@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.197 2018/12/18 23:18:34 tom Exp $ */
+/* $XTermId: trace.c,v 1.215 2019/11/16 14:48:19 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -134,7 +134,7 @@ TraceOpen(void)
 }
 
 void
-Trace(const char *fmt,...)
+Trace(const char *fmt, ...)
 {
     va_list ap;
     FILE *fp = TraceOpen();
@@ -377,7 +377,7 @@ visibleIChars(const IChar *buf, unsigned len)
 		unsigned value = *buf++;
 #if OPT_WIDE_CHARS
 		if (value > 255)
-		    sprintf(dst, "\\u+%04X", value);
+		    sprintf(dst, "\\U+%04X", value);
 		else
 #endif
 		    formatAscii(dst, value);
@@ -773,9 +773,10 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 {
     char mask_buffer[160];
 
-    TRACE(("Event #%lu %s: %s",
+    TRACE(("Event #%lu %s: %#lx %s",
 	   ev->xany.serial,
 	   tag,
+	   ev->xany.window,
 	   visibleEventType(ev->type)));
 
     switch (ev->type) {
@@ -800,14 +801,67 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	break;
     case EnterNotify:
     case LeaveNotify:
-	TRACE((" (%d,%d)",
+	TRACE((" at %d,%d root %d,%d %s %s",
+	       ev->xcrossing.y,
+	       ev->xcrossing.x,
 	       ev->xcrossing.y_root,
-	       ev->xcrossing.x_root));
+	       ev->xcrossing.x_root,
+	       visibleNotifyMode(ev->xcrossing.mode),
+	       visibleNotifyDetail(ev->xcrossing.detail)));
 	break;
     case FocusIn:
     case FocusOut:
+	TRACE((" %s %s",
+	       visibleNotifyMode(ev->xfocus.mode),
+	       visibleNotifyDetail(ev->xfocus.detail)));
+	break;
+    case MapNotify:
+	TRACE((" event %#lx %s",
+	       ev->xmap.event,
+	       ev->xmap.override_redirect ? "override" : ""));
+	break;
+    case UnmapNotify:
+	TRACE((" event %#lx %s",
+	       ev->xunmap.event,
+	       ev->xunmap.from_configure ? "configure" : ""));
+	break;
+    case ReparentNotify:
+	TRACE((" at %d,%d event %#lx parent %#lx %s",
+	       ev->xreparent.y,
+	       ev->xreparent.x,
+	       ev->xreparent.event,
+	       ev->xreparent.parent,
+	       ev->xreparent.override_redirect ? "override" : ""));
+	break;
+    case ConfigureNotify:
+	TRACE((" at %d,%d size %dx%d bd %d above %#lx",
+	       ev->xconfigure.y,
+	       ev->xconfigure.x,
+	       ev->xconfigure.height,
+	       ev->xconfigure.width,
+	       ev->xconfigure.border_width,
+	       ev->xconfigure.above));
+	break;
+    case PropertyNotify:
+	TRACE((" %s %s",
+	       TraceAtomName(XtDisplay(toplevel), ev->xproperty.atom),
+	       ((ev->xproperty.state == PropertyNewValue)
+		? "NewValue"
+		: ((ev->xproperty.state == PropertyDelete)
+		   ? "Delete"
+		   : "?"))));
+
+	break;
+    case Expose:
+	TRACE((" at %d,%d size %dx%d count %d",
+	       ev->xexpose.y,
+	       ev->xexpose.x,
+	       ev->xexpose.height,
+	       ev->xexpose.width,
+	       ev->xexpose.count));
+	break;
     default:
-	TRACE((" FIXME"));
+	TRACE(("FIXME\n"));
 	break;
     }
     TRACE(("\n"));
@@ -819,7 +873,7 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
     }
 }
 
-#if OPT_RENDERFONT
+#if OPT_RENDERFONT && OPT_WIDE_CHARS
 void
 TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
 {
@@ -889,30 +943,37 @@ void
 TraceSizeHints(XSizeHints * hints)
 {
     TRACE(("size hints:\n"));
-    if (hints->flags & (USPosition | PPosition))
+    if (hints->flags & (USPosition | PPosition)) {
 	TRACE(("   position   %d,%d%s%s\n", hints->y, hints->x,
 	       (hints->flags & USPosition) ? " user" : "",
 	       (hints->flags & PPosition) ? " prog" : ""));
-    if (hints->flags & (USSize | PSize))
+    }
+    if (hints->flags & (USSize | PSize)) {
 	TRACE(("   size       %d,%d%s%s\n", hints->height, hints->width,
 	       (hints->flags & USSize) ? " user" : "",
 	       (hints->flags & PSize) ? " prog" : ""));
-    if (hints->flags & PMinSize)
+    }
+    if (hints->flags & PMinSize) {
 	TRACE(("   min        %d,%d\n", hints->min_height, hints->min_width));
-    if (hints->flags & PMaxSize)
+    }
+    if (hints->flags & PMaxSize) {
 	TRACE(("   max        %d,%d\n", hints->max_height, hints->max_width));
-    if (hints->flags & PResizeInc)
+    }
+    if (hints->flags & PResizeInc) {
 	TRACE(("   inc        %d,%d\n", hints->height_inc, hints->width_inc));
-    else
+    } else {
 	TRACE(("   inc        NONE!\n"));
-    if (hints->flags & PAspect)
+    }
+    if (hints->flags & PAspect) {
 	TRACE(("   min aspect %d/%d\n", hints->min_aspect.y, hints->min_aspect.y));
-    if (hints->flags & PAspect)
 	TRACE(("   max aspect %d/%d\n", hints->max_aspect.y, hints->max_aspect.y));
-    if (hints->flags & PBaseSize)
+    }
+    if (hints->flags & PBaseSize) {
 	TRACE(("   base       %d,%d\n", hints->base_height, hints->base_width));
-    if (hints->flags & PWinGravity)
+    }
+    if (hints->flags & PWinGravity) {
 	TRACE(("   gravity    %d\n", hints->win_gravity));
+    }
 }
 
 static void
@@ -1167,6 +1228,10 @@ TraceXtermResources(void)
 #if OPT_MAXIMIZE
     XRES_B(maximized);
     XRES_S(fullscreen_s);
+#endif
+#if USE_DOUBLE_BUFFER
+    XRES_B(buffered);
+    XRES_I(buffered_fps);
 #endif
 }
 

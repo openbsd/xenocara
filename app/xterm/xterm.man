@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.778 2019/02/13 02:48:53 tom Exp $
+.\" $XTermId: xterm.man,v 1.802 2019/11/02 09:37:54 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -283,10 +283,8 @@ Because \fI\*n\fP uses the X Toolkit library,
 it accepts the standard X Toolkit command line options.
 \fI\*N\fP also accepts many application-specific options.
 .PP
-By convention, if an option begins with a
-.RB \*(`` + \*(''
-instead of a
-.RB \*(`` \- \*('',
+By convention, if an option begins with a \*(``\fB+\fP\*(''
+instead of a \*(``\fB\-\fP\*('',
 the option is restored to its default value.
 .\" ***************************************************************************
 .PP
@@ -525,6 +523,9 @@ This option allows you to override \fI\*n\fP's resource class.
 Normally it is \*(``__default_class__\*('', but
 can be set to another class such as
 \*(``U__default_class__\*('' to override selected resources.
+.IP
+X Toolkit sets the \fBWM_CLASS\fP property using the instance name
+and this class value.
 .TP 8
 .B "\-cm"
 This option disables recognition of ANSI color-change escape sequences.
@@ -838,7 +839,7 @@ That was a problem in X11R4 \fBxterm\fP (1989) which was addressed by
 a patch to X11R5 late in 1993.
 X11R6 included these fixes.
 The older version (when running with \fIroot\fP privilege) would create
-the log-file using \fIroot\fP privilege.
+the log file using \fIroot\fP privilege.
 The reason why \fI\*n\fP ran with \fIroot\fP privileges
 was to open pseudo-terminals.
 Those privileges are now needed only on very old systems:
@@ -850,7 +851,7 @@ Unless overridden by the \fB\-lf\fP option or the \fBlogFile\fP resource:
 If the filename is \*(``-\*('', then logging is sent to the standard output.
 .bP
 Otherwise a filename is generated, and
-the logfile is written to the directory from which \fI\*n\fP is invoked.
+the log file is written to the directory from which \fI\*n\fP is invoked.
 .bP
 The generated filename is of the form
 .NS
@@ -896,7 +897,7 @@ Force scrollbar to the left side of VT100 screen.
 This is the default, unless you have set the rightScrollBar resource.
 .TP 8
 .BI \-lf " filename"
-Specify the log-filename.
+Specify the log filename.
 This sets the \fBlogFile\fP resource.
 If set to \*(``-\*('',
 \fI\*n\fP writes its log to the standard output.
@@ -1022,6 +1023,12 @@ Print a report to the standard output showing information about pixmap-icons
 which are loaded.
 This corresponds to the \fBreportIcons\fP resource.
 .TP 8
+.B \-report\-xres
+Print a report to the standard output showing the values
+of boolean, numeric or string X resources for the VT100 widget when
+initialization is complete.
+This corresponds to the \fBreportXRes\fP resource.
+.TP 8
 .B \-rightbar
 Force scrollbar to the right side of VT100 screen.
 .TP 8
@@ -1120,7 +1127,7 @@ should not cause the window to be repositioned.
 This option specifies the number of lines to save that have been scrolled
 off the top of the screen.
 This corresponds to the \fBsaveLines\fP resource.
-The default is \*(``64\*(''.
+The default is \*(``1024\*(''.
 .TP 8
 .B \-sm
 This option, corresponding to the \fBsessionMgt\fR resource,
@@ -1369,6 +1376,8 @@ Note that this is not the same as the toolkit option \fB\-name\fP.
 The default icon name is the application name.
 .IP
 If no suitable icon is found, \fI\*n\fP provides a compiled-in pixmap.
+.IP
+X Toolkit sets the \fBWM_ICON_NAME\fP property using this value.
 .TP 8
 .B \-r
 This option indicates that reverse video should be simulated by swapping
@@ -1463,9 +1472,12 @@ colors.
 .B \-title \fIstring\fP
 This option specifies the window title string, which may be displayed by
 window managers if the user so chooses.
+It is shorthand for specifying the \*(``\fBtitle\fP\*('' resource.
 The default title is the command
 line specified after the \fB\-e\fP option, if any, otherwise the application
 name.
+.IP
+X Toolkit sets the \fBWM_NAME\fP property using this value.
 .TP 8
 .B \-xrm \fIresourcestring\fP
 This option specifies a resource string to be used.
@@ -1570,6 +1582,21 @@ c l l c c.
 ^H	true	true	1	^H
 .TE
 .TP 8
+.B "buffered\fP (class\fB Buffered\fP)"
+Normally \fI\*n\fP is built with double-buffer support.
+This resource can be used to turn it on or off.
+Setting the resource to
+\*(``true\*(''
+turns double-buffering on.
+The default value is \*(``__double_buffer__\*(''.
+.TP 8
+.B "bufferedFPS\fP (class\fB BufferedFPS\fP)"
+When \fI\*n\fP is built with double-buffer support,
+this gives the maximum number of frames/second.
+The default is
+\*(``40\*(''
+and is limited to the range 1 through 100.
+.TP 8
 .B "fullscreen\fP (class\fB Fullscreen\fP)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
 use a fullscreen layout on startup.
@@ -1663,7 +1690,7 @@ That is, \*(``mini.\*n\*('' is the same as \*(``mini.\*n_48x48\*(''.
 .IP
 If no explicit \fBiconHint\fP resource is given
 (or if none of the compiled-in names matches),
-\*n uses \*(``mini.\*n\*('' (which is always compiled-in).
+\fI\*n\fP uses \*(``mini.\*n\*('' (which is always compiled-in).
 .IP
 The \fBiconHint\fP resource has no effect on \*(``desktop\*('' files,
 including \*(``panel\*('' and \*(``menu\*(''.
@@ -1835,7 +1862,7 @@ setting the initial screen size, e.g., via window manager interaction.
 .IP
 See also \fBwaitForMap\fP which waits for a handshake-message
 giving the pseudo-terminal's notion of the screen size.
-The default is \*(``false\*('' on Linux and OS X systems,
+The default is \*(``false\*('' on Linux and macOS systems,
 \*(``true\*('' otherwise.
 .TP 8
 .B "reportColors\fP (class\fB ReportColors\fP)"
@@ -1851,6 +1878,12 @@ The default is \*(``false\*(''.
 .B "reportIcons\fP (class\fB ReportIcons\fP)"
 If true, \fI\*n\fP will print to the standard output a summary of
 each pixmap icon as it loads them.
+The default is \*(``false\*(''.
+.TP 8
+.B "reportXRes\fP (class\fB ReportXRes\fP)"
+If true, \fI\*n\fP will print to the standard output a list of the
+boolean, numeric and string X resources for the VT100 widget
+after initialization.
 The default is \*(``false\*(''.
 .TP 8
 .B "sameName\fP (class\fB SameName\fP)"
@@ -2650,11 +2683,11 @@ to be used as brighter versions.
 These specify the colors for the ISO-6429 extension if the bold attribute
 is also enabled.
 The default resource values are respectively,
-gray30,
+gray50,
 red,
 green,
 yellow,
-a customizable light blue,
+a customized light blue,
 magenta,
 cyan,
 and
@@ -2667,8 +2700,13 @@ through
 .B "color255\fP (class\fB Color255\fP)"
 These specify the colors for the 256-color extension.
 The default resource values
-are for colors 16 through 231 to make a 6x6x6 color cube, and colors
-232 through 255 to make a grayscale ramp.
+are for
+.RS
+.bP
+colors 16 through 231 to make a 6x6x6 color cube, and
+.bP
+colors 232 through 255 to make a grayscale ramp.
+.RE
 .IP
 Resources past \fBcolor15\fP are available as a compile-time option.
 Due to a hardcoded limit in the X libraries on the total number of
@@ -2747,7 +2785,7 @@ using the background color.
 If the \fBcolorInnerBorder\fP resource is enabled,
 at startup \fI\*n\fP will compare the \fBborderColor\fP and the
 window's background color.
-If those are different, \fI\*n\fP will use the \fBborderColor\fP 
+If those are different, \fI\*n\fP will use the \fBborderColor\fP
 resource to fill the inner border.
 Otherwise, it will use the window's background color.
 .IP
@@ -2929,7 +2967,7 @@ If the keyboard type is
 \*(``default\*('',
 or
 \*(``vt220\*(''
-and the resource is either \*(``true\*('' or \*(``maybe\*('' 
+and the resource is either \*(``true\*('' or \*(``maybe\*(''
 send the VT220-style \fIRemove\fP escape sequence.
 Otherwise, send DEL (127).
 .bP
@@ -3727,7 +3765,7 @@ See \fBfastScroll\fP for a variation.
 .TP 8
 .B "keepClipboard\fP (class\fB KeepClipboard\fP)"
 Specifies whether \fI\*n\fR will reuse the selection data which it
-copied to the keyboard rather than asking the clipboard for its
+copied to the clipboard rather than asking the clipboard for its
 current contents when told to provide the selection.
 The default is \*(``false\*(''.
 .IP
@@ -3770,6 +3808,12 @@ Set this to \*(``0\*('' to disable fallbacks entirely.
 Limits resizing of the screen via control sequence to a given multiple of
 the display dimensions.
 The default is \*(``1\*(''.
+.TP 8
+.B "limitResponse\fP (class\fB LimitResponse\fP)"
+Limits the buffer-size used when \fI\*n\fP
+replies to various control sequences.
+The default is \*(``1024\*(''.
+The minimum value is \*(``256\*(''.
 .TP 8
 .B "locale\fP (class\fB Locale\fP)"
 Specifies how to use \fIluit\fR, an encoding converter between UTF-8
@@ -3866,7 +3910,7 @@ as a login shell.
 The default is \*(``false\*(''.
 .TP 8
 .B "logFile\fP (class\fB Logfile\fP)"
-Specify the name for \fI\*n\fP's log-file.
+Specify the name for \fI\*n\fP's log file.
 If no name is specified, \fI\*n\fP will generate a name when
 logging is enabled,
 as described in the \fB\-l\fP option.
@@ -4071,10 +4115,20 @@ allows modification of other special keys
 .TP 8
 .B "modifyOtherKeys\fP (class\fB ModifyOtherKeys\fP)"
 Like \fBmodifyCursorKeys\fP, tells \fI\*n\fP to construct an
-escape sequence for other keys (such as \*(``2\*('') when modified by
-Control-, Alt- or Meta-modifiers.
-This feature does not apply to function keys and well-defined
-keys such as ESC or the control keys.
+escape sequence for \fIordinary\fP (i.e., \*(``other\*('') keys
+(such as \*(``2\*('') when modified by
+Shift-, Control-, Alt- or Meta-modifiers.
+This feature does not apply to \fIspecial keys\fP,
+i.e., cursor-, keypad-,  function- or control-keys
+which are labeled on your keyboard.
+Those have key symbols which XKB identifies uniquely.
+.IP
+For example, this feature does not apply to \fIspecial\fP
+control-keys
+(e.g., Escape, Tab, Enter, Backspace)
+Other control keys (e.g., Control-I, Control-M, Control-H) may
+send escape sequences when this feature is enabled.
+.IP
 The default is \*(``0\*('':
 .RS
 .TP 5
@@ -4084,10 +4138,26 @@ disables this feature.
 1
 enables this feature for keys except for those with
 well-known behavior, e.g., Tab, Backarrow and some special
-control character cases, e.g., Control-Space to make a NUL.
+control character cases which are built into the X11 library,
+e.g., Control-Space to make a NUL, or
+Control-3 to make an Escape character.
+.IP
+Except for those special cases built into the X11 library,
+the Shift- and Control- modifiers are treated normally.
+The Alt- and Meta- modifiers do not cause \fI\*n\fP to send escape sequences.
+Those modifier keys are interpreted according to other resources,
+e.g., the \fBmetaSendsEscape\fP resource.
 .TP 5
 2
 enables this feature for keys including the exceptions listed.
+\fI\*N\fP ignores the special cases built into the X11 library.
+Any shifted (modified) ordinary key sends an escape sequence.
+The Alt- and Meta- modifiers cause \fI\*n\fP to send escape sequences.
+.RE
+.IP
+The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:
+.RS
+https://invisible\-island.net/xterm/modified\-keys.html
 .RE
 .TP 8
 .B "multiClickTime\fP (class\fB MultiClickTime\fP)"
@@ -4208,7 +4278,7 @@ The \*(``^\*('' and \*(``$\*('' anchors in a regular expression
 denote the ends of the entire line.
 .bP
 If the regular expression contains backslashes \*(``\\\*('' those
-should be escaped \*(``\\\\\*('' 
+should be escaped \*(``\\\\\*(''
 because the X libraries interpret backslashes in resource strings.
 .RE
 .TP
@@ -4489,27 +4559,30 @@ After startup, you can still switch to/from the bitmap font using the
 .TP 5
 default
 .br
-startup using the normal (bitmap) font,
-but enable the \*(``TrueType Fonts\*(''
+Enable the \*(``TrueType Fonts\*(''
 menu entry to allow runtime switching to/from TrueType fonts.
-.IP
-If there is no \fBfaceName\fP resource set,
-then runtime switching to TrueType fonts is disabled.
-\fI\*N\fP has a separate  compiled-in value for \fBfaceName\fP
-for the special case where \fBrenderFont\fP is \*(``default\*(''.
+The initial font used depends upon whether the \fBfaceName\fP resource is set:
+.RS
+.bP
+If the \fBfaceName\fP resource is not set,
+start by using the normal (bitmap) font.
+\fI\*N\fP has a separate compiled-in value for \fBfaceName\fP
+for this special case.
 That is normally \*(``mono\*(''.
+.bP
+If the \fBfaceName\fP resource is set,
+then start by using the TrueType font rather than the bitmap font.
+.RE
 .RE
 .TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
-Affects the behavior when the window is resized to be taller or
-shorter.
+Affects the behavior when the window is resized to be taller or shorter.
 \fBNorthWest\fP
 specifies that the top line of text on the screen stay fixed.
-If the window
-is made shorter, lines are dropped from the bottom; if the window is
+If the window is made shorter,
+lines are dropped from the bottom; if the window is
 made taller, blank lines are added at the bottom.
-This is compatible
-with the behavior in R4.
+This is compatible with the behavior in X11R4.
 \fBSouthWest\fP (the default) specifies that
 the bottom line of text on the screen stay fixed.
 If the window is
@@ -4593,7 +4666,7 @@ The default is \*(``false\*(''.
 .B "saveLines\fP (class\fB SaveLines\fP)"
 Specifies the number of lines to save beyond the top of the screen when a
 scrollbar is turned on.
-The default is \*(``64\*(''.
+The default is \*(``1024\*(''.
 .TP 8
 .B "scrollBar\fP (class\fB ScrollBar\fP)"
 Specifies whether or not the scrollbar should be displayed.
@@ -4732,7 +4805,18 @@ The default for this resource is \*(``false\*(''.
 Tells \fI\*n\fP whether to accept or return
 window- and icon-labels in ISO-8859-1
 (the default) or UTF-8.
-Either can be encoded in hexadecimal.
+Either can be encoded in hexadecimal:
+.RS
+.bP
+UTF-8 titles require special treatment,
+because they may contain bytes which can be mistaken for control characters.
+Hexadecimal-encoding is supported to eliminate that possibility.
+.bP
+As an alternative, you could use the \fBallowC1Printable\fP resource,
+which suppresses \fI\*n\fP's parsing of the relevant control characters
+(and as a result, treats those bytes as data).
+.RE
+.IP
 The default for this resource is \*(``0\*(''.
 .IP
 Each bit (bit \*(``0\*('' is 1, bit \*(``1\*('' is 2, etc.)
@@ -4747,7 +4831,8 @@ Set window/icon labels using hexadecimal
 Query window/icon labels using hexadecimal
 .TP 5
 2
-Set window/icon labels using UTF-8 (overrides \fButf8Title\fP resource).
+Set window/icon labels using UTF-8
+(gives the same effect as the \fButf8Title\fP resource).
 .TP 5
 3
 Query window/icon labels using UTF-8
@@ -4780,6 +4865,12 @@ underlined.
 It may be desirable to disable underlining when color is being
 used for the underline attribute.
 The default is \*(``true\*(''.
+.TP 8
+.B "useBorderClipping\fP (class\fB UseBorderClipping\fP)"
+Tell \fI\*n\fP whether to apply clipping when \fBuseClipping\fP is false.
+Unlike \fBuseClipping\fP, this simply limits text to keep it within the
+window borders, e.g., as a refinement to the \fBscaleHeight\fP workaround.
+The default is \*(``false\*(''.
 .TP 8
 .B "useClipping\fP (class\fB UseClipping\fP)"
 Tell \fI\*n\fP whether to use clipping to keep
@@ -4881,19 +4972,40 @@ which assume the string is UTF-8.
 However, some users may wish to write a title string encoded in UTF-8.
 The window manager is responsible for drawing window titles.
 Some window managers (not all) support UTF-8 encoding of window titles.
-Set this resource to \*(``true\*('' to allow UTF-8 encoded title strings.
-That cancels the translation to UTF-8,
-allowing UTF-8 strings to be displayed as is.
+Set this resource to \*(``true\*('' to also set UTF-8 encoded title strings
+using the EWMH properties.
 .IP
 This feature is available as a menu entry, since it is related to
 the particular applications you are running within \fI\*n\fP.
 You can also use a control sequence
 (see the discussion of \*(``Title Modes\*(''
-in \fI\*N Control Sequences\fP), to set an equivalent flag.
-The \fBtitleModes\fP resource sets the same value,
-which overrides this resource.
+in \fI\*N Control Sequences\fP), to set an equivalent flag
+(which can also be set using the \fBtitleModes\fP resource).
 .IP
-The default is \*(``false\*(''.
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+Set only ISO-8859-1 title strings, e.g.,
+using the ICCCM \fBWM_NAME\fP STRING property.
+The menu entry is enabled, allowing the choice of title-strings to be changed
+at runtime.
+.TP
+true (1)
+Set both the EWMH (UTF-8 strings) and the ICCCM \fBWM_NAME\fP, etc.
+The menu entry is enabled, allowing the choice to be changed at runtime.
+.TP
+always (2)
+Always set both the EWMH (UTF-8 strings) and the ICCCM \fBWM_NAME\fP, etc.
+This also disables the menu entry.
+.TP
+default (3)
+At startup, the resource is set to true or false,
+according to the effective value of the \fButf8\fP resource.
+.RE
+.IP
+The default is \*(``default\*(''.
 .TP 8
 .B "veryBoldColors\fP (class\fB VeryBoldColors\fP)"
 Specifies whether to combine video attributes with colors specified by
@@ -5501,9 +5613,11 @@ for details).
 X clients provide select and paste support by responding to requests conveyed
 by the X server.
 The X server holds data in \*(``atoms\*('' which correspond
-to the different types of selection: PRIMARY, CLIPBOARD, CUT_BUFFER.
-The ICCCM also refers to a \fISECONDARY\fP selection atom,
-which \fI\*n\fP does not support.
+to the different types of selection
+(\fBPRIMARY\fP, \fBSECONDARY\fP, \fBCLIPBOARD\fP)
+as well as the similar cut buffer mechanism
+(\fBCUT_BUFFER0\fP to \fBCUT_BUFFER7\fP).
+Those are documented in the ICCCM.
 .PP
 The ICCCM deals with the underlying mechanism for select/paste.
 It does not mention \fIhighlighting\fP.
@@ -5520,6 +5634,16 @@ When configured to use the primary selection (the default),
 which help to retain character
 encoding information as it is pasted.
 .PP
+The \fBPRIMARY\fP token is a standard X feature, documented in the ICCCM
+(\fIInter-Client Communication Conventions Manual\fR),
+which states
+.RS 3
+.PP
+The selection named by the atom \fBPRIMARY\fP is used for all commands
+that take only a single argument and is the principal means of
+communication between clients that use the selection mechanism.
+.RE
+.PP
 A user \*(``selects\*('' text on \fI\*n\fP, which highlights the selected text.
 A subsequent \*(``paste\*('' to another client forwards
 a request to the client owning the selection.
@@ -5532,20 +5656,32 @@ But cut-buffers handle only ISO-8859-1 data
 (officially \- some clients ignore the rules).
 .
 .SS CLIPBOARD
+.PP
 When configured to use the clipboard
 (using the \fBselectToClipboard\fP resource),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
 passed via selection.
 .PP
-The \fBPRIMARY\fP token is a standard X feature, documented in the ICCCM
-(\fIInter-Client Communication Conventions Manual\fR),
-which states
-.RS
+The \fBselectToClipboard\fP resource is a compromise,
+allowing \fBCLIPBOARD\fP to be treated almost like \fBPRIMARY\fP,
+unlike the ICCCM, which describes \fBCLIPBOARD\fP in different terms
+than \fBPRIMARY\fP or \fBSECONDARY\fP.
+Its lengthy explanation begins with the essential points:
+.RS 3
 .PP
-The selection named by the atom \fBPRIMARY\fP is used for all commands
-that take only a single argument and is the principal means of
-communication between clients that use the selection mechanism.
+The selection named by the atom CLIPBOARD is used to hold data
+that is being transferred between clients,
+that is, data that usually is being cut and then pasted
+or copied and then pasted.
+Whenever a client wants to transfer data to the clipboard:
+.bP
+It should assert ownership of the CLIPBOARD.
+.bP
+If it succeeds in acquiring ownership,
+it should be prepared to respond to a request for the contents of the CLIPBOARD
+in the usual way (retaining the data to be able to return it).
+The request may be generated by the clipboard client described below.
 .RE
 .SS SELECT
 .PP
@@ -5559,6 +5695,16 @@ the \fBPRIMARY\fP and \fBCLIPBOARD\fP tokens.
 Without using this feature, one can use workarounds such as the
 \fIxclip\fP program to show the contents of the X clipboard within an
 \fI\*n\fP window.
+.SS SECONDARY
+.PP
+This is used less often than \fBPRIMARY\fP or \fBCLIPBOARD\fP.
+According to the ICCCM, it is used
+.bP
+As the second argument to commands taking two arguments
+(for example, \*(``exchange primary and secondary selections\*('')
+.bP
+As a means of obtaining data when there is a primary selection
+and the user does not want to disturb it
 .
 .SS Selection Targets
 The different types of data which are passed depend on what the receiving
@@ -5697,7 +5843,7 @@ Commands for capturing output:
 .RS
 .TP
 .B Log to File\fP (resource \fBlogging\fP)
-Captures text sent to the screen in a logfile,
+Captures text sent to the screen in a log file,
 as in the \fB\-l\fP logging option.
 .TP
 .B Print-All Immediately\fP (resource \fBprint-immediate\fP)
@@ -5954,7 +6100,7 @@ This corresponds to the \fB\-rw\fP option and the \fBreverseWrap\fP resource.
 .B Enable Auto Linefeed\fP (resource \fBautolinefeed\fP)
 Enable (or disable) auto-linefeed.
 This is the VT102 NEL function,
-which causes the emulator to emit a linefeed after each carriage return.
+which causes the emulator to emit a line feed after each carriage return.
 There is no corresponding command-line option or resource setting.
 .
 .TP
@@ -6951,11 +7097,15 @@ scrolled off the top of the screen is now visible.
 The \fIcount\fP argument
 indicates the number of \fIunits\fP (which may be \fIpage\fP, \fIhalfpage\fP,
 \fIpixel\fP, or \fIline\fP) by which to scroll.
+If no \fIcount\fP parameter is given, \fI\*n\fP uses the number of lines
+given by the \fBscrollLines\fP resource.
 .IP
 An adjustment can be specified for the \fIpage\fP or \fIhalfpage\fP units
 by appending a \*(``+\*('' or \*(``\-\*(''
 sign followed by a number,
 e.g., \fIpage\-2\fP to specify 2 lines less than a page.
+.IP
+If the second parameter is omitted \*(``lines\*('' is used.
 .IP
 If the third parameter \fImouse\fP is given, the action is ignored when
 mouse reporting is enabled.
@@ -7059,7 +7209,7 @@ This action sets, unsets or toggles the handling of Application Keypad mode
 and is also invoked by the \fBappkeypad\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autolinefeed(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles automatic insertion of linefeeds.
+This action sets, unsets or toggles automatic insertion of line feeds.
 It is also invoked by the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autowrap(\fIon/off/toggle\fP)"
@@ -7868,11 +8018,96 @@ for the actual size window you have created.
 This feature is, like \fBLINES\fP and \fBCOLUMNS\fP, used rarely.
 It addresses the same limitation of a few older systems
 by providing a way for \fItermcap\fP-based applications to get the initial
-screensize.
+screen size.
 .TP 5
 .B TERMINFO
 may be defined to a nonstandard location using the configure script.
 .\"
+.
+.
+.SH WINDOW PROPERTIES
+.PP
+In the output from \fBxprop\fP(1), there are several properties.
+.SS Properties set by X Toolkit
+.TP 5
+.B WM_CLASS
+This shows the \fIinstance name\fP and the X resource \fIclass\fP,
+passed to X Toolkit during initialization of \fI\*n\fP,
+e.g.,
+.NS
+WM_CLASS(STRING) = "xterm", "UXTerm"
+.NE
+.TP 5
+.B WM_CLIENT_LEADER
+This shows the window-id which \fI\*n\fP provides
+with an environment variable (\fBWINDOWID\fP),
+e.g.,
+.NS
+WM_CLIENT_LEADER(WINDOW): window id # 0x800023
+.NE
+.TP 5
+.B WM_COMMAND
+This shows the command-line arguments for \fI\*n\fP
+which are passed to X Toolkit during initialization, e.g.,
+.NS
+WM_COMMAND(STRING) = { "xterm", "-class", "UXTerm", "-title", "uxterm", "-u8" }
+.NE
+.TP 5
+.B WM_ICON_NAME
+This holds the icon title,
+which different window managers handle in various ways.
+It is set via the \fBiconName\fP resource.
+Applications can change this using control sequences.
+.TP 5
+.B WM_LOCALE_NAME
+This shows the result from the \fBsetlocale\fP(3) function
+for the \fILC_CTYPE\fP category,
+e.g.,
+.NS
+WM_LOCALE_NAME(STRING) = "en_US.UTF-8"
+.NE
+.TP 5
+.B WM_NAME
+This holds the window title, normally at the top of \fI\*n\fP's window.
+It is set via the \fBtitle\fP resource.
+Applications can change this using control sequences.
+.SS Properties set by Xterm
+X Toolkit does not manage EWMH properties.
+\*N does this directly.
+.TP 5
+.B _NET_WM_ICON_NAME
+stores the icon name.
+.TP 5
+.B _NET_WM_NAME
+stores the title string.
+.TP 5
+.B _NET_WM_PID
+stores the process identifier for \fI\*n\fP's display.
+.SS Properties used by Xterm
+.TP 5
+.B _NET_SUPPORTED
+\*N checks this property on the \fIsupporting window\fP
+to decide if the window manager supports
+specific maximizing styles.
+That may include other window manager hints;
+\fI\*n\fP uses the X library calls to manage those.
+.TP 5
+.B _NET_SUPPORTING_WM_CHECK
+\*N checks this to ensure that it will only update the EWMH
+properties for a window manager which claims EWMH compliance.
+.TP 5
+.B _NET_WM_STATE
+This tells \fI\*n\fP whether its window has been maximized by the window manager,
+and if so, what type of maximizing:
+.RS
+.TP 5
+.B _NET_WM_STATE_FULLSCREEN
+.TP 5
+.B _NET_WM_STATE_MAXIMIZED_HORZ
+.TP 5
+.B _NET_WM_STATE_MAXIMIZED_VERT
+.RE
+.PP
 .
 .
 .SH FILES
@@ -7888,10 +8123,10 @@ On systems which have the \fIgetusershell\fP function,
 since the file may not be present if the system uses default settings.
 .TP 5
 \fI/etc/utmp\fP
-the system logfile, which records user logins.
+the system log file, which records user logins.
 .TP 5
 \fI/etc/wtmp\fP
-the system logfile, which records user logins and logouts.
+the system log file, which records user logins and logouts.
 .TP 5
 .I __apploaddir__/__default_class__
 the \fI\*n\fP default application resources.
@@ -8176,15 +8411,27 @@ https://invisible\-island.net/xterm/xterm.faq.html
 https://invisible\-island.net/xterm/xterm.log.html
 .RE
 .PP
+\fIX Toolkit Intrinsics \(en C Language Interface\fP (Xt),
+.br
+Joel McCormack, Paul Asente, Ralph R. Swick (1994),
+.br
+Thomas E. Dickey (2019).
+.PP
 \fIInter-Client Communication Conventions Manual\fR (ICCCM),
 .br
 David Rosenthal and
 Stuart W. Marks (version 2.0, 1994).
 .PP
+\fIExtended Window Manager Hints\fP (EWMH),
+.br
+X Desktop Group (version 1.3, 2005).
+.PP
+EWMH uses \fIUTF8_STRING\fP pervasively without defining it,
+but does mention the ICCCM.
 Version 2.0 of the ICCCM does not address UTF-8.
 That is an extension added in XFree86.
 .bP
-Markus Kuhn summarized this in 
+Markus Kuhn summarized this in
 \fIUTF-8 and Unicode FAQ for Unix/Linux\fP (2001),
 in the section \*(``Is X11 ready for Unicode?\*(''
 .IP

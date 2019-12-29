@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.18 2016/05/22 16:34:38 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.19 2019/06/30 19:10:00 tom Exp $ */
 
 /*
- * Copyright 2009-2014,2016 by Thomas E. Dickey
+ * Copyright 2009-2016,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,7 +67,7 @@ addScrollback(TScreen *screen)
     ScrnBuf where = 0;
     unsigned ncols = (unsigned) MaxCols(screen);
 
-    if (screen->saveBuf_index != 0) {
+    if (screen->saveBuf_index != 0 && screen->savelines != 0) {
 	unsigned which;
 	Char *block;
 

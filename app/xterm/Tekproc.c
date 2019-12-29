@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.232 2018/06/25 20:14:43 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.237 2019/11/13 22:10:26 tom Exp $ */
 
 /*
- * Copyright 2001-2017,2018 by Thomas E. Dickey
+ * Copyright 2001-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -714,7 +714,7 @@ Tekparse(TekWidget tw)
 		TekGINoff(tw);
 	    TCursorDown(tw);
 	    if (!tekRefreshList)
-		do_xevents();
+		do_xevents(tw->vt);
 	    break;
 
 	case CASE_SP:
@@ -866,13 +866,13 @@ Tinput(TekWidget tw)
 	    }
 #ifdef VMS
 	    if (Tselect_mask & X_mask) {
-		xevents();
+		xevents(tw->vt);
 		if (VTbuffer->update != update)
 		    goto again;
 	    }
 #else /* VMS */
 	    if (FD_ISSET(ConnectionNumber(XtDisplay(tw)), &Tselect_mask)) {
-		xevents();
+		xevents(tw->vt);
 		if (VTbuffer->update != update)
 		    goto again;
 	    }
@@ -1371,6 +1371,7 @@ TekRun(void)
 	    Ttoggled = True;
 	}
 	TEK4014_ACTIVE(xw) = False;
+	xtermSetWinSize(xw);
     } else {
 	TEK4014_ACTIVE(xw) = False;
 	if (VWindow(TScreenOf(xw)) == 0) {
@@ -1701,16 +1702,29 @@ TekRealize(Widget gw,
     XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
 
     {				/* there's gotta be a better way... */
+	static char empty_string[1];
 	static Arg args[] =
 	{
 	    {XtNtitle, (XtArgVal) NULL},
 	    {XtNiconName, (XtArgVal) NULL},
 	};
-	char *icon_name, *title, *tek_icon_name, *tek_title;
+	char *icon_name = NULL;
+	char *title = NULL;
+	char *tek_icon_name = NULL;
+	char *tek_title = NULL;
 
 	args[0].value = (XtArgVal) & icon_name;
 	args[1].value = (XtArgVal) & title;
 	XtGetValues(SHELL_OF(tw), args, 2);
+
+	if (IsEmpty(title)) {
+	    title = empty_string;
+	}
+
+	if (IsEmpty(icon_name)) {
+	    icon_name = empty_string;
+	}
+
 	TRACE(("TekShell title='%s', iconName='%s'\n", title, icon_name));
 	tek_icon_name = XtMalloc((Cardinal) strlen(icon_name) + 7);
 	strcpy(tek_icon_name, icon_name);
@@ -1816,27 +1830,26 @@ TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 void
 ChangeTekColors(TekWidget tw, TScreen *screen, ScrnColors * pNew)
 {
-    TekScreen *tekscr = TekScreenOf(tw);
-    XGCValues gcv;
-
-    if (COLOR_DEFINED(pNew, TEK_FG)) {
-	T_COLOR(screen, TEK_FG) = COLOR_VALUE(pNew, TEK_FG);
-	TRACE(("... TEK_FG: %#lx\n", T_COLOR(screen, TEK_FG)));
-    }
-    if (COLOR_DEFINED(pNew, TEK_BG)) {
-	T_COLOR(screen, TEK_BG) = COLOR_VALUE(pNew, TEK_BG);
-	TRACE(("... TEK_BG: %#lx\n", T_COLOR(screen, TEK_BG)));
-    }
-    if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
-	T_COLOR(screen, TEK_CURSOR) = COLOR_VALUE(pNew, TEK_CURSOR);
-	TRACE(("... TEK_CURSOR: %#lx\n", T_COLOR(screen, TEK_CURSOR)));
-    } else {
-	T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
-	TRACE(("... TEK_CURSOR: %#lx\n", T_COLOR(screen, TEK_CURSOR)));
-    }
-
-    if (tw) {
+    if (tw && screen) {
+	TekScreen *tekscr = TekScreenOf(tw);
+	XGCValues gcv;
 	int i;
+
+	if (COLOR_DEFINED(pNew, TEK_FG)) {
+	    T_COLOR(screen, TEK_FG) = COLOR_VALUE(pNew, TEK_FG);
+	    TRACE(("... TEK_FG: %#lx\n", T_COLOR(screen, TEK_FG)));
+	}
+	if (COLOR_DEFINED(pNew, TEK_BG)) {
+	    T_COLOR(screen, TEK_BG) = COLOR_VALUE(pNew, TEK_BG);
+	    TRACE(("... TEK_BG: %#lx\n", T_COLOR(screen, TEK_BG)));
+	}
+	if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
+	    T_COLOR(screen, TEK_CURSOR) = COLOR_VALUE(pNew, TEK_CURSOR);
+	    TRACE(("... TEK_CURSOR: %#lx\n", T_COLOR(screen, TEK_CURSOR)));
+	} else {
+	    T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
+	    TRACE(("... TEK_CURSOR: %#lx\n", T_COLOR(screen, TEK_CURSOR)));
+	}
 
 	XSetForeground(XtDisplay(tw), tekscr->TnormalGC,
 		       T_COLOR(screen, TEK_FG));
@@ -1867,17 +1880,16 @@ ChangeTekColors(TekWidget tw, TScreen *screen, ScrnColors * pNew)
 void
 TekReverseVideo(XtermWidget xw, TekWidget tw)
 {
-    TScreen *screen = TScreenOf(xw);
-    TekScreen *tekscr = TekScreenOf(tw);
-    Pixel tmp;
-    XGCValues gcv;
-
-    EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), tmp);
-
-    T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
-
     if (tw) {
+	TScreen *screen = TScreenOf(xw);
+	TekScreen *tekscr = TekScreenOf(tw);
+	Pixel tmp;
+	XGCValues gcv;
 	int i;
+
+	EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), tmp);
+
+	T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
 
 	XSetForeground(XtDisplay(tw), tekscr->TnormalGC, T_COLOR(screen, TEK_FG));
 	XSetBackground(XtDisplay(tw), tekscr->TnormalGC, T_COLOR(screen, TEK_BG));
@@ -1919,12 +1931,18 @@ TekBackground(TekWidget tw, TScreen *screen)
 void
 TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
 {
-    TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(tw->vt);
+    TekScreen *tekscr;
+    XtermWidget xw;
     int c, x, y;
-    unsigned int cellwidth, cellheight;
+    unsigned cellwidth, cellheight;
 
-    if (!TEK4014_SHOWN(tw->vt))
+    if (tw == 0)
+	return;
+    if ((tekscr = TekScreenOf(tw)) == 0)
+	return;
+    if ((xw = tw->vt) == 0)
+	return;
+    if (!TEK4014_SHOWN(xw))
 	return;
 
     TRACE(("TCursorToggle %s\n", (toggle == TOGGLE) ? "toggle" : "clear"));
@@ -1937,6 +1955,7 @@ TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
     y = (int) ScaledY(tw, tekscr->cur_Y) - tw->tek.tobaseline[c];
 
     if (toggle == TOGGLE) {
+	TScreen *screen = TScreenOf(xw);
 	if (screen->select || screen->always_highlight)
 	    XFillRectangle(XtDisplay(tw), TWindow(tekscr),
 			   tekscr->TcursorGC, x, y,
@@ -2065,7 +2084,7 @@ HandleGINInput(Widget w,
 }
 
 /*
- * Check if the current widget, or any parent, is the VT100 "xterm" widget.
+ * Check if the current widget, or any parent, is the "tek4014" widget.
  */
 TekWidget
 getTekWidget(Widget w)

@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.134 2018/08/10 19:52:54 tom Exp $ */
+/* $XTermId: data.h,v 1.138 2019/10/06 20:16:02 tom Exp $ */
 
 /*
- * Copyright 2002-2017,2018 by Thomas E. Dickey
+ * Copyright 2002-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -220,6 +220,9 @@ typedef struct XTERM_RESOURCE {
 #if OPT_REPORT_FONTS
     Boolean reportFonts;	/* show bitmap-font information as loaded */
 #endif
+#if OPT_XRES_QUERY
+    Boolean reportXRes;		/* show vt100 resources after initialization */
+#endif
 #if OPT_REPORT_ICONS
     Boolean reportIcons;	/* show icon information as loaded */
 #endif
@@ -240,6 +243,10 @@ typedef struct XTERM_RESOURCE {
     Boolean maximized;
     String fullscreen_s;	/* resource for "fullscreen" */
     int fullscreen;		/* derived from fullscreen_s */
+#endif
+#if USE_DOUBLE_BUFFER
+    Boolean buffered;
+    int buffered_fps;
 #endif
 } XTERM_RESOURCE;
 

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.568 2019/02/11 10:21:35 tom Exp $ */
+/* $XTermId: button.c,v 1.575 2019/06/30 22:34:03 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -91,6 +91,21 @@ button.c	Handles button events in the terminal emulator.
 #endif
 #endif
 
+#define PRIMARY_NAME    "PRIMARY"
+#define CLIPBOARD_NAME  "CLIPBOARD"
+#define SECONDARY_NAME  "SECONDARY"
+
+#define AtomToSelection(d,n) \
+		 (((n) == XA_CLIPBOARD(d)) \
+		  ? CLIPBOARD_CODE \
+		  : (((n) == XA_SECONDARY) \
+		     ? SECONDARY_CODE \
+		     : PRIMARY_CODE))
+
+#define isSelectionCode(n) ((n) >= PRIMARY_CODE)
+#define CutBufferToCode(n) ((n) +  MAX_SELECTION_CODES)
+#define okSelectionCode(n) (isSelectionCode(n) ? (n) : PRIMARY_CODE)
+
 #if OPT_WIDE_CHARS
 #include <ctype.h>
 #include <wcwidth.h>
@@ -156,7 +171,6 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
-static int TargetToSelection(TScreen *screen, String name);
 static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
 static void EditorButton(XtermWidget xw, XButtonEvent *event);
 static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
@@ -269,7 +283,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
-	if (KeyModifiers(event) == 0 || KeyModifiers(event) == ControlMask) {
+	if (KeyModifiers(event) == 0) {
 	    /* xterm extension for motion reporting. June 1998 */
 	    /* EditorButton() will distinguish between the modes */
 	    switch (event->type) {
@@ -303,8 +317,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 		my_event->button == Button1) {
 		TrackDown(xw, my_event);
 		result = True;
-	    } else if (BtnModifiers(my_event) == 0
-		       || BtnModifiers(my_event) == ControlMask) {
+	    } else if (BtnModifiers(my_event) == 0) {
 		EditorButton(xw, my_event);
 		result = True;
 	    }
@@ -313,8 +326,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 
     case VT200_MOUSE:		/* DEC vt200 compatible */
 	if (IsBtnEvent(event)) {
-	    if (BtnModifiers(my_event) == 0
-		|| BtnModifiers(my_event) == ControlMask) {
+	    if (BtnModifiers(my_event) == 0) {
 		EditorButton(xw, my_event);
 		result = True;
 	    }
@@ -372,7 +384,7 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     /* Make sure the event is an appropriate type */
     if ((!IsBtnEvent(event) &&
 	 !screen->loc_filter) ||
-	(BtnModifiers(event) != 0 && BtnModifiers(event) != ControlMask))
+	(BtnModifiers(event) != 0))
 	return (False);
 
     if ((event->type == ButtonPress &&
@@ -1584,13 +1596,15 @@ TargetToSelection(TScreen *screen, String name)
 
     if (isSELECT(name)) {
 	result = DefaultSelection(screen);
-    } else if (!strcmp(name, "PRIMARY")) {
-	result = 0;
-    } else if (!strcmp(name, "CLIPBOARD")) {
-	result = 1;
+    } else if (!strcmp(name, PRIMARY_NAME)) {
+	result = PRIMARY_CODE;
+    } else if (!strcmp(name, CLIPBOARD_NAME)) {
+	result = CLIPBOARD_CODE;
+    } else if (!strcmp(name, SECONDARY_NAME)) {
+	result = SECONDARY_CODE;
     } else if (sscanf(name, "CUT_BUFFER%d", &cutb) == 1) {
-	if (cutb >= 0 && cutb <= 7) {
-	    result = cutb + 2;
+	if (cutb >= 0 && cutb < MAX_CUT_BUFFER) {
+	    result = CutBufferToCode(cutb);
 	} else {
 	    xtermWarning("unexpected cut-buffer code: %d\n", cutb);
 	}
@@ -1641,8 +1655,8 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 	if (map) {
 	    TScreen *screen = TScreenOf(xw);
 	    const char *mapTo = (screen->selectToClipboard
-				 ? "CLIPBOARD"
-				 : "PRIMARY");
+				 ? CLIPBOARD_NAME
+				 : PRIMARY_NAME);
 
 	    UnmapSelections(xw);
 	    if ((result = TypeMallocN(String, num_params + 1)) != 0) {
@@ -1670,7 +1684,7 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 
 /*
  * Lookup the cut-buffer number, which will be in the range 0-7.
- * If it is not a cut-buffer, it is the primary selection (-1).
+ * If it is not a cut-buffer, it is a type of selection, e.g., primary.
  */
 static int
 CutBuffer(Atom code)
@@ -3997,7 +4011,7 @@ void
 ClearSelectionBuffer(TScreen *screen, String selection)
 {
     int which = TargetToSelection(screen, selection);
-    SelectedCells *scp = &(screen->selected_cells[which >= 0 ? which : 0]);
+    SelectedCells *scp = &(screen->selected_cells[okSelectionCode(which)]);
     if (scp->data_buffer) {
 	free(scp->data_buffer);
 	scp->data_buffer = 0;
@@ -4037,7 +4051,7 @@ void
 AppendToSelectionBuffer(TScreen *screen, unsigned c, String selection)
 {
     int which = TargetToSelection(screen, selection);
-    SelectedCells *scp = &(screen->selected_cells[which >= 0 ? which : 0]);
+    SelectedCells *scp = &(screen->selected_cells[okSelectionCode(which)]);
     unsigned six;
     Char ch;
 
@@ -4208,10 +4222,8 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
     return result;
 }
 
-#define CLIPBOARD_ATOM XInternAtom(screen->display, "CLIPBOARD", False)
-
-#define keepClipboard(atom) ((screen->keepClipboard) && \
-	 (atom == CLIPBOARD_ATOM))
+#define keepClipboard(d,atom) ((screen->keepClipboard) && \
+	 (atom == XA_CLIPBOARD(d)))
 
 static Boolean
 ConvertSelection(Widget w,
@@ -4241,12 +4253,12 @@ ConvertSelection(Widget w,
 	   TraceAtomName(screen->display, *selection),
 	   visibleSelectionTarget(dpy, *target)));
 
-    if (keepClipboard(*selection)) {
+    if (keepClipboard(dpy, *selection)) {
 	TRACE(("asked for clipboard\n"));
 	scp = &(screen->clipboard_data);
     } else {
 	TRACE(("asked for selection\n"));
-	scp = &(screen->selected_cells[*selection == CLIPBOARD_ATOM]);
+	scp = &(screen->selected_cells[AtomToSelection(dpy, *selection)]);
     }
 
     data = scp->data_buffer;
@@ -4448,6 +4460,7 @@ _OwnSelection(XtermWidget xw,
 	      Cardinal count)
 {
     TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
     Atom *atoms = screen->selection_atoms;
     Cardinal i;
     Bool have_selection = False;
@@ -4465,13 +4478,13 @@ _OwnSelection(XtermWidget xw,
 	screen->selection_atoms = atoms;
 	screen->sel_atoms_size = count;
     }
-    XmuInternStrings(XtDisplay((Widget) xw), selections, count, atoms);
+    XmuInternStrings(dpy, selections, count, atoms);
     for (i = 0; i < count; i++) {
 	int cutbuffer = CutBuffer(atoms[i]);
 	if (cutbuffer >= 0) {
 	    unsigned long limit =
-	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
-	    scp = &(screen->selected_cells[cutbuffer + 2]);
+	    (unsigned long) (4 * XMaxRequestSize(dpy) - 32);
+	    scp = &(screen->selected_cells[CutBufferToCode(cutbuffer)]);
 	    if (scp->data_length > limit) {
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 		       scp->data_length, cutbuffer));
@@ -4489,18 +4502,18 @@ _OwnSelection(XtermWidget xw,
 		    data = UTF8toLatin1(screen, data, length, &length);
 		});
 		TRACE(("XStoreBuffer(%d)\n", cutbuffer));
-		XStoreBuffer(XtDisplay((Widget) xw),
+		XStoreBuffer(dpy,
 			     (char *) data,
 			     (int) length,
 			     cutbuffer);
 	    }
 	} else {
-	    int which = (atoms[i] == CLIPBOARD_ATOM) ? 1 : 0;
-	    if (keepClipboard(atoms[i])) {
+	    int which = AtomToSelection(dpy, atoms[i]);
+	    if (keepClipboard(dpy, atoms[i])) {
 		Char *buf;
 		SelectedCells *tcp = &(screen->clipboard_data);
 		TRACE(("saving selection to clipboard buffer\n"));
-		scp = &(screen->selected_cells[1]);
+		scp = &(screen->selected_cells[CLIPBOARD_CODE]);
 		if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
 		    SysError(ERROR_BMALLOC2);
 
@@ -4823,8 +4836,11 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	button++;
 
     /* Ignore buttons that cannot be encoded */
-    if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
-	|| screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
+    if (screen->send_mouse_pos == X10_MOUSE) {
+	if (button > 3)
+	    return;
+    } else if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
+	       || screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
 	if (button > 15) {
 	    return;
 	}
@@ -4895,13 +4911,21 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	    break;
 	case ButtonRelease:
 	    /*
-	     * Wheel mouse interface generates release-events for buttons
-	     * 4 and 5, coded here as 3 and 4 respectively.  We change the
-	     * release for buttons 1..3 to a -1, which will be later mapped
-	     * into a "0" (some button was released).
+	     * The (vertical) wheel mouse interface generates release-events
+	     * for buttons 4 and 5, coded here as 3 and 4 respectively.
+	     *
+	     * The X10/X11 xterm protocol maps the release for buttons 1..3 to
+	     * a -1, which will * be later mapped into a "0" (some button was
+	     * released),
+	     *
+	     * The SGR (extended) xterm mouse protocol keeps the button number
+	     * and uses a "m" to indicate button release.
+	     *
+	     * The behavior for mice with more buttons is unclear, and may be
+	     * revised -TD
 	     */
 	    screen->mouse_button &= ~ButtonBit(button);
-	    if (button < 3) {
+	    if (button < 3 || button >= 8) {
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
 		    final = 'm';
@@ -5104,7 +5128,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 #if OPT_SELECT_REGEX
     char *saveExpr = screen->selectExpr[noClick];
 #endif
-    SelectedCells *scp = &(screen->selected_cells[0]);
+    SelectedCells *scp = &(screen->selected_cells[PRIMARY_CODE]);
     SelectedCells save_selection = *scp;
 
     char *result = 0;
@@ -5137,7 +5161,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 
     ComputeSelect(xw, start, finish, False);
     SaltTextAway(xw,
-		 TargetToSelection(screen, "PRIMARY"),
+		 TargetToSelection(screen, PRIMARY_NAME),
 		 &(screen->startSel), &(screen->endSel));
 
     if (scp->data_limit && scp->data_buffer) {

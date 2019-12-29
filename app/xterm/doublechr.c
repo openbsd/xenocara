@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.93 2018/07/26 01:35:00 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.101 2019/09/12 00:24:07 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -216,20 +216,21 @@ pushback_font(XtermWidget xw, XTermFonts * source)
     return data;
 }
 
-int
-xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
+static int
+xterm_Double_index(XTermDraw * params)
 {
+    XTermDraw local = *params;
     int n;
     int result = -1;
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(local.xw);
     XTermFonts *data = getDoubleFont(screen, 0);
 
-    flags &= BOLD;
-    TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", chrset, flags));
+    local.attr_flags &= BOLD;
+    TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", local.this_chrset, local.attr_flags));
 
     for (n = 0; n < screen->fonts_used; n++) {
-	if (data[n].chrset == chrset
-	    && data[n].flags == flags) {
+	if (data[n].chrset == (unsigned) local.this_chrset
+	    && data[n].flags == local.attr_flags) {
 	    if (n != 0) {
 		XTermFonts save;
 		TRACE(("...xterm_Double_index -> %d (OLD:%d)\n", n, screen->fonts_used));
@@ -253,25 +254,21 @@ xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
  * NUM_CHRSET values.
  */
 GC
-xterm_DoubleGC(XtermWidget xw,
-	       unsigned chrset,
-	       unsigned attr_flags,
-	       unsigned draw_flags,
-	       GC old_gc,
-	       int *inxp)
+xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(params->xw);
     VTwin *cgsWin = WhichVWin(screen);
     char *name;
     GC result = 0;
 
-    if ((name = xtermSpecialFont(xw, attr_flags, draw_flags, chrset)) != 0) {
-	CgsEnum cgsId = WhichCgsId(attr_flags);
+    if ((name = xtermSpecialFont(params))
+	!= 0) {
+	CgsEnum cgsId = WhichCgsId(params->attr_flags);
 	Boolean found = False;
 	XTermFonts *data = 0;
 	int n;
 
-	if ((n = xterm_Double_index(xw, chrset, attr_flags)) >= 0) {
+	if ((n = xterm_Double_index(params)) >= 0) {
 	    data = getDoubleFont(screen, n);
 	    if (data->fn != 0) {
 		if (!strcmp(data->fn, name)
@@ -280,7 +277,7 @@ xterm_DoubleGC(XtermWidget xw,
 		    free(name);
 		    name = NULL;
 		} else {
-		    discard_font(xw, n);
+		    discard_font(params->xw, n);
 		}
 	    }
 	}
@@ -289,23 +286,23 @@ xterm_DoubleGC(XtermWidget xw,
 	    XTermFonts temp;
 
 	    TRACE(("xterm_DoubleGC %s %d: %s\n",
-		   (attr_flags & BOLD) ? "BOLD" : "NORM", n, name));
+		   (params->attr_flags & BOLD) ? "BOLD" : "NORM", n, name));
 
 	    memset(&temp, 0, sizeof(temp));
 	    temp.fn = name;
-	    temp.chrset = chrset;
-	    temp.flags = (attr_flags & BOLD);
+	    temp.chrset = params->this_chrset;
+	    temp.flags = (params->attr_flags & BOLD);
 	    temp.warn = fwResource;
 
-	    if (!xtermOpenFont(xw, name, &temp, False)) {
-		/* Retry with * in resolutions */
-		char *nname = xtermSpecialFont(xw,
-					       attr_flags,
-					       draw_flags | NORESOLUTION,
-					       chrset);
+	    if (!xtermOpenFont(params->xw, name, &temp, False)) {
+		XTermDraw local = *params;
+		char *nname;
 
+		/* Retry with * in resolutions */
+		local.draw_flags |= NORESOLUTION;
+		nname = xtermSpecialFont(&local);
 		if (nname != 0) {
-		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
+		    found = (Boolean) xtermOpenFont(params->xw, nname, &temp,
 						    False);
 		    free(nname);
 		}
@@ -316,28 +313,62 @@ xterm_DoubleGC(XtermWidget xw,
 
 	    if (found) {
 		n = 0;
-		data = pushback_font(xw, &temp);
+		data = pushback_font(params->xw, &temp);
 	    }
 
 	    TRACE(("-> %s\n", found ? "OK" : "FAIL"));
 	}
 
 	if (found) {
-	    setCgsCSet(xw, cgsWin, cgsId, chrset);
-	    setCgsFont(xw, cgsWin, cgsId, data);
-	    setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, old_gc));
-	    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, old_gc));
-	    result = getCgsGC(xw, cgsWin, cgsId);
+	    setCgsCSet(params->xw, cgsWin, cgsId, params->this_chrset);
+	    setCgsFont(params->xw, cgsWin, cgsId, data);
+	    setCgsFore(params->xw, cgsWin, cgsId, getCgsFore(params->xw,
+							     cgsWin, old_gc));
+	    setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw,
+							     cgsWin, old_gc));
+	    result = getCgsGC(params->xw, cgsWin, cgsId);
 	    *inxp = n;
-	} else if (attr_flags & BOLD) {
-	    UIntClr(attr_flags, BOLD);
-	    result = xterm_DoubleGC(xw, chrset,
-				    attr_flags,
-				    draw_flags,
-				    old_gc, inxp);
+	} else if (params->attr_flags & BOLD) {
+	    UIntClr(params->attr_flags, BOLD);
+	    result = xterm_DoubleGC(params, old_gc, inxp);
 	}
     }
 
     return result;
 }
-#endif
+
+#if OPT_RENDERFONT
+/*
+ * Like xterm_DoubleGC(), but returning an Xft font.
+ */
+XftFont *
+xterm_DoubleFT(XTermDraw * params, unsigned chrset, unsigned attr_flags)
+{
+    XftFont *result;
+    TScreen *screen = TScreenOf(params->xw);
+    unsigned num = (chrset & CSET_DWL);
+
+    if ((attr_flags &= BOLD) != 0)
+	num |= 4;
+
+    if ((result = screen->double_xft_fonts[num]) == 0) {
+	result = getDoubleXftFont(params, chrset, attr_flags);
+	screen->double_xft_fonts[num] = result;
+    }
+    return result;
+}
+
+void
+freeall_DoubleFT(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned num;
+
+    for (num = 0; num < XtNumber(screen->double_xft_fonts); ++num) {
+	closeCachedXft(screen, screen->double_xft_fonts[num]);
+	screen->double_xft_fonts[num] = 0;
+    }
+}
+#endif /* OPT_RENDERFONT */
+
+#endif /* OPT_DEC_CHRSET */

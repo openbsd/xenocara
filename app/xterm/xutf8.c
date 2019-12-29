@@ -1,7 +1,7 @@
-/* $XTermId: xutf8.c,v 1.16 2017/05/31 09:05:00 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.17 2019/09/16 20:29:20 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2019 by Thomas E. Dickey
  * Copyright (c) 2001 by Juliusz Chroboczek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -137,11 +137,11 @@ utf8l1strcpy(char *d, char *s)
 		*d++ = (char) (((*s & 0x03) << 6) | (s[1] & 0x3F));
 		s += 2;
 	    } else {
-		*d++ = '?';
+		*d++ = BAD_ASCII;
 		SKIP;
 	    }
 	} else {
-	    *d++ = '?';
+	    *d++ = BAD_ASCII;
 	    SKIP;
 	}
     }

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1637 2019/02/11 10:21:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1731 2019/11/17 22:38:26 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -104,10 +104,6 @@
 
 #endif
 
-#if OPT_DOUBLE_BUFFER
-#include <X11/extensions/Xdbe.h>
-#endif
-
 #if OPT_WIDE_CHARS
 #include <xutf8.h>
 #include <wcwidth.h>
@@ -115,6 +111,10 @@
 #ifdef HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif
+#endif
+
+#if USE_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
 #endif
 
 #if OPT_INPUT_METHOD
@@ -142,7 +142,7 @@
 typedef int (*BitFunc) (unsigned * /* p */ ,
 			unsigned /* mask */ );
 
-static IChar doinput(void);
+static IChar doinput(XtermWidget /* xw */ );
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
 static void ReallyReset(XtermWidget /* xw */ ,
@@ -157,7 +157,7 @@ static void SwitchBufs(XtermWidget /* xw */ ,
 		       Bool /* clearFirst */ );
 static void ToAlternate(XtermWidget /* xw */ ,
 			Bool /* clearFirst */ );
-static void ansi_modes(XtermWidget termw,
+static void ansi_modes(XtermWidget /* xw */ ,
 		       BitFunc /* func */ );
 static int bitclr(unsigned *p, unsigned mask);
 static int bitcpy(unsigned *p, unsigned q, unsigned mask);
@@ -172,17 +172,25 @@ static void window_ops(XtermWidget /* xw */ );
 #define SettableCursorBlink(screen) \
 	(((screen)->cursor_blink != cbAlways) && \
 	 ((screen)->cursor_blink != cbNever))
-#define UpdateCursorBlink(screen) \
-	 SetCursorBlink(screen, screen->cursor_blink)
-static void SetCursorBlink(TScreen * /* screen */ ,
+#define UpdateCursorBlink(xw) \
+	 SetCursorBlink(xw, TScreenOf(xw)->cursor_blink)
+static void SetCursorBlink(XtermWidget /* xw */ ,
 			   BlinkOps /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
 			   XtIntervalId * /* id */ );
-static void StartBlinking(TScreen * /* screen */ );
-static void StopBlinking(TScreen * /* screen */ );
+static void StartBlinking(XtermWidget /* xw */ );
+static void StopBlinking(XtermWidget /* xw */ );
 #else
-#define StartBlinking(screen)	/* nothing */
-#define StopBlinking(screen)	/* nothing */
+#define StartBlinking(xw)	/* nothing */
+#define StopBlinking(xw)	/* nothing */
+#endif
+
+#ifndef NO_ACTIVE_ICON
+static Boolean discount_frame_extents(XtermWidget /* xw */ ,
+				      int * /* height */ ,
+				      int * /* width */ );
+#else
+#define discount_frame_extents(xw, height, width)	False
 #endif
 
 #if OPT_INPUT_METHOD
@@ -493,6 +501,7 @@ static XtResource xterm_resources[] =
     Ires(XtNfontWarnings, XtCFontWarnings, misc.fontWarnings, fwResource),
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
+    Ires(XtNlimitResponse, XtCLimitResponse, screen.unparse_max, DEF_LIMIT_RESPONSE),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
     Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, DEF_POINTER_MODE),
@@ -602,6 +611,8 @@ static XtResource xterm_resources[] =
 
 #if OPT_CLIP_BOLD
     Bres(XtNuseClipping, XtCUseClipping, screen.use_clipping, True),
+    Bres(XtNuseBorderClipping, XtCUseBorderClipping,
+	 screen.use_border_clipping, False),
 #endif
 
 #if OPT_DEC_CHRSET
@@ -761,7 +772,6 @@ static XtResource xterm_resources[] =
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
-    Bres(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
@@ -769,6 +779,7 @@ static XtResource xterm_resources[] =
     Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
     Sres(XtNutf8, XtCUtf8, screen.utf8_mode_s, "default"),
     Sres(XtNutf8Fonts, XtCUtf8Fonts, screen.utf8_fonts_s, "default"),
+    Sres(XtNutf8Title, XtCUtf8Title, screen.utf8_title_s, "default"),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
     Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
@@ -1086,7 +1097,7 @@ setExtendedFG(XtermWidget xw)
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
-	&& (!hasDirectFG(xw->flags))
+	&& (!xw->sgr_38_xcolors)
 	&& (fg >= 0)
 	&& (fg < 8)
 	&& (xw->flags & BOLD))
@@ -1124,6 +1135,7 @@ static void
 reset_SGR_Foreground(XtermWidget xw)
 {
     xw->sgr_foreground = -1;
+    xw->sgr_38_xcolors = False;
     clrDirectFG(xw->flags);
     setExtendedFG(xw);
 }
@@ -1155,13 +1167,23 @@ setItalicFont(XtermWidget xw, Bool enable)
 	if ((xw->flags & ATR_ITALIC) == 0) {
 	    xtermLoadItalics(xw);
 	    TRACE(("setItalicFont: enabling Italics\n"));
-	    xtermUpdateFontGCs(xw, True);
+	    xtermUpdateFontGCs(xw, getItalicFont);
 	}
     } else if ((xw->flags & ATR_ITALIC) != 0) {
 	TRACE(("setItalicFont: disabling Italics\n"));
-	xtermUpdateFontGCs(xw, False);
+	xtermUpdateFontGCs(xw, getNormalFont);
     }
 }
+
+static void
+ResetItalics(XtermWidget xw)
+{
+    setItalicFont(xw, False);
+    UIntClr(xw->flags, ATR_ITALIC);
+}
+
+#else
+#define ResetItalics(xw)	/* nothing */
 #endif
 
 static void
@@ -1260,7 +1282,7 @@ set_ansi_conformance(TScreen *screen, int level)
  * Set scrolling margins.  VTxxx terminals require that the top/bottom are
  * different, so we have at least two lines in the scrolling region.
  */
-void
+static void
 set_tb_margins(TScreen *screen, int top, int bottom)
 {
     TRACE(("set_tb_margins %d..%d, prior %d..%d\n",
@@ -1277,7 +1299,7 @@ set_tb_margins(TScreen *screen, int top, int bottom)
 	screen->bot_marg = screen->max_row;
 }
 
-void
+static void
 set_lr_margins(TScreen *screen, int left, int right)
 {
     TRACE(("set_lr_margins %d..%d, prior %d..%d\n",
@@ -1297,11 +1319,24 @@ set_lr_margins(TScreen *screen, int left, int right)
 #define reset_tb_margins(screen) set_tb_margins(screen, 0, screen->max_row)
 #define reset_lr_margins(screen) set_lr_margins(screen, 0, screen->max_col)
 
-static void
-reset_margins(TScreen *screen)
+void
+resetMargins(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
+    UIntClr(xw->flags, LEFT_RIGHT);
     reset_tb_margins(screen);
     reset_lr_margins(screen);
+}
+
+static void
+resetRendition(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    (void) screen;
+    ResetItalics(xw);
+    UIntClr(xw->flags,
+	    (SGR_MASK | SGR_MASK2 | INVISIBLE));
 }
 
 void
@@ -1428,6 +1463,9 @@ check_tables(void)
 {
     Cardinal n;
     int ch;
+    int total_codes = 0;
+    int total_ground = 0;
+    int total_ignored = 0;
 
     TRACE(("** check_tables\n"));
     for (n = 0; n < XtNumber(all_tables); ++n) {
@@ -1467,7 +1505,29 @@ check_tables(void)
 		}
 	    }
 	}
+	/*
+	 * Just for amusement, show how sparse the encoding tables are.
+	 */
+	for (ch = 0; ch < 256; ++ch) {
+	    ++total_codes;
+	    switch (table[ch]) {
+	    case CASE_GROUND_STATE:
+		total_ground++;
+		break;
+	    case CASE_ESC_IGNORE:
+		/* FALLTHRU */
+	    case CASE_IGNORE:
+		/* FALLTHRU */
+	    case CASE_VT52_IGNORE:
+		total_ignored++;
+		break;
+	    }
+	}
     }
+    TRACE(("VTPrsTbl:\n"));
+    TRACE(("%d total codes\n", total_codes));
+    TRACE(("%d total ignored\n", total_ignored));
+    TRACE(("%d total reset/ground\n", total_ground));
 }
 
 static void
@@ -2156,6 +2216,19 @@ deferparsing(unsigned c, struct ParseState *sp)
     sp->defer_area[(sp->defer_used)++] = CharOf(c);
 }
 
+#if OPT_VT52_MODE
+static void
+update_vt52_vt100_settings(void)
+{
+    update_autowrap();
+    update_reversewrap();
+    update_autolinefeed();
+    update_appcursor();
+    update_appkeypad();
+    update_allow132();
+}
+#endif
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -2298,10 +2371,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (sp->parsestate == sp->groundtable) {
 		sp->nextstate = CASE_PRINT;
 	    } else if (sp->parsestate == sos_table) {
-		c &= 0xffff;
+		c &= WIDEST_ICHAR;
 		if (c > 255) {
 		    TRACE(("Found code > 255 while in SOS state: %04X\n", c));
-		    c = '?';
+		    c = BAD_ASCII;
 		}
 	    } else {
 		sp->nextstate = CASE_GROUND_STATE;
@@ -2462,9 +2535,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * accommodate the application a little by not aborting the
 	     * string.
 	     */
-	    if ((c & 0xffff) > 255) {
+	    if ((c & WIDEST_ICHAR) > 255) {
 		sp->nextstate = CASE_PRINT;
-		c = '?';
+		c = BAD_ASCII;
 	    }
 #endif
 	    sp->string_area[(sp->string_used)++] = CharOf(c);
@@ -2607,7 +2680,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (xw->flags & LINEFEED)
 		CarriageReturn(xw);
 	    else
-		do_xevents();
+		do_xevents(xw);
 	    break;
 
 	case CASE_CBT:
@@ -2908,7 +2981,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		TRACE(("CASE_SD - scroll down\n"));
 		/* SD */
 		RevScroll(xw, one_if_default(0));
-		do_xevents();
+		do_xevents(xw);
 	    }
 	    ResetState(sp);
 	    break;
@@ -2919,7 +2992,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     */
 	    TRACE(("CASE_SD - scroll down\n"));
 	    RevScroll(xw, one_if_default(0));
-	    do_xevents();
+	    do_xevents(xw);
 	    ResetState(sp);
 	    break;
 
@@ -3003,13 +3076,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 8;	/* user-defined-keys */
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
+		    reply.a_param[count++] = 16;	/* locator port */
 		    if (screen->terminal_id >= 400) {
-			reply.a_param[count++] = 18;	/* windowing capability */
+			reply.a_param[count++] = 17;	/* terminal state interrogation */
+			reply.a_param[count++] = 18;	/* windowing extension */
 			reply.a_param[count++] = 21;	/* horizontal scrolling */
 		    }
 		    if_OPT_ISO_COLORS(screen, {
 			reply.a_param[count++] = 22;	/* ANSI color, VT525 */
 		    });
+		    reply.a_param[count++] = 28;	/* rectangular editing */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 29;	/* ANSI text locator */
 #endif
@@ -3152,11 +3228,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case DEFAULT:
 		    /* FALLTHRU */
 		case 0:
-#if OPT_WIDE_ATTRS
-		    setItalicFont(xw, False);
-#endif
-		    UIntClr(xw->flags,
-			    (SGR_MASK | SGR_MASK2 | INVISIBLE));
+		    resetRendition(xw);
 		    if_OPT_ISO_COLORS(screen, {
 			reset_SGR_Colors(xw);
 		    });
@@ -3192,7 +3264,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    /* FALLTHRU */
 		case 6:	/* Blink (150 per minute, or more) */
 		    UIntSet(xw->flags, BLINK);
-		    StartBlinking(screen);
+		    StartBlinking(xw);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -3227,8 +3299,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #if OPT_WIDE_ATTRS
 		case 23:	/* not italicized */
-		    setItalicFont(xw, False);
-		    UIntClr(xw->flags, ATR_ITALIC);
+		    ResetItalics(xw);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -3280,6 +3351,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
+			xw->sgr_38_xcolors = False;
 			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
@@ -3293,6 +3365,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_foreground = value;
+			    xw->sgr_38_xcolors = True;
 			    setDirectFG(xw->flags, extended);
 			    setExtendedFG(xw);
 			}
@@ -3320,6 +3393,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
+			xw->sgr_38_xcolors = False;
 			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
@@ -3330,6 +3404,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_background = value;
+			    xw->sgr_38_xcolors = True;
 			    setDirectBG(xw->flags, extended);
 			    setExtendedBG(xw);
 			}
@@ -3634,7 +3709,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECALN - alignment test\n"));
 	    if (screen->cursor_state)
 		HideCursor();
-	    reset_margins(screen);
+	    /*
+	     * DEC STD 070 does not mention left/right margins.  Likely the
+	     * text was for VT100, and not updated for VT420.
+	     */
+	    resetRendition(xw);
+	    resetMargins(xw);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
@@ -3770,7 +3850,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (change) {
 		    xtermSetCursorBox(screen);
 		    screen->cursor_blink_esc = blinks;
-		    UpdateCursorBlink(screen);
+		    UpdateCursorBlink(xw);
 		}
 	    }
 	    ResetState(sp);
@@ -3829,10 +3909,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * DECSCL (per vttest).
 		 */
 		screen->vtXX_level = 1;
+		xw->flags = screen->vt52_save_flags;
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
 		screen->curss = screen->vt52_save_curss;
 		restoreCharsets(screen, screen->vt52_save_gsets);
+		update_vt52_vt100_settings();
 	    }
 	    break;
 #endif
@@ -3859,7 +3941,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCL(%d,%d)\n", GetParam(0), GetParam(1)));
 	    /*
 	     * This changes the emulation level, and is not recognized by
-	     * VT100s.
+	     * VT100s.  However, a VT220 or above can be set to conformance
+	     * level 1 to act like a VT100.
 	     */
 	    if (screen->terminal_id >= 200) {
 		/*
@@ -4176,7 +4259,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_IND:
 	    TRACE(("CASE_IND - index\n"));
 	    xtermIndex(xw, 1);
-	    do_xevents();
+	    do_xevents(xw);
 	    ResetState(sp);
 	    break;
 
@@ -4954,9 +5037,8 @@ VTparse(XtermWidget xw)
     (void) setjmp(vtjmpbuf);
     init_parser(xw, &myState);
 
-    keep_running = False;
     do {
-	keep_running = doparsing(xw, doinput(), &myState);
+	keep_running = doparsing(xw, doinput(xw), &myState);
 	while (myState.defer_used) {
 	    Char *deferred = myState.defer_area;
 	    size_t len = myState.defer_used;
@@ -5156,13 +5238,15 @@ updateCursor(TScreen *screen)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-reallyStopBlinking(TScreen *screen)
+reallyStopBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->cursor_state == BLINKED_OFF) {
 	/* force cursor to display if it is enabled */
 	screen->cursor_state = !screen->cursor_set;
 	updateCursor(screen);
-	xevents();
+	xevents(xw);
     }
 }
 #endif
@@ -5262,7 +5346,7 @@ in_put(XtermWidget xw)
 	}
 
 	if (select_mask & X_mask) {
-	    xevents();
+	    xevents(xw);
 	    if (VTbuffer->update != update)
 		break;
 	}
@@ -5279,7 +5363,7 @@ in_put(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     int i;
     int update = VTbuffer->update;
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     int should_wait = 1;
 #endif
 
@@ -5316,21 +5400,14 @@ in_put(XtermWidget xw)
 		FD_CLR(screen->respond, &select_mask);
 		break;
 	    }
-#if OPT_DOUBLE_BUFFER
-	    if (should_wait) {
-		/* wait 25 msec for potential extra data (avoids some bogus flickering) */
-		/* that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :) */
-		usleep(25000);
+#if USE_DOUBLE_BUFFER
+	    if (resource.buffered && should_wait) {
+		/* wait for potential extra data (avoids some flickering) */
+		usleep((unsigned) DbeMsecs(xw));
 		should_wait = 0;
 	    }
-	    select_timeout.tv_sec = 0;
-	    i = Select(max_plus1, &select_mask, &write_mask, 0,
-		       &select_timeout);
-	    if (i > 0 && FD_ISSET(screen->respond, &select_mask))
-		continue;
-	    else
-		break;
-#elif defined(HAVE_SCHED_YIELD)
+#endif
+#if defined(HAVE_SCHED_YIELD)
 	    /*
 	     * If we've read a full (small/fragment) buffer, let the operating
 	     * system have a turn, and we'll resume reading until we've either
@@ -5405,16 +5482,7 @@ in_put(XtermWidget xw)
 	}
 	if (need_cleanup)
 	    NormalExit();
-#if OPT_DOUBLE_BUFFER
-	if (screen->needSwap) {
-	    XdbeSwapInfo swap;
-	    swap.swap_window = VWindow(screen);
-	    swap.swap_action = XdbeCopied;
-	    XdbeSwapBuffers(XtDisplay(term), &swap, 1);
-	    XFlush(XtDisplay(xw));
-	    screen->needSwap = 0;
-	}
-#endif
+	xtermFlushDbe(xw);
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
 		   (time_select ? &select_timeout : 0));
 	if (i < 0) {
@@ -5432,7 +5500,7 @@ in_put(XtermWidget xw)
 	   counts as being readable */
 	if (xtermAppPending() ||
 	    FD_ISSET(ConnectionNumber(screen->display), &select_mask)) {
-	    xevents();
+	    xevents(xw);
 	    if (VTbuffer->update != update)	/* HandleInterpret */
 		break;
 	}
@@ -5442,12 +5510,12 @@ in_put(XtermWidget xw)
 #endif /* VMS */
 
 static IChar
-doinput(void)
+doinput(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     while (!morePtyData(screen, VTbuffer))
-	in_put(term);
+	in_put(xw);
     return nextPtyData(screen, VTbuffer);
 }
 
@@ -5743,41 +5811,35 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   Boolean *cont GCC_UNUSED)
 {
     XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
+    (void) screen;
+    TRACE_EVENT("HandleStructNotify", event, NULL, 0);
     switch (event->type) {
     case MapNotify:
-	TRACE(("HandleStructNotify(MapNotify) %#lx\n", event->xmap.window));
 	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
-	TRACE(("HandleStructNotify(UnmapNotify) %#lx\n", event->xunmap.window));
 	mapstate = IsUnmapped;
 	break;
     case ConfigureNotify:
 	if (event->xconfigure.window == XtWindow(toplevel)) {
 #if !OPT_TOOLBAR
-	    int height, width;
-
-	    height = event->xconfigure.height;
-	    width = event->xconfigure.width;
+	    int height = event->xconfigure.height;
+	    int width = event->xconfigure.width;
 #endif
-	    TRACE(("HandleStructNotify(ConfigureNotify) %#lx %d,%d %dx%d\n",
-		   event->xconfigure.window,
-		   event->xconfigure.y, event->xconfigure.x,
-		   event->xconfigure.height, event->xconfigure.width));
 
-#if OPT_DOUBLE_BUFFER
-	    discardRenderDraw(TScreenOf(xw));
-#endif /* OPT_DOUBLE_BUFFER */
-
+#if USE_DOUBLE_BUFFER
+	    discardRenderDraw(screen);
+#endif /* USE_DOUBLE_BUFFER */
 #if OPT_TOOLBAR
 	    /*
 	     * The notification is for the top-level widget, but we care about
 	     * vt100 (ignore the tek4014 window).
 	     */
-	    if (TScreenOf(xw)->Vshow) {
-		VTwin *Vwin = WhichVWin(TScreenOf(xw));
+	    if (screen->Vshow) {
+		VTwin *Vwin = WhichVWin(screen);
 		TbInfo *info = &(Vwin->tb_info);
 		TbInfo save = *info;
 
@@ -5801,18 +5863,22 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
-				   TScreenOf(xw)->fullVwin.fullwidth,
+				   screen->fullVwin.fullwidth,
 				   (Dimension) (info->menu_height
 						- save.menu_height
-						+ TScreenOf(xw)->fullVwin.fullheight),
+						+ screen->fullVwin.fullheight),
 				   NULL, NULL);
 			repairSizeHints();
 		    }
 		}
 	    }
 #else
-	    if (height != xw->hints.height || width != xw->hints.width) {
-#if OPT_DOUBLE_BUFFER
+	    if (!xw->work.doing_resize
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+		&& !(resource.buffered && UsingRenderFont(xw))	/* buggyXft */
+#endif
+		&& (height != xw->hints.height
+		    || width != xw->hints.width)) {
 		/*
 		 * This is a special case: other calls to RequestResize that
 		 * could set the screensize arbitrarily are via escape
@@ -5825,20 +5891,9 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		xw->misc.limit_resize = 0;
 		RequestResize(xw, height, width, False);
 		xw->misc.limit_resize = saved_limit;
-#else
-		RequestResize(xw, height, width, False);
-#endif
 	    }
 #endif /* OPT_TOOLBAR */
 	}
-	break;
-    case ReparentNotify:
-	TRACE(("HandleStructNotify(ReparentNotify) %#lx\n", event->xreparent.window));
-	break;
-    default:
-	TRACE(("HandleStructNotify(event %s) %#lx\n",
-	       visibleEventType(event->type),
-	       event->xany.window));
 	break;
     }
 }
@@ -5863,31 +5918,35 @@ DoStartBlinking(TScreen *screen)
 }
 
 static void
-SetCursorBlink(TScreen *screen, BlinkOps enable)
+SetCursorBlink(XtermWidget xw, BlinkOps enable)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (SettableCursorBlink(screen)) {
 	screen->cursor_blink = enable;
     }
     if (DoStartBlinking(screen)) {
-	StartBlinking(screen);
+	StartBlinking(xw);
     } else {
 	/* EMPTY */
 #if OPT_BLINK_TEXT
-	reallyStopBlinking(screen);
+	reallyStopBlinking(xw);
 #else
-	StopBlinking(screen);
+	StopBlinking(xw);
 #endif
     }
     update_cursorblink();
 }
 
 void
-ToggleCursorBlink(TScreen *screen)
+ToggleCursorBlink(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->cursor_blink == cbTrue) {
-	SetCursorBlink(screen, cbFalse);
+	SetCursorBlink(xw, cbFalse);
     } else if (screen->cursor_blink == cbFalse) {
-	SetCursorBlink(screen, cbTrue);
+	SetCursorBlink(xw, cbTrue);
     }
 }
 #endif
@@ -5979,30 +6038,47 @@ dpmodes(XtermWidget xw, BitFunc func)
 		TRACE(("DECANM terminal_id %d, vtXX_level %d\n",
 		       screen->terminal_id,
 		       screen->vtXX_level));
+		/*
+		 * According to DEC STD 070 section A.5.5, the various VT100
+		 * modes have undefined behavior when entering/exiting VT52
+		 * mode.  xterm saves/restores/initializes the most commonly
+		 * used settings, but a real VT100 or VT520 may differ.
+		 *
+		 * For instance, DEC's documention goes on to comment that
+		 * while the VT52 uses hardware tabs (8 columns), the emulation
+		 * (e.g., a VT420) does not alter those tab settings when
+		 * switching modes.
+		 */
 		screen->vtXX_level = 0;
+		screen->vt52_save_flags = xw->flags;
+		xw->flags = 0;
 		screen->vt52_save_curgl = screen->curgl;
 		screen->vt52_save_curgr = screen->curgr;
 		screen->vt52_save_curss = screen->curss;
 		saveCharsets(screen, screen->vt52_save_gsets);
 		resetCharsets(screen);
 		InitParams();	/* ignore the remaining params, if any */
+		update_vt52_vt100_settings();
+		RequestResize(xw, -1, 80, True);
 	    }
 #endif
 	    break;
 	case srm_DECCOLM:
 	    if (screen->c132) {
+		Boolean willResize = ((j = IsSM()
+				       ? 132
+				       : 80)
+				      != ((xw->flags & IN132COLUMNS)
+					  ? 132
+					  : 80)
+				      || j != MaxCols(screen));
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
-		CursorSet(screen, 0, 0, xw->flags);
-		if ((j = IsSM()? 132 : 80) !=
-		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||
-		    j != MaxCols(screen))
+		if (willResize)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
-		if (xw->flags & IN132COLUMNS) {
-		    UIntClr(xw->flags, LEFT_RIGHT);
-		    reset_lr_margins(screen);
-		}
+		resetMargins(xw);
+		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
 	case srm_DECSCLM:	/* (slow scroll)        */
@@ -6051,7 +6127,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
 	    if (SettableCursorBlink(screen)) {
 		set_bool_mode(screen->cursor_blink_esc);
-		UpdateCursorBlink(screen);
+		UpdateCursorBlink(xw);
 	    }
 	    break;
 	case srm_CURSOR_BLINK_OPS:
@@ -6742,7 +6818,7 @@ restoremodes(XtermWidget xw)
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
 	    if (SettableCursorBlink(screen)) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
-		UpdateCursorBlink(screen);
+		UpdateCursorBlink(xw);
 	    }
 	    break;
 	case srm_CURSOR_BLINK_OPS:
@@ -7041,16 +7117,20 @@ property_to_string(XtermWidget xw, XTextProperty * text)
      * The xtermUtf8ToTextList() call is used to convert UTF-8 explicitly to
      * ISO-8859-1.
      */
+    rc = -1;
     if ((text->format != 8)
 	|| IsTitleMode(xw, tmGetUtf8)
-	|| (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
+	|| (text->encoding == XA_UTF8_STRING(dpy) &&
+	    !(screen->wide_chars || screen->c1_printable) &&
+	    (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
+	|| (rc < 0))
 #endif
 	if ((rc = XmbTextPropertyToTextList(dpy, text, &list, &length)) < 0)
 	    rc = XTextPropertyToStringList(text, &list, &length);
 
     if (rc >= 0) {
 	int n, c, pass;
-	size_t need = 0;
+	size_t need;
 
 	for (pass = 0; pass < 2; ++pass) {
 	    for (n = 0, need = 0; n < length; n++) {
@@ -7169,8 +7249,8 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewSetWinPosition)) {
 	    unsigned value_mask;
 
-	    values.x = zero_if_default(1);
-	    values.y = zero_if_default(2);
+	    values.x = (Position) zero_if_default(1);
+	    values.y = (Position) zero_if_default(2);
 	    TRACE(("...move window to %d,%d\n", values.x, values.y));
 	    value_mask = (CWX | CWY);
 	    XReconfigureWMWindow(screen->display,
@@ -7257,6 +7337,10 @@ window_ops(XtermWidget xw)
 
     case ewGetWinPosition:	/* Report the window's position */
 	if (AllowWindowOps(xw, ewGetWinPosition)) {
+	    Window win;
+	    Window result_win;
+	    int result_y, result_x;
+
 	    TRACE(("...get window position\n"));
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
@@ -7264,28 +7348,43 @@ window_ops(XtermWidget xw)
 	    reply.a_param[0] = 3;
 	    switch (zero_if_default(1)) {
 	    case 2:		/* report the text-window's position */
-		win_attrs.y = 0;
-		win_attrs.x = 0;
+		result_y = 0;
+		result_x = 0;
 		{
 		    Widget mw;
 		    for (mw = (Widget) xw; mw != 0; mw = XtParent(mw)) {
-			win_attrs.x += mw->core.x;
-			win_attrs.y += mw->core.y;
+			result_x += mw->core.x;
+			result_y += mw->core.y;
 			if (mw == SHELL_OF(xw))
 			    break;
 		    }
 		}
-		win_attrs.x += OriginX(screen);
-		win_attrs.y += OriginY(screen);
+		result_x += OriginX(screen);
+		result_y += OriginY(screen);
 		break;
 	    default:
+		win = WMFrameWindow(xw);
 		xtermGetWinAttrs(screen->display,
-				 WMFrameWindow(xw),
+				 win,
 				 &win_attrs);
+		XTranslateCoordinates(screen->display,
+				      VShellWindow(xw),
+				      win_attrs.root,
+				      -win_attrs.border_width,
+				      -win_attrs.border_width,
+				      &result_x, &result_y, &result_win);
+		TRACE(("translated position %d,%d vs %d,%d\n",
+		       result_y, result_x,
+		       win_attrs.y, win_attrs.x));
+		if (!discount_frame_extents(xw, &result_y, &result_x)) {
+		    TRACE(("...cancelled translation\n"));
+		    result_y = win_attrs.y;
+		    result_x = win_attrs.x;
+		}
 		break;
 	    }
-	    reply.a_param[1] = (ParmType) win_attrs.x;
-	    reply.a_param[2] = (ParmType) win_attrs.y;
+	    reply.a_param[1] = (ParmType) result_x;
+	    reply.a_param[2] = (ParmType) result_y;
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
@@ -7565,7 +7664,7 @@ unparseseq(XtermWidget xw, ANSI *ap)
 		unparseputc(xw, ap->a_param[i]);
 		break;
 	    default:
-		unparseputn(xw, (unsigned int) ap->a_param[i]);
+		unparseputn(xw, (UParm) ap->a_param[i]);
 		break;
 	    }
 	}
@@ -7595,9 +7694,9 @@ unparseseq(XtermWidget xw, ANSI *ap)
 }
 
 void
-unparseputn(XtermWidget xw, unsigned int n)
+unparseputn(XtermWidget xw, UParm n)
 {
-    unsigned int q;
+    UParm q;
 
     q = n / 10;
     if (q != 0)
@@ -7621,8 +7720,8 @@ unparseputc(XtermWidget xw, int c)
     IChar *buf = screen->unparse_bfr;
     unsigned len;
 
-    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr) / sizeof(IChar))
-	  unparse_end(xw);
+    if ((screen->unparse_len + 2) >= screen->unparse_max)
+	unparse_end(xw);
 
     len = screen->unparse_len;
 
@@ -7657,6 +7756,18 @@ unparse_end(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
+#if OPT_TCAP_QUERY
+    /*
+     * tcap-query works by simulating key-presses, which ordinarily would be
+     * flushed out at the end of each key.  For better efficiency, do not do
+     * the flush unless we are about to fill the buffer used to capture the
+     * response.
+     */
+    if ((screen->tc_query_code >= 0)
+	&& (screen->unparse_len + 2 < screen->unparse_max)) {
+	return;
+    }
+#endif
     if (screen->unparse_len) {
 	TRACE(("unparse_end %u:%s\n",
 	       screen->unparse_len,
@@ -7795,7 +7906,7 @@ VTRun(XtermWidget xw)
     screen->cursor_set = ON;
 #if OPT_BLINK_CURS
     if (DoStartBlinking(screen))
-	StartBlinking(screen);
+	StartBlinking(xw);
 #endif
 
 #if OPT_TEK4014
@@ -7810,11 +7921,11 @@ VTRun(XtermWidget xw)
     }
 #if OPT_MAXIMIZE
     else if (resource.fullscreen == esTrue || resource.fullscreen == esAlways)
-	FullScreen(term, True);
+	FullScreen(xw, True);
 #endif
     if (!setjmp(VTend))
 	VTparse(xw);
-    StopBlinking(screen);
+    StopBlinking(xw);
     HideCursor();
     screen->cursor_set = OFF;
     TRACE(("... VTRun\n"));
@@ -7834,14 +7945,15 @@ VTExpose(Widget w GCC_UNUSED,
 static void
 VTGraphicsOrNoExpose(XEvent *event)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     if (screen->incopy <= 0) {
 	screen->incopy = 1;
 	if (screen->scrolls > 0)
 	    screen->scrolls--;
     }
     if (event->type == GraphicsExpose)
-	if (HandleExposure(term, event))
+	if (HandleExposure(xw, event))
 	    screen->cursor_state = OFF;
     if ((event->type == NoExpose)
 	|| ((XGraphicsExposeEvent *) event)->count == 0) {
@@ -7890,6 +8002,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     Dimension askedWidth, askedHeight;
     XtGeometryResult status;
     XWindowAttributes attrs;
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    Boolean buggyXft = False;
+    Cardinal ignore = 0;
+#endif
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
@@ -7911,6 +8027,31 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	askedHeight = 0;
     }
 
+    xw->work.doing_resize = True;
+
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    /*
+     * Work around a bug seen when vttest switches from 132 columns back to 80
+     * columns, while double-buffering is active.  If Xft is active during the
+     * resize, the screen will be blank thereafter.  This workaround causes
+     * some extra flickering, but that is preferable to a blank screen.
+     *
+     * Since the bitmap- and TrueType-fonts do not always have identical sizes,
+     * do this switching early, to use the updated font-sizes in the request
+     * for resizing the window.
+     */
+#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
+    if (resource.buffered
+	&& UsingRenderFont(xw)) {
+	ToggleXft();
+	buggyXft = True;
+    }
+#endif
+
+    /*
+     * If the requested values will fit into a Dimension, and one or both are
+     * zero, get the current corresponding screen dimension to use as a limit.
+     */
     if (askedHeight == 0
 	|| askedWidth == 0
 	|| xw->misc.limit_resize > 0) {
@@ -7918,6 +8059,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 			 RootWindowOfScreen(XtScreen(xw)), &attrs);
     }
 
+    /*
+     * Using the current font metrics, translate the requested character
+     * rows/columns into pixels.
+     */
     if (text) {
 	unsigned long value;
 
@@ -7927,7 +8072,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    value *= (unsigned long) FontHeight(screen);
 	    value += (unsigned long) (2 * screen->border);
 	    if (!okDimension(value, askedHeight))
-		return;
+		goto give_up;
 	}
 
 	if ((value = (unsigned long) cols) != 0) {
@@ -7937,7 +8082,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    value += (unsigned long) ((2 * screen->border)
 				      + ScrollbarWidth(screen));
 	    if (!okDimension(value, askedWidth))
-		return;
+		goto give_up;
 	}
 
     } else {
@@ -8000,10 +8145,24 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 #endif
 
     XSync(screen->display, False);	/* synchronize */
-    if (xtermAppPending())
-	xevents();
+    if (xtermAppPending()) {
+	xevents(xw);
+    }
+
+  give_up:
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    if (buggyXft) {
+	ToggleXft();
+	if (xtermAppPending()) {
+	    xevents(xw);
+	}
+    }
+#endif
+
+    xw->work.doing_resize = False;
 
     TRACE(("...RequestResize done\n"));
+    return;
 }
 
 static String xterm_trans =
@@ -8112,6 +8271,27 @@ repairColors(XtermWidget target)
 
 #if OPT_WIDE_CHARS
 static void
+set_utf8_feature(TScreen *screen, int *feature)
+{
+    if (*feature == uDefault) {
+	switch (screen->utf8_mode) {
+	case uFalse:
+	    /* FALLTHRU */
+	case uTrue:
+	    *feature = screen->utf8_mode;
+	    break;
+	case uDefault:
+	    /* should not happen */
+	    *feature = uTrue;
+	    break;
+	case uAlways:
+	    /* use this to disable menu entry */
+	    break;
+	}
+    }
+}
+
+static void
 VTInitialize_locale(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -8120,6 +8300,7 @@ VTInitialize_locale(XtermWidget xw)
     TRACE(("VTInitialize_locale\n"));
     TRACE(("... request screen.utf8_mode = %d\n", screen->utf8_mode));
     TRACE(("... request screen.utf8_fonts = %d\n", screen->utf8_fonts));
+    TRACE(("... request screen.utf8_title = %d\n", screen->utf8_title));
 
     screen->utf8_always = (screen->utf8_mode == uAlways);
     if (screen->utf8_mode < 0)
@@ -8226,27 +8407,14 @@ VTInitialize_locale(XtermWidget xw)
     }
 #endif /* OPT_LUIT_PROG */
 
-    if (screen->utf8_fonts == uDefault) {
-	switch (screen->utf8_mode) {
-	case uFalse:
-	    /* FALLTHRU */
-	case uTrue:
-	    screen->utf8_fonts = screen->utf8_mode;
-	    break;
-	case uDefault:
-	    /* should not happen */
-	    screen->utf8_fonts = uTrue;
-	    break;
-	case uAlways:
-	    /* use this to disable menu entry */
-	    break;
-	}
-    }
+    set_utf8_feature(screen, &screen->utf8_fonts);
+    set_utf8_feature(screen, &screen->utf8_title);
 
     screen->utf8_inparse = (Boolean) (screen->utf8_mode != uFalse);
 
     TRACE(("... updated screen.utf8_mode = %d\n", screen->utf8_mode));
     TRACE(("... updated screen.utf8_fonts = %d\n", screen->utf8_fonts));
+    TRACE(("... updated screen.utf8_title = %d\n", screen->utf8_title));
     TRACE(("...VTInitialize_locale done\n"));
 }
 #endif
@@ -8339,7 +8507,6 @@ set_flags_from_list(char *target,
 		    const FlagList * list)
 {
     Cardinal n;
-    int value = -1;
 
     while (!IsEmpty(source)) {
 	char *next = ParseList(&source);
@@ -8349,8 +8516,7 @@ set_flags_from_list(char *target,
 	    break;
 	if (isdigit(CharOf(*next))) {
 	    char *temp;
-
-	    value = (int) strtol(next, &temp, 0);
+	    int value = (int) strtol(next, &temp, 0);
 	    if (!FullS2L(next, temp)) {
 		xtermWarning("Expected a number: %s\n", next);
 	    } else {
@@ -8366,7 +8532,7 @@ set_flags_from_list(char *target,
 	} else {
 	    for (n = 0; list[n].name != 0; ++n) {
 		if (!x_wildstrcmp(next, list[n].name)) {
-		    value = list[n].code;
+		    int value = list[n].code;
 		    target[value] = 1;
 		    found = True;
 		    TRACE(("...found %s (%d)\n", list[n].name, value));
@@ -8384,6 +8550,114 @@ set_flags_from_list(char *target,
     target->cursor_shape = source->cursor_underline \
 	? CURSOR_UNDERLINE \
 	: CURSOR_BLOCK
+
+#if OPT_XRES_QUERY
+static XtResource *
+findVT100Resource(const char *name)
+{
+    Cardinal n;
+    XtResource *result = 0;
+
+    if (!IsEmpty(name)) {
+	XrmQuark quarkName = XrmPermStringToQuark(name);
+	for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	    if ((int) xterm_resources[n].resource_offset >= 0
+		&& !strcmp(xterm_resources[n].resource_name, name)) {
+		result = &xterm_resources[n];
+		break;
+	    } else if (xterm_resources[n].resource_name
+		       == (String) (intptr_t) quarkName) {
+		result = &xterm_resources[n];
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static int
+cmp_resources(const void *a, const void *b)
+{
+    return strcmp((*(const String *) a),
+		  (*(const String *) b));
+}
+
+static void
+reportResources(XtermWidget xw)
+{
+    String *list = TypeMallocN(String, XtNumber(xterm_resources));
+    Cardinal n;
+    int widest = 0;
+
+    if (list == NULL)
+	return;
+
+    for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	int width;
+	list[n] = (((int) xterm_resources[n].resource_offset < 0)
+		   ? XrmQuarkToString((XrmQuark) (intptr_t)
+				      xterm_resources[n].resource_name)
+		   : xterm_resources[n].resource_name);
+	width = (int) strlen(list[n]);
+	if (widest < width)
+	    widest = width;
+    }
+    qsort(list, XtNumber(xterm_resources), sizeof(String), cmp_resources);
+    for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	char *value = vt100ResourceToString(xw, list[n]);
+	printf("%-*s : %s\n", widest, list[n], value ? value : "(skip)");
+	free(value);
+    }
+    free(list);
+}
+
+char *
+vt100ResourceToString(XtermWidget xw, const char *name)
+{
+    XtResource *data;
+    char *result = NULL;
+
+    if ((data = findVT100Resource(name)) != 0) {
+	int fake_offset = (int) data->resource_offset;
+	void *res_addr;
+	int real_offset;
+	String res_type;
+
+	/*
+	 * X Toolkit "compiles" the resource-list into quarks and changes the
+	 * resource-offset at the same time to a negative value.
+	 */
+	if (fake_offset < 0) {
+	    real_offset = -(fake_offset + 1);
+	    res_type = XrmQuarkToString((XrmQuark) (intptr_t) data->resource_type);
+	} else {
+	    real_offset = fake_offset;
+	    res_type = data->resource_type;
+	}
+	res_addr = (void *) ((char *) xw + real_offset);
+
+	if (!strcmp(res_type, XtRString)) {
+	    char *value = *(char **) res_addr;
+	    if (value != NULL) {
+		size_t need = strlen(value);
+		if ((result = malloc(1 + need)) != 0)
+		    strcpy(result, value);
+	    }
+	} else if (!strcmp(res_type, XtRInt)) {
+	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+		sprintf(result, "%d", *(int *) res_addr);
+	} else if (!strcmp(res_type, XtRFloat)) {
+	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+		sprintf(result, "%f", *(float *) res_addr);
+	} else if (!strcmp(res_type, XtRBoolean)) {
+	    if ((result = malloc(6)) != 0)
+		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
+	}
+    }
+    TRACE(("vt100ResourceToString(%s) %s\n", name, NonNull(result)));
+    return result;
+}
+#endif /* OPT_XRES_QUERY */
 
 /* ARGSUSED */
 static void
@@ -9032,6 +9306,7 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_CLIP_BOLD
+    init_Bres(screen.use_border_clipping);
     init_Bres(screen.use_clipping);
 #endif
 
@@ -9144,6 +9419,7 @@ VTInitialize(Widget wrequest,
     }
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
+    wnew->sgr_38_xcolors = False;
     clrDirectFG(wnew->flags);
     clrDirectFG(wnew->flags);
 #endif /* OPT_ISO_COLORS */
@@ -9164,6 +9440,9 @@ VTInitialize(Widget wrequest,
 	    screen->selectMap[i] = (SelectUnit) i;
 	else
 	    break;
+#if OPT_XRES_QUERY
+	init_Sres(screen.onClick[i]);
+#endif
 	TRACE(("on%dClicks %s=%d\n", ck,
 	       NonNull(TScreenOf(request)->onClick[i]),
 	       screen->selectMap[i]));
@@ -9248,10 +9527,17 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_CHARS
     /* setup data for next call */
+    init_Sres(screen.utf8_mode_s);
     request->screen.utf8_mode =
 	extendedBoolean(request->screen.utf8_mode_s, tblUtf8Mode, uLast);
+
+    init_Sres(screen.utf8_fonts_s);
     request->screen.utf8_fonts =
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
+
+    init_Sres(screen.utf8_title_s);
+    request->screen.utf8_title =
+	extendedBoolean(request->screen.utf8_title_s, tblUtf8Mode, uLast);
 
     /*
      * Make a copy in the input/request so that DefaultFontN() works for
@@ -9263,7 +9549,6 @@ VTInitialize(Widget wrequest,
     VTInitialize_locale(request);
     init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
-    init_Bres(screen.utf8_title);
 
 #if OPT_LUIT_PROG
     init_Bres(misc.callfilter);
@@ -9275,6 +9560,7 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.utf8_inparse);
     init_Ires(screen.utf8_mode);
     init_Ires(screen.utf8_fonts);
+    init_Ires(screen.utf8_title);
     init_Ires(screen.max_combining);
 
     init_Ires(screen.utf8_always);	/* from utf8_mode, used in doparse */
@@ -9331,7 +9617,7 @@ VTInitialize(Widget wrequest,
 
     init_Sres(screen.eight_bit_meta_s);
     wnew->screen.eight_bit_meta =
-	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, uLast);
+	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, ebLast);
     if (wnew->screen.eight_bit_meta == ebLocale) {
 #if OPT_WIDE_CHARS
 	if (xtermEnvUTF8()) {
@@ -9526,14 +9812,9 @@ VTInitialize(Widget wrequest,
 #if OPT_TOOLBAR
     wnew->VT100_TB_INFO(menu_bar) = request->VT100_TB_INFO(menu_bar);
     init_Ires(VT100_TB_INFO(menu_height));
-#elif !OPT_DOUBLE_BUFFER
-    /* Flag icon name with "***"  on window output when iconified.
-     * Put in a handler that will tell us when we get Map/Unmap events.
-     */
-    if (resource.zIconBeep)
 #endif
-	XtAddEventHandler(my_parent, StructureNotifyMask, False,
-			  HandleStructNotify, (Opaque) 0);
+    XtAddEventHandler(my_parent, StructureNotifyMask, False,
+		      HandleStructNotify, (Opaque) 0);
 #endif /* HANDLE_STRUCT_NOTIFY */
 
     screen->bellInProgress = False;
@@ -9565,6 +9846,12 @@ VTInitialize(Widget wrequest,
 #ifndef NO_ACTIVE_ICON
     screen->whichVwin = &screen->fullVwin;
 #endif /* NO_ACTIVE_ICON */
+
+    init_Ires(screen.unparse_max);
+    if ((int) screen->unparse_max < 256)
+	screen->unparse_max = 256;
+    screen->unparse_bfr = (IChar *) (void *) XtCalloc(screen->unparse_max,
+						      (Cardinal) sizeof(IChar));
 
     if (screen->savelines < 0)
 	screen->savelines = 0;
@@ -9607,6 +9894,10 @@ VTInitialize(Widget wrequest,
     initLineData(wnew);
 #if OPT_WIDE_CHARS
     freeFontList(&(request->work.fonts.x11.list_n));
+#endif
+#if OPT_XRES_QUERY
+    if (resource.reportXRes)
+	reportResources(wnew);
 #endif
     return;
 }
@@ -9677,7 +9968,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TScreen *screen = TScreenOf(xw);
     Cardinal n, k;
 
-    StopBlinking(screen);
+    StopBlinking(xw);
 
     if (screen->scrollWidget) {
 	XtUninstallTranslations(screen->scrollWidget);
@@ -9721,6 +10012,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	}
     }
 #endif
+    TRACE_FREE_LEAK(screen->unparse_bfr);
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
@@ -10030,21 +10322,80 @@ getWindowManagerName(XtermWidget xw)
     TRACE(("... window manager name is %s\n", result));
     return result;
 }
-#endif
+
+static Boolean
+discount_frame_extents(XtermWidget xw, int *high, int *wide)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+
+    Atom atom_supported = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
+    Atom actual_type;
+    int actual_format;
+    long long_offset = 0;
+    long long_length = 128;	/* number of items to ask for at a time */
+    unsigned long nitems;
+    unsigned long bytes_after;
+    unsigned char *args;
+    Boolean rc;
+
+    rc = xtermGetWinProp(dpy,
+			 VShellWindow(xw),
+			 atom_supported,
+			 long_offset,
+			 long_length,
+			 XA_CARDINAL,	/* req_type */
+			 &actual_type,	/* actual_type_return */
+			 &actual_format,	/* actual_format_return */
+			 &nitems,	/* nitems_return */
+			 &bytes_after,	/* bytes_after_return */
+			 &args	/* prop_return */
+	);
+
+    if (rc && args && (nitems == 4) && (actual_format == 32)) {
+	long *extents = (long *) (void *) args;
+
+	TRACE(("_NET_FRAME_EXTENTS:\n"));
+	TRACE(("   left:   %ld\n", extents[0]));
+	TRACE(("   right:  %ld\n", extents[1]));
+	TRACE(("   top:    %ld\n", extents[2]));
+	TRACE(("   bottom: %ld\n", extents[3]));
+
+	if (!x_strncasecmp(xw->work.wm_name, "gnome shell", 11)) {
+	    *wide -= (int) (extents[0] + extents[1]);	/* -= (left+right) */
+	    *high -= (int) (extents[2] + extents[3]);	/* -= (top+bottom) */
+	    TRACE(("...applied extents %d,%d\n", *high, *wide));
+	} else if (!x_strncasecmp(xw->work.wm_name, "compiz", 6)) {
+	    /* Ubuntu 16.04 is really off-by-one */
+	    *wide -= (int) (extents[0] + extents[1] - 1);
+	    *high -= (int) (extents[2] + extents[3] - 1);
+	    TRACE(("...applied extents %d,%d\n", *high, *wide));
+	} else if (!x_strncasecmp(xw->work.wm_name, "fvwm", 4)) {
+	    TRACE(("...skipping extents\n"));
+	} else {
+	    TRACE(("...ignoring extents\n"));
+	    rc = False;
+	}
+    } else {
+	rc = False;
+    }
+    return rc;
+}
+#endif /* !NO_ACTIVE_ICON */
 
 void
 initBorderGC(XtermWidget xw, VTwin *win)
 {
     TScreen *screen = TScreenOf(xw);
-#if OPT_DOUBLE_BUFFER
-    unsigned long filler;
-#endif
+    Pixel filler;
 
-    TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
+    TRACE(("initBorderGC(%s) core bg %#lx, bd %#lx text fg %#lx, bg %#lx %s\n",
+	   (win == &(screen->fullVwin)) ? "full" : "icon",
 	   xw->core.background_pixel,
 	   xw->core.border_pixel,
 	   T_COLOR(screen, TEXT_FG),
-	   T_COLOR(screen, TEXT_BG)));
+	   T_COLOR(screen, TEXT_BG),
+	   xw->misc.re_verse ? "reverse" : "normal"));
     if (xw->misc.color_inner_border
 	&& (xw->core.background_pixel != xw->core.border_pixel)) {
 	/*
@@ -10052,14 +10403,26 @@ initBorderGC(XtermWidget xw, VTwin *win)
 	 */
 	if ((xw->core.background_pixel == T_COLOR(screen, TEXT_BG)) &&
 	    (xw->core.border_pixel == T_COLOR(screen, TEXT_FG))) {
-	    setCgsFore(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
-	    setCgsBack(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
+	    filler = T_COLOR(screen, TEXT_BG);
 	} else {
-	    setCgsFore(xw, win, gcBorder, xw->core.border_pixel);
-	    setCgsBack(xw, win, gcBorder, xw->core.border_pixel);
+	    filler = xw->core.border_pixel;
 	}
+	TRACE((" border %#lx\n", filler));
+	setCgsFore(xw, win, gcBorder, filler);
+	setCgsBack(xw, win, gcBorder, filler);
 	win->border_gc = getCgsGC(xw, win, gcBorder);
-    } else {
+    }
+#if USE_DOUBLE_BUFFER
+    else if (resource.buffered) {
+	filler = T_COLOR(screen, TEXT_BG);
+	TRACE((" border %#lx (buffered)\n", filler));
+	setCgsFore(xw, win, gcBorder, filler);
+	setCgsBack(xw, win, gcBorder, filler);
+	win->border_gc = getCgsGC(xw, win, gcBorder);
+    }
+#endif
+    else {
+	TRACE((" border unused\n"));
 	win->border_gc = 0;
     }
 
@@ -10068,15 +10431,21 @@ initBorderGC(XtermWidget xw, VTwin *win)
      * in xtermClear2().  When not double-buffering, the XClearArea call works,
      * without requiring a separate GC.
      */
-#if OPT_DOUBLE_BUFFER
-    filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
-	      ? (unsigned long) xw->cur_background
-	      : xw->core.background_pixel);
+#if USE_DOUBLE_BUFFER
+    if (resource.buffered) {
+	filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
+		  ? getXtermBG(xw, xw->flags, xw->cur_background)
+		  : T_COLOR(screen, TEXT_BG));
 
-    setCgsFore(xw, win, gcFiller, filler);
-    setCgsBack(xw, win, gcFiller, filler);
+	TRACE((" filler %#lx %s\n",
+	       filler,
+	       xw->misc.re_verse ? "reverse" : "normal"));
 
-    win->filler_gc = getCgsGC(xw, win, gcFiller);
+	setCgsFore(xw, win, gcFiller, filler);
+	setCgsBack(xw, win, gcFiller, filler);
+
+	win->filler_gc = getCgsGC(xw, win, gcFiller);
+    }
 #endif
 }
 
@@ -10191,7 +10560,7 @@ VTRealize(Widget w,
     pos.w = screen->fullVwin.fullwidth;
     pos.h = screen->fullVwin.fullheight;
 
-    TRACE(("... border widget %d parent %d shell %d\n",
+    TRACE(("... BorderWidth: widget %d parent %d shell %d\n",
 	   BorderWidth(xw),
 	   BorderWidth(XtParent(xw)),
 	   BorderWidth(SHELL_OF(xw))));
@@ -10220,7 +10589,7 @@ VTRealize(Widget w,
     xw->hints.y = pos.y;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (term->work.ewmh[0].mode) {
+    if (xw->work.ewmh[0].mode) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
@@ -10301,26 +10670,28 @@ VTRealize(Widget w,
 		      (int) xw->core.depth,
 		      InputOutput, CopyFromParent,
 		      *valuemask | CWBitGravity, values);
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     screen->fullVwin.drawable = screen->fullVwin.window;
 
-    {
+    if (resource.buffered) {
 	Window win = screen->fullVwin.window;
 	Drawable d;
 	int major, minor;
-	if (!XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
-	    fprintf(stderr, "XdbeQueryExtension returned zero!\n");
-	    exit(3);
+	if (XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
+	    d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
+					   (XdbeSwapAction) XdbeCopied);
+	    if (d == None) {
+		fprintf(stderr, "Couldn't allocate a back buffer!\n");
+		exit(3);
+	    }
+	    screen->fullVwin.drawable = d;
+	    screen->needSwap = 1;
+	    TRACE(("initialized double-buffering\n"));
+	} else {
+	    resource.buffered = False;
 	}
-	d = XdbeAllocateBackBufferName(XtDisplay(xw), win, XdbeCopied);
-	if (d == None) {
-	    fprintf(stderr, "Couldn't allocate a back buffer!\n");
-	    exit(3);
-	}
-	screen->fullVwin.drawable = d;
-	screen->needSwap = 1;
     }
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
@@ -10354,13 +10725,13 @@ VTRealize(Widget w,
 	ReportIcons(("using TrueType font as iconFont\n"));
     }
 #endif
+    xw->work.wm_name = getWindowManagerName(xw);
     if ((xw->work.active_icon == eiDefault) && getIconicFont(screen)->fs) {
-	char *wm_name = getWindowManagerName(xw);
-	ReportIcons(("window manager name is %s\n", wm_name));
-	if (x_strncasecmp(wm_name, "fvwm", 4) &&
-	    x_strncasecmp(wm_name, "window maker", 12))
+	ReportIcons(("window manager name is %s\n", xw->work.wm_name));
+	if (x_strncasecmp(xw->work.wm_name, "fvwm", 4) &&
+	    x_strncasecmp(xw->work.wm_name, "window maker", 12)) {
 	    xw->work.active_icon = eiFalse;
-	free(wm_name);
+	}
     }
     if (xw->work.active_icon && getIconicFont(screen)->fs) {
 	int iconX = 0, iconY = 0;
@@ -10395,7 +10766,7 @@ VTRealize(Widget w,
 			  InputOutput, CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	screen->iconVwin.drawable = screen->iconVwin.window;
 #endif
 	XtVaSetValues(shell,
@@ -10457,7 +10828,7 @@ VTRealize(Widget w,
     set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
-    reset_margins(screen);
+    resetMargins(xw);
 
     memset(screen->sc, 0, sizeof(screen->sc));
 
@@ -10512,10 +10883,12 @@ xim_instantiate_cb(Display *display,
 		   XPointer client_data GCC_UNUSED,
 		   XPointer call_data GCC_UNUSED)
 {
+    XtermWidget xw = term;
+
     TRACE(("xim_instantiate_cb client=%p, call=%p\n", client_data, call_data));
 
-    if (display == XtDisplay(term)) {
-	VTInitI18N(term);
+    if (display == XtDisplay(xw)) {
+	VTInitI18N(xw);
     }
 }
 
@@ -11005,6 +11378,7 @@ void
 ShowCursor(void)
 {
     XtermWidget xw = term;
+    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
     IChar base;
     unsigned flags;
@@ -11087,9 +11461,11 @@ ShowCursor(void)
 	    flags &= ~(FG_COLOR | BG_COLOR);
 	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
 	    TRACE(("ShowCursor - should we treat as a colored cell?\n"));
-	    if (!(xw->flags & FG_COLOR))
-		if (CheckBogusForeground(screen, "ShowCursor"))
+	    if (!(xw->flags & FG_COLOR)) {
+		if (CheckBogusForeground(screen, "ShowCursor")) {
 		    flags &= ~(FG_COLOR | BG_COLOR);
+		}
+	    }
 	}
     }
 #else /* !EXP_BOGUS_FG */
@@ -11217,10 +11593,8 @@ ShowCursor(void)
 			bg_pix = fg_pix;
 		    } else {
 			fg_pix = bg_pix;
+			bg_pix = selbg_pix;
 		    }
-		}
-		if (use_selbg) {
-		    bg_pix = selbg_pix;
 		}
 		if (use_selfg) {
 		    fg_pix = selfg_pix;
@@ -11311,7 +11685,7 @@ ShowCursor(void)
 	     */
 	    screen->box->x = (short) x;
 	    screen->box->y = (short) y;
-	    XDrawLines(screen->display, VWindow(screen), outlineGC,
+	    XDrawLines(screen->display, VDrawable(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
 #if OPT_WIDE_ATTRS
@@ -11319,6 +11693,7 @@ ShowCursor(void)
 	    int italics_off = ((xw->flags & ATR_ITALIC) != 0);
 	    int fix_italics = (italics_on != italics_off);
 	    int which_font = ((xw->flags & BOLD) ? fBold : fNorm);
+	    MyGetFont getter = italics_on ? getItalicFont : getNormalFont;
 
 	    if_OPT_WIDE_CHARS(screen, {
 		if (isWide((int) base)) {
@@ -11328,37 +11703,38 @@ ShowCursor(void)
 
 	    if (fix_italics && UseItalicFont(screen)) {
 		xtermLoadItalics(xw);
-		if (italics_on) {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getItalicFont(screen, which_font));
-		} else {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getNormalFont(screen, which_font));
-		}
+		setCgsFont(xw, currentWin, currentCgs,
+			   getter(screen, which_font));
 	    }
 	    currentGC = getCgsGC(xw, currentWin, currentCgs);
 #endif /* OPT_WIDE_ATTRS */
 
-	    drawXtermText(xw,
-			  flags & DRAWX_MASK,
-			  0,
+	    /* *INDENT-EQLS* */
+	    params.xw          = xw;
+	    params.attr_flags  = (flags & DRAWX_MASK);
+	    params.draw_flags  = 0;
+	    params.this_chrset = LineCharSet(screen, ld);
+	    params.real_chrset = CSET_SWL;
+	    params.on_wide     = 0;
+
+	    drawXtermText(&params,
 			  currentGC, x, y,
-			  LineCharSet(screen, ld),
-			  &base, 1, 0);
+			  &base, 1);
 
 #if OPT_WIDE_CHARS
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
+
+		/* *INDENT-EQLS* */
+		params.draw_flags = NOBACKGROUND;
+		params.on_wide    = isWide((int) base);
+
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
 			break;
-		    drawXtermText(xw,
-				  (flags & DRAWX_MASK),
-				  NOBACKGROUND,
+		    drawXtermText(&params,
 				  currentGC, x, y,
-				  LineCharSet(screen, ld),
-				  ld->combData[off] + my_col,
-				  1, isWide((int) base));
+				  ld->combData[off] + my_col, 1);
 		}
 	    });
 #endif
@@ -11371,13 +11747,8 @@ ShowCursor(void)
 	    }
 #if OPT_WIDE_ATTRS
 	    if (fix_italics && UseItalicFont(screen)) {
-		if (italics_on) {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getNormalFont(screen, which_font));
-		} else {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getItalicFont(screen, which_font));
-		}
+		setCgsFont(xw, currentWin, currentCgs,
+			   getter(screen, which_font));
 	    }
 #endif
 	}
@@ -11394,6 +11765,7 @@ void
 HideCursor(void)
 {
     XtermWidget xw = term;
+    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
     GC currentGC;
     int x, y;
@@ -11410,6 +11782,7 @@ HideCursor(void)
     int which_Cgs = gcMAX;
     unsigned attr_flags;
     int which_font = fNorm;
+    MyGetFont getter = getNormalFont;
 #endif
 
     if (screen->cursor_state == OFF)
@@ -11486,6 +11859,8 @@ HideCursor(void)
     attr_flags = ld->attribs[cursor_col];
     if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
 	which_font = ((attr_flags & BOLD) ? fBold : fNorm);
+	if ((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
+	    getter = getItalicFont;
 
 	if_OPT_WIDE_CHARS(screen, {
 	    if (isWide((int) base)) {
@@ -11497,9 +11872,7 @@ HideCursor(void)
 	if (which_Cgs != gcMAX) {
 	    setCgsFont(xw, WhichVWin(screen),
 		       (CgsEnum) which_Cgs,
-		       (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
-			? getItalicFont(screen, which_font)
-			: getNormalFont(screen, which_font)));
+		       getter(screen, which_font));
 	}
     }
 #endif
@@ -11512,26 +11885,32 @@ HideCursor(void)
     x = LineCursorX(screen, ld, cursor_col);
     y = CursorY(screen, screen->cursorp.row);
 
-    drawXtermText(xw,
-		  flags & DRAWX_MASK,
-		  0,
+    /* *INDENT-EQLS* */
+    params.xw          = xw;
+    params.attr_flags  = (flags & DRAWX_MASK);
+    params.draw_flags  = 0;
+    params.this_chrset = LineCharSet(screen, ld);
+    params.real_chrset = CSET_SWL;
+    params.on_wide     = 0;
+
+    drawXtermText(&params,
 		  currentGC, x, y,
-		  LineCharSet(screen, ld),
-		  &base, 1, 0);
+		  &base, 1);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
+
+	/* *INDENT-EQLS* */
+	params.draw_flags  = NOBACKGROUND;
+	params.on_wide     = isWide((int) base);
+
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))
 		break;
-	    drawXtermText(xw,
-			  (flags & DRAWX_MASK),
-			  NOBACKGROUND,
+	    drawXtermText(&params,
 			  currentGC, x, y,
-			  LineCharSet(screen, ld),
-			  ld->combData[off] + my_col,
-			  1, isWide((int) base));
+			  ld->combData[off] + my_col, 1);
 	}
     });
 #endif
@@ -11541,9 +11920,7 @@ HideCursor(void)
     if (which_Cgs != gcMAX) {
 	setCgsFont(xw, WhichVWin(screen),
 		   (CgsEnum) which_Cgs,
-		   (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
-		    ? getItalicFont(screen, which_font)
-		    : getNormalFont(screen, which_font)));
+		   getter(screen, which_font));
     }
 #endif
     resetXtermGC(xw, flags, in_selection);
@@ -11558,8 +11935,10 @@ HideCursor(void)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-StartBlinking(TScreen *screen)
+StartBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->blink_timer == 0) {
 	unsigned long interval = (unsigned long) ((screen->cursor_state == ON)
 						  ? screen->blink_on
@@ -11569,17 +11948,19 @@ StartBlinking(TScreen *screen)
 	screen->blink_timer = XtAppAddTimeOut(app_con,
 					      interval,
 					      HandleBlinking,
-					      screen);
+					      xw);
     }
 }
 
 static void
-StopBlinking(TScreen *screen)
+StopBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->blink_timer) {
 	XtRemoveTimeOut(screen->blink_timer);
 	screen->blink_timer = 0;
-	reallyStopBlinking(screen);
+	reallyStopBlinking(xw);
     } else {
 	screen->blink_timer = 0;
     }
@@ -11612,7 +11993,8 @@ LineHasBlinking(TScreen *screen, CLineData *ld)
 static void
 HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 {
-    TScreen *screen = (TScreen *) closure;
+    XtermWidget xw = (XtermWidget) closure;
+    TScreen *screen = TScreenOf(xw);
     Bool resume = False;
 
     screen->blink_timer = 0;
@@ -11667,7 +12049,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	 * columns which are updated.
 	 */
 	if (first_row <= last_row) {
-	    ScrnRefresh(term,
+	    ScrnRefresh(xw,
 			first_row,
 			0,
 			last_row + 1 - first_row,
@@ -11681,14 +12063,16 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
      * If either the cursor or text is blinking, restart the timer.
      */
     if (resume)
-	StartBlinking(screen);
+	StartBlinking(xw);
 }
 #endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
 
 void
-RestartBlinking(TScreen *screen GCC_UNUSED)
+RestartBlinking(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->blink_timer == 0) {
 	Bool resume = False;
 
@@ -11714,7 +12098,7 @@ RestartBlinking(TScreen *screen GCC_UNUSED)
 	}
 #endif
 	if (resume)
-	    StartBlinking(screen);
+	    StartBlinking(xw);
     }
 #endif
 }
@@ -11746,7 +12130,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
     if (saved) {
 	screen->savedlines = 0;
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 0);
     }
 
     /* make cursor visible */
@@ -11761,7 +12145,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #endif
 
     /* reset scrolling region */
-    reset_margins(screen);
+    resetMargins(xw);
 
     bitclr(&xw->flags, ORIGIN);
 
@@ -11857,10 +12241,12 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	FromAlternate(xw);
 	ClearScreen(xw);
 	screen->cursor_state = OFF;
+
 	if (xw->flags & REVERSE_VIDEO)
 	    ReverseVideo(xw);
-
+	ResetItalics(xw);
 	xw->flags = xw->initflags;
+
 	update_reversevideo();
 	update_autowrap();
 	update_reversewrap();
@@ -11890,7 +12276,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
 	    if (xtermAppPending())
-		xevents();
+		xevents(xw);
 	}
 
 	CursorSet(screen, 0, 0, xw->flags);
@@ -11904,6 +12290,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
 	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP);
 	bitclr(&xw->flags, INSERT | INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
+	ResetItalics(xw);
 	if_OPT_ISO_COLORS(screen, {
 	    reset_SGR_Colors(xw);
 	});
@@ -12192,7 +12579,7 @@ DoSetSelectedFont(Widget w,
 	int oldFont = TScreenOf(xw)->menu_font_number;
 	char *save = TScreenOf(xw)->SelectFontName();
 	char *val;
-	char *test = 0;
+	char *test;
 	unsigned len = (unsigned) *length;
 	unsigned tst;
 
@@ -12222,7 +12609,7 @@ DoSetSelectedFont(Widget w,
 		&& !strchr(used, '\n')
 		&& (test = x_strdup(used)) != 0) {
 		TScreenOf(xw)->SelectFontName() = test;
-		if (!xtermLoadFont(term,
+		if (!xtermLoadFont(xw,
 				   xtermFontName(used),
 				   True,
 				   fontMenu_fontsel)) {
@@ -12234,7 +12621,7 @@ DoSetSelectedFont(Widget w,
 		failed = True;
 	    }
 	    if (failed) {
-		(void) xtermLoadFont(term,
+		(void) xtermLoadFont(xw,
 				     xtermFontName(TScreenOf(xw)->MenuFontName(oldFont)),
 				     True,
 				     oldFont);
@@ -12324,6 +12711,8 @@ set_cursor_gcs(XtermWidget xw)
 
     TRACE(("set_cursor_gcs cc=%#lx, fg=%#lx, bg=%#lx\n", cc, fg, bg));
     if (win != 0 && (cc != bg)) {
+	Pixel xx = ((fg == cc) ? bg : cc);
+
 	/* set the fonts to the current one */
 	setCgsFont(xw, win, gcVTcursNormal, 0);
 	setCgsFont(xw, win, gcVTcursFilled, 0);
@@ -12332,9 +12721,9 @@ set_cursor_gcs(XtermWidget xw)
 
 	/* we have a colored cursor */
 	setCgsFore(xw, win, gcVTcursNormal, fg);
-	setCgsBack(xw, win, gcVTcursNormal, cc);
+	setCgsBack(xw, win, gcVTcursNormal, xx);
 
-	setCgsFore(xw, win, gcVTcursFilled, cc);
+	setCgsFore(xw, win, gcVTcursFilled, xx);
 	setCgsBack(xw, win, gcVTcursFilled, fg);
 
 	if (screen->always_highlight) {

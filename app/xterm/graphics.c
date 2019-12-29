@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.77 2018/07/26 01:32:33 tom Exp $ */
+/* $XTermId: graphics.c,v 1.79 2019/06/29 17:29:09 tom Exp $ */
 
 /*
- * Copyright 2013-2017,2018 by Ross Combs
+ * Copyright 2013-2018,2019 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -1626,14 +1626,14 @@ refresh_graphics(XtermWidget xw,
 			     (unsigned) xw->visInfo->depth,
 			     ZPixmap, 0, NULL,
 			     image_w, image_h,
-			     sizeof(int) * 8U, 0);
+			     (int) (sizeof(int) * 8U), 0);
 	if (!image) {
 	    TRACE(("unable to allocate XImage for graphics refresh\n"));
 	    XFreeGC(display, graphics_gc);
 	    free(buffer);
 	    return;
 	}
-	imgdata = malloc(image_h * (unsigned) image->bytes_per_line);
+	imgdata = malloc((size_t) (image_h * (unsigned) image->bytes_per_line));
 	if (!imgdata) {
 	    TRACE(("unable to allocate XImage for graphics refresh\n"));
 	    XDestroyImage(image);

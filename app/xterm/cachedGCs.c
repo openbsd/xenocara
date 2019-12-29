@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.75 2018/07/15 18:21:17 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.79 2019/11/13 23:07:08 tom Exp $ */
 
 /*
- * Copyright 2007-2017,2018 by Thomas E. Dickey
+ * Copyright 2007-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -464,6 +464,9 @@ setCgsFore(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel fg)
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	NEXT(fg) = fg;
 	me->mask |= GCForeground;
+	TRACE2(("setCgsFore(%s) %s\n",
+		traceCgsEnum(cgsId),
+		tracePixel(xw, NEXT(fg))));
     }
 }
 
@@ -475,6 +478,9 @@ setCgsBack(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel bg)
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	NEXT(bg) = bg;
 	me->mask |= GCBackground;
+	TRACE2(("setCgsBack(%s) %s\n",
+		traceCgsEnum(cgsId),
+		tracePixel(xw, NEXT(bg))));
     }
 }
 
@@ -494,7 +500,7 @@ setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 #endif
 
 void
-setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
+setCgsFont2(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font, unsigned which)
 {
     CgsCache *me;
 
@@ -508,7 +514,7 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		font = getIconicFont(screen);
 	    else
 #endif
-		font = GetNormalFont(screen, fNorm);
+		font = GetNormalFont(screen, which);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
 	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %p\n",
@@ -523,6 +529,12 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		    traceCgsEnum(cgsId)));
 	}
     }
+}
+
+void
+setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
+{
+    setCgsFont2(xw, cgsWin, cgsId, font, fNorm);
 }
 
 /*
@@ -635,9 +647,11 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 			k = j;
 		    }
 		}
-		LINK(k);
-		TRACE2(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
-		result = chgCache(xw, cgsId, me, True);
+		if (k >= 0) {
+		    LINK(k);
+		    TRACE2(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
+		    result = chgCache(xw, cgsId, me, True);
+		}
 	    }
 	    me->next = *(me->data);
 	} else {

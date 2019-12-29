@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.21 2019/01/13 17:18:41 tom Exp $
+-- $XTermId: THANKS,v 1.24 2019/07/22 22:27:54 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -112,6 +112,7 @@ Jochen Voss
 Joe Allen
 Joe Peterson
 Johnny Billquist
+Jonathan Irwin
 Julien Cristau
 Juliusz Chroboczek
 Jungshik Shin
@@ -152,6 +153,8 @@ Mike Castle
 Mike Fabian
 Mike Frysinger
 Mike Hopkirk
+Mike Thornburg
+Mikulas Patocka
 Milan Mehner
 Min Sik Kim
 Miroslav Lichvar
@@ -183,6 +186,7 @@ Richard Tollerton
 Rob Braun
 Robert Brady
 Robert Earl
+Robert Ross
 Robin Cutshaw
 Romain Francoise
 Ross Combs

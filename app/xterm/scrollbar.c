@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.203 2018/07/17 20:39:03 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.208 2019/07/19 00:40:41 tom Exp $ */
 
 /*
- * Copyright 2000-2017,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -234,7 +234,7 @@ DoResizeScreen(XtermWidget xw)
 #endif
     XSync(screen->display, False);	/* synchronize */
     if (xtermAppPending())
-	xevents();
+	xevents(xw);
 
 #ifndef NO_ACTIVE_ICON
     WhichVWin(screen) = saveWin;
@@ -308,19 +308,33 @@ ScrollBarReverseVideo(Widget scrollWidget)
 }
 
 void
-ScrollBarDrawThumb(Widget scrollWidget)
+ScrollBarDrawThumb(XtermWidget xw, int mode)
 {
-    XtermWidget xw = getXtermWidget(scrollWidget);
+    TScreen *screen = TScreenOf(xw);
 
-    if (xw != 0) {
-	TScreen *screen = TScreenOf(xw);
+    if (screen->scrollWidget != 0) {
 	int thumbTop, thumbHeight, totalHeight;
+
+#if USE_DOUBLE_BUFFER
+	if (resource.buffered) {
+	    if (mode == 1) {
+		screen->buffered_sb++;
+		return;
+	    } else if (mode == 2) {
+		if (screen->buffered_sb == 0)
+		    return;
+	    }
+	}
+	screen->buffered_sb = 0;
+#else
+	(void) mode;
+#endif
 
 	thumbTop = ROW2INX(screen, screen->savedlines);
 	thumbHeight = MaxRows(screen);
 	totalHeight = thumbHeight + screen->savedlines;
 
-	XawScrollbarSetThumb(scrollWidget,
+	XawScrollbarSetThumb(screen->scrollWidget,
 			     ((float) thumbTop) / (float) totalHeight,
 			     ((float) thumbHeight) / (float) totalHeight);
     }
@@ -354,7 +368,7 @@ ResizeScrollBar(XtermWidget xw)
 			     (Dimension) width,
 			     (Dimension) height,
 			     BorderWidth(screen->scrollWidget));
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 1);
     }
 }
 
@@ -409,11 +423,11 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-	    RestartBlinking(screen);
+	    RestartBlinking(xw);
 #endif
 	}
     }
-    ScrollBarDrawThumb(screen->scrollWidget);
+    ScrollBarDrawThumb(xw, 1);
 }
 
 #ifdef SCROLLBAR_RIGHT
@@ -476,7 +490,7 @@ ScrollBarOn(XtermWidget xw, Bool init)
 	       screen->scrollWidget->core.width,
 	       BorderWidth(screen->scrollWidget)));
 
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 1);
 	DoResizeScreen(xw);
 
 #ifdef SCROLLBAR_RIGHT

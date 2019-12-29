@@ -1,8 +1,8 @@
-/* $XTermId: svg.c,v 1.11 2017/12/30 14:47:53 tom Exp $ */
+/* $XTermId: svg.c,v 1.15 2019/11/02 15:04:31 tom Exp $ */
 
 /*
+ * Copyright 2017,2019		Thomas E. Dickey
  * Copyright 2015-2016,2017	Jens Schweikhardt
- * Copyright 2017		Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -44,16 +44,6 @@
 #define CELLW 10
 #define CELLH 20
 
-#define DUMP_PREFIX "xterm"
-#define DUMP_SUFFIX ".svg"
-#define DEFAULTNAME DUMP_PREFIX DUMP_SUFFIX
-
-#ifdef VMS
-#define VMS_SVG_FILE "sys$scratch:" DEFAULTNAME
-#endif
-
-extern char *PixelToCSSColor(XtermWidget xw, Pixel p);	/* in html.c */
-
 static void dumpSvgHeader(XtermWidget xw, FILE *fp);
 static void dumpSvgScreen(XtermWidget xw, FILE *fp);
 static void dumpSvgLine(XtermWidget xw, int row, FILE *fp);
@@ -70,28 +60,8 @@ xtermDumpSvg(XtermWidget xw)
     FILE *fp;
 
     TRACE(("xtermDumpSvg...\n"));
-#ifdef VMS
-    fp = fopen(VMS_HTML_FILE, "wb");
-#elif defined(HAVE_STRFTIME)
-    {
-	char fname[sizeof(DEFAULTNAME) + LEN_TIMESTAMP];
-	time_t now;
-	struct tm *ltm;
 
-	now = time((time_t *) 0);
-	ltm = localtime(&now);
-
-	if (strftime(fname, sizeof fname,
-		     DUMP_PREFIX FMT_TIMESTAMP DUMP_SUFFIX, ltm) > 0) {
-	    fp = fopen(fname, "wb");
-	} else {
-	    fp = fopen(DEFAULTNAME, "wb");
-	}
-    }
-#else
-    fp = fopen(DEFAULTNAME, "wb");
-#endif
-
+    fp = create_printfile(xw, ".svg");
     if (fp != 0) {
 	dumpSvgHeader(xw, fp);
 	dumpSvgScreen(xw, fp);
@@ -123,6 +93,7 @@ dumpSvgHeader(XtermWidget xw, FILE *fp)
     fprintf(fp,
 	    " <g font-size='%.2f' font-family='monospace, monospace'>\n",
 	    0.80 * CELLH);
+    xevents(xw);
 }
 
 static void
@@ -195,6 +166,8 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 
 	XQueryColor(xw->screen.display, xw->core.colormap, &fgcolor);
 	XQueryColor(xw->screen.display, xw->core.colormap, &bgcolor);
+	xevents(xw);
+
 	if (ld->attribs[col] & BLINK) {
 	    /* White on red. */
 	    fgcolor.red = fgcolor.green = fgcolor.blue = 65535u;
@@ -256,7 +229,7 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 #endif
 		switch (chr) {
 		case 0:
-		    /* This sometimes happens when resizing... ignore. */
+		    fputc(' ', fp);
 		    break;
 		case '&':
 		    fputs("&amp;", fp);
@@ -271,8 +244,10 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 		    fputc((int) chr, fp);
 		}
 	    fprintf(fp, "</text>\n");
+	    xevents(xw);
 	}
 	fprintf(fp, "  </g>\n");
+	xevents(xw);
 
 #define HLINE(x) \
   fprintf(fp, "  <line x1='%d' y1='%d' " \
@@ -295,13 +270,14 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 	    HLINE(1);
 	}
 #endif
+	xevents(xw);
     }
+    xevents(xw);
 }
 
 static void
 dumpSvgFooter(XtermWidget xw GCC_UNUSED, FILE *fp)
 {
     fputs(" </g>\n</svg>\n", fp);
+    xevents(xw);
 }
-
-/* vim: set ts=8 sw=4 et: */

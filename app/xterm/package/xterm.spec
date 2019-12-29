@@ -1,17 +1,17 @@
-# $XTermId: xterm.spec,v 1.114 2019/01/14 18:12:18 tom Exp $
+# $XTermId: xterm.spec,v 1.123 2019/11/18 00:46:31 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 344
+Version: 351
 Release: 1
 License: X11
 Group: User Interface/X
 Source: xterm-%{version}.tgz
 URL: ftp://ftp.invisible-island.net/xterm/
-Provides: x-terminal-emulator
+Provides: x-terminal-emulator >= %{version}
 
 # This part (the build-requires) would be useful if the various distributions
 # had provided stable package-naming, or virtual packages to cover transitions. 
@@ -67,6 +67,7 @@ for the program and its resource class, to avoid conflict with other packages.
 %prep
 
 %global desktop_vendor  dickey
+%global target_appdata %{desktop_vendor}-%{fullname}.appdata.xml
 
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
 %define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
@@ -96,46 +97,43 @@ for the program and its resource class, to avoid conflict with other packages.
 %build
 CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 %configure \
-	--target %{_target_platform} \
-	--prefix=%{_prefix} \
-	--bindir=%{_bindir} \
-	--datadir=%{_datadir} \
-	--mandir=%{_mandir} \
+        --target %{_target_platform} \
+        --prefix=%{_prefix} \
+        --bindir=%{_bindir} \
+        --datadir=%{_datadir} \
+        --mandir=%{_mandir} \
 %if "%{my_suffix}" != ""
-	--program-suffix=%{my_suffix} \
-	--without-xterm-symlink \
+        --program-suffix=%{my_suffix} \
+        --without-xterm-symlink \
 %endif
 %if "%{icon_theme}"
-	--with-icon-symlink=%{fullname} \
-	--with-icon-theme \
-	--with-icondir=%{_iconsdir} \
+        --with-icon-symlink=%{fullname} \
+        --with-icon-theme \
+        --with-icondir=%{_iconsdir} \
 %endif
-	--with-app-class=%{my_class} \
-	--disable-imake \
-	--enable-dabbrev \
-	--enable-dec-locator \
-	--enable-exec-xterm \
-	--enable-hp-fkeys \
-	--enable-load-vt-fonts \
-	--enable-logfile-exec \
-	--enable-logging \
-	--enable-mini-luit \
-	--enable-paste64 \
-	--enable-regis-graphics \
-	--enable-sco-fkeys \
-	--enable-sixel-graphics \
-	--enable-tcap-fkeys \
-	--enable-tcap-query \
-	--enable-toolbar \
-	--enable-wide-chars \
-	--enable-xmc-glitch \
-	--with-app-defaults=%{_xresdir} \
-	--with-pixmapdir=%{_pixmapsdir} \
-	--with-own-terminfo=%{_datadir}/terminfo \
-	--with-terminal-type=xterm-new \
-	--with-utempter \
-	--with-icon-name=mini.xterm \
-	--with-xpm
+        --with-app-class=%{my_class} \
+        --disable-imake \
+        --enable-dabbrev \
+        --enable-dec-locator \
+        --enable-double-buffer \
+        --enable-exec-xterm \
+        --enable-hp-fkeys \
+        --enable-load-vt-fonts \
+        --enable-logfile-exec \
+        --enable-logging \
+        --enable-mini-luit \
+        --enable-regis-graphics \
+        --enable-sco-fkeys \
+        --enable-sixel-graphics \
+        --enable-toolbar \
+        --enable-xmc-glitch \
+        --with-app-defaults=%{_xresdir} \
+        --with-pixmapdir=%{_pixmapsdir} \
+        --with-own-terminfo=%{_datadir}/terminfo \
+        --with-terminal-type=xterm-new \
+        --with-utempter \
+        --with-icon-name=mini.xterm \
+        --with-xpm
 make
 
 chmod u+w XTerm.ad
@@ -151,37 +149,47 @@ rm -rf $RPM_BUILD_ROOT
 # Usually do not use install-ti, since that will conflict with ncurses.
 make install-bin install-man install-app install-icon \
 %if "%{install_ti}" == "yes"
-	install-ti \
+        install-ti \
 %endif
-	DESTDIR=$RPM_BUILD_ROOT \
-	TERMINFO=%{_datadir}/terminfo
+        DESTDIR=$RPM_BUILD_ROOT \
+        TERMINFO=%{_datadir}/terminfo
 
-	mkdir -p $RPM_BUILD_ROOT%{my_docdir}
-	cp \
-		ctlseqs.txt \
-		README.i18n \
-		THANKS \
-		xterm.log.html \
-	$RPM_BUILD_ROOT%{my_docdir}/
+        mkdir -p $RPM_BUILD_ROOT%{my_docdir}
+        cp \
+                ctlseqs.txt \
+                README.i18n \
+                THANKS \
+                xterm.log.html \
+        $RPM_BUILD_ROOT%{my_docdir}/
 
-	cp -r vttests \
-	$RPM_BUILD_ROOT%{my_docdir}/
+        cp -r vttests \
+        $RPM_BUILD_ROOT%{my_docdir}/
 
-	# The scripts are readable, but not executable, to let find-requires
-	# know that they do not depend on Perl packages.
-	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*.pl
+        # The scripts are readable, but not executable, to let find-requires
+        # know that they do not depend on Perl packages.
+        chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*.pl
 
 %if "%{desktop_utils}"
 make install-desktop \
-	DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
+        DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
 
 test -n "%{my_suffix}" && \
 ( cd $RPM_BUILD_ROOT%{_datadir}/applications
-	for p in *.desktop
-	do
-		mv $p `basename $p .desktop`%{my_suffix}.desktop
-	done
+        for p in *.desktop
+        do
+                mv $p `basename $p .desktop`%{my_suffix}.desktop
+        done
 )
+
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata && \
+install -m 644 xterm.appdata.xml $RPM_BUILD_ROOT%{_datadir}/appdata/%{target_appdata} && \
+( cd $RPM_BUILD_ROOT%{_datadir}/appdata
+  sed -i \
+      -e 's/>xterm\.desktop</>%{desktop_vendor}-%{fullname}.desktop</' \
+      -e 's/>XTerm</>%{my_class}</' \
+      %{target_appdata}
+)
+diff -u xterm.appdata.xml $RPM_BUILD_ROOT%{_datadir}/appdata/%{target_appdata} && \
 %endif
 
 %post
@@ -203,7 +211,12 @@ fi
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+if rm -rf $RPM_BUILD_ROOT; then
+  echo OK
+else
+  find $RPM_BUILD_ROOT -type f | grep -F -v /.nfs && exit 1
+fi
+exit 0
 
 %files
 %defattr(-,root,root,-)
@@ -220,6 +233,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %if "%{desktop_utils}"
+%config(missingok) %{_datadir}/appdata/%{target_appdata}
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-%{fullname}.desktop
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-u%{fullname}.desktop
 %endif
@@ -233,6 +247,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Sun Nov 17 2019 Thomas E. Dickey
+- install appdata.xml file
 
 * Wed May 02 2018 Thomas E. Dickey
 - install all icons

@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.361 2018/12/09 19:07:03 tom Exp $
+dnl $XTermId: configure.in,v 1.366 2019/11/02 20:49:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2017,2018 by Thomas E. Dickey
+dnl Copyright 1997-2018,2019 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -285,6 +285,7 @@ CF_WITH_XINERAMA
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
+CF_TERMIOS_TYPES
 
 # If we notice Xcursor, there is a workaround needed.
 AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR)])
@@ -635,22 +636,22 @@ if test "$enable_exec_xterm" = yes ; then
 	fi
 fi
 
-AC_MSG_CHECKING(if you want to use double-buffering)
-CF_ARG_ENABLE(double-buffer,
-	[  --enable-double-buffer  enable double-buffering],
-	[enable_double_bfr=yes],
-	[enable_double_bfr=no])
-AC_MSG_RESULT($enable_double_bfr)
-if test "$enable_double_bfr" = yes ; then
-	case "x$LIBS" in
-	(*Xext*)
-		;;
-	(*)
-		CF_X_EXT
-		;;
-	esac
-	AC_DEFINE(OPT_DOUBLE_BUFFER,1,[Define to 1 to enable double-buffering])
+CF_X_EXT
+CF_X_EXT_DOUBLE_BUFFER
+double_buffer=False
+if test "$cf_x_ext_double_buffer" = yes ; then
+	AC_MSG_CHECKING(if you want to enable double-buffering in default resources)
+	CF_ARG_ENABLE(double-buffer,
+		[  --enable-double-buffer  enable double-buffering in default resources],
+		[enable_double_bfr=yes],
+		[enable_double_bfr=no])
+	AC_MSG_RESULT($enable_double_bfr)
+	if test "$enable_double_bfr" = yes ; then
+		AC_DEFINE(OPT_DOUBLE_BUFFER,1,[Define to 1 to enable double-buffering in default resources])
+		double_buffer=True
+	fi
 fi
+AC_SUBST(double_buffer)
 
 AC_MSG_CHECKING(if you want to use FreeType library)
 CF_ARG_DISABLE(freetype,
@@ -1013,9 +1014,10 @@ CF_ARG_DISABLE(screen-dumps,
 	[enable_screen_dumps=yes])
 AC_MSG_RESULT($enable_screen_dumps)
 if test "$enable_screen_dumps" = yes ; then
-	AC_DEFINE(OPT_SCREEN_DUMPS,1,[Define to 1 to enable XHTML and SVG screen dump support])
 	EXTRASRCS="$EXTRASRCS html.c svg.c"
 	EXTRAOBJS="$EXTRAOBJS html.o svg.o"
+else
+	AC_DEFINE(OPT_SCREEN_DUMPS,0,[Define to 0 to disable XHTML and SVG screen dump support])
 fi
 
 AC_MSG_CHECKING(if you want ReGIS graphics support)

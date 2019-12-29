@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.845 2018/12/16 23:06:59 tom Exp $ */
+/* $XTermId: main.c,v 1.859 2019/11/17 20:11:09 tom Exp $ */
 
 /*
- * Copyright 2002-2017,2018 by Thomas E. Dickey
+ * Copyright 2002-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -323,6 +323,13 @@ ttyslot(void)
 
 #if defined(USE_UTEMPTER)
 #include <utempter.h>
+#if 1
+#define UTEMPTER_ADD(pty,hostname,master_fd) utempter_add_record(master_fd, hostname)
+#define UTEMPTER_DEL()                       utempter_remove_added_record ()
+#else
+#define UTEMPTER_ADD(pty,hostname,master_fd) addToUtmp(pty, hostname, master_fd)
+#define UTEMPTER_DEL()                       removeFromUtmp()
+#endif
 #endif
 
 #if defined(I_FIND) && defined(I_PUSH)
@@ -939,6 +946,9 @@ static XtResource application_resources[] =
 #if OPT_REPORT_ICONS
     Bres("reportIcons", "ReportIcons", reportIcons, False),
 #endif
+#if OPT_XRES_QUERY
+    Bres("reportXRes", "ReportXRes", reportXRes, False),
+#endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
 #endif
@@ -951,6 +961,10 @@ static XtResource application_resources[] =
 #if OPT_MAXIMIZE
     Bres(XtNmaximized, XtCMaximized, maximized, False),
     Sres(XtNfullscreen, XtCFullscreen, fullscreen_s, "off"),
+#endif
+#if USE_DOUBLE_BUFFER
+    Bres(XtNbuffered, XtCBuffered, buffered, DEF_DOUBLE_BUFFER),
+    Ires(XtNbufferedFPS, XtCBufferedFPS, buffered_fps, 40),
 #endif
 };
 
@@ -1089,6 +1103,9 @@ DATA("-report-icons",	"*reportIcons",	XrmoptionNoArg,		"on"),
 #endif
 #if OPT_REPORT_FONTS
 DATA("-report-fonts",	"*reportFonts", XrmoptionNoArg,		"on"),
+#endif
+#if OPT_XRES_QUERY
+DATA("-report-xres",	"*reportXRes",	XrmoptionNoArg,		"on"),
 #endif
 #ifdef SCROLLBAR_RIGHT
 DATA("-leftbar",	"*rightScrollBar", XrmoptionNoArg,	"off"),
@@ -1287,6 +1304,12 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_REPORT_FONTS
 { "-report-fonts",         "report fonts as loaded to stdout" },
+#endif
+#if OPT_REPORT_ICONS
+{ "-report-icons",	   "report title/icon updates" },
+#endif
+#if OPT_XRES_QUERY
+{ "-report-xres",          "report X resources for VT100 widget" },
 #endif
 #ifdef SCROLLBAR_RIGHT
 { "-rightbar",             "force scrollbar right (default left)" },
@@ -1701,6 +1724,15 @@ Help(void)
 	puts(*cpp);
     putchar('\n');
     fflush(stdout);
+}
+
+static void
+NeedParam(XrmOptionDescRec * option_ptr, const char *option_val)
+{
+    if (IsEmpty(option_val)) {
+	xtermWarning("option %s requires a value\n", option_ptr->option);
+	exit(1);
+    }
 }
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -2255,11 +2287,13 @@ main(int argc, char *argv[]ENVP_ARG)
 		Help();
 		quit = True;
 	    } else if (!strcmp(option_ptr->option, "-baudrate")) {
+		NeedParam(option_ptr, option_value);
 		if ((line_speed = lookup_baudrate(option_value)) == 0) {
 		    Help();
 		    quit = True;
 		}
 	    } else if (!strcmp(option_ptr->option, "-class")) {
+		NeedParam(option_ptr, option_value);
 		free(my_class);
 		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
@@ -2267,6 +2301,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 	    } else if (!strcmp(option_ptr->option, "-into")) {
 		char *endPtr;
+		NeedParam(option_ptr, option_value);
 		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
 		if (!FullS2L(option_value, endPtr)) {
 		    Help();
@@ -2414,7 +2449,7 @@ main(int argc, char *argv[]ENVP_ARG)
 					my_class,
 					optionDescList,
 					XtNumber(optionDescList),
-					&argc, (String *) argv,
+					&argc, argv,
 					fallback_resources,
 					sessionShellWidgetClass,
 					NULL, 0);
@@ -2423,10 +2458,16 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#if USE_DOUBLE_BUFFER
+	if (resource.buffered_fps <= 0)
+	    resource.buffered_fps = DEF_BUFFER_RATE;
+	if (resource.buffered_fps > 100)
+	    resource.buffered_fps = 100;
+#endif
 #if OPT_MAXIMIZE
 	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
 					      tblFullscreen,
-					      XtNumber(tblFullscreen));
+					      esLAST);
 #endif
 	VTInitTranslations();
 #if OPT_PTY_HANDSHAKE
@@ -3169,6 +3210,8 @@ typedef enum {			/* c == child, p == parent                        */
     PTY_EXEC			/* p->c: window has been mapped the first time    */
 } status_t;
 
+#define HANDSHAKE_LEN	1024
+
 typedef struct {
     status_t status;
     int error;
@@ -3176,12 +3219,12 @@ typedef struct {
     int tty_slot;
     int rows;
     int cols;
-    char buffer[1024];
+    char buffer[HANDSHAKE_LEN];
 } handshake_t;
 
 /* the buffer is large enough that we can always have a trailing null */
 #define copy_handshake(dst, src) \
-	strncpy(dst.buffer, src, sizeof(dst.buffer) - 1)[sizeof(dst.buffer) - 1] = '\0'
+	strncpy(dst.buffer, src, HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
 
 #if OPT_TRACE
 static void
@@ -3906,7 +3949,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	}
     }
     if (ok_termcap) {
-	resource.term_name = TermName;
+	resource.term_name = x_strdup(TermName);
 	resize_termcap(xw);
     }
 
@@ -3994,7 +4037,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	SetUtmpHost(dummy.ut_host, screen);
 	TRACE(("...calling addToUtmp(pty=%s, hostname=%s, master_fd=%d)\n",
 	       ttydev, dummy.ut_host, screen->respond));
-	addToUtmp(ttydev, dummy.ut_host, screen->respond);
+	UTEMPTER_ADD(ttydev, dummy.ut_host, screen->respond);
 	added_utmp_entry = True;
     }
 #endif
@@ -4205,6 +4248,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    if (ttyfd >= 0)
 			close(ttyfd);
 		    free(ttydev);
+		    handshake.buffer[HANDSHAKE_LEN - 1] = '\0';
 		    ttydev = x_strdup(handshake.buffer);
 		}
 
@@ -5128,6 +5172,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    tslot = handshake.tty_slot;
 #endif /* USE_SYSV_UTMP */
 		    free(ttydev);
+		    handshake.buffer[HANDSHAKE_LEN - 1] = '\0';
 		    ttydev = x_strdup(handshake.buffer);
 		    break;
 		case PTY_NEW:
@@ -5215,7 +5260,7 @@ Exit(int n)
     DEBUG_MSG("handle:Exit USE_UTEMPTER\n");
     if (!resource.utmpInhibit && added_utmp_entry) {
 	TRACE(("...calling removeFromUtmp\n"));
-	removeFromUtmp();
+	UTEMPTER_DEL();
     }
 #elif defined(HAVE_UTMP)
 #ifdef USE_SYSV_UTMP

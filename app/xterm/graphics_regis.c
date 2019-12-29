@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.108 2018/12/15 19:18:08 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.113 2019/11/13 23:24:03 tom Exp $ */
 
 /*
- * Copyright 2014-2017,2018 by Ross Combs
+ * Copyright 2014-2018,2019 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -36,10 +36,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
-
-#if OPT_DOUBLE_BUFFER
-#include <X11/extensions/Xdbe.h>
-#endif
 
 #include <fontutils.h>
 #include <ptyx.h>
@@ -1586,7 +1582,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
     XftDrawString32(draw, &fg, font, 0, font->ascent - (int) ymin,
 		    &ch, 1);
 
-    image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1, XYPixmap);
+    image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1UL, XYPixmap);
     if (!image) {
 	TRACE(("Unable to create XImage\n"));
 	XftDrawDestroy(draw);
@@ -2002,7 +1998,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
     return 1;
 #else
     (void) context;
-    (void) context;
+    (void) fontname;
     (void) ch;
     (void) maxw;
     (void) maxh;
@@ -2376,7 +2372,7 @@ draw_text(RegisGraphicsContext *context, char const *str)
 {
 #ifndef ENABLE_DISTORTIONLESS_ROTATION
     RegisTextControls *old_text_controls = NULL;
-    RegisTextControls scratch_text_controls;
+    static RegisTextControls scratch_text_controls;
 #endif
     double total_rotation;
     size_t ii;
@@ -7483,16 +7479,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		prev_tv = curr_tv;
 		iterations = 0U;
 		refresh_modified_displayed_graphics(xw);
-#if OPT_DOUBLE_BUFFER
-		{
-		    XdbeSwapInfo swap;
-
-		    swap.swap_window = VWindow(screen);
-		    swap.swap_action = XdbeCopied;
-		    XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
-		    XFlush(XtDisplay(xw));
-		}
-#endif
+		xtermFlushDbe(xw);
 	    }
 
 	    continue;

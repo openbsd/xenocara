@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-fonts.pl,v 1.7 2018/08/10 15:01:35 tom Exp $
+# $XTermId: query-fonts.pl,v 1.8 2019/05/19 08:57:31 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2010-2014,2018 by Thomas E. Dickey
+# Copyright 2010-2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -60,17 +60,6 @@ Options:\n
 );
 
 our $ST = $opt_s ? "\007" : "\x1b\\";
-
-sub no_reply($) {
-    open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
-    autoflush TTY 1;
-    my $old = `stty -g`;
-    system "stty raw -echo min 0 time 5";
-
-    print TTY @_;
-    close TTY;
-    system "stty $old";
-}
 
 sub get_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");

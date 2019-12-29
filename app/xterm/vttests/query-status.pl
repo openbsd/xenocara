@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-status.pl,v 1.6 2018/08/10 15:01:35 tom Exp $
+# $XTermId: query-status.pl,v 1.7 2019/05/19 08:57:41 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2017,2018 by Thomas E. Dickey
+# Copyright 2017-2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -62,17 +62,6 @@ $suffixes{DECSTBM}  = 'r';
 $suffixes{DECSLRM}  = 's';
 $suffixes{SGR}      = 'm';
 $suffixes{DECSCUSR} = ' q';
-
-sub no_reply($) {
-    open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
-    autoflush TTY 1;
-    my $old = `stty -g`;
-    system "stty raw -echo min 0 time 5";
-
-    print TTY @_;
-    close TTY;
-    system "stty $old";
-}
 
 sub get_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");

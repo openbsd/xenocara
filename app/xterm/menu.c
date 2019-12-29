@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.355 2019/01/12 02:04:19 tom Exp $ */
+/* $XTermId: menu.c,v 1.358 2019/09/17 08:11:55 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1007,6 +1007,18 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 #endif
 }
 
+#if OPT_VT52_MODE
+static void
+DisableIfVT52(MenuEntry * menu, int which)
+{
+    Widget mi = menu[which].widget;
+    SetItemSensitivity(mi, TScreenOf(term)->vtXX_level != 0);
+}
+
+#else
+#define DisableIfVT52(which,val)	/* nothing */
+#endif
+
 static void
 UpdateMenuItem(
 #if OPT_TRACE
@@ -1665,7 +1677,7 @@ do_cursorblink(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    ToggleCursorBlink(TScreenOf(term));
+    ToggleCursorBlink(term);
 }
 #endif
 
@@ -3540,6 +3552,8 @@ update_reversevideo(void)
 void
 update_autowrap(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_autowrap);
     UpdateCheckbox("update_autowrap",
 		   vtMenuEntries,
 		   vtMenu_autowrap,
@@ -3549,6 +3563,8 @@ update_autowrap(void)
 void
 update_reversewrap(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_reversewrap);
     UpdateCheckbox("update_reversewrap",
 		   vtMenuEntries,
 		   vtMenu_reversewrap,
@@ -3558,6 +3574,8 @@ update_reversewrap(void)
 void
 update_autolinefeed(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_autolinefeed);
     UpdateCheckbox("update_autolinefeed",
 		   vtMenuEntries,
 		   vtMenu_autolinefeed,
@@ -3567,6 +3585,8 @@ update_autolinefeed(void)
 void
 update_appcursor(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_appcursor);
     UpdateCheckbox("update_appcursor",
 		   vtMenuEntries,
 		   vtMenu_appcursor,
@@ -3621,6 +3641,8 @@ update_selectToClipboard(void)
 void
 update_allow132(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_allow132);
     UpdateCheckbox("update_allow132",
 		   vtMenuEntries,
 		   vtMenu_allow132,
@@ -3837,8 +3859,8 @@ update_font_utf8_fonts(void)
 void
 update_font_utf8_title(void)
 {
-    Bool active = (TScreenOf(term)->utf8_mode != uFalse);
-    Bool enable = (TScreenOf(term)->utf8_title);
+    Bool active = (TScreenOf(term)->utf8_mode != uAlways);
+    Bool enable = (TScreenOf(term)->utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_title active %d, enable %d\n", active, enable));
     SetItemSensitivity(fontMenuEntries[fontMenu_utf8_title].widget, active);

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.951 2019/02/11 10:22:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.987 2019/11/17 20:07:59 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -383,6 +383,13 @@ typedef struct {
 #define	ANSI_PM		0x9E
 #define	ANSI_APC	0x9F
 
+#define BAD_ASCII	'?'
+#define NonLatin1(c)	(((c) != ANSI_LF) && \
+			 ((c) != ANSI_HT) && \
+			 (((c) < ANSI_SPA) || \
+			  ((c) >= ANSI_DEL && (c) <= ANSI_APC)))
+#define OnlyLatin1(c)	(NonLatin1(c) ? BAD_ASCII : (c))
+
 #define L_CURL		'{'
 #define R_CURL		'}'
 
@@ -423,6 +430,7 @@ typedef	struct {
 } PARAMS;
 
 typedef short ParmType;
+typedef unsigned short UParm;		/* unparseputn passes ParmType	*/
 
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
@@ -550,7 +558,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_DEC_RECTOPS
-#define OPT_DEC_RECTOPS 0 /* true if xterm is configured for VT420 rectangles */
+#define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
 #endif
 
 #ifndef OPT_SIXEL_GRAPHICS
@@ -558,7 +566,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_SCREEN_DUMPS
-#define OPT_SCREEN_DUMPS 0 /* true if xterm supports screen dumps */
+#define OPT_SCREEN_DUMPS 1 /* true if xterm supports screen dumps */
 #endif
 
 #ifndef OPT_REGIS_GRAPHICS
@@ -594,7 +602,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_FIFO_LINES
-#define OPT_FIFO_LINES 0 /* optimize save-lines feature using FIFO */
+#define OPT_FIFO_LINES 1 /* optimize save-lines feature using FIFO */
 #endif
 
 #ifndef OPT_FOCUS_EVENT
@@ -630,15 +638,15 @@ typedef enum {
 #endif
 
 #ifndef OPT_DIRECT_COLOR
-#define OPT_DIRECT_COLOR  0 /* true if xterm is configured with direct-colors */
+#define OPT_DIRECT_COLOR  OPT_ISO_COLORS /* true if xterm is configured with direct-colors */
 #endif
 
 #ifndef OPT_256_COLORS
-#define OPT_256_COLORS  0 /* true if xterm is configured with 256 colors */
+#define OPT_256_COLORS  1 /* true if xterm is configured with 256 colors */
 #endif
 
 #ifndef OPT_88_COLORS
-#define OPT_88_COLORS	0 /* true if xterm is configured with 88 colors */
+#define OPT_88_COLORS	1 /* true if xterm is configured with 88 colors */
 #endif
 
 #ifndef OPT_HIGHLIGHT_COLOR
@@ -650,7 +658,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_LUIT_PROG
-#define OPT_LUIT_PROG   0 /* true if xterm supports luit */
+#define OPT_LUIT_PROG   1 /* true if xterm supports luit */
 #endif
 
 #ifndef OPT_MAXIMIZE
@@ -670,7 +678,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_PASTE64
-#define OPT_PASTE64	0 /* program control of select/paste via base64 */
+#define OPT_PASTE64	1 /* program control of select/paste via base64 */
 #endif
 
 #ifndef OPT_PC_COLORS
@@ -722,7 +730,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_REPORT_ICONS
-#define OPT_REPORT_ICONS   1 /* provide "-report-fonts" option */
+#define OPT_REPORT_ICONS   1 /* provide "-report-icons" option */
 #endif
 
 #ifndef OPT_SAME_NAME
@@ -746,7 +754,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_SELECT_REGEX
-#define OPT_SELECT_REGEX 0 /* true if xterm supports regular-expression selects */
+#define OPT_SELECT_REGEX 1 /* true if xterm supports regular-expression selects */
 #endif
 
 #ifndef OPT_SELECTION_OPS
@@ -770,11 +778,11 @@ typedef enum {
 #endif
 
 #ifndef OPT_TCAP_FKEYS
-#define OPT_TCAP_FKEYS	0 /* true for experimental termcap function-keys */
+#define OPT_TCAP_FKEYS	1 /* true for termcap function-keys */
 #endif
 
 #ifndef OPT_TCAP_QUERY
-#define OPT_TCAP_QUERY	0 /* true for experimental termcap query */
+#define OPT_TCAP_QUERY	1 /* true for termcap query */
 #endif
 
 #ifndef OPT_TEK4014
@@ -802,7 +810,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_WIDE_CHARS
-#define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
+#define OPT_WIDE_CHARS  1 /* true if xterm supports 16-bit characters */
 #endif
 
 #ifndef OPT_WIDER_ICHAR
@@ -811,6 +819,10 @@ typedef enum {
 
 #ifndef OPT_XMC_GLITCH
 #define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
+#endif
+
+#ifndef OPT_XRES_QUERY
+#define OPT_XRES_QUERY	1 /* true for resource query */
 #endif
 
 #ifndef OPT_XTERM_SGR
@@ -884,11 +896,13 @@ typedef enum {
     , fBold			/* bold font */
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     , fItal			/* italic font */
+    , fBtal			/* bold-italic font */
 #endif
 #if OPT_WIDE_CHARS
     , fWide			/* double-width font */
     , fWBold			/* double-width bold font */
     , fWItal			/* double-width italic font */
+    , fWBtal			/* double-width bold-italic font */
 #endif
     , fMAX
 } VTFontEnum;
@@ -1153,6 +1167,14 @@ typedef enum {
 #endif
 } DECSET_codes;
 
+/* internal codes for selection atoms */
+typedef enum {
+    PRIMARY_CODE = 0
+    ,CLIPBOARD_CODE
+    ,SECONDARY_CODE
+    ,MAX_SELECTION_CODES
+} SelectionCodes;
+
 /* indices for mapping multiple clicks to selection types */
 typedef enum {
     Select_CHAR=0
@@ -1195,6 +1217,7 @@ typedef enum {
     , esTrue
     , esAlways
     , esNever
+    , esLAST
 } FullscreenOps;
 
 #ifndef NO_ACTIVE_ICON
@@ -1257,10 +1280,6 @@ typedef enum {
     , psBG_COLOR = 11
 #endif
 #if OPT_WIDE_ATTRS
-#if OPT_DIRECT_COLOR
-    , psATR_DIRECT_FG = 12
-    , psATR_DIRECT_BG = 13
-#endif
     , psATR_DBL_UNDER = 21
 #endif
     , MAX_PUSH_SGR
@@ -1496,9 +1515,8 @@ typedef enum {
 #else
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
-
-#define GetLineDblCS(ld)       0
-
+#define CSET_SWL                        0
+#define GetLineDblCS(ld)                0
 #define LineCharSet(screen, ld)         0
 #define LineMaxCol(screen, ld)          screen->max_col
 #define LineCursorX(screen, ld, col)    CursorX(screen, col)
@@ -1507,7 +1525,9 @@ typedef enum {
 #endif
 
 #if OPT_LUIT_PROG && !OPT_WIDE_CHARS
-#error Luit requires the wide-chars configuration
+/* Luit requires the wide-chars configuration */
+#undef OPT_LUIT_PROG
+#define OPT_LUIT_PROG 0
 #endif
 
 /***====================================================================***/
@@ -1580,9 +1600,12 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
+#define NARROW_ICHAR	0xffff
 #if OPT_WIDER_ICHAR
+#define WIDEST_ICHAR	0x1fffff
 typedef unsigned IChar;		/* for 8-21 bit characters */
 #else
+#define WIDEST_ICHAR	NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
 #else
@@ -1699,7 +1722,7 @@ typedef unsigned CellColor;
 #define GetCellColorBG(data)	((data).bg)
 #define hasDirectFG(flags)	((flags) & ATR_DIRECT_FG)
 #define hasDirectBG(flags)	((flags) & ATR_DIRECT_BG)
-#define setDirectFG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_FG); else UIntClr(flags, ATR_DIRECT_BG)
+#define setDirectFG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_FG); else UIntClr(flags, ATR_DIRECT_FG)
 #define setDirectBG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_BG); else UIntClr(flags, ATR_DIRECT_BG)
 #elif OPT_ISO_COLORS
 #define clrDirectFG(flags)	/* nothing */
@@ -1895,6 +1918,8 @@ typedef struct {
 	int		right;
 } XTermRect;
 
+/***====================================================================***/
+
 	/* indices into save_modes[] */
 typedef enum {
 	DP_ALLOW_ALTBUF,
@@ -2048,6 +2073,7 @@ typedef struct {
 	int		cur_background;  /* current background color	*/
 	int		sgr_foreground;  /* current SGR foreground color */
 	int		sgr_background;  /* current SGR background color */
+	Boolean		sgr_38_xcolors;  /* true if ISO 8613 extension	*/
 #endif
 } SavedCursor;
 
@@ -2092,7 +2118,7 @@ typedef struct {
 	SbInfo		sb_info;
 	GC		filler_gc;	/* filler's fg/bg		*/
 	GC		border_gc;	/* inner border's fg/bg		*/
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	Drawable	drawable;	/* X drawable id                */
 #endif
 #if OPT_TOOLBAR
@@ -2113,13 +2139,9 @@ typedef struct {
 typedef struct {
     char *f_n;			/* the normal font */
     char *f_b;			/* the bold font */
-#if OPT_WIDE_ATTRS
-    char *f_i;			/* italic font (Xft only) */
-#endif
 #if OPT_WIDE_CHARS
     char *f_w;			/* the normal wide font */
     char *f_wb;			/* the bold wide font */
-    char *f_wi;			/* wide italic font (Xft only) */
 #endif
 } VTFontNames;
 
@@ -2128,11 +2150,13 @@ typedef struct {
     char **list_b;		/* the bold font */
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     char **list_i;		/* italic font (Xft only) */
+    char **list_bi;		/* bold-italic font (Xft only) */
 #endif
 #if OPT_WIDE_CHARS
     char **list_w;		/* the normal wide font */
     char **list_wb;		/* the bold wide font */
     char **list_wi;		/* wide italic font (Xft only) */
+    char **list_wbi;		/* wide bold-italic font (Xft only) */
 #endif
 } VTFontList;
 
@@ -2185,8 +2209,9 @@ typedef struct {
 					   (position report, etc.)	*/
 	int		nextEventDelay;	/* msecs to delay for x-events  */
 /* These parameters apply to VT100 window */
-	IChar		unparse_bfr[256];
+	IChar		*unparse_bfr;
 	unsigned	unparse_len;
+	unsigned	unparse_max;	/* limitResponse resource	*/
 
 #if OPT_TCAP_QUERY
 	int		tc_query_code;
@@ -2219,14 +2244,17 @@ typedef struct {
 #if OPT_DIRECT_COLOR
 	Boolean		direct_color;	/* direct-color enabled?	*/
 #endif
-#endif
+#endif /* OPT_ISO_COLORS */
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
 	int		cache_doublesize;/* limit of our cache		*/
 	Char		cur_chrset;	/* character-set index & code	*/
 	int		fonts_used;	/* count items in double_fonts	*/
 	XTermFonts	double_fonts[NUM_CHRSET];
+#if OPT_RENDERFONT
+	XftFont *	double_xft_fonts[NUM_CHRSET];
 #endif
+#endif /* OPT_DEC_CHRSET */
 #if OPT_DEC_RECTOPS
 	int		cur_decsace;	/* parameter for DECSACE	*/
 	int		checksum_ext;	/* extensions for DECRQCRA	*/
@@ -2239,13 +2267,14 @@ typedef struct {
 	Boolean		normalized_c;	/* true to precompose to Form C */
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
+	char *		utf8_title_s;	/* use UTF-8 titles		*/
 	int		utf8_nrc_mode;	/* saved UTF-8 mode for DECNRCM */
 	Boolean		utf8_always;	/* special case for wideChars	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
-	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
+	int		utf8_fonts;	/* use UTF-8 fonts: 0-2		*/
+	int		utf8_title;	/* use UTF-8 EWHM props: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
 	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
-	Boolean		utf8_title;	/* use UTF-8 titles		*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/
 	int		utf_count;	/* state of utf_char		*/
@@ -2453,6 +2482,11 @@ typedef struct {
 	int		lft_marg;	/* left column of "	    "	*/
 	int		rgt_marg;	/* right column of "	    "	*/
 	Widget		scrollWidget;	/* pointer to scrollbar struct	*/
+#if USE_DOUBLE_BUFFER
+	int		buffered_sb;	/* nonzero when pending update	*/
+	struct timeval	buffered_at;	/* reference time, for FPS	*/
+#define DbeMsecs(xw)	(1000L / (long) resource.buffered_fps)
+#endif
 	/*
 	 * Indices used to keep track of the top of the vt100 window and
 	 * the saved lines, taking scrolling into account.
@@ -2592,6 +2626,7 @@ typedef struct {
 #endif
 
 #if OPT_VT52_MODE
+	IFlags		vt52_save_flags;
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
@@ -2646,8 +2681,10 @@ typedef struct {
 	Time		lastButtonUpTime;
 	unsigned	lastButton;
 
-#define MAX_SELECTIONS	12
-	SelectedCells	selected_cells[MAX_SELECTIONS]; /* primary/clipboard */
+#define MAX_CUT_BUFFER  8		/* CUT_BUFFER0 to CUT_BUFFER7 */
+#define MAX_SELECTIONS	(MAX_SELECTION_CODES + MAX_CUT_BUFFER)
+	SelectedCells	selected_cells[MAX_SELECTIONS];
+
 	CELL		rawPos;		/* raw position for selection start */
 	CELL		startRaw;	/* area before selectUnit processing */
 	CELL		endRaw;		/* " " */
@@ -2709,6 +2746,7 @@ typedef struct {
 	SubResourceRec	cacheVTFonts;
 #endif
 #if OPT_CLIP_BOLD
+	Boolean		use_border_clipping;
 	Boolean		use_clipping;
 #endif
 	void *		main_cgs_cache;
@@ -2720,10 +2758,12 @@ typedef struct {
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
 	XTermXftFonts	renderFontItal[NMENUFONTS];
+	XTermXftFonts	renderFontBtal[NMENUFONTS];
 #if OPT_RENDERWIDE
 	XTermXftFonts	renderWideNorm[NMENUFONTS];
 	XTermXftFonts	renderWideBold[NMENUFONTS];
 	XTermXftFonts	renderWideItal[NMENUFONTS];
+	XTermXftFonts	renderWideBtal[NMENUFONTS];
 	TypedBuffer(XftCharSpec);
 #else
 	TypedBuffer(XftChar8);
@@ -2740,6 +2780,8 @@ typedef struct {
 	char **		tcap_fkeys;
 #endif
 } TScreen;
+
+typedef XTermFonts *(*MyGetFont) (TScreen *, int);
 
 typedef struct _TekPart {
 	XFontStruct *	Tfont[TEKNUMFONTS];
@@ -3009,6 +3051,7 @@ typedef struct _Work {
     } user_keys[MAX_UDK];
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
+    char *wm_name;
 #endif /* NO_ACTIVE_ICON */
 #if OPT_INPUT_METHOD
     Boolean cannot_im;		/* true if we cannot use input-method */
@@ -3016,6 +3059,7 @@ typedef struct _Work {
     int xim_fs_ascent;		/* ascent of fs */
     TInput inputs[NINPUTWIDGETS];
 #endif
+    Boolean doing_resize;	/* currently in RequestResize */
 #if OPT_MAXIMIZE
 #define MAX_EWMH_MODE 3
 #define MAX_EWMH_DATA (1 + OPT_TEK4014)
@@ -3096,6 +3140,7 @@ typedef	struct {
 #if OPT_ISO_COLORS
 	int	sgr_foreground;
 	int	sgr_background;
+	Boolean	sgr_38_xcolors;
 #endif
     } stack[MAX_SAVED_SGR];
 } SavedSGR;
@@ -3122,6 +3167,7 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
+    Boolean	sgr_38_xcolors;	/* true if ISO 8613 extension	*/
 #endif
     IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
@@ -3199,7 +3245,7 @@ typedef struct _TekWidgetRec {
 #define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
 #define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
-#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+#define DrawBIT(n)	xBIT(n + 8)	/* XTermDraw.draw_flags */
 /* The following attributes are used in the argument of drawXtermText()  */
 #define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
 #define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
@@ -3248,7 +3294,7 @@ typedef struct _TekWidgetRec {
 /* set when the line contains blinking text.
  */
 
-#if OPT_ZICONBEEP || OPT_TOOLBAR || (OPT_DOUBLE_BUFFER && OPT_RENDERFONT)
+#if OPT_ZICONBEEP || OPT_TOOLBAR || (USE_DOUBLE_BUFFER && OPT_RENDERFONT)
 #define HANDLE_STRUCT_NOTIFY 1
 #else
 #define HANDLE_STRUCT_NOTIFY 0
@@ -3265,6 +3311,22 @@ typedef struct _TekWidgetRec {
 #define OFF_PROTECT 0
 #define DEC_PROTECT 1
 #define ISO_PROTECT 2
+
+/***====================================================================***/
+
+/*
+ * Reduce parameter-count of drawXtermText by putting less-modified data here.
+ */
+typedef struct {
+	XtermWidget	xw;
+	unsigned	attr_flags;
+	unsigned	draw_flags;
+	unsigned	this_chrset;
+	unsigned	real_chrset;
+	int		on_wide;
+} XTermDraw;
+
+/***====================================================================***/
 
 #define TScreenOf(xw)	(&(xw)->screen)
 #define TekScreenOf(tw) (&(tw)->screen)
@@ -3332,7 +3394,7 @@ typedef struct _TekWidgetRec {
 #define TWindow(screen)		WhichTWin(screen)->window
 #define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 extern Window VDrawable(TScreen * /* screen */);
 #else
 #define VDrawable(screen)	VWindow(screen)
@@ -3391,6 +3453,8 @@ extern Window VDrawable(TScreen * /* screen */);
 
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
 
+#define AllowXResOps(w)		True
+
 #define SpecialWindowOps(w,name) (!TScreenOf(w)->disallow_win_ops[name])
 #define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \
 				 SpecialWindowOps(w,name))
@@ -3431,94 +3495,6 @@ typedef struct Tek_Link
 #endif
 #define	I_SIGNAL	0x02
 #define	I_TEK		0x04
-
-/***====================================================================***/
-
-#if OPT_TRACE
-#undef NDEBUG			/* turn on assert's */
-#else
-#ifndef NDEBUG
-#define NDEBUG			/* not debugging, don't do assert's */
-#endif
-#endif
-
-#include <trace.h>
-
-#ifndef TRACE
-#define TRACE(p) /*nothing*/
-#endif
-
-#ifndef TRACE_CLOSE
-#define TRACE_CLOSE() /*nothing*/
-#endif
-
-#ifndef TRACE_ARGV
-#define TRACE_ARGV(tag,argv) /*nothing*/
-#endif
-
-#ifndef TRACE_CHILD
-#define TRACE_CHILD /*nothing*/
-#endif
-
-#ifndef TRACE_EVENT
-#define TRACE_EVENT(t,e,s,n) /*nothing*/
-#endif
-
-#ifndef TRACE_FALLBACK
-#define TRACE_FALLBACK(w,t,c,n,f) /*nothing*/
-#endif
-
-#ifndef TRACE_FOCUS
-#define TRACE_FOCUS(w,e) /*nothing*/
-#endif
-
-#ifndef TRACE_HINTS
-#define TRACE_HINTS(hints) /*nothing*/
-#endif
-
-#ifndef TRACE_IDS
-#define TRACE_IDS /*nothing*/
-#endif
-
-#ifndef TRACE_OPTS
-#define TRACE_OPTS(opts,ress,lens) /*nothing*/
-#endif
-
-#ifndef TRACE_TRANS
-#define TRACE_TRANS(name,w) /*nothing*/
-#endif
-
-#ifndef TRACE_WIN_ATTRS
-#define TRACE_WIN_ATTRS(w) /*nothing*/
-#endif
-
-#ifndef TRACE_WM_HINTS
-#define TRACE_WM_HINTS(w) /*nothing*/
-#endif
-
-#ifndef TRACE_X_ERR
-#define TRACE_X_ERR(d,e) /*nothing*/
-#endif
-
-#ifndef TRACE_XRES
-#define TRACE_XRES() /*nothing*/
-#endif
-
-#ifndef TRACE2
-#define TRACE2(p) /*nothing*/
-#endif
-
-#if OPT_TRACE && !defined(DEBUG)
-#define DEBUG 1
-#endif
-
-#ifdef DEBUG
-#define if_DEBUG(code) if(debug) code
-#else
-#define if_DEBUG(code) /*nothing*/
-#endif
-
-#define DEBUG_MSG(text) if_DEBUG({ IGNORE_RC(write(2, text, sizeof(text) - 1)); })
 
 /* *INDENT-ON* */
 

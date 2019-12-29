@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.20 2019/05/19 08:56:22 tom Exp $
+# $XTermId: query-dynamic.pl,v 1.6 2019/05/19 08:56:11 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012-2018,2019 by Thomas E. Dickey
+# Copyright 2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -31,38 +31,44 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
-# Test the color-query features of xterm using OSC 4 or OSC 5.
-
-# TODO: optionally show result in #rrggbb format.
+# Test the color-query features of xterm for dynamic-colors
 
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_4, $opt_a, $opt_n, $opt_q, $opt_s );
+our ( $opt_q, $opt_s, $opt_8 );
+
+our @query_params;
+
+our @color_names = (
+    "VT100 text foreground color",
+    "VT100 text background color",
+    "text cursor color",
+    "mouse foreground color",
+    "mouse background color",
+    "Tektronix foreground color",
+    "Tektronix background color",
+    "highlight background color",
+    "Tektronix cursor color",
+    "highlight foreground color"
+);
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('4an:qs') || die(
-    "Usage: $0 [options] [color1[-color2]]\n
+&getopts('qs8') || die(
+    "Usage: $0 [options]\n
 Options:\n
-  -4      use OSC 4 for special colors rather than OSC 5
-  -a      query all \"ANSI\" colors
-  -n NUM  assume terminal supports NUM \"ANSI\" colors rather than 256
   -q      quicker results by merging queries
   -s      use ^G rather than ST
+  -8      use 8-bit controls
 "
 );
 
-our $ST              = $opt_s ? "\007" : "\x1b\\";
-our $num_ansi_colors = $opt_n ? $opt_n : 256;
-
-our $last_op = -1;
-our $this_op = -1;
-
-our @query_params;
+our $OSC = "\x1b\]";
+$OSC = "\x9d" if ($opt_8);
+our $ST = $opt_8 ? "\x9c" : ( $opt_s ? "\007" : "\x1b\\" );
 
 sub get_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -116,27 +122,6 @@ sub visible($) {
     return $result;
 }
 
-sub special2code($) {
-    my $param = shift;
-    $param = 0 if ( $param =~ /^bold$/i );
-    $param = 1 if ( $param =~ /^underline$/i );
-    $param = 2 if ( $param =~ /^blink$/i );
-    $param = 3 if ( $param =~ /^reverse$/i );
-    $param = 4 if ( $param =~ /^italic$/i );
-    return $param;
-}
-
-sub code2special($) {
-    my $param = shift;
-    my $result;
-    $result = "bold"      if ( $param == 0 );
-    $result = "underline" if ( $param == 1 );
-    $result = "blink"     if ( $param == 2 );
-    $result = "reverse"   if ( $param == 3 );
-    $result = "italic"    if ( $param == 4 );
-    return $result;
-}
-
 sub begin_query() {
     @query_params = ();
 }
@@ -148,41 +133,41 @@ sub add_param($) {
 sub show_reply($) {
     my $reply = shift;
     printf "data={%s}", &visible($reply);
-    if ( $reply =~ /^\d+;rgb:.*/ and ( $opt_4 or ( $this_op == 5 ) ) ) {
-        my $num = $reply;
-        my $max = $opt_4 ? $num_ansi_colors : 0;
-        $num =~ s/;.*//;
-        if ( $num >= $max ) {
-            my $name = &code2special( $num - $max );
-            printf "  %s", $name if ($name);
-        }
-    }
 }
 
-sub finish_query() {
+sub finish_query($) {
+    return unless (@query_params);
+
     my $reply;
     my $n;
-    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
-    my $osc   = qr/\x1b]$this_op/;
-    my $match = qr/^(${osc}.*${st})+$/;
+    my $st = $opt_8 ? qr/\x9c/ : ( $opt_s ? qr/\007/ : qr/\x1b\\/ );
+    my $osc = $opt_8 ? qr/\x9d/ : qr/\x1b]/;
+    my $match = qr/${osc}.*${st}/;
 
-    my $params = sprintf "%s;?;", ( join( ";?;", @query_params ) );
-    $reply = &get_reply( "\x1b]$this_op;" . $params . $ST );
+    my $params = join( ";", @query_params );
+    $params =~ s/\d+/?/g;
+    $params = sprintf( "%d;%s", $query_params[0], $params );
+    $reply = &get_reply( $OSC . $params . $ST );
 
-    printf "query%s{%s}%*s", $this_op, &visible($params), 3 - length($params),
-      " ";
+    printf "query{%s}", &visible($params);
 
     if ( defined $reply ) {
-        printf "len=%2d ", length($reply);
+        printf " len=%2d ", length($reply);
         if ( $reply =~ /${match}/ ) {
             my @chunks = split /${st}${osc}/, $reply;
             printf "\n" if ( $#chunks > 0 );
             for my $c ( 0 .. $#chunks ) {
                 $chunks[$c] =~ s/^${osc}// if ( $c == 0 );
                 $chunks[$c] =~ s/${st}$//  if ( $c == $#chunks );
-                $chunks[$c] =~ s/^;//;
-                printf "\t%d: ", $c if ( $#chunks > 0 );
+                my $param = $chunks[$c];
+                $param =~ s/^(\d+);.*/$1/;
+                $param = -1 unless ( $param =~ /^\d+$/ );
+                $chunks[$c] =~ s/^\d+;//;
+                printf "\t%d: ", $param if ( $#chunks > 0 );
                 &show_reply( $chunks[$c] );
+                printf " %s", $color_names[ $param - 10 ]
+                  if (  ( $param >= 10 )
+                    and ( ( $param - 10 ) <= $#color_names ) );
                 printf "\n" if ( $c < $#chunks );
             }
         }
@@ -196,24 +181,14 @@ sub finish_query() {
 
 sub query_color($) {
     my $param = shift;
-    my $op    = 4;
-
-    if ( $param !~ /^\d+$/ ) {
-        $param = &special2code($param);
-        if ( $param !~ /^\d+$/ ) {
-            printf STDERR "? not a color name or code: $param\n";
-            return;
-        }
-        if ($opt_4) {
-            $param += $num_ansi_colors;
-        }
-        else {
-            $op = 5;
-        }
-    }
-    $this_op = $op;    # FIXME handle mixed OSC 4/5
 
     &begin_query unless $opt_q;
+    if ( $#query_params >= 0
+        and ( $param != $query_params[$#query_params] + 1 ) )
+    {
+        &finish_query;
+        &begin_query;
+    }
     &add_param($param);
     &finish_query unless $opt_q;
 }
@@ -221,17 +196,13 @@ sub query_color($) {
 sub query_colors($$) {
     my $lo = shift;
     my $hi = shift;
-    if ( $lo =~ /^\d+$/ ) {
-        my $n;
-        for ( $n = $lo ; $n <= $hi ; ++$n ) {
-            &query_color($n);
-        }
-    }
-    else {
-        &query_color($lo);
-        &query_color($hi) unless ( $hi eq $lo );
+    my $n;
+    for ( $n = $lo ; $n <= $hi ; ++$n ) {
+        &query_color($n);
     }
 }
+
+printf "\x1b G" if ($opt_8);
 
 &begin_query if ($opt_q);
 
@@ -248,9 +219,11 @@ if ( $#ARGV >= 0 ) {
     }
 }
 else {
-    &query_colors( 0, $opt_a ? $num_ansi_colors : 7 );
+    &query_colors( 10, 19 );
 }
 
 &finish_query if ($opt_q);
+
+printf "\x1b F" if ($opt_8);
 
 1;

@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.121 2018/08/12 17:23:20 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.123 2019/11/02 21:50:51 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -166,9 +166,6 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR -DHAVE_TERM_H
 #if !HasPutenv
       PUTENVDEF = -DNOPUTENV
 #endif
-#ifdef DumpsXTerm
-       DUMPSDEF = -DOPT_SCREEN_DUMPS=1
-#endif
 #ifdef RegisXTerm
        SIXELDEF = -DOPT_REGIS_GRAPHICS=1
 #endif
@@ -184,15 +181,13 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR -DHAVE_TERM_H
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
    PATH_DEFINES = -DPROJECTROOT=$(PROJECTROOT)
-        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(IMAKEDEFINES) $(SIXELDEF) $(TRACEDEF) $(DUMPSDEF)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(IMAKEDEFINES) $(SIXELDEF) $(TRACEDEF)
        INCLUDES = -I. $(XRFINCLUDES)
 
         MAINSRC = main.c
         MAINOBJ = main.o
-#ifdef DumpsXTerm
        DUMPSSRC = html.c svg.c
        DUMPSOBJ = html.o svg.o
-#endif
 #ifdef RegisXTerm
        SIXELSRC = graphics_regis.c
        SIXELOBJ = graphics_regis.o

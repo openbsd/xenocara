@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.91 2018/04/02 00:27:27 tom Exp $ */
+/* $XTermId: linedata.c,v 1.97 2019/06/30 19:10:53 tom Exp $ */
 
 /*
- * Copyright 2009-2017,2018 by Thomas E. Dickey
+ * Copyright 2009-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -76,6 +76,9 @@ getLineData(TScreen *screen, int row)
 void
 copyLineData(LineData *dst, CLineData *src)
 {
+    if (dst == NULL || src == NULL)
+	return;
+
     dst->bufHead = src->bufHead;
 
 #if OPT_WIDE_CHARS
@@ -226,23 +229,36 @@ saveCellData(TScreen *screen,
 	     CellData *data,
 	     Cardinal cell,
 	     CLineData *ld,
+	     XTermRect *limits,
 	     int column)
 {
     CellData *item = CellDataAddr(screen, data, cell);
 
+    (void) limits;
     if (column < MaxCols(screen)) {
 	item->attribs = ld->attribs[column];
-#if OPT_ISO_COLORS
-	item->color = ld->color[column];
-#endif
+	if_OPT_ISO_COLORS(screen, {
+	    item->color = ld->color[column];
+	});
 	item->charData = ld->charData[column];
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
-	    item->combSize = ld->combSize;
-	    for_each_combData(off, ld) {
+	    Bool blank = (((item->charData == HIDDEN_CHAR)
+			   && (limits == NULL
+			       || (column + 1) == limits->left))
+			  || (item->charData != HIDDEN_CHAR
+			      && WideCells(item->charData) > 1
+			      && (limits == NULL
+				  || (column + 1) >= limits->right)));
+	    if (blank) {
+		item->charData = (Char) ' ';
+	    }
+	    item->combSize = blank ? 0 : ld->combSize;
+	    for_each_combData(off, item) {
 		item->combData[off] = ld->combData[off][column];
 	    }
-	})
+	});
+	TRACE2(("SAVED::%s\n", visibleIChars(&(item->charData), 1)));
     }
 }
 
@@ -251,15 +267,18 @@ restoreCellData(TScreen *screen,
 		const CellData *data,
 		Cardinal cell,
 		LineData *ld,
+		XTermRect *limits,
 		int column)
 {
     const CellData *item = ConstCellDataAddr(screen, data, cell);
 
+    (void) limits;
     if (column < MaxCols(screen)) {
 	ld->attribs[column] = item->attribs;
-#if OPT_ISO_COLORS
-	ld->color[column] = item->color;
-#endif
+	TRACE2(("BEFORE:%2d:%s\n", column + 1, visibleIChars(ld->charData, ld->lineSize)));
+	if_OPT_ISO_COLORS(screen, {
+	    ld->color[column] = item->color;
+	});
 	ld->charData[column] = item->charData;
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
@@ -267,6 +286,7 @@ restoreCellData(TScreen *screen,
 	    for_each_combData(off, ld) {
 		ld->combData[off][column] = item->combData[off];
 	    }
-	})
+	});
+	TRACE2(("AFTER::%2d:%s\n", column + 1, visibleIChars(ld->charData, ld->lineSize)));
     }
 }

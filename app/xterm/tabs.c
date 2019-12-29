@@ -1,7 +1,7 @@
-/* $XTermId: tabs.c,v 1.46 2018/07/20 22:17:44 tom Exp $ */
+/* $XTermId: tabs.c,v 1.47 2019/11/13 23:19:01 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -58,7 +58,7 @@
 #include <data.h>
 
 #define TAB_INDEX(n) ((n) >> TAB_BITS_SHIFT)
-#define TAB_MASK(n)  (1 << ((n) & (TAB_BITS_WIDTH-1)))
+#define TAB_MASK(n)  (1U << ((n) & (TAB_BITS_WIDTH-1)))
 
 #define SET_TAB(tabs,n) UIntSet(tabs[TAB_INDEX(n)], TAB_MASK(n))
 #define CLR_TAB(tabs,n) UIntClr(tabs[TAB_INDEX(n)], TAB_MASK(n))

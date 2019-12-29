@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.109 2018/08/27 00:27:17 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.121 2019/09/18 23:28:41 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -125,7 +125,7 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		if (utf_count == 0) {
 #if !OPT_WIDER_ICHAR
 		    /* characters outside UCS-2 become UCS_REPL */
-		    if (utf_char > 0xffff) {
+		    if (utf_char > NARROW_ICHAR) {
 			TRACE(("using replacement for %#x\n", utf_char));
 			utf_char = UCS_REPL;
 		    }
@@ -392,6 +392,10 @@ fillPtyData(XtermWidget xw, PtyData *data, const char *value, int length)
 }
 
 #if OPT_WIDE_CHARS
+/*
+ * Convert an ISO-8859-1 code 'c' to UTF-8, storing the result in the target
+ * 'lp', and returning a pointer past the converted character.
+ */
 Char *
 convertToUTF8(Char *lp, unsigned c)
 {
@@ -433,6 +437,111 @@ convertToUTF8(Char *lp, unsigned c)
     }
     return lp;
 #undef CH
+}
+
+/*
+ * Convert a UTF-8 multibyte character to an Unicode value, returning a pointer
+ * past the converted UTF-8 input.  The first 256 values align with ISO-8859-1,
+ * making it possible to use this to convert to Latin-1.
+ *
+ * If the conversion fails, return null.
+ */
+Char *
+convertFromUTF8(Char *lp, unsigned *cp)
+{
+    int want;
+
+    /*
+     * Find the number of bytes we will need from the source.
+     */
+    if ((*lp & 0x80) == 0) {
+	want = 1;
+    } else if ((*lp & 0xe0) == 0xc0) {
+	want = 2;
+    } else if ((*lp & 0xf0) == 0xe0) {
+	want = 3;
+    } else if ((*lp & 0xf8) == 0xf0) {
+	want = 4;
+    } else if ((*lp & 0xfc) == 0xf8) {
+	want = 5;
+    } else if ((*lp & 0xfe) == 0xfc) {
+	want = 6;
+    } else {
+	want = 0;
+    }
+
+    if (want) {
+	int have = 1;
+
+	while (lp[have] != '\0') {
+	    if ((lp[have] & 0xc0) != 0x80)
+		break;
+	    ++have;
+	}
+	if (want == have) {
+	    unsigned mask = 0;
+	    int j;
+	    int shift = 0;
+
+	    *cp = 0;
+	    switch (want) {
+	    case 1:
+		mask = (*lp);
+		break;
+	    case 2:
+		mask = (*lp & 0x1f);
+		break;
+	    case 3:
+		mask = (*lp & 0x0f);
+		break;
+	    case 4:
+		mask = (*lp & 0x07);
+		break;
+	    case 5:
+		mask = (*lp & 0x03);
+		break;
+	    case 6:
+		mask = (*lp & 0x01);
+		break;
+	    default:
+		mask = 0;
+		break;
+	    }
+
+	    for (j = 1; j < want; j++) {
+		*cp |= (unsigned) ((lp[want - j] & 0x3f) << shift);
+		shift += 6;
+	    }
+	    *cp |= mask << shift;
+	    lp += want;
+	} else {
+	    *cp = BAD_ASCII;
+	    lp = NULL;
+	}
+    } else {
+	*cp = BAD_ASCII;
+	lp = NULL;
+    }
+    return lp;
+}
+
+/*
+ * Returns true if the entire string is valid UTF-8.
+ */
+Boolean
+isValidUTF8(Char *lp)
+{
+    Boolean result = True;
+    while (*lp) {
+	unsigned ch;
+	Char *next = convertFromUTF8(lp, &ch);
+	if (next == NULL || ch == 0) {
+	    result = False;
+	    break;
+	}
+	lp = next;
+    }
+    return result;
 }
 
 /*
@@ -500,3 +609,46 @@ test_ptydata(XtermWidget xw)
     }
 }
 #endif /* TEST_PTYDATA */
+
+#ifdef TEST_UTF8_CONVERT
+void
+test_utf8_convert(void)
+{
+    unsigned c_in, c_out;
+    Char buffer[10];
+    Char *result;
+    unsigned limit = 1 << 24;
+    unsigned success = 0;
+    unsigned bucket[256];
+
+    memset(bucket, 0, sizeof(bucket));
+    for (c_in = 0; c_in < limit; ++c_in) {
+	memset(buffer, 0, sizeof(buffer));
+	if ((result = convertToUTF8(buffer, c_in)) == 0) {
+	    TRACE(("conversion of U+%04X to UTF-8 failed\n", c_in));
+	} else {
+	    if ((result = convertFromUTF8(buffer, &c_out)) == 0) {
+		TRACE(("conversion of U+%04X from UTF-8 failed\n", c_in));
+	    } else if (c_in != c_out) {
+		TRACE(("conversion of U+%04X to/from UTF-8 gave U+%04X\n",
+		       c_in, c_out));
+	    } else {
+		while (result-- != buffer) {
+		    bucket[*result]++;
+		}
+		++success;
+	    }
+	}
+    }
+    TRACE(("test_utf8_convert: %u/%u successful\n", success, limit));
+    for (c_in = 0; c_in < 256; ++c_in) {
+	if ((c_in % 8) == 0) {
+	    TRACE((" %02X:", c_in));
+	}
+	TRACE((" %8X", bucket[c_in]));
+	if (((c_in + 1) % 8) == 0) {
+	    TRACE(("\n"));
+	}
+    }
+}
+#endif

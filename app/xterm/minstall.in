@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.24 2016/10/24 22:29:20 tom Exp $
+# $XTermId: minstall.in,v 1.25 2019/07/19 00:53:57 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2015,2016 by Thomas E. Dickey
+# Copyright 2001-2016,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -152,6 +152,7 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__backarrow_is_bs__%@backarrow_is_bs@% \
 	-e s%__backarrow_is_erase__%@backarrow_is_erase@% \
 	-e s%__delete_is_del__%@delete_is_del@% \
+	-e s%__double_buffer__%@double_buffer@% \
 	-e s%__initial_erase__%@initial_erase@% \
 	-e s%__default_class__%$APP_TYPE% \
 	-e s%__apploaddir__%$APPS_DIR% \

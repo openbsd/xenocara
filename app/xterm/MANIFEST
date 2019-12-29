@@ -1,4 +1,4 @@
-MANIFEST for xterm-344, version xterm-344
+MANIFEST for xterm-351, version xterm-351
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -6,6 +6,7 @@ MANIFEST                        this file
 88colres.h                      resource definitions for 88-color mode
 88colres.pl                     script to generate 88colres.h
 AAA_README_VMS.txt              note for VMS port of 'xterm'
+COPYING                         license for this program
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 KOI8RXTerm.ad                   resources for koi8rxterm
@@ -166,9 +167,17 @@ package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
 package/freebsd                 subdirectory
 package/freebsd/Makefile        build-script
+package/freebsd/distinfo        generated sums
 package/freebsd/pkg-descr       build-script
 package/freebsd/pkg-message     build-script
+package/freebsd/pkg-message.wchar  build-script
 package/freebsd/pkg-plist       build-script
+package/pkgsrc                  subdirectory
+package/pkgsrc/DESCR            build-script
+package/pkgsrc/Makefile         build-script
+package/pkgsrc/PLIST            build-script
+package/pkgsrc/distinfo         build-script
+package/pkgsrc/options.mk       build-script
 package                         subdirectory
 package/xterm.spec              build-script
 tektests                        subdirectory
@@ -200,16 +209,20 @@ vttests/dynamic.pl              demo for dynamic colors
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
+vttests/modify-keys.pl          illustrate modifyOtherKeys with a table
 vttests/mouse-codes             demo script for mouse-codes
 vttests/other-sgr.sh            demonstrate non-VTxx SGRs
 vttests/paste64.pl              script to test base64-selection option
 vttests/print-vt-chars.pl       demo-script
 vttests/query-color.pl          demonstrate OSC 4
+vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
 vttests/query-fonts.pl          script to demo/test font-querying
 vttests/query-status.pl         query DECRQSS status
+vttests/query-xres.pl           test/demo for DCS+Q
 vttests/report-sgr.pl           demonstrate report-sgr
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
-vttests/sgrPushPop.pl           Dan Thompson's script
+vttests/sgrPushPop.pl           demonstrate xterm SGR push/pop
+vttests/sgrPushPop2.pl          demonstrate xterm SGR push/pop for colors
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action

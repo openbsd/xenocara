@@ -1,3 +1,45 @@
+xterm-dev (351) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 04 Nov 2019 16:16:46 -0500
+
+xterm-dev (350) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 23 Sep 2019 16:16:38 -0400
+
+xterm-dev (349) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 23 Jul 2019 16:06:11 -0400
+
+xterm-dev (348) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 30 Jun 2019 20:15:46 -0400
+
+xterm-dev (347) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 28 May 2019 20:19:05 -0400
+
+xterm-dev (346) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 19 May 2019 04:44:47 -0400
+
+xterm-dev (345) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 26 Feb 2019 17:33:30 -0500
+
 xterm-dev (344) unstable; urgency=low
 
   * maintenance updates

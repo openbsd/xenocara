@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.69 2019/02/11 09:26:51 tom Exp $ */
+/* $XTermId: main.h,v 1.72 2019/07/19 00:45:03 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -149,6 +149,12 @@
 #define DEFBLINKASBOLD		True
 #endif
 
+#if OPT_DOUBLE_BUFFER
+#define DEF_DOUBLE_BUFFER	True
+#else
+#define DEF_DOUBLE_BUFFER	False
+#endif
+
 #ifndef DEFDELETE_DEL
 #define DEFDELETE_DEL		Maybe
 #endif
@@ -199,6 +205,14 @@
 #else
 #define DEF_PTY_STTY_SIZE	True
 #endif
+#endif
+
+#ifndef DEF_BUFFER_RATE
+#define DEF_BUFFER_RATE		40	/* frames/second, limited to 100 */
+#endif
+
+#ifndef DEF_LIMIT_RESPONSE
+#define DEF_LIMIT_RESPONSE	1024
 #endif
 
 #ifndef DEF_SAVE_LINES

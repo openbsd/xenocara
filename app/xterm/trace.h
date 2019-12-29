@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.86 2018/12/18 23:14:28 tom Exp $ */
+/* $XTermId: trace.h,v 1.89 2019/09/25 20:38:04 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -91,7 +91,7 @@ extern	void	TraceEvent(const char *, XEvent *, String *, Cardinal *);
 #undef  TRACE_EVENT
 #define	TRACE_EVENT(t,e,s,n) TraceEvent(t, (XEvent *)e, s, n)
 
-#if OPT_RENDERFONT
+#if OPT_RENDERFONT && OPT_WIDE_CHARS
 extern	void	TraceFallback(XtermWidget, const char *, unsigned, int, XftFont *);
 #undef  TRACE_FALLBACK
 #define TRACE_FALLBACK(w,t,c,n,f) TraceFallback(w, t, c, n, f)
@@ -159,6 +159,26 @@ extern const char * ModifierName(unsigned /* modifier */);
 			    (Dimension) (reqwide), (Dimension) (reqhigh), \
 			    (gotwide), (gothigh))
 
+#define TRACE(p)		/*nothing*/
+#define TRACE_CLOSE()		/*nothing*/
+#define TRACE_ARGV(tag,argv)	/*nothing*/
+#define TRACE_CHILD		/*nothing*/
+#define TRACE_EVENT(t,e,s,n)	/*nothing*/
+#define TRACE_FALLBACK(w,t,c,n,f) /*nothing*/
+#define TRACE_FOCUS(w,e)	/*nothing*/
+#define TRACE_HINTS(hints)	/*nothing*/
+#define TRACE_IDS		/*nothing*/
+#define TRACE_OPTS(opts,ress,lens) /*nothing*/
+#define TRACE_TRANS(name,w)	/*nothing*/
+#define TRACE_WIN_ATTRS(w)	/*nothing*/
+#define TRACE_WM_HINTS(w)	/*nothing*/
+#define TRACE_X_ERR(d,e)	/*nothing*/
+#define TRACE_XRES()		/*nothing*/
+
+#endif
+
+#ifndef TRACE2
+#define TRACE2(p)		/*nothing*/
 #endif
 
 extern void TraceScreen(XtermWidget /* xw */, int /* whichBuf */);

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.10 2019/01/14 23:43:02 tom Exp $
+# $XTermId: run-tic.sh,v 1.11 2019/05/12 00:44:47 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -40,8 +40,8 @@ MYTEMP=`mktemp -d 2>/dev/null`
 if test -z "$MYTEMP"
 then
 	MYTEMP=${TMPDIR:-/tmp}/run-tic$$
-	mkdir $MYTEMP || failed "cannot mkdir $MYTEMP"
 fi
+mkdir -p $MYTEMP || failed "cannot mkdir $MYTEMP"
 trap "rm -rf $MYTEMP" EXIT INT QUIT HUP TERM
 
 STDERR=$MYTEMP/run-tic$$.log

@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.216 2018/02/08 10:01:08 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.217 2019/07/19 00:34:12 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -122,12 +122,14 @@
 #undef HAVE_WCSWIDTH		/* AC_CHECK_FUNCS(wcswidth) */
 #undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
+#undef HAVE_X11_EXTENSIONS_XDBE_H /* AC_CHECK_HEADERS(X11/extensions/Xdbe.h) */
 #undef HAVE_X11_EXTENSIONS_XINERAMA_H /* AC_CHECK_HEADERS(X11/extensions/Xinerama.h) */
 #undef HAVE_X11_EXTENSIONS_XKB_H /* AC_CHECK_HEADERS(X11/extensions/XKB.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XF86KEYSYM_H	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
 #undef HAVE_X11_XKBLIB_H	/* AC_CHECK_HEADERS(X11/XKBlib.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
+#undef HAVE_XDBESWAPBUFFERS	/* AC_CHECK_FUNC(XdbeSwapBuffers) */
 #undef HAVE_XFTDRAWSETCLIP	/* CF_X_FREETYPE */
 #undef HAVE_XFTDRAWSETCLIPRECTANGLES /* CF_X_FREETYPE */
 #undef HAVE_XKBKEYCODETOKEYSYM	/* AC_CHECK_FUNCS(XkbKeycodeToKeysym) */

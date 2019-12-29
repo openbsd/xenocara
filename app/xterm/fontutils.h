@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.128 2018/11/29 00:03:41 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.134 2019/11/12 10:05:06 tom Exp $ */
 
 /*
- * Copyright 1998-2017,2018 by Thomas E. Dickey
+ * Copyright 1998-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,10 +60,10 @@ extern void xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);
 extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
 extern void xtermCopyFontInfo (XTermFonts * /* target */, XTermFonts * /* source */);
+extern void xtermDerivedFont (const char * /* name */);
 extern void xtermFreeFontInfo (XTermFonts * /* target */);
-extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
-extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
+extern void xtermUpdateFontGCs (XtermWidget /* xw */, MyGetFont /* myfunc */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define getIconicFont(screen) (&((screen)->fnt_icon))
@@ -85,7 +85,7 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 #define DefaultFontWB(xw)   ((xw)->work.fonts.x11.list_wb[0])
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
+extern char *xtermSpecialFont (XTermDraw * /* params */);
 #endif
 
 #define FontLacksMetrics(font) \
@@ -123,7 +123,7 @@ extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, 
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
-extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
+extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif
@@ -151,6 +151,9 @@ extern XftFont *findXftGlyph (XtermWidget /* xw */, XftFont * /* given */, unsig
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
 extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
+#if OPT_DEC_CHRSET
+extern XftFont * getDoubleXftFont(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
+#endif
 #endif
 
 #if OPT_SHIFT_FONTS

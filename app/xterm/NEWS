@@ -1,45 +1,30 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #344 - 2019/02/12
+                            Patch #351 - 2019/11/17
 
-     * add  ASCII  escape to default for disallowedPasteControls (prompted
-       by discussion with Martin Hostettler).
-     * fix typo in ctlseqs.ms (Robert Ross).
-     * implement  DEC  Cyrillic  NRCS  (based  on  screenshots  of  vttest
-       provided by Markus Schmidt).
-     * correct control returning sixel geometry maximum versus actual size
-       (patch by Ben Wong).
-     * improve  manual  page  for  resize  to clarify that resize does not
-       execute   the   shell  commands  which  it  generates  for  setting
-       environment variables.
-     * improve  memory-management  for  parser, to handle response strings
-       that  might  occur  with  ENQ  or when SRM mode is active (patch by
-       Martin Hostettler).
-     * change  Comment  text  in  uxterm's  desktop  file to work around a
-       limitation   of   GNOME's   GIO   application   (issue  #940).  The
-       documentation reads:
-
-     Searches desktop files for ones that match search_string.
-     The  return value is an array of strvs. Each strv contains a list of
-     applications  that  matched  search_string  with an equal score. The
-     outer  list  is  sorted by score so that the first strv contains the
-     best-matching applications, and so on. The algorithm for determining
-     matches is undefined and may change at any time.
-     * a  check  of zIconBeep resource was removed in double-buffer fix in
-       patch  #334. That is used to decide whether to handle struct-notify
-       events.  When  xterm does handle the events, it may negotiate a new
-       window-size  with the window manager. In that case, the limitResize
-       resource  setting  limited  the new window-size to the screen-size.
-       Amended  that  by  eliminating the limit for this special case when
-       double-buffer  is configured, and restoring the check for zIconBeep
-       when double-buffer is not configured (Debian #919475).
-     * disallow  recursion  which  could  happen  if a user configures the
-       answerbackString  resource  with  the ENQ code and experiments with
-       that code when SRM is enabled (report by by Martin Hostettler).
-     * add remaining credits in COPYING file.
-     * modify  run-tic.sh  to  check  if  it  is using an older version of
-       ncurses  which does not support large terminal descriptions, and if
-       so,  remove  a  non-essential  feature to keep within the 4096-byte
-       legacy limit.
+     * correct  logic  in property_to_string for deciding when to fallback
+       from  UTF-8  decoding  to ISO-8859-1 decoding, broken in xterm #350
+       (FreeBSD #241961).
+     * add -report-icons to help-message.
+     * improved autoconf macros:
+          + CF_ADD_LIBS:  the  change to filter out duplicates caused this
+            to append rather than prepend. revise to fix that.
+          + CF_GCC_VERSION and CF_GCC_WARNINGS: move checks to distinguish
+            icc/clang   from   gcc   from  the  macro  which  handles  the
+            --enable-warnings  option,  to make this work without-warnings
+            for the inline-checks.
+     * update config.guess, config.sub
+     * correct  status  in  XTGETXRES  replies  when  the resource was not
+       found.
+     * fix some gcc, cppcheck, clang and coverity warnings.
+     * guard call to RequestResize from the struct-notify event handler to
+       prevent recursion in the Xft+buffered workaround in some cases when
+       doing  manual  resizing  rather  than resizing via escape sequences
+       (reports by Stefan Assman, Mike Thornburg).
+     * amend the workaround for Xft+buffered blanking by moving the switch
+       to  bitmap-fonts to account for differences in font metrics between
+       bitmap- and TrueType-fonts (report by Stefan Assmann).
+     * improve  the  note  on  the  xterm-rep  terminfo entry (prompted by
+       discussion with Sven Joachim).
 

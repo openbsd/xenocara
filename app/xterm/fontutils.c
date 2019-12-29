@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.629 2019/01/11 02:14:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.659 2019/11/13 23:00:11 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -137,6 +137,27 @@ static void fillInFaceSize(XtermWidget, int);
 static int lookupOneFontSize(XtermWidget, int);
 #endif
 
+#if OPT_TRACE
+static void
+set_font_height(TScreen *screen, VTwin *win, int height)
+{
+    SetFontHeight(screen, win, height);
+    TRACE(("SetFontHeight %d\n", win->f_height));
+#undef SetFontHeight
+#define SetFontHeight(screen, win, height) set_font_height(screen, win, height)
+}
+
+static void
+set_font_width(TScreen *screen, VTwin *win, int width)
+{
+    (void) screen;
+    SetFontWidth(screen, win, width);
+    TRACE(("SetFontWidth  %d\n", win->f_width));
+#undef  SetFontWidth
+#define SetFontWidth(screen, win, height) set_font_width(screen, win, height)
+}
+#endif
+
 #if OPT_REPORT_FONTS || OPT_WIDE_CHARS
 static unsigned
 countGlyphs(XFontStruct *fp)
@@ -208,6 +229,40 @@ setupPackedFonts(XtermWidget xw)
 }
 #endif
 
+typedef struct _nameList {
+    struct _nameList *next;
+    char *name;
+} NameList;
+
+static NameList *derived_fonts;
+
+static Boolean
+is_derived_font_name(const char *name)
+{
+    Boolean result = False;
+    NameList *list;
+    if (!IsEmpty(name)) {
+	for (list = derived_fonts; list != 0; list = list->next) {
+	    if (!x_strcasecmp(name, list->name)) {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+void
+xtermDerivedFont(const char *name)
+{
+    if (!IsEmpty(name) && !is_derived_font_name(name)) {
+	NameList *list = TypeCalloc(NameList);
+	list->name = x_strdup(name);
+	list->next = derived_fonts;
+	derived_fonts = list;
+    }
+}
+
 /*
  * Returns the fields from start to stop in a dash- separated string.  This
  * function will modify the source, putting '\0's in the appropriate place and
@@ -275,13 +330,18 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
     static FontNameProperties props;
     static char *last_name;
 
-    Atom fontatom = XInternAtom(dpy, "FONT", False);
-    char *name = 0;
+    Atom fontatom;
+    char *name;
     char *str;
+
+    if (fs == NULL)
+	return NULL;
 
     /*
      * first get the full font name
      */
+    name = 0;
+    fontatom = XInternAtom(dpy, "FONT", False);
     if (fontatom != 0) {
 	XFontProp *fp;
 	int i;
@@ -451,6 +511,7 @@ derive_font_name(FontNameProperties *props,
     append_fontname_num(&result, use_average_width);
     append_fontname_str(&result, use_encoding);
 
+    xtermDerivedFont(result);
     return result;
 }
 
@@ -544,9 +605,9 @@ widebold_font_name(FontNameProperties *props)
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsigned chrset)
+xtermSpecialFont(XTermDraw * params)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(params->xw);
 #if OPT_TRACE
     static char old_spacing[80];
     static FontNameProperties old_props;
@@ -566,16 +627,16 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     pixel_size = props->pixel_size;
     res_x = props->res_x;
     res_y = props->res_y;
-    if (attr_flags & BOLD)
+    if (params->attr_flags & BOLD)
 	weight = "bold";
     else
 	weight = props->weight;
 
-    if (CSET_DOUBLE(chrset))
+    if (CSET_DOUBLE(params->this_chrset))
 	res_x *= 2;
 
-    if (chrset == CSET_DHL_TOP
-	|| chrset == CSET_DHL_BOT) {
+    if (params->this_chrset == CSET_DHL_TOP
+	|| params->this_chrset == CSET_DHL_BOT) {
 	res_y *= 2;
 	pixel_size *= 2;
     }
@@ -585,7 +646,7 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
 	|| old_props.pixel_size != pixel_size
 	|| strcmp(old_props.spacing, props->spacing)) {
 	TRACE(("xtermSpecialFont(atts = %#x, draw = %#x, chrset = %#x)\n",
-	       attr_flags, draw_flags, chrset));
+	       params->attr_flags, params->draw_flags, params->this_chrset));
 	TRACE(("res_x      = %d\n", res_x));
 	TRACE(("res_y      = %d\n", res_y));
 	TRACE(("point_size = %s\n", props->point_size));
@@ -606,12 +667,13 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     append_fontname_str(&result, props->add_style);
     append_fontname_num(&result, pixel_size);
     append_fontname_str(&result, props->point_size);
-    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_x);
-    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_y);
+    append_fontname_num(&result, (params->draw_flags & NORESOLUTION) ? -1 : res_x);
+    append_fontname_num(&result, (params->draw_flags & NORESOLUTION) ? -1 : res_y);
     append_fontname_str(&result, props->spacing);
     append_fontname_str(&result, 0);
     append_fontname_str(&result, props->end);
 
+    xtermDerivedFont(result);
     return result;
 }
 #endif /* OPT_DEC_CHRSET */
@@ -745,6 +807,15 @@ is_fixed_font(XFontStruct *fs)
     return 1;
 }
 
+static int
+differing_widths(XFontStruct *a, XFontStruct *b)
+{
+    int result = 0;
+    if (a != NULL && b != NULL && a->max_bounds.width != b->max_bounds.width)
+	result = 1;
+    return result;
+}
+
 /*
  * Check if the font looks like a double width font (i.e. contains
  * characters of width X and 2X
@@ -753,7 +824,7 @@ is_fixed_font(XFontStruct *fs)
 static int
 is_double_width_font(XFontStruct *fs)
 {
-    return ((2 * fs->min_bounds.width) == fs->max_bounds.width);
+    return (fs != NULL && ((2 * fs->min_bounds.width) == fs->max_bounds.width));
 }
 #else
 #define is_double_width_font(fs) 0
@@ -876,36 +947,36 @@ cache_menu_font_name(TScreen *screen, int fontnum, int which, const char *name)
     }
 }
 
-typedef struct _cannotFont {
-    struct _cannotFont *next;
-    char *where;
-} CannotFont;
-
 static void
-cannotFont(XtermWidget xw, const char *who, const char *what, const char *where)
+cannotFont(XtermWidget xw, const char *who, const char *tag, const char *name)
 {
-    static CannotFont *ignored;
-    CannotFont *list;
+    static NameList *reported;
+    NameList *list;
 
     switch (xw->misc.fontWarnings) {
     case fwNever:
 	return;
     case fwResource:
-	for (list = ignored; list != 0; list = list->next) {
-	    if (!strcmp(where, list->where)) {
-		return;
-	    }
-	}
-	if ((list = TypeMalloc(CannotFont)) != 0) {
-	    list->where = x_strdup(where);
-	    list->next = ignored;
-	    ignored = list;
-	}
+	if (is_derived_font_name(name))
+	    return;
 	break;
     case fwAlways:
 	break;
     }
-    xtermWarning("cannot %s%s%s font \"%s\"\n", who, *what ? " " : "", what, where);
+    for (list = reported; list != 0; list = list->next) {
+	if (!x_strcasecmp(name, list->name)) {
+	    return;
+	}
+    }
+    if ((list = TypeMalloc(NameList)) != 0) {
+	list->name = x_strdup(name);
+	list->next = reported;
+	reported = list;
+    }
+    xtermWarning("cannot %s%s%s %sfont \"%s\"\n",
+		 who, *tag ? " " : "", tag,
+		 is_derived_font_name(name) ? "derived " : "",
+		 name);
 }
 
 /*
@@ -921,6 +992,8 @@ xtermOpenFont(XtermWidget xw,
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("xtermOpenFont %d:%d '%s'\n",
+	   result->warn, xw->misc.fontWarnings, NonNull(name)));
     if (!IsEmpty(name)) {
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
@@ -1110,36 +1183,27 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 }
 #endif
 
-typedef XTermFonts *(*MyGetFont) (TScreen *, int);
-
 void
-xtermUpdateFontGCs(XtermWidget xw, Bool italic)
+xtermUpdateFontGCs(XtermWidget xw, MyGetFont myfunc)
 {
     TScreen *screen = TScreenOf(xw);
-#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
-    MyGetFont myfunc = italic ? getItalicFont : getNormalFont;
-#else
-    MyGetFont myfunc = getNormalFont;
-#endif
     VTwin *win = WhichVWin(screen);
     Pixel new_normal = getXtermFG(xw, xw->flags, xw->cur_foreground);
     Pixel new_revers = getXtermBG(xw, xw->flags, xw->cur_background);
-
-    (void) italic;
 
     setCgsFore(xw, win, gcNorm, new_normal);
     setCgsBack(xw, win, gcNorm, new_revers);
     setCgsFont(xw, win, gcNorm, myfunc(screen, fNorm));
 
     copyCgs(xw, win, gcBold, gcNorm);
-    setCgsFont(xw, win, gcBold, myfunc(screen, fBold));
+    setCgsFont2(xw, win, gcBold, myfunc(screen, fBold), fBold);
 
     setCgsFore(xw, win, gcNormReverse, new_revers);
     setCgsBack(xw, win, gcNormReverse, new_normal);
     setCgsFont(xw, win, gcNormReverse, myfunc(screen, fNorm));
 
     copyCgs(xw, win, gcBoldReverse, gcNormReverse);
-    setCgsFont(xw, win, gcBoldReverse, myfunc(screen, fBold));
+    setCgsFont2(xw, win, gcBoldReverse, myfunc(screen, fBold), fBold);
 
     if_OPT_WIDE_CHARS(screen, {
 	XTermFonts *wide_xx = myfunc(screen, fWide);
@@ -1169,9 +1233,9 @@ xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 {
     if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
 	xtermLoadItalics(xw);
-	xtermUpdateFontGCs(xw, True);
+	xtermUpdateFontGCs(xw, getItalicFont);
     } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
-	xtermUpdateFontGCs(xw, False);
+	xtermUpdateFontGCs(xw, getNormalFont);
     }
     return new_attrs;
 }
@@ -1301,27 +1365,35 @@ loadWideFP(XtermWidget xw,
 	   int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
-    FontNameProperties *fp;
     Bool status = True;
 
     TRACE(("loadWideFP (%s)\n", NonNull(*nameOutP)));
 
-    if (check_fontname(*nameOutP)) {
-	cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
-    } else if (screen->utf8_fonts && !is_double_width_font(infoRef->fs)) {
+    if (!check_fontname(*nameOutP)
+	&& (screen->utf8_fonts && !is_double_width_font(infoRef->fs))) {
 	char *normal = x_strdup(nameRef);
-	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
+	FontNameProperties *fp = get_font_name_props(screen->display,
+						     infoRef->fs, &normal);
 	if (fp != 0) {
 	    *nameOutP = wide_font_name(fp);
-	    TRACE(("...derived wide %s\n", NonNull(*nameOutP)));
-	    cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
+	    NoFontWarning(infoOut);
 	}
 	free(normal);
     }
 
     if (check_fontname(*nameOutP)) {
-	if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
+	if (xtermOpenFont(xw, *nameOutP, infoOut, False)
+	    && is_derived_font_name(*nameOutP)
+	    && EmptyFont(infoOut->fs)) {
+	    xtermCloseFont2(xw, infoOut - fWide, fWide);
+	}
+	if (infoOut->fs == 0) {
 	    xtermCopyFontInfo(infoOut, infoRef);
+	} else {
+	    TRACE(("...%s wide %s\n",
+		   is_derived_font_name(*nameOutP) ? "derived" : "given",
+		   NonNull(*nameOutP)));
+	    cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
 	}
     } else {
 	xtermCopyFontInfo(infoOut, infoRef);
@@ -1339,18 +1411,15 @@ loadWBoldFP(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     Bool status = True;
-    Boolean derived;
     char *bold = NULL;
 
     TRACE(("loadWBoldFP (%s)\n", NonNull(*nameOutP)));
 
-    derived = False;
     if (!check_fontname(*nameOutP)) {
 	FontNameProperties *fp;
 	fp = get_font_name_props(screen->display, boldInfoRef->fs, &bold);
 	if (fp != 0) {
 	    *nameOutP = widebold_font_name(fp);
-	    derived = True;
 	    NoFontWarning(infoOut);
 	}
     }
@@ -1358,13 +1427,13 @@ loadWBoldFP(XtermWidget xw,
     if (check_fontname(*nameOutP)) {
 
 	if (xtermOpenFont(xw, *nameOutP, infoOut, False)
-	    && derived
+	    && is_derived_font_name(*nameOutP)
 	    && !compatibleWideCounts(wideInfoRef->fs, infoOut->fs)) {
 	    xtermCloseFont2(xw, infoOut - fWBold, fWBold);
 	}
 
 	if (infoOut->fs == 0) {
-	    if (derived)
+	    if (is_derived_font_name(*nameOutP))
 		free(*nameOutP);
 	    if (IsEmpty(wideNameRef)) {
 		*nameOutP = x_strdup(boldNameRef);
@@ -1379,7 +1448,7 @@ loadWBoldFP(XtermWidget xw,
 	    }
 	} else {
 	    TRACE(("...%s wide/bold %s\n",
-		   derived ? "derived" : "given",
+		   is_derived_font_name(*nameOutP) ? "derived" : "given",
 		   NonNull(*nameOutP)));
 	    cache_menu_font_name(screen, fontnum, fWBold, *nameOutP);
 	}
@@ -1498,9 +1567,11 @@ xtermLoadFont(XtermWidget xw,
      * Normal/bold fonts should be the same width.  Also, the min/max
      * values should be the same.
      */
-    if (!is_fixed_font(fnts[fNorm].fs)
-	|| !is_fixed_font(fnts[fBold].fs)
-	|| fnts[fNorm].fs->max_bounds.width != fnts[fBold].fs->max_bounds.width) {
+    if (fnts[fNorm].fs != 0
+	&& fnts[fBold].fs != 0
+	&& (!is_fixed_font(fnts[fNorm].fs)
+	    || !is_fixed_font(fnts[fBold].fs)
+	    || differing_widths(fnts[fNorm].fs, fnts[fBold].fs))) {
 	TRACE(("Proportional font! normal %d/%d, bold %d/%d\n",
 	       fnts[fNorm].fs->min_bounds.width,
 	       fnts[fNorm].fs->max_bounds.width,
@@ -1514,7 +1585,7 @@ xtermLoadFont(XtermWidget xw,
 	    && fnts[fWBold].fs != 0
 	    && (!is_fixed_font(fnts[fWide].fs)
 		|| !is_fixed_font(fnts[fWBold].fs)
-		|| fnts[fWide].fs->max_bounds.width != fnts[fWBold].fs->max_bounds.width)) {
+		|| differing_widths(fnts[fWide].fs, fnts[fWBold].fs))) {
 	    TRACE(("Proportional font! wide %d/%d, wide bold %d/%d\n",
 		   fnts[fWide].fs->min_bounds.width,
 		   fnts[fWide].fs->max_bounds.width,
@@ -1547,7 +1618,7 @@ xtermLoadFont(XtermWidget xw,
     xtermCopyFontInfo(GetNormalFont(screen, fWBold), &fnts[fWBold]);
 #endif
 
-    xtermUpdateFontGCs(xw, False);
+    xtermUpdateFontGCs(xw, getNormalFont);
 
 #if OPT_BOX_CHARS
     screen->allow_packing = proportional;
@@ -1856,11 +1927,13 @@ xtermCopyFontLists(XtermWidget xw, VTFontList * target, VTFontList * source)
     COPY_IT(fontBold, list_b);
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     COPY_IT(fontItal, list_i);
+    COPY_IT(fontBtal, list_bi);
 #endif
 #if OPT_WIDE_CHARS
     COPY_IT(wideFont, list_w);
     COPY_IT(wideBoldFont, list_wb);
     COPY_IT(wideItalFont, list_wi);
+    COPY_IT(wideBtalFont, list_wbi);
 #endif
 #undef COPY_IT
 }
@@ -2990,10 +3063,12 @@ xtermComputeFontInfo(XtermWidget xw,
 	XTermXftFonts norm = screen->renderFontNorm[fontnum];
 	XTermXftFonts bold = screen->renderFontBold[fontnum];
 	XTermXftFonts ital = screen->renderFontItal[fontnum];
+	XTermXftFonts btal = screen->renderFontBtal[fontnum];
 #if OPT_RENDERWIDE
 	XTermXftFonts wnorm = screen->renderWideNorm[fontnum];
 	XTermXftFonts wbold = screen->renderWideBold[fontnum];
 	XTermXftFonts wital = screen->renderWideItal[fontnum];
+	XTermXftFonts wbtal = screen->renderWideBtal[fontnum];
 #endif
 
 	if (norm.font == 0 && !IsEmpty(face_name)) {
@@ -3035,6 +3110,11 @@ xtermComputeFontInfo(XtermWidget xw,
 	    XFT_SLANT,      XftTypeInteger, XFT_SLANT_ITALIC, \
 	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
 
+#define BtalXftPattern(norm) \
+	    XFT_WEIGHT,     XftTypeInteger, XFT_WEIGHT_BOLD, \
+	    XFT_SLANT,      XftTypeInteger, XFT_SLANT_ITALIC, \
+	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
+
 #if OPT_WIDE_ATTRS
 #define HAVE_ITALICS 1
 #define FIND_ITALICS ((pat = XftNameParse(face_name)) != 0)
@@ -3045,6 +3125,9 @@ xtermComputeFontInfo(XtermWidget xw,
 #define HAVE_ITALICS 0
 #endif
 
+#if OPT_DEC_CHRSET
+	    freeall_DoubleFT(xw);
+#endif
 	    if ((pat = XftNameParse(face_name)) != 0) {
 #define OPEN_XFT(name, tag) name.font = xtermOpenXft(xw, face_name, name.pattern, tag)
 		norm.pattern = XftPatternDuplicate(pat);
@@ -3069,6 +3152,12 @@ xtermComputeFontInfo(XtermWidget xw,
 					ItalXftPattern(norm),
 					(void *) 0);
 			OPEN_XFT(ital, "italic");
+			btal.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(btal.pattern,
+					NormXftPattern,
+					BtalXftPattern(norm),
+					(void *) 0);
+			OPEN_XFT(btal, "bold-italic");
 		    }
 #endif
 
@@ -3109,6 +3198,18 @@ xtermComputeFontInfo(XtermWidget xw,
 		    OPEN_XFT(ital, "italics");
 		    failed = 0;
 		    CACHE_XFT(screen->renderFontItal, ital);
+		}
+		CACHE_XFT(screen->renderFontBtal, btal);
+		if (norm.font != 0 && !btal.font) {
+		    xtermWarning("did not find a usable bold italic TrueType font\n");
+		    XftPatternDestroy(btal.pattern);
+		    btal.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(btal.pattern,
+				    NormXftPattern,
+				    (void *) 0);
+		    OPEN_XFT(btal, "bold-italics");
+		    failed = 0;
+		    CACHE_XFT(screen->renderFontBtal, btal);
 		}
 #endif
 		XftPatternDestroy(pat);
@@ -3167,6 +3268,18 @@ xtermComputeFontInfo(XtermWidget xw,
 					    (void *) 0);
 			    OPEN_XFT(wital, "wide-italic");
 			}
+			CACHE_XFT(screen->renderWideBtal, wbtal);
+			if (!wbtal.font) {
+			    xtermWarning("did not find a usable wide bold italic TrueType font\n");
+			    XftPatternDestroy(wbtal.pattern);
+			    wbtal.pattern = XftPatternDuplicate(pat);
+			    XftPatternBuild(wbtal.pattern,
+					    WideXftPattern,
+					    (void *) 0);
+			    OPEN_XFT(wbtal, "wide-bold-italics");
+			    failed = 0;
+			    CACHE_XFT(screen->renderWideBtal, wbtal);
+			}
 #endif
 		    }
 
@@ -3214,6 +3327,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	    setRenderFontsize(xw, win, norm.font, NULL);
 	    setRenderFontsize(xw, win, bold.font, "bold");
 	    setRenderFontsize(xw, win, ital.font, "ital");
+	    setRenderFontsize(xw, win, btal.font, "btal");
 #if OPT_BOX_CHARS
 	    setupPackedFonts(xw);
 
@@ -3269,7 +3383,7 @@ xtermComputeFontInfo(XtermWidget xw,
 }
 
 /* save this information as a side-effect for double-sized characters */
-void
+static void
 xtermSaveFontInfo(TScreen *screen, XFontStruct *font)
 {
     screen->fnt_wide = (Dimension) (font->max_bounds.width);
@@ -3288,9 +3402,9 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     int scrollbar_width;
     VTwin *win = &(screen->fullVwin);
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     discardRenderDraw(TScreenOf(xw));
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
 
     scrollbar_width = (xw->misc.scrollbar
 		       ? (screen->scrollWidget->core.width +
@@ -3327,7 +3441,9 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     XFontStruct *fs = font->fs;
     XCharStruct *pc = 0;
 
-    if (fs->max_byte1 == 0) {
+    if (fs == NULL) {
+	result = True;
+    } else if (fs->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
 	if (ch < 256)
 #endif
@@ -3384,16 +3500,14 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
  * line-drawing character).
  */
 void
-xtermDrawBoxChar(XtermWidget xw,
+xtermDrawBoxChar(XTermDraw * params,
 		 unsigned ch,
-		 unsigned attr_flags,
-		 unsigned draw_flags,
 		 GC gc,
 		 int x,
 		 int y,
 		 int cells)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(params->xw);
     /* *INDENT-OFF* */
     static const short glyph_ht[] = {
 	SEG(1*BOX_WIDE/10,  0,		1*BOX_WIDE/10,5*MID_HIGH/6),	/* H */
@@ -3572,10 +3686,10 @@ xtermDrawBoxChar(XtermWidget xw,
     CgsEnum cgsId = (ch == 2) ? gcDots : gcLine;
     VTwin *cgsWin = WhichVWin(screen);
     const short *p;
-    unsigned font_width = (unsigned) (((draw_flags & DOUBLEWFONT) ? 2 : 1)
-				      * screen->fnt_wide);
-    unsigned font_height = (unsigned) (((draw_flags & DOUBLEHFONT) ? 2 : 1)
-				       * screen->fnt_high);
+    unsigned font_width = (((params->draw_flags & DOUBLEWFONT) ? 2U : 1U)
+			   * screen->fnt_wide);
+    unsigned font_height = (((params->draw_flags & DOUBLEHFONT) ? 2U : 1U)
+			    * screen->fnt_high);
 
     if (cells > 1)
 	font_width *= (unsigned) cells;
@@ -3587,11 +3701,11 @@ xtermDrawBoxChar(XtermWidget xw,
      */
     if (screen->utf8_mode
 #if OPT_RENDERFONT
-	&& !UsingRenderFont(xw)
+	&& !UsingRenderFont(params->xw)
 #endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
-	int which = (attr_flags & BOLD) ? fBold : fNorm;
+	int which = (params->attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (xtermMissingChar(n, getNormalFont(screen, which)))
@@ -3625,29 +3739,29 @@ xtermDrawBoxChar(XtermWidget xw,
 	    : "")));
 
     if (cgsId == gcDots) {
-	setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-	setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, gc));
-	setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
+	setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+	setCgsFore(params->xw, cgsWin, cgsId, getCgsFore(params->xw, cgsWin, gc));
+	setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     } else {
-	setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-	setCgsFore(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
-	setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
+	setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+	setCgsFore(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
+	setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     }
-    gc2 = getCgsGC(xw, cgsWin, cgsId);
+    gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
-    if (!(draw_flags & NOBACKGROUND)) {
+    if (!(params->draw_flags & NOBACKGROUND)) {
 	XFillRectangle(screen->display, VDrawable(screen), gc2, x, y,
 		       font_width,
 		       font_height);
     }
 
-    setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-    setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, gc));
-    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
-    gc2 = getCgsGC(xw, cgsWin, cgsId);
+    setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+    setCgsFore(params->xw, cgsWin, cgsId, getCgsFore(params->xw, cgsWin, gc));
+    setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
+    gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
     XSetLineAttributes(screen->display, gc2,
-		       (attr_flags & BOLD)
+		       (params->attr_flags & BOLD)
 		       ? ((font_height > 12)
 			  ? font_height / 12
 			  : 1)
@@ -3810,10 +3924,12 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	offsetof(TScreen, renderFontNorm),
 	offsetof(TScreen, renderFontBold),
 	offsetof(TScreen, renderFontItal),
+	offsetof(TScreen, renderFontBtal),
 #if OPT_RENDERWIDE
 	offsetof(TScreen, renderWideNorm),
 	offsetof(TScreen, renderWideBold),
 	offsetof(TScreen, renderWideItal),
+	offsetof(TScreen, renderWideBtal),
 #endif
     };
     Cardinal n;
@@ -4044,38 +4160,38 @@ dec2ucs(TScreen *screen, unsigned ch)
 #if OPT_VT52_MODE
 	if (screen != 0 && !(screen->vtXX_level)) {
 	    switch (ch) {
-		MY_UCS(0x0020, 0);	/* reserved, treat as blank           */
-		MY_UCS(0x25ae, 1);	/* black vertical rectangle           */
-		MY_UCS(0x215f, 2);	/* "1/"                               */
-		MY_UCS(0x0020, 3);	/* "3/", not in Unicode, ignore       */
-		MY_UCS(0x0020, 4);	/* "5/", not in Unicode, ignore       */
-		MY_UCS(0x0020, 5);	/* "7/", not in Unicode, ignore       */
-		MY_UCS(0x00b0, 6);	/* degree sign                        */
-		MY_UCS(0x00b1, 7);	/* plus-minus sign                    */
-		MY_UCS(0x2192, 8);	/* right-arrow                        */
-		MY_UCS(0x2026, 9);	/* ellipsis                           */
-		MY_UCS(0x00f7, 10);	/* divide by                          */
-		MY_UCS(0x2193, 11);	/* down arrow                         */
-		MY_UCS(0x23ba, 12);	/* bar at scan 0                      */
-		MY_UCS(0x23ba, 13);	/* bar at scan 1                      */
-		MY_UCS(0x23bb, 14);	/* bar at scan 2                      */
-		MY_UCS(0x23bb, 15);	/* bar at scan 3                      */
-		MY_UCS(0x23bc, 16);	/* bar at scan 4                      */
-		MY_UCS(0x23bc, 17);	/* bar at scan 5                      */
-		MY_UCS(0x23bd, 18);	/* bar at scan 6                      */
-		MY_UCS(0x23bd, 19);	/* bar at scan 7                      */
-		MY_UCS(0x2080, 20);	/* subscript 0                        */
-		MY_UCS(0x2081, 21);	/* subscript 1                        */
-		MY_UCS(0x2082, 22);	/* subscript 2                        */
-		MY_UCS(0x2083, 23);	/* subscript 3                        */
-		MY_UCS(0x2084, 24);	/* subscript 4                        */
-		MY_UCS(0x2085, 25);	/* subscript 5                        */
-		MY_UCS(0x2086, 26);	/* subscript 6                        */
-		MY_UCS(0x2087, 27);	/* subscript 7                        */
-		MY_UCS(0x2088, 28);	/* subscript 8                        */
-		MY_UCS(0x2089, 29);	/* subscript 9                        */
-		MY_UCS(0x00b6, 30);	/* paragraph                          */
-		MY_UCS(0x007f, 31);	/* invalid, treat as rubout           */
+		MY_UCS(0x0020, 0);	/* nbsp, treat as blank           */
+		MY_UCS(0x0020, 1);	/* reserved, treat as blank       */
+		MY_UCS(0x25ae, 2);	/* black vertical rectangle       */
+		MY_UCS(0x215f, 3);	/* "1/"                           */
+		MY_UCS(0x0020, 4);	/* "3/", not in Unicode, ignore   */
+		MY_UCS(0x0020, 5);	/* "5/", not in Unicode, ignore   */
+		MY_UCS(0x0020, 6);	/* "7/", not in Unicode, ignore   */
+		MY_UCS(0x00b0, 7);	/* degree sign                    */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                */
+		MY_UCS(0x2192, 9);	/* right-arrow                    */
+		MY_UCS(0x2026, 10);	/* ellipsis                       */
+		MY_UCS(0x00f7, 11);	/* divide by                      */
+		MY_UCS(0x2193, 12);	/* down arrow                     */
+		MY_UCS(0x23ba, 13);	/* bar at scan 0                  */
+		MY_UCS(0x23ba, 14);	/* bar at scan 1                  */
+		MY_UCS(0x23bb, 15);	/* bar at scan 2                  */
+		MY_UCS(0x23bb, 16);	/* bar at scan 3                  */
+		MY_UCS(0x23bc, 17);	/* bar at scan 4                  */
+		MY_UCS(0x23bc, 18);	/* bar at scan 5                  */
+		MY_UCS(0x23bd, 19);	/* bar at scan 6                  */
+		MY_UCS(0x23bd, 20);	/* bar at scan 7                  */
+		MY_UCS(0x2080, 21);	/* subscript 0                    */
+		MY_UCS(0x2081, 22);	/* subscript 1                    */
+		MY_UCS(0x2082, 23);	/* subscript 2                    */
+		MY_UCS(0x2083, 24);	/* subscript 3                    */
+		MY_UCS(0x2084, 25);	/* subscript 4                    */
+		MY_UCS(0x2085, 26);	/* subscript 5                    */
+		MY_UCS(0x2086, 27);	/* subscript 6                    */
+		MY_UCS(0x2087, 28);	/* subscript 7                    */
+		MY_UCS(0x2088, 29);	/* subscript 8                    */
+		MY_UCS(0x2089, 30);	/* subscript 9                    */
+		MY_UCS(0x00b6, 31);	/* paragraph                      */
 	    }
 	} else
 #endif
@@ -4751,6 +4867,9 @@ save2FontList(XtermWidget xw,
 	case fItal:
 	    list = &(target->list_i);
 	    break;
+	case fBtal:
+	    list = &(target->list_bi);
+	    break;
 #endif
 #if OPT_WIDE_CHARS
 	case fWide:
@@ -4761,6 +4880,9 @@ save2FontList(XtermWidget xw,
 	    break;
 	case fWItal:
 	    list = &(target->list_wi);
+	    break;
+	case fWBtal:
+	    list = &(target->list_wbi);
 	    break;
 #endif
 	case fMAX:
@@ -4813,7 +4935,11 @@ save2FontList(XtermWidget xw,
 	    }
 	}
 	if (success) {
+#if (MAX_XFT_FONTS == MAX_XLFD_FONTS)
+	    size_t limit = MAX_XFT_FONTS;
+#else
 	    size_t limit = use_ttf ? MAX_XFT_FONTS : MAX_XLFD_FONTS;
+#endif
 	    if (count > limit && *x_skip_blanks(value)) {
 		fprintf(stderr, "%s: too many fonts for %s, ignoring %s\n",
 			ProgramName,
@@ -4988,6 +5114,9 @@ freeFontLists(VTFontList * lists)
 	case fItal:
 	    target = &(lists->list_i);
 	    break;
+	case fBtal:
+	    target = &(lists->list_bi);
+	    break;
 #endif
 #if OPT_WIDE_CHARS
 	case fWide:
@@ -4998,6 +5127,9 @@ freeFontLists(VTFontList * lists)
 	    break;
 	case fWItal:
 	    target = &(lists->list_wi);
+	    break;
+	case fWBtal:
+	    target = &(lists->list_wbi);
 	    break;
 #endif
 	default:
@@ -5030,7 +5162,51 @@ getDoubleFont(TScreen *screen, int which)
 	result = GetDoubleFont(screen, which);
     return result;
 }
+
+#if OPT_RENDERFONT
+XftFont *
+getDoubleXftFont(XTermDraw * params, unsigned chrset, unsigned attr_flags)
+{
+    XftFont *result = 0;
+
+    XtermWidget xw = params->xw;
+    TScreen *screen = TScreenOf(xw);
+    XftPattern *top_pattern;
+    int fontnum = screen->menu_font_number;
+    const char *face_name = getFaceName(xw, False);
+
+    if (chrset != CSET_SWL
+	&& (top_pattern = XftNameParse(face_name)) != 0) {
+	double face_size = xw->misc.face_size[fontnum];
+	XftPattern *sub_pattern = XftPatternDuplicate(top_pattern);
+
+	switch (chrset) {
+	case CSET_DHL_TOP:
+	    /* FALLTHRU */
+	case CSET_DHL_BOT:
+	    face_size *= 2;
+	    XftPatternBuild(sub_pattern,
+			    NormXftPattern,
+			    (void *) 0);
+	    break;
+	case CSET_DWL:
+	    XftPatternBuild(sub_pattern,
+			    NormXftPattern,
+			    FC_ASPECT, XftTypeDouble, 2.0,
+			    (void *) 0);
+	    break;
+	}
+	if (attr_flags & BOLD) {
+	    XftPatternBuild(sub_pattern,
+			    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+			    (void *) 0);
+	}
+	result = xtermOpenXft(xw, face_name, sub_pattern, "doublesize");
+    }
+    return result;
+}
 #endif
+#endif /* OPT_DEC_CHRSET */
 
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
 XTermFonts *
@@ -5070,6 +5246,9 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 	case fItal:
 	    result = &(screen->renderFontItal[fontnum]);
 	    break;
+	case fBtal:
+	    result = &(screen->renderFontBtal[fontnum]);
+	    break;
 #endif
 #if OPT_WIDE_CHARS
 	case fWide:
@@ -5080,6 +5259,9 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 	    break;
 	case fWItal:
 	    result = &(screen->renderWideItal[fontnum]);
+	    break;
+	case fWBtal:
+	    result = &(screen->renderWideBtal[fontnum]);
 	    break;
 #endif
 	case fMAX:
@@ -5110,11 +5292,13 @@ whichFontEnum(VTFontEnum value)
 	DATA(fBold);
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
 	DATA(fItal);
+	DATA(fBtal);
 #endif
 #if OPT_WIDE_CHARS
 	DATA(fWide);
 	DATA(fWBold);
 	DATA(fWItal);
+	DATA(fWBtal);
 #endif
 	DATA(fMAX);
     }
@@ -5148,11 +5332,13 @@ whichFontList2s(VTFontList * list, char **value)
     DATA(list_b);
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     DATA(list_i);
+    DATA(list_bi);
 #endif
 #if OPT_WIDE_CHARS
     DATA(list_w);
     DATA(list_wb);
     DATA(list_wi);
+    DATA(list_wbi);
 #endif
 #undef DATA
     return result;

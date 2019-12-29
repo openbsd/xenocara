@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.178 2019/01/13 19:27:05 tom Exp $
+# $XTermId: terminfo,v 1.184 2019/11/04 21:55:11 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -132,16 +132,22 @@
 xterm-new|modern xterm terminal emulator,
 	npc,
 	indn=\E[%p1%dS,
-	kb2=\EOE,
 	kcbt=\E[Z,
 	kent=\EOM,
 	rin=\E[%p1%dT,
+	use=xterm+keypad,
+	use=vt420+lrmm,
 	use=xterm+sm+1006,
 	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
 	use=xterm-basic,
+
+# Left/right margins are supported in xterm since patch #279 (2012/05/10)
+vt420+lrmm|VT420 left/right margins,
+	mgc=\E[?69l,
+	smglr=\E[?69h\E[%i%p1%d;%p2%ds,
 
 # These "ansi+XXX" blocks were added in ncurses 5.0:
 ansi+rep,
@@ -1515,6 +1521,35 @@ xterm+titlestack|xterm 251 feature,
 xterm+alt+title|xterm 90 and 251 features combined,
 	rmcup=\E[?1049l\E[23;0;0t,
 	smcup=\E[?1049h\E[22;0;0t,
+
+# from development after ncurses 6.1
+xterm+keypad|xterm emulating VT100/VT220 numeric keypad,
+	kp5=\EOE,
+	kpADD=\EOk,
+	kpCMA=\EOl,
+	kpDIV=\EOo,
+	kpDOT=\EOn,
+	kpMUL=\EOj,
+	kpSUB=\EOm,
+	kpZRO=\EOp,
+	use=vt220+keypad,
+
+# from develoment after ncurses 5.2
+vt220+keypad|dec vt220 numeric keypad,
+	ka1=\EOw,
+	ka3=\EOy,
+	kb2=\EOu,
+	kc1=\EOq,
+	kc3=\EOs,
+	kent=\EOM,
+	kf1=\EOP,
+	kf2=\EOQ,
+	kf3=\EOR,
+	kf4=\EOS,
+	ka2=\EOx,
+	kb1=\EOt,
+	kb3=\EOv,
+	kc2=\EOr,
 #
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
@@ -1546,9 +1581,18 @@ xterm-xmc|xterm with magic-cookie glitch,
 	xmc#1,
 	use=xterm-new,
 #
-# This one also is primarily for testing ncurses; while the ISO 6429 defines
-# the REP control, none of the DEC VTxxx terminals (VT52 through VT420) support
-# it.
+# This one was originally for testing ncurses.  While the ISO 6429 defines the
+# REP control, none of the DEC VTxxx terminals (VT52 through VT525) support it.
+#
+# The feature's inclusion in xterm was prompted by changes in ncurses to
+# support testing repeat_char by Alexander Lukyanov, since no readily-available
+# terminal supported this:
+#
+# + Alexander's patch was integrated in ncurses 1996/09/28
+# + xterm patch #32 1996/11/21 was released in XFree86 3.2A 1997/01/26
+#
+# In July 2017, the feature was added to xterm-new in ncurses, making this
+# entry obsolete (but it is kept for reference).
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
 	use=xterm-new,
@@ -1711,7 +1755,15 @@ xterm-16color|xterm with 16 colors,
 		%;
 		m,
 	use=xterm+256color,
+	use=xterm+osc104,
 	use=xterm-new,
+
+# xterm OSC 104 resets the color palette.  Using it as part of xterm+256color
+# has the drawback that some of the xterm-alikes which use that building block
+# require a different approach to rs1 -TD
+xterm+osc104|reset color palette,
+	oc=\E]104\007,
+	rs1=\Ec\E]104\007,
 
 # "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
@@ -1732,7 +1784,6 @@ xterm+256color|xterm 256-color feature,
 	initc=\E]4;
 		%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
 	oc=\E]104\007,
-	rs1=\Ec\E]104\007,
 	setab=\E[
 		%?
 			%p1%{8}%<
@@ -1759,6 +1810,7 @@ xterm+256color|xterm 256-color feature,
 	setf@,
 xterm-256color|xterm with 256 colors,
 	use=xterm+256color,
+	use=xterm+osc104,
 	use=xterm-new,
 xterm-88color|xterm with 88 colors,
 	colors#88,

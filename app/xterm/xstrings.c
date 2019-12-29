@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.72 2018/06/25 20:37:23 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.73 2019/10/06 23:09:43 tom Exp $ */
 
 /*
- * Copyright 2000-2017,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -134,6 +134,7 @@ x_encode_hex(const char *source)
 
     if (result != 0) {
 	unsigned j, k;
+	result[0] = '\0';
 	for (j = k = 0; source[j] != '\0'; ++j) {
 	    sprintf(result + k, "%02X", CharOf(source[j]));
 	    k += 2;

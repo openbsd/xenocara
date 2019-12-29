@@ -1,7 +1,7 @@
-/* $XTermId: testxmc.c,v 1.52 2014/05/11 14:05:38 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.53 2019/06/30 18:56:50 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -102,8 +102,13 @@ Mark_XMC(XtermWidget xw, int param)
     if (glitch == 0) {
 	unsigned len = screen->xmc_glitch;
 	glitch = TypeMallocN(IChar, len);
-	while (len--)
-	    glitch[len] = XMC_GLITCH;
+	if (glitch == NULL) {
+	    xtermWarning("Not enough core for xmc glitch mode\n");
+	    return;
+	} else {
+	    while (len--)
+		glitch[len] = XMC_GLITCH;
+	}
     }
     switch (param) {
     case -1:			/* DEFAULT */

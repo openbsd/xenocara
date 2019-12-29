@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: report-sgr.pl,v 1.32 2018/08/08 09:15:39 tom Exp $
+# $XTermId: report-sgr.pl,v 1.35 2019/07/21 21:55:49 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018 by Thomas E. Dickey
+# Copyright 2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -359,9 +359,9 @@ sub show_example() {
           $n, $sgr_names[$n];
         $mode .= ";$cur_sgr" unless ( $cur_sgr eq "0" );
         &sgr($mode);
-        printf                                   #
+        printf "%.55s",                          #
           "abcdefghijklmnopqrstuvwxyz" .         #
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZ",          #
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZ" .         #
           "0123456789";
     }
     &sgr(0);
@@ -448,7 +448,12 @@ sub restore_screen() {
     ReadMode 'restore', 'STDIN';
 }
 
-GetOptions( 'colors=i', 'help|?', 'direct', 'man' ) || pod2usage(2);
+GetOptions(
+    'colors=i',    #
+    'help|?',      #
+    'direct',      #
+    'man'
+) || pod2usage(2);
 pod2usage(1) if $opt_help;
 pod2usage( -verbose => 2 ) if $opt_man;
 
@@ -554,6 +559,8 @@ report-sgr.pl [options]
 
   Options:
     -help            brief help message
+    -8               use 8-bit controls
+    -colors=NUM      specify number of indexed colors
     -direct          use direct-colors, rather than indexed
 
 =head1 OPTIONS
@@ -567,6 +574,10 @@ Print a brief help message and exit.
 =item B<-man>
 
 Print the extended help message and exit.
+
+=item B<-colors>
+
+Specify the number of indexed colors.
 
 =item B<-direct>
 

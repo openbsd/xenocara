@@ -1,7 +1,7 @@
-/* $XTermId: version.c,v 1.5 2018/06/25 20:18:58 tom Exp $ */
+/* $XTermId: version.c,v 1.6 2019/11/13 23:52:20 tom Exp $ */
 
 /*
- * Copyright 2013-2016,2018 by Thomas E. Dickey
+ * Copyright 2013-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -49,12 +49,12 @@ xtermVersion(void)
     if (buffer == 0) {
 	const char *vendor = vendor_version;
 
-	buffer = TextAlloc(strlen(vendor) + 256);
+	buffer = TextAlloc(sizeof(vendor_version) + 256);
 	if (buffer == 0) {
 	    result = vendor;
 	} else {
-	    char first[BUFSIZ];
-	    char second[BUFSIZ];
+	    char first[sizeof(vendor_version)];
+	    char second[sizeof(vendor_version)];
 
 	    /* some vendors leave trash in this string */
 	    for (;;) {
