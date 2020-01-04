@@ -22,7 +22,7 @@
 SUBDIRS = src include wrapper
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xvmc.pc
+pkgconfig_DATA = xvmc.pc xvmc-wrapper.pc
 
 dist_doc_DATA = XvMC_API.txt
 
@@ -42,3 +42,5 @@ if LINT
 lint:
 	(cd src && $(MAKE) $(MFLAGS) lint)
 endif LINT
+
+EXTRA_DIST = README.md

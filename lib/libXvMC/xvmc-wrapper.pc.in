@@ -3,10 +3,10 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: XvMC
-Description: The XvMC Library
+Name: XvMCWrapper
+Description: XvMC wrapper library
 Version: @PACKAGE_VERSION@
 Requires: xproto videoproto
 Requires.private: x11 xext
 Cflags: -I${includedir}
-Libs: -L${libdir} -lXvMC
+Libs: -L${libdir} -lXvMCW

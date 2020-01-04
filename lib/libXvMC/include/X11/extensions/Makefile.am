@@ -1,2 +1,2 @@
 extdir = $(includedir)/X11/extensions
-ext_HEADERS = XvMClib.h
+ext_HEADERS = XvMClib.h vldXvMC.h

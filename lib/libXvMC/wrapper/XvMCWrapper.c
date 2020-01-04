@@ -47,7 +47,7 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XvMC.h>
 #include <X11/extensions/XvMClib.h>
-#include <X11/extensions/vldXvMC.h>
+#include "X11/extensions/vldXvMC.h"
 #include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,3 +1,141 @@
+commit 36086307ba9fd1272365b964056e8a6780109478
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 24 12:52:29 2019 -0400
+
+    libXvMC 1.0.12
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 0fab90b409a3e4848603bdb6b438523038239f23
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 24 12:28:19 2019 -0400
+
+    vld: Provide <X11/extensions/vldXvMC.h> ourself
+    
+    This header refers to libX11 types, it doesn't belong in xorgproto and
+    has been moved to legacy in 2019.2. Supply it ourselves.
+
+commit dd9ae03725990ee9c9336bca4b267dfbb696002f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 23 15:28:50 2019 -0400
+
+    pkgconfig: Remove xv from xvmc.pc
+    
+    This library does not itself require libXv for anything.
+
+commit 0366572c58a85558f9dc7229e74b9a0397becc89
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Mon Jul 8 09:46:28 2019 -0700
+
+    Add a pkgconfig file for libXvMCW
+    
+    Mesa needs to link with this for testing, as do others presumably.
+    Having a pkg-config file makes this much easier
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=110735
+    
+    v2: - remove xv from Requires and Requires.private
+
+commit 63a79d1d087f5121b07510692bf6dd8207d0c0d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 15:11:28 2019 -0700
+
+    libXvMC 1.0.11
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c0a1b5d9d5dea58c516a6aefa6dd15192919b48
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:56:27 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45de1c449740caf45984aac59ab35741defcadbb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:55:06 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a964f14b7b61bb8055d5144c96ecbba5dfae4a3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 22 15:56:27 2018 -0700
+
+    Fix sign comparison warnings for loop indexes
+    
+    XvMC.c: In function ‘XvMCListSurfaceTypes’:
+    XvMC.c:124:19: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+          for(i = 0; i < rep.num; i++) {
+                       ^
+    XvMC.c: In function ‘XvMCListSubpictureTypes’:
+    XvMC.c:185:26: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+                 for(i = 0; i < rep.num; i++) {
+                              ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28ad81420723175bfb163e20406af6d4d56bf4d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 22 15:51:49 2018 -0700
+
+    Need to check for -1, not 0, to determine if shmat() failed
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68d0e5a122c6c76c19cc58ce9cea1424c7a5db11
+Author: Neha Gupta <neha.g1@samsung.com>
+Date:   Fri Jun 5 08:20:48 2015 +0000
+
+    Fix handling of shmKey in XvMCGetDRInfo
+    
+    If we store the result of shmget in a CARD32 (unsigned int), then
+    checking if it returned -1 for an error by using >= 0 doesn't work.
+    
+    Also, once the request is flushed from the buffer (as XReply does),
+    there's no guarantee the values in it are still valid, so it's better
+    to rely on our local variable instead.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libxvmc/issues/1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 48ca78665a3f251f94b190b61fcc2027b07a76c9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 290edda14c96e34873cd5601d3c515ce74ca01a5
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9b8c4f2f82cd45c7c394efa992663fb75452e39f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 44a462835cbe263451a463af17f0fbedc1c957b2
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Oct 4 22:09:12 2016 +0200

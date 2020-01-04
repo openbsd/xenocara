@@ -72,11 +72,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_doc_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(srcdir)/xvmc.pc.in \
-	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	$(srcdir)/config.h.in $(srcdir)/xvmc-wrapper.pc.in \
+	$(srcdir)/xvmc.pc.in $(top_srcdir)/configure COPYING ChangeLog \
+	INSTALL compile config.guess config.sub depcomp install-sh \
+	ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -85,7 +86,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = xvmc.pc
+CONFIG_CLEAN_FILES = xvmc.pc xvmc-wrapper.pc
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -340,9 +341,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = src include wrapper
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xvmc.pc
+pkgconfig_DATA = xvmc.pc xvmc-wrapper.pc
 dist_doc_DATA = XvMC_API.txt
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -397,6 +399,8 @@ $(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 xvmc.pc: $(top_builddir)/config.status $(srcdir)/xvmc.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+xvmc-wrapper.pc: $(top_builddir)/config.status $(srcdir)/xvmc-wrapper.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:

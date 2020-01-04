@@ -258,7 +258,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 extdir = $(includedir)/X11/extensions
-ext_HEADERS = XvMClib.h
+ext_HEADERS = XvMClib.h vldXvMC.h
 all: all-am
 
 .SUFFIXES:
