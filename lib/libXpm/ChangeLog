@@ -1,3 +1,131 @@
+commit b0fc485495a694816d76a43978e2cfd5575c554d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 13 14:25:06 2019 +1000
+
+    libXpm 3.5.13
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5817fd4ac5308fe7c23301c652f174997009b7d5
+Author: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+Date:   Wed Dec 4 11:17:21 2019 +0100
+
+    parse: simplify error paths in xpmParseColors()
+    
+    We introduced a new label to handle the errors, we should use it
+    for the rest of the function.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+
+commit e1d8f704d52f70680869b7aae1da0ad2382db363
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 5 06:17:00 2019 +1000
+
+    parse: avoid memleak on error with STRLCAT/STRLCPY
+    
+    The original macro might exit the function without freeing `colorTable`.
+    
+    Move the macros into a slightly less awful helper function and use goto
+    to clean up in case of error.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7af7c5e275b69daedee3696bee1e880586f30373
+Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date:   Fri May 3 07:59:09 2019 +0200
+
+    Allow usage when fork() is not available
+    
+    When fork() is not available, we need to define NO_ZPIPE so that
+    libXpm doesn't try to fork/exec to use a pipe to uncompress compressed
+    .xpm files. There is obviously a loss of functionality, but loading
+    uncompressed .xpm files should continue to work.
+    
+    Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+    [Retrieved from:
+    https://git.buildroot.net/buildroot/tree/package/x11r7/xlib_libXpm/0001-fork-check.patch]
+    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+commit 0be2c6712728cea1fa1bcc640e564c45c2c82e37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:47:06 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9f8faf1c05fb92abc6c5b1db5e45eb1a7942875
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:30:30 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73a1e769dcf2a603fc63f5c36626c1c6db815f46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 30 15:09:29 2018 -0700
+
+    After fdopen(), use fclose() instead of close() in error path
+    
+    Found by Oracle's Parfait 2.2 static analyzer:
+    
+    Error: File Leak
+       File Leak [file-ptr-leak]:
+          Leaked File fp
+            at line 94 of lib/libXpm/src/RdFToBuf.c in function 'XpmReadFileToBuffer
+    '.
+              fp initialized at line 86 with fdopen
+              fp leaks when len < 0 at line 92.
+    
+    Introduced-by: commit 8b3024e6871ce50b34bf2dff924774bd654703bc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc1b4962f048cfa33b76be46493e10cfb256fe98
+Author: Dave Bodenstab <the.tick@gmx.com>
+Date:   Wed Feb 22 12:04:54 2012 +0000
+
+    Windows build fixes
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=46475
+    https://bugs.freedesktop.org/attachment.cgi?id=57479
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e42ca7b484418b169fd19a4c68e23ad2a6ec7a11
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit ed8f9c2e8b635eb63497c48b24a056f9e6f50609
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 644d7c595ba29fb368666fb497e1e14a92a65a77
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 1fab5e81fd761f628fb68d22934615536dbd0220
 Author: Matthieu Herrb <matthieu@herrb.eu>
 Date:   Mon Dec 12 23:09:52 2016 +0100

@@ -39,6 +39,10 @@
 #endif
 #include "XpmI.h"
 
+#ifdef FOR_MSW
+#define snprintf _snprintf
+#endif
+
 LFUNC(WriteColors, int, (char **dataptr, unsigned int *data_size,
 			 unsigned int *used_size, XpmColor *colors,
 			 unsigned int ncolors, unsigned int cpp));

@@ -216,8 +216,13 @@ FUNC(xpmHashTableFree, void, (xpmHashTable *table));
 FUNC(xpmHashSlot, xpmHashAtom *, (xpmHashTable *table, char *s));
 FUNC(xpmHashIntern, int, (xpmHashTable *table, char *tag, void *data));
 
+#if defined(_MSC_VER) && defined(_M_X64)
+#define HashAtomData(i) ((void *)(long long)i)
+#define HashColorIndex(slot) ((unsigned long long)((*slot)->data))
+#else
 #define HashAtomData(i) ((void *)(long)i)
 #define HashColorIndex(slot) ((unsigned long)((*slot)->data))
+#endif
 #define USE_HASHTABLE (cpp > 2 && ncolors > 4)
 
 /* I/O utility */

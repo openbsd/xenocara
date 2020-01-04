@@ -1,8 +1,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXpm], [3.5.12],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXpm])
+AC_INIT([libXpm], [3.5.13],
+        [https://gitlab.freedesktop.org/xorg/lib/libXpm/issues], [libXpm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -21,6 +21,7 @@ XORG_DEFAULT_OPTIONS
 
 # Checks for library functions
 AC_CHECK_FUNCS([strlcat])
+AC_CHECK_FUNC([fork],[], AC_DEFINE(NO_ZPIPE))
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XPM, xproto x11)

@@ -51,6 +51,12 @@
 
 #include "fcntl.h"
 
+#ifdef FOR_MSW
+#define O_WRONLY _O_WRONLY
+#define O_CREAT  _O_CREAT
+#define O_TRUNC  _O_TRUNC
+#endif
+
 /* MS Windows define a function called WriteFile @#%#&!!! */
 LFUNC(xpmWriteFile, int, (FILE *file, XpmImage *image, const char *name,
 			  XpmInfo *info));

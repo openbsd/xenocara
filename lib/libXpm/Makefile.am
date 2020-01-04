@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS = -I m4
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xpm.pc
 
-EXTRA_DIST = COPYRIGHT NEWS.old
+EXTRA_DIST = COPYRIGHT NEWS.old README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

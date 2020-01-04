@@ -54,7 +54,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/xpm.pc.in $(top_srcdir)/configure AUTHORS COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -324,7 +324,7 @@ SUBDIRS = doc include man src sxpm cxpm
 ACLOCAL_AMFLAGS = -I m4
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xpm.pc
-EXTRA_DIST = COPYRIGHT NEWS.old
+EXTRA_DIST = COPYRIGHT NEWS.old README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
