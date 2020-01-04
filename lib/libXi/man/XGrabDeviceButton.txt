@@ -49,7 +49,7 @@ SYNOPSIS
 
    modifier_device
           specifies the device whose modifiers are to be used. If
-          the modifier_devicespecified is NULL, the X keyboard
+          the modifier_device specified is NULL, the X keyboard
           will be used as the modifier_device.
 
    grab_window
@@ -57,8 +57,8 @@ SYNOPSIS
 
    owner_events
           Specifies a Boolean value that indicates whether the
-          deviceevents are to be reported as usual or reported
-          with respect to the grab windowif selected by the event
+          device events are to be reported as usual or reported
+          with respect to the grab window if selected by the event
           list.
 
    event_count
@@ -69,11 +69,11 @@ SYNOPSIS
 
    this_device_mode
           Specifies further processing of events from this
-          device.You can pass GrabModeSync or GrabModeAsync.
+          device. You can pass GrabModeSync or GrabModeAsync.
 
    other_devices_mode
           Specifies further processing of events from all other
-          devices.You can pass GrabModeSync or GrabModeAsync.
+          devices. You can pass GrabModeSync or GrabModeAsync.
 
 DESCRIPTION
 -----------

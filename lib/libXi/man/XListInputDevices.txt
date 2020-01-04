@@ -22,11 +22,11 @@ SYNOPSIS
 
    ndevices_return
           Specifies a pointer to a variable where the number of
-          available devices canbe returned.
+          available devices can be returned.
 
    list
           Specifies the list of devices to free. The
-          XFreeDeviceList functionfrees the list of available
+          XFreeDeviceList function frees the list of available
           extension input devices.
 
 DESCRIPTION

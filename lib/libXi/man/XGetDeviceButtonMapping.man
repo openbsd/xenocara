@@ -1,1 +1,1 @@
-.so manlibmansuffix/XSetDeviceButtonMapping.libmansuffix
+.so XSetDeviceButtonMapping.libmansuffix

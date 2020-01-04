@@ -1,1 +1,1 @@
-.so manlibmansuffix/XGetDeviceProperty.libmansuffix
+.so XGetDeviceProperty.libmansuffix

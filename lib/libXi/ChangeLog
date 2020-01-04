@@ -1,3 +1,114 @@
+commit e05da79a98775edb91ffe3de3b413f156bc4d6e7
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 19 12:42:33 2019 -0400
+
+    libXi 1.7.10
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit dd5cedb7cd631cf4aeaadfd9cb993f0086857dbd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 19 12:40:46 2019 -0400
+
+    Replace open-coded FP3232_TO_DOUBLE
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a42ee93c10bf9a63c22e0642d6e51877fba8dae5
+Author: Alexander Bersenev <bay@hackerdom.ru>
+Date:   Mon Jun 17 22:56:43 2019 +0500
+
+    Fix the FIXME in XIValuatorClass case of copy_classes function in XExtInt.c
+    
+    In addition fix FP3232_TO_DOUBLE macro to correctly compute the fractional
+    part.
+    
+    This fixes glitchy scrolling in Qt applications when the application was
+    just activated or was scrolled in the backgroud. Qt uses XIQueryDevice
+    call to synchronize internal scroll location with an actual one.
+    
+    Bug: https://gitlab.freedesktop.org/xorg/lib/libxi/issues/10
+
+commit 3e38d823a162c21492ac243924325730d4ea61bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:43:13 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e020870b1e322e3458c1c18a456661f1951cab70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:23:32 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7654506717f7ff08eae7ab4c0db3fc1c2d5b7ed
+Author: Raphaël Droz <raphael.droz+floss@gmail.com>
+Date:   Sat Oct 27 22:17:31 2018 +0000
+
+    Update XIChangeHierarchy.txt
+
+commit 60ef7bab67aca3dd7c83e8726feb3c46869a74c2
+Author: Jeff Smith <whydoubt@gmail.com>
+Date:   Thu Feb 1 01:59:56 2018 -0600
+
+    _XIPassiveGrabDevice needs to set time value
+    
+    When setting up a XIPassiveGrabDevice request, the time field is not
+    being set, leading to improper data being passed 'over the wire'.
+    
+    Accept a time value into _XIPassiveGrabDevice and use it to set the time
+    field in the request.  Since the the functions calling
+    _XIPassiveGrabDevice are part of the API, and they do not accept time
+    values, they can just pass CurrentTime.
+    
+    Signed-off-by: Jeff Smith <whydoubt@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a1c639255b7a9270fea52de3f186eb2fca9de01a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 14 11:15:01 2017 +1000
+
+    man: add a bunch of missing spaces
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8ffaac5710a9a983227454d8473604daae3f172a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c6c386431e1fa6b45ff966191e68bee1150c5e87
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c7584066d5b06cd2bb9d99df43b741cf565820ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit b87c312590877800b4e18a17a012b47839f5c06b
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Jan 23 13:44:58 2017 +1000

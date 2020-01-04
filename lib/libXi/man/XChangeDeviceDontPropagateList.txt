@@ -33,7 +33,7 @@ SYNOPSIS
           Specifies a pointer to a list of event classes.
 
    mode
-          Specifies the mode.You can pass AddToList, or
+          Specifies the mode. You can pass AddToList, or
           DeleteFromList.
 
    count

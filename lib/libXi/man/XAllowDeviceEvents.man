@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: xallowdeviceevents
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 03/09/2013
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/19/2019
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XALLOWDEVICEEVENTS" "libmansuffix" "03/09/2013" "\ \&" "\ \&"
+.TH "XALLOWDEVICEEVENTS" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -54,12 +54,12 @@ device
 event_mode
        Specifies the event mode\&.You can pass AsyncThisDevice,
        SyncThisDevice, ReplayThisDevice, AsyncOtherDevices,
-       SyncAll,or AsyncAll\&.
+       SyncAll, or AsyncAll\&.
 .fi
 .sp
 .nf
 time
-       Specifies the time\&.You can pass either a timestamp or
+       Specifies the time\&. You can pass either a timestamp or
        CurrentTime\&.
 .fi
 .SH "DESCRIPTION"
@@ -76,7 +76,7 @@ The following describes the processing that occurs depending on what constant yo
 .sp -1
 .IP \(bu 2.3
 .\}
-AsyncThisDevice \- If the specified device is frozen by the client, event processing for that device continues as usual\&. If the device is frozen multiple times by the client on behalf of multiple separate grabs, AsyncThisDevice thaws for all\&.AsyncThisDevice has no effect if the specified device is not frozen by the client, but the device need not be grabbed by the client\&.
+AsyncThisDevice \- If the specified device is frozen by the client, event processing for that device continues as usual\&. If the device is frozen multiple times by the client on behalf of multiple separate grabs, AsyncThisDevice thaws for all\&. AsyncThisDevice has no effect if the specified device is not frozen by the client, but the device need not be grabbed by the client\&.
 .RE
 .sp
 .RS 4
@@ -134,7 +134,7 @@ SyncAll \- If all devices are frozen by the client, event processing (for all de
 AsyncAll \- If all devices are frozen by the client, event processing for all devices continues normally\&. If any device is frozen multiple times by the client on behalf of multiple separate grabs, AsyncAll thaws for all\&. AsyncAll has no effect unless all devices are frozen by the client\&.
 .RE
 .sp
-AsyncThisDevice, SyncThisDevice, and ReplayThisDevice have no effect on the processing of events from the remaining devices\&.AsyncOtherDevices has no effect on the processing of events from the specified device\&. When the event_mode is SyncAll or AsyncAll, the device parameter is ignored\&.
+AsyncThisDevice, SyncThisDevice, and ReplayThisDevice have no effect on the processing of events from the remaining devices\&. AsyncOtherDevices has no effect on the processing of events from the specified device\&. When the event_mode is SyncAll or AsyncAll, the device parameter is ignored\&.
 .sp
 It is possible for several grabs of different devices by the same or different clients to be active simultaneously\&. If a device is frozen on behalf of any grab, no event processing is performed for the device\&. It is possible for a single device to be frozen because of several grabs\&. In this case, the freeze must be released on behalf of each grab before events can again be processed\&.
 .sp

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: xlistinputdevices
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 10/13/2016
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/19/2019
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XLISTINPUTDEVICES" "libmansuffix" "10/13/2016" "\ \&" "\ \&"
+.TH "XLISTINPUTDEVICES" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,13 +52,13 @@ display
 .nf
 ndevices_return
        Specifies a pointer to a variable where the number of
-       available devices canbe returned\&.
+       available devices can be returned\&.
 .fi
 .sp
 .nf
 list
        Specifies the list of devices to free\&. The
-       XFreeDeviceList functionfrees the list of available
+       XFreeDeviceList function frees the list of available
        extension input devices\&.
 .fi
 .SH "DESCRIPTION"

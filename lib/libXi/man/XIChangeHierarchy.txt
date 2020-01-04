@@ -93,7 +93,7 @@ DESCRIPTION
    XIRemoveMasterInfo can generate a BadValue and a BadDevice
    error.
 
-   XIAttachSlaveInfo attaches device to newMaster. If the device
+   XIAttachSlaveInfo attaches device to new_master. If the device
    is currently attached to a master device, it is detached from
    the master device and attached to the new master device.
 

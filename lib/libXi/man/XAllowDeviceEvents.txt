@@ -25,10 +25,10 @@ SYNOPSIS
    event_mode
           Specifies the event mode.You can pass AsyncThisDevice,
           SyncThisDevice, ReplayThisDevice, AsyncOtherDevices,
-          SyncAll,or AsyncAll.
+          SyncAll, or AsyncAll.
 
    time
-          Specifies the time.You can pass either a timestamp or
+          Specifies the time. You can pass either a timestamp or
           CurrentTime.
 
 DESCRIPTION
@@ -47,7 +47,7 @@ what constant you pass to the event_mode argument.
    client, event processing for that device continues as usual. If
    the device is frozen multiple times by the client on behalf of
    multiple separate grabs, AsyncThisDevice thaws for
-   all.AsyncThisDevice has no effect if the specified device is
+   all. AsyncThisDevice has no effect if the specified device is
    not frozen by the client, but the device need not be grabbed by
    the client.
 
@@ -100,7 +100,7 @@ what constant you pass to the event_mode argument.
 
 AsyncThisDevice, SyncThisDevice, and ReplayThisDevice have no
 effect on the processing of events from the remaining
-devices.AsyncOtherDevices has no effect on the processing of
+devices. AsyncOtherDevices has no effect on the processing of
 events from the specified device. When the event_mode is
 SyncAll or AsyncAll, the device parameter is ignored.
 

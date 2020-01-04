@@ -38,8 +38,8 @@ SYNOPSIS
 
    owner_events
           Specifies a Boolean value that indicates whether
-          theevents from the deviceare to be reported as usual or
-          reported with respect to the grab windowif selected by
+          the events from the device are to be reported as usual or
+          reported with respect to the grab window if selected by
           the event list.
 
    event_count
@@ -48,20 +48,20 @@ SYNOPSIS
 
    event_list
           Specifies a pointer to a list of event classes that
-          indicates which eventsthe client wishes to receive.
-          These event classes must have beenobtained specifying
+          indicates which events the client wishes to receive.
+          These event classes must have been obtained specifying
           the device being grabbed.
 
    this_device_mode
           Specifies further processing of events from this
-          device.You can pass GrabModeSyncor GrabModeAsync.
+          device. You can pass GrabModeSync or GrabModeAsync.
 
    other_devices_mode
           Specifies further processing of events from other
-          devices.You can pass GrabModeSyncor GrabModeAsync.
+          devices.You can pass GrabModeSync or GrabModeAsync.
 
    time
-          Specifies the time.You can pass either a timestamp or
+          Specifies the time. You can pass either a timestamp or
           CurrentTime.
 
 DESCRIPTION
@@ -109,8 +109,8 @@ DESCRIPTION
    and returns GrabFrozen. If the specified time is earlier than
    the last-device-grab time or later than the current X server
    time, it fails and returns GrabInvalidTime. Otherwise, the
-   last-device-grab time is set to the specified time (
-   CurrentTime is replaced by the current X server time).
+   last-device-grab time is set to the specified time
+   (CurrentTime is replaced by the current X server time).
 
    If a grabbed device is closed by a client while an active grab
    by that client is in effect, the active grab is released. If

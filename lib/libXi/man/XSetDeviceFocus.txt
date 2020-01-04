@@ -34,29 +34,29 @@ Arguments
           changed.
 
    focus
-          Specifies the window, PointerRoot, FollowKeyboard,or
+          Specifies the window, PointerRoot, FollowKeyboard, or
           None.
 
    focus_return
-          Returns the focus window, PointerRoot, FollowKeyboard,or
+          Returns the focus window, PointerRoot, FollowKeyboard, or
           None.
 
    revert_to
           Specifies where the input focus reverts to if the window
-          becomes notviewable.You can pass RevertToParent,
-          RevertToPointerRoot, RevertToFollowKeyboard,or
+          becomes not viewable. You can pass RevertToParent,
+          RevertToPointerRoot, RevertToFollowKeyboard, or
           RevertToNone.
 
    revert_to_return
           Returns the current focus state RevertToParent,
-          RevertToPointerRoot, RevertToFollowKeyboard,or
+          RevertToPointerRoot, RevertToFollowKeyboard, or
           RevertToNone.
 
    time_return
           Returns the last_focus_time for the device.
 
    time
-          Specifies the time.You can pass either a timestamp or
+          Specifies the time. You can pass either a timestamp or
           CurrentTime.
 
 DESCRIPTION

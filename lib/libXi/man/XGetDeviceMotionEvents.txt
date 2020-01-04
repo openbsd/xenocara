@@ -29,7 +29,7 @@ SYNOPSIS
 
    start, stop
           Specify the time interval in which the events are
-          returned from the motionhistory buffer.You can pass a
+          returned from the motion history buffer. You can pass a
           timestamp or CurrentTime.
 
    nevents_return

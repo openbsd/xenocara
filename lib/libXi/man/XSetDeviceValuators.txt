@@ -26,11 +26,11 @@ SYNOPSIS
 
    valuators
           Specifies a pointer to an array of integer values to be
-          used to initialize thedevice valuators.
+          used to initialize the device valuators.
 
    first_valuator
           Specifies the first valuator to be set. Valuators are
-          numbered beginning withzero.
+          numbered beginning with zero.
 
    num_valuators
           Specifies the number of valuators to be set.

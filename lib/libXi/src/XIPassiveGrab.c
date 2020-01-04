@@ -38,7 +38,8 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
                      Window grab_window, Cursor cursor,
                      int grab_mode, int paired_device_mode,
                      Bool owner_events, XIEventMask *mask,
-                     int num_modifiers, XIGrabModifiers *modifiers_inout)
+                     int num_modifiers, XIGrabModifiers *modifiers_inout,
+                     Time time)
 {
     xXIPassiveGrabDeviceReq *req;
     xXIPassiveGrabDeviceReply reply;
@@ -74,6 +75,7 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
     req->num_modifiers = num_modifiers;
     req->mask_len = (mask->mask_len + 3)/4;
     req->grab_type = grabtype;
+    req->time = time;
 
     len = req->mask_len + num_modifiers;
     SetReqLen(req, len, len);
@@ -118,7 +120,7 @@ XIGrabButton(Display* dpy, int deviceid, int button,
     return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeButton, button,
                                 grab_window, cursor, grab_mode,
                                 paired_device_mode, owner_events, mask,
-                                num_modifiers, modifiers_inout);
+                                num_modifiers, modifiers_inout, CurrentTime);
 }
 
 int
@@ -130,7 +132,7 @@ XIGrabKeycode(Display* dpy, int deviceid, int keycode,
     return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeKeycode, keycode,
                                 grab_window, None, grab_mode, paired_device_mode,
                                 owner_events, mask, num_modifiers,
-                                modifiers_inout);
+                                modifiers_inout, CurrentTime);
 }
 
 int
@@ -142,7 +144,7 @@ XIGrabEnter(Display *dpy, int deviceid, Window grab_window, Cursor cursor,
     return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeEnter, 0,
                                 grab_window, cursor, grab_mode, paired_device_mode,
                                 owner_events, mask, num_modifiers,
-                                modifiers_inout);
+                                modifiers_inout, CurrentTime);
 }
 
 int
@@ -153,7 +155,7 @@ XIGrabFocusIn(Display *dpy, int deviceid, Window grab_window, int grab_mode,
     return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeFocusIn, 0,
                                 grab_window, None, grab_mode, paired_device_mode,
                                 owner_events, mask, num_modifiers,
-                                modifiers_inout);
+                                modifiers_inout, CurrentTime);
 }
 
 int
@@ -172,7 +174,7 @@ XIGrabTouchBegin(Display *dpy, int deviceid, Window grab_window,
     return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeTouchBegin, 0,
                                 grab_window, None, XIGrabModeTouch,
                                 GrabModeAsync, owner_events, mask,
-                                num_modifiers, modifiers_inout);
+                                num_modifiers, modifiers_inout, CurrentTime);
 }
 
 

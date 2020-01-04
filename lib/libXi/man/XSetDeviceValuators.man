@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: xsetdevicevaluators
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 03/09/2013
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/19/2019
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XSETDEVICEVALUATORS" "libmansuffix" "03/09/2013" "\ \&" "\ \&"
+.TH "XSETDEVICEVALUATORS" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,13 +57,13 @@ device
 .nf
 valuators
        Specifies a pointer to an array of integer values to be
-       used to initialize thedevice valuators\&.
+       used to initialize the device valuators\&.
 .fi
 .sp
 .nf
 first_valuator
        Specifies the first valuator to be set\&. Valuators are
-       numbered beginning withzero\&.
+       numbered beginning with zero\&.
 .fi
 .sp
 .nf

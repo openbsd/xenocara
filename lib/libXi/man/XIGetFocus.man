@@ -1,1 +1,1 @@
-.so manlibmansuffix/XISetFocus.libmansuffix
+.so XISetFocus.libmansuffix

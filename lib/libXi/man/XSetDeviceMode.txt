@@ -22,7 +22,7 @@ SYNOPSIS
           Specifies the device whose mode is to be changed.
 
    mode
-          Specifies the mode.You can pass Absolute,or Relative.
+          Specifies the mode. You can pass Absolute, or Relative.
 
 DESCRIPTION
 -----------

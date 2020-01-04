@@ -1616,6 +1616,8 @@ size_classes(xXIAnyInfo* from, int nclasses)
     return len;
 }
 
+#define FP3232_TO_DOUBLE(x) ((double) (x).integral + (double) (x).frac / (1ULL << 32))
+
 /* Copy classes from any into to->classes and return the number of bytes
  * copied. Memory layout of to->classes is
  * [clsptr][clsptr][clsptr][classinfo][classinfo]...
@@ -1724,10 +1726,9 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses)
                     cls_lib->number = cls_wire->number;
                     cls_lib->label  = cls_wire->label;
                     cls_lib->resolution = cls_wire->resolution;
-                    cls_lib->min        = cls_wire->min.integral;
-                    cls_lib->max        = cls_wire->max.integral;
-                    cls_lib->value      = cls_wire->value.integral;
-                    /* FIXME: fractional parts */
+                    cls_lib->min        = FP3232_TO_DOUBLE(cls_wire->min);
+                    cls_lib->max        = FP3232_TO_DOUBLE(cls_wire->max);
+                    cls_lib->value      = FP3232_TO_DOUBLE(cls_wire->value);
                     cls_lib->mode       = cls_wire->mode;
 
                     to->classes[cls_idx++] = any_lib;
@@ -1748,8 +1749,7 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses)
                     cls_lib->number     = cls_wire->number;
                     cls_lib->scroll_type= cls_wire->scroll_type;
                     cls_lib->flags      = cls_wire->flags;
-                    cls_lib->increment  = cls_wire->increment.integral;
-                    cls_lib->increment += (unsigned int)cls_wire->increment.frac/(double)(1ULL << 32);
+                    cls_lib->increment  = FP3232_TO_DOUBLE(cls_wire->increment);
 
                     to->classes[cls_idx++] = any_lib;
                 }
@@ -1999,8 +1999,6 @@ wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
 
     return 1;
 }
-
-#define FP3232_TO_DOUBLE(x) ((double) (x).integral + (x).frac / (1ULL << 32))
 
 static int
 wireToBarrierEvent(xXIBarrierEvent *in, XGenericEventCookie *cookie)
