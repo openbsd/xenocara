@@ -22,8 +22,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxkbfile], [1.0.9],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libxkbfile])
+AC_INIT([libxkbfile], [1.1.0],
+        [https://gitlab.freedesktop.org/xorg/lib/libxkbfile/issues], [libxkbfile])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

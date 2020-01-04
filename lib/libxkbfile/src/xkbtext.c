@@ -758,9 +758,17 @@ XkbGeomFPText(int val, unsigned format)
     }
     else {
         whole = val / XkbGeomPtsPerMM;
-        frac = val % XkbGeomPtsPerMM;
-        if (frac != 0)
-            snprintf(buf, bufsize, "%d.%d", whole, frac);
+        frac = abs(val % XkbGeomPtsPerMM);
+        if (frac != 0) {
+            if (val < 0)
+            {
+                int wholeabs;
+                wholeabs = abs(whole);
+                snprintf(buf, bufsize, "-%d.%d", wholeabs, frac);
+            }
+            else
+                snprintf(buf, bufsize, "%d.%d", whole, frac);
+        }
         else
             snprintf(buf, bufsize, "%d", whole);
     }
@@ -886,8 +894,22 @@ CopyModActionArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
     }
     else
         TryCopyStr(buf, "none", sz);
-    if (act->type == XkbSA_LockMods)
+    if (act->type == XkbSA_LockMods) {
+        switch (act->flags & (XkbSA_LockNoUnlock | XkbSA_LockNoLock)) {
+        case XkbSA_LockNoLock:
+            TryCopyStr(buf, ",affect=unlock", sz);
+            break;
+        case XkbSA_LockNoUnlock:
+            TryCopyStr(buf, ",affect=lock", sz);
+            break;
+        case XkbSA_LockNoUnlock|XkbSA_LockNoLock:
+            TryCopyStr(buf, ",affect=neither", sz);
+            break;
+        default:
+            break;
+        }
         return True;
+    }
     if (act->flags & XkbSA_ClearLocks)
         TryCopyStr(buf, ",clearLocks", sz);
     if (act->flags & XkbSA_LatchToLock)
@@ -906,11 +928,11 @@ CopyGroupActionArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
     act = &action->group;
     TryCopyStr(buf, "group=", sz);
     if (act->flags & XkbSA_GroupAbsolute)
-        snprintf(tbuf, sizeof(buf), "%d", XkbSAGroup(act) + 1);
+        snprintf(tbuf, sizeof(tbuf), "%d", XkbSAGroup(act) + 1);
     else if (XkbSAGroup(act) < 0)
-        snprintf(tbuf, sizeof(buf), "%d", XkbSAGroup(act));
+        snprintf(tbuf, sizeof(tbuf), "%d", XkbSAGroup(act));
     else
-        snprintf(tbuf, sizeof(buf), "+%d", XkbSAGroup(act));
+        snprintf(tbuf, sizeof(tbuf), "+%d", XkbSAGroup(act));
     TryCopyStr(buf, tbuf, sz);
     if (act->type == XkbSA_LockGroup)
         return True;
@@ -1049,8 +1071,12 @@ CopyISOLockArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
             TryCopyStr(buf, "none", sz);
     }
     TryCopyStr(buf, ",affect=", sz);
-    if ((act->affect & XkbSA_ISOAffectMask) == 0)
+    if ((act->affect & XkbSA_ISOAffectMask) == 0) {
         TryCopyStr(buf, "all", sz);
+    }
+    else if ((act->affect & XkbSA_ISOAffectMask) == XkbSA_ISOAffectMask) {
+        TryCopyStr(buf, "none", sz);
+    }
     else {
         int nOut = 0;
 
@@ -1073,6 +1099,18 @@ CopyISOLockArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
             TryCopyStr(buf, tbuf, sz);
             nOut++;
         }
+    }
+    switch (act->flags & (XkbSA_LockNoUnlock | XkbSA_LockNoLock)) {
+    case XkbSA_LockNoLock:
+        TryCopyStr(buf, "+unlock", sz);
+        break;
+    case XkbSA_LockNoUnlock:
+        TryCopyStr(buf, "+lock", sz);
+        break;
+    case XkbSA_LockNoUnlock | XkbSA_LockNoLock:
+        TryCopyStr(buf, "+neither", sz);
+        break;
+    default: ;
     }
     return True;
 }
@@ -1183,6 +1221,20 @@ CopySetLockControlsArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
             nOut++;
         }
     }
+    if (action->type == XkbSA_LockControls) {
+        switch (act->flags & (XkbSA_LockNoUnlock | XkbSA_LockNoLock)) {
+        case XkbSA_LockNoLock:
+            TryCopyStr(buf, ",affect=unlock", sz);
+            break;
+        case XkbSA_LockNoUnlock:
+            TryCopyStr(buf, ",affect=lock", sz);
+            break;
+        case XkbSA_LockNoUnlock | XkbSA_LockNoLock:
+            TryCopyStr(buf, ",affect=neither", sz);
+            break;
+        default: ;
+        }
+    }
     return True;
 }
 
@@ -1218,6 +1270,8 @@ CopyActionMessageArgs(Display *dpy, XkbDescPtr xkb, XkbAction *action,
     TryCopyStr(buf, tbuf, sz);
     snprintf(tbuf, sizeof(tbuf), ",data[5]=0x%02x", act->message[5]);
     TryCopyStr(buf, tbuf, sz);
+    if (act->flags & XkbSA_MessageGenKeyEvent)
+        TryCopyStr(buf, ",genKeyEvent", sz);
     return True;
 }
 
