@@ -1,3 +1,219 @@
+commit db7cca17ad7807e92a928da9d4c68a00f4836da2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 9 13:41:29 2019 -0400
+
+    libX11 1.6.9
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f5ba2c632a4c84279bdd48c687271292f5dc4f87
+Author: Dmitry Osipenko <digetx@gmail.com>
+Date:   Sat May 18 19:10:32 2019 +0300
+
+    Fix lockup in _XReply() caused by recursive synchronization
+    
+    This patch is based on a suggestion made by Uli Schlachter in a comment
+    to the bug report https://gitlab.freedesktop.org/xorg/lib/libx11/issues/93.
+    
+    Explanation of the bug (given by Uli Schlachter as well):
+    
+    An error was received and handled. Since there was an error callback set,
+    Xlib unlocks the display, runs the error callback, and then locks the display
+    again. This goes through _XLockDisplay and then calls _XSeqSyncFunction.
+    On this "lock the thing"-path, Xlib notices that sequence numbers are close to
+    wrap-around and tries to send a GetInputFocus request. However, the earlier
+    calls already registered themselves as "we are handling replies/errors, do
+    not interfere!" and so the code here waits for "that other thread" to be done
+    before it continues. Only that there is no other thread, but it is this thread
+    itself and thus a deadlock follows.
+    
+    The bug is relatively easy to reproduce on any desktop environment by
+    using actively a touchscreen input that supports multitouch, i.e. practically
+    all mobile devices are affected.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libx11/issues/93
+    Suggested-by: Uli Schlachter <psychon@znc.in>
+    Tested-by: Dmitry Osipenko <digetx@gmail.com>
+    Reported-by: Dmitry Osipenko <digetx@gmail.com>
+    Signed-off-by: Dmitry Osipenko <digetx@gmail.com>
+
+commit 1f1ca0863fd81fd0538b104eb9d9841ddbc7c905
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Sep 13 16:44:32 2019 -0400
+
+    xkb: Provide <X11/extensions/XKBgeom.h> ourselves
+    
+    This header refers to libX11 types, it doesn't belong in xorgproto and
+    has been moved to legacy in 2019.2. Supply it ourselves.
+
+commit edc7680ed5a03cedb5facf14693823455e12c29c
+Author: Ross Burton <ross.burton@intel.com>
+Date:   Tue Aug 6 14:53:43 2019 +0100
+
+    src/util/Makefile: explicitly reset LINK to not use libtool
+    
+    Simply looking at libtool redefines LINK globally to use libtool, which when
+    you're trying to cross-compile to Windows can cause complications.
+    
+    As in src/util/ we're simply building a small binary for the build host, reset
+    LINK to the automake default so that the traditional compile/link steps occur
+    without libtool.
+    
+    Also remove -all-static from LDFLAGS as that is a libtool-specific argument
+    intended to solve this problem.
+    
+    Closes: #100
+    Signed-off-by: Ross Burton <ross.burton@intel.com>
+
+commit f111bf3ac091a3a6d1f094172621d9d033c3833c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 16:53:27 2019 -0400
+
+    improve some formatting
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1d0a6fe9126c7ce61c6648cabf43b2de4d6d3ba9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 15:49:09 2019 -0400
+
+    fix a substitution error from recent commit, e.g, "s/^\.EE/XDe/"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8fe8aafe7e9beffaff0460fe08354dfcde1efe98
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 05:07:40 2019 -0400
+
+    split lines at sentence endings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6f2cbcea5d6dcd1df7ef309481cad1663284c061
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 04:52:25 2019 -0400
+
+    trim trailing whitespace from manpages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4abf482d8e6b0b1ae84e0f528e71066afd6d18b5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 04:36:24 2019 -0400
+
+    another fake-quote fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c0f0651f2b4dfa9fef86d1374689220125631993
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 30 04:34:54 2019 -0400
+
+    the last commit overlooked some fake-quote pairs
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ef31143c9decda54b3ab2937d3300fcf5b493fd6
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jul 29 18:50:19 2019 +0200
+
+    fix ``fake quotes'' in text
+    
+    to remove the fake quotes replace them with propper
+    predefined macros \*(lq and \*(rq. this will allow
+    nroff to choose the propper characters when using ps etc.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 705027ea9b17d6552388d2067736ab4b0bf9dfb5
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jul 29 18:27:12 2019 +0200
+
+    get rid of ``fake quotes''
+    
+    these fake quotes are inside a comment and can be replaced with
+    some double quotes
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit fe46eb287106ad05538e896783a5cf877a4138df
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jul 29 17:57:02 2019 +0200
+
+    remove all private macro defines
+    
+    after converting everything to st. man page macros there is
+    no need to maintain X11 private nroff macros, so remove them.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit b7f09ae19c9a098ecd545b4d4c45a6afe39a8764
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jul 29 17:47:35 2019 +0200
+
+    Replace home-grown .Ds .De macro with man page .EX/.EE macro
+    
+    Same pages use the man page .EX/.EE macro. Replace all occurences
+    of .De/.Ds with the std. macros to make the code better to maintain.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 951e772bc8d89bc62c4bbac14adc5d4f5027419f
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Jul 3 18:23:51 2019 +0200
+
+    fix TBL format
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 4eb167f5aca4cca05a230c728ffdb4fd382a4e1e
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Jul 3 18:18:09 2019 +0200
+
+    replace home grown .ZN with std, .B and .BR
+    
+    Replace the home grown macro .ZN with std. macros
+    from man macro paket. So we can get rid of the
+    definition an get a clean header.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 08e6b36292ebf01ba2dcc4a48ec371c6f5d13458
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Jun 22 18:33:48 2019 +0200
+
+    remove in-text macros
+    
+    remove in-text macros an fix a few typos on the way.
+    hopefuly that will make maintenance more easy.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit cb0e894fe9927b07bd9d97c067fd0d007accb105
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jun 21 18:01:16 2019 +0200
+
+    note that we can handle kbd==NULL
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 0327c427d62f671eced067c6d9b69f4e216a8cac
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Jun 17 13:36:08 2019 -0400
+
+    makekeys: Detach ourselves from X headers entirely
+    
+    Subsequent to a121b7b0c210efe10bf93453b29050282324c906 we are no longer
+    building makekeys with enough -I/foo/bar to find the X11 headers, so if
+    they're not in a system include path, things fail. Since this utility is
+    only needed at build time, there's no real reason to demand the X
+    headers be installed for both the build and target machines if cross-
+    compiling, we can just assume a vaguely ANSI environment instead.
+    
+    Tested-by: Niclas Zeising <zeising@daemonic.se>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
 commit 57f0d421a1320090d3a4948181fe228d86cc8977
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Jun 17 10:45:45 2019 -0400

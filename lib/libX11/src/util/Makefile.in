@@ -101,9 +101,6 @@ am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
@@ -172,7 +169,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 KEYSYMDEFS = @KEYSYMDEFS@
 LAUNCHD = @LAUNCHD@
 LD = @LD@
-LDFLAGS = @LDFLAGS_FOR_BUILD@ -all-static
+LDFLAGS = @LDFLAGS_FOR_BUILD@
 LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@
 LIBOBJS = @LIBOBJS@
 LIBS = 
@@ -306,6 +303,7 @@ AM_CFLAGS = \
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include
 
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 EXTRA_DIST = mkks.sh
 
 # Check source code with tools like lint & sparse

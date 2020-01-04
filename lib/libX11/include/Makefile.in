@@ -52,7 +52,7 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = include
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(x11include_HEADERS)
+	$(x11extinclude_HEADERS) $(x11include_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -112,8 +112,9 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(x11includedir)" \
-	"$(DESTDIR)$(x11includedir)"
-HEADERS = $(nodist_x11include_HEADERS) $(x11include_HEADERS)
+	"$(DESTDIR)$(x11extincludedir)" "$(DESTDIR)$(x11includedir)"
+HEADERS = $(nodist_x11include_HEADERS) $(x11extinclude_HEADERS) \
+	$(x11include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -312,6 +313,10 @@ x11include_HEADERS = \
 	X11/ImUtil.h \
 	X11/Xlib-xcb.h
 
+x11extincludedir = ${x11includedir}/extensions
+x11extinclude_HEADERS = \
+	X11/extensions/XKBgeom.h
+
 nodist_x11include_HEADERS = \
 	X11/XlibConf.h
 
@@ -378,6 +383,27 @@ uninstall-nodist_x11includeHEADERS:
 	@list='$(nodist_x11include_HEADERS)'; test -n "$(x11includedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(x11includedir)'; $(am__uninstall_files_from_dir)
+install-x11extincludeHEADERS: $(x11extinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(x11extinclude_HEADERS)'; test -n "$(x11extincludedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(x11extincludedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(x11extincludedir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(x11extincludedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(x11extincludedir)" || exit $$?; \
+	done
+
+uninstall-x11extincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(x11extinclude_HEADERS)'; test -n "$(x11extincludedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(x11extincludedir)'; $(am__uninstall_files_from_dir)
 install-x11includeHEADERS: $(x11include_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(x11include_HEADERS)'; test -n "$(x11includedir)" || list=; \
@@ -500,7 +526,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(x11includedir)" "$(DESTDIR)$(x11includedir)"; do \
+	for dir in "$(DESTDIR)$(x11includedir)" "$(DESTDIR)$(x11extincludedir)" "$(DESTDIR)$(x11includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -554,7 +580,7 @@ info: info-am
 info-am:
 
 install-data-am: install-nodist_x11includeHEADERS \
-	install-x11includeHEADERS
+	install-x11extincludeHEADERS install-x11includeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -599,7 +625,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-nodist_x11includeHEADERS \
-	uninstall-x11includeHEADERS
+	uninstall-x11extincludeHEADERS uninstall-x11includeHEADERS
 
 .MAKE: install-am install-strip
 
@@ -611,12 +637,13 @@ uninstall-am: uninstall-nodist_x11includeHEADERS \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-nodist_x11includeHEADERS \
 	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip install-x11includeHEADERS installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-nodist_x11includeHEADERS \
-	uninstall-x11includeHEADERS
+	install-strip install-x11extincludeHEADERS \
+	install-x11includeHEADERS installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am tags uninstall uninstall-am \
+	uninstall-nodist_x11includeHEADERS \
+	uninstall-x11extincludeHEADERS uninstall-x11includeHEADERS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

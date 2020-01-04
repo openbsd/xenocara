@@ -38,72 +38,39 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XSetWMName __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XSetWMName, XGetWMName, XStoreName, XFetchName \- set or read a window's WM_NAME property
 .SH SYNTAX
 .HP
 void XSetWMName\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, XTextProperty
-*\fItext_prop\fP\^); 
+*\fItext_prop\fP\^);
 .HP
 Status XGetWMName\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^,
-XTextProperty *\fItext_prop_return\fP\^); 
+XTextProperty *\fItext_prop_return\fP\^);
 .HP
 int XStoreName\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, char
-*\fIwindow_name\fP\^); 
+*\fIwindow_name\fP\^);
 .HP
 Status XFetchName\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, char
-**\fIwindow_name_return\fP\^); 
+**\fIwindow_name_return\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fItext_prop\fP 1i
 Specifies the
-.ZN XTextProperty
+.B XTextProperty
 structure to be used.
 .IP \fItext_prop_return\fP 1i
 Returns the
-.ZN XTextProperty
+.B XTextProperty
 structure.
 .IP \fIw\fP 1i
 Specifies the window.
@@ -114,21 +81,21 @@ which should be a null-terminated string.
 Returns the window name, which is a null-terminated string.
 .SH DESCRIPTION
 The
-.ZN XSetWMName
+.B XSetWMName
 convenience function calls
-.ZN XSetTextProperty 
+.B XSetTextProperty
 to set the WM_NAME property.
 .LP
 The
-.ZN XGetWMName 
+.B XGetWMName
 convenience function calls
-.ZN XGetTextProperty 
+.B XGetTextProperty
 to obtain the WM_NAME property.
 It returns a nonzero status on success;
 otherwise, it returns a zero status.
 .LP
 The
-.ZN XStoreName
+.B XStoreName
 function assigns the name passed to window_name to the specified window.
 A window manager can display the window name in some prominent
 place, such as the title bar, to allow users to identify windows easily.
@@ -138,33 +105,33 @@ if one is provided by the application.
 If the string is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 .LP
-.ZN XStoreName
+.B XStoreName
 can generate
-.ZN BadAlloc
+.B BadAlloc
 and
-.ZN BadWindow
+.B BadWindow
 errors.
 .LP
 The
-.ZN XFetchName
+.B XFetchName
 function returns the name of the specified window.
 If it succeeds,
-it returns a nonzero status; 
+it returns a nonzero status;
 otherwise, no name has been set for the window,
 and it returns zero.
 If the WM_NAME property has not been set for this window,
-.ZN XFetchName
+.B XFetchName
 sets window_name_return to NULL.
 If the data returned by the server is in the Latin Portable Character Encoding,
 then the returned string is in the Host Portable Character Encoding.
 Otherwise, the result is implementation-dependent.
 When finished with it, a client must free
 the window name string using
-.ZN XFree .
+.BR XFree .
 .LP
-.ZN XFetchName
+.B XFetchName
 can generate a
-.ZN BadWindow
+.B BadWindow
 error.
 .SH PROPERTIES
 .TP 1i
@@ -172,10 +139,10 @@ error.
 The name of the application.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadAlloc
+.B BadAlloc
 The server failed to allocate the requested resource or server memory.
 .TP 1i
-.ZN BadWindow
+.B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
 XAllocClassHint(__libmansuffix__),

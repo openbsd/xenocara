@@ -38,68 +38,35 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XcmsStoreColor __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XcmsStoreColor, XcmsStoreColors \- set colors
 .SH SYNTAX
 .HP
 Status XcmsStoreColor\^(\^Display *\fIdisplay\fP\^, Colormap \fIcolormap\fP\^,
-XcmsColor *\fIcolor\fP\^); 
+XcmsColor *\fIcolor\fP\^);
 .HP
 Status XcmsStoreColors\^(\^Display *\fIdisplay\fP\^, Colormap
 \fIcolormap\fP\^, XcmsColor \fIcolors\fP\^[\^]\^, int \fIncolors\fP\^, Bool
-\fIcompression_flags_return\fP\^[\^]\^); 
+\fIcompression_flags_return\fP\^[\^]\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIcolor\fP 1i
 Specifies the color cell and the color to store.
 Values specified in this
-.ZN XcmsColor
+.B XcmsColor
 structure remain unchanged on return.
 .IP \fIcolors\fP 1i
 Specifies the color specification array of
-.ZN XcmsColor
+.B XcmsColor
 structures, each specifying a color cell and the color to store in that
 cell.
 Values specified in the array remain unchanged upon return.
@@ -109,134 +76,135 @@ Specifies the colormap.
 Returns an array of Boolean values indicating compression status.
 If a non-NULL pointer is supplied,
 each element of the array is set to
-.ZN True
+.B True
 if the corresponding color was compressed and
-.ZN False
+.B False
 otherwise.
 Pass NULL if the compression status is not useful.
 .IP \fIncolors\fP 1i
-Specifies the number of 
-.ZN XcmsColor
+Specifies the number of
+.B XcmsColor
 structures in the color-specification array.
 .SH DESCRIPTION
 The
-.ZN XcmsStoreColor
+.B XcmsStoreColor
 function converts the color specified in the
-.ZN XcmsColor
+.B XcmsColor
 structure into RGB values.
 It then uses this RGB specification in an
-.ZN XColor
-structure, whose three flags 
-.Pn ( DoRed , 
-.ZN DoGreen ,
+.B XColor
+structure, whose three flags
+.Pn ( DoRed ,
+.BR DoGreen ,
 and
-.ZN DoBlue )
+.BR DoBlue )
 are set, in a call to
-.ZN XStoreColor
+.B XStoreColor
 to change the color cell specified by the pixel member of the
-.ZN XcmsColor
+.B XcmsColor
 structure.
 This pixel value must be a valid index for the specified colormap,
 and the color cell specified by the pixel value must be a read/write cell.
 If the pixel value is not a valid index, a
-.ZN BadValue
+.B BadValue
 error results.
 If the color cell is unallocated or is allocated read-only, a
-.ZN BadAccess
+.B BadAccess
 error results.
-If the colormap is an installed map for its screen, 
+If the colormap is an installed map for its screen,
 the changes are visible immediately.
 .LP
-Note that 
-.ZN XStoreColor
+Note that
+.B XStoreColor
 has no return value; therefore, an
-.ZN XcmsSuccess
-return value from this function indicates that the conversion 
+.B XcmsSuccess
+return value from this function indicates that the conversion
 to RGB succeeded and the call to
-.ZN XStoreColor
+.B XStoreColor
 was made.
 To obtain the actual color stored, use
-.ZN XcmsQueryColor .
+.BR XcmsQueryColor .
 Because of the screen's hardware limitations or gamut compression,
 the color stored in the colormap may not be identical
 to the color specified.
 .LP
-.ZN XcmsStoreColor
+.B XcmsStoreColor
 can generate
-.ZN BadAccess ,
-.ZN BadColor ,
+.BR BadAccess ,
+.BR BadColor ,
 and
-.ZN BadValue
+.B BadValue
 errors.
 .LP
 The
-.ZN XcmsStoreColors
+.B XcmsStoreColors
 function converts the colors specified in the array of
-.ZN XcmsColor
+.B XcmsColor
 structures into RGB values and then uses these RGB specifications in
-.ZN XColor
-structures, whose three flags 
-.Pn ( DoRed , 
-.ZN DoGreen ,
+.B XColor
+structures, whose three flags
+.Pn ( DoRed ,
+.BR DoGreen ,
 and
-.ZN DoBlue )
+.BR DoBlue )
 are set, in a call to
-.ZN XStoreColors
+.B XStoreColors
 to change the color cells specified by the pixel member of the corresponding
-.ZN XcmsColor
+.B XcmsColor
 structure.
 Each pixel value must be a valid index for the specified colormap,
 and the color cell specified by each pixel value must be a read/write cell.
 If a pixel value is not a valid index, a
-.ZN BadValue
+.B BadValue
 error results.
 If a color cell is unallocated or is allocated read-only, a
-.ZN BadAccess
+.B BadAccess
 error results.
 If more than one pixel is in error,
 the one that gets reported is arbitrary.
-If the colormap is an installed map for its screen, 
+If the colormap is an installed map for its screen,
 the changes are visible immediately.
 .LP
-Note that 
-.ZN XStoreColors
+Note that
+.B XStoreColors
 has no return value; therefore, an
-.ZN XcmsSuccess
-return value from this function indicates that conversions 
+.B XcmsSuccess
+return value from this function indicates that conversions
 to RGB succeeded and the call to
-.ZN XStoreColors
+.B XStoreColors
 was made.
 To obtain the actual colors stored, use
-.ZN XcmsQueryColors .
+.BR XcmsQueryColors .
 Because of the screen's hardware limitations or gamut compression,
 the colors stored in the colormap may not be identical
 to the colors specified.
 .LP
 .LP
-.ZN XcmsStoreColors
+.B XcmsStoreColors
 can generate
-.ZN BadAccess ,
-.ZN BadColor ,
+.BR BadAccess ,
+.BR BadColor ,
 and
-.ZN BadValue
+.B BadValue
 errors.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadAccess
+.B BadAccess
 A client attempted
 to free a color map entry that it did not already allocate.
 .TP 1i
-.ZN BadAccess
+.B BadAccess
 A client attempted
 to store into a read-only color map entry.
 .TP 1i
-.ZN BadColor
+.B BadColor
 A value for a Colormap argument does not name a defined Colormap.
 .TP 1i
-.ZN BadValue
+.B BadValue
 Some numeric value falls outside the range of values accepted by the request.
 Unless a specific range is specified for an argument, the full range defined
-by the argument's type is accepted.  Any argument defined as a set of
+by the argument's type is accepted.
+Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
 XcmsAllocColor(__libmansuffix__),

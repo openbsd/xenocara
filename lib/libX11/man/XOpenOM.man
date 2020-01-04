@@ -39,63 +39,30 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
+.\" It is provided "as is" without express or implied warranty.
 .\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XOpenOM __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XOpenOM, XCloseOM, XSetOMValues, XGetOMValues, XDisplayOfOM, XLocaleOfOM \- open output methods
 .SH SYNTAX
 .HP
 XOM XOpenOM\^(\^Display *\fIdisplay\fP\^, XrmDatabase \fIdb\fP\^, char
-*\fIres_name\fP\^, char *\fIres_class\fP\^); 
+*\fIres_name\fP\^, char *\fIres_class\fP\^);
 .HP
-Status XCloseOM\^(\^XOM \fIom\fP\^); 
+Status XCloseOM\^(\^XOM \fIom\fP\^);
 .HP
-char *XSetOMValues\^(\^XOM \fIom\fP\^); 
+char *XSetOMValues\^(\^XOM \fIom\fP\^);
 .HP
-char *XGetOMValues\^(\^XOM \fIom\fP\^); 
+char *XGetOMValues\^(\^XOM \fIom\fP\^);
 .HP
-Display *XDisplayOfOM\^(\^XOM \fIom\fP\^); 
+Display *XDisplayOfOM\^(\^XOM \fIom\fP\^);
 .HP
-char *XLocaleOfOM\^(\^XOM \fIom\fP\^); 
+char *XLocaleOfOM\^(\^XOM \fIom\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
@@ -107,27 +74,26 @@ Specifies the full resource name of the application.
 Specifies the full class name of the application.
 .IP \fIom\fP 1i
 Specifies the output method.
-.ds Al \ to set or get XOM values
 .IP ... 1i
-Specifies the variable length argument list\*(Al.
+Specifies the variable length argument list to set or get XOM values.
 .SH DESCRIPTION
 The
-.ZN XOpenOM
+.B XOpenOM
 function opens an output method
 matching the current locale and modifiers specification.
 The current locale and modifiers are bound to the output method
 when
-.ZN XOpenOM
+.B XOpenOM
 is called.
 The locale associated with an output method cannot be changed.
 .LP
 The specific output method to which this call will be routed
 is identified on the basis of the current locale and modifiers.
-.ZN XOpenOM
+.B XOpenOM
 will identify a default output method corresponding to the
 current locale.
-That default can be modified using 
-.ZN XSetLocaleModifiers
+That default can be modified using
+.B XSetLocaleModifiers
 to set the output method modifier.
 .LP
 The db argument is the resource database to be used by the output method
@@ -137,8 +103,8 @@ up values that can be set as OC values in an output context.
 If db is NULL,
 no database is passed to the output method.
 .LP
-The res_name and res_class arguments specify the resource name 
-and class of the application. 
+The res_name and res_class arguments specify the resource name
+and class of the application.
 They are intended to be used as prefixes by the output method
 when looking up resources that are common to all output contexts
 that may be created for this output method.
@@ -149,19 +115,19 @@ if res_name or res_class is NULL.
 .LP
 The res_name and res_class arguments are not assumed to exist beyond
 the call to
-.ZN XOpenOM .
+.BR XOpenOM .
 The specified resource database is assumed to exist for the lifetime
 of the output method.
 .LP
-.ZN XOpenOM
+.B XOpenOM
 returns NULL if no output method could be opened.
 .LP
 The
-.ZN XCloseOM
+.B XCloseOM
 function closes the specified output method.
 .LP
 The
-.ZN XSetOMValues
+.B XSetOMValues
 function presents a variable argument list programming interface
 for setting properties or features of the specified output method.
 This function returns NULL if it succeeds;
@@ -175,7 +141,7 @@ correctly.
 No standard arguments are currently defined by Xlib.
 .LP
 The
-.ZN XGetOMValues
+.B XGetOMValues
 function presents a variable argument list programming interface
 for querying properties or features of the specified output method.
 This function returns NULL if it succeeds;
@@ -183,11 +149,11 @@ otherwise,
 it returns the name of the first argument that could not be obtained.
 .LP
 The
-.ZN XDisplayOfOM
+.B XDisplayOfOM
 function returns the display associated with the specified output method.
 .LP
 The
-.ZN XLocaleOfOM
+.B XLocaleOfOM
 returns the locale associated with the specified output method.
 .SH "SEE ALSO"
 XCreateOC(__libmansuffix__),

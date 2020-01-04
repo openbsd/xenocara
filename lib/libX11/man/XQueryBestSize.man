@@ -38,46 +38,13 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XQueryBestSize __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XQueryBestSize, XQueryBestTile, XQueryBestStipple \- determine efficient sizes
@@ -86,7 +53,7 @@ XQueryBestSize, XQueryBestTile, XQueryBestStipple \- determine efficient sizes
 Status XQueryBestSize\^(\^Display *\fIdisplay\fP\^, int \fIclass\fP\^,
 Drawable \fIwhich_screen\fP\^, unsigned int \fIwidth\fP, unsigned int
 \fIheight\fP\^, unsigned int *\fIwidth_return\fP, unsigned int
-*\fIheight_return\fP\^); 
+*\fIheight_return\fP\^);
 .HP
 Status XQueryBestTile\^(\^Display *\fIdisplay\fP\^, Drawable
 \fIwhich_screen\fP\^, unsigned int \fIwidth\fP, unsigned int \fIheight\fP\^,
@@ -94,15 +61,15 @@ unsigned int *\fIwidth_return\fP, unsigned int *\fIheight_return\fP\^);
 .HP
 Status XQueryBestStipple\^(\^Display *\fIdisplay\fP\^, Drawable
 \fIwhich_screen\fP\^, unsigned int \fIwidth\fP, unsigned int \fIheight\fP\^,
-unsigned int *\fIwidth_return\fP, unsigned int *\fIheight_return\fP\^); 
+unsigned int *\fIwidth_return\fP, unsigned int *\fIheight_return\fP\^);
 .SH ARGUMENTS
 .IP \fIclass\fP 1i
 Specifies the class that you are interested in.
-You can pass 
-.ZN TileShape , 
-.ZN CursorShape , 
-or 
-.ZN StippleShape .
+You can pass
+.BR TileShape ,
+.BR CursorShape ,
+or
+.BR StippleShape .
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIwidth\fP 1i
@@ -116,102 +83,103 @@ Specifies any drawable on the screen.
 .br
 .ns
 .IP \fIheight_return\fP 1i
-Return the width and height of the object best supported 
+Return the width and height of the object best supported
 by the display hardware.
 .SH DESCRIPTION
 The
-.ZN XQueryBestSize
+.B XQueryBestSize
 function returns the best or closest size to the specified size.
-For 
-.ZN CursorShape ,
+For
+.BR CursorShape ,
 this is the largest size that can be fully displayed on the screen specified by
 which_screen.
-For 
-.ZN TileShape ,
+For
+.BR TileShape ,
 this is the size that can be tiled fastest.
-For 
-.ZN StippleShape ,
+For
+.BR StippleShape ,
 this is the size that can be stippled fastest.
-For 
-.ZN CursorShape ,
+For
+.BR CursorShape ,
 the drawable indicates the desired screen.
-For 
-.ZN TileShape 
-and 
-.ZN StippleShape ,
+For
+.B TileShape
+and
+.BR StippleShape ,
 the drawable indicates the screen and possibly the window class and depth.
-An 
-.ZN InputOnly 
-window cannot be used as the drawable for 
-.ZN TileShape
-or 
-.ZN StippleShape ,
+An
+.B InputOnly
+window cannot be used as the drawable for
+.B TileShape
+or
+.BR StippleShape ,
 or a
-.ZN BadMatch 
+.B BadMatch
 error results.
 .LP
-.ZN XQueryBestSize
+.B XQueryBestSize
 can generate
-.ZN BadDrawable ,
-.ZN BadMatch ,
+.BR BadDrawable ,
+.BR BadMatch ,
 and
-.ZN BadValue 
+.B BadValue
 errors.
 .LP
 The
-.ZN XQueryBestTile
+.B XQueryBestTile
 function returns the best or closest size, that is, the size that can be
 tiled fastest on the screen specified by which_screen.
 The drawable indicates the screen and possibly the window class and depth.
-If an 
-.ZN InputOnly 
-window is used as the drawable, a 
-.ZN BadMatch 
+If an
+.B InputOnly
+window is used as the drawable, a
+.B BadMatch
 error results.
 .LP
-.ZN XQueryBestTile
+.B XQueryBestTile
 can generate
-.ZN BadDrawable
+.B BadDrawable
 and
-.ZN BadMatch 
+.B BadMatch
 errors.
 .LP
 The
-.ZN XQueryBestStipple
+.B XQueryBestStipple
 function returns the best or closest size, that is, the size that can be
 stippled fastest on the screen specified by which_screen.
 The drawable indicates the screen and possibly the window class and depth.
 If an
-.ZN InputOnly
+.B InputOnly
 window is used as the drawable, a
-.ZN BadMatch
+.B BadMatch
 error results.
 .LP
-.ZN XQueryBestStipple
+.B XQueryBestStipple
 can generate
-.ZN BadDrawable
+.B BadDrawable
 and
-.ZN BadMatch 
+.B BadMatch
 errors.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadMatch
+.B BadMatch
 An
-.ZN InputOnly
+.B InputOnly
 window is used as a Drawable.
 .TP 1i
-.ZN BadDrawable
+.B BadDrawable
 A value for a Drawable argument does not name a defined Window or Pixmap.
 .TP 1i
-.ZN BadMatch
+.B BadMatch
 The values do not exist for an
-.ZN InputOnly
+.B InputOnly
 window.
 .TP 1i
-.ZN BadValue
+.B BadValue
 Some numeric value falls outside the range of values accepted by the request.
 Unless a specific range is specified for an argument, the full range defined
-by the argument's type is accepted.  Any argument defined as a set of
+by the argument's type is accepted.
+Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
 XCreateGC(__libmansuffix__),

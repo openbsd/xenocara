@@ -38,111 +38,76 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XSetWMProtocols __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XSetWMProtocols, XGetWMProtocols \- set or read a window's WM_PROTOCOLS property
 .SH SYNTAX
 .HP
 Status XSetWMProtocols\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, Atom
-*\fIprotocols\fP\^, int \fIcount\fP\^); 
+*\fIprotocols\fP\^, int \fIcount\fP\^);
 .HP
 Status XGetWMProtocols\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, Atom
-**\fIprotocols_return\fP\^, int *\fIcount_return\fP\^); 
+**\fIprotocols_return\fP\^, int *\fIcount_return\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.ds Cn protocols in the list
 .IP \fIcount\fP 1i
-Specifies the number of \*(Cn.
-.ds Cn protocols in the list
+Specifies the number of protocols in the list.
 .IP \fIcount_return\fP 1i
-Returns the number of \*(Cn.
+Returns the number of protocols in the list.
 .IP \fIprotocols\fP 1i
 Specifies the list of protocols.
 .IP \fIprotocols_return\fP 1i
 Returns the list of protocols.
 .SH DESCRIPTION
-The 
-.ZN XSetWMProtocols 
-function replaces the WM_PROTOCOLS property on the specified window 
+The
+.B XSetWMProtocols
+function replaces the WM_PROTOCOLS property on the specified window
 with the list of atoms specified by the protocols argument.
 If the property does not already exist,
-.ZN XSetWMProtocols
+.B XSetWMProtocols
 sets the WM_PROTOCOLS property on the specified window
 to the list of atoms specified by the protocols argument.
 The property is stored with a type of ATOM and a format of 32.
-If it cannot intern the WM_PROTOCOLS atom, 
-.ZN XSetWMProtocols
+If it cannot intern the WM_PROTOCOLS atom,
+.B XSetWMProtocols
 returns a zero status.
 Otherwise, it returns a nonzero status.
 .LP
-.ZN XSetWMProtocols
+.B XSetWMProtocols
 can generate
-.ZN BadAlloc
+.B BadAlloc
 and
-.ZN BadWindow
+.B BadWindow
 errors.
 .LP
-The 
-.ZN XGetWMProtocols 
-function returns the list of atoms stored in the WM_PROTOCOLS property 
+The
+.B XGetWMProtocols
+function returns the list of atoms stored in the WM_PROTOCOLS property
 on the specified window.
-These atoms describe window manager protocols in which the owner 
+These atoms describe window manager protocols in which the owner
 of this window is willing to participate.
-If the property exists, is of type ATOM, is of format 32, 
-and the atom WM_PROTOCOLS can be interned, 
-.ZN XGetWMProtocols
-sets the protocols_return argument to a list of atoms, 
-sets the count_return argument to the number of elements in the list, 
+If the property exists, is of type ATOM, is of format 32,
+and the atom WM_PROTOCOLS can be interned,
+.B XGetWMProtocols
+sets the protocols_return argument to a list of atoms,
+sets the count_return argument to the number of elements in the list,
 and returns a nonzero status.
 Otherwise, it sets neither of the return arguments
 and returns a zero status.
 To release the list of atoms, use
-.ZN XFree .
+.BR XFree .
 .LP
-.ZN XGetWMProtocols
+.B XGetWMProtocols
 can generate a
-.ZN BadWindow
+.B BadWindow
 error.
 .SH PROPERTIES
 .TP 1i
@@ -151,10 +116,10 @@ List of atoms that identify the communications protocols between the
 client and window manager in which the client is willing to participate.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadAlloc
+.B BadAlloc
 The server failed to allocate the requested resource or server memory.
 .TP 1i
-.ZN BadWindow
+.B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
 XAllocClassHint(__libmansuffix__),

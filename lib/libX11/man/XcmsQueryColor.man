@@ -38,62 +38,29 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XcmsQueryColor __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XcmsQueryColor, XcmsQueryColors, XcmsLookupColor \- obtain color values
 .SH SYNTAX
 .HP
 Status XcmsQueryColor\^(\^Display *\fIdisplay\fP\^, Colormap \fIcolormap\fP\^,
-XcmsColor *\fIcolor_in_out\fP\^, XcmsColorFormat \fIresult_format\fP\^); 
+XcmsColor *\fIcolor_in_out\fP\^, XcmsColorFormat \fIresult_format\fP\^);
 .HP
 Status XcmsQueryColors\^(\^Display *\fIdisplay\fP\^, Colormap
 \fIcolormap\fP\^, XcmsColor \fIcolors_in_out\fP\^[\^]\^, unsigned int
-\fIncolors\fP\^, XcmsColorFormat \fIresult_format\fP\^); 
+\fIncolors\fP\^, XcmsColorFormat \fIresult_format\fP\^);
 .HP
 Status XcmsLookupColor\^(\^Display *\fIdisplay\fP\^, Colormap
 \fIcolormap\fP\^, char *\fIcolor_string\fP\^, XcmsColor
 *\fIcolor_exact_return\fP\^, XcmsColor *\fIcolor_screen_return\fP\^,
-XcmsColorFormat \fIresult_format\fP\^); 
+XcmsColorFormat \fIresult_format\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
@@ -105,97 +72,97 @@ or parsed from the corresponding string found in a color-name database.
 .IP \fIcolor_in_out\fP 1i
 Specifies the pixel member that indicates the color cell to query.
 The color specification stored for the color cell is returned in this
-.ZN XcmsColor
+.B XcmsColor
 structure.
 .IP \fIcolor_screen_return\fP 1i
 Returns the color that can be reproduced on the screen.
-.ds St
 .IP \fIcolor_string\fP 1i
-Specifies the color string\*(St.
+Specifies the color string.
 .IP \fIresult_format\fP 1i
 Specifies the color format for the returned color
 specifications (color_screen_return and color_exact_return arguments).
 If the format is
-.ZN XcmsUndefinedFormat
+.B XcmsUndefinedFormat
 and the color string contains a
 numerical color specification,
 the specification is returned in the format used in that numerical
 color specification.
 If the format is
-.ZN XcmsUndefinedFormat
+.B XcmsUndefinedFormat
 and the color string contains a color name,
-the specification is returned in the format used 
+the specification is returned in the format used
 to store the color in the database.
 .IP \fIncolors\fP 1i
-Specifies the number of 
-.ZN XcmsColor
+Specifies the number of
+.B XcmsColor
 structures in the color-specification array.
 .SH DESCRIPTION
 The
-.ZN XcmsQueryColor
+.B XcmsQueryColor
 function obtains the RGB value
 for the pixel value in the pixel member of the specified
-.ZN XcmsColor
+.B XcmsColor
 structure and then
 converts the value to the target format as
 specified by the result_format argument.
 If the pixel is not a valid index in the specified colormap, a
-.ZN BadValue
+.B BadValue
 error results.
 The
-.ZN XcmsQueryColors
+.B XcmsQueryColors
 function obtains the RGB values
 for pixel values in the pixel members of
-.ZN XcmsColor
+.B XcmsColor
 structures and then
 converts the values to the target format as
 specified by the result_format argument.
 If a pixel is not a valid index into the specified colormap, a
-.ZN BadValue
+.B BadValue
 error results.
 If more than one pixel is in error,
 the one that gets reported is arbitrary.
 .LP
-.ZN XcmsQueryColor
+.B XcmsQueryColor
 and
-.ZN XcmsQueryColors
+.B XcmsQueryColors
 can generate
-.ZN BadColor
+.B BadColor
 and
-.ZN BadValue
+.B BadValue
 errors.
 .LP
 The
-.ZN XcmsLookupColor
+.B XcmsLookupColor
 function looks up the string name of a color with respect to the screen
 associated with the specified colormap.
 It returns both the exact color values and
-the closest values provided by the screen 
+the closest values provided by the screen
 with respect to the visual type of the specified colormap.
 The values are returned in the format specified by result_format.
-If the color name is not in the Host Portable Character Encoding, 
+If the color name is not in the Host Portable Character Encoding,
 the result is implementation-dependent.
 Use of uppercase or lowercase does not matter.
-.ZN XcmsLookupColor
+.B XcmsLookupColor
 returns
-.ZN XcmsSuccess
+.B XcmsSuccess
 or
-.ZN XcmsSuccessWithCompression
+.B XcmsSuccessWithCompression
 if the name is resolved; otherwise, it returns
-.ZN XcmsFailure .
+.BR XcmsFailure .
 If
-.ZN XcmsSuccessWithCompression
-is returned, the color specification returned in 
+.B XcmsSuccessWithCompression
+is returned, the color specification returned in
 color_screen_return is the result of gamut compression.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadColor
+.B BadColor
 A value for a Colormap argument does not name a defined Colormap.
 .TP 1i
-.ZN BadValue
+.B BadValue
 Some numeric value falls outside the range of values accepted by the request.
 Unless a specific range is specified for an argument, the full range defined
-by the argument's type is accepted.  Any argument defined as a set of
+by the argument's type is accepted.
+Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
 XcmsAllocColor(__libmansuffix__),

@@ -38,56 +38,23 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XSetWMColormapWindows __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XSetWMColormapWindows, XGetWMColormapWindows \- set or read a window's WM_COLORMAP_WINDOWS property
 .SH SYNTAX
 .HP
 Status XSetWMColormapWindows\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^,
-Window *\fIcolormap_windows\fP\^, int \fIcount\fP\^); 
+Window *\fIcolormap_windows\fP\^, int \fIcount\fP\^);
 .HP
 Status XGetWMColormapWindows\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^,
-Window **\fIcolormap_windows_return\fP\^, int *\fIcount_return\fP\^); 
+Window **\fIcolormap_windows_return\fP\^, int *\fIcount_return\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
@@ -95,56 +62,54 @@ Specifies the connection to the X server.
 Specifies the list of windows.
 .IP \fIcolormap_windows_return\fP 1i
 Returns the list of windows.
-.ds Cn windows in the list
 .IP \fIcount\fP 1i
-Specifies the number of \*(Cn.
-.ds Cn windows in the list
+Specifies the number of windows in the list.
 .IP \fIcount_return\fP 1i
-Returns the number of \*(Cn.
+Returns the number of windows in the list.
 .IP \fIw\fP 1i
 Specifies the window.
 .SH DESCRIPTION
-The 
-.ZN XSetWMColormapWindows 
+The
+.B XSetWMColormapWindows
 function replaces the WM_COLORMAP_WINDOWS property on the specified
 window with the list of windows specified by the colormap_windows argument.
 It the property does not already exist,
-.ZN XSetWMColormapWindows
+.B XSetWMColormapWindows
 sets the WM_COLORMAP_WINDOWS property on the specified
 window to the list of windows specified by the colormap_windows argument.
 The property is stored with a type of WINDOW and a format of 32.
 If it cannot intern the WM_COLORMAP_WINDOWS atom,
-.ZN XSetWMColormapWindows
+.B XSetWMColormapWindows
 returns a zero status.
 Otherwise, it returns a nonzero status.
 .LP
-.ZN XSetWMColormapWindows
+.B XSetWMColormapWindows
 can generate
-.ZN BadAlloc
+.B BadAlloc
 and
-.ZN BadWindow
+.B BadWindow
 errors.
 .LP
-The 
-.ZN XGetWMColormapWindows 
-function returns the list of window identifiers stored 
+The
+.B XGetWMColormapWindows
+function returns the list of window identifiers stored
 in the WM_COLORMAP_WINDOWS property on the specified window.
 These identifiers indicate the colormaps that the window manager
 may need to install for this window.
-If the property exists, is of type WINDOW, is of format 32, 
-and the atom WM_COLORMAP_WINDOWS can be interned, 
-.ZN XGetWMColormapWindows
-sets the windows_return argument to a list of window identifiers, 
-sets the count_return argument to the number of elements in the list, 
+If the property exists, is of type WINDOW, is of format 32,
+and the atom WM_COLORMAP_WINDOWS can be interned,
+.B XGetWMColormapWindows
+sets the windows_return argument to a list of window identifiers,
+sets the count_return argument to the number of elements in the list,
 and returns a nonzero status.
 Otherwise, it sets neither of the return arguments
 and returns a zero status.
 To release the list of window identifiers, use
-.ZN XFree . 
+.BR XFree .
 .LP
-.ZN XGetWMColormapWindows
+.B XGetWMColormapWindows
 can generate a
-.ZN BadWindow
+.B BadWindow
 error.
 .SH PROPERTIES
 .TP 1i
@@ -153,10 +118,10 @@ The list of window IDs that may need a different colormap
 from that of their top-level window.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadAlloc
+.B BadAlloc
 The server failed to allocate the requested resource or server memory.
 .TP 1i
-.ZN BadWindow
+.B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
 XAllocClassHint(__libmansuffix__),

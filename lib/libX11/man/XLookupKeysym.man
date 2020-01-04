@@ -38,62 +38,29 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XLookupKeysym __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XLookupKeysym, XRefreshKeyboardMapping, XLookupString, XRebindKeysym \- handle keyboard input events in Latin-1
 .SH SYNTAX
 .HP
-KeySym XLookupKeysym(\^XKeyEvent *\fIkey_event\fP\^, int \fIindex\fP\^); 
+KeySym XLookupKeysym(\^XKeyEvent *\fIkey_event\fP\^, int \fIindex\fP\^);
 .HP
-int XRefreshKeyboardMapping(\^XMappingEvent *\fIevent_map\fP\^); 
+int XRefreshKeyboardMapping(\^XMappingEvent *\fIevent_map\fP\^);
 .HP
 int XLookupString(\^XKeyEvent *\fIevent_struct\fP\^, char
 *\fIbuffer_return\fP\^, int \fIbytes_buffer\fP\^, KeySym
-*\fIkeysym_return\fP\^, XComposeStatus *\fIstatus_in_out\fP\^); 
+*\fIkeysym_return\fP\^, XComposeStatus *\fIstatus_in_out\fP\^);
 .HP
 int XRebindKeysym(\^Display *\fIdisplay\fP\^, KeySym \fIkeysym\fP\^, KeySym
 \fIlist\fP\^[\^]\^, int \fImod_count\fP\^, unsigned char *\fIstring\fP\^, int
-\fInum_bytes\fP\^); 
+\fInum_bytes\fP\^);
 .SH ARGUMENTS
 .IP \fIbuffer_return\fP 1i
 Returns the translated characters.
@@ -109,19 +76,19 @@ Specifies the mapping event that is to be used.
 .IP \fIevent_struct\fP 1i
 Specifies the key event structure to be used.
 You can pass
-.ZN XKeyPressedEvent
+.B XKeyPressedEvent
 or
-.ZN XKeyReleasedEvent .
+.BR XKeyReleasedEvent .
 .IP \fIindex\fP 1i
 Specifies the index into the KeySyms list for the event's KeyCode.
 .IP \fIkey_event\fP 1i
-Specifies the 
-.ZN KeyPress
+Specifies the
+.B KeyPress
 or
-.ZN KeyRelease
+.B KeyRelease
 event.
 .IP \fIkeysym\fP 1i
-Specifies the KeySym that is to be \*(Fn.
+Specifies the KeySym that is to be returned.
 .IP \fIkeysym_return\fP 1i
 Returns the KeySym computed from the event if this argument is not NULL.
 .IP \fIlist\fP 1i
@@ -129,73 +96,73 @@ Specifies the KeySyms to be used as modifiers.
 .IP \fImod_count\fP 1i
 Specifies the number of modifiers in the modifier list.
 .IP \fIstatus_in_out\fP 1i
-Specifies or returns the 
-.ZN XComposeStatus 
+Specifies or returns the
+.B XComposeStatus
 structure or NULL.
 .IP \fIstring\fP 1i
-Specifies the string that is copied and will be returned by 
-.ZN XLookupString .
+Specifies the string that is copied and will be returned by
+.BR XLookupString .
 .SH DESCRIPTION
 The
-.ZN XLookupKeysym
+.B XLookupKeysym
 function uses a given keyboard event and the index you specified to return
 the KeySym from the list that corresponds to the KeyCode member in the
-.ZN XKeyPressedEvent
+.B XKeyPressedEvent
 or
-.ZN XKeyReleasedEvent
+.B XKeyReleasedEvent
 structure.
 If no KeySym is defined for the KeyCode of the event,
-.ZN XLookupKeysym
+.B XLookupKeysym
 returns
-.ZN NoSymbol .
+.BR NoSymbol .
 .LP
 The
-.ZN XRefreshKeyboardMapping
+.B XRefreshKeyboardMapping
 function refreshes the stored modifier and keymap information.
 You usually call this function when a
-.ZN MappingNotify
+.B MappingNotify
 event with a request member of
-.ZN MappingKeyboard
+.B MappingKeyboard
 or
-.ZN MappingModifier
+.B MappingModifier
 occurs.
 The result is to update Xlib's knowledge of the keyboard.
 .LP
 The
-.ZN XLookupString
+.B XLookupString
 function translates a key event to a KeySym and a string.
 The KeySym is obtained by using the standard interpretation of the
-.ZN Shift ,
-.ZN Lock ,
+.BR Shift ,
+.BR Lock ,
 group, and numlock modifiers as defined in the X Protocol specification.
 If the KeySym has been rebound (see
-.ZN XRebindKeysym ),
+.BR XRebindKeysym ),
 the bound string will be stored in the buffer.
 Otherwise, the KeySym is mapped, if possible, to an ISO Latin-1 character
 or (if the Control modifier is on) to an ASCII control character,
 and that character is stored in the buffer.
-.ZN XLookupString
+.B XLookupString
 returns the number of characters that are stored in the buffer.
 .LP
 If present (non-NULL),
 the
-.ZN XComposeStatus
+.B XComposeStatus
 structure records the state,
 which is private to Xlib,
 that needs preservation across calls to
-.ZN XLookupString
+.B XLookupString
 to implement compose processing.
 The creation of
-.ZN XComposeStatus
+.B XComposeStatus
 structures is implementation-dependent;
 a portable program must pass NULL for this argument.
 .LP
 The
-.ZN XRebindKeysym
+.B XRebindKeysym
 function can be used to rebind the meaning of a KeySym for the client.
 It does not redefine any key in the X server but merely
 provides an easy way for long strings to be attached to keys.
-.ZN XLookupString
+.B XLookupString
 returns this string when the appropriate set of
 modifier keys are pressed and when the KeySym would have been used for
 the translation.

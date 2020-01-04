@@ -38,65 +38,31 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XSelectInput __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XSelectInput \- select input events
 .SH SYNTAX
 .HP
 int XSelectInput\^(\^Display *\fIdisplay\fP\^, Window \fIw\fP\^, long
-\fIevent_mask\fP\^); 
+\fIevent_mask\fP\^);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIevent_mask\fP 1i
 Specifies the event mask.
-.ds Wi whose events you are interested in
 .IP \fIw\fP 1i
-Specifies the window \*(Wi.
+Specifies the window whose events you are interested in.
 .SH DESCRIPTION
 The
-.ZN XSelectInput
-function requests that the X server report the events associated with the 
+.B XSelectInput
+function requests that the X server report the events associated with the
 specified event mask.
 Initially, X will not report any of these events.
 Events are reported relative to a window.
@@ -116,36 +82,36 @@ When the X server generates an event, it reports it
 to all interested clients.
 .IP \(bu 5
 Only one client at a time can select
-.ZN CirculateRequest ,
-.ZN ConfigureRequest ,
+.BR CirculateRequest ,
+.BR ConfigureRequest ,
 or
-.ZN MapRequest
+.B MapRequest
 events, which are associated with
 the event mask
-.ZN SubstructureRedirectMask . 
+.BR SubstructureRedirectMask .
 .IP \(bu 5
 Only one client at a time can select
 a
-.ZN ResizeRequest
+.B ResizeRequest
 event, which is associated with
 the event mask
-.ZN ResizeRedirectMask . 
+.BR ResizeRedirectMask .
 .IP \(bu 5
-Only one client at a time can select a 
-.ZN ButtonPress 
+Only one client at a time can select a
+.B ButtonPress
 event, which is associated with
 the event mask
-.ZN ButtonPressMask .
+.BR ButtonPressMask .
 .LP
 The server reports the event to all interested clients.
 .LP
-.ZN XSelectInput
+.B XSelectInput
 can generate a
-.ZN BadWindow 
+.B BadWindow
 error.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadWindow
+.B BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
 \fI\*(xL\fP

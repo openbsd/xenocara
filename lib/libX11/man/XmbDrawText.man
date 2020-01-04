@@ -39,64 +39,31 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
+.\" It is provided "as is" without express or implied warranty.
 .\"
-.\" 
+.\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XmbDrawText __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
-XmbDrawText, XwcDrawText, Xutf8DrawText \- draw text using multiple font sets 
+XmbDrawText, XwcDrawText, Xutf8DrawText \- draw text using multiple font sets
 .SH SYNTAX
 .HP
 void XmbDrawText\^(\^Display *\fIdisplay\fP\^, Drawable \fId\fP\^, GC
 \fIgc\fP\^, int \fIx\fP\^, int \fIy\fP\^, XmbTextItem *\fIitems\fP\^, int
-\fInitems\fP\^); 
+\fInitems\fP\^);
 .HP
 void XwcDrawText\^(\^Display *\fIdisplay\fP\^, Drawable \fId\fP\^, GC
 \fIgc\fP\^, int \fIx\fP\^, int \fIy\fP\^, XwcTextItem *\fIitems\fP\^, int
-\fInitems\fP\^); 
+\fInitems\fP\^);
 .HP
 void Xutf8DrawText\^(\^Display *\fIdisplay\fP\^, Drawable \fId\fP\^, GC
 \fIgc\fP\^, int \fIx\fP\^, int \fIy\fP\^, XmbTextItem *\fIitems\fP\^, int \fInitems\fP\^);
 .SH ARGUMENTS
 .IP \fId\fP 1i
-Specifies the drawable. 
+Specifies the drawable.
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIgc\fP 1i
@@ -105,81 +72,81 @@ Specifies the GC.
 Specifies an array of text items.
 .IP \fInitems\fP 1i
 Specifies the number of text items in the array.
-.ds Xy
 .IP \fIx\fP 1i
 .br
 .ns
 .IP \fIy\fP 1i
-Specify the x and y coordinates\*(Xy.
+Specify the x and y coordinates.
 .SH DESCRIPTION
 The
-.ZN XmbDrawText ,
-.ZN XwcDrawText 
-and 
-.ZN Xutf8DrawText 
+.BR XmbDrawText ,
+.B XwcDrawText
+and
+.B Xutf8DrawText
 functions allow complex spacing and font set shifts between text strings.
 Each text item is processed in turn, with the origin of a text
 element advanced in the primary draw direction by the escapement of the
 previous text item.
 A text item delta specifies an additional escapement of the text item
 drawing origin in the primary draw direction.
-A font_set member other than 
-.ZN None
+A font_set member other than
+.B None
 in an item causes the font set to be used for this and subsequent text items
 in the text_items list.
 Leading text items with a font_set member set to
-.ZN None
+.B None
 will not be drawn.
 .LP
-.ZN XmbDrawText ,
-.ZN XwcDrawText
+.BR XmbDrawText ,
+.B XwcDrawText
 and
-.ZN Xutf8DrawText
+.B Xutf8DrawText
 do not perform any context-dependent rendering between text segments.
 Clients may compute the drawing metrics by passing each text segment to
-.ZN XmbTextExtents ,
-.ZN XwcTextExtents ,
-.ZN Xutf8TextExtents
+.BR XmbTextExtents ,
+.BR XwcTextExtents ,
+.B Xutf8TextExtents
 or
-.ZN XmbTextPerCharExtents ,
-.ZN XwcTextPerCharExtents .
-.ZN Xutf8TextPerCharExtents .
-When the 
-.ZN XFontSet
-has missing charsets, each unavailable character is drawn 
-with the default string returned by 
-.ZN XCreateFontSet .
+.BR XmbTextPerCharExtents ,
+.BR XwcTextPerCharExtents .
+.BR Xutf8TextPerCharExtents .
+When the
+.B XFontSet
+has missing charsets, each unavailable character is drawn
+with the default string returned by
+.BR XCreateFontSet .
 The behavior for an invalid codepoint is undefined.
 .LP
 The function
-.ZN Xutf8DrawText
-is an extension introduced by The XFree86 Project, Inc. in their 4.0.2
-release. Its presence is
+.B Xutf8DrawText
+is an extension introduced by The XFree86 Project, Inc., in their 4.0.2
+release.
+Its presence is
 indicated by the macro
-.ZN X_HAVE_UTF8_STRING .
+.BR X_HAVE_UTF8_STRING .
 .SH STRUCTURES
 The
-.ZN XmbTextItem
+.B XmbTextItem
 structure contains:
-.Ds 0
+.EX
 typedef struct {
         char *chars;    /\&* pointer to string */
         int nchars;     /\&* number of bytes */
         int delta;      /\&* pixel delta between strings */
         XFontSet font_set;      /\&* fonts, None means don't change */
 } XmbTextItem;
-.De
+.EE
 The
-.ZN XwcTextItem
+.B XwcTextItem
 structure contains:
-.Ds 0
+.EX
 typedef struct {
         wchar_t *chars; /\&* pointer to wide char string */
         int nchars;     /\&* number of wide characters */
         int delta;      /\&* pixel delta between strings */
         XFontSet font_set;      /\&* fonts, None means don't change */
 } XwcTextItem;
-.De
+.EE
 .SH "SEE ALSO"
 XDrawImageString(__libmansuffix__),
 XDrawString(__libmansuffix__),

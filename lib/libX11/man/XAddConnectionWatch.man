@@ -38,46 +38,13 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XAddConnectionWatch __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XAddConnectionWatch, XRemoveConnectionWatch, XProcessInternalConnection, XInternalConnectionNumbers \- handle Xlib internal connections
@@ -85,24 +52,23 @@ XAddConnectionWatch, XRemoveConnectionWatch, XProcessInternalConnection, XIntern
 .HP
 typedef void (*XConnectionWatchProc)\^(\^Display *\fIdisplay\fP\^, XPointer
 \fIclient_data\fP\^, int \fIfd\fP\^, Bool \fIopening\fP\^, XPointer
-*\fIwatch_data\fP\^); 
+*\fIwatch_data\fP\^);
 .HP
 Status XAddConnectionWatch\^(\^Display *\fIdisplay\fP\^, XWatchProc
-\fIprocedure\fP\^, XPointer \fIclient_data\fP\^); 
+\fIprocedure\fP\^, XPointer \fIclient_data\fP\^);
 .HP
 Status XRemoveConnectionWatch\^(\^Display *\fIdisplay\fP\^, XWatchProc
-\fIprocedure\fP\^, XPointer \fIclient_data\fP\^); 
+\fIprocedure\fP\^, XPointer \fIclient_data\fP\^);
 .HP
 void XProcessInternalConnection\^(\^Display *\fIdisplay\fP\^, int \fIfd\fP\^);
 .HP
 Status XInternalConnectionNumbers\^(\^Display *\fIdisplay\fP\^, int
-**\fIfd_return\fP\^, int *\fIcount_return\fP\^); 
+**\fIfd_return\fP\^, int *\fIcount_return\fP\^);
 .SH ARGUMENTS
 .IP \fIclient_data\fP 1i
 Specifies the additional client data.
-.ds Cn file descriptors
 .IP \fIcount_return\fP 1i
-Returns the number of \*(Cn.
+Returns the number of file descriptors.
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIfd\fP 1i
@@ -113,25 +79,27 @@ Returns the file descriptors.
 Specifies the procedure to be called.
 .SH DESCRIPTION
 The
-.ZN XAddConnectionWatch
+.B XAddConnectionWatch
 function registers a procedure to be called each time Xlib opens or closes an
-internal connection for the specified display.  The procedure is passed the
+internal connection for the specified display.
+The procedure is passed the
 display, the specified client_data, the file descriptor for the connection,
 a Boolean indicating whether the connection is being opened or closed, and a
-pointer to a location for private watch data.  If opening is
-.ZN True ,
+pointer to a location for private watch data.
+If opening is
+.BR True ,
 the procedure can store a pointer to private data in the location pointed
 to by watch_data;
 when the procedure is later called for this same connection and opening is
-.ZN False ,
+.BR False ,
 the location pointed to by watch_data will hold this same private data pointer.
 .LP
 This function can be called at any time after a display is opened.
 If internal connections already exist, the registered procedure will
 immediately be called for each of them, before
-.ZN XAddConnectionWatch
+.B XAddConnectionWatch
 returns.
-.ZN XAddConnectionWatch
+.B XAddConnectionWatch
 returns a nonzero status if the procedure is successfully registered;
 otherwise, it returns zero.
 .LP
@@ -142,33 +110,33 @@ If Xlib has been initialized for threads, the procedure is called with
 the display locked and the result of a call by the procedure to any
 Xlib function that locks the display is not defined unless the executing
 thread has externally locked the display using
-.ZN XLockDisplay .
+.BR XLockDisplay .
 .LP
 The
-.ZN XRemoveConnectionWatch
+.B XRemoveConnectionWatch
 function removes a previously registered connection watch procedure.
 The client_data must match the client_data used when the procedure
 was initially registered.
 
 .LP
 The
-.ZN XProcessInternalConnection
+.B XProcessInternalConnection
 function processes input available on an internal connection.
 This function should be called for an internal connection only
 after an operating system facility (for example,
-.ZN select
+.B select
 or
-.ZN poll )
+.BR poll )
 has indicated that input is available; otherwise,
 the effect is not defined.
 .LP
 The
-.ZN XInternalConnectionNumbers
+.B XInternalConnectionNumbers
 function returns a list of the file descriptors for all internal
 connections currently open for the specified display.
 When the allocated list is no longer needed,
 free it by using
-.ZN XFree .
+.BR XFree .
 This functions returns a nonzero status if the list is successfully allocated;
 otherwise, it returns zero.
 .SH "SEE ALSO"

@@ -38,69 +38,36 @@
 .\" to this documentation without specific, written prior permission.
 .\" Digital and Tektronix makes no representations about the suitability
 .\" of this documentation for any purpose.
-.\" It is provided ``as is'' without express or implied warranty.
-.\" 
+.\" It is provided "as is" without express or implied warranty.
+.\"
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
 .ds xL Xlib \- C Language X Interface
 .ds xC Inter-Client Communication Conventions Manual
-.na
-.de Ds
-.nf
-.\\$1D \\$2 \\$1
-.ft CW
-.\".ps \\n(PS
-.\".if \\n(VS>=40 .vs \\n(VSu
-.\".if \\n(VS<=39 .vs \\n(VSp
-..
-.de De
-.ce 0
-.if \\n(BD .DF
-.nr BD 0
-.in \\n(OIu
-.if \\n(TM .ls 2
-.sp \\n(DDu
-.fi
-..
-.de IN		\" send an index entry to the stderr
-..
-.de Pn
-.ie t \\$1\fB\^\\$2\^\fR\\$3
-.el \\$1\fI\^\\$2\^\fP\\$3
-..
-.de ZN
-.ie t \fB\^\\$1\^\fR\\$2
-.el \fI\^\\$1\^\fP\\$2
-..
-.de hN
-.ie t <\fB\\$1\fR>\\$2
-.el <\fI\\$1\fP>\\$2
-..
-.ny0
 .TH XDrawPoint __libmansuffix__ __xorgversion__ "XLIB FUNCTIONS"
 .SH NAME
 XDrawPoint, XDrawPoints, XPoint \- draw points and points structure
 .SH SYNTAX
 .HP
 int XDrawPoint\^(\^Display *\fIdisplay\fP\^, Drawable \fId\fP\^, GC
-\fIgc\fP\^, int \fIx\fP\^, int \fIy\fP\^); 
+\fIgc\fP\^, int \fIx\fP\^, int \fIy\fP\^);
 .HP
 int XDrawPoints\^(\^Display *\fIdisplay\fP\^, Drawable \fId\fP\^, GC
-\fIgc\fP\^, XPoint *\fIpoints\fP\^, int \fInpoints\fP\^, int \fImode\fP\^); 
+\fIgc\fP\^, XPoint *\fIpoints\fP\^, int \fInpoints\fP\^, int \fImode\fP\^);
 .SH ARGUMENTS
 .IP \fId\fP 1i
-Specifies the drawable. 
+Specifies the drawable.
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
 .IP \fIgc\fP 1i
 Specifies the GC.
 .IP \fImode\fP 1i
-Specifies the coordinate mode. 
+Specifies the coordinate mode.
 You can pass
-.ZN CoordModeOrigin
+.B CoordModeOrigin
 or
-.ZN CoordModePrevious .
+.BR CoordModePrevious .
 .IP \fInpoints\fP 1i
 Specifies the number of points in the array.
 .IP \fIpoints\fP 1i
@@ -112,47 +79,47 @@ Specifies an array of points.
 Specify the x and y coordinates where you want the point drawn.
 .SH DESCRIPTION
 The
-.ZN XDrawPoint
+.B XDrawPoint
 function uses the foreground pixel and function components of the
-GC to draw a single point into the specified drawable; 
-.ZN XDrawPoints
+GC to draw a single point into the specified drawable;
+.B XDrawPoints
 draws multiple points this way.
-.ZN CoordModeOrigin
+.B CoordModeOrigin
 treats all coordinates as relative to the origin,
 and
-.ZN CoordModePrevious
+.B CoordModePrevious
 treats all coordinates after the first as relative to the previous point.
-.ZN XDrawPoints
+.B XDrawPoints
 draws the points in the order listed in the array.
 .LP
 Both functions use these GC components: function, plane-mask,
 foreground, subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
 .LP
-.ZN XDrawPoint
+.B XDrawPoint
 can generate
-.ZN BadDrawable ,
-.ZN BadGC ,
-and 
-.ZN BadMatch 
-errors.
-.ZN XDrawPoints
-can generate
-.ZN BadDrawable ,
-.ZN BadGC ,
-.ZN BadMatch ,
+.BR BadDrawable ,
+.BR BadGC ,
 and
-.ZN BadValue 
+.B BadMatch
+errors.
+.B XDrawPoints
+can generate
+.BR BadDrawable ,
+.BR BadGC ,
+.BR BadMatch ,
+and
+.B BadValue
 errors.
 .SH STRUCTURES
 The
-.ZN XPoint
+.B XPoint
 structure contains:
 .LP
-.Ds 0
+.EX
 typedef struct {
         short x, y;
 } XPoint;
-.De
+.EE
 .LP
 All x and y members are signed integers.
 The width and height members are 16-bit unsigned integers.
@@ -161,25 +128,26 @@ out of the 16-bit ranges, because the protocol only has 16-bit fields
 for these values.
 .SH DIAGNOSTICS
 .TP 1i
-.ZN BadDrawable
+.B BadDrawable
 A value for a Drawable argument does not name a defined Window or Pixmap.
 .TP 1i
-.ZN BadGC
+.B BadGC
 A value for a GContext argument does not name a defined GContext.
 .TP 1i
-.ZN BadMatch
+.B BadMatch
 An
-.ZN InputOnly
+.B InputOnly
 window is used as a Drawable.
 .TP 1i
-.ZN BadMatch
+.B BadMatch
 Some argument or pair of arguments has the correct type and range but fails
 to match in some other way required by the request.
 .TP 1i
-.ZN BadValue
+.B BadValue
 Some numeric value falls outside the range of values accepted by the request.
 Unless a specific range is specified for an argument, the full range defined
-by the argument's type is accepted.  Any argument defined as a set of
+by the argument's type is accepted.
+Any argument defined as a set of
 alternatives can generate this error.
 .SH "SEE ALSO"
 XDrawArc(__libmansuffix__),
