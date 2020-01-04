@@ -436,6 +436,7 @@
 ./usr/X11R6/lib/pkgconfig/xcb-xv.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xvmc.pc
 ./usr/X11R6/lib/pkgconfig/xcb.pc
+./usr/X11R6/lib/pkgconfig/xvmc-wrapper.pc
 ./usr/X11R6/lib/xorg
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man
