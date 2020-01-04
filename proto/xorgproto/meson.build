@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-project('xorgproto', 'c', license : 'MIT', version : '2018.4')
+project('xorgproto', 'c', license : 'MIT', version : '2019.2')
 pkg = import('pkgconfig')
 cc = meson.get_compiler('c')
 sed = find_program('sed')
@@ -44,7 +44,6 @@ pcs = [
         ['scrnsaverproto',      '1.2.2'],
         ['trapproto',           '3.4.3'],
         ['videoproto',          '2.3.3'],
-        ['windowswmproto',      '1.0.4'],
         ['xcmiscproto',         '1.2.2'],
         ['xextproto',           '7.3.0'],
         ['xf86bigfontproto',    '1.2.0'],
@@ -79,6 +78,7 @@ if get_option('legacy') == true
         ['fontcacheproto', '0.1.3'],
         ['lg3dproto', '5.0'],
         ['printproto', '1.0.5'],
+        ['windowswmproto', '1.0.4'],
         ['xcalibrateproto', '0.1.0'],
         ['xf86rushproto', '1.2.2'],
     ]

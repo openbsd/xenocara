@@ -6,13 +6,13 @@
 /*****************************************************************************
 Copyright 1987, 1988, 1989, 1990, 1991 by Digital Equipment Corp., Maynard, MA
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -67,8 +67,8 @@ typedef struct
     ClientPtr            client;  /* Multi-client support and error handling */
     xXTrapGetCurReply    cur;    /* Struct of Miscellaneous state info */
     xXTrapGetStatsReply  *stats; /* Pointer to stat's, malloc'd if requested */
-    CARD32 last_input_time B32; /* last timestamp from input event */
-    CARD16 protocol B16;        /* current communication protocol */
+    CARD32 last_input_time;      /* last timestamp from input event */
+    CARD16 protocol;             /* current communication protocol */
 } XETrapEnv;
 
 #define XETrapSetHeaderEvent(phdr)      ((phdr)->type = 0x1L)
@@ -78,7 +78,7 @@ typedef struct
 #define XETrapSetHeaderReply(phdr)      ((phdr)->type = 0x5L)
 
 #ifndef vaxc
-#define globaldef 
+#define globaldef
 #define globalref extern
 #endif
 

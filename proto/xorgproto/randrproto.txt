@@ -3427,4 +3427,4 @@ Bibliography
 
 [RENDER]
 	Packard, Keith, "The X Rendering Extension", work in progress,
-	http://cgit.freedesktop.org/xorg/proto/renderproto/tree/renderproto.txt
+	https://gitlab.freedesktop.org/xorg/proto/xorgproto/raw/master/renderproto.txt

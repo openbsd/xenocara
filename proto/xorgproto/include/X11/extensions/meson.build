@@ -53,9 +53,6 @@ install_headers(
     'syncconst.h',
     'syncproto.h',
     'syncstr.h',
-    'vldXvMC.h',
-    'windowswm.h',
-    'windowswmstr.h',
     'xcmiscproto.h',
     'xcmiscstr.h',
     'xf86bigfont.h',
@@ -79,7 +76,6 @@ install_headers(
     'XI2proto.h',
     'XI.h',
     'XIproto.h',
-    'XKBgeom.h',
     'XKB.h',
     'XKBproto.h',
     'XKBsrv.h',
@@ -112,11 +108,15 @@ if get_option('legacy') == true
         'lgewire.h',
         'Print.h',
         'Printstr.h',
+        'vldXvMC.h',
+        'windowswm.h',
+        'windowswmstr.h',
         'xcalibrateproto.h',
         'xcalibratewire.h',
         'Xeviestr.h',
         'xf86rush.h',
         'xf86rushstr.h',
+        'XKBgeom.h',
         subdir : 'X11/extensions'
     )
 endif

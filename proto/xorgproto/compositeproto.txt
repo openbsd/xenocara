@@ -214,22 +214,28 @@ operations other than QueryVersion.
     UnredirectWindow:
 
 		window:				Window
+		update:				UPDATETYPE
 
 		errors: Window, Value
 
 	Redirection of the specified window will be terminated. If
 	the specified window was not selected for redirection by the
-	current client, a 'Value' error results.
+	current client, or if the update type does not match the
+	current client's previously requested update type, a 'Value'
+	error results.
 
-    UnredirectWindows:
+    UnredirectSubwindows:
 
 		window:				Window
+		update:				UPDATETYPE
 
 		errors: Window, Value
 
 	Redirection of all children of window will be terminated. If
 	the specified window was not selected for sub-redirection by the
-	current client, a 'Value' error results.
+	current client, or if the update type does not match the
+	current client's previously requested update type, a 'Value'
+	error results.
 
 9. Clip lists
 

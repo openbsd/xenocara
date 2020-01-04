@@ -22,8 +22,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xorgproto], [2018.4],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([xorgproto], [2019.2],
+        [https://gitlab.freedesktop.org/xorg/proto/xorgproto/issues])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
@@ -50,12 +50,6 @@ AC_ARG_ENABLE(applewm,
 			     [Install apple wm protocol headers (default: false)]),
 			     [APPLEWM=$enableval], [APPLEWM=no])
 AM_CONDITIONAL(APPLEWM, [test "x$APPLEWM" = "xyes"])
-
-AC_ARG_ENABLE(windowswm,
-	      AS_HELP_STRING([--enable-windowswm],
-			     [Install windows wm protocol headers (default: false)]),
-			     [WINDOWSWM=$enableval], [WINDOWSWM=no])
-AM_CONDITIONAL(WINDOWSWM, [test "x$WINDOWSWM" = "xyes"])
 
 AC_CHECK_HEADERS([sys/select.h sys/param.h sys/types.h sys/time.h])
 
@@ -141,6 +135,15 @@ AC_CONFIG_FILES([applewmproto.pc
 		 renderproto.pc
 		 resourceproto.pc
 		 scrnsaverproto.pc
+		 specs/Makefile
+		 specs/bigreqsproto/Makefile
+		 specs/fontsproto/Makefile
+		 specs/kbproto/Makefile
+		 specs/recordproto/Makefile
+		 specs/scrnsaverproto/Makefile
+		 specs/xcmiscproto/Makefile
+		 specs/xextproto/Makefile
+		 specs/xproto/Makefile
 		 trapproto.pc
 		 videoproto.pc
 		 windowswmproto.pc

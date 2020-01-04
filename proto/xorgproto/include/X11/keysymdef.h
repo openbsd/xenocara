@@ -73,7 +73,7 @@ SOFTWARE.
  * Unicode number plus 0x01000000. The keysym values in the range
  * 0x01000100 to 0x0110ffff are reserved to represent Unicode
  * characters in the range U+0100 to U+10FFFF.
- * 
+ *
  * While most newer Unicode-based X11 clients do already accept
  * Unicode-mapped keysyms in the range 0x01000100 to 0x0110ffff, it
  * will remain necessary for clients -- in the interest of
@@ -104,11 +104,11 @@ SOFTWARE.
  * When adding new keysyms to this file, do not forget to also update the
  * following as needed:
  *
- *   - the mappings in src/KeyBind.c in the repo
- *     git://anongit.freedesktop.org/xorg/lib/libX11.git
+ *   - the mappings in src/KeyBind.c in the libX11 repo
+ *     https://gitlab.freedesktop.org/xorg/lib/libx11
  *
- *   - the protocol specification in specs/keysyms.xml
- *     in the repo git://anongit.freedesktop.org/xorg/proto/x11proto.git
+ *   - the protocol specification in specs/keysyms.xml in this repo
+ *     https://gitlab.freedesktop.org/xorg/proto/xorgproto
  *
  */
 
@@ -1969,7 +1969,7 @@ SOFTWARE.
 #define XK_Ibreve                     0x100012c  /* U+012C LATIN CAPITAL LETTER I WITH BREVE */
 #define XK_Zstroke                    0x10001b5  /* U+01B5 LATIN CAPITAL LETTER Z WITH STROKE */
 #define XK_Gcaron                     0x10001e6  /* U+01E6 LATIN CAPITAL LETTER G WITH CARON */
-#define XK_Ocaron                     0x10001d1  /* U+01D2 LATIN CAPITAL LETTER O WITH CARON */
+#define XK_Ocaron                     0x10001d1  /* U+01D1 LATIN CAPITAL LETTER O WITH CARON */
 #define XK_Obarred                    0x100019f  /* U+019F LATIN CAPITAL LETTER O WITH MIDDLE TILDE */
 #define XK_xabovedot                  0x1001e8b  /* U+1E8B LATIN SMALL LETTER X WITH DOT ABOVE */
 #define XK_ibreve                     0x100012d  /* U+012D LATIN SMALL LETTER I WITH BREVE */
@@ -1990,7 +1990,7 @@ SOFTWARE.
 /*
  * Vietnamese
  */
- 
+
 #ifdef XK_VIETNAMESE
 #define XK_Abelowdot                  0x1001ea0  /* U+1EA0 LATIN CAPITAL LETTER A WITH DOT BELOW */
 #define XK_abelowdot                  0x1001ea1  /* U+1EA1 LATIN SMALL LETTER A WITH DOT BELOW */
@@ -2136,7 +2136,7 @@ SOFTWARE.
 #define XK_approxeq                   0x1002248  /* U+2245 ALMOST EQUAL TO */
 #define XK_notapproxeq                0x1002247  /* U+2247 NOT ALMOST EQUAL TO */
 #define XK_notidentical               0x1002262  /* U+2262 NOT IDENTICAL TO */
-#define XK_stricteq                   0x1002263  /* U+2263 STRICTLY EQUIVALENT TO */          
+#define XK_stricteq                   0x1002263  /* U+2263 STRICTLY EQUIVALENT TO */
 #endif /* XK_MATHEMATICAL */
 
 #ifdef XK_BRAILLE

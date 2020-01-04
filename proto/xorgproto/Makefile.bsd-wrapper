@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2019/01/20 17:28:24 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2020/01/04 17:53:16 matthieu Exp $
 
 CONFIGURE_ARGS= --datarootdir=${X11BASE}/lib \
 		--docdir=${X11BASE}/share/doc/xorgproto
@@ -23,9 +23,9 @@ EXTSPECS=       appendix.xml appgrp.xml dbe.xml dpms.xml evi.xml geproto.xml \
 
 
 afterinstall:
-	${INSTALL_DATA} ${.CURDIR}/specs/bigreq.xml \
+	${INSTALL_DATA} ${.CURDIR}/specs/bigreqsproto/bigreq.xml \
 		${DESTDIR}${X11BASE}/share/doc/xorgproto
-	${INSTALL_DATA} ${.CURDIR}/specs/fsproto.xml \
+	${INSTALL_DATA} ${.CURDIR}/specs/fontsproto/fsproto.xml \
 		${DESTDIR}${X11BASE}/share/doc/xorgproto
 	@for i in ${XISPECS}; do \
 		echo installing $$i in ${X11BASE}/share/doc/xorgproto/inputproto;\
@@ -34,16 +34,16 @@ afterinstall:
 	done
 	@for i in ${XKBSPECS}; do \
 		echo installing $$i in ${X11BASE}/share/doc/xorgproto/kbproto;\
-		${INSTALL_DATA} ${.CURDIR}/specs/$$i \
+		${INSTALL_DATA} ${.CURDIR}/specs/kbproto/$$i \
 			${DESTDIR}${X11BASE}/share/doc/xorgproto/kbproto;\
 	done
-	${INSTALL_DATA} ${.CURDIR}/specs/record.xml \
+	${INSTALL_DATA} ${.CURDIR}/specs/recordproto/record.xml \
 		${DESTDIR}${X11BASE}/share/doc/xorgproto
-	${INSTALL_DATA} ${.CURDIR}/specs/saver.xml \
+	${INSTALL_DATA} ${.CURDIR}/specs/scrnsaverproto/saver.xml \
 		${DESTDIR}${X11BASE}/share/doc/xorgproto
 	@for i in ${XSPECS}; do \
 		echo installing $$i in ${X11BASE}/share/doc/xorgproto/x11proto; \
-		${INSTALL_DATA} ${.CURDIR}/specs/$$i \
+		${INSTALL_DATA} ${.CURDIR}/specs/xproto/$$i \
 			${DESTDIR}${X11BASE}/share/doc/xorgproto/x11proto;\
 	done
 	@for i in ${SIADDRESSES}; do \
@@ -51,11 +51,11 @@ afterinstall:
 		${INSTALL_DATA} ${.CURDIR}/specs/SIAddresses/$$i \
 			${DESTDIR}${X11BASE}/share/doc/xorgproto/SIAddresses;\
 	done
-	${INSTALL_DATA} ${.CURDIR}/specs/xc-misc.xml \
+	${INSTALL_DATA} ${.CURDIR}/specs/xcmiscproto/xc-misc.xml \
 		${DESTDIR}${X11BASE}/share/doc/xorgproto
 	@for i in ${EXTSPECS}; do \
 		echo installing $$i in ${X11BASE}/share/doc/xorgproto/xextproto;\
-		${INSTALL_DATA} ${.CURDIR}/specs/$$i \
+		${INSTALL_DATA} ${.CURDIR}/specs/xextproto/$$i \
 			${DESTDIR}${X11BASE}/share/doc/xorgproto/xextproto;\
 	done
 
