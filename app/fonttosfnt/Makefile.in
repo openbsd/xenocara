@@ -75,7 +75,7 @@ bin_PROGRAMS = fonttosfnt$(EXEEXT)
 @NEED_SETENV_TRUE@am__append_1 = env.c
 @NEED_SETENV_TRUE@am__append_2 = -DNEED_SETENV
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	compile config.guess config.sub depcomp install-sh missing
@@ -322,6 +322,7 @@ fonttosfnt_LDADD = $(FONTTOSFNT_LIBS) -lm
 fonttosfnt_SOURCES = fonttosfnt.c fonttosfnt.h read.c struct.c util.c \
 	write.c $(am__append_1)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

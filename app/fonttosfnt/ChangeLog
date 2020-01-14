@@ -1,3 +1,116 @@
+commit 1d757ff6fa30079790fc44b141f6d0e4d5411f13
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 6 12:55:31 2020 +1000
+
+    Bump to 1.1.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bdcb892975de167b3d4258859234f0abe375f236
+Author: Jouke Witteveen <j.witteveen@gmail.com>
+Date:   Fri Aug 2 14:03:15 2019 +0200
+
+    Accept a BDF font on stdin
+    
+    This makes it easier to transition from bdftopcf.
+    Although an OTB file could include fonts from multiple BDF sources, that
+    functionality is not currently implemented for fonts read from stdin.
+    
+    Signed-off-by: Jouke Witteveen <j.witteveen@gmail.com>
+
+commit 0006f577898129c0c5d5e0996026641605705e08
+Author: Jouke Witteveen <j.witteveen@gmail.com>
+Date:   Fri Aug 2 11:43:56 2019 +0200
+
+    Mention .otb as an extension
+    
+    The OTB (OpenType Bitmap) extension has found some traction, so suggest
+    that.
+    
+    Signed-off-by: Jouke Witteveen <j.witteveen@gmail.com>
+
+commit cb4b8760f829040eb4b2fb314df5b6194230a237
+Author: Jouke Witteveen <j.witteveen@gmail.com>
+Date:   Fri Aug 2 11:41:59 2019 +0200
+
+    Correct a string literal
+    
+    Signed-off-by: Jouke Witteveen <j.witteveen@gmail.com>
+
+commit d06059ef2a85df3c70f3c0b77364b4c49837f331
+Author: Peng Wu <alexepico@gmail.com>
+Date:   Wed Oct 9 14:20:22 2019 +0800
+
+    Round font size to integer value when reading bitmap font
+    
+    Some fonts have a ppem value like 11.9, this patch adds integer rounding to
+    convert those ppem value to 12 instead of 11.
+
+commit cfb4d64e1b90a28693fd700f4abf0f55d969f4f6
+Author: Ryan Farley <ryan.farley@gmx.com>
+Date:   Sat Aug 31 06:42:24 2019 -0500
+
+    allow ISO-646.1991-IRV as well, adobe standard for bdf
+    
+    Allow for BDF file with no specified encoding to be read as Adobe
+    Standard (per freetype's BDF driver), and handle any Unicode-equivalent
+    encoding without changing the encoding name.
+
+commit 5d446a02a7422d3a61f74b8d1c28b7b551ea06fd
+Author: Ryan Farley <ryan.farley@gmx.com>
+Date:   Tue Aug 20 03:16:22 2019 -0500
+
+    let freetype handle ISO-8859-1 mapping
+    
+    https://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_encoding
+    indicates that ISO-8859-1 is automatically mapped to Unicode for BDF and
+    PCF fonts -- trying to use FT_Select_Charmap() with FT_ENCODING_NONE
+    leads to an error for such fonts.
+
+commit 6fc84fb2c0d4ac0b3b66330057bb90418cc1eb28
+Author: Ryan Farley <ryan.farley@gmx.com>
+Date:   Fri Aug 30 09:43:50 2019 -0500
+
+    check for freetype NULL atoms
+    
+    Freetype uses NULL to represent an empty string when retrieving a BDF
+    property -- check for this in addition to an actual error
+
+commit c214ab0d7deae30acdf90933ed14b223118dcf67
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Thu Jan 10 20:49:28 2019 +0200
+
+    Avoid undefined behaviour
+    
+    Left shifting a negative is undefined.
+    For consistency, use the equivalent form of multiplication for the
+    positive numbers as well.
+
+commit 8e34a2aa7c4dea5aa07dc08a40dacd90e2148a89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:46:19 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46d4900c2dbed1c7a632dc34a4ef952a9cdda8eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:53:06 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ec6f334152badff475d2a8c465dfdbf740f148d0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 31 14:37:24 2018 +1000
+
+    Mark vsprintf_alloc as printf-like function
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
 commit 7f8d7ecf0379ebc5386ee27f385a2ca564d6decb
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jul 31 11:36:54 2018 +1000

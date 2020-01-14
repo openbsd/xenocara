@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include FT_FREETYPE_H
 #include FT_BDF_H
 #include "X11/Xos.h"
+#include "X11/Xfuncproto.h" /* for _X_ATTRIBUTE_PRINTF */
 #include "fonttosfnt.h"
 
 #ifdef NEED_SNPRINTF
@@ -80,6 +81,7 @@ sprintf_alloc(const char *f, ...)
 }
 
 #if HAVE_VASPRINTF
+_X_ATTRIBUTE_PRINTF(1, 0)
 char*
 vsprintf_alloc(const char *f, va_list args)
 {
@@ -92,6 +94,7 @@ vsprintf_alloc(const char *f, va_list args)
     return r;
 }
 #else
+_X_ATTRIBUTE_PRINTF(1, 0)
 char*
 vsprintf_alloc(const char *f, va_list args)
 {
@@ -124,7 +127,7 @@ vsprintf_alloc(const char *f, va_list args)
 }
 #endif
 
-/* Build a UTF-16 string from a Latin-1 string.  
+/* Build a UTF-16 string from a Latin-1 string.
    Result is not NUL-terminated. */
 char *
 makeUTF16(const char *string)
@@ -238,7 +241,7 @@ faceFoundry(FT_Face face)
     BDF_PropertyRec prop;
 
     rc = FT_Get_BDF_Property(face, "FOUNDRY", &prop);
-    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM && prop.u.atom) {
         if(strcasecmp(prop.u.atom, "adobe") == 0)
             return makeName("ADBE");
         else if(strcasecmp(prop.u.atom, "agfa") == 0)
@@ -283,7 +286,7 @@ faceFoundry(FT_Face face)
     /* For now */
     return makeName("UNKN");
 }
-    
+
 
 int
 faceWeight(FT_Face face)
@@ -291,7 +294,7 @@ faceWeight(FT_Face face)
     int rc;
     BDF_PropertyRec prop;
     rc = FT_Get_BDF_Property(face, "WEIGHT_NAME", &prop);
-    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM && prop.u.atom) {
         if(strcasecmp(prop.u.atom, "thin") == 0)
             return 100;
         else if(strcasecmp(prop.u.atom, "extralight") == 0)
@@ -320,7 +323,7 @@ faceWidth(FT_Face face)
     int rc;
     BDF_PropertyRec prop;
     rc = FT_Get_BDF_Property(face, "SETWIDTH_NAME", &prop);
-    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM && prop.u.atom) {
         if(strcasecmp(prop.u.atom, "ultracondensed") == 0)
             return 1;
         else if(strcasecmp(prop.u.atom, "extracondensed") == 0)
@@ -357,7 +360,7 @@ faceItalicAngle(FT_Face face)
     }
 
     rc = FT_Get_BDF_Property(face, "SLANT", &prop);
-    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM && prop.u.atom) {
         if(strcasecmp(prop.u.atom, "i") == 0 ||
            strcasecmp(prop.u.atom, "s") == 0)
             return -30 * TWO_SIXTEENTH;
@@ -377,7 +380,7 @@ faceFlags(FT_Face face)
     if(faceWeight(face) >= 650)
         flags |= FACE_BOLD;
     rc = FT_Get_BDF_Property(face, "SLANT", &prop);
-    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM && prop.u.atom) {
         if(strcasecmp(prop.u.atom, "i") == 0 ||
            strcasecmp(prop.u.atom, "s") == 0)
             flags |= FACE_ITALIC;
@@ -397,10 +400,12 @@ faceEncoding(FT_Face face)
     rc = FT_Get_BDF_Property(face, "CHARSET_ENCODING", &p2);
     if(rc != 0 || p2.type != BDF_PROPERTY_TYPE_ATOM)
         return NULL;
+    if(!(p1.u.atom && p2.u.atom))
+        return NULL;
 
     return sprintf_alloc("%s-%s", p1.u.atom, p2.u.atom);
 }
-    
+
 int
 degreesToFraction(int deg, int *num, int *den)
 {

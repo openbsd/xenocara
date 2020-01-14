@@ -491,8 +491,8 @@ fontMetrics(FontPtr font,
 {
     int i, rc;
     int max_awidth = 0;
-    int min_x = 10000 << 16, min_y = 10000 << 16;
-    int max_x = -10000 << 16, max_y = -10000 << 16;
+    int min_x = 10000 * 65536, min_y = 10000 * 65536;
+    int max_x = -10000 * 65536, max_y = -10000 * 65536;
     for(i = 0; i < FONT_CODES; i++) {
         int awidth, x0, y0, x1, y1;
         rc = glyphMetrics(font, i, &awidth, &x0, &y0, &x1, &y1);

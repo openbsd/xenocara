@@ -39,8 +39,8 @@ usage(void)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, 
-            "fonttosfnt [ -v ] [ -c ] [ -b ] [ -r ] [ -g n ] [ -m n ] -o font.ttf "
-            "[ -- ] font ...\n");
+            "fonttosfnt [ -v ] [ -c ] [ -b ] [ -r ] [ -g n ] [ -m n ] -o font.otb "
+            "[ -- ] [ font ] ...\n");
 }
 
 int
@@ -106,7 +106,11 @@ main(int argc, char **argv)
 
     font = makeFont();
 
-    while(i < argc) {
+    if(i == argc) {
+        rc = readFile(NULL, font);
+        if(rc != 0)
+            exit(1);
+    } else while(i < argc) {
         rc = readFile(argv[i], font);
         if(rc != 0)
             exit(1);

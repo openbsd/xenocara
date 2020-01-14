@@ -1,21 +1,23 @@
 .\" $XFree86$
 .TH FONTTOSFNT 1 __vendorversion__
 .SH NAME
-fonttosfnt \- Wrap a bitmap font in a sfnt (TrueType) wrapper
+fonttosfnt \- Wrap a bitmap font in a sfnt (OpenType) wrapper
 .SH SYNOPSIS
 .B fonttosfnt
 [
 .I options
 ]
 .B \-o
-.I file.ttf
+.I file.otb
 [
 .B \-\-
-]
-.IR font ...
+] [
+.IR font
+] ...
 .SH DESCRIPTION
 Wrap a bitmap font or a set of bitmap fonts in a sfnt (TrueType or
 OpenType) wrapper.
+If no font is specified, a BDF font is read from standard input (stdin).
 .SH OPTIONS
 .TP
 .B \-v
