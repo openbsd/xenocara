@@ -23,6 +23,7 @@ SUBDIRS = man
 bin_PROGRAMS = viewres
 
 AM_CFLAGS = $(VIEWRES_CFLAGS) $(CWARNFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 viewres_LDADD = $(VIEWRES_LIBS)
 
 viewres_SOURCES =	\
@@ -48,3 +49,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md

@@ -294,7 +294,7 @@ initialize_widgetnode_list (XmuWidgetNode ***listp, int *sizep, int n)
 static Boolean 
 set_resource_labels (XmuWidgetNode *node)
 {
-    int i;
+    Cardinal i;
     const char **cur;
     XtResourceList res;
     XmuWidgetNode **wn;
@@ -617,9 +617,9 @@ select_callback (
 	      add_to_selected_list (node->superclass, TRUE);
 	} else {
 	    for (i = 0; i < nselected; i++) {
-		XmuWidgetNode *node = selected_list.elements[i];
-		if (node->superclass)
-		  add_to_selected_list (node->superclass, TRUE);
+		XmuWidgetNode *nodeI = selected_list.elements[i];
+		if (nodeI->superclass)
+		  add_to_selected_list (nodeI->superclass, TRUE);
 	    }
 	}
 	break;
@@ -655,11 +655,11 @@ select_callback (
 	    }
 	} else {
 	    for (i = 0; i < nselected; i++) {
-		XmuWidgetNode *node = selected_list.elements[i];
+		XmuWidgetNode *nodeI = selected_list.elements[i];
 
-		add_to_selected_list (node, TRUE);
-		for (node = node->children; node; node = node->siblings) {
-		    add_to_selected_list (node, TRUE);
+		add_to_selected_list (nodeI, TRUE);
+		for (nodeI = nodeI->children; nodeI; nodeI = nodeI->siblings) {
+		    add_to_selected_list (nodeI, TRUE);
 		}
 	    }
 	}
@@ -885,7 +885,7 @@ main (int argc, char *argv[])
 
     toplevel = XtAppInitialize (&app_con, "Viewres", 
 				Options, XtNumber (Options),
-				&argc, argv, (char **) fallback_resources, 
+				&argc, argv, (String *) fallback_resources,
 				(ArgList) NULL, ZERO);
     if (argc != 1) usage ();
 

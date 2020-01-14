@@ -1,3 +1,75 @@
+commit 5661dfdc04572cdbb6ed4e641049657c4ba39252
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 25 16:11:01 2019 -0700
+
+    viewres 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85f2a20e7535a5f8dcdeb805f3e30f387d45baf3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 19:20:26 2019 -0700
+
+    Fix -Wshadow warnings
+    
+    viewres.c: In function ‘select_callback’:
+    viewres.c:620:18: warning: declaration of ‘node’ shadows a previous local [-Wshadow]
+       XmuWidgetNode *node = selected_list.elements[i];
+                      ^~~~
+    viewres.c:593:20: note: shadowed declaration is here
+         XmuWidgetNode *node;
+                        ^~~~
+    viewres.c:658:18: warning: declaration of ‘node’ shadows a previous local [-Wshadow]
+       XmuWidgetNode *node = selected_list.elements[i];
+                      ^~~~
+    viewres.c:593:20: note: shadowed declaration is here
+         XmuWidgetNode *node;
+                        ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 917269949545cf1ab1e0068cc2ba7c1f9a775012
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 19:16:53 2019 -0700
+
+    Fix -Wsign-compare warnings
+    
+    viewres.c: In function ‘set_resource_labels’:
+    viewres.c:313:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < node->nresources; i++, res++, wn++) {
+                       ^
+    viewres.c:329:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < node->nconstraints; i++, res++, wn++) {
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f846695df6b5d9543e12d1c8f04d9d7575df1ac6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 19:15:34 2019 -0700
+
+    Pass -D_CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears up 32 of 38 gcc -Wdiscarded-qualifiers warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 74bd63d6e6768f96c3e6fc2b692a5b012edbcea3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:58:21 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ee2177d894c91a4a864b5b182705d72055e0090
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:55:55 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3b72d922ec82789124d43ef11e601a2f1e620458
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 19:38:27 2018 -0800

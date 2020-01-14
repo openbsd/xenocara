@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = viewres$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -340,6 +340,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
 AM_CFLAGS = $(VIEWRES_CFLAGS) $(CWARNFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 viewres_LDADD = $(VIEWRES_LIBS)
 viewres_SOURCES = \
         viewres.c
@@ -352,6 +353,7 @@ dist_appdefault_DATA = \
         app-defaults/Viewres-color
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
