@@ -284,7 +284,7 @@ XmuConvertStandardSelection(Widget w, Time time, Atom *selection, Atom *target,
     }
     if (*target == XA_TARGETS(d)) {
 #if defined(unix)
-#  define NUM_TARGETS 8
+#  define NUM_TARGETS 7
 #else
 #  define NUM_TARGETS 6
 #endif
