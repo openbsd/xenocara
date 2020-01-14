@@ -62,7 +62,7 @@ void _XtPopup(
 	XtAppErrorMsg(XtWidgetToApplicationContext(widget),
 		"invalidClass","xtPopup",XtCXtToolkitError,
                 "XtPopup requires a subclass of shellWidgetClass",
-                  (String *)NULL, (Cardinal *)NULL);
+                  NULL, NULL);
     }
 
     if (! shell_widget->shell.popped_up) {
@@ -70,7 +70,7 @@ void _XtPopup(
 	XtCallCallbacks(widget, XtNpopupCallback, (XtPointer)&call_data);
 	shell_widget->shell.popped_up = TRUE;
 	shell_widget->shell.grab_kind = grab_kind;
-	shell_widget->shell.spring_loaded = spring_loaded;
+	shell_widget->shell.spring_loaded = (Boolean) spring_loaded;
 	if (shell_widget->shell.create_popup_child_proc != NULL) {
 	    (*(shell_widget->shell.create_popup_child_proc))(widget);
 	}
@@ -102,7 +102,7 @@ void XtPopup (Widget widget, XtGrabKind grab_kind)
 		XtWidgetToApplicationContext(widget),
 		"invalidGrabKind","xtPopup",XtCXtToolkitError,
 		"grab kind argument has invalid value; XtGrabNone assumed",
-		(String *)NULL, (Cardinal *)NULL);
+		NULL, NULL);
 	grab_kind = XtGrabNone;
     }
 
@@ -152,7 +152,7 @@ void XtPopdown(
 	XtAppErrorMsg(XtWidgetToApplicationContext(widget),
 		"invalidClass","xtPopdown",XtCXtToolkitError,
             "XtPopdown requires a subclass of shellWidgetClass",
-              (String *)NULL, (Cardinal *)NULL);
+              NULL, NULL);
     }
 
 #ifndef X_NO_XT_POPDOWN_CONFORMANCE

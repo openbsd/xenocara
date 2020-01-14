@@ -81,11 +81,10 @@ struct _DestroyRec {
 static void Recursive(Widget widget, XtWidgetProc proc)
 {
     register Cardinal i;
-    CompositePart   *cwp;
 
     /* Recurse down normal children */
     if (XtIsComposite(widget)) {
-	cwp = &(((CompositeWidget) widget)->composite);
+	CompositePart *cwp = &(((CompositeWidget) widget)->composite);
 	for (i = 0; i < cwp->num_children; i++) {
 	    Recursive(cwp->children[i], proc);
 	}
@@ -329,7 +328,7 @@ void _XtDoPhase2Destroy(XtAppContext app, int dispatch_level)
 void XtDestroyWidget (Widget widget)
 {
     XtAppContext app;
-    DestroyRec *dr, *dr2;
+    DestroyRec *dr;
 
     app = XtWidgetToApplicationContext(widget);
     LOCK_APP(app);
@@ -351,7 +350,7 @@ void XtDestroyWidget (Widget widget)
 	app->destroy_list_size += 10;
 	app->destroy_list = (DestroyRec*)
 	    XtRealloc( (char*)app->destroy_list,
-		       (unsigned)sizeof(DestroyRec)*app->destroy_list_size
+		       (Cardinal)(sizeof(DestroyRec) * (size_t)app->destroy_list_size)
 		      );
     }
     dr = app->destroy_list + app->destroy_count++;
@@ -365,7 +364,7 @@ void XtDestroyWidget (Widget widget)
  	    dr = app->destroy_list + (--i);
  	    if (dr->dispatch_level < app->dispatch_level &&
  		IsDescendant(dr->widget, widget)) {
- 	        dr2 = app->destroy_list + (app->destroy_count-1);
+		DestroyRec *dr2 = app->destroy_list + (app->destroy_count-1);
  		dr2->dispatch_level = dr->dispatch_level;
   		break;
   	    }

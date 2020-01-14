@@ -209,7 +209,7 @@ void XtGetValues(
 	XtAppErrorMsg(app,
 		"invalidArgCount","xtGetValues",XtCXtToolkitError,
             "Argument count > 0 on NULL argument list in XtGetValues",
-              (String *)NULL, (Cardinal *)NULL);
+              NULL, NULL);
     }
 
     LOCK_APP(app);

@@ -75,6 +75,9 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <errno.h>
 
+#ifdef _WIN32
+typedef long suseconds_t;
+#endif
 
 static TimerEventRec* freeTimerRecs;
 static WorkProcRec* freeWorkRecs;
@@ -154,7 +157,7 @@ static void AdjustHowLong (
 	if(*howlong <= (unsigned long)(time_spent.tv_sec*1000+time_spent.tv_usec/1000))
 	    *howlong = (unsigned long)0;  /* Timed out */
 	else
-	    *howlong -= (time_spent.tv_sec*1000+time_spent.tv_usec/1000);
+	    *howlong = (*howlong - (unsigned long)(time_spent.tv_sec*1000+time_spent.tv_usec/1000));
 }
 
 typedef struct {
@@ -164,19 +167,19 @@ typedef struct {
     struct timeval new_time;
     struct timeval time_spent;
     struct timeval max_wait_time;
-#ifndef USE_POLL
-    struct timeval *wait_time_ptr;
-#else
+#ifdef USE_POLL
     int poll_wait;
+#else
+    struct timeval *wait_time_ptr;
 #endif
 } wait_times_t, *wait_times_ptr_t;
 
 static struct timeval  zero_time = { 0 , 0};
-#ifndef USE_POLL
-static fd_set zero_fd;
-#else
+#ifdef USE_POLL
 #define X_BLOCK -1
 #define X_DONT_BLOCK 0
+#else
+static fd_set zero_fd;
 #endif
 
 static void InitTimes (
@@ -189,38 +192,38 @@ static void InitTimes (
 	FIXUP_TIMEVAL(wt->cur_time);
 	wt->start_time = wt->cur_time;
 	if(howlong == NULL) { /* special case for ever */
-#ifndef USE_POLL
-	    wt->wait_time_ptr = NULL;
-#else
+#ifdef USE_POLL
 	    wt->poll_wait = X_BLOCK;
+#else
+	    wt->wait_time_ptr = NULL;
 #endif
 	} else { /* block until at most */
-	    wt->max_wait_time.tv_sec = *howlong/1000;
-	    wt->max_wait_time.tv_usec = (*howlong %1000)*1000;
-#ifndef USE_POLL
-	    wt->wait_time_ptr = &wt->max_wait_time;
+	    wt->max_wait_time.tv_sec = (time_t) (*howlong/1000);
+	    wt->max_wait_time.tv_usec = (suseconds_t) ((*howlong %1000)*1000);
+#ifdef USE_POLL
+	    wt->poll_wait = (int) *howlong;
 #else
-	    wt->poll_wait = *howlong;
+	    wt->wait_time_ptr = &wt->max_wait_time;
 #endif
 	}
     } else {  /* don't block */
 	wt->max_wait_time = zero_time;
-#ifndef USE_POLL
-	wt->wait_time_ptr = &wt->max_wait_time;
-#else
+#ifdef USE_POLL
 	wt->poll_wait = X_DONT_BLOCK;
+#else
+	wt->wait_time_ptr = &wt->max_wait_time;
 #endif
     }
 }
 
 typedef struct {
-#ifndef USE_POLL
-    fd_set rmask, wmask, emask;
-    int nfds;
-#else
+#ifdef USE_POLL
     struct pollfd* fdlist;
     struct pollfd* stack;
     int fdlistlen, num_dpys;
+#else
+    fd_set rmask, wmask, emask;
+    int nfds;
 #endif
 } wait_fds_t, *wait_fds_ptr_t;
 
@@ -232,20 +235,7 @@ static void InitFds (
 {
     int ii;
     app->rebuild_fdlist = FALSE;
-#ifndef USE_POLL
-    wf->nfds = app->fds.nfds;
-    if( !ignoreInputs ) {
-	wf->rmask = app->fds.rmask;
-	wf->wmask = app->fds.wmask;
-	wf->emask = app->fds.emask;
-     } else
-	wf->rmask = wf->wmask = wf->emask = zero_fd;
-
-     if (!ignoreEvents)
-	for (ii = 0; ii < app->count; ii++) {
-	    FD_SET (ConnectionNumber(app->list[ii]), &wf->rmask);
-	}
-#else
+#ifdef USE_POLL
 #ifndef POLLRDNORM
 #define POLLRDNORM 0
 #endif
@@ -272,7 +262,6 @@ static void InitFds (
 	wf->fdlistlen = wf->num_dpys = 0;
 
     if (!ignoreInputs && app->input_list != NULL) {
-	int ii;
 	for (ii = 0; ii < (int) app->input_max; ii++)
 	    if (app->input_list[ii] != NULL)
 		wf->fdlistlen++;
@@ -280,11 +269,11 @@ static void InitFds (
 
     if (!wf->fdlist || wf->fdlist == wf->stack) {
 	wf->fdlist = (struct pollfd*)
-	    XtStackAlloc (sizeof (struct pollfd) * wf->fdlistlen, wf->stack);
+	    XtStackAlloc (sizeof (struct pollfd) * (size_t)wf->fdlistlen, wf->stack);
     } else {
 	wf->fdlist = (struct pollfd*)
 	    XtRealloc ((char*) wf->fdlist,
-		       sizeof (struct pollfd) * wf->fdlistlen);
+		       (Cardinal) (sizeof (struct pollfd) * (size_t)wf->fdlistlen));
     }
 
     if (wf->fdlistlen) {
@@ -313,6 +302,19 @@ static void InitFds (
 		    fdlp++;
 		}
     }
+#else
+    wf->nfds = app->fds.nfds;
+    if( !ignoreInputs ) {
+	wf->rmask = app->fds.rmask;
+	wf->wmask = app->fds.wmask;
+	wf->emask = app->fds.emask;
+     } else
+	wf->rmask = wf->wmask = wf->emask = zero_fd;
+
+     if (!ignoreEvents)
+	for (ii = 0; ii < app->count; ii++) {
+	    FD_SET (ConnectionNumber(app->list[ii]), &wf->rmask);
+	}
 #endif
 }
 
@@ -324,24 +326,26 @@ static void AdjustTimes (
     wait_times_ptr_t wt)
 {
     if (app->timerQueue != NULL && !ignoreTimers && block) {
+#ifdef USE_POLL
 	if (IS_AFTER (wt->cur_time, app->timerQueue->te_timer_value)) {
 	    TIMEDELTA (wt->wait_time, app->timerQueue->te_timer_value, wt->cur_time);
 	    if (howlong == NULL || IS_AFTER (wt->wait_time, wt->max_wait_time))
-#ifndef USE_POLL
+		wt->poll_wait = (int) (wt->wait_time.tv_sec * 1000 + wt->wait_time.tv_usec / 1000);
+	    else
+		wt->poll_wait = (int) (wt->max_wait_time.tv_sec * 1000 + wt->max_wait_time.tv_usec / 1000);
+	} else
+	    wt->poll_wait = X_DONT_BLOCK;
+#else
+	if (IS_AFTER (wt->cur_time, app->timerQueue->te_timer_value)) {
+	    TIMEDELTA (wt->wait_time, app->timerQueue->te_timer_value, wt->cur_time);
+	    if (howlong == NULL || IS_AFTER (wt->wait_time, wt->max_wait_time))
 		wt->wait_time_ptr = &wt->wait_time;
 	    else
 		wt->wait_time_ptr = &wt->max_wait_time;
 	} else
 	    wt->wait_time_ptr = &zero_time;
-    }
-#else
-		wt->poll_wait = wt->wait_time.tv_sec * 1000 + wt->wait_time.tv_usec / 1000;
-	    else
-		wt->poll_wait = wt->max_wait_time.tv_sec * 1000 + wt->max_wait_time.tv_usec / 1000;
-	} else
-	    wt->poll_wait = X_DONT_BLOCK;
-    }
 #endif
+    }
 }
 
 
@@ -349,11 +353,11 @@ static int IoWait (
     wait_times_ptr_t wt,
     wait_fds_ptr_t wf)
 {
-#ifndef USE_POLL
+#ifdef USE_POLL
+    return poll (wf->fdlist, (nfds_t) wf->fdlistlen, wt->poll_wait);
+#else
     return Select (wf->nfds, &wf->rmask, &wf->wmask, &wf->emask,
 		   wt->wait_time_ptr);
-#else
-    return poll (wf->fdlist, wf->fdlistlen, wt->poll_wait);
 #endif
 }
 
@@ -367,10 +371,63 @@ static void FindInputs (
     int* dpy_no,
     int* found_input)
 {
-    XtInputMask condition;
     InputEvent *ep;
     int ii;
-#ifndef USE_POLL /* { check ready file descriptors block */
+#ifdef USE_POLL /* { check ready file descriptors block */
+    struct pollfd* fdlp;
+
+    *dpy_no = -1;
+    *found_input = False;
+
+    if (!ignoreEvents) {
+	fdlp = wf->fdlist;
+	for (ii = 0; ii < wf->num_dpys; ii++, fdlp++) {
+	    if (*dpy_no == -1 && fdlp->revents & (POLLIN|POLLHUP|POLLERR) &&
+#ifdef XTHREADS
+		!(fdlp->revents & POLLNVAL) &&
+#endif
+		XEventsQueued (app->list[ii], QueuedAfterReading)) {
+		*dpy_no = ii;
+		break;
+	    }
+	}
+    }
+
+    if (!ignoreInputs) {
+	fdlp = &wf->fdlist[wf->num_dpys];
+	for (ii = wf->num_dpys; ii < wf->fdlistlen; ii++, fdlp++) {
+	    XtInputMask condition = 0;
+	    if (fdlp->revents) {
+		if (fdlp->revents & (XPOLL_READ|POLLHUP|POLLERR)
+#ifdef XTHREADS
+		    && !(fdlp->revents & POLLNVAL)
+#endif
+		)
+		    condition = XtInputReadMask;
+		if (fdlp->revents & XPOLL_WRITE)
+		    condition |= XtInputWriteMask;
+		if (fdlp->revents & XPOLL_EXCEPT)
+		    condition |= XtInputExceptMask;
+	    }
+	    if (condition) {
+		*found_input = True;
+		for (ep = app->input_list[fdlp->fd]; ep; ep = ep->ie_next)
+		    if (condition & ep->ie_condition) {
+			InputEvent	*oq;
+			/* make sure this input isn't already marked outstanding */
+			for (oq = app->outstandingQueue; oq; oq = oq->ie_oq)
+			    if (oq == ep)
+				break;
+			if (!oq)
+			{
+			    ep->ie_oq = app->outstandingQueue;
+			    app->outstandingQueue = ep;
+			}
+		    }
+	    }
+	}
+    }
+#else /* }{ */
 #ifdef XTHREADS
     fd_set rmask;
 #endif
@@ -385,7 +442,8 @@ static void FindInputs (
 #endif
 
     for (ii = 0; ii < wf->nfds && nfds > 0; ii++) {
-	condition = 0;
+	XtInputMask condition = 0;
+
 	if (FD_ISSET (ii, &wf->rmask)
 #ifdef XTHREADS
 	    && FD_ISSET (ii, &rmask)
@@ -448,60 +506,6 @@ static void FindInputs (
 	}
 ENDILOOP:   ;
     } /* endfor */
-#else /* }{ */
-    struct pollfd* fdlp;
-
-    *dpy_no = -1;
-    *found_input = False;
-
-    if (!ignoreEvents) {
-	fdlp = wf->fdlist;
-	for (ii = 0; ii < wf->num_dpys; ii++, fdlp++) {
-	    if (*dpy_no == -1 && fdlp->revents & (POLLIN|POLLHUP|POLLERR) &&
-#ifdef XTHREADS
-		!(fdlp->revents & POLLNVAL) &&
-#endif
-		XEventsQueued (app->list[ii], QueuedAfterReading)) {
-		*dpy_no = ii;
-		break;
-	    }
-	}
-    }
-
-    if (!ignoreInputs) {
-	fdlp = &wf->fdlist[wf->num_dpys];
-	for (ii = wf->num_dpys; ii < wf->fdlistlen; ii++, fdlp++) {
-	    condition = 0;
-	    if (fdlp->revents) {
-		if (fdlp->revents & (XPOLL_READ|POLLHUP|POLLERR)
-#ifdef XTHREADS
-		    && !(fdlp->revents & POLLNVAL)
-#endif
-		)
-		    condition = XtInputReadMask;
-		if (fdlp->revents & XPOLL_WRITE)
-		    condition |= XtInputWriteMask;
-		if (fdlp->revents & XPOLL_EXCEPT)
-		    condition |= XtInputExceptMask;
-	    }
-	    if (condition) {
-		*found_input = True;
-		for (ep = app->input_list[fdlp->fd]; ep; ep = ep->ie_next)
-		    if (condition & ep->ie_condition) {
-			InputEvent	*oq;
-			/* make sure this input isn't already marked outstanding */
-			for (oq = app->outstandingQueue; oq; oq = oq->ie_oq)
-			    if (oq == ep)
-				break;
-			if (!oq)
-			{
-			    ep->ie_oq = app->outstandingQueue;
-			    app->outstandingQueue = ep;
-			}
-		    }
-	    }
-	}
-    }
 #endif /* } */
 }
 
@@ -555,9 +559,7 @@ int _XtWaitForSomething(
     _XtBoolean ignoreInputs,
     _XtBoolean ignoreSignals,
     _XtBoolean block,
-#ifdef XTHREADS
-    _XtBoolean drop_lock,
-#endif
+    _XtBoolean drop_lock,	/* only needed with XTHREADS */
     unsigned long *howlong)
 {
     wait_times_t wt;
@@ -577,9 +579,11 @@ int _XtWaitForSomething(
     /* If not multi-threaded, never drop lock */
     if (app->lock == (ThreadAppProc) NULL)
 	drop_lock = FALSE;
+#else
+    drop_lock=drop_lock;	/* avoid unsed warning */
 #endif
 
-    InitTimes (block, howlong, &wt);
+    InitTimes ((Boolean) block, howlong, &wt);
 
 #ifdef USE_POLL
     wf.fdlist = NULL;
@@ -591,7 +595,7 @@ WaitLoop:
     app->rebuild_fdlist = TRUE;
 
     while (1) {
-	AdjustTimes (app, block, howlong, ignoreTimers, &wt);
+	AdjustTimes (app, (Boolean) block, howlong, (Boolean) ignoreTimers, &wt);
 
 	if (block && app->block_hook_list) {
 	    BlockHook hook;
@@ -612,7 +616,7 @@ WaitLoop:
 	}
 
 	if (app->rebuild_fdlist)
-	    InitFds (app, ignoreEvents, ignoreInputs, &wf);
+	    InitFds (app, (Boolean) ignoreEvents, (Boolean) ignoreInputs, &wf);
 
 #ifdef XTHREADS /* { */
 	if (drop_lock) {
@@ -660,25 +664,25 @@ WaitLoop:
 			}
 
 		if (block) {
-#ifndef USE_POLL
-		    if (wt.wait_time_ptr == NULL)
-#else
+#ifdef USE_POLL
 		    if (wt.poll_wait == X_BLOCK)
+#else
+		    if (wt.wait_time_ptr == NULL)
 #endif
 			continue;
 		    X_GETTIMEOFDAY (&wt.new_time);
 		    FIXUP_TIMEVAL (wt.new_time);
 		    TIMEDELTA (wt.time_spent, wt.new_time, wt.cur_time);
 		    wt.cur_time = wt.new_time;
-#ifndef USE_POLL
-		    if (IS_AFTER (wt.time_spent, *wt.wait_time_ptr)) {
-			TIMEDELTA (wt.wait_time, *wt.wait_time_ptr, wt.time_spent);
-			wt.wait_time_ptr = &wt.wait_time;
+#ifdef USE_POLL
+		    if ((wt.time_spent.tv_sec * 1000 + wt.time_spent.tv_usec / 1000) < wt.poll_wait) {
+			wt.poll_wait -= (int)(wt.time_spent.tv_sec * 1000 + wt.time_spent.tv_usec / 1000);
 			continue;
 		    } else
 #else
-		    if ((wt.time_spent.tv_sec * 1000 + wt.time_spent.tv_usec / 1000) < wt.poll_wait) {
-			wt.poll_wait -= (wt.time_spent.tv_sec * 1000 + wt.time_spent.tv_usec / 1000);
+		    if (IS_AFTER (wt.time_spent, *wt.wait_time_ptr)) {
+			TIMEDELTA (wt.wait_time, *wt.wait_time_ptr, wt.time_spent);
+			wt.wait_time_ptr = &wt.wait_time;
 			continue;
 		    } else
 #endif
@@ -719,7 +723,7 @@ WaitLoop:
 	return -1;
     } else
 	FindInputs (app, &wf, nfds,
-		    ignoreEvents, ignoreInputs,
+		    (Boolean) ignoreEvents, (Boolean) ignoreInputs,
 		    &dpy_no, &found_input);
 
     if (dpy_no >= 0 || found_input) {
@@ -798,8 +802,8 @@ XtIntervalId XtAppAddTimeOut(
 	tptr->te_closure = closure;
 	tptr->te_proc = proc;
 	tptr->app = app;
-	tptr->te_timer_value.tv_sec = interval/1000;
-	tptr->te_timer_value.tv_usec = (interval%1000)*1000;
+	tptr->te_timer_value.tv_sec = (time_t) (interval/1000);
+	tptr->te_timer_value.tv_usec = (suseconds_t) ((interval%1000)*1000);
         X_GETTIMEOFDAY (&current_time);
 	FIXUP_TIMEVAL(current_time);
         ADD_TIME(tptr->te_timer_value,tptr->te_timer_value,current_time);
@@ -993,19 +997,19 @@ XtInputId XtAppAddInput(
 
 	LOCK_APP(app);
 	if (!condition ||
-	    condition & ~(XtInputReadMask|XtInputWriteMask|XtInputExceptMask))
+	    condition & (unsigned long)(~(XtInputReadMask|XtInputWriteMask|XtInputExceptMask)))
 	    XtAppErrorMsg(app,"invalidParameter","xtAddInput",XtCXtToolkitError,
 			  "invalid condition passed to XtAppAddInput",
-			  (String *)NULL, (Cardinal *)NULL);
+			  NULL, NULL);
 
 	if (app->input_max <= source) {
-	    Cardinal n = source + 1;
+	    Cardinal n = (Cardinal) (source + 1);
 	    int ii;
 	    app->input_list = (InputEvent**)XtRealloc((char*) app->input_list,
-						      n * sizeof(InputEvent*));
+						      (Cardinal)((size_t)n * sizeof(InputEvent*)));
 	    for (ii = app->input_max; ii < (int) n; ii++)
 		app->input_list[ii] = (InputEvent*) NULL;
-	    app->input_max = n;
+	    app->input_max = (short) n;
 	}
 	sptr = XtNew(InputEvent);
 	sptr->ie_proc = proc;
@@ -1017,15 +1021,15 @@ XtInputId XtAppAddInput(
 	sptr->ie_next = app->input_list[source];
 	app->input_list[source] = sptr;
 
-#ifndef USE_POLL
+#ifdef USE_POLL
+	if (sptr->ie_next == NULL)
+	    app->fds.nfds++;
+#else
 	if (condition & XtInputReadMask)   FD_SET(source, &app->fds.rmask);
 	if (condition & XtInputWriteMask)  FD_SET(source, &app->fds.wmask);
 	if (condition & XtInputExceptMask) FD_SET(source, &app->fds.emask);
 
 	if (app->fds.nfds < (source+1)) app->fds.nfds = source+1;
-#else
-	if (sptr->ie_next == NULL)
-	    app->fds.nfds++;
 #endif
 	app->input_count++;
 	app->rebuild_fdlist = TRUE;
@@ -1096,7 +1100,7 @@ void XtRemoveInput(
 	    XtAppWarningMsg(app, "invalidProcedure","inputHandler",
 			    XtCXtToolkitError,
 			    "XtRemoveInput: Input handler not found",
-			    (String *)NULL, (Cardinal *)NULL);
+			    NULL, NULL);
 	UNLOCK_APP(app);
 }
 
@@ -1138,9 +1142,7 @@ static void DoOtherSources(
 	    (void) _XtWaitForSomething (app,
 					TRUE, TRUE, FALSE, TRUE,
 					FALSE,
-#ifdef XTHREADS
 					TRUE,
-#endif
 					(unsigned long *)NULL);
 	    DrainQueue();
 	}
@@ -1261,18 +1263,13 @@ void XtAppNextEvent(
 	d = _XtWaitForSomething (app,
 				 FALSE, FALSE, FALSE, FALSE,
 				 TRUE,
-#ifdef XTHREADS
 				 TRUE,
-#endif
 				 (unsigned long *) NULL);
 
 	if (d != -1) {
 	  GotEvent:
 	    XNextEvent (app->list[d], event);
-#ifdef XTHREADS
-	    /* assert(app->list[d] == event->xany.display); */
-#endif
-	    app->last = d;
+	    app->last = (short) d;
 	    if (event->xany.type == MappingNotify)
 		_XtRefreshMapping(event, False);
 	    UNLOCK_APP(app);
@@ -1341,9 +1338,7 @@ void XtAppProcessEvent(
 		    (void) _XtWaitForSomething (app,
 						TRUE, TRUE, FALSE, TRUE,
 						FALSE,
-#ifdef XTHREADS
 						TRUE,
-#endif
 						(unsigned long *)NULL);
 		}
 		if (app->outstandingQueue != NULL) {
@@ -1374,23 +1369,18 @@ void XtAppProcessEvent(
 	    if (CallWorkProc(app)) continue;
 
 	    d = _XtWaitForSomething (app,
-				    (mask & XtIMXEvent ? FALSE : TRUE),
-				    (mask & XtIMTimer ? FALSE : TRUE),
-				    (mask & XtIMAlternateInput ? FALSE : TRUE),
-				    (mask & XtIMSignal ? FALSE : TRUE),
+				    ((mask & XtIMXEvent) ? FALSE : TRUE),
+				    ((mask & XtIMTimer) ? FALSE : TRUE),
+				    ((mask & XtIMAlternateInput) ? FALSE : TRUE),
+				    ((mask & XtIMSignal) ? FALSE : TRUE),
 				    TRUE,
-#ifdef XTHREADS
 				    TRUE,
-#endif
 				    (unsigned long *) NULL);
 
 	    if (mask & XtIMXEvent && d != -1) {
 	      GotEvent:
 		XNextEvent(app->list[d], &event);
-#ifdef XTHREADS
-		/* assert(app->list[d] == event.xany.display); */
-#endif
-		app->last = d;
+		app->last = (short) d;
 		if (event.xany.type == MappingNotify) {
 		    _XtRefreshMapping(&event, False);
 		}
@@ -1463,9 +1453,7 @@ XtInputMask XtAppPending(
 	    if(_XtWaitForSomething (app,
 				    FALSE, TRUE, FALSE, TRUE,
 				    FALSE,
-#ifdef XTHREADS
 				    TRUE,
-#endif
 				    (unsigned long *) NULL) != -1)
 		ret |= XtIMXEvent;
 	    if (app->outstandingQueue != NULL) ret |= XtIMAlternateInput;
@@ -1497,9 +1485,7 @@ static Boolean PeekOtherSources(
 	    (void) _XtWaitForSomething (app,
 					TRUE, TRUE, FALSE, TRUE,
 					FALSE,
-#ifdef XTHREADS
 					TRUE,
-#endif
 					(unsigned long *)NULL);
 	    if (app->outstandingQueue != NULL) return TRUE;
 	}
@@ -1554,15 +1540,13 @@ Boolean XtAppPeekEvent(
 		d = _XtWaitForSomething (app,
 			FALSE, FALSE, FALSE, FALSE,
 			TRUE,
-#ifdef XTHREADS
 			TRUE,
-#endif
 			(unsigned long *) NULL);
 
 		if (d != -1) {  /* event */
 			GotEvent:
 			XPeekEvent(app->list[d], event);
-			app->last = (d == 0 ? app->count : d) - 1;
+			app->last = (short) ((d == 0 ? app->count : d) - 1);
 			UNLOCK_APP(app);
 			return TRUE;
 		}

@@ -151,23 +151,26 @@ CallConstraintSetValues (
 {
     Boolean redisplay = FALSE;
     XtSetValuesFunc set_values;
-    ConstraintWidgetClass superclass;
 
     if ((WidgetClass)class != constraintWidgetClass) {
-	if (class == NULL)
+	ConstraintWidgetClass superclass;
+
+	if (class == NULL) {
 	    XtAppErrorMsg(XtWidgetToApplicationContext(current),
 		    "invalidClass","constraintSetValue",XtCXtToolkitError,
                  "Subclass of Constraint required in CallConstraintSetValues",
-                  (String *)NULL, (Cardinal *)NULL);
-	LOCK_PROCESS;
-	superclass = (ConstraintWidgetClass) class->core_class.superclass;
-	UNLOCK_PROCESS;
-	redisplay =
-	   CallConstraintSetValues(superclass,
-				   current, request, new, args, num_args);
+                  NULL, NULL);
+	} else {
+	    LOCK_PROCESS;
+	    superclass = (ConstraintWidgetClass) class->core_class.superclass;
+	    UNLOCK_PROCESS;
+	    redisplay =
+	       CallConstraintSetValues(superclass,
+				       current, request, new, args, num_args);
+	}
     }
     LOCK_PROCESS;
-    set_values = class->constraint_class.set_values;
+    set_values = class ? class->constraint_class.set_values : NULL;
     UNLOCK_PROCESS;
     if (set_values)
         redisplay |= (*set_values) (current, request, new, args, &num_args);
@@ -204,7 +207,6 @@ void XtSetValues(
     WidgetClass     wc;
     ConstraintWidgetClass cwc = NULL;
     Boolean	    hasConstraints;
-    XtAlmostProc set_values_almost;
     XtAppContext app = XtWidgetToApplicationContext(w);
     Widget hookobj = XtHooksOfDisplay(XtDisplayOfObject(w));
 
@@ -214,7 +216,7 @@ void XtSetValues(
         XtAppErrorMsg(app,
 		"invalidArgCount","xtSetValues",XtCXtToolkitError,
                 "Argument count > 0 on NULL argument list in XtSetValues",
-                 (String *)NULL, (Cardinal *)NULL);
+                 NULL, NULL);
     }
 
     /* Allocate and copy current widget into old widget */
@@ -224,7 +226,7 @@ void XtSetValues(
     UNLOCK_PROCESS;
     oldw = (Widget) XtStackAlloc(widgetSize, oldwCache);
     reqw = (Widget) XtStackAlloc (widgetSize, reqwCache);
-    (void) memmove((char *) oldw, (char *) w, (int) widgetSize);
+    (void) memmove((char *) oldw, (char *) w, (size_t) widgetSize);
 
     /* Set resource values */
 
@@ -233,7 +235,7 @@ void XtSetValues(
 	wc->core_class.num_resources, args, num_args);
     UNLOCK_PROCESS;
 
-    (void) memmove ((char *) reqw, (char *) w, (int) widgetSize);
+    (void) memmove ((char *) reqw, (char *) w, (size_t) widgetSize);
 
     hasConstraints = (XtParent(w) != NULL && !XtIsShell(w) && XtIsConstraint(XtParent(w)));
 
@@ -253,7 +255,7 @@ void XtSetValues(
 	oldw->core.constraints = XtStackAlloc(constraintSize, oldcCache);
 	reqw->core.constraints = XtStackAlloc(constraintSize, reqcCache);
 	(void) memmove((char *) oldw->core.constraints,
-		       (char *) w->core.constraints, (int) constraintSize);
+		       (char *) w->core.constraints, (size_t) constraintSize);
 
 	/* Set constraint values */
 	LOCK_PROCESS;
@@ -262,7 +264,7 @@ void XtSetValues(
 	    cwc->constraint_class.num_resources, args, num_args);
 	UNLOCK_PROCESS;
 	(void) memmove((char *) reqw->core.constraints,
-		       (char *) w->core.constraints, (int) constraintSize);
+		       (char *) w->core.constraints, (size_t) constraintSize);
     }
 
     /* Inform widget of changes, then inform parent of changes */
@@ -350,6 +352,7 @@ void XtSetValues(
 	    CALLGEOTAT(_XtGeoTab(1));
 	    do {
 		XtGeometryHookDataRec call_data;
+		XtAlmostProc set_values_almost;
 
 		if (XtHasCallbacks(hookobj, XtNgeometryHook) == XtCallbackHasSome) {
 		    call_data.type = XtHpreGeometry;
@@ -383,7 +386,7 @@ void XtSetValues(
 			    "invalidProcedure","set_values_almost",
 			  XtCXtToolkitError,
 			  "set_values_almost procedure shouldn't be NULL",
-			  (String *)NULL, (Cardinal *)NULL);
+			  NULL, NULL);
 		    break;
 		}
 		if (result == XtGeometryNo) geoReply.request_mode = 0;
@@ -432,8 +435,8 @@ void XtSetValues(
 				 XtName(w),XtName(pw)));
 		  XClearArea (XtDisplay (pw), XtWindow (pw),
 			      r->rectangle.x, r->rectangle.y,
-			      r->rectangle.width + bw2,
-			      r->rectangle.height + bw2,TRUE);
+			      (unsigned) (r->rectangle.width + bw2),
+			      (unsigned) (r->rectangle.height + bw2), TRUE);
 	      }
 	  }
         }

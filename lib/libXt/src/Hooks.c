@@ -80,7 +80,7 @@ void XtRemoveBlockHook(
 #ifdef DEBUG
 	XtAppWarningMsg(app, "badId", "xtRemoveBlockHook", XtCXtToolkitError,
 			"XtRemoveBlockHook called with bad or old hook id",
-			(String*)NULL, (Cardinal*)NULL);
+			NULL, NULL);
 #endif /*DEBUG*/
 	UNLOCK_APP(app);
 	return;
@@ -123,7 +123,7 @@ void _XtAddShellToHookObj(
 	ho->hooks.max_shells += SHELL_INCR;
 	ho->hooks.shells =
 	    (WidgetList)XtRealloc((char*)ho->hooks.shells,
-		ho->hooks.max_shells * sizeof (Widget));
+		(Cardinal) (ho->hooks.max_shells * sizeof (Widget)));
     }
     ho->hooks.shells[ho->hooks.num_shells++] = shell;
 

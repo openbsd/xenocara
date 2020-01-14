@@ -86,7 +86,7 @@ in this Software without prior written authorization from The Open Group.
 #define RConst /**/
 #endif
 
-static String XtNtranslationError = "translationError";
+static _Xconst _XtString XtNtranslationError = "translationError";
 
 typedef struct _CompiledAction{
     XrmQuark		signature;
@@ -117,16 +117,16 @@ static CompiledActionTable CompileActionTable(
 
     if (! stat) {
 	cTableHold = cActions = (CompiledActionTable)
-	    __XtMalloc(count * sizeof(CompiledAction));
+	    __XtMalloc((Cardinal)((size_t)count * sizeof(CompiledAction)));
 
-	for (i=count; --i >= 0; cActions++, actions++) {
+	for (i= (int)count; --i >= 0; cActions++, actions++) {
 	    cActions->proc = actions->proc;
 	    cActions->signature = (*func)(actions->string);
 	}
     } else {
 	cTableHold = (CompiledActionTable) actions;
 
-	for (i=count; --i >= 0; actions++)
+	for (i= (int)count; --i >= 0; actions++)
 	    ((CompiledActionTable) actions)->signature =
 		(*func)(actions->string);
     }
@@ -136,7 +136,7 @@ static CompiledActionTable CompileActionTable(
     for (i=1; (Cardinal) i <= count - 1; i++) {
 	register Cardinal j;
 	hold = cActions[i];
-	j = i;
+	j = (Cardinal)i;
 	while (j && cActions[j-1].signature > hold.signature) {
 	    cActions[j] = cActions[j-1];
 	    j--;
@@ -159,12 +159,11 @@ static void ReportUnboundActions(
     XtTranslations	xlations,
     TMBindData		bindData)
 {
-    TMSimpleStateTree	stateTree = (TMSimpleStateTree)xlations->stateTreeTbl[0];
+    TMSimpleStateTree	stateTree;
     Cardinal num_unbound = 0;
     Cardinal num_params = 1;
     char* message;
     char messagebuf[1000];
-    String params[1];
     register Cardinal num_chars = 0;
     register Cardinal i, j;
     XtActionProc *procs;
@@ -181,7 +180,7 @@ static void ReportUnboundActions(
 		String s = XrmQuarkToString(stateTree->quarkTbl[j]);
 		if (num_unbound != 0)
 		    num_chars += 2;
-		num_chars += strlen(s);
+		num_chars += (Cardinal)strlen(s);
 		num_unbound++;
 	    }
 	}
@@ -190,9 +189,10 @@ static void ReportUnboundActions(
 	return;
     message = XtStackAlloc (num_chars + 1, messagebuf);
     if (message != NULL) {
+	String params[1];
+
 	*message = '\0';
 	num_unbound = 0;
-	stateTree = (TMSimpleStateTree)xlations->stateTreeTbl[0];
 	for (i=0; i < xlations->numStateTrees; i++) {
 	    if (bindData->simple.isComplex)
 		procs = TMGetComplexBindEntry(bindData, i)->procs;
@@ -225,12 +225,12 @@ static CompiledAction *SearchActionTable(
     CompiledActionTable	actionTable,
     Cardinal		numActions)
 {
-    register int i, left, right;
+    int left, right;
 
     left = 0;
-    right = numActions - 1;
+    right = (int)numActions - 1;
     while (left <= right) {
-	i = (left + right) >> 1;
+	int i = (left + right) >> 1;
 	if (signature < actionTable[i].signature)
 	    right = i - 1;
 	else if (signature > actionTable[i].signature)
@@ -251,7 +251,7 @@ static int BindActions(
     TMShortCard		numActions,
     Cardinal 		*ndxP)
 {
-    register int unbound = stateTree->numQuarks - *ndxP;
+    register int unbound = (int)(stateTree->numQuarks - *ndxP);
     CompiledAction* action;
     register Cardinal ndx;
     register Boolean savedNdx = False;
@@ -331,7 +331,7 @@ static int  BindProcs(
 		BindActions(stateTree,
 			    procs,
 			    GetClassActions(class),
-			    class->core_class.num_actions,
+			    (TMShortCard) class->core_class.num_actions,
 			    &ndx);
 	    class = class->core_class.superclass;
         } while (unbound != 0 && class != NULL);
@@ -422,7 +422,7 @@ XtPointer _XtInitializeActionData(
     TMClassCache	classCache;
 
     classCache = XtNew(TMClassCacheRec);
-    classCache->actions = CompileActionTable(actions, count, inPlace, True);
+    classCache->actions = CompileActionTable(actions, count, (Boolean) inPlace, True);
     classCache->bindCache = NULL;
     return (XtPointer)classCache;
 }
@@ -444,7 +444,7 @@ static XtActionProc *EnterBindCache(
     LOCK_PROCESS;
     classCache = GetClassCache(w);
     bindCachePtr = &classCache->bindCache;
-    procsSize = stateTree->numQuarks * sizeof(XtActionProc);
+    procsSize = (TMShortCard)(stateTree->numQuarks * sizeof(XtActionProc));
 
     for (bindCache = *bindCachePtr;
 	 (*bindCachePtr);
@@ -466,8 +466,8 @@ static XtActionProc *EnterBindCache(
       {
 	  *bindCachePtr =
 	    bindCache = (TMBindCache)
-	      __XtMalloc(sizeof(TMBindCacheRec) +
-		       (procsSize - sizeof(XtActionProc)));
+	      __XtMalloc((Cardinal)(sizeof(TMBindCacheRec) +
+		       (size_t)(procsSize - sizeof(XtActionProc))));
 	  bindCache->next = NULL;
 	  bindCache->status = *bindStatus;
 	  bindCache->status.refCount = 1;
@@ -476,11 +476,12 @@ static XtActionProc *EnterBindCache(
 	  bindCache->widgetClass = XtClass(w);
 	  if (_XtGlobalTM.numBindCache == _XtGlobalTM.bindCacheTblSize)
 	    {
-		_XtGlobalTM.bindCacheTblSize += 16;
+		_XtGlobalTM.bindCacheTblSize =
+			    (TMShortCard)(_XtGlobalTM.bindCacheTblSize + 16);
 		_XtGlobalTM.bindCacheTbl = (TMBindCache *)
 		  XtRealloc((char *)_XtGlobalTM.bindCacheTbl,
-			    ((_XtGlobalTM.bindCacheTblSize) *
-			     sizeof(TMBindCache)));
+			    (Cardinal)((_XtGlobalTM.bindCacheTblSize) *
+				       sizeof(TMBindCache)));
 	    }
 	  _XtGlobalTM.bindCacheTbl[_XtGlobalTM.numBindCache++] = bindCache;
 #endif /* TRACE_TM */
@@ -553,7 +554,7 @@ static void RemoveAccelerators(
         XtAppWarningMsg(XtWidgetToApplicationContext(widget),
             XtNtranslationError,"nullTable",XtCXtToolkitError,
             "Can't remove accelerators from NULL table",
-            (String *)NULL, (Cardinal *)NULL);
+            NULL, NULL);
         return;
     }
 
@@ -581,7 +582,7 @@ static void RemoveAccelerators(
       XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		      XtNtranslationError,"nullTable",XtCXtToolkitError,
 		      "Tried to remove nonexistent accelerators",
-		      (String *)NULL, (Cardinal *)NULL);
+		      NULL, NULL);
     else {
 	if (!destination->core.being_destroyed)
 	  for (i = 0; i < numXlations; i++)
@@ -606,8 +607,6 @@ void _XtBindActions(
 
     if ((xlations == NULL) || widget->core.being_destroyed)
       return;
-
-    stateTree = (TMSimpleStateTree)xlations->stateTreeTbl[0];
 
     for (i = 0; i < xlations->numStateTrees; i++)
       {
@@ -776,7 +775,7 @@ void XtAppAddActions(
     rec->next = app->action_table;
     app->action_table = rec;
     rec->table = CompileActionTable(actions, num_actions, False, False);
-    rec->count = num_actions;
+    rec->count = (TMShortCard) num_actions;
     UNLOCK_APP(app);
 }
 
@@ -785,9 +784,7 @@ void XtGetActionList(
     XtActionList* actions_return,
     Cardinal* num_actions_return)
 {
-    XtActionList list;
     CompiledActionTable table;
-    int i;
 
     *actions_return = NULL;
     *num_actions_return = 0;
@@ -803,11 +800,14 @@ void XtGetActionList(
     }
     *num_actions_return = widget_class->core_class.num_actions;
     if (*num_actions_return) {
-	list = *actions_return = (XtActionList)
-	    __XtMalloc(*num_actions_return * sizeof(XtActionsRec));
+	XtActionList list = *actions_return = (XtActionList)
+	    __XtMalloc((Cardinal)((size_t)*num_actions_return * sizeof(XtActionsRec)));
+
 	table = GetClassActions(widget_class);
+
 	if (table != NULL) {
-	    for (i= (*num_actions_return); --i >= 0; list++, table++) {
+	    int i;
+	    for (i= (int)(*num_actions_return); --i >= 0; list++, table++) {
 		list->string = XrmQuarkToString(table->signature);
 		list->proc = table->proc;
 	    }
@@ -855,7 +855,7 @@ void XtMenuPopupAction(
 	XtAppWarningMsg(app,
 		      "invalidParameters","xtMenuPopupAction",XtCXtToolkitError,
 			"MenuPopup wants exactly one argument",
-			(String *)NULL, (Cardinal *)NULL);
+			NULL, NULL);
 	UNLOCK_APP(app);
 	return;
     }
@@ -868,7 +868,7 @@ void XtMenuPopupAction(
 	XtAppWarningMsg(app,
 		"invalidPopup","unsupportedOperation",XtCXtToolkitError,
 "Pop-up menu creation is only supported on ButtonPress, KeyPress or EnterNotify events.",
-                  (String *)NULL, (Cardinal *)NULL);
+                  NULL, NULL);
 	UNLOCK_APP(app);
 	return;
     }
@@ -914,7 +914,7 @@ static void _XtMenuPopdownAction(
 	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 			"invalidParameters","xtMenuPopdown",XtCXtToolkitError,
 			"XtMenuPopdown called with num_params != 0 or 1",
-			(String *)NULL, (Cardinal *)NULL);
+			NULL, NULL);
     }
 }
 
@@ -1041,14 +1041,14 @@ void XtCallActionProc(
     }
 
     {
-	String params[2];
-	Cardinal num_params = 2;
-	params[0] = (String)action;
-	params[1] = XtName(widget);
+	String par[2];
+	Cardinal num_par = 2;
+	par[0] = (String)action;
+	par[1] = XtName(widget);
 	XtAppWarningMsg(app,
 			"noActionProc", "xtCallActionProc", XtCXtToolkitError,
 			"No action proc named \"%s\" is registered for widget \"%s\"",
-			params, &num_params
+			par, &num_par
 			);
     }
     UNLOCK_APP(app);

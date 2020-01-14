@@ -246,15 +246,15 @@ extern Boolean XtIsTopLevelShell(Widget);
 #ifdef DEBUG
 #define XtCheckSubclass(w, widget_class_ptr, message)	\
 	if (!XtIsSubclass(((Widget)(w)), (widget_class_ptr))) {	\
-	    String params[3];				\
-	    Cardinal num_params = 3;			\
-	    params[0] = ((Widget)(w))->core.widget_class->core_class.class_name;\
-	    params[1] = (widget_class_ptr)->core_class.class_name;	     \
-	    params[2] = (message);					     \
+	    String dbgArgV[3];				\
+	    Cardinal dbgArgC = 3;			\
+	    dbgArgV[0] = ((Widget)(w))->core.widget_class->core_class.class_name;\
+	    dbgArgV[1] = (widget_class_ptr)->core_class.class_name;	     \
+	    dbgArgV[2] = (message);					     \
 	    XtAppErrorMsg(XtWidgetToApplicationContext((Widget)(w)),	     \
 		    "subclassMismatch", "xtCheckSubclass", "XtToolkitError", \
 		    "Widget class %s found when subclass of %s expected: %s",\
-		    params, &num_params);		\
+		    dbgArgV, &dbgArgC);			\
 	}
 #else
 #define XtCheckSubclass(w, widget_class, message)	/* nothing */

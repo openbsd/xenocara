@@ -82,9 +82,7 @@ static void SetAncestorSensitive(
     register Widget widget,
     Boolean	    ancestor_sensitive)
 {
-    Arg			args[1];
-    register Cardinal   i;
-    register WidgetList children;
+    Arg args[1];
 
     if (widget->core.ancestor_sensitive == ancestor_sensitive) return;
 
@@ -96,6 +94,9 @@ static void SetAncestorSensitive(
        ancestor_sensitive is already FALSE */
 
     if (widget->core.sensitive && XtIsComposite(widget)) {
+	Cardinal i;
+	WidgetList children;
+
 	children = ((CompositeWidget) widget)->composite.children;
 	for (i=0; i < ((CompositeWidget)widget)->composite.num_children; i++) {
 	    SetAncestorSensitive (children[i], ancestor_sensitive);
@@ -109,8 +110,6 @@ void XtSetSensitive(
     _XtBoolean	    sensitive)
 {
     Arg			args[1];
-    register Cardinal   i;
-    register WidgetList children;
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
@@ -127,9 +126,12 @@ void XtSetSensitive(
        ancestor_sensitive is already FALSE */
 
     if (widget->core.ancestor_sensitive && XtIsComposite (widget)) {
+	Cardinal   i;
+	WidgetList children;
+
 	children = ((CompositeWidget) widget)->composite.children;
 	for (i = 0; i < ((CompositeWidget)widget)->composite.num_children; i++){
-	    SetAncestorSensitive (children[i], sensitive);
+	    SetAncestorSensitive (children[i], (Boolean) sensitive);
 	}
     }
     UNLOCK_APP(app);

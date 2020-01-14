@@ -82,5 +82,11 @@
 /* Define to 1 to use XKB for keysym resolution. */
 #undef XKB
 
+/* Define to 1 to enable geo-tattler traces. */
+#undef XT_GEO_TATTLER
+
+/* Define to 1 to use standard C const feature. */
+#undef _CONST_X_STRING
+
 /* app default data directory */
 #undef appdefaultdir

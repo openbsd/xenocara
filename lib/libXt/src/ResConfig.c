@@ -118,10 +118,16 @@ _set_resource_values (
 	Display		*dpy;
 	XrmDatabase	tmp_db;
 
-	if (!XtIsWidget (w))
-		dpy = XtDisplay (w->core.parent);
-	else
-		dpy = XtDisplay (w);
+	if (last_part == NULL)
+	    return;
+
+	if (!XtIsWidget (w)) {
+	    if (w == 0 || w->core.parent == 0)
+		return;
+	    dpy = XtDisplay (w->core.parent);
+	} else {
+	    dpy = XtDisplay (w);
+	}
 	tmp_db = XtDatabase(dpy);
 
 	/*
@@ -201,8 +207,8 @@ _set_resource_values (
 					cur->core.widget_class->core_class.class_name);
 			}
 		}
-		if (resource_class != NULL)
-			XtFree (resource_class);
+
+		XtFree (resource_class);
 		resource_class = temp;
 
 		cur = XtParent(cur);
@@ -213,8 +219,8 @@ _set_resource_values (
 	 */
 	XtAsprintf (&temp, "%s.%s", resource_name,
 		resources_return[res_index].resource_name);
-	if (resource_name != NULL)
-		XtFree (resource_name);
+
+	XtFree (resource_name);
 	resource_name = temp;
 
 	/*
@@ -222,8 +228,8 @@ _set_resource_values (
 	 */
 	XtAsprintf (&temp, "%s.%s", resource_class,
 		resources_return[res_index].resource_class);
-	if (resource_class != NULL)
-		XtFree (resource_class);
+
+	XtFree (resource_class);
 	resource_class = temp;
 
 #ifdef DEBUG
@@ -557,6 +563,7 @@ _set_and_search (
 			} else
 				_search_child (w, local_index, remainder,
 					resource, value, last_token, last_part);
+			XtFree (part);
 			return;
 		}
 		if (token == '*') {
@@ -675,7 +682,6 @@ _search_widget_tree (
 	char	*last_part;
 	char	*remainder = NULL;
 	char	last_token;
-	char	*indx, *copy;
 	char	*loose, *tight;
 	int	loose_len, tight_len;
 
@@ -702,8 +708,8 @@ _search_widget_tree (
 	if ((loose == NULL) && (tight == NULL))
 		return;
 
-	loose_len = (loose) ? strlen (loose) : 0;
-	tight_len = (tight) ? strlen (tight) : 0;
+	loose_len = (loose) ? (int) strlen (loose) : 0;
+	tight_len = (tight) ? (int) strlen (tight) : 0;
 
 	if ((loose == NULL) || (tight_len > loose_len))
 		remainder = XtNewString (tight);
@@ -714,32 +720,35 @@ _search_widget_tree (
 	 * Parse last segment off of resource string, (eg. background, font,
 	 * etc.)
 	 */
-	last_token = _get_last_part (remainder, &last_part);
-	/*
-	 * this case covers resources of only one level (eg. *background)
-	 */
-	if (remainder[0] == 0) {
-		_set_resource_values (w, resource, value, last_part);
-		if (last_token == '*')
-			_apply_values_to_children (parent, remainder, resource,
-				value, last_token, last_part);
-	/*
-	 * all other resource strings are recursively applied to the widget tree.
-	 * Prepend a '.' to the remainder string if there is no leading token.
-	 */
-	} else {
-		if (remainder[0] != '*' && remainder[0] != '.') {
-			XtAsprintf (&copy, ".%s", remainder);
-			XtFree (remainder);
-			remainder = copy;
-		}
-		indx = remainder;
-		_set_and_search (parent, indx, remainder, resource, value,
-			last_token, last_part);
-	}
+	if (remainder) {
+	    last_token = _get_last_part (remainder, &last_part);
+	    /*
+	     * this case covers resources of only one level (eg. *background)
+	     */
+	    if (remainder[0] == 0) {
+		    _set_resource_values (w, resource, value, last_part);
+		    if (last_token == '*')
+			    _apply_values_to_children (parent, remainder, resource,
+				    value, last_token, last_part);
+	    /*
+	     * all other resource strings are recursively applied to the widget tree.
+	     * Prepend a '.' to the remainder string if there is no leading token.
+	     */
+	    } else {
+		    char *indx, *copy;
+		    if (remainder[0] != '*' && remainder[0] != '.') {
+			    XtAsprintf (&copy, ".%s", remainder);
+			    XtFree (remainder);
+			    remainder = copy;
+		    }
+		    indx = remainder;
+		    _set_and_search (parent, indx, remainder, resource, value,
+			    last_token, last_part);
+	    }
 
-	XtFree (remainder);
-	XtFree (last_part);
+	    XtFree (remainder);
+	    XtFree (last_part);
+	}
 }
 
 /*
@@ -774,16 +783,16 @@ _locate_children (
 	 * count the number of children
 	 */
 	if (XtIsWidget (parent))
-		num_children += parent->core.num_popups;
+		num_children = (int) ((Cardinal) num_children + parent->core.num_popups);
 	if (XtIsComposite (parent))
-		num_children += comp->composite.num_children;
+		num_children = (int) ((Cardinal) num_children + comp->composite.num_children);
 	if (num_children == 0) {
 		*children = NULL;
 		return (0);
 	}
 
 	*children = (Widget *)
-		XtMalloc ((Cardinal) sizeof(Widget) * num_children);
+		XtMalloc ((Cardinal) (sizeof(Widget) * (size_t) num_children));
 
 	if (XtIsComposite (parent)) {
 		for (i=0; i<comp->composite.num_children; i++) {
@@ -893,20 +902,17 @@ _XtResourceConfigurationEH (
 	unsigned long	nitems;
 	unsigned long	leftover;
 	char		*data = NULL;
-	unsigned long	resource_len;
 	char		*data_ptr;
-	char		*resource;
-	char		*value;
 #ifdef DEBUG
 	int		indent = 0;
 #endif
 	XtPerDisplay	pd;
 
 #ifdef DEBUG
-	fprintf (stderr, "in _XtResourceConfiguationEH atom = %d\n",event->xproperty.atom);
-	fprintf (stderr, "    window = %x\n", XtWindow (w));
+	fprintf (stderr, "in _XtResourceConfiguationEH atom = %u\n",(unsigned) event->xproperty.atom);
+	fprintf (stderr, "    window = %x\n", (unsigned) XtWindow (w));
 	if (XtIsWidget (w))
-		fprintf (stderr, "    widget = %x   name = %s\n", w, w->core.name);
+		fprintf (stderr, "    widget = %zx   name = %s\n", (size_t)w, w->core.name);
 #endif
 
 	pd = _XtGetPerDisplay (XtDisplay (w));
@@ -966,6 +972,7 @@ _XtResourceConfigurationEH (
 		if (data) {
 			char *data_end = data + nitems;
 			char *data_value;
+			unsigned long resource_len;
 
 			resource_len = strtoul (data, &data_ptr, 10);
 
@@ -976,12 +983,15 @@ _XtResourceConfigurationEH (
 				data_ptr = data_value = NULL;
 
 			if (data_value > data_ptr && data_value < data_end) {
+				char *resource;
+				char *value;
+
 				*data_value++ = '\0';
 
 				resource = XtNewString (data_ptr);
 				value = XtNewString (data_value);
 #ifdef DEBUG
-				fprintf (stderr, "resource_len=%d\n",
+				fprintf (stderr, "resource_len=%lu\n",
 					 resource_len);
 				fprintf (stderr, "resource = %s\t value = %s\n",
 					 resource, value);
@@ -998,6 +1008,5 @@ _XtResourceConfigurationEH (
 		}
 	}
 
-	if (data)
-		XFree ((char *)data);
+	XFree ((char *)data);
 }

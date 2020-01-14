@@ -136,7 +136,7 @@ void XtRemoveActionHook(
     else {
 	XtAppWarningMsg(app, "badId", "xtRemoveActionHook", XtCXtToolkitError,
 			"XtRemoveActionHook called with bad or old hook id",
-			(String*)NULL, (Cardinal*)NULL);
+			NULL, NULL);
     }
 #endif /*DEBUG*/
     UNLOCK_APP(app);

@@ -1,3 +1,1605 @@
+commit 93ffd50ccf04d02fc94565d8ee831c7b63d6d71a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 18 19:23:24 2019 -0400
+
+    add a dependency on makestrs to help with parallel builds
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6abd578a6f761c6c0563d63749bb11f9277b5897
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 18 07:08:47 2019 -0400
+
+    force a version-bump
+
+commit 3e2002294b130f1f46ab026075b9d7e83c94bd60
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 18 05:07:00 2019 -0400
+
+    fix a typo
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 59d9be57268c14e6995dff47a9f3f9d173b2b8a0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 17 03:53:23 2019 -0400
+
+    update for proposed release as 1.2.0
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ae293e379419e7e8451422fdd7a899a819db362b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 15 10:45:54 2019 -0400
+
+    update to 1.1.5.3 to reflect documentation updates/review
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 17b77304b23965c1c8ac6a260636f37c23f60ff6
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jun 14 21:55:45 2019 +0200
+
+    remove dead code
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit f09cef2528b664b0029242c5643246e28d0395b3
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jun 14 21:31:49 2019 +0200
+
+    make _XtWaitForSomething accept always the same number of arguments
+    
+    to reduce the #ifdef forrest make _XtWaitForSomething
+    accept all arguments. Also add a dummy use for drop_lock
+    to avoid unused warnings
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit c33fc7df82276b3dd06428d8ac34be39b6e1afd6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 13 21:21:40 2019 -0400
+
+    fix some more errata, plus reformat a list for consistency
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 880876ba1aff9cf56d574d2bf486856f5bf20107
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 13 19:05:55 2019 -0400
+
+    fix some punctuation errata
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 86073013496a2f45ebde242001e82cf5049d51cd
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 13 18:28:58 2019 -0400
+
+    reduce ifdef/ifndef inconsistency for USE_POLL
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 190c027e3e594afb15c6d613d95ce5af9e22fcf7
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jun 10 13:29:14 2019 +0200
+
+    fix documentation to refect reality..
+    
+    XtNewString is strdup() with NULL check. A Function not a macro.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 26337b48bd14b40b392b76e00aaa9563658e5789
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jun 10 13:13:20 2019 +0200
+
+    remove useles else
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 17c723643d0fb218b53ed04f837addb9d7de0d15
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Jun 10 12:48:46 2019 +0200
+
+    no need to check arument for XtFree()
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit fbbf91c17b8a85acfe883a103b43c21ddf1e6398
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 9 20:21:38 2019 -0400
+
+    use strdup in two places; remove a bogus "else" from X11R6.4 changes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 15f9eb3f0bb8cf4a5ea1279e58e1205aada3188b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 7 05:27:14 2019 -0400
+
+    fix formatting errata
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 3d65748dee9a6d2e34b7cafec09b1ec7a6f5eb43
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 6 21:01:06 2019 -0400
+
+    correct markup for header- and library-filenames; they are not functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ab1b99130f98a3767589519c37ce78b3dcb8ce8e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 30 19:59:02 2019 -0400
+
+    fix a syntax mess introduced by R6.6 ifdef'ing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 040eeec1d8034dbf2f432d792c90dbedc5148aea
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 30 18:59:30 2019 -0400
+
+    fix fake-quotes in manpages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fad2c6c20a793b20974a72b2fabb2eca668e69f3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 30 18:19:28 2019 -0400
+
+    drop "session" resource XtNsession / XtCSession, which was listed in X11R6 but never defined in headers
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c588859147c66561a839bc5d2eb3d2242bd377e9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 30 17:32:59 2019 -0400
+
+    add superscript-markup in range definitions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9f556b46f0009e58a2c30c3ba3c9f223ae9f6255
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Jun 9 18:26:23 2019 +0200
+
+    no need to check argument for X(t)Free
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 7c0ed275e4c0e86e23c5f93647e03fa4b71797b3
+Merge: d4208c7 4194ff5
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Jun 5 18:58:45 2019 +0200
+
+    Merge branch 'master' of ssh://gitlab.freedesktop.org/xorg/lib/libxt
+
+commit 4194ff5b427e39bb5325db0f377e80b3e6982e17
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 18:49:25 2019 -0400
+
+    fix compiler warnings when WHITEFILL is defined
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 66c1ea79516a0b31043dc604172a42cd859e5b47
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 18:46:27 2019 -0400
+
+    fix compiler warnings when _TRACE_HEAP is defined
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 390e9e20c029e4eb159d39bd3d79160ca4567650
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 18:35:16 2019 -0400
+
+    build- and compiler-warning fixes when XTTRACEMEMORY is defined
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5ad20c90e31abfb9854cf2eae8292e44f2e18671
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 17:06:15 2019 -0400
+
+    build-fix and compiler-warnings when TRACE_TM is defined
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7a6ca8784b3b1d75539962ad7b303ad0e5167e6a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 05:27:52 2019 -0400
+
+    add prototype for DEBUG-function
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7c4a5b577637f113372005fc360e03db9b058564
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 28 05:25:02 2019 -0400
+
+    fix compiler-warning when DEBUG is defined
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9ffc4ff7eb22b96472aa299b60dc3ed1550a7d6c
+Merge: 2d0140c 405e038
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 19 18:58:53 2019 -0400
+
+    Merge remote-tracking branch 'upstream/master'
+
+commit 405e03828dfc2a3d69a32236ae8f1214e7185cff
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 19 11:35:47 2019 -0400
+
+    bump to 1.1.5.2 to reflect noreturn-changes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2d0140cf36ad3a3f8496d8e2da888efb9304af67
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 19 11:35:47 2019 -0400
+
+    bump to 1.1.5.2 to reflect noreturn-changes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d4208c7734fb12adbfb5ef1b65dfcfe7126380d6
+Merge: b3b86a2 4264ac5
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat May 18 19:31:28 2019 +0200
+
+    Merge branch 'master' of ssh://gitlab.freedesktop.org/xorg/lib/libxt
+
+commit b3b86a2f6b974f5e040d64aa3778075c987bf0fa
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat May 18 19:31:08 2019 +0200
+
+    save one indent level
+
+commit 4264ac5f8bc959844ae8ac623d4db491fc691fa5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri May 17 20:39:24 2019 -0400
+
+    trim obsolete ifdef for ISC, and correct nonstandard "NaNS" to "NaN"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 41ba4dec60f7d9495c8d45c068d5c3d17e035e1e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri May 17 19:57:28 2019 -0400
+
+    use _X_NORETURN, works for gcc and clang
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 36019ab614068bdf3fc933addc3a9b4cb512c9e0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri May 17 04:52:57 2019 -0400
+
+    use explicit pointer check to eliminate a clang --analyze warning in VarGet.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1f0e3238352a497a59a36e0b8a5b4723c634b2e1
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 16 20:53:42 2019 -0400
+
+    fix most clang --analyze warnings about null-pointers
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fb78a7c881adbe46f1f8c6e8e429bc8963c9b3e8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 16 17:09:13 2019 -0400
+
+    fix unused-assignment warnings (clang --analyze)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7fa9ee9e656ec32cc382f7acc552d0b4c9bf952c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 16 05:21:06 2019 -0400
+
+    ensure XWindowChanges value is initialized before updating it (clang --analyze)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 91f1119528b57f94d178f0cfb12efafd0c90bbc9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed May 8 21:15:08 2019 -0400
+
+    fixes cppcheck "style" warnings (mostly variable-scope)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 43a65ae23370e0f7fb427e96c6d9037d8fa1af35
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed May 8 17:56:58 2019 -0400
+
+    add casts to quiet compiler warnings with Solaris 11.4 / gcc 7.3.0
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9c45da7cb487b8b6980ff3020468e0fb582bdd7f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 20:37:37 2019 -0400
+
+    remove an #include used in debugging
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 0eedde5df39ac754623511c06c5573ad62ca4c4c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 20:15:12 2019 -0400
+
+    manpage style fix: sentences should end at the end of a line
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b7a87ccb07f816e7b9579d91bd66552e86ef0e8e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 20:05:38 2019 -0400
+
+    add a note pointing out the change in design
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit adf962f3b2c4539e555bfda600d34b63c9e5e002
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 19:59:07 2019 -0400
+
+    updated spec to correspond to the current implementation of XtAppMainLoop
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2286ca56529f27b0f6a809314e8303591c7fe240
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 19:42:59 2019 -0400
+
+    update manpage for changes to XtAppMainLoop()
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit dc33dc58f8ec841f002b9c65fb86b879b2d7d44a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 7 19:04:10 2019 -0400
+
+    Proposed revision of XtAppMainLoop() in
+    
+            https://gitlab.freedesktop.org/xorg/lib/libxt/issues/7
+    
+    caused applications such as xclock to hang, because it did first not
+    check if there was an available event corresponding to the mask
+    parameter before calling XtAppProcessEvent().
+    
+    For instance, if the mask was XtIMXEvent, it would ignore timer events
+    until an X event occurred.
+    
+    Fix this by checking with XtAppPending() when the mask is not XtIMAll.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f0ff9ea4fc653d27db3251a5bae97df4b963b1ba
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 19:35:36 2019 -0400
+
+    Add related fix from
+            https://gitlab.freedesktop.org/xorg/lib/libxt/issues/6
+            https://bugs.chromium.org/p/chromium/issues/detail?id=284595
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 27778fd000d417dd81b940fc8a7855d4b4ccd068
+Merge: bb511a5 0b80bc9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 18:22:25 2019 -0400
+
+    Merge branch 'ffontaine/libxt-master' into HEAD
+
+commit bb511a50f14c69deaf67ef411aeb6eea03eca975
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 16:49:32 2019 -0400
+
+    add casts to fix compiler warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 86d7036808a6958f5937a81044262afe2658e6ec
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 16:38:46 2019 -0400
+
+    eliminate an unnecessary cast which gave a gcc warning and add a null-pointer check
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a9c54d128ac65a8fa065ef28cd51c42981949c60
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 16:09:04 2019 -0400
+
+    if Xalloca.h is corrected to use size_t param, one change is still needed in
+    libXt to fix compiler warnings - done here.
+
+commit 9112c3c104f0b3ec45ae776279e276034bc7dcc5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 05:16:24 2019 -0400
+
+    fixes for gcc warnings, no object-change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 37dce673d841e7df75091a3b31828431e71bd78f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 6 04:08:42 2019 -0400
+
+    XtAppProcessEvent expects XtInputMask parameter, which is unsigned-long
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8905b82df8a6dc1668d8e817924fb7b8cd574bdc
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 5 21:06:35 2019 -0400
+
+    use "const void *" rather than "char *" for memcmp, etc
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fb1d51d4da8f303e92c8b30e4503dc7f9c01b3a8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 5 20:49:13 2019 -0400
+
+    fix 5 more simple gcc warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5ee9a5d2de4e50552e50247e745f92b61f9784c0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 5 20:16:31 2019 -0400
+
+    fix gcc warnings when assigning into a bit-field by first masking the value
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c9f5ccd2e6c301853ebf1595ca12b377a991a095
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 5 18:36:04 2019 -0400
+
+    fixes for typos and formatting glitches
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 02bc6c1091fca1beeda6b0d79017c106655e913c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 5 14:43:08 2019 -0400
+
+    ignore the generated file used for version-number
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6d1d29a92b9726c8f960d96cd3d896d314963341
+Author: Jon Turney <jon.turney@dronecode.org.uk>
+Date:   Wed May 1 18:20:07 2019 +0100
+
+    Provide suseconds_t typedef on Win32
+    
+    Fix compilation on Win32 after cf9e8c73, where timeval is not defined in
+    terms of that type, but a plain long.
+
+commit 06cc5aa5a9f507bc1a5643854dcab33ad6d14761
+Author: Jon Turney <jon.turney@dronecode.org.uk>
+Date:   Wed May 1 18:31:29 2019 +0100
+
+    Fix WHITEFILL after const fixes
+    
+    Fix compilation of ExtractLocaleName() when WHITEFILL is defined (when
+    built for Win32) after const fixes in ffeb733d.
+
+commit 0b80bc9904c8d553c760651daca0c964df052c8b
+Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date:   Fri May 3 08:06:00 2019 +0200
+
+    libXt: util: don't link makestrs with target cflags
+    
+    The line:
+    
+    AM_CFLAGS = $(XT_CFLAGS)
+    
+    in util/Makefile.am is wrong because it adds target cflags to the
+    compilation of makestrs, which is built for the build machine, which
+    leads to build failures when cross-compiling.
+    
+    Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+    [Retrieved from:
+    https://git.buildroot.net/buildroot/tree/package/x11r7/xlib_libXt/0001-util-don-t-link-makestrs-with-target-cflags.patch]
+    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+commit 870954db9312d007a3c7620763e858cc0c03f753
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 28 19:54:36 2019 -0400
+
+    improved markup for the restored pages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c6bd044933771201d13256b18fad0c0d027b650b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 28 19:23:48 2019 -0400
+
+    restore the last 3-4 pages of "Registering a New Resource Converter",
+    originally section 9.6.4 which lost in sgml/docbook conversion.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 3b18eab505cfef9cc6135f39ee9608e1366edd26
+Merge: 64b57b0 ba4ec93
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Apr 28 17:31:32 2019 +0200
+
+    Merge branch 'master' of ssh://gitlab.freedesktop.org/xorg/lib/libxt
+
+commit 64b57b01feef4ddb85392eca013b756b2691106e
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Apr 28 17:00:17 2019 +0200
+
+    Fix input starvation in XtMainLoop() closes bug #7
+    
+    the function XtAppProcessEvent() can handle only one of
+    XtIMXEvent | XtIMTimer | XtIMAlternateInput | XtIMSignal
+    propperly. It returns after processing one type of input
+    others are left unprocessed. putting enought input of one
+    type, the later once will never processed.
+
+commit ba4ec937680ee72f2fcd463752766340a4b3729d
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Thu Apr 11 17:21:17 2019 +0200
+
+    Fix covscan complain
+    
+    covscan gets confused by the test before the XtFree.
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/Event.c:743: alloc_fn: Storage is returned from allocation function "__XtMalloc".
+    libXt-20190411/src/Event.c:743: var_assign: Assigning: "proc" = storage returned from "__XtMalloc((Cardinal)((size_t)numprocs * 16UL))".
+    libXt-20190411/src/Event.c:745: var_assign: Assigning: "closure" = "proc".
+    libXt-20190411/src/Event.c:776: leaked_storage: Variable "closure" going out of scope leaks the storage it points to.
+    libXt-20190411/src/Event.c:776: leaked_storage: Variable "proc" going out of scope leaks the storage it points to.
+    
+    Mixing static arrays and dynamic ones was a good idea
+    in the 90s when malloc was expensive, but now, we should
+    probably make the code clearer by just allocating the
+    memory when needed.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+
+commit 6a7584e0337bb5cfec7f786231597f46c6d5fb16
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Thu Apr 11 17:27:12 2019 +0200
+
+    dummy fix for covscan
+    
+    covscan seems lost here:
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/Intrinsic.c:1074: alloc_fn: Storage is returned from allocation function "__XtMalloc".
+    libXt-20190411/src/Intrinsic.c:1074: var_assign: Assigning: "buf2" = storage returned from "__XtMalloc(4096U)".
+    libXt-20190411/src/Intrinsic.c:1110: leaked_storage: Variable "buf2" going out of scope leaks the storage it points to.
+    
+    Error: USE_AFTER_FREE (CWE-416):
+    libXt-20190411/src/Intrinsic.c:1113: alias: Assigning: "buf" = "buf2". Now both point to the same storage.
+    libXt-20190411/src/Intrinsic.c:1108: freed_arg: "XtFree" frees "buf2".
+    libXt-20190411/src/Intrinsic.c:1110: use_after_free: Using freed pointer "buf".
+    
+    Both are false positive, but we can make it understand where it
+    is wrong.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+
+commit bca67f981dd3bcf730ac3816836b66049dd09f33
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Thu Apr 11 17:26:58 2019 +0200
+
+    Fix leaks detected by covscan
+    
+    The following leaks are reported by covscan:
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/ResConfig.c:542: alloc_arg: "_get_part" allocates memory that is stored into "part".
+    libXt-20190411/src/ResConfig.c:544: noescape: Resource "part" is not freed or pointed-to in "_match_resource_to_widget".
+    libXt-20190411/src/ResConfig.c:560: leaked_storage: Variable "part" going out of scope leaks the storage it points to.
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/TMgrab.c:108: alloc_arg: "XtKeysymToKeycodeList" allocates memory that is stored into "keycodes".
+    libXt-20190411/src/TMgrab.c:115: var_assign: Assigning: "keycodeP" = "keycodes".
+    libXt-20190411/src/TMgrab.c:124: leaked_storage: Variable "keycodeP" going out of scope leaks the storage it points to.
+    libXt-20190411/src/TMgrab.c:124: leaked_storage: Variable "keycodes" going out of scope leaks the storage it points to.
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/TMparse.c:1544: alloc_fn: Storage is returned from allocation function "XtMalloc".
+    libXt-20190411/src/TMparse.c:1544: var_assign: Assigning: "event" = storage returned from "XtMalloc(88U)".
+    libXt-20190411/src/TMparse.c:1549: noescape: Resource "event" is not freed or pointed-to in "ParseQuotedStringEvent".
+    libXt-20190411/src/TMparse.c:1555: leaked_storage: Variable "event" going out of scope leaks the storage it points to.
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/TMparse.c:1779: alloc_fn: Storage is returned from allocation function "XtMalloc".
+    libXt-20190411/src/TMparse.c:1779: var_assign: Assigning: "action" = storage returned from "XtMalloc(32U)".
+    libXt-20190411/src/TMparse.c:1784: noescape: Resource "action" is not freed or pointed-to in "ParseAction".
+    libXt-20190411/src/TMparse.c:1785: leaked_storage: Variable "action" going out of scope leaks the storage it points to.
+    
+    In addition to this legitimate leaks, covscan can get confused by
+    the allocated memory in XtKeysymToKeycodeList:
+    
+    Error: RESOURCE_LEAK (CWE-772):
+    libXt-20190411/src/TMgrab.c:108: alloc_arg: "XtKeysymToKeycodeList" allocates memory that is stored into "keycodes".
+    libXt-20190411/src/TMgrab.c:114: leaked_storage: Variable "keycodes" going out of scope leaks the storage it points to.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+
+commit 64dcec64b294d67a45596d84f91c876f15a5d95f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 19:44:10 2019 -0400
+
+    adapt change from libXaw for inserting the package version into the spec
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 29bfd6ce3d9b9a1040ee2edf4ac5f83b54ac1932
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 19:25:11 2019 -0400
+
+    bump to 1.1.5.1 (actually 1.2.0 should be the target)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 182d2029f4adc89dd78f52a55d626a8419ae0c09
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 18:18:54 2019 -0400
+
+    updated the acknowledgements section, and added a few notes to the release-7 section
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c1b8a6690b26bd7f802f953f4bd8f00f5937283c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 15:12:45 2019 -0400
+
+    summarize the const-changes in X11R7+
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 04b44ef88aa59705acb38347a0d184d3287f6dd3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 14:44:46 2019 -0400
+
+    add #include for <X11/Intrinsic.h> to manpages, per convention
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f89906ffa8b65b9875053acbd52a7380a21c626f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 14:26:17 2019 -0400
+
+    move MenuPopdown and MenuPopup to section to distinguish these actions from C prototypes (and use the "Xt" prefix for these names as implemented since X11R4).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5d5811668fd06d50d8ff6f22159325e2328d0ee8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 14:23:53 2019 -0400
+
+    minor tweak to work around docbook's limited formatting
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c605f7d108365fdd4e46a032fcaaa812cef56f83
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 13:47:49 2019 -0400
+
+    fill in a few missing typedef keywords, and a missing "*" in prototype, as well as minor clarification of "XtIs<class>"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 3637c0988df16732dbbd121760688ee82b9d3882
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Apr 20 10:00:15 2019 -0400
+
+    add some missing "typedef" keywords for prototyped function-pointers.
+    also, use "type" markup in some of the places where it's needed.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit dca1a94c4d08009af860012cba6c4849f4a04a9a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 19 18:53:13 2019 -0400
+
+    fill in prototype information for a code example, as well as for
+    the XtRFunction resource type.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d2df1c47e7f0511c2f1c269bec25a0c4b519fe88
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 19 05:29:53 2019 -0400
+
+    fill in background for wide-prototypes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 52999015089e38705454d0f6f2ea7b544c993bf3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Apr 18 21:08:22 2019 -0400
+
+    begin section on the conversion to standard C
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 725f2f79c6f79d8b0aaea4dd37f56856efcf3a2d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 17 20:43:56 2019 -0400
+
+    finish summarizing X11R6 vs documentation updates
+
+commit 3864d90245b8be233005bed639ec8cd7b5577cea
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 17 20:08:22 2019 -0400
+
+    summarize X11R6.3 and X11R6.4 changes
+
+commit c65723b624b0718f020868ac3aa9a19542434d50
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 17 19:47:04 2019 -0400
+
+    The interface changes made recently have to be documented, and due to the
+    time interval, etc., in turn requires an update to the specification version.
+    Update that now.
+
+commit 533e88162b1540e2ed7d3c6ccdae5f50aac3d69d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 17 19:42:43 2019 -0400
+
+    update xorg's documentation-urls
+
+commit 1fd61d36009090cb8e2d95b861ae2c02cb874c77
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 17 04:38:05 2019 -0400
+
+    fix cut/paste error in description of --enable-geo-tattler configure option
+    (reported by Alan Coopersmith)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4bd13f2bb92aafe66205160d55b3dc4cae98cda3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 16 21:20:21 2019 -0400
+
+    remove calls to "IN" macro, which was recently removed from header
+
+commit 735ee4b6cc90c9ebfc33680c820c299545aa02ed
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 16 21:13:57 2019 -0400
+
+    Add --disable-const and --enable-geo-tattler options for new/updated features.
+    Also, show configure choices for build-logs.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f2418d6ff43197d7e51404aa13ca9cb2434669ff
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 16 17:42:59 2019 -0400
+
+    update manpage prototype for XtFindFile()
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+    
+    Conflicts:
+            man/XtFindFile.man
+
+commit ea2247ee98b9c7357dccbba13df96ffc6d08b65a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 15 17:46:18 2019 -0400
+
+    use ldquo/rdquo/ndash where appropriate
+
+commit 44f5ef69ef6f1593d481a831d6aa4e035fc2e7bd
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 15 17:21:58 2019 -0400
+
+    correct an error from the original document's depiction of escape_char
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit eaa1835ba58525c90ffa2dc5a5d409dd9e7a909f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 15 17:20:57 2019 -0400
+
+    use ldquo/rdquo/ndash where appropriate
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cbf4dd22eedc33309efacfb2a1a795debdd44b3b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 15 17:13:05 2019 -0400
+
+    trim spurious backslashes from translation of nroff to docbook xml
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1474d2e826773f3f5aa61ef2ad827c977ee5d084
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 15 05:01:33 2019 -0400
+
+    The conversion to xml overlooked the nroff document's use of "\%" for
+    hyphenation (remove those).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit df21efb1cfaea8d46135f830817e4170605bffc0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 20:50:44 2019 -0400
+
+    use lineannotation tag
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 26e04bcf5714149c8e047af5c5243a9755fe925a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 20:45:45 2019 -0400
+
+    whitespace/formatting fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1882fbe7a1a2f05c9939b40c7c07be83aea77698
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 20:37:45 2019 -0400
+
+    use lineannotation tag
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 46505ebf1bb23b05364ee6da4fda48ea03221f58
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 20:29:02 2019 -0400
+
+    whitespace/formatting fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a3bb222d24c12dad2744039b8d5caa6ce05ca3bf
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 20:11:47 2019 -0400
+
+    formatted sample code to fit in 80 columns
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 346716ffe321ad24b839d9b17eee300b41c899c2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 19:48:09 2019 -0400
+
+    use lineannotation tag to solve font mismatches for xref's inside
+    programlisting
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 015f1dd200334b656ff056b03662beee7ad7a9db
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 19:30:48 2019 -0400
+
+    use consistent labeling for xref's
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit aab9b50bb755d741ee54203f91bdfc464a95642f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 18:45:06 2019 -0400
+
+    use programlisting tag rather than workaround for literallayout font.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit aa871eb5c087f3af40e49e77378a04fa872c7465
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 14 17:51:59 2019 -0400
+
+    fill in titles for some references to ICCCM and X11 documents
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8905ee4cd409f22e940747b2dc0347c414011250
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 12 21:17:55 2019 -0400
+
+    fix ``fake quotes''
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8310d272d09132b86ed821b3abd3b85ceb2ea73c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 12 19:52:24 2019 -0400
+
+    corrected some nested list formatting
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8000127db88f883a4e7c747560efeca536b1c14e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 12 19:23:58 2019 -0400
+
+    modify xml-files to use named-entities, for easier manipulation
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1380721b4d252b8ed32d6016f1635f861e75f453
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Apr 12 04:35:13 2019 -0400
+
+    use DOCTYPE consistently in included xml files, to allow using named entities
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6f75d2fefcf4e5c158546590bcfafc73293e4038
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Apr 11 19:20:23 2019 -0400
+
+    add (with an external script "markup-literallayout") <code> tags
+    within <literallayout>.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d9afa0ca6e677b446ce43f2f189c08cfe87f68f3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 29 21:47:33 2019 -0400
+
+    whitespace-fixes, plus convert examples to standard C
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1dd873e7bf2239b338d2b8c35607139c0d3d6e84
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 28 20:17:57 2019 -0400
+
+    fix a typo
+
+commit 2e9edb068ef2a20fc33f484ffaf69174a0a0945a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 28 19:55:53 2019 -0400
+
+    change ambiguous String's to char* or const-char*, as well as adding the
+    missing parameters to one prototype
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6d19d615ce6b23f2b14340682851b5eba64e32ca
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 28 19:43:25 2019 -0400
+
+    The conversion to xml's funcdef dropped one or more parameters from several
+    functions.  This commit restores those parameters to the function prototypes.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ae2808046eafcbbd5e96ce36b6735f2888bd2a19
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 21:24:42 2019 -0400
+
+    correct prototype for XtInitialize; error in spec
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 01d9652e223ddbf0756a6f8a57db8f44f37fe03f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 21:19:16 2019 -0400
+
+    correct prototype for XtDisplay; error in spec
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 37a65d8a0b8021c8c09f173c57f0c75bb035d556
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 21:13:41 2019 -0400
+
+    corrected prototype for XtAppSetFallbackResources; error in spec
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 01ddc661a67d4b578f34c612a900fc5ef760d8de
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 21:08:20 2019 -0400
+
+    updated return-type for XtFindFile, also due to _CONST_X_STRING
+    
+    The previous commit also adds the standard "...", for variable-length parameter
+    lists, which was omitted from the specification.
+
+commit e357bd3b79216923820c0a024f95026fdd4a1cf3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 21:04:44 2019 -0400
+
+    modify function prototypes in spec to correspond to updates made in headers
+    for the _CONST_X_STRING feature.
+
+commit 27483d8a3252e2c2a451976d4a99622becd83fe8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 20:07:55 2019 -0400
+
+    update several function prototypes to use void-return or void-parameter,
+    which were not in the original spec because it accommodated K&R C.
+
+commit a8dcb749458a723dd76e342162c5c00b629374fe
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 19:38:46 2019 -0400
+
+    by the way - an overdue notification
+
+commit 5dd96a769ed02a0125fa2f84a2f27a1f75bdcc8e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 27 18:51:41 2019 -0400
+
+    fix: some ASCII characters were mangled into Unicode look-alikes
+
+commit 464d6f0d396880152d1475f37459c38de5373d4f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 24 14:32:41 2019 -0400
+
+    remove some debris...
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6b500c797a461c6da3baf6a1be208b232bf84366
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 23 11:51:55 2019 -0400
+
+    fix minor regression in prototype updates
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 101090b0a60c8bc9aa38c8fd42b35119739bc53f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 23 11:36:33 2019 -0400
+
+    avoid using C keyword "default" as parameter name
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 149159df368aaa50db9e3e02f725d147ff557dbd
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 23 06:46:42 2019 -0400
+
+    updated manual pages' C prototypes to agree with the header-files.
+    This takes into account the _CONST_X_STRING feature, distinguishing
+    between String and char* and const char*, but also in
+    several cases, such as XtSessionGetToken, the manual page was wrong.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+    
+    Conflicts:
+            man/XtAppErrorMsg.man
+
+commit e5a1e228e7ab7332d46db9278fa7af85ae889e70
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 21:18:22 2019 -0400
+
+    change return-type to avoid const-mismatches
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e98352cebda8de6a715f6c5f35e549dc8cd55b8b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 21:16:25 2019 -0400
+
+    fix const-mismatches in Tmstate.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 973ebb581a2cd92349728e36ada108a2d8c68bc8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 21:13:17 2019 -0400
+
+    fix const-mismatches in TMprint.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7aa775b5a238e16bc752fe78327a4a6c73369305
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 21:10:06 2019 -0400
+
+    fix const-mismatches in TMparse.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ec3e02c88a72462100254723f96589e30cee2e8f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 20:55:18 2019 -0400
+
+    fix shadowing warning for widgetClass parameter; no binary-change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5037c01093c6a56728cab3096107d80052132dd3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 20:51:06 2019 -0400
+
+    fix gcc warnings in Display.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e19a99a733b3f1ed1b7120ef8355e2a449639242
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 19:07:52 2019 -0400
+
+    resolve const-mismatches in Shell.c
+    
+    some of those fixes use casts which elicit stricter warnings, but that's a
+    tradeoff needed to work with Xt's assumption that certain strings are
+    allocated (or const) in the calling application.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ffeb733db1384c6ffde199747fd84efe2e8d7499
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 05:17:11 2019 -0400
+
+    resolve const-mismatches in internal functions of Intrinsic.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e53726577e18f37186d7996dc85dc82de9532d22
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 20 05:07:21 2019 -0400
+
+    Allow all of the "argv" strings to be writable, since those arrays may
+    be updated during initialization.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 13ed4421006c3bc7743233a401ce80f849dd889b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 19 21:20:03 2019 -0400
+
+    This is a minimal change which compiles when predefining _CONST_X_STRING,
+    by changing some function parameters and struct-members to _XtString
+    (always "char*") from String (which may be "const char *").  There are
+    still many compiler warnings; subsequent commits will reduce those.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d10e295117fdde9a085f12d90cab1adb978450bb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 16 15:37:46 2019 -0400
+
+    The last commit removed "IN" macro, but not the lines which used it.
+
+commit 3f13df93468658cd48bb63a2d836c60d62494e4a
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Apr 16 14:42:41 2019 +0200
+
+    Remove unused macros to ease maintenance
+    
+    After the last cleanups all the private macros are
+    now obsolet. They are removed with:
+    sed -e'/^\.de/,/^\.ny/d' -i
+
+commit 2b26e9a5473e399c81ae11b98d1f0b38393dbd8c
+Merge: 4b446ce 965bc25
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Apr 16 13:20:42 2019 +0200
+
+    Merge branch 'master' of ssh://gitlab.freedesktop.org/xorg/lib/libxt
+    
+    Conflicts:
+            man/XtManageChildren.man
+
+commit 965bc251c1d8391e672f277686254299627d4e3c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 19 20:31:29 2019 -0400
+
+    Referring to the xterm FAQ
+    
+            https://invisible-island.net/xterm/xterm.faq.html#building_it
+    
+    I would like to add an optional feature which makes the String typedef
+    "const" if _CONST_X_STRING is defined.  Modifying the Intrinsic.h header
+    is only a partial solution because the library has not been modified to
+    take advantage of this (if it had, most of the const-warnings from gcc
+    would go away).
+    
+    This change modifies the header file as well as the makestrs.c program
+    which generates Shell.h and StringDefs.h so that they use String-casts
+    rather than char*-casts (reducing the warnings seen when compiling with
+    Xt's header files).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c131d277ef061716b97e27cccc094bf1c0ae222f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 19 20:04:40 2019 -0400
+
+    eliminate casts of NULL for String* and Cardinal*, since those are unnecessary
+    as well as interfere with proposed const-string changes.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4b446ce8b20b1de1488c73e1841dafbd25ca949f
+Author: Walter Harms <wharms@bfs.de>
+Date:   Mon Apr 15 23:03:31 2019 +0200
+
+    remove in-text macros
+    
+    The in-text macros are a problem when maintaining the text.
+    While removing i noticed several problems with missing
+    definitions this is fixed also.
+
+commit c66f453b4089b7af7ee14be7c5f817e8dd98be1e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 10 20:09:29 2019 -0400
+
+    restore fixed-pitch formatting of code-examples
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a89acaec14bd988659ebdc2ebb4b99c1eea5aa7e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 10 19:49:35 2019 -0400
+
+    The ".BR" macro is used to join bold/regular text.
+    Use ".B" when only bold is intended.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cf9e8c73c4ffa671d580938c9a84d6ef0bd2710d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 17 17:19:45 2019 -0400
+
+    This cleans up the "easy" warning fixes which can be made using my
+    Regress script, comparing object-files before/after the edits:
+    
+            https://invisible-island.net/ansification/index.html
+            https://invisible-island.net/scripts/readme.html
+    
+    The changes are casts, which quiet the gcc warnings about implicit
+    conversion that my "gcc-normal" script would show.  I avoided
+    reformatting the code.
+    
+    The change reduces the number of gcc warnings from 769 to 163.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fb7e899e94dd402c868e8eb59ccf32284732f6ac
+Author: Walter Harms <wharms@bfs.de>
+Date:   Thu Apr 4 22:32:20 2019 +0200
+
+    FIX: add missing .fi
+
+commit 76ed3193af4416324a18795fe3bee4fb37e9791f
+Author: Walter Harms <wharms@bfs.de>
+Date:   Thu Apr 4 21:46:55 2019 +0200
+
+    replace the use of .Ds/.De macro with the std. RS/.RE macro
+    
+    this make way to remove all private macro definitions from
+    the header. Now only plain man macros are used.
+
+commit b01eaa82c190b390f6a0de74668ed88a41b3d6b8
+Author: Walter Harms <wharms@bfs.de>
+Date:   Thu Apr 4 18:58:44 2019 +0200
+
+    remove space after < for include filename
+    
+    using <X11/Xutil.h> instead of < X11/Xutil.h > make things
+    more easy and closer to std. man pages
+    
+    noted by Thomas Dickey
+
+commit 0f549e8992d568493415056ecda7fdbd7a6423ec
+Merge: 7caf7f4 38c5ee4
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Apr 3 17:06:30 2019 +0200
+
+    Merge branch 'master' of ssh://gitlab.freedesktop.org/xorg/lib/libxt
+    
+    Replace home made macros in man macros
+
+commit 7caf7f47d473e92cf0fc36bf03720765916c17be
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Apr 2 22:50:51 2019 +0200
+
+    replace .ZN with .BR
+    
+    By replacing we do two things:
+    1. this fixes the troff behavier
+    2. this moves us closer to std. man pages
+    3. after this patch the macro ZN can be deleted
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 3b5b654d5b539364a2f19b5206a79fb2e13f810f
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Apr 2 21:49:28 2019 +0200
+
+    Replace last two uses of .Pn with .ZN
+    
+    After this patch the macro can savely be removed.
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 38c5ee4f77c1d837ed8936bad5a3a354701aaed2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 18 05:06:06 2019 -0400
+
+    bzero was marked "legacy" in POSIX 2001, and is not part of the later revisions.
+    Use memset, which is standard (and supported for some 30 years).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 91c08f4d9cb915d5f7c3074db3e72ad15ec14c01
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 17 20:59:21 2019 -0400
+
+    Use standard size_t type in the casts for length-parameter of memcpy, memmove
+    and bzero.  When the library was written (1989), none of those had been
+    standardized, and the source-code used "(int)" casts to help with K&R
+    compilers.  The cleanup done in the previous update used binary-compare
+    to validate, which does not work for these because the compiler is recording
+    the cast's effect.
+    
+    This change reduces the number of gcc warnings from 163 to 128.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4004d85df9e81fc8bcddacae15a2715ccdd6627c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 13:21:55 2019 -0400
+
+    update the "Ds" macro in the other files, for consistency
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ca3f8db51e629e59d94873c41642d1e8b8324c9a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 13:16:28 2019 -0400
+
+    None of the versions of the "Ds" macro (going back to X11R4) worked with
+    groff, and would display badly.  Modified the macro in the files which use
+    it, to do what was intended.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4a04da5838bdea2893ebe63c97465fa7349d92ac
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 12:55:53 2019 -0400
+
+    fix typo from last change
+
+commit 56c998bc127581974fa277e4e2bfc3561ea3a897
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 12:34:08 2019 -0400
+
+    trim down the "De" macro by removing the parts that used never-defined registers
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fe0f501b0dfb2d69f5879588547d6994d93217c7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 12:23:22 2019 -0400
+
+    cleanup undefined macros in manpages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1b2b648dbbc6f10b36e7914de8388b66bc93b45f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 11:51:09 2019 -0400
+
+    split-up lines longer than 80 columns in manpages
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a009bc8f3d69a379593b21997bb08a73eb39a8f2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 11:47:40 2019 -0400
+
+    fix typo from last step
+
+commit b571da73755f65c206c0e7b82ade3876a921e2ea
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Mar 16 11:44:37 2019 -0400
+
+    trim undefined symbol "D" from ".Ds" macros in manpages.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7bdec43f299d2538d66f65892766bf3c5dd27056
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 15 21:04:44 2019 -0400
+
+    workaround for obsolete macro/command ".ny", in the manpages since late
+    1989 in X11R4.  The command was given a ".ny0", but nroff did not accept
+    more than two-character names, so it "should" have been ".ny 0".  Further,
+    since there is no standard macro "ny" (and no command), define a fallback.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 283db645c56a5aa55af1665c309182e492a3c863
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 15 20:06:26 2019 -0400
+
+    fix bug introduced by
+            commit 57c8b133bbcf38a9a1e345eabeeabe2a3e07c1c8,
+    which modified util/makestrs.c to avoid a shadowing warning of a
+    function parameter versus global variable, but overlooked use of the
+    parameter within the functions.  That caused all of the resource strings
+    in Shell.h to have the same value.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fe32434ab1a6a85d222b15e730fed9a5d8a74a2d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 12 04:34:28 2019 -0400
+
+    fix build when XT_GEO_TATTLER is defined
+    That turns on a debugging feature (activated by a resource setting).
+    Its use of <stdarg.h> was incorrect.  Also fix compiler warnings in
+    the related file.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b724cd0d25dffe0091bb101ba8f993d0305844d3
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 15 19:45:29 2019 +0100
+
+    resolv:assignment discards 'const' qualifier from pointer target
+
+commit 93713f5b050fb40973775e13d8430d524e2d4d10
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jan 11 23:49:57 2019 +0100
+
+    no need to check XFree arguments
+
+commit 57c8b133bbcf38a9a1e345eabeeabe2a3e07c1c8
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jan 11 22:54:47 2019 +0100
+
+    resolv:shadows a global declaration
+
+commit d51325e11253f99bdcf672062cc04de80bc9c7e2
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Jan 11 22:17:02 2019 +0100
+
+    alloc+bzero == calloc
+
+commit cc255601963479bd94c49851564f5004ac471093
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 23:10:10 2019 +0100
+
+    resolv:assignment discards 'const' qualifier from pointer target
+
+commit 12eda76f2c7ff5d43dd68d7ff0ebc29cf27e9897
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 22:26:25 2019 +0100
+
+    no need to check args for free
+
+commit bfd021ed1c2b126d3f78a1ffe639e25d11649b02
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 22:01:47 2019 +0100
+
+    resolv:shadows a previous local
+
+commit 252b69ea85041ac5b368c15afdb7d7b6dc28636e
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 21:54:51 2019 +0100
+
+    resolv:shadows a previous local
+
+commit c4897b56d853709aa2013ec16354e38f83465aaf
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 21:51:26 2019 +0100
+
+    resolv:shadows a previous local
+
+commit a343fb6d854dd345a0216435b97e51b8f4dd4425
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 21:45:09 2019 +0100
+
+    resolv:shadows a previous local
+
+commit 0aae899ba1724bfb16ab1bbe7238b3f75cbb6550
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 21:37:08 2019 +0100
+
+    resolv:shadows a previous local
+
+commit 102ba41a668568d7e7e506b0ab9f064d1f2c4ec5
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Jan 8 21:25:00 2019 +0100
+
+    no need to check XFree arguments
+
+commit 8a25977b7ef3a5e96e57d0d56d597c9436a14871
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:51:23 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dd0429f82298e294b7611fb6ed63a96af94e2ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:41:26 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0659374e8c1a39433f074226a65f29ae6147157e
+Author: Rin Okuyama <rin@NetBSD.org>
+Date:   Tue Feb 21 06:18:37 2017 +0000
+
+    avoid -Wformat errors from clang when building with -DDEBUG
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=99882
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ac10bc4b93942572118625c1c3b98e87d5ef9d7
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit b2d06ea97f0b45c9f9cba00279afc376a21f854d
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5c8f59030c9407e657ba6824dcec151e904fc42d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 238f339165921831333a962f0c4e8ef6612f3ce4
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Sep 8 11:51:12 2016 -0700
+
+    darwin: Don't build libXt with -flat_namespace
+    
+    Force clients to be well-behaved.  libXaw and libXaw3d were updated to not
+    depend on the flat_namespace hack, so be sure to also update to newer versions
+    of those libraries as well.
+    
+    cf-libXaw: b3049d9b13333c0e67f1f23959227020741f486b
+    cf-libXaw3d: b8891dae09e107be01520c41ca8d903fe74cf6a0
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit e8e2560e3391fa9c240235207a909855bfa7c73f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 27 18:54:57 2015 -0700
+
+    Get rid of some extraneous ; at the end of C source lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e7411e7e5299116604ff1f01d9415802607f1051
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 30 22:36:14 2015 -0700
@@ -664,9 +2266,9 @@ Date:   Thu Mar 10 14:23:44 2011 -0800
     
     Only two simple test cases to start with:
      - compares the results of snprintf of a short string to a static buffer
-    	with the new buffer returned by XtAsprintf.
+            with the new buffer returned by XtAsprintf.
      - compare the results of using XtAsprintf to replicate a portion of a
-    	very long string with the original string.
+            very long string with the original string.
     
     Uses malloc debugging flags for various platforms to try to catch errors
     with uninitialized memory (such as the recently fixed failure to terminate

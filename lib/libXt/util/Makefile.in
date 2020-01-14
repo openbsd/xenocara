@@ -284,7 +284,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 EXTRA_DIST = Shell.ht StrDefs.ct StrDefs.ht string.list $(appman_PRE)
-AM_CFLAGS = $(XT_CFLAGS)
 makestrs_SOURCES = makestrs.c
 
 # Man page

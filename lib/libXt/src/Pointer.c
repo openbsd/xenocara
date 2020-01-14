@@ -75,7 +75,7 @@ Widget _XtProcessPointerEvent(
 		{
 		    Cardinal		i;
 
-		    for (i = pdi->traceDepth;
+		    for (i = (Cardinal) pdi->traceDepth;
 			 i > 0 && !newGrab;
 			 i--)
 		      newGrab = _XtCheckServerGrabsOnWidget((XEvent*)event,
@@ -94,7 +94,7 @@ Widget _XtProcessPointerEvent(
 	case ButtonRelease:
 	  {
 	      if ((device->grabType == XtPassiveServerGrab) &&
-		  !(event->state & ~(Button1Mask << (event->button - 1)) &
+		  !(event->state & (unsigned)(~(Button1Mask << (event->button - 1))) &
 		    AllButtonsMask))
 		deactivateGrab = TRUE;
 	  }

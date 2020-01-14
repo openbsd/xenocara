@@ -67,7 +67,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(am__dist_shelf_DATA_DIST) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/docbook.am
+	$(srcdir)/Makefile.in $(srcdir)/libXt.ent.in \
+	$(top_srcdir)/docbook.am
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(docbook:.xml=.html)
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(docbook:.xml=.txt)
 @ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = $(docbook:.xml=.pdf) \
@@ -84,7 +85,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = libXt.ent
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -425,6 +426,8 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+libXt.ent: $(top_builddir)/config.status $(srcdir)/libXt.ent.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -130,7 +130,7 @@ externaldef(objectClass) WidgetClass objectClass
 
 
 static void ConstructCallbackOffsets(
-    WidgetClass widgetClass)
+    WidgetClass myWidgetClass)
 {
     static XrmQuark QCallback = NULLQUARK;
     register int i;
@@ -138,7 +138,7 @@ static void ConstructCallbackOffsets(
     register CallbackTable newTable;
     register CallbackTable superTable;
     register XrmResourceList resourceList;
-    ObjectClass objectClass = (ObjectClass)widgetClass;
+    ObjectClass myObjectClass = (ObjectClass)myWidgetClass;
 
     /*
       This function builds an array of pointers to the resource
@@ -150,9 +150,9 @@ static void ConstructCallbackOffsets(
     if (QCallback == NULLQUARK)
 	QCallback = XrmPermStringToQuark(XtRCallback);
 
-    if (objectClass->object_class.superclass != NULL) {
+    if (myObjectClass->object_class.superclass != NULL) {
 	superTable = (CallbackTable)
-	    ((ObjectClass) objectClass->object_class.superclass)->
+	    ((ObjectClass) myObjectClass->object_class.superclass)->
 		object_class.callback_private;
 	tableSize = (int)(long) superTable[0];
     } else {
@@ -161,8 +161,8 @@ static void ConstructCallbackOffsets(
     }
 
     /* Count the number of callbacks */
-    resourceList = (XrmResourceList) objectClass->object_class.resources;
-    for (i = objectClass->object_class.num_resources; --i >= 0; resourceList++)
+    resourceList = (XrmResourceList) myObjectClass->object_class.resources;
+    for (i = (int) myObjectClass->object_class.num_resources; --i >= 0; resourceList++)
 	if (resourceList->xrm_type == QCallback)
 	    tableSize++;
 
@@ -172,13 +172,13 @@ static void ConstructCallbackOffsets(
      * offsets so that resource overrides work.
      */
     newTable = (CallbackTable)
-	__XtMalloc(sizeof(XrmResource *) * (tableSize + 1));
+	__XtMalloc((Cardinal) (sizeof(XrmResource *) * (size_t) (tableSize + 1)));
 
     newTable[0] = (XrmResource *)(long) tableSize;
 
     if (superTable)
 	tableSize -= (int)(long) superTable[0];
-    resourceList = (XrmResourceList) objectClass->object_class.resources;
+    resourceList = (XrmResourceList) myObjectClass->object_class.resources;
     for (i=1; tableSize > 0; resourceList++)
 	if (resourceList->xrm_type == QCallback) {
 	    newTable[i++] = resourceList;
@@ -190,7 +190,7 @@ static void ConstructCallbackOffsets(
 	    --tableSize >= 0; superTable++)
 	    newTable[i++] = *superTable;
 
-    objectClass->object_class.callback_private = (XtPointer) newTable;
+    myObjectClass->object_class.callback_private = (XtPointer) newTable;
 }
 
 static void InheritObjectExtensionMethods(
@@ -258,15 +258,15 @@ static Boolean ObjectSetValues(
     ArgList	args,
     Cardinal *	num_args)
 {
-    register CallbackTable offsets;
-    register int i;
-    register InternalCallbackList *ol, *nl;
+    CallbackTable offsets;
+    int i;
 
     LOCK_PROCESS;
     /* Compile any callback lists into internal form */
     offsets = (CallbackTable) XtClass(widget)->core_class.callback_private;
 
     for (i= (int)(long) *(offsets++); --i >= 0; offsets++) {
+	InternalCallbackList *ol, *nl;
 	ol = (InternalCallbackList *)
 	    ((char *) old - (*offsets)->xrm_offset - 1);
 	nl = (InternalCallbackList *)
@@ -286,9 +286,8 @@ static Boolean ObjectSetValues(
 static void ObjectDestroy (
     register Widget    widget)
 {
-    register CallbackTable offsets;
-    register int i;
-    register InternalCallbackList cl;
+    CallbackTable offsets;
+    int i;
 
     /* Remove all callbacks associated with widget */
     LOCK_PROCESS;
@@ -296,7 +295,7 @@ static void ObjectDestroy (
 	widget->core.widget_class->core_class.callback_private;
 
     for (i = (int)(long) *(offsets++); --i >= 0; offsets++) {
-	cl = *(InternalCallbackList *)
+	InternalCallbackList cl = *(InternalCallbackList *)
 	    ((char *) widget - (*offsets)->xrm_offset - 1);
 	if (cl) XtFree((char *) cl);
     }

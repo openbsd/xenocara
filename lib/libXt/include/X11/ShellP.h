@@ -332,7 +332,7 @@ typedef struct {
 #endif
     XrmClass xrm_class;
     int argc;
-    char **argv;
+    _XtString *argv;
 } ApplicationShellPart;
 
 typedef  struct {
@@ -376,14 +376,14 @@ typedef struct _XtSaveYourselfRec *XtSaveYourself; /* implementation-private */
 
 typedef struct {
     SmcConn         connection;
-    String          session_id;
-    String*         restart_command;
-    String*         clone_command;
-    String*         discard_command;
-    String*         resign_command;
-    String*         shutdown_command;
-    String*         environment;
-    String          current_dir;
+    _XtString       session_id;
+    _XtString*      restart_command;
+    _XtString*      clone_command;
+    _XtString*      discard_command;
+    _XtString*      resign_command;
+    _XtString*      shutdown_command;
+    _XtString*      environment;
+    _XtString       current_dir;
     String          program_path;
     unsigned char   restart_style;
     unsigned char   checkpoint_state;

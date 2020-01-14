@@ -173,12 +173,12 @@ void _XtFillAncestorList(
 	       happen again, so grow the ancestor list */
 	    *maxElemsPtr += CACHESIZE;
 	    trace = (Widget *) XtRealloc((char*)trace,
-					 sizeof(Widget) * (*maxElemsPtr));
+					 (Cardinal)(sizeof(Widget) * (size_t)(*maxElemsPtr)));
 	}
 	trace[i] = w;
     }
     *listPtr = trace;
-    *numElemsPtr = i;
+    *numElemsPtr = (int) i;
 #undef CACHESIZE
 }
 

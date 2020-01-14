@@ -85,13 +85,14 @@ in this Software without prior written authorization from The Open Group.
 #include <direct.h>            /* for _getdrives() */
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 
 String XtCXtToolkitError = "XtToolkitError";
 
 Boolean XtIsSubclass(
     Widget    widget,
-    WidgetClass widgetClass)
+    WidgetClass myWidgetClass)
 {
     register WidgetClass w;
     Boolean retval = FALSE;
@@ -100,7 +101,7 @@ Boolean XtIsSubclass(
     LOCK_APP(app);
     LOCK_PROCESS;
     for (w = widget->core.widget_class; w != NULL; w = w->core_class.superclass)
-	if (w == widgetClass) {
+	if (w == myWidgetClass) {
 	    retval = TRUE;
 	    break;
 	}
@@ -128,7 +129,7 @@ Boolean _XtCheckSubclassFlag(
 
 Boolean _XtIsSubclassOf(
     Widget object,
-    WidgetClass widgetClass,
+    WidgetClass myWidgetClass,
     WidgetClass superClass,
     _XtXtEnum flag)
 {
@@ -139,7 +140,7 @@ Boolean _XtIsSubclassOf(
     } else {
 	register WidgetClass c = object->core.widget_class;
 	while (c != superClass) {
-	    if (c == widgetClass) {
+	    if (c == myWidgetClass) {
 		UNLOCK_PROCESS;
 		return True;
 	    }
@@ -180,7 +181,7 @@ static void ComputeWindowAttributes(
     XtExposeProc expose;
 
     *value_mask = CWEventMask | CWColormap;
-    (*values).event_mask = XtBuildEventMask(widget);
+    (*values).event_mask = (long) XtBuildEventMask(widget);
     (*values).colormap = widget->core.colormap;
     if (widget->core.background_pixmap != XtUnspecifiedPixmap) {
 	*value_mask |= CWBackPixmap;
@@ -249,11 +250,10 @@ static void MapChildren(
 {
     Cardinal i;
     WidgetList children;
-    register Widget child;
 
     children = cwp->children;
     for (i = 0; i <  cwp->num_children; i++) {
-	child = children[i];
+        Widget child = children[i];
 	if (XtIsWidget (child)){
 	    if (child->core.managed && child->core.mapped_when_managed) {
 		XtMapWidget (children[i]);
@@ -268,11 +268,10 @@ static Boolean ShouldMapAllChildren(
 {
     Cardinal i;
     WidgetList children;
-    register Widget child;
 
     children = cwp->children;
     for (i = 0; i < cwp->num_children; i++) {
-	child = children[i];
+	Widget child = children[i];
 	if (XtIsWidget(child)) {
 	    if (XtIsRealized(child) && (! (child->core.managed
 					  && child->core.mapped_when_managed))){
@@ -309,7 +308,7 @@ static void RealizeWidget(
 	XtAppErrorMsg(XtWidgetToApplicationContext(widget),
 		      "invalidProcedure","realizeProc",XtCXtToolkitError,
 		      "No realize class procedure defined",
-		      (String *)NULL, (Cardinal *)NULL);
+		      NULL, NULL);
     else {
 	CALLGEOTAT(_XtGeoTrace(widget,"Call \"%s\"[%d,%d]'s realize proc\n",
 		       XtName(widget),
@@ -332,8 +331,8 @@ static void RealizeWidget(
 	int len_nm, len_cl;
 	char *s;
 
-	len_nm = widget->core.name ? strlen(widget->core.name) : 0;
-	len_cl = strlen(class_name);
+	len_nm = widget->core.name ? (int) strlen(widget->core.name) : 0;
+	len_cl = (int) strlen(class_name);
 	s = __XtMalloc((unsigned) (len_nm + len_cl + 2));
 	s[0] = '\0';
 	if (len_nm)
@@ -402,8 +401,6 @@ static void UnrealizeWidget(
     Widget		widget)
 {
     CompositeWidget	cw;
-    Cardinal		i;
-    WidgetList		children;
 
     if (!XtIsWidget(widget) || !XtIsRealized(widget)) return;
 
@@ -412,6 +409,9 @@ static void UnrealizeWidget(
 
     /* Recurse on children */
     if (XtIsComposite (widget)) {
+	Cardinal i;
+	WidgetList children;
+
 	cw = (CompositeWidget) widget;
 	children = cw->composite.children;
 	/* Unrealize all children */
@@ -591,7 +591,6 @@ static Widget NameListToWidget(
     XrmBindingList  bindings,
     int in_depth, int *out_depth, int *found_depth)
 {
-    Widget w1, w2;
     int d1, d2;
 
     if (in_depth >= *found_depth) {
@@ -614,6 +613,8 @@ static Widget NameListToWidget(
 		in_depth, out_depth, found_depth);
 
     } else {	/* XrmBindLoosely */
+	Widget w1, w2;
+
 	w1 = SearchChildren(root, names, bindings, MatchExactChildren,
 		in_depth, &d1, found_depth);
 	w2 = SearchChildren(root, names, bindings, MatchWildChildren,
@@ -633,7 +634,7 @@ Widget XtNameToWidget(
     Widget result;
     WIDGET_TO_APPCON(root);
 
-    len = strlen(name);
+    len = (int) strlen(name);
     if (len == 0) return NULL;
 
     LOCK_APP(app);
@@ -962,7 +963,7 @@ static Boolean TestFile(
 #else
 	    (status.st_mode & S_IFMT) != S_IFDIR);	/* not a directory */
 #endif /* X_NOT_POSIX else */
-    return ret;
+    return (Boolean) ret;
 #else /* VMS */
     return TRUE;	/* Who knows what to do here? */
 #endif /* VMS */
@@ -1059,23 +1060,25 @@ static Boolean Resolve(
 }
 
 
-String XtFindFile(
-    _Xconst char* path,
+_XtString XtFindFile(
+    _Xconst _XtString path,
     Substitution substitutions,
     Cardinal num_substitutions,
     XtFilePredicate predicate)
 {
-    char *buf, *buf1, *buf2, *colon;
+    char *buf, *buf1, *buf2;
+    _Xconst _XtString colon;
     int len;
     Boolean firstTime = TRUE;
 
-    buf = buf1 = __XtMalloc((unsigned)PATH_MAX);
+    buf1 = __XtMalloc((unsigned)PATH_MAX);
     buf2 = __XtMalloc((unsigned)PATH_MAX);
+    buf = buf1;
 
     if (predicate == NULL) predicate = TestFile;
 
     while (1) {
-	colon = (String)path;
+	colon = path;
 	/* skip leading colons */
 	while (*colon) {
 	    if (*colon != ':') break;
@@ -1091,7 +1094,7 @@ String XtFindFile(
 	    if (*colon == ':')
 		break;
 	}
-	len = colon - path;
+	len = (int) (colon - path);
 	if (Resolve(path, len, substitutions, num_substitutions,
 		    buf, '/')) {
 	    if (firstTime || strcmp(buf1,buf2) != 0) {
@@ -1104,9 +1107,12 @@ String XtFindFile(
 #ifdef XNL_DEBUG
 		    printf("File found.\n");
 #endif /* XNL_DEBUG */
-		    if (buf == buf1) XtFree(buf2);
-		    else XtFree(buf1);
-		    return buf;
+		    if (buf == buf1) {
+			XtFree(buf2);
+			return buf1;
+		    }
+		    XtFree(buf1);
+		    return buf2;
 		}
 		if (buf == buf1)
 		    buf = buf2;
@@ -1133,7 +1139,7 @@ String XtFindFile(
 /* The implementation of this routine is operating system dependent */
 /* Should match the code in Xlib _XlcMapOSLocaleName */
 
-static char *ExtractLocaleName(
+static String ExtractLocaleName(
     String	lang)
 {
 
@@ -1183,13 +1189,16 @@ static char *ExtractLocaleName(
 #  endif
 # endif
 
-    char           *start;
-    char           *end;
+    String          start;
+    String          end;
     int             len;
 # ifdef SKIPCOUNT
     int		    n;
 # endif
     static char*    buf = NULL;
+# ifdef WHITEFILL
+    char *temp;
+# endif
 
     start = lang;
 # ifdef SKIPCOUNT
@@ -1213,15 +1222,15 @@ static char *ExtractLocaleName(
 # endif
 
 	if ((end = strchr (start, ENDCHAR))) {
-	    len = end - start;
-	    if (buf != NULL) XtFree (buf);
-	    buf = XtMalloc (len + 1);
+	    len = (int) (end - start);
+	    XtFree (buf);
+	    buf = XtMalloc ((Cardinal)(len + 1));
 	    if (buf == NULL) return NULL;
-	    strncpy(buf, start, len);
+	    strncpy(buf, start, (size_t) len);
 	    *(buf + len) = '\0';
 # ifdef WHITEFILL
-	    for (start = buf; start = strchr(start, ' '); )
-		*start++ = '-';
+	    for (temp = buf; (temp = strchr(temp, ' ')) != NULL; )
+		*temp++ = '-';
 # endif
 	    return buf;
 	} else  /* if no ENDCHAR is found we are at the end of the line */
@@ -1229,12 +1238,11 @@ static char *ExtractLocaleName(
     }
 # ifdef WHITEFILL
     if (strchr(lang, ' ')) {
-	if (buf != NULL) XtFree (buf);
-	else buf = XtMalloc (strlen (lang) + 1);
+	XtFree (buf);
+	buf = strdup (lang);
 	if (buf == NULL) return NULL;
-	strcpy(buf, lang);
-	for (start = buf; start = strchr(start, ' '); )
-	    *start++ = '-';
+	for (temp = buf; (temp = strchr(temp, ' ')) != NULL; )
+	    *temp++ = '-';
 	return buf;
     }
 # endif
@@ -1251,7 +1259,8 @@ static void FillInLangSubs(
     XtPerDisplay pd)
 {
     int len;
-    char *string, *p1, *p2, *p3;
+    String string;
+    char *p1, *p2, *p3;
     char **rest;
     char *ch;
 
@@ -1271,9 +1280,9 @@ static void FillInLangSubs(
 	return;
     }
 
-    len = strlen(string) + 1;
-    subs[0].substitution = string;
-    p1 = subs[1].substitution = __XtMalloc((Cardinal) 3*len);
+    len = (int) strlen(string) + 1;
+    subs[0].substitution = (_XtString) string;
+    p1 = subs[1].substitution = __XtMalloc((Cardinal) (3*len));
     p2 = subs[2].substitution = subs[1].substitution + len;
     p3 = subs[3].substitution = subs[2].substitution + len;
 
@@ -1285,8 +1294,8 @@ static void FillInLangSubs(
 
     ch = strchr(string, '_');
     if (ch != NULL) {
-	len = ch - string;
-	(void) strncpy(p1, string, len);
+	len = (int) (ch - string);
+	(void) strncpy(p1, string, (size_t) len);
 	p1[len] = '\0';
 	string = ch + 1;
 	rest = &p2;
@@ -1296,8 +1305,8 @@ static void FillInLangSubs(
 
     ch = strchr(string, '.');
     if (ch != NULL) {
-	len = ch - string;
-	strncpy(*rest, string, len);
+	len = (int) (ch - string);
+	strncpy(*rest, string, (size_t) len);
 	(*rest)[len] = '\0';
 	(void) strcpy(p3, ch+1);
     } else (void) strcpy(*rest, string);
@@ -1333,7 +1342,7 @@ static SubstitutionRec defaultSubs[] = {
 };
 
 
-String XtResolvePathname(
+_XtString XtResolvePathname(
     Display *dpy,
     _Xconst char* type,
     _Xconst char* filename,
@@ -1346,7 +1355,7 @@ String XtResolvePathname(
     XtPerDisplay pd;
     static const char *defaultPath = NULL;
     const char *impl_default = implementation_default_path();
-    int idef_len = strlen(impl_default);
+    int idef_len = (int) strlen(impl_default);
     char *massagedPath;
     int bytesAllocd, bytesLeft;
     char *ch, *result;
@@ -1378,7 +1387,7 @@ String XtResolvePathname(
     }
 
     bytesAllocd = bytesLeft = 1000;
-    massagedPath = ALLOCATE_LOCAL(bytesAllocd);
+    massagedPath = ALLOCATE_LOCAL((size_t)bytesAllocd);
     if (massagedPath == NULL) _XtAllocError(NULL);
 
     if (path[0] == ':') {
@@ -1398,7 +1407,7 @@ String XtResolvePathname(
 	    char *new;
 	    bytesAllocd +=1000;
 	    new = __XtMalloc((Cardinal) bytesAllocd);
-	    strncpy( new, massagedPath, bytesUsed );
+	    strncpy( new, massagedPath, (size_t) bytesUsed );
 	    ch = new + bytesUsed;
 	    if (pathMallocd)
 		XtFree(massagedPath);
@@ -1443,14 +1452,14 @@ String XtResolvePathname(
 	int i = XtNumber(defaultSubs);
 	Substitution sub, def;
 	merged_substitutions = sub = (Substitution)
-	    ALLOCATE_LOCAL((unsigned)(num_substitutions+i)*sizeof(SubstitutionRec));
+	    ALLOCATE_LOCAL((unsigned)(num_substitutions+(Cardinal)i)*sizeof(SubstitutionRec));
 	if (sub == NULL) _XtAllocError(NULL);
 	for (def = defaultSubs; i--; sub++, def++) sub->match = def->match;
-	for (i = num_substitutions; i--; ) *sub++ = *substitutions++;
+	for (i = (int) num_substitutions; i--; ) *sub++ = *substitutions++;
     }
-    merged_substitutions[0].substitution = (String)filename;
-    merged_substitutions[1].substitution = (String)type;
-    merged_substitutions[2].substitution = (String)suffix;
+    merged_substitutions[0].substitution = (_XtString)filename;
+    merged_substitutions[1].substitution = (_XtString)type;
+    merged_substitutions[2].substitution = (_XtString)suffix;
     name_list[0] = pd->name;
     name_list[1] = XrmPermStringToQuark("customization");
     name_list[2] = NULLQUARK;
@@ -1566,14 +1575,13 @@ _XtGeoTab (int direction)  /* +1 or -1 */
 
 
 void
-_XtGeoTrace (Widget widget, ...)
+_XtGeoTrace (Widget widget, const char *fmt, ...)
 {
-    va_list args;
-    char *fmt;
-    int i ;
     if (IsTattled(widget)) {
-	va_start(args, widget);
-	fmt = va_arg(args, char *);
+	va_list args;
+	int i ;
+
+	va_start(args, fmt);
 	for (i=0; i<n_tab; i++) printf("     ");
 	(void) vprintf(fmt, args);
 	va_end(args);

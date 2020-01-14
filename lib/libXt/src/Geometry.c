@@ -85,7 +85,7 @@ static void ClearRectObjAreas(
     bw2 = old->border_width << 1;
     XClearArea( XtDisplay(pw), XtWindow(pw),
 		old->x, old->y,
-		old->width + bw2, old->height + bw2,
+		(unsigned)(old->width + bw2), (unsigned)(old->height + bw2),
 		TRUE );
 
     bw2 = r->rectangle.border_width << 1;
@@ -116,7 +116,9 @@ _XtMakeGeometryRequest (
     XtGeometryHandler manager = (XtGeometryHandler) NULL;
     XtGeometryResult returnCode;
     Widget parent = widget->core.parent;
-    Boolean managed, parentRealized, rgm = False;
+    Boolean managed;
+    Boolean parentRealized = False;
+    Boolean rgm = False;
     XtConfigureHookDataRec req;
     Widget hookobj;
 
@@ -163,21 +165,22 @@ _XtMakeGeometryRequest (
 	parentRealized = TRUE;
 	UNLOCK_PROCESS;
     } else /* not shell */ {
-	if (parent == NULL)
+	if (parent == NULL) {
 	    XtAppErrorMsg(XtWidgetToApplicationContext(widget),
 			  "invalidParent","xtMakeGeometryRequest",
 			  XtCXtToolkitError,
 			  "non-shell has no parent in XtMakeGeometryRequest",
-			  (String *)NULL, (Cardinal *)NULL);
-
-	managed = XtIsManaged(widget);
-	parentRealized = XtIsRealized(parent);
-	if (XtIsComposite(parent))
-	{
-	    LOCK_PROCESS;
-	    manager = ((CompositeWidgetClass) (parent->core.widget_class))
-		      ->composite_class.geometry_manager;
-	    UNLOCK_PROCESS;
+			  NULL, NULL);
+	} else {
+	    managed = XtIsManaged(widget);
+	    parentRealized = XtIsRealized(parent);
+	    if (XtIsComposite(parent))
+	    {
+		LOCK_PROCESS;
+		manager = ((CompositeWidgetClass) (parent->core.widget_class))
+			  ->composite_class.geometry_manager;
+		UNLOCK_PROCESS;
+	    }
 	}
     }
 
@@ -201,7 +204,7 @@ _XtMakeGeometryRequest (
 			  "invalidParent", "xtMakeGeometryRequest",
 			  XtCXtToolkitError,
 			  "XtMakeGeometryRequest - parent not composite",
-			  (String *)NULL, (Cardinal *)NULL);
+			  NULL, NULL);
 	}
 	else if (manager == (XtGeometryHandler) NULL)
 	{
@@ -209,7 +212,7 @@ _XtMakeGeometryRequest (
 			  "invalidGeometryManager","xtMakeGeometryRequest",
 			  XtCXtToolkitError,
 			  "XtMakeGeometryRequest - parent has no geometry manager",
-			  (String *)NULL, (Cardinal *)NULL);
+			  NULL, NULL);
 	}
     }
 #else
@@ -430,7 +433,7 @@ _XtMakeGeometryRequest (
 		if (XtIsWidget(request->sibling))
 		    req.changes.sibling = XtWindow(request->sibling);
 		else
-		    req.changeMask &= ~(CWStackMode | CWSibling);
+		    req.changeMask = (XtGeometryMask) (req.changeMask & (unsigned long) (~(CWStackMode | CWSibling)));
 	    }
 	}
 
@@ -456,7 +459,7 @@ _XtMakeGeometryRequest (
 
 	ClearRectObjAreas((RectObj)widget, &req.changes);
     }
-    hookobj = XtHooksOfDisplay(XtDisplayOfObject(widget));;
+    hookobj = XtHooksOfDisplay(XtDisplayOfObject(widget));
     if (XtHasCallbacks(hookobj, XtNconfigureHook) == XtCallbackHasSome) {
 	req.type = XtHconfigure;
 	req.widget = widget;
@@ -522,8 +525,8 @@ XtMakeResizeRequest(
 
     LOCK_APP(app);
     request.request_mode = CWWidth | CWHeight;
-    request.width = width;
-    request.height = height;
+    request.width = (Dimension) width;
+    request.height = (Dimension) height;
 
     if (XtHasCallbacks(hookobj, XtNgeometryHook) == XtCallbackHasSome) {
 	call_data.type = XtHpreGeometry;
@@ -546,13 +549,13 @@ XtMakeResizeRequest(
 	if (r == XtGeometryAlmost && reply.request_mode & CWWidth)
 	    *replyWidth = reply.width;
 	else
-	    *replyWidth = width;
+	    *replyWidth = (Dimension) width;
     }
     if (replyHeight != NULL) {
 	if (r == XtGeometryAlmost && reply.request_mode & CWHeight)
 	    *replyHeight = reply.height;
 	else
-	    *replyHeight = height;
+	    *replyHeight = (Dimension) height;
     }
     UNLOCK_APP(app);
     return ((r == XtGeometryDone) ? XtGeometryYes : r);
@@ -562,18 +565,19 @@ void XtResizeWindow(
     Widget w)
 {
     XtConfigureHookDataRec req;
-    Widget hookobj;
     WIDGET_TO_APPCON(w);
 
     LOCK_APP(app);
     if (XtIsRealized(w)) {
+        Widget hookobj;
+
 	req.changes.width = w->core.width;
 	req.changes.height = w->core.height;
 	req.changes.border_width = w->core.border_width;
 	req.changeMask = CWWidth | CWHeight | CWBorderWidth;
 	XConfigureWindow(XtDisplay(w), XtWindow(w),
 	    (unsigned) req.changeMask, &req.changes);
-	hookobj = XtHooksOfDisplay(XtDisplayOfObject(w));;
+	hookobj = XtHooksOfDisplay(XtDisplayOfObject(w));
 	if (XtHasCallbacks(hookobj, XtNconfigureHook) == XtCallbackHasSome) {
 	    req.type = XtHconfigure;
 	    req.widget = w;
@@ -603,7 +607,6 @@ void XtConfigureWidget(
     _XtDimension borderWidth)
 {
     XtConfigureHookDataRec req;
-    Widget hookobj;
     XWindowChanges old;
     WIDGET_TO_APPCON(w);
 
@@ -617,38 +620,40 @@ void XtConfigureWidget(
     req.changeMask = 0;
     if ((old.x = w->core.x) != x) {
 	CALLGEOTAT(_XtGeoTrace(w,"x move from %d to %d\n",w->core.x, x));
-	req.changes.x = w->core.x = x;
+	req.changes.x = w->core.x = (Position) x;
 	req.changeMask |= CWX;
     }
 
     if ((old.y = w->core.y) != y) {
 	CALLGEOTAT(_XtGeoTrace(w,"y move from %d to %d\n",w->core.y, y));
-	req.changes.y = w->core.y = y;
+	req.changes.y = w->core.y = (Position) y;
 	req.changeMask |= CWY;
     }
 
     if ((old.width = w->core.width) != width) {
 	CALLGEOTAT(_XtGeoTrace(w,
 			 "width move from %d to %d\n",w->core.width, width));
-	req.changes.width = w->core.width = width;
+	req.changes.width = w->core.width = (Dimension) width;
 	req.changeMask |= CWWidth;
     }
 
     if ((old.height = w->core.height) != height) {
 	CALLGEOTAT(_XtGeoTrace(w,
 		       "height move from %d to %d\n",w->core.height, height));
-	req.changes.height = w->core.height = height;
+	req.changes.height = w->core.height = (Dimension) height;
 	req.changeMask |= CWHeight;
     }
 
     if ((old.border_width = w->core.border_width) != borderWidth) {
 	CALLGEOTAT(_XtGeoTrace(w,"border_width move from %d to %d\n",
 		    w->core.border_width,borderWidth ));
-	req.changes.border_width = w->core.border_width = borderWidth;
+	req.changes.border_width = w->core.border_width = (Dimension) borderWidth;
 	req.changeMask |= CWBorderWidth;
     }
 
     if (req.changeMask != 0) {
+        Widget hookobj;
+
 	if (XtIsRealized(w)) {
 	    if (XtIsWidget(w)) {
 		CALLGEOTAT(_XtGeoTrace(w,
@@ -661,7 +666,7 @@ void XtConfigureWidget(
 		ClearRectObjAreas((RectObj)w, &old);
 	    }
 	}
-	hookobj = XtHooksOfDisplay(XtDisplayOfObject(w));;
+	hookobj = XtHooksOfDisplay(XtDisplayOfObject(w));
 	if (XtHasCallbacks(hookobj, XtNconfigureHook) == XtCallbackHasSome) {
 	    req.type = XtHconfigure;
 	    req.widget = w;
@@ -712,24 +717,24 @@ void XtTranslateCoords(
     if (rootx == NULL) rootx = &garbagex;
     if (rooty == NULL) rooty = &garbagey;
 
-    *rootx = x;
-    *rooty = y;
+    *rootx = (Position) x;
+    *rooty = (Position) y;
 
     for (; w != NULL && ! XtIsShell(w); w = w->core.parent) {
-	*rootx += w->core.x + w->core.border_width;
-	*rooty += w->core.y + w->core.border_width;
+	*rootx = (Position) (*rootx + w->core.x + w->core.border_width);
+	*rooty = (Position) (*rooty + w->core.y + w->core.border_width);
     }
 
     if (w == NULL)
         XtAppWarningMsg(app,
 		"invalidShell","xtTranslateCoords",XtCXtToolkitError,
                 "Widget has no shell ancestor",
-		(String *)NULL, (Cardinal *)NULL);
+		NULL, NULL);
     else {
-	Position x, y;
-	_XtShellGetCoordinates( w, &x, &y );
-	*rootx += x + w->core.border_width;
-	*rooty += y + w->core.border_width;
+	Position x2, y2;
+	_XtShellGetCoordinates( w, &x2, &y2 );
+	*rootx = (Position) (*rootx + x2 + w->core.border_width);
+	*rooty = (Position) (*rooty + y2 + w->core.border_width);
     }
     UNLOCK_APP(app);
 }

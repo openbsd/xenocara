@@ -86,9 +86,7 @@ XtVaGetSubresources(
     _XtGetSubresources(widget, base, name, class, resources, num_resources,
 	NULL, 0, args, num_args);
 
-    if (num_args != 0) {
-	XtFree((XtPointer)args);
-    }
+    XtFree((XtPointer)args);
 
     va_end(var);
     UNLOCK_APP(app);
@@ -116,9 +114,7 @@ XtVaGetApplicationResources(Widget widget, XtPointer base, XtResourceList resour
     _XtGetApplicationResources(widget, base, resources, num_resources,
 	NULL, 0, args, num_args);
 
-    if (num_args != 0) {
-	XtFree((XtPointer)args);
-    }
+    XtFree((XtPointer)args);
 
     va_end(var);
     UNLOCK_APP(app);
@@ -153,7 +149,7 @@ GetTypedArg(
 	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
             "unknownType", XtNxtGetTypedArg, XtCXtToolkitError,
             "Unable to find type of resource for conversion",
-            (String *)NULL, (Cardinal *)NULL);
+            NULL, NULL);
  	return;
     }
 
@@ -165,7 +161,7 @@ GetTypedArg(
     from_val.size = from_size;
     from_val.addr = (XPointer)value;
     to_val.addr = (XPointer)typed_arg->value;
-    to_val.size = typed_arg->size;
+    to_val.size = (unsigned) typed_arg->size;
 
     if (!XtConvertAndStore(widget, from_type, &from_val,
 			   typed_arg->type, &to_val)) {
@@ -238,47 +234,47 @@ XtVaGetValues(Widget widget, ...)
     _XtCountVaList(var, &total_count, &typed_count);
 
     if (total_count != typed_count) {
-        args = (ArgList)__XtMalloc((unsigned)((total_count - typed_count)
-				* sizeof(Arg)));
+	size_t limit = (size_t)(total_count - typed_count);
+        args = (ArgList)__XtMalloc((unsigned)(limit * sizeof(Arg)));
     }
     else args = NULL;		/* for lint; really unused */
     va_end(var);
 
-    va_start(var,widget);
-    for(attr = va_arg(var, String), count = 0 ; attr != NULL;
-			attr = va_arg(var, String)) {
-	if (strcmp(attr, XtVaTypedArg) == 0) {
-	    typed_arg.name = va_arg(var, String);
-	    typed_arg.type = va_arg(var, String);
-	    typed_arg.value = va_arg(var, XtArgVal);
-	    typed_arg.size = va_arg(var, int);
+    if (args != NULL) {
+	va_start(var,widget);
+	for(attr = va_arg(var, String), count = 0 ; attr != NULL;
+			    attr = va_arg(var, String)) {
+	    if (strcmp(attr, XtVaTypedArg) == 0) {
+		typed_arg.name = va_arg(var, String);
+		typed_arg.type = va_arg(var, String);
+		typed_arg.value = va_arg(var, XtArgVal);
+		typed_arg.size = va_arg(var, int);
 
-	    if (resources == NULL) {
-		XtGetResourceList(XtClass(widget), &resources,&num_resources);
+		if (resources == NULL) {
+		    XtGetResourceList(XtClass(widget), &resources,&num_resources);
+		}
+
+		GetTypedArg(widget, &typed_arg, resources, num_resources);
+	    } else if (strcmp(attr, XtVaNestedList) == 0) {
+		if (resources == NULL) {
+		    XtGetResourceList(XtClass(widget),&resources, &num_resources);
+		}
+
+		count += GetNestedArg(widget, va_arg(var, XtTypedArgList),
+					 (args+count), resources, num_resources);
+	    } else {
+		args[count].name = attr;
+		args[count].value = va_arg(var, XtArgVal);
+		count ++;
 	    }
-
-	    GetTypedArg(widget, &typed_arg, resources, num_resources);
-	} else if (strcmp(attr, XtVaNestedList) == 0) {
-	    if (resources == NULL) {
-		XtGetResourceList(XtClass(widget),&resources, &num_resources);
-	    }
-
-	    count += GetNestedArg(widget, va_arg(var, XtTypedArgList),
-				     (args+count), resources, num_resources);
-	} else {
-	    args[count].name = attr;
-	    args[count].value = va_arg(var, XtArgVal);
-	    count ++;
 	}
-    }
-    va_end(var);
-
-    if (resources != (XtResourceList)NULL) {
-	XtFree((XtPointer)resources);
+	va_end(var);
     }
 
-    if (total_count != typed_count) {
-	XtGetValues(widget, args, count);
+    XtFree((XtPointer)resources);
+
+    if (args != NULL) {
+	XtGetValues(widget, args, (Cardinal) count);
 	XtFree((XtPointer)args);
     }
     UNLOCK_APP(app);
@@ -307,7 +303,5 @@ XtVaGetSubvalues(XtPointer base,XtResourceList  resources, Cardinal num_resource
 
     XtGetSubvalues(base, resources, num_resources, args, num_args);
 
-    if (num_args != 0) {
-        XtFree((XtPointer)args);
-    }
+    XtFree((XtPointer)args);
 }

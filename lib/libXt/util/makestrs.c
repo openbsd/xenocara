@@ -35,7 +35,7 @@ typedef struct _TableEnt {
     struct _TableEnt* next;
     char* left;
     char* right;
-    int offset;
+    size_t offset;
 } TableEnt;
 
 typedef struct _Table {
@@ -44,7 +44,7 @@ typedef struct _Table {
     TableEnt* tableentcurrent;
     TableEnt** tableenttail;
     char* name;
-    int offset;
+    size_t offset;
 } Table;
 
 typedef struct _File {
@@ -88,7 +88,7 @@ static int   solaris_abi_names = FALSE;
  * commandline. Needed to separate source and build directories.
  */
 static char* includedir = NULL;
-static FILE *ifopen(const char *file, const char *mode)
+static FILE *ifopen(const char *myfile, const char *mode)
 {
 #ifndef HAVE_ASPRINTF
     size_t len;
@@ -97,18 +97,18 @@ static FILE *ifopen(const char *file, const char *mode)
     FILE *ret;
 
     if (includedir == NULL)
-        return fopen(file, mode);
+        return fopen(myfile, mode);
 
 #ifdef HAVE_ASPRINTF
-    if (asprintf(&buffer, "%s/%s", includedir, file) == -1)
+    if (asprintf(&buffer, "%s/%s", includedir, myfile) == -1)
         return NULL;
 #else
-    len = strlen(file) + strlen(includedir) + 1;
+    len = strlen(myfile) + strlen(includedir) + 1;
     buffer = (char*)malloc(len + 1);
     if (buffer == NULL)
         return NULL;
 
-    snprintf(buffer, len + 1, "%s/%s", includedir, file);
+    snprintf(buffer, len + 1, "%s/%s", includedir, myfile);
 #endif
 
     ret = fopen(buffer, mode);
@@ -123,7 +123,7 @@ static void WriteHeaderProlog (FILE *f, File *phile)
     TableEnt* te;
 
     (void) fprintf (f, "#ifdef %s\n", featurestr);
-    for (t = phile->table; t; t = t->next)
+    for (t = phile->table; t; t = t->next) {
 	for (te = t->tableent; te; te = te->next) {
 	    if (strcmp (te->left, "RAtom") == 0) {
 		(void) fprintf (f,
@@ -135,6 +135,7 @@ static void WriteHeaderProlog (FILE *f, File *phile)
 			prefixstr, te->left, te->right);
 	    }
 	}
+    }
     (void) fprintf (f, "%s", "#else\n");
 }
 
@@ -148,10 +149,12 @@ static void IntelABIWriteHeader (FILE *f, File *phile)
     for (t = phile->table; t; t = t->next) {
       (void) fprintf (f, "%s %sConst char %s[];\n",
 		      externrefstr, conststr ? conststr : fileprotstr, t->name);
-	for (te = t->tableent; te; te = te->next)
+	for (te = t->tableent; te; te = te->next) {
 	    (void) fprintf (f,
-		"#ifndef %s%s\n#define %s%s ((char*)&%s[%d])\n#endif\n",
-		prefixstr, te->left, prefixstr, te->left, t->name, te->offset);
+		"#ifndef %s%s\n#define %s%s ((String)&%s[%lu])\n#endif\n",
+		prefixstr, te->left, prefixstr, te->left, t->name,
+		(unsigned long) te->offset);
+	}
     }
 
     (void) fprintf (f, "#endif /* %s */\n", featurestr);
@@ -162,10 +165,12 @@ static void SPARCABIWriteHeader (FILE *f, File *phile)
     Table* t;
     TableEnt* te;
 
-    for (t = phile->table; t; t = t->next)
-	for (te = t->tableent; te; te = te->next)
+    for (t = phile->table; t; t = t->next) {
+	for (te = t->tableent; te; te = te->next) {
 	    (void) fprintf (f, "#define %s%s \"%s\"\n",
 			    prefixstr, te->left, te->right);
+	}
+    }
 }
 
 static void FunctionWriteHeader (FILE *f, File *phile)
@@ -179,12 +184,14 @@ static void FunctionWriteHeader (FILE *f, File *phile)
 		    externrefstr, conststr ? conststr : fileprotstr,
 		    phile->table->name);
 
-    for (t = phile->table; t; t = t->next)
-	for (te = t->tableent; te; te = te->next)
+    for (t = phile->table; t; t = t->next) {
+	for (te = t->tableent; te; te = te->next) {
 	    (void) fprintf (f,
-		"#ifndef %s%s\n#define %s%s (%s(%d))\n#endif\n",
+		"#ifndef %s%s\n#define %s%s (%s(%lu))\n#endif\n",
 		prefixstr, te->left, prefixstr, te->left, phile->table->name,
-		te->offset);
+		(unsigned long) te->offset);
+	}
+    }
 
     (void) fprintf (f, "#endif /* %s */\n", featurestr);
 }
@@ -196,13 +203,15 @@ static void ArrayperWriteHeader (FILE *f, File *phile)
 
     WriteHeaderProlog (f, phile);
 
-    for (t = phile->table; t; t = t->next)
-        for (te = t->tableent; te; te = te->next)
+    for (t = phile->table; t; t = t->next) {
+        for (te = t->tableent; te; te = te->next) {
 	    (void) fprintf (f,
 			    "#ifndef %s%s\n%s %sConst char %s%s[];\n#endif\n",
 			    prefixstr, te->left,
 			    externrefstr, conststr ? conststr : fileprotstr,
 			    prefixstr, te->left);
+	}
+    }
 
     (void) fprintf (f, "#endif /* %s */\n", featurestr);
 }
@@ -218,12 +227,14 @@ static void DefaultWriteHeader (FILE *f, File *phile)
 		    externrefstr, conststr ? conststr : fileprotstr,
 		    phile->table->name);
 
-    for (t = phile->table; t; t = t->next)
-	for (te = t->tableent; te; te = te->next)
+    for (t = phile->table; t; t = t->next) {
+	for (te = t->tableent; te; te = te->next) {
 	    (void) fprintf (f,
-		"#ifndef %s%s\n#define %s%s ((char*)&%s[%d])\n#endif\n",
+		"#ifndef %s%s\n#define %s%s ((String)&%s[%lu])\n#endif\n",
 		prefixstr, te->left, prefixstr, te->left, phile->table->name,
-		te->offset);
+		(unsigned long) te->offset);
+	}
+    }
 
     (void) fprintf (f, "#endif /* %s */\n", featurestr);
 }
@@ -232,7 +243,7 @@ static void CopyTmplProlog (FILE *tmpl, FILE *f)
 {
     char buf[1024];
     static const char* magic_string = X_MAGIC_STRING;
-    int magic_string_len = strlen (magic_string);
+    size_t magic_string_len = strlen (magic_string);
 
     while (fgets (buf, sizeof buf, tmpl)) {
 	if (strncmp (buf, magic_string, magic_string_len) == 0) {
@@ -316,7 +327,7 @@ static void WriteSourceLine (TableEnt *te, int abi, int fudge)
     (void) printf ("%s", "\n");
 }
 
-static const char* const_string = "%s %sConst char %s[] = {\n";
+#define const_string "%s %sConst char %s[] = {\n"
 
 static void IntelABIWriteSource (int abi)
 {
@@ -329,8 +340,9 @@ static void IntelABIWriteSource (int abi)
 	for (t = phile->table; t; t = t->next) {
 	    (void) printf (const_string, externdefstr,
 			   conststr ? conststr : "", t->name);
-	    for (te = t->tableent; te; te = te->next)
+	    for (te = t->tableent; te; te = te->next) {
 		WriteSourceLine (te, abi, 0);
+	    }
 	    (void) printf ("%s\n\n", "};");
 	}
     }
@@ -347,17 +359,21 @@ static void IntelABIBCWriteSource (int abi)
 	(void) printf (const_string, externdefstr,
 		       conststr ? conststr : "", phile->table->name);
 
-	for (t = phile->table; t; t = t->next)
-	    for (te = t->tableent; te; te = te->next)
+	for (t = phile->table; t; t = t->next) {
+	    for (te = t->tableent; te; te = te->next) {
 		WriteSourceLine (te, abi, t->next ? 1 : 0);
+	    }
+	}
 	(void) printf ("%s\n\n", "};");
 
 	if (phile->table->next) {
 	    (void) printf (const_string, externdefstr,
 			   conststr ? conststr : "", phile->table->next->name);
-	    for (t = phile->table->next; t; t = t->next)
-		for (te = t->tableent; te; te = te->next)
+	    for (t = phile->table->next; t; t = t->next) {
+		for (te = t->tableent; te; te = te->next) {
 		    WriteSourceLine (te, abi, 0);
+		}
+	    }
 	    (void) printf ("%s\n\n", "};");
 	}
     }
@@ -374,9 +390,11 @@ static void FunctionWriteSource (int abi)
 	(void) printf ("static %sConst char _%s[] = {\n",
 		       conststr ? conststr : "", phile->table->name);
 
-	for (t = phile->table; t; t = t->next)
-	    for (te = t->tableent; te; te = te->next)
+	for (t = phile->table; t; t = t->next) {
+	    for (te = t->tableent; te; te = te->next) {
 		WriteSourceLine (te, abi, t->next ? 1 : 0);
+	    }
+	}
 	(void) printf ("%s\n\n", "};");
 
 	(void) printf ("%sConst char* %s(index)\n    int index;\n{\n    return &_%s[index];\n}\n\n",
@@ -394,7 +412,7 @@ static void ArrayperWriteSource (int abi)
 	Table* t;
 	TableEnt* te;
 
-	for (t = phile->table; t; t = t->next)
+	for (t = phile->table; t; t = t->next) {
 	    for (te = t->tableent; te; te = te->next) {
 		if (strcmp (te->left, "RAtom") == 0) {
 		    if (done_atom) return;
@@ -405,6 +423,7 @@ static void ArrayperWriteSource (int abi)
 			       prefixstr,
 			       te->left, te->right);
 	    }
+	}
     }
 }
 
@@ -419,9 +438,11 @@ static void DefaultWriteSource (int abi)
 	(void) printf (const_string, externdefstr, conststr ? conststr : "",
 		       phile->table->name);
 
-	for (t = phile->table; t; t = t->next)
-	    for (te = t->tableent; te; te = te->next)
+	for (t = phile->table; t; t = t->next) {
+	    for (te = t->tableent; te; te = te->next) {
 		WriteSourceLine (te, abi, t->next ? 1 : 0);
+	    }
+	}
 	(void) printf ("%s\n\n", "};");
     }
 }
@@ -457,7 +478,10 @@ static void WriteSource(char *tagline, int abi)
 
     (*sourceproc[abi])(abi);
 
-    if (tmpl) CopyTmplEpilog (tmpl, stdout);
+    if (tmpl) {
+	CopyTmplEpilog (tmpl, stdout);
+	fclose(tmpl);
+    }
 }
 
 static void DoLine(char *buf)
@@ -586,9 +610,9 @@ static void DoLine(char *buf)
 	{
 	    char* right;
 	    TableEnt* tableent;
-	    int llen;
-	    int rlen;
-	    int len;
+	    size_t llen;
+	    size_t rlen;
+	    size_t len;
 
 	    if ((right = strchr(buf, ' ')))
 		*right++ = 0;
@@ -602,7 +626,8 @@ static void DoLine(char *buf)
 	    llen = len = strlen(buf) + 1;
 	    rlen = strlen(right) + 1;
 	    if (right != buf + 1) len += rlen;
-	    if ((tableent = (TableEnt*)malloc(sizeof(TableEnt) + len)) == NULL)
+	    tableent = (TableEnt*)calloc(sizeof(TableEnt) + len, 1);
+	    if (tableent == NULL)
 		exit(1);
 	    tableent->left = (char *)(tableent + 1);
 	    strcpy(tableent->left, buf);
@@ -622,44 +647,46 @@ static void DoLine(char *buf)
     }
 }
 
-static void IntelABIIndexEntries (File *file)
+static void IntelABIIndexEntries (File *myfile)
 {
     Table* t;
     TableEnt* te;
 
-    for (t = file->table; t; t = t->next)
+    for (t = myfile->table; t; t = t->next) {
 	for (te = t->tableent; te; te = te->next) {
 	    te->offset = t->offset;
 	    t->offset += strlen (te->right);
 	    t->offset++;
+	}
     }
 }
 
-static void DefaultIndexEntries (File *file)
+static void DefaultIndexEntries (File *myfile)
 {
     Table* t;
     TableEnt* te;
-    int offset = 0;
+    size_t offset = 0;
 
-    for (t = file->table; t; t = t->next)
+    for (t = myfile->table; t; t = t->next) {
 	for (te = t->tableent; te; te = te->next) {
 	    te->offset = offset;
 	    offset += strlen (te->right);
 	    offset++;
+	}
     }
 }
 
-static void IndexEntries (File *file, int abi)
+static void IndexEntries (File *myfile, int abi)
 {
     switch (abi) {
     case X_SPARC_ABI:
 	break;
     case X_INTEL_ABI:
     case X_INTEL_ABI_BC:
-	IntelABIIndexEntries (file);
+	IntelABIIndexEntries (myfile);
 	break;
     default:
-	DefaultIndexEntries (file);
+	DefaultIndexEntries (myfile);
 	break;
     }
 }
@@ -669,12 +696,12 @@ static char* DoComment (char *line)
     char* tag;
     char* eol;
     char* ret;
-    int len;
+    size_t len;
 
     /* assume that the first line with two '$' in it is the RCS tag line */
     if ((tag = strchr (line, '$')) == NULL) return NULL;
     if ((eol = strchr (tag + 1, '$')) == NULL) return NULL;
-    len = eol - tag;
+    len = (size_t)(eol - tag);
     if ((ret = malloc (len)) == NULL)
 	exit (1);
     (void) strncpy (ret, tag + 1, len - 1);
@@ -684,7 +711,7 @@ static char* DoComment (char *line)
 
 int main(int argc, char *argv[])
 {
-    int len, i;
+    size_t len;
     char* tagline = NULL;
     File* phile;
     FILE *f;
@@ -698,6 +725,7 @@ int main(int argc, char *argv[])
 
     f = stdin;
     if (argc > 1) {
+	int i;
 	for (i = 1; i < argc; i++) {
 	    if (strcmp (argv[i], "-f") == 0) {
 		if (++i < argc)
@@ -706,10 +734,12 @@ int main(int argc, char *argv[])
 		    return 1;
 	    }
 	    if (strcmp (argv[i], "-i") == 0) {
-		if (++i < argc)
+		if (++i < argc) {
 		    includedir = argv[i];
-		else
+		} else {
+		    if (f != 0 && f != stdin) fclose(f);
 		    return 1;
+		}
 	    }
 	    if (strcmp (argv[i], "-sparcabi") == 0)
 		abi = X_SPARC_ABI;

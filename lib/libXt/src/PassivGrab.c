@@ -111,7 +111,7 @@ static void DeleteDetailFromMask(
 	int i;
 	pDetailMask = (Mask *)__XtMalloc(sizeof(Mask) * MasksPerDetailMask);
 	for (i = MasksPerDetailMask; --i >= 0; )
-	    pDetailMask[i] = ~0;
+	    pDetailMask[i] = (unsigned long) (~0);
 	*ppDetailMask = pDetailMask;
     }
     BITCLEAR((pDetailMask), detail);
@@ -166,13 +166,13 @@ static XtServerGrabPtr CreateGrab(
 				      : 0));
     grab->next = NULL;
     grab->widget = widget;
-    grab->ownerEvents = ownerEvents;
-    grab->pointerMode = pointer_mode;
-    grab->keyboardMode = keyboard_mode;
-    grab->eventMask = event_mask;
-    grab->hasExt = need_ext;
+    XtSetBit(grab->ownerEvents, ownerEvents);
+    XtSetBit(grab->pointerMode, pointer_mode);
+    XtSetBit(grab->keyboardMode, keyboard_mode);
+    grab->eventMask = (unsigned short)event_mask;
+    XtSetBit(grab->hasExt, need_ext);
     grab->confineToIsWidgetWin = (XtWindow (widget) == confine_to);
-    grab->modifiers = modifiers;
+    grab->modifiers = (unsigned short) modifiers;
     grab->keybut = keybut;
     if (need_ext) {
 	XtServerGrabExtPtr ext = GRABEXT(grab);
@@ -578,7 +578,7 @@ XtServerGrabPtr _XtCheckServerGrabsOnWidget (
      * Extension may be representing keyboard group state in two upper bits.
      */
     tempGrab.widget = widget;
-    tempGrab.keybut = event->xkey.keycode; /* also xbutton.button */
+    tempGrab.keybut = (KeyCode) event->xkey.keycode; /* also xbutton.button */
     tempGrab.modifiers = event->xkey.state & 0x1FFF; /*also xbutton.state*/
     tempGrab.hasExt = False;
 
@@ -655,8 +655,6 @@ static void MakeGrabs(
     XtPerDisplayInput	pdi)
 {
     XtServerGrabPtr	next = *passiveListPtr;
-    XtServerGrabPtr	grab;
-    XtPerWidgetInput	pwi;
     /*
      * make MakeGrab build a new list that has had the merge
      * processing done on it. Start with an empty list
@@ -666,6 +664,9 @@ static void MakeGrabs(
     *passiveListPtr = NULL;
     while (next)
       {
+	  XtServerGrabPtr grab;
+	  XtPerWidgetInput pwi;
+
 	  grab = next;
 	  next = grab->next;
 	  pwi = _XtGetPerWidgetInput(grab->widget, FALSE);
@@ -782,8 +783,8 @@ void   UngrabKeyOrButton (
 
     /* Build a temporary grab list entry */
     tempGrab.widget = widget;
-    tempGrab.modifiers = modifiers;
-    tempGrab.keybut = keyOrButton;
+    tempGrab.modifiers = (unsigned short) modifiers;
+    tempGrab.keybut = (KeyCode) keyOrButton;
     tempGrab.hasExt = False;
 
     LOCK_PROCESS;
@@ -797,7 +798,7 @@ void   UngrabKeyOrButton (
 	  XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		       "invalidGrab", "ungrabKeyOrButton", XtCXtToolkitError,
 		       "Attempt to remove nonexistent passive grab",
-		       (String *)NULL, (Cardinal *)NULL);
+		       NULL, NULL);
 	  return;
       }
 
@@ -809,7 +810,7 @@ void   UngrabKeyOrButton (
 		       widget->core.window);
 	  else
 	    XUngrabButton(widget->core.screen->display,
-			  keyOrButton, (unsigned int)modifiers,
+			  (unsigned) keyOrButton, (unsigned int)modifiers,
 			  widget->core.window);
       }
 
@@ -830,7 +831,7 @@ void  XtGrabKey (
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
-    GrabKeyOrButton(widget, (KeyCode)keycode, modifiers, owner_events,
+    GrabKeyOrButton(widget, (KeyCode)keycode, modifiers, (Boolean) owner_events,
 		    pointer_mode, keyboard_mode,
 		    (Mask)0, (Window)None, (Cursor)None, KEYBOARD);
     UNLOCK_APP(app);
@@ -850,7 +851,7 @@ void  XtGrabButton(
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
-    GrabKeyOrButton(widget, (KeyCode)button, modifiers, owner_events,
+    GrabKeyOrButton(widget, (KeyCode)button, modifiers, (Boolean) owner_events,
 		    pointer_mode, keyboard_mode,
 		    (Mask)event_mask, confine_to, cursor, POINTER);
     UNLOCK_APP(app);
@@ -912,7 +913,7 @@ static int GrabDevice (
     UNLOCK_PROCESS;
     if (!isKeyboard)
       returnVal = XGrabPointer(XtDisplay(widget), XtWindow(widget),
-			       owner_events, event_mask,
+			       owner_events, (unsigned) event_mask,
 			       pointer_mode, keyboard_mode,
 			       confine_to, cursor, time);
     else
@@ -928,9 +929,9 @@ static int GrabDevice (
 	  device->grab.widget = widget;
 	  device->grab.modifiers = 0;
 	  device->grab.keybut = 0;
-	  device->grab.ownerEvents = owner_events;
-	  device->grab.pointerMode = pointer_mode;
-	  device->grab.keyboardMode = keyboard_mode;
+	  XtSetBit(device->grab.ownerEvents, owner_events);
+	  XtSetBit(device->grab.pointerMode, pointer_mode);
+	  XtSetBit(device->grab.keyboardMode, keyboard_mode);
 	  device->grab.hasExt = False;
 	  device->grabType = XtActiveServerGrab;
 	  pdi->activatingKey = (KeyCode)0;
@@ -982,7 +983,7 @@ int XtGrabKeyboard (
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
-    retval = GrabDevice (widget, owner_events,
+    retval = GrabDevice (widget, (Boolean) owner_events,
 			pointer_mode, keyboard_mode,
 			(Mask)0, (Window)None, (Cursor)None, time, KEYBOARD);
     UNLOCK_APP(app);
@@ -1025,7 +1026,7 @@ int XtGrabPointer (
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
-    retval = GrabDevice (widget, owner_events,
+    retval = GrabDevice (widget, (Boolean) owner_events,
 			pointer_mode, keyboard_mode,
 			(Mask)event_mask, confine_to,
 			cursor, time, POINTER);

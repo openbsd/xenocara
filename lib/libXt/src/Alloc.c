@@ -128,7 +128,7 @@ void _XtHeapInit(
  * require varargs macros everywhere, which are only standard in C99 & later.
  */
 Cardinal XtAsprintf(
-    String *new_string,
+    _XtString *new_string,
     _Xconst char * _X_RESTRICT_KYWD format,
     ...)
 {
@@ -143,20 +143,20 @@ Cardinal XtAsprintf(
     if (len < 0)
 	_XtAllocError("vsnprintf");
 
-    *new_string = XtMalloc(len + 1); /* snprintf doesn't count trailing '\0' */
+    *new_string = XtMalloc((Cardinal) len + 1); /* snprintf doesn't count trailing '\0' */
     if (len < sizeof(buf))
     {
-	strncpy(*new_string, buf, len);
+	strncpy(*new_string, buf, (size_t) len);
 	(*new_string)[len] = '\0';
     }
     else
     {
 	va_start(ap, format);
-	if (vsnprintf(*new_string, len + 1, format, ap) < 0)
+	if (vsnprintf(*new_string, (size_t) (len + 1), format, ap) < 0)
 	    _XtAllocError("vsnprintf");
 	va_end(ap);
     }
-    return len;
+    return (Cardinal) len;
 }
 
 
@@ -214,7 +214,7 @@ char *XtCalloc(
 void XtFree(
     char *ptr)
 {
-    if (ptr != NULL) Xfree(ptr);
+    free(ptr);
 }
 
 char* __XtMalloc(
@@ -249,10 +249,10 @@ char* _XtHeapAlloc(
 	if ((bytes + sizeof(char*)) >= (HEAP_SEGMENT_SIZE>>1)) {
 	    /* preserve current segment; insert this one in front */
 #ifdef _TRACE_HEAP
-	    printf( "allocating large segment (%d bytes) on heap %#x\n",
+	    printf( "allocating large segment (%d bytes) on heap %p\n",
 		    bytes, heap );
 #endif
-	    heap_loc = XtMalloc(bytes + sizeof(char*));
+	    heap_loc = XtMalloc(bytes + (Cardinal) sizeof(char*));
 	    if (heap->start) {
 		*(char**)heap_loc = *(char**)heap->start;
 		*(char**)heap->start = heap_loc;
@@ -265,7 +265,7 @@ char* _XtHeapAlloc(
 	}
 	/* else discard remainder of this segment */
 #ifdef _TRACE_HEAP
-	printf( "allocating new segment on heap %#x\n", heap );
+	printf( "allocating new segment on heap %p\n", heap );
 #endif
 	heap_loc = XtMalloc((unsigned)HEAP_SEGMENT_SIZE);
 	*(char**)heap_loc = heap->start;
@@ -273,10 +273,10 @@ char* _XtHeapAlloc(
 	heap->current = heap_loc + sizeof(char*);
 	heap->bytes_remaining = HEAP_SEGMENT_SIZE - sizeof(char*);
     }
-    bytes = (bytes + (sizeof(long) - 1)) & (~(sizeof(long) - 1));
+    bytes = (Cardinal) ((bytes + (sizeof(long) - 1)) & (~(sizeof(long) - 1)));
     heap_loc = heap->current;
     heap->current += bytes;
-    heap->bytes_remaining -= bytes; /* can be negative, if rounded */
+    heap->bytes_remaining = (heap->bytes_remaining - (int) bytes); /* can be negative, if rounded */
     return heap_loc;
 }
 
@@ -307,7 +307,7 @@ void _XtHeapFree(
 typedef struct _Stats *StatsPtr;
 typedef struct _Stats {
     StatsPtr prev, next;
-    char *file;
+    const char *file;
     int line;
     unsigned size;
     unsigned long seq;
@@ -317,9 +317,9 @@ typedef struct _Stats {
 static StatsPtr XtMemory = (StatsPtr)NULL;
 static unsigned long ActiveXtMemory = 0;
 static unsigned long XtSeqId = 0;
-static unsigned long XtSeqBreakpoint = ~0;
+static unsigned long XtSeqBreakpoint = (unsigned long)(~0UL);
 
-#define StatsSize(n) ((((n) + (sizeof(long) - 1)) & ~(sizeof(long) - 1)) + sizeof(Stats))
+#define StatsSize(n) (unsigned)((((n) + (sizeof(long) - 1)) & ~(sizeof(long) - 1)) + sizeof(Stats))
 #define ToStats(ptr) ((StatsPtr)(ptr - sizeof(Stats)))
 #define ToMem(ptr) (((char *)ptr) + sizeof(Stats))
 
@@ -349,7 +349,7 @@ static void _XtBreakpoint(
 
 char *_XtMalloc(
     unsigned size,
-    char *file,
+    const char *file,
     int line)
 {
     StatsPtr ptr;
@@ -375,7 +375,7 @@ char *XtMalloc(
 char *_XtRealloc(
     char     *ptr,
     unsigned size,
-    char *file,
+    const char *file,
     int line)
 {
    char *newptr;
@@ -401,7 +401,7 @@ char *XtRealloc(
 
 char *_XtCalloc(
     unsigned num, unsigned size,
-    char *file,
+    const char *file,
     int line)
 {
     StatsPtr ptr;
@@ -475,7 +475,7 @@ void XtFree(char *ptr)
 char *_XtHeapMalloc(
     Heap *heap,
     Cardinal size,
-    char *file,
+    const char *file,
     int line)
 {
     StatsPtr ptr;
@@ -493,7 +493,7 @@ char *_XtHeapMalloc(
     return retval;
 }
 
-void _XtHeapFree(register XtPointer heap)
+void _XtHeapFree(Heap* heap)
 {
     register StatsPtr mem, next;
 
@@ -517,7 +517,7 @@ void _XtHeapFree(register XtPointer heap)
 
 #include <stdio.h>
 
-void _XtPrintMemory(char * filename)
+void _XtPrintMemory(const char * filename)
 {
     register StatsPtr mem;
     FILE *f;
@@ -527,10 +527,10 @@ void _XtPrintMemory(char * filename)
     else
 	f = fopen(filename, "w");
     LOCK_PROCESS;
-    fprintf(f, "total size: %d\n", ActiveXtMemory);
+    fprintf(f, "total size: %lu\n", ActiveXtMemory);
     for (mem = XtMemory; mem; mem = mem->next) {
 	if (mem->file)
-	    fprintf(f, "size: %6d  seq: %5d  %12s(%4d)  %s\n",
+	    fprintf(f, "size: %6d  seq: %5lu  %12s(%4d)  %s\n",
 		    mem->size, mem->seq,
 		    mem->file, mem->line, mem->heap ? "heap" : "");
     }

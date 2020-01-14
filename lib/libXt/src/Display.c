@@ -84,7 +84,7 @@ void (*_XtProcessUnlock)(void) = NULL;
 void (*_XtInitAppLock)(XtAppContext) = NULL;
 #endif
 
-static String XtNnoPerDisplay = "noPerDisplay";
+static _Xconst _XtString XtNnoPerDisplay = "noPerDisplay";
 
 ProcessContext _XtGetProcessContext(void)
 {
@@ -120,19 +120,19 @@ static void AddToAppContext(
 #define DISPLAYS_TO_ADD 4
 
 	if (app->count >= app->max) {
-	    app->max += DISPLAYS_TO_ADD;
+	    app->max = (short) (app->max + DISPLAYS_TO_ADD);
 	    app->list = (Display **) XtRealloc((char *)app->list,
-		    (unsigned) app->max * sizeof(Display *));
+		    (Cardinal) (((size_t) app->max) * sizeof(Display *)));
 	}
 
 	app->list[app->count++] = d;
 	app->rebuild_fdlist = TRUE;
-#ifndef USE_POLL
+#ifdef USE_POLL
+	app->fds.nfds++;
+#else
 	if (ConnectionNumber(d) + 1 > app->fds.nfds) {
 	    app->fds.nfds = ConnectionNumber(d) + 1;
 	}
-#else
-	app->fds.nfds++;
 #endif
 #undef DISPLAYS_TO_ADD
 }
@@ -151,13 +151,13 @@ static void XtDeleteFromAppContext(
 	    app->count--;
 	}
 	app->rebuild_fdlist = TRUE;
-#ifndef USE_POLL
+#ifdef USE_POLL
+	app->fds.nfds--;
+#else
 	if ((ConnectionNumber(d) + 1) == app->fds.nfds)
 	    app->fds.nfds--;
 	else			/* Unnecessary, just to be fool-proof */
 	    FD_CLR(ConnectionNumber(d), &app->fds.rmask);
-#else
-	app->fds.nfds--;
 #endif
 }
 
@@ -218,8 +218,8 @@ static XtPerDisplay InitPerDisplay(
     pd->pdi.keyboard.grabType = XtNoServerGrab;
     pd->pdi.pointer.grabType  = XtNoServerGrab;
     _XtAllocWWTable(pd);
-    pd->per_screen_db = (XrmDatabase *)__XtCalloc(ScreenCount(dpy),
-						sizeof(XrmDatabase));
+    pd->per_screen_db = (XrmDatabase *)__XtCalloc((Cardinal)ScreenCount(dpy),
+						(Cardinal)sizeof(XrmDatabase));
     pd->cmd_db = (XrmDatabase)NULL;
     pd->server_db = (XrmDatabase)NULL;
     pd->dispatcher_list = NULL;
@@ -243,17 +243,16 @@ static XtPerDisplay InitPerDisplay(
 
 Display *XtOpenDisplay(
 	XtAppContext app,
-	_Xconst char* displayName,
-	_Xconst char* applName,
-	_Xconst char* className,
+	_Xconst _XtString displayName,
+	_Xconst _XtString applName,
+	_Xconst _XtString className,
 	XrmOptionDescRec *urlist,
 	Cardinal num_urs,
 	int *argc,
-	String *argv)
+	_XtString *argv)
 {
 	Display *d;
 	XrmDatabase db = NULL;
-	XtPerDisplay pd;
 	String language = NULL;
 
 	LOCK_APP(app);
@@ -282,15 +281,16 @@ Display *XtOpenDisplay(
 	}
 
 	if (d) {
+	    XtPerDisplay pd;
 	    pd = InitPerDisplay(d, app, applName, className);
 	    pd->language = language;
 	    _XtDisplayInitialize(d, pd, applName, urlist, num_urs, argc, argv);
 	} else {
 	    int len;
 	    displayName = XDisplayName(displayName);
-	    len = strlen (displayName);
-	    app->display_name_tried = (String) __XtMalloc (len + 1);
-	    strncpy ((char*) app->display_name_tried, displayName, len + 1);
+	    len = (int) strlen (displayName);
+	    app->display_name_tried = (_XtString) __XtMalloc ((Cardinal)(len + 1));
+	    strncpy ((char*) app->display_name_tried, displayName, (size_t) (len + 1));
 	    app->display_name_tried[len] = '\0';
 	}
 	if (db) XrmDestroyDatabase(db);
@@ -305,10 +305,10 @@ _XtAppInit(
 	XrmOptionDescRec *options,
 	Cardinal num_options,
 	int *argc_in_out,
-	String **argv_in_out,
+	_XtString **argv_in_out,
 	String * fallback_resources)
 {
-    String *saved_argv;
+    _XtString *saved_argv;
     int i;
     Display *dpy;
 
@@ -316,8 +316,8 @@ _XtAppInit(
  * Save away argv and argc so we can set the properties later
  */
 
-    saved_argv = (String *)
-	__XtMalloc( (Cardinal)((*argc_in_out + 1) * sizeof(String)) );
+    saved_argv = (_XtString *)
+	__XtMalloc( (Cardinal)((size_t)(*argc_in_out + 1) * sizeof(_XtString)) );
 
     for (i = 0 ; i < *argc_in_out ; i++) saved_argv[i] = (*argv_in_out)[i];
     saved_argv[i] = NULL;	/* NULL terminate that sucker. */
@@ -329,7 +329,7 @@ _XtAppInit(
     if (fallback_resources) /* save a procedure call */
 	XtAppSetFallbackResources(*app_context_return, fallback_resources);
 
-    dpy = XtOpenDisplay(*app_context_return, (String) NULL, NULL,
+    dpy = XtOpenDisplay(*app_context_return, NULL, NULL,
 			application_class,
 			options, num_options, argc_in_out, *argv_in_out);
 
@@ -349,12 +349,12 @@ void
 XtDisplayInitialize(
 	XtAppContext app,
 	Display *dpy,
-	_Xconst char* name,
-	_Xconst char* classname,
+	_Xconst _XtString name,
+	_Xconst _XtString classname,
 	XrmOptionDescRec *urlist,
 	Cardinal num_urs,
 	int *argc,
-	String *argv
+	_XtString *argv
 	)
 {
     XtPerDisplay pd;
@@ -507,7 +507,7 @@ void XtDestroyApplicationContext(XtAppContext app)
 	    _XtAppDestroyCount++;
 	    appDestroyList =
 		    (XtAppContext *) XtRealloc((char *) appDestroyList,
-		    (unsigned) (_XtAppDestroyCount * sizeof(XtAppContext)));
+		    (unsigned) ((size_t)_XtAppDestroyCount * sizeof(XtAppContext)));
 	    appDestroyList[_XtAppDestroyCount-1] = app;
 	    UNLOCK_PROCESS;
 	    UNLOCK_APP(app);
@@ -520,7 +520,7 @@ void _XtDestroyAppContexts(void)
 	XtAppContext apps[8];
 	XtAppContext* pApps;
 
-	pApps = XtStackAlloc (sizeof (XtAppContext) * _XtAppDestroyCount, apps);
+	pApps = XtStackAlloc (sizeof (XtAppContext) * (size_t)_XtAppDestroyCount, apps);
 
 	for (i = ii = 0; i < _XtAppDestroyCount; i++) {
 	    if (_XtSafeToDestroy(appDestroyList[i]))
@@ -555,6 +555,7 @@ PerDisplayTablePtr _XtperDisplayList = NULL;
 XtPerDisplay _XtSortPerDisplayList(Display *dpy)
 {
 	register PerDisplayTablePtr pd, opd = NULL;
+	XtPerDisplay result = NULL;
 
 	LOCK_PROCESS;
 	for (pd = _XtperDisplayList;
@@ -566,18 +567,19 @@ XtPerDisplay _XtSortPerDisplayList(Display *dpy)
 	if (pd == NULL) {
 	    XtErrorMsg(XtNnoPerDisplay, "getPerDisplay", XtCXtToolkitError,
 		    "Couldn't find per display information",
-		    (String *) NULL, (Cardinal *)NULL);
-	}
+		    NULL, NULL);
+	} else {
+	    if (pd != _XtperDisplayList) {	/* move it to the front */
+		/* opd points to the previous one... */
 
-	if (pd != _XtperDisplayList) {	/* move it to the front */
-	    /* opd points to the previous one... */
-
-	    opd->next = pd->next;
-	    pd->next = _XtperDisplayList;
-	    _XtperDisplayList = pd;
+		opd->next = pd->next;
+		pd->next = _XtperDisplayList;
+		_XtperDisplayList = pd;
+	    }
+	    result = &(pd->perDpy);
 	}
 	UNLOCK_PROCESS;
-	return &(pd->perDpy);
+	return result;
 }
 
 XtAppContext XtDisplayToApplicationContext(Display *dpy)
@@ -590,10 +592,9 @@ XtAppContext XtDisplayToApplicationContext(Display *dpy)
 
 static void CloseDisplay(Display *dpy)
 {
-        register XtPerDisplay xtpd;
+        register XtPerDisplay xtpd = NULL;
 	register PerDisplayTablePtr pd, opd = NULL;
 	XrmDatabase db;
-	int i;
 
 	XtDestroyWidget(XtHooksOfDisplay(dpy));
 
@@ -607,15 +608,18 @@ static void CloseDisplay(Display *dpy)
 	if (pd == NULL) {
 	    XtErrorMsg(XtNnoPerDisplay, "closeDisplay", XtCXtToolkitError,
 		    "Couldn't find per display information",
-		    (String *) NULL, (Cardinal *)NULL);
+		    NULL, NULL);
+	} else {
+
+	    if (pd == _XtperDisplayList) _XtperDisplayList = pd->next;
+	    else opd->next = pd->next;
+
+	    xtpd = &(pd->perDpy);
 	}
 
-	if (pd == _XtperDisplayList) _XtperDisplayList = pd->next;
-	else opd->next = pd->next;
-
-	xtpd = &(pd->perDpy);
-
         if (xtpd != NULL) {
+	    int i;
+
 	    if (xtpd->destroy_callbacks != NULL) {
 		XtCallCallbackList((Widget) NULL,
 				   (XtCallbackList)xtpd->destroy_callbacks,
@@ -653,7 +657,7 @@ static void CloseDisplay(Display *dpy)
 		XrmDestroyDatabase(xtpd->cmd_db);
 	    if (xtpd->server_db)
 		XrmDestroyDatabase(xtpd->server_db);
-	    XtFree(xtpd->language);
+	    XtFree((_XtString)xtpd->language);
 	    if (xtpd->dispatcher_list != NULL)
 		XtFree((char *) xtpd->dispatcher_list);
 	    if (xtpd->ext_select_list != NULL)
@@ -683,7 +687,7 @@ void XtCloseDisplay(Display *dpy)
 	    app->dpy_destroy_count++;
 	    app->dpy_destroy_list = (Display **)
 		XtRealloc((char *) app->dpy_destroy_list,
-		    (unsigned) (app->dpy_destroy_count * sizeof(Display *)));
+		    (Cardinal) ((size_t)app->dpy_destroy_count * sizeof(Display *)));
 	    app->dpy_destroy_list[app->dpy_destroy_count-1] = dpy;
 	}
 	UNLOCK_APP(app);
@@ -756,8 +760,8 @@ void XtGetDisplays(
 {
     int ii;
     LOCK_APP(app_context);
-    *num_dpy_return = app_context->count;
-    *dpy_return = (Display**)__XtMalloc(app_context->count * sizeof(Display*));
+    *num_dpy_return = (Cardinal)app_context->count;
+    *dpy_return = (Display**)__XtMalloc((Cardinal)((size_t)app_context->count * sizeof(Display*)));
     for (ii = 0; ii < app_context->count; ii++)
 	(*dpy_return)[ii] = app_context->list[ii];
     UNLOCK_APP(app_context);

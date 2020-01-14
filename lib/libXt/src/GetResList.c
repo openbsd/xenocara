@@ -90,14 +90,14 @@ void XtGetResourceList(
 	register XtResourceList *list, dlist;
 
 	LOCK_PROCESS;
-	size = widget_class->core_class.num_resources * sizeof(XtResource);
+	size = (int) (widget_class->core_class.num_resources * sizeof(XtResource));
 	*resources = (XtResourceList) __XtMalloc((unsigned) size);
 
 	if (!widget_class->core_class.class_inited) {
 	    /* Easy case */
 
 	    (void) memmove((char *) *resources,
-			   (char *)widget_class->core_class.resources, size);
+			   (char *)widget_class->core_class.resources, (size_t) size);
 	    *num_resources = widget_class->core_class.num_resources;
 	    UNLOCK_PROCESS;
 	    return;
@@ -161,14 +161,14 @@ void XtGetConstraintResourceList(
 	    return;
 	}
 
-	size = class->constraint_class.num_resources * sizeof(XtResource);
+	size = (int) (class->constraint_class.num_resources * sizeof(XtResource));
 	*resources = (XtResourceList) __XtMalloc((unsigned) size);
 
 	if (!class->core_class.class_inited) {
 	    /* Easy case */
 
 	    (void) memmove((char *) *resources,
-			   (char *)class->constraint_class.resources, size);
+			   (char *)class->constraint_class.resources, (size_t) size);
 	    *num_resources = class->constraint_class.num_resources;
 	    UNLOCK_PROCESS;
 	    return;

@@ -96,7 +96,7 @@ void _XtCopyFromParent(
 	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		"invalidParent","xtCopyFromParent",XtCXtToolkitError,
                   "CopyFromParent must have non-NULL parent",
-		  (String *)NULL, (Cardinal *)NULL);
+		  NULL, NULL);
         value->addr = NULL;
         return;
     }
@@ -110,7 +110,7 @@ void _XtCopyFromArg(
     register unsigned int size)
 {
     if (size > sizeof(XtArgVal))
-	(void) memmove((char *) dst, (char *)  src, (int) size);
+	(void) memmove((char *) dst, (char *)  src, (size_t) size);
     else {
 	union {
 	    long	longval;
@@ -133,7 +133,7 @@ void _XtCopyFromArg(
 	else if (size == sizeof(char*))	    u.charptr = (char*)src;
 	else				    p = (char*)&src;
 
-	(void) memmove(dst, p, (int) size);
+	(void) memmove(dst, p, (size_t) size);
     }
 } /* _XtCopyFromArg */
 
@@ -158,7 +158,7 @@ void _XtCopyToArg(
 	    XtPointer	ptr;
 	} u;
 	if (size <= sizeof(XtArgVal)) {
-	    (void) memmove((char*)&u, (char*)src, (int)size );
+	    (void) memmove((char*)&u, (char*)src, (size_t)size );
 	    if	    (size == sizeof(long)) 	*dst = (XtArgVal)u.longval;
 #ifdef LONG64
 	    else if (size == sizeof(int))	*dst = (XtArgVal)u.intval;
@@ -167,18 +167,18 @@ void _XtCopyToArg(
 	    else if (size == sizeof(char))	*dst = (XtArgVal)u.charval;
 	    else if (size == sizeof(char*))	*dst = (XtArgVal)u.charptr;
 	    else if (size == sizeof(XtPointer))	*dst = (XtArgVal)u.ptr;
-	    else (void) memmove((char*)dst, (char*)src, (int)size );
+	    else (void) memmove((char*)dst, (char*)src, (size_t)size );
 	}
 	else
-	    (void) memmove((char*)dst, (char*)src, (int)size );
+	    (void) memmove((char*)dst, (char*)src, (size_t)size );
 #else
 	XtErrorMsg("invalidGetValues", "xtGetValues", XtCXtToolkitError,
-	    "NULL ArgVal in XtGetValues", (String*) NULL, (Cardinal*) NULL);
+	    "NULL ArgVal in XtGetValues", NULL, NULL);
 #endif
     }
     else {
 	/* proper GetValues semantics: argval is pointer to destination */
-	(void) memmove((char*)*dst, (char*)src, (int)size );
+	(void) memmove((char*)*dst, (char*)src, (size_t)size );
     }
 } /* _XtCopyToArg */
 
@@ -202,7 +202,7 @@ static void CopyToArg(
 	    XtPointer	ptr;
 	} u;
 	if (size <= sizeof(XtArgVal)) {
-	    (void) memmove((char*)&u, (char*)src, (int)size );
+	    (void) memmove((char*)&u, (char*)src, (size_t)size );
 	    if	    (size == sizeof(long)) 	*dst = (XtArgVal)u.longval;
 #ifdef LONG64
 	    else if (size == sizeof(int))	*dst = (XtArgVal)u.intval;
@@ -211,14 +211,14 @@ static void CopyToArg(
 	    else if (size == sizeof(char))	*dst = (XtArgVal)u.charval;
 	    else if (size == sizeof(char*))	*dst = (XtArgVal)u.charptr;
 	    else if (size == sizeof(XtPointer))	*dst = (XtArgVal)u.ptr;
-	    else (void) memmove((char*)dst, (char*)src, (int)size );
+	    else (void) memmove((char*)dst, (char*)src, (size_t)size );
 	}
 	else
-	    (void) memmove((char*)dst, (char*)src, (int)size );
+	    (void) memmove((char*)dst, (char*)src, (size_t)size );
     }
     else {
 	/* proper GetValues semantics: argval is pointer to destination */
-	(void) memmove((char*)*dst, (char*)src, (int)size );
+	(void) memmove((char*)*dst, (char*)src, (size_t)size );
     }
 } /* CopyToArg */
 
@@ -290,7 +290,7 @@ void _XtCompileResourceList(
     	xrmres->xrm_name	 = PSToQ(resources->resource_name);
     	xrmres->xrm_class	 = PSToQ(resources->resource_class);
     	xrmres->xrm_type	 = PSToQ(resources->resource_type);
-        xrmres->xrm_offset	 = (Cardinal)
+        xrmres->xrm_offset	 = (int)
 		(-(int)resources->resource_offset - 1);
     	xrmres->xrm_default_type = PSToQ(resources->default_type);
     }
@@ -311,7 +311,7 @@ static void  XrmCompileResourceListEphem(
     	xrmres->xrm_name	 = StringToName(resources->resource_name);
     	xrmres->xrm_class	 = StringToClass(resources->resource_class);
     	xrmres->xrm_type	 = StringToQuark(resources->resource_type);
-        xrmres->xrm_offset	 = (Cardinal)
+        xrmres->xrm_offset	 = (int)
 		(-(int)resources->resource_offset - 1);
     	xrmres->xrm_default_type = StringToQuark(resources->default_type);
     }
@@ -363,7 +363,7 @@ void _XtDependencies(
 
     /* Allocate and initialize new_res with superclass resource pointers */
     new_num_res = super_num_res + class_num_res;
-    new_res = (XrmResourceList *) __XtMalloc(new_num_res*sizeof(XrmResourceList));
+    new_res = (XrmResourceList *) __XtMalloc((Cardinal)(new_num_res*sizeof(XrmResourceList)));
     if (super_num_res > 0)
 	XtMemmove(new_res, super_res, super_num_res * sizeof(XrmResourceList));
 
@@ -426,13 +426,13 @@ void _XtResourceDependencies(
 void _XtConstraintResDependencies(
     ConstraintWidgetClass wc)
 {
-    ConstraintWidgetClass sc;
-
     if (wc == (ConstraintWidgetClass) constraintWidgetClass) {
 	_XtDependencies(&(wc->constraint_class.resources),
 			&(wc->constraint_class.num_resources),
 			(XrmResourceList *)NULL, (unsigned)0, (unsigned)0);
     } else {
+	ConstraintWidgetClass sc;
+
 	sc = (ConstraintWidgetClass) wc->core_class.superclass;
 	_XtDependencies(&(wc->constraint_class.resources),
 			&(wc->constraint_class.num_resources),
@@ -452,7 +452,7 @@ XrmResourceList* _XtCreateIndirectionTable (
     register Cardinal idx;
     XrmResourceList* table;
 
-    table = (XrmResourceList*)__XtMalloc(num_resources * sizeof(XrmResourceList));
+    table = (XrmResourceList*)__XtMalloc((Cardinal)(num_resources * sizeof(XrmResourceList)));
     for (idx = 0; idx < num_resources; idx++)
         table[idx] = (XrmResourceList)(&(resources[idx]));
     return table;
@@ -491,7 +491,7 @@ static XtCacheRef *GetResources(
     XtCacheRef      *cache_ptr, *cache_base;
     Boolean	    persistent_resources = True;
     Boolean	    found_persistence = False;
-    int		    num_typed_args = *pNumTypedArgs;
+    int		    num_typed_args = (int) *pNumTypedArgs;
     XrmDatabase     db;
     Boolean	    do_tm_hack = False;
 
@@ -499,7 +499,7 @@ static XtCacheRef *GetResources(
     	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		"invalidArgCount","getResources",XtCXtToolkitError,
                  "argument count > 0 on NULL argument list",
-                   (String *)NULL, (Cardinal *)NULL);
+                   NULL, NULL);
 	num_args = 0;
     }
     if (num_resources == 0) {
@@ -508,19 +508,19 @@ static XtCacheRef *GetResources(
     	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		"invalidResourceCount","getResources",XtCXtToolkitError,
               "too many resources",
-	      (String *)NULL, (Cardinal *)NULL);
+	      NULL, NULL);
 	return NULL;
     } else if (table == NULL) {
     	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 		"invalidResourceCount","getResources",XtCXtToolkitError,
               "resource count > 0 on NULL resource list",
-	      (String *)NULL, (Cardinal *)NULL);
+	      NULL, NULL);
 	return NULL;
     }
 
     /* Mark each resource as not found on arg list */
-    bzero((char *) found, (int) (num_resources * sizeof(Boolean)));
-    bzero((char *) typed, (int) (num_resources * sizeof(int)));
+    memset((void *) found, 0, (size_t) (num_resources * sizeof(Boolean)));
+    memset((void *) typed, 0, (size_t) (num_resources * sizeof(int)));
 
     /* Copy the args into the resources, mark each as found */
     {
@@ -584,12 +584,12 @@ static XtCacheRef *GetResources(
 
     db = XtScreenDatabase(XtScreenOfObject(widget));
     while (!XrmQGetSearchList(db, names, classes,
-			      searchList, searchListSize)) {
+			      searchList, (int) searchListSize)) {
 	if (searchList == stackSearchList)
 	    searchList = NULL;
 	searchList = (XrmHashTable*)XtRealloc((char*)searchList,
-					      sizeof(XrmHashTable) *
-					      (searchListSize *= 2));
+					      (Cardinal) (sizeof(XrmHashTable) *
+					      (searchListSize *= 2)));
     }
 
     if (persistent_resources)
@@ -612,7 +612,7 @@ static XtCacheRef *GetResources(
 		XrmValue from_val, to_val;
 
 		from_type = StringToQuark(arg->type);
-		from_val.size = arg->size;
+		from_val.size = (Cardinal) arg->size;
 		if ((from_type == QString) || ((unsigned) arg->size > sizeof(XtArgVal)))
 		    from_val.addr = (XPointer)arg->value;
 		else
@@ -645,12 +645,12 @@ static XtCacheRef *GetResources(
 	if (widget->core.screen != oldscreen) {
 	    db = XtScreenDatabase(widget->core.screen);
 	    while (!XrmQGetSearchList(db, names, classes,
-				      searchList, searchListSize)) {
+				      searchList, (int) searchListSize)) {
 		if (searchList == stackSearchList)
 		    searchList = NULL;
 		searchList = (XrmHashTable*)XtRealloc((char*)searchList,
-						      sizeof(XrmHashTable) *
-						      (searchListSize *= 2));
+						      (Cardinal)(sizeof(XrmHashTable) *
+						      (searchListSize *= 2)));
 	    }
 	}
     }
@@ -692,7 +692,7 @@ static XtCacheRef *GetResources(
 
 	for (res = table, j = 0; j < num_resources; j++, res++) {
 	    rx = *res;
-	    xrm_type = rx->xrm_type;
+	    xrm_type = (XrmRepresentation) rx->xrm_type;
 	    if (typed[j]) {
 		register XtTypedArg* arg = typed_args + typed[j] - 1;
 
@@ -706,7 +706,7 @@ static XtCacheRef *GetResources(
 		Boolean		    converted;
 
 		from_type = StringToQuark(arg->type);
-    		from_val.size = arg->size;
+    		from_val.size = (Cardinal) arg->size;
 		if ((from_type == QString) || ((unsigned) arg->size > sizeof(XtArgVal)))
         	    from_val.addr = (XPointer)arg->value;
 	        else
@@ -733,7 +733,7 @@ static XtCacheRef *GetResources(
 		     */
 
 		    if(rx->xrm_size > sizeof(XtArgVal)) {
-			arg->value = (XtArgVal) __XtMalloc(rx->xrm_size);
+			arg->value = (XtArgVal) (void *) __XtMalloc(rx->xrm_size);
 			arg->size = -(arg->size);
 		    } else { /* will fit - copy directly into value field */
 			arg->value = (XtArgVal) NULL;
@@ -755,7 +755,7 @@ static XtCacheRef *GetResources(
 		Boolean have_value = False;
 
 		if (XrmQGetSearchResource(searchList,
-			rx->xrm_name, rx->xrm_class, &rawType, &value)) {
+			(XrmName) rx->xrm_name, (XrmClass) rx->xrm_class, &rawType, &value)) {
 		    if (rawType != xrm_type) {
 			convValue.size = rx->xrm_size;
 			convValue.addr = (XPointer)(base - rx->xrm_offset - 1);
@@ -774,7 +774,7 @@ static XtCacheRef *GetResources(
 			|| (rx->xrm_default_type == xrm_type)
 			|| (rx->xrm_default_addr != NULL))) {
 		    /* Convert default value to proper type */
-		    xrm_default_type = rx->xrm_default_type;
+		    xrm_default_type = (XrmRepresentation) rx->xrm_default_type;
 		    if (xrm_default_type == QCallProc) {
 			(*(XtResourceDefaultProc)(rx->xrm_default_addr))(
 			      widget,-(rx->xrm_offset+1), &value);
@@ -806,7 +806,7 @@ static XtCacheRef *GetResources(
 		    } else {
 			value.addr = rx->xrm_default_addr;
 			if (xrm_default_type == QString) {
-			    value.size = strlen((char *)value.addr) + 1;
+			    value.size = (unsigned) strlen((char *)value.addr) + 1;
 			} else {
 			    value.size = sizeof(XtPointer);
 			}
@@ -876,15 +876,15 @@ static XtCacheRef *GetResources(
 	    }
 	}
     }
-    if ((Cardinal)num_typed_args != *pNumTypedArgs) *pNumTypedArgs = num_typed_args;
+    if ((Cardinal)num_typed_args != *pNumTypedArgs) *pNumTypedArgs = (Cardinal) num_typed_args;
     if (searchList != stackSearchList) XtFree((char*)searchList);
     if (!cache_ptr)
 	cache_ptr = cache_base;
     if (cache_ptr && cache_ptr != cache_ref) {
-	int cache_ref_size = cache_ptr - cache_ref;
+	int cache_ref_size = (int) (cache_ptr - cache_ref);
 	XtCacheRef *refs = (XtCacheRef*)
-	    __XtMalloc((unsigned)sizeof(XtCacheRef)*(cache_ref_size + 1));
-	(void) memmove(refs, cache_ref, sizeof(XtCacheRef)*cache_ref_size );
+	    __XtMalloc((Cardinal)(sizeof(XtCacheRef) * (size_t)(cache_ref_size + 1)));
+	(void) memmove(refs, cache_ref, sizeof(XtCacheRef)*(size_t)cache_ref_size );
 	refs[cache_ref_size] = NULL;
 	return refs;
     }
@@ -909,7 +909,7 @@ static void CacheArgs(
     count = (args != NULL) ? num_args : num_typed_args;
 
     if (num_quarks < count) {
-	quarks = (XrmQuarkList) __XtMalloc(count * sizeof(XrmQuark));
+	quarks = (XrmQuarkList) __XtMalloc((Cardinal)(count * sizeof(XrmQuark)));
     } else {
 	quarks = quark_cache;
     }
@@ -941,8 +941,7 @@ XtCacheRef *_XtGetResources(
     XrmQuark	    quark_cache[100];
     XrmQuarkList    quark_args;
     WidgetClass     wc;
-    ConstraintWidgetClass   cwc;
-    XtCacheRef	    *cache_refs, *cache_refs_core;
+    XtCacheRef	    *cache_refs = NULL;
     Cardinal	    count;
 
     wc = XtClass(w);
@@ -950,37 +949,41 @@ XtCacheRef *_XtGetResources(
     count = CountTreeDepth(w);
     names = (XrmName*) XtStackAlloc (count * sizeof(XrmName), names_s);
     classes = (XrmClass*) XtStackAlloc (count * sizeof(XrmClass), classes_s);
-    if (names == NULL || classes == NULL) _XtAllocError(NULL);
+    if (names == NULL || classes == NULL) {
+	_XtAllocError(NULL);
+    } else {
 
-    /* Get names, classes for widget and ancestors */
-    GetNamesAndClasses(w, names, classes);
+	/* Get names, classes for widget and ancestors */
+	GetNamesAndClasses(w, names, classes);
 
-    /* Compile arg list into quarks */
-    CacheArgs(args, num_args, typed_args, *num_typed_args, quark_cache,
-	      XtNumber(quark_cache), &quark_args);
+	/* Compile arg list into quarks */
+	CacheArgs(args, num_args, typed_args, *num_typed_args, quark_cache,
+		  XtNumber(quark_cache), &quark_args);
 
-    /* Get normal resources */
-    LOCK_PROCESS;
-    cache_refs = GetResources(w, (char*)w, names, classes,
-	(XrmResourceList *) wc->core_class.resources,
-	wc->core_class.num_resources, quark_args, args, num_args,
-	typed_args, num_typed_args, XtIsWidget(w));
+	/* Get normal resources */
+	LOCK_PROCESS;
+	cache_refs = GetResources(w, (char*)w, names, classes,
+	    (XrmResourceList *) wc->core_class.resources,
+	    wc->core_class.num_resources, quark_args, args, num_args,
+	    typed_args, num_typed_args, XtIsWidget(w));
 
-    if (w->core.constraints != NULL) {
-	cwc = (ConstraintWidgetClass) XtClass(w->core.parent);
-	cache_refs_core =
-	    GetResources(w, (char*)w->core.constraints, names, classes,
-	    (XrmResourceList *) cwc->constraint_class.resources,
-	    cwc->constraint_class.num_resources,
-	    quark_args, args, num_args, typed_args, num_typed_args, False);
-	if (cache_refs_core) {
-	    XtFree((char *)cache_refs_core);
+	if (w->core.constraints != NULL) {
+	    ConstraintWidgetClass cwc;
+	    XtCacheRef *cache_refs_core;
+
+	    cwc = (ConstraintWidgetClass) XtClass(w->core.parent);
+	    cache_refs_core =
+		GetResources(w, (char*)w->core.constraints, names, classes,
+		(XrmResourceList *) cwc->constraint_class.resources,
+		cwc->constraint_class.num_resources,
+		quark_args, args, num_args, typed_args, num_typed_args, False);
+	     XtFree((char *)cache_refs_core);
 	}
+	FreeCache(quark_cache, quark_args);
+	UNLOCK_PROCESS;
+	XtStackFree((XtPointer)names, names_s);
+	XtStackFree((XtPointer)classes, classes_s);
     }
-    FreeCache(quark_cache, quark_args);
-    UNLOCK_PROCESS;
-    XtStackFree((XtPointer)names, names_s);
-    XtStackFree((XtPointer)classes, classes_s);
     return cache_refs;
 } /* _XtGetResources */
 
@@ -1013,35 +1016,37 @@ void _XtGetSubresources (
     count++;	/* make sure there's enough room for name and class */
     names = (XrmName*) XtStackAlloc(count * sizeof(XrmName), names_s);
     classes = (XrmClass*) XtStackAlloc(count * sizeof(XrmClass), classes_s);
-    if (names == NULL || classes == NULL) _XtAllocError(NULL);
+    if (names == NULL || classes == NULL) {
+	_XtAllocError(NULL);
+    } else {
+	/* Get full name, class of subobject */
+	GetNamesAndClasses(w, names, classes);
+	count -= 2;
+	names[count] = StringToName(name);
+	classes[count] = StringToClass(class);
+	count++;
+	names[count] = NULLQUARK;
+	classes[count] = NULLQUARK;
 
-    /* Get full name, class of subobject */
-    GetNamesAndClasses(w, names, classes);
-    count -= 2;
-    names[count] = StringToName(name);
-    classes[count] = StringToClass(class);
-    count++;
-    names[count] = NULLQUARK;
-    classes[count] = NULLQUARK;
+	/* Compile arg list into quarks */
+	CacheArgs(args, num_args, typed_args, num_typed_args,
+		  quark_cache, XtNumber(quark_cache), &quark_args);
 
-    /* Compile arg list into quarks */
-    CacheArgs(args, num_args, typed_args, num_typed_args,
-	      quark_cache, XtNumber(quark_cache), &quark_args);
-
-    /* Compile resource list if needed */
-    if (((int) resources->resource_offset) >= 0) {
-	XrmCompileResourceListEphem(resources, num_resources);
+	/* Compile resource list if needed */
+	if (((int) resources->resource_offset) >= 0) {
+	    XrmCompileResourceListEphem(resources, num_resources);
+	}
+	table = _XtCreateIndirectionTable(resources, num_resources);
+	Resrc = GetResources(w, (char*)base, names, classes, table, num_resources,
+			    quark_args, args, num_args,
+			    typed_args, &ntyped_args, False);
+	FreeCache(quark_cache, quark_args);
+	XtFree((char *)table);
+	XtFree((char *)Resrc);
+	XtStackFree((XtPointer)names, names_s);
+	XtStackFree((XtPointer)classes, classes_s);
+	UNLOCK_APP(app);
     }
-    table = _XtCreateIndirectionTable(resources, num_resources);
-    Resrc = GetResources(w, (char*)base, names, classes, table, num_resources,
-			quark_args, args, num_args,
-			typed_args, &ntyped_args, False);
-    FreeCache(quark_cache, quark_args);
-    XtFree((char *)table);
-    XtFree((char *)Resrc);
-    XtStackFree((XtPointer)names, names_s);
-    XtStackFree((XtPointer)classes, classes_s);
-    UNLOCK_APP(app);
 }
 
 void XtGetSubresources (
@@ -1073,7 +1078,7 @@ void _XtGetApplicationResources (
     XrmQuark	    quark_cache[100];
     XrmQuarkList    quark_args;
     XrmResourceList* table;
-    Cardinal        count, ntyped_args = num_typed_args;
+    Cardinal        ntyped_args = num_typed_args;
 #ifdef XTHREADS
     XtAppContext    app;
 #endif
@@ -1093,17 +1098,24 @@ void _XtGetApplicationResources (
 	XtPerDisplay pd = _XtGetPerDisplay(_XtDefaultAppContext()->list[0]);
 	names = (XrmName*) XtStackAlloc (2 * sizeof(XrmName), names_s);
 	classes = (XrmClass*) XtStackAlloc (2 * sizeof(XrmClass), classes_s);
-	names[0] = pd->name;
-	names[1] = NULLQUARK;
-	classes[0] = pd->class;
-	classes[1] = NULLQUARK;
+	if (names == NULL || classes == NULL) {
+	    _XtAllocError(NULL);
+	} else {
+	    names[0] = pd->name;
+	    names[1] = NULLQUARK;
+	    classes[0] = pd->class;
+	    classes[1] = NULLQUARK;
+	}
     }
     else {
-	count = CountTreeDepth(w);
+	Cardinal count = CountTreeDepth(w);
         names = (XrmName*) XtStackAlloc(count * sizeof(XrmName), names_s);
         classes = (XrmClass*) XtStackAlloc(count * sizeof(XrmClass), classes_s);
-	if (names == NULL || classes == NULL) _XtAllocError(NULL);
-	GetNamesAndClasses(w, names, classes);
+	if (names == NULL || classes == NULL) {
+	    _XtAllocError(NULL);
+	} else {
+	    GetNamesAndClasses(w, names, classes);
+	}
     }
 
     /* Compile arg list into quarks */
@@ -1147,7 +1159,7 @@ void _XtResourceListInitialize(void)
     if (initialized) {
 	XtWarningMsg("initializationError","xtInitialize",XtCXtToolkitError,
                   "Initializing Resource Lists twice",
-		  (String *)NULL, (Cardinal *)NULL);
+		  NULL, NULL);
 	UNLOCK_PROCESS;
     	return;
     }

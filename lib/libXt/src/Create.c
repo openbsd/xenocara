@@ -80,8 +80,8 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <stdio.h>
 
-static String XtNxtCreateWidget = "xtCreateWidget";
-static String XtNxtCreatePopupShell = "xtCreatePopupShell";
+static _Xconst _XtString XtNxtCreateWidget = "xtCreateWidget";
+static _Xconst _XtString XtNxtCreatePopupShell = "xtCreatePopupShell";
 
 static void
 CallClassPartInit(WidgetClass ancestor, WidgetClass wc)
@@ -146,8 +146,8 @@ XtInitializeWidgetClass(WidgetClass wc)
     if (wc->core_class.version != XtVersion &&
 	wc->core_class.version != XtVersionDontCheck) {
 	String param[3];
-	String mismatch = "Widget class %s version mismatch (recompilation needed):\n  widget %d vs. intrinsics %d.";
-	String recompile = "Widget class %s must be re-compiled.";
+	_Xconst _XtString mismatch = "Widget class %s version mismatch (recompilation needed):\n  widget %d vs. intrinsics %d.";
+	_Xconst _XtString recompile = "Widget class %s must be re-compiled.";
 	Cardinal num_params;
 
 	param[0] = wc->core_class.class_name;
@@ -260,15 +260,18 @@ xtWidgetAlloc(
     WidgetClass widget_class,
     ConstraintWidgetClass parent_constraint_class,
     Widget parent,
-    String name,
+    _Xconst _XtString name,
     ArgList     args,		/* must be NULL if typed_args is non-NULL */
     Cardinal    num_args,
     XtTypedArgList typed_args,	/* must be NULL if args is non-NULL */
     Cardinal	num_typed_args)
 {
     Widget widget;
-    Cardinal                wsize, csize = 0;
+    Cardinal                csize = 0;
     ObjectClassExtension    ext;
+
+    if (widget_class == NULL)
+	return 0;
 
     LOCK_PROCESS;
     if (! (widget_class->core_class.class_inited))
@@ -290,18 +293,17 @@ xtWidgetAlloc(
 	(*allocate)(widget_class, &csize, &extra, args, &nargs,
 		    typed_args, &ntyped, &widget, NULL);
     } else {
-	wsize = widget_class->core_class.widget_size;
+        Cardinal wsize = widget_class->core_class.widget_size;
 	UNLOCK_PROCESS;
 	if (csize) {
 	    if (sizeof(struct {char a; double b;}) !=
 		(sizeof(struct {char a; unsigned long b;}) -
 		 sizeof(unsigned long) + sizeof(double))) {
 		if (csize && !(csize & (sizeof(double) - 1)))
-		    wsize = (wsize + sizeof(double) - 1) & ~(sizeof(double)-1);
+		    wsize = (Cardinal) ((wsize + sizeof(double) - 1) & ~(sizeof(double)-1));
 	    }
 	}
-	widget = (Widget) __XtMalloc((unsigned)(wsize + csize));
-	bzero(widget, wsize + csize);
+	widget = (Widget) __XtCalloc(1,(unsigned)(wsize + csize));
 	widget->core.constraints =
 	    (csize ? (XtPointer)((char *)widget + wsize) : NULL);
     }
@@ -319,7 +321,6 @@ CompileCallbacks(
     Widget widget)
 {
     CallbackTable offsets;
-    InternalCallbackList* cl;
     int i;
 
     LOCK_PROCESS;
@@ -327,7 +328,7 @@ CompileCallbacks(
 	widget->core.widget_class->core_class.callback_private;
 
     for (i = (int)(long) *(offsets++); --i >= 0; offsets++) {
-	cl = (InternalCallbackList *)
+        InternalCallbackList* cl = (InternalCallbackList *)
 	    ((char *) widget - (*offsets)->xrm_offset - 1);
 	if (*cl)
 	    *cl = _XtCompileCallbackList((XtCallbackList) *cl);
@@ -337,8 +338,8 @@ CompileCallbacks(
 
 static Widget
 xtCreate(
-    char        *name,
-    char        *class,
+    String      name,
+    String      class,
     WidgetClass widget_class,
     Widget      parent,
     Screen*     default_screen, /* undefined when creating a nonwidget */
@@ -352,13 +353,11 @@ xtCreate(
 {
     /* need to use strictest alignment rules possible in next two decls. */
     double                  widget_cache[100];
-    double                  constraint_cache[20];
     Widget                  req_widget;
     XtPointer               req_constraints = NULL;
     Cardinal                wsize, csize;
     Widget	    	    widget;
     XtCacheRef		    *cache_refs;
-    Cardinal		    i;
     XtCreateHookDataRec     call_data;
 
     widget = xtWidgetAlloc(widget_class, parent_constraint_class, parent,
@@ -393,6 +392,7 @@ xtCreate(
 
     /* Convert typed arg list to arg list */
     if (typed_args != NULL && num_typed_args > 0) {
+	Cardinal i;
 	args = (ArgList)ALLOCATE_LOCAL(sizeof(Arg) * num_typed_args);
 	if (args == NULL) _XtAllocError(NULL);
 	for (i = 0; i < num_typed_args; i++) {
@@ -410,16 +410,16 @@ xtCreate(
     }
 
     wsize = widget_class->core_class.widget_size;
-    csize = 0;
     req_widget = (Widget) XtStackAlloc(wsize, widget_cache);
-    (void) memmove ((char *) req_widget, (char *) widget, (int) wsize);
+    (void) memmove ((char *) req_widget, (char *) widget, (size_t) wsize);
     CallInitialize (XtClass(widget), req_widget, widget, args, num_args);
     if (parent_constraint_class != NULL) {
+	double constraint_cache[20];
         csize = parent_constraint_class->constraint_class.constraint_size;
 	if (csize) {
 	    req_constraints = XtStackAlloc(csize, constraint_cache);
 	    (void) memmove((char*)req_constraints, widget->core.constraints,
-			(int)csize);
+			(size_t)csize);
 	    req_widget->core.constraints = req_constraints;
 	} else req_widget->core.constraints = NULL;
 	CallConstraintInitialize(parent_constraint_class, req_widget, widget,
@@ -621,7 +621,7 @@ popupPostProc(Widget w)
 
     parent->core.popup_list =
 	(WidgetList) XtRealloc((char*) parent->core.popup_list,
-		(unsigned) (parent->core.num_popups+1) * sizeof(Widget));
+		(Cardinal)((unsigned) (parent->core.num_popups+1) * sizeof(Widget)));
     parent->core.popup_list[parent->core.num_popups++] = w;
 }
 
@@ -641,12 +641,12 @@ _XtCreatePopupShell(
     if (parent == NULL) {
 	XtErrorMsg("invalidParent",XtNxtCreatePopupShell,XtCXtToolkitError,
 		"XtCreatePopupShell requires non-NULL parent",
-		(String *)NULL, (Cardinal *)NULL);
+		NULL, NULL);
     } else if (widget_class == NULL) {
 	XtAppErrorMsg(XtWidgetToApplicationContext(parent),
 		"invalidClass",XtNxtCreatePopupShell,XtCXtToolkitError,
 		"XtCreatePopupShell requires non-NULL widget class",
-		(String *)NULL, (Cardinal *)NULL);
+		NULL, NULL);
     }
     XtCheckSubclass(parent, coreWidgetClass, "in XtCreatePopupShell");
     default_screen = parent->core.screen;
@@ -698,7 +698,7 @@ _XtAppCreateShell(
 	XtAppErrorMsg(XtDisplayToApplicationContext(display),
 		"invalidClass","xtAppCreateShell",XtCXtToolkitError,
 		"XtAppCreateShell requires non-NULL widget class",
-		(String *)NULL, (Cardinal *)NULL);
+		NULL, NULL);
     }
     if (name == NULL)
 	name = XrmNameToString(_XtGetPerDisplay(display)->name);
@@ -778,7 +778,7 @@ _XtCreateHookObj(Screen* screen)
     CompileCallbacks(hookobj);
     wsize = hookObjectClass->core_class.widget_size;
     req_widget = (Widget) XtStackAlloc(wsize, widget_cache);
-    (void) memmove ((char *) req_widget, (char *) hookobj, (int) wsize);
+    (void) memmove ((char *) req_widget, (char *) hookobj, (size_t) wsize);
     CallInitialize (hookObjectClass, req_widget, hookobj,
 		(ArgList)NULL, (Cardinal) 0);
     XtStackFree((XtPointer)req_widget, widget_cache);

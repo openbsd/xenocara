@@ -102,16 +102,20 @@ static void GrabAllCorrectKeys(
 					  &careOn, &careMask);
 	if (!resolved) return;
     }
-    careOn |= modMatch->modifiers;
-    careMask |= modMatch->modifierMask;
+    careOn = (careOn | (Modifiers)modMatch->modifiers);
+    careMask = (careMask | (Modifiers)modMatch->modifierMask);
 
+    keycodes = NULL;
     XtKeysymToKeycodeList(
 	    dpy,
 	    (KeySym)typeMatch->eventCode,
 	    &keycodes,
 	    &keycount
 			 );
-    if (keycount == 0) return;
+    if (keycount == 0) {
+	XtFree((char *)keycodes);
+	return;
+    }
     for (keycodeP = keycodes; keycount--; keycodeP++) {
 	if (modMatch->standard) {
 	    /* find standard modifiers that produce this keysym */
@@ -120,8 +124,10 @@ static void GrabAllCorrectKeys(
 	    Modifiers modifiers_return;
 	    XtTranslateKeycode( dpy, *keycodeP, (Modifiers)0,
 			        &modifiers_return, &keysym );
-	    if (careOn & modifiers_return)
+	    if (careOn & modifiers_return) {
+		XtFree((char *)keycodes);
 		return;
+	    }
 	    if (keysym == typeMatch->eventCode) {
 		XtGrabKey(widget, *keycodeP, careOn,
 			  grabP->owner_events,
@@ -130,13 +136,13 @@ static void GrabAllCorrectKeys(
 			);
 		/* continue; */		/* grab all modifier combinations */
 	    }
-	    least_mod = modifiers_return & (~modifiers_return + 1);
-	    for (std_mods = modifiers_return;
+	    least_mod = (int) (modifiers_return & (~modifiers_return + 1));
+	    for (std_mods = (int) modifiers_return;
 		 std_mods >= least_mod; std_mods--) {
 		Modifiers dummy;
 		 /* check all useful combinations of modifier bits */
-		if (modifiers_return & std_mods &&
-		    !(~modifiers_return & std_mods)) {
+		if ((modifiers_return & (Modifiers)std_mods) &&
+		    !(~modifiers_return & (Modifiers)std_mods)) {
 		    XtTranslateKeycode( dpy, *keycodeP,
 					(Modifiers)std_mods,
 					&dummy, &keysym );
@@ -183,7 +189,6 @@ static Boolean DoGrab(
     TMModifierMatch	modMatch;
     Modifiers		careOn = 0;
     Modifiers		careMask = 0;
-    Boolean		resolved;
 
     LOCK_PROCESS;
     typeMatch = TMGetTypeMatch(typeIndex);
@@ -200,15 +205,15 @@ static Boolean DoGrab(
       case ButtonPress:
       case ButtonRelease:
 	if (modMatch->lateModifiers) {
-	    resolved = _XtComputeLateBindings(XtDisplay(widget),
-					      modMatch->lateModifiers,
-					      &careOn, &careMask);
+	    Boolean resolved = _XtComputeLateBindings(XtDisplay(widget),
+						      modMatch->lateModifiers,
+						      &careOn, &careMask);
 	    if (!resolved) break;
 	}
-	careOn |= modMatch->modifiers;
+	careOn = (careOn | (Modifiers) modMatch->modifiers);
 	XtGrabButton(
 		     widget,
-		     (unsigned) typeMatch->eventCode,
+		     (int) typeMatch->eventCode,
 		     careOn,
 		     grabP->owner_events,
 		     grabP->event_mask,
@@ -231,7 +236,7 @@ static Boolean DoGrab(
 	XtAppWarningMsg(XtWidgetToApplicationContext(widget),
 			"invalidPopup","unsupportedOperation",XtCXtToolkitError,
 			"Pop-up menu creation is only supported on Button, Key or EnterNotify events.",
-			(String *)NULL, (Cardinal *)NULL);
+			NULL, NULL);
 	break;
     }
     UNLOCK_PROCESS;
@@ -277,7 +282,7 @@ void _XtRegisterGrabs(
 		     */
 		    doGrab.widget = widget;
 		    doGrab.grabP = grabP;
-		    doGrab.count = count;
+		    doGrab.count = (TMShortCard) count;
 		    _XtTraverseStateTree((TMStateTree)*stateTreePtr,
 					 DoGrab,
 					 (XtPointer)&doGrab);
@@ -321,7 +326,7 @@ void XtRegisterGrabAction(
 	}
 #endif /*DEBUG*/
 
-    actionP->owner_events = owner_events;
+    actionP->owner_events = (Boolean) owner_events;
     actionP->event_mask = event_mask;
     actionP->pointer_mode = pointer_mode;
     actionP->keyboard_mode = keyboard_mode;

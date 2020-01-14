@@ -79,9 +79,8 @@ _XtVaCreateWidget(
     widget = _XtCreateWidget(name, widget_class, parent, (ArgList)NULL,
 		    (Cardinal)0, typed_args, num_args);
 
-    if (typed_args != NULL) {
-        XtFree((XtPointer)typed_args);
-    }
+
+    XtFree((XtPointer)typed_args);
 
     return widget;
 }
@@ -165,9 +164,8 @@ XtVaAppCreateShell(
     _XtVaToTypedArgList(var, total_count, &typed_args, &num_args);
     widget = _XtAppCreateShell((String)name, (String)class, widget_class,
 		display, (ArgList)NULL, (Cardinal)0, typed_args, num_args);
-    if (typed_args != NULL) {
-	XtFree((XtPointer)typed_args);
-    }
+
+    XtFree((XtPointer)typed_args);
 
     va_end(var);
     UNLOCK_APP(app);
@@ -199,9 +197,8 @@ XtVaCreatePopupShell(
     _XtVaToTypedArgList(var, total_count, &typed_args, &num_args);
     widget = _XtCreatePopupShell((String)name, widget_class, parent,
 		(ArgList)NULL, (Cardinal)0, typed_args, num_args);
-    if (typed_args != NULL) {
-	XtFree((XtPointer)typed_args);
-    }
+
+    XtFree((XtPointer)typed_args);
 
     va_end(var);
     UNLOCK_APP(app);
@@ -254,9 +251,7 @@ XtVaSetSubvalues(XtPointer base, XtResourceList resources, Cardinal num_resource
 
     XtSetSubvalues(base, resources, num_resources, args, num_args);
 
-    if (num_args != 0) {
-        XtFree((XtPointer)args);
-    }
+    XtFree((XtPointer)args);
 
     va_end(var);
 }
@@ -268,7 +263,7 @@ _XtVaOpenApplication(
     XrmOptionDescList options,
     Cardinal num_options,
     int *argc_in_out,
-    String *argv_in_out,
+    _XtString *argv_in_out,
     String *fallback_resources,
     WidgetClass widget_class,
     va_list var_args)
@@ -303,7 +298,7 @@ _XtVaOpenApplication(
 	count++;
 	typed_args = (XtTypedArgList)
 	    XtRealloc((char *) typed_args,
-		       (unsigned) (count + 1) * sizeof(XtTypedArg));
+		       (Cardinal) ((size_t)(count + 1) * sizeof(XtTypedArg)));
     }
     typed_args[count].name = NULL;
 
@@ -333,7 +328,7 @@ _XtVaAppInitialize(
     XrmOptionDescList options,
     Cardinal num_options,
     int *argc_in_out,
-    String *argv_in_out,
+    _XtString *argv_in_out,
     String *fallback_resources,
     va_list var_args)
 {
@@ -357,17 +352,20 @@ XtVaOpenApplication(
     XrmOptionDescList options,
     Cardinal num_options,
     int *argc_in_out,
-    String *argv_in_out,
+    _XtString *argv_in_out,
     String *fallback_resources,
     WidgetClass widget_class,
     ...)
 {
+    Widget      code;
     va_list	var;
 
     va_start(var, widget_class);
-    return _XtVaOpenApplication(app_context_return, (String)application_class,
+    code = _XtVaOpenApplication(app_context_return, (String)application_class,
 				options, num_options, argc_in_out, argv_in_out,
 				fallback_resources, widget_class, var);
+    va_end(var);
+    return code;
 }
 
 Widget
@@ -377,17 +375,20 @@ XtVaAppInitialize(
     XrmOptionDescList options,
     Cardinal num_options,
     int *argc_in_out,
-    String *argv_in_out,
+    _XtString *argv_in_out,
     String *fallback_resources,
     ...)
 {
+    Widget      code;
     va_list	var;
 
     va_start(var, fallback_resources);
-    return _XtVaOpenApplication(app_context_return, (String)application_class,
+    code = _XtVaOpenApplication(app_context_return, (String)application_class,
 				options, num_options, argc_in_out, argv_in_out,
 				fallback_resources,
 				applicationShellWidgetClass, var);
+    va_end(var);
+    return code;
 }
 
 #endif /* !((SUNSHLIB || AIXSHLIB) && SHAREDCODE) */

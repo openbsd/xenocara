@@ -199,8 +199,9 @@ AppUnlock(XtAppContext app)
     xmutex_unlock(app_lock->mutex);
 #else
     xthread_t self;
-
     self = xthread_self();
+    (void)self;
+
     xmutex_lock(app_lock->mutex);
     assert(xthread_equal(app_lock->holder, self));
     if (app_lock->level != 0) {
@@ -236,7 +237,7 @@ YieldAppLock(
 	    unsigned ii;
 	    app_lock->stack.st = (struct _Tstack *)
 		XtRealloc ((char *)app_lock->stack.st,
-		(app_lock->stack.size + STACK_INCR) * sizeof (struct _Tstack));
+		(Cardinal)((app_lock->stack.size + STACK_INCR) * sizeof (struct _Tstack)));
 	    ii = app_lock->stack.size;
 	    app_lock->stack.size += STACK_INCR;
 	    for ( ; ii < app_lock->stack.size; ii++) {

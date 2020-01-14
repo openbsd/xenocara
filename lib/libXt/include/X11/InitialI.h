@@ -185,7 +185,7 @@ typedef struct _XtAppStruct {
     Widget in_phase2_destroy;
     LangProcRec langProcRec;
     struct _TMBindCacheRec * free_bindings;
-    String display_name_tried;
+    _XtString display_name_tried;
     Display **dpy_destroy_list;
     int dpy_destroy_count;
     Boolean exit_flag;
@@ -209,7 +209,7 @@ extern void _XtHeapFree(Heap* heap);
 extern char *_XtHeapMalloc(
     Heap*	/* heap */,
     Cardinal	/* size */,
-    char *	/* file */,
+    const char */* file */,
     int		/* line */
 );
 
@@ -250,7 +250,7 @@ _XtAppInit(
     XrmOptionDescRec*	/* options */,
     Cardinal		/* num_options */,
     int*		/* argc_in_out */,
-    String**		/* argv_in_out */,
+    _XtString**		/* argv_in_out */,
     String*		/* fallback_resources */
 );
 
@@ -384,7 +384,7 @@ extern void _XtDisplayInitialize(
     XrmOptionDescRec*	/* urlist */,
     Cardinal 		/* num_urs */,
     int*		/* argc */,
-    char** 		/* argv */
+    _XtString* 		/* argv */
 );
 
 extern void _XtCacheFlushTag(
@@ -419,9 +419,9 @@ extern void _XtFreeWWTable(
     XtPerDisplay pd
 );
 
-extern String _XtGetUserName(String dest, int len);
+extern String _XtGetUserName(_XtString dest, int len);
 extern XrmDatabase _XtPreparseCommandLine(XrmOptionDescRec *urlist,
-			Cardinal num_urs, int argc, String *argv,
+			Cardinal num_urs, int argc, _XtString *argv,
 			String *applName, String *displayName,
 			String *language);
 

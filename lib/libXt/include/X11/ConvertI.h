@@ -93,4 +93,8 @@ extern Boolean _XtConvert(
 
 void _XtConvertInitialize(void);
 
+#ifdef DEBUG
+void _XtConverterCacheStats(void);
+#endif
+
 _XFUNCPROTOEND

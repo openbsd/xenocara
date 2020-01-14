@@ -1,4 +1,5 @@
 #
+#  Copyright © 2019 Thomas Dickey
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,8 +23,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXt], [1.1.5],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXt])
+AC_INIT([libXt], [1.2.0],
+	[https://gitlab.freedesktop.org/xorg/lib/libXt/issues], [libXt])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -36,7 +37,7 @@ AC_PROG_LIBTOOL
 
 # Require X.Org macros 1.13 or later for XORG_ENABLE_UNIT_TESTS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.13 or later before running autoconf/autogen])])
+	  [m4_fatal([must install xorg-macros 1.13 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.13)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
@@ -60,8 +61,12 @@ if test x"$CC_FOR_BUILD" = x; then
 	if test x"$cross_compiling" = xyes; then
 		AC_CHECK_PROGS(CC_FOR_BUILD, gcc cc)
 	else
-	        CC_FOR_BUILD="$CC"
+		CC_FOR_BUILD="$CC"
 	fi
+fi
+if test x"$cross_compiling" != xyes; then
+       : ${CFLAGS_FOR_BUILD=${CFLAGS}}
+       : ${LDFLAGS_FOR_BUILD=${LDFLAGS}}
 fi
 AC_SUBST([CC_FOR_BUILD])
 DEFAULT_CPPFLAGS_FOR_BUILD="${CPPFLAGS}"
@@ -70,9 +75,7 @@ AC_CHECK_FUNC(asprintf,
 CPPFLAGS_FOR_BUILD=${CPPFLAGS_FOR_BUILD-${DEFAULT_CPPFLAGS_FOR_BUILD}}
 AC_SUBST(CPPFLAGS_FOR_BUILD)
 DEFAULT_CFLAGS_FOR_BUILD="${CFLAGS} ${CWARNFLAGS}"
-CFLAGS_FOR_BUILD=${CFLAGS_FOR_BUILD-${DEFAULT_CFLAGS_FOR_BUILD}}
 AC_SUBST(CFLAGS_FOR_BUILD)
-LDFLAGS_FOR_BUILD=${LDFLAGS_FOR_BUILD-${LDFLAGS}}
 AC_SUBST(LDFLAGS_FOR_BUILD)
 
 # Map function checks to old Imake #defines
@@ -109,10 +112,28 @@ case $host_os in
 esac
 
 # Options
+AC_MSG_CHECKING(if XKB support is wanted)
 AC_ARG_ENABLE(xkb, AS_HELP_STRING([--disable-xkb], [Disable XKB support]),
 	XKB="$enableval", XKB="yes")
+AC_MSG_RESULT($XKB)
 if test "x$XKB" = "xyes" ; then
 	AC_DEFINE(XKB, 1, [Define to 1 to use XKB for keysym resolution.])
+fi
+
+AC_MSG_CHECKING(if C const-support is wanted)
+AC_ARG_ENABLE(const, AS_HELP_STRING([--disable-const], [Disable const-support]),
+	USE_CONST="$enableval", USE_CONST="yes")
+AC_MSG_RESULT($USE_CONST)
+if test "x$USE_CONST" = "xyes" ; then
+	AC_DEFINE(_CONST_X_STRING, 1, [Define to 1 to use standard C const feature.])
+fi
+
+AC_MSG_CHECKING(if geo-tattler traces are wanted)
+AC_ARG_ENABLE(geo-tattler, AS_HELP_STRING([--enable-geo-tattler], [Enable geo-tattler traces]),
+	GEO_TATTLER="$enableval", GEO_TATTLER="no")
+AC_MSG_RESULT($GEO_TATTLER)
+if test "x$GEO_TATTLER" = "xyes" ; then
+	AC_DEFINE(XT_GEO_TATTLER, 1, [Define to 1 to enable geo-tattler traces.])
 fi
 
 # --enable-unit-tests
@@ -121,42 +142,49 @@ XORG_WITH_GLIB([2.16])
 
 # Memory checking support
 case $host_os in
-     solaris*)
-        AC_CHECK_LIB([umem], [umem_alloc],
-            [MALLOC_DEBUG_ENV='LD_PRELOAD=libumem.so UMEM_DEBUG=default'])
-        ;;
-     *-gnu*) # GNU libc - Value is used as a single byte bit pattern,
-        # both directly and inverted, so should not be 0 or 255.
-        MALLOC_DEBUG_ENV='MALLOC_PERTURB_=15'
-        ;;
-     *bsd*|darwin*)
-        MALLOC_DEBUG_ENV='MallocPreScribble=1 MallocScribble=1'
-        ;;
+	solaris*)
+		AC_CHECK_LIB([umem], [umem_alloc],
+		[MALLOC_DEBUG_ENV='LD_PRELOAD=libumem.so UMEM_DEBUG=default'])
+	;;
+	*-gnu*) # GNU libc - Value is used as a single byte bit pattern,
+		# both directly and inverted, so should not be 0 or 255.
+		MALLOC_DEBUG_ENV='MALLOC_PERTURB_=15'
+	;;
+	*bsd*|darwin*)
+		MALLOC_DEBUG_ENV='MallocPreScribble=1 MallocScribble=1'
+	;;
 esac
+AC_MSG_CHECKING(for definitions to enable memory-checking support)
+AC_MSG_RESULT(${MALLOC_DEBUG_ENV:-none})
 AC_SUBST([MALLOC_DEBUG_ENV])
 
 # Replaces XFileSearchPathDefault from Imake configs
 XFILESEARCHPATHDEFAULT='$(sysconfdir)/X11/%L/%T/%N%C%S:$(sysconfdir)/X11/%l/%T/%N%C%S:$(sysconfdir)/X11/%T/%N%C%S:$(sysconfdir)/X11/%L/%T/%N%S:$(sysconfdir)/X11/%l/%T/%N%S:$(sysconfdir)/X11/%T/%N%S:$(datadir)/X11/%L/%T/%N%C%S:$(datadir)/X11/%l/%T/%N%C%S:$(datadir)/X11/%T/%N%C%S:$(datadir)/X11/%L/%T/%N%S:$(datadir)/X11/%l/%T/%N%S:$(datadir)/X11/%T/%N%S:$(libdir)/X11/%L/%T/%N%C%S:$(libdir)/X11/%l/%T/%N%C%S:$(libdir)/X11/%T/%N%C%S:$(libdir)/X11/%L/%T/%N%S:$(libdir)/X11/%l/%T/%N%S:$(libdir)/X11/%T/%N%S'
 
+AC_MSG_CHECKING(for X files search path)
 AC_ARG_WITH(xfile-search-path,
 	AS_HELP_STRING([--with-xfile-search-path=<path>],
 		       [Set path to search for app-defaults and other files]),
 	[XFILESEARCHPATHDEFAULT="$withval"], [])
+AC_MSG_RESULT(${XFILESEARCHPATHDEFAULT:-none})
 AC_SUBST([XFILESEARCHPATHDEFAULT])
 
+AC_MSG_CHECKING(for X app-defaults directory)
 AC_ARG_WITH(appdefaultdir,
 	AS_HELP_STRING([--with-appdefaultdir=<path>],
 		       [Set app-default directory (default: ${datadir}/X11/app-defaults)]),
 	[appdefaultdir="$withval"],
 	[appdefaultdir=${datadir}/X11/app-defaults])
+AC_MSG_RESULT($appdefaultdir)
 AX_DEFINE_DIR([appdefaultdir], [appdefaultdir], [app default data directory])
 
 # Replacement for Imake ToolkitStringsABIOptions, controls string tables
 # generated by util/string.list in StringDefs.h & Shell.h
+AC_MSG_CHECKING(for ABI options)
 case $host_os in
 	solaris*)
 		# Solaris uses -intelabi even on SPARC
-  		STRINGSABIOPTIONS="-intelabi -solarisabinames"
+		STRINGSABIOPTIONS="-intelabi -solarisabinames"
 		;;
 	sco* | svr4*)
 		case $host_cpu in
@@ -165,21 +193,11 @@ case $host_os in
 		esac
 		;;
 esac
+AC_MSG_RESULT(${STRINGSABIOPTIONS:-none})
 AC_SUBST(STRINGSABIOPTIONS)
 
 ERRORDBDIR=${datadir}/X11
 AC_SUBST(ERRORDBDIR)
-
-case $host_os in
-    darwin*)
-        OS_CFLAGS="-Wl,-flat_namespace"
-	;;
-    *)
-        OS_CFLAGS=
-        ;;
-esac
-
-XT_CFLAGS="$XT_CFLAGS $OS_CFLAGS"
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile
@@ -187,6 +205,7 @@ AC_CONFIG_FILES([Makefile
 		include/Makefile
 		man/Makefile
 		specs/Makefile
+		specs/libXt.ent
 		test/Makefile
 		xt.pc])
 AC_OUTPUT

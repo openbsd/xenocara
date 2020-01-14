@@ -61,9 +61,18 @@ in this Software without prior written authorization from The Open Group.
 #include <string.h>		/* for XtNewString */
 #endif /* XT_BC else */
 
-#define XtSpecificationRelease 6
+#define XtSpecificationRelease 7
 
+/*
+ * As used in its function interface, the String type of libXt can be readonly.
+ * But compiling libXt with this feature may require some internal changes,
+ * e.g., casts and occasionally using a plain "char*".
+ */
+#ifdef _CONST_X_STRING
+typedef const char *String;
+#else
 typedef char *String;
+#endif
 
 /* We do this in order to get "const" declarations to work right.  We
  * use _XtString instead of String so that C++ applications can
@@ -396,7 +405,7 @@ typedef Boolean (*XtWorkProc)(
 
 typedef struct {
     char match;
-    String substitution;
+    _XtString substitution;
 } SubstitutionRec, *Substitution;
 
 typedef Boolean (*XtFilePredicate)(
@@ -1437,7 +1446,7 @@ extern void XtDisplayInitialize(
     XrmOptionDescRec* 	/* options */,
     Cardinal 		/* num_options */,
     int*		/* argc */,
-    char**		/* argv */
+    _XtString*		/* argv */
 );
 
 extern Widget XtOpenApplication(
@@ -1446,7 +1455,7 @@ extern Widget XtOpenApplication(
     XrmOptionDescList 	/* options */,
     Cardinal 		/* num_options */,
     int*		/* argc_in_out */,
-    String*		/* argv_in_out */,
+    _XtString*		/* argv_in_out */,
     String*		/* fallback_resources */,
     WidgetClass		/* widget_class */,
     ArgList 		/* args */,
@@ -1459,7 +1468,7 @@ extern Widget XtVaOpenApplication(
     XrmOptionDescList	/* options */,
     Cardinal		/* num_options */,
     int*		/* argc_in_out */,
-    String*		/* argv_in_out */,
+    _XtString*		/* argv_in_out */,
     String*		/* fallback_resources */,
     WidgetClass		/* widget_class */,
     ...
@@ -1471,7 +1480,7 @@ extern Widget XtAppInitialize( /* obsolete */
     XrmOptionDescList 	/* options */,
     Cardinal 		/* num_options */,
     int*		/* argc_in_out */,
-    String*		/* argv_in_out */,
+    _XtString*		/* argv_in_out */,
     String*		/* fallback_resources */,
     ArgList 		/* args */,
     Cardinal 		/* num_args */
@@ -1483,7 +1492,7 @@ extern Widget XtVaAppInitialize( /* obsolete */
     XrmOptionDescList	/* options */,
     Cardinal		/* num_options */,
     int*		/* argc_in_out */,
-    String*		/* argv_in_out */,
+    _XtString*		/* argv_in_out */,
     String*		/* fallback_resources */,
     ...
 ) _X_SENTINEL(0);
@@ -1494,7 +1503,7 @@ extern Widget XtInitialize( /* obsolete */
     XrmOptionDescRec* 	/* options */,
     Cardinal 		/* num_options */,
     int*		/* argc */,
-    char**		/* argv */
+    _XtString*		/* argv */
 );
 
 extern Display *XtOpenDisplay(
@@ -1505,7 +1514,7 @@ extern Display *XtOpenDisplay(
     XrmOptionDescRec*	/* options */,
     Cardinal 		/* num_options */,
     int*		/* argc */,
-    char**		/* argv */
+    _XtString*		/* argv */
 );
 
 extern XtAppContext XtCreateApplicationContext(
@@ -1703,11 +1712,11 @@ void XtSessionReturnToken(
 
 extern XtErrorMsgHandler XtAppSetErrorMsgHandler(
     XtAppContext 	/* app_context */,
-    XtErrorMsgHandler 	/* handler */
+    XtErrorMsgHandler 	/* handler */ _X_NORETURN
 );
 
 extern void XtSetErrorMsgHandler( /* obsolete */
-    XtErrorMsgHandler 	/* handler */
+    XtErrorMsgHandler 	/* handler */ _X_NORETURN
 );
 
 extern XtErrorMsgHandler XtAppSetWarningMsgHandler(
@@ -1727,7 +1736,7 @@ extern void XtAppErrorMsg(
     _Xconst _XtString	/* default */,
     String*		/* params */,
     Cardinal*		/* num_params */
-);
+) _X_NORETURN;
 
 extern void XtErrorMsg( /* obsolete */
     _Xconst _XtString 	/* name */,
@@ -1736,7 +1745,7 @@ extern void XtErrorMsg( /* obsolete */
     _Xconst _XtString	/* default */,
     String*		/* params */,
     Cardinal*		/* num_params */
-);
+) _X_NORETURN;
 
 extern void XtAppWarningMsg(
     XtAppContext 	/* app_context */,
@@ -1759,11 +1768,11 @@ extern void XtWarningMsg( /* obsolete */
 
 extern XtErrorHandler XtAppSetErrorHandler(
     XtAppContext 	/* app_context */,
-    XtErrorHandler 	/* handler */
+    XtErrorHandler 	/* handler */ _X_NORETURN
 );
 
 extern void XtSetErrorHandler( /* obsolete */
-    XtErrorHandler 	/* handler */
+    XtErrorHandler 	/* handler */ _X_NORETURN
 );
 
 extern XtErrorHandler XtAppSetWarningHandler(
@@ -1778,11 +1787,11 @@ extern void XtSetWarningHandler( /* obsolete */
 extern void XtAppError(
     XtAppContext 	/* app_context */,
     _Xconst _XtString	/* message */
-);
+) _X_NORETURN;
 
 extern void XtError( /* obsolete */
     _Xconst _XtString	/* message */
-);
+) _X_NORETURN;
 
 extern void XtAppWarning(
     XtAppContext 	/* app_context */,
@@ -1807,7 +1816,7 @@ extern void XtAppGetErrorDatabaseText(
     _Xconst _XtString	/* type */,
     _Xconst _XtString	/* class */,
     _Xconst _XtString 	/* default */,
-    String 		/* buffer_return */,
+    _XtString 		/* buffer_return */,
     int 		/* nbytes */,
     XrmDatabase 	/* database */
 );
@@ -1817,7 +1826,7 @@ extern void XtGetErrorDatabaseText( /* obsolete */
     _Xconst _XtString	/* type */,
     _Xconst _XtString	/* class */,
     _Xconst _XtString 	/* default */,
-    String 		/* buffer_return */,
+    _XtString 		/* buffer_return */,
     int 		/* nbytes */
 );
 
@@ -1849,7 +1858,7 @@ extern void XtFree(
 # define _X_RESTRICT_KYWD
 #endif
 extern Cardinal XtAsprintf(
-    String *new_string,
+    _XtString *new_string,
     _Xconst char * _X_RESTRICT_KYWD format,
     ...
 ) _X_ATTRIBUTE_PRINTF(2,3);
@@ -1858,27 +1867,33 @@ extern Cardinal XtAsprintf(
 
 extern char *_XtMalloc( /* implementation-private */
     Cardinal	/* size */,
-    char *	/* file */,
+    const char */* file */,
     int	        /* line */
 );
 
 extern char *_XtRealloc( /* implementation-private */
     char *	/* ptr */,
     Cardinal    /* size */,
-    char *	/* file */,
+    const char */* file */,
     int		/* line */
 );
 
 extern char *_XtCalloc( /* implementation-private */
     Cardinal	/* num */,
     Cardinal 	/* size */,
-    char *	/* file */,
+    const char */* file */,
     int		/* line */
 );
 
 extern void _XtFree( /* implementation-private */
     char *	/* ptr */
 );
+
+extern Boolean _XtIsValidPointer( /* implementation-private */
+    char *	/* ptr */);
+
+extern void _XtPrintMemory( /* implementation-private */
+    const char */* filename */);
 
 #define XtMalloc(size) _XtMalloc(size, __FILE__, __LINE__)
 #define XtRealloc(ptr,size) _XtRealloc(ptr, size, __FILE__, __LINE__)
@@ -1974,14 +1989,14 @@ extern void XtSetWMColormapWindows(
     Cardinal		/* count */
 );
 
-extern String XtFindFile(
+extern _XtString XtFindFile(
     _Xconst _XtString	/* path */,
     Substitution	/* substitutions */,
     Cardinal 		/* num_substitutions */,
     XtFilePredicate	/* predicate */
 );
 
-extern String XtResolvePathname(
+extern _XtString XtResolvePathname(
     Display*		/* dpy */,
     _Xconst _XtString	/* type */,
     _Xconst _XtString	/* filename */,
