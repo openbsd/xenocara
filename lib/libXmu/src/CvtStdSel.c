@@ -64,7 +64,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #define XOS_USE_XT_LOCKING
 #endif
-#define X_INCLUDE_NETDB_H
 #include <X11/Xos_r.h>
 #endif
 
@@ -219,29 +218,6 @@ XmuConvertStandardSelection(Widget w, Time time, Atom *selection, Atom *target,
 	*format = 8;
 	return True;
     }
-#if defined(TCPCONN)
-    if (*target == XA_IP_ADDRESS(d)) {
-	char hostname[1024];
-#ifdef XTHREADS_NEEDS_BYNAMEPARAMS
-	_Xgethostbynameparams hparams;
-#endif
-	struct hostent *hostp;
-
-	hostname[0] = '\0';
-	(void) XmuGetHostname (hostname, sizeof hostname);
-
-	if ((hostp = _XGethostbyname (hostname,hparams)) == NULL)
-	    return False;
-
-	if (hostp->h_addrtype != AF_INET) return False;
-	*length = hostp->h_length;
-	*value = XtMalloc(*length);
-	(void) memmove (*value, hostp->h_addr, *length);
-	*type = XA_NET_ADDRESS(d);
-	*format = 8;
-	return True;
-    }
-#endif
     if (*target == XA_USER(d)) {
 	char *name = (char*)getenv("USER");
 	if (name == NULL) return False;
@@ -310,13 +286,12 @@ XmuConvertStandardSelection(Widget w, Time time, Atom *selection, Atom *target,
 #if defined(unix)
 #  define NUM_TARGETS 8
 #else
-#  define NUM_TARGETS 7
+#  define NUM_TARGETS 6
 #endif
 	Atom* std_targets = (Atom*)XtMalloc(NUM_TARGETS*sizeof(Atom));
 	int i = 0;
 	std_targets[i++] = XA_TIMESTAMP(d);
 	std_targets[i++] = XA_HOSTNAME(d);
-	std_targets[i++] = XA_IP_ADDRESS(d);
 	std_targets[i++] = XA_USER(d);
 	std_targets[i++] = XA_CLASS(d);
 	std_targets[i++] = XA_NAME(d);
