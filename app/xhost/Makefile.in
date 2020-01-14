@@ -52,7 +52,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xhost$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
 	compile config.guess config.sub depcomp install-sh missing
@@ -293,6 +293,7 @@ xhost_SOURCES = xhost.c
 AM_CFLAGS = $(CWARNFLAGS) $(XHOST_CFLAGS) $(XAU_CFLAGS)
 xhost_LDADD = $(XHOST_LIBS)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

@@ -160,6 +160,14 @@ XFamily(int af)
 }
 #endif /* NEEDSOCKETS */
 
+#if defined(__CYGWIN__) || defined(WIN32)
+void sethostent(int x)
+{}
+
+void endhostent()
+{}
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -501,13 +509,18 @@ change_host(Display *dpy, char *name, Bool add)
     }
 #ifdef NEEDSOCKETS
     /*
-     * First see if inet_addr() can grok the name; if so, then use it.
+     * First see if inet_aton/inet_addr can grok the name; if so, then use it.
      */
     if (((family == FamilyWild) || (family == FamilyInternet)) &&
-	((addr.s_addr = inet_addr(name)) != -1)) {
+#ifdef HAVE_INET_ATON
+	(inet_aton (name, &addr) != 0)
+#else
+	((addr.s_addr = inet_addr(name)) != -1)
+#endif
+        ) {
 	ha.family = FamilyInternet;
-	ha.length = 4;		/* but for Cray would be sizeof(addr.s_addr) */
-	ha.address = (char *)&addr; /* but for Cray would be &addr.s_addr */
+	ha.length = sizeof(addr.s_addr);
+	ha.address = (char *) &addr.s_addr;
 	if (add) {
 	    XAddHost (dpy, &ha);
 	    printf ("%s %s\n", name, add_msg);
@@ -674,6 +687,8 @@ get_hostname(XHostAddress *ha)
 #endif
 	    sin->sin_family = AF_INET;
 	    sin->sin_port = 0;
+	    if (sizeof(sin->sin_addr) > ha->length)
+		return "";
 	    memcpy(&sin->sin_addr, ha->address, sizeof(sin->sin_addr));
 	    saddrlen = sizeof(struct sockaddr_in);
 	} else {
@@ -683,6 +698,8 @@ get_hostname(XHostAddress *ha)
 #endif
 	    sin6->sin6_family = AF_INET6;
 	    sin6->sin6_port = 0;
+	    if (sizeof(sin6->sin6_addr) > ha->length)
+		return "";
 	    memcpy(&sin6->sin6_addr, ha->address, sizeof(sin6->sin6_addr));
 	    saddrlen = sizeof(struct sockaddr_in6);
 	}
@@ -842,12 +859,3 @@ local_xerror(Display *dpy, XErrorEvent *rep)
     XmuPrintDefaultErrorMessage (dpy, rep, stderr);
     return 0;
 }
-
-#if defined(__CYGWIN__) || defined(WIN32)
-void sethostent(int x)
-{}
-
-void endhostent()
-{}
-#endif
-
