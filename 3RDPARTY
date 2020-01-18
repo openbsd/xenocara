@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.357 2020/01/14 21:28:50 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.358 2020/01/18 15:20:28 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.10.1
@@ -8,7 +8,7 @@ Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	351
-Current Vers:	351
+Current Vers:	352
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
@@ -32,7 +32,7 @@ Archive Site:	https://mesa.freedesktop.org/archive/glu/
 
 Package:	libepoxy
 Version:	1.5.2
-Current Vers:	1.5.3
+Current Vers:	1.5.4
 Maintainer:	Eric Anholt
 Archive Site:	https://github.com/anholt/libepoxy/releases
 
