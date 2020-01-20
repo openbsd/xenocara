@@ -364,7 +364,7 @@ static XtActionsRec actionsList[] = {
     { "meta-sends-escape",	HandleMetaEsc },
     { "set-num-lock",		HandleNumLock },
 #endif
-#ifdef OPT_PRINT_ON_EXIT
+#if OPT_PRINT_ON_EXIT
     { "print-immediate",	HandlePrintImmediate },
     { "print-on-error",		HandlePrintOnError },
 #endif
