@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.166 2019/08/13 18:45:38 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.167 2020/01/21 15:50:03 okan Exp $
  */
 
 #include <sys/types.h>
@@ -322,6 +322,7 @@ kbfunc_client_snap(void *ctx, struct cargs *cargs)
 		}
 	}
 	client_move(cc);
+	client_ptr_inbound(cc, 1);
 }
 
 void
