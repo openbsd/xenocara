@@ -555,14 +555,18 @@ lp_build_add(struct lp_build_context *bld,
         return bld->one;
 
       if (!type.floating && !type.fixed) {
+         if (HAVE_LLVM >= 0x0800) {
+            char intrin[32];
+            intrinsic = type.sign ? "llvm.sadd.sat" : "llvm.uadd.sat";
+            lp_format_intrinsic(intrin, sizeof intrin, intrinsic, bld->vec_type);
+            return lp_build_intrinsic_binary(builder, intrin, bld->vec_type, a, b);
+         }
          if (type.width * type.length == 128) {
             if (util_cpu_caps.has_sse2) {
                if (type.width == 8)
-                 intrinsic = type.sign ? "llvm.x86.sse2.padds.b" :
-                                         HAVE_LLVM < 0x0800 ? "llvm.x86.sse2.paddus.b" : NULL;
+                 intrinsic = type.sign ? "llvm.x86.sse2.padds.b" : "llvm.x86.sse2.paddus.b";
                if (type.width == 16)
-                 intrinsic = type.sign ? "llvm.x86.sse2.padds.w" :
-                                         HAVE_LLVM < 0x0800 ? "llvm.x86.sse2.paddus.w" : NULL;
+                 intrinsic = type.sign ? "llvm.x86.sse2.padds.w" : "llvm.x86.sse2.paddus.w";
             } else if (util_cpu_caps.has_altivec) {
                if (type.width == 8)
                   intrinsic = type.sign ? "llvm.ppc.altivec.vaddsbs" : "llvm.ppc.altivec.vaddubs";
@@ -573,11 +577,9 @@ lp_build_add(struct lp_build_context *bld,
          if (type.width * type.length == 256) {
             if (util_cpu_caps.has_avx2) {
                if (type.width == 8)
-                  intrinsic = type.sign ? "llvm.x86.avx2.padds.b" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.avx2.paddus.b" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.avx2.padds.b" : "llvm.x86.avx2.paddus.b";
                if (type.width == 16)
-                  intrinsic = type.sign ? "llvm.x86.avx2.padds.w" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.avx2.paddus.w" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.avx2.padds.w" : "llvm.x86.avx2.paddus.w";
             }
          }
       }
@@ -625,6 +627,7 @@ lp_build_add(struct lp_build_context *bld,
           * NOTE: cmp/select does sext/trunc of the mask. Does not seem to
           * interfere with llvm's ability to recognize the pattern but seems
           * a bit brittle.
+          * NOTE: llvm 9+ always uses (non arch specific) intrinsic.
           */
          LLVMValueRef overflowed = lp_build_cmp(bld, PIPE_FUNC_GREATER, a, res);
          res = lp_build_select(bld, overflowed,
@@ -876,14 +879,18 @@ lp_build_sub(struct lp_build_context *bld,
         return bld->zero;
 
       if (!type.floating && !type.fixed) {
+         if (HAVE_LLVM >= 0x0800) {
+            char intrin[32];
+            intrinsic = type.sign ? "llvm.ssub.sat" : "llvm.usub.sat";
+            lp_format_intrinsic(intrin, sizeof intrin, intrinsic, bld->vec_type);
+            return lp_build_intrinsic_binary(builder, intrin, bld->vec_type, a, b);
+         }
          if (type.width * type.length == 128) {
             if (util_cpu_caps.has_sse2) {
                if (type.width == 8)
-                  intrinsic = type.sign ? "llvm.x86.sse2.psubs.b" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.sse2.psubus.b" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.sse2.psubs.b" : "llvm.x86.sse2.psubus.b";
                if (type.width == 16)
-                  intrinsic = type.sign ? "llvm.x86.sse2.psubs.w" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.sse2.psubus.w" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.sse2.psubs.w" : "llvm.x86.sse2.psubus.w";
             } else if (util_cpu_caps.has_altivec) {
                if (type.width == 8)
                   intrinsic = type.sign ? "llvm.ppc.altivec.vsubsbs" : "llvm.ppc.altivec.vsububs";
@@ -894,11 +901,9 @@ lp_build_sub(struct lp_build_context *bld,
          if (type.width * type.length == 256) {
             if (util_cpu_caps.has_avx2) {
                if (type.width == 8)
-                  intrinsic = type.sign ? "llvm.x86.avx2.psubs.b" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.avx2.psubus.b" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.avx2.psubs.b" : "llvm.x86.avx2.psubus.b";
                if (type.width == 16)
-                  intrinsic = type.sign ? "llvm.x86.avx2.psubs.w" :
-                                          HAVE_LLVM < 0x0800 ? "llvm.x86.avx2.psubus.w" : NULL;
+                  intrinsic = type.sign ? "llvm.x86.avx2.psubs.w" : "llvm.x86.avx2.psubus.w";
             }
          }
       }
@@ -925,6 +930,7 @@ lp_build_sub(struct lp_build_context *bld,
           * NOTE: cmp/select does sext/trunc of the mask. Does not seem to
           * interfere with llvm's ability to recognize the pattern but seems
           * a bit brittle.
+          * NOTE: llvm 9+ always uses (non arch specific) intrinsic.
           */
          LLVMValueRef no_ov = lp_build_cmp(bld, PIPE_FUNC_GREATER, a, b);
          a = lp_build_select(bld, no_ov, a, b);
@@ -2693,11 +2699,11 @@ lp_build_sqrt(struct lp_build_context *bld,
 /**
  * Do one Newton-Raphson step to improve reciprocate precision:
  *
- *   x_{i+1} = x_i * (2 - a * x_i)
+ *   x_{i+1} = x_i + x_i * (1 - a * x_i)
  *
  * XXX: Unfortunately this won't give IEEE-754 conformant results for 0 or
  * +/-Inf, giving NaN instead.  Certain applications rely on this behavior,
- * such as Google Earth, which does RCP(RSQRT(0.0) when drawing the Earth's
+ * such as Google Earth, which does RCP(RSQRT(0.0)) when drawing the Earth's
  * halo. It would be necessary to clamp the argument to prevent this.
  *
  * See also:
@@ -2710,12 +2716,12 @@ lp_build_rcp_refine(struct lp_build_context *bld,
                     LLVMValueRef rcp_a)
 {
    LLVMBuilderRef builder = bld->gallivm->builder;
-   LLVMValueRef two = lp_build_const_vec(bld->gallivm, bld->type, 2.0);
+   LLVMValueRef neg_a;
    LLVMValueRef res;
 
-   res = LLVMBuildFMul(builder, a, rcp_a, "");
-   res = LLVMBuildFSub(builder, two, res, "");
-   res = LLVMBuildFMul(builder, rcp_a, res, "");
+   neg_a = LLVMBuildFNeg(builder, a, "");
+   res = lp_build_fmuladd(builder, neg_a, rcp_a, bld->one);
+   res = lp_build_fmuladd(builder, res, rcp_a, rcp_a);
 
    return res;
 }

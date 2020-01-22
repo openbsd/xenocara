@@ -119,7 +119,7 @@ count_uniform_storage_slots(const struct glsl_type *type)
     * type is a composite type or an array where each element occupies
     * more than one slot than we need to recursively process it.
     */
-   if (glsl_type_is_struct(type)) {
+   if (glsl_type_is_struct_or_ifc(type)) {
       unsigned location_count = 0;
 
       for (unsigned i = 0; i < glsl_get_length(type); i++) {
@@ -135,7 +135,7 @@ count_uniform_storage_slots(const struct glsl_type *type)
       const struct glsl_type *element_type = glsl_get_array_element(type);
 
       if (glsl_type_is_array(element_type) ||
-          glsl_type_is_struct(element_type)) {
+          glsl_type_is_struct_or_ifc(element_type)) {
          unsigned element_count = count_uniform_storage_slots(element_type);
          return element_count * glsl_get_length(type);
       }
@@ -180,34 +180,32 @@ brw_nir_setup_glsl_uniform(gl_shader_stage stage, nir_variable *var,
           storage->type->is_image())
          continue;
 
-      {
-         gl_constant_value *components = storage->storage;
-         unsigned vector_count = (MAX2(storage->array_elements, 1) *
-                                  storage->type->matrix_columns);
-         unsigned vector_size = storage->type->vector_elements;
-         unsigned max_vector_size = 4;
-         if (storage->type->base_type == GLSL_TYPE_DOUBLE ||
-             storage->type->base_type == GLSL_TYPE_UINT64 ||
-             storage->type->base_type == GLSL_TYPE_INT64) {
-            vector_size *= 2;
-            if (vector_size > 4)
-               max_vector_size = 8;
+      gl_constant_value *components = storage->storage;
+      unsigned vector_count = (MAX2(storage->array_elements, 1) *
+                               storage->type->matrix_columns);
+      unsigned vector_size = storage->type->vector_elements;
+      unsigned max_vector_size = 4;
+      if (storage->type->base_type == GLSL_TYPE_DOUBLE ||
+          storage->type->base_type == GLSL_TYPE_UINT64 ||
+          storage->type->base_type == GLSL_TYPE_INT64) {
+         vector_size *= 2;
+         if (vector_size > 4)
+            max_vector_size = 8;
+      }
+
+      for (unsigned s = 0; s < vector_count; s++) {
+         unsigned i;
+         for (i = 0; i < vector_size; i++) {
+            uint32_t idx = components - prog->sh.data->UniformDataSlots;
+            stage_prog_data->param[uniform_index++] = BRW_PARAM_UNIFORM(idx);
+            components++;
          }
 
-         for (unsigned s = 0; s < vector_count; s++) {
-            unsigned i;
-            for (i = 0; i < vector_size; i++) {
-               uint32_t idx = components - prog->sh.data->UniformDataSlots;
-               stage_prog_data->param[uniform_index++] = BRW_PARAM_UNIFORM(idx);
-               components++;
-            }
-
-            if (!is_scalar) {
-               /* Pad out with zeros if needed (only needed for vec4) */
-               for (; i < max_vector_size; i++) {
-                  stage_prog_data->param[uniform_index++] =
-                     BRW_PARAM_BUILTIN_ZERO;
-               }
+         if (!is_scalar) {
+            /* Pad out with zeros if needed (only needed for vec4) */
+            for (; i < max_vector_size; i++) {
+               stage_prog_data->param[uniform_index++] =
+                  BRW_PARAM_BUILTIN_ZERO;
             }
          }
       }
@@ -357,7 +355,7 @@ brw_nir_lower_gl_images(nir_shader *shader,
             b.cursor = nir_before_instr(&intrin->instr);
             nir_ssa_def *index = nir_iadd(&b, nir_imm_int(&b, image_var_idx),
                                           get_aoa_deref_offset(&b, deref, 1));
-            brw_nir_rewrite_image_intrinsic(intrin, index);
+            nir_rewrite_image_intrinsic(intrin, index, false);
             break;
          }
 
@@ -394,6 +392,62 @@ brw_nir_lower_gl_images(nir_shader *shader,
          default:
             break;
          }
+      }
+   }
+}
+
+void
+brw_nir_lower_legacy_clipping(nir_shader *nir, int nr_userclip_plane_consts,
+                              struct brw_stage_prog_data *prog_data)
+{
+   if (nr_userclip_plane_consts == 0)
+      return;
+
+   nir_function_impl *impl = nir_shader_get_entrypoint(nir);
+
+   nir_lower_clip_vs(nir, (1 << nr_userclip_plane_consts) - 1, true);
+   nir_lower_io_to_temporaries(nir, impl, true, false);
+   nir_lower_global_vars_to_local(nir);
+   nir_lower_vars_to_ssa(nir);
+
+   const unsigned clip_plane_base = nir->num_uniforms;
+
+   assert(nir->num_uniforms == prog_data->nr_params * 4);
+   const unsigned num_clip_floats = 4 * nr_userclip_plane_consts;
+   uint32_t *clip_param =
+      brw_stage_prog_data_add_params(prog_data, num_clip_floats);
+   nir->num_uniforms += num_clip_floats * sizeof(float);
+   assert(nir->num_uniforms == prog_data->nr_params * 4);
+
+   for (unsigned i = 0; i < num_clip_floats; i++)
+      clip_param[i] = BRW_PARAM_BUILTIN_CLIP_PLANE(i / 4, i % 4);
+
+   nir_builder b;
+   nir_builder_init(&b, impl);
+   nir_foreach_block(block, impl) {
+      nir_foreach_instr_safe(instr, block) {
+         if (instr->type != nir_instr_type_intrinsic)
+            continue;
+
+         nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+         if (intrin->intrinsic != nir_intrinsic_load_user_clip_plane)
+            continue;
+
+         b.cursor = nir_before_instr(instr);
+
+         nir_intrinsic_instr *load =
+            nir_intrinsic_instr_create(nir, nir_intrinsic_load_uniform);
+         load->num_components = 4;
+         load->src[0] = nir_src_for_ssa(nir_imm_int(&b, 0));
+         nir_ssa_dest_init(&load->instr, &load->dest, 4, 32, NULL);
+         nir_intrinsic_set_base(load, clip_plane_base + 4 * sizeof(float) *
+                                      nir_intrinsic_ucp_id(intrin));
+         nir_intrinsic_set_range(load, 4 * sizeof(float));
+         nir_builder_instr_insert(&b, &load->instr);
+
+         nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+                                  nir_src_for_ssa(&load->dest.ssa));
+         nir_instr_remove(instr);
       }
    }
 }

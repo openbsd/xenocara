@@ -31,14 +31,26 @@
 extern "C" {
 #endif
 
-void anv_nir_lower_input_attachments(nir_shader *shader);
-
 void anv_nir_lower_push_constants(nir_shader *shader);
 
 bool anv_nir_lower_multiview(nir_shader *shader, uint32_t view_mask);
 
 bool anv_nir_lower_ycbcr_textures(nir_shader *shader,
                                   struct anv_pipeline_layout *layout);
+
+static inline nir_address_format
+anv_nir_ssbo_addr_format(const struct anv_physical_device *pdevice,
+                         bool robust_buffer_access)
+{
+   if (pdevice->has_a64_buffer_access) {
+      if (robust_buffer_access)
+         return nir_address_format_64bit_bounded_global;
+      else
+         return nir_address_format_64bit_global;
+   } else {
+      return nir_address_format_32bit_index_offset;
+   }
+}
 
 void anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
                                    bool robust_buffer_access,

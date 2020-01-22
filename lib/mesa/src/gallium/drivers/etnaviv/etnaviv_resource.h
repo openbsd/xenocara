@@ -31,12 +31,17 @@
 #include "etnaviv_tiling.h"
 #include "pipe/p_state.h"
 #include "util/list.h"
+#include "util/set.h"
+#include "util/u_helpers.h"
 
+struct etna_context;
 struct pipe_screen;
+struct util_dynarray;
 
 struct etna_resource_level {
    unsigned width, padded_width; /* in pixels */
    unsigned height, padded_height; /* in samples */
+   unsigned depth;
    unsigned offset; /* offset into memory area */
    uint32_t stride; /* row stride */
    uint32_t layer_stride; /* layer stride */
@@ -47,6 +52,12 @@ struct etna_resource_level {
    uint32_t ts_size;
    uint32_t clear_value; /* clear value of resource level (mainly for TS) */
    bool ts_valid;
+   uint8_t ts_mode;
+   int8_t ts_compress_fmt; /* COLOR_COMPRESSION_FORMAT_* (-1 = disable) */
+
+   /* keep track if we have done some per block patching */
+   bool patched;
+   struct util_dynarray *patch_offsets;
 };
 
 enum etna_resource_addressing_mode {
@@ -89,10 +100,7 @@ struct etna_resource {
 
    enum etna_resource_status status;
 
-   /* resources accessed by queued but not flushed draws are tracked
-    * in the used_resources list. */
-   struct list_head list;
-   struct etna_context *pending_ctx;
+   struct set *pending_ctx;
 };
 
 /* returns TRUE if a is newer than b */

@@ -233,20 +233,21 @@ public:
     OSALIGNLINE(volatile long) mTasksOutstanding{0};
 };
 
+/// @note this enum needs to be kept in sync with SWR_TILE_STATE!
 enum HOTTILE_STATE
 {
     HOTTILE_INVALID,  // tile is in unitialized state and should be loaded with surface contents
                       // before rendering
     HOTTILE_CLEAR,    // tile should be cleared
     HOTTILE_DIRTY,    // tile has been rendered to
-    HOTTILE_RESOLVED, // tile has been stored to memory
+    HOTTILE_RESOLVED, // tile is consistent with memory (either loaded or stored)
 };
 
 struct HOTTILE
 {
     uint8_t*      pBuffer;
     HOTTILE_STATE state;
-    DWORD clearData[4]; // May need to change based on pfnClearTile implementation.  Reorder for
+    uint32_t clearData[4]; // May need to change based on pfnClearTile implementation.  Reorder for
                         // alignment?
     uint32_t numSamples;
     uint32_t renderTargetArrayIndex; // current render target array index loaded

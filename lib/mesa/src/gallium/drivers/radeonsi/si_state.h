@@ -41,6 +41,7 @@
 
 struct si_screen;
 struct si_shader;
+struct si_shader_ctx_state;
 struct si_shader_selector;
 struct si_texture;
 struct si_qbo_state;
@@ -55,6 +56,7 @@ struct si_state_blend {
 	unsigned		blend_enable_4bit;
 	unsigned		need_src_alpha_4bit;
 	unsigned		commutative_4bit;
+	unsigned		dcc_msaa_corruption_4bit;
 	bool			alpha_to_coverage:1;
 	bool			alpha_to_one:1;
 	bool			dual_src_blend:1;
@@ -73,6 +75,7 @@ struct si_state_rasterizer {
 	unsigned		clip_plane_enable:8;
 	unsigned		half_pixel_center:1;
 	unsigned		flatshade:1;
+	unsigned		flatshade_first:1;
 	unsigned		two_side:1;
 	unsigned		multisample_enable:1;
 	unsigned		force_persample_interp:1;
@@ -86,6 +89,10 @@ struct si_state_rasterizer {
 	unsigned		rasterizer_discard:1;
 	unsigned		scissor_enable:1;
 	unsigned		clip_halfz:1;
+	unsigned		cull_front:1;
+	unsigned		cull_back:1;
+	unsigned		depth_clamp_any:1;
+	unsigned		provoking_vertex_first:1;
 };
 
 struct si_dsa_stencil_ref_part {
@@ -138,6 +145,25 @@ struct si_vertex_elements
 	uint8_t				fix_fetch[SI_MAX_ATTRIBS];
 	uint8_t				format_size[SI_MAX_ATTRIBS];
 	uint8_t				vertex_buffer_index[SI_MAX_ATTRIBS];
+
+	/* Bitmask of elements that always need a fixup to be applied. */
+	uint16_t			fix_fetch_always;
+
+	/* Bitmask of elements whose fetch should always be opencoded. */
+	uint16_t			fix_fetch_opencode;
+
+	/* Bitmask of elements which need to be opencoded if the vertex buffer
+	 * is unaligned. */
+	uint16_t			fix_fetch_unaligned;
+
+	/* For elements in fix_fetch_unaligned: whether the effective
+	 * element load size as seen by the hardware is a dword (as opposed
+	 * to a short).
+	 */
+	uint16_t			hw_load_is_dword;
+
+	/* Bitmask of vertex buffers requiring alignment check */
+	uint16_t			vb_alignment_check_mask;
 
 	uint8_t				count;
 	bool				uses_instance_divisors;
@@ -204,6 +230,7 @@ union si_state_atoms {
 		struct si_atom spi_map;
 		struct si_atom scratch_state;
 		struct si_atom window_rectangles;
+		struct si_atom shader_query;
 	} s;
 	struct si_atom array[0];
 };
@@ -232,6 +259,14 @@ struct si_shader_data {
 	uint32_t		sh_base[SI_NUM_SHADERS];
 };
 
+#define SI_TRACKED_PA_CL_VS_OUT_CNTL__VS_MASK \
+	(S_02881C_USE_VTX_POINT_SIZE(1) | \
+	 S_02881C_USE_VTX_EDGE_FLAG(1) | \
+	 S_02881C_USE_VTX_RENDER_TARGET_INDX(1) | \
+	 S_02881C_USE_VTX_VIEWPORT_INDX(1) | \
+	 S_02881C_VS_OUT_MISC_VEC_ENA(1) | \
+	 S_02881C_VS_OUT_MISC_SIDE_BUS_ENA(1))
+
 /* The list of registers whose emitted values are remembered by si_context. */
 enum si_tracked_reg {
 	SI_TRACKED_DB_RENDER_CONTROL, /* 2 consecutive registers */
@@ -256,7 +291,8 @@ enum si_tracked_reg {
 	SI_TRACKED_PA_SU_PRIM_FILTER_CNTL,
 	SI_TRACKED_PA_SU_SMALL_PRIM_FILTER_CNTL,
 
-	SI_TRACKED_PA_CL_VS_OUT_CNTL,
+	SI_TRACKED_PA_CL_VS_OUT_CNTL__VS, /* set with SI_TRACKED_PA_CL_VS_OUT_CNTL__VS_MASK*/
+	SI_TRACKED_PA_CL_VS_OUT_CNTL__CL, /* set with ~SI_TRACKED_PA_CL_VS_OUT_CNTL__VS_MASK */
 	SI_TRACKED_PA_CL_CLIP_CNTL,
 
 	SI_TRACKED_PA_SC_BINNER_CNTL_0,
@@ -274,10 +310,9 @@ enum si_tracked_reg {
 
 	SI_TRACKED_VGT_ESGS_RING_ITEMSIZE,
 
-	SI_TRACKED_VGT_GSVS_RING_OFFSET_1, /* 4 consecutive registers */
+	SI_TRACKED_VGT_GSVS_RING_OFFSET_1, /* 3 consecutive registers */
 	SI_TRACKED_VGT_GSVS_RING_OFFSET_2,
 	SI_TRACKED_VGT_GSVS_RING_OFFSET_3,
-	SI_TRACKED_VGT_GS_OUT_PRIM_TYPE,
 
 	SI_TRACKED_VGT_GSVS_RING_ITEMSIZE,
 	SI_TRACKED_VGT_GS_MAX_VERT_OUT,
@@ -294,8 +329,13 @@ enum si_tracked_reg {
 	SI_TRACKED_VGT_PRIMITIVEID_EN,
 	SI_TRACKED_VGT_REUSE_OFF,
 	SI_TRACKED_SPI_VS_OUT_CONFIG,
-	SI_TRACKED_SPI_SHADER_POS_FORMAT,
 	SI_TRACKED_PA_CL_VTE_CNTL,
+	SI_TRACKED_PA_CL_NGG_CNTL,
+	SI_TRACKED_GE_MAX_OUTPUT_PER_SUBGROUP,
+	SI_TRACKED_GE_NGG_SUBGRP_CNTL,
+
+	SI_TRACKED_SPI_SHADER_IDX_FORMAT, /* 2 consecutive registers */
+	SI_TRACKED_SPI_SHADER_POS_FORMAT,
 
 	SI_TRACKED_SPI_PS_INPUT_ENA, /* 2 consecutive registers */
 	SI_TRACKED_SPI_PS_INPUT_ADDR,
@@ -343,6 +383,8 @@ enum {
 	SI_PS_IMAGE_COLORBUF0_FMASK,
 	SI_PS_IMAGE_COLORBUF0_FMASK_HI,
 
+	GFX10_GS_QUERY_BUF,
+
 	SI_NUM_RW_BUFFERS,
 };
 
@@ -374,6 +416,20 @@ enum {
 	u_bit_consecutive(SI_DESCS_FIRST_SHADER + \
 			  PIPE_SHADER_##name * SI_NUM_SHADER_DESCS, \
 			  SI_NUM_SHADER_DESCS)
+
+static inline unsigned
+si_const_and_shader_buffer_descriptors_idx(unsigned shader)
+{
+	return SI_DESCS_FIRST_SHADER + shader * SI_NUM_SHADER_DESCS +
+	       SI_SHADER_DESCS_CONST_AND_SHADER_BUFFERS;
+}
+
+static inline unsigned
+si_sampler_and_image_descriptors_idx(unsigned shader)
+{
+	return SI_DESCS_FIRST_SHADER + shader * SI_NUM_SHADER_DESCS +
+	       SI_SHADER_DESCS_SAMPLERS_AND_IMAGES;
+}
 
 /* This represents descriptors in memory, such as buffer resources,
  * image resources, and sampler states.
@@ -409,14 +465,14 @@ struct si_descriptors {
 
 struct si_buffer_resources {
 	struct pipe_resource		**buffers; /* this has num_buffers elements */
+	unsigned			*offsets; /* this has num_buffers elements */
 
-	enum radeon_bo_usage		shader_usage:4; /* READ, WRITE, or READWRITE */
-	enum radeon_bo_usage		shader_usage_constbuf:4;
 	enum radeon_bo_priority		priority:6;
 	enum radeon_bo_priority		priority_constbuf:6;
 
 	/* The i-th bit is set if that element is enabled (non-NULL resource). */
 	unsigned			enabled_mask;
+	unsigned			writable_mask;
 };
 
 #define si_pm4_state_changed(sctx, member) \
@@ -464,8 +520,9 @@ bool si_upload_vertex_buffer_descriptors(struct si_context *sctx);
 bool si_upload_graphics_shader_descriptors(struct si_context *sctx);
 bool si_upload_compute_shader_descriptors(struct si_context *sctx);
 void si_release_all_descriptors(struct si_context *sctx);
+void si_gfx_resources_add_all_to_bo_list(struct si_context *sctx);
+void si_compute_resources_add_all_to_bo_list(struct si_context *sctx);
 void si_all_descriptors_begin_new_cs(struct si_context *sctx);
-void si_all_resident_buffers_begin_new_cs(struct si_context *sctx);
 void si_upload_const_buffer(struct si_context *sctx, struct si_resource **buf,
 			    const uint8_t *ptr, unsigned size, uint32_t *const_offset);
 void si_update_all_texture_descriptors(struct si_context *sctx);
@@ -487,9 +544,9 @@ struct pb_slab *si_bindless_descriptor_slab_alloc(void *priv, unsigned heap,
 						  unsigned entry_size,
 						  unsigned group_index);
 void si_bindless_descriptor_slab_free(void *priv, struct pb_slab *pslab);
-void si_rebind_buffer(struct si_context *sctx, struct pipe_resource *buf,
-		      uint64_t old_va);
+void si_rebind_buffer(struct si_context *sctx, struct pipe_resource *buf);
 /* si_state.c */
+void si_init_state_compute_functions(struct si_context *sctx);
 void si_init_state_functions(struct si_context *sctx);
 void si_init_screen_state_functions(struct si_screen *sscreen);
 void
@@ -497,18 +554,6 @@ si_make_buffer_descriptor(struct si_screen *screen, struct si_resource *buf,
 			  enum pipe_format format,
 			  unsigned offset, unsigned size,
 			  uint32_t *state);
-void
-si_make_texture_descriptor(struct si_screen *screen,
-			   struct si_texture *tex,
-			   bool sampler,
-			   enum pipe_texture_target target,
-			   enum pipe_format pipe_format,
-			   const unsigned char state_swizzle[4],
-			   unsigned first_level, unsigned last_level,
-			   unsigned first_layer, unsigned last_layer,
-			   unsigned width, unsigned height, unsigned depth,
-			   uint32_t *state,
-			   uint32_t *fmask_state);
 struct pipe_sampler_view *
 si_create_sampler_view_custom(struct pipe_context *ctx,
 			      struct pipe_resource *texture,
@@ -518,14 +563,26 @@ si_create_sampler_view_custom(struct pipe_context *ctx,
 void si_update_fb_dirtiness_after_rendering(struct si_context *sctx);
 void si_update_ps_iter_samples(struct si_context *sctx);
 void si_save_qbo_state(struct si_context *sctx, struct si_qbo_state *st);
+void si_restore_qbo_state(struct si_context *sctx, struct si_qbo_state *st);
 void si_set_occlusion_query_state(struct si_context *sctx,
 				  bool old_perfect_enable);
+
+struct si_fast_udiv_info32 {
+   unsigned multiplier; /* the "magic number" multiplier */
+   unsigned pre_shift; /* shift for the dividend before multiplying */
+   unsigned post_shift; /* shift for the dividend after multiplying */
+   int increment; /* 0 or 1; if set then increment the numerator, using one of
+                     the two strategies */
+};
+
+struct si_fast_udiv_info32
+si_compute_fast_udiv_info32(uint32_t D, unsigned num_bits);
 
 /* si_state_binning.c */
 void si_emit_dpbb_state(struct si_context *sctx);
 
 /* si_state_shaders.c */
-void *si_get_ir_binary(struct si_shader_selector *sel);
+void *si_get_ir_binary(struct si_shader_selector *sel, bool ngg, bool es);
 bool si_shader_cache_load_shader(struct si_screen *sscreen, void *ir_binary,
 				 struct si_shader *shader);
 bool si_shader_cache_insert_shader(struct si_screen *sscreen, void *ir_binary,
@@ -542,8 +599,24 @@ void si_schedule_initial_compile(struct si_context *sctx, unsigned processor,
 void si_get_active_slot_masks(const struct tgsi_shader_info *info,
 			      uint32_t *const_and_shader_buffers,
 			      uint64_t *samplers_and_images);
+int si_shader_select_with_key(struct si_screen *sscreen,
+			      struct si_shader_ctx_state *state,
+			      struct si_compiler_ctx_state *compiler_state,
+			      struct si_shader_key *key,
+			      int thread_index,
+			      bool optimized_or_none);
+void si_shader_selector_key_vs(struct si_context *sctx,
+			       struct si_shader_selector *vs,
+			       struct si_shader_key *key,
+			       struct si_vs_prolog_bits *prolog_key);
+unsigned si_get_input_prim(const struct si_shader_selector *gs);
+bool si_update_ngg(struct si_context *sctx);
 
 /* si_state_draw.c */
+void si_emit_surface_sync(struct si_context *sctx, struct radeon_cmdbuf *cs,
+			  unsigned cp_coher_cntl);
+void si_prim_discard_signal_next_compute_ib_start(struct si_context *sctx);
+void gfx10_emit_cache_flush(struct si_context *sctx);
 void si_emit_cache_flush(struct si_context *sctx);
 void si_trace_emit(struct si_context *sctx);
 void si_init_draw_functions(struct si_context *sctx);

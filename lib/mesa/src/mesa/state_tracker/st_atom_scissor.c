@@ -36,6 +36,7 @@
 #include "st_context.h"
 #include "pipe/p_context.h"
 #include "st_atom.h"
+#include "st_util.h"
 
 
 /**
@@ -52,6 +53,9 @@ st_update_scissor( struct st_context *st )
    GLint miny, maxy;
    unsigned i;
    bool changed = false;
+
+   if (!ctx->Scissor.EnableFlags)
+      return;
 
    for (i = 0 ; i < st->state.num_viewports; i++) {
       scissor[i].minx = 0;

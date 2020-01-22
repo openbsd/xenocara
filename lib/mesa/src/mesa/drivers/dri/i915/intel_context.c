@@ -446,7 +446,7 @@ intelInitContext(struct intel_context *intel,
 	  0, sizeof(ctx->TextureFormatSupported));
 
    driParseConfigFiles(&intel->optionCache, &intelScreen->optionCache,
-                       sPriv->myNum, "i915", NULL);
+                       sPriv->myNum, "i915", NULL, NULL, 0);
    intel->maxBatchSize = 4096;
 
    /* Estimate the size of the mappable aperture into the GTT.  There's an
@@ -599,7 +599,7 @@ intelDestroyContext(__DRIcontext * driContextPriv)
       driDestroyOptionCache(&intel->optionCache);
 
       /* free the Mesa context */
-      _mesa_free_context_data(&intel->ctx);
+      _mesa_free_context_data(&intel->ctx, true);
 
       _math_matrix_dtr(&intel->ViewportMatrix);
 

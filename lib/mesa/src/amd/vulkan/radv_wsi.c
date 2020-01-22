@@ -42,7 +42,8 @@ radv_init_wsi(struct radv_physical_device *physical_device)
 			       radv_physical_device_to_handle(physical_device),
 			       radv_wsi_proc_addr,
 			       &physical_device->instance->alloc,
-			       physical_device->master_fd);
+			       physical_device->master_fd,
+			       &physical_device->instance->dri_options);
 }
 
 void
@@ -237,8 +238,8 @@ VkResult radv_AcquireNextImage2KHR(
 							 pImageIndex);
 
 	if (fence && (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)) {
-		fence->submitted = true;
-		fence->signalled = true;
+		if (fence->fence)
+			device->ws->signal_fence(fence->fence);
 		if (fence->temp_syncobj) {
 			device->ws->signal_syncobj(device->ws, fence->temp_syncobj);
 		} else if (fence->syncobj) {

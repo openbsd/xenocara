@@ -25,7 +25,7 @@
 */
 
 /* Platform-specific types and definitions for egl.h
- * $Revision: 1.16 $ on $Date: 2019/07/01 08:36:47 $
+ * $Revision: 1.17 $ on $Date: 2020/01/22 02:49:19 $
  *
  * Adopters may modify khrplatform.h and this file to suit their platform.
  * You are encouraged to submit all modifications to the Khronos group so that
@@ -77,11 +77,17 @@ typedef HDC     EGLNativeDisplayType;
 typedef HBITMAP EGLNativePixmapType;
 typedef HWND    EGLNativeWindowType;
 
+#elif defined(__EMSCRIPTEN__)
+
+typedef int EGLNativeDisplayType;
+typedef int EGLNativePixmapType;
+typedef int EGLNativeWindowType;
+
 #elif defined(__WINSCW__) || defined(__SYMBIAN32__)  /* Symbian */
 
 typedef int   EGLNativeDisplayType;
-typedef void *EGLNativeWindowType;
 typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
 
 #elif defined(WL_EGL_PLATFORM)
 
@@ -100,15 +106,15 @@ typedef void               *EGLNativeWindowType;
 struct ANativeWindow;
 struct egl_native_pixmap_t;
 
-typedef struct ANativeWindow*           EGLNativeWindowType;
-typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 typedef void*                           EGLNativeDisplayType;
+typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
+typedef struct ANativeWindow*           EGLNativeWindowType;
 
 #elif defined(USE_OZONE)
 
 typedef intptr_t EGLNativeDisplayType;
-typedef intptr_t EGLNativeWindowType;
 typedef intptr_t EGLNativePixmapType;
+typedef intptr_t EGLNativeWindowType;
 
 #elif defined(__unix__) || defined(__APPLE__)
 

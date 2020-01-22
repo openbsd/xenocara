@@ -49,6 +49,7 @@ lower_load_input_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
 
       nir_intrinsic_set_base(chan_intr, nir_intrinsic_base(intr));
       nir_intrinsic_set_component(chan_intr, nir_intrinsic_component(intr) + i);
+      nir_intrinsic_set_type(chan_intr, nir_intrinsic_type(intr));
       /* offset */
       nir_src_copy(&chan_intr->src[0], &intr->src[0], chan_intr);
 
@@ -81,6 +82,7 @@ lower_store_output_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
       nir_intrinsic_set_base(chan_intr, nir_intrinsic_base(intr));
       nir_intrinsic_set_write_mask(chan_intr, 0x1);
       nir_intrinsic_set_component(chan_intr, nir_intrinsic_component(intr) + i);
+      nir_intrinsic_set_type(chan_intr, nir_intrinsic_type(intr));
 
       /* value */
       chan_intr->src[0] = nir_src_for_ssa(nir_channel(b, value, i));
@@ -341,7 +343,7 @@ nir_lower_io_to_scalar_early(nir_shader *shader, nir_variable_mode mask)
 
               /* Skip types we cannot split */
               if (glsl_type_is_matrix(glsl_without_array(var->type)) ||
-                  glsl_type_is_struct(glsl_without_array(var->type)))
+                  glsl_type_is_struct_or_ifc(glsl_without_array(var->type)))
                  continue;
 
                switch (intr->intrinsic) {

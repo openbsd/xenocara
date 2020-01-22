@@ -77,7 +77,7 @@ pipe_reference_described(struct pipe_reference *dst,
    if (dst != src) {
       /* bump the src.count first */
       if (src) {
-         MAYBE_UNUSED int count = p_atomic_inc_return(&src->count);
+         ASSERTED int count = p_atomic_inc_return(&src->count);
          assert(count != 1); /* src had to be referenced */
          debug_reference(src, get_desc, 1);
       }
@@ -190,26 +190,6 @@ pipe_sampler_view_reference(struct pipe_sampler_view **dst,
                                 debug_describe_sampler_view))
       old_dst->context->sampler_view_destroy(old_dst->context, old_dst);
    *dst = src;
-}
-
-/**
- * Similar to pipe_sampler_view_reference() but always set the pointer to
- * NULL and pass in the current context explicitly.
- *
- * If *ptr is non-NULL, it may refer to a view that was created in a different
- * context (however, that context must still be alive).
- */
-static inline void
-pipe_sampler_view_release(struct pipe_context *ctx,
-                          struct pipe_sampler_view **ptr)
-{
-   struct pipe_sampler_view *old_view = *ptr;
-
-   if (pipe_reference_described(&old_view->reference, NULL,
-                    (debug_reference_descriptor)debug_describe_sampler_view)) {
-      ctx->sampler_view_destroy(ctx, old_view);
-   }
-   *ptr = NULL;
 }
 
 static inline void
@@ -681,6 +661,22 @@ util_copy_constant_buffer(struct pipe_constant_buffer *dst,
 }
 
 static inline void
+util_copy_shader_buffer(struct pipe_shader_buffer *dst,
+                        const struct pipe_shader_buffer *src)
+{
+   if (src) {
+      pipe_resource_reference(&dst->buffer, src->buffer);
+      dst->buffer_offset = src->buffer_offset;
+      dst->buffer_size = src->buffer_size;
+   }
+   else {
+      pipe_resource_reference(&dst->buffer, NULL);
+      dst->buffer_offset = 0;
+      dst->buffer_size = 0;
+   }
+}
+
+static inline void
 util_copy_image_view(struct pipe_image_view *dst,
                      const struct pipe_image_view *src)
 {
@@ -688,11 +684,13 @@ util_copy_image_view(struct pipe_image_view *dst,
       pipe_resource_reference(&dst->resource, src->resource);
       dst->format = src->format;
       dst->access = src->access;
+      dst->shader_access = src->shader_access;
       dst->u = src->u;
    } else {
       pipe_resource_reference(&dst->resource, NULL);
       dst->format = PIPE_FORMAT_NONE;
       dst->access = 0;
+      dst->shader_access = 0;
       memset(&dst->u, 0, sizeof(dst->u));
    }
 }
@@ -731,6 +729,17 @@ util_texrange_covers_whole_level(const struct pipe_resource *tex,
           width == u_minify(tex->width0, level) &&
           height == u_minify(tex->height0, level) &&
           depth == util_num_layers(tex, level);
+}
+
+static inline struct pipe_context *
+pipe_create_multimedia_context(struct pipe_screen *screen)
+{
+   unsigned flags = 0;
+
+   if (!screen->get_param(screen, PIPE_CAP_GRAPHICS))
+      flags |= PIPE_CONTEXT_COMPUTE_ONLY;
+
+   return screen->context_create(screen, NULL, flags);
 }
 
 #ifdef __cplusplus

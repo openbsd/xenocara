@@ -40,6 +40,7 @@
 #include "core/fifo.hpp"
 #include "core/knobs.h"
 #include "common/intrin.h"
+#include "common/rdtsc_buckets.h"
 #include "core/threads.h"
 #include "ringbuffer.h"
 #include "archrast/archrast.h"
@@ -139,6 +140,7 @@ struct COMPUTE_DESC
     uint32_t threadGroupCountX;
     uint32_t threadGroupCountY;
     uint32_t threadGroupCountZ;
+    bool     enableThreadDispatch;
 };
 
 typedef void (*PFN_WORK_FUNC)(DRAW_CONTEXT* pDC,
@@ -230,7 +232,6 @@ typedef void (*PFN_PROCESS_PRIMS)(DRAW_CONTEXT*      pDC,
                                   simdscalari const& viewportIdx,
                                   simdscalari const& rtIdx);
 
-#if ENABLE_AVX512_SIMD16
 // function signature for pipeline stages that execute after primitive assembly
 typedef void(SIMDCALL* PFN_PROCESS_PRIMS_SIMD16)(DRAW_CONTEXT*        pDC,
                                                  PA_STATE&            pa,
@@ -241,7 +242,6 @@ typedef void(SIMDCALL* PFN_PROCESS_PRIMS_SIMD16)(DRAW_CONTEXT*        pDC,
                                                  simd16scalari const& viewportIdx,
                                                  simd16scalari const& rtIdx);
 
-#endif
 OSALIGNLINE(struct) API_STATE
 {
     // Vertex Buffers
@@ -264,8 +264,8 @@ OSALIGNLINE(struct) API_STATE
     PFN_CS_FUNC pfnCsFunc;
     uint32_t    totalThreadsInGroup;
     uint32_t    totalSpillFillSize;
-    uint32_t    scratchSpaceSize;
-    uint32_t    scratchSpaceNumInstances;
+    uint32_t    scratchSpaceSizePerWarp;
+    uint32_t    scratchSpaceNumWarps;
 
     // FE - Frontend State
     SWR_FRONTEND_STATE frontendState;
@@ -331,12 +331,17 @@ OSALIGNLINE(struct) API_STATE
 
 class MacroTileMgr;
 class DispatchQueue;
+class HOTTILE;
 
 struct RenderOutputBuffers
 {
     uint8_t* pColor[SWR_NUM_RENDERTARGETS];
     uint8_t* pDepth;
     uint8_t* pStencil;
+
+    HOTTILE* pColorHotTile[SWR_NUM_RENDERTARGETS];
+    HOTTILE* pDepthHotTile;
+    HOTTILE* pStencilHotTile;
 };
 
 // Plane equation A/B/C coeffs used to evaluate I/J barycentric coords
@@ -525,12 +530,16 @@ struct SWR_CONTEXT
     HotTileMgr* pHotTileMgr;
 
     // Callback functions, passed in at create context time
-    PFN_LOAD_TILE              pfnLoadTile;
-    PFN_STORE_TILE             pfnStoreTile;
-    PFN_CLEAR_TILE             pfnClearTile;
-    PFN_UPDATE_SO_WRITE_OFFSET pfnUpdateSoWriteOffset;
-    PFN_UPDATE_STATS           pfnUpdateStats;
-    PFN_UPDATE_STATS_FE        pfnUpdateStatsFE;
+    PFN_LOAD_TILE                  pfnLoadTile;
+    PFN_STORE_TILE                 pfnStoreTile;
+    PFN_TRANSLATE_GFXPTR_FOR_READ  pfnTranslateGfxptrForRead;
+    PFN_TRANSLATE_GFXPTR_FOR_WRITE pfnTranslateGfxptrForWrite;
+    PFN_MAKE_GFXPTR                pfnMakeGfxPtr;
+    PFN_CREATE_MEMORY_CONTEXT      pfnCreateMemoryContext;
+    PFN_DESTROY_MEMORY_CONTEXT     pfnDestroyMemoryContext;
+    PFN_UPDATE_SO_WRITE_OFFSET     pfnUpdateSoWriteOffset;
+    PFN_UPDATE_STATS               pfnUpdateStats;
+    PFN_UPDATE_STATS_FE            pfnUpdateStatsFE;
 
 
     // Global Stats
@@ -550,6 +559,11 @@ struct SWR_CONTEXT
 
     // ArchRast thread contexts.
     HANDLE* pArContext;
+
+    // handle to external memory for worker datas to create memory contexts
+    HANDLE hExternalMemory;
+
+    BucketManager *pBucketMgr;
 };
 
 #define UPDATE_STAT_BE(name, count)                   \
@@ -568,11 +582,11 @@ struct SWR_CONTEXT
 #define AR_API_CTX pDC->pContext->pArContext[pContext->NumWorkerThreads]
 
 #ifdef KNOB_ENABLE_RDTSC
-#define RDTSC_BEGIN(type, drawid) RDTSC_START(type)
-#define RDTSC_END(type, count) RDTSC_STOP(type, count, 0)
+#define RDTSC_BEGIN(pBucketMgr, type, drawid) RDTSC_START(pBucketMgr, type)
+#define RDTSC_END(pBucketMgr, type, count) RDTSC_STOP(pBucketMgr, type, count, 0)
 #else
-#define RDTSC_BEGIN(type, count)
-#define RDTSC_END(type, count)
+#define RDTSC_BEGIN(pBucketMgr, type, drawid)
+#define RDTSC_END(pBucketMgr, type, count)
 #endif
 
 #ifdef KNOB_ENABLE_AR

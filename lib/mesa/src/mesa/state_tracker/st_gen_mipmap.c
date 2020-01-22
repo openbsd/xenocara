@@ -40,6 +40,7 @@
 #include "st_debug.h"
 #include "st_context.h"
 #include "st_texture.h"
+#include "st_util.h"
 #include "st_gen_mipmap.h"
 #include "st_cb_bitmap.h"
 #include "st_cb_texture.h"
@@ -123,6 +124,9 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
       format = stObj->surface_format;
    else
       format = pt->format;
+
+   if (texObj->Sampler.sRGBDecode == GL_SKIP_DECODE_EXT)
+      format = util_format_linear(format);
 
    /* First see if the driver supports hardware mipmap generation,
     * if not then generate the mipmap by rendering/texturing.

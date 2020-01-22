@@ -602,6 +602,13 @@ st_mesa_format_to_pipe_format(const struct st_context *st,
          return PIPE_FORMAT_R8G8B8A8_SRGB;
       return PIPE_FORMAT_ASTC_12x12_SRGB;
 
+   case MESA_FORMAT_ATC_RGB:
+      return PIPE_FORMAT_ATC_RGB;
+   case MESA_FORMAT_ATC_RGBA_EXPLICIT:
+      return PIPE_FORMAT_ATC_RGBA_EXPLICIT;
+   case MESA_FORMAT_ATC_RGBA_INTERPOLATED:
+      return PIPE_FORMAT_ATC_RGBA_INTERPOLATED;
+
    default:
       return PIPE_FORMAT_NONE;
    }
@@ -1088,49 +1095,17 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
    case PIPE_FORMAT_ASTC_12x12_SRGB:
       return MESA_FORMAT_SRGB8_ALPHA8_ASTC_12x12;
 
+   case PIPE_FORMAT_ATC_RGB:
+      return MESA_FORMAT_ATC_RGB;
+   case PIPE_FORMAT_ATC_RGBA_EXPLICIT:
+      return MESA_FORMAT_ATC_RGBA_EXPLICIT;
+   case PIPE_FORMAT_ATC_RGBA_INTERPOLATED:
+      return MESA_FORMAT_ATC_RGBA_INTERPOLATED;
+
    default:
       return MESA_FORMAT_NONE;
    }
 }
-
-
-/**
- * Debug only: check that the two functions above correctly map
- * Mesa formats to Gallium formats and back again.
- */
-static void
-test_format_conversion(struct st_context *st)
-{
-   GLuint i;
-
-   /* test all Mesa formats */
-   for (i = 1; i < MESA_FORMAT_COUNT; i++) {
-      enum pipe_format pf;
-
-      if (st_compressed_format_fallback(st, i))
-         continue;
-
-      pf = st_mesa_format_to_pipe_format(st, i);
-      if (pf != PIPE_FORMAT_NONE) {
-         mesa_format MAYBE_UNUSED mf = st_pipe_format_to_mesa_format(pf);
-         assert(mf == i);
-      }
-   }
-
-   /* Test all Gallium formats */
-   for (i = 1; i < PIPE_FORMAT_COUNT; i++) {
-      mesa_format mf = st_pipe_format_to_mesa_format(i);
-      if (st_compressed_format_fallback(st, mf))
-         continue;
-
-      if (mf != MESA_FORMAT_NONE) {
-         enum pipe_format MAYBE_UNUSED pf =
-            st_mesa_format_to_pipe_format(st, mf);
-         assert(pf == i);
-      }
-   }
-}
-
 
 /**
  * Map GL texture formats to Gallium pipe formats.
@@ -2182,18 +2157,6 @@ st_choose_format(struct st_context *st, GLenum internalFormat,
    int j;
    enum pipe_format pf;
 
-#ifdef DEBUG
-   {
-      static boolean firstCall = TRUE;
-      if (firstCall) {
-         test_format_conversion(st);
-         firstCall = FALSE;
-      }
-   }
-#else
-   (void) test_format_conversion;
-#endif
-
    /* can't render to compressed formats at this time */
    if (_mesa_is_compressed_format(st->ctx, internalFormat)
        && (bindings & ~PIPE_BIND_SAMPLER_VIEW)) {
@@ -2288,7 +2251,7 @@ st_choose_matching_format(struct st_context *st, unsigned bind,
    mesa_format mesa_format;
 
    for (mesa_format = 1; mesa_format < MESA_FORMAT_COUNT; mesa_format++) {
-      if (_mesa_get_format_color_encoding(mesa_format) == GL_SRGB) {
+      if (_mesa_is_format_srgb(mesa_format)) {
          continue;
       }
       if (_mesa_get_format_bits(mesa_format, GL_TEXTURE_INTENSITY_SIZE) > 0) {

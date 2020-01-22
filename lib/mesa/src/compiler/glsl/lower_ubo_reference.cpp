@@ -884,7 +884,7 @@ lower_ubo_reference_visitor::check_for_buffer_struct_copy(ir_assignment *ir)
       return false;
 
    /* LHS and RHS must be records */
-   if (!ir->lhs->type->is_record() || !ir->rhs->type->is_record())
+   if (!ir->lhs->type->is_struct() || !ir->rhs->type->is_struct())
       return false;
 
    /* RHS must be a buffer-backed variable. This is what can cause the problem
@@ -971,7 +971,7 @@ lower_ubo_reference_visitor::lower_ssbo_atomic_intrinsic(ir_call *ir)
 
    ir_rvalue *deref = (ir_rvalue *) inst;
    assert(deref->type->is_scalar() &&
-          (deref->type->is_integer() || deref->type->is_float()));
+          (deref->type->is_integer_32() || deref->type->is_float()));
 
    ir_variable *var = deref->variable_referenced();
    assert(var);

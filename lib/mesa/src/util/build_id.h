@@ -26,6 +26,8 @@
 
 #if defined(HAVE_DL_ITERATE_PHDR) && defined(HAVE_LD_BUILD_ID)
 
+#include <stdint.h>
+
 struct build_id_note;
 
 const struct build_id_note *

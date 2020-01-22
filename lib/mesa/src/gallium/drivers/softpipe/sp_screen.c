@@ -65,12 +65,15 @@ softpipe_get_name(struct pipe_screen *screen)
 static int
 softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
 {
+   struct softpipe_screen *sp_screen = softpipe_screen(screen);
    switch (param) {
    case PIPE_CAP_NPOT_TEXTURES:
    case PIPE_CAP_MIXED_FRAMEBUFFER_SIZES:
    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
       return 1;
-   case PIPE_CAP_SM3:
+   case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
+   case PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES:
+   case PIPE_CAP_VERTEX_SHADER_SATURATE:
       return 1;
    case PIPE_CAP_ANISOTROPIC_FILTER:
       return 1;
@@ -94,8 +97,8 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK:
    case PIPE_CAP_MAX_TEXTURE_UPLOAD_MEMORY_BUDGET:
       return 0;
-   case PIPE_CAP_MAX_TEXTURE_2D_LEVELS:
-      return SP_MAX_TEXTURE_2D_LEVELS;
+   case PIPE_CAP_MAX_TEXTURE_2D_SIZE:
+      return 1 << (SP_MAX_TEXTURE_2D_LEVELS - 1);
    case PIPE_CAP_MAX_TEXTURE_3D_LEVELS:
       return SP_MAX_TEXTURE_3D_LEVELS;
    case PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS:
@@ -122,13 +125,17 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
       return 1024;
    case PIPE_CAP_MAX_VERTEX_STREAMS:
-      return 1;
+      if (sp_screen->use_llvm)
+         return 1;
+      else
+         return PIPE_MAX_VERTEX_STREAMS;
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
    case PIPE_CAP_PRIMITIVE_RESTART:
       return 1;
    case PIPE_CAP_SHADER_STENCIL_EXPORT:
       return 1;
+   case PIPE_CAP_TGSI_ATOMFADD:
    case PIPE_CAP_TGSI_INSTANCEID:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
    case PIPE_CAP_START_INSTANCE:
@@ -152,9 +159,9 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_VERTEX_COLOR_CLAMPED: /* draw module */
       return 1;
    case PIPE_CAP_MIXED_COLORBUFFER_FORMATS:
-      return 0;
+      return 1;
    case PIPE_CAP_GLSL_FEATURE_LEVEL:
-      return 330;
+      return 400;
    case PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY:
       return 140;
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
@@ -169,6 +176,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_DOUBLES:
    case PIPE_CAP_INT64:
    case PIPE_CAP_INT64_DIVMOD:
+   case PIPE_CAP_TGSI_DIV:
       return 1;
    case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
       return 16;
@@ -190,7 +198,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE:
       return 65536;
    case PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
-      return 0;
+      return 16;
    case PIPE_CAP_TGSI_TEXCOORD:
    case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
       return 0;
@@ -210,7 +218,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION:
       return 1;
    case PIPE_CAP_TGSI_FS_FINE_DERIVATIVE:
-      return 0;
+      return 1;
    case PIPE_CAP_SAMPLER_VIEW_TARGET:
       return 1;
    case PIPE_CAP_FAKE_SW_MSAA:
@@ -300,7 +308,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
    case PIPE_CAP_NATIVE_FENCE_FD:
    case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
-   case PIPE_CAP_TGSI_FS_FBFETCH:
+   case PIPE_CAP_FBFETCH:
    case PIPE_CAP_TGSI_MUL_ZERO_WINS:
    case PIPE_CAP_TGSI_CLOCK:
    case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
@@ -398,7 +406,7 @@ softpipe_get_paramf(struct pipe_screen *screen, enum pipe_capf param)
  * \param format  the format to test
  * \param type  one of PIPE_TEXTURE, PIPE_SURFACE
  */
-static boolean
+static bool
 softpipe_is_format_supported( struct pipe_screen *screen,
                               enum pipe_format format,
                               enum pipe_texture_target target,
@@ -424,21 +432,21 @@ softpipe_is_format_supported( struct pipe_screen *screen,
 
    format_desc = util_format_description(format);
    if (!format_desc)
-      return FALSE;
+      return false;
 
    if (sample_count > 1)
-      return FALSE;
+      return false;
 
    if (bind & (PIPE_BIND_DISPLAY_TARGET |
                PIPE_BIND_SCANOUT |
                PIPE_BIND_SHARED)) {
       if(!winsys->is_displaytarget_format_supported(winsys, bind, format))
-         return FALSE;
+         return false;
    }
 
    if (bind & PIPE_BIND_RENDER_TARGET) {
       if (format_desc->colorspace == UTIL_FORMAT_COLORSPACE_ZS)
-         return FALSE;
+         return false;
 
       /*
        * Although possible, it is unnatural to render into compressed or YUV
@@ -447,17 +455,18 @@ softpipe_is_format_supported( struct pipe_screen *screen,
        */
       if (format_desc->block.width != 1 ||
           format_desc->block.height != 1)
-         return FALSE;
+         return false;
    }
 
    if (bind & PIPE_BIND_DEPTH_STENCIL) {
       if (format_desc->colorspace != UTIL_FORMAT_COLORSPACE_ZS)
-         return FALSE;
+         return false;
    }
 
-   if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC) {
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC ||
+       format_desc->layout == UTIL_FORMAT_LAYOUT_ATC) {
       /* Software decoding is not hooked up. */
-      return FALSE;
+      return false;
    }
 
    if ((bind & (PIPE_BIND_RENDER_TARGET | PIPE_BIND_SAMPLER_VIEW)) &&
@@ -474,13 +483,13 @@ softpipe_is_format_supported( struct pipe_screen *screen,
           * PIPE_FORMAT_R8G8B8X8_UNORM, for example, which will not work
           * (different bpp).
           */
-         return FALSE;
+         return false;
       }
    }
 
    if (format_desc->layout == UTIL_FORMAT_LAYOUT_ETC &&
        format != PIPE_FORMAT_ETC1_RGB8)
-      return FALSE;
+      return false;
 
    /*
     * All other operations (sampling, transfer, etc).
@@ -489,7 +498,7 @@ softpipe_is_format_supported( struct pipe_screen *screen,
    /*
     * Everything else should be supported by u_format.
     */
-   return TRUE;
+   return true;
 }
 
 

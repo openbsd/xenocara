@@ -46,10 +46,11 @@
 
 #include <brw_bufmgr.h>
 
-#include "common/gen_debug.h"
+#include "dev/gen_debug.h"
 #include "common/gen_decoder.h"
 #include "intel_screen.h"
 #include "intel_tex_obj.h"
+#include "perf/gen_perf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -388,11 +389,11 @@ struct brw_cache {
    if (unlikely(INTEL_DEBUG & DEBUG_PERF))                      \
       dbg_printf(__VA_ARGS__);                                  \
    if (brw->perf_debug)                                         \
-      _mesa_gl_debug(&brw->ctx, &msg_id,                        \
-                     MESA_DEBUG_SOURCE_API,                     \
-                     MESA_DEBUG_TYPE_PERFORMANCE,               \
-                     MESA_DEBUG_SEVERITY_MEDIUM,                \
-                     __VA_ARGS__);                              \
+      _mesa_gl_debugf(&brw->ctx, &msg_id,                       \
+                      MESA_DEBUG_SOURCE_API,                    \
+                      MESA_DEBUG_TYPE_PERFORMANCE,              \
+                      MESA_DEBUG_SEVERITY_MEDIUM,               \
+                      __VA_ARGS__);                             \
 } while(0)
 
 #define WARN_ONCE(cond, fmt...) do {                            \
@@ -404,10 +405,10 @@ struct brw_cache {
          fprintf(stderr, fmt);                                  \
          _warned = true;                                        \
                                                                 \
-         _mesa_gl_debug(ctx, &msg_id,                           \
-                        MESA_DEBUG_SOURCE_API,                  \
-                        MESA_DEBUG_TYPE_OTHER,                  \
-                        MESA_DEBUG_SEVERITY_HIGH, fmt);         \
+         _mesa_gl_debugf(ctx, &msg_id,                          \
+                         MESA_DEBUG_SOURCE_API,                 \
+                         MESA_DEBUG_TYPE_OTHER,                 \
+                         MESA_DEBUG_SEVERITY_HIGH, fmt);        \
       }                                                         \
    }                                                            \
 } while (0)
@@ -524,7 +525,7 @@ struct intel_batchbuffer {
    } saved;
 
    /** Map from batch offset to brw_state_batch data (with DEBUG_BATCH) */
-   struct hash_table *state_batch_sizes;
+   struct hash_table_u64 *state_batch_sizes;
 
    struct gen_batch_decode_ctx decoder;
 };
@@ -681,48 +682,7 @@ enum brw_predicate_state {
 struct shader_times;
 
 struct gen_l3_config;
-
-enum brw_query_kind {
-   OA_COUNTERS,
-   OA_COUNTERS_RAW,
-   PIPELINE_STATS,
-};
-
-struct brw_perf_query_register_prog {
-   uint32_t reg;
-   uint32_t val;
-};
-
-struct brw_perf_query_info
-{
-   enum brw_query_kind kind;
-   const char *name;
-   const char *guid;
-   struct brw_perf_query_counter *counters;
-   int n_counters;
-   size_t data_size;
-
-   /* OA specific */
-   uint64_t oa_metrics_set_id;
-   int oa_format;
-
-   /* For indexing into the accumulator[] ... */
-   int gpu_time_offset;
-   int gpu_clock_offset;
-   int a_offset;
-   int b_offset;
-   int c_offset;
-
-   /* Register programming for a given query */
-   struct brw_perf_query_register_prog *flex_regs;
-   uint32_t n_flex_regs;
-
-   struct brw_perf_query_register_prog *mux_regs;
-   uint32_t n_mux_regs;
-
-   struct brw_perf_query_register_prog *b_counter_regs;
-   uint32_t n_b_counter_regs;
-};
+struct gen_perf;
 
 struct brw_uploader {
    struct brw_bufmgr *bufmgr;
@@ -754,6 +714,9 @@ struct brw_context
                                         uint32_t report_id);
 
       void (*emit_compute_walker)(struct brw_context *brw);
+      void (*emit_raw_pipe_control)(struct brw_context *brw, uint32_t flags,
+                                    struct brw_bo *bo, uint32_t offset,
+                                    uint64_t imm);
    } vtbl;
 
    struct brw_bufmgr *bufmgr;
@@ -1199,91 +1162,7 @@ struct brw_context
       bool supported;
    } predicate;
 
-   struct {
-      /* Variables referenced in the XML meta data for OA performance
-       * counters, e.g in the normalization equations.
-       *
-       * All uint64_t for consistent operand types in generated code
-       */
-      struct {
-         uint64_t timestamp_frequency; /** $GpuTimestampFrequency */
-         uint64_t n_eus;               /** $EuCoresTotalCount */
-         uint64_t n_eu_slices;         /** $EuSlicesTotalCount */
-         uint64_t n_eu_sub_slices;     /** $EuSubslicesTotalCount */
-         uint64_t eu_threads_count;    /** $EuThreadsCount */
-         uint64_t slice_mask;          /** $SliceMask */
-         uint64_t subslice_mask;       /** $SubsliceMask */
-         uint64_t gt_min_freq;         /** $GpuMinFrequency */
-         uint64_t gt_max_freq;         /** $GpuMaxFrequency */
-         uint64_t revision;            /** $SkuRevisionId */
-      } sys_vars;
-
-      /* OA metric sets, indexed by GUID, as know by Mesa at build time,
-       * to cross-reference with the GUIDs of configs advertised by the
-       * kernel at runtime
-       */
-      struct hash_table *oa_metrics_table;
-
-      /* Location of the device's sysfs entry. */
-      char sysfs_dev_dir[256];
-
-      struct brw_perf_query_info *queries;
-      int n_queries;
-
-      /* The i915 perf stream we open to setup + enable the OA counters */
-      int oa_stream_fd;
-
-      /* An i915 perf stream fd gives exclusive access to the OA unit that will
-       * report counter snapshots for a specific counter set/profile in a
-       * specific layout/format so we can only start OA queries that are
-       * compatible with the currently open fd...
-       */
-      int current_oa_metrics_set_id;
-      int current_oa_format;
-
-      /* List of buffers containing OA reports */
-      struct exec_list sample_buffers;
-
-      /* Cached list of empty sample buffers */
-      struct exec_list free_sample_buffers;
-
-      int n_active_oa_queries;
-      int n_active_pipeline_stats_queries;
-
-      /* The number of queries depending on running OA counters which
-       * extends beyond brw_end_perf_query() since we need to wait until
-       * the last MI_RPC command has parsed by the GPU.
-       *
-       * Accurate accounting is important here as emitting an
-       * MI_REPORT_PERF_COUNT command while the OA unit is disabled will
-       * effectively hang the gpu.
-       */
-      int n_oa_users;
-
-      /* To help catch an spurious problem with the hardware or perf
-       * forwarding samples, we emit each MI_REPORT_PERF_COUNT command
-       * with a unique ID that we can explicitly check for...
-       */
-      int next_query_start_report_id;
-
-      /**
-       * An array of queries whose results haven't yet been assembled
-       * based on the data in buffer objects.
-       *
-       * These may be active, or have already ended.  However, the
-       * results have not been requested.
-       */
-      struct brw_perf_query_object **unaccumulated;
-      int unaccumulated_elements;
-      int unaccumulated_array_size;
-
-      /* The total number of query objects so we can relinquish
-       * our exclusive access to perf if the application deletes
-       * all of its objects. (NB: We only disable perf while
-       * there are no active queries)
-       */
-      int n_query_instances;
-   } perfquery;
+   struct gen_perf_context *perf_ctx;
 
    int num_atoms[BRW_NUM_PIPELINES];
    const struct brw_tracked_state render_atoms[76];
@@ -1340,6 +1219,9 @@ struct brw_context
 
    enum gen9_astc5x5_wa_tex_type gen9_astc5x5_wa_tex_mask;
 
+   /** Last rendering scale argument provided to brw_emit_hashing_mode(). */
+   unsigned current_hash_scale;
+
    __DRIcontext *driContext;
    struct intel_screen *screen;
 };
@@ -1386,6 +1268,8 @@ GLboolean brwCreateContext(gl_api api,
  */
 void brw_workaround_depthstencil_alignment(struct brw_context *brw,
                                            GLbitfield clear_mask);
+void brw_emit_hashing_mode(struct brw_context *brw, unsigned width,
+                           unsigned height, unsigned scale);
 
 /* brw_object_purgeable.c */
 void brw_init_object_purgeable_functions(struct dd_function_table *functions);
@@ -1399,7 +1283,6 @@ void brw_emit_query_begin(struct brw_context *brw);
 void brw_emit_query_end(struct brw_context *brw);
 void brw_query_counter(struct gl_context *ctx, struct gl_query_object *q);
 bool brw_is_query_pipelined(struct brw_query_object *query);
-uint64_t brw_timebase_scale(struct brw_context *brw, uint64_t gpu_timestamp);
 uint64_t brw_raw_timestamp_delta(struct brw_context *brw,
                                  uint64_t time0, uint64_t time1);
 
@@ -1453,16 +1336,6 @@ void brw_validate_textures( struct brw_context *brw );
 /*======================================================================
  * brw_program.c
  */
-static inline bool
-key_debug(struct brw_context *brw, const char *name, int a, int b)
-{
-   if (a != b) {
-      perf_debug("  %s %d->%d\n", name, a, b);
-      return true;
-   }
-   return false;
-}
-
 void brwInitFragProgFuncs( struct dd_function_table *functions );
 
 void brw_get_scratch_bo(struct brw_context *brw,

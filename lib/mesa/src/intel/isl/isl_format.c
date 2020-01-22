@@ -294,7 +294,11 @@ static const struct surface_format_info format_info[] = {
    SF( 70,  70,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   BC7_UNORM_SRGB)
    SF( 70,  70,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   BC6H_UF16)
    SF(  x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   PLANAR_420_8)
-   SF( 75,  75,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   R8G8B8_UNORM_SRGB)
+   /* The format enum for R8G8B8_UNORM_SRGB first shows up in the HSW PRM but
+    * empirical testing indicates that it doesn't actually sRGB decode and
+    * acts identical to R8G8B8_UNORM.  It does work on gen8+.
+    */
+   SF( 80,  80,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   R8G8B8_UNORM_SRGB)
    SF( 80,  80,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   ETC1_RGB8)
    SF( 80,  80,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   ETC2_RGB8)
    SF( 80,  80,   x,   x,   x,   x,   x,   x,   x,   x,   x,   x,   EAC_R11)
@@ -686,6 +690,28 @@ bool
 isl_format_has_sint_channel(enum isl_format fmt)
 {
    return isl_format_has_channel_type(fmt, ISL_SINT);
+}
+
+bool
+isl_format_has_color_component(enum isl_format fmt, int component)
+{
+   const struct isl_format_layout *fmtl = isl_format_get_layout(fmt);
+   const uint8_t intensity = fmtl->channels.i.bits;
+   const uint8_t luminance = fmtl->channels.l.bits;
+
+   switch (component) {
+   case 0:
+      return (fmtl->channels.r.bits + intensity + luminance) > 0;
+   case 1:
+      return (fmtl->channels.g.bits + intensity + luminance) > 0;
+   case 2:
+      return (fmtl->channels.b.bits + intensity + luminance) > 0;
+   case 3:
+      return (fmtl->channels.a.bits + intensity) > 0;
+   default:
+      assert(!"Invalid color component: must be 0..3");
+      return false;
+   }
 }
 
 unsigned

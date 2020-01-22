@@ -35,7 +35,7 @@ get_parent_mov(nir_ssa_def *ssa)
       return NULL;
 
    nir_alu_instr *alu = nir_instr_as_alu(ssa->parent_instr);
-   return (alu->op == nir_op_imov || alu->op == nir_op_fmov) ? alu : NULL;
+   return (alu->op == nir_op_mov) ? alu : NULL;
 }
 
 static bool
@@ -109,12 +109,13 @@ remove_phis_block(nir_block *block, nir_builder *b)
       if (!srcs_same)
          continue;
 
-      /* We must have found at least one definition, since there must be at
-       * least one forward edge.
-       */
-      assert(def != NULL);
+      if (!def) {
+         /* In this case, the phi had no sources. So turn it into an undef. */
 
-      if (mov) {
+         b->cursor = nir_after_phis(block);
+         def = nir_ssa_undef(b, phi->dest.ssa.num_components,
+                             phi->dest.ssa.bit_size);
+      } else if (mov) {
          /* If the sources were all movs from the same source with the same
           * swizzle, then we can't just pick a random move because it may not
           * dominate the phi node. Instead, we need to emit our own move after
@@ -124,9 +125,7 @@ remove_phis_block(nir_block *block, nir_builder *b)
           */
 
          b->cursor = nir_after_phis(block);
-         def = mov->op == nir_op_imov ?
-            nir_imov_alu(b, mov->src[0], def->num_components) :
-            nir_fmov_alu(b, mov->src[0], def->num_components);
+         def = nir_mov_alu(b, mov->src[0], def->num_components);
       }
 
       assert(phi->dest.is_ssa);
@@ -137,6 +136,14 @@ remove_phis_block(nir_block *block, nir_builder *b)
    }
 
    return progress;
+}
+
+bool
+nir_opt_remove_phis_block(nir_block *block)
+{
+   nir_builder b;
+   nir_builder_init(&b, nir_cf_node_get_function(&block->cf_node));
+   return remove_phis_block(block, &b);
 }
 
 static bool

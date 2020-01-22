@@ -41,7 +41,7 @@
 
 
 #include "brw_compiler.h"
-#include "common/gen_debug.h"
+#include "dev/gen_debug.h"
 
 static inline void
 assign_vue_slot(struct brw_vue_map *vue_map, int varying, int slot)
@@ -266,7 +266,7 @@ varying_name(brw_varying_slot slot)
    assume(slot < BRW_VARYING_SLOT_COUNT);
 
    if (slot < VARYING_SLOT_MAX)
-      return gl_varying_slot_name(slot);
+      return gl_varying_slot_name((gl_varying_slot)slot);
 
    static const char *brw_names[] = {
       [BRW_VARYING_SLOT_NDC - VARYING_SLOT_MAX] = "BRW_VARYING_SLOT_NDC",

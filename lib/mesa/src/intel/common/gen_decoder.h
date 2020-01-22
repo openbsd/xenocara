@@ -54,6 +54,7 @@ struct gen_group *gen_spec_find_struct(struct gen_spec *spec, const char *name);
 struct gen_spec *gen_spec_load(const struct gen_device_info *devinfo);
 struct gen_spec *gen_spec_load_from_path(const struct gen_device_info *devinfo,
                                          const char *path);
+struct gen_spec *gen_spec_load_filename(const char *filename);
 void gen_spec_destroy(struct gen_spec *spec);
 uint32_t gen_spec_get_gen(struct gen_spec *spec);
 struct gen_group *gen_spec_find_instruction(struct gen_spec *spec,
@@ -71,6 +72,10 @@ struct gen_enum *gen_spec_find_enum(struct gen_spec *spec, const char *name);
 
 bool gen_field_is_header(struct gen_field *field);
 
+/* Only allow 5 levels of subgroup'ing
+ */
+#define DECODE_MAX_ARRAY_DEPTH 5
+
 struct gen_field_iterator {
    struct gen_group *group;
    char name[128];
@@ -83,7 +88,10 @@ struct gen_field_iterator {
    int start_bit; /**< current field starts at this bit offset into p */
    int end_bit; /**< current field ends at this bit offset into p */
 
-   int group_iter;
+   struct gen_field *fields[DECODE_MAX_ARRAY_DEPTH];
+   struct gen_group *groups[DECODE_MAX_ARRAY_DEPTH];
+   int array_iter[DECODE_MAX_ARRAY_DEPTH];
+   int level;
 
    struct gen_field *field;
    bool print_colors;
@@ -111,8 +119,9 @@ struct gen_group {
    uint32_t dw_length;
    uint32_t engine_mask; /* <instruction> specific */
    uint32_t bias; /* <instruction> specific */
-   uint32_t group_offset, group_count;
-   uint32_t group_size;
+   uint32_t array_offset; /* <group> specific */
+   uint32_t array_count; /* number of elements, <group> specific */
+   uint32_t array_item_size; /* <group> specific */
    bool variable; /* <group> specific */
    bool fixed_length; /* True for <struct> & <register> */
 
@@ -173,6 +182,7 @@ union gen_field_value {
 struct gen_field {
    struct gen_group *parent;
    struct gen_field *next;
+   struct gen_group *array;
 
    char *name;
    int start, end;
@@ -219,7 +229,7 @@ struct gen_batch_decode_ctx {
     * If the given address is inside a buffer, the map pointer should be
     * offset accordingly so it points at the data corresponding to address.
     */
-   struct gen_batch_decode_bo (*get_bo)(void *user_data, uint64_t address);
+   struct gen_batch_decode_bo (*get_bo)(void *user_data, bool ppgtt, uint64_t address);
    unsigned (*get_state_size)(void *user_data,
                               uint32_t offset_from_dynamic_state_base_addr);
    void *user_data;
@@ -237,6 +247,8 @@ struct gen_batch_decode_ctx {
    int max_vbo_decoded_lines;
 
    enum drm_i915_gem_engine_class engine;
+
+   int n_batch_buffer_start;
 };
 
 void gen_batch_decode_ctx_init(struct gen_batch_decode_ctx *ctx,
@@ -244,6 +256,7 @@ void gen_batch_decode_ctx_init(struct gen_batch_decode_ctx *ctx,
                                FILE *fp, enum gen_batch_decode_flags flags,
                                const char *xml_path,
                                struct gen_batch_decode_bo (*get_bo)(void *,
+                                                                    bool,
                                                                     uint64_t),
 
                                unsigned (*get_state_size)(void *, uint32_t),
@@ -253,7 +266,7 @@ void gen_batch_decode_ctx_finish(struct gen_batch_decode_ctx *ctx);
 
 void gen_print_batch(struct gen_batch_decode_ctx *ctx,
                      const uint32_t *batch, uint32_t batch_size,
-                     uint64_t batch_addr);
+                     uint64_t batch_addr, bool from_ring);
 
 #ifdef __cplusplus
 }

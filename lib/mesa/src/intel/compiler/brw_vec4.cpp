@@ -29,7 +29,7 @@
 #include "brw_vec4_live_variables.h"
 #include "brw_vec4_vs.h"
 #include "brw_dead_control_flow.h"
-#include "common/gen_debug.h"
+#include "dev/gen_debug.h"
 #include "program/prog_parameter.h"
 #include "util/u_math.h"
 
@@ -153,12 +153,9 @@ vec4_instruction::is_send_from_grf()
    switch (opcode) {
    case SHADER_OPCODE_SHADER_TIME_ADD:
    case VS_OPCODE_PULL_CONSTANT_LOAD_GEN7:
-   case SHADER_OPCODE_UNTYPED_ATOMIC:
-   case SHADER_OPCODE_UNTYPED_SURFACE_READ:
-   case SHADER_OPCODE_UNTYPED_SURFACE_WRITE:
-   case SHADER_OPCODE_TYPED_ATOMIC:
-   case SHADER_OPCODE_TYPED_SURFACE_READ:
-   case SHADER_OPCODE_TYPED_SURFACE_WRITE:
+   case VEC4_OPCODE_UNTYPED_ATOMIC:
+   case VEC4_OPCODE_UNTYPED_SURFACE_READ:
+   case VEC4_OPCODE_UNTYPED_SURFACE_WRITE:
    case VEC4_OPCODE_URB_READ:
    case TCS_OPCODE_URB_WRITE:
    case TCS_OPCODE_RELEASE_INPUT:
@@ -212,12 +209,9 @@ vec4_instruction::size_read(unsigned arg) const
 {
    switch (opcode) {
    case SHADER_OPCODE_SHADER_TIME_ADD:
-   case SHADER_OPCODE_UNTYPED_ATOMIC:
-   case SHADER_OPCODE_UNTYPED_SURFACE_READ:
-   case SHADER_OPCODE_UNTYPED_SURFACE_WRITE:
-   case SHADER_OPCODE_TYPED_ATOMIC:
-   case SHADER_OPCODE_TYPED_SURFACE_READ:
-   case SHADER_OPCODE_TYPED_SURFACE_WRITE:
+   case VEC4_OPCODE_UNTYPED_ATOMIC:
+   case VEC4_OPCODE_UNTYPED_SURFACE_READ:
+   case VEC4_OPCODE_UNTYPED_SURFACE_WRITE:
    case TCS_OPCODE_URB_WRITE:
       if (arg == 0)
          return mlen * REG_SIZE;
@@ -420,7 +414,7 @@ vec4_visitor::opt_vector_float()
 
       foreach_inst_in_block_safe(vec4_instruction, inst, block) {
          int vf = -1;
-         enum brw_reg_type need_type;
+         enum brw_reg_type need_type = BRW_REGISTER_TYPE_LAST;
 
          /* Look for unconditional MOVs from an immediate with a partial
           * writemask.  Skip type-conversion MOVs other than integer 0,
@@ -1210,8 +1204,30 @@ vec4_instruction::reswizzle(int dst_writemask, int swizzle)
        opcode != BRW_OPCODE_DP3 && opcode != BRW_OPCODE_DP2 &&
        opcode != VEC4_OPCODE_PACK_BYTES) {
       for (int i = 0; i < 3; i++) {
-         if (src[i].file == BAD_FILE || src[i].file == IMM)
+         if (src[i].file == BAD_FILE)
             continue;
+
+         if (src[i].file == IMM) {
+            assert(src[i].type != BRW_REGISTER_TYPE_V &&
+                   src[i].type != BRW_REGISTER_TYPE_UV);
+
+            /* Vector immediate types need to be reswizzled. */
+            if (src[i].type == BRW_REGISTER_TYPE_VF) {
+               const unsigned imm[] = {
+                  (src[i].ud >>  0) & 0x0ff,
+                  (src[i].ud >>  8) & 0x0ff,
+                  (src[i].ud >> 16) & 0x0ff,
+                  (src[i].ud >> 24) & 0x0ff,
+               };
+
+               src[i] = brw_imm_vf4(imm[BRW_GET_SWZ(swizzle, 0)],
+                                    imm[BRW_GET_SWZ(swizzle, 1)],
+                                    imm[BRW_GET_SWZ(swizzle, 2)],
+                                    imm[BRW_GET_SWZ(swizzle, 3)]);
+            }
+
+            continue;
+         }
 
          src[i].swizzle = brw_compose_swizzle(swizzle, src[i].swizzle);
       }
@@ -2826,10 +2842,11 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
                struct brw_vs_prog_data *prog_data,
                nir_shader *shader,
                int shader_time_index,
+               struct brw_compile_stats *stats,
                char **error_str)
 {
    const bool is_scalar = compiler->scalar_stage[MESA_SHADER_VERTEX];
-   shader = brw_nir_apply_sampler_key(shader, compiler, &key->tex, is_scalar);
+   brw_nir_apply_key(shader, compiler, &key->base, 8, is_scalar);
 
    const unsigned *assembly = NULL;
 
@@ -2853,7 +2870,7 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
 
    brw_nir_lower_vs_inputs(shader, key->gl_attrib_wa_flags);
    brw_nir_lower_vue_outputs(shader);
-   shader = brw_postprocess_nir(shader, compiler, is_scalar);
+   brw_postprocess_nir(shader, compiler, is_scalar);
 
    prog_data->base.clip_distance_mask =
       ((1 << shader->info.clip_distance_array_size) - 1);
@@ -2945,7 +2962,8 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
    if (is_scalar) {
       prog_data->base.dispatch_mode = DISPATCH_MODE_SIMD8;
 
-      fs_visitor v(compiler, log_data, mem_ctx, key, &prog_data->base.base,
+      fs_visitor v(compiler, log_data, mem_ctx, &key->base,
+                   &prog_data->base.base,
                    NULL, /* prog; Only used for TEXTURE_RECTANGLE on gen < 8 */
                    shader, 8, shader_time_index);
       if (!v.run_vs()) {
@@ -2958,7 +2976,7 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
       prog_data->base.base.dispatch_grf_start_reg = v.payload.num_regs;
 
       fs_generator g(compiler, log_data, mem_ctx,
-                     &prog_data->base.base, v.promoted_constants,
+                     &prog_data->base.base, v.shader_stats,
                      v.runtime_check_aads_emit, MESA_SHADER_VERTEX);
       if (INTEL_DEBUG & DEBUG_VS) {
          const char *debug_name =
@@ -2969,7 +2987,7 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
 
          g.enable_debug(debug_name);
       }
-      g.generate_code(v.cfg, 8);
+      g.generate_code(v.cfg, 8, stats);
       assembly = g.get_assembly();
    }
 
@@ -2986,7 +3004,8 @@ brw_compile_vs(const struct brw_compiler *compiler, void *log_data,
       }
 
       assembly = brw_vec4_generate_assembly(compiler, log_data, mem_ctx,
-                                            shader, &prog_data->base, v.cfg);
+                                            shader, &prog_data->base,
+                                            v.cfg, stats);
    }
 
    return assembly;

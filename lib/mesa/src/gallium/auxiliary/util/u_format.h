@@ -83,15 +83,14 @@ enum util_format_layout {
     */
    UTIL_FORMAT_LAYOUT_BPTC = 7,
 
-   /**
-    * ASTC
-    */
    UTIL_FORMAT_LAYOUT_ASTC = 8,
+
+   UTIL_FORMAT_LAYOUT_ATC = 9,
 
    /**
     * Everything else that doesn't fit in any of the above layouts.
     */
-   UTIL_FORMAT_LAYOUT_OTHER = 9
+   UTIL_FORMAT_LAYOUT_OTHER = 10
 };
 
 
@@ -485,6 +484,7 @@ util_format_is_compressed(enum pipe_format format)
    case UTIL_FORMAT_LAYOUT_ETC:
    case UTIL_FORMAT_LAYOUT_BPTC:
    case UTIL_FORMAT_LAYOUT_ASTC:
+   case UTIL_FORMAT_LAYOUT_ATC:
       /* XXX add other formats in the future */
       return TRUE;
    default:
@@ -570,7 +570,7 @@ util_format_is_depth_and_stencil(enum pipe_format format)
 /**
  * For depth-stencil formats, return the equivalent depth-only format.
  */
-static inline boolean
+static inline enum pipe_format
 util_format_get_depth_only(enum pipe_format format)
 {
    switch (format) {
@@ -782,7 +782,6 @@ util_format_is_rgba8_variant(const struct util_format_description *desc)
    return TRUE;
 }
 
-
 /**
  * Return total bits needed for the pixel format per block.
  */
@@ -871,7 +870,7 @@ static inline size_t
 util_format_get_stride(enum pipe_format format,
                        unsigned width)
 {
-   return util_format_get_nblocksx(format, width) * util_format_get_blocksize(format);
+   return (size_t)util_format_get_nblocksx(format, width) * util_format_get_blocksize(format);
 }
 
 static inline size_t
@@ -1257,6 +1256,22 @@ util_format_get_first_non_void_channel(enum pipe_format format)
        return -1;
 
    return i;
+}
+
+/**
+ * Whether this format is any 8-bit UNORM variant. Looser than
+ * util_is_rgba8_variant (also includes alpha textures, for instance).
+ */
+
+static inline bool
+util_format_is_unorm8(const struct util_format_description *desc)
+{
+   int c = util_format_get_first_non_void_channel(desc->format);
+
+   if (c == -1)
+      return false;
+
+   return desc->is_unorm && desc->is_array && desc->channel[c].size == 8;
 }
 
 /*

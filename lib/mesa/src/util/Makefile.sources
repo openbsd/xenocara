@@ -1,4 +1,6 @@
 MESA_UTIL_FILES := \
+	anon_file.h \
+	anon_file.c \
 	bigmath.h \
 	bitscan.c \
 	bitscan.h \
@@ -7,6 +9,8 @@ MESA_UTIL_FILES := \
 	build_id.h \
 	crc32.c \
 	crc32.h \
+	dag.c \
+	dag.h \
 	debug.c \
 	debug.h \
 	disk_cache.c \
@@ -27,6 +31,8 @@ MESA_UTIL_FILES := \
 	mesa-sha1.h \
 	os_time.c \
 	os_time.h \
+	os_file.c \
+	os_file.h \
 	os_misc.c \
 	os_misc.h \
 	u_process.c \
@@ -56,6 +62,7 @@ MESA_UTIL_FILES := \
 	strtod.c \
 	strtod.h \
 	texcompress_rgtc_tmp.h \
+	timespec.h \
 	u_atomic.c \
 	u_atomic.h \
 	u_dynarray.h \

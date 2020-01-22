@@ -37,6 +37,227 @@
 #include "virgl_resource.h"
 #include "virgl_screen.h"
 
+#define VIRGL_ENCODE_MAX_DWORDS MIN2(VIRGL_MAX_CMDBUF_DWORDS, VIRGL_CMD0_MAX_DWORDS)
+
+#define CONV_FORMAT(f) [PIPE_FORMAT_##f] = VIRGL_FORMAT_##f,
+
+static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
+   CONV_FORMAT(B8G8R8A8_UNORM)
+   CONV_FORMAT(B8G8R8X8_UNORM)
+   CONV_FORMAT(A8R8G8B8_UNORM)
+   CONV_FORMAT(X8R8G8B8_UNORM)
+   CONV_FORMAT(B5G5R5A1_UNORM)
+   CONV_FORMAT(B4G4R4A4_UNORM)
+   CONV_FORMAT(B5G6R5_UNORM)
+   CONV_FORMAT(R10G10B10A2_UNORM)
+   CONV_FORMAT(L8_UNORM)
+   CONV_FORMAT(A8_UNORM)
+   CONV_FORMAT(L8A8_UNORM)
+   CONV_FORMAT(L16_UNORM)
+   CONV_FORMAT(Z16_UNORM)
+   CONV_FORMAT(Z32_UNORM)
+   CONV_FORMAT(Z32_FLOAT)
+   CONV_FORMAT(Z24_UNORM_S8_UINT)
+   CONV_FORMAT(S8_UINT_Z24_UNORM)
+   CONV_FORMAT(Z24X8_UNORM)
+   CONV_FORMAT(X8Z24_UNORM)
+   CONV_FORMAT(S8_UINT)
+   CONV_FORMAT(R64_FLOAT)
+   CONV_FORMAT(R64G64_FLOAT)
+   CONV_FORMAT(R64G64B64_FLOAT)
+   CONV_FORMAT(R64G64B64A64_FLOAT)
+   CONV_FORMAT(R32_FLOAT)
+   CONV_FORMAT(R32G32_FLOAT)
+   CONV_FORMAT(R32G32B32_FLOAT)
+   CONV_FORMAT(R32G32B32A32_FLOAT)
+   CONV_FORMAT(R32_UNORM)
+   CONV_FORMAT(R32G32_UNORM)
+   CONV_FORMAT(R32G32B32_UNORM)
+   CONV_FORMAT(R32G32B32A32_UNORM)
+   CONV_FORMAT(R32_USCALED)
+   CONV_FORMAT(R32G32_USCALED)
+   CONV_FORMAT(R32G32B32_USCALED)
+   CONV_FORMAT(R32G32B32A32_USCALED)
+   CONV_FORMAT(R32_SNORM)
+   CONV_FORMAT(R32G32_SNORM)
+   CONV_FORMAT(R32G32B32_SNORM)
+   CONV_FORMAT(R32G32B32A32_SNORM)
+   CONV_FORMAT(R32_SSCALED)
+   CONV_FORMAT(R32G32_SSCALED)
+   CONV_FORMAT(R32G32B32_SSCALED)
+   CONV_FORMAT(R32G32B32A32_SSCALED)
+   CONV_FORMAT(R16_UNORM)
+   CONV_FORMAT(R16G16_UNORM)
+   CONV_FORMAT(R16G16B16_UNORM)
+   CONV_FORMAT(R16G16B16A16_UNORM)
+   CONV_FORMAT(R16_USCALED)
+   CONV_FORMAT(R16G16_USCALED)
+   CONV_FORMAT(R16G16B16_USCALED)
+   CONV_FORMAT(R16G16B16A16_USCALED)
+   CONV_FORMAT(R16_SNORM)
+   CONV_FORMAT(R16G16_SNORM)
+   CONV_FORMAT(R16G16B16_SNORM)
+   CONV_FORMAT(R16G16B16A16_SNORM)
+   CONV_FORMAT(R16_SSCALED)
+   CONV_FORMAT(R16G16_SSCALED)
+   CONV_FORMAT(R16G16B16_SSCALED)
+   CONV_FORMAT(R16G16B16A16_SSCALED)
+   CONV_FORMAT(R8_UNORM)
+   CONV_FORMAT(R8G8_UNORM)
+   CONV_FORMAT(R8G8B8_UNORM)
+   CONV_FORMAT(R8G8B8A8_UNORM)
+   CONV_FORMAT(R8_USCALED)
+   CONV_FORMAT(R8G8_USCALED)
+   CONV_FORMAT(R8G8B8_USCALED)
+   CONV_FORMAT(R8G8B8A8_USCALED)
+   CONV_FORMAT(R8_SNORM)
+   CONV_FORMAT(R8G8_SNORM)
+   CONV_FORMAT(R8G8B8_SNORM)
+   CONV_FORMAT(R8G8B8A8_SNORM)
+   CONV_FORMAT(R8_SSCALED)
+   CONV_FORMAT(R8G8_SSCALED)
+   CONV_FORMAT(R8G8B8_SSCALED)
+   CONV_FORMAT(R8G8B8A8_SSCALED)
+   CONV_FORMAT(R16_FLOAT)
+   CONV_FORMAT(R16G16_FLOAT)
+   CONV_FORMAT(R16G16B16_FLOAT)
+   CONV_FORMAT(R16G16B16A16_FLOAT)
+   CONV_FORMAT(L8_SRGB)
+   CONV_FORMAT(L8A8_SRGB)
+   CONV_FORMAT(R8G8B8_SRGB)
+   CONV_FORMAT(A8B8G8R8_SRGB)
+   CONV_FORMAT(X8B8G8R8_SRGB)
+   CONV_FORMAT(B8G8R8A8_SRGB)
+   CONV_FORMAT(B8G8R8X8_SRGB)
+   CONV_FORMAT(A8R8G8B8_SRGB)
+   CONV_FORMAT(X8R8G8B8_SRGB)
+   CONV_FORMAT(R8G8B8A8_SRGB)
+   CONV_FORMAT(DXT1_RGB)
+   CONV_FORMAT(DXT1_RGBA)
+   CONV_FORMAT(DXT3_RGBA)
+   CONV_FORMAT(DXT5_RGBA)
+   CONV_FORMAT(DXT1_SRGB)
+   CONV_FORMAT(DXT1_SRGBA)
+   CONV_FORMAT(DXT3_SRGBA)
+   CONV_FORMAT(DXT5_SRGBA)
+   CONV_FORMAT(RGTC1_UNORM)
+   CONV_FORMAT(RGTC1_SNORM)
+   CONV_FORMAT(RGTC2_UNORM)
+   CONV_FORMAT(RGTC2_SNORM)
+   CONV_FORMAT(A8B8G8R8_UNORM)
+   CONV_FORMAT(B5G5R5X1_UNORM)
+   CONV_FORMAT(R10G10B10A2_USCALED)
+   CONV_FORMAT(R11G11B10_FLOAT)
+   CONV_FORMAT(R9G9B9E5_FLOAT)
+   CONV_FORMAT(Z32_FLOAT_S8X24_UINT)
+   CONV_FORMAT(B10G10R10A2_UNORM)
+   CONV_FORMAT(R8G8B8X8_UNORM)
+   CONV_FORMAT(B4G4R4X4_UNORM)
+   CONV_FORMAT(X24S8_UINT)
+   CONV_FORMAT(S8X24_UINT)
+   CONV_FORMAT(X32_S8X24_UINT)
+   CONV_FORMAT(B2G3R3_UNORM)
+   CONV_FORMAT(L16A16_UNORM)
+   CONV_FORMAT(A16_UNORM)
+   CONV_FORMAT(I16_UNORM)
+   CONV_FORMAT(LATC1_UNORM)
+   CONV_FORMAT(LATC1_SNORM)
+   CONV_FORMAT(LATC2_UNORM)
+   CONV_FORMAT(LATC2_SNORM)
+   CONV_FORMAT(A8_SNORM)
+   CONV_FORMAT(L8_SNORM)
+   CONV_FORMAT(L8A8_SNORM)
+   CONV_FORMAT(A16_SNORM)
+   CONV_FORMAT(L16_SNORM)
+   CONV_FORMAT(L16A16_SNORM)
+   CONV_FORMAT(A16_FLOAT)
+   CONV_FORMAT(L16_FLOAT)
+   CONV_FORMAT(L16A16_FLOAT)
+   CONV_FORMAT(A32_FLOAT)
+   CONV_FORMAT(L32_FLOAT)
+   CONV_FORMAT(L32A32_FLOAT)
+   CONV_FORMAT(YV12)
+   CONV_FORMAT(YV16)
+   CONV_FORMAT(IYUV)
+   CONV_FORMAT(NV12)
+   CONV_FORMAT(NV21)
+   CONV_FORMAT(R8_UINT)
+   CONV_FORMAT(R8G8_UINT)
+   CONV_FORMAT(R8G8B8_UINT)
+   CONV_FORMAT(R8G8B8A8_UINT)
+   CONV_FORMAT(R8_SINT)
+   CONV_FORMAT(R8G8_SINT)
+   CONV_FORMAT(R8G8B8_SINT)
+   CONV_FORMAT(R8G8B8A8_SINT)
+   CONV_FORMAT(R16_UINT)
+   CONV_FORMAT(R16G16_UINT)
+   CONV_FORMAT(R16G16B16_UINT)
+   CONV_FORMAT(R16G16B16A16_UINT)
+   CONV_FORMAT(R16_SINT)
+   CONV_FORMAT(R16G16_SINT)
+   CONV_FORMAT(R16G16B16_SINT)
+   CONV_FORMAT(R16G16B16A16_SINT)
+   CONV_FORMAT(R32_UINT)
+   CONV_FORMAT(R32G32_UINT)
+   CONV_FORMAT(R32G32B32_UINT)
+   CONV_FORMAT(R32G32B32A32_UINT)
+   CONV_FORMAT(R32_SINT)
+   CONV_FORMAT(R32G32_SINT)
+   CONV_FORMAT(R32G32B32_SINT)
+   CONV_FORMAT(R32G32B32A32_SINT)
+   CONV_FORMAT(A8_UINT)
+   CONV_FORMAT(L8_UINT)
+   CONV_FORMAT(L8A8_UINT)
+   CONV_FORMAT(A8_SINT)
+   CONV_FORMAT(L8_SINT)
+   CONV_FORMAT(L8A8_SINT)
+   CONV_FORMAT(A16_UINT)
+   CONV_FORMAT(L16_UINT)
+   CONV_FORMAT(L16A16_UINT)
+   CONV_FORMAT(A16_SINT)
+   CONV_FORMAT(L16_SINT)
+   CONV_FORMAT(L16A16_SINT)
+   CONV_FORMAT(A32_UINT)
+   CONV_FORMAT(L32_UINT)
+   CONV_FORMAT(L32A32_UINT)
+   CONV_FORMAT(A32_SINT)
+   CONV_FORMAT(L32_SINT)
+   CONV_FORMAT(L32A32_SINT)
+   CONV_FORMAT(R10G10B10A2_SSCALED)
+   CONV_FORMAT(R10G10B10A2_SNORM)
+   CONV_FORMAT(B10G10R10A2_SNORM)
+   CONV_FORMAT(B10G10R10A2_UINT)
+   CONV_FORMAT(R8G8B8X8_SNORM)
+   CONV_FORMAT(R8G8B8X8_SRGB)
+   CONV_FORMAT(R8G8B8X8_UINT)
+   CONV_FORMAT(R8G8B8X8_SINT)
+   CONV_FORMAT(B10G10R10X2_UNORM)
+   CONV_FORMAT(R16G16B16X16_UNORM)
+   CONV_FORMAT(R16G16B16X16_SNORM)
+   CONV_FORMAT(R16G16B16X16_FLOAT)
+   CONV_FORMAT(R16G16B16X16_UINT)
+   CONV_FORMAT(R16G16B16X16_SINT)
+   CONV_FORMAT(R32G32B32X32_FLOAT)
+   CONV_FORMAT(R32G32B32X32_UINT)
+   CONV_FORMAT(R32G32B32X32_SINT)
+   CONV_FORMAT(R10G10B10A2_UINT)
+   CONV_FORMAT(BPTC_RGBA_UNORM)
+   CONV_FORMAT(BPTC_SRGBA)
+   CONV_FORMAT(BPTC_RGB_FLOAT)
+   CONV_FORMAT(BPTC_RGB_UFLOAT)
+   CONV_FORMAT(R10G10B10X2_UNORM)
+   CONV_FORMAT(A4B4G4R4_UNORM)
+   CONV_FORMAT(R8_SRGB)
+};
+
+enum virgl_formats pipe_to_virgl_format(enum pipe_format format)
+{
+   enum virgl_formats vformat = virgl_formats_conv_table[format];
+   if (format != PIPE_FORMAT_NONE && !vformat)
+      debug_printf("VIRGL: pipe format %s not in the format table\n", util_format_name(format));
+   return vformat;
+}
+
 static int virgl_encoder_write_cmd_dword(struct virgl_context *ctx,
                                         uint32_t dword)
 {
@@ -49,22 +270,23 @@ static int virgl_encoder_write_cmd_dword(struct virgl_context *ctx,
    return 0;
 }
 
-static void virgl_encoder_write_res(struct virgl_context *ctx,
-                                    struct virgl_resource *res)
+static void virgl_encoder_emit_resource(struct virgl_screen *vs,
+                                        struct virgl_cmd_buf *buf,
+                                        struct virgl_resource *res)
 {
-   struct virgl_winsys *vws = virgl_screen(ctx->base.screen)->vws;
-
+   struct virgl_winsys *vws = vs->vws;
    if (res && res->hw_res)
-      vws->emit_res(vws, ctx->cbuf, res->hw_res, TRUE);
+      vws->emit_res(vws, buf, res->hw_res, TRUE);
    else {
-      virgl_encoder_write_dword(ctx->cbuf, 0);
+      virgl_encoder_write_dword(buf, 0);
    }
 }
 
-static void virgl_dirty_res(struct virgl_resource *res)
+static void virgl_encoder_write_res(struct virgl_context *ctx,
+                                    struct virgl_resource *res)
 {
-   if (res)
-      res->clean = FALSE;
+   struct virgl_screen *vs = virgl_screen(ctx->base.screen);
+   virgl_encoder_emit_resource(vs, ctx->cbuf, res);
 }
 
 int virgl_encode_bind_object(struct virgl_context *ctx,
@@ -270,12 +492,13 @@ int virgl_encode_shader_state(struct virgl_context *ctx,
          if (virgl_debug & VIRGL_DEBUG_VERBOSE)
             debug_printf("Failed to translate shader in available space - trying again\n");
          old_size = str_total_size;
-         str_total_size = 65536 * ++retry_size;
+         str_total_size = 65536 * retry_size;
+         retry_size *= 2;
          str = REALLOC(str, old_size, str_total_size);
          if (!str)
             return -1;
       }
-   } while (bret == false && retry_size < 10);
+   } while (bret == false && retry_size < 1024);
 
    if (bret == false)
       return -1;
@@ -294,10 +517,10 @@ int virgl_encode_shader_state(struct virgl_context *ctx,
    while (left_bytes) {
       uint32_t length, offlen;
       int hdr_len = base_hdr_size + (first_pass ? strm_hdr_size : 0);
-      if (ctx->cbuf->cdw + hdr_len + 1 >= VIRGL_MAX_CMDBUF_DWORDS)
+      if (ctx->cbuf->cdw + hdr_len + 1 >= VIRGL_ENCODE_MAX_DWORDS)
          ctx->base.flush(&ctx->base, NULL, 0);
 
-      thispass = (VIRGL_MAX_CMDBUF_DWORDS - ctx->cbuf->cdw - hdr_len - 1) * 4;
+      thispass = (VIRGL_ENCODE_MAX_DWORDS - ctx->cbuf->cdw - hdr_len - 1) * 4;
 
       length = MIN2(thispass, left_bytes);
       len = ((length + 3) / 4) + hdr_len;
@@ -398,7 +621,7 @@ int virgl_encoder_create_vertex_elements(struct virgl_context *ctx,
       virgl_encoder_write_dword(ctx->cbuf, element[i].src_offset);
       virgl_encoder_write_dword(ctx->cbuf, element[i].instance_divisor);
       virgl_encoder_write_dword(ctx->cbuf, element[i].vertex_buffer_index);
-      virgl_encoder_write_dword(ctx->cbuf, element[i].src_format);
+      virgl_encoder_write_dword(ctx->cbuf, pipe_to_virgl_format(element[i].src_format));
    }
    return 0;
 }
@@ -466,10 +689,13 @@ int virgl_encoder_draw_vbo(struct virgl_context *ctx,
    if (length == VIRGL_DRAW_VBO_SIZE_INDIRECT) {
       virgl_encoder_write_res(ctx, virgl_resource(info->indirect->buffer));
       virgl_encoder_write_dword(ctx->cbuf, info->indirect->offset);
-      virgl_encoder_write_dword(ctx->cbuf, 0); /* indirect stride */
-      virgl_encoder_write_dword(ctx->cbuf, 0); /* indirect draw count */
-      virgl_encoder_write_dword(ctx->cbuf, 0); /* indirect draw count offset */
-      virgl_encoder_write_dword(ctx->cbuf, 0); /* indirect draw count handle */
+      virgl_encoder_write_dword(ctx->cbuf, info->indirect->stride); /* indirect stride */
+      virgl_encoder_write_dword(ctx->cbuf, info->indirect->draw_count); /* indirect draw count */
+      virgl_encoder_write_dword(ctx->cbuf, info->indirect->indirect_draw_count_offset); /* indirect draw count offset */
+      if (info->indirect->indirect_draw_count)
+         virgl_encoder_write_res(ctx, virgl_resource(info->indirect->indirect_draw_count));
+      else
+         virgl_encoder_write_dword(ctx->cbuf, 0); /* indirect draw count handle */
    }
    return 0;
 }
@@ -482,15 +708,12 @@ int virgl_encoder_create_surface(struct virgl_context *ctx,
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_CREATE_OBJECT, VIRGL_OBJECT_SURFACE, VIRGL_OBJ_SURFACE_SIZE));
    virgl_encoder_write_dword(ctx->cbuf, handle);
    virgl_encoder_write_res(ctx, res);
-   virgl_encoder_write_dword(ctx->cbuf, templat->format);
-   if (templat->texture->target == PIPE_BUFFER) {
-      virgl_encoder_write_dword(ctx->cbuf, templat->u.buf.first_element);
-      virgl_encoder_write_dword(ctx->cbuf, templat->u.buf.last_element);
+   virgl_encoder_write_dword(ctx->cbuf, pipe_to_virgl_format(templat->format));
 
-   } else {
-      virgl_encoder_write_dword(ctx->cbuf, templat->u.tex.level);
-      virgl_encoder_write_dword(ctx->cbuf, templat->u.tex.first_layer | (templat->u.tex.last_layer << 16));
-   }
+   assert(templat->texture->target != PIPE_BUFFER);
+   virgl_encoder_write_dword(ctx->cbuf, templat->u.tex.level);
+   virgl_encoder_write_dword(ctx->cbuf, templat->u.tex.first_layer | (templat->u.tex.last_layer << 16));
+
    return 0;
 }
 
@@ -508,23 +731,50 @@ int virgl_encoder_create_so_target(struct virgl_context *ctx,
    return 0;
 }
 
-static void virgl_encoder_iw_emit_header_1d(struct virgl_context *ctx,
-                                           struct virgl_resource *res,
-                                           unsigned level, unsigned usage,
-                                           const struct pipe_box *box,
-                                           unsigned stride, unsigned layer_stride)
+enum virgl_transfer3d_encode_stride {
+   /* The stride and layer_stride are explicitly specified in the command. */
+   virgl_transfer3d_explicit_stride,
+   /* The stride and layer_stride are inferred by the host. In this case, the
+    * host will use the image stride and layer_stride for the specified level.
+    */
+   virgl_transfer3d_host_inferred_stride,
+};
+
+static void virgl_encoder_transfer3d_common(struct virgl_screen *vs,
+                                            struct virgl_cmd_buf *buf,
+                                            struct virgl_transfer *xfer,
+                                            enum virgl_transfer3d_encode_stride encode_stride)
+
 {
-   virgl_encoder_write_res(ctx, res);
-   virgl_encoder_write_dword(ctx->cbuf, level);
-   virgl_encoder_write_dword(ctx->cbuf, usage);
-   virgl_encoder_write_dword(ctx->cbuf, stride);
-   virgl_encoder_write_dword(ctx->cbuf, layer_stride);
-   virgl_encoder_write_dword(ctx->cbuf, box->x);
-   virgl_encoder_write_dword(ctx->cbuf, box->y);
-   virgl_encoder_write_dword(ctx->cbuf, box->z);
-   virgl_encoder_write_dword(ctx->cbuf, box->width);
-   virgl_encoder_write_dword(ctx->cbuf, box->height);
-   virgl_encoder_write_dword(ctx->cbuf, box->depth);
+   struct pipe_transfer *transfer = &xfer->base;
+   unsigned stride;
+   unsigned layer_stride;
+
+   if (encode_stride == virgl_transfer3d_explicit_stride) {
+      stride = transfer->stride;
+      layer_stride = transfer->layer_stride;
+   } else if (virgl_transfer3d_host_inferred_stride) {
+      stride = 0;
+      layer_stride = 0;
+   } else {
+      assert(!"Invalid virgl_transfer3d_encode_stride value");
+   }
+
+   /* We cannot use virgl_encoder_emit_resource with transfer->resource here
+    * because transfer->resource might have a different virgl_hw_res than what
+    * this transfer targets, which is saved in xfer->hw_res.
+    */
+   vs->vws->emit_res(vs->vws, buf, xfer->hw_res, TRUE);
+   virgl_encoder_write_dword(buf, transfer->level);
+   virgl_encoder_write_dword(buf, transfer->usage);
+   virgl_encoder_write_dword(buf, stride);
+   virgl_encoder_write_dword(buf, layer_stride);
+   virgl_encoder_write_dword(buf, transfer->box.x);
+   virgl_encoder_write_dword(buf, transfer->box.y);
+   virgl_encoder_write_dword(buf, transfer->box.z);
+   virgl_encoder_write_dword(buf, transfer->box.width);
+   virgl_encoder_write_dword(buf, transfer->box.height);
+   virgl_encoder_write_dword(buf, transfer->box.depth);
 }
 
 int virgl_encoder_inline_write(struct virgl_context *ctx,
@@ -536,10 +786,17 @@ int virgl_encoder_inline_write(struct virgl_context *ctx,
 {
    uint32_t size = (stride ? stride : box->width) * box->height;
    uint32_t length, thispass, left_bytes;
-   struct pipe_box mybox = *box;
+   struct virgl_transfer transfer;
+   struct virgl_screen *vs = virgl_screen(ctx->base.screen);
+
+   transfer.base.resource = &res->u.b;
+   transfer.hw_res = res->hw_res;
+   transfer.base.level = level;
+   transfer.base.usage = usage;
+   transfer.base.box = *box;
 
    length = 11 + (size + 3) / 4;
-   if ((ctx->cbuf->cdw + length + 1) > VIRGL_MAX_CMDBUF_DWORDS) {
+   if ((ctx->cbuf->cdw + length + 1) > VIRGL_ENCODE_MAX_DWORDS) {
       if (box->height > 1 || box->depth > 1) {
          debug_printf("inline transfer failed due to multi dimensions and too large\n");
          assert(0);
@@ -548,19 +805,20 @@ int virgl_encoder_inline_write(struct virgl_context *ctx,
 
    left_bytes = size;
    while (left_bytes) {
-      if (ctx->cbuf->cdw + 12 >= VIRGL_MAX_CMDBUF_DWORDS)
+      if (ctx->cbuf->cdw + 12 >= VIRGL_ENCODE_MAX_DWORDS)
          ctx->base.flush(&ctx->base, NULL, 0);
 
-      thispass = (VIRGL_MAX_CMDBUF_DWORDS - ctx->cbuf->cdw - 12) * 4;
+      thispass = (VIRGL_ENCODE_MAX_DWORDS - ctx->cbuf->cdw - 12) * 4;
 
       length = MIN2(thispass, left_bytes);
 
-      mybox.width = length;
+      transfer.base.box.width = length;
       virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_RESOURCE_INLINE_WRITE, 0, ((length + 3) / 4) + 11));
-      virgl_encoder_iw_emit_header_1d(ctx, res, level, usage, &mybox, stride, layer_stride);
+      virgl_encoder_transfer3d_common(vs, ctx->cbuf, &transfer,
+                                      virgl_transfer3d_host_inferred_stride);
       virgl_encoder_write_block(ctx->cbuf, data, length);
       left_bytes -= length;
-      mybox.x += length;
+      transfer.base.box.x += length;
       data += length;
    }
    return 0;
@@ -611,7 +869,7 @@ int virgl_encode_sampler_view(struct virgl_context *ctx,
    unsigned elem_size = util_format_get_blocksize(state->format);
    struct virgl_screen *rs = virgl_screen(ctx->base.screen);
    uint32_t tmp;
-   uint32_t dword_fmt_target = state->format;
+   uint32_t dword_fmt_target = pipe_to_virgl_format(state->format);
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_CREATE_OBJECT, VIRGL_OBJECT_SAMPLER_VIEW, VIRGL_OBJ_SAMPLER_VIEW_SIZE));
    virgl_encoder_write_dword(ctx->cbuf, handle);
    virgl_encoder_write_res(ctx, res);
@@ -621,7 +879,6 @@ int virgl_encode_sampler_view(struct virgl_context *ctx,
    if (res->u.b.target == PIPE_BUFFER) {
       virgl_encoder_write_dword(ctx->cbuf, state->u.buf.offset / elem_size);
       virgl_encoder_write_dword(ctx->cbuf, (state->u.buf.offset + state->u.buf.size) / elem_size - 1);
-      virgl_dirty_res(res);
    } else {
       virgl_encoder_write_dword(ctx->cbuf, state->u.tex.first_layer | state->u.tex.last_layer << 16);
       virgl_encoder_write_dword(ctx->cbuf, state->u.tex.first_level | state->u.tex.last_level << 8);
@@ -809,7 +1066,7 @@ int virgl_encode_blit(struct virgl_context *ctx,
 
    virgl_encoder_write_res(ctx, dst_res);
    virgl_encoder_write_dword(ctx->cbuf, blit->dst.level);
-   virgl_encoder_write_dword(ctx->cbuf, blit->dst.format);
+   virgl_encoder_write_dword(ctx->cbuf, pipe_to_virgl_format(blit->dst.format));
    virgl_encoder_write_dword(ctx->cbuf, blit->dst.box.x);
    virgl_encoder_write_dword(ctx->cbuf, blit->dst.box.y);
    virgl_encoder_write_dword(ctx->cbuf, blit->dst.box.z);
@@ -819,7 +1076,7 @@ int virgl_encode_blit(struct virgl_context *ctx,
 
    virgl_encoder_write_res(ctx, src_res);
    virgl_encoder_write_dword(ctx->cbuf, blit->src.level);
-   virgl_encoder_write_dword(ctx->cbuf, blit->src.format);
+   virgl_encoder_write_dword(ctx->cbuf, pipe_to_virgl_format(blit->src.format));
    virgl_encoder_write_dword(ctx->cbuf, blit->src.box.x);
    virgl_encoder_write_dword(ctx->cbuf, blit->src.box.y);
    virgl_encoder_write_dword(ctx->cbuf, blit->src.box.z);
@@ -951,12 +1208,15 @@ int virgl_encode_set_shader_buffers(struct virgl_context *ctx,
    virgl_encoder_write_dword(ctx->cbuf, shader);
    virgl_encoder_write_dword(ctx->cbuf, start_slot);
    for (i = 0; i < count; i++) {
-      if (buffers) {
+      if (buffers && buffers[i].buffer) {
          struct virgl_resource *res = virgl_resource(buffers[i].buffer);
          virgl_encoder_write_dword(ctx->cbuf, buffers[i].buffer_offset);
          virgl_encoder_write_dword(ctx->cbuf, buffers[i].buffer_size);
          virgl_encoder_write_res(ctx, res);
-         virgl_dirty_res(res);
+
+         util_range_add(&res->valid_buffer_range, buffers[i].buffer_offset,
+               buffers[i].buffer_offset + buffers[i].buffer_size);
+         virgl_resource_dirty(res, 0);
       } else {
          virgl_encoder_write_dword(ctx->cbuf, 0);
          virgl_encoder_write_dword(ctx->cbuf, 0);
@@ -975,12 +1235,15 @@ int virgl_encode_set_hw_atomic_buffers(struct virgl_context *ctx,
 
    virgl_encoder_write_dword(ctx->cbuf, start_slot);
    for (i = 0; i < count; i++) {
-      if (buffers) {
+      if (buffers && buffers[i].buffer) {
          struct virgl_resource *res = virgl_resource(buffers[i].buffer);
          virgl_encoder_write_dword(ctx->cbuf, buffers[i].buffer_offset);
          virgl_encoder_write_dword(ctx->cbuf, buffers[i].buffer_size);
          virgl_encoder_write_res(ctx, res);
-         virgl_dirty_res(res);
+
+         util_range_add(&res->valid_buffer_range, buffers[i].buffer_offset,
+               buffers[i].buffer_offset + buffers[i].buffer_size);
+         virgl_resource_dirty(res, 0);
       } else {
          virgl_encoder_write_dword(ctx->cbuf, 0);
          virgl_encoder_write_dword(ctx->cbuf, 0);
@@ -1001,14 +1264,19 @@ int virgl_encode_set_shader_images(struct virgl_context *ctx,
    virgl_encoder_write_dword(ctx->cbuf, shader);
    virgl_encoder_write_dword(ctx->cbuf, start_slot);
    for (i = 0; i < count; i++) {
-      if (images) {
+      if (images && images[i].resource) {
          struct virgl_resource *res = virgl_resource(images[i].resource);
-         virgl_encoder_write_dword(ctx->cbuf, images[i].format);
+         virgl_encoder_write_dword(ctx->cbuf, pipe_to_virgl_format(images[i].format));
          virgl_encoder_write_dword(ctx->cbuf, images[i].access);
          virgl_encoder_write_dword(ctx->cbuf, images[i].u.buf.offset);
          virgl_encoder_write_dword(ctx->cbuf, images[i].u.buf.size);
          virgl_encoder_write_res(ctx, res);
-         virgl_dirty_res(res);
+
+         if (res->u.b.target == PIPE_BUFFER) {
+            util_range_add(&res->valid_buffer_range, images[i].u.buf.offset,
+                  images[i].u.buf.offset + images[i].u.buf.size);
+         }
+         virgl_resource_dirty(res, images[i].u.tex.level);
       } else {
          virgl_encoder_write_dword(ctx->cbuf, 0);
          virgl_encoder_write_dword(ctx->cbuf, 0);
@@ -1075,6 +1343,73 @@ int virgl_encode_host_debug_flagstring(struct virgl_context *ctx,
 
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_SET_DEBUG_FLAGS, 0, sslen));
    virgl_encoder_write_block(ctx->cbuf, (const uint8_t *)flagstring, string_length);
-
    return 0;
+}
+
+int virgl_encode_tweak(struct virgl_context *ctx, enum vrend_tweak_type tweak, uint32_t value)
+{
+   virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_SET_TWEAKS, 0, VIRGL_SET_TWEAKS_SIZE));
+   virgl_encoder_write_dword(ctx->cbuf, tweak);
+   virgl_encoder_write_dword(ctx->cbuf, value);
+   return 0;
+}
+
+
+int virgl_encode_get_query_result_qbo(struct virgl_context *ctx,
+                                      uint32_t handle,
+                                      struct virgl_resource *res, boolean wait,
+                                      uint32_t result_type,
+                                      uint32_t offset,
+                                      uint32_t index)
+{
+   virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_GET_QUERY_RESULT_QBO, 0, VIRGL_QUERY_RESULT_QBO_SIZE));
+   virgl_encoder_write_dword(ctx->cbuf, handle);
+   virgl_encoder_write_res(ctx, res);
+   virgl_encoder_write_dword(ctx->cbuf, wait ? 1 : 0);
+   virgl_encoder_write_dword(ctx->cbuf, result_type);
+   virgl_encoder_write_dword(ctx->cbuf, offset);
+   virgl_encoder_write_dword(ctx->cbuf, index);
+   return 0;
+}
+
+void virgl_encode_transfer(struct virgl_screen *vs, struct virgl_cmd_buf *buf,
+                           struct virgl_transfer *trans, uint32_t direction)
+{
+   uint32_t command;
+   command = VIRGL_CMD0(VIRGL_CCMD_TRANSFER3D, 0, VIRGL_TRANSFER3D_SIZE);
+   virgl_encoder_write_dword(buf, command);
+   virgl_encoder_transfer3d_common(vs, buf, trans,
+                                   virgl_transfer3d_host_inferred_stride);
+   virgl_encoder_write_dword(buf, trans->offset);
+   virgl_encoder_write_dword(buf, direction);
+}
+
+void virgl_encode_copy_transfer(struct virgl_context *ctx,
+                                struct virgl_transfer *trans)
+{
+   uint32_t command;
+   struct virgl_screen *vs = virgl_screen(ctx->base.screen);
+
+   assert(trans->copy_src_hw_res);
+
+   command = VIRGL_CMD0(VIRGL_CCMD_COPY_TRANSFER3D, 0, VIRGL_COPY_TRANSFER3D_SIZE);
+   virgl_encoder_write_cmd_dword(ctx, command);
+   /* Copy transfers need to explicitly specify the stride, since it may differ
+    * from the image stride.
+    */
+   virgl_encoder_transfer3d_common(vs, ctx->cbuf, trans, virgl_transfer3d_explicit_stride);
+   vs->vws->emit_res(vs->vws, ctx->cbuf, trans->copy_src_hw_res, TRUE);
+   virgl_encoder_write_dword(ctx->cbuf, trans->copy_src_offset);
+   /* At the moment all copy transfers are synchronized. */
+   virgl_encoder_write_dword(ctx->cbuf, 1);
+}
+
+void virgl_encode_end_transfers(struct virgl_cmd_buf *buf)
+{
+   uint32_t command, diff;
+   diff = VIRGL_MAX_TBUF_DWORDS - buf->cdw;
+   if (diff) {
+      command = VIRGL_CMD0(VIRGL_CCMD_END_TRANSFERS, 0, diff - 1);
+      virgl_encoder_write_dword(buf, command);
+   }
 }

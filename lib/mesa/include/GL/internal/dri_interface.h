@@ -48,6 +48,8 @@ typedef unsigned int drm_drawable_t;
 typedef struct drm_clip_rect drm_clip_rect_t;
 #endif
 
+#include <GL/gl.h>
+
 #include <stdint.h>
 
 /**
@@ -83,6 +85,7 @@ typedef struct __DRI2throttleExtensionRec	__DRI2throttleExtension;
 typedef struct __DRI2fenceExtensionRec          __DRI2fenceExtension;
 typedef struct __DRI2interopExtensionRec	__DRI2interopExtension;
 typedef struct __DRI2blobExtensionRec           __DRI2blobExtension;
+typedef struct __DRI2bufferDamageExtensionRec   __DRI2bufferDamageExtension;
 
 typedef struct __DRIimageLoaderExtensionRec     __DRIimageLoaderExtension;
 typedef struct __DRIimageDriverExtensionRec     __DRIimageDriverExtension;
@@ -484,6 +487,48 @@ struct __DRI2interopExtensionRec {
    int (*export_object)(__DRIcontext *ctx,
                         struct mesa_glinterop_export_in *in,
                         struct mesa_glinterop_export_out *out);
+};
+
+
+/**
+ * Extension for limiting window system back buffer rendering to user-defined
+ * scissor region.
+ */
+
+#define __DRI2_BUFFER_DAMAGE "DRI2_BufferDamage"
+#define __DRI2_BUFFER_DAMAGE_VERSION 1
+
+struct __DRI2bufferDamageExtensionRec {
+   __DRIextension base;
+
+   /**
+    * Provides an array of rectangles representing an overriding scissor region
+    * for rendering operations performed to the specified drawable. These
+    * rectangles do not replace client API scissor regions or draw
+    * co-ordinates, but instead inform the driver of the overall bounds of all
+    * operations which will be issued before the next flush.
+    *
+    * Any rendering operations writing pixels outside this region to the
+    * drawable will have an undefined effect on the entire drawable.
+    *
+    * This entrypoint may only be called after the drawable has either been
+    * newly created or flushed, and before any rendering operations which write
+    * pixels to the drawable. Calling this entrypoint at any other time will
+    * have an undefined effect on the entire drawable.
+    *
+    * Calling this entrypoint with @nrects 0 and @rects NULL will reset the
+    * region to the buffer's full size. This entrypoint may be called once to
+    * reset the region, followed by a second call with a populated region,
+    * before a rendering call is made.
+    *
+    * Used to implement EGL_KHR_partial_update.
+    *
+    * \param drawable affected drawable
+    * \param nrects   number of rectangles provided
+    * \param rects    the array of rectangles, lower-left origin
+    */
+   void (*set_damage_region)(__DRIdrawable *drawable, unsigned int nrects,
+                             int *rects);
 };
 
 /*@}*/
@@ -1290,6 +1335,7 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_FORMAT_XBGR2101010  0x1010
 #define __DRI_IMAGE_FORMAT_ABGR2101010  0x1011
 #define __DRI_IMAGE_FORMAT_SABGR8       0x1012
+#define __DRI_IMAGE_FORMAT_UYVY         0x1013
 
 #define __DRI_IMAGE_USE_SHARE		0x0001
 #define __DRI_IMAGE_USE_SCANOUT		0x0002
@@ -1345,12 +1391,17 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_FOURCC_YUYV		0x56595559
 #define __DRI_IMAGE_FOURCC_UYVY		0x59565955
 #define __DRI_IMAGE_FOURCC_AYUV		0x56555941
+#define __DRI_IMAGE_FOURCC_XYUV8888	0x56555958
 
 #define __DRI_IMAGE_FOURCC_YVU410	0x39555659
 #define __DRI_IMAGE_FOURCC_YVU411	0x31315659
 #define __DRI_IMAGE_FOURCC_YVU420	0x32315659
 #define __DRI_IMAGE_FOURCC_YVU422	0x36315659
 #define __DRI_IMAGE_FOURCC_YVU444	0x34325659
+
+#define __DRI_IMAGE_FOURCC_P010		0x30313050
+#define __DRI_IMAGE_FOURCC_P012		0x32313050
+#define __DRI_IMAGE_FOURCC_P016		0x36313050
 
 /**
  * Queryable on images created by createImageFromNames.
@@ -1372,6 +1423,7 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_COMPONENTS_Y_XUXV	0x3005
 #define __DRI_IMAGE_COMPONENTS_Y_UXVX	0x3008
 #define __DRI_IMAGE_COMPONENTS_AYUV	0x3009
+#define __DRI_IMAGE_COMPONENTS_XYUV	0x300A
 #define __DRI_IMAGE_COMPONENTS_R	0x3006
 #define __DRI_IMAGE_COMPONENTS_RG	0x3007
 

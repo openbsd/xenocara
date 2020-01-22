@@ -35,14 +35,17 @@ extern "C" {
 struct spirv_supported_capabilities {
    bool address;
    bool atomic_storage;
+   bool demote_to_helper_invocation;
+   bool derivative_group;
    bool descriptor_array_dynamic_indexing;
    bool descriptor_array_non_uniform_indexing;
    bool descriptor_indexing;
    bool device_group;
    bool draw_parameters;
    bool float64;
+   bool fragment_shader_sample_interlock;
+   bool fragment_shader_pixel_interlock;
    bool geometry_streams;
-   bool gcn_shader;
    bool image_ms_array;
    bool image_read_without_format;
    bool image_write_without_format;
@@ -69,8 +72,11 @@ struct spirv_supported_capabilities {
    bool subgroup_vote;
    bool tessellation;
    bool transform_feedback;
-   bool trinary_minmax;
    bool variable_pointers;
+   bool float16;
+   bool amd_gcn_shader;
+   bool amd_shader_ballot;
+   bool amd_trinary_minmax;
 };
 
 typedef struct shader_info {
@@ -117,6 +123,9 @@ typedef struct shader_info {
    /* Whether or not this shader ever uses textureGather() */
    bool uses_texture_gather;
 
+   /** Bitfield of which textures are used */
+   uint32_t textures_used;
+
    /** Bitfield of which textures are used by texelFetch() */
    uint32_t textures_used_by_txf;
 
@@ -148,6 +157,16 @@ typedef struct shader_info {
       struct {
          /* Which inputs are doubles */
          uint64_t double_inputs;
+
+         /* For AMD-specific driver-internal shaders. It replaces vertex
+          * buffer loads with code generating VS inputs from scalar registers.
+          *
+          * Valid values: SI_VS_BLIT_SGPRS_POS_*
+          */
+         unsigned blit_sgprs_amd;
+
+         /* True if the shader writes position in window space coordinates pre-transform */
+         bool window_space_position;
       } vs;
 
       struct {
@@ -177,6 +196,14 @@ typedef struct shader_info {
          bool uses_discard;
 
          /**
+          * True if this fragment shader requires helper invocations.  This
+          * can be caused by the use of ALU derivative ops, texture
+          * instructions which do implicit derivatives, and the use of quad
+          * subgroup operations.
+          */
+         bool needs_helper_invocations;
+
+         /**
           * Whether any inputs are declared with the "sample" qualifier.
           */
          bool uses_sample_qualifier;
@@ -194,12 +221,37 @@ typedef struct shader_info {
 
          bool post_depth_coverage;
 
+         /**
+          * \name ARB_fragment_coord_conventions
+          * @{
+          */
          bool pixel_center_integer;
+         bool origin_upper_left;
+         /*@}*/
 
          bool pixel_interlock_ordered;
          bool pixel_interlock_unordered;
          bool sample_interlock_ordered;
          bool sample_interlock_unordered;
+
+         /**
+          * Flags whether NIR's base types on the FS color outputs should be
+          * ignored.
+          *
+          * GLSL requires that fragment shader output base types match the
+          * render target's base types for the behavior to be defined.  From
+          * the GL 4.6 spec:
+          *
+          *     "If the values written by the fragment shader do not match the
+          *      format(s) of the corresponding color buffer(s), the result is
+          *      undefined."
+          *
+          * However, for NIR shaders translated from TGSI, we don't have the
+          * output types any more, so the driver will need to do whatever
+          * fixups are necessary to handle effectively untyped data being
+          * output from the FS.
+          */
+         bool untyped_color_outputs;
 
          /** gl_FragDepth layout for ARB_conservative_depth. */
          enum gl_frag_depth_layout depth_layout;
@@ -209,11 +261,27 @@ typedef struct shader_info {
          unsigned local_size[3];
 
          bool local_size_variable;
+         char user_data_components_amd;
 
          /**
           * Size of shared variables accessed by the compute shader.
           */
          unsigned shared_size;
+
+
+         /**
+          * pointer size is:
+          *   AddressingModelLogical:    0    (default)
+          *   AddressingModelPhysical32: 32
+          *   AddressingModelPhysical64: 64
+          */
+         unsigned ptr_size;
+
+         /*
+          * Arrangement of invocations used to calculate derivatives in a compute
+          * shader.  From NV_compute_shader_derivatives.
+          */
+         enum gl_derivative_group derivative_group;
       } cs;
 
       /* Applies to both TCS and TES. */

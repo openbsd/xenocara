@@ -558,7 +558,7 @@ fd4_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 
 	if (dirty & (FD_DIRTY_ZSA | FD_DIRTY_RASTERIZER | FD_DIRTY_PROG)) {
 		struct fd4_zsa_stateobj *zsa = fd4_zsa_stateobj(ctx->zsa);
-		bool fragz = fp->has_kill | fp->writes_pos;
+		bool fragz = fp->no_earlyz | fp->writes_pos;
 		bool clamp = !ctx->rasterizer->depth_clip_near;
 
 		OUT_PKT0(ring, REG_A4XX_RB_DEPTH_CONTROL, 1);
@@ -913,12 +913,6 @@ fd4_emit_restore(struct fd_batch *batch, struct fd_ringbuffer *ring)
 }
 
 static void
-fd4_emit_ib(struct fd_ringbuffer *ring, struct fd_ringbuffer *target)
-{
-	__OUT_IB(ring, true, target);
-}
-
-static void
 fd4_mem_to_mem(struct fd_ringbuffer *ring, struct pipe_resource *dst,
 		unsigned dst_off, struct pipe_resource *src, unsigned src_off,
 		unsigned sizedwords)
@@ -939,11 +933,17 @@ fd4_mem_to_mem(struct fd_ringbuffer *ring, struct pipe_resource *dst,
 }
 
 void
+fd4_emit_init_screen(struct pipe_screen *pscreen)
+{
+	struct fd_screen *screen = fd_screen(pscreen);
+
+	screen->emit_const = fd4_emit_const;
+	screen->emit_const_bo = fd4_emit_const_bo;
+	screen->emit_ib = fd4_emit_ib;
+	screen->mem_to_mem = fd4_mem_to_mem;
+}
+
+void
 fd4_emit_init(struct pipe_context *pctx)
 {
-	struct fd_context *ctx = fd_context(pctx);
-	ctx->emit_const = fd4_emit_const;
-	ctx->emit_const_bo = fd4_emit_const_bo;
-	ctx->emit_ib = fd4_emit_ib;
-	ctx->mem_to_mem = fd4_mem_to_mem;
 }

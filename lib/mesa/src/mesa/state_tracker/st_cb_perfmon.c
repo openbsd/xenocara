@@ -29,6 +29,7 @@
 #include "st_context.h"
 #include "st_cb_bitmap.h"
 #include "st_cb_perfmon.h"
+#include "st_util.h"
 
 #include "util/bitset.h"
 
@@ -343,7 +344,7 @@ static void
 st_InitPerfMonitorGroups(struct gl_context *ctx)
 {
    struct st_context *st = st_context(ctx);
-   struct gl_perf_monitor_state *perfmon = &st->ctx->PerfMonitor;
+   struct gl_perf_monitor_state *perfmon = &ctx->PerfMonitor;
    struct pipe_screen *screen = st->pipe->screen;
    struct gl_perf_monitor_group *groups = NULL;
    struct st_perf_monitor_group *stgroups = NULL;

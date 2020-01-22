@@ -388,8 +388,8 @@ MotionVectorToPipe(const struct pipe_mpeg12_macroblock *mb, unsigned vector,
          mv.bottom.weight = weight;
          break;
 
-      default: // TODO: Support DUALPRIME and 16x8
-         break;
+      default:
+         unreachable("TODO: Support DUALPRIME and 16x8");
       }
    } else {
       mv.top.x = mv.top.y = 0;
@@ -1120,7 +1120,7 @@ vl_create_mpeg12_decoder(struct pipe_context *context,
 
    dec->base = *templat;
    dec->base.context = context;
-   dec->context = context->screen->context_create(context->screen, NULL, 0);
+   dec->context = pipe_create_multimedia_context(context->screen);
 
    dec->base.destroy = vl_mpeg12_destroy;
    dec->base.begin_frame = vl_mpeg12_begin_frame;

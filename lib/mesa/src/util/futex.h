@@ -51,9 +51,41 @@ static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespe
                     FUTEX_BITSET_MATCH_ANY);
 }
 
-#endif
+#elif defined(__FreeBSD__)
 
-#ifdef __OpenBSD__
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/umtx.h>
+#include <sys/time.h>
+
+static inline int futex_wake(uint32_t *addr, int count)
+{
+   assert(count == (int)(uint32_t)count); /* Check that bits weren't discarded */
+   return _umtx_op(addr, UMTX_OP_WAKE, (uint32_t)count, NULL, NULL) == -1 ? errno : 0;
+}
+
+static inline int futex_wait(uint32_t *addr, int32_t value, struct timespec *timeout)
+{
+   void *uaddr = NULL, *uaddr2 = NULL;
+   struct _umtx_time tmo = {
+      ._flags = UMTX_ABSTIME,
+      ._clockid = CLOCK_MONOTONIC
+   };
+
+   assert(value == (int)(uint32_t)value); /* Check that bits weren't discarded */
+
+   if (timeout != NULL) {
+      tmo._timeout = *timeout;
+      uaddr = (void *)(uintptr_t)sizeof(tmo);
+      uaddr2 = (void *)&tmo;
+   }
+
+   return _umtx_op(addr, UMTX_OP_WAIT_UINT, (uint32_t)value, uaddr, uaddr2) == -1 ? errno : 0;
+}
+
+#elif defined(__OpenBSD__)
 
 #include <sys/time.h>
 #include <sys/futex.h>

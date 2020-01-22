@@ -861,7 +861,7 @@ typedef uint8_t isl_channel_mask_t;
 /**
  * @brief A channel select (also known as texture swizzle) value
  */
-enum isl_channel_select {
+enum PACKED isl_channel_select {
    ISL_CHANNEL_SELECT_ZERO = 0,
    ISL_CHANNEL_SELECT_ONE = 1,
    ISL_CHANNEL_SELECT_RED = 4,
@@ -1176,7 +1176,7 @@ struct isl_surf {
 
    /**
     * Physical extent of the surface's base level, in units of physical
-    * surface samples and aligned to the format's compression block.
+    * surface samples.
     *
     * Consider isl_dim_layout as an operator that transforms a logical surface
     * layout to a physical surface layout. Then
@@ -1361,6 +1361,11 @@ struct isl_buffer_fill_state_info {
     */
    enum isl_format format;
 
+   /**
+    * The swizzle to use in the surface state
+    */
+   struct isl_swizzle swizzle;
+
    uint32_t stride_B;
 };
 
@@ -1497,6 +1502,9 @@ isl_format_has_int_channel(enum isl_format fmt)
    return isl_format_has_uint_channel(fmt) ||
           isl_format_has_sint_channel(fmt);
 }
+
+bool isl_format_has_color_component(enum isl_format fmt,
+                                    int component) ATTRIBUTE_CONST;
 
 unsigned isl_format_get_num_channels(enum isl_format fmt);
 
@@ -1875,6 +1883,34 @@ isl_surf_get_image_alignment_sa(const struct isl_surf *surf)
    return isl_extent3d(fmtl->bw * surf->image_alignment_el.w,
                        fmtl->bh * surf->image_alignment_el.h,
                        fmtl->bd * surf->image_alignment_el.d);
+}
+
+/**
+ * Logical extent of level 0 in units of surface elements.
+ */
+static inline struct isl_extent4d
+isl_surf_get_logical_level0_el(const struct isl_surf *surf)
+{
+   const struct isl_format_layout *fmtl = isl_format_get_layout(surf->format);
+
+   return isl_extent4d(DIV_ROUND_UP(surf->logical_level0_px.w, fmtl->bw),
+                       DIV_ROUND_UP(surf->logical_level0_px.h, fmtl->bh),
+                       DIV_ROUND_UP(surf->logical_level0_px.d, fmtl->bd),
+                       surf->logical_level0_px.a);
+}
+
+/**
+ * Physical extent of level 0 in units of surface elements.
+ */
+static inline struct isl_extent4d
+isl_surf_get_phys_level0_el(const struct isl_surf *surf)
+{
+   const struct isl_format_layout *fmtl = isl_format_get_layout(surf->format);
+
+   return isl_extent4d(DIV_ROUND_UP(surf->phys_level0_sa.w, fmtl->bw),
+                       DIV_ROUND_UP(surf->phys_level0_sa.h, fmtl->bh),
+                       DIV_ROUND_UP(surf->phys_level0_sa.d, fmtl->bd),
+                       surf->phys_level0_sa.a);
 }
 
 /**

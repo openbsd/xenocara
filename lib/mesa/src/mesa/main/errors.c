@@ -59,7 +59,7 @@ output_if_debug(const char *prefixString, const char *outputString,
          LogFile = fopen(logFile, "w");
       if (!LogFile)
          LogFile = stderr;
-#ifdef DEBUG
+#ifndef NDEBUG
       /* in debug builds, print messages unless MESA_DEBUG="silent" */
       if (MESA_DEBUG_FLAGS & DEBUG_SILENT)
          debug = 0;
@@ -189,7 +189,7 @@ should_output(struct gl_context *ctx, GLenum error, const char *fmtString)
    if (debug == -1) {
       const char *debugEnv = getenv("MESA_DEBUG");
 
-#ifdef DEBUG
+#ifndef NDEBUG
       if (debugEnv && strstr(debugEnv, "silent"))
          debug = GL_FALSE;
       else
@@ -217,13 +217,13 @@ should_output(struct gl_context *ctx, GLenum error, const char *fmtString)
 
 
 void
-_mesa_gl_vdebug(struct gl_context *ctx,
-                GLuint *id,
-                enum mesa_debug_source source,
-                enum mesa_debug_type type,
-                enum mesa_debug_severity severity,
-                const char *fmtString,
-                va_list args)
+_mesa_gl_vdebugf(struct gl_context *ctx,
+                 GLuint *id,
+                 enum mesa_debug_source source,
+                 enum mesa_debug_type type,
+                 enum mesa_debug_severity severity,
+                 const char *fmtString,
+                 va_list args)
 {
    char s[MAX_DEBUG_MESSAGE_LENGTH];
    int len;
@@ -240,17 +240,44 @@ _mesa_gl_vdebug(struct gl_context *ctx,
 
 
 void
+_mesa_gl_debugf(struct gl_context *ctx,
+                GLuint *id,
+                enum mesa_debug_source source,
+                enum mesa_debug_type type,
+                enum mesa_debug_severity severity,
+                const char *fmtString, ...)
+{
+   va_list args;
+   va_start(args, fmtString);
+   _mesa_gl_vdebugf(ctx, id, source, type, severity, fmtString, args);
+   va_end(args);
+}
+
+size_t
 _mesa_gl_debug(struct gl_context *ctx,
                GLuint *id,
                enum mesa_debug_source source,
                enum mesa_debug_type type,
                enum mesa_debug_severity severity,
-               const char *fmtString, ...)
+               const char *msg)
 {
-   va_list args;
-   va_start(args, fmtString);
-   _mesa_gl_vdebug(ctx, id, source, type, severity, fmtString, args);
-   va_end(args);
+   _mesa_debug_get_id(id);
+
+   size_t len = strnlen(msg, MAX_DEBUG_MESSAGE_LENGTH);
+   if (len < MAX_DEBUG_MESSAGE_LENGTH) {
+      _mesa_log_msg(ctx, source, type, *id, severity, len, msg);
+      return len;
+   }
+
+   /* limit the message to fit within KHR_debug buffers */
+   char s[MAX_DEBUG_MESSAGE_LENGTH];
+   strncpy(s, msg, MAX_DEBUG_MESSAGE_LENGTH);
+   s[MAX_DEBUG_MESSAGE_LENGTH - 1] = '\0';
+   len = MAX_DEBUG_MESSAGE_LENGTH - 1;
+   _mesa_log_msg(ctx, source, type, *id, severity, len, s);
+
+   /* report the number of characters that were logged */
+   return len;
 }
 
 
@@ -351,7 +378,7 @@ _mesa_error_no_memory(const char *caller)
 void
 _mesa_debug( const struct gl_context *ctx, const char *fmtString, ... )
 {
-#ifdef DEBUG
+#ifndef NDEBUG
    char s[MAX_DEBUG_MESSAGE_LENGTH];
    va_list args;
    va_start(args, fmtString);

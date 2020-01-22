@@ -575,11 +575,14 @@ typedef enum
     */
    /*@{*/
    SYSTEM_VALUE_FRAG_COORD,
+   SYSTEM_VALUE_POINT_COORD,
    SYSTEM_VALUE_FRONT_FACE,
    SYSTEM_VALUE_SAMPLE_ID,
    SYSTEM_VALUE_SAMPLE_POS,
    SYSTEM_VALUE_SAMPLE_MASK_IN,
    SYSTEM_VALUE_HELPER_INVOCATION,
+   SYSTEM_VALUE_COLOR0,
+   SYSTEM_VALUE_COLOR1,
    /*@}*/
 
    /**
@@ -591,6 +594,8 @@ typedef enum
    SYSTEM_VALUE_PRIMITIVE_ID,
    SYSTEM_VALUE_TESS_LEVEL_OUTER, /**< TES input */
    SYSTEM_VALUE_TESS_LEVEL_INNER, /**< TES input */
+   SYSTEM_VALUE_TESS_LEVEL_OUTER_DEFAULT, /**< TCS input for passthru TCS */
+   SYSTEM_VALUE_TESS_LEVEL_INNER_DEFAULT, /**< TCS input for passthru TCS */
    /*@}*/
 
    /**
@@ -600,11 +605,13 @@ typedef enum
    SYSTEM_VALUE_LOCAL_INVOCATION_ID,
    SYSTEM_VALUE_LOCAL_INVOCATION_INDEX,
    SYSTEM_VALUE_GLOBAL_INVOCATION_ID,
+   SYSTEM_VALUE_GLOBAL_INVOCATION_INDEX,
    SYSTEM_VALUE_WORK_GROUP_ID,
    SYSTEM_VALUE_NUM_WORK_GROUPS,
    SYSTEM_VALUE_LOCAL_GROUP_SIZE,
    SYSTEM_VALUE_GLOBAL_GROUP_SIZE,
    SYSTEM_VALUE_WORK_DIM,
+   SYSTEM_VALUE_USER_DATA_AMD,
    /*@}*/
 
    /** Required for VK_KHR_device_group */
@@ -620,10 +627,16 @@ typedef enum
    SYSTEM_VALUE_VERTEX_CNT,
 
    /**
-    * Driver internal varying-coord, used for varying-fetch instructions.
+    * Driver internal varying-coords, used for varying-fetch instructions.
     * Not externally visible.
+    *
+    * The _SIZE value is "primitive size", used to scale i/j in primitive
+    * space to pixel space.
     */
-   SYSTEM_VALUE_VARYING_COORD,
+   SYSTEM_VALUE_BARYCENTRIC_PIXEL,
+   SYSTEM_VALUE_BARYCENTRIC_SAMPLE,
+   SYSTEM_VALUE_BARYCENTRIC_CENTROID,
+   SYSTEM_VALUE_BARYCENTRIC_SIZE,
 
    SYSTEM_VALUE_MAX             /**< Number of values */
 } gl_system_value;
@@ -715,6 +728,20 @@ enum gl_access_qualifier
    ACCESS_VOLATILE      = (1 << 2),
    ACCESS_NON_READABLE  = (1 << 3),
    ACCESS_NON_WRITEABLE = (1 << 4),
+
+   /** The access may use a non-uniform buffer or image index */
+   ACCESS_NON_UNIFORM   = (1 << 5),
+
+   /* This has the same semantics as NIR_INTRINSIC_CAN_REORDER, only to be
+    * used with loads. In other words, it means that the load can be
+    * arbitrarily reordered, or combined with other loads to the same address.
+    * It is implied by ACCESS_NON_WRITEABLE together with ACCESS_RESTRICT, and
+    * a lack of ACCESS_COHERENT and ACCESS_VOLATILE.
+    */
+   ACCESS_CAN_REORDER = (1 << 6),
+
+   /** Use as little cache space as possible. */
+   ACCESS_STREAM_CACHE_POLICY = (1 << 7),
 };
 
 /**
@@ -743,6 +770,27 @@ enum gl_advanced_blend_mode
    BLEND_ALL            = 0x7fff,
 };
 
+enum blend_func
+{
+   BLEND_FUNC_ADD,
+   BLEND_FUNC_SUBTRACT,
+   BLEND_FUNC_REVERSE_SUBTRACT,
+   BLEND_FUNC_MIN,
+   BLEND_FUNC_MAX,
+};
+
+enum blend_factor
+{
+   BLEND_FACTOR_ZERO,
+   BLEND_FACTOR_SRC_COLOR,
+   BLEND_FACTOR_DST_COLOR,
+   BLEND_FACTOR_SRC_ALPHA,
+   BLEND_FACTOR_DST_ALPHA,
+   BLEND_FACTOR_CONSTANT_COLOR,
+   BLEND_FACTOR_CONSTANT_ALPHA,
+   BLEND_FACTOR_SRC_ALPHA_SATURATE,
+};
+
 enum gl_tess_spacing
 {
    TESS_SPACING_UNSPECIFIED,
@@ -766,6 +814,47 @@ enum compare_func
    COMPARE_FUNC_NOTEQUAL,
    COMPARE_FUNC_GEQUAL,
    COMPARE_FUNC_ALWAYS,
+};
+
+/**
+ * Arrangements for grouping invocations from NV_compute_shader_derivatives.
+ *
+ *   The extension provides new layout qualifiers that support two different
+ *   arrangements of compute shader invocations for the purpose of derivative
+ *   computation.  When specifying
+ *
+ *     layout(derivative_group_quadsNV) in;
+ *
+ *   compute shader invocations are grouped into 2x2x1 arrays whose four local
+ *   invocation ID values follow the pattern:
+ *
+ *       +-----------------+------------------+
+ *       | (2x+0, 2y+0, z) |  (2x+1, 2y+0, z) |
+ *       +-----------------+------------------+
+ *       | (2x+0, 2y+1, z) |  (2x+1, 2y+1, z) |
+ *       +-----------------+------------------+
+ *
+ *   where Y increases from bottom to top.  When specifying
+ *
+ *     layout(derivative_group_linearNV) in;
+ *
+ *   compute shader invocations are grouped into 2x2x1 arrays whose four local
+ *   invocation index values follow the pattern:
+ *
+ *       +------+------+
+ *       | 4n+0 | 4n+1 |
+ *       +------+------+
+ *       | 4n+2 | 4n+3 |
+ *       +------+------+
+ *
+ *   If neither layout qualifier is specified, derivatives in compute shaders
+ *   return zero, which is consistent with the handling of built-in texture
+ *   functions like texture() in GLSL 4.50 compute shaders.
+ */
+enum gl_derivative_group {
+   DERIVATIVE_GROUP_NONE = 0,
+   DERIVATIVE_GROUP_QUADS,
+   DERIVATIVE_GROUP_LINEAR,
 };
 
 #ifdef __cplusplus

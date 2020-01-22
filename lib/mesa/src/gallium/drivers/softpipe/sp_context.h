@@ -94,7 +94,7 @@ struct softpipe_context {
    struct draw_so_target *so_targets[PIPE_MAX_SO_BUFFERS];
    unsigned num_so_targets;
    
-   struct pipe_query_data_so_statistics so_stats;
+   struct pipe_query_data_so_statistics so_stats[PIPE_MAX_VERTEX_STREAMS];
 
    struct pipe_query_data_pipeline_statistics pipeline_statistics;
    unsigned active_statistics_queries;
@@ -151,7 +151,7 @@ struct softpipe_context {
    /** Conditional query object and mode */
    struct pipe_query *render_cond_query;
    enum pipe_render_cond_flag render_cond_mode;
-   boolean render_cond_cond;
+   bool render_cond_cond;
 
    /** Polygon stipple items */
    struct {

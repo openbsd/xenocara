@@ -128,7 +128,7 @@ build_nir_copy_fragment_shader(enum glsl_sampler_dim tex_dim)
 	unsigned swz[] = { 0, (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 1), 2 };
 	nir_ssa_def *const tex_pos =
 		nir_swizzle(&b, nir_load_var(&b, tex_pos_in), swz,
-			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3), false);
+			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3));
 
 	const struct glsl_type *sampler_type =
 		glsl_sampler_type(tex_dim, false, tex_dim != GLSL_SAMPLER_DIM_3D,
@@ -186,7 +186,7 @@ build_nir_copy_fragment_shader_depth(enum glsl_sampler_dim tex_dim)
 	unsigned swz[] = { 0, (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 1), 2 };
 	nir_ssa_def *const tex_pos =
 		nir_swizzle(&b, nir_load_var(&b, tex_pos_in), swz,
-			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3), false);
+			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3));
 
 	const struct glsl_type *sampler_type =
 		glsl_sampler_type(tex_dim, false, tex_dim != GLSL_SAMPLER_DIM_3D,
@@ -244,7 +244,7 @@ build_nir_copy_fragment_shader_stencil(enum glsl_sampler_dim tex_dim)
 	unsigned swz[] = { 0, (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 1), 2 };
 	nir_ssa_def *const tex_pos =
 		nir_swizzle(&b, nir_load_var(&b, tex_pos_in), swz,
-			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3), false);
+			    (tex_dim == GLSL_SAMPLER_DIM_1D ? 2 : 3));
 
 	const struct glsl_type *sampler_type =
 		glsl_sampler_type(tex_dim, false, tex_dim != GLSL_SAMPLER_DIM_3D,
@@ -660,7 +660,7 @@ void radv_CmdBlitImage(
 							     .baseArrayLayer = dest_array_slice,
 							     .layerCount = 1
 						     },
-					     });
+					     }, NULL);
 			radv_image_view_init(&src_iview, cmd_buffer->device,
 					     &(VkImageViewCreateInfo) {
 						.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -674,7 +674,7 @@ void radv_CmdBlitImage(
 							.baseArrayLayer = src_array_slice,
 							.layerCount = 1
 						},
-					});
+					}, NULL);
 			meta_emit_blit(cmd_buffer,
 				       src_image, &src_iview, srcImageLayout,
 				       src_offset_0, src_offset_1,
@@ -956,8 +956,8 @@ radv_device_init_meta_blit_color(struct radv_device *device, bool on_demand)
 									.attachment = VK_ATTACHMENT_UNUSED,
 									.layout = VK_IMAGE_LAYOUT_GENERAL,
 								},
-								.preserveAttachmentCount = 1,
-								.pPreserveAttachments = (uint32_t[]) { 0 },
+								.preserveAttachmentCount = 0,
+								.pPreserveAttachments = NULL,
 							},
 							.dependencyCount = 0,
 						}, &device->meta_state.alloc, &device->meta_state.blit.render_pass[key][j]);
@@ -1016,8 +1016,8 @@ radv_device_init_meta_blit_depth(struct radv_device *device, bool on_demand)
 								       .attachment = 0,
 								       .layout = layout,
 								},
-							       .preserveAttachmentCount = 1,
-							       .pPreserveAttachments = (uint32_t[]) { 0 },
+							       .preserveAttachmentCount = 0,
+							       .pPreserveAttachments = NULL,
 							},
 						        .dependencyCount = 0,
 						}, &device->meta_state.alloc, &device->meta_state.blit.depth_only_rp[ds_layout]);
@@ -1073,8 +1073,8 @@ radv_device_init_meta_blit_stencil(struct radv_device *device, bool on_demand)
 								       .attachment = 0,
 								       .layout = layout,
 							       },
-							       .preserveAttachmentCount = 1,
-							       .pPreserveAttachments = (uint32_t[]) { 0 },
+							       .preserveAttachmentCount = 0,
+							       .pPreserveAttachments = NULL,
 						       },
 						       .dependencyCount = 0,
 					 }, &device->meta_state.alloc, &device->meta_state.blit.stencil_only_rp[ds_layout]);

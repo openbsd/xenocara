@@ -36,21 +36,28 @@ def collect_data(spirv, kind):
 
     # There are some duplicate values in some of the tables (thanks guys!), so
     # filter them out.
-    last_value = -1
+    seen = set()
     values = []
     for x in operands["enumerants"]:
-        if x["value"] != last_value:
-            last_value = x["value"]
+        if x["value"] not in seen:
+            seen.add(x["value"])
             values.append(x["enumerant"])
 
     return (kind, values)
 
 def collect_opcodes(spirv):
+    seen = set()
     values = []
     for x in spirv["instructions"]:
+        # Handle aliases by choosing the first one in the grammar.
+        # E.g. OpDecorateString and OpDecorateStringGOOGLE share same opcode.
+        if x["opcode"] in seen:
+            continue
+        opcode = x["opcode"]
         name = x["opname"]
         assert name.startswith("Op")
         values.append(name[2:])
+        seen.add(opcode)
 
     return ("Op", values)
 
@@ -88,9 +95,15 @@ if __name__ == "__main__":
     spirv_info = json.JSONDecoder().decode(open(pargs.json, "r").read())
 
     info = [
+        collect_data(spirv_info, "AddressingModel"),
+        collect_data(spirv_info, "BuiltIn"),
         collect_data(spirv_info, "Capability"),
         collect_data(spirv_info, "Decoration"),
+        collect_data(spirv_info, "Dim"),
         collect_data(spirv_info, "ExecutionMode"),
+        collect_data(spirv_info, "ExecutionModel"),
+        collect_data(spirv_info, "ImageFormat"),
+        collect_data(spirv_info, "StorageClass"),
         collect_opcodes(spirv_info),
     ]
 

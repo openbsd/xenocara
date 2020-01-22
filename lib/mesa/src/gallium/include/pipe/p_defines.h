@@ -261,6 +261,8 @@ enum pipe_transfer_usage
     * E.g. the state tracker could have a simpler path which maps textures and
     * does read/modify/write cycles on them directly, and a more complicated
     * path which uses minimal read and write transfers.
+    *
+    * This flag supresses implicit "DISCARD" for buffer_subdata.
     */
    PIPE_TRANSFER_MAP_DIRECTLY = (1 << 2),
 
@@ -425,7 +427,12 @@ enum pipe_flush_flags
 #define PIPE_BARRIER_FRAMEBUFFER       (1 << 9)
 #define PIPE_BARRIER_STREAMOUT_BUFFER  (1 << 10)
 #define PIPE_BARRIER_GLOBAL_BUFFER     (1 << 11)
-#define PIPE_BARRIER_ALL               ((1 << 12) - 1)
+#define PIPE_BARRIER_UPDATE_BUFFER     (1 << 12)
+#define PIPE_BARRIER_UPDATE_TEXTURE    (1 << 13)
+#define PIPE_BARRIER_ALL               ((1 << 14) - 1)
+
+#define PIPE_BARRIER_UPDATE \
+   (PIPE_BARRIER_UPDATE_BUFFER | PIPE_BARRIER_UPDATE_TEXTURE)
 
 /**
  * Flags for pipe_context::texture_barrier.
@@ -487,7 +494,7 @@ enum pipe_flush_flags
 #define PIPE_RESOURCE_FLAG_MAP_COHERENT   (1 << 1)
 #define PIPE_RESOURCE_FLAG_TEXTURING_MORE_LIKELY (1 << 2)
 #define PIPE_RESOURCE_FLAG_SPARSE                (1 << 3)
-#define PIPE_RESOURCE_FLAG_DRV_PRIV    (1 << 16) /* driver/winsys private */
+#define PIPE_RESOURCE_FLAG_DRV_PRIV    (1 << 8) /* driver/winsys private */
 #define PIPE_RESOURCE_FLAG_ST_PRIV     (1 << 24) /* state-tracker/winsys private */
 
 /**
@@ -639,7 +646,18 @@ enum pipe_reset_status
 enum pipe_conservative_raster_mode
 {
    PIPE_CONSERVATIVE_RASTER_OFF,
+
+   /**
+    * The post-snap mode means the conservative rasterization occurs after
+    * the conversion from floating-point to fixed-point coordinates
+    * on the subpixel grid.
+    */
    PIPE_CONSERVATIVE_RASTER_POST_SNAP,
+
+   /**
+    * The pre-snap mode means the conservative rasterization occurs before
+    * the conversion from floating-point to fixed-point coordinates.
+    */
    PIPE_CONSERVATIVE_RASTER_PRE_SNAP,
 };
 
@@ -667,6 +685,7 @@ enum pipe_conservative_raster_mode
  */
 enum pipe_cap
 {
+   PIPE_CAP_GRAPHICS,
    PIPE_CAP_NPOT_TEXTURES,
    PIPE_CAP_MAX_DUAL_SOURCE_RENDER_TARGETS,
    PIPE_CAP_ANISOTROPIC_FILTER,
@@ -675,12 +694,11 @@ enum pipe_cap
    PIPE_CAP_OCCLUSION_QUERY,
    PIPE_CAP_QUERY_TIME_ELAPSED,
    PIPE_CAP_TEXTURE_SWIZZLE,
-   PIPE_CAP_MAX_TEXTURE_2D_LEVELS,
+   PIPE_CAP_MAX_TEXTURE_2D_SIZE,
    PIPE_CAP_MAX_TEXTURE_3D_LEVELS,
    PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS,
    PIPE_CAP_TEXTURE_MIRROR_CLAMP,
    PIPE_CAP_BLEND_EQUATION_SEPARATE,
-   PIPE_CAP_SM3,
    PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS,
    PIPE_CAP_PRIMITIVE_RESTART,
    /** blend enables and write masks per rendertarget */
@@ -713,6 +731,7 @@ enum pipe_cap
    PIPE_CAP_VERTEX_COLOR_CLAMPED,
    PIPE_CAP_GLSL_FEATURE_LEVEL,
    PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY,
+   PIPE_CAP_ESSL_FEATURE_LEVEL,
    PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION,
    PIPE_CAP_USER_VERTEX_BUFFERS,
    PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY,
@@ -780,6 +799,7 @@ enum pipe_cap
    PIPE_CAP_MULTI_DRAW_INDIRECT,
    PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS,
    PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL,
+   PIPE_CAP_TGSI_FS_POINT_IS_SYSVAL,
    PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL,
    PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT,
    PIPE_CAP_INVALIDATE_BUFFER,
@@ -808,7 +828,7 @@ enum pipe_cap
    PIPE_CAP_NATIVE_FENCE_FD,
    PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY,
    PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS,
-   PIPE_CAP_TGSI_FS_FBFETCH,
+   PIPE_CAP_FBFETCH,
    PIPE_CAP_TGSI_MUL_ZERO_WINS,
    PIPE_CAP_DOUBLES,
    PIPE_CAP_INT64,
@@ -842,6 +862,7 @@ enum pipe_cap
    PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_POINTS_LINES,
    PIPE_CAP_MAX_CONSERVATIVE_RASTER_SUBPIXEL_PRECISION_BIAS,
    PIPE_CAP_CONSERVATIVE_RASTER_POST_DEPTH_COVERAGE,
+   PIPE_CAP_CONSERVATIVE_RASTER_INNER_COVERAGE,
    PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS,
    PIPE_CAP_MAX_GS_INVOCATIONS,
    PIPE_CAP_MAX_SHADER_BUFFER_SIZE,
@@ -856,7 +877,26 @@ enum pipe_cap
    PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE,
    PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND,
    PIPE_CAP_DEST_SURFACE_SRGB_CONTROL,
+   PIPE_CAP_NIR_COMPACT_ARRAYS,
    PIPE_CAP_MAX_VARYINGS,
+   PIPE_CAP_COMPUTE_GRID_INFO_LAST_BLOCK,
+   PIPE_CAP_COMPUTE_SHADER_DERIVATIVES,
+   PIPE_CAP_TGSI_SKIP_SHRINK_IO_ARRAYS,
+   PIPE_CAP_IMAGE_LOAD_FORMATTED,
+   PIPE_CAP_MAX_FRAMES_IN_FLIGHT,
+   PIPE_CAP_DMABUF,
+   PIPE_CAP_PREFER_COMPUTE_FOR_MULTIMEDIA,
+   PIPE_CAP_FRAGMENT_SHADER_INTERLOCK,
+   PIPE_CAP_FBFETCH_COHERENT,
+   PIPE_CAP_CS_DERIVED_SYSTEM_VALUES_SUPPORTED,
+   PIPE_CAP_ATOMIC_FLOAT_MINMAX,
+   PIPE_CAP_TGSI_DIV,
+   PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD,
+   PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES,
+   PIPE_CAP_VERTEX_SHADER_SATURATE,
+   PIPE_CAP_TEXTURE_SHADOW_LOD,
+   PIPE_CAP_SHADER_SAMPLES_IDENTICAL,
+   PIPE_CAP_TGSI_ATOMINC_WRAP,
 };
 
 /**
@@ -864,7 +904,7 @@ enum pipe_cap
  * return a bitmask of the supported priorities.  If the driver does not
  * support prioritized contexts, it can return 0.
  *
- * Note that these match __DRI2_RENDER_HAS_CONTEXT_PRIORITY_*
+ * Note that these match __DRI2_RENDERER_HAS_CONTEXT_PRIORITY_*
  */
 #define PIPE_CONTEXT_PRIORITY_LOW     (1 << 0)
 #define PIPE_CONTEXT_PRIORITY_MEDIUM  (1 << 1)
@@ -987,6 +1027,21 @@ enum pipe_compute_cap
 };
 
 /**
+ * Resource parameters. They can be queried using
+ * pipe_screen::get_resource_param.
+ */
+enum pipe_resource_param
+{
+   PIPE_RESOURCE_PARAM_NPLANES,
+   PIPE_RESOURCE_PARAM_STRIDE,
+   PIPE_RESOURCE_PARAM_OFFSET,
+   PIPE_RESOURCE_PARAM_MODIFIER,
+   PIPE_RESOURCE_PARAM_HANDLE_TYPE_SHARED,
+   PIPE_RESOURCE_PARAM_HANDLE_TYPE_KMS,
+   PIPE_RESOURCE_PARAM_HANDLE_TYPE_FD,
+};
+
+/**
  * Types of parameters for pipe_context::set_context_param.
  */
 enum pipe_context_param
@@ -1019,7 +1074,7 @@ struct pipe_query_data_so_statistics
 struct pipe_query_data_timestamp_disjoint
 {
    uint64_t frequency;
-   boolean  disjoint;
+   bool     disjoint;
 };
 
 /**
@@ -1060,7 +1115,7 @@ union pipe_query_result
    /* PIPE_QUERY_SO_OVERFLOW_PREDICATE */
    /* PIPE_QUERY_SO_OVERFLOW_ANY_PREDICATE */
    /* PIPE_QUERY_GPU_FINISHED */
-   boolean b;
+   bool b;
 
    /* PIPE_QUERY_OCCLUSION_COUNTER */
    /* PIPE_QUERY_TIMESTAMP */

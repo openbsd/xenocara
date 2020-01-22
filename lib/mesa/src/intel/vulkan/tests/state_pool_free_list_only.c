@@ -21,6 +21,8 @@
  * IN THE SOFTWARE.
  */
 
+#undef NDEBUG
+
 #include <pthread.h>
 
 #include "anv_private.h"
@@ -33,7 +35,7 @@
 
 int main(int argc, char **argv)
 {
-   struct anv_instance instance;
+   struct anv_instance instance = { };
    struct anv_device device = {
       .instance = &instance,
    };

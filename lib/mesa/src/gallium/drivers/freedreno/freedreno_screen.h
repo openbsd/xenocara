@@ -59,6 +59,7 @@ struct fd_screen {
 
 	struct slab_parent_pool transfer_pool;
 
+	uint64_t gmem_base;
 	uint32_t gmemsize_bytes;
 	uint32_t device_id;
 	uint32_t gpu_id;         /* 220, 305, etc */
@@ -70,6 +71,7 @@ struct fd_screen {
 	uint32_t num_vsc_pipes;
 	uint32_t priority_mask;
 	bool has_timestamp;
+	bool has_robustness;
 
 	unsigned num_perfcntr_groups;
 	const struct fd_perfcntr_group *perfcntr_groups;
@@ -92,6 +94,22 @@ struct fd_screen {
 	uint32_t (*setup_slices)(struct fd_resource *rsc);
 	unsigned (*tile_mode)(const struct pipe_resource *prsc);
 
+	/* constant emit:  (note currently not used/needed for a2xx) */
+	void (*emit_const)(struct fd_ringbuffer *ring, gl_shader_stage type,
+			uint32_t regid, uint32_t offset, uint32_t sizedwords,
+			const uint32_t *dwords, struct pipe_resource *prsc);
+	/* emit bo addresses as constant: */
+	void (*emit_const_bo)(struct fd_ringbuffer *ring, gl_shader_stage type, boolean write,
+			uint32_t regid, uint32_t num, struct pipe_resource **prscs, uint32_t *offsets);
+
+	/* indirect-branch emit: */
+	void (*emit_ib)(struct fd_ringbuffer *ring, struct fd_ringbuffer *target);
+
+	/* simple gpu "memcpy": */
+	void (*mem_to_mem)(struct fd_ringbuffer *ring, struct pipe_resource *dst,
+			unsigned dst_off, struct pipe_resource *src, unsigned src_off,
+			unsigned sizedwords);
+
 	int64_t cpu_gpu_time_delta;
 
 	struct fd_batch_cache batch_cache;
@@ -112,7 +130,7 @@ fd_screen(struct pipe_screen *pscreen)
 	return (struct fd_screen *)pscreen;
 }
 
-boolean fd_screen_bo_get_handle(struct pipe_screen *pscreen,
+bool fd_screen_bo_get_handle(struct pipe_screen *pscreen,
 		struct fd_bo *bo,
 		struct renderonly_scanout *scanout,
 		unsigned stride,
@@ -177,7 +195,7 @@ is_ir3(struct fd_screen *screen)
 static inline bool
 has_compute(struct fd_screen *screen)
 {
-	return is_a5xx(screen);
+	return is_a5xx(screen) || is_a6xx(screen);
 }
 
 #endif /* FREEDRENO_SCREEN_H_ */

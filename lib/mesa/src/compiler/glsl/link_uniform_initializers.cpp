@@ -190,7 +190,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
                         ir_constant *val, unsigned int boolean_true)
 {
    const glsl_type *t_without_array = type->without_array();
-   if (type->is_record()) {
+   if (type->is_struct()) {
       for (unsigned int i = 0; i < type->length; i++) {
          const glsl_type *field_type = type->fields.structure[i].type;
          const char *field_name = ralloc_asprintf(mem_ctx, "%s.%s", name,
@@ -200,7 +200,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
                                  boolean_true);
       }
       return;
-   } else if (t_without_array->is_record() ||
+   } else if (t_without_array->is_struct() ||
               (type->is_array() && type->fields.array->is_array())) {
       const glsl_type *const element_type = type->fields.array;
 
@@ -283,15 +283,15 @@ link_set_uniform_initializers(struct gl_shader_program *prog,
          if (var->data.explicit_binding) {
             const glsl_type *const type = var->type;
 
-            if (type->without_array()->is_sampler() ||
+            if (var->is_in_buffer_block()) {
+               /* This case is handled by link_uniform_blocks (at
+                * process_block_array_leaf)
+                */
+            } else if (type->without_array()->is_sampler() ||
                 type->without_array()->is_image()) {
                int binding = var->data.binding;
                linker::set_opaque_binding(mem_ctx, prog, var, var->type,
                                           var->name, &binding);
-            } else if (var->is_in_buffer_block()) {
-               /* This case is handled by link_uniform_blocks (at
-                * process_block_array_leaf)
-                */
             } else if (type->contains_atomic()) {
                /* we don't actually need to do anything. */
             } else {

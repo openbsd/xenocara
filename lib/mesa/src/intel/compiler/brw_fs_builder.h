@@ -322,10 +322,11 @@ namespace brw {
          case SHADER_OPCODE_INT_REMAINDER:
             return emit(instruction(opcode, dispatch_width(), dst,
                                     fix_math_operand(src0),
-                                    fix_math_operand(src1)));
+                                    fix_math_operand(fix_byte_src(src1))));
 
          default:
-            return emit(instruction(opcode, dispatch_width(), dst, src0, src1));
+            return emit(instruction(opcode, dispatch_width(), dst,
+                                    src0, fix_byte_src(src1)));
 
          }
       }
@@ -344,12 +345,12 @@ namespace brw {
          case BRW_OPCODE_LRP:
             return emit(instruction(opcode, dispatch_width(), dst,
                                     fix_3src_operand(src0),
-                                    fix_3src_operand(src1),
-                                    fix_3src_operand(src2)));
+                                    fix_3src_operand(fix_byte_src(src1)),
+                                    fix_3src_operand(fix_byte_src(src2))));
 
          default:
             return emit(instruction(opcode, dispatch_width(), dst,
-                                    src0, src1, src2));
+                                    src0, fix_byte_src(src1), fix_byte_src(src2)));
          }
       }
 
@@ -399,8 +400,11 @@ namespace brw {
       {
          assert(mod == BRW_CONDITIONAL_GE || mod == BRW_CONDITIONAL_L);
 
-         return set_condmod(mod, SEL(dst, fix_unsigned_negate(src0),
-                                     fix_unsigned_negate(src1)));
+         /* In some cases we can't have bytes as operand for src1, so use the
+          * same type for both operand.
+          */
+         return set_condmod(mod, SEL(dst, fix_unsigned_negate(fix_byte_src(src0)),
+                                     fix_unsigned_negate(fix_byte_src(src1))));
       }
 
       /**
@@ -590,6 +594,8 @@ namespace brw {
       ALU1(RNDE)
       ALU1(RNDU)
       ALU1(RNDZ)
+      ALU2(ROL)
+      ALU2(ROR)
       ALU2(SAD2)
       ALU2_ACC(SADA2)
       ALU2(SEL)
@@ -657,8 +663,8 @@ namespace brw {
                             emit(BRW_OPCODE_CSEL,
                                  retype(dst, BRW_REGISTER_TYPE_F),
                                  retype(src0, BRW_REGISTER_TYPE_F),
-                                 retype(src1, BRW_REGISTER_TYPE_F),
-                                 src2));
+                                 retype(fix_byte_src(src1), BRW_REGISTER_TYPE_F),
+                                 fix_byte_src(src2)));
       }
 
       /**
@@ -706,7 +712,33 @@ namespace brw {
          return inst;
       }
 
+      instruction *
+      UNDEF(const dst_reg &dst) const
+      {
+         assert(dst.file == VGRF);
+         instruction *inst = emit(SHADER_OPCODE_UNDEF,
+                                  retype(dst, BRW_REGISTER_TYPE_UD));
+         inst->size_written = shader->alloc.sizes[dst.nr] * REG_SIZE;
+
+         return inst;
+      }
+
       backend_shader *shader;
+
+      /**
+       * Byte sized operands are not supported for src1 on Gen11+.
+       */
+      src_reg
+      fix_byte_src(const src_reg &src) const
+      {
+         if (shader->devinfo->gen < 11 || type_sz(src.type) != 1)
+            return src;
+
+         dst_reg temp = vgrf(src.type == BRW_REGISTER_TYPE_UB ?
+                             BRW_REGISTER_TYPE_UD : BRW_REGISTER_TYPE_D);
+         MOV(temp, src);
+         return src_reg(temp);
+      }
 
    private:
       /**
@@ -733,13 +765,26 @@ namespace brw {
       src_reg
       fix_3src_operand(const src_reg &src) const
       {
-         if (src.file == VGRF || src.file == UNIFORM || src.stride > 1) {
+         switch (src.file) {
+         case FIXED_GRF:
+            /* FINISHME: Could handle scalar region, other stride=1 regions */
+            if (src.vstride != BRW_VERTICAL_STRIDE_8 ||
+                src.width != BRW_WIDTH_8 ||
+                src.hstride != BRW_HORIZONTAL_STRIDE_1)
+               break;
+            /* fallthrough */
+         case ATTR:
+         case VGRF:
+         case UNIFORM:
+         case IMM:
             return src;
-         } else {
-            dst_reg expanded = vgrf(src.type);
-            MOV(expanded, src);
-            return expanded;
+         default:
+            break;
          }
+
+         dst_reg expanded = vgrf(src.type);
+         MOV(expanded, src);
+         return expanded;
       }
 
       /**

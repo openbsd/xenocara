@@ -37,6 +37,7 @@
 #include "util/os_time.h"
 #include "os/os_thread.h"
 #include "util/u_memory.h"
+#include "util/u_string.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -114,7 +115,7 @@ query_wifi_bitrate(const struct nic_info *nic, uint64_t *bitrate)
    memset(&stats, 0, sizeof(stats));
    memset(&req, 0, sizeof(req));
 
-   strcpy(req.ifr_name, nic->name);
+   snprintf(req.ifr_name, sizeof(req.ifr_name), "%s", nic->name);
    req.u.data.pointer = &stats;
    req.u.data.flags = 1;
    req.u.data.length = sizeof(struct iw_statistics);
@@ -145,7 +146,7 @@ query_nic_rssi(const struct nic_info *nic, uint64_t *leveldBm)
    memset(&stats, 0, sizeof(stats));
    memset(&req, 0, sizeof(req));
 
-   strcpy(req.ifr_name, nic->name);
+   snprintf(req.ifr_name, sizeof(req.ifr_name), "%s", nic->name);
    req.u.data.pointer = &stats;
    req.u.data.flags = 1;
    req.u.data.length = sizeof(struct iw_statistics);
@@ -192,14 +193,14 @@ query_nic_load(struct hud_graph *gr, struct pipe_context *pipe)
                   ((bytes - nic->last_nic_bytes) / 1000000) * 8;
 
                float speedMbps = nic->speedMbps;
-               float periodMs = gr->pane->period / 1000;
+               float periodMs = gr->pane->period / 1000.0;
                float bits = nic_mbps;
                float period_factor = periodMs / 1000;
                float period_speed = speedMbps * period_factor;
                float pct = (bits / period_speed) * 100;
 
                /* Scaling bps with a narrow time period into a second,
-                * potentially suffers from routing errors at higher
+                * potentially suffers from rounding errors at higher
                 * periods. Eg 104%. Compensate.
                 */
                if (pct > 100)
@@ -272,8 +273,10 @@ hud_nic_graph_install(struct hud_pane *pane, const char *nic_name,
    }
    else if (nic->mode == NIC_RSSI_DBM)
       snprintf(gr->name, sizeof(gr->name), "%s-rssi", nic->name);
-   else
+   else {
+      free(gr);
       return;
+   }
 
    gr->query_data = nic;
    gr->query_new_value = query_nic_load;

@@ -343,6 +343,7 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
         vc4_emit_state(pctx);
 
         bool needs_drawarrays_shader_state = false;
+
         if ((vc4->dirty & (VC4_DIRTY_VTXBUF |
                            VC4_DIRTY_VTXSTATE |
                            VC4_DIRTY_PRIM_MODE |
@@ -577,7 +578,8 @@ vc4_clear(struct pipe_context *pctx, unsigned buffers,
                                            vc4->framebuffer.height,
                                            1,
                                            zsclear,
-                                           &dummy_color, depth, stencil);
+                                           &dummy_color, depth, stencil,
+                                           false);
                         buffers &= ~zsclear;
                         if (!buffers)
                                 return;

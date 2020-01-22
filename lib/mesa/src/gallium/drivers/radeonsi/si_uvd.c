@@ -96,6 +96,7 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 		/* reset the address */
 		resources[i]->buffer.gpu_address = ctx->ws->buffer_get_virtual_address(
 			resources[i]->buffer.buf);
+		resources[i]->buffer.bo_size = resources[i]->buffer.buf->size;
 	}
 
 	vidtemplate.height *= array_size;
@@ -146,8 +147,7 @@ struct pipe_video_codec *si_uvd_create_decoder(struct pipe_context *context,
 					       const struct pipe_video_codec *templ)
 {
 	struct si_context *ctx = (struct si_context *)context;
-	bool vcn = ctx->family == CHIP_RAVEN ||
-		   ctx->family == CHIP_RAVEN2;
+	bool vcn = ctx->family >= CHIP_RAVEN;
 
 	if (templ->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE) {
 		if (vcn) {

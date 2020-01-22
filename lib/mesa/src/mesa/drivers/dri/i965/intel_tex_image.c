@@ -14,6 +14,7 @@
 #include "main/texobj.h"
 #include "main/teximage.h"
 #include "main/texstore.h"
+#include "main/glthread.h"
 
 #include "drivers/common/meta.h"
 
@@ -442,6 +443,8 @@ intelSetTexBuffer2(__DRIcontext *pDRICtx, GLint target,
    mesa_format texFormat = MESA_FORMAT_NONE;
    GLenum internal_format = 0;
 
+   _mesa_glthread_finish(ctx);
+
    texObj = _mesa_get_current_tex_object(ctx, target);
 
    if (!texObj)
@@ -630,9 +633,17 @@ intel_image_target_texture_2d(struct gl_context *ctx, GLenum target,
    struct intel_texture_object *intel_texobj = intel_texture_object(texObj);
    intel_texobj->planar_format = image->planar_format;
 
-   const GLenum internal_format =
+   GLenum internal_format =
       image->internal_format != 0 ?
       image->internal_format : _mesa_get_format_base_format(mt->format);
+
+   /* Setup a sized internal format for MESA_FORMAT_R10G10B10[X2|A2]_UNORM. */
+   if (brw->mesa_format_supports_render[image->format]) {
+      if (image->format == MESA_FORMAT_R10G10B10A2_UNORM ||
+          image->format == MESA_FORMAT_R10G10B10X2_UNORM)
+         internal_format = GL_RGB10_A2;
+   }
+
    intel_set_texture_image_mt(brw, texImage, internal_format, mt->format, mt);
    intel_miptree_release(&mt);
 }

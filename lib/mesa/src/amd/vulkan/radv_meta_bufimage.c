@@ -1552,7 +1552,7 @@ create_iview(struct radv_cmd_buffer *cmd_buffer,
 					     .baseArrayLayer = surf->layer,
 					     .layerCount = 1
 				     },
-			     });
+			     }, NULL);
 }
 
 static void
@@ -1644,9 +1644,9 @@ get_image_stride_for_r32g32b32(struct radv_cmd_buffer *cmd_buffer,
 	unsigned stride;
 
 	if (cmd_buffer->device->physical_device->rad_info.chip_class >= GFX9) {
-		stride = surf->image->surface.u.gfx9.surf_pitch;
+		stride = surf->image->planes[0].surface.u.gfx9.surf_pitch;
 	} else {
-		stride = surf->image->surface.u.legacy.level[0].nblk_x * 3;
+		stride = surf->image->planes[0].surface.u.legacy.level[0].nblk_x * 3;
 	}
 
 	return stride;

@@ -1142,6 +1142,9 @@ _mesa_is_color_format(GLenum format)
       case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
       case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
       case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+      case GL_ATC_RGB_AMD:
+      case GL_ATC_RGBA_EXPLICIT_ALPHA_AMD:
+      case GL_ATC_RGBA_INTERPOLATED_ALPHA_AMD:
       /* generic integer formats */
       case GL_RED_INTEGER_EXT:
       case GL_GREEN_INTEGER_EXT:
@@ -1370,10 +1373,11 @@ _mesa_is_compressed_format(const struct gl_context *ctx, GLenum format)
 
    switch (_mesa_get_format_layout(m_format)) {
    case MESA_FORMAT_LAYOUT_S3TC:
-      if (_mesa_get_format_color_encoding(m_format) == GL_LINEAR) {
+      if (!_mesa_is_format_srgb(m_format)) {
          return _mesa_has_EXT_texture_compression_s3tc(ctx);
       } else {
-         return _mesa_has_EXT_texture_sRGB(ctx) &&
+         return (_mesa_has_EXT_texture_sRGB(ctx) ||
+            _mesa_has_EXT_texture_compression_s3tc_srgb(ctx)) &&
             _mesa_has_EXT_texture_compression_s3tc(ctx);
       }
    case MESA_FORMAT_LAYOUT_FXT1:
@@ -1392,6 +1396,8 @@ _mesa_is_compressed_format(const struct gl_context *ctx, GLenum format)
              _mesa_has_EXT_texture_compression_bptc(ctx);
    case MESA_FORMAT_LAYOUT_ASTC:
       return _mesa_has_KHR_texture_compression_astc_ldr(ctx);
+   case MESA_FORMAT_LAYOUT_ATC:
+      return _mesa_has_AMD_compressed_ATC_texture(ctx);
    default:
       return GL_FALSE;
    }

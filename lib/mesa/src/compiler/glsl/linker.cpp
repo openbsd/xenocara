@@ -854,7 +854,8 @@ validate_geometry_shader_emissions(struct gl_context *ctx,
 bool
 validate_intrastage_arrays(struct gl_shader_program *prog,
                            ir_variable *const var,
-                           ir_variable *const existing)
+                           ir_variable *const existing,
+                           bool match_precision)
 {
    /* Consider the types to be "the same" if both types are arrays
     * of the same type and one of the arrays is implicitly sized.
@@ -862,7 +863,15 @@ validate_intrastage_arrays(struct gl_shader_program *prog,
     * explicitly sized array.
     */
    if (var->type->is_array() && existing->type->is_array()) {
-      if ((var->type->fields.array == existing->type->fields.array) &&
+      const glsl_type *no_array_var = var->type->fields.array;
+      const glsl_type *no_array_existing = existing->type->fields.array;
+      bool type_matches;
+
+      type_matches = (match_precision ?
+                      no_array_var == no_array_existing :
+                      no_array_var->compare_no_precision(no_array_existing));
+
+      if (type_matches &&
           ((var->type->length == 0)|| (existing->type->length == 0))) {
          if (var->type->length != 0) {
             if ((int)var->type->length <= existing->data.max_array_access) {
@@ -2049,9 +2058,11 @@ link_fs_inout_layout_qualifiers(struct gl_shader_program *prog,
          shader->SampleInterlockOrdered;
       linked_shader->Program->info.fs.sample_interlock_unordered |=
          shader->SampleInterlockUnordered;
-
       linked_shader->Program->sh.fs.BlendSupport |= shader->BlendSupport;
    }
+
+   linked_shader->Program->info.fs.pixel_center_integer = pixel_center_integer;
+   linked_shader->Program->info.fs.origin_upper_left = origin_upper_left;
 }
 
 /**
@@ -2168,9 +2179,9 @@ link_gs_inout_layout_qualifiers(struct gl_shader_program *prog,
 
 
 /**
- * Perform cross-validation of compute shader local_size_{x,y,z} layout
- * qualifiers for the attached compute shaders, and propagate them to the
- * linked CS and linked shader program.
+ * Perform cross-validation of compute shader local_size_{x,y,z} layout and
+ * derivative arrangement qualifiers for the attached compute shaders, and
+ * propagate them to the linked CS and linked shader program.
  */
 static void
 link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
@@ -2188,6 +2199,8 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
       gl_prog->info.cs.local_size[i] = 0;
 
    gl_prog->info.cs.local_size_variable = false;
+
+   gl_prog->info.cs.derivative_group = DERIVATIVE_GROUP_NONE;
 
    /* From the ARB_compute_shader spec, in the section describing local size
     * declarations:
@@ -2232,6 +2245,17 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
          }
          gl_prog->info.cs.local_size_variable = true;
       }
+
+      enum gl_derivative_group group = shader->info.Comp.DerivativeGroup;
+      if (group != DERIVATIVE_GROUP_NONE) {
+         if (gl_prog->info.cs.derivative_group != DERIVATIVE_GROUP_NONE &&
+             gl_prog->info.cs.derivative_group != group) {
+            linker_error(prog, "compute shader defined with conflicting "
+                         "derivative groups\n");
+            return;
+         }
+         gl_prog->info.cs.derivative_group = group;
+      }
    }
 
    /* Just do the intrastage -> interstage propagation right now,
@@ -2243,6 +2267,30 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
       linker_error(prog, "compute shader must contain a fixed or a variable "
                          "local group size\n");
       return;
+   }
+
+   if (gl_prog->info.cs.derivative_group == DERIVATIVE_GROUP_QUADS) {
+      if (gl_prog->info.cs.local_size[0] % 2 != 0) {
+         linker_error(prog, "derivative_group_quadsNV must be used with a "
+                      "local group size whose first dimension "
+                      "is a multiple of 2\n");
+         return;
+      }
+      if (gl_prog->info.cs.local_size[1] % 2 != 0) {
+         linker_error(prog, "derivative_group_quadsNV must be used with a local"
+                      "group size whose second dimension "
+                      "is a multiple of 2\n");
+         return;
+      }
+   } else if (gl_prog->info.cs.derivative_group == DERIVATIVE_GROUP_LINEAR) {
+      if ((gl_prog->info.cs.local_size[0] *
+           gl_prog->info.cs.local_size[1] *
+           gl_prog->info.cs.local_size[2]) % 4 != 0) {
+         linker_error(prog, "derivative_group_linearNV must be used with a "
+                      "local group size whose total number of invocations "
+                      "is a multiple of 4\n");
+         return;
+      }
    }
 }
 
@@ -3646,81 +3694,6 @@ check_explicit_uniform_locations(struct gl_context *ctx,
    prog->NumExplicitUniformLocations = entries_total;
 }
 
-static bool
-should_add_buffer_variable(struct gl_shader_program *shProg,
-                           GLenum type, const char *name)
-{
-   bool found_interface = false;
-   unsigned block_name_len = 0;
-   const char *block_name_dot = strchr(name, '.');
-
-   /* These rules only apply to buffer variables. So we return
-    * true for the rest of types.
-    */
-   if (type != GL_BUFFER_VARIABLE)
-      return true;
-
-   for (unsigned i = 0; i < shProg->data->NumShaderStorageBlocks; i++) {
-      const char *block_name = shProg->data->ShaderStorageBlocks[i].Name;
-      block_name_len = strlen(block_name);
-
-      const char *block_square_bracket = strchr(block_name, '[');
-      if (block_square_bracket) {
-         /* The block is part of an array of named interfaces,
-          * for the name comparison we ignore the "[x]" part.
-          */
-         block_name_len -= strlen(block_square_bracket);
-      }
-
-      if (block_name_dot) {
-         /* Check if the variable name starts with the interface
-          * name. The interface name (if present) should have the
-          * length than the interface block name we are comparing to.
-          */
-         unsigned len = strlen(name) - strlen(block_name_dot);
-         if (len != block_name_len)
-            continue;
-      }
-
-      if (strncmp(block_name, name, block_name_len) == 0) {
-         found_interface = true;
-         break;
-      }
-   }
-
-   /* We remove the interface name from the buffer variable name,
-    * including the dot that follows it.
-    */
-   if (found_interface)
-      name = name + block_name_len + 1;
-
-   /* The ARB_program_interface_query spec says:
-    *
-    *     "For an active shader storage block member declared as an array, an
-    *     entry will be generated only for the first array element, regardless
-    *     of its type.  For arrays of aggregate types, the enumeration rules
-    *     are applied recursively for the single enumerated array element."
-    */
-   const char *struct_first_dot = strchr(name, '.');
-   const char *first_square_bracket = strchr(name, '[');
-
-   /* The buffer variable is on top level and it is not an array */
-   if (!first_square_bracket) {
-      return true;
-   /* The shader storage block member is a struct, then generate the entry */
-   } else if (struct_first_dot && struct_first_dot < first_square_bracket) {
-      return true;
-   } else {
-      /* Shader storage block member is an array, only generate an entry for the
-       * first array element.
-       */
-      if (strncmp(first_square_bracket, "[0]", 3) == 0)
-         return true;
-   }
-
-   return false;
-}
-
 /* Function checks if a variable var is a packed varying and
  * if given name is part of packed varying's list.
  *
@@ -4231,8 +4204,8 @@ is_top_level_shader_storage_block_member(const char* name,
       return false;
    }
 
-   util_snprintf(full_instanced_name, name_length, "%s.%s",
-                 interface_name, field_name);
+   snprintf(full_instanced_name, name_length, "%s.%s",
+            interface_name, field_name);
 
    /* Check if its top-level shader storage block member of an
     * instanced interface block, or of a unnamed interface block.
@@ -4301,7 +4274,7 @@ get_array_stride(struct gl_context *ctx, struct gl_uniform_storage *uni,
       if (GLSL_INTERFACE_PACKING_STD140 ==
           iface->
              get_internal_ifc_packing(ctx->Const.UseSTD430AsDefaultPacking)) {
-         if (array_type->is_record() || array_type->is_array())
+         if (array_type->is_struct() || array_type->is_array())
             return glsl_align(array_type->std140_size(row_major), 16);
          else
             return MAX2(array_type->std140_base_alignment(row_major), 16);
@@ -4461,6 +4434,11 @@ build_program_resource_list(struct gl_context *ctx,
       }
    }
 
+   int top_level_array_base_offset = -1;
+   int top_level_array_size_in_bytes = -1;
+   int second_element_offset = -1;
+   int buffer_block_index = -1;
+
    /* Add uniforms from uniform storage. */
    for (unsigned i = 0; i < shProg->data->NumUniformStorage; i++) {
       /* Do not add uniforms internally used by Mesa. */
@@ -4482,13 +4460,48 @@ build_program_resource_list(struct gl_context *ctx,
       }
 
       GLenum type = is_shader_storage ? GL_BUFFER_VARIABLE : GL_UNIFORM;
-      if (!should_add_buffer_variable(shProg, type,
-                                      shProg->data->UniformStorage[i].name))
+      if (!link_util_should_add_buffer_variable(shProg,
+                                                &shProg->data->UniformStorage[i],
+                                                top_level_array_base_offset,
+                                                top_level_array_size_in_bytes,
+                                                second_element_offset,
+                                                buffer_block_index))
          continue;
 
       if (is_shader_storage) {
          calculate_array_size_and_stride(ctx, shProg,
                                          &shProg->data->UniformStorage[i]);
+
+         /* From the OpenGL 4.6 specification, 7.3.1.1 Naming Active Resources:
+          *
+          *    "For an active shader storage block member declared as an array
+          *    of an aggregate type, an entry will be generated only for the
+          *    first array element, regardless of its type. Such block members
+          *    are referred to as top-level arrays. If the block member is an
+          *    aggregate type, the enumeration rules are then applied
+          *    recursively."
+          *
+          * Below we update our tracking values used by
+          * link_util_should_add_buffer_variable(). We only want to reset the
+          * offsets once we have moved past the first element.
+          */
+         if (shProg->data->UniformStorage[i].offset >= second_element_offset) {
+            top_level_array_base_offset =
+               shProg->data->UniformStorage[i].offset;
+
+            top_level_array_size_in_bytes =
+               shProg->data->UniformStorage[i].top_level_array_size *
+               shProg->data->UniformStorage[i].top_level_array_stride;
+
+            /* Set or reset the second element offset. For non arrays this
+             * will be set to -1.
+             */
+            second_element_offset = top_level_array_size_in_bytes ?
+               top_level_array_base_offset +
+               shProg->data->UniformStorage[i].top_level_array_stride : -1;
+         }
+
+         buffer_block_index = shProg->data->UniformStorage[i].block_index;
       }
 
       if (!link_util_add_program_resource(shProg, resource_set, type,
@@ -5102,15 +5115,14 @@ link_shaders(struct gl_context *ctx, struct gl_shader_program *prog)
       prev = i;
    }
 
-   /* The cross validation of outputs/inputs above validates explicit locations
-    * but for SSO programs we need to do this also for the inputs in the
-    * first stage and outputs of the last stage included in the program, since
-    * there is no cross validation for these.
+   /* The cross validation of outputs/inputs above validates interstage
+    * explicit locations. We need to do this also for the inputs in the first
+    * stage and outputs of the last stage included in the program, since there
+    * is no cross validation for these.
     */
-   if (prog->SeparateShader)
-      validate_sso_explicit_locations(ctx, prog,
-                                      (gl_shader_stage) first,
-                                      (gl_shader_stage) last);
+   validate_first_and_last_interface_explicit_locations(ctx, prog,
+                                                        (gl_shader_stage) first,
+                                                        (gl_shader_stage) last);
 
    /* Cross-validate uniform blocks between shader stages */
    validate_interstage_uniform_blocks(prog, prog->_LinkedShaders);

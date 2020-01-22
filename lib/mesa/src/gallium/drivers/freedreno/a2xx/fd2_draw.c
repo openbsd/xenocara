@@ -428,16 +428,20 @@ fd2_clear_fast(struct fd_context *ctx, unsigned buffers,
 	if (buffers & PIPE_CLEAR_COLOR)
 		color_size = util_format_get_blocksizebits(format) == 32;
 
-	if (buffers & (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL))
+	if (buffers & (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)) {
+		/* no fast clear when clearing only one component of depth+stencil buffer */
+		if (!(buffers & PIPE_CLEAR_DEPTH))
+			return false;
+
+		if ((pfb->zsbuf->format == PIPE_FORMAT_Z24_UNORM_S8_UINT ||
+			 pfb->zsbuf->format == PIPE_FORMAT_S8_UINT_Z24_UNORM) &&
+			 !(buffers & PIPE_CLEAR_STENCIL))
+			return false;
+
 		depth_size = fd_pipe2depth(pfb->zsbuf->format) == DEPTHX_24_8;
+	}
 
 	assert(color_size >= 0 || depth_size >= 0);
-
-	/* when clearing 24_8, depth/stencil must be both cleared
-	 * TODO: if buffer isn't attached we can clear it anyway
-	 */
-	if (depth_size == 1 && !(buffers & PIPE_CLEAR_STENCIL) != !(buffers & PIPE_CLEAR_DEPTH))
-		return false;
 
 	if (color_size == 0) {
 		color_clear = pack_rgba(format, color->f);
@@ -551,22 +555,20 @@ fd2_clear(struct fd_context *ctx, unsigned buffers,
 
 		if (buffers & (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)) {
 			uint32_t clear_mask, depth_clear;
-			if (buffers & (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)) {
-				switch (fd_pipe2depth(fb->zsbuf->format)) {
-				case DEPTHX_24_8:
-					clear_mask = ((buffers & PIPE_CLEAR_DEPTH) ? 0xe : 0) |
-						((buffers & PIPE_CLEAR_STENCIL) ? 0x1 : 0);
-					depth_clear = (((uint32_t)(0xffffff * depth)) << 8) |
-						(stencil & 0xff);
-					break;
-				case DEPTHX_16:
-					clear_mask = 0xf;
-					depth_clear = (uint32_t)(0xffffffff * depth);
-					break;
-				default:
-					debug_assert(0);
-					break;
-				}
+			switch (fd_pipe2depth(fb->zsbuf->format)) {
+			case DEPTHX_24_8:
+				clear_mask = ((buffers & PIPE_CLEAR_DEPTH) ? 0xe : 0) |
+					((buffers & PIPE_CLEAR_STENCIL) ? 0x1 : 0);
+				depth_clear = (((uint32_t)(0xffffff * depth)) << 8) |
+					(stencil & 0xff);
+				break;
+			case DEPTHX_16:
+				clear_mask = 0xf;
+				depth_clear = (uint32_t)(0xffffffff * depth);
+				break;
+			default:
+				unreachable("invalid depth");
+				break;
 			}
 
 			OUT_PKT3(ring, CP_SET_CONSTANT, 2);

@@ -692,7 +692,20 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * when not using MCJIT so no instructions are generated which the old JIT
     * can't handle. Not entirely sure if we really need to do anything yet.
     */
-#if defined(PIPE_ARCH_LITTLE_ENDIAN)  && defined(PIPE_ARCH_PPC_64)
+
+#ifdef PIPE_ARCH_PPC_64
+   /*
+    * Large programs, e.g. gnome-shell and firefox, may tax the addressability
+    * of the Medium code model once dynamically generated JIT-compiled shader
+    * programs are linked in and relocated.  Yet the default code model as of
+    * LLVM 8 is Medium or even Small.
+    * The cost of changing from Medium to Large is negligible:
+    * - an additional 8-byte pointer stored immediately before the shader entrypoint;
+    * - change an add-immediate (addis) instruction to a load (ld).
+    */
+   builder.setCodeModel(CodeModel::Large);
+
+#ifdef PIPE_ARCH_LITTLE_ENDIAN
    /*
     * Versions of LLVM prior to 4.0 lacked a table entry for "POWER8NVL",
     * resulting in (big-endian) "generic" being returned on
@@ -704,6 +717,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     */
    if (MCPU == "generic")
       MCPU = "pwr8";
+#endif
 #endif
    builder.setMCPU(MCPU);
    if (gallivm_debug & (GALLIVM_DEBUG_IR | GALLIVM_DEBUG_ASM | GALLIVM_DEBUG_DUMP_BC)) {
@@ -804,3 +818,35 @@ lp_is_function(LLVMValueRef v)
 	return llvm::isa<llvm::Function>(llvm::unwrap(v));
 #endif
 }
+
+#if HAVE_LLVM < 0x309
+static llvm::AtomicOrdering mapFromLLVMOrdering(LLVMAtomicOrdering Ordering) {
+   switch (Ordering) {
+   case LLVMAtomicOrderingNotAtomic: return llvm::AtomicOrdering::NotAtomic;
+   case LLVMAtomicOrderingUnordered: return llvm::AtomicOrdering::Unordered;
+   case LLVMAtomicOrderingMonotonic: return llvm::AtomicOrdering::Monotonic;
+   case LLVMAtomicOrderingAcquire: return llvm::AtomicOrdering::Acquire;
+   case LLVMAtomicOrderingRelease: return llvm::AtomicOrdering::Release;
+   case LLVMAtomicOrderingAcquireRelease:
+      return llvm::AtomicOrdering::AcquireRelease;
+   case LLVMAtomicOrderingSequentiallyConsistent:
+      return llvm::AtomicOrdering::SequentiallyConsistent;
+   }
+
+   llvm_unreachable("Invalid LLVMAtomicOrdering value!");
+}
+
+LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B, LLVMValueRef Ptr,
+                                    LLVMValueRef Cmp, LLVMValueRef New,
+                                    LLVMAtomicOrdering SuccessOrdering,
+                                    LLVMAtomicOrdering FailureOrdering,
+                                    LLVMBool SingleThread)
+{
+   return llvm::wrap(llvm::unwrap(B)->CreateAtomicCmpXchg(llvm::unwrap(Ptr), llvm::unwrap(Cmp),
+                                                          llvm::unwrap(New), mapFromLLVMOrdering(SuccessOrdering),
+#if HAVE_LLVM >= 0x305
+                                                          mapFromLLVMOrdering(FailureOrdering),
+#endif
+                                                          SingleThread ? llvm::SynchronizationScope::SingleThread : llvm::SynchronizationScope::CrossThread));
+}
+#endif

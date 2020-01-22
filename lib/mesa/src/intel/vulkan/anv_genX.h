@@ -44,6 +44,10 @@ void genX(cmd_buffer_apply_pipe_flushes)(struct anv_cmd_buffer *cmd_buffer);
 
 void genX(cmd_buffer_emit_gen7_depth_flush)(struct anv_cmd_buffer *cmd_buffer);
 
+void genX(cmd_buffer_emit_hashing_mode)(struct anv_cmd_buffer *cmd_buffer,
+                                        unsigned width, unsigned height,
+                                        unsigned scale);
+
 void genX(flush_pipeline_select_3d)(struct anv_cmd_buffer *cmd_buffer);
 void genX(flush_pipeline_select_gpgpu)(struct anv_cmd_buffer *cmd_buffer);
 
@@ -76,14 +80,6 @@ genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
 
 void genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
                                 struct anv_address dst, struct anv_address src,
-                                uint32_t size);
-
-void genX(cmd_buffer_mi_memcpy)(struct anv_cmd_buffer *cmd_buffer,
-                                struct anv_address dst, struct anv_address src,
-                                uint32_t size);
-
-void genX(cmd_buffer_mi_memset)(struct anv_cmd_buffer *cmd_buffer,
-                                struct anv_address dst, uint32_t value,
                                 uint32_t size);
 
 void genX(blorp_exec)(struct blorp_batch *batch,

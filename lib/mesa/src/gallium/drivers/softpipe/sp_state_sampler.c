@@ -127,6 +127,7 @@ softpipe_set_sampler_views(struct pipe_context *pipe,
       if (sp_sviewsrc) {
          memcpy(sp_sviewdst, sp_sviewsrc, sizeof(*sp_sviewsrc));
          sp_sviewdst->compute_lambda = softpipe_get_lambda_func(&sp_sviewdst->base, shader);
+         sp_sviewdst->compute_lambda_from_grad = softpipe_get_lambda_from_grad_func(&sp_sviewdst->base, shader);
          sp_sviewdst->cache = softpipe->tex_cache[shader][start + i];
       }
       else {
@@ -199,7 +200,7 @@ prepare_shader_sampling(
 
          if (!sp_tex->dt) {
             /* regular texture - setup array of mipmap level offsets */
-            MAYBE_UNUSED struct pipe_resource *res = view->texture;
+            ASSERTED struct pipe_resource *res = view->texture;
             int j;
 
             if (view->target != PIPE_BUFFER) {

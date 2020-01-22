@@ -210,7 +210,9 @@ enum opcode {
    BRW_OPCODE_SMOV =	10,  /**< Gen8+       */ /* Reused */
    /* Reserved - 11 */
    BRW_OPCODE_ASR =	12,
-   /* Reserved - 13-15 */
+   /* Reserved - 13 */
+   BRW_OPCODE_ROR =	14,  /**< Gen11+ */
+   BRW_OPCODE_ROL =	15,  /**< Gen11+ */
    BRW_OPCODE_CMP =	16,
    BRW_OPCODE_CMPN =	17,
    BRW_OPCODE_CSEL =	18,  /**< Gen8+ */
@@ -323,6 +325,14 @@ enum opcode {
    SHADER_OPCODE_SEND,
 
    /**
+    * An "undefined" write which does nothing but indicates to liveness that
+    * we don't care about any values in the register which predate this
+    * instruction.  Used to prevent partial writes from causing issues with
+    * live ranges.
+    */
+   SHADER_OPCODE_UNDEF,
+
+   /**
     * Texture sampling opcodes.
     *
     * LOGICAL opcodes are eventually translated to the matching non-LOGICAL
@@ -361,7 +371,6 @@ enum opcode {
    SHADER_OPCODE_SAMPLEINFO,
    SHADER_OPCODE_SAMPLEINFO_LOGICAL,
 
-   SHADER_OPCODE_IMAGE_SIZE,
    SHADER_OPCODE_IMAGE_SIZE_LOGICAL,
 
    /**
@@ -403,20 +412,32 @@ enum opcode {
     * Source 4: [required] Opcode-specific control immediate, same as source 2
     *                      of the matching non-LOGICAL opcode.
     */
-   SHADER_OPCODE_UNTYPED_ATOMIC,
+   VEC4_OPCODE_UNTYPED_ATOMIC,
    SHADER_OPCODE_UNTYPED_ATOMIC_LOGICAL,
-   SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT,
    SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT_LOGICAL,
-   SHADER_OPCODE_UNTYPED_SURFACE_READ,
+   VEC4_OPCODE_UNTYPED_SURFACE_READ,
    SHADER_OPCODE_UNTYPED_SURFACE_READ_LOGICAL,
-   SHADER_OPCODE_UNTYPED_SURFACE_WRITE,
+   VEC4_OPCODE_UNTYPED_SURFACE_WRITE,
    SHADER_OPCODE_UNTYPED_SURFACE_WRITE_LOGICAL,
 
-   SHADER_OPCODE_TYPED_ATOMIC,
+   /**
+    * Untyped A64 surface access opcodes.
+    *
+    * Source 0: 64-bit address
+    * Source 1: Operational source
+    * Source 2: [required] Opcode-specific control immediate, same as source 2
+    *                      of the matching non-LOGICAL opcode.
+    */
+   SHADER_OPCODE_A64_UNTYPED_READ_LOGICAL,
+   SHADER_OPCODE_A64_UNTYPED_WRITE_LOGICAL,
+   SHADER_OPCODE_A64_BYTE_SCATTERED_READ_LOGICAL,
+   SHADER_OPCODE_A64_BYTE_SCATTERED_WRITE_LOGICAL,
+   SHADER_OPCODE_A64_UNTYPED_ATOMIC_LOGICAL,
+   SHADER_OPCODE_A64_UNTYPED_ATOMIC_INT64_LOGICAL,
+   SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT_LOGICAL,
+
    SHADER_OPCODE_TYPED_ATOMIC_LOGICAL,
-   SHADER_OPCODE_TYPED_SURFACE_READ,
    SHADER_OPCODE_TYPED_SURFACE_READ_LOGICAL,
-   SHADER_OPCODE_TYPED_SURFACE_WRITE,
    SHADER_OPCODE_TYPED_SURFACE_WRITE_LOGICAL,
 
    SHADER_OPCODE_RND_MODE,
@@ -428,11 +449,20 @@ enum opcode {
     * opcode, but instead of taking a single payload blog they expect their
     * arguments separately as individual sources, like untyped write/read.
     */
-   SHADER_OPCODE_BYTE_SCATTERED_READ,
    SHADER_OPCODE_BYTE_SCATTERED_READ_LOGICAL,
-   SHADER_OPCODE_BYTE_SCATTERED_WRITE,
    SHADER_OPCODE_BYTE_SCATTERED_WRITE_LOGICAL,
 
+   /**
+    * Memory fence messages.
+    *
+    * Source 0: Must be register g0, used as header.
+    * Source 1: Immediate bool to indicate whether or not we need to stall
+    *           until memory transactions prior to the fence are completed.
+    * Source 2: Immediate byte indicating which memory to fence.  Zero means
+    *           global memory; GEN7_BTI_SLM means SLM (for Gen11+ only).
+    *
+    * Vec4 backend only uses Source 0.
+    */
    SHADER_OPCODE_MEMORY_FENCE,
 
    SHADER_OPCODE_GEN4_SCRATCH_READ,
@@ -826,6 +856,10 @@ enum tex_logical_srcs {
    TEX_LOGICAL_SRC_SURFACE,
    /** Texture sampler index */
    TEX_LOGICAL_SRC_SAMPLER,
+   /** Texture surface bindless handle */
+   TEX_LOGICAL_SRC_SURFACE_HANDLE,
+   /** Texture sampler bindless handle */
+   TEX_LOGICAL_SRC_SAMPLER_HANDLE,
    /** Texel offset for gathers */
    TEX_LOGICAL_SRC_TG4_OFFSET,
    /** REQUIRED: Number of coordinate components (as UD immediate) */
@@ -834,6 +868,23 @@ enum tex_logical_srcs {
    TEX_LOGICAL_SRC_GRAD_COMPONENTS,
 
    TEX_LOGICAL_NUM_SRCS,
+};
+
+enum surface_logical_srcs {
+   /** Surface binding table index */
+   SURFACE_LOGICAL_SRC_SURFACE,
+   /** Surface bindless handle */
+   SURFACE_LOGICAL_SRC_SURFACE_HANDLE,
+   /** Surface address; could be multi-dimensional for typed opcodes */
+   SURFACE_LOGICAL_SRC_ADDRESS,
+   /** Data to be written or used in an atomic op */
+   SURFACE_LOGICAL_SRC_DATA,
+   /** Surface number of dimensions.  Affects the size of ADDRESS */
+   SURFACE_LOGICAL_SRC_IMM_DIMS,
+   /** Per-opcode immediate argument.  For atomics, this is the atomic opcode */
+   SURFACE_LOGICAL_SRC_IMM_ARG,
+
+   SURFACE_LOGICAL_NUM_SRCS
 };
 
 #ifdef __cplusplus
@@ -1170,11 +1221,23 @@ enum brw_message_target {
 #define HSW_DATAPORT_DC_PORT1_ATOMIC_COUNTER_OP                     11
 #define HSW_DATAPORT_DC_PORT1_ATOMIC_COUNTER_OP_SIMD4X2             12
 #define HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_WRITE                   13
+#define GEN9_DATAPORT_DC_PORT1_A64_SCATTERED_READ                   0x10
+#define GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_READ             0x11
+#define GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_OP                0x12
+#define GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_WRITE            0x19
+#define GEN8_DATAPORT_DC_PORT1_A64_SCATTERED_WRITE                  0x1a
 #define GEN9_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_FLOAT_OP              0x1b
+#define GEN9_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_FLOAT_OP          0x1d
 
 /* GEN9 */
 #define GEN9_DATAPORT_RC_RENDER_TARGET_WRITE                        12
 #define GEN9_DATAPORT_RC_RENDER_TARGET_READ                         13
+
+/* A64 scattered message subtype */
+#define GEN8_A64_SCATTERED_SUBTYPE_BYTE                             0
+#define GEN8_A64_SCATTERED_SUBTYPE_DWORD                            1
+#define GEN8_A64_SCATTERED_SUBTYPE_QWORD                            2
+#define GEN8_A64_SCATTERED_SUBTYPE_HWORD                            3
 
 /* Dataport special binding table indices: */
 #define BRW_BTI_STATELESS                255
@@ -1188,6 +1251,7 @@ enum brw_message_target {
  */
 #define GEN8_BTI_STATELESS_IA_COHERENT   255
 #define GEN8_BTI_STATELESS_NON_COHERENT  253
+#define GEN9_BTI_BINDLESS                252
 
 /* Dataport atomic operations for Untyped Atomic Integer Operation message
  * (and others).

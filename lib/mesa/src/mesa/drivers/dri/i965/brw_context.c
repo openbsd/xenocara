@@ -36,6 +36,7 @@
 #include "main/context.h"
 #include "main/fbobject.h"
 #include "main/extensions.h"
+#include "main/glthread.h"
 #include "main/imports.h"
 #include "main/macros.h"
 #include "main/points.h"
@@ -45,6 +46,7 @@
 #include "main/framebuffer.h"
 #include "main/stencil.h"
 #include "main/state.h"
+#include "main/spirv_extensions.h"
 
 #include "vbo/vbo.h"
 
@@ -145,6 +147,24 @@ intel_get_string(struct gl_context * ctx, GLenum name)
    default:
       return NULL;
    }
+}
+
+static void
+brw_set_background_context(struct gl_context *ctx,
+                           struct util_queue_monitoring *queue_info)
+{
+   struct brw_context *brw = brw_context(ctx);
+   __DRIcontext *driContext = brw->driContext;
+   __DRIscreen *driScreen = driContext->driScreenPriv;
+   const __DRIbackgroundCallableExtension *backgroundCallable =
+      driScreen->dri2.backgroundCallable;
+
+   /* Note: Mesa will only call this function if we've called
+    * _mesa_enable_multithreading().  We only do that if the loader exposed
+    * the __DRI_BACKGROUND_CALLABLE extension.  So we know that
+    * backgroundCallable is not NULL.
+    */
+   backgroundCallable->setBackgroundContext(driContext->loaderPrivate);
 }
 
 static void
@@ -376,6 +396,8 @@ brw_init_driver_functions(struct brw_context *brw,
    if (brw->screen->disk_cache) {
       functions->ShaderCacheSerializeDriverBlob = brw_program_serialize_nir;
    }
+
+   functions->SetBackgroundContext = brw_set_background_context;
 }
 
 static void
@@ -456,11 +478,11 @@ brw_initialize_context_constants(struct brw_context *brw)
    ctx->Const.MaxImageUnits = MAX_IMAGE_UNITS;
    if (devinfo->gen >= 7) {
       ctx->Const.MaxRenderbufferSize = 16384;
-      ctx->Const.MaxTextureLevels = MIN2(15 /* 16384 */, MAX_TEXTURE_LEVELS);
+      ctx->Const.MaxTextureSize = 16384;
       ctx->Const.MaxCubeTextureLevels = 15; /* 16384 */
    } else {
       ctx->Const.MaxRenderbufferSize = 8192;
-      ctx->Const.MaxTextureLevels = MIN2(14 /* 8192 */, MAX_TEXTURE_LEVELS);
+      ctx->Const.MaxTextureSize = 8192;
       ctx->Const.MaxCubeTextureLevels = 14; /* 8192 */
    }
    ctx->Const.Max3DTextureLevels = 12; /* 2048 */
@@ -599,6 +621,8 @@ brw_initialize_context_constants(struct brw_context *brw)
    if (devinfo->gen >= 5 || devinfo->is_g4x)
       ctx->Const.MaxClipPlanes = 8;
 
+   ctx->Const.GLSLFragCoordIsSysVal = true;
+   ctx->Const.GLSLFrontFacingIsSysVal = true;
    ctx->Const.GLSLTessLevelsAsInputs = true;
    ctx->Const.PrimitiveRestartForPatches = true;
 
@@ -820,7 +844,7 @@ brw_process_driconf_options(struct brw_context *brw)
    driOptionCache *options = &brw->optionCache;
    driParseConfigFiles(options, &brw->screen->optionCache,
                        brw->driContext->driScreenPriv->myNum,
-                       "i965", NULL);
+                       "i965", NULL, NULL, 0);
 
    int bo_reuse_mode = driQueryOptioni(options, "bo_reuse");
    switch (bo_reuse_mode) {
@@ -940,6 +964,7 @@ brwCreateContext(gl_api api,
       *dri_ctx_error = __DRI_CTX_ERROR_NO_MEMORY;
       return false;
    }
+   brw->perf_ctx = gen_perf_new_context(brw);
 
    driContextPriv->driverPrivate = brw;
    brw->driContext = driContextPriv;
@@ -964,6 +989,13 @@ brwCreateContext(gl_api api,
 
    if (notify_reset)
       functions.GetGraphicsResetStatus = brw_get_graphics_reset_status;
+
+   brw_process_driconf_options(brw);
+
+   if (api == API_OPENGL_CORE &&
+       driQueryOptionb(&screen->optionCache, "force_compat_profile")) {
+      api = API_OPENGL_COMPAT;
+   }
 
    struct gl_context *ctx = &brw->ctx;
 
@@ -998,8 +1030,6 @@ brwCreateContext(gl_api api,
    }
 
    _mesa_meta_init(ctx);
-
-   brw_process_driconf_options(brw);
 
    if (INTEL_DEBUG & DEBUG_PERF)
       brw->perf_debug = true;
@@ -1059,13 +1089,6 @@ brwCreateContext(gl_api api,
       return false;
    }
 
-   if (devinfo->gen == 11) {
-      fprintf(stderr,
-              "WARNING: i965 does not fully support Gen11 yet.\n"
-              "Instability or lower performance might occur.\n");
-
-   }
-
    brw_upload_init(&brw->upload, brw->bufmgr, 65536);
 
    brw_init_state(brw);
@@ -1112,8 +1135,16 @@ brwCreateContext(gl_api api,
    _mesa_compute_version(ctx);
 
    /* GL_ARB_gl_spirv */
-   if (ctx->Extensions.ARB_gl_spirv)
+   if (ctx->Extensions.ARB_gl_spirv) {
       brw_initialize_spirv_supported_capabilities(brw);
+
+      if (ctx->Extensions.ARB_spirv_extensions) {
+         /* GL_ARB_spirv_extensions */
+         ctx->Const.SpirVExtensions = MALLOC_STRUCT(spirv_supported_extensions);
+         _mesa_fill_supported_spirv_extensions(ctx->Const.SpirVExtensions,
+                                               &ctx->Const.SpirVCapabilities);
+      }
+   }
 
    _mesa_initialize_dispatch_tables(ctx);
    _mesa_initialize_vbo_vtxfmt(ctx);
@@ -1126,6 +1157,12 @@ brwCreateContext(gl_api api,
 
    brw->ctx.Cache = brw->screen->disk_cache;
 
+   if (driContextPriv->driScreenPriv->dri2.backgroundCallable &&
+       driQueryOptionb(&screen->optionCache, "mesa_glthread")) {
+      /* Loader supports multithreading, and so do we. */
+      _mesa_glthread_init(ctx);
+   }
+
    return true;
 }
 
@@ -1135,6 +1172,18 @@ intelDestroyContext(__DRIcontext * driContextPriv)
    struct brw_context *brw =
       (struct brw_context *) driContextPriv->driverPrivate;
    struct gl_context *ctx = &brw->ctx;
+
+   GET_CURRENT_CONTEXT(curctx);
+
+   if (curctx == NULL) {
+      /* No current context, but we need one to release
+       * renderbuffer surface when we release framebuffer.
+       * So temporarily bind the context.
+       */
+      _mesa_make_current(ctx, NULL, NULL);
+   }
+
+   _mesa_glthread_destroy(&brw->ctx);
 
    _mesa_meta_free(&brw->ctx);
 
@@ -1187,7 +1236,7 @@ intelDestroyContext(__DRIcontext * driContextPriv)
    driDestroyOptionCache(&brw->optionCache);
 
    /* free the Mesa context */
-   _mesa_free_context_data(&brw->ctx);
+   _mesa_free_context_data(&brw->ctx, true);
 
    ralloc_free(brw);
    driContextPriv->driverPrivate = NULL;
@@ -1196,6 +1245,9 @@ intelDestroyContext(__DRIcontext * driContextPriv)
 GLboolean
 intelUnbindContext(__DRIcontext * driContextPriv)
 {
+   struct gl_context *ctx = driContextPriv->driverPrivate;
+   _mesa_glthread_finish(ctx);
+
    /* Unset current context and dispath table */
    _mesa_make_current(NULL, NULL, NULL);
 
@@ -1299,6 +1351,8 @@ intelMakeCurrent(__DRIcontext * driContextPriv,
 
       _mesa_make_current(ctx, fb, readFb);
    } else {
+      GET_CURRENT_CONTEXT(ctx);
+      _mesa_glthread_finish(ctx);
       _mesa_make_current(NULL, NULL, NULL);
    }
 

@@ -65,6 +65,7 @@ static const struct debug_named_value lp_bld_perf_flags[] = {
    { "no_brilinear", GALLIVM_PERF_NO_BRILINEAR, "disable brilinear optimization" },
    { "no_rho_approx", GALLIVM_PERF_NO_RHO_APPROX, "disable rho_approx optimization" },
    { "no_quad_lod", GALLIVM_PERF_NO_QUAD_LOD, "disable quad_lod optimization" },
+   { "no_aos_sampling", GALLIVM_PERF_NO_AOS_SAMPLING, "disable aos sampling optimization" },
    { "nopt",   GALLIVM_PERF_NO_OPT, "disable optimization passes to speed up shader compilation" },
    { "no_filter_hacks", GALLIVM_PERF_NO_BRILINEAR | GALLIVM_PERF_NO_RHO_APPROX |
      GALLIVM_PERF_NO_QUAD_LOD, "disable filter optimization hacks" },
@@ -371,7 +372,7 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
       {
          const unsigned pointer_size = 8 * sizeof(void *);
          char layout[512];
-         util_snprintf(layout, sizeof layout, "%c-p:%u:%u:%u-i64:64:64-a0:0:%u-s0:%u:%u",
+         snprintf(layout, sizeof layout, "%c-p:%u:%u:%u-i64:64:64-a0:0:%u-s0:%u:%u",
 #ifdef PIPE_ARCH_LITTLE_ENDIAN
                        'e', // little endian
 #else
@@ -594,7 +595,7 @@ gallivm_compile_module(struct gallivm_state *gallivm)
    if (gallivm_debug & GALLIVM_DEBUG_DUMP_BC) {
       char filename[256];
       assert(gallivm->module_name);
-      util_snprintf(filename, sizeof(filename), "ir_%s.bc", gallivm->module_name);
+      snprintf(filename, sizeof(filename), "ir_%s.bc", gallivm->module_name);
       LLVMWriteBitcodeToFile(gallivm->module, filename);
       debug_printf("%s written\n", filename);
       debug_printf("Invoke as \"opt %s %s | llc -O%d %s%s\"\n",

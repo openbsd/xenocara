@@ -28,6 +28,8 @@
  ******************************************************************************/
 #pragma once
 
+#include "tilemgr.h"
+
 void InitBackendSingleFuncTable(PFN_BACKEND_FUNC (&table)[SWR_INPUT_COVERAGE_COUNT][2][2]);
 void InitBackendSampleFuncTable(
     PFN_BACKEND_FUNC (&table)[SWR_MULTISAMPLE_TYPE_COUNT][SWR_INPUT_COVERAGE_COUNT][2][2]);
@@ -624,6 +626,19 @@ inline void SetupRenderBuffers(uint8_t*             pColorBuffer[SWR_NUM_RENDERT
     }
 }
 
+INLINE void SetRenderHotTilesDirty(DRAW_CONTEXT* pDC, RenderOutputBuffers& renderBuffers)
+{
+    const API_STATE& state = GetApiState(pDC);
+
+    unsigned long rtSlot                 = 0;
+    uint32_t      colorHottileEnableMask = state.colorHottileEnable;
+    while (_BitScanForward(&rtSlot, colorHottileEnableMask))
+    {
+        colorHottileEnableMask &= ~(1 << rtSlot);
+        renderBuffers.pColorHotTile[rtSlot]->state = HOTTILE_DIRTY;
+    }
+}
+
 template <typename T>
 void SetupPixelShaderContext(SWR_PS_CONTEXT*            psContext,
                              const SWR_MULTISAMPLE_POS& samplePos,
@@ -755,7 +770,7 @@ struct PixelRateZTestLoop
                                  _simd_vmask_ps(CalcDepthBoundsAcceptMask(z, minz, maxz)));
             }
 
-            RDTSC_BEGIN(BEBarycentric, pDC->drawId);
+            RDTSC_BEGIN(psContext.pBucketManager, BEBarycentric, pDC->drawId);
 
             // calculate per sample positions
             psContext.vX.sample = _simd_add_ps(psContext.vX.UL, samplePos.vX(sample));
@@ -778,7 +793,7 @@ struct PixelRateZTestLoop
                 vZ[sample] = state.pfnQuantizeDepth(vZ[sample]);
             }
 
-            RDTSC_END(BEBarycentric, 0);
+            RDTSC_END(psContext.pBucketManager, BEBarycentric, 0);
 
             ///@todo: perspective correct vs non-perspective correct clipping?
             // if clip distances are enabled, we need to interpolate for each sample
@@ -795,7 +810,7 @@ struct PixelRateZTestLoop
 
             // ZTest for this sample
             ///@todo Need to uncomment out this bucket.
-            // RDTSC_BEGIN(BEDepthBucket, pDC->drawId);
+            // RDTSC_BEGIN(psContext.pBucketManager, BEDepthBucket, pDC->drawId);
             depthPassMask[sample]   = vCoverageMask[sample];
             stencilPassMask[sample] = vCoverageMask[sample];
             depthPassMask[sample]   = DepthStencilTest(&state,
@@ -806,7 +821,7 @@ struct PixelRateZTestLoop
                                                      vCoverageMask[sample],
                                                      pStencilSample,
                                                      &stencilPassMask[sample]);
-            // RDTSC_END(BEDepthBucket, 0);
+            // RDTSC_END(psContext.pBucketManager, BEDepthBucket, 0);
 
             // early-exit if no pixels passed depth or earlyZ is forced on
             if (psState.forceEarlyZ || !_simd_movemask_ps(depthPassMask[sample]))
@@ -894,87 +909,6 @@ static INLINE void CalcSampleBarycentrics(const BarycentricCoeffs& coeffs,
                                           psContext.vJ.sample);
 }
 
-// Merge Output to 4x2 SIMD Tile Format
-INLINE void OutputMerger4x2(DRAW_CONTEXT*   pDC,
-                            SWR_PS_CONTEXT& psContext,
-                            uint8_t* (&pColorBase)[SWR_NUM_RENDERTARGETS],
-                            uint32_t               sample,
-                            const SWR_BLEND_STATE* pBlendState,
-                            const PFN_BLEND_JIT_FUNC (&pfnBlendFunc)[SWR_NUM_RENDERTARGETS],
-                            simdscalar&       coverageMask,
-                            simdscalar const& depthPassMask,
-                            uint32_t          renderTargetMask,
-                            uint32_t          workerId)
-{
-    // type safety guaranteed from template instantiation in BEChooser<>::GetFunc
-    const uint32_t rasterTileColorOffset = RasterTileColorOffset(sample);
-    simdvector     blendOut;
-
-    DWORD rt = 0;
-    while (_BitScanForward(&rt, renderTargetMask))
-    {
-        renderTargetMask &= ~(1 << rt);
-        uint8_t* pColorSample = pColorBase[rt] + rasterTileColorOffset;
-
-        const SWR_RENDER_TARGET_BLEND_STATE* pRTBlend = &pBlendState->renderTarget[rt];
-
-        SWR_BLEND_CONTEXT blendContext = {0};
-        {
-            // pfnBlendFunc may not update all channels.  Initialize with PS output.
-            /// TODO: move this into the blend JIT.
-            blendOut = psContext.shaded[rt];
-
-            blendContext.pBlendState = pBlendState;
-            blendContext.src         = &psContext.shaded[rt];
-            blendContext.src1        = &psContext.shaded[1];
-            blendContext.src0alpha   = reinterpret_cast<simdvector*>(&psContext.shaded[0].w);
-            blendContext.sampleNum   = sample;
-            blendContext.pDst        = (simdvector*)&pColorSample;
-            blendContext.result      = &blendOut;
-            blendContext.oMask       = &psContext.oMask;
-            blendContext.pMask       = reinterpret_cast<simdscalari*>(&coverageMask);
-
-            // Blend outputs and update coverage mask for alpha test
-            if (pfnBlendFunc[rt] != nullptr)
-            {
-                pfnBlendFunc[rt](&blendContext);
-            }
-        }
-
-        // Track alpha events
-        AR_EVENT(
-            AlphaInfoEvent(pDC->drawId, blendContext.isAlphaTested, blendContext.isAlphaBlended));
-
-        // final write mask
-        simdscalari outputMask = _simd_castps_si(_simd_and_ps(coverageMask, depthPassMask));
-
-        ///@todo can only use maskstore fast path if bpc is 32. Assuming hot tile is RGBA32_FLOAT.
-        static_assert(KNOB_COLOR_HOT_TILE_FORMAT == R32G32B32A32_FLOAT,
-                      "Unsupported hot tile format");
-
-        const uint32_t simd = KNOB_SIMD_WIDTH * sizeof(float);
-
-        // store with color mask
-        if (!pRTBlend->writeDisableRed)
-        {
-            _simd_maskstore_ps((float*)pColorSample, outputMask, blendOut.x);
-        }
-        if (!pRTBlend->writeDisableGreen)
-        {
-            _simd_maskstore_ps((float*)(pColorSample + simd), outputMask, blendOut.y);
-        }
-        if (!pRTBlend->writeDisableBlue)
-        {
-            _simd_maskstore_ps((float*)(pColorSample + simd * 2), outputMask, blendOut.z);
-        }
-        if (!pRTBlend->writeDisableAlpha)
-        {
-            _simd_maskstore_ps((float*)(pColorSample + simd * 3), outputMask, blendOut.w);
-        }
-    }
-}
-
-#if USE_8x2_TILE_BACKEND
 // Merge Output to 8x2 SIMD16 Tile Format
 INLINE void OutputMerger8x2(DRAW_CONTEXT*   pDC,
                             SWR_PS_CONTEXT& psContext,
@@ -1076,8 +1010,6 @@ INLINE void OutputMerger8x2(DRAW_CONTEXT*   pDC,
     }
 }
 
-#endif
-
 template <typename T>
 void BackendPixelRate(DRAW_CONTEXT*        pDC,
                       uint32_t             workerId,
@@ -1090,8 +1022,8 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
     /// backend
 
 
-    RDTSC_BEGIN(BEPixelRateBackend, pDC->drawId);
-    RDTSC_BEGIN(BESetup, pDC->drawId);
+    RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEPixelRateBackend, pDC->drawId);
+    RDTSC_BEGIN(pDC->pContext->pBucketMgr, BESetup, pDC->drawId);
 
     const API_STATE& state = GetApiState(pDC);
 
@@ -1112,7 +1044,9 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                        state.colorHottileEnable,
                        renderBuffers);
 
-    RDTSC_END(BESetup, 0);
+    bool isTileDirty = false;
+
+    RDTSC_END(pDC->pContext->pBucketMgr, BESetup, 0);
 
     PixelRateZTestLoop<T> PixelRateZTest(pDC,
                                          workerId,
@@ -1137,9 +1071,9 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
 
         for (uint32_t xx = x; xx < x + KNOB_TILE_X_DIM; xx += SIMD_TILE_X_DIM)
         {
-#if USE_8x2_TILE_BACKEND
             const bool useAlternateOffset = ((xx & SIMD_TILE_X_DIM) != 0);
-#endif
+
+
             simdscalar activeLanes;
             if (!(work.anyCoveredSamples & MASK))
             {
@@ -1158,14 +1092,14 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                     pCoverageMask, psContext.inputMask, state.blendState.sampleMask);
             }
 
-            RDTSC_BEGIN(BEBarycentric, pDC->drawId);
+            RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEBarycentric, pDC->drawId);
 
             CalcPixelBarycentrics(coeffs, psContext);
 
             CalcCentroid<T, false>(
                 &psContext, samplePos, coeffs, work.coverageMask, state.blendState.sampleMask);
 
-            RDTSC_END(BEBarycentric, 0);
+            RDTSC_END(pDC->pContext->pBucketMgr, BEBarycentric, 0);
 
             if (T::bForcedSampleCount)
             {
@@ -1192,12 +1126,12 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
 
             if (state.psState.usesSourceDepth)
             {
-                RDTSC_BEGIN(BEBarycentric, pDC->drawId);
+                RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEBarycentric, pDC->drawId);
                 // interpolate and quantize z
                 psContext.vZ = vplaneps(
                     coeffs.vZa, coeffs.vZb, coeffs.vZc, psContext.vI.center, psContext.vJ.center);
                 psContext.vZ = state.pfnQuantizeDepth(psContext.vZ);
-                RDTSC_END(BEBarycentric, 0);
+                RDTSC_END(pDC->pContext->pBucketMgr, BEBarycentric, 0);
             }
 
             // pixels that are currently active
@@ -1205,14 +1139,13 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
             psContext.oMask      = T::MultisampleT::FullSampleMask();
 
             // execute pixel shader
-            RDTSC_BEGIN(BEPixelShader, pDC->drawId);
+            RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEPixelShader, pDC->drawId);
             state.psState.pfnPixelShader(GetPrivateState(pDC), pWorkerData, &psContext);
-            UPDATE_STAT_BE(PsInvocations, _mm_popcnt_u32(_simd_movemask_ps(activeLanes)));
-            RDTSC_END(BEPixelShader, 0);
+            RDTSC_END(pDC->pContext->pBucketMgr, BEPixelShader, 0);
 
             // update stats
             UPDATE_STAT_BE(PsInvocations, _mm_popcnt_u32(_simd_movemask_ps(activeLanes)));
-            AR_EVENT(PSStats(psContext.stats.numInstExecuted));
+            AR_EVENT(PSStats((HANDLE)&psContext.stats));
 
             // update active lanes to remove any discarded or oMask'd pixels
             activeLanes = _simd_castsi_ps(_simd_and_si(
@@ -1221,6 +1154,8 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
             {
                 goto Endtile;
             };
+
+            isTileDirty = true;
 
             // late-Z
             if (!T::bCanEarlyZ && !T::bForcedSampleCount)
@@ -1242,7 +1177,7 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
             for (uint32_t sample = 0; sample < GetNumOMSamples<T>(state.blendState.sampleCount);
                  sample++)
             {
-                RDTSC_BEGIN(BEOutputMerger, pDC->drawId);
+                RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEOutputMerger, pDC->drawId);
                 // center pattern does a single coverage/depth/stencil test, standard pattern tests
                 // all samples
                 uint32_t   coverageSampleNum = (T::bIsCenterPattern) ? 0 : sample;
@@ -1258,13 +1193,13 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                     if (!_simd_movemask_ps(depthMask))
                     {
                         // stencil should already have been written in early/lateZ tests
-                        RDTSC_END(BEOutputMerger, 0);
+                        RDTSC_END(pDC->pContext->pBucketMgr, BEOutputMerger, 0);
                         continue;
                     }
                 }
 
                 // broadcast the results of the PS to all passing pixels
-#if USE_8x2_TILE_BACKEND
+
                 OutputMerger8x2(pDC,
                                 psContext,
                                 psContext.pColorBuffer,
@@ -1276,18 +1211,7 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                                 state.psState.renderTargetMask,
                                 useAlternateOffset,
                                 workerId);
-#else  // USE_8x2_TILE_BACKEND
-                OutputMerger4x2(pDC,
-                                psContext,
-                                psContext.pColorBuffer,
-                                sample,
-                                &state.blendState,
-                                state.pfnBlendFunc,
-                                coverageMask,
-                                depthMask,
-                                state.psState.renderTargetMask,
-                                workerId);
-#endif // USE_8x2_TILE_BACKEND
+
 
                 if (!state.psState.forceEarlyZ && !T::bForcedSampleCount)
                 {
@@ -1304,10 +1228,10 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                                       pStencilSample,
                                       PixelRateZTest.stencilPassMask[coverageSampleNum]);
                 }
-                RDTSC_END(BEOutputMerger, 0);
+                RDTSC_END(pDC->pContext->pBucketMgr, BEOutputMerger, 0);
             }
         Endtile:
-            RDTSC_BEGIN(BEEndTile, pDC->drawId);
+            RDTSC_BEGIN(pDC->pContext->pBucketMgr, BEEndTile, pDC->drawId);
 
             for (uint32_t sample = 0; sample < T::MultisampleT::numCoverageSamples; sample++)
             {
@@ -1320,7 +1244,6 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
             }
             work.anyCoveredSamples >>= (SIMD_TILE_Y_DIM * SIMD_TILE_X_DIM);
 
-#if USE_8x2_TILE_BACKEND
             if (useAlternateOffset)
             {
                 DWORD    rt;
@@ -1332,21 +1255,12 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
                         (2 * KNOB_SIMD_WIDTH * FormatTraits<KNOB_COLOR_HOT_TILE_FORMAT>::bpp) / 8;
                 }
             }
-#else
-            DWORD    rt;
-            uint32_t rtMask = state.colorHottileEnable;
-            while (_BitScanForward(&rt, rtMask))
-            {
-                rtMask &= ~(1 << rt);
-                psContext.pColorBuffer[rt] +=
-                    (KNOB_SIMD_WIDTH * FormatTraits<KNOB_COLOR_HOT_TILE_FORMAT>::bpp) / 8;
-            }
-#endif
+
             pDepthBuffer += (KNOB_SIMD_WIDTH * FormatTraits<KNOB_DEPTH_HOT_TILE_FORMAT>::bpp) / 8;
             pStencilBuffer +=
                 (KNOB_SIMD_WIDTH * FormatTraits<KNOB_STENCIL_HOT_TILE_FORMAT>::bpp) / 8;
 
-            RDTSC_END(BEEndTile, 0);
+            RDTSC_END(pDC->pContext->pBucketMgr, BEEndTile, 0);
 
             psContext.vX.UL     = _simd_add_ps(psContext.vX.UL, dx);
             psContext.vX.center = _simd_add_ps(psContext.vX.center, dx);
@@ -1356,7 +1270,12 @@ void BackendPixelRate(DRAW_CONTEXT*        pDC,
         psContext.vY.center = _simd_add_ps(psContext.vY.center, dy);
     }
 
-    RDTSC_END(BEPixelRateBackend, 0);
+    if (isTileDirty)
+    {
+        SetRenderHotTilesDirty(pDC, renderBuffers);
+    }
+
+    RDTSC_END(pDC->pContext->pBucketMgr, BEPixelRateBackend, 0);
 }
 
 template <uint32_t sampleCountT = SWR_MULTISAMPLE_1X,

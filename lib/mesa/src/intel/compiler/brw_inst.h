@@ -222,6 +222,8 @@ F8(3src_src1_negate,        39, 39, 40, 40)
 F8(3src_src1_abs,           38, 38, 39, 39)
 F8(3src_src0_negate,        37, 37, 38, 38)
 F8(3src_src0_abs,           36, 36, 37, 37)
+F8(3src_a16_src1_type,      -1, -1, 36, 36)
+F8(3src_a16_src2_type,      -1, -1, 35, 35)
 F8(3src_a16_flag_reg_nr,    34, 34, 33, 33)
 F8(3src_a16_flag_subreg_nr, 33, 33, 32, 32)
 FF(3src_a16_dst_reg_file,
@@ -343,7 +345,7 @@ REG_TYPE(src2)
  *  @{
  */
 static inline uint16_t
-brw_inst_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
+brw_inst_3src_a1_src0_imm(ASSERTED const struct gen_device_info *devinfo,
                           const brw_inst *insn)
 {
    assert(devinfo->gen >= 10);
@@ -351,7 +353,7 @@ brw_inst_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
 }
 
 static inline uint16_t
-brw_inst_3src_a1_src2_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
+brw_inst_3src_a1_src2_imm(ASSERTED const struct gen_device_info *devinfo,
                           const brw_inst *insn)
 {
    assert(devinfo->gen >= 10);
@@ -359,7 +361,7 @@ brw_inst_3src_a1_src2_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
 }
 
 static inline void
-brw_inst_set_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
+brw_inst_set_3src_a1_src0_imm(ASSERTED const struct gen_device_info *devinfo,
                               brw_inst *insn, uint16_t value)
 {
    assert(devinfo->gen >= 10);
@@ -367,7 +369,7 @@ brw_inst_set_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo
 }
 
 static inline void
-brw_inst_set_3src_a1_src2_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
+brw_inst_set_3src_a1_src2_imm(ASSERTED const struct gen_device_info *devinfo,
                               brw_inst *insn, uint16_t value)
 {
    assert(devinfo->gen >= 10);
@@ -812,7 +814,7 @@ brw_inst_imm_ud(const struct gen_device_info *devinfo, const brw_inst *insn)
 }
 
 static inline uint64_t
-brw_inst_imm_uq(MAYBE_UNUSED const struct gen_device_info *devinfo,
+brw_inst_imm_uq(ASSERTED const struct gen_device_info *devinfo,
                 const brw_inst *insn)
 {
    assert(devinfo->gen >= 8);

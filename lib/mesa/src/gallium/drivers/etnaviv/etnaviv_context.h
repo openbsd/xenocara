@@ -70,6 +70,7 @@ struct etna_transfer {
    struct pipe_transfer base;
    struct pipe_resource *rsc;
    void *staging;
+   void *mapped;
 };
 
 struct etna_vertexbuf_state {
@@ -87,15 +88,17 @@ struct etna_shader_state {
 enum etna_immediate_contents {
    ETNA_IMMEDIATE_UNUSED = 0,
    ETNA_IMMEDIATE_CONSTANT,
+   ETNA_IMMEDIATE_UNIFORM,
    ETNA_IMMEDIATE_TEXRECT_SCALE_X,
    ETNA_IMMEDIATE_TEXRECT_SCALE_Y,
+   ETNA_IMMEDIATE_UBO0_ADDR,
+   ETNA_IMMEDIATE_UBOMAX_ADDR = ETNA_IMMEDIATE_UBO0_ADDR + 255,
 };
 
 struct etna_shader_uniform_info {
    enum etna_immediate_contents *imm_contents;
    uint32_t *imm_data;
    uint32_t imm_count;
-   uint32_t const_count;
 };
 
 struct etna_context {
@@ -136,9 +139,6 @@ struct etna_context {
    uint32_t prim_hwsupport;
    struct primconvert_context *primconvert;
 
-   /* list of resources used by currently-unsubmitted renders */
-   struct list_head used_resources;
-
    struct slab_child_pool transfer_pool;
    struct blitter_context *blitter;
 
@@ -174,9 +174,6 @@ struct etna_context {
    struct pipe_stencil_ref stencil_ref_s;
    struct pipe_viewport_state viewport_s;
    struct pipe_scissor_state scissor_s;
-
-   /* cached state of entire GPU */
-   struct etna_3d_state gpu3d;
 
    /* stats/counters */
    struct {

@@ -133,18 +133,8 @@ gcm_pin_instructions_block(nir_block *block, struct gcm_state *state)
          break;
 
       case nir_instr_type_tex:
-         switch (nir_instr_as_tex(instr)->op) {
-         case nir_texop_tex:
-         case nir_texop_txb:
-         case nir_texop_lod:
-            /* These two take implicit derivatives so they need to be pinned */
+         if (nir_tex_instr_has_implicit_derivative(nir_instr_as_tex(instr)))
             instr->pass_flags = GCM_INSTR_PINNED;
-            break;
-
-         default:
-            instr->pass_flags = 0;
-            break;
-         }
          break;
 
       case nir_instr_type_load_const:
@@ -152,11 +142,7 @@ gcm_pin_instructions_block(nir_block *block, struct gcm_state *state)
          break;
 
       case nir_instr_type_intrinsic: {
-         const nir_intrinsic_info *info =
-            &nir_intrinsic_infos[nir_instr_as_intrinsic(instr)->intrinsic];
-
-         if ((info->flags & NIR_INTRINSIC_CAN_ELIMINATE) &&
-             (info->flags & NIR_INTRINSIC_CAN_REORDER)) {
+         if (nir_intrinsic_can_reorder(nir_instr_as_intrinsic(instr))) {
             instr->pass_flags = 0;
          } else {
             instr->pass_flags = GCM_INSTR_PINNED;

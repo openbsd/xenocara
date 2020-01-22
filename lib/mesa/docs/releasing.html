@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <title>Releasing process</title>
+  <title>Releasing Process</title>
   <link rel="stylesheet" type="text/css" href="mesa.css">
 </head>
 <body>
 
 <div class="header">
-  <h1>The Mesa 3D Graphics Library</h1>
+  The Mesa 3D Graphics Library
 </div>
 
 <iframe src="contents.html"></iframe>
 <div class="content">
 
 
-<h1>Releasing process</h1>
+<h1>Releasing Process</h1>
 
 <ul>
 <li><a href="#overview">Overview</a>
@@ -31,12 +31,14 @@
 </ul>
 
 
-<h1 id="overview">Overview</h1>
+<h2 id="overview">Overview</h2>
 
 <p>
 This document uses the convention X.Y.Z for the release number with X.Y being
 the stable branch name.
-<br>
+</p>
+
+<p>
 Mesa provides feature and bugfix releases. Former use zero as patch version (Z),
 while the latter have a non-zero one.
 </p>
@@ -52,12 +54,14 @@ For example:
 </pre>
 
 
-<h1 id="schedule">Release schedule</h1>
+<h2 id="schedule">Release schedule</h2>
 
 <p>
 Releases should happen on Wednesdays. Delays can occur although those
 should be kept to a minimum.
-<br>
+</p>
+
+<p>
 See our <a href="release-calendar.html" target="_parent">calendar</a>
 for information about how the release schedule is planned, and the
 date and other details for individual releases.
@@ -85,10 +89,14 @@ approximately 48 hours before the actual release.
 
 <p>
 Note: There is one or two releases overlap when changing branches. For example:
-<br>
+</p>
+
+<p>
 The final release from the 12.0 series Mesa 12.0.5 will be out around the same
 time (or shortly after) 13.0.1 is out.
-<br>
+</p>
+
+<p>
 This also involves that, as a final release may be delayed due to the
 need of additional candidates to solve some blocking regression(s),
 the release manager might have to update
@@ -97,7 +105,7 @@ additional bug fix releases of the current stable branch.
 </p>
 
 
-<h1 id="pickntest">Cherry-picking and testing</h1>
+<h2 id="pickntest">Cherry-picking and testing</h2>
 
 <p>
 Commits nominated for the active branch are picked as based on the
@@ -114,7 +122,7 @@ a casual search for terms such as regression, fix, broken and similar.
 
 <p>
 Maintainer is also responsible for testing in various possible permutations of
-the autoconf and scons build.
+the meson and scons build.
 </p>
 
 <h2>Cherry-picking and build/check testing</h2>
@@ -136,7 +144,7 @@ well contained. Thus it cannot affect more than one driver/subsystem.
 
 <p>The following must pass:</p>
 <ul>
-<li>make distcheck, scons and scons check
+<li>meson test, scons and scons check
 <li>Testing with different version of system components - LLVM and others is also
 performed where possible.
 <li>As a general rule, testing with various combinations of configure
@@ -167,9 +175,8 @@ good contact point.
 
 <p>
 <strong>Note:</strong> If a patch in the current queue needs any additional
-fix(es), then they should be squashed together.
-<br>
-The commit messages and the <code>cherry picked from</code> tags must be preserved.
+fix(es), then they should be squashed together. The commit messages and the
+&quot;<code>cherry picked from</code>&quot;-tags must be preserved.
 </p>
 
 <p>
@@ -223,7 +230,7 @@ system and making some every day's use until the release may be a good
 idea too.
 </p>
 
-<h1 id="stagingbranch">Staging branch</h1>
+<h2 id="stagingbranch">Staging branch</h2>
 
 <p>
 A live branch, which contains the currently merge/rejected patches is available
@@ -243,7 +250,7 @@ Notes:
 </ul>
 
 
-<h1 id="branch">Making a branchpoint</h1>
+<h2 id="branch">Making a branchpoint</h2>
 
 <p>
 A branchpoint is made such that new development can continue in parallel to
@@ -251,10 +258,9 @@ stabilisation and bugfixing.
 </p>
 
 <p>
-Note: Before doing a branch ensure that basic build and <code>make check</code>
-testing is done and there are little to-no issues.
-<br>
-Ideally all of those should be tackled already.
+Note: Before doing a branch ensure that basic build and <code>meson test</code>
+testing is done and there are little to-no issues. Ideally all of those should
+be tackled already.
 </p>
 
 <p>
@@ -279,7 +285,7 @@ To setup the branchpoint:
 
 <p>
 Now go to
-<a href="https://bugs.freedesktop.org/editversions.cgi?action=add&amp;product=Mesa" target="_parent">Bugzilla</a> and add the new Mesa version X.Y.
+<a href="https://gitlab.freedesktop.org/mesa/mesa/-/milestones" target="_parent">gitlab</a> and add the new Mesa version X.Y.
 </p>
 
 <p>
@@ -293,14 +299,15 @@ Proceed to <a href="#release">release</a> -rc1.
 </p>
 
 
-<h1 id="prerelease">Pre-release announcement</h1>
+<h2 id="prerelease">Pre-release announcement</h2>
 
 <p>
 It comes shortly after outstanding patches in the respective branch are pushed.
 Developers can check, in brief, what's the status of their patches. They,
 alongside very early testers, are strongly encouraged to test the branch and
 report any regressions.
-<br>
+</p>
+<p>
 It is followed by a brief period (normally 24 or 48 hours) before the actual
 release is made.
 </p>
@@ -330,10 +337,8 @@ Barring reported regressions or objections from developers.
 <p>
 Patch does not fit the
 <a href="submittingpatches.html#criteria" target="_parent">criteria</a> and
-is followed by a brief information.
-<br>
-The release maintainer is human so if you believe you've spotted a mistake do
-let them know.
+is followed by a brief information. The release maintainer is human so if you
+believe you've spotted a mistake do let them know.
 </p>
 
 <h2>Format/template</h2>
@@ -445,7 +450,7 @@ Reason: The patch was reverted shortly after it was merged.
 </pre>
 
 
-<h1 id="release">Making a new release</h1>
+<h2 id="release">Making a new release</h2>
 
 <p>
 These are the instructions for making a new Mesa release.
@@ -468,96 +473,48 @@ So we do a quick 'touch test'
 </p>
 
 <ul>
-<li>make distcheck (you can omit this if you're not using --dist below)
+<li>meson dist
 <li>scons (from release tarball)
 <li>the produced binaries work
 </ul>
 
 <p>
-Here is one solution that I've been using.
+  Here is one solution:
 </p>
 
 <pre>
-	# Set MAKEFLAGS if you haven't already
-	git clean -fXd; git clean -nxd
-	read # quick cross check any outstanding files
-	export __version=`cat VERSION`
-	export __mesa_root=../
-	export __build_root=./foo
-	chmod 755 -fR $__build_root; rm -rf $__build_root
-	mkdir -p $__build_root &amp;&amp; cd $__build_root
-
-	# For the native builds - such as distcheck, scons, sanity test, you
-	# may want to specify which LLVM to use:
-	# export LLVM_CONFIG=/usr/lib/llvm-3.9/bin/llvm-config
-
-	# Do a full distcheck
-	$__mesa_root/autogen.sh &amp;&amp; make distcheck
-
-	# Build check the tarballs (scons, linux)
-	tar -xaf mesa-$__version.tar.xz &amp;&amp; cd mesa-$__version
-	scons
-	cd .. &amp;&amp; rm -rf mesa-$__version
-
-	# Build check the tarballs (scons, windows/mingw)
-	# Temporary drop LLVM_CONFIG, unless you have a Windows/mingw one.
-	# save_LLVM_CONFIG=`echo $LLVM_CONFIG`; unset LLVM_CONFIG
-	tar -xaf mesa-$__version.tar.xz &amp;&amp; cd mesa-$__version
-	scons platform=windows toolchain=crossmingw
-	cd .. &amp;&amp; rm -rf mesa-$__version
-
-	# Test the automake binaries
-	# Restore LLVM_CONFIG, if applicable:
-	# export LLVM_CONFIG=`echo $save_LLVM_CONFIG`; unset save_LLVM_CONFIG
-	tar -xaf mesa-$__version.tar.xz &amp;&amp; cd mesa-$__version
-	./configure \
-		--with-dri-drivers=i965,swrast \
-		--with-gallium-drivers=swrast \
-		--with-vulkan-drivers=intel \
-		--enable-llvm-shared-libs \
-		--enable-llvm \
-		--enable-glx-tls \
-		--enable-gbm \
-		--enable-egl \
-		--with-platforms=x11,drm,wayland,surfaceless
-	make &amp;&amp; DESTDIR=`pwd`/test make install
-
-	# Drop LLVM_CONFIG, if applicable:
-	# unset LLVM_CONFIG
-
-	__glxinfo_cmd='glxinfo 2&gt;&amp;1 | egrep -o "Mesa.*|Gallium.*|.*dri\.so"'
-	__glxgears_cmd='glxgears 2&gt;&amp;1 | grep -v "configuration file"'
-	__es2info_cmd='es2_info 2&gt;&amp;1 | egrep "GL_VERSION|GL_RENDERER|.*dri\.so"'
-	__es2gears_cmd='es2gears_x11 2&gt;&amp;1 | grep -v "configuration file"'
-	test "x$LD_LIBRARY_PATH" != 'x' &amp;&amp; __old_ld="$LD_LIBRARY_PATH"
-	export LD_LIBRARY_PATH=`pwd`/test/usr/local/lib/:"${__old_ld}"
-	export LIBGL_DRIVERS_PATH=`pwd`/test/usr/local/lib/dri/
-	export LIBGL_DEBUG=verbose
-	eval $__glxinfo_cmd
-	eval $__glxgears_cmd
-	eval $__es2info_cmd
-	eval $__es2gears_cmd
-	export LIBGL_ALWAYS_SOFTWARE=true
-	eval $__glxinfo_cmd
-	eval $__glxgears_cmd
-	eval $__es2info_cmd
-	eval $__es2gears_cmd
-	export LIBGL_ALWAYS_SOFTWARE=true
-	export GALLIUM_DRIVER=softpipe
-	eval $__glxinfo_cmd
-	eval $__glxgears_cmd
-	eval $__es2info_cmd
-	eval $__es2gears_cmd
-	# Smoke test DOTA2
-	unset LD_LIBRARY_PATH
-	test "x$__old_ld" != 'x' &amp;&amp; export LD_LIBRARY_PATH="$__old_ld" &amp;&amp; unset __old_ld
-	unset LIBGL_DRIVERS_PATH
-	unset LIBGL_DEBUG
-	unset LIBGL_ALWAYS_SOFTWARE
-	unset GALLIUM_DRIVER
-	export VK_ICD_FILENAMES=`pwd`/src/intel/vulkan/dev_icd.json
-	steam steam://rungameid/570  -vconsole -vulkan
-	unset VK_ICD_FILENAMES
+    __glxgears_cmd='glxgears 2&gt;&amp;1 | grep -v "configuration file"'
+    __es2info_cmd='es2_info 2&gt;&amp;1 | egrep "GL_VERSION|GL_RENDERER|.*dri\.so"'
+    __es2gears_cmd='es2gears_x11 2&gt;&amp;1 | grep -v "configuration file"'
+    test "x$LD_LIBRARY_PATH" != 'x' &amp;&amp; __old_ld="$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH=`pwd`/test/usr/local/lib/:"${__old_ld}"
+    export LIBGL_DRIVERS_PATH=`pwd`/test/usr/local/lib/dri/
+    export LIBGL_DEBUG=verbose
+    eval $__glxinfo_cmd
+    eval $__glxgears_cmd
+    eval $__es2info_cmd
+    eval $__es2gears_cmd
+    export LIBGL_ALWAYS_SOFTWARE=true
+    eval $__glxinfo_cmd
+    eval $__glxgears_cmd
+    eval $__es2info_cmd
+    eval $__es2gears_cmd
+    export LIBGL_ALWAYS_SOFTWARE=true
+    export GALLIUM_DRIVER=softpipe
+    eval $__glxinfo_cmd
+    eval $__glxgears_cmd
+    eval $__es2info_cmd
+    eval $__es2gears_cmd
+    # Smoke test DOTA2
+    unset LD_LIBRARY_PATH
+    test "x$__old_ld" != 'x' &amp;&amp; export LD_LIBRARY_PATH="$__old_ld" &amp;&amp; unset __old_ld
+    unset LIBGL_DRIVERS_PATH
+    unset LIBGL_DEBUG
+    unset LIBGL_ALWAYS_SOFTWARE
+    unset GALLIUM_DRIVER
+    export VK_ICD_FILENAMES=`pwd`/test/usr/local/share/vulkan/icd.d/intel_icd.x86_64.json
+    steam steam://rungameid/570  -vconsole -vulkan
+    unset VK_ICD_FILENAMES
 </pre>
 
 <h3>Update version in file VERSION</h3>
@@ -647,7 +604,7 @@ docs/release-calendar.html. Then commit and push:
 </pre>
 
 
-<h1 id="announce">Announce the release</h1>
+<h2 id="announce">Announce the release</h2>
 
 <p>
 Use the generated template during the releasing process.
@@ -659,7 +616,7 @@ series, if that is the case.
 </p>
 
 
-<h1 id="website">Update the mesa3d.org website</h1>
+<h2 id="website">Update the mesa3d.org website</h2>
 
 <p>
 As the hosting was moved to freedesktop, git hooks are deployed to update the
@@ -667,14 +624,12 @@ website. Manually check that it is updated 5-10 minutes after the final <code>gi
 </p>
 
 
-<h1 id="bugzilla">Update Bugzilla</h1>
+<h2 id="bugzilla">Update Bugzilla</h2>
 
 <p>
 Parse through the bugreports as listed in the docs/relnotes/X.Y.Z.html
-document.
-<br>
-If there's outstanding action, close the bug referencing the commit ID which
-addresses the bug and mention the Mesa version that has the fix.
+document. If there's outstanding action, close the bug referencing the commit
+ID which addresses the bug and mention the Mesa version that has the fix.
 </p>
 
 <p>

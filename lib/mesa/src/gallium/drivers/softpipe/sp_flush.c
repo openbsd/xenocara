@@ -82,9 +82,9 @@ softpipe_flush( struct pipe_context *pipe,
    if (flags & PIPE_FLUSH_END_OF_FRAME) {
       static unsigned frame_no = 1;
       static char filename[256];
-      util_snprintf(filename, sizeof(filename), "cbuf_%u.bmp", frame_no);
+      snprintf(filename, sizeof(filename), "cbuf_%u.bmp", frame_no);
       debug_dump_surface_bmp(pipe, filename, softpipe->framebuffer.cbufs[0]);
-      util_snprintf(filename, sizeof(filename), "zsbuf_%u.bmp", frame_no);
+      snprintf(filename, sizeof(filename), "zsbuf_%u.bmp", frame_no);
       debug_dump_surface_bmp(pipe, filename, softpipe->framebuffer.zsbuf);
       ++frame_no;
    }
@@ -192,5 +192,8 @@ void softpipe_texture_barrier(struct pipe_context *pipe, unsigned flags)
 
 void softpipe_memory_barrier(struct pipe_context *pipe, unsigned flags)
 {
+   if (!(flags & ~PIPE_BARRIER_UPDATE))
+      return;
+
    softpipe_texture_barrier(pipe, 0);
 }

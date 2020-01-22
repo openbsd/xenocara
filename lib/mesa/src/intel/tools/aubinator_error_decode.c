@@ -381,7 +381,7 @@ static int ascii85_decode(const char *in, uint32_t **out, bool inflate)
 }
 
 static struct gen_batch_decode_bo
-get_gen_batch_bo(void *user_data, uint64_t address)
+get_gen_batch_bo(void *user_data, bool ppgtt, uint64_t address)
 {
    for (int s = 0; s < num_sections; s++) {
       if (sections[s].gtt_offset <= address &&
@@ -490,7 +490,7 @@ read_data_file(FILE *file)
                matched = sscanf(pci_id_start, "PCI ID: 0x%04x\n", &reg);
          }
          if (matched == 1) {
-            if (!gen_get_device_info(reg, &devinfo)) {
+            if (!gen_get_device_info_from_pci_id(reg, &devinfo)) {
                printf("Unable to identify devid=%x\n", reg);
                exit(EXIT_FAILURE);
             }
@@ -612,7 +612,7 @@ read_data_file(FILE *file)
          batch_ctx.engine = class;
          gen_print_batch(&batch_ctx, sections[s].data,
                          sections[s].dword_count * 4,
-                         sections[s].gtt_offset);
+                         sections[s].gtt_offset, false);
       }
    }
 
@@ -757,7 +757,7 @@ main(int argc, char *argv[])
       setup_pager();
 
    if (S_ISDIR(st.st_mode)) {
-      MAYBE_UNUSED int ret;
+      ASSERTED int ret;
       char *filename;
 
       ret = asprintf(&filename, "%s/i915_error_state", path);

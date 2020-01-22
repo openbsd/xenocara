@@ -57,6 +57,7 @@ struct amdgpu_cs_buffer {
 
 enum ib_type {
    IB_MAIN,
+   IB_PARALLEL_COMPUTE,
    IB_NUM,
 };
 
@@ -67,10 +68,23 @@ struct amdgpu_ib {
    struct pb_buffer        *big_ib_buffer;
    uint8_t                 *ib_mapped;
    unsigned                used_ib_space;
+
+   /* The maximum seen size from cs_check_space. If the driver does
+    * cs_check_space and flush, the newly allocated IB should have at least
+    * this size.
+    */
+   unsigned                max_check_space_size;
+
    unsigned                max_ib_size;
    uint32_t                *ptr_ib_size;
    bool                    ptr_ib_size_inside_ib;
    enum ib_type            ib_type;
+};
+
+struct amdgpu_fence_list {
+   struct pipe_fence_handle    **list;
+   unsigned                    num;
+   unsigned                    max;
 };
 
 struct amdgpu_cs_context {
@@ -96,13 +110,13 @@ struct amdgpu_cs_context {
    unsigned                    last_added_bo_usage;
    uint32_t                    last_added_bo_priority_usage;
 
-   struct pipe_fence_handle    **fence_dependencies;
-   unsigned                    num_fence_dependencies;
-   unsigned                    max_fence_dependencies;
+   struct amdgpu_fence_list    fence_dependencies;
+   struct amdgpu_fence_list    syncobj_dependencies;
+   struct amdgpu_fence_list    syncobj_to_signal;
 
-   struct pipe_fence_handle    **syncobj_to_signal;
-   unsigned                    num_syncobj_to_signal;
-   unsigned                    max_syncobj_to_signal;
+   /* The compute IB uses the dependencies above + these: */
+   struct amdgpu_fence_list    compute_fence_dependencies;
+   struct amdgpu_fence_list    compute_start_fence_dependencies;
 
    struct pipe_fence_handle    *fence;
 
@@ -112,6 +126,7 @@ struct amdgpu_cs_context {
 
 struct amdgpu_cs {
    struct amdgpu_ib main; /* must be first because this is inherited */
+   struct amdgpu_ib compute_ib; /* optional parallel compute IB */
    struct amdgpu_ctx *ctx;
    enum ring_type ring_type;
    struct drm_amdgpu_cs_chunk_fence fence_chunk;
@@ -211,6 +226,8 @@ amdgpu_cs_from_ib(struct amdgpu_ib *ib)
    switch (ib->ib_type) {
    case IB_MAIN:
       return get_container(ib, struct amdgpu_cs, main);
+   case IB_PARALLEL_COMPUTE:
+      return get_container(ib, struct amdgpu_cs, compute_ib);
    default:
       unreachable("bad ib_type");
    }
@@ -259,7 +276,7 @@ void amdgpu_add_fences(struct amdgpu_winsys_bo *bo,
                        unsigned num_fences,
                        struct pipe_fence_handle **fences);
 void amdgpu_cs_sync_flush(struct radeon_cmdbuf *rcs);
-void amdgpu_cs_init_functions(struct amdgpu_winsys *ws);
+void amdgpu_cs_init_functions(struct amdgpu_screen_winsys *ws);
 void amdgpu_cs_submit_ib(void *job, int thread_index);
 
 #endif

@@ -29,14 +29,10 @@
  *
  * Implementation of GLSL-related API functions.
  * The glUniform* functions are in uniforms.c
- *
- *
- * XXX things to do:
- * 1. Check that the right error code is generated for all _mesa_error() calls.
- * 2. Insert FLUSH_VERTICES calls in various places
  */
 
 
+#include <errno.h>
 #include <stdbool.h>
 #include <c99_alloca.h>
 #include "main/glheader.h"
@@ -63,6 +59,7 @@
 #include "util/hash_table.h"
 #include "util/mesa-sha1.h"
 #include "util/crc32.h"
+#include "util/os_file.h"
 
 /**
  * Return mask of GLSL_x flags by examining the MESA_GLSL env var.
@@ -162,6 +159,8 @@ _mesa_free_shader_state(struct gl_context *ctx)
       _mesa_reference_shader_program(ctx,
                                      &ctx->Shader.ReferencedPrograms[i],
                                      NULL);
+      free(ctx->SubroutineIndex[i].IndexPtr);
+      ctx->SubroutineIndex[i].IndexPtr = NULL;
    }
    _mesa_reference_shader_program(ctx, &ctx->Shader.ActiveProgram, NULL);
 
@@ -474,7 +473,7 @@ detach_shader(struct gl_context *ctx, GLuint program, GLuint shader,
          shProg->Shaders = newList;
          shProg->NumShaders = n - 1;
 
-#ifdef DEBUG
+#ifndef NDEBUG
          /* sanity check - make sure the new list's entries are sensible */
          for (j = 0; j < shProg->NumShaders; j++) {
             assert(shProg->Shaders[j]->Stage == MESA_SHADER_VERTEX ||
@@ -647,6 +646,13 @@ check_tes_query(struct gl_context *ctx, const struct gl_shader_program *shProg)
    return false;
 }
 
+/**
+ * Return the length of a string, or 0 if the pointer passed in is NULL
+ */
+static size_t strlen_or_zero(const char *s)
+{
+   return s ? strlen(s) : 0;
+}
 
 /**
  * glGetProgramiv() - get shader program state.
@@ -689,6 +695,12 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname,
    case GL_DELETE_STATUS:
       *params = shProg->DeletePending;
       return;
+   case GL_COMPLETION_STATUS_ARB:
+      if (ctx->Driver.GetShaderProgramCompletionStatus)
+         *params = ctx->Driver.GetShaderProgramCompletionStatus(ctx, shProg);
+      else
+         *params = GL_TRUE;
+      return;
    case GL_LINK_STATUS:
       *params = shProg->data->LinkStatus ? GL_TRUE : GL_FALSE;
       return;
@@ -728,11 +740,23 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname,
          if (shProg->data->UniformStorage[i].is_shader_storage)
             continue;
 
+         /* From ARB_gl_spirv spec:
+          *
+          *   "If pname is ACTIVE_UNIFORM_MAX_LENGTH, the length of the
+          *    longest active uniform name, including a null terminator, is
+          *    returned. If no active uniforms exist, zero is returned. If no
+          *    name reflection information is available, one is returned."
+          *
+          * We are setting 0 here, as below it will add 1 for the NUL character.
+          */
+         const GLint base_len =
+            strlen_or_zero(shProg->data->UniformStorage[i].name);
+
 	 /* Add one for the terminating NUL character for a non-array, and
 	  * 4 for the "[0]" and the NUL for an array.
 	  */
-         const GLint len = strlen(shProg->data->UniformStorage[i].name) + 1 +
-             ((shProg->data->UniformStorage[i].array_elements != 0) ? 3 : 0);
+         const GLint len = base_len + 1 +
+            ((shProg->data->UniformStorage[i].array_elements != 0) ? 3 : 0);
 
 	 if (len > max_len)
 	    max_len = len;
@@ -744,19 +768,48 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname,
    case GL_TRANSFORM_FEEDBACK_VARYINGS:
       if (!has_xfb)
          break;
-      *params = shProg->TransformFeedback.NumVarying;
+
+      /* Check first if there are transform feedback varyings specified in the
+       * shader (ARB_enhanced_layouts). If there isn't any, return the number of
+       * varyings specified using the API.
+       */
+      if (shProg->last_vert_prog &&
+          shProg->last_vert_prog->sh.LinkedTransformFeedback->NumVarying > 0)
+         *params =
+            shProg->last_vert_prog->sh.LinkedTransformFeedback->NumVarying;
+      else
+         *params = shProg->TransformFeedback.NumVarying;
       return;
    case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH: {
       unsigned i;
       GLint max_len = 0;
+      bool in_shader_varyings;
+      int num_varying;
+
       if (!has_xfb)
          break;
 
-      for (i = 0; i < shProg->TransformFeedback.NumVarying; i++) {
-         /* Add one for the terminating NUL character.
+      /* Check first if there are transform feedback varyings specified in the
+       * shader (ARB_enhanced_layouts). If there isn't any, use the ones
+       * specified using the API.
+       */
+      in_shader_varyings = shProg->last_vert_prog &&
+         shProg->last_vert_prog->sh.LinkedTransformFeedback->NumVarying > 0;
+
+      num_varying = in_shader_varyings ?
+         shProg->last_vert_prog->sh.LinkedTransformFeedback->NumVarying :
+         shProg->TransformFeedback.NumVarying;
+
+      for (i = 0; i < num_varying; i++) {
+         const char *name = in_shader_varyings ?
+            shProg->last_vert_prog->sh.LinkedTransformFeedback->Varyings[i].Name
+            : shProg->TransformFeedback.VaryingNames[i];
+
+         /* Add one for the terminating NUL character. We have to use
+          * strlen_or_zero, as for shaders constructed from SPIR-V binaries,
+          * it is possible that no name reflection information is available.
           */
-         const GLint len =
-            strlen(shProg->TransformFeedback.VaryingNames[i]) + 1;
+         const GLint len = strlen_or_zero(name) + 1;
 
          if (len > max_len)
             max_len = len;
@@ -810,9 +863,16 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname,
          break;
 
       for (i = 0; i < shProg->data->NumUniformBlocks; i++) {
-	 /* Add one for the terminating NUL character.
+	 /* Add one for the terminating NUL character. Name can be NULL, in
+          * that case, from ARB_gl_spirv:
+          *   "If pname is ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, the length of
+          *    the longest active uniform block name, including the null
+          *    terminator, is returned. If no active uniform blocks exist,
+          *    zero is returned. If no name reflection information is
+          *    available, one is returned."
 	  */
-         const GLint len = strlen(shProg->data->UniformBlocks[i].Name) + 1;
+         const GLint len =
+            strlen_or_zero(shProg->data->UniformBlocks[i].Name) + 1;
 
 	 if (len > max_len)
 	    max_len = len;
@@ -837,7 +897,7 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname,
       if (!_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
          break;
 
-      *params = shProg->BinaryRetreivableHint;
+      *params = shProg->BinaryRetrievableHint;
       return;
    case GL_PROGRAM_BINARY_LENGTH:
       if (ctx->Const.NumProgramBinaryFormats == 0 || !shProg->data->LinkStatus) {
@@ -960,6 +1020,10 @@ get_shaderiv(struct gl_context *ctx, GLuint name, GLenum pname, GLint *params)
    case GL_DELETE_STATUS:
       *params = shader->DeletePending;
       break;
+   case GL_COMPLETION_STATUS_ARB:
+      /* _mesa_glsl_compile_shader is not offloaded to other threads. */
+      *params = GL_TRUE;
+      return;
    case GL_COMPILE_STATUS:
       *params = shader->CompileStatus ? GL_TRUE : GL_FALSE;
       break;
@@ -1230,10 +1294,27 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
    /* Capture .shader_test files. */
    const char *capture_path = _mesa_get_shader_capture_path();
    if (shProg->Name != 0 && shProg->Name != ~0 && capture_path != NULL) {
-      FILE *file;
-      char *filename = ralloc_asprintf(NULL, "%s/%u.shader_test",
+      /* Find an unused filename. */
+      FILE *file = NULL;
+      char *filename = NULL;
+      for (unsigned i = 0;; i++) {
+         if (i) {
+            filename = ralloc_asprintf(NULL, "%s/%u-%u.shader_test",
+                                       capture_path, shProg->Name, i);
+         } else {
+            filename = ralloc_asprintf(NULL, "%s/%u.shader_test",
                                        capture_path, shProg->Name);
-      file = fopen(filename, "w");
+         }
+         file = os_file_create_unique(filename, 0644);
+         if (file)
+            break;
+         /* If we are failing for another reason than "this filename already
+          * exists", we are likely to fail again with another filename, so
+          * let's just give up */
+         if (errno != EEXIST)
+            break;
+         ralloc_free(filename);
+      }
       if (file) {
          fprintf(file, "[require]\nGLSL%s >= %u.%02u\n",
                  shProg->IsES ? " ES" : "",
@@ -1262,6 +1343,8 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
    }
 
    _mesa_update_vertex_processing_mode(ctx);
+
+   shProg->BinaryRetrievableHint = shProg->BinaryRetrievableHintPending;
 
    /* debug code */
    if (0) {
@@ -2356,7 +2439,7 @@ program_parameteri(struct gl_context *ctx, struct gl_shader_program *shProg,
        *     will not be in effect until the next time LinkProgram or
        *     ProgramBinary has been called successfully."
        *
-       * The resloution of issue 9 in the extension spec also says:
+       * The resolution of issue 9 in the extension spec also says:
        *
        *     "The application may use the PROGRAM_BINARY_RETRIEVABLE_HINT hint
        *     to indicate to the GL implementation that this program will
@@ -2365,7 +2448,7 @@ program_parameteri(struct gl_context *ctx, struct gl_shader_program *shProg,
        *     changes made to the program before being saved such that when it
        *     is loaded again a recompile can be avoided."
        */
-      shProg->BinaryRetreivableHint = value;
+      shProg->BinaryRetrievableHintPending = value;
       return;
 
    case GL_PROGRAM_SEPARABLE:

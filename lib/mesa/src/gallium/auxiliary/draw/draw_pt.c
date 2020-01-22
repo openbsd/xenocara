@@ -440,7 +440,8 @@ resolve_draw_info(const struct pipe_draw_info *raw_info,
       struct draw_so_target *target =
          (struct draw_so_target *)info->count_from_stream_output;
       assert(vertex_buffer != NULL);
-      info->count = target->internal_offset / vertex_buffer->stride;
+      info->count = vertex_buffer->stride == 0 ? 0 :
+                       target->internal_offset / vertex_buffer->stride;
 
       /* Stream output draw can not be indexed */
       debug_assert(!info->index_size);
@@ -464,6 +465,9 @@ draw_vbo(struct draw_context *draw,
    unsigned fpstate = util_fpstate_get();
    struct pipe_draw_info resolved_info;
 
+   if (info->instance_count == 0)
+      return;
+
    /* Make sure that denorms are treated like zeros. This is 
     * the behavior required by D3D10. OpenGL doesn't care.
     */
@@ -472,7 +476,6 @@ draw_vbo(struct draw_context *draw,
    resolve_draw_info(info, &resolved_info, &(draw->pt.vertex_buffer[0]));
    info = &resolved_info;
 
-   assert(info->instance_count > 0);
    if (info->index_size)
       assert(draw->pt.user.elts);
 

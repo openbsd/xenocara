@@ -148,11 +148,15 @@ svga_context_create(struct pipe_screen *screen, void *priv, unsigned flags)
    if (!svga->pipe.stream_uploader)
       goto cleanup;
 
+   u_upload_disable_persistent(svga->pipe.stream_uploader);
+
    svga->pipe.const_uploader = u_upload_create(&svga->pipe, 128 * 1024,
                                                PIPE_BIND_CONSTANT_BUFFER,
                                                PIPE_USAGE_STREAM, 0);
    if (!svga->pipe.const_uploader)
       goto cleanup;
+
+   u_upload_disable_persistent(svga->pipe.const_uploader);
 
    svga->swc = svgascreen->sws->context_create(svgascreen->sws);
    if (!svga->swc)
@@ -230,10 +234,13 @@ svga_context_create(struct pipe_screen *screen, void *priv, unsigned flags)
 
    svga->const0_upload = u_upload_create(&svga->pipe,
                                          CONST0_UPLOAD_DEFAULT_SIZE,
-                                         PIPE_BIND_CONSTANT_BUFFER,
+                                         PIPE_BIND_CONSTANT_BUFFER |
+                                         PIPE_BIND_CUSTOM,
                                          PIPE_USAGE_STREAM, 0);
    if (!svga->const0_upload)
       goto cleanup;
+
+   u_upload_disable_persistent(svga->const0_upload);
 
    if (!svga_texture_transfer_map_upload_create(svga))
       goto cleanup;

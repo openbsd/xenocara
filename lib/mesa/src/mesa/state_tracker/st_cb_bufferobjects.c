@@ -43,6 +43,7 @@
 #include "st_cb_bufferobjects.h"
 #include "st_cb_memoryobjects.h"
 #include "st_debug.h"
+#include "st_util.h"
 
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
@@ -130,10 +131,16 @@ st_bufferobj_subdata(struct gl_context *ctx,
     * even if the buffer is currently referenced by hardware - they
     * just queue the upload as dma rather than mapping the underlying
     * buffer directly.
+    *
+    * If the buffer is mapped, suppress implicit buffer range invalidation
+    * by using PIPE_TRANSFER_MAP_DIRECTLY.
     */
-   pipe_buffer_write(st_context(ctx)->pipe,
-                     st_obj->buffer,
-                     offset, size, data);
+   struct pipe_context *pipe = st_context(ctx)->pipe;
+
+   pipe->buffer_subdata(pipe, st_obj->buffer,
+                        _mesa_bufferobj_mapped(obj, MAP_USER) ?
+                           PIPE_TRANSFER_MAP_DIRECTLY : 0,
+                        offset, size, data);
 }
 
 
@@ -222,7 +229,7 @@ storage_flags_to_buffer_flags(GLbitfield storageFlags)
  * usage hint, return a pipe_resource_usage value (PIPE_USAGE_DYNAMIC,
  * STREAM, etc).
  */
-static const enum pipe_resource_usage
+static enum pipe_resource_usage
 buffer_usage(GLenum target, GLboolean immutable,
              GLbitfield storageFlags, GLenum usage)
 {
@@ -282,6 +289,7 @@ bufferobj_data(struct gl_context *ctx,
    struct pipe_screen *screen = pipe->screen;
    struct st_buffer_object *st_obj = st_buffer_object(obj);
    struct st_memory_object *st_mem_obj = st_memory_object(memObj);
+   bool is_mapped = _mesa_bufferobj_mapped(obj, MAP_USER);
 
    if (target != GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD &&
        size && st_obj->buffer &&
@@ -292,11 +300,19 @@ bufferobj_data(struct gl_context *ctx,
          /* Just discard the old contents and write new data.
           * This should be the same as creating a new buffer, but we avoid
           * a lot of validation in Mesa.
+          *
+          * If the buffer is mapped, we can't discard it.
+          *
+          * PIPE_TRANSFER_MAP_DIRECTLY supresses implicit buffer range
+          * invalidation.
           */
          pipe->buffer_subdata(pipe, st_obj->buffer,
-                              PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE,
+                              is_mapped ? PIPE_TRANSFER_MAP_DIRECTLY :
+                                          PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE,
                               0, size, data);
          return GL_TRUE;
+      } else if (is_mapped) {
+         return GL_TRUE; /* can't reallocate, nothing to do */
       } else if (screen->get_param(screen, PIPE_CAP_INVALIDATE_BUFFER)) {
          pipe->invalidate_resource(pipe, st_obj->buffer);
          return GL_TRUE;
@@ -357,8 +373,10 @@ bufferobj_data(struct gl_context *ctx,
    /* The current buffer may be bound, so we have to revalidate all atoms that
     * might be using it.
     */
-   /* TODO: Add arrays to usage history */
-   ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
+   if (st_obj->Base.UsageHistory & USAGE_ARRAY_BUFFER)
+      ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
+   /* if (st_obj->Base.UsageHistory & USAGE_ELEMENT_ARRAY_BUFFER) */
+   /*    ctx->NewDriverState |= TODO: Handle indices as gallium state; */
    if (st_obj->Base.UsageHistory & USAGE_UNIFORM_BUFFER)
       ctx->NewDriverState |= ST_NEW_UNIFORM_BUFFER;
    if (st_obj->Base.UsageHistory & USAGE_SHADER_STORAGE_BUFFER)
@@ -419,8 +437,8 @@ st_bufferobj_invalidate(struct gl_context *ctx,
    if (offset != 0 || size != obj->Size)
       return;
 
-   /* Nothing to invalidate. */
-   if (!st_obj->buffer)
+   /* If the buffer is mapped, we can't invalidate it. */
+   if (!st_obj->buffer || _mesa_bufferobj_mapped(obj, MAP_USER))
       return;
 
    pipe->invalidate_resource(pipe, st_obj->buffer);

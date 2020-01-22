@@ -22,6 +22,7 @@
 
 #include "pipe/p_defines.h"
 
+#include "compiler/nir/nir.h"
 #include "tgsi/tgsi_ureg.h"
 
 #include "nvc0/nvc0_context.h"
@@ -342,8 +343,6 @@ nvc0_tcp_gen_header(struct nvc0_program *tcp, struct nv50_ir_prog_info *info)
 {
    unsigned opcs = 6; /* output patch constants (at least the TessFactors) */
 
-   tcp->tp.input_patch_size = info->prop.tp.inputPatchSize;
-
    if (info->numPatchConstants)
       opcs = 8 + info->numPatchConstants * 4;
 
@@ -373,8 +372,6 @@ nvc0_tcp_gen_header(struct nvc0_program *tcp, struct nv50_ir_prog_info *info)
 static int
 nvc0_tep_gen_header(struct nvc0_program *tep, struct nv50_ir_prog_info *info)
 {
-   tep->tp.input_patch_size = ~0;
-
    tep->hdr[0] = 0x20061 | (3 << 10);
    tep->hdr[4] = 0xff000;
 
@@ -547,24 +544,25 @@ nvc0_program_create_tfb_state(const struct nv50_ir_prog_info *info,
    return tfb;
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 static void
 nvc0_program_dump(struct nvc0_program *prog)
 {
    unsigned pos;
 
    if (prog->type != PIPE_SHADER_COMPUTE) {
+      _debug_printf("dumping HDR for type %i\n", prog->type);
       for (pos = 0; pos < ARRAY_SIZE(prog->hdr); ++pos)
-         debug_printf("HDR[%02"PRIxPTR"] = 0x%08x\n",
+         _debug_printf("HDR[%02"PRIxPTR"] = 0x%08x\n",
                       pos * sizeof(prog->hdr[0]), prog->hdr[pos]);
    }
-   debug_printf("shader binary code (0x%x bytes):", prog->code_size);
+   _debug_printf("shader binary code (0x%x bytes):", prog->code_size);
    for (pos = 0; pos < prog->code_size / 4; ++pos) {
       if ((pos % 8) == 0)
-         debug_printf("\n");
-      debug_printf("%08x ", prog->code[pos]);
+         _debug_printf("\n");
+      _debug_printf("%08x ", prog->code[pos]);
    }
-   debug_printf("\n");
+   _debug_printf("\n");
 }
 #endif
 
@@ -581,10 +579,22 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
 
    info->type = prog->type;
    info->target = chipset;
-   info->bin.sourceRep = PIPE_SHADER_IR_TGSI;
-   info->bin.source = (void *)prog->pipe.tokens;
 
-#ifdef DEBUG
+   info->bin.sourceRep = prog->pipe.type;
+   switch (prog->pipe.type) {
+   case PIPE_SHADER_IR_TGSI:
+      info->bin.source = (void *)prog->pipe.tokens;
+      break;
+   case PIPE_SHADER_IR_NIR:
+      info->bin.source = (void *)nir_shader_clone(NULL, prog->pipe.ir.nir);
+      break;
+   default:
+      assert(!"unsupported IR!");
+      free(info);
+      return false;
+   }
+
+#ifndef NDEBUG
    info->target = debug_get_num_option("NV50_PROG_CHIPSET", chipset);
    info->optLevel = debug_get_num_option("NV50_PROG_OPTIMIZE", 3);
    info->dbgFlags = debug_get_num_option("NV50_PROG_DEBUG", 0);
@@ -704,12 +714,14 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
                       prog->num_gprs, info->bin.instructions,
                       info->bin.codeSize);
 
-#ifdef DEBUG
+#ifndef NDEBUG
    if (debug_get_option("NV50_PROG_CHIPSET", NULL) && info->dbgFlags)
       nvc0_program_dump(prog);
 #endif
 
 out:
+   if (info->bin.sourceRep == PIPE_SHADER_IR_NIR)
+      ralloc_free((void *)info->bin.source);
    FREE(info);
    return !ret;
 }
@@ -868,7 +880,7 @@ nvc0_program_upload(struct nvc0_context *nvc0, struct nvc0_program *prog)
 
    nvc0_program_upload_code(nvc0, prog);
 
-#ifdef DEBUG
+#ifndef NDEBUG
    if (debug_get_bool_option("NV50_PROG_DEBUG", false))
       nvc0_program_dump(prog);
 #endif

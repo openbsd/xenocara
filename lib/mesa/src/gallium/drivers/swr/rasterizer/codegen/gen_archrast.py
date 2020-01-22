@@ -27,11 +27,11 @@ import re
 from gen_common import *
 
 def parse_event_fields(lines, idx, event_dict):
-    field_names = []
-    field_types = []
+    """
+        Parses lines from a proto file that contain an event definition and stores it in event_dict
+    """
+    fields = []
     end_of_event = False
-
-    num_fields = 0
 
     # record all fields in event definition.
     # note: we don't check if there's a leading brace.
@@ -39,22 +39,36 @@ def parse_event_fields(lines, idx, event_dict):
         line = lines[idx].rstrip()
         idx += 1
 
-        field = re.match(r'(\s*)(\w+)(\s*)(\w+)', line)
+        # ex 1: uint32_t    numSampleCLZExecuted; // number of sample_cl_z instructions executed
+        # ex 2: char        reason[256]; // size of reason
+        match = re.match(r'^(\s*)([\w\*]+)(\s+)([\w]+)(\[\d+\])*;\s*(\/\/.*)*$', line)
+        # group 1 -
+        # group 2 type
+        # group 3 -
+        # group 4 name
+        # group 5 [array size]
+        # group 6 //comment
 
-        if field:
-            field_types.append(field.group(2))
-            field_names.append(field.group(4))
-            num_fields += 1
+        if match:
+            field = {
+                "type": match.group(2),
+                "name": match.group(4),
+                "size": int(match.group(5)[1:-1]) if match.group(5) else 1,
+                "desc": match.group(6)[2:].strip() if match.group(6) else "",
+            }
+            fields.append(field)
 
         end_of_event = re.match(r'(\s*)};', line)
 
-    event_dict['field_types'] = field_types
-    event_dict['field_names'] = field_names
-    event_dict['num_fields'] = num_fields
+    event_dict['fields'] = fields
+    event_dict['num_fields'] = len(fields)
 
     return idx
 
 def parse_enums(lines, idx, event_dict):
+    """
+        Parses lines from a proto file that contain an enum definition and stores it in event_dict
+    """
     enum_names = []
     end_of_enum = False
 
@@ -77,145 +91,238 @@ def parse_enums(lines, idx, event_dict):
     event_dict['names'] = enum_names
     return idx
 
-def parse_protos(protos, filename):
+def parse_protos(files, verbose=False):
+    """
+        Parses a proto file and returns a dictionary of event definitions
+    """
 
-    with open(filename, 'r') as f:
-        lines=f.readlines()
+    # Protos structure:
+    #
+    # {
+    #   "events": {
+    #     "defs": {     // dict of event definitions where keys are 'group_name::event_name"
+    #       ...,
+    #       "ApiStat::DrawInfoEvent": {
+    #         "id": 3,
+    #         "group": "ApiStat",
+    #         "name": "DrawInfoEvent",  // name of event without 'group_name::' prefix
+    #         "desc": "",
+    #         "fields": [
+    #           {
+    #             "type": "uint32_t",
+    #             "name": "drawId",
+    #             "size": 1,
+    #             "desc": "",
+    #           },
+    #           ...
+    #         ]
+    #       },
+    #       ...
+    #     },
+    #     "groups": {   // dict of groups with lists of event keys
+    #       "ApiStat": [
+    #         "ApiStat::DispatchEvent",
+    #         "ApiStat::DrawInfoEvent",
+    #         ...
+    #       ],
+    #       "Framework": [
+    #         "Framework::ThreadStartApiEvent",
+    #         "Framework::ThreadStartWorkerEvent",
+    #         ...
+    #       ],
+    #       ...
+    #     },
+    #     "map": {  // map of event ids to match archrast output to event key
+    #       "1": "Framework::ThreadStartApiEvent",
+    #       "2": "Framework::ThreadStartWorkerEvent",
+    #       "3": "ApiStat::DrawInfoEvent",
+    #       ...
+    #     }
+    #   },
+    #   "enums": { ... }    // enums follow similar defs, map (groups?) structure
+    # }
 
-        idx = 0
+    protos = {
+        'events': {
+            'defs': {},             # event dictionary containing events with their fields
+            'map': {},              # dictionary to map event ids to event names
+            'groups': {}            # event keys stored by groups
+        },
+        'enums': {
+            'defs': {},
+            'map': {}
+        }
+    }
 
-        eventId = 0
-        raw_text = []
-        while idx < len(lines):
-            line = lines[idx].rstrip()
-            idx += 1
+    event_id = 0
+    enum_id = 0
 
-            # search for event definitions.
-            match = re.match(r'(\s*)event(\s*)(\w+)', line)
+    if type(files) is not list:
+        files = [files]
 
-            if match:
-                eventId += 1
-                event_name = match.group(3)
-                protos['event_names'].append(event_name)
+    for filename in files:
+        if verbose:
+            print("Parsing proto file: %s" % os.path.normpath(filename))
 
-                protos['events'][event_name] = {}
-                protos['events'][event_name]['event_id'] = eventId
-                idx = parse_event_fields(lines, idx, protos['events'][event_name])
+        with open(filename, 'r') as f:
+            lines = f.readlines()
+            in_brief = False
+            brief = []
+            idx = 0
+            while idx < len(lines):
+                line = lines[idx].strip()
+                idx += 1
 
-            # search for enums.
-            match = re.match(r'(\s*)enum(\s*)(\w+)', line)
+                # If currently processing a brief, keep processing or change state
+                if in_brief:
+                    match = re.match(r'^\s*\/\/\/\s*(.*)$', line)                   # i.e. "/// more event desc..."
+                    if match:
+                        brief.append(match.group(1).strip())
+                        continue
+                    else:
+                        in_brief = False
 
-            if match:
-                enum_name = match.group(3)
-                protos['enum_names'].append(enum_name)
+                # Match event/enum brief
+                match = re.match(r'^\s*\/\/\/\s*@(brief|breif)\s*(.*)$', line)       # i.e. "///@brief My event desc..."
+                if match:
+                    in_brief = True
+                    brief.append(match.group(2).strip())
+                    continue
 
-                protos['enums'][enum_name] = {}
-                idx = parse_enums(lines, idx, protos['enums'][enum_name])
+                # Match event definition
+                match = re.match(r'event(\s*)(((\w*)::){0,1}(\w+))', line)          # i.e. "event SWTag::CounterEvent"
+                if match:
+                    event_id += 1
+
+                    # Parse event attributes
+                    event_key = match.group(2)                                      # i.e. SWTag::CounterEvent
+                    event_group = match.group(4) if match.group(4) else ""          # i.e. SWTag
+                    event_name = match.group(5)                                     # i.e. CounterEvent
+
+                    # Define event attributes
+                    event = {
+                        'id': event_id,
+                        'group': event_group,
+                        'name': event_name,
+                        'desc': ' '.join(brief)
+                    }
+                    # Add period at end of event desc if necessary
+                    if event["desc"] and event["desc"][-1] != '.':
+                        event["desc"] += '.'
+
+                    # Reset brief
+                    brief = []
+
+                    # Now add event fields
+                    idx = parse_event_fields(lines, idx, event)
+
+                    # Register event and mapping
+                    protos['events']['defs'][event_key] = event
+                    protos['events']['map'][event_id] = event_key
+
+                    continue
+
+                # Match enum definition
+                match = re.match(r'enum(\s*)(\w+)', line)
+                if match:
+                    enum_id += 1
+
+                    # Parse enum attributes
+                    enum_name = match.group(2)
+
+                    # Define enum attr
+                    enum = {
+                        'name': enum_name,
+                        'desc': ' '.join(brief)
+                    }
+                    # Add period at end of event desc if necessary
+                    if enum["desc"] and enum["desc"][-1] != '.':
+                        enum["desc"] += '.'
+
+                    # Reset brief
+                    brief = []
+
+                    # Now add enum fields
+                    idx = parse_enums(lines, idx, enum)
+
+                    # Register enum and mapping
+                    protos['enums']['defs'][enum_name] = enum
+                    protos['enums']['map'][enum_id] = enum_name
+
+                    continue
+
+    # Sort and group events
+    event_groups = protos['events']['groups']
+    for key in sorted(protos['events']['defs']):
+        group = protos['events']['defs'][key]['group']
+        if group not in event_groups:
+            event_groups[group] = []
+        event_groups[group].append(key)
+
+    return protos
+
 
 def main():
 
     # Parse args...
     parser = ArgumentParser()
-    parser.add_argument('--proto', '-p', help='Path to proto file', required=True)
-    parser.add_argument('--proto_private', '-pp', help='Path to private proto file', required=True)
-    parser.add_argument('--output', '-o', help='Output filename (i.e. event.hpp)', required=True)
-    parser.add_argument('--gen_event_hpp', help='Generate event header', action='store_true', default=False)
-    parser.add_argument('--gen_event_cpp', help='Generate event cpp', action='store_true', default=False)
-    parser.add_argument('--gen_eventhandler_hpp', help='Generate eventhandler header', action='store_true', default=False)
-    parser.add_argument('--gen_eventhandlerfile_hpp', help='Generate eventhandler header for writing to files', action='store_true', default=False)
+    parser.add_argument("--proto", "-p", dest="protos", nargs='+', help="Path to all proto file(s) to process. Accepts one or more paths (i.e. events.proto and events_private.proto)", required=True)
+    parser.add_argument("--output-dir", help="Output dir (defaults to ./codegen). Will create folder if it does not exist.", required=False, default="codegen")
+    parser.add_argument("--verbose", "-v", help="Verbose", action="store_true")
     args = parser.parse_args()
 
-    proto_filename = args.proto
-    proto_private_filename = args.proto_private
+    if not os.path.exists(args.output_dir):
+        MakeDir(args.output_dir)
 
-    (output_dir, output_filename) = os.path.split(args.output)
+    for f in args.protos:
+        if not os.path.exists(f):
+            print('Error: Could not find proto file %s' % f, file=sys.stderr)
+            return 1
 
-    if not output_dir:
-        output_dir = '.'
+    # Parse each proto file and add to protos container
+    protos = parse_protos(args.protos, args.verbose)
 
-    #print('output_dir = %s' % output_dir, file=sys.stderr)
-    #print('output_filename = %s' % output_filename, file=sys.stderr)
-
-    if not os.path.exists(proto_filename):
-        print('Error: Could not find proto file %s' % proto_filename, file=sys.stderr)
-        return 1
-
-    if not os.path.exists(proto_private_filename):
-        print('Error: Could not find private proto file %s' % proto_private_filename, file=sys.stderr)
-        return 1
-
-    final_output_dir = output_dir
-    MakeDir(final_output_dir)
-    output_dir = MakeTmpDir('_codegen')
-
-    protos = {}
-    protos['events'] = {}       # event dictionary containing events with their fields
-    protos['event_names'] = []  # needed to keep events in order parsed. dict is not ordered.
-    protos['enums'] = {}
-    protos['enum_names'] = []
-
-    parse_protos(protos, proto_filename)
-    parse_protos(protos, proto_private_filename)
+    files = [
+        ["gen_ar_event.hpp", ""],
+        ["gen_ar_event.cpp", ""],
+        ["gen_ar_eventhandler.hpp", "gen_ar_event.hpp"],
+        ["gen_ar_eventhandlerfile.hpp", "gen_ar_eventhandler.hpp"]
+    ]
 
     rval = 0
 
     try:
-        # Generate event header
-        if args.gen_event_hpp:
-            curdir = os.path.dirname(os.path.abspath(__file__))
-            template_file = os.sep.join([curdir, 'templates', 'gen_ar_event.hpp'])
-            output_fullpath = os.sep.join([output_dir, output_filename])
+        # Delete existing files
+        for f in files:
+            filename = f[0]
+            output_fullpath = os.path.join(args.output_dir, filename)
+            if os.path.exists(output_fullpath):
+                if args.verbose:
+                    print("Deleting existing file: %s" % output_fullpath)
+                os.remove(output_fullpath)
 
+        # Generate files from templates
+        print("Generating c++ from proto files...")
+        for f in files:
+            filename = f[0]
+            event_header = f[1]
+            curdir = os.path.dirname(os.path.abspath(__file__))
+            template_file = os.path.join(curdir, 'templates', filename)
+            output_fullpath = os.path.join(args.output_dir, filename)
+
+            if args.verbose:
+                print("Generating: %s" % output_fullpath)
             MakoTemplateWriter.to_file(template_file, output_fullpath,
                     cmdline=sys.argv,
-                    filename=output_filename,
-                    protos=protos)
+                    filename=filename,
+                    protos=protos,
+                    event_header=event_header)
 
-        # Generate event implementation
-        if args.gen_event_cpp:
-            curdir = os.path.dirname(os.path.abspath(__file__))
-            template_file = os.sep.join([curdir, 'templates', 'gen_ar_event.cpp'])
-            output_fullpath = os.sep.join([output_dir, output_filename])
-
-            MakoTemplateWriter.to_file(template_file, output_fullpath,
-                    cmdline=sys.argv,
-                    filename=output_filename,
-                    protos=protos)
-
-        # Generate event handler header
-        if args.gen_eventhandler_hpp:
-            curdir = os.path.dirname(os.path.abspath(__file__))
-            template_file = os.sep.join([curdir, 'templates', 'gen_ar_eventhandler.hpp'])
-            output_fullpath = os.sep.join([output_dir, output_filename])
-
-            MakoTemplateWriter.to_file(template_file, output_fullpath,
-                    cmdline=sys.argv,
-                    filename=output_filename,
-                    event_header='gen_ar_event.hpp',
-                    protos=protos)
-
-        # Generate event handler header
-        if args.gen_eventhandlerfile_hpp:
-            curdir = os.path.dirname(os.path.abspath(__file__))
-            template_file = os.sep.join([curdir, 'templates', 'gen_ar_eventhandlerfile.hpp'])
-            output_fullpath = os.sep.join([output_dir, output_filename])
-
-            MakoTemplateWriter.to_file(template_file, output_fullpath,
-                    cmdline=sys.argv,
-                    filename=output_filename,
-                    event_header='gen_ar_eventhandler.hpp',
-                    protos=protos)
-
-        rval = CopyDirFilesIfDifferent(output_dir, final_output_dir)
-
-    except:
+    except Exception as e:
+        print(e)
         rval = 1
-
-    finally:
-        DeleteDirTree(output_dir)
 
     return rval
 
 if __name__ == '__main__':
     sys.exit(main())
-

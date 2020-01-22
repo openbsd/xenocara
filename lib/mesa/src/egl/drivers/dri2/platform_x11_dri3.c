@@ -155,7 +155,8 @@ dri3_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
       return NULL;
    }
 
-   if (!dri2_init_surface(&dri3_surf->surf.base, disp, type, conf, attrib_list, false))
+   if (!dri2_init_surface(&dri3_surf->surf.base, disp, type, conf,
+                          attrib_list, false, native_surface))
       goto cleanup_surf;
 
    if (type == EGL_PBUFFER_BIT) {
@@ -402,13 +403,15 @@ dri3_create_image_khr(_EGLDriver *drv, _EGLDisplay *disp,
 static void
 dri3_flush_front_buffer(__DRIdrawable *driDrawable, void *loaderPrivate)
 {
+   struct loader_dri3_drawable *draw = loaderPrivate;
+   (void) driDrawable;
+
    /* There does not seem to be any kind of consensus on whether we should
     * support front-buffer rendering or not:
     * http://lists.freedesktop.org/archives/mesa-dev/2013-June/040129.html
     */
-   _eglLog(_EGL_WARNING, "FIXME: egl/x11 doesn't support front buffer rendering.");
-   (void) driDrawable;
-   (void) loaderPrivate;
+   if (!draw->is_pixmap)
+      _eglLog(_EGL_WARNING, "FIXME: egl/x11 doesn't support front buffer rendering.");
 }
 
 const __DRIimageLoaderExtension dri3_image_loader_extension = {
@@ -445,7 +448,7 @@ dri3_copy_buffers(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf,
 }
 
 static int
-dri3_query_buffer_age(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf)
+dri3_query_buffer_age(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf)
 {
    struct dri3_egl_surface *dri3_surf = dri3_egl_surface(surf);
 
@@ -453,7 +456,7 @@ dri3_query_buffer_age(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf)
 }
 
 static EGLBoolean
-dri3_query_surface(_EGLDriver *drv, _EGLDisplay *dpy,
+dri3_query_surface(_EGLDriver *drv, _EGLDisplay *disp,
                    _EGLSurface *surf, EGLint attribute,
                    EGLint *value)
 {
@@ -468,7 +471,7 @@ dri3_query_surface(_EGLDriver *drv, _EGLDisplay *dpy,
       break;
    }
 
-   return _eglQuerySurface(drv, dpy, surf, attribute, value);
+   return _eglQuerySurface(drv, disp, surf, attribute, value);
 }
 
 static __DRIdrawable *
@@ -480,9 +483,9 @@ dri3_get_dri_drawable(_EGLSurface *surf)
 }
 
 static void
-dri3_close_screen_notify(_EGLDisplay *dpy)
+dri3_close_screen_notify(_EGLDisplay *disp)
 {
-   struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
+   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
 
    loader_dri3_close_screen(dri2_dpy->dri_screen);
 }
@@ -498,7 +501,6 @@ struct dri2_egl_display_vtbl dri3_x11_display_vtbl = {
    .swap_buffers = dri3_swap_buffers,
    .swap_buffers_with_damage = dri2_fallback_swap_buffers_with_damage,
    .swap_buffers_region = dri2_fallback_swap_buffers_region,
-   .set_damage_region = dri2_fallback_set_damage_region,
    .post_sub_buffer = dri2_fallback_post_sub_buffer,
    .copy_buffers = dri3_copy_buffers,
    .query_buffer_age = dri3_query_buffer_age,

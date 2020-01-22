@@ -79,7 +79,7 @@ create_iview(struct radv_cmd_buffer *cmd_buffer,
 					     .baseArrayLayer = surf->layer,
 					     .layerCount = 1
 				     },
-			     });
+			     }, NULL);
 }
 
 static void
@@ -256,13 +256,17 @@ radv_meta_blit2d_normal_dst(struct radv_cmd_buffer *cmd_buffer,
 		unsigned i;
 		for_each_bit(i, dst->aspect_mask) {
 			unsigned aspect_mask = 1u << i;
+			unsigned src_aspect_mask = aspect_mask;
 			VkFormat depth_format = 0;
 			if (aspect_mask == VK_IMAGE_ASPECT_STENCIL_BIT)
 				depth_format = vk_format_stencil_only(dst->image->vk_format);
 			else if (aspect_mask == VK_IMAGE_ASPECT_DEPTH_BIT)
 				depth_format = vk_format_depth_only(dst->image->vk_format);
+			else if (src_img)
+				src_aspect_mask = src_img->aspect_mask;
+
 			struct blit2d_src_temps src_temps;
-			blit2d_bind_src(cmd_buffer, src_img, src_buf, &src_temps, src_type, depth_format, aspect_mask, log2_samples);
+			blit2d_bind_src(cmd_buffer, src_img, src_buf, &src_temps, src_type, depth_format, src_aspect_mask, log2_samples);
 
 			struct blit2d_dst_temps dst_temps;
 			blit2d_bind_dst(cmd_buffer, dst, rects[r].dst_x + rects[r].width,
@@ -280,7 +284,10 @@ radv_meta_blit2d_normal_dst(struct radv_cmd_buffer *cmd_buffer,
 					VK_SHADER_STAGE_VERTEX_BIT, 0, 16,
 					vertex_push_constants);
 
-			if (aspect_mask == VK_IMAGE_ASPECT_COLOR_BIT) {
+			if (aspect_mask == VK_IMAGE_ASPECT_COLOR_BIT ||
+			    aspect_mask == VK_IMAGE_ASPECT_PLANE_0_BIT ||
+			    aspect_mask == VK_IMAGE_ASPECT_PLANE_1_BIT ||
+			    aspect_mask == VK_IMAGE_ASPECT_PLANE_2_BIT) {
 				unsigned fs_key = radv_format_meta_fs_key(dst_temps.iview.vk_format);
 				unsigned dst_layout = radv_meta_dst_layout_from_layout(dst->current_layout);
 
@@ -691,7 +698,7 @@ radv_device_finish_meta_blit2d_state(struct radv_device *device)
 				       state->blit2d_stencil_only_rp[j], &state->alloc);
 	}
 
-	for (unsigned log2_samples = 0; log2_samples < 1 + MAX_SAMPLES_LOG2; ++log2_samples) {
+	for (unsigned log2_samples = 0; log2_samples < MAX_SAMPLES_LOG2; ++log2_samples) {
 		for (unsigned src = 0; src < BLIT2D_NUM_SRC_TYPES; src++) {
 			radv_DestroyPipelineLayout(radv_device_to_handle(device),
 						   state->blit2d[log2_samples].p_layouts[src],
@@ -807,8 +814,8 @@ blit2d_init_color_pipeline(struct radv_device *device,
 							.attachment = VK_ATTACHMENT_UNUSED,
 							.layout = layout,
 						},
-						.preserveAttachmentCount = 1,
-						.pPreserveAttachments = (uint32_t[]) { 0 },
+						.preserveAttachmentCount = 0,
+						.pPreserveAttachments = NULL,
 						},
 						.dependencyCount = 0,
 					}, &device->meta_state.alloc, &device->meta_state.blit2d_render_passes[fs_key][dst_layout]);
@@ -978,8 +985,8 @@ blit2d_init_depth_only_pipeline(struct radv_device *device,
 									       .attachment = 0,
 									       .layout = layout,
 								       },
-								       .preserveAttachmentCount = 1,
-								       .pPreserveAttachments = (uint32_t[]) { 0 },
+								       .preserveAttachmentCount = 0,
+								       .pPreserveAttachments = NULL,
 							       },
 							       .dependencyCount = 0,
 							}, &device->meta_state.alloc, &device->meta_state.blit2d_depth_only_rp[ds_layout]);
@@ -1148,8 +1155,8 @@ blit2d_init_stencil_only_pipeline(struct radv_device *device,
 									       .attachment = 0,
 									       .layout = layout,
 								       },
-								       .preserveAttachmentCount = 1,
-								       .pPreserveAttachments = (uint32_t[]) { 0 },
+								       .preserveAttachmentCount = 0,
+								       .pPreserveAttachments = NULL,
 							       },
 							       .dependencyCount = 0,
 						       }, &device->meta_state.alloc, &device->meta_state.blit2d_stencil_only_rp[ds_layout]);
@@ -1303,7 +1310,7 @@ radv_device_init_meta_blit2d_state(struct radv_device *device, bool on_demand)
 	VkResult result;
 	bool create_3d = device->physical_device->rad_info.chip_class >= GFX9;
 
-	for (unsigned log2_samples = 0; log2_samples < 1 + MAX_SAMPLES_LOG2; log2_samples++) {
+	for (unsigned log2_samples = 0; log2_samples < MAX_SAMPLES_LOG2; log2_samples++) {
 		for (unsigned src = 0; src < BLIT2D_NUM_SRC_TYPES; src++) {
 			if (src == BLIT2D_SRC_TYPE_IMAGE_3D && !create_3d)
 				continue;

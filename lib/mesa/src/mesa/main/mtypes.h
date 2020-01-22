@@ -603,6 +603,7 @@ struct gl_hint_attrib
    GLenum16 TextureCompression;   /**< GL_ARB_texture_compression */
    GLenum16 GenerateMipmap;       /**< GL_SGIS_generate_mipmap */
    GLenum16 FragmentShaderDerivative; /**< GL_ARB_fragment_shader */
+   GLuint MaxShaderCompilerThreads; /**< GL_ARB_parallel_shader_compile */
 };
 
 
@@ -1339,7 +1340,9 @@ typedef enum
    USAGE_SHADER_STORAGE_BUFFER = 0x8,
    USAGE_TRANSFORM_FEEDBACK_BUFFER = 0x10,
    USAGE_PIXEL_PACK_BUFFER = 0x20,
-   USAGE_DISABLE_MINMAX_CACHE = 0x40,
+   USAGE_ARRAY_BUFFER = 0x40,
+   USAGE_ELEMENT_ARRAY_BUFFER = 0x80,
+   USAGE_DISABLE_MINMAX_CACHE = 0x100,
 } gl_buffer_usage;
 
 
@@ -2102,10 +2105,6 @@ struct gl_program
    /** Texture units used for samplerExternalOES */
    GLbitfield ExternalSamplersUsed;
 
-   /* Fragement shader only fields */
-   GLboolean OriginUpperLeft;
-   GLboolean PixelCenterInteger;
-
    /** Named parameters, constants, etc. from program text */
    struct gl_program_parameter_list *Parameters;
 
@@ -2169,6 +2168,11 @@ struct gl_program
 
          struct gl_uniform_block **UniformBlocks;
          struct gl_uniform_block **ShaderStorageBlocks;
+
+         /**
+          * Bitmask of shader storage blocks not declared as read-only.
+          */
+         unsigned ShaderStorageBlocksWriteAccess;
 
          /** Which texture target is being sampled
           * (TEXTURE_1D/2D/3D/etc_INDEX)
@@ -2512,6 +2516,12 @@ struct gl_shader_info
        * ARB_compute_variable_group_size.
        */
       bool LocalSizeVariable;
+
+      /*
+       * Arrangement of invocations used to calculate derivatives in a compute
+       * shader.  From NV_compute_shader_derivatives.
+       */
+      enum gl_derivative_group DerivativeGroup;
    } Comp;
 };
 
@@ -2946,8 +2956,13 @@ struct gl_shader_program
 
    /**
     * Is the application intending to glGetProgramBinary this program?
+    *
+    * BinaryRetrievableHint is the currently active hint that gets set
+    * during initialization and after linking and BinaryRetrievableHintPending
+    * is the hint set by the user to be active when program is linked next time.
     */
-   GLboolean BinaryRetreivableHint;
+   GLboolean BinaryRetrievableHint;
+   GLboolean BinaryRetrievableHintPending;
 
    /**
     * Indicates whether program can be bound for individual pipeline stages
@@ -3506,6 +3521,7 @@ struct gl_framebuffer
 
    GLbitfield _IntegerBuffers;  /**< Which color buffers are integer valued */
    GLbitfield _RGBBuffers;  /**< Which color buffers have baseformat == RGB */
+   GLbitfield _FP32Buffers; /**< Which color buffers are FP32 */
 
    /* ARB_color_buffer_float */
    GLboolean _AllColorBuffersFixedPoint; /* no integer, no float */
@@ -3638,7 +3654,7 @@ struct gl_program_constants
 struct gl_constants
 {
    GLuint MaxTextureMbytes;      /**< Max memory per image, in MB */
-   GLuint MaxTextureLevels;      /**< Max mipmap levels. */
+   GLuint MaxTextureSize;        /**< Max 1D/2D texture size, in pixels*/
    GLuint Max3DTextureLevels;    /**< Max mipmap levels for 3D textures */
    GLuint MaxCubeTextureLevels;  /**< Max mipmap levels for cube textures */
    GLuint MaxArrayTextureLayers; /**< Max layers in array textures */
@@ -3896,8 +3912,12 @@ struct gl_constants
     */
    GLboolean GLSLSkipStrictMaxUniformLimitCheck;
 
-   /** Whether gl_FragCoord and gl_FrontFacing are system values. */
+   /**
+    * Whether gl_FragCoord, gl_PointCoord and gl_FrontFacing
+    * are system values.
+    **/
    bool GLSLFragCoordIsSysVal;
+   bool GLSLPointCoordIsSysVal;
    bool GLSLFrontFacingIsSysVal;
 
    /**
@@ -4112,6 +4132,11 @@ struct gl_constants
 
    /** GL_ARB_gl_spirv */
    struct spirv_supported_capabilities SpirVCapabilities;
+
+   /** GL_ARB_spirv_extensions */
+   struct spirv_supported_extensions *SpirVExtensions;
+
+   char *VendorOverride;
 };
 
 
@@ -4204,6 +4229,7 @@ struct gl_extensions
    GLboolean ARB_shadow;
    GLboolean ARB_sparse_buffer;
    GLboolean ARB_stencil_texturing;
+   GLboolean ARB_spirv_extensions;
    GLboolean ARB_sync;
    GLboolean ARB_tessellation_shader;
    GLboolean ARB_texture_border_clamp;
@@ -4248,6 +4274,7 @@ struct gl_extensions
    GLboolean EXT_depth_bounds_test;
    GLboolean EXT_disjoint_timer_query;
    GLboolean EXT_draw_buffers2;
+   GLboolean EXT_float_blend;
    GLboolean EXT_framebuffer_multisample;
    GLboolean EXT_framebuffer_multisample_blit_scaled;
    GLboolean EXT_framebuffer_sRGB;
@@ -4263,17 +4290,22 @@ struct gl_extensions
    GLboolean EXT_render_snorm;
    GLboolean EXT_semaphore;
    GLboolean EXT_semaphore_fd;
+   GLboolean EXT_shader_image_load_formatted;
+   GLboolean EXT_shader_image_load_store;
    GLboolean EXT_shader_integer_mix;
    GLboolean EXT_shader_samples_identical;
    GLboolean EXT_sRGB;
    GLboolean EXT_stencil_two_side;
    GLboolean EXT_texture_array;
+   GLboolean EXT_texture_buffer_object;
    GLboolean EXT_texture_compression_latc;
    GLboolean EXT_texture_compression_s3tc;
+   GLboolean EXT_texture_compression_s3tc_srgb;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
    GLboolean EXT_texture_mirror_clamp;
+   GLboolean EXT_texture_shadow_lod;
    GLboolean EXT_texture_shared_exponent;
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
@@ -4294,6 +4326,7 @@ struct gl_extensions
    GLboolean OES_texture_view;
    GLboolean OES_viewport_array;
    /* vendor extensions */
+   GLboolean AMD_compressed_ATC_texture;
    GLboolean AMD_framebuffer_multisample_advanced;
    GLboolean AMD_depth_clamp_separate;
    GLboolean AMD_performance_monitor;
@@ -4325,6 +4358,7 @@ struct gl_extensions
    GLboolean EXT_shader_framebuffer_fetch_non_coherent;
    GLboolean MESA_shader_integer_functions;
    GLboolean MESA_ycbcr_texture;
+   GLboolean NV_compute_shader_derivatives;
    GLboolean NV_conditional_render;
    GLboolean NV_fill_rectangle;
    GLboolean NV_fog_distance;
@@ -4427,7 +4461,7 @@ struct gl_matrix_stack
 #define _NEW_TRANSFORM         (1u << 17)  /**< gl_context::Transform */
 #define _NEW_VIEWPORT          (1u << 18)  /**< gl_context::Viewport */
 #define _NEW_TEXTURE_STATE     (1u << 19)  /**< gl_context::Texture (states only) */
-#define _NEW_ARRAY             (1u << 20)  /**< gl_context::Array */
+/* gap */
 #define _NEW_RENDERMODE        (1u << 21)  /**< gl_context::RenderMode, etc */
 #define _NEW_BUFFERS           (1u << 22)  /**< gl_context::Visual, DrawBuffer, */
 #define _NEW_CURRENT_ATTRIB    (1u << 23)  /**< gl_context::Current */
@@ -4948,6 +4982,11 @@ struct gl_context
     */
    struct gl_pipeline_object *_Shader;
 
+   /**
+    * NIR containing the functions that implement software fp64 support.
+    */
+   struct nir_shader *SoftFP64;
+
    struct gl_query_state Query;  /**< occlusion, timer queries */
 
    struct gl_transform_feedback_state TransformFeedback;
@@ -5101,7 +5140,6 @@ struct gl_context
    void *swtnl_context;
    struct vbo_context *vbo_context;
    struct st_context *st;
-   void *aelt_context;
    /*@}*/
 
    /**
@@ -5151,7 +5189,7 @@ struct gl_memory_info
    unsigned nr_device_memory_evictions; /**< # of evictions (monotonic counter) */
 };
 
-#ifdef DEBUG
+#ifndef NDEBUG
 extern int MESA_VERBOSE;
 extern int MESA_DEBUG_FLAGS;
 #else

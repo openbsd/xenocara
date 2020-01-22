@@ -31,6 +31,7 @@
 #include "util/u_memory.h"
 #include "util/u_string.h"
 #include "util/u_dl.h"
+#include "util/u_file.h"
 #include "util/xmlconfig.h"
 #include "util/xmlpool.h"
 
@@ -86,29 +87,19 @@ pipe_loader_base_release(struct pipe_loader_device **dev)
    *dev = NULL;
 }
 
-const struct drm_conf_ret *
-pipe_loader_configuration(struct pipe_loader_device *dev,
-                          enum drm_conf conf)
-{
-   return dev->ops->configuration(dev, conf);
-}
-
 void
 pipe_loader_load_options(struct pipe_loader_device *dev)
 {
    if (dev->option_info.info)
       return;
 
-   const char *xml_options = gallium_driinfo_xml;
-   const struct drm_conf_ret *xml_options_conf =
-      pipe_loader_configuration(dev, DRM_CONF_XML_OPTIONS);
-
-   if (xml_options_conf)
-      xml_options = xml_options_conf->val.val_pointer;
+   const char *xml_options = dev->ops->get_driconf_xml(dev);
+   if (!xml_options)
+      xml_options = gallium_driinfo_xml;
 
    driParseOptionInfo(&dev->option_info, xml_options);
    driParseConfigFiles(&dev->option_cache, &dev->option_info, 0,
-                       dev->driver_name, NULL);
+                       dev->driver_name, NULL, NULL, 0);
 }
 
 char *
@@ -147,22 +138,24 @@ pipe_loader_find_module(const char *driver_name,
    int len, ret;
 
    for (next = library_paths; *next; library_paths = next + 1) {
-      next = util_strchrnul(library_paths, ':');
+      next = strchrnul(library_paths, ':');
       len = next - library_paths;
 
       if (len)
-         ret = util_snprintf(path, sizeof(path), "%.*s/%s%s%s",
-                             len, library_paths,
-                             MODULE_PREFIX, driver_name, UTIL_DL_EXT);
+         ret = snprintf(path, sizeof(path), "%.*s/%s%s%s",
+                        len, library_paths,
+                        MODULE_PREFIX, driver_name, UTIL_DL_EXT);
       else
-         ret = util_snprintf(path, sizeof(path), "%s%s%s",
-                             MODULE_PREFIX, driver_name, UTIL_DL_EXT);
+         ret = snprintf(path, sizeof(path), "%s%s%s",
+                        MODULE_PREFIX, driver_name, UTIL_DL_EXT);
 
-      if (ret > 0 && ret < sizeof(path)) {
+      if (ret > 0 && ret < sizeof(path) && u_file_access(path, 0) != -1) {
          lib = util_dl_open(path);
          if (lib) {
             return lib;
          }
+         fprintf(stderr, "ERROR: Failed to load pipe driver at `%s': %s\n",
+                         path, util_dl_error());
       }
    }
 

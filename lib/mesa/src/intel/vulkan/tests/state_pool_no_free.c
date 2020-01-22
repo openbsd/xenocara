@@ -21,6 +21,8 @@
  * IN THE SOFTWARE.
  */
 
+#undef NDEBUG
+
 #include <pthread.h>
 
 #include "anv_private.h"
@@ -54,7 +56,7 @@ static void *alloc_states(void *_job)
 
 static void run_test()
 {
-   struct anv_instance instance;
+   struct anv_instance instance = { };
    struct anv_device device = {
       .instance = &instance,
    };

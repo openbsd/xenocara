@@ -83,6 +83,12 @@
  */
 
 
+#ifdef USE_LIBGLVND
+#define EGLAPI
+#undef PUBLIC
+#define PUBLIC
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -241,12 +247,12 @@ _eglCheckSync(_EGLDisplay *disp, _EGLSync *s, const char *msg)
  * Lookup and lock a display.
  */
 static inline _EGLDisplay *
-_eglLockDisplay(EGLDisplay display)
+_eglLockDisplay(EGLDisplay dpy)
 {
-   _EGLDisplay *dpy = _eglLookupDisplay(display);
-   if (dpy)
-      mtx_lock(&dpy->Mutex);
-   return dpy;
+   _EGLDisplay *disp = _eglLookupDisplay(dpy);
+   if (disp)
+      mtx_lock(&disp->Mutex);
+   return disp;
 }
 
 
@@ -254,9 +260,9 @@ _eglLockDisplay(EGLDisplay display)
  * Unlock a display.
  */
 static inline void
-_eglUnlockDisplay(_EGLDisplay *dpy)
+_eglUnlockDisplay(_EGLDisplay *disp)
 {
-   mtx_unlock(&dpy->Mutex);
+   mtx_unlock(&disp->Mutex);
 }
 
 static EGLBoolean
@@ -334,22 +340,16 @@ _eglConvertIntsToAttribs(const EGLint *int_list, EGLAttrib **out_attrib_list)
 static EGLint *
 _eglConvertAttribsToInt(const EGLAttrib *attr_list)
 {
+   size_t size = _eglNumAttribs(attr_list);
    EGLint *int_attribs = NULL;
 
    /* Convert attributes from EGLAttrib[] to EGLint[] */
-   if (attr_list) {
-      int i, size = 0;
-
-      while (attr_list[size] != EGL_NONE)
-         size += 2;
-
-      size += 1; /* add space for EGL_NONE */
-
+   if (size) {
       int_attribs = calloc(size, sizeof(int_attribs[0]));
       if (!int_attribs)
          return NULL;
 
-      for (i = 0; i < size; i++)
+      for (size_t i = 0; i < size; i++)
          int_attribs[i] = attr_list[i];
    }
    return int_attribs;
@@ -364,7 +364,7 @@ EGLDisplay EGLAPIENTRY
 eglGetDisplay(EGLNativeDisplayType nativeDisplay)
 {
    _EGLPlatformType plat;
-   _EGLDisplay *dpy;
+   _EGLDisplay *disp;
    void *native_display_ptr;
 
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL, EGL_NO_DISPLAY);
@@ -373,44 +373,52 @@ eglGetDisplay(EGLNativeDisplayType nativeDisplay)
    native_display_ptr = (void*) nativeDisplay;
 
    plat = _eglGetNativePlatform(native_display_ptr);
-   dpy = _eglFindDisplay(plat, native_display_ptr);
-   return _eglGetDisplayHandle(dpy);
+   disp = _eglFindDisplay(plat, native_display_ptr, NULL);
+   return _eglGetDisplayHandle(disp);
 }
 
 static EGLDisplay
 _eglGetPlatformDisplayCommon(EGLenum platform, void *native_display,
                              const EGLAttrib *attrib_list)
 {
-   _EGLDisplay *dpy;
+   _EGLDisplay *disp;
 
    switch (platform) {
 #ifdef HAVE_X11_PLATFORM
    case EGL_PLATFORM_X11_EXT:
-      dpy = _eglGetX11Display((Display*) native_display, attrib_list);
+      disp = _eglGetX11Display((Display*) native_display, attrib_list);
       break;
 #endif
 #ifdef HAVE_DRM_PLATFORM
    case EGL_PLATFORM_GBM_MESA:
-      dpy = _eglGetGbmDisplay((struct gbm_device*) native_display,
+      disp = _eglGetGbmDisplay((struct gbm_device*) native_display,
                               attrib_list);
       break;
 #endif
 #ifdef HAVE_WAYLAND_PLATFORM
    case EGL_PLATFORM_WAYLAND_EXT:
-      dpy = _eglGetWaylandDisplay((struct wl_display*) native_display,
+      disp = _eglGetWaylandDisplay((struct wl_display*) native_display,
                                   attrib_list);
       break;
 #endif
 #ifdef HAVE_SURFACELESS_PLATFORM
    case EGL_PLATFORM_SURFACELESS_MESA:
-      dpy = _eglGetSurfacelessDisplay(native_display, attrib_list);
+      disp = _eglGetSurfacelessDisplay(native_display, attrib_list);
       break;
 #endif
+#ifdef HAVE_ANDROID_PLATFORM
+   case EGL_PLATFORM_ANDROID_KHR:
+      disp = _eglGetAndroidDisplay(native_display, attrib_list);
+      break;
+#endif
+   case EGL_PLATFORM_DEVICE_EXT:
+      disp = _eglGetDeviceDisplay(native_display, attrib_list);
+      break;
    default:
       RETURN_EGL_ERROR(NULL, EGL_BAD_PARAMETER, NULL);
    }
 
-   return _eglGetDisplayHandle(dpy);
+   return _eglGetDisplayHandle(disp);
 }
 
 static EGLDisplay EGLAPIENTRY
@@ -418,16 +426,16 @@ eglGetPlatformDisplayEXT(EGLenum platform, void *native_display,
                          const EGLint *int_attribs)
 {
    EGLAttrib *attrib_list;
-   EGLDisplay display;
+   EGLDisplay disp;
 
    _EGL_FUNC_START(NULL, EGL_OBJECT_THREAD_KHR, NULL, EGL_NO_DISPLAY);
 
    if (_eglConvertIntsToAttribs(int_attribs, &attrib_list) != EGL_SUCCESS)
       RETURN_EGL_ERROR(NULL, EGL_BAD_ALLOC, NULL);
 
-   display = _eglGetPlatformDisplayCommon(platform, native_display, attrib_list);
+   disp = _eglGetPlatformDisplayCommon(platform, native_display, attrib_list);
    free(attrib_list);
-   return display;
+   return disp;
 }
 
 EGLDisplay EGLAPIENTRY
@@ -466,17 +474,17 @@ _eglAppendExtension(char **str, const char *ext)
  * the driver's Extensions string.
  */
 static void
-_eglCreateExtensionsString(_EGLDisplay *dpy)
+_eglCreateExtensionsString(_EGLDisplay *disp)
 {
 #define _EGL_CHECK_EXTENSION(ext)                                          \
    do {                                                                    \
-      if (dpy->Extensions.ext) {                                           \
+      if (disp->Extensions.ext) {                                           \
          _eglAppendExtension(&exts, "EGL_" #ext);                          \
-         assert(exts <= dpy->ExtensionsString + _EGL_MAX_EXTENSIONS_LEN);  \
+         assert(exts <= disp->ExtensionsString + _EGL_MAX_EXTENSIONS_LEN);  \
       }                                                                    \
    } while (0)
 
-   char *exts = dpy->ExtensionsString;
+   char *exts = disp->ExtensionsString;
 
    /* Please keep these sorted alphabetically. */
    _EGL_CHECK_EXTENSION(ANDROID_blob_cache);
@@ -509,8 +517,8 @@ _eglCreateExtensionsString(_EGLDisplay *dpy)
    _EGL_CHECK_EXTENSION(KHR_gl_texture_2D_image);
    _EGL_CHECK_EXTENSION(KHR_gl_texture_3D_image);
    _EGL_CHECK_EXTENSION(KHR_gl_texture_cubemap_image);
-   if (dpy->Extensions.KHR_image_base && dpy->Extensions.KHR_image_pixmap)
-      dpy->Extensions.KHR_image = EGL_TRUE;
+   if (disp->Extensions.KHR_image_base && disp->Extensions.KHR_image_pixmap)
+      disp->Extensions.KHR_image = EGL_TRUE;
    _EGL_CHECK_EXTENSION(KHR_image);
    _EGL_CHECK_EXTENSION(KHR_image_base);
    _EGL_CHECK_EXTENSION(KHR_image_pixmap);
@@ -519,12 +527,12 @@ _eglCreateExtensionsString(_EGLDisplay *dpy)
    _EGL_CHECK_EXTENSION(KHR_partial_update);
    _EGL_CHECK_EXTENSION(KHR_reusable_sync);
    _EGL_CHECK_EXTENSION(KHR_surfaceless_context);
-   if (dpy->Extensions.EXT_swap_buffers_with_damage)
+   if (disp->Extensions.EXT_swap_buffers_with_damage)
       _eglAppendExtension(&exts, "EGL_KHR_swap_buffers_with_damage");
    _EGL_CHECK_EXTENSION(EXT_pixel_format_float);
    _EGL_CHECK_EXTENSION(KHR_wait_sync);
 
-   if (dpy->Extensions.KHR_no_config_context)
+   if (disp->Extensions.KHR_no_config_context)
       _eglAppendExtension(&exts, "EGL_MESA_configless_context");
    _EGL_CHECK_EXTENSION(MESA_drm_image);
    _EGL_CHECK_EXTENSION(MESA_image_dma_buf_export);
@@ -542,29 +550,29 @@ _eglCreateExtensionsString(_EGLDisplay *dpy)
 }
 
 static void
-_eglCreateAPIsString(_EGLDisplay *dpy)
+_eglCreateAPIsString(_EGLDisplay *disp)
 {
 #define addstr(str) \
    { \
-      const size_t old_len = strlen(dpy->ClientAPIsString); \
+      const size_t old_len = strlen(disp->ClientAPIsString); \
       const size_t add_len = sizeof(str); \
-      const size_t max_len = sizeof(dpy->ClientAPIsString) - 1; \
+      const size_t max_len = sizeof(disp->ClientAPIsString) - 1; \
       if (old_len + add_len <= max_len) \
-         strcat(dpy->ClientAPIsString, str " "); \
+         strcat(disp->ClientAPIsString, str " "); \
       else \
-         assert(!"dpy->ClientAPIsString is not large enough"); \
+         assert(!"disp->ClientAPIsString is not large enough"); \
    }
 
-   if (dpy->ClientAPIs & EGL_OPENGL_BIT)
+   if (disp->ClientAPIs & EGL_OPENGL_BIT)
       addstr("OpenGL");
 
-   if (dpy->ClientAPIs & EGL_OPENGL_ES_BIT ||
-       dpy->ClientAPIs & EGL_OPENGL_ES2_BIT ||
-       dpy->ClientAPIs & EGL_OPENGL_ES3_BIT_KHR) {
+   if (disp->ClientAPIs & EGL_OPENGL_ES_BIT ||
+       disp->ClientAPIs & EGL_OPENGL_ES2_BIT ||
+       disp->ClientAPIs & EGL_OPENGL_ES3_BIT_KHR) {
       addstr("OpenGL_ES");
    }
 
-   if (dpy->ClientAPIs & EGL_OPENVG_BIT)
+   if (disp->ClientAPIs & EGL_OPENVG_BIT)
       addstr("OpenVG");
 
 #undef addstr
@@ -668,6 +676,10 @@ eglTerminate(EGLDisplay dpy)
       /* do not reset disp->Driver */
       disp->ClientAPIsString[0] = 0;
       disp->Initialized = EGL_FALSE;
+
+      /* Reset blob cache funcs on terminate. */
+      disp->BlobCacheSet = NULL;
+      disp->BlobCacheGet = NULL;
    }
 
    RETURN_EGL_SUCCESS(disp, EGL_TRUE);
@@ -718,7 +730,11 @@ eglGetConfigs(EGLDisplay dpy, EGLConfig *configs,
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_FALSE);
 
    _EGL_CHECK_DISPLAY(disp, EGL_FALSE, drv);
-   ret = drv->API.GetConfigs(drv, disp, configs, config_size, num_config);
+
+   if (!num_config)
+      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_FALSE);
+
+   ret = _eglGetConfigs(drv, disp, configs, config_size, num_config);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -735,8 +751,12 @@ eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs,
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_FALSE);
 
    _EGL_CHECK_DISPLAY(disp, EGL_FALSE, drv);
-   ret = drv->API.ChooseConfig(drv, disp, attrib_list, configs,
-                               config_size, num_config);
+
+   if (!num_config)
+      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_FALSE);
+
+   ret = _eglChooseConfig(drv, disp, attrib_list, configs,
+                          config_size, num_config);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -754,7 +774,8 @@ eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_FALSE);
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_FALSE, drv);
-   ret = drv->API.GetConfigAttrib(drv, disp, conf, attribute, value);
+
+   ret = _eglGetConfigAttrib(drv, disp, conf, attribute, value);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -878,9 +899,36 @@ eglQueryContext(EGLDisplay dpy, EGLContext ctx,
    _EGL_FUNC_START(disp, EGL_OBJECT_CONTEXT_KHR, context, EGL_FALSE);
 
    _EGL_CHECK_CONTEXT(disp, context, EGL_FALSE, drv);
-   ret = drv->API.QueryContext(drv, disp, context, attribute, value);
+
+   ret = _eglQueryContext(drv, disp, context, attribute, value);
 
    RETURN_EGL_EVAL(disp, ret);
+}
+
+
+/* In EGL specs 1.4 and 1.5, at the end of sections 3.5.1 and 3.5.4, it says
+ * that if native_surface was already used to create a window or pixmap, we
+ * can't create a new one. This is what this function checks for.
+ */
+static bool
+_eglNativeSurfaceAlreadyUsed(_EGLDisplay *disp, void *native_surface)
+{
+   _EGLResource *list;
+
+   list = disp->ResourceLists[_EGL_RESOURCE_SURFACE];
+   while (list) {
+      _EGLSurface *surf = (_EGLSurface *) list;
+
+      list = list->Next;
+
+      if (surf->Type == EGL_PBUFFER_BIT)
+         continue;
+
+      if (surf->NativeSurface == native_surface)
+         return true;
+   }
+
+   return false;
 }
 
 
@@ -897,8 +945,8 @@ _eglCreateWindowSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
    if (native_window == NULL)
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
 
-#ifdef HAVE_SURFACELESS_PLATFORM
-   if (disp && disp->Platform == _EGL_PLATFORM_SURFACELESS) {
+   if (disp && (disp->Platform == _EGL_PLATFORM_SURFACELESS ||
+                disp->Platform == _EGL_PLATFORM_DEVICE)) {
       /* From the EGL_MESA_platform_surfaceless spec (v1):
        *
        *    eglCreatePlatformWindowSurface fails when called with a <display>
@@ -913,12 +961,14 @@ _eglCreateWindowSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
        */
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
    }
-#endif
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
 
    if ((conf->SurfaceType & EGL_WINDOW_BIT) == 0)
       RETURN_EGL_ERROR(disp, EGL_BAD_MATCH, EGL_NO_SURFACE);
+
+   if (_eglNativeSurfaceAlreadyUsed(disp, native_window))
+      RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
 
    surf = drv->API.CreateWindowSurface(drv, disp, conf, native_window,
                                        attrib_list);
@@ -1021,8 +1071,8 @@ _eglCreatePixmapSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
    _EGLSurface *surf;
    EGLSurface ret;
 
-#if HAVE_SURFACELESS_PLATFORM
-   if (disp && disp->Platform == _EGL_PLATFORM_SURFACELESS) {
+   if (disp && (disp->Platform == _EGL_PLATFORM_SURFACELESS ||
+                disp->Platform == _EGL_PLATFORM_DEVICE)) {
       /* From the EGL_MESA_platform_surfaceless spec (v1):
        *
        *   [Like eglCreatePlatformWindowSurface,] eglCreatePlatformPixmapSurface
@@ -1035,7 +1085,6 @@ _eglCreatePixmapSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
        */
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_PIXMAP, EGL_NO_SURFACE);
    }
-#endif
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
 
@@ -1044,6 +1093,9 @@ _eglCreatePixmapSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
 
    if (native_pixmap == NULL)
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_PIXMAP, EGL_NO_SURFACE);
+
+   if (_eglNativeSurfaceAlreadyUsed(disp, native_pixmap))
+      RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
 
    surf = drv->API.CreatePixmapSurface(drv, disp, conf, native_pixmap,
                                        attrib_list);
@@ -1152,7 +1204,11 @@ eglQuerySurface(EGLDisplay dpy, EGLSurface surface,
 
    _EGL_FUNC_START(disp, EGL_OBJECT_SURFACE_KHR, surf, EGL_FALSE);
    _EGL_CHECK_SURFACE(disp, surf, EGL_FALSE, drv);
-   ret = drv->API.QuerySurface(drv, disp, surf, attribute, value);
+
+   if (drv->API.QuerySurface)
+      ret = drv->API.QuerySurface(drv, disp, surf, attribute, value);
+   else
+      ret = _eglQuerySurface(drv, disp, surf, attribute, value);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -1168,7 +1224,8 @@ eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface,
 
    _EGL_FUNC_START(disp, EGL_OBJECT_SURFACE_KHR, surf, EGL_FALSE);
    _EGL_CHECK_SURFACE(disp, surf, EGL_FALSE, drv);
-   ret = drv->API.SurfaceAttrib(drv, disp, surf, attribute, value);
+
+   ret = _eglSurfaceAttrib(drv, disp, surf, attribute, value);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -1232,10 +1289,15 @@ eglSwapInterval(EGLDisplay dpy, EGLint interval)
                     surf->Config->MinSwapInterval,
                     surf->Config->MaxSwapInterval);
 
-   if (surf->SwapInterval != interval)
-      ret = drv->API.SwapInterval(drv, disp, surf, interval);
-   else
+   if (surf->SwapInterval != interval) {
+      if (drv->API.SwapInterval)
+         ret = drv->API.SwapInterval(drv, disp, surf, interval);
+      else
+         ret = _eglSwapInterval(drv, disp, surf, interval);
+   }
+   else {
       ret = EGL_TRUE;
+   }
 
    if (ret)
       surf->SwapInterval = interval;
@@ -1625,18 +1687,13 @@ eglCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype,
    _EGLDisplay *disp = _eglLockDisplay(dpy);
    _EGLConfig *conf = _eglLookupConfig(config, disp);
    _EGLDriver *drv;
-   _EGLSurface *surf;
-   EGLSurface ret;
 
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_NO_SURFACE);
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
 
-   surf = drv->API.CreatePbufferFromClientBuffer(drv, disp, buftype, buffer,
-                                                 conf, attrib_list);
-   ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
-
-   RETURN_EGL_EVAL(disp, ret);
+   /* OpenVG is not supported */
+   RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
 }
 
 
@@ -2043,7 +2100,8 @@ _eglGetSyncAttribCommon(_EGLDisplay *disp, _EGLSync *s, EGLint attribute, EGLAtt
    assert(disp->Extensions.KHR_reusable_sync ||
           disp->Extensions.KHR_fence_sync ||
           disp->Extensions.ANDROID_native_fence_sync);
-   ret = drv->API.GetSyncAttrib(drv, disp, s, attribute, value);
+
+   ret = _eglGetSyncAttrib(drv, disp, s, attribute, value);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -2054,6 +2112,10 @@ eglGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLAttrib *valu
    _EGLDisplay *disp = _eglLockDisplay(dpy);
    _EGLSync *s = _eglLookupSync(sync, disp);
    _EGL_FUNC_START(disp, EGL_OBJECT_SYNC_KHR, s, EGL_FALSE);
+
+   if (!value)
+      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_FALSE);
+
    return _eglGetSyncAttribCommon(disp, s, attribute, value);
 }
 
@@ -2290,11 +2352,11 @@ eglPostSubBufferNV(EGLDisplay dpy, EGLSurface surface,
 }
 
 static EGLBoolean EGLAPIENTRY
-eglGetSyncValuesCHROMIUM(EGLDisplay display, EGLSurface surface,
+eglGetSyncValuesCHROMIUM(EGLDisplay dpy, EGLSurface surface,
                          EGLuint64KHR *ust, EGLuint64KHR *msc,
                          EGLuint64KHR *sbc)
 {
-   _EGLDisplay *disp = _eglLockDisplay(display);
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
    _EGLSurface *surf = _eglLookupSurface(surface, disp);
    _EGLDriver *drv;
    EGLBoolean ret;

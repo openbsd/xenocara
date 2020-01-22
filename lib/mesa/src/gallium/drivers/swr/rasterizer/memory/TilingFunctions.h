@@ -30,6 +30,7 @@
 #include "core/state.h"
 #include "core/format_traits.h"
 #include "memory/tilingtraits.h"
+#include "memory/SurfaceState.h"
 
 #include <algorithm>
 
@@ -153,7 +154,6 @@ struct SimdTile <R8_UINT,R8_UINT>
     }
 };
 
-#if ENABLE_AVX512_SIMD16
 //////////////////////////////////////////////////////////////////////////
 /// SimdTile 8x2 for AVX-512
 //////////////////////////////////////////////////////////////////////////
@@ -253,7 +253,6 @@ struct SimdTile_16 <R8_UINT, R8_UINT>
     }
 };
 
-#endif
 //////////////////////////////////////////////////////////////////////////
 /// @brief Computes lod offset for 1D surface at specified lod.
 /// @param baseWidth - width of basemip (mip 0).

@@ -32,6 +32,7 @@
 
 #include "virgl/virgl_winsys.h"
 #include "vtest_protocol.h"
+#include "virgl_resource_cache.h"
 
 struct pipe_fence_handle;
 struct sw_winsys;
@@ -45,9 +46,7 @@ struct virgl_vtest_winsys {
    /* fd to remote renderer */
    int sock_fd;
 
-   struct list_head delayed;
-   int num_delayed;
-   unsigned usecs;
+   struct virgl_resource_cache cache;
    mtx_t mutex;
 
    unsigned protocol_version;
@@ -69,16 +68,13 @@ struct virgl_hw_res {
    struct sw_displaytarget *dt;
    void *mapped;
 
-   struct list_head head;
    uint32_t bind;
-   boolean cacheable;
-   int64_t start, end;
-
+   struct virgl_resource_cache_entry cache_entry;
 };
 
 struct virgl_vtest_cmd_buf {
    struct virgl_cmd_buf base;
-   uint32_t buf[VIRGL_MAX_CMDBUF_DWORDS];
+   uint32_t *buf;
    unsigned nres;
    unsigned cres;
    struct virgl_winsys *ws;
@@ -122,7 +118,8 @@ int virgl_vtest_send_resource_create(struct virgl_vtest_winsys *vws,
                                      uint32_t array_size,
                                      uint32_t last_level,
                                      uint32_t nr_samples,
-                                     uint32_t size);
+                                     uint32_t size,
+                                     int *out_fd);
 
 int virgl_vtest_send_resource_unref(struct virgl_vtest_winsys *vws,
                                     uint32_t handle);
@@ -153,7 +150,7 @@ int virgl_vtest_recv_transfer_get_data(struct virgl_vtest_winsys *vws,
                                        uint32_t data_size,
                                        uint32_t stride,
                                        const struct pipe_box *box,
-                                       uint32_t format, uint32_t res_width);
+                                       uint32_t format);
 
 int virgl_vtest_busy_wait(struct virgl_vtest_winsys *vws, int handle,
                           int flags);

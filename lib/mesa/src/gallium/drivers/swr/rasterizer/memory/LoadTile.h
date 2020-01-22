@@ -67,7 +67,6 @@ struct LoadRasterTile
         uint32_t x, uint32_t y,
         uint8_t* pDst)
     {
-#if USE_8x2_TILE_BACKEND
         typedef SimdTile_16<DstFormat, SrcFormat> SimdT;
 
         SimdT* pDstSimdTiles = (SimdT*)pDst;
@@ -81,21 +80,6 @@ struct LoadRasterTile
         uint32_t simdOffset = (y % SIMD16_TILE_Y_DIM) * SIMD16_TILE_X_DIM + (x % SIMD16_TILE_X_DIM);
 
         pSimdTile->SetSwizzledColor(simdOffset, srcColor);
-#else
-        typedef SimdTile<DstFormat, SrcFormat> SimdT;
-
-        SimdT* pDstSimdTiles = (SimdT*)pDst;
-
-        // Compute which simd tile we're accessing within 8x8 tile.
-        //   i.e. Compute linear simd tile coordinate given (x, y) in pixel coordinates.
-        uint32_t simdIndex = (y / SIMD_TILE_Y_DIM) * (KNOB_TILE_X_DIM / SIMD_TILE_X_DIM) + (x / SIMD_TILE_X_DIM);
-
-        SimdT* pSimdTile = &pDstSimdTiles[simdIndex];
-
-        uint32_t simdOffset = (y % SIMD_TILE_Y_DIM) * SIMD_TILE_X_DIM + (x % SIMD_TILE_X_DIM);
-
-        pSimdTile->SetSwizzledColor(simdOffset, srcColor);
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -352,3 +336,18 @@ static INLINE void InitLoadTileDepthTable(PFN_LOAD_TILES(&table)[NUM_SWR_FORMATS
    table[R16_UNORM]                       = LoadMacroTile<TilingTraits<TTileMode, 16>, R16_UNORM, R32_FLOAT>::Load;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+/// @brief Loads a full hottile from a render surface
+/// @param hPrivateContext - Handle to private DC
+/// @param dstFormat - Format for hot tile.
+/// @param renderTargetIndex - Index to src render target
+/// @param x, y - Coordinates to raster tile.
+/// @param pDstHotTile - Pointer to Hot Tile
+void SwrLoadHotTile(
+        HANDLE hWorkerPrivateData,
+        const SWR_SURFACE_STATE *pSrcSurface,
+        SWR_FORMAT dstFormat,
+        SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
+        uint32_t x, uint32_t y, uint32_t renderTargetArrayIndex,
+        uint8_t *pDstHotTile);

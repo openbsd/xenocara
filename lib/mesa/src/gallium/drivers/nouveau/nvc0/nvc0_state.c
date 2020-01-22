@@ -27,6 +27,7 @@
 #include "util/u_transfer.h"
 
 #include "tgsi/tgsi_parse.h"
+#include "compiler/nir/nir.h"
 
 #include "nvc0/nvc0_stateobj.h"
 #include "nvc0/nvc0_context.h"
@@ -462,22 +463,23 @@ nvc0_sampler_state_delete(struct pipe_context *pipe, void *hwcso)
 static inline void
 nvc0_stage_sampler_states_bind(struct nvc0_context *nvc0,
                                unsigned s,
-                               unsigned nr, void **hwcso)
+                               unsigned nr, void **hwcsos)
 {
    unsigned highest_found = 0;
    unsigned i;
 
    for (i = 0; i < nr; ++i) {
+      struct nv50_tsc_entry *hwcso = hwcsos ? nv50_tsc_entry(hwcsos[i]) : NULL;
       struct nv50_tsc_entry *old = nvc0->samplers[s][i];
 
-      if (hwcso[i])
+      if (hwcso)
          highest_found = i;
 
-      if (hwcso[i] == old)
+      if (hwcso == old)
          continue;
       nvc0->samplers_dirty[s] |= 1 << i;
 
-      nvc0->samplers[s][i] = nv50_tsc_entry(hwcso[i]);
+      nvc0->samplers[s][i] = hwcso;
       if (old)
          nvc0_screen_tsc_unlock(nvc0->screen, old);
    }
@@ -522,14 +524,15 @@ nvc0_stage_set_sampler_views(struct nvc0_context *nvc0, int s,
    unsigned i;
 
    for (i = 0; i < nr; ++i) {
+      struct pipe_sampler_view *view = views ? views[i] : NULL;
       struct nv50_tic_entry *old = nv50_tic_entry(nvc0->textures[s][i]);
 
-      if (views[i] == nvc0->textures[s][i])
+      if (view == nvc0->textures[s][i])
          continue;
       nvc0->textures_dirty[s] |= 1 << i;
 
-      if (views[i] && views[i]->texture) {
-         struct pipe_resource *res = views[i]->texture;
+      if (view && view->texture) {
+         struct pipe_resource *res = view->texture;
          if (res->target == PIPE_BUFFER &&
              (res->flags & PIPE_RESOURCE_FLAG_MAP_COHERENT))
             nvc0->textures_coherent[s] |= 1 << i;
@@ -547,7 +550,7 @@ nvc0_stage_set_sampler_views(struct nvc0_context *nvc0, int s,
          nvc0_screen_tic_unlock(nvc0->screen, old);
       }
 
-      pipe_sampler_view_reference(&nvc0->textures[s][i], views[i]);
+      pipe_sampler_view_reference(&nvc0->textures[s][i], view);
    }
 
    for (i = nr; i < nvc0->num_textures[s]; ++i) {
@@ -595,9 +598,20 @@ nvc0_sp_state_create(struct pipe_context *pipe,
       return NULL;
 
    prog->type = type;
+   prog->pipe.type = cso->type;
 
-   if (cso->tokens)
+   switch(cso->type) {
+   case PIPE_SHADER_IR_TGSI:
       prog->pipe.tokens = tgsi_dup_tokens(cso->tokens);
+      break;
+   case PIPE_SHADER_IR_NIR:
+      prog->pipe.ir.nir = cso->ir.nir;
+      break;
+   default:
+      assert(!"unsupported IR!");
+      free(prog);
+      return NULL;
+   }
 
    if (cso->stream_output.num_outputs)
       prog->pipe.stream_output = cso->stream_output;
@@ -616,7 +630,10 @@ nvc0_sp_state_delete(struct pipe_context *pipe, void *hwcso)
 
    nvc0_program_destroy(nvc0_context(pipe), prog);
 
-   FREE((void *)prog->pipe.tokens);
+   if (prog->pipe.type == PIPE_SHADER_IR_TGSI)
+      FREE((void *)prog->pipe.tokens);
+   else if (prog->pipe.type == PIPE_SHADER_IR_NIR)
+      ralloc_free(prog->pipe.ir.nir);
    FREE(prog);
 }
 
@@ -710,12 +727,24 @@ nvc0_cp_state_create(struct pipe_context *pipe,
    if (!prog)
       return NULL;
    prog->type = PIPE_SHADER_COMPUTE;
+   prog->pipe.type = cso->ir_type;
 
    prog->cp.smem_size = cso->req_local_mem;
    prog->cp.lmem_size = cso->req_private_mem;
    prog->parm_size = cso->req_input_mem;
 
-   prog->pipe.tokens = tgsi_dup_tokens((const struct tgsi_token *)cso->prog);
+   switch(cso->ir_type) {
+   case PIPE_SHADER_IR_TGSI:
+      prog->pipe.tokens = tgsi_dup_tokens((const struct tgsi_token *)cso->prog);
+      break;
+   case PIPE_SHADER_IR_NIR:
+      prog->pipe.ir.nir = (nir_shader *)cso->prog;
+      break;
+   default:
+      assert(!"unsupported IR!");
+      free(prog);
+      return NULL;
+   }
 
    prog->translated = nvc0_program_translate(
       prog, nvc0_context(pipe)->screen->base.device->chipset,
@@ -922,7 +951,7 @@ nvc0_set_viewport_states(struct pipe_context *pipe,
 
 static void
 nvc0_set_window_rectangles(struct pipe_context *pipe,
-                           boolean include,
+                           bool include,
                            unsigned num_rectangles,
                            const struct pipe_scissor_state *rectangles)
 {
@@ -1301,7 +1330,8 @@ static void
 nvc0_set_shader_buffers(struct pipe_context *pipe,
                         enum pipe_shader_type shader,
                         unsigned start, unsigned nr,
-                        const struct pipe_shader_buffer *buffers)
+                        const struct pipe_shader_buffer *buffers,
+                        unsigned writable_bitmask)
 {
    const unsigned s = nvc0_shader_stage(shader);
    if (!nvc0_bind_buffers_range(nvc0_context(pipe), s, start, nr, buffers))
@@ -1344,10 +1374,9 @@ nvc0_set_global_bindings(struct pipe_context *pipe,
 
    if (nvc0->global_residents.size <= (end * sizeof(struct pipe_resource *))) {
       const unsigned old_size = nvc0->global_residents.size;
-      const unsigned req_size = end * sizeof(struct pipe_resource *);
-      util_dynarray_resize(&nvc0->global_residents, req_size);
+      util_dynarray_resize(&nvc0->global_residents, struct pipe_resource *, end);
       memset((uint8_t *)nvc0->global_residents.data + old_size, 0,
-             req_size - old_size);
+             nvc0->global_residents.size - old_size);
    }
 
    if (resources) {

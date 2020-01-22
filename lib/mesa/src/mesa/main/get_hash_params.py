@@ -21,7 +21,7 @@ descriptor=[
   [ "ALIASED_LINE_WIDTH_RANGE", "CONTEXT_FLOAT2(Const.MinLineWidth), NO_EXTRA" ],
   [ "MAX_ELEMENTS_VERTICES", "CONTEXT_INT(Const.MaxArrayLockSize), NO_EXTRA" ],
   [ "MAX_ELEMENTS_INDICES", "CONTEXT_INT(Const.MaxArrayLockSize), NO_EXTRA" ],
-  [ "MAX_TEXTURE_SIZE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_context, Const.MaxTextureLevels), NO_EXTRA" ],
+  [ "MAX_TEXTURE_SIZE", "CONTEXT_INT(Const.MaxTextureSize), NO_EXTRA" ],
   [ "MAX_VIEWPORT_DIMS", "CONTEXT_INT2(Const.MaxViewportWidth), NO_EXTRA" ],
   [ "PACK_ALIGNMENT", "CONTEXT_INT(Pack.Alignment), NO_EXTRA" ],
   [ "ALIASED_POINT_SIZE_RANGE", "CONTEXT_FLOAT2(Const.MinPointSize), NO_EXTRA" ],
@@ -277,8 +277,15 @@ descriptor=[
   [ "UNPACK_SKIP_IMAGES", "CONTEXT_INT(Unpack.SkipImages), NO_EXTRA" ],
   [ "UNPACK_IMAGE_HEIGHT", "CONTEXT_INT(Unpack.ImageHeight), NO_EXTRA" ],
 
+# GL_ARB_clip_control/GL_EXT_clip_control
+  [ "CLIP_DEPTH_MODE", "CONTEXT_ENUM16(Transform.ClipDepthMode), extra_ARB_clip_control" ],
+  [ "CLIP_ORIGIN", "CONTEXT_ENUM16(Transform.ClipOrigin), extra_ARB_clip_control" ],
+
 # GL_ARB_draw_buffers
   [ "MAX_DRAW_BUFFERS_ARB", "CONTEXT_INT(Const.MaxDrawBuffers), NO_EXTRA" ],
+
+# GL_ARB_parallel_shader_compile
+  [ "MAX_SHADER_COMPILER_THREADS_ARB", "CONTEXT_INT(Hint.MaxShaderCompilerThreads), NO_EXTRA" ],
 
 # GL_EXT_framebuffer_object / GL_NV_fbo_color_attachments
   [ "MAX_COLOR_ATTACHMENTS", "CONTEXT_INT(Const.MaxColorAttachments), NO_EXTRA" ],
@@ -408,6 +415,9 @@ descriptor=[
 # GL_ARB_sampler_objects / GL 3.3 / GLES 3.0
   [ "SAMPLER_BINDING", "LOC_CUSTOM, TYPE_INT, GL_SAMPLER_BINDING, NO_EXTRA" ],
 
+# GL_ARB_spirv_extensions
+  [ "NUM_SPIR_V_EXTENSIONS", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_spirv_extensions" ],
+
 # GL_ARB_sync
   [ "MAX_SERVER_WAIT_TIMEOUT", "CONTEXT_INT64(Const.MaxServerWaitTimeout), extra_ARB_sync" ],
 
@@ -436,8 +446,8 @@ descriptor=[
   [ "READ_FRAMEBUFFER_BINDING_EXT", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
 
 # GL_EXT_gpu_shader4 / GLSL 1.30
-  [ "MIN_PROGRAM_TEXEL_OFFSET", "CONTEXT_INT(Const.MinProgramTexelOffset), extra_GLSL_130_es3" ],
-  [ "MAX_PROGRAM_TEXEL_OFFSET", "CONTEXT_INT(Const.MaxProgramTexelOffset), extra_GLSL_130_es3" ],
+  [ "MIN_PROGRAM_TEXEL_OFFSET", "CONTEXT_INT(Const.MinProgramTexelOffset), extra_GLSL_130_es3_gpushader4" ],
+  [ "MAX_PROGRAM_TEXEL_OFFSET", "CONTEXT_INT(Const.MaxProgramTexelOffset), extra_GLSL_130_es3_gpushader4" ],
 
 # GL_EXT_pixel_buffer_object
   [ "PIXEL_PACK_BUFFER_BINDING_EXT", "LOC_CUSTOM, TYPE_INT, 0, extra_EXT_pixel_buffer_object" ],
@@ -683,8 +693,6 @@ descriptor=[
   [ "AUX_BUFFERS", "BUFFER_INT(Visual.numAuxBuffers), NO_EXTRA" ],
   [ "BLUE_BIAS", "CONTEXT_FLOAT(Pixel.BlueBias), NO_EXTRA" ],
   [ "BLUE_SCALE", "CONTEXT_FLOAT(Pixel.BlueScale), NO_EXTRA" ],
-  [ "CLIP_DEPTH_MODE", "CONTEXT_ENUM16(Transform.ClipDepthMode), extra_ARB_clip_control" ],
-  [ "CLIP_ORIGIN", "CONTEXT_ENUM16(Transform.ClipOrigin), extra_ARB_clip_control" ],
   [ "CLIENT_ATTRIB_STACK_DEPTH", "CONTEXT_INT(ClientAttribStackDepth), NO_EXTRA" ],
   [ "COLOR_MATERIAL_FACE", "CONTEXT_ENUM16(Light.ColorMaterialFace), NO_EXTRA" ],
   [ "COLOR_MATERIAL_PARAMETER", "CONTEXT_ENUM16(Light.ColorMaterialMode), NO_EXTRA" ],

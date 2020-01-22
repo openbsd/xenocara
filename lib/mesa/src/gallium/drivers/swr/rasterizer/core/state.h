@@ -31,6 +31,7 @@
 
 #include "common/formats.h"
 #include "common/intrin.h"
+#include "common/rdtsc_buckets.h"
 #include <functional>
 #include <algorithm>
 
@@ -168,8 +169,8 @@ enum SWR_INNER_TESSFACTOR_ID
 enum SWR_OUTER_TESSFACTOR_ID
 {
     SWR_QUAD_U_EQ0_TRI_U_LINE_DETAIL,
-    SWR_QUAD_V_EQ0_TRI_V_LINE_DENSITY,
-    SWR_QUAD_U_EQ1_TRI_W,
+    SWR_QUAD_U_EQ1_TRI_V_LINE_DENSITY,
+    SWR_QUAD_V_EQ0_TRI_W,
     SWR_QUAD_V_EQ1,
 
     SWR_NUM_OUTER_TESS_FACTORS,
@@ -201,18 +202,20 @@ struct simdvertex
     simdvector attrib[SWR_VTX_NUM_SLOTS];
 };
 
-#if ENABLE_AVX512_SIMD16
 struct simd16vertex
 {
     simd16vector attrib[SWR_VTX_NUM_SLOTS];
 };
 
-#endif
-
 template <typename SIMD_T>
 struct SIMDVERTEX_T
 {
     typename SIMD_T::Vec4 attrib[SWR_VTX_NUM_SLOTS];
+};
+
+struct SWR_WORKER_DATA
+{
+    HANDLE hArContext;  // handle to the archrast context
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -221,8 +224,20 @@ struct SIMDVERTEX_T
 /////////////////////////////////////////////////////////////////////////
 struct SWR_SHADER_STATS
 {
-    uint32_t numInstExecuted; // This is roughly the API instructions executed and not x86.
+    uint32_t numInstExecuted;      // This is roughly the API instructions executed and not x86.
+    uint32_t numSampleExecuted;
+    uint32_t numSampleLExecuted;
+    uint32_t numSampleBExecuted;
+    uint32_t numSampleCExecuted;
+    uint32_t numSampleCLZExecuted;
+    uint32_t numSampleCDExecuted;
+    uint32_t numGather4Executed;
+    uint32_t numGather4CExecuted;
+    uint32_t numGather4CPOExecuted;
+    uint32_t numGather4CPOCExecuted;
+    uint32_t numLodExecuted;
 };
+
 
 //////////////////////////////////////////////////////////////////////////
 /// SWR_VS_CONTEXT
@@ -272,7 +287,10 @@ struct SWR_TESSELLATION_FACTORS
 {
     float OuterTessFactors[SWR_NUM_OUTER_TESS_FACTORS];
     float InnerTessFactors[SWR_NUM_INNER_TESS_FACTORS];
+    float pad[2];
 };
+
+SWR_STATIC_ASSERT(sizeof(SWR_TESSELLATION_FACTORS) == 32);
 
 #define MAX_NUM_VERTS_PER_PRIM 32 // support up to 32 control point patches
 struct ScalarPatch
@@ -291,6 +309,7 @@ struct SWR_HS_CONTEXT
     simdvertex       vert[MAX_NUM_VERTS_PER_PRIM]; // IN: (SIMD) input primitive data
     simdscalari      PrimitiveID;                  // IN: (SIMD) primitive ID generated from the draw call
     simdscalari      mask;                         // IN: Active mask for shader
+    uint32_t         outputSize;                   // IN: Size of HS output (per lane)
     ScalarPatch*     pCPout;                       // OUT: Output control point patch SIMD-sized-array of SCALAR patches
     SWR_SHADER_STATS stats;                        // OUT: shader statistics used for archrast.
 };
@@ -373,6 +392,8 @@ struct SWR_PS_CONTEXT
     uint8_t* pColorBuffer[SWR_NUM_RENDERTARGETS]; // IN: Pointers to render target hottiles
 
     SWR_SHADER_STATS stats; // OUT: shader statistics used for archrast.
+
+    BucketManager *pBucketManager; // @llvm_struct - IN: performance buckets.
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -410,7 +431,7 @@ struct SWR_CS_CONTEXT
     uint8_t* pSpillFillBuffer;    // Spill/fill buffer for barrier support
     uint8_t* pScratchSpace;       // Pointer to scratch space buffer used by the shader, shader is
                                   // responsible for subdividing scratch space per instance/simd
-    uint32_t scratchSpacePerSimd; // Scratch space per work item x SIMD_WIDTH
+    uint32_t scratchSpacePerWarp; // Scratch space per work item x SIMD_WIDTH
 
     SWR_SHADER_STATS stats; // OUT: shader statistics used for archrast.
 };
@@ -418,11 +439,12 @@ struct SWR_CS_CONTEXT
 // enums
 enum SWR_TILE_MODE
 {
-    SWR_TILE_NONE = 0x0,   // Linear mode (no tiling)
-    SWR_TILE_MODE_WMAJOR,  // W major tiling
-    SWR_TILE_MODE_XMAJOR,  // X major tiling
-    SWR_TILE_MODE_YMAJOR,  // Y major tiling
-    SWR_TILE_SWRZ,         // SWR-Z tiling
+    SWR_TILE_NONE = 0x0,     // Linear mode (no tiling)
+    SWR_TILE_MODE_WMAJOR,    // W major tiling
+    SWR_TILE_MODE_XMAJOR,    // X major tiling
+    SWR_TILE_MODE_YMAJOR,    // Y major tiling
+    SWR_TILE_SWRZ,           // SWR-Z tiling
+
 
     SWR_TILE_MODE_COUNT
 };
@@ -527,47 +549,6 @@ enum SWR_AUX_MODE
     AUX_MODE_DEPTH,
 };
 
-struct SWR_LOD_OFFSETS
-{
-    uint32_t offsets[2][15];
-};
-
-//////////////////////////////////////////////////////////////////////////
-/// SWR_SURFACE_STATE
-//////////////////////////////////////////////////////////////////////////
-struct SWR_SURFACE_STATE
-{
-    gfxptr_t         xpBaseAddress;
-    SWR_SURFACE_TYPE type;   // @llvm_enum
-    SWR_FORMAT       format; // @llvm_enum
-    uint32_t         width;
-    uint32_t         height;
-    uint32_t         depth;
-    uint32_t         numSamples;
-    uint32_t         samplePattern;
-    uint32_t         pitch;
-    uint32_t         qpitch;
-    uint32_t minLod; // for sampled surfaces, the most detailed LOD that can be accessed by sampler
-    uint32_t maxLod; // for sampled surfaces, the max LOD that can be accessed
-    float    resourceMinLod; // for sampled surfaces, the most detailed fractional mip that can be
-                             // accessed by sampler
-    uint32_t lod;            // for render targets, the lod being rendered to
-    uint32_t arrayIndex; // for render targets, the array index being rendered to for arrayed surfaces
-    SWR_TILE_MODE tileMode; // @llvm_enum
-    uint32_t      halign;
-    uint32_t      valign;
-    uint32_t      xOffset;
-    uint32_t      yOffset;
-
-    uint32_t lodOffsets[2][15]; // lod offsets for sampled surfaces
-
-    gfxptr_t     xpAuxBaseAddress; // Used for compression, append/consume counter, etc.
-    SWR_AUX_MODE auxMode;          // @llvm_enum
-
-
-    bool bInterleavedSamples; // are MSAA samples stored interleaved or planar
-};
-
 // vertex fetch state
 // WARNING- any changes to this struct need to be reflected
 // in the fetch shader jit
@@ -667,10 +648,10 @@ OSALIGNLINE(struct) SWR_STATS_FE
 struct SWR_STREAMOUT_BUFFER
 {
     // Pointers to streamout buffers.
-    uint32_t* pBuffer;
+    gfxptr_t pBuffer;
 
     // Offset to the SO write offset. If not null then we update offset here.
-    uint32_t* pWriteOffset;
+    gfxptr_t pWriteOffset;
 
     bool enable;
     bool soWriteEnable;
@@ -847,11 +828,16 @@ struct SWR_TS_STATE
 
     uint32_t numHsInputAttribs;
     uint32_t numHsOutputAttribs;
+    uint32_t hsAllocationSize; // Size of HS output in bytes, per lane
+
     uint32_t numDsOutputAttribs;
     uint32_t dsAllocationSize;
     uint32_t dsOutVtxAttribOffset;
 
     // Offset to the start of the attributes of the input vertices, in simdvector units
+    uint32_t srcVertexAttribOffset;
+
+    // Offset to the start of the attributes expected by the hull shader
     uint32_t vertexAttribOffset;
 };
 
@@ -925,7 +911,7 @@ typedef void(__cdecl *PFN_HS_FUNC)(HANDLE hPrivateData, HANDLE hWorkerPrivateDat
 typedef void(__cdecl *PFN_DS_FUNC)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_DS_CONTEXT* pDsContext);
 typedef void(__cdecl *PFN_GS_FUNC)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_GS_CONTEXT* pGsContext);
 typedef void(__cdecl *PFN_CS_FUNC)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_CS_CONTEXT* pCsContext);
-typedef void(__cdecl *PFN_SO_FUNC)(SWR_STREAMOUT_CONTEXT& soContext);
+typedef void(__cdecl *PFN_SO_FUNC)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_STREAMOUT_CONTEXT& soContext);
 typedef void(__cdecl *PFN_PIXEL_KERNEL)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_PS_CONTEXT* pContext);
 typedef void(__cdecl *PFN_CPIXEL_KERNEL)(HANDLE hPrivateData, HANDLE hWorkerPrivateData, SWR_PS_CONTEXT* pContext);
 typedef void(__cdecl *PFN_BLEND_JIT_FUNC)(SWR_BLEND_CONTEXT*);
@@ -1082,6 +1068,7 @@ struct SWR_RASTSTATE
     uint32_t frontWinding : 1;
     uint32_t scissorEnable : 1;
     uint32_t depthClipEnable : 1;
+    uint32_t clipEnable : 1;
     uint32_t clipHalfZ : 1;
     uint32_t pointParam : 1;
     uint32_t pointSpriteEnable : 1;

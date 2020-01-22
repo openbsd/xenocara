@@ -40,16 +40,16 @@ nir_type_conversion_op(nir_alu_type src, nir_alu_type dst, nir_rounding_mode rnd
    unsigned dst_bit_size = nir_alu_type_get_type_size(dst);
 
    if (src == dst && src_base == nir_type_float) {
-      return nir_op_fmov;
+      return nir_op_mov;
    } else if (src == dst && src_base == nir_type_bool) {
-      return nir_op_imov;
+      return nir_op_mov;
    } else if ((src_base == nir_type_int || src_base == nir_type_uint) &&
               (dst_base == nir_type_int || dst_base == nir_type_uint) &&
               src_bit_size == dst_bit_size) {
       /* Integer <-> integer conversions with the same bit-size on both
        * ends are just no-op moves.
        */
-      return nir_op_imov;
+      return nir_op_mov;
    }
 
    switch (src_base) {
@@ -117,6 +117,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    .input_types = {
       ${ ", ".join("nir_type_" + type for type in opcode.input_types) }
    },
+   .is_conversion = ${"true" if opcode.is_conversion else "false"},
    .algebraic_properties =
       ${ "0" if opcode.algebraic_properties == "" else " | ".join(
             "NIR_OP_IS_" + prop.upper() for prop in

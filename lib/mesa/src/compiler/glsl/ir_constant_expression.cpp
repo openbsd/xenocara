@@ -106,7 +106,7 @@ bitcast_i642d(int64_t i)
    return d;
 }
 
-static double
+static uint64_t
 bitcast_d2u64(double d)
 {
    assert(sizeof(double) == sizeof(uint64_t));
@@ -115,7 +115,7 @@ bitcast_d2u64(double d)
    return u;
 }
 
-static double
+static int64_t
 bitcast_d2i64(double d)
 {
    assert(sizeof(double) == sizeof(int64_t));
@@ -435,7 +435,8 @@ constant_referenced(const ir_dereference *deref,
       ir_constant *const index_c =
          da->array_index->constant_expression_value(variable_context);
 
-      if (!index_c || !index_c->type->is_scalar() || !index_c->type->is_integer())
+      if (!index_c || !index_c->type->is_scalar() ||
+          !index_c->type->is_integer_32())
          break;
 
       const int index = index_c->type->base_type == GLSL_TYPE_INT ?

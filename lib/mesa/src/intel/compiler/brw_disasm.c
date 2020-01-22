@@ -437,8 +437,15 @@ static const char *const dp_dc1_msg_type_hsw[32] = {
    [HSW_DATAPORT_DC_PORT1_ATOMIC_COUNTER_OP_SIMD4X2] =
       "DC 4x2 atomic counter op",
    [HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_WRITE] = "DC typed surface write",
+   [GEN9_DATAPORT_DC_PORT1_A64_SCATTERED_READ] = "DC A64 scattered read",
+   [GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_READ] = "DC A64 untyped surface read",
+   [GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_OP] = "DC A64 untyped atomic op",
+   [GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_WRITE] = "DC A64 untyped surface write",
+   [GEN8_DATAPORT_DC_PORT1_A64_SCATTERED_WRITE] = "DC A64 scattered write",
    [GEN9_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_FLOAT_OP] =
       "DC untyped atomic float op",
+   [GEN9_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_FLOAT_OP] =
+      "DC A64 untyped atomic float op",
 };
 
 static const char *const aop[16] = {
@@ -1302,7 +1309,7 @@ imm(FILE *file, const struct gen_device_info *devinfo, enum brw_reg_type type,
       format(file, "0x%016"PRIx64"UQ", brw_inst_imm_uq(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_Q:
-      format(file, "%"PRId64"Q", brw_inst_imm_uq(devinfo, inst));
+      format(file, "0x%016"PRIx64"Q", brw_inst_imm_uq(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_UD:
       format(file, "0x%08xUD", brw_inst_imm_ud(devinfo, inst));
@@ -1332,9 +1339,18 @@ imm(FILE *file, const struct gen_device_info *devinfo, enum brw_reg_type type,
       format(file, "0x%08xV", brw_inst_imm_ud(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_F:
-      format(file, "0x%"PRIx64"F", brw_inst_bits(inst, 127, 96));
-      pad(file, 48);
-      format(file, " /* %-gF */", brw_inst_imm_f(devinfo, inst));
+      /* The DIM instruction's src0 uses an F type but contains a
+       * 64-bit immediate
+       */
+      if (brw_inst_opcode(devinfo, inst) == BRW_OPCODE_DIM) {
+         format(file, "0x%"PRIx64"F", brw_inst_bits(inst, 127, 64));
+         pad(file, 48);
+         format(file, "/* %-gF */", brw_inst_imm_df(devinfo, inst));
+      } else {
+         format(file, "0x%"PRIx64"F", brw_inst_bits(inst, 127, 96));
+         pad(file, 48);
+         format(file, " /* %-gF */", brw_inst_imm_f(devinfo, inst));
+      }
       break;
    case BRW_REGISTER_TYPE_DF:
       format(file, "0x%016"PRIx64"DF", brw_inst_bits(inst, 127, 64));
@@ -1654,7 +1670,8 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
       format(file, "Pop: %"PRIu64, brw_inst_gen4_pop_count(devinfo, inst));
    } else if (devinfo->gen < 6 && (opcode == BRW_OPCODE_IF ||
                                    opcode == BRW_OPCODE_IFF ||
-                                   opcode == BRW_OPCODE_HALT)) {
+                                   opcode == BRW_OPCODE_HALT ||
+                                   opcode == BRW_OPCODE_WHILE)) {
       pad(file, 16);
       format(file, "Jump: %d", brw_inst_gen4_jump_count(devinfo, inst));
    } else if (devinfo->gen < 6 && opcode == BRW_OPCODE_ENDIF) {
@@ -1936,18 +1953,22 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
                case HSW_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_OP_SIMD4X2:
                case HSW_DATAPORT_DC_PORT1_TYPED_ATOMIC_OP_SIMD4X2:
                case HSW_DATAPORT_DC_PORT1_ATOMIC_COUNTER_OP_SIMD4X2:
+               case GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_OP:
                   control(file, "atomic op", aop, msg_ctrl & 0xf, &space);
                   break;
                case HSW_DATAPORT_DC_PORT1_UNTYPED_SURFACE_READ:
                case HSW_DATAPORT_DC_PORT1_UNTYPED_SURFACE_WRITE:
                case HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_READ:
-               case HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_WRITE: {
+               case HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_WRITE:
+               case GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_WRITE:
+               case GEN8_DATAPORT_DC_PORT1_A64_UNTYPED_SURFACE_READ: {
                   static const char *simd_modes[] = { "4x2", "16", "8" };
                   format(file, "SIMD%s, Mask = 0x%x",
                          simd_modes[msg_ctrl >> 4], msg_ctrl & 0xf);
                   break;
                }
                case GEN9_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_FLOAT_OP:
+               case GEN9_DATAPORT_DC_PORT1_A64_UNTYPED_ATOMIC_FLOAT_OP:
                   format(file, "SIMD%d,", (msg_ctrl & (1 << 4)) ? 8 : 16);
                   control(file, "atomic float op", aop_float, msg_ctrl & 0xf,
                           &space);

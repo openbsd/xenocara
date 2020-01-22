@@ -25,25 +25,13 @@
 #include <unistd.h>
 #include <limits.h>
 #include <assert.h>
-#ifdef __linux__
-#include <linux/memfd.h>
-#else
-#include <fcntl.h>
-#endif
 #include <sys/mman.h>
-
-#ifndef MAP_POPULATE
-#define MAP_POPULATE 0
-#endif
-
-#ifndef MFD_CLOEXEC
-#define MFD_CLOEXEC O_CLOEXEC
-#endif
 
 #include "anv_private.h"
 
 #include "util/hash_table.h"
 #include "util/simple_mtx.h"
+#include "util/anon_file.h"
 
 #ifdef HAVE_VALGRIND
 #define VG_NOACCESS_READ(__ptr) ({                       \
@@ -60,6 +48,10 @@
 #else
 #define VG_NOACCESS_READ(__ptr) (*(__ptr))
 #define VG_NOACCESS_WRITE(__ptr, __val) (*(__ptr) = (__val))
+#endif
+
+#ifndef MAP_POPULATE
+#define MAP_POPULATE 0
 #endif
 
 /* Design goals:
@@ -123,22 +115,6 @@ struct anv_mmap_cleanup {
 
 #define ANV_MMAP_CLEANUP_INIT ((struct anv_mmap_cleanup){0})
 
-#ifndef HAVE_MEMFD_CREATE
-static inline int
-memfd_create(const char *name, unsigned int flags)
-{
-#ifdef __linux__
-   return syscall(SYS_memfd_create, name, flags);
-#else
-   char template[] = "/tmp/mesa-XXXXXXXXXX";
-   int fd = shm_mkstemp(template);
-   if (fd != -1)
-       shm_unlink(template);
-   return fd;
-#endif
-}
-#endif
-
 static inline uint32_t
 ilog2_round_up(uint32_t value)
 {
@@ -172,15 +148,12 @@ anv_state_table_init(struct anv_state_table *table,
 
    table->device = device;
 
-   table->fd = memfd_create("state table", MFD_CLOEXEC);
-   if (table->fd == -1)
-      return vk_error(VK_ERROR_INITIALIZATION_FAILED);
-
    /* Just make it 2GB up-front.  The Linux kernel won't actually back it
     * with pages until we either map and fault on one of them or we use
     * userptr and send a chunk of it off to the GPU.
     */
-   if (ftruncate(table->fd, BLOCK_POOL_MEMFD_SIZE) == -1) {
+   table->fd = os_create_anonymous_file(BLOCK_POOL_MEMFD_SIZE, "state table");
+   if (table->fd == -1) {
       result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
       goto fail_fd;
    }
@@ -466,18 +439,13 @@ anv_block_pool_init(struct anv_block_pool *pool,
    anv_bo_init(pool->bo, 0, 0);
 
    if (!(pool->bo_flags & EXEC_OBJECT_PINNED)) {
-      pool->fd = memfd_create("block pool", MFD_CLOEXEC);
-      if (pool->fd == -1)
-         return vk_error(VK_ERROR_INITIALIZATION_FAILED);
-
       /* Just make it 2GB up-front.  The Linux kernel won't actually back it
        * with pages until we either map and fault on one of them or we use
        * userptr and send a chunk of it off to the GPU.
        */
-      if (ftruncate(pool->fd, BLOCK_POOL_MEMFD_SIZE) == -1) {
-         result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-         goto fail_fd;
-      }
+      pool->fd = os_create_anonymous_file(BLOCK_POOL_MEMFD_SIZE, "block pool");
+      if (pool->fd == -1)
+         return vk_error(VK_ERROR_INITIALIZATION_FAILED);
    } else {
       pool->fd = -1;
    }
@@ -498,6 +466,11 @@ anv_block_pool_init(struct anv_block_pool *pool,
    if (result != VK_SUCCESS)
       goto fail_mmap_cleanups;
 
+   /* Make the entire pool available in the front of the pool.  If back
+    * allocation needs to use this space, the "ends" will be re-arranged.
+    */
+   pool->state.end = pool->size;
+
    return VK_SUCCESS;
 
  fail_mmap_cleanups:
@@ -513,10 +486,14 @@ void
 anv_block_pool_finish(struct anv_block_pool *pool)
 {
    struct anv_mmap_cleanup *cleanup;
+   const bool use_softpin = !!(pool->bo_flags & EXEC_OBJECT_PINNED);
 
    u_vector_foreach(cleanup, &pool->mmap_cleanups) {
-      if (cleanup->map)
+      if (use_softpin)
+         anv_gem_munmap(cleanup->map, cleanup->size);
+      else
          munmap(cleanup->map, cleanup->size);
+
       if (cleanup->gem_handle)
          anv_gem_close(pool->device, cleanup->gem_handle);
    }
@@ -555,9 +532,11 @@ anv_block_pool_expand_range(struct anv_block_pool *pool,
    if (use_softpin) {
       gem_handle = anv_gem_create(pool->device, newbo_size);
       map = anv_gem_mmap(pool->device, gem_handle, 0, newbo_size, 0);
-      if (map == MAP_FAILED)
+      if (map == MAP_FAILED) {
+         anv_gem_close(pool->device, gem_handle);
          return vk_errorf(pool->device->instance, pool->device,
                           VK_ERROR_MEMORY_MAP_FAILED, "gem mmap failed: %m");
+      }
       assert(center_bo_offset == 0);
    } else {
       /* Just leak the old map until we destroy the pool.  We can't munmap it
@@ -1041,7 +1020,7 @@ anv_state_pool_return_blocks(struct anv_state_pool *pool,
    assert(chunk_offset % block_size == 0);
 
    uint32_t st_idx;
-   VkResult result = anv_state_table_add(&pool->table, &st_idx, count);
+   UNUSED VkResult result = anv_state_table_add(&pool->table, &st_idx, count);
    assert(result == VK_SUCCESS);
    for (int i = 0; i < count; i++) {
       /* update states that were added back to the state table */
@@ -1184,7 +1163,7 @@ anv_state_pool_alloc_no_vg(struct anv_state_pool *pool,
                                                 &padding);
    /* Everytime we allocate a new state, add it to the state pool */
    uint32_t idx;
-   VkResult result = anv_state_table_add(&pool->table, &idx, 1);
+   UNUSED VkResult result = anv_state_table_add(&pool->table, &idx, 1);
    assert(result == VK_SUCCESS);
 
    state = anv_state_table_get(&pool->table, idx);
@@ -1228,7 +1207,7 @@ anv_state_pool_alloc_back(struct anv_state_pool *pool)
    offset = anv_block_pool_alloc_back(&pool->block_pool,
                                       pool->block_size);
    uint32_t idx;
-   VkResult result = anv_state_table_add(&pool->table, &idx, 1);
+   UNUSED VkResult result = anv_state_table_add(&pool->table, &idx, 1);
    assert(result == VK_SUCCESS);
 
    state = anv_state_table_get(&pool->table, idx);
@@ -1543,7 +1522,19 @@ anv_scratch_pool_alloc(struct anv_device *device, struct anv_scratch_pool *pool,
    const unsigned subslices = MAX2(physical_device->subslice_total, 1);
 
    unsigned scratch_ids_per_subslice;
-   if (devinfo->is_haswell) {
+   if (devinfo->gen >= 11) {
+      /* The MEDIA_VFE_STATE docs say:
+       *
+       *    "Starting with this configuration, the Maximum Number of
+       *     Threads must be set to (#EU * 8) for GPGPU dispatches.
+       *
+       *     Although there are only 7 threads per EU in the configuration,
+       *     the FFTID is calculated as if there are 8 threads per EU,
+       *     which in turn requires a larger amount of Scratch Space to be
+       *     allocated by the driver."
+       */
+      scratch_ids_per_subslice = 8 * 8;
+   } else if (devinfo->is_haswell) {
       /* WaCSScratchSize:hsw
        *
        * Haswell's scratch space address calculation appears to be sparse
@@ -1726,6 +1717,66 @@ anv_bo_cache_alloc(struct anv_device *device,
 
    pthread_mutex_unlock(&cache->mutex);
 
+   *bo_out = &bo->bo;
+
+   return VK_SUCCESS;
+}
+
+VkResult
+anv_bo_cache_import_host_ptr(struct anv_device *device,
+                             struct anv_bo_cache *cache,
+                             void *host_ptr, uint32_t size,
+                             uint64_t bo_flags, struct anv_bo **bo_out)
+{
+   assert(bo_flags == (bo_flags & ANV_BO_CACHE_SUPPORTED_FLAGS));
+   assert((bo_flags & ANV_BO_EXTERNAL) == 0);
+
+   uint32_t gem_handle = anv_gem_userptr(device, host_ptr, size);
+   if (!gem_handle)
+      return vk_error(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+
+   pthread_mutex_lock(&cache->mutex);
+
+   struct anv_cached_bo *bo = anv_bo_cache_lookup_locked(cache, gem_handle);
+   if (bo) {
+      /* VK_EXT_external_memory_host doesn't require handling importing the
+       * same pointer twice at the same time, but we don't get in the way.  If
+       * kernel gives us the same gem_handle, only succeed if the flags match.
+       */
+      if (bo_flags != bo->bo.flags) {
+         pthread_mutex_unlock(&cache->mutex);
+         return vk_errorf(device->instance, NULL,
+                          VK_ERROR_INVALID_EXTERNAL_HANDLE,
+                          "same host pointer imported two different ways");
+      }
+      __sync_fetch_and_add(&bo->refcount, 1);
+   } else {
+      bo = vk_alloc(&device->alloc, sizeof(struct anv_cached_bo), 8,
+                    VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (!bo) {
+         anv_gem_close(device, gem_handle);
+         pthread_mutex_unlock(&cache->mutex);
+         return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
+      }
+
+      bo->refcount = 1;
+
+      anv_bo_init(&bo->bo, gem_handle, size);
+      bo->bo.flags = bo_flags;
+
+      if (!anv_vma_alloc(device, &bo->bo)) {
+         anv_gem_close(device, bo->bo.gem_handle);
+         pthread_mutex_unlock(&cache->mutex);
+         vk_free(&device->alloc, bo);
+         return vk_errorf(device->instance, NULL,
+                          VK_ERROR_OUT_OF_DEVICE_MEMORY,
+                          "failed to allocate virtual address for BO");
+      }
+
+      _mesa_hash_table_insert(cache->bo_map, (void *)(uintptr_t)gem_handle, bo);
+   }
+
+   pthread_mutex_unlock(&cache->mutex);
    *bo_out = &bo->bo;
 
    return VK_SUCCESS;

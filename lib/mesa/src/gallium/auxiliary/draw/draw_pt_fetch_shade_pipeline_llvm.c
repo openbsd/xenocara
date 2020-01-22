@@ -297,6 +297,15 @@ llvm_middle_end_bind_parameters(struct draw_pt_middle_end *middle)
          llvm->jit_context.vs_constants[i] = fake_const_buf;
       }
    }
+   for (i = 0; i < ARRAY_SIZE(llvm->jit_context.vs_ssbos); ++i) {
+      int num_ssbos = draw->pt.user.vs_ssbos_size[i];
+      llvm->jit_context.vs_ssbos[i] = draw->pt.user.vs_ssbos[i];
+      llvm->jit_context.num_vs_ssbos[i] = num_ssbos;
+      if (num_ssbos == 0) {
+         llvm->jit_context.vs_ssbos[i] = (const uint32_t *)fake_const_buf;
+      }
+   }
+
    for (i = 0; i < ARRAY_SIZE(llvm->gs_jit_context.constants); ++i) {
       int num_consts =
          draw->pt.user.gs_constants_size[i] / (sizeof(float) * 4);
@@ -304,6 +313,14 @@ llvm_middle_end_bind_parameters(struct draw_pt_middle_end *middle)
       llvm->gs_jit_context.num_constants[i] = num_consts;
       if (num_consts == 0) {
          llvm->gs_jit_context.constants[i] = fake_const_buf;
+      }
+   }
+   for (i = 0; i < ARRAY_SIZE(llvm->gs_jit_context.ssbos); ++i) {
+      int num_ssbos = draw->pt.user.gs_ssbos_size[i];
+      llvm->gs_jit_context.ssbos[i] = draw->pt.user.gs_ssbos[i];
+      llvm->gs_jit_context.num_ssbos[i] = num_ssbos;
+      if (num_ssbos == 0) {
+         llvm->gs_jit_context.ssbos[i] = (const uint32_t *)fake_const_buf;
       }
    }
 
@@ -355,9 +372,9 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
    struct llvm_middle_end *fpme = llvm_middle_end(middle);
    struct draw_context *draw = fpme->draw;
    struct draw_geometry_shader *gshader = draw->gs.geometry_shader;
-   struct draw_prim_info gs_prim_info;
+   struct draw_prim_info gs_prim_info[TGSI_MAX_VERTEX_STREAMS];
    struct draw_vertex_info llvm_vert_info;
-   struct draw_vertex_info gs_vert_info;
+   struct draw_vertex_info gs_vert_info[TGSI_MAX_VERTEX_STREAMS];
    struct draw_vertex_info *vert_info;
    struct draw_prim_info ia_prim_info;
    struct draw_vertex_info ia_vert_info;
@@ -422,12 +439,12 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
                                vert_info,
                                prim_info,
                                &vshader->info,
-                               &gs_vert_info,
-                               &gs_prim_info);
+                               gs_vert_info,
+                               gs_prim_info);
 
       FREE(vert_info->verts);
-      vert_info = &gs_vert_info;
-      prim_info = &gs_prim_info;
+      vert_info = &gs_vert_info[0];
+      prim_info = &gs_prim_info[0];
       /*
        * pt emit can only handle ushort number of vertices (see
        * render->allocate_vertices).
@@ -461,7 +478,7 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
    }
 
    /* stream output needs to be done before clipping */
-   draw_pt_so_emit( fpme->so_emit, vert_info, prim_info );
+   draw_pt_so_emit( fpme->so_emit, 1, vert_info, prim_info );
 
    draw_stats_clipper_primitives(draw, prim_info);
 

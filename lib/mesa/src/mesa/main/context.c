@@ -129,6 +129,7 @@
 #include "util/disk_cache.h"
 #include "util/strtod.h"
 #include "stencil.h"
+#include "shaderimage.h"
 #include "texcompress_s3tc.h"
 #include "texstate.h"
 #include "transformfeedback.h"
@@ -554,7 +555,7 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
 
    /* Constants, may be overriden (usually only reduced) by device drivers */
    consts->MaxTextureMbytes = MAX_TEXTURE_MBYTES;
-   consts->MaxTextureLevels = MAX_TEXTURE_LEVELS;
+   consts->MaxTextureSize = 1 << (MAX_TEXTURE_LEVELS - 1);
    consts->Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    consts->MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
    consts->MaxTextureRectSize = MAX_TEXTURE_RECT_SIZE;
@@ -614,6 +615,17 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
 
    consts->MaxProgramMatrices = MAX_PROGRAM_MATRICES;
    consts->MaxProgramMatrixStackDepth = MAX_PROGRAM_MATRIX_STACK_DEPTH;
+
+   /* Set the absolute minimum possible GLSL version.  API_OPENGL_CORE can
+    * mean an OpenGL 3.0 forward-compatible context, so that implies a minimum
+    * possible version of 1.30.  Otherwise, the minimum possible version 1.20.
+    * Since Mesa unconditionally advertises GL_ARB_shading_language_100 and
+    * GL_ARB_shader_objects, every driver has GLSL 1.20... even if they don't
+    * advertise any extensions to enable any shader stages (e.g.,
+    * GL_ARB_vertex_shader).
+    */
+   consts->GLSLVersion = api == API_OPENGL_CORE ? 130 : 120;
+   consts->GLSLVersionCompat = consts->GLSLVersion;
 
    /* Assume that if GLSL 1.30+ (or GLSL ES 3.00+) is supported that
     * gl_VertexID is implemented using a native hardware register with OpenGL
@@ -781,7 +793,7 @@ check_context_limits(struct gl_context *ctx)
 
 
    /* Texture size checks */
-   assert(ctx->Const.MaxTextureLevels <= MAX_TEXTURE_LEVELS);
+   assert(ctx->Const.MaxTextureSize <= (1 << (MAX_TEXTURE_LEVELS - 1)));
    assert(ctx->Const.Max3DTextureLevels <= MAX_3D_TEXTURE_LEVELS);
    assert(ctx->Const.MaxCubeTextureLevels <= MAX_CUBE_TEXTURE_LEVELS);
    assert(ctx->Const.MaxTextureRectSize <= MAX_TEXTURE_RECT_SIZE);
@@ -791,10 +803,8 @@ check_context_limits(struct gl_context *ctx)
    assert(MAX_TEXTURE_LEVELS >= MAX_CUBE_TEXTURE_LEVELS);
 
    /* Max texture size should be <= max viewport size (render to texture) */
-   assert((1U << (ctx->Const.MaxTextureLevels - 1))
-          <= ctx->Const.MaxViewportWidth);
-   assert((1U << (ctx->Const.MaxTextureLevels - 1))
-          <= ctx->Const.MaxViewportHeight);
+   assert(ctx->Const.MaxTextureSize <= ctx->Const.MaxViewportWidth);
+   assert(ctx->Const.MaxTextureSize <= ctx->Const.MaxViewportHeight);
 
    assert(ctx->Const.MaxDrawBuffers <= MAX_DRAW_BUFFERS);
 
@@ -940,7 +950,7 @@ nop_handler(const char *name)
    if (ctx) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "%s(invalid call)", name);
    }
-#if defined(DEBUG)
+#ifndef NDEBUG
    else if (getenv("MESA_DEBUG") || getenv("LIBGL_DEBUG")) {
       fprintf(stderr,
               "GL User Error: gl%s called without a rendering context\n",
@@ -1195,6 +1205,8 @@ _mesa_initialize_context(struct gl_context *ctx,
    /* misc one-time initializations */
    one_time_init(ctx);
 
+   _mesa_init_shader_compiler_types();
+
    /* Plug in driver functions and context pointer here.
     * This is important because when we call alloc_shared_state() below
     * we'll call ctx->Driver.NewTextureObject() to create the default
@@ -1307,7 +1319,7 @@ fail:
  * \sa _mesa_initialize_context() and init_attrib_groups().
  */
 void
-_mesa_free_context_data( struct gl_context *ctx )
+_mesa_free_context_data(struct gl_context *ctx, bool destroy_compiler_types)
 {
    if (!_mesa_get_current_context()){
       /* No current context, but we may need one in order to delete
@@ -1345,6 +1357,7 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_free_buffer_objects(ctx);
    _mesa_free_eval_data( ctx );
    _mesa_free_texture_data( ctx );
+   _mesa_free_image_textures(ctx);
    _mesa_free_matrix_data( ctx );
    _mesa_free_pipeline_data(ctx);
    _mesa_free_program_data(ctx);
@@ -1381,10 +1394,17 @@ _mesa_free_context_data( struct gl_context *ctx )
 
    free(ctx->VersionString);
 
+   if (destroy_compiler_types)
+      _mesa_destroy_shader_compiler_types();
+
+   ralloc_free(ctx->SoftFP64);
+
    /* unbind the context if it's currently bound */
    if (ctx == _mesa_get_current_context()) {
       _mesa_make_current(NULL, NULL, NULL);
    }
+
+   free(ctx->Const.SpirVExtensions);
 }
 
 
@@ -1399,7 +1419,7 @@ void
 _mesa_destroy_context( struct gl_context *ctx )
 {
    if (ctx) {
-      _mesa_free_context_data(ctx);
+      _mesa_free_context_data(ctx, true);
       free( (void *) ctx );
    }
 }

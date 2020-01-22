@@ -122,7 +122,7 @@ void si_vid_clear_buffer(struct pipe_context *context, struct rvid_buffer* buffe
 {
 	struct si_context *sctx = (struct si_context*)context;
 
-	si_sdma_clear_buffer(sctx, &buffer->res->b.b, 0, buffer->res->buf->size, 0);
+	si_sdma_clear_buffer(sctx, &buffer->res->b.b, 0, buffer->res->b.b.width0, 0);
 	context->flush(context, NULL, 0);
 }
 
@@ -178,6 +178,7 @@ void si_vid_join_surfaces(struct si_context *sctx,
 				surfaces[i]->u.gfx9.offset[j] += off;
 		}
 
+		surfaces[i]->flags |= RADEON_SURF_IMPORTED;
 		off += surfaces[i]->surf_size;
 	}
 

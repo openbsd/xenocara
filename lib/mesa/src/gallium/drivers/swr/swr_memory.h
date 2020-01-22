@@ -35,7 +35,7 @@ swr_LoadHotTile(HANDLE hPrivateContext,
    swr_draw_context *pDC = (swr_draw_context*)hPrivateContext;
    SWR_SURFACE_STATE *pSrcSurface = &pDC->renderTargets[renderTargetIndex];
 
-   pDC->pAPI->pfnSwrLoadHotTile(hWorkerPrivateData, pSrcSurface, dstFormat, renderTargetIndex, x, y, renderTargetArrayIndex, pDstHotTile);
+   pDC->pTileAPI->pfnSwrLoadHotTile(hWorkerPrivateData, pSrcSurface, dstFormat, renderTargetIndex, x, y, renderTargetArrayIndex, pDstHotTile);
 }
 
 INLINE void
@@ -50,21 +50,12 @@ swr_StoreHotTile(HANDLE hPrivateContext,
    swr_draw_context *pDC = (swr_draw_context*)hPrivateContext;
    SWR_SURFACE_STATE *pDstSurface = &pDC->renderTargets[renderTargetIndex];
 
-   pDC->pAPI->pfnSwrStoreHotTileToSurface(hWorkerPrivateData, pDstSurface, srcFormat, renderTargetIndex, x, y, renderTargetArrayIndex, pSrcHotTile);
+   pDC->pTileAPI->pfnSwrStoreHotTileToSurface(hWorkerPrivateData, pDstSurface, srcFormat, renderTargetIndex, x, y, renderTargetArrayIndex, pSrcHotTile);
 }
 
-INLINE void
-swr_StoreHotTileClear(HANDLE hPrivateContext,
-                      HANDLE hWorkerPrivateData,
-                      SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
-                      UINT x,
-                      UINT y,
-                      uint32_t renderTargetArrayIndex,
-                      const float* pClearColor)
+INLINE gfxptr_t
+swr_MakeGfxPtr(HANDLE hPrivateContext, void* sysAddr)
 {
-   // Grab destination surface state from private context
-   swr_draw_context *pDC = (swr_draw_context*)hPrivateContext;
-   SWR_SURFACE_STATE *pDstSurface = &pDC->renderTargets[renderTargetIndex];
-
-   pDC->pAPI->pfnSwrStoreHotTileClear(hWorkerPrivateData, pDstSurface, renderTargetIndex, x, y, renderTargetArrayIndex, pClearColor);
+    // Fulfill an unused internal interface
+    return (gfxptr_t)sysAddr;
 }

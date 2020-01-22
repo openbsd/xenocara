@@ -32,6 +32,7 @@
 #include "util/u_string.h"
 #include "util/u_surface.h"
 #include "util/set.h"
+#include "util/u_drm.h"
 
 #include "freedreno_resource.h"
 #include "freedreno_batch_cache.h"
@@ -43,11 +44,19 @@
 #include "freedreno_query_hw.h"
 #include "freedreno_util.h"
 
-#include <drm_fourcc.h>
+#include "drm-uapi/drm_fourcc.h"
 #include <errno.h>
 
 /* XXX this should go away, needed for 'struct winsys_handle' */
 #include "state_tracker/drm_driver.h"
+
+/* A private modifier for now, so we have a way to request tiled but not
+ * compressed.  It would perhaps be good to get real modifiers for the
+ * tiled formats, but would probably need to do some work to figure out
+ * the layout(s) of the tiled modes, and whether they are the same
+ * across generations.
+ */
+#define FD_FORMAT_MOD_QCOM_TILED	fourcc_mod_code(QCOM, 0xffffffff)
 
 /**
  * Go through the entire state and see if the resource is bound
@@ -83,6 +92,15 @@ rebind_resource(struct fd_context *ctx, struct pipe_resource *prsc)
 				break;
 			if (ctx->tex[stage].textures[i] && (ctx->tex[stage].textures[i]->texture == prsc))
 				ctx->dirty_shader[stage] |= FD_DIRTY_SHADER_TEX;
+		}
+
+		/* Images */
+		const unsigned num_images = util_last_bit(ctx->shaderimg[stage].enabled_mask);
+		for (unsigned i = 0; i < num_images; i++) {
+			if (ctx->dirty_shader[stage] & FD_DIRTY_SHADER_IMAGE)
+				break;
+			if (ctx->shaderimg[stage].si[i].resource == prsc)
+				ctx->dirty_shader[stage] |= FD_DIRTY_SHADER_IMAGE;
 		}
 
 		/* SSBOs */
@@ -126,10 +144,7 @@ do_blit(struct fd_context *ctx, const struct pipe_blit_info *blit, bool fallback
 	struct pipe_context *pctx = &ctx->base;
 
 	/* TODO size threshold too?? */
-	if (!fallback) {
-		/* do blit on gpu: */
-		pctx->blit(pctx, blit);
-	} else {
+	if (fallback || !fd_blit(pctx, blit)) {
 		/* do blit on cpu: */
 		util_resource_copy_region(pctx,
 				blit->dst.resource, blit->dst.level, blit->dst.box.x,
@@ -138,9 +153,15 @@ do_blit(struct fd_context *ctx, const struct pipe_blit_info *blit, bool fallback
 	}
 }
 
+/**
+ * @rsc: the resource to shadow
+ * @level: the level to discard (if box != NULL, otherwise ignored)
+ * @box: the box to discard (or NULL if none)
+ * @modifier: the modifier for the new buffer state
+ */
 static bool
 fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
-		unsigned level, const struct pipe_box *box)
+		unsigned level, const struct pipe_box *box, uint64_t modifier)
 {
 	struct pipe_context *pctx = &ctx->base;
 	struct pipe_resource *prsc = &rsc->base;
@@ -162,15 +183,16 @@ fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
 	if (prsc->target == PIPE_BUFFER)
 		fallback = true;
 
-	bool whole_level = util_texrange_covers_whole_level(prsc, level,
+	bool discard_whole_level = box && util_texrange_covers_whole_level(prsc, level,
 		box->x, box->y, box->z, box->width, box->height, box->depth);
 
 	/* TODO need to be more clever about current level */
-	if ((prsc->target >= PIPE_TEXTURE_2D) && !whole_level)
+	if ((prsc->target >= PIPE_TEXTURE_2D) && box && !discard_whole_level)
 		return false;
 
 	struct pipe_resource *pshadow =
-		pctx->screen->resource_create(pctx->screen, prsc);
+		pctx->screen->resource_create_with_modifiers(pctx->screen,
+				prsc, &modifier, 1);
 
 	if (!pshadow)
 		return false;
@@ -201,6 +223,10 @@ fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
 	/* TODO valid_buffer_range?? */
 	swap(rsc->bo,        shadow->bo);
 	swap(rsc->write_batch,   shadow->write_batch);
+	swap(rsc->offset, shadow->offset);
+	swap(rsc->ubwc_offset, shadow->ubwc_offset);
+	swap(rsc->ubwc_pitch, shadow->ubwc_pitch);
+	swap(rsc->ubwc_size, shadow->ubwc_size);
 	rsc->seqno = p_atomic_inc_return(&ctx->screen->rsc_seqno);
 
 	/* at this point, the newly created shadow buffer is not referenced
@@ -233,7 +259,7 @@ fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
 
 	/* blit the other levels in their entirety: */
 	for (unsigned l = 0; l <= prsc->last_level; l++) {
-		if (l == level)
+		if (box && l == level)
 			continue;
 
 		/* just blit whole level: */
@@ -248,7 +274,7 @@ fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
 	/* deal w/ current level specially, since we might need to split
 	 * it up into a couple blits:
 	 */
-	if (!whole_level) {
+	if (box && !discard_whole_level) {
 		set_box(level, level);
 
 		switch (prsc->target) {
@@ -286,6 +312,34 @@ fd_try_shadow_resource(struct fd_context *ctx, struct fd_resource *rsc,
 	return true;
 }
 
+/**
+ * Uncompress an UBWC compressed buffer "in place".  This works basically
+ * like resource shadowing, creating a new resource, and doing an uncompress
+ * blit, and swapping the state between shadow and original resource so it
+ * appears to the state tracker as if nothing changed.
+ */
+void
+fd_resource_uncompress(struct fd_context *ctx, struct fd_resource *rsc)
+{
+	bool success =
+		fd_try_shadow_resource(ctx, rsc, 0, NULL, FD_FORMAT_MOD_QCOM_TILED);
+
+	/* shadow should not fail in any cases where we need to uncompress: */
+	debug_assert(success);
+
+	/*
+	 * TODO what if rsc is used in other contexts, we don't currently
+	 * have a good way to rebind_resource() in other contexts.  And an
+	 * app that is reading one resource in multiple contexts, isn't
+	 * going to expect that the resource is modified.
+	 *
+	 * Hopefully the edge cases where we need to uncompress are rare
+	 * enough that they mostly only show up in deqp.
+	 */
+
+	rebind_resource(ctx, &rsc->base);
+}
+
 static struct fd_resource *
 fd_alloc_staging(struct fd_context *ctx, struct fd_resource *rsc,
 		unsigned level, const struct pipe_box *box)
@@ -299,6 +353,8 @@ fd_alloc_staging(struct fd_context *ctx, struct fd_resource *rsc,
 	 * for 3d textures, it is the depth:
 	 */
 	if (tmpl.array_size > 1) {
+		if (tmpl.target == PIPE_TEXTURE_CUBE)
+			tmpl.target = PIPE_TEXTURE_2D_ARRAY;
 		tmpl.array_size = box->depth;
 		tmpl.depth0 = 1;
 	} else {
@@ -373,7 +429,9 @@ flush_resource(struct fd_context *ctx, struct fd_resource *rsc, unsigned usage)
 {
 	struct fd_batch *write_batch = NULL;
 
-	fd_batch_reference(&write_batch, rsc->write_batch);
+	mtx_lock(&ctx->screen->lock);
+	fd_batch_reference_locked(&write_batch, rsc->write_batch);
+	mtx_unlock(&ctx->screen->lock);
 
 	if (usage & PIPE_TRANSFER_WRITE) {
 		struct fd_batch *batch, *batches[32] = {};
@@ -387,11 +445,11 @@ flush_resource(struct fd_context *ctx, struct fd_resource *rsc, unsigned usage)
 		mtx_lock(&ctx->screen->lock);
 		batch_mask = rsc->batch_mask;
 		foreach_batch(batch, &ctx->screen->batch_cache, batch_mask)
-			fd_batch_reference(&batches[batch->idx], batch);
+			fd_batch_reference_locked(&batches[batch->idx], batch);
 		mtx_unlock(&ctx->screen->lock);
 
 		foreach_batch(batch, &ctx->screen->batch_cache, batch_mask)
-			fd_batch_flush(batch, false, false);
+			fd_batch_flush(batch, false);
 
 		foreach_batch(batch, &ctx->screen->batch_cache, batch_mask) {
 			fd_batch_sync(batch);
@@ -399,7 +457,7 @@ flush_resource(struct fd_context *ctx, struct fd_resource *rsc, unsigned usage)
 		}
 		assert(rsc->batch_mask == 0);
 	} else if (write_batch) {
-		fd_batch_flush(write_batch, true, false);
+		fd_batch_flush(write_batch, true);
 	}
 
 	fd_batch_reference(&write_batch, NULL);
@@ -501,7 +559,10 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 				fd_blit_to_staging(ctx, trans);
 
 				struct fd_batch *batch = NULL;
-				fd_batch_reference(&batch, staging_rsc->write_batch);
+
+				fd_context_lock(ctx);
+				fd_batch_reference_locked(&batch, staging_rsc->write_batch);
+				fd_context_unlock(ctx);
 
 				/* we can't fd_bo_cpu_prep() until the blit to staging
 				 * is submitted to kernel.. in that case write_batch
@@ -550,7 +611,9 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 		struct fd_batch *write_batch = NULL;
 
 		/* hold a reference, so it doesn't disappear under us: */
-		fd_batch_reference(&write_batch, rsc->write_batch);
+		fd_context_lock(ctx);
+		fd_batch_reference_locked(&write_batch, rsc->write_batch);
+		fd_context_unlock(ctx);
 
 		if ((usage & PIPE_TRANSFER_WRITE) && write_batch &&
 				write_batch->back_blit) {
@@ -577,7 +640,8 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 			/* try shadowing only if it avoids a flush, otherwise staging would
 			 * be better:
 			 */
-			if (needs_flush && fd_try_shadow_resource(ctx, rsc, level, box)) {
+			if (needs_flush && fd_try_shadow_resource(ctx, rsc, level,
+							box, DRM_FORMAT_MOD_LINEAR)) {
 				needs_flush = busy = false;
 				rebind_resource(ctx, prsc);
 				ctx->stats.shadow_uploads++;
@@ -676,11 +740,14 @@ fd_resource_modifier(struct fd_resource *rsc)
 	if (!rsc->tile_mode)
 		return DRM_FORMAT_MOD_LINEAR;
 
+	if (rsc->ubwc_size)
+		return DRM_FORMAT_MOD_QCOM_COMPRESSED;
+
 	/* TODO invent a modifier for tiled but not UBWC buffers: */
 	return DRM_FORMAT_MOD_INVALID;
 }
 
-static boolean
+static bool
 fd_resource_get_handle(struct pipe_screen *pscreen,
 		struct pipe_context *pctx,
 		struct pipe_resource *prsc,
@@ -826,19 +893,6 @@ has_depth(enum pipe_format format)
 	}
 }
 
-static bool
-find_modifier(uint64_t needle, const uint64_t *haystack, int count)
-{
-	int i;
-
-	for (i = 0; i < count; i++) {
-		if (haystack[i] == needle)
-			return true;
-	}
-
-	return false;
-}
-
 /**
  * Create a new texture object, using the given template info.
  */
@@ -863,6 +917,9 @@ fd_resource_create_with_modifiers(struct pipe_screen *pscreen,
 		struct pipe_resource scanout_templat = *tmpl;
 		struct renderonly_scanout *scanout;
 		struct winsys_handle handle;
+
+		/* apply freedreno alignment requirement */
+		scanout_templat.width0 = align(tmpl->width0, screen->gmem_alignw);
 
 		scanout = renderonly_scanout_for_resource(&scanout_templat,
 												  screen->ro, &handle);
@@ -902,7 +959,7 @@ fd_resource_create_with_modifiers(struct pipe_screen *pscreen,
 	 PIPE_BIND_LINEAR  | \
 	 PIPE_BIND_DISPLAY_TARGET)
 
-	bool linear = find_modifier(DRM_FORMAT_MOD_LINEAR, modifiers, count);
+	bool linear = drm_find_modifier(DRM_FORMAT_MOD_LINEAR, modifiers, count);
 	if (tmpl->bind & LINEAR)
 		linear = true;
 
@@ -914,13 +971,14 @@ fd_resource_create_with_modifiers(struct pipe_screen *pscreen,
 	 * except we don't have a format modifier for tiled.  (We probably
 	 * should.)
 	 */
-	bool allow_ubwc = find_modifier(DRM_FORMAT_MOD_INVALID, modifiers, count);
+	bool allow_ubwc = drm_find_modifier(DRM_FORMAT_MOD_INVALID, modifiers, count);
 	if (tmpl->bind & PIPE_BIND_SHARED)
-		allow_ubwc = find_modifier(DRM_FORMAT_MOD_QCOM_COMPRESSED, modifiers, count);
+		allow_ubwc = drm_find_modifier(DRM_FORMAT_MOD_QCOM_COMPRESSED, modifiers, count);
+
+	allow_ubwc &= !(fd_mesa_debug & FD_DBG_NOUBWC);
 
 	if (screen->tile_mode &&
 			(tmpl->target != PIPE_BUFFER) &&
-			(tmpl->bind & PIPE_BIND_SAMPLER_VIEW) &&
 			!linear) {
 		rsc->tile_mode = screen->tile_mode(tmpl);
 	}
@@ -1011,7 +1069,7 @@ is_supported_modifier(struct pipe_screen *pscreen, enum pipe_format pfmt,
 
 	/* Get the supported modifiers: */
 	uint64_t modifiers[count];
-	pscreen->query_dmabuf_modifiers(pscreen, pfmt, 0, modifiers, NULL, &count);
+	pscreen->query_dmabuf_modifiers(pscreen, pfmt, count, modifiers, NULL, &count);
 
 	for (int i = 0; i < count; i++)
 		if (modifiers[i] == mod)
@@ -1072,7 +1130,7 @@ fd_resource_from_handle(struct pipe_screen *pscreen,
 	if (handle->modifier == DRM_FORMAT_MOD_QCOM_COMPRESSED) {
 		if (!is_supported_modifier(pscreen, tmpl->format,
 				DRM_FORMAT_MOD_QCOM_COMPRESSED)) {
-			DBG("bad modifier: %lx", handle->modifier);
+			DBG("bad modifier: %"PRIx64, handle->modifier);
 			goto fail;
 		}
 		debug_assert(screen->fill_ubwc_buffer_sizes);
@@ -1089,6 +1147,8 @@ fd_resource_from_handle(struct pipe_screen *pscreen,
 			renderonly_create_gpu_import_for_resource(prsc, screen->ro, NULL);
 		/* failure is expected in some cases.. */
 	}
+
+	rsc->valid = true;
 
 	return prsc;
 
@@ -1114,81 +1174,6 @@ fd_render_condition_check(struct pipe_context *pctx)
 			return (bool)res.u64 != ctx->cond_cond;
 
 	return true;
-}
-
-/**
- * Optimal hardware path for blitting pixels.
- * Scaling, format conversion, up- and downsampling (resolve) are allowed.
- */
-static void
-fd_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
-{
-	struct fd_context *ctx = fd_context(pctx);
-	struct pipe_blit_info info = *blit_info;
-
-	if (info.render_condition_enable && !fd_render_condition_check(pctx))
-		return;
-
-	if (info.mask & PIPE_MASK_S) {
-		DBG("cannot blit stencil, skipping");
-		info.mask &= ~PIPE_MASK_S;
-	}
-
-	if (!util_blitter_is_blit_supported(ctx->blitter, &info)) {
-		DBG("blit unsupported %s -> %s",
-				util_format_short_name(info.src.resource->format),
-				util_format_short_name(info.dst.resource->format));
-		return;
-	}
-
-	if (!(ctx->blit && ctx->blit(ctx, &info)))
-		fd_blitter_blit(ctx, &info);
-}
-
-void
-fd_blitter_pipe_begin(struct fd_context *ctx, bool render_cond, bool discard,
-		enum fd_render_stage stage)
-{
-	fd_fence_ref(ctx->base.screen, &ctx->last_fence, NULL);
-
-	util_blitter_save_fragment_constant_buffer_slot(ctx->blitter,
-			ctx->constbuf[PIPE_SHADER_FRAGMENT].cb);
-	util_blitter_save_vertex_buffer_slot(ctx->blitter, ctx->vtx.vertexbuf.vb);
-	util_blitter_save_vertex_elements(ctx->blitter, ctx->vtx.vtx);
-	util_blitter_save_vertex_shader(ctx->blitter, ctx->prog.vp);
-	util_blitter_save_so_targets(ctx->blitter, ctx->streamout.num_targets,
-			ctx->streamout.targets);
-	util_blitter_save_rasterizer(ctx->blitter, ctx->rasterizer);
-	util_blitter_save_viewport(ctx->blitter, &ctx->viewport);
-	util_blitter_save_scissor(ctx->blitter, &ctx->scissor);
-	util_blitter_save_fragment_shader(ctx->blitter, ctx->prog.fp);
-	util_blitter_save_blend(ctx->blitter, ctx->blend);
-	util_blitter_save_depth_stencil_alpha(ctx->blitter, ctx->zsa);
-	util_blitter_save_stencil_ref(ctx->blitter, &ctx->stencil_ref);
-	util_blitter_save_sample_mask(ctx->blitter, ctx->sample_mask);
-	util_blitter_save_framebuffer(ctx->blitter, &ctx->framebuffer);
-	util_blitter_save_fragment_sampler_states(ctx->blitter,
-			ctx->tex[PIPE_SHADER_FRAGMENT].num_samplers,
-			(void **)ctx->tex[PIPE_SHADER_FRAGMENT].samplers);
-	util_blitter_save_fragment_sampler_views(ctx->blitter,
-			ctx->tex[PIPE_SHADER_FRAGMENT].num_textures,
-			ctx->tex[PIPE_SHADER_FRAGMENT].textures);
-	if (!render_cond)
-		util_blitter_save_render_condition(ctx->blitter,
-			ctx->cond_query, ctx->cond_cond, ctx->cond_mode);
-
-	if (ctx->batch)
-		fd_batch_set_stage(ctx->batch, stage);
-
-	ctx->in_blit = discard;
-}
-
-void
-fd_blitter_pipe_end(struct fd_context *ctx)
-{
-	if (ctx->batch)
-		fd_batch_set_stage(ctx->batch, FD_STAGE_NULL);
-	ctx->in_blit = false;
 }
 
 static void
@@ -1324,6 +1309,13 @@ fd_get_sample_position(struct pipe_context *context,
 	pos_out[1] = ptr[sample_index][1] / 16.0f;
 }
 
+static void
+fd_blit_pipe(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
+{
+	/* wrap fd_blit to return void */
+	fd_blit(pctx, blit_info);
+}
+
 void
 fd_resource_context_init(struct pipe_context *pctx)
 {
@@ -1335,7 +1327,7 @@ fd_resource_context_init(struct pipe_context *pctx)
 	pctx->create_surface = fd_create_surface;
 	pctx->surface_destroy = fd_surface_destroy;
 	pctx->resource_copy_region = fd_resource_copy_region;
-	pctx->blit = fd_blit;
+	pctx->blit = fd_blit_pipe;
 	pctx->flush_resource = fd_flush_resource;
 	pctx->invalidate_resource = fd_invalidate_resource;
 	pctx->get_sample_position = fd_get_sample_position;

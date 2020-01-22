@@ -378,8 +378,10 @@ if with_egl and not (with_platform_drm or with_platform_surfaceless or with_plat
 endif
 
 # Android uses emutls for versions <= P/28. For USE_ELF_TLS we need ELF TLS.
-if not with_platform_android or get_option('platform-sdk-version') >= 29
+use_elf_tls = false
+if host_machine.system() != 'openbsd' and (not with_platform_android or get_option('platform-sdk-version') >= 29)
   pre_args += '-DUSE_ELF_TLS'
+  use_elf_tls = true
 endif
 
 if with_glx != 'disabled'
@@ -860,6 +862,8 @@ if ['linux', 'cygwin', 'gnu', 'gnu/kfreebsd'].contains(host_machine.system())
   pre_args += '-D_GNU_SOURCE'
 elif host_machine.system() == 'sunos'
   pre_args += '-D__EXTENSIONS__'
+elif host_machine.system() == 'openbsd'
+  pre_args += '-D_ISOC11_SOURCE'
 endif
 
 # Check for generic C arguments
@@ -1031,12 +1035,12 @@ elif cc.has_header_symbol('sys/mkdev.h', 'major')
 endif
 
 foreach h : ['xlocale.h', 'sys/sysctl.h', 'linux/futex.h', 'endian.h', 'dlfcn.h', 'execinfo.h', 'sys/shm.h', 'cet.h']
-  if cc.compiles('#include <@0@>'.format(h), name : '@0@'.format(h))
+  if cc.compiles('#include <sys/types.h>\n#include <@0@>'.format(h), name : '@0@'.format(h))
     pre_args += '-DHAVE_@0@'.format(h.to_upper().underscorify())
   endif
 endforeach
 
-foreach f : ['strtof', 'mkostemp', 'posix_memalign', 'timespec_get', 'memfd_create', 'random_r', 'flock']
+foreach f : ['strtof', 'mkostemp', 'posix_memalign', 'timespec_get', 'memfd_create', 'random_r', 'flock', 'arc4random_buf']
   if cc.has_function(f)
     pre_args += '-DHAVE_@0@'.format(f.to_upper())
   endif
@@ -1098,6 +1102,8 @@ endif
 ld_args_build_id = []
 if build_machine.system() != 'darwin'
    ld_args_build_id += '-Wl,--build-id=sha1'
+   # XXX test if supported by linker
+   pre_args += '-DHAVE_LD_BUILD_ID'
 endif
 
 # check for dl support
@@ -1508,6 +1514,11 @@ if dep_m.found()
 endif
 if dep_dl.found()
   gl_priv_libs += '-ldl'
+endif
+
+gbm_priv_libs = []
+if dep_dl.found()
+  gbm_priv_libs += '-ldl'
 endif
 
 pkg = import('pkgconfig')

@@ -48,7 +48,7 @@ util_stream_writef(FILE *stream, const char *format, ...)
    unsigned len;
    va_list ap;
    va_start(ap, format);
-   len = util_vsnprintf(buf, sizeof(buf), format, ap);
+   len = vsnprintf(buf, sizeof(buf), format, ap);
    va_end(ap);
    fwrite(buf, len, 1, stream);
 }
@@ -789,7 +789,7 @@ util_dump_sampler_view(FILE *stream, const struct pipe_sampler_view *state)
    else {
       util_dump_member(stream, uint, state, u.tex.first_layer);
       util_dump_member(stream, uint, state, u.tex.last_layer);
-      util_dump_member(stream, uint, state, u.tex.last_level);
+      util_dump_member(stream, uint, state, u.tex.first_level);
       util_dump_member(stream, uint, state, u.tex.last_level);
    }
 

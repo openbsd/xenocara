@@ -62,7 +62,8 @@ static struct pipe_query *r300_create_query(struct pipe_context *pipe,
     q->buf = r300->rws->buffer_create(r300->rws,
                                       r300screen->info.gart_page_size,
                                       r300screen->info.gart_page_size,
-                                      RADEON_DOMAIN_GTT, 0);
+                                      RADEON_DOMAIN_GTT,
+                                      RADEON_FLAG_NO_INTERPROCESS_SHARING);
     if (!q->buf) {
         FREE(q);
         return NULL;
@@ -86,8 +87,8 @@ void r300_resume_query(struct r300_context *r300,
     r300_mark_atom_dirty(r300, &r300->query_start);
 }
 
-static boolean r300_begin_query(struct pipe_context* pipe,
-                                struct pipe_query* query)
+static bool r300_begin_query(struct pipe_context* pipe,
+                             struct pipe_query* query)
 {
     struct r300_context* r300 = r300_context(pipe);
     struct r300_query* q = r300_query(query);
@@ -137,10 +138,10 @@ static bool r300_end_query(struct pipe_context* pipe,
     return true;
 }
 
-static boolean r300_get_query_result(struct pipe_context* pipe,
-                                     struct pipe_query* query,
-                                     boolean wait,
-                                     union pipe_query_result *vresult)
+static bool r300_get_query_result(struct pipe_context* pipe,
+                                  struct pipe_query* query,
+                                  bool wait,
+                                  union pipe_query_result *vresult)
 {
     struct r300_context* r300 = r300_context(pipe);
     struct r300_query *q = r300_query(query);
@@ -183,12 +184,12 @@ static boolean r300_get_query_result(struct pipe_context* pipe,
 
 static void r300_render_condition(struct pipe_context *pipe,
                                   struct pipe_query *query,
-                                  boolean condition,
+                                  bool condition,
                                   enum pipe_render_cond_flag mode)
 {
     struct r300_context *r300 = r300_context(pipe);
     union pipe_query_result result;
-    boolean wait;
+    bool wait;
 
     r300->skip_rendering = FALSE;
 
@@ -208,7 +209,7 @@ static void r300_render_condition(struct pipe_context *pipe,
 }
 
 static void
-r300_set_active_query_state(struct pipe_context *pipe, boolean enable)
+r300_set_active_query_state(struct pipe_context *pipe, bool enable)
 {
 }
 

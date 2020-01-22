@@ -33,14 +33,11 @@
 #include "genxml/gen_macros.h"
 #include "genxml/genX_pack.h"
 
-static void
-emit_lrm(struct anv_batch *batch, uint32_t reg, struct anv_address addr)
-{
-   anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_MEM), lrm) {
-      lrm.RegisterAddress  = reg;
-      lrm.MemoryAddress    = addr;
-   }
-}
+/* We reserve GPR 14 and 15 for conditional rendering */
+#define GEN_MI_BUILDER_NUM_ALLOC_GPRS 14
+#define __gen_get_batch_dwords anv_batch_emit_dwords
+#define __gen_address_offset anv_address_add
+#include "common/gen_mi_builder.h"
 
 static void
 emit_lri(struct anv_batch *batch, uint32_t reg, uint32_t imm)
@@ -50,17 +47,6 @@ emit_lri(struct anv_batch *batch, uint32_t reg, uint32_t imm)
       lri.DataDWord        = imm;
    }
 }
-
-#if GEN_IS_HASWELL || GEN_GEN >= 8
-static void
-emit_lrr(struct anv_batch *batch, uint32_t dst, uint32_t src)
-{
-   anv_batch_emit(batch, GENX(MI_LOAD_REGISTER_REG), lrr) {
-      lrr.SourceRegisterAddress        = src;
-      lrr.DestinationRegisterAddress   = dst;
-   }
-}
-#endif
 
 void
 genX(cmd_buffer_emit_state_base_address)(struct anv_cmd_buffer *cmd_buffer)
@@ -89,6 +75,8 @@ genX(cmd_buffer_emit_state_base_address)(struct anv_cmd_buffer *cmd_buffer)
       sba.GeneralStateBaseAddress = (struct anv_address) { NULL, 0 };
       sba.GeneralStateMOCS = GENX(MOCS);
       sba.GeneralStateBaseAddressModifyEnable = true;
+
+      sba.StatelessDataPortAccessMOCS = GENX(MOCS);
 
       sba.SurfaceStateBaseAddress =
          anv_cmd_buffer_surface_base_address(cmd_buffer);
@@ -141,10 +129,18 @@ genX(cmd_buffer_emit_state_base_address)(struct anv_cmd_buffer *cmd_buffer)
       sba.InstructionAccessUpperBoundModifyEnable = true;
 #  endif
 #  if (GEN_GEN >= 9)
-      sba.BindlessSurfaceStateBaseAddress = (struct anv_address) { NULL, 0 };
+      if (cmd_buffer->device->instance->physicalDevice.use_softpin) {
+         sba.BindlessSurfaceStateBaseAddress = (struct anv_address) {
+            .bo = device->surface_state_pool.block_pool.bo,
+            .offset = 0,
+         };
+         sba.BindlessSurfaceStateSize = (1 << 20) - 1;
+      } else {
+         sba.BindlessSurfaceStateBaseAddress = ANV_NULL_ADDRESS;
+         sba.BindlessSurfaceStateSize = 0;
+      }
       sba.BindlessSurfaceStateMOCS = GENX(MOCS);
       sba.BindlessSurfaceStateBaseAddressModifyEnable = true;
-      sba.BindlessSurfaceStateSize = 0;
 #  endif
 #  if (GEN_GEN >= 10)
       sba.BindlessSamplerStateBaseAddress = (struct anv_address) { NULL, 0 };
@@ -250,7 +246,7 @@ color_attachment_compute_aux_usage(struct anv_device * device,
                                    union isl_color_value *fast_clear_color)
 {
    struct anv_attachment_state *att_state = &cmd_state->attachments[att];
-   struct anv_image_view *iview = cmd_state->framebuffer->attachments[att];
+   struct anv_image_view *iview = cmd_state->attachments[att].image_view;
 
    assert(iview->n_planes == 1);
 
@@ -392,7 +388,7 @@ depth_stencil_attachment_compute_aux_usage(struct anv_device *device,
    struct anv_render_pass_attachment *pass_att =
       &cmd_state->pass->attachments[att];
    struct anv_attachment_state *att_state = &cmd_state->attachments[att];
-   struct anv_image_view *iview = cmd_state->framebuffer->attachments[att];
+   struct anv_image_view *iview = cmd_state->attachments[att].image_view;
 
    /* These will be initialized after the first subpass transition. */
    att_state->aux_usage = ISL_AUX_USAGE_NONE;
@@ -497,6 +493,55 @@ transition_depth_buffer(struct anv_cmd_buffer *cmd_buffer,
                        0, 0, 1, hiz_op);
 }
 
+static inline bool
+vk_image_layout_stencil_write_optimal(VkImageLayout layout)
+{
+   return layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
+          layout == VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+}
+
+/* Transitions a HiZ-enabled depth buffer from one layout to another. Unless
+ * the initial layout is undefined, the HiZ buffer and depth buffer will
+ * represent the same data at the end of this operation.
+ */
+static void
+transition_stencil_buffer(struct anv_cmd_buffer *cmd_buffer,
+                          const struct anv_image *image,
+                          uint32_t base_level, uint32_t level_count,
+                          uint32_t base_layer, uint32_t layer_count,
+                          VkImageLayout initial_layout,
+                          VkImageLayout final_layout)
+{
+#if GEN_GEN == 7
+   uint32_t plane = anv_image_aspect_to_plane(image->aspects,
+                                              VK_IMAGE_ASPECT_STENCIL_BIT);
+
+   /* On gen7, we have to store a texturable version of the stencil buffer in
+    * a shadow whenever VK_IMAGE_USAGE_SAMPLED_BIT is set and copy back and
+    * forth at strategic points.  Stencil writes are only allowed in three
+    * layouts:
+    *
+    *  - VK_IMAGE_LAYOUT_GENERAL
+    *  - VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+    *  - VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    *  - VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+    *
+    * For general, we have no nice opportunity to transition so we do the copy
+    * to the shadow unconditionally at the end of the subpass.  For transfer
+    * destinations, we can update it as part of the transfer op.  For the
+    * other two, we delay the copy until a transition into some other layout.
+    */
+   if (image->planes[plane].shadow_surface.isl.size_B > 0 &&
+       vk_image_layout_stencil_write_optimal(initial_layout) &&
+       !vk_image_layout_stencil_write_optimal(final_layout)) {
+      anv_image_copy_to_shadow(cmd_buffer, image,
+                               VK_IMAGE_ASPECT_STENCIL_BIT,
+                               base_level, level_count,
+                               base_layer, layer_count);
+   }
+#endif /* GEN_GEN == 7 */
+}
+
 #define MI_PREDICATE_SRC0    0x2400
 #define MI_PREDICATE_SRC1    0x2408
 #define MI_PREDICATE_RESULT  0x2418
@@ -545,25 +590,6 @@ set_image_fast_clear_state(struct anv_cmd_buffer *cmd_buffer,
       set_image_compressed_bit(cmd_buffer, image, aspect, 0, 0, 1, true);
 }
 
-#if GEN_IS_HASWELL || GEN_GEN >= 8
-static inline uint32_t
-mi_alu(uint32_t opcode, uint32_t operand1, uint32_t operand2)
-{
-   struct GENX(MI_MATH_ALU_INSTRUCTION) instr = {
-      .ALUOpcode = opcode,
-      .Operand1 = operand1,
-      .Operand2 = operand2,
-   };
-
-   uint32_t dw;
-   GENX(MI_MATH_ALU_INSTRUCTION_pack)(NULL, &dw, &instr);
-
-   return dw;
-}
-#endif
-
-#define CS_GPR(n) (0x2600 + (n) * 8)
-
 /* This is only really practical on haswell and above because it requires
  * MI math in order to get it correct.
  */
@@ -576,15 +602,12 @@ anv_cmd_compute_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
                                   enum isl_aux_op resolve_op,
                                   enum anv_fast_clear_type fast_clear_supported)
 {
-   struct anv_address fast_clear_type_addr =
-      anv_image_get_fast_clear_type_addr(cmd_buffer->device, image, aspect);
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
 
-   /* Name some registers */
-   const int image_fc_reg = MI_ALU_REG0;
-   const int fc_imm_reg = MI_ALU_REG1;
-   const int pred_reg = MI_ALU_REG2;
-
-   uint32_t *dw;
+   const struct gen_mi_value fast_clear_type =
+      gen_mi_mem32(anv_image_get_fast_clear_type_addr(cmd_buffer->device,
+                                                      image, aspect));
 
    if (resolve_op == ISL_AUX_OP_FULL_RESOLVE) {
       /* In this case, we're doing a full resolve which means we want the
@@ -595,17 +618,13 @@ anv_cmd_compute_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
        * if the first slice has been fast-cleared, it is also marked as
        * compressed.  See also set_image_fast_clear_state.
        */
-      struct anv_address compression_state_addr =
-         anv_image_get_compression_state_addr(cmd_buffer->device, image,
-                                              aspect, level, array_layer);
-      anv_batch_emit(&cmd_buffer->batch, GENX(MI_LOAD_REGISTER_MEM), lrm) {
-         lrm.RegisterAddress  = MI_PREDICATE_SRC0;
-         lrm.MemoryAddress    = compression_state_addr;
-      }
-      anv_batch_emit(&cmd_buffer->batch, GENX(MI_STORE_DATA_IMM), sdi) {
-         sdi.Address       = compression_state_addr;
-         sdi.ImmediateData = 0;
-      }
+      const struct gen_mi_value compression_state =
+         gen_mi_mem32(anv_image_get_compression_state_addr(cmd_buffer->device,
+                                                           image, aspect,
+                                                           level, array_layer));
+      gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0),
+                       compression_state);
+      gen_mi_store(&b, compression_state, gen_mi_imm(0));
 
       if (level == 0 && array_layer == 0) {
          /* If the predicate is true, we want to write 0 to the fast clear type
@@ -613,25 +632,10 @@ anv_cmd_compute_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
           *
           * clear_type = clear_type & ~predicate;
           */
-         anv_batch_emit(&cmd_buffer->batch, GENX(MI_LOAD_REGISTER_MEM), lrm) {
-            lrm.RegisterAddress  = CS_GPR(image_fc_reg);
-            lrm.MemoryAddress    = fast_clear_type_addr;
-         }
-         anv_batch_emit(&cmd_buffer->batch, GENX(MI_LOAD_REGISTER_REG), lrr) {
-            lrr.DestinationRegisterAddress   = CS_GPR(pred_reg);
-            lrr.SourceRegisterAddress        = MI_PREDICATE_SRC0;
-         }
-
-         dw = anv_batch_emitn(&cmd_buffer->batch, 5, GENX(MI_MATH));
-         dw[1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, image_fc_reg);
-         dw[2] = mi_alu(MI_ALU_LOADINV, MI_ALU_SRCB, pred_reg);
-         dw[3] = mi_alu(MI_ALU_AND, 0, 0);
-         dw[4] = mi_alu(MI_ALU_STORE, image_fc_reg, MI_ALU_ACCU);
-
-         anv_batch_emit(&cmd_buffer->batch, GENX(MI_STORE_REGISTER_MEM), srm) {
-            srm.MemoryAddress    = fast_clear_type_addr;
-            srm.RegisterAddress  = CS_GPR(image_fc_reg);
-         }
+         struct gen_mi_value new_fast_clear_type =
+            gen_mi_iand(&b, fast_clear_type,
+                            gen_mi_inot(&b, gen_mi_reg64(MI_PREDICATE_SRC0)));
+         gen_mi_store(&b, fast_clear_type, new_fast_clear_type);
       }
    } else if (level == 0 && array_layer == 0) {
       /* In this case, we are doing a partial resolve to get rid of fast-clear
@@ -641,42 +645,20 @@ anv_cmd_compute_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
       assert(resolve_op == ISL_AUX_OP_PARTIAL_RESOLVE);
       assert(fast_clear_supported < ANV_FAST_CLEAR_ANY);
 
-      anv_batch_emit(&cmd_buffer->batch, GENX(MI_LOAD_REGISTER_MEM), lrm) {
-         lrm.RegisterAddress  = CS_GPR(image_fc_reg);
-         lrm.MemoryAddress    = fast_clear_type_addr;
-      }
-      emit_lri(&cmd_buffer->batch, CS_GPR(image_fc_reg) + 4, 0);
-
-      emit_lri(&cmd_buffer->batch, CS_GPR(fc_imm_reg), fast_clear_supported);
-      emit_lri(&cmd_buffer->batch, CS_GPR(fc_imm_reg) + 4, 0);
-
-      /* We need to compute (fast_clear_supported < image->fast_clear).
-       * We do this by subtracting and storing the carry bit.
-       */
-      dw = anv_batch_emitn(&cmd_buffer->batch, 5, GENX(MI_MATH));
-      dw[1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, fc_imm_reg);
-      dw[2] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCB, image_fc_reg);
-      dw[3] = mi_alu(MI_ALU_SUB, 0, 0);
-      dw[4] = mi_alu(MI_ALU_STORE, pred_reg, MI_ALU_CF);
-
-      /* Store the predicate */
-      emit_lrr(&cmd_buffer->batch, MI_PREDICATE_SRC0, CS_GPR(pred_reg));
+      /* We need to compute (fast_clear_supported < image->fast_clear) */
+      struct gen_mi_value pred =
+         gen_mi_ult(&b, gen_mi_imm(fast_clear_supported), fast_clear_type);
+      gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0),
+                       gen_mi_value_ref(&b, pred));
 
       /* If the predicate is true, we want to write 0 to the fast clear type
        * and, if it's false, leave it alone.  We can do this by writing
        *
        * clear_type = clear_type & ~predicate;
        */
-      dw = anv_batch_emitn(&cmd_buffer->batch, 5, GENX(MI_MATH));
-      dw[1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, image_fc_reg);
-      dw[2] = mi_alu(MI_ALU_LOADINV, MI_ALU_SRCB, pred_reg);
-      dw[3] = mi_alu(MI_ALU_AND, 0, 0);
-      dw[4] = mi_alu(MI_ALU_STORE, image_fc_reg, MI_ALU_ACCU);
-
-      anv_batch_emit(&cmd_buffer->batch, GENX(MI_STORE_REGISTER_MEM), srm) {
-         srm.RegisterAddress  = CS_GPR(image_fc_reg);
-         srm.MemoryAddress    = fast_clear_type_addr;
-      }
+      struct gen_mi_value new_fast_clear_type =
+         gen_mi_iand(&b, fast_clear_type, gen_mi_inot(&b, pred));
+      gen_mi_store(&b, fast_clear_type, new_fast_clear_type);
    } else {
       /* In this case, we're trying to do a partial resolve on a slice that
        * doesn't have clear color.  There's nothing to do.
@@ -685,13 +667,8 @@ anv_cmd_compute_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
       return;
    }
 
-   /* We use the first half of src0 for the actual predicate.  Set the second
-    * half of src0 and all of src1 to 0 as the predicate operation will be
-    * doing an implicit src0 != src1.
-    */
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC0 + 4, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1    , 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1 + 4, 0);
+   /* Set src1 to 0 and use a != condition */
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(0));
 
    anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOADINV;
@@ -710,8 +687,12 @@ anv_cmd_simple_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
                                  enum isl_aux_op resolve_op,
                                  enum anv_fast_clear_type fast_clear_supported)
 {
-   struct anv_address fast_clear_type_addr =
-      anv_image_get_fast_clear_type_addr(cmd_buffer->device, image, aspect);
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
+   struct gen_mi_value fast_clear_type_mem =
+      gen_mi_mem32(anv_image_get_fast_clear_type_addr(cmd_buffer->device,
+                                                      image, aspect));
 
    /* This only works for partial resolves and only when the clear color is
     * all or nothing.  On the upside, this emits less command streamer code
@@ -728,22 +709,9 @@ anv_cmd_simple_resolve_predicate(struct anv_cmd_buffer *cmd_buffer,
     * can't sample from CCS surfaces.  It's enough to just load the fast clear
     * state into the predicate register.
     */
-   anv_batch_emit(&cmd_buffer->batch, GENX(MI_LOAD_REGISTER_MEM), lrm) {
-      lrm.RegisterAddress  = MI_PREDICATE_SRC0;
-      lrm.MemoryAddress    = fast_clear_type_addr;
-   }
-   anv_batch_emit(&cmd_buffer->batch, GENX(MI_STORE_DATA_IMM), sdi) {
-      sdi.Address          = fast_clear_type_addr;
-      sdi.ImmediateData    = 0;
-   }
-
-   /* We use the first half of src0 for the actual predicate.  Set the second
-    * half of src0 and all of src1 to 0 as the predicate operation will be
-    * doing an implicit src0 != src1.
-    */
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC0 + 4, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1    , 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1 + 4, 0);
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0), fast_clear_type_mem);
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(0));
+   gen_mi_store(&b, fast_clear_type_mem, gen_mi_imm(0));
 
    anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOADINV;
@@ -907,12 +875,35 @@ genX(copy_fast_clear_dwords)(struct anv_cmd_buffer *cmd_buffer,
       anv_image_get_clear_color_addr(cmd_buffer->device, image, aspect);
    unsigned copy_size = cmd_buffer->device->isl_dev.ss.clear_value_size;
 
+#if GEN_GEN == 7
+   /* On gen7, the combination of commands used here(MI_LOAD_REGISTER_MEM
+    * and MI_STORE_REGISTER_MEM) can cause GPU hangs if any rendering is
+    * in-flight when they are issued even if the memory touched is not
+    * currently active for rendering.  The weird bit is that it is not the
+    * MI_LOAD/STORE_REGISTER_MEM commands which hang but rather the in-flight
+    * rendering hangs such that the next stalling command after the
+    * MI_LOAD/STORE_REGISTER_MEM commands will catch the hang.
+    *
+    * It is unclear exactly why this hang occurs.  Both MI commands come with
+    * warnings about the 3D pipeline but that doesn't seem to fully explain
+    * it.  My (Jason's) best theory is that it has something to do with the
+    * fact that we're using a GPU state register as our temporary and that
+    * something with reading/writing it is causing problems.
+    *
+    * In order to work around this issue, we emit a PIPE_CONTROL with the
+    * command streamer stall bit set.
+    */
+   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_CS_STALL_BIT;
+   genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+#endif
+
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
    if (copy_from_surface_state) {
-      genX(cmd_buffer_mi_memcpy)(cmd_buffer, entry_addr,
-                                 ss_clear_addr, copy_size);
+      gen_mi_memcpy(&b, entry_addr, ss_clear_addr, copy_size);
    } else {
-      genX(cmd_buffer_mi_memcpy)(cmd_buffer, ss_clear_addr,
-                                 entry_addr, copy_size);
+      gen_mi_memcpy(&b, ss_clear_addr, entry_addr, copy_size);
 
       /* Updating a surface state object may require that the state cache be
        * invalidated. From the SKL PRM, Shared Functions -> State -> State
@@ -958,7 +949,7 @@ transition_color_buffer(struct anv_cmd_buffer *cmd_buffer,
    assert(level_count != VK_REMAINING_MIP_LEVELS &&
           layer_count != VK_REMAINING_ARRAY_LAYERS);
    /* Ensure the subresource range is valid. */
-   uint64_t last_level_num = base_level + level_count;
+   UNUSED uint64_t last_level_num = base_level + level_count;
    const uint32_t max_depth = anv_minify(image->extent.depth, base_level);
    UNUSED const uint32_t image_layers = MAX2(image->array_size, max_depth);
    assert((uint64_t)base_layer + layer_count  <= image_layers);
@@ -987,6 +978,7 @@ transition_color_buffer(struct anv_cmd_buffer *cmd_buffer,
       assert(isl_format_is_compressed(image->planes[plane].surface.isl.format));
       assert(plane == 0);
       anv_image_copy_to_shadow(cmd_buffer, image,
+                               VK_IMAGE_ASPECT_COLOR_BIT,
                                base_level, level_count,
                                base_layer, layer_count);
    }
@@ -1185,6 +1177,7 @@ genX(cmd_buffer_setup_attachments)(struct anv_cmd_buffer *cmd_buffer,
 {
    const struct isl_device *isl_dev = &cmd_buffer->device->isl_dev;
    struct anv_cmd_state *state = &cmd_buffer->state;
+   struct anv_framebuffer *framebuffer = cmd_buffer->state.framebuffer;
 
    vk_free(&cmd_buffer->pool->alloc, state->attachments);
 
@@ -1224,6 +1217,12 @@ genX(cmd_buffer_setup_attachments)(struct anv_cmd_buffer *cmd_buffer,
    next_state.offset += ss_stride;
    next_state.map += ss_stride;
 
+   const VkRenderPassAttachmentBeginInfoKHR *begin_attachment =
+      vk_find_struct_const(begin, RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR);
+
+   if (begin && !begin_attachment)
+      assert(pass->attachment_count == framebuffer->attachment_count);
+
    for (uint32_t i = 0; i < pass->attachment_count; ++i) {
       if (vk_format_is_color(pass->attachments[i].format)) {
          state->attachments[i].color.state = next_state;
@@ -1236,14 +1235,19 @@ genX(cmd_buffer_setup_attachments)(struct anv_cmd_buffer *cmd_buffer,
          next_state.offset += ss_stride;
          next_state.map += ss_stride;
       }
+
+      if (begin_attachment && begin_attachment->attachmentCount != 0) {
+         assert(begin_attachment->attachmentCount == pass->attachment_count);
+         ANV_FROM_HANDLE(anv_image_view, iview, begin_attachment->pAttachments[i]);
+         cmd_buffer->state.attachments[i].image_view = iview;
+      } else if (framebuffer && i < framebuffer->attachment_count) {
+         cmd_buffer->state.attachments[i].image_view = framebuffer->attachments[i];
+      }
    }
    assert(next_state.offset == state->render_pass_states.offset +
                                state->render_pass_states.alloc_size);
 
    if (begin) {
-      ANV_FROM_HANDLE(anv_framebuffer, framebuffer, begin->framebuffer);
-      assert(pass->attachment_count == framebuffer->attachment_count);
-
       isl_null_fill_state(isl_dev, state->null_surface_state.map,
                           isl_extent3d(framebuffer->width,
                                        framebuffer->height,
@@ -1286,7 +1290,7 @@ genX(cmd_buffer_setup_attachments)(struct anv_cmd_buffer *cmd_buffer,
          if (clear_aspects)
             state->attachments[i].clear_value = begin->pClearValues[i];
 
-         struct anv_image_view *iview = framebuffer->attachments[i];
+         struct anv_image_view *iview = cmd_buffer->state.attachments[i].image_view;
          anv_assert(iview->vk_format == att->format);
 
          const uint32_t num_layers = iview->planes[0].isl.array_len;
@@ -1548,8 +1552,10 @@ genX(CmdExecuteCommands)(
              * with conditional rendering, we should satisfy this dependency
              * regardless of conditional rendering being enabled in primary.
              */
-            emit_lri(&primary->batch, CS_GPR(ANV_PREDICATE_RESULT_REG), UINT32_MAX);
-            emit_lri(&primary->batch, CS_GPR(ANV_PREDICATE_RESULT_REG) + 4, UINT32_MAX);
+            struct gen_mi_builder b;
+            gen_mi_builder_init(&b, &primary->batch);
+            gen_mi_store(&b, gen_mi_reg64(ANV_PREDICATE_RESULT_REG),
+                             gen_mi_imm(UINT64_MAX));
          }
       }
 #endif
@@ -1589,6 +1595,7 @@ genX(CmdExecuteCommands)(
     */
    primary->state.current_pipeline = UINT32_MAX;
    primary->state.current_l3_config = NULL;
+   primary->state.current_hash_scale = 0;
 
    /* Each of the secondary command buffers will use its own state base
     * address.  We need to re-emit state base address for the primary after
@@ -1708,7 +1715,7 @@ genX(cmd_buffer_config_l3)(struct anv_cmd_buffer *cmd_buffer,
    assert(!urb_low_bw || cfg->n[GEN_L3P_URB] == cfg->n[GEN_L3P_SLM]);
 
    /* Minimum number of ways that can be allocated to the URB. */
-   MAYBE_UNUSED const unsigned n0_urb = devinfo->is_baytrail ? 32 : 0;
+   const unsigned n0_urb = devinfo->is_baytrail ? 32 : 0;
    assert(cfg->n[GEN_L3P_URB] >= n0_urb);
 
    uint32_t l3sqcr1, l3cr2, l3cr3;
@@ -1911,24 +1918,34 @@ void genX(CmdPipelineBarrier)(
       const VkImageSubresourceRange *range =
          &pImageMemoryBarriers[i].subresourceRange;
 
+      uint32_t base_layer, layer_count;
+      if (image->type == VK_IMAGE_TYPE_3D) {
+         base_layer = 0;
+         layer_count = anv_minify(image->extent.depth, range->baseMipLevel);
+      } else {
+         base_layer = range->baseArrayLayer;
+         layer_count = anv_get_layerCount(image, range);
+      }
+
       if (range->aspectMask & VK_IMAGE_ASPECT_DEPTH_BIT) {
          transition_depth_buffer(cmd_buffer, image,
                                  pImageMemoryBarriers[i].oldLayout,
                                  pImageMemoryBarriers[i].newLayout);
-      } else if (range->aspectMask & VK_IMAGE_ASPECT_ANY_COLOR_BIT_ANV) {
+      }
+
+      if (range->aspectMask & VK_IMAGE_ASPECT_STENCIL_BIT) {
+         transition_stencil_buffer(cmd_buffer, image,
+                                   range->baseMipLevel,
+                                   anv_get_levelCount(image, range),
+                                   base_layer, layer_count,
+                                   pImageMemoryBarriers[i].oldLayout,
+                                   pImageMemoryBarriers[i].newLayout);
+      }
+
+      if (range->aspectMask & VK_IMAGE_ASPECT_ANY_COLOR_BIT_ANV) {
          VkImageAspectFlags color_aspects =
             anv_image_expand_aspects(image, range->aspectMask);
          uint32_t aspect_bit;
-
-         uint32_t base_layer, layer_count;
-         if (image->type == VK_IMAGE_TYPE_3D) {
-            base_layer = 0;
-            layer_count = anv_minify(image->extent.depth, range->baseMipLevel);
-         } else {
-            base_layer = range->baseArrayLayer;
-            layer_count = anv_get_layerCount(image, range);
-         }
-
          anv_foreach_image_aspect_bit(aspect_bit, image, color_aspects) {
             transition_color_buffer(cmd_buffer, image, 1UL << aspect_bit,
                                     range->baseMipLevel,
@@ -2040,25 +2057,47 @@ dynamic_offset_for_binding(const struct anv_cmd_pipeline_state *pipe_state,
    return pipe_state->dynamic_offsets[dynamic_offset_idx];
 }
 
+static struct anv_address
+anv_descriptor_set_address(struct anv_cmd_buffer *cmd_buffer,
+                           struct anv_descriptor_set *set)
+{
+   if (set->pool) {
+      /* This is a normal descriptor set */
+      return (struct anv_address) {
+         .bo = &set->pool->bo,
+         .offset = set->desc_mem.offset,
+      };
+   } else {
+      /* This is a push descriptor set.  We have to flag it as used on the GPU
+       * so that the next time we push descriptors, we grab a new memory.
+       */
+      struct anv_push_descriptor_set *push_set =
+         (struct anv_push_descriptor_set *)set;
+      push_set->set_used_on_gpu = true;
+
+      return (struct anv_address) {
+         .bo = cmd_buffer->dynamic_state_stream.state_pool->block_pool.bo,
+         .offset = set->desc_mem.offset,
+      };
+   }
+}
+
 static VkResult
 emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                    gl_shader_stage stage,
                    struct anv_state *bt_state)
 {
-   const struct gen_device_info *devinfo = &cmd_buffer->device->info;
    struct anv_subpass *subpass = cmd_buffer->state.subpass;
    struct anv_cmd_pipeline_state *pipe_state;
    struct anv_pipeline *pipeline;
-   uint32_t bias, state_offset;
+   uint32_t state_offset;
 
    switch (stage) {
    case  MESA_SHADER_COMPUTE:
       pipe_state = &cmd_buffer->state.compute.base;
-      bias = 1;
       break;
    default:
       pipe_state = &cmd_buffer->state.gfx.base;
-      bias = 0;
       break;
    }
    pipeline = pipe_state->pipeline;
@@ -2069,51 +2108,25 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
    }
 
    struct anv_pipeline_bind_map *map = &pipeline->shaders[stage]->bind_map;
-   if (bias + map->surface_count == 0) {
+   if (map->surface_count == 0) {
       *bt_state = (struct anv_state) { 0, };
       return VK_SUCCESS;
    }
 
    *bt_state = anv_cmd_buffer_alloc_binding_table(cmd_buffer,
-                                                  bias + map->surface_count,
+                                                  map->surface_count,
                                                   &state_offset);
    uint32_t *bt_map = bt_state->map;
 
    if (bt_state->map == NULL)
       return VK_ERROR_OUT_OF_DEVICE_MEMORY;
 
-   if (stage == MESA_SHADER_COMPUTE &&
-       get_cs_prog_data(pipeline)->uses_num_work_groups) {
-      struct anv_state surface_state;
-      surface_state =
-         anv_cmd_buffer_alloc_surface_state(cmd_buffer);
+   /* We only need to emit relocs if we're not using softpin.  If we are using
+    * softpin then we always keep all user-allocated memory objects resident.
+    */
+   const bool need_client_mem_relocs =
+      !cmd_buffer->device->instance->physicalDevice.use_softpin;
 
-      const enum isl_format format =
-         anv_isl_format_for_descriptor_type(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-      anv_fill_buffer_surface_state(cmd_buffer->device, surface_state,
-                                    format,
-                                    cmd_buffer->state.compute.num_workgroups,
-                                    12, 1);
-
-      bt_map[0] = surface_state.offset + state_offset;
-      add_surface_reloc(cmd_buffer, surface_state,
-                        cmd_buffer->state.compute.num_workgroups);
-   }
-
-   if (map->surface_count == 0)
-      goto out;
-
-   /* We only use push constant space for images before gen9 */
-   if (map->image_count > 0 && devinfo->gen < 9) {
-      VkResult result =
-         anv_cmd_buffer_ensure_push_constant_field(cmd_buffer, stage, images);
-      if (result != VK_SUCCESS)
-         return result;
-
-      cmd_buffer->state.push_constants_dirty |= 1 << stage;
-   }
-
-   uint32_t image = 0;
    for (uint32_t s = 0; s < map->surface_count; s++) {
       struct anv_pipeline_binding *binding = &map->surface_to_descriptor[s];
 
@@ -2142,7 +2155,7 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
             surface_state = cmd_buffer->state.null_surface_state;
          }
 
-         bt_map[bias + s] = surface_state.offset + state_offset;
+         bt_map[s] = surface_state.offset + state_offset;
          continue;
       } else if (binding->set == ANV_DESCRIPTOR_SET_SHADER_CONSTANTS) {
          struct anv_state surface_state =
@@ -2161,8 +2174,41 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                                        surface_state, format,
                                        constant_data, constant_data_size, 1);
 
-         bt_map[bias + s] = surface_state.offset + state_offset;
+         bt_map[s] = surface_state.offset + state_offset;
          add_surface_reloc(cmd_buffer, surface_state, constant_data);
+         continue;
+      } else if (binding->set == ANV_DESCRIPTOR_SET_NUM_WORK_GROUPS) {
+         /* This is always the first binding for compute shaders */
+         assert(stage == MESA_SHADER_COMPUTE && s == 0);
+         if (!get_cs_prog_data(pipeline)->uses_num_work_groups)
+            continue;
+
+         struct anv_state surface_state =
+            anv_cmd_buffer_alloc_surface_state(cmd_buffer);
+
+         const enum isl_format format =
+            anv_isl_format_for_descriptor_type(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+         anv_fill_buffer_surface_state(cmd_buffer->device, surface_state,
+                                       format,
+                                       cmd_buffer->state.compute.num_workgroups,
+                                       12, 1);
+         bt_map[s] = surface_state.offset + state_offset;
+         if (need_client_mem_relocs) {
+            add_surface_reloc(cmd_buffer, surface_state,
+                              cmd_buffer->state.compute.num_workgroups);
+         }
+         continue;
+      } else if (binding->set == ANV_DESCRIPTOR_SET_DESCRIPTORS) {
+         /* This is a descriptor set buffer so the set index is actually
+          * given by binding->binding.  (Yes, that's confusing.)
+          */
+         struct anv_descriptor_set *set =
+            pipe_state->descriptors[binding->binding];
+         assert(set->desc_mem.alloc_size);
+         assert(set->desc_surface_state.alloc_size);
+         bt_map[s] = set->desc_surface_state.offset + state_offset;
+         add_surface_reloc(cmd_buffer, set->desc_surface_state,
+                           anv_descriptor_set_address(cmd_buffer, set));
          continue;
       }
 
@@ -2182,7 +2228,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
             desc->image_view->planes[binding->plane].optimal_sampler_surface_state;
          surface_state = sstate.state;
          assert(surface_state.alloc_size);
-         add_surface_state_relocs(cmd_buffer, sstate);
+         if (need_client_mem_relocs)
+            add_surface_state_relocs(cmd_buffer, sstate);
          break;
       }
       case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
@@ -2197,7 +2244,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                desc->image_view->planes[binding->plane].optimal_sampler_surface_state;
             surface_state = sstate.state;
             assert(surface_state.alloc_size);
-            add_surface_state_relocs(cmd_buffer, sstate);
+            if (need_client_mem_relocs)
+               add_surface_state_relocs(cmd_buffer, sstate);
          } else {
             /* For color input attachments, we create the surface state at
              * vkBeginRenderPass time so that we can include aux and clear
@@ -2216,16 +2264,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
             : desc->image_view->planes[binding->plane].storage_surface_state;
          surface_state = sstate.state;
          assert(surface_state.alloc_size);
-         add_surface_state_relocs(cmd_buffer, sstate);
-         if (devinfo->gen < 9) {
-            assert(image < MAX_GEN8_IMAGES);
-            struct brw_image_param *image_param =
-               &cmd_buffer->state.push_constants[stage]->images[image];
-
-            *image_param =
-               desc->image_view->planes[binding->plane].storage_image_param;
-         }
-         image++;
+         if (need_client_mem_relocs)
+            add_surface_state_relocs(cmd_buffer, sstate);
          break;
       }
 
@@ -2234,8 +2274,10 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
       case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
          surface_state = desc->buffer_view->surface_state;
          assert(surface_state.alloc_size);
-         add_surface_reloc(cmd_buffer, surface_state,
-                           desc->buffer_view->address);
+         if (need_client_mem_relocs) {
+            add_surface_reloc(cmd_buffer, surface_state,
+                              desc->buffer_view->address);
+         }
          break;
 
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
@@ -2259,7 +2301,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
 
          anv_fill_buffer_surface_state(cmd_buffer->device, surface_state,
                                        format, address, range, 1);
-         add_surface_reloc(cmd_buffer, surface_state, address);
+         if (need_client_mem_relocs)
+            add_surface_reloc(cmd_buffer, surface_state, address);
          break;
       }
 
@@ -2268,16 +2311,10 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
             ? desc->buffer_view->writeonly_storage_surface_state
             : desc->buffer_view->storage_surface_state;
          assert(surface_state.alloc_size);
-         add_surface_reloc(cmd_buffer, surface_state,
-                           desc->buffer_view->address);
-         if (devinfo->gen < 9) {
-            assert(image < MAX_GEN8_IMAGES);
-            struct brw_image_param *image_param =
-               &cmd_buffer->state.push_constants[stage]->images[image];
-
-            *image_param = desc->buffer_view->storage_image_param;
+         if (need_client_mem_relocs) {
+            add_surface_reloc(cmd_buffer, surface_state,
+                              desc->buffer_view->address);
          }
-         image++;
          break;
 
       default:
@@ -2285,11 +2322,9 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
          continue;
       }
 
-      bt_map[bias + s] = surface_state.offset + state_offset;
+      bt_map[s] = surface_state.offset + state_offset;
    }
-   assert(image == map->image_count);
 
- out:
 #if GEN_GEN >= 11
    /* The PIPE_CONTROL command description says:
     *
@@ -2518,51 +2553,40 @@ cmd_buffer_flush_push_constants(struct anv_cmd_buffer *cmd_buffer,
                const struct anv_pipeline_binding *binding =
                   &bind_map->surface_to_descriptor[surface];
 
-               struct anv_address read_addr;
-               uint32_t read_len;
+               struct anv_address addr;
                if (binding->set == ANV_DESCRIPTOR_SET_SHADER_CONSTANTS) {
-                  struct anv_address constant_data = {
+                  addr = (struct anv_address) {
                      .bo = pipeline->device->dynamic_state_pool.block_pool.bo,
                      .offset = pipeline->shaders[stage]->constant_data.offset,
                   };
-                  unsigned constant_data_size =
-                     pipeline->shaders[stage]->constant_data_size;
-
-                  read_len = MIN2(range->length,
-                     DIV_ROUND_UP(constant_data_size, 32) - range->start);
-                  read_addr = anv_address_add(constant_data,
-                                              range->start * 32);
+               } else if (binding->set == ANV_DESCRIPTOR_SET_DESCRIPTORS) {
+                  /* This is a descriptor set buffer so the set index is
+                   * actually given by binding->binding.  (Yes, that's
+                   * confusing.)
+                   */
+                  struct anv_descriptor_set *set =
+                     gfx_state->base.descriptors[binding->binding];
+                  addr = anv_descriptor_set_address(cmd_buffer, set);
                } else {
                   const struct anv_descriptor *desc =
                      anv_descriptor_for_binding(&gfx_state->base, binding);
 
                   if (desc->type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
-                     read_len = MIN2(range->length,
-                        DIV_ROUND_UP(desc->buffer_view->range, 32) - range->start);
-                     read_addr = anv_address_add(desc->buffer_view->address,
-                                                 range->start * 32);
+                     addr = desc->buffer_view->address;
                   } else {
                      assert(desc->type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
 
                      uint32_t dynamic_offset =
                         dynamic_offset_for_binding(&gfx_state->base, binding);
-                     uint32_t buf_offset =
-                        MIN2(desc->offset + dynamic_offset, desc->buffer->size);
-                     uint32_t buf_range =
-                        MIN2(desc->range, desc->buffer->size - buf_offset);
-
-                     read_len = MIN2(range->length,
-                        DIV_ROUND_UP(buf_range, 32) - range->start);
-                     read_addr = anv_address_add(desc->buffer->address,
-                                                 buf_offset + range->start * 32);
+                     addr = anv_address_add(desc->buffer->address,
+                                            desc->offset + dynamic_offset);
                   }
                }
 
-               if (read_len > 0) {
-                  c.ConstantBody.Buffer[n] = read_addr;
-                  c.ConstantBody.ReadLength[n] = read_len;
-                  n--;
-               }
+               c.ConstantBody.Buffer[n] =
+                  anv_address_add(addr, range->start * 32);
+               c.ConstantBody.ReadLength[n] = range->length;
+               n--;
             }
 
             struct anv_state state =
@@ -2613,6 +2637,8 @@ genX(cmd_buffer_flush_state)(struct anv_cmd_buffer *cmd_buffer)
    assert((pipeline->active_stages & VK_SHADER_STAGE_COMPUTE_BIT) == 0);
 
    genX(cmd_buffer_config_l3)(cmd_buffer, pipeline->urb.l3_config);
+
+   genX(cmd_buffer_emit_hashing_mode)(cmd_buffer, UINT_MAX, UINT_MAX, 1);
 
    genX(flush_pipeline_select_3d)(cmd_buffer);
 
@@ -2921,150 +2947,6 @@ void genX(CmdDrawIndexed)(
 #define GEN7_3DPRIM_START_INSTANCE      0x243C
 #define GEN7_3DPRIM_BASE_VERTEX         0x2440
 
-/* MI_MATH only exists on Haswell+ */
-#if GEN_IS_HASWELL || GEN_GEN >= 8
-
-/* Emit dwords to multiply GPR0 by N */
-static void
-build_alu_multiply_gpr0(uint32_t *dw, unsigned *dw_count, uint32_t N)
-{
-   VK_OUTARRAY_MAKE(out, dw, dw_count);
-
-#define append_alu(opcode, operand1, operand2) \
-   vk_outarray_append(&out, alu_dw) *alu_dw = mi_alu(opcode, operand1, operand2)
-
-   assert(N > 0);
-   unsigned top_bit = 31 - __builtin_clz(N);
-   for (int i = top_bit - 1; i >= 0; i--) {
-      /* We get our initial data in GPR0 and we write the final data out to
-       * GPR0 but we use GPR1 as our scratch register.
-       */
-      unsigned src_reg = i == top_bit - 1 ? MI_ALU_REG0 : MI_ALU_REG1;
-      unsigned dst_reg = i == 0 ? MI_ALU_REG0 : MI_ALU_REG1;
-
-      /* Shift the current value left by 1 */
-      append_alu(MI_ALU_LOAD, MI_ALU_SRCA, src_reg);
-      append_alu(MI_ALU_LOAD, MI_ALU_SRCB, src_reg);
-      append_alu(MI_ALU_ADD, 0, 0);
-
-      if (N & (1 << i)) {
-         /* Store ACCU to R1 and add R0 to R1 */
-         append_alu(MI_ALU_STORE, MI_ALU_REG1, MI_ALU_ACCU);
-         append_alu(MI_ALU_LOAD, MI_ALU_SRCA, MI_ALU_REG0);
-         append_alu(MI_ALU_LOAD, MI_ALU_SRCB, MI_ALU_REG1);
-         append_alu(MI_ALU_ADD, 0, 0);
-      }
-
-      append_alu(MI_ALU_STORE, dst_reg, MI_ALU_ACCU);
-   }
-
-#undef append_alu
-}
-
-static void
-emit_mul_gpr0(struct anv_batch *batch, uint32_t N)
-{
-   uint32_t num_dwords;
-   build_alu_multiply_gpr0(NULL, &num_dwords, N);
-
-   uint32_t *dw = anv_batch_emitn(batch, 1 + num_dwords, GENX(MI_MATH));
-   build_alu_multiply_gpr0(dw + 1, &num_dwords, N);
-}
-
-static void
-emit_alu_add(struct anv_batch *batch, unsigned dst_reg,
-             unsigned reg_a, unsigned reg_b)
-{
-   uint32_t *dw = anv_batch_emitn(batch, 1 + 4, GENX(MI_MATH));
-   dw[1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, reg_a);
-   dw[2] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCB, reg_b);
-   dw[3] = mi_alu(MI_ALU_ADD, 0, 0);
-   dw[4] = mi_alu(MI_ALU_STORE, dst_reg, MI_ALU_ACCU);
-}
-
-static void
-emit_add32_gpr0(struct anv_batch *batch, uint32_t N)
-{
-   emit_lri(batch, CS_GPR(1), N);
-   emit_alu_add(batch, MI_ALU_REG0, MI_ALU_REG0, MI_ALU_REG1);
-}
-
-static void
-emit_alu_shl(struct anv_batch *batch, unsigned dst_reg,
-             unsigned src_reg, unsigned shift)
-{
-   assert(shift > 0);
-
-   uint32_t *dw = anv_batch_emitn(batch, 1 + 4 * shift, GENX(MI_MATH));
-   for (unsigned i = 0; i < shift; i++) {
-      unsigned add_src = (i == 0) ? src_reg : dst_reg;
-      dw[1 + (i * 4) + 0] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, add_src);
-      dw[1 + (i * 4) + 1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCB, add_src);
-      dw[1 + (i * 4) + 2] = mi_alu(MI_ALU_ADD, 0, 0);
-      dw[1 + (i * 4) + 3] = mi_alu(MI_ALU_STORE, dst_reg, MI_ALU_ACCU);
-   }
-}
-
-static void
-emit_div32_gpr0(struct anv_batch *batch, uint32_t D)
-{
-   /* Zero out the top of GPR0 */
-   emit_lri(batch, CS_GPR(0) + 4, 0);
-
-   if (D == 0) {
-      /* This invalid, but we should do something so we set GPR0 to 0. */
-      emit_lri(batch, CS_GPR(0), 0);
-   } else if (util_is_power_of_two_or_zero(D)) {
-      unsigned log2_D = util_logbase2(D);
-      assert(log2_D < 32);
-      /* We right-shift by log2(D) by left-shifting by 32 - log2(D) and taking
-       * the top 32 bits of the result.
-       */
-      emit_alu_shl(batch, MI_ALU_REG0, MI_ALU_REG0, 32 - log2_D);
-      emit_lrr(batch, CS_GPR(0) + 0, CS_GPR(0) + 4);
-      emit_lri(batch, CS_GPR(0) + 4, 0);
-   } else {
-      struct util_fast_udiv_info m = util_compute_fast_udiv_info(D, 32, 32);
-      assert(m.multiplier <= UINT32_MAX);
-
-      if (m.pre_shift) {
-         /* We right-shift by L by left-shifting by 32 - l and taking the top
-          * 32 bits of the result.
-          */
-         if (m.pre_shift < 32)
-            emit_alu_shl(batch, MI_ALU_REG0, MI_ALU_REG0, 32 - m.pre_shift);
-         emit_lrr(batch, CS_GPR(0) + 0, CS_GPR(0) + 4);
-         emit_lri(batch, CS_GPR(0) + 4, 0);
-      }
-
-      /* Do the 32x32 multiply  into gpr0 */
-      emit_mul_gpr0(batch, m.multiplier);
-
-      if (m.increment) {
-         /* If we need to increment, save off a copy of GPR0 */
-         emit_lri(batch, CS_GPR(1) + 0, m.multiplier);
-         emit_lri(batch, CS_GPR(1) + 4, 0);
-         emit_alu_add(batch, MI_ALU_REG0, MI_ALU_REG0, MI_ALU_REG1);
-      }
-
-      /* Shift by 32 */
-      emit_lrr(batch, CS_GPR(0) + 0, CS_GPR(0) + 4);
-      emit_lri(batch, CS_GPR(0) + 4, 0);
-
-      if (m.post_shift) {
-         /* We right-shift by L by left-shifting by 32 - l and taking the top
-          * 32 bits of the result.
-          */
-         if (m.post_shift < 32)
-            emit_alu_shl(batch, MI_ALU_REG0, MI_ALU_REG0, 32 - m.post_shift);
-         emit_lrr(batch, CS_GPR(0) + 0, CS_GPR(0) + 4);
-         emit_lri(batch, CS_GPR(0) + 4, 0);
-      }
-   }
-}
-
-#endif /* GEN_IS_HASWELL || GEN_GEN >= 8 */
-
 void genX(CmdDrawIndirectByteCountEXT)(
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    instanceCount,
@@ -3099,17 +2981,23 @@ void genX(CmdDrawIndirectByteCountEXT)(
     */
    instanceCount *= anv_subpass_view_count(cmd_buffer->state.subpass);
 
-   emit_lrm(&cmd_buffer->batch, CS_GPR(0),
-            anv_address_add(counter_buffer->address, counterBufferOffset));
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+   struct gen_mi_value count =
+      gen_mi_mem32(anv_address_add(counter_buffer->address,
+                                   counterBufferOffset));
    if (counterOffset)
-      emit_add32_gpr0(&cmd_buffer->batch, -counterOffset);
-   emit_div32_gpr0(&cmd_buffer->batch, vertexStride);
-   emit_lrr(&cmd_buffer->batch, GEN7_3DPRIM_VERTEX_COUNT, CS_GPR(0));
+      count = gen_mi_isub(&b, count, gen_mi_imm(counterOffset));
+   count = gen_mi_udiv32_imm(&b, count, vertexStride);
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_VERTEX_COUNT), count);
 
-   emit_lri(&cmd_buffer->batch, GEN7_3DPRIM_START_VERTEX, firstVertex);
-   emit_lri(&cmd_buffer->batch, GEN7_3DPRIM_INSTANCE_COUNT, instanceCount);
-   emit_lri(&cmd_buffer->batch, GEN7_3DPRIM_START_INSTANCE, firstInstance);
-   emit_lri(&cmd_buffer->batch, GEN7_3DPRIM_BASE_VERTEX, 0);
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_START_VERTEX),
+                    gen_mi_imm(firstVertex));
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_INSTANCE_COUNT),
+                    gen_mi_imm(instanceCount));
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_START_INSTANCE),
+                    gen_mi_imm(firstInstance));
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_BASE_VERTEX), gen_mi_imm(0));
 
    anv_batch_emit(&cmd_buffer->batch, GENX(3DPRIMITIVE), prim) {
       prim.IndirectParameterEnable  = true;
@@ -3124,33 +3012,36 @@ load_indirect_parameters(struct anv_cmd_buffer *cmd_buffer,
                          struct anv_address addr,
                          bool indexed)
 {
-   struct anv_batch *batch = &cmd_buffer->batch;
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
 
-   emit_lrm(batch, GEN7_3DPRIM_VERTEX_COUNT, anv_address_add(addr, 0));
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_VERTEX_COUNT),
+                    gen_mi_mem32(anv_address_add(addr, 0)));
 
+   struct gen_mi_value instance_count = gen_mi_mem32(anv_address_add(addr, 4));
    unsigned view_count = anv_subpass_view_count(cmd_buffer->state.subpass);
    if (view_count > 1) {
 #if GEN_IS_HASWELL || GEN_GEN >= 8
-      emit_lrm(batch, CS_GPR(0), anv_address_add(addr, 4));
-      emit_mul_gpr0(batch, view_count);
-      emit_lrr(batch, GEN7_3DPRIM_INSTANCE_COUNT, CS_GPR(0));
+      instance_count = gen_mi_imul_imm(&b, instance_count, view_count);
 #else
       anv_finishme("Multiview + indirect draw requires MI_MATH; "
                    "MI_MATH is not supported on Ivy Bridge");
-      emit_lrm(batch, GEN7_3DPRIM_INSTANCE_COUNT, anv_address_add(addr, 4));
 #endif
-   } else {
-      emit_lrm(batch, GEN7_3DPRIM_INSTANCE_COUNT, anv_address_add(addr, 4));
    }
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_INSTANCE_COUNT), instance_count);
 
-   emit_lrm(batch, GEN7_3DPRIM_START_VERTEX, anv_address_add(addr, 8));
+   gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_START_VERTEX),
+                    gen_mi_mem32(anv_address_add(addr, 8)));
 
    if (indexed) {
-      emit_lrm(batch, GEN7_3DPRIM_BASE_VERTEX, anv_address_add(addr, 12));
-      emit_lrm(batch, GEN7_3DPRIM_START_INSTANCE, anv_address_add(addr, 16));
+      gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_BASE_VERTEX),
+                       gen_mi_mem32(anv_address_add(addr, 12)));
+      gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_START_INSTANCE),
+                       gen_mi_mem32(anv_address_add(addr, 16)));
    } else {
-      emit_lrm(batch, GEN7_3DPRIM_START_INSTANCE, anv_address_add(addr, 12));
-      emit_lri(batch, GEN7_3DPRIM_BASE_VERTEX, 0);
+      gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_START_INSTANCE),
+                       gen_mi_mem32(anv_address_add(addr, 12)));
+      gen_mi_store(&b, gen_mi_reg32(GEN7_3DPRIM_BASE_VERTEX), gen_mi_imm(0));
    }
 }
 
@@ -3239,26 +3130,29 @@ void genX(CmdDrawIndexedIndirect)(
    }
 }
 
-#define TMP_DRAW_COUNT_REG MI_ALU_REG14
+#define TMP_DRAW_COUNT_REG 0x2670 /* MI_ALU_REG14 */
 
 static void
 prepare_for_draw_count_predicate(struct anv_cmd_buffer *cmd_buffer,
                                  struct anv_address count_address,
                                  const bool conditional_render_enabled)
 {
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
    if (conditional_render_enabled) {
 #if GEN_GEN >= 8 || GEN_IS_HASWELL
-      emit_lrm(&cmd_buffer->batch, CS_GPR(TMP_DRAW_COUNT_REG), count_address);
-      emit_lri(&cmd_buffer->batch, CS_GPR(TMP_DRAW_COUNT_REG) + 4, 0);
+      gen_mi_store(&b, gen_mi_reg64(TMP_DRAW_COUNT_REG),
+                       gen_mi_mem32(count_address));
 #endif
    } else {
       /* Upload the current draw count from the draw parameters buffer to
        * MI_PREDICATE_SRC0.
        */
-      emit_lrm(&cmd_buffer->batch, MI_PREDICATE_SRC0, count_address);
-      emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC0 + 4, 0);
+      gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0),
+                       gen_mi_mem32(count_address));
 
-      emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1 + 4, 0);
+      gen_mi_store(&b, gen_mi_reg32(MI_PREDICATE_SRC1 + 4), gen_mi_imm(0));
    }
 }
 
@@ -3266,8 +3160,11 @@ static void
 emit_draw_count_predicate(struct anv_cmd_buffer *cmd_buffer,
                           uint32_t draw_index)
 {
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
    /* Upload the index of the current primitive to MI_PREDICATE_SRC1. */
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1, draw_index);
+   gen_mi_store(&b, gen_mi_reg32(MI_PREDICATE_SRC1), gen_mi_imm(draw_index));
 
    if (draw_index == 0) {
       anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
@@ -3297,38 +3194,22 @@ emit_draw_count_predicate_with_conditional_render(
                           struct anv_cmd_buffer *cmd_buffer,
                           uint32_t draw_index)
 {
-   const int draw_index_reg = MI_ALU_REG0;
-   const int tmp_result_reg = MI_ALU_REG1;
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
 
-   emit_lri(&cmd_buffer->batch, CS_GPR(draw_index_reg), draw_index);
-   emit_lri(&cmd_buffer->batch, CS_GPR(draw_index_reg) + 4, 0);
-
-   uint32_t *dw;
-   /* Compute (draw_index < draw_count).
-    * We do this by subtracting and storing the carry bit.
-    */
-   dw = anv_batch_emitn(&cmd_buffer->batch, 9, GENX(MI_MATH));
-   dw[1] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, draw_index_reg);
-   dw[2] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCB, TMP_DRAW_COUNT_REG);
-   dw[3] = mi_alu(MI_ALU_SUB, 0, 0);
-   dw[4] = mi_alu(MI_ALU_STORE, tmp_result_reg, MI_ALU_CF);
-   /* & condition */
-   dw[5] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCA, tmp_result_reg);
-   dw[6] = mi_alu(MI_ALU_LOAD, MI_ALU_SRCB, ANV_PREDICATE_RESULT_REG);
-   dw[7] = mi_alu(MI_ALU_AND, 0, 0);
-   dw[8] = mi_alu(MI_ALU_STORE, tmp_result_reg, MI_ALU_ACCU);
+   struct gen_mi_value pred = gen_mi_ult(&b, gen_mi_imm(draw_index),
+                                         gen_mi_reg64(TMP_DRAW_COUNT_REG));
+   pred = gen_mi_iand(&b, pred, gen_mi_reg64(ANV_PREDICATE_RESULT_REG));
 
 #if GEN_GEN >= 8
-   emit_lrr(&cmd_buffer->batch, MI_PREDICATE_RESULT, CS_GPR(tmp_result_reg));
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_RESULT), pred);
 #else
    /* MI_PREDICATE_RESULT is not whitelisted in i915 command parser
     * so we emit MI_PREDICATE to set it.
     */
 
-   emit_lrr(&cmd_buffer->batch, MI_PREDICATE_SRC0, CS_GPR(tmp_result_reg));
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC0 + 4, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1 + 4, 0);
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0), pred);
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(0));
 
    anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOADINV;
@@ -3619,7 +3500,7 @@ void
 genX(cmd_buffer_flush_compute_state)(struct anv_cmd_buffer *cmd_buffer)
 {
    struct anv_pipeline *pipeline = cmd_buffer->state.compute.base.pipeline;
-   MAYBE_UNUSED VkResult result;
+   VkResult result;
 
    assert(pipeline->active_stages == VK_SHADER_STAGE_COMPUTE_BIT);
 
@@ -3699,16 +3580,8 @@ anv_cmd_buffer_push_base_group_id(struct anv_cmd_buffer *cmd_buffer,
    if (anv_batch_has_error(&cmd_buffer->batch))
       return;
 
-   VkResult result =
-      anv_cmd_buffer_ensure_push_constant_field(cmd_buffer, MESA_SHADER_COMPUTE,
-                                                base_work_group_id);
-   if (result != VK_SUCCESS) {
-      cmd_buffer->batch.status = result;
-      return;
-   }
-
    struct anv_push_constants *push =
-      cmd_buffer->state.push_constants[MESA_SHADER_COMPUTE];
+      &cmd_buffer->state.push_constants[MESA_SHADER_COMPUTE];
    if (push->base_work_group_id[0] != baseGroupX ||
        push->base_work_group_id[1] != baseGroupY ||
        push->base_work_group_id[2] != baseGroupZ) {
@@ -3814,40 +3687,37 @@ void genX(CmdDispatchIndirect)(
 
    genX(cmd_buffer_flush_compute_state)(cmd_buffer);
 
-   emit_lrm(batch, GPGPU_DISPATCHDIMX, anv_address_add(addr, 0));
-   emit_lrm(batch, GPGPU_DISPATCHDIMY, anv_address_add(addr, 4));
-   emit_lrm(batch, GPGPU_DISPATCHDIMZ, anv_address_add(addr, 8));
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
+   struct gen_mi_value size_x = gen_mi_mem32(anv_address_add(addr, 0));
+   struct gen_mi_value size_y = gen_mi_mem32(anv_address_add(addr, 4));
+   struct gen_mi_value size_z = gen_mi_mem32(anv_address_add(addr, 8));
+
+   gen_mi_store(&b, gen_mi_reg32(GPGPU_DISPATCHDIMX), size_x);
+   gen_mi_store(&b, gen_mi_reg32(GPGPU_DISPATCHDIMY), size_y);
+   gen_mi_store(&b, gen_mi_reg32(GPGPU_DISPATCHDIMZ), size_z);
 
 #if GEN_GEN <= 7
-   /* Clear upper 32-bits of SRC0 and all 64-bits of SRC1 */
-   emit_lri(batch, MI_PREDICATE_SRC0 + 4, 0);
-   emit_lri(batch, MI_PREDICATE_SRC1 + 0, 0);
-   emit_lri(batch, MI_PREDICATE_SRC1 + 4, 0);
-
-   /* Load compute_dispatch_indirect_x_size into SRC0 */
-   emit_lrm(batch, MI_PREDICATE_SRC0, anv_address_add(addr, 0));
-
    /* predicate = (compute_dispatch_indirect_x_size == 0); */
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0), size_x);
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(0));
    anv_batch_emit(batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOAD;
       mip.CombineOperation = COMBINE_SET;
       mip.CompareOperation = COMPARE_SRCS_EQUAL;
    }
 
-   /* Load compute_dispatch_indirect_y_size into SRC0 */
-   emit_lrm(batch, MI_PREDICATE_SRC0, anv_address_add(addr, 4));
-
    /* predicate |= (compute_dispatch_indirect_y_size == 0); */
+   gen_mi_store(&b, gen_mi_reg32(MI_PREDICATE_SRC0), size_y);
    anv_batch_emit(batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOAD;
       mip.CombineOperation = COMBINE_OR;
       mip.CompareOperation = COMPARE_SRCS_EQUAL;
    }
 
-   /* Load compute_dispatch_indirect_z_size into SRC0 */
-   emit_lrm(batch, MI_PREDICATE_SRC0, anv_address_add(addr, 8));
-
    /* predicate |= (compute_dispatch_indirect_z_size == 0); */
+   gen_mi_store(&b, gen_mi_reg32(MI_PREDICATE_SRC0), size_z);
    anv_batch_emit(batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOAD;
       mip.CombineOperation = COMBINE_OR;
@@ -3863,8 +3733,9 @@ void genX(CmdDispatchIndirect)(
 
 #if GEN_IS_HASWELL
    if (cmd_buffer->state.conditional_render_enabled) {
-      emit_lrr(batch, MI_PREDICATE_SRC0, CS_GPR(ANV_PREDICATE_RESULT_REG));
       /* predicate &= !(conditional_rendering_predicate == 0); */
+      gen_mi_store(&b, gen_mi_reg32(MI_PREDICATE_SRC0),
+                       gen_mi_reg32(ANV_PREDICATE_RESULT_REG));
       anv_batch_emit(batch, GENX(MI_PREDICATE), mip) {
          mip.LoadOperation    = LOAD_LOADINV;
          mip.CombineOperation = COMBINE_AND;
@@ -3914,6 +3785,32 @@ genX(flush_pipeline_select)(struct anv_cmd_buffer *cmd_buffer,
     */
    if (pipeline == GPGPU)
       anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_CC_STATE_POINTERS), t);
+#endif
+
+#if GEN_GEN == 9
+   if (pipeline == _3D) {
+      /* There is a mid-object preemption workaround which requires you to
+       * re-emit MEDIA_VFE_STATE after switching from GPGPU to 3D.  However,
+       * even without preemption, we have issues with geometry flickering when
+       * GPGPU and 3D are back-to-back and this seems to fix it.  We don't
+       * really know why.
+       */
+      const uint32_t subslices =
+         MAX2(cmd_buffer->device->instance->physicalDevice.subslice_total, 1);
+      anv_batch_emit(&cmd_buffer->batch, GENX(MEDIA_VFE_STATE), vfe) {
+         vfe.MaximumNumberofThreads =
+            devinfo->max_cs_threads * subslices - 1;
+         vfe.NumberofURBEntries     = 2;
+         vfe.URBEntryAllocationSize = 2;
+      }
+
+      /* We just emitted a dummy MEDIA_VFE_STATE so now that packet is
+       * invalid. Set the compute pipeline to dirty to force a re-emit of the
+       * pipeline in case we get back-to-back dispatch calls with the same
+       * pipeline and a PIPELINE_SELECT in between.
+       */
+      cmd_buffer->state.compute.pipeline_dirty = true;
+   }
 #endif
 
    /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
@@ -4010,6 +3907,98 @@ genX(cmd_buffer_emit_gen7_depth_flush)(struct anv_cmd_buffer *cmd_buffer)
    anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pipe) {
       pipe.DepthStallEnable = true;
    }
+}
+
+/**
+ * Update the pixel hashing modes that determine the balancing of PS threads
+ * across subslices and slices.
+ *
+ * \param width Width bound of the rendering area (already scaled down if \p
+ *              scale is greater than 1).
+ * \param height Height bound of the rendering area (already scaled down if \p
+ *               scale is greater than 1).
+ * \param scale The number of framebuffer samples that could potentially be
+ *              affected by an individual channel of the PS thread.  This is
+ *              typically one for single-sampled rendering, but for operations
+ *              like CCS resolves and fast clears a single PS invocation may
+ *              update a huge number of pixels, in which case a finer
+ *              balancing is desirable in order to maximally utilize the
+ *              bandwidth available.  UINT_MAX can be used as shorthand for
+ *              "finest hashing mode available".
+ */
+void
+genX(cmd_buffer_emit_hashing_mode)(struct anv_cmd_buffer *cmd_buffer,
+                                   unsigned width, unsigned height,
+                                   unsigned scale)
+{
+#if GEN_GEN == 9
+   const struct gen_device_info *devinfo = &cmd_buffer->device->info;
+   const unsigned slice_hashing[] = {
+      /* Because all Gen9 platforms with more than one slice require
+       * three-way subslice hashing, a single "normal" 16x16 slice hashing
+       * block is guaranteed to suffer from substantial imbalance, with one
+       * subslice receiving twice as much work as the other two in the
+       * slice.
+       *
+       * The performance impact of that would be particularly severe when
+       * three-way hashing is also in use for slice balancing (which is the
+       * case for all Gen9 GT4 platforms), because one of the slices
+       * receives one every three 16x16 blocks in either direction, which
+       * is roughly the periodicity of the underlying subslice imbalance
+       * pattern ("roughly" because in reality the hardware's
+       * implementation of three-way hashing doesn't do exact modulo 3
+       * arithmetic, which somewhat decreases the magnitude of this effect
+       * in practice).  This leads to a systematic subslice imbalance
+       * within that slice regardless of the size of the primitive.  The
+       * 32x32 hashing mode guarantees that the subslice imbalance within a
+       * single slice hashing block is minimal, largely eliminating this
+       * effect.
+       */
+      _32x32,
+      /* Finest slice hashing mode available. */
+      NORMAL
+   };
+   const unsigned subslice_hashing[] = {
+      /* 16x16 would provide a slight cache locality benefit especially
+       * visible in the sampler L1 cache efficiency of low-bandwidth
+       * non-LLC platforms, but it comes at the cost of greater subslice
+       * imbalance for primitives of dimensions approximately intermediate
+       * between 16x4 and 16x16.
+       */
+      _16x4,
+      /* Finest subslice hashing mode available. */
+      _8x4
+   };
+   /* Dimensions of the smallest hashing block of a given hashing mode.  If
+    * the rendering area is smaller than this there can't possibly be any
+    * benefit from switching to this mode, so we optimize out the
+    * transition.
+    */
+   const unsigned min_size[][2] = {
+         { 16, 4 },
+         { 8, 4 }
+   };
+   const unsigned idx = scale > 1;
+
+   if (cmd_buffer->state.current_hash_scale != scale &&
+       (width > min_size[idx][0] || height > min_size[idx][1])) {
+      uint32_t gt_mode;
+
+      anv_pack_struct(&gt_mode, GENX(GT_MODE),
+                      .SliceHashing = (devinfo->num_slices > 1 ? slice_hashing[idx] : 0),
+                      .SliceHashingMask = (devinfo->num_slices > 1 ? -1 : 0),
+                      .SubsliceHashing = subslice_hashing[idx],
+                      .SubsliceHashingMask = -1);
+
+      cmd_buffer->state.pending_pipe_bits |=
+         ANV_PIPE_CS_STALL_BIT | ANV_PIPE_STALL_AT_SCOREBOARD_BIT;
+      genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+
+      emit_lri(&cmd_buffer->batch, GENX(GT_MODE_num), gt_mode);
+
+      cmd_buffer->state.current_hash_scale = scale;
+   }
+#endif
 }
 
 static void
@@ -4173,7 +4162,7 @@ cmd_buffer_begin_subpass(struct anv_cmd_buffer *cmd_buffer,
       assert(a < cmd_state->pass->attachment_count);
       struct anv_attachment_state *att_state = &cmd_state->attachments[a];
 
-      struct anv_image_view *iview = fb->attachments[a];
+      struct anv_image_view *iview = cmd_state->attachments[a].image_view;
       const struct anv_image *image = iview->image;
 
       /* A resolve is necessary before use as an input attachment if the clear
@@ -4196,29 +4185,37 @@ cmd_buffer_begin_subpass(struct anv_cmd_buffer *cmd_buffer,
          target_layout = subpass->attachments[i].layout;
       }
 
+      uint32_t base_layer, layer_count;
+      if (image->type == VK_IMAGE_TYPE_3D) {
+         base_layer = 0;
+         layer_count = anv_minify(iview->image->extent.depth,
+                                  iview->planes[0].isl.base_level);
+      } else {
+         base_layer = iview->planes[0].isl.base_array_layer;
+         layer_count = fb->layers;
+      }
+
       if (image->aspects & VK_IMAGE_ASPECT_ANY_COLOR_BIT_ANV) {
          assert(image->aspects == VK_IMAGE_ASPECT_COLOR_BIT);
-
-         uint32_t base_layer, layer_count;
-         if (image->type == VK_IMAGE_TYPE_3D) {
-            base_layer = 0;
-            layer_count = anv_minify(iview->image->extent.depth,
-                                     iview->planes[0].isl.base_level);
-         } else {
-            base_layer = iview->planes[0].isl.base_array_layer;
-            layer_count = fb->layers;
-         }
-
          transition_color_buffer(cmd_buffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
                                  iview->planes[0].isl.base_level, 1,
                                  base_layer, layer_count,
                                  att_state->current_layout, target_layout);
-      } else if (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
+      }
+
+      if (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
          transition_depth_buffer(cmd_buffer, image,
                                  att_state->current_layout, target_layout);
          att_state->aux_usage =
             anv_layout_to_aux_usage(&cmd_buffer->device->info, image,
                                     VK_IMAGE_ASPECT_DEPTH_BIT, target_layout);
+      }
+
+      if (image->aspects & VK_IMAGE_ASPECT_STENCIL_BIT) {
+         transition_stencil_buffer(cmd_buffer, image,
+                                   iview->planes[0].isl.base_level, 1,
+                                   base_layer, layer_count,
+                                   att_state->current_layout, target_layout);
       }
       att_state->current_layout = target_layout;
 
@@ -4502,8 +4499,8 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
             cmd_buffer->state.attachments[dst_att].pending_clear_aspects = 0;
          }
 
-         struct anv_image_view *src_iview = fb->attachments[src_att];
-         struct anv_image_view *dst_iview = fb->attachments[dst_att];
+         struct anv_image_view *src_iview = cmd_state->attachments[src_att].image_view;
+         struct anv_image_view *dst_iview = cmd_state->attachments[dst_att].image_view;
 
          const VkRect2D render_area = cmd_buffer->state.render_area;
 
@@ -4557,8 +4554,8 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
          cmd_buffer->state.attachments[dst_att].pending_clear_aspects = 0;
       }
 
-      struct anv_image_view *src_iview = fb->attachments[src_att];
-      struct anv_image_view *dst_iview = fb->attachments[dst_att];
+      struct anv_image_view *src_iview = cmd_state->attachments[src_att].image_view;
+      struct anv_image_view *dst_iview = cmd_state->attachments[dst_att].image_view;
 
       const VkRect2D render_area = cmd_buffer->state.render_area;
 
@@ -4650,6 +4647,47 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
       }
    }
 
+#if GEN_GEN == 7
+   /* On gen7, we have to store a texturable version of the stencil buffer in
+    * a shadow whenever VK_IMAGE_USAGE_SAMPLED_BIT is set and copy back and
+    * forth at strategic points.  Stencil writes are only allowed in three
+    * layouts:
+    *
+    *  - VK_IMAGE_LAYOUT_GENERAL
+    *  - VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+    *  - VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    *  - VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+    *
+    * For general, we have no nice opportunity to transition so we do the copy
+    * to the shadow unconditionally at the end of the subpass.  For transfer
+    * destinations, we can update it as part of the transfer op.  For the
+    * other two, we delay the copy until a transition into some other layout.
+    */
+   if (subpass->depth_stencil_attachment) {
+      uint32_t a = subpass->depth_stencil_attachment->attachment;
+      assert(a != VK_ATTACHMENT_UNUSED);
+
+      struct anv_attachment_state *att_state = &cmd_state->attachments[a];
+      struct anv_image_view *iview = cmd_state->attachments[a].image_view;;
+      const struct anv_image *image = iview->image;
+
+      if (image->aspects & VK_IMAGE_ASPECT_STENCIL_BIT) {
+         uint32_t plane = anv_image_aspect_to_plane(image->aspects,
+                                                    VK_IMAGE_ASPECT_STENCIL_BIT);
+
+         if (image->planes[plane].shadow_surface.isl.size_B > 0 &&
+             att_state->current_layout == VK_IMAGE_LAYOUT_GENERAL) {
+            assert(image->aspects & VK_IMAGE_ASPECT_STENCIL_BIT);
+            anv_image_copy_to_shadow(cmd_buffer, image,
+                                     VK_IMAGE_ASPECT_STENCIL_BIT,
+                                     iview->planes[plane].isl.base_level, 1,
+                                     iview->planes[plane].isl.base_array_layer,
+                                     fb->layers);
+         }
+      }
+   }
+#endif /* GEN_GEN == 7 */
+
    for (uint32_t i = 0; i < subpass->attachment_count; ++i) {
       const uint32_t a = subpass->attachments[i].attachment;
       if (a == VK_ATTACHMENT_UNUSED)
@@ -4660,7 +4698,7 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
 
       assert(a < cmd_state->pass->attachment_count);
       struct anv_attachment_state *att_state = &cmd_state->attachments[a];
-      struct anv_image_view *iview = fb->attachments[a];
+      struct anv_image_view *iview = cmd_state->attachments[a].image_view;
       const struct anv_image *image = iview->image;
 
       if ((image->aspects & VK_IMAGE_ASPECT_ANY_COLOR_BIT_ANV) &&
@@ -4676,7 +4714,7 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
           * SRGB view & a UNORM image).
           */
          if (fast_clear_type != ANV_FAST_CLEAR_NONE) {
-            anv_perf_warn(cmd_buffer->device->instance, fb,
+            anv_perf_warn(cmd_buffer->device->instance, iview,
                           "Doing a partial resolve to get rid of clear color at the "
                           "end of a renderpass due to an image/view format mismatch");
 
@@ -4716,26 +4754,34 @@ cmd_buffer_end_subpass(struct anv_cmd_buffer *cmd_buffer)
       VkImageLayout target_layout =
          cmd_state->pass->attachments[a].final_layout;
 
+      uint32_t base_layer, layer_count;
+      if (image->type == VK_IMAGE_TYPE_3D) {
+         base_layer = 0;
+         layer_count = anv_minify(iview->image->extent.depth,
+                                  iview->planes[0].isl.base_level);
+      } else {
+         base_layer = iview->planes[0].isl.base_array_layer;
+         layer_count = fb->layers;
+      }
+
       if (image->aspects & VK_IMAGE_ASPECT_ANY_COLOR_BIT_ANV) {
          assert(image->aspects == VK_IMAGE_ASPECT_COLOR_BIT);
-
-         uint32_t base_layer, layer_count;
-         if (image->type == VK_IMAGE_TYPE_3D) {
-            base_layer = 0;
-            layer_count = anv_minify(iview->image->extent.depth,
-                                     iview->planes[0].isl.base_level);
-         } else {
-            base_layer = iview->planes[0].isl.base_array_layer;
-            layer_count = fb->layers;
-         }
-
          transition_color_buffer(cmd_buffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
                                  iview->planes[0].isl.base_level, 1,
                                  base_layer, layer_count,
                                  att_state->current_layout, target_layout);
-      } else if (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
+      }
+
+      if (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT) {
          transition_depth_buffer(cmd_buffer, image,
                                  att_state->current_layout, target_layout);
+      }
+
+      if (image->aspects & VK_IMAGE_ASPECT_STENCIL_BIT) {
+         transition_stencil_buffer(cmd_buffer, image,
+                                   iview->planes[0].isl.base_level, 1,
+                                   base_layer, layer_count,
+                                   att_state->current_layout, target_layout);
       }
    }
 
@@ -4820,7 +4866,7 @@ void genX(CmdEndRenderPass)(
    cmd_buffer->state.hiz_enabled = false;
 
 #ifndef NDEBUG
-   anv_dump_add_framebuffer(cmd_buffer, cmd_buffer->state.framebuffer);
+   anv_dump_add_attachments(cmd_buffer);
 #endif
 
    /* Remove references to render pass specific state. This enables us to
@@ -4842,10 +4888,12 @@ void
 genX(cmd_emit_conditional_render_predicate)(struct anv_cmd_buffer *cmd_buffer)
 {
 #if GEN_GEN >= 8 || GEN_IS_HASWELL
-   emit_lrr(&cmd_buffer->batch, MI_PREDICATE_SRC0, CS_GPR(ANV_PREDICATE_RESULT_REG));
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC0 + 4, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1, 0);
-   emit_lri(&cmd_buffer->batch, MI_PREDICATE_SRC1 + 4, 0);
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC0),
+                    gen_mi_reg32(ANV_PREDICATE_RESULT_REG));
+   gen_mi_store(&b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(0));
 
    anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
       mip.LoadOperation    = LOAD_LOADINV;
@@ -4873,6 +4921,9 @@ void genX(CmdBeginConditionalRenderingEXT)(
 
    genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
 
+   struct gen_mi_builder b;
+   gen_mi_builder_init(&b, &cmd_buffer->batch);
+
    /* Section 19.4 of the Vulkan 1.1.85 spec says:
     *
     *    If the value of the predicate in buffer memory changes
@@ -4884,20 +4935,15 @@ void genX(CmdBeginConditionalRenderingEXT)(
     *
     * So it's perfectly fine to read a value from the buffer once.
     */
-   emit_lrm(&cmd_buffer->batch, CS_GPR(MI_ALU_REG0), value_address);
-   /* Zero the top 32-bits of MI_PREDICATE_SRC0 */
-   emit_lri(&cmd_buffer->batch, CS_GPR(MI_ALU_REG0) + 4, 0);
+   struct gen_mi_value value =  gen_mi_mem32(value_address);
 
    /* Precompute predicate result, it is necessary to support secondary
     * command buffers since it is unknown if conditional rendering is
     * inverted when populating them.
     */
-   uint32_t *dw = anv_batch_emitn(&cmd_buffer->batch, 5, GENX(MI_MATH));
-   dw[1] = mi_alu(MI_ALU_LOAD0, MI_ALU_SRCA, 0);
-   dw[2] = mi_alu(MI_ALU_LOAD,  MI_ALU_SRCB, MI_ALU_REG0);
-   dw[3] = mi_alu(MI_ALU_SUB, 0, 0);
-   dw[4] = mi_alu(isInverted ? MI_ALU_STOREINV : MI_ALU_STORE,
-                  ANV_PREDICATE_RESULT_REG, MI_ALU_CF);
+   gen_mi_store(&b, gen_mi_reg64(ANV_PREDICATE_RESULT_REG),
+                    isInverted ? gen_mi_uge(&b, gen_mi_imm(0), value) :
+                                 gen_mi_ult(&b, gen_mi_imm(0), value));
 }
 
 void genX(CmdEndConditionalRenderingEXT)(
@@ -4909,3 +4955,110 @@ void genX(CmdEndConditionalRenderingEXT)(
    cmd_state->conditional_render_enabled = false;
 }
 #endif
+
+/* Set of stage bits for which are pipelined, i.e. they get queued by the
+ * command streamer for later execution.
+ */
+#define ANV_PIPELINE_STAGE_PIPELINED_BITS \
+   (VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | \
+    VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | \
+    VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT | \
+    VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT | \
+    VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT | \
+    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | \
+    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | \
+    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | \
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | \
+    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | \
+    VK_PIPELINE_STAGE_TRANSFER_BIT | \
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT | \
+    VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | \
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
+
+void genX(CmdSetEvent)(
+    VkCommandBuffer                             commandBuffer,
+    VkEvent                                     _event,
+    VkPipelineStageFlags                        stageMask)
+{
+   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
+   ANV_FROM_HANDLE(anv_event, event, _event);
+
+   anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
+      if (stageMask & ANV_PIPELINE_STAGE_PIPELINED_BITS) {
+         pc.StallAtPixelScoreboard = true;
+         pc.CommandStreamerStallEnable = true;
+      }
+
+      pc.DestinationAddressType  = DAT_PPGTT,
+      pc.PostSyncOperation       = WriteImmediateData,
+      pc.Address = (struct anv_address) {
+         cmd_buffer->device->dynamic_state_pool.block_pool.bo,
+         event->state.offset
+      };
+      pc.ImmediateData           = VK_EVENT_SET;
+   }
+}
+
+void genX(CmdResetEvent)(
+    VkCommandBuffer                             commandBuffer,
+    VkEvent                                     _event,
+    VkPipelineStageFlags                        stageMask)
+{
+   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
+   ANV_FROM_HANDLE(anv_event, event, _event);
+
+   anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
+      if (stageMask & ANV_PIPELINE_STAGE_PIPELINED_BITS) {
+         pc.StallAtPixelScoreboard = true;
+         pc.CommandStreamerStallEnable = true;
+      }
+
+      pc.DestinationAddressType  = DAT_PPGTT;
+      pc.PostSyncOperation       = WriteImmediateData;
+      pc.Address = (struct anv_address) {
+         cmd_buffer->device->dynamic_state_pool.block_pool.bo,
+         event->state.offset
+      };
+      pc.ImmediateData           = VK_EVENT_RESET;
+   }
+}
+
+void genX(CmdWaitEvents)(
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    eventCount,
+    const VkEvent*                              pEvents,
+    VkPipelineStageFlags                        srcStageMask,
+    VkPipelineStageFlags                        destStageMask,
+    uint32_t                                    memoryBarrierCount,
+    const VkMemoryBarrier*                      pMemoryBarriers,
+    uint32_t                                    bufferMemoryBarrierCount,
+    const VkBufferMemoryBarrier*                pBufferMemoryBarriers,
+    uint32_t                                    imageMemoryBarrierCount,
+    const VkImageMemoryBarrier*                 pImageMemoryBarriers)
+{
+#if GEN_GEN >= 8
+   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
+
+   for (uint32_t i = 0; i < eventCount; i++) {
+      ANV_FROM_HANDLE(anv_event, event, pEvents[i]);
+
+      anv_batch_emit(&cmd_buffer->batch, GENX(MI_SEMAPHORE_WAIT), sem) {
+         sem.WaitMode            = PollingMode,
+         sem.CompareOperation    = COMPARE_SAD_EQUAL_SDD,
+         sem.SemaphoreDataDword  = VK_EVENT_SET,
+         sem.SemaphoreAddress = (struct anv_address) {
+            cmd_buffer->device->dynamic_state_pool.block_pool.bo,
+            event->state.offset
+         };
+      }
+   }
+#else
+   anv_finishme("Implement events on gen7");
+#endif
+
+   genX(CmdPipelineBarrier)(commandBuffer, srcStageMask, destStageMask,
+                            false, /* byRegion */
+                            memoryBarrierCount, pMemoryBarriers,
+                            bufferMemoryBarrierCount, pBufferMemoryBarriers,
+                            imageMemoryBarrierCount, pImageMemoryBarriers);
+}

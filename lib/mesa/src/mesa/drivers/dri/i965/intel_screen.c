@@ -23,7 +23,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <drm_fourcc.h>
+#include "drm-uapi/drm_fourcc.h"
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
@@ -34,6 +34,7 @@
 #include "main/hash.h"
 #include "main/fbobject.h"
 #include "main/version.h"
+#include "main/glthread.h"
 #include "swrast/s_renderbuffer.h"
 #include "util/ralloc.h"
 #include "util/disk_cache.h"
@@ -62,6 +63,7 @@ DRI_CONF_BEGIN
 	 DRI_CONF_DESC_END
       DRI_CONF_OPT_END
       DRI_CONF_MESA_NO_ERROR("false")
+      DRI_CONF_MESA_GLTHREAD("false")
    DRI_CONF_SECTION_END
 
    DRI_CONF_SECTION_QUALITY
@@ -86,6 +88,7 @@ DRI_CONF_BEGIN
       DRI_CONF_ALLOW_GLSL_BUILTIN_VARIABLE_REDECLARATION("false")
       DRI_CONF_ALLOW_GLSL_CROSS_STAGE_INTERPOLATION_MISMATCH("false")
       DRI_CONF_ALLOW_HIGHER_COMPAT_VERSION("false")
+      DRI_CONF_FORCE_COMPAT_PROFILE("false")
       DRI_CONF_FORCE_GLSL_ABS_SQRT("false")
 
       DRI_CONF_OPT_BEGIN_B(shader_precompile, "true")
@@ -96,6 +99,7 @@ DRI_CONF_BEGIN
    DRI_CONF_SECTION_MISCELLANEOUS
       DRI_CONF_GLSL_ZERO_INIT("false")
       DRI_CONF_ALLOW_RGB10_CONFIGS("false")
+      DRI_CONF_ALLOW_RGB565_CONFIGS("true")
    DRI_CONF_SECTION_END
 DRI_CONF_END
 };
@@ -111,7 +115,7 @@ DRI_CONF_END
 
 #include "brw_context.h"
 
-#include "i915_drm.h"
+#include "drm-uapi/i915_drm.h"
 
 /**
  * For debugging purposes, this returns a time in seconds.
@@ -146,6 +150,8 @@ intel_dri2_flush_with_flags(__DRIcontext *cPriv,
       return;
 
    struct gl_context *ctx = &brw->ctx;
+
+   _mesa_glthread_finish(ctx);
 
    FLUSH_VERTICES(ctx, 0);
 
@@ -282,12 +288,27 @@ static const struct intel_image_format intel_image_formats[] = {
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_R8, 1 },
        { 1, 1, 1, __DRI_IMAGE_FORMAT_GR88, 2 } } },
 
+   { __DRI_IMAGE_FOURCC_P010, __DRI_IMAGE_COMPONENTS_Y_UV, 2,
+     { { 0, 0, 0, __DRI_IMAGE_FORMAT_R16, 2 },
+       { 1, 1, 1, __DRI_IMAGE_FORMAT_GR1616, 4 } } },
+
+   { __DRI_IMAGE_FOURCC_P012, __DRI_IMAGE_COMPONENTS_Y_UV, 2,
+     { { 0, 0, 0, __DRI_IMAGE_FORMAT_R16, 2 },
+       { 1, 1, 1, __DRI_IMAGE_FORMAT_GR1616, 4 } } },
+
+   { __DRI_IMAGE_FOURCC_P016, __DRI_IMAGE_COMPONENTS_Y_UV, 2,
+     { { 0, 0, 0, __DRI_IMAGE_FORMAT_R16, 2 },
+       { 1, 1, 1, __DRI_IMAGE_FORMAT_GR1616, 4 } } },
+
    { __DRI_IMAGE_FOURCC_NV16, __DRI_IMAGE_COMPONENTS_Y_UV, 2,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_R8, 1 },
        { 1, 1, 0, __DRI_IMAGE_FORMAT_GR88, 2 } } },
 
    { __DRI_IMAGE_FOURCC_AYUV, __DRI_IMAGE_COMPONENTS_AYUV, 1,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_ABGR8888, 4 } } },
+
+   { __DRI_IMAGE_FOURCC_XYUV8888, __DRI_IMAGE_COMPONENTS_XYUV, 1,
+     { { 0, 0, 0, __DRI_IMAGE_FORMAT_XBGR8888, 4 } } },
 
    /* For YUYV and UYVY buffers, we set up two overlapping DRI images
     * and treat them as planar buffers in the compositors.
@@ -400,7 +421,7 @@ intel_image_format_lookup(int fourcc)
    return NULL;
 }
 
-static boolean
+static bool
 intel_image_get_fourcc(__DRIimage *image, int *fourcc)
 {
    if (image->planar_format) {
@@ -1363,6 +1384,8 @@ intel_query_dma_buf_modifiers(__DRIscreen *_screen, int fourcc, int max,
       for (i = 0; i < num_mods && i < max; i++) {
          if (f->components == __DRI_IMAGE_COMPONENTS_Y_U_V ||
              f->components == __DRI_IMAGE_COMPONENTS_Y_UV ||
+             f->components == __DRI_IMAGE_COMPONENTS_AYUV ||
+             f->components == __DRI_IMAGE_COMPONENTS_XYUV ||
              f->components == __DRI_IMAGE_COMPONENTS_Y_XUXV ||
              f->components == __DRI_IMAGE_COMPONENTS_Y_UXVX) {
             external_only[i] = GL_TRUE;
@@ -1890,6 +1913,20 @@ intel_init_bufmgr(struct intel_screen *screen)
 static bool
 intel_detect_swizzling(struct intel_screen *screen)
 {
+   /* Broadwell PRM says:
+    *
+    *   "Before Gen8, there was a historical configuration control field to
+    *    swizzle address bit[6] for in X/Y tiling modes. This was set in three
+    *    different places: TILECTL[1:0], ARB_MODE[5:4], and
+    *    DISP_ARB_CTL[14:13].
+    *
+    *    For Gen8 and subsequent generations, the swizzle fields are all
+    *    reserved, and the CPU's memory controller performs all address
+    *    swizzling modifications."
+    */
+   if (screen->devinfo.gen >= 8)
+      return false;
+
    uint32_t tiling = I915_TILING_X;
    uint32_t swizzle_mode = 0;
    struct brw_bo *buffer =
@@ -2173,6 +2210,9 @@ intel_screen_make_configs(__DRIscreen *dri_screen)
    /* Shall we expose 10 bpc formats? */
    bool allow_rgb10_configs = driQueryOptionb(&screen->optionCache,
                                               "allow_rgb10_configs");
+   /* Shall we expose 565 formats? */
+   bool allow_rgb565_configs = driQueryOptionb(&screen->optionCache,
+                                               "allow_rgb565_configs");
 
    /* Generate singlesample configs, each without accumulation buffer
     * and with EGL_MUTABLE_RENDER_BUFFER_BIT_KHR.
@@ -2184,6 +2224,9 @@ intel_screen_make_configs(__DRIscreen *dri_screen)
       if (!allow_rgb10_configs &&
           (formats[i] == MESA_FORMAT_B10G10R10A2_UNORM ||
            formats[i] == MESA_FORMAT_B10G10R10X2_UNORM))
+         continue;
+
+      if (!allow_rgb565_configs && formats[i] == MESA_FORMAT_B5G6R5_UNORM)
          continue;
 
       /* Starting with DRI2 protocol version 1.1 we can request a depth/stencil
@@ -2228,6 +2271,9 @@ intel_screen_make_configs(__DRIscreen *dri_screen)
           formats[i] == MESA_FORMAT_B10G10R10X2_UNORM))
          continue;
 
+      if (!allow_rgb565_configs && formats[i] == MESA_FORMAT_B5G6R5_UNORM)
+         continue;
+
       if (formats[i] == MESA_FORMAT_B5G6R5_UNORM) {
          depth_bits[0] = 16;
          stencil_bits[0] = 0;
@@ -2264,6 +2310,9 @@ intel_screen_make_configs(__DRIscreen *dri_screen)
       if (!allow_rgb10_configs &&
           (formats[i] == MESA_FORMAT_B10G10R10A2_UNORM ||
           formats[i] == MESA_FORMAT_B10G10R10X2_UNORM))
+         continue;
+
+      if (!allow_rgb565_configs && formats[i] == MESA_FORMAT_B5G6R5_UNORM)
          continue;
 
       __DRIconfig **new_configs;
@@ -2367,28 +2416,6 @@ set_max_gl_versions(struct intel_screen *screen)
    }
 }
 
-/**
- * Return the revision (generally the revid field of the PCI header) of the
- * graphics device.
- */
-int
-intel_device_get_revision(int fd)
-{
-   struct drm_i915_getparam gp;
-   int revision;
-   int ret;
-
-   memset(&gp, 0, sizeof(gp));
-   gp.param = I915_PARAM_REVISION;
-   gp.value = &revision;
-
-   ret = drmCommandWriteRead(fd, DRM_I915_GETPARAM, &gp, sizeof(gp));
-   if (ret)
-      revision = -1;
-
-   return revision;
-}
-
 static void
 shader_debug_log_mesa(void *data, const char *fmt, ...)
 {
@@ -2397,10 +2424,10 @@ shader_debug_log_mesa(void *data, const char *fmt, ...)
 
    va_start(args, fmt);
    GLuint msg_id = 0;
-   _mesa_gl_vdebug(&brw->ctx, &msg_id,
-                   MESA_DEBUG_SOURCE_SHADER_COMPILER,
-                   MESA_DEBUG_TYPE_OTHER,
-                   MESA_DEBUG_SEVERITY_NOTIFICATION, fmt, args);
+   _mesa_gl_vdebugf(&brw->ctx, &msg_id,
+                    MESA_DEBUG_SOURCE_SHADER_COMPILER,
+                    MESA_DEBUG_TYPE_OTHER,
+                    MESA_DEBUG_SEVERITY_NOTIFICATION, fmt, args);
    va_end(args);
 }
 
@@ -2421,10 +2448,10 @@ shader_perf_log_mesa(void *data, const char *fmt, ...)
 
    if (brw->perf_debug) {
       GLuint msg_id = 0;
-      _mesa_gl_vdebug(&brw->ctx, &msg_id,
-                      MESA_DEBUG_SOURCE_SHADER_COMPILER,
-                      MESA_DEBUG_TYPE_PERFORMANCE,
-                      MESA_DEBUG_SEVERITY_MEDIUM, fmt, args);
+      _mesa_gl_vdebugf(&brw->ctx, &msg_id,
+                       MESA_DEBUG_SOURCE_SHADER_COMPILER,
+                       MESA_DEBUG_TYPE_PERFORMANCE,
+                       MESA_DEBUG_SEVERITY_MEDIUM, fmt, args);
    }
    va_end(args);
 }
@@ -2461,25 +2488,21 @@ __DRIconfig **intelInitScreen2(__DRIscreen *dri_screen)
 
    driParseOptionInfo(&options, brw_config_options.xml);
    driParseConfigFiles(&screen->optionCache, &options, dri_screen->myNum,
-                       "i965", NULL);
+                       "i965", NULL, NULL, 0);
    driDestroyOptionCache(&options);
 
    screen->driScrnPriv = dri_screen;
    dri_screen->driverPrivate = (void *) screen;
 
-   screen->deviceID = gen_get_pci_device_id_override();
-   if (screen->deviceID < 0)
-      screen->deviceID = intel_get_integer(screen, I915_PARAM_CHIPSET_ID);
-   else
-      screen->no_hw = true;
-
-   if (!gen_get_device_info(screen->deviceID, &screen->devinfo))
+   if (!gen_get_device_info_from_fd(dri_screen->fd, &screen->devinfo))
       return NULL;
+
+   const struct gen_device_info *devinfo = &screen->devinfo;
+   screen->deviceID = devinfo->chipset_id;
+   screen->no_hw = devinfo->no_hw;
 
    if (!intel_init_bufmgr(screen))
        return NULL;
-
-   const struct gen_device_info *devinfo = &screen->devinfo;
 
    brw_process_intel_debug_variable();
 

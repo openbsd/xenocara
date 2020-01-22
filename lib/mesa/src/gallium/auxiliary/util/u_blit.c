@@ -213,8 +213,10 @@ set_vertex_shader(struct blit_state *ctx)
     * fragment shader input semantics and vertex_element/buffers.
     */
    if (!ctx->vs) {
-      const uint semantic_names[] = { TGSI_SEMANTIC_POSITION,
-                                      TGSI_SEMANTIC_GENERIC };
+      const enum tgsi_semantic semantic_names[] = {
+         TGSI_SEMANTIC_POSITION,
+         TGSI_SEMANTIC_GENERIC
+      };
       const uint semantic_indexes[] = { 0, 0 };
       ctx->vs = util_make_vertex_passthrough_shader(ctx->pipe, 2,
                                                     semantic_names,
@@ -382,7 +384,7 @@ util_blit_pixels(struct blit_state *ctx,
                  struct pipe_surface *dst,
                  int dstX0, int dstY0,
                  int dstX1, int dstY1,
-                 MAYBE_UNUSED float z,
+                 ASSERTED float z,
                  enum pipe_tex_filter filter,
                  uint writemask)
 {

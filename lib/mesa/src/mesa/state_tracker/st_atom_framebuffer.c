@@ -38,6 +38,7 @@
 #include "st_cb_bitmap.h"
 #include "st_cb_fbo.h"
 #include "st_texture.h"
+#include "st_util.h"
 #include "pipe/p_context.h"
 #include "cso_cache/cso_context.h"
 #include "util/u_math.h"
@@ -145,7 +146,7 @@ st_update_framebuffer_state( struct st_context *st )
 
       if (strb) {
          if (strb->is_rtt || (strb->texture &&
-             _mesa_get_format_color_encoding(strb->Base.Format) == GL_SRGB)) {
+             _mesa_is_format_srgb(strb->Base.Format))) {
             /* rendering to a GL texture, may have to update surface */
             st_update_renderbuffer_surface(st, strb);
          }
@@ -187,7 +188,7 @@ st_update_framebuffer_state( struct st_context *st )
    else
       framebuffer.zsbuf = NULL;
 
-#ifdef DEBUG
+#ifndef NDEBUG
    /* Make sure the resource binding flags were set properly */
    for (i = 0; i < framebuffer.nr_cbufs; i++) {
       assert(!framebuffer.cbufs[i] ||

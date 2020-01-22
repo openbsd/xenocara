@@ -26,14 +26,16 @@
 
 #include "u_queue.h"
 
-#include <time.h>
+#include "c11/threads.h"
 
 #include "util/os_time.h"
 #include "util/u_string.h"
 #include "util/u_thread.h"
 #include "u_process.h"
 
-static void util_queue_killall_and_wait(struct util_queue *queue);
+static void
+util_queue_kill_threads(struct util_queue *queue, unsigned keep_num_threads,
+                        bool finish_locked);
 
 /****************************************************************************
  * Wait for all queues to assert idle when exit() is called.
@@ -54,7 +56,7 @@ atexit_handler(void)
    mtx_lock(&exit_mutex);
    /* Wait for all queues to assert idle. */
    LIST_FOR_EACH_ENTRY(iter, &queue_list, head) {
-      util_queue_killall_and_wait(iter);
+      util_queue_kill_threads(iter, 0, false);
    }
    mtx_unlock(&exit_mutex);
 }
@@ -255,7 +257,7 @@ util_queue_thread_func(void *input)
 
    if (strlen(queue->name) > 0) {
       char name[16];
-      util_snprintf(name, sizeof(name), "%s%i", queue->name, thread_index);
+      snprintf(name, sizeof(name), "%s%i", queue->name, thread_index);
       u_thread_setname(name);
    }
 
@@ -266,10 +268,11 @@ util_queue_thread_func(void *input)
       assert(queue->num_queued >= 0 && queue->num_queued <= queue->max_jobs);
 
       /* wait if the queue is empty */
-      while (!queue->kill_threads && queue->num_queued == 0)
+      while (thread_index < queue->num_threads && queue->num_queued == 0)
          cnd_wait(&queue->has_queued_cond, &queue->lock);
 
-      if (queue->kill_threads) {
+      /* only kill threads that are above "num_threads" */
+      if (thread_index >= queue->num_threads) {
          mtx_unlock(&queue->lock);
          break;
       }
@@ -290,19 +293,85 @@ util_queue_thread_func(void *input)
       }
    }
 
-   /* signal remaining jobs before terminating */
+   /* signal remaining jobs if all threads are being terminated */
    mtx_lock(&queue->lock);
-   for (unsigned i = queue->read_idx; i != queue->write_idx;
-        i = (i + 1) % queue->max_jobs) {
-      if (queue->jobs[i].job) {
-         util_queue_fence_signal(queue->jobs[i].fence);
-         queue->jobs[i].job = NULL;
+   if (queue->num_threads == 0) {
+      for (unsigned i = queue->read_idx; i != queue->write_idx;
+           i = (i + 1) % queue->max_jobs) {
+         if (queue->jobs[i].job) {
+            util_queue_fence_signal(queue->jobs[i].fence);
+            queue->jobs[i].job = NULL;
+         }
       }
+      queue->read_idx = queue->write_idx;
+      queue->num_queued = 0;
    }
-   queue->read_idx = queue->write_idx;
-   queue->num_queued = 0;
    mtx_unlock(&queue->lock);
    return 0;
+}
+
+static bool
+util_queue_create_thread(struct util_queue *queue, unsigned index)
+{
+   struct thread_input *input =
+      (struct thread_input *) malloc(sizeof(struct thread_input));
+   input->queue = queue;
+   input->thread_index = index;
+
+   queue->threads[index] = u_thread_create(util_queue_thread_func, input);
+
+   if (!queue->threads[index]) {
+      free(input);
+      return false;
+   }
+
+   if (queue->flags & UTIL_QUEUE_INIT_USE_MINIMUM_PRIORITY) {
+#if defined(__linux__) && defined(SCHED_IDLE)
+      struct sched_param sched_param = {0};
+
+      /* The nice() function can only set a maximum of 19.
+       * SCHED_IDLE is the same as nice = 20.
+       *
+       * Note that Linux only allows decreasing the priority. The original
+       * priority can't be restored.
+       */
+      pthread_setschedparam(queue->threads[index], SCHED_IDLE, &sched_param);
+#endif
+   }
+   return true;
+}
+
+void
+util_queue_adjust_num_threads(struct util_queue *queue, unsigned num_threads)
+{
+   num_threads = MIN2(num_threads, queue->max_threads);
+   num_threads = MAX2(num_threads, 1);
+
+   mtx_lock(&queue->finish_lock);
+   unsigned old_num_threads = queue->num_threads;
+
+   if (num_threads == old_num_threads) {
+      mtx_unlock(&queue->finish_lock);
+      return;
+   }
+
+   if (num_threads < old_num_threads) {
+      util_queue_kill_threads(queue, num_threads, true);
+      mtx_unlock(&queue->finish_lock);
+      return;
+   }
+
+   /* Create threads.
+    *
+    * We need to update num_threads first, because threads terminate
+    * when thread_index < num_threads.
+    */
+   queue->num_threads = num_threads;
+   for (unsigned i = old_num_threads; i < num_threads; i++) {
+      if (!util_queue_create_thread(queue, i))
+         break;
+   }
+   mtx_unlock(&queue->finish_lock);
 }
 
 bool
@@ -336,13 +405,14 @@ util_queue_init(struct util_queue *queue,
    memset(queue, 0, sizeof(*queue));
 
    if (process_len) {
-      util_snprintf(queue->name, sizeof(queue->name), "%.*s:%s",
-                    process_len, process_name, name);
+      snprintf(queue->name, sizeof(queue->name), "%.*s:%s",
+               process_len, process_name, name);
    } else {
-      util_snprintf(queue->name, sizeof(queue->name), "%s", name);
+      snprintf(queue->name, sizeof(queue->name), "%s", name);
    }
 
    queue->flags = flags;
+   queue->max_threads = num_threads;
    queue->num_threads = num_threads;
    queue->max_jobs = max_jobs;
 
@@ -364,16 +434,7 @@ util_queue_init(struct util_queue *queue,
 
    /* start threads */
    for (i = 0; i < num_threads; i++) {
-      struct thread_input *input =
-         (struct thread_input *) malloc(sizeof(struct thread_input));
-      input->queue = queue;
-      input->thread_index = i;
-
-      queue->threads[i] = u_thread_create(util_queue_thread_func, input);
-
-      if (!queue->threads[i]) {
-         free(input);
-
+      if (!util_queue_create_thread(queue, i)) {
          if (i == 0) {
             /* no threads created, fail */
             goto fail;
@@ -382,20 +443,6 @@ util_queue_init(struct util_queue *queue,
             queue->num_threads = i;
             break;
          }
-      }
-
-      if (flags & UTIL_QUEUE_INIT_USE_MINIMUM_PRIORITY) {
-   #if defined(__linux__) && defined(SCHED_IDLE)
-         struct sched_param sched_param = {0};
-
-         /* The nice() function can only set a maximum of 19.
-          * SCHED_IDLE is the same as nice = 20.
-          *
-          * Note that Linux only allows decreasing the priority. The original
-          * priority can't be restored.
-          */
-         pthread_setschedparam(queue->threads[i], SCHED_IDLE, &sched_param);
-   #endif
       }
    }
 
@@ -417,25 +464,40 @@ fail:
 }
 
 static void
-util_queue_killall_and_wait(struct util_queue *queue)
+util_queue_kill_threads(struct util_queue *queue, unsigned keep_num_threads,
+                        bool finish_locked)
 {
    unsigned i;
 
    /* Signal all threads to terminate. */
+   if (!finish_locked)
+      mtx_lock(&queue->finish_lock);
+
+   if (keep_num_threads >= queue->num_threads) {
+      mtx_unlock(&queue->finish_lock);
+      return;
+   }
+
    mtx_lock(&queue->lock);
-   queue->kill_threads = 1;
+   unsigned old_num_threads = queue->num_threads;
+   /* Setting num_threads is what causes the threads to terminate.
+    * Then cnd_broadcast wakes them up and they will exit their function.
+    */
+   queue->num_threads = keep_num_threads;
    cnd_broadcast(&queue->has_queued_cond);
    mtx_unlock(&queue->lock);
 
-   for (i = 0; i < queue->num_threads; i++)
+   for (i = keep_num_threads; i < old_num_threads; i++)
       thrd_join(queue->threads[i], NULL);
-   queue->num_threads = 0;
+
+   if (!finish_locked)
+      mtx_unlock(&queue->finish_lock);
 }
 
 void
 util_queue_destroy(struct util_queue *queue)
 {
-   util_queue_killall_and_wait(queue);
+   util_queue_kill_threads(queue, 0, false);
    remove_from_atexit_list(queue);
 
    cnd_destroy(&queue->has_space_cond);
@@ -456,7 +518,7 @@ util_queue_add_job(struct util_queue *queue,
    struct util_queue_job *ptr;
 
    mtx_lock(&queue->lock);
-   if (queue->kill_threads) {
+   if (queue->num_threads == 0) {
       mtx_unlock(&queue->lock);
       /* well no good option here, but any leaks will be
        * short-lived as things are shutting down..
@@ -568,15 +630,22 @@ void
 util_queue_finish(struct util_queue *queue)
 {
    util_barrier barrier;
-   struct util_queue_fence *fences = malloc(queue->num_threads * sizeof(*fences));
-
-   util_barrier_init(&barrier, queue->num_threads);
+   struct util_queue_fence *fences;
 
    /* If 2 threads were adding jobs for 2 different barries at the same time,
     * a deadlock would happen, because 1 barrier requires that all threads
     * wait for it exclusively.
     */
    mtx_lock(&queue->finish_lock);
+
+   /* The number of threads can be changed to 0, e.g. by the atexit handler. */
+   if (!queue->num_threads) {
+      mtx_unlock(&queue->finish_lock);
+      return;
+   }
+
+   fences = malloc(queue->num_threads * sizeof(*fences));
+   util_barrier_init(&barrier, queue->num_threads);
 
    for (unsigned i = 0; i < queue->num_threads; ++i) {
       util_queue_fence_init(&fences[i]);

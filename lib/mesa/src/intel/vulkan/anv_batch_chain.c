@@ -418,9 +418,9 @@ anv_batch_bo_link(struct anv_cmd_buffer *cmd_buffer,
                   struct anv_batch_bo *next_bbo,
                   uint32_t next_bbo_offset)
 {
-   MAYBE_UNUSED const uint32_t bb_start_offset =
+   const uint32_t bb_start_offset =
       prev_bbo->length - GEN8_MI_BATCH_BUFFER_START_length * 4;
-   MAYBE_UNUSED const uint32_t *bb_start = prev_bbo->bo.map + bb_start_offset;
+   ASSERTED const uint32_t *bb_start = prev_bbo->bo.map + bb_start_offset;
 
    /* Make sure we're looking at a MI_BATCH_BUFFER_START */
    assert(((*bb_start >> 29) & 0x07) == 0);
@@ -478,8 +478,10 @@ anv_batch_bo_list_clone(const struct list_head *list,
    }
 
    if (result != VK_SUCCESS) {
-      list_for_each_entry_safe(struct anv_batch_bo, bbo, new_list, link)
+      list_for_each_entry_safe(struct anv_batch_bo, bbo, new_list, link) {
+         list_del(&bbo->link);
          anv_batch_bo_destroy(bbo, cmd_buffer);
+      }
    }
 
    return result;
@@ -804,6 +806,7 @@ anv_cmd_buffer_fini_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
    /* Destroy all of the batch buffers */
    list_for_each_entry_safe(struct anv_batch_bo, bbo,
                             &cmd_buffer->batch_bos, link) {
+      list_del(&bbo->link);
       anv_batch_bo_destroy(bbo, cmd_buffer);
    }
 }
@@ -1393,6 +1396,15 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
       anv_execbuf_add_bo_set(execbuf, cmd_buffer->surface_relocs.deps, 0,
                              &cmd_buffer->device->alloc);
 
+      /* Add the BOs for all memory objects */
+      list_for_each_entry(struct anv_device_memory, mem,
+                          &cmd_buffer->device->memory_objects, link) {
+         result = anv_execbuf_add_bo(execbuf, mem->bo, NULL, 0,
+                                     &cmd_buffer->device->alloc);
+         if (result != VK_SUCCESS)
+            return result;
+      }
+
       struct anv_block_pool *pool;
       pool = &cmd_buffer->device->dynamic_state_pool.block_pool;
       anv_block_pool_foreach_bo(bo, pool) {
@@ -1585,6 +1597,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
                        VkFence _fence)
 {
    ANV_FROM_HANDLE(anv_fence, fence, _fence);
+   UNUSED struct anv_physical_device *pdevice = &device->instance->physicalDevice;
 
    struct anv_execbuf execbuf;
    anv_execbuf_init(&execbuf);
@@ -1599,6 +1612,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
 
       switch (impl->type) {
       case ANV_SEMAPHORE_TYPE_BO:
+         assert(!pdevice->has_syncobj);
          result = anv_execbuf_add_bo(&execbuf, impl->bo, NULL,
                                      0, &device->alloc);
          if (result != VK_SUCCESS)
@@ -1606,8 +1620,12 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
          break;
 
       case ANV_SEMAPHORE_TYPE_SYNC_FILE:
+         assert(!pdevice->has_syncobj);
          if (in_fence == -1) {
             in_fence = impl->fd;
+            if (in_fence == -1)
+               return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
+            impl->fd = -1;
          } else {
             int merge = anv_gem_sync_file_merge(device, in_fence, impl->fd);
             if (merge == -1)
@@ -1615,10 +1633,9 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
 
             close(impl->fd);
             close(in_fence);
+            impl->fd = -1;
             in_fence = merge;
          }
-
-         impl->fd = -1;
          break;
 
       case ANV_SEMAPHORE_TYPE_DRM_SYNCOBJ:
@@ -1655,6 +1672,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
 
       switch (impl->type) {
       case ANV_SEMAPHORE_TYPE_BO:
+         assert(!pdevice->has_syncobj);
          result = anv_execbuf_add_bo(&execbuf, impl->bo, NULL,
                                      EXEC_OBJECT_WRITE, &device->alloc);
          if (result != VK_SUCCESS)
@@ -1662,6 +1680,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
          break;
 
       case ANV_SEMAPHORE_TYPE_SYNC_FILE:
+         assert(!pdevice->has_syncobj);
          need_out_fence = true;
          break;
 
@@ -1696,6 +1715,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
 
       switch (impl->type) {
       case ANV_FENCE_TYPE_BO:
+         assert(!pdevice->has_syncobj_wait);
          result = anv_execbuf_add_bo(&execbuf, &impl->bo.bo, NULL,
                                      EXEC_OBJECT_WRITE, &device->alloc);
          if (result != VK_SUCCESS)
@@ -1715,10 +1735,20 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
       }
    }
 
-   if (cmd_buffer)
+   if (cmd_buffer) {
+      if (unlikely(INTEL_DEBUG & DEBUG_BATCH)) {
+         struct anv_batch_bo **bo = u_vector_tail(&cmd_buffer->seen_bbos);
+
+         device->cmd_buffer_being_decoded = cmd_buffer;
+         gen_print_batch(&device->decoder_ctx, (*bo)->bo.map,
+                         (*bo)->bo.size, (*bo)->bo.offset, false);
+         device->cmd_buffer_being_decoded = NULL;
+      }
+
       result = setup_execbuf_for_cmd_buffer(&execbuf, cmd_buffer);
-   else
+   } else {
       result = setup_empty_execbuf(&execbuf, device);
+   }
 
    if (result != VK_SUCCESS)
       return result;
@@ -1759,6 +1789,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
    }
 
    if (fence && fence->permanent.type == ANV_FENCE_TYPE_BO) {
+      assert(!pdevice->has_syncobj_wait);
       /* BO fences can't be shared, so they can't be temporary. */
       assert(fence->temporary.type == ANV_FENCE_TYPE_NONE);
 
@@ -1776,6 +1807,7 @@ anv_cmd_buffer_execbuf(struct anv_device *device,
    }
 
    if (result == VK_SUCCESS && need_out_fence) {
+      assert(!pdevice->has_syncobj_wait);
       int out_fence = execbuf.execbuf.rsvd2 >> 32;
       for (uint32_t i = 0; i < num_out_semaphores; i++) {
          ANV_FROM_HANDLE(anv_semaphore, semaphore, out_semaphores[i]);

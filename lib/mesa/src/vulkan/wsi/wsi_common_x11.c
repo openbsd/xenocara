@@ -36,8 +36,9 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <xf86drm.h>
-#include <drm_fourcc.h>
+#include "drm-uapi/drm_fourcc.h"
 #include "util/hash_table.h"
+#include "util/xmlconfig.h"
 
 #include "vk_util.h"
 #include "wsi_common_private.h"
@@ -451,6 +452,7 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
 
 static VkResult
 x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
+                             struct wsi_device *wsi_device,
                              VkSurfaceCapabilitiesKHR *caps)
 {
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
@@ -484,8 +486,10 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
        */
       caps->currentExtent = (VkExtent2D) { -1, -1 };
       caps->minImageExtent = (VkExtent2D) { 1, 1 };
-      /* This is the maximum supported size on Intel */
-      caps->maxImageExtent = (VkExtent2D) { 1 << 14, 1 << 14 };
+      caps->maxImageExtent = (VkExtent2D) {
+         wsi_device->maxImageDimension2D,
+         wsi_device->maxImageDimension2D,
+      };
    }
    free(err);
    free(geom);
@@ -498,15 +502,30 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                                       VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    }
 
-   /* For true mailbox mode, we need at least 4 images:
-    *  1) One to scan out from
-    *  2) One to have queued for scan-out
-    *  3) One to be currently held by the X server
-    *  4) One to render to
+   /* For IMMEDIATE and FIFO, most games work in a pipelined manner where the
+    * can produce frames at a rate of 1/MAX(CPU duration, GPU duration), but
+    * the render latency is CPU duration + GPU duration.
+    *
+    * This means that with scanout from pageflipping we need 3 frames to run
+    * full speed:
+    * 1) CPU rendering work
+    * 2) GPU rendering work
+    * 3) scanout
+    *
+    * Once we have a nonblocking acquire that returns a semaphore we can merge
+    * 1 and 3. Hence the ideal implementation needs only 2 images, but games
+    * cannot tellwe currently do not have an ideal implementation and that
+    * hence they need to allocate 3 images. So let us do it for them.
+    *
+    * This is a tradeoff as it uses more memory than needed for non-fullscreen
+    * and non-performance intensive applications.
     */
-   caps->minImageCount = 2;
+   caps->minImageCount = 3;
    /* There is no real maximum */
    caps->maxImageCount = 0;
+
+   if (wsi_device->x11.override_minImageCount)
+      caps->minImageCount = wsi_device->x11.override_minImageCount;
 
    caps->supportedTransforms = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
    caps->currentTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -523,12 +542,31 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
 
 static VkResult
 x11_surface_get_capabilities2(VkIcdSurfaceBase *icd_surface,
+                              struct wsi_device *wsi_device,
                               const void *info_next,
                               VkSurfaceCapabilities2KHR *caps)
 {
    assert(caps->sType == VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR);
 
-   return x11_surface_get_capabilities(icd_surface, &caps->surfaceCapabilities);
+   VkResult result =
+      x11_surface_get_capabilities(icd_surface, wsi_device,
+                                   &caps->surfaceCapabilities);
+
+   vk_foreach_struct(ext, caps->pNext) {
+      switch (ext->sType) {
+      case VK_STRUCTURE_TYPE_SURFACE_PROTECTED_CAPABILITIES_KHR: {
+         VkSurfaceProtectedCapabilitiesKHR *protected = (void *)ext;
+         protected->supportsProtected = VK_FALSE;
+         break;
+      }
+
+      default:
+         /* Ignored */
+         break;
+      }
+   }
+
+   return result;
 }
 
 static VkResult
@@ -707,7 +745,8 @@ struct x11_swapchain {
    uint64_t                                     last_present_msc;
    uint32_t                                     stamp;
 
-   bool                                         threaded;
+   bool                                         has_present_queue;
+   bool                                         has_acquire_queue;
    VkResult                                     status;
    xcb_present_complete_mode_t                  last_present_mode;
    struct wsi_queue                             present_queue;
@@ -716,6 +755,7 @@ struct x11_swapchain {
 
    struct x11_image                             images[0];
 };
+WSI_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, VkSwapchainKHR)
 
 /**
  * Update the swapchain status with the result of an operation, and return
@@ -786,7 +826,7 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
       for (unsigned i = 0; i < chain->base.image_count; i++) {
          if (chain->images[i].pixmap == idle->pixmap) {
             chain->images[i].busy = false;
-            if (chain->threaded)
+            if (chain->has_acquire_queue)
                wsi_queue_push(&chain->acquire_queue, i);
             break;
          }
@@ -831,19 +871,9 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
 }
 
 
-static uint64_t wsi_get_current_time(void)
-{
-   uint64_t current_time;
-   struct timespec tv;
-
-   clock_gettime(CLOCK_MONOTONIC, &tv);
-   current_time = tv.tv_nsec + tv.tv_sec*1000000000ull;
-   return current_time;
-}
-
 static uint64_t wsi_get_absolute_timeout(uint64_t timeout)
 {
-   uint64_t current_time = wsi_get_current_time();
+   uint64_t current_time = wsi_common_get_current_time();
 
    timeout = MIN2(UINT64_MAX - current_time, timeout);
 
@@ -894,7 +924,7 @@ x11_acquire_next_image_poll_x11(struct x11_swapchain *chain,
             /* If a non-special event happens, the fd will still
              * poll. So recalculate the timeout now just in case.
              */
-            uint64_t current_time = wsi_get_current_time();
+            uint64_t current_time = wsi_common_get_current_time();
             if (atimeout > current_time)
                timeout = atimeout - current_time;
             else
@@ -917,7 +947,7 @@ static VkResult
 x11_acquire_next_image_from_queue(struct x11_swapchain *chain,
                                   uint32_t *image_index_out, uint64_t timeout)
 {
-   assert(chain->threaded);
+   assert(chain->has_acquire_queue);
 
    uint32_t image_index;
    VkResult result = wsi_queue_pull(&chain->acquire_queue,
@@ -961,6 +991,19 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
       options |= XCB_PRESENT_OPTION_SUBOPTIMAL;
 #endif
 
+   /* Poll for any available event and update the swapchain status. This could
+    * update the status of the swapchain to SUBOPTIMAL or OUT_OF_DATE if the
+    * associated X11 surface has been resized.
+    */
+   xcb_generic_event_t *event;
+   while ((event = xcb_poll_for_special_event(chain->conn, chain->special_event))) {
+      VkResult result = x11_handle_dri3_present_event(chain, (void *)event);
+      free(event);
+      if (result < 0)
+         return x11_swapchain_result(chain, result);
+      x11_swapchain_result(chain, result);
+   }
+
    xshmfence_reset(image->shm_fence);
 
    ++chain->send_sbc;
@@ -981,7 +1024,6 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
                          divisor,
                          remainder, 0, NULL);
    xcb_discard_reply(chain->conn, cookie.sequence);
-   image->busy = true;
 
    xcb_flush(chain->conn);
 
@@ -996,7 +1038,11 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
    uint64_t timeout = info->timeout;
 
-   if (chain->threaded) {
+   /* If the swapchain is in an error state, don't go any further. */
+   if (chain->status < 0)
+      return chain->status;
+
+   if (chain->has_acquire_queue) {
       return x11_acquire_next_image_from_queue(chain, image_index, timeout);
    } else {
       return x11_acquire_next_image_poll_x11(chain, image_index, timeout);
@@ -1010,7 +1056,12 @@ x11_queue_present(struct wsi_swapchain *anv_chain,
 {
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
 
-   if (chain->threaded) {
+   /* If the swapchain is in an error state, don't go any further. */
+   if (chain->status < 0)
+      return chain->status;
+
+   chain->images[image_index].busy = true;
+   if (chain->has_present_queue) {
       wsi_queue_push(&chain->present_queue, image_index);
       return chain->status;
    } else {
@@ -1024,8 +1075,7 @@ x11_manage_fifo_queues(void *state)
    struct x11_swapchain *chain = state;
    VkResult result = VK_SUCCESS;
 
-   assert(chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR);
-
+   assert(chain->has_present_queue);
    while (chain->status >= 0) {
       /* It should be safe to unconditionally block here.  Later in the loop
        * we blocks until the previous present has landed on-screen.  At that
@@ -1045,29 +1095,45 @@ x11_manage_fifo_queues(void *state)
          return NULL;
       }
 
-      uint64_t target_msc = chain->last_present_msc + 1;
+      if (chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+         result = chain->base.wsi->WaitForFences(chain->base.device, 1,
+                                        &chain->base.fences[image_index],
+                                        true, UINT64_MAX);
+         if (result != VK_SUCCESS) {
+            result = VK_ERROR_OUT_OF_DATE_KHR;
+            goto fail;
+         }
+      }
+
+      uint64_t target_msc = 0;
+      if (chain->has_acquire_queue)
+         target_msc = chain->last_present_msc + 1;
+
       result = x11_present_to_x11(chain, image_index, target_msc);
       if (result < 0)
          goto fail;
 
-      while (chain->last_present_msc < target_msc) {
-         xcb_generic_event_t *event =
-            xcb_wait_for_special_event(chain->conn, chain->special_event);
-         if (!event) {
-            result = VK_ERROR_OUT_OF_DATE_KHR;
-            goto fail;
-         }
+      if (chain->has_acquire_queue) {
+         while (chain->last_present_msc < target_msc) {
+            xcb_generic_event_t *event =
+               xcb_wait_for_special_event(chain->conn, chain->special_event);
+            if (!event) {
+               result = VK_ERROR_OUT_OF_DATE_KHR;
+               goto fail;
+            }
 
-         result = x11_handle_dri3_present_event(chain, (void *)event);
-         free(event);
-         if (result < 0)
-            goto fail;
+            result = x11_handle_dri3_present_event(chain, (void *)event);
+            free(event);
+            if (result < 0)
+               goto fail;
+         }
       }
    }
 
 fail:
    x11_swapchain_result(chain, result);
-   wsi_queue_push(&chain->acquire_queue, UINT32_MAX);
+   if (chain->has_acquire_queue)
+      wsi_queue_push(&chain->acquire_queue, UINT32_MAX);
 
    return NULL;
 }
@@ -1277,12 +1343,14 @@ x11_swapchain_destroy(struct wsi_swapchain *anv_chain,
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
    xcb_void_cookie_t cookie;
 
-   if (chain->threaded) {
+   if (chain->has_present_queue) {
       chain->status = VK_ERROR_OUT_OF_DATE_KHR;
       /* Push a UINT32_MAX to wake up the manager */
       wsi_queue_push(&chain->present_queue, UINT32_MAX);
       pthread_join(chain->queue_manager, NULL);
-      wsi_queue_destroy(&chain->acquire_queue);
+
+      if (chain->has_acquire_queue)
+         wsi_queue_destroy(&chain->acquire_queue);
       wsi_queue_destroy(&chain->present_queue);
    }
 
@@ -1302,6 +1370,33 @@ x11_swapchain_destroy(struct wsi_swapchain *anv_chain,
    return VK_SUCCESS;
 }
 
+static void
+wsi_x11_set_adaptive_sync_property(xcb_connection_t *conn,
+                                   xcb_drawable_t drawable,
+                                   uint32_t state)
+{
+   static char const name[] = "_VARIABLE_REFRESH";
+   xcb_intern_atom_cookie_t cookie;
+   xcb_intern_atom_reply_t* reply;
+   xcb_void_cookie_t check;
+
+   cookie = xcb_intern_atom(conn, 0, strlen(name), name);
+   reply = xcb_intern_atom_reply(conn, cookie, NULL);
+   if (reply == NULL)
+      return;
+
+   if (state)
+      check = xcb_change_property_checked(conn, XCB_PROP_MODE_REPLACE,
+                                          drawable, reply->atom,
+                                          XCB_ATOM_CARDINAL, 32, 1, &state);
+   else
+      check = xcb_delete_property_checked(conn, drawable, reply->atom);
+
+   xcb_discard_reply(conn, check.sequence);
+   free(reply);
+}
+
+
 static VkResult
 x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
                              VkDevice device,
@@ -1313,10 +1408,15 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    struct x11_swapchain *chain;
    xcb_void_cookie_t cookie;
    VkResult result;
+   VkPresentModeKHR present_mode = wsi_swapchain_get_present_mode(wsi_device, pCreateInfo);
 
    assert(pCreateInfo->sType == VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
 
-   const unsigned num_images = pCreateInfo->minImageCount;
+   unsigned num_images = pCreateInfo->minImageCount;
+   if (wsi_device->x11.strict_imageCount)
+      num_images = pCreateInfo->minImageCount;
+   else if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+      num_images = MAX2(num_images, 5);
 
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
    struct wsi_x11_connection *wsi_conn =
@@ -1348,7 +1448,7 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->base.get_wsi_image = x11_get_wsi_image;
    chain->base.acquire_next_image = x11_acquire_next_image;
    chain->base.queue_present = x11_queue_present;
-   chain->base.present_mode = pCreateInfo->presentMode;
+   chain->base.present_mode = present_mode;
    chain->base.image_count = num_images;
    chain->conn = conn;
    chain->window = window;
@@ -1356,7 +1456,8 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->extent = pCreateInfo->imageExtent;
    chain->send_sbc = 0;
    chain->last_present_msc = 0;
-   chain->threaded = false;
+   chain->has_acquire_queue = false;
+   chain->has_present_queue = false;
    chain->status = VK_SUCCESS;
    chain->has_dri3_modifiers = wsi_conn->has_dri3_modifiers;
 
@@ -1366,7 +1467,7 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
     * mode which provokes reallocation when anything changes, to make
     * sure we have the most optimal allocation.
     */
-   struct x11_swapchain *old_chain = (void *)(intptr_t) pCreateInfo->oldSwapchain;
+   WSI_FROM_HANDLE(x11_swapchain, old_chain, pCreateInfo->oldSwapchain);
    if (old_chain)
       chain->last_present_mode = old_chain->last_present_mode;
    else
@@ -1421,39 +1522,55 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
          goto fail_init_images;
    }
 
-   if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR) {
-      chain->threaded = true;
+   if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR ||
+       chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+      chain->has_present_queue = true;
 
       /* Initialize our queues.  We make them base.image_count + 1 because we will
        * occasionally use UINT32_MAX to signal the other thread that an error
        * has occurred and we don't want an overflow.
        */
       int ret;
-      ret = wsi_queue_init(&chain->acquire_queue, chain->base.image_count + 1);
-      if (ret) {
-         goto fail_init_images;
-      }
-
       ret = wsi_queue_init(&chain->present_queue, chain->base.image_count + 1);
       if (ret) {
-         wsi_queue_destroy(&chain->acquire_queue);
          goto fail_init_images;
       }
 
-      for (unsigned i = 0; i < chain->base.image_count; i++)
-         wsi_queue_push(&chain->acquire_queue, i);
+      if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR) {
+         chain->has_acquire_queue = true;
+
+         ret = wsi_queue_init(&chain->acquire_queue, chain->base.image_count + 1);
+         if (ret) {
+            wsi_queue_destroy(&chain->present_queue);
+            goto fail_init_images;
+         }
+
+         for (unsigned i = 0; i < chain->base.image_count; i++)
+            wsi_queue_push(&chain->acquire_queue, i);
+      }
 
       ret = pthread_create(&chain->queue_manager, NULL,
                            x11_manage_fifo_queues, chain);
       if (ret) {
          wsi_queue_destroy(&chain->present_queue);
-         wsi_queue_destroy(&chain->acquire_queue);
+         if (chain->has_acquire_queue)
+            wsi_queue_destroy(&chain->acquire_queue);
+
          goto fail_init_images;
       }
    }
 
+   assert(chain->has_present_queue || !chain->has_acquire_queue);
+
    for (int i = 0; i < ARRAY_SIZE(modifiers); i++)
       vk_free(pAllocator, modifiers[i]);
+
+   /* It is safe to set it here as only one swapchain can be associated with
+    * the window, and swapchain creation does the association. At this point
+    * we know the creation is going to succeed. */
+   wsi_x11_set_adaptive_sync_property(conn, window,
+                                      wsi_device->enable_adaptive_sync);
+
    *swapchain_out = &chain->base;
 
    return VK_SUCCESS;
@@ -1478,7 +1595,8 @@ fail_alloc:
 
 VkResult
 wsi_x11_init_wsi(struct wsi_device *wsi_device,
-                 const VkAllocationCallbacks *alloc)
+                 const VkAllocationCallbacks *alloc,
+                 const struct driOptionCache *dri_options)
 {
    struct wsi_x11 *wsi;
    VkResult result;
@@ -1507,6 +1625,17 @@ wsi_x11_init_wsi(struct wsi_device *wsi_device,
    if (!wsi->connections) {
       result = VK_ERROR_OUT_OF_HOST_MEMORY;
       goto fail_mutex;
+   }
+
+   if (dri_options) {
+      if (driCheckOption(dri_options, "vk_x11_override_min_image_count", DRI_INT)) {
+         wsi_device->x11.override_minImageCount =
+            driQueryOptioni(dri_options, "vk_x11_override_min_image_count");
+      }
+      if (driCheckOption(dri_options, "vk_x11_strict_image_count", DRI_BOOL)) {
+         wsi_device->x11.strict_imageCount =
+            driQueryOptionb(dri_options, "vk_x11_strict_image_count");
+      }
    }
 
    wsi->base.get_support = x11_surface_get_support;

@@ -35,8 +35,6 @@
 extern "C" {
 #endif
 
-/* Prior to C11 the following may trigger a typedef redeclaration warning */
-typedef struct amdgpu_device *amdgpu_device_handle;
 struct amdgpu_gpu_info;
 
 struct radeon_info {
@@ -48,13 +46,25 @@ struct radeon_info {
 
 	/* Device info. */
 	const char                  *name;
+	const char                  *marketing_name;
+	bool                        is_pro_graphics;
 	uint32_t                    pci_id;
 	enum radeon_family          family;
 	enum chip_class             chip_class;
+	uint32_t                    family_id;
+	uint32_t                    chip_external_rev;
+	bool                        has_graphics; /* false if the chip is compute-only */
 	uint32_t                    num_compute_rings;
 	uint32_t                    num_sdma_rings;
 	uint32_t                    clock_crystal_freq;
 	uint32_t                    tcc_cache_line_size;
+	bool			    tcc_harvested;
+
+	/* There are 2 display DCC codepaths, because display expects unaligned DCC. */
+	/* Disable RB and pipe alignment to skip the retile blit. (1 RB chips only) */
+	bool                        use_display_dcc_unaligned;
+	/* Allocate both aligned and unaligned DCC and use the retile blit. */
+	bool                        use_display_dcc_with_retile_blit;
 
 	/* Memory info. */
 	uint32_t                    pte_fragment_size;
@@ -91,6 +101,7 @@ struct radeon_info {
 	uint32_t                    drm_major; /* version */
 	uint32_t                    drm_minor;
 	uint32_t                    drm_patchlevel;
+	bool                        is_amdgpu;
 	bool                        has_userptr;
 	bool                        has_syncobj;
 	bool                        has_syncobj_wait_for_submit;
@@ -102,7 +113,6 @@ struct radeon_info {
 	bool                        si_TA_CS_BC_BASE_ADDR_allowed;
 	bool                        has_bo_metadata;
 	bool                        has_gpu_reset_status_query;
-	bool                        has_gpu_reset_counter_query;
 	bool                        has_eqaa_surface_allocator;
 	bool                        has_format_bc1_through_bc7;
 	bool                        kernel_flushes_tc_l2_after_ib;
@@ -111,6 +121,8 @@ struct radeon_info {
 	bool                        has_sparse_vm_mappings;
 	bool                        has_2d_tiling;
 	bool                        has_read_registers_query;
+	bool                        has_gds_ordered_append;
+	bool                        has_scheduled_fence_dependency;
 
 	/* Shader cores. */
 	uint32_t                    r600_max_quad_pipes; /* wave size / 16 */
@@ -128,6 +140,7 @@ struct radeon_info {
 	bool                        r600_gb_backend_map_valid;
 	uint32_t                    r600_num_banks;
 	uint32_t                    gb_addr_config;
+	uint32_t                    pa_sc_tile_steering_override; /* CLEAR_STATE also sets this */
 	uint32_t                    num_render_backends;
 	uint32_t                    num_tile_pipes; /* pipe count from PIPE_CONFIG */
 	uint32_t                    pipe_interleave_bytes;
@@ -139,7 +152,7 @@ struct radeon_info {
 	uint32_t                    cik_macrotile_mode_array[16];
 };
 
-bool ac_query_gpu_info(int fd, amdgpu_device_handle dev,
+bool ac_query_gpu_info(int fd, void *dev_p,
 		       struct radeon_info *info,
 		       struct amdgpu_gpu_info *amdinfo);
 
@@ -156,8 +169,12 @@ void ac_get_harvested_configs(struct radeon_info *info,
 			      unsigned raster_config,
 			      unsigned *cik_raster_config_1_p,
 			      unsigned *raster_config_se);
+unsigned ac_get_compute_resource_limits(struct radeon_info *info,
+					unsigned waves_per_threadgroup,
+					unsigned max_waves_per_sh,
+					unsigned threadgroups_per_cu);
 
-static inline unsigned ac_get_max_simd_waves(enum radeon_family family)
+static inline unsigned ac_get_max_wave64_per_simd(enum radeon_family family)
 {
 
 	switch (family) {
@@ -170,6 +187,28 @@ static inline unsigned ac_get_max_simd_waves(enum radeon_family family)
 	default:
 		return 10;
 	}
+}
+
+static inline unsigned ac_get_num_physical_vgprs(enum chip_class chip_class,
+						 unsigned wave_size)
+{
+	/* The number is per SIMD. */
+	if (chip_class >= GFX10)
+		return wave_size == 32 ? 1024 : 512;
+	else
+		return 256;
+}
+
+static inline uint32_t
+ac_get_num_physical_sgprs(const struct radeon_info *info)
+{
+	/* The number is per SIMD. There is enough SGPRs for the maximum number
+	 * of Wave32, which is double the number for Wave64.
+	 */
+	if (info->chip_class >= GFX10)
+		return 128 * ac_get_max_wave64_per_simd(info->family) * 2;
+
+	return info->chip_class >= GFX8 ? 800 : 512;
 }
 
 #ifdef __cplusplus

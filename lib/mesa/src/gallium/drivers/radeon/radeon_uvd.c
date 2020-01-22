@@ -298,7 +298,7 @@ static unsigned calc_ctx_size_h265_main(struct ruvd_decoder *dec)
 
 static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_h265_picture_desc *pic)
 {
-	unsigned block_size, log2_ctb_size, width_in_ctb, height_in_ctb, num_16x16_block_per_ctb;
+	unsigned log2_ctb_size, width_in_ctb, height_in_ctb, num_16x16_block_per_ctb;
 	unsigned context_buffer_size_per_ctb_row, cm_buffer_size, max_mb_address, db_left_tile_pxl_size;
 	unsigned db_left_tile_ctx_size = 4096 / 16 * (32 + 16 * 4);
 
@@ -313,8 +313,8 @@ static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_
 	else
 		max_references = MAX2(max_references, 17);
 
-	block_size = (1 << (pic->pps->sps->log2_min_luma_coding_block_size_minus3 + 3));
-	log2_ctb_size = block_size + pic->pps->sps->log2_diff_max_min_luma_coding_block_size;
+	log2_ctb_size = pic->pps->sps->log2_min_luma_coding_block_size_minus3 + 3 +
+		pic->pps->sps->log2_diff_max_min_luma_coding_block_size;
 
 	width_in_ctb = (width + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
 	height_in_ctb = (height + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
@@ -1250,7 +1250,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 	if (!dec)
 		return NULL;
 
-	if (sctx->screen->info.drm_major < 3)
+	if (!sctx->screen->info.is_amdgpu)
 		dec->use_legacy = true;
 
 	dec->base = *templ;

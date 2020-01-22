@@ -35,14 +35,16 @@ using namespace brw;
 /* Sample from the MCS surface attached to this multisample texture. */
 fs_reg
 fs_visitor::emit_mcs_fetch(const fs_reg &coordinate, unsigned components,
-                           const fs_reg &texture)
+                           const fs_reg &texture,
+                           const fs_reg &texture_handle)
 {
    const fs_reg dest = vgrf(glsl_type::uvec4_type);
 
    fs_reg srcs[TEX_LOGICAL_NUM_SRCS];
    srcs[TEX_LOGICAL_SRC_COORDINATE] = coordinate;
    srcs[TEX_LOGICAL_SRC_SURFACE] = texture;
-   srcs[TEX_LOGICAL_SRC_SAMPLER] = texture;
+   srcs[TEX_LOGICAL_SRC_SAMPLER] = brw_imm_ud(0);
+   srcs[TEX_LOGICAL_SRC_SURFACE_HANDLE] = texture_handle;
    srcs[TEX_LOGICAL_SRC_COORD_COMPONENTS] = brw_imm_d(components);
    srcs[TEX_LOGICAL_SRC_GRAD_COMPONENTS] = brw_imm_d(0);
 
@@ -192,7 +194,7 @@ fs_visitor::emit_interpolation_setup_gen4()
     */
    this->wpos_w = vgrf(glsl_type::float_type);
    abld.emit(FS_OPCODE_LINTERP, wpos_w, delta_xy,
-             component(interp_reg(VARYING_SLOT_POS, 3), 0));
+             interp_reg(VARYING_SLOT_POS, 3));
    /* Compute the pixel 1/W value from wpos.w. */
    this->pixel_w = vgrf(glsl_type::float_type);
    abld.emit(SHADER_OPCODE_RCP, this->pixel_w, wpos_w);
@@ -400,6 +402,82 @@ fs_visitor::emit_single_fb_write(const fs_builder &bld,
 }
 
 void
+fs_visitor::emit_alpha_to_coverage_workaround(const fs_reg &src0_alpha)
+{
+   /* We need to compute alpha to coverage dithering manually in shader
+    * and replace sample mask store with the bitwise-AND of sample mask and
+    * alpha to coverage dithering.
+    *
+    * The following formula is used to compute final sample mask:
+    *  m = int(16.0 * clamp(src0_alpha, 0.0, 1.0))
+    *  dither_mask = 0x1111 * ((0xfea80 >> (m & ~3)) & 0xf) |
+    *     0x0808 * (m & 2) | 0x0100 * (m & 1)
+    *  sample_mask = sample_mask & dither_mask
+    *
+    * It gives a number of ones proportional to the alpha for 2, 4, 8 or 16
+    * least significant bits of the result:
+    *  0.0000 0000000000000000
+    *  0.0625 0000000100000000
+    *  0.1250 0001000000010000
+    *  0.1875 0001000100010000
+    *  0.2500 1000100010001000
+    *  0.3125 1000100110001000
+    *  0.3750 1001100010011000
+    *  0.4375 1001100110011000
+    *  0.5000 1010101010101010
+    *  0.5625 1010101110101010
+    *  0.6250 1011101010111010
+    *  0.6875 1011101110111010
+    *  0.7500 1110111011101110
+    *  0.8125 1110111111101110
+    *  0.8750 1111111011111110
+    *  0.9375 1111111111111110
+    *  1.0000 1111111111111111
+    */
+   const fs_builder abld = bld.annotate("compute alpha_to_coverage & "
+      "sample_mask");
+
+   /* clamp(src0_alpha, 0.f, 1.f) */
+   const fs_reg float_tmp = abld.vgrf(BRW_REGISTER_TYPE_F);
+   set_saturate(true, abld.MOV(float_tmp, src0_alpha));
+
+   /* 16.0 * clamp(src0_alpha, 0.0, 1.0) */
+   abld.MUL(float_tmp, float_tmp, brw_imm_f(16.0));
+
+   /* m = int(16.0 * clamp(src0_alpha, 0.0, 1.0)) */
+   const fs_reg m = abld.vgrf(BRW_REGISTER_TYPE_UW);
+   abld.MOV(m, float_tmp);
+
+   /* 0x1111 * ((0xfea80 >> (m & ~3)) & 0xf) */
+   const fs_reg int_tmp_1 = abld.vgrf(BRW_REGISTER_TYPE_UW);
+   const fs_reg shift_const = abld.vgrf(BRW_REGISTER_TYPE_UD);
+   abld.MOV(shift_const, brw_imm_d(0xfea80));
+   abld.AND(int_tmp_1, m, brw_imm_uw(~3));
+   abld.SHR(int_tmp_1, shift_const, int_tmp_1);
+   abld.AND(int_tmp_1, int_tmp_1, brw_imm_uw(0xf));
+   abld.MUL(int_tmp_1, int_tmp_1, brw_imm_uw(0x1111));
+
+   /* 0x0808 * (m & 2) */
+   const fs_reg int_tmp_2 = abld.vgrf(BRW_REGISTER_TYPE_UW);
+   abld.AND(int_tmp_2, m, brw_imm_uw(2));
+   abld.MUL(int_tmp_2, int_tmp_2, brw_imm_uw(0x0808));
+
+   abld.OR(int_tmp_1, int_tmp_1, int_tmp_2);
+
+   /* 0x0100 * (m & 1) */
+   const fs_reg int_tmp_3 = abld.vgrf(BRW_REGISTER_TYPE_UW);
+   abld.AND(int_tmp_3, m, brw_imm_uw(1));
+   abld.MUL(int_tmp_3, int_tmp_3, brw_imm_uw(0x0100));
+
+   abld.OR(int_tmp_1, int_tmp_1, int_tmp_3);
+
+   /* sample_mask = sample_mask & dither_mask */
+   const fs_reg mask = abld.vgrf(BRW_REGISTER_TYPE_UD);
+   abld.AND(mask, sample_mask, int_tmp_1);
+   sample_mask = mask;
+}
+
+void
 fs_visitor::emit_fb_writes()
 {
    assert(stage == MESA_SHADER_FRAGMENT);
@@ -427,6 +505,22 @@ fs_visitor::emit_fb_writes()
                            "in SIMD16+ mode.\n");
    }
 
+   /* ANV doesn't know about sample mask output during the wm key creation
+    * so we compute if we need replicate alpha and emit alpha to coverage
+    * workaround here.
+    */
+   prog_data->replicate_alpha = key->alpha_test_replicate_alpha ||
+      (key->nr_color_regions > 1 && key->alpha_to_coverage &&
+       (sample_mask.file == BAD_FILE || devinfo->gen == 6));
+
+   /* From the SKL PRM, Volume 7, "Alpha Coverage":
+    *  "If Pixel Shader outputs oMask, AlphaToCoverage is disabled in
+    *   hardware, regardless of the state setting for this feature."
+    */
+   if (devinfo->gen > 6 && key->alpha_to_coverage &&
+       sample_mask.file != BAD_FILE && this->outputs[0].file != BAD_FILE)
+      emit_alpha_to_coverage_workaround(offset(this->outputs[0], bld, 3));
+
    for (int target = 0; target < key->nr_color_regions; target++) {
       /* Skip over outputs that weren't written. */
       if (this->outputs[target].file == BAD_FILE)
@@ -436,7 +530,7 @@ fs_visitor::emit_fb_writes()
          ralloc_asprintf(this->mem_ctx, "FB write target %d", target));
 
       fs_reg src0_alpha;
-      if (devinfo->gen >= 6 && key->replicate_alpha && target != 0)
+      if (devinfo->gen >= 6 && prog_data->replicate_alpha && target != 0)
          src0_alpha = offset(outputs[0], bld, 3);
 
       inst = emit_single_fb_write(abld, this->outputs[target],
@@ -467,87 +561,6 @@ fs_visitor::emit_fb_writes()
 
    inst->last_rt = true;
    inst->eot = true;
-}
-
-void
-fs_visitor::setup_uniform_clipplane_values()
-{
-   const struct brw_vs_prog_key *key =
-      (const struct brw_vs_prog_key *) this->key;
-
-   if (key->nr_userclip_plane_consts == 0)
-      return;
-
-   assert(stage_prog_data->nr_params == uniforms);
-   brw_stage_prog_data_add_params(stage_prog_data,
-                                  key->nr_userclip_plane_consts * 4);
-
-   for (int i = 0; i < key->nr_userclip_plane_consts; i++) {
-      this->userplane[i] = fs_reg(UNIFORM, uniforms);
-      for (int j = 0; j < 4; ++j) {
-         stage_prog_data->param[uniforms + j] =
-            BRW_PARAM_BUILTIN_CLIP_PLANE(i, j);
-      }
-      uniforms += 4;
-   }
-}
-
-/**
- * Lower legacy fixed-function and gl_ClipVertex clipping to clip distances.
- *
- * This does nothing if the shader uses gl_ClipDistance or user clipping is
- * disabled altogether.
- */
-void fs_visitor::compute_clip_distance()
-{
-   struct brw_vue_prog_data *vue_prog_data = brw_vue_prog_data(prog_data);
-   const struct brw_vs_prog_key *key =
-      (const struct brw_vs_prog_key *) this->key;
-
-   /* Bail unless some sort of legacy clipping is enabled */
-   if (key->nr_userclip_plane_consts == 0)
-      return;
-
-   /* From the GLSL 1.30 spec, section 7.1 (Vertex Shader Special Variables):
-    *
-    *     "If a linked set of shaders forming the vertex stage contains no
-    *     static write to gl_ClipVertex or gl_ClipDistance, but the
-    *     application has requested clipping against user clip planes through
-    *     the API, then the coordinate written to gl_Position is used for
-    *     comparison against the user clip planes."
-    *
-    * This function is only called if the shader didn't write to
-    * gl_ClipDistance.  Accordingly, we use gl_ClipVertex to perform clipping
-    * if the user wrote to it; otherwise we use gl_Position.
-    */
-
-   gl_varying_slot clip_vertex = VARYING_SLOT_CLIP_VERTEX;
-   if (!(vue_prog_data->vue_map.slots_valid & VARYING_BIT_CLIP_VERTEX))
-      clip_vertex = VARYING_SLOT_POS;
-
-   /* If the clip vertex isn't written, skip this.  Typically this means
-    * the GS will set up clipping. */
-   if (outputs[clip_vertex].file == BAD_FILE)
-      return;
-
-   setup_uniform_clipplane_values();
-
-   const fs_builder abld = bld.annotate("user clip distances");
-
-   this->outputs[VARYING_SLOT_CLIP_DIST0] = vgrf(glsl_type::vec4_type);
-   this->outputs[VARYING_SLOT_CLIP_DIST1] = vgrf(glsl_type::vec4_type);
-
-   for (int i = 0; i < key->nr_userclip_plane_consts; i++) {
-      fs_reg u = userplane[i];
-      const fs_reg output = offset(outputs[VARYING_SLOT_CLIP_DIST0 + i / 4],
-                                   bld, i & 3);
-
-      abld.MUL(output, outputs[clip_vertex], u);
-      for (int j = 1; j < 4; j++) {
-         u.nr = userplane[i].nr + j;
-         abld.MAD(output, output, offset(outputs[clip_vertex], bld, j), u);
-      }
-   }
 }
 
 void
@@ -727,7 +740,13 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
                            header_size);
 
          fs_inst *inst = abld.emit(opcode, reg_undef, payload);
-         inst->eot = slot == last_slot && stage != MESA_SHADER_GEOMETRY;
+
+         /* For ICL WA 1805992985 one needs additional write in the end. */
+         if (devinfo->gen == 11 && stage == MESA_SHADER_TESS_EVAL)
+            inst->eot = false;
+         else
+            inst->eot = slot == last_slot && stage != MESA_SHADER_GEOMETRY;
+
          inst->mlen = length + header_size;
          inst->offset = urb_offset;
          urb_offset = starting_urb_offset + slot + 1;
@@ -763,6 +782,49 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
       inst->mlen = 2;
       inst->offset = 1;
       return;
+   } 
+ 
+   /* ICL WA 1805992985:
+    *
+    * ICLLP GPU hangs on one of tessellation vkcts tests with DS not done. The
+    * send cycle, which is a urb write with an eot must be 4 phases long and
+    * all 8 lanes must valid.
+    */
+   if (devinfo->gen == 11 && stage == MESA_SHADER_TESS_EVAL) {
+      fs_reg payload = fs_reg(VGRF, alloc.allocate(6), BRW_REGISTER_TYPE_UD);
+
+      /* Workaround requires all 8 channels (lanes) to be valid. This is
+       * understood to mean they all need to be alive. First trick is to find
+       * a live channel and copy its urb handle for all the other channels to
+       * make sure all handles are valid.
+       */
+      bld.exec_all().MOV(payload, bld.emit_uniformize(urb_handle));
+
+      /* Second trick is to use masked URB write where one can tell the HW to
+       * actually write data only for selected channels even though all are
+       * active.
+       * Third trick is to take advantage of the must-be-zero (MBZ) area in
+       * the very beginning of the URB.
+       *
+       * One masks data to be written only for the first channel and uses
+       * offset zero explicitly to land data to the MBZ area avoiding trashing
+       * any other part of the URB.
+       *
+       * Since the WA says that the write needs to be 4 phases long one uses
+       * 4 slots data. All are explicitly zeros in order to to keep the MBZ
+       * area written as zeros.
+       */
+      bld.exec_all().MOV(offset(payload, bld, 1), brw_imm_ud(0x10000u));
+      bld.exec_all().MOV(offset(payload, bld, 2), brw_imm_ud(0u));
+      bld.exec_all().MOV(offset(payload, bld, 3), brw_imm_ud(0u));
+      bld.exec_all().MOV(offset(payload, bld, 4), brw_imm_ud(0u));
+      bld.exec_all().MOV(offset(payload, bld, 5), brw_imm_ud(0u));
+
+      fs_inst *inst = bld.exec_all().emit(SHADER_OPCODE_URB_WRITE_SIMD8_MASKED,
+                                          reg_undef, payload);
+      inst->eot = true;
+      inst->mlen = 6;
+      inst->offset = 0;
    }
 }
 
@@ -826,7 +888,7 @@ fs_visitor::emit_barrier()
 
 fs_visitor::fs_visitor(const struct brw_compiler *compiler, void *log_data,
                        void *mem_ctx,
-                       const void *key,
+                       const brw_base_prog_key *key,
                        struct brw_stage_prog_data *prog_data,
                        struct gl_program *prog,
                        const nir_shader *shader,
@@ -851,7 +913,7 @@ fs_visitor::fs_visitor(const struct brw_compiler *compiler, void *log_data,
                        int shader_time_index)
    : backend_shader(compiler, log_data, mem_ctx, shader,
                     &prog_data->base.base),
-     key(&c->key), gs_compile(c),
+     key(&c->key.base), gs_compile(c),
      prog_data(&prog_data->base.base), prog(NULL),
      dispatch_width(8),
      shader_time_index(shader_time_index),
@@ -864,28 +926,7 @@ fs_visitor::fs_visitor(const struct brw_compiler *compiler, void *log_data,
 void
 fs_visitor::init()
 {
-   switch (stage) {
-   case MESA_SHADER_FRAGMENT:
-      key_tex = &((const brw_wm_prog_key *) key)->tex;
-      break;
-   case MESA_SHADER_VERTEX:
-      key_tex = &((const brw_vs_prog_key *) key)->tex;
-      break;
-   case MESA_SHADER_TESS_CTRL:
-      key_tex = &((const brw_tcs_prog_key *) key)->tex;
-      break;
-   case MESA_SHADER_TESS_EVAL:
-      key_tex = &((const brw_tes_prog_key *) key)->tex;
-      break;
-   case MESA_SHADER_GEOMETRY:
-      key_tex = &((const brw_gs_prog_key *) key)->tex;
-      break;
-   case MESA_SHADER_COMPUTE:
-      key_tex = &((const brw_cs_prog_key*) key)->tex;
-      break;
-   default:
-      unreachable("unhandled shader stage");
-   }
+   this->key_tex = &key->tex;
 
    this->max_dispatch_width = 32;
    this->prog_data = this->stage_prog_data;
@@ -911,7 +952,8 @@ fs_visitor::init()
    this->pull_constant_loc = NULL;
    this->push_constant_loc = NULL;
 
-   this->promoted_constants = 0,
+   this->shader_stats.scheduler_mode = NULL;
+   this->shader_stats.promoted_constants = 0,
 
    this->grf_used = 0;
    this->spilled_any_registers = false;

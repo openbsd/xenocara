@@ -769,7 +769,7 @@ clip_span( struct gl_context *ctx, SWspan *span )
           * For arrays of values, shift them left.
           */
          for (i = 0; i < VARYING_SLOT_MAX; i++) {
-            if (span->interpMask & (1 << i)) {
+            if (span->interpMask & (1u << i)) {
                GLuint j;
                for (j = 0; j < 4; j++) {
                   span->attrStart[i][j] += leftClip * span->attrStepX[i][j];
@@ -1041,8 +1041,8 @@ put_values(struct gl_context *ctx, struct gl_renderbuffer *rb,
            GLuint count, const GLint x[], const GLint y[],
            const void *values, const GLubyte *mask)
 {
-   gl_pack_ubyte_rgba_func pack_ubyte = NULL;
-   gl_pack_float_rgba_func pack_float = NULL;
+   mesa_pack_ubyte_rgba_func pack_ubyte = NULL;
+   mesa_pack_float_rgba_func pack_float = NULL;
    GLuint i;
 
    if (datatype == GL_UNSIGNED_BYTE)

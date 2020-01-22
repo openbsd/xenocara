@@ -165,10 +165,10 @@ get_deref_reg_src(nir_deref_instr *deref, struct locals_to_regs_state *state)
          }
 
          assert(src.reg.indirect->is_ssa);
+         nir_ssa_def *index = nir_i2i(b, nir_ssa_for_src(b, d->arr.index, 1), 32);
          src.reg.indirect->ssa =
             nir_iadd(b, src.reg.indirect->ssa,
-                        nir_imul(b, nir_ssa_for_src(b, d->arr.index, 1),
-                                    nir_imm_int(b, inner_array_size)));
+                        nir_imul(b, index, nir_imm_int(b, inner_array_size)));
       }
 
       inner_array_size *= glsl_get_length(nir_deref_instr_parent(d)->type);
@@ -197,7 +197,7 @@ lower_locals_to_regs_block(nir_block *block,
 
          b->cursor = nir_before_instr(&intrin->instr);
 
-         nir_alu_instr *mov = nir_alu_instr_create(b->shader, nir_op_imov);
+         nir_alu_instr *mov = nir_alu_instr_create(b->shader, nir_op_mov);
          mov->src[0].src = get_deref_reg_src(deref, state);
          mov->dest.write_mask = (1 << intrin->num_components) - 1;
          if (intrin->dest.is_ssa) {
@@ -225,7 +225,7 @@ lower_locals_to_regs_block(nir_block *block,
 
          nir_src reg_src = get_deref_reg_src(deref, state);
 
-         nir_alu_instr *mov = nir_alu_instr_create(b->shader, nir_op_imov);
+         nir_alu_instr *mov = nir_alu_instr_create(b->shader, nir_op_mov);
          nir_src_copy(&mov->src[0].src, &intrin->src[1], mov);
          mov->dest.write_mask = nir_intrinsic_write_mask(intrin);
          mov->dest.dest.is_ssa = false;

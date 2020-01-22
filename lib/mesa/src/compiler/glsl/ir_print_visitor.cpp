@@ -149,7 +149,7 @@ print_type(FILE *f, const glsl_type *t)
       fprintf(f, "(array ");
       print_type(f, t->fields.array);
       fprintf(f, " %u)", t->length);
-   } else if (t->is_record() && !is_gl_identifier(t->name)) {
+   } else if (t->is_struct() && !is_gl_identifier(t->name)) {
       fprintf(f, "%s@%p", t->name, (void *) t);
    } else {
       fprintf(f, "%s", t->name);
@@ -167,31 +167,31 @@ void ir_print_visitor::visit(ir_variable *ir)
 
    char binding[32] = {0};
    if (ir->data.binding)
-      util_snprintf(binding, sizeof(binding), "binding=%i ", ir->data.binding);
+      snprintf(binding, sizeof(binding), "binding=%i ", ir->data.binding);
 
    char loc[32] = {0};
    if (ir->data.location != -1)
-      util_snprintf(loc, sizeof(loc), "location=%i ", ir->data.location);
+      snprintf(loc, sizeof(loc), "location=%i ", ir->data.location);
 
    char component[32] = {0};
    if (ir->data.explicit_component || ir->data.location_frac != 0)
-      util_snprintf(component, sizeof(component), "component=%i ",
+      snprintf(component, sizeof(component), "component=%i ",
                     ir->data.location_frac);
 
    char stream[32] = {0};
    if (ir->data.stream & (1u << 31)) {
       if (ir->data.stream & ~(1u << 31)) {
-         util_snprintf(stream, sizeof(stream), "stream(%u,%u,%u,%u) ",
-                       ir->data.stream & 3, (ir->data.stream >> 2) & 3,
-                       (ir->data.stream >> 4) & 3, (ir->data.stream >> 6) & 3);
+         snprintf(stream, sizeof(stream), "stream(%u,%u,%u,%u) ",
+                  ir->data.stream & 3, (ir->data.stream >> 2) & 3,
+                  (ir->data.stream >> 4) & 3, (ir->data.stream >> 6) & 3);
       }
    } else if (ir->data.stream) {
-      util_snprintf(stream, sizeof(stream), "stream%u ", ir->data.stream);
+      snprintf(stream, sizeof(stream), "stream%u ", ir->data.stream);
    }
 
    char image_format[32] = {0};
    if (ir->data.image_format) {
-      util_snprintf(image_format, sizeof(image_format), "format=%x ",
+      snprintf(image_format, sizeof(image_format), "format=%x ",
                     ir->data.image_format);
    }
 
@@ -470,7 +470,7 @@ void ir_print_visitor::visit(ir_constant *ir)
    if (ir->type->is_array()) {
       for (unsigned i = 0; i < ir->type->length; i++)
 	 ir->get_array_element(i)->accept(this);
-   } else if (ir->type->is_record()) {
+   } else if (ir->type->is_struct()) {
       for (unsigned i = 0; i < ir->type->length; i++) {
 	 fprintf(f, "(%s ", ir->type->fields.structure[i].name);
          ir->get_record_field(i)->accept(this);

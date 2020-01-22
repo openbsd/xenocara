@@ -469,6 +469,16 @@ _mesa_init_image_units(struct gl_context *ctx)
       ctx->ImageUnits[i] = _mesa_default_image_unit(ctx);
 }
 
+
+void
+_mesa_free_image_textures(struct gl_context *ctx)
+{
+   unsigned i;
+
+   for (i = 0; i < ARRAY_SIZE(ctx->ImageUnits); ++i)
+      _mesa_reference_texobj(&ctx->ImageUnits[i].TexObj, NULL);
+}
+
 GLboolean
 _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
 {
@@ -531,7 +541,7 @@ _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
 static GLboolean
 validate_bind_image_texture(struct gl_context *ctx, GLuint unit,
                             GLuint texture, GLint level, GLint layer,
-                            GLenum access, GLenum format)
+                            GLenum access, GLenum format, bool check_level_layer)
 {
    assert(ctx->Const.MaxImageUnits <= MAX_IMAGE_UNITS);
 
@@ -540,14 +550,19 @@ validate_bind_image_texture(struct gl_context *ctx, GLuint unit,
       return GL_FALSE;
    }
 
-   if (level < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTexture(level)");
-      return GL_FALSE;
-   }
+   if (check_level_layer) {
+      /* EXT_shader_image_load_store doesn't throw an error if level or
+       * layer is negative.
+       */
+      if (level < 0) {
+         _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTexture(level)");
+         return GL_FALSE;
+      }
 
-   if (layer < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTexture(layer)");
-      return GL_FALSE;
+         if (layer < 0) {
+            _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTexture(layer)");
+            return GL_FALSE;
+      }
    }
 
    if (access != GL_READ_ONLY &&
@@ -578,11 +593,11 @@ set_image_binding(struct gl_image_unit *u, struct gl_texture_object *texObj,
    if (texObj && _mesa_tex_target_is_layered(texObj->Target)) {
       u->Layered = layered;
       u->Layer = layer;
-      u->_Layer = (u->Layered ? 0 : u->Layer);
    } else {
       u->Layered = GL_FALSE;
       u->Layer = 0;
    }
+   u->_Layer = (u->Layered ? 0 : u->Layer);
 
    _mesa_reference_texobj(&u->TexObj, texObj);
 }
@@ -627,7 +642,7 @@ _mesa_BindImageTexture(GLuint unit, GLuint texture, GLint level,
    GET_CURRENT_CONTEXT(ctx);
 
    if (!validate_bind_image_texture(ctx, unit, texture, level, layer, access,
-                                    format))
+                                    format, true))
       return;
 
    if (texture) {
@@ -657,6 +672,31 @@ _mesa_BindImageTexture(GLuint unit, GLuint texture, GLint level,
    }
 
    bind_image_texture(ctx, texObj, unit, level, layered, layer, access, format);
+}
+
+void GLAPIENTRY
+_mesa_BindImageTextureEXT(GLuint index, GLuint texture, GLint level,
+                          GLboolean layered, GLint layer, GLenum access,
+                          GLint format)
+{
+   struct gl_texture_object *texObj = NULL;
+
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (!validate_bind_image_texture(ctx, index, texture, level, layer, access,
+                                    format, false))
+      return;
+
+   if (texture) {
+      texObj = _mesa_lookup_texture(ctx, texture);
+
+      if (!texObj) {
+         _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTextureEXT(texture)");
+         return;
+      }
+   }
+
+   bind_image_texture(ctx, texObj, index, level, layered, layer, access, format);
 }
 
 static ALWAYS_INLINE void

@@ -26,6 +26,7 @@
  */
 
 #include "nir.h"
+#include "c11/threads.h"
 #include <assert.h>
 
 /*
@@ -51,15 +52,8 @@ typedef struct {
 } reg_validate_state;
 
 typedef struct {
-   /*
-    * equivalent to the uses in nir_ssa_def, but built up by the validator.
-    * At the end, we verify that the sets have the same entries.
-    */
-   struct set *uses, *if_uses;
-   nir_function_impl *where_defined;
-} ssa_def_validate_state;
+   void *mem_ctx;
 
-typedef struct {
    /* map of register -> validation state (struct above) */
    struct hash_table *regs;
 
@@ -87,8 +81,8 @@ typedef struct {
    /* the current function implementation being validated */
    nir_function_impl *impl;
 
-   /* map of SSA value -> function implementation where it is defined */
-   struct hash_table *ssa_defs;
+   /* Set of seen SSA sources */
+   struct set *ssa_srcs;
 
    /* bitset of ssa definitions we have found; used to check uniqueness */
    BITSET_WORD *ssa_defs_found;
@@ -150,17 +144,13 @@ validate_reg_src(nir_src *src, validate_state *state,
       _mesa_set_add(reg_state->if_uses, src);
    }
 
-   if (!src->reg.reg->is_global) {
-      validate_assert(state, reg_state->where_defined == state->impl &&
-             "using a register declared in a different function");
-   }
+   validate_assert(state, reg_state->where_defined == state->impl &&
+          "using a register declared in a different function");
 
-   if (!src->reg.reg->is_packed) {
-      if (bit_sizes)
-         validate_assert(state, src->reg.reg->bit_size & bit_sizes);
-      if (num_components)
-         validate_assert(state, src->reg.reg->num_components == num_components);
-   }
+   if (bit_sizes)
+      validate_assert(state, src->reg.reg->bit_size & bit_sizes);
+   if (num_components)
+      validate_assert(state, src->reg.reg->num_components == num_components);
 
    validate_assert(state, (src->reg.reg->num_array_elems == 0 ||
           src->reg.base_offset < src->reg.reg->num_array_elems) &&
@@ -175,30 +165,29 @@ validate_reg_src(nir_src *src, validate_state *state,
    }
 }
 
+#define SET_PTR_BIT(ptr, bit) \
+   (void *)(((uintptr_t)(ptr)) | (((uintptr_t)1) << bit))
+
 static void
 validate_ssa_src(nir_src *src, validate_state *state,
                  unsigned bit_sizes, unsigned num_components)
 {
    validate_assert(state, src->ssa != NULL);
 
-   struct hash_entry *entry = _mesa_hash_table_search(state->ssa_defs, src->ssa);
-
+   /* As we walk SSA defs, we add every use to this set.  We need to make sure
+    * our use is seen in a use list.
+    */
+   struct set_entry *entry;
+   if (state->instr) {
+      entry = _mesa_set_search(state->ssa_srcs, src);
+   } else {
+      entry = _mesa_set_search(state->ssa_srcs, SET_PTR_BIT(src, 0));
+   }
    validate_assert(state, entry);
 
-   if (!entry)
-      return;
-
-   ssa_def_validate_state *def_state = (ssa_def_validate_state *)entry->data;
-
-   validate_assert(state, def_state->where_defined == state->impl &&
-          "using an SSA value defined in a different function");
-
-   if (state->instr) {
-      _mesa_set_add(def_state->uses, src);
-   } else {
-      validate_assert(state, state->if_stmt);
-      _mesa_set_add(def_state->if_uses, src);
-   }
+   /* This will let us prove that we've seen all the sources */
+   if (entry)
+      _mesa_set_remove(state->ssa_srcs, entry);
 
    if (bit_sizes)
       validate_assert(state, src->ssa->bit_size & bit_sizes);
@@ -228,9 +217,10 @@ validate_alu_src(nir_alu_instr *instr, unsigned index, validate_state *state)
 {
    nir_alu_src *src = &instr->src[index];
 
+   if (instr->op == nir_op_mov)
+      assert(!src->abs && !src->negate);
+
    unsigned num_components = nir_src_num_components(src->src);
-   if (!src->src.is_ssa && src->src.reg.reg->is_packed)
-      num_components = NIR_MAX_VEC_COMPONENTS; /* can't check anything */
    for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++) {
       validate_assert(state, src->swizzle[i] < NIR_MAX_VEC_COMPONENTS);
 
@@ -257,17 +247,13 @@ validate_reg_dest(nir_reg_dest *dest, validate_state *state,
    reg_validate_state *reg_state = (reg_validate_state *) entry2->data;
    _mesa_set_add(reg_state->defs, dest);
 
-   if (!dest->reg->is_global) {
-      validate_assert(state, reg_state->where_defined == state->impl &&
-             "writing to a register declared in a different function");
-   }
+   validate_assert(state, reg_state->where_defined == state->impl &&
+          "writing to a register declared in a different function");
 
-   if (!dest->reg->is_packed) {
-      if (bit_sizes)
-         validate_assert(state, dest->reg->bit_size & bit_sizes);
-      if (num_components)
-         validate_assert(state, dest->reg->num_components == num_components);
-   }
+   if (bit_sizes)
+      validate_assert(state, dest->reg->bit_size & bit_sizes);
+   if (num_components)
+      validate_assert(state, dest->reg->num_components == num_components);
 
    validate_assert(state, (dest->reg->num_array_elems == 0 ||
           dest->base_offset < dest->reg->num_array_elems) &&
@@ -295,14 +281,25 @@ validate_ssa_def(nir_ssa_def *def, validate_state *state)
                           (def->num_components == 16));
 
    list_validate(&def->uses);
-   list_validate(&def->if_uses);
+   nir_foreach_use(src, def) {
+      validate_assert(state, src->is_ssa);
+      validate_assert(state, src->ssa == def);
+      bool already_seen = false;
+      _mesa_set_search_and_add(state->ssa_srcs, src, &already_seen);
+      /* A nir_src should only appear once and only in one SSA def use list */
+      validate_assert(state, !already_seen);
+   }
 
-   ssa_def_validate_state *def_state = ralloc(state->ssa_defs,
-                                              ssa_def_validate_state);
-   def_state->where_defined = state->impl;
-   def_state->uses = _mesa_pointer_set_create(def_state);
-   def_state->if_uses = _mesa_pointer_set_create(def_state);
-   _mesa_hash_table_insert(state->ssa_defs, def, def_state);
+   list_validate(&def->if_uses);
+   nir_foreach_if_use(src, def) {
+      validate_assert(state, src->is_ssa);
+      validate_assert(state, src->ssa == def);
+      bool already_seen = false;
+      _mesa_set_search_and_add(state->ssa_srcs, SET_PTR_BIT(src, 0),
+                               &already_seen);
+      /* A nir_src should only appear once and only in one SSA def use list */
+      validate_assert(state, !already_seen);
+   }
 }
 
 static void
@@ -325,13 +322,15 @@ validate_alu_dest(nir_alu_instr *instr, validate_state *state)
 {
    nir_alu_dest *dest = &instr->dest;
 
+   if (instr->op == nir_op_mov)
+      assert(!dest->saturate);
+
    unsigned dest_size = nir_dest_num_components(dest->dest);
-   bool is_packed = !dest->dest.is_ssa && dest->dest.reg.reg->is_packed;
    /*
     * validate that the instruction doesn't write to components not in the
     * register/SSA value
     */
-   validate_assert(state, is_packed || !(dest->write_mask & ~((1 << dest_size) - 1)));
+   validate_assert(state, !(dest->write_mask & ~((1 << dest_size) - 1)));
 
    /* validate that saturate is only ever used on instructions with
     * destinations of type float
@@ -395,7 +394,7 @@ validate_var_use(nir_variable *var, validate_state *state)
 {
    struct hash_entry *entry = _mesa_hash_table_search(state->var_defs, var);
    validate_assert(state, entry);
-   if (var->data.mode == nir_var_function_temp)
+   if (entry && var->data.mode == nir_var_function_temp)
       validate_assert(state, (nir_function_impl *) entry->data == state->impl);
 }
 
@@ -437,7 +436,7 @@ validate_deref_instr(nir_deref_instr *instr, validate_state *state)
 
       switch (instr->deref_type) {
       case nir_deref_type_struct:
-         validate_assert(state, glsl_type_is_struct(parent->type));
+         validate_assert(state, glsl_type_is_struct_or_ifc(parent->type));
          validate_assert(state,
             instr->strct.index < glsl_get_length(parent->type));
          validate_assert(state, instr->type ==
@@ -500,6 +499,16 @@ validate_deref_instr(nir_deref_instr *instr, validate_state *state)
     * NULL, an explicit comparison operation should be used.
     */
    validate_assert(state, list_empty(&instr->dest.ssa.if_uses));
+
+   /* Only certain modes can be used as sources for phi instructions. */
+   nir_foreach_use(use, &instr->dest.ssa) {
+      if (use->parent_instr->type == nir_instr_type_phi) {
+         validate_assert(state, instr->mode == nir_var_mem_ubo ||
+                                instr->mode == nir_var_mem_ssbo ||
+                                instr->mode == nir_var_mem_shared ||
+                                instr->mode == nir_var_mem_global);
+      }
+   }
 }
 
 static void
@@ -525,6 +534,9 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
       validate_assert(state, instr->num_components ==
                              glsl_get_vector_elements(src->type));
       dest_bit_size = glsl_get_bit_size(src->type);
+      /* Also allow 32-bit boolean load operations */
+      if (glsl_type_is_boolean(src->type))
+         dest_bit_size |= 32;
       break;
    }
 
@@ -534,6 +546,9 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
       validate_assert(state, instr->num_components ==
                              glsl_get_vector_elements(dst->type));
       src_bit_sizes[1] = glsl_get_bit_size(dst->type);
+      /* Also allow 32-bit boolean store operations */
+      if (glsl_type_is_boolean(dst->type))
+         src_bit_sizes[1] |= 32;
       validate_assert(state, (dst->mode & (nir_var_shader_in |
                                            nir_var_uniform)) == 0);
       validate_assert(state, (nir_intrinsic_write_mask(instr) & ~((1 << instr->num_components) - 1)) == 0);
@@ -543,7 +558,8 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
    case nir_intrinsic_copy_deref: {
       nir_deref_instr *dst = nir_src_as_deref(instr->src[0]);
       nir_deref_instr *src = nir_src_as_deref(instr->src[1]);
-      validate_assert(state, dst->type == src->type);
+      validate_assert(state, glsl_get_bare_type(dst->type) ==
+                             glsl_get_bare_type(src->type));
       validate_assert(state, (dst->mode & (nir_var_shader_in |
                                            nir_var_uniform)) == 0);
       break;
@@ -589,6 +605,22 @@ validate_tex_instr(nir_tex_instr *instr, validate_state *state)
       src_type_seen[instr->src[i].src_type] = true;
       validate_src(&instr->src[i].src, state,
                    0, nir_tex_instr_src_size(instr, i));
+
+      switch (instr->src[i].src_type) {
+      case nir_tex_src_texture_deref:
+      case nir_tex_src_sampler_deref:
+         validate_assert(state, instr->src[i].src.is_ssa);
+         validate_assert(state,
+                         instr->src[i].src.ssa->parent_instr->type == nir_instr_type_deref);
+         break;
+      default:
+         break;
+      }
+   }
+
+   if (nir_tex_instr_has_explicit_tg4_offsets(instr)) {
+      validate_assert(state, instr->op == nir_texop_tg4);
+      validate_assert(state, !src_type_seen[nir_tex_src_offset]);
    }
 
    validate_dest(&instr->dest, state, 0, nir_tex_instr_dest_size(instr));
@@ -607,9 +639,44 @@ validate_call_instr(nir_call_instr *instr, validate_state *state)
 }
 
 static void
+validate_const_value(nir_const_value *val, unsigned bit_size,
+                     validate_state *state)
+{
+   /* In order for block copies to work properly for things like instruction
+    * comparisons and [de]serialization, we require the unused bits of the
+    * nir_const_value to be zero.
+    */
+   nir_const_value cmp_val;
+   memset(&cmp_val, 0, sizeof(cmp_val));
+   switch (bit_size) {
+   case 1:
+      cmp_val.b = val->b;
+      break;
+   case 8:
+      cmp_val.u8 = val->u8;
+      break;
+   case 16:
+      cmp_val.u16 = val->u16;
+      break;
+   case 32:
+      cmp_val.u32 = val->u32;
+      break;
+   case 64:
+      cmp_val.u64 = val->u64;
+      break;
+   default:
+      validate_assert(state, !"Invalid load_const bit size");
+   }
+   validate_assert(state, memcmp(val, &cmp_val, sizeof(cmp_val)) == 0);
+}
+
+static void
 validate_load_const_instr(nir_load_const_instr *instr, validate_state *state)
 {
    validate_ssa_def(&instr->def, state);
+
+   for (unsigned i = 0; i < instr->def.num_components; i++)
+      validate_const_value(&instr->value[i], instr->def.bit_size, state);
 }
 
 static void
@@ -916,14 +983,9 @@ validate_cf_node(nir_cf_node *node, validate_state *state)
 }
 
 static void
-prevalidate_reg_decl(nir_register *reg, bool is_global, validate_state *state)
+prevalidate_reg_decl(nir_register *reg, validate_state *state)
 {
-   validate_assert(state, reg->is_global == is_global);
-
-   if (is_global)
-      validate_assert(state, reg->index < state->shader->reg_alloc);
-   else
-      validate_assert(state, reg->index < state->impl->reg_alloc);
+   validate_assert(state, reg->index < state->impl->reg_alloc);
    validate_assert(state, !BITSET_TEST(state->regs_found, reg->index));
    BITSET_SET(state->regs_found, reg->index);
 
@@ -936,7 +998,7 @@ prevalidate_reg_decl(nir_register *reg, bool is_global, validate_state *state)
    reg_state->if_uses = _mesa_pointer_set_create(reg_state);
    reg_state->defs = _mesa_pointer_set_create(reg_state);
 
-   reg_state->where_defined = is_global ? NULL : state->impl;
+   reg_state->where_defined = state->impl;
 
    _mesa_hash_table_insert(state->regs, reg, reg_state);
 }
@@ -1017,7 +1079,7 @@ validate_var_decl(nir_variable *var, bool is_global, validate_state *state)
 
    if (var->num_members > 0) {
       const struct glsl_type *without_array = glsl_without_array(var->type);
-      validate_assert(state, glsl_type_is_struct(without_array));
+      validate_assert(state, glsl_type_is_struct_or_ifc(without_array));
       validate_assert(state, var->num_members == glsl_get_length(without_array));
       validate_assert(state, var->members != NULL);
    }
@@ -1033,50 +1095,18 @@ validate_var_decl(nir_variable *var, bool is_global, validate_state *state)
    state->var = NULL;
 }
 
-static bool
-postvalidate_ssa_def(nir_ssa_def *def, void *void_state)
-{
-   validate_state *state = void_state;
-
-   struct hash_entry *entry = _mesa_hash_table_search(state->ssa_defs, def);
-
-   assume(entry);
-   ssa_def_validate_state *def_state = (ssa_def_validate_state *)entry->data;
-
-   nir_foreach_use(src, def) {
-      struct set_entry *entry = _mesa_set_search(def_state->uses, src);
-      validate_assert(state, entry);
-      _mesa_set_remove(def_state->uses, entry);
-   }
-
-   if (def_state->uses->entries != 0) {
-      printf("extra entries in SSA def uses:\n");
-      set_foreach(def_state->uses, entry)
-         printf("%p\n", entry->key);
-
-      abort();
-   }
-
-   nir_foreach_if_use(src, def) {
-      struct set_entry *entry = _mesa_set_search(def_state->if_uses, src);
-      validate_assert(state, entry);
-      _mesa_set_remove(def_state->if_uses, entry);
-   }
-
-   if (def_state->if_uses->entries != 0) {
-      printf("extra entries in SSA def uses:\n");
-      set_foreach(def_state->if_uses, entry)
-         printf("%p\n", entry->key);
-
-      abort();
-   }
-
-   return true;
-}
-
 static void
 validate_function_impl(nir_function_impl *impl, validate_state *state)
 {
+   /* Resize the ssa_srcs set.  It's likely that the size of this set will
+    * never actually hit the number of SSA defs because we remove sources from
+    * the set as we visit them.  (It could actually be much larger because
+    * each SSA def can be used more than once.)  However, growing it now costs
+    * us very little (the extra memory is already dwarfed by the SSA defs
+    * themselves) and makes collisions much less likely.
+    */
+   _mesa_set_resize(state->ssa_srcs, impl->ssa_alloc);
+
    validate_assert(state, impl->function->impl == impl);
    validate_assert(state, impl->cf_node.parent == NULL);
 
@@ -1092,19 +1122,17 @@ validate_function_impl(nir_function_impl *impl, validate_state *state)
       validate_var_decl(var, false, state);
    }
 
-   state->regs_found = realloc(state->regs_found,
-                               BITSET_WORDS(impl->reg_alloc) *
-                               sizeof(BITSET_WORD));
+   state->regs_found = reralloc(state->mem_ctx, state->regs_found,
+                                BITSET_WORD, BITSET_WORDS(impl->reg_alloc));
    memset(state->regs_found, 0, BITSET_WORDS(impl->reg_alloc) *
                                 sizeof(BITSET_WORD));
    exec_list_validate(&impl->registers);
    foreach_list_typed(nir_register, reg, node, &impl->registers) {
-      prevalidate_reg_decl(reg, false, state);
+      prevalidate_reg_decl(reg, state);
    }
 
-   state->ssa_defs_found = realloc(state->ssa_defs_found,
-                                   BITSET_WORDS(impl->ssa_alloc) *
-                                   sizeof(BITSET_WORD));
+   state->ssa_defs_found = reralloc(state->mem_ctx, state->ssa_defs_found,
+                                    BITSET_WORD, BITSET_WORDS(impl->ssa_alloc));
    memset(state->ssa_defs_found, 0, BITSET_WORDS(impl->ssa_alloc) *
                                     sizeof(BITSET_WORD));
    exec_list_validate(&impl->body);
@@ -1116,9 +1144,12 @@ validate_function_impl(nir_function_impl *impl, validate_state *state)
       postvalidate_reg_decl(reg, state);
    }
 
-   nir_foreach_block(block, impl) {
-      nir_foreach_instr(instr, block)
-         nir_foreach_ssa_def(instr, postvalidate_ssa_def, state);
+   if (state->ssa_srcs->entries != 0) {
+      printf("extra dangling SSA sources:\n");
+      set_foreach(state->ssa_srcs, entry)
+         printf("%p\n", entry->key);
+
+      abort();
    }
 }
 
@@ -1134,12 +1165,13 @@ validate_function(nir_function *func, validate_state *state)
 static void
 init_validate_state(validate_state *state)
 {
-   state->regs = _mesa_pointer_hash_table_create(NULL);
-   state->ssa_defs = _mesa_pointer_hash_table_create(NULL);
+   state->mem_ctx = ralloc_context(NULL);
+   state->regs = _mesa_pointer_hash_table_create(state->mem_ctx);
+   state->ssa_srcs = _mesa_pointer_set_create(state->mem_ctx);
    state->ssa_defs_found = NULL;
    state->regs_found = NULL;
-   state->var_defs = _mesa_pointer_hash_table_create(NULL);
-   state->errors = _mesa_pointer_hash_table_create(NULL);
+   state->var_defs = _mesa_pointer_hash_table_create(state->mem_ctx);
+   state->errors = _mesa_pointer_hash_table_create(state->mem_ctx);
 
    state->loop = NULL;
    state->instr = NULL;
@@ -1149,18 +1181,20 @@ init_validate_state(validate_state *state)
 static void
 destroy_validate_state(validate_state *state)
 {
-   _mesa_hash_table_destroy(state->regs, NULL);
-   _mesa_hash_table_destroy(state->ssa_defs, NULL);
-   free(state->ssa_defs_found);
-   free(state->regs_found);
-   _mesa_hash_table_destroy(state->var_defs, NULL);
-   _mesa_hash_table_destroy(state->errors, NULL);
+   ralloc_free(state->mem_ctx);
 }
+
+mtx_t fail_dump_mutex = _MTX_INITIALIZER_NP;
 
 static void
 dump_errors(validate_state *state, const char *when)
 {
    struct hash_table *errors = state->errors;
+
+   /* Lock around dumping so that we get clean dumps in a multi-threaded
+    * scenario
+    */
+   mtx_lock(&fail_dump_mutex);
 
    if (when) {
       fprintf(stderr, "NIR validation failed %s\n", when);
@@ -1179,6 +1213,8 @@ dump_errors(validate_state *state, const char *when)
          fprintf(stderr, "%s\n", (char *)entry->data);
       }
    }
+
+   mtx_unlock(&fail_dump_mutex);
 
    abort();
 }
@@ -1227,23 +1263,9 @@ nir_validate_shader(nir_shader *shader, const char *when)
      validate_var_decl(var, true, &state);
    }
 
-   state.regs_found = realloc(state.regs_found,
-                              BITSET_WORDS(shader->reg_alloc) *
-                              sizeof(BITSET_WORD));
-   memset(state.regs_found, 0, BITSET_WORDS(shader->reg_alloc) *
-                               sizeof(BITSET_WORD));
-   exec_list_validate(&shader->registers);
-   foreach_list_typed(nir_register, reg, node, &shader->registers) {
-      prevalidate_reg_decl(reg, true, &state);
-   }
-
    exec_list_validate(&shader->functions);
    foreach_list_typed(nir_function, func, node, &shader->functions) {
       validate_function(func, &state);
-   }
-
-   foreach_list_typed(nir_register, reg, node, &shader->registers) {
-      postvalidate_reg_decl(reg, &state);
    }
 
    if (_mesa_hash_table_num_entries(state.errors) > 0)

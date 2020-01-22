@@ -215,7 +215,7 @@ static boolean r300_reserve_cs_dwords(struct r300_context *r300,
     cs_dwords += r300_get_num_cs_end_dwords(r300);
 
     /* Reserve requested CS space. */
-    if (!r300->rws->cs_check_space(r300->cs, cs_dwords)) {
+    if (!r300->rws->cs_check_space(r300->cs, cs_dwords, false)) {
         r300_flush(&r300->context, PIPE_FLUSH_ASYNC, NULL);
         flushed = TRUE;
     }
@@ -915,7 +915,8 @@ static boolean r300_render_allocate_vertices(struct vbuf_render* render,
         r300->vbo = rws->buffer_create(rws,
                                        MAX2(R300_MAX_DRAW_VBO_SIZE, size),
                                        R300_BUFFER_ALIGNMENT,
-                                       RADEON_DOMAIN_GTT, 0);
+                                       RADEON_DOMAIN_GTT,
+                                       RADEON_FLAG_NO_INTERPROCESS_SHARING);
         if (!r300->vbo) {
             return FALSE;
         }

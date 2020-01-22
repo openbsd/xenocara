@@ -67,7 +67,7 @@ void KnobBase::autoExpandEnvironmentVariables(std::string& text)
 #else
     {
         // unix style variable replacement
-        static std::regex env("\\$\\{([^}]+)\\}");
+        static std::regex env("\\$\\{([^}]+?)\\}");
         std::smatch       match;
         while (std::regex_search(text, match, env))
         {
@@ -79,7 +79,7 @@ void KnobBase::autoExpandEnvironmentVariables(std::string& text)
     }
     {
         // win32 style variable replacement
-        static std::regex env("\\%([^}]+)\\%");
+        static std::regex env("%([^%]+?)%");
         std::smatch       match;
         while (std::regex_search(text, match, env))
         {
@@ -95,6 +95,13 @@ void KnobBase::autoExpandEnvironmentVariables(std::string& text)
 //========================================================
 // Static Data Members
 //========================================================
+% for knob in knobs:
+% if knob[1]['type'] == 'std::string':
+${knob[1]['type']} GlobalKnobs::Knob_${knob[0]}::m_default = "${repr(knob[1]['default'])[1:-1]}";
+% else:
+${knob[1]['type']} GlobalKnobs::Knob_${knob[0]}::m_default = ${knob[1]['default']};
+% endif
+% endfor
 GlobalKnobs g_GlobalKnobs;
 
 //========================================================

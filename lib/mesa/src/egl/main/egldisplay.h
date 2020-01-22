@@ -50,6 +50,7 @@ enum _egl_platform_type {
    _EGL_PLATFORM_ANDROID,
    _EGL_PLATFORM_HAIKU,
    _EGL_PLATFORM_SURFACELESS,
+   _EGL_PLATFORM_DEVICE,
 
    _EGL_NUM_PLATFORMS,
    _EGL_INVALID_PLATFORM = -1
@@ -149,7 +150,6 @@ struct _egl_extensions
    EGLBoolean WL_create_wayland_buffer_from_image;
 };
 
-
 struct _egl_display
 {
    /* used to link displays */
@@ -167,7 +167,8 @@ struct _egl_display
    /* options that affect how the driver initializes the display */
    struct {
       EGLBoolean ForceSoftware; /**< Use software path only */
-      void *Platform;         /**< Platform-specific options */
+      EGLAttrib *Attribs;     /**< Platform-specific options */
+      int fd; /**< plaform device specific, local fd */
    } Options;
 
    /* these fields are set by the driver during init */
@@ -202,11 +203,11 @@ _eglFiniDisplay(void);
 
 
 extern _EGLDisplay *
-_eglFindDisplay(_EGLPlatformType plat, void *plat_dpy);
+_eglFindDisplay(_EGLPlatformType plat, void *plat_dpy, const EGLAttrib *attr);
 
 
 extern void
-_eglReleaseDisplayResources(_EGLDriver *drv, _EGLDisplay *dpy);
+_eglReleaseDisplayResources(_EGLDriver *drv, _EGLDisplay *disp);
 
 
 extern void
@@ -218,7 +219,7 @@ _eglCheckDisplayHandle(EGLDisplay dpy);
 
 
 extern EGLBoolean
-_eglCheckResource(void *res, _EGLResourceType type, _EGLDisplay *dpy);
+_eglCheckResource(void *res, _EGLResourceType type, _EGLDisplay *disp);
 
 
 /**
@@ -226,12 +227,12 @@ _eglCheckResource(void *res, _EGLResourceType type, _EGLDisplay *dpy);
  * Return NULL if the handle has no corresponding linked display.
  */
 static inline _EGLDisplay *
-_eglLookupDisplay(EGLDisplay display)
+_eglLookupDisplay(EGLDisplay dpy)
 {
-   _EGLDisplay *dpy = (_EGLDisplay *) display;
-   if (!_eglCheckDisplayHandle(display))
-      dpy = NULL;
-   return dpy;
+   _EGLDisplay *disp = (_EGLDisplay *) dpy;
+   if (!_eglCheckDisplayHandle(dpy))
+      disp = NULL;
+   return disp;
 }
 
 
@@ -239,14 +240,14 @@ _eglLookupDisplay(EGLDisplay display)
  * Return the handle of a linked display, or EGL_NO_DISPLAY.
  */
 static inline EGLDisplay
-_eglGetDisplayHandle(_EGLDisplay *dpy)
+_eglGetDisplayHandle(_EGLDisplay *disp)
 {
-   return (EGLDisplay) ((dpy) ? dpy : EGL_NO_DISPLAY);
+   return (EGLDisplay) ((disp) ? disp : EGL_NO_DISPLAY);
 }
 
 
 extern void
-_eglInitResource(_EGLResource *res, EGLint size, _EGLDisplay *dpy);
+_eglInitResource(_EGLResource *res, EGLint size, _EGLDisplay *disp);
 
 
 extern void
@@ -272,6 +273,19 @@ static inline EGLBoolean
 _eglIsResourceLinked(_EGLResource *res)
 {
    return res->IsLinked;
+}
+
+static inline size_t
+_eglNumAttribs(const EGLAttrib *attribs)
+{
+   size_t len = 0;
+
+   if (attribs) {
+      while (attribs[len] != EGL_NONE)
+         len += 2;
+      len++;
+   }
+   return len;
 }
 
 #ifdef HAVE_X11_PLATFORM
@@ -300,6 +314,16 @@ _EGLDisplay*
 _eglGetSurfacelessDisplay(void *native_display,
                           const EGLAttrib *attrib_list);
 #endif
+
+#ifdef HAVE_ANDROID_PLATFORM
+_EGLDisplay*
+_eglGetAndroidDisplay(void *native_display,
+                         const EGLAttrib *attrib_list);
+#endif
+
+_EGLDisplay*
+_eglGetDeviceDisplay(void *native_display,
+                     const EGLAttrib *attrib_list);
 
 #ifdef __cplusplus
 }

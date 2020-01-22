@@ -49,7 +49,8 @@ anv_init_wsi(struct anv_physical_device *physical_device)
                             anv_physical_device_to_handle(physical_device),
                             anv_wsi_proc_addr,
                             &physical_device->instance->alloc,
-                            physical_device->master_fd);
+                            physical_device->master_fd,
+                            &physical_device->instance->dri_options);
    if (result != VK_SUCCESS)
       return result;
 
@@ -246,12 +247,28 @@ VkResult anv_AcquireNextImage2KHR(
                                                     pAcquireInfo,
                                                     pImageIndex);
 
-   /* Thanks to implicit sync, the image is ready immediately.  However, we
-    * should wait for the current GPU state to finish.
+   /* Thanks to implicit sync, the image is ready immediately. However, we
+    * should wait for the current GPU state to finish. Regardless of the
+    * result of the presentation, we need to signal the semaphore & fence.
     */
+
+   if (pAcquireInfo->semaphore != VK_NULL_HANDLE) {
+      /* Put a dummy semaphore in temporary, this is the fastest way to avoid
+       * any kind of work yet still provide some kind of synchronization. This
+       * only works because the Mesa WSI code always returns an image
+       * immediately if available.
+       */
+      ANV_FROM_HANDLE(anv_semaphore, semaphore, pAcquireInfo->semaphore);
+      anv_semaphore_reset_temporary(device, semaphore);
+
+      struct anv_semaphore_impl *impl = &semaphore->temporary;
+
+      impl->type = ANV_SEMAPHORE_TYPE_DUMMY;
+   }
+
    if (pAcquireInfo->fence != VK_NULL_HANDLE) {
-      anv_QueueSubmit(anv_queue_to_handle(&device->queue), 0, NULL,
-                      pAcquireInfo->fence);
+      result = anv_QueueSubmit(anv_queue_to_handle(&device->queue),
+                               0, NULL, pAcquireInfo->fence);
    }
 
    return result;

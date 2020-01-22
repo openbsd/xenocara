@@ -53,11 +53,8 @@ static bool
 can_omit_write(const fs_inst *inst)
 {
    switch (inst->opcode) {
-   case SHADER_OPCODE_UNTYPED_ATOMIC:
    case SHADER_OPCODE_UNTYPED_ATOMIC_LOGICAL:
-   case SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT:
    case SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT_LOGICAL:
-   case SHADER_OPCODE_TYPED_ATOMIC:
    case SHADER_OPCODE_TYPED_ATOMIC_LOGICAL:
       return true;
    default:
@@ -99,7 +96,8 @@ fs_visitor::dead_code_eliminate()
 
             if (!result_live &&
                 (can_omit_write(inst) || can_eliminate(inst, flag_live))) {
-               inst->dst = fs_reg(retype(brw_null_reg(), inst->dst.type));
+               inst->dst = fs_reg(spread(retype(brw_null_reg(), inst->dst.type),
+                                         inst->dst.stride));
                progress = true;
             }
          }

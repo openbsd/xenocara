@@ -141,7 +141,8 @@ struct _mesa_glsl_parse_state {
 
    bool check_bitwise_operations_allowed(YYLTYPE *locp)
    {
-      return check_version(130, 300, locp, "bit-wise operations are forbidden");
+      return EXT_gpu_shader4_enable ||
+             check_version(130, 300, locp, "bit-wise operations are forbidden");
    }
 
    bool check_explicit_attrib_stream_allowed(YYLTYPE *locp)
@@ -336,12 +337,19 @@ struct _mesa_glsl_parse_state {
 
    bool has_shader_image_load_store() const
    {
-      return ARB_shader_image_load_store_enable || is_version(420, 310);
+      return ARB_shader_image_load_store_enable ||
+             EXT_shader_image_load_store_enable ||
+             is_version(420, 310);
    }
 
    bool has_bindless() const
    {
       return ARB_bindless_texture_enable;
+   }
+
+   bool has_image_load_formatted() const
+   {
+      return EXT_shader_image_load_formatted_enable;
    }
 
    bool has_implicit_conversions() const
@@ -444,6 +452,12 @@ struct _mesa_glsl_parse_state {
     * a layout directive as specified by ARB_compute_variable_group_size.
     */
    bool cs_input_local_size_variable_specified;
+
+   /**
+    * Arrangement of invocations used to calculate derivatives in a compute
+    * shader.  From NV_compute_shader_derivatives.
+    */
+   enum gl_derivative_group cs_derivative_group;
 
    /**
     * True if a shader declare bindless_sampler/bindless_image, and
@@ -592,6 +606,10 @@ struct _mesa_glsl_parse_state {
 
    /** Have we found a return statement in this function? */
    bool found_return;
+
+   /** Have we found the interlock builtins in this function? */
+   bool found_begin_interlock;
+   bool found_end_interlock;
 
    /** Was there an error during compilation? */
    bool error;
@@ -806,6 +824,8 @@ struct _mesa_glsl_parse_state {
    bool EXT_geometry_point_size_warn;
    bool EXT_geometry_shader_enable;
    bool EXT_geometry_shader_warn;
+   bool EXT_gpu_shader4_enable;
+   bool EXT_gpu_shader4_warn;
    bool EXT_gpu_shader5_enable;
    bool EXT_gpu_shader5_warn;
    bool EXT_primitive_bounding_box_enable;
@@ -816,6 +836,10 @@ struct _mesa_glsl_parse_state {
    bool EXT_shader_framebuffer_fetch_warn;
    bool EXT_shader_framebuffer_fetch_non_coherent_enable;
    bool EXT_shader_framebuffer_fetch_non_coherent_warn;
+   bool EXT_shader_image_load_formatted_enable;
+   bool EXT_shader_image_load_formatted_warn;
+   bool EXT_shader_image_load_store_enable;
+   bool EXT_shader_image_load_store_warn;
    bool EXT_shader_implicit_conversions_enable;
    bool EXT_shader_implicit_conversions_warn;
    bool EXT_shader_integer_mix_enable;
@@ -834,12 +858,18 @@ struct _mesa_glsl_parse_state {
    bool EXT_texture_buffer_warn;
    bool EXT_texture_cube_map_array_enable;
    bool EXT_texture_cube_map_array_warn;
+   bool EXT_texture_query_lod_enable;
+   bool EXT_texture_query_lod_warn;
+   bool EXT_texture_shadow_lod_enable;
+   bool EXT_texture_shadow_lod_warn;
    bool INTEL_conservative_rasterization_enable;
    bool INTEL_conservative_rasterization_warn;
    bool INTEL_shader_atomic_float_minmax_enable;
    bool INTEL_shader_atomic_float_minmax_warn;
    bool MESA_shader_integer_functions_enable;
    bool MESA_shader_integer_functions_warn;
+   bool NV_compute_shader_derivatives_enable;
+   bool NV_compute_shader_derivatives_warn;
    bool NV_fragment_shader_interlock_enable;
    bool NV_fragment_shader_interlock_warn;
    bool NV_image_formats_enable;
@@ -980,6 +1010,7 @@ extern "C" {
 #endif
 
 struct glcpp_parser;
+struct _mesa_glsl_parse_state;
 
 typedef void (*glcpp_extension_iterator)(
               struct _mesa_glsl_parse_state *state,
@@ -993,6 +1024,8 @@ extern int glcpp_preprocess(void *ctx, const char **shader, char **info_log,
                             struct _mesa_glsl_parse_state *state,
                             struct gl_context *gl_ctx);
 
+extern void _mesa_init_shader_compiler_types(void);
+extern void _mesa_destroy_shader_compiler_types(void);
 extern void _mesa_destroy_shader_compiler(void);
 extern void _mesa_destroy_shader_compiler_caches(void);
 
