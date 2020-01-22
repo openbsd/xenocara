@@ -39,14 +39,14 @@ endif
 
 libgallium_dri = shared_library(
   'gallium_dri',
-  [files('target.c'), xmlpool_options_h],
+  files('target.c'),
   include_directories : [
     inc_common, inc_util, inc_dri_common, inc_gallium_drivers,
     inc_gallium_winsys, include_directories('../../state_trackers/dri'),
   ],
   c_args : [c_vis_args],
   cpp_args : [cpp_vis_args],
-  link_args : [ld_args_gc_sections, gallium_dri_ld_args],
+  link_args : [ld_args_build_id, ld_args_gc_sections, gallium_dri_ld_args],
   link_depends : gallium_dri_link_depends,
   link_with : [
     libmesa_gallium, libdricommon, libmegadriver_stub, libdri, libgalliumvl,
@@ -54,11 +54,11 @@ libgallium_dri = shared_library(
     libswkmsdri,
   ],
   dependencies : [
-    dep_selinux, dep_expat, dep_libdrm, dep_llvm, dep_thread,
+    dep_selinux, dep_libdrm, dep_llvm, dep_thread, idep_xmlconfig,
     driver_swrast, driver_r300, driver_r600, driver_radeonsi, driver_nouveau,
     driver_kmsro, driver_v3d, driver_vc4, driver_freedreno, driver_etnaviv,
     driver_tegra, driver_i915, driver_svga, driver_virgl,
-    driver_swr,
+    driver_swr, driver_panfrost, driver_iris, driver_lima
   ],
   # Will be deleted during installation, see install_megadrivers.py
   install : true,
@@ -66,9 +66,24 @@ libgallium_dri = shared_library(
   name_suffix : 'so',
 )
 
-foreach d : [[with_gallium_kmsro, 'pl111_dri.so'],
-             [with_gallium_kmsro, 'hx8357d_dri.so'],
-             [with_gallium_kmsro, 'imx-drm_dri.so'],
+foreach d : [[with_gallium_kmsro, [
+               'armada-drm_dri.so',
+               'exynos_dri.so',
+               'hx8357d_dri.so',
+               'ili9225_dri.so',
+               'ili9341_dri.so',
+               'imx-drm_dri.so',
+               'meson_dri.so',
+               'mi0283qt_dri.so',
+               'mxsfb-drm_dri.so',
+               'pl111_dri.so',
+               'repaper_dri.so',
+               'rockchip_dri.so',
+               'st7586_dri.so',
+               'st7735r_dri.so',
+               'stm_dri.so',
+	       'sun4i-drm_dri.so',
+             ]],
              [with_gallium_radeonsi, 'radeonsi_dri.so'],
              [with_gallium_nouveau, 'nouveau_dri.so'],
              [with_gallium_freedreno, ['msm_dri.so', 'kgsl_dri.so']],
@@ -76,13 +91,16 @@ foreach d : [[with_gallium_kmsro, 'pl111_dri.so'],
              [with_gallium_softpipe and with_gallium_drisw_kms, 'kms_swrast_dri.so'],
              [with_gallium_v3d, 'v3d_dri.so'],
              [with_gallium_vc4, 'vc4_dri.so'],
+             [with_gallium_panfrost, 'panfrost_dri.so'],
              [with_gallium_etnaviv, 'etnaviv_dri.so'],
              [with_gallium_tegra, 'tegra_dri.so'],
+             [with_gallium_iris, 'iris_dri.so'],
              [with_gallium_i915, 'i915_dri.so'],
              [with_gallium_r300, 'r300_dri.so'],
              [with_gallium_r600, 'r600_dri.so'],
              [with_gallium_svga, 'vmwgfx_dri.so'],
-             [with_gallium_virgl, 'virtio_gpu_dri.so']]
+             [with_gallium_virgl, 'virtio_gpu_dri.so'],
+             [with_gallium_lima, 'lima_dri.so']]
   if d[0]
     gallium_dri_drivers += d[1]
   endif

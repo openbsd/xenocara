@@ -43,6 +43,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_POINT_SPRITE:
       return 0;
 
+   case PIPE_CAP_GRAPHICS:
    case PIPE_CAP_MAX_RENDER_TARGETS:
       return 1;
 
@@ -51,14 +52,16 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_TEXTURE_SWIZZLE:
       return 0;
 
-   case PIPE_CAP_MAX_TEXTURE_2D_LEVELS:
+   case PIPE_CAP_MAX_TEXTURE_2D_SIZE:
    case PIPE_CAP_MAX_TEXTURE_3D_LEVELS:
    case PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS:
       unreachable("driver must implement these.");
 
    case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
    case PIPE_CAP_BLEND_EQUATION_SEPARATE:
-   case PIPE_CAP_SM3:
+   case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
+   case PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES:
+   case PIPE_CAP_VERTEX_SHADER_SATURATE:
    case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS: /* enables EXT_transform_feedback */
    case PIPE_CAP_PRIMITIVE_RESTART:
    case PIPE_CAP_INDEP_BLEND_ENABLE:
@@ -106,6 +109,10 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY:
       /* Minimum GLSL level implemented by gallium drivers. */
       return 120;
+
+   case PIPE_CAP_ESSL_FEATURE_LEVEL:
+      /* Tell state-tracker to fallback to PIPE_CAP_GLSL_FEATURE_LEVEL */
+      return 0;
 
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
    case PIPE_CAP_USER_VERTEX_BUFFERS:
@@ -221,6 +228,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_MULTI_DRAW_INDIRECT:
    case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
    case PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL:
+   case PIPE_CAP_TGSI_FS_POINT_IS_SYSVAL:
    case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
       return 0;
 
@@ -266,7 +274,8 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS:
       return 0;
 
-   case PIPE_CAP_TGSI_FS_FBFETCH:
+   case PIPE_CAP_FBFETCH:
+   case PIPE_CAP_FBFETCH_COHERENT:
    case PIPE_CAP_TGSI_MUL_ZERO_WINS:
    case PIPE_CAP_DOUBLES:
    case PIPE_CAP_INT64:
@@ -278,6 +287,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_TGSI_BALLOT:
    case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
    case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
+   case PIPE_CAP_TGSI_DIV:
       return 0;
 
    case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
@@ -289,6 +299,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_POST_DEPTH_COVERAGE:
    case PIPE_CAP_BINDLESS_TEXTURE:
    case PIPE_CAP_NIR_SAMPLERS_AS_DEREF:
+   case PIPE_CAP_NIR_COMPACT_ARRAYS:
    case PIPE_CAP_QUERY_SO_OVERFLOW:
    case PIPE_CAP_MEMOBJ:
    case PIPE_CAP_LOAD_CONSTBUF:
@@ -312,11 +323,20 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_POINTS_LINES:
    case PIPE_CAP_MAX_CONSERVATIVE_RASTER_SUBPIXEL_PRECISION_BIAS:
    case PIPE_CAP_CONSERVATIVE_RASTER_POST_DEPTH_COVERAGE:
+   case PIPE_CAP_CONSERVATIVE_RASTER_INNER_COVERAGE:
    case PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS:
    case PIPE_CAP_MAX_COMBINED_SHADER_BUFFERS:
    case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTERS:
    case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTER_BUFFERS:
    case PIPE_CAP_TGSI_ATOMFADD:
+   case PIPE_CAP_TGSI_SKIP_SHRINK_IO_ARRAYS:
+   case PIPE_CAP_IMAGE_LOAD_FORMATTED:
+   case PIPE_CAP_PREFER_COMPUTE_FOR_MULTIMEDIA:
+   case PIPE_CAP_FRAGMENT_SHADER_INTERLOCK:
+   case PIPE_CAP_CS_DERIVED_SYSTEM_VALUES_SUPPORTED:
+   case PIPE_CAP_ATOMIC_FLOAT_MINMAX:
+   case PIPE_CAP_SHADER_SAMPLES_IDENTICAL:
+   case PIPE_CAP_TGSI_ATOMINC_WRAP:
       return 0;
 
    case PIPE_CAP_MAX_GS_INVOCATIONS:
@@ -339,6 +359,25 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
 
    case PIPE_CAP_MAX_VARYINGS:
       return 8;
+
+   case PIPE_CAP_COMPUTE_GRID_INFO_LAST_BLOCK:
+      return 0;
+
+   case PIPE_CAP_COMPUTE_SHADER_DERIVATIVES:
+      return 0;
+
+   case PIPE_CAP_MAX_FRAMES_IN_FLIGHT:
+      return 1;
+
+   case PIPE_CAP_TEXTURE_SHADOW_LOD:
+      return 0;
+
+   case PIPE_CAP_DMABUF:
+#if defined(PIPE_OS_LINUX) || defined(PIPE_OS_BSD)
+      return 1;
+#else
+      return 0;
+#endif
 
    default:
       unreachable("bad PIPE_CAP_*");

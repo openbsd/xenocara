@@ -48,15 +48,12 @@ struct fd6_program_state {
 	struct ir3_shader_variant *bs;     /* binning pass vs */
 	struct ir3_shader_variant *vs;
 	struct ir3_shader_variant *fs;
+	struct fd_ringbuffer *config_stateobj;
 	struct fd_ringbuffer *binning_stateobj;
 	struct fd_ringbuffer *stateobj;
 
 	/* cached state about current emitted shader program (3d): */
 	struct fd6_streamout_state tf;
-
-	/* index and # of varyings: */
-	uint8_t fs_inputs[16];
-	uint8_t fs_inputs_count;
 
 	uint32_t vinterp[8];
 };

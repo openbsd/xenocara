@@ -403,9 +403,11 @@ static OMX_ERRORTYPE h264e_prc_create_encoder(void *ap_obj)
                                 PIPE_VIDEO_ENTRYPOINT_ENCODE, PIPE_VIDEO_CAP_SUPPORTED))
       return OMX_ErrorBadParameter;
 
-   priv->s_pipe = screen->context_create(screen, NULL, 0);
+   priv->s_pipe = pipe_create_multimedia_context(screen);
    if (!priv->s_pipe)
       return OMX_ErrorInsufficientResources;
+
+   enc_InitCompute_common(priv);
 
    if (!vl_compositor_init(&priv->compositor, priv->s_pipe)) {
       priv->s_pipe->destroy(priv->s_pipe);
@@ -420,7 +422,7 @@ static OMX_ERRORTYPE h264e_prc_create_encoder(void *ap_obj)
       return OMX_ErrorInsufficientResources;
    }
 
-   priv->t_pipe = screen->context_create(screen, NULL, 0);
+   priv->t_pipe = pipe_create_multimedia_context(screen);
    if (!priv->t_pipe)
       return OMX_ErrorInsufficientResources;
 
@@ -451,6 +453,7 @@ static void h264e_prc_destroy_encoder(void *ap_obj)
    if (priv->s_pipe) {
       vl_compositor_cleanup_state(&priv->cstate);
       vl_compositor_cleanup(&priv->compositor);
+      enc_ReleaseCompute_common(priv);
       priv->s_pipe->destroy(priv->s_pipe);
    }
 

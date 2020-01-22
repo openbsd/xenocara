@@ -31,7 +31,8 @@ struct pipe_fence_handle;
 struct winsys_handle;
 struct virgl_hw_res;
 
-#define VIRGL_MAX_CMDBUF_DWORDS (64 * 1024)
+#define VIRGL_MAX_TBUF_DWORDS 1024
+#define VIRGL_MAX_CMDBUF_DWORDS ((64 * 1024) + VIRGL_MAX_TBUF_DWORDS)
 
 struct virgl_drm_caps {
    union virgl_caps caps;
@@ -40,13 +41,12 @@ struct virgl_drm_caps {
 struct virgl_cmd_buf {
    unsigned cdw;
    uint32_t *buf;
-   int in_fence_fd;
-   bool needs_out_fence_fd;
 };
 
 struct virgl_winsys {
    unsigned pci_id;
    int supports_fences; /* In/Out fences are supported */
+   int supports_encoded_transfers; /* Encoded transfers are supported */
 
    void (*destroy)(struct virgl_winsys *vws);
 
@@ -70,10 +70,14 @@ struct virgl_winsys {
                                uint32_t last_level, uint32_t nr_samples,
                                uint32_t size);
 
-   void (*resource_unref)(struct virgl_winsys *vws, struct virgl_hw_res *res);
+   void (*resource_reference)(struct virgl_winsys *qws,
+                              struct virgl_hw_res **dres,
+                              struct virgl_hw_res *sres);
 
    void *(*resource_map)(struct virgl_winsys *vws, struct virgl_hw_res *res);
    void (*resource_wait)(struct virgl_winsys *vws, struct virgl_hw_res *res);
+   boolean (*resource_is_busy)(struct virgl_winsys *vws,
+                               struct virgl_hw_res *res);
 
    struct virgl_hw_res *(*resource_create_from_handle)(struct virgl_winsys *vws,
                                                        struct winsys_handle *whandle);
@@ -82,12 +86,12 @@ struct virgl_winsys {
                                   uint32_t stride,
                                   struct winsys_handle *whandle);
 
-   struct virgl_cmd_buf *(*cmd_buf_create)(struct virgl_winsys *ws);
+   struct virgl_cmd_buf *(*cmd_buf_create)(struct virgl_winsys *ws, uint32_t size);
    void (*cmd_buf_destroy)(struct virgl_cmd_buf *buf);
 
    void (*emit_res)(struct virgl_winsys *vws, struct virgl_cmd_buf *buf, struct virgl_hw_res *res, boolean write_buffer);
    int (*submit_cmd)(struct virgl_winsys *vws, struct virgl_cmd_buf *buf,
-                     int32_t in_fence_fd, int32_t *out_fence_fd);
+                     struct pipe_fence_handle **fence);
 
    boolean (*res_is_referenced)(struct virgl_winsys *vws,
                                 struct virgl_cmd_buf *buf,
@@ -152,4 +156,7 @@ static inline void virgl_ws_fill_new_caps_defaults(struct virgl_drm_caps *caps)
    caps->caps.v2.max_compute_shared_memory_size = 0;
    caps->caps.v2.host_feature_check_version = 0;
 }
+
+extern enum virgl_formats pipe_to_virgl_format(enum pipe_format format);
+
 #endif

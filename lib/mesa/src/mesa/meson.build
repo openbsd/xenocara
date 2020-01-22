@@ -249,6 +249,8 @@ files_libmesa_common = files(
   'main/shader_query.cpp',
   'main/shared.c',
   'main/shared.h',
+  'main/spirv_extensions.c',
+  'main/spirv_extensions.h',
   'main/state.c',
   'main/state.h',
   'main/stencil.c',
@@ -488,7 +490,6 @@ files_libmesa_gallium = files(
   'state_tracker/st_atom_sampler.c',
   'state_tracker/st_atom_scissor.c',
   'state_tracker/st_atom_shader.c',
-  'state_tracker/st_atom_shader.h',
   'state_tracker/st_atom_stipple.c',
   'state_tracker/st_atom_storagebuf.c',
   'state_tracker/st_atom_tess.c',
@@ -566,6 +567,8 @@ files_libmesa_gallium = files(
   'state_tracker/st_gen_mipmap.c',
   'state_tracker/st_gen_mipmap.h',
   'state_tracker/st_gl_api.h',
+  'state_tracker/st_glsl_to_ir.cpp',
+  'state_tracker/st_glsl_to_ir.h',
   'state_tracker/st_glsl_to_nir.cpp',
   'state_tracker/st_glsl_to_tgsi.cpp',
   'state_tracker/st_glsl_to_tgsi.h',
@@ -582,9 +585,9 @@ files_libmesa_gallium = files(
   'state_tracker/st_mesa_to_tgsi.c',
   'state_tracker/st_mesa_to_tgsi.h',
   'state_tracker/st_nir.h',
+  'state_tracker/st_nir_builtins.c',
   'state_tracker/st_nir_lower_builtin.c',
   'state_tracker/st_nir_lower_tex_src_plane.c',
-  'state_tracker/st_nir_lower_uniforms_to_ubo.c',
   'state_tracker/st_pbo.c',
   'state_tracker/st_pbo.h',
   'state_tracker/st_program.c',
@@ -597,27 +600,14 @@ files_libmesa_gallium = files(
   'state_tracker/st_shader_cache.h',
   'state_tracker/st_texture.c',
   'state_tracker/st_texture.h',
+  'state_tracker/st_tgsi_lower_depth_clamp.c',
+  'state_tracker/st_tgsi_lower_depth_clamp.h',
   'state_tracker/st_tgsi_lower_yuv.c',
   'state_tracker/st_tgsi_lower_yuv.h',
+  'state_tracker/st_util.h',
   'state_tracker/st_vdpau.c',
   'state_tracker/st_vdpau.h',
 )
-
-matypes_h = []
-if with_asm_arch == 'x86' or with_asm_arch == 'x86_64'
-  gen_matypes = executable(
-    'gen_matypes',
-    'x86/gen_matypes.c',
-    c_args : [c_vis_args, c_msvc_compat_args],
-    include_directories : inc_common,
-  )
-  matypes_h = custom_target(
-    'matypes.h',
-    output : 'matypes.h',
-    command : [gen_matypes],
-    capture : true,
-  )
-endif
 
 inc_libmesa_asm = []
 if with_asm_arch == 'x86'
@@ -705,7 +695,6 @@ files_libmesa_common += [
   main_dispatch_h,
   ir_expression_operation_h,
   main_remap_helper_h,
-  matypes_h,
   sha1_h,
 ]
 

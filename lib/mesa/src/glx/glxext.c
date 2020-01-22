@@ -214,6 +214,8 @@ FreeScreenConfigs(struct glx_display * priv)
    screens = ScreenCount(priv->dpy);
    for (i = 0; i < screens; i++) {
       psc = priv->screens[i];
+      if (!psc)
+         continue;
       glx_screen_cleanup(psc);
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
@@ -367,7 +369,6 @@ __glXInitializeVisualConfigFromTags(struct glx_config * config, int count,
                                     Bool fbconfig_style_tags)
 {
    int i;
-   GLint renderType = 0;
 
    if (!tagged_only) {
       /* Copy in the first set of properties */
@@ -375,7 +376,7 @@ __glXInitializeVisualConfigFromTags(struct glx_config * config, int count,
 
       config->visualType = convert_from_x_visual_type(*bp++);
 
-      config->rgbMode = *bp++;
+      config->renderType = *bp++ ? GLX_RGBA_BIT : GLX_COLOR_INDEX_BIT;
 
       config->redBits = *bp++;
       config->greenBits = *bp++;
@@ -419,7 +420,10 @@ __glXInitializeVisualConfigFromTags(struct glx_config * config, int count,
       
       switch (tag) {
       case GLX_RGBA:
-         FETCH_OR_SET(rgbMode);
+         if (fbconfig_style_tags)
+            config->renderType = *bp++ ? GLX_RGBA_BIT : GLX_COLOR_INDEX_BIT;
+         else
+            config->renderType = GLX_RGBA_BIT;
          break;
       case GLX_BUFFER_SIZE:
          config->rgbBits = *bp++;
@@ -501,7 +505,7 @@ __glXInitializeVisualConfigFromTags(struct glx_config * config, int count,
 #endif
          break;
       case GLX_RENDER_TYPE: /* fbconfig render type bits */
-         renderType = *bp++;
+         config->renderType = *bp++;
          break;
       case GLX_X_RENDERABLE:
          config->xRenderable = *bp++;
@@ -594,26 +598,13 @@ __glXInitializeVisualConfigFromTags(struct glx_config * config, int count,
       }
    }
 
-   if (renderType != 0 && renderType != GLX_DONT_CARE) {
-      config->renderType = renderType;
-      config->floatMode = (renderType &
-         (GLX_RGBA_FLOAT_BIT_ARB|GLX_RGBA_UNSIGNED_FLOAT_BIT_EXT)) != 0;
-   } else {
-      /* If there wasn't GLX_RENDER_TYPE property, set it based on
-       * config->rgbMode.  The only way to communicate that the config is
-       * floating-point is via GLX_RENDER_TYPE, so this cannot be a float
-       * config.
-       */
-      config->renderType =
-         (config->rgbMode) ? GLX_RGBA_BIT : GLX_COLOR_INDEX_BIT;
-   }
-
    /* The GLX_ARB_fbconfig_float spec says:
     *
     *     "Note that floating point rendering is only supported for
     *     GLXPbuffer drawables."
     */
-   if (config->floatMode)
+   if (config->renderType &
+       (GLX_RGBA_FLOAT_BIT_ARB|GLX_RGBA_UNSIGNED_FLOAT_BIT_EXT))
       config->drawableType &= GLX_PBUFFER_BIT;
 }
 
@@ -803,7 +794,7 @@ AllocAndFetchScreenConfigs(Display * dpy, struct glx_display * priv)
     ** First allocate memory for the array of per screen configs.
     */
    screens = ScreenCount(dpy);
-   priv->screens = malloc(screens * sizeof *priv->screens);
+   priv->screens = calloc(screens, sizeof *priv->screens);
    if (!priv->screens)
       return GL_FALSE;
 

@@ -38,7 +38,7 @@
 #include "tr_public.h"
 
 
-static boolean trace = FALSE;
+static bool trace = false;
 
 static const char *
 trace_screen_get_name(struct pipe_screen *_screen)
@@ -220,7 +220,7 @@ trace_screen_get_compute_param(struct pipe_screen *_screen,
 }
 
 
-static boolean
+static bool
 trace_screen_is_format_supported(struct pipe_screen *_screen,
                                  enum pipe_format format,
                                  enum pipe_texture_target target,
@@ -230,7 +230,7 @@ trace_screen_is_format_supported(struct pipe_screen *_screen,
 {
    struct trace_screen *tr_scr = trace_screen(_screen);
    struct pipe_screen *screen = tr_scr->screen;
-   boolean result;
+   bool result;
 
    trace_dump_call_begin("pipe_screen", "is_format_supported");
 
@@ -390,7 +390,7 @@ trace_screen_check_resource_capability(struct pipe_screen *_screen,
    return screen->check_resource_capability(screen, resource, bind);
 }
 
-static boolean
+static bool
 trace_screen_resource_get_handle(struct pipe_screen *_screen,
                                  struct pipe_context *_pipe,
                                 struct pipe_resource *resource,
@@ -405,6 +405,41 @@ trace_screen_resource_get_handle(struct pipe_screen *_screen,
 
    return screen->resource_get_handle(screen, tr_pipe ? tr_pipe->pipe : NULL,
                                       resource, handle, usage);
+}
+
+static bool
+trace_screen_resource_get_param(struct pipe_screen *_screen,
+                                struct pipe_context *_pipe,
+                                struct pipe_resource *resource,
+                                unsigned plane,
+                                unsigned layer,
+                                enum pipe_resource_param param,
+                                unsigned handle_usage,
+                                uint64_t *value)
+{
+   struct trace_screen *tr_screen = trace_screen(_screen);
+   struct trace_context *tr_pipe = _pipe ? trace_context(_pipe) : NULL;
+   struct pipe_screen *screen = tr_screen->screen;
+
+   /* TODO trace call */
+
+   return screen->resource_get_param(screen, tr_pipe ? tr_pipe->pipe : NULL,
+                                     resource, plane, layer, param,
+                                     handle_usage, value);
+}
+
+static void
+trace_screen_resource_get_info(struct pipe_screen *_screen,
+                               struct pipe_resource *resource,
+                               unsigned *stride,
+                               unsigned *offset)
+{
+   struct trace_screen *tr_screen = trace_screen(_screen);
+   struct pipe_screen *screen = tr_screen->screen;
+
+   /* TODO trace call */
+
+   screen->resource_get_info(screen, resource, stride, offset);
 }
 
 static struct pipe_resource *
@@ -495,7 +530,30 @@ trace_screen_fence_reference(struct pipe_screen *_screen,
 }
 
 
-static boolean
+static int
+trace_screen_fence_get_fd(struct pipe_screen *_screen,
+                          struct pipe_fence_handle *fence)
+{
+   struct trace_screen *tr_scr = trace_screen(_screen);
+   struct pipe_screen *screen = tr_scr->screen;
+   int result;
+
+   trace_dump_call_begin("pipe_screen", "fence_get_fd");
+
+   trace_dump_arg(ptr, screen);
+   trace_dump_arg(ptr, fence);
+
+   result = screen->fence_get_fd(screen, fence);
+
+   trace_dump_ret(int, result);
+
+   trace_dump_call_end();
+
+   return result;
+}
+
+
+static bool
 trace_screen_fence_finish(struct pipe_screen *_screen,
                           struct pipe_context *_ctx,
                           struct pipe_fence_handle *fence,
@@ -600,18 +658,18 @@ trace_screen_destroy(struct pipe_screen *_screen)
    FREE(tr_scr);
 }
 
-boolean
+bool
 trace_enabled(void)
 {
-   static boolean firstrun = TRUE;
+   static bool firstrun = true;
 
    if (!firstrun)
       return trace;
-   firstrun = FALSE;
+   firstrun = false;
 
    if(trace_dump_trace_begin()) {
       trace_dumping_start();
-      trace = TRUE;
+      trace = true;
    }
 
    return trace;
@@ -650,10 +708,13 @@ trace_screen_create(struct pipe_screen *screen)
    tr_scr->base.resource_from_handle = trace_screen_resource_from_handle;
    SCR_INIT(check_resource_capability);
    tr_scr->base.resource_get_handle = trace_screen_resource_get_handle;
+   SCR_INIT(resource_get_param);
+   SCR_INIT(resource_get_info);
    SCR_INIT(resource_from_memobj);
    SCR_INIT(resource_changed);
    tr_scr->base.resource_destroy = trace_screen_resource_destroy;
    tr_scr->base.fence_reference = trace_screen_fence_reference;
+   SCR_INIT(fence_get_fd);
    tr_scr->base.fence_finish = trace_screen_fence_finish;
    SCR_INIT(memobj_create_from_handle);
    SCR_INIT(memobj_destroy);

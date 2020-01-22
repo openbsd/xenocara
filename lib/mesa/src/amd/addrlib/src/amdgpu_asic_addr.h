@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2018 Advanced Micro Devices, Inc.
+ * Copyright © 2017-2019 Advanced Micro Devices, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -43,6 +43,7 @@
 #define FAMILY_CZ      0x87
 #define FAMILY_AI      0x8D
 #define FAMILY_RV      0x8E
+#define FAMILY_NV      0x8F
 
 // AMDGPU_FAMILY_IS(familyId, familyName)
 #define FAMILY_IS(f, fn)     (f == FAMILY_##fn)
@@ -55,6 +56,7 @@
 #define FAMILY_IS_CZ(f)      FAMILY_IS(f, CZ)
 #define FAMILY_IS_AI(f)      FAMILY_IS(f, AI)
 #define FAMILY_IS_RV(f)      FAMILY_IS(f, RV)
+#define FAMILY_IS_NV(f)      FAMILY_IS(f, NV)
 
 #define AMDGPU_UNKNOWN          0xFF
 
@@ -75,22 +77,26 @@
 #define AMDGPU_ICELAND_RANGE    0x01, 0x14
 #define AMDGPU_TONGA_RANGE      0x14, 0x28
 #define AMDGPU_FIJI_RANGE       0x3C, 0x50
-
 #define AMDGPU_POLARIS10_RANGE  0x50, 0x5A
 #define AMDGPU_POLARIS11_RANGE  0x5A, 0x64
 #define AMDGPU_POLARIS12_RANGE  0x64, 0x6E
 #define AMDGPU_VEGAM_RANGE      0x6E, 0xFF
 
 #define AMDGPU_CARRIZO_RANGE    0x01, 0x21
-#define AMDGPU_BRISTOL_RANGE    0x10, 0x21
 #define AMDGPU_STONEY_RANGE     0x61, 0xFF
 
 #define AMDGPU_VEGA10_RANGE     0x01, 0x14
 #define AMDGPU_VEGA12_RANGE     0x14, 0x28
-#define AMDGPU_VEGA20_RANGE     0x28, 0xFF
+#define AMDGPU_VEGA20_RANGE     0x28, 0x32
+#define AMDGPU_ARCTURUS_RANGE   0x32, 0xFF
 
 #define AMDGPU_RAVEN_RANGE      0x01, 0x81
-#define AMDGPU_RAVEN2_RANGE     0x81, 0xFF
+#define AMDGPU_RAVEN2_RANGE     0x81, 0x91
+#define AMDGPU_RENOIR_RANGE     0x91, 0xFF
+
+#define AMDGPU_NAVI10_RANGE     0x01, 0x0A
+#define AMDGPU_NAVI12_RANGE     0x0A, 0x14
+#define AMDGPU_NAVI14_RANGE     0x14, 0x28
 
 #define AMDGPU_EXPAND_FIX(x) x
 #define AMDGPU_RANGE_HELPER(val, min, max) ((val >= min) && (val < max))
@@ -122,7 +128,6 @@
 #define ASICREV_IS_VEGAM_P(r)          ASICREV_IS(r, VEGAM)
 
 #define ASICREV_IS_CARRIZO(r)          ASICREV_IS(r, CARRIZO)
-#define ASICREV_IS_CARRIZO_BRISTOL(r)  ASICREV_IS(r, BRISTOL)
 #define ASICREV_IS_STONEY(r)           ASICREV_IS(r, STONEY)
 
 #define ASICREV_IS_VEGA10_M(r)         ASICREV_IS(r, VEGA10)
@@ -130,8 +135,14 @@
 #define ASICREV_IS_VEGA12_P(r)         ASICREV_IS(r, VEGA12)
 #define ASICREV_IS_VEGA12_p(r)         ASICREV_IS(r, VEGA12)
 #define ASICREV_IS_VEGA20_P(r)         ASICREV_IS(r, VEGA20)
+#define ASICREV_IS_ARCTURUS(r)         ASICREV_IS(r, ARCTURUS)
 
 #define ASICREV_IS_RAVEN(r)            ASICREV_IS(r, RAVEN)
 #define ASICREV_IS_RAVEN2(r)           ASICREV_IS(r, RAVEN2)
+#define ASICREV_IS_RENOIR(r)           ASICREV_IS(r, RENOIR)
+
+#define ASICREV_IS_NAVI10_P(r)         ASICREV_IS(r, NAVI10)
+#define ASICREV_IS_NAVI12(r)           ASICREV_IS(r, NAVI12)
+#define ASICREV_IS_NAVI14(r)           ASICREV_IS(r, NAVI14)
 
 #endif // _AMDGPU_ASIC_ADDR_H

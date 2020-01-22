@@ -96,8 +96,8 @@ add_fetch_rgba_test(struct gallivm_state *gallivm, unsigned verbose,
    LLVMValueRef rgba;
    LLVMValueRef cache = NULL;
 
-   util_snprintf(name, sizeof name, "fetch_%s_%s", desc->short_name,
-                 type.floating ? "float" : "unorm8");
+   snprintf(name, sizeof name, "fetch_%s_%s", desc->short_name,
+            type.floating ? "float" : "unorm8");
 
    args[0] = LLVMPointerType(lp_build_vec_type(gallivm, type), 0);
    args[1] = LLVMPointerType(LLVMInt8TypeInContext(context), 0);
@@ -382,7 +382,7 @@ test_all(unsigned verbose, FILE *fp)
          }
 
          if (util_format_is_pure_integer(format))
-	    continue;
+            continue;
 
          /* only have util fetch func for etc1 */
          if (format_desc->layout == UTIL_FORMAT_LAYOUT_ETC &&
@@ -391,7 +391,8 @@ test_all(unsigned verbose, FILE *fp)
          }
 
          /* missing fetch funcs */
-         if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC) {
+         if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC ||
+             format_desc->layout == UTIL_FORMAT_LAYOUT_ATC) {
             continue;
          }
 
@@ -401,7 +402,7 @@ test_all(unsigned verbose, FILE *fp)
          }
 
          if (!test_one(verbose, fp, format_desc, use_cache)) {
-              success = FALSE;
+            success = FALSE;
          }
       }
    }

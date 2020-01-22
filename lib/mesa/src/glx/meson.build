@@ -1,4 +1,4 @@
-# Copyright © 2017 Intel Corporation
+# Copyright © 2017-2019 Intel Corporation
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,7 @@ extra_libs_libglx = []
 extra_deps_libgl = []
 extra_ld_args_libgl = []
 
-if with_dri
+if with_glx == 'dri'
   files_libglx += files(
     'dri_common.c',
     'dri_common.h',
@@ -83,7 +83,7 @@ if with_dri
 endif
 
 # dri2
-if with_dri and with_dri_platform == 'drm' and dep_libdrm.found()
+if with_glx == 'dri' and with_dri_platform == 'drm' and dep_libdrm.found()
   files_libglx += files(
     'dri2.c',
     'dri2_glx.c',
@@ -139,16 +139,19 @@ gl_lib_cargs = [
 libglx = static_library(
   'glx',
   [files_libglx, glx_generated],
-  include_directories : [inc_common, inc_glapi, inc_loader, inc_gl_internal],
+  include_directories : [inc_common, inc_glapi, inc_loader],
   c_args : [
     c_vis_args, gl_lib_cargs,
     '-DGL_LIB_NAME="lib@0@.so.@1@"'.format(gl_lib_name, gl_lib_version.split('.')[0]),
   ],
   link_with : [
-    libloader, libloader_dri3_helper, libmesa_util, libxmlconfig,
+    libloader, libloader_dri3_helper,
     extra_libs_libglx,
   ],
-  dependencies : [dep_libdrm, dep_dri2proto, dep_glproto, dep_x11, dep_glvnd],
+  dependencies : [
+    idep_mesautil, idep_xmlconfig,
+    dep_libdrm, dep_dri2proto, dep_glproto, dep_x11, dep_glvnd,
+  ],
 )
 
 libgl = shared_library(

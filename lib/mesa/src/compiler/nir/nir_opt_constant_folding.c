@@ -41,7 +41,7 @@ struct constant_fold_state {
 static bool
 constant_fold_alu_instr(nir_alu_instr *instr, void *mem_ctx)
 {
-   nir_const_value src[NIR_MAX_VEC_COMPONENTS];
+   nir_const_value src[NIR_MAX_VEC_COMPONENTS][NIR_MAX_VEC_COMPONENTS];
 
    if (!instr->dest.dest.is_ssa)
       return false;
@@ -75,25 +75,7 @@ constant_fold_alu_instr(nir_alu_instr *instr, void *mem_ctx)
 
       for (unsigned j = 0; j < nir_ssa_alu_instr_src_components(instr, i);
            j++) {
-         switch(load_const->def.bit_size) {
-         case 64:
-            src[i].u64[j] = load_const->value.u64[instr->src[i].swizzle[j]];
-            break;
-         case 32:
-            src[i].u32[j] = load_const->value.u32[instr->src[i].swizzle[j]];
-            break;
-         case 16:
-            src[i].u16[j] = load_const->value.u16[instr->src[i].swizzle[j]];
-            break;
-         case 8:
-            src[i].u8[j] = load_const->value.u8[instr->src[i].swizzle[j]];
-            break;
-         case 1:
-            src[i].b[j] = load_const->value.b[instr->src[i].swizzle[j]];
-            break;
-         default:
-            unreachable("Invalid bit size");
-         }
+         src[i][j] = load_const->value[instr->src[i].swizzle[j]];
       }
 
       /* We shouldn't have any source modifiers in the optimization loop. */
@@ -106,16 +88,20 @@ constant_fold_alu_instr(nir_alu_instr *instr, void *mem_ctx)
    /* We shouldn't have any saturate modifiers in the optimization loop. */
    assert(!instr->dest.saturate);
 
-   nir_const_value dest =
-      nir_eval_const_opcode(instr->op, instr->dest.dest.ssa.num_components,
-                            bit_size, src);
+   nir_const_value dest[NIR_MAX_VEC_COMPONENTS];
+   nir_const_value *srcs[NIR_MAX_VEC_COMPONENTS];
+   memset(dest, 0, sizeof(dest));
+   for (unsigned i = 0; i < nir_op_infos[instr->op].num_inputs; ++i)
+      srcs[i] = src[i];
+   nir_eval_const_opcode(instr->op, dest, instr->dest.dest.ssa.num_components,
+                         bit_size, srcs);
 
    nir_load_const_instr *new_instr =
       nir_load_const_instr_create(mem_ctx,
                                   instr->dest.dest.ssa.num_components,
                                   instr->dest.dest.ssa.bit_size);
 
-   new_instr->value = dest;
+   memcpy(new_instr->value, dest, sizeof(*new_instr->value) * new_instr->def.num_components);
 
    nir_instr_insert_before(&instr->instr, &new_instr->instr);
 
@@ -133,7 +119,8 @@ constant_fold_intrinsic_instr(nir_intrinsic_instr *instr)
 {
    bool progress = false;
 
-   if (instr->intrinsic == nir_intrinsic_discard_if &&
+   if ((instr->intrinsic == nir_intrinsic_demote_if ||
+        instr->intrinsic == nir_intrinsic_discard_if) &&
        nir_src_is_const(instr->src[0])) {
       if (nir_src_as_bool(instr->src[0])) {
          /* This method of getting a nir_shader * from a nir_instr is
@@ -145,9 +132,11 @@ constant_fold_intrinsic_instr(nir_intrinsic_instr *instr)
          nir_function_impl *impl = nir_cf_node_get_function(cf_node);
          nir_shader *shader = impl->function->shader;
 
-         nir_intrinsic_instr *discard =
-            nir_intrinsic_instr_create(shader, nir_intrinsic_discard);
-         nir_instr_insert_before(&instr->instr, &discard->instr);
+         nir_intrinsic_op op = instr->intrinsic == nir_intrinsic_discard_if ?
+                               nir_intrinsic_discard :
+                               nir_intrinsic_demote;
+         nir_intrinsic_instr *new_instr = nir_intrinsic_instr_create(shader, op);
+         nir_instr_insert_before(&instr->instr, &new_instr->instr);
          nir_instr_remove(&instr->instr);
          progress = true;
       } else {

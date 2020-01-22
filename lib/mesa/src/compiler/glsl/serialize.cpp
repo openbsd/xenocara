@@ -435,7 +435,11 @@ write_uniforms(struct blob *metadata, struct gl_shader_program *prog)
    for (unsigned i = 0; i < prog->data->NumUniformStorage; i++) {
       encode_type_to_blob(metadata, prog->data->UniformStorage[i].type);
       blob_write_uint32(metadata, prog->data->UniformStorage[i].array_elements);
-      blob_write_string(metadata, prog->data->UniformStorage[i].name);
+      if (prog->data->UniformStorage[i].name) {
+         blob_write_string(metadata, prog->data->UniformStorage[i].name);
+      } else {
+         blob_write_string(metadata, "");
+      }
       blob_write_uint32(metadata, prog->data->UniformStorage[i].builtin);
       blob_write_uint32(metadata, prog->data->UniformStorage[i].remap_location);
       blob_write_uint32(metadata, prog->data->UniformStorage[i].block_index);
@@ -786,7 +790,11 @@ write_program_resource_data(struct blob *metadata,
       encode_type_to_blob(metadata, var->interface_type);
       encode_type_to_blob(metadata, var->outermost_struct_type);
 
-      blob_write_string(metadata, var->name);
+      if (var->name) {
+         blob_write_string(metadata, var->name);
+      } else {
+         blob_write_string(metadata, "");
+      }
 
       size_t s_var_size, s_var_ptrs;
       get_shader_var_and_pointer_sizes(&s_var_size, &s_var_ptrs, var);
@@ -1065,6 +1073,7 @@ write_shader_metadata(struct blob *metadata, gl_linked_shader *shader)
                     sizeof(glprog->sh.SamplerTargets));
    blob_write_uint32(metadata, glprog->ShadowSamplers);
    blob_write_uint32(metadata, glprog->ExternalSamplersUsed);
+   blob_write_uint32(metadata, glprog->sh.ShaderStorageBlocksWriteAccess);
 
    blob_write_bytes(metadata, glprog->sh.ImageAccess,
                     sizeof(glprog->sh.ImageAccess));
@@ -1119,6 +1128,7 @@ read_shader_metadata(struct blob_reader *metadata,
                    sizeof(glprog->sh.SamplerTargets));
    glprog->ShadowSamplers = blob_read_uint32(metadata);
    glprog->ExternalSamplersUsed = blob_read_uint32(metadata);
+   glprog->sh.ShaderStorageBlocksWriteAccess = blob_read_uint32(metadata);
 
    blob_copy_bytes(metadata, (uint8_t *) glprog->sh.ImageAccess,
                    sizeof(glprog->sh.ImageAccess));

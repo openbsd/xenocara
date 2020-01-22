@@ -48,7 +48,7 @@ struct wsi_swapchain {
 
    VkDevice device;
    VkAllocationCallbacks alloc;
-   VkFence fences[3];
+   VkFence* fences;
    VkPresentModeKHR present_mode;
    uint32_t image_count;
 
@@ -79,6 +79,10 @@ wsi_swapchain_init(const struct wsi_device *wsi,
                    const VkSwapchainCreateInfoKHR *pCreateInfo,
                    const VkAllocationCallbacks *pAllocator);
 
+enum VkPresentModeKHR
+wsi_swapchain_get_present_mode(struct wsi_device *wsi,
+                               const VkSwapchainCreateInfoKHR *pCreateInfo);
+
 void wsi_swapchain_finish(struct wsi_swapchain *chain);
 
 VkResult
@@ -106,6 +110,7 @@ struct wsi_interface {
                            uint32_t queueFamilyIndex,
                            VkBool32* pSupported);
    VkResult (*get_capabilities2)(VkIcdSurfaceBase *surface,
+                                 struct wsi_device *wsi_device,
                                  const void *info_next,
                                  VkSurfaceCapabilities2KHR* pSurfaceCapabilities);
    VkResult (*get_formats)(VkIcdSurfaceBase *surface,
@@ -133,7 +138,8 @@ struct wsi_interface {
 };
 
 VkResult wsi_x11_init_wsi(struct wsi_device *wsi_device,
-                          const VkAllocationCallbacks *alloc);
+                          const VkAllocationCallbacks *alloc,
+                          const struct driOptionCache *dri_options);
 void wsi_x11_finish_wsi(struct wsi_device *wsi_device,
                         const VkAllocationCallbacks *alloc);
 VkResult wsi_wl_init_wsi(struct wsi_device *wsi_device,

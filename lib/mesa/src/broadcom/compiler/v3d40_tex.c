@@ -48,8 +48,7 @@ vir_WRTMUC(struct v3d_compile *c, enum quniform_contents contents, uint32_t data
 {
         struct qinst *inst = vir_NOP(c);
         inst->qpu.sig.wrtmuc = true;
-        inst->has_implicit_uniform = true;
-        inst->src[0] = vir_uniform(c, contents, data);
+        inst->uniform = vir_get_uniform_index(c, contents, data);
 }
 
 static const struct V3D41_TMU_CONFIG_PARAMETER_1 p1_unpacked_default = {
@@ -139,14 +138,13 @@ v3d40_vir_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
 
                 case nir_tex_src_offset: {
                         if (nir_src_is_const(instr->src[i].src)) {
-                                nir_const_value *offset =
-                                        nir_src_as_const_value(instr->src[i].src);
-
-                                p2_unpacked.offset_s = offset->i32[0];
+                                p2_unpacked.offset_s = nir_src_comp_as_int(instr->src[i].src, 0);
                                 if (instr->coord_components >= 2)
-                                        p2_unpacked.offset_t = offset->i32[1];
-                                if (instr->coord_components >= 3)
-                                        p2_unpacked.offset_r = offset->i32[2];
+                                        p2_unpacked.offset_t =
+                                                nir_src_comp_as_int(instr->src[i].src, 1);
+                                if (non_array_components >= 3)
+                                        p2_unpacked.offset_r =
+                                                nir_src_comp_as_int(instr->src[i].src, 2);
                         } else {
                                 struct qreg mask = vir_uniform_ui(c, 0xf);
                                 struct qreg x, y, offset;
@@ -184,6 +182,8 @@ v3d40_vir_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
                p0_unpacked.return_words_of_texture_data < (1 << 4));
         assert(p1_unpacked.output_type_32_bit ||
                p0_unpacked.return_words_of_texture_data < (1 << 2));
+
+        assert(p0_unpacked.return_words_of_texture_data != 0);
 
         uint32_t p0_packed;
         V3D41_TMU_CONFIG_PARAMETER_0_pack(NULL,
@@ -243,6 +243,34 @@ type_size_align_1(const struct glsl_type *type, unsigned *size, unsigned *align)
         *align = 1;
 }
 
+static uint32_t
+v3d40_image_load_store_tmu_op(nir_intrinsic_instr *instr)
+{
+        switch (instr->intrinsic) {
+        case nir_intrinsic_image_deref_load:
+        case nir_intrinsic_image_deref_store:
+                return V3D_TMU_OP_REGULAR;
+        case nir_intrinsic_image_deref_atomic_add:
+                return v3d_get_op_for_atomic_add(instr, 3);
+        case nir_intrinsic_image_deref_atomic_min:
+                return V3D_TMU_OP_WRITE_UMIN_FULL_L1_CLEAR;
+        case nir_intrinsic_image_deref_atomic_max:
+                return V3D_TMU_OP_WRITE_UMAX;
+        case nir_intrinsic_image_deref_atomic_and:
+                return V3D_TMU_OP_WRITE_AND_READ_INC;
+        case nir_intrinsic_image_deref_atomic_or:
+                return V3D_TMU_OP_WRITE_OR_READ_DEC;
+        case nir_intrinsic_image_deref_atomic_xor:
+                return V3D_TMU_OP_WRITE_XOR_READ_NOT;
+        case nir_intrinsic_image_deref_atomic_exchange:
+                return V3D_TMU_OP_WRITE_XCHG_READ_FLUSH;
+        case nir_intrinsic_image_deref_atomic_comp_swap:
+                return V3D_TMU_OP_WRITE_CMPXCHG_READ_FLUSH;
+        default:
+                unreachable("unknown image intrinsic");
+        };
+}
+
 void
 v3d40_vir_emit_image_load_store(struct v3d_compile *c,
                                 nir_intrinsic_instr *instr)
@@ -264,42 +292,15 @@ v3d40_vir_emit_image_load_store(struct v3d_compile *c,
 
         struct V3D41_TMU_CONFIG_PARAMETER_2 p2_unpacked = { 0 };
 
-        /* XXX perf: We should turn add/sub of 1 to inc/dec.  Perhaps NIR
-         * wants to have support for inc/dec?
-         */
-        switch (instr->intrinsic) {
-        case nir_intrinsic_image_deref_load:
-        case nir_intrinsic_image_deref_store:
-                p2_unpacked.op = V3D_TMU_OP_REGULAR;
-                break;
-        case nir_intrinsic_image_deref_atomic_add:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_ADD_READ_PREFETCH;
-                break;
-        case nir_intrinsic_image_deref_atomic_min:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_UMIN_FULL_L1_CLEAR;
-                break;
+        p2_unpacked.op = v3d40_image_load_store_tmu_op(instr);
 
-        case nir_intrinsic_image_deref_atomic_max:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_UMAX;
-                break;
-        case nir_intrinsic_image_deref_atomic_and:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_AND_READ_INC;
-                break;
-        case nir_intrinsic_image_deref_atomic_or:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_OR_READ_DEC;
-                break;
-        case nir_intrinsic_image_deref_atomic_xor:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_XOR_READ_NOT;
-                break;
-        case nir_intrinsic_image_deref_atomic_exchange:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_XCHG_READ_FLUSH;
-                break;
-        case nir_intrinsic_image_deref_atomic_comp_swap:
-                p2_unpacked.op = V3D_TMU_OP_WRITE_CMPXCHG_READ_FLUSH;
-                break;
-        default:
-                unreachable("unknown image intrinsic");
-        };
+        /* If we were able to replace atomic_add for an inc/dec, then we
+         * need/can to do things slightly different, like not loading the
+         * amount to add/sub, as that is implicit.
+         */
+        bool atomic_add_replaced = (instr->intrinsic == nir_intrinsic_image_deref_atomic_add &&
+                                    (p2_unpacked.op == V3D_TMU_OP_WRITE_AND_READ_INC ||
+                                     p2_unpacked.op == V3D_TMU_OP_WRITE_OR_READ_DEC));
 
         bool is_1d = false;
         switch (glsl_get_sampler_dim(sampler_type)) {
@@ -368,7 +369,8 @@ v3d40_vir_emit_image_load_store(struct v3d_compile *c,
                 vir_WRTMUC(c, QUNIFORM_CONSTANT, p2_packed);
 
         /* Emit the data writes for atomics or image store. */
-        if (instr->intrinsic != nir_intrinsic_image_deref_load) {
+        if (instr->intrinsic != nir_intrinsic_image_deref_load &&
+            !atomic_add_replaced) {
                 /* Vector for stores, or first atomic argument */
                 struct qreg src[4];
                 for (int i = 0; i < nir_intrinsic_src_components(instr, 3); i++) {
@@ -386,8 +388,20 @@ v3d40_vir_emit_image_load_store(struct v3d_compile *c,
                 }
         }
 
+        if (vir_in_nonuniform_control_flow(c) &&
+            instr->intrinsic != nir_intrinsic_image_deref_load) {
+           vir_set_pf(vir_MOV_dest(c, vir_nop_reg(), c->execute),
+                      V3D_QPU_PF_PUSHZ);
+        }
+
         vir_TMU_WRITE(c, V3D_QPU_WADDR_TMUSF, ntq_get_src(c, instr->src[1], 0),
                       &tmu_writes);
+
+        if (vir_in_nonuniform_control_flow(c) &&
+            instr->intrinsic != nir_intrinsic_image_deref_load) {
+           struct qinst *last_inst= (struct  qinst *)c->cur_block->instructions.prev;
+           vir_set_cond(last_inst, V3D_QPU_COND_IFA);
+        }
 
         vir_emit_thrsw(c);
 

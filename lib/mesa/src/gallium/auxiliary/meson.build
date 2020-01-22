@@ -129,14 +129,10 @@ files_libgallium = files(
   'pipebuffer/pb_buffer_fenced.c',
   'pipebuffer/pb_buffer_fenced.h',
   'pipebuffer/pb_buffer.h',
-  'pipebuffer/pb_buffer_malloc.c',
-  'pipebuffer/pb_bufmgr_alt.c',
   'pipebuffer/pb_bufmgr_cache.c',
   'pipebuffer/pb_bufmgr_debug.c',
   'pipebuffer/pb_bufmgr.h',
   'pipebuffer/pb_bufmgr_mm.c',
-  'pipebuffer/pb_bufmgr_ondemand.c',
-  'pipebuffer/pb_bufmgr_pool.c',
   'pipebuffer/pb_bufmgr_slab.c',
   'pipebuffer/pb_cache.c',
   'pipebuffer/pb_cache.h',
@@ -238,6 +234,8 @@ files_libgallium = files(
   'util/u_box.h',
   'util/u_cache.c',
   'util/u_cache.h',
+  'util/u_compute.c',
+  'util/u_compute.h',
   'util/u_debug_gallium.h',
   'util/u_debug_gallium.c',
   'util/u_debug_describe.c',
@@ -323,8 +321,6 @@ files_libgallium = files(
   'util/u_rect.h',
   'util/u_resource.c',
   'util/u_resource.h',
-  'util/u_ringbuffer.c',
-  'util/u_ringbuffer.h',
   'util/u_sampler.c',
   'util/u_sampler.h',
   'util/u_screen.c',
@@ -445,6 +441,10 @@ files_libgalliumvl = files(
   'vl/vl_bicubic_filter.h',
   'vl/vl_compositor.c',
   'vl/vl_compositor.h',
+  'vl/vl_compositor_gfx.c',
+  'vl/vl_compositor_gfx.h',
+  'vl/vl_compositor_cs.c',
+  'vl/vl_compositor_cs.h',
   'vl/vl_csc.c',
   'vl/vl_csc.h',
   'vl/vl_decoder.c',
@@ -477,7 +477,8 @@ files_libgalliumvl = files(
 )
 
 vlwinsys_deps = []
-files_libgalliumvlwinsys = files('vl/vl_winsys.h')
+files_libgalliumvlwinsys = files('vl/vl_winsys.h',
+                                 'vl/vl_winsys_drm.c')
 if with_dri2 and with_platform_x11
   files_libgalliumvlwinsys += files('vl/vl_winsys_dri.c')
   if with_dri3
@@ -487,9 +488,6 @@ if with_dri2 and with_platform_x11
     ]
     files_libgalliumvlwinsys += files('vl/vl_winsys_dri3.c')
   endif
-endif
-if with_platform_drm
-  files_libgalliumvlwinsys += files('vl/vl_winsys_drm.c')
 endif
 
 u_indices_gen_c = custom_target(
@@ -530,6 +528,9 @@ libgallium = static_library(
     idep_nir_headers,
   ],
   build_by_default : false,
+  link_with: [
+    libglsl
+  ]
 )
 
 libgalliumvl_stub = static_library(

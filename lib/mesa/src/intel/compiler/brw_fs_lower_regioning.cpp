@@ -127,20 +127,37 @@ namespace {
    has_invalid_src_region(const gen_device_info *devinfo, const fs_inst *inst,
                           unsigned i)
    {
-      if (is_unordered(inst) || inst->is_control_source(i)) {
+      if (is_unordered(inst) || inst->is_control_source(i))
          return false;
-      } else {
-         const unsigned dst_byte_stride = inst->dst.stride * type_sz(inst->dst.type);
-         const unsigned src_byte_stride = inst->src[i].stride *
-            type_sz(inst->src[i].type);
-         const unsigned dst_byte_offset = reg_offset(inst->dst) % REG_SIZE;
-         const unsigned src_byte_offset = reg_offset(inst->src[i]) % REG_SIZE;
 
-         return has_dst_aligned_region_restriction(devinfo, inst) &&
-                !is_uniform(inst->src[i]) &&
-                (src_byte_stride != dst_byte_stride ||
-                 src_byte_offset != dst_byte_offset);
+      /* Empirical testing shows that Broadwell has a bug affecting half-float
+       * MAD instructions when any of its sources has a non-zero offset, such
+       * as:
+       *
+       * mad(8) g18<1>HF -g17<4,4,1>HF g14.8<4,4,1>HF g11<4,4,1>HF { align16 1Q };
+       *
+       * We used to generate code like this for SIMD8 executions where we
+       * used to pack components Y and W of a vector at offset 16B of a SIMD
+       * register. The problem doesn't occur if the stride of the source is 0.
+       */
+      if (devinfo->gen == 8 &&
+          inst->opcode == BRW_OPCODE_MAD &&
+          inst->src[i].type == BRW_REGISTER_TYPE_HF &&
+          reg_offset(inst->src[i]) % REG_SIZE > 0 &&
+          inst->src[i].stride != 0) {
+         return true;
       }
+
+      const unsigned dst_byte_stride = inst->dst.stride * type_sz(inst->dst.type);
+      const unsigned src_byte_stride = inst->src[i].stride *
+         type_sz(inst->src[i].type);
+      const unsigned dst_byte_offset = reg_offset(inst->dst) % REG_SIZE;
+      const unsigned src_byte_offset = reg_offset(inst->src[i]) % REG_SIZE;
+
+      return has_dst_aligned_region_restriction(devinfo, inst) &&
+             !is_uniform(inst->src[i]) &&
+             (src_byte_stride != dst_byte_stride ||
+              src_byte_offset != dst_byte_offset);
    }
 
    /*
@@ -271,7 +288,9 @@ namespace {
       const unsigned stride =
          type_sz(inst->dst.type) * inst->dst.stride <= type_sz(type) ? 1 :
          type_sz(inst->dst.type) * inst->dst.stride / type_sz(type);
-      const fs_reg tmp = horiz_stride(ibld.vgrf(type, stride), stride);
+      fs_reg tmp = ibld.vgrf(type, stride);
+      ibld.UNDEF(tmp);
+      tmp = horiz_stride(tmp, stride);
 
       /* Emit a MOV taking care of all the destination modifiers. */
       fs_inst *mov = ibld.at(block, inst->next).MOV(inst->dst, tmp);
@@ -312,8 +331,9 @@ namespace {
       const unsigned stride = type_sz(inst->dst.type) * inst->dst.stride /
                               type_sz(inst->src[i].type);
       assert(stride > 0);
-      const fs_reg tmp = horiz_stride(ibld.vgrf(inst->src[i].type, stride),
-                                      stride);
+      fs_reg tmp = ibld.vgrf(inst->src[i].type, stride);
+      ibld.UNDEF(tmp);
+      tmp = horiz_stride(tmp, stride);
 
       /* Emit a series of 32-bit integer copies with any source modifiers
        * cleaned up (because their semantics are dependent on the type).
@@ -360,8 +380,9 @@ namespace {
       const unsigned stride = required_dst_byte_stride(inst) /
                               type_sz(inst->dst.type);
       assert(stride > 0);
-      const fs_reg tmp = horiz_stride(ibld.vgrf(inst->dst.type, stride),
-                                      stride);
+      fs_reg tmp = ibld.vgrf(inst->dst.type, stride);
+      ibld.UNDEF(tmp);
+      tmp = horiz_stride(tmp, stride);
 
       /* Emit a series of 32-bit integer copies from the temporary into the
        * original destination.

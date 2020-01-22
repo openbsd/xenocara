@@ -37,7 +37,7 @@
 #include "rbug_context.h"
 #include "rbug_objects.h"
 
-DEBUG_GET_ONCE_BOOL_OPTION(rbug, "GALLIUM_RBUG", FALSE)
+DEBUG_GET_ONCE_BOOL_OPTION(rbug, "GALLIUM_RBUG", false)
 
 static void
 rbug_screen_destroy(struct pipe_screen *_screen)
@@ -119,7 +119,7 @@ rbug_screen_get_paramf(struct pipe_screen *_screen,
                              param);
 }
 
-static boolean
+static bool
 rbug_screen_is_format_supported(struct pipe_screen *_screen,
                                 enum pipe_format format,
                                 enum pipe_texture_target target,
@@ -198,7 +198,7 @@ rbug_screen_check_resource_capability(struct pipe_screen *_screen,
    return screen->check_resource_capability(screen, resource, bind);
 }
 
-static boolean
+static bool
 rbug_screen_resource_get_handle(struct pipe_screen *_screen,
                                 struct pipe_context *_pipe,
                                 struct pipe_resource *_resource,
@@ -213,6 +213,42 @@ rbug_screen_resource_get_handle(struct pipe_screen *_screen,
 
    return screen->resource_get_handle(screen, rb_pipe ? rb_pipe->pipe : NULL,
                                       resource, handle, usage);
+}
+
+static bool
+rbug_screen_resource_get_param(struct pipe_screen *_screen,
+                               struct pipe_context *_pipe,
+                               struct pipe_resource *_resource,
+                               unsigned plane,
+                               unsigned layer,
+                               enum pipe_resource_param param,
+                               unsigned handle_usage,
+                               uint64_t *value)
+{
+   struct rbug_screen *rb_screen = rbug_screen(_screen);
+   struct rbug_context *rb_pipe = rbug_context(_pipe);
+   struct rbug_resource *rb_resource = rbug_resource(_resource);
+   struct pipe_screen *screen = rb_screen->screen;
+   struct pipe_resource *resource = rb_resource->resource;
+
+   return screen->resource_get_param(screen, rb_pipe ? rb_pipe->pipe : NULL,
+                                     resource, plane, layer, param,
+                                     handle_usage, value);
+}
+
+
+static void
+rbug_screen_resource_get_info(struct pipe_screen *_screen,
+                              struct pipe_resource *_resource,
+                              unsigned *stride,
+                              unsigned *offset)
+{
+   struct rbug_screen *rb_screen = rbug_screen(_screen);
+   struct rbug_resource *rb_resource = rbug_resource(_resource);
+   struct pipe_screen *screen = rb_screen->screen;
+   struct pipe_resource *resource = rb_resource->resource;
+
+   screen->resource_get_info(screen, resource, stride, offset);
 }
 
 static void
@@ -265,7 +301,7 @@ rbug_screen_fence_reference(struct pipe_screen *_screen,
                            fence);
 }
 
-static boolean
+static bool
 rbug_screen_fence_finish(struct pipe_screen *_screen,
                          struct pipe_context *_ctx,
                          struct pipe_fence_handle *fence,
@@ -278,7 +314,7 @@ rbug_screen_fence_finish(struct pipe_screen *_screen,
    return screen->fence_finish(screen, ctx, fence, timeout);
 }
 
-boolean
+bool
 rbug_enabled()
 {
    return debug_get_option_rbug();
@@ -319,6 +355,8 @@ rbug_screen_create(struct pipe_screen *screen)
    rb_screen->base.resource_from_handle = rbug_screen_resource_from_handle;
    SCR_INIT(check_resource_capability);
    rb_screen->base.resource_get_handle = rbug_screen_resource_get_handle;
+   SCR_INIT(resource_get_param);
+   SCR_INIT(resource_get_info);
    SCR_INIT(resource_changed);
    rb_screen->base.resource_destroy = rbug_screen_resource_destroy;
    rb_screen->base.flush_frontbuffer = rbug_screen_flush_frontbuffer;

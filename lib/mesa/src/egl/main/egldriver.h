@@ -84,7 +84,7 @@ _eglInitDriver(_EGLDriver *driver);
 
 
 extern _EGLDriver *
-_eglMatchDriver(_EGLDisplay *dpy);
+_eglMatchDriver(_EGLDisplay *disp);
 
 
 extern __eglMustCastToProperFunctionPointerType
@@ -93,11 +93,6 @@ _eglGetDriverProc(const char *procname);
 
 extern void
 _eglUnloadDrivers(void);
-
-
-/* defined in eglfallbacks.c */
-extern void
-_eglInitDriverFallbacks(_EGLDriver *drv);
 
 
 extern void

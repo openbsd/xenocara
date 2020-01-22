@@ -18,56 +18,79 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-inc_drm_uapi = include_directories('drm-uapi')
-inc_vulkan = include_directories('vulkan')
+inc_include = include_directories('.')
 inc_d3d9 = include_directories('D3D9')
-inc_gl_internal = include_directories('GL/internal')
 inc_haikugl = include_directories('HaikuGL')
 
-if with_gles1
-  install_headers(
-    'GLES/egl.h', 'GLES/gl.h', 'GLES/glext.h', 'GLES/glplatform.h',
-    subdir : 'GLES',
-  )
+if not glvnd_has_headers_and_pc_files
+  if with_gles1 or with_gles2 or with_opengl or with_egl
+    install_headers('KHR/khrplatform.h', subdir : 'KHR')
+  endif
+
+  if with_gles1
+    install_headers(
+      'GLES/egl.h',
+      'GLES/gl.h',
+      'GLES/glext.h',
+      'GLES/glplatform.h',
+      subdir : 'GLES',
+    )
+  endif
+
+  if with_gles2
+    install_headers(
+      'GLES2/gl2.h',
+      'GLES2/gl2ext.h',
+      'GLES2/gl2platform.h',
+      subdir : 'GLES2',
+    )
+    install_headers(
+      'GLES3/gl3.h',
+      'GLES3/gl31.h',
+      'GLES3/gl32.h',
+      'GLES3/gl3ext.h',
+      'GLES3/gl3platform.h',
+      subdir : 'GLES3',
+    )
+  endif
+
+  if with_opengl
+    install_headers(
+      'GL/gl.h',
+      'GL/glcorearb.h',
+      'GL/glext.h',
+      subdir : 'GL',
+    )
+  endif
+
+  if with_glx != 'disabled'
+    install_headers(
+      'GL/glx.h',
+      'GL/glxext.h',
+      subdir : 'GL')
+  endif
+
+  if with_egl
+    install_headers(
+      'EGL/egl.h',
+      'EGL/eglext.h',
+      'EGL/eglplatform.h',
+      subdir : 'EGL',
+    )
+  endif
 endif
 
-if with_gles2
+# Non-upstream headers
+if with_egl
   install_headers(
-    'GLES2/gl2.h', 'GLES2/gl2ext.h', 'GLES2/gl2platform.h',
-    subdir : 'GLES2',
+    'EGL/eglmesaext.h',
+    'EGL/eglextchromium.h',
+    subdir : 'EGL',
   )
-  install_headers(
-    'GLES3/gl3.h', 'GLES3/gl31.h', 'GLES3/gl32.h', 'GLES3/gl3ext.h',
-    'GLES3/gl3platform.h',
-    subdir : 'GLES3',
-  )
-endif
-
-if with_gles1 or with_gles2 or with_opengl or with_egl
-  install_headers('KHR/khrplatform.h', subdir : 'KHR')
-endif
-
-if with_opengl
-  install_headers(
-    'GL/gl.h', 'GL/glext.h', 'GL/glcorearb.h', 'GL/gl_mangle.h',
-    subdir : 'GL',
-  )
-endif
-
-if with_glx != 'disabled'
-  install_headers('GL/glx.h', 'GL/glxext.h', 'GL/glx_mangle.h', subdir : 'GL')
 endif
 
 if with_osmesa != 'none'
   install_headers('GL/osmesa.h', subdir : 'GL')
-endif
-
-if with_egl
-  install_headers(
-    'EGL/eglext.h', 'EGL/egl.h', 'EGL/eglextchromium.h', 'EGL/eglmesaext.h',
-    'EGL/eglplatform.h',
-    subdir : 'EGL',
-  )
 endif
 
 if with_dri
@@ -94,14 +117,19 @@ if with_gallium_opencl and not with_opencl_icd
   install_headers(
     'CL/cl.h',
     'CL/cl.hpp',
+    'CL/cl2.hpp',
     'CL/cl_d3d10.h',
     'CL/cl_d3d11.h',
     'CL/cl_dx9_media_sharing.h',
+    'CL/cl_dx9_media_sharing_intel.h',
     'CL/cl_egl.h',
     'CL/cl_ext.h',
+    'CL/cl_ext_intel.h',
     'CL/cl_gl.h',
     'CL/cl_gl_ext.h',
     'CL/cl_platform.h',
+    'CL/cl_va_api_media_sharing_intel.h',
+    'CL/cl_version.h',
     'CL/opencl.h',
     subdir: 'CL'
   )

@@ -25,8 +25,11 @@
  */
 
 #include <math.h>
+#include "util/half_float.h"
+#include "util/u_math.h"
 
 #include "ir3.h"
+#include "ir3_compiler.h"
 #include "ir3_shader.h"
 
 /*
@@ -36,7 +39,6 @@
 struct ir3_cp_ctx {
 	struct ir3 *shader;
 	struct ir3_shader_variant *so;
-	unsigned immediate_idx;
 };
 
 /* is it a type preserving mov, with ok flags? */
@@ -88,6 +90,12 @@ static bool valid_flags(struct ir3_instruction *instr, unsigned n,
 		unsigned flags)
 {
 	unsigned valid_flags;
+
+	if ((flags & IR3_REG_HIGH) &&
+			(opc_cat(instr->opc) > 1) &&
+			(instr->block->shader->compiler->gpu_id >= 600))
+		return false;
+
 	flags = cp_flags(flags);
 
 	/* If destination is indirect, then source cannot be.. at least
@@ -203,6 +211,12 @@ static bool valid_flags(struct ir3_instruction *instr, unsigned n,
 
 			if (is_atomic(instr->opc) && !(instr->flags & IR3_INSTR_G))
 				return false;
+
+			/* as with atomics, ldib on a6xx can only have immediate for
+			 * SSBO slot argument
+			 */
+			if ((instr->opc == OPC_LDIB) && (n != 0))
+				return false;
 		}
 
 		break;
@@ -243,6 +257,7 @@ static void combine_flags(unsigned *dstflags, struct ir3_instruction *src)
 	*dstflags |= srcflags & IR3_REG_IMMED;
 	*dstflags |= srcflags & IR3_REG_RELATIV;
 	*dstflags |= srcflags & IR3_REG_ARRAY;
+	*dstflags |= srcflags & IR3_REG_HIGH;
 
 	/* if src of the src is boolean we can drop the (abs) since we know
 	 * the source value is already a postitive integer.  This cleans
@@ -255,7 +270,7 @@ static void combine_flags(unsigned *dstflags, struct ir3_instruction *src)
 }
 
 static struct ir3_register *
-lower_immed(struct ir3_cp_ctx *ctx, struct ir3_register *reg, unsigned new_flags)
+lower_immed(struct ir3_cp_ctx *ctx, struct ir3_register *reg, unsigned new_flags, bool f_opcode)
 {
 	unsigned swiz, idx, i;
 
@@ -285,34 +300,42 @@ lower_immed(struct ir3_cp_ctx *ctx, struct ir3_register *reg, unsigned new_flags
 	}
 
 	/* Reallocate for 4 more elements whenever it's necessary */
-	if (ctx->immediate_idx == ctx->so->immediates_size * 4) {
-		ctx->so->immediates_size += 4;
-		ctx->so->immediates = realloc (ctx->so->immediates,
-			ctx->so->immediates_size * sizeof (ctx->so->immediates[0]));
+	struct ir3_const_state *const_state = &ctx->so->shader->const_state;
+	if (const_state->immediate_idx == const_state->immediates_size * 4) {
+		const_state->immediates_size += 4;
+		const_state->immediates = realloc (const_state->immediates,
+			const_state->immediates_size * sizeof(const_state->immediates[0]));
 	}
 
-	for (i = 0; i < ctx->immediate_idx; i++) {
+	for (i = 0; i < const_state->immediate_idx; i++) {
 		swiz = i % 4;
 		idx  = i / 4;
 
-		if (ctx->so->immediates[idx].val[swiz] == reg->uim_val) {
+		if (const_state->immediates[idx].val[swiz] == reg->uim_val) {
 			break;
 		}
 	}
 
-	if (i == ctx->immediate_idx) {
+	if (i == const_state->immediate_idx) {
 		/* need to generate a new immediate: */
 		swiz = i % 4;
 		idx  = i / 4;
-		ctx->so->immediates[idx].val[swiz] = reg->uim_val;
-		ctx->so->immediates_count = idx + 1;
-		ctx->immediate_idx++;
+
+		/* Half constant registers seems to handle only 32-bit values
+		 * within floating-point opcodes. So convert back to 32-bit values. */
+		if (f_opcode && (new_flags & IR3_REG_HALF)) {
+			reg->uim_val = fui(_mesa_half_to_float(reg->uim_val));
+		}
+
+		const_state->immediates[idx].val[swiz] = reg->uim_val;
+		const_state->immediates_count = idx + 1;
+		const_state->immediate_idx++;
 	}
 
 	new_flags &= ~IR3_REG_IMMED;
 	new_flags |= IR3_REG_CONST;
 	reg->flags = new_flags;
-	reg->num = i + (4 * ctx->so->constbase.immediate);
+	reg->num = i + (4 * const_state->offsets.immediate);
 
 	return reg;
 }
@@ -384,8 +407,12 @@ reg_cp(struct ir3_cp_ctx *ctx, struct ir3_instruction *instr,
 		if (!valid_flags(instr, n, new_flags)) {
 			/* See if lowering an immediate to const would help. */
 			if (valid_flags(instr, n, (new_flags & ~IR3_REG_IMMED) | IR3_REG_CONST)) {
+				bool f_opcode = (ir3_cat2_float(instr->opc) ||
+						ir3_cat3_float(instr->opc)) ? true : false;
+
 				debug_assert(new_flags & IR3_REG_IMMED);
-				instr->regs[n + 1] = lower_immed(ctx, src_reg, new_flags);
+
+				instr->regs[n + 1] = lower_immed(ctx, src_reg, new_flags, f_opcode);
 				return;
 			}
 
@@ -490,10 +517,12 @@ reg_cp(struct ir3_cp_ctx *ctx, struct ir3_instruction *instr,
 				src_reg->iim_val = iim_val;
 				instr->regs[n+1] = src_reg;
 			} else if (valid_flags(instr, n, (new_flags & ~IR3_REG_IMMED) | IR3_REG_CONST)) {
-				/* See if lowering an immediate to const would help. */
-				instr->regs[n+1] = lower_immed(ctx, src_reg, new_flags);
-			}
+				bool f_opcode = (ir3_cat2_float(instr->opc) ||
+						ir3_cat3_float(instr->opc)) ? true : false;
 
+				/* See if lowering an immediate to const would help. */
+				instr->regs[n+1] = lower_immed(ctx, src_reg, new_flags, f_opcode);
+			}
 			return;
 		}
 	}
@@ -597,6 +626,34 @@ instr_cp(struct ir3_cp_ctx *ctx, struct ir3_instruction *instr)
 			break;
 		default:
 			break;
+		}
+	}
+
+	/* Handle converting a sam.s2en (taking samp/tex idx params via
+	 * register) into a normal sam (encoding immediate samp/tex idx)
+	 * if they are immediate.  This saves some instructions and regs
+	 * in the common case where we know samp/tex at compile time:
+	 */
+	if (is_tex(instr) && (instr->flags & IR3_INSTR_S2EN) &&
+			!(ir3_shader_debug & IR3_DBG_FORCES2EN)) {
+		/* The first src will be a fan-in (collect), if both of it's
+		 * two sources are mov from imm, then we can
+		 */
+		struct ir3_instruction *samp_tex = ssa(instr->regs[1]);
+
+		debug_assert(samp_tex->opc == OPC_META_FI);
+
+		struct ir3_instruction *samp = ssa(samp_tex->regs[1]);
+		struct ir3_instruction *tex  = ssa(samp_tex->regs[2]);
+
+		if ((samp->opc == OPC_MOV) &&
+				(samp->regs[1]->flags & IR3_REG_IMMED) &&
+				(tex->opc == OPC_MOV) &&
+				(tex->regs[1]->flags & IR3_REG_IMMED)) {
+			instr->flags &= ~IR3_INSTR_S2EN;
+			instr->cat5.samp = samp->regs[1]->iim_val;
+			instr->cat5.tex  = tex->regs[1]->iim_val;
+			instr->regs[1]->instr = NULL;
 		}
 	}
 }

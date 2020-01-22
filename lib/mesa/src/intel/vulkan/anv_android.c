@@ -22,6 +22,12 @@
  */
 
 #include <hardware/gralloc.h>
+
+#if ANDROID_API_LEVEL >= 26
+#include <hardware/gralloc1.h>
+#include <grallocusage/GrallocUsageConversion.h>
+#endif
+
 #include <hardware/hardware.h>
 #include <hardware/hwvulkan.h>
 #include <vulkan/vk_android_native_buffer.h>
@@ -98,6 +104,7 @@ anv_hal_close(struct hw_device_t *dev)
    return -1;
 }
 
+#if ANDROID_API_LEVEL >= 26
 static VkResult
 get_ahw_buffer_format_properties(
    VkDevice device_h,
@@ -125,7 +132,7 @@ get_ahw_buffer_format_properties(
    /* Fill properties fields based on description. */
    VkAndroidHardwareBufferFormatPropertiesANDROID *p = pProperties;
 
-   p->format = vk_format_from_android(desc.format);
+   p->format = vk_format_from_android(desc.format, desc.usage);
 
    const struct anv_format *anv_format = anv_get_format(p->format);
    p->externalFormat = (uint64_t) (uintptr_t) anv_format;
@@ -215,37 +222,6 @@ anv_GetAndroidHardwareBufferPropertiesANDROID(
    return VK_SUCCESS;
 }
 
-/* Construct ahw usage mask from image usage bits, see
- * 'AHardwareBuffer Usage Equivalence' in Vulkan spec.
- */
-uint64_t
-anv_ahw_usage_from_vk_usage(const VkImageCreateFlags vk_create,
-                            const VkImageUsageFlags vk_usage)
-{
-   uint64_t ahw_usage = 0;
-
-   if (vk_usage & VK_IMAGE_USAGE_SAMPLED_BIT)
-      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
-
-   if (vk_usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
-      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
-
-   if (vk_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
-
-   if (vk_create & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
-      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_CUBE_MAP;
-
-   if (vk_create & VK_IMAGE_CREATE_PROTECTED_BIT)
-      ahw_usage |= AHARDWAREBUFFER_USAGE_PROTECTED_CONTENT;
-
-   /* No usage bits set - set at least one GPU usage. */
-   if (ahw_usage == 0)
-      ahw_usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
-
-   return ahw_usage;
-}
-
 VkResult
 anv_GetMemoryAndroidHardwareBufferANDROID(
    VkDevice device_h,
@@ -274,6 +250,39 @@ anv_GetMemoryAndroidHardwareBufferANDROID(
    return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
+#endif
+
+/* Construct ahw usage mask from image usage bits, see
+ * 'AHardwareBuffer Usage Equivalence' in Vulkan spec.
+ */
+uint64_t
+anv_ahw_usage_from_vk_usage(const VkImageCreateFlags vk_create,
+                            const VkImageUsageFlags vk_usage)
+{
+   uint64_t ahw_usage = 0;
+#if ANDROID_API_LEVEL >= 26
+   if (vk_usage & VK_IMAGE_USAGE_SAMPLED_BIT)
+      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
+
+   if (vk_usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
+      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
+
+   if (vk_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
+
+   if (vk_create & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT)
+      ahw_usage |= AHARDWAREBUFFER_USAGE_GPU_CUBE_MAP;
+
+   if (vk_create & VK_IMAGE_CREATE_PROTECTED_BIT)
+      ahw_usage |= AHARDWAREBUFFER_USAGE_PROTECTED_CONTENT;
+
+   /* No usage bits set - set at least one GPU usage. */
+   if (ahw_usage == 0)
+      ahw_usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
+#endif
+   return ahw_usage;
+}
+
 /*
  * Called from anv_AllocateMemory when import AHardwareBuffer.
  */
@@ -282,6 +291,7 @@ anv_import_ahw_memory(VkDevice device_h,
                       struct anv_device_memory *mem,
                       const VkImportAndroidHardwareBufferInfoANDROID *info)
 {
+#if ANDROID_API_LEVEL >= 26
    ANV_FROM_HANDLE(anv_device, device, device_h);
 
    /* Import from AHardwareBuffer to anv_device_memory. */
@@ -316,6 +326,9 @@ anv_import_ahw_memory(VkDevice device_h,
    mem->ahw = info->buffer;
 
    return VK_SUCCESS;
+#else
+   return VK_ERROR_EXTENSION_NOT_PRESENT;
+#endif
 }
 
 VkResult
@@ -323,6 +336,7 @@ anv_create_ahw_memory(VkDevice device_h,
                       struct anv_device_memory *mem,
                       const VkMemoryAllocateInfo *pAllocateInfo)
 {
+#if ANDROID_API_LEVEL >= 26
    ANV_FROM_HANDLE(anv_device, dev, device_h);
 
    const VkMemoryDedicatedAllocateInfo *dedicated_info =
@@ -369,8 +383,11 @@ anv_create_ahw_memory(VkDevice device_h,
       return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    mem->ahw = ahw;
-
    return VK_SUCCESS;
+#else
+   return VK_ERROR_EXTENSION_NOT_PRESENT;
+#endif
+
 }
 
 VkResult
@@ -381,6 +398,7 @@ anv_image_from_external(
    const VkAllocationCallbacks *alloc,
    VkImage *out_image_h)
 {
+#if ANDROID_API_LEVEL >= 26
    ANV_FROM_HANDLE(anv_device, device, device_h);
 
    const struct VkExternalFormatANDROID *ext_info =
@@ -407,7 +425,11 @@ anv_image_from_external(
    *out_image_h = image_h;
 
    return VK_SUCCESS;
+#else
+   return VK_ERROR_EXTENSION_NOT_PRESENT;
+#endif
 }
+
 
 VkResult
 anv_image_from_gralloc(VkDevice device_h,
@@ -533,32 +555,14 @@ anv_image_from_gralloc(VkDevice device_h,
    return result;
 }
 
-VkResult anv_GetSwapchainGrallocUsageANDROID(
-    VkDevice            device_h,
-    VkFormat            format,
-    VkImageUsageFlags   imageUsage,
-    int*                grallocUsage)
+VkResult
+format_supported_with_usage(VkDevice device_h, VkFormat format,
+                            VkImageUsageFlags imageUsage)
 {
    ANV_FROM_HANDLE(anv_device, device, device_h);
    struct anv_physical_device *phys_dev = &device->instance->physicalDevice;
    VkPhysicalDevice phys_dev_h = anv_physical_device_to_handle(phys_dev);
    VkResult result;
-
-   *grallocUsage = 0;
-   intel_logd("%s: format=%d, usage=0x%x", __func__, format, imageUsage);
-
-   /* WARNING: Android's libvulkan.so hardcodes the VkImageUsageFlags
-    * returned to applications via VkSurfaceCapabilitiesKHR::supportedUsageFlags.
-    * The relevant code in libvulkan/swapchain.cpp contains this fun comment:
-    *
-    *     TODO(jessehall): I think these are right, but haven't thought hard
-    *     about it. Do we need to query the driver for support of any of
-    *     these?
-    *
-    * Any disagreement between this function and the hardcoded
-    * VkSurfaceCapabilitiesKHR:supportedUsageFlags causes tests
-    * dEQP-VK.wsi.android.swapchain.*.image_usage to fail.
-    */
 
    const VkPhysicalDeviceImageFormatInfo2 image_format_info = {
       .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
@@ -580,6 +584,26 @@ VkResult anv_GetSwapchainGrallocUsageANDROID(
                        "anv_GetPhysicalDeviceImageFormatProperties2 failed "
                        "inside %s", __func__);
    }
+   return VK_SUCCESS;
+}
+
+
+static VkResult
+setup_gralloc0_usage(VkFormat format, VkImageUsageFlags imageUsage,
+                     int *grallocUsage)
+{
+   /* WARNING: Android's libvulkan.so hardcodes the VkImageUsageFlags
+    * returned to applications via VkSurfaceCapabilitiesKHR::supportedUsageFlags.
+    * The relevant code in libvulkan/swapchain.cpp contains this fun comment:
+    *
+    *     TODO(jessehall): I think these are right, but haven't thought hard
+    *     about it. Do we need to query the driver for support of any of
+    *     these?
+    *
+    * Any disagreement between this function and the hardcoded
+    * VkSurfaceCapabilitiesKHR:supportedUsageFlags causes tests
+    * dEQP-VK.wsi.android.swapchain.*.image_usage to fail.
+    */
 
    if (unmask32(&imageUsage, VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                              VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
@@ -624,6 +648,60 @@ VkResult anv_GetSwapchainGrallocUsageANDROID(
       return VK_ERROR_FORMAT_NOT_SUPPORTED;
 
    return VK_SUCCESS;
+}
+
+
+#if ANDROID_API_LEVEL >= 26
+VkResult anv_GetSwapchainGrallocUsage2ANDROID(
+    VkDevice            device_h,
+    VkFormat            format,
+    VkImageUsageFlags   imageUsage,
+    VkSwapchainImageUsageFlagsANDROID swapchainImageUsage,
+    uint64_t*           grallocConsumerUsage,
+    uint64_t*           grallocProducerUsage)
+{
+   ANV_FROM_HANDLE(anv_device, device, device_h);
+   VkResult result;
+
+   *grallocConsumerUsage = 0;
+   *grallocProducerUsage = 0;
+   intel_logd("%s: format=%d, usage=0x%x", __func__, format, imageUsage);
+
+   result = format_supported_with_usage(device_h, format, imageUsage);
+   if (result != VK_SUCCESS)
+      return result;
+
+   int32_t grallocUsage = 0;
+   result = setup_gralloc0_usage(format, imageUsage, &grallocUsage);
+   if (result != VK_SUCCESS)
+      return result;
+
+   android_convertGralloc0To1Usage(grallocUsage, grallocProducerUsage,
+                                   grallocConsumerUsage);
+
+   return VK_SUCCESS;
+}
+#endif
+
+VkResult anv_GetSwapchainGrallocUsageANDROID(
+    VkDevice            device_h,
+    VkFormat            format,
+    VkImageUsageFlags   imageUsage,
+    int*                grallocUsage)
+{
+   ANV_FROM_HANDLE(anv_device, device, device_h);
+   struct anv_physical_device *phys_dev = &device->instance->physicalDevice;
+   VkPhysicalDevice phys_dev_h = anv_physical_device_to_handle(phys_dev);
+   VkResult result;
+
+   *grallocUsage = 0;
+   intel_logd("%s: format=%d, usage=0x%x", __func__, format, imageUsage);
+
+   result = format_supported_with_usage(device_h, format, imageUsage);
+   if (result != VK_SUCCESS)
+      return result;
+
+   return setup_gralloc0_usage(format, imageUsage, grallocUsage);
 }
 
 VkResult

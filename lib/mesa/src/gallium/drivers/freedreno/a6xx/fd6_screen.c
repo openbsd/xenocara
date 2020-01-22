@@ -25,12 +25,14 @@
  *    Rob Clark <robclark@freedesktop.org>
  */
 
+#include "drm-uapi/drm_fourcc.h"
 #include "pipe/p_screen.h"
 #include "util/u_format.h"
 
 #include "fd6_screen.h"
 #include "fd6_blitter.h"
 #include "fd6_context.h"
+#include "fd6_emit.h"
 #include "fd6_format.h"
 #include "fd6_resource.h"
 
@@ -54,7 +56,7 @@ valid_sample_count(unsigned sample_count)
 	}
 }
 
-static boolean
+static bool
 fd6_screen_is_format_supported(struct pipe_screen *pscreen,
 		enum pipe_format format,
 		enum pipe_texture_target target,
@@ -68,7 +70,7 @@ fd6_screen_is_format_supported(struct pipe_screen *pscreen,
 			!valid_sample_count(sample_count)) {
 		DBG("not supported: format=%s, target=%d, sample_count=%d, usage=%x",
 				util_format_name(format), target, sample_count, usage);
-		return FALSE;
+		return false;
 	}
 
 	if (MAX2(1, sample_count) != MAX2(1, storage_sample_count))
@@ -125,6 +127,9 @@ fd6_screen_is_format_supported(struct pipe_screen *pscreen,
 	return retval == usage;
 }
 
+extern const struct fd_perfcntr_group a6xx_perfcntr_groups[];
+extern const unsigned a6xx_num_perfcntr_groups;
+
 void
 fd6_screen_init(struct pipe_screen *pscreen)
 {
@@ -136,4 +141,20 @@ fd6_screen_init(struct pipe_screen *pscreen)
 
 	screen->setup_slices = fd6_setup_slices;
 	screen->tile_mode = fd6_tile_mode;
+	screen->fill_ubwc_buffer_sizes = fd6_fill_ubwc_buffer_sizes;
+
+	static const uint64_t supported_modifiers[] = {
+		DRM_FORMAT_MOD_LINEAR,
+		DRM_FORMAT_MOD_QCOM_COMPRESSED,
+	};
+
+	screen->supported_modifiers = supported_modifiers;
+	screen->num_supported_modifiers = ARRAY_SIZE(supported_modifiers);
+
+	if (fd_mesa_debug & FD_DBG_PERFC) {
+		screen->perfcntr_groups = a6xx_perfcntr_groups;
+		screen->num_perfcntr_groups = a6xx_num_perfcntr_groups;
+	}
+
+	fd6_emit_init_screen(pscreen);
 }

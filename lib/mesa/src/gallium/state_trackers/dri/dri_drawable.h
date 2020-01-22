@@ -56,6 +56,9 @@ struct dri_drawable
    unsigned old_w;
    unsigned old_h;
 
+   struct pipe_box *damage_rects;
+   unsigned int num_damage_rects;
+
    struct pipe_resource *textures[ST_ATTACHMENT_COUNT];
    struct pipe_resource *msaa_textures[ST_ATTACHMENT_COUNT];
    unsigned int texture_mask, texture_stamp;
@@ -65,7 +68,7 @@ struct dri_drawable
    unsigned int head;
    unsigned int tail;
    unsigned int desired_fences;
-   boolean flushing; /* prevents recursion in dri_flush */
+   bool flushing; /* prevents recursion in dri_flush */
 
    /* used only by DRISW */
    struct pipe_surface *drisw_surface;
@@ -99,10 +102,10 @@ dri_drawable(__DRIdrawable * driDrawPriv)
 /***********************************************************************
  * dri_drawable.c
  */
-boolean
+bool
 dri_create_buffer(__DRIscreen * sPriv,
 		  __DRIdrawable * dPriv,
-		  const struct gl_config * visual, boolean isPixmap);
+		  const struct gl_config * visual, bool isPixmap);
 
 void dri_destroy_buffer(__DRIdrawable * dPriv);
 

@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 
+#include "c11/threads.h"
 #include "compiler/shader_enums.h"
 #include "compiler/nir/nir.h"
 #include "util/bitscan.h"
@@ -67,8 +68,18 @@ enum ir3_driver_param {
 #define IR3_MAX_SHADER_IMAGES    32
 #define IR3_MAX_SO_BUFFERS        4
 #define IR3_MAX_SO_OUTPUTS       64
+#define IR3_MAX_CONSTANT_BUFFERS 32
+
 
 /**
+ * Describes the layout of shader consts.  This includes:
+ *   + Driver lowered UBO ranges
+ *   + SSBO sizes
+ *   + Image sizes/dimensions
+ *   + Driver params (ie. IR3_DP_*)
+ *   + TFBO addresses (for generations that do not have hardware streamout)
+ *   + Lowered immediates
+ *
  * For consts needed to pass internal values to shader which may or may not
  * be required, rather than allocating worst-case const space, we scan the
  * shader and allocate consts as-needed:
@@ -78,8 +89,42 @@ enum ir3_driver_param {
  *
  *   + Image dimensions: needed to calculate pixel offset, but only for
  *     images that have a image_store intrinsic
+ *
+ * Layout of constant registers, each section aligned to vec4.  Note
+ * that pointer size (ubo, etc) changes depending on generation.
+ *
+ *    user consts
+ *    UBO addresses
+ *    SSBO sizes
+ *    if (vertex shader) {
+ *        driver params (IR3_DP_*)
+ *        if (stream_output.num_outputs > 0)
+ *           stream-out addresses
+ *    } else if (compute_shader) {
+ *        driver params (IR3_DP_*)
+ *    }
+ *    immediates
+ *
+ * Immediates go last mostly because they are inserted in the CP pass
+ * after the nir -> ir3 frontend.
+ *
+ * Note UBO size in bytes should be aligned to vec4
  */
-struct ir3_driver_const_layout {
+struct ir3_const_state {
+	unsigned num_ubos;
+	unsigned num_driver_params;   /* scalar */
+
+	struct {
+		/* user const start at zero */
+		unsigned ubo;
+		/* NOTE that a3xx might need a section for SSBO addresses too */
+		unsigned ssbo_sizes;
+		unsigned image_dims;
+		unsigned driver_param;
+		unsigned tfbo;
+		unsigned immediate;
+	} offsets;
+
 	struct {
 		uint32_t mask;  /* bitmask of SSBOs that have get_buffer_size */
 		uint32_t count; /* number of consts allocated */
@@ -100,6 +145,13 @@ struct ir3_driver_const_layout {
 		 */
 		uint32_t off[IR3_MAX_SHADER_IMAGES];
 	} image_dims;
+
+	unsigned immediate_idx;
+	unsigned immediates_count;
+	unsigned immediates_size;
+	struct {
+		uint32_t val[4];
+	} *immediates;
 };
 
 /**
@@ -152,6 +204,8 @@ struct ir3_shader_key {
 			/*
 			 * Fragment shader variant parameters:
 			 */
+			unsigned sample_shading : 1;
+			unsigned msaa           : 1;
 			unsigned color_two_side : 1;
 			unsigned half_precision : 1;
 			/* used when shader needs to handle flat varyings (a4xx)
@@ -274,8 +328,56 @@ ir3_normalize_key(struct ir3_shader_key *key, gl_shader_stage type)
 		/* TODO */
 		break;
 	}
-
 }
+
+/**
+ * On a4xx+a5xx, Images share state with textures and SSBOs:
+ *
+ *   + Uses texture (cat5) state/instruction (isam) to read
+ *   + Uses SSBO state and instructions (cat6) to write and for atomics
+ *
+ * Starting with a6xx, Images and SSBOs are basically the same thing,
+ * with texture state and isam also used for SSBO reads.
+ *
+ * On top of that, gallium makes the SSBO (shader_buffers) state semi
+ * sparse, with the first half of the state space used for atomic
+ * counters lowered to atomic buffers.  We could ignore this, but I
+ * don't think we could *really* handle the case of a single shader
+ * that used the max # of textures + images + SSBOs.  And once we are
+ * offsetting images by num_ssbos (or visa versa) to map them into
+ * the same hardware state, the hardware state has become coupled to
+ * the shader state, so at this point we might as well just use a
+ * mapping table to remap things from image/SSBO idx to hw idx.
+ *
+ * To make things less (more?) confusing, for the hw "SSBO" state
+ * (since it is really both SSBO and Image) I'll use the name "IBO"
+ */
+struct ir3_ibo_mapping {
+#define IBO_INVALID 0xff
+	/* Maps logical SSBO state to hw state: */
+	uint8_t ssbo_to_ibo[IR3_MAX_SHADER_BUFFERS];
+	uint8_t ssbo_to_tex[IR3_MAX_SHADER_BUFFERS];
+
+	/* Maps logical Image state to hw state: */
+	uint8_t image_to_ibo[IR3_MAX_SHADER_IMAGES];
+	uint8_t image_to_tex[IR3_MAX_SHADER_IMAGES];
+
+	/* Maps hw state back to logical SSBO or Image state:
+	 *
+	 * note IBO_SSBO ORd into values to indicate that the
+	 * hw slot is used for SSBO state vs Image state.
+	 */
+#define IBO_SSBO    0x80
+	uint8_t ibo_to_image[32];
+	uint8_t tex_to_image[32];
+
+	uint8_t num_ibo;
+	uint8_t num_tex;    /* including real textures */
+	uint8_t tex_base;   /* the number of real textures, ie. image/ssbo start here */
+};
+
+/* Represents half register in regid */
+#define HALF_REG_ID    0x100
 
 struct ir3_shader_variant {
 	struct fd_bo *bo;
@@ -289,15 +391,20 @@ struct ir3_shader_variant {
 	 * which is pointed to by so->binning:
 	 */
 	bool binning_pass;
-	struct ir3_shader_variant *binning;
+//	union {
+		struct ir3_shader_variant *binning;
+		struct ir3_shader_variant *nonbinning;
+//	};
 
-	struct ir3_driver_const_layout const_layout;
 	struct ir3_info info;
 	struct ir3 *ir;
 
 	/* Levels of nesting of flow control:
 	 */
 	unsigned branchstack;
+
+	unsigned max_sun;
+	unsigned loops;
 
 	/* the instructions length is in units of instruction groups
 	 * (4 instructions for a3xx, 16 instructions for a4xx.. each
@@ -309,13 +416,6 @@ struct ir3_shader_variant {
 	 * the uniforms and the built-in compiler constants
 	 */
 	unsigned constlen;
-
-	/* number of uniforms (in vec4), not including built-in compiler
-	 * constants, etc.
-	 */
-	unsigned num_uniforms;
-
-	unsigned num_ubos;
 
 	/* About Linkage:
 	 *   + Let the frag shader determine the position/compmask for the
@@ -339,8 +439,9 @@ struct ir3_shader_variant {
 	struct {
 		uint8_t slot;
 		uint8_t regid;
+		bool    half : 1;
 	} outputs[16 + 2];  /* +POSITION +PSIZE */
-	bool writes_pos, writes_psize;
+	bool writes_pos, writes_smask, writes_psize;
 
 	/* attributes (VS) / varyings (FS):
 	 * Note that sysval's should come *after* normal inputs.
@@ -362,6 +463,8 @@ struct ir3_shader_variant {
 		/* fragment shader specific: */
 		bool    bary       : 1;   /* fetched varying (vs one loaded into reg) */
 		bool    rasterflat : 1;   /* special handling for emit->rasterflat */
+		bool    use_ldlv   : 1;   /* internal to ir3_compiler_nir */
+		bool    half       : 1;
 		enum glsl_interp_mode interpolate;
 	} inputs[16 + 2];  /* +POSITION +FACE */
 
@@ -375,35 +478,28 @@ struct ir3_shader_variant {
 	 */
 	unsigned varying_in;
 
+	/* Remapping table to map Image and SSBO to hw state: */
+	struct ir3_ibo_mapping image_mapping;
+
 	/* number of samplers/textures (which are currently 1:1): */
 	int num_samp;
+
+	/* is there an implicit sampler to read framebuffer (FS only).. if
+	 * so the sampler-idx is 'num_samp - 1' (ie. it is appended after
+	 * the last "real" texture)
+	 */
+	bool fb_read;
 
 	/* do we have one or more SSBO instructions: */
 	bool has_ssbo;
 
-	/* do we have kill instructions: */
-	bool has_kill;
+	/* do we need derivatives: */
+	bool need_pixlod;
 
-	/* Layout of constant registers, each section (in vec4). Pointer size
-	 * is 32b (a3xx, a4xx), or 64b (a5xx+), which effects the size of the
-	 * UBO and stream-out consts.
-	 */
-	struct {
-		/* user const start at zero */
-		unsigned ubo;
-		/* NOTE that a3xx might need a section for SSBO addresses too */
-		unsigned ssbo_sizes;
-		unsigned image_dims;
-		unsigned driver_param;
-		unsigned tfbo;
-		unsigned immediate;
-	} constbase;
+	/* do we have kill, image write, etc (which prevents early-z): */
+	bool no_earlyz;
 
-	unsigned immediates_count;
-	unsigned immediates_size;
-	struct {
-		uint32_t val[4];
-	} *immediates;
+	bool per_samp;
 
 	/* for astc srgb workaround, the number/base of additional
 	 * alpha tex states we need, and index of original tex states
@@ -421,6 +517,19 @@ struct ir3_shader_variant {
 	struct ir3_shader *shader;
 };
 
+struct ir3_ubo_range {
+	uint32_t offset; /* start offset of this block in const register file */
+	uint32_t start, end; /* range of block that's actually used */
+};
+
+struct ir3_ubo_analysis_state
+{
+	struct ir3_ubo_range range[IR3_MAX_CONSTANT_BUFFERS];
+	uint32_t size;
+	uint32_t lower_count;
+};
+
+
 struct ir3_shader {
 	gl_shader_stage type;
 
@@ -433,10 +542,14 @@ struct ir3_shader {
 
 	struct ir3_compiler *compiler;
 
+	struct ir3_ubo_analysis_state ubo_state;
+	struct ir3_const_state const_state;
+
 	struct nir_shader *nir;
 	struct ir3_stream_output_info stream_output;
 
 	struct ir3_shader_variant *variants;
+	mtx_t variants_lock;
 };
 
 void * ir3_shader_assemble(struct ir3_shader_variant *v, uint32_t gpu_id);
@@ -448,13 +561,16 @@ void ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out);
 uint64_t ir3_shader_outputs(const struct ir3_shader *so);
 
 int
-ir3_glsl_type_size(const struct glsl_type *type);
+ir3_glsl_type_size(const struct glsl_type *type, bool bindless);
 
 static inline const char *
 ir3_shader_stage(struct ir3_shader *shader)
 {
 	switch (shader->type) {
 	case MESA_SHADER_VERTEX:     return "VERT";
+	case MESA_SHADER_TESS_CTRL:  return "TCS";
+	case MESA_SHADER_TESS_EVAL:  return "TES";
+	case MESA_SHADER_GEOMETRY:   return "GEOM";
 	case MESA_SHADER_FRAGMENT:   return "FRAG";
 	case MESA_SHADER_COMPUTE:    return "CL";
 	default:
@@ -564,8 +680,12 @@ ir3_find_output_regid(const struct ir3_shader_variant *so, unsigned slot)
 {
 	int j;
 	for (j = 0; j < so->outputs_count; j++)
-		if (so->outputs[j].slot == slot)
-			return so->outputs[j].regid;
+		if (so->outputs[j].slot == slot) {
+			uint32_t regid = so->outputs[j].regid;
+			if (so->outputs[j].half)
+				regid |= HALF_REG_ID;
+			return regid;
+		}
 	return regid(63, 0);
 }
 

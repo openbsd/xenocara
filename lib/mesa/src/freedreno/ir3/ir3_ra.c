@@ -286,13 +286,20 @@ ir3_ra_alloc_reg_set(struct ir3_compiler *compiler)
 		/* because of transitivity, we can get away with just setting up
 		 * conflicts between the first class of full and half regs:
 		 */
-		for (unsigned j = 0; j < CLASS_REGS(0) / 2; j++) {
-			unsigned freg  = set->gpr_to_ra_reg[0][j];
-			unsigned hreg0 = set->gpr_to_ra_reg[HALF_OFFSET][(j * 2) + 0];
-			unsigned hreg1 = set->gpr_to_ra_reg[HALF_OFFSET][(j * 2) + 1];
+		for (unsigned i = 0; i < half_class_count; i++) {
+			/* NOTE there are fewer half class sizes, but they match the
+			 * first N full class sizes.. but assert in case that ever
+			 * accidentially changes:
+			 */
+			debug_assert(class_sizes[i] == half_class_sizes[i]);
+			for (unsigned j = 0; j < CLASS_REGS(i) / 2; j++) {
+				unsigned freg  = set->gpr_to_ra_reg[i][j];
+				unsigned hreg0 = set->gpr_to_ra_reg[i + HALF_OFFSET][(j * 2) + 0];
+				unsigned hreg1 = set->gpr_to_ra_reg[i + HALF_OFFSET][(j * 2) + 1];
 
-			ra_add_transitive_reg_conflict(set->regs, freg, hreg0);
-			ra_add_transitive_reg_conflict(set->regs, freg, hreg1);
+				ra_add_transitive_reg_conflict(set->regs, freg, hreg0);
+				ra_add_transitive_reg_conflict(set->regs, freg, hreg1);
+			}
 		}
 
 		// TODO also need to update q_values, but for now:
@@ -323,9 +330,8 @@ struct ir3_ra_instr_data {
 
 /* register-assign context, per-shader */
 struct ir3_ra_ctx {
+	struct ir3_shader_variant *v;
 	struct ir3 *ir;
-	gl_shader_stage type;
-	bool frag_face;
 
 	struct ir3_ra_reg_set *set;
 	struct ra_graph *g;
@@ -503,8 +509,8 @@ get_definer(struct ir3_ra_ctx *ctx, struct ir3_instruction *instr,
 
 		*sz = MAX2(*sz, dsz);
 
-		debug_assert(instr->opc == OPC_META_FO);
-		*off = MAX2(*off, instr->fo.off);
+		if (instr->opc == OPC_META_FO)
+			*off = MAX2(*off, instr->fo.off);
 
 		d = dd;
 	}
@@ -531,8 +537,36 @@ ra_block_find_definers(struct ir3_ra_ctx *ctx, struct ir3_block *block)
 		} else if (instr->regs[0]->flags & IR3_REG_ARRAY) {
 			id->cls = total_class_count;
 		} else {
+			/* and the normal case: */
 			id->defn = get_definer(ctx, instr, &id->sz, &id->off);
 			id->cls = size_to_class(id->sz, is_half(id->defn), is_high(id->defn));
+
+			/* this is a bit of duct-tape.. if we have a scenario like:
+			 *
+			 *   sam (f32)(x) out.x, ...
+			 *   sam (f32)(x) out.y, ...
+			 *
+			 * Then the fanout/split meta instructions for the two different
+			 * tex instructions end up grouped as left/right neighbors.  The
+			 * upshot is that in when you get_definer() on one of the meta:fo's
+			 * you get definer as the first sam with sz=2, but when you call
+			 * get_definer() on the either of the sam's you get itself as the
+			 * definer with sz=1.
+			 *
+			 * (We actually avoid this scenario exactly, the neighbor links
+			 * prevent one of the output mov's from being eliminated, so this
+			 * hack should be enough.  But probably we need to rethink how we
+			 * find the "defining" instruction.)
+			 *
+			 * TODO how do we figure out offset properly...
+			 */
+			if (id->defn != instr) {
+				struct ir3_ra_instr_data *did = &ctx->instrd[id->defn->ip];
+				if (did->sz < id->sz) {
+					did->sz = id->sz;
+					did->cls = id->cls;
+				}
+			}
 		}
 	}
 }
@@ -1047,9 +1081,8 @@ ra_block_alloc(struct ir3_ra_ctx *ctx, struct ir3_block *block)
 		foreach_src_n(reg, n, instr) {
 			struct ir3_instruction *src = reg->instr;
 			/* Note: reg->instr could be null for IR3_REG_ARRAY */
-			if (!(src || (reg->flags & IR3_REG_ARRAY)))
-				continue;
-			reg_assign(ctx, instr->regs[n+1], src);
+			if (src || (reg->flags & IR3_REG_ARRAY))
+				reg_assign(ctx, instr->regs[n+1], src);
 			if (instr->regs[n+1]->flags & IR3_REG_HALF)
 				fixup_half_instr_src(instr);
 		}
@@ -1059,6 +1092,60 @@ ra_block_alloc(struct ir3_ra_ctx *ctx, struct ir3_block *block)
 static int
 ra_alloc(struct ir3_ra_ctx *ctx)
 {
+	/* Pre-assign VS inputs on a6xx+ binning pass shader, to align
+	 * with draw pass VS, so binning and draw pass can both use the
+	 * same VBO state.
+	 *
+	 * Note that VS inputs are expected to be full precision.
+	 */
+	bool pre_assign_inputs = (ctx->ir->compiler->gpu_id >= 600) &&
+			(ctx->ir->type == MESA_SHADER_VERTEX) &&
+			ctx->v->binning_pass;
+
+	if (pre_assign_inputs) {
+		for (unsigned i = 0; i < ctx->ir->ninputs; i++) {
+			struct ir3_instruction *instr = ctx->ir->inputs[i];
+
+			if (!instr)
+				continue;
+
+			debug_assert(!(instr->regs[0]->flags & (IR3_REG_HALF | IR3_REG_HIGH)));
+
+			struct ir3_ra_instr_data *id = &ctx->instrd[instr->ip];
+
+			/* only consider the first component: */
+			if (id->off > 0)
+				continue;
+
+			unsigned name = ra_name(ctx, id);
+
+			unsigned n = i / 4;
+			unsigned c = i % 4;
+
+			/* 'base' is in scalar (class 0) but we need to map that
+			 * the conflicting register of the appropriate class (ie.
+			 * input could be vec2/vec3/etc)
+			 *
+			 * Note that the higher class (larger than scalar) regs
+			 * are setup to conflict with others in the same class,
+			 * so for example, R1 (scalar) is also the first component
+			 * of D1 (vec2/double):
+			 *
+			 *    Single (base) |  Double
+			 *    --------------+---------------
+			 *       R0         |  D0
+			 *       R1         |  D0 D1
+			 *       R2         |     D1 D2
+			 *       R3         |        D2
+			 *           .. and so on..
+			 */
+			unsigned reg = ctx->set->gpr_to_ra_reg[id->cls]
+					[ctx->v->nonbinning->inputs[n].regid + c];
+
+			ra_set_node_reg(ctx->g, name, reg);
+		}
+	}
+
 	/* pre-assign array elements:
 	 */
 	list_for_each_entry (struct ir3_array, arr, &ctx->ir->array_list, node) {
@@ -1086,6 +1173,35 @@ retry:
 			}
 		}
 
+		/* also need to not conflict with any pre-assigned inputs: */
+		if (pre_assign_inputs) {
+			for (unsigned i = 0; i < ctx->ir->ninputs; i++) {
+				struct ir3_instruction *instr = ctx->ir->inputs[i];
+
+				if (!instr)
+					continue;
+
+				struct ir3_ra_instr_data *id = &ctx->instrd[instr->ip];
+
+				/* only consider the first component: */
+				if (id->off > 0)
+					continue;
+
+				unsigned name = ra_name(ctx, id);
+
+				/* Check if array intersects with liverange AND register
+				 * range of the input:
+				 */
+				if (intersects(arr->start_ip, arr->end_ip,
+						ctx->def[name], ctx->use[name]) &&
+					intersects(base, base + arr->length,
+						i, i + class_sizes[id->cls])) {
+					base = MAX2(base, i + class_sizes[id->cls]);
+					goto retry;
+				}
+			}
+		}
+
 		arr->reg = base;
 
 		for (unsigned i = 0; i < arr->length; i++) {
@@ -1108,14 +1224,12 @@ retry:
 	return 0;
 }
 
-int ir3_ra(struct ir3 *ir, gl_shader_stage type,
-		bool frag_coord, bool frag_face)
+int ir3_ra(struct ir3_shader_variant *v)
 {
 	struct ir3_ra_ctx ctx = {
-			.ir = ir,
-			.type = type,
-			.frag_face = frag_face,
-			.set = ir->compiler->set,
+			.v = v,
+			.ir = v->ir,
+			.set = v->ir->compiler->set,
 	};
 	int ret;
 

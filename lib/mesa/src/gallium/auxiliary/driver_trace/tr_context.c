@@ -167,13 +167,13 @@ trace_context_destroy_query(struct pipe_context *_pipe,
 }
 
 
-static boolean
+static bool
 trace_context_begin_query(struct pipe_context *_pipe,
                           struct pipe_query *query)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
-   boolean ret;
+   bool ret;
 
    query = trace_query_unwrap(query);
 
@@ -211,17 +211,17 @@ trace_context_end_query(struct pipe_context *_pipe,
 }
 
 
-static boolean
+static bool
 trace_context_get_query_result(struct pipe_context *_pipe,
                                struct pipe_query *_query,
-                               boolean wait,
+                               bool wait,
                                union pipe_query_result *result)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
    struct trace_query *tr_query = trace_query(_query);
    struct pipe_query *query = tr_query->query;
-   boolean ret;
+   bool ret;
 
    trace_dump_call_begin("pipe_context", "get_query_result");
 
@@ -248,7 +248,7 @@ trace_context_get_query_result(struct pipe_context *_pipe,
 
 static void
 trace_context_set_active_query_state(struct pipe_context *_pipe,
-                                     boolean enable)
+                                     bool enable)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
@@ -1314,7 +1314,49 @@ trace_context_flush(struct pipe_context *_pipe,
 }
 
 
-static inline boolean
+static void
+trace_context_create_fence_fd(struct pipe_context *_pipe,
+                              struct pipe_fence_handle **fence,
+                              int fd,
+                              enum pipe_fd_type type)
+{
+   struct trace_context *tr_ctx = trace_context(_pipe);
+   struct pipe_context *pipe = tr_ctx->pipe;
+
+   trace_dump_call_begin("pipe_context", "create_fence_fd");
+
+   trace_dump_arg(ptr, pipe);
+   trace_dump_arg(int, fd);
+   trace_dump_arg(uint, type);
+
+   pipe->create_fence_fd(pipe, fence, fd, type);
+
+   if (fence)
+      trace_dump_ret(ptr, *fence);
+
+   trace_dump_call_end();
+}
+
+
+static void
+trace_context_fence_server_sync(struct pipe_context *_pipe,
+                                struct pipe_fence_handle *fence)
+{
+   struct trace_context *tr_ctx = trace_context(_pipe);
+   struct pipe_context *pipe = tr_ctx->pipe;
+
+   trace_dump_call_begin("pipe_context", "fence_server_sync");
+
+   trace_dump_arg(ptr, pipe);
+   trace_dump_arg(ptr, fence);
+
+   pipe->fence_server_sync(pipe, fence);
+
+   trace_dump_call_end();
+}
+
+
+static inline bool
 trace_context_generate_mipmap(struct pipe_context *_pipe,
                               struct pipe_resource *res,
                               enum pipe_format format,
@@ -1325,7 +1367,7 @@ trace_context_generate_mipmap(struct pipe_context *_pipe,
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
-   boolean ret;
+   bool ret;
 
    trace_dump_call_begin("pipe_context", "generate_mipmap");
 
@@ -1598,7 +1640,7 @@ trace_context_set_context_param(struct pipe_context *_context,
 static void
 trace_context_render_condition(struct pipe_context *_context,
                                struct pipe_query *query,
-                               boolean condition,
+                               bool condition,
                                enum pipe_render_cond_flag mode)
 {
    struct trace_context *tr_context = trace_context(_context);
@@ -1692,7 +1734,8 @@ trace_context_set_tess_state(struct pipe_context *_context,
 static void trace_context_set_shader_buffers(struct pipe_context *_context,
                                              enum pipe_shader_type shader,
                                              unsigned start, unsigned nr,
-                                             const struct pipe_shader_buffer *buffers)
+                                             const struct pipe_shader_buffer *buffers,
+                                             unsigned writable_bitmask)
 {
    struct trace_context *tr_context = trace_context(_context);
    struct pipe_context *context = tr_context->pipe;
@@ -1703,10 +1746,12 @@ static void trace_context_set_shader_buffers(struct pipe_context *_context,
    trace_dump_arg(uint, start);
    trace_dump_arg_begin("buffers");
    trace_dump_struct_array(shader_buffer, buffers, nr);
+   trace_dump_arg(uint, writable_bitmask);
    trace_dump_arg_end();
    trace_dump_call_end();
 
-   context->set_shader_buffers(context, shader, start, nr, buffers);
+   context->set_shader_buffers(context, shader, start, nr, buffers,
+                               writable_bitmask);
 }
 
 static void trace_context_set_shader_images(struct pipe_context *_context,
@@ -1946,6 +1991,8 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(clear_depth_stencil);
    TR_CTX_INIT(clear_texture);
    TR_CTX_INIT(flush);
+   TR_CTX_INIT(create_fence_fd);
+   TR_CTX_INIT(fence_server_sync);
    TR_CTX_INIT(generate_mipmap);
    TR_CTX_INIT(texture_barrier);
    TR_CTX_INIT(memory_barrier);
@@ -1987,6 +2034,6 @@ error1:
 void
 trace_context_check(const struct pipe_context *pipe)
 {
-   MAYBE_UNUSED struct trace_context *tr_ctx = (struct trace_context *) pipe;
+   ASSERTED struct trace_context *tr_ctx = (struct trace_context *) pipe;
    assert(tr_ctx->base.destroy == trace_context_destroy);
 }

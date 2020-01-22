@@ -33,10 +33,25 @@
 void v3dX(bcl_epilogue)(struct v3d_context *v3d, struct v3d_job *job)
 {
                 v3d_cl_ensure_space_with_branch(&job->bcl,
+                                                cl_packet_length(PRIMITIVE_COUNTS_FEEDBACK) +
 #if V3D_VERSION >= 41
                                                 cl_packet_length(TRANSFORM_FEEDBACK_SPECS) +
 #endif
                                                 cl_packet_length(FLUSH));
+
+                if (job->tf_enabled) {
+                        /* Write primitive counts to memory. */
+                        assert(v3d->prim_counts);
+                        struct v3d_resource *rsc =
+                                v3d_resource(v3d->prim_counts);
+                        cl_emit(&job->bcl, PRIMITIVE_COUNTS_FEEDBACK, counter) {
+                                counter.address =
+                                        cl_address(rsc->bo,
+                                                   v3d->prim_counts_offset);
+                                counter.read_write_64byte = false;
+                                counter.op = 0;
+                        }
+                }
 
                 /* Disable TF at the end of the CL, so that the TF block
                  * cleans up and finishes before it gets reset by the next

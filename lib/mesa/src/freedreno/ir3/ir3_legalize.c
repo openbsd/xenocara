@@ -28,6 +28,7 @@
 #include "util/u_math.h"
 
 #include "ir3.h"
+#include "ir3_compiler.h"
 
 /*
  * Legalize:
@@ -39,8 +40,10 @@
  */
 
 struct ir3_legalize_ctx {
-	int num_samp;
+	struct ir3_compiler *compiler;
+	gl_shader_stage type;
 	bool has_ssbo;
+	bool need_pixlod;
 	int max_bary;
 };
 
@@ -84,6 +87,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 	struct list_head instr_list;
 	struct ir3_legalize_state prev_state = bd->state;
 	struct ir3_legalize_state *state = &bd->state;
+	bool last_input_needs_ss = false;
 
 	/* our input state is the OR of all predecessor blocks' state: */
 	for (unsigned i = 0; i < block->predecessors_count; i++) {
@@ -122,8 +126,10 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 			ctx->max_bary = MAX2(ctx->max_bary, inloc->iim_val);
 		}
 
-		if (last_n && is_barrier(last_n))
+		if (last_n && is_barrier(last_n)) {
 			n->flags |= IR3_INSTR_SS | IR3_INSTR_SY;
+			last_input_needs_ss = false;
+		}
 
 		/* NOTE: consider dst register too.. it could happen that
 		 * texture sample instruction (for example) writes some
@@ -142,6 +148,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				 */
 				if (regmask_get(&state->needs_ss, reg)) {
 					n->flags |= IR3_INSTR_SS;
+					last_input_needs_ss = false;
 					regmask_init(&state->needs_ss_war);
 					regmask_init(&state->needs_ss);
 				}
@@ -164,6 +171,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 			reg = n->regs[0];
 			if (regmask_get(&state->needs_ss_war, reg)) {
 				n->flags |= IR3_INSTR_SS;
+				last_input_needs_ss = false;
 				regmask_init(&state->needs_ss_war);
 				regmask_init(&state->needs_ss);
 			}
@@ -198,26 +206,43 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				last->flags |= n->flags;
 				continue;
 			}
+
+			/* NOTE: I think the nopN encoding works for a5xx and
+			 * probably a4xx, but not a3xx.  So far only tested on
+			 * a6xx.
+			 */
+			if ((ctx->compiler->gpu_id >= 600) && !n->flags && (last->nop < 3) &&
+					((opc_cat(last->opc) == 2) || (opc_cat(last->opc) == 3))) {
+				last->nop++;
+				continue;
+			}
 		}
 
-		list_addtail(&n->node, &block->instr_list);
+		if (ctx->compiler->samgq_workaround &&
+			ctx->type == MESA_SHADER_VERTEX && n->opc == OPC_SAMGQ) {
+			struct ir3_instruction *samgp;
+
+			for (i = 0; i < 4; i++) {
+				samgp = ir3_instr_clone(n);
+				samgp->opc = OPC_SAMGP0 + i;
+				if (i > 1)
+					samgp->flags |= IR3_INSTR_SY;
+			}
+			list_delinit(&n->node);
+		} else {
+			list_addtail(&n->node, &block->instr_list);
+		}
 
 		if (is_sfu(n))
 			regmask_set(&state->needs_ss, n->regs[0]);
 
 		if (is_tex(n)) {
-			/* this ends up being the # of samp instructions.. but that
-			 * is ok, everything else only cares whether it is zero or
-			 * not.  We do this here, rather than when we encounter a
-			 * SAMP decl, because (especially in binning pass shader)
-			 * the samp instruction(s) could get eliminated if the
-			 * result is not used.
-			 */
-			ctx->num_samp = MAX2(ctx->num_samp, n->cat5.samp + 1);
 			regmask_set(&state->needs_sy, n->regs[0]);
+			ctx->need_pixlod = true;
 		} else if (n->opc == OPC_RESINFO) {
 			regmask_set(&state->needs_ss, n->regs[0]);
 			ir3_NOP(block)->flags |= IR3_INSTR_SS;
+			last_input_needs_ss = false;
 		} else if (is_load(n)) {
 			/* seems like ldlv needs (ss) bit instead??  which is odd but
 			 * makes a bunch of flat-varying tests start working on a4xx.
@@ -227,10 +252,16 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 			else
 				regmask_set(&state->needs_sy, n->regs[0]);
 		} else if (is_atomic(n->opc)) {
-			if (n->flags & IR3_INSTR_G)
-				regmask_set(&state->needs_sy, n->regs[0]);
-			else
+			if (n->flags & IR3_INSTR_G) {
+				if (ctx->compiler->gpu_id >= 600) {
+					/* New encoding, returns  result via second src: */
+					regmask_set(&state->needs_sy, n->regs[3]);
+				} else {
+					regmask_set(&state->needs_sy, n->regs[0]);
+				}
+			} else {
 				regmask_set(&state->needs_ss, n->regs[0]);
+			}
 		}
 
 		if (is_ssbo(n->opc) || (is_atomic(n->opc) && (n->flags & IR3_INSTR_G)))
@@ -246,13 +277,17 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 			}
 		}
 
-		if (is_input(n))
+		if (is_input(n)) {
 			last_input = n;
+			last_input_needs_ss |= (n->opc == OPC_LDLV);
+		}
 
 		last_n = n;
 	}
 
 	if (last_input) {
+		assert(block == list_first_entry(&block->shader->block_list,
+				struct ir3_block, node));
 		/* special hack.. if using ldlv to bypass interpolation,
 		 * we need to insert a dummy bary.f on which we can set
 		 * the (ei) flag:
@@ -262,7 +297,6 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 
 			/* (ss)bary.f (ei)r63.x, 0, r0.x */
 			baryf = ir3_instr_create(block, OPC_BARY_F);
-			baryf->flags |= IR3_INSTR_SS;
 			ir3_reg_create(baryf, regid(63, 0), 0);
 			ir3_reg_create(baryf, 0, IR3_REG_IMMED)->iim_val = 0;
 			ir3_reg_create(baryf, regid(0, 0), 0);
@@ -272,8 +306,15 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 			list_add(&baryf->node, &last_input->node);
 
 			last_input = baryf;
+
+			/* by definition, we need (ss) since we are inserting
+			 * the dummy bary.f immediately after the ldlv:
+			 */
+			last_input_needs_ss = true;
 		}
 		last_input->regs[0]->flags |= IR3_REG_EI;
+		if (last_input_needs_ss)
+			last_input->flags |= IR3_INSTR_SS;
 	}
 
 	if (last_rel)
@@ -389,7 +430,7 @@ resolve_jump(struct ir3_instruction *instr)
 	else
 		next_block = 1;
 
-	if ((!target) || (target->ip == (instr->ip + next_block))) {
+	if (target->ip == (instr->ip + next_block)) {
 		list_delinit(&instr->node);
 		return true;
 	} else {
@@ -462,12 +503,14 @@ mark_convergence_points(struct ir3 *ir)
 }
 
 void
-ir3_legalize(struct ir3 *ir, int *num_samp, bool *has_ssbo, int *max_bary)
+ir3_legalize(struct ir3 *ir, bool *has_ssbo, bool *need_pixlod, int *max_bary)
 {
 	struct ir3_legalize_ctx *ctx = rzalloc(ir, struct ir3_legalize_ctx);
 	bool progress;
 
 	ctx->max_bary = -1;
+	ctx->compiler = ir->compiler;
+	ctx->type = ir->type;
 
 	/* allocate per-block data: */
 	list_for_each_entry (struct ir3_block, block, &ir->block_list, node) {
@@ -482,8 +525,8 @@ ir3_legalize(struct ir3 *ir, int *num_samp, bool *has_ssbo, int *max_bary)
 		}
 	} while (progress);
 
-	*num_samp = ctx->num_samp;
 	*has_ssbo = ctx->has_ssbo;
+	*need_pixlod = ctx->need_pixlod;
 	*max_bary = ctx->max_bary;
 
 	do {

@@ -22,20 +22,26 @@
  */
 
 #include "wsi_common_private.h"
-#include "drm_fourcc.h"
+#include "drm-uapi/drm_fourcc.h"
 #include "util/macros.h"
+#include "util/xmlconfig.h"
 #include "vk_util.h"
 
+#include <time.h>
 #include <unistd.h>
 #include <xf86drm.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 VkResult
 wsi_device_init(struct wsi_device *wsi,
                 VkPhysicalDevice pdevice,
                 WSI_FN_GetPhysicalDeviceProcAddr proc_addr,
                 const VkAllocationCallbacks *alloc,
-                int display_fd)
+                int display_fd,
+                const struct driOptionCache *dri_options)
 {
+   const char *present_mode;
    VkResult result;
 
    memset(wsi, 0, sizeof(*wsi));
@@ -57,6 +63,9 @@ wsi_device_init(struct wsi_device *wsi,
       .pNext = &wsi->pci_bus_info,
    };
    GetPhysicalDeviceProperties2(pdevice, &pdp2);
+
+   wsi->maxImageDimension2D = pdp2.properties.limits.maxImageDimension2D;
+   wsi->override_present_mode = VK_PRESENT_MODE_MAX_ENUM_KHR;
 
    GetPhysicalDeviceMemoryProperties(pdevice, &wsi->memory_props);
    GetPhysicalDeviceQueueFamilyProperties(pdevice, &wsi->queue_family_count, NULL);
@@ -92,7 +101,7 @@ wsi_device_init(struct wsi_device *wsi,
 #undef WSI_GET_CB
 
 #ifdef VK_USE_PLATFORM_XCB_KHR
-   result = wsi_x11_init_wsi(wsi, alloc);
+   result = wsi_x11_init_wsi(wsi, alloc, dri_options);
    if (result != VK_SUCCESS)
       goto fail;
 #endif
@@ -108,6 +117,25 @@ wsi_device_init(struct wsi_device *wsi,
    if (result != VK_SUCCESS)
       goto fail;
 #endif
+
+   present_mode = getenv("MESA_VK_WSI_PRESENT_MODE");
+   if (present_mode) {
+      if (!strcmp(present_mode, "fifo")) {
+         wsi->override_present_mode = VK_PRESENT_MODE_FIFO_KHR;
+      } else if (!strcmp(present_mode, "mailbox")) {
+         wsi->override_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+      } else if (!strcmp(present_mode, "immediate")) {
+         wsi->override_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+      } else {
+         fprintf(stderr, "Invalid MESA_VK_WSI_PRESENT_MODE value!\n");
+      }
+   }
+
+   if (dri_options) {
+      if (driCheckOption(dri_options, "adaptive_sync", DRI_BOOL))
+         wsi->enable_adaptive_sync = driQueryOptionb(dri_options,
+                                                     "adaptive_sync");
+   }
 
    return VK_SUCCESS;
 
@@ -199,11 +227,68 @@ fail:
    return result;
 }
 
+static bool
+wsi_swapchain_is_present_mode_supported(struct wsi_device *wsi,
+                                        const VkSwapchainCreateInfoKHR *pCreateInfo,
+                                        VkPresentModeKHR mode)
+{
+      ICD_FROM_HANDLE(VkIcdSurfaceBase, surface, pCreateInfo->surface);
+      struct wsi_interface *iface = wsi->wsi[surface->platform];
+      VkPresentModeKHR *present_modes;
+      uint32_t present_mode_count;
+      bool supported = false;
+      VkResult result;
+
+      result = iface->get_present_modes(surface, &present_mode_count, NULL);
+      if (result != VK_SUCCESS)
+         return supported;
+
+      present_modes = malloc(present_mode_count * sizeof(*present_modes));
+      if (!present_modes)
+         return supported;
+
+      result = iface->get_present_modes(surface, &present_mode_count,
+                                        present_modes);
+      if (result != VK_SUCCESS)
+         goto fail;
+
+      for (uint32_t i = 0; i < present_mode_count; i++) {
+         if (present_modes[i] == mode) {
+            supported = true;
+            break;
+         }
+      }
+
+fail:
+      free(present_modes);
+      return supported;
+}
+
+enum VkPresentModeKHR
+wsi_swapchain_get_present_mode(struct wsi_device *wsi,
+                               const VkSwapchainCreateInfoKHR *pCreateInfo)
+{
+   if (wsi->override_present_mode == VK_PRESENT_MODE_MAX_ENUM_KHR)
+      return pCreateInfo->presentMode;
+
+   if (!wsi_swapchain_is_present_mode_supported(wsi, pCreateInfo,
+                                                wsi->override_present_mode)) {
+      fprintf(stderr, "Unsupported MESA_VK_WSI_PRESENT_MODE value!\n");
+      return pCreateInfo->presentMode;
+   }
+
+   return wsi->override_present_mode;
+}
+
 void
 wsi_swapchain_finish(struct wsi_swapchain *chain)
 {
-   for (unsigned i = 0; i < ARRAY_SIZE(chain->fences); i++)
-      chain->wsi->DestroyFence(chain->device, chain->fences[i], &chain->alloc);
+   if (chain->fences) {
+      for (unsigned i = 0; i < chain->image_count; i++)
+         chain->wsi->DestroyFence(chain->device, chain->fences[i], &chain->alloc);
+
+      vk_free(&chain->alloc, chain->fences);
+   }
 
    for (uint32_t i = 0; i < chain->wsi->queue_family_count; i++) {
       chain->wsi->DestroyCommandPool(chain->device, chain->cmd_pools[i],
@@ -734,7 +819,7 @@ wsi_common_get_surface_capabilities(struct wsi_device *wsi_device,
       .sType = VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR,
    };
 
-   VkResult result = iface->get_capabilities2(surface, NULL, &caps2);
+   VkResult result = iface->get_capabilities2(surface, wsi_device, NULL, &caps2);
 
    if (result == VK_SUCCESS)
       *pSurfaceCapabilities = caps2.surfaceCapabilities;
@@ -750,7 +835,7 @@ wsi_common_get_surface_capabilities2(struct wsi_device *wsi_device,
    ICD_FROM_HANDLE(VkIcdSurfaceBase, surface, pSurfaceInfo->surface);
    struct wsi_interface *iface = wsi_device->wsi[surface->platform];
 
-   return iface->get_capabilities2(surface, pSurfaceInfo->pNext,
+   return iface->get_capabilities2(surface, wsi_device, pSurfaceInfo->pNext,
                                    pSurfaceCapabilities);
 }
 
@@ -777,7 +862,7 @@ wsi_common_get_surface_capabilities2ext(
       .pNext = &counters,
    };
 
-   VkResult result = iface->get_capabilities2(surface, NULL, &caps2);
+   VkResult result = iface->get_capabilities2(surface, wsi_device, NULL, &caps2);
 
    if (result == VK_SUCCESS) {
       VkSurfaceCapabilities2EXT *ext_caps = pSurfaceCapabilities;
@@ -868,6 +953,15 @@ wsi_common_create_swapchain(struct wsi_device *wsi,
    if (result != VK_SUCCESS)
       return result;
 
+   swapchain->fences = vk_zalloc(pAllocator,
+                                 sizeof (*swapchain->fences) * swapchain->image_count,
+                                 sizeof (*swapchain->fences),
+                                 VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!swapchain->fences) {
+      swapchain->destroy(swapchain, pAllocator);
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
+
    *pSwapchain = wsi_swapchain_to_handle(swapchain);
 
    return VK_SUCCESS;
@@ -927,9 +1021,10 @@ wsi_common_queue_present(const struct wsi_device *wsi,
 
    for (uint32_t i = 0; i < pPresentInfo->swapchainCount; i++) {
       WSI_FROM_HANDLE(wsi_swapchain, swapchain, pPresentInfo->pSwapchains[i]);
+      uint32_t image_index = pPresentInfo->pImageIndices[i];
       VkResult result;
 
-      if (swapchain->fences[0] == VK_NULL_HANDLE) {
+      if (swapchain->fences[image_index] == VK_NULL_HANDLE) {
          const VkFenceCreateInfo fence_info = {
             .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
             .pNext = NULL,
@@ -937,11 +1032,14 @@ wsi_common_queue_present(const struct wsi_device *wsi,
          };
          result = wsi->CreateFence(device, &fence_info,
                                    &swapchain->alloc,
-                                   &swapchain->fences[0]);
+                                   &swapchain->fences[image_index]);
          if (result != VK_SUCCESS)
             goto fail_present;
       } else {
-         wsi->ResetFences(device, 1, &swapchain->fences[0]);
+         wsi->WaitForFences(device, 1, &swapchain->fences[image_index],
+                            true, 1);
+
+         wsi->ResetFences(device, 1, &swapchain->fences[image_index]);
       }
 
       VkSubmitInfo submit_info = {
@@ -978,13 +1076,13 @@ wsi_common_queue_present(const struct wsi_device *wsi,
           * command buffer is attached to the image.
           */
          struct wsi_image *image =
-            swapchain->get_wsi_image(swapchain, pPresentInfo->pImageIndices[i]);
+            swapchain->get_wsi_image(swapchain, image_index);
          submit_info.commandBufferCount = 1;
          submit_info.pCommandBuffers =
             &image->prime.blit_cmd_buffers[queue_family_index];
       }
 
-      result = wsi->QueueSubmit(queue, 1, &submit_info, swapchain->fences[0]);
+      result = wsi->QueueSubmit(queue, 1, &submit_info, swapchain->fences[image_index]);
       vk_free(&swapchain->alloc, stage_flags);
       if (result != VK_SUCCESS)
          goto fail_present;
@@ -993,20 +1091,9 @@ wsi_common_queue_present(const struct wsi_device *wsi,
       if (regions && regions->pRegions)
          region = &regions->pRegions[i];
 
-      result = swapchain->queue_present(swapchain,
-                                        pPresentInfo->pImageIndices[i],
-                                        region);
+      result = swapchain->queue_present(swapchain, image_index, region);
       if (result != VK_SUCCESS)
          goto fail_present;
-
-      VkFence last = swapchain->fences[2];
-      swapchain->fences[2] = swapchain->fences[1];
-      swapchain->fences[1] = swapchain->fences[0];
-      swapchain->fences[0] = last;
-
-      if (last != VK_NULL_HANDLE) {
-         wsi->WaitForFences(device, 1, &last, true, 1);
-      }
 
    fail_present:
       if (pPresentInfo->pResults != NULL)
@@ -1018,4 +1105,12 @@ wsi_common_queue_present(const struct wsi_device *wsi,
    }
 
    return final_result;
+}
+
+uint64_t
+wsi_common_get_current_time(void)
+{
+   struct timespec current;
+   clock_gettime(CLOCK_MONOTONIC, &current);
+   return current.tv_nsec + current.tv_sec * 1000000000ull;
 }

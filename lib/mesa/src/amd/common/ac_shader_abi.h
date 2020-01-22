@@ -32,11 +32,16 @@ struct nir_variable;
 
 #define AC_LLVM_MAX_OUTPUTS (VARYING_SLOT_VAR31 + 1)
 
+#define AC_MAX_INLINE_PUSH_CONSTS 8
+
 enum ac_descriptor_type {
 	AC_DESC_IMAGE,
 	AC_DESC_FMASK,
 	AC_DESC_SAMPLER,
 	AC_DESC_BUFFER,
+	AC_DESC_PLANE_0,
+	AC_DESC_PLANE_1,
+	AC_DESC_PLANE_2,
 };
 
 /* Document the shader ABI during compilation. This is what allows radeonsi and
@@ -58,6 +63,9 @@ struct ac_shader_abi {
 	LLVMValueRef ancillary;
 	LLVMValueRef sample_coverage;
 	LLVMValueRef prim_mask;
+	LLVMValueRef color0;
+	LLVMValueRef color1;
+	LLVMValueRef user_data;
 	/* CS */
 	LLVMValueRef local_invocation_ids;
 	LLVMValueRef num_work_groups;
@@ -66,6 +74,9 @@ struct ac_shader_abi {
 
 	/* Vulkan only */
 	LLVMValueRef push_constants;
+	LLVMValueRef inline_push_consts[AC_MAX_INLINE_PUSH_CONSTS];
+	unsigned num_inline_push_consts;
+	unsigned base_inline_push_consts;
 	LLVMValueRef view_index;
 
 	LLVMValueRef outputs[AC_LLVM_MAX_OUTPUTS * 4];
@@ -128,7 +139,8 @@ struct ac_shader_abi {
 	LLVMValueRef (*load_patch_vertices_in)(struct ac_shader_abi *abi);
 
 	LLVMValueRef (*load_tess_level)(struct ac_shader_abi *abi,
-					unsigned varying_id);
+					unsigned varying_id,
+					bool load_default_state);
 
 
 	LLVMValueRef (*load_ubo)(struct ac_shader_abi *abi, LLVMValueRef index);
@@ -188,14 +200,20 @@ struct ac_shader_abi {
 
 	LLVMValueRef (*load_base_vertex)(struct ac_shader_abi *abi);
 
-	/* Whether to clamp the shadow reference value to [0,1]on VI. Radeonsi currently
+	LLVMValueRef (*emit_fbfetch)(struct ac_shader_abi *abi);
+
+	/* Whether to clamp the shadow reference value to [0,1]on GFX8. Radeonsi currently
 	 * uses it due to promoting D16 to D32, but radv needs it off. */
 	bool clamp_shadow_reference;
+	bool interp_at_sample_force_center;
 
 	/* Whether to workaround GFX9 ignoring the stride for the buffer size if IDXEN=0
 	* and LLVM optimizes an indexed load with constant index to IDXEN=0. */
 	bool gfx9_stride_size_workaround;
 	bool gfx9_stride_size_workaround_for_atomic;
+
+	/* Whether bounds checks are required */
+	bool robust_buffer_access;
 };
 
 #endif /* AC_SHADER_ABI_H */

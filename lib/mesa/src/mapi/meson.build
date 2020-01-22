@@ -1,4 +1,4 @@
-# Copyright © 2017 Intel Corporation
+# Copyright © 2017-2019 Intel Corporation
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,34 @@ mapi_abi_py = files('mapi_abi.py')
 subdir('glapi')
 if with_shared_glapi
   subdir('shared-glapi')
+else
+  libglapi = []
 endif
 if with_gles1
-  subdir('es1api')
+  if not with_glvnd
+    subdir('es1api')
+  elif not glvnd_has_headers_and_pc_files
+    pkg.generate(
+      name : 'glesv1_cm',
+      filebase : 'glesv1_cm',
+      description : 'Mesa OpenGL ES 1.1 CM library',
+      version : meson.project_version(),
+      libraries : '-L${libdir} -lGLESv1_CM',
+      libraries_private : gl_priv_libs,
+    )
+  endif
 endif
 if with_gles2
-  subdir('es2api')
+  if not with_glvnd
+    subdir('es2api')
+  elif not glvnd_has_headers_and_pc_files
+    pkg.generate(
+      name : 'glesv2',
+      filebase : 'glesv2',
+      description : 'Mesa OpenGL ES 2.0 library',
+      version : meson.project_version(),
+      libraries : '-L${libdir} -lGLESv2',
+      libraries_private : gl_priv_libs,
+    )
+  endif
 endif

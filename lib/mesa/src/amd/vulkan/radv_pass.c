@@ -28,6 +28,156 @@
 
 #include "vk_util.h"
 
+static void
+radv_render_pass_add_subpass_dep(struct radv_render_pass *pass,
+				 const VkSubpassDependency2KHR *dep)
+{
+	uint32_t src = dep->srcSubpass;
+	uint32_t dst = dep->dstSubpass;
+
+	/* Ignore subpass self-dependencies as they allow the app to call
+	 * vkCmdPipelineBarrier() inside the render pass and the driver should
+	 * only do the barrier when called, not when starting the render pass.
+	 */
+	if (src == dst)
+		return;
+
+	/* Accumulate all ingoing external dependencies to the first subpass. */
+	if (src == VK_SUBPASS_EXTERNAL)
+		dst = 0;
+
+	if (dst == VK_SUBPASS_EXTERNAL) {
+		if (dep->dstStageMask != VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
+			pass->end_barrier.src_stage_mask |= dep->srcStageMask;
+		pass->end_barrier.src_access_mask |= dep->srcAccessMask;
+		pass->end_barrier.dst_access_mask |= dep->dstAccessMask;
+	} else {
+		if (dep->dstStageMask != VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT)
+			pass->subpasses[dst].start_barrier.src_stage_mask |= dep->srcStageMask;
+		pass->subpasses[dst].start_barrier.src_access_mask |= dep->srcAccessMask;
+		pass->subpasses[dst].start_barrier.dst_access_mask |= dep->dstAccessMask;
+	}
+}
+
+static void
+radv_render_pass_compile(struct radv_render_pass *pass)
+{
+	for (uint32_t i = 0; i < pass->subpass_count; i++) {
+		struct radv_subpass *subpass = &pass->subpasses[i];
+
+		for (uint32_t j = 0; j < subpass->attachment_count; j++) {
+			struct radv_subpass_attachment *subpass_att =
+				&subpass->attachments[j];
+			if (subpass_att->attachment == VK_ATTACHMENT_UNUSED)
+				continue;
+
+			struct radv_render_pass_attachment *pass_att =
+				&pass->attachments[subpass_att->attachment];
+
+			pass_att->first_subpass_idx = UINT32_MAX;
+		}
+	}
+
+	for (uint32_t i = 0; i < pass->subpass_count; i++) {
+		struct radv_subpass *subpass = &pass->subpasses[i];
+		uint32_t color_sample_count = 1, depth_sample_count = 1;
+
+		/* We don't allow depth_stencil_attachment to be non-NULL and
+		 * be VK_ATTACHMENT_UNUSED.  This way something can just check
+		 * for NULL and be guaranteed that they have a valid
+		 * attachment.
+		 */
+		if (subpass->depth_stencil_attachment &&
+		    subpass->depth_stencil_attachment->attachment == VK_ATTACHMENT_UNUSED)
+			subpass->depth_stencil_attachment = NULL;
+
+		if (subpass->ds_resolve_attachment &&
+		    subpass->ds_resolve_attachment->attachment == VK_ATTACHMENT_UNUSED)
+			subpass->ds_resolve_attachment = NULL;
+
+		for (uint32_t j = 0; j < subpass->attachment_count; j++) {
+			struct radv_subpass_attachment *subpass_att =
+				&subpass->attachments[j];
+			if (subpass_att->attachment == VK_ATTACHMENT_UNUSED)
+				continue;
+
+			struct radv_render_pass_attachment *pass_att =
+				&pass->attachments[subpass_att->attachment];
+
+			if (i < pass_att->first_subpass_idx)
+				pass_att->first_subpass_idx = i;
+			pass_att->last_subpass_idx = i;
+		}
+
+		subpass->has_color_att = false;
+		for (uint32_t j = 0; j < subpass->color_count; j++) {
+			struct radv_subpass_attachment *subpass_att =
+				&subpass->color_attachments[j];
+			if (subpass_att->attachment == VK_ATTACHMENT_UNUSED)
+				continue;
+
+			subpass->has_color_att = true;
+
+			struct radv_render_pass_attachment *pass_att =
+				&pass->attachments[subpass_att->attachment];
+
+			color_sample_count = pass_att->samples;
+		}
+
+		if (subpass->depth_stencil_attachment) {
+			const uint32_t a =
+				subpass->depth_stencil_attachment->attachment;
+			struct radv_render_pass_attachment *pass_att =
+				&pass->attachments[a];
+			depth_sample_count = pass_att->samples;
+		}
+
+		subpass->max_sample_count = MAX2(color_sample_count,
+						 depth_sample_count);
+
+		/* We have to handle resolve attachments specially */
+		subpass->has_color_resolve = false;
+		if (subpass->resolve_attachments) {
+			for (uint32_t j = 0; j < subpass->color_count; j++) {
+				struct radv_subpass_attachment *resolve_att =
+					&subpass->resolve_attachments[j];
+
+				if (resolve_att->attachment == VK_ATTACHMENT_UNUSED)
+					continue;
+
+				subpass->has_color_resolve = true;
+			}
+		}
+
+		for (uint32_t j = 0; j < subpass->input_count; ++j) {
+			if (subpass->input_attachments[j].attachment == VK_ATTACHMENT_UNUSED)
+				continue;
+
+			for (uint32_t k = 0; k < subpass->color_count; ++k) {
+				if (subpass->color_attachments[k].attachment == subpass->input_attachments[j].attachment) {
+					subpass->input_attachments[j].in_render_loop = true;
+					subpass->color_attachments[k].in_render_loop = true;
+				}
+			}
+
+			if (subpass->depth_stencil_attachment &&
+			    subpass->depth_stencil_attachment->attachment == subpass->input_attachments[j].attachment) {
+				subpass->input_attachments[j].in_render_loop = true;
+				subpass->depth_stencil_attachment->in_render_loop = true;
+			}
+		}
+	}
+}
+
+static unsigned
+radv_num_subpass_attachments(const VkSubpassDescription *desc)
+{
+	return desc->inputAttachmentCount +
+	       desc->colorAttachmentCount +
+	       (desc->pResolveAttachments ? desc->colorAttachmentCount : 0) +
+	       (desc->pDepthStencilAttachment != NULL);
+}
+
 VkResult radv_CreateRenderPass(
 	VkDevice                                    _device,
 	const VkRenderPassCreateInfo*               pCreateInfo,
@@ -82,13 +232,8 @@ VkResult radv_CreateRenderPass(
 	uint32_t subpass_attachment_count = 0;
 	struct radv_subpass_attachment *p;
 	for (uint32_t i = 0; i < pCreateInfo->subpassCount; i++) {
-		const VkSubpassDescription *desc = &pCreateInfo->pSubpasses[i];
-
 		subpass_attachment_count +=
-			desc->inputAttachmentCount +
-			desc->colorAttachmentCount +
-			(desc->pResolveAttachments ? desc->colorAttachmentCount : 0) +
-			(desc->pDepthStencilAttachment != NULL);
+			radv_num_subpass_attachments(&pCreateInfo->pSubpasses[i]);
 	}
 
 	if (subpass_attachment_count) {
@@ -106,11 +251,13 @@ VkResult radv_CreateRenderPass(
 	p = pass->subpass_attachments;
 	for (uint32_t i = 0; i < pCreateInfo->subpassCount; i++) {
 		const VkSubpassDescription *desc = &pCreateInfo->pSubpasses[i];
-		uint32_t color_sample_count = 1, depth_sample_count = 1;
 		struct radv_subpass *subpass = &pass->subpasses[i];
 
 		subpass->input_count = desc->inputAttachmentCount;
 		subpass->color_count = desc->colorAttachmentCount;
+		subpass->attachment_count = radv_num_subpass_attachments(desc);
+		subpass->attachments = p;
+
 		if (multiview_info)
 			subpass->view_mask = multiview_info->pViewMasks[i];
 
@@ -123,8 +270,6 @@ VkResult radv_CreateRenderPass(
 					.attachment = desc->pInputAttachments[j].attachment,
 					.layout = desc->pInputAttachments[j].layout,
 				};
-				if (desc->pInputAttachments[j].attachment != VK_ATTACHMENT_UNUSED)
-					pass->attachments[desc->pInputAttachments[j].attachment].view_mask |= subpass->view_mask;
 			}
 		}
 
@@ -137,74 +282,64 @@ VkResult radv_CreateRenderPass(
 					.attachment = desc->pColorAttachments[j].attachment,
 					.layout = desc->pColorAttachments[j].layout,
 				};
-				if (desc->pColorAttachments[j].attachment != VK_ATTACHMENT_UNUSED) {
-					pass->attachments[desc->pColorAttachments[j].attachment].view_mask |= subpass->view_mask;
-					color_sample_count = pCreateInfo->pAttachments[desc->pColorAttachments[j].attachment].samples;
-				}
 			}
 		}
 
-		subpass->has_resolve = false;
 		if (desc->pResolveAttachments) {
 			subpass->resolve_attachments = p;
 			p += desc->colorAttachmentCount;
 
 			for (uint32_t j = 0; j < desc->colorAttachmentCount; j++) {
-				uint32_t a = desc->pResolveAttachments[j].attachment;
 				subpass->resolve_attachments[j] = (struct radv_subpass_attachment) {
 					.attachment = desc->pResolveAttachments[j].attachment,
 					.layout = desc->pResolveAttachments[j].layout,
 				};
-				if (a != VK_ATTACHMENT_UNUSED) {
-					subpass->has_resolve = true;
-					pass->attachments[desc->pResolveAttachments[j].attachment].view_mask |= subpass->view_mask;
-				}
 			}
 		}
 
 		if (desc->pDepthStencilAttachment) {
-			subpass->depth_stencil_attachment = (struct radv_subpass_attachment) {
+			subpass->depth_stencil_attachment = p++;
+
+			*subpass->depth_stencil_attachment = (struct radv_subpass_attachment) {
 				.attachment = desc->pDepthStencilAttachment->attachment,
 				.layout = desc->pDepthStencilAttachment->layout,
 			};
-			if (desc->pDepthStencilAttachment->attachment != VK_ATTACHMENT_UNUSED) {
-				pass->attachments[desc->pDepthStencilAttachment->attachment].view_mask |= subpass->view_mask;
-				depth_sample_count = pCreateInfo->pAttachments[desc->pDepthStencilAttachment->attachment].samples;
-			}
-		} else {
-			subpass->depth_stencil_attachment.attachment = VK_ATTACHMENT_UNUSED;
 		}
-
-		subpass->max_sample_count = MAX2(color_sample_count,
-						 depth_sample_count);
 	}
 
 	for (unsigned i = 0; i < pCreateInfo->dependencyCount; ++i) {
-		uint32_t src = pCreateInfo->pDependencies[i].srcSubpass;
-		uint32_t dst = pCreateInfo->pDependencies[i].dstSubpass;
-
-		/* Ignore subpass self-dependencies as they allow the app to
-		 * call vkCmdPipelineBarrier() inside the render pass and the
-		 * driver should only do the barrier when called, not when
-		 * starting the render pass.
-		 */
-		if (src == dst)
-			continue;
-
-		if (dst == VK_SUBPASS_EXTERNAL) {
-			pass->end_barrier.src_stage_mask = pCreateInfo->pDependencies[i].srcStageMask;
-			pass->end_barrier.src_access_mask = pCreateInfo->pDependencies[i].srcAccessMask;
-			pass->end_barrier.dst_access_mask = pCreateInfo->pDependencies[i].dstAccessMask;
-		} else {
-			pass->subpasses[dst].start_barrier.src_stage_mask = pCreateInfo->pDependencies[i].srcStageMask;
-			pass->subpasses[dst].start_barrier.src_access_mask = pCreateInfo->pDependencies[i].srcAccessMask;
-			pass->subpasses[dst].start_barrier.dst_access_mask = pCreateInfo->pDependencies[i].dstAccessMask;
-		}
+		/* Convert to a Dependency2KHR */
+		struct VkSubpassDependency2KHR dep2 = {
+			.srcSubpass       = pCreateInfo->pDependencies[i].srcSubpass,
+			.dstSubpass       = pCreateInfo->pDependencies[i].dstSubpass,
+			.srcStageMask     = pCreateInfo->pDependencies[i].srcStageMask,
+			.dstStageMask     = pCreateInfo->pDependencies[i].dstStageMask,
+			.srcAccessMask    = pCreateInfo->pDependencies[i].srcAccessMask,
+			.dstAccessMask    = pCreateInfo->pDependencies[i].dstAccessMask,
+			.dependencyFlags  = pCreateInfo->pDependencies[i].dependencyFlags,
+		};
+		radv_render_pass_add_subpass_dep(pass, &dep2);
 	}
+
+	radv_render_pass_compile(pass);
 
 	*pRenderPass = radv_render_pass_to_handle(pass);
 
 	return VK_SUCCESS;
+}
+
+static unsigned
+radv_num_subpass_attachments2(const VkSubpassDescription2KHR *desc)
+{
+	const VkSubpassDescriptionDepthStencilResolveKHR *ds_resolve =
+		vk_find_struct_const(desc->pNext,
+				     SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR);
+
+	return desc->inputAttachmentCount +
+	       desc->colorAttachmentCount +
+	       (desc->pResolveAttachments ? desc->colorAttachmentCount : 0) +
+	       (desc->pDepthStencilAttachment != NULL) +
+	       (ds_resolve && ds_resolve->pDepthStencilResolveAttachment);
 }
 
 VkResult radv_CreateRenderPass2KHR(
@@ -250,13 +385,8 @@ VkResult radv_CreateRenderPass2KHR(
 	uint32_t subpass_attachment_count = 0;
 	struct radv_subpass_attachment *p;
 	for (uint32_t i = 0; i < pCreateInfo->subpassCount; i++) {
-		const VkSubpassDescription2KHR *desc = &pCreateInfo->pSubpasses[i];
-
 		subpass_attachment_count +=
-			desc->inputAttachmentCount +
-			desc->colorAttachmentCount +
-			(desc->pResolveAttachments ? desc->colorAttachmentCount : 0) +
-			(desc->pDepthStencilAttachment != NULL);
+			radv_num_subpass_attachments2(&pCreateInfo->pSubpasses[i]);
 	}
 
 	if (subpass_attachment_count) {
@@ -274,11 +404,12 @@ VkResult radv_CreateRenderPass2KHR(
 	p = pass->subpass_attachments;
 	for (uint32_t i = 0; i < pCreateInfo->subpassCount; i++) {
 		const VkSubpassDescription2KHR *desc = &pCreateInfo->pSubpasses[i];
-		uint32_t color_sample_count = 1, depth_sample_count = 1;
 		struct radv_subpass *subpass = &pass->subpasses[i];
 
 		subpass->input_count = desc->inputAttachmentCount;
 		subpass->color_count = desc->colorAttachmentCount;
+		subpass->attachment_count = radv_num_subpass_attachments2(desc);
+		subpass->attachments = p;
 		subpass->view_mask = desc->viewMask;
 
 		if (desc->inputAttachmentCount > 0) {
@@ -290,8 +421,6 @@ VkResult radv_CreateRenderPass2KHR(
 					.attachment = desc->pInputAttachments[j].attachment,
 					.layout = desc->pInputAttachments[j].layout,
 				};
-				if (desc->pInputAttachments[j].attachment != VK_ATTACHMENT_UNUSED)
-					pass->attachments[desc->pInputAttachments[j].attachment].view_mask |= subpass->view_mask;
 			}
 		}
 
@@ -304,70 +433,53 @@ VkResult radv_CreateRenderPass2KHR(
 					.attachment = desc->pColorAttachments[j].attachment,
 					.layout = desc->pColorAttachments[j].layout,
 				};
-				if (desc->pColorAttachments[j].attachment != VK_ATTACHMENT_UNUSED) {
-					pass->attachments[desc->pColorAttachments[j].attachment].view_mask |= subpass->view_mask;
-					color_sample_count = pCreateInfo->pAttachments[desc->pColorAttachments[j].attachment].samples;
-				}
 			}
 		}
 
-		subpass->has_resolve = false;
 		if (desc->pResolveAttachments) {
 			subpass->resolve_attachments = p;
 			p += desc->colorAttachmentCount;
 
 			for (uint32_t j = 0; j < desc->colorAttachmentCount; j++) {
-				uint32_t a = desc->pResolveAttachments[j].attachment;
 				subpass->resolve_attachments[j] = (struct radv_subpass_attachment) {
 					.attachment = desc->pResolveAttachments[j].attachment,
 					.layout = desc->pResolveAttachments[j].layout,
 				};
-				if (a != VK_ATTACHMENT_UNUSED) {
-					subpass->has_resolve = true;
-					pass->attachments[desc->pResolveAttachments[j].attachment].view_mask |= subpass->view_mask;
-				}
 			}
 		}
 
 		if (desc->pDepthStencilAttachment) {
-			subpass->depth_stencil_attachment = (struct radv_subpass_attachment) {
+			subpass->depth_stencil_attachment = p++;
+
+			*subpass->depth_stencil_attachment = (struct radv_subpass_attachment) {
 				.attachment = desc->pDepthStencilAttachment->attachment,
 				.layout = desc->pDepthStencilAttachment->layout,
 			};
-			if (desc->pDepthStencilAttachment->attachment != VK_ATTACHMENT_UNUSED) {
-				pass->attachments[desc->pDepthStencilAttachment->attachment].view_mask |= subpass->view_mask;
-				depth_sample_count = pCreateInfo->pAttachments[desc->pDepthStencilAttachment->attachment].samples;
-			}
-		} else {
-			subpass->depth_stencil_attachment.attachment = VK_ATTACHMENT_UNUSED;
 		}
 
-		subpass->max_sample_count = MAX2(color_sample_count,
-						 depth_sample_count);
+		const VkSubpassDescriptionDepthStencilResolveKHR *ds_resolve =
+			vk_find_struct_const(desc->pNext,
+					     SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR);
+
+		if (ds_resolve && ds_resolve->pDepthStencilResolveAttachment) {
+			subpass->ds_resolve_attachment = p++;
+
+			*subpass->ds_resolve_attachment = (struct radv_subpass_attachment) {
+				.attachment =  ds_resolve->pDepthStencilResolveAttachment->attachment,
+				.layout =      ds_resolve->pDepthStencilResolveAttachment->layout,
+			};
+
+			subpass->depth_resolve_mode = ds_resolve->depthResolveMode;
+			subpass->stencil_resolve_mode = ds_resolve->stencilResolveMode;
+		}
 	}
 
 	for (unsigned i = 0; i < pCreateInfo->dependencyCount; ++i) {
-		uint32_t src = pCreateInfo->pDependencies[i].srcSubpass;
-		uint32_t dst = pCreateInfo->pDependencies[i].dstSubpass;
-
-		/* Ignore subpass self-dependencies as they allow the app to
-		 * call vkCmdPipelineBarrier() inside the render pass and the
-		 * driver should only do the barrier when called, not when
-		 * starting the render pass.
-		 */
-		if (src == dst)
-			continue;
-
-		if (dst == VK_SUBPASS_EXTERNAL) {
-			pass->end_barrier.src_stage_mask = pCreateInfo->pDependencies[i].srcStageMask;
-			pass->end_barrier.src_access_mask = pCreateInfo->pDependencies[i].srcAccessMask;
-			pass->end_barrier.dst_access_mask = pCreateInfo->pDependencies[i].dstAccessMask;
-		} else {
-			pass->subpasses[dst].start_barrier.src_stage_mask = pCreateInfo->pDependencies[i].srcStageMask;
-			pass->subpasses[dst].start_barrier.src_access_mask = pCreateInfo->pDependencies[i].srcAccessMask;
-			pass->subpasses[dst].start_barrier.dst_access_mask = pCreateInfo->pDependencies[i].dstAccessMask;
-		}
+		radv_render_pass_add_subpass_dep(pass,
+						 &pCreateInfo->pDependencies[i]);
 	}
+
+	radv_render_pass_compile(pass);
 
 	*pRenderPass = radv_render_pass_to_handle(pass);
 

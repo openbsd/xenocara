@@ -12,7 +12,11 @@ C_SOURCES := \
 	virgl_resource.h \
 	virgl_screen.c \
 	virgl_screen.h \
+	virgl_staging_mgr.c \
+	virgl_staging_mgr.h \
 	virgl_streamout.c \
 	virgl_texture.c \
 	virgl_tgsi.c \
+	virgl_transfer_queue.c \
+	virgl_transfer_queue.h \
 	virgl_winsys.h

@@ -93,6 +93,11 @@ enum virgl_context_cmd {
    VIRGL_CCMD_TEXTURE_BARRIER,
    VIRGL_CCMD_SET_ATOMIC_BUFFERS,
    VIRGL_CCMD_SET_DEBUG_FLAGS,
+   VIRGL_CCMD_GET_QUERY_RESULT_QBO,
+   VIRGL_CCMD_TRANSFER3D,
+   VIRGL_CCMD_END_TRANSFERS,
+   VIRGL_CCMD_COPY_TRANSFER3D,
+   VIRGL_CCMD_SET_TWEAKS,
 };
 
 /*
@@ -102,6 +107,7 @@ enum virgl_context_cmd {
 */
 
 #define VIRGL_CMD0(cmd, obj, len) ((cmd) | ((obj) << 8) | ((len) << 16))
+#define VIRGL_CMD0_MAX_DWORDS (((1ULL << 16) - 1) / 4) * 4
 
 /* hw specification */
 #define VIRGL_MAX_COLOR_BUFS 8
@@ -448,6 +454,7 @@ enum virgl_context_cmd {
 
 #define VIRGL_QUERY_END_HANDLE 1
 
+#define VIRGL_QUERY_RESULT_SIZE 2
 #define VIRGL_QUERY_RESULT_HANDLE 1
 #define VIRGL_QUERY_RESULT_WAIT 2
 
@@ -553,5 +560,42 @@ enum virgl_context_cmd {
 #define VIRGL_SET_ATOMIC_BUFFER_OFFSET(x) ((x) * VIRGL_SET_ATOMIC_BUFFER_ELEMENT_SIZE + 2)
 #define VIRGL_SET_ATOMIC_BUFFER_LENGTH(x) ((x) * VIRGL_SET_ATOMIC_BUFFER_ELEMENT_SIZE + 3)
 #define VIRGL_SET_ATOMIC_BUFFER_RES_HANDLE(x) ((x) * VIRGL_SET_ATOMIC_BUFFER_ELEMENT_SIZE + 4)
+
+/* qbo */
+#define VIRGL_QUERY_RESULT_QBO_SIZE 6
+#define VIRGL_QUERY_RESULT_QBO_HANDLE 1
+#define VIRGL_QUERY_RESULT_QBO_QBO_HANDLE 2
+#define VIRGL_QUERY_RESULT_QBO_WAIT 3
+#define VIRGL_QUERY_RESULT_QBO_RESULT_TYPE 4
+#define VIRGL_QUERY_RESULT_QBO_OFFSET 5
+#define VIRGL_QUERY_RESULT_QBO_INDEX 6
+
+#define VIRGL_TRANSFER_TO_HOST   1
+#define VIRGL_TRANSFER_FROM_HOST 2
+
+/* Transfer */
+#define VIRGL_TRANSFER3D_SIZE 13
+/* The first 11 dwords are the same as VIRGL_RESOURCE_IW_*  */
+#define VIRGL_TRANSFER3D_DATA_OFFSET 12
+#define VIRGL_TRANSFER3D_DIRECTION 13
+
+/* Copy transfer */
+#define VIRGL_COPY_TRANSFER3D_SIZE 14
+/* The first 11 dwords are the same as VIRGL_RESOURCE_IW_*  */
+#define VIRGL_COPY_TRANSFER3D_SRC_RES_HANDLE 12
+#define VIRGL_COPY_TRANSFER3D_SRC_RES_OFFSET 13
+#define VIRGL_COPY_TRANSFER3D_SYNCHRONIZED 14
+
+/* set tweak flags */
+#define VIRGL_SET_TWEAKS_SIZE 2
+#define VIRGL_SET_TWEAKS_ID 1
+#define VIRGL_SET_TWEAKS_VALUE 2
+
+enum vrend_tweak_type {
+   virgl_tweak_gles_brga_emulate,
+   virgl_tweak_gles_brga_apply_dest_swizzle,
+   virgl_tweak_gles_tf3_samples_passes_multiplier,
+   virgl_tweak_undefined
+};
 
 #endif

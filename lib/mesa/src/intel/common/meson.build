@@ -23,13 +23,12 @@
 files_libintel_common = files(
   'gen_clflush.h',
   'gen_batch_decoder.c',
-  'gen_debug.c',
-  'gen_debug.h',
   'gen_decoder.c',
   'gen_decoder.h',
   'gen_disasm.c',
   'gen_disasm.h',
   'gen_gem.h',
+  'gen_guardband.h',
   'gen_l3_config.c',
   'gen_l3_config.h',
   'gen_urb_config.c',
@@ -45,3 +44,64 @@ libintel_common = static_library(
   link_with : [libisl],
   dependencies : [dep_expat, dep_libdrm, dep_thread, idep_genxml],
 )
+
+libintel_extra_dependencies = []
+if with_platform_android
+  libintel_extra_dependencies += dep_android
+endif
+
+idep_libintel_common = declare_dependency(
+  link_with: [libintel_common],
+  dependencies: [libintel_extra_dependencies],
+)
+
+install_intel_gpu_tests = get_option('install-intel-gpu-tests')
+
+if install_intel_gpu_tests
+  foreach g : [['70', 'gen7'], ['75', 'hsw'], ['80', 'gen8'],
+               ['90', 'gen9'], ['110', 'gen11']]
+    executable(
+      'intel_@0@_mi_builder_test'.format(g[1]),
+      files('tests/gen_mi_builder_test.cpp'),
+      cpp_args : [
+        cpp_vis_args, cpp_msvc_compat_args,
+        '-DGEN_VERSIONx10=@0@'.format(g[0])
+      ],
+      include_directories : [inc_common, inc_intel],
+      link_with : [libintel_dev],
+      dependencies : [dep_libdrm, idep_gtest, idep_genxml, idep_mesautil],
+      install : install_intel_gpu_tests,
+    )
+  endforeach
+endif
+
+if with_tests
+  gentest_xml = files('tests/gentest.xml')
+  _name = 'gentest_pack.h'
+  gentest_pack = custom_target(
+    _name,
+    input : [gen_pack_header_py, gentest_xml],
+    output : _name,
+    command : [prog_python, '@INPUT@'],
+    capture : true,
+  )
+
+  genxml_path = join_paths(meson.source_root(),
+                           '@0@'.format(gentest_xml[0]))
+
+  test(
+    'genxml_test',
+    executable(
+      'genxml_test',
+      ['tests/genxml_test.c', gentest_pack],
+      include_directories : [inc_common, inc_intel],
+      dependencies : idep_mesautil,
+      link_with : libintel_common,
+      c_args : [
+        '-DGENXML_PATH="@0@"'.format(genxml_path)
+      ],
+    ),
+    args : ['-quiet'],
+    suite : ['intel'],
+  )
+endif

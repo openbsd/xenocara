@@ -37,8 +37,6 @@ files_libv3d = files(
   'v3d_screen.h',
   'v3d_simulator.c',
   'v3d_simulator_wrapper.cpp',
-  'v3d_tiling.c',
-  'v3d_tiling.h',
   'v3d_uniforms.c',
 )
 
@@ -52,10 +50,21 @@ files_per_version = files(
   'v3dx_state.c',
 )
 
-v3dv3_c_args = []
+v3d_driinfo_h = custom_target(
+  'v3d_driinfo.h',
+  input : files(
+    '../../../util/merge_driinfo.py',
+    '../../auxiliary/pipe-loader/driinfo_gallium.h', 'driinfo_v3d.h'
+  ),
+  output : 'v3d_driinfo.h',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+)
+v3d_args = ['-DV3D_BUILD_NEON']
+
 dep_v3dv3 = dependency('v3dv3', required: false)
 if dep_v3dv3.found()
-  v3dv3_c_args = '-DUSE_V3D_SIMULATOR'
+  v3d_args += '-DUSE_V3D_SIMULATOR'
 endif
 
 v3d_versions = ['33', '41']
@@ -67,30 +76,51 @@ foreach ver : v3d_versions
     [files_per_version, v3d_xml_pack, nir_opcodes_h, nir_builder_opcodes_h],
     include_directories : [
       inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_broadcom,
-      inc_gallium_drivers, inc_drm_uapi,
+      inc_gallium_drivers,
     ],
-    c_args : [c_vis_args, v3dv3_c_args, '-DV3D_VERSION=' + ver],
+    c_args : [c_vis_args, v3d_args, '-DV3D_VERSION=' + ver],
     cpp_args : [cpp_vis_args],
     dependencies : [dep_v3dv3, dep_libdrm, dep_valgrind],
 )
 
 endforeach
 
-libv3d = static_library(
-  'v3d',
-  [files_libv3d, v3d_xml_pack],
+v3d_neon_c_args = []
+if host_machine.cpu_family() == 'arm'
+    v3d_neon_c_args = '-mfpu=neon'
+endif
+
+libv3d_neon = static_library(
+  'v3d_neon',
+  'v3d_tiling.c',
   include_directories : [
     inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_broadcom,
-    inc_gallium_drivers, inc_drm_uapi,
+    inc_gallium_drivers,
   ],
-  c_args : [c_vis_args, v3dv3_c_args],
-  cpp_args : [cpp_vis_args, v3dv3_c_args],
+  c_args : [c_vis_args, v3d_args, v3d_neon_c_args],
   dependencies : [dep_v3dv3, dep_libdrm, dep_valgrind, idep_nir_headers],
-  link_with: per_version_libs,
+)
+
+libv3d = static_library(
+  'v3d',
+  [
+    files_libv3d,
+    v3d_xml_pack,
+    v3d_driinfo_h
+  ],
+  include_directories : [
+    inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_broadcom,
+    inc_gallium_drivers,
+  ],
+  c_args : [c_vis_args, v3d_args],
+  cpp_args : [cpp_vis_args, v3d_args],
+  dependencies : [dep_v3dv3, dep_libdrm, dep_valgrind, idep_nir_headers],
+  link_with: [per_version_libs, libv3d_neon],
 )
 
 driver_v3d = declare_dependency(
   compile_args : '-DGALLIUM_V3D',
   link_with : [libv3d, libv3dwinsys, libbroadcom_cle, libbroadcom_v3d],
+  sources : v3d_driinfo_h,
   dependencies : idep_nir,
 )
