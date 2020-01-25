@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.13 2019/06/30 17:10:24 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.14 2020/01/25 18:06:04 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -971,7 +971,7 @@ WildcatFBShadowUpdate(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
-    RegionPtr	damage = shadowDamage (pBuf);
+    RegionPtr	damage = DamageRegion (pBuf->pDamage);
     PixmapPtr	pShadow = pBuf->pPixmap;
     int		nbox = REGION_NUM_RECTS (damage);
     BoxPtr	pbox = REGION_RECTS (damage);
