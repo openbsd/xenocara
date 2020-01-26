@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.359 2020/01/22 02:54:22 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.360 2020/01/26 13:49:27 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.10.1
@@ -31,7 +31,7 @@ Maintainer:	Matt Turner
 Archive Site:	https://mesa.freedesktop.org/archive/glu/
 
 Package:	libepoxy
-Version:	1.5.2
+Version:	1.5.4
 Current Vers:	1.5.4
 Maintainer:	Eric Anholt
 Archive Site:	https://github.com/anholt/libepoxy/releases
