@@ -1,11 +1,11 @@
-project('libepoxy', 'c', version: '1.5.2',
+project('libepoxy', 'c', version: '1.5.4',
         default_options: [
           'buildtype=debugoptimized',
           'c_std=gnu99',
           'warning_level=1',
         ],
         license: 'MIT',
-        meson_version: '>= 0.44.0')
+        meson_version: '>= 0.47.0')
 
 epoxy_version = meson.project_version().split('.')
 epoxy_major_version = epoxy_version[0].to_int()

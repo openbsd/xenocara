@@ -63,6 +63,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_VERSION_1_4 1
 #define EGL_VERSION_1_5 1
 
+#define EGL_ANDROID_GLES_layers 1
 #define EGL_ANDROID_blob_cache 1
 #define EGL_ANDROID_create_native_client_buffer 1
 #define EGL_ANDROID_framebuffer_target 1
@@ -83,6 +84,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_EXT_bind_to_front 1
 #define EGL_EXT_buffer_age 1
 #define EGL_EXT_client_extensions 1
+#define EGL_EXT_client_sync 1
 #define EGL_EXT_compositor 1
 #define EGL_EXT_create_context_robustness 1
 #define EGL_EXT_device_base 1
@@ -94,10 +96,12 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_EXT_gl_colorspace_bt2020_pq 1
 #define EGL_EXT_gl_colorspace_display_p3 1
 #define EGL_EXT_gl_colorspace_display_p3_linear 1
+#define EGL_EXT_gl_colorspace_display_p3_passthrough 1
 #define EGL_EXT_gl_colorspace_scrgb 1
 #define EGL_EXT_gl_colorspace_scrgb_linear 1
 #define EGL_EXT_image_dma_buf_import 1
 #define EGL_EXT_image_dma_buf_import_modifiers 1
+#define EGL_EXT_image_gl_colorspace 1
 #define EGL_EXT_image_implicit_sync_control 1
 #define EGL_EXT_multiview_window 1
 #define EGL_EXT_output_base 1
@@ -114,6 +118,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_EXT_surface_CTA861_3_metadata 1
 #define EGL_EXT_surface_SMPTE2086_metadata 1
 #define EGL_EXT_swap_buffers_with_damage 1
+#define EGL_EXT_sync_reuse 1
 #define EGL_EXT_yuv_surface 1
 #define EGL_HI_clientpixmap 1
 #define EGL_HI_colorformats 1
@@ -164,6 +169,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_MESA_image_dma_buf_export 1
 #define EGL_MESA_platform_gbm 1
 #define EGL_MESA_platform_surfaceless 1
+#define EGL_MESA_query_driver 1
 #define EGL_NOK_swap_region 1
 #define EGL_NOK_swap_region2 1
 #define EGL_NOK_texture_from_pixmap 1
@@ -177,6 +183,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_NV_native_query 1
 #define EGL_NV_post_convert_rounding 1
 #define EGL_NV_post_sub_buffer 1
+#define EGL_NV_quadruple_buffer 1
 #define EGL_NV_robustness_video_memory_purge 1
 #define EGL_NV_stream_consumer_gltexture_yuv 1
 #define EGL_NV_stream_cross_display 1
@@ -184,10 +191,13 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_NV_stream_cross_partition 1
 #define EGL_NV_stream_cross_process 1
 #define EGL_NV_stream_cross_system 1
+#define EGL_NV_stream_dma 1
 #define EGL_NV_stream_fifo_next 1
 #define EGL_NV_stream_fifo_synchronous 1
+#define EGL_NV_stream_flush 1
 #define EGL_NV_stream_frame_limits 1
 #define EGL_NV_stream_metadata 1
+#define EGL_NV_stream_origin 1
 #define EGL_NV_stream_remote 1
 #define EGL_NV_stream_reset 1
 #define EGL_NV_stream_socket 1
@@ -196,6 +206,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_NV_stream_sync 1
 #define EGL_NV_sync 1
 #define EGL_NV_system_time 1
+#define EGL_NV_triple_buffer 1
 #define EGL_TIZEN_image_native_buffer 1
 #define EGL_TIZEN_image_native_surface 1
 
@@ -455,6 +466,18 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_NATIVE_BUFFER_MULTIPLANE_SEPARATE_IMG            0x3105
 #define EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG                   0x3106
 #define EGL_BITMAP_PIXEL_SIZE_KHR                            0x3110
+#define EGL_NEW_IMAGE_QCOM                                   0x3120
+#define EGL_IMAGE_FORMAT_QCOM                                0x3121
+#define EGL_FORMAT_RGBA_8888_QCOM                            0x3122
+#define EGL_FORMAT_RGB_565_QCOM                              0x3123
+#define EGL_FORMAT_YUYV_QCOM                                 0x3124
+#define EGL_FORMAT_UYVY_QCOM                                 0x3125
+#define EGL_FORMAT_YV12_QCOM                                 0x3126
+#define EGL_FORMAT_NV21_QCOM                                 0x3127
+#define EGL_FORMAT_NV12_TILED_QCOM                           0x3128
+#define EGL_FORMAT_BGRA_8888_QCOM                            0x3129
+#define EGL_FORMAT_BGRX_8888_QCOM                            0x312A
+#define EGL_FORMAT_RGBX_8888_QCOM                            0x312F
 #define EGL_COVERAGE_SAMPLE_RESOLVE_NV                       0x3131
 #define EGL_COVERAGE_SAMPLE_RESOLVE_DEFAULT_NV               0x3132
 #define EGL_COVERAGE_SAMPLE_RESOLVE_NONE_NV                  0x3133
@@ -473,6 +496,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_SYNC_NATIVE_FENCE_SIGNALED_ANDROID               0x3146
 #define EGL_FRAMEBUFFER_TARGET_ANDROID                       0x3147
 #define EGL_FRONT_BUFFER_AUTO_REFRESH_ANDROID                0x314C
+#define EGL_GL_COLORSPACE_DEFAULT_EXT                        0x314D
 #define EGL_CONTEXT_OPENGL_DEBUG                             0x31B0
 #define EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE                0x31B1
 #define EGL_CONTEXT_OPENGL_ROBUST_ACCESS                     0x31B2
@@ -485,6 +509,22 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_LOSE_CONTEXT_ON_RESET                            0x31BF
 #define EGL_LOSE_CONTEXT_ON_RESET_EXT                        0x31BF
 #define EGL_LOSE_CONTEXT_ON_RESET_KHR                        0x31BF
+#define EGL_FORMAT_R8_QCOM                                   0x31C0
+#define EGL_FORMAT_RG88_QCOM                                 0x31C1
+#define EGL_FORMAT_NV12_QCOM                                 0x31C2
+#define EGL_FORMAT_SRGBX_8888_QCOM                           0x31C3
+#define EGL_FORMAT_SRGBA_8888_QCOM                           0x31C4
+#define EGL_FORMAT_YVYU_QCOM                                 0x31C5
+#define EGL_FORMAT_VYUY_QCOM                                 0x31C6
+#define EGL_FORMAT_IYUV_QCOM                                 0x31C7
+#define EGL_FORMAT_RGB_888_QCOM                              0x31C8
+#define EGL_FORMAT_RGBA_5551_QCOM                            0x31C9
+#define EGL_FORMAT_RGBA_4444_QCOM                            0x31CA
+#define EGL_FORMAT_R_16_FLOAT_QCOM                           0x31CB
+#define EGL_FORMAT_RG_1616_FLOAT_QCOM                        0x31CC
+#define EGL_FORMAT_RGBA_16_FLOAT_QCOM                        0x31CD
+#define EGL_FORMAT_RGBA_1010102_QCOM                         0x31CE
+#define EGL_FORMAT_FLAG_QCOM                                 0x31CF
 #define EGL_DRM_BUFFER_FORMAT_MESA                           0x31D0
 #define EGL_DRM_BUFFER_USE_MESA                              0x31D1
 #define EGL_DRM_BUFFER_FORMAT_ARGB32_MESA                    0x31D2
@@ -525,6 +565,8 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_BAD_OUTPUT_LAYER_EXT                             0x322D
 #define EGL_BAD_OUTPUT_PORT_EXT                              0x322E
 #define EGL_SWAP_INTERVAL_EXT                                0x322F
+#define EGL_TRIPLE_BUFFER_NV                                 0x3230
+#define EGL_QUADRUPLE_BUFFER_NV                              0x3231
 #define EGL_DRM_DEVICE_FILE_EXT                              0x3233
 #define EGL_DRM_CRTC_EXT                                     0x3234
 #define EGL_DRM_PLANE_EXT                                    0x3235
@@ -590,7 +632,25 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_SYNC_PRIOR_COMMANDS_IMPLICIT_EXTERNAL_ARM        0x328A
 #define EGL_NATIVE_BUFFER_TIZEN                              0x32A0
 #define EGL_NATIVE_SURFACE_TIZEN                             0x32A1
+#define EGL_IMAGE_NUM_PLANES_QCOM                            0x32B0
+#define EGL_IMAGE_PLANE_PITCH_0_QCOM                         0x32B1
+#define EGL_IMAGE_PLANE_PITCH_1_QCOM                         0x32B2
+#define EGL_IMAGE_PLANE_PITCH_2_QCOM                         0x32B3
+#define EGL_IMAGE_PLANE_DEPTH_0_QCOM                         0x32B4
+#define EGL_IMAGE_PLANE_DEPTH_1_QCOM                         0x32B5
+#define EGL_IMAGE_PLANE_DEPTH_2_QCOM                         0x32B6
+#define EGL_IMAGE_PLANE_WIDTH_0_QCOM                         0x32B7
+#define EGL_IMAGE_PLANE_WIDTH_1_QCOM                         0x32B8
+#define EGL_IMAGE_PLANE_WIDTH_2_QCOM                         0x32B9
+#define EGL_IMAGE_PLANE_HEIGHT_0_QCOM                        0x32BA
+#define EGL_IMAGE_PLANE_HEIGHT_1_QCOM                        0x32BB
+#define EGL_IMAGE_PLANE_HEIGHT_2_QCOM                        0x32BC
+#define EGL_IMAGE_PLANE_POINTER_0_QCOM                       0x32BD
+#define EGL_IMAGE_PLANE_POINTER_1_QCOM                       0x32BE
+#define EGL_IMAGE_PLANE_POINTER_2_QCOM                       0x32BF
 #define EGL_PROTECTED_CONTENT_EXT                            0x32C0
+#define EGL_GPU_PERF_HINT_QCOM                               0x32D0
+#define EGL_HINT_PERSISTENT_QCOM                             0x32D1
 #define EGL_YUV_BUFFER_EXT                                   0x3300
 #define EGL_YUV_ORDER_EXT                                    0x3301
 #define EGL_YUV_ORDER_YUV_EXT                                0x3302
@@ -630,6 +690,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_COLOR_COMPONENT_TYPE_EXT                         0x3339
 #define EGL_COLOR_COMPONENT_TYPE_FIXED_EXT                   0x333A
 #define EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT                   0x333B
+#define EGL_DRM_MASTER_FD_EXT                                0x333C
 #define EGL_GL_COLORSPACE_BT2020_LINEAR_EXT                  0x333F
 #define EGL_GL_COLORSPACE_BT2020_PQ_EXT                      0x3340
 #define EGL_SMPTE2086_DISPLAY_PRIMARY_RX_EXT                 0x3341
@@ -654,6 +715,21 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_CTA861_3_MAX_FRAME_AVERAGE_LEVEL_EXT             0x3361
 #define EGL_GL_COLORSPACE_DISPLAY_P3_LINEAR_EXT              0x3362
 #define EGL_GL_COLORSPACE_DISPLAY_P3_EXT                     0x3363
+#define EGL_SYNC_CLIENT_EXT                                  0x3364
+#define EGL_SYNC_CLIENT_SIGNAL_EXT                           0x3365
+#define EGL_STREAM_FRAME_ORIGIN_X_NV                         0x3366
+#define EGL_STREAM_FRAME_ORIGIN_Y_NV                         0x3367
+#define EGL_STREAM_FRAME_MAJOR_AXIS_NV                       0x3368
+#define EGL_CONSUMER_AUTO_ORIENTATION_NV                     0x3369
+#define EGL_PRODUCER_AUTO_ORIENTATION_NV                     0x336A
+#define EGL_LEFT_NV                                          0x336B
+#define EGL_RIGHT_NV                                         0x336C
+#define EGL_TOP_NV                                           0x336D
+#define EGL_BOTTOM_NV                                        0x336E
+#define EGL_X_AXIS_NV                                        0x336F
+#define EGL_Y_AXIS_NV                                        0x3370
+#define EGL_STREAM_DMA_NV                                    0x3371
+#define EGL_STREAM_DMA_SERVER_NV                             0x3372
 #define EGL_D3D9_DEVICE_ANGLE                                0x33A0
 #define EGL_D3D11_DEVICE_ANGLE                               0x33A1
 #define EGL_OBJECT_THREAD_KHR                                0x33B0
@@ -668,6 +744,51 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_DEBUG_MSG_ERROR_KHR                              0x33BA
 #define EGL_DEBUG_MSG_WARN_KHR                               0x33BB
 #define EGL_DEBUG_MSG_INFO_KHR                               0x33BC
+#define EGL_FORMAT_FLAG_UBWC_QCOM                            0x33E0
+#define EGL_FORMAT_FLAG_MACROTILE_QCOM                       0x33E1
+#define EGL_FORMAT_ASTC_4X4_QCOM                             0x33E2
+#define EGL_FORMAT_ASTC_5X4_QCOM                             0x33E3
+#define EGL_FORMAT_ASTC_5X5_QCOM                             0x33E4
+#define EGL_FORMAT_ASTC_6X5_QCOM                             0x33E5
+#define EGL_FORMAT_ASTC_6X6_QCOM                             0x33E6
+#define EGL_FORMAT_ASTC_8X5_QCOM                             0x33E7
+#define EGL_FORMAT_ASTC_8X6_QCOM                             0x33E8
+#define EGL_FORMAT_ASTC_8X8_QCOM                             0x33E9
+#define EGL_FORMAT_ASTC_10X5_QCOM                            0x33EA
+#define EGL_FORMAT_ASTC_10X6_QCOM                            0x33EB
+#define EGL_FORMAT_ASTC_10X8_QCOM                            0x33EC
+#define EGL_FORMAT_ASTC_10X10_QCOM                           0x33ED
+#define EGL_FORMAT_ASTC_12X10_QCOM                           0x33EE
+#define EGL_FORMAT_ASTC_12X12_QCOM                           0x33EF
+#define EGL_FORMAT_ASTC_4X4_SRGB_QCOM                        0x3400
+#define EGL_FORMAT_ASTC_5X4_SRGB_QCOM                        0x3401
+#define EGL_FORMAT_ASTC_5X5_SRGB_QCOM                        0x3402
+#define EGL_FORMAT_ASTC_6X5_SRGB_QCOM                        0x3403
+#define EGL_FORMAT_ASTC_6X6_SRGB_QCOM                        0x3404
+#define EGL_FORMAT_ASTC_8X5_SRGB_QCOM                        0x3405
+#define EGL_FORMAT_ASTC_8X6_SRGB_QCOM                        0x3406
+#define EGL_FORMAT_ASTC_8X8_SRGB_QCOM                        0x3407
+#define EGL_FORMAT_ASTC_10X5_SRGB_QCOM                       0x3408
+#define EGL_FORMAT_ASTC_10X6_SRGB_QCOM                       0x3409
+#define EGL_FORMAT_ASTC_10X8_SRGB_QCOM                       0x340A
+#define EGL_FORMAT_ASTC_10X10_SRGB_QCOM                      0x340B
+#define EGL_FORMAT_ASTC_12X10_SRGB_QCOM                      0x340C
+#define EGL_FORMAT_ASTC_12X12_SRGB_QCOM                      0x340D
+#define EGL_FORMAT_TP10_QCOM                                 0x340E
+#define EGL_FORMAT_NV12_Y_QCOM                               0x340F
+#define EGL_FORMAT_NV12_UV_QCOM                              0x3410
+#define EGL_FORMAT_NV21_VU_QCOM                              0x3411
+#define EGL_FORMAT_NV12_4R_QCOM                              0x3412
+#define EGL_FORMAT_NV12_4R_Y_QCOM                            0x3413
+#define EGL_FORMAT_NV12_4R_UV_QCOM                           0x3414
+#define EGL_FORMAT_P010_QCOM                                 0x3415
+#define EGL_FORMAT_P010_Y_QCOM                               0x3416
+#define EGL_FORMAT_P010_UV_QCOM                              0x3417
+#define EGL_FORMAT_TP10_Y_QCOM                               0x3418
+#define EGL_FORMAT_TP10_UV_QCOM                              0x3419
+#define EGL_GENERIC_TOKEN_1_QCOM                             0x3420
+#define EGL_GENERIC_TOKEN_2_QCOM                             0x3421
+#define EGL_GENERIC_TOKEN_3_QCOM                             0x3422
 #define EGL_TIMESTAMPS_ANDROID                               0x3430
 #define EGL_COMPOSITE_DEADLINE_ANDROID                       0x3431
 #define EGL_COMPOSITE_INTERVAL_ANDROID                       0x3432
@@ -700,6 +821,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 #define EGL_IMPORT_SYNC_TYPE_EXT                             0x3470
 #define EGL_IMPORT_IMPLICIT_SYNC_EXT                         0x3471
 #define EGL_IMPORT_EXPLICIT_SYNC_EXT                         0x3472
+#define EGL_GL_COLORSPACE_DISPLAY_P3_PASSTHROUGH_EXT         0x3490
 #define EGL_COLOR_FORMAT_HI                                  0x8F70
 #define EGL_COLOR_RGB_HI                                     0x8F71
 #define EGL_COLOR_RGBA_HI                                    0x8F72
@@ -734,6 +856,7 @@ typedef void (APIENTRY *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLin
 typedef EGLBoolean (GLAPIENTRY *PFNEGLBINDAPIPROC)(EGLenum api);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLBINDTEXIMAGEPROC)(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLCHOOSECONFIGPROC)(EGLDisplay dpy, const EGLint * attrib_list, EGLConfig * configs, EGLint config_size, EGLint * num_config);
+typedef EGLBoolean (GLAPIENTRY *PFNEGLCLIENTSIGNALSYNCEXTPROC)(EGLDisplay dpy, EGLSync sync, const EGLAttrib * attrib_list);
 typedef EGLint (GLAPIENTRY *PFNEGLCLIENTWAITSYNCPROC)(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
 typedef EGLint (GLAPIENTRY *PFNEGLCLIENTWAITSYNCKHRPROC)(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
 typedef EGLint (GLAPIENTRY *PFNEGLCLIENTWAITSYNCNVPROC)(EGLSyncNV sync, EGLint flags, EGLTimeNV timeout);
@@ -790,6 +913,8 @@ typedef EGLContext (GLAPIENTRY *PFNEGLGETCURRENTCONTEXTPROC)(void);
 typedef EGLDisplay (GLAPIENTRY *PFNEGLGETCURRENTDISPLAYPROC)(void);
 typedef EGLSurface (GLAPIENTRY *PFNEGLGETCURRENTSURFACEPROC)(EGLint readdraw);
 typedef EGLDisplay (GLAPIENTRY *PFNEGLGETDISPLAYPROC)(EGLNativeDisplayType display_id);
+typedef char * (GLAPIENTRY *PFNEGLGETDISPLAYDRIVERCONFIGPROC)(EGLDisplay dpy);
+typedef const char * (GLAPIENTRY *PFNEGLGETDISPLAYDRIVERNAMEPROC)(EGLDisplay dpy);
 typedef EGLint (GLAPIENTRY *PFNEGLGETERRORPROC)(void);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLGETFRAMETIMESTAMPSUPPORTEDANDROIDPROC)(EGLDisplay dpy, EGLSurface surface, EGLint timestamp);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLGETFRAMETIMESTAMPSANDROIDPROC)(EGLDisplay dpy, EGLSurface surface, EGLuint64KHR frameId, EGLint numTimestamps, const EGLint * timestamps, EGLnsecsANDROID * values);
@@ -858,6 +983,7 @@ typedef EGLBoolean (GLAPIENTRY *PFNEGLSTREAMCONSUMERGLTEXTUREEXTERNALKHRPROC)(EG
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSTREAMCONSUMEROUTPUTEXTPROC)(EGLDisplay dpy, EGLStreamKHR stream, EGLOutputLayerEXT layer);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSTREAMCONSUMERRELEASEATTRIBKHRPROC)(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib * attrib_list);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSTREAMCONSUMERRELEASEKHRPROC)(EGLDisplay dpy, EGLStreamKHR stream);
+typedef EGLBoolean (GLAPIENTRY *PFNEGLSTREAMFLUSHNVPROC)(EGLDisplay dpy, EGLStreamKHR stream);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSURFACEATTRIBPROC)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSWAPBUFFERSPROC)(EGLDisplay dpy, EGLSurface surface);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSWAPBUFFERSREGION2NOKPROC)(EGLDisplay dpy, EGLSurface surface, EGLint numRects, const EGLint * rects);
@@ -867,6 +993,7 @@ typedef EGLBoolean (GLAPIENTRY *PFNEGLSWAPBUFFERSWITHDAMAGEKHRPROC)(EGLDisplay d
 typedef EGLBoolean (GLAPIENTRY *PFNEGLSWAPINTERVALPROC)(EGLDisplay dpy, EGLint interval);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLTERMINATEPROC)(EGLDisplay dpy);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLUNLOCKSURFACEKHRPROC)(EGLDisplay dpy, EGLSurface surface);
+typedef EGLBoolean (GLAPIENTRY *PFNEGLUNSIGNALSYNCEXTPROC)(EGLDisplay dpy, EGLSync sync, const EGLAttrib * attrib_list);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLWAITCLIENTPROC)(void);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLWAITGLPROC)(void);
 typedef EGLBoolean (GLAPIENTRY *PFNEGLWAITNATIVEPROC)(EGLint engine);
@@ -877,6 +1004,8 @@ EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglBindAPI)(EGLenum api);
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglBindTexImage)(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
 
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglChooseConfig)(EGLDisplay dpy, const EGLint * attrib_list, EGLConfig * configs, EGLint config_size, EGLint * num_config);
+
+EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglClientSignalSyncEXT)(EGLDisplay dpy, EGLSync sync, const EGLAttrib * attrib_list);
 
 EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglClientWaitSync)(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
 
@@ -989,6 +1118,10 @@ EPOXY_PUBLIC EGLDisplay (EPOXY_CALLSPEC *epoxy_eglGetCurrentDisplay)(void);
 EPOXY_PUBLIC EGLSurface (EPOXY_CALLSPEC *epoxy_eglGetCurrentSurface)(EGLint readdraw);
 
 EPOXY_PUBLIC EGLDisplay (EPOXY_CALLSPEC *epoxy_eglGetDisplay)(EGLNativeDisplayType display_id);
+
+EPOXY_PUBLIC char * (EPOXY_CALLSPEC *epoxy_eglGetDisplayDriverConfig)(EGLDisplay dpy);
+
+EPOXY_PUBLIC const char * (EPOXY_CALLSPEC *epoxy_eglGetDisplayDriverName)(EGLDisplay dpy);
 
 EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglGetError)(void);
 
@@ -1126,6 +1259,8 @@ EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglStreamConsumerReleaseAttribKHR
 
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglStreamConsumerReleaseKHR)(EGLDisplay dpy, EGLStreamKHR stream);
 
+EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglStreamFlushNV)(EGLDisplay dpy, EGLStreamKHR stream);
+
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglSurfaceAttrib)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
 
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
@@ -1144,6 +1279,8 @@ EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglTerminate)(EGLDisplay dpy);
 
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglUnlockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface);
 
+EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglUnsignalSyncEXT)(EGLDisplay dpy, EGLSync sync, const EGLAttrib * attrib_list);
+
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglWaitClient)(void);
 
 EPOXY_PUBLIC EGLBoolean (EPOXY_CALLSPEC *epoxy_eglWaitGL)(void);
@@ -1157,6 +1294,7 @@ EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglWaitSyncKHR)(EGLDisplay dpy, EGLSy
 #define eglBindAPI epoxy_eglBindAPI
 #define eglBindTexImage epoxy_eglBindTexImage
 #define eglChooseConfig epoxy_eglChooseConfig
+#define eglClientSignalSyncEXT epoxy_eglClientSignalSyncEXT
 #define eglClientWaitSync epoxy_eglClientWaitSync
 #define eglClientWaitSyncKHR epoxy_eglClientWaitSyncKHR
 #define eglClientWaitSyncNV epoxy_eglClientWaitSyncNV
@@ -1213,6 +1351,8 @@ EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglWaitSyncKHR)(EGLDisplay dpy, EGLSy
 #define eglGetCurrentDisplay epoxy_eglGetCurrentDisplay
 #define eglGetCurrentSurface epoxy_eglGetCurrentSurface
 #define eglGetDisplay epoxy_eglGetDisplay
+#define eglGetDisplayDriverConfig epoxy_eglGetDisplayDriverConfig
+#define eglGetDisplayDriverName epoxy_eglGetDisplayDriverName
 #define eglGetError epoxy_eglGetError
 #define eglGetFrameTimestampSupportedANDROID epoxy_eglGetFrameTimestampSupportedANDROID
 #define eglGetFrameTimestampsANDROID epoxy_eglGetFrameTimestampsANDROID
@@ -1281,6 +1421,7 @@ EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglWaitSyncKHR)(EGLDisplay dpy, EGLSy
 #define eglStreamConsumerOutputEXT epoxy_eglStreamConsumerOutputEXT
 #define eglStreamConsumerReleaseAttribKHR epoxy_eglStreamConsumerReleaseAttribKHR
 #define eglStreamConsumerReleaseKHR epoxy_eglStreamConsumerReleaseKHR
+#define eglStreamFlushNV epoxy_eglStreamFlushNV
 #define eglSurfaceAttrib epoxy_eglSurfaceAttrib
 #define eglSwapBuffers epoxy_eglSwapBuffers
 #define eglSwapBuffersRegion2NOK epoxy_eglSwapBuffersRegion2NOK
@@ -1290,6 +1431,7 @@ EPOXY_PUBLIC EGLint (EPOXY_CALLSPEC *epoxy_eglWaitSyncKHR)(EGLDisplay dpy, EGLSy
 #define eglSwapInterval epoxy_eglSwapInterval
 #define eglTerminate epoxy_eglTerminate
 #define eglUnlockSurfaceKHR epoxy_eglUnlockSurfaceKHR
+#define eglUnsignalSyncEXT epoxy_eglUnsignalSyncEXT
 #define eglWaitClient epoxy_eglWaitClient
 #define eglWaitGL epoxy_eglWaitGL
 #define eglWaitNative epoxy_eglWaitNative

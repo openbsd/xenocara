@@ -50,6 +50,7 @@ class GLProvider(object):
         self.enum = self.enum.replace(' ', '_')
         self.enum = self.enum.replace('\\"', '')
         self.enum = self.enum.replace('.', '_')
+        self.enum = "PROVIDER_" + self.enum
 
 class GLFunction(object):
     def __init__(self, ret_type, name):
@@ -383,6 +384,7 @@ class Generator(object):
 
         for extension in reg.findall('extensions/extension'):
             extname = extension.get('name')
+            cond_extname = "enum_string[enum_string_offsets[i]]"
 
             self.supported_extensions.add(extname)
 
@@ -390,25 +392,21 @@ class Generator(object):
             # or glx, which are separated by '|'
             apis = extension.get('supported').split('|')
             if 'glx' in apis:
-                human_name = 'GLX extension \\"{0}\\"'.format(extname)
-                condition = 'epoxy_conservative_has_glx_extension("{0}")'.format(extname)
+                condition = 'epoxy_conservative_has_glx_extension(provider_name)'
                 loader = 'glXGetProcAddress((const GLubyte *){0})'
-                self.process_require_statements(extension, condition, loader, human_name)
+                self.process_require_statements(extension, condition, loader, extname)
             if 'egl' in apis:
-                human_name = 'EGL extension \\"{0}\\"'.format(extname)
-                condition = 'epoxy_conservative_has_egl_extension("{0}")'.format(extname)
+                condition = 'epoxy_conservative_has_egl_extension(provider_name)'
                 loader = 'eglGetProcAddress({0})'
-                self.process_require_statements(extension, condition, loader, human_name)
+                self.process_require_statements(extension, condition, loader, extname)
             if 'wgl' in apis:
-                human_name = 'WGL extension \\"{0}\\"'.format(extname)
-                condition = 'epoxy_conservative_has_wgl_extension("{0}")'.format(extname)
+                condition = 'epoxy_conservative_has_wgl_extension(provider_name)'
                 loader = 'wglGetProcAddress({0})'
-                self.process_require_statements(extension, condition, loader, human_name)
+                self.process_require_statements(extension, condition, loader, extname)
             if {'gl', 'gles1', 'gles2'}.intersection(apis):
-                human_name = 'GL extension \\"{0}\\"'.format(extname)
-                condition = 'epoxy_conservative_has_gl_extension("{0}")'.format(extname)
+                condition = 'epoxy_conservative_has_gl_extension(provider_name)'
                 loader = 'epoxy_get_proc_address({0})'
-                self.process_require_statements(extension, condition, loader, human_name)
+                self.process_require_statements(extension, condition, loader, extname)
 
     def fixup_bootstrap_function(self, name, loader):
         # We handle glGetString(), glGetIntegerv(), and
@@ -676,7 +674,7 @@ class Generator(object):
         self.outln('    -1, /* {0}_provider_terminator, unused */'.format(self.target))
         for human_name in sorted_providers:
             enum = self.provider_enum[human_name]
-            self.outln('    {1}, /* {0} */'.format(enum, self.enum_string_offset[human_name]))
+            self.outln('    {1}, /* {0} */'.format(human_name, self.enum_string_offset[human_name]))
         self.outln('};')
         self.outln('')
 
@@ -703,7 +701,9 @@ class Generator(object):
         self.outln('    int i;')
 
         self.outln('    for (i = 0; providers[i] != {0}_provider_terminator; i++) {{'.format(self.target))
+        self.outln('        const char *provider_name = enum_string + enum_string_offsets[providers[i]];')
         self.outln('        switch (providers[i]) {')
+        self.outln('')
 
         for human_name in sorted(self.provider_enum.keys()):
             enum = self.provider_enum[human_name]

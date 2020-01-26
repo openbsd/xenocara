@@ -33,6 +33,12 @@ test('khronos_typedefs',
                 c_args: common_cflags,
                 dependencies: libepoxy_dep,
                 include_directories: libepoxy_inc))
+test('gl_version',
+     executable('gl_version',
+                'gl_version.c',
+                c_args: common_cflags,
+                dependencies: libepoxy_dep,
+                include_directories: libepoxy_inc))
 
 if build_egl and build_x11_tests
   egl_common_sources = [ 'egl_common.h', 'egl_common.c', ]
@@ -74,7 +80,7 @@ if build_egl and build_x11_tests
   endforeach
 endif
 
-if build_glx
+if build_glx and build_x11_tests
   glx_common_sources = [ 'glx_common.h', 'glx_common.c', ]
   glx_common_lib = static_library('glx_common',
                                   sources: glx_common_sources,
@@ -150,5 +156,29 @@ if build_wgl
                           link_with: wgl_common_lib)
 
     test(test_name, test_bin)
+  endforeach
+endif
+
+# Apple
+if host_machine.system().contains('darwin')
+  opengl_dep = dependency('appleframeworks', modules: ['OpenGL', 'Carbon'], required: true)
+
+  cgl_tests = [
+    [ 'cgl_core', [ 'cgl_core.c' ] ],
+    [ 'cgl_epoxy_api', [ 'cgl_epoxy_api.c' ] ],
+  ]
+
+  foreach t: cgl_tests
+    test_name = t[0]
+    test_sources = t[1]
+
+    test(test_name,
+      executable(
+        test_name, test_sources,
+        c_args: test_cflags,
+        include_directories: libepoxy_inc,
+        dependencies: [ libepoxy_dep, opengl_dep ],
+      ),
+    )
   endforeach
 endif

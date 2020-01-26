@@ -22,7 +22,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([libepoxy],
-        [1.5.2],
+        [1.5.4],
         [https://github.com/anholt/libepoxy],
         [libepoxy])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -157,6 +157,8 @@ if test x$enable_x11 = xno; then
         AC_MSG_ERROR([GLX support is explicitly enabled, but X11 was disabled])
     fi
     build_glx=no
+else
+    AC_DEFINE([ENABLE_X11], [1], [Whether X11 support is enabled])
 fi
 
 AM_CONDITIONAL(BUILD_EGL, test x$build_egl = xyes)

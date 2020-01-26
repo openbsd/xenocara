@@ -173,28 +173,29 @@
 
 #include "dispatch_common.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #define GLX_LIB "/opt/X11/lib/libGL.1.dylib"
 #define OPENGL_LIB "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL"
+#define GLES1_LIB "libGLESv1_CM.so"
+#define GLES2_LIB "libGLESv2.so"
 #elif defined(__ANDROID__)
 #define GLX_LIB "libGLESv2.so"
-#elif defined(__OpenBSD__)
-#define GLX_LIB "libGL.so"
-#else
-#define GLVND_GLX_LIB "libGLX.so.1"
-#define GLX_LIB "libGL.so.1"
-#endif
-
-#ifdef __ANDROID__
 #define EGL_LIB "libEGL.so"
 #define GLES1_LIB "libGLESv1_CM.so"
 #define GLES2_LIB "libGLESv2.so"
-#elif defined _WIN32
+#elif defined(__OpenBSD__)
+#define GLX_LIB "libGL.so"
+#define EGL_LIB "libEGL.so"
+#define GLES1_LIB "libGLESv1_CM.so"
+#define GLES2_LIB "libGLESv2.so"
+#elif defined(_WIN32)
 #define EGL_LIB "libEGL.dll"
 #define GLES1_LIB "libGLES_CM.dll"
 #define GLES2_LIB "libGLESv2.dll"
 #define OPENGL_LIB "OPENGL32"
 #else
+#define GLVND_GLX_LIB "libGLX.so.1"
+#define GLX_LIB "libGL.so.1"
 #define EGL_LIB "libEGL.so.1"
 #define GLES1_LIB "libGLESv1_CM.so.1"
 #define GLES2_LIB "libGLESv2.so.2"
@@ -310,8 +311,10 @@ get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail, bool l
     pthread_mutex_lock(&api.mutex);
     if (!*handle) {
         int flags = RTLD_LAZY | RTLD_LOCAL;
+#ifndef __OpenBSD__
         if (!load)
             flags |= RTLD_NOLOAD;
+#endif
 
         *handle = dlopen(lib_name, flags);
         if (!*handle) {
@@ -555,23 +558,25 @@ epoxy_internal_has_gl_extension(const char *ext, bool invalid_op_mode)
 bool
 epoxy_load_glx(bool exit_if_fails, bool load)
 {
-#ifdef GLVND_GLX_LIB
+#if PLATFORM_HAS_GLX
+# ifdef GLVND_GLX_LIB
     /* prefer the glvnd library if it exists */
     if (!api.glx_handle)
 	get_dlopen_handle(&api.glx_handle, GLVND_GLX_LIB, false, load);
-#endif
+# endif
     if (!api.glx_handle)
         get_dlopen_handle(&api.glx_handle, GLX_LIB, exit_if_fails, load);
-
+#endif
     return api.glx_handle != NULL;
 }
 
 void *
 epoxy_conservative_glx_dlsym(const char *name, bool exit_if_fails)
 {
+#if PLATFORM_HAS_GLX
     if (epoxy_load_glx(exit_if_fails, exit_if_fails))
         return do_dlsym(&api.glx_handle, name, exit_if_fails);
-
+#endif
     return NULL;
 }
 
@@ -638,15 +643,20 @@ epoxy_conservative_has_gl_extension(const char *ext)
 bool
 epoxy_load_egl(bool exit_if_fails, bool load)
 {
+#if PLATFORM_HAS_EGL
     return get_dlopen_handle(&api.egl_handle, EGL_LIB, exit_if_fails, load);
+#else
+    return false;
+#endif
 }
 
 void *
 epoxy_conservative_egl_dlsym(const char *name, bool exit_if_fails)
 {
+#if PLATFORM_HAS_EGL
     if (epoxy_load_egl(exit_if_fails, exit_if_fails))
         return do_dlsym(&api.egl_handle, name, exit_if_fails);
-
+#endif
     return NULL;
 }
 
@@ -729,7 +739,7 @@ epoxy_gles3_dlsym(const char *name)
         return epoxy_get_proc_address(name);
     } else {
         if (get_dlopen_handle(&api.gles2_handle, GLES2_LIB, false, true)) {
-            void *func = do_dlsym(&api.gles2_handle, GLES2_LIB, false);
+            void *func = do_dlsym(&api.gles2_handle, name, false);
 
             if (func)
                 return func;

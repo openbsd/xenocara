@@ -1,7 +1,7 @@
 /* GL dispatch header.
  * This is code-generated from the GL API XML files from Khronos.
  * 
- * Copyright (c) 2013-2017 The Khronos Group Inc.
+ * Copyright (c) 2013-2018 The Khronos Group Inc.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,16 +48,16 @@ typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
 typedef unsigned int GLbitfield;
 typedef void GLvoid;
-typedef signed char GLbyte;
-typedef short GLshort;
+typedef khronos_int8_t GLbyte;
+typedef khronos_uint8_t GLubyte;
+typedef khronos_int16_t GLshort;
+typedef khronos_uint16_t GLushort;
 typedef int GLint;
-typedef int GLclampx;
-typedef unsigned char GLubyte;
-typedef unsigned short GLushort;
 typedef unsigned int GLuint;
+typedef khronos_int32_t GLclampx;
 typedef int GLsizei;
-typedef float GLfloat;
-typedef float GLclampf;
+typedef khronos_float_t GLfloat;
+typedef khronos_float_t GLclampf;
 typedef double GLdouble;
 typedef double GLclampd;
 typedef void *GLeglClientBufferEXT;
@@ -69,17 +69,17 @@ typedef void *GLhandleARB;
 #else
 typedef unsigned int GLhandleARB;
 #endif
-typedef unsigned short GLhalfARB;
-typedef unsigned short GLhalf;
-typedef GLint GLfixed;
-typedef ptrdiff_t GLintptr;
-typedef ptrdiff_t GLsizeiptr;
-typedef int64_t GLint64;
-typedef uint64_t GLuint64;
-typedef ptrdiff_t GLintptrARB;
-typedef ptrdiff_t GLsizeiptrARB;
-typedef int64_t GLint64EXT;
-typedef uint64_t GLuint64EXT;
+typedef khronos_uint16_t GLhalf;
+typedef khronos_uint16_t GLhalfARB;
+typedef khronos_int32_t GLfixed;
+typedef khronos_intptr_t GLintptr;
+typedef khronos_intptr_t GLintptrARB;
+typedef khronos_ssize_t GLsizeiptr;
+typedef khronos_ssize_t GLsizeiptrARB;
+typedef khronos_int64_t GLint64;
+typedef khronos_int64_t GLint64EXT;
+typedef khronos_uint64_t GLuint64;
+typedef khronos_uint64_t GLuint64EXT;
 typedef struct __GLsync *GLsync;
 struct _cl_context;
 struct _cl_event;
@@ -127,6 +127,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_AMD_debug_output 1
 #define GL_AMD_depth_clamp_separate 1
 #define GL_AMD_draw_buffers_blend 1
+#define GL_AMD_framebuffer_multisample_advanced 1
 #define GL_AMD_framebuffer_sample_positions 1
 #define GL_AMD_gcn_shader 1
 #define GL_AMD_gpu_shader_half_float 1
@@ -390,6 +391,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_DMP_shader_binary 1
 #define GL_EXT_422_pixels 1
 #define GL_EXT_EGL_image_array 1
+#define GL_EXT_EGL_image_storage 1
 #define GL_EXT_YUV_target 1
 #define GL_EXT_abgr 1
 #define GL_EXT_base_instance 1
@@ -421,6 +423,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_EXT_debug_label 1
 #define GL_EXT_debug_marker 1
 #define GL_EXT_depth_bounds_test 1
+#define GL_EXT_depth_clamp 1
 #define GL_EXT_direct_state_access 1
 #define GL_EXT_discard_framebuffer 1
 #define GL_EXT_disjoint_timer_query 1
@@ -463,6 +466,9 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_EXT_multisampled_compatibility 1
 #define GL_EXT_multisampled_render_to_texture 1
 #define GL_EXT_multiview_draw_buffers 1
+#define GL_EXT_multiview_tessellation_geometry_shader 1
+#define GL_EXT_multiview_texture_multisample 1
+#define GL_EXT_multiview_timer_query 1
 #define GL_EXT_occlusion_query_boolean 1
 #define GL_EXT_packed_depth_stencil 1
 #define GL_EXT_packed_float 1
@@ -493,6 +499,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_EXT_separate_shader_objects 1
 #define GL_EXT_separate_specular_color 1
 #define GL_EXT_shader_framebuffer_fetch 1
+#define GL_EXT_shader_framebuffer_fetch_non_coherent 1
 #define GL_EXT_shader_group_vote 1
 #define GL_EXT_shader_image_load_formatted 1
 #define GL_EXT_shader_image_load_store 1
@@ -535,6 +542,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_EXT_texture_filter_anisotropic 1
 #define GL_EXT_texture_filter_minmax 1
 #define GL_EXT_texture_format_BGRA8888 1
+#define GL_EXT_texture_format_sRGB_override 1
 #define GL_EXT_texture_integer 1
 #define GL_EXT_texture_lod_bias 1
 #define GL_EXT_texture_mirror_clamp 1
@@ -542,11 +550,13 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_EXT_texture_norm16 1
 #define GL_EXT_texture_object 1
 #define GL_EXT_texture_perturb_normal 1
+#define GL_EXT_texture_query_lod 1
 #define GL_EXT_texture_rg 1
 #define GL_EXT_texture_sRGB 1
 #define GL_EXT_texture_sRGB_R8 1
 #define GL_EXT_texture_sRGB_RG8 1
 #define GL_EXT_texture_sRGB_decode 1
+#define GL_EXT_texture_shadow_lod 1
 #define GL_EXT_texture_shared_exponent 1
 #define GL_EXT_texture_snorm 1
 #define GL_EXT_texture_storage 1
@@ -591,6 +601,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_INGR_blend_func_separate 1
 #define GL_INGR_color_clamp 1
 #define GL_INGR_interlace_read 1
+#define GL_INTEL_blackhole_render 1
 #define GL_INTEL_conservative_rasterization 1
 #define GL_INTEL_fragment_shader_ordering 1
 #define GL_INTEL_framebuffer_CMAA 1
@@ -605,10 +616,12 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_KHR_parallel_shader_compile 1
 #define GL_KHR_robust_buffer_access_behavior 1
 #define GL_KHR_robustness 1
+#define GL_KHR_shader_subgroup 1
 #define GL_KHR_texture_compression_astc_hdr 1
 #define GL_KHR_texture_compression_astc_ldr 1
 #define GL_KHR_texture_compression_astc_sliced_3d 1
 #define GL_MESAX_texture_stack 1
+#define GL_MESA_framebuffer_flip_y 1
 #define GL_MESA_pack_invert 1
 #define GL_MESA_program_binary_formats 1
 #define GL_MESA_resize_buffers 1
@@ -620,7 +633,9 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NVX_conditional_render 1
 #define GL_NVX_cross_process_interop 1
 #define GL_NVX_gpu_memory_info 1
+#define GL_NVX_gpu_multicast2 1
 #define GL_NVX_linked_gpu_multicast 1
+#define GL_NVX_progress_fence 1
 #define GL_NV_alpha_to_coverage_dither_control 1
 #define GL_NV_bindless_multi_draw_indirect 1
 #define GL_NV_bindless_multi_draw_indirect_count 1
@@ -632,6 +647,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_clip_space_w_scaling 1
 #define GL_NV_command_list 1
 #define GL_NV_compute_program5 1
+#define GL_NV_compute_shader_derivatives 1
 #define GL_NV_conditional_render 1
 #define GL_NV_conservative_raster 1
 #define GL_NV_conservative_raster_dilate 1
@@ -663,6 +679,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_fragment_program2 1
 #define GL_NV_fragment_program4 1
 #define GL_NV_fragment_program_option 1
+#define GL_NV_fragment_shader_barycentric 1
 #define GL_NV_fragment_shader_interlock 1
 #define GL_NV_framebuffer_blit 1
 #define GL_NV_framebuffer_mixed_samples 1
@@ -682,6 +699,8 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_instanced_arrays 1
 #define GL_NV_internalformat_sample_query 1
 #define GL_NV_light_max_exponent 1
+#define GL_NV_memory_attachment 1
+#define GL_NV_mesh_shader 1
 #define GL_NV_multisample_coverage 1
 #define GL_NV_multisample_filter_hint 1
 #define GL_NV_non_square_matrices 1
@@ -706,10 +725,12 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_read_stencil 1
 #define GL_NV_register_combiners 1
 #define GL_NV_register_combiners2 1
+#define GL_NV_representative_fragment_test 1
 #define GL_NV_robustness_video_memory_purge 1
 #define GL_NV_sRGB_formats 1
 #define GL_NV_sample_locations 1
 #define GL_NV_sample_mask_override_coverage 1
+#define GL_NV_scissor_exclusive 1
 #define GL_NV_shader_atomic_counters 1
 #define GL_NV_shader_atomic_float 1
 #define GL_NV_shader_atomic_float64 1
@@ -719,8 +740,11 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_shader_buffer_store 1
 #define GL_NV_shader_noperspective_interpolation 1
 #define GL_NV_shader_storage_buffer_object 1
+#define GL_NV_shader_subgroup_partitioned 1
+#define GL_NV_shader_texture_footprint 1
 #define GL_NV_shader_thread_group 1
 #define GL_NV_shader_thread_shuffle 1
+#define GL_NV_shading_rate_image 1
 #define GL_NV_shadow_samplers_array 1
 #define GL_NV_shadow_samplers_cube 1
 #define GL_NV_stereo_view_rendering 1
@@ -744,6 +768,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_NV_transform_feedback2 1
 #define GL_NV_uniform_buffer_unified_memory 1
 #define GL_NV_vdpau_interop 1
+#define GL_NV_vdpau_interop2 1
 #define GL_NV_vertex_array_range 1
 #define GL_NV_vertex_array_range2 1
 #define GL_NV_vertex_attrib_integer_64bit 1
@@ -838,6 +863,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_OVR_multiview_multisampled_render_to_texture 1
 #define GL_PGI_misc_hints 1
 #define GL_PGI_vertex_hints 1
+#define GL_QCOM_YUV_texture_gather 1
 #define GL_QCOM_alpha_test 1
 #define GL_QCOM_binning_control 1
 #define GL_QCOM_driver_control 1
@@ -846,7 +872,9 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_QCOM_framebuffer_foveated 1
 #define GL_QCOM_perfmon_global_mode 1
 #define GL_QCOM_shader_framebuffer_fetch_noncoherent 1
+#define GL_QCOM_shader_framebuffer_fetch_rate 1
 #define GL_QCOM_texture_foveated 1
+#define GL_QCOM_texture_foveated_subsampled_layout 1
 #define GL_QCOM_tiled_rendering 1
 #define GL_QCOM_writeonly_rendering 1
 #define GL_REND_screen_coordinates 1
@@ -943,6 +971,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PERFQUERY_GLOBAL_CONTEXT_INTEL                                          0x00000001
 #define GL_QUERY_DEPTH_PASS_EVENT_BIT_AMD                                          0x00000001
 #define GL_RED_BIT_ATI                                                             0x00000001
+#define GL_SUBGROUP_FEATURE_BASIC_BIT_KHR                                          0x00000001
 #define GL_SYNC_FLUSH_COMMANDS_BIT                                                 0x00000001
 #define GL_SYNC_FLUSH_COMMANDS_BIT_APPLE                                           0x00000001
 #define GL_TEXTURE_DEFORMATION_BIT_SGIX                                            0x00000001
@@ -967,17 +996,20 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_GREEN_BIT_ATI                                                           0x00000002
 #define GL_POINT_BIT                                                               0x00000002
 #define GL_QUERY_DEPTH_FAIL_EVENT_BIT_AMD                                          0x00000002
+#define GL_SUBGROUP_FEATURE_VOTE_BIT_KHR                                           0x00000002
 #define GL_8X_BIT_ATI                                                              0x00000004
 #define GL_BLUE_BIT_ATI                                                            0x00000004
 #define GL_COLOR_BUFFER_BIT2_QCOM                                                  0x00000004
 #define GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT                                          0x00000004
 #define GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB                                      0x00000004
+#define GL_FOVEATION_SUBSAMPLED_LAYOUT_METHOD_BIT_QCOM                             0x00000004
 #define GL_GEOMETRY_SHADER_BIT                                                     0x00000004
 #define GL_GEOMETRY_SHADER_BIT_EXT                                                 0x00000004
 #define GL_GEOMETRY_SHADER_BIT_OES                                                 0x00000004
 #define GL_LINE_BIT                                                                0x00000004
 #define GL_NEGATE_BIT_ATI                                                          0x00000004
 #define GL_QUERY_STENCIL_FAIL_EVENT_BIT_AMD                                        0x00000004
+#define GL_SUBGROUP_FEATURE_ARITHMETIC_BIT_KHR                                     0x00000004
 #define GL_UNIFORM_BARRIER_BIT                                                     0x00000004
 #define GL_UNIFORM_BARRIER_BIT_EXT                                                 0x00000004
 #define GL_VERTEX23_BIT_PGI                                                        0x00000004
@@ -988,6 +1020,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_HALF_BIT_ATI                                                            0x00000008
 #define GL_POLYGON_BIT                                                             0x00000008
 #define GL_QUERY_DEPTH_BOUNDS_FAIL_EVENT_BIT_AMD                                   0x00000008
+#define GL_SUBGROUP_FEATURE_BALLOT_BIT_KHR                                         0x00000008
 #define GL_TESS_CONTROL_SHADER_BIT                                                 0x00000008
 #define GL_TESS_CONTROL_SHADER_BIT_EXT                                             0x00000008
 #define GL_TESS_CONTROL_SHADER_BIT_OES                                             0x00000008
@@ -999,6 +1032,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_POLYGON_STIPPLE_BIT                                                     0x00000010
 #define GL_QUARTER_BIT_ATI                                                         0x00000010
 #define GL_SHADER_GLOBAL_ACCESS_BARRIER_BIT_NV                                     0x00000010
+#define GL_SUBGROUP_FEATURE_SHUFFLE_BIT_KHR                                        0x00000010
 #define GL_TESS_EVALUATION_SHADER_BIT                                              0x00000010
 #define GL_TESS_EVALUATION_SHADER_BIT_EXT                                          0x00000010
 #define GL_TESS_EVALUATION_SHADER_BIT_OES                                          0x00000010
@@ -1008,17 +1042,23 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PIXEL_MODE_BIT                                                          0x00000020
 #define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT                                         0x00000020
 #define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT_EXT                                     0x00000020
+#define GL_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT_KHR                               0x00000020
 #define GL_COLOR_BUFFER_BIT6_QCOM                                                  0x00000040
 #define GL_COMMAND_BARRIER_BIT                                                     0x00000040
 #define GL_COMMAND_BARRIER_BIT_EXT                                                 0x00000040
 #define GL_LIGHTING_BIT                                                            0x00000040
+#define GL_MESH_SHADER_BIT_NV                                                      0x00000040
 #define GL_SATURATE_BIT_ATI                                                        0x00000040
+#define GL_SUBGROUP_FEATURE_CLUSTERED_BIT_KHR                                      0x00000040
 #define GL_COLOR_BUFFER_BIT7_QCOM                                                  0x00000080
 #define GL_FOG_BIT                                                                 0x00000080
 #define GL_PIXEL_BUFFER_BARRIER_BIT                                                0x00000080
 #define GL_PIXEL_BUFFER_BARRIER_BIT_EXT                                            0x00000080
+#define GL_SUBGROUP_FEATURE_QUAD_BIT_KHR                                           0x00000080
+#define GL_TASK_SHADER_BIT_NV                                                      0x00000080
 #define GL_DEPTH_BUFFER_BIT                                                        0x00000100
 #define GL_DEPTH_BUFFER_BIT0_QCOM                                                  0x00000100
+#define GL_SUBGROUP_FEATURE_PARTITIONED_BIT_NV                                     0x00000100
 #define GL_TEXTURE_UPDATE_BARRIER_BIT                                              0x00000100
 #define GL_TEXTURE_UPDATE_BARRIER_BIT_EXT                                          0x00000100
 #define GL_ACCUM_BUFFER_BIT                                                        0x00000200
@@ -1124,7 +1164,6 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PATCHES_OES                                                             0x000E
 #define GL_POLYGON_OFFSET_COMMAND_NV                                               0x000E
 #define GL_ALPHA_REF_COMMAND_NV                                                    0x000F
-#define GL_ALL_ATTRIB_BITS                                                         0x000FFFFF
 #define GL_MAP_FLUSH_EXPLICIT_BIT                                                  0x0010
 #define GL_MAP_FLUSH_EXPLICIT_BIT_EXT                                              0x0010
 #define GL_TRACE_PIXELS_BIT_MESA                                                   0x0010
@@ -2889,6 +2928,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PERFQUERY_DONOT_FLUSH_INTEL                                             0x83F9
 #define GL_PERFQUERY_FLUSH_INTEL                                                   0x83FA
 #define GL_PERFQUERY_WAIT_INTEL                                                    0x83FB
+#define GL_BLACKHOLE_RENDER_INTEL                                                  0x83FC
 #define GL_CONSERVATIVE_RASTERIZATION_INTEL                                        0x83FE
 #define GL_TEXTURE_MEMORY_LAYOUT_INTEL                                             0x83FF
 #define GL_FRAGMENT_LIGHTING_SGIX                                                  0x8400
@@ -3441,6 +3481,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_OFFSET_TEXTURE_RECTANGLE_SCALE_NV                                       0x864D
 #define GL_DOT_PRODUCT_TEXTURE_RECTANGLE_NV                                        0x864E
 #define GL_DEPTH_CLAMP                                                             0x864F
+#define GL_DEPTH_CLAMP_EXT                                                         0x864F
 #define GL_DEPTH_CLAMP_NV                                                          0x864F
 #define GL_VERTEX_ATTRIB_ARRAY0_NV                                                 0x8650
 #define GL_VERTEX_ATTRIB_ARRAY1_NV                                                 0x8651
@@ -4670,6 +4711,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_TILE_RASTER_ORDER_FIXED_MESA                                            0x8BB8
 #define GL_TILE_RASTER_ORDER_INCREASING_X_MESA                                     0x8BB9
 #define GL_TILE_RASTER_ORDER_INCREASING_Y_MESA                                     0x8BBA
+#define GL_FRAMEBUFFER_FLIP_Y_MESA                                                 0x8BBB
 #define GL_COUNTER_TYPE_AMD                                                        0x8BC0
 #define GL_COUNTER_RANGE_AMD                                                       0x8BC1
 #define GL_UNSIGNED_INT64_AMD                                                      0x8BC2
@@ -5428,6 +5470,22 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET                                       0x8E5F
 #define GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET_ARB                                   0x8E5F
 #define GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET_NV                                    0x8E5F
+#define GL_MAX_MESH_UNIFORM_BLOCKS_NV                                              0x8E60
+#define GL_MAX_MESH_TEXTURE_IMAGE_UNITS_NV                                         0x8E61
+#define GL_MAX_MESH_IMAGE_UNIFORMS_NV                                              0x8E62
+#define GL_MAX_MESH_UNIFORM_COMPONENTS_NV                                          0x8E63
+#define GL_MAX_MESH_ATOMIC_COUNTER_BUFFERS_NV                                      0x8E64
+#define GL_MAX_MESH_ATOMIC_COUNTERS_NV                                             0x8E65
+#define GL_MAX_MESH_SHADER_STORAGE_BLOCKS_NV                                       0x8E66
+#define GL_MAX_COMBINED_MESH_UNIFORM_COMPONENTS_NV                                 0x8E67
+#define GL_MAX_TASK_UNIFORM_BLOCKS_NV                                              0x8E68
+#define GL_MAX_TASK_TEXTURE_IMAGE_UNITS_NV                                         0x8E69
+#define GL_MAX_TASK_IMAGE_UNIFORMS_NV                                              0x8E6A
+#define GL_MAX_TASK_UNIFORM_COMPONENTS_NV                                          0x8E6B
+#define GL_MAX_TASK_ATOMIC_COUNTER_BUFFERS_NV                                      0x8E6C
+#define GL_MAX_TASK_ATOMIC_COUNTERS_NV                                             0x8E6D
+#define GL_MAX_TASK_SHADER_STORAGE_BLOCKS_NV                                       0x8E6E
+#define GL_MAX_COMBINED_TASK_UNIFORM_COMPONENTS_NV                                 0x8E6F
 #define GL_MAX_TRANSFORM_FEEDBACK_BUFFERS                                          0x8E70
 #define GL_MAX_VERTEX_STREAMS                                                      0x8E71
 #define GL_PATCH_VERTICES                                                          0x8E72
@@ -5630,6 +5688,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PRIMITIVE_RESTART_INDEX                                                 0x8F9E
 #define GL_MAX_PROGRAM_TEXTURE_GATHER_COMPONENTS_ARB                               0x8F9F
 #define GL_PERFMON_GLOBAL_MODE_QCOM                                                0x8FA0
+#define GL_MAX_SHADER_SUBSAMPLED_IMAGE_UNITS_QCOM                                  0x8FA1
 #define GL_BINNING_CONTROL_HINT_QCOM                                               0x8FB0
 #define GL_CPU_OPTIMIZED_QCOM                                                      0x8FB1
 #define GL_GPU_OPTIMIZED_QCOM                                                      0x8FB2
@@ -5637,6 +5696,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_GPU_DISJOINT_EXT                                                        0x8FBB
 #define GL_SR8_EXT                                                                 0x8FBD
 #define GL_SRG8_EXT                                                                0x8FBE
+#define GL_TEXTURE_FORMAT_SRGB_OVERRIDE_EXT                                        0x8FBF
 #define GL_SHADER_BINARY_VIV                                                       0x8FC4
 #define GL_INT8_NV                                                                 0x8FE0
 #define GL_INT8_VEC2_NV                                                            0x8FE1
@@ -6142,6 +6202,12 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_MAX_SHADER_COMPILER_THREADS_KHR                                         0x91B0
 #define GL_COMPLETION_STATUS_ARB                                                   0x91B1
 #define GL_COMPLETION_STATUS_KHR                                                   0x91B1
+#define GL_RENDERBUFFER_STORAGE_SAMPLES_AMD                                        0x91B2
+#define GL_MAX_COLOR_FRAMEBUFFER_SAMPLES_AMD                                       0x91B3
+#define GL_MAX_COLOR_FRAMEBUFFER_STORAGE_SAMPLES_AMD                               0x91B4
+#define GL_MAX_DEPTH_STENCIL_FRAMEBUFFER_SAMPLES_AMD                               0x91B5
+#define GL_NUM_SUPPORTED_MULTISAMPLE_MODES_AMD                                     0x91B6
+#define GL_SUPPORTED_MULTISAMPLE_MODES_AMD                                         0x91B7
 #define GL_COMPUTE_SHADER                                                          0x91B9
 #define GL_MAX_COMPUTE_UNIFORM_BLOCKS                                              0x91BB
 #define GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS                                         0x91BC
@@ -6316,6 +6382,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS                                      0x92DC
 #define GL_FRAGMENT_COVERAGE_TO_COLOR_NV                                           0x92DD
 #define GL_FRAGMENT_COVERAGE_COLOR_NV                                              0x92DE
+#define GL_MESH_OUTPUT_PER_VERTEX_GRANULARITY_NV                                   0x92DF
 #define GL_DEBUG_OUTPUT                                                            0x92E0
 #define GL_DEBUG_OUTPUT_KHR                                                        0x92E0
 #define GL_UNIFORM                                                                 0x92E1
@@ -6474,11 +6541,31 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_VIEWPORT_POSITION_W_SCALE_NV                                            0x937C
 #define GL_VIEWPORT_POSITION_W_SCALE_X_COEFF_NV                                    0x937D
 #define GL_VIEWPORT_POSITION_W_SCALE_Y_COEFF_NV                                    0x937E
+#define GL_REPRESENTATIVE_FRAGMENT_TEST_NV                                         0x937F
 #define GL_NUM_SAMPLE_COUNTS                                                       0x9380
 #define GL_MULTISAMPLE_LINE_WIDTH_RANGE                                            0x9381
 #define GL_MULTISAMPLE_LINE_WIDTH_RANGE_ARB                                        0x9381
 #define GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY                                      0x9382
 #define GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY_ARB                                  0x9382
+#define GL_VIEW_CLASS_EAC_R11                                                      0x9383
+#define GL_VIEW_CLASS_EAC_RG11                                                     0x9384
+#define GL_VIEW_CLASS_ETC2_RGB                                                     0x9385
+#define GL_VIEW_CLASS_ETC2_RGBA                                                    0x9386
+#define GL_VIEW_CLASS_ETC2_EAC_RGBA                                                0x9387
+#define GL_VIEW_CLASS_ASTC_4x4_RGBA                                                0x9388
+#define GL_VIEW_CLASS_ASTC_5x4_RGBA                                                0x9389
+#define GL_VIEW_CLASS_ASTC_5x5_RGBA                                                0x938A
+#define GL_VIEW_CLASS_ASTC_6x5_RGBA                                                0x938B
+#define GL_VIEW_CLASS_ASTC_6x6_RGBA                                                0x938C
+#define GL_VIEW_CLASS_ASTC_8x5_RGBA                                                0x938D
+#define GL_VIEW_CLASS_ASTC_8x6_RGBA                                                0x938E
+#define GL_VIEW_CLASS_ASTC_8x8_RGBA                                                0x938F
+#define GL_VIEW_CLASS_ASTC_10x5_RGBA                                               0x9390
+#define GL_VIEW_CLASS_ASTC_10x6_RGBA                                               0x9391
+#define GL_VIEW_CLASS_ASTC_10x8_RGBA                                               0x9392
+#define GL_VIEW_CLASS_ASTC_10x10_RGBA                                              0x9393
+#define GL_VIEW_CLASS_ASTC_12x10_RGBA                                              0x9394
+#define GL_VIEW_CLASS_ASTC_12x12_RGBA                                              0x9395
 #define GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE                                   0x93A0
 #define GL_BGRA8_EXT                                                               0x93A1
 #define GL_TEXTURE_USAGE_ANGLE                                                     0x93A2
@@ -6580,14 +6667,30 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL                                   0x9500
 #define GL_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_EXT                           0x9530
 #define GL_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_EXT                           0x9531
+#define GL_SUBGROUP_SIZE_KHR                                                       0x9532
+#define GL_SUBGROUP_SUPPORTED_STAGES_KHR                                           0x9533
+#define GL_SUBGROUP_SUPPORTED_FEATURES_KHR                                         0x9534
+#define GL_SUBGROUP_QUAD_ALL_STAGES_KHR                                            0x9535
+#define GL_MAX_MESH_TOTAL_MEMORY_SIZE_NV                                           0x9536
+#define GL_MAX_TASK_TOTAL_MEMORY_SIZE_NV                                           0x9537
+#define GL_MAX_MESH_OUTPUT_VERTICES_NV                                             0x9538
+#define GL_MAX_MESH_OUTPUT_PRIMITIVES_NV                                           0x9539
+#define GL_MAX_TASK_OUTPUT_COUNT_NV                                                0x953A
+#define GL_MAX_MESH_WORK_GROUP_SIZE_NV                                             0x953B
+#define GL_MAX_TASK_WORK_GROUP_SIZE_NV                                             0x953C
+#define GL_MAX_DRAW_MESH_TASKS_COUNT_NV                                            0x953D
+#define GL_MESH_WORK_GROUP_SIZE_NV                                                 0x953E
+#define GL_TASK_WORK_GROUP_SIZE_NV                                                 0x953F
 #define GL_QUERY_RESOURCE_TYPE_VIDMEM_ALLOC_NV                                     0x9540
 #define GL_QUERY_RESOURCE_MEMTYPE_VIDMEM_NV                                        0x9542
+#define GL_MESH_OUTPUT_PER_PRIMITIVE_GRANULARITY_NV                                0x9543
 #define GL_QUERY_RESOURCE_SYS_RESERVED_NV                                          0x9544
 #define GL_QUERY_RESOURCE_TEXTURE_NV                                               0x9545
 #define GL_QUERY_RESOURCE_RENDERBUFFER_NV                                          0x9546
 #define GL_QUERY_RESOURCE_BUFFEROBJECT_NV                                          0x9547
 #define GL_PER_GPU_STORAGE_NV                                                      0x9548
 #define GL_MULTICAST_PROGRAMMABLE_SAMPLE_LOCATION_NV                               0x9549
+#define GL_UPLOAD_GPU_MASK_NVX                                                     0x954A
 #define GL_CONSERVATIVE_RASTER_MODE_NV                                             0x954D
 #define GL_CONSERVATIVE_RASTER_MODE_POST_SNAP_NV                                   0x954E
 #define GL_CONSERVATIVE_RASTER_MODE_PRE_SNAP_TRIANGLES_NV                          0x954F
@@ -6598,7 +6701,37 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_SPIR_V_BINARY_ARB                                                       0x9552
 #define GL_SPIR_V_EXTENSIONS                                                       0x9553
 #define GL_NUM_SPIR_V_EXTENSIONS                                                   0x9554
+#define GL_SCISSOR_TEST_EXCLUSIVE_NV                                               0x9555
+#define GL_SCISSOR_BOX_EXCLUSIVE_NV                                                0x9556
+#define GL_MAX_MESH_VIEWS_NV                                                       0x9557
 #define GL_RENDER_GPU_MASK_NV                                                      0x9558
+#define GL_MESH_SHADER_NV                                                          0x9559
+#define GL_TASK_SHADER_NV                                                          0x955A
+#define GL_SHADING_RATE_IMAGE_BINDING_NV                                           0x955B
+#define GL_SHADING_RATE_IMAGE_TEXEL_WIDTH_NV                                       0x955C
+#define GL_SHADING_RATE_IMAGE_TEXEL_HEIGHT_NV                                      0x955D
+#define GL_SHADING_RATE_IMAGE_PALETTE_SIZE_NV                                      0x955E
+#define GL_MAX_COARSE_FRAGMENT_SAMPLES_NV                                          0x955F
+#define GL_SHADING_RATE_IMAGE_NV                                                   0x9563
+#define GL_SHADING_RATE_NO_INVOCATIONS_NV                                          0x9564
+#define GL_SHADING_RATE_1_INVOCATION_PER_PIXEL_NV                                  0x9565
+#define GL_SHADING_RATE_1_INVOCATION_PER_1X2_PIXELS_NV                             0x9566
+#define GL_SHADING_RATE_1_INVOCATION_PER_2X1_PIXELS_NV                             0x9567
+#define GL_SHADING_RATE_1_INVOCATION_PER_2X2_PIXELS_NV                             0x9568
+#define GL_SHADING_RATE_1_INVOCATION_PER_2X4_PIXELS_NV                             0x9569
+#define GL_SHADING_RATE_1_INVOCATION_PER_4X2_PIXELS_NV                             0x956A
+#define GL_SHADING_RATE_1_INVOCATION_PER_4X4_PIXELS_NV                             0x956B
+#define GL_SHADING_RATE_2_INVOCATIONS_PER_PIXEL_NV                                 0x956C
+#define GL_SHADING_RATE_4_INVOCATIONS_PER_PIXEL_NV                                 0x956D
+#define GL_SHADING_RATE_8_INVOCATIONS_PER_PIXEL_NV                                 0x956E
+#define GL_SHADING_RATE_16_INVOCATIONS_PER_PIXEL_NV                                0x956F
+#define GL_MESH_VERTICES_OUT_NV                                                    0x9579
+#define GL_MESH_PRIMITIVES_OUT_NV                                                  0x957A
+#define GL_MESH_OUTPUT_TYPE_NV                                                     0x957B
+#define GL_MESH_SUBROUTINE_NV                                                      0x957C
+#define GL_TASK_SUBROUTINE_NV                                                      0x957D
+#define GL_MESH_SUBROUTINE_UNIFORM_NV                                              0x957E
+#define GL_TASK_SUBROUTINE_UNIFORM_NV                                              0x957F
 #define GL_TEXTURE_TILING_EXT                                                      0x9580
 #define GL_DEDICATED_MEMORY_OBJECT_EXT                                             0x9581
 #define GL_NUM_TILING_TYPES_EXT                                                    0x9582
@@ -6627,6 +6760,27 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_DEVICE_LUID_EXT                                                         0x9599
 #define GL_DEVICE_NODE_MASK_EXT                                                    0x959A
 #define GL_PROTECTED_MEMORY_OBJECT_EXT                                             0x959B
+#define GL_UNIFORM_BLOCK_REFERENCED_BY_MESH_SHADER_NV                              0x959C
+#define GL_UNIFORM_BLOCK_REFERENCED_BY_TASK_SHADER_NV                              0x959D
+#define GL_ATOMIC_COUNTER_BUFFER_REFERENCED_BY_MESH_SHADER_NV                      0x959E
+#define GL_ATOMIC_COUNTER_BUFFER_REFERENCED_BY_TASK_SHADER_NV                      0x959F
+#define GL_REFERENCED_BY_MESH_SHADER_NV                                            0x95A0
+#define GL_REFERENCED_BY_TASK_SHADER_NV                                            0x95A1
+#define GL_MAX_MESH_WORK_GROUP_INVOCATIONS_NV                                      0x95A2
+#define GL_MAX_TASK_WORK_GROUP_INVOCATIONS_NV                                      0x95A3
+#define GL_ATTACHED_MEMORY_OBJECT_NV                                               0x95A4
+#define GL_ATTACHED_MEMORY_OFFSET_NV                                               0x95A5
+#define GL_MEMORY_ATTACHABLE_ALIGNMENT_NV                                          0x95A6
+#define GL_MEMORY_ATTACHABLE_SIZE_NV                                               0x95A7
+#define GL_MEMORY_ATTACHABLE_NV                                                    0x95A8
+#define GL_DETACHED_MEMORY_INCARNATION_NV                                          0x95A9
+#define GL_DETACHED_TEXTURES_NV                                                    0x95AA
+#define GL_DETACHED_BUFFERS_NV                                                     0x95AB
+#define GL_MAX_DETACHED_TEXTURES_NV                                                0x95AC
+#define GL_MAX_DETACHED_BUFFERS_NV                                                 0x95AD
+#define GL_SHADING_RATE_SAMPLE_ORDER_DEFAULT_NV                                    0x95AE
+#define GL_SHADING_RATE_SAMPLE_ORDER_PIXEL_MAJOR_NV                                0x95AF
+#define GL_SHADING_RATE_SAMPLE_ORDER_SAMPLE_MAJOR_NV                               0x95B0
 #define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR                            0x9630
 #define GL_MAX_VIEWS_OVR                                                           0x9631
 #define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR                      0x9632
@@ -6637,6 +6791,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_SIZE_EXT                              0x9651
 #define GL_FRAMEBUFFER_INCOMPLETE_INSUFFICIENT_SHADER_COMBINED_LOCAL_STORAGE_EXT   0x9652
 #define GL_FRAMEBUFFER_FETCH_NONCOHERENT_QCOM                                      0x96A2
+#define GL_VALIDATE_SHADER_BINARY_QCOM                                             0x96A3
 #define GL_SHARED_EDGE_NV                                                          0xC0
 #define GL_ROUNDED_RECT_NV                                                         0xE8
 #define GL_RELATIVE_ROUNDED_RECT_NV                                                0xE9
@@ -6657,6 +6812,7 @@ typedef void (APIENTRY *GLVULKANPROCNV)(void);
 #define GL_ARC_TO_NV                                                               0xFE
 #define GL_RELATIVE_ARC_TO_NV                                                      0xFF
 #define GL_TRACE_ALL_BITS_MESA                                                     0xFFFF
+#define GL_ALL_ATTRIB_BITS                                                         0xFFFFFFFF
 #define GL_ALL_BARRIER_BITS                                                        0xFFFFFFFF
 #define GL_ALL_BARRIER_BITS_EXT                                                    0xFFFFFFFF
 #define GL_ALL_PIXELS_AMD                                                          0xFFFFFFFF
@@ -6722,6 +6878,8 @@ typedef GLboolean (GLAPIENTRY *PFNGLARETEXTURESRESIDENTEXTPROC)(GLsizei n, const
 typedef void (GLAPIENTRY *PFNGLARRAYELEMENTPROC)(GLint i);
 typedef void (GLAPIENTRY *PFNGLARRAYELEMENTEXTPROC)(GLint i);
 typedef void (GLAPIENTRY *PFNGLARRAYOBJECTATIPROC)(GLenum array, GLint size, GLenum type, GLsizei stride, GLuint buffer, GLuint offset);
+typedef GLuint (GLAPIENTRY *PFNGLASYNCCOPYBUFFERSUBDATANVXPROC)(GLsizei waitSemaphoreCount, const GLuint * waitSemaphoreArray, const GLuint64 * fenceValueArray, GLuint readGpu, GLbitfield writeGpuMask, GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size, GLsizei signalSemaphoreCount, const GLuint * signalSemaphoreArray, const GLuint64 * signalValueArray);
+typedef GLuint (GLAPIENTRY *PFNGLASYNCCOPYIMAGESUBDATANVXPROC)(GLsizei waitSemaphoreCount, const GLuint * waitSemaphoreArray, const GLuint64 * waitValueArray, GLuint srcGpu, GLbitfield dstGpuMask, GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth, GLsizei signalSemaphoreCount, const GLuint * signalSemaphoreArray, const GLuint64 * signalValueArray);
 typedef void (GLAPIENTRY *PFNGLASYNCMARKERSGIXPROC)(GLuint marker);
 typedef void (GLAPIENTRY *PFNGLATTACHOBJECTARBPROC)(GLhandleARB containerObj, GLhandleARB obj);
 typedef void (GLAPIENTRY *PFNGLATTACHSHADERPROC)(GLuint program, GLuint shader);
@@ -6780,6 +6938,7 @@ typedef void (GLAPIENTRY *PFNGLBINDRENDERBUFFEREXTPROC)(GLenum target, GLuint re
 typedef void (GLAPIENTRY *PFNGLBINDRENDERBUFFEROESPROC)(GLenum target, GLuint renderbuffer);
 typedef void (GLAPIENTRY *PFNGLBINDSAMPLERPROC)(GLuint unit, GLuint sampler);
 typedef void (GLAPIENTRY *PFNGLBINDSAMPLERSPROC)(GLuint first, GLsizei count, const GLuint * samplers);
+typedef void (GLAPIENTRY *PFNGLBINDSHADINGRATEIMAGENVPROC)(GLuint texture);
 typedef GLuint (GLAPIENTRY *PFNGLBINDTEXGENPARAMETEREXTPROC)(GLenum unit, GLenum coord, GLenum value);
 typedef void (GLAPIENTRY *PFNGLBINDTEXTUREPROC)(GLenum target, GLuint texture);
 typedef void (GLAPIENTRY *PFNGLBINDTEXTUREEXTPROC)(GLenum target, GLuint texture);
@@ -6853,6 +7012,7 @@ typedef void (GLAPIENTRY *PFNGLBLITFRAMEBUFFEREXTPROC)(GLint srcX0, GLint srcY0,
 typedef void (GLAPIENTRY *PFNGLBLITFRAMEBUFFERNVPROC)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 typedef void (GLAPIENTRY *PFNGLBLITNAMEDFRAMEBUFFERPROC)(GLuint readFramebuffer, GLuint drawFramebuffer, GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 typedef void (GLAPIENTRY *PFNGLBUFFERADDRESSRANGENVPROC)(GLenum pname, GLuint index, GLuint64EXT address, GLsizeiptr length);
+typedef void (GLAPIENTRY *PFNGLBUFFERATTACHMEMORYNVPROC)(GLenum target, GLuint memory, GLuint64 offset);
 typedef void (GLAPIENTRY *PFNGLBUFFERDATAPROC)(GLenum target, GLsizeiptr size, const void * data, GLenum usage);
 typedef void (GLAPIENTRY *PFNGLBUFFERDATAARBPROC)(GLenum target, GLsizeiptrARB size, const void * data, GLenum usage);
 typedef void (GLAPIENTRY *PFNGLBUFFERPAGECOMMITMENTARBPROC)(GLenum target, GLintptr offset, GLsizeiptr size, GLboolean commit);
@@ -6912,6 +7072,7 @@ typedef void (GLAPIENTRY *PFNGLCLIENTACTIVETEXTUREPROC)(GLenum texture);
 typedef void (GLAPIENTRY *PFNGLCLIENTACTIVETEXTUREARBPROC)(GLenum texture);
 typedef void (GLAPIENTRY *PFNGLCLIENTACTIVEVERTEXSTREAMATIPROC)(GLenum stream);
 typedef void (GLAPIENTRY *PFNGLCLIENTATTRIBDEFAULTEXTPROC)(GLbitfield mask);
+typedef void (GLAPIENTRY *PFNGLCLIENTWAITSEMAPHOREUI64NVXPROC)(GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
 typedef GLenum (GLAPIENTRY *PFNGLCLIENTWAITSYNCPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 typedef GLenum (GLAPIENTRY *PFNGLCLIENTWAITSYNCAPPLEPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 typedef void (GLAPIENTRY *PFNGLCLIPCONTROLPROC)(GLenum origin, GLenum depth);
@@ -7114,6 +7275,7 @@ typedef void (GLAPIENTRY *PFNGLCREATEPERFQUERYINTELPROC)(GLuint queryId, GLuint 
 typedef GLuint (GLAPIENTRY *PFNGLCREATEPROGRAMPROC)(void);
 typedef GLhandleARB (GLAPIENTRY *PFNGLCREATEPROGRAMOBJECTARBPROC)(void);
 typedef void (GLAPIENTRY *PFNGLCREATEPROGRAMPIPELINESPROC)(GLsizei n, GLuint * pipelines);
+typedef GLuint (GLAPIENTRY *PFNGLCREATEPROGRESSFENCENVXPROC)(void);
 typedef void (GLAPIENTRY *PFNGLCREATEQUERIESPROC)(GLenum target, GLsizei n, GLuint * ids);
 typedef void (GLAPIENTRY *PFNGLCREATERENDERBUFFERSPROC)(GLsizei n, GLuint * renderbuffers);
 typedef void (GLAPIENTRY *PFNGLCREATESAMPLERSPROC)(GLsizei n, GLuint * samplers);
@@ -7196,7 +7358,7 @@ typedef void (GLAPIENTRY *PFNGLDEPTHBOUNDSEXTPROC)(GLclampd zmin, GLclampd zmax)
 typedef void (GLAPIENTRY *PFNGLDEPTHBOUNDSDNVPROC)(GLdouble zmin, GLdouble zmax);
 typedef void (GLAPIENTRY *PFNGLDEPTHFUNCPROC)(GLenum func);
 typedef void (GLAPIENTRY *PFNGLDEPTHMASKPROC)(GLboolean flag);
-typedef void (GLAPIENTRY *PFNGLDEPTHRANGEPROC)(GLdouble hither, GLdouble yon);
+typedef void (GLAPIENTRY *PFNGLDEPTHRANGEPROC)(GLdouble n, GLdouble f);
 typedef void (GLAPIENTRY *PFNGLDEPTHRANGEARRAYFVNVPROC)(GLuint first, GLsizei count, const GLfloat * v);
 typedef void (GLAPIENTRY *PFNGLDEPTHRANGEARRAYFVOESPROC)(GLuint first, GLsizei count, const GLfloat * v);
 typedef void (GLAPIENTRY *PFNGLDEPTHRANGEARRAYVPROC)(GLuint first, GLsizei count, const GLdouble * v);
@@ -7273,6 +7435,8 @@ typedef void (GLAPIENTRY *PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXOESPROC)(GLenum mo
 typedef void (GLAPIENTRY *PFNGLDRAWELEMENTSINSTANCEDEXTPROC)(GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount);
 typedef void (GLAPIENTRY *PFNGLDRAWELEMENTSINSTANCEDNVPROC)(GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount);
 typedef void (GLAPIENTRY *PFNGLDRAWMESHARRAYSSUNPROC)(GLenum mode, GLint first, GLsizei count, GLsizei width);
+typedef void (GLAPIENTRY *PFNGLDRAWMESHTASKSINDIRECTNVPROC)(GLintptr indirect);
+typedef void (GLAPIENTRY *PFNGLDRAWMESHTASKSNVPROC)(GLuint first, GLuint count);
 typedef void (GLAPIENTRY *PFNGLDRAWPIXELSPROC)(GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
 typedef void (GLAPIENTRY *PFNGLDRAWRANGEELEMENTARRAYAPPLEPROC)(GLenum mode, GLuint start, GLuint end, GLint first, GLsizei count);
 typedef void (GLAPIENTRY *PFNGLDRAWRANGEELEMENTARRAYATIPROC)(GLenum mode, GLuint start, GLuint end, GLsizei count);
@@ -7299,7 +7463,9 @@ typedef void (GLAPIENTRY *PFNGLDRAWTRANSFORMFEEDBACKSTREAMPROC)(GLenum mode, GLu
 typedef void (GLAPIENTRY *PFNGLDRAWTRANSFORMFEEDBACKSTREAMINSTANCEDPROC)(GLenum mode, GLuint id, GLuint stream, GLsizei instancecount);
 typedef void (GLAPIENTRY *PFNGLDRAWVKIMAGENVPROC)(GLuint64 vkImage, GLuint sampler, GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1, GLfloat z, GLfloat s0, GLfloat t0, GLfloat s1, GLfloat t1);
 typedef void (GLAPIENTRY *PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC)(GLenum target, GLeglImageOES image);
+typedef void (GLAPIENTRY *PFNGLEGLIMAGETARGETTEXSTORAGEEXTPROC)(GLenum target, GLeglImageOES image, const GLint* attrib_list);
 typedef void (GLAPIENTRY *PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)(GLenum target, GLeglImageOES image);
+typedef void (GLAPIENTRY *PFNGLEGLIMAGETARGETTEXTURESTORAGEEXTPROC)(GLuint texture, GLeglImageOES image, const GLint* attrib_list);
 typedef void (GLAPIENTRY *PFNGLEDGEFLAGPROC)(GLboolean flag);
 typedef void (GLAPIENTRY *PFNGLEDGEFLAGFORMATNVPROC)(GLsizei stride);
 typedef void (GLAPIENTRY *PFNGLEDGEFLAGPOINTERPROC)(GLsizei stride, const void * pointer);
@@ -7439,10 +7605,12 @@ typedef void (GLAPIENTRY *PFNGLFRAMETERMINATORGREMEDYPROC)(void);
 typedef void (GLAPIENTRY *PFNGLFRAMEZOOMSGIXPROC)(GLint factor);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERDRAWBUFFEREXTPROC)(GLuint framebuffer, GLenum mode);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERDRAWBUFFERSEXTPROC)(GLuint framebuffer, GLsizei n, const GLenum * bufs);
+typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERFETCHBARRIEREXTPROC)(void);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERFETCHBARRIERQCOMPROC)(void);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERFOVEATIONCONFIGQCOMPROC)(GLuint framebuffer, GLuint numLayers, GLuint focalPointsPerLayer, GLuint requestedFeatures, GLuint * providedFeatures);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERFOVEATIONPARAMETERSQCOMPROC)(GLuint framebuffer, GLuint layer, GLuint focalPoint, GLfloat focalX, GLfloat focalY, GLfloat gainX, GLfloat gainY, GLfloat foveaArea);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERPARAMETERIPROC)(GLenum target, GLenum pname, GLint param);
+typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERPARAMETERIMESAPROC)(GLenum target, GLenum pname, GLint param);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERPIXELLOCALSTORAGESIZEEXTPROC)(GLuint target, GLsizei size);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERREADBUFFEREXTPROC)(GLuint framebuffer, GLenum mode);
 typedef void (GLAPIENTRY *PFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
@@ -7627,6 +7795,7 @@ typedef void (GLAPIENTRY *PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVOESPROC)(GLenu
 typedef void (GLAPIENTRY *PFNGLGETFRAMEBUFFERPARAMETERFVAMDPROC)(GLenum target, GLenum pname, GLuint numsamples, GLuint pixelindex, GLsizei size, GLfloat * values);
 typedef void (GLAPIENTRY *PFNGLGETFRAMEBUFFERPARAMETERIVPROC)(GLenum target, GLenum pname, GLint * params);
 typedef void (GLAPIENTRY *PFNGLGETFRAMEBUFFERPARAMETERIVEXTPROC)(GLuint framebuffer, GLenum pname, GLint * params);
+typedef void (GLAPIENTRY *PFNGLGETFRAMEBUFFERPARAMETERIVMESAPROC)(GLenum target, GLenum pname, GLint * params);
 typedef GLsizei (GLAPIENTRY *PFNGLGETFRAMEBUFFERPIXELLOCALSTORAGESIZEEXTPROC)(GLuint target);
 typedef GLenum (GLAPIENTRY *PFNGLGETGRAPHICSRESETSTATUSPROC)(void);
 typedef GLenum (GLAPIENTRY *PFNGLGETGRAPHICSRESETSTATUSARBPROC)(void);
@@ -7685,6 +7854,7 @@ typedef void (GLAPIENTRY *PFNGLGETMATERIALIVPROC)(GLenum face, GLenum pname, GLi
 typedef void (GLAPIENTRY *PFNGLGETMATERIALXOESPROC)(GLenum face, GLenum pname, GLfixed param);
 typedef void (GLAPIENTRY *PFNGLGETMATERIALXVPROC)(GLenum face, GLenum pname, GLfixed * params);
 typedef void (GLAPIENTRY *PFNGLGETMATERIALXVOESPROC)(GLenum face, GLenum pname, GLfixed * params);
+typedef void (GLAPIENTRY *PFNGLGETMEMORYOBJECTDETACHEDRESOURCESUIVNVPROC)(GLuint memory, GLenum pname, GLint first, GLsizei count, GLuint * params);
 typedef void (GLAPIENTRY *PFNGLGETMEMORYOBJECTPARAMETERIVEXTPROC)(GLuint memoryObject, GLenum pname, GLint * params);
 typedef void (GLAPIENTRY *PFNGLGETMINMAXPROC)(GLenum target, GLboolean reset, GLenum format, GLenum type, void * values);
 typedef void (GLAPIENTRY *PFNGLGETMINMAXEXTPROC)(GLenum target, GLboolean reset, GLenum format, GLenum type, void * values);
@@ -7850,6 +8020,8 @@ typedef void (GLAPIENTRY *PFNGLGETSHADERPRECISIONFORMATPROC)(GLenum shadertype, 
 typedef void (GLAPIENTRY *PFNGLGETSHADERSOURCEPROC)(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source);
 typedef void (GLAPIENTRY *PFNGLGETSHADERSOURCEARBPROC)(GLhandleARB obj, GLsizei maxLength, GLsizei * length, GLcharARB * source);
 typedef void (GLAPIENTRY *PFNGLGETSHADERIVPROC)(GLuint shader, GLenum pname, GLint * params);
+typedef void (GLAPIENTRY *PFNGLGETSHADINGRATEIMAGEPALETTENVPROC)(GLuint viewport, GLuint entry, GLenum * rate);
+typedef void (GLAPIENTRY *PFNGLGETSHADINGRATESAMPLELOCATIONIVNVPROC)(GLenum rate, GLuint samples, GLuint index, GLint * location);
 typedef void (GLAPIENTRY *PFNGLGETSHARPENTEXFUNCSGISPROC)(GLenum target, GLfloat * points);
 typedef GLushort (GLAPIENTRY *PFNGLGETSTAGEINDEXNVPROC)(GLenum shadertype);
 typedef const GLubyte * (GLAPIENTRY *PFNGLGETSTRINGPROC)(GLenum name);
@@ -8308,6 +8480,8 @@ typedef void (GLAPIENTRY *PFNGLMULTIDRAWELEMENTSINDIRECTBINDLESSNVPROC)(GLenum m
 typedef void (GLAPIENTRY *PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTPROC)(GLenum mode, GLenum type, const void * indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
 typedef void (GLAPIENTRY *PFNGLMULTIDRAWELEMENTSINDIRECTCOUNTARBPROC)(GLenum mode, GLenum type, const void * indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
 typedef void (GLAPIENTRY *PFNGLMULTIDRAWELEMENTSINDIRECTEXTPROC)(GLenum mode, GLenum type, const void * indirect, GLsizei drawcount, GLsizei stride);
+typedef void (GLAPIENTRY *PFNGLMULTIDRAWMESHTASKSINDIRECTCOUNTNVPROC)(GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
+typedef void (GLAPIENTRY *PFNGLMULTIDRAWMESHTASKSINDIRECTNVPROC)(GLintptr indirect, GLsizei drawcount, GLsizei stride);
 typedef void (GLAPIENTRY *PFNGLMULTIDRAWRANGEELEMENTARRAYAPPLEPROC)(GLenum mode, GLuint start, GLuint end, const GLint * first, const GLsizei * count, GLsizei primcount);
 typedef void (GLAPIENTRY *PFNGLMULTIMODEDRAWARRAYSIBMPROC)(const GLenum * mode, const GLint * first, const GLsizei * count, GLsizei primcount, GLint modestride);
 typedef void (GLAPIENTRY *PFNGLMULTIMODEDRAWELEMENTSIBMPROC)(const GLenum * mode, const GLsizei * count, GLenum type, const void *const* indices, GLsizei primcount, GLint modestride);
@@ -8443,7 +8617,11 @@ typedef void (GLAPIENTRY *PFNGLMULTICASTGETQUERYOBJECTI64VNVPROC)(GLuint gpu, GL
 typedef void (GLAPIENTRY *PFNGLMULTICASTGETQUERYOBJECTIVNVPROC)(GLuint gpu, GLuint id, GLenum pname, GLint * params);
 typedef void (GLAPIENTRY *PFNGLMULTICASTGETQUERYOBJECTUI64VNVPROC)(GLuint gpu, GLuint id, GLenum pname, GLuint64 * params);
 typedef void (GLAPIENTRY *PFNGLMULTICASTGETQUERYOBJECTUIVNVPROC)(GLuint gpu, GLuint id, GLenum pname, GLuint * params);
+typedef void (GLAPIENTRY *PFNGLMULTICASTSCISSORARRAYVNVXPROC)(GLuint gpu, GLuint first, GLsizei count, const GLint * v);
+typedef void (GLAPIENTRY *PFNGLMULTICASTVIEWPORTARRAYVNVXPROC)(GLuint gpu, GLuint first, GLsizei count, const GLfloat * v);
+typedef void (GLAPIENTRY *PFNGLMULTICASTVIEWPORTPOSITIONWSCALENVXPROC)(GLuint gpu, GLuint index, GLfloat xcoeff, GLfloat ycoeff);
 typedef void (GLAPIENTRY *PFNGLMULTICASTWAITSYNCNVPROC)(GLuint signalGpu, GLbitfield waitGpuMask);
+typedef void (GLAPIENTRY *PFNGLNAMEDBUFFERATTACHMEMORYNVPROC)(GLuint buffer, GLuint memory, GLuint64 offset);
 typedef void (GLAPIENTRY *PFNGLNAMEDBUFFERDATAPROC)(GLuint buffer, GLsizeiptr size, const void * data, GLenum usage);
 typedef void (GLAPIENTRY *PFNGLNAMEDBUFFERDATAEXTPROC)(GLuint buffer, GLsizeiptr size, const void * data, GLenum usage);
 typedef void (GLAPIENTRY *PFNGLNAMEDBUFFERPAGECOMMITMENTARBPROC)(GLuint buffer, GLintptr offset, GLsizeiptr size, GLboolean commit);
@@ -8488,6 +8666,7 @@ typedef void (GLAPIENTRY *PFNGLNAMEDPROGRAMSTRINGEXTPROC)(GLuint program, GLenum
 typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEPROC)(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEEXTPROC)(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEPROC)(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEADVANCEDAMDPROC)(GLuint renderbuffer, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLECOVERAGEEXTPROC)(GLuint renderbuffer, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLNAMEDRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLNAMEDSTRINGARBPROC)(GLenum type, GLint namelen, const GLchar * name, GLint stringlen, const GLchar * string);
@@ -8903,6 +9082,7 @@ typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEEXTPROC)(GLenum target, GLenum
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEANGLEPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEAPPLEPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEADVANCEDAMDPROC)(GLenum target, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLECOVERAGENVPROC)(GLenum target, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMGPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
@@ -8934,6 +9114,7 @@ typedef void (GLAPIENTRY *PFNGLREPLACEMENTCODEUSVSUNPROC)(const GLushort * code)
 typedef void (GLAPIENTRY *PFNGLREQUESTRESIDENTPROGRAMSNVPROC)(GLsizei n, const GLuint * programs);
 typedef void (GLAPIENTRY *PFNGLRESETHISTOGRAMPROC)(GLenum target);
 typedef void (GLAPIENTRY *PFNGLRESETHISTOGRAMEXTPROC)(GLenum target);
+typedef void (GLAPIENTRY *PFNGLRESETMEMORYOBJECTPARAMETERNVPROC)(GLuint memory, GLenum pname);
 typedef void (GLAPIENTRY *PFNGLRESETMINMAXPROC)(GLenum target);
 typedef void (GLAPIENTRY *PFNGLRESETMINMAXEXTPROC)(GLenum target);
 typedef void (GLAPIENTRY *PFNGLRESIZEBUFFERSMESAPROC)(void);
@@ -8974,6 +9155,8 @@ typedef void (GLAPIENTRY *PFNGLSCISSORPROC)(GLint x, GLint y, GLsizei width, GLs
 typedef void (GLAPIENTRY *PFNGLSCISSORARRAYVPROC)(GLuint first, GLsizei count, const GLint * v);
 typedef void (GLAPIENTRY *PFNGLSCISSORARRAYVNVPROC)(GLuint first, GLsizei count, const GLint * v);
 typedef void (GLAPIENTRY *PFNGLSCISSORARRAYVOESPROC)(GLuint first, GLsizei count, const GLint * v);
+typedef void (GLAPIENTRY *PFNGLSCISSOREXCLUSIVEARRAYVNVPROC)(GLuint first, GLsizei count, const GLint * v);
+typedef void (GLAPIENTRY *PFNGLSCISSOREXCLUSIVENVPROC)(GLint x, GLint y, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLSCISSORINDEXEDPROC)(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLSCISSORINDEXEDNVPROC)(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height);
 typedef void (GLAPIENTRY *PFNGLSCISSORINDEXEDOESPROC)(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height);
@@ -9039,8 +9222,13 @@ typedef void (GLAPIENTRY *PFNGLSHADEROP3EXTPROC)(GLenum op, GLuint res, GLuint a
 typedef void (GLAPIENTRY *PFNGLSHADERSOURCEPROC)(GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
 typedef void (GLAPIENTRY *PFNGLSHADERSOURCEARBPROC)(GLhandleARB shaderObj, GLsizei count, const GLcharARB ** string, const GLint * length);
 typedef void (GLAPIENTRY *PFNGLSHADERSTORAGEBLOCKBINDINGPROC)(GLuint program, GLuint storageBlockIndex, GLuint storageBlockBinding);
+typedef void (GLAPIENTRY *PFNGLSHADINGRATEIMAGEBARRIERNVPROC)(GLboolean synchronize);
+typedef void (GLAPIENTRY *PFNGLSHADINGRATEIMAGEPALETTENVPROC)(GLuint viewport, GLuint first, GLsizei count, const GLenum * rates);
+typedef void (GLAPIENTRY *PFNGLSHADINGRATESAMPLEORDERCUSTOMNVPROC)(GLenum rate, GLuint samples, const GLint * locations);
+typedef void (GLAPIENTRY *PFNGLSHADINGRATESAMPLEORDERNVPROC)(GLenum order);
 typedef void (GLAPIENTRY *PFNGLSHARPENTEXFUNCSGISPROC)(GLenum target, GLsizei n, const GLfloat * points);
 typedef void (GLAPIENTRY *PFNGLSIGNALSEMAPHOREEXTPROC)(GLuint semaphore, GLuint numBufferBarriers, const GLuint * buffers, GLuint numTextureBarriers, const GLuint * textures, const GLenum * dstLayouts);
+typedef void (GLAPIENTRY *PFNGLSIGNALSEMAPHOREUI64NVXPROC)(GLuint signalGpu, GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
 typedef void (GLAPIENTRY *PFNGLSIGNALVKFENCENVPROC)(GLuint64 vkFence);
 typedef void (GLAPIENTRY *PFNGLSIGNALVKSEMAPHORENVPROC)(GLuint64 vkSemaphore);
 typedef void (GLAPIENTRY *PFNGLSPECIALIZESHADERPROC)(GLuint shader, const GLchar * pEntryPoint, GLuint numSpecializationConstants, const GLuint * pConstantIndex, const GLuint * pConstantValue);
@@ -9093,6 +9281,7 @@ typedef void (GLAPIENTRY *PFNGLTESSELLATIONMODEAMDPROC)(GLenum mode);
 typedef GLboolean (GLAPIENTRY *PFNGLTESTFENCEAPPLEPROC)(GLuint fence);
 typedef GLboolean (GLAPIENTRY *PFNGLTESTFENCENVPROC)(GLuint fence);
 typedef GLboolean (GLAPIENTRY *PFNGLTESTOBJECTAPPLEPROC)(GLenum object, GLuint name);
+typedef void (GLAPIENTRY *PFNGLTEXATTACHMEMORYNVPROC)(GLenum target, GLuint memory, GLuint64 offset);
 typedef void (GLAPIENTRY *PFNGLTEXBUFFERPROC)(GLenum target, GLenum internalformat, GLuint buffer);
 typedef void (GLAPIENTRY *PFNGLTEXBUFFERARBPROC)(GLenum target, GLenum internalformat, GLuint buffer);
 typedef void (GLAPIENTRY *PFNGLTEXBUFFEREXTPROC)(GLenum target, GLenum internalformat, GLuint buffer);
@@ -9256,6 +9445,7 @@ typedef void (GLAPIENTRY *PFNGLTEXSUBIMAGE3DPROC)(GLenum target, GLint level, GL
 typedef void (GLAPIENTRY *PFNGLTEXSUBIMAGE3DEXTPROC)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void * pixels);
 typedef void (GLAPIENTRY *PFNGLTEXSUBIMAGE3DOESPROC)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void * pixels);
 typedef void (GLAPIENTRY *PFNGLTEXSUBIMAGE4DSGISPROC)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint woffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei size4d, GLenum format, GLenum type, const void * pixels);
+typedef void (GLAPIENTRY *PFNGLTEXTUREATTACHMEMORYNVPROC)(GLuint texture, GLuint memory, GLuint64 offset);
 typedef void (GLAPIENTRY *PFNGLTEXTUREBARRIERPROC)(void);
 typedef void (GLAPIENTRY *PFNGLTEXTUREBARRIERNVPROC)(void);
 typedef void (GLAPIENTRY *PFNGLTEXTUREBUFFERPROC)(GLuint texture, GLenum internalformat, GLuint buffer);
@@ -9462,6 +9652,7 @@ typedef GLboolean (GLAPIENTRY *PFNGLUNMAPNAMEDBUFFEREXTPROC)(GLuint buffer);
 typedef void (GLAPIENTRY *PFNGLUNMAPOBJECTBUFFERATIPROC)(GLuint buffer);
 typedef void (GLAPIENTRY *PFNGLUNMAPTEXTURE2DINTELPROC)(GLuint texture, GLint level);
 typedef void (GLAPIENTRY *PFNGLUPDATEOBJECTBUFFERATIPROC)(GLuint buffer, GLuint offset, GLsizei size, const void * pointer, GLenum preserve);
+typedef void (GLAPIENTRY *PFNGLUPLOADGPUMASKNVXPROC)(GLbitfield mask);
 typedef void (GLAPIENTRY *PFNGLUSEPROGRAMPROC)(GLuint program);
 typedef void (GLAPIENTRY *PFNGLUSEPROGRAMOBJECTARBPROC)(GLhandleARB programObj);
 typedef void (GLAPIENTRY *PFNGLUSEPROGRAMSTAGESPROC)(GLuint pipeline, GLbitfield stages, GLuint program);
@@ -9474,6 +9665,7 @@ typedef GLboolean (GLAPIENTRY *PFNGLVDPAUISSURFACENVPROC)(GLvdpauSurfaceNV surfa
 typedef void (GLAPIENTRY *PFNGLVDPAUMAPSURFACESNVPROC)(GLsizei numSurfaces, const GLvdpauSurfaceNV * surfaces);
 typedef GLvdpauSurfaceNV (GLAPIENTRY *PFNGLVDPAUREGISTEROUTPUTSURFACENVPROC)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames);
 typedef GLvdpauSurfaceNV (GLAPIENTRY *PFNGLVDPAUREGISTERVIDEOSURFACENVPROC)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames);
+typedef GLvdpauSurfaceNV (GLAPIENTRY *PFNGLVDPAUREGISTERVIDEOSURFACEWITHPICTURESTRUCTURENVPROC)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames, GLboolean isFrameStructure);
 typedef void (GLAPIENTRY *PFNGLVDPAUSURFACEACCESSNVPROC)(GLvdpauSurfaceNV surface, GLenum access);
 typedef void (GLAPIENTRY *PFNGLVDPAUUNMAPSURFACESNVPROC)(GLsizei numSurface, const GLvdpauSurfaceNV * surfaces);
 typedef void (GLAPIENTRY *PFNGLVDPAUUNREGISTERSURFACENVPROC)(GLvdpauSurfaceNV surface);
@@ -9858,6 +10050,7 @@ typedef void (GLAPIENTRY *PFNGLVIEWPORTINDEXEDFVOESPROC)(GLuint index, const GLf
 typedef void (GLAPIENTRY *PFNGLVIEWPORTPOSITIONWSCALENVPROC)(GLuint index, GLfloat xcoeff, GLfloat ycoeff);
 typedef void (GLAPIENTRY *PFNGLVIEWPORTSWIZZLENVPROC)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew);
 typedef void (GLAPIENTRY *PFNGLWAITSEMAPHOREEXTPROC)(GLuint semaphore, GLuint numBufferBarriers, const GLuint * buffers, GLuint numTextureBarriers, const GLuint * textures, const GLenum * srcLayouts);
+typedef void (GLAPIENTRY *PFNGLWAITSEMAPHOREUI64NVXPROC)(GLuint waitGpu, GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
 typedef void (GLAPIENTRY *PFNGLWAITSYNCPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 typedef void (GLAPIENTRY *PFNGLWAITSYNCAPPLEPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 typedef void (GLAPIENTRY *PFNGLWAITVKSEMAPHORENVPROC)(GLuint64 vkSemaphore);
@@ -9982,6 +10175,10 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glArrayElementEXT)(GLint i);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glArrayObjectATI)(GLenum array, GLint size, GLenum type, GLsizei stride, GLuint buffer, GLuint offset);
 
+EPOXY_PUBLIC GLuint (EPOXY_CALLSPEC *epoxy_glAsyncCopyBufferSubDataNVX)(GLsizei waitSemaphoreCount, const GLuint * waitSemaphoreArray, const GLuint64 * fenceValueArray, GLuint readGpu, GLbitfield writeGpuMask, GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size, GLsizei signalSemaphoreCount, const GLuint * signalSemaphoreArray, const GLuint64 * signalValueArray);
+
+EPOXY_PUBLIC GLuint (EPOXY_CALLSPEC *epoxy_glAsyncCopyImageSubDataNVX)(GLsizei waitSemaphoreCount, const GLuint * waitSemaphoreArray, const GLuint64 * waitValueArray, GLuint srcGpu, GLbitfield dstGpuMask, GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth, GLsizei signalSemaphoreCount, const GLuint * signalSemaphoreArray, const GLuint64 * signalValueArray);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glAsyncMarkerSGIX)(GLuint marker);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glAttachObjectARB)(GLhandleARB containerObj, GLhandleARB obj);
@@ -10097,6 +10294,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBindRenderbufferOES)(GLenum target, G
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBindSampler)(GLuint unit, GLuint sampler);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBindSamplers)(GLuint first, GLsizei count, const GLuint * samplers);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBindShadingRateImageNV)(GLuint texture);
 
 EPOXY_PUBLIC GLuint (EPOXY_CALLSPEC *epoxy_glBindTexGenParameterEXT)(GLenum unit, GLenum coord, GLenum value);
 
@@ -10244,6 +10443,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBlitNamedFramebuffer)(GLuint readFram
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBufferAddressRangeNV)(GLenum pname, GLuint index, GLuint64EXT address, GLsizeiptr length);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBufferAttachMemoryNV)(GLenum target, GLuint memory, GLuint64 offset);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBufferData)(GLenum target, GLsizeiptr size, const void * data, GLenum usage);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glBufferDataARB)(GLenum target, GLsizeiptrARB size, const void * data, GLenum usage);
@@ -10361,6 +10562,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glClientActiveTextureARB)(GLenum textur
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glClientActiveVertexStreamATI)(GLenum stream);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glClientAttribDefaultEXT)(GLbitfield mask);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glClientWaitSemaphoreui64NVX)(GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
 
 EPOXY_PUBLIC GLenum (EPOXY_CALLSPEC *epoxy_glClientWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 
@@ -10766,6 +10969,8 @@ EPOXY_PUBLIC GLhandleARB (EPOXY_CALLSPEC *epoxy_glCreateProgramObjectARB)(void);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glCreateProgramPipelines)(GLsizei n, GLuint * pipelines);
 
+EPOXY_PUBLIC GLuint (EPOXY_CALLSPEC *epoxy_glCreateProgressFenceNVX)(void);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glCreateQueries)(GLenum target, GLsizei n, GLuint * ids);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glCreateRenderbuffers)(GLsizei n, GLuint * renderbuffers);
@@ -10930,7 +11135,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDepthFunc)(GLenum func);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDepthMask)(GLboolean flag);
 
-EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDepthRange)(GLdouble hither, GLdouble yon);
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDepthRange)(GLdouble n, GLdouble f);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDepthRangeArrayfvNV)(GLuint first, GLsizei count, const GLfloat * v);
 
@@ -11084,6 +11289,10 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawElementsInstancedNV)(GLenum mode,
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawMeshArraysSUN)(GLenum mode, GLint first, GLsizei count, GLsizei width);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawMeshTasksIndirectNV)(GLintptr indirect);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawMeshTasksNV)(GLuint first, GLuint count);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawPixels)(GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawRangeElementArrayAPPLE)(GLenum mode, GLuint start, GLuint end, GLint first, GLsizei count);
@@ -11136,7 +11345,11 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glDrawVkImageNV)(GLuint64 vkImage, GLui
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glEGLImageTargetRenderbufferStorageOES)(GLenum target, GLeglImageOES image);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glEGLImageTargetTexStorageEXT)(GLenum target, GLeglImageOES image, const GLint* attrib_list);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glEGLImageTargetTexture2DOES)(GLenum target, GLeglImageOES image);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glEGLImageTargetTextureStorageEXT)(GLuint texture, GLeglImageOES image, const GLint* attrib_list);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glEdgeFlag)(GLboolean flag);
 
@@ -11416,6 +11629,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferDrawBufferEXT)(GLuint fram
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferDrawBuffersEXT)(GLuint framebuffer, GLsizei n, const GLenum * bufs);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferFetchBarrierEXT)(void);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferFetchBarrierQCOM)(void);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferFoveationConfigQCOM)(GLuint framebuffer, GLuint numLayers, GLuint focalPointsPerLayer, GLuint requestedFeatures, GLuint * providedFeatures);
@@ -11423,6 +11638,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferFoveationConfigQCOM)(GLuin
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferFoveationParametersQCOM)(GLuint framebuffer, GLuint layer, GLuint focalPoint, GLfloat focalX, GLfloat focalY, GLfloat gainX, GLfloat gainY, GLfloat foveaArea);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferParameteri)(GLenum target, GLenum pname, GLint param);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferParameteriMESA)(GLenum target, GLenum pname, GLint param);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glFramebufferPixelLocalStorageSizeEXT)(GLuint target, GLsizei size);
 
@@ -11792,6 +12009,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetFramebufferParameteriv)(GLenum tar
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetFramebufferParameterivEXT)(GLuint framebuffer, GLenum pname, GLint * params);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetFramebufferParameterivMESA)(GLenum target, GLenum pname, GLint * params);
+
 EPOXY_PUBLIC GLsizei (EPOXY_CALLSPEC *epoxy_glGetFramebufferPixelLocalStorageSizeEXT)(GLuint target);
 
 EPOXY_PUBLIC GLenum (EPOXY_CALLSPEC *epoxy_glGetGraphicsResetStatus)(void);
@@ -11907,6 +12126,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetMaterialxOES)(GLenum face, GLenum 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetMaterialxv)(GLenum face, GLenum pname, GLfixed * params);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetMaterialxvOES)(GLenum face, GLenum pname, GLfixed * params);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetMemoryObjectDetachedResourcesuivNV)(GLuint memory, GLenum pname, GLint first, GLsizei count, GLuint * params);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetMemoryObjectParameterivEXT)(GLuint memoryObject, GLenum pname, GLint * params);
 
@@ -12237,6 +12458,10 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetShaderSource)(GLuint shader, GLsiz
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetShaderSourceARB)(GLhandleARB obj, GLsizei maxLength, GLsizei * length, GLcharARB * source);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetShaderiv)(GLuint shader, GLenum pname, GLint * params);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetShadingRateImagePaletteNV)(GLuint viewport, GLuint entry, GLenum * rate);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetShadingRateSampleLocationivNV)(GLenum rate, GLuint samples, GLuint index, GLint * location);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glGetSharpenTexFuncSGIS)(GLenum target, GLfloat * points);
 
@@ -13154,6 +13379,10 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiDrawElementsIndirectCountARB)(GL
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiDrawElementsIndirectEXT)(GLenum mode, GLenum type, const void * indirect, GLsizei drawcount, GLsizei stride);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiDrawMeshTasksIndirectCountNV)(GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiDrawMeshTasksIndirectNV)(GLintptr indirect, GLsizei drawcount, GLsizei stride);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiDrawRangeElementArrayAPPLE)(GLenum mode, GLuint start, GLuint end, const GLint * first, const GLsizei * count, GLsizei primcount);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMultiModeDrawArraysIBM)(const GLenum * mode, const GLint * first, const GLsizei * count, GLsizei primcount, GLint modestride);
@@ -13424,7 +13653,15 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastGetQueryObjectui64vNV)(GLuin
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastGetQueryObjectuivNV)(GLuint gpu, GLuint id, GLenum pname, GLuint * params);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastScissorArrayvNVX)(GLuint gpu, GLuint first, GLsizei count, const GLint * v);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastViewportArrayvNVX)(GLuint gpu, GLuint first, GLsizei count, const GLfloat * v);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastViewportPositionWScaleNVX)(GLuint gpu, GLuint index, GLfloat xcoeff, GLfloat ycoeff);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glMulticastWaitSyncNV)(GLuint signalGpu, GLbitfield waitGpuMask);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedBufferAttachMemoryNV)(GLuint buffer, GLuint memory, GLuint64 offset);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedBufferData)(GLuint buffer, GLsizeiptr size, const void * data, GLenum usage);
 
@@ -13513,6 +13750,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedRenderbufferStorage)(GLuint rend
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedRenderbufferStorageEXT)(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedRenderbufferStorageMultisample)(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedRenderbufferStorageMultisampleAdvancedAMD)(GLuint renderbuffer, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glNamedRenderbufferStorageMultisampleCoverageEXT)(GLuint renderbuffer, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height);
 
@@ -14344,6 +14583,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRenderbufferStorageMultisampleANGLE)(
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRenderbufferStorageMultisampleAPPLE)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRenderbufferStorageMultisampleAdvancedAMD)(GLenum target, GLsizei samples, GLsizei storageSamples, GLenum internalformat, GLsizei width, GLsizei height);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRenderbufferStorageMultisampleCoverageNV)(GLenum target, GLsizei coverageSamples, GLsizei colorSamples, GLenum internalformat, GLsizei width, GLsizei height);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRenderbufferStorageMultisampleEXT)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
@@ -14405,6 +14646,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glRequestResidentProgramsNV)(GLsizei n,
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glResetHistogram)(GLenum target);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glResetHistogramEXT)(GLenum target);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glResetMemoryObjectParameterNV)(GLuint memory, GLenum pname);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glResetMinmax)(GLenum target);
 
@@ -14485,6 +14728,10 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorArrayv)(GLuint first, GLsizei 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorArrayvNV)(GLuint first, GLsizei count, const GLint * v);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorArrayvOES)(GLuint first, GLsizei count, const GLint * v);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorExclusiveArrayvNV)(GLuint first, GLsizei count, const GLint * v);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorExclusiveNV)(GLint x, GLint y, GLsizei width, GLsizei height);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glScissorIndexed)(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height);
 
@@ -14616,9 +14863,19 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShaderSourceARB)(GLhandleARB shaderOb
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShaderStorageBlockBinding)(GLuint program, GLuint storageBlockIndex, GLuint storageBlockBinding);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShadingRateImageBarrierNV)(GLboolean synchronize);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShadingRateImagePaletteNV)(GLuint viewport, GLuint first, GLsizei count, const GLenum * rates);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShadingRateSampleOrderCustomNV)(GLenum rate, GLuint samples, const GLint * locations);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glShadingRateSampleOrderNV)(GLenum order);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glSharpenTexFuncSGIS)(GLenum target, GLsizei n, const GLfloat * points);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glSignalSemaphoreEXT)(GLuint semaphore, GLuint numBufferBarriers, const GLuint * buffers, GLuint numTextureBarriers, const GLuint * textures, const GLenum * dstLayouts);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glSignalSemaphoreui64NVX)(GLuint signalGpu, GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glSignalVkFenceNV)(GLuint64 vkFence);
 
@@ -14723,6 +14980,8 @@ EPOXY_PUBLIC GLboolean (EPOXY_CALLSPEC *epoxy_glTestFenceAPPLE)(GLuint fence);
 EPOXY_PUBLIC GLboolean (EPOXY_CALLSPEC *epoxy_glTestFenceNV)(GLuint fence);
 
 EPOXY_PUBLIC GLboolean (EPOXY_CALLSPEC *epoxy_glTestObjectAPPLE)(GLenum object, GLuint name);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTexAttachMemoryNV)(GLenum target, GLuint memory, GLuint64 offset);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTexBuffer)(GLenum target, GLenum internalformat, GLuint buffer);
 
@@ -15049,6 +15308,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTexSubImage3DEXT)(GLenum target, GLin
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTexSubImage3DOES)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void * pixels);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTexSubImage4DSGIS)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint woffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei size4d, GLenum format, GLenum type, const void * pixels);
+
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTextureAttachMemoryNV)(GLuint texture, GLuint memory, GLuint64 offset);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glTextureBarrier)(void);
 
@@ -15462,6 +15723,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glUnmapTexture2DINTEL)(GLuint texture, 
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glUpdateObjectBufferATI)(GLuint buffer, GLuint offset, GLsizei size, const void * pointer, GLenum preserve);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glUploadGpuMaskNVX)(GLbitfield mask);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glUseProgram)(GLuint program);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glUseProgramObjectARB)(GLhandleARB programObj);
@@ -15485,6 +15748,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glVDPAUMapSurfacesNV)(GLsizei numSurfac
 EPOXY_PUBLIC GLvdpauSurfaceNV (EPOXY_CALLSPEC *epoxy_glVDPAURegisterOutputSurfaceNV)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames);
 
 EPOXY_PUBLIC GLvdpauSurfaceNV (EPOXY_CALLSPEC *epoxy_glVDPAURegisterVideoSurfaceNV)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames);
+
+EPOXY_PUBLIC GLvdpauSurfaceNV (EPOXY_CALLSPEC *epoxy_glVDPAURegisterVideoSurfaceWithPictureStructureNV)(const void * vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint * textureNames, GLboolean isFrameStructure);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glVDPAUSurfaceAccessNV)(GLvdpauSurfaceNV surface, GLenum access);
 
@@ -16254,6 +16519,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glViewportSwizzleNV)(GLuint index, GLen
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWaitSemaphoreEXT)(GLuint semaphore, GLuint numBufferBarriers, const GLuint * buffers, GLuint numTextureBarriers, const GLuint * textures, const GLenum * srcLayouts);
 
+EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWaitSemaphoreui64NVX)(GLuint waitGpu, GLsizei fenceObjectCount, const GLuint * semaphoreArray, const GLuint64 * fenceValueArray);
+
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWaitSync)(GLsync sync, GLbitfield flags, GLuint64 timeout);
 
 EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWaitSyncAPPLE)(GLsync sync, GLbitfield flags, GLuint64 timeout);
@@ -16424,6 +16691,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glArrayElement epoxy_glArrayElement
 #define glArrayElementEXT epoxy_glArrayElementEXT
 #define glArrayObjectATI epoxy_glArrayObjectATI
+#define glAsyncCopyBufferSubDataNVX epoxy_glAsyncCopyBufferSubDataNVX
+#define glAsyncCopyImageSubDataNVX epoxy_glAsyncCopyImageSubDataNVX
 #define glAsyncMarkerSGIX epoxy_glAsyncMarkerSGIX
 #define glAttachObjectARB epoxy_glAttachObjectARB
 #define glAttachShader epoxy_glAttachShader
@@ -16482,6 +16751,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glBindRenderbufferOES epoxy_glBindRenderbufferOES
 #define glBindSampler epoxy_glBindSampler
 #define glBindSamplers epoxy_glBindSamplers
+#define glBindShadingRateImageNV epoxy_glBindShadingRateImageNV
 #define glBindTexGenParameterEXT epoxy_glBindTexGenParameterEXT
 #define glBindTexture epoxy_glBindTexture
 #define glBindTextureEXT epoxy_glBindTextureEXT
@@ -16555,6 +16825,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glBlitFramebufferNV epoxy_glBlitFramebufferNV
 #define glBlitNamedFramebuffer epoxy_glBlitNamedFramebuffer
 #define glBufferAddressRangeNV epoxy_glBufferAddressRangeNV
+#define glBufferAttachMemoryNV epoxy_glBufferAttachMemoryNV
 #define glBufferData epoxy_glBufferData
 #define glBufferDataARB epoxy_glBufferDataARB
 #define glBufferPageCommitmentARB epoxy_glBufferPageCommitmentARB
@@ -16614,6 +16885,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glClientActiveTextureARB epoxy_glClientActiveTextureARB
 #define glClientActiveVertexStreamATI epoxy_glClientActiveVertexStreamATI
 #define glClientAttribDefaultEXT epoxy_glClientAttribDefaultEXT
+#define glClientWaitSemaphoreui64NVX epoxy_glClientWaitSemaphoreui64NVX
 #define glClientWaitSync epoxy_glClientWaitSync
 #define glClientWaitSyncAPPLE epoxy_glClientWaitSyncAPPLE
 #define glClipControl epoxy_glClipControl
@@ -16816,6 +17088,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glCreateProgram epoxy_glCreateProgram
 #define glCreateProgramObjectARB epoxy_glCreateProgramObjectARB
 #define glCreateProgramPipelines epoxy_glCreateProgramPipelines
+#define glCreateProgressFenceNVX epoxy_glCreateProgressFenceNVX
 #define glCreateQueries epoxy_glCreateQueries
 #define glCreateRenderbuffers epoxy_glCreateRenderbuffers
 #define glCreateSamplers epoxy_glCreateSamplers
@@ -16975,6 +17248,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glDrawElementsInstancedEXT epoxy_glDrawElementsInstancedEXT
 #define glDrawElementsInstancedNV epoxy_glDrawElementsInstancedNV
 #define glDrawMeshArraysSUN epoxy_glDrawMeshArraysSUN
+#define glDrawMeshTasksIndirectNV epoxy_glDrawMeshTasksIndirectNV
+#define glDrawMeshTasksNV epoxy_glDrawMeshTasksNV
 #define glDrawPixels epoxy_glDrawPixels
 #define glDrawRangeElementArrayAPPLE epoxy_glDrawRangeElementArrayAPPLE
 #define glDrawRangeElementArrayATI epoxy_glDrawRangeElementArrayATI
@@ -17001,7 +17276,9 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glDrawTransformFeedbackStreamInstanced epoxy_glDrawTransformFeedbackStreamInstanced
 #define glDrawVkImageNV epoxy_glDrawVkImageNV
 #define glEGLImageTargetRenderbufferStorageOES epoxy_glEGLImageTargetRenderbufferStorageOES
+#define glEGLImageTargetTexStorageEXT epoxy_glEGLImageTargetTexStorageEXT
 #define glEGLImageTargetTexture2DOES epoxy_glEGLImageTargetTexture2DOES
+#define glEGLImageTargetTextureStorageEXT epoxy_glEGLImageTargetTextureStorageEXT
 #define glEdgeFlag epoxy_glEdgeFlag
 #define glEdgeFlagFormatNV epoxy_glEdgeFlagFormatNV
 #define glEdgeFlagPointer epoxy_glEdgeFlagPointer
@@ -17141,10 +17418,12 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glFrameZoomSGIX epoxy_glFrameZoomSGIX
 #define glFramebufferDrawBufferEXT epoxy_glFramebufferDrawBufferEXT
 #define glFramebufferDrawBuffersEXT epoxy_glFramebufferDrawBuffersEXT
+#define glFramebufferFetchBarrierEXT epoxy_glFramebufferFetchBarrierEXT
 #define glFramebufferFetchBarrierQCOM epoxy_glFramebufferFetchBarrierQCOM
 #define glFramebufferFoveationConfigQCOM epoxy_glFramebufferFoveationConfigQCOM
 #define glFramebufferFoveationParametersQCOM epoxy_glFramebufferFoveationParametersQCOM
 #define glFramebufferParameteri epoxy_glFramebufferParameteri
+#define glFramebufferParameteriMESA epoxy_glFramebufferParameteriMESA
 #define glFramebufferPixelLocalStorageSizeEXT epoxy_glFramebufferPixelLocalStorageSizeEXT
 #define glFramebufferReadBufferEXT epoxy_glFramebufferReadBufferEXT
 #define glFramebufferRenderbuffer epoxy_glFramebufferRenderbuffer
@@ -17329,6 +17608,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glGetFramebufferParameterfvAMD epoxy_glGetFramebufferParameterfvAMD
 #define glGetFramebufferParameteriv epoxy_glGetFramebufferParameteriv
 #define glGetFramebufferParameterivEXT epoxy_glGetFramebufferParameterivEXT
+#define glGetFramebufferParameterivMESA epoxy_glGetFramebufferParameterivMESA
 #define glGetFramebufferPixelLocalStorageSizeEXT epoxy_glGetFramebufferPixelLocalStorageSizeEXT
 #define glGetGraphicsResetStatus epoxy_glGetGraphicsResetStatus
 #define glGetGraphicsResetStatusARB epoxy_glGetGraphicsResetStatusARB
@@ -17387,6 +17667,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glGetMaterialxOES epoxy_glGetMaterialxOES
 #define glGetMaterialxv epoxy_glGetMaterialxv
 #define glGetMaterialxvOES epoxy_glGetMaterialxvOES
+#define glGetMemoryObjectDetachedResourcesuivNV epoxy_glGetMemoryObjectDetachedResourcesuivNV
 #define glGetMemoryObjectParameterivEXT epoxy_glGetMemoryObjectParameterivEXT
 #define glGetMinmax epoxy_glGetMinmax
 #define glGetMinmaxEXT epoxy_glGetMinmaxEXT
@@ -17552,6 +17833,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glGetShaderSource epoxy_glGetShaderSource
 #define glGetShaderSourceARB epoxy_glGetShaderSourceARB
 #define glGetShaderiv epoxy_glGetShaderiv
+#define glGetShadingRateImagePaletteNV epoxy_glGetShadingRateImagePaletteNV
+#define glGetShadingRateSampleLocationivNV epoxy_glGetShadingRateSampleLocationivNV
 #define glGetSharpenTexFuncSGIS epoxy_glGetSharpenTexFuncSGIS
 #define glGetStageIndexNV epoxy_glGetStageIndexNV
 #define glGetString epoxy_glGetString
@@ -18010,6 +18293,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glMultiDrawElementsIndirectCount epoxy_glMultiDrawElementsIndirectCount
 #define glMultiDrawElementsIndirectCountARB epoxy_glMultiDrawElementsIndirectCountARB
 #define glMultiDrawElementsIndirectEXT epoxy_glMultiDrawElementsIndirectEXT
+#define glMultiDrawMeshTasksIndirectCountNV epoxy_glMultiDrawMeshTasksIndirectCountNV
+#define glMultiDrawMeshTasksIndirectNV epoxy_glMultiDrawMeshTasksIndirectNV
 #define glMultiDrawRangeElementArrayAPPLE epoxy_glMultiDrawRangeElementArrayAPPLE
 #define glMultiModeDrawArraysIBM epoxy_glMultiModeDrawArraysIBM
 #define glMultiModeDrawElementsIBM epoxy_glMultiModeDrawElementsIBM
@@ -18145,7 +18430,11 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glMulticastGetQueryObjectivNV epoxy_glMulticastGetQueryObjectivNV
 #define glMulticastGetQueryObjectui64vNV epoxy_glMulticastGetQueryObjectui64vNV
 #define glMulticastGetQueryObjectuivNV epoxy_glMulticastGetQueryObjectuivNV
+#define glMulticastScissorArrayvNVX epoxy_glMulticastScissorArrayvNVX
+#define glMulticastViewportArrayvNVX epoxy_glMulticastViewportArrayvNVX
+#define glMulticastViewportPositionWScaleNVX epoxy_glMulticastViewportPositionWScaleNVX
 #define glMulticastWaitSyncNV epoxy_glMulticastWaitSyncNV
+#define glNamedBufferAttachMemoryNV epoxy_glNamedBufferAttachMemoryNV
 #define glNamedBufferData epoxy_glNamedBufferData
 #define glNamedBufferDataEXT epoxy_glNamedBufferDataEXT
 #define glNamedBufferPageCommitmentARB epoxy_glNamedBufferPageCommitmentARB
@@ -18190,6 +18479,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glNamedRenderbufferStorage epoxy_glNamedRenderbufferStorage
 #define glNamedRenderbufferStorageEXT epoxy_glNamedRenderbufferStorageEXT
 #define glNamedRenderbufferStorageMultisample epoxy_glNamedRenderbufferStorageMultisample
+#define glNamedRenderbufferStorageMultisampleAdvancedAMD epoxy_glNamedRenderbufferStorageMultisampleAdvancedAMD
 #define glNamedRenderbufferStorageMultisampleCoverageEXT epoxy_glNamedRenderbufferStorageMultisampleCoverageEXT
 #define glNamedRenderbufferStorageMultisampleEXT epoxy_glNamedRenderbufferStorageMultisampleEXT
 #define glNamedStringARB epoxy_glNamedStringARB
@@ -18605,6 +18895,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glRenderbufferStorageMultisample epoxy_glRenderbufferStorageMultisample
 #define glRenderbufferStorageMultisampleANGLE epoxy_glRenderbufferStorageMultisampleANGLE
 #define glRenderbufferStorageMultisampleAPPLE epoxy_glRenderbufferStorageMultisampleAPPLE
+#define glRenderbufferStorageMultisampleAdvancedAMD epoxy_glRenderbufferStorageMultisampleAdvancedAMD
 #define glRenderbufferStorageMultisampleCoverageNV epoxy_glRenderbufferStorageMultisampleCoverageNV
 #define glRenderbufferStorageMultisampleEXT epoxy_glRenderbufferStorageMultisampleEXT
 #define glRenderbufferStorageMultisampleIMG epoxy_glRenderbufferStorageMultisampleIMG
@@ -18636,6 +18927,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glRequestResidentProgramsNV epoxy_glRequestResidentProgramsNV
 #define glResetHistogram epoxy_glResetHistogram
 #define glResetHistogramEXT epoxy_glResetHistogramEXT
+#define glResetMemoryObjectParameterNV epoxy_glResetMemoryObjectParameterNV
 #define glResetMinmax epoxy_glResetMinmax
 #define glResetMinmaxEXT epoxy_glResetMinmaxEXT
 #define glResizeBuffersMESA epoxy_glResizeBuffersMESA
@@ -18676,6 +18968,8 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glScissorArrayv epoxy_glScissorArrayv
 #define glScissorArrayvNV epoxy_glScissorArrayvNV
 #define glScissorArrayvOES epoxy_glScissorArrayvOES
+#define glScissorExclusiveArrayvNV epoxy_glScissorExclusiveArrayvNV
+#define glScissorExclusiveNV epoxy_glScissorExclusiveNV
 #define glScissorIndexed epoxy_glScissorIndexed
 #define glScissorIndexedNV epoxy_glScissorIndexedNV
 #define glScissorIndexedOES epoxy_glScissorIndexedOES
@@ -18741,8 +19035,13 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glShaderSource epoxy_glShaderSource
 #define glShaderSourceARB epoxy_glShaderSourceARB
 #define glShaderStorageBlockBinding epoxy_glShaderStorageBlockBinding
+#define glShadingRateImageBarrierNV epoxy_glShadingRateImageBarrierNV
+#define glShadingRateImagePaletteNV epoxy_glShadingRateImagePaletteNV
+#define glShadingRateSampleOrderCustomNV epoxy_glShadingRateSampleOrderCustomNV
+#define glShadingRateSampleOrderNV epoxy_glShadingRateSampleOrderNV
 #define glSharpenTexFuncSGIS epoxy_glSharpenTexFuncSGIS
 #define glSignalSemaphoreEXT epoxy_glSignalSemaphoreEXT
+#define glSignalSemaphoreui64NVX epoxy_glSignalSemaphoreui64NVX
 #define glSignalVkFenceNV epoxy_glSignalVkFenceNV
 #define glSignalVkSemaphoreNV epoxy_glSignalVkSemaphoreNV
 #define glSpecializeShader epoxy_glSpecializeShader
@@ -18795,6 +19094,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glTestFenceAPPLE epoxy_glTestFenceAPPLE
 #define glTestFenceNV epoxy_glTestFenceNV
 #define glTestObjectAPPLE epoxy_glTestObjectAPPLE
+#define glTexAttachMemoryNV epoxy_glTexAttachMemoryNV
 #define glTexBuffer epoxy_glTexBuffer
 #define glTexBufferARB epoxy_glTexBufferARB
 #define glTexBufferEXT epoxy_glTexBufferEXT
@@ -18958,6 +19258,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glTexSubImage3DEXT epoxy_glTexSubImage3DEXT
 #define glTexSubImage3DOES epoxy_glTexSubImage3DOES
 #define glTexSubImage4DSGIS epoxy_glTexSubImage4DSGIS
+#define glTextureAttachMemoryNV epoxy_glTextureAttachMemoryNV
 #define glTextureBarrier epoxy_glTextureBarrier
 #define glTextureBarrierNV epoxy_glTextureBarrierNV
 #define glTextureBuffer epoxy_glTextureBuffer
@@ -19164,6 +19465,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glUnmapObjectBufferATI epoxy_glUnmapObjectBufferATI
 #define glUnmapTexture2DINTEL epoxy_glUnmapTexture2DINTEL
 #define glUpdateObjectBufferATI epoxy_glUpdateObjectBufferATI
+#define glUploadGpuMaskNVX epoxy_glUploadGpuMaskNVX
 #define glUseProgram epoxy_glUseProgram
 #define glUseProgramObjectARB epoxy_glUseProgramObjectARB
 #define glUseProgramStages epoxy_glUseProgramStages
@@ -19176,6 +19478,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glVDPAUMapSurfacesNV epoxy_glVDPAUMapSurfacesNV
 #define glVDPAURegisterOutputSurfaceNV epoxy_glVDPAURegisterOutputSurfaceNV
 #define glVDPAURegisterVideoSurfaceNV epoxy_glVDPAURegisterVideoSurfaceNV
+#define glVDPAURegisterVideoSurfaceWithPictureStructureNV epoxy_glVDPAURegisterVideoSurfaceWithPictureStructureNV
 #define glVDPAUSurfaceAccessNV epoxy_glVDPAUSurfaceAccessNV
 #define glVDPAUUnmapSurfacesNV epoxy_glVDPAUUnmapSurfacesNV
 #define glVDPAUUnregisterSurfaceNV epoxy_glVDPAUUnregisterSurfaceNV
@@ -19560,6 +19863,7 @@ EPOXY_PUBLIC void (EPOXY_CALLSPEC *epoxy_glWriteMaskEXT)(GLuint res, GLuint in, 
 #define glViewportPositionWScaleNV epoxy_glViewportPositionWScaleNV
 #define glViewportSwizzleNV epoxy_glViewportSwizzleNV
 #define glWaitSemaphoreEXT epoxy_glWaitSemaphoreEXT
+#define glWaitSemaphoreui64NVX epoxy_glWaitSemaphoreui64NVX
 #define glWaitSync epoxy_glWaitSync
 #define glWaitSyncAPPLE epoxy_glWaitSyncAPPLE
 #define glWaitVkSemaphoreNV epoxy_glWaitVkSemaphoreNV
