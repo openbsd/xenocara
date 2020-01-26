@@ -779,6 +779,12 @@ xf86UseMsg(void)
     return;
 }
 
+void
+xf86OSInputThreadInit()
+{
+    return;
+}
+
 #ifdef X_PRIVSEP
 /*
  * Revoke privileges after init.

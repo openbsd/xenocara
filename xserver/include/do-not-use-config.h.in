@@ -120,6 +120,9 @@
 /* Have GLAMOR_HAS_EGL_QUERY_DMABUF */
 #undef GLAMOR_HAS_EGL_QUERY_DMABUF
 
+/* Have GLAMOR_HAS_EGL_QUERY_DRIVER */
+#undef GLAMOR_HAS_EGL_QUERY_DRIVER
+
 /* Build glamor with GBM-based EGL support */
 #undef GLAMOR_HAS_GBM
 

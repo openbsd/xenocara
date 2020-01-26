@@ -39,6 +39,7 @@
 #include "dumb_bo.h"
 #include "xf86str.h"
 #include "X11/Xatom.h"
+#include "mi.h"
 #include "micmap.h"
 #include "xf86cmap.h"
 #include "xf86DDC.h"
@@ -757,6 +758,7 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    ScreenPtr screen = crtc->scrn->pScreen;
     drmModeModeInfo kmode;
     int output_count = 0;
     uint32_t *output_ids = NULL;
@@ -766,6 +768,12 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
 
     if (!drmmode_crtc_get_fb_id(crtc, &fb_id, &x, &y))
         return 1;
+
+#ifdef GLAMOR_HAS_GBM
+    /* Make sure any pending drawing will be visible in a new scanout buffer */
+    if (drmmode->glamor)
+        glamor_finish(screen);
+#endif
 
     if (ms->atomic_modeset) {
         drmModeAtomicReq *req = drmModeAtomicAlloc();
@@ -1455,8 +1463,6 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 
     FreeScratchGC(gc);
 
-    glamor_finish(pScreen);
-
     pScreen->canDoBGNoneRoot = TRUE;
 
     if (drmmode->fbcon_pixmap)
@@ -1791,6 +1797,19 @@ drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
 
     return drmmode_set_target_scanout_pixmap(crtc, ppix,
                                              &drmmode_crtc->prime_pixmap);
+}
+
+static void
+drmmode_clear_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr screen = pixmap->drawable.pScreen;
+    GCPtr gc;
+
+    gc = GetScratchGC(pixmap->drawable.depth, screen);
+    if (gc) {
+        miClearDrawable(&pixmap->drawable, gc);
+        FreeScratchGC(gc);
+    }
 }
 
 static void *
@@ -3223,6 +3242,8 @@ drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
     if (!drmmode_glamor_handle_new_screen_pixmap(drmmode))
         goto fail;
 
+    drmmode_clear_pixmap(ppix);
+
     for (i = 0; i < xf86_config->num_crtc; i++) {
         xf86CrtcPtr crtc = xf86_config->crtc[i];
 
@@ -3255,12 +3276,18 @@ static void
 drmmode_validate_leases(ScrnInfoPtr scrn)
 {
     ScreenPtr screen = scrn->pScreen;
-    rrScrPrivPtr scr_priv = rrGetScrPriv(screen);
+    rrScrPrivPtr scr_priv;
     modesettingPtr ms = modesettingPTR(scrn);
     drmmode_ptr drmmode = &ms->drmmode;
     drmModeLesseeListPtr lessees;
     RRLeasePtr lease, next;
     int l;
+
+    /* Bail out if RandR wasn't initialized. */
+    if (!dixPrivateKeyRegistered(rrPrivKey))
+        return;
+
+    scr_priv = rrGetScrPriv(screen);
 
     /* We can't talk to the kernel about leases when VT switched */
     if (!scrn->vtSema)

@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.20.6, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2019-11-22"
-RELEASE_NAME="Enchiladas de Queso"
+AC_INIT([xorg-server], 1.20.7, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2020-01-13"
+RELEASE_NAME="Stuffed French Toast"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -2120,6 +2120,10 @@ if test "x$GLAMOR" = xyes; then
 
 	PKG_CHECK_EXISTS(epoxy >= 1.4.4,
 			 [AC_DEFINE(GLAMOR_HAS_EGL_QUERY_DMABUF, 1, [Have GLAMOR_HAS_EGL_QUERY_DMABUF])],
+			 [])
+
+	PKG_CHECK_EXISTS(epoxy >= 1.5.4,
+			 [AC_DEFINE(GLAMOR_HAS_EGL_QUERY_DRIVER, 1, [Have GLAMOR_HAS_EGL_QUERY_DRIVER])],
 			 [])
 
 	PKG_CHECK_MODULES(GBM, "$LIBGBM", [GBM=yes], [GBM=no])
