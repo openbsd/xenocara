@@ -110,7 +110,7 @@
 ./usr/X11R6/lib/libdrm_radeon.la
 ./usr/X11R6/lib/libdrm_radeon.so.4.0
 ./usr/X11R6/lib/libepoxy.a
-./usr/X11R6/lib/libepoxy.so.3.0
+./usr/X11R6/lib/libepoxy.so.4.0
 ./usr/X11R6/lib/libgbm.la
 ./usr/X11R6/lib/libgbm.so.0.4
 ./usr/X11R6/lib/libglapi.la
