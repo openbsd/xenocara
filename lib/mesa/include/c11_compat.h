@@ -18,7 +18,11 @@
  * assert.h only defines that name for C11 and above
  */
 #ifndef static_assert
+#ifdef __clang__
 #define static_assert _Static_assert
+#else
+#define static_assert(...) ((void)0)
+#endif
 #endif
 
 
