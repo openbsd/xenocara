@@ -24,7 +24,6 @@
 #if defined(__clang__) && __has_extension(c_static_assert)
 #define static_assert _Static_assert
 #elif defined(__GNUC__) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || (__GNUC__ > 4))
-#warning 
 #define static_assert _Static_assert
 #else
 #define static_assert(cond, mesg) struct _C11_COMPAT_H_static_assert_unused
