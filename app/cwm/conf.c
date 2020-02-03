@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.249 2019/03/07 12:54:21 okan Exp $
+ * $OpenBSD: conf.c,v 1.250 2020/02/03 16:38:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -197,10 +197,11 @@ static const struct {
 	const char	ch;
 	int		mask;
 } bind_mods[] = {
+	{ 'S',	ShiftMask },
 	{ 'C',	ControlMask },
 	{ 'M',	Mod1Mask },
 	{ '4',	Mod4Mask },
-	{ 'S',	ShiftMask },
+	{ '5',	Mod5Mask },
 };
 static const struct {
 	const char	*key;
