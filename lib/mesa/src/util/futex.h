@@ -99,7 +99,7 @@ static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespe
 {
    struct timespec tsrel, tsnow;
    clock_gettime(CLOCK_MONOTONIC, &tsnow); 
-   timespecsub(timeout, &tsrel, &tsrel);
+   timespecsub(timeout, &tsnow, &tsrel);
    return futex(addr, FUTEX_WAIT, value, &tsrel, NULL);
 }
 
