@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.255 2019/03/07 14:28:17 okan Exp $
+ * $OpenBSD: client.c,v 1.256 2020/02/07 18:53:41 okan Exp $
  */
 
 #include <sys/types.h>
@@ -971,10 +971,7 @@ client_htile(struct client_ctx *cc)
 	struct geom 		 area;
 	int 			 i, n, mh, x, w, h;
 
-	if (!cc->gc)
-		return;
 	i = n = 0;
-
 	area = screen_area(sc,
 	    cc->geom.x + cc->geom.w / 2,
 	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
@@ -1042,10 +1039,7 @@ client_vtile(struct client_ctx *cc)
 	struct geom 		 area;
 	int 			 i, n, mw, y, w, h;
 
-	if (!cc->gc)
-		return;
 	i = n = 0;
-
 	area = screen_area(sc,
 	    cc->geom.x + cc->geom.w / 2,
 	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
