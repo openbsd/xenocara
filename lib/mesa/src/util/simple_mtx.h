@@ -28,7 +28,7 @@
 
 #include "c11/threads.h"
 
-#if defined(__GNUC__) && defined(HAVE_LINUX_FUTEX_H)
+#if defined(__GNUC__) && defined(USE_FUTEX)
 
 /* mtx_t - Fast, simple mutex
  *

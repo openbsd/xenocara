@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.29 2020/01/22 02:49:17 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.30 2020/02/20 02:55:46 jsg Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
@@ -31,11 +31,19 @@ VULKAN_DRIVERS=		radeon
 WITH_LLVM=		--enable-llvm
 .endif
 
+.if ${MACHINE_ARCH} == "hppa" || ${MACHINE_ARCH} == "m88k" || \
+    ${MACHINE_ARCH} == "sh"
+WITH_FUTEX=		--disable-futex
+.else
+WITH_FUTEX=		--enable-futex
+.endif
+
 CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--with-gallium-drivers=${GALLIUM_DRIVERS} \
 			--with-vulkan-drivers=${VULKAN_DRIVERS} \
 			--disable-silent-rules \
 			${WITH_LLVM} \
+			${WITH_FUTEX} \
 			--disable-glx-tls \
 			--disable-regen-sources \
 			--enable-gles1 --enable-gles2 \

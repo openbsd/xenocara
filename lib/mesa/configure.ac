@@ -1044,6 +1044,16 @@ LIBS="$save_LIBS"
 dnl Check for futex for fast inline simple_mtx_t.
 AC_CHECK_HEADER([linux/futex.h], [DEFINES="$DEFINES -DHAVE_LINUX_FUTEX_H"])
 
+AC_ARG_ENABLE([futex],
+    [AS_HELP_STRING([--disable-futex],
+        [disable futex use @<:@default=enabled@:>@])],
+    [enable_futex="$enableval"],
+    [enable_futex=yes])
+
+if test "x$enable_futex" = xyes; then
+    DEFINES="$DEFINES -DUSE_FUTEX"
+fi
+
 dnl SELinux awareness.
 AC_ARG_ENABLE([selinux],
     [AS_HELP_STRING([--enable-selinux],

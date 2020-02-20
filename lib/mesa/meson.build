@@ -1040,6 +1040,8 @@ foreach h : ['xlocale.h', 'sys/sysctl.h', 'linux/futex.h', 'endian.h', 'dlfcn.h'
   endif
 endforeach
 
+pre_args += '-DUSE_FUTEX'
+
 foreach f : ['strtof', 'mkostemp', 'posix_memalign', 'timespec_get', 'memfd_create', 'random_r', 'flock', 'arc4random_buf']
   if cc.has_function(f)
     pre_args += '-DHAVE_@0@'.format(f.to_upper())
