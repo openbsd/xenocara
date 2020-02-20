@@ -83,8 +83,8 @@ DIST_COMMON = $(am__configure_deps) $(noinst_HEADERS) \
 	$(top_srcdir)/src/gbm/main/gbm.pc.in \
 	$(top_srcdir)/src/mapi/es1api/glesv1_cm.pc.in \
 	$(top_srcdir)/src/mapi/es2api/glesv2.pc.in bin/ar-lib \
-	bin/compile bin/config.guess bin/config.sub bin/install-sh \
-	bin/ltmain.sh bin/missing
+	bin/compile bin/config.guess bin/config.sub bin/depcomp \
+	bin/install-sh bin/ltmain.sh bin/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_check_gnu_make.m4 \

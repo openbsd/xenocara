@@ -1198,6 +1198,7 @@ enable_debug
 enable_profile
 enable_sanitize
 enable_asm
+enable_futex
 enable_selinux
 enable_llvm_shared_libs
 with_llvm_prefix
@@ -2006,6 +2007,7 @@ Optional Features:
                           enable code sanitizer [default=disabled]
   --disable-asm           disable assembly usage [default=enabled on supported
                           platforms]
+  --disable-futex         disable futex use [default=enabled]
   --enable-selinux        Build SELinux-aware Mesa [default=disabled]
   --enable-llvm-shared-libs
                           link with LLVM shared libraries [default=enabled]
@@ -22743,6 +22745,18 @@ if test "x$ac_cv_header_linux_futex_h" = xyes; then :
 fi
 
 
+
+# Check whether --enable-futex was given.
+if test "${enable_futex+set}" = set; then :
+  enableval=$enable_futex; enable_futex="$enableval"
+else
+  enable_futex=yes
+fi
+
+
+if test "x$enable_futex" = xyes; then
+    DEFINES="$DEFINES -DUSE_FUTEX"
+fi
 
 # Check whether --enable-selinux was given.
 if test "${enable_selinux+set}" = set; then :
