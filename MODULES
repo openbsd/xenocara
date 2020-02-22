@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.431 2020/01/26 13:49:27 matthieu Exp $
+# $OpenBSD: MODULES,v 1.432 2020/02/22 13:48:42 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -46,7 +46,7 @@ app/xgc			1.0.5
 app/xhost		1.0.8
 app/xinit		1.4.1		needs-update
 app/xinput		1.6.3
-app/xkbcomp		1.4.2
+app/xkbcomp		1.4.3		needs-update
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5		needs-update
 app/xkbutils		1.0.4
