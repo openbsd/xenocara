@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.258 2020/02/28 13:38:35 okan Exp $
+ * $OpenBSD: client.c,v 1.259 2020/03/13 20:49:13 tim Exp $
  */
 
 #include <sys/types.h>
@@ -668,21 +668,23 @@ void
 client_set_name(struct client_ctx *cc)
 {
 	struct winname	*wn;
-	char		*newname;
 	int		 i = 0;
 
-	if (!xu_get_strprop(cc->win, ewmh[_NET_WM_NAME], &newname))
-		if (!xu_get_strprop(cc->win, XA_WM_NAME, &newname))
-			newname = xstrdup("");
+	free(cc->name);
+	if (!xu_get_strprop(cc->win, ewmh[_NET_WM_NAME], &cc->name))
+		if (!xu_get_strprop(cc->win, XA_WM_NAME, &cc->name))
+			cc->name = xstrdup("");
 
 	TAILQ_FOREACH(wn, &cc->nameq, entry) {
-		if (strcmp(wn->name, newname) == 0)
+		if (strcmp(wn->name, cc->name) == 0) {
 			TAILQ_REMOVE(&cc->nameq, wn, entry);
+			free(wn->name);
+			free(wn);
+		}
 		i++;
 	}
-	cc->name = newname;
 	wn = xmalloc(sizeof(*wn));
-	wn->name = xstrdup(newname);
+	wn->name = xstrdup(cc->name);
 	TAILQ_INSERT_TAIL(&cc->nameq, wn, entry);
 
 	/* Garbage collection. */
