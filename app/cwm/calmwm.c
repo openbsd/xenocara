@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.112 2020/02/27 14:56:39 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.113 2020/03/23 20:14:27 okan Exp $
  */
 
 #include <sys/types.h>
@@ -89,11 +89,12 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	if (signal(SIGCHLD, sighdlr) == SIG_ERR)
+	if (signal(SIGCHLD, sighdlr) == SIG_ERR ||
+	    signal(SIGHUP, sighdlr) == SIG_ERR ||
+	    signal(SIGINT, sighdlr) == SIG_ERR ||
+	    signal(SIGTERM, sighdlr) == SIG_ERR)
 		err(1, "signal");
-	if (signal(SIGHUP, sighdlr) == SIG_ERR)
-		err(1, "signal");
-
+		 
 	if (parse_config(Conf.conf_file, &Conf) == -1) {
 		warnx("error parsing config file");
 		if (nflag)
@@ -215,6 +216,10 @@ sighdlr(int sig)
 		break;
 	case SIGHUP:
 		cwm_status = CWM_EXEC_WM;
+		break;
+	case SIGINT:
+	case SIGTERM:
+		cwm_status = CWM_QUIT;
 		break;
 	}
 
