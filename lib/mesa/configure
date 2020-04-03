@@ -21122,7 +21122,7 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 #include <stdint.h>
-uint64_t v;
+uint32_t v;
 int main() {
     return __sync_add_and_fetch(&v, (uint32_t)1);
 }
