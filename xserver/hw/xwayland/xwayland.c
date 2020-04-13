@@ -40,7 +40,11 @@
 
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmproto.h>
-_X_EXPORT Bool noXFree86VidModeExtension;
+extern _X_EXPORT Bool noXFree86VidModeExtension;
+#endif
+
+#ifdef XWL_HAS_GLAMOR
+#include <glamor.h>
 #endif
 
 void
@@ -596,6 +600,10 @@ ensure_surface_for_window(WindowPtr window)
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, xwl_window);
     xorg_list_init(&xwl_window->link_damage);
 
+#ifdef GLAMOR_HAS_GBM
+    xorg_list_init(&xwl_window->frame_callback_list);
+#endif
+
     xwl_window_init_allow_commits(xwl_window);
 
     return TRUE;
@@ -680,11 +688,6 @@ xwl_unrealize_window(WindowPtr window)
     xwl_screen->UnrealizeWindow = screen->UnrealizeWindow;
     screen->UnrealizeWindow = xwl_unrealize_window;
 
-#ifdef GLAMOR_HAS_GBM
-    if (xwl_screen->present)
-        xwl_present_unrealize_window(window);
-#endif
-
     xwl_window = xwl_window_get(window);
     if (!xwl_window)
         return ret;
@@ -695,6 +698,18 @@ xwl_unrealize_window(WindowPtr window)
 
     if (xwl_window->frame_callback)
         wl_callback_destroy(xwl_window->frame_callback);
+
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_screen->present) {
+        struct xwl_present_window *xwl_present_window, *tmp;
+
+        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
+                                      &xwl_window->frame_callback_list,
+                                      frame_callback_list) {
+            xwl_present_unrealize_window(xwl_present_window);
+        }
+    }
+#endif
 
     free(xwl_window);
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, NULL);
@@ -737,11 +752,31 @@ frame_callback(void *data,
 
     wl_callback_destroy (xwl_window->frame_callback);
     xwl_window->frame_callback = NULL;
+
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_window->xwl_screen->present) {
+        struct xwl_present_window *xwl_present_window, *tmp;
+
+        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
+                                      &xwl_window->frame_callback_list,
+                                      frame_callback_list) {
+            xwl_present_frame_callback(xwl_present_window);
+        }
+    }
+#endif
 }
 
 static const struct wl_callback_listener frame_listener = {
     frame_callback
 };
+
+void
+xwl_window_create_frame_callback(struct xwl_window *xwl_window)
+{
+    xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
+    wl_callback_add_listener(xwl_window->frame_callback, &frame_listener,
+                             xwl_window);
+}
 
 static Bool
 xwl_destroy_window(WindowPtr window)
@@ -813,19 +848,17 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
                               box->x2 - box->x1, box->y2 - box->y1);
     }
 
-    xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
-    wl_callback_add_listener(xwl_window->frame_callback, &frame_listener, xwl_window);
-
-    wl_surface_commit(xwl_window->surface);
+    xwl_window_create_frame_callback(xwl_window);
     DamageEmpty(window_get_damage(xwl_window->window));
-
-    xorg_list_del(&xwl_window->link_damage);
 }
 
 static void
 xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 {
     struct xwl_window *xwl_window, *next_xwl_window;
+    struct xorg_list commit_window_list;
+
+    xorg_list_init(&commit_window_list);
 
     xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
                                   &xwl_screen->damage_window_list, link_damage) {
@@ -843,6 +876,24 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 #endif
 
         xwl_window_post_damage(xwl_window);
+        xorg_list_del(&xwl_window->link_damage);
+        xorg_list_append(&xwl_window->link_damage, &commit_window_list);
+    }
+
+    if (xorg_list_is_empty(&commit_window_list))
+        return;
+
+#ifdef XWL_HAS_GLAMOR
+    if (xwl_screen->glamor &&
+        xwl_screen->egl_backend == &xwl_screen->gbm_backend) {
+        glamor_block_handler(xwl_screen->screen);
+    }
+#endif
+
+    xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
+                                  &commit_window_list, link_damage) {
+        wl_surface_commit(xwl_window->surface);
+        xorg_list_del(&xwl_window->link_damage);
     }
 }
 

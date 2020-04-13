@@ -780,7 +780,7 @@ xf86UseMsg(void)
 }
 
 void
-xf86OSInputThreadInit()
+xf86OSInputThreadInit(void)
 {
     return;
 }
