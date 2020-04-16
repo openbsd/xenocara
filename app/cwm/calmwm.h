@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.374 2020/03/24 14:47:29 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.375 2020/04/16 13:32:35 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -291,6 +291,8 @@ struct conf {
 	int			 bwidth;
 	int			 mamount;
 	int			 snapdist;
+	int			 htile;
+	int			 vtile;
 	struct gap		 gap;
 	char			*color[CWM_COLOR_NITEMS];
 	char			*font;

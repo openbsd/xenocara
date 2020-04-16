@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.251 2020/02/27 14:56:39 okan Exp $
+ * $OpenBSD: conf.c,v 1.252 2020/04/16 13:32:35 okan Exp $
  */
 
 #include <sys/types.h>
@@ -281,6 +281,8 @@ conf_init(struct conf *c)
 	c->stickygroups = 0;
 	c->bwidth = 1;
 	c->mamount = 1;
+	c->htile = 50;
+	c->vtile = 50;
 	c->snapdist = 0;
 	c->ngroups = 0;
 	c->nameqlen = 5;
