@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.25 2020/02/27 14:56:39 okan Exp $
+ * $OpenBSD: util.c,v 1.26 2020/04/16 17:12:49 tobias Exp $
  */
 
 #include <sys/types.h>
@@ -53,7 +53,7 @@ u_exec(char *argstr)
 {
 #define MAXARGLEN 20
 	char	*args[MAXARGLEN], **ap = args;
-	char	**end = &args[MAXARGLEN - 1], *tmp;
+	char	**end = &args[MAXARGLEN - 2], *tmp;
 	char	*s = argstr;
 
 	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL) {
