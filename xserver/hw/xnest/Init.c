@@ -156,6 +156,14 @@ OsVendorInit(void)
     return;
 }
 
+#ifdef X_PRIVSEP
+void
+priv_vendor_init(void)
+{
+    return;
+}
+#endif
+
 void
 OsVendorFatalError(const char *f, va_list args)
 {

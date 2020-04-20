@@ -375,6 +375,13 @@ OsVendorInit(void)
     }
 }
 
+#ifdef X_PRIVSEP
+void
+priv_vendor_init(void)
+{
+}
+#endif
+
 KdCardFuncs ephyrFuncs = {
     ephyrCardInit,              /* cardinit */
     ephyrScreenInitialize,      /* scrinit */

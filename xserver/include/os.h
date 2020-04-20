@@ -314,6 +314,8 @@ extern _X_EXPORT int
 ChownLock(uid_t, gid_t);
 extern _X_EXPORT int
 priv_open_device(const char *);
+extern _X_EXPORT void
+priv_vendor_init(void);
 #endif
 
 extern _X_EXPORT int

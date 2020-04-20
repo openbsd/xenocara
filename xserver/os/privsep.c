@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.31 2019/06/11 14:51:34 jcs Exp $ */
+/* $OpenBSD: privsep.c,v 1.32 2020/04/20 18:17:26 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -279,6 +279,7 @@ priv_init(uid_t uid, gid_t gid)
 		signal(i, SIG_DFL);
 	setproctitle("[priv]");
 	close(socks[1]);
+	priv_vendor_init();
 
 	for (dev = allowed_devices; dev->name != NULL; dev++) {
 		if (unveil(dev->name, "rw") == -1)

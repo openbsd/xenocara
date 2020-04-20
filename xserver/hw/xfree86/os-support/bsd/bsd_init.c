@@ -820,4 +820,15 @@ xf86DropPriv(void)
         }
     }
 }
+
+/*
+ * Called in the privileged child
+ */
+void
+priv_vendor_init(void)
+{
+	/* release resources it won't need */
+	pci_system_cleanup();
+	close(xf86Info.consoleFd);
+}
 #endif
