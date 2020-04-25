@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.112 2020/03/24 14:47:29 okan Exp $
+ * $OpenBSD: xutil.c,v 1.113 2020/04/25 20:07:28 tobias Exp $
  */
 
 #include <sys/types.h>
@@ -73,8 +73,10 @@ xu_get_strprop(Window win, Atom atm, char **text) {
 	*text = NULL;
 
 	XGetTextProperty(X_Dpy, win, &prop, atm);
-	if (!prop.nitems)
+	if (!prop.nitems) {
+		XFree(prop.value);
 		return 0;
+	}
 
 	if (Xutf8TextPropertyToTextList(X_Dpy, &prop, &list,
 	    &nitems) == Success && nitems > 0 && *list) {
