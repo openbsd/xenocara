@@ -1,9 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/arm64
-----------------------------------------------------------
-
-There is no X server for arm64.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.arm64,v 1.1 2017/02/03 04:34:10 jsg Exp $
-

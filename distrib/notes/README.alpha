@@ -1,8 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/alpha
----------------------------------------------------------
-
-There is no X server for alpha.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.alpha,v 1.4 2011/02/19 19:51:53 matthieu Exp $

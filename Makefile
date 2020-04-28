@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.77 2016/11/19 14:22:05 tb Exp $
+# $OpenBSD: Makefile,v 1.78 2020/04/28 07:04:49 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -14,7 +14,6 @@ SUBDIR= proto font/util data/bitmaps lib app data \
 .ifndef NOFONTS
 SUBDIR+= font
 .endif
-SUBDIR+= distrib/notes
 
 NOOBJ=
 
