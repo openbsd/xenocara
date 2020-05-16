@@ -29,8 +29,8 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xrandr version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXrandr], [1.5.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXrandr])
+AC_INIT([libXrandr], [1.5.2],
+        [https://gitlab.freedesktop.org/xorg/lib/libXrandr/issues], [libXrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

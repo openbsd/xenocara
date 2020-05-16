@@ -459,6 +459,7 @@ XRRGetCrtcTransform (Display	*dpy,
     e = extra;
 
     if (e + rep.pendingNbytesFilter > end) {
+	XFree (attr);
 	XFree (extra);
 	return False;
     }
@@ -468,6 +469,7 @@ XRRGetCrtcTransform (Display	*dpy,
     for (p = 0; p < rep.pendingNparamsFilter; p++) {
 	INT32	f;
 	if (e + 4 > end) {
+	    XFree (attr);
 	    XFree (extra);
 	    return False;
 	}
@@ -478,6 +480,7 @@ XRRGetCrtcTransform (Display	*dpy,
     attr->pendingNparams = rep.pendingNparamsFilter;
 
     if (e + rep.currentNbytesFilter > end) {
+	XFree (attr);
 	XFree (extra);
 	return False;
     }
@@ -487,6 +490,7 @@ XRRGetCrtcTransform (Display	*dpy,
     for (p = 0; p < rep.currentNparamsFilter; p++) {
 	INT32	f;
 	if (e + 4 > end) {
+	    XFree (attr);
 	    XFree (extra);
 	    return False;
 	}

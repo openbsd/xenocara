@@ -1,3 +1,78 @@
+commit 55dcda4518eda8ae03ef25ea29d3c994ad71eb0a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 13:54:20 2019 -0700
+
+    libXrandr 1.5.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a03e8d069fce635981aad248e1cab14ed93e176
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 13:53:42 2019 -0700
+
+    Add description of libXrandr to README.md
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 583d4f114d36e4df87ba3ed1201acae4aefb68dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:48:28 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08fab8367ea5357314d1c54edac04bc6a38da074
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:35:01 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87227e5fc79750d3eccc3c3482a3c5b3f2af2e90
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sat Jan 28 15:37:57 2017 +0100
+
+    Fix memory leak on error paths
+    
+    Introduced in commit a0df3e1c7728205e5c7650b2e6dce684139254a6 "Avoid out
+    of boundary accesses on illegal responses"
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 5fb14f7a2c6da81c8e6bb325b354141233ab7d0a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit e0303d9c61d55081ffe4365a24107d851f457948
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f26e07fa0fdb7f5cb5c82a3bb0ab5494fe3faa29
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 54ac1eb5d14636002b018607227c6d52cca0b754
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Oct 4 21:23:23 2016 +0200
@@ -871,7 +946,7 @@ Date:   Mon Dec 1 20:59:39 2008 +0100
     
     Conflicts:
     
-    	src/Xrandr.c
+            src/Xrandr.c
 
 commit 00f2e30d0b8296668776d62a4c47f96bf95faa08
 Author: Julien Cristau <jcristau@debian.org>
@@ -1050,9 +1125,9 @@ Date:   Wed Jan 31 14:20:33 2007 -0800
     Fix read sizes for 64-bit machines.
     
     Be consistent in variable usage:
-    	nbytes = network byte length.
-    	rbytes = memory byte length.
-    	nbytesRead = actual network bytes read.
+            nbytes = network byte length.
+            rbytes = memory byte length.
+            nbytesRead = actual network bytes read.
     Malloc rbytes data to pass to _XRead*, but use nbytes as the
     amount of data to read (yes, this is insane, welcome to Xlib).
     Some of this patch is semi-gratuitous, but the goal is to be consistent
@@ -1111,7 +1186,7 @@ Date:   Mon Nov 27 15:41:03 2006 -0800
     
     Conflicts:
     
-    	configure.ac
+            configure.ac
 
 commit 0dba1be7969aa56f934d93889cbd589b3dafd3d4
 Author: Keith Packard <keithp@neko.keithp.com>
