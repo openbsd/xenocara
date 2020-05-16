@@ -268,9 +268,8 @@ AlpSync(ScreenPtr pScreen, int marker)
 
 
 static void
-AlpAccelEngineInit(ScreenPtr pScreen)
+AlpAccelEngineInit(ScrnInfoPtr pScrn)
 {
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CirPtr pCir = CIRPTR(pScrn);
 
     outw(pCir->PIOReg, 0x200E); /* enable writes to gr33 */
@@ -291,7 +290,9 @@ AlpEXAInit(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CirPtr pCir = CIRPTR(pScrn);
 
-    AlpAccelEngineInit(pScreen);
+    AlpAccelEngineInit(pScrn);
+
+    pCir->InitAccel =  AlpAccelEngineInit;
 
     pCir->ExaDriver->exa_major = EXA_VERSION_MAJOR;
     pCir->ExaDriver->exa_minor = EXA_VERSION_MINOR;
