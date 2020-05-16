@@ -1,3 +1,76 @@
+commit e605c540995554af99d8b728c7d1d4e82e514199
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 15:20:28 2019 -0700
+
+    libXxf86dga 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 975d71ffbdb17f2ed361304ec940db8709a0b58f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:58:09 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 036673d9e160143c0959240b14a20efb1b298987
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:55:54 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91f4518a2e35d9a9513db867e48f55a95d5643a9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 286a9f9b2e66094dd17104f14ad557bf1d938b3f
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3d2ceb7b0df67c7657e77353ff50d4c22955697e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 7fad129032e7b4be67a27e31c660ca10b44444f6
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0f2e21d7e8310cf7bc02bba56884be0e52c061ae
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu May 30 18:36:19 2013 -0700

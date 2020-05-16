@@ -27,17 +27,6 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <stdint.h>
 #include <limits.h>
 
-#ifndef HAVE__XEATDATAWORDS
-static inline void _XEatDataWords(Display *dpy, unsigned long n)
-{
-# ifndef LONG64
-    if (n >= (ULONG_MAX >> 2))
-        _XIOError(dpy);
-# endif
-    _XEatData (dpy, n << 2);
-}
-#endif
-
 /* If you change this, change the Bases[] array below as well */
 #define MAX_HEADS 16
 
