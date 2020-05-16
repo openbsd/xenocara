@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2018/10/04 20:17:48 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.12 2020/05/16 08:49:00 matthieu Exp $
 
 # This Makefile is used to generate the sources files with xcbgen
 # The x11/py-xcbgen package needs to be installed
@@ -6,7 +6,7 @@
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
 
-MANOPTIONS=	-c 'libxcb 1.13.1' -l 'X Version 11' -s 3
+MANOPTIONS=	-c 'libxcb 1.14' -l 'X Version 11' -s 3
 
 SRCS= \
 	bigreq.c \

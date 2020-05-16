@@ -34,6 +34,7 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef __INTERIX
 /* _don't_ ask. interix has INADDR_LOOPBACK in here. */

@@ -2,8 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxcb],[1.13.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xcb],
+AC_INIT([libxcb],[1.14],
+        [https://gitlab.freedesktop.org/xorg/lib/libxcb/issues],
         [libxcb])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -11,7 +11,7 @@ AC_CONFIG_SRCDIR([xcb.pc.in])
 AC_CONFIG_HEADERS([src/config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 AM_PATH_PYTHON([2.6])
 
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
@@ -50,8 +50,12 @@ fi
 AC_SUBST(HTML_CHECK_RESULT)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.13)
-NEEDED="pthread-stubs xau >= 0.99.2"
+PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.14)
+NEEDED="xau >= 0.99.2"
+case $host_os in
+linux*) ;;
+     *) NEEDED="$NEEDED pthread-stubs" ;;
+esac
 PKG_CHECK_MODULES(NEEDED, $NEEDED)
 
 have_xdmcp="no"
