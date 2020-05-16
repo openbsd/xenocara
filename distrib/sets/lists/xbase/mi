@@ -357,7 +357,7 @@
 ./usr/X11R6/lib/libxcb-res.a
 ./usr/X11R6/lib/libxcb-res.so.1.1
 ./usr/X11R6/lib/libxcb-screensaver.a
-./usr/X11R6/lib/libxcb-screensaver.so.1.1
+./usr/X11R6/lib/libxcb-screensaver.so.2.0
 ./usr/X11R6/lib/libxcb-shape.a
 ./usr/X11R6/lib/libxcb-shape.so.1.1
 ./usr/X11R6/lib/libxcb-shm.a
@@ -387,7 +387,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.a
 ./usr/X11R6/lib/libxcb-xvmc.so.1.0
 ./usr/X11R6/lib/libxcb.a
-./usr/X11R6/lib/libxcb.so.4.0
+./usr/X11R6/lib/libxcb.so.4.1
 ./usr/X11R6/lib/libxkbfile.a
 ./usr/X11R6/lib/libxkbfile.la
 ./usr/X11R6/lib/libxkbfile.so.6.0
