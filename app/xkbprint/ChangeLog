@@ -1,3 +1,70 @@
+commit 7defa9ddfd5f5d1853b9f404af854b0f42fa6ee5
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Nov 3 14:20:07 2019 -0800
+
+    xkbprint 1.0.5
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b968db6ca6fdb6ebb2384eaffaabe406c5cf783f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 15 17:53:55 2019 -0700
+
+    xkbprint(1): Some (typographical) corrections to the manual
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xkbprint/issues/2
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=742356
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b134b4835cc0b6743bbd67d61b647dff3941ca9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:12:07 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d15a9ce43042d12c545d194f46075214678046e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:27:40 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8122e255d9c8c417d1eb9496b9b7b5c6cb53c334
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit e43f3641499669bc993fe8370b58dac94d4e7eb1
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b08a9ce8e834d5c019b37a63dbc2e06b2ace93ca
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit facf56074567094349d9050e99a659d8e3a1b0ce
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:41:38 2015 -0700

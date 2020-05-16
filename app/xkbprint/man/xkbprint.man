@@ -21,7 +21,7 @@ replacing the colon with a dash.  For a local display, xkprint uses
 server-\fIn\fP where \fIn\fP is the number of the display.
 .SH OPTIONS
 .TP 8
-.B \-?, -help
+.B \-?, \-help
 Prints a usage message.
 .TP 8
 .B \-color
@@ -44,7 +44,7 @@ Fit the keyboard image on the page (default).
 Print the keyboard at full size.
 .TP 8
 .B \-grid\ \fIres\fP
-Print a grid with \fIres\fPmm resolution over the keyboard.
+Print a grid with \fIres\fP\ mm resolution over the keyboard.
 .TP 8
 .B \-if\ \fIfontName\fP
 Specifies an internal PostScript type 1 font to dump to the specified
@@ -52,8 +52,8 @@ output file or to \fIfontName\fP.pfa, if no output file is specified.
 No keyboard description is printed if an internal font is dumped.
 .TP 8
 .B \-label\ \fItype\fP
-Specifies the labels to be printed on keys;  legal types are: \fInone\fP,
-\fIname\fP,\fIcode\fP,\fIsymbols\fP.
+Specifies the labels to be printed on keys;  valid types are: \fInone\fP,
+\fIname\fP, \fIcode\fP, and \fIsymbols\fP.
 .TP 8
 .B \-lc\ \fI<locale>\fP
 Specifies a locale in which KeySyms should be resolved.
@@ -90,24 +90,27 @@ Write output to \fIfile\fP.
 Use \fIdirectory\fP as the root directory; all path names are interpreted
 relative to \fIdirectory\fP.
 .TP 8
-.B -pict \fIwhich\fP
+.B \-pict \fIwhich\fP
 Controls use of pictographs instead of keysym names where available.
-\fIwhich\fP can be any of \fIall\fP, \fInone\fP, or \fIcommon\fP(default).
+\fIwhich\fP can be any of \fIall\fP, \fInone\fP, or \fIcommon\fP (default).
 .TP 8
-.B -synch
+.B \-synch
 Forces synchronization for X requests.
 .TP 8
-.B -version
+.B \-version
 Print out the program version and exit.
 .TP 8
-.B -w\ \fIlevel\fP
+.B \-w\ \fIlevel\fP
 Sets warning level (0 for no warning, 10 for all warnings).
 .SH "SEE ALSO"
-X(__miscmansuffix__),xkbcomp(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xkbcomp (__appmansuffix__)
 .SH COPYRIGHT
 Copyright 1995, Silicon Graphics Computer Systems
 Copyright 1995, 1998  The Open Group
 .br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
+See
+.BR X (__miscmansuffix__)
+for a full statement of rights and permissions.
 .SH AUTHOR
 Erik Fortune, Silicon Graphics
