@@ -37,7 +37,7 @@ xrandr_LDADD = $(XRANDR_LIBS)
 xrandr_SOURCES =	\
         xrandr.c
 
-EXTRA_DIST = xrandr_test.pl keystone.5c
+EXTRA_DIST = xrandr_test.pl keystone.5c README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL

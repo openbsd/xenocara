@@ -22,14 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrandr], [1.5.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xrandr])
+AC_INIT([xrandr], [1.5.1],
+        [https://gitlab.freedesktop.org/xorg/app/xrandr/issues], [xrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],

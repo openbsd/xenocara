@@ -54,6 +54,11 @@ static Bool	automatic = False;
 static Bool	properties = False;
 static Bool	grab_server = True;
 static Bool	no_primary = False;
+static int	filter_type = -1;
+
+static const char *filter_names[2] = {
+    "bilinear",
+    "nearest"};
 
 static const char *direction[5] = {
     "normal", 
@@ -132,13 +137,14 @@ usage(void)
            "      --below <output>\n"
            "      --same-as <output>\n"
            "      --set <property> <value>\n"
-           "      --scale <x>x<y>\n"
+           "      --scale <x>[x<y>]\n"
            "      --scale-from <w>x<h>\n"
            "      --transform <a>,<b>,<c>,<d>,<e>,<f>,<g>,<h>,<i>\n"
+           "      --filter nearest,bilinear\n"
            "      --off\n"
            "      --crtc <crtc>\n"
            "      --panning <w>x<h>[+<x>+<y>[/<track:w>x<h>+<x>+<y>[/<border:l>/<t>/<r>/<b>]]]\n"
-           "      --gamma <r>:<g>:<b>\n"
+           "      --gamma <r>[:<g>:<b>]\n"
            "      --brightness <value>\n"
            "      --primary\n"
            "  --noprimary\n"
@@ -285,6 +291,7 @@ typedef enum _changes {
     changes_panning = (1 << 10),
     changes_gamma = (1 << 11),
     changes_primary = (1 << 12),
+    changes_filter = (1 << 13),
 } changes_t;
 
 typedef enum _name_kind {
@@ -630,6 +637,7 @@ print_verbose_mode (const XRRModeInfo *mode, Bool current, Bool preferred)
 static void
 init_name (name_t *name)
 {
+    memset(name, 0, sizeof(*name));
     name->kind = name_none;
 }
 
@@ -1311,6 +1319,10 @@ set_output_info (output_t *output, RROutput xid, XRROutputInfo *output_info)
 	    output->transform.params = NULL;
 	}
     }
+    if (output->changes & changes_filter)
+    {
+	output->transform.filter = filter_names[filter_type];
+    }
 
     /* set primary */
     if (!(output->changes & changes_primary))
@@ -1811,6 +1823,7 @@ get_outputs (void)
 	output_t	*output;
 	name_t		output_name;
 	if (!output_info) fatal ("could not get output 0x%lx information\n", res->outputs[o]);
+	init_name(&output_name);
 	set_name_xid (&output_name, res->outputs[o]);
 	set_name_index (&output_name, o);
 	set_name_string (&output_name, output_info->name);
@@ -2808,6 +2821,28 @@ main (int argc, char **argv)
 	    action_requested = True;
 	    continue;
 	}
+	if (!strcmp("--filter", argv[i])) {
+	    int t;
+
+	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
+	    if (++i >= argc) argerr("%s requires an argument\n", argv[i-1]);
+
+	    filter_type = -1;
+	    for (t = 0; t < sizeof(filter_names) / sizeof(filter_names[0]); t++)
+	    {
+		if (!strcmp(filter_names[t], argv[i]))
+		{
+		    filter_type = t;
+		    break;
+		}
+	    }
+
+	    if (filter_type == -1) argerr("Bad argument: %s, for a filter\n", argv[i]);
+
+	    config_output->changes |= changes_filter;
+	    action_requested = True;
+	    continue;
+	}
 	if (!strcmp ("--crtc", argv[i])) {
 	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
@@ -2934,11 +2969,21 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp ("--gamma", argv[i])) {
+	    char junk;
 	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
-	    if (sscanf(argv[i], "%f:%f:%f", &config_output->gamma.red,
-		    &config_output->gamma.green, &config_output->gamma.blue) != 3)
-		argerr ("%s: invalid argument '%s'\n", argv[i-1], argv[i]);
+	    if (sscanf(argv[i], "%f:%f:%f%c", &config_output->gamma.red,
+		    &config_output->gamma.green, &config_output->gamma.blue, &junk) != 3)
+	    {
+		/* check if it's a single floating-point value,
+		 * to be applied to all components */
+		if (sscanf(argv[i], "%f%c", &config_output->gamma.red, &junk) != 1)
+		    argerr ("%s: invalid argument '%s'\n", argv[i-1], argv[i]);
+		config_output->gamma.green = config_output->gamma.blue = config_output->gamma.red;
+	    }
+	    if (config_output->gamma.red <= 0.0 || config_output->gamma.green <= 0.0 ||
+		    config_output->gamma.blue <= 0.0)
+		    argerr ("gamma correction factors must be positive\n");
 	    config_output->changes |= changes_gamma;
 	    setit_1_2 = True;
 	    continue;
@@ -2981,10 +3026,17 @@ main (int argc, char **argv)
 	if (!strcmp ("--scale", argv[i]))
 	{
 	    double  sx, sy;
+	    char junk;
 	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
-	    if (sscanf (argv[i], "%lfx%lf", &sx, &sy) != 2)
-		argerr ("failed to parse '%s' as a scaling factor\n", argv[i]);
+	    if (sscanf (argv[i], "%lfx%lf%c", &sx, &sy, &junk) != 2)
+	    {
+		if (sscanf (argv[i], "%lf%c", &sx, &junk) != 1)
+		    argerr ("failed to parse '%s' as a scaling factor\n", argv[i]);
+		sy = sx;
+	    }
+	    if (sx <= 0.0 || sy <= 0.0)
+		    argerr ("scaling factors must be positive\n");
 	    init_transform (&config_output->transform);
 	    config_output->transform.transform.matrix[0][0] = XDoubleToFixed (sx);
 	    config_output->transform.transform.matrix[1][1] = XDoubleToFixed (sy);
@@ -3590,7 +3642,7 @@ main (int argc, char **argv)
 	}
 
 	get_screen(True);
-	get_monitors(True);
+	get_monitors(False);
 	get_crtcs();
 	get_outputs();
 
@@ -3703,14 +3755,16 @@ main (int argc, char **argv)
 		printf (" (");
 		for (i = 0; i < 4; i ++) {
 		    if ((rotations >> i) & 1) {
-			if (!first) printf (" "); first = False;
+			if (!first) printf (" ");
 			printf("%s", direction[i]);
+			first = False;
 		    }
 		}
 		if (rotations & RR_Reflect_X)
 		{
-		    if (!first) printf (" "); first = False;
+		    if (!first) printf (" ");
 		    printf ("x axis");
+		    first = False;
 		}
 		if (rotations & RR_Reflect_Y)
 		{
@@ -3873,6 +3927,12 @@ main (int argc, char **argv)
 		for (j = 0; j < output_info->nmode; j++)
 		{
 		    XRRModeInfo	*mode = find_mode_by_xid (output_info->modes[j]);
+		    if (!mode)
+		    {
+			printf ("  [Unknown mode ID 0x%x]\n",
+				(int)output_info->modes[j]);
+			continue;
+		    }
 
 		    print_verbose_mode (mode, mode == output->mode_info,
 					j < output_info->npreferred);
@@ -3887,16 +3947,23 @@ main (int argc, char **argv)
 		{
 		    XRRModeInfo *jmode, *kmode;
 		    int k;
-		    
+
 		    if (mode_shown[j]) continue;
-    
+
 		    jmode = find_mode_by_xid (output_info->modes[j]);
+		    if (!jmode)
+		    {
+			printf ("   [Unknown mode ID 0x%x]\n",
+				(int)output_info->modes[j]);
+			continue;
+		    }
 		    printf (" ");
 		    printf ("  %-12s", jmode->name);
 		    for (k = j; k < output_info->nmode; k++)
 		    {
 			if (mode_shown[k]) continue;
 			kmode = find_mode_by_xid (output_info->modes[k]);
+			if (!kmode) continue;
 			if (strcmp (jmode->name, kmode->name) != 0) continue;
 			mode_shown[k] = True;
 			kmode->modeFlags |= ModeShown;

@@ -34,7 +34,7 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-current]
 [\-\-noprimary]
 [\-\-panning \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]]
-[\-\-scale \fIx\fPx\fIy\fP]
+[\-\-scale \fIx\fP[x\fIy\fP]]
 [\-\-scale-from \fIw\fPx\fIh\fP]
 [\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP]
 [\-\-primary]
@@ -42,6 +42,7 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-fb \fIwidth\fPx\fIheight\fP]
 [\-\-fbmm \fIwidth\fPx\fIheight\fP]
 [\-\-dpi \fIdpi\fP]
+[\-\-dpi \fIfrom-output\fP]
 [\-\-newmode \fIname\fP \fImode\fP]
 [\-\-rmmode \fIname\fP]
 [\-\-addmode \fIoutput\fP \fIname\fP]
@@ -62,7 +63,7 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-set \fIproperty\fP \fIvalue\fP]
 [\-\-off]
 [\-\-crtc \fIcrtc\fP]
-[\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP]
+[\-\-gamma \fIred\fP[:\fIgreen\fP:\fIblue\fP]]
 [\-\-brightness \fIbrightness\fP]
 [\-o \fIorientation\fP]
 [\-s \fIsize\fP]
@@ -71,6 +72,10 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-listproviders]
 [\-\-setprovideroutputsource \fIprovider\fP \fIsource\fP]
 [\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP]
+[\-\-listmonitors]
+[\-\-listactivemonitors]
+[\-\-setmonitor \fIname\fP \fIgeometry\fP \fIoutputs\fP]
+[\-\-delmonitor \fIname\fP]
 .SH DESCRIPTION
 .I Xrandr
 is used to set the size, orientation and/or reflection of the outputs for a
@@ -117,6 +122,25 @@ is available.
 Forces the usage of the RandR version 1.2 protocol, even if the display does
 not report it as supported or a higher version is available.
 .PP
+.SH "RandR version 1.5 options"
+.PP
+Options for RandR 1.5 are used as a superset of the options for RandR 1.4.
+.PP
+.IP \-\-listmonitors
+Report information about all defined monitors.
+.IP \-\-listactivemonitors
+Report information about currently active monitors.
+.IP "\-\-setmonitor \fIname\fP \fIgeometry\fP \fIoutputs\fP"} {none|\fIoutput\fP,\fIoutput\fP,...}\n"
+Define a new monitor with the given geometry and associated to the given outputs.
+The output list is either the keyword \fBnone\fP or a comma-separated list of outputs.
+The geometry is either the keyword \fBauto\fP, in which case the monitor
+will automatically track the geometry of the associated outputs, or a manual specification
+in the form
+\fIw\fP/\fImmw\fPx\fIh\fP/\fImmh\fP+\fIx\fP+\fIy\fP
+where w, h, x, y are in pixels and mmw, mmh are the physical dimensions of the monitor.
+.IP "\-\-delmonitor \fIname\fP"
+Delete the given user-defined monitor.
+.PP
 .SH "RandR version 1.4 options"
 .PP
 Options for RandR 1.4 are used as a superset of the options for RandR 1.3.
@@ -154,7 +178,9 @@ parameters specify the border and default to 0. A width or height set to zero
 disables panning on the according axis. You typically have to set the screen
 size with \fI--fb\fP simultaneously.
 .IP "\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP"
-Specifies a transformation matrix to apply on the output. Automatically a bilinear filter is selected.
+Specifies a transformation matrix to apply on the output.
+A bilinear filter is selected automatically unless the \-\-filter parameter is
+also specified.
 The mathematical form corresponds to:
 .RS
 .RS
@@ -200,11 +226,17 @@ As a special argument, instead of
 passing a matrix, one can pass the string \fInone\fP, in which case the default
 values are used (a unit matrix without filter).
 .RE
-.IP "\-\-scale \fIx\fPx\fIy\fP"
-Changes the dimensions of the output picture. Values superior to 1 will lead to
-a compressed screen (screen dimension bigger than the dimension of the output
-mode), and values below 1 leads to a zoom in on the output. This option is
-actually a shortcut version of the \fI\-\-transform\fP option.
+.IP "\-\-filter \fIfiltermode\fP"
+Chooses the scaling filter method to be applied when the screen is scaled or
+transformed.
+Can be either 'bilinear' or 'nearest'.
+.IP "\-\-scale \fIx\fP[x\fIy\fP]"
+Changes the dimensions of the output picture.
+If the \fIy\fP value is omitted, the \fIx\fP value will be used for both dimensions.
+Values larger than 1 lead to a compressed screen (screen dimension bigger
+than the dimension of the output mode), and values less than 1 lead to
+a zoom in on the output.
+This option is actually a shortcut version of the \fI\-\-transform\fP option.
 .IP "\-\-scale-from \fIw\fPx\fIh\fP"
 Specifies the size in pixels of the area of the framebuffer to be displayed on
 this output.
@@ -225,13 +257,25 @@ fit within this size. When this option is not provided, xrandr computes the
 smallest screen size that will hold the set of configured outputs; this
 option provides a way to override that behaviour.
 .IP "\-\-fbmm \fIwidth\fPx\fIheight\fP"
-Sets the reported values for the physical size of the screen. Normally,
+Sets the value reported as physical size of the X screen as a whole
+(union of all configured monitors). In configurations with multiple
+monitors with different DPIs, the value has no physical meaning, but
+it may be used by some legacy clients which do not support RandR
+version 1.2 to compute a reference font scaling. Normally,
 xrandr resets the reported physical size values to keep the DPI constant.
-This overrides that computation.
+This overrides that computation. Default DPI value is 96.
 .IP "\-\-dpi \fIdpi\fP"
-This also sets the reported physical size values of the screen, it uses the
-specified DPI value to compute an appropriate physical size using whatever
-pixel size will be set.
+.IP "\-\-dpi \fIfrom-output\fP"
+This also sets the value reported as physical size of the X screen as a whole
+(union of all configured monitors). In configurations with multiple
+monitors with different DPIs, the value has no physical meaning, but
+it may be used by some legacy clients which do not support RandR
+version 1.2 to compute a reference font scaling. This option uses either
+the specified DPI value, or the DPI of the given output, to compute an appropriate
+physical size using whatever pixel size will be set. Typical values are
+the default (96 DPI), the DPI of the only monitor in single-monitor
+configurations, or the DPI of the primary monitor in multi-monitor
+configurations.
 .IP "\-\-newmode \fIname\fP \fImode\fP"
 New modelines can be added to the server and then associated with outputs.
 This option does the former. The \fImode\fP is specified using the ModeLine
@@ -293,9 +337,12 @@ Uses the specified crtc (either as an index in the list of CRTCs or XID).
 In normal usage, this option is not required as xrandr tries to make
 sensible choices about which crtc to use with each output. When that fails
 for some reason, this option can override the normal selection.
-.IP "\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP"
+.IP "\-\-gamma \fIred\fP[:\fIgreen\fP:\fIblue\fP]"
 Set the specified floating point values as gamma correction on the crtc
-currently attached to this output. Note that you cannot get two different values
+currently attached to this output.
+If green and blue are not specified, the red value will be used
+for all three components.
+Note that you cannot get two different values
 for cloned outputs (i.e.: which share the same crtc) and that switching an output to another crtc doesn't change
 the crtc gamma corrections at all.
 .IP "\-\-brightness \fIbrightness\fP"

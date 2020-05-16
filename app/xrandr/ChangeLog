@@ -1,3 +1,272 @@
+commit 824484e5ba50f1e6858ea990393c181a249c3a5e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Aug 12 10:42:41 2019 -0700
+
+    xrandr 1.5.1
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit edac280f06da2ad2256c710f95b34253202e6e49
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Aug 12 10:49:52 2019 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 829ed54d89bb37c9e2f8050fe72bd4ecf7b5395a
+Author: Vladimir Panteleev <git@thecybershadow.net>
+Date:   Thu Dec 20 11:28:51 2018 +0000
+
+    xrandr: Fix deleting inactive monitors
+    
+    The following commands did not behave correctly:
+    
+    xrandr --setmonitor empty auto none
+    xrandr --delmonitor empty
+    
+    The second command failed with "No monitor named 'empty'". This
+    occurred because get_monitors was invoked with its get_active argument
+    set to False, which caused it to not retrieve inactive monitors. Thus,
+    inactive monitors could not be deleted.
+    
+    Fix this bug by invoking get_monitors (and, thus, XRRGetMonitors) with
+    get_active = False, thus enabling deletion of disabled monitors.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 9e5fa7c8c26f78e121ffad0d7a745a674c4a1849
+Author: Adam Simpkins <adam@adamsimpkins.net>
+Date:   Thu Aug 3 15:11:53 2017 -0700
+
+    xrandr: fix crash if some modes cannot be found
+    
+    When printing modes in "xrandr -q", check to see if we failed to look up
+    mode information from a mode XID.  Previously the command would
+    dereference null and crash if the mode information could not be found.
+    
+    When using an external HDMI monitor on a laptop with a Skylake Intel
+    graphics chipset "xrandr -q" occasionally is unable to look up mode
+    information for some of the modes.  It seems likely there is some other
+    sort of library or driver issue causing these lookup failures, but this
+    change to xrandr at least prevents it from segfaulting.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3316ccaca35dc5fc6b6e3b5826e222cd648eb9c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:17:09 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 004681fb9c71256feb49e2bda203819654b0a05f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:47:41 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a2134406ab0aef44e7b710e1e2a2a40965e96692
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 13 09:44:16 2018 +1000
+
+    init the name to 0
+    
+    There are a few conditions where coverity finds a use of an uninitialized
+    field of the name_t struct. These are rather messy combinations of conditions,
+    so let's go with the simple solution here and just init everything to 0.
+    This may still have side-effects but at least they'll be more obvious than the
+    previous "use whatever memory is leftover from breakfast".
+    
+    This patch also adds a missing init_name(), much for the same reason.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9882680c9f7f433a47514a9cb799c79e3e10a024
+Author: Pali Rohár <pali.rohar@gmail.com>
+Date:   Sat Mar 10 16:23:29 2018 +0100
+
+    Document that --dpi and --fbmm options set DPI of whole X screen
+    
+    Explicitly document and make it clear that those options do not change
+    DPI of some monitor output. Also state that these options have no useful
+    meaning for multi-monitor configuration.
+    
+    Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+    Reviewed-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+
+commit da61a8bd95bd20d45397eee6a6c0d3ad5a50c399
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Tue Feb 6 22:02:42 2018 +0100
+
+    xrandr: gamma and scaling factors must be positive
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 5e95248b5bab1254ecedffb6cb681b0ee06c0f29
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Mon Feb 5 02:01:21 2018 +0100
+
+    xrandr.man: document the monitor manipulation options
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit cf25d585df5582d29528acc35f1c91dcb98b0f00
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Mon Feb 5 01:31:15 2018 +0100
+
+    xrandr: allow single value for --gamma
+    
+    Similarly to --scale, accept a single value to be used for all three
+    components, and refuse values with extra junk after the acceptable
+    values.
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 289bc0f1c53d8bc488d96e7f79afabd361758e08
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Jul 16 14:57:40 2017 +0200
+
+    xrandr.man: grammar tuning
+    
+    Rephrase the --scale option paragraph to improve English and be more
+    consistent in choice of plurals and tense. Also ensure that each
+    sentence starts on a new line in the roff source.
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 635a4c8bc9f81852dc77b5dc9de1ce5825849a7f
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Sun Jul 16 15:05:21 2017 +0200
+
+    xrandr: stricter --scale argument parsing
+    
+    We used to accept something like --scale 2x3junk as a valid input
+    (scaling x by 2 and y by 3), even though this isn't really a valid
+    scaling factor.
+    
+    Fix by making sure there is nothing after the parsed number(s).
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 4e655b2cfc79b02d0ca7cea82b09f1f1133f1a0a
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Wed May 17 17:20:50 2017 +0200
+
+    xrandr: allow a single value for --scale
+    
+    This allows using e.g. --scale 0.5 as a shorthand for --scale 0.5x0.5
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 8969b3c651eaae3e3a2370ec45f4eeae9750111d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Jun 1 15:45:59 2017 -0700
+
+    man: Document the new --filter option
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6ac2afc0d7d8d51d4085767b901667393c11061b
+Author: Pablo De La Garza <pdelagarza@nvidia.com>
+Date:   Thu Mar 23 16:05:02 2017 -0700
+
+    xrandr: Add a "--filter" flag
+    
+    Flag can be set to "nearest" or "bilinear"
+    
+    Signed-off-by: Pablo De La Garza <pdelagarza@nvidia.com>
+    [aplattner@nvidia.com: Fixed style and whitespace]
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 5d5db88d106a49d7560a8042fa054df8b609f00a
+Author: Pali Rohár <pali.rohar@gmail.com>
+Date:   Sun May 28 23:33:26 2017 +0200
+
+    Document format of --dpi option in non-ambiguous way
+    
+    Slash in previous documentation could be misunderstood as part of the
+    --dpi command line option. So fix it.
+    
+    Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 215a01f1513f918e7295a8a477d4674f7b8085f0
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Wed Jan 18 08:52:23 2017 +0100
+
+    xrandr: suppress misleading indentation warning
+    
+    When printing out rotations, we print a space before any item other than
+    the first, and set `first = False` in each block where we print.
+    However, this is done in the same line as the conditional that checks if
+    first is set, which may give the impression that the assignment is also
+    under the conditional. This is not the case, and recent GCC warns about
+    this.
+    
+    Move the assignment to after we print the value we want to print, which
+    (1) doesn't mislead about the indentation, and
+    (2) makes logical sense as the _next_ entry is what won't be the first.
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+
+commit 85e95db7120da3bdaf9efb3033be5f9338e6c328
+Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Date:   Wed Jan 18 08:52:09 2017 +0100
+
+    xrandr: document that we accept '--dpi output'
+    
+    Signed-off-by: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+
+commit 1b561d25d197069a4a2c8b5d4007938b669ee612
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit f84206b8cdbb9c6211c845da92492346bae8fde0
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bd3f2f58351a038469c7adc6be7650087433f6f4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 65fd628cdfd1c95bd01a50706d4577655d1dd404
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 23 10:22:26 2016 -0800
@@ -132,14 +401,14 @@ Date:   Fri Aug 1 23:14:42 2014 -0700
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 20d76f773cf8de474cf7a3f1082961605732c3f1
-Merge: 00477d88297e 193a358563a5
+Merge: 00477d8 193a358
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Aug 1 23:10:46 2014 -0700
 
     Merge commit '193a358'
     
     Conflicts:
-    	xrandr.c
+            xrandr.c
 
 commit 193a358563a59c1a3fc55f55029c605e2419c80b
 Author: Stéphane Aulery <lkppo@free.fr>
@@ -418,14 +687,14 @@ Date:   Tue Feb 12 13:24:38 2013 -0800
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 3e5f160c4198a5160be5e9a3f21ba3f4130d4318
-Merge: dac72dbbc750 bd166184f6c1
+Merge: dac72db bd16618
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 12 12:30:20 2013 -0800
 
     Merge branch 'fixes'
     
     Conflicts:
-    	xrandr.c
+            xrandr.c
 
 commit bd166184f6c1973ae2f5f99d040733db3e9e82cf
 Author: Aaron Plattner <aplattner@nvidia.com>
@@ -1504,7 +1773,7 @@ Date:   Fri Mar 6 14:49:43 2009 +0100
     
     Conflicts:
     
-    	xrandr.c
+            xrandr.c
 
 commit 880f045202d1e70368b855c3783604e19be946b8
 Author: Julien Cristau <jcristau@debian.org>
@@ -1684,7 +1953,7 @@ Date:   Mon Dec 1 21:45:47 2008 +0100
     Fix build outside of the source dir
 
 commit 63ba316bcbe8ad61ba63d9fe62c82e7d56dcc399
-Merge: a813c4da7f0b 1b95e32b4b0a
+Merge: a813c4d 1b95e32
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Dec 1 21:33:35 2008 +0100
 
@@ -2162,7 +2431,7 @@ Date:   Sun Feb 18 21:27:55 2007 -0800
     Update version number to 1.2.0 for release.
 
 commit 13cef2baa884039e96f5dfd9245bb949aed99448
-Merge: 065f09cc304d a175972de6fb
+Merge: 065f09c a175972
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sun Feb 18 21:26:50 2007 -0800
 
@@ -2204,7 +2473,7 @@ Date:   Sat Feb 10 16:14:58 2007 -0800
     Display set of available CRTCs per output in --verbose mode.
 
 commit 067cafb5cda0aa6e34773e888fd469ff657760c2
-Merge: 7c25c245bceb b0a00df69f83
+Merge: 7c25c24 b0a00df
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Wed Jan 31 15:25:35 2007 -0800
 
@@ -2363,7 +2632,7 @@ Date:   Tue Dec 19 16:27:46 2006 -0800
     Actually respect the --fb option
 
 commit 7b32611632ab08b6a123db5df1c2b919b3a12104
-Merge: a0df3aa81205 4bb1a9cd6f9c
+Merge: a0df3aa 4bb1a9c
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Tue Dec 19 15:58:38 2006 -0800
 
@@ -2376,7 +2645,7 @@ Date:   Tue Dec 19 15:58:21 2006 -0800
     Correct format for sscanf to double variable "dpi"
 
 commit 4bb1a9cd6f9cc3ed61d7913528afa3f573092833
-Merge: b6c03827bae7 6ef400f35d7d
+Merge: b6c0382 6ef400f
 Author: Keith Packard <keithp@bouzouki.jf.intel.com>
 Date:   Wed Dec 13 11:36:36 2006 -0800
 
