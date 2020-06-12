@@ -569,11 +569,7 @@ UseMsg(void)
     ErrorF("-r                     turns off auto-repeat\n");
     ErrorF("r                      turns on auto-repeat \n");
     ErrorF("-render [default|mono|gray|color] set render color alloc policy\n");
-#ifndef __OpenBSD__
     ErrorF("-retro                 start with classic stipple and cursor\n");
-#else
-    ErrorF("-retard		   start with black background and no cursor\n");
-#endif
     ErrorF("-s #                   screen-saver timeout (minutes)\n");
     ErrorF("-seat string           seat to run on\n");
     ErrorF("-t #                   default pointer threshold (pixels/t)\n");
@@ -727,7 +723,8 @@ ProcessCommandLine(int argc, char *argv[])
             else
                 UseMsg();
         }
-        else if (strcmp(argv[i], "-br") == 0);  /* default */
+        else if (strcmp(argv[i], "-br") == 0)  /* default */
+            party_like_its_1989 = FALSE;
         else if (strcmp(argv[i], "+bs") == 0)
             enableBackingStore = TRUE;
         else if (strcmp(argv[i], "-bs") == 0)
@@ -923,13 +920,8 @@ ProcessCommandLine(int argc, char *argv[])
             defaultKeyboardControl.autoRepeat = TRUE;
         else if (strcmp(argv[i], "-r") == 0)
             defaultKeyboardControl.autoRepeat = FALSE;
-#ifndef __OpenBSD__
 	else if ( strcmp( argv[i], "-retro") == 0)
             party_like_its_1989 = TRUE;
-#else
-	else if ( strcmp( argv[i], "-retard") == 0)
-	    party_like_its_1989 = FALSE;
-#endif
         else if (strcmp(argv[i], "-s") == 0) {
             if (++i < argc)
                 defaultScreenSaverTime = ((CARD32) atoi(argv[i])) *
