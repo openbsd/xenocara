@@ -920,7 +920,7 @@ ProcessCommandLine(int argc, char *argv[])
             defaultKeyboardControl.autoRepeat = TRUE;
         else if (strcmp(argv[i], "-r") == 0)
             defaultKeyboardControl.autoRepeat = FALSE;
-	else if ( strcmp( argv[i], "-retro") == 0)
+        else if (strcmp(argv[i], "-retro") == 0)
             party_like_its_1989 = TRUE;
         else if (strcmp(argv[i], "-s") == 0) {
             if (++i < argc)
