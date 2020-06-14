@@ -1,4 +1,4 @@
-.\" $OpenBSD: wsfb.man,v 1.4 2010/08/29 15:05:55 matthieu Exp $
+.\" $OpenBSD: wsfb.man,v 1.5 2020/06/14 07:10:44 matthieu Exp $
 .\"
 .\" Copyright (c) 2001,2002 Matthieu Herrb
 .\" All rights reserved.
@@ -55,11 +55,8 @@ Multi-head configurations are supported.
 .SH SUPPORTED HARDWARE
 The
 .B wsfb
-driver supports all hardware where a wsdisplay framebuffer driver
-is available on OpenBSD and NetBSD.
-On OpenBSD, currently this includes OpenBSD/macppc, OpenBSD/sgi,
-OpenBSD/sparc, OpenBSD/sparc64 and OpenBSD/alpha on TGA graphics cards.
-It also supports NetBSD/i386 using wsdisplay on vesafb(4).
+driver supports all hardware where a wsdisplay(__drivermansuffix__)
+framebuffer driver is available on OpenBSD and NetBSD.
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.
