@@ -225,7 +225,7 @@ parseArgs(int argc, char *argv[])
     for (i = 1; i < argc; i++)
     {
         int itmp;
-        if ((argv[i][0] != '-') || (uStringEqual(argv[i], "-")))
+        if ((argv[i][0] != '-') || (strcmp(argv[i], "-") == 0))
         {
             if (!xkblist)
             {
@@ -651,7 +651,7 @@ parseArgs(int argc, char *argv[])
         ERROR("No input file specified\n");
         return False;
     }
-    else if (uStringEqual(inputFile, "-"))
+    else if (strcmp(inputFile, "-") == 0)
     {
         inputFormat = INPUT_XKB;
     }
@@ -755,7 +755,7 @@ parseArgs(int argc, char *argv[])
             return False;
         }
     }
-    else if ((!outputFile) && (inputFile) && uStringEqual(inputFile, "-"))
+    else if ((!outputFile) && (inputFile) && (strcmp(inputFile, "-") == 0))
     {
         int len = strlen("stdin") + strlen(fileTypeExt[outputFormat]) + 2;
         outputFile = uTypedCalloc(len, char);
@@ -930,7 +930,7 @@ main(int argc, char *argv[])
     }
     if (inputFile != NULL)
     {
-        if (uStringEqual(inputFile, "-"))
+        if (strcmp(inputFile, "-") == 0)
         {
             file = stdin;
             inputFile = "stdin";
@@ -1132,7 +1132,7 @@ main(int argc, char *argv[])
         }
         if (outputFile != NULL)
         {
-            if (uStringEqual(outputFile, "-"))
+            if (strcmp(outputFile, "-") == 0)
                 outputFile = "stdout";
             else
             {
