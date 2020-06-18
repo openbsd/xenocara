@@ -97,8 +97,7 @@ static const char *
 llvmpipe_get_name(struct pipe_screen *screen)
 {
    static char buf[100];
-   snprintf(buf, sizeof(buf), "llvmpipe (LLVM %u.%u, %u bits)",
-            HAVE_LLVM >> 8, HAVE_LLVM & 0xff,
+   snprintf(buf, sizeof(buf), "llvmpipe (LLVM " MESA_LLVM_VERSION_STRING ", %u bits)",
             lp_native_vector_width );
    return buf;
 }
