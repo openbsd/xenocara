@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.53 2019/09/13 19:11:23 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.54 2020/06/27 09:06:07 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 23.1.17
+FT_VERSION_INFO= 23.2.17
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -107,4 +107,3 @@ NOPROFILE=
 .PATH:  ${FREETYPESRC}/winfonts
 
 .include <bsd.subdir.mk>
-
