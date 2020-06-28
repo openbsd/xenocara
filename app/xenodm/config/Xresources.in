@@ -1,4 +1,4 @@
-! $OpenBSD: Xresources.in,v 1.2 2019/04/16 05:51:04 matthieu Exp $
+! $OpenBSD: Xresources.in,v 1.3 2020/06/28 15:38:34 matthieu Exp $
 !
 !
 !
@@ -75,19 +75,19 @@ xlogin*innerFramesWidth: 0
 xlogin.Login.sepWidth: 0
 
 ! top/left border
-xlogin*hiColor: #667788
+xlogin*hiColor: #445566
 
 ! bottom/right border
-xlogin*shdColor: #667788
+xlogin*shdColor: #445566
 
 ! 'Welcome to..' text color
-xlogin*greetColor: #fef886
+xlogin*greetColor: #ded866
 #if defined(bpp4) || defined(bpp8) || defined(bpp15)
 ! flood fill
-xlogin*background: #798a99
-xlogin*inpColor: #99aab9
+xlogin*background: #596a79
+xlogin*inpColor: #798a99
 #endif
-xlogin*failColor: #aa0000
+xlogin*failColor: #ff4d29
 
 ! 'Login:' and 'Password:'
 *Foreground: #eeeeff
