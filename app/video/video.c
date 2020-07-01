@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.29 2019/11/06 05:46:51 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.30 2020/07/01 06:45:24 feinerer Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1354,6 +1354,8 @@ mmap_init(struct video *vid)
 
 	/* request buffers */
 	rb.count = MMAP_NUM_BUFS;
+	rb.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	rb.memory = V4L2_MEMORY_MMAP;
 	r = ioctl(vid->dev.fd, VIDIOC_REQBUFS, &rb);
 	if (r == -1) {
 		warn("ioctl VIDIOC_REQBUFS");
