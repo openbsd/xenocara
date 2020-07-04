@@ -1,9 +1,9 @@
 #!/bin/sh
-# $OpenBSD: Xsetup_0,v 1.7 2020/06/28 15:40:48 matthieu Exp $
-
-xconsole -geometry 480x130-0-0 -daemon -notify -verbose -fn fixed -exitOnFail
+# $OpenBSD: Xsetup_0,v 1.8 2020/07/04 13:32:50 matthieu Exp $
 
 xsetroot -fg \#6f6f6f -bg \#bfbfbf -bitmap /usr/X11R6/include/X11/bitmaps/root_weave
+
+xconsole -geometry 480x130-0-0 -daemon -notify -verbose -fn fixed -exitOnFail
 
 #  install package openbsd-backgrounds
 #  then uncomment:
