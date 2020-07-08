@@ -312,7 +312,6 @@
 ./usr/X11R6/include/X11/extensions/XKBrules.h
 ./usr/X11R6/include/X11/extensions/XKBsrv.h
 ./usr/X11R6/include/X11/extensions/XKBstr.h
-./usr/X11R6/include/X11/extensions/XKBui.h
 ./usr/X11R6/include/X11/extensions/XKM.h
 ./usr/X11R6/include/X11/extensions/XKMformat.h
 ./usr/X11R6/include/X11/extensions/XLbx.h
@@ -744,7 +743,6 @@
 ./usr/X11R6/lib/pkgconfig/xineramaproto.pc
 ./usr/X11R6/lib/pkgconfig/xkbcomp.pc
 ./usr/X11R6/lib/pkgconfig/xkbfile.pc
-./usr/X11R6/lib/pkgconfig/xkbui.pc
 ./usr/X11R6/lib/pkgconfig/xkeyboard-config.pc
 ./usr/X11R6/lib/pkgconfig/xmu.pc
 ./usr/X11R6/lib/pkgconfig/xmuu.pc
