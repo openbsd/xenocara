@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.14 2019/02/25 12:34:35 rapha Exp $
+.\"	$OpenBSD: video.1,v 1.15 2020/07/17 07:51:23 mglocker Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: February 25 2019 $
+.Dd $Mdocdate: July 17 2020 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -66,8 +66,8 @@ written to
 .Ar output
 and displayed via
 .Xr Xv 3 .
-The acutance, brightness, contrast, gain, gamma, hue and saturation
-controls of
+The acutance, brightness, contrast, gain, gamma, hue, saturation and white
+balance temperature controls of
 .Ar file
 can also be adjusted if
 .Ar file
@@ -293,6 +293,12 @@ Increase saturation control of
 .Ar file .
 .It Ic s
 Decrease saturation control of
+.Ar file .
+.It Ic W
+Increase white balance temperature control of
+.Ar file .
+.It Ic w
+Decrease white balance temperature control of
 .Ar file .
 .El
 .Sh EXAMPLES

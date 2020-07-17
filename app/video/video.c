@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.30 2020/07/01 06:45:24 feinerer Exp $	*/
+/*	$OpenBSD: video.c,v 1.31 2020/07/17 07:51:23 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -114,7 +114,10 @@ struct dev_ctrls {
 	{ "gamma",	0, V4L2_CID_GAMMA, 	0, 0, 0, 0, 0 },
 #define CTRL_SHARPNESS	6
 	{ "sharpness",	0, V4L2_CID_SHARPNESS, 	0, 0, 0, 0, 0 },
-#define CTRL_LAST       7
+#define CTRL_WHITE_BALANCE_TEMPERATURE 7
+	{ "white_balance_temperature",
+			0, V4L2_CID_WHITE_BALANCE_TEMPERATURE, 	0, 0, 0, 0, 0 },
+#define CTRL_LAST       8
 	{ NULL, 0, 0, 0, 0, 0, 0, 0 }
 };
 
@@ -210,6 +213,7 @@ void dev_dump_info(struct video *);
 void dev_dump_query(struct video *);
 int dev_init(struct video *);
 void dev_set_ctrl(struct video *, int, int);
+void dev_set_ctrl_auto_white_balance(struct video *, int);
 void dev_reset_ctrls(struct video *);
 
 int parse_size(struct video *);
@@ -730,6 +734,16 @@ display_event(struct video *vid)
 				if (vid->mode & M_IN_DEV)
 					dev_set_ctrl(vid, CTRL_SATURATION, -1);
 				break;
+			case 'W':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid,
+					    CTRL_WHITE_BALANCE_TEMPERATURE, 10);
+				break;
+			case 'w':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid,
+					    CTRL_WHITE_BALANCE_TEMPERATURE, -10);
+				break;
 			default:
 				break;
 			}
@@ -1011,6 +1025,13 @@ dev_set_ctrl(struct video *vid, int ctrl, int change)
 		    ctrls[ctrl].name, d->path);
 		return;
 	}
+	if (ctrl == CTRL_WHITE_BALANCE_TEMPERATURE) {
+		/*
+		 * The spec requires auto-white balance to be off before
+		 * we can set the white balance temperature.
+		 */
+		dev_set_ctrl_auto_white_balance(vid, 0);
+	}
 	val = ctrls[ctrl].cur + ctrls[ctrl].step * change;
 	if (val > ctrls[ctrl].max)
 		val = ctrls[ctrl].max;
@@ -1034,6 +1055,23 @@ dev_set_ctrl(struct video *vid, int ctrl, int change)
 }
 
 void
+dev_set_ctrl_auto_white_balance(struct video *vid, int toggle)
+{
+	struct dev *d = &vid->dev;
+	struct v4l2_control control;
+
+	control.id = V4L2_CID_AUTO_WHITE_BALANCE;
+	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0)
+		warn("VIDIOC_G_CTRL");
+	if (control.value == toggle)
+		return;
+
+	control.value = toggle;
+	if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
+		warn("VIDIOC_S_CTRL");
+}
+
+void
 dev_reset_ctrls(struct video *vid)
 {
 	struct dev *d = &vid->dev;
@@ -1043,6 +1081,14 @@ dev_reset_ctrls(struct video *vid)
 	for (i = 0; i < CTRL_LAST; i++) {
 		if (!ctrls[i].supported)
 			continue;
+		if (i == CTRL_WHITE_BALANCE_TEMPERATURE) {
+			/*
+			 * We might be asked to reset before the white balance
+			 * temperature has been adjusted, so we need to make
+			 * sure that auto-white balance really is off.
+			 */
+			dev_set_ctrl_auto_white_balance(vid, 0);
+		}
 		control.id = ctrls[i].id;
 		control.value = ctrls[i].def;
 		if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
@@ -1054,6 +1100,9 @@ dev_reset_ctrls(struct video *vid)
 		if (vid->verbose > 0)
 			fprintf(stderr, "%s now %d\n", ctrls[i].name,
 			    ctrls[i].cur);
+		if (i == CTRL_WHITE_BALANCE_TEMPERATURE) {
+			dev_set_ctrl_auto_white_balance(vid, 1);
+		}
 	}
 }
 
