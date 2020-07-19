@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile.bsd-wrapper,v 1.1.1.1 2014/04/14 19:31:49 matthieu Exp $
+#	$OpenBSD: Makefile.bsd-wrapper,v 1.2 2020/07/19 17:10:17 matthieu Exp $
 
-SHARED_LIBS= xcb-util-iccm 3.0 xcb-util-ewmh 0.0
+SHARED_LIBS= xcb-iccm 4.0 xcb-ewmh 2.0
 
 CONFIGURE_ARGS=		   --without-doxygen
 
