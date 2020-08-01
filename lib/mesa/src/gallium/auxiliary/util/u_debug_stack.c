@@ -265,6 +265,7 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
    }
 #endif
 
+#ifdef PIPE_ARCH_X86
 #if defined(PIPE_CC_GCC) && (PIPE_CC_GCC_VERSION > 404) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wframe-address"
@@ -279,7 +280,6 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
    frame_pointer = NULL;
 #endif
 
-#ifdef PIPE_ARCH_X86
    while (nr_frames) {
       const void **next_frame_pointer;
 
