@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.31 2020/07/17 07:51:23 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.32 2020/08/05 10:49:47 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -192,6 +192,8 @@ struct video {
 #define M_IN_FILE	0x4
 #define M_OUT_FILE	0x8
 #define M_QUERY		0x10
+#define M_QUERY_CTRLS	0x20
+#define M_RESET		0x40
 	int		 mode;
 	int		 verbose;
 };
@@ -211,11 +213,14 @@ int dev_get_rates(struct video *);
 int dev_get_ctrls(struct video *);
 void dev_dump_info(struct video *);
 void dev_dump_query(struct video *);
+void dev_dump_query_ctrls(struct video *);
 int dev_init(struct video *);
-void dev_set_ctrl(struct video *, int, int);
-void dev_set_ctrl_auto_white_balance(struct video *, int);
+int dev_set_ctrl_abs(struct video *vid, int, int);
+void dev_set_ctrl_rel(struct video *, int, int);
+void dev_set_ctrl_auto_white_balance(struct video *, int, int);
 void dev_reset_ctrls(struct video *);
 
+int parse_ctrl(struct video *, int, char **);
 int parse_size(struct video *);
 int choose_size(struct video *);
 int choose_enc(struct video *);
@@ -240,10 +245,10 @@ extern char *__progname;
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-gqRv] "
+	fprintf(stderr, "usage: %s [-cdgqRv] "
 	    "[-a adaptor] [-e encoding] [-f file] [-i input] [-O output]\n"
-	    "       %*s [-o output] [-r rate] [-s size]\n", __progname,
-	    (int)strlen(__progname), "");
+	    "       %*s [-o output] [-r rate] [-s size] [control[=value]]\n",
+	    __progname, (int)strlen(__progname), "");
 }
 
 int
@@ -657,46 +662,46 @@ display_event(struct video *vid)
 			switch (str) {
 			case 'A':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_SHARPNESS, 1);
+					dev_set_ctrl_rel(vid, CTRL_SHARPNESS, 1);
 				break;
 			case 'a':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_SHARPNESS, -1);
+					dev_set_ctrl_rel(vid, CTRL_SHARPNESS, -1);
 				break;
 			case 'B':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_BRIGHTNESS, 1);
+					dev_set_ctrl_rel(vid, CTRL_BRIGHTNESS, 1);
 				break;
 			case 'b':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_BRIGHTNESS, -1);
+					dev_set_ctrl_rel(vid, CTRL_BRIGHTNESS, -1);
 				break;
 			case 'C':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_CONTRAST, 1);
+					dev_set_ctrl_rel(vid, CTRL_CONTRAST, 1);
 				break;
 			case 'c':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_CONTRAST, -1);
+					dev_set_ctrl_rel(vid, CTRL_CONTRAST, -1);
 				break;
 			case 'f':
 				resize_window(vid, 1);
 				break;
 			case 'G':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_GAIN, 1);
+					dev_set_ctrl_rel(vid, CTRL_GAIN, 1);
 				break;
 			case 'g':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_GAIN, -1);
+					dev_set_ctrl_rel(vid, CTRL_GAIN, -1);
 				break;
 			case 'H':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_HUE, 1);
+					dev_set_ctrl_rel(vid, CTRL_HUE, 1);
 				break;
 			case 'h':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_HUE, -1);
+					dev_set_ctrl_rel(vid, CTRL_HUE, -1);
 				break;
 			case 'O':
 				if (!wout && vid->verbose > 0)
@@ -710,11 +715,11 @@ display_event(struct video *vid)
 				break;
 			case 'M':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_GAMMA, 1);
+					dev_set_ctrl_rel(vid, CTRL_GAMMA, 1);
 				break;
 			case 'm':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_GAMMA, -1);
+					dev_set_ctrl_rel(vid, CTRL_GAMMA, -1);
 				break;
 			case 'p':
 				hold = !hold;
@@ -728,20 +733,20 @@ display_event(struct video *vid)
 				break;
 			case 'S':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_SATURATION, 1);
+					dev_set_ctrl_rel(vid, CTRL_SATURATION, 1);
 				break;
 			case 's':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid, CTRL_SATURATION, -1);
+					dev_set_ctrl_rel(vid, CTRL_SATURATION, -1);
 				break;
 			case 'W':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid,
+					dev_set_ctrl_rel(vid,
 					    CTRL_WHITE_BALANCE_TEMPERATURE, 10);
 				break;
 			case 'w':
 				if (vid->mode & M_IN_DEV)
-					dev_set_ctrl(vid,
+					dev_set_ctrl_rel(vid,
 					    CTRL_WHITE_BALANCE_TEMPERATURE, -10);
 				break;
 			default:
@@ -1009,11 +1014,55 @@ dev_get_ctrls(struct video *vid)
 	return 1;
 }
 
-void
-dev_set_ctrl(struct video *vid, int ctrl, int change)
+int
+dev_set_ctrl_abs(struct video *vid, int ctrl, int val)
 {
 	struct dev *d = &vid->dev;
 	struct v4l2_control control;
+
+	if (ctrl < 0 || ctrl >= CTRL_LAST) {
+		warnx("invalid control");
+		return -1;
+	}
+	if (!ctrls[ctrl].supported) {
+		warnx("control %s not supported by %s",
+		    ctrls[ctrl].name, d->path);
+		return -1;
+	}
+	if (ctrl == CTRL_WHITE_BALANCE_TEMPERATURE) {
+		/*
+		 * The spec requires auto-white balance to be off before
+		 * we can set the white balance temperature.
+		 */
+		dev_set_ctrl_auto_white_balance(vid, 0, 0);
+	}
+	if (val > ctrls[ctrl].max)
+		val = ctrls[ctrl].max;
+	else if (val < ctrls[ctrl].min)
+		val = ctrls[ctrl].min;
+	control.id = ctrls[ctrl].id;
+	control.value = val;
+	if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0) {
+		warn("VIDIOC_S_CTRL");
+		return -1;
+	}
+	control.id = ctrls[ctrl].id;
+	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0) {
+		warn("VIDIOC_G_CTRL");
+		return -1;
+	}
+	ctrls[ctrl].cur = control.value;
+	if (vid->verbose > 0)
+		fprintf(stderr, "%s now %d\n", ctrls[ctrl].name,
+		    ctrls[ctrl].cur);
+
+	return 0;
+}
+
+void
+dev_set_ctrl_rel(struct video *vid, int ctrl, int change)
+{
+	struct dev *d = &vid->dev;
 	int val;
 
 	if (ctrl < 0 || ctrl >= CTRL_LAST) {
@@ -1025,50 +1074,32 @@ dev_set_ctrl(struct video *vid, int ctrl, int change)
 		    ctrls[ctrl].name, d->path);
 		return;
 	}
-	if (ctrl == CTRL_WHITE_BALANCE_TEMPERATURE) {
-		/*
-		 * The spec requires auto-white balance to be off before
-		 * we can set the white balance temperature.
-		 */
-		dev_set_ctrl_auto_white_balance(vid, 0);
-	}
 	val = ctrls[ctrl].cur + ctrls[ctrl].step * change;
-	if (val > ctrls[ctrl].max)
-		val = ctrls[ctrl].max;
-	else if (val < ctrls[ctrl].min)
-		val = ctrls[ctrl].min;
-	control.id = ctrls[ctrl].id;
-	control.value = val;
-	if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0) {
-		warn("VIDIOC_S_CTRL");
-		return;
-	}
-	control.id = ctrls[ctrl].id;
-	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0) {
-		warn("VIDIOC_G_CTRL");
-		return;
-	}
-	ctrls[ctrl].cur = control.value;
-	if (vid->verbose > 0)
-		fprintf(stderr, "%s now %d\n", ctrls[ctrl].name,
-		    ctrls[ctrl].cur);
+	dev_set_ctrl_abs(vid, ctrl, val);
 }
 
 void
-dev_set_ctrl_auto_white_balance(struct video *vid, int toggle)
+dev_set_ctrl_auto_white_balance(struct video *vid, int value, int reset)
 {
 	struct dev *d = &vid->dev;
 	struct v4l2_control control;
 
 	control.id = V4L2_CID_AUTO_WHITE_BALANCE;
-	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0)
+	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0) {
 		warn("VIDIOC_G_CTRL");
-	if (control.value == toggle)
 		return;
+	}
 
-	control.value = toggle;
-	if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
-		warn("VIDIOC_S_CTRL");
+	if (reset) {
+		if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
+			warn("VIDIOC_S_CTRL");
+	} else {
+		if (control.value == value)
+			return;
+		control.value = value;
+		if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
+			warn("VIDIOC_S_CTRL");
+	}
 }
 
 void
@@ -1081,27 +1112,9 @@ dev_reset_ctrls(struct video *vid)
 	for (i = 0; i < CTRL_LAST; i++) {
 		if (!ctrls[i].supported)
 			continue;
+		dev_set_ctrl_abs(vid, i, ctrls[i].def);
 		if (i == CTRL_WHITE_BALANCE_TEMPERATURE) {
-			/*
-			 * We might be asked to reset before the white balance
-			 * temperature has been adjusted, so we need to make
-			 * sure that auto-white balance really is off.
-			 */
-			dev_set_ctrl_auto_white_balance(vid, 0);
-		}
-		control.id = ctrls[i].id;
-		control.value = ctrls[i].def;
-		if (ioctl(d->fd, VIDIOC_S_CTRL, &control) != 0)
-			warn("VIDIOC_S_CTRL(%s)", ctrls[i].name);
-		control.id = ctrls[i].id;
-		if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0)
-			warn("VIDIOC_G_CTRL(%s)", ctrls[i].name);
-		ctrls[i].cur = control.value;
-		if (vid->verbose > 0)
-			fprintf(stderr, "%s now %d\n", ctrls[i].name,
-			    ctrls[i].cur);
-		if (i == CTRL_WHITE_BALANCE_TEMPERATURE) {
-			dev_set_ctrl_auto_white_balance(vid, 1);
+			dev_set_ctrl_auto_white_balance(vid, 1, 0);
 		}
 	}
 }
@@ -1171,6 +1184,22 @@ dev_dump_query(struct video *vid)
 	dev_dump_info(vid);
 }
 
+void
+dev_dump_query_ctrls(struct video *vid)
+{
+	int i;
+
+	if (!dev_check_caps(vid))
+		return;
+	if (!dev_get_ctrls(vid))
+		return;
+
+	for (i = 0; i < CTRL_LAST; i++) {
+		if (ctrls[i].supported)
+			fprintf(stderr, "%s=%d\n", ctrls[i].name, ctrls[i].cur);
+	}
+}
+
 int
 dev_init(struct video *vid)
 {
@@ -1219,6 +1248,64 @@ dev_init(struct video *vid)
 		    fps, vid->fps);
 
 	return 1;
+}
+
+int
+parse_ctrl(struct video *vid, int argc, char **argv)
+{
+	int i, val_old, val_new;
+	char *p;
+	const char *errstr;
+
+	if (*argv == NULL)
+		return 1;	/* No control arguments found. */
+
+	if (!dev_check_caps(vid))
+		return 0;
+	if (!dev_get_ctrls(vid))
+		return 0;
+
+	for (; argc > 0; argc--, argv++) {
+		p = strchr(*argv, '=');
+
+		/* Display control value. */
+		if (p == NULL) {
+			for (i = 0; i < CTRL_LAST; i++) {
+				if (!strcmp(*argv, ctrls[i].name)) {
+					fprintf(stderr, "%s: %d\n",
+					    ctrls[i].name, ctrls[i].cur);
+					break;
+				}
+			}
+			if (i == CTRL_LAST)
+				warnx("%s: unknown control", *argv);	
+			continue;
+		}
+
+		/* Set control value. */
+		for (i = 0, *p++ = '\0'; i < CTRL_LAST; i++) {
+			if (strcmp(*argv, ctrls[i].name) != 0)
+				continue;
+			if (*p == '\0') {
+				warnx("%s: no value", *argv);
+				break;
+			}
+			val_new = strtonum(p, -32768, 32768, &errstr);
+			if (errstr != NULL) {
+				warnx("%s: %s", *argv, errstr);
+				return 0;
+			}
+			val_old = ctrls[i].cur;
+			if (dev_set_ctrl_abs(vid, i, val_new) == 0)
+				fprintf(stderr, "%s: %d -> %d\n",
+				    ctrls[i].name, val_old, ctrls[i].cur);
+			break;
+		}
+		if (i == CTRL_LAST)
+			warnx("%s: unknown control", *argv);
+	}
+
+	return 0;
 }
 
 int
@@ -1563,6 +1650,13 @@ setup(struct video *vid)
 		if (!mmap_init(vid))
 			return 0;
 	}
+
+	/*
+	 * Reset the current White Balance Temperature Auto Control value
+	 * after the video stream has been started since some cams only
+	 * process this control while the video stream is on.
+	 */
+	dev_set_ctrl_auto_white_balance(vid, 0, 1);
 
 	if (vid->mode & M_OUT_XV)
 		net_wm_supported(vid);
@@ -1949,7 +2043,7 @@ main(int argc, char *argv[])
 	vid.mmap_on = 1; /* mmap method is default */
 	wout = 1;
 
-	while ((ch = getopt(argc, argv, "gqRva:e:f:i:O:o:r:s:")) != -1) {
+	while ((ch = getopt(argc, argv, "cdgqRva:e:f:i:O:o:r:s:")) != -1) {
 		switch (ch) {
 		case 'a':
 			x->cur_adap = strtonum(optarg, 0, 4, &errstr);
@@ -1957,6 +2051,14 @@ main(int argc, char *argv[])
 				warnx("Xv adaptor '%s' is %s", optarg, errstr);
 				errs++;
 			}
+			break;
+		case 'c':
+			vid.mode |= M_QUERY_CTRLS;
+			vid.mode &= ~M_OUT_XV;
+			break;
+		case 'd':
+			vid.mode |= M_RESET;
+			vid.mode &= ~M_OUT_XV;
 			break;
 		case 'e':
 			vid.enc = find_enc(optarg);
@@ -2043,6 +2145,14 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
+	if (!parse_ctrl(&vid, argc, argv))
+		cleanup(&vid, 0);
+
+	if (vid.mode & M_QUERY_CTRLS) {
+		dev_dump_query_ctrls(&vid);
+		cleanup(&vid, 0);
+	}
+
 	if (vid.mode & M_QUERY) {
 		if (pledge("stdio rpath wpath video", NULL) == -1)
 			err(1, "pledge");
@@ -2055,6 +2165,11 @@ main(int argc, char *argv[])
 
 	if (!setup(&vid))
 		cleanup(&vid, 1);
+
+	if (vid.mode & M_RESET) {
+		dev_reset_ctrls(&vid);
+		cleanup(&vid, 0);
+	}
 
 	if (vid.mode & M_IN_FILE) {
 		if (pledge("stdio rpath", NULL) == -1)

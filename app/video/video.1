@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.15 2020/07/17 07:51:23 mglocker Exp $
+.\"	$OpenBSD: video.1,v 1.16 2020/08/05 10:49:47 mglocker Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: July 17 2020 $
+.Dd $Mdocdate: August 5 2020 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -25,7 +25,7 @@
 .Sh SYNOPSIS
 .Nm
 .Bk -words
-.Op Fl \&gqRv
+.Op Fl \&cdgqRv
 .Op Fl a Ar adaptor
 .Op Fl e Ar encoding
 .Op Fl f Ar file
@@ -34,6 +34,7 @@
 .Op Fl o Ar output
 .Op Fl r Ar rate
 .Op Fl s Ar size
+.Op Ar control Ns Op = Ns Ar value
 .Ek
 .Sh DESCRIPTION
 .Nm
@@ -81,6 +82,10 @@ Index of
 adaptor to use.
 The default is 0, the first adaptor reported by
 .Xr X 7 .
+.It Fl c
+List all current supported control values and quit.
+.It Fl d
+Reset all supported controls to their default value and quit.
 .It Fl e Ar encoding
 Lowercase FOURCC name of video encoding to use.
 Valid arguments are
@@ -219,6 +224,15 @@ Verbose mode.
 Multiple instances of this option are allowed.
 Each instance increases the level of informational output printed to
 .Ar stderr .
+.It Ar control Ns Op = Ns Ar value
+Retrieve the specified
+.Ar control ,
+or attempt to set it to
+.Ar value
+and quit.
+Multiple
+.Ar control Ns Op = Ns Ar value
+arguments may be given.
 .El
 .Pp
 .Nm
