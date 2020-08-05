@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.32 2020/08/05 10:49:47 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.33 2020/08/05 11:34:00 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1340,21 +1340,21 @@ parse_size(struct video *vid)
 			dimp++;
 	}
 	if (dimx > 0) {
-		if (dims[0] != '\0') {
+		if (dims[0] != NULL) {
 			vid->width = strtonum(dims[0], 0, 4096, &errstr);
 			if (errstr != NULL) {
 				warnx("width '%s' is %s", dims[0], errstr);
 				return 0;
 			}
 		}
-		if (dims[1] != '\0') {
+		if (dims[1] != NULL) {
 			vid->height = strtonum(dims[1], 0, 4096, &errstr);
 			if (errstr != NULL) {
 				warnx("height '%s' is %s", dims[1], errstr);
 				return 0;
 			}
 		}
-	} else if (dims[0] != '\0') {
+	} else if (dims[0] != NULL) {
 		vid->height = strtonum(dims[0], 0, 4096, &errstr);
 		if (errstr != NULL) {
 			warnx("height '%s' is %s", dims[0], errstr);
