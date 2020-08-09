@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.34 2020/08/09 06:41:51 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.35 2020/08/09 06:51:04 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1134,9 +1134,8 @@ dev_reset_ctrls(struct video *vid)
 		if (!ctrls[i].supported)
 			continue;
 		dev_set_ctrl_abs(vid, i, ctrls[i].def);
-		if (i == CTRL_WHITE_BALANCE_TEMPERATURE) {
+		if (i == CTRL_WHITE_BALANCE_TEMPERATURE)
 			dev_set_ctrl_auto_white_balance(vid, 1, 0);
-		}
 	}
 }
 
