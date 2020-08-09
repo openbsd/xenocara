@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.33 2020/08/05 11:34:00 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.34 2020/08/09 06:41:51 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -94,6 +94,7 @@ struct dev_ctrls {
 	char		*name;
 	int		 supported;
 	int		 id;
+	int		 id_auto;
 	int		 def;
 	int		 min;
 	int		 max;
@@ -101,24 +102,25 @@ struct dev_ctrls {
 	int		 cur;
 } ctrls[] = {
 #define CTRL_BRIGHTNESS	0
-	{ "brightness",	0, V4L2_CID_BRIGHTNESS,	0, 0, 0, 0, 0 },
+	{ "brightness",	0, V4L2_CID_BRIGHTNESS,	0, 0, 0, 0, 0, 0 },
 #define CTRL_CONTRAST	1
-	{ "contrast",	0, V4L2_CID_CONTRAST,	0, 0, 0, 0, 0 },
+	{ "contrast",	0, V4L2_CID_CONTRAST,	0, 0, 0, 0, 0, 0 },
 #define CTRL_SATURATION	2
-	{ "saturation",	0, V4L2_CID_SATURATION,	0, 0, 0, 0, 0 },
+	{ "saturation",	0, V4L2_CID_SATURATION,	0, 0, 0, 0, 0, 0 },
 #define CTRL_HUE	3
-	{ "hue",	0, V4L2_CID_HUE,	0, 0, 0, 0, 0 },
+	{ "hue",	0, V4L2_CID_HUE,	0, 0, 0, 0, 0, 0 },
 #define CTRL_GAIN	4
-	{ "gain",	0, V4L2_CID_GAIN, 	0, 0, 0, 0, 0 },
+	{ "gain",	0, V4L2_CID_GAIN, 	0, 0, 0, 0, 0, 0 },
 #define CTRL_GAMMA	5
-	{ "gamma",	0, V4L2_CID_GAMMA, 	0, 0, 0, 0, 0 },
+	{ "gamma",	0, V4L2_CID_GAMMA, 	0, 0, 0, 0, 0, 0 },
 #define CTRL_SHARPNESS	6
-	{ "sharpness",	0, V4L2_CID_SHARPNESS, 	0, 0, 0, 0, 0 },
+	{ "sharpness",	0, V4L2_CID_SHARPNESS, 	0, 0, 0, 0, 0, 0 },
 #define CTRL_WHITE_BALANCE_TEMPERATURE 7
 	{ "white_balance_temperature",
-			0, V4L2_CID_WHITE_BALANCE_TEMPERATURE, 	0, 0, 0, 0, 0 },
+			0, V4L2_CID_WHITE_BALANCE_TEMPERATURE,
+			   V4L2_CID_AUTO_WHITE_BALANCE, 0, 0, 0, 0, 0 },
 #define CTRL_LAST       8
-	{ NULL, 0, 0, 0, 0, 0, 0, 0 }
+	{ NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 /* frame dimensions */
@@ -218,6 +220,7 @@ int dev_init(struct video *);
 int dev_set_ctrl_abs(struct video *vid, int, int);
 void dev_set_ctrl_rel(struct video *, int, int);
 void dev_set_ctrl_auto_white_balance(struct video *, int, int);
+int dev_get_ctrl_auto(struct video *, int);
 void dev_reset_ctrls(struct video *);
 
 int parse_ctrl(struct video *, int, char **);
@@ -1102,6 +1105,24 @@ dev_set_ctrl_auto_white_balance(struct video *vid, int value, int reset)
 	}
 }
 
+int
+dev_get_ctrl_auto(struct video *vid, int ctrl)
+{
+	struct dev *d = &vid->dev;
+	struct v4l2_control control;
+
+	if (!ctrls[ctrl].id_auto)
+		return 0;
+
+	control.id = ctrls[ctrl].id_auto;
+	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0) {
+		warn("VIDIOC_G_CTRL");
+		return 0;
+	}
+
+	return (control.value);
+}
+
 void
 dev_reset_ctrls(struct video *vid)
 {
@@ -1195,7 +1216,12 @@ dev_dump_query_ctrls(struct video *vid)
 		return;
 
 	for (i = 0; i < CTRL_LAST; i++) {
-		if (ctrls[i].supported)
+		if (!ctrls[i].supported)
+			continue;
+
+		if (dev_get_ctrl_auto(vid, i))
+			fprintf(stderr, "%s=auto\n", ctrls[i].name);
+		else
 			fprintf(stderr, "%s=%d\n", ctrls[i].name, ctrls[i].cur);
 	}
 }
@@ -1253,7 +1279,7 @@ dev_init(struct video *vid)
 int
 parse_ctrl(struct video *vid, int argc, char **argv)
 {
-	int i, val_old, val_new;
+	int i, val_old, auto_old, val_new;
 	char *p;
 	const char *errstr;
 
@@ -1296,9 +1322,17 @@ parse_ctrl(struct video *vid, int argc, char **argv)
 				return 0;
 			}
 			val_old = ctrls[i].cur;
-			if (dev_set_ctrl_abs(vid, i, val_new) == 0)
-				fprintf(stderr, "%s: %d -> %d\n",
-				    ctrls[i].name, val_old, ctrls[i].cur);
+			auto_old = dev_get_ctrl_auto(vid, i);
+			if (dev_set_ctrl_abs(vid, i, val_new) == 0) {
+				if (auto_old) {
+					fprintf(stderr, "%s: auto -> %d\n",
+					    ctrls[i].name, ctrls[i].cur);
+				} else {
+					fprintf(stderr, "%s: %d -> %d\n",
+					    ctrls[i].name, val_old,
+					    ctrls[i].cur);
+				}
+			}
 			break;
 		}
 		if (i == CTRL_LAST)
