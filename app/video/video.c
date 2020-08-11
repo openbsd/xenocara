@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.35 2020/08/09 06:51:04 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.36 2020/08/11 05:35:17 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1209,11 +1209,6 @@ dev_dump_query_ctrls(struct video *vid)
 {
 	int i;
 
-	if (!dev_check_caps(vid))
-		return;
-	if (!dev_get_ctrls(vid))
-		return;
-
 	for (i = 0; i < CTRL_LAST; i++) {
 		if (!ctrls[i].supported)
 			continue;
@@ -2181,11 +2176,6 @@ main(int argc, char *argv[])
 	if (!parse_ctrl(&vid, argc, argv))
 		cleanup(&vid, 0);
 
-	if (vid.mode & M_QUERY_CTRLS) {
-		dev_dump_query_ctrls(&vid);
-		cleanup(&vid, 0);
-	}
-
 	if (vid.mode & M_QUERY) {
 		if (pledge("stdio rpath wpath video", NULL) == -1)
 			err(1, "pledge");
@@ -2201,6 +2191,12 @@ main(int argc, char *argv[])
 
 	if (vid.mode & M_RESET) {
 		dev_reset_ctrls(&vid);
+		if (!(vid.mode & M_QUERY_CTRLS))
+			cleanup(&vid, 0);
+	}
+
+	if (vid.mode & M_QUERY_CTRLS) {
+		dev_dump_query_ctrls(&vid);
 		cleanup(&vid, 0);
 	}
 
