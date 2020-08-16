@@ -33,10 +33,6 @@
 #include <X11/extensions/XKM.h>
 #include "xkbpath.h"
 
-#ifndef DFLT_XKB_CONFIG_ROOT
-#define DFLT_XKB_CONFIG_ROOT	"/usr/lib/X11/xkb"
-#endif
-
 #ifndef PATH_MAX
 #define	PATH_MAX 1024
 #endif

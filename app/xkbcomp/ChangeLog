@@ -1,3 +1,113 @@
+commit d373c9b434c603bf6a5eb442b6427992d23ef874
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Feb 20 09:47:30 2020 -0800
+
+    xkbcomp 1.4.3
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e200d0d41ef3158ea717206c1490e499a0c07f1b
+Author: Dimitry Andric <dimitry@andric.com>
+Date:   Wed Feb 19 21:24:59 2020 +0100
+
+    Don't compare with string literals
+    
+    xkbcomp.c:228:37: error: result of comparison against a string literal is unspecified (use an explicit string comparison function instead) [-Werror,-Wstring-compare]
+            if ((argv[i][0] != '-') || (uStringEqual(argv[i], "-")))
+                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./utils.h:195:30: note: expanded from macro 'uStringEqual'
+                                     ^~~~~~~~~~~~~~~~~~~~~
+    ./utils.h:198:38: note: expanded from macro 'uStringCompare'
+                                     (s1)!=(s2):strcmp(s1,s2))
+                                         ^ ~~~~
+    
+    Don't attempt to do this macro trickery, and simply use strcmp instead,
+    where it applies.
+    
+    Bug: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=244235
+
+commit 29fda8e50e4a4a127348e63fcf9f47600beab93c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 13 12:29:19 2019 +1000
+
+    Error out if we have no default path
+    
+    The path is set through configure.ac/Makefile.am and always defined anyway.
+    Let's not re-define it here with a different value than our default.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ff0e59084d6b9f2e7085fc88ba68916150085afb
+Author: Andreas Wettstein <wettstein509@solnet.ch>
+Date:   Sat Feb 15 17:34:41 2014 +0100
+
+    xkbcomp Fix missing support for "affect" and incorrect modifier handling for ISOLock
+    
+    Add missing support for "affect" flag to selectively affect locking or
+    unlocking for for modifier locking, control locking, and ISOLock.
+    Fix some incorrect masking and modifier handling for ISOLock.
+    
+    Signed-off-by: Andreas Wettstein <wettstein509@solnet.ch>
+    Reviewed-By: Ran Benita <ran234@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9edd61b91a02bda31fc6edd2c32c553e872b6ea2
+Author: Miroslav Koškár <mk@mkoskar.com>
+Date:   Fri Jan 18 20:01:01 2019 +0100
+
+    Fix invalid error report on F_Accel field
+    
+    F_Accel is valid MovePtr field yet following error is reported:
+    
+        > Error:            Field accel is not defined for an action of type MovePtr
+        >                   Action definition ignored
+    
+    Signed-off-by: Miroslav Koškár <mk@mkoskar.com>
+
+commit 7ffec6583ae92fe81402870eb89dea21ca34e933
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Feb 11 21:44:51 2019 +0100
+
+    configure: Remove unused AC_SUBST([REQUIRED_MODULES])
+    
+    v2: Add square brackets back.
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 4683410b6b072bd55dbdc661c76a5ba30bae608e
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Feb 11 21:31:19 2019 +0100
+
+    pkgconfig: Remove unneeded Requires.private
+    
+    Fixes "pkg-config --exists xkbcomp" without installed pkg-config files
+    for x11, xkbfile, and xproto >= 7.0.17.
+    
+    xkbcomp works fine without those pkg-config files.
+    
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=913359
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 1fdbacbe34742328b2a95742982b6017f60a1342
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 17 11:44:37 2018 -0400
+
+    Suppress high-keycode warnings at the default warning level
+    
+    We expect evdev to have keycodes above 255, there's no reason to warn
+    about this.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 32d8d53fc1b622d97b3b8eb7b8b5e8354eda60a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:11:16 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2abe23d23d3755335c10ff573e4e1f93b682e9d9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jun 8 09:10:03 2018 +1000

@@ -436,6 +436,14 @@ HandleSetLatchMods(XkbDescPtr xkb,
     return ReportIllegal(action->type, field);
 }
 
+static LookupEntry lockWhich[] = {
+    {"both", 0},
+    {"lock", XkbSA_LockNoUnlock},
+    {"neither", (XkbSA_LockNoLock | XkbSA_LockNoUnlock)},
+    {"unlock", XkbSA_LockNoLock},
+    {NULL, 0}
+};
+
 static Bool
 HandleLockMods(XkbDescPtr xkb,
                XkbAnyAction * action,
@@ -443,12 +451,19 @@ HandleLockMods(XkbDescPtr xkb,
 {
     XkbModAction *act;
     unsigned t1, t2;
+    ExprResult rtrn;
 
     act = (XkbModAction *) action;
-    if ((array_ndx != NULL) && (field == F_Modifiers))
+    if ((array_ndx != NULL) && (field == F_Modifiers || field == F_Affect))
         return ReportActionNotArray(action->type, field);
     switch (field)
     {
+    case F_Affect:
+        if (!ExprResolveEnum(value, &rtrn, lockWhich))
+            return ReportMismatch(action->type, field, "lock or unlock");
+        act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
+        act->flags |= rtrn.uval;
+        return True;
     case F_Modifiers:
         t1 = act->flags;
         if (CheckModifierField(xkb, action->type, value, &t1, &t2))
@@ -627,6 +642,7 @@ HandleMovePtr(XkbDescPtr xkb,
             act->flags &= ~XkbSA_NoAcceleration;
         else
             act->flags |= XkbSA_NoAcceleration;
+        return True;
     }
     return ReportIllegal(action->type, field);
 }
@@ -638,14 +654,6 @@ static LookupEntry btnNames[] = {
     {"button4", 4},
     {"button5", 5},
     {"default", 0},
-    {NULL, 0}
-};
-
-static LookupEntry lockWhich[] = {
-    {"both", 0},
-    {"lock", XkbSA_LockNoUnlock},
-    {"neither", (XkbSA_LockNoLock | XkbSA_LockNoUnlock)},
-    {"unlock", XkbSA_LockNoLock},
     {NULL, 0}
 };
 
@@ -682,7 +690,7 @@ HandlePtrBtn(XkbDescPtr xkb,
         if (!ExprResolveEnum(value, &rtrn, lockWhich))
             return ReportMismatch(action->type, field, "lock or unlock");
         act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
-        act->flags |= rtrn.ival;
+        act->flags |= rtrn.uval;
         return True;
     }
     else if (field == F_Count)
@@ -779,8 +787,12 @@ static LookupEntry isoNames[] = {
     {"pointer", XkbSA_ISONoAffectPtr},
     {"ctrls", XkbSA_ISONoAffectCtrls},
     {"controls", XkbSA_ISONoAffectCtrls},
-    {"all", ~((unsigned) 0)},
+    {"all", XkbSA_ISOAffectMask},
     {"none", 0},
+    {"both", 0},
+    {"lock", XkbSA_LockNoUnlock},
+    {"neither", (XkbSA_LockNoLock | XkbSA_LockNoUnlock)},
+    {"unlock", XkbSA_LockNoLock},
     {NULL, 0},
 };
 
@@ -804,8 +816,8 @@ HandleISOLock(XkbDescPtr xkb,
         if (CheckModifierField(xkb, action->type, value, &flags, &mods))
         {
             act->flags = flags & (~XkbSA_ISODfltIsGroup);
-            act->real_mods = mods & 0xff;
-            mods = (mods >> 8) & 0xff;
+            act->real_mods = act->mask = (mods & 0xff);
+            mods = (mods >> 8) & 0xffff;
             XkbSetModActionVMods(act, mods);
             return True;
         }
@@ -827,6 +839,8 @@ HandleISOLock(XkbDescPtr xkb,
         if (!ExprResolveMask(value, &rtrn, SimpleLookup, (XPointer) isoNames))
             return ReportMismatch(action->type, field, "keyboard component");
         act->affect = (~rtrn.uval) & XkbSA_ISOAffectMask;
+        act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
+        act->flags |= rtrn.uval & (XkbSA_LockNoLock | XkbSA_LockNoUnlock);
         return True;
     }
     return ReportIllegal(action->type, field);
@@ -941,6 +955,15 @@ HandleSetLockControls(XkbDescPtr xkb,
             (value, &rtrn, SimpleLookup, (XPointer) ctrlNames))
             return ReportMismatch(action->type, field, "controls mask");
         XkbActionSetCtrls(act, rtrn.uval);
+        return True;
+    }
+    else if (field == F_Affect && action->type == XkbSA_LockControls) {
+        if (array_ndx != NULL)
+            return ReportActionNotArray(action->type, field);
+        if (!ExprResolveEnum(value, &rtrn, lockWhich))
+            return ReportMismatch(action->type, field, "lock or unlock");
+        act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
+        act->flags |= rtrn.uval;
         return True;
     }
     return ReportIllegal(action->type, field);
@@ -1122,7 +1145,7 @@ HandleDeviceBtn(XkbDescPtr xkb,
         if (!ExprResolveEnum(value, &rtrn, lockWhich))
             return ReportMismatch(action->type, field, "lock or unlock");
         act->flags &= ~(XkbSA_LockNoLock | XkbSA_LockNoUnlock);
-        act->flags |= rtrn.ival;
+        act->flags |= rtrn.uval;
         return True;
     }
     else if (field == F_Count)
@@ -1289,7 +1312,7 @@ ApplyActionFactoryDefaults(XkbAction * action)
     }
     else if (action->type == XkbSA_ISOLock)
     {
-        action->iso.real_mods = LockMask;
+        action->iso.real_mods = action->iso.mask = LockMask;
     }
     return;
 }
