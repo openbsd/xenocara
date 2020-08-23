@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.36 2020/08/11 05:35:17 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.37 2020/08/23 10:49:34 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -219,8 +219,8 @@ void dev_dump_query_ctrls(struct video *);
 int dev_init(struct video *);
 int dev_set_ctrl_abs(struct video *vid, int, int);
 void dev_set_ctrl_rel(struct video *, int, int);
-void dev_set_ctrl_auto_white_balance(struct video *, int, int);
 int dev_get_ctrl_auto(struct video *, int);
+void dev_set_ctrl_auto(struct video *, int, int, int);
 void dev_reset_ctrls(struct video *);
 
 int parse_ctrl(struct video *, int, char **);
@@ -1037,7 +1037,7 @@ dev_set_ctrl_abs(struct video *vid, int ctrl, int val)
 		 * The spec requires auto-white balance to be off before
 		 * we can set the white balance temperature.
 		 */
-		dev_set_ctrl_auto_white_balance(vid, 0, 0);
+		dev_set_ctrl_auto(vid, ctrl, 0, 0);
 	}
 	if (val > ctrls[ctrl].max)
 		val = ctrls[ctrl].max;
@@ -1082,12 +1082,15 @@ dev_set_ctrl_rel(struct video *vid, int ctrl, int change)
 }
 
 void
-dev_set_ctrl_auto_white_balance(struct video *vid, int value, int reset)
+dev_set_ctrl_auto(struct video *vid, int ctrl, int value, int reset)
 {
 	struct dev *d = &vid->dev;
 	struct v4l2_control control;
 
-	control.id = V4L2_CID_AUTO_WHITE_BALANCE;
+	if (!ctrls[ctrl].id_auto)
+		return;
+
+	control.id = ctrls[ctrl].id_auto;
 	if (ioctl(d->fd, VIDIOC_G_CTRL, &control) != 0) {
 		warn("VIDIOC_G_CTRL");
 		return;
@@ -1134,8 +1137,7 @@ dev_reset_ctrls(struct video *vid)
 		if (!ctrls[i].supported)
 			continue;
 		dev_set_ctrl_abs(vid, i, ctrls[i].def);
-		if (i == CTRL_WHITE_BALANCE_TEMPERATURE)
-			dev_set_ctrl_auto_white_balance(vid, 1, 0);
+		dev_set_ctrl_auto(vid, i, 1, 0);
 	}
 }
 
@@ -1310,21 +1312,40 @@ parse_ctrl(struct video *vid, int argc, char **argv)
 				warnx("%s: no value", *argv);
 				break;
 			}
-			val_new = strtonum(p, -32768, 32768, &errstr);
-			if (errstr != NULL) {
-				warnx("%s: %s", *argv, errstr);
-				return 0;
-			}
-			val_old = ctrls[i].cur;
 			auto_old = dev_get_ctrl_auto(vid, i);
-			if (dev_set_ctrl_abs(vid, i, val_new) == 0) {
-				if (auto_old) {
-					fprintf(stderr, "%s: auto -> %d\n",
-					    ctrls[i].name, ctrls[i].cur);
+			val_old = ctrls[i].cur;
+			if (strcmp(p, "auto") == 0) {
+				if (ctrls[i].id_auto == 0) {
+					fprintf(stderr,
+					    "%s: no automatic control found\n",
+					    ctrls[i].name);
+				} else if (!auto_old) {
+					fprintf(stderr, "%s: %d -> auto\n",
+					    ctrls[i].name, val_old);
+					dev_set_ctrl_auto(vid, i, 1, 0);
 				} else {
-					fprintf(stderr, "%s: %d -> %d\n",
-					    ctrls[i].name, val_old,
-					    ctrls[i].cur);
+					fprintf(stderr,
+					    "%s: auto -> auto\n",
+					    ctrls[i].name);
+				}
+			} else {
+				val_new = strtonum(p, -32768, 32768, &errstr);
+				if (errstr != NULL) {
+					warnx("%s: %s", *argv, errstr);
+					return 0;
+				}
+				if (dev_set_ctrl_abs(vid, i, val_new) == 0) {
+					if (auto_old) {
+						fprintf(stderr,
+						    "%s: auto -> %d\n",
+						    ctrls[i].name,
+						    ctrls[i].cur);
+					} else {
+						fprintf(stderr,
+						    "%s: %d -> %d\n",
+						    ctrls[i].name, val_old,
+						    ctrls[i].cur);
+					}
 				}
 			}
 			break;
@@ -1684,7 +1705,7 @@ setup(struct video *vid)
 	 * after the video stream has been started since some cams only
 	 * process this control while the video stream is on.
 	 */
-	dev_set_ctrl_auto_white_balance(vid, 0, 1);
+	dev_set_ctrl_auto(vid, CTRL_WHITE_BALANCE_TEMPERATURE, 0, 1);
 
 	if (vid->mode & M_OUT_XV)
 		net_wm_supported(vid);
