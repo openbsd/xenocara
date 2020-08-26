@@ -260,8 +260,7 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_abs:
    case ir_unop_sign:
       assert(ir->operands[0]->type->base_type == GLSL_TYPE_INT ||
-             ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double() ||
+             ir->operands[0]->type->is_float_16_32_64() ||
              ir->operands[0]->type->base_type == GLSL_TYPE_INT64);
       assert(ir->type == ir->operands[0]->type);
       break;
@@ -269,8 +268,7 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_rcp:
    case ir_unop_rsq:
    case ir_unop_sqrt:
-      assert(ir->type->is_float() ||
-             ir->type->is_double());
+      assert(ir->type->is_float_16_32_64());
       assert(ir->type == ir->operands[0]->type);
       break;
 
@@ -279,7 +277,7 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_exp2:
    case ir_unop_log2:
    case ir_unop_saturate:
-      assert(ir->operands[0]->type->is_float());
+      assert(ir->operands[0]->type->is_float_16_32());
       assert(ir->type == ir->operands[0]->type);
       break;
 
@@ -299,9 +297,18 @@ ir_validate::visit_leave(ir_expression *ir)
       assert(ir->operands[0]->type->is_float());
       assert(ir->type->is_boolean());
       break;
+   case ir_unop_f162b:
+      assert(ir->operands[0]->type->base_type ==
+             GLSL_TYPE_FLOAT16);
+      assert(ir->type->is_boolean());
+      break;
    case ir_unop_b2f:
       assert(ir->operands[0]->type->is_boolean());
       assert(ir->type->is_float());
+      break;
+   case ir_unop_b2f16:
+      assert(ir->operands[0]->type->is_boolean());
+      assert(ir->type->base_type == GLSL_TYPE_FLOAT16);
       break;
    case ir_unop_i2b:
       assert(ir->operands[0]->type->base_type == GLSL_TYPE_INT);
@@ -441,8 +448,7 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_ceil:
    case ir_unop_floor:
    case ir_unop_fract:
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->operands[0]->type == ir->type);
       break;
    case ir_unop_sin:
@@ -453,7 +459,7 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_dFdy:
    case ir_unop_dFdy_coarse:
    case ir_unop_dFdy_fine:
-      assert(ir->operands[0]->type->is_float());
+      assert(ir->operands[0]->type->is_float_16_32());
       assert(ir->operands[0]->type == ir->type);
       break;
 
@@ -546,13 +552,14 @@ ir_validate::visit_leave(ir_expression *ir)
       assert(ir->type->base_type == GLSL_TYPE_INT);
       break;
 
-   case ir_unop_noise:
-      /* XXX what can we assert here? */
+   case ir_unop_clz:
+      assert(ir->operands[0]->type == ir->type);
+      assert(ir->type->base_type == GLSL_TYPE_UINT);
       break;
 
    case ir_unop_interpolate_at_centroid:
       assert(ir->operands[0]->type == ir->type);
-      assert(ir->operands[0]->type->is_float());
+      assert(ir->operands[0]->type->is_float_16_32());
       break;
 
    case ir_unop_get_buffer_size:
@@ -573,6 +580,15 @@ ir_validate::visit_leave(ir_expression *ir)
    case ir_unop_f2d:
       assert(ir->operands[0]->type->is_float());
       assert(ir->type->is_double());
+      break;
+   case ir_unop_f162f:
+      assert(ir->operands[0]->type->base_type == GLSL_TYPE_FLOAT16);
+      assert(ir->type->is_float());
+      break;
+   case ir_unop_f2f16:
+   case ir_unop_f2fmp:
+      assert(ir->operands[0]->type->is_float());
+      assert(ir->type->base_type == GLSL_TYPE_FLOAT16);
       break;
    case ir_unop_d2i:
       assert(ir->operands[0]->type->is_double());
@@ -596,18 +612,21 @@ ir_validate::visit_leave(ir_expression *ir)
       break;
 
    case ir_unop_frexp_sig:
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->type->is_double());
       break;
    case ir_unop_frexp_exp:
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->type->base_type == GLSL_TYPE_INT);
       break;
    case ir_unop_subroutine_to_int:
       assert(ir->operands[0]->type->base_type == GLSL_TYPE_SUBROUTINE);
       assert(ir->type->base_type == GLSL_TYPE_INT);
+      break;
+
+   case ir_unop_atan:
+      assert(ir->operands[0]->type->is_float_16_32_64());
+      assert(ir->type == ir->operands[0]->type);
       break;
 
    case ir_binop_add:
@@ -643,6 +662,25 @@ ir_validate::visit_leave(ir_expression *ir)
       }
       break;
 
+   case ir_binop_abs_sub:
+      assert(ir->operands[0]->type == ir->operands[1]->type);
+      assert(ir->operands[0]->type->is_integer_32_64());
+      assert(ir->operands[0]->type->vector_elements ==
+             ir->type->vector_elements);
+      assert(ir->type->base_type == GLSL_TYPE_UINT ||
+             ir->type->base_type == GLSL_TYPE_UINT64);
+      break;
+
+   case ir_binop_add_sat:
+   case ir_binop_sub_sat:
+   case ir_binop_avg:
+   case ir_binop_avg_round:
+      assert(ir->type == ir->operands[0]->type);
+      assert(ir->type == ir->operands[1]->type);
+      assert(ir->type->is_integer_32_64());
+      break;
+
+   case ir_binop_mul_32x16:
    case ir_binop_imul_high:
       assert(ir->type == ir->operands[0]->type);
       assert(ir->type == ir->operands[1]->type);
@@ -720,9 +758,9 @@ ir_validate::visit_leave(ir_expression *ir)
 
    case ir_binop_dot:
       assert(ir->type == glsl_type::float_type ||
-             ir->type == glsl_type::double_type);
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+             ir->type == glsl_type::double_type ||
+             ir->type == glsl_type::float16_t_type);
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->operands[0]->type->is_vector());
       assert(ir->operands[0]->type == ir->operands[1]->type);
       break;
@@ -735,8 +773,7 @@ ir_validate::visit_leave(ir_expression *ir)
 
    case ir_binop_ldexp:
       assert(ir->operands[0]->type == ir->type);
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->operands[1]->type->base_type == GLSL_TYPE_INT);
       assert(ir->operands[0]->type->components() ==
              ir->operands[1]->type->components());
@@ -761,21 +798,26 @@ ir_validate::visit_leave(ir_expression *ir)
       assert(ir->operands[1]->type == glsl_type::int_type);
       break;
 
+   case ir_binop_atan2:
+      assert(ir->operands[0]->type->is_float_16_32_64());
+      assert(ir->operands[1]->type == ir->operands[0]->type);
+      assert(ir->type == ir->operands[0]->type);
+      break;
+
    case ir_triop_fma:
-      assert(ir->type->is_float() ||
-             ir->type->is_double());
+      assert(ir->type->is_float_16_32_64());
       assert(ir->type == ir->operands[0]->type);
       assert(ir->type == ir->operands[1]->type);
       assert(ir->type == ir->operands[2]->type);
       break;
 
    case ir_triop_lrp:
-      assert(ir->operands[0]->type->is_float() ||
-             ir->operands[0]->type->is_double());
+      assert(ir->operands[0]->type->is_float_16_32_64());
       assert(ir->operands[0]->type == ir->operands[1]->type);
       assert(ir->operands[2]->type == ir->operands[0]->type ||
              ir->operands[2]->type == glsl_type::float_type ||
-             ir->operands[2]->type == glsl_type::double_type);
+             ir->operands[2]->type == glsl_type::double_type ||
+             ir->operands[2]->type == glsl_type::float16_t_type);
       break;
 
    case ir_triop_csel:
@@ -1052,7 +1094,8 @@ ir_validate::validate_ir(ir_instruction *ir, void *data)
    _mesa_set_add(ir_set, ir);
 }
 
-ASSERTED static void
+#ifdef DEBUG
+static void
 check_node_type(ir_instruction *ir, void *data)
 {
    (void) data;
@@ -1065,6 +1108,7 @@ check_node_type(ir_instruction *ir, void *data)
    if (value != NULL)
       assert(value->type != glsl_type::error_type);
 }
+#endif
 
 void
 validate_ir_tree(exec_list *instructions)

@@ -121,7 +121,7 @@ build_mat_subdet(struct nir_builder *b, struct vtn_ssa_value *src,
       return nir_channel(b, src->elems[1 - col]->def, 1 - row);
    } else {
       /* Swizzle to get all but the specified row */
-      unsigned swiz[3];
+      unsigned swiz[NIR_MAX_VEC_COMPONENTS] = {0};
       for (unsigned j = 0; j < 3; j++)
          swiz[j] = j + (j >= row);
 
@@ -172,24 +172,6 @@ matrix_inverse(struct vtn_builder *b, struct vtn_ssa_value *src)
 }
 
 /**
- * Return e^x.
- */
-static nir_ssa_def *
-build_exp(nir_builder *b, nir_ssa_def *x)
-{
-   return nir_fexp2(b, nir_fmul_imm(b, x, M_LOG2E));
-}
-
-/**
- * Return ln(x) - the natural logarithm of x.
- */
-static nir_ssa_def *
-build_log(nir_builder *b, nir_ssa_def *x)
-{
-   return nir_fmul_imm(b, nir_flog2(b, x), 1.0 / M_LOG2E);
-}
-
-/**
  * Approximate asin(x) by the formula:
  *    asin~(x) = sign(x) * (pi/2 - sqrt(1 - |x|) * (pi/2 + |x|(pi/4 - 1 + |x|(p0 + |x|p1))))
  *
@@ -234,160 +216,10 @@ build_asin(nir_builder *b, nir_ssa_def *x, float p0, float p1)
                                                            expr_tail)));
 }
 
-/**
- * Compute xs[0] + xs[1] + xs[2] + ... using fadd.
- */
-static nir_ssa_def *
-build_fsum(nir_builder *b, nir_ssa_def **xs, int terms)
-{
-   nir_ssa_def *accum = xs[0];
-
-   for (int i = 1; i < terms; i++)
-      accum = nir_fadd(b, accum, xs[i]);
-
-   return accum;
-}
-
-static nir_ssa_def *
-build_atan(nir_builder *b, nir_ssa_def *y_over_x)
-{
-   const uint32_t bit_size = y_over_x->bit_size;
-
-   nir_ssa_def *abs_y_over_x = nir_fabs(b, y_over_x);
-   nir_ssa_def *one = nir_imm_floatN_t(b, 1.0f, bit_size);
-
-   /*
-    * range-reduction, first step:
-    *
-    *      / y_over_x         if |y_over_x| <= 1.0;
-    * x = <
-    *      \ 1.0 / y_over_x   otherwise
-    */
-   nir_ssa_def *x = nir_fdiv(b, nir_fmin(b, abs_y_over_x, one),
-                                nir_fmax(b, abs_y_over_x, one));
-
-   /*
-    * approximate atan by evaluating polynomial:
-    *
-    * x   * 0.9999793128310355 - x^3  * 0.3326756418091246 +
-    * x^5 * 0.1938924977115610 - x^7  * 0.1173503194786851 +
-    * x^9 * 0.0536813784310406 - x^11 * 0.0121323213173444
-    */
-   nir_ssa_def *x_2  = nir_fmul(b, x,   x);
-   nir_ssa_def *x_3  = nir_fmul(b, x_2, x);
-   nir_ssa_def *x_5  = nir_fmul(b, x_3, x_2);
-   nir_ssa_def *x_7  = nir_fmul(b, x_5, x_2);
-   nir_ssa_def *x_9  = nir_fmul(b, x_7, x_2);
-   nir_ssa_def *x_11 = nir_fmul(b, x_9, x_2);
-
-   nir_ssa_def *polynomial_terms[] = {
-      nir_fmul_imm(b, x,     0.9999793128310355f),
-      nir_fmul_imm(b, x_3,  -0.3326756418091246f),
-      nir_fmul_imm(b, x_5,   0.1938924977115610f),
-      nir_fmul_imm(b, x_7,  -0.1173503194786851f),
-      nir_fmul_imm(b, x_9,   0.0536813784310406f),
-      nir_fmul_imm(b, x_11, -0.0121323213173444f),
-   };
-
-   nir_ssa_def *tmp =
-      build_fsum(b, polynomial_terms, ARRAY_SIZE(polynomial_terms));
-
-   /* range-reduction fixup */
-   tmp = nir_fadd(b, tmp,
-                  nir_fmul(b, nir_b2f(b, nir_flt(b, one, abs_y_over_x), bit_size),
-                           nir_fadd_imm(b, nir_fmul_imm(b, tmp, -2.0f), M_PI_2f)));
-
-   /* sign fixup */
-   return nir_fmul(b, tmp, nir_fsign(b, y_over_x));
-}
-
-static nir_ssa_def *
-build_atan2(nir_builder *b, nir_ssa_def *y, nir_ssa_def *x)
-{
-   assert(y->bit_size == x->bit_size);
-   const uint32_t bit_size = x->bit_size;
-
-   nir_ssa_def *zero = nir_imm_floatN_t(b, 0, bit_size);
-   nir_ssa_def *one = nir_imm_floatN_t(b, 1, bit_size);
-
-   /* If we're on the left half-plane rotate the coordinates π/2 clock-wise
-    * for the y=0 discontinuity to end up aligned with the vertical
-    * discontinuity of atan(s/t) along t=0.  This also makes sure that we
-    * don't attempt to divide by zero along the vertical line, which may give
-    * unspecified results on non-GLSL 4.1-capable hardware.
-    */
-   nir_ssa_def *flip = nir_fge(b, zero, x);
-   nir_ssa_def *s = nir_bcsel(b, flip, nir_fabs(b, x), y);
-   nir_ssa_def *t = nir_bcsel(b, flip, y, nir_fabs(b, x));
-
-   /* If the magnitude of the denominator exceeds some huge value, scale down
-    * the arguments in order to prevent the reciprocal operation from flushing
-    * its result to zero, which would cause precision problems, and for s
-    * infinite would cause us to return a NaN instead of the correct finite
-    * value.
-    *
-    * If fmin and fmax are respectively the smallest and largest positive
-    * normalized floating point values representable by the implementation,
-    * the constants below should be in agreement with:
-    *
-    *    huge <= 1 / fmin
-    *    scale <= 1 / fmin / fmax (for |t| >= huge)
-    *
-    * In addition scale should be a negative power of two in order to avoid
-    * loss of precision.  The values chosen below should work for most usual
-    * floating point representations with at least the dynamic range of ATI's
-    * 24-bit representation.
-    */
-   const double huge_val = bit_size >= 32 ? 1e18 : 16384;
-   nir_ssa_def *huge = nir_imm_floatN_t(b,  huge_val, bit_size);
-   nir_ssa_def *scale = nir_bcsel(b, nir_fge(b, nir_fabs(b, t), huge),
-                                  nir_imm_floatN_t(b, 0.25, bit_size), one);
-   nir_ssa_def *rcp_scaled_t = nir_frcp(b, nir_fmul(b, t, scale));
-   nir_ssa_def *s_over_t = nir_fmul(b, nir_fmul(b, s, scale), rcp_scaled_t);
-
-   /* For |x| = |y| assume tan = 1 even if infinite (i.e. pretend momentarily
-    * that ∞/∞ = 1) in order to comply with the rather artificial rules
-    * inherited from IEEE 754-2008, namely:
-    *
-    *  "atan2(±∞, −∞) is ±3π/4
-    *   atan2(±∞, +∞) is ±π/4"
-    *
-    * Note that this is inconsistent with the rules for the neighborhood of
-    * zero that are based on iterated limits:
-    *
-    *  "atan2(±0, −0) is ±π
-    *   atan2(±0, +0) is ±0"
-    *
-    * but GLSL specifically allows implementations to deviate from IEEE rules
-    * at (0,0), so we take that license (i.e. pretend that 0/0 = 1 here as
-    * well).
-    */
-   nir_ssa_def *tan = nir_bcsel(b, nir_feq(b, nir_fabs(b, x), nir_fabs(b, y)),
-                                one, nir_fabs(b, s_over_t));
-
-   /* Calculate the arctangent and fix up the result if we had flipped the
-    * coordinate system.
-    */
-   nir_ssa_def *arc =
-      nir_fadd(b, nir_fmul_imm(b, nir_b2f(b, flip, bit_size), M_PI_2f),
-                  build_atan(b, tan));
-
-   /* Rather convoluted calculation of the sign of the result.  When x < 0 we
-    * cannot use fsign because we need to be able to distinguish between
-    * negative and positive zero.  We don't use bitwise arithmetic tricks for
-    * consistency with the GLSL front-end.  When x >= 0 rcp_scaled_t will
-    * always be non-negative so this won't be able to distinguish between
-    * negative and positive zero, but we don't care because atan2 is
-    * continuous along the whole positive y = 0 half-line, so it won't affect
-    * the result significantly.
-    */
-   return nir_bcsel(b, nir_flt(b, nir_fmin(b, y, rcp_scaled_t), zero),
-                    nir_fneg(b, arc), arc);
-}
-
 static nir_op
 vtn_nir_alu_op_for_spirv_glsl_opcode(struct vtn_builder *b,
-                                     enum GLSLstd450 opcode)
+                                     enum GLSLstd450 opcode,
+                                     unsigned execution_mode)
 {
    switch (opcode) {
    case GLSLstd450Round:         return nir_op_fround_even;
@@ -433,7 +265,11 @@ vtn_nir_alu_op_for_spirv_glsl_opcode(struct vtn_builder *b,
    case GLSLstd450UnpackUnorm4x8:   return nir_op_unpack_unorm_4x8;
    case GLSLstd450UnpackSnorm2x16:  return nir_op_unpack_snorm_2x16;
    case GLSLstd450UnpackUnorm2x16:  return nir_op_unpack_unorm_2x16;
-   case GLSLstd450UnpackHalf2x16:   return nir_op_unpack_half_2x16;
+   case GLSLstd450UnpackHalf2x16:
+      if (execution_mode & FLOAT_CONTROLS_DENORM_FLUSH_TO_ZERO_FP16)
+         return nir_op_unpack_half_2x16_flush_to_zero;
+      else
+         return nir_op_unpack_half_2x16;
    case GLSLstd450UnpackDouble2x32: return nir_op_unpack_64_2x32;
 
    default:
@@ -510,11 +346,11 @@ handle_glsl450_alu(struct vtn_builder *b, enum GLSLstd450 entrypoint,
       return;
 
    case GLSLstd450Exp:
-      val->ssa->def = build_exp(nb, src[0]);
+      val->ssa->def = nir_fexp(nb, src[0]);
       return;
 
    case GLSLstd450Log:
-      val->ssa->def = build_log(nb, src[0]);
+      val->ssa->def = nir_flog(nb, src[0]);
       return;
 
    case GLSLstd450FClamp:
@@ -590,58 +426,57 @@ handle_glsl450_alu(struct vtn_builder *b, enum GLSLstd450 entrypoint,
    case GLSLstd450Sinh:
       /* 0.5 * (e^x - e^(-x)) */
       val->ssa->def =
-         nir_fmul_imm(nb, nir_fsub(nb, build_exp(nb, src[0]),
-                                       build_exp(nb, nir_fneg(nb, src[0]))),
+         nir_fmul_imm(nb, nir_fsub(nb, nir_fexp(nb, src[0]),
+                                       nir_fexp(nb, nir_fneg(nb, src[0]))),
                           0.5f);
       return;
 
    case GLSLstd450Cosh:
       /* 0.5 * (e^x + e^(-x)) */
       val->ssa->def =
-         nir_fmul_imm(nb, nir_fadd(nb, build_exp(nb, src[0]),
-                                       build_exp(nb, nir_fneg(nb, src[0]))),
+         nir_fmul_imm(nb, nir_fadd(nb, nir_fexp(nb, src[0]),
+                                       nir_fexp(nb, nir_fneg(nb, src[0]))),
                           0.5f);
       return;
 
    case GLSLstd450Tanh: {
-      /* tanh(x) := (0.5 * (e^x - e^(-x))) / (0.5 * (e^x + e^(-x)))
+      /* tanh(x) := (e^x - e^(-x)) / (e^x + e^(-x))
        *
-       * With a little algebra this reduces to (e^2x - 1) / (e^2x + 1)
+       * We clamp x to [-10, +10] to avoid precision problems.  When x > 10,
+       * e^x dominates the sum, e^(-x) is lost and tanh(x) is 1.0 for 32 bit
+       * floating point.
        *
-       * We clamp x to (-inf, +10] to avoid precision problems.  When x > 10,
-       * e^2x is so much larger than 1.0 that 1.0 gets flushed to zero in the
-       * computation e^2x +/- 1 so it can be ignored.
-       *
-       * For 16-bit precision we clamp x to (-inf, +4.2] since the maximum
-       * representable number is only 65,504 and e^(2*6) exceeds that. Also,
-       * if x > 4.2, tanh(x) will return 1.0 in fp16.
+       * For 16-bit precision this we clamp x to [-4.2, +4.2].
        */
       const uint32_t bit_size = src[0]->bit_size;
       const double clamped_x = bit_size > 16 ? 10.0 : 4.2;
-      nir_ssa_def *x = nir_fmin(nb, src[0],
-                                    nir_imm_floatN_t(nb, clamped_x, bit_size));
-      nir_ssa_def *exp2x = build_exp(nb, nir_fmul_imm(nb, x, 2.0));
-      val->ssa->def = nir_fdiv(nb, nir_fadd_imm(nb, exp2x, -1.0),
-                                   nir_fadd_imm(nb, exp2x, 1.0));
+      nir_ssa_def *x = nir_fclamp(nb, src[0],
+                                  nir_imm_floatN_t(nb, -clamped_x, bit_size),
+                                  nir_imm_floatN_t(nb, clamped_x, bit_size));
+      val->ssa->def =
+         nir_fdiv(nb, nir_fsub(nb, nir_fexp(nb, x),
+                               nir_fexp(nb, nir_fneg(nb, x))),
+                  nir_fadd(nb, nir_fexp(nb, x),
+                           nir_fexp(nb, nir_fneg(nb, x))));
       return;
    }
 
    case GLSLstd450Asinh:
       val->ssa->def = nir_fmul(nb, nir_fsign(nb, src[0]),
-         build_log(nb, nir_fadd(nb, nir_fabs(nb, src[0]),
-                       nir_fsqrt(nb, nir_fadd_imm(nb, nir_fmul(nb, src[0], src[0]),
-                                                      1.0f)))));
+         nir_flog(nb, nir_fadd(nb, nir_fabs(nb, src[0]),
+                      nir_fsqrt(nb, nir_fadd_imm(nb, nir_fmul(nb, src[0], src[0]),
+                                                    1.0f)))));
       return;
    case GLSLstd450Acosh:
-      val->ssa->def = build_log(nb, nir_fadd(nb, src[0],
+      val->ssa->def = nir_flog(nb, nir_fadd(nb, src[0],
          nir_fsqrt(nb, nir_fadd_imm(nb, nir_fmul(nb, src[0], src[0]),
                                         -1.0f))));
       return;
    case GLSLstd450Atanh: {
       nir_ssa_def *one = nir_imm_floatN_t(nb, 1.0, src[0]->bit_size);
       val->ssa->def =
-         nir_fmul_imm(nb, build_log(nb, nir_fdiv(nb, nir_fadd(nb, src[0], one),
-                                        nir_fsub(nb, one, src[0]))),
+         nir_fmul_imm(nb, nir_flog(nb, nir_fdiv(nb, nir_fadd(nb, src[0], one),
+                                       nir_fsub(nb, one, src[0]))),
                           0.5f);
       return;
    }
@@ -657,11 +492,11 @@ handle_glsl450_alu(struct vtn_builder *b, enum GLSLstd450 entrypoint,
       return;
 
    case GLSLstd450Atan:
-      val->ssa->def = build_atan(nb, src[0]);
+      val->ssa->def = nir_atan(nb, src[0]);
       return;
 
    case GLSLstd450Atan2:
-      val->ssa->def = build_atan2(nb, src[0], src[1]);
+      val->ssa->def = nir_atan2(nb, src[0], src[1]);
       return;
 
    case GLSLstd450Frexp: {
@@ -678,12 +513,15 @@ handle_glsl450_alu(struct vtn_builder *b, enum GLSLstd450 entrypoint,
       return;
    }
 
-   default:
+   default: {
+      unsigned execution_mode =
+         b->shader->info.float_controls_execution_mode;
       val->ssa->def =
          nir_build_alu(&b->nb,
-                       vtn_nir_alu_op_for_spirv_glsl_opcode(b, entrypoint),
+                       vtn_nir_alu_op_for_spirv_glsl_opcode(b, entrypoint, execution_mode),
                        src[0], src[1], src[2], NULL);
       return;
+   }
    }
 }
 
@@ -753,13 +591,8 @@ handle_glsl450_interpolation(struct vtn_builder *b, enum GLSLstd450 opcode,
 
    if (vec_array_deref) {
       assert(vec_deref);
-      if (nir_src_is_const(vec_deref->arr.index)) {
-         val->ssa->def = vtn_vector_extract(b, &intrin->dest.ssa,
-                                            nir_src_as_uint(vec_deref->arr.index));
-      } else {
-         val->ssa->def = vtn_vector_extract_dynamic(b, &intrin->dest.ssa,
-                                                    vec_deref->arr.index.ssa);
-      }
+      val->ssa->def = nir_vector_extract(&b->nb, &intrin->dest.ssa,
+                                         vec_deref->arr.index.ssa);
    } else {
       val->ssa->def = &intrin->dest.ssa;
    }

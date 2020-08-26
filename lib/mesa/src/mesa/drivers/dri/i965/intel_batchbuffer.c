@@ -67,14 +67,14 @@ dump_validation_list(struct intel_batchbuffer *batch)
       uint64_t flags = batch->validation_list[i].flags;
       assert(batch->validation_list[i].handle ==
              batch->exec_bos[i]->gem_handle);
-      fprintf(stderr, "[%2d]: %2d %-14s %p %s%-7s @ 0x%016llx%s (%"PRIu64"B)\n",
+      fprintf(stderr, "[%2d]: %2d %-14s %p %s%-7s @ 0x%"PRIx64"%s (%"PRIu64"B)\n",
               i,
               batch->validation_list[i].handle,
               batch->exec_bos[i]->name,
               batch->exec_bos[i],
               (flags & EXEC_OBJECT_SUPPORTS_48B_ADDRESS) ? "(48b" : "(32b",
               (flags & EXEC_OBJECT_WRITE) ? " write)" : ")",
-              batch->validation_list[i].offset,
+              (uint64_t)batch->validation_list[i].offset,
               (flags & EXEC_OBJECT_PINNED) ? " (pinned)" : "",
               batch->exec_bos[i]->size);
    }
@@ -104,12 +104,13 @@ decode_get_bo(void *v_brw, bool ppgtt, uint64_t address)
 }
 
 static unsigned
-decode_get_state_size(void *v_brw, uint32_t offset_from_dsba)
+decode_get_state_size(void *v_brw, uint64_t address, uint64_t base_address)
 {
    struct brw_context *brw = v_brw;
    struct intel_batchbuffer *batch = &brw->batch;
-   unsigned size = (uintptr_t) _mesa_hash_table_u64_search(
-      batch->state_batch_sizes, offset_from_dsba);
+   unsigned size = (uintptr_t)
+      _mesa_hash_table_u64_search(batch->state_batch_sizes,
+                                  address - base_address);
    return size;
 }
 
@@ -502,10 +503,16 @@ grow_buffer(struct brw_context *brw,
    new_bo->refcount = bo->refcount;
    bo->refcount = 1;
 
+   assert(list_is_empty(&bo->exports));
+   assert(list_is_empty(&new_bo->exports));
+
    struct brw_bo tmp;
    memcpy(&tmp, bo, sizeof(struct brw_bo));
    memcpy(bo, new_bo, sizeof(struct brw_bo));
    memcpy(new_bo, &tmp, sizeof(struct brw_bo));
+
+   list_inithead(&bo->exports);
+   list_inithead(&new_bo->exports);
 
    grow->partial_bo = new_bo; /* the one reference of the OLD bo */
    grow->partial_bytes = existing_bytes;
@@ -572,6 +579,8 @@ brw_new_batch(struct brw_context *brw)
     */
    if (INTEL_DEBUG & DEBUG_SHADER_TIME)
       brw_collect_and_report_shader_time(brw);
+
+   intel_batchbuffer_maybe_noop(brw);
 }
 
 /**
@@ -672,8 +681,7 @@ throttle(struct brw_context *brw)
    }
 
    if (brw->need_flush_throttle) {
-      __DRIscreen *dri_screen = brw->screen->driScrnPriv;
-      drmCommandNone(dri_screen->fd, DRM_I915_GEM_THROTTLE);
+      drmCommandNone(brw->screen->fd, DRM_I915_GEM_THROTTLE);
       brw->need_flush_throttle = false;
    }
 }
@@ -721,9 +729,9 @@ execbuffer(int fd,
 
       /* Update brw_bo::gtt_offset */
       if (batch->validation_list[i].offset != bo->gtt_offset) {
-         DBG("BO %d migrated: 0x%" PRIx64 " -> 0x%llx\n",
+         DBG("BO %d migrated: 0x%" PRIx64 " -> 0x%" PRIx64 "\n",
              bo->gem_handle, bo->gtt_offset,
-             batch->validation_list[i].offset);
+             (uint64_t)batch->validation_list[i].offset);
          assert(!(bo->kflags & EXEC_OBJECT_PINNED));
          bo->gtt_offset = batch->validation_list[i].offset;
       }
@@ -738,7 +746,6 @@ execbuffer(int fd,
 static int
 submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
 {
-   __DRIscreen *dri_screen = brw->screen->driScrnPriv;
    struct intel_batchbuffer *batch = &brw->batch;
    int ret = 0;
 
@@ -805,7 +812,7 @@ submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
          batch->exec_bos[index] = tmp_bo;
       }
 
-      ret = execbuffer(dri_screen->fd, batch, brw->hw_ctx,
+      ret = execbuffer(brw->screen->fd, batch, brw->hw_ctx,
                        4 * USED_BATCH(*batch),
                        in_fence_fd, out_fence_fd, flags);
 
@@ -888,6 +895,17 @@ _intel_batchbuffer_flush_fence(struct brw_context *brw,
    brw_new_batch(brw);
 
    return ret;
+}
+
+void
+intel_batchbuffer_maybe_noop(struct brw_context *brw)
+{
+   if (!brw->frontend_noop || USED_BATCH(brw->batch) != 0)
+      return;
+
+   BEGIN_BATCH(1);
+   OUT_BATCH(MI_BATCH_BUFFER_END);
+   ADVANCE_BATCH();
 }
 
 bool

@@ -191,6 +191,50 @@ struct pipe_context {
     */
    void (*set_active_query_state)(struct pipe_context *pipe, bool enable);
 
+   /**
+    * INTEL Performance Query
+    */
+   /*@{*/
+
+   unsigned (*init_intel_perf_query_info)(struct pipe_context *pipe);
+
+   void (*get_intel_perf_query_info)(struct pipe_context *pipe,
+                                     unsigned query_index,
+                                     const char **name,
+                                     uint32_t *data_size,
+                                     uint32_t *n_counters,
+                                     uint32_t *n_active);
+
+   void (*get_intel_perf_query_counter_info)(struct pipe_context *pipe,
+                                             unsigned query_index,
+                                             unsigned counter_index,
+                                             const char **name,
+                                             const char **desc,
+                                             uint32_t *offset,
+                                             uint32_t *data_size,
+                                             uint32_t *type_enum,
+                                             uint32_t *data_type_enum,
+                                             uint64_t *raw_max);
+
+   struct pipe_query *(*new_intel_perf_query_obj)(struct pipe_context *pipe,
+                                                 unsigned query_index);
+
+   bool (*begin_intel_perf_query)(struct pipe_context *pipe, struct pipe_query *q);
+
+   void (*end_intel_perf_query)(struct pipe_context *pipe, struct pipe_query *q);
+
+   void (*delete_intel_perf_query)(struct pipe_context *pipe, struct pipe_query *q);
+
+   void (*wait_intel_perf_query)(struct pipe_context *pipe, struct pipe_query *q);
+
+   bool (*is_intel_perf_query_ready)(struct pipe_context *pipe, struct pipe_query *q);
+
+   void (*get_intel_perf_query_data)(struct pipe_context *pipe,
+                                     struct pipe_query *q,
+                                     size_t data_size,
+                                     uint32_t *data,
+                                     uint32_t *bytes_written);
+
    /*@}*/
 
    /**
@@ -425,6 +469,17 @@ struct pipe_context {
 
 
    /**
+    * INTEL_blackhole_render
+    */
+   /*@{*/
+
+   void (*set_frontend_noop)(struct pipe_context *,
+                             bool enable);
+
+   /*@}*/
+
+
+   /**
     * Resource functions for blit-like functionality
     *
     * If a driver supports multisampling, blit must implement color resolve.
@@ -457,12 +512,14 @@ struct pipe_context {
     * The entire buffers are cleared (no scissor, no colormask, etc).
     *
     * \param buffers  bitfield of PIPE_CLEAR_* values.
+    * \param scissor_state  the scissored region to clear
     * \param color  pointer to a union of fiu array for each of r, g, b, a.
     * \param depth  depth clear value in [0,1].
     * \param stencil  stencil clear value
     */
    void (*clear)(struct pipe_context *pipe,
                  unsigned buffers,
+                 const struct pipe_scissor_state *scissor_state,
                  const union pipe_color_union *color,
                  double depth,
                  unsigned stencil);

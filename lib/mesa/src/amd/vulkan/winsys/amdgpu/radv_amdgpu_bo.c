@@ -31,12 +31,17 @@
 #include "radv_amdgpu_bo.h"
 
 #include <amdgpu.h>
-#include <amdgpu_drm.h>
+#include "drm-uapi/amdgpu_drm.h"
 #include <inttypes.h>
 #include <pthread.h>
 #include <unistd.h>
 
 #include "util/u_atomic.h"
+#include "util/u_memory.h"
+#include "util/u_math.h"
+
+#define AMDGPU_TILING_SCANOUT_SHIFT 63
+#define AMDGPU_TILING_SCANOUT_MASK 1
 
 static void radv_amdgpu_winsys_bo_destroy(struct radeon_winsys_bo *_bo);
 
@@ -58,7 +63,7 @@ radv_amdgpu_bo_va_op(struct radv_amdgpu_winsys *ws,
 	if (!(bo_flags & RADEON_FLAG_READ_ONLY))
 		flags |= AMDGPU_VM_PAGE_WRITEABLE;
 
-	size = ALIGN(size, getpagesize());
+	size = align64(size, getpagesize());
 
 	return amdgpu_bo_va_op_raw(ws->dev, bo, offset, size, addr,
 				   flags, ops);
@@ -262,7 +267,7 @@ static void radv_amdgpu_winsys_bo_destroy(struct radeon_winsys_bo *_bo)
 	} else {
 		if (bo->ws->debug_all_bos) {
 			pthread_mutex_lock(&bo->ws->global_bo_list_lock);
-			LIST_DEL(&bo->global_list_item);
+			list_del(&bo->global_list_item);
 			bo->ws->num_buffers--;
 			pthread_mutex_unlock(&bo->ws->global_bo_list_lock);
 		}
@@ -291,7 +296,7 @@ static void radv_amdgpu_add_buffer_to_global_list(struct radv_amdgpu_winsys_bo *
 
 	if (bo->ws->debug_all_bos) {
 		pthread_mutex_lock(&ws->global_bo_list_lock);
-		LIST_ADDTAIL(&bo->global_list_item, &ws->global_bo_list);
+		list_addtail(&bo->global_list_item, &ws->global_bo_list);
 		ws->num_buffers++;
 		pthread_mutex_unlock(&ws->global_bo_list_lock);
 	}
@@ -356,6 +361,10 @@ radv_amdgpu_winsys_bo_create(struct radeon_winsys *_ws,
 		request.preferred_heap |= AMDGPU_GEM_DOMAIN_VRAM;
 	if (initial_domain & RADEON_DOMAIN_GTT)
 		request.preferred_heap |= AMDGPU_GEM_DOMAIN_GTT;
+	if (initial_domain & RADEON_DOMAIN_GDS)
+		request.preferred_heap |= AMDGPU_GEM_DOMAIN_GDS;
+	if (initial_domain & RADEON_DOMAIN_OA)
+		request.preferred_heap |= AMDGPU_GEM_DOMAIN_OA;
 
 	if (flags & RADEON_FLAG_CPU_ACCESS) {
 		bo->base.vram_cpu_access = initial_domain & RADEON_DOMAIN_VRAM;
@@ -375,8 +384,11 @@ radv_amdgpu_winsys_bo_create(struct radeon_winsys *_ws,
 	}
 
 	/* this won't do anything on pre 4.9 kernels */
-	if (ws->zero_all_vram_allocs && (initial_domain & RADEON_DOMAIN_VRAM))
-		request.flags |= AMDGPU_GEM_CREATE_VRAM_CLEARED;
+	if (initial_domain & RADEON_DOMAIN_VRAM) {
+		if (ws->zero_all_vram_allocs || (flags & RADEON_FLAG_ZERO_VRAM))
+			request.flags |= AMDGPU_GEM_CREATE_VRAM_CLEARED;
+	}
+
 	r = amdgpu_bo_alloc(ws->dev, &request, &buf_handle);
 	if (r) {
 		fprintf(stderr, "amdgpu: Failed to allocate a buffer:\n");
@@ -530,8 +542,7 @@ error:
 static struct radeon_winsys_bo *
 radv_amdgpu_winsys_bo_from_fd(struct radeon_winsys *_ws,
 			      int fd, unsigned priority,
-			      unsigned *stride,
-			      unsigned *offset)
+			      uint64_t *alloc_size)
 {
 	struct radv_amdgpu_winsys *ws = radv_amdgpu_winsys(_ws);
 	struct radv_amdgpu_winsys_bo *bo;
@@ -553,6 +564,10 @@ radv_amdgpu_winsys_bo_from_fd(struct radeon_winsys *_ws,
 	r = amdgpu_bo_query_info(result.buf_handle, &info);
 	if (r)
 		goto error_query;
+
+	if (alloc_size) {
+		*alloc_size = info.alloc_size;
+	}
 
 	r = amdgpu_va_range_alloc(ws->dev, amdgpu_gpu_va_range_general,
 				  result.alloc_size, 1 << 20, 0, &va, &va_handle,
@@ -621,6 +636,52 @@ radv_amdgpu_winsys_get_fd(struct radeon_winsys *_ws,
 	return true;
 }
 
+static bool
+radv_amdgpu_bo_get_flags_from_fd(struct radeon_winsys *_ws, int fd,
+                                 enum radeon_bo_domain *domains,
+                                 enum radeon_bo_flag *flags)
+{
+	struct radv_amdgpu_winsys *ws = radv_amdgpu_winsys(_ws);
+	struct amdgpu_bo_import_result result = {0};
+	struct amdgpu_bo_info info = {0};
+	int r;
+
+	*domains = 0;
+	*flags = 0;
+
+	r = amdgpu_bo_import(ws->dev, amdgpu_bo_handle_type_dma_buf_fd, fd, &result);
+	if (r)
+		return false;
+
+	r = amdgpu_bo_query_info(result.buf_handle, &info);
+	amdgpu_bo_free(result.buf_handle);
+	if (r)
+		return false;
+
+	if (info.preferred_heap & AMDGPU_GEM_DOMAIN_VRAM)
+		*domains |= RADEON_DOMAIN_VRAM;
+	if (info.preferred_heap & AMDGPU_GEM_DOMAIN_GTT)
+		*domains |= RADEON_DOMAIN_GTT;
+	if (info.preferred_heap & AMDGPU_GEM_DOMAIN_GDS)
+		*domains |= RADEON_DOMAIN_GDS;
+	if (info.preferred_heap & AMDGPU_GEM_DOMAIN_OA)
+		*domains |= RADEON_DOMAIN_OA;
+
+	if (info.alloc_flags & AMDGPU_GEM_CREATE_CPU_ACCESS_REQUIRED)
+		*flags |= RADEON_FLAG_CPU_ACCESS;
+	if (info.alloc_flags & AMDGPU_GEM_CREATE_NO_CPU_ACCESS)
+		*flags |= RADEON_FLAG_NO_CPU_ACCESS;
+	if (!(info.alloc_flags & AMDGPU_GEM_CREATE_EXPLICIT_SYNC))
+		*flags |= RADEON_FLAG_IMPLICIT_SYNC;
+	if (info.alloc_flags & AMDGPU_GEM_CREATE_CPU_GTT_USWC)
+		*flags |= RADEON_FLAG_GTT_WC;
+	if (info.alloc_flags & AMDGPU_GEM_CREATE_VM_ALWAYS_VALID)
+		*flags |= RADEON_FLAG_NO_INTERPROCESS_SHARING | RADEON_FLAG_PREFER_LOCAL_BO;
+	if (info.alloc_flags & AMDGPU_GEM_CREATE_VRAM_CLEARED)
+		*flags |= RADEON_FLAG_ZERO_VRAM;
+	return true;
+}
+
 static unsigned eg_tile_split(unsigned tile_split)
 {
 	switch (tile_split) {
@@ -656,10 +717,11 @@ radv_amdgpu_winsys_bo_set_metadata(struct radeon_winsys_bo *_bo,
 {
 	struct radv_amdgpu_winsys_bo *bo = radv_amdgpu_winsys_bo(_bo);
 	struct amdgpu_bo_metadata metadata = {0};
-	uint32_t tiling_flags = 0;
+	uint64_t tiling_flags = 0;
 
 	if (bo->ws->info.chip_class >= GFX9) {
 		tiling_flags |= AMDGPU_TILING_SET(SWIZZLE_MODE, md->u.gfx9.swizzle_mode);
+		tiling_flags |= AMDGPU_TILING_SET(SCANOUT, md->u.gfx9.scanout);
 	} else {
 		if (md->u.legacy.macrotile == RADEON_LAYOUT_TILED)
 			tiling_flags |= AMDGPU_TILING_SET(ARRAY_MODE, 4); /* 2D_TILED_THIN1 */
@@ -704,6 +766,7 @@ radv_amdgpu_winsys_bo_get_metadata(struct radeon_winsys_bo *_bo,
 
 	if (bo->ws->info.chip_class >= GFX9) {
 		md->u.gfx9.swizzle_mode = AMDGPU_TILING_GET(tiling_flags, SWIZZLE_MODE);
+		md->u.gfx9.scanout = AMDGPU_TILING_GET(tiling_flags, SCANOUT);
 	} else {
 		md->u.legacy.microtile = RADEON_LAYOUT_LINEAR;
 		md->u.legacy.macrotile = RADEON_LAYOUT_LINEAR;
@@ -738,4 +801,5 @@ void radv_amdgpu_bo_init_functions(struct radv_amdgpu_winsys *ws)
 	ws->base.buffer_set_metadata = radv_amdgpu_winsys_bo_set_metadata;
 	ws->base.buffer_get_metadata = radv_amdgpu_winsys_bo_get_metadata;
 	ws->base.buffer_virtual_bind = radv_amdgpu_winsys_bo_virtual_bind;
+	ws->base.buffer_get_flags_from_fd = radv_amdgpu_bo_get_flags_from_fd;
 }

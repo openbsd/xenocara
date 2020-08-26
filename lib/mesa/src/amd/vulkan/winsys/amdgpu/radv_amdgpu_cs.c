@@ -24,11 +24,12 @@
 
 #include <stdlib.h>
 #include <amdgpu.h>
-#include <amdgpu_drm.h>
+#include "drm-uapi/amdgpu_drm.h"
 #include <assert.h>
 #include <pthread.h>
 #include <errno.h>
 
+#include "util/u_memory.h"
 #include "ac_debug.h"
 #include "radv_radeon_winsys.h"
 #include "radv_amdgpu_cs.h"
@@ -166,7 +167,7 @@ static void radv_amdgpu_request_to_fence(struct radv_amdgpu_ctx *ctx,
 	fence->fence.ip_instance = req->ip_instance;
 	fence->fence.ring = req->ring;
 	fence->fence.fence = req->seq_no;
-	fence->user_ptr = (volatile uint64_t*)(ctx->fence_map + (req->ip_type * MAX_RINGS_PER_TYPE + req->ring) * sizeof(uint64_t));
+	fence->user_ptr = (volatile uint64_t*)(ctx->fence_map + req->ip_type * MAX_RINGS_PER_TYPE + req->ring);
 }
 
 static struct radeon_winsys_fence *radv_amdgpu_create_fence()
@@ -560,13 +561,20 @@ static void radv_amdgpu_cs_add_buffer_internal(struct radv_amdgpu_cs *cs,
 	unsigned hash;
 	int index = radv_amdgpu_cs_find_buffer(cs, bo);
 
-	if (index != -1)
+	if (index != -1 || cs->failed)
 		return;
 
 	if (cs->num_buffers == cs->max_num_buffers) {
 		unsigned new_count = MAX2(1, cs->max_num_buffers * 2);
-		cs->handles = realloc(cs->handles, new_count * sizeof(struct drm_amdgpu_bo_list_entry));
-		cs->max_num_buffers = new_count;
+		struct drm_amdgpu_bo_list_entry *new_entries =
+			realloc(cs->handles, new_count * sizeof(struct drm_amdgpu_bo_list_entry));
+		if (new_entries) {
+			cs->max_num_buffers = new_count;
+			cs->handles = new_entries;
+		} else {
+			cs->failed = true;
+			return;
+		}
 	}
 
 	cs->handles[cs->num_buffers].bo_handle = bo;
@@ -1122,6 +1130,7 @@ static int radv_amdgpu_winsys_cs_submit_sysmem(struct radeon_winsys_ctx *_ctx,
 
 				ibs[j].size = size;
 				ibs[j].ib_mc_address = radv_buffer_get_va(bos[j]);
+				ibs[j].flags = 0;
 			}
 
 			cnt++;
@@ -1166,6 +1175,7 @@ static int radv_amdgpu_winsys_cs_submit_sysmem(struct radeon_winsys_ctx *_ctx,
 
 			ibs[0].size = size;
 			ibs[0].ib_mc_address = radv_buffer_get_va(bos[0]);
+			ibs[0].flags = 0;
 		}
 
 		r = radv_amdgpu_create_bo_list(cs0->ws, &cs_array[i], cnt,
@@ -1240,7 +1250,7 @@ static int radv_amdgpu_winsys_cs_submit(struct radeon_winsys_ctx *_ctx,
 	if (!cs->ws->use_ib_bos) {
 		ret = radv_amdgpu_winsys_cs_submit_sysmem(_ctx, queue_idx, sem_info, bo_list, cs_array,
 							   cs_count, initial_preamble_cs, continue_preamble_cs, _fence);
-	} else if (can_patch && cs->ws->batchchain) {
+	} else if (can_patch) {
 		ret = radv_amdgpu_winsys_cs_submit_chained(_ctx, queue_idx, sem_info, bo_list, cs_array,
 							    cs_count, initial_preamble_cs, continue_preamble_cs, _fence);
 	} else {
@@ -1318,20 +1328,26 @@ static uint32_t radv_to_amdgpu_priority(enum radeon_ctx_priority radv_priority)
 	}
 }
 
-static struct radeon_winsys_ctx *radv_amdgpu_ctx_create(struct radeon_winsys *_ws,
-							enum radeon_ctx_priority priority)
+static VkResult radv_amdgpu_ctx_create(struct radeon_winsys *_ws,
+                                       enum radeon_ctx_priority priority,
+                                       struct radeon_winsys_ctx **rctx)
 {
 	struct radv_amdgpu_winsys *ws = radv_amdgpu_winsys(_ws);
 	struct radv_amdgpu_ctx *ctx = CALLOC_STRUCT(radv_amdgpu_ctx);
 	uint32_t amdgpu_priority = radv_to_amdgpu_priority(priority);
+	VkResult result;
 	int r;
 
 	if (!ctx)
-		return NULL;
+		return VK_ERROR_OUT_OF_HOST_MEMORY;
 
 	r = amdgpu_cs_ctx_create2(ws->dev, amdgpu_priority, &ctx->ctx);
-	if (r) {
+	if (r && r == -EACCES) {
+		result = VK_ERROR_NOT_PERMITTED_EXT;
+		goto error_create;
+	} else if (r) {
 		fprintf(stderr, "amdgpu: radv_amdgpu_cs_ctx_create2 failed. (%i)\n", r);
+		result = VK_ERROR_OUT_OF_HOST_MEMORY;
 		goto error_create;
 	}
 	ctx->ws = ws;
@@ -1346,10 +1362,12 @@ static struct radeon_winsys_ctx *radv_amdgpu_ctx_create(struct radeon_winsys *_w
 		ctx->fence_map = (uint64_t*)ws->base.buffer_map(ctx->fence_bo);
 	if (ctx->fence_map)
 		memset(ctx->fence_map, 0, 4096);
-	return (struct radeon_winsys_ctx *)ctx;
+
+	*rctx = (struct radeon_winsys_ctx *)ctx;
+	return VK_SUCCESS;
 error_create:
 	FREE(ctx);
-	return NULL;
+	return result;
 }
 
 static void radv_amdgpu_ctx_destroy(struct radeon_winsys_ctx *rwctx)

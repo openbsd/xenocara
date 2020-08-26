@@ -97,7 +97,27 @@ create_pass(struct radv_device *device, VkFormat vk_format, VkRenderPass *pass)
 						       .preserveAttachmentCount = 0,
 						       .pPreserveAttachments = NULL,
 					       },
-								.dependencyCount = 0,
+							.dependencyCount = 2,
+							.pDependencies = (VkSubpassDependency[]) {
+								{
+									.srcSubpass = VK_SUBPASS_EXTERNAL,
+									.dstSubpass = 0,
+									.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+									.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+									.srcAccessMask = 0,
+									.dstAccessMask = 0,
+									.dependencyFlags = 0
+								},
+								{
+									.srcSubpass = 0,
+									.dstSubpass = VK_SUBPASS_EXTERNAL,
+									.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+									.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+									.srcAccessMask = 0,
+									.dstAccessMask = 0,
+									.dependencyFlags = 0
+								}
+							},
 									 },
 				       alloc,
 				       pass);
@@ -589,25 +609,27 @@ void radv_CmdResolveImage(
 					       &cmd_buffer->pool->alloc,
 					       &fb_h);
 
-			radv_CmdBeginRenderPass(cmd_buffer_h,
-						      &(VkRenderPassBeginInfo) {
-							      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-								      .renderPass = device->meta_state.resolve.pass[fs_key],
-								      .framebuffer = fb_h,
-								      .renderArea = {
-								      .offset = {
-									      dstOffset.x,
-									      dstOffset.y,
-								      },
-								      .extent = {
-									      extent.width,
-									      extent.height,
+			radv_cmd_buffer_begin_render_pass(cmd_buffer,
+							  &(VkRenderPassBeginInfo) {
+								.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+								.renderPass = device->meta_state.resolve.pass[fs_key],
+								.framebuffer = fb_h,
+								.renderArea = {
+									.offset = {
+										dstOffset.x,
+										dstOffset.y,
+									},
+									.extent = {
+										extent.width,
+										extent.height,
 								      }
-							      },
-							      .clearValueCount = 0,
-							      .pClearValues = NULL,
-						      },
-						      VK_SUBPASS_CONTENTS_INLINE);
+								},
+								.clearValueCount = 0,
+								.pClearValues = NULL,
+						      });
+
+			radv_cmd_buffer_set_subpass(cmd_buffer,
+						    &cmd_buffer->state.pass->subpasses[0]);
 
 			emit_resolve(cmd_buffer,
 				     dest_iview.vk_format,
@@ -620,7 +642,7 @@ void radv_CmdResolveImage(
 					     .height = extent.height,
 				     });
 
-			radv_CmdEndRenderPass(cmd_buffer_h);
+			radv_cmd_buffer_end_render_pass(cmd_buffer);
 
 			radv_DestroyFramebuffer(device_h, fb_h,
 						&cmd_buffer->pool->alloc);
@@ -648,6 +670,9 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 			cmd_buffer->state.attachments[src_att.attachment].iview;
 		struct radv_image_view *dst_iview =
 			cmd_buffer->state.attachments[dst_att.attachment].iview;
+
+		/* Make sure to not clear the depth/stencil attachment after resolves. */
+		cmd_buffer->state.attachments[dst_att.attachment].pending_clear_aspects = 0;
 
 		radv_pick_resolve_method_images(cmd_buffer->device,
 						src_iview->image,
@@ -799,7 +824,7 @@ radv_decompress_resolve_subpass_src(struct radv_cmd_buffer *cmd_buffer)
 		struct radv_image *src_image = src_iview->image;
 
 		VkImageResolve region = {};
-		region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.srcSubresource.aspectMask = src_iview->aspect_mask;
 		region.srcSubresource.mipLevel = 0;
 		region.srcSubresource.baseArrayLayer = src_iview->base_layer;
 		region.srcSubresource.layerCount = layer_count;
@@ -814,7 +839,7 @@ radv_decompress_resolve_subpass_src(struct radv_cmd_buffer *cmd_buffer)
 		struct radv_image *src_image = src_iview->image;
 
 		VkImageResolve region = {};
-		region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		region.srcSubresource.aspectMask = src_iview->aspect_mask;
 		region.srcSubresource.mipLevel = 0;
 		region.srcSubresource.baseArrayLayer = src_iview->base_layer;
 		region.srcSubresource.layerCount = layer_count;

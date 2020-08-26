@@ -37,10 +37,7 @@ extern "C" {
 
 struct nir_spirv_specialization {
    uint32_t id;
-   union {
-      uint32_t data32;
-      uint64_t data64;
-   };
+   nir_const_value value;
    bool defined_on_module;
 };
 
@@ -77,6 +74,12 @@ struct spirv_to_nir_options {
    nir_address_format shared_addr_format;
    nir_address_format global_addr_format;
    nir_address_format temp_addr_format;
+
+   /* Whether UniformConstant memory should be treated as normal global memory.
+    * This is usefull for CL 2.0 implementations with fine grain system SVM
+    * support.
+    */
+   bool constant_as_global;
 
    struct {
       void (*func)(void *private_data,

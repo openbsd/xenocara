@@ -1674,7 +1674,7 @@ void visit_alu_instr(isel_context *ctx, nir_alu_instr *instr)
       } else if (dst.regClass() == v2) {
          if (ctx->block->fp_mode.must_flush_denorms16_64 && ctx->program->chip_class < GFX9) {
             Temp tmp = bld.vop3(aco_opcode::v_max_f64, bld.def(v2), src0, src1);
-            bld.vop3(aco_opcode::v_mul_f64, Definition(dst), Operand(0x3FF0000000000000lu), tmp);
+            bld.vop3(aco_opcode::v_mul_f64, Definition(dst), Operand(0x3FF0000000000000llu), tmp);
          } else {
             bld.vop3(aco_opcode::v_max_f64, Definition(dst), src0, src1);
          }
@@ -1698,7 +1698,7 @@ void visit_alu_instr(isel_context *ctx, nir_alu_instr *instr)
       } else if (dst.regClass() == v2) {
          if (ctx->block->fp_mode.must_flush_denorms16_64 && ctx->program->chip_class < GFX9) {
             Temp tmp = bld.vop3(aco_opcode::v_min_f64, bld.def(v2), src0, src1);
-            bld.vop3(aco_opcode::v_mul_f64, Definition(dst), Operand(0x3FF0000000000000lu), tmp);
+            bld.vop3(aco_opcode::v_mul_f64, Definition(dst), Operand(0x3FF0000000000000llu), tmp);
          } else {
             bld.vop3(aco_opcode::v_min_f64, Definition(dst), src0, src1);
          }
@@ -1864,7 +1864,7 @@ void visit_alu_instr(isel_context *ctx, nir_alu_instr *instr)
          bld.vop2(aco_opcode::v_xor_b32, Definition(dst), Operand(0x80000000u), as_vgpr(ctx, src));
       } else if (dst.regClass() == v2) {
          if (ctx->block->fp_mode.must_flush_denorms16_64)
-            src = bld.vop3(aco_opcode::v_mul_f64, bld.def(v2), Operand(0x3FF0000000000000lu), as_vgpr(ctx, src));
+            src = bld.vop3(aco_opcode::v_mul_f64, bld.def(v2), Operand(0x3FF0000000000000llu), as_vgpr(ctx, src));
          Temp upper = bld.tmp(v1), lower = bld.tmp(v1);
          bld.pseudo(aco_opcode::p_split_vector, Definition(lower), Definition(upper), src);
          upper = bld.vop2(aco_opcode::v_xor_b32, bld.def(v1), Operand(0x80000000u), upper);
@@ -1887,7 +1887,7 @@ void visit_alu_instr(isel_context *ctx, nir_alu_instr *instr)
          bld.vop2(aco_opcode::v_and_b32, Definition(dst), Operand(0x7FFFFFFFu), as_vgpr(ctx, src));
       } else if (dst.regClass() == v2) {
          if (ctx->block->fp_mode.must_flush_denorms16_64)
-            src = bld.vop3(aco_opcode::v_mul_f64, bld.def(v2), Operand(0x3FF0000000000000lu), as_vgpr(ctx, src));
+            src = bld.vop3(aco_opcode::v_mul_f64, bld.def(v2), Operand(0x3FF0000000000000llu), as_vgpr(ctx, src));
          Temp upper = bld.tmp(v1), lower = bld.tmp(v1);
          bld.pseudo(aco_opcode::p_split_vector, Definition(lower), Definition(upper), src);
          upper = bld.vop2(aco_opcode::v_and_b32, bld.def(v1), Operand(0x7FFFFFFFu), upper);

@@ -44,6 +44,14 @@ void genX(cmd_buffer_apply_pipe_flushes)(struct anv_cmd_buffer *cmd_buffer);
 
 void genX(cmd_buffer_emit_gen7_depth_flush)(struct anv_cmd_buffer *cmd_buffer);
 
+void genX(cmd_buffer_set_binding_for_gen8_vb_flush)(struct anv_cmd_buffer *cmd_buffer,
+                                                    int vb_index,
+                                                    struct anv_address vb_address,
+                                                    uint32_t vb_size);
+void genX(cmd_buffer_update_dirty_vbs_for_gen8_vb_flush)(struct anv_cmd_buffer *cmd_buffer,
+                                                         uint32_t access_type,
+                                                         uint64_t vb_used);
+
 void genX(cmd_buffer_emit_hashing_mode)(struct anv_cmd_buffer *cmd_buffer,
                                         unsigned width, unsigned height,
                                         unsigned scale);
@@ -76,7 +84,8 @@ void
 genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
                      const struct gen_l3_config *l3_config,
                      VkShaderStageFlags active_stages,
-                     const unsigned entry_size[4]);
+                     const unsigned entry_size[4],
+                     enum gen_urb_deref_block_size *deref_block_size);
 
 void genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
                                 struct anv_address dst, struct anv_address src,

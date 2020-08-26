@@ -76,6 +76,7 @@ is_expression(const fs_visitor *v, const fs_inst *const inst)
    case FS_OPCODE_VARYING_PULL_CONSTANT_LOAD_LOGICAL:
    case FS_OPCODE_LINTERP:
    case SHADER_OPCODE_FIND_LIVE_CHANNEL:
+   case FS_OPCODE_LOAD_LIVE_CHANNELS:
    case SHADER_OPCODE_BROADCAST:
    case SHADER_OPCODE_MOV_INDIRECT:
    case SHADER_OPCODE_TEX_LOGICAL:
@@ -105,7 +106,7 @@ is_expression(const fs_visitor *v, const fs_inst *const inst)
    case SHADER_OPCODE_COS:
       return inst->mlen < 2;
    case SHADER_OPCODE_LOAD_PAYLOAD:
-      return !inst->is_copy_payload(v->alloc);
+      return !is_coalescing_payload(v->alloc, inst);
    default:
       return inst->is_send_from_grf() && !inst->has_side_effects() &&
          !inst->is_volatile();
@@ -242,14 +243,13 @@ create_copy_instr(const fs_builder &bld, fs_inst *inst, fs_reg src, bool negate)
 }
 
 bool
-fs_visitor::opt_cse_local(bblock_t *block)
+fs_visitor::opt_cse_local(const fs_live_variables &live, bblock_t *block, int &ip)
 {
    bool progress = false;
    exec_list aeb;
 
    void *cse_ctx = ralloc_context(NULL);
 
-   int ip = block->start_ip;
    foreach_inst_in_block(fs_inst, inst, block) {
       /* Skip some cases. */
       if (is_expression(this, inst) && !inst->is_partial_write() &&
@@ -318,6 +318,16 @@ fs_visitor::opt_cse_local(bblock_t *block)
          }
       }
 
+      /* Discard jumps aren't represented in the CFG unfortunately, so we need
+       * to make sure that they behave as a CSE barrier, since we lack global
+       * dataflow information.  This is particularly likely to cause problems
+       * with instructions dependent on the current execution mask like
+       * SHADER_OPCODE_FIND_LIVE_CHANNEL.
+       */
+      if (inst->opcode == FS_OPCODE_DISCARD_JUMP ||
+          inst->opcode == FS_OPCODE_PLACEHOLDER_HALT)
+         aeb.make_empty();
+
       foreach_in_list_safe(aeb_entry, entry, &aeb) {
          /* Kill all AEB entries that write a different value to or read from
           * the flag register if we just wrote it.
@@ -350,7 +360,7 @@ fs_visitor::opt_cse_local(bblock_t *block)
             /* Kill any AEB entries using registers that don't get reused any
              * more -- a sure sign they'll fail operands_match().
              */
-            if (src_reg->file == VGRF && virtual_grf_end[src_reg->nr] < ip) {
+            if (src_reg->file == VGRF && live.vgrf_end[src_reg->nr] < ip) {
                entry->remove();
                ralloc_free(entry);
                break;
@@ -369,16 +379,16 @@ fs_visitor::opt_cse_local(bblock_t *block)
 bool
 fs_visitor::opt_cse()
 {
+   const fs_live_variables &live = live_analysis.require();
    bool progress = false;
-
-   calculate_live_intervals();
+   int ip = 0;
 
    foreach_block (block, cfg) {
-      progress = opt_cse_local(block) || progress;
+      progress = opt_cse_local(live, block, ip) || progress;
    }
 
    if (progress)
-      invalidate_live_intervals();
+      invalidate_analysis(DEPENDENCY_INSTRUCTIONS | DEPENDENCY_VARIABLES);
 
    return progress;
 }

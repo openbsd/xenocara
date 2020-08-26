@@ -77,6 +77,7 @@ public:
    {
       struct YYLTYPE locp;
 
+      locp.path = this->location.path;
       locp.source = this->location.source;
       locp.first_line = this->location.first_line;
       locp.first_column = this->location.first_column;
@@ -93,6 +94,7 @@ public:
     */
    void set_location(const struct YYLTYPE &locp)
    {
+      this->location.path = locp.path;
       this->location.source = locp.source;
       this->location.first_line = locp.first_line;
       this->location.first_column = locp.first_column;
@@ -107,6 +109,7 @@ public:
     */
    void set_location_range(const struct YYLTYPE &begin, const struct YYLTYPE &end)
    {
+      this->location.path = begin.path;
       this->location.source = begin.source;
       this->location.first_line = begin.first_line;
       this->location.last_line = end.last_line;
@@ -118,6 +121,7 @@ public:
     * Source location of the AST node.
     */
    struct {
+      char *path;               /**< GLSL shader include path. */
       unsigned source;          /**< GLSL source number. */
       unsigned first_line;      /**< First line number within the source string. */
       unsigned first_column;    /**< First column in the first line. */
@@ -659,6 +663,12 @@ struct ast_type_qualifier {
          /** \{ */
          unsigned derivative_group:1;
          /** \} */
+
+         /**
+          * Flag set if GL_NV_viewport_array2 viewport_relative layout
+          * qualifier is used.
+          */
+         unsigned viewport_relative:1;
       }
       /** \brief Set of flags, accessed by name. */
       q;
@@ -769,7 +779,7 @@ struct ast_type_qualifier {
     * \note
     * This field is only valid if \c explicit_image_format is set.
     */
-   GLenum image_format;
+   enum pipe_format image_format;
 
    /**
     * Arrangement of invocations used to calculate derivatives in a compute
@@ -1210,6 +1220,16 @@ public:
    } mode;
 
    ast_expression *opt_return_value;
+};
+
+
+class ast_demote_statement : public ast_node {
+public:
+   ast_demote_statement(void) {}
+   virtual void print(void) const;
+
+   virtual ir_rvalue *hir(exec_list *instructions,
+                          struct _mesa_glsl_parse_state *state);
 };
 
 

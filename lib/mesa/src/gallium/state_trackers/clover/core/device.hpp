@@ -71,6 +71,7 @@ namespace clover {
       bool has_int64_atomics() const;
       bool has_unified_memory() const;
       cl_uint mem_base_addr_align() const;
+      cl_device_svm_capabilities svm_support() const;
 
       std::vector<size_t> max_block_size() const;
       cl_uint subgroup_size() const;
@@ -90,8 +91,14 @@ namespace clover {
       friend class hard_event;
       friend std::set<cl_image_format>
       supported_formats(const context &, cl_mem_object_type);
+      const void *get_compiler_options(enum pipe_shader_ir ir) const;
 
       clover::platform &platform;
+
+      inline bool
+      has_system_svm() const {
+         return svm_support() & CL_DEVICE_SVM_FINE_GRAIN_SYSTEM;
+      }
 
    private:
       pipe_screen *pipe;

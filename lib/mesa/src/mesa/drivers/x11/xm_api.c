@@ -69,7 +69,6 @@
 #include "main/context.h"
 #include "main/extensions.h"
 #include "main/framebuffer.h"
-#include "main/imports.h"
 #include "main/macros.h"
 #include "main/renderbuffer.h"
 #include "main/teximage.h"
@@ -84,7 +83,7 @@
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
 #include "drivers/common/meta.h"
-#include "util/u_math.h"
+#include "util/u_memory.h"
 
 /**
  * Global X driver lock
@@ -117,7 +116,7 @@ static int host_byte_order( void )
  */
 static int check_for_xshm( XMesaDisplay *display )
 {
-#if defined(USE_XSHM) 
+#if defined(USE_XSHM)
    int ignore;
 
    if (XQueryExtension( display, "MIT-SHM", &ignore, &ignore, &ignore )) {
@@ -151,7 +150,7 @@ gamma_adjust( GLfloat gamma, GLint value, GLint max )
    }
    else {
       double x = (double) value / (double) max;
-      return IROUND_POS((GLfloat) max * pow(x, 1.0F/gamma));
+      return lroundf((GLfloat) max * pow(x, 1.0F/gamma));
    }
 }
 
@@ -328,7 +327,7 @@ create_xmesa_buffer(XMesaDrawable d, BufferType type,
       b->backxrb->Parent = b;
       /* determine back buffer implementation */
       b->db_mode = vis->ximage_flag ? BACK_XIMAGE : BACK_PIXMAP;
-      
+
       _mesa_attach_and_own_rb(&b->mesa_buffer, BUFFER_BACK_LEFT,
                               &b->backxrb->Base.Base);
    }
@@ -338,9 +337,9 @@ create_xmesa_buffer(XMesaDrawable d, BufferType type,
     */
    _swrast_add_soft_renderbuffers(&b->mesa_buffer,
                                   GL_FALSE,  /* color */
-                                  vis->mesa_visual.haveDepthBuffer,
-                                  vis->mesa_visual.haveStencilBuffer,
-                                  vis->mesa_visual.haveAccumBuffer,
+                                  vis->mesa_visual.depthBits > 0,
+                                  vis->mesa_visual.stencilBits > 0,
+                                  vis->mesa_visual.accumRedBits > 0,
                                   GL_FALSE,  /* software alpha buffer */
                                   vis->mesa_visual.numAuxBuffers > 0 );
 
@@ -582,7 +581,6 @@ initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
       _mesa_warning(NULL, "XMesa: RGB mode rendering not supported in given visual.\n");
       return GL_FALSE;
    }
-   v->mesa_visual.indexBits = 0;
 
    if (getenv("MESA_NO_DITHER")) {
       v->dithered_pf = v->undithered_pf;
@@ -687,12 +685,12 @@ xmesa_color_to_pixel(struct gl_context *ctx,
 
 /**
  * Convert an X visual type to a GLX visual type.
- * 
+ *
  * \param visualType X visual type (i.e., \c TrueColor, \c StaticGray, etc.)
  *        to be converted.
  * \return If \c visualType is a valid X visual type, a GLX visual type will
  *         be returned.  Otherwise \c GLX_NONE will be returned.
- * 
+ *
  * \note
  * This code was lifted directly from lib/GL/glx/glcontextmodes.c in the
  * DRI CVS tree.
@@ -942,10 +940,10 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
    /* Initialize the software rasterizer and helper modules.
     */
    if (!_swrast_CreateContext( mesaCtx ) ||
-       !_vbo_CreateContext( mesaCtx ) ||
+       !_vbo_CreateContext( mesaCtx, false ) ||
        !_tnl_CreateContext( mesaCtx ) ||
        !_swsetup_CreateContext( mesaCtx )) {
-      _mesa_free_context_data(&c->mesa, true);
+      _mesa_free_context_data(&c->mesa);
       free(c);
       return NULL;
    }
@@ -982,7 +980,7 @@ void XMesaDestroyContext( XMesaContext c )
    _swrast_DestroyContext( mesaCtx );
    _tnl_DestroyContext( mesaCtx );
    _vbo_DestroyContext( mesaCtx );
-   _mesa_free_context_data(mesaCtx, true);
+   _mesa_free_context_data(mesaCtx);
    free( c );
 }
 
@@ -1334,7 +1332,7 @@ void XMesaSwapBuffers( XMesaBuffer b )
    if (b->db_mode) {
       if (b->backxrb->ximage) {
 	 /* Copy Ximage (back buf) from client memory to server window */
-#if defined(USE_XSHM) 
+#if defined(USE_XSHM)
 	 if (b->shm) {
             /*mtx_lock(&_xmesa_lock);*/
 	    XShmPutImage( b->xm_visual->display, b->frontxrb->drawable,
@@ -1388,14 +1386,14 @@ void XMesaCopySubBuffer( XMesaBuffer b, int x, int y, int width, int height )
 
    if (!b->backxrb) {
       /* single buffered */
-      return; 
+      return;
    }
 
    if (b->db_mode) {
       int yTop = b->mesa_buffer.Height - y - height;
       if (b->backxrb->ximage) {
          /* Copy Ximage from host's memory to server's window */
-#if defined(USE_XSHM) 
+#if defined(USE_XSHM)
          if (b->shm) {
             /* XXX assuming width and height aren't too large! */
             XShmPutImage( b->xm_visual->display, b->frontxrb->drawable,

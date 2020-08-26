@@ -108,7 +108,7 @@ is_draw_rate_query(struct fd_query *q)
 	}
 }
 
-static bool
+static void
 fd_sw_begin_query(struct fd_context *ctx, struct fd_query *q)
 {
 	struct fd_sw_query *sq = fd_sw_query(q);
@@ -118,7 +118,6 @@ fd_sw_begin_query(struct fd_context *ctx, struct fd_query *q)
 	} else if (is_draw_rate_query(q)) {
 		sq->begin_time = ctx->stats.draw_calls;
 	}
-	return true;
 }
 
 static void
@@ -162,7 +161,7 @@ static const struct fd_query_funcs sw_query_funcs = {
 };
 
 struct fd_query *
-fd_sw_create_query(struct fd_context *ctx, unsigned query_type)
+fd_sw_create_query(struct fd_context *ctx, unsigned query_type, unsigned index)
 {
 	struct fd_sw_query *sq;
 	struct fd_query *q;

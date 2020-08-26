@@ -29,7 +29,7 @@
 #define H_ETNAVIV_SCREEN
 
 #include "etnaviv_internal.h"
-#include "etnaviv_query_pm.h"
+#include "etnaviv_perfmon.h"
 
 #include "os/os_thread.h"
 #include "pipe/p_screen.h"
@@ -84,10 +84,6 @@ struct etna_screen {
    struct etna_specs specs;
 
    uint32_t drm_version;
-
-   /* set of resources used by currently-unsubmitted renders */
-   mtx_t lock;
-   struct set *used_resources;
 
    nir_shader_compiler_options options;
 };

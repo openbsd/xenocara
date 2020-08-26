@@ -68,6 +68,8 @@ typedef struct YYLTYPE {
    int last_line;
    int last_column;
    unsigned source;
+   /* Path for ARB_shading_language_include include source */
+   char *path;
 } YYLTYPE;
 # define YYLTYPE_IS_DECLARED 1
 # define YYLTYPE_IS_TRIVIAL 1
@@ -727,6 +729,8 @@ struct _mesa_glsl_parse_state {
    bool ARB_shader_viewport_layer_array_warn;
    bool ARB_shading_language_420pack_enable;
    bool ARB_shading_language_420pack_warn;
+   bool ARB_shading_language_include_enable;
+   bool ARB_shading_language_include_warn;
    bool ARB_shading_language_packing_enable;
    bool ARB_shading_language_packing_warn;
    bool ARB_tessellation_shader_enable;
@@ -816,8 +820,12 @@ struct _mesa_glsl_parse_state {
    bool EXT_blend_func_extended_warn;
    bool EXT_clip_cull_distance_enable;
    bool EXT_clip_cull_distance_warn;
+   bool EXT_demote_to_helper_invocation_enable;
+   bool EXT_demote_to_helper_invocation_warn;
    bool EXT_draw_buffers_enable;
    bool EXT_draw_buffers_warn;
+   bool EXT_draw_instanced_enable;
+   bool EXT_draw_instanced_warn;
    bool EXT_frag_depth_enable;
    bool EXT_frag_depth_warn;
    bool EXT_geometry_point_size_enable;
@@ -866,6 +874,8 @@ struct _mesa_glsl_parse_state {
    bool INTEL_conservative_rasterization_warn;
    bool INTEL_shader_atomic_float_minmax_enable;
    bool INTEL_shader_atomic_float_minmax_warn;
+   bool INTEL_shader_integer_functions2_enable;
+   bool INTEL_shader_integer_functions2_warn;
    bool MESA_shader_integer_functions_enable;
    bool MESA_shader_integer_functions_warn;
    bool NV_compute_shader_derivatives_enable;
@@ -876,6 +886,8 @@ struct _mesa_glsl_parse_state {
    bool NV_image_formats_warn;
    bool NV_shader_atomic_float_enable;
    bool NV_shader_atomic_float_warn;
+   bool NV_viewport_array2_enable;
+   bool NV_viewport_array2_warn;
    /*@}*/
 
    /** Extensions supported by the OpenGL implementation. */
@@ -918,6 +930,10 @@ struct _mesa_glsl_parse_state {
    /** Atomic counter offsets by binding */
    unsigned atomic_counter_offsets[MAX_COMBINED_ATOMIC_BUFFERS];
 
+   /** Whether gl_Layer output is viewport-relative. */
+   bool redeclares_gl_layer;
+   bool layer_viewport_relative;
+
    bool allow_extension_directive_midshader;
    bool allow_builtin_variable_redeclaration;
    bool allow_layout_qualifier_on_function_parameter;
@@ -956,6 +972,7 @@ do {                                                            \
       (Current).first_column = YYRHSLOC(Rhs, 1).first_column;   \
       (Current).last_line    = YYRHSLOC(Rhs, N).last_line;      \
       (Current).last_column  = YYRHSLOC(Rhs, N).last_column;    \
+      (Current).path         = YYRHSLOC(Rhs, N).path;           \
    }                                                            \
    else                                                         \
    {                                                            \
@@ -963,6 +980,7 @@ do {                                                            \
          YYRHSLOC(Rhs, 0).last_line;                            \
       (Current).first_column = (Current).last_column =          \
          YYRHSLOC(Rhs, 0).last_column;                          \
+      (Current).path = YYRHSLOC(Rhs, 0).path;                   \
    }                                                            \
    (Current).source = 0;                                        \
 } while (0)
@@ -1023,11 +1041,6 @@ extern int glcpp_preprocess(void *ctx, const char **shader, char **info_log,
                             glcpp_extension_iterator extensions,
                             struct _mesa_glsl_parse_state *state,
                             struct gl_context *gl_ctx);
-
-extern void _mesa_init_shader_compiler_types(void);
-extern void _mesa_destroy_shader_compiler_types(void);
-extern void _mesa_destroy_shader_compiler(void);
-extern void _mesa_destroy_shader_compiler_caches(void);
 
 extern void
 _mesa_glsl_copy_symbols_from_table(struct exec_list *shader_ir,

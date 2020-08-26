@@ -50,7 +50,7 @@
 extern "C" {
 #endif
 
-#ifndef _GNU_SOURCE
+#if !defined(_GNU_SOURCE) || defined(__APPLE__)
 
 #define strchrnul util_strchrnul
 static inline char *
@@ -110,8 +110,15 @@ util_asprintf(char **str, const char *fmt, ...)
    return ret;
 }
 
+#ifndef strcasecmp
 #define strcasecmp stricmp
+#endif
+
 #define strdup _strdup
+
+#if defined(_WIN32) && !defined(HAVE_STRTOK_R)
+#define strtok_r strtok_s
+#endif
 
 #endif
 

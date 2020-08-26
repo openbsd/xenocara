@@ -4,10 +4,10 @@
 struct pipe_screen;
 struct pipe_screen_config;
 
-const char *iris_driconf_xml;
-const char *radeonsi_driconf_xml;
-const char *v3d_driconf_xml;
-const char *virgl_driconf_xml;
+extern const char *iris_driconf_xml;
+extern const char *radeonsi_driconf_xml;
+extern const char *v3d_driconf_xml;
+extern const char *virgl_driconf_xml;
 
 struct pipe_screen *
 pipe_i915_create_screen(int fd, const struct pipe_screen_config *config);
@@ -59,5 +59,9 @@ pipe_tegra_create_screen(int fd, const struct pipe_screen_config *config);
 
 struct pipe_screen *
 pipe_lima_create_screen(int fd, const struct pipe_screen_config *config);
+
+struct pipe_screen *
+pipe_zink_create_screen(int fd, const struct pipe_screen_config *config);
+
 
 #endif /* _DRM_HELPER_PUBLIC_H */

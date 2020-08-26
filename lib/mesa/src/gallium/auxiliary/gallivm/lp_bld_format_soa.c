@@ -28,7 +28,7 @@
 
 #include "pipe/p_defines.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_memory.h"
 #include "util/u_string.h"
 #include "util/u_math.h"
@@ -42,7 +42,9 @@
 #include "lp_bld_format.h"
 #include "lp_bld_arit.h"
 #include "lp_bld_pack.h"
-
+#include "lp_bld_flow.h"
+#include "lp_bld_printf.h"
+#include "lp_bld_intr.h"
 
 static void
 convert_to_soa(struct gallivm_state *gallivm,
@@ -365,7 +367,7 @@ lp_build_rgba8_to_fi32_soa(struct gallivm_state *gallivm,
 
    /* Decode the input vector components */
    for (chan = 0; chan < 4; ++chan) {
-#ifdef PIPE_ARCH_LITTLE_ENDIAN
+#if UTIL_ARCH_LITTLE_ENDIAN
       unsigned start = chan*8;
 #else
       unsigned start = (3-chan)*8;
@@ -652,7 +654,7 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
             unsigned blockbits = type.width;
             unsigned vec_nr;
 
-#ifdef PIPE_ARCH_BIG_ENDIAN
+#if UTIL_ARCH_BIG_ENDIAN
             vec_nr = (format_desc->block.bits - (chan_desc.shift + chan_desc.size)) / type.width;
 #else
             vec_nr = chan_desc.shift / type.width;
@@ -739,13 +741,14 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
    /*
     * Try calling lp_build_fetch_rgba_aos for all pixels.
     * Should only really hit subsampled, compressed
-    * (for s3tc srgb too, for rgtc the unorm ones only) by now.
+    * (for s3tc srgb and rgtc too).
     * (This is invalid for plain 8unorm formats because we're lazy with
     * the swizzle since some results would arrive swizzled, some not.)
     */
 
    if ((format_desc->layout != UTIL_FORMAT_LAYOUT_PLAIN) &&
        (util_format_fits_8unorm(format_desc) ||
+        format_desc->layout == UTIL_FORMAT_LAYOUT_RGTC ||
         format_desc->layout == UTIL_FORMAT_LAYOUT_S3TC) &&
        type.floating && type.width == 32 &&
        (type.length == 1 || (type.length % 4 == 0))) {
@@ -755,6 +758,10 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
       const struct util_format_description *flinear_desc;
       const struct util_format_description *frgba8_desc;
       unsigned chan;
+      bool is_signed = (format_desc->format == PIPE_FORMAT_RGTC1_SNORM ||
+                        format_desc->format == PIPE_FORMAT_RGTC2_SNORM ||
+                        format_desc->format == PIPE_FORMAT_LATC1_SNORM ||
+                        format_desc->format == PIPE_FORMAT_LATC2_SNORM);
 
       lp_build_context_init(&bld, gallivm, type);
 
@@ -767,6 +774,7 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
       tmp_type.width = 8;
       tmp_type.length = type.length * 4;
       tmp_type.norm = TRUE;
+      tmp_type.sign = is_signed;
 
       packed = lp_build_fetch_rgba_aos(gallivm, flinear_desc, tmp_type,
                                        aligned, base_ptr, offset, i, j, cache);
@@ -776,7 +784,7 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
        * The values are now packed so they match ordinary (srgb) RGBA8 format,
        * hence need to use matching format for unpack.
        */
-      frgba8_desc = util_format_description(PIPE_FORMAT_R8G8B8A8_UNORM);
+      frgba8_desc = util_format_description(is_signed ? PIPE_FORMAT_R8G8B8A8_SNORM : PIPE_FORMAT_R8G8B8A8_UNORM);
       if (format_desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB) {
          assert(format_desc->layout == UTIL_FORMAT_LAYOUT_S3TC);
          frgba8_desc = util_format_description(PIPE_FORMAT_R8G8B8A8_SRGB);
@@ -813,7 +821,7 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
     * in particular if the formats have less than 4 channels.
     *
     * Right now, this should only be hit for:
-    * - RGTC snorm formats
+    * - ETC formats
     *   (those miss fast fetch functions hence they are terrible anyway)
     */
 
@@ -856,5 +864,239 @@ lp_build_fetch_rgba_soa(struct gallivm_state *gallivm,
 
       }
       convert_to_soa(gallivm, aos_fetch, rgba_out, type);
+   }
+}
+
+static void
+lp_build_insert_soa_chan(struct lp_build_context *bld,
+                         unsigned blockbits,
+                         struct util_format_channel_description chan_desc,
+                         LLVMValueRef *output,
+                         LLVMValueRef rgba)
+{
+    struct gallivm_state *gallivm = bld->gallivm;
+    LLVMBuilderRef builder = gallivm->builder;
+    struct lp_type type = bld->type;
+    const unsigned width = chan_desc.size;
+    const unsigned start = chan_desc.shift;
+    const uint32_t chan_mask = (1ULL << width) - 1;
+    ASSERTED const unsigned stop = start + width;
+    LLVMValueRef chan = NULL;
+    switch(chan_desc.type) {
+    case UTIL_FORMAT_TYPE_UNSIGNED:
+
+       if (chan_desc.pure_integer) {
+          chan = LLVMBuildBitCast(builder, rgba, bld->int_vec_type, "");
+          LLVMValueRef mask_val = lp_build_const_int_vec(gallivm, type, chan_mask);
+          LLVMValueRef mask = LLVMBuildICmp(builder, LLVMIntUGT, chan, mask_val, "");
+          chan = LLVMBuildSelect(builder, mask, mask_val, chan, "");
+       }
+       else if (type.floating) {
+          if (chan_desc.normalized) {
+             rgba = lp_build_clamp(bld, rgba, bld->zero, bld->one);
+             chan = lp_build_clamped_float_to_unsigned_norm(gallivm, type, width, rgba);
+          } else
+             chan = LLVMBuildFPToSI(builder, rgba, bld->vec_type, "");
+       }
+       if (start)
+          chan = LLVMBuildShl(builder, chan,
+                              lp_build_const_int_vec(gallivm, type, start), "");
+       if (!*output)
+          *output = chan;
+       else
+          *output = LLVMBuildOr(builder, *output, chan, "");
+       break;
+    case UTIL_FORMAT_TYPE_SIGNED:
+       if (chan_desc.pure_integer) {
+          chan = LLVMBuildBitCast(builder, rgba, bld->int_vec_type, "");
+          chan = LLVMBuildAnd(builder, chan, lp_build_const_int_vec(gallivm, type, chan_mask), "");
+       } else if (type.floating) {
+          if (chan_desc.normalized) {
+             char intrin[32];
+             double scale = ((1 << (chan_desc.size - 1)) - 1);
+             LLVMValueRef scale_val = lp_build_const_vec(gallivm, type, scale);
+             rgba = lp_build_clamp(bld, rgba, lp_build_negate(bld, bld->one), bld->one);
+             rgba = LLVMBuildFMul(builder, rgba, scale_val, "");
+             lp_format_intrinsic(intrin, sizeof intrin, "llvm.rint", bld->vec_type);
+             rgba = lp_build_intrinsic_unary(builder, intrin, bld->vec_type, rgba);
+          }
+          chan = LLVMBuildFPToSI(builder, rgba, bld->int_vec_type, "");
+          chan = LLVMBuildAnd(builder, chan, lp_build_const_int_vec(gallivm, type, chan_mask), "");
+       }
+       if (start)
+          chan = LLVMBuildShl(builder, chan,
+                              lp_build_const_int_vec(gallivm, type, start), "");
+       if (!*output)
+          *output = chan;
+       else
+          *output = LLVMBuildOr(builder, *output, chan, "");
+       break;
+    case UTIL_FORMAT_TYPE_FLOAT:
+       if (type.floating) {
+          if (chan_desc.size == 16) {
+             chan = lp_build_float_to_half(gallivm, rgba);
+             chan = LLVMBuildZExt(builder, chan, bld->int_vec_type, "");
+             if (start)
+                chan = LLVMBuildShl(builder, chan,
+                                    lp_build_const_int_vec(gallivm, type, start), "");
+             if (!*output)
+                *output = chan;
+             else
+                *output = LLVMBuildOr(builder, *output, chan, "");
+          } else {
+             assert(start == 0);
+             assert(stop == 32);
+             assert(type.width == 32);
+             *output = LLVMBuildBitCast(builder, rgba, bld->int_vec_type, "");
+          }
+       } else
+          assert(0);
+       break;
+    default:
+       assert(0);
+       *output = bld->undef;
+    }
+}
+
+static void
+lp_build_pack_rgba_soa(struct gallivm_state *gallivm,
+                       const struct util_format_description *format_desc,
+                       struct lp_type type,
+                       const LLVMValueRef rgba_in[4],
+                       LLVMValueRef *packed)
+{
+   unsigned chan;
+   struct lp_build_context bld;
+   assert(format_desc->layout == UTIL_FORMAT_LAYOUT_PLAIN);
+   assert(format_desc->block.width == 1);
+   assert(format_desc->block.height == 1);
+   assert(format_desc->block.bits <= type.width);
+   /* FIXME: Support more output types */
+   assert(type.width == 32);
+
+   lp_build_context_init(&bld, gallivm, type);
+   for (chan = 0; chan < format_desc->nr_channels; ++chan) {
+      struct util_format_channel_description chan_desc = format_desc->channel[chan];
+
+      lp_build_insert_soa_chan(&bld, format_desc->block.bits,
+                               chan_desc,
+                               packed,
+                               rgba_in[chan]);
+   }
+}
+
+void
+lp_build_store_rgba_soa(struct gallivm_state *gallivm,
+                        const struct util_format_description *format_desc,
+                        struct lp_type type,
+                        LLVMValueRef exec_mask,
+                        LLVMValueRef base_ptr,
+                        LLVMValueRef offset,
+                        LLVMValueRef out_of_bounds,
+                        const LLVMValueRef rgba_in[4])
+{
+   enum pipe_format format = format_desc->format;
+   LLVMValueRef packed[4];
+   unsigned num_stores = 0;
+
+   memset(packed, 0, sizeof(LLVMValueRef) * 4);
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_PLAIN &&
+       format_desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB &&
+       format_desc->block.width == 1 &&
+       format_desc->block.height == 1 &&
+       format_desc->block.bits <= type.width &&
+       (format_desc->channel[0].type != UTIL_FORMAT_TYPE_FLOAT ||
+        format_desc->channel[0].size == 32 ||
+        format_desc->channel[0].size == 16))
+   {
+      lp_build_pack_rgba_soa(gallivm, format_desc, type, rgba_in, &packed[0]);
+
+      num_stores = 1;
+   } else if (format_desc->layout == UTIL_FORMAT_LAYOUT_PLAIN &&
+       (format_desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB) &&
+       format_desc->block.width == 1 &&
+       format_desc->block.height == 1 &&
+       format_desc->block.bits > type.width &&
+       ((format_desc->block.bits <= type.width * type.length &&
+         format_desc->channel[0].size <= type.width) ||
+        (format_desc->channel[0].size == 64 &&
+         format_desc->channel[0].type == UTIL_FORMAT_TYPE_FLOAT &&
+         type.floating)))
+   {
+      /*
+       * Similar to above, but the packed pixel is larger than what fits
+       * into an element of the destination format. The packed pixels will be
+       * shuffled into SoA vectors appropriately, and then the extraction will
+       * be done in parallel as much as possible.
+       * Good for 16xn (n > 2) and 32xn (n > 1) formats, care is taken so
+       * the gathered vectors can be shuffled easily (even with avx).
+       * 64xn float -> 32xn float is handled too but it's a bit special as
+       * it does the conversion pre-shuffle.
+       */
+      struct lp_build_context bld;
+
+      lp_build_context_init(&bld, gallivm, type);
+      assert(type.width == 32);
+      assert(format_desc->block.bits > type.width);
+
+      unsigned store_width = util_next_power_of_two(format_desc->block.bits);
+      num_stores = store_width / type.width;
+      for (unsigned i = 0; i < format_desc->nr_channels; i++) {
+            struct util_format_channel_description chan_desc = format_desc->channel[i];
+            unsigned blockbits = type.width;
+            unsigned vec_nr;
+
+            vec_nr = chan_desc.shift / type.width;
+            chan_desc.shift %= type.width;
+
+            lp_build_insert_soa_chan(&bld, blockbits,
+                                     chan_desc,
+                                     &packed[vec_nr],
+                                     rgba_in[i]);
+      }
+
+      assert(num_stores == 4 || num_stores == 2);
+      /* we can transpose and store at the same time */
+   } else if (format == PIPE_FORMAT_R11G11B10_FLOAT) {
+      packed[0] = lp_build_float_to_r11g11b10(gallivm, rgba_in);
+      num_stores = 1;
+   } else
+      assert(0);
+
+   assert(exec_mask);
+
+   LLVMTypeRef int32_ptr_type = LLVMPointerType(LLVMInt32TypeInContext(gallivm->context), 0);
+   LLVMTypeRef int16_ptr_type = LLVMPointerType(LLVMInt16TypeInContext(gallivm->context), 0);
+   LLVMTypeRef int8_ptr_type = LLVMPointerType(LLVMInt8TypeInContext(gallivm->context), 0);
+
+   LLVMValueRef should_store_mask = LLVMBuildAnd(gallivm->builder, exec_mask, LLVMBuildNot(gallivm->builder, out_of_bounds, ""), "store_mask");
+   should_store_mask = LLVMBuildICmp(gallivm->builder, LLVMIntNE, should_store_mask, lp_build_const_int_vec(gallivm, type, 0), "");
+   for (unsigned i = 0; i < num_stores; i++) {
+      struct lp_build_loop_state loop_state;
+
+      LLVMValueRef store_offset = LLVMBuildAdd(gallivm->builder, offset, lp_build_const_int_vec(gallivm, type, i * 4), "");
+      store_offset = LLVMBuildGEP(gallivm->builder, base_ptr, &store_offset, 1, "");
+
+      lp_build_loop_begin(&loop_state, gallivm, lp_build_const_int32(gallivm, 0));
+
+      struct lp_build_if_state ifthen;
+      LLVMValueRef cond = LLVMBuildExtractElement(gallivm->builder, should_store_mask, loop_state.counter, "");
+      lp_build_if(&ifthen, gallivm, cond);
+
+      LLVMValueRef data = LLVMBuildExtractElement(gallivm->builder, packed[i], loop_state.counter, "");
+      LLVMValueRef this_offset = LLVMBuildExtractElement(gallivm->builder, store_offset, loop_state.counter, "");
+
+      if (format_desc->block.bits == 8) {
+         this_offset = LLVMBuildBitCast(gallivm->builder, this_offset, int8_ptr_type, "");
+         data = LLVMBuildTrunc(gallivm->builder, data, LLVMInt8TypeInContext(gallivm->context), "");
+      } else if (format_desc->block.bits == 16) {
+         this_offset = LLVMBuildBitCast(gallivm->builder, this_offset, int16_ptr_type, "");
+         data = LLVMBuildTrunc(gallivm->builder, data, LLVMInt16TypeInContext(gallivm->context), "");
+      } else
+         this_offset = LLVMBuildBitCast(gallivm->builder, this_offset, int32_ptr_type, "");
+      LLVMBuildStore(gallivm->builder, data, this_offset);
+      lp_build_endif(&ifthen);
+      lp_build_loop_end_cond(&loop_state, lp_build_const_int32(gallivm, type.length),
+                             NULL, LLVMIntUGE);
    }
 }

@@ -25,7 +25,7 @@
 #include "r300_texture.h"
 #include "r300_reg.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_half.h"
 #include "util/u_pack_color.h"
 #include "util/u_surface.h"
@@ -202,6 +202,7 @@ DEBUG_GET_ONCE_BOOL_OPTION(hyperz, "RADEON_HYPERZ", FALSE)
 /* Clear currently bound buffers. */
 static void r300_clear(struct pipe_context* pipe,
                        unsigned buffers,
+                       const struct pipe_scissor_state *scissor_state,
                        const union pipe_color_union *color,
                        double depth,
                        unsigned stencil)

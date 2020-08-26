@@ -28,9 +28,10 @@
 #include "context.h"
 #include "enums.h"
 #include "hash.h"
-#include "imports.h"
+
 #include "queryobj.h"
 #include "mtypes.h"
+#include "util/u_memory.h"
 
 
 /**
@@ -663,11 +664,21 @@ _mesa_GetQueryIndexediv(GLenum target, GLuint index, GLenum pname,
     * <pname> is not CURRENT_QUERY_EXT."
     *
     * Same rule is present also in ES 3.2 spec.
+    *
+    * EXT_disjoint_timer_query extends this with GL_QUERY_COUNTER_BITS.
     */
-   if (_mesa_is_gles(ctx) && pname != GL_CURRENT_QUERY) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetQueryivEXT(%s)",
-                  _mesa_enum_to_string(pname));
-      return;
+   if (_mesa_is_gles(ctx)) {
+      switch (pname) {
+      case GL_CURRENT_QUERY:
+         break;
+      case GL_QUERY_COUNTER_BITS:
+         if (_mesa_has_EXT_disjoint_timer_query(ctx))
+            break;
+         /* fallthrough */
+      default:
+         _mesa_error(ctx, GL_INVALID_ENUM, "glGetQueryivEXT(%s)",
+                     _mesa_enum_to_string(pname));
+      }
    }
 
    if (target == GL_TIMESTAMP) {
@@ -815,7 +826,7 @@ get_query_object(struct gl_context *ctx, const char *func,
       return;
    }
 
-   if (buf && buf != ctx->Shared->NullBufferObj) {
+   if (buf) {
       bool is_64bit = ptype == GL_INT64_ARB ||
          ptype == GL_UNSIGNED_INT64_ARB;
       if (!_mesa_has_ARB_query_buffer_object(ctx)) {

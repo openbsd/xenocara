@@ -24,7 +24,7 @@
  */
 
 #include "glheader.h"
-#include "imports.h"
+
 #include "accum.h"
 #include "arrayobj.h"
 #include "attrib.h"
@@ -43,6 +43,7 @@
 #include "macros.h"
 #include "matrix.h"
 #include "multisample.h"
+#include "pixelstore.h"
 #include "points.h"
 #include "polygon.h"
 #include "shared.h"
@@ -59,6 +60,7 @@
 #include "state.h"
 #include "hash.h"
 #include <stdbool.h>
+#include "util/u_memory.h"
 
 
 /**
@@ -1176,7 +1178,7 @@ _mesa_PopAttrib(void)
             break;
          case GL_EVAL_BIT:
             memcpy(&ctx->Eval, attr->data, sizeof(struct gl_eval_attrib));
-            ctx->NewState |= _NEW_EVAL;
+            vbo_exec_update_eval_maps(ctx);
             break;
          case GL_FOG_BIT:
             {
@@ -1517,6 +1519,8 @@ _mesa_PopAttrib(void)
 
                _mesa_SampleCoverage(ms->SampleCoverageValue,
                                        ms->SampleCoverageInvert);
+
+               _mesa_AlphaToCoverageDitherControlNV(ms->SampleAlphaToCoverageDitherControl);
             }
             break;
 
@@ -1579,8 +1583,10 @@ copy_array_object(struct gl_context *ctx,
    /* Enabled must be the same than on push */
    dest->Enabled = src->Enabled;
    dest->_EffEnabledVBO = src->_EffEnabledVBO;
+   dest->_EffEnabledNonZeroDivisor = src->_EffEnabledNonZeroDivisor;
    /* The bitmask of bound VBOs needs to match the VertexBinding array */
    dest->VertexAttribBufferMask = src->VertexAttribBufferMask;
+   dest->NonZeroDivisorMask = src->NonZeroDivisorMask;
    dest->_AttributeMapMode = src->_AttributeMapMode;
    dest->NewArrays = src->NewArrays;
 }
@@ -1604,6 +1610,7 @@ copy_array_attrib(struct gl_context *ctx,
    dest->PrimitiveRestartFixedIndex = src->PrimitiveRestartFixedIndex;
    dest->_PrimitiveRestart = src->_PrimitiveRestart;
    dest->RestartIndex = src->RestartIndex;
+   memcpy(dest->_RestartIndex, src->_RestartIndex, sizeof(src->_RestartIndex));
    /* skip NewState */
    /* skip RebindArrays */
 
@@ -1663,21 +1670,24 @@ restore_array_attrib(struct gl_context *ctx,
    _mesa_BindVertexArray(src->VAO->Name);
 
    /* Restore or recreate the buffer objects by the names ... */
-   if (is_vao_name_zero || src->ArrayBufferObj->Name == 0 ||
+   if (is_vao_name_zero || !src->ArrayBufferObj ||
        _mesa_IsBuffer(src->ArrayBufferObj->Name)) {
       /* ... and restore its content */
       copy_array_attrib(ctx, dest, src, false);
 
       _mesa_BindBuffer(GL_ARRAY_BUFFER_ARB,
-                       src->ArrayBufferObj->Name);
+                       src->ArrayBufferObj ?
+                          src->ArrayBufferObj->Name : 0);
    } else {
       copy_array_attrib(ctx, dest, src, true);
    }
 
-   if (is_vao_name_zero || src->VAO->IndexBufferObj->Name == 0 ||
-       _mesa_IsBuffer(src->VAO->IndexBufferObj->Name))
+   if (is_vao_name_zero || !src->VAO->IndexBufferObj ||
+       _mesa_IsBuffer(src->VAO->IndexBufferObj->Name)) {
       _mesa_BindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB,
-                       src->VAO->IndexBufferObj->Name);
+                       src->VAO->IndexBufferObj ?
+                          src->VAO->IndexBufferObj->Name : 0);
+   }
 }
 
 /**
@@ -1689,7 +1699,7 @@ init_array_attrib_data(struct gl_context *ctx,
                        struct gl_array_attrib *attrib)
 {
    /* Get a non driver gl_vertex_array_object. */
-   attrib->VAO = CALLOC_STRUCT(gl_vertex_array_object);
+   attrib->VAO = MALLOC_STRUCT(gl_vertex_array_object);
 
    if (attrib->VAO == NULL) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glPushClientAttrib");
@@ -1850,6 +1860,89 @@ _mesa_PopClientAttrib(void)
       free(node);
       node = next;
    }
+}
+
+void GLAPIENTRY
+_mesa_ClientAttribDefaultEXT( GLbitfield mask )
+{
+   if (mask & GL_CLIENT_PIXEL_STORE_BIT) {
+      _mesa_PixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+      _mesa_PixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+      _mesa_PixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+      _mesa_PixelStorei(GL_UNPACK_SKIP_IMAGES, 0);
+      _mesa_PixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+      _mesa_PixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+      _mesa_PixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+      _mesa_PixelStorei(GL_UNPACK_ALIGNMENT, 4);
+      _mesa_PixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
+      _mesa_PixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
+      _mesa_PixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
+      _mesa_PixelStorei(GL_PACK_SKIP_IMAGES, 0);
+      _mesa_PixelStorei(GL_PACK_ROW_LENGTH, 0);
+      _mesa_PixelStorei(GL_PACK_SKIP_ROWS, 0);
+      _mesa_PixelStorei(GL_PACK_SKIP_PIXELS, 0);
+      _mesa_PixelStorei(GL_PACK_ALIGNMENT, 4);
+
+      _mesa_BindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+      _mesa_BindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+   }
+   if (mask & GL_CLIENT_VERTEX_ARRAY_BIT) {
+      GET_CURRENT_CONTEXT(ctx);
+      int i;
+
+      _mesa_BindBuffer(GL_ARRAY_BUFFER, 0);
+      _mesa_BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+      _mesa_DisableClientState(GL_EDGE_FLAG_ARRAY);
+      _mesa_EdgeFlagPointer(0, 0);
+
+      _mesa_DisableClientState(GL_INDEX_ARRAY);
+      _mesa_IndexPointer(GL_FLOAT, 0, 0);
+
+      _mesa_DisableClientState(GL_SECONDARY_COLOR_ARRAY);
+      _mesa_SecondaryColorPointer(4, GL_FLOAT, 0, 0);
+
+      _mesa_DisableClientState(GL_FOG_COORD_ARRAY);
+      _mesa_FogCoordPointer(GL_FLOAT, 0, 0);
+
+      for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
+         _mesa_ClientActiveTexture(GL_TEXTURE0 + i);
+         _mesa_DisableClientState(GL_TEXTURE_COORD_ARRAY);
+         _mesa_TexCoordPointer(4, GL_FLOAT, 0, 0);
+      }
+
+      _mesa_DisableClientState(GL_COLOR_ARRAY);
+      _mesa_ColorPointer(4, GL_FLOAT, 0, 0);
+
+      _mesa_DisableClientState(GL_NORMAL_ARRAY);
+      _mesa_NormalPointer(GL_FLOAT, 0, 0);
+
+      _mesa_DisableClientState(GL_VERTEX_ARRAY);
+      _mesa_VertexPointer(4, GL_FLOAT, 0, 0);
+
+      for (i = 0; i < ctx->Const.Program[MESA_SHADER_VERTEX].MaxAttribs; i++) {
+         _mesa_DisableVertexAttribArray(i);
+         _mesa_VertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+      }
+
+      _mesa_ClientActiveTexture(GL_TEXTURE0);
+
+      _mesa_PrimitiveRestartIndex_no_error(0);
+      if (ctx->Version >= 31)
+         _mesa_Disable(GL_PRIMITIVE_RESTART);
+      else if (_mesa_has_NV_primitive_restart(ctx))
+         _mesa_DisableClientState(GL_PRIMITIVE_RESTART_NV);
+
+      if (_mesa_has_ARB_ES3_compatibility(ctx))
+         _mesa_Disable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+   }
+}
+
+void GLAPIENTRY
+_mesa_PushClientAttribDefaultEXT( GLbitfield mask )
+{
+   _mesa_PushClientAttrib(mask);
+   _mesa_ClientAttribDefaultEXT(mask);
 }
 
 

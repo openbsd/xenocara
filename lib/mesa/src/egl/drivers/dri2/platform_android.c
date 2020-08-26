@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <sync/sync.h>
 #include <sys/types.h>
+#include <drm-uapi/drm_fourcc.h>
 
 #include "loader.h"
 #include "egl_dri2.h"
@@ -61,24 +62,24 @@ struct droid_yuv_format {
    int chroma_step; /* Distance in bytes between subsequent chroma pixels. */
 
    /* Result */
-   int fourcc; /* __DRI_IMAGE_FOURCC_ */
+   int fourcc; /* DRM_FORMAT_ */
 };
 
 /* The following table is used to look up a DRI image FourCC based
  * on native format and information contained in android_ycbcr struct. */
 static const struct droid_yuv_format droid_yuv_formats[] = {
    /* Native format, YCrCb, Chroma step, DRI image FourCC */
-   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCbCr, 2, __DRI_IMAGE_FOURCC_NV12 },
-   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCbCr, 1, __DRI_IMAGE_FOURCC_YUV420 },
-   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCrCb, 1, __DRI_IMAGE_FOURCC_YVU420 },
-   { HAL_PIXEL_FORMAT_YV12,          YCrCb, 1, __DRI_IMAGE_FOURCC_YVU420 },
+   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCbCr, 2, DRM_FORMAT_NV12 },
+   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCbCr, 1, DRM_FORMAT_YUV420 },
+   { HAL_PIXEL_FORMAT_YCbCr_420_888, YCrCb, 1, DRM_FORMAT_YVU420 },
+   { HAL_PIXEL_FORMAT_YV12,          YCrCb, 1, DRM_FORMAT_YVU420 },
    /* HACK: See droid_create_image_from_prime_fds() and
     * https://issuetracker.google.com/32077885. */
-   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCbCr, 2, __DRI_IMAGE_FOURCC_NV12 },
-   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCbCr, 1, __DRI_IMAGE_FOURCC_YUV420 },
-   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, __DRI_IMAGE_FOURCC_YVU420 },
-   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, __DRI_IMAGE_FOURCC_AYUV },
-   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, __DRI_IMAGE_FOURCC_XYUV8888 },
+   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCbCr, 2, DRM_FORMAT_NV12 },
+   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCbCr, 1, DRM_FORMAT_YUV420 },
+   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, DRM_FORMAT_YVU420 },
+   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, DRM_FORMAT_AYUV },
+   { HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED, YCrCb, 1, DRM_FORMAT_XYUV8888 },
 };
 
 static int
@@ -109,6 +110,9 @@ get_format_bpp(int native)
    int bpp;
 
    switch (native) {
+   case HAL_PIXEL_FORMAT_RGBA_FP16:
+      bpp = 8;
+      break;
    case HAL_PIXEL_FORMAT_RGBA_8888:
    case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
       /*
@@ -117,6 +121,7 @@ get_format_bpp(int native)
        */
    case HAL_PIXEL_FORMAT_RGBX_8888:
    case HAL_PIXEL_FORMAT_BGRA_8888:
+   case HAL_PIXEL_FORMAT_RGBA_1010102:
       bpp = 4;
       break;
    case HAL_PIXEL_FORMAT_RGB_565:
@@ -134,15 +139,17 @@ get_format_bpp(int native)
 static int get_fourcc(int native)
 {
    switch (native) {
-   case HAL_PIXEL_FORMAT_RGB_565:   return __DRI_IMAGE_FOURCC_RGB565;
-   case HAL_PIXEL_FORMAT_BGRA_8888: return __DRI_IMAGE_FOURCC_ARGB8888;
-   case HAL_PIXEL_FORMAT_RGBA_8888: return __DRI_IMAGE_FOURCC_ABGR8888;
+   case HAL_PIXEL_FORMAT_RGB_565:   return DRM_FORMAT_RGB565;
+   case HAL_PIXEL_FORMAT_BGRA_8888: return DRM_FORMAT_ARGB8888;
+   case HAL_PIXEL_FORMAT_RGBA_8888: return DRM_FORMAT_ABGR8888;
    case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
       /*
        * HACK: Hardcode this to RGBX_8888 as per cros_gralloc hack.
        * TODO: Remove this once https://issuetracker.google.com/32077885 is fixed.
        */
-   case HAL_PIXEL_FORMAT_RGBX_8888: return __DRI_IMAGE_FOURCC_XBGR8888;
+   case HAL_PIXEL_FORMAT_RGBX_8888: return DRM_FORMAT_XBGR8888;
+   case HAL_PIXEL_FORMAT_RGBA_FP16: return DRM_FORMAT_ABGR16161616F;
+   case HAL_PIXEL_FORMAT_RGBA_1010102: return DRM_FORMAT_ABGR2101010;
    default:
       _eglLog(_EGL_WARNING, "unsupported native buffer format 0x%x", native);
    }
@@ -161,6 +168,8 @@ static int get_format(int format)
        * TODO: Revert this once https://issuetracker.google.com/32077885 is fixed.
        */
    case HAL_PIXEL_FORMAT_RGBX_8888: return __DRI_IMAGE_FORMAT_XBGR8888;
+   case HAL_PIXEL_FORMAT_RGBA_FP16: return __DRI_IMAGE_FORMAT_ABGR16161616F;
+   case HAL_PIXEL_FORMAT_RGBA_1010102: return __DRI_IMAGE_FORMAT_ABGR2101010;
    default:
       _eglLog(_EGL_WARNING, "unsupported native buffer format 0x%x", format);
    }
@@ -366,6 +375,10 @@ droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
    if (type == EGL_WINDOW_BIT) {
       int format;
       int buffer_count;
+      int min_buffer_count, max_buffer_count;
+
+      /* Prefer triple buffering for performance reasons. */
+      const int preferred_buffer_count = 3;
 
       if (window->common.magic != ANDROID_NATIVE_WINDOW_MAGIC) {
          _eglError(EGL_BAD_NATIVE_WINDOW, "droid_create_surface");
@@ -376,25 +389,41 @@ droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
          goto cleanup_surface;
       }
 
-      /* Query ANativeWindow for MIN_UNDEQUEUED_BUFFER, set buffer count
-       * and allocate color_buffers.
+      /* Query ANativeWindow for MIN_UNDEQUEUED_BUFFER, minimum amount
+       * of undequeued buffers.
        */
       if (window->query(window, NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS,
-                        &buffer_count)) {
+                        &min_buffer_count)) {
          _eglError(EGL_BAD_NATIVE_WINDOW, "droid_create_surface");
          goto cleanup_surface;
       }
-      if (native_window_set_buffer_count(window, buffer_count+1)) {
+
+      /* Query for maximum buffer count, application can set this
+       * to limit the total amount of buffers.
+       */
+      if (window->query(window, NATIVE_WINDOW_MAX_BUFFER_COUNT,
+                        &max_buffer_count)) {
          _eglError(EGL_BAD_NATIVE_WINDOW, "droid_create_surface");
          goto cleanup_surface;
       }
-      dri2_surf->color_buffers = calloc(buffer_count+1,
+
+      /* Clamp preferred between minimum (min undequeued + 1 dequeued)
+       * and maximum.
+       */
+      buffer_count = CLAMP(preferred_buffer_count, min_buffer_count + 1,
+                           max_buffer_count);
+
+      if (native_window_set_buffer_count(window, buffer_count)) {
+         _eglError(EGL_BAD_NATIVE_WINDOW, "droid_create_surface");
+         goto cleanup_surface;
+      }
+      dri2_surf->color_buffers = calloc(buffer_count,
                                         sizeof(*dri2_surf->color_buffers));
       if (!dri2_surf->color_buffers) {
          _eglError(EGL_BAD_ALLOC, "droid_create_surface");
          goto cleanup_surface;
       }
-      dri2_surf->color_buffers_count = buffer_count+1;
+      dri2_surf->color_buffers_count = buffer_count;
 
       if (format != dri2_conf->base.NativeVisualID) {
          _eglLog(_EGL_WARNING, "Native format mismatch: 0x%x != 0x%x",
@@ -403,6 +432,11 @@ droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
 
       window->query(window, NATIVE_WINDOW_WIDTH, &dri2_surf->base.Width);
       window->query(window, NATIVE_WINDOW_HEIGHT, &dri2_surf->base.Height);
+
+      uint32_t usage = strcmp(dri2_dpy->driver_name, "kms_swrast") == 0
+            ? GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN
+            : GRALLOC_USAGE_HW_RENDER;
+      native_window_set_usage(window, usage);
    }
 
    config = dri2_get_dri_config(dri2_conf, type,
@@ -1149,12 +1183,16 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
    static const struct {
       int format;
-      unsigned int rgba_masks[4];
+      int rgba_shifts[4];
+      unsigned int rgba_sizes[4];
    } visuals[] = {
-      { HAL_PIXEL_FORMAT_RGBA_8888, { 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 } },
-      { HAL_PIXEL_FORMAT_RGBX_8888, { 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000 } },
-      { HAL_PIXEL_FORMAT_RGB_565,   { 0x0000f800, 0x000007e0, 0x0000001f, 0x00000000 } },
-      { HAL_PIXEL_FORMAT_BGRA_8888, { 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
+      { HAL_PIXEL_FORMAT_RGBA_8888, { 0, 8, 16, 24 }, { 8, 8, 8, 8 } },
+      { HAL_PIXEL_FORMAT_RGBX_8888, { 0, 8, 16, -1 }, { 8, 8, 8, 0 } },
+      { HAL_PIXEL_FORMAT_RGB_565,   { 11, 5, 0, -1 }, { 5, 6, 5, 0 } },
+      /* This must be after HAL_PIXEL_FORMAT_RGBA_8888, we only keep BGRA
+       * visual if it turns out RGBA visual is not available.
+       */
+      { HAL_PIXEL_FORMAT_BGRA_8888, { 16, 8, 0, 24 }, { 8, 8, 8, 8 } },
    };
 
    unsigned int format_count[ARRAY_SIZE(visuals)] = { 0 };
@@ -1178,7 +1216,13 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
     * (chadversary) testing on Android Nougat, this was good enough to pacify
     * the buggy clients.
     */
+   bool has_rgba = false;
    for (int i = 0; i < ARRAY_SIZE(visuals); i++) {
+      /* Only enable BGRA configs when RGBA is not available. BGRA configs are
+       * buggy on stock Android.
+       */
+      if (visuals[i].format == HAL_PIXEL_FORMAT_BGRA_8888 && has_rgba)
+         continue;
       for (int j = 0; dri2_dpy->driver_configs[j]; j++) {
          const EGLint surface_type = EGL_WINDOW_BIT | EGL_PBUFFER_BIT;
 
@@ -1193,13 +1237,15 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
          struct dri2_egl_config *dri2_conf =
             dri2_add_config(disp, dri2_dpy->driver_configs[j],
                             config_count + 1, surface_type, config_attrs,
-                            visuals[i].rgba_masks);
+                            visuals[i].rgba_shifts, visuals[i].rgba_sizes);
          if (dri2_conf) {
             if (dri2_conf->base.ConfigID == config_count + 1)
                config_count++;
             format_count[i]++;
          }
       }
+      if (visuals[i].format == HAL_PIXEL_FORMAT_RGBA_8888 && format_count[i])
+         has_rgba = true;
    }
 
    for (int i = 0; i < ARRAY_SIZE(format_count); i++) {
@@ -1604,7 +1650,20 @@ dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *disp)
    disp->Extensions.ANDROID_framebuffer_target = EGL_TRUE;
    disp->Extensions.ANDROID_image_native_buffer = EGL_TRUE;
    disp->Extensions.ANDROID_recordable = EGL_TRUE;
-   disp->Extensions.EXT_buffer_age = EGL_TRUE;
+
+   /* Querying buffer age requires a buffer to be dequeued.  Without
+    * EGL_ANDROID_native_fence_sync, dequeue might call eglClientWaitSync and
+    * result in a deadlock (the lock is already held by eglQuerySurface).
+    */
+   if (disp->Extensions.ANDROID_native_fence_sync) {
+      disp->Extensions.EXT_buffer_age = EGL_TRUE;
+   } else {
+      /* disable KHR_partial_update that might have been enabled in
+       * dri2_setup_screen
+       */
+      disp->Extensions.KHR_partial_update = EGL_FALSE;
+   }
+
    disp->Extensions.KHR_image = EGL_TRUE;
 #if ANDROID_API_LEVEL >= 24
    if (dri2_dpy->mutable_render_buffer &&

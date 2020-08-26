@@ -26,12 +26,15 @@
  */
 
 #include "brw_cfg.h"
+#include "brw_shader.h"
 
 /** @file brw_cfg.cpp
  *
  * Walks the shader instructions generated and creates a set of basic
  * blocks with successor/predecessor edges connecting them.
  */
+
+using namespace brw;
 
 static bblock_t *
 pop_stack(exec_list *list)
@@ -44,14 +47,23 @@ pop_stack(exec_list *list)
 }
 
 static exec_node *
-link(void *mem_ctx, bblock_t *block)
+link(void *mem_ctx, bblock_t *block, enum bblock_link_kind kind)
 {
-   bblock_link *l = new(mem_ctx) bblock_link(block);
+   bblock_link *l = new(mem_ctx) bblock_link(block, kind);
    return &l->link;
 }
 
+void
+push_stack(exec_list *list, void *mem_ctx, bblock_t *block)
+{
+   /* The kind of the link is immaterial, but we need to provide one since
+    * this is (ab)using the edge data structure in order to implement a stack.
+    */
+   list->push_tail(link(mem_ctx, block, bblock_link_logical));
+}
+
 bblock_t::bblock_t(cfg_t *cfg) :
-   cfg(cfg), idom(NULL), start_ip(0), end_ip(0), num(0), cycle_count(0)
+   cfg(cfg), start_ip(0), end_ip(0), num(0)
 {
    instructions.make_empty();
    parents.make_empty();
@@ -59,17 +71,19 @@ bblock_t::bblock_t(cfg_t *cfg) :
 }
 
 void
-bblock_t::add_successor(void *mem_ctx, bblock_t *successor)
+bblock_t::add_successor(void *mem_ctx, bblock_t *successor,
+                        enum bblock_link_kind kind)
 {
-   successor->parents.push_tail(::link(mem_ctx, this));
-   children.push_tail(::link(mem_ctx, successor));
+   successor->parents.push_tail(::link(mem_ctx, this, kind));
+   children.push_tail(::link(mem_ctx, successor, kind));
 }
 
 bool
-bblock_t::is_predecessor_of(const bblock_t *block) const
+bblock_t::is_predecessor_of(const bblock_t *block,
+                            enum bblock_link_kind kind) const
 {
    foreach_list_typed_safe (bblock_link, parent, link, &block->parents) {
-      if (parent->block == this) {
+      if (parent->block == this && parent->kind <= kind) {
          return true;
       }
    }
@@ -78,10 +92,11 @@ bblock_t::is_predecessor_of(const bblock_t *block) const
 }
 
 bool
-bblock_t::is_successor_of(const bblock_t *block) const
+bblock_t::is_successor_of(const bblock_t *block,
+                          enum bblock_link_kind kind) const
 {
    foreach_list_typed_safe (bblock_link, child, link, &block->children) {
-      if (child->block == this) {
+      if (child->block == this && child->kind <= kind) {
          return true;
       }
    }
@@ -139,8 +154,10 @@ bblock_t::combine_with(bblock_t *that)
 }
 
 void
-bblock_t::dump(backend_shader *s) const
+bblock_t::dump() const
 {
+   const backend_shader *s = this->cfg->s;
+
    int ip = this->start_ip;
    foreach_inst_in_block(backend_instruction, inst, this) {
       fprintf(stderr, "%5d: ", ip);
@@ -149,14 +166,13 @@ bblock_t::dump(backend_shader *s) const
    }
 }
 
-cfg_t::cfg_t(exec_list *instructions)
+cfg_t::cfg_t(const backend_shader *s, exec_list *instructions) :
+   s(s)
 {
    mem_ctx = ralloc_context(NULL);
    block_list.make_empty();
    blocks = NULL;
    num_blocks = 0;
-   idom_dirty = true;
-   cycle_count = 0;
 
    bblock_t *cur = NULL;
    int ip = 0;
@@ -185,8 +201,8 @@ cfg_t::cfg_t(exec_list *instructions)
 	 /* Push our information onto a stack so we can recover from
 	  * nested ifs.
 	  */
-	 if_stack.push_tail(link(mem_ctx, cur_if));
-	 else_stack.push_tail(link(mem_ctx, cur_else));
+         push_stack(&if_stack, mem_ctx, cur_if);
+         push_stack(&else_stack, mem_ctx, cur_else);
 
 	 cur_if = cur;
 	 cur_else = NULL;
@@ -196,7 +212,7 @@ cfg_t::cfg_t(exec_list *instructions)
 	  * instructions.
 	  */
 	 next = new_block();
-	 cur_if->add_successor(mem_ctx, next);
+         cur_if->add_successor(mem_ctx, next, bblock_link_logical);
 
 	 set_next_block(&cur, next, ip);
 	 break;
@@ -208,7 +224,8 @@ cfg_t::cfg_t(exec_list *instructions)
 
 	 next = new_block();
          assert(cur_if != NULL);
-	 cur_if->add_successor(mem_ctx, next);
+         cur_if->add_successor(mem_ctx, next, bblock_link_logical);
+         cur_else->add_successor(mem_ctx, next, bblock_link_physical);
 
 	 set_next_block(&cur, next, ip);
 	 break;
@@ -220,7 +237,7 @@ cfg_t::cfg_t(exec_list *instructions)
          } else {
             cur_endif = new_block();
 
-            cur->add_successor(mem_ctx, cur_endif);
+            cur->add_successor(mem_ctx, cur_endif, bblock_link_logical);
 
             set_next_block(&cur, cur_endif, ip - 1);
          }
@@ -228,10 +245,10 @@ cfg_t::cfg_t(exec_list *instructions)
          cur->instructions.push_tail(inst);
 
          if (cur_else) {
-            cur_else->add_successor(mem_ctx, cur_endif);
+            cur_else->add_successor(mem_ctx, cur_endif, bblock_link_logical);
          } else {
             assert(cur_if != NULL);
-            cur_if->add_successor(mem_ctx, cur_endif);
+            cur_if->add_successor(mem_ctx, cur_endif, bblock_link_logical);
          }
 
          assert(cur_if->end()->opcode == BRW_OPCODE_IF);
@@ -246,8 +263,8 @@ cfg_t::cfg_t(exec_list *instructions)
 	 /* Push our information onto a stack so we can recover from
 	  * nested loops.
 	  */
-	 do_stack.push_tail(link(mem_ctx, cur_do));
-	 while_stack.push_tail(link(mem_ctx, cur_while));
+         push_stack(&do_stack, mem_ctx, cur_do);
+         push_stack(&while_stack, mem_ctx, cur_while);
 
 	 /* Set up the block just after the while.  Don't know when exactly
 	  * it will start, yet.
@@ -260,7 +277,7 @@ cfg_t::cfg_t(exec_list *instructions)
          } else {
             cur_do = new_block();
 
-            cur->add_successor(mem_ctx, cur_do);
+            cur->add_successor(mem_ctx, cur_do, bblock_link_logical);
 
             set_next_block(&cur, cur_do, ip - 1);
          }
@@ -294,8 +311,8 @@ cfg_t::cfg_t(exec_list *instructions)
           * corruption.
           */
          next = new_block();
-         cur->add_successor(mem_ctx, next);
-         cur->add_successor(mem_ctx, cur_while);
+         cur->add_successor(mem_ctx, next, bblock_link_logical);
+         cur->add_successor(mem_ctx, cur_while, bblock_link_physical);
          set_next_block(&cur, next, ip);
 	 break;
 
@@ -316,11 +333,13 @@ cfg_t::cfg_t(exec_list *instructions)
           * loop, the top of the loop again, into a use of the variable).
           */
          assert(cur_do != NULL);
-         cur->add_successor(mem_ctx, cur_do->next());
+         cur->add_successor(mem_ctx, cur_do->next(), bblock_link_logical);
 
 	 next = new_block();
 	 if (inst->predicate)
-	    cur->add_successor(mem_ctx, next);
+            cur->add_successor(mem_ctx, next, bblock_link_logical);
+         else
+            cur->add_successor(mem_ctx, next, bblock_link_physical);
 
 	 set_next_block(&cur, next, ip);
 	 break;
@@ -339,11 +358,12 @@ cfg_t::cfg_t(exec_list *instructions)
           * See the DO case for additional explanation.
           */
          assert(cur_do != NULL);
-         cur->add_successor(mem_ctx, cur_do);
+         cur->add_successor(mem_ctx, cur_do, bblock_link_physical);
+         cur->add_successor(mem_ctx, cur_while, bblock_link_logical);
 
 	 next = new_block();
 	 if (inst->predicate)
-	    cur->add_successor(mem_ctx, next);
+            cur->add_successor(mem_ctx, next, bblock_link_logical);
 
 	 set_next_block(&cur, next, ip);
 	 break;
@@ -362,8 +382,11 @@ cfg_t::cfg_t(exec_list *instructions)
           * channels, so we may skip over the divergence point at the top of
           * the loop to keep the CFG as unambiguous as possible.
           */
-         cur->add_successor(mem_ctx, inst->predicate ? cur_do :
-                                     cur_do->next());
+         if (inst->predicate) {
+            cur->add_successor(mem_ctx, cur_do, bblock_link_logical);
+         } else {
+            cur->add_successor(mem_ctx, cur_do->next(), bblock_link_logical);
+         }
 
 	 set_next_block(&cur, cur_while, ip);
 
@@ -403,9 +426,11 @@ cfg_t::remove_block(bblock_t *block)
 
       /* Add removed-block's successors to its predecessors' successor lists. */
       foreach_list_typed (bblock_link, successor, link, &block->children) {
-         if (!successor->block->is_successor_of(predecessor->block)) {
+         if (!successor->block->is_successor_of(predecessor->block,
+                                                successor->kind)) {
             predecessor->block->children.push_tail(link(mem_ctx,
-                                                        successor->block));
+                                                        successor->block,
+                                                        successor->kind));
          }
       }
    }
@@ -422,9 +447,11 @@ cfg_t::remove_block(bblock_t *block)
 
       /* Add removed-block's predecessors to its successors' predecessor lists. */
       foreach_list_typed (bblock_link, predecessor, link, &block->parents) {
-         if (!predecessor->block->is_predecessor_of(successor->block)) {
+         if (!predecessor->block->is_predecessor_of(successor->block,
+                                                    predecessor->kind)) {
             successor->block->parents.push_tail(link(mem_ctx,
-                                                     predecessor->block));
+                                                     predecessor->block,
+                                                     predecessor->kind));
          }
       }
    }
@@ -438,7 +465,6 @@ cfg_t::remove_block(bblock_t *block)
 
    this->blocks[this->num_blocks - 1]->num = this->num_blocks - 2;
    this->num_blocks--;
-   idom_dirty = true;
 }
 
 bblock_t *
@@ -475,27 +501,29 @@ cfg_t::make_block_array()
 }
 
 void
-cfg_t::dump(backend_shader *s)
+cfg_t::dump()
 {
-   if (idom_dirty)
-      calculate_idom();
+   const idom_tree *idom = (s ? &s->idom_analysis.require() : NULL);
 
    foreach_block (block, this) {
-      if (block->idom)
-         fprintf(stderr, "START B%d IDOM(B%d)", block->num, block->idom->num);
+      if (idom && idom->parent(block))
+         fprintf(stderr, "START B%d IDOM(B%d)", block->num,
+                 idom->parent(block)->num);
       else
          fprintf(stderr, "START B%d IDOM(none)", block->num);
 
       foreach_list_typed(bblock_link, link, link, &block->parents) {
-         fprintf(stderr, " <-B%d",
+         fprintf(stderr, " <%cB%d",
+                 link->kind == bblock_link_logical ? '-' : '~',
                  link->block->num);
       }
       fprintf(stderr, "\n");
       if (s != NULL)
-         block->dump(s);
+         block->dump();
       fprintf(stderr, "END B%d", block->num);
       foreach_list_typed(bblock_link, link, link, &block->children) {
-         fprintf(stderr, " ->B%d",
+         fprintf(stderr, " %c>B%d",
+                 link->kind == bblock_link_logical ? '-' : '~',
                  link->block->num);
       }
       fprintf(stderr, "\n");
@@ -510,45 +538,44 @@ cfg_t::dump(backend_shader *s)
  * (less than 1000 nodes) that this algorithm is significantly faster than
  * others like Lengauer-Tarjan.
  */
-void
-cfg_t::calculate_idom()
+idom_tree::idom_tree(const backend_shader *s) :
+   num_parents(s->cfg->num_blocks),
+   parents(new bblock_t *[num_parents]())
 {
-   foreach_block(block, this) {
-      block->idom = NULL;
-   }
-   blocks[0]->idom = blocks[0];
-
    bool changed;
+
+   parents[0] = s->cfg->blocks[0];
+
    do {
       changed = false;
 
-      foreach_block(block, this) {
+      foreach_block(block, s->cfg) {
          if (block->num == 0)
             continue;
 
          bblock_t *new_idom = NULL;
-         foreach_list_typed(bblock_link, parent, link, &block->parents) {
-            if (parent->block->idom) {
-               if (new_idom == NULL) {
-                  new_idom = parent->block;
-               } else if (parent->block->idom != NULL) {
-                  new_idom = intersect(parent->block, new_idom);
-               }
+         foreach_list_typed(bblock_link, parent_link, link, &block->parents) {
+            if (parent(parent_link->block)) {
+               new_idom = (new_idom ? intersect(new_idom, parent_link->block) :
+                           parent_link->block);
             }
          }
 
-         if (block->idom != new_idom) {
-            block->idom = new_idom;
+         if (parent(block) != new_idom) {
+            parents[block->num] = new_idom;
             changed = true;
          }
       }
    } while (changed);
+}
 
-   idom_dirty = false;
+idom_tree::~idom_tree()
+{
+   delete[] parents;
 }
 
 bblock_t *
-cfg_t::intersect(bblock_t *b1, bblock_t *b2)
+idom_tree::intersect(bblock_t *b1, bblock_t *b2) const
 {
    /* Note, the comparisons here are the opposite of what the paper says
     * because we index blocks from beginning -> end (i.e. reverse post-order)
@@ -556,12 +583,21 @@ cfg_t::intersect(bblock_t *b1, bblock_t *b2)
     */
    while (b1->num != b2->num) {
       while (b1->num > b2->num)
-         b1 = b1->idom;
+         b1 = parent(b1);
       while (b2->num > b1->num)
-         b2 = b2->idom;
+         b2 = parent(b2);
    }
    assert(b1);
    return b1;
+}
+
+void
+idom_tree::dump() const
+{
+   printf("digraph DominanceTree {\n");
+   for (unsigned i = 0; i < num_parents; i++)
+      printf("\t%d -> %d\n", parents[i]->num, i);
+   printf("}\n");
 }
 
 void
@@ -573,18 +609,6 @@ cfg_t::dump_cfg()
 
       foreach_list_typed_safe (bblock_link, child, link, &block->children) {
          printf("\t%d -> %d\n", b, child->block->num);
-      }
-   }
-   printf("}\n");
-}
-
-void
-cfg_t::dump_domtree()
-{
-   printf("digraph DominanceTree {\n");
-   foreach_block(block, this) {
-      if (block->idom) {
-         printf("\t%d -> %d\n", block->idom->num, block->num);
       }
    }
    printf("}\n");

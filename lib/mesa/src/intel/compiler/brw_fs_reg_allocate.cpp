@@ -72,12 +72,21 @@ fs_visitor::assign_regs_trivial()
 
 }
 
+/**
+ * Size of a register from the aligned_bary_class register class.
+ */
+static unsigned
+aligned_bary_size(unsigned dispatch_width)
+{
+   return (dispatch_width == 8 ? 2 : 4);
+}
+
 static void
 brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
 {
    const struct gen_device_info *devinfo = compiler->devinfo;
    int base_reg_count = BRW_MAX_GRF;
-   const int index = _mesa_logbase2(dispatch_width / 8);
+   const int index = util_logbase2(dispatch_width / 8);
 
    if (dispatch_width > 8 && devinfo->gen >= 7) {
       /* For IVB+, we don't need the PLN hacks or the even-reg alignment in
@@ -145,10 +154,11 @@ brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
    if (devinfo->gen >= 6)
       ra_set_allocate_round_robin(regs);
    int *classes = ralloc_array(compiler, int, class_count);
-   int aligned_pairs_class = -1;
+   int aligned_bary_class = -1;
 
    /* Allocate space for q values.  We allocate class_count + 1 because we
-    * want to leave room for the aligned pairs class if we have it. */
+    * want to leave room for the aligned barycentric class if we have it.
+    */
    unsigned int **q_values = ralloc_array(compiler, unsigned int *,
                                           class_count + 1);
    for (int i = 0; i < class_count + 1; ++i)
@@ -158,8 +168,8 @@ brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
     * between them and the base GRF registers (and also each other).
     */
    int reg = 0;
-   int pairs_base_reg = 0;
-   int pairs_reg_count = 0;
+   int aligned_bary_base_reg = 0;
+   int aligned_bary_reg_count = 0;
    for (int i = 0; i < class_count; i++) {
       int class_reg_count;
       if (devinfo->gen <= 5 && dispatch_width >= 16) {
@@ -202,10 +212,10 @@ brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
       }
       classes[i] = ra_alloc_reg_class(regs);
 
-      /* Save this off for the aligned pair class at the end. */
-      if (class_sizes[i] == 2) {
-         pairs_base_reg = reg;
-         pairs_reg_count = class_reg_count;
+      /* Save this off for the aligned barycentric class at the end. */
+      if (class_sizes[i] == int(aligned_bary_size(dispatch_width))) {
+         aligned_bary_base_reg = reg;
+         aligned_bary_reg_count = class_reg_count;
       }
 
       if (devinfo->gen <= 5 && dispatch_width >= 16) {
@@ -246,29 +256,33 @@ brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
    for (int reg = 0; reg < base_reg_count; reg++)
       ra_make_reg_conflicts_transitive(regs, reg);
 
-   /* Add a special class for aligned pairs, which we'll put delta_xy
-    * in on Gen <= 6 so that we can do PLN.
+   /* Add a special class for aligned barycentrics, which we'll put the
+    * first source of LINTERP on so that we can do PLN on Gen <= 6.
     */
-   if (devinfo->has_pln && dispatch_width == 8 && devinfo->gen <= 6) {
-      aligned_pairs_class = ra_alloc_reg_class(regs);
+   if (devinfo->has_pln && (devinfo->gen == 6 ||
+                            (dispatch_width == 8 && devinfo->gen <= 5))) {
+      aligned_bary_class = ra_alloc_reg_class(regs);
 
-      for (int i = 0; i < pairs_reg_count; i++) {
-	 if ((ra_reg_to_grf[pairs_base_reg + i] & 1) == 0) {
-	    ra_class_add_reg(regs, aligned_pairs_class, pairs_base_reg + i);
+      for (int i = 0; i < aligned_bary_reg_count; i++) {
+	 if ((ra_reg_to_grf[aligned_bary_base_reg + i] & 1) == 0) {
+	    ra_class_add_reg(regs, aligned_bary_class,
+                             aligned_bary_base_reg + i);
 	 }
       }
 
       for (int i = 0; i < class_count; i++) {
-         /* These are a little counter-intuitive because the pair registers
-          * are required to be aligned while the register they are
-          * potentially interferring with are not.  In the case where the
-          * size is even, the worst-case is that the register is
-          * odd-aligned.  In the odd-size case, it doesn't matter.
+         /* These are a little counter-intuitive because the barycentric
+          * registers are required to be aligned while the register they are
+          * potentially interferring with are not.  In the case where the size
+          * is even, the worst-case is that the register is odd-aligned.  In
+          * the odd-size case, it doesn't matter.
           */
-         q_values[class_count][i] = class_sizes[i] / 2 + 1;
-         q_values[i][class_count] = class_sizes[i] + 1;
+         q_values[class_count][i] = class_sizes[i] / 2 +
+                                    aligned_bary_size(dispatch_width) / 2;
+         q_values[i][class_count] = class_sizes[i] +
+                                    aligned_bary_size(dispatch_width) - 1;
       }
-      q_values[class_count][class_count] = 1;
+      q_values[class_count][class_count] = aligned_bary_size(dispatch_width) - 1;
    }
 
    ra_set_finalize(regs, q_values);
@@ -281,7 +295,7 @@ brw_alloc_reg_set(struct brw_compiler *compiler, int dispatch_width)
    for (int i = 0; i < class_count; i++)
       compiler->fs_reg_sets[index].classes[class_sizes[i] - 1] = classes[i];
    compiler->fs_reg_sets[index].ra_reg_to_grf = ra_reg_to_grf;
-   compiler->fs_reg_sets[index].aligned_pairs_class = aligned_pairs_class;
+   compiler->fs_reg_sets[index].aligned_bary_class = aligned_bary_class;
 }
 
 void
@@ -317,7 +331,7 @@ count_to_loop_end(const bblock_t *block)
 }
 
 void fs_visitor::calculate_payload_ranges(int payload_node_count,
-                                          int *payload_last_use_ip)
+                                          int *payload_last_use_ip) const
 {
    int loop_depth = 0;
    int loop_end_ip = 0;
@@ -396,7 +410,8 @@ void fs_visitor::calculate_payload_ranges(int payload_node_count,
 class fs_reg_alloc {
 public:
    fs_reg_alloc(fs_visitor *fs):
-      fs(fs), devinfo(fs->devinfo), compiler(fs->compiler), g(NULL),
+      fs(fs), devinfo(fs->devinfo), compiler(fs->compiler),
+      live(fs->live_analysis.require()), g(NULL),
       have_spill_costs(false)
    {
       mem_ctx = ralloc_context(NULL);
@@ -408,7 +423,7 @@ public:
        * for reg_width == 2.
        */
       int reg_width = fs->dispatch_width / 8;
-      rsi = _mesa_logbase2(reg_width);
+      rsi = util_logbase2(reg_width);
       payload_node_count = ALIGN(fs->first_non_payload_grf, reg_width);
 
       /* Get payload IP information */
@@ -429,7 +444,7 @@ public:
 private:
    void setup_live_interference(unsigned node,
                                 int node_start_ip, int node_end_ip);
-   void setup_inst_interference(fs_inst *inst);
+   void setup_inst_interference(const fs_inst *inst);
 
    void build_interference_graph(bool allow_spilling);
    void discard_interference_graph();
@@ -443,6 +458,7 @@ private:
    fs_visitor *fs;
    const gen_device_info *devinfo;
    const brw_compiler *compiler;
+   const fs_live_variables &live;
 
    /* Which compiler->fs_reg_sets[] to use */
    int rsi;
@@ -474,7 +490,7 @@ private:
  * contents.
  */
 static void
-get_used_mrfs(fs_visitor *v, bool *mrf_used)
+get_used_mrfs(const fs_visitor *v, bool *mrf_used)
 {
    int reg_width = v->dispatch_width / 8;
 
@@ -494,7 +510,7 @@ get_used_mrfs(fs_visitor *v, bool *mrf_used)
       }
 
       if (inst->mlen > 0) {
-	 for (int i = 0; i < v->implied_mrf_writes(inst); i++) {
+	 for (unsigned i = 0; i < inst->implied_mrf_writes(); i++) {
             mrf_used[inst->base_mrf + i] = true;
          }
       }
@@ -553,7 +569,7 @@ fs_reg_alloc::setup_live_interference(unsigned node,
       if (payload_last_use_ip[i] == -1)
          continue;
 
-      /* Note that we use a <= comparison, unlike virtual_grf_interferes(),
+      /* Note that we use a <= comparison, unlike vgrfs_interfere(),
        * in order to not have to worry about the uniform issue described in
        * calculate_live_intervals().
        */
@@ -576,14 +592,14 @@ fs_reg_alloc::setup_live_interference(unsigned node,
    for (unsigned n2 = first_vgrf_node;
         n2 < (unsigned)first_spill_node && n2 < node; n2++) {
       unsigned vgrf = n2 - first_vgrf_node;
-      if (!(node_end_ip <= fs->virtual_grf_start[vgrf] ||
-            fs->virtual_grf_end[vgrf] <= node_start_ip))
+      if (!(node_end_ip <= live.vgrf_start[vgrf] ||
+            live.vgrf_end[vgrf] <= node_start_ip))
          ra_add_node_interference(g, node, n2);
    }
 }
 
 void
-fs_reg_alloc::setup_inst_interference(fs_inst *inst)
+fs_reg_alloc::setup_inst_interference(const fs_inst *inst)
 {
    /* Certain instructions can't safely use the same register for their
     * sources and destination.  Add interference.
@@ -683,12 +699,18 @@ fs_reg_alloc::setup_inst_interference(fs_inst *inst)
       int size = fs->alloc.sizes[vgrf];
       int reg = compiler->fs_reg_sets[rsi].class_to_ra_reg_range[size] - 1;
 
-      /* If something happened to spill, we want to push the EOT send
-       * register early enough in the register file that we don't
-       * conflict with any used MRF hack registers.
-       */
-      if (first_mrf_hack_node >= 0)
+      if (first_mrf_hack_node >= 0) {
+         /* If something happened to spill, we want to push the EOT send
+          * register early enough in the register file that we don't
+          * conflict with any used MRF hack registers.
+          */
          reg -= BRW_MAX_MRF(devinfo->gen) - spill_base_mrf(fs);
+      } else if (grf127_send_hack_node >= 0) {
+         /* Avoid r127 which might be unusable if the node was previously
+          * written by a SIMD8 SEND message with source/destination overlap.
+          */
+         reg--;
+      }
 
       ra_set_node_reg(g, first_vgrf_node + vgrf, reg);
    }
@@ -697,9 +719,6 @@ fs_reg_alloc::setup_inst_interference(fs_inst *inst)
 void
 fs_reg_alloc::build_interference_graph(bool allow_spilling)
 {
-   const gen_device_info *devinfo = fs->devinfo;
-   const brw_compiler *compiler = fs->compiler;
-
    /* Compute the RA node layout */
    node_count = 0;
    first_payload_node = node_count;
@@ -720,7 +739,6 @@ fs_reg_alloc::build_interference_graph(bool allow_spilling)
    node_count += fs->alloc.count;
    first_spill_node = node_count;
 
-   fs->calculate_live_intervals();
    fs->calculate_payload_ranges(payload_node_count,
                                 payload_last_use_ip);
 
@@ -763,35 +781,37 @@ fs_reg_alloc::build_interference_graph(bool allow_spilling)
    if (grf127_send_hack_node >= 0)
       ra_set_node_reg(g, grf127_send_hack_node, 127);
 
+   /* Specify the classes of each virtual register. */
    for (unsigned i = 0; i < fs->alloc.count; i++) {
       unsigned size = fs->alloc.sizes[i];
-      int c;
 
       assert(size <= ARRAY_SIZE(compiler->fs_reg_sets[rsi].classes) &&
              "Register allocation relies on split_virtual_grfs()");
-      c = compiler->fs_reg_sets[rsi].classes[size - 1];
 
-      /* Special case: on pre-GEN6 hardware that supports PLN, the
-       * second operand of a PLN instruction needs to be an
-       * even-numbered register, so we have a special register class
-       * wm_aligned_pairs_class to handle this case.  pre-GEN6 always
-       * uses fs->delta_xy[BRW_BARYCENTRIC_PERSPECTIVE_PIXEL] as the
-       * second operand of a PLN instruction (since it doesn't support
-       * any other interpolation modes).  So all we need to do is find
-       * that register and set it to the appropriate class.
-       */
-      if (compiler->fs_reg_sets[rsi].aligned_pairs_class >= 0 &&
-          fs->delta_xy[BRW_BARYCENTRIC_PERSPECTIVE_PIXEL].file == VGRF &&
-          fs->delta_xy[BRW_BARYCENTRIC_PERSPECTIVE_PIXEL].nr == i) {
-         c = compiler->fs_reg_sets[rsi].aligned_pairs_class;
+      ra_set_node_class(g, first_vgrf_node + i,
+                        compiler->fs_reg_sets[rsi].classes[size - 1]);
+   }
+
+   /* Special case: on pre-Gen7 hardware that supports PLN, the second operand
+    * of a PLN instruction needs to be an even-numbered register, so we have a
+    * special register class aligned_bary_class to handle this case.
+    */
+   if (compiler->fs_reg_sets[rsi].aligned_bary_class >= 0) {
+      foreach_block_and_inst(block, fs_inst, inst, fs->cfg) {
+         if (inst->opcode == FS_OPCODE_LINTERP && inst->src[0].file == VGRF &&
+             fs->alloc.sizes[inst->src[0].nr] ==
+               aligned_bary_size(fs->dispatch_width)) {
+            ra_set_node_class(g, first_vgrf_node + inst->src[0].nr,
+                              compiler->fs_reg_sets[rsi].aligned_bary_class);
+         }
       }
+   }
 
-      ra_set_node_class(g, first_vgrf_node + i, c);
-
-      /* Add interference based on the live range of the register */
+   /* Add interference based on the live range of the register */
+   for (unsigned i = 0; i < fs->alloc.count; i++) {
       setup_live_interference(first_vgrf_node + i,
-                              fs->virtual_grf_start[i],
-                              fs->virtual_grf_end[i]);
+                              live.vgrf_start[i],
+                              live.vgrf_end[i]);
    }
 
    /* Add interference based on the instructions in which a register is used.
@@ -931,7 +951,7 @@ fs_reg_alloc::set_spill_costs()
       if (no_spill[i])
          continue;
 
-      int live_length = fs->virtual_grf_end[i] - fs->virtual_grf_start[i];
+      int live_length = live.vgrf_end[i] - live.vgrf_start[i];
       if (live_length <= 0)
          continue;
 
@@ -1186,7 +1206,7 @@ fs_reg_alloc::assign_regs(bool allow_spilling, bool spill_all)
    }
 
    if (spilled)
-      fs->invalidate_live_intervals();
+      fs->invalidate_analysis(DEPENDENCY_INSTRUCTIONS | DEPENDENCY_VARIABLES);
 
    /* Get the chosen virtual registers for each node, and map virtual
     * regs in the register classes back down to real hardware reg

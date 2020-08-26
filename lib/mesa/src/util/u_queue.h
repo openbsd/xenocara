@@ -50,7 +50,7 @@ extern "C" {
 #define UTIL_QUEUE_INIT_RESIZE_IF_FULL            (1 << 1)
 #define UTIL_QUEUE_INIT_SET_FULL_THREAD_AFFINITY  (1 << 2)
 
-#if defined(__GNUC__) && defined(USE_FUTEX)
+#if UTIL_FUTEX_SUPPORTED
 #define UTIL_QUEUE_FENCE_FUTEX
 #else
 #define UTIL_QUEUE_FENCE_STANDARD
@@ -193,6 +193,7 @@ typedef void (*util_queue_execute_func)(void *job, int thread_index);
 
 struct util_queue_job {
    void *job;
+   size_t job_size;
    struct util_queue_fence *fence;
    util_queue_execute_func execute;
    util_queue_execute_func cleanup;
@@ -212,6 +213,7 @@ struct util_queue {
    unsigned num_threads; /* decreasing this number will terminate threads */
    int max_jobs;
    int write_idx, read_idx; /* ring buffer pointers */
+   size_t total_jobs_size;  /* memory use of all jobs in the queue */
    struct util_queue_job *jobs;
 
    /* for cleanup at exit(), protected by exit_mutex */
@@ -230,7 +232,8 @@ void util_queue_add_job(struct util_queue *queue,
                         void *job,
                         struct util_queue_fence *fence,
                         util_queue_execute_func execute,
-                        util_queue_execute_func cleanup);
+                        util_queue_execute_func cleanup,
+                        const size_t job_size);
 void util_queue_drop_job(struct util_queue *queue,
                          struct util_queue_fence *fence);
 

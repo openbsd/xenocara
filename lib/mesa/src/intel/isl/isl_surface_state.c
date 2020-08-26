@@ -72,7 +72,9 @@ static const uint8_t isl_to_gen_tiling[] = {
    [ISL_TILING_Y0]      = YMAJOR,
    [ISL_TILING_Yf]      = YMAJOR,
    [ISL_TILING_Ys]      = YMAJOR,
+#if GEN_GEN <= 11
    [ISL_TILING_W]       = WMAJOR,
+#endif
 };
 #endif
 
@@ -84,7 +86,16 @@ static const uint32_t isl_to_gen_multisample_layout[] = {
 };
 #endif
 
-#if GEN_GEN >= 9
+#if GEN_GEN >= 12
+static const uint32_t isl_to_gen_aux_mode[] = {
+   [ISL_AUX_USAGE_NONE] = AUX_NONE,
+   [ISL_AUX_USAGE_MCS] = AUX_CCS_E,
+   [ISL_AUX_USAGE_CCS_E] = AUX_CCS_E,
+   [ISL_AUX_USAGE_HIZ_CCS_WT] = AUX_CCS_E,
+   [ISL_AUX_USAGE_MCS_CCS] = AUX_MCS_LCE,
+   [ISL_AUX_USAGE_STC_CCS] = AUX_CCS_E,
+};
+#elif GEN_GEN >= 9
 static const uint32_t isl_to_gen_aux_mode[] = {
    [ISL_AUX_USAGE_NONE] = AUX_NONE,
    [ISL_AUX_USAGE_HIZ] = AUX_HIZ,
@@ -272,6 +283,39 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 
    s.SurfaceFormat = info->view->format;
 
+#if GEN_GEN >= 12
+   /* The BSpec description of this field says:
+    *
+    *    "This bit field, when set, indicates if the resource is created as
+    *    Depth/Stencil resource."
+    *
+    *    "SW must set this bit for any resource that was created with
+    *    Depth/Stencil resource flag. Setting this bit allows HW to properly
+    *    interpret the data-layout for various cases. For any resource that's
+    *    created without Depth/Stencil resource flag, it must be reset."
+    *
+    * Even though the docs for this bit seem to imply that it's required for
+    * anything which might have been used for depth/stencil, empirical
+    * evidence suggests that it only affects CCS compression usage.  There are
+    * a few things which back this up:
+    *
+    *  1. The docs are also pretty clear that this bit was added as part
+    *     of enabling Gen12 depth/stencil lossless compression.
+    *
+    *  2. The only new difference between depth/stencil and color images on
+    *     Gen12 (where the bit was added) is how they treat CCS compression.
+    *     All other differences such as alignment requirements and MSAA layout
+    *     are already covered by other bits.
+    *
+    * Under these assumptions, it makes sense for ISL to model this bit as
+    * being an extension of AuxiliarySurfaceMode where STC_CCS and HIZ_CCS_WT
+    * are indicated by AuxiliarySurfaceMode == CCS_E and DepthStencilResource
+    * == true.
+    */
+   s.DepthStencilResource = info->aux_usage == ISL_AUX_USAGE_HIZ_CCS_WT ||
+                            info->aux_usage == ISL_AUX_USAGE_STC_CCS;
+#endif
+
 #if GEN_GEN <= 5
    s.ColorBufferComponentWriteDisables = info->write_disables;
 #else
@@ -388,7 +432,11 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       unreachable("bad SurfaceType");
    }
 
-#if GEN_GEN >= 7
+#if GEN_GEN >= 12
+   /* GEN:BUG:1806565034: Only set SurfaceArray if arrayed surface is > 1. */
+   s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D &&
+      info->view->array_len > 1;
+#elif GEN_GEN >= 7
    s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D;
 #endif
 
@@ -441,6 +489,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
 
 #if GEN_GEN >= 8
+   assert(GEN_GEN < 12 || info->surf->tiling != ISL_TILING_W);
    s.TileMode = isl_to_gen_tiling[info->surf->tiling];
 #else
    s.TiledSurface = info->surf->tiling != ISL_TILING_LINEAR,
@@ -535,32 +584,66 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
 
 #if GEN_GEN >= 7
-   if (info->aux_surf && info->aux_usage != ISL_AUX_USAGE_NONE) {
+   if (info->aux_usage != ISL_AUX_USAGE_NONE) {
+      /* Check valid aux usages per-gen */
+      if (GEN_GEN >= 12) {
+         assert(info->aux_usage == ISL_AUX_USAGE_MCS ||
+                info->aux_usage == ISL_AUX_USAGE_CCS_E ||
+                info->aux_usage == ISL_AUX_USAGE_HIZ_CCS_WT ||
+                info->aux_usage == ISL_AUX_USAGE_MCS_CCS ||
+                info->aux_usage == ISL_AUX_USAGE_STC_CCS);
+      } else if (GEN_GEN >= 9) {
+         assert(info->aux_usage == ISL_AUX_USAGE_HIZ ||
+                info->aux_usage == ISL_AUX_USAGE_MCS ||
+                info->aux_usage == ISL_AUX_USAGE_CCS_D ||
+                info->aux_usage == ISL_AUX_USAGE_CCS_E);
+      } else if (GEN_GEN >= 8) {
+         assert(info->aux_usage == ISL_AUX_USAGE_HIZ ||
+                info->aux_usage == ISL_AUX_USAGE_MCS ||
+                info->aux_usage == ISL_AUX_USAGE_CCS_D);
+      } else if (GEN_GEN >= 7) {
+         assert(info->aux_usage == ISL_AUX_USAGE_MCS ||
+                info->aux_usage == ISL_AUX_USAGE_CCS_D);
+      }
+
       /* The docs don't appear to say anything whatsoever about compression
        * and the data port.  Testing seems to indicate that the data port
        * completely ignores the AuxiliarySurfaceMode field.
+       *
+       * On gen12 HDC supports compression.
        */
-      assert(!(info->view->usage & ISL_SURF_USAGE_STORAGE_BIT));
+      if (GEN_GEN < 12)
+         assert(!(info->view->usage & ISL_SURF_USAGE_STORAGE_BIT));
 
-      struct isl_tile_info tile_info;
-      isl_surf_get_tile_info(info->aux_surf, &tile_info);
-      uint32_t pitch_in_tiles =
-         info->aux_surf->row_pitch_B / tile_info.phys_extent_B.width;
+      if (isl_surf_usage_is_depth(info->surf->usage))
+         assert(isl_aux_usage_has_hiz(info->aux_usage));
 
-      s.AuxiliarySurfaceBaseAddress = info->aux_address;
-      s.AuxiliarySurfacePitch = pitch_in_tiles - 1;
+      if (isl_surf_usage_is_stencil(info->surf->usage))
+         assert(info->aux_usage == ISL_AUX_USAGE_STC_CCS);
 
-#if GEN_GEN >= 8
-      assert(GEN_GEN >= 9 || info->aux_usage != ISL_AUX_USAGE_CCS_E);
-      /* Auxiliary surfaces in ISL have compressed formats but the hardware
-       * doesn't expect our definition of the compression, it expects qpitch
-       * in units of samples on the main surface.
-       */
-      s.AuxiliarySurfaceQPitch =
-         isl_surf_get_array_pitch_sa_rows(info->aux_surf) >> 2;
-
-      if (info->aux_usage == ISL_AUX_USAGE_HIZ) {
-         /* The number of samples must be 1 */
+      if (isl_aux_usage_has_hiz(info->aux_usage)) {
+         /* For Gen8-10, there are some restrictions around sampling from HiZ.
+          * The Skylake PRM docs for RENDER_SURFACE_STATE::AuxiliarySurfaceMode
+          * say:
+          *
+          *    "If this field is set to AUX_HIZ, Number of Multisamples must
+          *    be MULTISAMPLECOUNT_1, and Surface Type cannot be SURFTYPE_3D."
+          *
+          * On Gen12, the docs are a bit less obvious but the restriction is
+          * the same.  The limitation isn't called out explicitly but the docs
+          * for the CCS_E value of RENDER_SURFACE_STATE::AuxiliarySurfaceMode
+          * say:
+          *
+          *    "If Number of multisamples > 1, programming this value means
+          *    MSAA compression is enabled for that surface. Auxillary surface
+          *    is MSC with tile y."
+          *
+          * Since this interpretation ignores whether the surface is
+          * depth/stencil or not and since multisampled depth buffers use
+          * ISL_MSAA_LAYOUT_INTERLEAVED which is incompatible with MCS
+          * compression, this means that we can't even specify MSAA depth CCS
+          * in RENDER_SURFACE_STATE::AuxiliarySurfaceMode.
+          */
          assert(info->surf->samples == 1);
 
          /* The dimension must not be 3D */
@@ -578,16 +661,48 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
          }
       }
 
+#if GEN_GEN >= 8
       s.AuxiliarySurfaceMode = isl_to_gen_aux_mode[info->aux_usage];
 #else
-      assert(info->aux_usage == ISL_AUX_USAGE_MCS ||
-             info->aux_usage == ISL_AUX_USAGE_CCS_D);
       s.MCSEnable = true;
+#endif
+   }
+
+   /* The auxiliary buffer info is filled when it's useable by the HW.
+    *
+    * Starting with Gen12, the only form of compression that can be used
+    * with RENDER_SURFACE_STATE which requires an aux surface is MCS.
+    * HiZ still requires a surface but the HiZ surface can only be
+    * accessed through 3DSTATE_HIER_DEPTH_BUFFER.
+    *
+    * On all earlier hardware, an aux surface is required for all forms
+    * of compression.
+    */
+   if ((GEN_GEN < 12 && info->aux_usage != ISL_AUX_USAGE_NONE) ||
+       (GEN_GEN >= 12 && isl_aux_usage_has_mcs(info->aux_usage))) {
+
+      assert(info->aux_surf != NULL);
+
+      struct isl_tile_info tile_info;
+      isl_surf_get_tile_info(info->aux_surf, &tile_info);
+      uint32_t pitch_in_tiles =
+         info->aux_surf->row_pitch_B / tile_info.phys_extent_B.width;
+
+      s.AuxiliarySurfaceBaseAddress = info->aux_address;
+      s.AuxiliarySurfacePitch = pitch_in_tiles - 1;
+
+#if GEN_GEN >= 8
+      /* Auxiliary surfaces in ISL have compressed formats but the hardware
+       * doesn't expect our definition of the compression, it expects qpitch
+       * in units of samples on the main surface.
+       */
+      s.AuxiliarySurfaceQPitch =
+         isl_surf_get_array_pitch_sa_rows(info->aux_surf) >> 2;
 #endif
    }
 #endif
 
-#if GEN_GEN >= 8
+#if GEN_GEN >= 8 && GEN_GEN < 11
    /* From the CHV PRM, Volume 2d, page 321 (RENDER_SURFACE_STATE dword 0
     * bit 9 "Sampler L2 Bypass Mode Disable" Programming Notes):
     *
@@ -648,7 +763,9 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       }
 #endif
 
-#if GEN_GEN >= 9
+#if GEN_GEN >= 12
+      assert(info->use_clear_address);
+#elif GEN_GEN >= 9
       if (!info->use_clear_address) {
          s.RedClearColor = info->clear_color.u32[0];
          s.GreenClearColor = info->clear_color.u32[1];
@@ -685,7 +802,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 }
 
 void
-isl_genX(buffer_fill_state_s)(void *state,
+isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
                               const struct isl_buffer_fill_state_info *restrict info)
 {
    uint64_t buffer_size = info->size_B;
@@ -751,6 +868,25 @@ isl_genX(buffer_fill_state_s)(void *state,
    s.Depth = ((num_elements - 1) >> 20) & 0x7f;
 #endif
 
+   if (GEN_GEN == 12 && dev->info->revision == 0) {
+      /* TGL-LP A0 has a HW bug (fixed in later HW) which causes buffer
+       * textures with very close base addresses (delta < 64B) to corrupt each
+       * other.  We can sort-of work around this by making small buffer
+       * textures 1D textures instead.  This doesn't fix the problem for large
+       * buffer textures but the liklihood of large, overlapping, and very
+       * close buffer textures is fairly low and the point is to hack around
+       * the bug so we can run apps and tests.
+       */
+       if (info->format != ISL_FORMAT_RAW &&
+           info->stride_B == isl_format_get_layout(info->format)->bpb / 8 &&
+           num_elements <= (1 << 14)) {
+         s.SurfaceType = SURFTYPE_1D;
+         s.Width = num_elements - 1;
+         s.Height = 0;
+         s.Depth = 0;
+      }
+   }
+
    s.SurfacePitch = info->stride_B - 1;
 
 #if GEN_GEN >= 6
@@ -792,17 +928,30 @@ isl_genX(null_fill_state)(void *state, struct isl_extent3d size)
       /* We previously had this format set to B8G8R8A8_UNORM but ran into
        * hangs on IVB. R32_UINT seems to work for everybody.
        *
-       * https://gitlab.freedesktop.org/mesa/mesa/issues/1872
+       * https://gitlab.freedesktop.org/mesa/mesa/-/issues/1872
        */
       .SurfaceFormat = ISL_FORMAT_R32_UINT,
 #if GEN_GEN >= 7
-      .SurfaceArray = size.depth > 0,
+      .SurfaceArray = size.depth > 1,
 #endif
 #if GEN_GEN >= 8
       .TileMode = YMAJOR,
 #else
       .TiledSurface = true,
       .TileWalk = TILEWALK_YMAJOR,
+#endif
+#if GEN_GEN == 7
+      /* According to PRMs: "Volume 4 Part 1: Subsystem and Cores – Shared
+       * Functions"
+       *
+       * RENDER_SURFACE_STATE::Surface Vertical Alignment
+       *
+       *    "This field must be set to VALIGN_4 for all tiled Y Render Target
+       *     surfaces."
+       *
+       * Affect IVB, HSW.
+       */
+      .SurfaceVerticalAlignment = VALIGN_4,
 #endif
       .Width = size.width - 1,
       .Height = size.height - 1,

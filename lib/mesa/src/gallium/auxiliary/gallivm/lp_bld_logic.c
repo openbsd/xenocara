@@ -32,6 +32,7 @@
  * @author Jose Fonseca <jfonseca@vmware.com>
  */
 
+#include <llvm/Config/llvm-config.h>
 
 #include "util/u_cpu_detect.h"
 #include "util/u_memory.h"
@@ -256,6 +257,7 @@ lp_build_select_bitwise(struct lp_build_context *bld,
    LLVMBuilderRef builder = bld->gallivm->builder;
    struct lp_type type = bld->type;
    LLVMValueRef res;
+   LLVMTypeRef int_vec_type = lp_build_int_vec_type(bld->gallivm, type);
 
    assert(lp_check_value(type, a));
    assert(lp_check_value(type, b));
@@ -265,11 +267,12 @@ lp_build_select_bitwise(struct lp_build_context *bld,
    }
 
    if(type.floating) {
-      LLVMTypeRef int_vec_type = lp_build_int_vec_type(bld->gallivm, type);
       a = LLVMBuildBitCast(builder, a, int_vec_type, "");
       b = LLVMBuildBitCast(builder, b, int_vec_type, "");
    }
 
+   if (type.width > 32)
+      mask = LLVMBuildSExt(builder, mask, int_vec_type, "");
    a = LLVMBuildAnd(builder, a, mask, "");
 
    /* This often gets translated to PANDN, but sometimes the NOT is
@@ -317,16 +320,14 @@ lp_build_select(struct lp_build_context *bld,
       mask = LLVMBuildTrunc(builder, mask, LLVMInt1TypeInContext(lc), "");
       res = LLVMBuildSelect(builder, mask, a, b, "");
    }
-   else if (!(HAVE_LLVM == 0x0307) &&
-            (LLVMIsConstant(mask) ||
-             LLVMGetInstructionOpcode(mask) == LLVMSExt)) {
+   else if (LLVMIsConstant(mask) ||
+            LLVMGetInstructionOpcode(mask) == LLVMSExt) {
       /* Generate a vector select.
        *
        * Using vector selects should avoid emitting intrinsics hence avoid
        * hindering optimization passes, but vector selects weren't properly
        * supported yet for a long time, and LLVM will generate poor code when
        * the mask is not the result of a comparison.
-       * Also, llvm 3.7 may miscompile them (bug 94972).
        * XXX: Even if the instruction was an SExt, this may still produce
        * terrible code. Try piglit stencil-twoside.
        */
@@ -360,6 +361,11 @@ lp_build_select(struct lp_build_context *bld,
       LLVMTypeRef arg_type;
       LLVMValueRef args[3];
 
+      LLVMTypeRef mask_type = LLVMGetElementType(LLVMTypeOf(mask));
+      if (LLVMGetIntTypeWidth(mask_type) != type.width) {
+         LLVMTypeRef int_vec_type = LLVMVectorType(LLVMIntTypeInContext(lc, type.width), type.length);
+         mask = LLVMBuildSExt(builder, mask, int_vec_type, "");
+      }
       /*
        *  There's only float blend in AVX but can just cast i32/i64
        *  to float.

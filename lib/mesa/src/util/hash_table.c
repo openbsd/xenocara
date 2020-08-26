@@ -47,8 +47,31 @@
 #include "hash_table.h"
 #include "ralloc.h"
 #include "macros.h"
-#include "main/hash.h"
+#include "u_memory.h"
 #include "fast_urem_by_const.h"
+#include "util/u_memory.h"
+
+#define XXH_INLINE_ALL
+#include "xxhash.h"
+
+/**
+ * Magic number that gets stored outside of the struct hash_table.
+ *
+ * The hash table needs a particular pointer to be the marker for a key that
+ * was deleted from the table, along with NULL for the "never allocated in the
+ * table" marker.  Legacy GL allows any GLuint to be used as a GL object name,
+ * and we use a 1:1 mapping from GLuints to key pointers, so we need to be
+ * able to track a GLuint that happens to match the deleted key outside of
+ * struct hash_table.  We tell the hash table to use "1" as the deleted key
+ * value, so that we test the deleted-key-in-the-table path as best we can.
+ */
+#define DELETED_KEY_VALUE 1
+
+static inline void *
+uint_key(unsigned id)
+{
+   return (void *)(uintptr_t) id;
+}
 
 static const uint32_t deleted_key_value;
 
@@ -98,7 +121,7 @@ static const struct {
    ENTRY(2147483648ul, 2362232233ul, 2362232231ul )
 };
 
-static inline bool
+ASSERTED static inline bool
 key_pointer_is_reserved(const struct hash_table *ht, const void *key)
 {
    return key == NULL || key == ht->deleted_key;
@@ -546,20 +569,28 @@ _mesa_hash_table_random_entry(struct hash_table *ht,
 }
 
 
-/**
- * Quick FNV-1a hash implementation based on:
- * http://www.isthe.com/chongo/tech/comp/fnv/
- *
- * FNV-1a is not be the best hash out there -- Jenkins's lookup3 is supposed
- * to be quite good, and it probably beats FNV.  But FNV has the advantage
- * that it involves almost no code.  For an improvement on both, see Paul
- * Hsieh's http://www.azillionmonkeys.com/qed/hash.html
- */
 uint32_t
 _mesa_hash_data(const void *data, size_t size)
 {
-   return _mesa_fnv32_1a_accumulate_block(_mesa_fnv32_1a_offset_bias,
-                                          data, size);
+   return XXH32(data, size, 0);
+}
+
+uint32_t
+_mesa_hash_int(const void *key)
+{
+   return XXH32(key, sizeof(int), 0);
+}
+
+uint32_t
+_mesa_hash_uint(const void *key)
+{
+   return XXH32(key, sizeof(unsigned), 0);
+}
+
+uint32_t
+_mesa_hash_u32(const void *key)
+{
+   return XXH32(key, 4, 0);
 }
 
 /** FNV-1a string hash implementation */
@@ -575,6 +606,32 @@ _mesa_hash_string(const void *_key)
    }
 
    return hash;
+}
+
+uint32_t
+_mesa_hash_pointer(const void *pointer)
+{
+   uintptr_t num = (uintptr_t) pointer;
+   return (uint32_t) ((num >> 2) ^ (num >> 6) ^ (num >> 10) ^ (num >> 14));
+}
+
+bool
+_mesa_key_int_equal(const void *a, const void *b)
+{
+   return *((const int *)a) == *((const int *)b);
+}
+
+bool
+_mesa_key_uint_equal(const void *a, const void *b)
+{
+
+   return *((const unsigned *)a) == *((const unsigned *)b);
+}
+
+bool
+_mesa_key_u32_equal(const void *a, const void *b)
+{
+   return *((const uint32_t *)a) == *((const uint32_t *)b);
 }
 
 /**

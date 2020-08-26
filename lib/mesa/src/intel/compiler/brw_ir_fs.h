@@ -276,12 +276,11 @@ is_uniform(const fs_reg &reg)
 
 /**
  * Get the specified 8-component quarter of a register.
- * XXX - Maybe come up with a less misleading name for this (e.g. quarter())?
  */
 static inline fs_reg
-half(const fs_reg &reg, unsigned idx)
+quarter(const fs_reg &reg, unsigned idx)
 {
-   assert(idx < 2);
+   assert(idx < 4);
    return horiz_offset(reg, 8 * idx);
 }
 
@@ -298,8 +297,8 @@ subscript(fs_reg reg, brw_reg_type type, unsigned i)
       /* The stride is encoded inconsistently for fixed GRF and ARF registers
        * as the log2 of the actual vertical and horizontal strides.
        */
-      const int delta = _mesa_logbase2(type_sz(reg.type)) -
-                        _mesa_logbase2(type_sz(type));
+      const int delta = util_logbase2(type_sz(reg.type)) -
+                        util_logbase2(type_sz(type));
       reg.hstride += (reg.hstride ? delta : 0);
       reg.vstride += (reg.vstride ? delta : 0);
 
@@ -348,14 +347,15 @@ public:
    void resize_sources(uint8_t num_sources);
 
    bool is_send_from_grf() const;
+   bool is_payload(unsigned arg) const;
    bool is_partial_write() const;
-   bool is_copy_payload(const brw::simple_allocator &grf_alloc) const;
    unsigned components_read(unsigned i) const;
    unsigned size_read(int arg) const;
    bool can_do_source_mods(const struct gen_device_info *devinfo) const;
    bool can_do_cmod();
    bool can_change_types() const;
    bool has_source_and_destination_hazard() const;
+   unsigned implied_mrf_writes() const;
 
    /**
     * Return whether \p arg is a control source of a virtual instruction which
@@ -383,6 +383,8 @@ public:
 
    bool last_rt:1;
    bool pi_noperspective:1;   /**< Pixel interpolator noperspective flag */
+
+   tgl_swsb sched; /**< Scheduling info. */
 };
 
 /**
@@ -514,6 +516,12 @@ get_exec_type_size(const fs_inst *inst)
    return type_sz(get_exec_type(inst));
 }
 
+static inline bool
+is_send(const fs_inst *inst)
+{
+   return inst->mlen || inst->is_send_from_grf();
+}
+
 /**
  * Return whether the instruction isn't an ALU instruction and cannot be
  * assumed to complete in-order.
@@ -521,7 +529,7 @@ get_exec_type_size(const fs_inst *inst)
 static inline bool
 is_unordered(const fs_inst *inst)
 {
-   return inst->mlen || inst->is_send_from_grf() || inst->is_math();
+   return is_send(inst) || inst->is_math();
 }
 
 /**
@@ -559,5 +567,107 @@ has_dst_aligned_region_restriction(const gen_device_info *devinfo,
    else
       return false;
 }
+
+/**
+ * Return whether the LOAD_PAYLOAD instruction is a plain copy of bits from
+ * the specified register file into a VGRF.
+ *
+ * This implies identity register regions without any source-destination
+ * overlap, but otherwise has no implications on the location of sources and
+ * destination in the register file: Gathering any number of portions from
+ * multiple virtual registers in any order is allowed.
+ */
+inline bool
+is_copy_payload(brw_reg_file file, const fs_inst *inst)
+{
+   if (inst->opcode != SHADER_OPCODE_LOAD_PAYLOAD ||
+       inst->is_partial_write() || inst->saturate ||
+       inst->dst.file != VGRF)
+      return false;
+
+   for (unsigned i = 0; i < inst->sources; i++) {
+      if (inst->src[i].file != file ||
+          inst->src[i].abs || inst->src[i].negate)
+         return false;
+
+      if (!inst->src[i].is_contiguous())
+         return false;
+
+      if (regions_overlap(inst->dst, inst->size_written,
+                          inst->src[i], inst->size_read(i)))
+         return false;
+   }
+
+   return true;
+}
+
+/**
+ * Like is_copy_payload(), but the instruction is required to copy a single
+ * contiguous block of registers from the given register file into the
+ * destination without any reordering.
+ */
+inline bool
+is_identity_payload(brw_reg_file file, const fs_inst *inst) {
+   if (is_copy_payload(file, inst)) {
+      fs_reg reg = inst->src[0];
+
+      for (unsigned i = 0; i < inst->sources; i++) {
+         reg.type = inst->src[i].type;
+         if (!inst->src[i].equals(reg))
+            return false;
+
+         reg = byte_offset(reg, inst->size_read(i));
+      }
+
+      return true;
+   } else {
+      return false;
+   }
+}
+
+/**
+ * Like is_copy_payload(), but the instruction is required to source data from
+ * at least two disjoint VGRFs.
+ *
+ * This doesn't necessarily rule out the elimination of this instruction
+ * through register coalescing, but due to limitations of the register
+ * coalesce pass it might be impossible to do so directly until a later stage,
+ * when the LOAD_PAYLOAD instruction is unrolled into a sequence of MOV
+ * instructions.
+ */
+inline bool
+is_multi_copy_payload(const fs_inst *inst) {
+   if (is_copy_payload(VGRF, inst)) {
+      for (unsigned i = 0; i < inst->sources; i++) {
+            if (inst->src[i].nr != inst->src[0].nr)
+               return true;
+      }
+   }
+
+   return false;
+}
+
+/**
+ * Like is_identity_payload(), but the instruction is required to copy the
+ * whole contents of a single VGRF into the destination.
+ *
+ * This means that there is a good chance that the instruction will be
+ * eliminated through register coalescing, but it's neither a necessary nor a
+ * sufficient condition for that to happen -- E.g. consider the case where
+ * source and destination registers diverge due to other instructions in the
+ * program overwriting part of their contents, which isn't something we can
+ * predict up front based on a cheap strictly local test of the copy
+ * instruction.
+ */
+inline bool
+is_coalescing_payload(const brw::simple_allocator &alloc, const fs_inst *inst)
+{
+   return is_identity_payload(VGRF, inst) &&
+          inst->src[0].offset == 0 &&
+          alloc.sizes[inst->src[0].nr] * REG_SIZE == inst->size_written;
+}
+
+bool
+has_bank_conflict(const gen_device_info *devinfo, const fs_inst *inst);
 
 #endif

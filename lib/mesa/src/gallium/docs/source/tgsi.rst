@@ -681,6 +681,27 @@ This instruction replicates its result.
   Unconditional discard.  Allowed in fragment shaders only.
 
 
+.. opcode:: DEMOTE - Demote Invocation to a Helper
+
+  This demotes the current invocation to a helper, but continues
+  execution (while KILL may or may not terminate the
+  invocation). After this runs, all the usual helper invocation rules
+  apply about discarding buffer and render target writes. This is
+  useful for having accurate derivatives in the other invocations
+  which have not been demoted.
+
+  Allowed in fragment shaders only.
+
+
+.. opcode:: READ_HELPER - Reads Invocation Helper Status
+
+  This is identical to ``TGSI_SEMANTIC_HELPER_INVOCATION``, except
+  this will read the current value, which might change as a result of
+  a ``DEMOTE`` instruction.
+
+  Allowed in fragment shaders only.
+
+
 .. opcode:: TXB - Texture Lookup With Bias
 
   for cube map array textures and shadow cube maps, the bias value
@@ -714,7 +735,8 @@ This instruction replicates its result.
   Presumably shadow 2d arrays and shadow 3d targets could use
   this encoding too, but this is not legal.
 
-  shadow cube map arrays are neither possible nor required.
+  if the target is a shadow cube map array, the reference value is in
+  src1.y.
 
 .. math::
 
@@ -805,7 +827,8 @@ This instruction replicates its result.
   Presumably shadow 3d / 2d array / cube targets could use
   this encoding too, but this is not legal.
 
-  shadow cube map arrays are neither possible nor required.
+  if the target is a shadow cube map array, the reference value is in
+  src1.y.
 
 .. math::
 
@@ -941,13 +964,21 @@ XXX doesn't look like most of the opcodes really belong here.
   require another CAP is hw can do it natively. For now we lower that before
   TGSI.
 
+  PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE changes the encoding so that component
+  is stored in the sampler source swizzle x.
+
 .. math::
 
    coord = src0
 
+   (without TGSI_TG4_COMPONENT_IN_SWIZZLE)
    component = src1
 
    dst = texture\_gather4 (unit, coord, component)
+
+   (with TGSI_TG4_COMPONENT_IN_SWIZZLE)
+   dst = texture\_gather4 (unit, coord)
+   component is encoded in sampler swizzle.
 
 (with SM5 - cube array shadow)
 
@@ -3495,6 +3526,13 @@ A bit mask of ``bit index < TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
 ``(1 << subgroup_invocation) - 1`` in arbitrary precision arithmetic.
 
 
+TGSI_SEMANTIC_VIEWPORT_MASK
+"""""""""""""""""""""""""""
+
+A bit mask of viewports to broadcast the current primitive to. See
+GL_NV_viewport_array2 for more details.
+
+
 TGSI_SEMANTIC_TESS_DEFAULT_OUTER_LEVEL
 """"""""""""""""""""""""""""""""""""""
 
@@ -3765,6 +3803,13 @@ FS_POST_DEPTH_COVERAGE
 When enabled, the input for TGSI_SEMANTIC_SAMPLEMASK will exclude samples
 that have failed the depth/stencil tests. This is only valid when
 FS_EARLY_DEPTH_STENCIL is also specified.
+
+LAYER_VIEWPORT_RELATIVE
+"""""""""""""""""""""""
+
+When enabled, the TGSI_SEMATNIC_LAYER output value is relative to the
+current viewport. This is especially useful in conjunction with
+TGSI_SEMANTIC_VIEWPORT_MASK.
 
 
 Texture Sampling and Texture Formats

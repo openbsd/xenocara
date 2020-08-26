@@ -27,14 +27,12 @@ noinst_LTLIBRARIES += perf/libintel_perf.la
 perf_libintel_perf_la_SOURCES = $(GEN_PERF_FILES) $(GEN_PERF_GENERATED_FILES)
 perf_libintel_perf_la_CFLAGS = $(AM_CFLAGS)
 
-if REGEN_SOURCES
 perf/gen_perf_metrics.c: perf/gen_perf.py $(GEN_PERF_XML_FILES)
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) $(PYTHON_FLAGS) $(srcdir)/perf/gen_perf.py \
 	--code=$(builddir)/perf/gen_perf_metrics.c \
 	--header=$(builddir)/perf/gen_perf_metrics.h \
 	$(GEN_PERF_XML_FILES:%=$(srcdir)/%)
-endif
 
 perf/gen_perf_metrics.h: perf/gen_perf_metrics.c
 

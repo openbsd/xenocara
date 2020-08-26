@@ -28,7 +28,7 @@
 #include "util/u_string.h"
 #include "util/u_memory.h"
 #include "util/u_prim.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "freedreno_state.h"
 #include "freedreno_resource.h"
@@ -126,7 +126,7 @@ fd3_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 			.color_two_side = ctx->rasterizer->light_twoside,
 			.vclamp_color = ctx->rasterizer->clamp_vertex_color,
 			.fclamp_color = ctx->rasterizer->clamp_fragment_color,
-			.half_precision = ctx->in_blit &&
+			.half_precision = ctx->in_discard_blit &&
 					fd_half_precision(&ctx->batch->framebuffer),
 			.has_per_samp = (fd3_ctx->fsaturate || fd3_ctx->vsaturate),
 			.vsaturate_s = fd3_ctx->vsaturate_s,
@@ -141,7 +141,7 @@ fd3_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 		.sprite_coord_mode = ctx->rasterizer->sprite_coord_mode,
 	};
 
-	if (fd3_needs_manual_clipping(ctx->prog.vp, ctx->rasterizer))
+	if (fd3_needs_manual_clipping(ctx->prog.vs, ctx->rasterizer))
 		emit.key.ucp_enables = ctx->rasterizer->clip_plane_enable;
 
 	fixup_shader_state(ctx, &emit.key);
@@ -165,8 +165,8 @@ fd3_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 	/* and now binning pass: */
 	emit.binning_pass = true;
 	emit.dirty = dirty & ~(FD_DIRTY_BLEND);
-	emit.vp = NULL;   /* we changed key so need to refetch vp */
-	emit.fp = NULL;
+	emit.vs = NULL;   /* we changed key so need to refetch vs */
+	emit.fs = NULL;
 	draw_impl(ctx, ctx->batch->binning, &emit, index_offset);
 
 	fd_context_all_clean(ctx);

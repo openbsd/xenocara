@@ -36,12 +36,12 @@
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_rect.h"
 #include "util/u_surface.h"
 #include "util/u_pack_color.h"
-
+#include "util/u_memset.h"
 
 /**
  * Initialize a pipe_surface object.  'view' is considered to have
@@ -54,59 +54,6 @@ u_surface_default_template(struct pipe_surface *surf,
    memset(surf, 0, sizeof(*surf));
 
    surf->format = texture->format;
-}
-
-
-/**
- * Copy 2D rect from one place to another.
- * Position and sizes are in pixels.
- * src_stride may be negative to do vertical flip of pixels from source.
- */
-void
-util_copy_rect(ubyte * dst,
-               enum pipe_format format,
-               unsigned dst_stride,
-               unsigned dst_x,
-               unsigned dst_y,
-               unsigned width,
-               unsigned height,
-               const ubyte * src,
-               int src_stride,
-               unsigned src_x,
-               unsigned src_y)
-{
-   unsigned i;
-   int src_stride_pos = src_stride < 0 ? -src_stride : src_stride;
-   int blocksize = util_format_get_blocksize(format);
-   int blockwidth = util_format_get_blockwidth(format);
-   int blockheight = util_format_get_blockheight(format);
-
-   assert(blocksize > 0);
-   assert(blockwidth > 0);
-   assert(blockheight > 0);
-
-   dst_x /= blockwidth;
-   dst_y /= blockheight;
-   width = (width + blockwidth - 1)/blockwidth;
-   height = (height + blockheight - 1)/blockheight;
-   src_x /= blockwidth;
-   src_y /= blockheight;
-
-   dst += dst_x * blocksize;
-   src += src_x * blocksize;
-   dst += dst_y * dst_stride;
-   src += src_y * src_stride_pos;
-   width *= blocksize;
-
-   if (width == dst_stride && width == (unsigned)src_stride)
-      memcpy(dst, src, height * width);
-   else {
-      for (i = 0; i < height; i++) {
-         memcpy(dst, src, width);
-         dst += dst_stride;
-         src += src_stride;
-      }
-   }
 }
 
 
@@ -194,9 +141,7 @@ util_fill_rect(ubyte * dst,
       break;
    case 4:
       for (i = 0; i < height; i++) {
-         uint32_t *row = (uint32_t *)dst;
-         for (j = 0; j < width; j++)
-            *row++ = uc->ui[0];
+         util_memset32(dst, uc->ui[0], width);
          dst += dst_stride;
       }
       break;
@@ -391,21 +336,7 @@ util_clear_color_texture_helper(struct pipe_transfer *dst_trans,
 
    assert(dst_trans->stride > 0);
 
-   if (util_format_is_pure_integer(format)) {
-      /*
-       * We expect int/uint clear values here, though some APIs
-       * might disagree (but in any case util_pack_color()
-       * couldn't handle it)...
-       */
-      if (util_format_is_pure_sint(format)) {
-         util_format_write_4i(format, color->i, 0, &uc, 0, 0, 0, 1, 1);
-      } else {
-         assert(util_format_is_pure_uint(format));
-         util_format_write_4ui(format, color->ui, 0, &uc, 0, 0, 0, 1, 1);
-      }
-   } else {
-      util_pack_color(color->f, format, &uc);
-   }
+   util_pack_color_union(format, &uc, color);
 
    util_fill_box(dst_map, format,
                  dst_trans->stride, dst_trans->layer_stride,
@@ -559,9 +490,7 @@ util_clear_depth_stencil_texture(struct pipe_context *pipe,
       case 4:
          if (!need_rmw) {
             for (i = 0; i < height; i++) {
-               uint32_t *row = (uint32_t *)dst_map;
-               for (j = 0; j < width; j++)
-                  *row++ = (uint32_t) zstencil;
+               util_memset32(dst_map, (uint32_t)zstencil, width);
                dst_map += dst_stride;
             }
          }
@@ -644,12 +573,12 @@ util_clear_texture(struct pipe_context *pipe,
 
       if (util_format_has_depth(desc)) {
          clear |= PIPE_CLEAR_DEPTH;
-         desc->unpack_z_float(&depth, 0, data, 0, 1, 1);
+         util_format_unpack_z_float(tex->format, &depth, data, 1);
       }
 
       if (util_format_has_stencil(desc)) {
          clear |= PIPE_CLEAR_STENCIL;
-         desc->unpack_s_8uint(&stencil, 0, data, 0, 1, 1);
+         util_format_unpack_s_8uint(tex->format, &stencil, data, 1);
       }
 
       zstencil = util_pack64_z_stencil(tex->format, depth, stencil);
@@ -659,12 +588,7 @@ util_clear_texture(struct pipe_context *pipe,
                                        box->width, box->height, box->depth);
    } else {
       union pipe_color_union color;
-      if (util_format_is_pure_uint(tex->format))
-         desc->unpack_rgba_uint(color.ui, 0, data, 0, 1, 1);
-      else if (util_format_is_pure_sint(tex->format))
-         desc->unpack_rgba_sint(color.i, 0, data, 0, 1, 1);
-      else
-         desc->unpack_rgba_float(color.f, 0, data, 0, 1, 1);
+      util_format_unpack_rgba(tex->format, color.ui, data, 1);
 
       util_clear_color_texture(pipe, tex, tex->format, &color, level,
                                box->x, box->y, box->z,

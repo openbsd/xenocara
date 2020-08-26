@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "compiler/blob.h"
+#include "util/blob.h"
 #include "util/hash_table.h"
 #include "util/debug.h"
 #include "util/disk_cache.h"
@@ -32,11 +32,12 @@
 
 struct anv_shader_bin *
 anv_shader_bin_create(struct anv_device *device,
+                      gl_shader_stage stage,
                       const void *key_data, uint32_t key_size,
                       const void *kernel_data, uint32_t kernel_size,
                       const void *constant_data, uint32_t constant_data_size,
                       const struct brw_stage_prog_data *prog_data_in,
-                      uint32_t prog_data_size, const void *prog_data_param_in,
+                      uint32_t prog_data_size,
                       const struct brw_compile_stats *stats, uint32_t num_stats,
                       const nir_xfb_info *xfb_info_in,
                       const struct anv_pipeline_bind_map *bind_map)
@@ -68,6 +69,8 @@ anv_shader_bin_create(struct anv_device *device,
 
    shader->ref_cnt = 1;
 
+   shader->stage = stage;
+
    key->size = key_size;
    memcpy(key->data, key_data, key_size);
    shader->key = key;
@@ -88,7 +91,7 @@ anv_shader_bin_create(struct anv_device *device,
    shader->constant_data_size = constant_data_size;
 
    memcpy(prog_data, prog_data_in, prog_data_size);
-   memcpy(prog_data_param, prog_data_param_in,
+   memset(prog_data_param, 0,
           prog_data->nr_params * sizeof(*prog_data_param));
    prog_data->param = prog_data_param;
    shader->prog_data = prog_data;
@@ -132,6 +135,8 @@ static bool
 anv_shader_bin_write_to_blob(const struct anv_shader_bin *shader,
                              struct blob *blob)
 {
+   blob_write_uint32(blob, shader->stage);
+
    blob_write_uint32(blob, shader->key->size);
    blob_write_bytes(blob, shader->key->data, shader->key->size);
 
@@ -144,9 +149,6 @@ anv_shader_bin_write_to_blob(const struct anv_shader_bin *shader,
 
    blob_write_uint32(blob, shader->prog_data_size);
    blob_write_bytes(blob, shader->prog_data, shader->prog_data_size);
-   blob_write_bytes(blob, shader->prog_data->param,
-                    shader->prog_data->nr_params *
-                    sizeof(*shader->prog_data->param));
 
    blob_write_uint32(blob, shader->num_stats);
    blob_write_bytes(blob, shader->stats,
@@ -161,6 +163,12 @@ anv_shader_bin_write_to_blob(const struct anv_shader_bin *shader,
       blob_write_uint32(blob, 0);
    }
 
+   blob_write_bytes(blob, shader->bind_map.surface_sha1,
+                    sizeof(shader->bind_map.surface_sha1));
+   blob_write_bytes(blob, shader->bind_map.sampler_sha1,
+                    sizeof(shader->bind_map.sampler_sha1));
+   blob_write_bytes(blob, shader->bind_map.push_sha1,
+                    sizeof(shader->bind_map.push_sha1));
    blob_write_uint32(blob, shader->bind_map.surface_count);
    blob_write_uint32(blob, shader->bind_map.sampler_count);
    blob_write_bytes(blob, shader->bind_map.surface_to_descriptor,
@@ -169,6 +177,8 @@ anv_shader_bin_write_to_blob(const struct anv_shader_bin *shader,
    blob_write_bytes(blob, shader->bind_map.sampler_to_descriptor,
                     shader->bind_map.sampler_count *
                     sizeof(*shader->bind_map.sampler_to_descriptor));
+   blob_write_bytes(blob, shader->bind_map.push_ranges,
+                    sizeof(shader->bind_map.push_ranges));
 
    return !blob->out_of_memory;
 }
@@ -177,6 +187,8 @@ static struct anv_shader_bin *
 anv_shader_bin_create_from_blob(struct anv_device *device,
                                 struct blob_reader *blob)
 {
+   gl_shader_stage stage = blob_read_uint32(blob);
+
    uint32_t key_size = blob_read_uint32(blob);
    const void *key_data = blob_read_bytes(blob, key_size);
 
@@ -191,8 +203,6 @@ anv_shader_bin_create_from_blob(struct anv_device *device,
       blob_read_bytes(blob, prog_data_size);
    if (blob->overrun)
       return NULL;
-   const void *prog_data_param =
-      blob_read_bytes(blob, prog_data->nr_params * sizeof(*prog_data->param));
 
    uint32_t num_stats = blob_read_uint32(blob);
    const struct brw_compile_stats *stats =
@@ -204,6 +214,9 @@ anv_shader_bin_create_from_blob(struct anv_device *device,
       xfb_info = blob_read_bytes(blob, xfb_size);
 
    struct anv_pipeline_bind_map bind_map;
+   blob_copy_bytes(blob, bind_map.surface_sha1, sizeof(bind_map.surface_sha1));
+   blob_copy_bytes(blob, bind_map.sampler_sha1, sizeof(bind_map.sampler_sha1));
+   blob_copy_bytes(blob, bind_map.push_sha1, sizeof(bind_map.push_sha1));
    bind_map.surface_count = blob_read_uint32(blob);
    bind_map.sampler_count = blob_read_uint32(blob);
    bind_map.surface_to_descriptor = (void *)
@@ -212,15 +225,16 @@ anv_shader_bin_create_from_blob(struct anv_device *device,
    bind_map.sampler_to_descriptor = (void *)
       blob_read_bytes(blob, bind_map.sampler_count *
                             sizeof(*bind_map.sampler_to_descriptor));
+   blob_copy_bytes(blob, bind_map.push_ranges, sizeof(bind_map.push_ranges));
 
    if (blob->overrun)
       return NULL;
 
-   return anv_shader_bin_create(device,
+   return anv_shader_bin_create(device, stage,
                                 key_data, key_size,
                                 kernel_data, kernel_size,
                                 constant_data, constant_data_size,
-                                prog_data, prog_data_size, prog_data_param,
+                                prog_data, prog_data_size,
                                 stats, num_stats, xfb_info, &bind_map);
 }
 
@@ -364,6 +378,7 @@ anv_pipeline_cache_add_shader_bin(struct anv_pipeline_cache *cache,
 
 static struct anv_shader_bin *
 anv_pipeline_cache_add_shader_locked(struct anv_pipeline_cache *cache,
+                                     gl_shader_stage stage,
                                      const void *key_data, uint32_t key_size,
                                      const void *kernel_data,
                                      uint32_t kernel_size,
@@ -371,7 +386,6 @@ anv_pipeline_cache_add_shader_locked(struct anv_pipeline_cache *cache,
                                      uint32_t constant_data_size,
                                      const struct brw_stage_prog_data *prog_data,
                                      uint32_t prog_data_size,
-                                     const void *prog_data_param,
                                      const struct brw_compile_stats *stats,
                                      uint32_t num_stats,
                                      const nir_xfb_info *xfb_info,
@@ -383,10 +397,11 @@ anv_pipeline_cache_add_shader_locked(struct anv_pipeline_cache *cache,
       return shader;
 
    struct anv_shader_bin *bin =
-      anv_shader_bin_create(cache->device, key_data, key_size,
+      anv_shader_bin_create(cache->device, stage,
+                            key_data, key_size,
                             kernel_data, kernel_size,
                             constant_data, constant_data_size,
-                            prog_data, prog_data_size, prog_data_param,
+                            prog_data, prog_data_size,
                             stats, num_stats, xfb_info, bind_map);
    if (!bin)
       return NULL;
@@ -398,6 +413,7 @@ anv_pipeline_cache_add_shader_locked(struct anv_pipeline_cache *cache,
 
 struct anv_shader_bin *
 anv_pipeline_cache_upload_kernel(struct anv_pipeline_cache *cache,
+                                 gl_shader_stage stage,
                                  const void *key_data, uint32_t key_size,
                                  const void *kernel_data, uint32_t kernel_size,
                                  const void *constant_data,
@@ -413,11 +429,10 @@ anv_pipeline_cache_upload_kernel(struct anv_pipeline_cache *cache,
       pthread_mutex_lock(&cache->mutex);
 
       struct anv_shader_bin *bin =
-         anv_pipeline_cache_add_shader_locked(cache, key_data, key_size,
+         anv_pipeline_cache_add_shader_locked(cache, stage, key_data, key_size,
                                               kernel_data, kernel_size,
                                               constant_data, constant_data_size,
                                               prog_data, prog_data_size,
-                                              prog_data->param,
                                               stats, num_stats,
                                               xfb_info, bind_map);
 
@@ -430,11 +445,11 @@ anv_pipeline_cache_upload_kernel(struct anv_pipeline_cache *cache,
       return bin;
    } else {
       /* In this case, we're not caching it so the caller owns it entirely */
-      return anv_shader_bin_create(cache->device, key_data, key_size,
+      return anv_shader_bin_create(cache->device, stage,
+                                   key_data, key_size,
                                    kernel_data, kernel_size,
                                    constant_data, constant_data_size,
                                    prog_data, prog_data_size,
-                                   prog_data->param,
                                    stats, num_stats,
                                    xfb_info, bind_map);
    }
@@ -453,7 +468,7 @@ anv_pipeline_cache_load(struct anv_pipeline_cache *cache,
                         const void *data, size_t size)
 {
    struct anv_device *device = cache->device;
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
+   struct anv_physical_device *pdevice = device->physical;
 
    if (cache->cache == NULL)
       return;
@@ -473,7 +488,7 @@ anv_pipeline_cache_load(struct anv_pipeline_cache *cache,
       return;
    if (header.vendor_id != 0x8086)
       return;
-   if (header.device_id != device->chipset_id)
+   if (header.device_id != device->info.chipset_id)
       return;
    if (memcmp(header.uuid, pdevice->pipeline_cache_uuid, VK_UUID_SIZE) != 0)
       return;
@@ -506,7 +521,7 @@ VkResult anv_CreatePipelineCache(
       return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
 
    anv_pipeline_cache_init(cache, device,
-                           device->instance->pipeline_cache_enabled);
+                           device->physical->instance->pipeline_cache_enabled);
 
    if (pCreateInfo->initialDataSize > 0)
       anv_pipeline_cache_load(cache,
@@ -542,7 +557,6 @@ VkResult anv_GetPipelineCacheData(
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
    ANV_FROM_HANDLE(anv_pipeline_cache, cache, _cache);
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
 
    struct blob blob;
    if (pData) {
@@ -555,9 +569,9 @@ VkResult anv_GetPipelineCacheData(
       .header_size = sizeof(struct cache_header),
       .header_version = VK_PIPELINE_CACHE_HEADER_VERSION_ONE,
       .vendor_id = 0x8086,
-      .device_id = device->chipset_id,
+      .device_id = device->info.chipset_id,
    };
-   memcpy(header.uuid, pdevice->pipeline_cache_uuid, VK_UUID_SIZE);
+   memcpy(header.uuid, device->physical->pipeline_cache_uuid, VK_UUID_SIZE);
    blob_write_bytes(&blob, &header, sizeof(header));
 
    uint32_t count = 0;
@@ -644,8 +658,8 @@ anv_device_search_for_kernel(struct anv_device *device,
    }
 
 #ifdef ENABLE_SHADER_CACHE
-   struct disk_cache *disk_cache = device->instance->physicalDevice.disk_cache;
-   if (disk_cache && device->instance->pipeline_cache_enabled) {
+   struct disk_cache *disk_cache = device->physical->disk_cache;
+   if (disk_cache && device->physical->instance->pipeline_cache_enabled) {
       cache_key cache_key;
       disk_cache_compute_key(disk_cache, key_data, key_size, cache_key);
 
@@ -672,6 +686,7 @@ anv_device_search_for_kernel(struct anv_device *device,
 struct anv_shader_bin *
 anv_device_upload_kernel(struct anv_device *device,
                          struct anv_pipeline_cache *cache,
+                         gl_shader_stage stage,
                          const void *key_data, uint32_t key_size,
                          const void *kernel_data, uint32_t kernel_size,
                          const void *constant_data,
@@ -685,18 +700,17 @@ anv_device_upload_kernel(struct anv_device *device,
 {
    struct anv_shader_bin *bin;
    if (cache) {
-      bin = anv_pipeline_cache_upload_kernel(cache, key_data, key_size,
+      bin = anv_pipeline_cache_upload_kernel(cache, stage, key_data, key_size,
                                              kernel_data, kernel_size,
                                              constant_data, constant_data_size,
                                              prog_data, prog_data_size,
                                              stats, num_stats,
                                              xfb_info, bind_map);
    } else {
-      bin = anv_shader_bin_create(device, key_data, key_size,
+      bin = anv_shader_bin_create(device, stage, key_data, key_size,
                                   kernel_data, kernel_size,
                                   constant_data, constant_data_size,
                                   prog_data, prog_data_size,
-                                  prog_data->param,
                                   stats, num_stats,
                                   xfb_info, bind_map);
    }
@@ -705,7 +719,7 @@ anv_device_upload_kernel(struct anv_device *device,
       return NULL;
 
 #ifdef ENABLE_SHADER_CACHE
-   struct disk_cache *disk_cache = device->instance->physicalDevice.disk_cache;
+   struct disk_cache *disk_cache = device->physical->disk_cache;
    if (disk_cache) {
       struct blob binary;
       blob_init(&binary);
@@ -779,7 +793,7 @@ anv_device_upload_nir(struct anv_device *device,
       struct blob blob;
       blob_init(&blob);
 
-      nir_serialize(&blob, nir);
+      nir_serialize(&blob, nir, false);
       if (blob.out_of_memory) {
          blob_finish(&blob);
          return;

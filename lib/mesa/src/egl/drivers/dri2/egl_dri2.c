@@ -65,6 +65,8 @@
 #include "util/u_atomic.h"
 #include "util/u_vector.h"
 #include "mapi/glapi/glapi.h"
+#include "util/bitscan.h"
+#include "util/u_math.h"
 
 /* Additional definitions not yet in the drm_fourcc.h.
  */
@@ -81,6 +83,56 @@
 #endif
 
 #define NUM_ATTRIBS 12
+
+static const struct dri2_pbuffer_visual {
+   const char *format_name;
+   unsigned int dri_image_format;
+   int rgba_shifts[4];
+   unsigned int rgba_sizes[4];
+} dri2_pbuffer_visuals[] = {
+   {
+      "ABGR16F",
+      __DRI_IMAGE_FORMAT_ABGR16161616F,
+      { 0, 16, 32, 48 },
+      { 16, 16, 16, 16 }
+   },
+   {
+      "XBGR16F",
+      __DRI_IMAGE_FORMAT_XBGR16161616F,
+      { 0, 16, 32, -1 },
+      { 16, 16, 16, 0 }
+   },
+   {
+      "A2RGB10",
+      __DRI_IMAGE_FORMAT_ARGB2101010,
+      { 20, 10, 0, 30 },
+      { 10, 10, 10, 2 }
+   },
+   {
+      "X2RGB10",
+      __DRI_IMAGE_FORMAT_XRGB2101010,
+      { 20, 10, 0, -1 },
+      { 10, 10, 10, 0 }
+   },
+   {
+      "ARGB8888",
+      __DRI_IMAGE_FORMAT_ARGB8888,
+      { 16, 8, 0, 24 },
+      { 8, 8, 8, 8 }
+   },
+   {
+      "RGB888",
+      __DRI_IMAGE_FORMAT_XRGB8888,
+      { 16, 8, 0, -1 },
+      { 8, 8, 8, 0 }
+   },
+   {
+      "RGB565",
+      __DRI_IMAGE_FORMAT_RGB565,
+      { 11, 5, 0, -1 },
+      { 5, 6, 5, 0 }
+   },
+};
 
 static void
 dri_set_background_context(void *loaderPrivate)
@@ -161,25 +213,102 @@ dri2_get_pbuffer_drawable_info(__DRIdrawable * draw,
    *h = dri2_surf->base.Height;
 }
 
-/* HACK: technically we should have swrast_null, instead of these. We
- * get away since only pbuffers are supported, thus the callbacks are
- * unused.
+static int
+dri2_get_bytes_per_pixel(struct dri2_egl_surface *dri2_surf)
+{
+   const int depth = dri2_surf->base.Config->BufferSize;
+   return depth ? util_next_power_of_two(depth / 8) : 0;
+}
+
+static void
+dri2_put_image(__DRIdrawable * draw, int op,
+               int x, int y, int w, int h,
+               char *data, void *loaderPrivate)
+{
+   struct dri2_egl_surface *dri2_surf = loaderPrivate;
+   const int bpp = dri2_get_bytes_per_pixel(dri2_surf);
+   const int width = dri2_surf->base.Width;
+   const int height = dri2_surf->base.Height;
+   const int dst_stride = width*bpp;
+   const int src_stride = w*bpp;
+   const int x_offset = x*bpp;
+   int copy_width = src_stride;
+
+   if (!dri2_surf->swrast_device_buffer)
+      dri2_surf->swrast_device_buffer = malloc(height*dst_stride);
+
+   if (dri2_surf->swrast_device_buffer) {
+      const char *src = data;
+      char *dst = dri2_surf->swrast_device_buffer;
+
+      dst += x_offset;
+      dst += y*dst_stride;
+
+      /* Drivers are allowed to submit OOB PutImage requests, so clip here. */
+      if (copy_width > dst_stride - x_offset)
+         copy_width = dst_stride - x_offset;
+      if (h > height - y)
+         h = height - y;
+
+      for (; 0 < h; --h) {
+         memcpy(dst, src, copy_width);
+         dst += dst_stride;
+         src += src_stride;
+      }
+   }
+}
+
+static void
+dri2_get_image(__DRIdrawable * read,
+               int x, int y, int w, int h,
+               char *data, void *loaderPrivate)
+{
+   struct dri2_egl_surface *dri2_surf = loaderPrivate;
+   const int bpp = dri2_get_bytes_per_pixel(dri2_surf);
+   const int width = dri2_surf->base.Width;
+   const int height = dri2_surf->base.Height;
+   const int src_stride = width*bpp;
+   const int dst_stride = w*bpp;
+   const int x_offset = x*bpp;
+   int copy_width = dst_stride;
+   const char *src = dri2_surf->swrast_device_buffer;
+   char *dst = data;
+
+   if (!src) {
+      memset(data, 0, copy_width * h);
+      return;
+   }
+
+   src += x_offset;
+   src += y*src_stride;
+
+   /* Drivers are allowed to submit OOB GetImage requests, so clip here. */
+   if (copy_width > src_stride - x_offset)
+      copy_width = src_stride - x_offset;
+   if (h > height - y)
+      h = height - y;
+
+   for (; 0 < h; --h) {
+      memcpy(dst, src, copy_width);
+      src += src_stride;
+      dst += dst_stride;
+   }
+
+}
+
+/* HACK: technically we should have swrast_null, instead of these.
  */
 const __DRIswrastLoaderExtension swrast_pbuffer_loader_extension = {
    .base            = { __DRI_SWRAST_LOADER, 1 },
    .getDrawableInfo = dri2_get_pbuffer_drawable_info,
-   .putImage        = NULL,
-   .getImage        = NULL,
+   .putImage        = dri2_put_image,
+   .getImage        = dri2_get_image,
 };
 
 static const EGLint dri2_to_egl_attribute_map[__DRI_ATTRIB_MAX] = {
    [__DRI_ATTRIB_BUFFER_SIZE ]          = EGL_BUFFER_SIZE,
    [__DRI_ATTRIB_LEVEL]                 = EGL_LEVEL,
-   [__DRI_ATTRIB_RED_SIZE]              = EGL_RED_SIZE,
-   [__DRI_ATTRIB_GREEN_SIZE]            = EGL_GREEN_SIZE,
-   [__DRI_ATTRIB_BLUE_SIZE]             = EGL_BLUE_SIZE,
    [__DRI_ATTRIB_LUMINANCE_SIZE]        = EGL_LUMINANCE_SIZE,
-   [__DRI_ATTRIB_ALPHA_SIZE]            = EGL_ALPHA_SIZE,
    [__DRI_ATTRIB_DEPTH_SIZE]            = EGL_DEPTH_SIZE,
    [__DRI_ATTRIB_STENCIL_SIZE]          = EGL_STENCIL_SIZE,
    [__DRI_ATTRIB_SAMPLE_BUFFERS]        = EGL_SAMPLE_BUFFERS,
@@ -214,10 +343,77 @@ dri2_match_config(const _EGLConfig *conf, const _EGLConfig *criteria)
    return EGL_TRUE;
 }
 
+void
+dri2_get_shifts_and_sizes(const __DRIcoreExtension *core,
+                          const __DRIconfig *config, int *shifts,
+		          unsigned int *sizes)
+{
+   unsigned int mask;
+
+   if (core->getConfigAttrib(config, __DRI_ATTRIB_RED_SHIFT, (unsigned int *)&shifts[0])) {
+      core->getConfigAttrib(config, __DRI_ATTRIB_GREEN_SHIFT, (unsigned int *)&shifts[1]);
+      core->getConfigAttrib(config, __DRI_ATTRIB_BLUE_SHIFT, (unsigned int *)&shifts[2]);
+      core->getConfigAttrib(config, __DRI_ATTRIB_ALPHA_SHIFT, (unsigned int *)&shifts[3]);
+   } else {
+      /* Driver isn't exposing shifts, so convert masks to shifts */
+      core->getConfigAttrib(config, __DRI_ATTRIB_RED_MASK, &mask);
+      shifts[0] = ffs(mask) - 1;
+      core->getConfigAttrib(config, __DRI_ATTRIB_GREEN_MASK, &mask);
+      shifts[1] = ffs(mask) - 1;
+      core->getConfigAttrib(config, __DRI_ATTRIB_BLUE_MASK, &mask);
+      shifts[2] = ffs(mask) - 1;
+      core->getConfigAttrib(config, __DRI_ATTRIB_ALPHA_MASK, &mask);
+      shifts[3] = ffs(mask) - 1;
+   }
+
+   core->getConfigAttrib(config, __DRI_ATTRIB_RED_SIZE, &sizes[0]);
+   core->getConfigAttrib(config, __DRI_ATTRIB_GREEN_SIZE, &sizes[1]);
+   core->getConfigAttrib(config, __DRI_ATTRIB_BLUE_SIZE, &sizes[2]);
+   core->getConfigAttrib(config, __DRI_ATTRIB_ALPHA_SIZE, &sizes[3]);
+}
+
+void
+dri2_get_render_type_float(const __DRIcoreExtension *core,
+                           const __DRIconfig *config,
+                           bool *is_float)
+{
+   unsigned int render_type;
+
+   core->getConfigAttrib(config, __DRI_ATTRIB_RENDER_TYPE, &render_type);
+   *is_float = (render_type & __DRI_ATTRIB_FLOAT_BIT) ? true : false;
+}
+
+unsigned int
+dri2_image_format_for_pbuffer_config(struct dri2_egl_display *dri2_dpy,
+                                     const __DRIconfig *config)
+{
+   int shifts[4];
+   unsigned int sizes[4];
+
+   dri2_get_shifts_and_sizes(dri2_dpy->core, config, shifts, sizes);
+
+   for (unsigned i = 0; i < ARRAY_SIZE(dri2_pbuffer_visuals); ++i) {
+      const struct dri2_pbuffer_visual *visual = &dri2_pbuffer_visuals[i];
+
+      if (shifts[0] == visual->rgba_shifts[0] &&
+          shifts[1] == visual->rgba_shifts[1] &&
+          shifts[2] == visual->rgba_shifts[2] &&
+          shifts[3] == visual->rgba_shifts[3] &&
+          sizes[0] == visual->rgba_sizes[0] &&
+          sizes[1] == visual->rgba_sizes[1] &&
+          sizes[2] == visual->rgba_sizes[2] &&
+          sizes[3] == visual->rgba_sizes[3]) {
+         return visual->dri_image_format;
+      }
+   }
+
+   return __DRI_IMAGE_FORMAT_NONE;
+}
+
 struct dri2_egl_config *
 dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
                 EGLint surface_type, const EGLint *attr_list,
-                const unsigned int *rgba_masks)
+                const int *rgba_shifts, const unsigned int *rgba_sizes)
 {
    struct dri2_egl_config *conf;
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
@@ -225,7 +421,8 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
    unsigned int attrib, value, double_buffer;
    bool srgb = false;
    EGLint key, bind_to_texture_rgb, bind_to_texture_rgba;
-   unsigned int dri_masks[4] = { 0, 0, 0, 0 };
+   int dri_shifts[4] = { -1, -1, -1, -1 };
+   unsigned int dri_sizes[4] = { 0, 0, 0, 0 };
    _EGLConfig *matching_config;
    EGLint num_configs = 0;
    EGLint config_id;
@@ -242,13 +439,15 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
 
       switch (attrib) {
       case __DRI_ATTRIB_RENDER_TYPE:
+         if (value & __DRI_ATTRIB_FLOAT_BIT)
+            base.ComponentType = EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT;
          if (value & __DRI_ATTRIB_RGBA_BIT)
             value = EGL_RGB_BUFFER;
          else if (value & __DRI_ATTRIB_LUMINANCE_BIT)
             value = EGL_LUMINANCE_BUFFER;
          else
             return NULL;
-         _eglSetConfigKey(&base, EGL_COLOR_BUFFER_TYPE, value);
+         base.ColorBufferType = value;
          break;
 
       case __DRI_ATTRIB_CONFIG_CAVEAT:
@@ -258,7 +457,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
             value = EGL_SLOW_CONFIG;
          else
             value = EGL_NONE;
-         _eglSetConfigKey(&base, EGL_CONFIG_CAVEAT, value);
+         base.ConfigCaveat = value;
          break;
 
       case __DRI_ATTRIB_BIND_TO_TEXTURE_RGB:
@@ -273,20 +472,56 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
          double_buffer = value;
          break;
 
+      case __DRI_ATTRIB_RED_SIZE:
+         dri_sizes[0] = value;
+         base.RedSize = value;
+         break;
+
       case __DRI_ATTRIB_RED_MASK:
-         dri_masks[0] = value;
+         dri_shifts[0] = ffs(value) - 1;
+         break;
+
+      case __DRI_ATTRIB_RED_SHIFT:
+         dri_shifts[0] = value;
+         break;
+
+      case __DRI_ATTRIB_GREEN_SIZE:
+         dri_sizes[1] = value;
+         base.GreenSize = value;
          break;
 
       case __DRI_ATTRIB_GREEN_MASK:
-         dri_masks[1] = value;
+         dri_shifts[1] = ffs(value) - 1;
+         break;
+
+      case __DRI_ATTRIB_GREEN_SHIFT:
+         dri_shifts[1] = value;
+         break;
+
+      case __DRI_ATTRIB_BLUE_SIZE:
+         dri_sizes[2] = value;
+         base.BlueSize = value;
          break;
 
       case __DRI_ATTRIB_BLUE_MASK:
-         dri_masks[2] = value;
+         dri_shifts[2] = ffs(value) - 1;
+         break;
+
+      case __DRI_ATTRIB_BLUE_SHIFT:
+         dri_shifts[2] = value;
+         break;
+
+     case __DRI_ATTRIB_ALPHA_SIZE:
+         dri_sizes[3] = value;
+         base.AlphaSize = value;
          break;
 
       case __DRI_ATTRIB_ALPHA_MASK:
-         dri_masks[3] = value;
+         dri_shifts[3] = ffs(value) - 1;
+         break;
+
+      case __DRI_ATTRIB_ALPHA_SHIFT:
+         dri_shifts[3] = value;
          break;
 
       case __DRI_ATTRIB_ACCUM_RED_SIZE:
@@ -305,12 +540,10 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
          break;
 
       case __DRI_ATTRIB_MAX_PBUFFER_WIDTH:
-         _eglSetConfigKey(&base, EGL_MAX_PBUFFER_WIDTH,
-                          _EGL_MAX_PBUFFER_WIDTH);
+         base.MaxPbufferWidth = _EGL_MAX_PBUFFER_WIDTH;
          break;
       case __DRI_ATTRIB_MAX_PBUFFER_HEIGHT:
-         _eglSetConfigKey(&base, EGL_MAX_PBUFFER_HEIGHT,
-                          _EGL_MAX_PBUFFER_HEIGHT);
+         base.MaxPbufferHeight = _EGL_MAX_PBUFFER_HEIGHT;
          break;
       case __DRI_ATTRIB_MUTABLE_RENDER_BUFFER:
          if (disp->Extensions.KHR_mutable_render_buffer)
@@ -328,7 +561,10 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
       for (int i = 0; attr_list[i] != EGL_NONE; i += 2)
          _eglSetConfigKey(&base, attr_list[i], attr_list[i+1]);
 
-   if (rgba_masks && memcmp(rgba_masks, dri_masks, sizeof(dri_masks)))
+   if (rgba_shifts && memcmp(rgba_shifts, dri_shifts, sizeof(dri_shifts)))
+      return NULL;
+
+   if (rgba_sizes && memcmp(rgba_sizes, dri_sizes, sizeof(dri_sizes)))
       return NULL;
 
    base.NativeRenderable = EGL_TRUE;
@@ -340,6 +576,22 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
       if (base.AlphaSize > 0)
          base.BindToTextureRGBA = bind_to_texture_rgba;
    }
+
+   if (double_buffer) {
+      surface_type &= ~EGL_PIXMAP_BIT;
+   }
+
+   /* No support for pbuffer + MSAA for now.
+    *
+    * XXX TODO: pbuffer + MSAA does not work and causes crashes.
+    * See QT bugreport: https://bugreports.qt.io/browse/QTBUG-47509
+    */
+   if (base.Samples) {
+      surface_type &= ~EGL_PBUFFER_BIT;
+   }
+
+   if (!surface_type)
+      return NULL;
 
    base.RenderableType = disp->ClientAPIs;
    base.Conformant = disp->ClientAPIs;
@@ -385,22 +637,42 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
       return NULL;
    }
 
-   if (double_buffer) {
-      surface_type &= ~EGL_PIXMAP_BIT;
-   }
-
-   /* No support for pbuffer + MSAA for now.
-    *
-    * XXX TODO: pbuffer + MSAA does not work and causes crashes.
-    * See QT bugreport: https://bugreports.qt.io/browse/QTBUG-47509
-    */
-   if (base.Samples) {
-      surface_type &= ~EGL_PBUFFER_BIT;
-   }
-
    conf->base.SurfaceType |= surface_type;
 
    return conf;
+}
+
+EGLBoolean
+dri2_add_pbuffer_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
+{
+   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+   unsigned int format_count[ARRAY_SIZE(dri2_pbuffer_visuals)] = { 0 };
+   unsigned int config_count = 0;
+
+   for (unsigned i = 0; dri2_dpy->driver_configs[i] != NULL; i++) {
+      for (unsigned j = 0; j < ARRAY_SIZE(dri2_pbuffer_visuals); j++) {
+         struct dri2_egl_config *dri2_conf;
+
+         dri2_conf = dri2_add_config(disp, dri2_dpy->driver_configs[i],
+               config_count + 1, EGL_PBUFFER_BIT, NULL,
+               dri2_pbuffer_visuals[j].rgba_shifts, dri2_pbuffer_visuals[j].rgba_sizes);
+
+         if (dri2_conf) {
+            if (dri2_conf->base.ConfigID == config_count + 1)
+               config_count++;
+            format_count[j]++;
+         }
+      }
+   }
+
+   for (unsigned i = 0; i < ARRAY_SIZE(format_count); i++) {
+      if (!format_count[i]) {
+         _eglLog(_EGL_DEBUG, "No DRI config supports native format %s",
+               dri2_pbuffer_visuals[i].format_name);
+      }
+   }
+
+   return (config_count != 0);
 }
 
 __DRIimage *
@@ -552,6 +824,7 @@ dri2_load_driver_common(_EGLDisplay *disp,
 
    if (!dri2_bind_extensions(dri2_dpy, driver_extensions, extensions, false)) {
       dlclose(dri2_dpy->driver);
+      dri2_dpy->driver = NULL;
       return EGL_FALSE;
    }
    dri2_dpy->driver_extensions = extensions;
@@ -733,11 +1006,6 @@ dri2_setup_screen(_EGLDisplay *disp)
       if (dri2_dpy->image->base.version >= 8 &&
           dri2_dpy->image->createImageFromDmaBufs) {
          disp->Extensions.EXT_image_dma_buf_import = EGL_TRUE;
-      }
-      if (dri2_dpy->image->base.version >= 15 &&
-          dri2_dpy->image->createImageFromDmaBufs2 &&
-          dri2_dpy->image->queryDmaBufFormats &&
-          dri2_dpy->image->queryDmaBufModifiers) {
          disp->Extensions.EXT_image_dma_buf_import_modifiers = EGL_TRUE;
       }
 #endif
@@ -1499,32 +1767,22 @@ dri2_make_current(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *dsurf,
    _EGLSurface *tmp_dsurf, *tmp_rsurf;
    __DRIdrawable *ddraw, *rdraw;
    __DRIcontext *cctx;
-   EGLBoolean unbind;
+   EGLint egl_error = EGL_SUCCESS;
 
    if (!dri2_dpy)
       return _eglError(EGL_NOT_INITIALIZED, "eglMakeCurrent");
 
-   /* make new bindings */
-   if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf)) {
-      /* _eglBindContext already sets the EGL error (in _eglCheckMakeCurrent) */
+   /* make new bindings, set the EGL error otherwise */
+   if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf))
       return EGL_FALSE;
-   }
-
-   if (old_ctx) {
-      old_disp = old_ctx->Resource.Display;
-      old_dri2_dpy = dri2_egl_display(old_disp);
-   }
-
-   /* flush before context switch */
-   if (old_ctx)
-      dri2_gl_flush();
-
-   ddraw = (dsurf) ? dri2_dpy->vtbl->get_dri_drawable(dsurf) : NULL;
-   rdraw = (rsurf) ? dri2_dpy->vtbl->get_dri_drawable(rsurf) : NULL;
-   cctx = (dri2_ctx) ? dri2_ctx->dri_context : NULL;
 
    if (old_ctx) {
       __DRIcontext *old_cctx = dri2_egl_context(old_ctx)->dri_context;
+      old_disp = old_ctx->Resource.Display;
+      old_dri2_dpy = dri2_egl_display(old_disp);
+
+      /* flush before context switch */
+      dri2_gl_flush();
 
       if (old_dsurf)
          dri2_surf_update_fence_fd(old_ctx, disp, old_dsurf);
@@ -1538,45 +1796,81 @@ dri2_make_current(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *dsurf,
       dri2_dpy->core->unbindContext(old_cctx);
    }
 
-   unbind = (cctx == NULL && ddraw == NULL && rdraw == NULL);
+   ddraw = (dsurf) ? dri2_dpy->vtbl->get_dri_drawable(dsurf) : NULL;
+   rdraw = (rsurf) ? dri2_dpy->vtbl->get_dri_drawable(rsurf) : NULL;
+   cctx = (dri2_ctx) ? dri2_ctx->dri_context : NULL;
 
-   if (!unbind && !dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
-      /* undo the previous _eglBindContext */
-      _eglBindContext(old_ctx, old_dsurf, old_rsurf, &ctx, &tmp_dsurf, &tmp_rsurf);
-      assert(&dri2_ctx->base == ctx &&
-             tmp_dsurf == dsurf &&
-             tmp_rsurf == rsurf);
+   if (cctx || ddraw || rdraw) {
+      if (!dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
+         _EGLContext *tmp_ctx;
 
-      if (old_dsurf && _eglSurfaceInSharedBufferMode(old_dsurf) &&
-          old_dri2_dpy->vtbl->set_shared_buffer_mode) {
-         old_dri2_dpy->vtbl->set_shared_buffer_mode(old_disp, old_dsurf, true);
+         /* dri2_dpy->core->bindContext failed. We cannot tell for sure why, but
+          * setting the error to EGL_BAD_MATCH is surely better than leaving it
+          * as EGL_SUCCESS.
+          */
+         egl_error = EGL_BAD_MATCH;
+
+         /* undo the previous _eglBindContext */
+         _eglBindContext(old_ctx, old_dsurf, old_rsurf, &ctx, &tmp_dsurf, &tmp_rsurf);
+         assert(&dri2_ctx->base == ctx &&
+                tmp_dsurf == dsurf &&
+                tmp_rsurf == rsurf);
+
+         _eglPutSurface(dsurf);
+         _eglPutSurface(rsurf);
+         _eglPutContext(ctx);
+
+         _eglPutSurface(old_dsurf);
+         _eglPutSurface(old_rsurf);
+         _eglPutContext(old_ctx);
+
+         ddraw = (old_dsurf) ? dri2_dpy->vtbl->get_dri_drawable(old_dsurf) : NULL;
+         rdraw = (old_rsurf) ? dri2_dpy->vtbl->get_dri_drawable(old_rsurf) : NULL;
+         cctx = (old_ctx) ? dri2_egl_context(old_ctx)->dri_context : NULL;
+
+         /* undo the previous dri2_dpy->core->unbindContext */
+         if (dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
+            if (old_dsurf && _eglSurfaceInSharedBufferMode(old_dsurf) &&
+                old_dri2_dpy->vtbl->set_shared_buffer_mode) {
+               old_dri2_dpy->vtbl->set_shared_buffer_mode(old_disp, old_dsurf, true);
+            }
+
+            return _eglError(egl_error, "eglMakeCurrent");
+         }
+
+         /* We cannot restore the same state as it was before calling
+          * eglMakeCurrent() and the spec isn't clear about what to do. We
+          * can prevent EGL from calling into the DRI driver with no DRI
+          * context bound.
+          */
+         dsurf = rsurf = NULL;
+         ctx = NULL;
+
+         _eglBindContext(ctx, dsurf, rsurf, &tmp_ctx, &tmp_dsurf, &tmp_rsurf);
+         assert(tmp_ctx == old_ctx && tmp_dsurf == old_dsurf &&
+                tmp_rsurf == old_rsurf);
+
+         _eglLog(_EGL_WARNING, "DRI2: failed to rebind the previous context");
+      } else {
+         /* dri2_dpy->core->bindContext succeeded, so take a reference on the
+          * dri2_dpy. This prevents dri2_dpy from being reinitialized when a
+          * EGLDisplay is terminated and then initialized again while a
+          * context is still bound. See dri2_intitialize() for a more in depth
+          * explanation. */
+         dri2_dpy->ref_count++;
       }
-
-      _eglPutSurface(dsurf);
-      _eglPutSurface(rsurf);
-      _eglPutContext(ctx);
-
-      _eglPutSurface(old_dsurf);
-      _eglPutSurface(old_rsurf);
-      _eglPutContext(old_ctx);
-
-      /* dri2_dpy->core->bindContext failed. We cannot tell for sure why, but
-       * setting the error to EGL_BAD_MATCH is surely better than leaving it
-       * as EGL_SUCCESS.
-       */
-      return _eglError(EGL_BAD_MATCH, "eglMakeCurrent");
    }
 
    dri2_destroy_surface(drv, disp, old_dsurf);
    dri2_destroy_surface(drv, disp, old_rsurf);
 
-   if (!unbind)
-      dri2_dpy->ref_count++;
-
    if (old_ctx) {
       dri2_destroy_context(drv, disp, old_ctx);
       dri2_display_release(old_disp);
    }
+
+   if (egl_error != EGL_SUCCESS)
+      return _eglError(egl_error, "eglMakeCurrent");
 
    if (dsurf && _eglSurfaceHasMutableRenderBuffer(dsurf) &&
        dri2_dpy->vtbl->set_shared_buffer_mode) {
@@ -2343,6 +2637,8 @@ dri2_num_fourcc_format_planes(EGLint format)
    case DRM_FORMAT_ABGR2101010:
    case DRM_FORMAT_RGBA1010102:
    case DRM_FORMAT_BGRA1010102:
+   case DRM_FORMAT_XBGR16161616F:
+   case DRM_FORMAT_ABGR16161616F:
    case DRM_FORMAT_YUYV:
    case DRM_FORMAT_YVYU:
    case DRM_FORMAT_UYVY:

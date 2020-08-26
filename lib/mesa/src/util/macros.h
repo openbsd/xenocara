@@ -72,7 +72,7 @@
  * Unreachable macro. Useful for suppressing "control reaches end of non-void
  * function" warnings.
  */
-#ifdef HAVE___BUILTIN_UNREACHABLE
+#if defined(HAVE___BUILTIN_UNREACHABLE) || __has_builtin(__builtin_unreachable)
 #define unreachable(str)    \
 do {                        \
    assert(!str);            \
@@ -331,5 +331,19 @@ do {                       \
 /** Set count bits starting from bit b  */
 #define BITFIELD64_RANGE(b, count) \
    (BITFIELD64_MASK((b) + (count)) & ~BITFIELD64_MASK(b))
+
+/* TODO: In future we should try to move this to u_debug.h once header
+ * dependencies are reorganised to allow this.
+ */
+enum pipe_debug_type
+{
+   PIPE_DEBUG_TYPE_OUT_OF_MEMORY = 1,
+   PIPE_DEBUG_TYPE_ERROR,
+   PIPE_DEBUG_TYPE_SHADER_INFO,
+   PIPE_DEBUG_TYPE_PERF_INFO,
+   PIPE_DEBUG_TYPE_INFO,
+   PIPE_DEBUG_TYPE_FALLBACK,
+   PIPE_DEBUG_TYPE_CONFORMANCE,
+};
 
 #endif /* UTIL_MACROS_H */

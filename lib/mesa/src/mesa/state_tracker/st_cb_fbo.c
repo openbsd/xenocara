@@ -33,7 +33,7 @@
  */
 
 
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/fbobject.h"
 #include "main/framebuffer.h"
@@ -56,7 +56,7 @@
 #include "st_util.h"
 #include "st_manager.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_surface.h"
 
@@ -355,6 +355,7 @@ st_new_renderbuffer_fb(enum pipe_format format, unsigned samples, boolean sw)
    case PIPE_FORMAT_R8G8B8X8_UNORM:
    case PIPE_FORMAT_B8G8R8X8_UNORM:
    case PIPE_FORMAT_X8R8G8B8_UNORM:
+   case PIPE_FORMAT_R8G8B8_UNORM:
       strb->Base.InternalFormat = GL_RGB8;
       break;
    case PIPE_FORMAT_R8G8B8A8_SRGB:
@@ -400,6 +401,9 @@ st_new_renderbuffer_fb(enum pipe_format format, unsigned samples, boolean sw)
    case PIPE_FORMAT_R16G16B16A16_UNORM:
       strb->Base.InternalFormat = GL_RGBA16;
       break;
+   case PIPE_FORMAT_R16G16B16_UNORM:
+      strb->Base.InternalFormat = GL_RGB16;
+      break;
    case PIPE_FORMAT_R8_UNORM:
       strb->Base.InternalFormat = GL_R8;
       break;
@@ -416,6 +420,7 @@ st_new_renderbuffer_fb(enum pipe_format format, unsigned samples, boolean sw)
       strb->Base.InternalFormat = GL_RGBA32F;
       break;
    case PIPE_FORMAT_R32G32B32X32_FLOAT:
+   case PIPE_FORMAT_R32G32B32_FLOAT:
       strb->Base.InternalFormat = GL_RGB32F;
       break;
    case PIPE_FORMAT_R16G16B16A16_FLOAT:
@@ -778,7 +783,7 @@ st_discard_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
    struct st_context *st = st_context(ctx);
    struct pipe_resource *prsc;
 
-   if (!att->Renderbuffer)
+   if (!att->Renderbuffer || !att->Complete)
       return;
 
    prsc = st_renderbuffer(att->Renderbuffer)->surface->texture;
@@ -863,12 +868,9 @@ st_MapRenderbuffer(struct gl_context *ctx,
    struct st_context *st = st_context(ctx);
    struct st_renderbuffer *strb = st_renderbuffer(rb);
    struct pipe_context *pipe = st->pipe;
-   const GLboolean invert = rb->Name == 0;
+   const GLboolean invert = flip_y;
    GLuint y2;
    GLubyte *map;
-
-   /* driver does not support GL_FRAMEBUFFER_FLIP_Y_MESA */
-   assert((rb->Name == 0) == flip_y);
 
    if (strb->software) {
       /* software-allocated renderbuffer (probably an accum buffer) */

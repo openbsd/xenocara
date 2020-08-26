@@ -39,10 +39,8 @@ static void
 batch_init(struct fd_batch *batch)
 {
 	struct fd_context *ctx = batch->ctx;
+	enum fd_ringbuffer_flags flags = 0;
 	unsigned size = 0;
-
-	if (ctx->screen->reorder)
-		util_queue_fence_init(&batch->flush_fence);
 
 	/* if kernel is too old to support unlimited # of cmd buffers, we
 	 * have no option but to allocate large worst-case sizes so that
@@ -54,21 +52,23 @@ batch_init(struct fd_batch *batch)
 	if ((fd_device_version(ctx->screen->dev) < FD_VERSION_UNLIMITED_CMDS) ||
 			(fd_mesa_debug & FD_DBG_NOGROW)){
 		size = 0x100000;
+	} else {
+		flags = FD_RINGBUFFER_GROWABLE;
 	}
 
 	batch->submit = fd_submit_new(ctx->pipe);
 	if (batch->nondraw) {
 		batch->draw = fd_submit_new_ringbuffer(batch->submit, size,
-				FD_RINGBUFFER_PRIMARY | FD_RINGBUFFER_GROWABLE);
+				FD_RINGBUFFER_PRIMARY | flags);
 	} else {
 		batch->gmem = fd_submit_new_ringbuffer(batch->submit, size,
-				FD_RINGBUFFER_PRIMARY | FD_RINGBUFFER_GROWABLE);
+				FD_RINGBUFFER_PRIMARY | flags);
 		batch->draw = fd_submit_new_ringbuffer(batch->submit, size,
-				FD_RINGBUFFER_GROWABLE);
+				flags);
 
 		if (ctx->screen->gpu_id < 600) {
 			batch->binning = fd_submit_new_ringbuffer(batch->submit,
-					size, FD_RINGBUFFER_GROWABLE);
+					size, flags);
 		}
 	}
 
@@ -84,6 +84,9 @@ batch_init(struct fd_batch *batch)
 	batch->gmem_reason = 0;
 	batch->num_draws = 0;
 	batch->num_vertices = 0;
+	batch->num_bins_per_pipe = 0;
+	batch->prim_strm_bits = 0;
+	batch->draw_strm_bits = 0;
 	batch->stage = FD_STAGE_NULL;
 
 	fd_reset_wfi(batch);
@@ -102,6 +105,8 @@ batch_init(struct fd_batch *batch)
 	assert(batch->resources->entries == 0);
 
 	util_dynarray_init(&batch->samples, NULL);
+
+	list_inithead(&batch->log_chunks);
 }
 
 struct fd_batch *
@@ -166,6 +171,12 @@ batch_fini(struct fd_batch *batch)
 		batch->tile_fini = NULL;
 	}
 
+	if (batch->tessellation) {
+		fd_bo_del(batch->tessfactor_bo);
+		fd_bo_del(batch->tessparam_bo);
+		fd_ringbuffer_del(batch->tess_addrs_constobj);
+	}
+
 	fd_submit_del(batch->submit);
 
 	util_dynarray_fini(&batch->draw_patches);
@@ -186,8 +197,7 @@ batch_fini(struct fd_batch *batch)
 	}
 	util_dynarray_fini(&batch->samples);
 
-	if (batch->ctx->screen->reorder)
-		util_queue_fence_destroy(&batch->flush_fence);
+	assert(list_is_empty(&batch->log_chunks));
 }
 
 static void
@@ -198,7 +208,7 @@ batch_flush_reset_dependencies(struct fd_batch *batch, bool flush)
 
 	foreach_batch(dep, cache, batch->dependents_mask) {
 		if (flush)
-			fd_batch_flush(dep, false);
+			fd_batch_flush(dep);
 		fd_batch_reference(&dep, NULL);
 	}
 
@@ -232,8 +242,6 @@ static void
 batch_reset(struct fd_batch *batch)
 {
 	DBG("%p", batch);
-
-	fd_batch_sync(batch);
 
 	batch_flush_reset_dependencies(batch, false);
 	batch_reset_resources(batch);
@@ -280,32 +288,6 @@ __fd_batch_describe(char* buf, const struct fd_batch *batch)
 	sprintf(buf, "fd_batch<%u>", batch->seqno);
 }
 
-void
-fd_batch_sync(struct fd_batch *batch)
-{
-	if (!batch->ctx->screen->reorder)
-		return;
-	util_queue_fence_wait(&batch->flush_fence);
-}
-
-static void
-batch_flush_func(void *job, int id)
-{
-	struct fd_batch *batch = job;
-
-	DBG("%p", batch);
-
-	fd_gmem_render_tiles(batch);
-	batch_reset_resources(batch);
-}
-
-static void
-batch_cleanup_func(void *job, int id)
-{
-	struct fd_batch *batch = job;
-	fd_batch_reference(&batch, NULL);
-}
-
 static void
 batch_flush(struct fd_batch *batch)
 {
@@ -327,20 +309,8 @@ batch_flush(struct fd_batch *batch)
 
 	fd_fence_ref(&batch->ctx->last_fence, batch->fence);
 
-	if (batch->ctx->screen->reorder) {
-		struct fd_batch *tmp = NULL;
-		fd_batch_reference(&tmp, batch);
-
-		if (!util_queue_is_initialized(&batch->ctx->flush_queue))
-			util_queue_init(&batch->ctx->flush_queue, "flush_queue", 16, 1, 0);
-
-		util_queue_add_job(&batch->ctx->flush_queue,
-				batch, &batch->flush_fence,
-				batch_flush_func, batch_cleanup_func);
-	} else {
-		fd_gmem_render_tiles(batch);
-		batch_reset_resources(batch);
-	}
+	fd_gmem_render_tiles(batch);
+	batch_reset_resources(batch);
 
 	debug_assert(batch->reference.count > 0);
 
@@ -358,10 +328,9 @@ batch_flush(struct fd_batch *batch)
  *   a fence to sync on
  */
 void
-fd_batch_flush(struct fd_batch *batch, bool sync)
+fd_batch_flush(struct fd_batch *batch)
 {
 	struct fd_batch *tmp = NULL;
-	bool newbatch = false;
 
 	/* NOTE: we need to hold an extra ref across the body of flush,
 	 * since the last ref to this batch could be dropped when cleaning
@@ -369,34 +338,11 @@ fd_batch_flush(struct fd_batch *batch, bool sync)
 	 */
 	fd_batch_reference(&tmp, batch);
 
-	if (batch == batch->ctx->batch) {
-		batch->ctx->batch = NULL;
-		newbatch = true;
-	}
-
 	batch_flush(tmp);
 
-	if (newbatch) {
-		struct fd_context *ctx = batch->ctx;
-		struct fd_batch *new_batch;
-
-		if (ctx->screen->reorder) {
-			/* defer allocating new batch until one is needed for rendering
-			 * to avoid unused batches for apps that create many contexts
-			 */
-			new_batch = NULL;
-		} else {
-			new_batch = fd_bc_alloc_batch(&ctx->screen->batch_cache, ctx, false);
-			util_copy_framebuffer_state(&new_batch->framebuffer, &batch->framebuffer);
-		}
-
-		fd_batch_reference(&batch, NULL);
-		ctx->batch = new_batch;
-		fd_context_all_dirty(ctx);
+	if (batch == batch->ctx->batch) {
+		fd_batch_reference(&batch->ctx->batch, NULL);
 	}
-
-	if (sync)
-		fd_batch_sync(tmp);
 
 	fd_batch_reference(&tmp, NULL);
 }
@@ -439,7 +385,7 @@ flush_write_batch(struct fd_resource *rsc)
 	fd_batch_reference_locked(&b, rsc->write_batch);
 
 	mtx_unlock(&b->ctx->screen->lock);
-	fd_batch_flush(b, true);
+	fd_batch_flush(b);
 	mtx_lock(&b->ctx->screen->lock);
 
 	fd_bc_invalidate_batch(b, false);
@@ -513,7 +459,7 @@ fd_batch_check_size(struct fd_batch *batch)
 	debug_assert(!batch->flushed);
 
 	if (unlikely(fd_mesa_debug & FD_DBG_FLUSH)) {
-		fd_batch_flush(batch, true);
+		fd_batch_flush(batch);
 		return;
 	}
 
@@ -522,7 +468,7 @@ fd_batch_check_size(struct fd_batch *batch)
 
 	struct fd_ringbuffer *ring = batch->draw;
 	if ((ring->cur - ring->start) > (ring->size/4 - 0x1000))
-		fd_batch_flush(batch, true);
+		fd_batch_flush(batch);
 }
 
 /* emit a WAIT_FOR_IDLE only if needed, ie. if there has not already

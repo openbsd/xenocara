@@ -133,6 +133,8 @@ public:
    virtual ir_visitor_status visit_leave(class ir_return *);
    virtual ir_visitor_status visit_enter(class ir_discard *);
    virtual ir_visitor_status visit_leave(class ir_discard *);
+   virtual ir_visitor_status visit_enter(class ir_demote *);
+   virtual ir_visitor_status visit_leave(class ir_demote *);
    virtual ir_visitor_status visit_enter(class ir_if *);
    virtual ir_visitor_status visit_leave(class ir_if *);
    virtual ir_visitor_status visit_enter(class ir_emit_vertex *);
@@ -146,6 +148,12 @@ public:
     * Utility function to process a linked list of instructions with a visitor
     */
    void run(struct exec_list *instructions);
+
+   /**
+    * Utility function to call both the leave and enter callback functions.
+    * This is used for leaf nodes.
+    */
+   void call_enter_leave_callbacks(class ir_instruction *ir);
 
    /* Some visitors may need to insert new variable declarations and
     * assignments for portions of a subtree, which means they need a

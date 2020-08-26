@@ -78,6 +78,7 @@ genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
       genX(cmd_buffer_config_l3)(cmd_buffer, cfg);
    }
 
+   genX(cmd_buffer_set_binding_for_gen8_vb_flush)(cmd_buffer, 32, src, size);
    genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
 
    genX(flush_pipeline_select_3d)(cmd_buffer);
@@ -110,6 +111,13 @@ genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
          .Component2Control = (bs >= 12) ? VFCOMP_STORE_SRC : VFCOMP_STORE_0,
          .Component3Control = (bs >= 16) ? VFCOMP_STORE_SRC : VFCOMP_STORE_0,
       });
+
+#if GEN_GEN >= 8
+   anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_VF_INSTANCING), vfi) {
+      vfi.InstancingEnable = false;
+      vfi.VertexElementIndex = 0;
+   }
+#endif
 
 #if GEN_GEN >= 8
    anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_VF_SGVS), sgvs);
@@ -146,10 +154,15 @@ genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
 
    genX(emit_urb_setup)(cmd_buffer->device, &cmd_buffer->batch,
                         cmd_buffer->state.current_l3_config,
-                        VK_SHADER_STAGE_VERTEX_BIT, entry_size);
+                        VK_SHADER_STAGE_VERTEX_BIT, entry_size, NULL);
 
    anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_SO_BUFFER), sob) {
+#if GEN_GEN < 12
       sob.SOBufferIndex = 0;
+#else
+      sob._3DCommandOpcode = 0;
+      sob._3DCommandSubOpcode = SO_BUFFER_INDEX_0_CMD;
+#endif
       sob.MOCS = anv_mocs_for_bo(cmd_buffer->device, dst.bo),
       sob.SurfaceBaseAddress = dst;
 
@@ -214,6 +227,11 @@ genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
       vf.StatisticsEnable = false;
    }
 
+#if GEN_GEN >= 12
+   /* Disable Primitive Replication. */
+   anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_PRIMITIVE_REPLICATION), pr);
+#endif
+
    anv_batch_emit(&cmd_buffer->batch, GENX(3DPRIMITIVE), prim) {
       prim.VertexAccessType         = SEQUENTIAL;
       prim.PrimitiveTopologyType    = _3DPRIM_POINTLIST;
@@ -223,6 +241,9 @@ genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
       prim.StartInstanceLocation    = 0;
       prim.BaseVertexLocation       = 0;
    }
+
+   genX(cmd_buffer_update_dirty_vbs_for_gen8_vb_flush)(cmd_buffer, SEQUENTIAL,
+                                                       1ull << 32);
 
    cmd_buffer->state.gfx.dirty |= ANV_CMD_DIRTY_PIPELINE;
 }

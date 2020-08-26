@@ -31,7 +31,7 @@
 
 #include "c99_math.h"
 #include "glheader.h"
-#include "imports.h"
+
 #include "api_arrayelt.h"
 #include "api_exec.h"
 #include "api_loopback.h"
@@ -70,7 +70,10 @@
 #include "main/dispatch.h"
 
 #include "vbo/vbo.h"
+#include "vbo/vbo_util.h"
+#include "util/format_r11g11b10f.h"
 
+#include "util/u_memory.h"
 
 #define USE_BITMAP_ATLAS 1
 
@@ -393,6 +396,40 @@ typedef enum
    OPCODE_UNIFORM_MATRIX34D,
    OPCODE_UNIFORM_MATRIX43D,
 
+   /* GL_ARB_gpu_shader_int64 */
+   OPCODE_UNIFORM_1I64,
+   OPCODE_UNIFORM_2I64,
+   OPCODE_UNIFORM_3I64,
+   OPCODE_UNIFORM_4I64,
+   OPCODE_UNIFORM_1I64V,
+   OPCODE_UNIFORM_2I64V,
+   OPCODE_UNIFORM_3I64V,
+   OPCODE_UNIFORM_4I64V,
+   OPCODE_UNIFORM_1UI64,
+   OPCODE_UNIFORM_2UI64,
+   OPCODE_UNIFORM_3UI64,
+   OPCODE_UNIFORM_4UI64,
+   OPCODE_UNIFORM_1UI64V,
+   OPCODE_UNIFORM_2UI64V,
+   OPCODE_UNIFORM_3UI64V,
+   OPCODE_UNIFORM_4UI64V,
+   OPCODE_PROGRAM_UNIFORM_1I64,
+   OPCODE_PROGRAM_UNIFORM_2I64,
+   OPCODE_PROGRAM_UNIFORM_3I64,
+   OPCODE_PROGRAM_UNIFORM_4I64,
+   OPCODE_PROGRAM_UNIFORM_1I64V,
+   OPCODE_PROGRAM_UNIFORM_2I64V,
+   OPCODE_PROGRAM_UNIFORM_3I64V,
+   OPCODE_PROGRAM_UNIFORM_4I64V,
+   OPCODE_PROGRAM_UNIFORM_1UI64,
+   OPCODE_PROGRAM_UNIFORM_2UI64,
+   OPCODE_PROGRAM_UNIFORM_3UI64,
+   OPCODE_PROGRAM_UNIFORM_4UI64,
+   OPCODE_PROGRAM_UNIFORM_1UI64V,
+   OPCODE_PROGRAM_UNIFORM_2UI64V,
+   OPCODE_PROGRAM_UNIFORM_3UI64V,
+   OPCODE_PROGRAM_UNIFORM_4UI64V,
+
    /* OpenGL 4.0 / GL_ARB_tessellation_shader */
    OPCODE_PATCH_PARAMETER_I,
    OPCODE_PATCH_PARAMETER_FV_INNER,
@@ -471,10 +508,15 @@ typedef enum
    OPCODE_ATTR_2F_ARB,
    OPCODE_ATTR_3F_ARB,
    OPCODE_ATTR_4F_ARB,
+   OPCODE_ATTR_1I,
+   OPCODE_ATTR_2I,
+   OPCODE_ATTR_3I,
+   OPCODE_ATTR_4I,
    OPCODE_ATTR_1D,
    OPCODE_ATTR_2D,
    OPCODE_ATTR_3D,
    OPCODE_ATTR_4D,
+   OPCODE_ATTR_1UI64,
    OPCODE_MATERIAL,
    OPCODE_BEGIN,
    OPCODE_END,
@@ -570,6 +612,8 @@ typedef enum
    OPCODE_MATRIX_POP,
    OPCODE_TEXTUREPARAMETER_F,
    OPCODE_TEXTUREPARAMETER_I,
+   OPCODE_TEXTUREPARAMETER_II,
+   OPCODE_TEXTUREPARAMETER_IUI,
    OPCODE_TEXTURE_IMAGE1D,
    OPCODE_TEXTURE_IMAGE2D,
    OPCODE_TEXTURE_IMAGE3D,
@@ -584,6 +628,8 @@ typedef enum
    OPCODE_BIND_MULTITEXTURE,
    OPCODE_MULTITEXPARAMETER_F,
    OPCODE_MULTITEXPARAMETER_I,
+   OPCODE_MULTITEXPARAMETER_II,
+   OPCODE_MULTITEXPARAMETER_IUI,
    OPCODE_MULTITEX_IMAGE1D,
    OPCODE_MULTITEX_IMAGE2D,
    OPCODE_MULTITEX_IMAGE3D,
@@ -608,6 +654,8 @@ typedef enum
    OPCODE_COMPRESSED_MULTITEX_SUB_IMAGE_1D,
    OPCODE_COMPRESSED_MULTITEX_SUB_IMAGE_2D,
    OPCODE_COMPRESSED_MULTITEX_SUB_IMAGE_3D,
+   OPCODE_NAMED_PROGRAM_STRING,
+   OPCODE_NAMED_PROGRAM_LOCAL_PARAMETER,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -719,6 +767,11 @@ union float64_pair
    GLuint uint32[2];
 };
 
+union int64_pair
+{
+   GLint64 int64;
+   GLint int32[2];
+};
 
 #define ASSIGN_DOUBLE_TO_NODES(n, idx, value)                              \
    do {                                                                    \
@@ -728,6 +781,21 @@ union float64_pair
       n[idx+1].ui = tmp.uint32[1];                                         \
    } while (0)
 
+#define ASSIGN_UINT64_TO_NODES(n, idx, value)                              \
+   do {                                                                    \
+      union uint64_pair tmp;                                               \
+      tmp.uint64 = value;                                                  \
+      n[idx].ui = tmp.uint32[0];                                           \
+      n[idx+1].ui = tmp.uint32[1];                                         \
+   } while (0)
+
+#define ASSIGN_INT64_TO_NODES(n, idx, value)                               \
+   do {                                                                    \
+      union int64_pair tmp;                                                \
+      tmp.int64 = value;                                                   \
+      n[idx].i = tmp.int32[0];                                             \
+      n[idx+1].i = tmp.int32[1];                                           \
+   } while (0)
 
 /**
  * How many nodes to allocate at a time.  Note that bulk vertex data
@@ -941,9 +1009,14 @@ build_bitmap_atlas(struct gl_context *ctx, struct gl_bitmap_atlas *atlas,
       goto out_of_memory;
    }
 
-   _mesa_init_teximage_fields(ctx, atlas->texImage,
-                              atlas->texWidth, atlas->texHeight, 1, 0,
-                              GL_ALPHA, MESA_FORMAT_A_UNORM8);
+   if (ctx->Const.BitmapUsesRed)
+      _mesa_init_teximage_fields(ctx, atlas->texImage,
+                                 atlas->texWidth, atlas->texHeight, 1, 0,
+                                 GL_RED, MESA_FORMAT_R_UNORM8);
+   else
+      _mesa_init_teximage_fields(ctx, atlas->texImage,
+                                 atlas->texWidth, atlas->texHeight, 1, 0,
+                                 GL_ALPHA, MESA_FORMAT_A_UNORM8);
 
    /* alloc image storage */
    if (!ctx->Driver.AllocTextureImageBuffer(ctx, atlas->texImage)) {
@@ -1172,6 +1245,14 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
          case OPCODE_UNIFORM_2UIV:
          case OPCODE_UNIFORM_3UIV:
          case OPCODE_UNIFORM_4UIV:
+         case OPCODE_UNIFORM_1I64V:
+         case OPCODE_UNIFORM_2I64V:
+         case OPCODE_UNIFORM_3I64V:
+         case OPCODE_UNIFORM_4I64V:
+         case OPCODE_UNIFORM_1UI64V:
+         case OPCODE_UNIFORM_2UI64V:
+         case OPCODE_UNIFORM_3UI64V:
+         case OPCODE_UNIFORM_4UI64V:
             free(get_pointer(&n[3]));
             break;
          case OPCODE_UNIFORM_MATRIX22:
@@ -1210,6 +1291,14 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
          case OPCODE_PROGRAM_UNIFORM_2UIV:
          case OPCODE_PROGRAM_UNIFORM_3UIV:
          case OPCODE_PROGRAM_UNIFORM_4UIV:
+         case OPCODE_PROGRAM_UNIFORM_1I64V:
+         case OPCODE_PROGRAM_UNIFORM_2I64V:
+         case OPCODE_PROGRAM_UNIFORM_3I64V:
+         case OPCODE_PROGRAM_UNIFORM_4I64V:
+         case OPCODE_PROGRAM_UNIFORM_1UI64V:
+         case OPCODE_PROGRAM_UNIFORM_2UI64V:
+         case OPCODE_PROGRAM_UNIFORM_3UI64V:
+         case OPCODE_PROGRAM_UNIFORM_4UI64V:
             free(get_pointer(&n[4]));
             break;
          case OPCODE_PROGRAM_UNIFORM_MATRIX22F:
@@ -1284,7 +1373,9 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
          case OPCODE_COMPRESSED_MULTITEX_IMAGE_3D:
             free(get_pointer(&n[10]));
             break;
-
+         case OPCODE_NAMED_PROGRAM_STRING:
+            free(get_pointer(&n[5]));
+            break;
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
             free(block);
@@ -1446,7 +1537,7 @@ unpack_image(struct gl_context *ctx, GLuint dimensions,
       return NULL;
    }
 
-   if (!_mesa_is_bufferobj(unpack->BufferObj)) {
+   if (!unpack->BufferObj) {
       /* no PBO */
       GLvoid *image;
 
@@ -5811,188 +5902,6 @@ save_SetFragmentShaderConstantATI(GLuint dst, const GLfloat *value)
 }
 
 static void GLAPIENTRY
-save_Attr1fNV(GLenum attr, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_1F_NV, 2);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 1;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib1fNV(ctx->Exec, (attr, x));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr2fNV(GLenum attr, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_2F_NV, 3);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 2;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib2fNV(ctx->Exec, (attr, x, y));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_3F_NV, 4);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 3;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib3fNV(ctx->Exec, (attr, x, y, z));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_4F_NV, 5);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-      n[5].f = w;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 4;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib4fNV(ctx->Exec, (attr, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
-save_Attr1fARB(GLenum attr, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_1F_ARB, 2);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 1;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib1fARB(ctx->Exec, (attr, x));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr2fARB(GLenum attr, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_2F_ARB, 3);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 2;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib2fARB(ctx->Exec, (attr, x, y));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_3F_ARB, 4);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 3;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib3fARB(ctx->Exec, (attr, x, y, z));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr4fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_4F_ARB, 5);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-      n[5].f = w;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 4;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib4fARB(ctx->Exec, (attr, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
 save_EvalCoord1f(GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6065,24 +5974,6 @@ save_EvalPoint2(GLint x, GLint y)
    if (ctx->ExecuteFlag) {
       CALL_EvalPoint2(ctx->Exec, (x, y));
    }
-}
-
-static void GLAPIENTRY
-save_Indexf(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, x);
-}
-
-static void GLAPIENTRY
-save_Indexfv(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, v[0]);
-}
-
-static void GLAPIENTRY
-save_EdgeFlag(GLboolean x)
-{
-   save_Attr1fNV(VERT_ATTRIB_EDGEFLAG, x ? 1.0f : 0.0f);
 }
 
 
@@ -6225,444 +6116,6 @@ save_Rectf(GLfloat a, GLfloat b, GLfloat c, GLfloat d)
    if (ctx->ExecuteFlag) {
       CALL_Rectf(ctx->Exec, (a, b, c, d));
    }
-}
-
-
-static void GLAPIENTRY
-save_Vertex2f(GLfloat x, GLfloat y)
-{
-   save_Attr2fNV(VERT_ATTRIB_POS, x, y);
-}
-
-static void GLAPIENTRY
-save_Vertex2fv(const GLfloat * v)
-{
-   save_Attr2fNV(VERT_ATTRIB_POS, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_Vertex3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_POS, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Vertex3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_POS, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_Vertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_POS, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_Vertex4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_POS, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_TexCoord1f(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_TEX0, x);
-}
-
-static void GLAPIENTRY
-save_TexCoord1fv(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_TEX0, v[0]);
-}
-
-static void GLAPIENTRY
-save_TexCoord2f(GLfloat x, GLfloat y)
-{
-   save_Attr2fNV(VERT_ATTRIB_TEX0, x, y);
-}
-
-static void GLAPIENTRY
-save_TexCoord2fv(const GLfloat * v)
-{
-   save_Attr2fNV(VERT_ATTRIB_TEX0, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_TexCoord3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_TEX0, x, y, z);
-}
-
-static void GLAPIENTRY
-save_TexCoord3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_TEX0, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_TexCoord4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_TEX0, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_TexCoord4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_TEX0, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_Normal3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_NORMAL, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Normal3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_NORMAL, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_FogCoordfEXT(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_FOG, x);
-}
-
-static void GLAPIENTRY
-save_FogCoordfvEXT(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_FOG, v[0]);
-}
-
-static void GLAPIENTRY
-save_Color3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Color3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_Color4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_Color4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fEXT(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, x, y, z);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fvEXT(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, v[0], v[1], v[2]);
-}
-
-
-/* Just call the respective ATTR for texcoord
- */
-static void GLAPIENTRY
-save_MultiTexCoord1f(GLenum target, GLfloat x)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr1fNV(attr, x);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord1fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr1fNV(attr, v[0]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord2f(GLenum target, GLfloat x, GLfloat y)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr2fNV(attr, x, y);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord2fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr2fNV(attr, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord3f(GLenum target, GLfloat x, GLfloat y, GLfloat z)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr3fNV(attr, x, y, z);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord3fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr3fNV(attr, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord4f(GLenum target, GLfloat x, GLfloat y,
-                     GLfloat z, GLfloat w)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr4fNV(attr, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord4fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr4fNV(attr, v[0], v[1], v[2], v[3]);
-}
-
-
-/**
- * Record a GL_INVALID_VALUE error when an invalid vertex attribute
- * index is found.
- */
-static void
-index_error(void)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_VALUE, "VertexAttribf(index)");
-}
-
-
-
-static void GLAPIENTRY
-save_VertexAttrib1fARB(GLuint index, GLfloat x)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr1fARB(index, x);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib1fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr1fARB(index, v[0]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib2fARB(GLuint index, GLfloat x, GLfloat y)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr2fARB(index, x, y);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib2fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr2fARB(index, v[0], v[1]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib3fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr3fARB(index, x, y, z);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib3fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr3fARB(index, v[0], v[1], v[2]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib4fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z,
-                       GLfloat w)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr4fARB(index, x, y, z, w);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib4fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr4fARB(index, v[0], v[1], v[2], v[3]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL1d(GLuint index, GLdouble x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_1D, 3);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 1;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2], sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL1d(ctx->Exec, (index, x));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL1dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL1d(index, v[0]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL2d(GLuint index, GLdouble x, GLdouble y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_2D, 5);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 2;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             2 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL2d(ctx->Exec, (index, x, y));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL2dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL2d(index, v[0], v[1]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL3d(GLuint index, GLdouble x, GLdouble y, GLdouble z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_3D, 7);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-         ASSIGN_DOUBLE_TO_NODES(n, 6, z);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 3;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             3 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL3d(ctx->Exec, (index, x, y, z));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL3dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL3d(index, v[0], v[1], v[2]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL4d(GLuint index, GLdouble x, GLdouble y, GLdouble z,
-                       GLdouble w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_4D, 9);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-         ASSIGN_DOUBLE_TO_NODES(n, 6, z);
-         ASSIGN_DOUBLE_TO_NODES(n, 8, w);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 4;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             4 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL4d(ctx->Exec, (index, x, y, z, w));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL4dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL4d(index, v[0], v[1], v[2], v[3]);
-   else
-      index_error();
 }
 
 static void GLAPIENTRY
@@ -6889,6 +6342,171 @@ save_DispatchComputeIndirect(GLintptr indirect)
    _mesa_error(ctx, GL_INVALID_OPERATION,
                "glDispatchComputeIndirect() during display list compile");
 }
+
+static void ALWAYS_INLINE
+save_Attr32bit(struct gl_context *ctx, unsigned attr, unsigned size,
+               GLenum type, uint32_t x, uint32_t y, uint32_t z, uint32_t w)
+{
+   Node *n;
+   SAVE_FLUSH_VERTICES(ctx);
+   unsigned base_op;
+   unsigned index = attr;
+
+   /* We don't care about GL_INT vs GL_UNSIGNED_INT. The idea is to get W=1
+    * right for 3 or lower number of components, so only distinguish between
+    * FLOAT and INT.
+    */
+   if (type == GL_FLOAT) {
+      if (attr >= VERT_ATTRIB_GENERIC0) {
+         base_op = OPCODE_ATTR_1F_ARB;
+         attr -= VERT_ATTRIB_GENERIC0;
+      } else {
+         base_op = OPCODE_ATTR_1F_NV;
+      }
+   } else {
+      base_op = OPCODE_ATTR_1I;
+      attr -= VERT_ATTRIB_GENERIC0;
+   }
+
+   n = alloc_instruction(ctx, base_op + size - 1, 1 + size);
+   if (n) {
+      n[1].ui = attr;
+      n[2].ui = x;
+      if (size >= 2) n[3].ui = y;
+      if (size >= 3) n[4].ui = z;
+      if (size >= 4) n[5].ui = w;
+   }
+
+   ctx->ListState.ActiveAttribSize[index] = size;
+   ASSIGN_4V(ctx->ListState.CurrentAttrib[index], x, y, z, w);
+
+   if (ctx->ExecuteFlag) {
+      if (type == GL_FLOAT) {
+         if (base_op == OPCODE_ATTR_1F_NV) {
+            if (size == 4)
+               CALL_VertexAttrib4fNV(ctx->Exec, (attr, uif(x), uif(y), uif(z), uif(w)));
+            else if (size == 3)
+               CALL_VertexAttrib3fNV(ctx->Exec, (attr, uif(x), uif(y), uif(z)));
+            else if (size == 2)
+               CALL_VertexAttrib2fNV(ctx->Exec, (attr, uif(x), uif(y)));
+            else
+               CALL_VertexAttrib1fNV(ctx->Exec, (attr, uif(x)));
+         } else {
+            if (size == 4)
+               CALL_VertexAttrib4fARB(ctx->Exec, (attr, uif(x), uif(y), uif(z), uif(w)));
+            else if (size == 3)
+               CALL_VertexAttrib3fARB(ctx->Exec, (attr, uif(x), uif(y), uif(z)));
+            else if (size == 2)
+               CALL_VertexAttrib2fARB(ctx->Exec, (attr, uif(x), uif(y)));
+            else
+               CALL_VertexAttrib1fARB(ctx->Exec, (attr, uif(x)));
+         }
+      } else {
+         if (size == 4)
+            CALL_VertexAttribI4iEXT(ctx->Exec, (attr, x, y, z, w));
+         else if (size == 3)
+            CALL_VertexAttribI3iEXT(ctx->Exec, (attr, x, y, z));
+         else if (size == 2)
+            CALL_VertexAttribI2iEXT(ctx->Exec, (attr, x, y));
+         else
+            CALL_VertexAttribI1iEXT(ctx->Exec, (attr, x));
+      }
+   }
+}
+
+static void ALWAYS_INLINE
+save_Attr64bit(struct gl_context *ctx, unsigned attr, unsigned size,
+               GLenum type, uint64_t x, uint64_t y, uint64_t z, uint64_t w)
+{
+   Node *n;
+   SAVE_FLUSH_VERTICES(ctx);
+   unsigned base_op;
+   unsigned index = attr;
+
+   if (type == GL_DOUBLE) {
+      base_op = OPCODE_ATTR_1D;
+   } else {
+      base_op = OPCODE_ATTR_1UI64;
+      assert(size == 1);
+   }
+
+   attr -= VERT_ATTRIB_GENERIC0;
+   n = alloc_instruction(ctx, base_op + size - 1, 1 + size * 2);
+   if (n) {
+      n[1].ui = attr;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+      if (size >= 2) ASSIGN_UINT64_TO_NODES(n, 4, y);
+      if (size >= 3) ASSIGN_UINT64_TO_NODES(n, 6, z);
+      if (size >= 4) ASSIGN_UINT64_TO_NODES(n, 8, w);
+   }
+
+   ctx->ListState.ActiveAttribSize[index] = size;
+   memcpy(ctx->ListState.CurrentAttrib[index], &n[2], size * sizeof(uint64_t));
+
+   if (ctx->ExecuteFlag) {
+      uint64_t v[] = {x, y, z, w};
+      if (type == GL_DOUBLE) {
+         if (size == 4)
+            CALL_VertexAttribL4dv(ctx->Exec, (attr, (GLdouble*)v));
+         else if (size == 3)
+            CALL_VertexAttribL3dv(ctx->Exec, (attr, (GLdouble*)v));
+         else if (size == 2)
+            CALL_VertexAttribL2dv(ctx->Exec, (attr, (GLdouble*)v));
+         else
+            CALL_VertexAttribL1d(ctx->Exec, (attr, UINT64_AS_DOUBLE(x)));
+      } else {
+         CALL_VertexAttribL1ui64ARB(ctx->Exec, (attr, x));
+      }
+   }
+}
+
+/**
+ * If index=0, does glVertexAttrib*() alias glVertex() to emit a vertex?
+ * It depends on a few things, including whether we're inside or outside
+ * of glBegin/glEnd.
+ */
+static inline bool
+is_vertex_position(const struct gl_context *ctx, GLuint index)
+{
+   return (index == 0 &&
+           _mesa_attr_zero_aliases_vertex(ctx) &&
+           _mesa_inside_dlist_begin_end(ctx));
+}
+
+/**
+ * This macro is used to implement all the glVertex, glColor, glTexCoord,
+ * glVertexAttrib, etc functions.
+ * \param A  VBO_ATTRIB_x attribute index
+ * \param N  attribute size (1..4)
+ * \param T  type (GL_FLOAT, GL_DOUBLE, GL_INT, GL_UNSIGNED_INT)
+ * \param C  cast type (uint32_t or uint64_t)
+ * \param V0, V1, v2, V3  attribute value
+ */
+#define ATTR_UNION(A, N, T, C, V0, V1, V2, V3)                          \
+do {                                                                    \
+   if (sizeof(C) == 4) {                                                \
+      save_Attr32bit(ctx, A, N, T, V0, V1, V2, V3);                     \
+   } else {                                                             \
+      save_Attr64bit(ctx, A, N, T, V0, V1, V2, V3);                     \
+   }                                                                    \
+} while (0)
+
+#undef ERROR
+#define ERROR(err) _mesa_error(ctx, err, __func__)
+#define TAG(x) save_##x
+
+#define VBO_ATTRIB_POS           VERT_ATTRIB_POS
+#define VBO_ATTRIB_NORMAL        VERT_ATTRIB_NORMAL
+#define VBO_ATTRIB_COLOR0        VERT_ATTRIB_COLOR0
+#define VBO_ATTRIB_COLOR1        VERT_ATTRIB_COLOR1
+#define VBO_ATTRIB_FOG           VERT_ATTRIB_FOG
+#define VBO_ATTRIB_COLOR_INDEX   VERT_ATTRIB_COLOR_INDEX
+#define VBO_ATTRIB_EDGEFLAG      VERT_ATTRIB_EDGEFLAG
+#define VBO_ATTRIB_TEX0          VERT_ATTRIB_TEX0
+#define VBO_ATTRIB_GENERIC0      VERT_ATTRIB_GENERIC0
+#define VBO_ATTRIB_MAX           VERT_ATTRIB_MAX
+
+#include "vbo/vbo_attrib_tmp.h"
 
 static void GLAPIENTRY
 save_UseProgram(GLuint program)
@@ -7827,6 +7445,592 @@ save_UniformMatrix4x3dv(GLint location, GLsizei count, GLboolean transpose,
    }
    if (ctx->ExecuteFlag) {
       CALL_UniformMatrix4x3dv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform1i64ARB(GLint location, GLint64 x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1I64, 3);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_INT64_TO_NODES(n, 2, x);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1i64ARB(ctx->Exec, (location, x));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2i64ARB(GLint location, GLint64 x, GLint64 y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2I64, 5);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_INT64_TO_NODES(n, 2, x);
+      ASSIGN_INT64_TO_NODES(n, 4, y);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2i64ARB(ctx->Exec, (location, x, y));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3i64ARB(GLint location, GLint64 x, GLint64 y, GLint64 z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3I64, 7);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_INT64_TO_NODES(n, 2, x);
+      ASSIGN_INT64_TO_NODES(n, 4, y);
+      ASSIGN_INT64_TO_NODES(n, 6, z);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3i64ARB(ctx->Exec, (location, x, y, z));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4i64ARB(GLint location, GLint64 x, GLint64 y, GLint64 z, GLint64 w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4I64, 9);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_INT64_TO_NODES(n, 2, x);
+      ASSIGN_INT64_TO_NODES(n, 4, y);
+      ASSIGN_INT64_TO_NODES(n, 6, z);
+      ASSIGN_INT64_TO_NODES(n, 8, w);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4i64ARB(ctx->Exec, (location, x, y, z, w));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform1i64vARB(GLint location, GLsizei count, const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1I64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 1 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1i64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2i64vARB(GLint location, GLsizei count, const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2I64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 2 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2i64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3i64vARB(GLint location, GLsizei count, const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3I64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 3 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3i64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4i64vARB(GLint location, GLsizei count, const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4I64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 4 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4i64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform1ui64ARB(GLint location, GLuint64 x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1UI64, 3);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1ui64ARB(ctx->Exec, (location, x));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2ui64ARB(GLint location, GLuint64 x, GLuint64 y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2UI64, 5);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+      ASSIGN_UINT64_TO_NODES(n, 4, y);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2ui64ARB(ctx->Exec, (location, x, y));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3ui64ARB(GLint location, GLuint64 x, GLuint64 y, GLuint64 z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3UI64, 7);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+      ASSIGN_UINT64_TO_NODES(n, 4, y);
+      ASSIGN_UINT64_TO_NODES(n, 6, z);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3ui64ARB(ctx->Exec, (location, x, y, z));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4ui64ARB(GLint location, GLuint64 x, GLuint64 y, GLuint64 z, GLuint64 w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4UI64, 9);
+   if (n) {
+      n[1].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+      ASSIGN_UINT64_TO_NODES(n, 4, y);
+      ASSIGN_UINT64_TO_NODES(n, 6, z);
+      ASSIGN_UINT64_TO_NODES(n, 8, w);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4ui64ARB(ctx->Exec, (location, x, y, z, w));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform1ui64vARB(GLint location, GLsizei count, const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1UI64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 1 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1ui64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2ui64vARB(GLint location, GLsizei count, const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2UI64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 2 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2ui64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3ui64vARB(GLint location, GLsizei count, const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3UI64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 3 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3ui64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4ui64vARB(GLint location, GLsizei count, const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4UI64V, 2 + POINTER_DWORDS);
+   if (n) {
+     n[1].i = location;
+     n[2].i = count;
+     save_pointer(&n[3], memdup(v, count * 4 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4ui64vARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform1i64ARB(GLuint program, GLint location, GLint64 x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_1I64, 4);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_INT64_TO_NODES(n, 3, x);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform1i64ARB(ctx->Exec, (program, location, x));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform2i64ARB(GLuint program, GLint location, GLint64 x,
+                           GLint64 y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_2I64, 6);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_INT64_TO_NODES(n, 3, x);
+      ASSIGN_INT64_TO_NODES(n, 5, y);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform2i64ARB(ctx->Exec, (program, location, x, y));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform3i64ARB(GLuint program, GLint location, GLint64 x,
+                           GLint64 y, GLint64 z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_3I64, 8);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_INT64_TO_NODES(n, 3, x);
+      ASSIGN_INT64_TO_NODES(n, 5, y);
+      ASSIGN_INT64_TO_NODES(n, 7, z);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform3i64ARB(ctx->Exec, (program, location, x, y, z));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform4i64ARB(GLuint program, GLint location, GLint64 x,
+                           GLint64 y, GLint64 z, GLint64 w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_4I64, 10);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_INT64_TO_NODES(n, 3, x);
+      ASSIGN_INT64_TO_NODES(n, 5, y);
+      ASSIGN_INT64_TO_NODES(n, 7, z);
+      ASSIGN_INT64_TO_NODES(n, 9, w);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform4i64ARB(ctx->Exec, (program, location, x, y, z, w));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform1i64vARB(GLuint program, GLint location, GLsizei count,
+                            const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_1I64V, 3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform1i64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform2i64vARB(GLuint program, GLint location, GLsizei count,
+                            const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_2I64V, 3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform2i64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform3i64vARB(GLuint program, GLint location, GLsizei count,
+                            const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_3I64V, 3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform3i64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform4i64vARB(GLuint program, GLint location, GLsizei count,
+                            const GLint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_4I64V, 3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform4i64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform1ui64ARB(GLuint program, GLint location, GLuint64 x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_1UI64, 4);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 3, x);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform1ui64ARB(ctx->Exec, (program, location, x));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform2ui64ARB(GLuint program, GLint location, GLuint64 x,
+                            GLuint64 y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_2UI64, 6);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 3, x);
+      ASSIGN_UINT64_TO_NODES(n, 5, y);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform2ui64ARB(ctx->Exec, (program, location, x, y));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform3ui64ARB(GLuint program, GLint location, GLuint64 x,
+                            GLuint64 y, GLuint64 z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_3UI64, 8);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 3, x);
+      ASSIGN_UINT64_TO_NODES(n, 5, y);
+      ASSIGN_UINT64_TO_NODES(n, 7, z);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform3ui64ARB(ctx->Exec, (program, location, x, y, z));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform4ui64ARB(GLuint program, GLint location, GLuint64 x,
+                            GLuint64 y, GLuint64 z, GLuint64 w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_4UI64, 10);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      ASSIGN_UINT64_TO_NODES(n, 3, x);
+      ASSIGN_UINT64_TO_NODES(n, 5, y);
+      ASSIGN_UINT64_TO_NODES(n, 7, z);
+      ASSIGN_UINT64_TO_NODES(n, 9, w);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform4i64ARB(ctx->Exec, (program, location, x, y, z, w));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform1ui64vARB(GLuint program, GLint location, GLsizei count,
+                             const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_1UI64V,
+                         3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform1ui64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform2ui64vARB(GLuint program, GLint location, GLsizei count,
+                            const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_2UI64V,
+                         3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform2ui64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform3ui64vARB(GLuint program, GLint location, GLsizei count,
+                             const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_3UI64V,
+                         3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform3ui64vARB(ctx->Exec, (program, location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_ProgramUniform4ui64vARB(GLuint program, GLint location, GLsizei count,
+                             const GLuint64 *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_UNIFORM_4UI64V,
+                         3 + POINTER_DWORDS);
+   if (n) {
+      n[1].ui = program;
+      n[2].i = location;
+      n[3].i = count;
+      save_pointer(&n[4], memdup(v, count * 1 * sizeof(GLuint64)));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramUniform4ui64vARB(ctx->Exec, (program, location, count, v));
    }
 }
 
@@ -9608,6 +9812,49 @@ save_TextureParameteriEXT(GLuint texture, GLenum target, GLenum pname, GLint par
 }
 
 static void GLAPIENTRY
+save_TextureParameterIivEXT(GLuint texture, GLenum target, GLenum pname, const GLint* params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_TEXTUREPARAMETER_II, 7);
+   if (n) {
+      n[1].ui = texture;
+      n[2].e = target;
+      n[3].e = pname;
+      n[4].i = params[0];
+      n[5].i = params[1];
+      n[6].i = params[2];
+      n[7].i = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_TextureParameterIivEXT(ctx->Exec, (texture, target, pname, params));
+   }
+}
+
+static void GLAPIENTRY
+save_TextureParameterIuivEXT(GLuint texture, GLenum target, GLenum pname, const GLuint* params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_TEXTUREPARAMETER_IUI, 7);
+   if (n) {
+      n[1].ui = texture;
+      n[2].e = target;
+      n[3].e = pname;
+      n[4].ui = params[0];
+      n[5].ui = params[1];
+      n[6].ui = params[2];
+      n[7].ui = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_TextureParameterIuivEXT(ctx->Exec, (texture, target, pname, params));
+   }
+}
+
+
+static void GLAPIENTRY
 save_TextureImage1DEXT(GLuint texture, GLenum target,
                        GLint level, GLint components,
                        GLsizei width, GLint border,
@@ -10025,6 +10272,48 @@ save_MultiTexParameterivEXT(GLenum texunit, GLenum target, GLenum pname, const G
    }
    if (ctx->ExecuteFlag) {
       CALL_MultiTexParameterivEXT(ctx->Exec, (texunit, target, pname, params));
+   }
+}
+
+static void GLAPIENTRY
+save_MultiTexParameterIivEXT(GLenum texunit, GLenum target, GLenum pname, const GLint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_MULTITEXPARAMETER_II, 7);
+   if (n) {
+      n[1].e = texunit;
+      n[2].e = target;
+      n[3].e = pname;
+      n[4].i = params[0];
+      n[5].i = params[1];
+      n[6].i = params[2];
+      n[7].i = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_MultiTexParameterIivEXT(ctx->Exec, (texunit, target, pname, params));
+   }
+}
+
+static void GLAPIENTRY
+save_MultiTexParameterIuivEXT(GLenum texunit, GLenum target, GLenum pname, const GLuint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_MULTITEXPARAMETER_IUI, 7);
+   if (n) {
+      n[1].e = texunit;
+      n[2].e = target;
+      n[3].e = pname;
+      n[4].ui = params[0];
+      n[5].ui = params[1];
+      n[6].ui = params[2];
+      n[7].ui = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_MultiTexParameterIuivEXT(ctx->Exec, (texunit, target, pname, params));
    }
 }
 
@@ -10897,6 +11186,87 @@ save_CompressedMultiTexSubImage3DEXT(GLenum texunit, GLenum target, GLint level,
                                             zoffset, width, height, depth, format,
                                             imageSize, data));
    }
+}
+
+
+static void GLAPIENTRY
+save_NamedProgramStringEXT(GLuint program, GLenum target, GLenum format, GLsizei len,
+                           const GLvoid * string)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+
+   n = alloc_instruction(ctx, OPCODE_NAMED_PROGRAM_STRING, 4 + POINTER_DWORDS);
+   if (n) {
+      GLubyte *programCopy = malloc(len);
+      if (!programCopy) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glNamedProgramStringEXT");
+         return;
+      }
+      memcpy(programCopy, string, len);
+      n[1].ui = program;
+      n[2].e = target;
+      n[3].e = format;
+      n[4].i = len;
+      save_pointer(&n[5], programCopy);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_NamedProgramStringEXT(ctx->Exec, (program, target, format, len, string));
+   }
+}
+
+
+static void GLAPIENTRY
+save_NamedProgramLocalParameter4fEXT(GLuint program, GLenum target, GLuint index,
+                                     GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_NAMED_PROGRAM_LOCAL_PARAMETER, 7);
+   if (n) {
+      n[1].ui = program;
+      n[2].e = target;
+      n[3].ui = index;
+      n[4].f = x;
+      n[5].f = y;
+      n[6].f = z;
+      n[7].f = w;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_NamedProgramLocalParameter4fEXT(ctx->Exec, (program, target, index, x, y, z, w));
+   }
+}
+
+
+static void GLAPIENTRY
+save_NamedProgramLocalParameter4fvEXT(GLuint program, GLenum target, GLuint index,
+                                      const GLfloat *params)
+{
+   save_NamedProgramLocalParameter4fEXT(program, target, index, params[0],
+                                        params[1], params[2], params[3]);
+}
+
+
+static void GLAPIENTRY
+save_NamedProgramLocalParameter4dEXT(GLuint program, GLenum target, GLuint index,
+                                    GLdouble x, GLdouble y,
+                                    GLdouble z, GLdouble w)
+{
+      save_NamedProgramLocalParameter4fEXT(program, target, index, (GLfloat) x,
+                                           (GLfloat) y, (GLfloat) z, (GLfloat) w);
+}
+
+
+static void GLAPIENTRY
+save_NamedProgramLocalParameter4dvEXT(GLuint program, GLenum target, GLuint index,
+                                      const GLdouble *params)
+{
+   save_NamedProgramLocalParameter4fEXT(program, target, index, (GLfloat) params[0],
+                                        (GLfloat) params[1], (GLfloat) params[2],
+                                        (GLfloat) params[3]);
 }
 
 
@@ -11920,6 +12290,294 @@ execute_list(struct gl_context *ctx, GLuint list)
                                     (n[1].i, n[2].i, n[3].b, get_pointer(&n[4])));
             break;
 
+         case OPCODE_UNIFORM_1I64: {
+            union int64_pair x;
+
+            x.int32[0] = n[2].i;
+            x.int32[1] = n[3].i;
+
+            CALL_Uniform1i64ARB(ctx->Exec, (n[1].i, x.int64));
+            break;
+         }
+         case OPCODE_UNIFORM_2I64: {
+            union int64_pair x;
+            union int64_pair y;
+
+            x.int32[0] = n[2].i;
+            x.int32[1] = n[3].i;
+            y.int32[0] = n[4].i;
+            y.int32[1] = n[5].i;
+
+            CALL_Uniform2i64ARB(ctx->Exec, (n[1].i, x.int64, y.int64));
+            break;
+         }
+         case OPCODE_UNIFORM_3I64: {
+            union int64_pair x;
+            union int64_pair y;
+            union int64_pair z;
+
+            x.int32[0] = n[2].i;
+            x.int32[1] = n[3].i;
+            y.int32[0] = n[4].i;
+            y.int32[1] = n[5].i;
+            z.int32[0] = n[6].i;
+            z.int32[1] = n[7].i;
+
+
+            CALL_Uniform3i64ARB(ctx->Exec, (n[1].i, x.int64, y.int64, z.int64));
+            break;
+         }
+         case OPCODE_UNIFORM_4I64: {
+            union int64_pair x;
+            union int64_pair y;
+            union int64_pair z;
+            union int64_pair w;
+
+            x.int32[0] = n[2].i;
+            x.int32[1] = n[3].i;
+            y.int32[0] = n[4].i;
+            y.int32[1] = n[5].i;
+            z.int32[0] = n[6].i;
+            z.int32[1] = n[7].i;
+            w.int32[0] = n[8].i;
+            w.int32[1] = n[9].i;
+
+            CALL_Uniform4i64ARB(ctx->Exec, (n[1].i, x.int64, y.int64, z.int64, w.int64));
+            break;
+         }
+         case OPCODE_UNIFORM_1I64V:
+            CALL_Uniform1i64vARB(ctx->Exec, (n[1].i, n[2].i, get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_2I64V:
+            CALL_Uniform2i64vARB(ctx->Exec, (n[1].i, n[2].i, get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_3I64V:
+            CALL_Uniform3i64vARB(ctx->Exec, (n[1].i, n[2].i, get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_4I64V:
+            CALL_Uniform4i64vARB(ctx->Exec, (n[1].i, n[2].i, get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_1UI64: {
+            union uint64_pair x;
+
+            x.uint32[0] = n[2].ui;
+            x.uint32[1] = n[3].ui;
+
+            CALL_Uniform1ui64ARB(ctx->Exec, (n[1].i, x.uint64));
+            break;
+         }
+         case OPCODE_UNIFORM_2UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+
+            x.uint32[0] = n[2].ui;
+            x.uint32[1] = n[3].ui;
+            y.uint32[0] = n[4].ui;
+            y.uint32[1] = n[5].ui;
+
+            CALL_Uniform2ui64ARB(ctx->Exec, (n[1].i, x.uint64, y.uint64));
+            break;
+         }
+         case OPCODE_UNIFORM_3UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+            union uint64_pair z;
+
+            x.uint32[0] = n[2].ui;
+            x.uint32[1] = n[3].ui;
+            y.uint32[0] = n[4].ui;
+            y.uint32[1] = n[5].ui;
+            z.uint32[0] = n[6].ui;
+            z.uint32[1] = n[7].ui;
+
+
+            CALL_Uniform3ui64ARB(ctx->Exec, (n[1].i, x.uint64, y.uint64,
+                                 z.uint64));
+            break;
+         }
+         case OPCODE_UNIFORM_4UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+            union uint64_pair z;
+            union uint64_pair w;
+
+            x.uint32[0] = n[2].ui;
+            x.uint32[1] = n[3].ui;
+            y.uint32[0] = n[4].ui;
+            y.uint32[1] = n[5].ui;
+            z.uint32[0] = n[6].ui;
+            z.uint32[1] = n[7].ui;
+            w.uint32[0] = n[8].ui;
+            w.uint32[1] = n[9].ui;
+
+            CALL_Uniform4ui64ARB(ctx->Exec, (n[1].i, x.uint64, y.uint64,
+                                 z.uint64, w.uint64));
+            break;
+         }
+         case OPCODE_UNIFORM_1UI64V:
+            CALL_Uniform1ui64vARB(ctx->Exec, (n[1].i, n[2].i,
+                                  get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_2UI64V:
+            CALL_Uniform2ui64vARB(ctx->Exec, (n[1].i, n[2].i,
+                                  get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_3UI64V:
+            CALL_Uniform3ui64vARB(ctx->Exec, (n[1].i, n[2].i,
+                                  get_pointer(&n[3])));
+            break;
+         case OPCODE_UNIFORM_4UI64V:
+            CALL_Uniform4ui64vARB(ctx->Exec, (n[1].i, n[2].i,
+                                  get_pointer(&n[3])));
+            break;
+
+         case OPCODE_PROGRAM_UNIFORM_1I64: {
+            union int64_pair x;
+
+            x.int32[0] = n[3].i;
+            x.int32[1] = n[4].i;
+
+            CALL_ProgramUniform1i64ARB(ctx->Exec, (n[1].ui, n[2].i, x.int64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_2I64: {
+            union int64_pair x;
+            union int64_pair y;
+
+            x.int32[0] = n[3].i;
+            x.int32[1] = n[4].i;
+            y.int32[0] = n[5].i;
+            y.int32[1] = n[6].i;
+
+            CALL_ProgramUniform2i64ARB(ctx->Exec, (n[1].ui, n[2].i, x.int64,
+                                       y.int64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_3I64: {
+            union int64_pair x;
+            union int64_pair y;
+            union int64_pair z;
+
+            x.int32[0] = n[3].i;
+            x.int32[1] = n[4].i;
+            y.int32[0] = n[5].i;
+            y.int32[1] = n[6].i;
+            z.int32[0] = n[7].i;
+            z.int32[1] = n[8].i;
+
+            CALL_ProgramUniform3i64ARB(ctx->Exec, (n[1].ui, n[2].i, x.int64,
+                                       y.int64, z.int64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_4I64: {
+            union int64_pair x;
+            union int64_pair y;
+            union int64_pair z;
+            union int64_pair w;
+
+            x.int32[0] = n[3].i;
+            x.int32[1] = n[4].i;
+            y.int32[0] = n[5].i;
+            y.int32[1] = n[6].i;
+            z.int32[0] = n[7].i;
+            z.int32[1] = n[8].i;
+            w.int32[0] = n[9].i;
+            w.int32[1] = n[10].i;
+
+            CALL_ProgramUniform4i64ARB(ctx->Exec, (n[1].ui, n[2].i, x.int64,
+                                       y.int64, z.int64, w.int64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_1I64V:
+            CALL_ProgramUniform1i64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                        get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_2I64V:
+            CALL_ProgramUniform2i64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                        get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_3I64V:
+            CALL_ProgramUniform3i64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                        get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_4I64V:
+            CALL_ProgramUniform4i64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                        get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_1UI64: {
+            union uint64_pair x;
+
+            x.uint32[0] = n[3].ui;
+            x.uint32[1] = n[4].ui;
+
+            CALL_ProgramUniform1i64ARB(ctx->Exec, (n[1].ui, n[2].i, x.uint64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_2UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+
+            x.uint32[0] = n[3].ui;
+            x.uint32[1] = n[4].ui;
+            y.uint32[0] = n[5].ui;
+            y.uint32[1] = n[6].ui;
+
+            CALL_ProgramUniform2ui64ARB(ctx->Exec, (n[1].ui, n[2].i, x.uint64,
+                                        y.uint64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_3UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+            union uint64_pair z;
+
+            x.uint32[0] = n[3].ui;
+            x.uint32[1] = n[4].ui;
+            y.uint32[0] = n[5].ui;
+            y.uint32[1] = n[6].ui;
+            z.uint32[0] = n[7].ui;
+            z.uint32[1] = n[8].ui;
+
+            CALL_ProgramUniform3ui64ARB(ctx->Exec, (n[1].ui, n[2].i, x.uint64,
+                                        y.uint64, z.uint64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_4UI64: {
+            union uint64_pair x;
+            union uint64_pair y;
+            union uint64_pair z;
+            union uint64_pair w;
+
+            x.uint32[0] = n[3].ui;
+            x.uint32[1] = n[4].ui;
+            y.uint32[0] = n[5].ui;
+            y.uint32[1] = n[6].ui;
+            z.uint32[0] = n[7].ui;
+            z.uint32[1] = n[8].ui;
+            w.uint32[0] = n[9].ui;
+            w.uint32[1] = n[10].ui;
+
+            CALL_ProgramUniform4ui64ARB(ctx->Exec, (n[1].ui, n[2].i, x.uint64,
+                                        y.uint64, z.uint64, w.uint64));
+            break;
+         }
+         case OPCODE_PROGRAM_UNIFORM_1UI64V:
+            CALL_ProgramUniform1ui64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                         get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_2UI64V:
+            CALL_ProgramUniform2ui64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                         get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_3UI64V:
+            CALL_ProgramUniform3ui64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                         get_pointer(&n[4])));
+            break;
+         case OPCODE_PROGRAM_UNIFORM_4UI64V:
+            CALL_ProgramUniform4ui64vARB(ctx->Exec, (n[1].ui, n[2].i, n[3].i,
+                                         get_pointer(&n[4])));
+            break;
+
          case OPCODE_USE_PROGRAM_STAGES:
             CALL_UseProgramStages(ctx->Exec, (n[1].ui, n[2].ui, n[3].ui));
             break;
@@ -12216,6 +12874,18 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_ATTR_4F_ARB:
             CALL_VertexAttrib4fvARB(ctx->Exec, (n[1].e, &n[2].f));
             break;
+         case OPCODE_ATTR_1I:
+            CALL_VertexAttribI1iEXT(ctx->Exec, (n[1].e, n[2].i));
+            break;
+         case OPCODE_ATTR_2I:
+            CALL_VertexAttribI2ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
+         case OPCODE_ATTR_3I:
+            CALL_VertexAttribI3ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
+         case OPCODE_ATTR_4I:
+            CALL_VertexAttribI4ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
          case OPCODE_ATTR_1D: {
             GLdouble *d = (GLdouble *) &n[2];
             CALL_VertexAttribL1d(ctx->Exec, (n[1].ui, *d));
@@ -12234,6 +12904,11 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_ATTR_4D: {
             GLdouble *d = (GLdouble *) &n[2];
             CALL_VertexAttribL4dv(ctx->Exec, (n[1].ui, d));
+            break;
+         }
+         case OPCODE_ATTR_1UI64: {
+            uint64_t *ui64 = (uint64_t *) &n[2];
+            CALL_VertexAttribL1ui64ARB(ctx->Exec, (n[1].ui, *ui64));
             break;
          }
          case OPCODE_MATERIAL:
@@ -12485,6 +13160,26 @@ execute_list(struct gl_context *ctx, GLuint list)
                CALL_TextureParameterivEXT(ctx->Exec, (n[1].ui, n[2].e, n[3].e, params));
             }
             break;
+         case OPCODE_TEXTUREPARAMETER_II:
+            {
+               GLint params[4];
+               params[0] = n[4].i;
+               params[1] = n[5].i;
+               params[2] = n[6].i;
+               params[3] = n[7].i;
+               CALL_TextureParameterIivEXT(ctx->Exec, (n[1].ui, n[2].e, n[3].e, params));
+            }
+            break;
+         case OPCODE_TEXTUREPARAMETER_IUI:
+            {
+               GLuint params[4];
+               params[0] = n[4].ui;
+               params[1] = n[5].ui;
+               params[2] = n[6].ui;
+               params[3] = n[7].ui;
+               CALL_TextureParameterIuivEXT(ctx->Exec, (n[1].ui, n[2].e, n[3].e, params));
+            }
+            break;
          case OPCODE_TEXTURE_IMAGE1D:
             {
                const struct gl_pixelstore_attrib save = ctx->Unpack;
@@ -12616,6 +13311,26 @@ execute_list(struct gl_context *ctx, GLuint list)
                params[2] = n[6].i;
                params[3] = n[7].i;
                CALL_MultiTexParameterivEXT(ctx->Exec, (n[1].e, n[2].e, n[3].e, params));
+            }
+            break;
+         case OPCODE_MULTITEXPARAMETER_II:
+            {
+               GLint params[4];
+               params[0] = n[4].i;
+               params[1] = n[5].i;
+               params[2] = n[6].i;
+               params[3] = n[7].i;
+               CALL_MultiTexParameterIivEXT(ctx->Exec, (n[1].e, n[2].e, n[3].e, params));
+            }
+            break;
+         case OPCODE_MULTITEXPARAMETER_IUI:
+            {
+               GLuint params[4];
+               params[0] = n[4].ui;
+               params[1] = n[5].ui;
+               params[2] = n[6].ui;
+               params[3] = n[7].ui;
+               CALL_MultiTexParameterIuivEXT(ctx->Exec, (n[1].e, n[2].e, n[3].e, params));
             }
             break;
          case OPCODE_MULTITEX_IMAGE1D:
@@ -12810,6 +13525,16 @@ execute_list(struct gl_context *ctx, GLuint list)
                                                  n[9].i, n[10].e, n[11].i,
                                                  get_pointer(&n[12])));
             break;
+         case OPCODE_NAMED_PROGRAM_STRING:
+            CALL_NamedProgramStringEXT(ctx->Exec,
+                                  (n[1].ui, n[2].e, n[3].e, n[4].i,
+                                   get_pointer(&n[5])));
+            break;
+         case OPCODE_NAMED_PROGRAM_LOCAL_PARAMETER:
+            CALL_NamedProgramLocalParameter4fEXT(ctx->Exec,
+                                            (n[1].ui, n[2].e, n[3].ui, n[4].f,
+                                             n[5].f, n[6].f, n[7].f));
+            break;
 
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
@@ -12823,7 +13548,7 @@ execute_list(struct gl_context *ctx, GLuint list)
          default:
             {
                char msg[1000];
-               _mesa_snprintf(msg, sizeof(msg), "Error in execute_list: opcode=%d",
+               snprintf(msg, sizeof(msg), "Error in execute_list: opcode=%d",
                              (int) opcode);
                _mesa_problem(ctx, "%s", msg);
             }
@@ -13648,6 +14373,41 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_UniformMatrix3x4dv(table, save_UniformMatrix3x4dv);
    SET_UniformMatrix4x3dv(table, save_UniformMatrix4x3dv);
 
+   /* GL_ARB_gpu_shader_int64 */
+   SET_Uniform1i64ARB(table, save_Uniform1i64ARB);
+   SET_Uniform2i64ARB(table, save_Uniform2i64ARB);
+   SET_Uniform3i64ARB(table, save_Uniform3i64ARB);
+   SET_Uniform4i64ARB(table, save_Uniform4i64ARB);
+   SET_Uniform1i64vARB(table, save_Uniform1i64vARB);
+   SET_Uniform2i64vARB(table, save_Uniform2i64vARB);
+   SET_Uniform3i64vARB(table, save_Uniform3i64vARB);
+   SET_Uniform4i64vARB(table, save_Uniform4i64vARB);
+   SET_Uniform1ui64ARB(table, save_Uniform1ui64ARB);
+   SET_Uniform2ui64ARB(table, save_Uniform2ui64ARB);
+   SET_Uniform3ui64ARB(table, save_Uniform3ui64ARB);
+   SET_Uniform4ui64ARB(table, save_Uniform4ui64ARB);
+   SET_Uniform1ui64vARB(table, save_Uniform1ui64vARB);
+   SET_Uniform2ui64vARB(table, save_Uniform2ui64vARB);
+   SET_Uniform3ui64vARB(table, save_Uniform3ui64vARB);
+   SET_Uniform4ui64vARB(table, save_Uniform4ui64vARB);
+
+   SET_ProgramUniform1i64ARB(table, save_ProgramUniform1i64ARB);
+   SET_ProgramUniform2i64ARB(table, save_ProgramUniform2i64ARB);
+   SET_ProgramUniform3i64ARB(table, save_ProgramUniform3i64ARB);
+   SET_ProgramUniform4i64ARB(table, save_ProgramUniform4i64ARB);
+   SET_ProgramUniform1i64vARB(table, save_ProgramUniform1i64vARB);
+   SET_ProgramUniform2i64vARB(table, save_ProgramUniform2i64vARB);
+   SET_ProgramUniform3i64vARB(table, save_ProgramUniform3i64vARB);
+   SET_ProgramUniform4i64vARB(table, save_ProgramUniform4i64vARB);
+   SET_ProgramUniform1ui64ARB(table, save_ProgramUniform1ui64ARB);
+   SET_ProgramUniform2ui64ARB(table, save_ProgramUniform2ui64ARB);
+   SET_ProgramUniform3ui64ARB(table, save_ProgramUniform3ui64ARB);
+   SET_ProgramUniform4ui64ARB(table, save_ProgramUniform4ui64ARB);
+   SET_ProgramUniform1ui64vARB(table, save_ProgramUniform1ui64vARB);
+   SET_ProgramUniform2ui64vARB(table, save_ProgramUniform2ui64vARB);
+   SET_ProgramUniform3ui64vARB(table, save_ProgramUniform3ui64vARB);
+   SET_ProgramUniform4ui64vARB(table, save_ProgramUniform4ui64vARB);
+
    /* These are: */
    SET_BeginTransformFeedback(table, save_BeginTransformFeedback);
    SET_EndTransformFeedback(table, save_EndTransformFeedback);
@@ -13806,6 +14566,8 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_TextureParameterivEXT(table, save_TextureParameterivEXT);
    SET_TextureParameterfEXT(table, save_TextureParameterfEXT);
    SET_TextureParameterfvEXT(table, save_TextureParameterfvEXT);
+   SET_TextureParameterIivEXT(table, save_TextureParameterIivEXT);
+   SET_TextureParameterIuivEXT(table, save_TextureParameterIuivEXT);
    SET_TextureImage1DEXT(table, save_TextureImage1DEXT);
    SET_TextureImage2DEXT(table, save_TextureImage2DEXT);
    SET_TextureImage3DEXT(table, save_TextureImage3DEXT);
@@ -13820,6 +14582,8 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_BindMultiTextureEXT(table, save_BindMultiTextureEXT);
    SET_MultiTexParameteriEXT(table, save_MultiTexParameteriEXT);
    SET_MultiTexParameterivEXT(table, save_MultiTexParameterivEXT);
+   SET_MultiTexParameterIivEXT(table, save_MultiTexParameterIivEXT);
+   SET_MultiTexParameterIuivEXT(table, save_MultiTexParameterIuivEXT);
    SET_MultiTexParameterfEXT(table, save_MultiTexParameterfEXT);
    SET_MultiTexParameterfvEXT(table, save_MultiTexParameterfvEXT);
    SET_MultiTexImage1DEXT(table, save_MultiTexImage1DEXT);
@@ -13849,6 +14613,11 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_CompressedMultiTexSubImage1DEXT(table, save_CompressedMultiTexSubImage1DEXT);
    SET_CompressedMultiTexSubImage2DEXT(table, save_CompressedMultiTexSubImage2DEXT);
    SET_CompressedMultiTexSubImage3DEXT(table, save_CompressedMultiTexSubImage3DEXT);
+   SET_NamedProgramStringEXT(table, save_NamedProgramStringEXT);
+   SET_NamedProgramLocalParameter4dEXT(table, save_NamedProgramLocalParameter4dEXT);
+   SET_NamedProgramLocalParameter4dvEXT(table, save_NamedProgramLocalParameter4dvEXT);
+   SET_NamedProgramLocalParameter4fEXT(table, save_NamedProgramLocalParameter4fEXT);
+   SET_NamedProgramLocalParameter4fvEXT(table, save_NamedProgramLocalParameter4fvEXT);
 }
 
 
@@ -14198,82 +14967,6 @@ mesa_print_display_list(GLuint list)
 /*****                      Initialization                        *****/
 /**********************************************************************/
 
-static void
-save_vtxfmt_init(GLvertexformat * vfmt)
-{
-   vfmt->ArrayElement = _ae_ArrayElement;
-
-   vfmt->Begin = save_Begin;
-
-   vfmt->CallList = save_CallList;
-   vfmt->CallLists = save_CallLists;
-
-   vfmt->Color3f = save_Color3f;
-   vfmt->Color3fv = save_Color3fv;
-   vfmt->Color4f = save_Color4f;
-   vfmt->Color4fv = save_Color4fv;
-   vfmt->EdgeFlag = save_EdgeFlag;
-   vfmt->End = save_End;
-
-   vfmt->EvalCoord1f = save_EvalCoord1f;
-   vfmt->EvalCoord1fv = save_EvalCoord1fv;
-   vfmt->EvalCoord2f = save_EvalCoord2f;
-   vfmt->EvalCoord2fv = save_EvalCoord2fv;
-   vfmt->EvalPoint1 = save_EvalPoint1;
-   vfmt->EvalPoint2 = save_EvalPoint2;
-
-   vfmt->FogCoordfEXT = save_FogCoordfEXT;
-   vfmt->FogCoordfvEXT = save_FogCoordfvEXT;
-   vfmt->Indexf = save_Indexf;
-   vfmt->Indexfv = save_Indexfv;
-   vfmt->Materialfv = save_Materialfv;
-   vfmt->MultiTexCoord1fARB = save_MultiTexCoord1f;
-   vfmt->MultiTexCoord1fvARB = save_MultiTexCoord1fv;
-   vfmt->MultiTexCoord2fARB = save_MultiTexCoord2f;
-   vfmt->MultiTexCoord2fvARB = save_MultiTexCoord2fv;
-   vfmt->MultiTexCoord3fARB = save_MultiTexCoord3f;
-   vfmt->MultiTexCoord3fvARB = save_MultiTexCoord3fv;
-   vfmt->MultiTexCoord4fARB = save_MultiTexCoord4f;
-   vfmt->MultiTexCoord4fvARB = save_MultiTexCoord4fv;
-   vfmt->Normal3f = save_Normal3f;
-   vfmt->Normal3fv = save_Normal3fv;
-   vfmt->SecondaryColor3fEXT = save_SecondaryColor3fEXT;
-   vfmt->SecondaryColor3fvEXT = save_SecondaryColor3fvEXT;
-   vfmt->TexCoord1f = save_TexCoord1f;
-   vfmt->TexCoord1fv = save_TexCoord1fv;
-   vfmt->TexCoord2f = save_TexCoord2f;
-   vfmt->TexCoord2fv = save_TexCoord2fv;
-   vfmt->TexCoord3f = save_TexCoord3f;
-   vfmt->TexCoord3fv = save_TexCoord3fv;
-   vfmt->TexCoord4f = save_TexCoord4f;
-   vfmt->TexCoord4fv = save_TexCoord4fv;
-   vfmt->Vertex2f = save_Vertex2f;
-   vfmt->Vertex2fv = save_Vertex2fv;
-   vfmt->Vertex3f = save_Vertex3f;
-   vfmt->Vertex3fv = save_Vertex3fv;
-   vfmt->Vertex4f = save_Vertex4f;
-   vfmt->Vertex4fv = save_Vertex4fv;
-   vfmt->VertexAttrib1fARB = save_VertexAttrib1fARB;
-   vfmt->VertexAttrib1fvARB = save_VertexAttrib1fvARB;
-   vfmt->VertexAttrib2fARB = save_VertexAttrib2fARB;
-   vfmt->VertexAttrib2fvARB = save_VertexAttrib2fvARB;
-   vfmt->VertexAttrib3fARB = save_VertexAttrib3fARB;
-   vfmt->VertexAttrib3fvARB = save_VertexAttrib3fvARB;
-   vfmt->VertexAttrib4fARB = save_VertexAttrib4fARB;
-   vfmt->VertexAttrib4fvARB = save_VertexAttrib4fvARB;
-   vfmt->VertexAttribL1d = save_VertexAttribL1d;
-   vfmt->VertexAttribL1dv = save_VertexAttribL1dv;
-   vfmt->VertexAttribL2d = save_VertexAttribL2d;
-   vfmt->VertexAttribL2dv = save_VertexAttribL2dv;
-   vfmt->VertexAttribL3d = save_VertexAttribL3d;
-   vfmt->VertexAttribL3dv = save_VertexAttribL3dv;
-   vfmt->VertexAttribL4d = save_VertexAttribL4d;
-   vfmt->VertexAttribL4dv = save_VertexAttribL4dv;
-
-   vfmt->PrimitiveRestartNV = save_PrimitiveRestartNV;
-}
-
-
 void
 _mesa_install_dlist_vtxfmt(struct _glapi_table *disp,
                            const GLvertexformat *vfmt)
@@ -14290,6 +14983,7 @@ void
 _mesa_init_display_list(struct gl_context *ctx)
 {
    static GLboolean tableInitialized = GL_FALSE;
+   GLvertexformat *vfmt = &ctx->ListState.ListVtxfmt;
 
    /* zero-out the instruction size table, just once */
    if (!tableInitialized) {
@@ -14310,9 +15004,14 @@ _mesa_init_display_list(struct gl_context *ctx)
    /* Display List group */
    ctx->List.ListBase = 0;
 
-   save_vtxfmt_init(&ctx->ListState.ListVtxfmt);
-
    InstSize[OPCODE_NOP] = 1;
+
+#define NAME_AE(x) _ae_##x
+#define NAME_CALLLIST(x) save_##x
+#define NAME(x) save_##x
+#define NAME_ES(x) save_##x##ARB
+
+#include "vbo/vbo_init_tmp.h"
 }
 
 

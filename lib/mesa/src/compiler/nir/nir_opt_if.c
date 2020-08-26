@@ -309,35 +309,29 @@ alu_instr_is_type_conversion(const nir_alu_instr *alu)
  *
  * - At least one source of the instruction is a phi node from the header block.
  *
- * and either this rule
+ * - The phi node selects a constant or undef from the block before the loop.
  *
- * - The phi node selects undef from the block before the loop and a value
- *   from the continue block of the loop.
- *
- * or these two rules
- *
- * - The phi node selects a constant from the block before the loop.
- *
- * - The non-phi source of the ALU instruction comes from a block that
+ * - Any non-phi sources of the ALU instruction come from a block that
  *   dominates the block before the loop.  The most common failure mode for
  *   this check is sources that are generated in the loop header block.
  *
- * The split process moves the original ALU instruction to the bottom of the
- * loop.  The phi node source is replaced with the value from the phi node
- * selected from the continue block (i.e., the non-undef value).  A new phi
- * node is added to the header block that selects either undef from the block
- * before the loop or the result of the (moved) ALU instruction.
+ * The split process splits the original ALU instruction into two, one at the
+ * bottom of the loop and one at the block before the loop. The instruction
+ * before the loop computes the value on the first iteration, and the
+ * instruction at the bottom computes the value on the second, third, and so
+ * on. A new phi node is added to the header block that selects either the
+ * instruction before the loop or the one at the end, and uses of the original
+ * instruction are replaced by this phi.
  *
  * The splitting transforms a loop like:
  *
- *    vec1 32 ssa_7 = undefined
  *    vec1 32 ssa_8 = load_const (0x00000001)
  *    vec1 32 ssa_10 = load_const (0x00000000)
  *    // succs: block_1
  *    loop {
  *            block block_1:
  *            // preds: block_0 block_4
- *            vec1 32 ssa_11 = phi block_0: ssa_7, block_4: ssa_15
+ *            vec1 32 ssa_11 = phi block_0: ssa_10, block_4: ssa_15
  *            vec1 32 ssa_12 = phi block_0: ssa_1, block_4: ssa_15
  *            vec1 32 ssa_13 = phi block_0: ssa_10, block_4: ssa_16
  *            vec1 32 ssa_14 = iadd ssa_11, ssa_8
@@ -348,27 +342,22 @@ alu_instr_is_type_conversion(const nir_alu_instr *alu)
  *
  * into:
  *
- *    vec1 32 ssa_7 = undefined
  *    vec1 32 ssa_8 = load_const (0x00000001)
  *    vec1 32 ssa_10 = load_const (0x00000000)
+ *    vec1 32 ssa_22 = iadd ssa_10, ssa_8
  *    // succs: block_1
  *    loop {
  *            block block_1:
  *            // preds: block_0 block_4
- *            vec1 32 ssa_11 = phi block_0: ssa_7, block_4: ssa_15
+ *            vec1 32 ssa_11 = phi block_0: ssa_10, block_4: ssa_15
  *            vec1 32 ssa_12 = phi block_0: ssa_1, block_4: ssa_15
  *            vec1 32 ssa_13 = phi block_0: ssa_10, block_4: ssa_16
- *            vec1 32 ssa_21 = phi block_0: sss_7, block_4: ssa_20
+ *            vec1 32 ssa_21 = phi block_0: ssa_22, block_4: ssa_20
  *            vec1 32 ssa_15 = b32csel ssa_13, ssa_21, ssa_12
  *            ...
  *            vec1 32 ssa_20 = iadd ssa_15, ssa_8
  *            // succs: block_1
  *    }
- *
- * If the phi does not select an undef, the instruction is duplicated in the
- * loop continue block (as in the undef case) and in the previous block.  When
- * the ALU instruction is duplicated in the previous block, the correct source
- * must be selected from the phi node.
  */
 static bool
 opt_split_alu_of_phi(nir_builder *b, nir_loop *loop)
@@ -394,22 +383,12 @@ opt_split_alu_of_phi(nir_builder *b, nir_loop *loop)
 
       nir_alu_instr *const alu = nir_instr_as_alu(instr);
 
-      /* Most ALU ops produce an undefined result if any source is undef.
-       * However, operations like bcsel only produce undefined results of the
-       * first operand is undef.  Even in the undefined case, the result
-       * should be one of the other two operands, so the result of the bcsel
-       * should never be replaced with undef.
-       *
-       * nir_op_vec{2,3,4} and nir_op_mov are excluded because they can easily
-       * lead to infinite optimization loops.
+      /* nir_op_vec{2,3,4} and nir_op_mov are excluded because they can easily
+       * lead to infinite optimization loops. Splitting comparisons can lead
+       * to loop unrolling not recognizing loop termintators, and type
+       * conversions also lead to regressions.
        */
-      if (alu->op == nir_op_bcsel ||
-          alu->op == nir_op_b32csel ||
-          alu->op == nir_op_fcsel ||
-          alu->op == nir_op_vec2 ||
-          alu->op == nir_op_vec3 ||
-          alu->op == nir_op_vec4 ||
-          alu->op == nir_op_mov ||
+      if (nir_op_is_vec(alu->op) ||
           alu_instr_is_comparison(alu) ||
           alu_instr_is_type_conversion(alu))
          continue;
@@ -477,26 +456,9 @@ opt_split_alu_of_phi(nir_builder *b, nir_loop *loop)
       if (has_phi_src_from_prev_block && all_non_phi_exist_in_prev_block &&
           (is_prev_result_undef || is_prev_result_const)) {
          nir_block *const continue_block = find_continue_block(loop);
-         nir_ssa_def *prev_value;
 
-         if (!is_prev_result_undef) {
-            b->cursor = nir_after_block(prev_block);
-            prev_value = clone_alu_and_replace_src_defs(b, alu, prev_srcs);
-         } else {
-            /* Since the undef used as the source of the original ALU
-             * instruction may have different number of components or
-             * bit size than the result of that instruction, a new
-             * undef must be created.
-             */
-            nir_ssa_undef_instr *undef =
-               nir_ssa_undef_instr_create(b->shader,
-                                          alu->dest.dest.ssa.num_components,
-                                          alu->dest.dest.ssa.bit_size);
-
-            nir_instr_insert_after_block(prev_block, &undef->instr);
-
-            prev_value = &undef->def;
-         }
+         b->cursor = nir_after_block(prev_block);
+         nir_ssa_def *prev_value = clone_alu_and_replace_src_defs(b, alu, prev_srcs);
 
          /* Make a copy of the original ALU instruction.  Replace the sources
           * of the new instruction that read a phi with an undef source from
@@ -670,7 +632,7 @@ opt_simplify_bcsel_of_phi(nir_builder *b, nir_loop *loop)
     * bcsel that must come before any break.
     *
     * For more details, see
-    * https://gitlab.freedesktop.org/mesa/mesa/merge_requests/170#note_110305
+    * https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/170#note_110305
     */
    nir_foreach_instr_safe(instr, header_block) {
       if (instr->type != nir_instr_type_alu)
@@ -971,6 +933,17 @@ opt_if_simplification(nir_builder *b, nir_if *nif)
    nir_block *then_block = nir_if_last_then_block(nif);
    nir_block *else_block = nir_if_last_else_block(nif);
 
+   if (nir_block_ends_in_jump(else_block)) {
+      /* Even though this if statement has a jump on one side, we may still have
+       * phis afterwards.  Single-source phis can be produced by loop unrolling
+       * or dead control-flow passes and are perfectly legal.  Run a quick phi
+       * removal on the block after the if to clean up any such phis.
+       */
+      nir_block *const next_block =
+         nir_cf_node_as_block(nir_cf_node_next(&nif->cf_node));
+      nir_opt_remove_phis_block(next_block);
+   }
+
    rewrite_phi_predecessor_blocks(nif, then_block, else_block, else_block,
                                   then_block);
 
@@ -1036,7 +1009,7 @@ opt_if_loop_terminator(nir_if *nif)
    if (is_block_empty(first_continue_from_blk))
       return false;
 
-   if (!nir_is_trivial_loop_if(nif, break_blk))
+   if (nir_block_ends_in_jump(continue_from_blk))
       return false;
 
    /* Even though this if statement has a jump on one side, we may still have
@@ -1372,9 +1345,39 @@ opt_if_cf_list(nir_builder *b, struct exec_list *cf_list,
          progress |= opt_if_cf_list(b, &loop->body,
                                     aggressive_last_continue);
          progress |= opt_simplify_bcsel_of_phi(b, loop);
-         progress |= opt_peel_loop_initial_if(loop);
          progress |= opt_if_loop_last_continue(loop,
                                                aggressive_last_continue);
+         break;
+      }
+
+      case nir_cf_node_function:
+         unreachable("Invalid cf type");
+      }
+   }
+
+   return progress;
+}
+
+static bool
+opt_peel_loop_initial_if_cf_list(struct exec_list *cf_list)
+{
+   bool progress = false;
+   foreach_list_typed(nir_cf_node, cf_node, node, cf_list) {
+      switch (cf_node->type) {
+      case nir_cf_node_block:
+         break;
+
+      case nir_cf_node_if: {
+         nir_if *nif = nir_cf_node_as_if(cf_node);
+         progress |= opt_peel_loop_initial_if_cf_list(&nif->then_list);
+         progress |= opt_peel_loop_initial_if_cf_list(&nif->else_list);
+         break;
+      }
+
+      case nir_cf_node_loop: {
+         nir_loop *loop = nir_cf_node_as_loop(cf_node);
+         progress |= opt_peel_loop_initial_if_cf_list(&loop->body);
+         progress |= opt_peel_loop_initial_if(loop);
          break;
       }
 
@@ -1440,17 +1443,26 @@ nir_opt_if(nir_shader *shader, bool aggressive_last_continue)
       nir_metadata_preserve(function->impl, nir_metadata_block_index |
                             nir_metadata_dominance);
 
-      if (opt_if_cf_list(&b, &function->impl->body,
-                         aggressive_last_continue)) {
-         nir_metadata_preserve(function->impl, nir_metadata_none);
+      bool preserve = true;
+
+      if (opt_if_cf_list(&b, &function->impl->body, aggressive_last_continue)) {
+         preserve = false;
+         progress = true;
+      }
+
+      if (opt_peel_loop_initial_if_cf_list(&function->impl->body)) {
+         preserve = false;
+         progress = true;
 
          /* If that made progress, we're no longer really in SSA form.  We
           * need to convert registers back into SSA defs and clean up SSA defs
           * that don't dominate their uses.
           */
          nir_lower_regs_to_ssa_impl(function->impl);
+      }
 
-         progress = true;
+      if (preserve) {
+         nir_metadata_preserve(function->impl, nir_metadata_none);
       } else {
    #ifndef NDEBUG
          function->impl->valid_metadata &= ~nir_metadata_not_properly_reset;

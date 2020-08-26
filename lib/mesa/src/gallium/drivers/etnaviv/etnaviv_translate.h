@@ -36,7 +36,7 @@
 #include "hw/state.xml.h"
 #include "hw/state_3d.xml.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_math.h"
 
 /* Returned when there is no match of pipe value to etna value */
@@ -227,35 +227,16 @@ translate_texture_filter(unsigned filter)
       return TEXTURE_FILTER_NEAREST;
    case PIPE_TEX_FILTER_LINEAR:
       return TEXTURE_FILTER_LINEAR;
-   /* What about anisotropic? */
    default:
       DBG("Unhandled texture filter: %i", filter);
       return ETNA_NO_MATCH;
    }
 }
 
-/* return a RS "compatible" format for use when copying */
-static inline enum pipe_format
-etna_compatible_rs_format(enum pipe_format fmt)
-{
-   /* YUYV and UYVY are blocksize 4, but 2 bytes per pixel */
-   if (fmt == PIPE_FORMAT_YUYV || fmt == PIPE_FORMAT_UYVY)
-      return PIPE_FORMAT_B4G4R4A4_UNORM;
-
-   switch (util_format_get_blocksize(fmt)) {
-   case 2:
-      return PIPE_FORMAT_B4G4R4A4_UNORM;
-   case 4:
-      return PIPE_FORMAT_B8G8R8A8_UNORM;
-   default:
-      return fmt;
-   }
-}
-
 static inline int
 translate_rb_src_dst_swap(enum pipe_format src, enum pipe_format dst)
 {
-   return translate_rs_format_rb_swap(src) ^ translate_rs_format_rb_swap(dst);
+   return translate_pe_format_rb_swap(src) ^ translate_pe_format_rb_swap(dst);
 }
 
 static inline uint32_t
@@ -320,8 +301,30 @@ translate_vertex_format_normalize(enum pipe_format fmt)
    /* assumes that normalization of channel 0 holds for all channels;
     * this holds for all vertex formats that we support */
    return desc->channel[0].normalized
-             ? VIVS_FE_VERTEX_ELEMENT_CONFIG_NORMALIZE_ON
+             ? VIVS_FE_VERTEX_ELEMENT_CONFIG_NORMALIZE_SIGN_EXTEND
              : VIVS_FE_VERTEX_ELEMENT_CONFIG_NORMALIZE_OFF;
+}
+
+static inline uint32_t
+translate_output_mode(enum pipe_format fmt, bool halti5)
+{
+   const unsigned bits =
+      util_format_get_component_bits(fmt, UTIL_FORMAT_COLORSPACE_RGB, 0);
+
+   if (bits == 32)
+      return COLOR_OUTPUT_MODE_UIF32;
+
+   if (!util_format_is_pure_integer(fmt))
+      return COLOR_OUTPUT_MODE_NORMAL;
+
+   /* generic integer output mode pre-halti5 (?) */
+   if (bits == 10 || !halti5)
+      return COLOR_OUTPUT_MODE_A2B10G10R10UI;
+
+   if (util_format_is_pure_sint(fmt))
+      return bits == 8 ? COLOR_OUTPUT_MODE_I8 : COLOR_OUTPUT_MODE_I16;
+
+   return bits == 8 ? COLOR_OUTPUT_MODE_U8 : COLOR_OUTPUT_MODE_U16;
 }
 
 static inline uint32_t
@@ -435,32 +438,26 @@ translate_clear_depth_stencil(enum pipe_format format, float depth,
    return clear_value;
 }
 
-/* Convert MSAA number of samples to x and y scaling factor and
- * VIVS_GL_MULTI_SAMPLE_CONFIG value.
+/* Convert MSAA number of samples to x and y scaling factor.
  * Return true if supported and false otherwise. */
 static inline bool
-translate_samples_to_xyscale(int num_samples, int *xscale_out, int *yscale_out,
-                             uint32_t *config_out)
+translate_samples_to_xyscale(int num_samples, int *xscale_out, int *yscale_out)
 {
    int xscale, yscale;
-   uint32_t config;
 
    switch (num_samples) {
    case 0:
    case 1:
       xscale = 1;
       yscale = 1;
-      config = VIVS_GL_MULTI_SAMPLE_CONFIG_MSAA_SAMPLES_NONE;
       break;
    case 2:
       xscale = 2;
       yscale = 1;
-      config = VIVS_GL_MULTI_SAMPLE_CONFIG_MSAA_SAMPLES_2X;
       break;
    case 4:
       xscale = 2;
       yscale = 2;
-      config = VIVS_GL_MULTI_SAMPLE_CONFIG_MSAA_SAMPLES_4X;
       break;
    default:
       return false;
@@ -470,8 +467,6 @@ translate_samples_to_xyscale(int num_samples, int *xscale_out, int *yscale_out,
       *xscale_out = xscale;
    if (yscale_out)
       *yscale_out = yscale;
-   if (config_out)
-      *config_out = config;
 
    return true;
 }
@@ -494,6 +489,31 @@ translate_texture_target(unsigned target)
    default:
       DBG("Unhandled texture target: %i", target);
       return ETNA_NO_MATCH;
+   }
+}
+
+static inline uint32_t
+translate_texture_compare(enum pipe_compare_func compare_func)
+{
+   switch (compare_func) {
+   case PIPE_FUNC_NEVER:
+      return TEXTURE_COMPARE_FUNC_NEVER;
+   case PIPE_FUNC_LESS:
+      return TEXTURE_COMPARE_FUNC_LESS;
+   case PIPE_FUNC_EQUAL:
+      return TEXTURE_COMPARE_FUNC_EQUAL;
+   case PIPE_FUNC_LEQUAL:
+      return TEXTURE_COMPARE_FUNC_LEQUAL;
+   case PIPE_FUNC_GREATER:
+      return TEXTURE_COMPARE_FUNC_GREATER;
+   case PIPE_FUNC_NOTEQUAL:
+      return TEXTURE_COMPARE_FUNC_NOTEQUAL;
+   case PIPE_FUNC_GEQUAL:
+      return TEXTURE_COMPARE_FUNC_GEQUAL;
+   case PIPE_FUNC_ALWAYS:
+      return TEXTURE_COMPARE_FUNC_ALWAYS;
+   default:
+      unreachable("Invalid compare func");
    }
 }
 

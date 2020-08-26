@@ -319,7 +319,8 @@
     <enum name="POINT_SIZE_ARRAY_BUFFER_BINDING_OES"	  value="0x8B9F"/>
 
     <function name="PointSizePointerOES" es1="1.0" desktop="false"
-              no_error="true">
+              no_error="true" marshal="async"
+              marshal_call_after="if (COMPAT) _mesa_glthread_AttribPointer(ctx, VERT_ATTRIB_POINT_SIZE);">
         <param name="type" type="GLenum"/>
         <param name="stride" type="GLsizei"/>
         <param name="pointer" type="const GLvoid *"/>
@@ -864,6 +865,12 @@
         <param name="id" type="GLuint"/>
         <param name="target" type="GLenum"/>
     </function>
+
+    <function name="GetInteger64vEXT" alias="GetInteger64v" es2="2.0">
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint64 *" output="true" variable_param="pname"/>
+    </function>
+
 </category>
 
 <!-- 151. GL_EXT_draw_buffers -->
@@ -1094,7 +1101,7 @@
     </function>
 
     <function name="DrawElementsInstancedBaseVertexEXT" alias="DrawElementsInstancedBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1236,7 +1243,7 @@
     </function>
 
     <function name="DrawElementsInstancedBaseVertexOES" alias="DrawElementsInstancedBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1457,7 +1464,7 @@
     <function name="DepthRangeArrayfvOES" es2="3.1" desktop="false">
         <param name="first" type="GLuint"/>
         <param name="count" type="GLsizei"/>
-        <param name="v" type="const GLfloat *"/>
+        <param name="v" type="const GLfloat *" count="(2 * count)"/>
     </function>
     <function name="DepthRangeIndexedfOES" es2="3.1" desktop="false">
         <param name="index" type="GLuint"/>
@@ -1496,6 +1503,21 @@
         <param name="numlevels" type="GLuint"/>
         <param name="minlayer" type="GLuint"/>
         <param name="numlayers" type="GLuint"/>
+   </function>
+</category>
+
+<!-- 302. GL_MESA_framebuffer_flip_y -->
+<category name="GL_MESA_framebuffer_flip_y" number="302">
+   <enum name="GL_FRAMEBUFFER_FLIP_Y_MESA" value="0x8BBB"/>
+   <function name="FramebufferParameteriMESA" es2="3.0">
+       <param name="target" type="GLenum"/>
+       <param name="pname"  type="GLenum"/>
+       <param name="param"  type="GLint" />
+   </function>
+   <function name="GetFramebufferParameterivMESA" es2="3.0">
+       <param name="target" type="GLenum" />
+       <param name="pname"  type="GLenum" />
+       <param name="params" type="GLint *" output="true" />
    </function>
 </category>
 

@@ -71,9 +71,15 @@ st_get_external_sampler_key(struct st_context *st, struct gl_program *prog)
       unsigned unit = u_bit_scan(&mask);
       struct st_texture_object *stObj =
             st_get_texture_object(st->ctx, prog, unit);
+      enum pipe_format format = st_get_view_format(stObj);
 
-      switch (st_get_view_format(stObj)) {
+      /* if resource format matches then YUV wasn't lowered */
+      if (format == stObj->pt->format)
+         continue;
+
+      switch (format) {
       case PIPE_FORMAT_NV12:
+      case PIPE_FORMAT_P010:
       case PIPE_FORMAT_P016:
          key.lower_nv12 |= (1 << unit);
          break;
@@ -93,7 +99,8 @@ st_get_external_sampler_key(struct st_context *st, struct gl_program *prog)
          key.lower_xyuv |= (1 << unit);
          break;
       default:
-         printf("unhandled %u\n", st_get_view_format(stObj));
+         printf("mesa: st_get_external_sampler_key: unhandled pipe format %u\n",
+                format);
          break;
       }
    }
@@ -126,23 +133,41 @@ struct st_fp_variant_key
    /** for ARB_depth_clamp */
    GLuint lower_depth_clamp:1;
 
+   /** for OpenGL 1.0 on modern hardware */
+   GLuint lower_two_sided_color:1;
+
+   GLuint lower_flatshade:1;
+   unsigned lower_alpha_func:3;
+
    /** needed for ATI_fragment_shader */
    char texture_targets[MAX_NUM_FRAGMENT_REGISTERS_ATI];
 
    struct st_external_sampler_key external;
 };
 
+/**
+ * Base class for shader variants.
+ */
+struct st_variant
+{
+   /** next in linked list */
+   struct st_variant *next;
+
+   /** st_context from the shader key */
+   struct st_context *st;
+
+   void *driver_shader;
+};
 
 /**
  * Variant of a fragment program.
  */
 struct st_fp_variant
 {
+   struct st_variant base;
+
    /** Parameters which generated this version of fragment program */
    struct st_fp_variant_key key;
-
-   /** Driver's compiled shader */
-   void *driver_shader;
 
    /** For glBitmap variants */
    uint bitmap_sampler;
@@ -150,36 +175,11 @@ struct st_fp_variant
    /** For glDrawPixels variants */
    unsigned drawpix_sampler;
    unsigned pixelmap_sampler;
-
-   /** next in linked list */
-   struct st_fp_variant *next;
 };
 
 
-/**
- * Derived from Mesa gl_program:
- */
-struct st_fragment_program
-{
-   struct gl_program Base;
-   struct pipe_shader_state tgsi;
-   struct glsl_to_tgsi_visitor* glsl_to_tgsi;
-   struct ati_fragment_shader *ati_fs;
-   uint64_t affected_states; /**< ST_NEW_* flags to mark dirty when binding */
-
-   /* used when bypassing glsl_to_tgsi: */
-   struct gl_shader_program *shader_program;
-
-   struct st_fp_variant *variants;
-
-   /* Used by the shader cache and ARB_get_program_binary */
-   unsigned num_tgsi_tokens;
-};
-
-
-
-/** Vertex program variant key */
-struct st_vp_variant_key
+/** Shader key shared by other shaders */
+struct st_common_variant_key
 {
    struct st_context *st;          /**< variants are per-context */
    bool passthrough_edgeflags;
@@ -190,39 +190,33 @@ struct st_vp_variant_key
    /** both for ARB_depth_clamp */
    bool lower_depth_clamp;
    bool clip_negative_one_to_one;
+
+   /** lower glPointSize to gl_PointSize */
+   boolean lower_point_size;
+
+   /* for user-defined clip-planes */
+   uint8_t lower_ucp;
+
+   /* Whether st_variant::driver_shader is for the draw module,
+    * not for the driver.
+    */
+   bool is_draw_shader;
 };
 
 
 /**
- * This represents a vertex program, especially translated to match
- * the inputs of a particular fragment shader.
+ * Common shader variant.
  */
-struct st_vp_variant
+struct st_common_variant
 {
-   /* Parameters which generated this translated version of a vertex
-    * shader:
+   struct st_variant base;
+
+   /* Parameters which generated this variant. */
+   struct st_common_variant_key key;
+
+   /* Bitfield of VERT_BIT_* bits matching vertex shader inputs,
+    * but not include the high part of doubles.
     */
-   struct st_vp_variant_key key;
-
-   /**
-    * TGSI tokens (to later generate a 'draw' module shader for
-    * selection/feedback/rasterpos)
-    */
-   struct pipe_shader_state tgsi;
-
-   /** Driver's compiled shader */
-   void *driver_shader;
-
-   /** For using our private draw module (glRasterPos) */
-   struct draw_vertex_shader *draw_shader;
-
-   /** Next in linked list */
-   struct st_vp_variant *next;  
-
-   /** similar to that in st_vertex_program, but with edgeflags info too */
-   GLuint num_inputs;
-
-   /** Bitfield of VERT_BIT_* bits of mesa vertex processing inputs */
    GLbitfield vert_attrib_mask;
 };
 
@@ -230,15 +224,27 @@ struct st_vp_variant
 /**
  * Derived from Mesa gl_program:
  */
-struct st_vertex_program
+struct st_program
 {
-   struct gl_program Base;  /**< The Mesa vertex program */
-   struct pipe_shader_state tgsi;
+   struct gl_program Base;
+   struct pipe_shader_state state;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
+   struct ati_fragment_shader *ati_fs;
    uint64_t affected_states; /**< ST_NEW_* flags to mark dirty when binding */
+
+   void *serialized_nir;
+   unsigned serialized_nir_size;
 
    /* used when bypassing glsl_to_tgsi: */
    struct gl_shader_program *shader_program;
+
+   struct st_variant *variants;
+};
+
+
+struct st_vertex_program
+{
+   struct st_program Base;
 
    /** maps a TGSI input index back to a Mesa VERT_ATTRIB_x */
    ubyte index_to_input[PIPE_MAX_ATTRIBS];
@@ -248,158 +254,35 @@ struct st_vertex_program
 
    /** Maps VARYING_SLOT_x to slot */
    ubyte result_to_output[VARYING_SLOT_MAX];
-
-   /** List of translated variants of this vertex program.
-    */
-   struct st_vp_variant *variants;
-
-   /** SHA1 hash of linked tgsi shader program, used for on-disk cache */
-   unsigned char sha1[20];
-
-   /* Used by the shader cache and ARB_get_program_binary */
-   unsigned num_tgsi_tokens;
 };
 
 
-
-/** Key shared by all shaders except VP, FP */
-struct st_basic_variant_key
+static inline struct st_program *
+st_program( struct gl_program *cp )
 {
-   struct st_context *st;          /**< variants are per-context */
-
-   /** For compat profile */
-   bool clamp_color;
-
-   /** both for ARB_depth_clamp */
-   bool lower_depth_clamp;
-   bool clip_negative_one_to_one;
-
-};
-
-
-/**
- * Geometry program variant.
- */
-struct st_basic_variant
-{
-   /* Parameters which generated this variant. */
-   struct st_basic_variant_key key;
-
-   void *driver_shader;
-
-   struct st_basic_variant *next;
-};
-
-
-/**
- * Derived from Mesa gl_program:
- */
-struct st_common_program
-{
-   struct gl_program Base;
-   struct pipe_shader_state tgsi;
-   struct glsl_to_tgsi_visitor* glsl_to_tgsi;
-   uint64_t affected_states; /**< ST_NEW_* flags to mark dirty when binding */
-
-  /* used when bypassing glsl_to_tgsi: */
-   struct gl_shader_program *shader_program;
-
-   struct st_basic_variant *variants;
-
-   /** SHA1 hash of linked tgsi shader program, used for on-disk cache */
-   unsigned char sha1[20];
-
-   /* Used by the shader cache and ARB_get_program_binary */
-   unsigned num_tgsi_tokens;
-};
-
-
-/**
- * Derived from Mesa gl_program:
- */
-struct st_compute_program
-{
-   struct gl_program Base;  /**< The Mesa compute program */
-   struct pipe_compute_state tgsi;
-   struct glsl_to_tgsi_visitor* glsl_to_tgsi;
-   uint64_t affected_states; /**< ST_NEW_* flags to mark dirty when binding */
-
-   /* used when bypassing glsl_to_tgsi: */
-   struct gl_shader_program *shader_program;
-
-   struct st_basic_variant *variants;
-
-   /** SHA1 hash of linked tgsi shader program, used for on-disk cache */
-   unsigned char sha1[20];
-
-   /* Used by the shader cache and ARB_get_program_binary */
-   unsigned num_tgsi_tokens;
-};
-
-
-static inline struct st_fragment_program *
-st_fragment_program( struct gl_program *fp )
-{
-   return (struct st_fragment_program *)fp;
-}
-
-
-static inline struct st_vertex_program *
-st_vertex_program( struct gl_program *vp )
-{
-   return (struct st_vertex_program *)vp;
-}
-
-static inline struct st_common_program *
-st_common_program( struct gl_program *gp )
-{
-   return (struct st_common_program *)gp;
-}
-
-static inline struct st_compute_program *
-st_compute_program( struct gl_program *cp )
-{
-   return (struct st_compute_program *)cp;
-}
-
-static inline void
-st_reference_vertprog(struct st_context *st,
-                      struct st_vertex_program **ptr,
-                      struct st_vertex_program *prog)
-{
-   _mesa_reference_program(st->ctx,
-                           (struct gl_program **) ptr,
-                           (struct gl_program *) prog);
-}
-
-static inline void
-st_reference_fragprog(struct st_context *st,
-                      struct st_fragment_program **ptr,
-                      struct st_fragment_program *prog)
-{
-   _mesa_reference_program(st->ctx,
-                           (struct gl_program **) ptr,
-                           (struct gl_program *) prog);
+   return (struct st_program *)cp;
 }
 
 static inline void
 st_reference_prog(struct st_context *st,
-                  struct st_common_program **ptr,
-                  struct st_common_program *prog)
+                  struct st_program **ptr,
+                  struct st_program *prog)
 {
    _mesa_reference_program(st->ctx,
                            (struct gl_program **) ptr,
                            (struct gl_program *) prog);
 }
 
-static inline void
-st_reference_compprog(struct st_context *st,
-                      struct st_compute_program **ptr,
-                      struct st_compute_program *prog)
+static inline struct st_common_variant *
+st_common_variant(struct st_variant *v)
 {
-   _mesa_reference_program(st->ctx,
-                           (struct gl_program **) ptr,
-                           (struct gl_program *) prog);
+   return (struct st_common_variant*)v;
+}
+
+static inline struct st_fp_variant *
+st_fp_variant(struct st_variant *v)
+{
+   return (struct st_fp_variant*)v;
 }
 
 /**
@@ -415,78 +298,57 @@ st_get_generic_varying_index(struct st_context *st, GLuint attr)
 extern void
 st_set_prog_affected_state_flags(struct gl_program *prog);
 
-extern struct st_vp_variant *
+extern struct st_common_variant *
 st_get_vp_variant(struct st_context *st,
-                  struct st_vertex_program *stvp,
-                  const struct st_vp_variant_key *key);
+                  struct st_program *stvp,
+                  const struct st_common_variant_key *key);
 
 
 extern struct st_fp_variant *
 st_get_fp_variant(struct st_context *st,
-                  struct st_fragment_program *stfp,
+                  struct st_program *stfp,
                   const struct st_fp_variant_key *key);
 
-extern struct st_basic_variant *
-st_get_cp_variant(struct st_context *st,
-                  struct pipe_compute_state *tgsi,
-                  struct st_basic_variant **variants);
-
-extern struct st_basic_variant *
-st_get_basic_variant(struct st_context *st,
-                     unsigned pipe_shader,
-                     struct st_common_program *p,
-                     const struct st_basic_variant_key *key);
+extern struct st_variant *
+st_get_common_variant(struct st_context *st,
+                      struct st_program *p,
+                      const struct st_common_variant_key *key);
 
 extern void
-st_release_vp_variants( struct st_context *st,
-                        struct st_vertex_program *stvp );
+st_release_variants(struct st_context *st, struct st_program *p);
 
 extern void
-st_release_fp_variants( struct st_context *st,
-                        struct st_fragment_program *stfp );
-
-extern void
-st_release_cp_variants(struct st_context *st,
-                        struct st_compute_program *stcp);
-
-extern void
-st_release_basic_variants(struct st_context *st, GLenum target,
-                          struct st_basic_variant **variants,
-                          struct pipe_shader_state *tgsi);
+st_release_program(struct st_context *st, struct st_program **p);
 
 extern void
 st_destroy_program_variants(struct st_context *st);
 
+extern void
+st_finalize_nir_before_variants(struct nir_shader *nir);
+
+extern void
+st_prepare_vertex_program(struct st_program *stvp);
+
+extern void
+st_translate_stream_output_info(struct gl_program *prog);
+
 extern bool
 st_translate_vertex_program(struct st_context *st,
-                            struct st_vertex_program *stvp);
+                            struct st_program *stvp);
 
 extern bool
 st_translate_fragment_program(struct st_context *st,
-                              struct st_fragment_program *stfp);
+                              struct st_program *stfp);
 
 extern bool
-st_translate_geometry_program(struct st_context *st,
-                              struct st_common_program *stgp);
-
-extern bool
-st_translate_tessctrl_program(struct st_context *st,
-                              struct st_common_program *sttcp);
-
-extern bool
-st_translate_tesseval_program(struct st_context *st,
-                              struct st_common_program *sttep);
-
-extern bool
-st_translate_compute_program(struct st_context *st,
-                             struct st_compute_program *stcp);
+st_translate_common_program(struct st_context *st,
+                            struct st_program *stp);
 
 extern void
-st_print_current_vertex_program(void);
+st_serialize_nir(struct st_program *stp);
 
 extern void
-st_precompile_shader_variant(struct st_context *st,
-                             struct gl_program *prog);
+st_finalize_program(struct st_context *st, struct gl_program *prog);
 
 #ifdef __cplusplus
 }

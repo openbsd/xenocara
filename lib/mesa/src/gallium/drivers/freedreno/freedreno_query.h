@@ -35,7 +35,7 @@ struct fd_query;
 struct fd_query_funcs {
 	void (*destroy_query)(struct fd_context *ctx,
 			struct fd_query *q);
-	bool (*begin_query)(struct fd_context *ctx, struct fd_query *q);
+	void (*begin_query)(struct fd_context *ctx, struct fd_query *q);
 	void (*end_query)(struct fd_context *ctx, struct fd_query *q);
 	bool (*get_query_result)(struct fd_context *ctx,
 			struct fd_query *q, bool wait,
@@ -44,8 +44,8 @@ struct fd_query_funcs {
 
 struct fd_query {
 	const struct fd_query_funcs *funcs;
-	bool active;
 	int type;
+	unsigned index;
 };
 
 static inline struct fd_query *
@@ -102,6 +102,12 @@ int pidx(unsigned query_type)
 		return 3;
 	case PIPE_QUERY_TIMESTAMP:
 		return 4;
+
+	case PIPE_QUERY_PRIMITIVES_GENERATED:
+		return 5;
+	case PIPE_QUERY_PRIMITIVES_EMITTED:
+		return 6;
+
 	default:
 		return -1;
 	}

@@ -349,32 +349,49 @@ static enum pipe_reset_status
 amdgpu_ctx_query_reset_status(struct radeon_winsys_ctx *rwctx)
 {
    struct amdgpu_ctx *ctx = (struct amdgpu_ctx*)rwctx;
-   uint32_t result, hangs;
    int r;
 
    /* Return a failure due to a GPU hang. */
-   r = amdgpu_cs_query_reset_state(ctx->ctx, &result, &hangs);
-   if (r) {
-      fprintf(stderr, "amdgpu: amdgpu_cs_query_reset_state failed. (%i)\n", r);
-      return PIPE_NO_RESET;
+   if (ctx->ws->info.drm_minor >= 24) {
+      uint64_t flags;
+
+      r = amdgpu_cs_query_reset_state2(ctx->ctx, &flags);
+      if (r) {
+         fprintf(stderr, "amdgpu: amdgpu_cs_query_reset_state failed. (%i)\n", r);
+         return PIPE_NO_RESET;
+      }
+
+      if (flags & AMDGPU_CTX_QUERY2_FLAGS_RESET) {
+         if (flags & AMDGPU_CTX_QUERY2_FLAGS_GUILTY)
+            return PIPE_GUILTY_CONTEXT_RESET;
+         else
+            return PIPE_INNOCENT_CONTEXT_RESET;
+      }
+   } else {
+      uint32_t result, hangs;
+
+      r = amdgpu_cs_query_reset_state(ctx->ctx, &result, &hangs);
+      if (r) {
+         fprintf(stderr, "amdgpu: amdgpu_cs_query_reset_state failed. (%i)\n", r);
+         return PIPE_NO_RESET;
+      }
+
+      switch (result) {
+      case AMDGPU_CTX_GUILTY_RESET:
+         return PIPE_GUILTY_CONTEXT_RESET;
+      case AMDGPU_CTX_INNOCENT_RESET:
+         return PIPE_INNOCENT_CONTEXT_RESET;
+      case AMDGPU_CTX_UNKNOWN_RESET:
+         return PIPE_UNKNOWN_CONTEXT_RESET;
+      }
    }
 
-   switch (result) {
-   case AMDGPU_CTX_GUILTY_RESET:
-      return PIPE_GUILTY_CONTEXT_RESET;
-   case AMDGPU_CTX_INNOCENT_RESET:
-      return PIPE_INNOCENT_CONTEXT_RESET;
-   case AMDGPU_CTX_UNKNOWN_RESET:
-      return PIPE_UNKNOWN_CONTEXT_RESET;
-   case AMDGPU_CTX_NO_RESET:
-   default:
-      /* Return a failure due to a rejected command submission. */
-      if (ctx->ws->num_total_rejected_cs > ctx->initial_num_total_rejected_cs) {
-         return ctx->num_rejected_cs ? PIPE_GUILTY_CONTEXT_RESET :
-                                       PIPE_INNOCENT_CONTEXT_RESET;
-      }
-      return PIPE_NO_RESET;
+   /* Return a failure due to a rejected command submission. */
+   if (ctx->ws->num_total_rejected_cs > ctx->initial_num_total_rejected_cs) {
+      return ctx->num_rejected_cs ? PIPE_GUILTY_CONTEXT_RESET :
+                                    PIPE_INNOCENT_CONTEXT_RESET;
    }
+   return PIPE_NO_RESET;
 }
 
 /* COMMAND SUBMISSION */
@@ -1159,17 +1176,20 @@ static void add_fence_to_list(struct amdgpu_fence_list *fences,
    amdgpu_fence_reference(&fences->list[idx], (struct pipe_fence_handle*)fence);
 }
 
-/* TODO: recognizing dependencies as no-ops doesn't take the parallel
- * compute IB into account. The compute IB won't wait for these.
- * Also, the scheduler can execute compute and SDMA IBs on any rings.
- * Should we always insert dependencies?
- */
 static bool is_noop_fence_dependency(struct amdgpu_cs *acs,
                                      struct amdgpu_fence *fence)
 {
    struct amdgpu_cs_context *cs = acs->csc;
 
-   if (!amdgpu_fence_is_syncobj(fence) &&
+   /* Detect no-op dependencies only when there is only 1 ring,
+    * because IBs on one ring are always executed one at a time.
+    *
+    * We always want no dependency between back-to-back gfx IBs, because
+    * we need the parallelism between IBs for good performance.
+    */
+   if ((acs->ring_type == RING_GFX ||
+        acs->ctx->ws->info.num_rings[acs->ring_type] == 1) &&
+       !amdgpu_fence_is_syncobj(fence) &&
        fence->ctx == acs->ctx &&
        fence->fence.ip_type == cs->ib[IB_MAIN].ip_type &&
        fence->fence.ip_instance == cs->ib[IB_MAIN].ip_instance &&
@@ -1378,9 +1398,6 @@ void amdgpu_cs_submit_ib(void *job, int thread_index)
 
       simple_mtx_lock(&ws->global_bo_list_lock);
       LIST_FOR_EACH_ENTRY(bo, &ws->global_bo_list, u.real.global_list_item) {
-         if (bo->is_local)
-            continue;
-
          list[num_handles].bo_handle = bo->u.real.kms_handle;
          list[num_handles].bo_priority = 0;
          ++num_handles;
@@ -1405,10 +1422,6 @@ void amdgpu_cs_submit_ib(void *job, int thread_index)
       unsigned num_handles = 0;
       for (i = 0; i < cs->num_real_buffers; ++i) {
          struct amdgpu_cs_buffer *buffer = &cs->real_buffers[i];
-
-         if (buffer->bo->is_local)
-            continue;
-
          assert(buffer->u.real.priority_usage != 0);
 
          list[num_handles].bo_handle = buffer->bo->u.real.kms_handle;
@@ -1663,9 +1676,6 @@ static int amdgpu_cs_flush(struct radeon_cmdbuf *rcs,
       if (ws->info.chip_class <= GFX6) {
          while (rcs->current.cdw & 7)
             radeon_emit(rcs, 0xf0000000); /* NOP packet */
-      } else {
-         while (rcs->current.cdw & 7)
-            radeon_emit(rcs, 0x00000000); /* NOP packet */
       }
       break;
    case RING_GFX:
@@ -1756,7 +1766,7 @@ static int amdgpu_cs_flush(struct radeon_cmdbuf *rcs,
 
       /* Submit. */
       util_queue_add_job(&ws->cs_queue, cs, &cs->flush_completed,
-                         amdgpu_cs_submit_ib, NULL);
+                         amdgpu_cs_submit_ib, NULL, 0);
       /* The submission has been queued, unlock the fence now. */
       simple_mtx_unlock(&ws->bo_fence_lock);
 

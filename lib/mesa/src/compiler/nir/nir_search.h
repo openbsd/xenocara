@@ -29,6 +29,8 @@
 #define _NIR_SEARCH_
 
 #include "nir.h"
+#include "nir_worklist.h"
+#include "util/u_dynarray.h"
 
 #define NIR_SEARCH_MAX_VARIABLES 16
 
@@ -93,11 +95,11 @@ typedef struct {
     * variables to require, for example, power-of-two in order for the search
     * to match.
     */
-   bool (*cond)(nir_alu_instr *instr, unsigned src,
+   bool (*cond)(struct hash_table *range_ht, nir_alu_instr *instr, unsigned src,
                 unsigned num_components, const uint8_t *swizzle);
 
-	/** Swizzle (for replace only) */
-	uint8_t swizzle[NIR_MAX_VEC_COMPONENTS];
+   /** Swizzle (for replace only) */
+   uint8_t swizzle[NIR_MAX_VEC_COMPONENTS];
 } nir_search_variable;
 
 typedef struct {
@@ -166,6 +168,25 @@ typedef struct {
    bool (*cond)(nir_alu_instr *instr);
 } nir_search_expression;
 
+struct per_op_table {
+   const uint16_t *filter;
+   unsigned num_filtered_states;
+   const uint16_t *table;
+};
+
+struct transform {
+   const nir_search_expression *search;
+   const nir_search_value *replace;
+   unsigned condition_offset;
+};
+
+/* Note: these must match the start states created in
+ * TreeAutomaton._build_table()
+ */
+
+/* WILDCARD_STATE = 0 is set by zeroing the state array */
+static const uint16_t CONST_STATE = 1;
+
 NIR_DEFINE_CAST(nir_search_value_as_variable, nir_search_value,
                 nir_search_variable, value,
                 type, nir_search_value_variable)
@@ -178,7 +199,17 @@ NIR_DEFINE_CAST(nir_search_value_as_expression, nir_search_value,
 
 nir_ssa_def *
 nir_replace_instr(struct nir_builder *b, nir_alu_instr *instr,
+                  struct hash_table *range_ht,
+                  struct util_dynarray *states,
+                  const struct per_op_table *pass_op_table,
                   const nir_search_expression *search,
-                  const nir_search_value *replace);
+                  const nir_search_value *replace,
+                  nir_instr_worklist *algebraic_worklist);
+bool
+nir_algebraic_impl(nir_function_impl *impl,
+                   const bool *condition_flags,
+                   const struct transform **transforms,
+                   const uint16_t *transform_counts,
+                   const struct per_op_table *pass_op_table);
 
 #endif /* _NIR_SEARCH_ */

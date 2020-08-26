@@ -78,6 +78,12 @@ struct st_sampler_views
    struct st_sampler_view views[0];
 };
 
+struct st_compressed_data
+{
+   struct pipe_reference reference;
+   GLubyte *ptr;
+};
+
 
 /**
  * Subclass of gl_texure_image.
@@ -101,7 +107,7 @@ struct st_texture_image
     * the original data. This is necessary for mapping/unmapping,
     * as well as image copies.
     */
-   GLubyte *compressed_data;
+   struct st_compressed_data* compressed_data;
 };
 
 
@@ -164,15 +170,15 @@ struct st_texture_object
     */
    enum pipe_format surface_format;
 
-   /* When non-zero, samplers should use this level instead of the level
+   /* When non-negative, samplers should use this level instead of the level
     * range specified by the GL state.
     *
     * This is used for EGL images, which may correspond to a single level out
     * of an imported pipe_resources with multiple mip levels.
     */
-   uint level_override;
+   int level_override;
 
-   /* When non-zero, samplers should use this layer instead of the one
+   /* When non-negative, samplers should use this layer instead of the one
     * specified by the GL state.
     *
     * This is used for EGL images and VDPAU interop, where imported
@@ -180,7 +186,7 @@ struct st_texture_object
     * with different fields in the case of VDPAU) even though the GL state
     * describes one non-array texture per field.
     */
-   uint layer_override;
+   int layer_override;
 
     /**
      * Set when the texture images of this texture object might not all be in
@@ -321,6 +327,9 @@ st_destroy_bound_texture_handles(struct st_context *st);
 
 void
 st_destroy_bound_image_handles(struct st_context *st);
+
+bool
+st_astc_format_fallback(const struct st_context *st, mesa_format format);
 
 bool
 st_compressed_format_fallback(struct st_context *st, mesa_format format);

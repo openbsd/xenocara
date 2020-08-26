@@ -548,46 +548,17 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       break;
    }
 
-   case nir_intrinsic_ssbo_atomic_add: {
-      int op = BRW_AOP_ADD;
-
-      if (nir_src_is_const(instr->src[2])) {
-         int add_val = nir_src_as_int(instr->src[2]);
-         if (add_val == 1)
-            op = BRW_AOP_INC;
-         else if (add_val == -1)
-            op = BRW_AOP_DEC;
-      }
-
-      nir_emit_ssbo_atomic(op, instr);
-      break;
-   }
+   case nir_intrinsic_ssbo_atomic_add:
    case nir_intrinsic_ssbo_atomic_imin:
-      nir_emit_ssbo_atomic(BRW_AOP_IMIN, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_umin:
-      nir_emit_ssbo_atomic(BRW_AOP_UMIN, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_imax:
-      nir_emit_ssbo_atomic(BRW_AOP_IMAX, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_umax:
-      nir_emit_ssbo_atomic(BRW_AOP_UMAX, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_and:
-      nir_emit_ssbo_atomic(BRW_AOP_AND, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_or:
-      nir_emit_ssbo_atomic(BRW_AOP_OR, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_xor:
-      nir_emit_ssbo_atomic(BRW_AOP_XOR, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_exchange:
-      nir_emit_ssbo_atomic(BRW_AOP_MOV, instr);
-      break;
    case nir_intrinsic_ssbo_atomic_comp_swap:
-      nir_emit_ssbo_atomic(BRW_AOP_CMPWR, instr);
+      nir_emit_ssbo_atomic(brw_aop_for_nir_intrinsic(instr), instr);
       break;
 
    case nir_intrinsic_load_vertex_id:
@@ -655,6 +626,8 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
 
    case nir_intrinsic_load_ubo: {
       src_reg surf_index;
+
+      prog_data->base.has_ubo_pull = true;
 
       dest = get_nir_dest(instr->dest);
 
@@ -727,12 +700,14 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       break;
    }
 
-   case nir_intrinsic_memory_barrier: {
+   case nir_intrinsic_memory_barrier:
+   case nir_intrinsic_scoped_memory_barrier: {
       const vec4_builder bld =
          vec4_builder(this).at_end().annotate(current_annotation, base_ir);
-      const dst_reg tmp = bld.vgrf(BRW_REGISTER_TYPE_UD, 2);
-      bld.emit(SHADER_OPCODE_MEMORY_FENCE, tmp, brw_vec8_grf(0, 0))
-         ->size_written = 2 * REG_SIZE;
+      const dst_reg tmp = bld.vgrf(BRW_REGISTER_TYPE_UD);
+      vec4_instruction *fence =
+         bld.emit(SHADER_OPCODE_MEMORY_FENCE, tmp, brw_vec8_grf(0, 0));
+      fence->sfid = GEN7_SFID_DATAPORT_DATA_CACHE;
       break;
    }
 
@@ -831,8 +806,6 @@ vec4_visitor::optimize_predicate(nir_alu_instr *instr,
       unsigned base_swizzle =
          brw_swizzle_for_nir_swizzle(cmp_instr->src[i].swizzle);
       op[i].swizzle = brw_compose_swizzle(size_swizzle, base_swizzle);
-      op[i].abs = cmp_instr->src[i].abs;
-      op[i].negate = cmp_instr->src[i].negate;
    }
 
    emit(CMP(dst_null_d(), op[0], op[1],
@@ -890,8 +863,7 @@ emit_find_msb_using_lzd(const vec4_builder &bld,
 }
 
 void
-vec4_visitor::emit_conversion_from_double(dst_reg dst, src_reg src,
-                                          bool saturate)
+vec4_visitor::emit_conversion_from_double(dst_reg dst, src_reg src)
 {
    /* BDW PRM vol 15 - workarounds:
     * DF->f format conversion for Align16 has wrong emask calculation when
@@ -899,8 +871,7 @@ vec4_visitor::emit_conversion_from_double(dst_reg dst, src_reg src,
     */
    if (devinfo->gen == 8 && dst.type == BRW_REGISTER_TYPE_F &&
        src.file == BRW_IMMEDIATE_VALUE) {
-      vec4_instruction *inst = emit(MOV(dst, brw_imm_f(src.df)));
-      inst->saturate = saturate;
+      emit(MOV(dst, brw_imm_f(src.df)));
       return;
    }
 
@@ -925,20 +896,17 @@ vec4_visitor::emit_conversion_from_double(dst_reg dst, src_reg src,
    emit(op, temp2, src_reg(temp));
 
    emit(VEC4_OPCODE_PICK_LOW_32BIT, retype(temp2, dst.type), src_reg(temp2));
-   vec4_instruction *inst = emit(MOV(dst, src_reg(retype(temp2, dst.type))));
-   inst->saturate = saturate;
+   emit(MOV(dst, src_reg(retype(temp2, dst.type))));
 }
 
 void
-vec4_visitor::emit_conversion_to_double(dst_reg dst, src_reg src,
-                                        bool saturate)
+vec4_visitor::emit_conversion_to_double(dst_reg dst, src_reg src)
 {
    dst_reg tmp_dst = dst_reg(src_reg(this, glsl_type::dvec4_type));
    src_reg tmp_src = retype(src_reg(this, glsl_type::vec4_type), src.type);
    emit(MOV(dst_reg(tmp_src), src));
    emit(VEC4_OPCODE_TO_DOUBLE, tmp_dst, tmp_src);
-   vec4_instruction *inst = emit(MOV(dst, src_reg(tmp_dst)));
-   inst->saturate = saturate;
+   emit(MOV(dst, src_reg(tmp_dst)));
 }
 
 /**
@@ -992,7 +960,7 @@ try_immediate_source(const nir_alu_instr *instr, src_reg *op,
    case BRW_REGISTER_TYPE_D:
    case BRW_REGISTER_TYPE_UD: {
       int first_comp = -1;
-      int d;
+      int d = 0;
 
       for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++) {
          if (nir_alu_instr_channel_used(instr, idx, i)) {
@@ -1006,6 +974,8 @@ try_immediate_source(const nir_alu_instr *instr, src_reg *op,
             }
          }
       }
+
+      assert(first_comp >= 0);
 
       if (op[idx].abs)
          d = MAX2(-d, d);
@@ -1027,7 +997,7 @@ try_immediate_source(const nir_alu_instr *instr, src_reg *op,
 
    case BRW_REGISTER_TYPE_F: {
       int first_comp = -1;
-      float f[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+      float f[NIR_MAX_VEC_COMPONENTS] = { 0.0f };
       bool is_scalar = true;
 
       for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++) {
@@ -1054,7 +1024,8 @@ try_immediate_source(const nir_alu_instr *instr, src_reg *op,
       } else {
          uint8_t vf_values[4] = { 0, 0, 0, 0 };
 
-         for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++) {
+         for (unsigned i = 0; i < ARRAY_SIZE(vf_values); i++) {
+
             if (op[idx].abs)
                f[i] = fabs(f[i]);
 
@@ -1134,6 +1105,18 @@ vec4_visitor::fix_float_operands(src_reg op[3], nir_alu_instr *instr)
    }
 }
 
+static bool
+const_src_fits_in_16_bits(const nir_src &src, brw_reg_type type)
+{
+   assert(nir_src_is_const(src));
+   if (type_is_unsigned_int(type)) {
+      return nir_src_comp_as_uint(src, 0) <= UINT16_MAX;
+   } else {
+      const int64_t c = nir_src_comp_as_int(src, 0);
+      return c <= INT16_MAX && c >= INT16_MIN;
+   }
+}
+
 void
 vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 {
@@ -1144,22 +1127,25 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    dst_reg dst = get_nir_dest(instr->dest.dest, dst_type);
    dst.writemask = instr->dest.write_mask;
 
+   assert(!instr->dest.saturate);
+
    src_reg op[4];
    for (unsigned i = 0; i < nir_op_infos[instr->op].num_inputs; i++) {
+      /* We don't lower to source modifiers, so they shouldn't exist. */
+      assert(!instr->src[i].abs);
+      assert(!instr->src[i].negate);
+
       nir_alu_type src_type = (nir_alu_type)
          (nir_op_infos[instr->op].input_types[i] |
           nir_src_bit_size(instr->src[i].src));
       op[i] = get_nir_src(instr->src[i].src, src_type, 4);
       op[i].swizzle = brw_swizzle_for_nir_swizzle(instr->src[i].swizzle);
-      op[i].abs = instr->src[i].abs;
-      op[i].negate = instr->src[i].negate;
    }
 
    switch (instr->op) {
    case nir_op_mov:
       try_immediate_source(instr, &op[0], true, devinfo);
       inst = emit(MOV(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_vec2:
@@ -1170,14 +1156,13 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_i2f32:
    case nir_op_u2f32:
       inst = emit(MOV(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_f2f32:
    case nir_op_f2i32:
    case nir_op_f2u32:
       if (nir_src_bit_size(instr->src[0].src) == 64)
-         emit_conversion_from_double(dst, op[0], instr->dest.saturate);
+         emit_conversion_from_double(dst, op[0]);
       else
          inst = emit(MOV(dst, op[0]));
       break;
@@ -1185,7 +1170,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_f2f64:
    case nir_op_i2f64:
    case nir_op_u2f64:
-      emit_conversion_to_double(dst, op[0], instr->dest.saturate);
+      emit_conversion_to_double(dst, op[0]);
       break;
 
    case nir_op_fsat:
@@ -1197,8 +1182,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_ineg:
       op[0].negate = true;
       inst = emit(MOV(dst, op[0]));
-      if (instr->op == nir_op_fneg)
-         inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fabs:
@@ -1206,8 +1189,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       op[0].negate = false;
       op[0].abs = true;
       inst = emit(MOV(dst, op[0]));
-      if (instr->op == nir_op_fabs)
-         inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_iadd:
@@ -1216,7 +1197,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_fadd:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit(ADD(dst, op[0], op[1]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_uadd_sat:
@@ -1228,7 +1208,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_fmul:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit(MUL(dst, op[0], op[1]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_imul: {
@@ -1242,14 +1221,14 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
           */
          if (nir_src_is_const(instr->src[0].src) &&
              nir_alu_instr_src_read_mask(instr, 0) == 1 &&
-             nir_src_comp_as_uint(instr->src[0].src, 0) < (1 << 16)) {
+             const_src_fits_in_16_bits(instr->src[0].src, op[0].type)) {
             if (devinfo->gen < 7)
                emit(MUL(dst, op[0], op[1]));
             else
                emit(MUL(dst, op[1], op[0]));
          } else if (nir_src_is_const(instr->src[1].src) &&
                     nir_alu_instr_src_read_mask(instr, 1) == 1 &&
-                    nir_src_comp_as_uint(instr->src[1].src, 0) < (1 << 16)) {
+                    const_src_fits_in_16_bits(instr->src[1].src, op[1].type)) {
             if (devinfo->gen < 7)
                emit(MUL(dst, op[1], op[0]));
             else
@@ -1283,27 +1262,22 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 
    case nir_op_frcp:
       inst = emit_math(SHADER_OPCODE_RCP, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fexp2:
       inst = emit_math(SHADER_OPCODE_EXP2, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_flog2:
       inst = emit_math(SHADER_OPCODE_LOG2, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fsin:
       inst = emit_math(SHADER_OPCODE_SIN, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fcos:
       inst = emit_math(SHADER_OPCODE_COS, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_idiv:
@@ -1358,17 +1332,14 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 
    case nir_op_fsqrt:
       inst = emit_math(SHADER_OPCODE_SQRT, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_frsq:
       inst = emit_math(SHADER_OPCODE_RSQ, dst, op[0]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fpow:
       inst = emit_math(SHADER_OPCODE_POW, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_uadd_carry: {
@@ -1391,7 +1362,12 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 
    case nir_op_ftrunc:
       inst = emit(RNDZ(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
+      if (devinfo->gen < 6) {
+         inst->conditional_mod = BRW_CONDITIONAL_R;
+         inst = emit(ADD(dst, src_reg(dst), brw_imm_f(1.0f)));
+         inst->predicate = BRW_PREDICATE_NORMAL;
+         inst = emit(MOV(dst, src_reg(dst))); /* for potential saturation */
+      }
       break;
 
    case nir_op_fceil: {
@@ -1405,23 +1381,25 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       emit(RNDD(dst_reg(tmp), op[0]));
       tmp.negate = true;
       inst = emit(MOV(dst, tmp));
-      inst->saturate = instr->dest.saturate;
       break;
    }
 
    case nir_op_ffloor:
       inst = emit(RNDD(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_ffract:
       inst = emit(FRC(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fround_even:
       inst = emit(RNDE(dst, op[0]));
-      inst->saturate = instr->dest.saturate;
+      if (devinfo->gen < 6) {
+         inst->conditional_mod = BRW_CONDITIONAL_R;
+         inst = emit(ADD(dst, src_reg(dst), brw_imm_f(1.0f)));
+         inst->predicate = BRW_PREDICATE_NORMAL;
+         inst = emit(MOV(dst, src_reg(dst))); /* for potential saturation */
+      }
       break;
 
    case nir_op_fquantize2f16: {
@@ -1445,7 +1423,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       /* Select that or zero based on normal status */
       inst = emit(BRW_OPCODE_SEL, dst, zero, tmp32);
       inst->predicate = BRW_PREDICATE_NORMAL;
-      inst->saturate = instr->dest.saturate;
       break;
    }
 
@@ -1456,7 +1433,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_fmin:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit_minmax(BRW_CONDITIONAL_L, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_imax:
@@ -1466,7 +1442,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_fmax:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit_minmax(BRW_CONDITIONAL_GE, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fddx:
@@ -1597,7 +1572,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_b2f64:
       if (nir_dest_bit_size(instr->dest.dest) > 32) {
          assert(dst.type == BRW_REGISTER_TYPE_DF);
-         emit_conversion_to_double(dst, negate(op[0]), false);
+         emit_conversion_to_double(dst, negate(op[0]));
       } else {
          emit(MOV(dst, negate(op[0])));
       }
@@ -1627,24 +1602,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_i2b32:
       emit(CMP(dst, op[0], brw_imm_d(0), BRW_CONDITIONAL_NZ));
       break;
-
-   case nir_op_fnoise1_1:
-   case nir_op_fnoise1_2:
-   case nir_op_fnoise1_3:
-   case nir_op_fnoise1_4:
-   case nir_op_fnoise2_1:
-   case nir_op_fnoise2_2:
-   case nir_op_fnoise2_3:
-   case nir_op_fnoise2_4:
-   case nir_op_fnoise3_1:
-   case nir_op_fnoise3_2:
-   case nir_op_fnoise3_3:
-   case nir_op_fnoise3_4:
-   case nir_op_fnoise4_1:
-   case nir_op_fnoise4_2:
-   case nir_op_fnoise4_3:
-   case nir_op_fnoise4_4:
-      unreachable("not reached: should be handled by lower_noise");
 
    case nir_op_unpack_half_2x16_split_x:
    case nir_op_unpack_half_2x16_split_y:
@@ -1832,20 +1789,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       unreachable("not reached: should have been lowered");
 
    case nir_op_fsign:
-      assert(!instr->dest.saturate);
-      if (op[0].abs) {
-         /* Straightforward since the source can be assumed to be either
-          * strictly >= 0 or strictly <= 0 depending on the setting of the
-          * negate flag.
-          */
-         inst = emit(MOV(dst, op[0]));
-         inst->conditional_mod = BRW_CONDITIONAL_NZ;
-
-         inst = (op[0].negate)
-            ? emit(MOV(dst, brw_imm_f(-1.0f)))
-            : emit(MOV(dst, brw_imm_f(1.0f)));
-         inst->predicate = BRW_PREDICATE_NORMAL;
-       } else if (type_sz(op[0].type) < 8) {
+       if (type_sz(op[0].type) < 8) {
          /* AND(val, 0x80000000) gives the sign bit.
           *
           * Predicated OR ORs 1.0 (0x3f800000) with the sign bit if val is not
@@ -1891,8 +1835,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 
          /* Now convert the result from float to double */
          emit_conversion_to_double(dst, retype(src_reg(tmp),
-                                               BRW_REGISTER_TYPE_F),
-                                   false);
+                                               BRW_REGISTER_TYPE_F));
       }
       break;
 
@@ -1919,18 +1862,15 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
          dst_reg mul_dst = dst_reg(this, glsl_type::dvec4_type);
          emit(MUL(mul_dst, op[1], op[0]));
          inst = emit(ADD(dst, src_reg(mul_dst), op[2]));
-         inst->saturate = instr->dest.saturate;
       } else {
          fix_float_operands(op, instr);
          inst = emit(MAD(dst, op[2], op[1], op[0]));
-         inst->saturate = instr->dest.saturate;
       }
       break;
 
    case nir_op_flrp:
       fix_float_operands(op, instr);
       inst = emit(LRP(dst, op[2], op[1], op[0]));
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_b32csel:
@@ -1962,25 +1902,21 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
    case nir_op_fdot_replicated2:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit(BRW_OPCODE_DP2, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fdot_replicated3:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit(BRW_OPCODE_DP3, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fdot_replicated4:
       try_immediate_source(instr, op, true, devinfo);
       inst = emit(BRW_OPCODE_DP4, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fdph_replicated:
       try_immediate_source(instr, op, false, devinfo);
       inst = emit(BRW_OPCODE_DPH, dst, op[0], op[1]);
-      inst->saturate = instr->dest.saturate;
       break;
 
    case nir_op_fdiv:

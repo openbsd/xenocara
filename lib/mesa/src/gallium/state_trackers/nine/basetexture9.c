@@ -33,7 +33,7 @@
 #include "nine_dump.h"
 #endif
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #define DBG_CHANNEL DBG_BASETEXTURE
 
@@ -122,7 +122,7 @@ NineBaseTexture9_SetLOD( struct NineBaseTexture9 *This,
                 0 : This->base.info.last_level;
     This->managed.lod = MIN2(LODNew, max_level);
 
-    if (This->managed.lod != old && This->bind_count && LIST_IS_EMPTY(&This->list))
+    if (This->managed.lod != old && This->bind_count && list_is_empty(&This->list))
        list_add(&This->list, &This->base.base.device->update_textures);
 
     return old;
@@ -563,7 +563,7 @@ NineBaseTexture9_UpdateSamplerView( struct NineBaseTexture9 *This,
         templ.format = resource->format;
     templ.u.tex.first_layer = 0;
     templ.u.tex.last_layer = resource->target == PIPE_TEXTURE_3D ?
-                             resource->depth0 - 1 : resource->array_size - 1;
+                             0 : resource->array_size - 1;
     templ.u.tex.first_level = 0;
     templ.u.tex.last_level = resource->last_level;
     templ.swizzle_r = swizzle[0];

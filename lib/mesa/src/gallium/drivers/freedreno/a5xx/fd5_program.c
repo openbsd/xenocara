@@ -28,7 +28,7 @@
 #include "util/u_string.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/bitset.h"
 
 #include "freedreno_program.h"
@@ -39,43 +39,6 @@
 #include "fd5_format.h"
 
 #include "ir3_cache.h"
-
-static struct ir3_shader *
-create_shader_stateobj(struct pipe_context *pctx, const struct pipe_shader_state *cso,
-		gl_shader_stage type)
-{
-	struct fd_context *ctx = fd_context(pctx);
-	struct ir3_compiler *compiler = ctx->screen->compiler;
-	return ir3_shader_create(compiler, cso, type, &ctx->debug, pctx->screen);
-}
-
-static void *
-fd5_fp_state_create(struct pipe_context *pctx,
-		const struct pipe_shader_state *cso)
-{
-	return create_shader_stateobj(pctx, cso, MESA_SHADER_FRAGMENT);
-}
-
-static void
-fd5_fp_state_delete(struct pipe_context *pctx, void *hwcso)
-{
-	struct ir3_shader *so = hwcso;
-	ir3_shader_destroy(so);
-}
-
-static void *
-fd5_vp_state_create(struct pipe_context *pctx,
-		const struct pipe_shader_state *cso)
-{
-	return create_shader_stateobj(pctx, cso, MESA_SHADER_VERTEX);
-}
-
-static void
-fd5_vp_state_delete(struct pipe_context *pctx, void *hwcso)
-{
-	struct ir3_shader *so = hwcso;
-	ir3_shader_destroy(so);
-}
 
 void
 fd5_emit_shader(struct fd_ringbuffer *ring, const struct ir3_shader_variant *so)
@@ -357,7 +320,7 @@ fd5_program_emit(struct fd_context *ctx, struct fd_ringbuffer *ring,
 	face_regid      = ir3_find_sysval_regid(s[FS].v, SYSTEM_VALUE_FRONT_FACE);
 	coord_regid     = ir3_find_sysval_regid(s[FS].v, SYSTEM_VALUE_FRAG_COORD);
 	zwcoord_regid   = (coord_regid == regid(63,0)) ? regid(63,0) : (coord_regid + 2);
-	vcoord_regid    = ir3_find_sysval_regid(s[FS].v, SYSTEM_VALUE_BARYCENTRIC_PIXEL);
+	vcoord_regid    = ir3_find_sysval_regid(s[FS].v, SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL);
 
 	/* we could probably divide this up into things that need to be
 	 * emitted if frag-prog is dirty vs if vert-prog is dirty..
@@ -444,27 +407,20 @@ fd5_program_emit(struct fd_context *ctx, struct fd_ringbuffer *ring,
 			A5XX_SP_VS_CTRL_REG0_FULLREGFOOTPRINT(s[VS].i->max_reg + 1) |
 			0x6 | /* XXX seems to be always set? */
 			A5XX_SP_VS_CTRL_REG0_BRANCHSTACK(s[VS].v->branchstack) |
-			COND(s[VS].v->num_samp > 0, A5XX_SP_VS_CTRL_REG0_PIXLODENABLE));
+			COND(s[VS].v->need_pixlod, A5XX_SP_VS_CTRL_REG0_PIXLODENABLE));
 
 	struct ir3_shader_linkage l = {0};
-	ir3_link_shaders(&l, s[VS].v, s[FS].v);
+	ir3_link_shaders(&l, s[VS].v, s[FS].v, true);
 
 	if ((s[VS].v->shader->stream_output.num_outputs > 0) &&
 			!emit->binning_pass)
 		link_stream_out(&l, s[VS].v);
 
-	BITSET_DECLARE(varbs, 128) = {0};
-	uint32_t *varmask = (uint32_t *)varbs;
-
-	for (i = 0; i < l.cnt; i++)
-		for (j = 0; j < util_last_bit(l.var[i].compmask); j++)
-			BITSET_SET(varbs, l.var[i].loc + j);
-
 	OUT_PKT4(ring, REG_A5XX_VPC_VAR_DISABLE(0), 4);
-	OUT_RING(ring, ~varmask[0]);  /* VPC_VAR[0].DISABLE */
-	OUT_RING(ring, ~varmask[1]);  /* VPC_VAR[1].DISABLE */
-	OUT_RING(ring, ~varmask[2]);  /* VPC_VAR[2].DISABLE */
-	OUT_RING(ring, ~varmask[3]);  /* VPC_VAR[3].DISABLE */
+	OUT_RING(ring, ~l.varmask[0]);  /* VPC_VAR[0].DISABLE */
+	OUT_RING(ring, ~l.varmask[1]);  /* VPC_VAR[1].DISABLE */
+	OUT_RING(ring, ~l.varmask[2]);  /* VPC_VAR[2].DISABLE */
+	OUT_RING(ring, ~l.varmask[3]);  /* VPC_VAR[3].DISABLE */
 
 	/* a5xx appends pos/psize to end of the linkage map: */
 	if (pos_regid != regid(63,0))
@@ -568,7 +524,7 @@ fd5_program_emit(struct fd_context *ctx, struct fd_ringbuffer *ring,
 			A5XX_SP_FS_CTRL_REG0_HALFREGFOOTPRINT(s[FS].i->max_half_reg + 1) |
 			A5XX_SP_FS_CTRL_REG0_FULLREGFOOTPRINT(s[FS].i->max_reg + 1) |
 			A5XX_SP_FS_CTRL_REG0_BRANCHSTACK(s[FS].v->branchstack) |
-			COND(s[FS].v->num_samp > 0, A5XX_SP_FS_CTRL_REG0_PIXLODENABLE));
+			COND(s[FS].v->need_pixlod, A5XX_SP_FS_CTRL_REG0_PIXLODENABLE));
 
 	OUT_PKT4(ring, REG_A5XX_HLSQ_UPDATE_CNTL, 1);
 	OUT_RING(ring, 0x020fffff);        /* XXX */
@@ -722,11 +678,6 @@ fd5_program_emit(struct fd_context *ctx, struct fd_ringbuffer *ring,
 void
 fd5_prog_init(struct pipe_context *pctx)
 {
-	pctx->create_fs_state = fd5_fp_state_create;
-	pctx->delete_fs_state = fd5_fp_state_delete;
-
-	pctx->create_vs_state = fd5_vp_state_create;
-	pctx->delete_vs_state = fd5_vp_state_delete;
-
+	ir3_prog_init(pctx);
 	fd_prog_init(pctx);
 }

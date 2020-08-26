@@ -126,6 +126,12 @@ static void validate_src(nir_src *src, validate_state *state,
                          unsigned bit_sizes, unsigned num_components);
 
 static void
+validate_num_components(validate_state *state, unsigned num_components)
+{
+   validate_assert(state, nir_num_components_valid(num_components));
+}
+
+static void
 validate_reg_src(nir_src *src, validate_state *state,
                  unsigned bit_sizes, unsigned num_components)
 {
@@ -275,10 +281,7 @@ validate_ssa_def(nir_ssa_def *def, validate_state *state)
    BITSET_SET(state->ssa_defs_found, def->index);
 
    validate_assert(state, def->parent_instr == state->instr);
-
-   validate_assert(state, (def->num_components <= 4) ||
-                          (def->num_components == 8) ||
-                          (def->num_components == 16));
+   validate_num_components(state, def->num_components);
 
    list_validate(&def->uses);
    nir_foreach_use(src, def) {
@@ -498,7 +501,7 @@ validate_deref_instr(nir_deref_instr *instr, validate_state *state)
     * conditions expect well-formed Booleans.  If you want to compare with
     * NULL, an explicit comparison operation should be used.
     */
-   validate_assert(state, list_empty(&instr->dest.ssa.if_uses));
+   validate_assert(state, list_is_empty(&instr->dest.ssa.if_uses));
 
    /* Only certain modes can be used as sources for phi instructions. */
    nir_foreach_use(use, &instr->dest.ssa) {
@@ -528,6 +531,7 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
 
    case nir_intrinsic_load_deref: {
       nir_deref_instr *src = nir_src_as_deref(instr->src[0]);
+      assert(src);
       validate_assert(state, glsl_type_is_vector_or_scalar(src->type) ||
                       (src->mode == nir_var_uniform &&
                        glsl_get_base_type(src->type) == GLSL_TYPE_SUBROUTINE));
@@ -542,6 +546,7 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
 
    case nir_intrinsic_store_deref: {
       nir_deref_instr *dst = nir_src_as_deref(instr->src[0]);
+      assert(dst);
       validate_assert(state, glsl_type_is_vector_or_scalar(dst->type));
       validate_assert(state, instr->num_components ==
                              glsl_get_vector_elements(dst->type));
@@ -565,15 +570,60 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
       break;
    }
 
+   case nir_intrinsic_load_ubo:
+   case nir_intrinsic_load_ssbo:
+   case nir_intrinsic_load_shared:
+   case nir_intrinsic_load_global:
+   case nir_intrinsic_load_scratch:
+   case nir_intrinsic_load_constant:
+      /* These memory load operations must have alignments */
+      validate_assert(state,
+         util_is_power_of_two_nonzero(nir_intrinsic_align_mul(instr)));
+      validate_assert(state, nir_intrinsic_align_offset(instr) <
+                             nir_intrinsic_align_mul(instr));
+      /* Fall through */
+
+   case nir_intrinsic_load_uniform:
+   case nir_intrinsic_load_input:
+   case nir_intrinsic_load_per_vertex_input:
+   case nir_intrinsic_load_interpolated_input:
+   case nir_intrinsic_load_output:
+   case nir_intrinsic_load_per_vertex_output:
+   case nir_intrinsic_load_push_constant:
+      /* All memory load operations must load at least a byte */
+      validate_assert(state, nir_dest_bit_size(instr->dest) >= 8);
+      break;
+
+   case nir_intrinsic_store_ssbo:
+   case nir_intrinsic_store_shared:
+   case nir_intrinsic_store_global:
+   case nir_intrinsic_store_scratch:
+      /* These memory store operations must also have alignments */
+      validate_assert(state,
+         util_is_power_of_two_nonzero(nir_intrinsic_align_mul(instr)));
+      validate_assert(state, nir_intrinsic_align_offset(instr) <
+                             nir_intrinsic_align_mul(instr));
+      /* Fall through */
+
+   case nir_intrinsic_store_output:
+   case nir_intrinsic_store_per_vertex_output:
+      /* All memory store operations must store at least a byte */
+      validate_assert(state, nir_src_bit_size(instr->src[0]) >= 8);
+      break;
+
    default:
       break;
    }
 
-   unsigned num_srcs = nir_intrinsic_infos[instr->intrinsic].num_srcs;
+   if (instr->num_components > 0)
+      validate_num_components(state, instr->num_components);
+
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   unsigned num_srcs = info->num_srcs;
    for (unsigned i = 0; i < num_srcs; i++) {
       unsigned components_read = nir_intrinsic_src_components(instr, i);
 
-      validate_assert(state, components_read > 0);
+      validate_num_components(state, components_read);
 
       validate_src(&instr->src[i], state, src_bit_sizes[i], components_read);
    }
@@ -582,8 +632,7 @@ validate_intrinsic_instr(nir_intrinsic_instr *instr, validate_state *state)
       unsigned components_written = nir_intrinsic_dest_components(instr);
       unsigned bit_sizes = nir_intrinsic_infos[instr->intrinsic].dest_bit_sizes;
 
-      validate_assert(state, components_written > 0);
-
+      validate_num_components(state, components_written);
       if (dest_bit_size && bit_sizes)
          validate_assert(state, dest_bit_size & bit_sizes);
       else
@@ -987,6 +1036,7 @@ prevalidate_reg_decl(nir_register *reg, validate_state *state)
 {
    validate_assert(state, reg->index < state->impl->reg_alloc);
    validate_assert(state, !BITSET_TEST(state->regs_found, reg->index));
+   validate_num_components(state, reg->num_components);
    BITSET_SET(state->regs_found, reg->index);
 
    list_validate(&reg->uses);
@@ -1055,14 +1105,14 @@ postvalidate_reg_decl(nir_register *reg, validate_state *state)
 }
 
 static void
-validate_var_decl(nir_variable *var, bool is_global, validate_state *state)
+validate_var_decl(nir_variable *var, nir_variable_mode valid_modes,
+                  validate_state *state)
 {
    state->var = var;
 
-   validate_assert(state, is_global == nir_variable_is_global(var));
-
    /* Must have exactly one mode set */
    validate_assert(state, util_is_power_of_two_nonzero(var->data.mode));
+   validate_assert(state, var->data.mode & valid_modes);
 
    if (var->data.compact) {
       /* The "compact" flag is only valid on arrays of scalars. */
@@ -1084,13 +1134,17 @@ validate_var_decl(nir_variable *var, bool is_global, validate_state *state)
       validate_assert(state, var->members != NULL);
    }
 
+   if (var->data.per_view)
+      validate_assert(state, glsl_type_is_array(var->type));
+
    /*
     * TODO validate some things ir_validate.cpp does (requires more GLSL type
     * support)
     */
 
    _mesa_hash_table_insert(state->var_defs, var,
-                           is_global ? NULL : state->impl);
+                           valid_modes == nir_var_function_temp ?
+                           state->impl : NULL);
 
    state->var = NULL;
 }
@@ -1119,7 +1173,7 @@ validate_function_impl(nir_function_impl *impl, validate_state *state)
 
    exec_list_validate(&impl->locals);
    nir_foreach_variable(var, &impl->locals) {
-      validate_var_decl(var, false, state);
+      validate_var_decl(var, nir_var_function_temp, state);
    }
 
    state->regs_found = reralloc(state->mem_ctx, state->regs_found,
@@ -1235,32 +1289,35 @@ nir_validate_shader(nir_shader *shader, const char *when)
 
    exec_list_validate(&shader->uniforms);
    nir_foreach_variable(var, &shader->uniforms) {
-      validate_var_decl(var, true, &state);
+      validate_var_decl(var, nir_var_uniform |
+                             nir_var_mem_ubo |
+                             nir_var_mem_ssbo,
+                        &state);
    }
 
    exec_list_validate(&shader->inputs);
    nir_foreach_variable(var, &shader->inputs) {
-     validate_var_decl(var, true, &state);
+     validate_var_decl(var, nir_var_shader_in, &state);
    }
 
    exec_list_validate(&shader->outputs);
    nir_foreach_variable(var, &shader->outputs) {
-     validate_var_decl(var, true, &state);
+     validate_var_decl(var, nir_var_shader_out, &state);
    }
 
    exec_list_validate(&shader->shared);
    nir_foreach_variable(var, &shader->shared) {
-      validate_var_decl(var, true, &state);
+      validate_var_decl(var, nir_var_mem_shared, &state);
    }
 
    exec_list_validate(&shader->globals);
    nir_foreach_variable(var, &shader->globals) {
-     validate_var_decl(var, true, &state);
+     validate_var_decl(var, nir_var_shader_temp, &state);
    }
 
    exec_list_validate(&shader->system_values);
    nir_foreach_variable(var, &shader->system_values) {
-     validate_var_decl(var, true, &state);
+     validate_var_decl(var, nir_var_system_value, &state);
    }
 
    exec_list_validate(&shader->functions);

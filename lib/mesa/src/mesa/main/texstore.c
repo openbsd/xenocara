@@ -62,7 +62,7 @@
 #include "mtypes.h"
 #include "pack.h"
 #include "pbo.h"
-#include "imports.h"
+
 #include "texcompress.h"
 #include "texcompress_fxt1.h"
 #include "texcompress_rgtc.h"
@@ -280,8 +280,6 @@ _mesa_texstore_z16(TEXSTORE_PARAMS)
 static GLboolean
 _mesa_texstore_ycbcr(TEXSTORE_PARAMS)
 {
-   const GLboolean littleEndian = _mesa_little_endian();
-
    (void) ctx; (void) dims; (void) baseInternalFormat;
 
    assert((dstFormat == MESA_FORMAT_YCBCR) ||
@@ -305,7 +303,7 @@ _mesa_texstore_ycbcr(TEXSTORE_PARAMS)
    if (srcPacking->SwapBytes ^
        (srcType == GL_UNSIGNED_SHORT_8_8_REV_MESA) ^
        (dstFormat == MESA_FORMAT_YCBCR_REV) ^
-       !littleEndian) {
+       !UTIL_ARCH_LITTLE_ENDIAN) {
       GLint img, row;
       for (img = 0; img < srcDepth; img++) {
          GLubyte *dstRow = dstSlices[img];
@@ -538,7 +536,7 @@ _mesa_texstore_z32f_x24s8(TEXSTORE_PARAMS)
    GLint img, row;
    const GLint srcRowStride
       = _mesa_image_row_stride(srcPacking, srcWidth, srcFormat, srcType)
-      / sizeof(uint64_t);
+         / sizeof(int32_t);
 
    assert(dstFormat == MESA_FORMAT_Z32_FLOAT_S8X24_UINT);
    assert(srcFormat == GL_DEPTH_STENCIL ||
@@ -551,8 +549,8 @@ _mesa_texstore_z32f_x24s8(TEXSTORE_PARAMS)
    /* In case we only upload depth we need to preserve the stencil */
    for (img = 0; img < srcDepth; img++) {
       uint64_t *dstRow = (uint64_t *) dstSlices[img];
-      const uint64_t *src
-         = (const uint64_t *) _mesa_image_address(dims, srcPacking, srcAddr,
+      const int32_t *src
+         = (const int32_t *) _mesa_image_address(dims, srcPacking, srcAddr,
                srcWidth, srcHeight,
                srcFormat, srcType,
                img, 0, 0);

@@ -73,7 +73,9 @@
 #include "intel_batchbuffer.h"
 
 #include "perf/gen_perf.h"
+#include "perf/gen_perf_regs.h"
 #include "perf/gen_perf_mdapi.h"
+#include "perf/gen_perf_query.h"
 
 #define FILE_DEBUG_FLAG DEBUG_PERFMON
 
@@ -222,21 +224,6 @@ enum OaReadStatus {
 
 /******************************************************************************/
 
-static void
-capture_frequency_stat_register(struct brw_context *brw,
-                                struct brw_bo *bo,
-                                uint32_t bo_offset)
-{
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
-
-   if (devinfo->gen >= 7 && devinfo->gen <= 8 &&
-       !devinfo->is_baytrail && !devinfo->is_cherryview) {
-      brw_store_register_mem32(brw, bo, GEN7_RPSTAT1, bo_offset);
-   } else if (devinfo->gen >= 9) {
-      brw_store_register_mem32(brw, bo, GEN9_RPSTAT0, bo_offset);
-   }
-}
-
 /**
  * Driver hook for glBeginPerfQueryINTEL().
  */
@@ -260,12 +247,12 @@ brw_begin_perf_query(struct gl_context *ctx,
 
    DBG("Begin(%d)\n", o->Id);
 
-   gen_perf_begin_query(perf_ctx, obj);
+   bool ret = gen_perf_begin_query(perf_ctx, obj);
 
    if (INTEL_DEBUG & DEBUG_PERFMON)
       dump_perf_queries(brw);
 
-   return true;
+   return ret;
 }
 
 /**
@@ -336,7 +323,7 @@ brw_get_perf_query_data(struct gl_context *ctx,
     */
    assert(o->Ready);
 
-   gen_perf_get_query_data(brw->perf_ctx, obj,
+   gen_perf_get_query_data(brw->perf_ctx, obj, &brw->batch,
                            data_size, data, bytes_written);
 }
 
@@ -458,9 +445,29 @@ brw_oa_batchbuffer_flush(void *c, const char *file, int line)
    _intel_batchbuffer_flush_fence(ctx, -1, NULL, file,  line);
 }
 
-typedef void (*capture_frequency_stat_register_t)(void *, void *, uint32_t );
-typedef void (*store_register_mem64_t)(void *ctx, void *bo,
-                                       uint32_t reg, uint32_t offset);
+static void
+brw_oa_emit_stall_at_pixel_scoreboard(void *c)
+{
+   struct brw_context *brw = c;
+   brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_STALL_AT_SCOREBOARD);
+}
+
+static void
+brw_perf_store_register(struct brw_context *brw, struct brw_bo *bo,
+                        uint32_t reg, uint32_t reg_size,
+                        uint32_t offset)
+{
+   if (reg_size == 8) {
+      brw_store_register_mem64(brw, bo, reg, offset);
+   } else {
+      assert(reg_size == 4);
+      brw_store_register_mem32(brw, bo, reg, offset);
+   }
+}
+
+typedef void (*store_register_mem_t)(void *ctx, void *bo,
+                                     uint32_t reg, uint32_t reg_size,
+                                     uint32_t offset);
 typedef bool (*batch_references_t)(void *batch, void *bo);
 typedef void (*bo_wait_rendering_t)(void *bo);
 typedef int (*bo_busy_t)(void *bo);
@@ -477,7 +484,7 @@ brw_init_perf_query_info(struct gl_context *ctx)
    if (perf_cfg)
       return perf_cfg->n_queries;
 
-   if (!oa_metrics_kernel_support(brw->screen->driScrnPriv->fd, devinfo))
+   if (!oa_metrics_kernel_support(brw->screen->fd, devinfo))
       return 0;
 
    perf_cfg = gen_perf_new(ctx);
@@ -486,21 +493,20 @@ brw_init_perf_query_info(struct gl_context *ctx)
    perf_cfg->vtbl.bo_unreference = (bo_unreference_t)brw_bo_unreference;
    perf_cfg->vtbl.bo_map = (bo_map_t)brw_bo_map;
    perf_cfg->vtbl.bo_unmap = (bo_unmap_t)brw_bo_unmap;
-   perf_cfg->vtbl.emit_mi_flush = (emit_mi_flush_t)brw_emit_mi_flush;
+   perf_cfg->vtbl.emit_stall_at_pixel_scoreboard =
+      (emit_mi_flush_t)brw_oa_emit_stall_at_pixel_scoreboard;
    perf_cfg->vtbl.emit_mi_report_perf_count =
       (emit_mi_report_t)brw_oa_emit_mi_report_perf_count;
    perf_cfg->vtbl.batchbuffer_flush = brw_oa_batchbuffer_flush;
-   perf_cfg->vtbl.capture_frequency_stat_register =
-      (capture_frequency_stat_register_t) capture_frequency_stat_register;
-   perf_cfg->vtbl.store_register_mem64 =
-      (store_register_mem64_t) brw_store_register_mem64;
+   perf_cfg->vtbl.store_register_mem =
+      (store_register_mem_t) brw_perf_store_register;
    perf_cfg->vtbl.batch_references = (batch_references_t)brw_batch_references;
    perf_cfg->vtbl.bo_wait_rendering = (bo_wait_rendering_t)brw_bo_wait_rendering;
    perf_cfg->vtbl.bo_busy = (bo_busy_t)brw_bo_busy;
 
    gen_perf_init_context(perf_ctx, perf_cfg, brw, brw->bufmgr, devinfo,
-                         brw->hw_ctx, brw->screen->driScrnPriv->fd);
-   gen_perf_init_metrics(perf_cfg, devinfo, brw->screen->driScrnPriv->fd);
+                         brw->hw_ctx, brw->screen->fd);
+   gen_perf_init_metrics(perf_cfg, devinfo, brw->screen->fd);
 
    return perf_cfg->n_queries;
 }

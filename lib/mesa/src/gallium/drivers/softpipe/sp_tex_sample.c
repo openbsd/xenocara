@@ -38,7 +38,7 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_shader_tokens.h"
 #include "util/u_math.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
 #include "sp_quad.h"   /* only for #define QUAD_* tokens */
@@ -2320,7 +2320,7 @@ create_filter_table(void)
       for (i = 0; i < WEIGHT_LUT_SIZE; ++i) {
          const float alpha = 2;
          const float r2 = (float) i / (float) (WEIGHT_LUT_SIZE - 1);
-         const float weight = (float) exp(-alpha * r2);
+         const float weight = (float) expf(-alpha * r2);
          lut[i] = weight;
       }
       weightLut = lut;

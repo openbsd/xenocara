@@ -34,6 +34,9 @@ The integer capabilities:
   bound.
 * ``PIPE_CAP_OCCLUSION_QUERY``: Whether occlusion queries are available.
 * ``PIPE_CAP_QUERY_TIME_ELAPSED``: Whether PIPE_QUERY_TIME_ELAPSED queries are available.
+* ``PIPE_CAP_TEXTURE_SHADOW_MAP``: indicates whether the fragment shader hardware
+  can do the depth texture / Z comparison operation in TEX instructions
+  for shadow testing.
 * ``PIPE_CAP_TEXTURE_SWIZZLE``: Whether swizzling through sampler views is
   supported.
 * ``PIPE_CAP_MAX_TEXTURE_2D_SIZE``: The maximum size of 2D (and 1D) textures.
@@ -300,6 +303,8 @@ The integer capabilities:
   a compressed block is copied to/from a plain pixel of the same size.
 * ``PIPE_CAP_CLEAR_TEXTURE``: Whether `clear_texture` will be
   available in contexts.
+* ``PIPE_CAP_CLEAR_SCISSORED``: Whether `clear` can accept a scissored
+  bounding box.
 * ``PIPE_CAP_DRAW_PARAMETERS``: Whether ``TGSI_SEMANTIC_BASEVERTEX``,
   ``TGSI_SEMANTIC_BASEINSTANCE``, and ``TGSI_SEMANTIC_DRAWID`` are
   supported in vertex shaders.
@@ -438,12 +443,14 @@ The integer capabilities:
 * ``PIPE_CAP_FRAMEBUFFER_MSAA_CONSTRAINTS``: This determines limitations
   on the number of samples that framebuffer attachments can have.
   Possible values:
-    0: color.nr_samples == zs.nr_samples == color.nr_storage_samples
+
+    0. color.nr_samples == zs.nr_samples == color.nr_storage_samples
        (standard MSAA quality)
-    1: color.nr_samples >= zs.nr_samples == color.nr_storage_samples
+    1. color.nr_samples >= zs.nr_samples == color.nr_storage_samples
        (enhanced MSAA quality)
-    2: color.nr_samples >= zs.nr_samples >= color.nr_storage_samples
+    2. color.nr_samples >= zs.nr_samples >= color.nr_storage_samples
        (full flexibility in tuning MSAA quality and performance)
+
   All color attachments must have the same number of samples and the same
   number of storage samples.
 * ``PIPE_CAP_SIGNED_VERTEX_BUFFER_OFFSET``:
@@ -523,8 +530,7 @@ The integer capabilities:
   A driver might rely on the input mapping that was defined with the original
   GLSL code.
 * ``PIPE_CAP_IMAGE_LOAD_FORMATTED``: True if a format for image loads does not need to be specified in the shader IR
-* ``PIPE_CAP_MAX_FRAMES_IN_FLIGHT``: Maximum number of frames that state
-  trackers should allow to be in flight before throttling pipe_context
+* ``PIPE_CAP_THROTTLE``: Whether or not state trackers should throttle pipe_context
   execution. 0 = throttling is disabled.
 * ``PIPE_CAP_DMABUF``: Whether Linux DMABUF handles are supported by
   resource_from_handle and resource_get_handle.
@@ -548,6 +554,33 @@ The integer capabilities:
   types with texture functions having interaction with LOD of texture lookup.
 * ``PIPE_CAP_SHADER_SAMPLES_IDENTICAL``: True if the driver supports a shader query to tell whether all samples of a multisampled surface are definitely identical.
 * ``PIPE_CAP_TGSI_ATOMINC_WRAP``: Atomic increment/decrement + wrap around are supported.
+* ``PIPE_CAP_PREFER_IMM_ARRAYS_AS_CONSTBUF``: True if the state tracker should
+  turn arrays whose contents can be deduced at compile time into constant
+  buffer loads, or false if the driver can handle such arrays itself in a more
+  efficient manner.
+* ``PIPE_CAP_GL_SPIRV``: True if the driver supports ARB_gl_spirv extension.
+* ``PIPE_CAP_GL_SPIRV_VARIABLE_POINTERS``: True if the driver supports Variable Pointers in SPIR-V shaders.
+* ``PIPE_CAP_DEMOTE_TO_HELPER_INVOCATION``: True if driver supports demote keyword in GLSL programs.
+* ``PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE``: True if driver wants the TG4 component encoded in sampler swizzle rather than as a separate source.
+* ``PIPE_CAP_FLATSHADE``: Driver supports pipe_rasterizer_state::flatshade.
+* ``PIPE_CAP_ALPHA_TEST``: Driver supports alpha-testing.
+* ``PIPE_CAP_POINT_SIZE_FIXED``: Driver supports point-sizes that are fixed,
+  as opposed to writing gl_PointSize for every point.
+* ``PIPE_CAP_TWO_SIDED_COLOR``: Driver supports two-sided coloring.
+* ``PIPE_CAP_CLIP_PLANES``: Driver supports user-defined clip-planes.
+* ``PIPE_CAP_MAX_VERTEX_BUFFERS``: Number of supported vertex buffers.
+* ``PIPE_CAP_OPENCL_INTEGER_FUNCTIONS``: Driver supports extended OpenCL-style integer functions.  This includes averge, saturating additiong, saturating subtraction, absolute difference, count leading zeros, and count trailing zeros.
+* ``PIPE_CAP_INTEGER_MULTIPLY_32X16``: Driver supports integer multiplication between a 32-bit integer and a 16-bit integer.  If the second operand is 32-bits, the upper 16-bits are ignored, and the low 16-bits are possibly sign extended as necessary.
+* ``PIPE_CAP_NIR_IMAGES_AS_DEREF``: Whether NIR image load/store intrinsics should be nir_intrinsic_image_deref_* instead of nir_intrinsic_image_*.  Defaults to true.
+* ``PIPE_CAP_PACKED_STREAM_OUTPUT``: Driver supports packing optimization for stream output (e.g. GL transform feedback captured variables). Defaults to true.
+* ``PIPE_CAP_VIEWPORT_TRANSFORM_LOWERED``: Driver needs the nir_lower_viewport_transform pass to be enabled. This also means that the gl_Position value is modified and should be lowered for transform feedback, if needed. Defaults to false.
+* ``PIPE_CAP_PSIZ_CLAMPED``: Driver needs for the point size to be clamped. Additionally, the gl_PointSize has been modified and its value should be lowered for transform feedback, if needed. Defaults to false.
+* ``PIPE_CAP_DRAW_INFO_START_WITH_USER_INDICES``: pipe_draw_info::start can be non-zero with user indices.
+* ``PIPE_CAP_GL_BEGIN_END_BUFFER_SIZE``: Buffer size used to upload vertices for glBegin/glEnd.
+* ``PIPE_CAP_VIEWPORT_SWIZZLE``: Whether pipe_viewport_state::swizzle can be used to specify pre-clipping swizzling of coordinates (see GL_NV_viewport_swizzle).
+* ``PIPE_CAP_SYSTEM_SVM``: True if all application memory can be shared with the GPU without explicit mapping.
+* ``PIPE_CAP_VIEWPORT_MASK``: Whether ``TGSI_SEMANTIC_VIEWPORT_MASK`` and ``TGSI_PROPERTY_LAYER_VIEWPORT_RELATIVE`` are supported (see GL_NV_viewport_array2).
+* ``PIPE_CAP_MAP_UNSYNCHRONIZED_THREAD_SAFE``: Whether mapping a buffer as unsynchronized from any thread is safe.
 
 .. _pipe_capf:
 
@@ -655,7 +688,6 @@ MOV OUT[0], CONST[0][3]  # copy vector 3 of constbuf 0
   how many HW counters are available for this stage. (0 uses SSBO atomics).
 * ``PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTER_BUFFERS``: If atomic counters are
   separate, how many atomic counter buffers are available for this stage.
-* ``PIPE_SHADER_CAP_SCALAR_ISA``: Whether the ISA is a scalar one.
 
 .. _pipe_compute_cap:
 
@@ -898,6 +930,7 @@ If there are not enough slots to store all sample colors, some samples will
 have an undefined color (called "undefined samples").
 
 The resolve blit behavior is driver-specific, but can be one of these two:
+
 1. Only defined samples will be averaged. Undefined samples will be ignored.
 2. Undefined samples will be approximated by looking at surrounding defined
    samples (even in different pixels).
@@ -915,7 +948,11 @@ replaced by ``nr_storage_samples``.
 
 **flags** bitmask of PIPE_RESOURCE_FLAG flags.
 
+**next**: Pointer to the next plane for resources that consist of multiple
+memory planes.
 
+As a corollary, this mean resources for an image with multiple planes have
+to be created starting from the highest plane.
 
 resource_changed
 ^^^^^^^^^^^^^^^^

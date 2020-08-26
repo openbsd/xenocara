@@ -33,7 +33,6 @@
 
 #include "main/glheader.h"
 #include "main/mtypes.h"
-#include "main/imports.h"
 #include "main/arbprogram.h"
 #include "main/arrayobj.h"
 #include "main/blend.h"
@@ -90,6 +89,7 @@
 #include "util/ralloc.h"
 #include "compiler/nir/nir.h"
 #include "util/u_math.h"
+#include "util/u_memory.h"
 
 /** Return offset in bytes of the field within a vertex struct */
 #define OFFSET(FIELD) ((void *) offsetof(struct vertex, FIELD))
@@ -110,6 +110,10 @@ static void meta_decompress_cleanup(struct gl_context *ctx,
                                     struct decompress_state *decompress);
 static void meta_drawpix_cleanup(struct gl_context *ctx,
                                  struct drawpix_state *drawpix);
+static void meta_drawtex_cleanup(struct gl_context *ctx,
+                                 struct drawtex_state *drawtex);
+static void meta_bitmap_cleanup(struct gl_context *ctx,
+                                struct bitmap_state *bitmap);
 
 void
 _mesa_meta_framebuffer_texture_image(struct gl_context *ctx,
@@ -352,7 +356,8 @@ _mesa_meta_setup_vertex_objects(struct gl_context *ctx,
                                    GL_FALSE, GL_FALSE,
                                    offsetof(struct vertex, x));
          _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_GENERIC(0),
-                                  *buf_obj, 0, sizeof(struct vertex));
+                                  *buf_obj, 0, sizeof(struct vertex), false,
+                                  false);
          _mesa_enable_vertex_array_attrib(ctx, array_obj,
                                           VERT_ATTRIB_GENERIC(0));
          if (texcoord_size > 0) {
@@ -361,7 +366,8 @@ _mesa_meta_setup_vertex_objects(struct gl_context *ctx,
                                       GL_FALSE, GL_FALSE, GL_FALSE,
                                       offsetof(struct vertex, tex));
             _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_GENERIC(1),
-                                     *buf_obj, 0, sizeof(struct vertex));
+                                     *buf_obj, 0, sizeof(struct vertex), false,
+                                     false);
             _mesa_enable_vertex_array_attrib(ctx, array_obj,
                                              VERT_ATTRIB_GENERIC(1));
          }
@@ -371,7 +377,8 @@ _mesa_meta_setup_vertex_objects(struct gl_context *ctx,
                                    GL_FALSE, GL_FALSE,
                                    offsetof(struct vertex, x));
          _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_POS,
-                                  *buf_obj, 0, sizeof(struct vertex));
+                                  *buf_obj, 0, sizeof(struct vertex), false,
+                                  false);
          _mesa_enable_vertex_array_attrib(ctx, array_obj, VERT_ATTRIB_POS);
 
          if (texcoord_size > 0) {
@@ -380,7 +387,8 @@ _mesa_meta_setup_vertex_objects(struct gl_context *ctx,
                                       GL_FALSE, GL_FALSE,
                                       offsetof(struct vertex, tex));
             _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_TEX(0),
-                                     *buf_obj, 0, sizeof(struct vertex));
+                                     *buf_obj, 0, sizeof(struct vertex), false,
+                                     false);
             _mesa_enable_vertex_array_attrib(ctx, array_obj,
                                              VERT_ATTRIB_TEX(0));
          }
@@ -391,7 +399,8 @@ _mesa_meta_setup_vertex_objects(struct gl_context *ctx,
                                       GL_FALSE, GL_FALSE,
                                       offsetof(struct vertex, r));
             _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_COLOR0,
-                                     *buf_obj, 0, sizeof(struct vertex));
+                                     *buf_obj, 0, sizeof(struct vertex), false,
+                                     false);
             _mesa_enable_vertex_array_attrib(ctx, array_obj,
                                              VERT_ATTRIB_COLOR0);
          }
@@ -429,6 +438,9 @@ _mesa_meta_free(struct gl_context *ctx)
    cleanup_temp_texture(ctx, &ctx->Meta->TempTex);
    meta_decompress_cleanup(ctx, &ctx->Meta->Decompress);
    meta_drawpix_cleanup(ctx, &ctx->Meta->DrawPix);
+   meta_drawtex_cleanup(ctx, &ctx->Meta->DrawTex);
+   meta_bitmap_cleanup(ctx, &ctx->Meta->Bitmap);
+
    if (old_context)
       _mesa_make_current(old_context, old_context->WinSysDrawBuffer, old_context->WinSysReadBuffer);
    else
@@ -1854,7 +1866,7 @@ meta_clear(struct gl_context *ctx, GLbitfield buffers, bool glsl)
 
    /* draw quad(s) */
    if (fb->MaxNumLayers > 0) {
-      _mesa_DrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, fb->MaxNumLayers);
+      _mesa_DrawArraysInstancedARB(GL_TRIANGLE_FAN, 0, 4, fb->MaxNumLayers);
    } else {
       _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
    }
@@ -1970,6 +1982,30 @@ meta_drawpix_cleanup(struct gl_context *ctx, struct drawpix_state *drawpix)
    }
 }
 
+static void
+meta_drawtex_cleanup(struct gl_context *ctx, struct drawtex_state *drawtex)
+{
+   if (drawtex->VAO != 0) {
+      _mesa_DeleteVertexArrays(1, &drawtex->VAO);
+      drawtex->VAO = 0;
+
+      _mesa_reference_buffer_object(ctx, &drawtex->buf_obj, NULL);
+   }
+}
+
+static void
+meta_bitmap_cleanup(struct gl_context *ctx, struct bitmap_state *bitmap)
+{
+   if (bitmap->VAO != 0) {
+      _mesa_DeleteVertexArrays(1, &bitmap->VAO);
+      bitmap->VAO = 0;
+
+      _mesa_reference_buffer_object(ctx, &bitmap->buf_obj, NULL);
+
+      cleanup_temp_texture(ctx, &bitmap->Tex);
+   }
+}
+
 /**
  * When the glDrawPixels() image size is greater than the max rectangle
  * texture size we use this function to break the glDrawPixels() image
@@ -2063,7 +2099,7 @@ init_draw_stencil_pixels(struct gl_context *ctx)
       texTarget = "RECT";
    else
       texTarget = "2D";
-   _mesa_snprintf(program2, sizeof(program2), program, texTarget);
+   snprintf(program2, sizeof(program2), program, texTarget);
 
    _mesa_GenProgramsARB(1, &drawpix->StencilFP);
    _mesa_BindProgramARB(GL_FRAGMENT_PROGRAM_ARB, drawpix->StencilFP);
@@ -2097,7 +2133,7 @@ init_draw_depth_pixels(struct gl_context *ctx)
       texTarget = "RECT";
    else
       texTarget = "2D";
-   _mesa_snprintf(program2, sizeof(program2), program, texTarget);
+   snprintf(program2, sizeof(program2), program, texTarget);
 
    _mesa_GenProgramsARB(1, &drawpix->DepthFP);
    _mesa_BindProgramARB(GL_FRAGMENT_PROGRAM_ARB, drawpix->DepthFP);
@@ -2279,7 +2315,7 @@ _mesa_meta_DrawPixels(struct gl_context *ctx,
       _mesa_StencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
       _mesa_StencilFunc(GL_ALWAYS, 0, 255);
       _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-  
+
       /* set stencil bits to 1 where needed */
       _mesa_StencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
@@ -2993,6 +3029,7 @@ meta_decompress_cleanup(struct gl_context *ctx,
    }
 
    _mesa_reference_sampler_object(ctx, &decompress->samp_obj, NULL);
+   _mesa_meta_blit_shader_table_cleanup(ctx, &decompress->shaders);
 
    memset(decompress, 0, sizeof(*decompress));
 }
@@ -3200,7 +3237,7 @@ decompress_texture_image(struct gl_context *ctx,
 
       /* render quad w/ texture into renderbuffer */
       _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-      
+
       /* Restore texture object state, the texture binding will
        * be restored by _mesa_meta_end().
        */
@@ -3364,7 +3401,8 @@ _mesa_meta_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
                                 GL_FALSE, GL_FALSE,
                                 offsetof(struct vertex, x));
       _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_POS,
-                               drawtex->buf_obj, 0, sizeof(struct vertex));
+                               drawtex->buf_obj, 0, sizeof(struct vertex),
+                               false, false);
       _mesa_enable_vertex_array_attrib(ctx, array_obj, VERT_ATTRIB_POS);
 
 
@@ -3375,7 +3413,8 @@ _mesa_meta_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
                                    GL_FALSE, GL_FALSE,
                                    offsetof(struct vertex, st[i]));
          _mesa_bind_vertex_buffer(ctx, array_obj, VERT_ATTRIB_TEX(i),
-                                  drawtex->buf_obj, 0, sizeof(struct vertex));
+                                  drawtex->buf_obj, 0, sizeof(struct vertex),
+                                  false, false);
          _mesa_enable_vertex_array_attrib(ctx, array_obj, VERT_ATTRIB_TEX(i));
       }
    }

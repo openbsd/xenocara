@@ -35,7 +35,7 @@
 #include "fbobject.h"
 #include "formats.h"
 #include "hash.h"
-#include "imports.h"
+
 #include "macros.h"
 #include "shaderimage.h"
 #include "teximage.h"
@@ -44,6 +44,7 @@
 #include "mtypes.h"
 #include "program/prog_instruction.h"
 #include "texturebindless.h"
+#include "util/u_memory.h"
 
 
 
@@ -757,7 +758,7 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
       /* Adjust max level for views: the data store may have more levels than
        * the view exposes.
        */
-      t->_MaxLevel = MIN2(t->_MaxLevel, t->NumLevels - 1);
+      t->_MaxLevel = MAX2(MIN2(t->_MaxLevel, t->NumLevels - 1), 0);
    }
 
    /* Compute _MaxLambda = q - p in the spec used during mipmapping */

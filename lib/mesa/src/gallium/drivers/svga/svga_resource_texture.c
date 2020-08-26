@@ -29,7 +29,7 @@
 #include "pipe/p_state.h"
 #include "pipe/p_defines.h"
 #include "os/os_thread.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
@@ -133,25 +133,26 @@ svga_transfer_dma(struct svga_context *svga,
       }
    }
    else {
-      int y, h, srcy;
+      int y, h, y_max;
       unsigned blockheight =
          util_format_get_blockheight(st->base.resource->format);
 
       h = st->hw_nblocksy * blockheight;
-      srcy = 0;
+      y_max = st->box.y + st->box.h;
 
-      for (y = 0; y < st->box.h; y += h) {
+      for (y = st->box.y; y < y_max; y += h) {
          unsigned offset, length;
          void *hw, *sw;
 
-         if (y + h > st->box.h)
-            h = st->box.h - y;
+         if (y + h > y_max)
+            h = y_max - y;
 
          /* Transfer band must be aligned to pixel block boundaries */
          assert(y % blockheight == 0);
          assert(h % blockheight == 0);
 
-         offset = y * st->base.stride / blockheight;
+         /* First band starts at the top of the SW buffer. */
+         offset = (y - st->box.y) * st->base.stride / blockheight;
          length = h * st->base.stride / blockheight;
 
          sw = (uint8_t *) st->swbuf + offset;
@@ -159,9 +160,9 @@ svga_transfer_dma(struct svga_context *svga,
          if (transfer == SVGA3D_WRITE_HOST_VRAM) {
             unsigned usage = PIPE_TRANSFER_WRITE;
 
-            /* Wait for the previous DMAs to complete */
-            /* TODO: keep one DMA (at half the size) in the background */
-            if (y) {
+            /* Don't write to an in-flight DMA buffer. Synchronize or
+             * discard in-flight storage. */
+            if (y != st->box.y) {
                svga_context_flush(svga, NULL);
                usage |= PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE;
             }
@@ -177,7 +178,7 @@ svga_transfer_dma(struct svga_context *svga,
          svga_transfer_dma_band(svga, st, transfer,
                                 st->box.x, y, st->box.z,
                                 st->box.w, h, st->box.d,
-                                0, srcy, 0, flags);
+                                0, 0, 0, flags);
 
          /*
           * Prevent the texture contents to be discarded on the next band
@@ -457,10 +458,15 @@ svga_texture_transfer_map_direct(struct svga_context *svga,
    {
       SVGA3dSize baseLevelSize;
       uint8_t *map;
-      boolean retry;
+      boolean retry, rebind;
       unsigned offset, mip_width, mip_height;
+      struct svga_winsys_context *swc = svga->swc;
 
-      map = svga->swc->surface_map(svga->swc, surf, usage, &retry);
+      if (swc->force_coherent) {
+         usage |= PIPE_TRANSFER_PERSISTENT | PIPE_TRANSFER_COHERENT;
+      }
+
+      map = swc->surface_map(swc, surf, usage, &retry, &rebind);
       if (map == NULL && retry) {
          /*
           * At this point, the svga_surfaces_flush() should already have
@@ -468,7 +474,18 @@ svga_texture_transfer_map_direct(struct svga_context *svga,
           */
          svga->hud.surface_write_flushes++;
          svga_context_flush(svga, NULL);
-         map = svga->swc->surface_map(svga->swc, surf, usage, &retry);
+         map = swc->surface_map(swc, surf, usage, &retry, &rebind);
+      }
+      if (map && rebind) {
+         enum pipe_error ret;
+
+         ret = SVGA3D_BindGBSurface(swc, surf);
+         if (ret != PIPE_OK) {
+            svga_context_flush(svga, NULL);
+            ret = SVGA3D_BindGBSurface(swc, surf);
+            assert(ret == PIPE_OK);
+         }
+         svga_context_flush(svga, NULL);
       }
 
       /*
@@ -531,7 +548,7 @@ svga_texture_transfer_map(struct pipe_context *pipe,
    struct svga_transfer *st;
    struct svga_winsys_surface *surf = tex->handle;
    boolean use_direct_map = svga_have_gb_objects(svga) &&
-                            !svga_have_gb_dma(svga);
+       (!svga_have_gb_dma(svga) || (usage & PIPE_TRANSFER_WRITE));
    void *map = NULL;
    int64_t begin = svga_get_time(svga);
 
@@ -695,15 +712,6 @@ svga_texture_surface_unmap(struct svga_context *svga,
          svga_context_flush(svga, NULL);
          ret = SVGA3D_BindGBSurface(swc, surf);
          assert(ret == PIPE_OK);
-      }
-      if (swc->force_coherent) {
-         ret = SVGA3D_UpdateGBSurface(swc, surf);
-         if (ret != PIPE_OK) {
-            /* flush and retry */
-            svga_context_flush(svga, NULL);
-            ret = SVGA3D_UpdateGBSurface(swc, surf);
-            assert(ret == PIPE_OK);
-         }
       }
    }
 }

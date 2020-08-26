@@ -174,21 +174,16 @@ _mesa_lookup_framebuffer_dsa(struct gl_context *ctx, GLuint id,
    /* Name exists but buffer is not initialized */
    if (fb == &DummyFramebuffer) {
       fb = ctx->Driver.NewFramebuffer(ctx, id);
-      _mesa_HashLockMutex(ctx->Shared->FrameBuffers);
       _mesa_HashInsert(ctx->Shared->FrameBuffers, id, fb);
-      _mesa_HashUnlockMutex(ctx->Shared->BufferObjects);
    }
    /* Name doesn't exist */
    else if (!fb) {
-      _mesa_HashLockMutex(ctx->Shared->FrameBuffers);
       fb = ctx->Driver.NewFramebuffer(ctx, id);
       if (!fb) {
-         _mesa_HashUnlockMutex(ctx->Shared->FrameBuffers);
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", func);
          return NULL;
       }
-      _mesa_HashInsertLocked(ctx->Shared->BufferObjects, id, fb);
-      _mesa_HashUnlockMutex(ctx->Shared->BufferObjects);
+      _mesa_HashInsert(ctx->Shared->FrameBuffers, id, fb);
    }
    return fb;
 }
@@ -326,22 +321,24 @@ get_fb0_attachment(struct gl_context *ctx, struct gl_framebuffer *fb,
 {
    assert(_mesa_is_winsys_fbo(fb));
 
+   attachment = _mesa_back_to_front_if_single_buffered(fb, attachment);
+
    if (_mesa_is_gles3(ctx)) {
-      assert(attachment == GL_BACK ||
-             attachment == GL_DEPTH ||
-             attachment == GL_STENCIL);
       switch (attachment) {
       case GL_BACK:
          /* Since there is no stereo rendering in ES 3.0, only return the
           * LEFT bits.
           */
-         if (ctx->DrawBuffer->Visual.doubleBufferMode)
-            return &fb->Attachment[BUFFER_BACK_LEFT];
+         return &fb->Attachment[BUFFER_BACK_LEFT];
+      case GL_FRONT:
+         /* We might get this if back_to_front triggers above */
          return &fb->Attachment[BUFFER_FRONT_LEFT];
       case GL_DEPTH:
          return &fb->Attachment[BUFFER_DEPTH];
       case GL_STENCIL:
          return &fb->Attachment[BUFFER_STENCIL];
+      default:
+         unreachable("invalid attachment");
       }
    }
 
@@ -1625,18 +1622,46 @@ invalid_pname_enum:
    _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=0x%x)", func, pname);
 }
 
+static bool
+validate_framebuffer_parameter_extensions(GLenum pname, const char *func)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (!ctx->Extensions.ARB_framebuffer_no_attachments &&
+       !ctx->Extensions.ARB_sample_locations &&
+       !ctx->Extensions.MESA_framebuffer_flip_y) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+                  "%s not supported "
+                  "(none of ARB_framebuffer_no_attachments,"
+                  " ARB_sample_locations, or"
+                  " MESA_framebuffer_flip_y extensions are available)",
+                  func);
+      return false;
+   }
+
+   /*
+    * If only the MESA_framebuffer_flip_y extension is enabled
+    * pname can only be GL_FRAMEBUFFER_FLIP_Y_MESA
+    */
+   if (ctx->Extensions.MESA_framebuffer_flip_y &&
+       pname != GL_FRAMEBUFFER_FLIP_Y_MESA &&
+       !(ctx->Extensions.ARB_framebuffer_no_attachments ||
+         ctx->Extensions.ARB_sample_locations)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=0x%x)", func, pname);
+      return false;
+   }
+
+   return true;
+}
+
 void GLAPIENTRY
 _mesa_FramebufferParameteri(GLenum target, GLenum pname, GLint param)
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_framebuffer *fb;
 
-   if (!ctx->Extensions.ARB_framebuffer_no_attachments &&
-       !ctx->Extensions.ARB_sample_locations) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glFramebufferParameteriv not supported "
-                  "(neither ARB_framebuffer_no_attachments nor ARB_sample_locations"
-                  " is available)");
+   if (!validate_framebuffer_parameter_extensions(pname,
+       "glFramebufferParameteri")) {
       return;
    }
 
@@ -1648,6 +1673,12 @@ _mesa_FramebufferParameteri(GLenum target, GLenum pname, GLint param)
    }
 
    framebuffer_parameteri(ctx, fb, pname, param, "glFramebufferParameteri");
+}
+
+void GLAPIENTRY
+_mesa_FramebufferParameteriMESA(GLenum target, GLenum pname, GLint param)
+{
+   _mesa_FramebufferParameteri(target, pname, param);
 }
 
 static bool
@@ -1779,12 +1810,8 @@ _mesa_GetFramebufferParameteriv(GLenum target, GLenum pname, GLint *params)
    GET_CURRENT_CONTEXT(ctx);
    struct gl_framebuffer *fb;
 
-   if (!ctx->Extensions.ARB_framebuffer_no_attachments &&
-       !ctx->Extensions.ARB_sample_locations) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glGetFramebufferParameteriv not supported "
-                  "(neither ARB_framebuffer_no_attachments nor ARB_sample_locations"
-                  " is available)");
+   if (!validate_framebuffer_parameter_extensions(pname,
+       "glGetFramebufferParameteriv")) {
       return;
    }
 
@@ -1799,6 +1826,11 @@ _mesa_GetFramebufferParameteriv(GLenum target, GLenum pname, GLint *params)
                                "glGetFramebufferParameteriv");
 }
 
+void GLAPIENTRY
+_mesa_GetFramebufferParameterivMESA(GLenum target, GLenum pname, GLint *params)
+{
+   _mesa_GetFramebufferParameteriv(target, pname, params);
+}
 
 /**
  * Remove the specified renderbuffer or texture from any attachment point in
@@ -2671,6 +2703,22 @@ _mesa_NamedRenderbufferStorage(GLuint renderbuffer, GLenum internalformat,
 }
 
 void GLAPIENTRY
+_mesa_NamedRenderbufferStorageEXT(GLuint renderbuffer, GLenum internalformat,
+                                  GLsizei width, GLsizei height)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   struct gl_renderbuffer *rb = _mesa_lookup_renderbuffer(ctx, renderbuffer);
+   if (!rb || rb == &DummyRenderbuffer) {
+      _mesa_HashLockMutex(ctx->Shared->RenderBuffers);
+      rb = allocate_renderbuffer_locked(ctx, renderbuffer, "glNamedRenderbufferStorageEXT");
+      _mesa_HashUnlockMutex(ctx->Shared->RenderBuffers);
+   }
+   renderbuffer_storage(ctx, rb, internalformat, width, height, NO_SAMPLES,
+                        0, "glNamedRenderbufferStorageEXT");
+}
+
+
+void GLAPIENTRY
 _mesa_NamedRenderbufferStorageMultisample(GLuint renderbuffer, GLsizei samples,
                                           GLenum internalformat,
                                           GLsizei width, GLsizei height)
@@ -2678,6 +2726,25 @@ _mesa_NamedRenderbufferStorageMultisample(GLuint renderbuffer, GLsizei samples,
    renderbuffer_storage_named(renderbuffer, internalformat, width, height,
                               samples, samples,
                               "glNamedRenderbufferStorageMultisample");
+}
+
+
+void GLAPIENTRY
+_mesa_NamedRenderbufferStorageMultisampleEXT(GLuint renderbuffer, GLsizei samples,
+                                             GLenum internalformat,
+                                             GLsizei width, GLsizei height)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   struct gl_renderbuffer *rb = _mesa_lookup_renderbuffer(ctx, renderbuffer);
+   if (!rb || rb == &DummyRenderbuffer) {
+      _mesa_HashLockMutex(ctx->Shared->RenderBuffers);
+      rb = allocate_renderbuffer_locked(ctx, renderbuffer,
+                                        "glNamedRenderbufferStorageMultisampleEXT");
+      _mesa_HashUnlockMutex(ctx->Shared->RenderBuffers);
+   }
+   renderbuffer_storage(ctx, rb, internalformat, width, height,
+                        samples, samples,
+                        "glNamedRenderbufferStorageMultisample");
 }
 
 
@@ -2777,6 +2844,24 @@ _mesa_GetNamedRenderbufferParameteriv(GLuint renderbuffer, GLenum pname,
 
    get_render_buffer_parameteriv(ctx, rb, pname, params,
                                  "glGetNamedRenderbufferParameteriv");
+}
+
+
+void GLAPIENTRY
+_mesa_GetNamedRenderbufferParameterivEXT(GLuint renderbuffer, GLenum pname,
+                                         GLint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   struct gl_renderbuffer *rb = _mesa_lookup_renderbuffer(ctx, renderbuffer);
+   if (!rb || rb == &DummyRenderbuffer) {
+      _mesa_HashLockMutex(ctx->Shared->RenderBuffers);
+      rb = allocate_renderbuffer_locked(ctx, renderbuffer, "glGetNamedRenderbufferParameterivEXT");
+      _mesa_HashUnlockMutex(ctx->Shared->RenderBuffers);
+   }
+
+   get_render_buffer_parameteriv(ctx, rb, pname, params,
+                                 "glGetNamedRenderbufferParameterivEXT");
 }
 
 
@@ -2952,6 +3037,7 @@ _mesa_bind_framebuffers(struct gl_context *ctx,
       check_begin_texture_render(ctx, newDrawFb);
 
       _mesa_reference_framebuffer(&ctx->DrawBuffer, newDrawFb);
+      _mesa_update_allow_draw_out_of_order(ctx);
    }
 
    if ((bindDrawBuf || bindReadBuf) && ctx->Driver.BindFramebuffer) {
@@ -4643,6 +4729,63 @@ _mesa_NamedFramebufferParameteri(GLuint framebuffer, GLenum pname,
 }
 
 
+/* Helper function for ARB_framebuffer_no_attachments functions interacting with EXT_direct_state_access */
+static struct gl_framebuffer *
+lookup_named_framebuffer_ext_dsa(struct gl_context *ctx, GLuint framebuffer, const char* caller)
+{
+   struct gl_framebuffer *fb = NULL;
+
+   if (framebuffer) {
+      /* The ARB_framebuffer_no_attachments spec says:
+       *
+       *     "The error INVALID_VALUE is generated if <framebuffer> is not
+       *     a name returned by GenFramebuffers.  If a framebuffer object
+       *     named <framebuffer> does not yet exist, it will be created."
+       *
+       * This is different from the EXT_direct_state_access spec which says:
+       *
+       *     "If the framebuffer object named by the framebuffer parameter has not
+       *      been previously bound or has been deleted since the last binding,
+       *     the GL first creates a new state vector in the same manner as when
+       *    BindFramebuffer creates a new framebuffer object"
+       *
+       * So first we verify that the name exists.
+       */
+      fb = _mesa_lookup_framebuffer(ctx, framebuffer);
+      if (!fb) {
+         _mesa_error(ctx, GL_INVALID_VALUE, "%s(frameBuffer)", caller);
+         return NULL;
+      }
+      /* Then, make sure it's initialized */
+      if (fb == &DummyFramebuffer) {
+         fb = ctx->Driver.NewFramebuffer(ctx, framebuffer);
+         _mesa_HashInsert(ctx->Shared->FrameBuffers, framebuffer, fb);
+      }
+   }
+   else
+      fb = ctx->WinSysDrawBuffer;
+
+   return fb;
+}
+
+
+void GLAPIENTRY
+_mesa_NamedFramebufferParameteriEXT(GLuint framebuffer, GLenum pname,
+                                    GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   struct gl_framebuffer *fb =
+      lookup_named_framebuffer_ext_dsa(ctx, framebuffer,
+                                       "glNamedFramebufferParameteriEXT");
+
+   if (!fb)
+      return;
+
+   framebuffer_parameteri(ctx, fb, pname, param,
+                             "glNamedFramebufferParameteriEXT");
+}
+
+
 void GLAPIENTRY
 _mesa_GetFramebufferParameterivEXT(GLuint framebuffer, GLenum pname,
                                    GLint *param)
@@ -4671,7 +4814,11 @@ _mesa_GetFramebufferParameterivEXT(GLuint framebuffer, GLenum pname,
          *param = fb->ColorReadBuffer;
       }
       else if (GL_DRAW_BUFFER0 <= pname && pname <= GL_DRAW_BUFFER15) {
-         *param = fb->ColorDrawBuffer[pname - GL_DRAW_BUFFER0];
+         unsigned buffer = pname - GL_DRAW_BUFFER0;
+         if (buffer < ARRAY_SIZE(fb->ColorDrawBuffer))
+            *param = fb->ColorDrawBuffer[buffer];
+         else
+            _mesa_error(ctx, GL_INVALID_ENUM, "glGetFramebufferParameterivEXT(pname)");
       }
       else {
          _mesa_error(ctx, GL_INVALID_ENUM, "glGetFramebufferParameterivEXT(pname)");
@@ -4705,6 +4852,23 @@ _mesa_GetNamedFramebufferParameteriv(GLuint framebuffer, GLenum pname,
       get_framebuffer_parameteriv(ctx, fb, pname, param,
                                   "glGetNamedFramebufferParameteriv");
    }
+}
+
+
+void GLAPIENTRY
+_mesa_GetNamedFramebufferParameterivEXT(GLuint framebuffer, GLenum pname,
+                                     GLint *param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   struct gl_framebuffer *fb =
+      lookup_named_framebuffer_ext_dsa(ctx, framebuffer,
+                                       "glGetNamedFramebufferParameterivEXT");
+
+   if (!fb)
+      return;
+
+   get_framebuffer_parameteriv(ctx, fb, pname, param,
+                               "glGetNamedFramebufferParameterivEXT");
 }
 
 
@@ -4904,9 +5068,10 @@ discard_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
                                 GL_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT);
          bool has_both = false;
          for (int j = 0; j < numAttachments; j++) {
-            if (attachments[j] == other_format)
+            if (attachments[j] == other_format) {
                has_both = true;
-            break;
+               break;
+            }
          }
 
          if (fb->Attachment[BUFFER_DEPTH].Renderbuffer !=

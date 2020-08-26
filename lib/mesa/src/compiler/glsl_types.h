@@ -29,8 +29,9 @@
 #include <assert.h>
 
 #include "shader_enums.h"
-#include "blob.h"
 #include "c11/threads.h"
+#include "util/blob.h"
+#include "util/format/u_format.h"
 #include "util/macros.h"
 
 #ifdef __cplusplus
@@ -58,10 +59,6 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state);
 void encode_type_to_blob(struct blob *blob, const struct glsl_type *type);
 
 const struct glsl_type *decode_type_from_blob(struct blob_reader *blob);
-
-#ifdef __cplusplus
-}
-#endif
 
 typedef void (*glsl_type_size_align_func)(const struct glsl_type *type,
                                           unsigned *size, unsigned *align);
@@ -196,6 +193,27 @@ glsl_base_type_get_bit_size(const enum glsl_base_type base_type)
    return 0;
 }
 
+static inline enum glsl_base_type
+glsl_unsigned_base_type_of(enum glsl_base_type type)
+{
+   switch (type) {
+   case GLSL_TYPE_INT:
+      return GLSL_TYPE_UINT;
+   case GLSL_TYPE_INT8:
+      return GLSL_TYPE_UINT8;
+   case GLSL_TYPE_INT16:
+      return GLSL_TYPE_UINT16;
+   case GLSL_TYPE_INT64:
+      return GLSL_TYPE_UINT64;
+   default:
+      assert(type == GLSL_TYPE_UINT ||
+             type == GLSL_TYPE_UINT8 ||
+             type == GLSL_TYPE_UINT16 ||
+             type == GLSL_TYPE_UINT64);
+      return type;
+   }
+}
+
 enum glsl_sampler_dim {
    GLSL_SAMPLER_DIM_1D = 0,
    GLSL_SAMPLER_DIM_2D,
@@ -208,6 +226,9 @@ enum glsl_sampler_dim {
    GLSL_SAMPLER_DIM_SUBPASS, /* for vulkan input attachments */
    GLSL_SAMPLER_DIM_SUBPASS_MS, /* for multisampled vulkan input attachments */
 };
+
+int
+glsl_get_sampler_dim_coordinate_components(enum glsl_sampler_dim dim);
 
 enum glsl_matrix_layout {
    /**
@@ -238,6 +259,8 @@ enum {
 };
 
 #ifdef __cplusplus
+} /* extern "C" */
+
 #include "GL/gl.h"
 #include "util/ralloc.h"
 #include "main/menums.h" /* for gl_texture_index, C++'s enum rules are broken */
@@ -373,6 +396,11 @@ public:
    const glsl_type *get_bare_type() const;
 
    /**
+    * Gets the float16 version of this type.
+    */
+   const glsl_type *get_float16_type() const;
+
+   /**
     * Get the instance of a built-in scalar, vector, or matrix type
     */
    static const glsl_type *get_instance(unsigned base_type, unsigned rows,
@@ -473,6 +501,23 @@ public:
    unsigned varying_count() const;
 
    /**
+    * Calculate the number of vec4 slots required to hold this type.
+    *
+    * This is the underlying recursive type_size function for
+    * count_attribute_slots() (vertex inputs and varyings) but also for
+    * gallium's !PIPE_CAP_PACKED_UNIFORMS case.
+    */
+   unsigned count_vec4_slots(bool is_gl_vertex_input, bool bindless) const;
+
+   /**
+    * Calculate the number of vec4 slots required to hold this type.
+    *
+    * This is the underlying recursive type_size function for
+    * gallium's PIPE_CAP_PACKED_UNIFORMS case.
+    */
+   unsigned count_dword_slots(bool bindless) const;
+
+   /**
     * Calculate the number of attribute slots required to hold this type
     *
     * This implements the language rules of GLSL 1.50 for counting the number
@@ -487,7 +532,9 @@ public:
     * Vulkan doesn’t make this distinction so the argument should always be
     * false.
     */
-   unsigned count_attribute_slots(bool is_gl_vertex_input) const;
+   unsigned count_attribute_slots(bool is_gl_vertex_input) const {
+      return count_vec4_slots(is_gl_vertex_input, true);
+   }
 
    /**
     * Alignment in bytes of the start of this type in a std140 uniform
@@ -712,6 +759,22 @@ public:
    bool is_float() const
    {
       return base_type == GLSL_TYPE_FLOAT;
+   }
+
+   /**
+    * Query whether or not a type is a half-float or float type
+    */
+   bool is_float_16_32() const
+   {
+      return base_type == GLSL_TYPE_FLOAT16 || is_float();
+   }
+
+   /**
+    * Query whether or not a type is a half-float, float or double
+    */
+   bool is_float_16_32_64() const
+   {
+      return base_type == GLSL_TYPE_FLOAT16 || is_float() || is_double();
    }
 
    /**
@@ -1214,7 +1277,7 @@ struct glsl_struct_field {
     * For interface blocks, the interpolation mode (as in
     * ir_variable::interpolation).  0 otherwise.
     */
-   unsigned interpolation:2;
+   unsigned interpolation:3;
 
    /**
     * For interface blocks, 1 if this variable uses centroid interpolation (as
@@ -1257,7 +1320,7 @@ struct glsl_struct_field {
    /**
     * Layout format, applicable to image variables only.
     */
-   unsigned image_format:16;
+   enum pipe_format image_format;
 
    /**
     * Any of the xfb_* qualifiers trigger the shader to be in transform
@@ -1274,7 +1337,8 @@ struct glsl_struct_field {
    sample(0), matrix_layout(GLSL_MATRIX_LAYOUT_INHERITED), patch(0),    \
    precision(_precision), memory_read_only(0),                          \
    memory_write_only(0), memory_coherent(0), memory_volatile(0),        \
-   memory_restrict(0), image_format(0), explicit_xfb_buffer(0),         \
+   memory_restrict(0), image_format(PIPE_FORMAT_NONE),                  \
+   explicit_xfb_buffer(0),                                              \
    implicit_sized_array(0)
 
    glsl_struct_field(const struct glsl_type *_type,

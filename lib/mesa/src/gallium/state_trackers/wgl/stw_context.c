@@ -40,7 +40,7 @@
 #include "state_tracker/st_api.h"
 #include "hud/hud_context.h"
 
-#include "stw_icd.h"
+#include "gldrv.h"
 #include "stw_device.h"
 #include "stw_winsys.h"
 #include "stw_framebuffer.h"
@@ -448,10 +448,11 @@ stw_make_current(HDC hDrawDC, HDC hReadDC, DHGLRC dhglrc)
          if (old_ctx->shared) {
             struct pipe_fence_handle *fence = NULL;
             old_ctx->st->flush(old_ctx->st,
-                               ST_FLUSH_FRONT | ST_FLUSH_WAIT, &fence);
+                               ST_FLUSH_FRONT | ST_FLUSH_WAIT, &fence,
+                               NULL, NULL);
          }
          else {
-            old_ctx->st->flush(old_ctx->st, ST_FLUSH_FRONT, NULL);
+            old_ctx->st->flush(old_ctx->st, ST_FLUSH_FRONT, NULL, NULL, NULL);
          }
       }
    }

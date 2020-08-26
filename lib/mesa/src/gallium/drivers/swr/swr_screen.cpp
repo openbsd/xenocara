@@ -31,10 +31,10 @@
 #include "pipe/p_screen.h"
 #include "pipe/p_defines.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_cpu_detect.h"
-#include "util/u_format_s3tc.h"
+#include "util/format/u_format_s3tc.h"
 #include "util/u_string.h"
 #include "util/u_screen.h"
 
@@ -69,8 +69,7 @@ static const char *
 swr_get_name(struct pipe_screen *screen)
 {
    static char buf[100];
-   snprintf(buf, sizeof(buf), "SWR (LLVM %u.%u, %u bits)",
-            HAVE_LLVM >> 8, HAVE_LLVM & 0xff,
+   snprintf(buf, sizeof(buf), "SWR (LLVM " MESA_LLVM_VERSION_STRING ", %u bits)",
             lp_native_vector_width);
    return buf;
 }
@@ -142,8 +141,15 @@ swr_is_format_supported(struct pipe_screen *_screen,
          return false;
    }
 
-   if (format_desc->layout == UTIL_FORMAT_LAYOUT_BPTC ||
-       format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC) {
+   if (bind & PIPE_BIND_VERTEX_BUFFER) {
+      if (mesa_to_swr_format(format) == (SWR_FORMAT)-1) {
+         return false;
+      }
+   }
+
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC ||
+       format_desc->layout == UTIL_FORMAT_LAYOUT_FXT1)
+   {
       return false;
    }
 
@@ -192,7 +198,7 @@ swr_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
       return 1024;
    case PIPE_CAP_MAX_VERTEX_STREAMS:
-      return 1;
+      return 4;
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
    case PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS:
@@ -275,6 +281,9 @@ swr_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_DOUBLES:
    case PIPE_CAP_TEXTURE_QUERY_LOD:
    case PIPE_CAP_COPY_BETWEEN_COMPRESSED_AND_PLAIN_FORMATS:
+   case PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE:
+   case PIPE_CAP_QUERY_SO_OVERFLOW:
+   case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
       return 1;
 
    /* MSAA support
@@ -345,7 +354,6 @@ swr_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
    case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
    case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
-   case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
    case PIPE_CAP_NATIVE_FENCE_FD:
    case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
    case PIPE_CAP_FBFETCH:
@@ -363,7 +371,6 @@ swr_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_POST_DEPTH_COVERAGE:
    case PIPE_CAP_BINDLESS_TEXTURE:
    case PIPE_CAP_NIR_SAMPLERS_AS_DEREF:
-   case PIPE_CAP_QUERY_SO_OVERFLOW:
    case PIPE_CAP_MEMOBJ:
    case PIPE_CAP_LOAD_CONSTBUF:
    case PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS:
@@ -420,10 +427,13 @@ swr_get_shader_param(struct pipe_screen *screen,
 {
    if (shader == PIPE_SHADER_VERTEX ||
        shader == PIPE_SHADER_FRAGMENT ||
-       shader == PIPE_SHADER_GEOMETRY)
+       shader == PIPE_SHADER_GEOMETRY
+       || shader == PIPE_SHADER_TESS_CTRL ||
+       shader == PIPE_SHADER_TESS_EVAL
+   )
       return gallivm_get_shader_param(param);
 
-   // Todo: tesselation, compute
+   // Todo: compute
    return 0;
 }
 
@@ -782,7 +792,7 @@ swr_texture_layout(struct swr_screen *screen,
        * surface sample count. */
       if (screen->msaa_force_enable) {
          res->swr.numSamples = screen->msaa_max_count;
-         fprintf(stderr,"swr_texture_layout: forcing sample count: %d\n",
+         swr_print_info("swr_texture_layout: forcing sample count: %d\n",
                  res->swr.numSamples);
       }
    } else {
@@ -1122,7 +1132,7 @@ swr_destroy_screen(struct pipe_screen *p_screen)
    struct swr_screen *screen = swr_screen(p_screen);
    struct sw_winsys *winsys = screen->winsys;
 
-   fprintf(stderr, "SWR destroy screen!\n");
+   swr_print_info("SWR destroy screen!\n");
 
    if (winsys->destroy)
       winsys->destroy(winsys);
@@ -1156,12 +1166,11 @@ swr_validate_env_options(struct swr_screen *screen)
          fprintf(stderr, "must be power of 2 between 1 and %d" \
                          " (or 1 to disable msaa)\n",
                SWR_MAX_NUM_MULTISAMPLES);
+         fprintf(stderr, "(msaa disabled)\n");
          msaa_max_count = 1;
       }
 
-      fprintf(stderr, "SWR_MSAA_MAX_COUNT: %d\n", msaa_max_count);
-      if (msaa_max_count == 1)
-         fprintf(stderr, "(msaa disabled)\n");
+      swr_print_info("SWR_MSAA_MAX_COUNT: %d\n", msaa_max_count);
 
       screen->msaa_max_count = msaa_max_count;
    }
@@ -1169,7 +1178,7 @@ swr_validate_env_options(struct swr_screen *screen)
    screen->msaa_force_enable = debug_get_bool_option(
          "SWR_MSAA_FORCE_ENABLE", false);
    if (screen->msaa_force_enable)
-      fprintf(stderr, "SWR_MSAA_FORCE_ENABLE: true\n");
+      swr_print_info("SWR_MSAA_FORCE_ENABLE: true\n");
 }
 
 

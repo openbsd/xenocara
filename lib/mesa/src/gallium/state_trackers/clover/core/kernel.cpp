@@ -161,8 +161,9 @@ kernel::exec_context::bind(intrusive_ptr<command_queue> _q,
 
    // Bind kernel arguments.
    auto &m = kern.program().build(q->device()).binary;
-   auto margs = find(name_equals(kern.name()), m.syms).args;
-   auto msec = find(type_equals(module::section::text_executable), m.secs);
+   auto msym = find(name_equals(kern.name()), m.syms);
+   auto margs = msym.args;
+   auto msec = find(id_equals(msym.section), m.secs);
    auto explicit_arg = kern._args.begin();
 
    for (auto &marg : margs) {
@@ -409,6 +410,14 @@ kernel::global_argument::set(size_t size, const void *value) {
       throw error(CL_INVALID_ARG_SIZE);
 
    buf = pobj<buffer>(value ? *(cl_mem *)value : NULL);
+   svm = nullptr;
+   _set = true;
+}
+
+void
+kernel::global_argument::set_svm(const void *value) {
+   svm = value;
+   buf = nullptr;
    _set = true;
 }
 
@@ -426,6 +435,11 @@ kernel::global_argument::bind(exec_context &ctx,
       // We don't need to.  Buffer offsets are always
       // one-dimensional.
       auto v = bytes(r.offset[0]);
+      extend(v, marg.ext_type, marg.target_size);
+      byteswap(v, ctx.q->device().endianness());
+      insert(ctx.input, v);
+   } else if (svm) {
+      auto v = bytes(svm);
       extend(v, marg.ext_type, marg.target_size);
       byteswap(v, ctx.q->device().endianness());
       insert(ctx.input, v);

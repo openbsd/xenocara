@@ -60,17 +60,6 @@ _mesa_check_disallowed_mapping(const struct gl_buffer_object *obj)
             GL_MAP_PERSISTENT_BIT);
 }
 
-/**
- * Is the given buffer object a user-created buffer object?
- * Mesa uses default buffer objects in several places.  Default buffers
- * always have Name==0.  User created buffers have Name!=0.
- */
-static inline GLboolean
-_mesa_is_bufferobj(const struct gl_buffer_object *obj)
-{
-   return obj != NULL && obj->Name != 0;
-}
-
 
 extern void
 _mesa_init_buffer_objects(struct gl_context *ctx);
@@ -101,7 +90,8 @@ _mesa_lookup_bufferobj_err(struct gl_context *ctx, GLuint buffer,
 extern struct gl_buffer_object *
 _mesa_multi_bind_lookup_bufferobj(struct gl_context *ctx,
                                   const GLuint *buffers,
-                                  GLuint index, const char *caller);
+                                  GLuint index, const char *caller,
+                                  bool *error);
 
 extern void
 _mesa_initialize_buffer_object(struct gl_context *ctx,
@@ -278,6 +268,11 @@ _mesa_ClearNamedBufferData(GLuint buffer, GLenum internalformat,
                            const GLvoid *data);
 
 void GLAPIENTRY
+_mesa_ClearNamedBufferDataEXT(GLuint buffer, GLenum internalformat,
+                              GLenum format, GLenum type,
+                              const GLvoid *data);
+
+void GLAPIENTRY
 _mesa_ClearBufferSubData_no_error(GLenum target, GLenum internalformat,
                                   GLintptr offset, GLsizeiptr size,
                                   GLenum format, GLenum type,
@@ -300,6 +295,12 @@ _mesa_ClearNamedBufferSubData(GLuint buffer, GLenum internalformat,
                               GLintptr offset, GLsizeiptr size,
                               GLenum format, GLenum type,
                               const GLvoid *data);
+
+void GLAPIENTRY
+_mesa_ClearNamedBufferSubDataEXT(GLuint buffer, GLenum internalformat,
+                                 GLintptr offset, GLsizeiptr size,
+                                 GLenum format, GLenum type,
+                                 const GLvoid *data);
 
 GLboolean GLAPIENTRY
 _mesa_UnmapBuffer_no_error(GLenum target);
@@ -344,6 +345,11 @@ void GLAPIENTRY
 _mesa_CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
                         GLintptr readOffset, GLintptr writeOffset,
                         GLsizeiptr size);
+
+void GLAPIENTRY
+_mesa_NamedCopyBufferSubDataEXT(GLuint readBuffer, GLuint writeBuffer,
+                                GLintptr readOffset, GLintptr writeOffset,
+                                GLsizeiptr size);
 
 void GLAPIENTRY
 _mesa_CopyNamedBufferSubData_no_error(GLuint readBuffer, GLuint writeBuffer,
@@ -439,6 +445,10 @@ _mesa_BufferPageCommitmentARB(GLenum target, GLintptr offset, GLsizeiptr size,
 
 void GLAPIENTRY
 _mesa_NamedBufferPageCommitmentARB(GLuint buffer, GLintptr offset,
+                                   GLsizeiptr size, GLboolean commit);
+
+void GLAPIENTRY
+_mesa_NamedBufferPageCommitmentEXT(GLuint buffer, GLintptr offset,
                                    GLsizeiptr size, GLboolean commit);
 
 #endif

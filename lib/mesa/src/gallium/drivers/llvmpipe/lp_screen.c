@@ -29,14 +29,15 @@
 #include "util/u_memory.h"
 #include "util/u_math.h"
 #include "util/u_cpu_detect.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_screen.h"
 #include "util/u_string.h"
-#include "util/u_format_s3tc.h"
+#include "util/format/u_format_s3tc.h"
 #include "pipe/p_defines.h"
 #include "pipe/p_screen.h"
 #include "draw/draw_context.h"
 #include "gallivm/lp_bld_type.h"
+#include "gallivm/lp_bld_nir.h"
 
 #include "util/os_misc.h"
 #include "util/os_time.h"
@@ -49,8 +50,11 @@
 #include "lp_public.h"
 #include "lp_limits.h"
 #include "lp_rast.h"
+#include "lp_cs_tpool.h"
 
 #include "state_tracker/sw_winsys.h"
+
+#include "nir.h"
 
 #ifdef DEBUG
 int LP_DEBUG = 0;
@@ -68,6 +72,9 @@ static const struct debug_named_value lp_debug_flags[] = {
    { "fence", DEBUG_FENCE, NULL },
    { "mem", DEBUG_MEM, NULL },
    { "fs", DEBUG_FS, NULL },
+   { "cs", DEBUG_CS, NULL },
+   { "tgsi_ir", DEBUG_TGSI_IR, NULL },
+   { "cl", DEBUG_CL, NULL },
    DEBUG_NAMED_VALUE_END
 };
 #endif
@@ -196,8 +203,10 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES:
    case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
       return 1024;
-   case PIPE_CAP_MAX_VERTEX_STREAMS:
-      return 1;
+   case PIPE_CAP_MAX_VERTEX_STREAMS: {
+      struct llvmpipe_screen *lscreen = llvmpipe_screen(screen);
+      return lscreen->use_tgsi ? 1 : 4;
+   }
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
    case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
@@ -215,14 +224,14 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
       return 0;
    case PIPE_CAP_COMPUTE:
-      return 0;
+      return GALLIVM_HAVE_CORO;
    case PIPE_CAP_USER_VERTEX_BUFFERS:
       return 1;
    case PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_BUFFER_STRIDE_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY:
-   case PIPE_CAP_TGSI_TEXCOORD:
       return 0;
+   case PIPE_CAP_TGSI_TEXCOORD:
    case PIPE_CAP_DRAW_INDIRECT:
       return 1;
 
@@ -239,7 +248,7 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE:
       return 65536;
    case PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
-      return 1;
+      return 16;
    case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
       return 0;
    case PIPE_CAP_MAX_VIEWPORTS:
@@ -259,8 +268,8 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION:
       return 1;
    case PIPE_CAP_TGSI_FS_FINE_DERIVATIVE:
+      return 1;
    case PIPE_CAP_TGSI_TEX_TXF_LZ:
-      return 0;
    case PIPE_CAP_SAMPLER_VIEW_TARGET:
       return 1;
    case PIPE_CAP_FAKE_SW_MSAA:
@@ -315,36 +324,37 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MAX_VARYINGS:
       return 32;
    case PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT:
+      return 16;
+   case PIPE_CAP_QUERY_BUFFER_OBJECT:
       return 1;
+   case PIPE_CAP_DRAW_PARAMETERS:
+      return 1;
+   case PIPE_CAP_MULTI_DRAW_INDIRECT:
+   case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
+      return 1;
+   case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
+      return 32;
    case PIPE_CAP_MULTISAMPLE_Z_RESOLVE:
    case PIPE_CAP_RESOURCE_FROM_USER_MEMORY:
    case PIPE_CAP_DEVICE_RESET_STATUS_QUERY:
-   case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
    case PIPE_CAP_DEPTH_BOUNDS_TEST:
    case PIPE_CAP_TGSI_TXQS:
    case PIPE_CAP_FORCE_PERSAMPLE_INTERP:
    case PIPE_CAP_SHAREABLE_SHADERS:
-   case PIPE_CAP_DRAW_PARAMETERS:
    case PIPE_CAP_TGSI_PACK_HALF_FLOAT:
-   case PIPE_CAP_MULTI_DRAW_INDIRECT:
-   case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
    case PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL:
-   case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
    case PIPE_CAP_INVALIDATE_BUFFER:
    case PIPE_CAP_GENERATE_MIPMAP:
    case PIPE_CAP_STRING_MARKER:
    case PIPE_CAP_BUFFER_SAMPLER_VIEW_RGBA_ONLY:
    case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
-   case PIPE_CAP_QUERY_BUFFER_OBJECT:
    case PIPE_CAP_QUERY_MEMORY_INFO:
    case PIPE_CAP_PCI_GROUP:
    case PIPE_CAP_PCI_BUS:
    case PIPE_CAP_PCI_DEVICE:
    case PIPE_CAP_PCI_FUNCTION:
-   case PIPE_CAP_FRAMEBUFFER_NO_ATTACHMENT:
    case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
    case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
-   case PIPE_CAP_TGSI_VOTE:
    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
@@ -364,7 +374,6 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_BINDLESS_TEXTURE:
    case PIPE_CAP_NIR_SAMPLERS_AS_DEREF:
    case PIPE_CAP_MEMOBJ:
-   case PIPE_CAP_LOAD_CONSTBUF:
    case PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS:
    case PIPE_CAP_TILE_RASTER_ORDER:
    case PIPE_CAP_MAX_COMBINED_SHADER_OUTPUT_RESOURCES:
@@ -373,7 +382,6 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_CONTEXT_PRIORITY_MASK:
    case PIPE_CAP_FENCE_SIGNAL:
    case PIPE_CAP_CONSTBUF0_FLAGS:
-   case PIPE_CAP_PACKED_UNIFORMS:
    case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_TRIANGLES:
    case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_POINTS_LINES:
    case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_TRIANGLES:
@@ -386,6 +394,16 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return 32;
    case PIPE_CAP_MAX_SHADER_BUFFER_SIZE:
       return LP_MAX_TGSI_SHADER_BUFFER_SIZE;
+   case PIPE_CAP_FRAMEBUFFER_NO_ATTACHMENT:
+   case PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE:
+   case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
+      return 1;
+   case PIPE_CAP_TGSI_VOTE:
+   case PIPE_CAP_LOAD_CONSTBUF:
+   case PIPE_CAP_PACKED_UNIFORMS: {
+      struct llvmpipe_screen *lscreen = llvmpipe_screen(screen);
+      return !lscreen->use_tgsi;
+   }
    default:
       return u_pipe_screen_get_param_defaults(screen, param);
    }
@@ -396,15 +414,37 @@ llvmpipe_get_shader_param(struct pipe_screen *screen,
                           enum pipe_shader_type shader,
                           enum pipe_shader_cap param)
 {
+   struct llvmpipe_screen *lscreen = llvmpipe_screen(screen);
    switch(shader)
    {
+   case PIPE_SHADER_COMPUTE:
+      if ((LP_DEBUG & DEBUG_CL) && param == PIPE_SHADER_CAP_SUPPORTED_IRS)
+         return (1 << PIPE_SHADER_IR_TGSI) | (1 << PIPE_SHADER_IR_NIR) | (1 << PIPE_SHADER_IR_NIR_SERIALIZED);
    case PIPE_SHADER_FRAGMENT:
+      if (param == PIPE_SHADER_CAP_PREFERRED_IR) {
+         if (lscreen->use_tgsi)
+            return PIPE_SHADER_IR_TGSI;
+         else
+            return PIPE_SHADER_IR_NIR;
+      }
       switch (param) {
       default:
          return gallivm_get_shader_param(param);
       }
+   case PIPE_SHADER_TESS_CTRL:
+   case PIPE_SHADER_TESS_EVAL:
+      /* Tessellation shader needs llvm coroutines support */
+      if (!GALLIVM_HAVE_CORO || lscreen->use_tgsi)
+         return 0;
    case PIPE_SHADER_VERTEX:
    case PIPE_SHADER_GEOMETRY:
+      if (param == PIPE_SHADER_CAP_PREFERRED_IR) {
+         if (lscreen->use_tgsi)
+            return PIPE_SHADER_IR_TGSI;
+         else
+            return PIPE_SHADER_IR_NIR;
+      }
+
       switch (param) {
       case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
          /* At this time, the draw module and llvmpipe driver only
@@ -439,7 +479,7 @@ llvmpipe_get_paramf(struct pipe_screen *screen, enum pipe_capf param)
    case PIPE_CAPF_MAX_POINT_WIDTH:
       /* fall-through */
    case PIPE_CAPF_MAX_POINT_WIDTH_AA:
-      return 255.0; /* arbitrary */
+      return LP_MAX_POINT_WIDTH; /* arbitrary */
    case PIPE_CAPF_MAX_TEXTURE_ANISOTROPY:
       return 16.0; /* not actually signficant at this time */
    case PIPE_CAPF_MAX_TEXTURE_LOD_BIAS:
@@ -456,6 +496,156 @@ llvmpipe_get_paramf(struct pipe_screen *screen, enum pipe_capf param)
    return 0.0;
 }
 
+static int
+llvmpipe_get_compute_param(struct pipe_screen *_screen,
+                           enum pipe_shader_ir ir_type,
+                           enum pipe_compute_cap param,
+                           void *ret)
+{
+   switch (param) {
+   case PIPE_COMPUTE_CAP_IR_TARGET:
+      return 0;
+   case PIPE_COMPUTE_CAP_MAX_GRID_SIZE:
+      if (ret) {
+         uint64_t *grid_size = ret;
+         grid_size[0] = 65535;
+         grid_size[1] = 65535;
+         grid_size[2] = 65535;
+      }
+      return 3 * sizeof(uint64_t) ;
+   case PIPE_COMPUTE_CAP_MAX_BLOCK_SIZE:
+      if (ret) {
+         uint64_t *block_size = ret;
+         block_size[0] = 1024;
+         block_size[1] = 1024;
+         block_size[2] = 1024;
+      }
+      return 3 * sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_MAX_THREADS_PER_BLOCK:
+      if (ret) {
+         uint64_t *max_threads_per_block = ret;
+         *max_threads_per_block = 1024;
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_MAX_LOCAL_SIZE:
+      if (ret) {
+         uint64_t *max_local_size = ret;
+         *max_local_size = 32768;
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_GRID_DIMENSION:
+      if (ret) {
+         uint32_t *grid_dim = ret;
+         *grid_dim = 3;
+      }
+      return sizeof(uint32_t);
+   case PIPE_COMPUTE_CAP_MAX_GLOBAL_SIZE:
+      if (ret) {
+         uint64_t *max_global_size = ret;
+         *max_global_size = (1ULL << 31);
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE:
+      if (ret) {
+         uint64_t *max_mem_alloc_size = ret;
+         *max_mem_alloc_size = (1ULL << 31);
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_MAX_PRIVATE_SIZE:
+      if (ret) {
+         uint64_t *max_private = ret;
+         *max_private = (1UL << 31);
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_MAX_INPUT_SIZE:
+      if (ret) {
+         uint64_t *max_input = ret;
+         *max_input = 4096;
+      }
+      return sizeof(uint64_t);
+   case PIPE_COMPUTE_CAP_IMAGES_SUPPORTED:
+      if (ret) {
+         uint32_t *images = ret;
+         *images = 0;
+      }
+      return sizeof(uint32_t);
+   case PIPE_COMPUTE_CAP_MAX_VARIABLE_THREADS_PER_BLOCK:
+      return 0;
+   case PIPE_COMPUTE_CAP_SUBGROUP_SIZE:
+      if (ret) {
+         uint32_t *subgroup_size = ret;
+         *subgroup_size = 32;
+      }
+      return sizeof(uint32_t);
+   case PIPE_COMPUTE_CAP_MAX_COMPUTE_UNITS:
+      if (ret) {
+         uint32_t *max_compute_units = ret;
+         *max_compute_units = 8;
+      }
+      return sizeof(uint32_t);
+   case PIPE_COMPUTE_CAP_MAX_CLOCK_FREQUENCY:
+      if (ret) {
+         uint32_t *max_clock_freq = ret;
+         *max_clock_freq = 300;
+      }
+      return sizeof(uint32_t);
+   case PIPE_COMPUTE_CAP_ADDRESS_BITS:
+      if (ret) {
+         uint32_t *address_bits = ret;
+         *address_bits = 64;
+      }
+      return sizeof(uint32_t);
+   }
+   return 0;
+}
+
+static const struct nir_shader_compiler_options gallivm_nir_options = {
+   .lower_scmp = true,
+   .lower_flrp32 = true,
+   .lower_flrp64 = true,
+   .lower_fsat = true,
+   .lower_bitfield_insert_to_shifts = true,
+   .lower_bitfield_extract_to_shifts = true,
+   .lower_sub = true,
+   .lower_ffma = true,
+   .lower_fmod = true,
+   .lower_hadd = true,
+   .lower_add_sat = true,
+   .lower_pack_snorm_2x16 = true,
+   .lower_pack_snorm_4x8 = true,
+   .lower_pack_unorm_2x16 = true,
+   .lower_pack_unorm_4x8 = true,
+   .lower_unpack_snorm_2x16 = true,
+   .lower_unpack_snorm_4x8 = true,
+   .lower_unpack_unorm_2x16 = true,
+   .lower_unpack_unorm_4x8 = true,
+   .lower_extract_byte = true,
+   .lower_extract_word = true,
+   .lower_rotate = true,
+   .lower_ifind_msb = true,
+   .optimize_sample_mask_in = true,
+   .max_unroll_iterations = 32,
+   .use_interpolated_input_intrinsics = true,
+   .lower_to_scalar = true,
+};
+
+static void
+llvmpipe_finalize_nir(struct pipe_screen *screen,
+                      void *nirptr,
+                      bool optimize)
+{
+   struct nir_shader *nir = (struct nir_shader *)nirptr;
+   lp_build_opt_nir(nir);
+}
+
+static inline const void *
+llvmpipe_get_compiler_options(struct pipe_screen *screen,
+                              enum pipe_shader_ir ir,
+                              enum pipe_shader_type shader)
+{
+   assert(ir == PIPE_SHADER_IR_NIR);
+   return &gallivm_nir_options;
+}
 
 /**
  * Query format support for creating a texture, drawing surface, etc.
@@ -544,15 +734,11 @@ llvmpipe_is_format_supported( struct pipe_screen *_screen,
 
       if (format_desc->colorspace != UTIL_FORMAT_COLORSPACE_ZS)
          return false;
-
-      /* TODO: Support stencil-only formats */
-      if (format_desc->swizzle[0] == PIPE_SWIZZLE_NONE) {
-         return false;
-      }
    }
 
    if (format_desc->layout == UTIL_FORMAT_LAYOUT_ASTC ||
-       format_desc->layout == UTIL_FORMAT_LAYOUT_ATC) {
+       format_desc->layout == UTIL_FORMAT_LAYOUT_ATC ||
+       format_desc->layout == UTIL_FORMAT_LAYOUT_FXT1) {
       /* Software decoding is not hooked up. */
       return false;
    }
@@ -594,6 +780,9 @@ llvmpipe_destroy_screen( struct pipe_screen *_screen )
    struct llvmpipe_screen *screen = llvmpipe_screen(_screen);
    struct sw_winsys *winsys = screen->winsys;
 
+   if (screen->cs_tpool)
+      lp_cs_tpool_destroy(screen->cs_tpool);
+
    if (screen->rast)
       lp_rast_destroy(screen->rast);
 
@@ -602,8 +791,10 @@ llvmpipe_destroy_screen( struct pipe_screen *_screen )
    if(winsys->destroy)
       winsys->destroy(winsys);
 
-   mtx_destroy(&screen->rast_mutex);
+   glsl_type_singleton_decref();
 
+   mtx_destroy(&screen->rast_mutex);
+   mtx_destroy(&screen->cs_mutex);
    FREE(screen);
 }
 
@@ -665,6 +856,8 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
 
    util_cpu_detect();
 
+   glsl_type_singleton_init_or_ref();
+
 #ifdef DEBUG
    LP_DEBUG = debug_get_flags_option("LP_DEBUG", lp_debug_flags, 0 );
 #endif
@@ -689,7 +882,9 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
    screen->base.get_device_vendor = llvmpipe_get_vendor; // TODO should be the CPU vendor
    screen->base.get_param = llvmpipe_get_param;
    screen->base.get_shader_param = llvmpipe_get_shader_param;
+   screen->base.get_compute_param = llvmpipe_get_compute_param;
    screen->base.get_paramf = llvmpipe_get_paramf;
+   screen->base.get_compiler_options = llvmpipe_get_compiler_options;
    screen->base.is_format_supported = llvmpipe_is_format_supported;
 
    screen->base.context_create = llvmpipe_create_context;
@@ -699,8 +894,10 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
 
    screen->base.get_timestamp = llvmpipe_get_timestamp;
 
+   screen->base.finalize_nir = llvmpipe_finalize_nir;
    llvmpipe_init_screen_resource_funcs(&screen->base);
 
+   screen->use_tgsi = (LP_DEBUG & DEBUG_TGSI_IR);
    screen->num_threads = util_cpu_caps.nr_cpus > 1 ? util_cpu_caps.nr_cpus : 0;
 #ifdef EMBEDDED_DEVICE
    screen->num_threads = 0;
@@ -715,6 +912,15 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
       return NULL;
    }
    (void) mtx_init(&screen->rast_mutex, mtx_plain);
+
+   screen->cs_tpool = lp_cs_tpool_create(screen->num_threads);
+   if (!screen->cs_tpool) {
+      lp_rast_destroy(screen->rast);
+      lp_jit_screen_cleanup(screen);
+      FREE(screen);
+      return NULL;
+   }
+   (void) mtx_init(&screen->cs_mutex, mtx_plain);
 
    return &screen->base;
 }

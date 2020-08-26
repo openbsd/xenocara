@@ -518,7 +518,7 @@ brw_nir_optimize(nir_shader *nir, const struct brw_compiler *compiler,
       OPT(nir_opt_combine_stores, nir_var_all);
 
       if (is_scalar) {
-         OPT(nir_lower_alu_to_scalar, NULL);
+         OPT(nir_lower_alu_to_scalar, NULL, NULL);
       }
 
       OPT(nir_copy_prop);
@@ -553,7 +553,7 @@ brw_nir_optimize(nir_shader *nir, const struct brw_compiler *compiler,
          (nir->info.stage == MESA_SHADER_TESS_CTRL ||
           nir->info.stage == MESA_SHADER_TESS_EVAL);
       OPT(nir_opt_peephole_select, 0, !is_vec4_tessellation, false);
-      OPT(nir_opt_peephole_select, 1, !is_vec4_tessellation,
+      OPT(nir_opt_peephole_select, 8, !is_vec4_tessellation,
           compiler->devinfo->gen >= 6);
 
       OPT(nir_opt_intrinsics);
@@ -654,16 +654,19 @@ brw_preprocess_nir(const struct brw_compiler *compiler, nir_shader *nir,
    const bool is_scalar = compiler->scalar_stage[nir->info.stage];
 
    if (is_scalar) {
-      OPT(nir_lower_alu_to_scalar, NULL);
+      OPT(nir_lower_alu_to_scalar, NULL, NULL);
    }
 
    if (nir->info.stage == MESA_SHADER_GEOMETRY)
-      OPT(nir_lower_gs_intrinsics);
+      OPT(nir_lower_gs_intrinsics, false);
 
    /* See also brw_nir_trig_workarounds.py */
    if (compiler->precise_trig &&
        !(devinfo->gen >= 10 || devinfo->is_kabylake))
       OPT(brw_nir_apply_trig_workarounds);
+
+   if (devinfo->gen >= 12)
+      OPT(brw_nir_clamp_image_1d_2d_array_sizes);
 
    static const nir_lower_tex_options tex_options = {
       .lower_txp = ~0,
@@ -690,13 +693,6 @@ brw_preprocess_nir(const struct brw_compiler *compiler, nir_shader *nir,
    OPT(nir_lower_doubles, softfp64, nir->options->lower_doubles_options);
    OPT(nir_lower_int64, nir->options->lower_int64_options);
 
-   /* This needs to be run after the first optimization pass but before we
-    * lower indirect derefs away
-    */
-   if (compiler->supports_shader_constants) {
-      OPT(nir_opt_large_constants, NULL, 32);
-   }
-
    OPT(nir_lower_bit_size, lower_bit_size_callback, (void *)compiler);
 
    if (is_scalar) {
@@ -706,6 +702,13 @@ brw_preprocess_nir(const struct brw_compiler *compiler, nir_shader *nir,
    /* Lower a bunch of stuff */
    OPT(nir_lower_var_copies);
 
+   /* This needs to be run after the first optimization pass but before we
+    * lower indirect derefs away
+    */
+   if (compiler->supports_shader_constants) {
+      OPT(nir_opt_large_constants, NULL, 32);
+   }
+
    OPT(nir_lower_system_values);
 
    const nir_lower_subgroups_options subgroups_options = {
@@ -713,10 +716,34 @@ brw_preprocess_nir(const struct brw_compiler *compiler, nir_shader *nir,
       .lower_to_scalar = true,
       .lower_vote_trivial = !is_scalar,
       .lower_shuffle = true,
+      .lower_quad_broadcast_dynamic = true,
    };
    OPT(nir_lower_subgroups, &subgroups_options);
 
    OPT(nir_lower_clip_cull_distance_arrays);
+
+   if ((devinfo->gen >= 8 || devinfo->is_haswell) && is_scalar) {
+      /* TODO: Yes, we could in theory do this on gen6 and earlier.  However,
+       * that would require plumbing through support for these indirect
+       * scratch read/write messages with message registers and that's just a
+       * pain.  Also, the primary benefit of this is for compute shaders which
+       * won't run on gen6 and earlier anyway.
+       *
+       * On gen7 and earlier the scratch space size is limited to 12kB.
+       * By enabling this optimization we may easily exceed this limit without
+       * having any fallback.
+       *
+       * The threshold of 128B was chosen semi-arbitrarily.  The idea is that
+       * 128B per channel on a SIMD8 program is 32 registers or 25% of the
+       * register file.  Any array that large is likely to cause pressure
+       * issues.  Also, this value is sufficiently high that the benchmarks
+       * known to suffer from large temporary array issues are helped but
+       * nothing else in shader-db is hurt except for maybe that one kerbal
+       * space program shader.
+       */
+      OPT(nir_lower_vars_to_scratch, nir_var_function_temp, 128,
+          glsl_get_natural_size_align_bytes);
+   }
 
    nir_variable_mode indirect_mask =
       brw_nir_no_indirect_mask(compiler, nir->info.stage);
@@ -797,6 +824,80 @@ brw_nir_link_shaders(const struct brw_compiler *compiler,
    }
 }
 
+static bool
+brw_nir_should_vectorize_mem(unsigned align, unsigned bit_size,
+                             unsigned num_components, unsigned high_offset,
+                             nir_intrinsic_instr *low,
+                             nir_intrinsic_instr *high)
+{
+   /* Don't combine things to generate 64-bit loads/stores.  We have to split
+    * those back into 32-bit ones anyway and UBO loads aren't split in NIR so
+    * we don't want to make a mess for the back-end.
+    */
+   if (bit_size > 32)
+      return false;
+
+   /* We can handle at most a vec4 right now.  Anything bigger would get
+    * immediately split by brw_nir_lower_mem_access_bit_sizes anyway.
+    */
+   if (num_components > 4)
+      return false;
+
+   if (align < bit_size / 8)
+      return false;
+
+   return true;
+}
+
+static
+bool combine_all_barriers(nir_intrinsic_instr *a,
+                          nir_intrinsic_instr *b,
+                          void *data)
+{
+   /* Translation to backend IR will get rid of modes we don't care about, so
+    * no harm in always combining them.
+    *
+    * TODO: While HW has only ACQUIRE|RELEASE fences, we could improve the
+    * scheduling so that it can take advantage of the different semantics.
+    */
+   nir_intrinsic_set_memory_modes(a, nir_intrinsic_memory_modes(a) |
+                                     nir_intrinsic_memory_modes(b));
+   nir_intrinsic_set_memory_semantics(a, nir_intrinsic_memory_semantics(a) |
+                                         nir_intrinsic_memory_semantics(b));
+   nir_intrinsic_set_memory_scope(a, MAX2(nir_intrinsic_memory_scope(a),
+                                          nir_intrinsic_memory_scope(b)));
+   return true;
+}
+
+static void
+brw_vectorize_lower_mem_access(nir_shader *nir,
+                               const struct brw_compiler *compiler,
+                               bool is_scalar)
+{
+   const struct gen_device_info *devinfo = compiler->devinfo;
+   bool progress = false;
+
+   if (is_scalar) {
+      OPT(nir_opt_load_store_vectorize,
+          nir_var_mem_ubo | nir_var_mem_ssbo |
+          nir_var_mem_global | nir_var_mem_shared,
+          brw_nir_should_vectorize_mem);
+   }
+
+   OPT(brw_nir_lower_mem_access_bit_sizes, devinfo);
+
+   while (progress) {
+      progress = false;
+
+      OPT(nir_lower_pack);
+      OPT(nir_copy_prop);
+      OPT(nir_opt_dce);
+      OPT(nir_opt_cse);
+      OPT(nir_opt_algebraic);
+      OPT(nir_opt_constant_folding);
+   }
+}
+
 /* Prepare the given shader for codegen
  *
  * This function is intended to be called right before going into the actual
@@ -814,7 +915,7 @@ brw_postprocess_nir(nir_shader *nir, const struct brw_compiler *compiler,
 
    UNUSED bool progress; /* Written by OPT */
 
-   OPT(brw_nir_lower_mem_access_bit_sizes);
+   OPT(nir_opt_combine_memory_barriers, combine_all_barriers, NULL);
 
    do {
       progress = false;
@@ -822,6 +923,8 @@ brw_postprocess_nir(nir_shader *nir, const struct brw_compiler *compiler,
    } while (progress);
 
    brw_nir_optimize(nir, compiler, is_scalar, false);
+
+   brw_vectorize_lower_mem_access(nir, compiler, is_scalar);
 
    if (OPT(nir_lower_int64, nir->options->lower_int64_options))
       brw_nir_optimize(nir, compiler, is_scalar, false);
@@ -858,10 +961,10 @@ brw_postprocess_nir(nir_shader *nir, const struct brw_compiler *compiler,
           * havok on the vec4 backend.  The handling of constants in the vec4
           * backend is not good.
           */
-         if (is_scalar) {
+         if (is_scalar)
             OPT(nir_opt_constant_folding);
-            OPT(nir_copy_prop);
-         }
+
+         OPT(nir_copy_prop);
          OPT(nir_opt_dce);
          OPT(nir_opt_cse);
       }
@@ -871,13 +974,21 @@ brw_postprocess_nir(nir_shader *nir, const struct brw_compiler *compiler,
    OPT(brw_nir_lower_conversions);
 
    if (is_scalar)
-      OPT(nir_lower_alu_to_scalar, NULL);
-   OPT(nir_lower_to_source_mods, nir_lower_all_source_mods);
+      OPT(nir_lower_alu_to_scalar, NULL, NULL);
+
+   while (OPT(nir_opt_algebraic_distribute_src_mods)) {
+      OPT(nir_copy_prop);
+      OPT(nir_opt_dce);
+      OPT(nir_opt_cse);
+   }
+
    OPT(nir_copy_prop);
    OPT(nir_opt_dce);
    OPT(nir_opt_move, nir_move_comparisons);
 
    OPT(nir_lower_bool_to_int32);
+   OPT(nir_copy_prop);
+   OPT(nir_opt_dce);
 
    OPT(nir_lower_locals_to_regs);
 
@@ -949,7 +1060,7 @@ brw_nir_apply_sampler_key(nir_shader *nir,
       if (key_tex->swizzles[s] == SWIZZLE_NOOP)
          continue;
 
-      tex_options.swizzle_result |= (1 << s);
+      tex_options.swizzle_result |= BITFIELD_BIT(s);
       for (unsigned c = 0; c < 4; c++)
          tex_options.swizzles[s][c] = GET_SWZ(key_tex->swizzles[s], c);
    }
@@ -1087,6 +1198,72 @@ brw_cmod_for_nir_comparison(nir_op op)
 
    default:
       unreachable("Unsupported NIR comparison op");
+   }
+}
+
+uint32_t
+brw_aop_for_nir_intrinsic(const nir_intrinsic_instr *atomic)
+{
+   switch (atomic->intrinsic) {
+#define AOP_CASE(atom) \
+   case nir_intrinsic_image_atomic_##atom:            \
+   case nir_intrinsic_bindless_image_atomic_##atom:   \
+   case nir_intrinsic_ssbo_atomic_##atom:             \
+   case nir_intrinsic_shared_atomic_##atom:           \
+   case nir_intrinsic_global_atomic_##atom
+
+   AOP_CASE(add): {
+      unsigned src_idx;
+      switch (atomic->intrinsic) {
+      case nir_intrinsic_image_atomic_add:
+      case nir_intrinsic_bindless_image_atomic_add:
+         src_idx = 3;
+         break;
+      case nir_intrinsic_ssbo_atomic_add:
+         src_idx = 2;
+         break;
+      case nir_intrinsic_shared_atomic_add:
+      case nir_intrinsic_global_atomic_add:
+         src_idx = 1;
+         break;
+      default:
+         unreachable("Invalid add atomic opcode");
+      }
+
+      if (nir_src_is_const(atomic->src[src_idx])) {
+         int64_t add_val = nir_src_as_int(atomic->src[src_idx]);
+         if (add_val == 1)
+            return BRW_AOP_INC;
+         else if (add_val == -1)
+            return BRW_AOP_DEC;
+      }
+      return BRW_AOP_ADD;
+   }
+
+   AOP_CASE(imin):         return BRW_AOP_IMIN;
+   AOP_CASE(umin):         return BRW_AOP_UMIN;
+   AOP_CASE(imax):         return BRW_AOP_IMAX;
+   AOP_CASE(umax):         return BRW_AOP_UMAX;
+   AOP_CASE(and):          return BRW_AOP_AND;
+   AOP_CASE(or):           return BRW_AOP_OR;
+   AOP_CASE(xor):          return BRW_AOP_XOR;
+   AOP_CASE(exchange):     return BRW_AOP_MOV;
+   AOP_CASE(comp_swap):    return BRW_AOP_CMPWR;
+
+#undef AOP_CASE
+#define AOP_CASE(atom) \
+   case nir_intrinsic_ssbo_atomic_##atom:          \
+   case nir_intrinsic_shared_atomic_##atom:        \
+   case nir_intrinsic_global_atomic_##atom
+
+   AOP_CASE(fmin):         return BRW_AOP_FMIN;
+   AOP_CASE(fmax):         return BRW_AOP_FMAX;
+   AOP_CASE(fcomp_swap):   return BRW_AOP_FCMPWR;
+
+#undef AOP_CASE
+
+   default:
+      unreachable("Unsupported NIR atomic intrinsic");
    }
 }
 

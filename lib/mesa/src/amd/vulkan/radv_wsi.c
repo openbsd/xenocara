@@ -32,18 +32,37 @@
 static PFN_vkVoidFunction
 radv_wsi_proc_addr(VkPhysicalDevice physicalDevice, const char *pName)
 {
-	return radv_lookup_entrypoint_unchecked(pName);
+	return radv_lookup_entrypoint(pName);
+}
+
+static void
+radv_wsi_set_memory_ownership(VkDevice _device,
+                              VkDeviceMemory _mem,
+                              VkBool32 ownership)
+{
+	RADV_FROM_HANDLE(radv_device, device, _device);
+	RADV_FROM_HANDLE(radv_device_memory, mem, _mem);
+
+	if (ownership)
+		radv_bo_list_add(device, mem->bo);
+	else
+		radv_bo_list_remove(device, mem->bo);
 }
 
 VkResult
 radv_init_wsi(struct radv_physical_device *physical_device)
 {
-	return wsi_device_init(&physical_device->wsi_device,
-			       radv_physical_device_to_handle(physical_device),
-			       radv_wsi_proc_addr,
-			       &physical_device->instance->alloc,
-			       physical_device->master_fd,
-			       &physical_device->instance->dri_options);
+	VkResult result =  wsi_device_init(&physical_device->wsi_device,
+					   radv_physical_device_to_handle(physical_device),
+					   radv_wsi_proc_addr,
+					   &physical_device->instance->alloc,
+					   physical_device->master_fd,
+					   &physical_device->instance->dri_options);
+	if (result != VK_SUCCESS)
+		return result;
+
+	physical_device->wsi_device.set_memory_ownership = radv_wsi_set_memory_ownership;
+	return VK_SUCCESS;
 }
 
 void
@@ -231,19 +250,39 @@ VkResult radv_AcquireNextImage2KHR(
 	RADV_FROM_HANDLE(radv_device, device, _device);
 	struct radv_physical_device *pdevice = device->physical_device;
 	RADV_FROM_HANDLE(radv_fence, fence, pAcquireInfo->fence);
+	RADV_FROM_HANDLE(radv_semaphore, semaphore, pAcquireInfo->semaphore);
 
 	VkResult result = wsi_common_acquire_next_image2(&pdevice->wsi_device,
 							 _device,
                                                          pAcquireInfo,
 							 pImageIndex);
 
-	if (fence && (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)) {
-		if (fence->fence)
-			device->ws->signal_fence(fence->fence);
-		if (fence->temp_syncobj) {
-			device->ws->signal_syncobj(device->ws, fence->temp_syncobj);
-		} else if (fence->syncobj) {
-			device->ws->signal_syncobj(device->ws, fence->syncobj);
+	if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) {
+		if (fence) {
+			if (fence->fence)
+				device->ws->signal_fence(fence->fence);
+			if (fence->temp_syncobj) {
+				device->ws->signal_syncobj(device->ws, fence->temp_syncobj);
+			} else if (fence->syncobj) {
+				device->ws->signal_syncobj(device->ws, fence->syncobj);
+			}
+		}
+		if (semaphore) {
+			struct radv_semaphore_part *part =
+				semaphore->temporary.kind != RADV_SEMAPHORE_NONE ?
+					&semaphore->temporary : &semaphore->permanent;
+
+			switch (part->kind) {
+			case RADV_SEMAPHORE_NONE:
+			case RADV_SEMAPHORE_WINSYS:
+				/* Do not need to do anything. */
+				break;
+			case RADV_SEMAPHORE_TIMELINE:
+				unreachable("WSI only allows binary semaphores.");
+			case RADV_SEMAPHORE_SYNCOBJ:
+				device->ws->signal_syncobj(device->ws, part->syncobj);
+				break;
+			}
 		}
 	}
 	return result;
@@ -256,9 +295,9 @@ VkResult radv_QueuePresentKHR(
 	RADV_FROM_HANDLE(radv_queue, queue, _queue);
 	return wsi_common_queue_present(&queue->device->physical_device->wsi_device,
 					radv_device_to_handle(queue->device),
-					_queue,
-					queue->queue_family_index,
-					pPresentInfo);
+				        _queue,
+				        queue->queue_family_index,
+				        pPresentInfo);
 }
 
 

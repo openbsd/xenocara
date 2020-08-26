@@ -115,6 +115,8 @@ fd_set_constant_buffer(struct pipe_context *pctx,
 	so->enabled_mask |= 1 << index;
 	ctx->dirty_shader[shader] |= FD_DIRTY_SHADER_CONST;
 	ctx->dirty |= FD_DIRTY_CONST;
+
+	fd_resource_set_usage(cb->buffer, FD_DIRTY_CONST);
 }
 
 static void
@@ -126,43 +128,36 @@ fd_set_shader_buffers(struct pipe_context *pctx,
 {
 	struct fd_context *ctx = fd_context(pctx);
 	struct fd_shaderbuf_stateobj *so = &ctx->shaderbuf[shader];
-	unsigned mask = 0;
+	const unsigned modified_bits = u_bit_consecutive(start, count);
 
-	if (buffers) {
-		for (unsigned i = 0; i < count; i++) {
-			unsigned n = i + start;
-			struct pipe_shader_buffer *buf = &so->sb[n];
+	so->enabled_mask &= ~modified_bits;
+	so->writable_mask &= ~modified_bits;
+	so->writable_mask |= writable_bitmask << start;
 
+	for (unsigned i = 0; i < count; i++) {
+		unsigned n = i + start;
+		struct pipe_shader_buffer *buf = &so->sb[n];
+
+		if (buffers && buffers[i].buffer) {
 			if ((buf->buffer == buffers[i].buffer) &&
 					(buf->buffer_offset == buffers[i].buffer_offset) &&
 					(buf->buffer_size == buffers[i].buffer_size))
 				continue;
 
-			mask |= BIT(n);
-
 			buf->buffer_offset = buffers[i].buffer_offset;
 			buf->buffer_size = buffers[i].buffer_size;
 			pipe_resource_reference(&buf->buffer, buffers[i].buffer);
 
-			if (buf->buffer)
-				so->enabled_mask |= BIT(n);
-			else
-				so->enabled_mask &= ~BIT(n);
-		}
-	} else {
-		mask = (BIT(count) - 1) << start;
+			fd_resource_set_usage(buffers[i].buffer, FD_DIRTY_SSBO);
 
-		for (unsigned i = 0; i < count; i++) {
-			unsigned n = i + start;
-			struct pipe_shader_buffer *buf = &so->sb[n];
-
+			so->enabled_mask |= BIT(n);
+		} else {
 			pipe_resource_reference(&buf->buffer, NULL);
 		}
-
-		so->enabled_mask &= ~mask;
 	}
 
 	ctx->dirty_shader[shader] |= FD_DIRTY_SHADER_SSBO;
+	ctx->dirty |= FD_DIRTY_SSBO;
 }
 
 void
@@ -190,10 +185,12 @@ fd_set_shader_images(struct pipe_context *pctx,
 			mask |= BIT(n);
 			util_copy_image_view(buf, &images[i]);
 
-			if (buf->resource)
+			if (buf->resource) {
+				fd_resource_set_usage(buf->resource, FD_DIRTY_IMAGE);
 				so->enabled_mask |= BIT(n);
-			else
+			} else {
 				so->enabled_mask &= ~BIT(n);
+			}
 		}
 	} else {
 		mask = (BIT(count) - 1) << start;
@@ -209,6 +206,7 @@ fd_set_shader_images(struct pipe_context *pctx,
 	}
 
 	ctx->dirty_shader[shader] |= FD_DIRTY_SHADER_IMAGE;
+	ctx->dirty |= FD_DIRTY_IMAGE;
 }
 
 static void
@@ -248,15 +246,14 @@ fd_set_framebuffer_state(struct pipe_context *pctx,
 			 * multiple times to the same surface), so we might as
 			 * well go ahead and flush this one:
 			 */
-			fd_batch_flush(old_batch, false);
+			fd_batch_flush(old_batch);
 		}
 
 		fd_batch_reference(&old_batch, NULL);
-	} else {
+	} else if (ctx->batch) {
 		DBG("%d: cbufs[0]=%p, zsbuf=%p", ctx->batch->needs_flush,
 				framebuffer->cbufs[0], framebuffer->zsbuf);
-		fd_batch_flush(ctx->batch, false);
-		util_copy_framebuffer_state(&ctx->batch->framebuffer, cso);
+		fd_batch_flush(ctx->batch);
 	}
 
 	ctx->dirty |= FD_DIRTY_FRAMEBUFFER;
@@ -359,7 +356,15 @@ fd_set_vertex_buffers(struct pipe_context *pctx,
 	util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb, start_slot, count);
 	so->count = util_last_bit(so->enabled_mask);
 
+	if (!vb)
+		return;
+
 	ctx->dirty |= FD_DIRTY_VTXBUF;
+
+	for (unsigned i = 0; i < count; i++) {
+		assert(!vb[i].is_user_buffer);
+		fd_resource_set_usage(vb[i].buffer.resource, FD_DIRTY_VTXBUF);
+	}
 }
 
 static void
@@ -472,7 +477,7 @@ fd_create_stream_output_target(struct pipe_context *pctx,
 	target->buffer_size = buffer_size;
 
 	assert(rsc->base.target == PIPE_BUFFER);
-	util_range_add(&rsc->valid_buffer_range,
+	util_range_add(&rsc->base, &rsc->valid_buffer_range,
 		buffer_offset, buffer_offset + buffer_size);
 
 	return target;
@@ -499,12 +504,14 @@ fd_set_stream_output_targets(struct pipe_context *pctx,
 
 	for (i = 0; i < num_targets; i++) {
 		boolean changed = targets[i] != so->targets[i];
-		boolean append = (offsets[i] == (unsigned)-1);
+		boolean reset = (offsets[i] != (unsigned)-1);
 
-		if (!changed && append)
+		so->reset |= (reset << i);
+
+		if (!changed && !reset)
 			continue;
 
-		if (!append)
+		if (reset)
 			so->offsets[i] = offsets[i];
 
 		pipe_so_target_reference(&so->targets[i], targets[i]);

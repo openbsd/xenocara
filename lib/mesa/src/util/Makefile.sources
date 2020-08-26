@@ -5,8 +5,11 @@ MESA_UTIL_FILES := \
 	bitscan.c \
 	bitscan.h \
 	bitset.h \
+	blob.c \
+	blob.h \
 	build_id.c \
 	build_id.h \
+        compiler.h \
 	crc32.c \
 	crc32.h \
 	dag.c \
@@ -15,8 +18,31 @@ MESA_UTIL_FILES := \
 	debug.h \
 	disk_cache.c \
 	disk_cache.h \
+	double.c \
+	double.h \
 	fast_idiv_by_const.c \
 	fast_idiv_by_const.h \
+	fnv1a.h \
+	format/u_format.c \
+	format/u_format.h \
+	format/u_format_bptc.c \
+	format/u_format_bptc.h \
+	format/u_format_etc.c \
+	format/u_format_etc.h \
+	format/u_format_latc.c \
+	format/u_format_latc.h \
+	format/u_format_other.c \
+	format/u_format_other.h \
+	format/u_format_rgtc.c \
+	format/u_format_rgtc.h \
+	format/u_format_s3tc.c \
+	format/u_format_s3tc.h \
+	format/u_format_tests.c \
+	format/u_format_tests.h \
+	format/u_format_yuv.c \
+	format/u_format_yuv.h \
+	format/u_format_zs.c \
+	format/u_format_zs.h \
 	format_r11g11b10f.h \
 	format_rgb9e5.h \
 	format_srgb.h \
@@ -33,6 +59,8 @@ MESA_UTIL_FILES := \
 	os_time.h \
 	os_file.c \
 	os_file.h \
+	os_socket.c \
+	os_socket.h \
 	os_misc.c \
 	os_misc.h \
 	u_process.c \
@@ -56,6 +84,10 @@ MESA_UTIL_FILES := \
 	simple_mtx.h \
 	slab.c \
 	slab.h \
+	softfloat.c \
+	softfloat.h \
+	sparse_array.c \
+	sparse_array.h \
 	string_buffer.c \
 	string_buffer.h \
 	strndup.h \
@@ -77,6 +109,7 @@ MESA_UTIL_FILES := \
 	u_vector.h \
 	u_debug.c \
 	u_debug.h \
+	u_debug_memory.c \
 	u_cpu_detect.c \
 	u_cpu_detect.h \
 	os_memory_aligned.h \
@@ -84,11 +117,17 @@ MESA_UTIL_FILES := \
 	os_memory_stdc.h \
 	os_memory.h \
 	u_memory.h \
+	u_memset.h \
+	u_mm.h \
+	u_mm.c \
 	vma.c \
-	vma.h
+	vma.h \
+	xxhash.h
+
 
 MESA_UTIL_GENERATED_FILES = \
-	format_srgb.c
+	format_srgb.c \
+	format/u_format_table.c
 
 XMLCONFIG_FILES := \
 	xmlconfig.c \

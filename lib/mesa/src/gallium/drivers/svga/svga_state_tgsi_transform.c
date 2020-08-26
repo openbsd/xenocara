@@ -69,7 +69,7 @@ emulate_point_sprite(struct svga_context *svga,
    const struct tgsi_token *orig_tokens;
    struct svga_geometry_shader *orig_gs = (struct svga_geometry_shader *)shader;
    struct svga_geometry_shader *gs = NULL;
-   struct pipe_shader_state templ;
+   struct pipe_shader_state templ = {0};
    struct svga_stream_output *streamout = NULL;
    int pos_out_index = -1;
    int aa_point_coord_index = -1;
@@ -131,7 +131,7 @@ emulate_point_sprite(struct svga_context *svga,
          tgsi_dump(new_tokens, 0);
       }
 
-      templ.tokens = new_tokens;
+      pipe_shader_state_from_tgsi(&templ, new_tokens);
       templ.stream_output.num_outputs = 0;
 
       if (streamout) {

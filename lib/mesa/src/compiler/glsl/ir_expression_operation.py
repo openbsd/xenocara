@@ -438,6 +438,8 @@ ir_expression_operation = [
    operation("f2b", 1, source_types=(float_type,), dest_type=bool_type, c_expression="{src0} != 0.0F ? true : false"),
    # Boolean-to-float conversion
    operation("b2f", 1, source_types=(bool_type,), dest_type=float_type, c_expression="{src0} ? 1.0F : 0.0F"),
+   # Boolean-to-float16 conversion
+   operation("b2f16", 1, source_types=(bool_type,), dest_type=float_type, c_expression="{src0} ? 1.0F : 0.0F"),
    # int-to-boolean conversion
    operation("i2b", 1, source_types=(uint_type, int_type), dest_type=bool_type, c_expression="{src0} ? true : false"),
    # Boolean-to-int conversion
@@ -452,6 +454,13 @@ ir_expression_operation = [
    operation("d2f", 1, source_types=(double_type,), dest_type=float_type, c_expression="{src0}"),
    # Float-to-double conversion.
    operation("f2d", 1, source_types=(float_type,), dest_type=double_type, c_expression="{src0}"),
+   # Half-float conversions. These all operate on and return float types,
+   # since the framework expands half to full float before calling in.  We
+   # still have to handle them here so that we can constant propagate through
+   # them, but they are no-ops.
+   operation("f2f16", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f2fmp", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
+   operation("f162f", 1, source_types=(float_type,), dest_type=float_type, c_expression="{src0}"),
    # Double-to-integer conversion.
    operation("d2i", 1, source_types=(double_type,), dest_type=int_type, c_expression="{src0}"),
    # Integer-to-double conversion.
@@ -462,6 +471,8 @@ ir_expression_operation = [
    operation("u2d", 1, source_types=(uint_type,), dest_type=double_type, c_expression="{src0}"),
    # Double-to-boolean conversion.
    operation("d2b", 1, source_types=(double_type,), dest_type=bool_type, c_expression="{src0} != 0.0"),
+   # Float16-to-boolean conversion.
+   operation("f162b", 1, source_types=(float_type,), dest_type=bool_type, c_expression="{src0} != 0.0"),
    # 'Bit-identical int-to-float "conversion"
    operation("bitcast_i2f", 1, source_types=(int_type,), dest_type=float_type, c_expression="bitcast_u2f({src0})"),
    # 'Bit-identical float-to-int "conversion"
@@ -512,6 +523,7 @@ ir_expression_operation = [
    # Trigonometric operations.
    operation("sin", 1, source_types=(float_type,), c_expression="sinf({src0})"),
    operation("cos", 1, source_types=(float_type,), c_expression="cosf({src0})"),
+   operation("atan", 1, source_types=(float_type,), c_expression="atan({src0})"),
 
    # Partial derivatives.
    operation("dFdx", 1, source_types=(float_type,), c_expression="0.0f"),
@@ -538,23 +550,22 @@ ir_expression_operation = [
    operation("bit_count", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression="util_bitcount({src0})"),
    operation("find_msb", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression={'u': "find_msb_uint({src0})", 'i': "find_msb_int({src0})"}),
    operation("find_lsb", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression="find_msb_uint({src0} & -{src0})"),
+   operation("clz", 1, source_types=(uint_type,), dest_type=uint_type, c_expression="(unsigned)(31 - find_msb_uint({src0}))"),
 
    operation("saturate", 1, printable_name="sat", source_types=(float_type,), c_expression="CLAMP({src0}, 0.0f, 1.0f)"),
 
    # Double packing, part of ARB_gpu_shader_fp64.
-   operation("pack_double_2x32", 1, printable_name="packDouble2x32", source_types=(uint_type,), dest_type=double_type, c_expression="memcpy(&data.d[0], &op[0]->value.u[0], sizeof(double))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("unpack_double_2x32", 1, printable_name="unpackDouble2x32", source_types=(double_type,), dest_type=uint_type, c_expression="memcpy(&data.u[0], &op[0]->value.d[0], sizeof(double))", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("pack_double_2x32", 1, printable_name="packDouble2x32", source_types=(uint_type,), dest_type=double_type, c_expression="data.u64[0] = pack_2x32(op[0]->value.u[0], op[0]->value.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("unpack_double_2x32", 1, printable_name="unpackDouble2x32", source_types=(double_type,), dest_type=uint_type, c_expression="unpack_2x32(op[0]->value.u64[0], &data.u[0], &data.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
 
    # Sampler/Image packing, part of ARB_bindless_texture.
-   operation("pack_sampler_2x32", 1, printable_name="packSampler2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="memcpy(&data.u64[0], &op[0]->value.u[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("pack_image_2x32", 1, printable_name="packImage2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="memcpy(&data.u64[0], &op[0]->value.u[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("unpack_sampler_2x32", 1, printable_name="unpackSampler2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="memcpy(&data.u[0], &op[0]->value.u64[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("unpack_image_2x32", 1, printable_name="unpackImage2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="memcpy(&data.u[0], &op[0]->value.u64[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("pack_sampler_2x32", 1, printable_name="packSampler2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="data.u64[0] = pack_2x32(op[0]->value.u[0], op[0]->value.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("pack_image_2x32", 1, printable_name="packImage2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="data.u64[0] = pack_2x32(op[0]->value.u[0], op[0]->value.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("unpack_sampler_2x32", 1, printable_name="unpackSampler2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="unpack_2x32(op[0]->value.u64[0], &data.u[0], &data.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("unpack_image_2x32", 1, printable_name="unpackImage2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="unpack_2x32(op[0]->value.u64[0], &data.u[0], &data.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
 
    operation("frexp_sig", 1),
    operation("frexp_exp", 1),
-
-   operation("noise", 1),
 
    operation("subroutine_to_int", 1),
 
@@ -576,15 +587,40 @@ ir_expression_operation = [
    operation("ssbo_unsized_array_length", 1),
 
    # 64-bit integer packing ops.
-   operation("pack_int_2x32", 1, printable_name="packInt2x32", source_types=(int_type,), dest_type=int64_type, c_expression="memcpy(&data.i64[0], &op[0]->value.i[0], sizeof(int64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("pack_uint_2x32", 1, printable_name="packUint2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="memcpy(&data.u64[0], &op[0]->value.u[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("unpack_int_2x32", 1, printable_name="unpackInt2x32", source_types=(int64_type,), dest_type=int_type, c_expression="memcpy(&data.i[0], &op[0]->value.i64[0], sizeof(int64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
-   operation("unpack_uint_2x32", 1, printable_name="unpackUint2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="memcpy(&data.u[0], &op[0]->value.u64[0], sizeof(uint64_t))", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("pack_int_2x32", 1, printable_name="packInt2x32", source_types=(int_type,), dest_type=int64_type, c_expression="data.u64[0] = pack_2x32(op[0]->value.u[0], op[0]->value.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("pack_uint_2x32", 1, printable_name="packUint2x32", source_types=(uint_type,), dest_type=uint64_type, c_expression="data.u64[0] = pack_2x32(op[0]->value.u[0], op[0]->value.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("unpack_int_2x32", 1, printable_name="unpackInt2x32", source_types=(int64_type,), dest_type=int_type, c_expression="unpack_2x32(op[0]->value.u64[0], &data.u[0], &data.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
+   operation("unpack_uint_2x32", 1, printable_name="unpackUint2x32", source_types=(uint64_type,), dest_type=uint_type, c_expression="unpack_2x32(op[0]->value.u64[0], &data.u[0], &data.u[1])", flags=frozenset((horizontal_operation, non_assign_operation))),
 
    operation("add", 2, printable_name="+", source_types=numeric_types, c_expression="{src0} + {src1}", flags=vector_scalar_operation),
    operation("sub", 2, printable_name="-", source_types=numeric_types, c_expression="{src0} - {src1}", flags=vector_scalar_operation),
+   operation("add_sat", 2, printable_name="add_sat", source_types=integer_types, c_expression={
+      'u': "({src0} + {src1}) < {src0} ? UINT32_MAX : ({src0} + {src1})",
+      'i': "iadd_saturate({src0}, {src1})",
+      'u64': "({src0} + {src1}) < {src0} ? UINT64_MAX : ({src0} + {src1})",
+      'i64': "iadd64_saturate({src0}, {src1})"
+   }),
+   operation("sub_sat", 2, printable_name="sub_sat", source_types=integer_types, c_expression={
+      'u': "({src1} > {src0}) ? 0 : {src0} - {src1}",
+      'i': "isub_saturate({src0}, {src1})",
+      'u64': "({src1} > {src0}) ? 0 : {src0} - {src1}",
+      'i64': "isub64_saturate({src0}, {src1})"
+   }),
+   operation("abs_sub", 2, printable_name="abs_sub", source_types=integer_types, c_expression={
+      'u': "({src1} > {src0}) ? {src1} - {src0} : {src0} - {src1}",
+      'i': "({src1} > {src0}) ? (unsigned){src1} - (unsigned){src0} : (unsigned){src0} - (unsigned){src1}",
+      'u64': "({src1} > {src0}) ? {src1} - {src0} : {src0} - {src1}",
+      'i64': "({src1} > {src0}) ? (uint64_t){src1} - (uint64_t){src0} : (uint64_t){src0} - (uint64_t){src1}",
+   }),
+   operation("avg", 2, printable_name="average", source_types=integer_types, c_expression="({src0} >> 1) + ({src1} >> 1) + (({src0} & {src1}) & 1)"),
+   operation("avg_round", 2, printable_name="average_rounded", source_types=integer_types, c_expression="({src0} >> 1) + ({src1} >> 1) + (({src0} | {src1}) & 1)"),
+
    # "Floating-point or low 32-bit integer multiply."
    operation("mul", 2, printable_name="*", source_types=numeric_types, c_expression="{src0} * {src1}"),
+   operation("mul_32x16", 2, printable_name="*", source_types=(uint_type, int_type), c_expression={
+      'u': "{src0} * (uint16_t){src1}",
+      'i': "{src0} * (int16_t){src0}"
+   }),
    operation("imul_high", 2),       # Calculates the high 32-bits of a 64-bit multiply.
    operation("div", 2, printable_name="/", source_types=numeric_types, c_expression={'u': "{src1} == 0 ? 0 : {src0} / {src1}", 'i': "{src1} == 0 ? 0 : {src0} / {src1}", 'u64': "{src1} == 0 ? 0 : {src0} / {src1}", 'i64': "{src1} == 0 ? 0 : {src0} / {src1}", 'default': "{src0} / {src1}"}, flags=vector_scalar_operation),
 
@@ -663,6 +699,8 @@ ir_expression_operation = [
    # operand0 is the fs input
    # operand1 is the sample ID
    operation("interpolate_at_sample", 2),
+
+   operation("atan2", 2, source_types=(float_type,), c_expression="atan2({src0}, {src1})"),
 
    # Fused floating-point multiply-add, part of ARB_gpu_shader5.
    operation("fma", 3, source_types=real_types, c_expression="{src0} * {src1} + {src2}"),

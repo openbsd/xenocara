@@ -55,19 +55,20 @@
 
 #include "pipe/p_context.h"
 #include "pipe/p_screen.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_helpers.h"
 #include "util/u_pointer.h"
 #include "util/u_inlines.h"
 #include "util/u_atomic.h"
 #include "util/u_surface.h"
 #include "util/list.h"
+#include "util/u_memory.h"
 
 struct hash_table;
 struct st_manager_private
 {
    struct hash_table *stfbi_ht; /* framebuffer iface objects hash table */
-   mtx_t st_mutex;
+   simple_mtx_t st_mutex;
 };
 
 
@@ -380,8 +381,6 @@ st_visual_to_context_mode(const struct st_visual *visual,
       mode->stereoMode = GL_TRUE;
 
    if (visual->color_format != PIPE_FORMAT_NONE) {
-      mode->rgbMode = GL_TRUE;
-
       mode->redBits =
          util_format_get_component_bits(visual->color_format,
                UTIL_FORMAT_COLORSPACE_RGB, 0);
@@ -407,14 +406,9 @@ st_visual_to_context_mode(const struct st_visual *visual,
       mode->stencilBits =
          util_format_get_component_bits(visual->depth_stencil_format,
                UTIL_FORMAT_COLORSPACE_ZS, 1);
-
-      mode->haveDepthBuffer = mode->depthBits > 0;
-      mode->haveStencilBuffer = mode->stencilBits > 0;
    }
 
    if (visual->accum_format != PIPE_FORMAT_NONE) {
-      mode->haveAccumBuffer = GL_TRUE;
-
       mode->accumRedBits =
          util_format_get_component_bits(visual->accum_format,
                UTIL_FORMAT_COLORSPACE_RGB, 0);
@@ -527,7 +521,7 @@ void
 st_framebuffer_reference(struct st_framebuffer **ptr,
                          struct st_framebuffer *stfb)
 {
-   struct gl_framebuffer *fb = &stfb->Base;
+   struct gl_framebuffer *fb = stfb ? &stfb->Base : NULL;
    _mesa_reference_framebuffer((struct gl_framebuffer **) ptr, fb);
 }
 
@@ -557,9 +551,9 @@ st_framebuffer_iface_lookup(struct st_manager *smapi,
    assert(smPriv);
    assert(smPriv->stfbi_ht);
 
-   mtx_lock(&smPriv->st_mutex);
+   simple_mtx_lock(&smPriv->st_mutex);
    entry = _mesa_hash_table_search(smPriv->stfbi_ht, stfbi);
-   mtx_unlock(&smPriv->st_mutex);
+   simple_mtx_unlock(&smPriv->st_mutex);
 
    return entry != NULL;
 }
@@ -576,9 +570,9 @@ st_framebuffer_iface_insert(struct st_manager *smapi,
    assert(smPriv);
    assert(smPriv->stfbi_ht);
 
-   mtx_lock(&smPriv->st_mutex);
+   simple_mtx_lock(&smPriv->st_mutex);
    entry = _mesa_hash_table_insert(smPriv->stfbi_ht, stfbi, stfbi);
-   mtx_unlock(&smPriv->st_mutex);
+   simple_mtx_unlock(&smPriv->st_mutex);
 
    return entry != NULL;
 }
@@ -595,7 +589,7 @@ st_framebuffer_iface_remove(struct st_manager *smapi,
    if (!smPriv || !smPriv->stfbi_ht)
       return;
 
-   mtx_lock(&smPriv->st_mutex);
+   simple_mtx_lock(&smPriv->st_mutex);
    entry = _mesa_hash_table_search(smPriv->stfbi_ht, stfbi);
    if (!entry)
       goto unlock;
@@ -603,7 +597,7 @@ st_framebuffer_iface_remove(struct st_manager *smapi,
    _mesa_hash_table_remove(smPriv->stfbi_ht, entry);
 
 unlock:
-   mtx_unlock(&smPriv->st_mutex);
+   simple_mtx_unlock(&smPriv->st_mutex);
 }
 
 
@@ -647,7 +641,7 @@ st_framebuffers_purge(struct st_context *st)
        * deleted.
        */
       if (!st_framebuffer_iface_lookup(smapi, stfbi)) {
-         LIST_DEL(&stfb->head);
+         list_del(&stfb->head);
          st_framebuffer_reference(&stfb, NULL);
       }
    }
@@ -656,7 +650,9 @@ st_framebuffers_purge(struct st_context *st)
 
 static void
 st_context_flush(struct st_context_iface *stctxi, unsigned flags,
-                 struct pipe_fence_handle **fence)
+                 struct pipe_fence_handle **fence,
+                 void (*before_flush_cb) (void*),
+                 void* args)
 {
    struct st_context *st = (struct st_context *) stctxi;
    unsigned pipe_flags = 0;
@@ -666,8 +662,15 @@ st_context_flush(struct st_context_iface *stctxi, unsigned flags,
    if (flags & ST_FLUSH_FENCE_FD)
       pipe_flags |= PIPE_FLUSH_FENCE_FD;
 
+   /* If both the bitmap cache is dirty and there are unflushed vertices,
+    * it means that glBitmap was called first and then glBegin.
+    */
+   st_flush_bitmap_cache(st);
    FLUSH_VERTICES(st->ctx, 0);
-   FLUSH_CURRENT(st->ctx, 0);
+
+   /* Notify the caller that we're ready to flush */
+   if (before_flush_cb)
+      before_flush_cb(args);
    st_flush(st, fence, pipe_flags);
 
    if ((flags & ST_FLUSH_WAIT) && fence && *fence) {
@@ -825,8 +828,8 @@ st_start_thread(struct st_context_iface *stctxi)
     * If glthread is disabled, st_draw.c re-pins driver threads regularly
     * based on the location of the app thread.
     */
-   struct glthread_state *glthread = st->ctx->GLThread;
-   if (glthread && st->pipe->set_context_param) {
+   struct glthread_state *glthread = &st->ctx->GLThread;
+   if (glthread->enabled && st->pipe->set_context_param) {
       util_pin_driver_threads_to_random_L3(st->pipe, &glthread->queue.threads[0]);
    }
 }
@@ -848,7 +851,7 @@ st_manager_destroy(struct st_manager *smapi)
 
    if (smPriv && smPriv->stfbi_ht) {
       _mesa_hash_table_destroy(smPriv->stfbi_ht, NULL);
-      mtx_destroy(&smPriv->st_mutex);
+      simple_mtx_destroy(&smPriv->st_mutex);
       free(smPriv);
       smapi->st_manager_private = NULL;
    }
@@ -891,6 +894,8 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       return NULL;
    }
 
+   _mesa_initialize();
+
    /* Create a hash table for the framebuffer interface objects
     * if it has not been created for this st manager.
     */
@@ -898,7 +903,7 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       struct st_manager_private *smPriv;
 
       smPriv = CALLOC_STRUCT(st_manager_private);
-      mtx_init(&smPriv->st_mutex, mtx_plain);
+      simple_mtx_init(&smPriv->st_mutex, mtx_plain);
       smPriv->stfbi_ht = _mesa_hash_table_create(NULL,
                                                  st_framebuffer_iface_hash,
                                                  st_framebuffer_iface_equal);
@@ -979,6 +984,8 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       }
    }
 
+   st->can_scissor_clear = !!st->pipe->screen->get_param(st->pipe->screen, PIPE_CAP_CLEAR_SCISSORED);
+
    st->invalidate_on_gl_viewport =
       smapi->get_param(smapi, ST_MANAGER_BROKEN_INVALIDATE);
 
@@ -1043,7 +1050,7 @@ st_framebuffer_reuse_or_create(struct st_context *st,
          }
 
          /* add to the context's winsys buffers list */
-         LIST_ADD(&cur->head, &st->winsys_buffers);
+         list_add(&cur->head, &st->winsys_buffers);
 
          st_framebuffer_reference(&stfb, cur);
       }
@@ -1271,8 +1278,9 @@ get_version(struct pipe_screen *screen,
 
    st_init_limits(screen, &consts, &extensions);
    st_init_extensions(screen, &consts, &extensions, options, api);
-
-   return _mesa_get_version(&extensions, &consts, api);
+   version = _mesa_get_version(&extensions, &consts, api);
+   free(consts.SpirVExtensions);
+   return version;
 }
 
 

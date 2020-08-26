@@ -31,16 +31,17 @@
 #include "os/os_mman.h"
 #include "util/os_time.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_hash_table.h"
 #include "util/u_inlines.h"
+#include "util/u_pointer.h"
 #include "state_tracker/drm_driver.h"
 #include "virgl/virgl_screen.h"
 #include "virgl/virgl_public.h"
 
 #include <xf86drm.h>
 #include <libsync.h>
-#include "virtgpu_drm.h"
+#include "drm-uapi/virtgpu_drm.h"
 
 #include "virgl_drm_winsys.h"
 #include "virgl_drm_public.h"
@@ -68,10 +69,10 @@ static void virgl_hw_res_destroy(struct virgl_drm_winsys *qdws,
       struct drm_gem_close args;
 
       mtx_lock(&qdws->bo_handles_mutex);
-      util_hash_table_remove(qdws->bo_handles,
+      _mesa_hash_table_remove_key(qdws->bo_handles,
                              (void *)(uintptr_t)res->bo_handle);
       if (res->flink_name)
-         util_hash_table_remove(qdws->bo_names,
+         _mesa_hash_table_remove_key(qdws->bo_names,
                                 (void *)(uintptr_t)res->flink_name);
       mtx_unlock(&qdws->bo_handles_mutex);
       if (res->ptr)
@@ -113,8 +114,8 @@ virgl_drm_winsys_destroy(struct virgl_winsys *qws)
 
    virgl_resource_cache_flush(&qdws->cache);
 
-   util_hash_table_destroy(qdws->bo_handles);
-   util_hash_table_destroy(qdws->bo_names);
+   _mesa_hash_table_destroy(qdws->bo_handles, NULL);
+   _mesa_hash_table_destroy(qdws->bo_names, NULL);
    mtx_destroy(&qdws->bo_handles_mutex);
    mtx_destroy(&qdws->mutex);
 
@@ -186,12 +187,10 @@ virgl_drm_winsys_resource_create(struct virgl_winsys *qws,
    }
 
    res->bind = bind;
-   res->format = format;
 
    res->res_handle = createcmd.res_handle;
    res->bo_handle = createcmd.bo_handle;
    res->size = size;
-   res->stride = stride;
    pipe_reference_init(&res->reference, 1);
    p_atomic_set(&res->external, false);
    p_atomic_set(&res->num_cs_references, 0);
@@ -303,7 +302,11 @@ alloc:
 
 static struct virgl_hw_res *
 virgl_drm_winsys_resource_create_handle(struct virgl_winsys *qws,
-                                        struct winsys_handle *whandle)
+                                        struct winsys_handle *whandle,
+                                        uint32_t *plane,
+                                        uint32_t *stride,
+                                        uint32_t *plane_offset,
+                                        uint64_t *modifier)
 {
    struct virgl_drm_winsys *qdws = virgl_drm_winsys(qws);
    struct drm_gem_open open_arg = {};
@@ -311,10 +314,15 @@ virgl_drm_winsys_resource_create_handle(struct virgl_winsys *qws,
    struct virgl_hw_res *res = NULL;
    uint32_t handle = whandle->handle;
 
-   if (whandle->offset != 0) {
-      fprintf(stderr, "attempt to import unsupported winsys offset %u\n",
-              whandle->offset);
+   if (whandle->offset != 0 && whandle->type == WINSYS_HANDLE_TYPE_SHARED) {
+      _debug_printf("attempt to import unsupported winsys offset %u\n",
+                    whandle->offset);
       return NULL;
+   } else if (whandle->type == WINSYS_HANDLE_TYPE_FD) {
+      *plane = whandle->plane;
+      *stride = whandle->stride;
+      *plane_offset = whandle->offset;
+      *modifier = whandle->modifier;
    }
 
    mtx_lock(&qdws->bo_handles_mutex);
@@ -375,14 +383,13 @@ virgl_drm_winsys_resource_create_handle(struct virgl_winsys *qws,
    res->res_handle = info_arg.res_handle;
 
    res->size = info_arg.size;
-   res->stride = info_arg.stride;
    pipe_reference_init(&res->reference, 1);
    p_atomic_set(&res->external, true);
    res->num_cs_references = 0;
 
    if (res->flink_name)
-      util_hash_table_set(qdws->bo_names, (void *)(uintptr_t)res->flink_name, res);
-   util_hash_table_set(qdws->bo_handles, (void *)(uintptr_t)res->bo_handle, res);
+      _mesa_hash_table_insert(qdws->bo_names, (void *)(uintptr_t)res->flink_name, res);
+   _mesa_hash_table_insert(qdws->bo_handles, (void *)(uintptr_t)res->bo_handle, res);
 
 done:
    mtx_unlock(&qdws->bo_handles_mutex);
@@ -411,7 +418,7 @@ static boolean virgl_drm_winsys_resource_get_handle(struct virgl_winsys *qws,
          res->flink_name = flink.name;
 
          mtx_lock(&qdws->bo_handles_mutex);
-         util_hash_table_set(qdws->bo_names, (void *)(uintptr_t)res->flink_name, res);
+         _mesa_hash_table_insert(qdws->bo_names, (void *)(uintptr_t)res->flink_name, res);
          mtx_unlock(&qdws->bo_handles_mutex);
       }
       whandle->handle = res->flink_name;
@@ -421,7 +428,7 @@ static boolean virgl_drm_winsys_resource_get_handle(struct virgl_winsys *qws,
       if (drmPrimeHandleToFD(qdws->fd, res->bo_handle, DRM_CLOEXEC, (int*)&whandle->handle))
             return FALSE;
       mtx_lock(&qdws->bo_handles_mutex);
-      util_hash_table_set(qdws->bo_handles, (void *)(uintptr_t)res->bo_handle, res);
+      _mesa_hash_table_insert(qdws->bo_handles, (void *)(uintptr_t)res->bo_handle, res);
       mtx_unlock(&qdws->bo_handles_mutex);
    }
 
@@ -468,10 +475,10 @@ static void virgl_drm_resource_wait(struct virgl_winsys *qws,
 
    memset(&waitcmd, 0, sizeof(waitcmd));
    waitcmd.handle = res->bo_handle;
- again:
+
    ret = drmIoctl(qdws->fd, DRM_IOCTL_VIRTGPU_WAIT, &waitcmd);
-   if (ret == -EAGAIN)
-      goto again;
+   if (ret)
+      _debug_printf("waiting got error - %d, slow gpu or hang?\n", errno);
 
    p_atomic_set(&res->maybe_busy, false);
 }
@@ -540,7 +547,7 @@ static void virgl_drm_add_res(struct virgl_drm_winsys *qdws,
                               cbuf->nres * sizeof(struct virgl_hw_buf*),
                               new_nres * sizeof(struct virgl_hw_buf*));
       if (!new_ptr) {
-          fprintf(stderr,"failure to add relocation %d, %d\n", cbuf->cres, new_nres);
+          _debug_printf("failure to add relocation %d, %d\n", cbuf->cres, new_nres);
           return;
       }
       cbuf->res_bo = new_ptr;
@@ -549,7 +556,7 @@ static void virgl_drm_add_res(struct virgl_drm_winsys *qdws,
                         cbuf->nres * sizeof(uint32_t),
                         new_nres * sizeof(uint32_t));
       if (!new_ptr) {
-          fprintf(stderr,"failure to add hlist relocation %d, %d\n", cbuf->cres, cbuf->nres);
+          _debug_printf("failure to add hlist relocation %d, %d\n", cbuf->cres, cbuf->nres);
           return;
       }
       cbuf->res_hlist = new_ptr;
@@ -735,7 +742,7 @@ static int virgl_drm_winsys_submit_cmd(struct virgl_winsys *qws,
 
    ret = drmIoctl(qdws->fd, DRM_IOCTL_VIRTGPU_EXECBUFFER, &eb);
    if (ret == -1)
-      fprintf(stderr,"got error from kernel - expect bad rendering %d\n", errno);
+      _debug_printf("got error from kernel - expect bad rendering %d\n", errno);
    cbuf->base.cdw = 0;
 
    if (qws->supports_fences) {
@@ -786,18 +793,6 @@ static int virgl_drm_get_caps(struct virgl_winsys *vws,
           return ret;
    }
    return ret;
-}
-
-#define PTR_TO_UINT(x) ((unsigned)((intptr_t)(x)))
-
-static unsigned handle_hash(void *key)
-{
-    return PTR_TO_UINT(key);
-}
-
-static int handle_compare(void *key1, void *key2)
-{
-    return PTR_TO_UINT(key1) != PTR_TO_UINT(key2);
 }
 
 static struct pipe_fence_handle *
@@ -968,8 +963,8 @@ virgl_drm_winsys_create(int drmFD)
                              qdws);
    (void) mtx_init(&qdws->mutex, mtx_plain);
    (void) mtx_init(&qdws->bo_handles_mutex, mtx_plain);
-   qdws->bo_handles = util_hash_table_create(handle_hash, handle_compare);
-   qdws->bo_names = util_hash_table_create(handle_hash, handle_compare);
+   qdws->bo_handles = util_hash_table_create_ptr_keys();
+   qdws->bo_names = util_hash_table_create_ptr_keys();
    qdws->base.destroy = virgl_drm_winsys_destroy;
 
    qdws->base.transfer_put = virgl_bo_transfer_put;
@@ -1010,7 +1005,7 @@ virgl_drm_winsys_create(int drmFD)
 
 }
 
-static struct util_hash_table *fd_tab = NULL;
+static struct hash_table *fd_tab = NULL;
 static mtx_t virgl_screen_mutex = _MTX_INITIALIZER_NP;
 
 static void
@@ -1023,7 +1018,7 @@ virgl_drm_screen_destroy(struct pipe_screen *pscreen)
    destroy = --screen->refcnt == 0;
    if (destroy) {
       int fd = virgl_drm_winsys(screen->vws)->fd;
-      util_hash_table_remove(fd_tab, intptr_to_pointer(fd));
+      _mesa_hash_table_remove_key(fd_tab, intptr_to_pointer(fd));
       close(fd);
    }
    mtx_unlock(&virgl_screen_mutex);
@@ -1034,28 +1029,6 @@ virgl_drm_screen_destroy(struct pipe_screen *pscreen)
    }
 }
 
-static unsigned hash_fd(void *key)
-{
-   int fd = pointer_to_intptr(key);
-   struct stat stat;
-   fstat(fd, &stat);
-
-   return stat.st_dev ^ stat.st_ino ^ stat.st_rdev;
-}
-
-static int compare_fd(void *key1, void *key2)
-{
-   int fd1 = pointer_to_intptr(key1);
-   int fd2 = pointer_to_intptr(key2);
-   struct stat stat1, stat2;
-   fstat(fd1, &stat1);
-   fstat(fd2, &stat2);
-
-   return stat1.st_dev != stat2.st_dev ||
-         stat1.st_ino != stat2.st_ino ||
-         stat1.st_rdev != stat2.st_rdev;
-}
-
 struct pipe_screen *
 virgl_drm_screen_create(int fd, const struct pipe_screen_config *config)
 {
@@ -1063,7 +1036,7 @@ virgl_drm_screen_create(int fd, const struct pipe_screen_config *config)
 
    mtx_lock(&virgl_screen_mutex);
    if (!fd_tab) {
-      fd_tab = util_hash_table_create(hash_fd, compare_fd);
+      fd_tab = util_hash_table_create_fd_keys();
       if (!fd_tab)
          goto unlock;
    }
@@ -1083,7 +1056,7 @@ virgl_drm_screen_create(int fd, const struct pipe_screen_config *config)
 
       pscreen = virgl_create_screen(vws, config);
       if (pscreen) {
-         util_hash_table_set(fd_tab, intptr_to_pointer(dup_fd), pscreen);
+         _mesa_hash_table_insert(fd_tab, intptr_to_pointer(dup_fd), pscreen);
 
          /* Bit of a hack, to avoid circular linkage dependency,
           * ie. pipe driver having to call in to winsys, we

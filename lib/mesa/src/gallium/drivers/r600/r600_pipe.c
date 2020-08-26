@@ -155,7 +155,7 @@ static struct pipe_context *r600_create_context(struct pipe_screen *screen,
 		goto fail;
 
 	rctx->screen = rscreen;
-	LIST_INITHEAD(&rctx->texture_buffers);
+	list_inithead(&rctx->texture_buffers);
 
 	r600_init_blit_functions(rctx);
 
@@ -249,6 +249,12 @@ fail:
 	return NULL;
 }
 
+static bool is_nir_enabled(struct r600_common_screen *screen) {
+   return (screen->debug_flags & DBG_NIR &&
+       screen->family >= CHIP_CEDAR &&
+       screen->family < CHIP_CAYMAN);
+}
+
 /*
  * pipe_screen
  */
@@ -333,7 +339,7 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 		return rscreen->b.chip_class > R700;
 
 	case PIPE_CAP_TGSI_TEXCOORD:
-		return 0;
+		return is_nir_enabled(&rscreen->b);
 
 	case PIPE_CAP_FAKE_SW_MSAA:
 		return 0;
@@ -400,60 +406,7 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_MAX_COMBINED_SHADER_BUFFERS:
 		return 8;
 
-	/* Unsupported features. */
-	case PIPE_CAP_TGSI_FS_COORD_ORIGIN_LOWER_LEFT:
-	case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
-	case PIPE_CAP_TGSI_CAN_COMPACT_CONSTANTS:
-	case PIPE_CAP_FRAGMENT_COLOR_CLAMPED:
-	case PIPE_CAP_VERTEX_COLOR_CLAMPED:
-	case PIPE_CAP_USER_VERTEX_BUFFERS:
-	case PIPE_CAP_TEXTURE_GATHER_OFFSETS:
-	case PIPE_CAP_VERTEXID_NOBASE:
-	case PIPE_CAP_DEPTH_BOUNDS_TEST:
-	case PIPE_CAP_FORCE_PERSAMPLE_INTERP:
-	case PIPE_CAP_SHAREABLE_SHADERS:
-	case PIPE_CAP_DRAW_PARAMETERS:
-	case PIPE_CAP_MULTI_DRAW_INDIRECT:
-	case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
-	case PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL:
-	case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
-	case PIPE_CAP_GENERATE_MIPMAP:
-	case PIPE_CAP_STRING_MARKER:
-	case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
-	case PIPE_CAP_TGSI_VOTE:
-	case PIPE_CAP_MAX_WINDOW_RECTANGLES:
-	case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
-	case PIPE_CAP_NATIVE_FENCE_FD:
 	case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
-	case PIPE_CAP_FBFETCH:
-	case PIPE_CAP_INT64:
-	case PIPE_CAP_INT64_DIVMOD:
-	case PIPE_CAP_TGSI_TEX_TXF_LZ:
-	case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
-	case PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE:
-	case PIPE_CAP_TGSI_BALLOT:
-	case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
-	case PIPE_CAP_POST_DEPTH_COVERAGE:
-	case PIPE_CAP_BINDLESS_TEXTURE:
-	case PIPE_CAP_NIR_SAMPLERS_AS_DEREF:
-	case PIPE_CAP_QUERY_SO_OVERFLOW:
-	case PIPE_CAP_MEMOBJ:
-	case PIPE_CAP_LOAD_CONSTBUF:
-	case PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS:
-	case PIPE_CAP_TILE_RASTER_ORDER:
-	case PIPE_CAP_SIGNED_VERTEX_BUFFER_OFFSET:
-	case PIPE_CAP_CONTEXT_PRIORITY_MASK:
-	case PIPE_CAP_FENCE_SIGNAL:
-	case PIPE_CAP_CONSTBUF0_FLAGS:
-	case PIPE_CAP_PACKED_UNIFORMS:
-	case PIPE_CAP_FRAMEBUFFER_MSAA_CONSTRAINTS:
-	case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_TRIANGLES:
-	case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_POINTS_LINES:
-	case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_TRIANGLES:
-	case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_POINTS_LINES:
-	case PIPE_CAP_CONSERVATIVE_RASTER_POST_DEPTH_COVERAGE:
-	case PIPE_CAP_MAX_CONSERVATIVE_RASTER_SUBPIXEL_PRECISION_BIAS:
-	case PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS:
 		return 0;
 
 	case PIPE_CAP_DOUBLES:
@@ -595,7 +548,6 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 	{
 	case PIPE_SHADER_FRAGMENT:
 	case PIPE_SHADER_VERTEX:
-	case PIPE_SHADER_COMPUTE:
 		break;
 	case PIPE_SHADER_GEOMETRY:
 		if (rscreen->b.family >= CHIP_CEDAR)
@@ -604,9 +556,13 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 		if (rscreen->b.info.drm_minor >= 37)
 			break;
 		return 0;
+      /* With NIR we currently disable TES, TCS and COMP shaders */
 	case PIPE_SHADER_TESS_CTRL:
 	case PIPE_SHADER_TESS_EVAL:
 		if (rscreen->b.family >= CHIP_CEDAR)
+			break;
+	case PIPE_SHADER_COMPUTE:
+		if (!is_nir_enabled(&rscreen->b))
 			break;
 	default:
 		return 0;
@@ -629,9 +585,11 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 	case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
 		if (shader == PIPE_SHADER_COMPUTE) {
 			uint64_t max_const_buffer_size;
-			pscreen->get_compute_param(pscreen, PIPE_SHADER_IR_TGSI,
-				PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE,
-				&max_const_buffer_size);
+			enum pipe_shader_ir ir_type = is_nir_enabled(&rscreen->b) ?
+				PIPE_SHADER_IR_NIR: PIPE_SHADER_IR_TGSI;
+			pscreen->get_compute_param(pscreen, ir_type,
+						   PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE,
+						   &max_const_buffer_size);
 			return MIN2(max_const_buffer_size, INT_MAX);
 
 		} else {
@@ -658,14 +616,19 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 	case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
 	case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
 		return 16;
-        case PIPE_SHADER_CAP_PREFERRED_IR:
+	case PIPE_SHADER_CAP_PREFERRED_IR:
+		if (is_nir_enabled(&rscreen->b))
+			return PIPE_SHADER_IR_NIR;
 		return PIPE_SHADER_IR_TGSI;
 	case PIPE_SHADER_CAP_SUPPORTED_IRS: {
 		int ir = 0;
 		if (shader == PIPE_SHADER_COMPUTE)
 			ir = 1 << PIPE_SHADER_IR_NATIVE;
-		if (rscreen->b.family >= CHIP_CEDAR)
+		if (rscreen->b.family >= CHIP_CEDAR) {
 			ir |= 1 << PIPE_SHADER_IR_TGSI;
+			if (is_nir_enabled(&rscreen->b))
+				ir |= 1 << PIPE_SHADER_IR_NIR;
+		}
 		return ir;
 	}
 	case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
@@ -697,8 +660,6 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 		if (rscreen->b.family >= CHIP_CEDAR && rscreen->has_atomics) {
 			return EG_MAX_ATOMIC_BUFFERS;
 		}
-		return 0;
-	case PIPE_SHADER_CAP_SCALAR_ISA:
 		return 0;
 	case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
 		/* due to a bug in the shader compiler, some loops hang

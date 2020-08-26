@@ -46,12 +46,17 @@ namespace {
 device::device(clover::platform &platform, pipe_loader_device *ldev) :
    platform(platform), ldev(ldev) {
    pipe = pipe_loader_create_screen(ldev);
-   if (!pipe || !pipe->get_param(pipe, PIPE_CAP_COMPUTE) ||
-       !supports_ir(PIPE_SHADER_IR_NATIVE)) {
-      if (pipe)
-         pipe->destroy(pipe);
-      throw error(CL_INVALID_DEVICE);
+   if (pipe && pipe->get_param(pipe, PIPE_CAP_COMPUTE)) {
+      if (supports_ir(PIPE_SHADER_IR_NATIVE))
+         return;
+#ifdef HAVE_CLOVER_SPIRV
+      if (supports_ir(PIPE_SHADER_IR_NIR_SERIALIZED))
+         return;
+#endif
    }
+   if (pipe)
+      pipe->destroy(pipe);
+   throw error(CL_INVALID_DEVICE);
 }
 
 device::~device() {
@@ -215,6 +220,32 @@ device::mem_base_addr_align() const {
    return sysconf(_SC_PAGESIZE);
 }
 
+cl_device_svm_capabilities
+device::svm_support() const {
+   // Without CAP_RESOURCE_FROM_USER_MEMORY SVM and CL_MEM_USE_HOST_PTR
+   // interactions won't work according to spec as clover manages a GPU side
+   // copy of the host data.
+   //
+   // The biggest problem are memory buffers created with CL_MEM_USE_HOST_PTR,
+   // but the application and/or the kernel updates the memory via SVM and not
+   // the cl_mem buffer.
+   // We can't even do proper tracking on what memory might have been accessed
+   // as the host ptr to the buffer could be within a SVM region, where through
+   // the CL API there is no reliable way of knowing if a certain cl_mem buffer
+   // was accessed by a kernel or not and the runtime can't reliably know from
+   // which side the GPU buffer content needs to be updated.
+   //
+   // Another unsolvable scenario is a cl_mem object passed by cl_mem reference
+   // and SVM pointer into the same kernel at the same time.
+   if (pipe->get_param(pipe, PIPE_CAP_RESOURCE_FROM_USER_MEMORY) &&
+       pipe->get_param(pipe, PIPE_CAP_SYSTEM_SVM))
+      // we can emulate all lower levels if we support fine grain system
+      return CL_DEVICE_SVM_FINE_GRAIN_SYSTEM |
+             CL_DEVICE_SVM_COARSE_GRAIN_BUFFER |
+             CL_DEVICE_SVM_FINE_GRAIN_BUFFER;
+   return 0;
+}
+
 std::vector<size_t>
 device::max_block_size() const {
    auto v = get_compute_param<uint64_t>(pipe, ir_format(),
@@ -246,7 +277,11 @@ device::vendor_name() const {
 
 enum pipe_shader_ir
 device::ir_format() const {
-   return PIPE_SHADER_IR_NATIVE;
+   if (supports_ir(PIPE_SHADER_IR_NATIVE))
+      return PIPE_SHADER_IR_NATIVE;
+
+   assert(supports_ir(PIPE_SHADER_IR_NIR_SERIALIZED));
+   return PIPE_SHADER_IR_NIR_SERIALIZED;
 }
 
 std::string
@@ -292,5 +327,11 @@ device::supported_extensions() const {
       + std::string(has_int64_atomics() ? " cl_khr_int64_base_atomics" : "")
       + std::string(has_int64_atomics() ? " cl_khr_int64_extended_atomics" : "")
       + std::string(has_doubles() ? " cl_khr_fp64" : "")
-      + std::string(has_halves() ? " cl_khr_fp16" : "");
+      + std::string(has_halves() ? " cl_khr_fp16" : "")
+      + std::string(svm_support() ? " cl_arm_shared_virtual_memory" : "");
+}
+
+const void *
+device::get_compiler_options(enum pipe_shader_ir ir) const {
+   return pipe->get_compiler_options(pipe, ir, PIPE_SHADER_COMPUTE);
 }

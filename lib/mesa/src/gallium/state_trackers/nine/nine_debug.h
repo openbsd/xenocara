@@ -24,6 +24,7 @@
 #define _NINE_DEBUG_H_
 
 #include "util/u_debug.h"
+#include "pipe/p_compiler.h"
 
 void
 _nine_debug_printf( unsigned long flag,
@@ -44,15 +45,15 @@ _nine_debug_printf( unsigned long flag,
         } \
     } while(0)
 #else
-#define WARN(fmt, ...)
-#define WARN_ONCE(fmt, ...)
+#define WARN(fmt, ...) do {} while(0)
+#define WARN_ONCE(fmt, ...) do {} while(0)
 #endif
 
 #if defined(DEBUG) || !defined(NDEBUG)
 #define DBG_FLAG(flag, fmt, ...) \
     _nine_debug_printf(flag, __FUNCTION__, fmt, ## __VA_ARGS__)
 #else
-#define DBG_FLAG(flag, fmt, ...)
+#define DBG_FLAG(flag, fmt, ...) do {} while(0)
 #endif
 #define DBG(fmt, ...) DBG_FLAG(DBG_CHANNEL, fmt, ## __VA_ARGS__)
 
@@ -116,7 +117,7 @@ _nine_stub( const char *file,
 #define user_warn(x) \
     if ((x)) { DBG_FLAG(DBG_USER, "User warning: `%s'\n", #x); }
 #else
-#define user_warn(x)
+#define user_warn(x) do {} while(0)
 #endif
 
 /* nonfatal assert */

@@ -458,6 +458,16 @@ static inline nir_ssa_def *
 nir_mov_alu(nir_builder *build, nir_alu_src src, unsigned num_components)
 {
    assert(!src.abs && !src.negate);
+   if (src.src.is_ssa && src.src.ssa->num_components == num_components) {
+      bool any_swizzles = false;
+      for (unsigned i = 0; i < num_components; i++) {
+         if (src.swizzle[i] != i)
+            any_swizzles = true;
+      }
+      if (!any_swizzles)
+         return src.src.ssa;
+   }
+
    nir_alu_instr *mov = nir_alu_instr_create(build->shader, nir_op_mov);
    nir_ssa_dest_init(&mov->instr, &mov->dest.dest, num_components,
                      nir_src_bit_size(src.src), NULL);
@@ -570,7 +580,7 @@ _nir_vector_extract_helper(nir_builder *b, nir_ssa_def *vec, nir_ssa_def *c,
       return nir_channel(b, vec, start);
    } else {
       unsigned mid = start + (end - start) / 2;
-      return nir_bcsel(b, nir_ilt(b, c, nir_imm_int(b, mid)),
+      return nir_bcsel(b, nir_ilt(b, c, nir_imm_intN_t(b, mid, c->bit_size)),
                        _nir_vector_extract_helper(b, vec, c, start, mid),
                        _nir_vector_extract_helper(b, vec, c, mid, end));
    }
@@ -581,13 +591,68 @@ nir_vector_extract(nir_builder *b, nir_ssa_def *vec, nir_ssa_def *c)
 {
    nir_src c_src = nir_src_for_ssa(c);
    if (nir_src_is_const(c_src)) {
-      unsigned c_const = nir_src_as_uint(c_src);
+      uint64_t c_const = nir_src_as_uint(c_src);
       if (c_const < vec->num_components)
          return nir_channel(b, vec, c_const);
       else
          return nir_ssa_undef(b, 1, vec->bit_size);
    } else {
       return _nir_vector_extract_helper(b, vec, c, 0, vec->num_components);
+   }
+}
+
+/** Replaces the component of `vec` specified by `c` with `scalar` */
+static inline nir_ssa_def *
+nir_vector_insert_imm(nir_builder *b, nir_ssa_def *vec,
+                      nir_ssa_def *scalar, unsigned c)
+{
+   assert(scalar->num_components == 1);
+   assert(c < vec->num_components);
+
+   nir_op vec_op = nir_op_vec(vec->num_components);
+   nir_alu_instr *vec_instr = nir_alu_instr_create(b->shader, vec_op);
+
+   for (unsigned i = 0; i < vec->num_components; i++) {
+      if (i == c) {
+         vec_instr->src[i].src = nir_src_for_ssa(scalar);
+         vec_instr->src[i].swizzle[0] = 0;
+      } else {
+         vec_instr->src[i].src = nir_src_for_ssa(vec);
+         vec_instr->src[i].swizzle[0] = i;
+      }
+   }
+
+   return nir_builder_alu_instr_finish_and_insert(b, vec_instr);
+}
+
+/** Replaces the component of `vec` specified by `c` with `scalar` */
+static inline nir_ssa_def *
+nir_vector_insert(nir_builder *b, nir_ssa_def *vec, nir_ssa_def *scalar,
+                  nir_ssa_def *c)
+{
+   assert(scalar->num_components == 1);
+   assert(c->num_components == 1);
+
+   nir_src c_src = nir_src_for_ssa(c);
+   if (nir_src_is_const(c_src)) {
+      uint64_t c_const = nir_src_as_uint(c_src);
+      if (c_const < vec->num_components)
+         return nir_vector_insert_imm(b, vec, scalar, c_const);
+      else
+         return vec;
+   } else {
+      nir_const_value per_comp_idx_const[NIR_MAX_VEC_COMPONENTS];
+      for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++)
+         per_comp_idx_const[i] = nir_const_value_for_int(i, c->bit_size);
+      nir_ssa_def *per_comp_idx =
+         nir_build_imm(b, vec->num_components,
+                       c->bit_size, per_comp_idx_const);
+
+      /* nir_builder will automatically splat out scalars to vectors so an
+       * insert is as simple as "if I'm the channel, replace me with the
+       * scalar."
+       */
+      return nir_bcsel(b, nir_ieq(b, c, per_comp_idx), scalar, vec);
    }
 }
 
@@ -636,7 +701,7 @@ nir_iadd_imm(nir_builder *build, nir_ssa_def *x, uint64_t y)
 }
 
 static inline nir_ssa_def *
-nir_imul_imm(nir_builder *build, nir_ssa_def *x, uint64_t y)
+_nir_mul_imm(nir_builder *build, nir_ssa_def *x, uint64_t y, bool amul)
 {
    assert(x->bit_size <= 64);
    if (x->bit_size < 64)
@@ -646,11 +711,26 @@ nir_imul_imm(nir_builder *build, nir_ssa_def *x, uint64_t y)
       return nir_imm_intN_t(build, 0, x->bit_size);
    } else if (y == 1) {
       return x;
-   } else if (util_is_power_of_two_or_zero64(y)) {
+   } else if (!build->shader->options->lower_bitops &&
+              util_is_power_of_two_or_zero64(y)) {
       return nir_ishl(build, x, nir_imm_int(build, ffsll(y) - 1));
+   } else if (amul) {
+      return nir_amul(build, x, nir_imm_intN_t(build, y, x->bit_size));
    } else {
       return nir_imul(build, x, nir_imm_intN_t(build, y, x->bit_size));
    }
+}
+
+static inline nir_ssa_def *
+nir_imul_imm(nir_builder *build, nir_ssa_def *x, uint64_t y)
+{
+   return _nir_mul_imm(build, x, y, false);
+}
+
+static inline nir_ssa_def *
+nir_amul_imm(nir_builder *build, nir_ssa_def *x, uint64_t y)
+{
+   return _nir_mul_imm(build, x, y, true);
 }
 
 static inline nir_ssa_def *
@@ -733,6 +813,85 @@ nir_unpack_bits(nir_builder *b, nir_ssa_def *src, unsigned dest_bit_size)
    return nir_vec(b, dest_comps, dest_num_components);
 }
 
+/**
+ * Treats srcs as if it's one big blob of bits and extracts the range of bits
+ * given by
+ *
+ *       [first_bit, first_bit + dest_num_components * dest_bit_size)
+ *
+ * The range can have any alignment or size as long as it's an integer number
+ * of destination components and fits inside the concatenated sources.
+ *
+ * TODO: The one caveat here is that we can't handle byte alignment if 64-bit
+ * values are involved because that would require pack/unpack to/from a vec8
+ * which NIR currently does not support.
+ */
+static inline nir_ssa_def *
+nir_extract_bits(nir_builder *b, nir_ssa_def **srcs, unsigned num_srcs,
+                 unsigned first_bit,
+                 unsigned dest_num_components, unsigned dest_bit_size)
+{
+   const unsigned num_bits = dest_num_components * dest_bit_size;
+
+   /* Figure out the common bit size */
+   unsigned common_bit_size = dest_bit_size;
+   for (unsigned i = 0; i < num_srcs; i++)
+      common_bit_size = MIN2(common_bit_size, srcs[i]->bit_size);
+   if (first_bit > 0)
+      common_bit_size = MIN2(common_bit_size, (1u << (ffs(first_bit) - 1)));
+
+   /* We don't want to have to deal with 1-bit values */
+   assert(common_bit_size >= 8);
+
+   nir_ssa_def *common_comps[NIR_MAX_VEC_COMPONENTS * sizeof(uint64_t)];
+   assert(num_bits / common_bit_size <= ARRAY_SIZE(common_comps));
+
+   /* First, unpack to the common bit size and select the components from the
+    * source.
+    */
+   int src_idx = -1;
+   unsigned src_start_bit = 0;
+   unsigned src_end_bit = 0;
+   for (unsigned i = 0; i < num_bits / common_bit_size; i++) {
+      const unsigned bit = first_bit + (i * common_bit_size);
+      while (bit >= src_end_bit) {
+         src_idx++;
+         assert(src_idx < (int) num_srcs);
+         src_start_bit = src_end_bit;
+         src_end_bit += srcs[src_idx]->bit_size *
+                        srcs[src_idx]->num_components;
+      }
+      assert(bit >= src_start_bit);
+      assert(bit + common_bit_size <= src_end_bit);
+      const unsigned rel_bit = bit - src_start_bit;
+      const unsigned src_bit_size = srcs[src_idx]->bit_size;
+
+      nir_ssa_def *comp = nir_channel(b, srcs[src_idx],
+                                      rel_bit / src_bit_size);
+      if (srcs[src_idx]->bit_size > common_bit_size) {
+         nir_ssa_def *unpacked = nir_unpack_bits(b, comp, common_bit_size);
+         comp = nir_channel(b, unpacked, (rel_bit % src_bit_size) /
+                                         common_bit_size);
+      }
+      common_comps[i] = comp;
+   }
+
+   /* Now, re-pack the destination if we have to */
+   if (dest_bit_size > common_bit_size) {
+      unsigned common_per_dest = dest_bit_size / common_bit_size;
+      nir_ssa_def *dest_comps[NIR_MAX_VEC_COMPONENTS];
+      for (unsigned i = 0; i < dest_num_components; i++) {
+         nir_ssa_def *unpacked = nir_vec(b, common_comps + i * common_per_dest,
+                                         common_per_dest);
+         dest_comps[i] = nir_pack_bits(b, unpacked, dest_bit_size);
+      }
+      return nir_vec(b, dest_comps, dest_num_components);
+   } else {
+      assert(dest_bit_size == common_bit_size);
+      return nir_vec(b, common_comps, dest_num_components);
+   }
+}
+
 static inline nir_ssa_def *
 nir_bitcast_vector(nir_builder *b, nir_ssa_def *src, unsigned dest_bit_size)
 {
@@ -741,43 +900,7 @@ nir_bitcast_vector(nir_builder *b, nir_ssa_def *src, unsigned dest_bit_size)
       (src->bit_size * src->num_components) / dest_bit_size;
    assert(dest_num_components <= NIR_MAX_VEC_COMPONENTS);
 
-   if (src->bit_size > dest_bit_size) {
-      assert(src->bit_size % dest_bit_size == 0);
-      if (src->num_components == 1) {
-         return nir_unpack_bits(b, src, dest_bit_size);
-      } else {
-         const unsigned divisor = src->bit_size / dest_bit_size;
-         assert(src->num_components * divisor == dest_num_components);
-         nir_ssa_def *dest[NIR_MAX_VEC_COMPONENTS];
-         for (unsigned i = 0; i < src->num_components; i++) {
-            nir_ssa_def *unpacked =
-               nir_unpack_bits(b, nir_channel(b, src, i), dest_bit_size);
-            assert(unpacked->num_components == divisor);
-            for (unsigned j = 0; j < divisor; j++)
-               dest[i * divisor + j] = nir_channel(b, unpacked, j);
-         }
-         return nir_vec(b, dest, dest_num_components);
-      }
-   } else if (src->bit_size < dest_bit_size) {
-      assert(dest_bit_size % src->bit_size == 0);
-      if (dest_num_components == 1) {
-         return nir_pack_bits(b, src, dest_bit_size);
-      } else {
-         const unsigned divisor = dest_bit_size / src->bit_size;
-         assert(src->num_components == dest_num_components * divisor);
-         nir_ssa_def *dest[NIR_MAX_VEC_COMPONENTS];
-         for (unsigned i = 0; i < dest_num_components; i++) {
-            nir_component_mask_t src_mask =
-               ((1 << divisor) - 1) << (i * divisor);
-            dest[i] = nir_pack_bits(b, nir_channels(b, src, src_mask),
-                                       dest_bit_size);
-         }
-         return nir_vec(b, dest, dest_num_components);
-      }
-   } else {
-      assert(src->bit_size == dest_bit_size);
-      return src;
-   }
+   return nir_extract_bits(b, &src, 1, 0, dest_num_components, dest_bit_size);
 }
 
 /**
@@ -807,7 +930,7 @@ nir_ssa_for_src(nir_builder *build, nir_src src, int num_components)
 static inline nir_ssa_def *
 nir_ssa_for_alu_src(nir_builder *build, nir_alu_instr *instr, unsigned srcn)
 {
-   static uint8_t trivial_swizzle[] = { 0, 1, 2, 3 };
+   static uint8_t trivial_swizzle[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
    STATIC_ASSERT(ARRAY_SIZE(trivial_swizzle) == NIR_MAX_VEC_COMPONENTS);
 
    nir_alu_src *src = &instr->src[srcn];
@@ -1182,8 +1305,9 @@ static inline nir_ssa_def *
 nir_load_barycentric(nir_builder *build, nir_intrinsic_op op,
                      unsigned interp_mode)
 {
+   unsigned num_components = op == nir_intrinsic_load_barycentric_model ? 3 : 2;
    nir_intrinsic_instr *bary = nir_intrinsic_instr_create(build->shader, op);
-   nir_ssa_dest_init(&bary->instr, &bary->dest, 2, 32, NULL);
+   nir_ssa_dest_init(&bary->instr, &bary->dest, num_components, 32, NULL);
    nir_intrinsic_set_interp_mode(bary, interp_mode);
    nir_builder_instr_insert(build, &bary->instr);
    return &bary->dest.ssa;
@@ -1219,6 +1343,20 @@ nir_compare_func(nir_builder *b, enum compare_func func,
       return nir_fge(b, src1, src0);
    }
    unreachable("bad compare func");
+}
+
+static inline void
+nir_scoped_memory_barrier(nir_builder *b,
+                          nir_scope scope,
+                          nir_memory_semantics semantics,
+                          nir_variable_mode modes)
+{
+   nir_intrinsic_instr *intrin =
+      nir_intrinsic_instr_create(b->shader, nir_intrinsic_scoped_memory_barrier);
+   nir_intrinsic_set_memory_scope(intrin, scope);
+   nir_intrinsic_set_memory_semantics(intrin, semantics);
+   nir_intrinsic_set_memory_modes(intrin, modes);
+   nir_builder_instr_insert(b, &intrin->instr);
 }
 
 #endif /* NIR_BUILDER_H */

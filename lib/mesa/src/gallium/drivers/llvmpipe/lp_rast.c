@@ -33,7 +33,7 @@
 #include "util/u_pack_color.h"
 #include "util/u_string.h"
 #include "util/u_thread.h"
-
+#include "util/u_memset.h"
 #include "util/os_time.h"
 
 #include "lp_scene_queue.h"
@@ -211,7 +211,11 @@ lp_rast_clear_zstencil(struct lp_rasterizer_task *task,
          switch (block_size) {
          case 1:
             assert(clear_mask == 0xff);
-            memset(dst, (uint8_t) clear_value, height * width);
+            for (i = 0; i < height; i++) {
+               uint8_t *row = (uint8_t *)dst;
+               memset(row, (uint8_t) clear_value, width);
+               dst += dst_stride;
+            }
             break;
          case 2:
             if (clear_mask == 0xffff) {
@@ -236,9 +240,7 @@ lp_rast_clear_zstencil(struct lp_rasterizer_task *task,
          case 4:
             if (clear_mask == 0xffffffff) {
                for (i = 0; i < height; i++) {
-                  uint32_t *row = (uint32_t *)dst;
-                  for (j = 0; j < width; j++)
-                     *row++ = clear_value;
+                  util_memset32(dst, clear_value, width);
                   dst += dst_stride;
                }
             }
@@ -628,7 +630,7 @@ rasterize_bin(struct lp_rasterizer_task *task,
 
    lp_rast_tile_end(task);
 
-
+#ifdef DEBUG
    /* Debug/Perf flags:
     */
    if (bin->head->count == 1) {
@@ -637,6 +639,7 @@ rasterize_bin(struct lp_rasterizer_task *task,
       else if (bin->head->cmd[0] == LP_RAST_OP_SHADE_TILE)
          LP_COUNT(nr_pure_shade_64);
    }
+#endif
 }
 
 
@@ -866,6 +869,10 @@ create_rast_threads(struct lp_rasterizer *rast)
       pipe_semaphore_init(&rast->tasks[i].work_done, 0);
       rast->threads[i] = u_thread_create(thread_function,
                                             (void *) &rast->tasks[i]);
+      if (!rast->threads[i]) {
+         rast->num_threads = i; /* previous thread is max */
+         break;
+      }
    }
 }
 

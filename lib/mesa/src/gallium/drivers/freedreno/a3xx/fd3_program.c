@@ -29,7 +29,7 @@
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "freedreno_program.h"
 
@@ -37,43 +37,6 @@
 #include "fd3_emit.h"
 #include "fd3_texture.h"
 #include "fd3_format.h"
-
-static struct ir3_shader *
-create_shader_stateobj(struct pipe_context *pctx, const struct pipe_shader_state *cso,
-		gl_shader_stage type)
-{
-	struct fd_context *ctx = fd_context(pctx);
-	struct ir3_compiler *compiler = ctx->screen->compiler;
-	return ir3_shader_create(compiler, cso, type, &ctx->debug, pctx->screen);
-}
-
-static void *
-fd3_fp_state_create(struct pipe_context *pctx,
-		const struct pipe_shader_state *cso)
-{
-	return create_shader_stateobj(pctx, cso, MESA_SHADER_FRAGMENT);
-}
-
-static void
-fd3_fp_state_delete(struct pipe_context *pctx, void *hwcso)
-{
-	struct ir3_shader *so = hwcso;
-	ir3_shader_destroy(so);
-}
-
-static void *
-fd3_vp_state_create(struct pipe_context *pctx,
-		const struct pipe_shader_state *cso)
-{
-	return create_shader_stateobj(pctx, cso, MESA_SHADER_VERTEX);
-}
-
-static void
-fd3_vp_state_delete(struct pipe_context *pctx, void *hwcso)
-{
-	struct ir3_shader *so = hwcso;
-	ir3_shader_destroy(so);
-}
 
 bool
 fd3_needs_manual_clipping(const struct ir3_shader *shader,
@@ -211,7 +174,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 	face_regid      = ir3_find_sysval_regid(fp, SYSTEM_VALUE_FRONT_FACE);
 	coord_regid     = ir3_find_sysval_regid(fp, SYSTEM_VALUE_FRAG_COORD);
 	zwcoord_regid   = (coord_regid == regid(63,0)) ? regid(63,0) : (coord_regid + 2);
-	vcoord_regid    = ir3_find_sysval_regid(fp, SYSTEM_VALUE_BARYCENTRIC_PIXEL);
+	vcoord_regid    = ir3_find_sysval_regid(fp, SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL);
 
 	/* adjust regids for alpha output formats. there is no alpha render
 	 * format, so it's just treated like red
@@ -274,7 +237,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 			A3XX_SP_VS_PARAM_REG_TOTALVSOUTVAR(fp->varying_in));
 
 	struct ir3_shader_linkage l = {0};
-	ir3_link_shaders(&l, vp, fp);
+	ir3_link_shaders(&l, vp, fp, false);
 
 	for (i = 0, j = 0; (i < 16) && (j < l.cnt); i++) {
 		uint32_t reg = 0;
@@ -335,7 +298,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 				A3XX_SP_FS_CTRL_REG0_INOUTREGOVERLAP |
 				A3XX_SP_FS_CTRL_REG0_THREADSIZE(FOUR_QUADS) |
 				A3XX_SP_FS_CTRL_REG0_SUPERTHREADMODE |
-				COND(fp->num_samp > 0, A3XX_SP_FS_CTRL_REG0_PIXLODENABLE) |
+				COND(fp->need_pixlod, A3XX_SP_FS_CTRL_REG0_PIXLODENABLE) |
 				A3XX_SP_FS_CTRL_REG0_LENGTH(fpbuffersz));
 		OUT_RING(ring, A3XX_SP_FS_CTRL_REG1_CONSTLENGTH(fp->constlen) |
 				A3XX_SP_FS_CTRL_REG1_INITIALOUTSTANDING(fp->total_in) |
@@ -358,7 +321,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 	OUT_PKT0(ring, REG_A3XX_SP_FS_MRT_REG(0), 4);
 	for (i = 0; i < 4; i++) {
 		uint32_t mrt_reg = A3XX_SP_FS_MRT_REG_REGID(color_regid[i]) |
-			COND(fp->key.half_precision, A3XX_SP_FS_MRT_REG_HALF_PRECISION);
+			COND(color_regid[i] & HALF_REG_ID, A3XX_SP_FS_MRT_REG_HALF_PRECISION);
 
 		if (i < nr) {
 			enum pipe_format fmt = pipe_surface_format(bufs[i]);
@@ -485,11 +448,6 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 void
 fd3_prog_init(struct pipe_context *pctx)
 {
-	pctx->create_fs_state = fd3_fp_state_create;
-	pctx->delete_fs_state = fd3_fp_state_delete;
-
-	pctx->create_vs_state = fd3_vp_state_create;
-	pctx->delete_vs_state = fd3_vp_state_delete;
-
+	ir3_prog_init(pctx);
 	fd_prog_init(pctx);
 }

@@ -32,6 +32,7 @@
 
 #include "draw/draw_context.h"
 #include "draw/draw_gs.h"
+#include "draw/draw_tess.h"
 #include "draw/draw_private.h"
 #include "draw/draw_pt.h"
 #include "draw/draw_vbuf.h"
@@ -39,7 +40,7 @@
 #include "tgsi/tgsi_dump.h"
 #include "util/u_math.h"
 #include "util/u_prim.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_draw.h"
 
 
@@ -66,16 +67,24 @@ draw_pt_arrays(struct draw_context *draw,
     */
    {
       unsigned first, incr;
-      draw_pt_split_prim(prim, &first, &incr);
+
+      if (prim == PIPE_PRIM_PATCHES) {
+         first = draw->pt.vertices_per_patch;
+         incr = draw->pt.vertices_per_patch;
+      } else
+         draw_pt_split_prim(prim, &first, &incr);
       count = draw_pt_trim_count(count, first, incr);
       if (count < first)
          return TRUE;
    }
 
    if (!draw->force_passthrough) {
-      unsigned gs_out_prim = (draw->gs.geometry_shader ? 
-                              draw->gs.geometry_shader->output_primitive :
-                              prim);
+      unsigned out_prim = prim;
+
+      if (draw->gs.geometry_shader)
+         out_prim = draw->gs.geometry_shader->output_primitive;
+      else if (draw->tes.tess_eval_shader)
+         out_prim = get_tes_output_prim(draw->tes.tess_eval_shader);
 
       if (!draw->render) {
          opt |= PT_PIPELINE;
@@ -83,7 +92,7 @@ draw_pt_arrays(struct draw_context *draw,
 
       if (draw_need_pipeline(draw,
                              draw->rasterizer,
-                             gs_out_prim)) {
+                             out_prim)) {
          opt |= PT_PIPELINE;
       }
 
@@ -191,7 +200,7 @@ boolean draw_pt_init( struct draw_context *draw )
    if (!draw->pt.middle.general)
       return FALSE;
 
-#if HAVE_LLVM
+#ifdef LLVM_AVAILABLE
    if (draw->llvm)
       draw->pt.middle.llvm = draw_pt_fetch_pipeline_or_emit_llvm( draw );
 #endif
@@ -485,6 +494,9 @@ draw_vbo(struct draw_context *draw,
    draw->pt.user.min_index = info->min_index;
    draw->pt.user.max_index = info->max_index;
    draw->pt.user.eltSize = info->index_size ? draw->pt.user.eltSizeIB : 0;
+   draw->pt.user.drawid = info->drawid;
+
+   draw->pt.vertices_per_patch = info->vertices_per_patch;
 
    if (0)
       debug_printf("draw_vbo(mode=%u start=%u count=%u):\n",
@@ -522,7 +534,7 @@ draw_vbo(struct draw_context *draw,
                                      draw->pt.vertex_element,
                                      draw->pt.nr_vertex_elements,
                                      info);
-#if HAVE_LLVM
+#ifdef LLVM_AVAILABLE
    if (!draw->llvm)
 #endif
    {

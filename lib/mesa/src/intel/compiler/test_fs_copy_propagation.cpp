@@ -47,8 +47,7 @@ public:
                                struct brw_wm_prog_data *prog_data,
                                nir_shader *shader)
       : fs_visitor(compiler, NULL, NULL, NULL,
-                   &prog_data->base, (struct gl_program *) NULL,
-                   shader, 8, -1) {}
+                   &prog_data->base, shader, 8, -1) {}
 };
 
 
@@ -85,14 +84,14 @@ copy_propagation(fs_visitor *v)
 
    if (print) {
       fprintf(stderr, "= Before =\n");
-      v->cfg->dump(v);
+      v->cfg->dump();
    }
 
    bool ret = v->opt_copy_propagation();
 
    if (print) {
       fprintf(stderr, "\n= After =\n");
-      v->cfg->dump(v);
+      v->cfg->dump();
    }
 
    return ret;

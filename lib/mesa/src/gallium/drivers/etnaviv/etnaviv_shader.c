@@ -151,6 +151,10 @@ etna_link_shaders(struct etna_context *ctx, struct compiled_shader_state *cs,
       cs->VS_OUTPUT_COUNT_PSIZE = cs->VS_OUTPUT_COUNT;
    }
 
+   /* if fragment shader doesn't read pointcoord, disable it */
+   if (link.pcoord_varying_comp_ofs == -1)
+      cs->PA_CONFIG &= ~VIVS_PA_CONFIG_POINT_SPRITE_ENABLE;
+
    cs->VS_LOAD_BALANCING = vs->vs_load_balancing;
    cs->VS_START_PC = 0;
 
@@ -161,7 +165,6 @@ etna_link_shaders(struct etna_context *ctx, struct compiled_shader_state *cs,
       VIVS_PS_INPUT_COUNT_UNK8(fs->input_count_unk8);
    cs->PS_TEMP_REGISTER_CONTROL =
       VIVS_PS_TEMP_REGISTER_CONTROL_NUM_TEMPS(MAX2(fs->num_temps, link.num_varyings + 1));
-   cs->PS_CONTROL = VIVS_PS_CONTROL_SATURATE_RT0; /* XXX when can we set BYPASS? */
    cs->PS_START_PC = 0;
 
    /* Precompute PS_INPUT_COUNT and TEMP_REGISTER_CONTROL in the case of MSAA
@@ -187,7 +190,8 @@ etna_link_shaders(struct etna_context *ctx, struct compiled_shader_state *cs,
 
    cs->GL_VARYING_TOTAL_COMPONENTS =
       VIVS_GL_VARYING_TOTAL_COMPONENTS_NUM(align(total_components, 2));
-   cs->GL_VARYING_NUM_COMPONENTS = num_components[0];
+   cs->GL_VARYING_NUM_COMPONENTS[0] = num_components[0];
+   cs->GL_VARYING_NUM_COMPONENTS[1] = num_components[1];
    cs->GL_VARYING_COMPONENT_USE[0] = component_use[0];
    cs->GL_VARYING_COMPONENT_USE[1] = component_use[1];
 
@@ -199,6 +203,9 @@ etna_link_shaders(struct etna_context *ctx, struct compiled_shader_state *cs,
       VIVS_GL_HALTI5_SH_SPECIALS_PS_PCOORD_IN((link.pcoord_varying_comp_ofs != -1) ?
                                               link.pcoord_varying_comp_ofs : 0x7f);
 
+   /* mask out early Z bit when frag depth is written */
+   cs->PE_DEPTH_CONFIG = ~COND(fs->ps_depth_out_reg >= 0, VIVS_PE_DEPTH_CONFIG_EARLY_Z);
+
    /* reference instruction memory */
    cs->vs_inst_mem_size = vs->code_size;
    cs->VS_INST_MEM = vs->code;
@@ -206,7 +213,7 @@ etna_link_shaders(struct etna_context *ctx, struct compiled_shader_state *cs,
    cs->ps_inst_mem_size = fs->code_size;
    cs->PS_INST_MEM = fs->code;
 
-   if (vs->needs_icache | fs->needs_icache) {
+   if (vs->needs_icache || fs->needs_icache) {
       /* If either of the shaders needs ICACHE, we use it for both. It is
        * either switched on or off for the entire shader processor.
        */
@@ -278,6 +285,20 @@ etna_shader_update_vs_inputs(struct compiled_shader_state *cs,
          etna_bitarray_set(vs_input, 8, idx, cur_temp++);
    }
 
+   if (vs->vs_id_in_reg >= 0) {
+      cs->VS_INPUT_COUNT = VIVS_VS_INPUT_COUNT_COUNT(num_vs_inputs + 1) |
+                           VIVS_VS_INPUT_COUNT_UNK8(vs->input_count_unk8) |
+                           VIVS_VS_INPUT_COUNT_ID_ENABLE;
+
+      etna_bitarray_set(vs_input, 8, num_vs_inputs, vs->vs_id_in_reg);
+
+      cs->FE_HALTI5_ID_CONFIG =
+         VIVS_FE_HALTI5_ID_CONFIG_VERTEX_ID_ENABLE |
+         VIVS_FE_HALTI5_ID_CONFIG_INSTANCE_ID_ENABLE |
+         VIVS_FE_HALTI5_ID_CONFIG_VERTEX_ID_REG(vs->vs_id_in_reg * 4) |
+         VIVS_FE_HALTI5_ID_CONFIG_INSTANCE_ID_REG(vs->vs_id_in_reg * 4 + 1);
+   }
+
    for (int idx = 0; idx < ARRAY_SIZE(cs->VS_INPUT); ++idx)
       cs->VS_INPUT[idx] = vs_input[idx];
 
@@ -303,15 +324,12 @@ dump_shader_info(struct etna_shader_variant *v, struct pipe_debug_callback *debu
    if (!unlikely(etna_mesa_debug & ETNA_DBG_SHADERDB))
       return;
 
-   pipe_debug_message(debug, SHADER_INFO, "\n"
-         "SHADER-DB: %s prog %d/%d: %u instructions %u temps\n"
-         "SHADER-DB: %s prog %d/%d: %u immediates %u loops\n",
+   pipe_debug_message(debug, SHADER_INFO,
+         "%s shader: %u instructions, %u temps, "
+         "%u immediates, %u loops",
          etna_shader_stage(v),
-         v->shader->id, v->id,
          v->code_size,
          v->num_temps,
-         etna_shader_stage(v),
-         v->shader->id, v->id,
          v->uniforms.imm_count,
          v->num_loops);
 }
@@ -376,6 +394,7 @@ etna_create_shader_state(struct pipe_context *pctx,
                          const struct pipe_shader_state *pss)
 {
    struct etna_context *ctx = etna_context(pctx);
+   struct etna_screen *screen = ctx->screen;
    struct etna_shader *shader = CALLOC_STRUCT(etna_shader);
 
    if (!shader)
@@ -383,7 +402,7 @@ etna_create_shader_state(struct pipe_context *pctx,
 
    static uint32_t id;
    shader->id = id++;
-   shader->specs = &ctx->specs;
+   shader->specs = &screen->specs;
 
    if (DBG_ENABLED(ETNA_DBG_NIR))
       shader->nir = (pss->type == PIPE_SHADER_IR_NIR) ? pss->ir.nir :

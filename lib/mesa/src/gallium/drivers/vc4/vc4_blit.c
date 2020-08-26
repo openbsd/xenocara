@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_surface.h"
 #include "util/u_blitter.h"
 #include "compiler/nir/nir_builder.h"
@@ -165,6 +165,8 @@ vc4_tile_blit(struct pipe_context *pctx, const struct pipe_blit_info *info)
 void
 vc4_blitter_save(struct vc4_context *vc4)
 {
+        util_blitter_save_fragment_constant_buffer_slot(vc4->blitter,
+                                                        vc4->constbuf[PIPE_SHADER_FRAGMENT].cb);
         util_blitter_save_vertex_buffer_slot(vc4->blitter, vc4->vertexbuf.vb);
         util_blitter_save_vertex_elements(vc4->blitter, vc4->vtx);
         util_blitter_save_vertex_shader(vc4->blitter, vc4->prog.bind_vs);
@@ -360,7 +362,7 @@ vc4_yuv_blit(struct pipe_context *pctx, const struct pipe_blit_info *info)
                 util_blitter_unset_running_flag(vc4->blitter);
                 return false;
         }
-        dst_surf->width /= 2;
+        dst_surf->width = align(dst_surf->width, 8) / 2;
         if (dst->cpp == 1)
                 dst_surf->height /= 2;
 

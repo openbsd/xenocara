@@ -31,7 +31,7 @@
 
 #include "main/glheader.h"
 #include "main/context.h"
-#include "main/imports.h"
+
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/state.h"
@@ -621,8 +621,8 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
                                  (1.0 / tex_coord[2]) : 1.0;            \
            GLfloat s_tmp = (GLfloat) (tex_coord[0] * invQ);		\
            GLfloat t_tmp = (GLfloat) (tex_coord[1] * invQ);		\
-           GLint s = IFLOOR(s_tmp) & info->smask;	        	\
-           GLint t = IFLOOR(t_tmp) & info->tmask;	        	\
+           GLint s = util_ifloor(s_tmp) & info->smask;	        	\
+           GLint t = util_ifloor(t_tmp) & info->tmask;	        	\
            GLint pos = (t << info->twidth_log2) + s;			\
            const GLchan *tex00 = info->texture + COMP * pos;		\
            DO_TEX;							\
@@ -782,7 +782,7 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
       }
       break;
    }
-   
+
    assert(span->arrayMask & SPAN_RGBA);
    _swrast_write_rgba_span(ctx, span);
 
@@ -1108,7 +1108,7 @@ _swrast_choose_triangle( struct gl_context *ctx )
 #if CHAN_BITS != 8
                   USE(general_triangle);
 #else
-                  if (format == MESA_FORMAT_A8B8G8R8_UNORM && !_mesa_little_endian()) {
+                  if (format == MESA_FORMAT_A8B8G8R8_UNORM && !UTIL_ARCH_LITTLE_ENDIAN) {
                      /* We only handle RGBA8888 correctly on little endian
                       * in the optimized code above.
                       */

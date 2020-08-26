@@ -21,8 +21,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "util/u_memory.h"
-#include "util/u_format.h"
-#include "util/u_format_s3tc.h"
+#include "util/format/u_format.h"
+#include "util/format/u_format_s3tc.h"
 #include "util/u_screen.h"
 #include "util/u_video.h"
 #include "util/u_math.h"
@@ -463,8 +463,6 @@ virgl_get_shader_param(struct pipe_screen *screen,
       case PIPE_SHADER_CAP_INT64_ATOMICS:
       case PIPE_SHADER_CAP_FP16:
          return 0;
-      case PIPE_SHADER_CAP_SCALAR_ISA:
-         return 1;
       default:
          return 0;
       }
@@ -661,6 +659,9 @@ virgl_is_format_supported( struct pipe_screen *screen,
    if (MAX2(1, sample_count) != MAX2(1, storage_sample_count))
       return false;
 
+   if (!util_is_power_of_two_or_zero(sample_count))
+      return false;
+
    assert(target == PIPE_BUFFER ||
           target == PIPE_TEXTURE_1D ||
           target == PIPE_TEXTURE_1D_ARRAY ||
@@ -756,6 +757,9 @@ virgl_is_format_supported( struct pipe_screen *screen,
       goto out_lookup;
    }
    if (format_desc->layout == UTIL_FORMAT_LAYOUT_BPTC) {
+      goto out_lookup;
+   }
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_ETC) {
       goto out_lookup;
    }
 

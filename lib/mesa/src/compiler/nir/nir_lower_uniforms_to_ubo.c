@@ -43,7 +43,9 @@ lower_instr(nir_intrinsic_instr *instr, nir_builder *b, int multiplier)
 {
    b->cursor = nir_before_instr(&instr->instr);
 
-   if (instr->intrinsic == nir_intrinsic_load_ubo) {
+   /* Increase all UBO binding points by 1. */
+   if (instr->intrinsic == nir_intrinsic_load_ubo &&
+       !b->shader->info.first_ubo_is_default_ubo) {
       nir_ssa_def *old_idx = nir_ssa_for_src(b, instr->src[0], 1);
       nir_ssa_def *new_idx = nir_iadd(b, old_idx, nir_imm_int(b, 1));
       nir_instr_rewrite_src(&instr->instr, &instr->src[0],
@@ -63,6 +65,8 @@ lower_instr(nir_intrinsic_instr *instr, nir_builder *b, int multiplier)
       load->num_components = instr->num_components;
       load->src[0] = nir_src_for_ssa(ubo_idx);
       load->src[1] = nir_src_for_ssa(ubo_offset);
+      assert(instr->dest.ssa.bit_size >= 8);
+      nir_intrinsic_set_align(load, instr->dest.ssa.bit_size / 8, 0);
       nir_ssa_dest_init(&load->instr, &load->dest,
                         load->num_components, instr->dest.ssa.bit_size,
                         instr->dest.ssa.name);
@@ -99,6 +103,7 @@ nir_lower_uniforms_to_ubo(nir_shader *shader, int multiplier)
       }
    }
 
+   shader->info.first_ubo_is_default_ubo = true;
    return progress;
 }
 

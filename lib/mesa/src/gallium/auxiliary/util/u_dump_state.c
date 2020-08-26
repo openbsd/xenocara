@@ -29,7 +29,7 @@
 #include "pipe/p_compiler.h"
 #include "util/u_memory.h"
 #include "util/u_string.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "tgsi/tgsi_dump.h"
 
 #include <inttypes.h>
@@ -603,6 +603,7 @@ util_dump_blend_state(FILE *stream, const struct pipe_blend_state *state)
    util_dump_member(stream, bool, state, dither);
    util_dump_member(stream, bool, state, alpha_to_coverage);
    util_dump_member(stream, bool, state, alpha_to_one);
+   util_dump_member(stream, uint, state, max_rt);
 
    util_dump_member(stream, bool, state, logicop_enable);
    if (state->logicop_enable) {
@@ -613,7 +614,7 @@ util_dump_blend_state(FILE *stream, const struct pipe_blend_state *state)
 
       util_dump_member_begin(stream, "rt");
       if (state->independent_blend_enable)
-         valid_entries = PIPE_MAX_COLOR_BUFS;
+         valid_entries = state->max_rt + 1;
       util_dump_struct_array(stream, rt_blend_state, state->rt, valid_entries);
       util_dump_member_end(stream);
    }

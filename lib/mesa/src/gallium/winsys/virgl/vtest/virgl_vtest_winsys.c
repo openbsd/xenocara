@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include "util/u_surface.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/os_time.h"
 #include "state_tracker/sw_winsys.h"
@@ -181,7 +181,7 @@ static void virgl_hw_res_destroy(struct virgl_vtest_winsys *vtws,
       if (res->ptr)
          os_munmap(res->ptr, res->size);
    } else {
-      free(res->ptr);
+      align_free(res->ptr);
    }
 
    FREE(res);

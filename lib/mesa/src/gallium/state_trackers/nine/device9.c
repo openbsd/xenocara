@@ -47,7 +47,7 @@
 #include "util/u_math.h"
 #include "util/u_inlines.h"
 #include "util/u_hash_table.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_surface.h"
 #include "util/u_upload_mgr.h"
 #include "hud/hud_context.h"
@@ -3023,7 +3023,7 @@ NineDevice9_ProcessVertices( struct NineDevice9 *This,
             if (FAILED(hr))
                 return hr;
             vdecl->fvf = FVF;
-            util_hash_table_set(This->ff.ht_fvf, &vdecl->fvf, vdecl);
+            _mesa_hash_table_insert(This->ff.ht_fvf, &vdecl->fvf, vdecl);
             NineUnknown_ConvertRefToBind(NineUnknown(vdecl));
         }
     }
@@ -3183,7 +3183,7 @@ NineDevice9_SetFVF( struct NineDevice9 *This,
         if (FAILED(hr))
             return hr;
         vdecl->fvf = FVF;
-        util_hash_table_set(This->ff.ht_fvf, &vdecl->fvf, vdecl);
+        _mesa_hash_table_insert(This->ff.ht_fvf, &vdecl->fvf, vdecl);
         NineUnknown_ConvertRefToBind(NineUnknown(vdecl));
     }
     return NineDevice9_SetVertexDeclaration(

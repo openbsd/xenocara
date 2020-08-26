@@ -22,7 +22,7 @@
  */
 
 #include <string.h>
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "ir.h"
 #include "compiler/glsl_types.h"
 #include "util/hash_table.h"
@@ -100,6 +100,12 @@ ir_discard::clone(void *mem_ctx, struct hash_table *ht) const
       new_condition = this->condition->clone(mem_ctx, ht);
 
    return new(mem_ctx) ir_discard(new_condition);
+}
+
+ir_demote *
+ir_demote::clone(void *mem_ctx, struct hash_table *ht) const
+{
+   return new(mem_ctx) ir_demote();
 }
 
 ir_loop_jump *

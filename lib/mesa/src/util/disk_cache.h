@@ -91,7 +91,7 @@ disk_cache_format_hex_id(char *buf, const uint8_t *hex_id, unsigned size)
    return buf;
 }
 
-#ifdef HAVE_DLFCN_H
+#ifdef HAVE_DLADDR
 static inline bool
 disk_cache_get_function_timestamp(void *ptr, uint32_t* timestamp)
 {
@@ -173,6 +173,12 @@ disk_cache_create(const char *gpu_name, const char *timestamp,
  */
 void
 disk_cache_destroy(struct disk_cache *cache);
+
+/* Wait for all previous disk_cache_put() calls to be processed (used for unit
+ * testing).
+ */
+void
+disk_cache_wait_for_idle(struct disk_cache *cache);
 
 /**
  * Remove the item in the cache under the name \key.

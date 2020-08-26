@@ -34,10 +34,11 @@
 #include "drm/etnaviv_drmif.h"
 
 #define ETNA_NUM_INPUTS (16)
-#define ETNA_NUM_VARYINGS 8
+#define ETNA_NUM_VARYINGS 16
 #define ETNA_NUM_LOD (14)
 #define ETNA_NUM_LAYERS (6)
 #define ETNA_MAX_UNIFORMS (256)
+#define ETNA_MAX_CONST_BUF 16
 #define ETNA_MAX_PIXELPIPES 2
 
 /* All RS operations must have width%16 = 0 */
@@ -90,6 +91,8 @@ struct etna_specs {
    unsigned use_blt : 1;
    /* can use any kind of wrapping mode on npot textures */
    unsigned npot_tex_any_wrap : 1;
+   /* supports seamless cube map */
+   unsigned seamless_cube_map : 1;
    /* number of bits per TS tile */
    unsigned bits_per_tile;
    /* clear value for TS (dependent on bits_per_tile) */
@@ -152,18 +155,8 @@ struct compiled_blend_color {
 
 /* Compiled pipe_stencil_ref */
 struct compiled_stencil_ref {
-   uint32_t PE_STENCIL_CONFIG;
-   uint32_t PE_STENCIL_CONFIG_EXT;
-};
-
-/* Compiled pipe_scissor_state */
-struct compiled_scissor_state {
-   uint32_t SE_SCISSOR_LEFT;
-   uint32_t SE_SCISSOR_TOP;
-   uint32_t SE_SCISSOR_RIGHT;
-   uint32_t SE_SCISSOR_BOTTOM;
-   uint32_t SE_CLIP_RIGHT;
-   uint32_t SE_CLIP_BOTTOM;
+   uint32_t PE_STENCIL_CONFIG[2];
+   uint32_t PE_STENCIL_CONFIG_EXT[2];
 };
 
 /* Compiled pipe_viewport_state */
@@ -178,8 +171,6 @@ struct compiled_viewport_state {
    uint32_t SE_SCISSOR_TOP;
    uint32_t SE_SCISSOR_RIGHT;
    uint32_t SE_SCISSOR_BOTTOM;
-   uint32_t SE_CLIP_RIGHT;
-   uint32_t SE_CLIP_BOTTOM;
    uint32_t PE_DEPTH_NEAR;
    uint32_t PE_DEPTH_FAR;
 };
@@ -198,12 +189,6 @@ struct compiled_framebuffer_state {
    struct etna_reloc PE_PIPE_COLOR_ADDR[ETNA_MAX_PIXELPIPES];
    uint32_t PE_COLOR_STRIDE;
    uint32_t PE_MEM_CONFIG;
-   uint32_t SE_SCISSOR_LEFT;
-   uint32_t SE_SCISSOR_TOP;
-   uint32_t SE_SCISSOR_RIGHT;
-   uint32_t SE_SCISSOR_BOTTOM;
-   uint32_t SE_CLIP_RIGHT;
-   uint32_t SE_CLIP_BOTTOM;
    uint32_t RA_MULTISAMPLE_UNK00E04;
    uint32_t RA_MULTISAMPLE_UNK00E10[VIVS_RA_MULTISAMPLE_UNK00E10__LEN];
    uint32_t RA_CENTROID_TABLE[VIVS_RA_CENTROID_TABLE__LEN];
@@ -212,9 +197,12 @@ struct compiled_framebuffer_state {
    struct etna_reloc TS_DEPTH_STATUS_BASE;
    struct etna_reloc TS_DEPTH_SURFACE_BASE;
    uint32_t TS_COLOR_CLEAR_VALUE;
+   uint32_t TS_COLOR_CLEAR_VALUE_EXT;
    struct etna_reloc TS_COLOR_STATUS_BASE;
    struct etna_reloc TS_COLOR_SURFACE_BASE;
    uint32_t PE_LOGIC_OP;
+   uint32_t PS_CONTROL;
+   uint32_t PS_CONTROL_EXT;
    bool msaa_mode; /* adds input (and possible temp) to PS */
 };
 
@@ -225,12 +213,13 @@ struct compiled_vertex_elements_state {
    uint32_t NFE_GENERIC_ATTRIB_CONFIG0[VIVS_NFE_GENERIC_ATTRIB__LEN];
    uint32_t NFE_GENERIC_ATTRIB_SCALE[VIVS_NFE_GENERIC_ATTRIB__LEN];
    uint32_t NFE_GENERIC_ATTRIB_CONFIG1[VIVS_NFE_GENERIC_ATTRIB__LEN];
+   unsigned num_buffers;
+   uint32_t NFE_VERTEX_STREAMS_VERTEX_DIVISOR[VIVS_NFE_VERTEX_STREAMS__LEN];
 };
 
 /* Compiled context->set_vertex_buffer result */
 struct compiled_set_vertex_buffer {
    uint32_t FE_VERTEX_STREAM_CONTROL;
-   uint32_t FE_VERTEX_STREAM_UNK14680;
    struct etna_reloc FE_VERTEX_STREAM_BASE_ADDR;
 };
 
@@ -255,12 +244,13 @@ struct compiled_shader_state {
    uint32_t PS_INPUT_COUNT_MSAA; /* Adds an input */
    uint32_t PS_TEMP_REGISTER_CONTROL;
    uint32_t PS_TEMP_REGISTER_CONTROL_MSAA; /* Adds a temporary if needed to make space for extra input */
-   uint32_t PS_CONTROL;
    uint32_t PS_START_PC;
+   uint32_t PE_DEPTH_CONFIG;
    uint32_t GL_VARYING_TOTAL_COMPONENTS;
-   uint32_t GL_VARYING_NUM_COMPONENTS;
+   uint32_t GL_VARYING_NUM_COMPONENTS[2];
    uint32_t GL_VARYING_COMPONENT_USE[2];
    uint32_t GL_HALTI5_SH_SPECIALS;
+   uint32_t FE_HALTI5_ID_CONFIG;
    unsigned vs_inst_mem_size;
    unsigned ps_inst_mem_size;
    uint32_t *VS_INST_MEM;

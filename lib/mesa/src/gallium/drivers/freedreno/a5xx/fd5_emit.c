@@ -28,7 +28,7 @@
 #include "util/u_string.h"
 #include "util/u_memory.h"
 #include "util/u_helpers.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_viewport.h"
 
 #include "freedreno_resource.h"
@@ -365,7 +365,7 @@ emit_textures(struct fd_context *ctx, struct fd_ringbuffer *ring,
 			enum a5xx_tile_mode tile_mode = TILE5_LINEAR;
 
 			if (view->base.texture)
-				tile_mode = fd_resource(view->base.texture)->tile_mode;
+				tile_mode = fd_resource(view->base.texture)->layout.tile_mode;
 
 			OUT_RING(ring, view->texconst0 |
 					A5XX_TEX_CONST_0_TILE_MODE(tile_mode));
@@ -400,13 +400,10 @@ emit_ssbos(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		const struct ir3_shader_variant *v)
 {
 	unsigned count = util_last_bit(so->enabled_mask);
-	const struct ir3_ibo_mapping *m = &v->image_mapping;
 
 	for (unsigned i = 0; i < count; i++) {
-		unsigned slot = m->ssbo_to_ibo[i];
-
 		OUT_PKT7(ring, CP_LOAD_STATE4, 5);
-		OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(slot) |
+		OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(i) |
 				CP_LOAD_STATE4_0_STATE_SRC(SS4_DIRECT) |
 				CP_LOAD_STATE4_0_STATE_BLOCK(sb) |
 				CP_LOAD_STATE4_0_NUM_UNIT(1));
@@ -424,7 +421,7 @@ emit_ssbos(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		OUT_RING(ring, A5XX_SSBO_1_1_HEIGHT(sz >> 16));
 
 		OUT_PKT7(ring, CP_LOAD_STATE4, 5);
-		OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(slot) |
+		OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(i) |
 				CP_LOAD_STATE4_0_STATE_SRC(SS4_DIRECT) |
 				CP_LOAD_STATE4_0_STATE_BLOCK(sb) |
 				CP_LOAD_STATE4_0_NUM_UNIT(1));
@@ -728,17 +725,13 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 			bool is_int = util_format_is_pure_integer(format);
 			bool has_alpha = util_format_has_alpha(format);
 			uint32_t control = blend->rb_mrt[i].control;
-			uint32_t blend_control = blend->rb_mrt[i].blend_control_alpha;
 
 			if (is_int) {
 				control &= A5XX_RB_MRT_CONTROL_COMPONENT_ENABLE__MASK;
 				control |= A5XX_RB_MRT_CONTROL_ROP_CODE(ROP_COPY);
 			}
 
-			if (has_alpha) {
-				blend_control |= blend->rb_mrt[i].blend_control_rgb;
-			} else {
-				blend_control |= blend->rb_mrt[i].blend_control_no_alpha_rgb;
+			if (!has_alpha) {
 				control &= ~A5XX_RB_MRT_CONTROL_BLEND2;
 			}
 
@@ -746,7 +739,7 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 			OUT_RING(ring, control);
 
 			OUT_PKT4(ring, REG_A5XX_RB_MRT_BLEND_CONTROL(i), 1);
-			OUT_RING(ring, blend_control);
+			OUT_RING(ring, blend->rb_mrt[i].blend_control);
 		}
 
 		OUT_PKT4(ring, REG_A5XX_SP_BLEND_CNTL, 1);

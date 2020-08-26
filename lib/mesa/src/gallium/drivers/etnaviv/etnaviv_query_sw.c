@@ -45,8 +45,8 @@ static uint64_t
 read_counter(struct etna_context *ctx, unsigned type)
 {
    switch (type) {
-   case PIPE_QUERY_PRIMITIVES_EMITTED:
-      return ctx->stats.prims_emitted;
+   case PIPE_QUERY_PRIMITIVES_GENERATED:
+      return ctx->stats.prims_generated;
    case ETNA_QUERY_DRAW_CALLS:
       return ctx->stats.draw_calls;
    case ETNA_QUERY_RS_OPERATIONS:
@@ -56,14 +56,12 @@ read_counter(struct etna_context *ctx, unsigned type)
    return 0;
 }
 
-static bool
+static void
 etna_sw_begin_query(struct etna_context *ctx, struct etna_query *q)
 {
    struct etna_sw_query *sq = etna_sw_query(q);
 
    sq->begin_value = read_counter(ctx, q->type);
-
-   return true;
 }
 
 static void
@@ -99,7 +97,7 @@ etna_sw_create_query(struct etna_context *ctx, unsigned query_type)
    struct etna_query *q;
 
    switch (query_type) {
-   case PIPE_QUERY_PRIMITIVES_EMITTED:
+   case PIPE_QUERY_PRIMITIVES_GENERATED:
    case ETNA_QUERY_DRAW_CALLS:
    case ETNA_QUERY_RS_OPERATIONS:
       break;
@@ -119,7 +117,7 @@ etna_sw_create_query(struct etna_context *ctx, unsigned query_type)
 }
 
 static const struct pipe_driver_query_info list[] = {
-   {"prims-emitted", PIPE_QUERY_PRIMITIVES_EMITTED, { 0 }},
+   {"prims-generated", PIPE_QUERY_PRIMITIVES_GENERATED, { 0 }},
    {"draw-calls", ETNA_QUERY_DRAW_CALLS, { 0 }},
    {"rs-operations", ETNA_QUERY_RS_OPERATIONS, { 0 }},
 };

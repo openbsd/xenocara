@@ -38,9 +38,8 @@
 #include "pipe/p_format.h"
 
 struct cso_context;
+struct cso_velems_state;
 struct u_vbuf;
-
-#define U_VBUF_FLAG_NO_USER_VBOS (1 << 0)
 
 /* Hardware vertex fetcher limitations can be described by this structure. */
 struct u_vbuf_caps {
@@ -54,11 +53,17 @@ struct u_vbuf_caps {
 
    /* Whether the driver supports user vertex buffers. */
    unsigned user_vertex_buffers:1;
+
+   /* Maximum number of vertex buffers */
+   unsigned max_vertex_buffers:6;
+
+   bool fallback_always;
+   bool fallback_only_for_user_vbuffers;
 };
 
 
-boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
-                        unsigned flags);
+void u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
+                     bool needs64b);
 
 struct u_vbuf *
 u_vbuf_create(struct pipe_context *pipe, struct u_vbuf_caps *caps);
@@ -66,8 +71,9 @@ u_vbuf_create(struct pipe_context *pipe, struct u_vbuf_caps *caps);
 void u_vbuf_destroy(struct u_vbuf *mgr);
 
 /* State and draw functions. */
-void u_vbuf_set_vertex_elements(struct u_vbuf *mgr, unsigned count,
-                                const struct pipe_vertex_element *states);
+void u_vbuf_set_vertex_elements(struct u_vbuf *mgr,
+                                const struct cso_velems_state *velems);
+void u_vbuf_unset_vertex_elements(struct u_vbuf *mgr);
 void u_vbuf_set_vertex_buffers(struct u_vbuf *mgr,
                                unsigned start_slot, unsigned count,
                                const struct pipe_vertex_buffer *bufs);

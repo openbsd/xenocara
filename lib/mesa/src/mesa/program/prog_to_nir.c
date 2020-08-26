@@ -26,7 +26,7 @@
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_builder.h"
 #include "compiler/glsl/list.h"
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 #include "util/ralloc.h"
 
@@ -456,7 +456,10 @@ ptn_lrp(nir_builder *b, nir_alu_dest dest, nir_ssa_def **src)
 static void
 ptn_kil(nir_builder *b, nir_ssa_def **src)
 {
+   /* flt must be exact, because NaN shouldn't discard. (apps rely on this) */
+   b->exact = true;
    nir_ssa_def *cmp = nir_bany(b, nir_flt(b, src[0], nir_imm_float(b, 0.0)));
+   b->exact = false;
 
    nir_intrinsic_instr *discard =
       nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard_if);
@@ -531,30 +534,13 @@ ptn_tex(struct ptn_compile *c, nir_alu_dest dest, nir_ssa_def **src,
       abort();
    }
 
-   switch (instr->sampler_dim) {
-   case GLSL_SAMPLER_DIM_1D:
-   case GLSL_SAMPLER_DIM_BUF:
-      instr->coord_components = 1;
-      break;
-   case GLSL_SAMPLER_DIM_2D:
-   case GLSL_SAMPLER_DIM_RECT:
-   case GLSL_SAMPLER_DIM_EXTERNAL:
-   case GLSL_SAMPLER_DIM_MS:
-      instr->coord_components = 2;
-      break;
-   case GLSL_SAMPLER_DIM_3D:
-   case GLSL_SAMPLER_DIM_CUBE:
-      instr->coord_components = 3;
-      break;
-   case GLSL_SAMPLER_DIM_SUBPASS:
-   case GLSL_SAMPLER_DIM_SUBPASS_MS:
-      unreachable("can't reach");
-   }
+   instr->coord_components =
+      glsl_get_sampler_dim_coordinate_components(instr->sampler_dim);
 
    nir_variable *var = c->sampler_vars[prog_inst->TexSrcUnit];
    if (!var) {
       const struct glsl_type *type =
-         glsl_sampler_type(instr->sampler_dim, false, false, GLSL_TYPE_FLOAT);
+         glsl_sampler_type(instr->sampler_dim, instr->is_shadow, false, GLSL_TYPE_FLOAT);
       var = nir_variable_create(b->shader, nir_var_uniform, type, "sampler");
       var->data.binding = prog_inst->TexSrcUnit;
       var->data.explicit_binding = true;
@@ -838,8 +824,9 @@ ptn_add_output_stores(struct ptn_compile *c)
          src = nir_channel(b, src, 2);
       }
       if (c->prog->Target == GL_VERTEX_PROGRAM_ARB &&
-          var->data.location == VARYING_SLOT_FOGC) {
-         /* result.fogcoord is a single component value */
+          (var->data.location == VARYING_SLOT_FOGC ||
+           var->data.location == VARYING_SLOT_PSIZ)) {
+         /* result.{fogcoord,psiz} is a single component value */
          src = nir_channel(b, src, 0);
       }
       unsigned num_components = glsl_get_vector_elements(var->type);
@@ -926,7 +913,8 @@ setup_registers_and_variables(struct ptn_compile *c)
 
       nir_variable *var = rzalloc(shader, nir_variable);
       if ((c->prog->Target == GL_FRAGMENT_PROGRAM_ARB && i == FRAG_RESULT_DEPTH) ||
-          (c->prog->Target == GL_VERTEX_PROGRAM_ARB && i == VARYING_SLOT_FOGC))
+          (c->prog->Target == GL_VERTEX_PROGRAM_ARB && i == VARYING_SLOT_FOGC) ||
+          (c->prog->Target == GL_VERTEX_PROGRAM_ARB && i == VARYING_SLOT_PSIZ))
          var->type = glsl_float_type();
       else
          var->type = glsl_vec4_type();

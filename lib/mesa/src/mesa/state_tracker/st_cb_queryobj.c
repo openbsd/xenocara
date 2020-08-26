@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 
@@ -33,8 +33,7 @@
  */
 
 
-#include "main/imports.h"
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "main/context.h"
 #include "main/queryobj.h"
 
@@ -221,6 +220,9 @@ st_BeginQuery(struct gl_context *ctx, struct gl_query_object *q)
       return;
    }
 
+   if (stq->type != PIPE_QUERY_TIMESTAMP)
+      st->active_queries++;
+
    assert(stq->type == type);
 }
 
@@ -228,7 +230,8 @@ st_BeginQuery(struct gl_context *ctx, struct gl_query_object *q)
 static void
 st_EndQuery(struct gl_context *ctx, struct gl_query_object *q)
 {
-   struct pipe_context *pipe = st_context(ctx)->pipe;
+   struct st_context *st = st_context(ctx);
+   struct pipe_context *pipe = st->pipe;
    struct st_query_object *stq = st_query_object(q);
    bool ret = false;
 
@@ -248,6 +251,9 @@ st_EndQuery(struct gl_context *ctx, struct gl_query_object *q)
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glEndQuery");
       return;
    }
+
+   if (stq->type != PIPE_QUERY_TIMESTAMP)
+      st->active_queries--;
 }
 
 

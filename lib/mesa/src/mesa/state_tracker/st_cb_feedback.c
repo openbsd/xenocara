@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 /**
@@ -37,7 +37,7 @@
  *   Brian Paul
  */
 
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/feedback.h"
 #include "main/varray.h"
@@ -84,6 +84,7 @@ feedback_vertex(struct gl_context *ctx, const struct draw_context *draw,
                 const struct vertex_header *v)
 {
    const struct st_context *st = st_context(ctx);
+   struct st_vertex_program *stvp = (struct st_vertex_program *)st->vp;
    GLfloat win[4];
    const GLfloat *color, *texcoord;
    GLuint slot;
@@ -101,13 +102,13 @@ feedback_vertex(struct gl_context *ctx, const struct draw_context *draw,
     * color and texcoord attribs to use here.
     */
 
-   slot = st->vp->result_to_output[VARYING_SLOT_COL0];
+   slot = stvp->result_to_output[VARYING_SLOT_COL0];
    if (slot != ~0U)
       color = v->data[slot];
    else
       color = ctx->Current.Attrib[VERT_ATTRIB_COLOR0];
 
-   slot = st->vp->result_to_output[VARYING_SLOT_TEX0];
+   slot = stvp->result_to_output[VARYING_SLOT_TEX0];
    if (slot != ~0U)
       texcoord = v->data[slot];
    else
@@ -303,7 +304,7 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
       ctx->Driver.Draw = st_feedback_draw_vbo;
       /* need to generate/use a vertex program that emits pos/color/tex */
       if (vp)
-         st->dirty |= ST_NEW_VERTEX_PROGRAM(st, st_vertex_program(vp));
+         st->dirty |= ST_NEW_VERTEX_PROGRAM(st, st_program(vp));
    }
 }
 

@@ -37,11 +37,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <errno.h>
 #include "main/glheader.h"
-#include "main/imports.h"
 #include "main/mtypes.h"
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
 #include "main/fbobject.h"
+#include "util/u_memory.h"
 #include "swrast/s_renderbuffer.h"
 
 #include "radeon_chipset.h"
@@ -696,11 +696,26 @@ radeonCreateBuffer( __DRIscreen *driScrnPriv,
     _mesa_initialize_window_framebuffer(&rfb->base, mesaVis);
 
     if (mesaVis->redBits == 5)
-        rgbFormat = _mesa_little_endian() ? MESA_FORMAT_B5G6R5_UNORM : MESA_FORMAT_R5G6B5_UNORM;
+        rgbFormat =
+#if UTIL_ARCH_LITTLE_ENDIAN
+           MESA_FORMAT_B5G6R5_UNORM;
+#else
+           MESA_FORMAT_R5G6B5_UNORM;
+#endif
     else if (mesaVis->alphaBits == 0)
-        rgbFormat = _mesa_little_endian() ? MESA_FORMAT_B8G8R8X8_UNORM : MESA_FORMAT_X8R8G8B8_UNORM;
+        rgbFormat =
+#if UTIL_ARCH_LITTLE_ENDIAN
+           MESA_FORMAT_B8G8R8X8_UNORM;
+#else
+           MESA_FORMAT_X8R8G8B8_UNORM;
+#endif
     else
-        rgbFormat = _mesa_little_endian() ? MESA_FORMAT_B8G8R8A8_UNORM : MESA_FORMAT_A8R8G8B8_UNORM;
+        rgbFormat =
+#if UTIL_ARCH_LITTLE_ENDIAN
+           MESA_FORMAT_B8G8R8A8_UNORM;
+#else
+           MESA_FORMAT_A8R8G8B8_UNORM;
+#endif
 
     /* front color renderbuffer */
     rfb->color_rb[0] = radeon_create_renderbuffer(rgbFormat, driDrawPriv);

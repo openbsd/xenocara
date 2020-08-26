@@ -39,9 +39,10 @@
  */
 
 #include <windows.h>
+#include <GL/gl.h>
 
 #include "util/u_debug.h"
-#include "stw_icd.h"
+#include "gldrv.h"
 #include "stw_context.h"
 #include "stw_pixelformat.h"
 #include "stw_wgl.h"
@@ -67,7 +68,7 @@ wglCreateContext(
    HDC hdc )
 {
    overrideOpenGL32EntryPoints();
-   return (HGLRC) DrvCreateContext(hdc);
+   return (HGLRC)(UINT_PTR)DrvCreateContext(hdc);
 }
 
 WINGDIAPI HGLRC APIENTRY
@@ -76,7 +77,7 @@ wglCreateLayerContext(
    int iLayerPlane )
 {
    overrideOpenGL32EntryPoints();
-   return (HGLRC) DrvCreateLayerContext( hdc, iLayerPlane );
+   return (HGLRC)(UINT_PTR)DrvCreateLayerContext( hdc, iLayerPlane );
 }
 
 WINGDIAPI BOOL APIENTRY
@@ -258,8 +259,10 @@ wglUseFontBitmapsW(
 
       if (size != GDI_ERROR) {
          if (size == 0) {
-            glBitmap(0, 0, -gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y,
-                     gm.gmCellIncX, gm.gmCellIncY, NULL);
+            glBitmap(0, 0, (GLfloat)-gm.gmptGlyphOrigin.x,
+                     (GLfloat)gm.gmptGlyphOrigin.y,
+                     (GLfloat)gm.gmCellIncX,
+                     (GLfloat)gm.gmCellIncY, NULL);
          }
          else {
             buffer = realloc(buffer, size);

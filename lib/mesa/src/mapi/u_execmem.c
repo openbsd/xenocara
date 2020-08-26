@@ -53,7 +53,7 @@ init_map(void)
   return 0;
 }
 
-#elif defined(__linux__) || defined(_NetBSD__) || defined(__sun) || defined(__HAIKU__)
+#elif defined(__linux__) || defined(__NetBSD__) || defined(__sun) || defined(__HAIKU__)
 
 #include <unistd.h>
 #include <sys/mman.h>

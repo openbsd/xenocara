@@ -33,7 +33,7 @@
 #include "util/disk_cache.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_debug.h"
 #include "state_tracker/drm_driver.h"
 #include "state_tracker/st_cb_bufferobjects.h"
@@ -153,6 +153,12 @@ dri2_drawable_get_buffers(struct dri_drawable *drawable,
        * may occur as the stvis->color_format.
        */
       switch(format) {
+      case PIPE_FORMAT_R16G16B16A16_FLOAT:
+         depth = 64;
+         break;
+      case PIPE_FORMAT_R16G16B16X16_FLOAT:
+         depth = 48;
+         break;
       case PIPE_FORMAT_B10G10R10A2_UNORM:
       case PIPE_FORMAT_R10G10B10A2_UNORM:
       case PIPE_FORMAT_BGRA8888_UNORM:
@@ -231,6 +237,12 @@ dri_image_drawable_get_buffers(struct dri_drawable *drawable,
       }
 
       switch (pf) {
+      case PIPE_FORMAT_R16G16B16A16_FLOAT:
+         image_format = __DRI_IMAGE_FORMAT_ABGR16161616F;
+         break;
+      case PIPE_FORMAT_R16G16B16X16_FLOAT:
+         image_format = __DRI_IMAGE_FORMAT_XBGR16161616F;
+         break;
       case PIPE_FORMAT_B5G5R5A1_UNORM:
          image_format = __DRI_IMAGE_FORMAT_ARGB1555;
          break;
@@ -304,6 +316,12 @@ dri2_allocate_buffer(__DRIscreen *sPriv,
    bind |= PIPE_BIND_SHARED;
 
    switch (format) {
+      case 64:
+         pf = PIPE_FORMAT_R16G16B16A16_FLOAT;
+         break;
+      case 48:
+         pf = PIPE_FORMAT_R16G16B16X16_FLOAT;
+         break;
       case 32:
          pf = PIPE_FORMAT_BGRA8888_UNORM;
          break;
@@ -720,7 +738,7 @@ dri2_create_image_from_winsys(__DRIscreen *_screen,
    struct pipe_resource templ;
    unsigned tex_usage = 0;
    int i;
-   bool is_yuv = util_format_is_yuv(map->pipe_format);
+   bool use_lowered = false;
 
    if (pscreen->is_format_supported(pscreen, map->pipe_format, screen->target, 0, 0,
                                     PIPE_BIND_RENDER_TARGET))
@@ -729,17 +747,15 @@ dri2_create_image_from_winsys(__DRIscreen *_screen,
                                     PIPE_BIND_SAMPLER_VIEW))
       tex_usage |= PIPE_BIND_SAMPLER_VIEW;
 
-   if (!tex_usage && is_yuv) {
+   if (!tex_usage && util_format_is_yuv(map->pipe_format)) {
       /* YUV format sampling can be emulated by the Mesa state tracker by
        * using multiple samplers of varying formats.
        * If no tex_usage is set and we detect a YUV format,
-       * test for support of the first plane's sampler format and
+       * test for support of all planes' sampler formats and
        * add sampler view usage.
        */
-      if (pscreen->is_format_supported(pscreen,
-                                       dri2_get_pipe_format_for_dri_format(map->planes[0].dri_format),
-                                       screen->target, 0, 0,
-                                       PIPE_BIND_SAMPLER_VIEW))
+      use_lowered = true;
+      if (dri2_yuv_dma_buf_supported(screen, map))
          tex_usage |= PIPE_BIND_SAMPLER_VIEW;
    }
 
@@ -757,26 +773,27 @@ dri2_create_image_from_winsys(__DRIscreen *_screen,
    templ.depth0 = 1;
    templ.array_size = 1;
 
-   for (i = num_handles - 1; i >= 0; i--) {
+   for (i = (use_lowered ? map->nplanes : num_handles) - 1; i >= 0; i--) {
       struct pipe_resource *tex;
 
+      templ.next = img->texture;
       templ.width0 = width >> map->planes[i].width_shift;
       templ.height0 = height >> map->planes[i].height_shift;
-      if (is_yuv)
+      if (use_lowered)
          templ.format = dri2_get_pipe_format_for_dri_format(map->planes[i].dri_format);
       else
          templ.format = map->pipe_format;
       assert(templ.format != PIPE_FORMAT_NONE);
 
       tex = pscreen->resource_from_handle(pscreen,
-            &templ, &whandle[i], PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
+               &templ, &whandle[use_lowered ? map->planes[i].buffer_index : i],
+               PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
       if (!tex) {
          pipe_resource_reference(&img->texture, NULL);
          FREE(img);
          return NULL;
       }
 
-      tex->next = img->texture;
       img->texture = tex;
    }
 
@@ -877,8 +894,8 @@ dri2_create_image_from_fd(__DRIscreen *_screen,
    }
 
    switch (fourcc) {
-   case __DRI_IMAGE_FOURCC_YUYV:
-   case __DRI_IMAGE_FOURCC_UYVY:
+   case DRM_FORMAT_YUYV:
+   case DRM_FORMAT_UYVY:
       expected_num_fds = 1;
       break;
    default:
@@ -893,25 +910,23 @@ dri2_create_image_from_fd(__DRIscreen *_screen,
 
    memset(whandles, 0, sizeof(whandles));
 
-   for (i = 0; i < num_handles; i++) {
-      int fdnum = i >= num_fds ? 0 : i;
-      int index = i >= map->nplanes ? i : map->planes[i].buffer_index;
-      if (fds[fdnum] < 0) {
+   for (i = 0; i < num_fds; i++) {
+      if (fds[i] < 0) {
          err = __DRI_IMAGE_ERROR_BAD_ALLOC;
          goto exit;
       }
 
       whandles[i].type = WINSYS_HANDLE_TYPE_FD;
-      whandles[i].handle = (unsigned)fds[fdnum];
-      whandles[i].stride = (unsigned)strides[index];
-      whandles[i].offset = (unsigned)offsets[index];
+      whandles[i].handle = (unsigned)fds[i];
+      whandles[i].stride = (unsigned)strides[i];
+      whandles[i].offset = (unsigned)offsets[i];
       whandles[i].format = map->pipe_format;
       whandles[i].modifier = modifier;
-      whandles[i].plane = index;
+      whandles[i].plane = i;
    }
 
    img = dri2_create_image_from_winsys(_screen, width, height, map,
-                                       num_handles, whandles, loaderPrivate);
+                                       num_fds, whandles, loaderPrivate);
    if(img == NULL) {
       err = __DRI_IMAGE_ERROR_BAD_ALLOC;
       goto exit;
@@ -920,6 +935,7 @@ dri2_create_image_from_fd(__DRIscreen *_screen,
    img->dri_components = map->dri_components;
    img->dri_fourcc = fourcc;
    img->dri_format = map->dri_format;
+   img->imported_dmabuf = TRUE;
 
 exit:
    if (error)
@@ -1090,10 +1106,10 @@ dri2_query_image_by_resource_handle(__DRIimage *image, int attrib, int *value)
       return false;
    }
 
+   usage = PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE;
+
    if (image->use & __DRI_IMAGE_USE_BACKBUFFER)
-      usage = PIPE_HANDLE_USAGE_EXPLICIT_FLUSH;
-   else
-      usage = PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE;
+      usage |= PIPE_HANDLE_USAGE_EXPLICIT_FLUSH;
 
    if (!pscreen->resource_get_handle(pscreen, NULL, image->texture,
                                      &whandle, usage))
@@ -1176,10 +1192,10 @@ dri2_query_image_by_resource_param(__DRIimage *image, int attrib, int *value)
       return false;
    }
 
+   handle_usage = PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE;
+
    if (image->use & __DRI_IMAGE_USE_BACKBUFFER)
-      handle_usage = PIPE_HANDLE_USAGE_EXPLICIT_FLUSH;
-   else
-      handle_usage = PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE;
+      handle_usage |= PIPE_HANDLE_USAGE_EXPLICIT_FLUSH;
 
    if (!dri2_resource_get_param(image, param, handle_usage, &res_param))
       return false;
@@ -1375,13 +1391,16 @@ dri2_query_dma_buf_modifiers(__DRIscreen *_screen, int fourcc, int max,
 
    format = map->pipe_format;
 
-   if (pscreen->query_dmabuf_modifiers != NULL &&
-       (pscreen->is_format_supported(pscreen, format, screen->target, 0, 0,
+   if (pscreen->is_format_supported(pscreen, format, screen->target, 0, 0,
                                      PIPE_BIND_RENDER_TARGET) ||
         pscreen->is_format_supported(pscreen, format, screen->target, 0, 0,
-                                     PIPE_BIND_SAMPLER_VIEW))) {
-      pscreen->query_dmabuf_modifiers(pscreen, format, max, modifiers,
-                                      external_only, count);
+                                     PIPE_BIND_SAMPLER_VIEW) ||
+        dri2_yuv_dma_buf_supported(screen, map)) {
+      if (pscreen->query_dmabuf_modifiers != NULL)
+         pscreen->query_dmabuf_modifiers(pscreen, format, max, modifiers,
+                                         external_only, count);
+      else
+         *count = 0;
       return true;
    }
    return false;
@@ -1392,6 +1411,12 @@ dri2_query_dma_buf_format_modifier_attribs(__DRIscreen *_screen,
                                            uint32_t fourcc, uint64_t modifier,
                                            int attrib, uint64_t *value)
 {
+   struct dri_screen *screen = dri_screen(_screen);
+   struct pipe_screen *pscreen = screen->base.screen;
+
+   if (!pscreen->query_dmabuf_modifiers)
+      return false;
+
    switch (attrib) {
    case __DRI_IMAGE_FORMAT_MODIFIER_ATTRIB_PLANE_COUNT: {
       uint64_t mod_planes = dri2_get_modifier_num_planes(modifier, fourcc);
@@ -1499,11 +1524,11 @@ dri2_blit_image(__DRIcontext *context, __DRIimage *dst, __DRIimage *src,
 
    if (flush_flag == __BLIT_FLAG_FLUSH) {
       pipe->flush_resource(pipe, dst->texture);
-      ctx->st->flush(ctx->st, 0, NULL);
+      ctx->st->flush(ctx->st, 0, NULL, NULL, NULL);
    } else if (flush_flag == __BLIT_FLAG_FINISH) {
       screen = dri_screen(ctx->sPriv)->base.screen;
       pipe->flush_resource(pipe, dst->texture);
-      ctx->st->flush(ctx->st, 0, &fence);
+      ctx->st->flush(ctx->st, 0, &fence, NULL, NULL);
       (void) screen->fence_finish(screen, NULL, fence, PIPE_TIMEOUT_INFINITE);
       screen->fence_reference(screen, &fence, NULL);
    }
@@ -2055,8 +2080,7 @@ dri2_init_screen(__DRIscreen * sPriv)
    if (!pscreen)
        goto release_pipe;
 
-   screen->default_throttle_frames =
-      pscreen->get_param(pscreen, PIPE_CAP_MAX_FRAMES_IN_FLIGHT);
+   screen->throttle = pscreen->get_param(pscreen, PIPE_CAP_THROTTLE);
 
    if (pscreen->resource_create_with_modifiers)
       dri2ImageExtension.createImageWithModifiers =
@@ -2070,13 +2094,11 @@ dri2_init_screen(__DRIscreen * sPriv)
          dri2ImageExtension.createImageFromFds = dri2_from_fds;
          dri2ImageExtension.createImageFromDmaBufs = dri2_from_dma_bufs;
          dri2ImageExtension.createImageFromDmaBufs2 = dri2_from_dma_bufs2;
-         if (pscreen->query_dmabuf_modifiers) {
-            dri2ImageExtension.queryDmaBufFormats = dri2_query_dma_buf_formats;
-            dri2ImageExtension.queryDmaBufModifiers =
-                                       dri2_query_dma_buf_modifiers;
-            dri2ImageExtension.queryDmaBufFormatModifierAttribs =
-                                       dri2_query_dma_buf_format_modifier_attribs;
-         }
+         dri2ImageExtension.queryDmaBufFormats = dri2_query_dma_buf_formats;
+         dri2ImageExtension.queryDmaBufModifiers =
+            dri2_query_dma_buf_modifiers;
+         dri2ImageExtension.queryDmaBufFormatModifierAttribs =
+            dri2_query_dma_buf_format_modifier_attribs;
       }
    }
 
@@ -2152,10 +2174,8 @@ dri_kms_init_screen(__DRIscreen * sPriv)
       dri2ImageExtension.createImageFromFds = dri2_from_fds;
       dri2ImageExtension.createImageFromDmaBufs = dri2_from_dma_bufs;
       dri2ImageExtension.createImageFromDmaBufs2 = dri2_from_dma_bufs2;
-      if (pscreen->query_dmabuf_modifiers) {
-         dri2ImageExtension.queryDmaBufFormats = dri2_query_dma_buf_formats;
-         dri2ImageExtension.queryDmaBufModifiers = dri2_query_dma_buf_modifiers;
-      }
+      dri2ImageExtension.queryDmaBufFormats = dri2_query_dma_buf_formats;
+      dri2ImageExtension.queryDmaBufModifiers = dri2_query_dma_buf_modifiers;
    }
 
    sPriv->extensions = dri_screen_extensions;

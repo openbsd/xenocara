@@ -50,7 +50,7 @@
 
 #include "cso_cache/cso_context.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 
 /**
@@ -114,9 +114,14 @@ st_convert_sampler(const struct st_context *st,
    sampler->wrap_t = gl_wrap_xlate(msamp->WrapT);
    sampler->wrap_r = gl_wrap_xlate(msamp->WrapR);
 
-   sampler->min_img_filter = gl_filter_to_img_filter(msamp->MinFilter);
+   if (texobj->_IsIntegerFormat && st->ctx->Const.ForceIntegerTexNearest) {
+      sampler->min_img_filter = gl_filter_to_img_filter(GL_NEAREST);
+      sampler->mag_img_filter = gl_filter_to_img_filter(GL_NEAREST);
+   } else {
+      sampler->min_img_filter = gl_filter_to_img_filter(msamp->MinFilter);
+      sampler->mag_img_filter = gl_filter_to_img_filter(msamp->MagFilter);
+   }
    sampler->min_mip_filter = gl_filter_to_mip_filter(msamp->MinFilter);
-   sampler->mag_img_filter = gl_filter_to_img_filter(msamp->MagFilter);
 
    if (texobj->Target != GL_TEXTURE_RECTANGLE_ARB)
       sampler->normalized_coords = 1;
@@ -304,11 +309,13 @@ update_shader_samplers(struct st_context *st,
             st_get_texture_object(st->ctx, prog, unit);
       struct pipe_sampler_state *sampler = samplers + unit;
 
-      if (!stObj)
+      /* if resource format matches then YUV wasn't lowered */
+      if (!stObj || st_get_view_format(stObj) == stObj->pt->format)
          continue;
 
       switch (st_get_view_format(stObj)) {
       case PIPE_FORMAT_NV12:
+      case PIPE_FORMAT_P010:
       case PIPE_FORMAT_P016:
       case PIPE_FORMAT_YUYV:
       case PIPE_FORMAT_UYVY:
@@ -344,7 +351,9 @@ st_update_vertex_samplers(struct st_context *st)
 
    update_shader_samplers(st,
                           PIPE_SHADER_VERTEX,
-                          ctx->VertexProgram._Current, NULL, NULL);
+                          ctx->VertexProgram._Current,
+                          st->state.vert_samplers,
+                          &st->state.num_vert_samplers);
 }
 
 

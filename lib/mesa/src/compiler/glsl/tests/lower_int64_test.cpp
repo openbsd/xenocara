@@ -21,7 +21,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #include <gtest/gtest.h>
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "main/mtypes.h"
 #include "main/macros.h"
 #include "ir.h"
@@ -57,6 +57,8 @@ public:
 void
 expand_source::SetUp()
 {
+   glsl_type_singleton_init_or_ref();
+
    mem_ctx = ralloc_context(NULL);
 
    memset(expanded_src, 0, sizeof(expanded_src));
@@ -72,6 +74,8 @@ expand_source::TearDown()
 
    ralloc_free(mem_ctx);
    mem_ctx = NULL;
+
+   glsl_type_singleton_decref();
 }
 
 static ir_dereference_variable *

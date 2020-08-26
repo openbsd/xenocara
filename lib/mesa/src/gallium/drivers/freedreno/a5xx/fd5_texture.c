@@ -28,7 +28,7 @@
 #include "util/u_string.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "fd5_texture.h"
 #include "fd5_format.h"
@@ -126,11 +126,20 @@ fd5_sampler_state_create(struct pipe_context *pctx,
 		COND(!cso->seamless_cube_map, A5XX_TEX_SAMP_1_CUBEMAPSEAMLESSFILTOFF) |
 		COND(!cso->normalized_coords, A5XX_TEX_SAMP_1_UNNORM_COORDS);
 
+	so->texsamp0 |= A5XX_TEX_SAMP_0_LOD_BIAS(cso->lod_bias);
+
 	if (cso->min_mip_filter != PIPE_TEX_MIPFILTER_NONE) {
-		so->texsamp0 |= A5XX_TEX_SAMP_0_LOD_BIAS(cso->lod_bias);
 		so->texsamp1 |=
 			A5XX_TEX_SAMP_1_MIN_LOD(cso->min_lod) |
 			A5XX_TEX_SAMP_1_MAX_LOD(cso->max_lod);
+	} else {
+		/* If we're not doing mipmap filtering, we still need a slightly > 0
+		 * LOD clamp so the HW can decide between min and mag filtering of
+		 * level 0.
+		 */
+		so->texsamp1 |=
+			A5XX_TEX_SAMP_1_MIN_LOD(MIN2(cso->min_lod, 0.125)) |
+			A5XX_TEX_SAMP_1_MAX_LOD(MIN2(cso->max_lod, 0.125));
 	}
 
 	if (cso->compare_mode)
@@ -198,6 +207,7 @@ fd5_sampler_view_create(struct pipe_context *pctx, struct pipe_resource *prsc,
 {
 	struct fd5_pipe_sampler_view *so = CALLOC_STRUCT(fd5_pipe_sampler_view);
 	struct fd_resource *rsc = fd_resource(prsc);
+	struct fdl_slice *slice = NULL;
 	enum pipe_format format = cso->format;
 	unsigned lvl, layers = 0;
 
@@ -249,12 +259,13 @@ fd5_sampler_view_create(struct pipe_context *pctx, struct pipe_resource *prsc,
 			A5XX_TEX_CONST_1_HEIGHT(1);
 		so->texconst2 =
 			A5XX_TEX_CONST_2_FETCHSIZE(fd5_pipe2fetchsize(format)) |
-			A5XX_TEX_CONST_2_PITCH(elements * rsc->cpp);
+			A5XX_TEX_CONST_2_PITCH(elements * rsc->layout.cpp);
 		so->offset = cso->u.buf.offset;
 	} else {
 		unsigned miplevels;
 
 		lvl = fd_sampler_first_level(cso);
+		slice = fd_resource_slice(rsc, lvl);
 		miplevels = fd_sampler_last_level(cso) - lvl;
 		layers = cso->u.tex.last_layer - cso->u.tex.first_layer + 1;
 
@@ -264,9 +275,7 @@ fd5_sampler_view_create(struct pipe_context *pctx, struct pipe_resource *prsc,
 			A5XX_TEX_CONST_1_HEIGHT(u_minify(prsc->height0, lvl));
 		so->texconst2 =
 			A5XX_TEX_CONST_2_FETCHSIZE(fd5_pipe2fetchsize(format)) |
-			A5XX_TEX_CONST_2_PITCH(
-					util_format_get_nblocksx(
-							format, rsc->slices[lvl].pitch) * rsc->cpp);
+			A5XX_TEX_CONST_2_PITCH(slice->pitch);
 		so->offset = fd_resource_offset(rsc, lvl, cso->u.tex.first_layer);
 	}
 
@@ -277,27 +286,27 @@ fd5_sampler_view_create(struct pipe_context *pctx, struct pipe_resource *prsc,
 	case PIPE_TEXTURE_1D:
 	case PIPE_TEXTURE_2D:
 		so->texconst3 =
-			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layer_size);
+			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layout.layer_size);
 		so->texconst5 =
 			A5XX_TEX_CONST_5_DEPTH(1);
 		break;
 	case PIPE_TEXTURE_1D_ARRAY:
 	case PIPE_TEXTURE_2D_ARRAY:
 		so->texconst3 =
-			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layer_size);
+			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layout.layer_size);
 		so->texconst5 =
 			A5XX_TEX_CONST_5_DEPTH(layers);
 		break;
 	case PIPE_TEXTURE_CUBE:
 	case PIPE_TEXTURE_CUBE_ARRAY:
 		so->texconst3 =
-			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layer_size);
+			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->layout.layer_size);
 		so->texconst5 =
 			A5XX_TEX_CONST_5_DEPTH(layers / 6);
 		break;
 	case PIPE_TEXTURE_3D:
 		so->texconst3 =
-			A5XX_TEX_CONST_3_ARRAY_PITCH(rsc->slices[lvl].size0);
+			A5XX_TEX_CONST_3_ARRAY_PITCH(slice->size0);
 		so->texconst5 =
 			A5XX_TEX_CONST_5_DEPTH(u_minify(prsc->depth0, lvl));
 		break;

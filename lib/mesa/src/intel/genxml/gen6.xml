@@ -608,7 +608,6 @@
     <field name="Perspective Divide Disable" start="73" end="73" type="bool"/>
     <field name="Clip Mode" start="77" end="79" type="uint">
       <value name="CLIPMODE_NORMAL" value="0"/>
-      <value name="reserved" value="2"/>
       <value name="CLIPMODE_REJECT_ALL" value="3"/>
       <value name="CLIPMODE_ACCEPT_ALL" value="4"/>
     </field>
@@ -2888,6 +2887,11 @@
     <field name="Semaphore Wait" start="10" end="10" type="bool"/>
     <field name="RBWait" start="11" end="11" type="bool"/>
     <field name="Buffer Length (in pages - 1)" start="12" end="20" type="uint"/>
+  </register>
+
+  <register name="RPSTAT1" length="1" num="0xa01c">
+    <field name="Previous GT Frequency" start="0" end="6" type="uint"/>
+    <field name="Current GT Frequency" start="7" end="14" type="uint"/>
   </register>
 
   <register name="VCS_FAULT_REG" length="1" num="0x4194">

@@ -97,13 +97,13 @@ struct SWR_RECT
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Function signature for load hot tiles
-/// @param hPrivateContext - handle to private data
+/// @param hDC - handle to DRAW_CONTEXT
 /// @param dstFormat - format of the hot tile
 /// @param renderTargetIndex - render target to store, can be color, depth or stencil
 /// @param x - destination x coordinate
 /// @param y - destination y coordinate
 /// @param pDstHotTile - pointer to the hot tile surface
-typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hPrivateContext,
+typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hDC,
                                      HANDLE                      hWorkerPrivateData,
                                      SWR_FORMAT                  dstFormat,
                                      SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
@@ -114,13 +114,13 @@ typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hPrivateContext
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Function signature for store hot tiles
-/// @param hPrivateContext - handle to private data
+/// @param hDC - handle to DRAW_CONTEXT
 /// @param srcFormat - format of the hot tile
 /// @param renderTargetIndex - render target to store, can be color, depth or stencil
 /// @param x - destination x coordinate
 /// @param y - destination y coordinate
 /// @param pSrcHotTile - pointer to the hot tile surface
-typedef void(SWR_API* PFN_STORE_TILE)(HANDLE                      hPrivateContext,
+typedef void(SWR_API* PFN_STORE_TILE)(HANDLE                      hDC,
                                       HANDLE                      hWorkerPrivateData,
                                       SWR_FORMAT                  srcFormat,
                                       SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
@@ -186,6 +186,12 @@ typedef void(SWR_API* PFN_UPDATE_STATS)(HANDLE hPrivateContext, const SWR_STATS*
 /// @param hPrivateContext - handle to private data
 /// @param pStats - pointer to draw stats
 typedef void(SWR_API* PFN_UPDATE_STATS_FE)(HANDLE hPrivateContext, const SWR_STATS_FE* pStats);
+
+//////////////////////////////////////////////////////////////////////////
+/// @brief Callback to allow driver to update StreamOut status
+/// @param hPrivateContext - handle to private data
+/// @param numPrims - number of primitives written to StreamOut buffer
+typedef void(SWR_API* PFN_UPDATE_STREAMOUT)(HANDLE hPrivateContext, uint64_t numPrims);
 
 //////////////////////////////////////////////////////////////////////////
 /// BucketManager
@@ -272,6 +278,7 @@ struct SWR_CREATECONTEXT_INFO
     PFN_UPDATE_SO_WRITE_OFFSET     pfnUpdateSoWriteOffset;
     PFN_UPDATE_STATS               pfnUpdateStats;
     PFN_UPDATE_STATS_FE            pfnUpdateStatsFE;
+    PFN_UPDATE_STREAMOUT           pfnUpdateStreamOut;
 
 
     // Pointer to rdtsc buckets mgr returned to the caller.

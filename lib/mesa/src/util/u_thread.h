@@ -40,7 +40,15 @@
 #endif
 #endif
 
+#ifdef __HAIKU__
+#include <OS.h>
+#endif
+
 #ifdef __FreeBSD__
+/* pthread_np.h -> sys/param.h -> machine/param.h
+ * - defines ALIGN which clashes with our ALIGN
+ */
+#undef ALIGN
 #define cpu_set_t cpuset_t
 #endif
 
@@ -77,8 +85,10 @@ static inline void u_thread_setname( const char *name )
    pthread_setname_np(pthread_self(), "%s", (void *)name);
 #elif DETECT_OS_APPLE
    pthread_setname_np(name);
+#elif DETECT_OS_HAIKU
+   rename_thread(find_thread(NULL), name);
 #else
-#error Not sure how to call pthread_setname_np
+#warning Not sure how to call pthread_setname_np
 #endif
 #endif
    (void)name;
@@ -149,7 +159,7 @@ util_get_L3_for_pinned_thread(thrd_t thread, unsigned cores_per_L3)
 static inline int64_t
 u_thread_get_time_nano(thrd_t thread)
 {
-#if defined(HAVE_PTHREAD)
+#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)
    struct timespec ts;
    clockid_t cid;
 

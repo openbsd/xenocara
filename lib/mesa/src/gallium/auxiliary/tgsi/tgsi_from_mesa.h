@@ -32,6 +32,11 @@
 
 #include "compiler/shader_enums.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 void
 tgsi_get_gl_varying_semantic(gl_varying_slot attr,
                              bool needs_texcoord_semantic,
@@ -46,6 +51,9 @@ void
 tgsi_get_gl_frag_result_semantic(gl_frag_result frag_result,
                                  unsigned *semantic_name,
                                  unsigned *semantic_index);
+
+enum tgsi_semantic
+tgsi_get_sysval_semantic(unsigned sysval);
 
 static inline enum pipe_shader_type
 pipe_shader_type_from_mesa(gl_shader_stage stage)
@@ -62,6 +70,7 @@ pipe_shader_type_from_mesa(gl_shader_stage stage)
    case MESA_SHADER_FRAGMENT:
       return PIPE_SHADER_FRAGMENT;
    case MESA_SHADER_COMPUTE:
+   case MESA_SHADER_KERNEL:
       return PIPE_SHADER_COMPUTE;
    default:
       unreachable("bad shader stage");
@@ -82,5 +91,9 @@ tgsi_processor_to_shader_stage(unsigned processor)
       unreachable("invalid TGSI processor");
    }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* TGSI_FROM_MESA_H */

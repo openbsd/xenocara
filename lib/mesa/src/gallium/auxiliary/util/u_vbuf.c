@@ -88,9 +88,10 @@
 #include "util/u_vbuf.h"
 
 #include "util/u_dump.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
+#include "util/u_screen.h"
 #include "util/u_upload_mgr.h"
 #include "translate/translate.h"
 #include "translate/translate_cache.h"
@@ -166,13 +167,14 @@ struct u_vbuf {
    struct u_vbuf_elements *ve, *ve_saved;
 
    /* Vertex elements used for the translate fallback. */
-   struct pipe_vertex_element fallback_velems[PIPE_MAX_ATTRIBS];
+   struct cso_velems_state fallback_velems;
    /* If non-NULL, this is a vertex element state used for the translate
     * fallback and therefore used for rendering too. */
    boolean using_translate;
    /* The vertex buffer slot index where translated vertices have been
     * stored in. */
    unsigned fallback_vbs[VB_NUM];
+   unsigned fallback_vbs_mask;
 
    /* Which buffer is a user buffer. */
    uint32_t user_vb_mask; /* each bit describes a corresp. buffer */
@@ -180,6 +182,8 @@ struct u_vbuf {
    uint32_t incompatible_vb_mask; /* each bit describes a corresp. buffer */
    /* Which buffer has a non-zero stride. */
    uint32_t nonzero_stride_vb_mask; /* each bit describes a corresp. buffer */
+   /* Which buffers are allowed (supported by hardware). */
+   uint32_t allowed_vb_mask;
 };
 
 static void *
@@ -252,11 +256,12 @@ static const struct {
    { PIPE_FORMAT_R8G8B8A8_SSCALED,     PIPE_FORMAT_R32G32B32A32_FLOAT },
 };
 
-boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
-                        unsigned flags)
+void u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
+                     bool needs64b)
 {
    unsigned i;
-   boolean fallback = FALSE;
+
+   memset(caps, 0, sizeof(*caps));
 
    /* I'd rather have a bitfield of which formats are supported and a static
     * table of the translations indexed by format, but since we don't have C99
@@ -268,11 +273,15 @@ boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
 
    for (i = 0; i < ARRAY_SIZE(vbuf_format_fallbacks); i++) {
       enum pipe_format format = vbuf_format_fallbacks[i].from;
+      unsigned comp_bits = util_format_get_component_bits(format, 0, 0);
+
+      if ((comp_bits > 32) && !needs64b)
+         continue;
 
       if (!screen->is_format_supported(screen, format, PIPE_BUFFER, 0, 0,
                                        PIPE_BIND_VERTEX_BUFFER)) {
          caps->format_translation[format] = vbuf_format_fallbacks[i].to;
-         fallback = TRUE;
+         caps->fallback_always = true;
       }
    }
 
@@ -287,15 +296,20 @@ boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
                          PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY);
    caps->user_vertex_buffers =
       screen->get_param(screen, PIPE_CAP_USER_VERTEX_BUFFERS);
+   caps->max_vertex_buffers =
+      screen->get_param(screen, PIPE_CAP_MAX_VERTEX_BUFFERS);
+
+   /* OpenGL 2.0 requires a minimum of 16 vertex buffers */
+   if (caps->max_vertex_buffers < 16)
+      caps->fallback_always = true;
 
    if (!caps->buffer_offset_unaligned ||
        !caps->buffer_stride_unaligned ||
-       !caps->velem_src_offset_unaligned ||
-       (!(flags & U_VBUF_FLAG_NO_USER_VBOS) && !caps->user_vertex_buffers)) {
-      fallback = TRUE;
-   }
+       !caps->velem_src_offset_unaligned)
+      caps->fallback_always = true;
 
-   return fallback;
+   if (!caps->fallback_always && !caps->user_vertex_buffers)
+      caps->fallback_only_for_user_vbuffers = true;
 }
 
 struct u_vbuf *
@@ -308,6 +322,7 @@ u_vbuf_create(struct pipe_context *pipe, struct u_vbuf_caps *caps)
    mgr->cso_cache = cso_cache_create();
    mgr->translate_cache = translate_cache_create();
    memset(mgr->fallback_vbs, ~0, sizeof(mgr->fallback_vbs));
+   mgr->allowed_vb_mask = u_bit_consecutive(0, mgr->caps.max_vertex_buffers);
 
    mgr->has_signed_vb_offset =
       pipe->screen->get_param(pipe->screen,
@@ -319,28 +334,26 @@ u_vbuf_create(struct pipe_context *pipe, struct u_vbuf_caps *caps)
 /* u_vbuf uses its own caching for vertex elements, because it needs to keep
  * its own preprocessed state per vertex element CSO. */
 static struct u_vbuf_elements *
-u_vbuf_set_vertex_elements_internal(struct u_vbuf *mgr, unsigned count,
-                                    const struct pipe_vertex_element *states)
+u_vbuf_set_vertex_elements_internal(struct u_vbuf *mgr,
+                                    const struct cso_velems_state *velems)
 {
    struct pipe_context *pipe = mgr->pipe;
    unsigned key_size, hash_key;
    struct cso_hash_iter iter;
    struct u_vbuf_elements *ve;
-   struct cso_velems_state velems_state;
 
    /* need to include the count into the stored state data too. */
-   key_size = sizeof(struct pipe_vertex_element) * count + sizeof(unsigned);
-   velems_state.count = count;
-   memcpy(velems_state.velems, states,
-          sizeof(struct pipe_vertex_element) * count);
-   hash_key = cso_construct_key((void*)&velems_state, key_size);
+   key_size = sizeof(struct pipe_vertex_element) * velems->count +
+              sizeof(unsigned);
+   hash_key = cso_construct_key((void*)velems, key_size);
    iter = cso_find_state_template(mgr->cso_cache, hash_key, CSO_VELEMENTS,
-                                  (void*)&velems_state, key_size);
+                                  (void*)velems, key_size);
 
    if (cso_hash_iter_is_null(iter)) {
       struct cso_velements *cso = MALLOC_STRUCT(cso_velements);
-      memcpy(&cso->state, &velems_state, key_size);
-      cso->data = u_vbuf_create_vertex_elements(mgr, count, states);
+      memcpy(&cso->state, velems, key_size);
+      cso->data = u_vbuf_create_vertex_elements(mgr, velems->count,
+                                                velems->velems);
       cso->delete_state = (cso_state_callback)u_vbuf_delete_vertex_elements;
       cso->context = (void*)mgr;
 
@@ -358,10 +371,15 @@ u_vbuf_set_vertex_elements_internal(struct u_vbuf *mgr, unsigned count,
    return ve;
 }
 
-void u_vbuf_set_vertex_elements(struct u_vbuf *mgr, unsigned count,
-                               const struct pipe_vertex_element *states)
+void u_vbuf_set_vertex_elements(struct u_vbuf *mgr,
+                                const struct cso_velems_state *velems)
 {
-   mgr->ve = u_vbuf_set_vertex_elements_internal(mgr, count, states);
+   mgr->ve = u_vbuf_set_vertex_elements_internal(mgr, velems);
+}
+
+void u_vbuf_unset_vertex_elements(struct u_vbuf *mgr)
+{
+   mgr->ve = NULL;
 }
 
 void u_vbuf_destroy(struct u_vbuf *mgr)
@@ -536,23 +554,45 @@ u_vbuf_translate_find_free_vb_slots(struct u_vbuf *mgr,
    uint32_t unused_vb_mask =
       mgr->ve->incompatible_vb_mask_all | mgr->incompatible_vb_mask |
       ~mgr->enabled_vb_mask;
+   uint32_t unused_vb_mask_orig;
+   boolean insufficient_buffers = false;
+
+   /* No vertex buffers available at all */
+   if (!unused_vb_mask)
+      return FALSE;
 
    memset(fallback_vbs, ~0, sizeof(fallback_vbs));
+   mgr->fallback_vbs_mask = 0;
 
    /* Find free slots for each type if needed. */
+   unused_vb_mask_orig = unused_vb_mask;
    for (type = 0; type < VB_NUM; type++) {
       if (mask[type]) {
          uint32_t index;
 
          if (!unused_vb_mask) {
-            return FALSE;
+            insufficient_buffers = true;
+            break;
          }
 
          index = ffs(unused_vb_mask) - 1;
          fallback_vbs[type] = index;
+         mgr->fallback_vbs_mask |= 1 << index;
          unused_vb_mask &= ~(1 << index);
          /*printf("found slot=%i for type=%i\n", index, type);*/
       }
+   }
+
+   if (insufficient_buffers) {
+      /* not enough vbs for all types supported by the hardware, they will have to share one
+       * buffer */
+      uint32_t index = ffs(unused_vb_mask_orig) - 1;
+      /* When sharing one vertex buffer use per-vertex frequency for everything. */
+      fallback_vbs[VB_VERTEX] = index;
+      mgr->fallback_vbs_mask = 1 << index;
+      mask[VB_VERTEX] = mask[VB_VERTEX] | mask[VB_CONST] | mask[VB_INSTANCE];
+      mask[VB_CONST] = 0;
+      mask[VB_INSTANCE] = 0;
    }
 
    for (type = 0; type < VB_NUM; type++) {
@@ -693,10 +733,10 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
       for (type = 0; type < VB_NUM; type++) {
          if (elem_index[type][i] < key[type].nr_elements) {
             struct translate_element *te = &key[type].element[elem_index[type][i]];
-            mgr->fallback_velems[i].instance_divisor = mgr->ve->ve[i].instance_divisor;
-            mgr->fallback_velems[i].src_format = te->output_format;
-            mgr->fallback_velems[i].src_offset = te->output_offset;
-            mgr->fallback_velems[i].vertex_buffer_index = mgr->fallback_vbs[type];
+            mgr->fallback_velems.velems[i].instance_divisor = mgr->ve->ve[i].instance_divisor;
+            mgr->fallback_velems.velems[i].src_format = te->output_format;
+            mgr->fallback_velems.velems[i].src_offset = te->output_offset;
+            mgr->fallback_velems.velems[i].vertex_buffer_index = mgr->fallback_vbs[type];
 
             /* elem_index[type][i] can only be set for one type. */
             assert(type > VB_INSTANCE || elem_index[type+1][i] == ~0u);
@@ -706,13 +746,14 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
       }
       /* No translating, just copy the original vertex element over. */
       if (type == VB_NUM) {
-         memcpy(&mgr->fallback_velems[i], &mgr->ve->ve[i],
+         memcpy(&mgr->fallback_velems.velems[i], &mgr->ve->ve[i],
                 sizeof(struct pipe_vertex_element));
       }
    }
 
-   u_vbuf_set_vertex_elements_internal(mgr, mgr->ve->count,
-                                       mgr->fallback_velems);
+   mgr->fallback_velems.count = mgr->ve->count;
+
+   u_vbuf_set_vertex_elements_internal(mgr, &mgr->fallback_velems);
    mgr->using_translate = TRUE;
    return TRUE;
 }
@@ -731,11 +772,11 @@ static void u_vbuf_translate_end(struct u_vbuf *mgr)
       if (vb != ~0u) {
          pipe_resource_reference(&mgr->real_vertex_buffer[vb].buffer.resource, NULL);
          mgr->fallback_vbs[i] = ~0;
-
-         /* This will cause the buffer to be unbound in the driver later. */
-         mgr->dirty_real_vb_mask |= 1 << vb;
       }
    }
+   /* This will cause the buffer to be unbound in the driver later. */
+   mgr->dirty_real_vb_mask |= mgr->fallback_vbs_mask;
+   mgr->fallback_vbs_mask = 0;
 }
 
 static void *
@@ -783,6 +824,17 @@ u_vbuf_create_vertex_elements(struct u_vbuf *mgr, unsigned count,
       }
    }
 
+   if (used_buffers & ~mgr->allowed_vb_mask) {
+      /* More vertex buffers are used than the hardware supports.  In
+       * principle, we only need to make sure that less vertex buffers are
+       * used, and mark some of the latter vertex buffers as incompatible.
+       * For now, mark all vertex buffers as incompatible.
+       */
+      ve->incompatible_vb_mask_any = used_buffers;
+      ve->compatible_vb_mask_any = 0;
+      ve->incompatible_elem_mask = u_bit_consecutive(0, count);
+   }
+
    ve->used_vb_mask = used_buffers;
    ve->compatible_vb_mask_all = ~ve->incompatible_vb_mask_any & used_buffers;
    ve->incompatible_vb_mask_all = ~ve->compatible_vb_mask_any & used_buffers;
@@ -795,8 +847,12 @@ u_vbuf_create_vertex_elements(struct u_vbuf *mgr, unsigned count,
       }
    }
 
-   ve->driver_cso =
-      pipe->create_vertex_elements_state(pipe, count, driver_attribs);
+   /* Only create driver CSO if no incompatible elements */
+   if (!ve->incompatible_elem_mask) {
+      ve->driver_cso =
+         pipe->create_vertex_elements_state(pipe, count, driver_attribs);
+   }
+
    return ve;
 }
 
@@ -805,7 +861,8 @@ static void u_vbuf_delete_vertex_elements(struct u_vbuf *mgr, void *cso)
    struct pipe_context *pipe = mgr->pipe;
    struct u_vbuf_elements *ve = cso;
 
-   pipe->delete_vertex_elements_state(pipe, ve->driver_cso);
+   if (ve->driver_cso)
+      pipe->delete_vertex_elements_state(pipe, ve->driver_cso);
    FREE(ve);
 }
 
@@ -905,7 +962,7 @@ u_vbuf_upload_buffers(struct u_vbuf *mgr,
    unsigned i;
    unsigned nr_velems = mgr->ve->count;
    const struct pipe_vertex_element *velems =
-         mgr->using_translate ? mgr->fallback_velems : mgr->ve->ve;
+         mgr->using_translate ? mgr->fallback_velems.velems : mgr->ve->ve;
    unsigned start_offset[PIPE_MAX_ATTRIBS];
    unsigned end_offset[PIPE_MAX_ATTRIBS];
    uint32_t buffer_mask = 0;
@@ -918,9 +975,7 @@ u_vbuf_upload_buffers(struct u_vbuf *mgr,
       unsigned instance_div, first, size, index_bit;
 
       /* Skip the buffers generated by translate. */
-      if (index == mgr->fallback_vbs[VB_VERTEX] ||
-          index == mgr->fallback_vbs[VB_INSTANCE] ||
-          index == mgr->fallback_vbs[VB_CONST]) {
+      if ((1 << index) & mgr->fallback_vbs_mask) {
          continue;
       }
 
@@ -1030,12 +1085,17 @@ u_vbuf_get_minmax_index_mapped(const struct pipe_draw_info *info,
                                const void *indices, unsigned *out_min_index,
                                unsigned *out_max_index)
 {
-   unsigned max = 0;
-   unsigned min = ~0u;
+   if (!info->count) {
+      *out_min_index = 0;
+      *out_max_index = 0;
+      return;
+   }
 
    switch (info->index_size) {
    case 4: {
       const unsigned *ui_indices = (const unsigned*)indices;
+      unsigned max = 0;
+      unsigned min = ~0u;
       if (info->primitive_restart) {
          for (unsigned i = 0; i < info->count; i++) {
             if (ui_indices[i] != info->restart_index) {
@@ -1050,10 +1110,14 @@ u_vbuf_get_minmax_index_mapped(const struct pipe_draw_info *info,
             if (ui_indices[i] < min) min = ui_indices[i];
          }
       }
+      *out_min_index = min;
+      *out_max_index = max;
       break;
    }
    case 2: {
       const unsigned short *us_indices = (const unsigned short*)indices;
+      unsigned short max = 0;
+      unsigned short min = ~((unsigned short)0);
       if (info->primitive_restart) {
          for (unsigned i = 0; i < info->count; i++) {
             if (us_indices[i] != info->restart_index) {
@@ -1068,10 +1132,14 @@ u_vbuf_get_minmax_index_mapped(const struct pipe_draw_info *info,
             if (us_indices[i] < min) min = us_indices[i];
          }
       }
+      *out_min_index = min;
+      *out_max_index = max;
       break;
    }
    case 1: {
       const unsigned char *ub_indices = (const unsigned char*)indices;
+      unsigned char max = 0;
+      unsigned char min = ~((unsigned char)0);
       if (info->primitive_restart) {
          for (unsigned i = 0; i < info->count; i++) {
             if (ub_indices[i] != info->restart_index) {
@@ -1086,14 +1154,13 @@ u_vbuf_get_minmax_index_mapped(const struct pipe_draw_info *info,
             if (ub_indices[i] < min) min = ub_indices[i];
          }
       }
+      *out_min_index = min;
+      *out_max_index = max;
       break;
    }
    default:
-      assert(0);
+      unreachable("bad index size");
    }
-
-   *out_min_index = min;
-   *out_max_index = max;
 }
 
 void u_vbuf_get_minmax_index(struct pipe_context *pipe,
@@ -1371,8 +1438,7 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
           * performance. */
          if (!info->indirect &&
              !new_info.primitive_restart &&
-             num_vertices > new_info.count*2 &&
-             num_vertices - new_info.count > 32 &&
+             util_is_vbo_upload_ratio_too_large(new_info.count, num_vertices) &&
              !u_vbuf_mapping_vertex_buffer_blocks(mgr)) {
             unroll_indices = TRUE;
             user_vb_mask &= ~(mgr->nonzero_stride_vb_mask &

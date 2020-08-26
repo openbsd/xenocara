@@ -49,6 +49,13 @@ process_parameters(exec_list *instructions, exec_list *actual_parameters,
       ast->set_is_lhs(true);
       ir_rvalue *result = ast->hir(instructions, state);
 
+      /* Error happened processing function parameter */
+      if (!result) {
+         actual_parameters->push_tail(ir_rvalue::error_value(mem_ctx));
+         count++;
+         continue;
+      }
+
       ir_constant *const constant =
          result->constant_expression_value(mem_ctx);
 
@@ -174,6 +181,37 @@ is_atomic_function(const char *func_name)
           !strcmp(func_name, "atomicExchange") ||
           !strcmp(func_name, "atomicCompSwap");
 }
+
+static bool
+verify_atomic_image_parameter_qualifier(YYLTYPE *loc, _mesa_glsl_parse_state *state,
+                                        ir_variable *var)
+{
+   if (!var ||
+       (var->data.image_format != PIPE_FORMAT_R32_UINT &&
+        var->data.image_format != PIPE_FORMAT_R32_SINT &&
+        var->data.image_format != PIPE_FORMAT_R32_FLOAT)) {
+      _mesa_glsl_error(loc, state, "Image atomic functions should use r32i/r32ui "
+                       "format qualifier");
+      return false;
+   }
+   return true;
+}
+
+static bool
+is_atomic_image_function(const char *func_name)
+{
+   return !strcmp(func_name, "imageAtomicAdd") ||
+          !strcmp(func_name, "imageAtomicMin") ||
+          !strcmp(func_name, "imageAtomicMax") ||
+          !strcmp(func_name, "imageAtomicAnd") ||
+          !strcmp(func_name, "imageAtomicOr") ||
+          !strcmp(func_name, "imageAtomicXor") ||
+          !strcmp(func_name, "imageAtomicExchange") ||
+          !strcmp(func_name, "imageAtomicCompSwap") ||
+          !strcmp(func_name, "imageAtomicIncWrap") ||
+          !strcmp(func_name, "imageAtomicDecWrap");
+}
+
 
 /**
  * Verify that 'out' and 'inout' actual parameters are lvalues.  Also, verify
@@ -340,6 +378,19 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
       YYLTYPE loc = actual_ast->get_location();
 
       if (!verify_first_atomic_parameter(&loc, state,
+                                         actual->variable_referenced())) {
+         return false;
+      }
+   } else if (is_atomic_image_function(func_name)) {
+      const ir_rvalue *const actual =
+         (ir_rvalue *) actual_ir_parameters.get_head_raw();
+
+      const ast_expression *const actual_ast =
+         exec_node_data(ast_expression,
+                        actual_ast_parameters.get_head_raw(), link);
+      YYLTYPE loc = actual_ast->get_location();
+
+      if (!verify_atomic_image_parameter_qualifier(&loc, state,
                                          actual->variable_referenced())) {
          return false;
       }
@@ -612,11 +663,6 @@ generate_call(exec_list *instructions, ir_function_signature *sig,
    ir_call *call = new(ctx) ir_call(sig, deref,
                                     actual_parameters, sub_var, array_idx);
    instructions->push_tail(call);
-   if (sig->is_builtin()) {
-      /* inline immediately */
-      call->generate_inline(call);
-      call->remove();
-   }
 
    /* Also emit any necessary out-parameter conversions. */
    instructions->append_list(&post_call_conversions);
@@ -664,7 +710,6 @@ match_function_by_name(const char *name,
    }
 
    /* Local shader has no exact candidates; check the built-ins. */
-   _mesa_glsl_initialize_builtin_functions();
    sig = _mesa_glsl_find_builtin_function(state, name, actual_parameters);
 
    /* if _mesa_glsl_find_builtin_function failed, fall back to the result

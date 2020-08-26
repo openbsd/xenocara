@@ -31,12 +31,10 @@
  * GL_EXT_transform_feedback, and friends) on platforms that support
  * hardware contexts (Gen6+).
  */
-#include "main/imports.h"
-
 #include "brw_context.h"
 #include "brw_defines.h"
 #include "brw_state.h"
-#include "perf/gen_perf.h"
+#include "perf/gen_perf_regs.h"
 #include "intel_batchbuffer.h"
 #include "intel_buffer_objects.h"
 

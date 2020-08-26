@@ -66,11 +66,11 @@
 #include "util/u_atomic.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
+#include "util/u_memory.h"
 
 #include "hud/hud_context.h"
 
 #include "main/errors.h"
-#include "main/imports.h"
 
 #include "xm_public.h"
 #include <GL/glx.h>
@@ -404,7 +404,7 @@ xmesa_get_window_size(Display *dpy, XMesaBuffer b,
 static GLuint
 choose_pixel_format(XMesaVisual v)
 {
-   boolean native_byte_order = (host_byte_order() == 
+   boolean native_byte_order = (host_byte_order() ==
                                 ImageByteOrder(v->display));
 
    if (   GET_REDMASK(v)   == 0x0000ff
@@ -636,15 +636,13 @@ xmesa_free_buffer(XMesaBuffer buffer)
  * initializing the context's visual and buffer information.
  * \param v  the XMesaVisual to initialize
  * \param b  the XMesaBuffer to initialize (may be NULL)
- * \param rgb_flag  TRUE = RGBA mode, FALSE = color index mode
  * \param window  the window/pixmap we're rendering into
  * \param cmap  the colormap associated with the window/pixmap
  * \return GL_TRUE=success, GL_FALSE=failure
  */
 static GLboolean
 initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
-                             GLboolean rgb_flag, Drawable window,
-                             Colormap cmap)
+                             Drawable window, Colormap cmap)
 {
    assert(!b || b->xm_visual == v);
 
@@ -652,29 +650,22 @@ initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
    v->BitsPerPixel = bits_per_pixel(v);
    assert(v->BitsPerPixel > 0);
 
-   if (rgb_flag == GL_FALSE) {
-      /* COLOR-INDEXED WINDOW: not supported*/
+   /* RGB WINDOW:
+    * We support RGB rendering into almost any kind of visual.
+    */
+   const int xclass = v->visualType;
+   if (xclass != GLX_TRUE_COLOR && xclass != GLX_DIRECT_COLOR) {
+      _mesa_warning(NULL,
+         "XMesa: RGB mode rendering not supported in given visual.\n");
       return GL_FALSE;
    }
-   else {
-      /* RGB WINDOW:
-       * We support RGB rendering into almost any kind of visual.
-       */
-      const int xclass = v->visualType;
-      if (xclass != GLX_TRUE_COLOR && xclass == !GLX_DIRECT_COLOR) {
-	 _mesa_warning(NULL,
-            "XMesa: RGB mode rendering not supported in given visual.\n");
-	 return GL_FALSE;
-      }
-      v->mesa_visual.indexBits = 0;
 
-      if (v->BitsPerPixel == 32) {
-         /* We use XImages for all front/back buffers.  If an X Window or
-          * X Pixmap is 32bpp, there's no guarantee that the alpha channel
-          * will be preserved.  For XImages we're in luck.
-          */
-         v->mesa_visual.alphaBits = 8;
-      }
+   if (v->BitsPerPixel == 32) {
+      /* We use XImages for all front/back buffers.  If an X Window or
+       * X Pixmap is 32bpp, there's no guarantee that the alpha channel
+       * will be preserved.  For XImages we're in luck.
+       */
+      v->mesa_visual.alphaBits = 8;
    }
 
    /*
@@ -698,12 +689,12 @@ initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
 
 /**
  * Convert an X visual type to a GLX visual type.
- * 
+ *
  * \param visualType X visual type (i.e., \c TrueColor, \c StaticGray, etc.)
  *        to be converted.
  * \return If \c visualType is a valid X visual type, a GLX visual type will
  *         be returned.  Otherwise \c GLX_NONE will be returned.
- * 
+ *
  * \note
  * This code was lifted directly from lib/GL/glx/glcontextmodes.c in the
  * DRI CVS tree.
@@ -775,6 +766,9 @@ XMesaVisual XMesaCreateVisual( Display *display,
    if (!xmdpy)
       return NULL;
 
+   if (!rgb_flag)
+      return NULL;
+
    /* For debugging only */
    if (getenv("MESA_XSYNC")) {
       /* This makes debugging X easier.
@@ -821,7 +815,7 @@ XMesaVisual XMesaCreateVisual( Display *display,
    if (alpha_flag)
       v->mesa_visual.alphaBits = 8;
 
-   (void) initialize_visual_and_buffer( v, NULL, rgb_flag, 0, 0 );
+   (void) initialize_visual_and_buffer( v, NULL, 0, 0 );
 
    {
       const int xclass = v->visualType;
@@ -849,7 +843,6 @@ XMesaVisual XMesaCreateVisual( Display *display,
    {
       struct gl_config *vis = &v->mesa_visual;
 
-      vis->rgbMode          = GL_TRUE;
       vis->doubleBufferMode = db_flag;
       vis->stereoMode       = stereo_flag;
 
@@ -859,7 +852,6 @@ XMesaVisual XMesaCreateVisual( Display *display,
       vis->alphaBits        = alpha_bits;
       vis->rgbBits          = red_bits + green_bits + blue_bits;
 
-      vis->indexBits      = 0;
       vis->depthBits      = depth_size;
       vis->stencilBits    = stencil_size;
 
@@ -867,10 +859,6 @@ XMesaVisual XMesaCreateVisual( Display *display,
       vis->accumGreenBits = accum_green_size;
       vis->accumBlueBits  = accum_blue_size;
       vis->accumAlphaBits = accum_alpha_size;
-
-      vis->haveAccumBuffer   = accum_red_size > 0;
-      vis->haveDepthBuffer   = depth_size > 0;
-      vis->haveStencilBuffer = stencil_size > 0;
 
       vis->numAuxBuffers = 0;
       vis->level = 0;
@@ -1062,9 +1050,9 @@ void XMesaDestroyContext( XMesaContext c )
 
    c->st->destroy(c->st);
 
-   /* FIXME: We should destroy the screen here, but if we do so, surfaces may 
+   /* FIXME: We should destroy the screen here, but if we do so, surfaces may
     * outlive it, causing segfaults
-   struct pipe_screen *screen = c->st->pipe->screen; 
+   struct pipe_screen *screen = c->st->pipe->screen;
    screen->destroy(screen);
    */
 
@@ -1115,8 +1103,7 @@ XMesaCreateWindowBuffer(XMesaVisual v, Window w)
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer( v, b, v->mesa_visual.rgbMode,
-                                      (Drawable) w, cmap )) {
+   if (!initialize_visual_and_buffer( v, b, (Drawable) w, cmap )) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1146,8 +1133,7 @@ XMesaCreatePixmapBuffer(XMesaVisual v, Pixmap p, Colormap cmap)
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     (Drawable) p, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, (Drawable) p, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1205,8 +1191,7 @@ XMesaCreatePixmapTextureBuffer(XMesaVisual v, Pixmap p,
    b->TextureFormat = format;
    b->TextureMipmap = mipmap;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     (Drawable) p, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, (Drawable) p, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1235,8 +1220,7 @@ XMesaCreatePBuffer(XMesaVisual v, Colormap cmap,
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     drawable, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, drawable, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1274,6 +1258,9 @@ xmesa_check_buffer_size(XMesaBuffer b)
 {
    GLuint old_width, old_height;
 
+   if (!b)
+      return;
+
    if (b->type == PBUFFER)
       return;
 
@@ -1303,8 +1290,9 @@ GLboolean XMesaMakeCurrent2( XMesaContext c, XMesaBuffer drawBuffer,
    }
 
    if (c) {
-      if (!drawBuffer || !readBuffer)
-         return GL_FALSE;  /* must specify buffers! */
+      if (!drawBuffer != !readBuffer) {
+         return GL_FALSE;  /* must specify zero or two buffers! */
+      }
 
       if (c == old_ctx &&
 	  c->xm_buffer == drawBuffer &&
@@ -1318,10 +1306,13 @@ GLboolean XMesaMakeCurrent2( XMesaContext c, XMesaBuffer drawBuffer,
       c->xm_buffer = drawBuffer;
       c->xm_read_buffer = readBuffer;
 
-      stapi->make_current(stapi, c->st, drawBuffer->stfb, readBuffer->stfb);
+      stapi->make_current(stapi, c->st,
+                          drawBuffer ? drawBuffer->stfb : NULL,
+                          readBuffer ? readBuffer->stfb : NULL);
 
       /* Solution to Stephane Rehel's problem with glXReleaseBuffersMESA(): */
-      drawBuffer->wasCurrent = GL_TRUE;
+      if (drawBuffer)
+         drawBuffer->wasCurrent = GL_TRUE;
    }
    else {
       /* Detach */
@@ -1367,7 +1358,7 @@ void XMesaSwapBuffers( XMesaBuffer b )
    }
 
    if (xmctx && xmctx->xm_buffer == b) {
-      xmctx->st->flush( xmctx->st, ST_FLUSH_FRONT, NULL);
+      xmctx->st->flush( xmctx->st, ST_FLUSH_FRONT, NULL, NULL, NULL);
    }
 
    xmesa_swap_st_framebuffer(b->stfb);
@@ -1382,7 +1373,7 @@ void XMesaCopySubBuffer( XMesaBuffer b, int x, int y, int width, int height )
 {
    XMesaContext xmctx = XMesaGetCurrentContext();
 
-   xmctx->st->flush( xmctx->st, ST_FLUSH_FRONT, NULL);
+   xmctx->st->flush( xmctx->st, ST_FLUSH_FRONT, NULL, NULL, NULL);
 
    xmesa_copy_st_framebuffer(b->stfb,
          ST_ATTACHMENT_BACK_LEFT, ST_ATTACHMENT_FRONT_LEFT,
@@ -1397,7 +1388,7 @@ void XMesaFlush( XMesaContext c )
       XMesaDisplay xmdpy = xmesa_init_display(c->xm_visual->display);
       struct pipe_fence_handle *fence = NULL;
 
-      c->st->flush(c->st, ST_FLUSH_FRONT, &fence);
+      c->st->flush(c->st, ST_FLUSH_FRONT, &fence, NULL, NULL);
       if (fence) {
          xmdpy->screen->fence_finish(xmdpy->screen, NULL, fence,
                                      PIPE_TIMEOUT_INFINITE);

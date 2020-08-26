@@ -18,23 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-inc_common = [inc_include, include_directories(
-  '.', 'mapi', 'mesa', 'gallium/include', 'gallium/auxiliary')]
 inc_mesa = include_directories('mesa')
 inc_mapi = include_directories('mapi')
 inc_src = include_directories('.')
 inc_gallium = include_directories('gallium/include')
 inc_gallium_aux = include_directories('gallium/auxiliary')
 inc_amd_common = include_directories('amd/common')
+inc_amd_common_llvm = include_directories('amd/llvm')
 
 libglsl_util = static_library(
   'glsl_util',
   files(
-    'mesa/main/extensions_table.c', 'mesa/main/imports.c',
-    'mesa/program/prog_parameter.c', 'mesa/program/symbol_table.c',
+    'mesa/main/extensions_table.c',
+    'mesa/program/prog_parameter.c',
+    'mesa/program/symbol_table.c',
     'mesa/program/dummy_errors.c',
   ),
-  include_directories : [inc_common],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
   c_args : [c_vis_args],
   build_by_default : false,
 )
@@ -47,6 +47,11 @@ sha1_h = custom_target(
 )
 
 subdir('gtest')
+if cc.get_id() == 'msvc'
+  subdir('getopt')
+else
+  idep_getopt = null_dep
+endif
 subdir('util')
 subdir('mapi')
 # TODO: opengl
@@ -54,7 +59,9 @@ subdir('compiler')
 if with_tools.contains('drm-shim')
   subdir('drm-shim')
 endif
-subdir('imgui')
+if with_imgui
+  subdir('imgui')
+endif
 if with_platform_wayland
   subdir('egl/wayland/wayland-drm')
 endif
@@ -106,22 +113,12 @@ endif
 
 # This must be after at least mesa, glx, and gallium, since libgl will be
 # defined in one of those subdirs depending on the glx provider.
-if with_glx != 'disabled' and (not with_glvnd or not glvnd_has_headers_and_pc_files)
-  # If using glvnd the pkg-config header should not point to GL_mesa, it should
-  # point to GL. glvnd is only available on unix like platforms so adding -l
-  # should be safe here
-  # TODO: in the glvnd case glvnd itself should really be providing this.
-  if not glvnd_has_headers_and_pc_files
-    _gl = '-L${libdir} -lGL'
-  else
-    _gl = libgl
-  endif
-
+if with_glx != 'disabled' and not with_glvnd
   pkg.generate(
     name : 'gl',
     description : 'Mesa OpenGL Library',
     version : meson.project_version(),
-    libraries : _gl,
+    libraries : libgl,
     libraries_private : gl_priv_libs,
     requires_private : gl_priv_reqs,
     variables : ['glx_tls=@0@'.format(use_elf_tls ? 'yes' : 'no')],

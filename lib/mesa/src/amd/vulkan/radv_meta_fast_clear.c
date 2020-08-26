@@ -87,7 +87,7 @@ build_dcc_decompress_compute_shader(struct radv_device *dev)
 	nir_intrinsic_instr *membar = nir_intrinsic_instr_create(b.shader, nir_intrinsic_memory_barrier);
 	nir_builder_instr_insert(&b, &membar->instr);
 
-	nir_intrinsic_instr *bar = nir_intrinsic_instr_create(b.shader, nir_intrinsic_barrier);
+	nir_intrinsic_instr *bar = nir_intrinsic_instr_create(b.shader, nir_intrinsic_control_barrier);
 	nir_builder_instr_insert(&b, &bar->instr);
 
 	nir_ssa_def *outval = &tex->dest.ssa;
@@ -97,6 +97,7 @@ build_dcc_decompress_compute_shader(struct radv_device *dev)
 	store->src[1] = nir_src_for_ssa(global_id);
 	store->src[2] = nir_src_for_ssa(nir_ssa_undef(&b, 1, 32));
 	store->src[3] = nir_src_for_ssa(outval);
+	store->src[4] = nir_src_for_ssa(nir_imm_int(&b, 0));
 
 	nir_builder_instr_insert(&b, &store->instr);
 	return b.shader;
@@ -222,7 +223,27 @@ create_pass(struct radv_device *device)
 						       .preserveAttachmentCount = 0,
 						       .pPreserveAttachments = NULL,
 					       },
-								.dependencyCount = 0,
+							.dependencyCount = 2,
+							.pDependencies = (VkSubpassDependency[]) {
+								{
+									.srcSubpass = VK_SUBPASS_EXTERNAL,
+									.dstSubpass = 0,
+									.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+									.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+									.srcAccessMask = 0,
+									.dstAccessMask = 0,
+									.dependencyFlags = 0
+								},
+								{
+									.srcSubpass = 0,
+									.dstSubpass = VK_SUBPASS_EXTERNAL,
+									.srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+									.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+									.srcAccessMask = 0,
+									.dstAccessMask = 0,
+									.dependencyFlags = 0
+								}
+							},
 				       },
 				       alloc,
 				       &device->meta_state.fast_clear_flush.pass);
@@ -605,31 +626,28 @@ radv_process_color_image_layer(struct radv_cmd_buffer *cmd_buffer,
 					.layers = 1
 				}, &cmd_buffer->pool->alloc, &fb_h);
 
-	radv_CmdBeginRenderPass(radv_cmd_buffer_to_handle(cmd_buffer),
-				&(VkRenderPassBeginInfo) {
-					.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-					.renderPass = device->meta_state.fast_clear_flush.pass,
-					.framebuffer = fb_h,
-					.renderArea = {
-						.offset = {
-							0,
-							0,
+	radv_cmd_buffer_begin_render_pass(cmd_buffer,
+					  &(VkRenderPassBeginInfo) {
+						.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+						.renderPass = device->meta_state.fast_clear_flush.pass,
+						.framebuffer = fb_h,
+						.renderArea = {
+							.offset = { 0, 0, },
+							.extent = { width, height, }
 						},
-						.extent = {
-							width,
-							height,
-						}
-					},
-					.clearValueCount = 0,
-					.pClearValues = NULL,
-				}, VK_SUBPASS_CONTENTS_INLINE);
+						.clearValueCount = 0,
+						.pClearValues = NULL,
+					});
+
+	radv_cmd_buffer_set_subpass(cmd_buffer,
+				    &cmd_buffer->state.pass->subpasses[0]);
 
 	radv_CmdDraw(radv_cmd_buffer_to_handle(cmd_buffer), 3, 1, 0, 0);
 
 	cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_FLUSH_AND_INV_CB |
 					RADV_CMD_FLAG_FLUSH_AND_INV_CB_META;
 
-	radv_CmdEndRenderPass(radv_cmd_buffer_to_handle(cmd_buffer));
+	radv_cmd_buffer_end_render_pass(cmd_buffer);
 
 	radv_DestroyFramebuffer(radv_device_to_handle(device), fb_h,
 				&cmd_buffer->pool->alloc);
@@ -765,6 +783,15 @@ radv_fast_clear_flush_image_inplace(struct radv_cmd_buffer *cmd_buffer,
                                     struct radv_image *image,
                                     const VkImageSubresourceRange *subresourceRange)
 {
+	struct radv_barrier_data barrier = {};
+
+	if (radv_image_has_fmask(image)) {
+		barrier.layout_transitions.fmask_decompress = 1;
+	} else {
+		barrier.layout_transitions.fast_clear_eliminate = 1;
+	}
+	radv_describe_layout_transition(cmd_buffer, &barrier);
+
 	radv_emit_color_decompress(cmd_buffer, image, subresourceRange, false);
 }
 
@@ -910,6 +937,11 @@ radv_decompress_dcc(struct radv_cmd_buffer *cmd_buffer,
                     struct radv_image *image,
                     const VkImageSubresourceRange *subresourceRange)
 {
+	struct radv_barrier_data barrier = {};
+
+	barrier.layout_transitions.dcc_decompress = 1;
+	radv_describe_layout_transition(cmd_buffer, &barrier);
+
 	if (cmd_buffer->queue_family_index == RADV_QUEUE_GENERAL)
 		radv_decompress_dcc_gfx(cmd_buffer, image, subresourceRange);
 	else

@@ -73,12 +73,12 @@ dri_message(int level, const char *f, ...)
    }
 }
 
+#ifndef GL_LIB_NAME
 #ifdef __OpenBSD__
 #define GL_LIB_NAME "libGL.so"
-#endif
-
-#ifndef GL_LIB_NAME
+#else
 #define GL_LIB_NAME "libGL.so.1"
+#endif
 #endif
 
 /**
@@ -170,6 +170,10 @@ static const struct
       __ATTRIB(__DRI_ATTRIB_GREEN_MASK, greenMask),
       __ATTRIB(__DRI_ATTRIB_BLUE_MASK, blueMask),
       __ATTRIB(__DRI_ATTRIB_ALPHA_MASK, alphaMask),
+      __ATTRIB(__DRI_ATTRIB_RED_SHIFT, redShift),
+      __ATTRIB(__DRI_ATTRIB_GREEN_SHIFT, greenShift),
+      __ATTRIB(__DRI_ATTRIB_BLUE_SHIFT, blueShift),
+      __ATTRIB(__DRI_ATTRIB_ALPHA_SHIFT, alphaShift),
 #endif
       __ATTRIB(__DRI_ATTRIB_MAX_PBUFFER_WIDTH, maxPbufferWidth),
       __ATTRIB(__DRI_ATTRIB_MAX_PBUFFER_HEIGHT, maxPbufferHeight),

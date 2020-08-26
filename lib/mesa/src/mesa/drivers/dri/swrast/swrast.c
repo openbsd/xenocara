@@ -39,7 +39,6 @@
 #include "main/fbobject.h"
 #include "main/formats.h"
 #include "main/framebuffer.h"
-#include "main/imports.h"
 #include "main/renderbuffer.h"
 #include "main/version.h"
 #include "main/vtxfmt.h"
@@ -53,6 +52,7 @@
 #include "drivers/common/driverfuncs.h"
 #include "drivers/common/meta.h"
 #include "utils.h"
+#include "util/u_memory.h"
 
 #include "main/teximage.h"
 #include "main/texformat.h"
@@ -584,9 +584,9 @@ dri_create_buffer(__DRIscreen * sPriv,
     /* add software renderbuffers */
     _swrast_add_soft_renderbuffers(fb,
                                    GL_FALSE, /* color */
-                                   visual->haveDepthBuffer,
-                                   visual->haveStencilBuffer,
-                                   visual->haveAccumBuffer,
+                                   visual->depthBits > 0,
+                                   visual->stencilBits > 0,
+                                   visual->accumRedBits > 0,
                                    GL_FALSE, /* alpha */
                                    GL_FALSE /* aux bufs */);
 
@@ -809,7 +809,7 @@ dri_create_context(gl_api api,
 
     /* create module contexts */
     _swrast_CreateContext( mesaCtx );
-    _vbo_CreateContext( mesaCtx );
+    _vbo_CreateContext( mesaCtx, false );
     _tnl_CreateContext( mesaCtx );
     _swsetup_CreateContext( mesaCtx );
     _swsetup_Wakeup( mesaCtx );

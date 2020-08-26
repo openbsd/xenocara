@@ -47,15 +47,15 @@ enum fd_resource_status;
  * is active across IB's (or between tile IB and draw IB)
  */
 enum fd_render_stage {
-	FD_STAGE_NULL     = 0x01,
-	FD_STAGE_DRAW     = 0x02,
-	FD_STAGE_CLEAR    = 0x04,
+	FD_STAGE_NULL     = 0x00,
+	FD_STAGE_DRAW     = 0x01,
+	FD_STAGE_CLEAR    = 0x02,
 	/* used for driver internal draws (ie. util_blitter_blit()): */
-	FD_STAGE_BLIT     = 0x08,
+	FD_STAGE_BLIT     = 0x04,
 	FD_STAGE_ALL      = 0xff,
 };
 
-#define MAX_HW_SAMPLE_PROVIDERS 5
+#define MAX_HW_SAMPLE_PROVIDERS 7
 struct fd_hw_sample_provider;
 struct fd_hw_sample;
 
@@ -73,8 +73,6 @@ struct fd_batch {
 	struct pipe_fence_handle *fence;
 
 	struct fd_context *ctx;
-
-	struct util_queue_fence flush_fence;
 
 	/* do we need to mem2gmem before rendering.  We don't, if for example,
 	 * there was a glClear() that invalidated the entire previous buffer
@@ -103,6 +101,7 @@ struct fd_batch {
 	bool flushed : 1;
 	bool blit : 1;
 	bool back_blit : 1;      /* only blit so far is resource shadowing back-blit */
+	bool tessellation : 1;      /* tessellation used in batch */
 
 	/* Keep track if WAIT_FOR_IDLE is needed for registers we need
 	 * to update via RMW:
@@ -124,8 +123,21 @@ struct fd_batch {
 		FD_GMEM_LOGICOP_ENABLED      = 0x20,
 		FD_GMEM_FB_READ              = 0x40,
 	} gmem_reason;
-	unsigned num_draws;   /* number of draws in current batch */
+
+	/* At submit time, once we've decided that this batch will use GMEM
+	 * rendering, the appropriate gmem state is looked up:
+	 */
+	const struct fd_gmem_stateobj *gmem_state;
+
+	unsigned num_draws;      /* number of draws in current batch */
 	unsigned num_vertices;   /* number of vertices in current batch */
+
+	/* Currently only used on a6xx, to calculate vsc prim/draw stream
+	 * sizes:
+	 */
+	unsigned num_bins_per_pipe;
+	unsigned prim_strm_bits;
+	unsigned draw_strm_bits;
 
 	/* Track the maximal bounds of the scissor of all the draws within a
 	 * batch.  Used at the tile rendering step (fd_gmem_render_tiles(),
@@ -223,13 +235,26 @@ struct fd_batch {
 
 	/** set of dependent batches.. holds refs to dependent batches: */
 	uint32_t dependents_mask;
+
+	/* Buffer for tessellation engine input
+	 */
+	struct fd_bo *tessfactor_bo;
+	uint32_t tessfactor_size;
+
+	/* Buffer for passing parameters between TCS and TES
+	 */
+	struct fd_bo *tessparam_bo;
+	uint32_t tessparam_size;
+
+	struct fd_ringbuffer *tess_addrs_constobj;
+
+	struct list_head log_chunks;  /* list of unflushed log chunks in fifo order */
 };
 
 struct fd_batch * fd_batch_create(struct fd_context *ctx, bool nondraw);
 
 void fd_batch_reset(struct fd_batch *batch);
-void fd_batch_sync(struct fd_batch *batch);
-void fd_batch_flush(struct fd_batch *batch, bool sync);
+void fd_batch_flush(struct fd_batch *batch);
 void fd_batch_add_dep(struct fd_batch *batch, struct fd_batch *dep);
 void fd_batch_resource_used(struct fd_batch *batch, struct fd_resource *rsc, bool write);
 void fd_batch_check_size(struct fd_batch *batch);

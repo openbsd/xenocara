@@ -135,6 +135,10 @@ static const struct drm_driver_descriptor driver_descriptors[] = {
         .driver_name = "lima",
         .create_screen = pipe_lima_create_screen,
     },
+    {
+        .driver_name = "zink",
+        .create_screen = pipe_zink_create_screen,
+    },
 };
 
 static const struct drm_driver_descriptor default_driver_descriptor = {
@@ -208,6 +212,11 @@ pipe_loader_drm_probe_fd_nodup(struct pipe_loader_device **dev, int fd)
    plib = &ddev->lib;
 #endif
    ddev->dd = get_driver_descriptor(ddev->base.driver_name, plib);
+
+   /* kmsro supports lots of drivers, try as a fallback */
+   if (!ddev->dd)
+      ddev->dd = get_driver_descriptor("kmsro", plib);
+
    if (!ddev->dd)
       goto fail;
 
@@ -322,7 +331,7 @@ pipe_loader_drm_get_driinfo_xml(const char *driver_name)
    const struct drm_driver_descriptor *dd =
       get_driver_descriptor(driver_name, &lib);
 
-   if (dd && dd->driconf_xml)
+   if (dd && dd->driconf_xml && *dd->driconf_xml)
       xml = strdup(*dd->driconf_xml);
 
    if (lib)

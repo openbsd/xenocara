@@ -25,7 +25,7 @@
 */
 
 /* Platform-specific types and definitions for egl.h
- * $Revision: 1.17 $ on $Date: 2020/01/22 02:49:19 $
+ * $Revision: 1.18 $ on $Date: 2020/08/26 06:02:35 $
  *
  * Adopters may modify khrplatform.h and this file to suit their platform.
  * You are encouraged to submit all modifications to the Khronos group so that
@@ -54,6 +54,12 @@
 #define EGLAPIENTRY  KHRONOS_APIENTRY
 #endif
 #define EGLAPIENTRYP EGLAPIENTRY*
+
+#if defined(MESA_EGL_NO_X11_HEADERS) && !defined(EGL_NO_X11)
+#warning "`MESA_EGL_NO_X11_HEADERS` is deprecated, and doesn't work with the unmodified Khronos header"
+#warning "Please use `EGL_NO_X11` instead, as `MESA_EGL_NO_X11_HEADERS` will be removed soon"
+#define EGL_NO_X11
+#endif
 
 /* The types NativeDisplayType, NativeWindowType, and NativePixmapType
  * are aliases of window-system-dependent types, such as X Display * or
@@ -116,15 +122,13 @@ typedef intptr_t EGLNativeDisplayType;
 typedef intptr_t EGLNativePixmapType;
 typedef intptr_t EGLNativeWindowType;
 
-#elif defined(__unix__) || defined(__APPLE__)
+#elif defined(__unix__) && defined(EGL_NO_X11)
 
-#if defined(MESA_EGL_NO_X11_HEADERS)
-
-typedef void            *EGLNativeDisplayType;
+typedef void             *EGLNativeDisplayType;
 typedef khronos_uintptr_t EGLNativePixmapType;
 typedef khronos_uintptr_t EGLNativeWindowType;
 
-#else
+#elif defined(__unix__) || defined(USE_X11)
 
 /* X11 (tentative)  */
 #include <X11/Xlib.h>
@@ -134,7 +138,11 @@ typedef Display *EGLNativeDisplayType;
 typedef Pixmap   EGLNativePixmapType;
 typedef Window   EGLNativeWindowType;
 
-#endif /* MESA_EGL_NO_X11_HEADERS */
+#elif defined(__APPLE__)
+
+typedef int   EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
 
 #elif defined(__HAIKU__)
 

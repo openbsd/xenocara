@@ -25,7 +25,7 @@
  */
 
 #include "pipe/p_screen.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "fd5_screen.h"
 #include "fd5_blitter.h"
@@ -76,9 +76,9 @@ fd5_screen_is_format_supported(struct pipe_screen *pscreen,
 	}
 
 	if ((usage & (PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_SHADER_IMAGE)) &&
+			(fd5_pipe2tex(format) != (enum a5xx_tex_fmt)~0) &&
 			(target == PIPE_BUFFER ||
-			 util_format_get_blocksize(format) != 12) &&
-			(fd5_pipe2tex(format) != (enum a5xx_tex_fmt)~0)) {
+			 util_format_get_blocksize(format) != 12)) {
 		retval |= usage & (PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_SHADER_IMAGE);
 	}
 
@@ -121,9 +121,6 @@ fd5_screen_is_format_supported(struct pipe_screen *pscreen,
 	return retval == usage;
 }
 
-extern const struct fd_perfcntr_group a5xx_perfcntr_groups[];
-extern const unsigned a5xx_num_perfcntr_groups;
-
 void
 fd5_screen_init(struct pipe_screen *pscreen)
 {
@@ -136,11 +133,6 @@ fd5_screen_init(struct pipe_screen *pscreen)
 	screen->setup_slices = fd5_setup_slices;
 	if (fd_mesa_debug & FD_DBG_TTILE)
 		screen->tile_mode = fd5_tile_mode;
-
-	if (fd_mesa_debug & FD_DBG_PERFC) {
-		screen->perfcntr_groups = a5xx_perfcntr_groups;
-		screen->num_perfcntr_groups = a5xx_num_perfcntr_groups;
-	}
 
 	fd5_emit_init_screen(pscreen);
 }

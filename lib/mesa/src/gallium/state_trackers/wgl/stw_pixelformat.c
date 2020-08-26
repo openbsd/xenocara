@@ -29,11 +29,12 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_screen.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 
-#include "stw_icd.h"
+#include <GL/gl.h>
+#include "gldrv.h"
 #include "stw_device.h"
 #include "stw_pixelformat.h"
 #include "stw_tls.h"
@@ -312,6 +313,9 @@ stw_pixelformat_init(void)
 uint
 stw_pixelformat_get_count(void)
 {
+   if (!stw_init_screen())
+      return 0;
+
    return stw_dev->pixelformat_count;
 }
 
@@ -319,6 +323,9 @@ stw_pixelformat_get_count(void)
 uint
 stw_pixelformat_get_extended_count(void)
 {
+   if (!stw_init_screen())
+      return 0;
+
    return stw_dev->pixelformat_extended_count;
 }
 

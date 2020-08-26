@@ -1148,7 +1148,7 @@ nv50_so_target_create(struct pipe_context *pipe,
    pipe_reference_init(&targ->pipe.reference, 1);
 
    assert(buf->base.target == PIPE_BUFFER);
-   util_range_add(&buf->valid_buffer_range, offset, offset + size);
+   util_range_add(&buf->base, &buf->valid_buffer_range, offset, offset + size);
 
    return &targ->pipe;
 }
@@ -1267,9 +1267,13 @@ nv50_set_global_bindings(struct pipe_context *pipe,
 
    if (nv50->global_residents.size <= (end * sizeof(struct pipe_resource *))) {
       const unsigned old_size = nv50->global_residents.size;
-      util_dynarray_resize(&nv50->global_residents, struct pipe_resource *, end);
-      memset((uint8_t *)nv50->global_residents.data + old_size, 0,
-             nv50->global_residents.size - old_size);
+      if (util_dynarray_resize(&nv50->global_residents, struct pipe_resource *, end)) {
+         memset((uint8_t *)nv50->global_residents.data + old_size, 0,
+                nv50->global_residents.size - old_size);
+      } else {
+         NOUVEAU_ERR("Could not resize global residents array\n");
+         return;
+      }
    }
 
    if (resources) {

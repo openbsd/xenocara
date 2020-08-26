@@ -45,6 +45,7 @@
 #include "main/teximage.h"
 #include "main/texstate.h"
 #include "program/prog_instruction.h"
+#include "util/u_math.h"
 
 
 /**
@@ -924,7 +925,6 @@ _mesa_texture_parameteri(struct gl_context *ctx,
    case GL_TEXTURE_PRIORITY:
    case GL_TEXTURE_MAX_ANISOTROPY_EXT:
    case GL_TEXTURE_LOD_BIAS:
-   case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
       {
          GLfloat fparam[4];
          fparam[0] = (GLfloat) param;
@@ -981,7 +981,6 @@ _mesa_texture_parameteriv(struct gl_context *ctx,
    case GL_TEXTURE_PRIORITY:
    case GL_TEXTURE_MAX_ANISOTROPY_EXT:
    case GL_TEXTURE_LOD_BIAS:
-   case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
       {
          /* convert int param to float */
          GLfloat fparams[4];
@@ -1395,12 +1394,76 @@ _mesa_TextureParameterIiv(GLuint texture, GLenum pname, const GLint *params)
 }
 
 void GLAPIENTRY
+_mesa_TextureParameterIivEXT(GLuint texture, GLenum target, GLenum pname,
+                             const GLint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_lookup_or_create_texture(ctx, target, texture, false, true,
+                                           "glTextureParameterIivEXT");
+   if (!texObj)
+      return;
+
+   _mesa_texture_parameterIiv(ctx, texObj, pname, params, true);
+}
+
+void GLAPIENTRY
+_mesa_MultiTexParameterIivEXT(GLenum texunit, GLenum target, GLenum pname,
+                              const GLint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_get_texobj_by_target_and_texunit(ctx, target,
+                                                   texunit - GL_TEXTURE0,
+                                                   true,
+                                                   "glMultiTexParameterIivEXT");
+   if (!texObj)
+      return;
+
+   _mesa_texture_parameterIiv(ctx, texObj, pname, params, true);
+}
+
+void GLAPIENTRY
 _mesa_TextureParameterIuiv(GLuint texture, GLenum pname, const GLuint *params)
 {
    struct gl_texture_object *texObj;
    GET_CURRENT_CONTEXT(ctx);
 
    texObj = get_texobj_by_name(ctx, texture, "glTextureParameterIuiv");
+   if (!texObj)
+      return;
+
+   _mesa_texture_parameterIuiv(ctx, texObj, pname, params, true);
+}
+
+void GLAPIENTRY
+_mesa_TextureParameterIuivEXT(GLuint texture, GLenum target, GLenum pname,
+                              const GLuint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_lookup_or_create_texture(ctx, target, texture, false, true,
+                                           "glTextureParameterIuivEXT");
+   if (!texObj)
+      return;
+
+   _mesa_texture_parameterIuiv(ctx, texObj, pname, params, true);
+}
+
+void GLAPIENTRY
+_mesa_MultiTexParameterIuivEXT(GLenum texunit, GLenum target, GLenum pname,
+                               const GLuint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_get_texobj_by_target_and_texunit(ctx, target,
+                                                   texunit - GL_TEXTURE0,
+                                                   true,
+                                                   "glMultiTexParameterIuivEXT");
    if (!texObj)
       return;
 
@@ -1587,7 +1650,7 @@ get_tex_level_parameter_image(struct gl_context *ctx,
             }
             if (*params == 0 && pname == GL_TEXTURE_INTENSITY_SIZE) {
                /* Gallium may store intensity as LA */
-               *params = _mesa_get_format_bits(texFormat, 
+               *params = _mesa_get_format_bits(texFormat,
                                                GL_TEXTURE_ALPHA_SIZE);
             }
          }
@@ -2361,16 +2424,30 @@ get_tex_parameteriv(struct gl_context *ctx,
             goto invalid_pname;
          /* GL spec 'Data Conversions' section specifies that floating-point
           * value in integer Get function is rounded to nearest integer
+          *
+          * Section 2.2.2 (Data Conversions For State Query Commands) of the
+          * OpenGL 4.5 spec says:
+          *
+          *   Following these steps, if a value is so large in magnitude that
+          *   it cannot be represented by the returned data type, then the
+          *   nearest value representable using that type is returned.
           */
-         *params = IROUND(obj->Sampler.MinLod);
+         *params = CLAMP(lroundf(obj->Sampler.MinLod), INT_MIN, INT_MAX);
          break;
       case GL_TEXTURE_MAX_LOD:
          if (!_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
             goto invalid_pname;
          /* GL spec 'Data Conversions' section specifies that floating-point
           * value in integer Get function is rounded to nearest integer
+          *
+          * Section 2.2.2 (Data Conversions For State Query Commands) of the
+          * OpenGL 4.5 spec says:
+          *
+          *   Following these steps, if a value is so large in magnitude that
+          *   it cannot be represented by the returned data type, then the
+          *   nearest value representable using that type is returned.
           */
-         *params = IROUND(obj->Sampler.MaxLod);
+         *params = CLAMP(lroundf(obj->Sampler.MaxLod), INT_MIN, INT_MAX);
          break;
       case GL_TEXTURE_BASE_LEVEL:
          if (!_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
@@ -2386,8 +2463,15 @@ get_tex_parameteriv(struct gl_context *ctx,
             goto invalid_pname;
          /* GL spec 'Data Conversions' section specifies that floating-point
           * value in integer Get function is rounded to nearest integer
+          *
+          * Section 2.2.2 (Data Conversions For State Query Commands) of the
+          * OpenGL 4.5 spec says:
+          *
+          *   Following these steps, if a value is so large in magnitude that
+          *   it cannot be represented by the returned data type, then the
+          *   nearest value representable using that type is returned.
           */
-         *params = IROUND(obj->Sampler.MaxAnisotropy);
+         *params = CLAMP(lroundf(obj->Sampler.MaxAnisotropy), INT_MIN, INT_MAX);
          break;
       case GL_GENERATE_MIPMAP_SGIS:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
@@ -2424,8 +2508,15 @@ get_tex_parameteriv(struct gl_context *ctx,
 
          /* GL spec 'Data Conversions' section specifies that floating-point
           * value in integer Get function is rounded to nearest integer
+          *
+          * Section 2.2.2 (Data Conversions For State Query Commands) of the
+          * OpenGL 4.5 spec says:
+          *
+          *   Following these steps, if a value is so large in magnitude that
+          *   it cannot be represented by the returned data type, then the
+          *   nearest value representable using that type is returned.
           */
-         *params = IROUND(obj->Sampler.LodBias);
+         *params = CLAMP(lroundf(obj->Sampler.LodBias), INT_MIN, INT_MAX);
          break;
       case GL_TEXTURE_CROP_RECT_OES:
          if (ctx->API != API_OPENGLES || !ctx->Extensions.OES_draw_texture)
@@ -2739,6 +2830,37 @@ _mesa_GetTextureParameterIiv(GLuint texture, GLenum pname, GLint *params)
    get_tex_parameterIiv(ctx, texObj, pname, params, true);
 }
 
+void GLAPIENTRY
+_mesa_GetTextureParameterIivEXT(GLuint texture, GLenum target, GLenum pname, GLint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_lookup_or_create_texture(ctx, target, texture, false, true,
+                                           "glGetTextureParameterIivEXT");
+   if (!texObj)
+      return;
+
+
+   get_tex_parameterIiv(ctx, texObj, pname, params, true);
+}
+
+void GLAPIENTRY
+_mesa_GetMultiTexParameterIivEXT(GLenum texunit, GLenum target, GLenum pname,
+                                 GLint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_get_texobj_by_target_and_texunit(ctx, target,
+                                                   texunit - GL_TEXTURE0,
+                                                   true,
+                                                   "glGetMultiTexParameterIiv");
+   if (!texObj)
+      return;
+
+   get_tex_parameterIiv(ctx, texObj, pname, params, true);
+}
 
 void GLAPIENTRY
 _mesa_GetTextureParameterIuiv(GLuint texture, GLenum pname, GLuint *params)
@@ -2747,6 +2869,38 @@ _mesa_GetTextureParameterIuiv(GLuint texture, GLenum pname, GLuint *params)
    GET_CURRENT_CONTEXT(ctx);
 
    texObj = get_texobj_by_name(ctx, texture, "glGetTextureParameterIuiv");
+   if (!texObj)
+      return;
+
+   get_tex_parameterIiv(ctx, texObj, pname, (GLint *) params, true);
+}
+
+void GLAPIENTRY
+_mesa_GetTextureParameterIuivEXT(GLuint texture, GLenum target, GLenum pname,
+                                 GLuint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_lookup_or_create_texture(ctx, target, texture, false, true,
+                                           "glGetTextureParameterIuvEXT");
+   if (!texObj)
+      return;
+
+   get_tex_parameterIiv(ctx, texObj, pname, (GLint *) params, true);
+}
+
+void GLAPIENTRY
+_mesa_GetMultiTexParameterIuivEXT(GLenum texunit, GLenum target, GLenum pname,
+                               GLuint *params)
+{
+   struct gl_texture_object *texObj;
+   GET_CURRENT_CONTEXT(ctx);
+
+   texObj = _mesa_get_texobj_by_target_and_texunit(ctx, target,
+                                                   texunit - GL_TEXTURE0,
+                                                   true,
+                                                   "glGetMultiTexParameterIuiv");
    if (!texObj)
       return;
 

@@ -40,6 +40,8 @@
 #include "pipe-loader/pipe_loader.h"
 #include "state_tracker/st_context.h"
 
+#include "util/u_memory.h"
+
 GLboolean
 dri_create_context(gl_api api, const struct gl_config * visual,
                    __DRIcontext * cPriv,
@@ -241,7 +243,7 @@ dri_destroy_context(__DRIcontext * cPriv)
     * to avoid having to add code elsewhere to cope with flushing a
     * partially destroyed context.
     */
-   ctx->st->flush(ctx->st, 0, NULL);
+   ctx->st->flush(ctx->st, 0, NULL, NULL, NULL);
    ctx->st->destroy(ctx->st);
    free(ctx);
 }

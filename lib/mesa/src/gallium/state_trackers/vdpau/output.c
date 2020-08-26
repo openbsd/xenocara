@@ -31,7 +31,7 @@
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 #include "util/u_sampler.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_surface.h"
 
 #include "vl/vl_csc.h"
@@ -465,7 +465,6 @@ vlVdpOutputSurfacePutBitsYCbCr(VdpOutputSurface surface,
    mtx_lock(&vlsurface->device->mutex);
    memset(&vtmpl, 0, sizeof(vtmpl));
    vtmpl.buffer_format = format;
-   vtmpl.chroma_format = FormatYCBCRToPipeChroma(source_ycbcr_format);
 
    if (destination_rect) {
       vtmpl.width = abs(destination_rect->x0-destination_rect->x1);

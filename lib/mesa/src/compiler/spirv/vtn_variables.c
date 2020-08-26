@@ -30,18 +30,49 @@
 #include "nir_deref.h"
 #include <vulkan/vulkan_core.h>
 
-static void ptr_decoration_cb(struct vtn_builder *b,
-                              struct vtn_value *val, int member,
-                              const struct vtn_decoration *dec,
-                              void *void_ptr);
+static void
+ptr_decoration_cb(struct vtn_builder *b, struct vtn_value *val, int member,
+                  const struct vtn_decoration *dec, void *void_ptr)
+{
+   struct vtn_pointer *ptr = void_ptr;
+
+   switch (dec->decoration) {
+   case SpvDecorationNonUniformEXT:
+      ptr->access |= ACCESS_NON_UNIFORM;
+      break;
+
+   default:
+      break;
+   }
+}
+
+static struct vtn_pointer*
+vtn_decorate_pointer(struct vtn_builder *b, struct vtn_value *val,
+                     struct vtn_pointer *ptr)
+{
+   struct vtn_pointer dummy = { .access = 0 };
+   vtn_foreach_decoration(b, val, ptr_decoration_cb, &dummy);
+
+   /* If we're adding access flags, make a copy of the pointer.  We could
+    * probably just OR them in without doing so but this prevents us from
+    * leaking them any further than actually specified in the SPIR-V.
+    */
+   if (dummy.access & ~ptr->access) {
+      struct vtn_pointer *copy = ralloc(b, struct vtn_pointer);
+      *copy = *ptr;
+      copy->access |= dummy.access;
+      return copy;
+   }
+
+   return ptr;
+}
 
 struct vtn_value *
 vtn_push_value_pointer(struct vtn_builder *b, uint32_t value_id,
                        struct vtn_pointer *ptr)
 {
    struct vtn_value *val = vtn_push_value(b, value_id, vtn_value_type_pointer);
-   val->pointer = ptr;
-   vtn_foreach_decoration(b, val, ptr_decoration_cb, ptr);
+   val->pointer = vtn_decorate_pointer(b, val, ptr);
    return val;
 }
 
@@ -98,6 +129,18 @@ vtn_mode_uses_ssa_offset(struct vtn_builder *b,
             mode == vtn_variable_mode_ssbo) &&
            b->options->lower_ubo_ssbo_access_to_offsets) ||
           mode == vtn_variable_mode_push_constant;
+}
+
+static bool
+vtn_mode_is_cross_invocation(struct vtn_builder *b,
+                             enum vtn_variable_mode mode)
+{
+   return mode == vtn_variable_mode_ssbo ||
+          mode == vtn_variable_mode_ubo ||
+          mode == vtn_variable_mode_phys_ssbo ||
+          mode == vtn_variable_mode_push_constant ||
+          mode == vtn_variable_mode_workgroup ||
+          mode == vtn_variable_mode_cross_workgroup;
 }
 
 static bool
@@ -578,23 +621,6 @@ vtn_pointer_dereference(struct vtn_builder *b,
    }
 }
 
-struct vtn_pointer *
-vtn_pointer_for_variable(struct vtn_builder *b,
-                         struct vtn_variable *var, struct vtn_type *ptr_type)
-{
-   struct vtn_pointer *pointer = rzalloc(b, struct vtn_pointer);
-
-   pointer->mode = var->mode;
-   pointer->type = var->type;
-   vtn_assert(ptr_type->base_type == vtn_base_type_pointer);
-   vtn_assert(ptr_type->deref->type == var->type->type);
-   pointer->ptr_type = ptr_type;
-   pointer->var = var;
-   pointer->access = var->access | var->type->access;
-
-   return pointer;
-}
-
 /* Returns an atomic_uint type based on the original uint type. The returned
  * type will be equivalent to the original one but will have an atomic_uint
  * type as leaf instead of an uint.
@@ -704,11 +730,7 @@ vtn_local_load(struct vtn_builder *b, nir_deref_instr *src,
 
    if (src_tail != src) {
       val->type = src->type;
-      if (nir_src_is_const(src->arr.index))
-         val->def = vtn_vector_extract(b, val->def,
-                                       nir_src_as_uint(src->arr.index));
-      else
-         val->def = vtn_vector_extract_dynamic(b, val->def, src->arr.index.ssa);
+      val->def = nir_vector_extract(&b->nb, val->def, src->arr.index.ssa);
    }
 
    return val;
@@ -724,12 +746,8 @@ vtn_local_store(struct vtn_builder *b, struct vtn_ssa_value *src,
       struct vtn_ssa_value *val = vtn_create_ssa_value(b, dest_tail->type);
       _vtn_local_load_store(b, true, dest_tail, val, access);
 
-      if (nir_src_is_const(dest->arr.index))
-         val->def = vtn_vector_insert(b, val->def, src->def,
-                                      nir_src_as_uint(dest->arr.index));
-      else
-         val->def = vtn_vector_insert_dynamic(b, val->def, src->def,
-                                              dest->arr.index.ssa);
+      val->def = nir_vector_insert(&b->nb, val->def, src->def,
+                                   dest->arr.index.ssa);
       _vtn_local_load_store(b, false, dest_tail, val, access);
    } else {
       _vtn_local_load_store(b, false, dest_tail, src, access);
@@ -1087,11 +1105,11 @@ _vtn_variable_load_store(struct vtn_builder *b, bool load,
       if (glsl_type_is_vector_or_scalar(ptr->type->type)) {
          /* We hit a vector or scalar; go ahead and emit the load[s] */
          nir_deref_instr *deref = vtn_pointer_to_deref(b, ptr);
-         if (vtn_pointer_is_external_block(b, ptr)) {
-            /* If it's external, we call nir_load/store_deref directly.  The
-             * vtn_local_load/store helpers are too clever and do magic to
-             * avoid array derefs of vectors.  That magic is both less
-             * efficient than the direct load/store and, in the case of
+         if (vtn_mode_is_cross_invocation(b, ptr->mode)) {
+            /* If it's cross-invocation, we call nir_load/store_deref
+             * directly.  The vtn_local_load/store helpers are too clever and
+             * do magic to avoid array derefs of vectors.  That magic is both
+             * less efficient than the direct load/store and, in the case of
              * stores, is broken because it creates a race condition if two
              * threads are writing to different components of the same vector
              * due to the load+insert+store it uses to emulate the array
@@ -1176,7 +1194,8 @@ static void
 _vtn_variable_copy(struct vtn_builder *b, struct vtn_pointer *dest,
                    struct vtn_pointer *src)
 {
-   vtn_assert(src->type->type == dest->type->type);
+   vtn_assert(glsl_get_bare_type(src->type->type) ==
+              glsl_get_bare_type(dest->type->type));
    enum glsl_base_type base_type = glsl_get_base_type(src->type->type);
    switch (base_type) {
    case GLSL_TYPE_UINT:
@@ -1479,6 +1498,34 @@ vtn_get_builtin_location(struct vtn_builder *b,
       *location = SYSTEM_VALUE_GLOBAL_GROUP_SIZE;
       set_mode_system_value(b, mode);
       break;
+   case SpvBuiltInBaryCoordNoPerspAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_LINEAR_PIXEL;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordNoPerspCentroidAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_LINEAR_CENTROID;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordNoPerspSampleAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_LINEAR_SAMPLE;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordSmoothAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordSmoothCentroidAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_PERSP_CENTROID;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordSmoothSampleAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_PERSP_SAMPLE;
+      set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInBaryCoordPullModelAMD:
+      *location = SYSTEM_VALUE_BARYCENTRIC_PULL_MODEL;
+      set_mode_system_value(b, mode);
+      break;
    default:
       vtn_fail("Unsupported builtin: %s (%u)",
                spirv_builtin_to_string(builtin), builtin);
@@ -1499,6 +1546,9 @@ apply_var_decoration(struct vtn_builder *b,
    case SpvDecorationFlat:
       var_data->interpolation = INTERP_MODE_FLAT;
       break;
+   case SpvDecorationExplicitInterpAMD:
+      var_data->interpolation = INTERP_MODE_EXPLICIT;
+      break;
    case SpvDecorationCentroid:
       var_data->centroid = true;
       break;
@@ -1512,20 +1562,20 @@ apply_var_decoration(struct vtn_builder *b,
       var_data->read_only = true;
       break;
    case SpvDecorationNonReadable:
-      var_data->image.access |= ACCESS_NON_READABLE;
+      var_data->access |= ACCESS_NON_READABLE;
       break;
    case SpvDecorationNonWritable:
       var_data->read_only = true;
-      var_data->image.access |= ACCESS_NON_WRITEABLE;
+      var_data->access |= ACCESS_NON_WRITEABLE;
       break;
    case SpvDecorationRestrict:
-      var_data->image.access |= ACCESS_RESTRICT;
+      var_data->access |= ACCESS_RESTRICT;
       break;
    case SpvDecorationVolatile:
-      var_data->image.access |= ACCESS_VOLATILE;
+      var_data->access |= ACCESS_VOLATILE;
       break;
    case SpvDecorationCoherent:
-      var_data->image.access |= ACCESS_COHERENT;
+      var_data->access |= ACCESS_COHERENT;
       break;
    case SpvDecorationComponent:
       var_data->location_frac = dec->operands[0];
@@ -1586,12 +1636,12 @@ apply_var_decoration(struct vtn_builder *b,
 
    case SpvDecorationXfbBuffer:
       var_data->explicit_xfb_buffer = true;
-      var_data->xfb_buffer = dec->operands[0];
+      var_data->xfb.buffer = dec->operands[0];
       var_data->always_active_io = true;
       break;
    case SpvDecorationXfbStride:
       var_data->explicit_xfb_stride = true;
-      var_data->xfb_stride = dec->operands[0];
+      var_data->xfb.stride = dec->operands[0];
       break;
    case SpvDecorationOffset:
       var_data->explicit_offset = true;
@@ -1615,6 +1665,7 @@ apply_var_decoration(struct vtn_builder *b,
       break;
 
    case SpvDecorationUserSemantic:
+   case SpvDecorationUserTypeGOOGLE:
       /* User semantic decorations can safely be ignored by the driver. */
       break;
 
@@ -1753,22 +1804,6 @@ var_decoration_cb(struct vtn_builder *b, struct vtn_value *val, int member,
    }
 }
 
-static void
-ptr_decoration_cb(struct vtn_builder *b, struct vtn_value *val, int member,
-                  const struct vtn_decoration *dec, void *void_ptr)
-{
-   struct vtn_pointer *ptr = void_ptr;
-
-   switch (dec->decoration) {
-   case SpvDecorationNonUniformEXT:
-      ptr->access |= ACCESS_NON_UNIFORM;
-      break;
-
-   default:
-      break;
-   }
-}
-
 enum vtn_variable_mode
 vtn_storage_class_to_mode(struct vtn_builder *b,
                           SpvStorageClass class,
@@ -1796,13 +1831,23 @@ vtn_storage_class_to_mode(struct vtn_builder *b,
       mode = vtn_variable_mode_ssbo;
       nir_mode = nir_var_mem_ssbo;
       break;
-   case SpvStorageClassPhysicalStorageBufferEXT:
+   case SpvStorageClassPhysicalStorageBuffer:
       mode = vtn_variable_mode_phys_ssbo;
       nir_mode = nir_var_mem_global;
       break;
    case SpvStorageClassUniformConstant:
-      mode = vtn_variable_mode_uniform;
-      nir_mode = nir_var_uniform;
+      if (b->shader->info.stage == MESA_SHADER_KERNEL) {
+         if (b->options->constant_as_global) {
+            mode = vtn_variable_mode_cross_workgroup;
+            nir_mode = nir_var_mem_global;
+         } else {
+            mode = vtn_variable_mode_ubo;
+            nir_mode = nir_var_mem_ubo;
+         }
+      } else {
+         mode = vtn_variable_mode_uniform;
+         nir_mode = nir_var_uniform;
+      }
       break;
    case SpvStorageClassPushConstant:
       mode = vtn_variable_mode_push_constant;
@@ -1926,10 +1971,10 @@ vtn_pointer_to_ssa(struct vtn_builder *b, struct vtn_pointer *ptr)
          /* In this case, we're looking for a block index and not an actual
           * deref.
           *
-          * For PhysicalStorageBufferEXT pointers, we don't have a block index
+          * For PhysicalStorageBuffer pointers, we don't have a block index
           * at all because we get the pointer directly from the client.  This
           * assumes that there will never be a SSBO binding variable using the
-          * PhysicalStorageBufferEXT storage class.  This assumption appears
+          * PhysicalStorageBuffer storage class.  This assumption appears
           * to be correct according to the Vulkan spec because the table,
           * "Shader Resource and Storage Class Correspondence," the only the
           * Uniform storage class with BufferBlock or the StorageBuffer
@@ -2013,10 +2058,10 @@ vtn_pointer_from_ssa(struct vtn_builder *b, nir_ssa_def *ssa,
          /* This is a pointer to something internal or a pointer inside a
           * block.  It's just a regular cast.
           *
-          * For PhysicalStorageBufferEXT pointers, we don't have a block index
+          * For PhysicalStorageBuffer pointers, we don't have a block index
           * at all because we get the pointer directly from the client.  This
           * assumes that there will never be a SSBO binding variable using the
-          * PhysicalStorageBufferEXT storage class.  This assumption appears
+          * PhysicalStorageBuffer storage class.  This assumption appears
           * to be correct according to the Vulkan spec because the table,
           * "Shader Resource and Storage Class Correspondence," the only the
           * Uniform storage class with BufferBlock or the StorageBuffer
@@ -2099,7 +2144,7 @@ assign_missing_member_locations(struct vtn_variable *var)
 static void
 vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
                     struct vtn_type *ptr_type, SpvStorageClass storage_class,
-                    nir_constant *initializer)
+                    nir_constant *const_initializer, nir_variable *var_initializer)
 {
    vtn_assert(ptr_type->base_type == vtn_base_type_pointer);
    struct vtn_type *type = ptr_type->deref;
@@ -2150,7 +2195,7 @@ vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
 
    case vtn_variable_mode_phys_ssbo:
       vtn_fail("Cannot create a variable with the "
-               "PhysicalStorageBufferEXT storage class");
+               "PhysicalStorageBuffer storage class");
       break;
 
    default:
@@ -2163,8 +2208,12 @@ vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
    var->mode = mode;
    var->base_location = -1;
 
-   vtn_assert(val->value_type == vtn_value_type_pointer);
-   val->pointer = vtn_pointer_for_variable(b, var, ptr_type);
+   val->pointer = rzalloc(b, struct vtn_pointer);
+   val->pointer->mode = var->mode;
+   val->pointer->type = var->type;
+   val->pointer->ptr_type = ptr_type;
+   val->pointer->var = var;
+   val->pointer->access = var->type->access;
 
    switch (var->mode) {
    case vtn_variable_mode_function:
@@ -2322,13 +2371,20 @@ vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
       unreachable("Should have been caught before");
    }
 
-   if (initializer) {
+   /* We can only have one type of initializer */
+   assert(!(const_initializer && var_initializer));
+   if (const_initializer) {
       var->var->constant_initializer =
-         nir_constant_clone(initializer, var->var);
+         nir_constant_clone(const_initializer, var->var);
    }
+   if (var_initializer)
+      var->var->pointer_initializer = var_initializer;
 
    vtn_foreach_decoration(b, val, var_decoration_cb, var);
    vtn_foreach_decoration(b, val, ptr_decoration_cb, val->pointer);
+
+   /* Propagate access flags from the OpVariable decorations. */
+   val->pointer->access |= var->access;
 
    if ((var->mode == vtn_variable_mode_input ||
         var->mode == vtn_variable_mode_output) &&
@@ -2447,11 +2503,25 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
       struct vtn_value *val = vtn_push_value(b, w[2], vtn_value_type_pointer);
 
       SpvStorageClass storage_class = w[3];
-      nir_constant *initializer = NULL;
-      if (count > 4)
-         initializer = vtn_value(b, w[4], vtn_value_type_constant)->constant;
+      nir_constant *const_initializer = NULL;
+      nir_variable *var_initializer = NULL;
+      if (count > 4) {
+         struct vtn_value *init = vtn_untyped_value(b, w[4]);
+         switch (init->value_type) {
+         case vtn_value_type_constant:
+            const_initializer = init->constant;
+            break;
+         case vtn_value_type_pointer:
+            var_initializer = init->pointer->var->var;
+            break;
+         default:
+            vtn_fail("SPIR-V variable initializer %u must be constant or pointer",
+               w[4]);
+         }
+      }
 
-      vtn_create_variable(b, val, ptr_type, storage_class, initializer);
+      vtn_create_variable(b, val, ptr_type, storage_class, const_initializer, var_initializer);
+
       break;
    }
 
@@ -2490,14 +2560,13 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
          struct vtn_value *val =
             vtn_push_value(b, w[2], vtn_value_type_sampled_image);
          val->sampled_image = ralloc(b, struct vtn_sampled_image);
-         val->sampled_image->type = base_val->sampled_image->type;
          val->sampled_image->image =
             vtn_pointer_dereference(b, base_val->sampled_image->image, chain);
          val->sampled_image->sampler = base_val->sampled_image->sampler;
-         vtn_foreach_decoration(b, val, ptr_decoration_cb,
-                                val->sampled_image->image);
-         vtn_foreach_decoration(b, val, ptr_decoration_cb,
-                                val->sampled_image->sampler);
+         val->sampled_image->image =
+            vtn_decorate_pointer(b, val, val->sampled_image->image);
+         val->sampled_image->sampler =
+            vtn_decorate_pointer(b, val, val->sampled_image->sampler);
       } else {
          vtn_assert(base_val->value_type == vtn_value_type_pointer);
          struct vtn_pointer *ptr =
@@ -2527,10 +2596,33 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
 
       vtn_assert_types_equal(b, opcode, res_type, src_val->type->deref);
 
-      if (glsl_type_is_image(res_type->type) ||
-          glsl_type_is_sampler(res_type->type)) {
+      if (res_type->base_type == vtn_base_type_image ||
+          res_type->base_type == vtn_base_type_sampler) {
          vtn_push_value_pointer(b, w[2], src);
          return;
+      } else if (res_type->base_type == vtn_base_type_sampled_image) {
+         struct vtn_value *val =
+            vtn_push_value(b, w[2], vtn_value_type_sampled_image);
+         val->sampled_image = ralloc(b, struct vtn_sampled_image);
+         val->sampled_image->image = val->sampled_image->sampler =
+            vtn_decorate_pointer(b, val, src);
+         return;
+      }
+
+      if (count > 4) {
+         unsigned idx = 5;
+         SpvMemoryAccessMask access = w[4];
+         if (access & SpvMemoryAccessAlignedMask)
+            idx++;
+
+         if (access & SpvMemoryAccessMakePointerVisibleMask) {
+            SpvMemorySemanticsMask semantics =
+               SpvMemorySemanticsMakeVisibleMask |
+               vtn_storage_class_to_memory_semantics(src->ptr_type->storage_class);
+
+            SpvScope scope = vtn_constant_uint(b, w[idx]);
+            vtn_emit_memory_barrier(b, scope, semantics);
+         }
       }
 
       vtn_push_ssa(b, w[2], res_type, vtn_variable_load(b, src));
@@ -2572,8 +2664,13 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
             vtn_warn("OpStore of a sampler detected.  Doing on-the-fly copy "
                      "propagation to workaround the problem.");
             vtn_assert(dest->var->copy_prop_sampler == NULL);
-            dest->var->copy_prop_sampler =
-               vtn_value(b, w[2], vtn_value_type_pointer)->pointer;
+            struct vtn_value *v = vtn_untyped_value(b, w[2]);
+            if (v->value_type == vtn_value_type_sampled_image) {
+               dest->var->copy_prop_sampler = v->sampled_image->sampler;
+            } else {
+               vtn_assert(v->value_type == vtn_value_type_pointer);
+               dest->var->copy_prop_sampler = v->pointer;
+            }
          } else {
             vtn_fail("Vulkan does not allow OpStore of a sampler or image.");
          }
@@ -2582,6 +2679,22 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
 
       struct vtn_ssa_value *src = vtn_ssa_value(b, w[2]);
       vtn_variable_store(b, src, dest);
+
+      if (count > 3) {
+         unsigned idx = 4;
+         SpvMemoryAccessMask access = w[3];
+
+         if (access & SpvMemoryAccessAlignedMask)
+            idx++;
+
+         if (access & SpvMemoryAccessMakePointerAvailableMask) {
+            SpvMemorySemanticsMask semantics =
+               SpvMemorySemanticsMakeAvailableMask |
+               vtn_storage_class_to_memory_semantics(dest->ptr_type->storage_class);
+            SpvScope scope = vtn_constant_uint(b, w[idx]);
+            vtn_emit_memory_barrier(b, scope, semantics);
+         }
+      }
       break;
    }
 
@@ -2652,7 +2765,7 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
    case SpvOpConvertUToPtr: {
       struct vtn_value *ptr_val =
          vtn_push_value(b, w[2], vtn_value_type_pointer);
-      struct vtn_value *u_val = vtn_value(b, w[3], vtn_value_type_ssa);
+      struct vtn_value *u_val = vtn_untyped_value(b, w[3]);
 
       vtn_fail_if(ptr_val->type->type == NULL,
                   "OpConvertUToPtr can only be used on physical pointers");
@@ -2662,7 +2775,8 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
                   "OpConvertUToPtr can only be used to cast from a vector or "
                   "scalar type");
 
-      nir_ssa_def *ptr_ssa = nir_sloppy_bitcast(&b->nb, u_val->ssa->def,
+      struct vtn_ssa_value *u_ssa = vtn_ssa_value(b, w[3]);
+      nir_ssa_def *ptr_ssa = nir_sloppy_bitcast(&b->nb, u_ssa->def,
                                                 ptr_val->type->type);
       ptr_val->pointer = vtn_pointer_from_ssa(b, ptr_ssa, ptr_val->type);
       vtn_foreach_decoration(b, ptr_val, ptr_decoration_cb, ptr_val->pointer);

@@ -37,6 +37,10 @@
 #define __gen_get_batch_dwords anv_batch_emit_dwords
 #define __gen_address_offset anv_address_add
 #include "common/gen_mi_builder.h"
+#include "perf/gen_perf.h"
+#include "perf/gen_perf_mdapi.h"
+
+#define OA_REPORT_N_UINT64 (256 / sizeof(uint64_t))
 
 VkResult genX(CreateQueryPool)(
     VkDevice                                    _device,
@@ -45,16 +49,21 @@ VkResult genX(CreateQueryPool)(
     VkQueryPool*                                pQueryPool)
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
-   const struct anv_physical_device *pdevice = &device->instance->physicalDevice;
+   const struct anv_physical_device *pdevice = device->physical;
    struct anv_query_pool *pool;
    VkResult result;
 
    assert(pCreateInfo->sType == VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO);
 
    /* Query pool slots are made up of some number of 64-bit values packed
-    * tightly together.  The first 64-bit value is always the "available" bit
-    * which is 0 when the query is unavailable and 1 when it is available.
-    * The 64-bit values that follow are determined by the type of query.
+    * tightly together. For most query types have the first 64-bit value is
+    * the "available" bit which is 0 when the query is unavailable and 1 when
+    * it is available. The 64-bit values that follow are determined by the
+    * type of query.
+    *
+    * For performance queries, we have a requirement to align OA reports at
+    * 64bytes so we put those first and have the "available" bit behind
+    * together with some other counters.
     */
    uint32_t uint64s_per_slot = 1;
 
@@ -84,6 +93,10 @@ VkResult genX(CreateQueryPool)(
        */
       uint64s_per_slot += 4;
       break;
+   case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL: {
+      uint64s_per_slot = 72; /* 576 bytes, see layout below */
+      break;
+   }
    default:
       assert(!"Invalid query type");
    }
@@ -98,31 +111,24 @@ VkResult genX(CreateQueryPool)(
    pool->stride = uint64s_per_slot * sizeof(uint64_t);
    pool->slots = pCreateInfo->queryCount;
 
-   uint64_t size = pool->slots * pool->stride;
-   result = anv_bo_init_new(&pool->bo, device, size);
-   if (result != VK_SUCCESS)
-      goto fail;
-
+   uint32_t bo_flags = 0;
    if (pdevice->supports_48bit_addresses)
-      pool->bo.flags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
+      bo_flags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
 
    if (pdevice->use_softpin)
-      pool->bo.flags |= EXEC_OBJECT_PINNED;
+      bo_flags |= EXEC_OBJECT_PINNED;
 
    if (pdevice->has_exec_async)
-      pool->bo.flags |= EXEC_OBJECT_ASYNC;
+      bo_flags |= EXEC_OBJECT_ASYNC;
 
-   anv_vma_alloc(device, &pool->bo);
-
-   /* For query pools, we set the caching mode to I915_CACHING_CACHED.  On LLC
-    * platforms, this does nothing.  On non-LLC platforms, this means snooping
-    * which comes at a slight cost.  However, the buffers aren't big, won't be
-    * written frequently, and trying to handle the flushing manually without
-    * doing too much flushing is extremely painful.
-    */
-   anv_gem_set_caching(device, pool->bo.gem_handle, I915_CACHING_CACHED);
-
-   pool->bo.map = anv_gem_mmap(device, pool->bo.gem_handle, 0, size, 0);
+   uint64_t size = pool->slots * pool->stride;
+   result = anv_device_alloc_bo(device, size,
+                                ANV_BO_ALLOC_MAPPED |
+                                ANV_BO_ALLOC_SNOOPED,
+                                0 /* explicit_address */,
+                                &pool->bo);
+   if (result != VK_SUCCESS)
+      goto fail;
 
    *pQueryPool = anv_query_pool_to_handle(pool);
 
@@ -145,9 +151,7 @@ void genX(DestroyQueryPool)(
    if (!pool)
       return;
 
-   anv_gem_munmap(pool->bo.map, pool->bo.size);
-   anv_vma_free(device, &pool->bo);
-   anv_gem_close(device, pool->bo.gem_handle);
+   anv_device_release_bo(device, pool->bo);
    vk_free2(&device->alloc, pAllocator, pool);
 }
 
@@ -155,9 +159,59 @@ static struct anv_address
 anv_query_address(struct anv_query_pool *pool, uint32_t query)
 {
    return (struct anv_address) {
-      .bo = &pool->bo,
+      .bo = pool->bo,
       .offset = query * pool->stride,
    };
+}
+
+/**
+ * VK_INTEL_performance_query layout (576 bytes) :
+ *
+ * ------------------------------
+ * |       availability (8b)    |
+ * |----------------------------|
+ * |         marker (8b)        |
+ * |----------------------------|
+ * | begin RPSTAT register (4b) |
+ * |----------------------------|
+ * |  end RPSTAT register (4b)  |
+ * |----------------------------|
+ * | begin perfcntr 1 & 2 (16b) |
+ * |----------------------------|
+ * |  end perfcntr 1 & 2 (16b)  |
+ * |----------------------------|
+ * |          Unused (8b)       |
+ * |----------------------------|
+ * |     begin MI_RPC (256b)    |
+ * |----------------------------|
+ * |       end MI_RPC (256b)    |
+ * ------------------------------
+ */
+
+static uint32_t
+intel_perf_marker_offset(void)
+{
+   return 8;
+}
+
+static uint32_t
+intel_perf_rpstart_offset(bool end)
+{
+   return 16 + (end ? sizeof(uint32_t) : 0);
+}
+
+#if GEN_GEN >= 8 && GEN_GEN <= 11
+static uint32_t
+intel_perf_counter(bool end)
+{
+   return 24 + (end ? (2 * sizeof(uint64_t)) : 0);
+}
+#endif
+
+static uint32_t
+intel_perf_mi_rpc_offset(bool end)
+{
+   return 64 + (end ? 256 : 0);
 }
 
 static void
@@ -173,48 +227,33 @@ cpu_write_query_result(void *dst_slot, VkQueryResultFlags flags,
    }
 }
 
-static bool
-query_is_available(uint64_t *slot)
+static void *
+query_slot(struct anv_query_pool *pool, uint32_t query)
 {
-   return *(volatile uint64_t *)slot;
+   return pool->bo->map + query * pool->stride;
+}
+
+static bool
+query_is_available(struct anv_query_pool *pool, uint32_t query)
+{
+   return *(volatile uint64_t *)query_slot(pool, query);
 }
 
 static VkResult
 wait_for_available(struct anv_device *device,
-                   struct anv_query_pool *pool, uint64_t *slot)
+                   struct anv_query_pool *pool, uint32_t query)
 {
-   while (true) {
-      if (query_is_available(slot))
+   uint64_t abs_timeout = anv_get_absolute_timeout(5 * NSEC_PER_SEC);
+
+   while (anv_gettime_ns() < abs_timeout) {
+      if (query_is_available(pool, query))
          return VK_SUCCESS;
-
-      int ret = anv_gem_busy(device, pool->bo.gem_handle);
-      if (ret == 1) {
-         /* The BO is still busy, keep waiting. */
-         continue;
-      } else if (ret == -1) {
-         /* We don't know the real error. */
-         return anv_device_set_lost(device, "gem wait failed: %m");
-      } else {
-         assert(ret == 0);
-         /* The BO is no longer busy. */
-         if (query_is_available(slot)) {
-            return VK_SUCCESS;
-         } else {
-            VkResult status = anv_device_query_status(device);
-            if (status != VK_SUCCESS)
-               return status;
-
-            /* If we haven't seen availability yet, then we never will.  This
-             * can only happen if we have a client error where they call
-             * GetQueryPoolResults on a query that they haven't submitted to
-             * the GPU yet.  The spec allows us to do anything in this case,
-             * but returning VK_SUCCESS doesn't seem right and we shouldn't
-             * just keep spinning.
-             */
-            return VK_NOT_READY;
-         }
-      }
+      VkResult status = anv_device_query_status(device);
+      if (status != VK_SUCCESS)
+         return status;
    }
+
+   return anv_device_set_lost(device, "query timeout");
 }
 
 VkResult genX(GetQueryPoolResults)(
@@ -233,7 +272,8 @@ VkResult genX(GetQueryPoolResults)(
    assert(pool->type == VK_QUERY_TYPE_OCCLUSION ||
           pool->type == VK_QUERY_TYPE_PIPELINE_STATISTICS ||
           pool->type == VK_QUERY_TYPE_TIMESTAMP ||
-          pool->type == VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT);
+          pool->type == VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT ||
+          pool->type == VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL);
 
    if (anv_device_is_lost(device))
       return VK_ERROR_DEVICE_LOST;
@@ -245,13 +285,10 @@ VkResult genX(GetQueryPoolResults)(
 
    VkResult status = VK_SUCCESS;
    for (uint32_t i = 0; i < queryCount; i++) {
-      uint64_t *slot = pool->bo.map + (firstQuery + i) * pool->stride;
-
-      /* Availability is always at the start of the slot */
-      bool available = slot[0];
+      bool available = query_is_available(pool, firstQuery + i);
 
       if (!available && (flags & VK_QUERY_RESULT_WAIT_BIT)) {
-         status = wait_for_available(device, pool, slot);
+         status = wait_for_available(device, pool, firstQuery + i);
          if (status != VK_SUCCESS)
             return status;
 
@@ -271,13 +308,25 @@ VkResult genX(GetQueryPoolResults)(
 
       uint32_t idx = 0;
       switch (pool->type) {
-      case VK_QUERY_TYPE_OCCLUSION:
-         if (write_results)
-            cpu_write_query_result(pData, flags, idx, slot[2] - slot[1]);
+      case VK_QUERY_TYPE_OCCLUSION: {
+         uint64_t *slot = query_slot(pool, firstQuery + i);
+         if (write_results) {
+            /* From the Vulkan 1.2.132 spec:
+             *
+             *    "If VK_QUERY_RESULT_PARTIAL_BIT is set,
+             *    VK_QUERY_RESULT_WAIT_BIT is not set, and the query’s status
+             *    is unavailable, an intermediate result value between zero and
+             *    the final result value is written to pData for that query."
+             */
+            uint64_t result = available ? slot[2] - slot[1] : 0;
+            cpu_write_query_result(pData, flags, idx, result);
+         }
          idx++;
          break;
+      }
 
       case VK_QUERY_TYPE_PIPELINE_STATISTICS: {
+         uint64_t *slot = query_slot(pool, firstQuery + i);
          uint32_t statistics = pool->pipeline_statistics;
          while (statistics) {
             uint32_t stat = u_bit_scan(&statistics);
@@ -297,7 +346,8 @@ VkResult genX(GetQueryPoolResults)(
          break;
       }
 
-      case VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT:
+      case VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT: {
+         uint64_t *slot = query_slot(pool, firstQuery + i);
          if (write_results)
             cpu_write_query_result(pData, flags, idx, slot[2] - slot[1]);
          idx++;
@@ -305,12 +355,56 @@ VkResult genX(GetQueryPoolResults)(
             cpu_write_query_result(pData, flags, idx, slot[4] - slot[3]);
          idx++;
          break;
+      }
 
-      case VK_QUERY_TYPE_TIMESTAMP:
+      case VK_QUERY_TYPE_TIMESTAMP: {
+         uint64_t *slot = query_slot(pool, firstQuery + i);
          if (write_results)
             cpu_write_query_result(pData, flags, idx, slot[1]);
          idx++;
          break;
+      }
+
+      case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL: {
+         if (!write_results)
+            break;
+         const void *query_data = query_slot(pool, firstQuery + i);
+         const uint32_t *oa_begin = query_data + intel_perf_mi_rpc_offset(false);
+         const uint32_t *oa_end = query_data + intel_perf_mi_rpc_offset(true);
+         const uint32_t *rpstat_begin = query_data + intel_perf_rpstart_offset(false);
+         const uint32_t *rpstat_end = query_data + intel_perf_mi_rpc_offset(true);
+         struct gen_perf_query_result result;
+         struct gen_perf_query_info metric = {
+            .oa_format = (GEN_GEN >= 8 ?
+                          I915_OA_FORMAT_A32u40_A4u32_B8_C8 :
+                          I915_OA_FORMAT_A45_B8_C8),
+         };
+         uint32_t core_freq[2];
+#if GEN_GEN < 9
+         core_freq[0] = ((*rpstat_begin >> 7) & 0x7f) * 1000000ULL;
+         core_freq[1] = ((*rpstat_end >> 7) & 0x7f) * 1000000ULL;
+#else
+         core_freq[0] = ((*rpstat_begin >> 23) & 0x1ff) * 1000000ULL;
+         core_freq[1] = ((*rpstat_end >> 23) & 0x1ff) * 1000000ULL;
+#endif
+         gen_perf_query_result_clear(&result);
+         gen_perf_query_result_accumulate(&result, &metric,
+                                          oa_begin, oa_end);
+         gen_perf_query_result_read_frequencies(&result, &device->info,
+                                                oa_begin, oa_end);
+         gen_perf_query_result_write_mdapi(pData, stride,
+                                           &device->info,
+                                           &result,
+                                           core_freq[0], core_freq[1]);
+#if GEN_GEN >= 8 && GEN_GEN <= 11
+         gen_perf_query_mdapi_write_perfcntr(pData, stride, &device->info,
+                                             query_data + intel_perf_counter(false),
+                                             query_data + intel_perf_counter(true));
+#endif
+         const uint64_t *marker = query_data + intel_perf_marker_offset();
+         gen_perf_query_mdapi_write_marker(pData, stride, &device->info, *marker);
+         break;
+      }
 
       default:
          unreachable("invalid pool type");
@@ -334,6 +428,9 @@ static void
 emit_ps_depth_count(struct anv_cmd_buffer *cmd_buffer,
                     struct anv_address addr)
 {
+   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_POST_SYNC_BIT;
+   genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+
    anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
       pc.DestinationAddressType  = DAT_PPGTT;
       pc.PostSyncOperation       = WritePSDepthCount;
@@ -358,6 +455,9 @@ emit_query_pc_availability(struct anv_cmd_buffer *cmd_buffer,
                            struct anv_address addr,
                            bool available)
 {
+   cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_POST_SYNC_BIT;
+   genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+
    anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
       pc.DestinationAddressType  = DAT_PPGTT;
       pc.PostSyncOperation       = WriteImmediateData;
@@ -406,6 +506,15 @@ emit_zero_queries(struct anv_cmd_buffer *cmd_buffer,
       }
       break;
 
+   case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL:
+      for (uint32_t i = 0; i < num_queries; i++) {
+         struct anv_address slot_addr =
+            anv_query_address(pool, first_index + i);
+         gen_mi_memset(b, anv_address_add(slot_addr, 8), 0, pool->stride - 8);
+         emit_query_mi_availability(b, slot_addr, true);
+      }
+      break;
+
    default:
       unreachable("Unsupported query type");
    }
@@ -440,12 +549,21 @@ void genX(CmdResetQueryPool)(
       break;
    }
 
+   case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL: {
+      struct gen_mi_builder b;
+      gen_mi_builder_init(&b, &cmd_buffer->batch);
+
+      for (uint32_t i = 0; i < queryCount; i++)
+         emit_query_mi_availability(&b, anv_query_address(pool, firstQuery + i), false);
+      break;
+   }
+
    default:
       unreachable("Unsupported query type");
    }
 }
 
-void genX(ResetQueryPoolEXT)(
+void genX(ResetQueryPool)(
     VkDevice                                    _device,
     VkQueryPool                                 queryPool,
     uint32_t                                    firstQuery,
@@ -454,7 +572,7 @@ void genX(ResetQueryPoolEXT)(
    ANV_FROM_HANDLE(anv_query_pool, pool, queryPool);
 
    for (uint32_t i = 0; i < queryCount; i++) {
-      uint64_t *slot = pool->bo.map + (firstQuery + i) * pool->stride;
+      uint64_t *slot = query_slot(pool, firstQuery + i);
       *slot = 0;
    }
 }
@@ -550,6 +668,37 @@ void genX(CmdBeginQueryIndexedEXT)(
       emit_xfb_query(&b, index, anv_address_add(query_addr, 8));
       break;
 
+   case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL: {
+      anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
+         pc.CommandStreamerStallEnable = true;
+         pc.StallAtPixelScoreboard = true;
+      }
+      anv_batch_emit(&cmd_buffer->batch, GENX(MI_REPORT_PERF_COUNT), rpc) {
+         rpc.MemoryAddress =
+            anv_address_add(query_addr, intel_perf_mi_rpc_offset(false));
+      }
+#if GEN_GEN < 9
+      gen_mi_store(&b,
+                   gen_mi_mem32(anv_address_add(query_addr,
+                                                intel_perf_rpstart_offset(false))),
+                   gen_mi_reg32(GENX(RPSTAT1_num)));
+#else
+      gen_mi_store(&b,
+                   gen_mi_mem32(anv_address_add(query_addr,
+                                                intel_perf_rpstart_offset(false))),
+                   gen_mi_reg32(GENX(RPSTAT0_num)));
+#endif
+#if GEN_GEN >= 8 && GEN_GEN <= 11
+      gen_mi_store(&b, gen_mi_mem64(anv_address_add(query_addr,
+                                                    intel_perf_counter(false))),
+                   gen_mi_reg64(GENX(PERFCNT1_num)));
+      gen_mi_store(&b, gen_mi_mem64(anv_address_add(query_addr,
+                                                    intel_perf_counter(false) + 8)),
+                   gen_mi_reg64(GENX(PERFCNT2_num)));
+#endif
+      break;
+   }
+
    default:
       unreachable("");
    }
@@ -611,6 +760,43 @@ void genX(CmdEndQueryIndexedEXT)(
       emit_query_mi_availability(&b, query_addr, true);
       break;
 
+   case VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL: {
+      anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
+         pc.CommandStreamerStallEnable = true;
+         pc.StallAtPixelScoreboard = true;
+      }
+      uint32_t marker_offset = intel_perf_marker_offset();
+      gen_mi_store(&b, gen_mi_mem64(anv_address_add(query_addr, marker_offset)),
+                   gen_mi_imm(cmd_buffer->intel_perf_marker));
+#if GEN_GEN >= 8 && GEN_GEN <= 11
+      gen_mi_store(&b, gen_mi_mem64(anv_address_add(query_addr, intel_perf_counter(true))),
+                   gen_mi_reg64(GENX(PERFCNT1_num)));
+      gen_mi_store(&b, gen_mi_mem64(anv_address_add(query_addr, intel_perf_counter(true) + 8)),
+                   gen_mi_reg64(GENX(PERFCNT2_num)));
+#endif
+#if GEN_GEN < 9
+      gen_mi_store(&b,
+                   gen_mi_mem32(anv_address_add(query_addr,
+                                                intel_perf_rpstart_offset(true))),
+                   gen_mi_reg32(GENX(RPSTAT1_num)));
+#else
+      gen_mi_store(&b,
+                   gen_mi_mem32(anv_address_add(query_addr,
+                                                intel_perf_rpstart_offset(true))),
+                   gen_mi_reg32(GENX(RPSTAT0_num)));
+#endif
+      /* Position the last OA snapshot at the beginning of the query so that
+       * we can tell whether it's ready.
+       */
+      anv_batch_emit(&cmd_buffer->batch, GENX(MI_REPORT_PERF_COUNT), rpc) {
+         rpc.MemoryAddress = anv_address_add(query_addr,
+                                             intel_perf_mi_rpc_offset(true));
+         rpc.ReportID = 0xdeadbeef; /* This goes in the first dword */
+      }
+      emit_query_mi_availability(&b, query_addr, true);
+      break;
+   }
+
    default:
       unreachable("");
    }
@@ -656,6 +842,9 @@ void genX(CmdWriteTimestamp)(
 
    default:
       /* Everything else is bottom-of-pipe */
+      cmd_buffer->state.pending_pipe_bits |= ANV_PIPE_POST_SYNC_BIT;
+      genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+
       anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
          pc.DestinationAddressType  = DAT_PPGTT;
          pc.PostSyncOperation       = WriteTimestamp;
@@ -686,6 +875,45 @@ void genX(CmdWriteTimestamp)(
 }
 
 #if GEN_GEN > 7 || GEN_IS_HASWELL
+
+#if GEN_GEN >= 8 || GEN_IS_HASWELL
+
+#define MI_PREDICATE_SRC0    0x2400
+#define MI_PREDICATE_SRC1    0x2408
+#define MI_PREDICATE_RESULT  0x2418
+
+/**
+ * Writes the results of a query to dst_addr is the value at poll_addr is equal
+ * to the reference value.
+ */
+static void
+gpu_write_query_result_cond(struct anv_cmd_buffer *cmd_buffer,
+                            struct gen_mi_builder *b,
+                            struct anv_address poll_addr,
+                            struct anv_address dst_addr,
+                            uint64_t ref_value,
+                            VkQueryResultFlags flags,
+                            uint32_t value_index,
+                            struct gen_mi_value query_result)
+{
+   gen_mi_store(b, gen_mi_reg64(MI_PREDICATE_SRC0), gen_mi_mem64(poll_addr));
+   gen_mi_store(b, gen_mi_reg64(MI_PREDICATE_SRC1), gen_mi_imm(ref_value));
+   anv_batch_emit(&cmd_buffer->batch, GENX(MI_PREDICATE), mip) {
+      mip.LoadOperation    = LOAD_LOAD;
+      mip.CombineOperation = COMBINE_SET;
+      mip.CompareOperation = COMPARE_SRCS_EQUAL;
+   }
+
+   if (flags & VK_QUERY_RESULT_64_BIT) {
+      struct anv_address res_addr = anv_address_add(dst_addr, value_index * 8);
+      gen_mi_store_if(b, gen_mi_mem64(res_addr), query_result);
+   } else {
+      struct anv_address res_addr = anv_address_add(dst_addr, value_index * 4);
+      gen_mi_store_if(b, gen_mi_mem32(res_addr), query_result);
+   }
+}
+
+#endif /* GEN_GEN >= 8 || GEN_IS_HASWELL */
 
 static void
 gpu_write_query_result(struct gen_mi_builder *b,
@@ -763,7 +991,22 @@ void genX(CmdCopyQueryPoolResults)(
       switch (pool->type) {
       case VK_QUERY_TYPE_OCCLUSION:
          result = compute_query_result(&b, anv_address_add(query_addr, 8));
+#if GEN_GEN >= 8 || GEN_IS_HASWELL
+         /* Like in the case of vkGetQueryPoolResults, if the query is
+          * unavailable and the VK_QUERY_RESULT_PARTIAL_BIT flag is set,
+          * conservatively write 0 as the query result. If the
+          * VK_QUERY_RESULT_PARTIAL_BIT isn't set, don't write any value.
+          */
+         gpu_write_query_result_cond(cmd_buffer, &b, query_addr, dest_addr,
+               1 /* available */, flags, idx, result);
+         if (flags & VK_QUERY_RESULT_PARTIAL_BIT) {
+            gpu_write_query_result_cond(cmd_buffer, &b, query_addr, dest_addr,
+                  0 /* unavailable */, flags, idx, gen_mi_imm(0));
+         }
+         idx++;
+#else /* GEN_GEN < 8 && !GEN_IS_HASWELL */
          gpu_write_query_result(&b, dest_addr, flags, idx++, result);
+#endif
          break;
 
       case VK_QUERY_TYPE_PIPELINE_STATISTICS: {

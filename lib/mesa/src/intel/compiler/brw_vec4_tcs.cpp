@@ -308,18 +308,49 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       break;
    }
 
-   case nir_intrinsic_barrier: {
+   case nir_intrinsic_control_barrier: {
       dst_reg header = dst_reg(this, glsl_type::uvec4_type);
       emit(TCS_OPCODE_CREATE_BARRIER_HEADER, header);
       emit(SHADER_OPCODE_BARRIER, dst_null_ud(), src_reg(header));
       break;
    }
 
+   case nir_intrinsic_memory_barrier_tcs_patch:
+      break;
+
    default:
       vec4_visitor::nir_emit_intrinsic(instr);
    }
 }
 
+/**
+ * Return the number of patches to accumulate before an 8_PATCH mode thread is
+ * launched.  In cases with a large number of input control points and a large
+ * amount of VS outputs, the VS URB space needed to store an entire 8 patches
+ * worth of data can be prohibitive, so it can be beneficial to launch threads
+ * early.
+ *
+ * See the 3DSTATE_HS::Patch Count Threshold documentation for the recommended
+ * values.  Note that 0 means to "disable" early dispatch, meaning to wait for
+ * a full 8 patches as normal.
+ */
+static int
+get_patch_count_threshold(int input_control_points)
+{
+   if (input_control_points <= 4)
+      return 0;
+   else if (input_control_points <= 6)
+      return 5;
+   else if (input_control_points <= 8)
+      return 4;
+   else if (input_control_points <= 10)
+      return 3;
+   else if (input_control_points <= 14)
+      return 2;
+
+   /* Return patch count 1 for PATCHLIST_15 - PATCHLIST_32 */
+   return 1;
+}
 
 extern "C" const unsigned *
 brw_compile_tcs(const struct brw_compiler *compiler,
@@ -342,7 +373,7 @@ brw_compile_tcs(const struct brw_compiler *compiler,
 
    struct brw_vue_map input_vue_map;
    brw_compute_vue_map(devinfo, &input_vue_map, nir->info.inputs_read,
-                       nir->info.separate_shader);
+                       nir->info.separate_shader, 1);
    brw_compute_tess_vue_map(&vue_prog_data->vue_map,
                             nir->info.outputs_written,
                             nir->info.patch_outputs_written);
@@ -359,13 +390,16 @@ brw_compile_tcs(const struct brw_compiler *compiler,
    bool has_primitive_id =
       nir->info.system_values_read & (1 << SYSTEM_VALUE_PRIMITIVE_ID);
 
+   prog_data->patch_count_threshold = get_patch_count_threshold(key->input_vertices);
+
    if (compiler->use_tcs_8_patch &&
-       nir->info.tess.tcs_vertices_out <= 16 &&
-       2 + has_primitive_id + key->input_vertices <= 31) {
-      /* 3DSTATE_HS imposes two constraints on using 8_PATCH mode.  First,
-       * the "Instance" field limits the number of output vertices to [1, 16].
-       * Secondly, the "Dispatch GRF Start Register for URB Data" field is
-       * limited to [0, 31] - which imposes a limit on the input vertices.
+       nir->info.tess.tcs_vertices_out <= (devinfo->gen >= 12 ? 32 : 16) &&
+       2 + has_primitive_id + key->input_vertices <= (devinfo->gen >= 12 ? 63 : 31)) {
+      /* 3DSTATE_HS imposes two constraints on using 8_PATCH mode. First, the
+       * "Instance" field limits the number of output vertices to [1, 16] on
+       * gen11 and below, or [1, 32] on gen12 and above. Secondly, the
+       * "Dispatch GRF Start Register for URB Data" field is limited to [0,
+       * 31] - which imposes a limit on the input vertices.
        */
       vue_prog_data->dispatch_mode = DISPATCH_MODE_TCS_8_PATCH;
       prog_data->instances = nir->info.tess.tcs_vertices_out;
@@ -426,7 +460,7 @@ brw_compile_tcs(const struct brw_compiler *compiler,
 
    if (is_scalar) {
       fs_visitor v(compiler, log_data, mem_ctx, &key->base,
-                   &prog_data->base.base, NULL, nir, 8,
+                   &prog_data->base.base, nir, 8,
                    shader_time_index, &input_vue_map);
       if (!v.run_tcs()) {
          if (error_str)
@@ -437,8 +471,7 @@ brw_compile_tcs(const struct brw_compiler *compiler,
       prog_data->base.base.dispatch_grf_start_reg = v.payload.num_regs;
 
       fs_generator g(compiler, log_data, mem_ctx,
-                     &prog_data->base.base, v.shader_stats, false,
-                     MESA_SHADER_TESS_CTRL);
+                     &prog_data->base.base, false, MESA_SHADER_TESS_CTRL);
       if (unlikely(INTEL_DEBUG & DEBUG_TCS)) {
          g.enable_debug(ralloc_asprintf(mem_ctx,
                                         "%s tessellation control shader %s",
@@ -447,7 +480,8 @@ brw_compile_tcs(const struct brw_compiler *compiler,
                                         nir->info.name));
       }
 
-      g.generate_code(v.cfg, 8, stats);
+      g.generate_code(v.cfg, 8, v.shader_stats,
+                      v.performance_analysis.require(), stats);
 
       assembly = g.get_assembly();
    } else {
@@ -464,7 +498,9 @@ brw_compile_tcs(const struct brw_compiler *compiler,
 
 
       assembly = brw_vec4_generate_assembly(compiler, log_data, mem_ctx, nir,
-                                            &prog_data->base, v.cfg, stats);
+                                            &prog_data->base, v.cfg,
+                                            v.performance_analysis.require(),
+                                            stats);
    }
 
    return assembly;

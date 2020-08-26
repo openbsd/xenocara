@@ -29,13 +29,19 @@
 #ifdef HAVE_SYS_SHM_H
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#ifdef __FreeBSD__
+/* sys/ipc.h -> sys/_types.h -> machine/param.h
+ * - defines ALIGN which clashes with our ALIGN
+ */
+#undef ALIGN
+#endif
 #endif
 
 #include "pipe/p_compiler.h"
 #include "pipe/p_format.h"
 #include "pipe/p_state.h"
 #include "util/u_inlines.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
 

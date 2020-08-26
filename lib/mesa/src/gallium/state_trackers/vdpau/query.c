@@ -154,13 +154,13 @@ vlVdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities(VdpDevice device, VdpChromaTyp
       break;
    }
 
-   *is_supported &= pscreen->is_video_format_supported
-   (
-      pscreen,
-      FormatYCBCRToPipe(bits_ycbcr_format),
-      PIPE_VIDEO_PROFILE_UNKNOWN,
-      PIPE_VIDEO_ENTRYPOINT_BITSTREAM
-   );
+   if (*is_supported &&
+       !pscreen->is_video_format_supported(pscreen,
+                                           FormatYCBCRToPipe(bits_ycbcr_format),
+                                           PIPE_VIDEO_PROFILE_UNKNOWN,
+                                           PIPE_VIDEO_ENTRYPOINT_BITSTREAM)) {
+      *is_supported = false;
+   }
    mtx_unlock(&dev->mutex);
 
    return VDP_STATUS_OK;
@@ -246,7 +246,7 @@ vlVdpOutputSurfaceQueryCapabilities(VdpDevice device, VdpRGBAFormat surface_rgba
    mtx_lock(&dev->mutex);
    *is_supported = pscreen->is_format_supported
    (
-      pscreen, format, PIPE_TEXTURE_3D, 1, 1,
+      pscreen, format, PIPE_TEXTURE_2D, 1, 1,
       PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET
    );
    if (*is_supported) {
@@ -446,7 +446,7 @@ vlVdpBitmapSurfaceQueryCapabilities(VdpDevice device, VdpRGBAFormat surface_rgba
    mtx_lock(&dev->mutex);
    *is_supported = pscreen->is_format_supported
    (
-      pscreen, format, PIPE_TEXTURE_3D, 1, 1,
+      pscreen, format, PIPE_TEXTURE_2D, 1, 1,
       PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET
    );
    if (*is_supported) {

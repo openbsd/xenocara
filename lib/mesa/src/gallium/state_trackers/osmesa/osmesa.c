@@ -50,6 +50,7 @@
 
 
 #include <stdio.h>
+#include <c11/threads.h>
 #include "GL/osmesa.h"
 
 #include "glapi/glapi.h"  /* for OSMesaGetProcAddress below */
@@ -61,7 +62,7 @@
 #include "util/u_atomic.h"
 #include "util/u_box.h"
 #include "util/u_debug.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
 
@@ -149,6 +150,18 @@ get_st_api(void)
    return stapi;
 }
 
+static struct st_manager *stmgr = NULL;
+
+static void
+create_st_manager(void)
+{
+   stmgr = CALLOC_STRUCT(st_manager);
+   if (stmgr) {
+      stmgr->screen = osmesa_create_screen();
+      stmgr->get_param = osmesa_st_get_param;
+      stmgr->get_egl_image = NULL;
+   }
+}
 
 /**
  * Create/return a singleton st_manager object.
@@ -156,24 +169,11 @@ get_st_api(void)
 static struct st_manager *
 get_st_manager(void)
 {
-   static struct st_manager *stmgr = NULL;
-   if (!stmgr) {
-      stmgr = CALLOC_STRUCT(st_manager);
-      if (stmgr) {
-         stmgr->screen = osmesa_create_screen();
-         stmgr->get_param = osmesa_st_get_param;
-         stmgr->get_egl_image = NULL;
-      }         
-   }
+   static once_flag create_once_flag = ONCE_FLAG_INIT;
+
+   call_once(&create_once_flag, create_st_manager);
+
    return stmgr;
-}
-
-
-static inline boolean
-little_endian(void)
-{
-   const unsigned ui = 1;
-   return *((const char *) &ui);
 }
 
 
@@ -191,10 +191,11 @@ osmesa_choose_format(GLenum format, GLenum type)
    switch (format) {
    case OSMESA_RGBA:
       if (type == GL_UNSIGNED_BYTE) {
-         if (little_endian())
-            return PIPE_FORMAT_R8G8B8A8_UNORM;
-         else
-            return PIPE_FORMAT_A8B8G8R8_UNORM;
+#if UTIL_ARCH_LITTLE_ENDIAN
+         return PIPE_FORMAT_R8G8B8A8_UNORM;
+#else
+         return PIPE_FORMAT_A8B8G8R8_UNORM;
+#endif
       }
       else if (type == GL_UNSIGNED_SHORT) {
          return PIPE_FORMAT_R16G16B16A16_UNORM;
@@ -208,10 +209,11 @@ osmesa_choose_format(GLenum format, GLenum type)
       break;
    case OSMESA_BGRA:
       if (type == GL_UNSIGNED_BYTE) {
-         if (little_endian())
-            return PIPE_FORMAT_B8G8R8A8_UNORM;
-         else
-            return PIPE_FORMAT_A8R8G8B8_UNORM;
+#if UTIL_ARCH_LITTLE_ENDIAN
+         return PIPE_FORMAT_B8G8R8A8_UNORM;
+#else
+         return PIPE_FORMAT_A8R8G8B8_UNORM;
+#endif
       }
       else if (type == GL_UNSIGNED_SHORT) {
          return PIPE_FORMAT_R16G16B16A16_UNORM;
@@ -225,10 +227,11 @@ osmesa_choose_format(GLenum format, GLenum type)
       break;
    case OSMESA_ARGB:
       if (type == GL_UNSIGNED_BYTE) {
-         if (little_endian())
-            return PIPE_FORMAT_A8R8G8B8_UNORM;
-         else
-            return PIPE_FORMAT_B8G8R8A8_UNORM;
+#if UTIL_ARCH_LITTLE_ENDIAN
+         return PIPE_FORMAT_A8R8G8B8_UNORM;
+#else
+         return PIPE_FORMAT_B8G8R8A8_UNORM;
+#endif
       }
       else if (type == GL_UNSIGNED_SHORT) {
          return PIPE_FORMAT_R16G16B16A16_UNORM;
@@ -258,6 +261,8 @@ osmesa_choose_format(GLenum format, GLenum type)
       /* No gallium format for this one */
       return PIPE_FORMAT_NONE;
    case OSMESA_RGB_565:
+      if (type != GL_UNSIGNED_SHORT_5_6_5)
+         return PIPE_FORMAT_NONE;
       return PIPE_FORMAT_B5G6R5_UNORM;
    default:
       ; /* fall-through */
@@ -692,7 +697,7 @@ OSMesaCreateContextAttribs(const int *attribList, OSMesaContext sharelist)
    attribs.options.force_glsl_version = 0;
 
    osmesa_init_st_visual(&attribs.visual,
-                         PIPE_FORMAT_R8G8B8A8_UNORM,
+                         PIPE_FORMAT_NONE,
                          osmesa->depth_stencil_format,
                          osmesa->accum_format);
 
@@ -766,10 +771,6 @@ OSMesaMakeCurrent(OSMesaContext osmesa, void *buffer, GLenum type,
    }
 
    if (!osmesa || !buffer || width < 1 || height < 1) {
-      return GL_FALSE;
-   }
-
-   if (osmesa->format == OSMESA_RGB_565 && type != GL_UNSIGNED_SHORT_5_6_5) {
       return GL_FALSE;
    }
 

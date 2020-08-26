@@ -122,7 +122,7 @@ brw_codegen_wm_prog(struct brw_context *brw,
    char *error_str = NULL;
    program = brw_compile_fs(brw->screen->compiler, brw, mem_ctx,
                             key, &prog_data, nir,
-                            &fp->program, st_index8, st_index16, st_index32,
+                            st_index8, st_index16, st_index32,
                             true, false, vue_map,
                             NULL, &error_str);
 
@@ -602,7 +602,7 @@ brw_fs_precompile(struct gl_context *ctx, struct gl_program *prog)
    if (devinfo->gen < 6) {
       brw_compute_vue_map(&brw->screen->devinfo, &vue_map,
                           prog->info.inputs_read | VARYING_BIT_POS,
-                          false);
+                          false, 1);
    }
 
    bool success = brw_codegen_wm_prog(brw, bfp, &key, &vue_map);

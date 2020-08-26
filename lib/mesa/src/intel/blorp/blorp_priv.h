@@ -83,6 +83,12 @@ blorp_surf_convert_to_uncompressed(const struct isl_device *isl_dev,
                                    struct brw_blorp_surface_info *info,
                                    uint32_t *x, uint32_t *y,
                                    uint32_t *width, uint32_t *height);
+void
+blorp_surf_fake_interleaved_msaa(const struct isl_device *isl_dev,
+                                 struct brw_blorp_surface_info *info);
+void
+blorp_surf_retile_w_to_y(const struct isl_device *isl_dev,
+                         struct brw_blorp_surface_info *info);
 
 
 struct brw_blorp_coord_transform
@@ -312,6 +318,8 @@ struct brw_blorp_blit_prog_key
     * non-power-of-two formats.
     */
    bool dst_rgb;
+
+   isl_surf_usage_flags_t dst_usage;
 
    enum blorp_filter filter;
 

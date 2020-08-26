@@ -31,12 +31,13 @@
 
 
 #include "main/glheader.h"
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/fbobject.h"
 #include "main/formats.h"
 #include "main/mtypes.h"
 #include "main/renderbuffer.h"
+#include "util/u_memory.h"
 #include "swrast/s_context.h"
 #include "swrast/s_renderbuffer.h"
 
@@ -76,14 +77,13 @@ soft_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
    case GL_RGBA4:
    case GL_RGB5_A1:
    case GL_RGBA8:
-#if 1
    case GL_RGB10_A2:
    case GL_RGBA12:
+#if UTIL_ARCH_LITTLE_ENDIAN
+      rb->Format = MESA_FORMAT_R8G8B8A8_UNORM;
+#else
+      rb->Format = MESA_FORMAT_A8B8G8R8_UNORM;
 #endif
-      if (_mesa_little_endian())
-         rb->Format = MESA_FORMAT_R8G8B8A8_UNORM;
-      else
-         rb->Format = MESA_FORMAT_A8B8G8R8_UNORM;
       break;
    case GL_RGBA16:
    case GL_RGBA16_SNORM:
@@ -585,7 +585,7 @@ map_attachment(struct gl_context *ctx,
 
    assert(srb->Map);
 }
- 
+
 
 static void
 unmap_attachment(struct gl_context *ctx,
@@ -667,8 +667,8 @@ _swrast_map_renderbuffers(struct gl_context *ctx)
       }
    }
 }
- 
- 
+
+
 /**
  * Unmap renderbuffers after rendering.
  */

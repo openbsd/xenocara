@@ -36,14 +36,6 @@
 #include "vc4_context.h"
 #include "vc4_screen.h"
 
-#ifdef HAVE_VALGRIND
-#include <valgrind.h>
-#include <memcheck.h>
-#define VG(x) x
-#else
-#define VG(x)
-#endif
-
 static bool dump_stats = false;
 
 static void
@@ -92,7 +84,7 @@ vc4_bo_dump_stats(struct vc4_screen *screen)
         fprintf(stderr, "  BOs cached:      %d\n", cache->bo_count);
         fprintf(stderr, "  BOs cached size: %dkb\n", cache->bo_size / 1024);
 
-        if (!list_empty(&cache->time_list)) {
+        if (!list_is_empty(&cache->time_list)) {
                 struct vc4_bo *first = LIST_ENTRY(struct vc4_bo,
                                                   cache->time_list.next,
                                                   time_list);
@@ -108,7 +100,7 @@ vc4_bo_dump_stats(struct vc4_screen *screen)
                 struct timespec time;
                 clock_gettime(CLOCK_MONOTONIC, &time);
                 fprintf(stderr, "  now:               %ld\n",
-                        time.tv_sec);
+                        (long)time.tv_sec);
         }
 }
 
@@ -263,7 +255,7 @@ vc4_bo_alloc(struct vc4_screen *screen, uint32_t size, const char *name)
         bo->handle = create.handle;
 
         if (ret != 0) {
-                if (!list_empty(&screen->bo_cache.time_list) &&
+                if (!list_is_empty(&screen->bo_cache.time_list) &&
                     !cleared_and_retried) {
                         cleared_and_retried = true;
                         vc4_bo_cache_free_all(&screen->bo_cache);
@@ -413,7 +405,7 @@ vc4_bo_open_handle(struct vc4_screen *screen,
         bo->map = malloc(bo->size);
 #endif
 
-        util_hash_table_set(screen->bo_handles, (void *)(uintptr_t)handle, bo);
+        _mesa_hash_table_insert(screen->bo_handles, (void *)(uintptr_t)handle, bo);
 
 done:
         mtx_unlock(&screen->bo_handles_mutex);
@@ -471,7 +463,7 @@ vc4_bo_get_dmabuf(struct vc4_bo *bo)
 
         mtx_lock(&bo->screen->bo_handles_mutex);
         bo->private = false;
-        util_hash_table_set(bo->screen->bo_handles, (void *)(uintptr_t)bo->handle, bo);
+        _mesa_hash_table_insert(bo->screen->bo_handles, (void *)(uintptr_t)bo->handle, bo);
         mtx_unlock(&bo->screen->bo_handles_mutex);
 
         return fd;

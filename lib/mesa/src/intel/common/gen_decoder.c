@@ -738,10 +738,10 @@ struct gen_spec *
 gen_spec_load_from_path(const struct gen_device_info *devinfo,
                         const char *path)
 {
-   size_t len, filename_len = strlen(path) + 20;
+   size_t filename_len = strlen(path) + 20;
    char *filename = malloc(filename_len);
 
-   len = snprintf(filename, filename_len, "%s/gen%i.xml",
+   ASSERTED size_t len = snprintf(filename, filename_len, "%s/gen%i.xml",
                   path, devinfo_to_gen(devinfo, false));
    assert(len < filename_len);
 
@@ -1208,10 +1208,12 @@ gen_field_is_header(struct gen_field *field)
 {
    uint32_t bits;
 
-   if (field->start >= 32)
+   /* Instructions are identified by the first DWord. */
+   if (field->start >= 32 ||
+       field->end >= 32)
       return false;
 
-   bits = (1U << (field->end - field->start + 1)) - 1;
+   bits = (1ULL << (field->end - field->start + 1)) - 1;
    bits <<= field->start;
 
    return (field->parent->opcode_mask & bits) != 0;

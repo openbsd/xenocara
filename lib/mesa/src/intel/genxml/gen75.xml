@@ -668,7 +668,7 @@
   <struct name="SO_DECL" length="1">
     <field name="Component Mask" start="0" end="3" type="uint" default="0"/>
     <field name="Register Index" start="4" end="9" type="uint"/>
-    <field name="Hole Flag" start="11" end="11" type="uint"/>
+    <field name="Hole Flag" start="11" end="11" type="bool"/>
     <field name="Output Buffer Slot" start="12" end="13" type="uint"/>
   </struct>
 
@@ -4258,6 +4258,11 @@
     <field name="EU13 Done SS0" start="24" end="24" type="bool"/>
     <field name="EU14 Done SS0" start="25" end="25" type="bool"/>
     <field name="MA1 Done SS0" start="26" end="26" type="bool"/>
+  </register>
+
+  <register name="RPSTAT1" length="1" num="0xa01c">
+    <field name="Previous GT Frequency" start="0" end="6" type="uint"/>
+    <field name="Current GT Frequency" start="7" end="14" type="uint"/>
   </register>
 
   <register name="SAMPLER_INSTDONE" length="1" num="0xe160">
