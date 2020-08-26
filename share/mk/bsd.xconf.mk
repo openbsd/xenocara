@@ -1,7 +1,8 @@
-# $OpenBSD: bsd.xconf.mk,v 1.35 2018/06/28 20:11:32 kettenis Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.36 2020/08/26 06:25:26 jsg Exp $
 
 # Build GL libs and apps?
-.if ${MACHINE_ARCH} == "m88k"
+.if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "hppa" || \
+    ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "sh"
 XENOCARA_BUILD_GL?=no
 XENOCARA_BUILD_DRI?=no
 .else
