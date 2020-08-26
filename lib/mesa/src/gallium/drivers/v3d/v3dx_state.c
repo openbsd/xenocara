@@ -23,7 +23,7 @@
  */
 
 #include "pipe/p_state.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_framebuffer.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
@@ -778,8 +778,14 @@ v3d_flag_dirty_sampler_state(struct v3d_context *v3d,
         case PIPE_SHADER_VERTEX:
                 v3d->dirty |= VC5_DIRTY_VERTTEX;
                 break;
+        case PIPE_SHADER_GEOMETRY:
+                v3d->dirty |= VC5_DIRTY_GEOMTEX;
+                break;
         case PIPE_SHADER_FRAGMENT:
                 v3d->dirty |= VC5_DIRTY_FRAGTEX;
+                break;
+        case PIPE_SHADER_COMPUTE:
+                v3d->dirty |= VC5_DIRTY_COMPTEX;
                 break;
         default:
                 unreachable("Unsupported shader stage");
@@ -1228,7 +1234,7 @@ v3d_set_stream_output_targets(struct pipe_context *pctx,
          * draw we need to do it here as well.
          */
         if (num_targets == 0 && so->num_targets > 0)
-                v3d_tf_update_counters(ctx);
+                v3d_update_primitive_counters(ctx);
 
         for (i = 0; i < num_targets; i++) {
                 if (offsets[i] != -1)
@@ -1244,7 +1250,8 @@ v3d_set_stream_output_targets(struct pipe_context *pctx,
 
         /* Create primitive counters BO if needed */
         if (num_targets > 0 && !ctx->prim_counts) {
-                uint32_t zeroes[7] = { 0 }; /* Init all 7 counters to 0 */
+                /* Init all 7 counters and 1 padding to 0 */
+                uint32_t zeroes[8] = { 0 };
                 u_upload_data(ctx->uploader,
                               0, sizeof(zeroes), 32, zeroes,
                               &ctx->prim_counts_offset,

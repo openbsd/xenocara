@@ -77,7 +77,7 @@ iris_emit_pipe_control_flush(struct iris_batch *batch,
       flags &= ~(PIPE_CONTROL_CACHE_FLUSH_BITS | PIPE_CONTROL_CS_STALL);
    }
 
-   batch->vtbl->emit_raw_pipe_control(batch, reason, flags, NULL, 0, 0);
+   batch->screen->vtbl.emit_raw_pipe_control(batch, reason, flags, NULL, 0, 0);
 }
 
 /**
@@ -94,7 +94,7 @@ iris_emit_pipe_control_write(struct iris_batch *batch,
                              struct iris_bo *bo, uint32_t offset,
                              uint64_t imm)
 {
-   batch->vtbl->emit_raw_pipe_control(batch, reason, flags, bo, offset, imm);
+   batch->screen->vtbl.emit_raw_pipe_control(batch, reason, flags, bo, offset, imm);
 }
 
 /*
@@ -149,6 +149,24 @@ iris_emit_end_of_pipe_sync(struct iris_batch *batch,
                                 flags | PIPE_CONTROL_CS_STALL |
                                 PIPE_CONTROL_WRITE_IMMEDIATE,
                                 batch->screen->workaround_bo, 0, 0);
+}
+
+/**
+ * Flush and invalidate all caches (for debugging purposes).
+ */
+void
+iris_flush_all_caches(struct iris_batch *batch)
+{
+   iris_emit_pipe_control_flush(batch, "debug: flush all caches",
+                                PIPE_CONTROL_CS_STALL |
+                                PIPE_CONTROL_DATA_CACHE_FLUSH |
+                                PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                PIPE_CONTROL_VF_CACHE_INVALIDATE |
+                                PIPE_CONTROL_INSTRUCTION_INVALIDATE |
+                                PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
+                                PIPE_CONTROL_CONST_CACHE_INVALIDATE |
+                                PIPE_CONTROL_STATE_CACHE_INVALIDATE);
 }
 
 static void

@@ -22,7 +22,9 @@
  *
  */
 #include "main/mtypes.h"
+#include "glsl_types.h"
 #include "linker_util.h"
+#include "util/bitscan.h"
 #include "util/set.h"
 #include "ir_uniform.h" /* for gl_uniform_storage */
 
@@ -153,4 +155,222 @@ link_util_update_empty_uniform_locations(struct gl_shader_program *prog)
          current_block->slots++;
       }
    }
+}
+
+void
+link_util_check_subroutine_resources(struct gl_shader_program *prog)
+{
+   unsigned mask = prog->data->linked_stages;
+   while (mask) {
+      const int i = u_bit_scan(&mask);
+      struct gl_program *p = prog->_LinkedShaders[i]->Program;
+
+      if (p->sh.NumSubroutineUniformRemapTable > MAX_SUBROUTINE_UNIFORM_LOCATIONS) {
+         linker_error(prog, "Too many %s shader subroutine uniforms\n",
+                      _mesa_shader_stage_to_string(i));
+      }
+   }
+}
+
+/**
+ * Validate uniform resources used by a program versus the implementation limits
+ */
+void
+link_util_check_uniform_resources(struct gl_context *ctx,
+                                  struct gl_shader_program *prog)
+{
+   unsigned total_uniform_blocks = 0;
+   unsigned total_shader_storage_blocks = 0;
+
+   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
+      struct gl_linked_shader *sh = prog->_LinkedShaders[i];
+
+      if (sh == NULL)
+         continue;
+
+      if (sh->num_uniform_components >
+          ctx->Const.Program[i].MaxUniformComponents) {
+         if (ctx->Const.GLSLSkipStrictMaxUniformLimitCheck) {
+            linker_warning(prog, "Too many %s shader default uniform block "
+                           "components, but the driver will try to optimize "
+                           "them out; this is non-portable out-of-spec "
+                           "behavior\n",
+                           _mesa_shader_stage_to_string(i));
+         } else {
+            linker_error(prog, "Too many %s shader default uniform block "
+                         "components\n",
+                         _mesa_shader_stage_to_string(i));
+         }
+      }
+
+      if (sh->num_combined_uniform_components >
+          ctx->Const.Program[i].MaxCombinedUniformComponents) {
+         if (ctx->Const.GLSLSkipStrictMaxUniformLimitCheck) {
+            linker_warning(prog, "Too many %s shader uniform components, "
+                           "but the driver will try to optimize them out; "
+                           "this is non-portable out-of-spec behavior\n",
+                           _mesa_shader_stage_to_string(i));
+         } else {
+            linker_error(prog, "Too many %s shader uniform components\n",
+                         _mesa_shader_stage_to_string(i));
+         }
+      }
+
+      total_shader_storage_blocks += sh->Program->info.num_ssbos;
+      total_uniform_blocks += sh->Program->info.num_ubos;
+   }
+
+   if (total_uniform_blocks > ctx->Const.MaxCombinedUniformBlocks) {
+      linker_error(prog, "Too many combined uniform blocks (%d/%d)\n",
+                   total_uniform_blocks, ctx->Const.MaxCombinedUniformBlocks);
+   }
+
+   if (total_shader_storage_blocks > ctx->Const.MaxCombinedShaderStorageBlocks) {
+      linker_error(prog, "Too many combined shader storage blocks (%d/%d)\n",
+                   total_shader_storage_blocks,
+                   ctx->Const.MaxCombinedShaderStorageBlocks);
+   }
+
+   for (unsigned i = 0; i < prog->data->NumUniformBlocks; i++) {
+      if (prog->data->UniformBlocks[i].UniformBufferSize >
+          ctx->Const.MaxUniformBlockSize) {
+         linker_error(prog, "Uniform block %s too big (%d/%d)\n",
+                      prog->data->UniformBlocks[i].Name,
+                      prog->data->UniformBlocks[i].UniformBufferSize,
+                      ctx->Const.MaxUniformBlockSize);
+      }
+   }
+
+   for (unsigned i = 0; i < prog->data->NumShaderStorageBlocks; i++) {
+      if (prog->data->ShaderStorageBlocks[i].UniformBufferSize >
+          ctx->Const.MaxShaderStorageBlockSize) {
+         linker_error(prog, "Shader storage block %s too big (%d/%d)\n",
+                      prog->data->ShaderStorageBlocks[i].Name,
+                      prog->data->ShaderStorageBlocks[i].UniformBufferSize,
+                      ctx->Const.MaxShaderStorageBlockSize);
+      }
+   }
+}
+
+void
+link_util_calculate_subroutine_compat(struct gl_shader_program *prog)
+{
+   unsigned mask = prog->data->linked_stages;
+   while (mask) {
+      const int i = u_bit_scan(&mask);
+      struct gl_program *p = prog->_LinkedShaders[i]->Program;
+
+      for (unsigned j = 0; j < p->sh.NumSubroutineUniformRemapTable; j++) {
+         if (p->sh.SubroutineUniformRemapTable[j] == INACTIVE_UNIFORM_EXPLICIT_LOCATION)
+            continue;
+
+         struct gl_uniform_storage *uni = p->sh.SubroutineUniformRemapTable[j];
+
+         if (!uni)
+            continue;
+
+         int count = 0;
+         if (p->sh.NumSubroutineFunctions == 0) {
+            linker_error(prog, "subroutine uniform %s defined but no valid functions found\n", uni->type->name);
+            continue;
+         }
+         for (unsigned f = 0; f < p->sh.NumSubroutineFunctions; f++) {
+            struct gl_subroutine_function *fn = &p->sh.SubroutineFunctions[f];
+            for (int k = 0; k < fn->num_compat_types; k++) {
+               if (fn->types[k] == uni->type) {
+                  count++;
+                  break;
+               }
+            }
+         }
+         uni->num_compatible_subroutines = count;
+      }
+   }
+}
+
+/**
+ * Recursive part of the public mark_array_elements_referenced function.
+ *
+ * The recursion occurs when an entire array-of- is accessed.  See the
+ * implementation for more details.
+ *
+ * \param dr                List of array_deref_range elements to be
+ *                          processed.
+ * \param count             Number of array_deref_range elements to be
+ *                          processed.
+ * \param scale             Current offset scale.
+ * \param linearized_index  Current accumulated linearized array index.
+ */
+void
+_mark_array_elements_referenced(const struct array_deref_range *dr,
+                                unsigned count, unsigned scale,
+                                unsigned linearized_index,
+                                BITSET_WORD *bits)
+{
+   /* Walk through the list of array dereferences in least- to
+    * most-significant order.  Along the way, accumulate the current
+    * linearized offset and the scale factor for each array-of-.
+    */
+   for (unsigned i = 0; i < count; i++) {
+      if (dr[i].index < dr[i].size) {
+         linearized_index += dr[i].index * scale;
+         scale *= dr[i].size;
+      } else {
+         /* For each element in the current array, update the count and
+          * offset, then recurse to process the remaining arrays.
+          *
+          * There is some inefficency here if the last eBITSET_WORD *bitslement in the
+          * array_deref_range list specifies the entire array.  In that case,
+          * the loop will make recursive calls with count == 0.  In the call,
+          * all that will happen is the bit will be set.
+          */
+         for (unsigned j = 0; j < dr[i].size; j++) {
+            _mark_array_elements_referenced(&dr[i + 1],
+                                            count - (i + 1),
+                                            scale * dr[i].size,
+                                            linearized_index + (j * scale),
+                                            bits);
+         }
+
+         return;
+      }
+   }
+
+   BITSET_SET(bits, linearized_index);
+}
+
+/**
+ * Mark a set of array elements as accessed.
+ *
+ * If every \c array_deref_range is for a single index, only a single
+ * element will be marked.  If any \c array_deref_range is for an entire
+ * array-of-, then multiple elements will be marked.
+ *
+ * Items in the \c array_deref_range list appear in least- to
+ * most-significant order.  This is the \b opposite order the indices
+ * appear in the GLSL shader text.  An array access like
+ *
+ *     x = y[1][i][3];
+ *
+ * would appear as
+ *
+ *     { { 3, n }, { m, m }, { 1, p } }
+ *
+ * where n, m, and p are the sizes of the arrays-of-arrays.
+ *
+ * The set of marked array elements can later be queried by
+ * \c ::is_linearized_index_referenced.
+ *
+ * \param dr     List of array_deref_range elements to be processed.
+ * \param count  Number of array_deref_range elements to be processed.
+ */
+void
+link_util_mark_array_elements_referenced(const struct array_deref_range *dr,
+                                         unsigned count, unsigned array_depth,
+                                         BITSET_WORD *bits)
+{
+   if (count != array_depth)
+      return;
+
+   _mark_array_elements_referenced(dr, count, 1, 0, bits);
 }

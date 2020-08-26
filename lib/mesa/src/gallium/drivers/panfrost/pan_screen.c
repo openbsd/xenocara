@@ -28,8 +28,8 @@
 
 #include "util/u_debug.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
-#include "util/u_format_s3tc.h"
+#include "util/format/u_format.h"
+#include "util/format/u_format_s3tc.h"
 #include "util/u_video.h"
 #include "util/u_screen.h"
 #include "util/os_time.h"
@@ -41,7 +41,9 @@
 #include <fcntl.h>
 
 #include "drm-uapi/drm_fourcc.h"
+#include "drm-uapi/panfrost_drm.h"
 
+#include "pan_bo.h"
 #include "pan_screen.h"
 #include "pan_resource.h"
 #include "pan_public.h"
@@ -50,12 +52,17 @@
 
 #include "pan_context.h"
 #include "midgard/midgard_compile.h"
+#include "bifrost/bifrost_compile.h"
+#include "panfrost-quirks.h"
 
 static const struct debug_named_value debug_options[] = {
         {"msgs",      PAN_DBG_MSGS,	"Print debug messages"},
         {"trace",     PAN_DBG_TRACE,    "Trace the command stream"},
         {"deqp",      PAN_DBG_DEQP,     "Hacks for dEQP"},
         {"afbc",      PAN_DBG_AFBC,     "Enable non-conformant AFBC impl"},
+        {"sync",      PAN_DBG_SYNC,     "Wait for each job's completion and check for any GPU fault"},
+        {"precompile", PAN_DBG_PRECOMPILE, "Precompile shaders for shader-db"},
+        {"gles3",     PAN_DBG_GLES3,    "Enable experimental GLES3 implementation"},
         DEBUG_NAMED_VALUE_END
 };
 
@@ -66,13 +73,13 @@ int pan_debug = 0;
 static const char *
 panfrost_get_name(struct pipe_screen *screen)
 {
-        return "panfrost";
+        return panfrost_model_name(pan_device(screen)->gpu_id);
 }
 
 static const char *
 panfrost_get_vendor(struct pipe_screen *screen)
 {
-        return "panfrost";
+        return "Panfrost";
 }
 
 static const char *
@@ -87,17 +94,22 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         /* We expose in-dev stuff for dEQP that we don't want apps to use yet */
         bool is_deqp = pan_debug & PAN_DBG_DEQP;
 
+        /* Our GLES3 implementation is WIP */
+        bool is_gles3 = pan_debug & PAN_DBG_GLES3;
+        is_gles3 |= is_deqp;
+
         switch (param) {
         case PIPE_CAP_NPOT_TEXTURES:
         case PIPE_CAP_MIXED_FRAMEBUFFER_SIZES:
         case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
         case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
         case PIPE_CAP_VERTEX_SHADER_SATURATE:
+        case PIPE_CAP_VERTEX_COLOR_UNCLAMPED:
         case PIPE_CAP_POINT_SPRITE:
                 return 1;
 
         case PIPE_CAP_MAX_RENDER_TARGETS:
-                return is_deqp ? 4 : 1;
+                return is_gles3 ? 4 : 1;
 
 
         case PIPE_CAP_OCCLUSION_QUERY:
@@ -108,42 +120,48 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         case PIPE_CAP_QUERY_SO_OVERFLOW:
                 return 0;
 
-        case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
         case PIPE_CAP_TEXTURE_SWIZZLE:
+                return 1;
+
+        case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
+        case PIPE_CAP_TEXTURE_MIRROR_CLAMP_TO_EDGE:
                 return 1;
 
         case PIPE_CAP_TGSI_INSTANCEID:
         case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
-                return is_deqp ? 1 : 0;
+        case PIPE_CAP_PRIMITIVE_RESTART:
+                return 1;
 
         case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
-                return is_deqp ? 4 : 0;
+                return is_gles3 ? 4 : 0;
         case PIPE_CAP_MAX_STREAM_OUTPUT_SEPARATE_COMPONENTS:
         case PIPE_CAP_MAX_STREAM_OUTPUT_INTERLEAVED_COMPONENTS:
-                return is_deqp ? 64 : 0;
+                return is_gles3 ? 64 : 0;
         case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
                 return 1;
 
         case PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS:
-                return is_deqp ? 256 : 0; /* for GL3 */
+                return 256;
 
         case PIPE_CAP_GLSL_FEATURE_LEVEL:
         case PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY:
-                return is_deqp ? 140 : 120;
+                return is_gles3 ? 140 : 120;
         case PIPE_CAP_ESSL_FEATURE_LEVEL:
-                return is_deqp ? 300 : 120;
+                return is_gles3 ? 300 : 120;
 
         case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
-                return is_deqp ? 16 : 0;
+                return 16;
 
-        case PIPE_CAP_CUBE_MAP_ARRAY:
                 return is_deqp;
 
-        /* For faking GLES 3.1 for dEQP-GLES31 */
         case PIPE_CAP_TEXTURE_MULTISAMPLE:
+                return is_gles3;
+
+        /* For faking GLES 3.1 for dEQP-GLES31 */
         case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTERS:
         case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTER_BUFFERS:
         case PIPE_CAP_IMAGE_LOAD_FORMATTED:
+        case PIPE_CAP_CUBE_MAP_ARRAY:
                 return is_deqp;
 
         /* For faking compute shaders */
@@ -234,11 +252,27 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
                 return (int)(system_memory >> 20);
         }
 
+        case PIPE_CAP_SHADER_STENCIL_EXPORT:
+                return 1;
+
         case PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT:
                 return 4;
 
         case PIPE_CAP_MAX_VARYINGS:
                 return 16;
+
+        case PIPE_CAP_ALPHA_TEST:
+        case PIPE_CAP_FLATSHADE:
+        case PIPE_CAP_TWO_SIDED_COLOR:
+        case PIPE_CAP_CLIP_PLANES:
+                return 0;
+
+        case PIPE_CAP_PACKED_STREAM_OUTPUT:
+                return 0;
+
+        case PIPE_CAP_VIEWPORT_TRANSFORM_LOWERED:
+        case PIPE_CAP_PSIZ_CLAMPED:
+                return 1;
 
         default:
                 return u_pipe_screen_get_param_defaults(screen, param);
@@ -251,6 +285,7 @@ panfrost_get_shader_param(struct pipe_screen *screen,
                           enum pipe_shader_cap param)
 {
         bool is_deqp = pan_debug & PAN_DBG_DEQP;
+        struct panfrost_device *dev = pan_device(screen);
 
         if (shader != PIPE_SHADER_VERTEX &&
             shader != PIPE_SHADER_FRAGMENT &&
@@ -259,9 +294,6 @@ panfrost_get_shader_param(struct pipe_screen *screen,
 
         /* this is probably not totally correct.. but it's a start: */
         switch (param) {
-        case PIPE_SHADER_CAP_SCALAR_ISA:
-                return 0;
-
         case PIPE_SHADER_CAP_MAX_INSTRUCTIONS:
         case PIPE_SHADER_CAP_MAX_ALU_INSTRUCTIONS:
         case PIPE_SHADER_CAP_MAX_TEX_INSTRUCTIONS:
@@ -275,7 +307,7 @@ panfrost_get_shader_param(struct pipe_screen *screen,
                 return 16;
 
         case PIPE_SHADER_CAP_MAX_OUTPUTS:
-                return shader == PIPE_SHADER_FRAGMENT ? 4 : 8;
+                return shader == PIPE_SHADER_FRAGMENT ? 4 : 16;
 
         case PIPE_SHADER_CAP_MAX_TEMPS:
                 return 256; /* GL_MAX_PROGRAM_TEMPORARIES_ARB */
@@ -309,8 +341,10 @@ panfrost_get_shader_param(struct pipe_screen *screen,
         case PIPE_SHADER_CAP_INTEGERS:
                 return 1;
 
-        case PIPE_SHADER_CAP_INT64_ATOMICS:
         case PIPE_SHADER_CAP_FP16:
+                return !(dev->quirks & MIDGARD_BROKEN_FP16);
+
+        case PIPE_SHADER_CAP_INT64_ATOMICS:
         case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
@@ -326,14 +360,14 @@ panfrost_get_shader_param(struct pipe_screen *screen,
                 return PIPE_SHADER_IR_NIR;
 
         case PIPE_SHADER_CAP_SUPPORTED_IRS:
-                return (1 << PIPE_SHADER_IR_NIR);
+                return (1 << PIPE_SHADER_IR_NIR) | (1 << PIPE_SHADER_IR_NIR_SERIALIZED);
 
         case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
                 return 32;
 
         case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
         case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
-                return is_deqp ? 4 : 0;
+                return is_deqp ? 8 : 0;
         case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
         case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTER_BUFFERS:
                 return 0;
@@ -343,7 +377,7 @@ panfrost_get_shader_param(struct pipe_screen *screen,
                 return 0;
 
         default:
-                fprintf(stderr, "unknown shader param %d\n", param);
+                DBG("unknown shader param %d\n", param);
                 return 0;
         }
 
@@ -413,14 +447,25 @@ panfrost_is_format_supported( struct pipe_screen *screen,
         if (!format_desc)
                 return false;
 
-        if (sample_count > 1)
+        /* MSAA 4x supported, but no more. Technically some revisions of the
+         * hardware can go up to 16x but we don't support higher modes yet. */
+
+        if (sample_count > 1 && !(pan_debug & PAN_DBG_DEQP))
+                return false;
+
+        if (sample_count > 4)
+                return false;
+
+        if (MAX2(sample_count, 1) != MAX2(storage_sample_count, 1))
                 return false;
 
         /* Format wishlist */
         if (format == PIPE_FORMAT_X8Z24_UNORM)
                 return false;
 
-        if (format == PIPE_FORMAT_A1B5G5R5_UNORM || format == PIPE_FORMAT_X1B5G5R5_UNORM)
+        if (format == PIPE_FORMAT_A1B5G5R5_UNORM ||
+            format == PIPE_FORMAT_X1B5G5R5_UNORM ||
+            format == PIPE_FORMAT_B2G3R3_UNORM)
                 return false;
 
         /* TODO */
@@ -436,11 +481,19 @@ panfrost_is_format_supported( struct pipe_screen *screen,
         if (scanout && renderable && !util_format_is_rgba8_variant(format_desc))
                 return false;
 
-        if (format_desc->layout != UTIL_FORMAT_LAYOUT_PLAIN &&
-            format_desc->layout != UTIL_FORMAT_LAYOUT_OTHER) {
-                /* Compressed formats not yet hooked up. */
-                return false;
+        switch (format_desc->layout) {
+                case UTIL_FORMAT_LAYOUT_PLAIN:
+                case UTIL_FORMAT_LAYOUT_OTHER:
+                        break;
+                case UTIL_FORMAT_LAYOUT_ETC:
+                case UTIL_FORMAT_LAYOUT_ASTC:
+                        return true;
+                default:
+                        return false;
         }
+
+        if (format_desc->channel[0].size > 32)
+            return false;
 
         /* Internally, formats that are depth/stencil renderable are limited.
          *
@@ -486,8 +539,7 @@ panfrost_get_compute_param(struct pipe_screen *pscreen, enum pipe_shader_ir ir_t
 
 	switch (param) {
 	case PIPE_COMPUTE_CAP_ADDRESS_BITS:
-                /* TODO: We'll want 64-bit pointers soon */
-		RET((uint32_t []){ 32 });
+		RET((uint32_t []){ 64 });
 
 	case PIPE_COMPUTE_CAP_IR_TARGET:
 		if (ret)
@@ -541,20 +593,8 @@ panfrost_get_compute_param(struct pipe_screen *pscreen, enum pipe_shader_ir ir_t
 static void
 panfrost_destroy_screen(struct pipe_screen *pscreen)
 {
-        struct panfrost_screen *screen = pan_screen(pscreen);
-        panfrost_bo_cache_evict_all(screen);
-        drmFreeVersion(screen->kernel_version);
-        ralloc_free(screen);
-}
-
-static void
-panfrost_flush_frontbuffer(struct pipe_screen *_screen,
-                           struct pipe_resource *resource,
-                           unsigned level, unsigned layer,
-                           void *context_private,
-                           struct pipe_box *sub_box)
-{
-        /* TODO: Display target integration */
+        panfrost_close_device(pan_device(pscreen));
+        ralloc_free(pscreen);
 }
 
 static uint64_t
@@ -568,7 +608,17 @@ panfrost_fence_reference(struct pipe_screen *pscreen,
                          struct pipe_fence_handle **ptr,
                          struct pipe_fence_handle *fence)
 {
-        panfrost_drm_fence_reference(pscreen, ptr, fence);
+        struct panfrost_fence **p = (struct panfrost_fence **)ptr;
+        struct panfrost_fence *f = (struct panfrost_fence *)fence;
+        struct panfrost_fence *old = *p;
+
+        if (pipe_reference(&(*p)->reference, &f->reference)) {
+                util_dynarray_foreach(&old->syncfds, int, fd)
+                        close(*fd);
+                util_dynarray_fini(&old->syncfds);
+                free(old);
+        }
+        *p = f;
 }
 
 static bool
@@ -577,7 +627,72 @@ panfrost_fence_finish(struct pipe_screen *pscreen,
                       struct pipe_fence_handle *fence,
                       uint64_t timeout)
 {
-        return panfrost_drm_fence_finish(pscreen, ctx, fence, timeout);
+        struct panfrost_device *dev = pan_device(pscreen);
+        struct panfrost_fence *f = (struct panfrost_fence *)fence;
+        struct util_dynarray syncobjs;
+        int ret;
+
+        /* All fences were already signaled */
+        if (!util_dynarray_num_elements(&f->syncfds, int))
+                return true;
+
+        util_dynarray_init(&syncobjs, NULL);
+        util_dynarray_foreach(&f->syncfds, int, fd) {
+                uint32_t syncobj;
+
+                ret = drmSyncobjCreate(dev->fd, 0, &syncobj);
+                assert(!ret);
+
+                ret = drmSyncobjImportSyncFile(dev->fd, syncobj, *fd);
+                assert(!ret);
+                util_dynarray_append(&syncobjs, uint32_t, syncobj);
+        }
+
+        uint64_t abs_timeout = os_time_get_absolute_timeout(timeout);
+        if (abs_timeout == OS_TIMEOUT_INFINITE)
+                abs_timeout = INT64_MAX;
+
+        ret = drmSyncobjWait(dev->fd, util_dynarray_begin(&syncobjs),
+                             util_dynarray_num_elements(&syncobjs, uint32_t),
+                             abs_timeout, DRM_SYNCOBJ_WAIT_FLAGS_WAIT_ALL,
+                             NULL);
+
+        util_dynarray_foreach(&syncobjs, uint32_t, syncobj)
+                drmSyncobjDestroy(dev->fd, *syncobj);
+
+        return ret >= 0;
+}
+
+struct panfrost_fence *
+panfrost_fence_create(struct panfrost_context *ctx,
+                      struct util_dynarray *fences)
+{
+        struct panfrost_device *device = pan_device(ctx->base.screen);
+        struct panfrost_fence *f = calloc(1, sizeof(*f));
+        if (!f)
+                return NULL;
+
+        util_dynarray_init(&f->syncfds, NULL);
+
+        /* Export fences from all pending batches. */
+        util_dynarray_foreach(fences, struct panfrost_batch_fence *, fence) {
+                int fd = -1;
+
+                /* The fence is already signaled, no need to export it. */
+                if ((*fence)->signaled)
+                        continue;
+
+                drmSyncobjExportSyncFile(device->fd, (*fence)->syncobj, &fd);
+                if (fd == -1)
+                        fprintf(stderr, "export failed: %m\n");
+
+                assert(fd != -1);
+                util_dynarray_append(&f->syncfds, int, fd);
+        }
+
+        pipe_reference_init(&f->reference, 1);
+
+        return f;
 }
 
 static const void *
@@ -585,7 +700,10 @@ panfrost_screen_get_compiler_options(struct pipe_screen *pscreen,
                                      enum pipe_shader_ir ir,
                                      enum pipe_shader_type shader)
 {
-        return &midgard_nir_options;
+        if (pan_device(pscreen)->quirks & IS_BIFROST)
+                return &bifrost_nir_options;
+        else
+                return &midgard_nir_options;
 }
 
 struct pipe_screen *
@@ -611,42 +729,35 @@ panfrost_create_screen(int fd, struct renderonly *ro)
         if (!screen)
                 return NULL;
 
+        struct panfrost_device *dev = pan_device(&screen->base);
+        panfrost_open_device(screen, fd, dev);
+
         if (ro) {
-                screen->ro = renderonly_dup(ro);
-                if (!screen->ro) {
-                        fprintf(stderr, "Failed to dup renderonly object\n");
+                dev->ro = renderonly_dup(ro);
+                if (!dev->ro) {
+                        DBG("Failed to dup renderonly object\n");
                         free(screen);
                         return NULL;
                 }
         }
 
-        screen->fd = fd;
-
-        screen->gpu_id = panfrost_drm_query_gpu_version(screen);
-        screen->require_sfbd = screen->gpu_id < 0x0750; /* T760 is the first to support MFBD */
-        screen->kernel_version = drmGetVersion(fd);
-
         /* Check if we're loading against a supported GPU model. */
 
-        switch (screen->gpu_id) {
+        switch (dev->gpu_id) {
+        case 0x720: /* T720 */
         case 0x750: /* T760 */
         case 0x820: /* T820 */
         case 0x860: /* T860 */
                 break;
         default:
                 /* Fail to load against untested models */
-                debug_printf("panfrost: Unsupported model %X",
-                             screen->gpu_id);
+                debug_printf("panfrost: Unsupported model %X", dev->gpu_id);
+                panfrost_destroy_screen(&(screen->base));
                 return NULL;
         }
 
-        util_dynarray_init(&screen->transient_bo, screen);
-
-        for (unsigned i = 0; i < ARRAY_SIZE(screen->bo_cache); ++i)
-                list_inithead(&screen->bo_cache[i]);
-
-        if (pan_debug & PAN_DBG_TRACE)
-                pandecode_initialize();
+        if (pan_debug & (PAN_DBG_TRACE | PAN_DBG_SYNC))
+                pandecode_initialize(!(pan_debug & PAN_DBG_TRACE));
 
         screen->base.destroy = panfrost_destroy_screen;
 
@@ -660,16 +771,12 @@ panfrost_create_screen(int fd, struct renderonly *ro)
         screen->base.get_timestamp = panfrost_get_timestamp;
         screen->base.is_format_supported = panfrost_is_format_supported;
         screen->base.context_create = panfrost_create_context;
-        screen->base.flush_frontbuffer = panfrost_flush_frontbuffer;
         screen->base.get_compiler_options = panfrost_screen_get_compiler_options;
         screen->base.fence_reference = panfrost_fence_reference;
         screen->base.fence_finish = panfrost_fence_finish;
         screen->base.set_damage_region = panfrost_resource_set_damage_region;
 
-        screen->last_fragment_flushed = true;
-        screen->last_job = NULL;
-
-        panfrost_resource_screen_init(screen);
+        panfrost_resource_screen_init(&screen->base);
 
         return &screen->base;
 }

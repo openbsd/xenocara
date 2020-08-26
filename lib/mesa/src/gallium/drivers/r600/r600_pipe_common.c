@@ -27,10 +27,11 @@
 #include "r600_pipe_common.h"
 #include "r600_cs.h"
 #include "tgsi/tgsi_parse.h"
+#include "compiler/nir/nir.h"
 #include "util/list.h"
 #include "util/u_draw_quad.h"
 #include "util/u_memory.h"
-#include "util/u_format_s3tc.h"
+#include "util/format/u_format_s3tc.h"
 #include "util/u_upload_mgr.h"
 #include "util/os_time.h"
 #include "vl/vl_decoder.h"
@@ -38,12 +39,9 @@
 #include "radeon_video.h"
 #include <inttypes.h>
 #include <sys/utsname.h>
+#include <stdlib.h>
 
-#ifndef HAVE_LLVM
-#define HAVE_LLVM 0
-#endif
-
-#if HAVE_LLVM
+#ifdef LLVM_AVAILABLE
 #include <llvm-c/TargetMachine.h>
 #endif
 
@@ -302,7 +300,7 @@ void r600_need_dma_space(struct r600_common_context *ctx, unsigned num_dw,
 void r600_preflush_suspend_features(struct r600_common_context *ctx)
 {
 	/* suspend queries */
-	if (!LIST_IS_EMPTY(&ctx->active_queries))
+	if (!list_is_empty(&ctx->active_queries))
 		r600_suspend_queries(ctx);
 
 	ctx->streamout.suspended = false;
@@ -320,7 +318,7 @@ void r600_postflush_resume_features(struct r600_common_context *ctx)
 	}
 
 	/* resume queries */
-	if (!LIST_IS_EMPTY(&ctx->active_queries))
+	if (!list_is_empty(&ctx->active_queries))
 		r600_resume_queries(ctx);
 }
 
@@ -639,7 +637,7 @@ bool r600_common_context_init(struct r600_common_context *rctx,
 	if (!rctx->ctx)
 		return false;
 
-	if (rscreen->info.num_sdma_rings && !(rscreen->debug_flags & DBG_NO_ASYNC_DMA)) {
+	if (rscreen->info.num_rings[RING_DMA] && !(rscreen->debug_flags & DBG_NO_ASYNC_DMA)) {
 		rctx->dma.cs = rctx->ws->cs_create(rctx->ctx, RING_DMA,
 						   r600_flush_dma_ring,
 						   rctx, false);
@@ -821,10 +819,7 @@ static float r600_get_paramf(struct pipe_screen* pscreen,
 	case PIPE_CAPF_MAX_LINE_WIDTH_AA:
 	case PIPE_CAPF_MAX_POINT_WIDTH:
 	case PIPE_CAPF_MAX_POINT_WIDTH_AA:
-		if (rscreen->family >= CHIP_CEDAR)
-			return 16384.0f;
-		else
-			return 8192.0f;
+         return 8191.0f;
 	case PIPE_CAPF_MAX_TEXTURE_ANISOTROPY:
 		return 16.0f;
 	case PIPE_CAPF_MAX_TEXTURE_LOD_BIAS:
@@ -916,7 +911,8 @@ const char *r600_get_llvm_processor_name(enum radeon_family family)
 static unsigned get_max_threads_per_block(struct r600_common_screen *screen,
 					  enum pipe_shader_ir ir_type)
 {
-	if (ir_type != PIPE_SHADER_IR_TGSI)
+	if (ir_type != PIPE_SHADER_IR_TGSI &&
+	    ir_type != PIPE_SHADER_IR_NIR)
 		return 256;
 	if (screen->chip_class >= EVERGREEN)
 		return 1024;
@@ -1184,6 +1180,58 @@ struct pipe_resource *r600_resource_create_common(struct pipe_screen *screen,
 	}
 }
 
+const struct nir_shader_compiler_options r600_nir_fs_options = {
+	.fuse_ffma = true,
+	.lower_scmp = true,
+	.lower_flrp32 = true,
+	.lower_flrp64 = true,
+	.lower_fpow = true,
+	.lower_fdiv = true,
+	.lower_idiv = true,
+	.lower_fmod = true,
+	.lower_doubles_options = nir_lower_fp64_full_software,
+	.lower_int64_options = 0,
+	.lower_extract_byte = true,
+	.lower_extract_word = true,
+	.max_unroll_iterations = 32,
+	.lower_all_io_to_temps = true,
+	.vectorize_io = true,
+	.has_umad24 = true,
+	.has_umul24 = true,
+};
+
+const struct nir_shader_compiler_options r600_nir_options = {
+	.fuse_ffma = true,
+	.lower_scmp = true,
+	.lower_flrp32 = true,
+	.lower_flrp64 = true,
+	.lower_fpow = true,
+	.lower_fdiv = true,
+	.lower_idiv = true,
+	.lower_fmod = true,
+	.lower_doubles_options = nir_lower_fp64_full_software,
+	.lower_int64_options = 0,
+	.lower_extract_byte = true,
+	.lower_extract_word = true,
+	.max_unroll_iterations = 32,
+	.vectorize_io = true,
+	.has_umad24 = true,
+	.has_umul24 = true,
+};
+
+
+static const void *
+r600_get_compiler_options(struct pipe_screen *screen,
+			  enum pipe_shader_ir ir,
+			  enum pipe_shader_type shader)
+{
+	assert(ir == PIPE_SHADER_IR_NIR);
+	if (shader == PIPE_SHADER_FRAGMENT)
+	   return &r600_nir_fs_options;
+	else
+	   return &r600_nir_options;
+}
+
 bool r600_common_screen_init(struct r600_common_screen *rscreen,
 			     struct radeon_winsys *ws)
 {
@@ -1202,7 +1250,7 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 
 	snprintf(rscreen->renderer_string, sizeof(rscreen->renderer_string),
 		 "%s (%sDRM %i.%i.%i%s"
-#if HAVE_LLVM > 0
+#ifdef LLVM_AVAILABLE
 		 ", LLVM " MESA_LLVM_VERSION_STRING
 #endif
 		 ")",
@@ -1217,6 +1265,7 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 	rscreen->b.get_compute_param = r600_get_compute_param;
 	rscreen->b.get_paramf = r600_get_paramf;
 	rscreen->b.get_timestamp = r600_get_timestamp;
+	rscreen->b.get_compiler_options = r600_get_compiler_options;
 	rscreen->b.fence_finish = r600_fence_finish;
 	rscreen->b.fence_reference = r600_fence_reference;
 	rscreen->b.resource_destroy = u_resource_destroy_vtbl;
@@ -1237,6 +1286,10 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 	rscreen->family = rscreen->info.family;
 	rscreen->chip_class = rscreen->info.chip_class;
 	rscreen->debug_flags |= debug_get_flags_option("R600_DEBUG", common_debug_options, 0);
+	int has_draw_use_llvm = debug_get_bool_option("DRAW_USE_LLVM", FALSE);
+	if (!has_draw_use_llvm)
+	   setenv("DRAW_USE_LLVM", "no", 0);
+
 
 	r600_disk_cache_create(rscreen);
 
@@ -1272,8 +1325,8 @@ bool r600_common_screen_init(struct r600_common_screen *rscreen,
 		printf("r600_has_virtual_memory = %i\n", rscreen->info.r600_has_virtual_memory);
 		printf("gfx_ib_pad_with_type2 = %i\n", rscreen->info.gfx_ib_pad_with_type2);
 		printf("has_hw_decode = %u\n", rscreen->info.has_hw_decode);
-		printf("num_sdma_rings = %i\n", rscreen->info.num_sdma_rings);
-		printf("num_compute_rings = %u\n", rscreen->info.num_compute_rings);
+		printf("num_rings[RING_DMA] = %i\n", rscreen->info.num_rings[RING_DMA]);
+		printf("num_rings[RING_COMPUTE] = %u\n", rscreen->info.num_rings[RING_COMPUTE]);
 		printf("uvd_fw_version = %u\n", rscreen->info.uvd_fw_version);
 		printf("vce_fw_version = %u\n", rscreen->info.vce_fw_version);
 		printf("me_fw_version = %i\n", rscreen->info.me_fw_version);

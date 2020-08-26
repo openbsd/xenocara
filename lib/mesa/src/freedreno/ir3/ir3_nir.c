@@ -37,6 +37,7 @@ static void ir3_setup_const_state(struct ir3_shader *shader, nir_shader *nir);
 static const nir_shader_compiler_options options = {
 		.lower_fpow = true,
 		.lower_scmp = true,
+		.lower_flrp16 = true,
 		.lower_flrp32 = true,
 		.lower_flrp64 = true,
 		.lower_ffract = true,
@@ -45,7 +46,9 @@ static const nir_shader_compiler_options options = {
 		.lower_isign = true,
 		.lower_ldexp = true,
 		.lower_uadd_carry = true,
+		.lower_usub_borrow = true,
 		.lower_mul_high = true,
+		.lower_mul_2x32_64 = true,
 		.fuse_ffma = true,
 		.vertex_id_zero_based = true,
 		.lower_extract_byte = true,
@@ -54,14 +57,28 @@ static const nir_shader_compiler_options options = {
 		.lower_helper_invocation = true,
 		.lower_bitfield_insert_to_shifts = true,
 		.lower_bitfield_extract_to_shifts = true,
+		.lower_pack_half_2x16 = true,
+		.lower_pack_snorm_4x8 = true,
+		.lower_pack_snorm_2x16 = true,
+		.lower_pack_unorm_4x8 = true,
+		.lower_pack_unorm_2x16 = true,
+		.lower_unpack_half_2x16 = true,
+		.lower_unpack_snorm_4x8 = true,
+		.lower_unpack_snorm_2x16 = true,
+		.lower_unpack_unorm_4x8 = true,
+		.lower_unpack_unorm_2x16 = true,
+		.lower_pack_split = true,
 		.use_interpolated_input_intrinsics = true,
 		.lower_rotate = true,
+		.lower_to_scalar = true,
+		.has_imul24 = true,
 };
 
 /* we don't want to lower vertex_id to _zero_based on newer gpus: */
 static const nir_shader_compiler_options options_a6xx = {
 		.lower_fpow = true,
 		.lower_scmp = true,
+		.lower_flrp16 = true,
 		.lower_flrp32 = true,
 		.lower_flrp64 = true,
 		.lower_ffract = true,
@@ -70,7 +87,9 @@ static const nir_shader_compiler_options options_a6xx = {
 		.lower_isign = true,
 		.lower_ldexp = true,
 		.lower_uadd_carry = true,
+		.lower_usub_borrow = true,
 		.lower_mul_high = true,
+		.lower_mul_2x32_64 = true,
 		.fuse_ffma = true,
 		.vertex_id_zero_based = false,
 		.lower_extract_byte = true,
@@ -79,8 +98,23 @@ static const nir_shader_compiler_options options_a6xx = {
 		.lower_helper_invocation = true,
 		.lower_bitfield_insert_to_shifts = true,
 		.lower_bitfield_extract_to_shifts = true,
+		.lower_pack_half_2x16 = true,
+		.lower_pack_snorm_4x8 = true,
+		.lower_pack_snorm_2x16 = true,
+		.lower_pack_unorm_4x8 = true,
+		.lower_pack_unorm_2x16 = true,
+		.lower_unpack_half_2x16 = true,
+		.lower_unpack_snorm_4x8 = true,
+		.lower_unpack_snorm_2x16 = true,
+		.lower_unpack_unorm_4x8 = true,
+		.lower_unpack_unorm_2x16 = true,
+		.lower_pack_split = true,
 		.use_interpolated_input_intrinsics = true,
 		.lower_rotate = true,
+		.vectorize_io = true,
+		.lower_to_scalar = true,
+		.has_imul24 = true,
+		.max_unroll_iterations = 32,
 };
 
 const nir_shader_compiler_options *
@@ -98,7 +132,8 @@ ir3_key_lowers_nir(const struct ir3_shader_key *key)
 	return key->fsaturate_s | key->fsaturate_t | key->fsaturate_r |
 			key->vsaturate_s | key->vsaturate_t | key->vsaturate_r |
 			key->ucp_enables | key->color_two_side |
-			key->fclamp_color | key->vclamp_color;
+			key->fclamp_color | key->vclamp_color |
+			key->tessellation | key->has_gs;
 }
 
 #define OPT(nir, pass, ...) ({                             \
@@ -124,7 +159,7 @@ ir3_optimize_loop(nir_shader *s)
 		OPT_V(s, nir_lower_vars_to_ssa);
 		progress |= OPT(s, nir_opt_copy_prop_vars);
 		progress |= OPT(s, nir_opt_dead_write_vars);
-		progress |= OPT(s, nir_lower_alu_to_scalar, NULL);
+		progress |= OPT(s, nir_lower_alu_to_scalar, NULL, NULL);
 		progress |= OPT(s, nir_lower_phis_to_scalar);
 
 		progress |= OPT(s, nir_copy_prop);
@@ -140,6 +175,8 @@ ir3_optimize_loop(nir_shader *s)
 		progress |= OPT(s, nir_opt_peephole_select, 16, true, true);
 		progress |= OPT(s, nir_opt_intrinsics);
 		progress |= OPT(s, nir_opt_algebraic);
+		progress |= OPT(s, nir_lower_alu);
+		progress |= OPT(s, nir_lower_pack);
 		progress |= OPT(s, nir_opt_constant_folding);
 
 		if (lower_flrp != 0) {
@@ -170,7 +207,6 @@ ir3_optimize_loop(nir_shader *s)
 		progress |= OPT(s, nir_opt_if, false);
 		progress |= OPT(s, nir_opt_remove_phis);
 		progress |= OPT(s, nir_opt_undef);
-
 	} while (progress);
 }
 
@@ -182,6 +218,27 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 			.lower_rect = 0,
 			.lower_tg4_offsets = true,
 	};
+
+	if (key && (key->has_gs || key->tessellation)) {
+		switch (shader->type) {
+		case MESA_SHADER_VERTEX:
+			NIR_PASS_V(s, ir3_nir_lower_to_explicit_io, shader, key->tessellation);
+			break;
+		case MESA_SHADER_TESS_CTRL:
+			NIR_PASS_V(s, ir3_nir_lower_tess_ctrl, shader, key->tessellation);
+			break;
+		case MESA_SHADER_TESS_EVAL:
+			NIR_PASS_V(s, ir3_nir_lower_tess_eval, key->tessellation);
+			if (key->has_gs)
+				NIR_PASS_V(s, ir3_nir_lower_to_explicit_io, shader, key->tessellation);
+			break;
+		case MESA_SHADER_GEOMETRY:
+			NIR_PASS_V(s, ir3_nir_lower_gs, shader);
+			break;
+		default:
+			break;
+		}
+	}
 
 	if (key) {
 		switch (shader->type) {
@@ -220,11 +277,11 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 
 	if (key) {
 		if (s->info.stage == MESA_SHADER_VERTEX) {
-			OPT_V(s, nir_lower_clip_vs, key->ucp_enables, false);
+			OPT_V(s, nir_lower_clip_vs, key->ucp_enables, false, false, NULL);
 			if (key->vclamp_color)
 				OPT_V(s, nir_lower_clamp_color_outputs);
 		} else if (s->info.stage == MESA_SHADER_FRAGMENT) {
-			OPT_V(s, nir_lower_clip_fs, key->ucp_enables);
+			OPT_V(s, nir_lower_clip_fs, key->ucp_enables, false);
 			if (key->fclamp_color)
 				OPT_V(s, nir_lower_clamp_color_outputs);
 		}
@@ -258,9 +315,23 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 	 * NOTE that UBO analysis pass should only be done once, before variants
 	 */
 	const bool ubo_progress = !key && OPT(s, ir3_nir_analyze_ubo_ranges, shader);
-	const bool idiv_progress = OPT(s, nir_lower_idiv);
+	const bool idiv_progress = OPT(s, nir_lower_idiv, nir_lower_idiv_fast);
 	if (ubo_progress || idiv_progress)
 		ir3_optimize_loop(s);
+
+	/* Do late algebraic optimization to turn add(a, neg(b)) back into
+	* subs, then the mandatory cleanup after algebraic.  Note that it may
+	* produce fnegs, and if so then we need to keep running to squash
+	* fneg(fneg(a)).
+	*/
+	bool more_late_algebraic = true;
+	while (more_late_algebraic) {
+		more_late_algebraic = OPT(s, nir_opt_algebraic_late);
+		OPT_V(s, nir_opt_constant_folding);
+		OPT_V(s, nir_copy_prop);
+		OPT_V(s, nir_opt_dce);
+		OPT_V(s, nir_opt_cse);
+	}
 
 	OPT_V(s, nir_remove_dead_variables, nir_var_function_temp);
 
@@ -287,12 +358,12 @@ static void
 ir3_nir_scan_driver_consts(nir_shader *shader,
 		struct ir3_const_state *layout)
 {
-	nir_foreach_function(function, shader) {
+	nir_foreach_function (function, shader) {
 		if (!function->impl)
 			continue;
 
-		nir_foreach_block(block, function->impl) {
-			nir_foreach_instr(instr, block) {
+		nir_foreach_block (block, function->impl) {
+			nir_foreach_instr (instr, block) {
 				if (instr->type != nir_instr_type_intrinsic)
 					continue;
 
@@ -310,17 +381,19 @@ ir3_nir_scan_driver_consts(nir_shader *shader,
 						layout->ssbo_size.count;
 					layout->ssbo_size.count += 1; /* one const per */
 					break;
-				case nir_intrinsic_image_deref_atomic_add:
-				case nir_intrinsic_image_deref_atomic_min:
-				case nir_intrinsic_image_deref_atomic_max:
-				case nir_intrinsic_image_deref_atomic_and:
-				case nir_intrinsic_image_deref_atomic_or:
-				case nir_intrinsic_image_deref_atomic_xor:
-				case nir_intrinsic_image_deref_atomic_exchange:
-				case nir_intrinsic_image_deref_atomic_comp_swap:
-				case nir_intrinsic_image_deref_store:
-				case nir_intrinsic_image_deref_size:
-					idx = nir_intrinsic_get_var(intr, 0)->data.driver_location;
+				case nir_intrinsic_image_atomic_add:
+				case nir_intrinsic_image_atomic_imin:
+				case nir_intrinsic_image_atomic_umin:
+				case nir_intrinsic_image_atomic_imax:
+				case nir_intrinsic_image_atomic_umax:
+				case nir_intrinsic_image_atomic_and:
+				case nir_intrinsic_image_atomic_or:
+				case nir_intrinsic_image_atomic_xor:
+				case nir_intrinsic_image_atomic_exchange:
+				case nir_intrinsic_image_atomic_comp_swap:
+				case nir_intrinsic_image_store:
+				case nir_intrinsic_image_size:
+					idx = nir_src_as_uint(intr->src[0]);
 					if (layout->image_dims.mask & (1 << idx))
 						break;
 					layout->image_dims.mask |= (1 << idx);
@@ -340,6 +413,10 @@ ir3_nir_scan_driver_consts(nir_shader *shader,
 				case nir_intrinsic_load_first_vertex:
 					layout->num_driver_params =
 						MAX2(layout->num_driver_params, IR3_DP_VTXID_BASE + 1);
+					break;
+				case nir_intrinsic_load_base_instance:
+					layout->num_driver_params =
+						MAX2(layout->num_driver_params, IR3_DP_INSTID_BASE + 1);
 					break;
 				case nir_intrinsic_load_user_clip_plane:
 					layout->num_driver_params =
@@ -410,6 +487,27 @@ ir3_setup_const_state(struct ir3_shader *shader, nir_shader *nir)
 			shader->stream_output.num_outputs > 0) {
 		const_state->offsets.tfbo = constoff;
 		constoff += align(IR3_MAX_SO_BUFFERS * ptrsz, 4) / 4;
+	}
+
+	switch (shader->type) {
+	case MESA_SHADER_VERTEX:
+		const_state->offsets.primitive_param = constoff;
+		constoff += 1;
+		break;
+	case MESA_SHADER_TESS_CTRL:
+	case MESA_SHADER_TESS_EVAL:
+		constoff = align(constoff - 1, 4) + 3;
+		const_state->offsets.primitive_param = constoff;
+		const_state->offsets.primitive_map = constoff + 5;
+		constoff += 5 + DIV_ROUND_UP(nir->num_inputs, 4);
+		break;
+	case MESA_SHADER_GEOMETRY:
+		const_state->offsets.primitive_param = constoff;
+		const_state->offsets.primitive_map = constoff + 1;
+		constoff += 1 + DIV_ROUND_UP(nir->num_inputs, 4);
+		break;
+	default:
+		break;
 	}
 
 	const_state->offsets.immediate = constoff;

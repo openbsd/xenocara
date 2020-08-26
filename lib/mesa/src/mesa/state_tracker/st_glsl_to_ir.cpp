@@ -59,6 +59,12 @@ st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
 
    assert(prog->data->LinkStatus);
 
+   /* Skip the GLSL steps when using SPIR-V. */
+   if (prog->data->spirv) {
+      assert(use_nir);
+      return st_link_nir(ctx, prog);
+   }
+
    for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
       if (prog->_LinkedShaders[i] == NULL)
          continue;
@@ -153,7 +159,6 @@ st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       do_vec_index_to_cond_assign(ir);
       lower_vector_insert(ir, true);
       lower_quadop_vector(ir, false);
-      lower_noise(ir);
       if (options->MaxIfDepth == 0) {
          lower_discard(ir);
       }
@@ -161,7 +166,7 @@ st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       validate_ir_tree(ir);
    }
 
-   build_program_resource_list(ctx, prog);
+   build_program_resource_list(ctx, prog, use_nir);
 
    if (use_nir)
       return st_link_nir(ctx, prog);

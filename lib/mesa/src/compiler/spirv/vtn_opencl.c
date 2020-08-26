@@ -25,7 +25,6 @@
  */
 
 #include "math.h"
-
 #include "nir/nir_builtin_builder.h"
 
 #include "vtn_private.h"
@@ -85,6 +84,8 @@ nir_alu_op_for_opencl_opcode(struct vtn_builder *b,
    case OpenCLstd_UMin: return nir_op_umin;
    case OpenCLstd_Fmod: return nir_op_fmod;
    case OpenCLstd_Mix: return nir_op_flrp;
+   case OpenCLstd_Native_exp2: return nir_op_fexp2;
+   case OpenCLstd_Native_log2: return nir_op_flog2;
    case OpenCLstd_SMul_hi: return nir_op_imul_high;
    case OpenCLstd_UMul_hi: return nir_op_umul_high;
    case OpenCLstd_Popcount: return nir_op_bit_count;
@@ -99,6 +100,7 @@ nir_alu_op_for_opencl_opcode(struct vtn_builder *b,
    case OpenCLstd_SSub_sat: return nir_op_isub_sat;
    case OpenCLstd_USub_sat: return nir_op_usub_sat;
    case OpenCLstd_Trunc: return nir_op_ftrunc;
+   case OpenCLstd_Rint: return nir_op_fround_even;
    /* uhm... */
    case OpenCLstd_UAbs: return nir_op_mov;
    default:
@@ -129,6 +131,18 @@ handle_special(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
       return nir_uabs_diff(nb, srcs[0], srcs[1]);
    case OpenCLstd_Bitselect:
       return nir_bitselect(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_SMad_hi:
+      return nir_imad_hi(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_UMad_hi:
+      return nir_umad_hi(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_SMul24:
+      return nir_imul24(nb, srcs[0], srcs[1]);
+   case OpenCLstd_UMul24:
+      return nir_umul24(nb, srcs[0], srcs[1]);
+   case OpenCLstd_SMad24:
+      return nir_imad24(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_UMad24:
+      return nir_umad24(nb, srcs[0], srcs[1], srcs[2]);
    case OpenCLstd_FClamp:
       return nir_fclamp(nb, srcs[0], srcs[1], srcs[2]);
    case OpenCLstd_SClamp:
@@ -173,6 +187,8 @@ handle_special(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
       return nir_rotate(nb, srcs[0], srcs[1]);
    case OpenCLstd_Smoothstep:
       return nir_smoothstep(nb, srcs[0], srcs[1], srcs[2]);
+   case OpenCLstd_Clz:
+      return nir_clz_u(nb, srcs[0]);
    case OpenCLstd_Select:
       return nir_select(nb, srcs[0], srcs[1], srcs[2]);
    case OpenCLstd_Step:
@@ -180,6 +196,14 @@ handle_special(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
    case OpenCLstd_S_Upsample:
    case OpenCLstd_U_Upsample:
       return nir_upsample(nb, srcs[0], srcs[1]);
+   case OpenCLstd_Native_exp:
+      return nir_fexp(nb, srcs[0]);
+   case OpenCLstd_Native_exp10:
+      return nir_fexp2(nb, nir_fmul_imm(nb, srcs[0], log(10) / log(2)));
+   case OpenCLstd_Native_log:
+      return nir_flog(nb, srcs[0]);
+   case OpenCLstd_Native_log10:
+      return nir_fmul_imm(nb, nir_flog2(nb, srcs[0]), log(2) / log(10));
    default:
       vtn_fail("No NIR equivalent");
       return NULL;
@@ -199,25 +223,34 @@ _handle_v_load_store(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
 
    const struct glsl_type *dest_type = type->type;
    unsigned components = glsl_get_vector_elements(dest_type);
-   unsigned stride = components * glsl_get_bit_size(dest_type) / 8;
 
    nir_ssa_def *offset = vtn_ssa_value(b, w[5 + a])->def;
    struct vtn_value *p = vtn_value(b, w[6 + a], vtn_value_type_pointer);
 
+   struct vtn_ssa_value *comps[NIR_MAX_VEC_COMPONENTS];
+   nir_ssa_def *ncomps[NIR_MAX_VEC_COMPONENTS];
+
+   nir_ssa_def *moffset = nir_imul_imm(&b->nb, offset, components);
    nir_deref_instr *deref = vtn_pointer_to_deref(b, p->pointer);
 
-   /* 1. cast to vec type with adjusted stride */
-   deref = nir_build_deref_cast(&b->nb, &deref->dest.ssa, deref->mode,
-                                dest_type, stride);
-   /* 2. deref ptr_as_array */
-   deref = nir_build_deref_ptr_as_array(&b->nb, deref, offset);
+   for (int i = 0; i < components; i++) {
+      nir_ssa_def *coffset = nir_iadd_imm(&b->nb, moffset, i);
+      nir_deref_instr *arr_deref = nir_build_deref_ptr_as_array(&b->nb, deref, coffset);
 
+      if (load) {
+         comps[i] = vtn_local_load(b, arr_deref, p->type->access);
+         ncomps[i] = comps[i]->def;
+      } else {
+         struct vtn_ssa_value *ssa = vtn_create_ssa_value(b, glsl_scalar_type(glsl_get_base_type(dest_type)));
+         struct vtn_ssa_value *val = vtn_ssa_value(b, w[5]);
+         ssa->def = nir_channel(&b->nb, val->def, i);
+         vtn_local_store(b, ssa, arr_deref, p->type->access);
+      }
+   }
    if (load) {
-      struct vtn_ssa_value *val = vtn_local_load(b, deref, p->type->access);
-      vtn_push_ssa(b, w[2], type, val);
-   } else {
-      struct vtn_ssa_value *val = vtn_ssa_value(b, w[5]);
-      vtn_local_store(b, val, deref, p->type->access);
+      struct vtn_ssa_value *ssa = vtn_create_ssa_value(b, dest_type);
+      ssa->def = nir_vec(&b->nb, ncomps, components);
+      vtn_push_ssa(b, w[2], type, ssa);
    }
 }
 
@@ -244,11 +277,59 @@ handle_printf(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode,
    return nir_imm_int(&b->nb, -1);
 }
 
+static nir_ssa_def *
+handle_shuffle(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode, unsigned num_srcs,
+               nir_ssa_def **srcs, const struct glsl_type *dest_type)
+{
+   struct nir_ssa_def *input = srcs[0];
+   struct nir_ssa_def *mask = srcs[1];
+
+   unsigned out_elems = glsl_get_vector_elements(dest_type);
+   nir_ssa_def *outres[NIR_MAX_VEC_COMPONENTS];
+   unsigned in_elems = input->num_components;
+   if (mask->bit_size != 32)
+      mask = nir_u2u32(&b->nb, mask);
+   mask = nir_iand(&b->nb, mask, nir_imm_intN_t(&b->nb, in_elems - 1, mask->bit_size));
+   for (unsigned i = 0; i < out_elems; i++)
+      outres[i] = nir_vector_extract(&b->nb, input, nir_channel(&b->nb, mask, i));
+
+   return nir_vec(&b->nb, outres, out_elems);
+}
+
+static nir_ssa_def *
+handle_shuffle2(struct vtn_builder *b, enum OpenCLstd_Entrypoints opcode, unsigned num_srcs,
+                nir_ssa_def **srcs, const struct glsl_type *dest_type)
+{
+   struct nir_ssa_def *input0 = srcs[0];
+   struct nir_ssa_def *input1 = srcs[1];
+   struct nir_ssa_def *mask = srcs[2];
+
+   unsigned out_elems = glsl_get_vector_elements(dest_type);
+   nir_ssa_def *outres[NIR_MAX_VEC_COMPONENTS];
+   unsigned in_elems = input0->num_components;
+   unsigned total_mask = 2 * in_elems - 1;
+   unsigned half_mask = in_elems - 1;
+   if (mask->bit_size != 32)
+      mask = nir_u2u32(&b->nb, mask);
+   mask = nir_iand(&b->nb, mask, nir_imm_intN_t(&b->nb, total_mask, mask->bit_size));
+   for (unsigned i = 0; i < out_elems; i++) {
+      nir_ssa_def *this_mask = nir_channel(&b->nb, mask, i);
+      nir_ssa_def *vmask = nir_iand(&b->nb, this_mask, nir_imm_intN_t(&b->nb, half_mask, mask->bit_size));
+      nir_ssa_def *val0 = nir_vector_extract(&b->nb, input0, vmask);
+      nir_ssa_def *val1 = nir_vector_extract(&b->nb, input1, vmask);
+      nir_ssa_def *sel = nir_ilt(&b->nb, this_mask, nir_imm_intN_t(&b->nb, in_elems, mask->bit_size));
+      outres[i] = nir_bcsel(&b->nb, sel, val0, val1);
+   }
+   return nir_vec(&b->nb, outres, out_elems);
+}
+
 bool
 vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
                               const uint32_t *w, unsigned count)
 {
-   switch ((enum OpenCLstd_Entrypoints)ext_opcode) {
+   enum OpenCLstd_Entrypoints cl_opcode = (enum OpenCLstd_Entrypoints) ext_opcode;
+
+   switch (cl_opcode) {
    case OpenCLstd_Fabs:
    case OpenCLstd_SAbs:
    case OpenCLstd_UAbs:
@@ -269,6 +350,8 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_SMin:
    case OpenCLstd_UMin:
    case OpenCLstd_Mix:
+   case OpenCLstd_Native_exp2:
+   case OpenCLstd_Native_log2:
    case OpenCLstd_Fmod:
    case OpenCLstd_SMul_hi:
    case OpenCLstd_UMul_hi:
@@ -284,10 +367,17 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_SSub_sat:
    case OpenCLstd_USub_sat:
    case OpenCLstd_Trunc:
-      handle_instr(b, ext_opcode, w, count, handle_alu);
+   case OpenCLstd_Rint:
+      handle_instr(b, cl_opcode, w, count, handle_alu);
       return true;
    case OpenCLstd_SAbs_diff:
    case OpenCLstd_UAbs_diff:
+   case OpenCLstd_SMad_hi:
+   case OpenCLstd_UMad_hi:
+   case OpenCLstd_SMad24:
+   case OpenCLstd_UMad24:
+   case OpenCLstd_SMul24:
+   case OpenCLstd_UMul24:
    case OpenCLstd_Bitselect:
    case OpenCLstd_FClamp:
    case OpenCLstd_SClamp:
@@ -314,16 +404,27 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_Smoothstep:
    case OpenCLstd_S_Upsample:
    case OpenCLstd_U_Upsample:
-      handle_instr(b, ext_opcode, w, count, handle_special);
+   case OpenCLstd_Clz:
+   case OpenCLstd_Native_exp:
+   case OpenCLstd_Native_exp10:
+   case OpenCLstd_Native_log:
+   case OpenCLstd_Native_log10:
+      handle_instr(b, cl_opcode, w, count, handle_special);
       return true;
    case OpenCLstd_Vloadn:
-      vtn_handle_opencl_vload(b, ext_opcode, w, count);
+      vtn_handle_opencl_vload(b, cl_opcode, w, count);
       return true;
    case OpenCLstd_Vstoren:
-      vtn_handle_opencl_vstore(b, ext_opcode, w, count);
+      vtn_handle_opencl_vstore(b, cl_opcode, w, count);
+      return true;
+   case OpenCLstd_Shuffle:
+      handle_instr(b, cl_opcode, w, count, handle_shuffle);
+      return true;
+   case OpenCLstd_Shuffle2:
+      handle_instr(b, cl_opcode, w, count, handle_shuffle2);
       return true;
    case OpenCLstd_Printf:
-      handle_instr(b, ext_opcode, w, count, handle_printf);
+      handle_instr(b, cl_opcode, w, count, handle_printf);
       return true;
    case OpenCLstd_Prefetch:
       /* TODO maybe add a nir instruction for this? */

@@ -21,58 +21,68 @@
  * SOFTWARE.
  */
 
-/* mir_is_live_after performs liveness analysis on the MIR, used primarily
- * as part of register allocation. TODO: Algorithmic improvements for
- * compiler performance (this is the worst algorithm possible -- see
- * backlog with Connor on IRC) */
-
 #include "compiler.h"
 
-/* Determine if a variable is live in the successors of a block */
-static bool
-is_live_after_successors(compiler_context *ctx, midgard_block *bl, int src)
+void
+mir_liveness_ins_update(uint16_t *live, midgard_instruction *ins, unsigned max)
 {
-        for (unsigned i = 0; i < bl->nr_successors; ++i) {
-                midgard_block *succ = bl->successors[i];
+        /* live_in[s] = GEN[s] + (live_out[s] - KILL[s]) */
 
-                /* If we already visited, the value we're seeking
-                 * isn't down this path (or we would have short
-                 * circuited */
+        pan_liveness_kill(live, ins->dest, max, mir_bytemask(ins));
 
-                if (succ->visited) continue;
+        mir_foreach_src(ins, src) {
+                unsigned node = ins->src[src];
+                unsigned bytemask = mir_bytemask_of_read_components(ins, node);
 
-                /* Otherwise (it's visited *now*), check the block */
-
-                succ->visited = true;
-
-                /* Within this block, check if it's overwritten first */
-                unsigned overwritten_mask = 0;
-
-                mir_foreach_instr_in_block(succ, ins) {
-                        /* Did we read any components that we haven't overwritten yet? */
-                        if (mir_mask_of_read_components(ins, src) & ~overwritten_mask)
-                                return true;
-
-                        /* If written-before-use, we're gone */
-
-                        if (ins->ssa_args.dest == src)
-                                overwritten_mask |= ins->mask;
-                }
-
-                /* ...and also, check *its* successors */
-                if (is_live_after_successors(ctx, succ, src))
-                        return true;
-
+                pan_liveness_gen(live, node, max, bytemask);
         }
+}
 
-        /* Welp. We're really not live. */
+static void
+mir_liveness_ins_update_wrap(uint16_t *live, void *ins, unsigned max)
+{
+        mir_liveness_ins_update(live, (midgard_instruction *) ins, max);
+}
 
-        return false;
+void
+mir_compute_liveness(compiler_context *ctx)
+{
+        /* If we already have fresh liveness, nothing to do */
+        if (ctx->metadata & MIDGARD_METADATA_LIVENESS)
+                return;
+
+        mir_compute_temp_count(ctx);
+        pan_compute_liveness(&ctx->blocks, ctx->temp_count, mir_liveness_ins_update_wrap);
+
+        /* Liveness is now valid */
+        ctx->metadata |= MIDGARD_METADATA_LIVENESS;
+}
+
+/* Once liveness data is no longer valid, call this */
+
+void
+mir_invalidate_liveness(compiler_context *ctx)
+{
+        /* If we didn't already compute liveness, there's nothing to do */
+        if (!(ctx->metadata & MIDGARD_METADATA_LIVENESS))
+                return;
+
+        pan_free_liveness(&ctx->blocks);
+
+        /* It's now invalid regardless */
+        ctx->metadata &= ~MIDGARD_METADATA_LIVENESS;
 }
 
 bool
 mir_is_live_after(compiler_context *ctx, midgard_block *block, midgard_instruction *start, int src)
 {
+        mir_compute_liveness(ctx);
+
+        /* Check whether we're live in the successors */
+
+        if (pan_liveness_get(block->base.live_out, src, ctx->temp_count))
+                return true;
+
         /* Check the rest of the block for liveness */
 
         mir_foreach_instr_in_block_from(block, ins, mir_next_op(start)) {
@@ -80,29 +90,5 @@ mir_is_live_after(compiler_context *ctx, midgard_block *block, midgard_instructi
                         return true;
         }
 
-        /* Check the rest of the blocks for liveness recursively */
-
-        bool succ = is_live_after_successors(ctx, block, src);
-
-        mir_foreach_block(ctx, block) {
-                block->visited = false;
-        }
-
-        return succ;
-}
-
-/* Just a quick check -- is it written more than once? (I.e. are we definitely
- * not SSA?) */
-
-bool
-mir_has_multiple_writes(compiler_context *ctx, int dest)
-{
-        unsigned write_count = 0;
-
-        mir_foreach_instr_global(ctx, ins) {
-                if (ins->ssa_args.dest == dest)
-                        write_count++;
-        }
-
-        return write_count > 1;
+        return false;
 }

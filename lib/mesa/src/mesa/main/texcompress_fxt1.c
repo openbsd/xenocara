@@ -31,7 +31,7 @@
 
 #include "errors.h"
 #include "glheader.h"
-#include "imports.h"
+
 #include "image.h"
 #include "macros.h"
 #include "mipmap.h"
@@ -132,8 +132,11 @@ _mesa_texstore_rgba_fxt1(TEXSTORE_PARAMS)
       tempImageSlices[0] = (GLubyte *) tempImage;
       _mesa_texstore(ctx, dims,
                      baseInternalFormat,
-                     _mesa_little_endian() ? MESA_FORMAT_R8G8B8A8_UNORM
-                                           : MESA_FORMAT_A8B8G8R8_UNORM,
+#if UTIL_ARCH_LITTLE_ENDIAN
+                     MESA_FORMAT_R8G8B8A8_UNORM,
+#else
+                     MESA_FORMAT_A8B8G8R8_UNORM,
+#endif
                      rgbaRowStride, tempImageSlices,
                      srcWidth, srcHeight, srcDepth,
                      srcFormat, srcType, srcAddr,
@@ -664,7 +667,7 @@ fxt1_quantize_ALPHA1 (GLuint *cc,
            }
            sumL += sum;
        }
-       
+
        nn_comp--;
    }
 
@@ -739,7 +742,7 @@ fxt1_quantize_ALPHA1 (GLuint *cc,
          lolo <<= 2;
          lolo |= texel;
       }
-      
+
       cc[0] = lolo;
    }
 
@@ -1114,7 +1117,7 @@ fxt1_quantize_MIXED0 (GLuint *cc,
          }
          lolo = ~lolo;
       }
-      
+
       cc[0] = lolo;
    }
 

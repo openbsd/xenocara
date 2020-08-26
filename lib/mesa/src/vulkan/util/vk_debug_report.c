@@ -77,6 +77,9 @@ vk_destroy_debug_report_callback(struct vk_debug_report_instance *instance,
                                  const VkAllocationCallbacks* pAllocator,
                                  const VkAllocationCallbacks* instance_allocator)
 {
+   if (_callback == VK_NULL_HANDLE)
+      return;
+
    struct vk_debug_report_callback *callback =
             (struct vk_debug_report_callback *)(uintptr_t)_callback;
 
@@ -99,7 +102,7 @@ vk_debug_report(struct vk_debug_report_instance *instance,
                 const char *pMessage)
 {
    /* Allow NULL for convinience, return if no callbacks registered. */
-   if (!instance || list_empty(&instance->callbacks))
+   if (!instance || list_is_empty(&instance->callbacks))
       return;
 
    pthread_mutex_lock(&instance->callbacks_mutex);

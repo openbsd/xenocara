@@ -52,8 +52,6 @@ st_flush(struct st_context *st,
          struct pipe_fence_handle **fence,
          unsigned flags)
 {
-   st_flush_bitmap_cache(st);
-
    /* We want to call this function periodically.
     * Typically, it has nothing to do so it shouldn't be expensive.
     */
@@ -71,6 +69,7 @@ st_finish(struct st_context *st)
 {
    struct pipe_fence_handle *fence = NULL;
 
+   st_flush_bitmap_cache(st);
    st_flush(st, &fence, PIPE_FLUSH_ASYNC | PIPE_FLUSH_HINT_FINISH);
 
    if (fence) {
@@ -91,6 +90,8 @@ static void
 st_glFlush(struct gl_context *ctx)
 {
    struct st_context *st = st_context(ctx);
+
+   st_flush_bitmap_cache(st);
 
    /* Don't call st_finish() here.  It is not the state tracker's
     * responsibilty to inject sleeps in the hope of avoiding buffer
@@ -136,6 +137,18 @@ gl_reset_status_from_pipe_reset_status(enum pipe_reset_status status)
 }
 
 
+static void
+st_device_reset_callback(void *data, enum pipe_reset_status status)
+{
+   struct st_context *st = data;
+
+   assert(status != PIPE_NO_RESET);
+
+   st->reset_status = status;
+   _mesa_set_context_lost_dispatch(st->ctx);
+}
+
+
 /**
  * Query information about GPU resets observed by this context
  *
@@ -152,21 +165,11 @@ st_get_graphics_reset_status(struct gl_context *ctx)
       st->reset_status = PIPE_NO_RESET;
    } else {
       status = st->pipe->get_device_reset_status(st->pipe);
+      if (status != PIPE_NO_RESET)
+         st_device_reset_callback(st, status);
    }
 
    return gl_reset_status_from_pipe_reset_status(status);
-}
-
-
-static void
-st_device_reset_callback(void *data, enum pipe_reset_status status)
-{
-   struct st_context *st = data;
-
-   assert(status != PIPE_NO_RESET);
-
-   st->reset_status = status;
-   _mesa_set_context_lost_dispatch(st->ctx);
 }
 
 

@@ -1,7 +1,7 @@
 #ifndef R600_FORMATS_H
 #define R600_FORMATS_H
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "r600_pipe.h"
 
 /* list of formats from R700 ISA document - apply across GPUs in different registers */
@@ -113,6 +113,10 @@ static inline bool r600_is_vertex_format_supported(enum pipe_format format)
 	    !desc->channel[i].pure_integer &&
 	    (desc->channel[i].type == UTIL_FORMAT_TYPE_SIGNED ||
 	     desc->channel[i].type == UTIL_FORMAT_TYPE_UNSIGNED))
+		return false;
+
+	/* No 8 bit 3 channel formats */
+	if (desc->channel[i].size == 8 && desc->nr_channels == 3)
 		return false;
 
 	return true;

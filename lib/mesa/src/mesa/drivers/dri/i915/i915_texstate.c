@@ -48,7 +48,7 @@ translate_texture_format(mesa_format mesa_format, GLenum DepthMode)
       return MAPSURF_8BIT | MT_8BIT_I8;
    case MESA_FORMAT_A_UNORM8:
       return MAPSURF_8BIT | MT_8BIT_A8;
-   case MESA_FORMAT_L8A8_UNORM:
+   case MESA_FORMAT_LA_UNORM8:
       return MAPSURF_16BIT | MT_16BIT_AY88;
    case MESA_FORMAT_B5G6R5_UNORM:
       return MAPSURF_16BIT | MT_16BIT_RGB565;
@@ -342,7 +342,7 @@ i915_update_tex_unit(struct intel_context *intel, GLuint unit, GLuint ss3)
        * Thus, I guess we need do this for other platforms as well.
        */
       if (tObj->Target == GL_TEXTURE_CUBE_MAP_ARB &&
-          !_mesa_is_pow_two(firstImage->Height))
+          !util_is_power_of_two_or_zero(firstImage->Height))
          return false;
 
       state[I915_TEXREG_SS3] = ss3;     /* SS3_NORMALIZED_COORDS */

@@ -57,11 +57,12 @@ libgallium_nine = shared_library(
   ],
   c_args : [c_vis_args, gallium_nine_c_args],
   cpp_args : [cpp_vis_args],
-  link_args : [ld_args_gc_sections, gallium_nine_ld_args],
+  link_args : [ld_args_build_id, ld_args_gc_sections, gallium_nine_ld_args],
   link_depends : gallium_nine_link_depends,
   link_with : gallium_nine_link_with,
   dependencies : [
-    dep_selinux, dep_libdrm, dep_llvm, dep_thread, idep_xmlconfig, idep_mesautil,
+    dep_selinux, dep_libdrm, dep_llvm, dep_thread,
+    idep_xmlconfig, idep_mesautil, idep_nir,
     driver_swrast, driver_r300, driver_r600, driver_radeonsi, driver_nouveau,
     driver_i915, driver_svga, driver_iris
   ],

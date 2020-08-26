@@ -43,20 +43,22 @@ void st_nir_lower_wpos_ytransform(struct nir_shader *nir,
 
 void st_finalize_nir(struct st_context *st, struct gl_program *prog,
                      struct gl_shader_program *shader_program,
-                     struct nir_shader *nir);
+                     struct nir_shader *nir, bool finalize_by_driver);
 
-void st_nir_opts(struct nir_shader *nir, bool is_scalar);
+void st_nir_opts(struct nir_shader *nir);
 
 bool
 st_link_nir(struct gl_context *ctx,
             struct gl_shader_program *shader_program);
 
+void st_nir_assign_vs_in_locations(struct nir_shader *nir);
 void st_nir_assign_varying_locations(struct st_context *st,
                                      struct nir_shader *nir);
 
 void st_nir_lower_samplers(struct pipe_screen *screen, struct nir_shader *nir,
                            struct gl_shader_program *shader_program,
                            struct gl_program *prog);
+void st_nir_lower_uniforms(struct st_context *st, struct nir_shader *nir);
 
 struct pipe_shader_state *
 st_nir_finish_builtin_shader(struct st_context *st,

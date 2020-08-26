@@ -54,6 +54,10 @@
 #define FW_52_8_3 ((52 << 24) | (8 << 16) | (3 << 8))
 #define FW_53 (53 << 24)
 
+/* version specific function for getting parameters */
+static void (*get_pic_param)(struct rvce_encoder *enc,
+                             struct pipe_h264_enc_picture_desc *pic) = NULL;
+
 /**
  * flush commands to the hardware
  */
@@ -97,14 +101,14 @@ static void reset_cpb(struct rvce_encoder *enc)
 {
 	unsigned i;
 
-	LIST_INITHEAD(&enc->cpb_slots);
+	list_inithead(&enc->cpb_slots);
 	for (i = 0; i < enc->cpb_num; ++i) {
 		struct rvce_cpb_slot *slot = &enc->cpb_array[i];
 		slot->index = i;
 		slot->picture_type = PIPE_H264_ENC_PICTURE_TYPE_SKIP;
 		slot->frame_num = 0;
 		slot->pic_order_cnt = 0;
-		LIST_ADDTAIL(&slot->list, &enc->cpb_slots);
+		list_addtail(&slot->list, &enc->cpb_slots);
 	}
 }
 
@@ -131,13 +135,13 @@ static void sort_cpb(struct rvce_encoder *enc)
 	}
 
 	if (l1) {
-		LIST_DEL(&l1->list);
-		LIST_ADD(&l1->list, &enc->cpb_slots);
+		list_del(&l1->list);
+		list_add(&l1->list, &enc->cpb_slots);
 	}
 
 	if (l0) {
-		LIST_DEL(&l0->list);
-		LIST_ADD(&l0->list, &enc->cpb_slots);
+		list_del(&l0->list);
+		list_add(&l0->list, &enc->cpb_slots);
 	}
 }
 
@@ -341,8 +345,8 @@ static void rvce_end_frame(struct pipe_video_codec *encoder,
 	slot->frame_num = enc->pic.frame_num;
 	slot->pic_order_cnt = enc->pic.pic_order_cnt;
 	if (!enc->pic.not_referenced) {
-		LIST_DEL(&slot->list);
-		LIST_ADD(&slot->list, &enc->cpb_slots);
+		list_del(&slot->list);
+		list_add(&slot->list, &enc->cpb_slots);
 	}
 }
 
@@ -434,7 +438,6 @@ struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
 	}
 
 	templat.buffer_format = PIPE_FORMAT_NV12;
-	templat.chroma_format = PIPE_VIDEO_CHROMA_FORMAT_420;
 	templat.width = enc->base.width;
 	templat.height = enc->base.height;
 	templat.interlaced = false;

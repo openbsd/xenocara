@@ -26,36 +26,28 @@ files_panfrost = files(
   'pan_resource.c',
   'pan_resource.h',
 
-  'nir/nir_undef_to_zero.c',
   'nir/nir_lower_blend.c',
   'nir/nir_lower_framebuffer.c',
-  'nir/nir_clamp_psiz.c',
 
   'pan_context.c',
-  'pan_afbc.c',
-  'pan_bo_cache.c',
   'pan_blit.c',
   'pan_job.c',
-  'pan_drm.c',
   'pan_allocate.c',
   'pan_assemble.c',
-  'pan_format.c',
   'pan_blending.c',
   'pan_blend_shaders.c',
   'pan_blend_cso.c',
+  'pan_cmdstream.c',
   'pan_compute.c',
   'pan_fragment.c',
-  'pan_invocation.c',
-  'pan_instancing.c',
   'pan_scoreboard.c',
   'pan_sfbd.c',
   'pan_mfbd.c',
-  'pan_tiler.c',
-  'pan_varyings.c',
 )
 
 panfrost_includes = [
-  inc_common,
+  inc_mapi,
+  inc_mesa,
   inc_gallium,
   inc_gallium_aux,
   inc_include,
@@ -82,5 +74,5 @@ libpanfrost = static_library(
 
 driver_panfrost = declare_dependency(
   compile_args : compile_args_panfrost,
-  link_with : [libpanfrost, libpanfrostwinsys, libpanfrost_shared, libpanfrost_midgard, libpanfrost_bifrost, libpanfrost_decode],
+  link_with : [libpanfrost, libpanfrostwinsys, libpanfrost_shared, libpanfrost_midgard, libpanfrost_bifrost, libpanfrost_decode, libpanfrost_encoder],
 )

@@ -27,12 +27,13 @@
 #include "r600_pipe_common.h"
 #include "r600_cs.h"
 #include "r600_query.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_log.h"
 #include "util/u_memory.h"
 #include "util/u_pack_color.h"
 #include "util/u_surface.h"
 #include "util/os_time.h"
+#include "state_tracker/winsys_handle.h"
 #include <errno.h>
 #include <inttypes.h>
 
@@ -242,8 +243,6 @@ static int r600_init_surface(struct r600_common_screen *rscreen,
 		flags |= RADEON_SURF_SHAREABLE;
 	if (is_imported)
 		flags |= RADEON_SURF_IMPORTED | RADEON_SURF_SHAREABLE;
-	if (!(ptex->flags & R600_RESOURCE_FLAG_FORCE_TILING))
-		flags |= RADEON_SURF_OPTIMIZE_FOR_SPACE;
 
 	r = rscreen->ws->surface_init(rscreen->ws, ptex,
 				      flags, bpe, array_mode, surface);
@@ -569,8 +568,10 @@ static bool r600_texture_get_handle(struct pipe_screen* screen,
 		res->external_usage = usage;
 	}
 
-	return rscreen->ws->buffer_get_handle(rscreen->ws, res->buf, stride,
-					      offset, slice_size, whandle);
+	whandle->stride = stride;
+	whandle->offset = offset + slice_size * whandle->layer;
+
+	return rscreen->ws->buffer_get_handle(rscreen->ws, res->buf, whandle);
 }
 
 static void r600_texture_destroy(struct pipe_screen *screen,
@@ -915,7 +916,6 @@ r600_texture_create_object(struct pipe_screen *screen,
 
 	resource = &rtex->resource;
 	resource->b.b = *base;
-	resource->b.b.next = NULL;
 	resource->b.vtbl = &r600_texture_vtbl;
 	pipe_reference_init(&resource->b.b.reference, 1);
 	resource->b.b.screen = screen;
@@ -1115,7 +1115,6 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 {
 	struct r600_common_screen *rscreen = (struct r600_common_screen*)screen;
 	struct pb_buffer *buf = NULL;
-	unsigned stride = 0, offset = 0;
 	enum radeon_surf_mode array_mode;
 	struct radeon_surf surface = {};
 	int r;
@@ -1129,8 +1128,7 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 		return NULL;
 
 	buf = rscreen->ws->buffer_from_handle(rscreen->ws, whandle,
-					      rscreen->info.max_alignment,
-					      &stride, &offset);
+					      rscreen->info.max_alignment);
 	if (!buf)
 		return NULL;
 
@@ -1138,8 +1136,9 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 	r600_surface_import_metadata(rscreen, &surface, &metadata,
 				     &array_mode, &is_scanout);
 
-	r = r600_init_surface(rscreen, &surface, templ, array_mode, stride,
-			      offset, true, is_scanout, false);
+	r = r600_init_surface(rscreen, &surface, templ, array_mode,
+			      whandle->stride, whandle->offset,
+			      true, is_scanout, false);
 	if (r) {
 		return NULL;
 	}
@@ -1633,11 +1632,11 @@ static void r600_clear_texture(struct pipe_context *pipe,
 
 		/* Depth is always present. */
 		clear = PIPE_CLEAR_DEPTH;
-		desc->unpack_z_float(&depth, 0, data, 0, 1, 1);
+		util_format_unpack_z_float(tex->format, &depth, data, 1);
 
 		if (rtex->surface.has_stencil) {
 			clear |= PIPE_CLEAR_STENCIL;
-			desc->unpack_s_8uint(&stencil, 0, data, 0, 1, 1);
+			util_format_unpack_s_8uint(tex->format, &stencil, data, 1);
 		}
 
 		pipe->clear_depth_stencil(pipe, sf, clear, depth, stencil,
@@ -1646,13 +1645,7 @@ static void r600_clear_texture(struct pipe_context *pipe,
 	} else {
 		union pipe_color_union color;
 
-		/* pipe_color_union requires the full vec4 representation. */
-		if (util_format_is_pure_uint(tex->format))
-			desc->unpack_rgba_uint(color.ui, 0, data, 0, 1, 1);
-		else if (util_format_is_pure_sint(tex->format))
-			desc->unpack_rgba_sint(color.i, 0, data, 0, 1, 1);
-		else
-			desc->unpack_rgba_float(color.f, 0, data, 0, 1, 1);
+		util_format_unpack_rgba(tex->format, color.ui, data, 1);
 
 		if (screen->is_format_supported(screen, tex->format,
 						tex->target, 0, 0,
@@ -1749,12 +1742,8 @@ static void evergreen_set_clear_color(struct r600_texture *rtex,
 		       color->ui[0] == color->ui[2]);
 		uc.ui[0] = color->ui[0];
 		uc.ui[1] = color->ui[3];
-	} else if (util_format_is_pure_uint(surface_format)) {
-		util_format_write_4ui(surface_format, color->ui, 0, &uc, 0, 0, 0, 1, 1);
-	} else if (util_format_is_pure_sint(surface_format)) {
-		util_format_write_4i(surface_format, color->i, 0, &uc, 0, 0, 0, 1, 1);
 	} else {
-		util_pack_color(color->f, surface_format, &uc);
+		util_pack_color_union(surface_format, &uc, color);
 	}
 
 	memcpy(rtex->color_clear_value, &uc, 2 * sizeof(uint32_t));
@@ -1769,7 +1758,7 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 	int i;
 
 	/* This function is broken in BE, so just disable this path for now */
-#ifdef PIPE_ARCH_BIG_ENDIAN
+#if UTIL_ARCH_BIG_ENDIAN
 	return;
 #endif
 
@@ -1865,14 +1854,12 @@ r600_memobj_from_handle(struct pipe_screen *screen,
 	struct r600_common_screen *rscreen = (struct r600_common_screen*)screen;
 	struct r600_memory_object *memobj = CALLOC_STRUCT(r600_memory_object);
 	struct pb_buffer *buf = NULL;
-	uint32_t stride, offset;
 
 	if (!memobj)
 		return NULL;
 
 	buf = rscreen->ws->buffer_from_handle(rscreen->ws, whandle,
-					      rscreen->info.max_alignment,
-					      &stride, &offset);
+					      rscreen->info.max_alignment);
 	if (!buf) {
 		free(memobj);
 		return NULL;
@@ -1880,8 +1867,8 @@ r600_memobj_from_handle(struct pipe_screen *screen,
 
 	memobj->b.dedicated = dedicated;
 	memobj->buf = buf;
-	memobj->stride = stride;
-	memobj->offset = offset;
+	memobj->stride = whandle->stride;
+	memobj->offset = whandle->offset;
 
 	return (struct pipe_memory_object *)memobj;
 

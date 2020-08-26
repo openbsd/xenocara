@@ -43,12 +43,12 @@ struct fd6_context {
 	 * Compared to previous generations
 	 *   (1) we cannot specify individual buffers per VSC, instead
 	 *       just a pitch and base address
-	 *   (2) there is a second smaller buffer, for something.. we
-	 *       also stash VSC_BIN_SIZE at end of 2nd buffer.
+	 *   (2) there is a second smaller buffer.. we also stash
+	 *       VSC_BIN_SIZE at end of 2nd buffer.
 	 */
-	struct fd_bo *vsc_data, *vsc_data2;
+	struct fd_bo *vsc_draw_strm, *vsc_prim_strm;
 
-	unsigned vsc_data_pitch, vsc_data2_pitch;
+	unsigned vsc_draw_strm_pitch, vsc_prim_strm_pitch;
 
 	/* The 'control' mem BO is used for various housekeeping
 	 * functions.  See 'struct fd6_control'
@@ -91,6 +91,17 @@ struct fd6_context {
 
 	uint16_t tex_seqno;
 	struct hash_table *tex_cache;
+
+	/* collection of magic register values which differ between
+	 * various different a6xx
+	 */
+	struct {
+		uint32_t RB_UNKNOWN_8E04_blit;    /* value for CP_BLIT's */
+		uint32_t RB_CCU_CNTL_bypass;      /* for sysmem rendering */
+		uint32_t RB_CCU_CNTL_gmem;        /* for GMEM rendering */
+		uint32_t PC_UNKNOWN_9805;
+		uint32_t SP_UNKNOWN_A0F8;
+	} magic;
 };
 
 static inline struct fd6_context *
@@ -107,13 +118,19 @@ fd6_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags);
 struct fd6_control {
 	uint32_t seqno;          /* seqno for async CP_EVENT_WRITE, etc */
 	uint32_t _pad0;
-	uint32_t flush_base;     /* dummy address for VPC_SO[i].FLUSH_BASE_LO/HI */
+	volatile uint32_t vsc_overflow;
 	uint32_t _pad1;
 	/* flag set from cmdstream when VSC overflow detected: */
-	volatile uint32_t vsc_overflow;
-	uint32_t _pad2;
 	uint32_t vsc_scratch;
+	uint32_t _pad2;
 	uint32_t _pad3;
+	uint32_t _pad4;
+
+	/* scratch space for VPC_SO[i].FLUSH_BASE_LO/HI, start on 32 byte boundary. */
+	struct {
+		uint32_t offset;
+		uint32_t pad[7];
+	} flush_base[4];
 };
 
 #define control_ptr(fd6_ctx, member)  \
@@ -125,8 +142,16 @@ emit_marker6(struct fd_ringbuffer *ring, int scratch_idx)
 {
 	extern unsigned marker_cnt;
 	unsigned reg = REG_A6XX_CP_SCRATCH_REG(scratch_idx);
-	OUT_PKT4(ring, reg, 1);
-	OUT_RING(ring, ++marker_cnt);
+#ifdef DEBUG
+#  define __EMIT_MARKER 1
+#else
+#  define __EMIT_MARKER 0
+#endif
+	if (__EMIT_MARKER) {
+		OUT_WFI5(ring);
+		OUT_PKT4(ring, reg, 1);
+		OUT_RING(ring, ++marker_cnt);
+	}
 }
 
 #endif /* FD6_CONTEXT_H_ */

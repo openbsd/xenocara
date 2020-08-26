@@ -31,8 +31,8 @@
 #include <string.h>
 
 #include "bifrost.h"
-#include "bifrost_ops.h"
 #include "disassemble.h"
+#include "bi_print.h"
 #include "util/macros.h"
 
 // return bits (high, lo]
@@ -52,15 +52,6 @@ struct bifrost_alu_inst {
         uint64_t reg_bits;
 };
 
-struct bifrost_regs {
-        unsigned uniform_const : 8;
-        unsigned reg2 : 6;
-        unsigned reg3 : 6;
-        unsigned reg0 : 5;
-        unsigned reg1 : 6;
-        unsigned ctrl : 4;
-};
-
 static unsigned get_reg0(struct bifrost_regs regs)
 {
         if (regs.ctrl == 0)
@@ -73,12 +64,6 @@ static unsigned get_reg1(struct bifrost_regs regs)
 {
         return regs.reg0 <= regs.reg1 ? regs.reg1 : 63 - regs.reg1;
 }
-
-enum bifrost_reg_write_unit {
-        REG_WRITE_NONE = 0, // don't write
-        REG_WRITE_TWO, // write using reg2
-        REG_WRITE_THREE, // write using reg3
-};
 
 // this represents the decoded version of the ctrl register field.
 struct bifrost_reg_ctrl {
@@ -100,14 +85,16 @@ enum fma_src_type {
         FMA_FCMP,
         FMA_FCMP16,
         FMA_THREE_SRC,
+        FMA_SHIFT,
         FMA_FMA,
         FMA_FMA16,
-        FMA_FOUR_SRC,
+        FMA_CSEL4,
         FMA_FMA_MSCALE,
         FMA_SHIFT_ADD64,
 };
 
 struct fma_op_info {
+        bool extended;
         unsigned op;
         char name[30];
         enum fma_src_type src_type;
@@ -121,6 +108,7 @@ enum add_src_type {
         ADD_FADD16,
         ADD_FMINMAX16,
         ADD_THREE_SRC,
+        ADD_SHIFT,
         ADD_FADDMscale,
         ADD_FCMP,
         ADD_FCMP16,
@@ -140,121 +128,82 @@ struct add_op_info {
         bool has_data_reg;
 };
 
-struct bifrost_tex_ctrl {
-        unsigned sampler_index : 4; // also used to signal indirects
-        unsigned tex_index : 7;
-        bool no_merge_index : 1; // whether to merge (direct) sampler & texture indices
-        bool filter : 1; // use the usual filtering pipeline (0 for texelFetch & textureGather)
-        unsigned unk0 : 2;
-        bool texel_offset : 1; // *Offset()
-        bool is_shadow : 1;
-        bool is_array : 1;
-        unsigned tex_type : 2; // 2D, 3D, Cube, Buffer
-        bool compute_lod : 1; // 0 for *Lod()
-        bool not_supply_lod : 1; // 0 for *Lod() or when a bias is applied
-        bool calc_gradients : 1; // 0 for *Grad()
-        unsigned unk1 : 1;
-        unsigned result_type : 4; // integer, unsigned, float TODO: why is this 4 bits?
-        unsigned unk2 : 4;
-};
-
-struct bifrost_dual_tex_ctrl {
-        unsigned sampler_index0 : 2;
-        unsigned unk0 : 2;
-        unsigned tex_index0 : 2;
-        unsigned sampler_index1 : 2;
-        unsigned tex_index1 : 2;
-        unsigned unk1 : 22;
-};
-
-enum branch_bit_size {
-        BR_SIZE_32 = 0,
-        BR_SIZE_16XX = 1,
-        BR_SIZE_16YY = 2,
-        // For the above combinations of bitsize and location, an extra bit is
-        // encoded via comparing the sources. The only possible source of ambiguity
-        // would be if the sources were the same, but then the branch condition
-        // would be always true or always false anyways, so we can ignore it. But
-        // this no longer works when comparing the y component to the x component,
-        // since it's valid to compare the y component of a source against its own
-        // x component. Instead, the extra bit is encoded via an extra bitsize.
-        BR_SIZE_16YX0 = 3,
-        BR_SIZE_16YX1 = 4,
-        BR_SIZE_32_AND_16X = 5,
-        BR_SIZE_32_AND_16Y = 6,
-        // Used for comparisons with zero and always-true, see below. I think this
-        // only works for integer comparisons.
-        BR_SIZE_ZERO = 7,
-};
-
-void dump_header(struct bifrost_header header, bool verbose);
-void dump_instr(const struct bifrost_alu_inst *instr, struct bifrost_regs next_regs, uint64_t *consts,
+void dump_header(FILE *fp, struct bifrost_header header, bool verbose);
+void dump_instr(FILE *fp, const struct bifrost_alu_inst *instr,
+                struct bifrost_regs next_regs, uint64_t *consts,
                 unsigned data_reg, unsigned offset, bool verbose);
-bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose);
+bool dump_clause(FILE *fp, uint32_t *words, unsigned *size, unsigned offset, bool verbose);
 
-void dump_header(struct bifrost_header header, bool verbose)
+void dump_header(FILE *fp, struct bifrost_header header, bool verbose)
 {
+        fprintf(fp, "id(%du) ", header.scoreboard_index);
+
         if (header.clause_type != 0) {
-                printf("id(%du) ", header.scoreboard_index);
+                const char *name = bi_clause_type_name(header.clause_type);
+
+                if (name[0] == '?')
+                        fprintf(fp, "unk%u ", header.clause_type);
+                else
+                        fprintf(fp, "%s ", name);
         }
 
         if (header.scoreboard_deps != 0) {
-                printf("next-wait(");
+                fprintf(fp, "next-wait(");
                 bool first = true;
                 for (unsigned i = 0; i < 8; i++) {
                         if (header.scoreboard_deps & (1 << i)) {
                                 if (!first) {
-                                        printf(", ");
+                                        fprintf(fp, ", ");
                                 }
-                                printf("%d", i);
+                                fprintf(fp, "%d", i);
                                 first = false;
                         }
                 }
-                printf(") ");
+                fprintf(fp, ") ");
         }
 
         if (header.datareg_writebarrier)
-                printf("data-reg-barrier ");
+                fprintf(fp, "data-reg-barrier ");
 
         if (!header.no_end_of_shader)
-                printf("eos ");
+                fprintf(fp, "eos ");
 
         if (!header.back_to_back) {
-                printf("nbb ");
+                fprintf(fp, "nbb ");
                 if (header.branch_cond)
-                        printf("branch-cond ");
+                        fprintf(fp, "branch-cond ");
                 else
-                        printf("branch-uncond ");
+                        fprintf(fp, "branch-uncond ");
         }
 
         if (header.elide_writes)
-                printf("we ");
+                fprintf(fp, "we ");
 
         if (header.suppress_inf)
-                printf("suppress-inf ");
+                fprintf(fp, "suppress-inf ");
         if (header.suppress_nan)
-                printf("suppress-nan ");
+                fprintf(fp, "suppress-nan ");
 
         if (header.unk0)
-                printf("unk0 ");
+                fprintf(fp, "unk0 ");
         if (header.unk1)
-                printf("unk1 ");
+                fprintf(fp, "unk1 ");
         if  (header.unk2)
-                printf("unk2 ");
+                fprintf(fp, "unk2 ");
         if (header.unk3)
-                printf("unk3 ");
+                fprintf(fp, "unk3 ");
         if (header.unk4)
-                printf("unk4 ");
+                fprintf(fp, "unk4 ");
 
-        printf("\n");
+        fprintf(fp, "\n");
 
         if (verbose) {
-                printf("# clause type %d, next clause type %d\n",
+                fprintf(fp, "# clause type %d, next clause type %d\n",
                        header.clause_type, header.next_clause_type);
         }
 }
 
-static struct bifrost_reg_ctrl DecodeRegCtrl(struct bifrost_regs regs)
+static struct bifrost_reg_ctrl DecodeRegCtrl(FILE *fp, struct bifrost_regs regs)
 {
         struct bifrost_reg_ctrl decoded = {};
         unsigned ctrl;
@@ -309,7 +258,7 @@ static struct bifrost_reg_ctrl DecodeRegCtrl(struct bifrost_regs regs)
                 decoded.add_write_unit = REG_WRITE_TWO;
                 break;
         default:
-                printf("# unknown reg ctrl %d\n", ctrl);
+                fprintf(fp, "# unknown reg ctrl %d\n", ctrl);
         }
 
         return decoded;
@@ -330,43 +279,43 @@ static unsigned GetRegToWrite(enum bifrost_reg_write_unit unit, struct bifrost_r
         }
 }
 
-static void dump_regs(struct bifrost_regs srcs)
+static void dump_regs(FILE *fp, struct bifrost_regs srcs)
 {
-        struct bifrost_reg_ctrl ctrl = DecodeRegCtrl(srcs);
-        printf("# ");
+        struct bifrost_reg_ctrl ctrl = DecodeRegCtrl(fp, srcs);
+        fprintf(fp, "# ");
         if (ctrl.read_reg0)
-                printf("port 0: R%d ", get_reg0(srcs));
+                fprintf(fp, "port 0: R%d ", get_reg0(srcs));
         if (ctrl.read_reg1)
-                printf("port 1: R%d ", get_reg1(srcs));
+                fprintf(fp, "port 1: R%d ", get_reg1(srcs));
 
         if (ctrl.fma_write_unit == REG_WRITE_TWO)
-                printf("port 2: R%d (write FMA) ", srcs.reg2);
+                fprintf(fp, "port 2: R%d (write FMA) ", srcs.reg2);
         else if (ctrl.add_write_unit == REG_WRITE_TWO)
-                printf("port 2: R%d (write ADD) ", srcs.reg2);
+                fprintf(fp, "port 2: R%d (write ADD) ", srcs.reg2);
 
         if (ctrl.fma_write_unit == REG_WRITE_THREE)
-                printf("port 3: R%d (write FMA) ", srcs.reg3);
+                fprintf(fp, "port 3: R%d (write FMA) ", srcs.reg3);
         else if (ctrl.add_write_unit == REG_WRITE_THREE)
-                printf("port 3: R%d (write ADD) ", srcs.reg3);
+                fprintf(fp, "port 3: R%d (write ADD) ", srcs.reg3);
         else if (ctrl.read_reg3)
-                printf("port 3: R%d (read) ", srcs.reg3);
+                fprintf(fp, "port 3: R%d (read) ", srcs.reg3);
 
         if (srcs.uniform_const) {
                 if (srcs.uniform_const & 0x80) {
-                        printf("uniform: U%d", (srcs.uniform_const & 0x7f) * 2);
+                        fprintf(fp, "uniform: U%d", (srcs.uniform_const & 0x7f) * 2);
                 }
         }
 
-        printf("\n");
+        fprintf(fp, "\n");
 }
-static void dump_const_imm(uint32_t imm)
+static void dump_const_imm(FILE *fp, uint32_t imm)
 {
         union {
                 float f;
                 uint32_t i;
         } fi;
         fi.i = imm;
-        printf("0x%08x /* %f */", imm, fi.f);
+        fprintf(fp, "0x%08x /* %f */", imm, fi.f);
 }
 
 static uint64_t get_const(uint64_t *consts, struct bifrost_regs srcs)
@@ -399,27 +348,27 @@ static uint64_t get_const(uint64_t *consts, struct bifrost_regs srcs)
         return imm | low_bits;
 }
 
-static void dump_uniform_const_src(struct bifrost_regs srcs, uint64_t *consts, bool high32)
+static void dump_uniform_const_src(FILE *fp, struct bifrost_regs srcs, uint64_t *consts, bool high32)
 {
         if (srcs.uniform_const & 0x80) {
                 unsigned uniform = (srcs.uniform_const & 0x7f) * 2;
-                printf("U%d", uniform + (high32 ? 1 : 0));
+                fprintf(fp, "U%d", uniform + (high32 ? 1 : 0));
         } else if (srcs.uniform_const >= 0x20) {
                 uint64_t imm = get_const(consts, srcs);
                 if (high32)
-                        dump_const_imm(imm >> 32);
+                        dump_const_imm(fp, imm >> 32);
                 else
-                        dump_const_imm(imm);
+                        dump_const_imm(fp, imm);
         } else {
                 switch (srcs.uniform_const) {
                 case 0:
-                        printf("0");
+                        fprintf(fp, "0");
                         break;
                 case 5:
-                        printf("atest-data");
+                        fprintf(fp, "atest-data");
                         break;
                 case 6:
-                        printf("sample-ptr");
+                        fprintf(fp, "sample-ptr");
                         break;
                 case 8:
                 case 9:
@@ -429,369 +378,199 @@ static void dump_uniform_const_src(struct bifrost_regs srcs, uint64_t *consts, b
                 case 13:
                 case 14:
                 case 15:
-                        printf("blend-descriptor%u", (unsigned) srcs.uniform_const - 8);
+                        fprintf(fp, "blend-descriptor%u", (unsigned) srcs.uniform_const - 8);
                         break;
                 default:
-                        printf("unkConst%u", (unsigned) srcs.uniform_const);
+                        fprintf(fp, "unkConst%u", (unsigned) srcs.uniform_const);
                         break;
                 }
 
                 if (high32)
-                        printf(".y");
+                        fprintf(fp, ".y");
                 else
-                        printf(".x");
+                        fprintf(fp, ".x");
         }
 }
 
-static void dump_src(unsigned src, struct bifrost_regs srcs, uint64_t *consts, bool isFMA)
+static void dump_src(FILE *fp, unsigned src, struct bifrost_regs srcs, uint64_t *consts, bool isFMA)
 {
         switch (src) {
         case 0:
-                printf("R%d", get_reg0(srcs));
+                fprintf(fp, "R%d", get_reg0(srcs));
                 break;
         case 1:
-                printf("R%d", get_reg1(srcs));
+                fprintf(fp, "R%d", get_reg1(srcs));
                 break;
         case 2:
-                printf("R%d", srcs.reg3);
+                fprintf(fp, "R%d", srcs.reg3);
                 break;
         case 3:
                 if (isFMA)
-                        printf("0");
+                        fprintf(fp, "0");
                 else
-                        printf("T"); // i.e. the output of FMA this cycle
+                        fprintf(fp, "T"); // i.e. the output of FMA this cycle
                 break;
         case 4:
-                dump_uniform_const_src(srcs, consts, false);
+                dump_uniform_const_src(fp, srcs, consts, false);
                 break;
         case 5:
-                dump_uniform_const_src(srcs, consts, true);
+                dump_uniform_const_src(fp, srcs, consts, true);
                 break;
         case 6:
-                printf("T0");
+                fprintf(fp, "T0");
                 break;
         case 7:
-                printf("T1");
-                break;
-        }
-}
-
-static void dump_output_mod(unsigned mod)
-{
-        switch (mod) {
-        case 0:
-                break;
-        case 1:
-                printf(".clamp_0_inf");
-                break; // max(out, 0)
-        case 2:
-                printf(".clamp_m1_1");
-                break; // clamp(out, -1, 1)
-        case 3:
-                printf(".clamp_0_1");
-                break; // clamp(out, 0, 1)
-        default:
-                break;
-        }
-}
-
-static void dump_minmax_mode(unsigned mod)
-{
-        switch (mod) {
-        case 0:
-                /* Same as fmax() and fmin() -- return the other number if any
-                 * number is NaN.  Also always return +0 if one argument is +0 and
-                 * the other is -0.
-                 */
-                break;
-        case 1:
-                /* Instead of never returning a NaN, always return one. The
-                 * "greater"/"lesser" NaN is always returned, first by checking the
-                 * sign and then the mantissa bits.
-                 */
-                printf(".nan_wins");
-                break;
-        case 2:
-                /* For max, implement src0 > src1 ? src0 : src1
-                 * For min, implement src0 < src1 ? src0 : src1
-                 *
-                 * This includes handling NaN's and signedness of 0 differently
-                 * from above, since +0 and -0 compare equal and comparisons always
-                 * return false for NaN's. As a result, this mode is *not*
-                 * commutative.
-                 */
-                printf(".src1_wins");
-                break;
-        case 3:
-                /* For max, implement src0 < src1 ? src1 : src0
-                 * For min, implement src0 > src1 ? src1 : src0
-                 */
-                printf(".src0_wins");
-                break;
-        default:
-                break;
-        }
-}
-
-static void dump_round_mode(unsigned mod)
-{
-        switch (mod) {
-        case 0:
-                /* roundTiesToEven, the IEEE default. */
-                break;
-        case 1:
-                /* roundTowardPositive in the IEEE spec. */
-                printf(".round_pos");
-                break;
-        case 2:
-                /* roundTowardNegative in the IEEE spec. */
-                printf(".round_neg");
-                break;
-        case 3:
-                /* roundTowardZero in the IEEE spec. */
-                printf(".round_zero");
-                break;
-        default:
+                fprintf(fp, "T1");
                 break;
         }
 }
 
 static const struct fma_op_info FMAOpInfos[] = {
-        { 0x00000, "FMA.f32",  FMA_FMA },
-        { 0x40000, "MAX.f32", FMA_FMINMAX },
-        { 0x44000, "MIN.f32", FMA_FMINMAX },
-        { 0x48000, "FCMP.GL", FMA_FCMP },
-        { 0x4c000, "FCMP.D3D", FMA_FCMP },
-        { 0x4ff98, "ADD.i32", FMA_TWO_SRC },
-        { 0x4ffd8, "SUB.i32", FMA_TWO_SRC },
-        { 0x4fff0, "SUBB.i32", FMA_TWO_SRC },
-        { 0x50000, "FMA_MSCALE", FMA_FMA_MSCALE },
-        { 0x58000, "ADD.f32", FMA_FADD },
-        { 0x5c000, "CSEL.FEQ.f32", FMA_FOUR_SRC },
-        { 0x5c200, "CSEL.FGT.f32", FMA_FOUR_SRC },
-        { 0x5c400, "CSEL.FGE.f32", FMA_FOUR_SRC },
-        { 0x5c600, "CSEL.IEQ.f32", FMA_FOUR_SRC },
-        { 0x5c800, "CSEL.IGT.i32", FMA_FOUR_SRC },
-        { 0x5ca00, "CSEL.IGE.i32", FMA_FOUR_SRC },
-        { 0x5cc00, "CSEL.UGT.i32", FMA_FOUR_SRC },
-        { 0x5ce00, "CSEL.UGE.i32", FMA_FOUR_SRC },
-        { 0x5d8d0, "ICMP.D3D.GT.v2i16", FMA_TWO_SRC },
-        { 0x5d9d0, "UCMP.D3D.GT.v2i16", FMA_TWO_SRC },
-        { 0x5dad0, "ICMP.D3D.GE.v2i16", FMA_TWO_SRC },
-        { 0x5dbd0, "UCMP.D3D.GE.v2i16", FMA_TWO_SRC },
-        { 0x5dcd0, "ICMP.D3D.EQ.v2i16", FMA_TWO_SRC },
-        { 0x5de40, "ICMP.GL.GT.i32", FMA_TWO_SRC }, // src0 > src1 ? 1 : 0
-        { 0x5de48, "ICMP.GL.GE.i32", FMA_TWO_SRC },
-        { 0x5de50, "UCMP.GL.GT.i32", FMA_TWO_SRC },
-        { 0x5de58, "UCMP.GL.GE.i32", FMA_TWO_SRC },
-        { 0x5de60, "ICMP.GL.EQ.i32", FMA_TWO_SRC },
-        { 0x5dec0, "ICMP.D3D.GT.i32", FMA_TWO_SRC }, // src0 > src1 ? ~0 : 0
-        { 0x5dec8, "ICMP.D3D.GE.i32", FMA_TWO_SRC },
-        { 0x5ded0, "UCMP.D3D.GT.i32", FMA_TWO_SRC },
-        { 0x5ded8, "UCMP.D3D.GE.i32", FMA_TWO_SRC },
-        { 0x5dee0, "ICMP.D3D.EQ.i32", FMA_TWO_SRC },
-        { 0x60200, "RSHIFT_NAND.i32", FMA_THREE_SRC },
-        { 0x603c0, "RSHIFT_NAND.v2i16", FMA_THREE_SRC },
-        { 0x60e00, "RSHIFT_OR.i32", FMA_THREE_SRC },
-        { 0x60fc0, "RSHIFT_OR.v2i16", FMA_THREE_SRC },
-        { 0x61200, "RSHIFT_AND.i32", FMA_THREE_SRC },
-        { 0x613c0, "RSHIFT_AND.v2i16", FMA_THREE_SRC },
-        { 0x61e00, "RSHIFT_NOR.i32", FMA_THREE_SRC }, // ~((src0 << src2) | src1)
-        { 0x61fc0, "RSHIFT_NOR.v2i16", FMA_THREE_SRC }, // ~((src0 << src2) | src1)
-        { 0x62200, "LSHIFT_NAND.i32", FMA_THREE_SRC },
-        { 0x623c0, "LSHIFT_NAND.v2i16", FMA_THREE_SRC },
-        { 0x62e00, "LSHIFT_OR.i32",  FMA_THREE_SRC }, // (src0 << src2) | src1
-        { 0x62fc0, "LSHIFT_OR.v2i16",  FMA_THREE_SRC }, // (src0 << src2) | src1
-        { 0x63200, "LSHIFT_AND.i32", FMA_THREE_SRC }, // (src0 << src2) & src1
-        { 0x633c0, "LSHIFT_AND.v2i16", FMA_THREE_SRC },
-        { 0x63e00, "LSHIFT_NOR.i32", FMA_THREE_SRC },
-        { 0x63fc0, "LSHIFT_NOR.v2i16", FMA_THREE_SRC },
-        { 0x64200, "RSHIFT_XOR.i32", FMA_THREE_SRC },
-        { 0x643c0, "RSHIFT_XOR.v2i16", FMA_THREE_SRC },
-        { 0x64600, "RSHIFT_XNOR.i32", FMA_THREE_SRC }, // ~((src0 >> src2) ^ src1)
-        { 0x647c0, "RSHIFT_XNOR.v2i16", FMA_THREE_SRC }, // ~((src0 >> src2) ^ src1)
-        { 0x64a00, "LSHIFT_XOR.i32", FMA_THREE_SRC },
-        { 0x64bc0, "LSHIFT_XOR.v2i16", FMA_THREE_SRC },
-        { 0x64e00, "LSHIFT_XNOR.i32", FMA_THREE_SRC }, // ~((src0 >> src2) ^ src1)
-        { 0x64fc0, "LSHIFT_XNOR.v2i16", FMA_THREE_SRC }, // ~((src0 >> src2) ^ src1)
-        { 0x65200, "LSHIFT_ADD.i32", FMA_THREE_SRC },
-        { 0x65600, "LSHIFT_SUB.i32", FMA_THREE_SRC }, // (src0 << src2) - src1
-        { 0x65a00, "LSHIFT_RSUB.i32", FMA_THREE_SRC }, // src1 - (src0 << src2)
-        { 0x65e00, "RSHIFT_ADD.i32", FMA_THREE_SRC },
-        { 0x66200, "RSHIFT_SUB.i32", FMA_THREE_SRC },
-        { 0x66600, "RSHIFT_RSUB.i32", FMA_THREE_SRC },
-        { 0x66a00, "ARSHIFT_ADD.i32", FMA_THREE_SRC },
-        { 0x66e00, "ARSHIFT_SUB.i32", FMA_THREE_SRC },
-        { 0x67200, "ARSHIFT_RSUB.i32", FMA_THREE_SRC },
-        { 0x80000, "FMA.v2f16",  FMA_FMA16 },
-        { 0xc0000, "MAX.v2f16", FMA_FMINMAX16 },
-        { 0xc4000, "MIN.v2f16", FMA_FMINMAX16 },
-        { 0xc8000, "FCMP.GL", FMA_FCMP16 },
-        { 0xcc000, "FCMP.D3D", FMA_FCMP16 },
-        { 0xcf900, "ADD.v2i16", FMA_TWO_SRC },
-        { 0xcfc10, "ADDC.i32", FMA_TWO_SRC },
-        { 0xcfd80, "ADD.i32.i16.X", FMA_TWO_SRC },
-        { 0xcfd90, "ADD.i32.u16.X", FMA_TWO_SRC },
-        { 0xcfdc0, "ADD.i32.i16.Y", FMA_TWO_SRC },
-        { 0xcfdd0, "ADD.i32.u16.Y", FMA_TWO_SRC },
-        { 0xd8000, "ADD.v2f16", FMA_FADD16 },
-        { 0xdc000, "CSEL.FEQ.v2f16", FMA_FOUR_SRC },
-        { 0xdc200, "CSEL.FGT.v2f16", FMA_FOUR_SRC },
-        { 0xdc400, "CSEL.FGE.v2f16", FMA_FOUR_SRC },
-        { 0xdc600, "CSEL.IEQ.v2f16", FMA_FOUR_SRC },
-        { 0xdc800, "CSEL.IGT.v2i16", FMA_FOUR_SRC },
-        { 0xdca00, "CSEL.IGE.v2i16", FMA_FOUR_SRC },
-        { 0xdcc00, "CSEL.UGT.v2i16", FMA_FOUR_SRC },
-        { 0xdce00, "CSEL.UGE.v2i16", FMA_FOUR_SRC },
-        { 0xdd000, "F32_TO_F16", FMA_TWO_SRC },
-        { 0xe0046, "F16_TO_I16.XX", FMA_ONE_SRC },
-        { 0xe0047, "F16_TO_U16.XX", FMA_ONE_SRC },
-        { 0xe004e, "F16_TO_I16.YX", FMA_ONE_SRC },
-        { 0xe004f, "F16_TO_U16.YX", FMA_ONE_SRC },
-        { 0xe0056, "F16_TO_I16.XY", FMA_ONE_SRC },
-        { 0xe0057, "F16_TO_U16.XY", FMA_ONE_SRC },
-        { 0xe005e, "F16_TO_I16.YY", FMA_ONE_SRC },
-        { 0xe005f, "F16_TO_U16.YY", FMA_ONE_SRC },
-        { 0xe00c0, "I16_TO_F16.XX", FMA_ONE_SRC },
-        { 0xe00c1, "U16_TO_F16.XX", FMA_ONE_SRC },
-        { 0xe00c8, "I16_TO_F16.YX", FMA_ONE_SRC },
-        { 0xe00c9, "U16_TO_F16.YX", FMA_ONE_SRC },
-        { 0xe00d0, "I16_TO_F16.XY", FMA_ONE_SRC },
-        { 0xe00d1, "U16_TO_F16.XY", FMA_ONE_SRC },
-        { 0xe00d8, "I16_TO_F16.YY", FMA_ONE_SRC },
-        { 0xe00d9, "U16_TO_F16.YY", FMA_ONE_SRC },
-        { 0xe0136, "F32_TO_I32", FMA_ONE_SRC },
-        { 0xe0137, "F32_TO_U32", FMA_ONE_SRC },
-        { 0xe0178, "I32_TO_F32", FMA_ONE_SRC },
-        { 0xe0179, "U32_TO_F32", FMA_ONE_SRC },
-        { 0xe0198, "I16_TO_I32.X", FMA_ONE_SRC },
-        { 0xe0199, "U16_TO_U32.X", FMA_ONE_SRC },
-        { 0xe019a, "I16_TO_I32.Y", FMA_ONE_SRC },
-        { 0xe019b, "U16_TO_U32.Y", FMA_ONE_SRC },
-        { 0xe019c, "I16_TO_F32.X", FMA_ONE_SRC },
-        { 0xe019d, "U16_TO_F32.X", FMA_ONE_SRC },
-        { 0xe019e, "I16_TO_F32.Y", FMA_ONE_SRC },
-        { 0xe019f, "U16_TO_F32.Y", FMA_ONE_SRC },
-        { 0xe01a2, "F16_TO_F32.X", FMA_ONE_SRC },
-        { 0xe01a3, "F16_TO_F32.Y", FMA_ONE_SRC },
-        { 0xe032c, "NOP",  FMA_ONE_SRC },
-        { 0xe032d, "MOV",  FMA_ONE_SRC },
-        { 0xe032f, "SWZ.YY.v2i16",  FMA_ONE_SRC },
-        // From the ARM patent US20160364209A1:
-        // "Decompose v (the input) into numbers x1 and s such that v = x1 * 2^s,
-        // and x1 is a floating point value in a predetermined range where the
-        // value 1 is within the range and not at one extremity of the range (e.g.
-        // choose a range where 1 is towards middle of range)."
-        //
-        // This computes x1.
-        { 0xe0345, "LOG_FREXPM", FMA_ONE_SRC },
-        // Given a floating point number m * 2^e, returns m * 2^{-1}. This is
-        // exactly the same as the mantissa part of frexp().
-        { 0xe0365, "FRCP_FREXPM", FMA_ONE_SRC },
-        // Given a floating point number m * 2^e, returns m * 2^{-2} if e is even,
-        // and m * 2^{-1} if e is odd. In other words, scales by powers of 4 until
-        // within the range [0.25, 1). Used for square-root and reciprocal
-        // square-root.
-        { 0xe0375, "FSQRT_FREXPM", FMA_ONE_SRC },
-        // Given a floating point number m * 2^e, computes -e - 1 as an integer.
-        // Zero and infinity/NaN return 0.
-        { 0xe038d, "FRCP_FREXPE", FMA_ONE_SRC },
-        // Computes floor(e/2) + 1.
-        { 0xe03a5, "FSQRT_FREXPE", FMA_ONE_SRC },
-        // Given a floating point number m * 2^e, computes -floor(e/2) - 1 as an
-        // integer.
-        { 0xe03ad, "FRSQ_FREXPE", FMA_ONE_SRC },
-        { 0xe03c5, "LOG_FREXPE", FMA_ONE_SRC },
-        { 0xe03fa, "CLZ", FMA_ONE_SRC },
-        { 0xe0b80, "IMAX3", FMA_THREE_SRC },
-        { 0xe0bc0, "UMAX3", FMA_THREE_SRC },
-        { 0xe0c00, "IMIN3", FMA_THREE_SRC },
-        { 0xe0c40, "UMIN3", FMA_THREE_SRC },
-        { 0xe0ec5, "ROUND", FMA_ONE_SRC },
-        { 0xe0f40, "CSEL", FMA_THREE_SRC }, // src2 != 0 ? src1 : src0
-        { 0xe0fc0, "MUX.i32", FMA_THREE_SRC }, // see ADD comment
-        { 0xe1805, "ROUNDEVEN", FMA_ONE_SRC },
-        { 0xe1845, "CEIL", FMA_ONE_SRC },
-        { 0xe1885, "FLOOR", FMA_ONE_SRC },
-        { 0xe18c5, "TRUNC", FMA_ONE_SRC },
-        { 0xe19b0, "ATAN_LDEXP.Y.f32", FMA_TWO_SRC },
-        { 0xe19b8, "ATAN_LDEXP.X.f32", FMA_TWO_SRC },
-        // These instructions in the FMA slot, together with LSHIFT_ADD_HIGH32.i32
-        // in the ADD slot, allow one to do a 64-bit addition with an extra small
-        // shift on one of the sources. There are three possible scenarios:
-        //
-        // 1) Full 64-bit addition. Do:
-        // out.x = LSHIFT_ADD_LOW32.i64 src1.x, src2.x, shift
-        // out.y = LSHIFT_ADD_HIGH32.i32 src1.y, src2.y
-        //
-        // The shift amount is applied to src2 before adding. The shift amount, and
-        // any extra bits from src2 plus the overflow bit, are sent directly from
-        // FMA to ADD instead of being passed explicitly. Hence, these two must be
-        // bundled together into the same instruction.
-        //
-        // 2) Add a 64-bit value src1 to a zero-extended 32-bit value src2. Do:
-        // out.x = LSHIFT_ADD_LOW32.u32 src1.x, src2, shift
-        // out.y = LSHIFT_ADD_HIGH32.i32 src1.x, 0
-        //
-        // Note that in this case, the second argument to LSHIFT_ADD_HIGH32 is
-        // ignored, so it can actually be anything. As before, the shift is applied
-        // to src2 before adding.
-        //
-        // 3) Add a 64-bit value to a sign-extended 32-bit value src2. Do:
-        // out.x = LSHIFT_ADD_LOW32.i32 src1.x, src2, shift
-        // out.y = LSHIFT_ADD_HIGH32.i32 src1.x, 0
-        //
-        // The only difference is the .i32 instead of .u32. Otherwise, this is
-        // exactly the same as before.
-        //
-        // In all these instructions, the shift amount is stored where the third
-        // source would be, so the shift has to be a small immediate from 0 to 7.
-        // This is fine for the expected use-case of these instructions, which is
-        // manipulating 64-bit pointers.
-        //
-        // These instructions can also be combined with various load/store
-        // instructions which normally take a 64-bit pointer in order to add a
-        // 32-bit or 64-bit offset to the pointer before doing the operation,
-        // optionally shifting the offset. The load/store op implicity does
-        // LSHIFT_ADD_HIGH32.i32 internally. Letting ptr be the pointer, and offset
-        // the desired offset, the cases go as follows:
-        //
-        // 1) Add a 64-bit offset:
-        // LSHIFT_ADD_LOW32.i64 ptr.x, offset.x, shift
-        // ld_st_op ptr.y, offset.y, ...
-        //
-        // Note that the output of LSHIFT_ADD_LOW32.i64 is not used, instead being
-        // implicitly sent to the load/store op to serve as the low 32 bits of the
-        // pointer.
-        //
-        // 2) Add a 32-bit unsigned offset:
-        // temp = LSHIFT_ADD_LOW32.u32 ptr.x, offset, shift
-        // ld_st_op temp, ptr.y, ...
-        //
-        // Now, the low 32 bits of offset << shift + ptr are passed explicitly to
-        // the ld_st_op, to match the case where there is no offset and ld_st_op is
-        // called directly.
-        //
-        // 3) Add a 32-bit signed offset:
-        // temp = LSHIFT_ADD_LOW32.i32 ptr.x, offset, shift
-        // ld_st_op temp, ptr.y, ...
-        //
-        // Again, the same as the unsigned case except for the offset.
-        { 0xe1c80, "LSHIFT_ADD_LOW32.u32", FMA_SHIFT_ADD64 },
-        { 0xe1cc0, "LSHIFT_ADD_LOW32.i64", FMA_SHIFT_ADD64 },
-        { 0xe1d80, "LSHIFT_ADD_LOW32.i32", FMA_SHIFT_ADD64 },
-        { 0xe1e00, "SEL.XX.i16", FMA_TWO_SRC },
-        { 0xe1e08, "SEL.YX.i16", FMA_TWO_SRC },
-        { 0xe1e10, "SEL.XY.i16", FMA_TWO_SRC },
-        { 0xe1e18, "SEL.YY.i16", FMA_TWO_SRC },
-        { 0xe7800, "IMAD", FMA_THREE_SRC },
-        { 0xe78db, "POPCNT", FMA_ONE_SRC },
+        { false, 0x00000, "FMA.f32",  FMA_FMA },
+        { false, 0x40000, "MAX.f32", FMA_FMINMAX },
+        { false, 0x44000, "MIN.f32", FMA_FMINMAX },
+        { false, 0x48000, "FCMP.GL", FMA_FCMP },
+        { false, 0x4c000, "FCMP.D3D", FMA_FCMP },
+        { false, 0x4ff98, "ADD.i32", FMA_TWO_SRC },
+        { false, 0x4ffd8, "SUB.i32", FMA_TWO_SRC },
+        { false, 0x4fff0, "SUBB.i32", FMA_TWO_SRC },
+        { false, 0x50000, "FMA_MSCALE", FMA_FMA_MSCALE },
+        { false, 0x58000, "ADD.f32", FMA_FADD },
+        { false, 0x5c000, "CSEL4", FMA_CSEL4 },
+        { false, 0x5d8d0, "ICMP.D3D.GT.v2i16", FMA_TWO_SRC },
+        { false, 0x5d9d0, "UCMP.D3D.GT.v2i16", FMA_TWO_SRC },
+        { false, 0x5dad0, "ICMP.D3D.GE.v2i16", FMA_TWO_SRC },
+        { false, 0x5dbd0, "UCMP.D3D.GE.v2i16", FMA_TWO_SRC },
+        { false, 0x5dcd0, "ICMP.D3D.EQ.v2i16", FMA_TWO_SRC },
+        { false, 0x5de40, "ICMP.GL.GT.i32", FMA_TWO_SRC }, // src0 > src1 ? 1 : 0
+        { false, 0x5de48, "ICMP.GL.GE.i32", FMA_TWO_SRC },
+        { false, 0x5de50, "UCMP.GL.GT.i32", FMA_TWO_SRC },
+        { false, 0x5de58, "UCMP.GL.GE.i32", FMA_TWO_SRC },
+        { false, 0x5de60, "ICMP.GL.EQ.i32", FMA_TWO_SRC },
+        { false, 0x5dec0, "ICMP.D3D.GT.i32", FMA_TWO_SRC }, // src0 > src1 ? ~0 : 0
+        { false, 0x5dec8, "ICMP.D3D.GE.i32", FMA_TWO_SRC },
+        { false, 0x5ded0, "UCMP.D3D.GT.i32", FMA_TWO_SRC },
+        { false, 0x5ded8, "UCMP.D3D.GE.i32", FMA_TWO_SRC },
+        { false, 0x5dee0, "ICMP.D3D.EQ.i32", FMA_TWO_SRC },
+        { false, 0x60000, "RSHIFT_NAND", FMA_SHIFT },
+        { false, 0x61000, "RSHIFT_AND", FMA_SHIFT },
+        { false, 0x62000, "LSHIFT_NAND", FMA_SHIFT },
+        { false, 0x63000, "LSHIFT_AND", FMA_SHIFT }, // (src0 << src2) & src1
+        { false, 0x64000, "RSHIFT_XOR", FMA_SHIFT },
+        { false, 0x65200, "LSHIFT_ADD.i32", FMA_THREE_SRC },
+        { false, 0x65600, "LSHIFT_SUB.i32", FMA_THREE_SRC }, // (src0 << src2) - src1
+        { false, 0x65a00, "LSHIFT_RSUB.i32", FMA_THREE_SRC }, // src1 - (src0 << src2)
+        { false, 0x65e00, "RSHIFT_ADD.i32", FMA_THREE_SRC },
+        { false, 0x66200, "RSHIFT_SUB.i32", FMA_THREE_SRC },
+        { false, 0x66600, "RSHIFT_RSUB.i32", FMA_THREE_SRC },
+        { false, 0x66a00, "ARSHIFT_ADD.i32", FMA_THREE_SRC },
+        { false, 0x66e00, "ARSHIFT_SUB.i32", FMA_THREE_SRC },
+        { false, 0x67200, "ARSHIFT_RSUB.i32", FMA_THREE_SRC },
+        { false, 0x80000, "FMA.v2f16",  FMA_FMA16 },
+        { false, 0xc0000, "MAX.v2f16", FMA_FMINMAX16 },
+        { false, 0xc4000, "MIN.v2f16", FMA_FMINMAX16 },
+        { false, 0xc8000, "FCMP.GL", FMA_FCMP16 },
+        { false, 0xcc000, "FCMP.D3D", FMA_FCMP16 },
+        { false, 0xcf900, "ADD.v2i16", FMA_TWO_SRC },
+        { false, 0xcfc10, "ADDC.i32", FMA_TWO_SRC },
+        { false, 0xcfd80, "ADD.i32.i16.X", FMA_TWO_SRC },
+        { false, 0xcfd90, "ADD.i32.u16.X", FMA_TWO_SRC },
+        { false, 0xcfdc0, "ADD.i32.i16.Y", FMA_TWO_SRC },
+        { false, 0xcfdd0, "ADD.i32.u16.Y", FMA_TWO_SRC },
+        { false, 0xd8000, "ADD.v2f16", FMA_FADD16 },
+        { false, 0xdc000, "CSEL4.v16", FMA_CSEL4 },
+        { false, 0xdd000, "F32_TO_F16", FMA_TWO_SRC },
+
+        /* TODO: Combine to bifrost_fma_f2i_i2f16 */
+        { true,  0x00046, "F16_TO_I16.XX", FMA_ONE_SRC },
+        { true,  0x00047, "F16_TO_U16.XX", FMA_ONE_SRC },
+        { true,  0x0004e, "F16_TO_I16.YX", FMA_ONE_SRC },
+        { true,  0x0004f, "F16_TO_U16.YX", FMA_ONE_SRC },
+        { true,  0x00056, "F16_TO_I16.XY", FMA_ONE_SRC },
+        { true,  0x00057, "F16_TO_U16.XY", FMA_ONE_SRC },
+        { true,  0x0005e, "F16_TO_I16.YY", FMA_ONE_SRC },
+        { true,  0x0005f, "F16_TO_U16.YY", FMA_ONE_SRC },
+        { true,  0x000c0, "I16_TO_F16.XX", FMA_ONE_SRC },
+        { true,  0x000c1, "U16_TO_F16.XX", FMA_ONE_SRC },
+        { true,  0x000c8, "I16_TO_F16.YX", FMA_ONE_SRC },
+        { true,  0x000c9, "U16_TO_F16.YX", FMA_ONE_SRC },
+        { true,  0x000d0, "I16_TO_F16.XY", FMA_ONE_SRC },
+        { true,  0x000d1, "U16_TO_F16.XY", FMA_ONE_SRC },
+        { true,  0x000d8, "I16_TO_F16.YY", FMA_ONE_SRC },
+        { true,  0x000d9, "U16_TO_F16.YY", FMA_ONE_SRC },
+
+        { true,  0x00136, "F32_TO_I32", FMA_ONE_SRC },
+        { true,  0x00137, "F32_TO_U32", FMA_ONE_SRC },
+        { true,  0x00178, "I32_TO_F32", FMA_ONE_SRC },
+        { true,  0x00179, "U32_TO_F32", FMA_ONE_SRC },
+
+        /* TODO: cleanup to use bifrost_fma_int16_to_32 */
+        { true,  0x00198, "I16_TO_I32.X", FMA_ONE_SRC },
+        { true,  0x00199, "U16_TO_U32.X", FMA_ONE_SRC },
+        { true,  0x0019a, "I16_TO_I32.Y", FMA_ONE_SRC },
+        { true,  0x0019b, "U16_TO_U32.Y", FMA_ONE_SRC },
+        { true,  0x0019c, "I16_TO_F32.X", FMA_ONE_SRC },
+        { true,  0x0019d, "U16_TO_F32.X", FMA_ONE_SRC },
+        { true,  0x0019e, "I16_TO_F32.Y", FMA_ONE_SRC },
+        { true,  0x0019f, "U16_TO_F32.Y", FMA_ONE_SRC },
+
+        { true,  0x001a2, "F16_TO_F32.X", FMA_ONE_SRC },
+        { true,  0x001a3, "F16_TO_F32.Y", FMA_ONE_SRC },
+
+        { true,  0x0032c, "NOP",  FMA_ONE_SRC },
+        { true,  0x0032d, "MOV",  FMA_ONE_SRC },
+        { true,  0x0032f, "SWZ.YY.v2i16",  FMA_ONE_SRC },
+        { true,  0x00345, "LOG_FREXPM", FMA_ONE_SRC },
+        { true,  0x00365, "FRCP_FREXPM", FMA_ONE_SRC },
+        { true,  0x00375, "FSQRT_FREXPM", FMA_ONE_SRC },
+        { true,  0x0038d, "FRCP_FREXPE", FMA_ONE_SRC },
+        { true,  0x003a5, "FSQRT_FREXPE", FMA_ONE_SRC },
+        { true,  0x003ad, "FRSQ_FREXPE", FMA_ONE_SRC },
+        { true,  0x003c5, "LOG_FREXPE", FMA_ONE_SRC },
+        { true,  0x003fa, "CLZ", FMA_ONE_SRC },
+        { true,  0x00b80, "IMAX3", FMA_THREE_SRC },
+        { true,  0x00bc0, "UMAX3", FMA_THREE_SRC },
+        { true,  0x00c00, "IMIN3", FMA_THREE_SRC },
+        { true,  0x00c40, "UMIN3", FMA_THREE_SRC },
+        { true,  0x00ec2, "ROUND.v2f16", FMA_ONE_SRC },
+        { true,  0x00ec5, "ROUND.f32", FMA_ONE_SRC },
+        { true,  0x00f40, "CSEL", FMA_THREE_SRC }, // src2 != 0 ? src1 : src0
+        { true,  0x00fc0, "MUX.i32", FMA_THREE_SRC }, // see ADD comment
+        { true,  0x01802, "ROUNDEVEN.v2f16", FMA_ONE_SRC },
+        { true,  0x01805, "ROUNDEVEN.f32", FMA_ONE_SRC },
+        { true,  0x01842, "CEIL.v2f16", FMA_ONE_SRC },
+        { true,  0x01845, "CEIL.f32", FMA_ONE_SRC },
+        { true,  0x01882, "FLOOR.v2f16", FMA_ONE_SRC },
+        { true,  0x01885, "FLOOR.f32", FMA_ONE_SRC },
+        { true,  0x018c2, "TRUNC.v2f16", FMA_ONE_SRC },
+        { true,  0x018c5, "TRUNC.f32", FMA_ONE_SRC },
+        { true,  0x019b0, "ATAN_LDEXP.Y.f32", FMA_TWO_SRC },
+        { true,  0x019b8, "ATAN_LDEXP.X.f32", FMA_TWO_SRC },
+        { true,  0x01c80, "LSHIFT_ADD_LOW32.u32", FMA_SHIFT_ADD64 },
+        { true,  0x01cc0, "LSHIFT_ADD_LOW32.i64", FMA_SHIFT_ADD64 },
+        { true,  0x01d80, "LSHIFT_ADD_LOW32.i32", FMA_SHIFT_ADD64 },
+        { true,  0x01e00, "SEL.XX.i16", FMA_TWO_SRC },
+        { true,  0x01e08, "SEL.YX.i16", FMA_TWO_SRC },
+        { true,  0x01e10, "SEL.XY.i16", FMA_TWO_SRC },
+        { true,  0x01e18, "SEL.YY.i16", FMA_TWO_SRC },
+        { true,  0x01e80, "ADD_FREXPM.f32", FMA_TWO_SRC },
+        { true,  0x02000, "SWZ.XXXX.v4i8", FMA_ONE_SRC },
+        { true,  0x03e00, "SWZ.ZZZZ.v4i8", FMA_ONE_SRC },
+        { true,  0x00800, "IMAD", FMA_THREE_SRC },
+        { true,  0x078db, "POPCNT", FMA_ONE_SRC },
 };
 
-static struct fma_op_info find_fma_op_info(unsigned op)
+static struct fma_op_info find_fma_op_info(unsigned op, bool extended)
 {
         for (unsigned i = 0; i < ARRAY_SIZE(FMAOpInfos); i++) {
                 unsigned opCmp = ~0;
+
+                if (FMAOpInfos[i].extended != extended)
+                        continue;
+
+                if (extended)
+                        op &= ~0xe0000;
+
                 switch (FMAOpInfos[i].src_type) {
                 case FMA_ONE_SRC:
                         opCmp = op;
@@ -817,8 +596,9 @@ static struct fma_op_info find_fma_op_info(unsigned op)
                 case FMA_FMA16:
                         opCmp = op & ~0x3ffff;
                         break;
-                case FMA_FOUR_SRC:
-                        opCmp = op & ~0x1ff;
+                case FMA_CSEL4:
+                case FMA_SHIFT:
+                        opCmp = op & ~0xfff;
                         break;
                 case FMA_FMA_MSCALE:
                         opCmp = op & ~0x7fff;
@@ -833,126 +613,127 @@ static struct fma_op_info find_fma_op_info(unsigned op)
 
         struct fma_op_info info;
         snprintf(info.name, sizeof(info.name), "op%04x", op);
+        info.extended = extended;
         info.op = op;
         info.src_type = FMA_THREE_SRC;
         return info;
 }
 
-static void dump_fcmp(unsigned op)
+static void dump_fcmp(FILE *fp, unsigned op)
 {
         switch (op) {
         case 0:
-                printf(".OEQ");
+                fprintf(fp, ".OEQ");
                 break;
         case 1:
-                printf(".OGT");
+                fprintf(fp, ".OGT");
                 break;
         case 2:
-                printf(".OGE");
+                fprintf(fp, ".OGE");
                 break;
         case 3:
-                printf(".UNE");
+                fprintf(fp, ".UNE");
                 break;
         case 4:
-                printf(".OLT");
+                fprintf(fp, ".OLT");
                 break;
         case 5:
-                printf(".OLE");
+                fprintf(fp, ".OLE");
                 break;
         default:
-                printf(".unk%d", op);
+                fprintf(fp, ".unk%d", op);
                 break;
         }
 }
 
-static void dump_16swizzle(unsigned swiz)
+static void dump_16swizzle(FILE *fp, unsigned swiz)
 {
         if (swiz == 2)
                 return;
-        printf(".%c%c", "xy"[swiz & 1], "xy"[(swiz >> 1) & 1]);
+        fprintf(fp, ".%c%c", "xy"[swiz & 1], "xy"[(swiz >> 1) & 1]);
 }
 
-static void dump_fma_expand_src0(unsigned ctrl)
+static void dump_fma_expand_src0(FILE *fp, unsigned ctrl)
 {
         switch (ctrl) {
         case 3:
         case 4:
         case 6:
-                printf(".x");
+                fprintf(fp, ".x");
                 break;
         case 5:
         case 7:
-                printf(".y");
+                fprintf(fp, ".y");
                 break;
         case 0:
         case 1:
         case 2:
                 break;
         default:
-                printf(".unk");
+                fprintf(fp, ".unk");
                 break;
         }
 }
 
-static void dump_fma_expand_src1(unsigned ctrl)
+static void dump_fma_expand_src1(FILE *fp, unsigned ctrl)
 {
         switch (ctrl) {
         case 1:
         case 3:
-                printf(".x");
+                fprintf(fp, ".x");
                 break;
         case 2:
         case 4:
         case 5:
-                printf(".y");
+                fprintf(fp, ".y");
                 break;
         case 0:
         case 6:
         case 7:
                 break;
         default:
-                printf(".unk");
+                fprintf(fp, ".unk");
                 break;
         }
 }
 
-static void dump_fma(uint64_t word, struct bifrost_regs regs, struct bifrost_regs next_regs, uint64_t *consts, bool verbose)
+static void dump_fma(FILE *fp, uint64_t word, struct bifrost_regs regs, struct bifrost_regs next_regs, uint64_t *consts, bool verbose)
 {
         if (verbose) {
-                printf("# FMA: %016" PRIx64 "\n", word);
+                fprintf(fp, "# FMA: %016" PRIx64 "\n", word);
         }
         struct bifrost_fma_inst FMA;
         memcpy((char *) &FMA, (char *) &word, sizeof(struct bifrost_fma_inst));
-        struct fma_op_info info = find_fma_op_info(FMA.op);
+        struct fma_op_info info = find_fma_op_info(FMA.op, (FMA.op & 0xe0000) == 0xe0000);
 
-        printf("%s", info.name);
+        fprintf(fp, "%s", info.name);
         if (info.src_type == FMA_FADD ||
             info.src_type == FMA_FMINMAX ||
             info.src_type == FMA_FMA ||
             info.src_type == FMA_FADD16 ||
             info.src_type == FMA_FMINMAX16 ||
             info.src_type == FMA_FMA16) {
-                dump_output_mod(bits(FMA.op, 12, 14));
+                fprintf(fp, "%s", bi_output_mod_name(bits(FMA.op, 12, 14)));
                 switch (info.src_type) {
                 case FMA_FADD:
                 case FMA_FMA:
                 case FMA_FADD16:
                 case FMA_FMA16:
-                        dump_round_mode(bits(FMA.op, 10, 12));
+                        fprintf(fp, "%s", bi_round_mode_name(bits(FMA.op, 10, 12)));
                         break;
                 case FMA_FMINMAX:
                 case FMA_FMINMAX16:
-                        dump_minmax_mode(bits(FMA.op, 10, 12));
+                        fprintf(fp, "%s", bi_minmax_mode_name(bits(FMA.op, 10, 12)));
                         break;
                 default:
                         assert(0);
                 }
         } else if (info.src_type == FMA_FCMP || info.src_type == FMA_FCMP16) {
-                dump_fcmp(bits(FMA.op, 10, 13));
+                dump_fcmp(fp, bits(FMA.op, 10, 13));
                 if (info.src_type == FMA_FCMP)
-                        printf(".f32");
+                        fprintf(fp, ".f32");
                 else
-                        printf(".v2f16");
+                        fprintf(fp, ".v2f16");
         } else if (info.src_type == FMA_FMA_MSCALE) {
                 if (FMA.op & (1 << 11)) {
                         switch ((FMA.op >> 9) & 0x3) {
@@ -965,190 +746,227 @@ static void dump_fma(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                                  *   presumably to make sure that the same exact nan is
                                  *   returned for 1/nan.
                                  */
-                                printf(".rcp_mode");
+                                fprintf(fp, ".rcp_mode");
                                 break;
                         case 3:
                                 /* Similar to the above, but src0 always wins when multiplying
                                  * 0 by infinity.
                                  */
-                                printf(".sqrt_mode");
+                                fprintf(fp, ".sqrt_mode");
                                 break;
                         default:
-                                printf(".unk%d_mode", (int) (FMA.op >> 9) & 0x3);
+                                fprintf(fp, ".unk%d_mode", (int) (FMA.op >> 9) & 0x3);
                         }
                 } else {
-                        dump_output_mod(bits(FMA.op, 9, 11));
+                        fprintf(fp, "%s", bi_output_mod_name(bits(FMA.op, 9, 11)));
                 }
+        } else if (info.src_type == FMA_SHIFT) {
+                struct bifrost_shift_fma shift;
+                memcpy(&shift, &FMA, sizeof(shift));
+
+                if (shift.half == 0x7)
+                        fprintf(fp, ".v2i16");
+                else if (shift.half == 0)
+                        fprintf(fp, ".i32");
+                else if (shift.half == 0x4)
+                        fprintf(fp, ".v4i8");
+                else
+                        fprintf(fp, ".unk%u", shift.half);
+
+                if (!shift.unk)
+                        fprintf(fp, ".no_unk");
+
+                if (shift.invert_1)
+                        fprintf(fp, ".invert_1");
+
+                if (shift.invert_2)
+                        fprintf(fp, ".invert_2");
         }
 
-        printf(" ");
+        fprintf(fp, " ");
 
-        struct bifrost_reg_ctrl next_ctrl = DecodeRegCtrl(next_regs);
+        struct bifrost_reg_ctrl next_ctrl = DecodeRegCtrl(fp, next_regs);
         if (next_ctrl.fma_write_unit != REG_WRITE_NONE) {
-                printf("{R%d, T0}, ", GetRegToWrite(next_ctrl.fma_write_unit, next_regs));
+                fprintf(fp, "{R%d, T0}, ", GetRegToWrite(next_ctrl.fma_write_unit, next_regs));
         } else {
-                printf("T0, ");
+                fprintf(fp, "T0, ");
         }
 
         switch (info.src_type) {
         case FMA_ONE_SRC:
-                dump_src(FMA.src0, regs, consts, true);
+                dump_src(fp, FMA.src0, regs, consts, true);
                 break;
         case FMA_TWO_SRC:
-                dump_src(FMA.src0, regs, consts, true);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
+                dump_src(fp, FMA.src0, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
                 break;
         case FMA_FADD:
         case FMA_FMINMAX:
                 if (FMA.op & 0x10)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (FMA.op & 0x200)
-                        printf("abs(");
-                dump_src(FMA.src0, regs, consts, true);
-                dump_fma_expand_src0((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                dump_fma_expand_src0(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & 0x200)
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (FMA.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (FMA.op & 0x8)
-                        printf("abs(");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_fma_expand_src1((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_fma_expand_src1(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & 0x8)
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         case FMA_FADD16:
         case FMA_FMINMAX16: {
                 bool abs1 = FMA.op & 0x8;
                 bool abs2 = (FMA.op & 0x7) < FMA.src0;
                 if (FMA.op & 0x10)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (abs1 || abs2)
-                        printf("abs(");
-                dump_src(FMA.src0, regs, consts, true);
-                dump_16swizzle((FMA.op >> 6) & 0x3);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 6) & 0x3);
                 if (abs1 || abs2)
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (FMA.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (abs1 && abs2)
-                        printf("abs(");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_16swizzle((FMA.op >> 8) & 0x3);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 8) & 0x3);
                 if (abs1 && abs2)
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         }
         case FMA_FCMP:
                 if (FMA.op & 0x200)
-                        printf("abs(");
-                dump_src(FMA.src0, regs, consts, true);
-                dump_fma_expand_src0((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                dump_fma_expand_src0(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & 0x200)
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (FMA.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (FMA.op & 0x8)
-                        printf("abs(");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_fma_expand_src1((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_fma_expand_src1(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & 0x8)
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         case FMA_FCMP16:
-                dump_src(FMA.src0, regs, consts, true);
+                dump_src(fp, FMA.src0, regs, consts, true);
                 // Note: this is kinda a guess, I haven't seen the blob set this to
                 // anything other than the identity, but it matches FMA_TWO_SRCFmod16
-                dump_16swizzle((FMA.op >> 6) & 0x3);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_16swizzle((FMA.op >> 8) & 0x3);
+                dump_16swizzle(fp, (FMA.op >> 6) & 0x3);
+                fprintf(fp, ", ");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 8) & 0x3);
                 break;
         case FMA_SHIFT_ADD64:
-                dump_src(FMA.src0, regs, consts, true);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                printf(", ");
-                printf("shift:%u", (FMA.op >> 3) & 0x7);
+                dump_src(fp, FMA.src0, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                fprintf(fp, ", ");
+                fprintf(fp, "shift:%u", (FMA.op >> 3) & 0x7);
                 break;
         case FMA_THREE_SRC:
-                dump_src(FMA.src0, regs, consts, true);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                printf(", ");
-                dump_src((FMA.op >> 3) & 0x7, regs, consts, true);
+                dump_src(fp, FMA.src0, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, (FMA.op >> 3) & 0x7, regs, consts, true);
                 break;
+        case FMA_SHIFT: {
+                struct bifrost_shift_fma shift;
+                memcpy(&shift, &FMA, sizeof(shift));
+
+                dump_src(fp, shift.src0, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, shift.src1, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, shift.src2, regs, consts, true);
+                break;
+        }
         case FMA_FMA:
                 if (FMA.op & (1 << 14))
-                        printf("-");
+                        fprintf(fp, "-");
                 if (FMA.op & (1 << 9))
-                        printf("abs(");
-                dump_src(FMA.src0, regs, consts, true);
-                dump_fma_expand_src0((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                dump_fma_expand_src0(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & (1 << 9))
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (FMA.op & (1 << 16))
-                        printf("abs(");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_fma_expand_src1((FMA.op >> 6) & 0x7);
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_fma_expand_src1(fp, (FMA.op >> 6) & 0x7);
                 if (FMA.op & (1 << 16))
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (FMA.op & (1 << 15))
-                        printf("-");
+                        fprintf(fp, "-");
                 if (FMA.op & (1 << 17))
-                        printf("abs(");
-                dump_src((FMA.op >> 3) & 0x7, regs, consts, true);
+                        fprintf(fp, "abs(");
+                dump_src(fp, (FMA.op >> 3) & 0x7, regs, consts, true);
                 if (FMA.op & (1 << 17))
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         case FMA_FMA16:
                 if (FMA.op & (1 << 14))
-                        printf("-");
-                dump_src(FMA.src0, regs, consts, true);
-                dump_16swizzle((FMA.op >> 6) & 0x3);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                dump_16swizzle((FMA.op >> 8) & 0x3);
-                printf(", ");
+                        fprintf(fp, "-");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 6) & 0x3);
+                fprintf(fp, ", ");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 8) & 0x3);
+                fprintf(fp, ", ");
                 if (FMA.op & (1 << 15))
-                        printf("-");
-                dump_src((FMA.op >> 3) & 0x7, regs, consts, true);
-                dump_16swizzle((FMA.op >> 16) & 0x3);
+                        fprintf(fp, "-");
+                dump_src(fp, (FMA.op >> 3) & 0x7, regs, consts, true);
+                dump_16swizzle(fp, (FMA.op >> 16) & 0x3);
                 break;
-        case FMA_FOUR_SRC:
-                dump_src(FMA.src0, regs, consts, true);
-                printf(", ");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                printf(", ");
-                dump_src((FMA.op >> 3) & 0x7, regs, consts, true);
-                printf(", ");
-                dump_src((FMA.op >> 6) & 0x7, regs, consts, true);
-                break;
-        case FMA_FMA_MSCALE:
-                if (FMA.op & (1 << 12))
-                        printf("abs(");
-                dump_src(FMA.src0, regs, consts, true);
-                if (FMA.op & (1 << 12))
-                        printf(")");
-                printf(", ");
-                if (FMA.op & (1 << 13))
-                        printf("-");
-                dump_src(FMA.op & 0x7, regs, consts, true);
-                printf(", ");
-                if (FMA.op & (1 << 14))
-                        printf("-");
-                dump_src((FMA.op >> 3) & 0x7, regs, consts, true);
-                printf(", ");
-                dump_src((FMA.op >> 6) & 0x7, regs, consts, true);
+        case FMA_CSEL4: {
+                struct bifrost_csel4 csel;
+                memcpy(&csel, &FMA, sizeof(csel));
+                fprintf(fp, ".%s ", bi_csel_cond_name(csel.cond));
+
+                dump_src(fp, csel.src0, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, csel.src1, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, csel.src2, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, csel.src3, regs, consts, true);
                 break;
         }
-        printf("\n");
+        case FMA_FMA_MSCALE:
+                if (FMA.op & (1 << 12))
+                        fprintf(fp, "abs(");
+                dump_src(fp, FMA.src0, regs, consts, true);
+                if (FMA.op & (1 << 12))
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
+                if (FMA.op & (1 << 13))
+                        fprintf(fp, "-");
+                dump_src(fp, FMA.op & 0x7, regs, consts, true);
+                fprintf(fp, ", ");
+                if (FMA.op & (1 << 14))
+                        fprintf(fp, "-");
+                dump_src(fp, (FMA.op >> 3) & 0x7, regs, consts, true);
+                fprintf(fp, ", ");
+                dump_src(fp, (FMA.op >> 6) & 0x7, regs, consts, true);
+                break;
+        }
+        fprintf(fp, "\n");
 }
 
 static const struct add_op_info add_op_infos[] = {
@@ -1167,8 +985,10 @@ static const struct add_op_info add_op_infos[] = {
         { 0x078d1, "U16_TO_F16.XY", ADD_ONE_SRC },
         { 0x078d8, "I16_TO_F16.YY", ADD_ONE_SRC },
         { 0x078d9, "U16_TO_F16.YY", ADD_ONE_SRC },
+        { 0x07909, "B1_TO_F16", ADD_ONE_SRC },
         { 0x07936, "F32_TO_I32", ADD_ONE_SRC },
         { 0x07937, "F32_TO_U32", ADD_ONE_SRC },
+        { 0x07971, "B1_TO_F32", ADD_ONE_SRC },
         { 0x07978, "I32_TO_F32", ADD_ONE_SRC },
         { 0x07979, "U32_TO_F32", ADD_ONE_SRC },
         { 0x07998, "I16_TO_I32.X", ADD_ONE_SRC },
@@ -1179,51 +999,27 @@ static const struct add_op_info add_op_infos[] = {
         { 0x0799d, "U16_TO_F32.X", ADD_ONE_SRC },
         { 0x0799e, "I16_TO_F32.Y", ADD_ONE_SRC },
         { 0x0799f, "U16_TO_F32.Y", ADD_ONE_SRC },
-        // take the low 16 bits, and expand it to a 32-bit float
         { 0x079a2, "F16_TO_F32.X", ADD_ONE_SRC },
-        // take the high 16 bits, ...
         { 0x079a3, "F16_TO_F32.Y", ADD_ONE_SRC },
         { 0x07b2b, "SWZ.YX.v2i16",  ADD_ONE_SRC },
         { 0x07b2c, "NOP",  ADD_ONE_SRC },
         { 0x07b29, "SWZ.XX.v2i16",  ADD_ONE_SRC },
-        // Logically, this should be SWZ.XY, but that's equivalent to a move, and
-        // this seems to be the canonical way the blob generates a MOV.
         { 0x07b2d, "MOV",  ADD_ONE_SRC },
         { 0x07b2f, "SWZ.YY.v2i16",  ADD_ONE_SRC },
-        // Given a floating point number m * 2^e, returns m ^ 2^{-1}.
         { 0x07b65, "FRCP_FREXPM", ADD_ONE_SRC },
         { 0x07b75, "FSQRT_FREXPM", ADD_ONE_SRC },
         { 0x07b8d, "FRCP_FREXPE", ADD_ONE_SRC },
         { 0x07ba5, "FSQRT_FREXPE", ADD_ONE_SRC },
         { 0x07bad, "FRSQ_FREXPE", ADD_ONE_SRC },
-        // From the ARM patent US20160364209A1:
-        // "Decompose v (the input) into numbers x1 and s such that v = x1 * 2^s,
-        // and x1 is a floating point value in a predetermined range where the
-        // value 1 is within the range and not at one extremity of the range (e.g.
-        // choose a range where 1 is towards middle of range)."
-        //
-        // This computes s.
         { 0x07bc5, "FLOG_FREXPE", ADD_ONE_SRC },
-        { 0x07d45, "CEIL", ADD_ONE_SRC },
-        { 0x07d85, "FLOOR", ADD_ONE_SRC },
-        { 0x07dc5, "TRUNC", ADD_ONE_SRC },
+        { 0x07d42, "CEIL.v2f16", ADD_ONE_SRC },
+        { 0x07d45, "CEIL.f32", ADD_ONE_SRC },
+        { 0x07d82, "FLOOR.v2f16", ADD_ONE_SRC },
+        { 0x07d85, "FLOOR.f32", ADD_ONE_SRC },
+        { 0x07dc2, "TRUNC.v2f16", ADD_ONE_SRC },
+        { 0x07dc5, "TRUNC.f32", ADD_ONE_SRC },
         { 0x07f18, "LSHIFT_ADD_HIGH32.i32", ADD_TWO_SRC },
-        { 0x08000, "LD_ATTR.f16", ADD_LOAD_ATTR, true },
-        { 0x08100, "LD_ATTR.v2f16", ADD_LOAD_ATTR, true },
-        { 0x08200, "LD_ATTR.v3f16", ADD_LOAD_ATTR, true },
-        { 0x08300, "LD_ATTR.v4f16", ADD_LOAD_ATTR, true },
-        { 0x08400, "LD_ATTR.f32", ADD_LOAD_ATTR, true },
-        { 0x08500, "LD_ATTR.v3f32", ADD_LOAD_ATTR, true },
-        { 0x08600, "LD_ATTR.v3f32", ADD_LOAD_ATTR, true },
-        { 0x08700, "LD_ATTR.v4f32", ADD_LOAD_ATTR, true },
-        { 0x08800, "LD_ATTR.i32", ADD_LOAD_ATTR, true },
-        { 0x08900, "LD_ATTR.v3i32", ADD_LOAD_ATTR, true },
-        { 0x08a00, "LD_ATTR.v3i32", ADD_LOAD_ATTR, true },
-        { 0x08b00, "LD_ATTR.v4i32", ADD_LOAD_ATTR, true },
-        { 0x08c00, "LD_ATTR.u32", ADD_LOAD_ATTR, true },
-        { 0x08d00, "LD_ATTR.v3u32", ADD_LOAD_ATTR, true },
-        { 0x08e00, "LD_ATTR.v3u32", ADD_LOAD_ATTR, true },
-        { 0x08f00, "LD_ATTR.v4u32", ADD_LOAD_ATTR, true },
+        { 0x08000, "LD_ATTR", ADD_LOAD_ATTR, true },
         { 0x0a000, "LD_VAR.32", ADD_VARYING_INTERP, true },
         { 0x0b000, "TEX", ADD_TEX_COMPACT, true },
         { 0x0c188, "LOAD.i32", ADD_TWO_SRC, true },
@@ -1233,7 +1029,6 @@ static const struct add_op_info add_op_infos[] = {
         { 0x0c1e0, "LD_UBO.v2i32", ADD_TWO_SRC, true },
         { 0x0c1f8, "LD_SCRATCH.v2i32", ADD_TWO_SRC, true },
         { 0x0c208, "LOAD.v4i32", ADD_TWO_SRC, true },
-        // src0 = offset, src1 = binding
         { 0x0c220, "LD_UBO.v4i32", ADD_TWO_SRC, true },
         { 0x0c238, "LD_SCRATCH.v4i32", ADD_TWO_SRC, true },
         { 0x0c248, "STORE.v4i32", ADD_TWO_SRC, true },
@@ -1248,25 +1043,15 @@ static const struct add_op_info add_op_infos[] = {
         { 0x0cab8, "LD_SCRATCH.v3i32", ADD_TWO_SRC, true },
         { 0x0cb88, "STORE.v3i32", ADD_TWO_SRC, true },
         { 0x0cbb8, "ST_SCRATCH.v3i32", ADD_TWO_SRC, true },
-        // *_FAST does not exist on G71 (added to G51, G72, and everything after)
         { 0x0cc00, "FRCP_FAST.f32", ADD_ONE_SRC },
         { 0x0cc20, "FRSQ_FAST.f32", ADD_ONE_SRC },
-        // Given a floating point number m * 2^e, produces a table-based
-        // approximation of 2/m using the top 17 bits. Includes special cases for
-        // infinity, NaN, and zero, and copies the sign bit.
+        { 0x0cc68, "FLOG2_U.f32", ADD_ONE_SRC },
+        { 0x0cd58, "FEXP2_FAST.f32", ADD_ONE_SRC },
         { 0x0ce00, "FRCP_TABLE", ADD_ONE_SRC },
-        // Exists on G71
         { 0x0ce10, "FRCP_FAST.f16.X", ADD_ONE_SRC },
-        // A similar table for inverse square root, using the high 17 bits of the
-        // mantissa as well as the low bit of the exponent.
         { 0x0ce20, "FRSQ_TABLE", ADD_ONE_SRC },
         { 0x0ce30, "FRCP_FAST.f16.Y", ADD_ONE_SRC },
         { 0x0ce50, "FRSQ_FAST.f16.X", ADD_ONE_SRC },
-        // Used in the argument reduction for log. Given a floating-point number
-        // m * 2^e, uses the top 4 bits of m to produce an approximation to 1/m
-        // with the exponent forced to 0 and only the top 5 bits are nonzero. 0,
-        // infinity, and NaN all return 1.0.
-        // See the ARM patent for more information.
         { 0x0ce60, "FRCP_APPROX", ADD_ONE_SRC },
         { 0x0ce70, "FRSQ_FAST.f16.Y", ADD_ONE_SRC },
         { 0x0cf40, "ATAN_ASSIST", ADD_TWO_SRC },
@@ -1277,8 +1062,6 @@ static const struct add_op_info add_op_infos[] = {
         { 0x0cf60, "FLOG2_TABLE", ADD_ONE_SRC },
         { 0x0cf64, "FLOGE_TABLE", ADD_ONE_SRC },
         { 0x0d000, "BRANCH", ADD_BRANCH },
-        // For each bit i, return src2[i] ? src0[i] : src1[i]. In other words, this
-        // is the same as (src2 & src0) | (~src2 & src1).
         { 0x0e8c0, "MUX", ADD_THREE_SRC },
         { 0x0e9b0, "ATAN_LDEXP.Y.f32", ADD_TWO_SRC },
         { 0x0e9b8, "ATAN_LDEXP.X.f32", ADD_TWO_SRC },
@@ -1287,21 +1070,36 @@ static const struct add_op_info add_op_infos[] = {
         { 0x0ea68, "SEL.YX.i16", ADD_TWO_SRC },
         { 0x0ea78, "SEL.YY.i16", ADD_TWO_SRC },
         { 0x0ec00, "F32_TO_F16", ADD_TWO_SRC },
+        { 0x0e840, "CSEL.64",    ADD_THREE_SRC }, // u2u32(src2) ? src0 : src1
+        { 0x0e940, "CSEL.8",    ADD_THREE_SRC }, // (src2 != 0) ? src0 : src1
         { 0x0f640, "ICMP.GL.GT", ADD_TWO_SRC }, // src0 > src1 ? 1 : 0
         { 0x0f648, "ICMP.GL.GE", ADD_TWO_SRC },
         { 0x0f650, "UCMP.GL.GT", ADD_TWO_SRC },
         { 0x0f658, "UCMP.GL.GE", ADD_TWO_SRC },
         { 0x0f660, "ICMP.GL.EQ", ADD_TWO_SRC },
+        { 0x0f669, "ICMP.GL.NEQ", ADD_TWO_SRC },
+        { 0x0f690, "UCMP.8.GT", ADD_TWO_SRC },
+        { 0x0f698, "UCMP.8.GE", ADD_TWO_SRC },
+        { 0x0f6a8, "ICMP.8.NE", ADD_TWO_SRC },
         { 0x0f6c0, "ICMP.D3D.GT", ADD_TWO_SRC }, // src0 > src1 ? ~0 : 0
         { 0x0f6c8, "ICMP.D3D.GE", ADD_TWO_SRC },
         { 0x0f6d0, "UCMP.D3D.GT", ADD_TWO_SRC },
         { 0x0f6d8, "UCMP.D3D.GE", ADD_TWO_SRC },
         { 0x0f6e0, "ICMP.D3D.EQ", ADD_TWO_SRC },
+        { 0x0f700, "ICMP.64.GT.PT1", ADD_TWO_SRC },
+        { 0x0f708, "ICMP.64.GE.PT1", ADD_TWO_SRC },
+        { 0x0f710, "UCMP.64.GT.PT1", ADD_TWO_SRC },
+        { 0x0f718, "UCMP.64.GE.PT1", ADD_TWO_SRC },
+        { 0x0f720, "ICMP.64.EQ.PT1", ADD_TWO_SRC },
+        { 0x0f728, "ICMP.64.NE.PT1", ADD_TWO_SRC },
+        { 0x0f7c0, "ICMP.64.PT2", ADD_THREE_SRC }, // src3 = result of PT1
         { 0x10000, "MAX.v2f16", ADD_FMINMAX16 },
         { 0x11000, "ADD_MSCALE.f32", ADD_FADDMscale },
         { 0x12000, "MIN.v2f16", ADD_FMINMAX16 },
         { 0x14000, "ADD.v2f16", ADD_FADD16 },
+        { 0x16000, "FCMP.GL", ADD_FCMP16 },
         { 0x17000, "FCMP.D3D", ADD_FCMP16 },
+        { 0x17880, "ADD.v4i8", ADD_TWO_SRC },
         { 0x178c0, "ADD.i32",  ADD_TWO_SRC },
         { 0x17900, "ADD.v2i16", ADD_TWO_SRC },
         { 0x17ac0, "SUB.i32",  ADD_TWO_SRC },
@@ -1310,55 +1108,30 @@ static const struct add_op_info add_op_infos[] = {
         { 0x17d90, "ADD.i32.u16.X", ADD_TWO_SRC },
         { 0x17dc0, "ADD.i32.i16.Y", ADD_TWO_SRC },
         { 0x17dd0, "ADD.i32.u16.Y", ADD_TWO_SRC },
-        // Compute varying address and datatype (for storing in the vertex shader),
-        // and store the vec3 result in the data register. The result is passed as
-        // the 3 normal arguments to ST_VAR.
-        { 0x18000, "LD_VAR_ADDR.f16", ADD_VARYING_ADDRESS, true },
-        { 0x18100, "LD_VAR_ADDR.f32", ADD_VARYING_ADDRESS, true },
-        { 0x18200, "LD_VAR_ADDR.i32", ADD_VARYING_ADDRESS, true },
-        { 0x18300, "LD_VAR_ADDR.u32", ADD_VARYING_ADDRESS, true },
-        // Implements alpha-to-coverage, as well as possibly the late depth and
-        // stencil tests. The first source is the existing sample mask in R60
-        // (possibly modified by gl_SampleMask), and the second source is the alpha
-        // value.  The sample mask is written right away based on the
-        // alpha-to-coverage result using the normal register write mechanism,
-        // since that doesn't need to read from any memory, and then written again
-        // later based on the result of the stencil and depth tests using the
-        // special register.
+        { 0x18000, "LD_VAR_ADDR", ADD_VARYING_ADDRESS, true },
+        { 0x19181, "DISCARD.FEQ.f32", ADD_TWO_SRC, true },
+        { 0x19189, "DISCARD.FNE.f32", ADD_TWO_SRC, true },
+        { 0x1918C, "DISCARD.GL.f32", ADD_TWO_SRC, true }, /* Consumes ICMP.GL/etc with fixed 0 argument */
+        { 0x19190, "DISCARD.FLE.f32", ADD_TWO_SRC, true },
+        { 0x19198, "DISCARD.FLT.f32", ADD_TWO_SRC, true },
         { 0x191e8, "ATEST.f32", ADD_TWO_SRC, true },
         { 0x191f0, "ATEST.X.f16", ADD_TWO_SRC, true },
         { 0x191f8, "ATEST.Y.f16", ADD_TWO_SRC, true },
-        // store a varying given the address and datatype from LD_VAR_ADDR
         { 0x19300, "ST_VAR.v1", ADD_THREE_SRC, true },
         { 0x19340, "ST_VAR.v2", ADD_THREE_SRC, true },
         { 0x19380, "ST_VAR.v3", ADD_THREE_SRC, true },
         { 0x193c0, "ST_VAR.v4", ADD_THREE_SRC, true },
-        // This takes the sample coverage mask (computed by ATEST above) as a
-        // regular argument, in addition to the vec4 color in the special register.
         { 0x1952c, "BLEND", ADD_BLENDING, true },
         { 0x1a000, "LD_VAR.16", ADD_VARYING_INTERP, true },
         { 0x1ae60, "TEX", ADD_TEX, true },
-        { 0x1c000, "RSHIFT_NAND.i32", ADD_THREE_SRC },
-        { 0x1c300, "RSHIFT_OR.i32", ADD_THREE_SRC },
-        { 0x1c400, "RSHIFT_AND.i32", ADD_THREE_SRC },
-        { 0x1c700, "RSHIFT_NOR.i32", ADD_THREE_SRC },
-        { 0x1c800, "LSHIFT_NAND.i32", ADD_THREE_SRC },
-        { 0x1cb00, "LSHIFT_OR.i32", ADD_THREE_SRC },
-        { 0x1cc00, "LSHIFT_AND.i32", ADD_THREE_SRC },
-        { 0x1cf00, "LSHIFT_NOR.i32", ADD_THREE_SRC },
-        { 0x1d000, "RSHIFT_XOR.i32", ADD_THREE_SRC },
-        { 0x1d100, "RSHIFT_XNOR.i32", ADD_THREE_SRC },
-        { 0x1d200, "LSHIFT_XOR.i32", ADD_THREE_SRC },
-        { 0x1d300, "LSHIFT_XNOR.i32", ADD_THREE_SRC },
-        { 0x1d400, "LSHIFT_ADD.i32", ADD_THREE_SRC },
-        { 0x1d500, "LSHIFT_SUB.i32", ADD_THREE_SRC },
-        { 0x1d500, "LSHIFT_RSUB.i32", ADD_THREE_SRC },
-        { 0x1d700, "RSHIFT_ADD.i32", ADD_THREE_SRC },
-        { 0x1d800, "RSHIFT_SUB.i32", ADD_THREE_SRC },
-        { 0x1d900, "RSHIFT_RSUB.i32", ADD_THREE_SRC },
-        { 0x1da00, "ARSHIFT_ADD.i32", ADD_THREE_SRC },
-        { 0x1db00, "ARSHIFT_SUB.i32", ADD_THREE_SRC },
-        { 0x1dc00, "ARSHIFT_RSUB.i32", ADD_THREE_SRC },
+        { 0x1b000, "TEX.f16", ADD_TEX_COMPACT, true },
+        { 0x1c000, "RSHIFT_NAND.i32", ADD_SHIFT },
+        { 0x1c400, "RSHIFT_AND.i32", ADD_SHIFT },
+        { 0x1c800, "LSHIFT_NAND.i32", ADD_SHIFT },
+        { 0x1cc00, "LSHIFT_AND.i32", ADD_SHIFT },
+        { 0x1d000, "RSHIFT_XOR.i32", ADD_SHIFT },
+        { 0x1d400, "LSHIFT_ADD.i32", ADD_SHIFT },
+        { 0x1d800, "RSHIFT_SUB.i32", ADD_SHIFT },
         { 0x1dd18, "OR.i32",  ADD_TWO_SRC },
         { 0x1dd20, "AND.i32",  ADD_TWO_SRC },
         { 0x1dd60, "LSHIFT.i32", ADD_TWO_SRC },
@@ -1381,6 +1154,9 @@ static struct add_op_info find_add_op_info(unsigned op)
                         break;
                 case ADD_THREE_SRC:
                         opCmp = op & ~0x3f;
+                        break;
+                case ADD_SHIFT:
+                        opCmp = op & ~0x3ff;
                         break;
                 case ADD_TEX:
                         opCmp = op & ~0xf;
@@ -1405,11 +1181,9 @@ static struct add_op_info find_add_op_info(unsigned op)
                         opCmp = op & ~0x7ff;
                         break;
                 case ADD_VARYING_ADDRESS:
-                        opCmp = op & ~0xff;
+                        opCmp = op & ~0xfff;
                         break;
                 case ADD_LOAD_ATTR:
-                        opCmp = op & ~0x7f;
-                        break;
                 case ADD_BRANCH:
                         opCmp = op & ~0xfff;
                         break;
@@ -1429,83 +1203,72 @@ static struct add_op_info find_add_op_info(unsigned op)
         return info;
 }
 
-static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_regs next_regs, uint64_t *consts,
+static void dump_add(FILE *fp, uint64_t word, struct bifrost_regs regs,
+                     struct bifrost_regs next_regs, uint64_t *consts,
                      unsigned data_reg, unsigned offset, bool verbose)
 {
         if (verbose) {
-                printf("# ADD: %016" PRIx64 "\n", word);
+                fprintf(fp, "# ADD: %016" PRIx64 "\n", word);
         }
         struct bifrost_add_inst ADD;
         memcpy((char *) &ADD, (char *) &word, sizeof(ADD));
         struct add_op_info info = find_add_op_info(ADD.op);
 
-        printf("%s", info.name);
+        fprintf(fp, "%s", info.name);
 
         // float16 seems like it doesn't support output modifiers
         if (info.src_type == ADD_FADD || info.src_type == ADD_FMINMAX) {
                 // output modifiers
-                dump_output_mod(bits(ADD.op, 8, 10));
+                fprintf(fp, "%s", bi_output_mod_name(bits(ADD.op, 8, 10)));
                 if (info.src_type == ADD_FADD)
-                        dump_round_mode(bits(ADD.op, 10, 12));
+                        fprintf(fp, "%s", bi_round_mode_name(bits(ADD.op, 10, 12)));
                 else
-                        dump_minmax_mode(bits(ADD.op, 10, 12));
+                        fprintf(fp, "%s", bi_minmax_mode_name(bits(ADD.op, 10, 12)));
         } else if (info.src_type == ADD_FCMP || info.src_type == ADD_FCMP16) {
-                dump_fcmp(bits(ADD.op, 3, 6));
+                dump_fcmp(fp, bits(ADD.op, 3, 6));
                 if (info.src_type == ADD_FCMP)
-                        printf(".f32");
+                        fprintf(fp, ".f32");
                 else
-                        printf(".v2f16");
+                        fprintf(fp, ".v2f16");
         } else if (info.src_type == ADD_FADDMscale) {
                 switch ((ADD.op >> 6) & 0x7) {
                 case 0:
                         break;
                 // causes GPU hangs on G71
                 case 1:
-                        printf(".invalid");
+                        fprintf(fp, ".invalid");
                         break;
                 // Same as usual outmod value.
                 case 2:
-                        printf(".clamp_0_1");
+                        fprintf(fp, ".clamp_0_1");
                         break;
                 // If src0 is infinite or NaN, flush it to zero so that the other
                 // source is passed through unmodified.
                 case 3:
-                        printf(".flush_src0_inf_nan");
+                        fprintf(fp, ".flush_src0_inf_nan");
                         break;
                 // Vice versa.
                 case 4:
-                        printf(".flush_src1_inf_nan");
+                        fprintf(fp, ".flush_src1_inf_nan");
                         break;
                 // Every other case seems to behave the same as the above?
                 default:
-                        printf(".unk%d", (ADD.op >> 6) & 0x7);
+                        fprintf(fp, ".unk%d", (ADD.op >> 6) & 0x7);
                         break;
                 }
         } else if (info.src_type == ADD_VARYING_INTERP) {
                 if (ADD.op & 0x200)
-                        printf(".reuse");
+                        fprintf(fp, ".reuse");
                 if (ADD.op & 0x400)
-                        printf(".flat");
-                switch ((ADD.op >> 7) & 0x3) {
-                case 0:
-                        printf(".per_frag");
-                        break;
-                case 1:
-                        printf(".centroid");
-                        break;
-                case 2:
-                        break;
-                case 3:
-                        printf(".explicit");
-                        break;
-                }
-                printf(".v%d", ((ADD.op >> 5) & 0x3) + 1);
+                        fprintf(fp, ".flat");
+                fprintf(fp, "%s", bi_interp_mode_name((ADD.op >> 7) & 0x3));
+                fprintf(fp, ".v%d", ((ADD.op >> 5) & 0x3) + 1);
         } else if (info.src_type == ADD_BRANCH) {
-                enum branch_code branchCode = (enum branch_code) ((ADD.op >> 6) & 0x3f);
+                enum bifrost_branch_code branchCode = (enum bifrost_branch_code) ((ADD.op >> 6) & 0x3f);
                 if (branchCode == BR_ALWAYS) {
                         // unconditional branch
                 } else {
-                        enum branch_cond cond = (enum branch_cond) ((ADD.op >> 6) & 0x7);
+                        enum bifrost_branch_cond cond = (enum bifrost_branch_cond) ((ADD.op >> 6) & 0x7);
                         enum branch_bit_size size = (enum branch_bit_size) ((ADD.op >> 9) & 0x7);
                         bool portSwapped = (ADD.op & 0x7) < ADD.src0;
                         // See the comment in branch_bit_size
@@ -1526,87 +1289,112 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                         switch (cond) {
                         case BR_COND_LT:
                                 if (portSwapped)
-                                        printf(".LT.u");
+                                        fprintf(fp, ".LT.u");
                                 else
-                                        printf(".LT.i");
+                                        fprintf(fp, ".LT.i");
                                 break;
                         case BR_COND_LE:
                                 if (size == BR_SIZE_32_AND_16X || size == BR_SIZE_32_AND_16Y) {
-                                        printf(".UNE.f");
+                                        fprintf(fp, ".UNE.f");
                                 } else {
                                         if (portSwapped)
-                                                printf(".LE.u");
+                                                fprintf(fp, ".LE.u");
                                         else
-                                                printf(".LE.i");
+                                                fprintf(fp, ".LE.i");
                                 }
                                 break;
                         case BR_COND_GT:
                                 if (portSwapped)
-                                        printf(".GT.u");
+                                        fprintf(fp, ".GT.u");
                                 else
-                                        printf(".GT.i");
+                                        fprintf(fp, ".GT.i");
                                 break;
                         case BR_COND_GE:
                                 if (portSwapped)
-                                        printf(".GE.u");
+                                        fprintf(fp, ".GE.u");
                                 else
-                                        printf(".GE.i");
+                                        fprintf(fp, ".GE.i");
                                 break;
                         case BR_COND_EQ:
                                 if (portSwapped)
-                                        printf(".NE.i");
+                                        fprintf(fp, ".NE.i");
                                 else
-                                        printf(".EQ.i");
+                                        fprintf(fp, ".EQ.i");
                                 break;
                         case BR_COND_OEQ:
                                 if (portSwapped)
-                                        printf(".UNE.f");
+                                        fprintf(fp, ".UNE.f");
                                 else
-                                        printf(".OEQ.f");
+                                        fprintf(fp, ".OEQ.f");
                                 break;
                         case BR_COND_OGT:
                                 if (portSwapped)
-                                        printf(".OGT.unk.f");
+                                        fprintf(fp, ".OGT.unk.f");
                                 else
-                                        printf(".OGT.f");
+                                        fprintf(fp, ".OGT.f");
                                 break;
                         case BR_COND_OLT:
                                 if (portSwapped)
-                                        printf(".OLT.unk.f");
+                                        fprintf(fp, ".OLT.unk.f");
                                 else
-                                        printf(".OLT.f");
+                                        fprintf(fp, ".OLT.f");
                                 break;
                         }
                         switch (size) {
                         case BR_SIZE_32:
                         case BR_SIZE_32_AND_16X:
                         case BR_SIZE_32_AND_16Y:
-                                printf("32");
+                                fprintf(fp, "32");
                                 break;
                         case BR_SIZE_16XX:
                         case BR_SIZE_16YY:
                         case BR_SIZE_16YX0:
                         case BR_SIZE_16YX1:
-                                printf("16");
+                                fprintf(fp, "16");
                                 break;
                         case BR_SIZE_ZERO: {
                                 unsigned ctrl = (ADD.op >> 1) & 0x3;
                                 if (ctrl == 0)
-                                        printf("32.Z");
+                                        fprintf(fp, "32.Z");
                                 else
-                                        printf("16.Z");
+                                        fprintf(fp, "16.Z");
                                 break;
                         }
                         }
                 }
-        }
-        printf(" ");
+        } else if (info.src_type == ADD_SHIFT) {
+                struct bifrost_shift_add shift;
+                memcpy(&shift, &ADD, sizeof(ADD));
 
-        struct bifrost_reg_ctrl next_ctrl = DecodeRegCtrl(next_regs);
+                if (shift.invert_1)
+                        fprintf(fp, ".invert_1");
+
+                if (shift.invert_2)
+                        fprintf(fp, ".invert_2");
+
+                if (shift.zero)
+                        fprintf(fp, ".unk%u", shift.zero);
+        } else if (info.src_type == ADD_VARYING_ADDRESS) {
+                struct bifrost_ld_var_addr ld;
+                memcpy(&ld, &ADD, sizeof(ADD));
+                fprintf(fp, ".%s", bi_ldst_type_name(ld.type));
+        } else if (info.src_type == ADD_LOAD_ATTR) {
+                struct bifrost_ld_attr ld;
+                memcpy(&ld, &ADD, sizeof(ADD));
+
+                if (ld.channels)
+                        fprintf(fp, ".v%d%s", ld.channels + 1, bi_ldst_type_name(ld.type));
+                else
+                        fprintf(fp, ".%s", bi_ldst_type_name(ld.type));
+        }
+
+        fprintf(fp, " ");
+
+        struct bifrost_reg_ctrl next_ctrl = DecodeRegCtrl(fp, next_regs);
         if (next_ctrl.add_write_unit != REG_WRITE_NONE) {
-                printf("{R%d, T1}, ", GetRegToWrite(next_ctrl.add_write_unit, next_regs));
+                fprintf(fp, "{R%d, T1}, ", GetRegToWrite(next_ctrl.add_write_unit, next_regs));
         } else {
-                printf("T1, ");
+                fprintf(fp, "T1, ");
         }
 
         switch (info.src_type) {
@@ -1616,38 +1404,52 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                 // same instruction. This re-uses the encoding that normally means
                 // "disabled", where the low 4 bits are ignored. Perhaps the extra
                 // 0x8 or'd in indicates this is happening.
-                printf("location:%d, ", regs.uniform_const & 0x7);
+                fprintf(fp, "location:%d, ", regs.uniform_const & 0x7);
         // fallthrough
         case ADD_ONE_SRC:
-                dump_src(ADD.src0, regs, consts, false);
+                dump_src(fp, ADD.src0, regs, consts, false);
                 break;
         case ADD_TEX:
         case ADD_TEX_COMPACT: {
                 int tex_index;
                 int sampler_index;
                 bool dualTex = false;
+
+                fprintf(fp, "coords <");
+                dump_src(fp, ADD.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                fprintf(fp, ">, ");
+
                 if (info.src_type == ADD_TEX_COMPACT) {
                         tex_index = (ADD.op >> 3) & 0x7;
                         sampler_index = (ADD.op >> 7) & 0x7;
                         bool unknown = (ADD.op & 0x40);
                         // TODO: figure out if the unknown bit is ever 0
                         if (!unknown)
-                                printf("unknown ");
+                                fprintf(fp, "unknown ");
                 } else {
                         uint64_t constVal = get_const(consts, regs);
                         uint32_t controlBits = (ADD.op & 0x8) ? (constVal >> 32) : constVal;
                         struct bifrost_tex_ctrl ctrl;
                         memcpy((char *) &ctrl, (char *) &controlBits, sizeof(ctrl));
 
-                        // TODO: figure out what actually triggers dual-tex
-                        if (ctrl.result_type == 9) {
+                        /* Dual-tex triggered for adjacent texturing
+                         * instructions with the same coordinates to different
+                         * textures/samplers. Observed for the compact
+                         * (2D/normal) case. */
+
+                        if ((ctrl.result_type & 7) == 1) {
+                                bool f32 = ctrl.result_type & 8;
+
                                 struct bifrost_dual_tex_ctrl dualCtrl;
                                 memcpy((char *) &dualCtrl, (char *) &controlBits, sizeof(ctrl));
-                                printf("(dualtex) tex0:%d samp0:%d tex1:%d samp1:%d ",
+                                fprintf(fp, "(dualtex) tex0:%d samp0:%d tex1:%d samp1:%d %s",
                                        dualCtrl.tex_index0, dualCtrl.sampler_index0,
-                                       dualCtrl.tex_index1, dualCtrl.sampler_index1);
+                                       dualCtrl.tex_index1, dualCtrl.sampler_index1,
+                                       f32 ? "f32" : "f16");
                                 if (dualCtrl.unk0 != 3)
-                                        printf("unk:%d ", dualCtrl.unk0);
+                                        fprintf(fp, "unk:%d ", dualCtrl.unk0);
                                 dualTex = true;
                         } else {
                                 if (ctrl.no_merge_index) {
@@ -1657,7 +1459,7 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                                         tex_index = sampler_index = ctrl.tex_index;
                                         unsigned unk = ctrl.sampler_index >> 2;
                                         if (unk != 3)
-                                                printf("unk:%d ", unk);
+                                                fprintf(fp, "unk:%d ", unk);
                                         if (ctrl.sampler_index & 1)
                                                 tex_index = -1;
                                         if (ctrl.sampler_index & 2)
@@ -1665,80 +1467,80 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                                 }
 
                                 if (ctrl.unk0 != 3)
-                                        printf("unk0:%d ", ctrl.unk0);
+                                        fprintf(fp, "unk0:%d ", ctrl.unk0);
                                 if (ctrl.unk1)
-                                        printf("unk1 ");
+                                        fprintf(fp, "unk1 ");
                                 if (ctrl.unk2 != 0xf)
-                                        printf("unk2:%x ", ctrl.unk2);
+                                        fprintf(fp, "unk2:%x ", ctrl.unk2);
 
                                 switch (ctrl.result_type) {
                                 case 0x4:
-                                        printf("f32 ");
+                                        fprintf(fp, "f32 ");
                                         break;
                                 case 0xe:
-                                        printf("i32 ");
+                                        fprintf(fp, "i32 ");
                                         break;
                                 case 0xf:
-                                        printf("u32 ");
+                                        fprintf(fp, "u32 ");
                                         break;
                                 default:
-                                        printf("unktype(%x) ", ctrl.result_type);
+                                        fprintf(fp, "unktype(%x) ", ctrl.result_type);
                                 }
 
                                 switch (ctrl.tex_type) {
                                 case 0:
-                                        printf("cube ");
+                                        fprintf(fp, "cube ");
                                         break;
                                 case 1:
-                                        printf("buffer ");
+                                        fprintf(fp, "buffer ");
                                         break;
                                 case 2:
-                                        printf("2D ");
+                                        fprintf(fp, "2D ");
                                         break;
                                 case 3:
-                                        printf("3D ");
+                                        fprintf(fp, "3D ");
                                         break;
                                 }
 
                                 if (ctrl.is_shadow)
-                                        printf("shadow ");
+                                        fprintf(fp, "shadow ");
                                 if (ctrl.is_array)
-                                        printf("array ");
+                                        fprintf(fp, "array ");
 
                                 if (!ctrl.filter) {
                                         if (ctrl.calc_gradients) {
                                                 int comp = (controlBits >> 20) & 0x3;
-                                                printf("txg comp:%d ", comp);
+                                                fprintf(fp, "txg comp:%d ", comp);
                                         } else {
-                                                printf("txf ");
+                                                fprintf(fp, "txf ");
                                         }
                                 } else {
                                         if (!ctrl.not_supply_lod) {
                                                 if (ctrl.compute_lod)
-                                                        printf("lod_bias ");
+                                                        fprintf(fp, "lod_bias ");
                                                 else
-                                                        printf("lod ");
+                                                        fprintf(fp, "lod ");
                                         }
 
                                         if (!ctrl.calc_gradients)
-                                                printf("grad ");
+                                                fprintf(fp, "grad ");
                                 }
 
                                 if (ctrl.texel_offset)
-                                        printf("offset ");
+                                        fprintf(fp, "offset ");
                         }
                 }
 
                 if (!dualTex) {
                         if (tex_index == -1)
-                                printf("tex:indirect ");
+                                fprintf(fp, "tex:indirect ");
                         else
-                                printf("tex:%d ", tex_index);
+                                fprintf(fp, "tex:%d ", tex_index);
 
                         if (sampler_index == -1)
-                                printf("samp:indirect ");
+                                fprintf(fp, "samp:indirect ");
                         else
-                                printf("samp:%d ", sampler_index);
+                                fprintf(fp, "samp:%d ", sampler_index);
                 }
                 break;
         }
@@ -1746,222 +1548,233 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                 unsigned addr = ADD.op & 0x1f;
                 if (addr < 0b10100) {
                         // direct addr
-                        printf("%d", addr);
+                        fprintf(fp, "%d", addr);
                 } else if (addr < 0b11000) {
                         if (addr == 22)
-                                printf("fragw");
+                                fprintf(fp, "fragw");
                         else if (addr == 23)
-                                printf("fragz");
+                                fprintf(fp, "fragz");
                         else
-                                printf("unk%d", addr);
+                                fprintf(fp, "unk%d", addr);
                 } else {
-                        dump_src(ADD.op & 0x7, regs, consts, false);
+                        dump_src(fp, ADD.op & 0x7, regs, consts, false);
                 }
-                printf(", ");
-                dump_src(ADD.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.src0, regs, consts, false);
                 break;
         }
         case ADD_VARYING_ADDRESS: {
-                dump_src(ADD.src0, regs, consts, false);
-                printf(", ");
-                dump_src(ADD.op & 0x7, regs, consts, false);
-                printf(", ");
+                dump_src(fp, ADD.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                fprintf(fp, ", ");
                 unsigned location = (ADD.op >> 3) & 0x1f;
                 if (location < 16) {
-                        printf("location:%d", location);
+                        fprintf(fp, "location:%d", location);
                 } else if (location == 20) {
-                        printf("location:%u", (uint32_t) get_const(consts, regs));
+                        fprintf(fp, "location:%u", (uint32_t) get_const(consts, regs));
                 } else if (location == 21) {
-                        printf("location:%u", (uint32_t) (get_const(consts, regs) >> 32));
+                        fprintf(fp, "location:%u", (uint32_t) (get_const(consts, regs) >> 32));
                 } else {
-                        printf("location:%d(unk)", location);
+                        fprintf(fp, "location:%d(unk)", location);
                 }
                 break;
         }
         case ADD_LOAD_ATTR:
-                printf("location:%d, ", (ADD.op >> 3) & 0xf);
+                fprintf(fp, "location:%d, ", (ADD.op >> 3) & 0x1f);
         case ADD_TWO_SRC:
-                dump_src(ADD.src0, regs, consts, false);
-                printf(", ");
-                dump_src(ADD.op & 0x7, regs, consts, false);
+                dump_src(fp, ADD.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
                 break;
         case ADD_THREE_SRC:
-                dump_src(ADD.src0, regs, consts, false);
-                printf(", ");
-                dump_src(ADD.op & 0x7, regs, consts, false);
-                printf(", ");
-                dump_src((ADD.op >> 3) & 0x7, regs, consts, false);
+                dump_src(fp, ADD.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, (ADD.op >> 3) & 0x7, regs, consts, false);
                 break;
+        case ADD_SHIFT: {
+                struct bifrost_shift_add shift;
+                memcpy(&shift, &ADD, sizeof(ADD));
+                dump_src(fp, shift.src0, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, shift.src1, regs, consts, false);
+                fprintf(fp, ", ");
+                dump_src(fp, shift.src2, regs, consts, false);
+                break;
+        }
         case ADD_FADD:
         case ADD_FMINMAX:
                 if (ADD.op & 0x10)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (ADD.op & 0x1000)
-                        printf("abs(");
-                dump_src(ADD.src0, regs, consts, false);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.src0, regs, consts, false);
                 switch ((ADD.op >> 6) & 0x3) {
                 case 3:
-                        printf(".x");
+                        fprintf(fp, ".x");
                         break;
                 default:
                         break;
                 }
                 if (ADD.op & 0x1000)
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (ADD.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (ADD.op & 0x8)
-                        printf("abs(");
-                dump_src(ADD.op & 0x7, regs, consts, false);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
                 switch ((ADD.op >> 6) & 0x3) {
                 case 1:
                 case 3:
-                        printf(".x");
+                        fprintf(fp, ".x");
                         break;
                 case 2:
-                        printf(".y");
+                        fprintf(fp, ".y");
                         break;
                 case 0:
                         break;
                 default:
-                        printf(".unk");
+                        fprintf(fp, ".unk");
                         break;
                 }
                 if (ADD.op & 0x8)
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         case ADD_FADD16:
                 if (ADD.op & 0x10)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (ADD.op & 0x1000)
-                        printf("abs(");
-                dump_src(ADD.src0, regs, consts, false);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.src0, regs, consts, false);
                 if (ADD.op & 0x1000)
-                        printf(")");
-                dump_16swizzle((ADD.op >> 6) & 0x3);
-                printf(", ");
+                        fprintf(fp, ")");
+                dump_16swizzle(fp, (ADD.op >> 6) & 0x3);
+                fprintf(fp, ", ");
                 if (ADD.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (ADD.op & 0x8)
-                        printf("abs(");
-                dump_src(ADD.op & 0x7, regs, consts, false);
-                dump_16swizzle((ADD.op >> 8) & 0x3);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                dump_16swizzle(fp, (ADD.op >> 8) & 0x3);
                 if (ADD.op & 0x8)
-                        printf(")");
+                        fprintf(fp, ")");
                 break;
         case ADD_FMINMAX16: {
                 bool abs1 = ADD.op & 0x8;
                 bool abs2 = (ADD.op & 0x7) < ADD.src0;
                 if (ADD.op & 0x10)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (abs1 || abs2)
-                        printf("abs(");
-                dump_src(ADD.src0, regs, consts, false);
-                dump_16swizzle((ADD.op >> 6) & 0x3);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.src0, regs, consts, false);
+                dump_16swizzle(fp, (ADD.op >> 6) & 0x3);
                 if (abs1 || abs2)
-                        printf(")");
-                printf(", ");
+                        fprintf(fp, ")");
+                fprintf(fp, ", ");
                 if (ADD.op & 0x20)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (abs1 && abs2)
-                        printf("abs(");
-                dump_src(ADD.op & 0x7, regs, consts, false);
-                dump_16swizzle((ADD.op >> 8) & 0x3);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                dump_16swizzle(fp, (ADD.op >> 8) & 0x3);
                 if (abs1 && abs2)
-                        printf(")");
+                        fprintf(fp, ")");
+                fprintf(fp, "/* %X */\n", (ADD.op >> 10) & 0x3); /* mode */
                 break;
         }
         case ADD_FADDMscale: {
                 if (ADD.op & 0x400)
-                        printf("-");
+                        fprintf(fp, "-");
                 if (ADD.op & 0x200)
-                        printf("abs(");
-                dump_src(ADD.src0, regs, consts, false);
+                        fprintf(fp, "abs(");
+                dump_src(fp, ADD.src0, regs, consts, false);
                 if (ADD.op & 0x200)
-                        printf(")");
+                        fprintf(fp, ")");
 
-                printf(", ");
+                fprintf(fp, ", ");
 
                 if (ADD.op & 0x800)
-                        printf("-");
-                dump_src(ADD.op & 0x7, regs, consts, false);
+                        fprintf(fp, "-");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
 
-                printf(", ");
+                fprintf(fp, ", ");
 
-                dump_src((ADD.op >> 3) & 0x7, regs, consts, false);
+                dump_src(fp, (ADD.op >> 3) & 0x7, regs, consts, false);
                 break;
         }
         case ADD_FCMP:
                 if (ADD.op & 0x400) {
-                        printf("-");
+                        fprintf(fp, "-");
                 }
                 if (ADD.op & 0x100) {
-                        printf("abs(");
+                        fprintf(fp, "abs(");
                 }
-                dump_src(ADD.src0, regs, consts, false);
+                dump_src(fp, ADD.src0, regs, consts, false);
                 switch ((ADD.op >> 6) & 0x3) {
                 case 3:
-                        printf(".x");
+                        fprintf(fp, ".x");
                         break;
                 default:
                         break;
                 }
                 if (ADD.op & 0x100) {
-                        printf(")");
+                        fprintf(fp, ")");
                 }
-                printf(", ");
+                fprintf(fp, ", ");
                 if (ADD.op & 0x200) {
-                        printf("abs(");
+                        fprintf(fp, "abs(");
                 }
-                dump_src(ADD.op & 0x7, regs, consts, false);
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
                 switch ((ADD.op >> 6) & 0x3) {
                 case 1:
                 case 3:
-                        printf(".x");
+                        fprintf(fp, ".x");
                         break;
                 case 2:
-                        printf(".y");
+                        fprintf(fp, ".y");
                         break;
                 case 0:
                         break;
                 default:
-                        printf(".unk");
+                        fprintf(fp, ".unk");
                         break;
                 }
                 if (ADD.op & 0x200) {
-                        printf(")");
+                        fprintf(fp, ")");
                 }
                 break;
         case ADD_FCMP16:
-                dump_src(ADD.src0, regs, consts, false);
-                dump_16swizzle((ADD.op >> 6) & 0x3);
-                printf(", ");
-                dump_src(ADD.op & 0x7, regs, consts, false);
-                dump_16swizzle((ADD.op >> 8) & 0x3);
+                dump_src(fp, ADD.src0, regs, consts, false);
+                dump_16swizzle(fp, (ADD.op >> 6) & 0x3);
+                fprintf(fp, ", ");
+                dump_src(fp, ADD.op & 0x7, regs, consts, false);
+                dump_16swizzle(fp, (ADD.op >> 8) & 0x3);
                 break;
         case ADD_BRANCH: {
-                enum branch_code code = (enum branch_code) ((ADD.op >> 6) & 0x3f);
+                enum bifrost_branch_code code = (enum bifrost_branch_code) ((ADD.op >> 6) & 0x3f);
                 enum branch_bit_size size = (enum branch_bit_size) ((ADD.op >> 9) & 0x7);
                 if (code != BR_ALWAYS) {
-                        dump_src(ADD.src0, regs, consts, false);
+                        dump_src(fp, ADD.src0, regs, consts, false);
                         switch (size) {
                         case BR_SIZE_16XX:
-                                printf(".x");
+                                fprintf(fp, ".x");
                                 break;
                         case BR_SIZE_16YY:
                         case BR_SIZE_16YX0:
                         case BR_SIZE_16YX1:
-                                printf(".y");
+                                fprintf(fp, ".y");
                                 break;
                         case BR_SIZE_ZERO: {
                                 unsigned ctrl = (ADD.op >> 1) & 0x3;
                                 switch (ctrl) {
                                 case 1:
-                                        printf(".y");
+                                        fprintf(fp, ".y");
                                         break;
                                 case 2:
-                                        printf(".x");
+                                        fprintf(fp, ".x");
                                         break;
                                 default:
                                         break;
@@ -1970,25 +1783,25 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                         default:
                                 break;
                         }
-                        printf(", ");
+                        fprintf(fp, ", ");
                 }
                 if (code != BR_ALWAYS && size != BR_SIZE_ZERO) {
-                        dump_src(ADD.op & 0x7, regs, consts, false);
+                        dump_src(fp, ADD.op & 0x7, regs, consts, false);
                         switch (size) {
                         case BR_SIZE_16XX:
                         case BR_SIZE_16YX0:
                         case BR_SIZE_16YX1:
                         case BR_SIZE_32_AND_16X:
-                                printf(".x");
+                                fprintf(fp, ".x");
                                 break;
                         case BR_SIZE_16YY:
                         case BR_SIZE_32_AND_16Y:
-                                printf(".y");
+                                fprintf(fp, ".y");
                                 break;
                         default:
                                 break;
                         }
-                        printf(", ");
+                        fprintf(fp, ", ");
                 }
                 // I haven't had the chance to test if this actually specifies the
                 // branch offset, since I couldn't get it to produce values other
@@ -2020,33 +1833,34 @@ static void dump_add(uint64_t word, struct bifrost_regs regs, struct bifrost_reg
                         // Note: the offset is in bytes, relative to the beginning of the
                         // current clause, so a zero offset would be a loop back to the
                         // same clause (annoyingly different from Midgard).
-                        printf("clause_%d", offset + branch_offset);
+                        fprintf(fp, "clause_%d", offset + branch_offset);
                 } else {
-                        dump_src(offsetSrc, regs, consts, false);
+                        dump_src(fp, offsetSrc, regs, consts, false);
                 }
         }
         }
         if (info.has_data_reg) {
-                printf(", R%d", data_reg);
+                fprintf(fp, ", R%d", data_reg);
         }
-        printf("\n");
+        fprintf(fp, "\n");
 }
 
-void dump_instr(const struct bifrost_alu_inst *instr, struct bifrost_regs next_regs, uint64_t *consts,
+void dump_instr(FILE *fp, const struct bifrost_alu_inst *instr,
+                struct bifrost_regs next_regs, uint64_t *consts,
                 unsigned data_reg, unsigned offset, bool verbose)
 {
         struct bifrost_regs regs;
         memcpy((char *) &regs, (char *) &instr->reg_bits, sizeof(regs));
 
         if (verbose) {
-                printf("# regs: %016" PRIx64 "\n", instr->reg_bits);
-                dump_regs(regs);
+                fprintf(fp, "# regs: %016" PRIx64 "\n", instr->reg_bits);
+                dump_regs(fp, regs);
         }
-        dump_fma(instr->fma_bits, regs, next_regs, consts, verbose);
-        dump_add(instr->add_bits, regs, next_regs, consts, data_reg, offset, verbose);
+        dump_fma(fp, instr->fma_bits, regs, next_regs, consts, verbose);
+        dump_add(fp, instr->add_bits, regs, next_regs, consts, data_reg, offset, verbose);
 }
 
-bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
+bool dump_clause(FILE *fp, uint32_t *words, unsigned *size, unsigned offset, bool verbose)
 {
         // State for a decoded clause
         struct bifrost_alu_inst instrs[8] = {};
@@ -2059,10 +1873,10 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
         unsigned i;
         for (i = 0; ; i++, words += 4) {
                 if (verbose) {
-                        printf("# ");
+                        fprintf(fp, "# ");
                         for (int j = 0; j < 4; j++)
-                                printf("%08x ", words[3 - j]); // low bit on the right
-                        printf("\n");
+                                fprintf(fp, "%08x ", words[3 - j]); // low bit on the right
+                        fprintf(fp, "\n");
                 }
                 unsigned tag = bits(words[0], 0, 8);
 
@@ -2081,7 +1895,7 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
                 bool stop = tag & 0x40;
 
                 if (verbose) {
-                        printf("# tag: 0x%02x\n", tag);
+                        fprintf(fp, "# tag: 0x%02x\n", tag);
                 }
                 if (tag & 0x80) {
                         unsigned idx = stop ? 5 : 2;
@@ -2137,7 +1951,7 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
                                         done = stop;
                                         break;
                                 default:
-                                        printf("unknown tag bits 0x%02x\n", tag);
+                                        fprintf(fp, "unknown tag bits 0x%02x\n", tag);
                                 }
                                 break;
                         case 0x2:
@@ -2177,7 +1991,7 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
                                 // share a buffer in the decoder, but we only care about
                                 // the position in the constant stream; the total number of
                                 // instructions is redundant.
-                                unsigned const_idx = 7;
+                                unsigned const_idx = 0;
                                 switch (pos) {
                                 case 0:
                                 case 1:
@@ -2204,10 +2018,13 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
                                         const_idx = 4;
                                         break;
                                 default:
-                                        printf("# unknown pos 0x%x\n", pos);
+                                        fprintf(fp, "# unknown pos 0x%x\n", pos);
+                                        break;
                                 }
+
                                 if (num_consts < const_idx + 2)
                                         num_consts = const_idx + 2;
+
                                 consts[const_idx] = const0;
                                 consts[const_idx + 1] = const1;
                                 done = stop;
@@ -2225,16 +2042,16 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
         *size = i + 1;
 
         if (verbose) {
-                printf("# header: %012" PRIx64 "\n", header_bits);
+                fprintf(fp, "# header: %012" PRIx64 "\n", header_bits);
         }
 
         struct bifrost_header header;
         memcpy((char *) &header, (char *) &header_bits, sizeof(struct bifrost_header));
-        dump_header(header, verbose);
+        dump_header(fp, header, verbose);
         if (!header.no_end_of_shader)
                 stopbit = true;
 
-        printf("{\n");
+        fprintf(fp, "{\n");
         for (i = 0; i < num_instrs; i++) {
                 struct bifrost_regs next_regs;
                 if (i + 1 == num_instrs) {
@@ -2245,20 +2062,20 @@ bool dump_clause(uint32_t *words, unsigned *size, unsigned offset, bool verbose)
                                sizeof(next_regs));
                 }
 
-                dump_instr(&instrs[i], next_regs, consts, header.datareg, offset, verbose);
+                dump_instr(fp, &instrs[i], next_regs, consts, header.datareg, offset, verbose);
         }
-        printf("}\n");
+        fprintf(fp, "}\n");
 
         if (verbose) {
                 for (unsigned i = 0; i < num_consts; i++) {
-                        printf("# const%d: %08" PRIx64 "\n", 2 * i, consts[i] & 0xffffffff);
-                        printf("# const%d: %08" PRIx64 "\n", 2 * i + 1, consts[i] >> 32);
+                        fprintf(fp, "# const%d: %08" PRIx64 "\n", 2 * i, consts[i] & 0xffffffff);
+                        fprintf(fp, "# const%d: %08" PRIx64 "\n", 2 * i + 1, consts[i] >> 32);
                 }
         }
         return stopbit;
 }
 
-void disassemble_bifrost(uint8_t *code, size_t size, bool verbose)
+void disassemble_bifrost(FILE *fp, uint8_t *code, size_t size, bool verbose)
 {
         uint32_t *words = (uint32_t *) code;
         uint32_t *words_end = words + (size / 4);
@@ -2270,9 +2087,9 @@ void disassemble_bifrost(uint8_t *code, size_t size, bool verbose)
                 uint32_t zero[4] = {};
                 if (memcmp(words, zero, 4 * sizeof(uint32_t)) == 0)
                         break;
-                printf("clause_%d:\n", offset);
+                fprintf(fp, "clause_%d:\n", offset);
                 unsigned size;
-                if (dump_clause(words, &size, offset, verbose) == true) {
+                if (dump_clause(fp, words, &size, offset, verbose) == true) {
                         break;
                 }
                 words += size * 4;

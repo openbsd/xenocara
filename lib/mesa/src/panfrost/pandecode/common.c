@@ -31,6 +31,7 @@
 
 #include "decode.h"
 #include "util/macros.h"
+#include "util/u_debug.h"
 
 /* Memory handling */
 
@@ -47,9 +48,39 @@ pandecode_find_mapped_gpu_mem_containing(uint64_t addr)
         return NULL;
 }
 
+static void
+pandecode_add_name(struct pandecode_mapped_memory *mem, uint64_t gpu_va, const char *name)
+{
+        if (!name) {
+                /* If we don't have a name, assign one */
+
+                snprintf(mem->name, ARRAY_SIZE(mem->name) - 1,
+                         "memory_%" PRIx64, gpu_va);
+        } else {
+                assert((strlen(name) + 1) < ARRAY_SIZE(mem->name));
+                memcpy(mem->name, name, strlen(name) + 1);
+        }
+}
+
 void
 pandecode_inject_mmap(uint64_t gpu_va, void *cpu, unsigned sz, const char *name)
 {
+        /* First, search if we already mapped this and are just updating an address */
+
+        list_for_each_entry(struct pandecode_mapped_memory, pos, &mmaps.node, node) {
+                if (pos->gpu_va == gpu_va) {
+                        /* TODO: Resizing weirdness. Only applies to tracing
+                         * the legacy driver, not for native traces */
+
+                        pos->length = sz;
+                        pos->addr = cpu;
+                        pandecode_add_name(pos, gpu_va, name);
+
+                        return;
+                }
+        }
+
+        /* Otherwise, add a fresh mapping */
         struct pandecode_mapped_memory *mapped_mem = NULL;
 
         mapped_mem = malloc(sizeof(*mapped_mem));
@@ -58,16 +89,7 @@ pandecode_inject_mmap(uint64_t gpu_va, void *cpu, unsigned sz, const char *name)
         mapped_mem->gpu_va = gpu_va;
         mapped_mem->length = sz;
         mapped_mem->addr = cpu;
-
-        if (!name) {
-                /* If we don't have a name, assign one */
-
-                snprintf(mapped_mem->name, ARRAY_SIZE(mapped_mem->name) - 1,
-                         "memory_%" PRIx64, gpu_va);
-        } else {
-                assert(strlen(name) < ARRAY_SIZE(mapped_mem->name));
-                memcpy(mapped_mem->name, name, strlen(name));
-        }
+        pandecode_add_name(mapped_mem, gpu_va, name);
 
         list_add(&mapped_mem->node, &mmaps.node);
 }
@@ -94,9 +116,60 @@ pointer_as_memory_reference(uint64_t ptr)
 
 }
 
+static int pandecode_dump_frame_count = 0;
+
+static void
+pandecode_dump_file_open(void)
+{
+        if (pandecode_dump_stream)
+                return;
+
+        char buffer[1024];
+
+        /* This does a getenv every frame, so it is possible to use
+         * setenv to change the base at runtime.
+         */
+        const char *dump_file_base = debug_get_option("PANDECODE_DUMP_FILE", "pandecode.dump");
+        snprintf(buffer, sizeof(buffer), "%s.%04d", dump_file_base, pandecode_dump_frame_count);
+
+        printf("pandecode: dump command stream to file %s\n", buffer);
+        pandecode_dump_stream = fopen(buffer, "w");
+
+        if (!pandecode_dump_stream)
+                fprintf(stderr,"pandecode: failed to open command stream log file %s\n",
+                        buffer);
+}
+
+static void
+pandecode_dump_file_close(void)
+{
+        if (pandecode_dump_stream) {
+                fclose(pandecode_dump_stream);
+                pandecode_dump_stream = NULL;
+        }
+}
+
 void
-pandecode_initialize(void)
+pandecode_initialize(bool to_stderr)
 {
         list_inithead(&mmaps.node);
 
+        if (to_stderr)
+                pandecode_dump_stream = stderr;
+        else
+                pandecode_dump_file_open();
+}
+
+void
+pandecode_next_frame(void)
+{
+        pandecode_dump_file_close();
+        pandecode_dump_frame_count++;
+        pandecode_dump_file_open();
+}
+
+void
+pandecode_close(void)
+{
+        pandecode_dump_file_close();
 }

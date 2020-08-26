@@ -41,7 +41,7 @@ libgallium_dri = shared_library(
   'gallium_dri',
   files('target.c'),
   include_directories : [
-    inc_common, inc_util, inc_dri_common, inc_gallium_drivers,
+    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_util, inc_dri_common, inc_gallium_drivers,
     inc_gallium_winsys, include_directories('../../state_trackers/dri'),
   ],
   c_args : [c_vis_args],
@@ -49,7 +49,7 @@ libgallium_dri = shared_library(
   link_args : [ld_args_build_id, ld_args_gc_sections, gallium_dri_ld_args],
   link_depends : gallium_dri_link_depends,
   link_with : [
-    libmesa_gallium, libdricommon, libmegadriver_stub, libdri, libgalliumvl,
+    libdri, libmesa_gallium, libdricommon, libmegadriver_stub, libgalliumvl,
     libgallium, libglapi, libpipe_loader_static, libws_null, libwsw, libswdri,
     libswkmsdri,
   ],
@@ -58,7 +58,7 @@ libgallium_dri = shared_library(
     driver_swrast, driver_r300, driver_r600, driver_radeonsi, driver_nouveau,
     driver_kmsro, driver_v3d, driver_vc4, driver_freedreno, driver_etnaviv,
     driver_tegra, driver_i915, driver_svga, driver_virgl,
-    driver_swr, driver_panfrost, driver_iris, driver_lima
+    driver_swr, driver_panfrost, driver_iris, driver_lima, driver_zink
   ],
   # Will be deleted during installation, see install_megadrivers.py
   install : true,
@@ -73,6 +73,8 @@ foreach d : [[with_gallium_kmsro, [
                'ili9225_dri.so',
                'ili9341_dri.so',
                'imx-drm_dri.so',
+               'ingenic-drm_dri.so',
+               'mcde_dri.so',
                'meson_dri.so',
                'mi0283qt_dri.so',
                'mxsfb-drm_dri.so',
@@ -100,15 +102,15 @@ foreach d : [[with_gallium_kmsro, [
              [with_gallium_r600, 'r600_dri.so'],
              [with_gallium_svga, 'vmwgfx_dri.so'],
              [with_gallium_virgl, 'virtio_gpu_dri.so'],
-             [with_gallium_lima, 'lima_dri.so']]
+             [with_gallium_lima, 'lima_dri.so'],
+             [with_gallium_zink, 'zink_dri.so']]
   if d[0]
     gallium_dri_drivers += d[1]
   endif
 endforeach
 
 meson.add_install_script(
-  prog_python.path(),
-  join_paths(meson.source_root(), 'bin/install_megadrivers.py'),
+  install_megadrivers_py.path(),
   libgallium_dri.full_path(),
   dri_drivers_path,
   gallium_dri_drivers,

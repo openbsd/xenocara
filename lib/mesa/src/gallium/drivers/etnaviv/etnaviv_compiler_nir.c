@@ -49,9 +49,6 @@ struct etna_compile {
    const struct etna_specs *specs;
    struct etna_shader_variant *variant;
 
-   /* register assigned to each output, indexed by driver_location */
-   unsigned output_reg[ETNA_NUM_INPUTS];
-
    /* block # to instr index */
    unsigned *block_ptr;
 
@@ -59,15 +56,12 @@ struct etna_compile {
    int inst_ptr; /* current instruction pointer */
    struct etna_inst code[ETNA_MAX_INSTRUCTIONS * ETNA_INST_SIZE];
 
+   /* constants */
+   uint64_t consts[ETNA_MAX_IMM];
+
    /* There was an error during compilation */
    bool error;
 };
-
-#define compile_error(ctx, args...) ({ \
-   printf(args); \
-   ctx->error = true; \
-   assert(0); \
-})
 
 /* io related lowering
  * run after lower_int_to_float because it adds i2f/f2i ops
@@ -75,18 +69,6 @@ struct etna_compile {
 static void
 etna_lower_io(nir_shader *shader, struct etna_shader_variant *v)
 {
-   bool rb_swap = shader->info.stage == MESA_SHADER_FRAGMENT && v->key.frag_rb_swap;
-
-   unsigned color_location = 0;
-   nir_foreach_variable(var, &shader->outputs) {
-      switch (var->data.location) {
-      case FRAG_RESULT_COLOR:
-      case FRAG_RESULT_DATA0:
-         color_location = var->data.driver_location;
-         break;
-      }
-   }
-
    nir_foreach_function(function, shader) {
       nir_builder b;
       nir_builder_init(&b, function->impl);
@@ -98,39 +80,77 @@ etna_lower_io(nir_shader *shader, struct etna_shader_variant *v)
 
                switch (intr->intrinsic) {
                case nir_intrinsic_load_front_face: {
-                  /* front face inverted (run after int_to_float, so invert as float) */
+                  /* HW front_face is 0.0/1.0, not 0/~0u for bool
+                   * lower with a comparison with 0
+                   */
+                  intr->dest.ssa.bit_size = 32;
+
                   b.cursor = nir_after_instr(instr);
 
-                  nir_ssa_def *ssa = nir_seq(&b, &intr->dest.ssa, nir_imm_float(&b, 0.0));
+                  nir_ssa_def *ssa = nir_ine(&b, &intr->dest.ssa, nir_imm_int(&b, 0));
+                  if (v->key.front_ccw)
+                     nir_instr_as_alu(ssa->parent_instr)->op = nir_op_ieq;
+
                   nir_ssa_def_rewrite_uses_after(&intr->dest.ssa,
                                                  nir_src_for_ssa(ssa),
                                                  ssa->parent_instr);
                } break;
-               case nir_intrinsic_store_output: {
-                  if (!rb_swap || nir_intrinsic_base(intr) != color_location)
+               case nir_intrinsic_store_deref: {
+                  nir_deref_instr *deref = nir_src_as_deref(intr->src[0]);
+                  if (shader->info.stage != MESA_SHADER_FRAGMENT || !v->key.frag_rb_swap)
                      break;
+
+                  assert(deref->deref_type == nir_deref_type_var);
+
+                  if (deref->var->data.location != FRAG_RESULT_COLOR &&
+                      deref->var->data.location != FRAG_RESULT_DATA0)
+                      break;
+
                   b.cursor = nir_before_instr(instr);
 
-                  nir_ssa_def *ssa = nir_mov(&b, intr->src[0].ssa);
+                  nir_ssa_def *ssa = nir_mov(&b, intr->src[1].ssa);
                   nir_alu_instr *alu = nir_instr_as_alu(ssa->parent_instr);
                   alu->src[0].swizzle[0] = 2;
                   alu->src[0].swizzle[2] = 0;
-                  nir_instr_rewrite_src(instr, &intr->src[0], nir_src_for_ssa(ssa));
-               } break;
-               case nir_intrinsic_load_instance_id: {
-                  b.cursor = nir_after_instr(instr);
-                  nir_ssa_def *ssa = nir_i2f32(&b, &intr->dest.ssa);
-                  nir_ssa_def_rewrite_uses_after(&intr->dest.ssa,
-                                                 nir_src_for_ssa(ssa),
-                                                 ssa->parent_instr);
+                  nir_instr_rewrite_src(instr, &intr->src[1], nir_src_for_ssa(ssa));
                } break;
                case nir_intrinsic_load_uniform: {
-                  /* multiply by 16 and convert to int */
+                  /* convert indirect load_uniform to load_ubo when possible
+                   * this is required on HALTI5+ because address register is not implemented
+                   * address register loads also arent done optimally
+                   */
+                  if (v->shader->specs->halti < 2 || nir_src_is_const(intr->src[0]))
+                     break;
+
+                  nir_intrinsic_instr *load_ubo =
+                     nir_intrinsic_instr_create(b.shader, nir_intrinsic_load_ubo);
+                  load_ubo->num_components = intr->num_components;
+                  nir_ssa_dest_init(&load_ubo->instr, &load_ubo->dest,
+                                    load_ubo->num_components, 32, NULL);
+
                   b.cursor = nir_before_instr(instr);
-                  nir_ssa_def *ssa = nir_f2u32(&b, nir_fmul(&b, intr->src[0].ssa,
-                                                                nir_imm_float(&b, 16.0f)));
-                  nir_instr_rewrite_src(instr, &intr->src[0], nir_src_for_ssa(ssa));
+                  load_ubo->src[0] = nir_src_for_ssa(nir_imm_int(&b, 0));
+                  load_ubo->src[1] = nir_src_for_ssa(nir_iadd(&b,
+                     nir_imul(&b, intr->src[0].ssa, nir_imm_int(&b, 16)),
+                     nir_imm_int(&b, nir_intrinsic_base(intr) * 16)));
+                  nir_builder_instr_insert(&b, &load_ubo->instr);
+                  nir_ssa_def_rewrite_uses(&intr->dest.ssa,
+                                             nir_src_for_ssa(&load_ubo->dest.ssa));
+                  nir_instr_remove(&intr->instr);
                } break;
+               case nir_intrinsic_load_ubo: {
+                  nir_const_value *idx = nir_src_as_const_value(intr->src[0]);
+                  assert(idx);
+                  /* offset index by 1, index 0 is used for converted load_uniform */
+                  b.cursor = nir_before_instr(instr);
+                  nir_instr_rewrite_src(instr, &intr->src[0],
+                                        nir_src_for_ssa(nir_imm_int(&b, idx[0].u32 + 1)));
+               } break;
+               case nir_intrinsic_load_vertex_id:
+               case nir_intrinsic_load_instance_id:
+                  /* detect use of vertex_id/instance_id */
+                  v->vs_id_in_reg = v->infile.num_reg;
+                  break;
                default:
                   break;
                }
@@ -156,6 +176,8 @@ etna_lower_io(nir_shader *shader, struct etna_shader_variant *v)
                   assert(!lod_bias);
                   lod_bias = &tex->src[i].src;
                   lod_bias_idx = i;
+                  break;
+               case nir_tex_src_comparator:
                   break;
                default:
                   assert(0);
@@ -208,25 +230,49 @@ etna_lower_io(nir_shader *shader, struct etna_shader_variant *v)
    }
 }
 
-static void
-etna_lower_alu_to_scalar(nir_shader *shader, const struct etna_specs *specs)
+static bool
+etna_alu_to_scalar_filter_cb(const nir_instr *instr, const void *data)
 {
-   BITSET_DECLARE(scalar_ops, nir_num_opcodes);
-   BITSET_ZERO(scalar_ops);
+   const struct etna_specs *specs = data;
 
-   BITSET_SET(scalar_ops, nir_op_frsq);
-   BITSET_SET(scalar_ops, nir_op_frcp);
-   BITSET_SET(scalar_ops, nir_op_flog2);
-   BITSET_SET(scalar_ops, nir_op_fexp2);
-   BITSET_SET(scalar_ops, nir_op_fsqrt);
-   BITSET_SET(scalar_ops, nir_op_fcos);
-   BITSET_SET(scalar_ops, nir_op_fsin);
-   BITSET_SET(scalar_ops, nir_op_fdiv);
+   if (instr->type != nir_instr_type_alu)
+      return false;
 
-   if (!specs->has_halti2_instructions)
-      BITSET_SET(scalar_ops, nir_op_fdot2);
+   nir_alu_instr *alu = nir_instr_as_alu(instr);
+   switch (alu->op) {
+   case nir_op_frsq:
+   case nir_op_frcp:
+   case nir_op_flog2:
+   case nir_op_fexp2:
+   case nir_op_fsqrt:
+   case nir_op_fcos:
+   case nir_op_fsin:
+   case nir_op_fdiv:
+   case nir_op_imul:
+      return true;
+   /* TODO: can do better than alu_to_scalar for vector compares */
+   case nir_op_b32all_fequal2:
+   case nir_op_b32all_fequal3:
+   case nir_op_b32all_fequal4:
+   case nir_op_b32any_fnequal2:
+   case nir_op_b32any_fnequal3:
+   case nir_op_b32any_fnequal4:
+   case nir_op_b32all_iequal2:
+   case nir_op_b32all_iequal3:
+   case nir_op_b32all_iequal4:
+   case nir_op_b32any_inequal2:
+   case nir_op_b32any_inequal3:
+   case nir_op_b32any_inequal4:
+      return true;
+   case nir_op_fdot2:
+      if (!specs->has_halti2_instructions)
+         return true;
+      break;
+   default:
+      break;
+   }
 
-   nir_lower_alu_to_scalar(shader, scalar_ops);
+   return false;
 }
 
 static void
@@ -332,7 +378,11 @@ static const struct etna_op_info etna_ops[] = {
    INST_TYPE_##type \
 }
 #define OPC(nir, op, src, cond) OPCT(nir, op, src, cond, F32)
+#define IOPC(nir, op, src, cond) OPCT(nir, op, src, cond, S32)
+#define UOPC(nir, op, src, cond) OPCT(nir, op, src, cond, U32)
 #define OP(nir, op, src) OPC(nir, op, src, TRUE)
+#define IOP(nir, op, src) IOPC(nir, op, src, TRUE)
+#define UOP(nir, op, src) UOPC(nir, op, src, TRUE)
    OP(mov, MOV, X_X_0), OP(fneg, MOV, X_X_0), OP(fabs, MOV, X_X_0), OP(fsat, MOV, X_X_0),
    OP(fmul, MUL, 0_1_X), OP(fadd, ADD, 0_X_1), OP(ffma, MAD, 0_1_2),
    OP(fdot2, DP2, 0_1_X), OP(fdot3, DP3, 0_1_X), OP(fdot4, DP4, 0_1_X),
@@ -346,9 +396,51 @@ static const struct etna_op_info etna_ops[] = {
    OP(fdiv, DIV, 0_1_X),
    OP(fddx, DSX, 0_X_0), OP(fddy, DSY, 0_X_0),
 
-   /* integer opcodes */
-   OPCT(i2f32, I2F, 0_X_X, TRUE, S32),
-   OPCT(f2u32, F2I, 0_X_X, TRUE, U32),
+   /* type convert */
+   IOP(i2f32, I2F, 0_X_X),
+   UOP(u2f32, I2F, 0_X_X),
+   IOP(f2i32, F2I, 0_X_X),
+   UOP(f2u32, F2I, 0_X_X),
+   UOP(b2f32, AND, 0_X_X), /* AND with fui(1.0f) */
+   UOP(b2i32, AND, 0_X_X), /* AND with 1 */
+   OPC(f2b32, CMP, 0_X_X, NE), /* != 0.0 */
+   UOPC(i2b32, CMP, 0_X_X, NE), /* != 0 */
+
+   /* arithmetic */
+   IOP(iadd, ADD, 0_X_1),
+   IOP(imul, IMULLO0, 0_1_X),
+   /* IOP(imad, IMADLO0, 0_1_2), */
+   IOP(ineg, ADD, X_X_0), /* ADD 0, -x */
+   IOP(iabs, IABS, X_X_0),
+   IOP(isign, SIGN, X_X_0),
+   IOPC(imin, SELECT, 0_1_0, GT),
+   IOPC(imax, SELECT, 0_1_0, LT),
+   UOPC(umin, SELECT, 0_1_0, GT),
+   UOPC(umax, SELECT, 0_1_0, LT),
+
+   /* select */
+   UOPC(b32csel, SELECT, 0_1_2, NZ),
+
+   /* compare with int result */
+    OPC(feq32, CMP, 0_1_X, EQ),
+    OPC(fne32, CMP, 0_1_X, NE),
+    OPC(fge32, CMP, 0_1_X, GE),
+    OPC(flt32, CMP, 0_1_X, LT),
+   IOPC(ieq32, CMP, 0_1_X, EQ),
+   IOPC(ine32, CMP, 0_1_X, NE),
+   IOPC(ige32, CMP, 0_1_X, GE),
+   IOPC(ilt32, CMP, 0_1_X, LT),
+   UOPC(uge32, CMP, 0_1_X, GE),
+   UOPC(ult32, CMP, 0_1_X, LT),
+
+   /* bit ops */
+   IOP(ior,  OR,  0_X_1),
+   IOP(iand, AND, 0_X_1),
+   IOP(ixor, XOR, 0_X_1),
+   IOP(inot, NOT, X_X_0),
+   IOP(ishl, LSHIFT, 0_X_1),
+   IOP(ishr, RSHIFT, 0_X_1),
+   UOP(ushr, RSHIFT, 0_X_1),
 };
 
 static void
@@ -362,6 +454,7 @@ etna_emit_alu(struct etna_compile *c, nir_op op, struct etna_inst_dst dst,
               struct etna_inst_src src[3], bool saturate)
 {
    struct etna_op_info ei = etna_ops[op];
+   unsigned swiz_scalar = INST_SWIZ_BROADCAST(ffs(dst.write_mask) - 1);
 
    assert(ei.opcode != 0xff);
 
@@ -385,16 +478,35 @@ etna_emit_alu(struct etna_compile *c, nir_op op, struct etna_inst_dst dst,
    case nir_op_frcp:
    case nir_op_fexp2:
    case nir_op_fsqrt:
-   case nir_op_i2f32:
-   case nir_op_f2u32:
-      /* for these instructions we want src to be in x component
-       * note: on HALTI2+ i2f/f2u are not scalar but we only use them this way currently
-       */
-      src[0].swiz = inst_swiz_compose(src[0].swiz,
-                                      INST_SWIZ_BROADCAST(ffs(inst.dst.write_mask)-1));
+   case nir_op_imul:
+      /* scalar instructions we want src to be in x component */
+      src[0].swiz = inst_swiz_compose(src[0].swiz, swiz_scalar);
+      src[1].swiz = inst_swiz_compose(src[1].swiz, swiz_scalar);
+      break;
+   /* deal with instructions which don't have 1:1 mapping */
+   case nir_op_b2f32:
+      inst.src[2] = etna_immediate_float(1.0f);
+      break;
+   case nir_op_b2i32:
+      inst.src[2] = etna_immediate_int(1);
+      break;
+   case nir_op_f2b32:
+      inst.src[1] = etna_immediate_float(0.0f);
+      break;
+   case nir_op_i2b32:
+      inst.src[1] = etna_immediate_int(0);
+      break;
+   case nir_op_ineg:
+      inst.src[0] = etna_immediate_int(0);
+      src[0].neg = 1;
+      break;
    default:
       break;
    }
+
+   /* set the "true" value for CMP instructions */
+   if (inst.opcode == INST_OPCODE_CMP)
+      inst.src[2] = etna_immediate_int(-1);
 
    for (unsigned j = 0; j < 3; j++) {
       unsigned i = ((ei.src >> j*2) & 3);
@@ -408,7 +520,7 @@ etna_emit_alu(struct etna_compile *c, nir_op op, struct etna_inst_dst dst,
 static void
 etna_emit_tex(struct etna_compile *c, nir_texop op, unsigned texid, unsigned dst_swiz,
               struct etna_inst_dst dst, struct etna_inst_src coord,
-              struct etna_inst_src lod_bias)
+              struct etna_inst_src lod_bias, struct etna_inst_src compare)
 {
    struct etna_inst inst = {
       .dst = dst,
@@ -419,6 +531,9 @@ etna_emit_tex(struct etna_compile *c, nir_texop op, unsigned texid, unsigned dst
 
    if (lod_bias.use)
       inst.src[1] = lod_bias;
+
+   if (compare.use)
+      inst.src[2] = compare;
 
    switch (op) {
    case nir_texop_tex: inst.opcode = INST_OPCODE_TEXLD; break;
@@ -460,7 +575,8 @@ etna_emit_discard(struct etna_compile *c, struct etna_inst_src condition)
 
    struct etna_inst inst = {
       .opcode = INST_OPCODE_TEXKILL,
-      .cond = INST_CONDITION_GZ,
+      .cond = INST_CONDITION_NZ,
+      .type = (c->specs->halti < 2) ? INST_TYPE_F32 : INST_TYPE_U32,
       .src[0] = condition,
    };
    inst.src[0].swiz = INST_SWIZ_BROADCAST(inst.src[0].swiz & 3);
@@ -468,22 +584,39 @@ etna_emit_discard(struct etna_compile *c, struct etna_inst_src condition)
 }
 
 static void
-etna_emit_output(struct etna_compile *c, unsigned index, struct etna_inst_src src)
+etna_emit_output(struct etna_compile *c, nir_variable *var, struct etna_inst_src src)
 {
-   c->output_reg[index] = src.reg;
-}
+   struct etna_shader_io_file *sf = &c->variant->outfile;
 
-static void
-etna_emit_load_ubo(struct etna_compile *c, struct etna_inst_dst dst,
-                   struct etna_inst_src src, struct etna_inst_src base)
-{
-   emit_inst(c, &(struct etna_inst) {
-      .opcode = INST_OPCODE_LOAD,
-      .type = INST_TYPE_U32,
-      .dst = dst,
-      .src[0] = src,
-      .src[1] = base,
-   });
+   if (is_fs(c)) {
+      switch (var->data.location) {
+      case FRAG_RESULT_COLOR:
+      case FRAG_RESULT_DATA0: /* DATA0 is used by gallium shaders for color */
+         c->variant->ps_color_out_reg = src.reg;
+         break;
+      case FRAG_RESULT_DEPTH:
+         c->variant->ps_depth_out_reg = src.reg;
+         break;
+      default:
+         unreachable("Unsupported fs output");
+      }
+      return;
+   }
+
+   switch (var->data.location) {
+   case VARYING_SLOT_POS:
+      c->variant->vs_pos_out_reg = src.reg;
+      break;
+   case VARYING_SLOT_PSIZ:
+      c->variant->vs_pointsize_out_reg = src.reg;
+      break;
+   default:
+      sf->reg[sf->num_reg].reg = src.reg;
+      sf->reg[sf->num_reg].slot = var->data.location;
+      sf->reg[sf->num_reg].num_components = glsl_get_components(var->type);
+      sf->num_reg++;
+      break;
+   }
 }
 
 #define OPT(nir, pass, ...) ({                             \
@@ -552,185 +685,41 @@ copy_uniform_state_to_shader(struct etna_shader_variant *sobj, uint64_t *consts,
 
 #include "etnaviv_compiler_nir_emit.h"
 
-bool
-etna_compile_shader_nir(struct etna_shader_variant *v)
+static bool
+etna_compile_check_limits(struct etna_shader_variant *v)
 {
-   if (unlikely(!v))
+   const struct etna_specs *specs = v->shader->specs;
+   int max_uniforms = (v->stage == MESA_SHADER_VERTEX)
+                         ? specs->max_vs_uniforms
+                         : specs->max_ps_uniforms;
+
+   if (!specs->has_icache && v->needs_icache) {
+      DBG("Number of instructions (%d) exceeds maximum %d", v->code_size / 4,
+          specs->max_instructions);
       return false;
+   }
 
-   struct etna_compile *c = CALLOC_STRUCT(etna_compile);
-   if (!c)
+   if (v->num_temps > specs->max_registers) {
+      DBG("Number of registers (%d) exceeds maximum %d", v->num_temps,
+          specs->max_registers);
       return false;
-
-   c->variant = v;
-   c->specs = v->shader->specs;
-   c->nir = nir_shader_clone(NULL, v->shader->nir);
-
-   nir_shader *s = c->nir;
-   const struct etna_specs *specs = c->specs;
-
-   v->stage = s->info.stage;
-   v->num_loops = 0; /* TODO */
-   v->vs_id_in_reg = -1;
-   v->vs_pos_out_reg = -1;
-   v->vs_pointsize_out_reg = -1;
-   v->ps_color_out_reg = 0; /* 0 for shader that doesn't write fragcolor.. */
-   v->ps_depth_out_reg = -1;
-
-   /* setup input linking */
-   struct etna_shader_io_file *sf = &v->infile;
-   if (s->info.stage == MESA_SHADER_VERTEX) {
-      nir_foreach_variable(var, &s->inputs) {
-         unsigned idx = var->data.driver_location;
-         sf->reg[idx].reg = idx;
-         sf->reg[idx].slot = var->data.location;
-         sf->reg[idx].num_components = 4; /* TODO */
-         sf->num_reg = MAX2(sf->num_reg, idx+1);
-      }
-   } else {
-      unsigned count = 0;
-      nir_foreach_variable(var, &s->inputs) {
-         unsigned idx = var->data.driver_location;
-         sf->reg[idx].reg = idx + 1;
-         sf->reg[idx].slot = var->data.location;
-         sf->reg[idx].num_components = 4; /* TODO */
-         sf->num_reg = MAX2(sf->num_reg, idx+1);
-         count++;
-      }
-      assert(sf->num_reg == count);
    }
 
-   NIR_PASS_V(s, nir_lower_io, nir_var_all, etna_glsl_type_size,
-            (nir_lower_io_options)0);
-
-   OPT_V(s, nir_lower_regs_to_ssa);
-   OPT_V(s, nir_lower_vars_to_ssa);
-   OPT_V(s, nir_lower_indirect_derefs, nir_var_all);
-   OPT_V(s, nir_lower_tex, &(struct nir_lower_tex_options) { .lower_txp = ~0u });
-   OPT_V(s, etna_lower_alu_to_scalar, specs);
-
-   etna_optimize_loop(s);
-
-   /* use opt_algebraic between int_to_float and boot_to_float because
-    * int_to_float emits ftrunc, and ftrunc lowering generates bool ops
-    */
-   OPT_V(s, nir_lower_int_to_float);
-   OPT_V(s, nir_opt_algebraic);
-   OPT_V(s, nir_lower_bool_to_float);
-
-   /* after int to float because insert i2f for instance_id */
-   OPT_V(s, etna_lower_io, v);
-
-   etna_optimize_loop(s);
-
-   if (DBG_ENABLED(ETNA_DBG_DUMP_SHADERS))
-      nir_print_shader(s, stdout);
-
-   while( OPT(s, nir_opt_vectorize) );
-   OPT_V(s, etna_lower_alu_to_scalar, specs);
-
-   NIR_PASS_V(s, nir_remove_dead_variables, nir_var_function_temp);
-   NIR_PASS_V(s, nir_opt_algebraic_late);
-
-   NIR_PASS_V(s, nir_move_vec_src_uses_to_dest);
-   NIR_PASS_V(s, nir_copy_prop);
-   NIR_PASS_V(s, nir_lower_to_source_mods, ~nir_lower_int_source_mods);
-   /* need copy prop after uses_to_dest, and before src mods: see
-    * dEQP-GLES2.functional.shaders.random.all_features.fragment.95
-    */
-
-   NIR_PASS_V(s, nir_opt_dce);
-
-   NIR_PASS_V(s, etna_lower_alu, c);
-
-   if (DBG_ENABLED(ETNA_DBG_DUMP_SHADERS))
-      nir_print_shader(s, stdout);
-
-   uint64_t consts[ETNA_MAX_IMM] = {};
-
-   unsigned block_ptr[nir_shader_get_entrypoint(s)->num_blocks];
-   c->block_ptr = block_ptr;
-   struct emit_options options = {
-      .max_temps = ETNA_MAX_TEMPS,
-      .max_consts = ETNA_MAX_IMM / 4,
-      .id_reg = sf->num_reg,
-      .single_const_src = c->specs->halti < 5,
-      .etna_new_transcendentals = c->specs->has_new_transcendentals,
-      .user = c,
-      .consts = consts,
-   };
-
-   unsigned num_consts;
-   ASSERTED bool ok = emit_shader(c->nir, &options, &v->num_temps, &num_consts);
-   assert(ok);
-
-   /* empty shader, emit NOP */
-   if (!c->inst_ptr)
-      emit_inst(c, &(struct etna_inst) { .opcode = INST_OPCODE_NOP });
-
-   /* assemble instructions, fixing up labels */
-   uint32_t *code = MALLOC(c->inst_ptr * 16 + 1024);
-   for (unsigned i = 0; i < c->inst_ptr; i++) {
-      struct etna_inst *inst = &c->code[i];
-      if (inst->opcode == INST_OPCODE_BRANCH)
-         inst->imm = block_ptr[inst->imm];
-
-      inst->halti5 = specs->halti >= 5;
-      etna_assemble(&code[i * 4], inst);
+   if (v->uniforms.imm_count / 4 > max_uniforms) {
+      DBG("Number of uniforms (%d) exceeds maximum %d",
+          v->uniforms.imm_count / 4, max_uniforms);
+      return false;
    }
 
-   v->code_size = c->inst_ptr * 4;
-   v->code = code;
-   v->needs_icache = c->inst_ptr > specs->max_instructions;
+   return true;
+}
 
-   copy_uniform_state_to_shader(v, consts, num_consts);
-
-   if (s->info.stage == MESA_SHADER_FRAGMENT) {
-      v->input_count_unk8 = 31; /* XXX what is this */
-
-      nir_foreach_variable(var, &s->outputs) {
-         unsigned reg = c->output_reg[var->data.driver_location];
-         switch (var->data.location) {
-         case FRAG_RESULT_COLOR:
-         case FRAG_RESULT_DATA0: /* DATA0 is used by gallium shaders for color */
-            v->ps_color_out_reg = reg;
-            break;
-         case FRAG_RESULT_DEPTH:
-            v->ps_depth_out_reg = reg;
-            break;
-         default:
-            compile_error(c, "Unsupported fs output %s\n", gl_frag_result_name(var->data.location));
-         }
-      }
-      assert(v->ps_depth_out_reg <= 0);
-      v->outfile.num_reg = 0;
-      ralloc_free(c->nir);
-      FREE(c);
-      return true;
-   }
+static void
+fill_vs_mystery(struct etna_shader_variant *v)
+{
+   const struct etna_specs *specs = v->shader->specs;
 
    v->input_count_unk8 = DIV_ROUND_UP(v->infile.num_reg + 4, 16); /* XXX what is this */
-
-   sf = &v->outfile;
-   sf->num_reg = 0;
-   nir_foreach_variable(var, &s->outputs) {
-      unsigned native = c->output_reg[var->data.driver_location];
-
-      if (var->data.location == VARYING_SLOT_POS) {
-         v->vs_pos_out_reg = native;
-         continue;
-      }
-
-      if (var->data.location == VARYING_SLOT_PSIZ) {
-         v->vs_pointsize_out_reg = native;
-         continue;
-      }
-
-      sf->reg[sf->num_reg].reg = native;
-      sf->reg[sf->num_reg].slot = var->data.location;
-      sf->reg[sf->num_reg].num_components = 4; /* TODO */
-      sf->num_reg++;
-   }
 
    /* fill in "mystery meat" load balancing value. This value determines how
     * work is scheduled between VS and PS
@@ -763,10 +752,150 @@ etna_compile_shader_nir(struct etna_shader_variant *v)
                              VIVS_VS_LOAD_BALANCING_B(MIN2(b, 255)) |
                              VIVS_VS_LOAD_BALANCING_C(0x3f) |
                              VIVS_VS_LOAD_BALANCING_D(0x0f);
+}
 
+bool
+etna_compile_shader_nir(struct etna_shader_variant *v)
+{
+   if (unlikely(!v))
+      return false;
+
+   struct etna_compile *c = CALLOC_STRUCT(etna_compile);
+   if (!c)
+      return false;
+
+   c->variant = v;
+   c->specs = v->shader->specs;
+   c->nir = nir_shader_clone(NULL, v->shader->nir);
+
+   nir_shader *s = c->nir;
+   const struct etna_specs *specs = c->specs;
+
+   v->stage = s->info.stage;
+   v->num_loops = 0; /* TODO */
+   v->vs_id_in_reg = -1;
+   v->vs_pos_out_reg = -1;
+   v->vs_pointsize_out_reg = -1;
+   v->ps_color_out_reg = 0; /* 0 for shader that doesn't write fragcolor.. */
+   v->ps_depth_out_reg = -1;
+
+   /* setup input linking */
+   struct etna_shader_io_file *sf = &v->infile;
+   if (s->info.stage == MESA_SHADER_VERTEX) {
+      nir_foreach_variable(var, &s->inputs) {
+         unsigned idx = var->data.driver_location;
+         sf->reg[idx].reg = idx;
+         sf->reg[idx].slot = var->data.location;
+         sf->reg[idx].num_components = glsl_get_components(var->type);
+         sf->num_reg = MAX2(sf->num_reg, idx+1);
+      }
+   } else {
+      unsigned count = 0;
+      nir_foreach_variable(var, &s->inputs) {
+         unsigned idx = var->data.driver_location;
+         sf->reg[idx].reg = idx + 1;
+         sf->reg[idx].slot = var->data.location;
+         sf->reg[idx].num_components = glsl_get_components(var->type);
+         sf->num_reg = MAX2(sf->num_reg, idx+1);
+         count++;
+      }
+      assert(sf->num_reg == count);
+   }
+
+   NIR_PASS_V(s, nir_lower_io, ~nir_var_shader_out, etna_glsl_type_size,
+            (nir_lower_io_options)0);
+
+   OPT_V(s, nir_lower_regs_to_ssa);
+   OPT_V(s, nir_lower_vars_to_ssa);
+   OPT_V(s, nir_lower_indirect_derefs, nir_var_all);
+   OPT_V(s, nir_lower_tex, &(struct nir_lower_tex_options) { .lower_txp = ~0u });
+   OPT_V(s, nir_lower_alu_to_scalar, etna_alu_to_scalar_filter_cb, specs);
+
+   etna_optimize_loop(s);
+
+   OPT_V(s, etna_lower_io, v);
+
+   if (v->shader->specs->vs_need_z_div)
+      NIR_PASS_V(s, nir_lower_clip_halfz);
+
+   /* lower pre-halti2 to float (halti0 has integers, but only scalar..) */
+   if (c->specs->halti < 2) {
+      /* use opt_algebraic between int_to_float and boot_to_float because
+       * int_to_float emits ftrunc, and ftrunc lowering generates bool ops
+       */
+      OPT_V(s, nir_lower_int_to_float);
+      OPT_V(s, nir_opt_algebraic);
+      OPT_V(s, nir_lower_bool_to_float);
+   } else {
+      OPT_V(s, nir_lower_idiv, nir_lower_idiv_fast);
+      OPT_V(s, nir_lower_bool_to_int32);
+   }
+
+   etna_optimize_loop(s);
+
+   if (DBG_ENABLED(ETNA_DBG_DUMP_SHADERS))
+      nir_print_shader(s, stdout);
+
+   while( OPT(s, nir_opt_vectorize) );
+   OPT_V(s, nir_lower_alu_to_scalar, etna_alu_to_scalar_filter_cb, specs);
+
+   NIR_PASS_V(s, nir_remove_dead_variables, nir_var_function_temp);
+   NIR_PASS_V(s, nir_opt_algebraic_late);
+
+   NIR_PASS_V(s, nir_move_vec_src_uses_to_dest);
+   NIR_PASS_V(s, nir_copy_prop);
+   /* only HW supported integer source mod is ineg for iadd instruction (?) */
+   NIR_PASS_V(s, nir_lower_to_source_mods, ~nir_lower_int_source_mods);
+   /* need copy prop after uses_to_dest, and before src mods: see
+    * dEQP-GLES2.functional.shaders.random.all_features.fragment.95
+    */
+
+   NIR_PASS_V(s, nir_opt_dce);
+
+   NIR_PASS_V(s, etna_lower_alu, c);
+
+   if (DBG_ENABLED(ETNA_DBG_DUMP_SHADERS))
+      nir_print_shader(s, stdout);
+
+   unsigned block_ptr[nir_shader_get_entrypoint(s)->num_blocks];
+   c->block_ptr = block_ptr;
+
+   unsigned num_consts;
+   ASSERTED bool ok = emit_shader(c, &v->num_temps, &num_consts);
+   assert(ok);
+
+   /* empty shader, emit NOP */
+   if (!c->inst_ptr)
+      emit_inst(c, &(struct etna_inst) { .opcode = INST_OPCODE_NOP });
+
+   /* assemble instructions, fixing up labels */
+   uint32_t *code = MALLOC(c->inst_ptr * 16);
+   for (unsigned i = 0; i < c->inst_ptr; i++) {
+      struct etna_inst *inst = &c->code[i];
+      if (inst->opcode == INST_OPCODE_BRANCH)
+         inst->imm = block_ptr[inst->imm];
+
+      inst->halti5 = specs->halti >= 5;
+      etna_assemble(&code[i * 4], inst);
+   }
+
+   v->code_size = c->inst_ptr * 4;
+   v->code = code;
+   v->needs_icache = c->inst_ptr > specs->max_instructions;
+
+   copy_uniform_state_to_shader(v, c->consts, num_consts);
+
+   if (s->info.stage == MESA_SHADER_FRAGMENT) {
+      v->input_count_unk8 = 31; /* XXX what is this */
+      assert(v->ps_depth_out_reg <= 0);
+   } else {
+      fill_vs_mystery(v);
+   }
+
+   bool result = etna_compile_check_limits(v);
    ralloc_free(c->nir);
    FREE(c);
-   return true;
+   return result;
 }
 
 void

@@ -33,6 +33,8 @@ files_llvmpipe = files(
   'lp_clear.h',
   'lp_context.c',
   'lp_context.h',
+  'lp_cs_tpool.h',
+  'lp_cs_tpool.c',
   'lp_debug.h',
   'lp_draw_arrays.c',
   'lp_fence.c',
@@ -71,6 +73,8 @@ files_llvmpipe = files(
   'lp_state_blend.c',
   'lp_state_clip.c',
   'lp_state_derived.c',
+  'lp_state_cs.c',
+  'lp_state_cs.h',
   'lp_state_fs.c',
   'lp_state_fs.h',
   'lp_state_gs.c',
@@ -81,6 +85,7 @@ files_llvmpipe = files(
   'lp_state_setup.h',
   'lp_state_so.c',
   'lp_state_surface.c',
+  'lp_state_tess.c',
   'lp_state_vertex.c',
   'lp_state_vs.c',
   'lp_surface.c',
@@ -97,7 +102,7 @@ libllvmpipe = static_library(
   c_args : [c_vis_args, c_msvc_compat_args],
   cpp_args : [cpp_vis_args, cpp_msvc_compat_args],
   include_directories : [inc_gallium, inc_gallium_aux, inc_include, inc_src],
-  dependencies : dep_llvm,
+  dependencies : [ dep_llvm, idep_nir_headers, ],
 )
 
 # This overwrites the softpipe driver dependency, but itself depends on the
@@ -105,7 +110,7 @@ libllvmpipe = static_library(
 driver_swrast = declare_dependency(
   compile_args : '-DGALLIUM_LLVMPIPE',
   link_with : libllvmpipe,
-  dependencies : driver_swrast,
+  dependencies : [driver_swrast, dep_llvm],
 )
 
 if with_tests and with_gallium_softpipe and with_llvm
@@ -121,6 +126,8 @@ if with_tests and with_gallium_softpipe and with_llvm
         link_with : [libllvmpipe, libgallium],
       ),
       suite : ['llvmpipe'],
+      should_fail : meson.get_cross_property('xfail', '').contains(t),
+      timeout: 180,
     )
   endforeach
 endif

@@ -11,31 +11,37 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<value name="CACHE_FLUSH_TS" value="4"/>
 	<value name="CONTEXT_DONE" value="5"/>
 	<value name="CACHE_FLUSH" value="6"/>
-	<value name="HLSQ_FLUSH" value="7"/> <!-- on a3xx -->
-	<value name="VIZQUERY_START" value="7"/> <!-- on a2xx (??) -->
-	<value name="VIZQUERY_END" value="8"/>
+	<value name="VIZQUERY_START" value="7" variants="A2XX"/>
+	<value name="HLSQ_FLUSH" value="7" variants="A3XX,A4XX"/>
+	<value name="VIZQUERY_END" value="8" variants="A2XX"/>
 	<value name="SC_WAIT_WC" value="9"/>
+	<value name="WRITE_PRIMITIVE_COUNTS" value="9" variants="A6XX"/>
+	<value name="START_PRIMITIVE_CTRS" value="11" variants="A6XX"/>
+	<value name="STOP_PRIMITIVE_CTRS" value="12" variants="A6XX"/>
 	<value name="RST_PIX_CNT" value="13"/>
 	<value name="RST_VTX_CNT" value="14"/>
 	<value name="TILE_FLUSH" value="15"/>
 	<value name="STAT_EVENT" value="16"/>
 	<value name="CACHE_FLUSH_AND_INV_TS_EVENT" value="20" variants="A2XX,A3XX,A4XX"/>
 	<value name="ZPASS_DONE" value="21"/>
-	<value name="CACHE_FLUSH_AND_INV_EVENT" value="22"/>
+	<value name="CACHE_FLUSH_AND_INV_EVENT" value="22" variants="A2XX"/>
+	<value name="RB_DONE_TS" value="22" variants="A3XX-"/>
 	<value name="PERFCOUNTER_START" value="23" variants="A2XX,A3XX,A4XX"/>
 	<value name="PERFCOUNTER_STOP" value="24" variants="A2XX,A3XX,A4XX"/>
 	<value name="VS_FETCH_DONE" value="27"/>
 	<value name="FACENESS_FLUSH" value="28" variants="A2XX,A3XX,A4XX"/>
 
 	<!-- a5xx events -->
+	<value name="WT_DONE_TS" value="8" variants="A5XX,A6XX"/>
 	<value name="FLUSH_SO_0" value="17" variants="A5XX,A6XX"/>
 	<value name="FLUSH_SO_1" value="18" variants="A5XX,A6XX"/>
 	<value name="FLUSH_SO_2" value="19" variants="A5XX,A6XX"/>
 	<value name="FLUSH_SO_3" value="20" variants="A5XX,A6XX"/>
 	<value name="PC_CCU_INVALIDATE_DEPTH" value="24" variants="A5XX,A6XX"/>
 	<value name="PC_CCU_INVALIDATE_COLOR" value="25" variants="A5XX,A6XX"/>
-	<value name="UNK_1C" value="28" variants="A5XX,A6XX"/>
-	<value name="UNK_1D" value="29" variants="A5XX,A6XX"/>
+	<value name="PC_CCU_RESOLVE_TS" value="26" variants="A6XX"/>
+	<value name="PC_CCU_FLUSH_DEPTH_TS" value="28" variants="A5XX,A6XX"/>
+	<value name="PC_CCU_FLUSH_COLOR_TS" value="29" variants="A5XX,A6XX"/>
 	<value name="BLIT" value="30" variants="A5XX,A6XX"/>
 	<value name="UNK_25" value="37" variants="A5XX"/>
 	<value name="LRZ_FLUSH" value="38" variants="A5XX,A6XX"/>
@@ -62,7 +68,39 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<value name="DI_PT_LINESTRIP_ADJ" value="0xb"/>
 	<value name="DI_PT_TRI_ADJ" value="0xc"/>
 	<value name="DI_PT_TRISTRIP_ADJ" value="0xd"/>
-	<value name="DI_PT_PATCHES" value="0x29"/>
+
+	<value name="DI_PT_PATCHES0" value="0x1f"/>
+	<value name="DI_PT_PATCHES1" value="0x20"/>
+	<value name="DI_PT_PATCHES2" value="0x21"/>
+	<value name="DI_PT_PATCHES3" value="0x22"/>
+	<value name="DI_PT_PATCHES4" value="0x23"/>
+	<value name="DI_PT_PATCHES5" value="0x24"/>
+	<value name="DI_PT_PATCHES6" value="0x25"/>
+	<value name="DI_PT_PATCHES7" value="0x26"/>
+	<value name="DI_PT_PATCHES8" value="0x27"/>
+	<value name="DI_PT_PATCHES9" value="0x28"/>
+	<value name="DI_PT_PATCHES10" value="0x29"/>
+	<value name="DI_PT_PATCHES11" value="0x2a"/>
+	<value name="DI_PT_PATCHES12" value="0x2b"/>
+	<value name="DI_PT_PATCHES13" value="0x2c"/>
+	<value name="DI_PT_PATCHES14" value="0x2d"/>
+	<value name="DI_PT_PATCHES15" value="0x2e"/>
+	<value name="DI_PT_PATCHES16" value="0x2f"/>
+	<value name="DI_PT_PATCHES17" value="0x30"/>
+	<value name="DI_PT_PATCHES18" value="0x31"/>
+	<value name="DI_PT_PATCHES19" value="0x32"/>
+	<value name="DI_PT_PATCHES20" value="0x33"/>
+	<value name="DI_PT_PATCHES21" value="0x34"/>
+	<value name="DI_PT_PATCHES22" value="0x35"/>
+	<value name="DI_PT_PATCHES23" value="0x36"/>
+	<value name="DI_PT_PATCHES24" value="0x37"/>
+	<value name="DI_PT_PATCHES25" value="0x38"/>
+	<value name="DI_PT_PATCHES26" value="0x39"/>
+	<value name="DI_PT_PATCHES27" value="0x3a"/>
+	<value name="DI_PT_PATCHES28" value="0x3b"/>
+	<value name="DI_PT_PATCHES29" value="0x3c"/>
+	<value name="DI_PT_PATCHES30" value="0x3d"/>
+	<value name="DI_PT_PATCHES31" value="0x3e"/>
 </enum>
 
 <enum name="pc_di_src_sel">
@@ -122,6 +160,12 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<value name="CP_PREEMPT_ENABLE" value="0x1c"/>
 	<value name="CP_PREEMPT_TOKEN" value="0x1e"/>
 	<value name="CP_INDIRECT_BUFFER" value="0x3f"/>
+	<doc>
+		Takes the same arguments as CP_INDIRECT_BUFFER, but jumps to
+		another buffer at the same level. Must be at the end of IB, and
+		doesn't work with draw state IB's.
+	</doc>
+	<value name="CP_INDIRECT_BUFFER_CHAIN" value="0x57" variants="A5XX-"/>
 	<doc>indirect buffer dispatch.  same as IB, but init is pipelined</doc>
 	<value name="CP_INDIRECT_BUFFER_PFD" value="0x37"/>
 	<doc>wait for the IDLE state of the engine</doc>
@@ -184,7 +228,7 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<doc>load sequencer instruction memory (code embedded in packet)</doc>
 	<value name="CP_IM_LOAD_IMMEDIATE" value="0x2b"/>
 	<doc>load constants from a location in memory</doc>
-	<value name="CP_LOAD_CONSTANT_CONTEXT" value="0x2e"/>
+	<value name="CP_LOAD_CONSTANT_CONTEXT" value="0x2e" variants="A2XX"/>
 	<doc>selective invalidation of state pointers</doc>
 	<value name="CP_INVALIDATE_STATE" value="0x3b"/>
 	<doc>dynamically changes shader instruction memory partition</doc>
@@ -231,7 +275,7 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<doc>Load a buffer with pre-fetch enabled</doc>
 	<value name="CP_INDIRECT_BUFFER_PFE" value="0x3f" variants="A5XX"/>
 	<doc>Set bin (?)</doc>
-	<value name="CP_SET_BIN" value="0x4c"/>
+	<value name="CP_SET_BIN" value="0x4c" variants="A2XX"/>
 
 	<doc>test 2 memory locations to dword values specified</doc>
 	<value name="CP_TEST_TWO_MEMS" value="0x71"/>
@@ -275,7 +319,7 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 		for A4xx
 		Write to register with address that does not fit into type-0 pkt
 	</doc>
-	<value name="CP_WIDE_REG_WRITE" value="0x74"/>
+	<value name="CP_WIDE_REG_WRITE" value="0x74" variants="A4XX"/>
 
 	<doc>copy from ME scratch RAM to a register</doc>
 	<value name="CP_SCRATCH_TO_REG" value="0x4d"/>
@@ -378,15 +422,16 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 
 	<!-- jmptable entry used to handle type4 packet on a5xx+: -->
 	<value name="PKT4" value="0x04" variants="A5XX,A6XX"/>
-<!--
-unknown a6xx opcodes:
 
-opcode: (null) (14) (5 dwords)
-opcode: (null) (55) (4 dwords)
-opcode: (null) (6d) (4 dwords)
- -->
-	<value name="CP_UNK_A6XX_14" value="0x14" variants="A6XX"/>
-	<value name="CP_UNK_A6XX_55" value="0x55" variants="A6XX"/>
+	<!-- TODO do these exist on A5xx? -->
+	<value name="CP_SCRATCH_WRITE" value="0x4c" variants="A6XX"/>
+	<value name="CP_REG_TO_MEM_OFFSET_MEM" value="0x74" variants="A6XX"/>
+	<value name="CP_REG_TO_MEM_OFFSET_REG" value="0x72" variants="A6XX"/>
+	<value name="CP_WAIT_MEM_GTE" value="0x14" variants="A6XX"/>
+	<value name="CP_WAIT_TWO_REGS" value="0x70" variants="A6XX"/>
+	<value name="CP_MEMCPY" value="0x75" variants="A6XX"/>
+	<value name="CP_SET_BIN_DATA5_OFFSET" value="0x2e" variants="A6XX"/>
+	<value name="CP_SET_CTXSWITCH_IB" value="0x55" variants="A6XX"/>
 
 	<!--
 	Seems to always have the payload:
@@ -562,6 +607,7 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	</enum>
 	<enum name="a6xx_state_src">
 		<value name="SS6_DIRECT" value="0"/>
+		<value name="SS6_BINDLESS" value="1"/> <!-- TODO does this exist on a4xx/a5xx? -->
 		<value name="SS6_INDIRECT" value="2"/>
 	</enum>
 	<reg32 offset="0" name="0">
@@ -610,6 +656,7 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	<bitfield name="VIS_CULL" low="8" high="9" type="pc_di_vis_cull_mode"/>
 	<bitfield name="INDEX_SIZE" low="10" high="11" type="a4xx_index_size"/>
 	<bitfield name="PATCH_TYPE" low="12" high="13" type="a6xx_patch_type"/>
+	<bitfield name="GS_ENABLE" pos="16" type="boolean"/>
 	<bitfield name="TESS_ENABLE" pos="17" type="boolean"/>
 </bitset>
 
@@ -650,9 +697,23 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	</reg32>
 	<reg32 offset="3" name="3">
 	</reg32>
+
+	<stripe variants="A5XX-">
+		<reg32 offset="4" name="4">
+			<bitfield name="INDX_BASE_LO" low="0" high="31"/>
+		</reg32>
+		<reg32 offset="5" name="5">
+			<bitfield name="INDX_BASE_HI" low="0" high="31"/>
+		</reg32>
+		<reg32 offset="6" name="6">
+			<bitfield name="INDX_SIZE" low="0" high="31"/>
+		</reg32>
+	</stripe>
+
 	<reg32 offset="4" name="4">
 		<bitfield name="INDX_BASE" low="0" high="31"/>
 	</reg32>
+
 	<reg32 offset="5" name="5">
 		<bitfield name="INDX_SIZE" low="0" high="31"/>
 	</reg32>
@@ -712,13 +773,9 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 			<bitfield name="DISABLE" pos="17" type="boolean"/>
 			<bitfield name="DISABLE_ALL_GROUPS" pos="18" type="boolean"/>
 			<bitfield name="LOAD_IMMED" pos="19" type="boolean"/>
-			<!--
-			I think this is a bitmask of states that this group applies to
-			(ie. binning/bypass/gmem)?  At least starting w/ a6xx blob
-			emits different VS state at the same time, with ENABLE_MASK=0x1
-			for binning pass VS state, and ENABLE_MASK=0x6 for full VS.
-			-->
-			<bitfield name="ENABLE_MASK" low="20" high="23" variants="A6XX-"/>
+			<bitfield name="BINNING" pos="20" variants="A6XX-" type="boolean"/>
+			<bitfield name="GMEM" pos="21" variants="A6XX-" type="boolean"/>
+			<bitfield name="SYSMEM" pos="22" variants="A6XX-" type="boolean"/>
 			<bitfield name="GROUP_ID" low="24" high="28" type="uint"/>
 		</reg32>
 		<reg32 offset="1" name="1">
@@ -775,23 +832,75 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	<reg32 offset="4" name="4">
 		<bitfield name="BIN_SIZE_ADDRESS_HI" low="0" high="31"/>
 	</reg32>
-	<!-- what is this new address? -->
+	<!-- new on a6xx, where BIN_DATA_ADDR is the DRAW_STRM: -->
 	<reg32 offset="5" name="5">
-		<bitfield name="BIN_DATA_ADDR2_LO" low="0" high="31"/>
+		<bitfield name="BIN_PRIM_STRM_LO" low="0" high="31"/>
 	</reg32>
 	<reg32 offset="6" name="6">
-		<bitfield name="BIN_DATA_ADDR2_LO" low="0" high="31"/>
+		<bitfield name="BIN_PRIM_STRM_HI" low="0" high="31"/>
+	</reg32>
+</domain>
+
+<domain name="CP_SET_BIN_DATA5_OFFSET" width="32">
+	<doc>
+                Like CP_SET_BIN_DATA5, but set the pointers as offsets from the
+                pointers stored in VSC_PIPE_{DATA,DATA2,SIZE}_ADDRESS. Useful
+                for Vulkan where these values aren't known when the command
+                stream is recorded.
+	</doc>
+	<reg32 offset="0" name="0">
+		<!-- equiv to PC_VSTREAM_CONTROL.SIZE on a3xx/a4xx: -->
+		<bitfield name="VSC_SIZE" low="16" high="21" type="uint"/>
+		<!-- equiv to PC_VSTREAM_CONTROL.N on a3xx/a4xx: -->
+		<bitfield name="VSC_N" low="22" high="26" type="uint"/>
+	</reg32>
+	<!-- BIN_DATA_ADDR -> VSC_PIPE[p].DATA_ADDRESS -->
+	<reg32 offset="1" name="1">
+		<bitfield name="BIN_DATA_OFFSET" low="0" high="31" type="uint"/>
+	</reg32>
+	<!-- BIN_SIZE_ADDRESS -> VSC_SIZE_ADDRESS + (p * 4)-->
+	<reg32 offset="2" name="2">
+		<bitfield name="BIN_SIZE_OFFSET" low="0" high="31" type="uint"/>
+	</reg32>
+	<!-- BIN_DATA2_ADDR -> VSC_PIPE[p].DATA2_ADDRESS -->
+	<reg32 offset="3" name="3">
+		<bitfield name="BIN_DATA2_OFFSET" low="0" high="31" type="uint"/>
+	</reg32>
+</domain>
+
+<domain name="CP_REG_RMW" width="32">
+	<doc>
+                Modifies DST_REG using two sources that can either be registers
+                or immediates. If SRC1_ADD is set, then do the following:
+
+			$dst = (($dst &amp; $src0) rot $rotate) + $src1
+
+		Otherwise:
+
+			$dst = (($dst &amp; $src0) rot $rotate) | $src1
+
+		Here "rot" means rotate left.
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="DST_REG" low="0" high="17" type="hex"/>
+		<bitfield name="ROTATE" low="24" high="28" type="uint"/>
+		<bitfield name="SRC1_ADD" pos="29" type="boolean"/>
+		<bitfield name="SRC1_IS_REG" pos="30" type="boolean"/>
+		<bitfield name="SRC0_IS_REG" pos="31" type="boolean"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="SRC0" low="0" high="31" type="uint"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="SRC1" low="0" high="31" type="uint"/>
 	</reg32>
 </domain>
 
 <domain name="CP_REG_TO_MEM" width="32">
 	<reg32 offset="0" name="0">
 		<bitfield name="REG" low="0" high="15" type="hex"/>
-		<!--
-		number of regsiters/dwords copied is CNT+1.. unsure
-		about # of bits
-		 -->
-		<bitfield name="CNT" low="19" high="29" type="uint"/>
+		<!-- number of registers/dwords copied is max(CNT, 1). -->
+		<bitfield name="CNT" low="18" high="29" type="uint"/>
 		<bitfield name="64B" pos="30" type="boolean"/>
 		<bitfield name="ACCUMULATE" pos="31" type="boolean"/>
 	</reg32>
@@ -803,16 +912,67 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	</reg32>
 </domain>
 
+<domain name="CP_REG_TO_MEM_OFFSET_REG" width="32">
+	<doc>
+                Like CP_REG_TO_MEM, but the memory address to write to can be
+                offsetted using either one or two registers or scratch
+                registers.
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="REG" low="0" high="15" type="hex"/>
+		<!-- number of registers/dwords copied is max(CNT, 1). -->
+		<bitfield name="CNT" low="18" high="29" type="uint"/>
+		<bitfield name="64B" pos="30" type="boolean"/>
+		<bitfield name="ACCUMULATE" pos="31" type="boolean"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="DEST" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="2" name="2" variants="A5XX-">
+		<bitfield name="DEST_HI" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="OFFSET0" low="0" high="17" type="hex"/>
+		<bitfield name="OFFSET0_SCRATCH" pos="19" type="boolean"/>
+	</reg32>
+	<!-- followed by an optional identical OFFSET1 dword -->
+</domain>
+
+<domain name="CP_REG_TO_MEM_OFFSET_MEM" width="32">
+	<doc>
+                Like CP_REG_TO_MEM, but the memory address to write to can be
+                offsetted using a DWORD in memory.
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="REG" low="0" high="15" type="hex"/>
+		<!-- number of registers/dwords copied is max(CNT, 1). -->
+		<bitfield name="CNT" low="18" high="29" type="uint"/>
+		<bitfield name="64B" pos="30" type="boolean"/>
+		<bitfield name="ACCUMULATE" pos="31" type="boolean"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="DEST" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="2" name="2" variants="A5XX-">
+		<bitfield name="DEST_HI" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="OFFSET_LO" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="4" name="4">
+		<bitfield name="OFFSET_HI" low="0" high="31" type="hex"/>
+	</reg32>
+</domain>
+
 <domain name="CP_MEM_TO_REG" width="32">
 	<reg32 offset="0" name="0">
 		<bitfield name="REG" low="0" high="15" type="hex"/>
-		<!--
-		number of regsiters/dwords copied is CNT+1.. unsure
-		about # of bits
-		 -->
+		<!-- number of registers/dwords copied is max(CNT, 1). -->
 		<bitfield name="CNT" low="19" high="29" type="uint"/>
-		<bitfield name="64B" pos="30" type="boolean"/>
-		<bitfield name="ACCUMULATE" pos="31" type="boolean"/>
+		<!-- shift each DWORD left by 2 while copying -->
+		<bitfield name="SHIFT_BY_2" pos="30" type="boolean"/>
+		<!-- does the same thing as CP_MEM_TO_MEM::UNK31 -->
+		<bitfield name="UNK31" pos="31" type="boolean"/>
 	</reg32>
 	<reg32 offset="1" name="1">
 		<bitfield name="SRC" low="0" high="31"/>
@@ -834,6 +994,10 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 
 		<!-- if set treat src/dst as 64bit values -->
 		<bitfield name="DOUBLE" pos="29" type="boolean"/>
+		<!-- execute CP_WAIT_FOR_MEM_WRITES beforehand -->
+		<bitfield name="WAIT_FOR_MEM_WRITES" pos="30" type="boolean"/>
+		<!-- some other kind of wait -->
+		<bitfield name="UNK31" pos="31" type="boolean"/>
 	</reg32>
 	<!--
 	followed by sequence of addresses.. the first is the
@@ -843,6 +1007,61 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	out to be useful for queries and accumulating results
 	across multiple tiles)
 	 -->
+</domain>
+
+<domain name="CP_MEMCPY" width="32">
+	<reg32 offset="0" name="0">
+		<bitfield name="DWORDS" low="0" high="31" type="uint"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="SRC_LO" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="SRC_HI" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="DST_LO" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="4" name="4">
+		<bitfield name="DST_HI" low="0" high="31" type="hex"/>
+	</reg32>
+</domain>
+
+<domain name="CP_REG_TO_SCRATCH" width="32">
+	<reg32 offset="0" name="0">
+		<bitfield name="REG" low="0" high="17" type="hex"/>
+		<bitfield name="SCRATCH" low="20" high="22" type="uint"/>
+		<!-- number of registers/dwords copied is CNT + 1. -->
+		<bitfield name="CNT" low="24" high="26" type="uint"/>
+	</reg32>
+</domain>
+
+<domain name="CP_SCRATCH_TO_REG" width="32">
+	<reg32 offset="0" name="0">
+		<bitfield name="REG" low="0" high="17" type="hex"/>
+		<!-- note: CP_MEM_TO_REG always sets this when writing to the register -->
+		<bitfield name="UNK18" pos="18" type="boolean"/>
+		<bitfield name="SCRATCH" low="20" high="22" type="uint"/>
+		<!-- number of registers/dwords copied is CNT + 1. -->
+		<bitfield name="CNT" low="24" high="26" type="uint"/>
+	</reg32>
+</domain>
+
+<domain name="CP_SCRATCH_WRITE" width="32">
+	<reg32 offset="0" name="0">
+		<bitfield name="SCRATCH" low="20" high="22" type="uint"/>
+	</reg32>
+	<!-- followed by one or more DWORDs to write to scratch registers -->
+</domain>
+
+<domain name="CP_MEM_WRITE" width="32">
+	<reg32 offset="0" name="0">
+		<bitfield name="ADDR_LO" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="ADDR_HI" low="0" high="31"/>
+	</reg32>
+	<!-- followed by the DWORDs to write -->
 </domain>
 
 <enum name="cp_cond_function">
@@ -881,7 +1100,10 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 <domain name="CP_COND_WRITE5" width="32">
 	<reg32 offset="0" name="0">
 		<bitfield name="FUNCTION" low="0" high="2" type="cp_cond_function"/>
+		<bitfield name="SIGNED_COMPARE" pos="3" type="boolean"/>
+                <!-- if both POLL_MEMORY and POLL_SCRATCH are false, it polls a register at POLL_ADDR_LO instead. -->
 		<bitfield name="POLL_MEMORY" pos="4" type="boolean"/>
+		<bitfield name="POLL_SCRATCH" pos="5" type="boolean"/>
 		<bitfield name="WRITE_MEMORY" pos="8" type="boolean"/>
 	</reg32>
 	<reg32 offset="1" name="1">
@@ -904,6 +1126,71 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 	</reg32>
 	<reg32 offset="7" name="7">
 		<bitfield name="WRITE_DATA" low="0" high="31"/>
+	</reg32>
+</domain>
+
+<domain name="CP_WAIT_MEM_GTE" width="32">
+        <doc>
+                Wait until a memory value is greater than or equal to the
+                reference, using signed comparison.
+	</doc>
+	<reg32 offset="0" name="0">
+		<!-- Reserved for flags, presumably? Unused in FW -->
+		<bitfield name="RESERVED" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="POLL_ADDR_LO" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="POLL_ADDR_HI" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="REF" low="0" high="31"/>
+	</reg32>
+</domain>
+
+<domain name="CP_WAIT_REG_MEM" width="32">
+        <doc>
+                This uses the same internal comparison as CP_COND_WRITE,
+                but waits until the comparison is true instead. It busy-loops in
+                the CP for the given number of cycles before trying again.
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="FUNCTION" low="0" high="2" type="cp_cond_function"/>
+		<bitfield name="SIGNED_COMPARE" pos="3" type="boolean"/>
+		<bitfield name="POLL_MEMORY" pos="4" type="boolean"/>
+		<bitfield name="POLL_SCRATCH" pos="5" type="boolean"/>
+		<bitfield name="WRITE_MEMORY" pos="8" type="boolean"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="POLL_ADDR_LO" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="POLL_ADDR_HI" low="0" high="31" type="hex"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="REF" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="4" name="4">
+		<bitfield name="MASK" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="5" name="5">
+		<bitfield name="DELAY_LOOP_CYCLES" low="0" high="31"/>
+	</reg32>
+</domain>
+
+<domain name="CP_WAIT_TWO_REGS" width="32">
+	<doc>
+		Waits for REG0 to not be 0 or REG1 to not equal REF
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="REG0" low="0" high="17" type="hex"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="REG1" low="0" high="17" type="hex"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="REF" low="0" high="31" type="uint"/>
 	</reg32>
 </domain>
 
@@ -1101,15 +1388,35 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 		<value value="1" name="RM6_BYPASS"/>
 		<value value="2" name="RM6_BINNING"/>
 		<value value="4" name="RM6_GMEM"/>
-		<value value="5" name="RM6_BLIT2D"/>
+		<value value="5" name="RM6_ENDVIS"/>
 		<value value="6" name="RM6_RESOLVE"/>
-		<value value="0xc" name="RM6_BLIT2DSCALE"/>
+		<value value="7" name="RM6_YIELD"/>
+		<value value="8" name="RM6_COMPUTE"/>
+		<value value="0xc" name="RM6_BLIT2DSCALE"/>  <!-- no-op (at least on current sqe fw) -->
+
+		<!--
+			These values come from a6xx_set_marker() in the
+			downstream kernel, and they can only be set by the kernel
+		-->
+		<value value="0xd" name="RM6_IB1LIST_START"/>
+		<value value="0xe" name="RM6_IB1LIST_END"/>
+		<!-- IFPC - inter-frame power collapse -->
+		<value value="0x100" name="RM6_IFPC_ENABLE"/>
+		<value value="0x101" name="RM6_IFPC_DISABLE"/>
 	</enum>
 	<reg32 offset="0" name="0">
-		<bitfield name="MARKER" low="0" high="3"/>
-		<bitfield name="MODE" low="0" high="3" type="a6xx_render_mode"/>
-		<!-- IFPC - inter-frame power collapse -->
-		<bitfield name="IFPC" pos="8" type="boolean"/>
+		<!--
+			NOTE: blob driver and some versions of freedreno/turnip set
+			b4, which is unused (at least by current sqe fw), but interferes
+			with parsing if we extend the size of the bitfield to include
+			b8 (only sent by kernel mode driver).  Really, the way the
+			parsing works in the firmware, only b0-b3 are considered, but
+			if b8 is set, the low bits are interpreted differently.  To
+			model this, without getting confused by spurious b4, this is
+			described as two overlapping bitfields:
+		 -->
+		<bitfield name="MODE" low="0" high="8" type="a6xx_render_mode"/>
+		<bitfield name="MARKER" low="0" high="3" type="a6xx_render_mode"/>
 	</reg32>
 </domain>
 
@@ -1155,17 +1462,152 @@ opcode: CP_LOAD_STATE4 (30) (4 dwords)
 		<bitfield name="REG" low="0" high="11"/>
 		<!-- the bit to test -->
 		<bitfield name="BIT" low="20" high="24" type="uint"/>
-		<bitfield name="UNK25" pos="25" type="boolean"/>
+		<!-- execute CP_WAIT_FOR_ME beforehand -->
+		<bitfield name="WAIT_FOR_ME" pos="25" type="boolean"/>
 	</reg32>
 </domain>
 
 <!-- I *think* this existed at least as far back as a4xx -->
 <domain name="CP_COND_REG_EXEC" width="32">
+	<enum name="compare_mode">
+		<!-- use the predicate bit set by CP_REG_TEST -->
+		<value value="1" name="PRED_TEST"/>
+		<!-- compare two registers directly for equality -->
+		<value value="2" name="REG_COMPARE"/>
+		<!-- test if certain render modes are set via CP_SET_MARKER -->
+		<value value="3" name="RENDER_MODE" variants="A6XX-"/>
+	</enum>
 	<reg32 offset="0" name="0">
-		<bitfield name="UNK28" pos="28" type="boolean"/>
+		<bitfield name="REG0" low="0" high="17" type="hex"/>
+
+		<!--
+			Note: these bits have the same meaning, and use the same
+			internal mechanism as the bits in CP_SET_DRAW_STATE.
+			When RENDER_MODE is selected, they're used as
+			a bitmask of which modes pass the test.
+		-->
+
+		<!-- RM6_BINNING -->
+		<bitfield name="BINNING" pos="25" variants="A6XX-" type="boolean"/>
+		<!-- all others -->
+		<bitfield name="GMEM" pos="26" variants="A6XX-" type="boolean"/>
+		<!-- RM6_BYPASS -->
+		<bitfield name="SYSMEM" pos="27" variants="A6XX-" type="boolean"/>
+
+		<bitfield name="MODE" low="28" high="31" type="compare_mode"/>
 	</reg32>
+
+	<!-- in REG_COMPARE mode, there's an extra DWORD here with REG1 -->
+
 	<reg32 offset="1" name="1">
 		<bitfield name="DWORDS" low="0" high="31" type="uint"/>
+	</reg32>
+</domain>
+
+<domain name="CP_COND_EXEC" width="32">
+	<doc>
+                Executes the following DWORDs of commands if the dword at ADDR0
+                is not equal to 0 and the dword at ADDR1 is less than REF
+                (signed comparison).
+	</doc>
+	<reg32 offset="0" name="0">
+		<bitfield name="ADDR0_LO" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="ADDR0_HI" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="ADDR1_LO" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="3" name="3">
+		<bitfield name="ADDR1_HI" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="4" name="4">
+		<bitfield name="REF" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="5" name="5">
+		<bitfield name="DWORDS" low="0" high="31" type="uint"/>
+	</reg32>
+</domain>
+
+<domain name="CP_SET_CTXSWITCH_IB" width="32">
+	<doc>
+                Used by the userspace driver to set various IB's which are
+                executed during context save/restore for handling
+                state that isn't restored by the
+                context switch routine itself.
+	</doc>
+	<enum name="ctxswitch_ib">
+		<value name="RESTORE_IB" value="0">
+			<doc>Executed unconditionally when switching back to the context.</doc>
+		</value>
+		<value name="YIELD_RESTORE_IB" value="1">
+                        <doc>
+				Executed when switching back after switching
+				away during execution of
+				a CP_SET_MARKER packet with RM6_YIELD as the
+				payload *and* the normal save routine was
+				bypassed for a shorter one. I think this is
+				connected to the "skipsaverestore" bit set by
+				the kernel when preempting.
+			</doc>
+		</value>
+		<value name="SAVE_IB" value="2">
+                        <doc>
+				Executed when switching away from the context,
+				except for context switches initiated via
+				CP_YIELD.
+                        </doc>
+		</value>
+		<value name="RB_SAVE_IB" value="3">
+			<doc>
+				This can only be set by the RB (i.e. the kernel)
+				and executes with protected mode off, but
+				is otherwise similar to SAVE_IB.
+			</doc>
+		</value>
+	</enum>
+	<reg32 offset="0" name="0">
+		<bitfield name="ADDR_LO" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="1" name="1">
+		<bitfield name="ADDR_HI" low="0" high="31"/>
+	</reg32>
+	<reg32 offset="2" name="2">
+		<bitfield name="DWORDS" low="0" high="19" type="uint"/>
+		<bitfield name="TYPE" low="20" high="21" type="ctxswitch_ib"/>
+	</reg32>
+</domain>
+
+<domain name="CP_REG_WRITE" width="32">
+	<enum name="reg_tracker">
+		<doc>
+			Keep shadow copies of these registers and only set them
+			when drawing, avoiding redundant writes:
+			- VPC_CNTL_0
+			- HLSQ_CONTROL_1_REG
+			- HLSQ_UNKNOWN_B980
+		</doc>
+		<value name="TRACK_CNTL_REG" value="0x1"/>
+		<doc>
+			Track RB_RENDER_CNTL, and insert a WFI in the following
+			situation:
+			- There is a write that disables binning
+			- There was a draw with binning left enabled, but in
+			  BYPASS mode
+			Presumably this is a hang workaround?
+		</doc>
+		<value name="TRACK_RENDER_CNTL" value="0x2"/>
+		<doc>
+			Do a mysterious CP_EVENT_WRITE 0x3f when the low bit of
+			the data to write is 0. Used by the Vulkan blob with
+			PC_UNKNOWN_9B07, but this isn't predicated on particular
+			register(s) like the others.
+		</doc>
+		<value name="UNK_EVENT_WRITE" value="0x4"/>
+	</enum>
+	<reg32 offset="0" name="0">
+		<bitfield name="TRACKER" low="0" high="2" type="reg_tracker"/>
 	</reg32>
 </domain>
 

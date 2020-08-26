@@ -28,6 +28,7 @@
 #include "draw/draw_private.h"
 #include "draw/draw_vs.h"
 #include "draw/draw_gs.h"
+#include "draw/draw_tess.h"
 #include "draw/draw_context.h"
 #include "draw/draw_vbuf.h"
 #include "draw/draw_vertex.h"
@@ -36,6 +37,7 @@
 #include "pipe/p_state.h"
 
 #include "util/u_math.h"
+#include "util/u_prim.h"
 #include "util/u_memory.h"
 
 struct pt_so_emit {
@@ -59,6 +61,8 @@ draw_so_info(const struct draw_context *draw)
 
    if (draw->gs.geometry_shader) {
       state = &draw->gs.geometry_shader->state.stream_output;
+   } else if (draw->tes.tess_eval_shader) {
+      state = &draw->tes.tess_eval_shader->state.stream_output;
    } else {
       state = &draw->vs.vertex_shader->state.stream_output;
    }
@@ -273,8 +277,20 @@ void draw_pt_so_emit( struct pt_so_emit *emit,
    struct vbuf_render *render = draw->render;
    unsigned start, i, stream;
 
-   if (!emit->has_so)
+   if (!emit->has_so) {
+      if (draw->collect_primgen) {
+         unsigned i;
+         unsigned total = 0;
+         for (i = 0; i < input_prims->primitive_count; i++) {
+            total +=
+               u_decomposed_prims_for_vertices(input_prims->prim,
+                                               input_prims->primitive_lengths[i]);
+         }
+         render->set_stream_output_info(render,
+                                        0, 0, total);
+      }
       return;
+   }
 
    if (!draw->so.num_targets)
       return;

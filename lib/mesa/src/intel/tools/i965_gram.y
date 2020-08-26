@@ -616,6 +616,7 @@ instruction:
 	| syncinstruction
 	| ternaryinstruction
 	| sendinstruction
+	| illegalinstruction
 	;
 
 relocatableinstruction:
@@ -623,6 +624,15 @@ relocatableinstruction:
 	| branchinstruction
 	| breakinstruction
 	| loopinstruction
+	;
+
+illegalinstruction:
+	ILLEGAL execsize instoptions
+	{
+		brw_next_insn(p, $1);
+		brw_inst_set_exec_size(p->devinfo, brw_last_inst, $2);
+		i965_asm_set_instruction_options(p, $3);
+	}
 	;
 
 /* Unary instruction */
@@ -962,7 +972,7 @@ sendinstruction:
 		if (brw_inst_send_sel_reg32_ex_desc(p->devinfo, brw_last_inst)) {
 			brw_inst_set_send_ex_desc_ia_subreg_nr(p->devinfo, brw_last_inst, $5.subnr);
 		} else {
-			brw_inst_set_send_ex_desc(p->devinfo, brw_last_inst, $8);
+			brw_inst_set_sends_ex_desc(p->devinfo, brw_last_inst, $8);
 		}
 
 		brw_inst_set_bits(brw_last_inst, 127, 96, $7);
@@ -988,7 +998,7 @@ sendinstruction:
 		brw_set_src1(p, brw_last_inst, $6);
 
 		brw_inst_set_send_sel_reg32_desc(p->devinfo, brw_last_inst, 1);
-		brw_inst_set_send_ex_desc(p->devinfo, brw_last_inst, $8);
+		brw_inst_set_sends_ex_desc(p->devinfo, brw_last_inst, $8);
 
 		brw_inst_set_sfid(p->devinfo, brw_last_inst, $9);
 		brw_inst_set_eot(p->devinfo, brw_last_inst, $10.end_of_thread);
@@ -1648,6 +1658,7 @@ srcarcoperandex_ud_typed:
 srcarcoperandex_typed:
 	flagreg
 	| maskreg
+	| statereg
 	;
 
 indirectsrcoperand:
@@ -1770,7 +1781,9 @@ addrreg:
 			error(&@2, "Address sub resgister number %d"
 				   "out of range\n", $2);
 
-		$$ = brw_address_reg($2);
+		$$.file = BRW_ARCHITECTURE_REGISTER_FILE;
+		$$.nr = BRW_ARF_ADDRESS;
+		$$.subnr = $2;
 	}
 	;
 
@@ -1853,8 +1866,9 @@ statereg:
 			error(&@2, "State sub register number %d"
 				   " out of range\n", $2);
 
-		$$ = brw_sr0_reg($2);
-		$$.nr = $1;
+		$$.file = BRW_ARCHITECTURE_REGISTER_FILE;
+		$$.nr = BRW_ARF_STATE;
+		$$.subnr = $2;
 	}
 	;
 

@@ -37,7 +37,7 @@ fd2_setup_slices(struct fd_resource *rsc)
 	uint32_t depth = prsc->depth0;
 
 	for (level = 0; level <= prsc->last_level; level++) {
-		struct fd_resource_slice *slice = fd_resource_slice(rsc, level);
+		struct fdl_slice *slice = fd_resource_slice(rsc, level);
 		uint32_t blocks;
 
 		/* 32 * 32 block alignment */
@@ -61,13 +61,13 @@ fd2_setup_slices(struct fd_resource *rsc)
 			height = util_next_power_of_two(height);
 		}
 
-		slice->pitch = width;
+		slice->pitch = util_format_get_nblocksx(format, width) * rsc->layout.cpp;
 		slice->offset = size;
 
 		blocks = util_format_get_nblocks(format, width, height);
 
 		/* 4k aligned size */
-		slice->size0 = align(blocks * rsc->cpp, 4096);
+		slice->size0 = align(blocks * rsc->layout.cpp, 4096);
 
 		size += slice->size0 * depth * prsc->array_size;
 

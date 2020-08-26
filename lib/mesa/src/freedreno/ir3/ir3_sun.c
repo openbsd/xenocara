@@ -38,7 +38,7 @@
  * is computed in multiple paths into a block, I think we should only have to
  * consider the worst-case.
  *
- * [1] https://pdfs.semanticscholar.org/ae53/6010b214612c2571f483354c264b0b39c545.pdf
+ * [1] https://www.cs.princeton.edu/~appel/papers/sun.pdf
  */
 
 static unsigned
@@ -56,7 +56,7 @@ number_instr(struct ir3_instruction *instr)
 	/* TODO I think including false-deps in the calculation is the right
 	 * thing to do:
 	 */
-	foreach_ssa_src_n(src, n, instr) {
+	foreach_ssa_src_n (src, n, instr) {
 		if (__is_false_dep(instr, n))
 			continue;
 		if (src->block != instr->block) {
@@ -96,11 +96,11 @@ ir3_sun(struct ir3 *ir)
 
 	ir3_clear_mark(ir);
 
-	for (unsigned i = 0; i < ir->noutputs; i++)
-		if (ir->outputs[i])
-			max = MAX2(max, number_instr(ir->outputs[i]));
+	struct ir3_instruction *out;
+	foreach_output (out, ir)
+		max = MAX2(max, number_instr(out));
 
-	list_for_each_entry (struct ir3_block, block, &ir->block_list, node) {
+	foreach_block (block, &ir->block_list) {
 		for (unsigned i = 0; i < block->keeps_count; i++)
 			max = MAX2(max, number_instr(block->keeps[i]));
 		if (block->condition)

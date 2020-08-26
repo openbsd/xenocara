@@ -65,7 +65,7 @@ v3d_bo_dump_stats(struct v3d_screen *screen)
         fprintf(stderr, "  BOs cached:      %d\n", cache_count);
         fprintf(stderr, "  BOs cached size: %dkb\n", cache_size / 1024);
 
-        if (!list_empty(&cache->time_list)) {
+        if (!list_is_empty(&cache->time_list)) {
                 struct v3d_bo *first = list_first_entry(&cache->time_list,
                                                         struct v3d_bo,
                                                         time_list);
@@ -81,7 +81,7 @@ v3d_bo_dump_stats(struct v3d_screen *screen)
                 struct timespec time;
                 clock_gettime(CLOCK_MONOTONIC, &time);
                 fprintf(stderr, "  now:               %ld\n",
-                        time.tv_sec);
+                        (long)time.tv_sec);
         }
 }
 
@@ -103,7 +103,7 @@ v3d_bo_from_cache(struct v3d_screen *screen, uint32_t size, const char *name)
 
         struct v3d_bo *bo = NULL;
         mtx_lock(&cache->lock);
-        if (!list_empty(&cache->size_list[page_index])) {
+        if (!list_is_empty(&cache->size_list[page_index])) {
                 bo = list_first_entry(&cache->size_list[page_index],
                                       struct v3d_bo, size_list);
 
@@ -170,7 +170,7 @@ v3d_bo_alloc(struct v3d_screen *screen, uint32_t size, const char *name)
         bo->offset = create.offset;
 
         if (ret != 0) {
-                if (!list_empty(&screen->bo_cache.time_list) &&
+                if (!list_is_empty(&screen->bo_cache.time_list) &&
                     !cleared_and_retried) {
                         cleared_and_retried = true;
                         v3d_bo_cache_free_all(&screen->bo_cache);
@@ -300,7 +300,7 @@ v3d_bo_last_unreference_locked_timed(struct v3d_bo *bo, time_t time)
                  */
                 for (int i = 0; i < cache->size_list_size; i++) {
                         struct list_head *old_head = &cache->size_list[i];
-                        if (list_empty(old_head))
+                        if (list_is_empty(old_head))
                                 list_inithead(&new_list[i]);
                         else {
                                 new_list[i].next = old_head->next;
@@ -367,12 +367,13 @@ v3d_bo_open_handle(struct v3d_screen *screen,
                         strerror(errno));
                 free(bo->map);
                 free(bo);
-                return NULL;
+                bo = NULL;
+                goto done;
         }
         bo->offset = get.offset;
         assert(bo->offset != 0);
 
-        util_hash_table_set(screen->bo_handles, (void *)(uintptr_t)handle, bo);
+        _mesa_hash_table_insert(screen->bo_handles, (void *)(uintptr_t)handle, bo);
 
         screen->bo_count++;
         screen->bo_size += bo->size;
@@ -433,7 +434,7 @@ v3d_bo_get_dmabuf(struct v3d_bo *bo)
 
         mtx_lock(&bo->screen->bo_handles_mutex);
         bo->private = false;
-        util_hash_table_set(bo->screen->bo_handles, (void *)(uintptr_t)bo->handle, bo);
+        _mesa_hash_table_insert(bo->screen->bo_handles, (void *)(uintptr_t)bo->handle, bo);
         mtx_unlock(&bo->screen->bo_handles_mutex);
 
         return fd;

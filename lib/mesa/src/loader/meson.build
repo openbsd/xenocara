@@ -23,7 +23,7 @@ inc_loader = include_directories('.')
 if with_platform_x11 and with_dri3
   libloader_dri3_helper = static_library(
     'loader_dri3_helper',
-    ['loader_dri3_helper.c', 'loader_dri3_helper.h'],
+    'loader_dri3_helper.c',
     c_args : c_vis_args,
     include_directories : [inc_include, inc_src],
     dependencies : [
@@ -35,14 +35,20 @@ else
   libloader_dri3_helper = []
 endif
 
+loader_c_args = [
+  c_vis_args, '-DUSE_DRICONF',
+  '-DDEFAULT_DRIVER_DIR="@0@"'.format(dri_search_path),
+]
+
+if with_gallium_iris and get_option('prefer-iris')
+  loader_c_args += ['-DPREFER_IRIS']
+endif
+
 libloader = static_library(
   'loader',
-  ['loader.c', 'loader.h', 'pci_id_driver_map.c', 'pci_id_driver_map.h',
-   xmlpool_options_h],
-  c_args : [c_vis_args, '-DUSE_DRICONF',
-            '-DDEFAULT_DRIVER_DIR="@0@"'.format(dri_search_path),
-],
+  ['loader.c', 'pci_id_driver_map.c'],
+  c_args : loader_c_args,
   include_directories : [inc_include, inc_src, inc_util],
-  dependencies : [dep_libdrm, dep_thread],
+  dependencies : [dep_libdrm, dep_thread, idep_xmlconfig_headers],
   build_by_default : false,
 )

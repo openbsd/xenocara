@@ -45,8 +45,6 @@ static gpir_codegen_src gpir_get_alu_input(gpir_node *parent, gpir_node *child)
          gpir_codegen_src_unused, gpir_codegen_src_p1_complex, gpir_codegen_src_unused },
       [GPIR_INSTR_SLOT_PASS] = {
          gpir_codegen_src_unused, gpir_codegen_src_p1_pass, gpir_codegen_src_p2_pass },
-      [GPIR_INSTR_SLOT_BRANCH] = {
-         gpir_codegen_src_unused, gpir_codegen_src_unused, gpir_codegen_src_unused },
 
       [GPIR_INSTR_SLOT_REG0_LOAD0] = {
          gpir_codegen_src_attrib_x, gpir_codegen_src_p1_attrib_x, gpir_codegen_src_unused },
@@ -418,6 +416,22 @@ static void gpir_codegen_pass_slot(gpir_codegen_instr *code, gpir_instr *instr)
       return;
    }
 
+   if (node->op == gpir_op_branch_cond) {
+      gpir_branch_node *branch = gpir_node_to_branch(node);
+
+      code->pass_op = gpir_codegen_pass_op_pass;
+      code->pass_src = gpir_get_alu_input(node, branch->cond);
+
+      /* Fill out branch information */
+      unsigned offset = branch->dest->instr_offset;
+      assert(offset < 0x200);
+      code->branch = true;
+      code->branch_target = offset & 0xff;
+      code->branch_target_lo = !(offset >> 8);
+      code->unknown_1 = 13;
+      return;
+   }
+
    gpir_alu_node *alu = gpir_node_to_alu(node);
    code->pass_src = gpir_get_alu_input(node, alu->children[0]);
 
@@ -434,16 +448,7 @@ static void gpir_codegen_pass_slot(gpir_codegen_instr *code, gpir_instr *instr)
    default:
       assert(0);
    }
-}
 
-static void gpir_codegen_branch_slot(gpir_codegen_instr *code, gpir_instr *instr)
-{
-   gpir_node *node = instr->slots[GPIR_INSTR_SLOT_BRANCH];
-
-   if (!node)
-      return;
-
-   assert(0);
 }
 
 static void gpir_codegen_reg0_slot(gpir_codegen_instr *code, gpir_instr *instr)
@@ -483,7 +488,7 @@ static gpir_codegen_store_src gpir_get_store_input(gpir_node *node)
       [GPIR_INSTR_SLOT_ADD1] = gpir_codegen_store_src_acc_1,
       [GPIR_INSTR_SLOT_COMPLEX] = gpir_codegen_store_src_complex,
       [GPIR_INSTR_SLOT_PASS] = gpir_codegen_store_src_pass,
-      [GPIR_INSTR_SLOT_BRANCH...GPIR_INSTR_SLOT_STORE3] = gpir_codegen_store_src_none,
+      [GPIR_INSTR_SLOT_REG0_LOAD0...GPIR_INSTR_SLOT_STORE3] = gpir_codegen_store_src_none,
    };
 
    gpir_store_node *store = gpir_node_to_store(node);
@@ -546,7 +551,6 @@ static void gpir_codegen(gpir_codegen_instr *code, gpir_instr *instr)
 
    gpir_codegen_complex_slot(code, instr);
    gpir_codegen_pass_slot(code, instr);
-   gpir_codegen_branch_slot(code, instr);
 
    gpir_codegen_reg0_slot(code, instr);
    gpir_codegen_reg1_slot(code, instr);
@@ -558,11 +562,9 @@ static void gpir_codegen(gpir_codegen_instr *code, gpir_instr *instr)
 static void gpir_codegen_print_prog(gpir_compiler *comp)
 {
    uint32_t *data = comp->prog->shader;
-   int size = comp->prog->shader_size;
-   int num_instr = size / sizeof(gpir_codegen_instr);
    int num_dword_per_instr = sizeof(gpir_codegen_instr) / sizeof(uint32_t);
 
-   for (int i = 0; i < num_instr; i++) {
+   for (int i = 0; i < comp->num_instr; i++) {
       printf("%03d: ", i);
       for (int j = 0; j < num_dword_per_instr; j++)
          printf("%08x ", data[i * num_dword_per_instr + j]);
@@ -574,14 +576,11 @@ bool gpir_codegen_prog(gpir_compiler *comp)
 {
    int num_instr = 0;
    list_for_each_entry(gpir_block, block, &comp->block_list, list) {
+      block->instr_offset = num_instr;
       num_instr += list_length(&block->instr_list);
    }
 
-   if (num_instr > 512) {
-      gpir_error("shader too big (%d), GP has a 512 instruction limit.\n",
-                 num_instr);
-      return false;
-   }
+   assert(num_instr <= 512);
 
    gpir_codegen_instr *code = rzalloc_array(comp->prog, gpir_codegen_instr, num_instr);
    if (!code)
@@ -602,7 +601,6 @@ bool gpir_codegen_prog(gpir_compiler *comp)
 
    comp->prog->shader = code;
    comp->prog->shader_size = num_instr * sizeof(gpir_codegen_instr);
-   comp->num_instr = num_instr;
 
    if (lima_debug & LIMA_DEBUG_GP) {
       gpir_codegen_print_prog(comp);

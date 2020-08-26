@@ -53,6 +53,8 @@ lower_alu_instr(nir_alu_instr *alu)
    case nir_op_vec2:
    case nir_op_vec3:
    case nir_op_vec4:
+   case nir_op_vec8:
+   case nir_op_vec16:
    case nir_op_inot:
    case nir_op_iand:
    case nir_op_ior:
@@ -62,6 +64,15 @@ lower_alu_instr(nir_alu_instr *alu)
 
    case nir_op_f2b1: alu->op = nir_op_f2b32; break;
    case nir_op_i2b1: alu->op = nir_op_i2b32; break;
+
+   case nir_op_b2b32:
+   case nir_op_b2b1:
+      /* We're mutating instructions in a dominance-preserving order so our
+       * source boolean should be 32-bit by now.
+       */
+      assert(nir_src_bit_size(alu->src[0].src) == 32);
+      alu->op = nir_op_mov;
+      break;
 
    case nir_op_flt: alu->op = nir_op_flt32; break;
    case nir_op_fge: alu->op = nir_op_fge32; break;

@@ -106,7 +106,7 @@ perfcntr_resume(struct fd_acc_query *aq, struct fd_batch *batch)
 		const struct fd_perfcntr_counter *counter = &g->counters[counter_idx];
 
 		OUT_PKT3(ring, CP_REG_TO_MEM, 2);
-		OUT_RING(ring, counter->counter_reg_lo | CP_MEM_TO_REG_0_ACCUMULATE);
+		OUT_RING(ring, counter->counter_reg_lo | CP_REG_TO_MEM_0_ACCUMULATE);
 		OUT_RELOCW(ring, query_sample_idx(aq, i, start));
 	}
 }
@@ -133,7 +133,7 @@ perfcntr_pause(struct fd_acc_query *aq, struct fd_batch *batch)
 		const struct fd_perfcntr_counter *counter = &g->counters[counter_idx];
 
 		OUT_PKT3(ring, CP_REG_TO_MEM, 2);
-		OUT_RING(ring, counter->counter_reg_lo | CP_MEM_TO_REG_0_ACCUMULATE);
+		OUT_RING(ring, counter->counter_reg_lo | CP_REG_TO_MEM_0_ACCUMULATE);
 		OUT_RELOCW(ring, query_sample_idx(aq, i, stop));
 	}
 }
@@ -151,7 +151,7 @@ perfcntr_accumulate_result(struct fd_acc_query *aq, void *buf,
 
 static const struct fd_acc_sample_provider perfcntr = {
 		.query_type = FD_QUERY_FIRST_PERFCNTR,
-		.active = FD_STAGE_DRAW | FD_STAGE_CLEAR,
+		.always = true,
 		.resume = perfcntr_resume,
 		.pause = perfcntr_pause,
 		.result = perfcntr_accumulate_result,
@@ -218,7 +218,7 @@ fd2_create_batch_query(struct pipe_context *pctx,
 		counters_per_group[entry->gid]++;
 	}
 
-	q = fd_acc_create_query2(ctx, 0, &perfcntr);
+	q = fd_acc_create_query2(ctx, 0, 0, &perfcntr);
 	aq = fd_acc_query(q);
 
 	/* sample buffer size is based on # of queries: */

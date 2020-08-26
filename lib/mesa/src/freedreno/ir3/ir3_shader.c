@@ -27,7 +27,7 @@
 #include "util/u_atomic.h"
 #include "util/u_string.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "drm/freedreno_drmif.h"
 
@@ -48,6 +48,8 @@ delete_variant(struct ir3_shader_variant *v)
 		ir3_destroy(v->ir);
 	if (v->bo)
 		fd_bo_del(v->bo);
+	if (v->binning)
+		delete_variant(v->binning);
 	free(v);
 }
 
@@ -96,8 +98,25 @@ fixup_regfootprint(struct ir3_shader_variant *v, uint32_t gpu_id)
 	}
 
 	for (i = 0; i < v->outputs_count; i++) {
+		/* for ex, VS shaders with tess don't have normal varying outs: */
+		if (!VALIDREG(v->outputs[i].regid))
+			continue;
 		int32_t regid = v->outputs[i].regid + 3;
 		if (v->outputs[i].half) {
+			if (gpu_id < 500) {
+				v->info.max_half_reg = MAX2(v->info.max_half_reg, regid >> 2);
+			} else {
+				v->info.max_reg = MAX2(v->info.max_reg, regid >> 3);
+			}
+		} else {
+			v->info.max_reg = MAX2(v->info.max_reg, regid >> 2);
+		}
+	}
+
+	for (i = 0; i < v->num_sampler_prefetch; i++) {
+		unsigned n = util_last_bit(v->sampler_prefetch[i].wrmask) - 1;
+		int32_t regid = v->sampler_prefetch[i].dst + n;
+		if (v->sampler_prefetch[i].half_precision) {
 			if (gpu_id < 500) {
 				v->info.max_half_reg = MAX2(v->info.max_half_reg, regid >> 2);
 			} else {
@@ -151,24 +170,16 @@ assemble_variant(struct ir3_shader_variant *v)
 	v->bo = fd_bo_new(compiler->dev, sz,
 			DRM_FREEDRENO_GEM_CACHE_WCOMBINE |
 			DRM_FREEDRENO_GEM_TYPE_KMEM,
-			"%s:%s", ir3_shader_stage(v->shader), info->name);
+			"%s:%s", ir3_shader_stage(v), info->name);
 
 	memcpy(fd_bo_map(v->bo), bin, sz);
 
-	if (ir3_shader_debug & IR3_DBG_DISASM) {
-		struct ir3_shader_key key = v->key;
-		printf("disassemble: type=%d, k={bp=%u,cts=%u,hp=%u}\n", v->type,
-			v->binning_pass, key.color_two_side, key.half_precision);
-		ir3_shader_disasm(v, bin, stdout);
-	}
-
 	if (shader_debug_enabled(v->shader->type)) {
-		fprintf(stderr, "Native code for unnamed %s shader %s:\n",
-			_mesa_shader_stage_to_string(v->shader->type),
-			v->shader->nir->info.name);
+		fprintf(stdout, "Native code for unnamed %s shader %s:\n",
+			ir3_shader_stage(v), v->shader->nir->info.name);
 		if (v->shader->type == MESA_SHADER_FRAGMENT)
-			fprintf(stderr, "SIMD0\n");
-		ir3_shader_disasm(v, bin, stderr);
+			fprintf(stdout, "SIMD0\n");
+		ir3_shader_disasm(v, bin, stdout);
 	}
 
 	free(bin);
@@ -291,6 +302,11 @@ ir3_shader_from_nir(struct ir3_compiler *compiler, nir_shader *nir)
 	NIR_PASS_V(nir, nir_lower_io, nir_var_all, ir3_glsl_type_size,
 			   (nir_lower_io_options)0);
 
+	if (compiler->gpu_id >= 600 &&
+			nir->info.stage == MESA_SHADER_FRAGMENT &&
+			!(ir3_shader_debug & IR3_DBG_NOFP16))
+		NIR_PASS_V(nir, nir_lower_mediump_outputs);
+
 	if (nir->info.stage == MESA_SHADER_FRAGMENT) {
 		/* NOTE: lower load_barycentric_at_sample first, since it
 		 * produces load_barycentric_at_offset:
@@ -302,6 +318,8 @@ ir3_shader_from_nir(struct ir3_compiler *compiler, nir_shader *nir)
 	}
 
 	NIR_PASS_V(nir, nir_lower_io_arrays_to_elements_no_indirects, false);
+
+	NIR_PASS_V(nir, nir_lower_amul, ir3_glsl_type_size);
 
 	/* do first pass optimization, ignoring the key: */
 	ir3_optimize_nir(shader, nir, NULL);
@@ -350,7 +368,16 @@ output_name(struct ir3_shader_variant *so, int i)
 	if (so->type == MESA_SHADER_FRAGMENT) {
 		return gl_frag_result_name(so->outputs[i].slot);
 	} else {
-		return gl_varying_slot_name(so->outputs[i].slot);
+		switch (so->outputs[i].slot) {
+		case VARYING_SLOT_GS_HEADER_IR3:
+			return "GS_HEADER";
+		case VARYING_SLOT_GS_VERTEX_FLAGS_IR3:
+			return "GS_VERTEX_FLAGS";
+		case VARYING_SLOT_TCS_HEADER_IR3:
+			return "TCS_HEADER";
+		default:
+			return gl_varying_slot_name(so->outputs[i].slot);
+		}
 	}
 }
 
@@ -359,35 +386,42 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 {
 	struct ir3 *ir = so->ir;
 	struct ir3_register *reg;
-	const char *type = ir3_shader_stage(so->shader);
+	const char *type = ir3_shader_stage(so);
 	uint8_t regid;
 	unsigned i;
 
-	for (i = 0; i < ir->ninputs; i++) {
-		if (!ir->inputs[i]) {
-			fprintf(out, "; in%d unused\n", i);
-			continue;
-		}
-		reg = ir->inputs[i]->regs[0];
+	struct ir3_instruction *instr;
+	foreach_input_n (instr, i, ir) {
+		reg = instr->regs[0];
 		regid = reg->num;
-		fprintf(out, "@in(%sr%d.%c)\tin%d\n",
+		fprintf(out, "@in(%sr%d.%c)\tin%d",
 				(reg->flags & IR3_REG_HALF) ? "h" : "",
 				(regid >> 2), "xyzw"[regid & 0x3], i);
+
+		if (reg->wrmask > 0x1)
+			fprintf(out, " (wrmask=0x%x)", reg->wrmask);
+		fprintf(out, "\n");
 	}
 
-	for (i = 0; i < ir->noutputs; i++) {
-		if (!ir->outputs[i]) {
-			fprintf(out, "; out%d unused\n", i);
-			continue;
-		}
-		/* kill shows up as a virtual output.. skip it! */
-		if (is_kill(ir->outputs[i]))
-			continue;
-		reg = ir->outputs[i]->regs[0];
+	/* print pre-dispatch texture fetches: */
+	for (i = 0; i < so->num_sampler_prefetch; i++) {
+		const struct ir3_sampler_prefetch *fetch = &so->sampler_prefetch[i];
+		fprintf(out, "@tex(%sr%d.%c)\tsrc=%u, samp=%u, tex=%u, wrmask=0x%x, cmd=%u\n",
+				fetch->half_precision ? "h" : "",
+				fetch->dst >> 2, "xyzw"[fetch->dst & 0x3],
+				fetch->src, fetch->samp_id, fetch->tex_id,
+				fetch->wrmask, fetch->cmd);
+	}
+
+	foreach_output_n (instr, i, ir) {
+		reg = instr->regs[0];
 		regid = reg->num;
-		fprintf(out, "@out(%sr%d.%c)\tout%d\n",
+		fprintf(out, "@out(%sr%d.%c)\tout%d",
 				(reg->flags & IR3_REG_HALF) ? "h" : "",
 				(regid >> 2), "xyzw"[regid & 0x3], i);
+		if (reg->wrmask > 0x1)
+			fprintf(out, " (wrmask=0x%x)", reg->wrmask);
+		fprintf(out, "\n");
 	}
 
 	struct ir3_const_state *const_state = &so->shader->const_state;
@@ -426,17 +460,28 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 	fprintf(out, "\n");
 
 	/* print generic shader info: */
-	fprintf(out, "; %s prog %d/%d: %u instructions, %d half, %d full\n",
+	fprintf(out, "; %s prog %d/%d: %u instr, %u nops, %u non-nops, %u mov, %u cov, %u dwords\n",
 			type, so->shader->id, so->id,
 			so->info.instrs_count,
+			so->info.nops_count,
+			so->info.instrs_count - so->info.nops_count,
+			so->info.mov_count, so->info.cov_count,
+			so->info.sizedwords);
+
+	fprintf(out, "; %s prog %d/%d: %u last-baryf, %d half, %d full, %u constlen\n",
+			type, so->shader->id, so->id,
+			so->info.last_baryf,
 			so->info.max_half_reg + 1,
-			so->info.max_reg + 1);
+			so->info.max_reg + 1,
+			so->constlen);
 
-	fprintf(out, "; %u constlen\n", so->constlen);
-
-	fprintf(out, "; %u (ss), %u (sy)\n", so->info.ss, so->info.sy);
-
-	fprintf(out, "; max_sun=%u\n", ir->max_sun);
+	fprintf(out, "; %s prog %d/%d: %u sstall, %u (ss), %u (sy), %d max_sun, %d loops\n",
+			type, so->shader->id, so->id,
+			so->info.sstall,
+			so->info.ss,
+			so->info.sy,
+			so->max_sun,
+			so->loops);
 
 	/* print shader type specific info: */
 	switch (so->type) {
@@ -446,11 +491,11 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 		break;
 	case MESA_SHADER_FRAGMENT:
 		dump_reg(out, "pos (ij_pixel)",
-			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_PIXEL));
+			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL));
 		dump_reg(out, "pos (ij_centroid)",
-			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_CENTROID));
+			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_PERSP_CENTROID));
 		dump_reg(out, "pos (ij_size)",
-			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_SIZE));
+			ir3_find_sysval_regid(so, SYSTEM_VALUE_BARYCENTRIC_PERSP_SIZE));
 		dump_output(out, so, FRAG_RESULT_DEPTH, "posz");
 		if (so->color0_mrt) {
 			dump_output(out, so, FRAG_RESULT_COLOR, "color");
@@ -464,13 +509,10 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 			dump_output(out, so, FRAG_RESULT_DATA6, "data6");
 			dump_output(out, so, FRAG_RESULT_DATA7, "data7");
 		}
-		/* these two are hard-coded since we don't know how to
-		 * program them to anything but all 0's...
-		 */
-		if (so->frag_coord)
-			fprintf(out, "; fragcoord: r0.x\n");
-		if (so->frag_face)
-			fprintf(out, "; fragface: hr0.x\n");
+		dump_reg(out, "fragcoord",
+			ir3_find_sysval_regid(so, SYSTEM_VALUE_FRAG_COORD));
+		dump_reg(out, "fragface",
+			ir3_find_sysval_regid(so, SYSTEM_VALUE_FRONT_FACE));
 		break;
 	default:
 		/* TODO */

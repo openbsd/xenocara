@@ -31,7 +31,7 @@ import xml.etree.cElementTree as et
 
 from mako.template import Template
 
-MAX_API_VERSION = '1.1.82'
+MAX_API_VERSION = '1.2.131'
 
 class Extension:
     def __init__(self, name, ext_version, enable):
@@ -60,6 +60,7 @@ EXTENSIONS = [
     Extension('VK_KHR_maintenance1',                      1, True),
     Extension('VK_KHR_maintenance2',                      1, True),
     Extension('VK_KHR_maintenance3',                      1, True),
+    Extension('VK_KHR_sampler_mirror_clamp_to_edge',      1, True),
     Extension('VK_KHR_surface',                          25, 'TU_HAS_SURFACE'),
     Extension('VK_KHR_swapchain',                        68, 'TU_HAS_SURFACE'),
     Extension('VK_KHR_wayland_surface',                   6, 'VK_USE_PLATFORM_WAYLAND_KHR'),
@@ -75,6 +76,15 @@ EXTENSIONS = [
     Extension('VK_KHR_external_memory',                   1, True),
     Extension('VK_KHR_external_memory_fd',                1, True),
     Extension('VK_EXT_external_memory_dma_buf',           1, True),
+    Extension('VK_EXT_image_drm_format_modifier',         1, False),
+    Extension('VK_EXT_sample_locations',                  1, 'device->gpu_id == 650'),
+    Extension('VK_EXT_sampler_filter_minmax',             1, True),
+    Extension('VK_EXT_transform_feedback',                1, True),
+    Extension('VK_ANDROID_native_buffer',                 1, True),
+    Extension('VK_KHR_external_semaphore_fd',             1, True),
+    Extension('VK_KHR_external_fence_fd',                 1, True),
+    Extension('VK_IMG_filter_cubic',                      1, 'device->gpu_id == 650'),
+    Extension('VK_EXT_filter_cubic',                      1, 'device->gpu_id == 650'),
 ]
 
 class VkVersion:

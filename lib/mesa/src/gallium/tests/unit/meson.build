@@ -19,18 +19,19 @@
 # SOFTWARE.
 
 foreach t : ['pipe_barrier_test', 'u_cache_test', 'u_half_test',
-             'u_format_test', 'u_format_compatible_test', 'translate_test',
-             'u_prim_verts_test' ]
+             'translate_test', 'u_prim_verts_test']
   exe = executable(
     t,
     '@0@.c'.format(t),
-    include_directories : inc_common,
+    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
     link_with : libgallium,
     dependencies : idep_mesautil,
     install : false,
   )
   # u_cache_test is slow, and translate_test fails.
   if not ['u_cache_test', 'translate_test'].contains(t)
-    test(t, exe, suite: 'gallium')
+    test(t, exe, suite: 'gallium',
+         should_fail : meson.get_cross_property('xfail', '').contains(t),
+    )
   endif
 endforeach

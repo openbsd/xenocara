@@ -490,7 +490,7 @@ rbug_delete_vs_state(struct pipe_context *_pipe,
    struct rbug_context *rb_pipe = rbug_context(_pipe);
    struct rbug_shader *rb_shader = rbug_shader(_vs);
 
-   mtx_unlock(&rb_pipe->call_mutex);
+   mtx_lock(&rb_pipe->call_mutex);
    rbug_shader_destroy(rb_pipe, rb_shader);
    mtx_unlock(&rb_pipe->call_mutex);
 }
@@ -921,6 +921,7 @@ rbug_flush_resource(struct pipe_context *_pipe,
 static void
 rbug_clear(struct pipe_context *_pipe,
            unsigned buffers,
+           const struct pipe_scissor_state *scissor_state,
            const union pipe_color_union *color,
            double depth,
            unsigned stencil)
@@ -931,6 +932,7 @@ rbug_clear(struct pipe_context *_pipe,
    mtx_lock(&rb_pipe->call_mutex);
    pipe->clear(pipe,
                buffers,
+               scissor_state,
                color,
                depth,
                stencil);
@@ -1001,6 +1003,31 @@ rbug_flush(struct pipe_context *_pipe,
 
    mtx_lock(&rb_pipe->call_mutex);
    pipe->flush(pipe, fence, flags);
+   mtx_unlock(&rb_pipe->call_mutex);
+}
+
+static void
+rbug_create_fence_fd(struct pipe_context *_pipe,
+                     struct pipe_fence_handle **fence, int fd,
+                     enum pipe_fd_type type)
+{
+   struct rbug_context *rb_pipe = rbug_context(_pipe);
+   struct pipe_context *pipe = rb_pipe->pipe;
+
+   mtx_lock(&rb_pipe->call_mutex);
+   pipe->create_fence_fd(pipe, fence, fd, type);
+   mtx_unlock(&rb_pipe->call_mutex);
+}
+
+static void
+rbug_fence_server_sync(struct pipe_context *_pipe,
+                       struct pipe_fence_handle *fence)
+{
+   struct rbug_context *rb_pipe = rbug_context(_pipe);
+   struct pipe_context *pipe = rb_pipe->pipe;
+
+   mtx_lock(&rb_pipe->call_mutex);
+   pipe->fence_server_sync(pipe, fence);
    mtx_unlock(&rb_pipe->call_mutex);
 }
 
@@ -1178,6 +1205,17 @@ rbug_context_texture_subdata(struct pipe_context *_context,
    mtx_unlock(&rb_pipe->call_mutex);
 }
 
+static void
+rbug_context_texture_barrier(struct pipe_context *_context, unsigned flags)
+{
+   struct rbug_context *rb_pipe = rbug_context(_context);
+   struct pipe_context *context = rb_pipe->pipe;
+
+   mtx_lock(&rb_pipe->call_mutex);
+   context->texture_barrier(context,
+                            flags);
+   mtx_unlock(&rb_pipe->call_mutex);
+}
 
 struct pipe_context *
 rbug_context_create(struct pipe_screen *_screen, struct pipe_context *pipe)
@@ -1252,11 +1290,12 @@ rbug_context_create(struct pipe_screen *_screen, struct pipe_context *pipe)
    rb_pipe->base.set_stream_output_targets = rbug_set_stream_output_targets;
    rb_pipe->base.resource_copy_region = rbug_resource_copy_region;
    rb_pipe->base.blit = rbug_blit;
-   rb_pipe->base.flush_resource = rbug_flush_resource;
    rb_pipe->base.clear = rbug_clear;
    rb_pipe->base.clear_render_target = rbug_clear_render_target;
    rb_pipe->base.clear_depth_stencil = rbug_clear_depth_stencil;
    rb_pipe->base.flush = rbug_flush;
+   rb_pipe->base.create_fence_fd = rbug_create_fence_fd;
+   rb_pipe->base.fence_server_sync = rbug_fence_server_sync;
    rb_pipe->base.create_sampler_view = rbug_context_create_sampler_view;
    rb_pipe->base.sampler_view_destroy = rbug_context_sampler_view_destroy;
    rb_pipe->base.create_surface = rbug_context_create_surface;
@@ -1266,6 +1305,8 @@ rbug_context_create(struct pipe_screen *_screen, struct pipe_context *pipe)
    rb_pipe->base.transfer_flush_region = rbug_context_transfer_flush_region;
    rb_pipe->base.buffer_subdata = rbug_context_buffer_subdata;
    rb_pipe->base.texture_subdata = rbug_context_texture_subdata;
+   rb_pipe->base.texture_barrier = rbug_context_texture_barrier;
+   rb_pipe->base.flush_resource = rbug_flush_resource;
 
    rb_pipe->pipe = pipe;
 

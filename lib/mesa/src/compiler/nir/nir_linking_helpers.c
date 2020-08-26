@@ -50,7 +50,7 @@ get_variable_io_mask(nir_variable *var, gl_shader_stage stage)
    assert(var->data.location >= 0);
 
    const struct glsl_type *type = var->type;
-   if (nir_is_per_vertex_io(var, stage)) {
+   if (nir_is_per_vertex_io(var, stage) || var->data.per_view) {
       assert(glsl_type_is_array(type));
       type = glsl_get_array_element(type);
    }
@@ -279,7 +279,7 @@ get_unmoveable_components_masks(struct exec_list *var_list,
           var->data.location - VARYING_SLOT_VAR0 < MAX_VARYINGS_INCL_PATCH) {
 
          const struct glsl_type *type = var->type;
-         if (nir_is_per_vertex_io(var, stage)) {
+         if (nir_is_per_vertex_io(var, stage) || var->data.per_view) {
             assert(glsl_type_is_array(type));
             type = glsl_get_array_element(type);
          }
@@ -376,7 +376,7 @@ remap_slots_and_components(struct exec_list *var_list, gl_shader_stage stage,
           var->data.location - VARYING_SLOT_VAR0 < MAX_VARYINGS_INCL_PATCH) {
 
          const struct glsl_type *type = var->type;
-         if (nir_is_per_vertex_io(var, stage)) {
+         if (nir_is_per_vertex_io(var, stage) || var->data.per_view) {
             assert(glsl_type_is_array(type));
             type = glsl_get_array_element(type);
          }
@@ -443,6 +443,7 @@ struct varying_component {
    uint8_t interp_loc;
    bool is_32bit;
    bool is_patch;
+   bool is_intra_stage_only;
    bool initialised;
 };
 
@@ -455,6 +456,12 @@ cmp_varying_component(const void *comp1_v, const void *comp2_v)
    /* We want patches to be order at the end of the array */
    if (comp1->is_patch != comp2->is_patch)
       return comp1->is_patch ? 1 : -1;
+
+   /* We want to try to group together TCS outputs that are only read by other
+    * TCS invocations and not consumed by the follow stage.
+    */
+   if (comp1->is_intra_stage_only != comp2->is_intra_stage_only)
+      return comp1->is_intra_stage_only ? 1 : -1;
 
    /* We can only pack varyings with matching interpolation types so group
     * them together.
@@ -471,7 +478,7 @@ cmp_varying_component(const void *comp1_v, const void *comp2_v)
 }
 
 static void
-gather_varying_component_info(nir_shader *consumer,
+gather_varying_component_info(nir_shader *producer, nir_shader *consumer,
                               struct varying_component **varying_comp_info,
                               unsigned *varying_comp_info_size,
                               bool default_to_smooth_interp)
@@ -482,7 +489,7 @@ gather_varying_component_info(nir_shader *consumer,
    /* Count the number of varying that can be packed and create a mapping
     * of those varyings to the array we will pass to qsort.
     */
-   nir_foreach_variable(var, &consumer->inputs) {
+   nir_foreach_variable(var, &producer->outputs) {
 
       /* Only remap things that aren't builtins. */
       if (var->data.location >= VARYING_SLOT_VAR0 &&
@@ -493,7 +500,7 @@ gather_varying_component_info(nir_shader *consumer,
             continue;
 
          const struct glsl_type *type = var->type;
-         if (nir_is_per_vertex_io(var, consumer->info.stage)) {
+         if (nir_is_per_vertex_io(var, producer->info.stage) || var->data.per_view) {
             assert(glsl_type_is_array(type));
             type = glsl_get_array_element(type);
          }
@@ -523,7 +530,8 @@ gather_varying_component_info(nir_shader *consumer,
          if (intr->intrinsic != nir_intrinsic_load_deref &&
              intr->intrinsic != nir_intrinsic_interp_deref_at_centroid &&
              intr->intrinsic != nir_intrinsic_interp_deref_at_sample &&
-             intr->intrinsic != nir_intrinsic_interp_deref_at_offset)
+             intr->intrinsic != nir_intrinsic_interp_deref_at_offset &&
+             intr->intrinsic != nir_intrinsic_interp_deref_at_vertex)
             continue;
 
          nir_deref_instr *deref = nir_src_as_deref(intr->src[0]);
@@ -549,7 +557,8 @@ gather_varying_component_info(nir_shader *consumer,
 
          if (!vc_info->initialised) {
             const struct glsl_type *type = in_var->type;
-            if (nir_is_per_vertex_io(in_var, consumer->info.stage)) {
+            if (nir_is_per_vertex_io(in_var, consumer->info.stage) ||
+                in_var->data.per_view) {
                assert(glsl_type_is_array(type));
                type = glsl_get_array_element(type);
             }
@@ -560,7 +569,84 @@ gather_varying_component_info(nir_shader *consumer,
             vc_info->interp_loc = get_interp_loc(in_var);
             vc_info->is_32bit = glsl_type_is_32bit(type);
             vc_info->is_patch = in_var->data.patch;
+            vc_info->is_intra_stage_only = false;
+            vc_info->initialised = true;
          }
+      }
+   }
+
+   /* Walk over the shader and populate the varying component info array
+    * for varyings which are read by other TCS instances but are not consumed
+    * by the TES.
+    */
+   if (producer->info.stage == MESA_SHADER_TESS_CTRL) {
+      impl = nir_shader_get_entrypoint(producer);
+
+      nir_foreach_block(block, impl) {
+         nir_foreach_instr(instr, block) {
+            if (instr->type != nir_instr_type_intrinsic)
+               continue;
+
+            nir_intrinsic_instr *intr = nir_instr_as_intrinsic(instr);
+            if (intr->intrinsic != nir_intrinsic_load_deref)
+               continue;
+
+            nir_deref_instr *deref = nir_src_as_deref(intr->src[0]);
+            if (deref->mode != nir_var_shader_out)
+               continue;
+
+            /* We only remap things that aren't builtins. */
+            nir_variable *out_var = nir_deref_instr_get_variable(deref);
+            if (out_var->data.location < VARYING_SLOT_VAR0)
+               continue;
+
+            unsigned location = out_var->data.location - VARYING_SLOT_VAR0;
+            if (location >= MAX_VARYINGS_INCL_PATCH)
+               continue;
+
+            unsigned var_info_idx =
+               store_varying_info_idx[location][out_var->data.location_frac];
+            if (!var_info_idx) {
+               /* Something went wrong, the shader interfaces didn't match, so
+                * abandon packing. This can happen for example when the
+                * inputs are scalars but the outputs are struct members.
+                */
+               *varying_comp_info_size = 0;
+               break;
+            }
+
+            struct varying_component *vc_info =
+               &(*varying_comp_info)[var_info_idx-1];
+
+            if (!vc_info->initialised) {
+               const struct glsl_type *type = out_var->type;
+               if (nir_is_per_vertex_io(out_var, producer->info.stage)) {
+                  assert(glsl_type_is_array(type));
+                  type = glsl_get_array_element(type);
+               }
+
+               vc_info->var = out_var;
+               vc_info->interp_type =
+                  get_interp_type(out_var, type, default_to_smooth_interp);
+               vc_info->interp_loc = get_interp_loc(out_var);
+               vc_info->is_32bit = glsl_type_is_32bit(type);
+               vc_info->is_patch = out_var->data.patch;
+               vc_info->is_intra_stage_only = true;
+               vc_info->initialised = true;
+            }
+         }
+      }
+   }
+
+   for (unsigned i = 0; i < *varying_comp_info_size; i++ ) {
+      struct varying_component *vc_info = &(*varying_comp_info)[i];
+      if (!vc_info->initialised) {
+         /* Something went wrong, the shader interfaces didn't match, so
+          * abandon packing. This can happen for example when the outputs are
+          * scalars but the inputs are struct members.
+          */
+         *varying_comp_info_size = 0;
+         break;
       }
    }
 }
@@ -647,7 +733,7 @@ compact_components(nir_shader *producer, nir_shader *consumer,
    unsigned varying_comp_info_size;
 
    /* Gather varying component info */
-   gather_varying_component_info(consumer, &varying_comp_info,
+   gather_varying_component_info(producer, consumer, &varying_comp_info,
                                  &varying_comp_info_size,
                                  default_to_smooth_interp);
 
@@ -1007,20 +1093,34 @@ nir_assign_io_var_locations(struct exec_list *var_list, unsigned *size,
 
    sort_varyings(var_list);
 
-   const int base = stage == MESA_SHADER_FRAGMENT ?
-      (int) FRAG_RESULT_DATA0 : (int) VARYING_SLOT_VAR0;
-
    int UNUSED last_loc = 0;
    bool last_partial = false;
    nir_foreach_variable(var, var_list) {
       const struct glsl_type *type = var->type;
-      if (nir_is_per_vertex_io(var, stage)) {
+      if (nir_is_per_vertex_io(var, stage) || var->data.per_view) {
          assert(glsl_type_is_array(type));
          type = glsl_get_array_element(type);
       }
 
+      int base;
+      if (var->data.mode == nir_var_shader_in && stage == MESA_SHADER_VERTEX)
+         base = VERT_ATTRIB_GENERIC0;
+      else if (var->data.mode == nir_var_shader_out &&
+               stage == MESA_SHADER_FRAGMENT)
+         base = FRAG_RESULT_DATA0;
+      else
+         base = VARYING_SLOT_VAR0;
+
       unsigned var_size;
       if (var->data.compact) {
+         /* If we are inside a partial compact,
+          * don't allow another compact to be in this slot
+          * if it starts at component 0.
+          */
+         if (last_partial && var->data.location_frac == 0) {
+            location++;
+         }
+
          /* compact variables must be arrays of scalars */
          assert(glsl_type_is_array(type));
          assert(glsl_type_is_scalar(glsl_get_array_element(type)));
@@ -1079,7 +1179,7 @@ nir_assign_io_var_locations(struct exec_list *var_list, unsigned *size,
          if (last_slot_location > location) {
             unsigned num_unallocated_slots = last_slot_location - location;
             unsigned first_unallocated_slot = var_size - num_unallocated_slots;
-            for (unsigned i = first_unallocated_slot; i < num_unallocated_slots; i++) {
+            for (unsigned i = first_unallocated_slot; i < var_size; i++) {
                assigned_locations[var->data.location + i] = location;
                location++;
             }
@@ -1101,3 +1201,102 @@ nir_assign_io_var_locations(struct exec_list *var_list, unsigned *size,
    *size = location;
 }
 
+static uint64_t
+get_linked_variable_location(unsigned location, bool patch)
+{
+   if (!patch)
+      return location;
+
+   /* Reserve locations 0...3 for special patch variables
+    * like tess factors and bounding boxes, and the generic patch
+    * variables will come after them.
+    */
+   if (location >= VARYING_SLOT_PATCH0)
+      return location - VARYING_SLOT_PATCH0 + 4;
+   else if (location >= VARYING_SLOT_TESS_LEVEL_OUTER &&
+            location <= VARYING_SLOT_BOUNDING_BOX1)
+      return location - VARYING_SLOT_TESS_LEVEL_OUTER;
+   else
+      unreachable("Unsupported variable in get_linked_variable_location.");
+}
+
+static uint64_t
+get_linked_variable_io_mask(nir_variable *variable, gl_shader_stage stage)
+{
+   const struct glsl_type *type = variable->type;
+
+   if (nir_is_per_vertex_io(variable, stage)) {
+      assert(glsl_type_is_array(type));
+      type = glsl_get_array_element(type);
+   }
+
+   unsigned slots = glsl_count_attribute_slots(type, false);
+   if (variable->data.compact) {
+      unsigned component_count = variable->data.location_frac + glsl_get_length(type);
+      slots = DIV_ROUND_UP(component_count, 4);
+   }
+
+   uint64_t mask = u_bit_consecutive64(0, slots);
+   return mask;
+}
+
+nir_linked_io_var_info
+nir_assign_linked_io_var_locations(nir_shader *producer, nir_shader *consumer)
+{
+   assert(producer);
+   assert(consumer);
+
+   uint64_t producer_output_mask = 0;
+   uint64_t producer_patch_output_mask = 0;
+
+   nir_foreach_variable(variable, &producer->outputs) {
+      uint64_t mask = get_linked_variable_io_mask(variable, producer->info.stage);
+      uint64_t loc = get_linked_variable_location(variable->data.location, variable->data.patch);
+
+      if (variable->data.patch)
+         producer_patch_output_mask |= mask << loc;
+      else
+         producer_output_mask |= mask << loc;
+   }
+
+   uint64_t consumer_input_mask = 0;
+   uint64_t consumer_patch_input_mask = 0;
+
+   nir_foreach_variable(variable, &consumer->inputs) {
+      uint64_t mask = get_linked_variable_io_mask(variable, consumer->info.stage);
+      uint64_t loc = get_linked_variable_location(variable->data.location, variable->data.patch);
+
+      if (variable->data.patch)
+         consumer_patch_input_mask |= mask << loc;
+      else
+         consumer_input_mask |= mask << loc;
+   }
+
+   uint64_t io_mask = producer_output_mask | consumer_input_mask;
+   uint64_t patch_io_mask = producer_patch_output_mask | consumer_patch_input_mask;
+
+   nir_foreach_variable(variable, &producer->outputs) {
+      uint64_t loc = get_linked_variable_location(variable->data.location, variable->data.patch);
+
+      if (variable->data.patch)
+         variable->data.driver_location = util_bitcount64(patch_io_mask & u_bit_consecutive64(0, loc)) * 4;
+      else
+         variable->data.driver_location = util_bitcount64(io_mask & u_bit_consecutive64(0, loc)) * 4;
+   }
+
+   nir_foreach_variable(variable, &consumer->inputs) {
+      uint64_t loc = get_linked_variable_location(variable->data.location, variable->data.patch);
+
+      if (variable->data.patch)
+         variable->data.driver_location = util_bitcount64(patch_io_mask & u_bit_consecutive64(0, loc)) * 4;
+      else
+         variable->data.driver_location = util_bitcount64(io_mask & u_bit_consecutive64(0, loc)) * 4;
+   }
+
+   nir_linked_io_var_info result = {
+      .num_linked_io_vars = util_bitcount64(io_mask),
+      .num_linked_patch_io_vars = util_bitcount64(patch_io_mask),
+   };
+
+   return result;
+}

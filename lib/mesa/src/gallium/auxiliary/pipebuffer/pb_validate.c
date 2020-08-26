@@ -65,7 +65,7 @@ enum pipe_error
 pb_validate_add_buffer(struct pb_validate *vl,
                        struct pb_buffer *buf,
                        enum pb_usage_flags flags,
-                       struct util_hash_table *ht,
+                       struct hash_table *ht,
                        boolean *already_present)
 {
    assert(buf);
@@ -78,7 +78,7 @@ pb_validate_add_buffer(struct pb_validate *vl,
    flags &= PB_USAGE_GPU_READ_WRITE;
 
    if (ht) {
-      unsigned long entry_idx = (unsigned long) util_hash_table_get(ht, buf);
+      unsigned entry_idx = (unsigned)(uintptr_t)util_hash_table_get(ht, buf);
 
       if (entry_idx) {
          struct pb_validate_entry *entry = &vl->entries[entry_idx - 1];
@@ -118,7 +118,7 @@ pb_validate_add_buffer(struct pb_validate *vl,
    ++vl->used;
 
    if (ht)
-      util_hash_table_set(ht, buf, (void *) (unsigned long) vl->used);
+      _mesa_hash_table_insert(ht, buf, (void *) (uintptr_t) vl->used);
 
    return PIPE_OK;
 }

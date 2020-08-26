@@ -46,11 +46,15 @@
 
 // ADDR_LNX_KERNEL_BUILD is for internal build
 // Moved from addrinterface.h so __KERNEL__ is not needed any more
-#if   !defined(__APPLE__) || defined(HAVE_TSERVER)
+#if ADDR_LNX_KERNEL_BUILD // || (defined(__GNUC__) && defined(__KERNEL__))
+    #include <string.h>
+#elif !defined(__APPLE__) || defined(HAVE_TSERVER)
     #include <stdlib.h>
     #include <string.h>
-    #include <assert.h>
 #endif
+
+#include <assert.h>
+#include "util/macros.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Platform specific debug break defines
@@ -64,7 +68,7 @@
         #define ADDR_DBG_BREAK()    { __debugbreak(); }
     #endif
 #else
-    #define ADDR_DBG_BREAK()
+    #define ADDR_DBG_BREAK() do {} while(0)
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -143,24 +147,20 @@
 
 #define ADDRDPF 1 ? (void)0 : (void)
 
-#define ADDR_PRNT(a)
+#define ADDR_PRNT(a) do {} while(0)
 
-#define ADDR_DBG_BREAK()
+#define ADDR_DBG_BREAK() do {} while(0)
 
-#define ADDR_INFO(cond, a)
+#define ADDR_INFO(cond, a) do {} while(0)
 
-#define ADDR_WARN(cond, a)
+#define ADDR_WARN(cond, a) do {} while(0)
 
-#define ADDR_EXIT(cond, a)
+#define ADDR_EXIT(cond, a) do {} while(0)
 
 #endif // DEBUG
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(static_assert)
-#define ADDR_C_ASSERT(__e) static_assert(__e, "")
-#else
-#define ADDR_C_ASSERT(__e) typedef char __ADDR_C_ASSERT__[(__e) ? 1 : -1]
-#endif
+#define ADDR_C_ASSERT(__e) STATIC_ASSERT(__e)
 
 namespace Addr
 {
@@ -270,7 +270,8 @@ union ConfigFlags
         UINT_32 disableLinearOpt       : 1;    ///< Disallow tile modes to be optimized to linear
         UINT_32 use32bppFor422Fmt      : 1;    ///< View 422 formats as 32 bits per pixel element
         UINT_32 forceDccAndTcCompat    : 1;    ///< Force enable DCC and TC compatibility
-        UINT_32 reserved               : 20;   ///< Reserved bits for future use
+        UINT_32 nonPower2MemConfig     : 1;    ///< Physical video memory size is not power of 2
+        UINT_32 reserved               : 19;   ///< Reserved bits for future use
     };
 
     UINT_32 value;
@@ -924,6 +925,21 @@ static inline UINT_32 GetCoordActiveMask(
     }
 
     return mask;
+}
+
+/**
+****************************************************************************************************
+*   ShiftCeil
+*
+*   @brief
+*       Apply righ-shift with ceiling
+****************************************************************************************************
+*/
+static inline UINT_32 ShiftCeil(
+    UINT_32 a,  ///< [in] value to be right-shifted
+    UINT_32 b)  ///< [in] number of bits to shift
+{
+    return (a >> b) + (((a & ((1 << b) - 1)) != 0) ? 1 : 0);
 }
 
 } // Addr

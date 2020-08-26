@@ -567,13 +567,21 @@ namespace {
                constrained[p.atom_of_reg(reg_of(inst->src[i]))] = true;
          }
 
+         /* Preserve the original allocation of VGRFs used by the barycentric
+          * source of the LINTERP instruction on Gen6, since pair-aligned
+          * barycentrics allow the PLN instruction to be used.
+          */
+         if (v->devinfo->has_pln && v->devinfo->gen <= 6 &&
+             inst->opcode == FS_OPCODE_LINTERP)
+            constrained[p.atom_of_reg(reg_of(inst->src[0]))] = true;
+
          /* The location of the Gen7 MRF hack registers is hard-coded in the
           * rest of the compiler back-end.  Don't attempt to move them around.
           */
          if (v->devinfo->gen >= 7) {
             assert(inst->dst.file != MRF);
 
-            for (int i = 0; i < v->implied_mrf_writes(inst); i++) {
+            for (unsigned i = 0; i < inst->implied_mrf_writes(); i++) {
                const unsigned reg = GEN7_MRF_HACK_START + inst->base_mrf + i;
                constrained[p.atom_of_reg(reg)] = true;
             }
@@ -927,20 +935,16 @@ fs_visitor::opt_bank_conflicts()
 }
 
 /**
- * Estimate the number of GRF bank conflict cycles incurred by an instruction.
+ * Return whether the instruction incurs GRF bank conflict cycles.
  *
- * Note that this neglects conflict cycles prior to register allocation
- * because we don't know which bank each VGRF is going to end up aligned to.
+ * Note that this is only accurate after register allocation because otherwise
+ * we don't know which bank each VGRF is going to end up aligned to.
  */
-unsigned
-fs_visitor::bank_conflict_cycles(const fs_inst *inst) const
+bool
+has_bank_conflict(const gen_device_info *devinfo, const fs_inst *inst)
 {
-   if (grf_used && inst->is_3src(devinfo) &&
-       is_grf(inst->src[1]) && is_grf(inst->src[2]) &&
-       bank_of(reg_of(inst->src[1])) == bank_of(reg_of(inst->src[2])) &&
-       !is_conflict_optimized_out(devinfo, inst)) {
-      return DIV_ROUND_UP(inst->dst.component_size(inst->exec_size), REG_SIZE);
-   } else {
-      return 0;
-   }
+   return inst->is_3src(devinfo) &&
+          is_grf(inst->src[1]) && is_grf(inst->src[2]) &&
+          bank_of(reg_of(inst->src[1])) == bank_of(reg_of(inst->src[2])) &&
+          !is_conflict_optimized_out(devinfo, inst);
 }

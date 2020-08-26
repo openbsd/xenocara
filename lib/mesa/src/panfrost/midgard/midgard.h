@@ -52,6 +52,25 @@ typedef enum {
         midgard_alu_lut
 } midgard_alu;
 
+enum {
+        TAG_INVALID = 0x0,
+        TAG_BREAK = 0x1,
+        TAG_TEXTURE_4_VTX = 0x2,
+        TAG_TEXTURE_4 = 0x3,
+        TAG_TEXTURE_4_BARRIER = 0x4,
+        TAG_LOAD_STORE_4 = 0x5,
+        TAG_UNKNOWN_1 = 0x6,
+        TAG_UNKNOWN_2 = 0x7,
+        TAG_ALU_4 = 0x8,
+        TAG_ALU_8 = 0x9,
+        TAG_ALU_12 = 0xA,
+        TAG_ALU_16 = 0xB,
+        TAG_ALU_4_WRITEOUT = 0xC,
+        TAG_ALU_8_WRITEOUT = 0xD,
+        TAG_ALU_12_WRITEOUT = 0xE,
+        TAG_ALU_16_WRITEOUT = 0xF
+};
+
 /*
  * ALU words
  */
@@ -188,9 +207,9 @@ typedef enum {
 
 typedef enum {
         midgard_outmod_none = 0,
-        midgard_outmod_pos  = 1,
-        /* 0x2 unknown */
-        midgard_outmod_sat  = 3
+        midgard_outmod_pos  = 1, /* max(x, 0.0) */
+        midgard_outmod_one  = 2, /* clamp(x, -1.0, 1.0) */
+        midgard_outmod_sat  = 3 /* clamp(x, 0.0, 1.0) */
 } midgard_outmod_float;
 
 typedef enum {
@@ -391,6 +410,12 @@ midgard_writeout;
 typedef enum {
         midgard_op_ld_st_noop   = 0x03,
 
+        /* Unpack a colour from a native format to fp16 */
+        midgard_op_unpack_colour = 0x05,
+
+        /* Packs a colour from fp16 to a native format */
+        midgard_op_pack_colour   = 0x09,
+
         /* Unclear why this is on the L/S unit, but moves fp32 cube map
          * coordinates in r27 to its cube map texture coordinate destination
          * (e.g r29). */
@@ -409,16 +434,26 @@ typedef enum {
 
         /* val in r27.y, address embedded, outputs result to argument. Invert val for sub. Let val = +-1 for inc/dec. */
         midgard_op_atomic_add = 0x40,
+        midgard_op_atomic_add64 = 0x41,
+
         midgard_op_atomic_and = 0x44,
+        midgard_op_atomic_and64 = 0x45,
         midgard_op_atomic_or = 0x48,
+        midgard_op_atomic_or64 = 0x49,
         midgard_op_atomic_xor = 0x4C,
+        midgard_op_atomic_xor64 = 0x4D,
 
         midgard_op_atomic_imin = 0x50,
+        midgard_op_atomic_imin64 = 0x51,
         midgard_op_atomic_umin = 0x54,
+        midgard_op_atomic_umin64 = 0x55,
         midgard_op_atomic_imax = 0x58,
+        midgard_op_atomic_imax64 = 0x59,
         midgard_op_atomic_umax = 0x5C,
+        midgard_op_atomic_umax64 = 0x5D,
 
         midgard_op_atomic_xchg = 0x60,
+        midgard_op_atomic_xchg64 = 0x61,
 
         /* Used for compute shader's __global arguments, __local variables (or
          * for register spilling) */
@@ -438,7 +473,9 @@ typedef enum {
         midgard_op_ld_vary_16 = 0x99,
         midgard_op_ld_vary_32u = 0x9A,
         midgard_op_ld_vary_32i = 0x9B,
-        midgard_op_ld_color_buffer_16 = 0x9D,
+
+        /* Old version of midgard_op_ld_color_buffer_u8_as_fp16, for T720 */
+        midgard_op_ld_color_buffer_u8_as_fp16_old = 0x9D,
 
         /* The distinction between these ops is the alignment requirement /
          * accompanying shift. Thus, the offset to ld_ubo_int4 is in 16-byte
@@ -454,7 +491,9 @@ typedef enum {
         midgard_op_ld_ubo_short4 = 0xAC,
         midgard_op_ld_ubo_int4   = 0xB0,
 
-        midgard_op_ld_color_buffer_8 = 0xBA,
+        /* New-style blending ops. Works on T760/T860 */
+        midgard_op_ld_color_buffer_u8_as_fp16 = 0xB9,
+        midgard_op_ld_color_buffer_32u = 0xBA,
 
         midgard_op_st_char = 0xC0,
         midgard_op_st_char2 = 0xC4, /* short */
@@ -592,6 +631,9 @@ midgard_tex_register_select;
 #define TEXTURE_OP_LOD 0x12             /* textureLod */
 #define TEXTURE_OP_TEXEL_FETCH 0x14     /* texelFetch */
 
+/* Implements barrier() */
+#define TEXTURE_OP_BARRIER 0x0B
+
 /* Computes horizontal and vertical derivatives respectively. Use with a float
  * sampler and a "2D" texture.  Leave texture/sampler IDs as zero; they ought
  * to be ignored. Only works for fp32 on 64-bit at a time, so derivatives of a
@@ -628,7 +670,13 @@ __attribute__((__packed__))
         unsigned last  : 1;
 
         enum mali_texture_type format : 2;
-        unsigned zero : 2;
+
+        /* Are sampler_handle/texture_handler respectively set by registers? If
+         * true, the lower 8-bits of the respective field is a register word.
+         * If false, they are an immediate */
+
+        unsigned sampler_register : 1;
+        unsigned texture_register : 1;
 
         /* Is a register used to specify the
          * LOD/bias/offset? If set, use the `bias` field as
@@ -664,23 +712,43 @@ __attribute__((__packed__))
         midgard_outmod_float outmod  : 2;
 
         unsigned swizzle  : 8;
-        unsigned unknown4  : 8;
 
-        unsigned unknownA  : 4;
+        /* For barriers, control barriers are implied regardless, but these
+         * bits also enable memory barriers of various types. For regular
+         * textures, these bits are not yet understood. */
+        unsigned barrier_buffer : 1;
+        unsigned barrier_shared : 1;
+        unsigned barrier_stack  : 1;
+
+        unsigned unknown4  : 9;
 
         /* In immediate mode, each offset field is an immediate range [0, 7].
          *
          * In register mode, offset_x becomes a register full / select / upper
-         * triplet and a vec3 swizzle is splattered across offset_y/offset_z in
-         * a genuinely bizarre way.
+         * triplet followed by a vec3 swizzle is splattered across
+         * offset_y/offset_z in a genuinely bizarre way.
          *
          * For texel fetches in immediate mode, the range is the full [-8, 7],
          * but for normal texturing the top bit must be zero and a register
-         * used instead. It's not clear where this limitation is from. */
+         * used instead. It's not clear where this limitation is from.
+         *
+         * union {
+         *      struct {
+         *              signed offset_x  : 4;
+         *              signed offset_y  : 4;
+         *              signed offset_z  : 4;
+         *      } immediate;
+         *      struct {
+         *              bool full        : 1;
+         *              bool select      : 1;
+         *              bool upper       : 1;
+         *              unsigned swizzle : 8;
+         *              unsigned zero    : 1;
+         *      } register;
+         * }
+         */
 
-        signed offset_x : 4;
-        signed offset_y : 4;
-        signed offset_z : 4;
+        unsigned offset : 12;
 
         /* In immediate bias mode, for a normal texture op, this is
          * texture bias, computed as int(2^8 * frac(biasf)), with
@@ -693,9 +761,56 @@ __attribute__((__packed__))
         unsigned bias : 8;
         signed bias_int  : 8;
 
+        /* If sampler/texture_register is set, the bottom 8-bits are
+         * midgard_tex_register_select and the top 8-bits are zero. If they are
+         * clear, they are immediate texture indices */
+
         unsigned sampler_handle : 16;
         unsigned texture_handle : 16;
 }
 midgard_texture_word;
+
+/* Technically barriers are texture instructions but it's less work to add them
+ * as an explicitly zeroed special case, since most fields are forced to go to
+ * zero */
+
+typedef struct
+__attribute__((__packed__))
+{
+        unsigned type      : 4;
+        unsigned next_type : 4;
+
+        /* op = TEXTURE_OP_BARRIER */
+        unsigned op  : 6;
+        unsigned zero1    : 2;
+
+        /* Since helper invocations don't make any sense, these are forced to one */
+        unsigned cont  : 1;
+        unsigned last  : 1;
+        unsigned zero2 : 14;
+
+        unsigned zero3 : 24;
+        unsigned buffer : 1;
+        unsigned shared : 1;
+        unsigned stack  : 1;
+        unsigned zero4 : 5;
+
+        uint64_t zero5;
+} midgard_texture_barrier_word;
+
+typedef union midgard_constants {
+        double f64[2];
+        uint64_t u64[2];
+        int64_t i64[2];
+        float f32[4];
+        uint32_t u32[4];
+        int32_t i32[4];
+        uint16_t f16[8];
+        uint16_t u16[8];
+        int16_t i16[8];
+        uint8_t u8[16];
+        int8_t i8[16];
+}
+midgard_constants;
 
 #endif

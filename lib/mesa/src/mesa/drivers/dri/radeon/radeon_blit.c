@@ -42,35 +42,26 @@ static inline uint32_t cmdpacket0(struct radeon_screen *rscrn,
 unsigned r100_check_blit(mesa_format mesa_format, uint32_t dst_pitch)
 {
     /* XXX others?  */
-    if (_mesa_little_endian()) {
-	switch (mesa_format) {
-	case MESA_FORMAT_B8G8R8A8_UNORM:
-	case MESA_FORMAT_B8G8R8X8_UNORM:
-	case MESA_FORMAT_B5G6R5_UNORM:
-	case MESA_FORMAT_B4G4R4A4_UNORM:
-	case MESA_FORMAT_B5G5R5A1_UNORM:
-	case MESA_FORMAT_A_UNORM8:
-	case MESA_FORMAT_L_UNORM8:
-	case MESA_FORMAT_I_UNORM8:
-	    break;
-	default:
-	    return 0;
-	}
-    }
-    else {
-	switch (mesa_format) {
-	case MESA_FORMAT_A8R8G8B8_UNORM:
-	case MESA_FORMAT_X8R8G8B8_UNORM:
-	case MESA_FORMAT_R5G6B5_UNORM:
-	case MESA_FORMAT_A4R4G4B4_UNORM:
-	case MESA_FORMAT_A1R5G5B5_UNORM:
-	case MESA_FORMAT_A_UNORM8:
-	case MESA_FORMAT_L_UNORM8:
-	case MESA_FORMAT_I_UNORM8:
-	    break;
-	default:
-	    return 0;
-	}
+    switch (mesa_format) {
+#if UTIL_ARCH_LITTLE_ENDIAN
+    case MESA_FORMAT_B8G8R8A8_UNORM:
+    case MESA_FORMAT_B8G8R8X8_UNORM:
+    case MESA_FORMAT_B5G6R5_UNORM:
+    case MESA_FORMAT_B4G4R4A4_UNORM:
+    case MESA_FORMAT_B5G5R5A1_UNORM:
+#else
+    case MESA_FORMAT_A8R8G8B8_UNORM:
+    case MESA_FORMAT_X8R8G8B8_UNORM:
+    case MESA_FORMAT_R5G6B5_UNORM:
+    case MESA_FORMAT_A4R4G4B4_UNORM:
+    case MESA_FORMAT_A1R5G5B5_UNORM:
+#endif
+    case MESA_FORMAT_A_UNORM8:
+    case MESA_FORMAT_L_UNORM8:
+    case MESA_FORMAT_I_UNORM8:
+        break;
+    default:
+        return 0;
     }
 
     /* Rendering to small buffer doesn't work.
@@ -153,7 +144,7 @@ static void inline emit_tx_setup(struct r100_context *r100,
     OUT_BATCH_REGVAL(RADEON_PP_TEX_PITCH_0, pitch * _mesa_get_format_bytes(mesa_format) - 32);
 
     OUT_BATCH_REGSEQ(RADEON_PP_TXOFFSET_0, 1);
-    OUT_BATCH_RELOC(offset, bo, offset, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0, 0);
+    OUT_BATCH_RELOC(bo, offset, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0, 0);
 
     END_BATCH();
 }
@@ -215,9 +206,9 @@ static inline void emit_cb_setup(struct r100_context *r100,
     OUT_BATCH_REGVAL(RADEON_RB3D_CNTL, dst_format);
 
     OUT_BATCH_REGSEQ(RADEON_RB3D_COLOROFFSET, 1);
-    OUT_BATCH_RELOC(offset, bo, offset, 0, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0);
+    OUT_BATCH_RELOC(bo, offset, 0, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0);
     OUT_BATCH_REGSEQ(RADEON_RB3D_COLORPITCH, 1);
-    OUT_BATCH_RELOC(dst_pitch, bo, dst_pitch, 0, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0);
+    OUT_BATCH_RELOC(bo, dst_pitch, 0, RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0);
 
     END_BATCH();
 }

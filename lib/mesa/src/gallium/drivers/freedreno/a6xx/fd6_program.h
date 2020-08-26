@@ -47,15 +47,17 @@ struct fd6_program_state {
 	struct ir3_program_state base;
 	struct ir3_shader_variant *bs;     /* binning pass vs */
 	struct ir3_shader_variant *vs;
+	struct ir3_shader_variant *hs;
+	struct ir3_shader_variant *ds;
+	struct ir3_shader_variant *gs;
 	struct ir3_shader_variant *fs;
 	struct fd_ringbuffer *config_stateobj;
+	struct fd_ringbuffer *interp_stateobj;
 	struct fd_ringbuffer *binning_stateobj;
 	struct fd_ringbuffer *stateobj;
 
 	/* cached state about current emitted shader program (3d): */
 	struct fd6_streamout_state tf;
-
-	uint32_t vinterp[8];
 };
 
 static inline struct fd6_program_state *
@@ -64,9 +66,20 @@ fd6_program_state(struct ir3_program_state *state)
 	return (struct fd6_program_state *)state;
 }
 
+static inline const struct ir3_shader_variant *
+fd6_last_shader(const struct fd6_program_state *state)
+{
+	if (state->gs)
+		return state->gs;
+	else if (state->ds)
+		return state->ds;
+	else
+		return state->vs;
+}
+
 void fd6_emit_shader(struct fd_ringbuffer *ring, const struct ir3_shader_variant *so);
 
-void fd6_program_emit(struct fd_ringbuffer *ring, struct fd6_emit *emit);
+struct fd_ringbuffer * fd6_program_interp_state(struct fd6_emit *emit);
 
 void fd6_prog_init(struct pipe_context *pctx);
 

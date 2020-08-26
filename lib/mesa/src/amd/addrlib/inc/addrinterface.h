@@ -308,7 +308,8 @@ typedef union _ADDR_CREATE_FLAGS
         UINT_32 useHtileSliceAlign     : 1;    ///< Do htile single slice alignment
         UINT_32 allowLargeThickTile    : 1;    ///< Allow 64*thickness*bytesPerPixel > rowSize
         UINT_32 forceDccAndTcCompat    : 1;    ///< Force enable DCC and TC compatibility
-        UINT_32 reserved               : 24;   ///< Reserved bits for future use
+        UINT_32 nonPower2MemConfig     : 1;    ///< Physical video memory size is not power of 2
+        UINT_32 reserved               : 23;   ///< Reserved bits for future use
     };
 
     UINT_32 value;
@@ -347,9 +348,6 @@ typedef struct _ADDR_REGISTER_VALUE
                                  ///< CI registers-------------------------------------------------
     const UINT_32* pMacroTileConfig;    ///< Global macro tile mode table
     UINT_32  noOfMacroEntries;   ///< Number of entries in pMacroTileConfig
-
-                                 ///< GFX9 HW parameters
-    UINT_32  blockVarSizeLog2;   ///< SW_VAR_* block size
 } ADDR_REGISTER_VALUE;
 
 /**
@@ -3351,17 +3349,23 @@ typedef struct _ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT
     UINT_32             mipId;               ///< mipmap level id
 
     ADDR2_META_FLAGS    dccKeyFlags;         ///< DCC flags
-    ADDR2_SURFACE_FLAGS colorFlags;          ///< Color surface flags
     AddrResourceType    resourceType;        ///< Color surface type
     AddrSwizzleMode     swizzleMode;         ///< Color surface swizzle mode
     UINT_32             bpp;                 ///< Color surface bits per pixel
-    UINT_32             unalignedWidth;      ///< Color surface original width (of mip0)
-    UINT_32             unalignedHeight;     ///< Color surface original height (of mip0)
     UINT_32             numSlices;           ///< Color surface original slices (of mip0)
     UINT_32             numMipLevels;        ///< Color surface mipmap levels
     UINT_32             numFrags;            ///< Color surface fragment number
 
     UINT_32             pipeXor;             ///< pipe Xor setting
+    UINT_32             pitch;               ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::pitch
+    UINT_32             height;              ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::height
+    UINT_32             compressBlkWidth;    ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkWidth
+    UINT_32             compressBlkHeight;   ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkHeight
+    UINT_32             compressBlkDepth;    ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkDepth
+    UINT_32             metaBlkWidth;        ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkWidth
+    UINT_32             metaBlkHeight;       ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkHeight
+    UINT_32             metaBlkDepth;        ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkDepth
+    UINT_32             dccRamSliceSize;     ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::dccRamSliceSize
 } ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT;
 
 /**
@@ -3549,12 +3553,14 @@ typedef union _ADDR2_BLOCK_SET
 {
     struct
     {
-        UINT_32 micro       : 1;   // 256B block for 2D resource
-        UINT_32 macro4KB    : 1;   // 4KB for 2D/3D resource
-        UINT_32 macro64KB   : 1;   // 64KB for 2D/3D resource
-        UINT_32 var         : 1;   // VAR block
-        UINT_32 linear      : 1;   // Linear block
-        UINT_32 reserved    : 27;
+        UINT_32 micro          : 1;   // 256B block for 2D resource
+        UINT_32 macroThin4KB   : 1;   // Thin 4KB for 2D/3D resource
+        UINT_32 macroThick4KB  : 1;   // Thick 4KB for 3D resource
+        UINT_32 macroThin64KB  : 1;   // Thin 64KB for 2D/3D resource
+        UINT_32 macroThick64KB : 1;   // Thick 64KB for 3D resource
+        UINT_32 var            : 1;   // VAR block
+        UINT_32 linear         : 1;   // Linear block
+        UINT_32 reserved       : 25;
     };
 
     UINT_32 value;
@@ -3594,38 +3600,38 @@ typedef union _ADDR2_SWMODE_SET
 {
     struct
     {
-        UINT_32 swLinear   : 1;
-        UINT_32 sw256B_S   : 1;
-        UINT_32 sw256B_D   : 1;
-        UINT_32 sw256B_R   : 1;
-        UINT_32 sw4KB_Z    : 1;
-        UINT_32 sw4KB_S    : 1;
-        UINT_32 sw4KB_D    : 1;
-        UINT_32 sw4KB_R    : 1;
-        UINT_32 sw64KB_Z   : 1;
-        UINT_32 sw64KB_S   : 1;
-        UINT_32 sw64KB_D   : 1;
-        UINT_32 sw64KB_R   : 1;
-        UINT_32 swVar_Z    : 1;
-        UINT_32 swVar_S    : 1;
-        UINT_32 swVar_D    : 1;
-        UINT_32 swVar_R    : 1;
-        UINT_32 sw64KB_Z_T : 1;
-        UINT_32 sw64KB_S_T : 1;
-        UINT_32 sw64KB_D_T : 1;
-        UINT_32 sw64KB_R_T : 1;
-        UINT_32 sw4KB_Z_X  : 1;
-        UINT_32 sw4KB_S_X  : 1;
-        UINT_32 sw4KB_D_X  : 1;
-        UINT_32 sw4KB_R_X  : 1;
-        UINT_32 sw64KB_Z_X : 1;
-        UINT_32 sw64KB_S_X : 1;
-        UINT_32 sw64KB_D_X : 1;
-        UINT_32 sw64KB_R_X : 1;
-        UINT_32 swVar_Z_X  : 1;
-        UINT_32 swVar_S_X  : 1;
-        UINT_32 swVar_D_X  : 1;
-        UINT_32 swVar_R_X  : 1;
+        UINT_32 swLinear    : 1;
+        UINT_32 sw256B_S    : 1;
+        UINT_32 sw256B_D    : 1;
+        UINT_32 sw256B_R    : 1;
+        UINT_32 sw4KB_Z     : 1;
+        UINT_32 sw4KB_S     : 1;
+        UINT_32 sw4KB_D     : 1;
+        UINT_32 sw4KB_R     : 1;
+        UINT_32 sw64KB_Z    : 1;
+        UINT_32 sw64KB_S    : 1;
+        UINT_32 sw64KB_D    : 1;
+        UINT_32 sw64KB_R    : 1;
+        UINT_32 swReserved0 : 1;
+        UINT_32 swReserved1 : 1;
+        UINT_32 swReserved2 : 1;
+        UINT_32 swReserved3 : 1;
+        UINT_32 sw64KB_Z_T  : 1;
+        UINT_32 sw64KB_S_T  : 1;
+        UINT_32 sw64KB_D_T  : 1;
+        UINT_32 sw64KB_R_T  : 1;
+        UINT_32 sw4KB_Z_X   : 1;
+        UINT_32 sw4KB_S_X   : 1;
+        UINT_32 sw4KB_D_X   : 1;
+        UINT_32 sw4KB_R_X   : 1;
+        UINT_32 sw64KB_Z_X  : 1;
+        UINT_32 sw64KB_S_X  : 1;
+        UINT_32 sw64KB_D_X  : 1;
+        UINT_32 sw64KB_R_X  : 1;
+        UINT_32 swVar_Z_X   : 1;
+        UINT_32 swReserved4 : 1;
+        UINT_32 swReserved5 : 1;
+        UINT_32 swVar_R_X   : 1;
     };
 
     UINT_32 value;

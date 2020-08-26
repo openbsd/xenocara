@@ -896,6 +896,23 @@ static const struct {
    { .format = VK_FORMAT_B8G8R8A8_UNORM, .drm_format = DRM_FORMAT_XRGB8888 },
 };
 
+static void
+get_sorted_vk_formats(struct wsi_device *wsi_device, VkFormat *sorted_formats)
+{
+   for (unsigned i = 0; i < ARRAY_SIZE(available_surface_formats); i++)
+      sorted_formats[i] = available_surface_formats[i].format;
+
+   if (wsi_device->force_bgra8_unorm_first) {
+      for (unsigned i = 0; i < ARRAY_SIZE(available_surface_formats); i++) {
+         if (sorted_formats[i] == VK_FORMAT_B8G8R8A8_UNORM) {
+            sorted_formats[i] = sorted_formats[0];
+            sorted_formats[0] = VK_FORMAT_B8G8R8A8_UNORM;
+            break;
+         }
+      }
+   }
+}
+
 static VkResult
 wsi_display_surface_get_formats(VkIcdSurfaceBase *icd_surface,
                                 struct wsi_device *wsi_device,
@@ -904,9 +921,12 @@ wsi_display_surface_get_formats(VkIcdSurfaceBase *icd_surface,
 {
    VK_OUTARRAY_MAKE(out, surface_formats, surface_format_count);
 
-   for (unsigned i = 0; i < ARRAY_SIZE(available_surface_formats); i++) {
+   VkFormat sorted_formats[ARRAY_SIZE(available_surface_formats)];
+   get_sorted_vk_formats(wsi_device, sorted_formats);
+
+   for (unsigned i = 0; i < ARRAY_SIZE(sorted_formats); i++) {
       vk_outarray_append(&out, f) {
-         f->format = available_surface_formats[i].format;
+         f->format = sorted_formats[i];
          f->colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
       }
    }
@@ -923,10 +943,13 @@ wsi_display_surface_get_formats2(VkIcdSurfaceBase *surface,
 {
    VK_OUTARRAY_MAKE(out, surface_formats, surface_format_count);
 
-   for (unsigned i = 0; i < ARRAY_SIZE(available_surface_formats); i++) {
+   VkFormat sorted_formats[ARRAY_SIZE(available_surface_formats)];
+   get_sorted_vk_formats(wsi_device, sorted_formats);
+
+   for (unsigned i = 0; i < ARRAY_SIZE(sorted_formats); i++) {
       vk_outarray_append(&out, f) {
          assert(f->sType == VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR);
-         f->surfaceFormat.format = available_surface_formats[i].format;
+         f->surfaceFormat.format = sorted_formats[i];
          f->surfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
       }
    }
@@ -1203,6 +1226,18 @@ wsi_display_start_wait_thread(struct wsi_display *wsi)
          return ret;
    }
    return 0;
+}
+
+static void
+wsi_display_stop_wait_thread(struct wsi_display *wsi)
+{
+   pthread_mutex_lock(&wsi->wait_mutex);
+   if (wsi->wait_thread) {
+      pthread_cancel(wsi->wait_thread);
+      pthread_join(wsi->wait_thread, NULL);
+      wsi->wait_thread = 0;
+   }
+   pthread_mutex_unlock(&wsi->wait_mutex);
 }
 
 /*
@@ -1664,6 +1699,15 @@ _wsi_display_queue_next(struct wsi_swapchain *drv_chain)
                               &connector->id, 1,
                               &connector->current_drm_mode);
          if (ret == 0) {
+            /* Disable the HW cursor as the app doesn't have a mechanism
+             * to control it.
+             * Refer to question 12 of the VK_KHR_display spec.
+             */
+            ret = drmModeSetCursor(wsi->fd, connector->crtc_id, 0, 0, 0 );
+            if (ret != 0) {
+               wsi_display_debug("failed to hide cursor err %d %s\n", ret, strerror(-ret));
+            }
+
             /* Assume that the mode set is synchronous and that any
              * previous image is now idle.
              */
@@ -1904,12 +1948,7 @@ wsi_display_finish_wsi(struct wsi_device *wsi_device,
          vk_free(wsi->alloc, connector);
       }
 
-      pthread_mutex_lock(&wsi->wait_mutex);
-      if (wsi->wait_thread) {
-         pthread_cancel(wsi->wait_thread);
-         pthread_join(wsi->wait_thread, NULL);
-      }
-      pthread_mutex_unlock(&wsi->wait_mutex);
+      wsi_display_stop_wait_thread(wsi);
       pthread_mutex_destroy(&wsi->wait_mutex);
       pthread_cond_destroy(&wsi->wait_cond);
 
@@ -1929,9 +1968,12 @@ wsi_release_display(VkPhysicalDevice            physical_device,
       (struct wsi_display *) wsi_device->wsi[VK_ICD_WSI_PLATFORM_DISPLAY];
 
    if (wsi->fd >= 0) {
+      wsi_display_stop_wait_thread(wsi);
+
       close(wsi->fd);
       wsi->fd = -1;
    }
+
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
    wsi_display_connector_from_handle(display)->output = None;
 #endif

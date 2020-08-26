@@ -28,8 +28,9 @@ include $(LOCAL_PATH)/Makefile.sources
 
 include $(CLEAR_VARS)
 
+# filter-out tessellator/tessellator.hpp to avoid "Unused source files" error
 LOCAL_SRC_FILES := \
-	$(C_SOURCES) \
+	$(filter-out tessellator/tessellator.hpp, $(C_SOURCES)) \
 	$(NIR_SOURCES) \
 	$(RENDERONLY_SOURCES) \
 	$(VL_STUB_SOURCES)
@@ -70,10 +71,18 @@ $(intermediates)/indices/u_unfilled_gen.c \
 $(intermediates)/util/u_format_srgb.c: $(intermediates)/%.c: $(LOCAL_PATH)/%.py
 	$(transform-generated-source)
 
-$(intermediates)/util/u_format_table.c: $(intermediates)/%.c: $(LOCAL_PATH)/%.py $(LOCAL_PATH)/util/u_format.csv
-	$(transform-generated-source)
-
 LOCAL_GENERATED_SOURCES += $(MESA_GEN_NIR_H)
+
+include $(GALLIUM_COMMON_MK)
+include $(BUILD_STATIC_LIBRARY)
+
+# Build libmesa_galliumvl used by radeonsi
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := \
+	$(VL_SOURCES)
+
+LOCAL_MODULE := libmesa_galliumvl
 
 include $(GALLIUM_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

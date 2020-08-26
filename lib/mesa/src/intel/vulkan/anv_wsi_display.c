@@ -241,7 +241,7 @@ anv_DisplayPowerControlEXT(VkDevice                    _device,
    ANV_FROM_HANDLE(anv_device, device, _device);
 
    return wsi_display_power_control(
-      _device, &device->instance->physicalDevice.wsi_device,
+      _device, &device->physical->wsi_device,
       display, display_power_info);
 }
 
@@ -255,7 +255,7 @@ anv_RegisterDeviceEventEXT(VkDevice _device,
    struct anv_fence *fence;
    VkResult ret;
 
-   fence = vk_zalloc2(&device->instance->alloc, allocator, sizeof (*fence), 8,
+   fence = vk_zalloc2(&device->alloc, allocator, sizeof (*fence), 8,
                       VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!fence)
       return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
@@ -263,14 +263,14 @@ anv_RegisterDeviceEventEXT(VkDevice _device,
    fence->permanent.type = ANV_FENCE_TYPE_WSI;
 
    ret = wsi_register_device_event(_device,
-                                   &device->instance->physicalDevice.wsi_device,
+                                   &device->physical->wsi_device,
                                    device_event_info,
                                    allocator,
                                    &fence->permanent.fence_wsi);
    if (ret == VK_SUCCESS)
       *_fence = anv_fence_to_handle(fence);
    else
-      vk_free2(&device->instance->alloc, allocator, fence);
+      vk_free2(&device->alloc, allocator, fence);
    return ret;
 }
 
@@ -293,7 +293,7 @@ anv_RegisterDisplayEventEXT(VkDevice _device,
    fence->permanent.type = ANV_FENCE_TYPE_WSI;
 
    ret = wsi_register_display_event(
-      _device, &device->instance->physicalDevice.wsi_device,
+      _device, &device->physical->wsi_device,
       display, display_event_info, allocator, &(fence->permanent.fence_wsi));
 
    if (ret == VK_SUCCESS)
@@ -312,6 +312,6 @@ anv_GetSwapchainCounterEXT(VkDevice _device,
    ANV_FROM_HANDLE(anv_device, device, _device);
 
    return wsi_get_swapchain_counter(
-      _device, &device->instance->physicalDevice.wsi_device,
+      _device, &device->physical->wsi_device,
       swapchain, flag_bits, value);
 }

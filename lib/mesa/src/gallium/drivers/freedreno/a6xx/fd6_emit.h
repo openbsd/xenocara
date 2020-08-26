@@ -46,18 +46,31 @@ enum fd6_state_id {
 	FD6_GROUP_PROG_CONFIG,
 	FD6_GROUP_PROG,
 	FD6_GROUP_PROG_BINNING,
+	FD6_GROUP_PROG_INTERP,
+	FD6_GROUP_PROG_FB_RAST,
 	FD6_GROUP_LRZ,
 	FD6_GROUP_LRZ_BINNING,
 	FD6_GROUP_VBO,
 	FD6_GROUP_VS_CONST,
+	FD6_GROUP_HS_CONST,
+	FD6_GROUP_DS_CONST,
+	FD6_GROUP_GS_CONST,
 	FD6_GROUP_FS_CONST,
 	FD6_GROUP_VS_DRIVER_PARAMS,
+	FD6_GROUP_PRIMITIVE_PARAMS,
 	FD6_GROUP_VS_TEX,
+	FD6_GROUP_HS_TEX,
+	FD6_GROUP_DS_TEX,
+	FD6_GROUP_GS_TEX,
 	FD6_GROUP_FS_TEX,
 	FD6_GROUP_IBO,
 	FD6_GROUP_RASTERIZER,
 	FD6_GROUP_ZSA,
+	FD6_GROUP_BLEND,
 };
+
+#define ENABLE_ALL (CP_SET_DRAW_STATE__0_BINNING | CP_SET_DRAW_STATE__0_GMEM | CP_SET_DRAW_STATE__0_SYSMEM)
+#define ENABLE_DRAW (CP_SET_DRAW_STATE__0_GMEM | CP_SET_DRAW_STATE__0_SYSMEM)
 
 struct fd6_state_group {
 	struct fd_ringbuffer *stateobj;
@@ -65,7 +78,7 @@ struct fd6_state_group {
 	/* enable_mask controls which states the stateobj is evaluated in,
 	 * b0 is binning pass b1 and/or b2 is draw pass
 	 */
-	uint8_t enable_mask;
+	uint32_t enable_mask;
 };
 
 /* grouped together emit-state for prog/vertex/state emit: */
@@ -80,6 +93,7 @@ struct fd6_emit {
 	bool sprite_coord_mode;
 	bool rasterflat;
 	bool no_decode_srgb;
+	bool primitive_restart;
 
 	/* in binning pass, we don't have real frag shader, so we
 	 * don't know if real draw disqualifies lrz write.  So just
@@ -92,6 +106,9 @@ struct fd6_emit {
 
 	struct ir3_shader_variant *bs;
 	struct ir3_shader_variant *vs;
+	struct ir3_shader_variant *hs;
+	struct ir3_shader_variant *ds;
+	struct ir3_shader_variant *gs;
 	struct ir3_shader_variant *fs;
 
 	unsigned streamout_mask;
@@ -162,21 +179,22 @@ fd6_cache_flush(struct fd_batch *batch, struct fd_ringbuffer *ring)
 	struct fd6_context *fd6_ctx = fd6_context(batch->ctx);
 	unsigned seqno;
 
-	seqno = fd6_event_write(batch, ring, CACHE_FLUSH_AND_INV_EVENT, true);
+	seqno = fd6_event_write(batch, ring, RB_DONE_TS, true);
 
 	OUT_PKT7(ring, CP_WAIT_REG_MEM, 6);
-	OUT_RING(ring, 0x00000013);
+	OUT_RING(ring, CP_WAIT_REG_MEM_0_FUNCTION(WRITE_EQ) |
+		       CP_WAIT_REG_MEM_0_POLL_MEMORY);
 	OUT_RELOC(ring, control_ptr(fd6_ctx, seqno));
-	OUT_RING(ring, seqno);
-	OUT_RING(ring, 0xffffffff);
-	OUT_RING(ring, 0x00000010);
+	OUT_RING(ring, CP_WAIT_REG_MEM_3_REF(seqno));
+	OUT_RING(ring, CP_WAIT_REG_MEM_4_MASK(~0));
+	OUT_RING(ring, CP_WAIT_REG_MEM_5_DELAY_LOOP_CYCLES(16));
 
 	seqno = fd6_event_write(batch, ring, CACHE_FLUSH_TS, true);
 
-	OUT_PKT7(ring, CP_UNK_A6XX_14, 4);
-	OUT_RING(ring, 0x00000000);
+	OUT_PKT7(ring, CP_WAIT_MEM_GTE, 4);
+	OUT_RING(ring, CP_WAIT_MEM_GTE_0_RESERVED(0));
 	OUT_RELOC(ring, control_ptr(fd6_ctx, seqno));
-	OUT_RING(ring, seqno);
+	OUT_RING(ring, CP_WAIT_MEM_GTE_3_REF(seqno));
 }
 
 static inline void
@@ -218,6 +236,12 @@ fd6_stage2shadersb(gl_shader_stage type)
 	switch (type) {
 	case MESA_SHADER_VERTEX:
 		return SB6_VS_SHADER;
+	case MESA_SHADER_TESS_CTRL:
+		return SB6_HS_SHADER;
+	case MESA_SHADER_TESS_EVAL:
+		return SB6_DS_SHADER;
+	case MESA_SHADER_GEOMETRY:
+		return SB6_GS_SHADER;
 	case MESA_SHADER_FRAGMENT:
 		return SB6_FS_SHADER;
 	case MESA_SHADER_COMPUTE:
@@ -226,6 +250,22 @@ fd6_stage2shadersb(gl_shader_stage type)
 	default:
 		unreachable("bad shader type");
 		return ~0;
+	}
+}
+
+static inline enum a6xx_tess_spacing
+fd6_gl2spacing(enum gl_tess_spacing spacing)
+{
+	switch (spacing) {
+	case TESS_SPACING_EQUAL:
+		return TESS_EQUAL;
+	case TESS_SPACING_FRACTIONAL_ODD:
+		return TESS_FRACTIONAL_ODD;
+	case TESS_SPACING_FRACTIONAL_EVEN:
+		return TESS_FRACTIONAL_EVEN;
+	case TESS_SPACING_UNSPECIFIED:
+	default:
+		unreachable("spacing must be specified");
 	}
 }
 

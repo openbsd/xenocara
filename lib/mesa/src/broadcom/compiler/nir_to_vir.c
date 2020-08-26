@@ -22,7 +22,7 @@
  */
 
 #include <inttypes.h>
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/ralloc.h"
@@ -207,6 +207,9 @@ ntq_emit_tmu_general(struct v3d_compile *c, nir_intrinsic_instr *instr,
                         instr->intrinsic == nir_intrinsic_load_ssbo ||
                         instr->intrinsic == nir_intrinsic_load_scratch ||
                         instr->intrinsic == nir_intrinsic_load_shared);
+
+        if (!is_load)
+                c->tmu_dirty_rcl = true;
 
         bool has_index = !is_shared_or_scratch;
 
@@ -440,7 +443,7 @@ ntq_store_dest(struct v3d_compile *c, nir_dest *dest, int chan,
                struct qreg result)
 {
         struct qinst *last_inst = NULL;
-        if (!list_empty(&c->cur_block->instructions))
+        if (!list_is_empty(&c->cur_block->instructions))
                 last_inst = (struct qinst *)c->cur_block->instructions.prev;
 
         assert((result.file == QFILE_TEMP &&
@@ -1364,11 +1367,20 @@ emit_frag_end(struct v3d_compile *c)
                 vir_emit_tlb_color_write(c, rt);
 }
 
+static inline void
+vir_VPM_WRITE_indirect(struct v3d_compile *c,
+                       struct qreg val,
+                       struct qreg vpm_index)
+{
+        assert(c->devinfo->ver >= 40);
+        vir_STVPMV(c, vpm_index, val);
+}
+
 static void
 vir_VPM_WRITE(struct v3d_compile *c, struct qreg val, uint32_t vpm_index)
 {
         if (c->devinfo->ver >= 40) {
-                vir_STVPMV(c, vir_uniform_ui(c, vpm_index), val);
+                vir_VPM_WRITE_indirect(c, val, vir_uniform_ui(c, vpm_index));
         } else {
                 /* XXX: v3d33_vir_vpm_write_setup(c); */
                 vir_MOV_dest(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_VPM), val);
@@ -1377,6 +1389,15 @@ vir_VPM_WRITE(struct v3d_compile *c, struct qreg val, uint32_t vpm_index)
 
 static void
 emit_vert_end(struct v3d_compile *c)
+{
+        /* GFXH-1684: VPM writes need to be complete by the end of the shader.
+         */
+        if (c->devinfo->ver >= 40 && c->devinfo->ver <= 42)
+                vir_VPMWT(c);
+}
+
+static void
+emit_geom_end(struct v3d_compile *c)
 {
         /* GFXH-1684: VPM writes need to be complete by the end of the shader.
          */
@@ -1397,7 +1418,7 @@ v3d_optimize_nir(struct nir_shader *s)
                 progress = false;
 
                 NIR_PASS_V(s, nir_lower_vars_to_ssa);
-                NIR_PASS(progress, s, nir_lower_alu_to_scalar, NULL);
+                NIR_PASS(progress, s, nir_lower_alu_to_scalar, NULL, NULL);
                 NIR_PASS(progress, s, nir_lower_phis_to_scalar);
                 NIR_PASS(progress, s, nir_copy_prop);
                 NIR_PASS(progress, s, nir_opt_remove_phis);
@@ -1438,6 +1459,9 @@ driver_location_compare(const void *in_a, const void *in_b)
         const nir_variable *const *a = in_a;
         const nir_variable *const *b = in_b;
 
+        if ((*a)->data.driver_location == (*b)->data.driver_location)
+                return (*a)->data.location_frac - (*b)->data.location_frac;
+
         return (*a)->data.driver_location - (*b)->data.driver_location;
 }
 
@@ -1471,7 +1495,7 @@ ntq_emit_vpm_read(struct v3d_compile *c,
 }
 
 static void
-ntq_setup_vpm_inputs(struct v3d_compile *c)
+ntq_setup_vs_inputs(struct v3d_compile *c)
 {
         /* Figure out how many components of each vertex attribute the shader
          * uses.  Each variable should have been split to individual
@@ -1562,27 +1586,69 @@ program_reads_point_coord(struct v3d_compile *c)
 }
 
 static void
-ntq_setup_fs_inputs(struct v3d_compile *c)
+get_sorted_input_variables(struct v3d_compile *c,
+                           unsigned *num_entries,
+                           nir_variable ***vars)
 {
-        unsigned num_entries = 0;
-        unsigned num_components = 0;
-        nir_foreach_variable(var, &c->s->inputs) {
-                num_entries++;
-                num_components += glsl_get_components(var->type);
-        }
+        *num_entries = 0;
+        nir_foreach_variable(var, &c->s->inputs)
+                (*num_entries)++;
 
-        nir_variable *vars[num_entries];
+        *vars = ralloc_array(c, nir_variable *, *num_entries);
 
         unsigned i = 0;
         nir_foreach_variable(var, &c->s->inputs)
-                vars[i++] = var;
+                (*vars)[i++] = var;
 
         /* Sort the variables so that we emit the input setup in
          * driver_location order.  This is required for VPM reads, whose data
          * is fetched into the VPM in driver_location (TGSI register index)
          * order.
          */
-        qsort(&vars, num_entries, sizeof(*vars), driver_location_compare);
+        qsort(*vars, *num_entries, sizeof(**vars), driver_location_compare);
+}
+
+static void
+ntq_setup_gs_inputs(struct v3d_compile *c)
+{
+        nir_variable **vars;
+        unsigned num_entries;
+        get_sorted_input_variables(c, &num_entries, &vars);
+
+        for (unsigned i = 0; i < num_entries; i++) {
+                nir_variable *var = vars[i];
+
+                /* All GS inputs are arrays with as many entries as vertices
+                 * in the input primitive, but here we only care about the
+                 * per-vertex input type.
+                 */
+                const struct glsl_type *type = glsl_without_array(var->type);
+                unsigned array_len = MAX2(glsl_get_length(type), 1);
+                unsigned loc = var->data.driver_location;
+
+                resize_qreg_array(c, &c->inputs, &c->inputs_array_size,
+                                  (loc + array_len) * 4);
+
+                for (unsigned j = 0; j < array_len; j++) {
+                        unsigned num_elements = glsl_get_vector_elements(type);
+                        for (unsigned k = 0; k < num_elements; k++) {
+                                unsigned chan = var->data.location_frac + k;
+                                unsigned input_idx = c->num_inputs++;
+                                struct v3d_varying_slot slot =
+                                        v3d_slot_from_slot_and_component(var->data.location + j, chan);
+                                c->input_slots[input_idx] = slot;
+                        }
+                }
+        }
+}
+
+
+static void
+ntq_setup_fs_inputs(struct v3d_compile *c)
+{
+        nir_variable **vars;
+        unsigned num_entries;
+        get_sorted_input_variables(c, &num_entries, &vars);
 
         for (unsigned i = 0; i < num_entries; i++) {
                 nir_variable *var = vars[i];
@@ -1697,11 +1763,8 @@ ntq_emit_ssa_undef(struct v3d_compile *c, nir_ssa_undef_instr *instr)
 static void
 ntq_emit_image_size(struct v3d_compile *c, nir_intrinsic_instr *instr)
 {
-        assert(instr->intrinsic == nir_intrinsic_image_deref_size);
-        nir_variable *var = nir_intrinsic_get_var(instr, 0);
-        unsigned image_index = var->data.driver_location;
-        const struct glsl_type *sampler_type = glsl_without_array(var->type);
-        bool is_array = glsl_sampler_type_is_array(sampler_type);
+        unsigned image_index = nir_src_as_uint(instr->src[0]);
+        bool is_array = nir_intrinsic_image_array(instr);
 
         ntq_store_dest(c, &instr->dest, 0,
                        vir_uniform(c, QUNIFORM_IMAGE_WIDTH, image_index));
@@ -1949,6 +2012,66 @@ ntq_emit_color_write(struct v3d_compile *c,
 }
 
 static void
+emit_store_output_gs(struct v3d_compile *c, nir_intrinsic_instr *instr)
+{
+        assert(instr->num_components == 1);
+
+        uint32_t base_offset = nir_intrinsic_base(instr);
+        struct qreg src_offset = ntq_get_src(c, instr->src[1], 0);
+        struct qreg offset =
+                vir_ADD(c, vir_uniform_ui(c, base_offset), src_offset);
+
+        /* Usually, for VS or FS, we only emit outputs once at program end so
+         * our VPM writes are never in non-uniform control flow, but this
+         * is not true for GS, where we are emitting multiple vertices.
+         */
+        if (vir_in_nonuniform_control_flow(c)) {
+                vir_set_pf(vir_MOV_dest(c, vir_nop_reg(), c->execute),
+                           V3D_QPU_PF_PUSHZ);
+        }
+
+        struct qreg val = ntq_get_src(c, instr->src[0], 0);
+
+        /* The offset isn’t necessarily dynamically uniform for a geometry
+         * shader. This can happen if the shader sometimes doesn’t emit one of
+         * the vertices. In that case subsequent vertices will be written to
+         * different offsets in the VPM and we need to use the scatter write
+         * instruction to have a different offset for each lane.
+         */
+        if (nir_src_is_dynamically_uniform(instr->src[1]))
+                vir_VPM_WRITE_indirect(c, val, offset);
+        else
+                vir_STVPMD(c, offset, val);
+
+        if (vir_in_nonuniform_control_flow(c)) {
+                struct qinst *last_inst =
+                        (struct qinst *)c->cur_block->instructions.prev;
+                vir_set_cond(last_inst, V3D_QPU_COND_IFA);
+        }
+}
+
+static void
+ntq_emit_store_output(struct v3d_compile *c, nir_intrinsic_instr *instr)
+{
+        /* XXX perf: Use stvpmv with uniform non-constant offsets and
+         * stvpmd with non-uniform offsets and enable
+         * PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR.
+         */
+        if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
+               ntq_emit_color_write(c, instr);
+        } else if (c->s->info.stage == MESA_SHADER_GEOMETRY)  {
+               emit_store_output_gs(c, instr);
+        } else {
+               assert(c->s->info.stage == MESA_SHADER_VERTEX);
+               assert(instr->num_components == 1);
+
+               vir_VPM_WRITE(c,
+                             ntq_get_src(c, instr->src[0], 0),
+                             nir_intrinsic_base(instr));
+        }
+}
+
+static void
 ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
 {
         switch (instr->intrinsic) {
@@ -1992,16 +2115,18 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
                 ntq_emit_tmu_general(c, instr, true);
                 break;
 
-        case nir_intrinsic_image_deref_load:
-        case nir_intrinsic_image_deref_store:
-        case nir_intrinsic_image_deref_atomic_add:
-        case nir_intrinsic_image_deref_atomic_min:
-        case nir_intrinsic_image_deref_atomic_max:
-        case nir_intrinsic_image_deref_atomic_and:
-        case nir_intrinsic_image_deref_atomic_or:
-        case nir_intrinsic_image_deref_atomic_xor:
-        case nir_intrinsic_image_deref_atomic_exchange:
-        case nir_intrinsic_image_deref_atomic_comp_swap:
+        case nir_intrinsic_image_load:
+        case nir_intrinsic_image_store:
+        case nir_intrinsic_image_atomic_add:
+        case nir_intrinsic_image_atomic_imin:
+        case nir_intrinsic_image_atomic_umin:
+        case nir_intrinsic_image_atomic_imax:
+        case nir_intrinsic_image_atomic_umax:
+        case nir_intrinsic_image_atomic_and:
+        case nir_intrinsic_image_atomic_or:
+        case nir_intrinsic_image_atomic_xor:
+        case nir_intrinsic_image_atomic_exchange:
+        case nir_intrinsic_image_atomic_comp_swap:
                 v3d40_vir_emit_image_load_store(c, instr);
                 break;
 
@@ -2088,22 +2213,10 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
                break;
 
        case nir_intrinsic_store_output:
-                /* XXX perf: Use stvpmv with uniform non-constant offsets and
-                 * stvpmd with non-uniform offsets and enable
-                 * PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR.
-                 */
-                if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
-                        ntq_emit_color_write(c, instr);
-                } else {
-                        assert(instr->num_components == 1);
-
-                        vir_VPM_WRITE(c,
-                                      ntq_get_src(c, instr->src[0], 0),
-                                      nir_intrinsic_base(instr));
-                }
+                ntq_emit_store_output(c, instr);
                 break;
 
-        case nir_intrinsic_image_deref_size:
+        case nir_intrinsic_image_size:
                 ntq_emit_image_size(c, instr);
                 break;
 
@@ -2141,10 +2254,10 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
         }
 
         case nir_intrinsic_memory_barrier:
-        case nir_intrinsic_memory_barrier_atomic_counter:
         case nir_intrinsic_memory_barrier_buffer:
         case nir_intrinsic_memory_barrier_image:
         case nir_intrinsic_memory_barrier_shared:
+        case nir_intrinsic_memory_barrier_tcs_patch:
         case nir_intrinsic_group_memory_barrier:
                 /* We don't do any instruction scheduling of these NIR
                  * instructions between each other, so we just need to make
@@ -2155,7 +2268,7 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
                  */
                 break;
 
-        case nir_intrinsic_barrier:
+        case nir_intrinsic_control_barrier:
                 /* Emit a TSY op to get all invocations in the workgroup
                  * (actually supergroup) to block until the last invocation
                  * reaches the TSY op.
@@ -2210,6 +2323,43 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
 
         case nir_intrinsic_load_subgroup_id:
                 ntq_store_dest(c, &instr->dest, 0, vir_EIDX(c));
+                break;
+
+        case nir_intrinsic_load_per_vertex_input: {
+                /* col: vertex index, row = varying index */
+                struct qreg col = ntq_get_src(c, instr->src[0], 0);
+                uint32_t row_idx = nir_intrinsic_base(instr) * 4 +
+                                   nir_intrinsic_component(instr);
+                for (int i = 0; i < instr->num_components; i++) {
+                        struct qreg row = vir_uniform_ui(c, row_idx++);
+                        ntq_store_dest(c, &instr->dest, i,
+                                       vir_LDVPMG_IN(c, row, col));
+                }
+                break;
+        }
+
+        case nir_intrinsic_emit_vertex:
+        case nir_intrinsic_end_primitive:
+                unreachable("Should have been lowered in v3d_nir_lower_io");
+                break;
+
+        case nir_intrinsic_load_primitive_id: {
+                /* gl_PrimitiveIdIn is written by the GBG in the first word of
+                 * VPM output header. According to docs, we should read this
+                 * using ldvpm(v,d)_in (See Table 71).
+                 */
+                ntq_store_dest(c, &instr->dest, 0,
+                               vir_LDVPMV_IN(c, vir_uniform_ui(c, 0)));
+                break;
+        }
+
+        case nir_intrinsic_load_invocation_id:
+                ntq_store_dest(c, &instr->dest, 0, vir_IID(c));
+                break;
+
+        case nir_intrinsic_load_fb_layers_v3d:
+                ntq_store_dest(c, &instr->dest, 0,
+                               vir_uniform(c, QUNIFORM_FB_LAYERS, 0));
                 break;
 
         default:
@@ -2414,10 +2564,6 @@ static void
 ntq_emit_instr(struct v3d_compile *c, nir_instr *instr)
 {
         switch (instr->type) {
-        case nir_instr_type_deref:
-                /* ignored, will be walked by the intrinsic using it. */
-                break;
-
         case nir_instr_type_alu:
                 ntq_emit_alu(c, nir_instr_as_alu(instr));
                 break;
@@ -2634,10 +2780,21 @@ nir_to_vir(struct v3d_compile *c)
                 c->spill_size += V3D_CHANNELS * c->s->scratch_size;
         }
 
-        if (c->s->info.stage == MESA_SHADER_FRAGMENT)
+        switch (c->s->info.stage) {
+        case MESA_SHADER_VERTEX:
+                ntq_setup_vs_inputs(c);
+                break;
+        case MESA_SHADER_GEOMETRY:
+                ntq_setup_gs_inputs(c);
+                break;
+        case MESA_SHADER_FRAGMENT:
                 ntq_setup_fs_inputs(c);
-        else
-                ntq_setup_vpm_inputs(c);
+                break;
+        case MESA_SHADER_COMPUTE:
+                break;
+        default:
+                unreachable("unsupported shader stage");
+        }
 
         ntq_setup_outputs(c);
 
@@ -2681,6 +2838,7 @@ const nir_shader_compiler_options v3d_nir_options = {
         .lower_mul_high = true,
         .lower_wpos_pntc = true,
         .lower_rotate = true,
+        .lower_to_scalar = true,
 };
 
 /**
@@ -2781,6 +2939,9 @@ v3d_nir_to_vir(struct v3d_compile *c)
         switch (c->s->info.stage) {
         case MESA_SHADER_FRAGMENT:
                 emit_frag_end(c);
+                break;
+        case MESA_SHADER_GEOMETRY:
+                emit_geom_end(c);
                 break;
         case MESA_SHADER_VERTEX:
                 emit_vert_end(c);

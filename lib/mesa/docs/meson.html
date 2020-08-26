@@ -26,13 +26,17 @@
 <h2 id="intro">1. Introduction</h2>
 
 <p>For general information about Meson see the
-<a href="http://mesonbuild.com/">Meson website</a>.</p>
+<a href="https://mesonbuild.com/">Meson website</a>.</p>
 
 <p><strong>Mesa's Meson build system is generally considered stable and ready
 for production.</strong></p>
 
-<p>The Meson build of Mesa is tested on Linux, macOS, Cygwin and Haiku, FreeBSD,
+<p><strong>Mesa requires Meson &gt;= 0.46.0 to build.</strong>
+
+<p>The Meson build of Mesa is tested on Linux, macOS, Windows, Cygwin, Haiku, FreeBSD,
 DragonflyBSD, NetBSD, and should work on OpenBSD.</p>
+
+<h4>Unix-like OSes</h4>
 
 <p>If Meson is not already installed on your system, you can typically
 install it with your package installer.  For example:</p>
@@ -43,9 +47,7 @@ or
 <pre>
 sudo dnf install meson   # Fedora
 </pre>
-
-<p><strong>Mesa requires Meson &gt;= 0.46.0 to build.</strong>
-
+<p>
 Some older versions of meson do not check that they are too old and will error
 out in odd ways.
 </p>
@@ -55,14 +57,37 @@ If it's not already installed, use apt-get or dnf to install
 the <em>ninja-build</em> package.
 </p>
 
+<h4>Windows</h4>
+
+<p>
+You will need to install python3 and meson as a module using pip. This is
+because we use python for generating code, and rely on external modules
+(mako). You also need pkg-config (a hard dependency of meson), flex, and bison.
+
+The easiest way to install everything you need is with <a
+href="https://chocolatey.org/">chocolatey</a>.
+</p>
+<pre>
+choco install python3 winflexbison pkgconfiglite
+</pre>
+<p>You can even use chocolatey to install mingw and ninja (ninja can be used with MSVC as well)</p>
+<pre>
+choco install ninja mingw
+</pre>
+<p>Then install meson using pip</p>
+<pre>
+py -3 -m pip install meson mako
+</pre>
+
+You may need to add the python3 scripts directory to your path for meson.
+
 <h2 id="basic">2. Basic Usage</h2>
 
 <p>
 The meson program is used to configure the source directory and generates
 either a ninja build file or Visual Studio® build files. The latter must
 be enabled via the <code>--backend</code> switch, as ninja is the default
-backend on all
-operating systems.
+backend on all operating systems.
 </p>
 
 <p>
@@ -70,7 +95,7 @@ Meson only supports out-of-tree builds, and must be passed a
 directory to put built and generated sources into. We'll call that directory
 "build" here.
 It's recommended to create a
-<a href="http://mesonbuild.com/Using-multiple-build-directories.html">
+<a href="https://mesonbuild.com/Using-multiple-build-directories.html">
 separate build directory</a> for each configuration you might want to use.
 </p>
 
@@ -101,7 +126,7 @@ running "meson build/" but this feature is being discussed upstream.
 For now, we have a <code>bin/meson-options.py</code> script that prints
 the options for you.
 If that script doesn't work for some reason, you can always look in the
-<a href="https://gitlab.freedesktop.org/mesa/mesa/blob/master/meson_options.txt">
+<a href="https://gitlab.freedesktop.org/mesa/mesa/-/blob/master/meson_options.txt">
 meson_options.txt</a> file at the root of the project.
 </p>
 
@@ -119,7 +144,7 @@ meson configure build/ -Dprefix=/tmp/install -Dglx=true
 
 <p>
 Note that options taking lists (such as <code>platforms</code>) are
-<a href="http://mesonbuild.com/Build-options.html#using-build-options">a bit
+<a href="https://mesonbuild.com/Build-options.html#using-build-options">a bit
 more complicated</a>, but the simplest form compatible with Mesa options
 is to use a comma to separate values (<code>-D platforms=drm,wayland</code>)
 and brackets to represent an empty list (<code>-D platforms=[]</code>).
@@ -153,12 +178,32 @@ Meson does not do this.  Instead, you will need do this:
 ninja -C build/ xmlpool-pot xmlpool-update-po xmlpool-gmo
 </pre>
 
+<h4>Windows specific instructions</h4>
+
+<p>
+On windows you have a couple of choices for compilers. If you installed mingw
+with chocolatey and want to use ninja you should be able to open any shell
+and follow the instructions above. If you want to you MSVC, clang-cl, or ICL
+(the Intel Compiler), read on.
+</p>
+<p>
+Both ICL and MSVC come with shell environments, the easiest way to use meson
+with these it to open a shell. For clang-cl you will need to open an MSVC
+shell, and then override the compilers, either using a <a
+href="https://mesonbuild.com/Native-environments.html">native file</a>, or
+with the CC and CXX environment variables.
+</p>
+<p>
+All of these compilers are tested and work with ninja, but if you want visual
+studio integration or you just like msbuild, passing
+<code>--backend=vs</code> to meson will generate a visual studio solution. If
+you want to use ICL or clang-cl with the vsbackend you will need meson 0.52.0
+or greater. Older versions always use the microsoft compiler.
+</p>
+
 <h2 id="advanced">3. Advanced Usage</h2>
 
-<dl>
-
-<dt>Installation Location</dt>
-<dd>
+<h3>Installation Location</h3>
 <p>
 Meson default to installing libGL.so in your system's main lib/ directory
 and DRI drivers to a dri/ subdirectory.
@@ -180,10 +225,8 @@ to run/test the driver.
 <p>
 Meson also honors <code>DESTDIR</code> for installs.
 </p>
-</dd>
 
-<dt>Compiler Options</dt>
-<dd>
+<h3>Compiler Options</h3>
 <p>Meson supports the common CFLAGS, CXXFLAGS, etc. environment
 variables but their use is discouraged because of the many caveats
 in using them.
@@ -199,11 +242,9 @@ for C++ sources:
 <pre>
 meson builddir/ -Dc_args=-fmax-errors=10 -Dcpp_args=-DMAGIC=123
 </pre>
-</dd>
 
 
-<dt>Compiler Specification</dt>
-<dd>
+<h3>Compiler Specification</h3>
 <p>
 Meson supports the standard CC and CXX environment variables for
 changing the default compiler.  Note that Meson does not allow
@@ -224,16 +265,28 @@ ninja -C build-clang
 <p>
 The default compilers depends on your operating system. Meson supports most of
 the popular compilers, a complete list is available
-<a href="http://mesonbuild.com/Reference-tables.html#compiler-ids">here</a>.
+<a href="https://mesonbuild.com/Reference-tables.html#compiler-ids">here</a>.
 </p>
-</dd>
 
-<dt>LLVM</dt>
-<dd><p>Meson includes upstream logic to wrap llvm-config using its standard
+<h3>LLVM</h3>
+<p>Meson includes upstream logic to wrap llvm-config using its standard
 dependency interface.
-</p></dd>
+</p>
+<p>
+As of meson 0.51.0 meson can use cmake to find llvm (the cmake finder
+was added in meson 0.49.0, but LLVM cannot be found until 0.51) Due to the
+way LLVM implements its cmake finder it will only find static libraries, it
+will never find libllvm.so.
 
-<dd><p>
+There is also a <code>-Dcmake_module_path</code> option in this meson version,
+which points to the root of an alternative installation (the prefix). For
+example:
+</p>
+<pre>
+meson builddir -Dcmake_module_path=/home/user/mycmake/prefix
+</pre>
+
+<p>
 As of meson 0.49.0 meson also has the concept of a
 <a href="https://mesonbuild.com/Native-environments.html">"native file"</a>,
 these files provide information about the native build environment (as opposed
@@ -243,18 +296,17 @@ find llvm-config:
 
 custom-llvm.ini
 <pre>
-    [binaries]
-    llvm-config = '/usr/local/bin/llvm/llvm-config'
+[binaries]
+llvm-config = '/usr/local/bin/llvm/llvm-config'
 </pre>
 
 Then configure meson:
 
 <pre>
-    meson builddir/ --native-file custom-llvm.ini
+meson builddir/ --native-file custom-llvm.ini
 </pre>
-</dd>
 
-<dd><p>
+<p>
 Meson &lt; 0.49 doesn't support native files, so to specify a custom
 <code>llvm-config</code> you need to modify your <code>$PATH</code> (or
 <code>%PATH%</code> on windows), which will be searched for
@@ -264,9 +316,8 @@ and <code>llvm-config-<i>$version</i></code>:
 <pre>
 PATH=/path/to/folder/with/llvm-config:$PATH meson build
 </pre>
-</dd>
 
-<dd><p>
+<p>
 For selecting llvm-config for cross compiling a
 <a href="https://mesonbuild.com/Cross-compilation.html#defining-the-environment">"cross file"</a>
 should be used. It uses the same format as the native file above:
@@ -274,30 +325,96 @@ should be used. It uses the same format as the native file above:
 
 <p>cross-llvm.ini</p>
 <pre>
-    [binaries]
-    ...
-    llvm-config = '/usr/lib/llvm-config-32'
+[binaries]
+...
+llvm-config = '/usr/lib/llvm-config-32'
+cmake = '/usr/bin/cmake-for-my-arch'
 </pre>
+
+<p>Obviously, only cmake or llvm-config is required.</p>
 
 <p>Then configure meson:</p>
 <pre>
-    meson builddir/ --cross-file cross-llvm.ini
+meson builddir/ --cross-file cross-llvm.ini
 </pre>
 
 See the <a href="#cross-compilation">Cross Compilation</a> section for more information.
-</dd>
 
-<dt><code>PKG_CONFIG_PATH</code></dt>
-<dd><p>The
+<p>On windows (and in other cases), using llvm-config or cmake may be
+either undesirable or impossible. Meson's solution for this is a
+<a href="https://mesonbuild.com/Wrap-dependency-system-manual.html">wrap</a>, in
+this case a "binary wrap". Follow the steps below:</p>
+<ul>
+    <li>Install the binaries and headers into the <code>$mesa_src/subprojects/llvm</code></li>
+    <li>Add a meson build.build file to that directory (more on that later)</li>
+</ul>
+
+<p>The wrap file must define the following:</p>
+<ul>
+    <li><code>dep_llvm</code>: a <code>declare_dependency()</code> object with include_directories, dependencies, and version set)</li>
+</ul>
+
+<p>It may also define:</p>
+<ul>
+    <li><code>irbuilder_h</code>: a <code>files()</code> object pointing to llvm/IR/IRBuilder.h (this is requred for SWR)</li>
+    <li><code>has_rtti</code>: a <code>bool</code> that declares whether LLVM was built with RTTI. Defaults to true</li>
+</ul>
+
+<p>such a meson.build file might look like:</p>
+<pre>
+project('llvm', ['cpp'])
+
+cpp = meson.get_compiler('cpp')
+
+_deps = []
+_search = join_paths(meson.current_source_dir(), 'lib')
+foreach d : ['libLLVMCodeGen', 'libLLVMScalarOpts', 'libLLVMAnalysis',
+             'libLLVMTransformUtils', 'libLLVMCore', 'libLLVMX86CodeGen',
+             'libLLVMSelectionDAG', 'libLLVMipo', 'libLLVMAsmPrinter',
+             'libLLVMInstCombine', 'libLLVMInstrumentation', 'libLLVMMC',
+             'libLLVMGlobalISel', 'libLLVMObjectYAML', 'libLLVMDebugInfoPDB',
+             'libLLVMVectorize', 'libLLVMPasses', 'libLLVMSupport',
+             'libLLVMLTO', 'libLLVMObject', 'libLLVMDebugInfoCodeView',
+             'libLLVMDebugInfoDWARF', 'libLLVMOrcJIT', 'libLLVMProfileData',
+             'libLLVMObjCARCOpts', 'libLLVMBitReader', 'libLLVMCoroutines',
+             'libLLVMBitWriter', 'libLLVMRuntimeDyld', 'libLLVMMIRParser',
+             'libLLVMX86Desc', 'libLLVMAsmParser', 'libLLVMTableGen',
+             'libLLVMFuzzMutate', 'libLLVMLinker', 'libLLVMMCParser',
+             'libLLVMExecutionEngine', 'libLLVMCoverage', 'libLLVMInterpreter',
+             'libLLVMTarget', 'libLLVMX86AsmParser', 'libLLVMSymbolize',
+             'libLLVMDebugInfoMSF', 'libLLVMMCJIT', 'libLLVMXRay',
+             'libLLVMX86AsmPrinter', 'libLLVMX86Disassembler',
+             'libLLVMMCDisassembler', 'libLLVMOption', 'libLLVMIRReader',
+             'libLLVMLibDriver', 'libLLVMDlltoolDriver', 'libLLVMDemangle',
+             'libLLVMBinaryFormat', 'libLLVMLineEditor',
+             'libLLVMWindowsManifest', 'libLLVMX86Info', 'libLLVMX86Utils']
+  _deps += cpp.find_library(d, dirs : _search)
+endforeach
+
+dep_llvm = declare_dependency(
+  include_directories : include_directories('include'),
+  dependencies : _deps,
+  version : '6.0.0',
+)
+
+has_rtti = false
+irbuilder_h = files('include/llvm/IR/IRBuilder.h')
+</pre>
+
+<p>It is very important that version is defined and is accurate, if it is not,
+workarounds for the wrong version of LLVM might be used resulting in build
+failures.</p>
+
+<h3><code>PKG_CONFIG_PATH</code></h3>
+<p>The
 <code>pkg-config</code> utility is a hard requirement for configuring and
 building Mesa on Unix-like systems. It is used to search for external libraries
 on the system. This environment variable is used to control the search path for
 <code>pkg-config</code>. For instance, setting
 <code>PKG_CONFIG_PATH=/usr/X11R6/lib/pkgconfig</code> will search for package
 metadata in <code>/usr/X11R6</code> before the standard directories.</p>
-</dd>
-</dl>
 
+<h3>Options</h3>
 <p>
 One of the oddities of meson is that some options are different when passed to
 the <code>meson</code> than to <code>meson configure</code>. These options are

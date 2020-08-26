@@ -43,7 +43,11 @@
 /**
  * Max texture sizes
  */
-#define LP_MAX_TEXTURE_SIZE (1 * 1024 * 1024 * 1024ULL)  /* 1GB for now */
+/**
+ * 2GB is the actual max currently (we always use 32bit offsets, and both
+ * llvm GEP as well as avx2 gather use signed offsets).
+ */
+#define LP_MAX_TEXTURE_SIZE (2 * 1024 * 1024 * 1024ULL)
 #define LP_MAX_TEXTURE_2D_LEVELS 14  /* 8K x 8K for now */
 #define LP_MAX_TEXTURE_3D_LEVELS 12  /* 2K x 2K x 2K for now */
 #define LP_MAX_TEXTURE_CUBE_LEVELS 14  /* 8K x 8K for now */
@@ -91,4 +95,8 @@
  */
 #define LP_MAX_SETUP_VARIANTS 64
 
+/*
+ * Max point size reported. Cap vertex shader point sizes to this.
+ */
+#define LP_MAX_POINT_WIDTH 255.0f
 #endif /* LP_LIMITS_H */

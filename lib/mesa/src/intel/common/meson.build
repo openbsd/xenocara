@@ -21,6 +21,9 @@
 # TODO: android?
 
 files_libintel_common = files(
+  'gen_aux_map.c',
+  'gen_aux_map.h',
+  'gen_buffer_alloc.h',
   'gen_clflush.h',
   'gen_batch_decoder.c',
   'gen_decoder.c',
@@ -39,7 +42,7 @@ files_libintel_common = files(
 libintel_common = static_library(
   ['intel_common', genX_xml_h],
   files_libintel_common,
-  include_directories : [inc_common, inc_intel],
+  include_directories : [inc_include, inc_src, inc_mesa, inc_gallium, inc_intel],
   c_args : [c_vis_args, no_override_init_args],
   link_with : [libisl],
   dependencies : [dep_expat, dep_libdrm, dep_thread, idep_genxml],
@@ -59,7 +62,7 @@ install_intel_gpu_tests = get_option('install-intel-gpu-tests')
 
 if install_intel_gpu_tests
   foreach g : [['70', 'gen7'], ['75', 'hsw'], ['80', 'gen8'],
-               ['90', 'gen9'], ['110', 'gen11']]
+               ['90', 'gen9'], ['110', 'gen11'], ['120', 'gen12']]
     executable(
       'intel_@0@_mi_builder_test'.format(g[1]),
       files('tests/gen_mi_builder_test.cpp'),
@@ -67,7 +70,7 @@ if install_intel_gpu_tests
         cpp_vis_args, cpp_msvc_compat_args,
         '-DGEN_VERSIONx10=@0@'.format(g[0])
       ],
-      include_directories : [inc_common, inc_intel],
+      include_directories : [inc_include, inc_src, inc_intel],
       link_with : [libintel_dev],
       dependencies : [dep_libdrm, idep_gtest, idep_genxml, idep_mesautil],
       install : install_intel_gpu_tests,
@@ -94,7 +97,7 @@ if with_tests
     executable(
       'genxml_test',
       ['tests/genxml_test.c', gentest_pack],
-      include_directories : [inc_common, inc_intel],
+      include_directories : [inc_include, inc_src, inc_intel],
       dependencies : idep_mesautil,
       link_with : libintel_common,
       c_args : [

@@ -44,6 +44,7 @@
 #include "util/macros.h"
 #include "util/u_atomic.h"
 #include "util/u_debug.h"
+#include "util/vma.h"
 
 #include "etnaviv_drmif.h"
 #include "drm-uapi/etnaviv_drm.h"
@@ -76,6 +77,9 @@ struct etna_device {
 
 	struct etna_bo_cache bo_cache;
 
+	int use_softpin;
+	struct util_vma_heap address_space;
+
 	int closefd;        /* call close(fd) upon destruction */
 };
 
@@ -97,6 +101,7 @@ struct etna_bo {
 	uint32_t        flags;
 	uint32_t        name;           /* flink global handle (DRI2 name) */
 	uint64_t        offset;         /* offset to mmap() */
+	uint32_t        va;             /* GPU virtual address */
 	int		refcnt;
 
 	/*
@@ -150,8 +155,8 @@ struct etna_cmd_stream_priv {
 	uint32_t nr_bos, max_bos;
 
 	/* notify callback if buffer reset happened */
-	void (*reset_notify)(struct etna_cmd_stream *stream, void *priv);
-	void *reset_notify_priv;
+	void (*force_flush)(struct etna_cmd_stream *stream, void *priv);
+	void *force_flush_priv;
 
 	void *bo_table;
 };
@@ -199,10 +204,9 @@ struct etna_perfmon_signal
 static inline void get_abs_timeout(struct drm_etnaviv_timespec *tv, uint64_t ns)
 {
 	struct timespec t;
-	uint32_t s = ns / 1000000000;
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	tv->tv_sec = t.tv_sec + s;
-	tv->tv_nsec = t.tv_nsec + ns - (s * 1000000000);
+	tv->tv_sec = t.tv_sec + ns / 1000000000;
+	tv->tv_nsec = t.tv_nsec + ns % 1000000000;
 }
 
 #if HAVE_VALGRIND

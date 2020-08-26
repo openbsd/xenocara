@@ -25,7 +25,7 @@
  */
 
 #include "pipe/p_screen.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 #include "fd2_screen.h"
 #include "fd2_context.h"
@@ -53,27 +53,20 @@ fd2_screen_is_format_supported(struct pipe_screen *pscreen,
 	if (MAX2(1, sample_count) != MAX2(1, storage_sample_count))
 		return false;
 
-	/* TODO figure out how to render to other formats.. */
 	if ((usage & PIPE_BIND_RENDER_TARGET) &&
-			((format != PIPE_FORMAT_B5G6R5_UNORM) &&
-			 (format != PIPE_FORMAT_B5G5R5A1_UNORM) &&
-			 (format != PIPE_FORMAT_B5G5R5X1_UNORM) &&
-			 (format != PIPE_FORMAT_B4G4R4A4_UNORM) &&
-			 (format != PIPE_FORMAT_B4G4R4X4_UNORM) &&
-			 (format != PIPE_FORMAT_B8G8R8A8_UNORM) &&
-			 (format != PIPE_FORMAT_B8G8R8X8_UNORM) &&
-			 (format != PIPE_FORMAT_R8G8B8A8_UNORM) &&
-			 (format != PIPE_FORMAT_R8G8B8X8_UNORM))) {
-		DBG("not supported render target: format=%s, target=%d, sample_count=%d, usage=%x",
-				util_format_name(format), target, sample_count, usage);
-		return false;
+	    fd2_pipe2color(format) != (enum a2xx_colorformatx)~0) {
+		retval |= PIPE_BIND_RENDER_TARGET;
 	}
 
-	if ((usage & (PIPE_BIND_SAMPLER_VIEW |
-				PIPE_BIND_VERTEX_BUFFER)) &&
-			(fd2_pipe2surface(format) != (enum a2xx_sq_surfaceformat)~0)) {
-		retval |= usage & (PIPE_BIND_SAMPLER_VIEW |
-				PIPE_BIND_VERTEX_BUFFER);
+	if ((usage & (PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_VERTEX_BUFFER)) &&
+			!util_format_is_srgb(format) &&
+			!util_format_is_pure_integer(format) &&
+			fd2_pipe2surface(format).format != FMT_INVALID) {
+		retval |= usage & PIPE_BIND_VERTEX_BUFFER;
+		/* the only npot blocksize supported texture format is R32G32B32_FLOAT */
+		if (util_is_power_of_two_or_zero(util_format_get_blocksize(format)) ||
+				format == PIPE_FORMAT_R32G32B32_FLOAT)
+			retval |= usage & PIPE_BIND_SAMPLER_VIEW;
 	}
 
 	if ((usage & (PIPE_BIND_RENDER_TARGET |
@@ -106,9 +99,6 @@ fd2_screen_is_format_supported(struct pipe_screen *pscreen,
 	return retval == usage;
 }
 
-extern const struct fd_perfcntr_group a2xx_perfcntr_groups[];
-extern const unsigned a2xx_num_perfcntr_groups;
-
 void
 fd2_screen_init(struct pipe_screen *pscreen)
 {
@@ -121,11 +111,6 @@ fd2_screen_init(struct pipe_screen *pscreen)
 	screen->setup_slices = fd2_setup_slices;
 	if (fd_mesa_debug & FD_DBG_TTILE)
 		screen->tile_mode = fd2_tile_mode;
-
-	if (fd_mesa_debug & FD_DBG_PERFC) {
-		screen->perfcntr_groups = a2xx_perfcntr_groups;
-		screen->num_perfcntr_groups = a2xx_num_perfcntr_groups;
-	}
 
 	fd2_emit_init_screen(pscreen);
 }

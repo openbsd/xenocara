@@ -82,16 +82,21 @@ unsigned ir3_pointer_size(struct ir3_compiler *compiler)
 }
 
 enum ir3_shader_debug {
-	IR3_DBG_SHADER_VS  = 0x001,
-	IR3_DBG_SHADER_TCS = 0x002,
-	IR3_DBG_SHADER_TES = 0x004,
-	IR3_DBG_SHADER_GS  = 0x008,
-	IR3_DBG_SHADER_FS  = 0x010,
-	IR3_DBG_SHADER_CS  = 0x020,
-	IR3_DBG_DISASM     = 0x040,
-	IR3_DBG_OPTMSGS    = 0x080,
-	IR3_DBG_FORCES2EN  = 0x100,
-	IR3_DBG_NOUBOOPT   = 0x200,
+	IR3_DBG_SHADER_VS  = BITFIELD_BIT(0),
+	IR3_DBG_SHADER_TCS = BITFIELD_BIT(1),
+	IR3_DBG_SHADER_TES = BITFIELD_BIT(2),
+	IR3_DBG_SHADER_GS  = BITFIELD_BIT(3),
+	IR3_DBG_SHADER_FS  = BITFIELD_BIT(4),
+	IR3_DBG_SHADER_CS  = BITFIELD_BIT(5),
+	IR3_DBG_DISASM     = BITFIELD_BIT(6),
+	IR3_DBG_OPTMSGS    = BITFIELD_BIT(7),
+	IR3_DBG_FORCES2EN  = BITFIELD_BIT(8),
+	IR3_DBG_NOUBOOPT   = BITFIELD_BIT(9),
+	IR3_DBG_NOFP16     = BITFIELD_BIT(10),
+
+	/* DEBUG-only options: */
+	IR3_DBG_SCHEDMSGS  = BITFIELD_BIT(20),
+	IR3_DBG_RAMSGS     = BITFIELD_BIT(21),
 };
 
 extern enum ir3_shader_debug ir3_shader_debug;
@@ -99,6 +104,9 @@ extern enum ir3_shader_debug ir3_shader_debug;
 static inline bool
 shader_debug_enabled(gl_shader_stage type)
 {
+	if (ir3_shader_debug & IR3_DBG_DISASM)
+		return true;
+
 	switch (type) {
 	case MESA_SHADER_VERTEX:      return !!(ir3_shader_debug & IR3_DBG_SHADER_VS);
 	case MESA_SHADER_TESS_CTRL:   return !!(ir3_shader_debug & IR3_DBG_SHADER_TCS);
@@ -109,6 +117,15 @@ shader_debug_enabled(gl_shader_stage type)
 	default:
 		debug_assert(0);
 		return false;
+	}
+}
+
+static inline void
+ir3_debug_print(struct ir3 *ir, const char *when)
+{
+	if (ir3_shader_debug & IR3_DBG_OPTMSGS) {
+		printf("%s:\n", when);
+		ir3_print(ir);
 	}
 }
 

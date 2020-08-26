@@ -25,7 +25,7 @@ foreach lang : _langs
   _langs_po_files += files(lang + '.po')
 endforeach
 
-xmlpool_options_h = custom_target(
+_xmlpool_options_h = custom_target(
   'xmlpool_options.h',
   input : ['gen_xmlpool.py', 't_options.h'],
   output : 'options.h',
@@ -36,5 +36,12 @@ xmlpool_options_h = custom_target(
   depend_files : _langs_po_files,
 )
 
-i18n = import('i18n')
-i18n.gettext('xmlpool', install : false)
+idep_xmlconfig_headers = declare_dependency(
+  sources : _xmlpool_options_h,
+  include_directories : inc_util,
+)
+
+if host_machine.system() != 'windows'
+  i18n = import('i18n')
+  i18n.gettext('xmlpool', install : false)
+endif

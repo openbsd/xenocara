@@ -31,8 +31,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "compiler/blob.h"
 #include "compiler/nir/nir.h"
+#include "util/blob.h"
 #include "util/build_id.h"
 #include "util/disk_cache.h"
 #include "util/mesa-sha1.h"
@@ -196,7 +196,7 @@ iris_disk_cache_retrieve(struct iris_context *ice,
        stage == MESA_SHADER_TESS_EVAL ||
        stage == MESA_SHADER_GEOMETRY) {
       struct brw_vue_prog_data *vue_prog_data = (void *) prog_data;
-      so_decls = ice->vtbl.create_so_decl_list(&ish->stream_output,
+      so_decls = screen->vtbl.create_so_decl_list(&ish->stream_output,
                                                &vue_prog_data->vue_map);
    }
 

@@ -25,7 +25,7 @@
 #include "nv50/g80_texture.xml.h"
 #include "nv50/g80_defs.xml.h"
 
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 
 static inline uint32_t
 nv50_tic_swizzle(const struct nv50_format *fmt, unsigned swz, bool tex_int)
@@ -315,7 +315,7 @@ nv50_validate_tic(struct nv50_context *nv50, int s)
          struct nv50_tic_entry *tic = nv50_tic_entry(nv50->textures[s][i]);
          struct nv50_miptree *res;
 
-         if (!tic) {
+         if (!tic || tic->pipe.target == PIPE_BUFFER) {
             PUSH_DATA (push, 0);
             PUSH_DATA (push, 0);
             continue;

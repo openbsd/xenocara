@@ -29,14 +29,15 @@
 
 /* iris_state.c */
 void genX(init_state)(struct iris_context *ice);
-void genX(emit_urb_setup)(struct iris_context *ice,
-                          struct iris_batch *batch,
-                          const unsigned size[4],
-                          bool tess_present, bool gs_present);
 void genX(emit_hashing_mode)(struct iris_context *ice,
                              struct iris_batch *batch,
                              unsigned width, unsigned height,
                              unsigned scale);
+void genX(update_pma_fix)(struct iris_context *ice,
+                          struct iris_batch *batch,
+                          bool enable);
+
+void genX(invalidate_aux_map_state)(struct iris_batch *batch);
 
 /* iris_blorp.c */
 void genX(init_blorp)(struct iris_context *ice);

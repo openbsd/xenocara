@@ -34,6 +34,7 @@
 #include "main/macros.h"
 #include "pipe/p_context.h"
 #include "pipe/p_screen.h"
+#include "util/u_memory.h"
 #include "st_context.h"
 #include "st_cb_syncobj.h"
 
@@ -41,7 +42,7 @@ struct st_sync_object {
    struct gl_sync_object b;
 
    struct pipe_fence_handle *fence;
-   mtx_t mutex; /**< protects "fence" */
+   simple_mtx_t mutex; /**< protects "fence" */
 };
 
 
@@ -49,7 +50,7 @@ static struct gl_sync_object *st_new_sync_object(struct gl_context *ctx)
 {
    struct st_sync_object *so = CALLOC_STRUCT(st_sync_object);
 
-   mtx_init(&so->mutex, mtx_plain);
+   simple_mtx_init(&so->mutex, mtx_plain);
    return &so->b;
 }
 
@@ -60,7 +61,7 @@ static void st_delete_sync_object(struct gl_context *ctx,
    struct st_sync_object *so = (struct st_sync_object*)obj;
 
    screen->fence_reference(screen, &so->fence, NULL);
-   mtx_destroy(&so->mutex);
+   simple_mtx_destroy(&so->mutex);
    free(so->b.Label);
    free(so);
 }
@@ -74,7 +75,8 @@ static void st_fence_sync(struct gl_context *ctx, struct gl_sync_object *obj,
    assert(condition == GL_SYNC_GPU_COMMANDS_COMPLETE && flags == 0);
    assert(so->fence == NULL);
 
-   pipe->flush(pipe, &so->fence, PIPE_FLUSH_DEFERRED);
+   /* Deferred flush are only allowed when there's a single context. See issue 1430 */
+   pipe->flush(pipe, &so->fence, ctx->Shared->RefCount == 1 ? PIPE_FLUSH_DEFERRED : 0);
 }
 
 static void st_client_wait_sync(struct gl_context *ctx,
@@ -87,9 +89,9 @@ static void st_client_wait_sync(struct gl_context *ctx,
    struct pipe_fence_handle *fence = NULL;
 
    /* If the fence doesn't exist, assume it's signalled. */
-   mtx_lock(&so->mutex);
+   simple_mtx_lock(&so->mutex);
    if (!so->fence) {
-      mtx_unlock(&so->mutex);
+      simple_mtx_unlock(&so->mutex);
       so->b.StatusFlag = GL_TRUE;
       return;
    }
@@ -98,7 +100,7 @@ static void st_client_wait_sync(struct gl_context *ctx,
     * fence_finish unlocked.
     */
    screen->fence_reference(screen, &fence, so->fence);
-   mtx_unlock(&so->mutex);
+   simple_mtx_unlock(&so->mutex);
 
    /* Section 4.1.2 of OpenGL 4.5 (Compatibility Profile) says:
     *    [...] if ClientWaitSync is called and all of the following are true:
@@ -113,9 +115,9 @@ static void st_client_wait_sync(struct gl_context *ctx,
     * forget to set it.
     */
    if (screen->fence_finish(screen, pipe, fence, timeout)) {
-      mtx_lock(&so->mutex);
+      simple_mtx_lock(&so->mutex);
       screen->fence_reference(screen, &so->fence, NULL);
-      mtx_unlock(&so->mutex);
+      simple_mtx_unlock(&so->mutex);
       so->b.StatusFlag = GL_TRUE;
    }
    screen->fence_reference(screen, &fence, NULL);
@@ -141,16 +143,16 @@ static void st_server_wait_sync(struct gl_context *ctx,
       return;
 
    /* If the fence doesn't exist, assume it's signalled. */
-   mtx_lock(&so->mutex);
+   simple_mtx_lock(&so->mutex);
    if (!so->fence) {
-      mtx_unlock(&so->mutex);
+      simple_mtx_unlock(&so->mutex);
       so->b.StatusFlag = GL_TRUE;
       return;
    }
 
    /* We need a local copy of the fence pointer. */
    screen->fence_reference(screen, &fence, so->fence);
-   mtx_unlock(&so->mutex);
+   simple_mtx_unlock(&so->mutex);
 
    pipe->fence_server_sync(pipe, fence);
    screen->fence_reference(screen, &fence, NULL);

@@ -25,12 +25,12 @@
 #include "pipe/p_defines.h"
 #include "util/u_blit.h"
 #include "util/u_memory.h"
-#include "util/u_format.h"
+#include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_surface.h"
 #include "util/u_transfer_helper.h"
 #include "util/u_upload_mgr.h"
-#include "util/u_format_zs.h"
+#include "util/format/u_format_zs.h"
 #include "util/u_drm.h"
 
 #include "drm-uapi/drm_fourcc.h"
@@ -170,19 +170,23 @@ v3d_map_usage_prep(struct pipe_context *pctx,
                          * don't violate any syncing requirements.
                          */
                         v3d_flush_jobs_reading_resource(v3d, prsc,
-                                                        V3D_FLUSH_DEFAULT);
+                                                        V3D_FLUSH_DEFAULT,
+                                                        false);
                 }
         } else if (!(usage & PIPE_TRANSFER_UNSYNCHRONIZED)) {
                 /* If we're writing and the buffer is being used by the CL, we
                  * have to flush the CL first.  If we're only reading, we need
                  * to flush if the CL has written our buffer.
                  */
-                if (usage & PIPE_TRANSFER_WRITE)
+                if (usage & PIPE_TRANSFER_WRITE) {
                         v3d_flush_jobs_reading_resource(v3d, prsc,
-                                                        V3D_FLUSH_ALWAYS);
-                else
+                                                        V3D_FLUSH_ALWAYS,
+                                                        false);
+                } else {
                         v3d_flush_jobs_writing_resource(v3d, prsc,
-                                                        V3D_FLUSH_ALWAYS);
+                                                        V3D_FLUSH_ALWAYS,
+                                                        false);
+                }
         }
 
         if (usage & PIPE_TRANSFER_WRITE) {
@@ -991,8 +995,6 @@ v3d_create_surface(struct pipe_context *pctx,
 
         if (!surface)
                 return NULL;
-
-        assert(surf_tmpl->u.tex.first_layer == surf_tmpl->u.tex.last_layer);
 
         struct pipe_surface *psurf = &surface->base;
         unsigned level = surf_tmpl->u.tex.level;

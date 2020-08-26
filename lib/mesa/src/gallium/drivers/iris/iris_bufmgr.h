@@ -28,11 +28,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include "c11/threads.h"
 #include "util/macros.h"
 #include "util/u_atomic.h"
 #include "util/list.h"
 #include "pipe/p_defines.h"
 
+struct iris_batch;
 struct gen_device_info;
 struct pipe_debug_callback;
 
@@ -100,6 +102,9 @@ struct iris_bo {
    /** Buffer manager context associated with this buffer object */
    struct iris_bufmgr *bufmgr;
 
+   /** Pre-computed hash using _mesa_hash_pointer for cache tracking sets */
+   uint32_t hash;
+
    /** The GEM handle for this buffer object. */
    uint32_t gem_handle;
 
@@ -111,6 +116,11 @@ struct iris_bo {
     * same address in all contexts, for simplicity.
     */
    uint64_t gtt_offset;
+
+   /**
+    * If non-zero, then this bo has an aux-map translation to this address.
+    */
+   uint64_t aux_map_address;
 
    /**
     * The validation list index for this buffer, or -1 when not in a batch.
@@ -125,15 +135,6 @@ struct iris_bo {
     * XXX: compute index...
     */
    unsigned index;
-
-   /**
-    * Boolean of whether the GPU is definitely not accessing the buffer.
-    *
-    * This is only valid when reusable, since non-reusable
-    * buffers are those that have been shared with other
-    * processes, so we don't know their state.
-    */
-   bool idle;
 
    int refcount;
    const char *name;
@@ -166,6 +167,18 @@ struct iris_bo {
    /** BO cache list */
    struct list_head head;
 
+   /** List of GEM handle exports of this buffer (bo_export) */
+   struct list_head exports;
+
+   /**
+    * Boolean of whether the GPU is definitely not accessing the buffer.
+    *
+    * This is only valid when reusable, since non-reusable
+    * buffers are those that have been shared with other
+    * processes, so we don't know their state.
+    */
+   bool idle;
+
    /**
     * Boolean of whether this buffer can be re-used
     */
@@ -185,9 +198,6 @@ struct iris_bo {
     * Boolean of whether this buffer points into user memory
     */
    bool userptr;
-
-   /** Pre-computed hash using _mesa_hash_pointer for cache tracking sets */
-   uint32_t hash;
 };
 
 #define BO_ALLOC_ZEROED     (1<<0)
@@ -249,7 +259,7 @@ void iris_bo_unreference(struct iris_bo *bo);
 #define MAP_PERSISTENT    PIPE_TRANSFER_PERSISTENT
 #define MAP_COHERENT      PIPE_TRANSFER_COHERENT
 /* internal */
-#define MAP_INTERNAL_MASK (0xff << 24)
+#define MAP_INTERNAL_MASK (0xffu << 24)
 #define MAP_RAW           (0x01 << 24)
 
 #define MAP_FLAGS         (MAP_READ | MAP_WRITE | MAP_ASYNC | \
@@ -279,10 +289,11 @@ static inline int iris_bo_unmap(struct iris_bo *bo) { return 0; }
  */
 void iris_bo_wait_rendering(struct iris_bo *bo);
 
+
 /**
- * Tears down the buffer manager instance.
+ * Unref a buffer manager instance.
  */
-void iris_bufmgr_destroy(struct iris_bufmgr *bufmgr);
+void iris_bufmgr_unref(struct iris_bufmgr *bufmgr);
 
 /**
  * Get the current tiling (and resulting swizzling) mode for the bo.
@@ -301,6 +312,13 @@ int iris_bo_get_tiling(struct iris_bo *bo, uint32_t *tiling_mode,
  * \param name Returned name
  */
 int iris_bo_flink(struct iris_bo *bo, uint32_t *name);
+
+/**
+ * Make a BO externally accessible.
+ *
+ * \param bo Buffer to make external
+ */
+void iris_bo_make_external(struct iris_bo *bo);
 
 /**
  * Returns 1 if mapping the buffer for write could cause the process
@@ -323,11 +341,15 @@ int iris_bo_busy(struct iris_bo *bo);
 int iris_bo_madvise(struct iris_bo *bo, int madv);
 
 /* drm_bacon_bufmgr_gem.c */
-struct iris_bufmgr *iris_bufmgr_init(struct gen_device_info *devinfo, int fd);
+struct iris_bufmgr *iris_bufmgr_get_for_fd(struct gen_device_info *devinfo, int fd,
+                                           bool bo_reuse);
+int iris_bufmgr_get_fd(struct iris_bufmgr *bufmgr);
+
 struct iris_bo *iris_bo_gem_create_from_name(struct iris_bufmgr *bufmgr,
                                              const char *name,
                                              unsigned handle);
-void iris_bufmgr_enable_reuse(struct iris_bufmgr *bufmgr);
+
+void* iris_bufmgr_get_aux_map_context(struct iris_bufmgr *bufmgr);
 
 int iris_bo_wait(struct iris_bo *bo, int64_t timeout_ns);
 
@@ -344,7 +366,20 @@ int iris_hw_context_set_priority(struct iris_bufmgr *bufmgr,
 void iris_destroy_hw_context(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
 
 int iris_bo_export_dmabuf(struct iris_bo *bo, int *prime_fd);
-struct iris_bo *iris_bo_import_dmabuf(struct iris_bufmgr *bufmgr, int prime_fd);
+struct iris_bo *iris_bo_import_dmabuf(struct iris_bufmgr *bufmgr, int prime_fd,
+                                      uint32_t tiling, uint32_t stride);
+
+/**
+ * Exports a bo as a GEM handle into a given DRM file descriptor
+ * \param bo Buffer to export
+ * \param drm_fd File descriptor where the new handle is created
+ * \param out_handle Pointer to store the new handle
+ *
+ * Returns 0 if the buffer was successfully exported, a non zero error code
+ * otherwise.
+ */
+int iris_bo_export_gem_handle_for_device(struct iris_bo *bo, int drm_fd,
+                                         uint32_t *out_handle);
 
 uint32_t iris_bo_export_gem_handle(struct iris_bo *bo);
 

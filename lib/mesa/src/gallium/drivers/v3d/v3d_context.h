@@ -54,37 +54,46 @@ void v3d_job_add_bo(struct v3d_job *job, struct v3d_bo *bo);
 #define using_v3d_simulator false
 #endif
 
-#define VC5_DIRTY_BLEND         (1 <<  0)
-#define VC5_DIRTY_RASTERIZER    (1 <<  1)
-#define VC5_DIRTY_ZSA           (1 <<  2)
-#define VC5_DIRTY_FRAGTEX       (1 <<  3)
-#define VC5_DIRTY_VERTTEX       (1 <<  4)
-#define VC5_DIRTY_SHADER_IMAGE  (1 <<  5)
+#define VC5_DIRTY_BLEND               (1ull <<  0)
+#define VC5_DIRTY_RASTERIZER          (1ull <<  1)
+#define VC5_DIRTY_ZSA                 (1ull <<  2)
+#define VC5_DIRTY_COMPTEX             (1ull <<  3)
+#define VC5_DIRTY_VERTTEX             (1ull <<  4)
+#define VC5_DIRTY_GEOMTEX             (1ull <<  5)
+#define VC5_DIRTY_FRAGTEX             (1ull <<  6)
 
-#define VC5_DIRTY_BLEND_COLOR   (1 <<  7)
-#define VC5_DIRTY_STENCIL_REF   (1 <<  8)
-#define VC5_DIRTY_SAMPLE_STATE  (1 <<  9)
-#define VC5_DIRTY_FRAMEBUFFER   (1 << 10)
-#define VC5_DIRTY_STIPPLE       (1 << 11)
-#define VC5_DIRTY_VIEWPORT      (1 << 12)
-#define VC5_DIRTY_CONSTBUF      (1 << 13)
-#define VC5_DIRTY_VTXSTATE      (1 << 14)
-#define VC5_DIRTY_VTXBUF        (1 << 15)
-#define VC5_DIRTY_SCISSOR       (1 << 17)
-#define VC5_DIRTY_FLAT_SHADE_FLAGS (1 << 18)
-#define VC5_DIRTY_PRIM_MODE     (1 << 19)
-#define VC5_DIRTY_CLIP          (1 << 20)
-#define VC5_DIRTY_UNCOMPILED_VS (1 << 21)
-#define VC5_DIRTY_UNCOMPILED_FS (1 << 22)
-#define VC5_DIRTY_COMPILED_CS   (1 << 23)
-#define VC5_DIRTY_COMPILED_VS   (1 << 24)
-#define VC5_DIRTY_COMPILED_FS   (1 << 25)
-#define VC5_DIRTY_FS_INPUTS     (1 << 26)
-#define VC5_DIRTY_STREAMOUT     (1 << 27)
-#define VC5_DIRTY_OQ            (1 << 28)
-#define VC5_DIRTY_CENTROID_FLAGS (1 << 29)
-#define VC5_DIRTY_NOPERSPECTIVE_FLAGS (1 << 30)
-#define VC5_DIRTY_SSBO          (1 << 31)
+#define VC5_DIRTY_SHADER_IMAGE        (1ull <<  9)
+#define VC5_DIRTY_BLEND_COLOR         (1ull << 10)
+#define VC5_DIRTY_STENCIL_REF         (1ull << 11)
+#define VC5_DIRTY_SAMPLE_STATE        (1ull << 12)
+#define VC5_DIRTY_FRAMEBUFFER         (1ull << 13)
+#define VC5_DIRTY_STIPPLE             (1ull << 14)
+#define VC5_DIRTY_VIEWPORT            (1ull << 15)
+#define VC5_DIRTY_CONSTBUF            (1ull << 16)
+#define VC5_DIRTY_VTXSTATE            (1ull << 17)
+#define VC5_DIRTY_VTXBUF              (1ull << 18)
+#define VC5_DIRTY_SCISSOR             (1ull << 19)
+#define VC5_DIRTY_FLAT_SHADE_FLAGS    (1ull << 20)
+#define VC5_DIRTY_PRIM_MODE           (1ull << 21)
+#define VC5_DIRTY_CLIP                (1ull << 22)
+#define VC5_DIRTY_UNCOMPILED_CS       (1ull << 23)
+#define VC5_DIRTY_UNCOMPILED_VS       (1ull << 24)
+#define VC5_DIRTY_UNCOMPILED_GS       (1ull << 25)
+#define VC5_DIRTY_UNCOMPILED_FS       (1ull << 26)
+
+#define VC5_DIRTY_COMPILED_CS         (1ull << 29)
+#define VC5_DIRTY_COMPILED_VS         (1ull << 30)
+#define VC5_DIRTY_COMPILED_GS_BIN     (1ULL << 31)
+#define VC5_DIRTY_COMPILED_GS         (1ULL << 32)
+#define VC5_DIRTY_COMPILED_FS         (1ull << 33)
+
+#define VC5_DIRTY_FS_INPUTS           (1ull << 38)
+#define VC5_DIRTY_GS_INPUTS           (1ull << 39)
+#define VC5_DIRTY_STREAMOUT           (1ull << 40)
+#define VC5_DIRTY_OQ                  (1ull << 41)
+#define VC5_DIRTY_CENTROID_FLAGS      (1ull << 42)
+#define VC5_DIRTY_NOPERSPECTIVE_FLAGS (1ull << 43)
+#define VC5_DIRTY_SSBO                (1ull << 44)
 
 #define VC5_MAX_FS_INPUTS 64
 
@@ -202,6 +211,7 @@ struct v3d_compiled_shader {
         union {
                 struct v3d_prog_data *base;
                 struct v3d_vs_prog_data *vs;
+                struct v3d_gs_prog_data *gs;
                 struct v3d_fs_prog_data *fs;
                 struct v3d_compute_prog_data *compute;
         } prog_data;
@@ -211,12 +221,12 @@ struct v3d_compiled_shader {
          * uniforms have to be rewritten (and therefore the shader state
          * reemitted).
          */
-        uint32_t uniform_dirty_bits;
+        uint64_t uniform_dirty_bits;
 };
 
 struct v3d_program_stateobj {
-        struct v3d_uncompiled_shader *bind_vs, *bind_fs, *bind_compute;
-        struct v3d_compiled_shader *cs, *vs, *fs, *compute;
+        struct v3d_uncompiled_shader *bind_vs, *bind_gs, *bind_fs, *bind_compute;
+        struct v3d_compiled_shader *cs, *vs, *gs_bin, *gs, *fs, *compute;
 
         struct hash_table *cache[MESA_SHADER_STAGES];
 
@@ -305,7 +315,6 @@ struct v3d_job {
         struct v3d_cl indirect;
         struct v3d_bo *tile_alloc;
         struct v3d_bo *tile_state;
-        uint32_t shader_rec_count;
 
         struct drm_v3d_submit_cl submit;
 
@@ -345,6 +354,8 @@ struct v3d_job {
         */
         uint32_t draw_width;
         uint32_t draw_height;
+        uint32_t num_layers;
+
         /** @} */
         /** @{ Tile information, depending on MSAA and float color buffer. */
         uint32_t draw_tiles_x; /** @< Number of tiles wide for framebuffer. */
@@ -409,6 +420,12 @@ struct v3d_job {
          */
         uint32_t draw_calls_queued;
 
+        /**
+         * Number of draw calls (not counting full buffer clears) queued in
+         * the current job during active transform feedback.
+         */
+        uint32_t tf_draw_calls_queued;
+
         struct v3d_job_key key;
 };
 
@@ -437,7 +454,7 @@ struct v3d_context {
         struct blitter_context *blitter;
 
         /** bitfield of VC5_DIRTY_* */
-        uint32_t dirty;
+        uint64_t dirty;
 
         struct primconvert_context *primconvert;
 
@@ -501,6 +518,12 @@ struct v3d_context {
         uint8_t blend_dst_alpha_one;
 
         bool active_queries;
+
+        /**
+         * If a compute job writes a resource read by a non-compute stage we
+         * should sync on the last compute job.
+         */
+        bool sync_on_last_compute_job;
 
         uint32_t tf_prims_generated;
         uint32_t prims_generated;
@@ -610,17 +633,21 @@ v3d_ioctl(int fd, unsigned long request, void *arg)
 static inline bool
 v3d_transform_feedback_enabled(struct v3d_context *v3d)
 {
-        return v3d->prog.bind_vs->num_tf_specs != 0 &&
+        return (v3d->prog.bind_vs->num_tf_specs != 0 ||
+                (v3d->prog.bind_gs && v3d->prog.bind_gs->num_tf_specs != 0)) &&
                v3d->active_queries;
 }
 
 void v3d_set_shader_uniform_dirty_flags(struct v3d_compiled_shader *shader);
 struct v3d_cl_reloc v3d_write_uniforms(struct v3d_context *v3d,
+                                       struct v3d_job *job,
                                        struct v3d_compiled_shader *shader,
                                        enum pipe_shader_type stage);
 
 void v3d_flush(struct pipe_context *pctx);
 void v3d_job_init(struct v3d_context *v3d);
+struct v3d_job *v3d_job_create(struct v3d_context *v3d);
+void v3d_job_free(struct v3d_context *v3d, struct v3d_job *job);
 struct v3d_job *v3d_get_job(struct v3d_context *v3d,
                             struct pipe_surface **cbufs,
                             struct pipe_surface *zsbuf);
@@ -632,10 +659,12 @@ void v3d_job_submit(struct v3d_context *v3d, struct v3d_job *job);
 void v3d_flush_jobs_using_bo(struct v3d_context *v3d, struct v3d_bo *bo);
 void v3d_flush_jobs_writing_resource(struct v3d_context *v3d,
                                      struct pipe_resource *prsc,
-                                     enum v3d_flush_cond flush_cond);
+                                     enum v3d_flush_cond flush_cond,
+                                     bool is_compute_pipeline);
 void v3d_flush_jobs_reading_resource(struct v3d_context *v3d,
                                      struct pipe_resource *prsc,
-                                     enum v3d_flush_cond flush_cond);
+                                     enum v3d_flush_cond flush_cond,
+                                     bool is_compute_pipeline);
 void v3d_update_compiled_shaders(struct v3d_context *v3d, uint8_t prim_mode);
 void v3d_update_compiled_cs(struct v3d_context *v3d);
 
@@ -672,7 +701,7 @@ bool v3d_generate_mipmap(struct pipe_context *pctx,
 
 struct v3d_fence *v3d_fence_create(struct v3d_context *v3d);
 
-void v3d_tf_update_counters(struct v3d_context *v3d);
+void v3d_update_primitive_counters(struct v3d_context *v3d);
 
 #ifdef v3dX
 #  include "v3dx_context.h"

@@ -27,6 +27,7 @@
 #include "util/u_inlines.h"
 #include "util/u_helpers.h"
 #include "util/u_debug.h"
+#include "util/u_framebuffer.h"
 
 #include "pipe/p_state.h"
 
@@ -40,53 +41,15 @@ lima_set_framebuffer_state(struct pipe_context *pctx,
 {
    struct lima_context *ctx = lima_context(pctx);
 
-   /* submit need framebuffer info, flush before change it */
-   lima_flush(ctx);
+   /* make sure there are always single job in this context */
+   if (lima_debug & LIMA_DEBUG_SINGLE_JOB)
+      lima_flush(ctx);
 
    struct lima_context_framebuffer *fb = &ctx->framebuffer;
 
-   fb->base.samples = framebuffer->samples;
+   util_copy_framebuffer_state(&fb->base, framebuffer);
 
-   fb->base.nr_cbufs = framebuffer->nr_cbufs;
-   pipe_surface_reference(&fb->base.cbufs[0], framebuffer->cbufs[0]);
-   pipe_surface_reference(&fb->base.zsbuf, framebuffer->zsbuf);
-
-   /* need align here? */
-   fb->base.width = framebuffer->width;
-   fb->base.height = framebuffer->height;
-
-   int width = align(framebuffer->width, 16) >> 4;
-   int height = align(framebuffer->height, 16) >> 4;
-   if (fb->tiled_w != width || fb->tiled_h != height) {
-      struct lima_screen *screen = lima_screen(ctx->base.screen);
-
-      fb->tiled_w = width;
-      fb->tiled_h = height;
-
-      fb->shift_h = 0;
-      fb->shift_w = 0;
-
-      int limit = screen->plb_max_blk;
-      while ((width * height) > limit) {
-         if (width >= height) {
-            width = (width + 1) >> 1;
-            fb->shift_w++;
-         } else {
-            height = (height + 1) >> 1;
-            fb->shift_h++;
-         }
-      }
-
-      fb->block_w = width;
-      fb->block_h = height;
-
-      fb->shift_min = MIN3(fb->shift_w, fb->shift_h, 2);
-
-      debug_printf("fb dim change tiled=%d/%d block=%d/%d shift=%d/%d/%d\n",
-                   fb->tiled_w, fb->tiled_h, fb->block_w, fb->block_h,
-                   fb->shift_w, fb->shift_h, fb->shift_min);
-   }
-
+   ctx->job = NULL;
    ctx->dirty |= LIMA_CONTEXT_DIRTY_FRAMEBUFFER;
 }
 
@@ -226,7 +189,7 @@ lima_set_vertex_buffers(struct pipe_context *pctx,
    struct lima_context *ctx = lima_context(pctx);
    struct lima_context_vertex_buffer *so = &ctx->vertex_buffers;
 
-   util_set_vertex_buffers_mask(so->vb + start_slot, &so->enabled_mask,
+   util_set_vertex_buffers_mask(so->vb, &so->enabled_mask,
                                 vb, start_slot, count);
    so->count = util_last_bit(so->enabled_mask);
 
@@ -242,14 +205,18 @@ lima_set_viewport_states(struct pipe_context *pctx,
    struct lima_context *ctx = lima_context(pctx);
 
    /* reverse calculate the parameter of glViewport */
-   ctx->viewport.x = viewport->translate[0] - viewport->scale[0];
-   ctx->viewport.y = fabsf(viewport->translate[1] - fabsf(viewport->scale[1]));
-   ctx->viewport.width = viewport->scale[0] * 2;
-   ctx->viewport.height = fabsf(viewport->scale[1] * 2);
+   ctx->viewport.left = viewport->translate[0] - fabsf(viewport->scale[0]);
+   ctx->viewport.right = viewport->translate[0] + fabsf(viewport->scale[0]);
+   ctx->viewport.bottom = viewport->translate[1] - fabsf(viewport->scale[1]);
+   ctx->viewport.top = viewport->translate[1] + fabsf(viewport->scale[1]);
 
    /* reverse calculate the parameter of glDepthRange */
-   ctx->viewport.near = viewport->translate[2] - viewport->scale[2];
-   ctx->viewport.far = viewport->translate[2] + viewport->scale[2];
+   float near, far;
+   near = viewport->translate[2] - viewport->scale[2];
+   far = viewport->translate[2] + viewport->scale[2];
+
+   ctx->viewport.near = MIN2(near, far);
+   ctx->viewport.far = MAX2(near, far);
 
    ctx->viewport.transform = *viewport;
    ctx->dirty |= LIMA_CONTEXT_DIRTY_VIEWPORT;
@@ -412,50 +379,6 @@ lima_set_sampler_views(struct pipe_context *pctx,
 
    lima_tex->num_textures = new_nr;
    ctx->dirty |= LIMA_CONTEXT_DIRTY_TEXTURES;
-}
-
-UNUSED static bool
-lima_set_damage_region(struct pipe_context *pctx, unsigned num_rects, int *rects)
-{
-   struct lima_context *ctx = lima_context(pctx);
-   struct lima_damage_state *damage = &ctx->damage;
-   int i;
-
-   if (damage->region)
-      ralloc_free(damage->region);
-
-   if (!num_rects) {
-      damage->region = NULL;
-      damage->num_region = 0;
-      return true;
-   }
-
-   damage->region = ralloc_size(ctx, sizeof(*damage->region) * num_rects);
-   if (!damage->region) {
-      damage->num_region = 0;
-      return false;
-   }
-
-   for (i = 0; i < num_rects; i++) {
-      struct pipe_scissor_state *r = damage->region + i;
-      /* region in tile unit */
-      r->minx = rects[i * 4] >> 4;
-      r->miny = rects[i * 4 + 1] >> 4;
-      r->maxx = (rects[i * 4] + rects[i * 4 + 2] + 0xf) >> 4;
-      r->maxy = (rects[i * 4 + 1] + rects[i * 4 + 3] + 0xf) >> 4;
-   }
-
-   /* is region aligned to tiles? */
-   damage->aligned = true;
-   for (i = 0; i < num_rects * 4; i++) {
-      if (rects[i] & 0xf) {
-         damage->aligned = false;
-         break;
-      }
-   }
-
-   damage->num_region = num_rects;
-   return true;
 }
 
 static void

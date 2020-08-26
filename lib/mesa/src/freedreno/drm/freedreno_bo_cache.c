@@ -88,7 +88,7 @@ fd_bo_cache_cleanup(struct fd_bo_cache *cache, time_t time)
 		struct fd_bo_bucket *bucket = &cache->cache_bucket[i];
 		struct fd_bo *bo;
 
-		while (!LIST_IS_EMPTY(&bucket->list)) {
+		while (!list_is_empty(&bucket->list)) {
 			bo = LIST_ENTRY(struct fd_bo, bucket->list.next, list);
 
 			/* keep things in cache for at least 1 second: */
@@ -141,7 +141,7 @@ static struct fd_bo *find_in_bucket(struct fd_bo_bucket *bucket, uint32_t flags)
 	 * (MRU, since likely to be in GPU cache), rather than head (LRU)..
 	 */
 	pthread_mutex_lock(&table_lock);
-	if (!LIST_IS_EMPTY(&bucket->list)) {
+	if (!list_is_empty(&bucket->list)) {
 		bo = LIST_ENTRY(struct fd_bo, bucket->list.next, list);
 		/* TODO check for compatible flags? */
 		if (is_idle(bo)) {
@@ -172,7 +172,7 @@ retry:
 		bo = find_in_bucket(bucket, flags);
 		if (bo) {
 			VG_BO_OBTAIN(bo);
-			if (bo->funcs->madvise(bo, TRUE) <= 0) {
+			if (bo->funcs->madvise(bo, true) <= 0) {
 				/* we've lost the backing pages, delete and try again: */
 				pthread_mutex_lock(&table_lock);
 				bo_del(bo);
@@ -197,7 +197,7 @@ fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo)
 	if (bucket) {
 		struct timespec time;
 
-		bo->funcs->madvise(bo, FALSE);
+		bo->funcs->madvise(bo, false);
 
 		clock_gettime(CLOCK_MONOTONIC, &time);
 

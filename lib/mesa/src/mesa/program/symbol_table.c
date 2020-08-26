@@ -21,10 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/imports.h"
+
 #include "main/errors.h"
 #include "symbol_table.h"
-#include "../../util/hash_table.h"
+#include "util/hash_table.h"
 #include "util/u_string.h"
 
 struct symbol {
@@ -63,7 +63,7 @@ struct symbol {
 struct scope_level {
     /** Link to next (inner) scope level. */
     struct scope_level *next;
-    
+
     /** Linked list of symbols with the same scope. */
     struct symbol *symbols;
 };
@@ -292,7 +292,7 @@ _mesa_symbol_table_ctor(void)
     struct _mesa_symbol_table *table = calloc(1, sizeof(*table));
 
     if (table != NULL) {
-       table->ht = _mesa_hash_table_create(NULL, _mesa_key_hash_string,
+       table->ht = _mesa_hash_table_create(NULL, _mesa_hash_string,
                                            _mesa_key_string_equal);
 
        _mesa_symbol_table_push_scope(table);

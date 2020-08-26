@@ -50,8 +50,7 @@ swzsurf_format(mesa_format format)
 	case MESA_FORMAT_B5G5R5A1_UNORM:
 	case MESA_FORMAT_A1B5G5R5_UNORM:
 	case MESA_FORMAT_A1R5G5B5_UNORM:
-	case MESA_FORMAT_L8A8_UNORM:
-	case MESA_FORMAT_A8L8_UNORM:
+	case MESA_FORMAT_LA_UNORM8:
 	case MESA_FORMAT_YCBCR:
 	case MESA_FORMAT_YCBCR_REV:
 	case MESA_FORMAT_Z_UNORM16:
@@ -89,8 +88,7 @@ surf2d_format(mesa_format format)
 	case MESA_FORMAT_B5G5R5A1_UNORM:
 	case MESA_FORMAT_A1B5G5R5_UNORM:
 	case MESA_FORMAT_A1R5G5B5_UNORM:
-	case MESA_FORMAT_L8A8_UNORM:
-	case MESA_FORMAT_A8L8_UNORM:
+	case MESA_FORMAT_LA_UNORM8:
 	case MESA_FORMAT_YCBCR:
 	case MESA_FORMAT_YCBCR_REV:
 	case MESA_FORMAT_Z_UNORM16:
@@ -128,8 +126,7 @@ rect_format(mesa_format format)
 	case MESA_FORMAT_B5G5R5A1_UNORM:
 	case MESA_FORMAT_A1B5G5R5_UNORM:
 	case MESA_FORMAT_A1R5G5B5_UNORM:
-	case MESA_FORMAT_L8A8_UNORM:
-	case MESA_FORMAT_A8L8_UNORM:
+	case MESA_FORMAT_LA_UNORM8:
 	case MESA_FORMAT_YCBCR:
 	case MESA_FORMAT_YCBCR_REV:
 	case MESA_FORMAT_Z_UNORM16:
@@ -167,8 +164,7 @@ sifm_format(mesa_format format)
 	case MESA_FORMAT_B5G5R5A1_UNORM:
 	case MESA_FORMAT_A1B5G5R5_UNORM:
 	case MESA_FORMAT_A1R5G5B5_UNORM:
-	case MESA_FORMAT_L8A8_UNORM:
-	case MESA_FORMAT_A8L8_UNORM:
+	case MESA_FORMAT_LA_UNORM8:
 	case MESA_FORMAT_YCBCR:
 	case MESA_FORMAT_YCBCR_REV:
 	case MESA_FORMAT_Z_UNORM16:
@@ -212,8 +208,8 @@ nv04_surface_copy_swizzle(struct gl_context *ctx,
 	unsigned x, y;
 
         /* Swizzled surfaces must be POT  */
-	assert(_mesa_is_pow_two(dst->width) &&
-	       _mesa_is_pow_two(dst->height));
+	assert(util_is_power_of_two_or_zero(dst->width) &&
+	       util_is_power_of_two_or_zero(dst->height));
 
 	if (context_chipset(ctx) < 0x10) {
 		BEGIN_NV04(push, NV01_SUBC(SURF, OBJECT), 1);

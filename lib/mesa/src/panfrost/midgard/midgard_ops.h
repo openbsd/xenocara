@@ -19,12 +19,19 @@
  * THE SOFTWARE.
  */
 
+#ifndef __MIDGARD_OPS
+#define __MIDGARD_OPS
+
 #include "helpers.h"
 
 /* Forward declare */
 
 extern struct mir_op_props alu_opcode_props[256];
-extern const char *load_store_opcode_names[256];
+extern struct mir_ldst_op_props load_store_opcode_props[256];
+extern struct mir_tag_props midgard_tag_props[16];
+
+#define OP_IS_STORE(op) (load_store_opcode_props[op].props & LDST_STORE)
+#define OP_HAS_ADDRESS(op) (load_store_opcode_props[op].props & LDST_ADDRESS)
 
 /* Is this opcode that of an integer (regardless of signedness)? Instruction
  * names authoritatively determine types */
@@ -70,4 +77,4 @@ effective_writemask(midgard_vector_alu *alu, unsigned existing_mask)
         return existing_mask;
 };
 
-
+#endif

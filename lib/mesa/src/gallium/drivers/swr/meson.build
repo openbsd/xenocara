@@ -1,4 +1,4 @@
-# Copyright © 2017-2018 Intel Corporation
+# Copyright © 2017-2020 Intel Corporation
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -129,6 +129,8 @@ files_swr_arch = files(
   'rasterizer/core/state.h',
   'rasterizer/core/state_funcs.h',
   'rasterizer/core/tessellator.h',
+  'rasterizer/core/tessellator.hpp',
+  'rasterizer/core/tessellator.cpp',
   'rasterizer/core/threads.cpp',
   'rasterizer/core/threads.h',
   'rasterizer/core/tilemgr.cpp',
@@ -189,77 +191,28 @@ swr_cpp_args = [cpp_vis_args]
 if cpp.has_argument('-fno-strict-aliasing')
   swr_cpp_args += '-fno-strict-aliasing'
 endif
+if cpp.has_argument('-Wno-aligned-new')
+  swr_cpp_args += '-Wno-aligned-new'
+endif
+
 
 swr_arch_libs = []
-swr_arch_defines = []
+swr_defines = []
 
 swr_avx_args = cpp.first_supported_argument(
-  '-mavx', '-target-cpu=sandybridge', '-march=core-avx', '-tp=sandybridge',
+  '-target-cpu=sandybridge', '-mavx', '-march=core-avx', '-tp=sandybridge',
+  '/arch:AVX',
 )
 if swr_avx_args == []
   error('Cannot find AVX support for swr. (these are required for SWR an all architectures.)')
 endif
-if with_swr_arches.contains('avx')
-  swr_arch_defines += '-DHAVE_SWR_AVX'
-  swr_arch_libs += shared_library(
-    'swrAVX',
-    [files_swr_common, files_swr_arch],
-    cpp_args : [swr_cpp_args, swr_avx_args, '-DKNOB_ARCH=KNOB_ARCH_AVX'],
-    link_args : [ld_args_gc_sections],
-    include_directories : [swr_incs],
-    dependencies : [dep_thread, dep_llvm],
-    version : '0.0.0',
-    install : true,
-  )
-endif
 
-if with_swr_arches.contains('avx2')
-  swr_avx2_args = cpp.first_supported_argument(
-    '-march=core-avx2', '-target-cpu=haswell', '-tp=haswell',
-  )
-  if swr_avx2_args == []
-    if cpp.has_argument(['-mavx2', '-mfma', '-mbmi2', '-mf16c'])
-      swr_avx2_args = ['-mavx2', '-mfma', '-mbmi2', '-mf16c']
-    else
-      error('Cannot find AVX2 support for swr.')
-    endif
+shared_swr = get_option('shared-swr')
+if not shared_swr
+  if with_swr_arches.length() > 1
+    error('When SWR is linked statically only one architecture is allowed.')
   endif
-
-  swr_arch_defines += '-DHAVE_SWR_AVX2'
-  swr_arch_libs += shared_library(
-    'swrAVX2',
-    [files_swr_common, files_swr_arch],
-    cpp_args : [swr_cpp_args, swr_avx2_args, '-DKNOB_ARCH=KNOB_ARCH_AVX2'],
-    link_args : [ld_args_gc_sections],
-    include_directories : [swr_incs],
-    dependencies : [dep_thread, dep_llvm],
-    version : '0.0.0',
-    install : true,
-  )
-endif
-
-if with_swr_arches.contains('knl')
-  swr_knl_args = cpp.first_supported_argument(
-    '-march=knl', '-target-cpu=mic-knl', '-xMIC-AVX512',
-  )
-  if swr_knl_args == []
-    error('Cannot find KNL support for swr.')
-  endif
-
-  swr_arch_defines += '-DHAVE_SWR_KNL'
-  swr_arch_libs += shared_library(
-    'swrKNL',
-    [files_swr_common, files_swr_arch],
-    cpp_args : [
-      swr_cpp_args, swr_knl_args, '-DKNOB_ARCH=KNOB_ARCH_AVX512',
-      '-DSIMD_ARCH_KNIGHTS',
-    ],
-    link_args : [ld_args_gc_sections],
-    include_directories : [swr_incs],
-    dependencies : [dep_thread, dep_llvm],
-    version : '0.0.0',
-    install : true,
-  )
+  swr_defines += '-DHAVE_SWR_BUILTIN'
 endif
 
 if with_swr_arches.contains('skx')
@@ -270,18 +223,152 @@ if with_swr_arches.contains('skx')
     error('Cannot find SKX support for swr.')
   endif
 
-  swr_arch_defines += '-DHAVE_SWR_SKX'
-  swr_arch_libs += shared_library(
-    'swrSKX',
-    [files_swr_common, files_swr_arch],
-    cpp_args : [swr_cpp_args, swr_skx_args, '-DKNOB_ARCH=KNOB_ARCH_AVX512'],
-    link_args : [ld_args_gc_sections],
-    include_directories : [swr_incs],
-    dependencies : [dep_thread, dep_llvm],
-    version : '0.0.0',
-    install : true,
-  )
+  swr_defines += '-DHAVE_SWR_SKX'
+  if shared_swr
+    swr_arch_libs += shared_library(
+      'swrSKX',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_skx_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX512',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+      version : '0.0.0',
+      soversion : host_machine.system() == 'windows' ? '' : '0',
+      install : true,
+    )
+  else
+    swr_arch_libs += static_library(
+      'swrSKX',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_skx_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX512',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+    )
+  endif
 endif
+
+if with_swr_arches.contains('knl')
+  swr_knl_args = cpp.first_supported_argument(
+    '-march=knl', '-target-cpu=mic-knl', '-xMIC-AVX512',
+  )
+  if swr_knl_args == []
+    error('Cannot find KNL support for swr.')
+  endif
+
+  swr_defines += '-DHAVE_SWR_KNL'
+  if shared_swr
+    swr_arch_libs += shared_library(
+      'swrKNL',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_knl_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX512', '-DSIMD_ARCH_KNIGHTS',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+      version : '0.0.0',
+      soversion : host_machine.system() == 'windows' ? '' : '0',
+      install : true,
+    )
+  else
+    swr_arch_libs += static_library(
+      'swrKNL',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_knl_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX512', '-DSIMD_ARCH_KNIGHTS',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+    )
+  endif
+endif
+
+
+if with_swr_arches.contains('avx2')
+  swr_avx2_args = cpp.first_supported_argument(
+    '-target-cpu=haswell', '-march=core-avx2', '-tp=haswell', '/arch:AVX2',
+  )
+  if swr_avx2_args == []
+    if cpp.has_argument(['-mavx2', '-mfma', '-mbmi2', '-mf16c'])
+      swr_avx2_args = ['-mavx2', '-mfma', '-mbmi2', '-mf16c']
+    else
+      error('Cannot find AVX2 support for swr.')
+    endif
+  endif
+
+  swr_defines += '-DHAVE_SWR_AVX2'
+  if shared_swr
+    swr_arch_libs += shared_library(
+      'swrAVX2',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_avx2_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX2',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+      version : '0.0.0',
+      soversion : host_machine.system() == 'windows' ? '' : '0',
+      install : true,
+    )
+  else
+    swr_arch_libs += static_library(
+      'swrAVX2',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_avx2_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX2',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+    )
+  endif
+endif
+
+if with_swr_arches.contains('avx')
+  swr_defines += '-DHAVE_SWR_AVX'
+  if shared_swr
+    swr_arch_libs += shared_library(
+      'swrAVX',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_avx_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+      version : '0.0.0',
+      soversion : host_machine.system() == 'windows' ? '' : '0',
+      install : true,
+    )
+  else
+    swr_arch_libs += static_library(
+      'swrAVX',
+      [files_swr_common, files_swr_arch],
+      cpp_args : [
+        cpp_msvc_compat_args, swr_cpp_args, swr_avx_args,
+        '-DKNOB_ARCH=KNOB_ARCH_AVX',
+      ],
+      link_args : [ld_args_gc_sections],
+      include_directories : [swr_incs],
+      dependencies : [dep_thread, dep_llvm],
+    )
+  endif
+endif
+
 
 if swr_arch_libs == []
   error('SWR configured, but no SWR architectures configured')
@@ -292,12 +379,20 @@ libmesaswr = static_library(
   'mesaswr',
   [files_swr_mesa, files_swr_common, gen_knobs_h, gen_knobs_cpp,
    gen_builder_hpp, gen_builder_meta_hpp, gen_builder_intrin_hpp],
-  cpp_args : [cpp_vis_args, swr_cpp_args, swr_avx_args, swr_arch_defines],
-  include_directories : [inc_common, swr_incs],
+  cpp_args : [
+    cpp_msvc_compat_args, cpp_vis_args, swr_cpp_args, swr_avx_args,
+    swr_defines,
+  ],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, swr_incs],
   dependencies : dep_llvm,
 )
 
+link_libs = [libmesaswr]
+if not shared_swr
+  link_libs += swr_arch_libs
+endif
+
 driver_swr = declare_dependency(
   compile_args : '-DGALLIUM_SWR',
-  link_with : libmesaswr,
+  link_with : link_libs
 )

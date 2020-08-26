@@ -84,7 +84,7 @@ static struct combined_store *
 alloc_combined_store(struct combine_stores_state *state)
 {
    struct combined_store *result;
-   if (list_empty(&state->freelist)) {
+   if (list_is_empty(&state->freelist)) {
       result = linear_zalloc_child(state->lin_ctx, sizeof(*result));
    } else {
       result = list_first_entry(&state->freelist,
@@ -287,10 +287,11 @@ combine_stores_block(struct combine_stores_state *state, nir_block *block)
    nir_foreach_instr_safe(instr, block) {
       if (instr->type == nir_instr_type_call) {
          combine_stores_with_modes(state, nir_var_shader_out |
-                                              nir_var_shader_temp |
-                                              nir_var_function_temp |
-                                              nir_var_mem_ssbo |
-                                              nir_var_mem_shared);
+                                          nir_var_shader_temp |
+                                          nir_var_function_temp |
+                                          nir_var_mem_ssbo |
+                                          nir_var_mem_shared |
+                                          nir_var_mem_global);
          continue;
       }
 
@@ -300,20 +301,48 @@ combine_stores_block(struct combine_stores_state *state, nir_block *block)
       nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
       switch (intrin->intrinsic) {
       case nir_intrinsic_store_deref:
-         update_combined_store(state, intrin);
+         if (nir_intrinsic_access(intrin) & ACCESS_VOLATILE) {
+            nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
+            /* When we see a volatile store, we go ahead and combine all
+             * previous non-volatile stores which touch that address and
+             * specifically don't add the volatile store to the list.  This
+             * way we guarantee that the volatile store isn't combined with
+             * anything and no non-volatile stores are combined across a
+             * volatile store.
+             */
+            combine_stores_with_deref(state, dst);
+         } else {
+            update_combined_store(state, intrin);
+         }
          break;
 
-      case nir_intrinsic_barrier:
+      case nir_intrinsic_control_barrier:
       case nir_intrinsic_group_memory_barrier:
       case nir_intrinsic_memory_barrier:
-      case nir_intrinsic_memory_barrier_atomic_counter:
-      case nir_intrinsic_memory_barrier_buffer:
-      case nir_intrinsic_memory_barrier_image:
-      case nir_intrinsic_memory_barrier_shared:
-         /* TODO: Be more granular depending on the barrier. */
          combine_stores_with_modes(state, nir_var_shader_out |
-                                              nir_var_mem_ssbo |
-                                              nir_var_mem_shared);
+                                          nir_var_mem_ssbo |
+                                          nir_var_mem_shared |
+                                          nir_var_mem_global);
+         break;
+
+      case nir_intrinsic_memory_barrier_buffer:
+         combine_stores_with_modes(state, nir_var_mem_ssbo |
+                                          nir_var_mem_global);
+         break;
+
+      case nir_intrinsic_memory_barrier_shared:
+         combine_stores_with_modes(state, nir_var_mem_shared);
+         break;
+
+      case nir_intrinsic_memory_barrier_tcs_patch:
+         combine_stores_with_modes(state, nir_var_shader_out);
+         break;
+
+      case nir_intrinsic_scoped_memory_barrier:
+         if (nir_intrinsic_memory_semantics(intrin) & NIR_MEMORY_RELEASE) {
+            combine_stores_with_modes(state,
+                                      nir_intrinsic_memory_modes(intrin));
+         }
          break;
 
       case nir_intrinsic_emit_vertex:

@@ -35,27 +35,48 @@ glcpp_lex = custom_target(
   command : [prog_flex, '-o', '@OUTPUT@', '@INPUT@'],
 )
 
+_extra_args = []
+if cpp.get_id() == 'msvc'
+  # Flex relies on __STDC_VERSION__>=199901L to decide when to include C99
+  # inttypes.h.  We always have inttypes.h available with MSVC (either the one
+  # bundled with MSVC 2013, or the one we bundle ourselves), but we can't just
+  # define __STDC_VERSION__ without breaking stuff, as MSVC doesn't fully
+  # support C99.  There's also no way to premptively include stdint.
+  _extra_args += '-FIinttypes.h'
+endif
+
 libglcpp = static_library(
   'glcpp',
   [glcpp_lex, glcpp_parse, files('glcpp.h', 'pp.c')],
   dependencies : idep_mesautil,
-  include_directories : [inc_common],
-  c_args : [c_vis_args, no_override_init_args, c_msvc_compat_args],
-  cpp_args : [cpp_vis_args, cpp_msvc_compat_args],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  c_args : [c_vis_args, no_override_init_args, c_msvc_compat_args, _extra_args],
+  cpp_args : [cpp_vis_args, cpp_msvc_compat_args, _extra_args],
+  build_by_default : false,
+)
+
+libglcpp_standalone = static_library(
+  'glcpp_standalone',
+  'pp_standalone_scaffolding.c',
+  link_with : libglcpp,
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  c_args : [c_vis_args, no_override_init_args, c_msvc_compat_args, _extra_args],
+  cpp_args : [cpp_vis_args, cpp_msvc_compat_args, _extra_args],
   build_by_default : false,
 )
 
 glcpp = executable(
   'glcpp',
   'glcpp.c',
-  dependencies : [dep_m],
-  include_directories : [inc_common],
-  link_with : [libglcpp, libglsl_util],
+  dependencies : [dep_m, idep_getopt],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  link_with : [libglcpp_standalone, libglsl_util],
   c_args : [c_vis_args, no_override_init_args, c_msvc_compat_args],
   build_by_default : false,
 )
 
-if with_any_opengl and with_tests
+# FIXME: these fail on windows due to whitespace differences
+if with_any_opengl and with_tests and host_machine.system() != 'windows'
   modes = ['unix', 'windows', 'oldmac', 'bizarro']
   if dep_valgrind.found()
     modes += ['valgrind']
@@ -71,6 +92,7 @@ if with_any_opengl and with_tests
         '--@0@'.format(m),
       ],
       suite : ['compiler', 'glcpp'],
+      timeout: 60,
     )
   endforeach
 endif

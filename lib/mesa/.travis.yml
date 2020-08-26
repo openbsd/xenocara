@@ -19,14 +19,15 @@ matrix:
 before_install:
   - HOMEBREW_NO_AUTO_UPDATE=1 brew install expat gettext
   - if test "x$BUILD" = xmeson; then
-      HOMEBREW_NO_AUTO_UPDATE=1 brew install python3 ninja;
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja;
     fi
   - if test "x$BUILD" = xscons; then
-      HOMEBREW_NO_AUTO_UPDATE=1 brew install python2 scons;
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install scons;
     fi
 
   # Set PATH for homebrew pip3 installs
-  - PATH="$HOME/Library/Python/3.6/bin:${PATH}"
+  - PYTHON_VERSION=$(python3 -V | awk '{print $2}' | cut -d. -f1-2)
+  - PATH="$HOME/Library/Python/$PYTHON_VERSION/bin:${PATH}"
   # Set PKG_CONFIG_PATH for keg-only expat
   - PKG_CONFIG_PATH="/usr/local/opt/expat/lib/pkgconfig:${PKG_CONFIG_PATH}"
   # Set PATH for keg-only gettext
@@ -55,8 +56,9 @@ script:
       meson _build -Dbuild-tests=true;
       ninja -C _build || travis_terminate 1;
       ninja -C _build test || travis_terminate 1;
+      ninja -C _build install || travis_terminate 1;
     fi
   - if test "x$BUILD" = xscons; then
-      scons || travis_terminate 1;
-      scons check || travis_terminate 1;
+      scons force_scons=1 || travis_terminate 1;
+      scons force_scons=1 check || travis_terminate 1;
     fi

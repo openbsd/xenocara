@@ -31,30 +31,30 @@
 
 static pthread_mutex_t etna_drm_table_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static uint32_t
-u32_hash(const void *key)
-{
-	return _mesa_hash_data(key, sizeof(uint32_t));
-}
-
-static bool
-u32_equals(const void *key1, const void *key2)
-{
-	return *(const uint32_t *)key1 == *(const uint32_t *)key2;
-}
-
 struct etna_device *etna_device_new(int fd)
 {
 	struct etna_device *dev = calloc(sizeof(*dev), 1);
+	struct drm_etnaviv_param req = {
+		.param = ETNAVIV_PARAM_SOFTPIN_START_ADDR,
+	};
+	int ret;
 
 	if (!dev)
 		return NULL;
 
 	p_atomic_set(&dev->refcnt, 1);
 	dev->fd = fd;
-	dev->handle_table = _mesa_hash_table_create(NULL, u32_hash, u32_equals);
-	dev->name_table = _mesa_hash_table_create(NULL, u32_hash, u32_equals);
+	dev->handle_table = _mesa_hash_table_create(NULL, _mesa_hash_u32, _mesa_key_u32_equal);
+	dev->name_table = _mesa_hash_table_create(NULL, _mesa_hash_u32, _mesa_key_u32_equal);
 	etna_bo_cache_init(&dev->bo_cache);
+
+	ret = drmCommandWriteRead(dev->fd, DRM_ETNAVIV_GET_PARAM, &req, sizeof(req));
+	if (!ret && req.value != ~0ULL) {
+		const uint64_t _4GB = 1ull << 32;
+
+		util_vma_heap_init(&dev->address_space, req.value, _4GB - req.value);
+		dev->use_softpin = 1;
+	}
 
 	return dev;
 }
@@ -84,6 +84,10 @@ struct etna_device *etna_device_ref(struct etna_device *dev)
 static void etna_device_del_impl(struct etna_device *dev)
 {
 	etna_bo_cache_cleanup(&dev->bo_cache, 0);
+
+	if (dev->use_softpin)
+		util_vma_heap_finish(&dev->address_space);
+
 	_mesa_hash_table_destroy(dev->handle_table, NULL);
 	_mesa_hash_table_destroy(dev->name_table, NULL);
 
@@ -114,4 +118,9 @@ void etna_device_del(struct etna_device *dev)
 int etna_device_fd(struct etna_device *dev)
 {
    return dev->fd;
+}
+
+bool etnaviv_device_softpin_capable(struct etna_device *dev)
+{
+	return !!dev->use_softpin;
 }

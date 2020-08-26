@@ -71,13 +71,14 @@ struct v3d_screen {
 
         const struct v3d_compiler *compiler;
 
-        struct util_hash_table *bo_handles;
+        struct hash_table *bo_handles;
         mtx_t bo_handles_mutex;
 
         uint32_t bo_size;
         uint32_t bo_count;
 
         bool has_csd;
+        bool has_cache_flush;
         bool nonmsaa_texture_size_limit;
 
         struct v3d_simulator_file *sim_file;

@@ -61,7 +61,7 @@
 #include "gl_nir.h"
 #include "ir_uniform.h"
 
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "main/mtypes.h"
 
 struct lower_samplers_as_deref_state {
@@ -118,6 +118,21 @@ remove_struct_derefs_prep(nir_deref_instr **p, char **name,
    }
 }
 
+static void
+record_images_used(struct shader_info *info,
+                   nir_deref_instr *deref)
+{
+   nir_variable *var = nir_deref_instr_get_variable(deref);
+
+   /* Structs have been lowered already, so get_aoa_size is sufficient. */
+   const unsigned size =
+      glsl_type_is_array(var->type) ? glsl_get_aoa_size(var->type) : 1;
+   unsigned mask = ((1ull << MAX2(size, 1)) - 1) << var->data.binding;
+
+   info->images_used |= mask;
+}
+
+
 static nir_deref_instr *
 lower_deref(nir_builder *b, struct lower_samplers_as_deref_state *state,
             nir_deref_instr *deref)
@@ -168,7 +183,7 @@ lower_deref(nir_builder *b, struct lower_samplers_as_deref_state *state,
       return deref;
    }
 
-   uint32_t hash = _mesa_key_hash_string(name);
+   uint32_t hash = _mesa_hash_string(name);
    struct hash_entry *h =
       _mesa_hash_table_search_pre_hashed(state->remap_table, hash, name);
 
@@ -271,8 +286,10 @@ lower_intrinsic(nir_intrinsic_instr *instr,
    if (instr->intrinsic == nir_intrinsic_image_deref_load ||
        instr->intrinsic == nir_intrinsic_image_deref_store ||
        instr->intrinsic == nir_intrinsic_image_deref_atomic_add ||
-       instr->intrinsic == nir_intrinsic_image_deref_atomic_min ||
-       instr->intrinsic == nir_intrinsic_image_deref_atomic_max ||
+       instr->intrinsic == nir_intrinsic_image_deref_atomic_imin ||
+       instr->intrinsic == nir_intrinsic_image_deref_atomic_umin ||
+       instr->intrinsic == nir_intrinsic_image_deref_atomic_imax ||
+       instr->intrinsic == nir_intrinsic_image_deref_atomic_umax ||
        instr->intrinsic == nir_intrinsic_image_deref_atomic_and ||
        instr->intrinsic == nir_intrinsic_image_deref_atomic_or ||
        instr->intrinsic == nir_intrinsic_image_deref_atomic_xor ||
@@ -284,6 +301,9 @@ lower_intrinsic(nir_intrinsic_instr *instr,
       b->cursor = nir_before_instr(&instr->instr);
       nir_deref_instr *deref =
          lower_deref(b, state, nir_src_as_deref(instr->src[0]));
+
+      record_images_used(&state->shader->info, deref);
+
       /* don't lower bindless: */
       if (!deref)
          return false;
@@ -323,11 +343,8 @@ gl_nir_lower_samplers_as_deref(nir_shader *shader,
 
    state.shader = shader;
    state.shader_program = shader_program;
-   state.remap_table = _mesa_hash_table_create(NULL, _mesa_key_hash_string,
+   state.remap_table = _mesa_hash_table_create(NULL, _mesa_hash_string,
                                                _mesa_key_string_equal);
-
-   shader->info.textures_used = 0;
-   shader->info.textures_used_by_txf = 0;
 
    nir_foreach_function(function, shader) {
       if (function->impl)

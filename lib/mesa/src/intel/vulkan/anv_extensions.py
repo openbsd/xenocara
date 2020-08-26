@@ -45,7 +45,7 @@ class ApiVersion:
         self.version = version
         self.enable = _bool_to_c_expr(enable)
 
-API_PATCH_VERSION = 102
+API_PATCH_VERSION = 131
 
 # Supported API versions.  Each one is the maximum patch version for the given
 # version.  Version come in increasing order and each version is available if
@@ -53,10 +53,8 @@ API_PATCH_VERSION = 102
 # available.
 API_VERSIONS = [
     ApiVersion('1.0',   True),
-
-    # DRM_IOCTL_SYNCOBJ_WAIT is required for VK_KHR_external_fence which is a
-    # required core feature in Vulkan 1.1
-    ApiVersion('1.1',   'device->has_syncobj_wait'),
+    ApiVersion('1.1',   True),
+    ApiVersion('1.2',   True),
 ]
 
 MAX_API_VERSION = None # Computed later
@@ -70,6 +68,8 @@ EXTENSIONS = [
     Extension('VK_KHR_8bit_storage',                      1, 'device->info.gen >= 8'),
     Extension('VK_KHR_16bit_storage',                     1, 'device->info.gen >= 8'),
     Extension('VK_KHR_bind_memory2',                      1, True),
+    Extension('VK_KHR_buffer_device_address',             1,
+              'device->has_a64_buffer_access && device->info.gen < 12'),
     Extension('VK_KHR_create_renderpass2',                1, True),
     Extension('VK_KHR_dedicated_allocation',              1, True),
     Extension('VK_KHR_depth_stencil_resolve',             1, True),
@@ -106,21 +106,31 @@ EXTENSIONS = [
     Extension('VK_KHR_relaxed_block_layout',              1, True),
     Extension('VK_KHR_sampler_mirror_clamp_to_edge',      1, True),
     Extension('VK_KHR_sampler_ycbcr_conversion',          1, True),
+    Extension('VK_KHR_separate_depth_stencil_layouts',    1, True),
     Extension('VK_KHR_shader_atomic_int64',               1,
               'device->info.gen >= 9 && device->use_softpin'),
+    Extension('VK_KHR_shader_clock',                      1, True),
     Extension('VK_KHR_shader_draw_parameters',            1, True),
     Extension('VK_KHR_shader_float16_int8',               1, 'device->info.gen >= 8'),
+    Extension('VK_KHR_shader_float_controls',             1, 'device->info.gen >= 8'),
+    Extension('VK_KHR_shader_non_semantic_info',          1, True),
+    Extension('VK_KHR_shader_subgroup_extended_types',    1, 'device->info.gen >= 8'),
+    Extension('VK_KHR_spirv_1_4',                         1, True),
     Extension('VK_KHR_storage_buffer_storage_class',      1, True),
     Extension('VK_KHR_surface',                          25, 'ANV_HAS_SURFACE'),
     Extension('VK_KHR_surface_protected_capabilities',    1, 'ANV_HAS_SURFACE'),
     Extension('VK_KHR_swapchain',                        70, 'ANV_HAS_SURFACE'),
+    Extension('VK_KHR_swapchain_mutable_format',          1, 'ANV_HAS_SURFACE'),
+    Extension('VK_KHR_timeline_semaphore',                1, True),
     Extension('VK_KHR_uniform_buffer_standard_layout',    1, True),
     Extension('VK_KHR_variable_pointers',                 1, True),
+    Extension('VK_KHR_vulkan_memory_model',               3, True),
     Extension('VK_KHR_wayland_surface',                   6, 'VK_USE_PLATFORM_WAYLAND_KHR'),
     Extension('VK_KHR_xcb_surface',                       6, 'VK_USE_PLATFORM_XCB_KHR'),
     Extension('VK_KHR_xlib_surface',                      6, 'VK_USE_PLATFORM_XLIB_KHR'),
     Extension('VK_EXT_acquire_xlib_display',              1, 'VK_USE_PLATFORM_XLIB_XRANDR_EXT'),
-    Extension('VK_EXT_buffer_device_address',             1, 'device->has_a64_buffer_access'),
+    Extension('VK_EXT_buffer_device_address',             1,
+              'device->has_a64_buffer_access && device->info.gen < 12'),
     Extension('VK_EXT_calibrated_timestamps',             1, True),
     Extension('VK_EXT_conditional_rendering',             1, 'device->info.gen >= 8 || device->info.is_haswell'),
     Extension('VK_EXT_debug_report',                      8, True),
@@ -136,6 +146,7 @@ EXTENSIONS = [
     Extension('VK_EXT_global_priority',                   1,
               'device->has_context_priority'),
     Extension('VK_EXT_host_query_reset',                  1, True),
+    Extension('VK_EXT_image_drm_format_modifier',         1, False),
     Extension('VK_EXT_index_type_uint8',                  1, True),
     Extension('VK_EXT_inline_uniform_block',              1, True),
     Extension('VK_EXT_line_rasterization',                1, True),
@@ -144,11 +155,14 @@ EXTENSIONS = [
     Extension('VK_EXT_pipeline_creation_feedback',        1, True),
     Extension('VK_EXT_post_depth_coverage',               1, 'device->info.gen >= 9'),
     Extension('VK_EXT_queue_family_foreign',              1, 'ANDROID'),
+    Extension('VK_EXT_robustness2',                       1, True),
     Extension('VK_EXT_sampler_filter_minmax',             1, 'device->info.gen >= 9'),
     Extension('VK_EXT_scalar_block_layout',               1, True),
     Extension('VK_EXT_separate_stencil_usage',            1, True),
     Extension('VK_EXT_shader_demote_to_helper_invocation', 1, True),
     Extension('VK_EXT_shader_stencil_export',             1, 'device->info.gen >= 9'),
+    Extension('VK_EXT_shader_subgroup_ballot',            1, True),
+    Extension('VK_EXT_shader_subgroup_vote',              1, True),
     Extension('VK_EXT_shader_viewport_index_layer',       1, True),
     Extension('VK_EXT_subgroup_size_control',             2, True),
     Extension('VK_EXT_texel_buffer_alignment',            1, True),
@@ -159,6 +173,9 @@ EXTENSIONS = [
     Extension('VK_ANDROID_native_buffer',                 7, 'ANDROID'),
     Extension('VK_GOOGLE_decorate_string',                1, True),
     Extension('VK_GOOGLE_hlsl_functionality1',            1, True),
+    Extension('VK_GOOGLE_user_type',                      1, True),
+    Extension('VK_INTEL_performance_query',               1, 'device->perf && device->perf->i915_perf_version >= 3'),
+    Extension('VK_INTEL_shader_integer_functions2',       1, 'device->info.gen >= 8'),
     Extension('VK_NV_compute_shader_derivatives',         1, True),
 ]
 

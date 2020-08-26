@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2017-2018 Intel Corporation.   All Rights Reserved.
+ * Copyright (C) 2017-2020 Intel Corporation.   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,9 +34,13 @@
 #pragma warning(disable : 4146 4244 4267 4800 4996)
 #endif
 
+#include <llvm/Config/llvm-config.h>
+
+#if LLVM_VERSION_MAJOR < 7
 // llvm 3.7+ reuses "DEBUG" as an enum value
 #pragma push_macro("DEBUG")
 #undef DEBUG
+#endif
 
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instructions.h"
@@ -45,9 +49,10 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/IntrinsicInst.h"
+#if LLVM_VERSION_MAJOR >= 10
+#include "llvm/IR/IntrinsicsX86.h"
+#endif
 #include "llvm/ExecutionEngine/ObjectCache.h"
-
-#include "llvm/Config/llvm-config.h"
 
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
@@ -133,7 +138,17 @@ static inline llvm::AttributeSet GetFuncAttribSet(llvm::LLVMContext&       ctx,
 }
 #endif
 
+#if LLVM_VERSION_MAJOR < 7
 #pragma pop_macro("DEBUG")
+#endif
+
+#if LLVM_VERSION_MAJOR > 10
+    typedef unsigned            IntrinsicID;
+    typedef llvm::Align         AlignType;
+#else
+    typedef llvm::Intrinsic::ID IntrinsicID;
+    typedef unsigned            AlignType;
+#endif
 
 #include <deque>
 #include <list>

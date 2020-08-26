@@ -59,6 +59,9 @@ endif
 
 subdir('util')
 subdir('wsi')
-if get_option('vulkan-overlay-layer')
+if with_vulkan_overlay_layer
   subdir('overlay-layer')
+endif
+if get_option('vulkan-device-select-layer')
+  subdir('device-select-layer')
 endif

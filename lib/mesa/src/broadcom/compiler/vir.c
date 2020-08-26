@@ -23,6 +23,7 @@
 
 #include "broadcom/common/v3d_device_info.h"
 #include "v3d_compiler.h"
+#include "util/u_prim.h"
 
 int
 vir_get_nsrc(struct qinst *inst)
@@ -661,6 +662,47 @@ v3d_vs_set_prog_data(struct v3d_compile *c,
 }
 
 static void
+v3d_gs_set_prog_data(struct v3d_compile *c,
+                     struct v3d_gs_prog_data *prog_data)
+{
+        prog_data->num_inputs = c->num_inputs;
+        memcpy(prog_data->input_slots, c->input_slots,
+               c->num_inputs * sizeof(*c->input_slots));
+
+        /* gl_PrimitiveIdIn is written by the GBG into the first word of the
+         * VPM output header automatically and the shader will overwrite
+         * it after reading it if necessary, so it doesn't add to the VPM
+         * size requirements.
+         */
+        prog_data->uses_pid = (c->s->info.system_values_read &
+                               (1ull << SYSTEM_VALUE_PRIMITIVE_ID));
+
+        /* Output segment size is in sectors (8 rows of 32 bits per channel) */
+        prog_data->vpm_output_size = align(c->vpm_output_size, 8) / 8;
+
+        /* Compute SIMD dispatch width and update VPM output size accordingly
+         * to ensure we can fit our program in memory. Available widths are
+         * 16, 8, 4, 1.
+         *
+         * Notice that at draw time we will have to consider VPM memory
+         * requirements from other stages and choose a smaller dispatch
+         * width if needed to fit the program in VPM memory.
+         */
+        prog_data->simd_width = 16;
+        while ((prog_data->simd_width > 1 && prog_data->vpm_output_size > 16) ||
+               prog_data->simd_width == 2) {
+                prog_data->simd_width >>= 1;
+                prog_data->vpm_output_size =
+                        align(prog_data->vpm_output_size, 2) / 2;
+        }
+        assert(prog_data->vpm_output_size <= 16);
+        assert(prog_data->simd_width != 2);
+
+        prog_data->out_prim_type = c->s->info.gs.output_primitive;
+        prog_data->num_invocations = c->s->info.gs.invocations;
+}
+
+static void
 v3d_set_fs_prog_data_inputs(struct v3d_compile *c,
                             struct v3d_fs_prog_data *prog_data)
 {
@@ -710,16 +752,25 @@ v3d_set_prog_data(struct v3d_compile *c,
         prog_data->threads = c->threads;
         prog_data->single_seg = !c->last_thrsw;
         prog_data->spill_size = c->spill_size;
+        prog_data->tmu_dirty_rcl = c->tmu_dirty_rcl;
 
         v3d_set_prog_data_uniforms(c, prog_data);
 
-        if (c->s->info.stage == MESA_SHADER_COMPUTE) {
-                v3d_cs_set_prog_data(c, (struct v3d_compute_prog_data *)prog_data);
-        } else if (c->s->info.stage == MESA_SHADER_VERTEX) {
+        switch (c->s->info.stage) {
+        case MESA_SHADER_VERTEX:
                 v3d_vs_set_prog_data(c, (struct v3d_vs_prog_data *)prog_data);
-        } else {
-                assert(c->s->info.stage == MESA_SHADER_FRAGMENT);
+                break;
+        case MESA_SHADER_GEOMETRY:
+                v3d_gs_set_prog_data(c, (struct v3d_gs_prog_data *)prog_data);
+                break;
+        case MESA_SHADER_FRAGMENT:
                 v3d_fs_set_prog_data(c, (struct v3d_fs_prog_data *)prog_data);
+                break;
+        case MESA_SHADER_COMPUTE:
+                v3d_cs_set_prog_data(c, (struct v3d_compute_prog_data *)prog_data);
+                break;
+        default:
+                unreachable("unsupported shader stage");
         }
 }
 
@@ -748,9 +799,9 @@ v3d_nir_lower_vs_early(struct v3d_compile *c)
         NIR_PASS_V(c->s, nir_lower_io_to_scalar_early,
                    nir_var_shader_in | nir_var_shader_out);
         uint64_t used_outputs[4] = {0};
-        for (int i = 0; i < c->vs_key->num_fs_inputs; i++) {
-                int slot = v3d_slot_get_slot(c->vs_key->fs_inputs[i]);
-                int comp = v3d_slot_get_component(c->vs_key->fs_inputs[i]);
+        for (int i = 0; i < c->vs_key->num_used_outputs; i++) {
+                int slot = v3d_slot_get_slot(c->vs_key->used_outputs[i]);
+                int comp = v3d_slot_get_component(c->vs_key->used_outputs[i]);
                 used_outputs[comp] |= 1ull << slot;
         }
         NIR_PASS_V(c->s, nir_remove_unused_io_vars,
@@ -761,6 +812,37 @@ v3d_nir_lower_vs_early(struct v3d_compile *c)
 
         /* This must go before nir_lower_io */
         if (c->vs_key->per_vertex_point_size)
+                NIR_PASS_V(c->s, nir_lower_point_size, 1.0f, 0.0f);
+
+        NIR_PASS_V(c->s, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
+                   type_size_vec4,
+                   (nir_lower_io_options)0);
+        /* clean up nir_lower_io's deref_var remains */
+        NIR_PASS_V(c->s, nir_opt_dce);
+}
+
+static void
+v3d_nir_lower_gs_early(struct v3d_compile *c)
+{
+        /* Split our I/O vars and dead code eliminate the unused
+         * components.
+         */
+        NIR_PASS_V(c->s, nir_lower_io_to_scalar_early,
+                   nir_var_shader_in | nir_var_shader_out);
+        uint64_t used_outputs[4] = {0};
+        for (int i = 0; i < c->gs_key->num_used_outputs; i++) {
+                int slot = v3d_slot_get_slot(c->gs_key->used_outputs[i]);
+                int comp = v3d_slot_get_component(c->gs_key->used_outputs[i]);
+                used_outputs[comp] |= 1ull << slot;
+        }
+        NIR_PASS_V(c->s, nir_remove_unused_io_vars,
+                   &c->s->outputs, used_outputs, NULL); /* demotes to globals */
+        NIR_PASS_V(c->s, nir_lower_global_vars_to_local);
+        v3d_optimize_nir(c->s);
+        NIR_PASS_V(c->s, nir_remove_dead_variables, nir_var_shader_in);
+
+        /* This must go before nir_lower_io */
+        if (c->gs_key->per_vertex_point_size)
                 NIR_PASS_V(c->s, nir_lower_point_size, 1.0f, 0.0f);
 
         NIR_PASS_V(c->s, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
@@ -812,10 +894,21 @@ v3d_nir_lower_fs_early(struct v3d_compile *c)
          * enabling early_fragment_tests even if the user didn't.
          */
         if (!(c->s->info.num_images ||
-              c->s->info.num_ssbos ||
-              c->s->info.num_abos)) {
+              c->s->info.num_ssbos)) {
                 c->s->info.fs.early_fragment_tests = true;
         }
+}
+
+static void
+v3d_nir_lower_gs_late(struct v3d_compile *c)
+{
+        if (c->key->ucp_enables) {
+                NIR_PASS_V(c->s, nir_lower_clip_gs, c->key->ucp_enables,
+                           false, NULL);
+        }
+
+        /* Note: GS output scalarizing must happen after nir_lower_clip_gs. */
+        NIR_PASS_V(c->s, nir_lower_io_to_scalar, nir_var_shader_out);
 }
 
 static void
@@ -826,7 +919,7 @@ v3d_nir_lower_vs_late(struct v3d_compile *c)
 
         if (c->key->ucp_enables) {
                 NIR_PASS_V(c->s, nir_lower_clip_vs, c->key->ucp_enables,
-                           false);
+                           false, false, NULL);
                 NIR_PASS_V(c->s, nir_lower_io_to_scalar,
                            nir_var_shader_out);
         }
@@ -847,11 +940,12 @@ v3d_nir_lower_fs_late(struct v3d_compile *c)
         if (c->fs_key->alpha_test) {
                 NIR_PASS_V(c->s, nir_lower_alpha_test,
                            c->fs_key->alpha_test_func,
-                           false);
+                           false, NULL);
         }
 
         if (c->key->ucp_enables)
-                NIR_PASS_V(c->s, nir_lower_clip_fs, c->key->ucp_enables);
+                NIR_PASS_V(c->s, nir_lower_clip_fs, c->key->ucp_enables,
+                           false);
 
         /* Note: FS input scalarizing must happen after
          * nir_lower_two_sided_color, which only handles a vec4 at a time.
@@ -906,6 +1000,10 @@ uint64_t *v3d_compile(const struct v3d_compiler *compiler,
                 c->vs_key = (struct v3d_vs_key *)key;
                 prog_data = rzalloc_size(NULL, sizeof(struct v3d_vs_prog_data));
                 break;
+        case MESA_SHADER_GEOMETRY:
+                c->gs_key = (struct v3d_gs_key *)key;
+                prog_data = rzalloc_size(NULL, sizeof(struct v3d_gs_prog_data));
+                break;
         case MESA_SHADER_FRAGMENT:
                 c->fs_key = (struct v3d_fs_key *)key;
                 prog_data = rzalloc_size(NULL, sizeof(struct v3d_fs_prog_data));
@@ -918,30 +1016,66 @@ uint64_t *v3d_compile(const struct v3d_compiler *compiler,
                 unreachable("unsupported shader stage");
         }
 
-        if (c->s->info.stage == MESA_SHADER_VERTEX) {
+
+        switch (c->s->info.stage) {
+        case MESA_SHADER_VERTEX:
                 v3d_nir_lower_vs_early(c);
-        } else if (c->s->info.stage != MESA_SHADER_COMPUTE) {
-                assert(c->s->info.stage == MESA_SHADER_FRAGMENT);
+                break;
+        case MESA_SHADER_GEOMETRY:
+                v3d_nir_lower_gs_early(c);
+                break;
+        case MESA_SHADER_FRAGMENT:
                 v3d_nir_lower_fs_early(c);
+                break;
+        default:
+                break;
         }
 
         v3d_lower_nir(c);
 
-        if (c->s->info.stage == MESA_SHADER_VERTEX) {
+        switch (c->s->info.stage) {
+        case MESA_SHADER_VERTEX:
                 v3d_nir_lower_vs_late(c);
-        } else if (c->s->info.stage != MESA_SHADER_COMPUTE)  {
-                assert(c->s->info.stage == MESA_SHADER_FRAGMENT);
+                break;
+        case MESA_SHADER_GEOMETRY:
+                v3d_nir_lower_gs_late(c);
+                break;
+        case MESA_SHADER_FRAGMENT:
                 v3d_nir_lower_fs_late(c);
+                break;
+        default:
+                break;
         }
 
         NIR_PASS_V(c->s, v3d_nir_lower_io, c);
         NIR_PASS_V(c->s, v3d_nir_lower_txf_ms, c);
         NIR_PASS_V(c->s, v3d_nir_lower_image_load_store);
-        NIR_PASS_V(c->s, nir_lower_idiv);
+        NIR_PASS_V(c->s, nir_lower_idiv, nir_lower_idiv_fast);
 
         v3d_optimize_nir(c->s);
+
+        /* Do late algebraic optimization to turn add(a, neg(b)) back into
+         * subs, then the mandatory cleanup after algebraic.  Note that it may
+         * produce fnegs, and if so then we need to keep running to squash
+         * fneg(fneg(a)).
+         */
+        bool more_late_algebraic = true;
+        while (more_late_algebraic) {
+                more_late_algebraic = false;
+                NIR_PASS(more_late_algebraic, c->s, nir_opt_algebraic_late);
+                NIR_PASS_V(c->s, nir_opt_constant_folding);
+                NIR_PASS_V(c->s, nir_copy_prop);
+                NIR_PASS_V(c->s, nir_opt_dce);
+                NIR_PASS_V(c->s, nir_opt_cse);
+        }
+
         NIR_PASS_V(c->s, nir_lower_bool_to_int32);
         NIR_PASS_V(c->s, nir_convert_from_ssa, true);
+
+        /* Schedule for about half our register space, to enable more shaders
+         * to hit 4 threads.
+         */
+        NIR_PASS_V(c->s, nir_schedule, 24);
 
         v3d_nir_to_vir(c);
 
@@ -1017,7 +1151,7 @@ vir_compile_destroy(struct v3d_compile *c)
         c->cursor.link = NULL;
 
         vir_for_each_block(block, c) {
-                while (!list_empty(&block->instructions)) {
+                while (!list_is_empty(&block->instructions)) {
                         struct qinst *qinst =
                                 list_first_entry(&block->instructions,
                                                  struct qinst, link);
@@ -1112,7 +1246,9 @@ const char *
 vir_get_stage_name(struct v3d_compile *c)
 {
         if (c->vs_key && c->vs_key->is_coord)
-                return "MESA_SHADER_COORD";
+                return "MESA_SHADER_VERTEX_BIN";
+        else if (c->gs_key && c->gs_key->is_coord)
+                return "MESA_SHADER_GEOMETRY_BIN";
         else
                 return gl_shader_stage_name(c->s->info.stage);
 }

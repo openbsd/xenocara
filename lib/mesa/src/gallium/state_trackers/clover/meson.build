@@ -19,10 +19,30 @@
 # SOFTWARE.
 
 clover_cpp_args = []
+clover_opencl_cpp_args = [
+  '-DCL_TARGET_OPENCL_VERSION=220',
+  '-DCL_USE_DEPRECATED_OPENCL_1_0_APIS',
+  '-DCL_USE_DEPRECATED_OPENCL_1_1_APIS',
+  '-DCL_USE_DEPRECATED_OPENCL_1_2_APIS',
+  '-DCL_USE_DEPRECATED_OPENCL_2_0_APIS',
+  '-DCL_USE_DEPRECATED_OPENCL_2_1_APIS'
+]
+clover_spirv_cpp_args = []
 clover_incs = [inc_include, inc_src, inc_gallium, inc_gallium_aux]
+
+# the CL header files declare attributes on the CL types. Compilers warn if
+# we use them as template arguments. Disable the warning as there isn't
+# anything we can do about it
+if cpp.has_argument('-Wno-ignored-attributes')
+   clover_cpp_args += '-Wno-ignored-attributes'
+endif
 
 if with_opencl_icd
   clover_cpp_args += '-DHAVE_CLOVER_ICD'
+endif
+
+if with_opencl_spirv
+  clover_spirv_cpp_args += '-DHAVE_CLOVER_SPIRV'
 endif
 
 libclllvm = static_library(
@@ -40,6 +60,9 @@ libclllvm = static_library(
   ),
   include_directories : clover_incs,
   cpp_args : [
+    clover_cpp_args,
+    clover_opencl_cpp_args,
+    clover_spirv_cpp_args,
     cpp_vis_args,
     '-DLIBCLC_INCLUDEDIR="@0@/"'.format(dep_clc.get_pkgconfig_variable('includedir')),
     '-DLIBCLC_LIBEXECDIR="@0@/"'.format(dep_clc.get_pkgconfig_variable('libexecdir')),
@@ -48,8 +71,23 @@ libclllvm = static_library(
       dep_llvm.version(), 'include',
     )),
   ],
-  dependencies : [dep_llvm, dep_elf],
-  override_options : clover_cpp_std,
+  dependencies : [dep_llvm, dep_elf, dep_llvmspirvlib],
+)
+
+libclspirv = static_library(
+  'clspirv',
+  files('spirv/invocation.cpp', 'spirv/invocation.hpp'),
+  include_directories : clover_incs,
+  cpp_args : [clover_opencl_cpp_args, clover_spirv_cpp_args, cpp_vis_args],
+  dependencies : [dep_spirv_tools],
+)
+
+libclnir = static_library(
+  'clnir',
+  files('nir/invocation.cpp', 'nir/invocation.hpp'),
+  include_directories : [clover_incs, inc_mesa],
+  dependencies : idep_nir,
+  cpp_args : [clover_opencl_cpp_args, clover_spirv_cpp_args, cpp_vis_args],
 )
 
 clover_files = files(
@@ -67,6 +105,7 @@ clover_files = files(
   'api/sampler.cpp',
   'api/transfer.cpp',
   'api/util.hpp',
+  'core/compiler.hpp',
   'core/context.cpp',
   'core/context.hpp',
   'core/device.cpp',
@@ -111,7 +150,11 @@ libclover = static_library(
   'clover',
   [clover_files, sha1_h],
   include_directories : clover_incs,
-  cpp_args : [clover_cpp_args, cpp_vis_args],
-  link_with : [libclllvm],
-  override_options : clover_cpp_std,
+  cpp_args : [
+    clover_opencl_cpp_args,
+    clover_spirv_cpp_args,
+    clover_cpp_args,
+    cpp_vis_args
+  ],
+  link_with : [libclllvm, libclspirv, libclnir],
 )

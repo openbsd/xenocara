@@ -187,8 +187,7 @@ msm_submit_suballoc_ring_bo(struct fd_submit *submit,
 
 	if (!suballoc_bo) {
 		// TODO possibly larger size for streaming bo?
-		msm_ring->ring_bo = fd_bo_new_ring(submit->pipe->dev,
-				0x8000, DRM_FREEDRENO_GEM_GPUREADONLY);
+		msm_ring->ring_bo = fd_bo_new_ring(submit->pipe->dev, 0x8000);
 		msm_ring->offset = 0;
 	} else {
 		msm_ring->ring_bo = fd_bo_ref(suballoc_bo);
@@ -226,8 +225,7 @@ msm_submit_sp_new_ringbuffer(struct fd_submit *submit, uint32_t size,
 			size = INIT_SIZE;
 
 		msm_ring->offset = 0;
-		msm_ring->ring_bo = fd_bo_new_ring(submit->pipe->dev, size,
-				DRM_FREEDRENO_GEM_GPUREADONLY);
+		msm_ring->ring_bo = fd_bo_new_ring(submit->pipe->dev, size);
 	}
 
 	if (!msm_ringbuffer_sp_init(msm_ring, size, flags))
@@ -388,8 +386,7 @@ msm_ringbuffer_sp_grow(struct fd_ringbuffer *ring, uint32_t size)
 	finalize_current_cmd(ring);
 
 	fd_bo_del(msm_ring->ring_bo);
-	msm_ring->ring_bo = fd_bo_new_ring(pipe->dev, size,
-			DRM_FREEDRENO_GEM_GPUREADONLY);
+	msm_ring->ring_bo = fd_bo_new_ring(pipe->dev, size);
 
 	ring->start = fd_bo_map(msm_ring->ring_bo);
 	ring->end = &(ring->start[size/4]);
@@ -421,25 +418,19 @@ msm_ringbuffer_sp_emit_reloc(struct fd_ringbuffer *ring,
 	}
 
 	uint64_t iova = fd_bo_get_iova(reloc->bo) + reloc->offset;
-	uint32_t dword = iova;
 	int shift = reloc->shift;
 
 	if (shift < 0)
-		dword >>= -shift;
+		iova >>= -shift;
 	else
-		dword <<= shift;
+		iova <<= shift;
+
+	uint32_t dword = iova;
 
 	(*ring->cur++) = dword | reloc->or;
 
 	if (pipe->gpu_id >= 500) {
 		dword = iova >> 32;
-		shift -= 32;
-
-		if (shift < 0)
-			dword >>= -shift;
-		else
-			dword <<= shift;
-
 		(*ring->cur++) = dword | reloc->orhi;
 	}
 }
@@ -515,6 +506,7 @@ msm_ringbuffer_sp_destroy(struct fd_ringbuffer *ring)
 		for (unsigned i = 0; i < msm_ring->u.nr_reloc_bos; i++) {
 			fd_bo_del(msm_ring->u.reloc_bos[i].bo);
 		}
+		free(msm_ring->u.reloc_bos);
 
 		free(msm_ring);
 	} else {
@@ -523,6 +515,7 @@ msm_ringbuffer_sp_destroy(struct fd_ringbuffer *ring)
 		for (unsigned i = 0; i < msm_ring->u.nr_cmds; i++) {
 			fd_bo_del(msm_ring->u.cmds[i].ring_bo);
 		}
+		free(msm_ring->u.cmds);
 
 		slab_free(&to_msm_submit_sp(submit)->ring_pool, msm_ring);
 	}
@@ -572,8 +565,7 @@ msm_ringbuffer_sp_new_object(struct fd_pipe *pipe, uint32_t size)
 
 	msm_ring->u.pipe = pipe;
 	msm_ring->offset = 0;
-	msm_ring->ring_bo = fd_bo_new_ring(pipe->dev, size,
-			DRM_FREEDRENO_GEM_GPUREADONLY);
+	msm_ring->ring_bo = fd_bo_new_ring(pipe->dev, size);
 	msm_ring->base.refcnt = 1;
 
 	return msm_ringbuffer_sp_init(msm_ring, size, _FD_RINGBUFFER_OBJECT);

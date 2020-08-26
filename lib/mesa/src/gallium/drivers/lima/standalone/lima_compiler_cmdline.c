@@ -33,8 +33,8 @@
 #include "compiler/glsl/gl_nir.h"
 #include "compiler/nir_types.h"
 
-#include "lima_program.h"
 #include "lima_context.h"
+#include "lima_program.h"
 #include "ir/lima_ir.h"
 #include "standalone/glsl.h"
 
@@ -135,7 +135,7 @@ load_glsl(unsigned num_files, char* const* files, gl_shader_stage stage)
    NIR_PASS_V(nir, nir_lower_var_copies);
    nir_print_shader(nir, stdout);
    NIR_PASS_V(nir, gl_nir_lower_atomics, prog, true);
-   NIR_PASS_V(nir, nir_lower_atomics_to_ssbo, 8);
+   NIR_PASS_V(nir, nir_lower_atomics_to_ssbo);
    nir_print_shader(nir, stdout);
 
    switch (stage) {
@@ -212,6 +212,10 @@ main(int argc, char **argv)
       return -1;
    }
 
+   struct nir_lower_tex_options tex_options = {
+      .lower_txp = ~0u,
+   };
+
    nir_shader *nir = load_glsl(1, filename, stage);
 
    switch (stage) {
@@ -224,7 +228,7 @@ main(int argc, char **argv)
       gpir_compile_nir(vs, nir, NULL);
       break;
    case MESA_SHADER_FRAGMENT:
-      lima_program_optimize_fs_nir(nir);
+      lima_program_optimize_fs_nir(nir, &tex_options);
 
       nir_print_shader(nir, stdout);
 

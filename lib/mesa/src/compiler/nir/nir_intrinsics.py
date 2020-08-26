@@ -124,6 +124,14 @@ DESC_TYPE = "NIR_INTRINSIC_DESC_TYPE"
 TYPE = "NIR_INTRINSIC_TYPE"
 # The swizzle mask for quad_swizzle_amd & masked_swizzle_amd
 SWIZZLE_MASK = "NIR_INTRINSIC_SWIZZLE_MASK"
+# Driver location of attribute
+DRIVER_LOCATION = "NIR_INTRINSIC_DRIVER_LOCATION"
+# Ordering and visibility of a memory operation
+MEMORY_SEMANTICS = "NIR_INTRINSIC_MEMORY_SEMANTICS"
+# Modes affected by a memory operation
+MEMORY_MODES = "NIR_INTRINSIC_MEMORY_MODES"
+# Scope of a memory operation
+MEMORY_SCOPE = "NIR_INTRINSIC_MEMORY_SCOPE"
 
 #
 # Possible flags:
@@ -162,15 +170,17 @@ intrinsic("copy_deref", src_comp=[-1, -1], indices=[DST_ACCESS, SRC_ACCESS])
 
 # Interpolation of input.  The interp_deref_at* intrinsics are similar to the
 # load_var intrinsic acting on a shader input except that they interpolate the
-# input differently.  The at_sample and at_offset intrinsics take an
-# additional source that is an integer sample id or a vec2 position offset
-# respectively.
+# input differently.  The at_sample, at_offset and at_vertex intrinsics take an
+# additional source that is an integer sample id, a vec2 position offset, or a
+# vertex ID respectively.
 
 intrinsic("interp_deref_at_centroid", dest_comp=0, src_comp=[1],
           flags=[ CAN_ELIMINATE, CAN_REORDER])
 intrinsic("interp_deref_at_sample", src_comp=[1, 1], dest_comp=0,
           flags=[CAN_ELIMINATE, CAN_REORDER])
 intrinsic("interp_deref_at_offset", src_comp=[1, 2], dest_comp=0,
+          flags=[CAN_ELIMINATE, CAN_REORDER])
+intrinsic("interp_deref_at_vertex", src_comp=[1, 1], dest_comp=0,
           flags=[CAN_ELIMINATE, CAN_REORDER])
 
 # Gets the length of an unsized array at the end of a buffer
@@ -187,7 +197,6 @@ intrinsic("get_buffer_size", src_comp=[-1], dest_comp=1,
 def barrier(name):
     intrinsic(name)
 
-barrier("barrier")
 barrier("discard")
 
 # Demote fragment shader invocation to a helper invocation.  Any stores to
@@ -199,10 +208,22 @@ barrier("discard")
 barrier("demote")
 intrinsic("is_helper_invocation", dest_comp=1, flags=[CAN_ELIMINATE])
 
+# A workgroup-level control barrier.  Any thread which hits this barrier will
+# pause until all threads within the current workgroup have also hit the
+# barrier.  For compute shaders, the workgroup is defined as the local group.
+# For tessellation control shaders, the workgroup is defined as the current
+# patch.  This intrinsic does not imply any sort of memory barrier.
+barrier("control_barrier")
 
 # Memory barrier with semantics analogous to the memoryBarrier() GLSL
 # intrinsic.
 barrier("memory_barrier")
+
+# Memory barrier with explicit scope.  Follows the semantics of SPIR-V
+# OpMemoryBarrier, used to implement Vulkan Memory Model.  Storage that the
+# barrierr applies is represented using NIR variable modes.
+intrinsic("scoped_memory_barrier",
+          indices=[MEMORY_SEMANTICS, MEMORY_MODES, MEMORY_SCOPE])
 
 # Shader clock intrinsic with semantics analogous to the clock2x32ARB()
 # GLSL intrinsic.
@@ -240,6 +261,9 @@ barrier("memory_barrier_image")
 barrier("memory_barrier_shared")
 barrier("begin_invocation_interlock")
 barrier("end_invocation_interlock")
+
+# Memory barrier for synchronizing TCS patch outputs
+barrier("memory_barrier_tcs_patch")
 
 # A conditional discard/demote, with a single boolean source.
 intrinsic("discard_if", src_comp=[1])
@@ -365,11 +389,13 @@ def image(name, src_comp=[], **kwargs):
     intrinsic("bindless_image_" + name, src_comp=[1] + src_comp,
               indices=[IMAGE_DIM, IMAGE_ARRAY, FORMAT, ACCESS], **kwargs)
 
-image("load", src_comp=[4, 1], dest_comp=0, flags=[CAN_ELIMINATE])
-image("store", src_comp=[4, 1, 0])
+image("load", src_comp=[4, 1, 1], dest_comp=0, flags=[CAN_ELIMINATE])
+image("store", src_comp=[4, 1, 0, 1])
 image("atomic_add",  src_comp=[4, 1, 1], dest_comp=1)
-image("atomic_min",  src_comp=[4, 1, 1], dest_comp=1)
-image("atomic_max",  src_comp=[4, 1, 1], dest_comp=1)
+image("atomic_imin",  src_comp=[4, 1, 1], dest_comp=1)
+image("atomic_umin",  src_comp=[4, 1, 1], dest_comp=1)
+image("atomic_imax",  src_comp=[4, 1, 1], dest_comp=1)
+image("atomic_umax",  src_comp=[4, 1, 1], dest_comp=1)
 image("atomic_and",  src_comp=[4, 1, 1], dest_comp=1)
 image("atomic_or",   src_comp=[4, 1, 1], dest_comp=1)
 image("atomic_xor",  src_comp=[4, 1, 1], dest_comp=1)
@@ -622,9 +648,10 @@ system_value("user_data_amd", 4)
 # Barycentric coordinate intrinsics.
 #
 # These set up the barycentric coordinates for a particular interpolation.
-# The first three are for the simple cases: pixel, centroid, or per-sample
-# (at gl_SampleID).  The next two handle interpolating at a specified
-# sample location, or interpolating with a vec2 offset,
+# The first four are for the simple cases: pixel, centroid, per-sample
+# (at gl_SampleID), or pull model (1/W, 1/I, 1/J) at the pixel center. The next
+# three two handle interpolating at a specified sample location, or
+# interpolating with a vec2 offset,
 #
 # The interp_mode index should be either the INTERP_MODE_SMOOTH or
 # INTERP_MODE_NOPERSPECTIVE enum values.
@@ -632,18 +659,19 @@ system_value("user_data_amd", 4)
 # The vec2 value produced by these intrinsics is intended for use as the
 # barycoord source of a load_interpolated_input intrinsic.
 
-def barycentric(name, src_comp=[]):
-    intrinsic("load_barycentric_" + name, src_comp=src_comp, dest_comp=2,
+def barycentric(name, dst_comp, src_comp=[]):
+    intrinsic("load_barycentric_" + name, src_comp=src_comp, dest_comp=dst_comp,
               indices=[INTERP_MODE], flags=[CAN_ELIMINATE, CAN_REORDER])
 
 # no sources.
-barycentric("pixel")
-barycentric("centroid")
-barycentric("sample")
+barycentric("pixel", 2)
+barycentric("centroid", 2)
+barycentric("sample", 2)
+barycentric("model", 3)
 # src[] = { sample_id }.
-barycentric("at_sample", [1])
+barycentric("at_sample", 2, [1])
 # src[] = { offset.xy }.
-barycentric("at_offset", [2])
+barycentric("at_offset", 2, [2])
 
 # Load sample position:
 #
@@ -698,6 +726,8 @@ load("uniform", 1, [BASE, RANGE, TYPE], [CAN_ELIMINATE, CAN_REORDER])
 load("ubo", 2, [ACCESS, ALIGN_MUL, ALIGN_OFFSET], flags=[CAN_ELIMINATE, CAN_REORDER])
 # src[] = { offset }.
 load("input", 1, [BASE, COMPONENT, TYPE], [CAN_ELIMINATE, CAN_REORDER])
+# src[] = { vertex_id, offset }.
+load("input_vertex", 2, [BASE, COMPONENT, TYPE], [CAN_ELIMINATE, CAN_REORDER])
 # src[] = { vertex, offset }.
 load("per_vertex_input", 2, [BASE, COMPONENT], [CAN_ELIMINATE, CAN_REORDER])
 # src[] = { barycoord, offset }.
@@ -706,6 +736,8 @@ intrinsic("load_interpolated_input", src_comp=[2, 1], dest_comp=0,
 
 # src[] = { buffer_index, offset }.
 load("ssbo", 2, [ACCESS, ALIGN_MUL, ALIGN_OFFSET], [CAN_ELIMINATE])
+# src[] = { buffer_index }
+load("ssbo_address", 1, [], [CAN_ELIMINATE, CAN_REORDER])
 # src[] = { offset }.
 load("output", 1, [BASE, COMPONENT], flags=[CAN_ELIMINATE])
 # src[] = { vertex, offset }.
@@ -715,7 +747,8 @@ load("shared", 1, [BASE, ALIGN_MUL, ALIGN_OFFSET], [CAN_ELIMINATE])
 # src[] = { offset }.
 load("push_constant", 1, [BASE, RANGE], [CAN_ELIMINATE, CAN_REORDER])
 # src[] = { offset }.
-load("constant", 1, [BASE, RANGE], [CAN_ELIMINATE, CAN_REORDER])
+load("constant", 1, [BASE, RANGE, ALIGN_MUL, ALIGN_OFFSET],
+     [CAN_ELIMINATE, CAN_REORDER])
 # src[] = { address }.
 load("global", 1, [ACCESS, ALIGN_MUL, ALIGN_OFFSET], [CAN_ELIMINATE])
 # src[] = { address }.
@@ -770,6 +803,57 @@ intrinsic("ssbo_atomic_xor_ir3",        src_comp=[1, 1, 1, 1],    dest_comp=1)
 intrinsic("ssbo_atomic_exchange_ir3",   src_comp=[1, 1, 1, 1],    dest_comp=1)
 intrinsic("ssbo_atomic_comp_swap_ir3",  src_comp=[1, 1, 1, 1, 1], dest_comp=1)
 
+# IR3-specific instruction for UBO loads using the ldc instruction. The second
+# source is the indirect offset, in units of four dwords. The base is a
+# component offset, in dword units.
+intrinsic("load_ubo_ir3", src_comp=[1, 1], bit_sizes=[32], dest_comp=0, indices=[BASE],
+          flags=[CAN_REORDER, CAN_ELIMINATE])
+
+# System values for freedreno geometry shaders.
+system_value("vs_primitive_stride_ir3", 1)
+system_value("vs_vertex_stride_ir3", 1)
+system_value("gs_header_ir3", 1)
+system_value("primitive_location_ir3", 1, indices=[DRIVER_LOCATION])
+
+# System values for freedreno tessellation shaders.
+system_value("hs_patch_stride_ir3", 1)
+system_value("tess_factor_base_ir3", 2)
+system_value("tess_param_base_ir3", 2)
+system_value("tcs_header_ir3", 1)
+
+# IR3-specific intrinsics for tessellation control shaders.  cond_end_ir3 end
+# the shader when src0 is false and is used to narrow down the TCS shader to
+# just thread 0 before writing out tessellation levels.
+intrinsic("cond_end_ir3", src_comp=[1])
+# end_patch_ir3 is used just before thread 0 exist the TCS and presumably
+# signals the TE that the patch is complete and can be tessellated.
+intrinsic("end_patch_ir3")
+
+# IR3-specific load/store intrinsics. These access a buffer used to pass data
+# between geometry stages - perhaps it's explicit access to the vertex cache.
+
+# src[] = { value, offset }.
+store("shared_ir3", 2, [BASE, WRMASK, ALIGN_MUL, ALIGN_OFFSET])
+# src[] = { offset }.
+load("shared_ir3", 1, [BASE, ALIGN_MUL, ALIGN_OFFSET], [CAN_ELIMINATE])
+
+# IR3-specific load/store global intrinsics. They take a 64-bit base address
+# and a 32-bit offset.  The hardware will add the base and the offset, which
+# saves us from doing 64-bit math on the base address.
+
+# src[] = { value, address(vec2 of hi+lo uint32_t), offset }.
+# const_index[] = { write_mask, align_mul, align_offset }
+intrinsic("store_global_ir3", [0, 2, 1], indices=[WRMASK, ACCESS, ALIGN_MUL, ALIGN_OFFSET])
+# src[] = { address(vec2 of hi+lo uint32_t), offset }.
+# const_index[] = { access, align_mul, align_offset }
+intrinsic("load_global_ir3", [2, 1], dest_comp=0, indices=[ACCESS, ALIGN_MUL, ALIGN_OFFSET], flags=[CAN_ELIMINATE])
+
+# IR3-specific bindless handle specifier. Similar to vulkan_resource_index, but
+# without the binding because the hardware expects a single flattened index
+# rather than a (binding, index) pair. We may also want to use this with GL.
+# Note that this doesn't actually turn into a HW instruction.
+intrinsic("bindless_resource_ir3", [1], dest_comp=1, indices=[DESC_SET], flags=[CAN_ELIMINATE, CAN_REORDER])
+
 # Intrinsics used by the Midgard/Bifrost blend pipeline. These are defined
 # within a blend shader to read/write the raw value from the tile buffer,
 # without applying any format conversion in the process. If the shader needs
@@ -781,10 +865,41 @@ intrinsic("ssbo_atomic_comp_swap_ir3",  src_comp=[1, 1, 1, 1, 1], dest_comp=1)
 # One notable divergence is sRGB, which is asymmetric: raw_input_pan requires
 # an sRGB->linear conversion, but linear values should be written to
 # raw_output_pan and the hardware handles linear->sRGB.
+#
+# We also have format-specific Midgard intrinsics. There are rather
+# here-be-dragons. load_output_u8_as_fp16_pan does the equivalent of
+# load_raw_out_pan on an RGBA8 UNORM framebuffer followed by u2u16 -> fp16 ->
+# division by 255.
 
 # src[] = { value }
 store("raw_output_pan", 1, [])
+store("zs_output_pan", 1, [COMPONENT])
 load("raw_output_pan", 0, [], [CAN_ELIMINATE, CAN_REORDER])
+load("output_u8_as_fp16_pan", 0, [], [CAN_ELIMINATE, CAN_REORDER])
+
+# Loads the sampler paramaters <min_lod, max_lod, lod_bias>
+# src[] = { sampler_index }
+load("sampler_lod_parameters_pan", 1, [CAN_ELIMINATE, CAN_REORDER])
+
+# R600 specific instrincs
+#
+# R600 can only fetch 16 byte aligned data from an UBO, and the actual offset
+# is given in vec4 units, so we have to fetch the a vec4 and get the component
+# later
+# src[] = { buffer_index, offset }.
+load("ubo_r600", 2, [ACCESS, ALIGN_MUL, ALIGN_OFFSET], flags=[CAN_ELIMINATE, CAN_REORDER])
+
+# location where the tesselation data is stored in LDS
+system_value("tcs_in_param_base_r600", 4)
+system_value("tcs_out_param_base_r600", 4)
+system_value("tcs_rel_patch_id_r600", 1)
+system_value("tcs_tess_factor_base_r600", 1)
+
+# load as many components as needed giving per-component addresses
+intrinsic("load_local_shared_r600", src_comp=[0], dest_comp=0, indices = [COMPONENT], flags = [CAN_ELIMINATE, CAN_REORDER])
+
+store("local_shared_r600", 2, [WRMASK])
+store("tf_r600", 1)
 
 # V3D-specific instrinc for tile buffer color reads.
 #
@@ -803,3 +918,7 @@ load("tlb_color_v3d", 1, [BASE, COMPONENT], [])
 # src[] = { value, render_target }
 # BASE = sample index
 store("tlb_sample_color_v3d", 2, [BASE, COMPONENT, TYPE], [])
+
+# V3D-specific intrinsic to load the number of layers attached to
+# the target framebuffer
+intrinsic("load_fb_layers_v3d", dest_comp=1, flags=[CAN_ELIMINATE, CAN_REORDER])

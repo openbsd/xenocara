@@ -236,8 +236,8 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<value name="RB_R8G8B8A8_SINT"	    value="0x0b"/>
 	<value name="RB_R8G8_UNORM"	    value="0x0c"/>
 	<value name="RB_R8G8_SNORM"	    value="0x0d"/>
-	<value name="RB_R8_UINT"	    value="0x0e"/> <!-- also used for R8G8_UINT? -->
-	<value name="RB_R8_SINT"	    value="0x0f"/> <!-- also used for R8G8_SINT? -->
+	<value name="RB_R8G8_UINT"	    value="0x0e"/>
+	<value name="RB_R8G8_SINT"	    value="0x0f"/>
 	<value name="RB_R10G10B10A2_UNORM"  value="0x10"/>
 	<value name="RB_A2R10G10B10_UNORM"  value="0x11"/>
 	<value name="RB_R10G10B10A2_UINT"   value="0x12"/>
@@ -1185,7 +1185,6 @@ xsi:schemaLocation="http://nouveau.freedesktop.org/ rules-ng.xsd">
 	<reg32 offset="0x2242" name="VFD_INDEX_MIN" type="uint"/>
 	<reg32 offset="0x2243" name="VFD_INDEX_MAX" type="uint"/>
 	<reg32 offset="0x2244" name="VFD_INSTANCEID_OFFSET" type="uint"/>
-	<reg32 offset="0x2245" name="VFD_INDEX_OFFSET" type="uint"/>
 	<reg32 offset="0x2245" name="VFD_INDEX_OFFSET" type="uint"/>
 	<array offset="0x2246" name="VFD_FETCH" stride="2" length="16">
 		<reg32 offset="0x0" name="INSTR_0">

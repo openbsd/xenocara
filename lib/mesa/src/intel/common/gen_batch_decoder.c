@@ -36,7 +36,8 @@ gen_batch_decode_ctx_init(struct gen_batch_decode_ctx *ctx,
                           struct gen_batch_decode_bo (*get_bo)(void *,
                                                                bool,
                                                                uint64_t),
-                          unsigned (*get_state_size)(void *, uint32_t),
+                          unsigned (*get_state_size)(void *, uint64_t,
+                                                     uint64_t),
                           void *user_data)
 {
    memset(ctx, 0, sizeof(*ctx));
@@ -110,14 +111,15 @@ ctx_get_bo(struct gen_batch_decode_ctx *ctx, bool ppgtt, uint64_t addr)
 
 static int
 update_count(struct gen_batch_decode_ctx *ctx,
-             uint32_t offset_from_dsba,
+             uint64_t address,
+             uint64_t base_address,
              unsigned element_dwords,
              unsigned guess)
 {
    unsigned size = 0;
 
    if (ctx->get_state_size)
-      size = ctx->get_state_size(ctx->user_data, offset_from_dsba);
+      size = ctx->get_state_size(ctx->user_data, address, base_address);
 
    if (size > 0)
       return size / (sizeof(uint32_t) * element_dwords);
@@ -174,11 +176,13 @@ ctx_print_buffer(struct gen_batch_decode_ctx *ctx,
    const uint32_t *dw_end =
          bo.map + ROUND_DOWN_TO(MIN2(bo.size, read_length), 4);
 
-   int column_count = 0, line_count = -1;
+   int column_count = 0, pitch_col_count = 0, line_count = -1;
    for (const uint32_t *dw = bo.map; dw < dw_end; dw++) {
-      if (column_count * 4 == pitch || column_count == 8) {
+      if (pitch_col_count * 4 == pitch || column_count == 8) {
          fprintf(ctx->fp, "\n");
          column_count = 0;
+         if (pitch_col_count * 4 == pitch)
+            pitch_col_count = 0;
          line_count++;
 
          if (max_lines >= 0 && line_count >= max_lines)
@@ -192,6 +196,7 @@ ctx_print_buffer(struct gen_batch_decode_ctx *ctx,
          fprintf(ctx->fp, "  0x%08x", *dw);
 
       column_count++;
+      pitch_col_count++;
    }
    fprintf(ctx->fp, "\n");
 }
@@ -249,8 +254,10 @@ dump_binding_table(struct gen_batch_decode_ctx *ctx, uint32_t offset, int count)
       return;
    }
 
-   if (count < 0)
-      count = update_count(ctx, offset, 1, 8);
+   if (count < 0) {
+      count = update_count(ctx, ctx->surface_base + offset,
+                           ctx->surface_base, 1, 8);
+   }
 
    if (offset % 32 != 0 || offset >= UINT16_MAX) {
       fprintf(ctx->fp, "  invalid binding table pointer\n");
@@ -289,11 +296,13 @@ static void
 dump_samplers(struct gen_batch_decode_ctx *ctx, uint32_t offset, int count)
 {
    struct gen_group *strct = gen_spec_find_struct(ctx->spec, "SAMPLER_STATE");
-
-   if (count < 0)
-      count = update_count(ctx, offset, strct->dw_length, 4);
-
    uint64_t state_addr = ctx->dynamic_base + offset;
+
+   if (count < 0) {
+      count = update_count(ctx, state_addr, ctx->dynamic_base,
+                           strct->dw_length, 4);
+   }
+
    struct gen_batch_decode_bo bo = ctx_get_bo(ctx, true, state_addr);
    const void *state_map = bo.map;
 
@@ -369,7 +378,7 @@ handle_media_interface_descriptor_load(struct gen_batch_decode_ctx *ctx,
       }
 
       ctx_disassemble_program(ctx, ksp, "compute shader");
-      printf("\n");
+      fprintf(ctx->fp, "\n");
 
       dump_samplers(ctx, sampler_offset, sampler_count);
       dump_binding_table(ctx, binding_table_offset, binding_entry_count);
@@ -531,7 +540,7 @@ decode_single_ksp(struct gen_batch_decode_ctx *ctx, const uint32_t *p)
 
    if (is_enabled) {
       ctx_disassemble_program(ctx, ksp, type);
-      printf("\n");
+      fprintf(ctx->fp, "\n");
    }
 }
 
@@ -580,7 +589,52 @@ decode_ps_kernels(struct gen_batch_decode_ctx *ctx, const uint32_t *p)
       ctx_disassemble_program(ctx, ksp[1], "SIMD16 fragment shader");
    if (enabled[2])
       ctx_disassemble_program(ctx, ksp[2], "SIMD32 fragment shader");
-   fprintf(ctx->fp, "\n");
+
+   if (enabled[0] || enabled[1] || enabled[2])
+      fprintf(ctx->fp, "\n");
+}
+
+static void
+decode_3dstate_constant_all(struct gen_batch_decode_ctx *ctx, const uint32_t *p)
+{
+   struct gen_group *inst =
+      gen_spec_find_instruction(ctx->spec, ctx->engine, p);
+   struct gen_group *body =
+      gen_spec_find_struct(ctx->spec, "3DSTATE_CONSTANT_ALL_DATA");
+
+   uint32_t read_length[4];
+   struct gen_batch_decode_bo buffer[4];
+   memset(buffer, 0, sizeof(buffer));
+
+   struct gen_field_iterator outer;
+   gen_field_iterator_init(&outer, inst, p, 0, false);
+   int idx = 0;
+   while (gen_field_iterator_next(&outer)) {
+      if (outer.struct_desc != body)
+         continue;
+
+      struct gen_field_iterator iter;
+      gen_field_iterator_init(&iter, body, &outer.p[outer.start_bit / 32],
+                              0, false);
+      while (gen_field_iterator_next(&iter)) {
+         if (!strcmp(iter.name, "Pointer To Constant Buffer")) {
+            buffer[idx] = ctx_get_bo(ctx, true, iter.raw_value);
+         } else if (!strcmp(iter.name, "Constant Buffer Read Length")) {
+            read_length[idx] = iter.raw_value;
+         }
+      }
+      idx++;
+   }
+
+   for (int i = 0; i < 4; i++) {
+      if (read_length[i] == 0 || buffer[i].map == NULL)
+         continue;
+
+      unsigned size = read_length[i] * 32;
+      fprintf(ctx->fp, "constant buffer %d, size %u\n", i, size);
+
+      ctx_print_buffer(ctx, buffer[i], size, 0, -1);
+   }
 }
 
 static void
@@ -628,6 +682,20 @@ decode_3dstate_constant(struct gen_batch_decode_ctx *ctx, const uint32_t *p)
          ctx_print_buffer(ctx, buffer, size, 0, -1);
       }
    }
+}
+
+static void
+decode_gen6_3dstate_binding_table_pointers(struct gen_batch_decode_ctx *ctx,
+                                           const uint32_t *p)
+{
+   fprintf(ctx->fp, "VS Binding Table:\n");
+   dump_binding_table(ctx, p[1], -1);
+
+   fprintf(ctx->fp, "GS Binding Table:\n");
+   dump_binding_table(ctx, p[2], -1);
+
+   fprintf(ctx->fp, "PS Binding Table:\n");
+   dump_binding_table(ctx, p[3], -1);
 }
 
 static void
@@ -706,7 +774,8 @@ decode_dynamic_state_pointers(struct gen_batch_decode_ctx *ctx,
       state = gen_spec_find_struct(ctx->spec, struct_type);
    }
 
-   count = update_count(ctx, state_offset, state->dw_length, count);
+   count = update_count(ctx, ctx->dynamic_base + state_offset,
+                        ctx->dynamic_base, state->dw_length, count);
 
    for (int i = 0; i < count; i++) {
       fprintf(ctx->fp, "%s %d\n", struct_type, i);
@@ -784,12 +853,15 @@ struct custom_decoder {
    { "3DSTATE_DS", decode_single_ksp },
    { "3DSTATE_HS", decode_single_ksp },
    { "3DSTATE_PS", decode_ps_kernels },
+   { "3DSTATE_WM", decode_ps_kernels },
    { "3DSTATE_CONSTANT_VS", decode_3dstate_constant },
    { "3DSTATE_CONSTANT_GS", decode_3dstate_constant },
    { "3DSTATE_CONSTANT_PS", decode_3dstate_constant },
    { "3DSTATE_CONSTANT_HS", decode_3dstate_constant },
    { "3DSTATE_CONSTANT_DS", decode_3dstate_constant },
+   { "3DSTATE_CONSTANT_ALL", decode_3dstate_constant_all },
 
+   { "3DSTATE_BINDING_TABLE_POINTERS", decode_gen6_3dstate_binding_table_pointers },
    { "3DSTATE_BINDING_TABLE_POINTERS_VS", decode_3dstate_binding_table_pointers },
    { "3DSTATE_BINDING_TABLE_POINTERS_HS", decode_3dstate_binding_table_pointers },
    { "3DSTATE_BINDING_TABLE_POINTERS_DS", decode_3dstate_binding_table_pointers },

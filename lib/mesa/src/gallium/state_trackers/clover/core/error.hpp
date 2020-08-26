@@ -23,8 +23,12 @@
 #ifndef CLOVER_CORE_ERROR_HPP
 #define CLOVER_CORE_ERROR_HPP
 
-#define CL_TARGET_OPENCL_VERSION 220
 #include "CL/cl.h"
+#if defined(__ALTIVEC__) && !defined(__APPLE_ALTIVEC__)
+   #undef vector
+   #undef pixel
+   #undef bool
+#endif
 
 #include <stdexcept>
 #include <string>
