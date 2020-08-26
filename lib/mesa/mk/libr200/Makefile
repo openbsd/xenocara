@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/08/26 06:36:08 jsg Exp $
 
 LIB=	r200
 
@@ -40,6 +40,8 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-DRADEON_R200 \
 		-I${MESA_SRC}/src/mesa/drivers/dri/r200 \
 		-I${MESA_SRC}/src/mesa/drivers/dri/r200/server \
+		-I${MESA_SRC}/src/mesa/drivers/dri/radeon \
+		-I${MESA_SRC}/src/mesa/drivers/dri/radeon/server \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
@@ -53,3 +55,4 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/mesa/drivers/dri/r200
+.PATH: ${MESA_SRC}/src/mesa/drivers/dri/radeon
