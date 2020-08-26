@@ -290,7 +290,7 @@
 ./usr/X11R6/lib/libgbm.so.0.4
 ./usr/X11R6/lib/libgbm_p.a
 ./usr/X11R6/lib/libglapi.a
-./usr/X11R6/lib/libglapi.so.0.2
+./usr/X11R6/lib/libglapi.so.0.3
 ./usr/X11R6/lib/libglapi_p.a
 ./usr/X11R6/lib/libtxc_dxtn.a
 ./usr/X11R6/lib/libtxc_dxtn.so.0.0
