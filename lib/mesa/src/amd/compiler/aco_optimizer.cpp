@@ -2862,7 +2862,7 @@ void optimize(Program* program)
          label_instruction(ctx, block, instr);
    }
 
-   ctx.uses = std::move(dead_code_analysis(program));
+   ctx.uses = dead_code_analysis(program);
 
    /* 2. Combine v_mad, omod, clamp and propagate sgpr on VALU instructions */
    for (Block& block : program->blocks) {
