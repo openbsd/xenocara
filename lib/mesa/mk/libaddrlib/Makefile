@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/08/27 05:02:25 jsg Exp $
 
 LIB=	addrlib
 
@@ -19,7 +19,7 @@ SRCS=	addrinterface.cpp \
 
 .include "../Makefile.inc"
 
-CXXFLAGS+=	${CXX_VIS_ARGS}
+CXXFLAGS+=	${CXX_VIS_ARGS} -Wno-unused-variable
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/amd/addrlib/inc \
