@@ -747,7 +747,7 @@ private:
    };
 };
 
-class Block;
+struct Block;
 
 struct Instruction {
    aco_opcode opcode;
