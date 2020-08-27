@@ -1058,7 +1058,7 @@ void handle_operands(std::map<PhysReg, copy_operation>& copy_map, lower_context*
 
    /* all target regs are needed as operand somewhere which means, all entries are part of a cycle */
    unsigned largest = 0;
-   for (const std::pair<PhysReg, copy_operation>& op : copy_map)
+   for (const std::pair<const PhysReg, copy_operation>& op : copy_map)
       largest = MAX2(largest, op.second.bytes);
 
    while (!copy_map.empty()) {
