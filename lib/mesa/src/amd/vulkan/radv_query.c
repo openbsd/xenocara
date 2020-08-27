@@ -1673,7 +1673,7 @@ void radv_CmdResetQueryPool(
 	RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);
 	RADV_FROM_HANDLE(radv_query_pool, pool, queryPool);
 	uint32_t value = pool->type == VK_QUERY_TYPE_TIMESTAMP
-			 ? TIMESTAMP_NOT_READY : 0;
+			 ? (uint32_t)TIMESTAMP_NOT_READY : 0;
 	uint32_t flush_bits = 0;
 
 	/* Make sure to sync all previous work if the given command buffer has
@@ -1708,7 +1708,7 @@ void radv_ResetQueryPool(
 	RADV_FROM_HANDLE(radv_query_pool, pool, queryPool);
 
 	uint32_t value = pool->type == VK_QUERY_TYPE_TIMESTAMP
-			 ? TIMESTAMP_NOT_READY : 0;
+			 ? (uint32_t)TIMESTAMP_NOT_READY : 0;
 	uint32_t *data =  (uint32_t*)(pool->ptr + firstQuery * pool->stride);
 	uint32_t *data_end = (uint32_t*)(pool->ptr + (firstQuery + queryCount) * pool->stride);
 
