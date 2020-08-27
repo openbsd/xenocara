@@ -12,6 +12,7 @@ CFLAGS+= \
 	-Werror=missing-prototypes \
 	-Werror=return-type \
 	-Wno-missing-field-initializers \
+	-Wno-typedef-redefinition \
 	-fno-math-errno \
 	-fno-trapping-math \
 	-fno-common \
