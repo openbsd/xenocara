@@ -912,7 +912,7 @@ public:
       /* empty */
    }
 
-   ast_type_specifier(const struct glsl_type *t)
+   ast_type_specifier(const glsl_type *t)
       : type(t), type_name(t->name), structure(NULL), array_specifier(NULL),
         default_precision(ast_precision_none)
    {

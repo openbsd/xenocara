@@ -488,7 +488,7 @@ bool ralloc_vasprintf_append(char **str, const char *fmt, va_list args);
  *
  * which is more idiomatic in C++ than calling ralloc.
  */
-#define DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(TYPE, ALLOC_FUNC, USE_DESTRUCTOR) \
+#define DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(TYPE, ALLOC_FUNC)           \
 private:                                                                 \
    static void _ralloc_destructor(void *p)                               \
    {                                                                     \
@@ -499,7 +499,7 @@ public:                                                                  \
    {                                                                     \
       void *p = ALLOC_FUNC(mem_ctx, size);                               \
       assert(p != NULL);                                                 \
-      if (USE_DESTRUCTOR && !HAS_TRIVIAL_DESTRUCTOR(TYPE))               \
+      if (!HAS_TRIVIAL_DESTRUCTOR(TYPE))                                 \
          ralloc_set_destructor(p, _ralloc_destructor);                   \
       return p;                                                          \
    }                                                                     \
@@ -516,16 +516,16 @@ public:                                                                  \
    }
 
 #define DECLARE_RALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, ralloc_size, true)
+   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, ralloc_size)
 
 #define DECLARE_RZALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, rzalloc_size, true)
+   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, rzalloc_size)
 
 #define DECLARE_LINEAR_ALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_alloc_child, false)
+   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_alloc_child)
 
 #define DECLARE_LINEAR_ZALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_zalloc_child, false)
+   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_zalloc_child)
 
 
 /**
