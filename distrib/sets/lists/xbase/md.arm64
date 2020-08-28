@@ -87,7 +87,6 @@
 ./usr/X11R6/include/libdrm/via_drm.h
 ./usr/X11R6/include/libdrm/virtgpu_drm.h
 ./usr/X11R6/include/libdrm/vmwgfx_drm.h
-./usr/X11R6/include/txc_dxtn.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
@@ -292,8 +291,6 @@
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.3
 ./usr/X11R6/lib/libglapi_p.a
-./usr/X11R6/lib/libtxc_dxtn.a
-./usr/X11R6/lib/libtxc_dxtn.so.0.0
 ./usr/X11R6/lib/libvulkan_radeon.so
 ./usr/X11R6/lib/libxshmfence.a
 ./usr/X11R6/lib/libxshmfence.la
