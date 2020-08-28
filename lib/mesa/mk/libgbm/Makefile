@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -28,6 +28,9 @@ LDADD+= -L${X11BASE}/lib -ldrm
 .endif
 
 obj: _xenocara_obj
+
+beforeinstall:
+	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

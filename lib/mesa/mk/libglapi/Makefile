@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
 
 LIB=	glapi
 
@@ -17,6 +17,9 @@ CPPFLAGS+=	-DMAPI_MODE_GLAPI \
 		-DMAPI_ABI_HEADER=\"${MESA_SRC}/generated/src/mapi/shared-glapi/glapi_mapi_tmp.h\"
 
 obj: _xenocara_obj
+
+beforeinstall:
+	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

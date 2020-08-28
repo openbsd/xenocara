@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
 
 LIB=	vulkan_radeon
 
@@ -88,7 +88,7 @@ VKARCH=x86_64
 VKARCH=${MACHINE_ARCH}
 .endif
 
-install:
+install: beforeinstall
 	${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
 	    -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    lib${LIB}.so ${DESTDIR}${X11BASE}/lib
@@ -97,6 +97,9 @@ install:
 	    ${DESTDIR}${X11BASE}/share/vulkan/icd.d/radeon_icd.${VKARCH}.json
 
 obj: _xenocara_obj
+
+beforeinstall:
+	rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
