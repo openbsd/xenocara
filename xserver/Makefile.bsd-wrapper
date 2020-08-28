@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.68 2018/11/03 14:05:28 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.69 2020/08/28 02:20:19 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -22,7 +22,7 @@ KDRIVE_OPTION=	--enable-kdrive
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 DRI_OPTION=	--enable-dri --enable-dri2
 .else
-DRI_OPTION=	--disable-dri --disable-dri2 --disable-libdrm
+DRI_OPTION=	--disable-dri --disable-dri2 --disable-dri3 --disable-libdrm
 .endif
 
 XKB_PATH=	${X11BASE}/share/X11/xkb
