@@ -297,8 +297,6 @@
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.3
 ./usr/X11R6/lib/libglapi_p.a
-./usr/X11R6/lib/libtxc_dxtn.a
-./usr/X11R6/lib/libtxc_dxtn.so.0.0
 ./usr/X11R6/lib/libvulkan_intel.so
 ./usr/X11R6/lib/libvulkan_radeon.so
 ./usr/X11R6/lib/libxshmfence.a

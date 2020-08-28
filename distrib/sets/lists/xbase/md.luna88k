@@ -170,8 +170,6 @@
 ./usr/X11R6/include/xorg/xserver_poll.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
-./usr/X11R6/lib/libtxc_dxtn.a
-./usr/X11R6/lib/libtxc_dxtn.so.0.0
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
