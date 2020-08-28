@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.43 2020/07/08 20:01:53 matthieu Exp $
+# $OpenBSD: Makefile,v 1.44 2020/08/28 05:54:00 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -52,7 +52,7 @@ SUBDIR+= libxshmfence
 .if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libdrm
 SUBDIR+= mesa
-SUBDIR+= libGLU libGLw libtxc_dxtn
+SUBDIR+= libGLU libGLw
 SUBDIR+= libepoxy
 .endif
 
