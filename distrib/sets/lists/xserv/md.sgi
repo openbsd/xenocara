@@ -2,8 +2,6 @@
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
-./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
-./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.la
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
@@ -40,9 +38,6 @@
 ./usr/X11R6/lib/modules/libvgahw.so
 ./usr/X11R6/lib/modules/libwfb.la
 ./usr/X11R6/lib/modules/libwfb.so
-./usr/X11R6/lib/pkgconfig/libdrm_amdgpu.pc
-./usr/X11R6/lib/pkgconfig/libdrm_nouveau.pc
-./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xorg.1

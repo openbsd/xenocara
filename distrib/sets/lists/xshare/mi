@@ -3851,6 +3851,8 @@
 ./usr/X11R6/share/doc/libXtst/xtestlib.xml
 ./usr/X11R6/share/doc/libXvMC
 ./usr/X11R6/share/doc/libXvMC/XvMC_API.txt
+./usr/X11R6/share/doc/xorg-docs
+./usr/X11R6/share/doc/xorg-docs/MAINTAINERS
 ./usr/X11R6/share/doc/xorgproto
 ./usr/X11R6/share/doc/xorgproto/PM_spec
 ./usr/X11R6/share/doc/xorgproto/SIAddresses
@@ -3861,8 +3863,8 @@
 ./usr/X11R6/share/doc/xorgproto/bigreq.xml
 ./usr/X11R6/share/doc/xorgproto/compositeproto.txt
 ./usr/X11R6/share/doc/xorgproto/damageproto.txt
-./usr/X11R6/share/doc/xorgproto/dri3proto.txt
 ./usr/X11R6/share/doc/xorgproto/dri2proto.txt
+./usr/X11R6/share/doc/xorgproto/dri3proto.txt
 ./usr/X11R6/share/doc/xorgproto/fixesproto.txt
 ./usr/X11R6/share/doc/xorgproto/fsproto.xml
 ./usr/X11R6/share/doc/xorgproto/inputproto
@@ -3929,8 +3931,6 @@
 ./usr/X11R6/share/doc/xorgproto/xextproto/tog-cup.xml
 ./usr/X11R6/share/doc/xorgproto/xextproto/xtest.xml
 ./usr/X11R6/share/doc/xorgproto/xv-protocol-v2.txt
-./usr/X11R6/share/doc/xorg-docs
-./usr/X11R6/share/doc/xorg-docs/MAINTAINERS
 ./usr/X11R6/share/doc/xtrans
 ./usr/X11R6/share/doc/xtrans/xtrans.xml
 ./usr/X11R6/share/mk
