@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.37 2020/08/23 10:49:34 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.38 2020/08/29 13:45:30 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1294,7 +1294,7 @@ parse_ctrl(struct video *vid, int argc, char **argv)
 		if (p == NULL) {
 			for (i = 0; i < CTRL_LAST; i++) {
 				if (!strcmp(*argv, ctrls[i].name)) {
-					fprintf(stderr, "%s: %d\n",
+					fprintf(stderr, "%s=%d\n",
 					    ctrls[i].name, ctrls[i].cur);
 					break;
 				}
