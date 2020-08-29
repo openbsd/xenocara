@@ -87,7 +87,6 @@
 ./usr/X11R6/include/libdrm/via_drm.h
 ./usr/X11R6/include/libdrm/virtgpu_drm.h
 ./usr/X11R6/include/libdrm/vmwgfx_drm.h
-./usr/X11R6/include/txc_dxtn.h
 ./usr/X11R6/include/vulkan/vulkan_intel.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
