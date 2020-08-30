@@ -35,6 +35,7 @@
 static pthread_mutex_t sync_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef __clang__
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma redefine_extname __sync_add_and_fetch_8_c __sync_add_and_fetch_8
 #pragma redefine_extname __sync_sub_and_fetch_8_c __sync_sub_and_fetch_8
 #pragma redefine_extname __sync_fetch_and_add_8_c __sync_fetch_and_add_8
