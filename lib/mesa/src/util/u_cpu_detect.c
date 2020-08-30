@@ -131,7 +131,7 @@ check_os_altivec_support(void)
    int sels[2] = {CTL_MACHDEP, CPU_ALTIVEC};
 #endif
    int has_vu = 0;
-   int len = sizeof (has_vu);
+   size_t len = sizeof (has_vu);
    int err;
 
    err = sysctl(sels, 2, &has_vu, &len, NULL, 0);
