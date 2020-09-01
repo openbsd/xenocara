@@ -1243,7 +1243,9 @@ if cc.links('int main() { return 0; }',
 endif
 
 ld_args_build_id = cc.get_supported_link_arguments('-Wl,--build-id=sha1')
-pre_args += '-DHAVE_LD_BUILD_ID'
+if ld_args_build_id.length() != 0
+  pre_args += '-DHAVE_LD_BUILD_ID'
+endif
 
 # check for dl support
 dep_dl = null_dep
