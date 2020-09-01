@@ -2105,7 +2105,9 @@ anv_get_memory_budget(VkPhysicalDevice physicalDevice,
 {
    ANV_FROM_HANDLE(anv_physical_device, device, physicalDevice);
    uint64_t sys_available;
-   assert(os_get_available_system_memory(&sys_available));
+   ASSERTED bool has_available_memory =
+      os_get_available_system_memory(&sys_available);
+   assert(has_available_memory);
 
    VkDeviceSize total_heaps_size = 0;
    for (size_t i = 0; i < device->memory.heap_count; i++)
