@@ -186,6 +186,9 @@ struct ac_shader_abi {
 
 	/* Whether bounds checks are required */
 	bool robust_buffer_access;
+
+	/* Clamp div by 0 (so it won't produce NaN) */
+	bool clamp_div_by_zero;
 };
 
 #endif /* AC_SHADER_ABI_H */

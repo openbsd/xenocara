@@ -1,0 +1,169 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>Mesa Release Notes</title>
+<link rel="stylesheet" type="text/css" href="../mesa.css">
+</head>
+<body>
+
+<div class="header">
+<h1>The Mesa 3D Graphics Library</h1>
+</div>
+
+<iframe src="../contents.html"></iframe>
+<div class="content">
+
+<h1>Mesa 20.1.7 Release Notes / 2020-09-02</h1>
+
+<p>
+    Mesa 20.1.7 is a bug fix release which fixes bugs found since the 20.1.6 release.
+</p>
+<p>
+Mesa 20.1.7 implements the OpenGL 4.6 API, but the version reported by
+glGetString(GL_VERSION) or glGetIntegerv(GL_MAJOR_VERSION) /
+glGetIntegerv(GL_MINOR_VERSION) depends on the particular driver being used.
+Some drivers don't support all the features required in OpenGL 4.6. OpenGL
+4.6 is <strong>only</strong> available if requested at context creation.
+Compatibility contexts may report a lower version depending on each driver.
+</p>
+<p>
+Mesa 20.1.7 implements the Vulkan 1.2 API, but the version reported by
+the apiVersion property of the VkPhysicalDeviceProperties struct
+depends on the particular driver being used.
+</p>
+
+<h2>SHA256 checksum</h2>
+<pre>
+TBD.
+</pre>
+
+
+<h2>New features</h2>
+
+<ul>
+    <li>None</li>
+</ul>
+
+<h2>Bug fixes</h2>
+
+<ul>
+    <li>Road Redemption certain  graphic effects rendered white color</li>
+    <li>Intel Vulkan driver crash with alpha-to-coverage</li>
+    <li>error: ‘static_assert’ was not declared in this scope</li>
+    <li>vulkan/wsi/x11: deadlock with Xwayland when compositor holds multiple buffers</li>
+    <li>[RADV/ACO] Death Stranding cause a GPU hung (*ERROR* Waiting for fences timed out!)</li>
+    <li>lp_bld_init.c:172:7: error: implicit declaration of function ‘LLVMAddConstantPropagationPass’; did you mean ‘LLVMAddCorrelatedValuePropagationPass’? [-Werror=implicit-function-declaration]</li>
+    <li>radv: blitting 3D images with linear filter</li>
+    <li>&lt;&lt;MESA crashed&gt;&gt; Array Index Out of Range with Graphicsfuzz application</li>
+    <li>Intel Vulkan driver assertion with small xfb buffer</li>
+</ul>
+
+<h2>Changes</h2>
+
+<ul>
+    <p>Alejandro Piñeiro (2):</p>
+    <li>      v3d/packet: fix typo on Set InstanceID/PrimitiveID packet</li>
+    <li>      v3d: set instance id to 0 at start of tile</li>
+    <p></p>
+    <p>Alyssa Rosenzweig (6):</p>
+    <li>      panfrost: Fix blend leak for render targets 5-8</li>
+    <li>      panfrost: Free hash_to_temp map</li>
+    <li>      pan/mdg: Free previous liveness</li>
+    <li>      panfrost: Use memctx for sysvals</li>
+    <li>      panfrost: Free batch-&gt;dependencies</li>
+    <li>      pan/mdg: Fix perspective combination</li>
+    <p></p>
+    <p>Bas Nieuwenhuizen (1):</p>
+    <li>      radv: Fix 3d blits.</li>
+    <p></p>
+    <p>Danylo Piliaiev (3):</p>
+    <li>      glsl: Eliminate out-of-bounds triop_vector_insert</li>
+    <li>      ir_constant: Return zero on out-of-bounds vector accesses</li>
+    <li>      glsl: Eliminate assigments to out-of-bounds elements of vector</li>
+    <p></p>
+    <p>Emil Velikov (1):</p>
+    <li>      radv: restrict exported symbols with static llvm</li>
+    <p></p>
+    <p>Eric Engestrom (10):</p>
+    <li>      docs/relnotes: add sha256 sums to 20.1.6</li>
+    <li>      .pick_status.json: Update to e94c22429b64f419d9a66f04fa5ecdad33f7f5ef</li>
+    <li>      .pick_status.json: Mark 9146f596ed1e8854a2a6c9137396a902bc92946c as denominated</li>
+    <li>      .pick_status.json: Mark da6d0e3facfe0eb5c7db2d75d6992643d929caff as denominated</li>
+    <li>      .pick_status.json: Mark b5558f2d2aa738d90b9e039144ae3ca69bdf92ca as denominated</li>
+    <li>      .pick_status.json: Mark c9858fb941ce7e903f608e537b3657c946f86980 as denominated</li>
+    <li>      .pick_status.json: Mark ee77951714ff4373261befde6e84f592cc1c769c as denominated</li>
+    <li>      .pick_status.json: Mark 7c226116c6c0793d6d9a7dec52ac7cf54b82b57f as denominated</li>
+    <li>      .pick_status.json: Mark d7d7687829875e401690219d4a72458fb2bbe4de as denominated</li>
+    <li>      scons: bump c++ standard to 14 to match meson</li>
+    <p></p>
+    <p>Jason Ekstrand (5):</p>
+    <li>      clover/spirv: Don&#x27;t call llvm::regularizeLlvmForSpirv</li>
+    <li>      intel/nir: Pass the nir_builder by reference in lower_alpha_to_coverage</li>
+    <li>      nir: Add a nir_metadata_all enum value</li>
+    <li>      intel/nir: Rewrite the guts of lower_alpha_to_coverage</li>
+    <li>      intel/fs: Fix MOV_INDIRECT and BROADCAST of Q types on Gen11+</li>
+    <p></p>
+    <p>Jonathan Gray (11):</p>
+    <li>      util: unbreak endian detection on OpenBSD</li>
+    <li>      util/anon_file: add OpenBSD shm_mkstemp() path</li>
+    <li>      meson: build with _ISOC11_SOURCE on OpenBSD</li>
+    <li>      meson: conditionally include -ldl in gbm pkg-config file</li>
+    <li>      util: futex fixes for OpenBSD</li>
+    <li>      util/u_thread: include pthread_np.h if found</li>
+    <li>      anv: use os_get_total_physical_memory()</li>
+    <li>      util/os_misc: add os_get_available_system_memory()</li>
+    <li>      anv: use os_get_available_system_memory()</li>
+    <li>      util/os_misc: os_get_available_system_memory() for OpenBSD</li>
+    <li>      vulkan: make VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_EXT conditional</li>
+    <p></p>
+    <p>Lionel Landwerlin (3):</p>
+    <li>      anv: fix transform feedback surface size</li>
+    <li>      intel/perf: store query symbol name</li>
+    <li>      intel/perf: fix raw query kernel metric selection</li>
+    <p></p>
+    <p>Marek Olšák (3):</p>
+    <li>      st/mesa: don&#x27;t generate NIR for ARB_vp/fp if NIR is not preferred</li>
+    <li>      radeonsi: fix tess levels coming as scalar arrays from SPIR-V</li>
+    <li>      gallivm: fix build on LLVM 12 due to LLVMAddConstantPropagationPass removal</li>
+    <p></p>
+    <p>Marek Vasut (2):</p>
+    <li>      etnaviv: Remove etna_resource_get_status()</li>
+    <li>      etnaviv: Add lock around pending_ctx</li>
+    <p></p>
+    <p>Nanley Chery (1):</p>
+    <li>      gallium/dri2: Report correct YUYV and UYVY plane count</li>
+    <p></p>
+    <p>Pierre Moreau (1):</p>
+    <li>      clover/spirv: Remove unused tuple header</li>
+    <p></p>
+    <p>Pierre-Eric Pelloux-Prayer (5):</p>
+    <li>      mesa/st: introduce PIPE_CAP_NO_CLIP_ON_COPY_TEX</li>
+    <li>      radeonsi: enable PIPE_CAP_NO_CLIP_ON_COPY_TEX</li>
+    <li>      ac/llvm: add option to clamp division by zero</li>
+    <li>      radeonsi,driconf: add clamp_div_by_zero option</li>
+    <li>      radeonsi: use radeonsi_clamp_div_by_zero for SPECviewperf13, Road Redemption</li>
+    <p></p>
+    <p>Rhys Perry (1):</p>
+    <li>      aco: fix non-rtz pack_half_2x16</li>
+    <p></p>
+    <p>Rob Clark (1):</p>
+    <li>      freedreno: handle case of shadowing current render target</li>
+    <p></p>
+    <p>Roman Gilg (2):</p>
+    <li>      vulkan/wsi/x11: add sent image counter</li>
+    <li>      vulkan/wsi/x11: wait for acquirable images in FIFO mode</li>
+    <p></p>
+    <p>Samuel Pitoiset (1):</p>
+    <li>      nir/algebraic: mark some optimizations with fsat(NaN) as inexact</li>
+    <p></p>
+    <p>Vinson Lee (1):</p>
+    <li>      vulkan: Fix memory leaks.</li>
+    <p></p>
+    <p></p>
+</ul>
+
+</div>
+</body>
+</html>

@@ -157,6 +157,16 @@ if with_platform_android
   ]
 endif
 
+# When static linking LLVM, all its symbols are public API.
+# That may cause symbol collision, so explicitly demote everything.
+libvulkan_radeon_ld_args = []
+libvulkan_radeon_link_depends = []
+
+if with_llvm and with_ld_version_script
+  libvulkan_radeon_ld_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'vulkan.sym')]
+  libvulkan_radeon_link_depends += files('vulkan.sym')
+endif
+
 libvulkan_radeon = shared_library(
   'vulkan_radeon',
   [libradv_files, radv_entrypoints, radv_extensions_c, amd_vk_format_table_c, sha1_h, radv_gfx10_format_table_h],
@@ -173,7 +183,8 @@ libvulkan_radeon = shared_library(
   ],
   c_args : [c_vis_args, no_override_init_args, radv_flags],
   cpp_args : [cpp_vis_args, radv_flags],
-  link_args : [ld_args_bsymbolic, ld_args_gc_sections],
+  link_args : [ld_args_bsymbolic, ld_args_gc_sections, libvulkan_radeon_ld_args],
+  link_depends : [libvulkan_radeon_link_depends,],
   install : true,
 )
 

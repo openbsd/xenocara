@@ -621,6 +621,19 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
    else
       enumerate_sysfs_metrics(perf);
 
+   /* Select a fallback OA metric. Look for the TestOa metric or use the last
+    * one if no present (on HSW).
+    */
+   for (int i = 0; i < perf->n_queries; i++) {
+      if (perf->queries[i].symbol_name &&
+          strcmp(perf->queries[i].symbol_name, "TestOa") == 0) {
+         perf->fallback_raw_oa_metric = perf->queries[i].oa_metrics_set_id;
+         break;
+      }
+   }
+   if (perf->fallback_raw_oa_metric == 0)
+      perf->fallback_raw_oa_metric = perf->queries[perf->n_queries - 1].oa_metrics_set_id;
+
    return true;
 }
 
