@@ -35,7 +35,7 @@
 
 #ifdef HAVE_PTHREAD
 #include <signal.h>
-#if defined(PTHREAD_SETAFFINITY_IN_NP_HEADER) || defined(__OpenBSD__)
+#ifdef HAVE_PTHREAD_NP_H
 #include <pthread_np.h>
 #endif
 #endif

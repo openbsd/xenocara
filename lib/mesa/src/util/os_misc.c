@@ -194,7 +194,7 @@ bool
 os_get_available_system_memory(uint64_t *size)
 {
 #if DETECT_OS_LINUX
-   char *meminfo = os_read_file("/proc/meminfo");
+   char *meminfo = os_read_file("/proc/meminfo", NULL);
    if (!meminfo)
       return false;
 
