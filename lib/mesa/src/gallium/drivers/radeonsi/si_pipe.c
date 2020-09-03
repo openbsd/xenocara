@@ -885,7 +885,7 @@ static void si_disk_cache_create(struct si_screen *sscreen)
    disk_cache_format_hex_id(cache_id, sha1, 20 * 2);
 
 /* These flags affect shader compilation. */
-#define ALL_FLAGS (DBG(GISEL))
+#define ALL_FLAGS (DBG(GISEL) | DBG(CLAMP_DIV_BY_ZERO))
    uint64_t shader_debug_flags = sscreen->debug_flags & ALL_FLAGS;
 
    /* Add the high bits of 32-bit addresses, which affects
@@ -1001,6 +1001,9 @@ static struct pipe_screen *radeonsi_screen_create_impl(struct radeon_winsys *ws,
    sscreen->options.name = driQueryOptionb(config->options, "radeonsi_" #name);
 #include "si_debug_options.h"
    }
+
+   if (sscreen->options.clamp_div_by_zero)
+      sscreen->debug_flags |= DBG(CLAMP_DIV_BY_ZERO);
 
    si_disk_cache_create(sscreen);
 

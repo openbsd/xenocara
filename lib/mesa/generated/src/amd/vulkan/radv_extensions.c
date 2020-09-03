@@ -228,7 +228,7 @@ void radv_fill_device_extension_table(const struct radv_physical_device *device,
                                       struct radv_device_extension_table* table)
 {
    const struct radv_instance *instance = device->instance;
-   table->ANDROID_external_memory_android_hardware_buffer = (!ANDROID || ANDROID_API_LEVEL >= 28) && ((RADV_SUPPORT_ANDROID_HARDWARE_BUFFER  && device->rad_info.has_syncobj_wait_for_submit) && (instance->enabled_extensions.KHR_external_memory_capabilities || instance->apiVersion >= VK_API_VERSION_1_1) && (instance->enabled_extensions.KHR_get_physical_device_properties2 || instance->apiVersion >= VK_API_VERSION_1_1));
+   table->ANDROID_external_memory_android_hardware_buffer = (!ANDROID || ANDROID_API_LEVEL >= 28) && ((RADV_SUPPORT_ANDROID_HARDWARE_BUFFER  && device->rad_info.has_syncobj_wait_for_submit) && (instance->enabled_extensions.KHR_get_physical_device_properties2 || instance->apiVersion >= VK_API_VERSION_1_1) && (instance->enabled_extensions.KHR_external_memory_capabilities || instance->apiVersion >= VK_API_VERSION_1_1));
    table->ANDROID_native_buffer = (!ANDROID || ANDROID_API_LEVEL >= 26) && ((ANDROID && device->rad_info.has_syncobj_wait_for_submit));
    table->KHR_16bit_storage = (!ANDROID || ANDROID_API_LEVEL >= 28) && ((!device->use_aco || device->rad_info.chip_class >= GFX8) && (instance->enabled_extensions.KHR_get_physical_device_properties2 || instance->apiVersion >= VK_API_VERSION_1_1));
    table->KHR_bind_memory2 = (!ANDROID || ANDROID_API_LEVEL >= 28) && ((true));
@@ -279,7 +279,7 @@ void radv_fill_device_extension_table(const struct radv_physical_device *device,
    table->EXT_calibrated_timestamps = (true);
    table->EXT_conditional_rendering = (true);
    table->EXT_conservative_rasterization = (device->rad_info.chip_class >= GFX9) && (instance->enabled_extensions.KHR_get_physical_device_properties2 || instance->apiVersion >= VK_API_VERSION_1_1);
-   table->EXT_display_control = (VK_USE_PLATFORM_DISPLAY_KHR) && instance->enabled_extensions.KHR_surface && instance->enabled_extensions.EXT_display_surface_counter;
+   table->EXT_display_control = (VK_USE_PLATFORM_DISPLAY_KHR) && instance->enabled_extensions.EXT_display_surface_counter && instance->enabled_extensions.KHR_surface;
    table->EXT_depth_clip_enable = (true);
    table->EXT_depth_range_unrestricted = (true);
    table->EXT_descriptor_indexing = (true) && (instance->enabled_extensions.KHR_get_physical_device_properties2 || instance->apiVersion >= VK_API_VERSION_1_1);

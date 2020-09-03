@@ -581,6 +581,7 @@ The integer capabilities:
 * ``PIPE_CAP_SYSTEM_SVM``: True if all application memory can be shared with the GPU without explicit mapping.
 * ``PIPE_CAP_VIEWPORT_MASK``: Whether ``TGSI_SEMANTIC_VIEWPORT_MASK`` and ``TGSI_PROPERTY_LAYER_VIEWPORT_RELATIVE`` are supported (see GL_NV_viewport_array2).
 * ``PIPE_CAP_MAP_UNSYNCHRONIZED_THREAD_SAFE``: Whether mapping a buffer as unsynchronized from any thread is safe.
+* ``PIPE_CAP_NO_CLIP_ON_COPY_TEX``: Driver doesn't want x/y/width/height clipped based on src size when doing a copy texture operation (eg: may want out-of-bounds reads that produce 0 instead of leaving the texture content undefined)
 
 .. _pipe_capf:
 

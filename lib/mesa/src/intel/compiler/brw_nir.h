@@ -101,7 +101,7 @@ brw_nir_link_shaders(const struct brw_compiler *compiler,
 
 bool brw_nir_lower_cs_intrinsics(nir_shader *nir,
                                  unsigned dispatch_width);
-void brw_nir_lower_alpha_to_coverage(nir_shader *shader);
+bool brw_nir_lower_alpha_to_coverage(nir_shader *shader);
 void brw_nir_lower_legacy_clipping(nir_shader *nir,
                                    int nr_userclip_plane_consts,
                                    struct brw_stage_prog_data *prog_data);

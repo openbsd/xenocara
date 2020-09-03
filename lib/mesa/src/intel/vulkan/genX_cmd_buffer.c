@@ -3346,7 +3346,7 @@ genX(cmd_buffer_flush_state)(struct anv_cmd_buffer *cmd_buffer)
                sob.SurfaceBaseAddress = anv_address_add(xfb->buffer->address,
                                                         xfb->offset);
                /* Size is in DWords - 1 */
-               sob.SurfaceSize = xfb->size / 4 - 1;
+               sob.SurfaceSize = DIV_ROUND_UP(xfb->size, 4) - 1;
             }
          }
       }

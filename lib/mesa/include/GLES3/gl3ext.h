@@ -1,7 +1,7 @@
 #ifndef __gl3ext_h_
 #define __gl3ext_h_
 
-/* $Revision: 1.18 $ on $Date: 2020/08/26 06:02:35 $ */
+/* $Revision: 1.19 $ on $Date: 2020/09/03 07:17:23 $ */
 
 /*
  * This document is licensed under the SGI Free Software B License Version

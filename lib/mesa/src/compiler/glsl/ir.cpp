@@ -799,6 +799,20 @@ ir_constant::ir_constant(const ir_constant *c, unsigned i)
    this->const_elements = NULL;
    this->type = c->type->get_base_type();
 
+   /* Section 5.11 (Out-of-Bounds Accesses) of the GLSL 4.60 spec says:
+    *
+    *    In the subsections described above for array, vector, matrix and
+    *    structure accesses, any out-of-bounds access produced undefined
+    *    behavior....Out-of-bounds reads return undefined values, which
+    *    include values from other variables of the active program or zero.
+    *
+    * GL_KHR_robustness and GL_ARB_robustness encourage us to return zero.
+    */
+   if (i >= c->type->vector_elements) {
+      this->value = { { 0 } };
+      return;
+   }
+
    switch (this->type->base_type) {
    case GLSL_TYPE_UINT:  this->value.u[0] = c->value.u[i]; break;
    case GLSL_TYPE_INT:   this->value.i[0] = c->value.i[i]; break;

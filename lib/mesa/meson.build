@@ -1161,7 +1161,7 @@ if not ['linux'].contains(host_machine.system())
   endif
 endif
 
-foreach h : ['xlocale.h', 'linux/futex.h', 'endian.h', 'dlfcn.h', 'execinfo.h', 'sys/shm.h', 'cet.h']
+foreach h : ['xlocale.h', 'linux/futex.h', 'endian.h', 'dlfcn.h', 'execinfo.h', 'sys/shm.h', 'cet.h', 'pthread_np.h']
   if cc.compiles('#include <@0@>'.format(h), name : '@0@'.format(h))
     pre_args += '-DHAVE_@0@'.format(h.to_upper().underscorify())
   endif
@@ -1728,6 +1728,7 @@ if dep_dl.found()
   gl_priv_libs += '-ldl'
 endif
 
+# FIXME: autotools lists this as incomplete
 gbm_priv_libs = []
 if dep_dl.found()
   gbm_priv_libs += '-ldl'

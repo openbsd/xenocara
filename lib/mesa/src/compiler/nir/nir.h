@@ -2574,6 +2574,15 @@ typedef enum {
    nir_metadata_live_ssa_defs = 0x4,
    nir_metadata_not_properly_reset = 0x8,
    nir_metadata_loop_analysis = 0x10,
+
+   /** All metadata
+    *
+    * This includes all nir_metadata flags except not_properly_reset.  Passes
+    * which do not change the shader in any way should call
+    *
+    *    nir_metadata_preserve(impl, nir_metadata_all);
+    */
+   nir_metadata_all = ~nir_metadata_not_properly_reset,
 } nir_metadata;
 
 typedef struct {
