@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2020/09/03 11:29:42 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -18,14 +18,18 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gbm/main \
 		-I${MESA_SRC}/src/gbm/backends/dri \
 		-I${MESA_SRC}/src/loader
 
-LDADD+= ${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
-	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
+LDADD+=	-Wl,--as-needed -Wl,--start-group \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \
+	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
+	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
+	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
 	-lz -lm -lexpat
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD+= -L${X11BASE}/lib -ldrm
 .endif
+
+LDADD+=	-Wl,--end-group
 
 obj: _xenocara_obj
 
