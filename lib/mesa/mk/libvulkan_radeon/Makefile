@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2020/09/04 11:27:58 jsg Exp $
 
 LIB=	vulkan_radeon
 
@@ -127,7 +127,8 @@ LDADD+=		-L${X11BASE}/lib -ldrm -ldrm_amdgpu \
 		-lX11 -lxcb-dri2 -lxcb-present -lxcb-sync \
 		-lxshmfence
 
-LDADD+=		${BUILD_ID_SHA1} -Wl,--gc-sections \
+LDADD+=		-Wl,--gc-sections \
+		-Wl,--version-script ${MESA_SRC}/src/amd/vulkan/vulkan.sym \
 		-Wl,--end-group
 
 all:	lib${LIB}.so
