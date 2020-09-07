@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.38 2020/08/29 13:45:30 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.39 2020/09/07 10:35:22 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -119,7 +119,10 @@ struct dev_ctrls {
 	{ "white_balance_temperature",
 			0, V4L2_CID_WHITE_BALANCE_TEMPERATURE,
 			   V4L2_CID_AUTO_WHITE_BALANCE, 0, 0, 0, 0, 0 },
-#define CTRL_LAST       8
+	{ "backlight_compensation",
+			0, V4L2_CID_BACKLIGHT_COMPENSATION,
+			   0, 0, 0, 0, 0, 0 },
+#define CTRL_LAST       9
 	{ NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
