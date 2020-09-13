@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.64 2019/03/24 17:59:19 bru Exp $ */
+/* $OpenBSD: ws.c,v 1.65 2020/09/13 10:26:31 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -83,19 +83,20 @@ static XF86ModuleVersionInfo VersionRec = {
 };
 
 _X_EXPORT XF86ModuleData wsModuleData = {
-	&VersionRec,
-	SetupProc,
-	TearDownProc
+	.vers     = &VersionRec,
+	.setup    = SetupProc,
+	.teardown = TearDownProc
 };
 
 _X_EXPORT InputDriverRec WS = {
-	1,
-	"ws",
-	NULL,
-	wsPreInit,
-	wsUnInit,
-	NULL,
-	0
+	.driverVersion   = 1,
+	.driverName      = "ws",
+	.Identify        = NULL,
+	.PreInit         = wsPreInit,
+	.UnInit          = wsUnInit,
+	.module          = NULL,
+	.default_options = NULL,
+	.capabilities    = 0
 };
 
 static pointer
