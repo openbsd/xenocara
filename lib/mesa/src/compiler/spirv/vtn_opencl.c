@@ -316,7 +316,9 @@ bool
 vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
                               const uint32_t *w, unsigned count)
 {
-   switch ((enum OpenCLstd_Entrypoints)ext_opcode) {
+   enum OpenCLstd_Entrypoints cl_opcode = (enum OpenCLstd_Entrypoints) ext_opcode;
+
+   switch (cl_opcode) {
    case OpenCLstd_Fabs:
    case OpenCLstd_SAbs:
    case OpenCLstd_UAbs:
@@ -352,7 +354,7 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_SSub_sat:
    case OpenCLstd_USub_sat:
    case OpenCLstd_Trunc:
-      handle_instr(b, ext_opcode, w, count, handle_alu);
+      handle_instr(b, cl_opcode, w, count, handle_alu);
       return true;
    case OpenCLstd_SAbs_diff:
    case OpenCLstd_UAbs_diff:
@@ -389,22 +391,22 @@ vtn_handle_opencl_instruction(struct vtn_builder *b, SpvOp ext_opcode,
    case OpenCLstd_S_Upsample:
    case OpenCLstd_U_Upsample:
    case OpenCLstd_Clz:
-      handle_instr(b, ext_opcode, w, count, handle_special);
+      handle_instr(b, cl_opcode, w, count, handle_special);
       return true;
    case OpenCLstd_Vloadn:
-      vtn_handle_opencl_vload(b, ext_opcode, w, count);
+      vtn_handle_opencl_vload(b, cl_opcode, w, count);
       return true;
    case OpenCLstd_Vstoren:
-      vtn_handle_opencl_vstore(b, ext_opcode, w, count);
+      vtn_handle_opencl_vstore(b, cl_opcode, w, count);
       return true;
    case OpenCLstd_Shuffle:
-      handle_instr(b, ext_opcode, w, count, handle_shuffle);
+      handle_instr(b, cl_opcode, w, count, handle_shuffle);
       return true;
    case OpenCLstd_Shuffle2:
-      handle_instr(b, ext_opcode, w, count, handle_shuffle2);
+      handle_instr(b, cl_opcode, w, count, handle_shuffle2);
       return true;
    case OpenCLstd_Printf:
-      handle_instr(b, ext_opcode, w, count, handle_printf);
+      handle_instr(b, cl_opcode, w, count, handle_printf);
       return true;
    case OpenCLstd_Prefetch:
       /* TODO maybe add a nir instruction for this? */
