@@ -260,6 +260,8 @@ public:
 
 class array_resize_visitor : public deref_type_updater {
 public:
+   using deref_type_updater::visit;
+
    unsigned num_vertices;
    gl_shader_program *prog;
    gl_shader_stage stage;
@@ -1506,6 +1508,8 @@ move_non_declarations(exec_list *instructions, exec_node *last,
  */
 class array_sizing_visitor : public deref_type_updater {
 public:
+   using deref_type_updater::visit;
+
    array_sizing_visitor()
       : mem_ctx(ralloc_context(NULL)),
         unnamed_interfaces(_mesa_pointer_hash_table_create(NULL))
