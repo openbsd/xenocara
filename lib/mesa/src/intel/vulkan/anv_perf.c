@@ -83,16 +83,6 @@ anv_device_perf_open(struct anv_device *device, uint64_t metric_id)
    properties[p++] = DRM_I915_PERF_PROP_HOLD_PREEMPTION;
    properties[p++] = true;
 
-   /* If global SSEU is available, pin it to the default. This will ensure on
-    * Gen11 for instance we use the full EU array. Initially when perf was
-    * enabled we would use only half on Gen11 because of functional
-    * requirements.
-    */
-   if (device->physical->perf->i915_perf_version >= 4) {
-      properties[p++] = DRM_I915_PERF_PROP_GLOBAL_SSEU;
-      properties[p++] = (uintptr_t) &device->physical->perf->sseu;
-   }
-
    memset(&param, 0, sizeof(param));
    param.flags = 0;
    param.flags |= I915_PERF_FLAG_FD_CLOEXEC | I915_PERF_FLAG_FD_NONBLOCK;

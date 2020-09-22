@@ -1,0 +1,203 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>Mesa Release Notes</title>
+<link rel="stylesheet" type="text/css" href="../mesa.css">
+</head>
+<body>
+
+<div class="header">
+<h1>The Mesa 3D Graphics Library</h1>
+</div>
+
+<iframe src="../contents.html"></iframe>
+<div class="content">
+
+<h1>Mesa 20.0.8 Release Notes / 2020-06-11</h1>
+
+<p>
+    Mesa 20.0.8 is a bug fix release which fixes bugs found since the 20.0.7 release.
+</p>
+<p>
+Mesa 20.0.8 implements the OpenGL 4.6 API, but the version reported by
+glGetString(GL_VERSION) or glGetIntegerv(GL_MAJOR_VERSION) /
+glGetIntegerv(GL_MINOR_VERSION) depends on the particular driver being used.
+Some drivers don't support all the features required in OpenGL 4.6. OpenGL
+4.6 is <strong>only</strong> available if requested at context creation.
+Compatibility contexts may report a lower version depending on each driver.
+</p>
+<p>
+Mesa 20.0.8 implements the Vulkan 1.2 API, but the version reported by
+the apiVersion property of the VkPhysicalDeviceProperties struct
+depends on the particular driver being used.
+</p>
+
+<h2>SHA256 checksum</h2>
+<pre>
+TBD.
+</pre>
+
+
+<h2>New features</h2>
+
+<ul>
+    <li>VK_GOOGLE_user_type on ANV and RADV.
+</li>
+</ul>
+
+<h2>Bug fixes</h2>
+
+<ul>
+    <li>iris/i965: possible regression in 20.0.5 due to changes in buffer manager sharing across screens (firefox/mozilla#1634213)</li>
+    <li>[RADV] - Doom Eternal (782330) &amp; Metro Exodus (412020) - Title requires &#x27;RADV_DEBUG=zerovram&#x27; to eliminate colorful graphical aberrations.</li>
+    <li>[RADV] - Doom Eternal (782330) &amp; Metro Exodus (412020) - Title requires &#x27;RADV_DEBUG=zerovram&#x27; to eliminate colorful graphical aberrations.</li>
+    <li>NIR validation failed after glsl to nir, before function inline, wrong {src,dst}-&gt;type ?</li>
+    <li>Mesa 20.0.7 / 20.1.0-rc4 regression, extremally long shader compilation time in NIR</li>
+    <li>Mesa-git build fails on Fedora Rawhide</li>
+    <li>iris/i965: possible regression in 20.0.5 due to changes in buffer manager sharing across screens (firefox/mozilla#1634213)</li>
+    <li>Incorrect _NetBSD__ macro inside execmem.c</li>
+    <li>Possible invalid sizeof in device.c</li>
+    <li>mesa trunk master vulkan overlay-layer meson.build warning empty configuration_data() object</li>
+    <li>20.0.7: mesa still is not ready to gcc 10 default settings</li>
+    <li>[Gen9/icl] [Bisected] [Regression] dEQP-GLES3.functional.shaders.loops.short_circuit.do_while_fragment fail</li>
+    <li>Reproduceable i915 gpu hang Intel Iris Plus Graphics (Ice Lake 8x8 GT2)</li>
+    <li>Double lock in fbobject.c</li>
+    <li>[bisected] Steam crashes when newest Iris built with LTO</li>
+    <li>freedreno: glamor issue with x11 desktops</li>
+    <li>Deadlock in anv_timelines_wait()</li>
+</ul>
+
+<h2>Changes</h2>
+
+<ul>
+    <p>Bas Nieuwenhuizen (3):</p>
+    <li>      radv/winsys:  Remove extra sizeof multiply.</li>
+    <li>      radv: Handle failing to create .cache dir.</li>
+    <li>      radv: Provide a better error for permission issues with priorities.</li>
+    <p></p>
+    <p>D Scott Phillips (1):</p>
+    <li>      anv/gen11+: Disable object level preemption</li>
+    <p></p>
+    <p>Danylo Piliaiev (6):</p>
+    <li>      anv: Translate relative timeout to absolute when calling anv_timelines_wait</li>
+    <li>      anv: Fix deadlock in anv_timelines_wait</li>
+    <li>      meson: Disable GCC&#x27;s dead store elimination for memory zeroing custom new</li>
+    <li>      mesa: Fix double-lock of Shared-&gt;FrameBuffers and usage of wrong mutex</li>
+    <li>      intel/fs: Work around dual-source blending hangs in combination with SIMD16</li>
+    <li>      glsl: inline functions with unsupported return type before converting to nir</li>
+    <p></p>
+    <p>Dave Airlie (1):</p>
+    <li>      llvmpipe: compute shaders work better with all the threads.</li>
+    <p></p>
+    <p>Dylan Baker (10):</p>
+    <li>      docs/relnotes Add sha256 sums to 20.0.7</li>
+    <li>      .pick_status.json: Update to ceae09da156309327d7ba6f4a59d3a2e9b8837d9</li>
+    <li>      .pick_status.json: Update to a887ad7c84e14fdad7907037a39e9fee9d504bf3</li>
+    <li>      .pick_status.json: Update to 4504d6374dbe2aa40af519c16765457bcbf81b84</li>
+    <li>      .pick_status.json: Update to f0c102c075f8ac76629bb34619187262ccc3e9d8</li>
+    <li>      tests: Make tests aware of meson test wrapper</li>
+    <li>      .pick_status.json: Update to e58112bc08f99861ac634ede8db0f98cd497fc14</li>
+    <li>      radonsi/si_state.c: retab</li>
+    <li>      .pick_status.json: Update to 0795241dde1507e0c6a3f9ef07c281ad4f2acf7b</li>
+    <li>      vulkan-overlay/meson: use install_data instead of configure_file</li>
+    <p></p>
+    <p>Eric Engestrom (3):</p>
+    <li>      tree-wide: fix deprecated GitLab URLs</li>
+    <li>      glapi: remove deprecated .getchildren() that has been replace with an iterator</li>
+    <li>      intel: fix gen_sort_tags.py</li>
+    <p></p>
+    <p>Erik Faye-Lund (2):</p>
+    <li>      zink: use general-layout when blitting to/from same resource</li>
+    <li>      nir: reuse existing psiz-variable</li>
+    <p></p>
+    <p>Gert Wollny (1):</p>
+    <li>      nir: lower_tex: Don&#x27;t normalize coordinates for TXF with RECT</li>
+    <p></p>
+    <p>Ian Romanick (1):</p>
+    <li>      anv/tests: Don&#x27;t rely on assert or changing NDEBUG in tests</li>
+    <p></p>
+    <p>Ilia Mirkin (1):</p>
+    <li>      nouveau: allow invalidating coherent/persistent buffer backings</li>
+    <p></p>
+    <p>Jan Palus (1):</p>
+    <li>      targets/opencl: fix build against LLVM&gt;=10 with Polly support</li>
+    <p></p>
+    <p>Jason Ekstrand (6):</p>
+    <li>      anv:gpu_memcpy: Emit 3DSTATE_VF_INDEXING on Gen8+</li>
+    <li>      nir/lower_double_ops: Rework the if (progress) tree</li>
+    <li>      nir/opt_deref: Report progress if we remove a deref</li>
+    <li>      nir/copy_prop_vars: Record progress in more places</li>
+    <li>      intel/vec4: Stomp the return type of RESINFO to UINT32</li>
+    <li>      intel/fs: Fix unused texture coordinate zeroing on Gen4-5</li>
+    <p></p>
+    <p>Jonathan Marek (1):</p>
+    <li>      freedreno/a6xx: use nonbinning VS when GS is used</li>
+    <p></p>
+    <p>Joshua Ashton (1):</p>
+    <li>      radeonsi: Use TRUNC_COORD on samplers</li>
+    <p></p>
+    <p>Lionel Landwerlin (4):</p>
+    <li>      iris: fix BO destruction in error path</li>
+    <li>      i965: don&#x27;t forget to set screen on duped image</li>
+    <li>      i965: fix export of GEM handles</li>
+    <li>      iris: fix export of GEM handles</li>
+    <p></p>
+    <p>Lucas Stach (1):</p>
+    <li>      etnaviv: retarget transfer to render resource when necessary</li>
+    <p></p>
+    <p>Marek Olšák (2):</p>
+    <li>      radeonsi: don&#x27;t expose 16xAA on chips with 1 RB due to an occlusion query issue</li>
+    <li>      radeonsi: add a hack to disable TRUNC_COORD for shadow samplers</li>
+    <p></p>
+    <p>Marek Vasut (1):</p>
+    <li>      etnaviv: Disable seamless cube map on GC880</li>
+    <p></p>
+    <p>Michel Dänzer (1):</p>
+    <li>      util: Change os_same_file_description return type from bool to int</li>
+    <p></p>
+    <p>Nataraj Deshpande (1):</p>
+    <li>      dri_util: Update internal_format to GL_RGB8 for MESA_FORMAT_R8G8B8X8_UNORM</li>
+    <p></p>
+    <p>Neha Bhende (1):</p>
+    <li>      util: Initialize pipe_shader_state for passthrough and transform shaders</li>
+    <p></p>
+    <p>Pierre-Eric Pelloux-Prayer (1):</p>
+    <li>      omx: fix build with gcc 10</li>
+    <p></p>
+    <p>Rhys Perry (4):</p>
+    <li>      nir: fix lowering to scratch with boolean access</li>
+    <li>      aco: fix interaction with 3f branch workaround and p_constaddr</li>
+    <li>      aco: check instruction format before waiting for a previous SMEM store</li>
+    <li>      aco: preserve more fields when combining additions into SMEM</li>
+    <p></p>
+    <p>Rob Clark (1):</p>
+    <li>      freedreno: clear last_fence after resource tracking</li>
+    <p></p>
+    <p>Samuel Pitoiset (4):</p>
+    <li>      spirv,radv,anv: implement no-op VK_GOOGLE_user_type</li>
+    <li>      nir/lower_explicit_io: fix NON_UNIFORM access for UBO loads</li>
+    <li>      radv: enable zero VRAM for Doom Eternal</li>
+    <li>      radv: enable zero VRAM for all VKD3D (DX12-&gt;VK) games</li>
+    <p></p>
+    <p>Timothy Arceri (3):</p>
+    <li>      glsl: stop cascading errors if process_parameters() fails</li>
+    <li>      radv: fix regression with builtin cache</li>
+    <li>      glsl: fix potential slow compile times for GLSLOptimizeConservatively</li>
+    <p></p>
+    <p>Vinson Lee (4):</p>
+    <li>      zink: Check fopen result.</li>
+    <li>      r300g: Remove extra printf format specifiers.</li>
+    <li>      vdpau: Fix wrong calloc sizeof argument.</li>
+    <li>      mesa: Fix NetBSD compiler macro.</li>
+    <p></p>
+    <p>Yevhenii Kolesnikov (1):</p>
+    <li>      intel/compiler: fix cmod propagation optimisations</li>
+    <p></p>
+    <p></p>
+</ul>
+
+</div>
+</body>
+</html>

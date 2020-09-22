@@ -39,23 +39,11 @@ files_libzink = files(
   'zink_surface.c',
 )
 
-zink_nir_algebraic_c = custom_target(
-  'zink_nir_algebraic.c',
-  input : 'nir_to_spirv/zink_nir_algebraic.py',
-  output : 'zink_nir_algebraic.c',
-  command : [
-    prog_python, '@INPUT@',
-    '-p', join_paths(meson.source_root(), 'src/compiler/nir/'),
-  ],
-  capture : true,
-  depend_files : nir_algebraic_py,
-)
-
 libzink = static_library(
   'zink',
-  [files_libzink, zink_nir_algebraic_c],
+  files_libzink,
   c_args : c_vis_args,
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  include_directories : inc_common,
   dependencies: [dep_vulkan, idep_nir_headers],
 )
 

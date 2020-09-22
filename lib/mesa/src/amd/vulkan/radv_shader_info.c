@@ -403,7 +403,7 @@ gather_info_input_decl_vs(const nir_shader *nir, const nir_variable *var,
 	unsigned attrib_count = glsl_count_attribute_slots(var->type, true);
 	int idx = var->data.location;
 
-	if (idx >= VERT_ATTRIB_GENERIC0 && idx < VERT_ATTRIB_GENERIC0 + MAX_VERTEX_ATTRIBS)
+	if (idx >= VERT_ATTRIB_GENERIC0 && idx <= VERT_ATTRIB_GENERIC15)
 		info->vs.has_vertex_buffers = true;
 
 	for (unsigned i = 0; i < attrib_count; ++i) {
@@ -656,8 +656,7 @@ void
 radv_nir_shader_info_pass(const struct nir_shader *nir,
 			  const struct radv_pipeline_layout *layout,
 			  const struct radv_shader_variant_key *key,
-			  struct radv_shader_info *info,
-			  bool use_aco)
+			  struct radv_shader_info *info)
 {
 	struct nir_function *func =
 		(struct nir_function *)exec_list_get_head_const(&nir->functions);
@@ -763,7 +762,6 @@ radv_nir_shader_info_pass(const struct nir_shader *nir,
 		info->ps.can_discard = nir->info.fs.uses_discard;
                 info->ps.early_fragment_test = nir->info.fs.early_fragment_tests;
                 info->ps.post_depth_coverage = nir->info.fs.post_depth_coverage;
-                info->ps.depth_layout = nir->info.fs.depth_layout;
                 break;
         case MESA_SHADER_GEOMETRY:
                 info->gs.vertices_in = nir->info.gs.vertices_in;
@@ -810,27 +808,17 @@ radv_nir_shader_info_pass(const struct nir_shader *nir,
 	    key->vs_common_out.as_es) {
 		struct radv_es_output_info *es_info =
 			nir->info.stage == MESA_SHADER_VERTEX ? &info->vs.es_info : &info->tes.es_info;
+		uint32_t max_output_written = 0;
 
-		if (use_aco) {
-			/* The outputs don't contain gaps, se we can use the number of outputs */
-			uint32_t num_outputs_written = nir->info.stage == MESA_SHADER_VERTEX
-				? info->vs.num_linked_outputs
-				: info->tes.num_linked_outputs;
-			es_info->esgs_itemsize = num_outputs_written * 16;
-		} else {
-			/* The outputs may contain gaps, use the highest output index + 1 */
-			uint32_t max_output_written = 0;
-			uint64_t output_mask = nir->info.outputs_written;
+		uint64_t output_mask = nir->info.outputs_written;
+		while (output_mask) {
+			const int i = u_bit_scan64(&output_mask);
+			unsigned param_index = shader_io_get_unique_index(i);
 
-			while (output_mask) {
-				const int i = u_bit_scan64(&output_mask);
-				unsigned param_index = shader_io_get_unique_index(i);
-
-				max_output_written = MAX2(param_index, max_output_written);
-			}
-
-			es_info->esgs_itemsize = (max_output_written + 1) * 16;
+			max_output_written = MAX2(param_index, max_output_written);
 		}
+
+		es_info->esgs_itemsize = (max_output_written + 1) * 16;
 	}
 
 	info->float_controls_mode = nir->info.float_controls_execution_mode;

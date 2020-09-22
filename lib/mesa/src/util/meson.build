@@ -34,7 +34,6 @@ files_mesa_util = files(
   'blob.h',
   'build_id.c',
   'build_id.h',
-  'compiler.h',
   'crc32.c',
   'crc32.h',
   'dag.c',
@@ -110,7 +109,6 @@ files_mesa_util = files(
   'u_vector.h',
   'u_math.c',
   'u_math.h',
-  'u_memset.h',
   'u_mm.c',
   'u_mm.h',
   'u_debug.c',
@@ -169,7 +167,7 @@ endif
 _libmesa_util = static_library(
   'mesa_util',
   [files_mesa_util, format_srgb],
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  include_directories : inc_common,
   dependencies : deps_for_libmesa_util,
   link_with: libmesa_format,
   c_args : [c_msvc_compat_args, c_vis_args],
@@ -185,7 +183,7 @@ idep_mesautil = declare_dependency(
 _libxmlconfig = static_library(
   'xmlconfig',
   files_xmlconfig,
-  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  include_directories : inc_common,
   dependencies : [idep_mesautil, dep_expat, dep_m],
   c_args : [
     c_msvc_compat_args, c_vis_args,
@@ -210,7 +208,7 @@ if with_tests
     executable(
       'u_atomic_test',
       files('u_atomic_test.c'),
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+      include_directories : inc_common,
       dependencies : idep_mesautil,
       c_args : [c_msvc_compat_args],
     ),
@@ -222,7 +220,7 @@ if with_tests
     executable(
       'blob_test',
       files('blob_test.c'),
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+      include_directories : inc_common,
       dependencies : idep_mesautil,
       c_args : [c_msvc_compat_args],
     ),
@@ -234,7 +232,7 @@ if with_tests
     executable(
       'rb_tree_test',
       files('rb_tree_test.c'),
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+      include_directories : inc_common,
       dependencies : idep_mesautil,
       c_args : [c_msvc_compat_args],
     ),
@@ -246,12 +244,11 @@ if with_tests
     executable(
       'roundeven_test',
       files('roundeven_test.c'),
-      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+      include_directories : inc_common,
       c_args : [c_msvc_compat_args],
       dependencies : [dep_m],
     ),
     suite : ['util'],
-    should_fail : meson.get_cross_property('xfail', '').contains('roundeven'),
   )
 
   # FIXME: this test crashes on windows
@@ -261,7 +258,7 @@ if with_tests
       executable(
         'mesa-sha1_test',
         files('mesa-sha1_test.c'),
-        include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+        include_directories : inc_common,
         link_with : _libmesa_util,
         c_args : [c_msvc_compat_args],
       ),
@@ -274,36 +271,10 @@ if with_tests
     executable(
        'bitset_test',
        files('bitset_test.cpp'),
-       include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+       include_directories : inc_common,
        dependencies : [idep_mesautil, idep_gtest],
      ),
      suite : ['util'],
-  )
-
-  process_test_exe = executable(
-    'process_test',
-    files('process_test.c'),
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
-    dependencies : idep_mesautil,
-    c_args : [c_msvc_compat_args],
-  )
-  if (host_machine.system() == 'windows' and build_machine.system() != 'windows')
-    # This conversion is only required on mingw crosscompilers, otherwise we hit at least one of these issues
-    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/2690
-    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/2788
-    prog_winepath = find_program('winepath')
-    process_test_exe_full_path = run_command(
-      prog_winepath, '-w', process_test_exe.full_path()
-    ).stdout().strip()
-  else
-    process_test_exe_full_path = process_test_exe.full_path()
-  endif
-
-  test(
-    'process',
-    process_test_exe,
-    suite : ['util'],
-    env: ['BUILD_FULL_PATH='+process_test_exe_full_path]
   )
 
   subdir('tests/fast_idiv_by_const')

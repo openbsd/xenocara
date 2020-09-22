@@ -38,8 +38,6 @@
 #include "compiler/glsl/list.h"
 #include "util/ralloc.h"
 
-#include "drm-uapi/i915_drm.h"
-
 struct gen_device_info;
 
 struct gen_perf_config;
@@ -170,7 +168,6 @@ struct gen_perf_query_info {
       GEN_PERF_QUERY_TYPE_PIPELINE,
    } kind;
    const char *name;
-   const char *symbol_name;
    const char *guid;
    struct gen_perf_query_counter *counters;
    int n_counters;
@@ -192,14 +189,10 @@ struct gen_perf_query_info {
 };
 
 struct gen_perf_config {
-   /* Whether i915 has DRM_I915_QUERY_PERF_CONFIG support. */
    bool i915_query_supported;
 
    /* Version of the i915-perf subsystem, refer to i915_drm.h. */
    int i915_perf_version;
-
-   /* Powergating configuration for the running the query. */
-   struct drm_i915_gem_context_param_sseu sseu;
 
    struct gen_perf_query_info *queries;
    int n_queries;
@@ -227,11 +220,6 @@ struct gen_perf_config {
     * runtime
     */
    struct hash_table *oa_metrics_table;
-
-   /* When MDAPI hasn't configured the metric we need to use by the time the
-    * query begins, this OA metric is used as a fallback.
-    */
-   uint64_t fallback_raw_oa_metric;
 
    /* Location of the device's sysfs entry. */
    char sysfs_dev_dir[256];

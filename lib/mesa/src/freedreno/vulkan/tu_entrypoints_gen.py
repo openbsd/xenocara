@@ -27,7 +27,7 @@ import copy
 import functools
 import math
 import os
-import xml.etree.ElementTree as et
+import xml.etree.cElementTree as et
 
 from collections import OrderedDict, namedtuple
 from mako.template import Template
@@ -75,7 +75,7 @@ struct tu_dispatch_table {
 #ifdef ${e.guard}
   % endif
   % for layer in LAYERS:
-  VKAPI_ATTR ${e.return_type} ${e.prefixed_name(layer)}(${e.decl_params()});
+  ${e.return_type} ${e.prefixed_name(layer)}(${e.decl_params()});
   % endfor
   % if e.guard is not None:
 #endif // ${e.guard}
@@ -206,7 +206,7 @@ tu_entrypoint_is_enabled(int index, uint32_t core_version,
    % if not e.device_command:
       if (device) return false;
    % endif
-   % if e.name == 'vkGetInstanceProcAddr' or e.name == 'vkCreateInstance' or e.name == 'vkEnumerateInstanceExtensionProperties' or e.name == 'vkEnumerateInstanceLayerProperties' or e.name == 'vkEnumerateInstanceVersion':
+   % if e.name == 'vkCreateInstance' or e.name == 'vkEnumerateInstanceExtensionProperties' or e.name == 'vkEnumerateInstanceLayerProperties' or e.name == 'vkEnumerateInstanceVersion':
       return !device;
    % elif e.core_version:
       return instance && ${e.core_version.c_vk_version()} <= core_version;

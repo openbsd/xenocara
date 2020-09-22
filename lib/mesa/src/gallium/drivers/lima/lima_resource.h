@@ -31,7 +31,6 @@
 #define LIMA_MAX_MIP_LEVELS 13
 
 struct lima_screen;
-struct panfrost_minmax_cache;
 
 struct lima_resource_level {
    uint32_t width;
@@ -53,7 +52,6 @@ struct lima_resource {
    struct lima_damage_region damage;
    struct renderonly_scanout *scanout;
    struct lima_bo *bo;
-   struct panfrost_minmax_cache *index_cache;
    bool tiled;
 
    struct lima_resource_level levels[LIMA_MAX_MIP_LEVELS];
@@ -62,7 +60,7 @@ struct lima_resource {
 struct lima_surface {
    struct pipe_surface base;
    int tiled_w, tiled_h;
-   unsigned reload;
+   bool reload;
 };
 
 struct lima_transfer {

@@ -38,7 +38,7 @@ libxvmc_gallium = shared_library(
   cpp_args : cpp_vis_args,
   link_args : [xvmc_link_args, ld_args_gc_sections],
   include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_util, inc_gallium_winsys, inc_gallium_drivers,
+    inc_common, inc_util, inc_gallium_winsys, inc_gallium_drivers,
   ],
   link_whole : [libxvmc_st],
   link_with : [
@@ -51,12 +51,11 @@ libxvmc_gallium = shared_library(
   install : true,
   install_dir : xvmc_drivers_path,
   name_suffix : 'so',
-  version : '@0@.@1@.0'.format(XVMC_MAJOR, XVMC_MINOR),
 )
 
 foreach d : [[with_gallium_r600, 'r600'], [with_gallium_nouveau, 'nouveau']]
   if d[0]
-    xvmc_drivers += 'libXvMC@0@.so.@1@.@2@.0'.format(d[1], XVMC_MAJOR, XVMC_MINOR)
+    xvmc_drivers += 'libXvMC@0@.so'.format(d[1])
   endif
 endforeach
 

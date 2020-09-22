@@ -71,18 +71,12 @@ mir_print_mask(unsigned mask)
 }
 
 static void
-mir_print_swizzle(unsigned *swizzle, nir_alu_type T)
+mir_print_swizzle(unsigned *swizzle)
 {
-        unsigned sz = nir_alu_type_get_type_size(T);
-        unsigned comps = 128 / sz;
-
         printf(".");
 
-        for (unsigned i = 0; i < comps; ++i) {
-                unsigned C = swizzle[i];
-                assert(C < comps);
-                putchar(components[C]);
-        }
+        for (unsigned i = 0; i < 16; ++i)
+                putchar(components[swizzle[i]]);
 }
 
 static const char *
@@ -298,8 +292,7 @@ mir_print_instruction(midgard_instruction *ins)
 
                 if (ins->branch.target_type != TARGET_DISCARD)
                         printf(" %s -> block(%d)\n",
-                               ins->branch.target_type < 4 ?
-                                       branch_target_names[ins->branch.target_type] : "??",
+                               branch_target_names[ins->branch.target_type],
                                ins->branch.target_block);
 
                 return;
@@ -341,10 +334,8 @@ mir_print_instruction(midgard_instruction *ins)
         printf(" ");
         mir_print_index(ins->dest);
 
-        if (ins->dest) {
-                pan_print_alu_type(ins->dest_type, stdout);
+        if (ins->mask != 0xF)
                 mir_print_mask(ins->mask);
-        }
 
         printf(", ");
 
@@ -354,11 +345,7 @@ mir_print_instruction(midgard_instruction *ins)
                 mir_print_embedded_constant(ins, 0);
         else {
                 mir_print_index(ins->src[0]);
-
-                if (ins->src[0] != ~0) {
-                        pan_print_alu_type(ins->src_types[0], stdout);
-                        mir_print_swizzle(ins->swizzle[0], ins->src_types[0]);
-                }
+                mir_print_swizzle(ins->swizzle[0]);
         }
         printf(", ");
 
@@ -368,22 +355,16 @@ mir_print_instruction(midgard_instruction *ins)
                 mir_print_embedded_constant(ins, 1);
         else {
                 mir_print_index(ins->src[1]);
-
-                if (ins->src[1] != ~0) {
-                        pan_print_alu_type(ins->src_types[1], stdout);
-                        mir_print_swizzle(ins->swizzle[1], ins->src_types[1]);
-                }
+                mir_print_swizzle(ins->swizzle[1]);
         }
 
-        for (unsigned c = 2; c <= 3; ++c) {
-                printf(", ");
-                mir_print_index(ins->src[c]);
+        printf(", ");
+        mir_print_index(ins->src[2]);
+        mir_print_swizzle(ins->swizzle[2]);
 
-                if (ins->src[c] != ~0) {
-                        pan_print_alu_type(ins->src_types[c], stdout);
-                        mir_print_swizzle(ins->swizzle[c], ins->src_types[c]);
-                }
-        }
+        printf(", ");
+        mir_print_index(ins->src[3]);
+        mir_print_swizzle(ins->swizzle[3]);
 
         if (ins->no_spill)
                 printf(" /* no spill */");
@@ -396,9 +377,9 @@ mir_print_instruction(midgard_instruction *ins)
 void
 mir_print_block(midgard_block *block)
 {
-        printf("block%u: {\n", block->base.name);
+        printf("block%u: {\n", block->source_id);
 
-        if (block->scheduled) {
+        if (block->is_scheduled) {
                 mir_foreach_bundle_in_block(block, bundle) {
                         for (unsigned i = 0; i < bundle->instruction_count; ++i)
                                 mir_print_instruction(bundle->instructions[i]);
@@ -413,15 +394,17 @@ mir_print_block(midgard_block *block)
 
         printf("}");
 
-        if (block->base.successors[0]) {
+        if (block->nr_successors) {
                 printf(" -> ");
-                pan_foreach_successor((&block->base), succ)
-                        printf(" block%u ", succ->name);
+                for (unsigned i = 0; i < block->nr_successors; ++i) {
+                        printf("block%u%s", block->successors[i]->source_id,
+                                        (i + 1) != block->nr_successors ? ", " : "");
+                }
         }
 
         printf(" from { ");
         mir_foreach_predecessor(block, pred)
-                printf("block%u ", pred->base.name);
+                printf("block%u ", pred->source_id);
         printf("}");
 
         printf("\n\n");
@@ -431,6 +414,6 @@ void
 mir_print_shader(compiler_context *ctx)
 {
         mir_foreach_block(ctx, block) {
-                mir_print_block((midgard_block *) block);
+                mir_print_block(block);
         }
 }

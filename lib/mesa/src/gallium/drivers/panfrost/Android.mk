@@ -45,8 +45,7 @@ LOCAL_STATIC_LIBRARIES := \
 	libpanfrost_decode \
 	libpanfrost_encoder \
 	libpanfrost_midgard \
-	libpanfrost_shared \
-	libpanfrost_util \
+	libpanfrost_shared
 
 LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 

@@ -107,13 +107,10 @@ bool pred_by_exec_mask(aco_ptr<Instruction>& instr) {
    if (instr->format == Format::PSEUDO) {
       switch (instr->opcode) {
       case aco_opcode::p_create_vector:
+         return instr->definitions[0].getTemp().type() == RegType::vgpr;
       case aco_opcode::p_extract_vector:
       case aco_opcode::p_split_vector:
-         for (Definition def : instr->definitions) {
-            if (def.getTemp().type() == RegType::vgpr)
-               return true;
-         }
-         return false;
+         return instr->operands[0].getTemp().type() == RegType::vgpr;
       case aco_opcode::p_spill:
       case aco_opcode::p_reload:
          return false;
@@ -165,6 +162,12 @@ void mark_block_wqm(wqm_ctx &ctx, unsigned block_idx)
 
    ctx.branch_wqm[block_idx] = true;
    Block& block = ctx.program->blocks[block_idx];
+   aco_ptr<Instruction>& branch = block.instructions.back();
+
+   if (branch->opcode != aco_opcode::p_branch) {
+      assert(!branch->operands.empty() && branch->operands[0].isTemp());
+      set_needs_wqm(ctx, branch->operands[0].getTemp());
+   }
 
    /* TODO: this sets more branch conditions to WQM than it needs to
     * it should be enough to stop at the "exec mask top level" */
@@ -183,14 +186,11 @@ void get_block_needs(wqm_ctx &ctx, exec_ctx &exec_ctx, Block* block)
 
    if (block->kind & block_kind_top_level) {
       if (ctx.loop && ctx.wqm) {
+         /* mark all break conditions as WQM */
          unsigned block_idx = block->index + 1;
          while (!(ctx.program->blocks[block_idx].kind & block_kind_top_level)) {
-            /* flag all break conditions as WQM:
-             * the conditions might be computed outside the nested CF */
             if (ctx.program->blocks[block_idx].kind & block_kind_break)
                mark_block_wqm(ctx, block_idx);
-            /* flag all blocks as WQM to ensure we enter all (nested) loops in WQM */
-            exec_ctx.info[block_idx].block_needs |= WQM;
             block_idx++;
          }
       } else if (ctx.loop && !ctx.wqm) {
@@ -225,11 +225,6 @@ void get_block_needs(wqm_ctx &ctx, exec_ctx &exec_ctx, Block* block)
             needs = pred_by_exec ? WQM : Unspecified;
             propagate_wqm = true;
          }
-      }
-
-      if (instr->format == Format::PSEUDO_BRANCH && ctx.branch_wqm[block->index]) {
-         needs = WQM;
-         propagate_wqm = true;
       }
 
       if (propagate_wqm) {
@@ -379,7 +374,7 @@ unsigned add_coupling_code(exec_ctx& ctx, Block* block,
       bld.insert(std::move(startpgm));
 
       /* exec seems to need to be manually initialized with combined shaders */
-      if (util_bitcount(ctx.program->stage & sw_mask) > 1 || (ctx.program->stage & hw_ngg_gs)) {
+      if (util_bitcount(ctx.program->stage & sw_mask) > 1) {
          bld.sop1(Builder::s_mov, bld.exec(Definition(exec_mask)), bld.lm == s2 ? Operand(UINT64_MAX) : Operand(UINT32_MAX));
          instructions[0]->definitions.pop_back();
       }

@@ -30,7 +30,6 @@
 
 
 #include "postprocess.h"
-#include "cso_cache/cso_context.h"
 
 
 /**
@@ -49,7 +48,7 @@ struct pp_program
    struct pipe_sampler_state sampler_point;     /* point */
    struct pipe_viewport_state viewport;
    struct pipe_framebuffer_state framebuffer;
-   struct cso_velems_state velem;
+   struct pipe_vertex_element velem[2];
 
    union pipe_color_union clear_color;
 

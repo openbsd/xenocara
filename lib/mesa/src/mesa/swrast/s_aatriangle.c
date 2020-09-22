@@ -31,6 +31,7 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/macros.h"
+#include "main/imports.h"
 #include "main/state.h"
 #include "s_aatriangle.h"
 #include "s_context.h"
@@ -123,7 +124,7 @@ solve_plane_chan(GLfloat x, GLfloat y, const GLfloat plane[4])
       return 0;
    else if (z > CHAN_MAX)
       return CHAN_MAX;
-   return (GLchan) lroundf(z);
+   return (GLchan) IROUND_POS(z);
 #endif
 }
 

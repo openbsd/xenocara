@@ -26,7 +26,7 @@
 #include "gl_nir.h"
 #include "ir_uniform.h"
 
-#include "util/compiler.h"
+#include "main/compiler.h"
 #include "main/mtypes.h"
 
 static nir_ssa_def *

@@ -30,7 +30,6 @@
 
 #include "perf/gen_perf.h"
 #include "perf/gen_perf_mdapi.h"
-#include "perf/gen_perf_private.h"
 #include "perf/gen_perf_query.h"
 #include "perf/gen_perf_regs.h"
 
@@ -348,8 +347,6 @@ gen_perf_close(struct gen_perf_context *perfquery,
    }
 }
 
-#define NUM_PERF_PROPERTIES(array) (ARRAY_SIZE(array) / 2)
-
 static bool
 gen_perf_open(struct gen_perf_context *perf_ctx,
               int metrics_set_id,
@@ -369,17 +366,12 @@ gen_perf_open(struct gen_perf_context *perf_ctx,
       DRM_I915_PERF_PROP_OA_METRICS_SET, metrics_set_id,
       DRM_I915_PERF_PROP_OA_FORMAT, report_format,
       DRM_I915_PERF_PROP_OA_EXPONENT, period_exponent,
-
-      /* SSEU configuration */
-      DRM_I915_PERF_PROP_GLOBAL_SSEU, to_user_pointer(&perf_ctx->perf->sseu),
    };
    struct drm_i915_perf_open_param param = {
       .flags = I915_PERF_FLAG_FD_CLOEXEC |
                I915_PERF_FLAG_FD_NONBLOCK |
                I915_PERF_FLAG_DISABLED,
-      .num_properties = perf_ctx->perf->i915_perf_version >= 4 ?
-                        NUM_PERF_PROPERTIES(properties) :
-                        NUM_PERF_PROPERTIES(properties) - 1,
+      .num_properties = ARRAY_SIZE(properties) / 2,
       .properties_ptr = (uintptr_t) properties,
    };
    int fd = gen_ioctl(drm_fd, DRM_IOCTL_I915_PERF_OPEN, &param);
@@ -423,7 +415,7 @@ get_metric_id(struct gen_perf_config *perf,
    if (!gen_perf_load_metric_id(perf, query->guid,
                                 &raw_query->oa_metrics_set_id)) {
       DBG("Unable to read query guid=%s ID, falling back to test config\n", query->guid);
-      raw_query->oa_metrics_set_id = perf->fallback_raw_oa_metric;
+      raw_query->oa_metrics_set_id = 1ULL;
    } else {
       DBG("Raw query '%s'guid=%s loaded ID: %"PRIu64"\n",
           query->name, query->guid, query->oa_metrics_set_id);
@@ -1061,6 +1053,17 @@ gen_perf_wait_query(struct gen_perf_context *perf_ctx,
       perf_cfg->vtbl.batchbuffer_flush(perf_ctx->ctx, __FILE__, __LINE__);
 
    perf_cfg->vtbl.bo_wait_rendering(bo);
+
+   /* Due to a race condition between the OA unit signaling report
+    * availability and the report actually being written into memory,
+    * we need to wait for all the reports to come in before we can
+    * read them.
+    */
+   if (query->queryinfo->kind == GEN_PERF_QUERY_TYPE_OA ||
+       query->queryinfo->kind == GEN_PERF_QUERY_TYPE_RAW) {
+      while (!read_oa_samples_for_query(perf_ctx, query, current_batch))
+         ;
+   }
 }
 
 bool
@@ -1076,8 +1079,8 @@ gen_perf_is_query_ready(struct gen_perf_context *perf_ctx,
       return (query->oa.results_accumulated ||
               (query->oa.bo &&
                !perf_cfg->vtbl.batch_references(current_batch, query->oa.bo) &&
-               !perf_cfg->vtbl.bo_busy(query->oa.bo)));
-
+               !perf_cfg->vtbl.bo_busy(query->oa.bo) &&
+               read_oa_samples_for_query(perf_ctx, query, current_batch)));
    case GEN_PERF_QUERY_TYPE_PIPELINE:
       return (query->pipeline_stats.bo &&
               !perf_cfg->vtbl.batch_references(current_batch, query->pipeline_stats.bo) &&
@@ -1502,7 +1505,6 @@ get_pipeline_stats_data(struct gen_perf_context *perf_ctx,
 void
 gen_perf_get_query_data(struct gen_perf_context *perf_ctx,
                         struct gen_perf_query_object *query,
-                        void *current_batch,
                         int data_size,
                         unsigned *data,
                         unsigned *bytes_written)
@@ -1514,17 +1516,6 @@ gen_perf_get_query_data(struct gen_perf_context *perf_ctx,
    case GEN_PERF_QUERY_TYPE_OA:
    case GEN_PERF_QUERY_TYPE_RAW:
       if (!query->oa.results_accumulated) {
-         /* Due to the sampling frequency of the OA buffer by the i915-perf
-          * driver, there can be a 5ms delay between the Mesa seeing the query
-          * complete and i915 making all the OA buffer reports available to us.
-          * We need to wait for all the reports to come in before we can do
-          * the post processing removing unrelated deltas.
-          * There is a i915-perf series to address this issue, but it's
-          * not been merged upstream yet.
-          */
-         while (!read_oa_samples_for_query(perf_ctx, query, current_batch))
-            ;
-
          read_gt_frequency(perf_ctx, query);
          uint32_t *begin_report = query->oa.map;
          uint32_t *end_report = query->oa.map + MI_RPC_BO_END_OFFSET_BYTES;

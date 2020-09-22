@@ -47,7 +47,6 @@
 #define mkdir(dir, mode) _mkdir(dir)
 #endif
 
-struct pipe_screen;
 
 /* name of the directory in home */
 #define DD_DIR "ddebug_dumps"

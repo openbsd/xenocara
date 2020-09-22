@@ -107,6 +107,4 @@ void panfrost_instance_id(unsigned padded_count, union mali_attr *attr);
 enum mali_func
 panfrost_flip_compare_func(enum mali_func f);
 
-
-
 #endif

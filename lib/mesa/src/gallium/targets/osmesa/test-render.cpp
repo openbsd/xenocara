@@ -7,16 +7,9 @@
 #include <gtest/gtest.h>
 
 #include "GL/osmesa.h"
-#include "util/macros.h"
-#include "util/u_endian.h"
-#include "util/u_math.h"
 
-typedef struct {
-   unsigned format;
-   GLenum type;
-   int bpp;
-   uint64_t expected;
-} Params;
+
+typedef std::array<GLenum, 2> Params;
 
 class OSMesaRenderTestFixture : public testing::TestWithParam<Params> {};
 
@@ -24,7 +17,7 @@ std::string
 name_params(const testing::TestParamInfo<Params> params) {
    auto p = params.param;
    std::string first, second;
-   switch (p.format) {
+   switch (p[0]) {
    case OSMESA_RGBA:
       first = "rgba";
       break;
@@ -42,7 +35,7 @@ name_params(const testing::TestParamInfo<Params> params) {
       break;
    }
 
-   switch (p.type) {
+   switch (p[1]) {
    case GL_UNSIGNED_SHORT:
       second = "unsigned_short";
       break;
@@ -53,7 +46,7 @@ name_params(const testing::TestParamInfo<Params> params) {
       second = "float";
       break;
    case GL_UNSIGNED_SHORT_5_6_5:
-      second = "unsigned_short_565";
+      second = "unisgned_short_565";
       break;
    }
 
@@ -62,103 +55,47 @@ name_params(const testing::TestParamInfo<Params> params) {
 
 TEST_P(OSMesaRenderTestFixture, Render)
 {
-   auto p = GetParam();
-   const int w = 2, h = 2;
-   uint8_t pixels[w * h * 8] = { 0 };
+   auto params = GetParam();
+   uint32_t pixel = 0;
+   uint32_t expected;  // This should be green for the given color model
+   int w = 1, h = 1;
 
    std::unique_ptr<osmesa_context, decltype(&OSMesaDestroyContext)> ctx{
-      OSMesaCreateContext(p.format, NULL), &OSMesaDestroyContext};
+      OSMesaCreateContext(params[0], NULL), &OSMesaDestroyContext};
    ASSERT_TRUE(ctx);
 
-   auto ret = OSMesaMakeCurrent(ctx.get(), &pixels, p.type, w, h);
+   auto ret = OSMesaMakeCurrent(ctx.get(), &pixel, params[1], w, h);
    ASSERT_EQ(ret, GL_TRUE);
 
-   glClearColor(0.25, 1.0, 0.5, 0.75);
-
-   uint64_t expected = p.expected;
-
-   /* All the formats other than 565 and RGB/byte are array formats, but our
-    * expected values are packed, so byte swap appropriately.
-    */
-   if (UTIL_ARCH_BIG_ENDIAN) {
-      switch (p.bpp) {
-      case 8:
-         expected = util_bswap64(expected);
-         break;
-
-      case 4:
-         expected = util_bswap32(expected);
-         break;
-
-      case 3:
-      case 2:
-         break;
-      }
+   switch (params[0]) {
+   case OSMESA_RGBA:
+   case OSMESA_BGRA:
+   case OSMESA_RGB:
+      expected = 0xff << 8;
+      glClearColor(0, 1, 0, 0);
+      break;
+   case OSMESA_RGB_565:
+      expected = 0x3f << 5;
+      glClearColor(0, 1, 0, 0);
+      break;
+   case OSMESA_ARGB:
+      expected = 0xff << 24;
+      glClearColor(0, 0, 1, 0);
+      break;
    }
-
    glClear(GL_COLOR_BUFFER_BIT);
    glFinish();
 
-#if 0 /* XXX */
-   for (unsigned i = 0; i < ARRAY_SIZE(pixels); i += 4) {
-      fprintf(stderr, "pixel %d: %02x %02x %02x %02x\n",
-              i / 4,
-              pixels[i + 0],
-              pixels[i + 1],
-              pixels[i + 2],
-              pixels[i + 3]);
-   }
-#endif
-
-   for (unsigned i = 0; i < w * h; i++) {
-      switch (p.bpp) {
-      case 2: {
-         uint16_t color = 0;
-         memcpy(&color, &pixels[i * p.bpp], p.bpp);
-         ASSERT_EQ(expected, color);
-         break;
-      }
-
-      case 3: {
-         uint32_t color = ((pixels[i * p.bpp + 0] << 0) |
-                           (pixels[i * p.bpp + 1] << 8) |
-                           (pixels[i * p.bpp + 2] << 16));
-         ASSERT_EQ(expected, color);
-         break;
-      }
-
-      case 4: {
-         uint32_t color = 0;
-         memcpy(&color, &pixels[i * p.bpp], p.bpp);
-         ASSERT_EQ(expected, color);
-         break;
-      }
-
-      case 8: {
-         uint64_t color = 0;
-         memcpy(&color, &pixels[i * p.bpp], p.bpp);
-         ASSERT_EQ(expected, color);
-         break;
-      }
-
-      default:
-         unreachable("bad bpp");
-      }
-   }
+   ASSERT_EQ(expected, pixel);
 }
 
 INSTANTIATE_TEST_CASE_P(
    OSMesaRenderTest,
    OSMesaRenderTestFixture,
    testing::Values(
-      Params{ OSMESA_RGBA, GL_UNSIGNED_BYTE,  4, 0xbf80ff40 },
-      Params{ OSMESA_BGRA, GL_UNSIGNED_BYTE,  4, 0xbf40ff80 },
-      Params{ OSMESA_ARGB, GL_UNSIGNED_BYTE,  4, 0x80ff40bf},
-      Params{ OSMESA_RGB,  GL_UNSIGNED_BYTE,  3, 0x80ff40 },
-      Params{ OSMESA_RGBA, GL_UNSIGNED_SHORT, 8, 0xbfff8000ffff4000ull },
-      Params{ OSMESA_RGB_565, GL_UNSIGNED_SHORT_5_6_5, 2, ((0x10 << 0) |
-                                                           (0x3f << 5) |
-                                                           (0x8 << 11)) }
+      Params{ OSMESA_RGBA, GL_UNSIGNED_BYTE },
+      Params{ OSMESA_BGRA, GL_UNSIGNED_BYTE },
+      Params{ OSMESA_ARGB, GL_UNSIGNED_BYTE }
    ),
    name_params
 );

@@ -30,14 +30,13 @@
  * as such */
 
 static unsigned
-find_or_allocate_temp(compiler_context *ctx, struct hash_table_u64 *map,
-                unsigned hash)
+find_or_allocate_temp(compiler_context *ctx, unsigned hash)
 {
         if (hash >= SSA_FIXED_MINIMUM)
                 return hash;
 
         unsigned temp = (uintptr_t) _mesa_hash_table_u64_search(
-                                map, hash + 1);
+                                ctx->hash_to_temp, hash + 1);
 
         if (temp)
                 return temp - 1;
@@ -46,7 +45,7 @@ find_or_allocate_temp(compiler_context *ctx, struct hash_table_u64 *map,
         temp = ctx->temp_count++;
         ctx->max_hash = MAX2(ctx->max_hash, hash);
 
-        _mesa_hash_table_u64_insert(map,
+        _mesa_hash_table_u64_insert(ctx->hash_to_temp,
                                     hash + 1, (void *) ((uintptr_t) temp + 1));
 
         return temp;
@@ -58,10 +57,10 @@ find_or_allocate_temp(compiler_context *ctx, struct hash_table_u64 *map,
 void
 mir_squeeze_index(compiler_context *ctx)
 {
-        struct hash_table_u64 *map = _mesa_hash_table_u64_create(NULL);
-
         /* Reset */
         ctx->temp_count = 0;
+        /* TODO don't leak old hash_to_temp */
+        ctx->hash_to_temp = _mesa_hash_table_u64_create(NULL);
 
         /* We need to prioritize texture registers on older GPUs so we don't
          * fail RA trying to assign to work registers r0/r1 when a work
@@ -69,16 +68,14 @@ mir_squeeze_index(compiler_context *ctx)
 
         mir_foreach_instr_global(ctx, ins) {
                 if (ins->type == TAG_TEXTURE_4)
-                        ins->dest = find_or_allocate_temp(ctx, map, ins->dest);
+                        ins->dest = find_or_allocate_temp(ctx, ins->dest);
         }
 
         mir_foreach_instr_global(ctx, ins) {
                 if (ins->type != TAG_TEXTURE_4)
-                        ins->dest = find_or_allocate_temp(ctx, map, ins->dest);
+                        ins->dest = find_or_allocate_temp(ctx, ins->dest);
 
                 for (unsigned i = 0; i < ARRAY_SIZE(ins->src); ++i)
-                        ins->src[i] = find_or_allocate_temp(ctx, map, ins->src[i]);
+                        ins->src[i] = find_or_allocate_temp(ctx, ins->src[i]);
         }
-
-        _mesa_hash_table_u64_destroy(map, NULL);
 }

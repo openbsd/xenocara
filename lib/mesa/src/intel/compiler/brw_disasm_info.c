@@ -31,8 +31,7 @@ __attribute__((weak)) void nir_print_instr(UNUSED const nir_instr *instr,
                                            UNUSED FILE *fp) {}
 
 void
-dump_assembly(void *assembly, struct disasm_info *disasm,
-              const unsigned *block_latency)
+dump_assembly(void *assembly, struct disasm_info *disasm)
 {
    const struct gen_device_info *devinfo = disasm->devinfo;
    const char *last_annotation_string = NULL;
@@ -56,10 +55,7 @@ dump_assembly(void *assembly, struct disasm_info *disasm,
             struct bblock_t *predecessor_block = predecessor_link->block;
             fprintf(stderr, " <-B%d", predecessor_block->num);
          }
-         if (block_latency)
-            fprintf(stderr, " (%u cycles)",
-                    block_latency[group->block_start->num]);
-         fprintf(stderr, "\n");
+         fprintf(stderr, " (%u cycles)\n", group->block_start->cycle_count);
       }
 
       if (last_annotation_ir != group->ir) {

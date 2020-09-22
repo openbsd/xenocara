@@ -52,12 +52,12 @@
 
     <function name="VDPAUMapSurfacesNV">
 	<param name="numSurfaces" type="GLsizei"/>
-	<param name="surfaces" type="const GLintptr *" count="numSurfaces"/>
+	<param name="surfaces" type="const GLintptr *"/>
     </function>
 
     <function name="VDPAUUnmapSurfacesNV">
 	<param name="numSurfaces" type="GLsizei"/>
-	<param name="surfaces" type="const GLintptr *" count="numSurfaces"/>
+	<param name="surfaces" type="const GLintptr *"/>
     </function>
 
     <enum name="SURFACE_STATE_NV"      value="0x86EB"/>

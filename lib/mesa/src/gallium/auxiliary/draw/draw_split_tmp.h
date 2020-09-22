@@ -40,11 +40,7 @@ FUNC(FUNC_VARS)
                    max_count_loop, max_count_fan);
    }
 
-   if (prim == PIPE_PRIM_PATCHES) {
-      first = vsplit->draw->pt.vertices_per_patch;
-      incr = vsplit->draw->pt.vertices_per_patch;
-   } else
-      draw_pt_split_prim(prim, &first, &incr);
+   draw_pt_split_prim(prim, &first, &incr);
    /* sanitize primitive length */
    count = draw_pt_trim_count(count, first, incr);
    if (count < first)
@@ -79,7 +75,6 @@ FUNC(FUNC_VARS)
        * That is, remaining is implicitly trimmed.
        */
       switch (prim) {
-      case PIPE_PRIM_PATCHES:
       case PIPE_PRIM_POINTS:
       case PIPE_PRIM_LINES:
       case PIPE_PRIM_LINE_STRIP:

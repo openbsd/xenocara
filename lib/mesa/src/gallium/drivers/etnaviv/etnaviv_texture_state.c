@@ -98,8 +98,7 @@ etna_create_sampler_state_state(struct pipe_context *pipe,
       VIVS_TE_SAMPLER_CONFIG0_VWRAP(translate_texture_wrapmode(ss->wrap_t)) |
       VIVS_TE_SAMPLER_CONFIG0_MIN(translate_texture_filter(ss->min_img_filter)) |
       VIVS_TE_SAMPLER_CONFIG0_MIP(translate_texture_mipfilter(ss->min_mip_filter)) |
-      VIVS_TE_SAMPLER_CONFIG0_MAG(translate_texture_filter(ss->mag_img_filter)) |
-      VIVS_TE_SAMPLER_CONFIG0_ANISOTROPY(COND(ansio, etna_log2_fixp55(ss->max_anisotropy)));
+      VIVS_TE_SAMPLER_CONFIG0_MAG(translate_texture_filter(ss->mag_img_filter));
 
    /* ROUND_UV improves precision - but not compatible with NEAREST filter */
    if (ss->min_img_filter != PIPE_TEX_FILTER_NEAREST &&
@@ -151,7 +150,6 @@ etna_create_sampler_view_state(struct pipe_context *pctx, struct pipe_resource *
 {
    struct etna_sampler_view *sv = CALLOC_STRUCT(etna_sampler_view);
    struct etna_context *ctx = etna_context(pctx);
-   struct etna_screen *screen = ctx->screen;
    const uint32_t format = translate_texture_format(so->format);
    const bool ext = !!(format & EXT_FORMAT);
    const bool astc = !!(format & ASTC_FORMAT);
@@ -234,7 +232,8 @@ etna_create_sampler_view_state(struct pipe_context *pctx, struct pipe_resource *
       VIVS_TE_SAMPLER_LOG_SIZE_WIDTH(etna_log2_fixp55(res->base.width0)) |
       VIVS_TE_SAMPLER_LOG_SIZE_HEIGHT(etna_log2_fixp55(base_height)) |
       COND(util_format_is_srgb(so->format) && !astc, VIVS_TE_SAMPLER_LOG_SIZE_SRGB) |
-      COND(astc, VIVS_TE_SAMPLER_LOG_SIZE_ASTC);
+      COND(astc, VIVS_TE_SAMPLER_LOG_SIZE_ASTC) |
+      COND(texture_use_int_filter(so, false), VIVS_TE_SAMPLER_LOG_SIZE_INT_FILTER);
    sv->TE_SAMPLER_3D_CONFIG =
       VIVS_TE_SAMPLER_3D_CONFIG_DEPTH(base_depth) |
       VIVS_TE_SAMPLER_3D_CONFIG_LOG_DEPTH(etna_log2_fixp55(base_depth));
@@ -250,7 +249,7 @@ etna_create_sampler_view_state(struct pipe_context *pctx, struct pipe_resource *
 
    /* Workaround for npot textures -- it appears that only CLAMP_TO_EDGE is
     * supported when the appropriate capability is not set. */
-   if (!screen->specs.npot_tex_any_wrap &&
+   if (!ctx->specs.npot_tex_any_wrap &&
        (!util_is_power_of_two_or_zero(res->base.width0) ||
         !util_is_power_of_two_or_zero(res->base.height0))) {
       sv->TE_SAMPLER_CONFIG0_MASK = ~(VIVS_TE_SAMPLER_CONFIG0_UWRAP__MASK |
@@ -285,7 +284,6 @@ static void
 etna_emit_texture_state(struct etna_context *ctx)
 {
    struct etna_cmd_stream *stream = ctx->stream;
-   struct etna_screen *screen = ctx->screen;
    uint32_t active_samplers = active_samplers_bits(ctx);
    uint32_t dirty = ctx->dirty;
    struct etna_coalesce coalesce;
@@ -336,7 +334,6 @@ etna_emit_texture_state(struct etna_context *ctx)
       }
    }
    if (unlikely(dirty & (ETNA_DIRTY_SAMPLER_VIEWS))) {
-      struct etna_sampler_state *ss;
       struct etna_sampler_view *sv;
 
       for (int x = 0; x < VIVS_TE_SAMPLER__LEN; ++x) {
@@ -347,12 +344,7 @@ etna_emit_texture_state(struct etna_context *ctx)
       }
       for (int x = 0; x < VIVS_TE_SAMPLER__LEN; ++x) {
          if ((1 << x) & active_samplers) {
-            ss = etna_sampler_state(ctx->sampler[x]);
             sv = etna_sampler_view(ctx->sampler_view[x]);
-
-            if (texture_use_int_filter(&sv->base, &ss->base, false))
-               sv->TE_SAMPLER_LOG_SIZE |= VIVS_TE_SAMPLER_LOG_SIZE_INT_FILTER;
-
             /*02080*/ EMIT_STATE(TE_SAMPLER_LOG_SIZE(x), sv->TE_SAMPLER_LOG_SIZE);
          }
       }
@@ -415,7 +407,7 @@ etna_emit_texture_state(struct etna_context *ctx)
          }
       }
    }
-   if (unlikely(screen->specs.tex_astc && (dirty & (ETNA_DIRTY_SAMPLER_VIEWS)))) {
+   if (unlikely(ctx->specs.tex_astc && (dirty & (ETNA_DIRTY_SAMPLER_VIEWS)))) {
       for (int x = 0; x < VIVS_TE_SAMPLER__LEN; ++x) {
          if ((1 << x) & active_samplers) {
             struct etna_sampler_view *sv = etna_sampler_view(ctx->sampler_view[x]);
@@ -423,7 +415,7 @@ etna_emit_texture_state(struct etna_context *ctx)
          }
       }
    }
-   if (unlikely(screen->specs.halti >= 1 && (dirty & (ETNA_DIRTY_SAMPLER_VIEWS)))) {
+   if (unlikely(ctx->specs.halti >= 1 && (dirty & (ETNA_DIRTY_SAMPLER_VIEWS)))) {
       for (int x = 0; x < VIVS_TE_SAMPLER__LEN; ++x) {
          if ((1 << x) & active_samplers) {
             struct etna_sampler_state *ss = etna_sampler_state(ctx->sampler[x]);

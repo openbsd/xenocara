@@ -195,6 +195,20 @@ class nir_dead_write_vars_test : public nir_vars_test {};
 class nir_combine_stores_test : public nir_vars_test {};
 class nir_split_vars_test : public nir_vars_test {};
 
+void
+scoped_memory_barrier(nir_builder *b,
+                      nir_memory_semantics semantics,
+                      nir_variable_mode modes,
+                      nir_scope scope = NIR_SCOPE_DEVICE)
+{
+   nir_intrinsic_instr *intrin =
+      nir_intrinsic_instr_create(b->shader, nir_intrinsic_scoped_memory_barrier);
+   nir_intrinsic_set_memory_semantics(intrin, semantics);
+   nir_intrinsic_set_memory_modes(intrin, modes);
+   nir_intrinsic_set_memory_scope(intrin, scope);
+   nir_builder_instr_insert(b, &intrin->instr);
+}
+
 } // namespace
 
 static nir_ssa_def *
@@ -620,8 +634,7 @@ TEST_F(nir_copy_prop_vars_test, memory_barrier_in_two_blocks)
 
    nir_store_var(b, v[2], nir_load_var(b, v[0]), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQ_REL,
-                             nir_var_mem_ssbo);
+   nir_builder_instr_insert(b, &nir_intrinsic_instr_create(b->shader, nir_intrinsic_memory_barrier)->instr);
 
    nir_store_var(b, v[3], nir_load_var(b, v[1]), 1);
 
@@ -640,8 +653,7 @@ TEST_F(nir_redundant_load_vars_test, acquire_barrier_prevents_load_removal)
 
    nir_load_var(b, x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
 
@@ -658,8 +670,7 @@ TEST_F(nir_redundant_load_vars_test, acquire_barrier_prevents_same_mode_load_rem
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -680,8 +691,7 @@ TEST_F(nir_redundant_load_vars_test, acquire_barrier_allows_different_mode_load_
    nir_load_var(b, y[0]);
    nir_load_var(b, y[1]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -717,8 +727,7 @@ TEST_F(nir_redundant_load_vars_test, release_barrier_allows_load_removal)
 
    nir_load_var(b, x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
 
@@ -735,8 +744,7 @@ TEST_F(nir_redundant_load_vars_test, release_barrier_allows_same_mode_load_remov
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -757,8 +765,7 @@ TEST_F(nir_redundant_load_vars_test, release_barrier_allows_different_mode_load_
    nir_load_var(b, y[0]);
    nir_load_var(b, y[1]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -789,8 +796,7 @@ TEST_F(nir_copy_prop_vars_test, acquire_barrier_prevents_propagation)
 
    nir_store_var(b, x[0], nir_imm_int(b, 10), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
 
@@ -808,8 +814,7 @@ TEST_F(nir_copy_prop_vars_test, acquire_barrier_prevents_same_mode_propagation)
    nir_store_var(b, x[0], nir_imm_int(b, 10), 1);
    nir_store_var(b, x[1], nir_imm_int(b, 20), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -831,8 +836,7 @@ TEST_F(nir_copy_prop_vars_test, acquire_barrier_allows_different_mode_propagatio
    nir_store_var(b, y[0], nir_imm_int(b, 30), 1);
    nir_store_var(b, y[1], nir_imm_int(b, 40), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -871,8 +875,7 @@ TEST_F(nir_copy_prop_vars_test, release_barrier_allows_propagation)
 
    nir_store_var(b, x[0], nir_imm_int(b, 10), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
 
@@ -889,8 +892,7 @@ TEST_F(nir_copy_prop_vars_test, release_barrier_allows_same_mode_propagation)
    nir_store_var(b, x[0], nir_imm_int(b, 10), 1);
    nir_store_var(b, x[1], nir_imm_int(b, 20), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -912,8 +914,7 @@ TEST_F(nir_copy_prop_vars_test, release_barrier_allows_different_mode_propagatio
    nir_store_var(b, y[0], nir_imm_int(b, 30), 1);
    nir_store_var(b, y[1], nir_imm_int(b, 40), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_load_var(b, x[0]);
    nir_load_var(b, x[1]);
@@ -945,8 +946,7 @@ TEST_F(nir_copy_prop_vars_test, acquire_barrier_prevents_propagation_from_copy)
 
    nir_copy_var(b, x[1], x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_copy_var(b, x[2], x[1]);
 
@@ -971,8 +971,7 @@ TEST_F(nir_copy_prop_vars_test, acquire_barrier_prevents_propagation_from_copy_t
 
    nir_copy_var(b, y[0], x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQUIRE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_ACQUIRE, nir_var_mem_ssbo);
 
    nir_copy_var(b, x[1], y[0]);
 
@@ -996,8 +995,7 @@ TEST_F(nir_copy_prop_vars_test, release_barrier_allows_propagation_from_copy)
 
    nir_copy_var(b, x[1], x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_copy_var(b, x[2], x[1]);
 
@@ -1022,8 +1020,7 @@ TEST_F(nir_copy_prop_vars_test, release_barrier_allows_propagation_from_copy_to_
 
    nir_copy_var(b, y[0], x[0]);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_RELEASE,
-                             nir_var_mem_ssbo);
+   scoped_memory_barrier(b, NIR_MEMORY_RELEASE, nir_var_mem_ssbo);
 
    nir_copy_var(b, x[1], y[0]);
 
@@ -1345,48 +1342,6 @@ TEST_F(nir_dead_write_vars_test, no_dead_writes_different_components_in_block)
    ASSERT_FALSE(progress);
 }
 
-TEST_F(nir_dead_write_vars_test, volatile_write)
-{
-   nir_variable *v = create_int(nir_var_mem_ssbo, "v");
-
-   nir_store_var(b, v, nir_imm_int(b, 0), 0x1);
-   nir_store_var_volatile(b, v, nir_imm_int(b, 1), 0x1);
-   nir_store_var(b, v, nir_imm_int(b, 2), 0x1);
-
-   /* Our approach here is a bit scorched-earth.  We expect the volatile store
-    * in the middle to cause both that store and the one before it to be kept.
-    * Technically, volatile only prevents combining the volatile store with
-    * another store and one could argue that the store before the volatile and
-    * the one after it could be combined.  However, it seems safer to just
-    * treat a volatile store like an atomic and prevent any combining across
-    * it.
-    */
-   bool progress = nir_opt_dead_write_vars(b->shader);
-   ASSERT_FALSE(progress);
-}
-
-TEST_F(nir_dead_write_vars_test, volatile_copies)
-{
-   nir_variable **v = create_many_int(nir_var_mem_ssbo, "v", 2);
-
-   nir_copy_var(b, v[0], v[1]);
-   nir_copy_deref_with_access(b, nir_build_deref_var(b, v[0]),
-                                 nir_build_deref_var(b, v[1]),
-                                 ACCESS_VOLATILE, (gl_access_qualifier)0);
-   nir_copy_var(b, v[0], v[1]);
-
-   /* Our approach here is a bit scorched-earth.  We expect the volatile store
-    * in the middle to cause both that store and the one before it to be kept.
-    * Technically, volatile only prevents combining the volatile store with
-    * another store and one could argue that the store before the volatile and
-    * the one after it could be combined.  However, it seems safer to just
-    * treat a volatile store like an atomic and prevent any combining across
-    * it.
-    */
-   bool progress = nir_opt_dead_write_vars(b->shader);
-   ASSERT_FALSE(progress);
-}
-
 TEST_F(nir_dead_write_vars_test, no_dead_writes_in_if_statement)
 {
    nir_variable **v = create_many_int(nir_var_mem_ssbo, "v", 6);
@@ -1558,8 +1513,7 @@ TEST_F(nir_dead_write_vars_test, DISABLED_memory_barrier_in_two_blocks)
    /* Because it is before the barrier, this will kill the previous store to that target. */
    nir_store_var(b, v[0], nir_imm_int(b, 3), 1);
 
-   nir_scoped_memory_barrier(b, NIR_SCOPE_DEVICE, NIR_MEMORY_ACQ_REL,
-                             nir_var_mem_ssbo);
+   nir_builder_instr_insert(b, &nir_intrinsic_instr_create(b->shader, nir_intrinsic_memory_barrier)->instr);
 
    nir_store_var(b, v[1], nir_imm_int(b, 4), 1);
 
@@ -1755,59 +1709,6 @@ TEST_F(nir_combine_stores_test, direct_array_derefs)
    nir_intrinsic_instr *load_for_w = nir_src_as_intrinsic(vec->src[3].src);
    ASSERT_EQ(nir_intrinsic_get_var(load_for_w, 0), s[1]);
    ASSERT_EQ(vec->src[3].swizzle[0], 0);
-}
-
-static int64_t
-vec_src_comp_as_int(nir_src src, unsigned comp)
-{
-   if (nir_src_is_const(src))
-      return nir_src_comp_as_int(src, comp);
-
-   assert(src.is_ssa);
-   nir_ssa_scalar s = { src.ssa, comp };
-   assert(nir_op_is_vec(nir_ssa_scalar_alu_op(s)));
-   return nir_ssa_scalar_as_int(nir_ssa_scalar_chase_alu_src(s, comp));
-}
-
-TEST_F(nir_combine_stores_test, store_volatile)
-{
-   nir_variable *out = create_ivec4(nir_var_shader_out, "out");
-
-   nir_store_var(b, out, nir_imm_ivec4(b, 0, 0, 0, 0), 1 << 0);
-   nir_store_var(b, out, nir_imm_ivec4(b, 1, 1, 1, 1), 1 << 1);
-   nir_store_var_volatile(b, out, nir_imm_ivec4(b, -1, -2, -3, -4), 0xf);
-   nir_store_var(b, out, nir_imm_ivec4(b, 2, 2, 2, 2), 1 << 2);
-   nir_store_var(b, out, nir_imm_ivec4(b, 3, 3, 3, 3), 1 << 3);
-
-   nir_validate_shader(b->shader, NULL);
-
-   bool progress = nir_opt_combine_stores(b->shader, nir_var_shader_out);
-   ASSERT_TRUE(progress);
-
-   nir_validate_shader(b->shader, NULL);
-
-   /* Clean up the stored values */
-   nir_opt_constant_folding(b->shader);
-   nir_opt_dce(b->shader);
-
-   ASSERT_EQ(count_intrinsics(nir_intrinsic_store_deref), 3);
-
-   nir_intrinsic_instr *first = get_intrinsic(nir_intrinsic_store_deref, 0);
-   ASSERT_EQ(nir_intrinsic_write_mask(first), 0x3);
-   ASSERT_EQ(vec_src_comp_as_int(first->src[1], 0), 0);
-   ASSERT_EQ(vec_src_comp_as_int(first->src[1], 1), 1);
-
-   nir_intrinsic_instr *second = get_intrinsic(nir_intrinsic_store_deref, 1);
-   ASSERT_EQ(nir_intrinsic_write_mask(second), 0xf);
-   ASSERT_EQ(vec_src_comp_as_int(second->src[1], 0), -1);
-   ASSERT_EQ(vec_src_comp_as_int(second->src[1], 1), -2);
-   ASSERT_EQ(vec_src_comp_as_int(second->src[1], 2), -3);
-   ASSERT_EQ(vec_src_comp_as_int(second->src[1], 3), -4);
-
-   nir_intrinsic_instr *third = get_intrinsic(nir_intrinsic_store_deref, 2);
-   ASSERT_EQ(nir_intrinsic_write_mask(third), 0xc);
-   ASSERT_EQ(vec_src_comp_as_int(third->src[1], 2), 2);
-   ASSERT_EQ(vec_src_comp_as_int(third->src[1], 3), 3);
 }
 
 TEST_F(nir_split_vars_test, simple_split)

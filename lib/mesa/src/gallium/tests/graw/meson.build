@@ -29,7 +29,7 @@ foreach t : progs
   executable(
     'graw-' + t,
     t + '.c',
-    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+    include_directories : inc_common,
     link_with : [libgraw, libgraw_util, libgallium],
     dependencies : [dep_m, idep_mesautil],
   )

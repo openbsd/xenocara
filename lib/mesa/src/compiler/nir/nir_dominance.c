@@ -42,10 +42,6 @@ init_block(nir_block *block, nir_function_impl *impl)
       block->imm_dom = NULL;
    block->num_dom_children = 0;
 
-   /* See nir_block_dominates */
-   block->dom_pre_index = INT16_MAX;
-   block->dom_post_index = -1;
-
    set_foreach(block->dom_frontier, entry) {
       _mesa_set_remove(block->dom_frontier, entry);
    }
@@ -205,25 +201,18 @@ nir_calc_dominance(nir_shader *shader)
    }
 }
 
-static nir_block *
-block_return_if_reachable(nir_block *b)
-{
-   return (b && nir_block_is_reachable(b)) ? b : NULL;
-}
-
 /**
- * Computes the least common ancestor of two blocks.  If one of the blocks
- * is null or unreachable, the other block is returned or NULL if it's
- * unreachable.
+ * Computes the least common anscestor of two blocks.  If one of the blocks
+ * is null, the other block is returned.
  */
 nir_block *
 nir_dominance_lca(nir_block *b1, nir_block *b2)
 {
-   if (b1 == NULL || !nir_block_is_reachable(b1))
-      return block_return_if_reachable(b2);
+   if (b1 == NULL)
+      return b2;
 
-   if (b2 == NULL || !nir_block_is_reachable(b2))
-      return block_return_if_reachable(b1);
+   if (b2 == NULL)
+      return b1;
 
    assert(nir_cf_node_get_function(&b1->cf_node) ==
           nir_cf_node_get_function(&b2->cf_node));
@@ -235,15 +224,7 @@ nir_dominance_lca(nir_block *b1, nir_block *b2)
 }
 
 /**
- * Returns true if parent dominates child according to the following
- * definition:
- *
- *    "The block A dominates the block B if every path from the start block
- *    to block B passes through A."
- *
- * This means, in particular, that any unreachable block is dominated by every
- * other block and an unreachable block does not dominate anything except
- * another unreachable block.
+ * Returns true if parent dominates child
  */
 bool
 nir_block_dominates(nir_block *parent, nir_block *child)
@@ -254,10 +235,6 @@ nir_block_dominates(nir_block *parent, nir_block *child)
    assert(nir_cf_node_get_function(&parent->cf_node)->valid_metadata &
           nir_metadata_dominance);
 
-   /* If a block is unreachable, then nir_block::dom_pre_index == INT16_MAX
-    * and nir_block::dom_post_index == -1.  This allows us to trivially handle
-    * unreachable blocks here with zero extra work.
-    */
    return child->dom_pre_index >= parent->dom_pre_index &&
           child->dom_post_index <= parent->dom_post_index;
 }

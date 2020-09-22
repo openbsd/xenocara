@@ -30,7 +30,6 @@
 #include "texobj.h"
 #include "glformats.h"
 #include "texstorage.h"
-#include "util/u_memory.h"
 
 /**
  * Allocate and initialize a new memory object.  But don't put it into the
@@ -735,6 +734,7 @@ _mesa_WaitSemaphoreEXT(GLuint semaphore,
       return;
 
    FLUSH_VERTICES(ctx, 0);
+   FLUSH_CURRENT(ctx, 0);
 
    bufObjs = malloc(sizeof(struct gl_buffer_object *) * numBufferBarriers);
    if (!bufObjs) {
@@ -795,6 +795,7 @@ _mesa_SignalSemaphoreEXT(GLuint semaphore,
       return;
 
    FLUSH_VERTICES(ctx, 0);
+   FLUSH_CURRENT(ctx, 0);
 
    bufObjs = malloc(sizeof(struct gl_buffer_object *) * numBufferBarriers);
    if (!bufObjs) {

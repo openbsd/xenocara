@@ -37,6 +37,7 @@
 
 #include "pipe/p_compiler.h"
 #include "pipe/p_format.h"
+#include "util/u_debug_gallium.h"
 #include "util/format/u_format.h"
 #include "util/u_math.h"
 
@@ -429,18 +430,10 @@ util_pack_color(const float rgba[4], enum pipe_format format, union util_color *
    /* Handle other cases with a generic function.
     */
    default:
-      util_format_pack_rgba(format, uc, rgba, 1);
+      util_format_write_4f(format, rgba, 0, uc, 0, 0, 0, 1, 1);
    }
 }
-
-static inline void
-util_pack_color_union(enum pipe_format format,
-                      union util_color *dst,
-                      const union pipe_color_union *src)
-{
-   util_format_pack_rgba(format, dst, &src->ui, 1);
-}
-
+ 
 /* Integer versions of util_pack_z and util_pack_z_stencil - useful for
  * constructing clear masks.
  */
@@ -462,8 +455,7 @@ util_pack_mask_z(enum pipe_format format, uint32_t z)
    case PIPE_FORMAT_S8_UINT:
       return 0;
    default:
-      debug_printf("gallium: unhandled format in util_pack_mask_z(): %s\n",
-                   util_format_name(format));
+      debug_print_format("gallium: unhandled format in util_pack_mask_z()", format);
       assert(0);
       return 0;
    }
@@ -559,8 +551,7 @@ util_pack_z(enum pipe_format format, double z)
       /* this case can get it via util_pack_z_stencil() */
       return 0;
    default:
-      debug_printf("gallium: unhandled format in util_pack_z(): %s\n",
-                   util_format_name(format));
+      debug_print_format("gallium: unhandled format in util_pack_z()", format);
       assert(0);
       return 0;
    }

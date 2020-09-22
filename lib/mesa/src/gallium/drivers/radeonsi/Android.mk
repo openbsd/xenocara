@@ -21,8 +21,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-ifeq ($(MESA_ENABLE_LLVM),true)
-
 LOCAL_PATH := $(call my-dir)
 
 # get C_SOURCES and GENERATED_SOURCES
@@ -98,5 +96,3 @@ $(eval GALLIUM_LIBS += \
 	libmesa_winsys_amdgpu)
 $(eval GALLIUM_SHARED_LIBS += $(LOCAL_SHARED_LIBRARIES))
 endif
-
-endif # MESA_ENABLE_LLVM==true

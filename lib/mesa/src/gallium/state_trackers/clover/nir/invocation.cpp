@@ -109,7 +109,7 @@ module clover::nir::spirv_to_nir(const module &mod, const device &dev,
 
       // Inline all functions first.
       // according to the comment on nir_inline_functions
-      NIR_PASS_V(nir, nir_lower_variable_initializers, nir_var_function_temp);
+      NIR_PASS_V(nir, nir_lower_constant_initializers, nir_var_function_temp);
       NIR_PASS_V(nir, nir_lower_returns);
       NIR_PASS_V(nir, nir_inline_functions);
       NIR_PASS_V(nir, nir_opt_deref);
@@ -123,7 +123,7 @@ module clover::nir::spirv_to_nir(const module &mod, const device &dev,
 
       nir_validate_shader(nir, "clover after function inlining");
 
-      NIR_PASS_V(nir, nir_lower_variable_initializers,
+      NIR_PASS_V(nir, nir_lower_constant_initializers,
                  static_cast<nir_variable_mode>(~nir_var_function_temp));
 
       // copy propagate to prepare for lower_explicit_io

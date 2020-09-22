@@ -35,8 +35,6 @@ struct nir_shader;
 
 void lima_program_optimize_vs_nir(struct nir_shader *s);
 
-struct nir_lower_tex_options;
-void lima_program_optimize_fs_nir(struct nir_shader *s,
-                             struct nir_lower_tex_options *tex_options);
+void lima_program_optimize_fs_nir(struct nir_shader *s);
 
 #endif

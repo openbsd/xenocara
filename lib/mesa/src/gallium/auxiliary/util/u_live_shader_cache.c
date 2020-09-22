@@ -71,8 +71,7 @@ util_live_shader_cache_deinit(struct util_live_shader_cache *cache)
 void *
 util_live_shader_cache_get(struct pipe_context *ctx,
                            struct util_live_shader_cache *cache,
-                           const struct pipe_shader_state *state,
-                           bool* cache_hit)
+                           const struct pipe_shader_state *state)
 {
    struct blob blob = {0};
    unsigned ir_size;
@@ -124,9 +123,6 @@ util_live_shader_cache_get(struct pipe_context *ctx,
       cache->hits++;
    }
    simple_mtx_unlock(&cache->lock);
-
-   if (cache_hit)
-      *cache_hit = (shader != NULL);
 
    /* Return if the shader already exists. */
    if (shader) {

@@ -89,14 +89,6 @@ nir_make_options(const struct pipe_blend_state *blend, unsigned i)
 {
         nir_lower_blend_options options;
 
-        if (blend->logicop_enable) {
-            options.logicop_enable = true;
-            options.logicop_func = blend->logicop_func;
-            return options;
-        }
-
-        options.logicop_enable = false;
-
         /* If blend is disabled, we just use replace mode */
 
         nir_lower_blend_channel rgb = {
@@ -138,7 +130,7 @@ panfrost_compile_blend_shader(
         enum pipe_format format,
         unsigned rt)
 {
-        struct panfrost_device *dev = pan_device(ctx->base.screen);
+        struct panfrost_screen *screen = pan_screen(ctx->base.screen);
         struct panfrost_blend_shader res;
 
         res.ctx = ctx;
@@ -173,16 +165,14 @@ panfrost_compile_blend_shader(
 
         nir_lower_blend_options options =
                 nir_make_options(cso, rt);
-        options.format = format;
-
         NIR_PASS_V(shader, nir_lower_blend, options);
 
-        NIR_PASS_V(shader, nir_lower_framebuffer, format, dev->gpu_id);
+        NIR_PASS_V(shader, nir_lower_framebuffer, format, screen->gpu_id);
 
         /* Compile the built shader */
 
-        panfrost_program program;
-        midgard_compile_shader_nir(shader, &program, true, rt, dev->gpu_id, false);
+        midgard_program program;
+        midgard_compile_shader_nir(shader, &program, true, rt, screen->gpu_id, false);
 
         /* Allow us to patch later */
         res.patch_index = program.blend_patch_offset;

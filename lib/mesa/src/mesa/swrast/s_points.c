@@ -38,7 +38,7 @@
    do {                                              \
       float tmp = (V)->attrib[VARYING_SLOT_POS][0]   \
                 + (V)->attrib[VARYING_SLOT_POS][1];  \
-      if (util_is_inf_or_nan(tmp))                   \
+      if (IS_INF_OR_NAN(tmp))                        \
 	 return;                                     \
    } while(0)
 

@@ -25,8 +25,8 @@
 #ifndef H_LIMA_CONTEXT
 #define H_LIMA_CONTEXT
 
-#include "util/list.h"
 #include "util/slab.h"
+#include "util/u_dynarray.h"
 
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
@@ -39,16 +39,22 @@ struct lima_context_framebuffer {
    int shift_min;
 };
 
+struct lima_context_clear {
+   unsigned buffers;
+   uint32_t color_8pc;
+   uint32_t depth;
+   uint32_t stencil;
+   uint64_t color_16pc;
+};
+
 struct lima_depth_stencil_alpha_state {
    struct pipe_depth_stencil_alpha_state base;
 };
 
 struct lima_fs_shader_state {
-   struct pipe_shader_state base;
    void *shader;
    int shader_size;
    int stack_size;
-   uint8_t swizzles[PIPE_MAX_SAMPLERS][4];
    bool uses_discard;
    struct lima_bo *bo;
 };
@@ -119,12 +125,14 @@ enum lima_ctx_buff {
    lima_ctx_buff_gp_varying_info,
    lima_ctx_buff_gp_attribute_info,
    lima_ctx_buff_gp_uniform,
+   lima_ctx_buff_gp_vs_cmd,
+   lima_ctx_buff_gp_plbu_cmd,
    lima_ctx_buff_pp_plb_rsw,
    lima_ctx_buff_pp_uniform_array,
    lima_ctx_buff_pp_uniform,
    lima_ctx_buff_pp_tex_desc,
+   lima_ctx_buff_pp_stack,
    lima_ctx_buff_num,
-   lima_ctx_buff_num_gp = lima_ctx_buff_pp_plb_rsw,
 };
 
 struct lima_ctx_buff_state {
@@ -141,24 +149,21 @@ struct lima_texture_stateobj {
 };
 
 struct lima_ctx_plb_pp_stream_key {
-   uint16_t plb_index;
-   /* Coordinates are in tiles */
-   uint16_t minx, miny, maxx, maxy;
-   /* FB params */
-   uint16_t shift_w, shift_h;
-   uint16_t block_w, block_h;
+   uint32_t plb_index;
+   uint32_t tiled_w;
+   uint32_t tiled_h;
 };
 
 struct lima_ctx_plb_pp_stream {
-   struct list_head lru_list;
    struct lima_ctx_plb_pp_stream_key key;
+   uint32_t refcnt;
    struct lima_bo *bo;
-   uint32_t offset[8];
+   uint32_t offset[4];
 };
 
 struct lima_pp_stream_state {
-   void *map;
-   uint32_t va;
+   struct lima_bo *bo;
+   uint32_t bo_offset;
    uint32_t offset[8];
 };
 
@@ -183,6 +188,8 @@ struct lima_context {
       LIMA_CONTEXT_DIRTY_TEXTURES     = (1 << 14),
    } dirty;
 
+   unsigned resolve;
+
    struct u_upload_mgr *uploader;
    struct blitter_context *blitter;
 
@@ -191,7 +198,8 @@ struct lima_context {
    struct lima_context_framebuffer framebuffer;
    struct lima_context_viewport_state viewport;
    struct pipe_scissor_state scissor;
-   struct pipe_scissor_state clipped_scissor;
+   struct pipe_scissor_state damage_rect;
+   struct lima_context_clear clear;
    struct lima_vs_shader_state *vs;
    struct lima_fs_shader_state *fs;
    struct lima_vertex_element_state *vertex_elements;
@@ -224,28 +232,21 @@ struct lima_context {
    uint32_t gp_output_point_size_offt;
 
    struct hash_table *plb_pp_stream;
-   struct list_head plb_pp_stream_lru_list;
    uint32_t plb_index;
-   size_t plb_stream_cache_size;
 
    struct lima_ctx_buff_state buffer_state[lima_ctx_buff_num];
 
-   /* current job */
-   struct lima_job *job;
+   struct util_dynarray vs_cmd_array;
+   struct util_dynarray plbu_cmd_array;
 
-   /* map from lima_job_key to lima_job */
-   struct hash_table *jobs;
-
-   /* map from pipe_resource to lima_job which write to it */
-   struct hash_table *write_jobs;
-
-   int in_sync_fd;
-   uint32_t in_sync[2];
-   uint32_t out_sync[2];
+   struct lima_submit *gp_submit;
+   struct lima_submit *pp_submit;
 
    int id;
 
    struct pipe_debug_callback debug;
+
+   int pp_max_stack_size;
 
    unsigned index_offset;
    struct lima_resource *index_res;
@@ -277,7 +278,11 @@ lima_sampler_view(struct pipe_sampler_view *psview)
    return (struct lima_sampler_view *)psview;
 }
 
-uint32_t lima_ctx_buff_va(struct lima_context *ctx, enum lima_ctx_buff buff);
+#define LIMA_CTX_BUFF_SUBMIT_GP (1 << 0)
+#define LIMA_CTX_BUFF_SUBMIT_PP (1 << 1)
+
+uint32_t lima_ctx_buff_va(struct lima_context *ctx, enum lima_ctx_buff buff,
+                          unsigned submit);
 void *lima_ctx_buff_map(struct lima_context *ctx, enum lima_ctx_buff buff);
 void *lima_ctx_buff_alloc(struct lima_context *ctx, enum lima_ctx_buff buff,
                           unsigned size);
@@ -292,9 +297,8 @@ struct pipe_context *
 lima_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags);
 
 void lima_flush(struct lima_context *ctx);
-void lima_flush_job_accessing_bo(
-   struct lima_context *ctx, struct lima_bo *bo, bool write);
-void lima_flush_previous_job_writing_resource(
-   struct lima_context *ctx, struct pipe_resource *prsc);
+
+bool lima_need_flush(struct lima_context *ctx, struct lima_bo *bo, bool write);
+bool lima_is_scanout(struct lima_context *ctx);
 
 #endif

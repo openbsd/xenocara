@@ -74,7 +74,7 @@
 //=================================================================================================================================
 // Data types for the caller
 //=================================================================================================================================
-enum D3D11_TESSELLATOR_PARTITIONING
+typedef enum D3D11_TESSELLATOR_PARTITIONING
 {
     D3D11_TESSELLATOR_PARTITIONING_INTEGER,
     D3D11_TESSELLATOR_PARTITIONING_POW2,
@@ -82,20 +82,20 @@ enum D3D11_TESSELLATOR_PARTITIONING
     D3D11_TESSELLATOR_PARTITIONING_FRACTIONAL_EVEN
 };
 
-enum D3D11_TESSELLATOR_REDUCTION
+typedef enum D3D11_TESSELLATOR_REDUCTION
 {
     D3D11_TESSELLATOR_REDUCTION_MIN,
     D3D11_TESSELLATOR_REDUCTION_MAX,
     D3D11_TESSELLATOR_REDUCTION_AVERAGE
 };
 
-enum D3D11_TESSELLATOR_QUAD_REDUCTION_AXIS
+typedef enum D3D11_TESSELLATOR_QUAD_REDUCTION_AXIS
 {
     D3D11_TESSELLATOR_QUAD_REDUCTION_1_AXIS,
     D3D11_TESSELLATOR_QUAD_REDUCTION_2_AXIS
 };
 
-enum D3D11_TESSELLATOR_OUTPUT_PRIMITIVE
+typedef enum D3D11_TESSELLATOR_OUTPUT_PRIMITIVE
 {
     D3D11_TESSELLATOR_OUTPUT_POINT,
     D3D11_TESSELLATOR_OUTPUT_LINE,
@@ -177,7 +177,7 @@ public:
     static const int TRI_EDGES = 3;
     //=============================================================================================================================
 
-    enum TESSELLATOR_PARITY // derived from D3D11_TESSELLATOR_PARTITIONING
+    typedef enum TESSELLATOR_PARITY // derived from D3D11_TESSELLATOR_PARTITIONING
     {                               // (note: for integer tessellation, both parities are used)
         TESSELLATOR_PARITY_EVEN,
         TESSELLATOR_PARITY_ODD
@@ -310,7 +310,7 @@ private:
                                                int outsideEdgePointBaseOffset, int outsideNumHalfTessFactorPoints,
                                                TESSELLATOR_PARITY outsideEdgeTessFactorParity );
     // The interior can just use a simpler stitch.
-    enum DIAGONALS
+    typedef enum DIAGONALS
     {
         DIAGONALS_INSIDE_TO_OUTSIDE,
         DIAGONALS_INSIDE_TO_OUTSIDE_EXCEPT_MIDDLE,

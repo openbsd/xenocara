@@ -1095,13 +1095,8 @@ wsi_common_acquire_next_image2(const struct wsi_device *wsi,
 
    VkResult result = swapchain->acquire_next_image(swapchain, pAcquireInfo,
                                                    pImageIndex);
-   if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+   if (result != VK_SUCCESS)
       return result;
-
-   if (wsi->set_memory_ownership) {
-      VkDeviceMemory mem = swapchain->get_wsi_image(swapchain, *pImageIndex)->memory;
-      wsi->set_memory_ownership(swapchain->device, mem, true);
-   }
 
    if (pAcquireInfo->semaphore != VK_NULL_HANDLE &&
        wsi->signal_semaphore_for_memory != NULL) {
@@ -1119,7 +1114,7 @@ wsi_common_acquire_next_image2(const struct wsi_device *wsi,
                                    image->memory);
    }
 
-   return result;
+   return VK_SUCCESS;
 }
 
 VkResult
@@ -1221,13 +1216,8 @@ wsi_common_queue_present(const struct wsi_device *wsi,
          region = &regions->pRegions[i];
 
       result = swapchain->queue_present(swapchain, image_index, region);
-      if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+      if (result != VK_SUCCESS)
          goto fail_present;
-
-      if (wsi->set_memory_ownership) {
-         VkDeviceMemory mem = swapchain->get_wsi_image(swapchain, image_index)->memory;
-         wsi->set_memory_ownership(swapchain->device, mem, false);
-      }
 
    fail_present:
       if (pPresentInfo->pResults != NULL)

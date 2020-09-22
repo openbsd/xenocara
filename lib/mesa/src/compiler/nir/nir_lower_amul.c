@@ -61,8 +61,6 @@ typedef struct {
     */
    bool has_large_ubo;
    bool has_large_ssbo;
-
-   unsigned max_slot;
 } lower_state;
 
 /* Lower 'amul's in offset src of large variables to 'imul': */
@@ -101,9 +99,7 @@ large_ubo(lower_state *state, nir_src src)
 {
    if (!nir_src_is_const(src))
       return state->has_large_ubo;
-   unsigned idx = nir_src_as_uint(src);
-   assert(idx < state->max_slot);
-   return state->large_ubos[idx];
+   return state->large_ubos[nir_src_as_uint(src)];
 }
 
 static bool
@@ -111,9 +107,7 @@ large_ssbo(lower_state *state, nir_src src)
 {
    if (!nir_src_is_const(src))
       return state->has_large_ssbo;
-   unsigned idx = nir_src_as_uint(src);
-   assert(idx < state->max_slot);
-   return state->large_ssbos[idx];
+   return state->large_ssbos[nir_src_as_uint(src)];
 }
 
 static bool
@@ -215,8 +209,7 @@ lower_instr(lower_state *state, nir_instr *instr)
 static bool
 is_large(lower_state *state, nir_variable *var)
 {
-   const struct glsl_type *type = glsl_without_array(var->type);
-   unsigned size = state->type_size(type, false);
+   unsigned size = state->type_size(var->type, false);
 
    /* if size is not known (ie. VLA) then assume the worst: */
    if (!size)
@@ -233,23 +226,15 @@ nir_lower_amul(nir_shader *shader,
    assert(type_size);
 
    /* uniforms list actually includes ubo's and ssbo's: */
-   int max_slot = 0;
+   int num_uniforms = exec_list_length(&shader->uniforms);
 
-   nir_foreach_variable (var, &shader->uniforms) {
-      int base = var->data.binding;
-      int size = MAX2(1, glsl_array_size(var->type));
-
-      max_slot = MAX2(max_slot, base + size);
-   }
-
-   NIR_VLA_FILL(bool, large_ubos, max_slot, 0);
-   NIR_VLA_FILL(bool, large_ssbos, max_slot, 0);
+   NIR_VLA_FILL(bool, large_ubos, num_uniforms, 0);
+   NIR_VLA_FILL(bool, large_ssbos, num_uniforms, 0);
 
    lower_state state = {
          .type_size = type_size,
          .large_ubos = large_ubos,
          .large_ssbos = large_ssbos,
-         .max_slot = max_slot,
    };
 
    /* Figure out which UBOs or SSBOs are large enough to be
@@ -257,18 +242,16 @@ nir_lower_amul(nir_shader *shader,
     */
    nir_foreach_variable(var, &shader->uniforms) {
       if (var->data.mode == nir_var_mem_ubo) {
+         assert(var->data.driver_location < num_uniforms);
          if (is_large(&state, var)) {
             state.has_large_ubo = true;
-            unsigned size = MAX2(1, glsl_array_size(var->type));
-            for (unsigned i = 0; i < size; i++)
-               state.large_ubos[var->data.binding + i] = true;
+            state.large_ubos[var->data.driver_location] = true;
          }
       } else if (var->data.mode == nir_var_mem_ssbo) {
+         assert(var->data.driver_location < num_uniforms);
          if (is_large(&state, var)) {
             state.has_large_ssbo = true;
-            unsigned size = MAX2(1, glsl_array_size(var->type));
-            for (unsigned i = 0; i < size; i++)
-               state.large_ssbos[var->data.binding + i] = true;
+            state.large_ssbos[var->data.driver_location] = true;
          }
       }
    }

@@ -66,11 +66,6 @@ enum pb_usage_flags {
    PB_USAGE_GPU_WRITE = (1 << 3),
    PB_USAGE_DONTBLOCK = (1 << 9),
    PB_USAGE_UNSYNCHRONIZED = (1 << 10),
-   /* Persistent mappings may remain across a flush. Note that contrary
-    * to OpenGL persistent maps, there is no requirement at the pipebuffer
-    * api level to explicitly enforce coherency by barriers or range flushes.
-    */
-   PB_USAGE_PERSISTENT = (1 << 13)
 };
 
 /* For error checking elsewhere */
@@ -79,8 +74,7 @@ enum pb_usage_flags {
                       PB_USAGE_GPU_READ | \
                       PB_USAGE_GPU_WRITE | \
                       PB_USAGE_DONTBLOCK | \
-                      PB_USAGE_UNSYNCHRONIZED | \
-                      PB_USAGE_PERSISTENT)
+                      PB_USAGE_UNSYNCHRONIZED)
 
 #define PB_USAGE_CPU_READ_WRITE  (PB_USAGE_CPU_READ | PB_USAGE_CPU_WRITE)
 #define PB_USAGE_GPU_READ_WRITE  (PB_USAGE_GPU_READ | PB_USAGE_GPU_WRITE)

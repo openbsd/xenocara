@@ -136,7 +136,7 @@ mark_available(struct iris_context *ice, struct iris_query *q)
    offset += q->query_state_ref.offset;
 
    if (!iris_is_query_pipelined(q)) {
-      batch->screen->vtbl.store_data_imm64(batch, bo, offset, true);
+      ice->vtbl.store_data_imm64(batch, bo, offset, true);
    } else {
       /* Order available *after* the query results. */
       flags |= PIPE_CONTROL_FLUSH_ENABLE;
@@ -205,14 +205,14 @@ write_value(struct iris_context *ice, struct iris_query *q, unsigned offset)
                            offset);
       break;
    case PIPE_QUERY_PRIMITIVES_GENERATED:
-      batch->screen->vtbl.store_register_mem64(batch,
+      ice->vtbl.store_register_mem64(batch,
                                      q->index == 0 ?
                                      GENX(CL_INVOCATION_COUNT_num) :
                                      SO_PRIM_STORAGE_NEEDED(q->index),
                                      bo, offset, false);
       break;
    case PIPE_QUERY_PRIMITIVES_EMITTED:
-      batch->screen->vtbl.store_register_mem64(batch,
+      ice->vtbl.store_register_mem64(batch,
                                      SO_NUM_PRIMS_WRITTEN(q->index),
                                      bo, offset, false);
       break;
@@ -232,7 +232,7 @@ write_value(struct iris_context *ice, struct iris_query *q, unsigned offset)
       };
       const uint32_t reg = index_to_reg[q->index];
 
-      batch->screen->vtbl.store_register_mem64(batch, reg, bo, offset, false);
+      ice->vtbl.store_register_mem64(batch, reg, bo, offset, false);
       break;
    }
    default:
@@ -258,9 +258,9 @@ write_overflow_values(struct iris_context *ice, struct iris_query *q, bool end)
                            stream[s].num_prims[end]);
       int w_idx = offset + offsetof(struct iris_query_so_overflow,
                            stream[s].prim_storage_needed[end]);
-      batch->screen->vtbl.store_register_mem64(batch, SO_NUM_PRIMS_WRITTEN(s),
+      ice->vtbl.store_register_mem64(batch, SO_NUM_PRIMS_WRITTEN(s),
                                      bo, g_idx, false);
-      batch->screen->vtbl.store_register_mem64(batch, SO_PRIM_STORAGE_NEEDED(s),
+      ice->vtbl.store_register_mem64(batch, SO_PRIM_STORAGE_NEEDED(s),
                                      bo, w_idx, false);
    }
 }
@@ -675,7 +675,7 @@ iris_get_query_result_resource(struct pipe_context *ctx,
       if (q->syncpt == iris_batch_get_signal_syncpt(batch))
          iris_batch_flush(batch);
 
-      batch->screen->vtbl.copy_mem_mem(batch, dst_bo, offset,
+      ice->vtbl.copy_mem_mem(batch, dst_bo, offset,
                              query_bo, snapshots_landed_offset,
                              result_type <= PIPE_QUERY_TYPE_U32 ? 4 : 8);
       return;
@@ -691,9 +691,9 @@ iris_get_query_result_resource(struct pipe_context *ctx,
    if (q->ready) {
       /* We happen to have the result on the CPU, so just copy it. */
       if (result_type <= PIPE_QUERY_TYPE_U32) {
-         batch->screen->vtbl.store_data_imm32(batch, dst_bo, offset, q->result);
+         ice->vtbl.store_data_imm32(batch, dst_bo, offset, q->result);
       } else {
-         batch->screen->vtbl.store_data_imm64(batch, dst_bo, offset, q->result);
+         ice->vtbl.store_data_imm64(batch, dst_bo, offset, q->result);
       }
 
       /* Make sure the result lands before they use bind the QBO elsewhere
@@ -865,7 +865,6 @@ void
 genX(init_query)(struct iris_context *ice)
 {
    struct pipe_context *ctx = &ice->ctx;
-   struct iris_screen *screen = (struct iris_screen *)ctx->screen;
 
    ctx->create_query = iris_create_query;
    ctx->create_batch_query = iris_create_batch_query;
@@ -877,5 +876,5 @@ genX(init_query)(struct iris_context *ice)
    ctx->set_active_query_state = iris_set_active_query_state;
    ctx->render_condition = iris_render_condition;
 
-   screen->vtbl.resolve_conditional_render = iris_resolve_conditional_render;
+   ice->vtbl.resolve_conditional_render = iris_resolve_conditional_render;
 }

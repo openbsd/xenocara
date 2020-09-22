@@ -34,7 +34,7 @@
 
 #include "util/u_idalloc.h"
 #include "util/u_math.h"
-#include <stdlib.h>
+#include "util/u_memory.h"
 
 void
 util_idalloc_init(struct util_idalloc *buf)

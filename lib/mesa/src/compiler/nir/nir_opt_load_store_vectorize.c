@@ -38,8 +38,6 @@
  * - It won't turn four consecutive vec3 loads into 3 vec4 loads.
  * - It doesn't do global vectorization.
  * Handling these cases probably wouldn't provide much benefit though.
- *
- * This probably doesn't handle big-endian GPUs correctly.
 */
 
 #include "nir.h"
@@ -80,8 +78,6 @@ case nir_intrinsic_##op: {\
    STORE(0, deref, -1, -1, 0, 1)
    LOAD(nir_var_mem_shared, shared, -1, 0, -1)
    STORE(nir_var_mem_shared, shared, -1, 1, -1, 0)
-   LOAD(nir_var_mem_global, global, -1, 0, -1)
-   STORE(nir_var_mem_global, global, -1, 1, -1, 0)
    ATOMIC(nir_var_mem_ssbo, ssbo, add, 0, 1, -1, 2)
    ATOMIC(nir_var_mem_ssbo, ssbo, imin, 0, 1, -1, 2)
    ATOMIC(nir_var_mem_ssbo, ssbo, umin, 0, 1, -1, 2)
@@ -124,20 +120,6 @@ case nir_intrinsic_##op: {\
    ATOMIC(nir_var_mem_shared, shared, fmin, -1, 0, -1, 1)
    ATOMIC(nir_var_mem_shared, shared, fmax, -1, 0, -1, 1)
    ATOMIC(nir_var_mem_shared, shared, fcomp_swap, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, add, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, imin, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, umin, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, imax, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, umax, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, and, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, or, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, xor, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, exchange, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, comp_swap, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, fadd, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, fmin, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, fmax, -1, 0, -1, 1)
-   ATOMIC(nir_var_mem_global, global, fcomp_swap, -1, 0, -1, 1)
    default:
       break;
 #undef ATOMIC
@@ -531,27 +513,6 @@ get_variable_mode(struct entry *entry)
    return entry->deref->mode;
 }
 
-static unsigned
-mode_to_index(nir_variable_mode mode)
-{
-   assert(util_bitcount(mode) == 1);
-
-   /* Globals and SSBOs should be tracked together */
-   if (mode == nir_var_mem_global)
-      mode = nir_var_mem_ssbo;
-
-   return ffs(mode) - 1;
-}
-
-static nir_variable_mode
-aliasing_modes(nir_variable_mode modes)
-{
-   /* Global and SSBO can alias */
-   if (modes & (nir_var_mem_ssbo | nir_var_mem_global))
-      modes |= nir_var_mem_ssbo | nir_var_mem_global;
-   return modes;
-}
-
 static struct entry *
 create_entry(struct vectorize_ctx *ctx,
              const struct intrinsic_info *info,
@@ -830,7 +791,7 @@ vectorize_loads(nir_builder *b, struct vectorize_ctx *ctx,
       b->cursor = nir_before_instr(first->instr);
 
       nir_ssa_def *new_base = first->intrin->src[info->base_src].ssa;
-      new_base = nir_iadd_imm(b, new_base, -(int)(high_start / 8u));
+      new_base = nir_iadd(b, new_base, nir_imm_int(b, -(high_start / 8u)));
 
       nir_instr_rewrite_src(first->instr, &first->intrin->src[info->base_src],
                             nir_src_for_ssa(new_base));
@@ -989,8 +950,7 @@ compare_entries(struct entry *a, struct entry *b)
 static bool
 may_alias(struct entry *a, struct entry *b)
 {
-   assert(mode_to_index(get_variable_mode(a)) ==
-          mode_to_index(get_variable_mode(b)));
+   assert(get_variable_mode(a) == get_variable_mode(b));
 
    /* if the resources/variables are definitively different and both have
     * ACCESS_RESTRICT, we can assume they do not alias. */
@@ -1027,7 +987,7 @@ check_for_aliasing(struct vectorize_ctx *ctx, struct entry *first, struct entry 
                nir_var_mem_push_const | nir_var_mem_ubo))
       return false;
 
-   unsigned mode_index = mode_to_index(mode);
+   unsigned mode_index = ffs(mode) - 1;
    if (first->is_store) {
       /* find first entry that aliases "first" */
       list_for_each_entry_from(struct entry, next, first, &ctx->entries[mode_index], head) {
@@ -1057,8 +1017,7 @@ static bool
 is_strided_vector(const struct glsl_type *type)
 {
    if (glsl_type_is_vector(type)) {
-      unsigned explicit_stride = glsl_get_explicit_stride(type);
-      return explicit_stride != 0 && explicit_stride !=
+      return glsl_get_explicit_stride(type) !=
              type_scalar_size_bytes(glsl_get_array_element(type));
    } else {
       return false;
@@ -1070,10 +1029,6 @@ try_vectorize(nir_function_impl *impl, struct vectorize_ctx *ctx,
               struct entry *low, struct entry *high,
               struct entry *first, struct entry *second)
 {
-   if (!(get_variable_mode(first) & ctx->modes) ||
-       !(get_variable_mode(second) & ctx->modes))
-      return false;
-
    if (check_for_aliasing(ctx, first, second))
       return false;
 
@@ -1231,13 +1186,6 @@ handle_barrier(struct vectorize_ctx *ctx, bool *progress, nir_function_impl *imp
 
    while (modes) {
       unsigned mode_index = u_bit_scan(&modes);
-      if ((1 << mode_index) == nir_var_mem_global) {
-         /* Global should be rolled in with SSBO */
-         assert(list_is_empty(&ctx->entries[mode_index]));
-         assert(ctx->loads[mode_index] == NULL);
-         assert(ctx->stores[mode_index] == NULL);
-         continue;
-      }
 
       if (acquire)
          *progress |= vectorize_entries(ctx, impl, ctx->loads[mode_index]);
@@ -1280,9 +1228,9 @@ process_block(nir_function_impl *impl, struct vectorize_ctx *ctx, nir_block *blo
       nir_variable_mode mode = info->mode;
       if (!mode)
          mode = nir_src_as_deref(intrin->src[info->deref_src])->mode;
-      if (!(mode & aliasing_modes(ctx->modes)))
+      if (!(mode & ctx->modes))
          continue;
-      unsigned mode_index = mode_to_index(mode);
+      unsigned mode_index = ffs(mode) - 1;
 
       /* create entry */
       struct entry *entry = create_entry(ctx, info, intrin);

@@ -53,8 +53,7 @@
 
     <function name="Fogxv" es1="1.0" desktop="false">
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_fog_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <function name="Frustumx" es1="1.0" desktop="false">
@@ -73,8 +72,7 @@
 
     <function name="LightModelxv" es1="1.0" desktop="false">
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_light_model_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <function name="Lightx" es1="1.0" desktop="false">
@@ -86,8 +84,7 @@
     <function name="Lightxv" es1="1.0" desktop="false">
         <param name="light" type="GLenum"/>
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_light_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <function name="LineWidthx" es1="1.0" desktop="false">
@@ -107,8 +104,7 @@
     <function name="Materialxv" es1="1.0" desktop="false">
         <param name="face" type="GLenum"/>
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_material_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <function name="MultMatrixx" es1="1.0" desktop="false">
@@ -174,8 +170,7 @@
     <function name="TexEnvxv" es1="1.0" desktop="false">
         <param name="target" type="GLenum"/>
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_texenv_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <function name="TexParameterx" es1="1.0" desktop="false">
@@ -258,15 +253,13 @@
 
     <function name="PointParameterxv" es1="1.1" desktop="false">
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *"
-               count="_mesa_point_param_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *"/>
     </function>
 
     <function name="TexParameterxv" es1="1.1" desktop="false">
         <param name="target" type="GLenum"/>
         <param name="pname" type="GLenum"/>
-        <param name="params" type="const GLfixed *" variable_param="pname"
-               marshal_count="_mesa_tex_param_enum_to_count(pname)"/>
+        <param name="params" type="const GLfixed *" variable_param="pname"/>
     </function>
 
     <!-- from GL_OES_single_precision -->

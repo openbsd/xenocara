@@ -39,6 +39,7 @@
 #include "os/os_thread.h"
 
 #include "util/u_debug.h"
+#include "util/u_debug_gallium.h"
 #include "util/u_debug_stack.h"
 #include "util/list.h"
 #include "util/os_memory.h"

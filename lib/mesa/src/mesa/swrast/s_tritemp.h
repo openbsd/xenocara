@@ -90,7 +90,6 @@
  * SUB_PIXEL_BITS.
  */
 
-#include "util/u_math.h"
 
 #ifndef MAX_GLUINT
 #define MAX_GLUINT	0xffffffffu
@@ -240,7 +239,7 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
    {
       const GLfloat area = eMaj.dx * eBot.dy - eBot.dx * eMaj.dy;
 
-      if (util_is_inf_or_nan(area) || area == 0.0F)
+      if (IS_INF_OR_NAN(area) || area == 0.0F)
          return;
 
       if (area * bf * swrast->_BackfaceCullSign < 0.0F)

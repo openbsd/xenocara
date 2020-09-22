@@ -34,6 +34,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "c99_math.h"
 #include "main/glheader.h"
+#include "main/imports.h"
 #include "main/context.h"
 #include "main/mtypes.h"
 #include "main/enums.h"

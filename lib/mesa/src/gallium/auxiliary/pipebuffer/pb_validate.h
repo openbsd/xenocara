@@ -46,7 +46,7 @@ extern "C" {
 
 struct pb_buffer;
 struct pipe_fence_handle;
-struct hash_table;
+struct util_hash_table;
 
 
 /**
@@ -61,7 +61,7 @@ enum pipe_error
 pb_validate_add_buffer(struct pb_validate *vl,
                        struct pb_buffer *buf,
                        enum pb_usage_flags flags,
-                       struct hash_table *ht,
+                       struct util_hash_table *ht,
                        boolean *already_present);
 
 enum pipe_error

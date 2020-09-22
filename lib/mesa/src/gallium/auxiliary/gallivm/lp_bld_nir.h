@@ -119,20 +119,16 @@ struct lp_build_nir_context
                     unsigned bit_size,
                     nir_variable *var,
                     unsigned vertex_index,
-                    LLVMValueRef indir_vertex_index,
                     unsigned const_index,
                     LLVMValueRef indir_index,
                     LLVMValueRef result[NIR_MAX_VEC_COMPONENTS]);
    void (*store_var)(struct lp_build_nir_context *bld_base,
                      nir_variable_mode deref_mode,
-                     unsigned num_components,
                      unsigned bit_size,
-                     nir_variable *var,
+                     unsigned num_components,
                      unsigned writemask,
-                     LLVMValueRef indir_vertex_index,
                      unsigned const_index,
-                     LLVMValueRef indir_index,
-                     LLVMValueRef dst);
+                     nir_variable *var, LLVMValueRef dst);
 
    LLVMValueRef (*load_reg)(struct lp_build_nir_context *bld_base,
                             struct lp_build_context *reg_bld,
@@ -174,7 +170,6 @@ struct lp_build_nir_context
    void (*end_primitive)(struct lp_build_nir_context *bld_base, uint32_t stream_id);
 
    void (*vote)(struct lp_build_nir_context *bld_base, LLVMValueRef src, nir_intrinsic_instr *instr, LLVMValueRef dst[4]);
-   void (*helper_invocation)(struct lp_build_nir_context *bld_base, LLVMValueRef *dst);
 //   LLVMValueRef main_function
 };
 
@@ -208,11 +203,9 @@ struct lp_build_nir_soa_context
    const struct lp_build_image_soa *image;
 
    const struct lp_build_gs_iface *gs_iface;
-   const struct lp_build_tcs_iface *tcs_iface;
-   const struct lp_build_tes_iface *tes_iface;
-   LLVMValueRef emitted_prims_vec_ptr[PIPE_MAX_VERTEX_STREAMS];
-   LLVMValueRef total_emitted_vertices_vec_ptr[PIPE_MAX_VERTEX_STREAMS];
-   LLVMValueRef emitted_vertices_vec_ptr[PIPE_MAX_VERTEX_STREAMS];
+   LLVMValueRef emitted_prims_vec_ptr;
+   LLVMValueRef total_emitted_vertices_vec_ptr;
+   LLVMValueRef emitted_vertices_vec_ptr;
    LLVMValueRef max_output_vertices_vec;
    struct lp_bld_tgsi_system_values system_values;
 

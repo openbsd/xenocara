@@ -28,7 +28,6 @@
  */
 
 #include "pan_context.h"
-#include "pan_util.h"
 #include "util/format/u_format.h"
 
 static void
@@ -68,7 +67,7 @@ panfrost_u_blitter_blit(struct pipe_context *pipe,
         struct panfrost_context *ctx = pan_context(pipe);
 
         if (!util_blitter_is_blit_supported(ctx->blitter, info)) {
-                DBG("blit unsupported %s -> %s\n",
+                fprintf(stderr, "blit unsupported %s -> %s\n",
                         util_format_short_name(info->src.resource->format),
                         util_format_short_name(info->dst.resource->format));
                 return false;
@@ -92,6 +91,8 @@ panfrost_blit(struct pipe_context *pipe,
 
         if (panfrost_u_blitter_blit(pipe, info))
                 return;
+
+        fprintf(stderr, "Unhandled blit");
 
         return;
 }

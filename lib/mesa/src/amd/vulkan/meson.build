@@ -58,7 +58,6 @@ radv_gfx10_format_table_h = custom_target(
 )
 
 libradv_files = files(
-  'layers/radv_sqtt_layer.c',
   'winsys/amdgpu/radv_amdgpu_bo.c',
   'winsys/amdgpu/radv_amdgpu_bo.h',
   'winsys/amdgpu/radv_amdgpu_cs.c',
@@ -68,12 +67,6 @@ libradv_files = files(
   'winsys/amdgpu/radv_amdgpu_winsys.c',
   'winsys/amdgpu/radv_amdgpu_winsys.h',
   'winsys/amdgpu/radv_amdgpu_winsys_public.h',
-  'winsys/null/radv_null_bo.c',
-  'winsys/null/radv_null_bo.h',
-  'winsys/null/radv_null_cs.c',
-  'winsys/null/radv_null_cs.h',
-  'winsys/null/radv_null_winsys.c',
-  'winsys/null/radv_null_winsys_public.h',
   'radv_android.c',
   'radv_cmd_buffer.c',
   'radv_cs.h',
@@ -106,14 +99,12 @@ libradv_files = files(
   'radv_pipeline_cache.c',
   'radv_private.h',
   'radv_radeon_winsys.h',
-  'radv_rgp.c',
   'radv_shader.c',
   'radv_shader.h',
   'radv_shader_args.c',
   'radv_shader_args.h',
   'radv_shader_helper.h',
   'radv_shader_info.c',
-  'radv_sqtt.c',
   'radv_query.c',
   'radv_util.c',
   'radv_util.h',
@@ -157,21 +148,11 @@ if with_platform_android
   ]
 endif
 
-# When static linking LLVM, all its symbols are public API.
-# That may cause symbol collision, so explicitly demote everything.
-libvulkan_radeon_ld_args = []
-libvulkan_radeon_link_depends = []
-
-if with_llvm and with_ld_version_script
-  libvulkan_radeon_ld_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'vulkan.sym')]
-  libvulkan_radeon_link_depends += files('vulkan.sym')
-endif
-
 libvulkan_radeon = shared_library(
   'vulkan_radeon',
   [libradv_files, radv_entrypoints, radv_extensions_c, amd_vk_format_table_c, sha1_h, radv_gfx10_format_table_h],
   include_directories : [
-    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_compiler, inc_util, inc_vulkan_wsi,
+    inc_common, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_compiler, inc_util, inc_vulkan_wsi,
   ],
   link_with : [
     libamd_common, libamd_common_llvm, libamdgpu_addrlib, libvulkan_wsi,
@@ -183,8 +164,7 @@ libvulkan_radeon = shared_library(
   ],
   c_args : [c_vis_args, no_override_init_args, radv_flags],
   cpp_args : [cpp_vis_args, radv_flags],
-  link_args : [ld_args_bsymbolic, ld_args_gc_sections, libvulkan_radeon_ld_args],
-  link_depends : [libvulkan_radeon_link_depends,],
+  link_args : [ld_args_bsymbolic, ld_args_gc_sections],
   install : true,
 )
 

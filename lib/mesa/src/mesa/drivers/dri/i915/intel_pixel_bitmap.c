@@ -211,7 +211,7 @@ do_blit_bitmap( struct gl_context *ctx,
 
    irb = intel_renderbuffer(fb->_ColorDrawBuffers[0]);
 
-   if (unpack->BufferObj) {
+   if (_mesa_is_bufferobj(unpack->BufferObj)) {
       bitmap = map_pbo(ctx, width, height, unpack, bitmap);
       if (bitmap == NULL)
 	 return true;	/* even though this is an error, we're done */
@@ -310,7 +310,7 @@ out:
    if (unlikely(INTEL_DEBUG & DEBUG_SYNC))
       intel_batchbuffer_flush(intel);
 
-   if (unpack->BufferObj) {
+   if (_mesa_is_bufferobj(unpack->BufferObj)) {
       /* done with PBO so unmap it now */
       ctx->Driver.UnmapBuffer(ctx, unpack->BufferObj, MAP_INTERNAL);
    }

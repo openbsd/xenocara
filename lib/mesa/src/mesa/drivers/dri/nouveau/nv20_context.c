@@ -34,7 +34,6 @@
 #include "nv04_driver.h"
 #include "nv10_driver.h"
 #include "nv20_driver.h"
-#include "util/u_memory.h"
 
 static void
 nv20_clear(struct gl_context *ctx, GLbitfield buffers)

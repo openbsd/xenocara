@@ -29,9 +29,6 @@
 extern "C" {
 #endif
 
-uint32_t
-brw_cs_group_size(const struct brw_context *brw);
-
 void
 brw_upload_cs_prog(struct brw_context *brw);
 

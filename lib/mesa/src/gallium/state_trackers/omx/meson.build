@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-inc_st_omx = [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux]
+inc_st_omx = [inc_common]
 dep_st_omx = [
   dep_omx, dep_x11_xcb, dep_xcb, dep_xcb_dri2, dep_xcb_dri3, dep_libdrm,
 ]

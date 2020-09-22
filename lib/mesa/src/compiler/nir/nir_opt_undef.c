@@ -77,7 +77,10 @@ opt_undef_csel(nir_alu_instr *instr)
 static bool
 opt_undef_vecN(nir_builder *b, nir_alu_instr *alu)
 {
-   if (!nir_op_is_vec(alu->op))
+   if (alu->op != nir_op_vec2 &&
+       alu->op != nir_op_vec3 &&
+       alu->op != nir_op_vec4 &&
+       alu->op != nir_op_mov)
       return false;
 
    assert(alu->dest.dest.is_ssa);

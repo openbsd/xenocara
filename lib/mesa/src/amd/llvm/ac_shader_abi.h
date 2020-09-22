@@ -80,10 +80,7 @@ struct ac_shader_abi {
 	void (*emit_primitive)(struct ac_shader_abi *abi,
 			       unsigned stream);
 
-	void (*emit_vertex_with_counter)(struct ac_shader_abi *abi,
-					 unsigned stream,
-					 LLVMValueRef vertexidx,
-					 LLVMValueRef *addrs);
+	void (*emit_kill)(struct ac_shader_abi *abi, LLVMValueRef visible);
 
 	LLVMValueRef (*load_inputs)(struct ac_shader_abi *abi,
 				    unsigned location,
@@ -186,9 +183,6 @@ struct ac_shader_abi {
 
 	/* Whether bounds checks are required */
 	bool robust_buffer_access;
-
-	/* Clamp div by 0 (so it won't produce NaN) */
-	bool clamp_div_by_zero;
 };
 
 #endif /* AC_SHADER_ABI_H */

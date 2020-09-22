@@ -212,10 +212,6 @@ main(int argc, char **argv)
       return -1;
    }
 
-   struct nir_lower_tex_options tex_options = {
-      .lower_txp = ~0u,
-   };
-
    nir_shader *nir = load_glsl(1, filename, stage);
 
    switch (stage) {
@@ -228,7 +224,7 @@ main(int argc, char **argv)
       gpir_compile_nir(vs, nir, NULL);
       break;
    case MESA_SHADER_FRAGMENT:
-      lima_program_optimize_fs_nir(nir, &tex_options);
+      lima_program_optimize_fs_nir(nir);
 
       nir_print_shader(nir, stdout);
 

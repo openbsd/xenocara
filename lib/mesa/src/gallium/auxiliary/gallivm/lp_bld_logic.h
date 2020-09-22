@@ -36,9 +36,6 @@
 #ifndef LP_BLD_LOGIC_H
 #define LP_BLD_LOGIC_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "gallivm/lp_bld.h"
 
@@ -96,9 +93,5 @@ LLVMValueRef
 lp_build_any_true_range(struct lp_build_context *bld,
                         unsigned real_length,
                         LLVMValueRef val);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !LP_BLD_LOGIC_H */

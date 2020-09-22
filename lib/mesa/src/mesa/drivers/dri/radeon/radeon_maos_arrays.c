@@ -33,6 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "main/glheader.h"
+#include "main/imports.h"
 #include "main/mtypes.h"
 #include "main/macros.h"
 
@@ -138,7 +139,7 @@ static void emit_tex_vector(struct gl_context *ctx, struct radeon_aos *aos,
 
 
 /* Emit any changed arrays to new GART memory, re-emit a packet to
- * update the arrays.
+ * update the arrays.  
  */
 void radeonEmitArrays( struct gl_context *ctx, GLuint inputs )
 {
@@ -148,15 +149,15 @@ void radeonEmitArrays( struct gl_context *ctx, GLuint inputs )
    GLuint vfmt = 0;
    GLuint count = VB->Count;
    GLuint vtx, unit;
-
+   
 #if 0
    if (RADEON_DEBUG & RADEON_VERTS)
       _tnl_print_vert_flags( __func__, inputs );
 #endif
 
    if (1) {
-      if (!rmesa->tcl.obj.buf)
-	rcommon_emit_vector( ctx,
+      if (!rmesa->tcl.obj.buf) 
+	rcommon_emit_vector( ctx, 
 			     &(rmesa->tcl.aos[nr]),
 			     (char *)VB->AttribPtr[_TNL_ATTRIB_POS]->data,
 			     VB->AttribPtr[_TNL_ATTRIB_POS]->size,
@@ -172,11 +173,11 @@ void radeonEmitArrays( struct gl_context *ctx, GLuint inputs )
       }
       nr++;
    }
-
+   
 
    if (inputs & VERT_BIT_NORMAL) {
       if (!rmesa->tcl.norm.buf)
-	 rcommon_emit_vector( ctx,
+	 rcommon_emit_vector( ctx, 
 			      &(rmesa->tcl.aos[nr]),
 			      (char *)VB->AttribPtr[_TNL_ATTRIB_NORMAL]->data,
 			      3,
@@ -246,7 +247,7 @@ void radeonEmitArrays( struct gl_context *ctx, GLuint inputs )
 
    vtx = (rmesa->hw.tcl.cmd[TCL_OUTPUT_VTXFMT] &
 	  ~(RADEON_TCL_VTX_Q0|RADEON_TCL_VTX_Q1|RADEON_TCL_VTX_Q2));
-
+      
    for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++) {
       if (inputs & VERT_BIT_TEX(unit)) {
 	 if (!rmesa->tcl.tex[unit].buf)

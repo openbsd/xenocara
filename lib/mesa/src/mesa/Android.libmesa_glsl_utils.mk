@@ -43,6 +43,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := \
 	main/extensions_table.c \
+	main/imports.c \
 	program/symbol_table.c \
 	program/dummy_errors.c
 
@@ -67,6 +68,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := \
 	main/extensions_table.c \
+	main/imports.c \
 	program/symbol_table.c \
 	program/dummy_errors.c
 

@@ -350,13 +350,8 @@ static LLVMValueRef split_64bit(struct lp_build_nir_context *bld_base,
    LLVMValueRef shuffles2[LP_MAX_VECTOR_WIDTH/32];
    int len = bld_base->base.type.length * 2;
    for (unsigned i = 0; i < bld_base->base.type.length; i++) {
-#if UTIL_ARCH_LITTLE_ENDIAN
       shuffles[i] = lp_build_const_int32(gallivm, i * 2);
       shuffles2[i] = lp_build_const_int32(gallivm, (i * 2) + 1);
-#else
-      shuffles[i] = lp_build_const_int32(gallivm, (i * 2) + 1);
-      shuffles2[i] = lp_build_const_int32(gallivm, (i * 2));
-#endif
    }
 
    src = LLVMBuildBitCast(gallivm->builder, src, LLVMVectorType(LLVMInt32TypeInContext(gallivm->context), len), "");
@@ -380,13 +375,8 @@ merge_64bit(struct lp_build_nir_context *bld_base,
    assert(len <= (2 * (LP_MAX_VECTOR_WIDTH/32)));
 
    for (i = 0; i < bld_base->base.type.length * 2; i+=2) {
-#if UTIL_ARCH_LITTLE_ENDIAN
       shuffles[i] = lp_build_const_int32(gallivm, i / 2);
       shuffles[i + 1] = lp_build_const_int32(gallivm, i / 2 + bld_base->base.type.length);
-#else
-      shuffles[i] = lp_build_const_int32(gallivm, i / 2 + bld_base->base.type.length);
-      shuffles[i + 1] = lp_build_const_int32(gallivm, i / 2);
-#endif
    }
    return LLVMBuildShuffleVector(builder, input, input2, LLVMConstVector(shuffles, len), "");
 }
@@ -872,7 +862,7 @@ static void visit_load_const(struct lp_build_nir_context *bld_base,
    LLVMValueRef result[NIR_MAX_VEC_COMPONENTS];
    struct lp_build_context *int_bld = get_int_bld(bld_base, true, instr->def.bit_size);
    for (unsigned i = 0; i < instr->def.num_components; i++)
-      result[i] = lp_build_const_int_vec(bld_base->base.gallivm, int_bld->type, instr->def.bit_size == 32 ? instr->value[i].u32 : instr->value[i].u64);
+      result[i] = lp_build_const_int_vec(bld_base->base.gallivm, int_bld->type, instr->value[i].u64);
    assign_ssa_dest(bld_base, &instr->def, result);
 }
 
@@ -956,7 +946,6 @@ static void visit_load_var(struct lp_build_nir_context *bld_base,
    nir_variable_mode mode = deref->mode;
    unsigned const_index;
    LLVMValueRef indir_index;
-   LLVMValueRef indir_vertex_index = NULL;
    unsigned vertex_index = 0;
    unsigned nc = nir_dest_num_components(instr->dest);
    unsigned bit_size = nir_dest_bit_size(instr->dest);
@@ -965,19 +954,12 @@ static void visit_load_var(struct lp_build_nir_context *bld_base,
          var->data.mode == nir_var_shader_in;
       bool gs_in = bld_base->shader->info.stage == MESA_SHADER_GEOMETRY &&
          var->data.mode == nir_var_shader_in;
-      bool tcs_in = bld_base->shader->info.stage == MESA_SHADER_TESS_CTRL &&
-         var->data.mode == nir_var_shader_in;
-      bool tcs_out = bld_base->shader->info.stage == MESA_SHADER_TESS_CTRL &&
-         var->data.mode == nir_var_shader_out && !var->data.patch;
-      bool tes_in = bld_base->shader->info.stage == MESA_SHADER_TESS_EVAL &&
-         var->data.mode == nir_var_shader_in && !var->data.patch;
-
       mode = var->data.mode;
 
-      get_deref_offset(bld_base, deref, vs_in, gs_in ? &vertex_index : NULL, (tcs_in || tcs_out || tes_in) ? &indir_vertex_index : NULL,
+      get_deref_offset(bld_base, deref, vs_in, gs_in ? &vertex_index : NULL, NULL,
                        &const_index, &indir_index);
    }
-   bld_base->load_var(bld_base, mode, nc, bit_size, var, vertex_index, indir_vertex_index, const_index, indir_index, result);
+   bld_base->load_var(bld_base, mode, nc, bit_size, var, vertex_index, const_index, indir_index, result);
 }
 
 static void
@@ -991,14 +973,11 @@ visit_store_var(struct lp_build_nir_context *bld_base,
    unsigned bit_size = nir_src_bit_size(instr->src[1]);
    LLVMValueRef src = get_src(bld_base, instr->src[1]);
    unsigned const_index = 0;
-   LLVMValueRef indir_index, indir_vertex_index = NULL;
-   if (var) {
-      bool tcs_out = bld_base->shader->info.stage == MESA_SHADER_TESS_CTRL &&
-         var->data.mode == nir_var_shader_out && !var->data.patch;
-      get_deref_offset(bld_base, deref, false, NULL, tcs_out ? &indir_vertex_index : NULL,
+   LLVMValueRef indir_index;
+   if (var)
+      get_deref_offset(bld_base, deref, false, NULL, NULL,
                        &const_index, &indir_index);
-   }
-   bld_base->store_var(bld_base, mode, instr->num_components, bit_size, var, writemask, indir_vertex_index, const_index, indir_index, src);
+   bld_base->store_var(bld_base, mode, bit_size, instr->num_components, writemask, const_index, var, src);
 }
 
 static void visit_load_ubo(struct lp_build_nir_context *bld_base,
@@ -1337,14 +1316,7 @@ static void visit_intrinsic(struct lp_build_nir_context *bld_base,
    case nir_intrinsic_load_draw_id:
    case nir_intrinsic_load_local_group_size:
    case nir_intrinsic_load_work_dim:
-   case nir_intrinsic_load_tess_coord:
-   case nir_intrinsic_load_tess_level_outer:
-   case nir_intrinsic_load_tess_level_inner:
-   case nir_intrinsic_load_patch_vertices_in:
       bld_base->sysval_intrin(bld_base, instr, result);
-      break;
-   case nir_intrinsic_load_helper_invocation:
-      bld_base->helper_invocation(bld_base, &result[0]);
       break;
    case nir_intrinsic_discard_if:
    case nir_intrinsic_discard:
@@ -1436,7 +1408,6 @@ static void visit_intrinsic(struct lp_build_nir_context *bld_base,
    case nir_intrinsic_global_atomic_exchange:
    case nir_intrinsic_global_atomic_comp_swap:
       visit_global_atomic(bld_base, instr, result);
-      break;
    case nir_intrinsic_vote_all:
    case nir_intrinsic_vote_any:
    case nir_intrinsic_vote_ieq:
@@ -1889,9 +1860,6 @@ void lp_build_opt_nir(struct nir_shader *nir)
       NIR_PASS_V(nir, nir_opt_constant_folding);
       NIR_PASS_V(nir, nir_opt_algebraic);
       NIR_PASS_V(nir, nir_lower_pack);
-
-      nir_lower_tex_options options = { .lower_tex_without_implicit_lod = true };
-      NIR_PASS_V(nir, nir_lower_tex, &options);
    } while (progress);
    nir_lower_bool_to_int32(nir);
 }

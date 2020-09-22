@@ -54,6 +54,11 @@
 
 #define OA_REPORT_INVALID_CTX_ID (0xffffffff)
 
+static inline uint64_t to_user_pointer(void *ptr)
+{
+   return (uintptr_t) ptr;
+}
+
 static bool
 is_dir_or_link(const struct dirent *entry, const char *parent_dir)
 {
@@ -554,18 +559,6 @@ i915_perf_version(int drm_fd)
    return ret < 0 ? 0 : tmp;
 }
 
-static void
-i915_get_sseu(int drm_fd, struct drm_i915_gem_context_param_sseu *sseu)
-{
-   struct drm_i915_gem_context_param arg = {
-      .param = I915_CONTEXT_PARAM_SSEU,
-      .size = sizeof(*sseu),
-      .value = to_user_pointer(sseu)
-   };
-
-   gen_ioctl(drm_fd, DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM, &arg);
-}
-
 static bool
 load_oa_metrics(struct gen_perf_config *perf, int fd,
                          const struct gen_device_info *devinfo)
@@ -576,9 +569,6 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
 
    perf->i915_query_supported = i915_query_perf_config_supported(perf, fd);
    perf->i915_perf_version = i915_perf_version(fd);
-
-   /* Record the default SSEU configuration. */
-   i915_get_sseu(fd, &perf->sseu);
 
    /* The existence of this sysctl parameter implies the kernel supports
     * the i915 perf interface.
@@ -620,19 +610,6 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
       init_oa_configs(perf, fd);
    else
       enumerate_sysfs_metrics(perf);
-
-   /* Select a fallback OA metric. Look for the TestOa metric or use the last
-    * one if no present (on HSW).
-    */
-   for (int i = 0; i < perf->n_queries; i++) {
-      if (perf->queries[i].symbol_name &&
-          strcmp(perf->queries[i].symbol_name, "TestOa") == 0) {
-         perf->fallback_raw_oa_metric = perf->queries[i].oa_metrics_set_id;
-         break;
-      }
-   }
-   if (perf->fallback_raw_oa_metric == 0)
-      perf->fallback_raw_oa_metric = perf->queries[perf->n_queries - 1].oa_metrics_set_id;
 
    return true;
 }

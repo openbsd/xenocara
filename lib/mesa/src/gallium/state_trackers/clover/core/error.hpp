@@ -24,11 +24,6 @@
 #define CLOVER_CORE_ERROR_HPP
 
 #include "CL/cl.h"
-#if defined(__ALTIVEC__) && !defined(__APPLE_ALTIVEC__)
-   #undef vector
-   #undef pixel
-   #undef bool
-#endif
 
 #include <stdexcept>
 #include <string>

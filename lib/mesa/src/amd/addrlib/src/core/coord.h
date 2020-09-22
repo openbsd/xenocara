@@ -34,25 +34,15 @@ namespace Addr
 namespace V2
 {
 
-enum Dim
-{
-   DIM_X,
-   DIM_Y,
-   DIM_Z,
-   DIM_S,
-   DIM_M,
-   NUM_DIMS
-};
-
 class Coordinate
 {
 public:
     Coordinate();
-    Coordinate(enum Dim dim, INT_32 n);
+    Coordinate(INT_8 c, INT_32 n);
 
-    VOID set(enum Dim dim, INT_32 n);
-    UINT_32 ison(const UINT_32 *coords) const;
-    enum Dim getdim();
+    VOID set(INT_8 c, INT_32 n);
+    UINT_32 ison(UINT_32 x, UINT_32 y, UINT_32 z = 0, UINT_32 s = 0, UINT_32 m = 0) const;
+    INT_8   getdim();
     INT_8   getord();
 
     BOOL_32 operator==(const Coordinate& b);
@@ -64,7 +54,7 @@ public:
     Coordinate& operator++(INT_32);
 
 private:
-    enum Dim dim;
+    INT_8 dim;
     INT_8 ord;
 };
 
@@ -79,14 +69,14 @@ public:
     BOOL_32 Exists(Coordinate& co);
     VOID copyto(CoordTerm& cl);
     UINT_32 getsize();
-    UINT_32 getxor(const UINT_32 *coords) const;
+    UINT_32 getxor(UINT_32 x, UINT_32 y, UINT_32 z = 0, UINT_32 s = 0, UINT_32 m = 0) const;
 
     VOID getsmallest(Coordinate& co);
-    UINT_32 Filter(INT_8 f, Coordinate& co, UINT_32 start = 0, enum Dim axis = NUM_DIMS);
+    UINT_32 Filter(INT_8 f, Coordinate& co, UINT_32 start = 0, INT_8 axis = '\0');
     Coordinate& operator[](UINT_32 i);
     BOOL_32 operator==(const CoordTerm& b);
     BOOL_32 operator!=(const CoordTerm& b);
-    BOOL_32 exceedRange(const UINT_32 *ranges);
+    BOOL_32 exceedRange(UINT_32 xRange, UINT_32 yRange = 0, UINT_32 zRange = 0, UINT_32 sRange = 0);
 
 private:
     static const UINT_32 MaxCoords = 8;
@@ -102,14 +92,14 @@ public:
     BOOL_32 Exists(Coordinate& co);
     VOID resize(UINT_32 n);
     UINT_32 getsize();
-    virtual UINT_64 solve(const UINT_32 *coords) const;
+    virtual UINT_64 solve(UINT_32 x, UINT_32 y, UINT_32 z = 0, UINT_32 s = 0, UINT_32 m = 0) const;
     virtual VOID solveAddr(UINT_64 addr, UINT_32 sliceInM,
-                           UINT_32 *coords) const;
+                           UINT_32& x, UINT_32& y, UINT_32& z, UINT_32& s, UINT_32& m) const;
 
     VOID copy(CoordEq& o, UINT_32 start = 0, UINT_32 num = 0xFFFFFFFF);
     VOID reverse(UINT_32 start = 0, UINT_32 num = 0xFFFFFFFF);
     VOID xorin(CoordEq& x, UINT_32 start = 0);
-    UINT_32 Filter(INT_8 f, Coordinate& co, UINT_32 start = 0, enum Dim axis = NUM_DIMS);
+    UINT_32 Filter(INT_8 f, Coordinate& co, UINT_32 start = 0, INT_8 axis = '\0');
     VOID shift(INT_32 amount, INT_32 start = 0);
     virtual CoordTerm& operator[](UINT_32 i);
     VOID mort2d(Coordinate& c0, Coordinate& c1, UINT_32 start = 0, UINT_32 end = 0);

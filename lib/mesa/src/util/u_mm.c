@@ -27,7 +27,6 @@
 
 #include "util/u_memory.h"
 #include "util/u_mm.h"
-#include "util/macros.h"
 
 
 void

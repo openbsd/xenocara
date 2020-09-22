@@ -30,6 +30,7 @@ if with_ld_version_script
 endif
 
 llvm_libdir = dep_llvm.get_configtool_variable('libdir')
+
 opencl_libname = with_opencl_icd ? 'MesaOpenCL' : 'OpenCL'
 
 polly_dep = null_dep
@@ -40,25 +41,7 @@ if dep_llvm.version().version_compare('>=10.0.0')
 endif
 
 dep_clang = cpp.find_library('clang-cpp', dirs : llvm_libdir, required : false)
-
-# meson will return clang-cpp from system dirs if it's not found in llvm_libdir
-linker_rpath_arg = '-Wl,--rpath=@0@'.format(llvm_libdir)
-clang_test_code = '''
-  #include <clang/Basic/Version.h>
-  int main (void) {
-    size_t found_pos = clang::getClangFullVersion().find(CLANG_VERSION_STRING);
-    return found_pos == ::std::string::npos ? 1 : 0;
-  }
-'''
-can_check_clang = (not meson.is_cross_build() or meson.has_exe_wrapper()) and cpp.has_link_argument(linker_rpath_arg)
-if can_check_clang
-  test_run = cpp.run(clang_test_code, name : 'dep-clang-usable',
-                     dependencies : [dep_llvm, dep_clang], args : linker_rpath_arg)
-  dep_clang_usable = test_run.compiled() and test_run.returncode() == 0
-else
-  dep_clang_usable = true
-endif
-if not (dep_clang.found() and dep_clang_usable)
+if not dep_clang.found()
   dep_clang = [
     cpp.find_library('clangCodeGen', dirs : llvm_libdir),
     cpp.find_library('clangFrontendTool', dirs : llvm_libdir),
@@ -75,14 +58,6 @@ if not (dep_clang.found() and dep_clang_usable)
     cpp.find_library('clangBasic', dirs : llvm_libdir),
     polly_dep, polly_isl_dep,
   ]
-  # check clang once more
-  if can_check_clang
-    test_run = cpp.run(clang_test_code, name : 'dep-clang-usable',
-                       dependencies : [dep_llvm, dep_clang], args : linker_rpath_arg)
-    if not test_run.compiled() or test_run.returncode() != 0
-      error('No usable clang found!')
-    endif
-  endif
 endif
 
 libopencl = shared_library(

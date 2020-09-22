@@ -177,7 +177,6 @@ struct iris_bufmgr {
    struct util_vma_heap vma_allocator[IRIS_MEMZONE_COUNT];
 
    bool has_llc:1;
-   bool has_mmap_offset:1;
    bool bo_reuse:1;
 
    struct gen_aux_map_context *aux_map_ctx;
@@ -193,6 +192,10 @@ static int bo_set_tiling_internal(struct iris_bo *bo, uint32_t tiling_mode,
                                   uint32_t stride);
 
 static void bo_free(struct iris_bo *bo);
+
+static uint64_t vma_alloc(struct iris_bufmgr *bufmgr,
+                          enum iris_memory_zone memzone,
+                          uint64_t size, uint64_t alignment);
 
 static struct iris_bo *
 find_and_ref_external_bo(struct hash_table *ht, unsigned int key)
@@ -714,6 +717,7 @@ iris_bo_gem_create_from_name(struct iris_bufmgr *bufmgr,
    p_atomic_set(&bo->refcount, 1);
 
    bo->size = open_arg.size;
+   bo->gtt_offset = 0;
    bo->bufmgr = bufmgr;
    bo->gem_handle = open_arg.handle;
    bo->name = name;
@@ -942,74 +946,11 @@ print_flags(unsigned flags)
 }
 
 static void *
-iris_bo_gem_mmap_legacy(struct pipe_debug_callback *dbg,
-                        struct iris_bo *bo, bool wc)
-{
-   struct iris_bufmgr *bufmgr = bo->bufmgr;
-
-   struct drm_i915_gem_mmap mmap_arg = {
-      .handle = bo->gem_handle,
-      .size = bo->size,
-      .flags = wc ? I915_MMAP_WC : 0,
-   };
-
-   int ret = gen_ioctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
-   if (ret != 0) {
-      DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
-          __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
-      return NULL;
-   }
-   void *map = (void *) (uintptr_t) mmap_arg.addr_ptr;
-
-   return map;
-}
-
-static void *
-iris_bo_gem_mmap_offset(struct pipe_debug_callback *dbg, struct iris_bo *bo,
-                        bool wc)
-{
-   struct iris_bufmgr *bufmgr = bo->bufmgr;
-
-   struct drm_i915_gem_mmap_offset mmap_arg = {
-      .handle = bo->gem_handle,
-      .flags = wc ? I915_MMAP_OFFSET_WC : I915_MMAP_OFFSET_WB,
-   };
-
-   /* Get the fake offset back */
-   int ret = gen_ioctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP_OFFSET, &mmap_arg);
-   if (ret != 0) {
-      DBG("%s:%d: Error preparing buffer %d (%s): %s .\n",
-          __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
-      return NULL;
-   }
-
-   /* And map it */
-   void *map = mmap(0, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    bufmgr->fd, mmap_arg.offset);
-   if (map == MAP_FAILED) {
-      DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
-          __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
-      return NULL;
-   }
-
-   return map;
-}
-
-static void *
-iris_bo_gem_mmap(struct pipe_debug_callback *dbg, struct iris_bo *bo, bool wc)
-{
-   struct iris_bufmgr *bufmgr = bo->bufmgr;
-
-   if (bufmgr->has_mmap_offset)
-      return iris_bo_gem_mmap_offset(dbg, bo, wc);
-   else
-      return iris_bo_gem_mmap_legacy(dbg, bo, wc);
-}
-
-static void *
 iris_bo_map_cpu(struct pipe_debug_callback *dbg,
                 struct iris_bo *bo, unsigned flags)
 {
+   struct iris_bufmgr *bufmgr = bo->bufmgr;
+
    /* We disallow CPU maps for writing to non-coherent buffers, as the
     * CPU map can become invalidated when a batch is flushed out, which
     * can happen at unpredictable times.  You should use WC maps instead.
@@ -1018,11 +959,18 @@ iris_bo_map_cpu(struct pipe_debug_callback *dbg,
 
    if (!bo->map_cpu) {
       DBG("iris_bo_map_cpu: %d (%s)\n", bo->gem_handle, bo->name);
-      void *map = iris_bo_gem_mmap(dbg, bo, false);
-      if (!map) {
+
+      struct drm_i915_gem_mmap mmap_arg = {
+         .handle = bo->gem_handle,
+         .size = bo->size,
+      };
+      int ret = gen_ioctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
+      if (ret != 0) {
+         DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
+             __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
          return NULL;
       }
-
+      void *map = (void *) (uintptr_t) mmap_arg.addr_ptr;
       VG_DEFINED(map, bo->size);
 
       if (p_atomic_cmpxchg(&bo->map_cpu, NULL, map)) {
@@ -1067,13 +1015,24 @@ static void *
 iris_bo_map_wc(struct pipe_debug_callback *dbg,
                struct iris_bo *bo, unsigned flags)
 {
+   struct iris_bufmgr *bufmgr = bo->bufmgr;
+
    if (!bo->map_wc) {
       DBG("iris_bo_map_wc: %d (%s)\n", bo->gem_handle, bo->name);
-      void *map = iris_bo_gem_mmap(dbg, bo, true);
-      if (!map) {
+
+      struct drm_i915_gem_mmap mmap_arg = {
+         .handle = bo->gem_handle,
+         .size = bo->size,
+         .flags = I915_MMAP_WC,
+      };
+      int ret = gen_ioctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
+      if (ret != 0) {
+         DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
+             __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
          return NULL;
       }
 
+      void *map = (void *) (uintptr_t) mmap_arg.addr_ptr;
       VG_DEFINED(map, bo->size);
 
       if (p_atomic_cmpxchg(&bo->map_wc, NULL, map)) {
@@ -1780,18 +1739,6 @@ static struct gen_mapped_pinned_buffer_alloc aux_map_allocator = {
    .free = gen_aux_map_buffer_free,
 };
 
-static int
-gem_param(int fd, int name)
-{
-   int v = -1; /* No param uses (yet) the sign bit, reserve it for errors */
-
-   struct drm_i915_getparam gp = { .param = name, .value = &v };
-   if (gen_ioctl(fd, DRM_IOCTL_I915_GETPARAM, &gp))
-      return -1;
-
-   return v;
-}
-
 /**
  * Initializes the GEM buffer manager, which uses the kernel to allocate, map,
  * and manage map buffer objections.
@@ -1832,7 +1779,6 @@ iris_bufmgr_create(struct gen_device_info *devinfo, int fd, bool bo_reuse)
 
    bufmgr->has_llc = devinfo->has_llc;
    bufmgr->bo_reuse = bo_reuse;
-   bufmgr->has_mmap_offset = gem_param(fd, I915_PARAM_MMAP_GTT_VERSION) >= 4;
 
    STATIC_ASSERT(IRIS_MEMZONE_SHADER_START == 0ull);
    const uint64_t _4GB = 1ull << 32;

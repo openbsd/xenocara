@@ -35,7 +35,7 @@
 #include "lima_context.h"
 #include "lima_resource.h"
 #include "lima_bo.h"
-#include "lima_job.h"
+#include "lima_submit.h"
 #include "lima_util.h"
 #include "lima_fence.h"
 
@@ -45,14 +45,15 @@
 int lima_ctx_num_plb = LIMA_CTX_PLB_DEF_NUM;
 
 uint32_t
-lima_ctx_buff_va(struct lima_context *ctx, enum lima_ctx_buff buff)
+lima_ctx_buff_va(struct lima_context *ctx, enum lima_ctx_buff buff, unsigned submit)
 {
-   struct lima_job *job = lima_job_get(ctx);
    struct lima_ctx_buff_state *cbs = ctx->buffer_state + buff;
    struct lima_resource *res = lima_resource(cbs->res);
-   int pipe = buff < lima_ctx_buff_num_gp ? LIMA_PIPE_GP : LIMA_PIPE_PP;
 
-   lima_job_add_bo(job, pipe, res->bo, LIMA_SUBMIT_BO_READ);
+   if (submit & LIMA_CTX_BUFF_SUBMIT_GP)
+      lima_submit_add_bo(ctx->gp_submit, res->bo, LIMA_SUBMIT_BO_READ);
+   if (submit & LIMA_CTX_BUFF_SUBMIT_PP)
+      lima_submit_add_bo(ctx->pp_submit, res->bo, LIMA_SUBMIT_BO_READ);
 
    return res->bo->va + cbs->offset;
 }
@@ -108,28 +109,12 @@ lima_invalidate_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
 {
    struct lima_context *ctx = lima_context(pctx);
 
-   struct hash_entry *entry = _mesa_hash_table_search(ctx->write_jobs, prsc);
-   if (!entry)
-      return;
+   if (ctx->framebuffer.base.zsbuf && (ctx->framebuffer.base.zsbuf->texture == prsc))
+      ctx->resolve &= ~(PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL);
 
-   struct lima_job *job = entry->data;
-   if (job->key.zsbuf && (job->key.zsbuf->texture == prsc))
-      job->resolve &= ~(PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL);
-
-   if (job->key.cbuf && (job->key.cbuf->texture == prsc))
-      job->resolve &= ~PIPE_CLEAR_COLOR0;
-
-   _mesa_hash_table_remove_key(ctx->write_jobs, prsc);
-}
-
-static void
-plb_pp_stream_delete_fn(struct hash_entry *entry)
-{
-   struct lima_ctx_plb_pp_stream *s = entry->data;
-
-   lima_bo_unreference(s->bo);
-   list_del(&s->lru_list);
-   ralloc_free(s);
+   if (ctx->framebuffer.base.nr_cbufs &&
+       (ctx->framebuffer.base.cbufs[0]->texture == prsc))
+      ctx->resolve &= ~PIPE_CLEAR_COLOR0;
 }
 
 static void
@@ -138,7 +123,10 @@ lima_context_destroy(struct pipe_context *pctx)
    struct lima_context *ctx = lima_context(pctx);
    struct lima_screen *screen = lima_screen(pctx->screen);
 
-   lima_job_fini(ctx);
+   if (ctx->pp_submit)
+      lima_submit_free(ctx->pp_submit);
+   if (ctx->gp_submit)
+      lima_submit_free(ctx->gp_submit);
 
    for (int i = 0; i < lima_ctx_buff_num; i++)
       pipe_resource_reference(&ctx->buffer_state[i].res, NULL);
@@ -166,8 +154,8 @@ lima_context_destroy(struct pipe_context *pctx)
    if (ctx->gp_output)
       lima_bo_unreference(ctx->gp_output);
 
-   _mesa_hash_table_destroy(ctx->plb_pp_stream,
-                            plb_pp_stream_delete_fn);
+   if (ctx->plb_pp_stream)
+      assert(!_mesa_hash_table_num_entries(ctx->plb_pp_stream));
 
    lima_context_free_drm_ctx(screen, ctx->id);
 
@@ -238,6 +226,12 @@ lima_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
    ctx->base.stream_uploader = ctx->uploader;
    ctx->base.const_uploader = ctx->uploader;
 
+   ctx->damage_rect.minx = ctx->damage_rect.miny = 0xffff;
+   ctx->damage_rect.maxx = ctx->damage_rect.maxy = 0;
+
+   util_dynarray_init(&ctx->vs_cmd_array, ctx);
+   util_dynarray_init(&ctx->plbu_cmd_array, ctx);
+
    ctx->plb_size = screen->plb_max_blk * LIMA_CTX_PLB_BLK_SIZE;
    ctx->plb_gp_size = screen->plb_max_blk * 4;
 
@@ -279,13 +273,19 @@ lima_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
          plb_gp_stream[j] = ctx->plb[i]->va + LIMA_CTX_PLB_BLK_SIZE * j;
    }
 
-   list_inithead(&ctx->plb_pp_stream_lru_list);
-   ctx->plb_pp_stream = _mesa_hash_table_create(
-      ctx, plb_pp_stream_hash, plb_pp_stream_compare);
-   if (!ctx->plb_pp_stream)
+   if (screen->gpu_type == DRM_LIMA_PARAM_GPU_ID_MALI400) {
+      ctx->plb_pp_stream = _mesa_hash_table_create(
+         ctx, plb_pp_stream_hash, plb_pp_stream_compare);
+      if (!ctx->plb_pp_stream)
+         goto err_out;
+   }
+
+   ctx->gp_submit = lima_submit_create(ctx, LIMA_PIPE_GP);
+   if (!ctx->gp_submit)
       goto err_out;
 
-   if (!lima_job_init(ctx))
+   ctx->pp_submit = lima_submit_create(ctx, LIMA_PIPE_PP);
+   if (!ctx->pp_submit)
       goto err_out;
 
    return &ctx->base;
@@ -293,4 +293,11 @@ lima_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
 err_out:
    lima_context_destroy(&ctx->base);
    return NULL;
+}
+
+bool
+lima_need_flush(struct lima_context *ctx, struct lima_bo *bo, bool write)
+{
+   return lima_submit_has_bo(ctx->gp_submit, bo, write) ||
+      lima_submit_has_bo(ctx->pp_submit, bo, write);
 }

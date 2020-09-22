@@ -33,7 +33,7 @@
 
 #include "main/glheader.h"
 #include "main/bufferobj.h"
-
+#include "main/imports.h"
 #include "main/glformats.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
@@ -146,10 +146,13 @@ check_flush(struct copy_context *copy)
  * Dump the parameters/info for a vbo->draw() call.
  */
 static void
-dump_draw_info(const struct tnl_vertex_array *arrays,
+dump_draw_info(struct gl_context *ctx,
+               const struct tnl_vertex_array *arrays,
                const struct _mesa_prim *prims,
                GLuint nr_prims,
-               const struct _mesa_index_buffer *ib)
+               const struct _mesa_index_buffer *ib,
+               GLuint min_index,
+               GLuint max_index)
 {
    GLuint i, j;
 
@@ -189,10 +192,13 @@ flush(struct copy_context *copy)
    copy->dstib.count = copy->dstelt_nr;
 
 #if 0
-   dump_draw_info(copy->dstarray,
+   dump_draw_info(copy->ctx,
+                  copy->dstarray,
                   copy->dstprim,
                   copy->dstprim_nr,
-                  &copy->dstib);
+                  &copy->dstib,
+                  0,
+                  copy->dstbuf_nr);
 #else
    (void) dump_draw_info;
 #endif
@@ -205,8 +211,7 @@ flush(struct copy_context *copy)
               GL_TRUE,
               0,
               copy->dstbuf_nr - 1,
-              1,
-              0);
+              NULL, 0, NULL);
 
    /* Reset all pointers:
     */
@@ -232,6 +237,7 @@ begin(struct copy_context *copy, GLenum mode, GLboolean begin_flag)
 
    prim->mode = mode;
    prim->begin = begin_flag;
+   prim->num_instances = 1;
 }
 
 
@@ -267,7 +273,7 @@ elt(struct copy_context *copy, GLuint elt_idx)
             GLuint k;
             GLfloat *f = (GLfloat *) srcptr;
             for (k = 0; k < srcarray->Size; k++) {
-               assert(!util_is_inf_or_nan(f[k]));
+               assert(!IS_INF_OR_NAN(f[k]));
                assert(f[k] <= 1.0e20 && f[k] >= -1.0e20);
             }
          }
@@ -448,17 +454,13 @@ replay_init(struct copy_context *copy)
          copy->varying[j].size = attrib->Format._ElementSize;
          copy->vertex_size += attrib->Format._ElementSize;
 
-         if (vbo) {
-            if (!_mesa_bufferobj_mapped(vbo, MAP_INTERNAL)) {
-               ctx->Driver.MapBufferRange(ctx, 0, vbo->Size, GL_MAP_READ_BIT, vbo,
-                                          MAP_INTERNAL);
-            }
+         if (_mesa_is_bufferobj(vbo) &&
+             !_mesa_bufferobj_mapped(vbo, MAP_INTERNAL))
+            ctx->Driver.MapBufferRange(ctx, 0, vbo->Size, GL_MAP_READ_BIT, vbo,
+                                       MAP_INTERNAL);
 
-            copy->varying[j].src_ptr =
-                  ADD_POINTERS(vbo->Mappings[MAP_INTERNAL].Pointer, ptr);
-         } else {
-            copy->varying[j].src_ptr = ptr;
-         }
+         copy->varying[j].src_ptr =
+               ADD_POINTERS(vbo->Mappings[MAP_INTERNAL].Pointer, ptr);
 
          copy->dstarray[i].VertexAttrib = &copy->varying[j].dstattribs;
          copy->dstarray[i].BufferBinding = &copy->varying[j].dstbinding;
@@ -469,19 +471,17 @@ replay_init(struct copy_context *copy)
     * caller convert non-indexed prims to indexed.  Could alternately
     * do it internally.
     */
-   if (copy->ib->obj) {
-      if (!_mesa_bufferobj_mapped(copy->ib->obj, MAP_INTERNAL))
-         ctx->Driver.MapBufferRange(ctx, 0, copy->ib->obj->Size, GL_MAP_READ_BIT,
-                                    copy->ib->obj, MAP_INTERNAL);
+   if (_mesa_is_bufferobj(copy->ib->obj) &&
+       !_mesa_bufferobj_mapped(copy->ib->obj, MAP_INTERNAL))
+      ctx->Driver.MapBufferRange(ctx, 0, copy->ib->obj->Size, GL_MAP_READ_BIT,
+                                 copy->ib->obj, MAP_INTERNAL);
 
-      srcptr = (const GLubyte *)
-         ADD_POINTERS(copy->ib->obj->Mappings[MAP_INTERNAL].Pointer,
-                      copy->ib->ptr);
-   } else
-      srcptr = copy->ib->ptr;
+   srcptr = (const GLubyte *)
+            ADD_POINTERS(copy->ib->obj->Mappings[MAP_INTERNAL].Pointer,
+                         copy->ib->ptr);
 
-   switch (copy->ib->index_size_shift) {
-   case 0:
+   switch (copy->ib->index_size) {
+   case 1:
       copy->translated_elt_buf = malloc(sizeof(GLuint) * copy->ib->count);
       copy->srcelt = copy->translated_elt_buf;
 
@@ -489,7 +489,7 @@ replay_init(struct copy_context *copy)
          copy->translated_elt_buf[i] = ((const GLubyte *)srcptr)[i];
       break;
 
-   case 1:
+   case 2:
       copy->translated_elt_buf = malloc(sizeof(GLuint) * copy->ib->count);
       copy->srcelt = copy->translated_elt_buf;
 
@@ -497,7 +497,7 @@ replay_init(struct copy_context *copy)
          copy->translated_elt_buf[i] = ((const GLushort *)srcptr)[i];
       break;
 
-   case 2:
+   case 4:
       copy->translated_elt_buf = NULL;
       copy->srcelt = (const GLuint *)srcptr;
       break;
@@ -531,7 +531,7 @@ replay_init(struct copy_context *copy)
       dstattr->Format = srcattr->Format;
       dstattr->Ptr = copy->dstbuf + offset;
       dstbind->Stride = copy->vertex_size;
-      dstbind->BufferObj = NULL;
+      dstbind->BufferObj = ctx->Shared->NullBufferObj;
       dst->BufferBinding = dstbind;
       dst->VertexAttrib = dstattr;
 
@@ -549,8 +549,8 @@ replay_init(struct copy_context *copy)
     * list:
     */
    copy->dstib.count = 0;        /* duplicates dstelt_nr */
-   copy->dstib.index_size_shift = 2;
-   copy->dstib.obj = NULL;
+   copy->dstib.index_size = 4;
+   copy->dstib.obj = ctx->Shared->NullBufferObj;
    copy->dstib.ptr = copy->dstelt;
 }
 
@@ -573,12 +573,12 @@ replay_finish(struct copy_context *copy)
    for (i = 0; i < copy->nr_varying; i++) {
       struct gl_buffer_object *vbo =
          copy->varying[i].array->BufferBinding->BufferObj;
-      if (vbo && _mesa_bufferobj_mapped(vbo, MAP_INTERNAL))
+      if (_mesa_is_bufferobj(vbo) && _mesa_bufferobj_mapped(vbo, MAP_INTERNAL))
          ctx->Driver.UnmapBuffer(ctx, vbo, MAP_INTERNAL);
    }
 
    /* Unmap index buffer */
-   if (copy->ib->obj &&
+   if (_mesa_is_bufferobj(copy->ib->obj) &&
        _mesa_bufferobj_mapped(copy->ib->obj, MAP_INTERNAL)) {
       ctx->Driver.UnmapBuffer(ctx, copy->ib->obj, MAP_INTERNAL);
    }

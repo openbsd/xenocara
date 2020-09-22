@@ -40,13 +40,25 @@
 #include "lima_bo.h"
 #include "lima_util.h"
 
+#define PTR_TO_UINT(x) ((unsigned)((intptr_t)(x)))
+
+static unsigned handle_hash(void *key)
+{
+    return PTR_TO_UINT(key);
+}
+
+static int handle_compare(void *key1, void *key2)
+{
+    return PTR_TO_UINT(key1) != PTR_TO_UINT(key2);
+}
+
 bool lima_bo_table_init(struct lima_screen *screen)
 {
-   screen->bo_handles = util_hash_table_create_ptr_keys();
+   screen->bo_handles = util_hash_table_create(handle_hash, handle_compare);
    if (!screen->bo_handles)
       return false;
 
-   screen->bo_flink_names = util_hash_table_create_ptr_keys();
+   screen->bo_flink_names = util_hash_table_create(handle_hash, handle_compare);
    if (!screen->bo_flink_names)
       goto err_out0;
 
@@ -54,7 +66,7 @@ bool lima_bo_table_init(struct lima_screen *screen)
    return true;
 
 err_out0:
-   _mesa_hash_table_destroy(screen->bo_handles, NULL);
+   util_hash_table_destroy(screen->bo_handles);
    return false;
 }
 
@@ -71,8 +83,8 @@ bool lima_bo_cache_init(struct lima_screen *screen)
 void lima_bo_table_fini(struct lima_screen *screen)
 {
    mtx_destroy(&screen->bo_table_lock);
-   _mesa_hash_table_destroy(screen->bo_handles, NULL);
-   _mesa_hash_table_destroy(screen->bo_flink_names, NULL);
+   util_hash_table_destroy(screen->bo_handles);
+   util_hash_table_destroy(screen->bo_flink_names);
 }
 
 static void
@@ -101,10 +113,10 @@ lima_bo_free(struct lima_bo *bo)
               bo, bo->size);
 
    mtx_lock(&screen->bo_table_lock);
-   _mesa_hash_table_remove_key(screen->bo_handles,
+   util_hash_table_remove(screen->bo_handles,
                           (void *)(uintptr_t)bo->handle);
    if (bo->flink_name)
-      _mesa_hash_table_remove_key(screen->bo_flink_names,
+      util_hash_table_remove(screen->bo_flink_names,
                              (void *)(uintptr_t)bo->flink_name);
    mtx_unlock(&screen->bo_table_lock);
 
@@ -378,7 +390,7 @@ bool lima_bo_export(struct lima_bo *bo, struct winsys_handle *handle)
          bo->flink_name = flink.name;
 
          mtx_lock(&screen->bo_table_lock);
-         _mesa_hash_table_insert(screen->bo_flink_names,
+         util_hash_table_set(screen->bo_flink_names,
                              (void *)(uintptr_t)bo->flink_name, bo);
          mtx_unlock(&screen->bo_table_lock);
       }
@@ -387,7 +399,7 @@ bool lima_bo_export(struct lima_bo *bo, struct winsys_handle *handle)
 
    case WINSYS_HANDLE_TYPE_KMS:
       mtx_lock(&screen->bo_table_lock);
-      _mesa_hash_table_insert(screen->bo_handles,
+      util_hash_table_set(screen->bo_handles,
                           (void *)(uintptr_t)bo->handle, bo);
       mtx_unlock(&screen->bo_table_lock);
 
@@ -400,7 +412,7 @@ bool lima_bo_export(struct lima_bo *bo, struct winsys_handle *handle)
          return false;
 
       mtx_lock(&screen->bo_table_lock);
-      _mesa_hash_table_insert(screen->bo_handles,
+      util_hash_table_set(screen->bo_handles,
                           (void *)(uintptr_t)bo->handle, bo);
       mtx_unlock(&screen->bo_table_lock);
       return true;
@@ -504,9 +516,9 @@ struct lima_bo *lima_bo_import(struct lima_screen *screen,
 
    if (lima_bo_get_info(bo)) {
       if (handle->type == WINSYS_HANDLE_TYPE_SHARED)
-         _mesa_hash_table_insert(screen->bo_flink_names,
+         util_hash_table_set(screen->bo_flink_names,
                           (void *)(uintptr_t)bo->flink_name, bo);
-      _mesa_hash_table_insert(screen->bo_handles,
+      util_hash_table_set(screen->bo_handles,
                           (void*)(uintptr_t)bo->handle, bo);
    }
    else {

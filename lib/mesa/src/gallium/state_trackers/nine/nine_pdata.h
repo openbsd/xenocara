@@ -9,15 +9,15 @@ struct pheader
     DWORD size;
 };
 
-static bool
-ht_guid_compare( const void *a,
-                 const void *b )
+static int
+ht_guid_compare( void *a,
+                 void *b )
 {
-    return GUID_equal(a, b);
+    return GUID_equal(a, b) ? 0 : 1;
 }
 
-static uint32_t
-ht_guid_hash( const void *key )
+static unsigned
+ht_guid_hash( void *key )
 {
     unsigned i, hash = 0;
     const unsigned char *str = key;

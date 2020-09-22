@@ -29,29 +29,18 @@
 
 #define LIMA_PAGE_SIZE 4096
 
-struct lima_dump;
+extern FILE *lima_dump_command_stream;
 
 bool lima_get_absolute_timeout(uint64_t *timeout);
-
-struct lima_dump *lima_dump_create(void);
-struct lima_dump *lima_dump_next(struct lima_dump *dump);
-void lima_dump_free(struct lima_dump *dump);
-
-void lima_dump_vs_command_stream_print(struct lima_dump *dump, void *data,
-                                       int size, uint32_t start);
-void lima_dump_plbu_command_stream_print(struct lima_dump *dump, void *data,
-                                         int size, uint32_t start);
-void lima_dump_rsw_command_stream_print(struct lima_dump *dump, void *data,
-                                        int size, uint32_t start);
-void lima_dump_texture_descriptor(struct lima_dump *dump, void *data,
-                                  int size, uint32_t start, uint32_t offset);
-
-void _lima_dump_command_stream_print(struct lima_dump *dump, void *data,
-                                     int size, bool is_float, const char *fmt, ...);
-#define lima_dump_command_stream_print(dump, ...) \
-   do { \
-      if (dump) \
-         _lima_dump_command_stream_print(dump, __VA_ARGS__); \
-   } while (0)
+void lima_dump_file_open(void);
+void lima_dump_file_next(void);
+void lima_dump_file_close(void);
+void lima_dump_blob(FILE *fp, void *data, int size, bool is_float);
+void lima_dump_vs_command_stream_print(void *data, int size, uint32_t start);
+void lima_dump_plbu_command_stream_print(void *data, int size, uint32_t start);
+void lima_dump_rsw_command_stream_print(void *data, int size, uint32_t start);
+void lima_dump_texture_descriptor(void *data, int size, uint32_t start, uint32_t offset);
+void lima_dump_command_stream_print(void *data, int size, bool is_float,
+                                    const char *fmt, ...);
 
 #endif

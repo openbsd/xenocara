@@ -25,7 +25,6 @@ import enum
 import json
 import pathlib
 import re
-import subprocess
 import typing
 
 import attr
@@ -39,11 +38,10 @@ if typing.TYPE_CHECKING:
 
         sha: str
         description: str
-        nominated: bool
+        nomintated: bool
         nomination_type: typing.Optional[int]
         resolution: typing.Optional[int]
         master_sha: typing.Optional[str]
-        because_sha: typing.Optional[str]
 
 IS_FIX = re.compile(r'^\s*fixes:\s*([a-f0-9]{6,40})', flags=re.MULTILINE | re.IGNORECASE)
 # FIXME: I dislike the duplication in this regex, but I couldn't get it to work otherwise
@@ -55,10 +53,6 @@ IS_REVERT = re.compile(r'This reverts commit ([0-9a-f]{40})')
 SEM = asyncio.Semaphore(50)
 
 COMMIT_LOCK = asyncio.Lock()
-
-git_toplevel = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'],
-                                       stderr=subprocess.DEVNULL).decode("ascii").strip()
-pick_status_json = pathlib.Path(git_toplevel) / '.pick_status.json'
 
 
 class PickUIException(Exception):
@@ -83,11 +77,12 @@ class Resolution(enum.Enum):
     NOTNEEDED = 4
 
 
-async def commit_state(*, amend: bool = False, message: str = 'Update') -> bool:
+async def commit_state(*, amend: bool = False, message: str = 'Update') -> None:
     """Commit the .pick_status.json file."""
+    f = pathlib.Path(__file__).parent.parent.parent / '.pick_status.json'
     async with COMMIT_LOCK:
         p = await asyncio.create_subprocess_exec(
-            'git', 'add', pick_status_json.as_posix(),
+            'git', 'add', f.as_posix(),
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
         )
@@ -150,7 +145,7 @@ class Commit:
             _, err = await p.communicate()
 
         if p.returncode != 0:
-            return (False, err.decode())
+            return (False, err)
 
         self.resolution = Resolution.MERGED
         await ui.feedback(f'{self.sha} ({self.description}) applied successfully')
@@ -196,16 +191,9 @@ class Commit:
 
 
 async def get_new_commits(sha: str) -> typing.List[typing.Tuple[str, str]]:
-    # Try to get the authoritative upstream master
+    # TODO: config file that points to the upstream branch
     p = await asyncio.create_subprocess_exec(
-        'git', 'for-each-ref', '--format=%(upstream)', 'refs/heads/master',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL)
-    out, _ = await p.communicate()
-    upstream = out.decode().strip()
-
-    p = await asyncio.create_subprocess_exec(
-        'git', 'log', '--pretty=oneline', f'{sha}..{upstream}',
+        'git', 'log', '--pretty=oneline', f'{sha}..master',
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL)
     out, _ = await p.communicate()
@@ -249,7 +237,7 @@ async def full_sha(sha: str) -> str:
 async def resolve_nomination(commit: 'Commit', version: str) -> 'Commit':
     async with SEM:
         p = await asyncio.create_subprocess_exec(
-            'git', 'log', '--format=%B', '-1', commit.sha,
+            'git', 'log', '--pretty=medium', '-1', commit.sha,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
@@ -257,8 +245,8 @@ async def resolve_nomination(commit: 'Commit', version: str) -> 'Commit':
         assert p.returncode == 0, f'git log for {commit.sha} failed'
     out = _out.decode()
 
-    # We give precedence to fixes and cc tags over revert tags.
-    # XXX: not having the walrus operator available makes me sad :=
+    # We give presedence to fixes and cc tags over revert tags.
+    # XXX: not having the wallrus operator available makes me sad :=
     m = IS_FIX.search(out)
     if m:
         # We set the nomination_type and because_sha here so that we can later
@@ -335,24 +323,22 @@ async def gather_commits(version: str, previous: typing.List['Commit'],
     # We create an array of the final size up front, then we pass that array
     # to the "inner" co-routine, which is turned into a list of tasks and
     # collected by asyncio.gather. We do this to allow the tasks to be
-    # asynchronously gathered, but to also ensure that the commits list remains
+    # asyncrounously gathered, but to also ensure that the commits list remains
     # in order.
-    m_commits: typing.List[typing.Optional['Commit']] = [None] * len(new)
+    commits = [None] * len(new)
     tasks = []
 
-    async def inner(commit: 'Commit', version: str,
-                    commits: typing.List[typing.Optional['Commit']],
+    async def inner(commit: 'Commit', version: str, commits: typing.List['Commit'],
                     index: int, cb) -> None:
         commits[index] = await resolve_nomination(commit, version)
         cb()
 
     for i, (sha, desc) in enumerate(new):
         tasks.append(asyncio.ensure_future(
-            inner(Commit(sha, desc), version, m_commits, i, cb)))
+            inner(Commit(sha, desc), version, commits, i, cb)))
 
     await asyncio.gather(*tasks)
-    assert None not in m_commits
-    commits = typing.cast(typing.List[Commit], m_commits)
+    assert None not in commits
 
     await resolve_fixes(commits, previous)
 
@@ -364,16 +350,18 @@ async def gather_commits(version: str, previous: typing.List['Commit'],
 
 
 def load() -> typing.List['Commit']:
-    if not pick_status_json.exists():
+    p = pathlib.Path(__file__).parent.parent.parent / '.pick_status.json'
+    if not p.exists():
         return []
-    with pick_status_json.open('r') as f:
+    with p.open('r') as f:
         raw = json.load(f)
         return [Commit.from_json(c) for c in raw]
 
 
 def save(commits: typing.Iterable['Commit']) -> None:
+    p = pathlib.Path(__file__).parent.parent.parent / '.pick_status.json'
     commits = list(commits)
-    with pick_status_json.open('wt') as f:
+    with p.open('wt') as f:
         json.dump([c.to_json() for c in commits], f, indent=4)
 
     asyncio.ensure_future(commit_state(message=f'Update to {commits[0].sha}'))

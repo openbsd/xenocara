@@ -321,23 +321,23 @@ llvm_fetch_gs_outputs(struct draw_geometry_shader *shader,
    int vertex_count = 0;
    int total_prims = 0;
    int max_prims_per_invocation = 0;
-   char *output_ptr = (char*)shader->gs_output[stream];
+   char *output_ptr = (char*)shader->gs_output;
    int i, j, prim_idx;
    unsigned next_prim_boundary = shader->primitive_boundary;
 
    for (i = 0; i < shader->vector_length; ++i) {
-      int prims = shader->llvm_emitted_primitives[i + (stream * shader->vector_length)];
+      int prims = shader->llvm_emitted_primitives[i];
       total_prims += prims;
       max_prims_per_invocation = MAX2(max_prims_per_invocation, prims);
    }
    for (i = 0; i < shader->vector_length; ++i) {
-      total_verts += shader->llvm_emitted_vertices[i + (stream * shader->vector_length)];
+      total_verts += shader->llvm_emitted_vertices[i];
    }
 
-   output_ptr += shader->stream[stream].emitted_vertices * shader->vertex_size;
+   output_ptr += shader->stream[0].emitted_vertices * shader->vertex_size;
    for (i = 0; i < shader->vector_length - 1; ++i) {
       int current_verts = shader->llvm_emitted_vertices[i];
-      int next_verts = shader->llvm_emitted_vertices[i + 1 + (stream * shader->vector_length)];
+      int next_verts = shader->llvm_emitted_vertices[i + 1];
 #if 0
       int j; 
       for (j = 0; j < current_verts; ++j) {
@@ -377,18 +377,18 @@ llvm_fetch_gs_outputs(struct draw_geometry_shader *shader,
 
    prim_idx = 0;
    for (i = 0; i < shader->vector_length; ++i) {
-      int num_prims = shader->llvm_emitted_primitives[i + (stream * shader->vector_length)];
+      int num_prims = shader->llvm_emitted_primitives[i];
       for (j = 0; j < num_prims; ++j) {
          int prim_length =
             shader->llvm_prim_lengths[j][i];
-         shader->stream[stream].primitive_lengths[shader->stream[stream].emitted_primitives + prim_idx] =
+         shader->stream[0].primitive_lengths[shader->stream[0].emitted_primitives + prim_idx] =
             prim_length;
          ++prim_idx;
       }
    }
 
-   shader->stream[stream].emitted_primitives += total_prims;
-   shader->stream[stream].emitted_vertices += total_verts;
+   shader->stream[0].emitted_primitives += total_prims;
+   shader->stream[0].emitted_vertices += total_verts;
 }
 
 static void
@@ -402,24 +402,20 @@ static void
 llvm_gs_run(struct draw_geometry_shader *shader,
             unsigned input_primitives, unsigned *out_prims)
 {
-   struct vertex_header *input[PIPE_MAX_VERTEX_STREAMS];
-   for (unsigned i = 0; i < shader->num_vertex_streams; i++) {
-      char *tmp = (char *)shader->gs_output[i];
-      tmp += shader->stream[i].emitted_vertices * shader->vertex_size;
-      input[i] = (struct vertex_header *)tmp;
-   }
+   unsigned ret;
+   char *input = (char*)shader->gs_output;
 
-   shader->current_variant->jit_func(
+   input += (shader->stream[0].emitted_vertices * shader->vertex_size);
+
+   ret = shader->current_variant->jit_func(
       shader->jit_context, shader->gs_input->data,
-      input,
+      (struct vertex_header*)input,
       input_primitives,
       shader->draw->instance_id,
       shader->llvm_prim_ids,
       shader->invocation_id);
 
-   for (unsigned i = 0; i < shader->num_vertex_streams; i++) {
-      out_prims[i] = shader->jit_context->emitted_prims[i];
-   }
+   *out_prims = ret;
 }
 
 #endif
@@ -638,9 +634,7 @@ int draw_geometry_shader_run(struct draw_geometry_shader *shader,
 
 #ifdef LLVM_AVAILABLE
    if (shader->draw->llvm) {
-      for (i = 0; i < shader->num_vertex_streams; i++) {
-         shader->gs_output[i] = output_verts[i].verts;
-      }
+      shader->gs_output = output_verts[0].verts;
       if (max_out_prims > shader->max_out_prims) {
          unsigned i;
          if (shader->llvm_prim_lengths) {
@@ -878,9 +872,9 @@ draw_create_geometry_shader(struct draw_context *draw,
       memset(gs->gs_input, 0, sizeof(struct draw_gs_inputs));
       gs->llvm_prim_lengths = 0;
 
-      gs->llvm_emitted_primitives = align_malloc(vector_size * PIPE_MAX_VERTEX_STREAMS, vector_size);
-      gs->llvm_emitted_vertices = align_malloc(vector_size * PIPE_MAX_VERTEX_STREAMS, vector_size);
-      gs->llvm_prim_ids = align_calloc(vector_size, vector_size);
+      gs->llvm_emitted_primitives = align_malloc(vector_size, vector_size);
+      gs->llvm_emitted_vertices = align_malloc(vector_size, vector_size);
+      gs->llvm_prim_ids = align_malloc(vector_size, vector_size);
 
       gs->fetch_outputs = llvm_fetch_gs_outputs;
       gs->fetch_inputs = llvm_fetch_gs_input;

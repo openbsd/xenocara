@@ -283,8 +283,7 @@ TEST_F(array_refcount_test, mark_array_elements_referenced_simple)
    };
    const unsigned accessed_element = 0 + (1 * 5) + (2 * 4 * 5);
 
-   link_util_mark_array_elements_referenced(dr, 3, entry.array_depth,
-                                            entry.bits);
+   entry.mark_array_elements_referenced(dr, 3);
 
    for (unsigned i = 0; i < total_elements; i++)
       EXPECT_EQ(i == accessed_element, entry.is_linearized_index_referenced(i));
@@ -303,8 +302,7 @@ TEST_F(array_refcount_test, mark_array_elements_referenced_whole_first_array)
       { 0, 5 }, { 1, 4 }, { 3, 3 }
    };
 
-   link_util_mark_array_elements_referenced(dr, 3, entry.array_depth,
-                                            entry.bits);
+   entry.mark_array_elements_referenced(dr, 3);
 
    for (unsigned i = 0; i < 3; i++) {
       for (unsigned j = 0; j < 4; j++) {
@@ -332,8 +330,7 @@ TEST_F(array_refcount_test, mark_array_elements_referenced_whole_second_array)
       { 0, 5 }, { 4, 4 }, { 1, 3 }
    };
 
-   link_util_mark_array_elements_referenced(dr, 3, entry.array_depth,
-                                            entry.bits);
+   entry.mark_array_elements_referenced(dr, 3);
 
    for (unsigned i = 0; i < 3; i++) {
       for (unsigned j = 0; j < 4; j++) {
@@ -361,8 +358,7 @@ TEST_F(array_refcount_test, mark_array_elements_referenced_whole_third_array)
       { 5, 5 }, { 2, 4 }, { 1, 3 }
    };
 
-   link_util_mark_array_elements_referenced(dr, 3, entry.array_depth,
-                                            entry.bits);
+   entry.mark_array_elements_referenced(dr, 3);
 
    for (unsigned i = 0; i < 3; i++) {
       for (unsigned j = 0; j < 4; j++) {
@@ -390,8 +386,7 @@ TEST_F(array_refcount_test, mark_array_elements_referenced_whole_first_and_third
       { 5, 5 }, { 3, 4 }, { 3, 3 }
    };
 
-   link_util_mark_array_elements_referenced(dr, 3, entry.array_depth,
-                                            entry.bits);
+   entry.mark_array_elements_referenced(dr, 3);
 
    for (unsigned i = 0; i < 3; i++) {
       for (unsigned j = 0; j < 4; j++) {

@@ -152,7 +152,9 @@ st_BeginPerfQuery(struct gl_context *ctx, struct gl_perf_query_object *o)
    assert(!o->Active);
    assert(!o->Used || o->Ready); /* no in-flight query to worry about */
 
-   return pipe->begin_intel_perf_query(pipe, (struct pipe_query *)o);
+   pipe->begin_intel_perf_query(pipe, (struct pipe_query *)o);
+
+   return true;
 }
 
 static void

@@ -25,8 +25,7 @@
 # ---------------------------------------
 
 LIBISL_GENX_COMMON_INCLUDES := \
-	$(MESA_TOP)/src/ \
-	$(MESA_TOP)/src/gallium/include/
+	$(MESA_TOP)/src/
 
 # ---------------------------------------
 # Build libmesa_isl_gen4

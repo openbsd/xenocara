@@ -490,7 +490,7 @@ rbug_delete_vs_state(struct pipe_context *_pipe,
    struct rbug_context *rb_pipe = rbug_context(_pipe);
    struct rbug_shader *rb_shader = rbug_shader(_vs);
 
-   mtx_lock(&rb_pipe->call_mutex);
+   mtx_unlock(&rb_pipe->call_mutex);
    rbug_shader_destroy(rb_pipe, rb_shader);
    mtx_unlock(&rb_pipe->call_mutex);
 }
@@ -921,7 +921,6 @@ rbug_flush_resource(struct pipe_context *_pipe,
 static void
 rbug_clear(struct pipe_context *_pipe,
            unsigned buffers,
-           const struct pipe_scissor_state *scissor_state,
            const union pipe_color_union *color,
            double depth,
            unsigned stencil)
@@ -932,7 +931,6 @@ rbug_clear(struct pipe_context *_pipe,
    mtx_lock(&rb_pipe->call_mutex);
    pipe->clear(pipe,
                buffers,
-               scissor_state,
                color,
                depth,
                stencil);

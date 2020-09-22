@@ -23,10 +23,7 @@
  */
 
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
+#include "main/imports.h"
 #include "main/cpuinfo.h"
 
 

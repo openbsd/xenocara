@@ -30,11 +30,10 @@
 #include <stddef.h>
 
 #include "main/glheader.h"
+#include "main/imports.h"
 #include "main/macros.h"
 
 #include "m_vector.h"
-
-#include "util/u_memory.h"
 
 
 
@@ -110,7 +109,7 @@ _mesa_vector4f_alloc( GLvector4f *v, GLbitfield flags, GLuint count,
 {
    v->stride = 4 * sizeof(GLfloat);
    v->size = 2;
-   v->storage = align_malloc( count * 4 * sizeof(GLfloat), alignment );
+   v->storage = _mesa_align_malloc( count * 4 * sizeof(GLfloat), alignment );
    v->storage_count = count;
    v->start = (GLfloat *) v->storage;
    v->data = (GLfloat (*)[4]) v->storage;
@@ -128,7 +127,7 @@ void
 _mesa_vector4f_free( GLvector4f *v )
 {
    if (v->flags & VEC_MALLOC) {
-      align_free( v->storage );
+      _mesa_align_free( v->storage );
       v->data = NULL;
       v->start = NULL;
       v->storage = NULL;

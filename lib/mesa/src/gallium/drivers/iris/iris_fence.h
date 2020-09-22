@@ -51,8 +51,7 @@ iris_syncpt_reference(struct iris_screen *screen,
                       struct iris_syncpt **dst,
                       struct iris_syncpt *src)
 {
-   if (pipe_reference(*dst ? &(*dst)->ref : NULL,
-                      src ? &src->ref: NULL))
+   if (pipe_reference(&(*dst)->ref, &src->ref))
       iris_syncpt_destroy(screen, *dst);
 
    *dst = src;

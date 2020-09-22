@@ -176,13 +176,11 @@ ctx_print_buffer(struct gen_batch_decode_ctx *ctx,
    const uint32_t *dw_end =
          bo.map + ROUND_DOWN_TO(MIN2(bo.size, read_length), 4);
 
-   int column_count = 0, pitch_col_count = 0, line_count = -1;
+   int column_count = 0, line_count = -1;
    for (const uint32_t *dw = bo.map; dw < dw_end; dw++) {
-      if (pitch_col_count * 4 == pitch || column_count == 8) {
+      if (column_count * 4 == pitch || column_count == 8) {
          fprintf(ctx->fp, "\n");
          column_count = 0;
-         if (pitch_col_count * 4 == pitch)
-            pitch_col_count = 0;
          line_count++;
 
          if (max_lines >= 0 && line_count >= max_lines)
@@ -196,7 +194,6 @@ ctx_print_buffer(struct gen_batch_decode_ctx *ctx,
          fprintf(ctx->fp, "  0x%08x", *dw);
 
       column_count++;
-      pitch_col_count++;
    }
    fprintf(ctx->fp, "\n");
 }
@@ -378,7 +375,7 @@ handle_media_interface_descriptor_load(struct gen_batch_decode_ctx *ctx,
       }
 
       ctx_disassemble_program(ctx, ksp, "compute shader");
-      fprintf(ctx->fp, "\n");
+      printf("\n");
 
       dump_samplers(ctx, sampler_offset, sampler_count);
       dump_binding_table(ctx, binding_table_offset, binding_entry_count);
@@ -540,7 +537,7 @@ decode_single_ksp(struct gen_batch_decode_ctx *ctx, const uint32_t *p)
 
    if (is_enabled) {
       ctx_disassemble_program(ctx, ksp, type);
-      fprintf(ctx->fp, "\n");
+      printf("\n");
    }
 }
 

@@ -9,8 +9,7 @@
 static bool
 blit_resolve(struct zink_context *ctx, const struct pipe_blit_info *info)
 {
-   if (util_format_get_mask(info->dst.format) != info->mask ||
-       util_format_get_mask(info->src.format) != info->mask ||
+   if (info->mask != PIPE_MASK_RGBA ||
        info->scissor_enable ||
        info->alpha_blend)
       return false;
@@ -67,14 +66,9 @@ blit_resolve(struct zink_context *ctx, const struct pipe_blit_info *info)
 static bool
 blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
 {
-   if (util_format_get_mask(info->dst.format) != info->mask ||
-       util_format_get_mask(info->src.format) != info->mask ||
+   if (info->mask != PIPE_MASK_RGBA ||
        info->scissor_enable ||
        info->alpha_blend)
-      return false;
-
-   if (util_format_is_depth_or_stencil(info->dst.format) &&
-       info->dst.format != info->src.format)
       return false;
 
    struct zink_resource *src = zink_resource(info->src.resource);

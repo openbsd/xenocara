@@ -48,7 +48,7 @@ struct i915_winsys_batchbuffer;
 extern unsigned i915_debug;
 
 #ifdef DEBUG
-static inline bool
+static inline boolean
 I915_DBG_ON(unsigned flags)
 {
    return i915_debug & flags;

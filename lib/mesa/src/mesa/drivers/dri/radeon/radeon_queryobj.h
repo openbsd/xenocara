@@ -25,6 +25,7 @@
  *
  */
 
+#include "main/imports.h"
 #include "util/simple_list.h"
 #include "radeon_common_context.h"
 

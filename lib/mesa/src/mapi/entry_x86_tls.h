@@ -27,12 +27,6 @@
 
 #include <string.h>
 
-#ifdef __CET__
-#define ENDBR "endbr32\n\t"
-#else
-#define ENDBR
-#endif
-
 #ifdef HAVE_FUNC_ATTRIBUTE_VISIBILITY
 #define HIDDEN __attribute__((visibility("hidden")))
 #else
@@ -65,7 +59,6 @@ __asm__(".balign 16\n"
    func ":"
 
 #define STUB_ASM_CODE(slot)                                 \
-   ENDBR                                                    \
    "call 1f\n"                                              \
    "1:\n\t"                                                 \
    "popl %eax\n\t"                                          \

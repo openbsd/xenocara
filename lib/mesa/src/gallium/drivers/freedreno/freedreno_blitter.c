@@ -114,13 +114,15 @@ fd_blitter_pipe_begin(struct fd_context *ctx, bool render_cond, bool discard,
 	if (ctx->batch)
 		fd_batch_set_stage(ctx->batch, stage);
 
-	ctx->in_discard_blit = discard;
+	ctx->in_blit = discard;
 }
 
 static void
 fd_blitter_pipe_end(struct fd_context *ctx)
 {
-	ctx->in_discard_blit = false;
+	if (ctx->batch)
+		fd_batch_set_stage(ctx->batch, FD_STAGE_NULL);
+	ctx->in_blit = false;
 }
 
 bool

@@ -24,7 +24,7 @@ import os
 import sys
 import textwrap
 
-import xml.etree.ElementTree as et
+import xml.etree.cElementTree as et
 
 hashed_funcs = {}
 
@@ -667,7 +667,6 @@ def main():
 
             c(".kind = GEN_PERF_QUERY_TYPE_OA,\n")
             c(".name = \"" + set.name + "\",\n")
-            c(".symbol_name = \"" + set.symbol_name + "\",\n")
             c(".guid = \"" + set.hw_config_guid + "\",\n")
 
             c(".counters = {0}_{1}_query_counters,".format(gen.chipset, set.underscore_name))

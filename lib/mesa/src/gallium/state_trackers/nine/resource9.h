@@ -27,7 +27,7 @@
 #include "pipe/p_state.h"
 
 struct pipe_screen;
-struct hash_table;
+struct util_hash_table;
 struct NineDevice9;
 
 struct NineResource9
