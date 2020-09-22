@@ -74,7 +74,7 @@ const ModStruct bomb_description =
 
 #endif
 
-#include <sys/signal.h>
+#include <signal.h>
 
 #if 0
 #define SIMPLE_COUNTDOWN	/* Display a simple integer countdown,     */
