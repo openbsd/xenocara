@@ -30,6 +30,7 @@
 
 #include "radv_radeon_winsys.h"
 #include "ac_gpu_info.h"
+#include "addrlib/inc/addrinterface.h"
 #include <amdgpu.h>
 #include "util/list.h"
 #include <pthread.h>
@@ -40,9 +41,10 @@ struct radv_amdgpu_winsys {
 
 	struct radeon_info info;
 	struct amdgpu_gpu_info amdinfo;
-	struct ac_addrlib *addrlib;
+	ADDR_HANDLE addrlib;
 
 	bool debug_all_bos;
+	bool batchchain;
 	bool use_ib_bos;
 	bool zero_all_vram_allocs;
 	bool use_local_bos;

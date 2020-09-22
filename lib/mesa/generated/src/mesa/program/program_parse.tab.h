@@ -161,7 +161,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 130 "../src/mesa/program/program_parse.y" /* yacc.c:1921  */
+#line 129 "../src/mesa/program/program_parse.y" /* yacc.c:1921  */
 
    struct asm_instruction *inst;
    struct asm_symbol *sym;

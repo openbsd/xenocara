@@ -37,6 +37,7 @@
 #include "main/fbobject.h"
 #include "main/extensions.h"
 #include "main/glthread.h"
+#include "main/imports.h"
 #include "main/macros.h"
 #include "main/points.h"
 #include "main/version.h"
@@ -75,7 +76,6 @@
 #include "util/ralloc.h"
 #include "util/debug.h"
 #include "util/disk_cache.h"
-#include "util/u_memory.h"
 #include "isl/isl.h"
 
 #include "common/gen_defines.h"
@@ -290,31 +290,6 @@ intel_glFlush(struct gl_context *ctx)
 }
 
 static void
-intel_glEnable(struct gl_context *ctx, GLenum cap, GLboolean state)
-{
-   struct brw_context *brw = brw_context(ctx);
-
-   switch (cap) {
-   case GL_BLACKHOLE_RENDER_INTEL:
-      brw->frontend_noop = state;
-      intel_batchbuffer_flush(brw);
-      intel_batchbuffer_maybe_noop(brw);
-      /* Because we started previous batches with a potential
-       * MI_BATCH_BUFFER_END if NOOP was enabled, that means that anything
-       * that was ever emitted after that never made it to the HW. So when the
-       * blackhole state changes from NOOP->!NOOP reupload the entire state.
-       */
-      if (!brw->frontend_noop) {
-         brw->NewGLState = ~0u;
-         brw->ctx.NewDriverState = ~0ull;
-      }
-      break;
-   default:
-      break;
-   }
-}
-
-static void
 intel_finish(struct gl_context * ctx)
 {
    struct brw_context *brw = brw_context(ctx);
@@ -343,7 +318,6 @@ brw_init_driver_functions(struct brw_context *brw,
    if (!brw->driContext->driScreenPriv->dri2.useInvalidate)
       functions->Viewport = intel_viewport;
 
-   functions->Enable = intel_glEnable;
    functions->Flush = intel_glFlush;
    functions->Finish = intel_finish;
    functions->GetString = intel_get_string;
@@ -602,6 +576,14 @@ brw_initialize_context_constants(struct brw_context *brw)
    ctx->Const.MaxIntegerSamples = max_samples;
    ctx->Const.MaxImageSamples = 0;
 
+   /* gen6_set_sample_maps() sets SampleMap{2,4,8}x variables which are used
+    * to map indices of rectangular grid to sample numbers within a pixel.
+    * These variables are used by GL_EXT_framebuffer_multisample_blit_scaled
+    * extension implementation. For more details see the comment above
+    * gen6_set_sample_maps() definition.
+    */
+   gen6_set_sample_maps(ctx);
+
    ctx->Const.MinLineWidth = 1.0;
    ctx->Const.MinLineWidthAA = 1.0;
    if (devinfo->gen >= 6) {
@@ -835,24 +817,6 @@ brw_initialize_cs_context_constants(struct brw_context *brw)
    ctx->Const.MaxComputeWorkGroupSize[2] = max_invocations;
    ctx->Const.MaxComputeWorkGroupInvocations = max_invocations;
    ctx->Const.MaxComputeSharedMemorySize = 64 * 1024;
-
-   /* Constants used for ARB_compute_variable_group_size.  The compiler will
-    * use the maximum to decide which SIMDs can be used.  If we top this like
-    * max_invocations, that would prevent SIMD8 / SIMD16 to be considered.
-    *
-    * TODO: To avoid the trade off above between having the lower maximum
-    * vs. always using SIMD32, keep all three shader variants (for each SIMD)
-    * and select a suitable one at dispatch time.
-    */
-   if (devinfo->gen >= 7) {
-      const uint32_t max_var_invocations =
-         (max_threads >= 64 ? 8 : (max_threads >= 32 ? 16 : 32)) * max_threads;
-      assert(max_var_invocations >= 512);
-      ctx->Const.MaxComputeVariableGroupSize[0] = max_var_invocations;
-      ctx->Const.MaxComputeVariableGroupSize[1] = max_var_invocations;
-      ctx->Const.MaxComputeVariableGroupSize[2] = max_var_invocations;
-      ctx->Const.MaxComputeVariableGroupInvocations = max_var_invocations;
-   }
 }
 
 /**
@@ -871,7 +835,7 @@ brw_process_driconf_options(struct brw_context *brw)
    driOptionCache *options = &brw->optionCache;
    driParseConfigFiles(options, &brw->screen->optionCache,
                        brw->driContext->driScreenPriv->myNum,
-                       "i965", NULL, NULL, 0, NULL, 0);
+                       "i965", NULL, NULL, 0);
 
    if (INTEL_DEBUG & DEBUG_NO_HIZ) {
        brw->has_hiz = false;
@@ -1036,7 +1000,7 @@ brwCreateContext(gl_api api,
       _swrast_CreateContext(ctx);
    }
 
-   _vbo_CreateContext(ctx, true);
+   _vbo_CreateContext(ctx);
    if (ctx->swrast_context) {
       _tnl_CreateContext(ctx);
       TNL_CONTEXT(ctx)->Driver.RunPipeline = _tnl_run_pipeline;
@@ -1169,6 +1133,9 @@ brwCreateContext(gl_api api,
 
    if (ctx->Extensions.INTEL_performance_query)
       brw_init_performance_queries(brw);
+
+   vbo_use_buffer_objects(ctx);
+   vbo_always_unmap_buffers(ctx);
 
    brw->ctx.Cache = brw->screen->disk_cache;
 

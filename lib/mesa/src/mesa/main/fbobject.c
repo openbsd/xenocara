@@ -3037,7 +3037,6 @@ _mesa_bind_framebuffers(struct gl_context *ctx,
       check_begin_texture_render(ctx, newDrawFb);
 
       _mesa_reference_framebuffer(&ctx->DrawBuffer, newDrawFb);
-      _mesa_update_allow_draw_out_of_order(ctx);
    }
 
    if ((bindDrawBuf || bindReadBuf) && ctx->Driver.BindFramebuffer) {
@@ -4814,11 +4813,7 @@ _mesa_GetFramebufferParameterivEXT(GLuint framebuffer, GLenum pname,
          *param = fb->ColorReadBuffer;
       }
       else if (GL_DRAW_BUFFER0 <= pname && pname <= GL_DRAW_BUFFER15) {
-         unsigned buffer = pname - GL_DRAW_BUFFER0;
-         if (buffer < ARRAY_SIZE(fb->ColorDrawBuffer))
-            *param = fb->ColorDrawBuffer[buffer];
-         else
-            _mesa_error(ctx, GL_INVALID_ENUM, "glGetFramebufferParameterivEXT(pname)");
+         *param = fb->ColorDrawBuffer[pname - GL_DRAW_BUFFER0];
       }
       else {
          _mesa_error(ctx, GL_INVALID_ENUM, "glGetFramebufferParameterivEXT(pname)");

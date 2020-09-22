@@ -193,7 +193,7 @@ extern int _mesa_glsl_debug;
 
 union YYSTYPE
 {
-#line 101 "../src/compiler/glsl/glsl_parser.yy" /* yacc.c:1921  */
+#line 100 "../src/compiler/glsl/glsl_parser.yy" /* yacc.c:1921  */
 
    int n;
    int64_t n64;

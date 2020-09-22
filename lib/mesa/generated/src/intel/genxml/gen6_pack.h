@@ -1476,6 +1476,7 @@ struct GEN6_3DSTATE_CLIP {
    bool                                 PerspectiveDivideDisable;
    uint32_t                             ClipMode;
 #define CLIPMODE_NORMAL                          0
+#define reserved                                 2
 #define CLIPMODE_REJECT_ALL                      3
 #define CLIPMODE_ACCEPT_ALL                      4
    uint32_t                             UserClipDistanceClipTestEnableBitmask;

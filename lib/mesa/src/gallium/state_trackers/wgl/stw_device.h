@@ -31,8 +31,7 @@
 
 #include "pipe/p_compiler.h"
 #include "util/u_handle_table.h"
-#include <GL/gl.h>
-#include "gldrv.h"
+#include "stw_icd.h"
 #include "stw_pixelformat.h"
 
 
@@ -47,12 +46,11 @@ struct stw_framebuffer;
 struct stw_device
 {
    const struct stw_winsys *stw_winsys;
-
-   CRITICAL_SECTION screen_mutex;
-   bool screen_initialized;
+   
    struct pipe_screen *screen;
-
+   
    /* Cache some PIPE_CAP_* */
+   unsigned max_2d_levels;
    unsigned max_2d_length;
 
    struct st_api *stapi;
@@ -64,7 +62,7 @@ struct stw_device
    unsigned pixelformat_count;
    unsigned pixelformat_extended_count;
 
-   struct WGLCALLBACKS callbacks;
+   GLCALLBACKTABLE callbacks;
 
    CRITICAL_SECTION ctx_mutex;
    struct handle_table *ctx_table;
@@ -90,8 +88,6 @@ struct stw_device
 
 extern struct stw_device *stw_dev;
 
-boolean
-stw_init_screen(void);
 
 static inline struct stw_context *
 stw_lookup_context_locked( DHGLRC dhglrc )

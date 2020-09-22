@@ -36,7 +36,7 @@
 #include "util/u_hash_table.h"
 #include "util/hash_table.h"
 #include "util/xmlconfig.h"
-#include "drm-uapi/amdgpu_drm.h"
+#include <amdgpu_drm.h>
 #include <xf86drm.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -48,7 +48,7 @@
 #define AMDGPU_INFO_NUM_VRAM_CPU_PAGE_FAULTS	0x1E
 #endif
 
-static struct hash_table *dev_tab = NULL;
+static struct util_hash_table *dev_tab = NULL;
 static simple_mtx_t dev_tab_mutex = _SIMPLE_MTX_INITIALIZER_NP;
 
 DEBUG_GET_ONCE_BOOL_OPTION(all_bos, "RADEON_ALL_BOS", false)
@@ -102,7 +102,7 @@ static bool do_winsys_init(struct amdgpu_winsys *ws,
 
    handle_env_var_force_family(ws);
 
-   ws->addrlib = ac_addrlib_create(&ws->info, &ws->amdinfo, &ws->info.max_alignment);
+   ws->addrlib = amdgpu_addr_create(&ws->info, &ws->amdinfo, &ws->info.max_alignment);
    if (!ws->addrlib) {
       fprintf(stderr, "amdgpu: Cannot create addrlib.\n");
       goto fail;
@@ -139,12 +139,12 @@ static void do_winsys_deinit(struct amdgpu_winsys *ws)
          pb_slabs_deinit(&ws->bo_slabs[i]);
    }
    pb_cache_deinit(&ws->bo_cache);
-   _mesa_hash_table_destroy(ws->bo_export_table, NULL);
+   util_hash_table_destroy(ws->bo_export_table);
    simple_mtx_destroy(&ws->sws_list_lock);
    simple_mtx_destroy(&ws->global_bo_list_lock);
    simple_mtx_destroy(&ws->bo_export_table_lock);
 
-   ac_addrlib_destroy(ws->addrlib);
+   AddrDestroy(ws->addrlib);
    amdgpu_device_deinitialize(ws->dev);
    FREE(ws);
 }
@@ -165,9 +165,9 @@ static void amdgpu_winsys_destroy(struct radeon_winsys *rws)
 
    destroy = pipe_reference(&ws->reference, NULL);
    if (destroy && dev_tab) {
-      _mesa_hash_table_remove_key(dev_tab, ws->dev);
-      if (_mesa_hash_table_num_entries(dev_tab) == 0) {
-         _mesa_hash_table_destroy(dev_tab, NULL);
+      util_hash_table_remove(dev_tab, ws->dev);
+      if (util_hash_table_count(dev_tab) == 0) {
+         util_hash_table_destroy(dev_tab);
          dev_tab = NULL;
       }
    }
@@ -269,6 +269,16 @@ static bool amdgpu_read_registers(struct radeon_winsys *rws,
                                    0xffffffff, 0, out) == 0;
 }
 
+static unsigned hash_pointer(void *key)
+{
+   return _mesa_hash_pointer(key);
+}
+
+static int compare_pointers(void *key1, void *key2)
+{
+   return key1 != key2;
+}
+
 static bool amdgpu_winsys_unref(struct radeon_winsys *rws)
 {
    struct amdgpu_screen_winsys *sws = amdgpu_screen_winsys(rws);
@@ -336,8 +346,7 @@ amdgpu_winsys_create(int fd, const struct pipe_screen_config *config,
    struct amdgpu_screen_winsys *ws;
    struct amdgpu_winsys *aws;
    amdgpu_device_handle dev;
-   uint32_t drm_major, drm_minor;
-   int r;
+   uint32_t drm_major, drm_minor, r;
 
    ws = CALLOC_STRUCT(amdgpu_screen_winsys);
    if (!ws)
@@ -349,7 +358,7 @@ amdgpu_winsys_create(int fd, const struct pipe_screen_config *config,
    /* Look up the winsys from the dev table. */
    simple_mtx_lock(&dev_tab_mutex);
    if (!dev_tab)
-      dev_tab = util_hash_table_create_ptr_keys();
+      dev_tab = util_hash_table_create(hash_pointer, compare_pointers);
 
    /* Initialize the amdgpu device. This should always return the same pointer
     * for the same fd. */
@@ -453,7 +462,7 @@ amdgpu_winsys_create(int fd, const struct pipe_screen_config *config,
       pipe_reference_init(&aws->reference, 1);
 
       list_inithead(&aws->global_bo_list);
-      aws->bo_export_table = util_hash_table_create_ptr_keys();
+      aws->bo_export_table = util_hash_table_create(hash_pointer, compare_pointers);
 
       (void) simple_mtx_init(&aws->sws_list_lock, mtx_plain);
       (void) simple_mtx_init(&aws->global_bo_list_lock, mtx_plain);
@@ -467,7 +476,7 @@ amdgpu_winsys_create(int fd, const struct pipe_screen_config *config,
          return NULL;
       }
 
-      _mesa_hash_table_insert(dev_tab, dev, aws);
+      util_hash_table_set(dev_tab, dev, aws);
 
       if (aws->reserve_vmid) {
          r = amdgpu_vm_reserve_vmid(dev, 0);

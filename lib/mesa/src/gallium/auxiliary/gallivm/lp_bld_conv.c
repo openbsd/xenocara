@@ -34,7 +34,7 @@
  * The other side of this is that we need to be able convert between several
  * types accurately and efficiently.
  *
- * Conversion between types of different bit width is quite complex since a
+ * Conversion between types of different bit width is quite complex since a 
  *
  * To remember there are a few invariants in type conversions:
  *
@@ -321,10 +321,7 @@ lp_build_clamped_float_to_unsigned_norm(struct gallivm_state *gallivm,
 
       res = LLVMBuildFMul(builder, src,
                           lp_build_const_vec(gallivm, src_type, scale), "");
-      if (!src_type.sign && src_type.width == 32)
-         res = LLVMBuildFPToUI(builder, res, int_vec_type, "");
-      else
-         res = LLVMBuildFPToSI(builder, res, int_vec_type, "");
+      res = LLVMBuildFPToSI(builder, res, int_vec_type, "");
 
       /*
        * Align the most significant bit to its final place.
@@ -673,7 +670,7 @@ lp_build_conv(struct gallivm_state *gallivm,
          dst[0] = lp_build_extract_range(gallivm, dst[0], 0, dst_type.length);
       }
 
-      return;
+      return; 
    }
 
    /* Special case 2x8x32 --> 1x16x8, 1x8x32 ->1x8x8

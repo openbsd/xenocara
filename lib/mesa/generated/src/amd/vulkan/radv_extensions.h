@@ -27,7 +27,7 @@
 
 enum {
    RADV_INSTANCE_EXTENSION_COUNT = 17,
-   RADV_DEVICE_EXTENSION_COUNT = 104,
+   RADV_DEVICE_EXTENSION_COUNT = 100,
 };
 
 struct radv_instance_extension_table {
@@ -95,7 +95,6 @@ struct radv_device_extension_table {
         bool KHR_shader_draw_parameters;
         bool KHR_shader_float_controls;
         bool KHR_shader_float16_int8;
-        bool KHR_shader_non_semantic_info;
         bool KHR_shader_subgroup_extended_types;
         bool KHR_spirv_1_4;
         bool KHR_storage_buffer_storage_class;
@@ -121,14 +120,12 @@ struct radv_device_extension_table {
         bool EXT_host_query_reset;
         bool EXT_index_type_uint8;
         bool EXT_inline_uniform_block;
-        bool EXT_line_rasterization;
         bool EXT_memory_budget;
         bool EXT_memory_priority;
         bool EXT_pci_bus_info;
         bool EXT_pipeline_creation_feedback;
         bool EXT_post_depth_coverage;
         bool EXT_queue_family_foreign;
-        bool EXT_robustness2;
         bool EXT_sample_locations;
         bool EXT_sampler_filter_minmax;
         bool EXT_scalar_block_layout;
@@ -148,7 +145,6 @@ struct radv_device_extension_table {
         bool AMD_gcn_shader;
         bool AMD_gpu_shader_half_float;
         bool AMD_gpu_shader_int16;
-        bool AMD_memory_overallocation_behavior;
         bool AMD_mixed_attachment_samples;
         bool AMD_rasterization_order;
         bool AMD_shader_ballot;

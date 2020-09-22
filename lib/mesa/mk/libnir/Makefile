@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	nir
 
@@ -8,7 +8,6 @@ SRCS=	nir.c \
 	nir_builtin_builder.c \
 	nir_clone.c \
 	nir_control_flow.c \
-	nir_convert_ycbcr.c \
 	nir_deref.c \
 	nir_divergence_analysis.c \
 	nir_dominance.c \
@@ -29,15 +28,13 @@ SRCS=	nir.c \
 	nir_lower_array_deref_of_vec.c \
 	nir_lower_atomics_to_ssbo.c \
 	nir_lower_bitmap.c \
-	nir_lower_bool_to_bitsize.c \
 	nir_lower_bool_to_float.c \
 	nir_lower_bool_to_int32.c \
 	nir_lower_clamp_color_outputs.c \
 	nir_lower_clip.c \
 	nir_lower_clip_cull_distance_arrays.c \
 	nir_lower_clip_halfz.c \
-	nir_lower_variable_initializers.c \
-	nir_lower_discard_to_demote.c \
+	nir_lower_constant_initializers.c \
 	nir_lower_double_ops.c \
 	nir_lower_drawpixels.c \
 	nir_lower_fb_read.c \
@@ -60,7 +57,6 @@ SRCS=	nir.c \
 	nir_lower_io_to_temporaries.c \
 	nir_lower_io_to_scalar.c \
 	nir_lower_io_to_vector.c \
-	nir_lower_mediump_outputs.c \
 	nir_lower_non_uniform_access.c \
 	nir_lower_packing.c \
 	nir_lower_passthrough_edgeflags.c \
@@ -72,7 +68,6 @@ SRCS=	nir.c \
 	nir_lower_returns.c \
 	nir_lower_samplers.c \
 	nir_lower_scratch.c \
-	nir_lower_ssbo.c \
 	nir_lower_subgroups.c \
 	nir_lower_system_values.c \
 	nir_lower_tex.c \
@@ -90,7 +85,6 @@ SRCS=	nir.c \
 	nir_move_vec_src_uses_to_dest.c \
 	nir_normalize_cubemap_coords.c \
 	nir_opt_access.c \
-	nir_opt_barriers.c \
 	nir_opt_combine_stores.c \
 	nir_opt_comparison_pre.c \
 	nir_opt_conditional_discard.c \

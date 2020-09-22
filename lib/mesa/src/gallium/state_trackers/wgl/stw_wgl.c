@@ -39,10 +39,9 @@
  */
 
 #include <windows.h>
-#include <GL/gl.h>
 
 #include "util/u_debug.h"
-#include "gldrv.h"
+#include "stw_icd.h"
 #include "stw_context.h"
 #include "stw_pixelformat.h"
 #include "stw_wgl.h"
@@ -68,7 +67,7 @@ wglCreateContext(
    HDC hdc )
 {
    overrideOpenGL32EntryPoints();
-   return (HGLRC)(UINT_PTR)DrvCreateContext(hdc);
+   return (HGLRC) DrvCreateContext(hdc);
 }
 
 WINGDIAPI HGLRC APIENTRY
@@ -77,7 +76,7 @@ wglCreateLayerContext(
    int iLayerPlane )
 {
    overrideOpenGL32EntryPoints();
-   return (HGLRC)(UINT_PTR)DrvCreateLayerContext( hdc, iLayerPlane );
+   return (HGLRC) DrvCreateLayerContext( hdc, iLayerPlane );
 }
 
 WINGDIAPI BOOL APIENTRY

@@ -7,7 +7,6 @@
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
 #include "util/u_hash_table.h"
-#include "util/u_pointer.h"
 #include "os/os_thread.h"
 
 #include "nouveau_drm_public.h"
@@ -18,7 +17,7 @@
 #include <nvif/class.h>
 #include <nvif/cl0080.h>
 
-static struct hash_table *fd_tab = NULL;
+static struct util_hash_table *fd_tab = NULL;
 
 static mtx_t nouveau_screen_mutex = _MTX_INITIALIZER_NP;
 
@@ -32,9 +31,31 @@ bool nouveau_drm_screen_unref(struct nouveau_screen *screen)
 	ret = --screen->refcount;
 	assert(ret >= 0);
 	if (ret == 0)
-		_mesa_hash_table_remove_key(fd_tab, intptr_to_pointer(screen->drm->fd));
+		util_hash_table_remove(fd_tab, intptr_to_pointer(screen->drm->fd));
 	mtx_unlock(&nouveau_screen_mutex);
 	return ret == 0;
+}
+
+static unsigned hash_fd(void *key)
+{
+    int fd = pointer_to_intptr(key);
+    struct stat stat;
+    fstat(fd, &stat);
+
+    return stat.st_dev ^ stat.st_ino ^ stat.st_rdev;
+}
+
+static int compare_fd(void *key1, void *key2)
+{
+    int fd1 = pointer_to_intptr(key1);
+    int fd2 = pointer_to_intptr(key2);
+    struct stat stat1, stat2;
+    fstat(fd1, &stat1);
+    fstat(fd2, &stat2);
+
+    return stat1.st_dev != stat2.st_dev ||
+           stat1.st_ino != stat2.st_ino ||
+           stat1.st_rdev != stat2.st_rdev;
 }
 
 PUBLIC struct pipe_screen *
@@ -48,7 +69,7 @@ nouveau_drm_screen_create(int fd)
 
 	mtx_lock(&nouveau_screen_mutex);
 	if (!fd_tab) {
-		fd_tab = util_hash_table_create_fd_keys();
+		fd_tab = util_hash_table_create(hash_fd, compare_fd);
 		if (!fd_tab) {
 			mtx_unlock(&nouveau_screen_mutex);
 			return NULL;
@@ -120,7 +141,7 @@ nouveau_drm_screen_create(int fd)
 	 * closed by its owner. The hash key needs to live at least as long as
 	 * the screen.
 	 */
-	_mesa_hash_table_insert(fd_tab, intptr_to_pointer(dupfd), screen);
+	util_hash_table_set(fd_tab, intptr_to_pointer(dupfd), screen);
 	screen->refcount = 1;
 	mtx_unlock(&nouveau_screen_mutex);
 	return &screen->base;

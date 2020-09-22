@@ -1208,12 +1208,10 @@ gen_field_is_header(struct gen_field *field)
 {
    uint32_t bits;
 
-   /* Instructions are identified by the first DWord. */
-   if (field->start >= 32 ||
-       field->end >= 32)
+   if (field->start >= 32)
       return false;
 
-   bits = (1ULL << (field->end - field->start + 1)) - 1;
+   bits = (1U << (field->end - field->start + 1)) - 1;
    bits <<= field->start;
 
    return (field->parent->opcode_mask & bits) != 0;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: getopt.h,v 1.19 2020/09/03 07:17:26 jsg Exp $	*/
+/*	$OpenBSD: getopt.h,v 1.20 2020/09/22 02:09:11 jsg Exp $	*/
 /*	$NetBSD: getopt.h,v 1.4 2000/07/07 10:43:54 ad Exp $	*/
 
 /*-

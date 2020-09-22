@@ -55,21 +55,26 @@
  * fragment program.
  */
 static struct gl_program *
-st_new_program(struct gl_context *ctx, gl_shader_stage stage, GLuint id,
+st_new_program(struct gl_context *ctx, GLenum target, GLuint id,
                bool is_arb_asm)
 {
-   struct st_program *prog;
-
-   switch (stage) {
-   case MESA_SHADER_VERTEX:
-      prog = (struct st_program*)rzalloc(NULL, struct st_vertex_program);
-      break;
-   default:
-      prog = rzalloc(NULL, struct st_program);
-      break;
+   switch (target) {
+   case GL_VERTEX_PROGRAM_ARB: {
+      struct st_vertex_program *prog = rzalloc(NULL, struct st_vertex_program);
+      return _mesa_init_gl_program(&prog->Base.Base, target, id, is_arb_asm);
    }
-
-   return _mesa_init_gl_program(&prog->Base, stage, id, is_arb_asm);
+   case GL_TESS_CONTROL_PROGRAM_NV:
+   case GL_TESS_EVALUATION_PROGRAM_NV:
+   case GL_GEOMETRY_PROGRAM_NV:
+   case GL_FRAGMENT_PROGRAM_ARB:
+   case GL_COMPUTE_PROGRAM_NV: {
+      struct st_program *prog = rzalloc(NULL, struct st_program);
+      return _mesa_init_gl_program(&prog->Base, target, id, is_arb_asm);
+   }
+   default:
+      assert(0);
+      return NULL;
+   }
 }
 
 
@@ -86,8 +91,6 @@ st_delete_program(struct gl_context *ctx, struct gl_program *prog)
 
    if (stp->glsl_to_tgsi)
       free_glsl_to_tgsi_visitor(stp->glsl_to_tgsi);
-
-   free(stp->serialized_nir);
 
    /* delete base class */
    _mesa_delete_program( ctx, prog );
@@ -141,7 +144,7 @@ st_program_string_notify( struct gl_context *ctx,
 static struct gl_program *
 st_new_ati_fs(struct gl_context *ctx, struct ati_fragment_shader *curProg)
 {
-   struct gl_program *prog = ctx->Driver.NewProgram(ctx, MESA_SHADER_FRAGMENT,
+   struct gl_program *prog = ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB,
          curProg->Id, true);
    struct st_program *stfp = (struct st_program *)prog;
    stfp->ati_fs = curProg;

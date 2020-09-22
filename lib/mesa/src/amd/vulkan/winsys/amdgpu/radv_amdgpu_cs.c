@@ -24,12 +24,11 @@
 
 #include <stdlib.h>
 #include <amdgpu.h>
-#include "drm-uapi/amdgpu_drm.h"
+#include <amdgpu_drm.h>
 #include <assert.h>
 #include <pthread.h>
 #include <errno.h>
 
-#include "util/u_memory.h"
 #include "ac_debug.h"
 #include "radv_radeon_winsys.h"
 #include "radv_amdgpu_cs.h"
@@ -558,20 +557,13 @@ static void radv_amdgpu_cs_add_buffer_internal(struct radv_amdgpu_cs *cs,
 	unsigned hash;
 	int index = radv_amdgpu_cs_find_buffer(cs, bo);
 
-	if (index != -1 || cs->failed)
+	if (index != -1)
 		return;
 
 	if (cs->num_buffers == cs->max_num_buffers) {
 		unsigned new_count = MAX2(1, cs->max_num_buffers * 2);
-		struct drm_amdgpu_bo_list_entry *new_entries =
-			realloc(cs->handles, new_count * sizeof(struct drm_amdgpu_bo_list_entry));
-		if (new_entries) {
-			cs->max_num_buffers = new_count;
-			cs->handles = new_entries;
-		} else {
-			cs->failed = true;
-			return;
-		}
+		cs->handles = realloc(cs->handles, new_count * sizeof(struct drm_amdgpu_bo_list_entry));
+		cs->max_num_buffers = new_count;
 	}
 
 	cs->handles[cs->num_buffers].bo_handle = bo;
@@ -1247,7 +1239,7 @@ static int radv_amdgpu_winsys_cs_submit(struct radeon_winsys_ctx *_ctx,
 	if (!cs->ws->use_ib_bos) {
 		ret = radv_amdgpu_winsys_cs_submit_sysmem(_ctx, queue_idx, sem_info, bo_list, cs_array,
 							   cs_count, initial_preamble_cs, continue_preamble_cs, _fence);
-	} else if (can_patch) {
+	} else if (can_patch && cs->ws->batchchain) {
 		ret = radv_amdgpu_winsys_cs_submit_chained(_ctx, queue_idx, sem_info, bo_list, cs_array,
 							    cs_count, initial_preamble_cs, continue_preamble_cs, _fence);
 	} else {

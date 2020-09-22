@@ -1590,7 +1590,6 @@ convert_from_blend_type(struct gallivm_state *gallivm,
       for (j = 0; j < src_fmt->nr_channels; ++j) {
          unsigned mask = 0;
          unsigned sa = src_fmt->channel[j].shift;
-         unsigned sz_a = src_fmt->channel[j].size;
 #if UTIL_ARCH_LITTLE_ENDIAN
          unsigned from_lsb = j;
 #else
@@ -1619,10 +1618,6 @@ convert_from_blend_type(struct gallivm_state *gallivm,
          if (src_type.norm) {
             chans[j] = scale_bits(gallivm, blend_type.width,
                                   src_fmt->channel[j].size, chans[j], src_type);
-         } else if (!src_type.floating && sz_a < blend_type.width) {
-            LLVMValueRef mask_val = lp_build_const_int_vec(gallivm, src_type, (1UL << sz_a) - 1);
-            LLVMValueRef mask = LLVMBuildICmp(builder, LLVMIntUGT, chans[j], mask_val, "");
-            chans[j] = LLVMBuildSelect(builder, mask, mask_val, chans[j], "");
          }
 
          /* Insert bits */
@@ -3174,9 +3169,7 @@ llvmpipe_set_constant_buffer(struct pipe_context *pipe,
    }
 
    if (shader == PIPE_SHADER_VERTEX ||
-       shader == PIPE_SHADER_GEOMETRY ||
-       shader == PIPE_SHADER_TESS_CTRL ||
-       shader == PIPE_SHADER_TESS_EVAL) {
+       shader == PIPE_SHADER_GEOMETRY) {
       /* Pass the constants to the 'draw' module */
       const unsigned size = cb ? cb->buffer_size : 0;
       const ubyte *data;
@@ -3221,9 +3214,7 @@ llvmpipe_set_shader_buffers(struct pipe_context *pipe,
       util_copy_shader_buffer(&llvmpipe->ssbos[shader][i], buffer);
 
       if (shader == PIPE_SHADER_VERTEX ||
-          shader == PIPE_SHADER_GEOMETRY ||
-          shader == PIPE_SHADER_TESS_CTRL ||
-          shader == PIPE_SHADER_TESS_EVAL) {
+          shader == PIPE_SHADER_GEOMETRY) {
          const unsigned size = buffer ? buffer->buffer_size : 0;
          const ubyte *data = NULL;
          if (buffer && buffer->buffer)
@@ -3257,9 +3248,7 @@ llvmpipe_set_shader_images(struct pipe_context *pipe,
 
    llvmpipe->num_images[shader] = start_slot + count;
    if (shader == PIPE_SHADER_VERTEX ||
-       shader == PIPE_SHADER_GEOMETRY ||
-       shader == PIPE_SHADER_TESS_CTRL ||
-       shader == PIPE_SHADER_TESS_EVAL) {
+       shader == PIPE_SHADER_GEOMETRY) {
       draw_set_images(llvmpipe->draw,
                       shader,
                       llvmpipe->images[shader],

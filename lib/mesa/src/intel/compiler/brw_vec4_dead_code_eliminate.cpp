@@ -41,15 +41,16 @@ vec4_visitor::dead_code_eliminate()
 {
    bool progress = false;
 
-   const vec4_live_variables &live_vars = live_analysis.require();
-   int num_vars = live_vars.num_vars;
+   calculate_live_intervals();
+
+   int num_vars = live_intervals->num_vars;
    BITSET_WORD *live = rzalloc_array(NULL, BITSET_WORD, BITSET_WORDS(num_vars));
    BITSET_WORD *flag_live = rzalloc_array(NULL, BITSET_WORD, 1);
 
    foreach_block_reverse_safe(block, cfg) {
-      memcpy(live, live_vars.block_data[block->num].liveout,
+      memcpy(live, live_intervals->block_data[block->num].liveout,
              sizeof(BITSET_WORD) * BITSET_WORDS(num_vars));
-      memcpy(flag_live, live_vars.block_data[block->num].flag_liveout,
+      memcpy(flag_live, live_intervals->block_data[block->num].flag_liveout,
              sizeof(BITSET_WORD));
 
       foreach_inst_in_block_reverse_safe(vec4_instruction, inst, block) {
@@ -182,7 +183,7 @@ vec4_visitor::dead_code_eliminate()
    ralloc_free(flag_live);
 
    if (progress)
-      invalidate_analysis(DEPENDENCY_INSTRUCTIONS);
+      invalidate_live_intervals();
 
    return progress;
 }

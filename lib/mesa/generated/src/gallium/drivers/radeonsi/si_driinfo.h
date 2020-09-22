@@ -18,6 +18,7 @@ DRI_CONF_BEGIN
       DRI_CONF_DISABLE_OML_SYNC_CONTROL("false")
       DRI_CONF_DISABLE_SGI_VIDEO_SYNC("false")
       DRI_CONF_ADAPTIVE_SYNC("true")
+      DRI_CONF_RADEONSI_ENABLE_SISCHED("false")
       DRI_CONF_RADEONSI_ASSUME_NO_Z_FIGHTS("false")
       DRI_CONF_RADEONSI_COMMUTATIVE_BLEND_ADD("false")
       DRI_CONF_RADEONSI_ZERO_ALL_VRAM_ALLOCS("false")
@@ -45,14 +46,13 @@ DRI_CONF_BEGIN
       DRI_CONF_FORCE_GLSL_ABS_SQRT("false")
       DRI_CONF_GLSL_CORRECT_DERIVATIVES_AFTER_DISCARD("false")
       DRI_CONF_ALLOW_GLSL_LAYOUT_QUALIFIER_ON_FUNCTION_PARAMETERS("false")
-      DRI_CONF_ALLOW_DRAW_OUT_OF_ORDER("false")
       DRI_CONF_FORCE_COMPAT_PROFILE("false")
       DRI_CONF_FORCE_GL_VENDOR()
 //= BEGIN VERBATIM
-#define OPT_BOOL(name, dflt, description)                                                          \
-   DRI_CONF_OPT_BEGIN_B(radeonsi_##name, #dflt)                                                    \
-   DRI_CONF_DESC(en, description)                                                                  \
-   DRI_CONF_OPT_END
+#define OPT_BOOL(name, dflt, description) \
+	DRI_CONF_OPT_BEGIN_B(radeonsi_##name, #dflt) \
+		DRI_CONF_DESC(en, description) \
+	DRI_CONF_OPT_END
 
 #include "radeonsi/si_debug_options.h"
 //= END VERBATIM
@@ -64,6 +64,5 @@ DRI_CONF_BEGIN
       DRI_CONF_VS_POSITION_ALWAYS_INVARIANT("false")
       DRI_CONF_ALLOW_RGB10_CONFIGS("true")
       DRI_CONF_ALLOW_FP16_CONFIGS("false")
-      DRI_CONF_FORCE_INTEGER_TEX_NEAREST("false")
    DRI_CONF_SECTION_END
 DRI_CONF_END

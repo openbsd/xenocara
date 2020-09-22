@@ -813,7 +813,7 @@ update_vertex_elements(struct NineDevice9 *device)
     char used_streams[device->caps.MaxStreams];
     int dummy_vbo_stream = -1;
     BOOL need_dummy_vbo = FALSE;
-    struct cso_velems_state ve;
+    struct pipe_vertex_element ve[PIPE_MAX_ATTRIBS];
 
     context->stream_usage_mask = 0;
     memset(vdecl_index_map, -1, 16);
@@ -856,21 +856,21 @@ update_vertex_elements(struct NineDevice9 *device)
     for (n = 0; n < vs->num_inputs; ++n) {
         index = vdecl_index_map[n];
         if (index >= 0) {
-            ve.velems[n] = vdecl->elems[index];
-            b = ve.velems[n].vertex_buffer_index;
+            ve[n] = vdecl->elems[index];
+            b = ve[n].vertex_buffer_index;
             context->stream_usage_mask |= 1 << b;
             /* XXX wine just uses 1 here: */
             if (context->stream_freq[b] & D3DSTREAMSOURCE_INSTANCEDATA)
-                ve.velems[n].instance_divisor = context->stream_freq[b] & 0x7FFFFF;
+                ve[n].instance_divisor = context->stream_freq[b] & 0x7FFFFF;
         } else {
             /* if the vertex declaration is incomplete compared to what the
              * vertex shader needs, we bind a dummy vbo with 0 0 0 0.
              * This is not precised by the spec, but is the behaviour
              * tested on win */
-            ve.velems[n].vertex_buffer_index = dummy_vbo_stream;
-            ve.velems[n].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
-            ve.velems[n].src_offset = 0;
-            ve.velems[n].instance_divisor = 0;
+            ve[n].vertex_buffer_index = dummy_vbo_stream;
+            ve[n].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+            ve[n].src_offset = 0;
+            ve[n].instance_divisor = 0;
         }
     }
 
@@ -884,8 +884,7 @@ update_vertex_elements(struct NineDevice9 *device)
         context->dummy_vbo_bound_at = dummy_vbo_stream;
     }
 
-    ve.count = vs->num_inputs;
-    cso_set_vertex_elements(context->cso, &ve);
+    cso_set_vertex_elements(context->cso, vs->num_inputs, ve);
 }
 
 static void
@@ -2238,7 +2237,7 @@ CSMT_ITEM_NO_WAIT(nine_context_clear_fb,
          rect.x2 >= zsbuf_surf->desc.Width &&
          rect.y2 >= zsbuf_surf->desc.Height))) {
         DBG("Clear fast path\n");
-        pipe->clear(pipe, bufs, NULL, &rgba, Z, Stencil);
+        pipe->clear(pipe, bufs, &rgba, Z, Stencil);
         return;
     }
 
@@ -2976,7 +2975,7 @@ update_vertex_elements_sw(struct NineDevice9 *device)
     char used_streams[device->caps.MaxStreams];
     int dummy_vbo_stream = -1;
     BOOL need_dummy_vbo = FALSE;
-    struct cso_velems_state ve;
+    struct pipe_vertex_element ve[PIPE_MAX_ATTRIBS];
     bool programmable_vs = state->vs && !(state->vdecl && state->vdecl->position_t);
 
     memset(vdecl_index_map, -1, 16);
@@ -3018,25 +3017,24 @@ update_vertex_elements_sw(struct NineDevice9 *device)
     for (n = 0; n < vs->num_inputs; ++n) {
         index = vdecl_index_map[n];
         if (index >= 0) {
-            ve.velems[n] = vdecl->elems[index];
-            b = ve.velems[n].vertex_buffer_index;
+            ve[n] = vdecl->elems[index];
+            b = ve[n].vertex_buffer_index;
             /* XXX wine just uses 1 here: */
             if (state->stream_freq[b] & D3DSTREAMSOURCE_INSTANCEDATA)
-                ve.velems[n].instance_divisor = state->stream_freq[b] & 0x7FFFFF;
+                ve[n].instance_divisor = state->stream_freq[b] & 0x7FFFFF;
         } else {
             /* if the vertex declaration is incomplete compared to what the
              * vertex shader needs, we bind a dummy vbo with 0 0 0 0.
              * This is not precised by the spec, but is the behaviour
              * tested on win */
-            ve.velems[n].vertex_buffer_index = dummy_vbo_stream;
-            ve.velems[n].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
-            ve.velems[n].src_offset = 0;
-            ve.velems[n].instance_divisor = 0;
+            ve[n].vertex_buffer_index = dummy_vbo_stream;
+            ve[n].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+            ve[n].src_offset = 0;
+            ve[n].instance_divisor = 0;
         }
     }
 
-    ve.count = vs->num_inputs;
-    cso_set_vertex_elements(device->cso_sw, &ve);
+    cso_set_vertex_elements(device->cso_sw, vs->num_inputs, ve);
 }
 
 static void

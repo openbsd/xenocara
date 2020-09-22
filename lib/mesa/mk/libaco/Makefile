@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:01 jsg Exp $
 
 LIB=	aco
 
@@ -16,7 +16,7 @@ SRCS=	aco_dead_code_analysis.cpp \
 	aco_reduce_assign.cpp \
 	aco_register_allocation.cpp \
 	aco_live_var_analysis.cpp \
-	aco_lower_phis.cpp \
+	aco_lower_bool_phis.cpp \
 	aco_lower_to_cssa.cpp \
 	aco_lower_to_hw_instr.cpp \
 	aco_optimizer.cpp \
@@ -24,9 +24,8 @@ SRCS=	aco_dead_code_analysis.cpp \
 	aco_print_asm.cpp \
 	aco_print_ir.cpp \
 	aco_scheduler.cpp \
-	aco_spill.cpp \
 	aco_ssa_elimination.cpp \
-	aco_statistics.cpp \
+	aco_spill.cpp \
 	aco_validate.cpp
 
 SRCS+=	aco_opcodes.cpp

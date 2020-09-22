@@ -388,7 +388,10 @@ opt_split_alu_of_phi(nir_builder *b, nir_loop *loop)
        * to loop unrolling not recognizing loop termintators, and type
        * conversions also lead to regressions.
        */
-      if (nir_op_is_vec(alu->op) ||
+      if (alu->op == nir_op_vec2 ||
+          alu->op == nir_op_vec3 ||
+          alu->op == nir_op_vec4 ||
+          alu->op == nir_op_mov ||
           alu_instr_is_comparison(alu) ||
           alu_instr_is_type_conversion(alu))
          continue;
@@ -933,17 +936,6 @@ opt_if_simplification(nir_builder *b, nir_if *nif)
    nir_block *then_block = nir_if_last_then_block(nif);
    nir_block *else_block = nir_if_last_else_block(nif);
 
-   if (nir_block_ends_in_jump(else_block)) {
-      /* Even though this if statement has a jump on one side, we may still have
-       * phis afterwards.  Single-source phis can be produced by loop unrolling
-       * or dead control-flow passes and are perfectly legal.  Run a quick phi
-       * removal on the block after the if to clean up any such phis.
-       */
-      nir_block *const next_block =
-         nir_cf_node_as_block(nir_cf_node_next(&nif->cf_node));
-      nir_opt_remove_phis_block(next_block);
-   }
-
    rewrite_phi_predecessor_blocks(nif, then_block, else_block, else_block,
                                   then_block);
 
@@ -1009,7 +1001,7 @@ opt_if_loop_terminator(nir_if *nif)
    if (is_block_empty(first_continue_from_blk))
       return false;
 
-   if (nir_block_ends_in_jump(continue_from_blk))
+   if (!nir_is_trivial_loop_if(nif, break_blk))
       return false;
 
    /* Even though this if statement has a jump on one side, we may still have
@@ -1345,39 +1337,9 @@ opt_if_cf_list(nir_builder *b, struct exec_list *cf_list,
          progress |= opt_if_cf_list(b, &loop->body,
                                     aggressive_last_continue);
          progress |= opt_simplify_bcsel_of_phi(b, loop);
+         progress |= opt_peel_loop_initial_if(loop);
          progress |= opt_if_loop_last_continue(loop,
                                                aggressive_last_continue);
-         break;
-      }
-
-      case nir_cf_node_function:
-         unreachable("Invalid cf type");
-      }
-   }
-
-   return progress;
-}
-
-static bool
-opt_peel_loop_initial_if_cf_list(struct exec_list *cf_list)
-{
-   bool progress = false;
-   foreach_list_typed(nir_cf_node, cf_node, node, cf_list) {
-      switch (cf_node->type) {
-      case nir_cf_node_block:
-         break;
-
-      case nir_cf_node_if: {
-         nir_if *nif = nir_cf_node_as_if(cf_node);
-         progress |= opt_peel_loop_initial_if_cf_list(&nif->then_list);
-         progress |= opt_peel_loop_initial_if_cf_list(&nif->else_list);
-         break;
-      }
-
-      case nir_cf_node_loop: {
-         nir_loop *loop = nir_cf_node_as_loop(cf_node);
-         progress |= opt_peel_loop_initial_if_cf_list(&loop->body);
-         progress |= opt_peel_loop_initial_if(loop);
          break;
       }
 
@@ -1443,26 +1405,17 @@ nir_opt_if(nir_shader *shader, bool aggressive_last_continue)
       nir_metadata_preserve(function->impl, nir_metadata_block_index |
                             nir_metadata_dominance);
 
-      bool preserve = true;
-
-      if (opt_if_cf_list(&b, &function->impl->body, aggressive_last_continue)) {
-         preserve = false;
-         progress = true;
-      }
-
-      if (opt_peel_loop_initial_if_cf_list(&function->impl->body)) {
-         preserve = false;
-         progress = true;
+      if (opt_if_cf_list(&b, &function->impl->body,
+                         aggressive_last_continue)) {
+         nir_metadata_preserve(function->impl, nir_metadata_none);
 
          /* If that made progress, we're no longer really in SSA form.  We
           * need to convert registers back into SSA defs and clean up SSA defs
           * that don't dominate their uses.
           */
          nir_lower_regs_to_ssa_impl(function->impl);
-      }
 
-      if (preserve) {
-         nir_metadata_preserve(function->impl, nir_metadata_none);
+         progress = true;
       } else {
    #ifndef NDEBUG
          function->impl->valid_metadata &= ~nir_metadata_not_properly_reset;

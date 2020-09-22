@@ -266,10 +266,6 @@ resize_callback(struct wl_egl_window *wl_win, void *data)
    struct dri2_egl_display *dri2_dpy =
       dri2_egl_display(dri2_surf->base.Resource.Display);
 
-   if (dri2_surf->base.Width == wl_win->width &&
-       dri2_surf->base.Height == wl_win->height)
-      return;
-
    /* Update the surface size as soon as native window is resized; from user
     * pov, this makes the effect that resize is done immediately after native
     * window resize, without requiring to wait until the first draw.

@@ -62,7 +62,7 @@ struct anv_instance_extension_table {
 extern const struct anv_instance_extension_table anv_instance_extensions_supported;
 
 
-#define ANV_DEVICE_EXTENSION_COUNT 88
+#define ANV_DEVICE_EXTENSION_COUNT 86
 
 extern const VkExtensionProperties anv_device_extensions[];
 
@@ -106,7 +106,6 @@ struct anv_device_extension_table {
         bool KHR_shader_draw_parameters;
         bool KHR_shader_float16_int8;
         bool KHR_shader_float_controls;
-        bool KHR_shader_non_semantic_info;
         bool KHR_shader_subgroup_extended_types;
         bool KHR_spirv_1_4;
         bool KHR_storage_buffer_storage_class;
@@ -136,7 +135,6 @@ struct anv_device_extension_table {
         bool EXT_pipeline_creation_feedback;
         bool EXT_post_depth_coverage;
         bool EXT_queue_family_foreign;
-        bool EXT_robustness2;
         bool EXT_sampler_filter_minmax;
         bool EXT_scalar_block_layout;
         bool EXT_separate_stencil_usage;

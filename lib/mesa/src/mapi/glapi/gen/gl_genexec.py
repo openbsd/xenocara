@@ -89,6 +89,7 @@ header = """/**
 #include "main/genmipmap.h"
 #include "main/hint.h"
 #include "main/histogram.h"
+#include "main/imports.h"
 #include "main/light.h"
 #include "main/lines.h"
 #include "main/matrix.h"

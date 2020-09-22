@@ -285,7 +285,7 @@ public:
    bool sol_final_write; /**< gen6: send commit message */
    unsigned sol_vertex; /**< gen6: used for setting dst index in SVB header */
 
-   bool is_send_from_grf() const;
+   bool is_send_from_grf();
    unsigned size_read(unsigned arg) const;
    bool can_reswizzle(const struct gen_device_info *devinfo, int dst_writemask,
                       int swizzle, int swizzle_mask);
@@ -295,7 +295,6 @@ public:
    bool can_do_writemask(const struct gen_device_info *devinfo);
    bool can_change_types() const;
    bool has_source_and_destination_hazard() const;
-   unsigned implied_mrf_writes() const;
 
    bool is_align1_partial_write()
    {
@@ -303,7 +302,7 @@ public:
              opcode == VEC4_OPCODE_SET_HIGH_32BIT;
    }
 
-   bool reads_flag() const
+   bool reads_flag()
    {
       return predicate || opcode == VS_OPCODE_UNPACK_FLAGS_SIMD4X2;
    }
@@ -329,7 +328,7 @@ public:
       }
    }
 
-   bool writes_flag() const
+   bool writes_flag()
    {
       return (conditional_mod && (opcode != BRW_OPCODE_SEL &&
                                   opcode != BRW_OPCODE_CSEL &&

@@ -48,7 +48,6 @@
 #include "program/program.h"
 #include "program/prog_parameter.h"
 #include "util/ralloc.h"
-#include "util/bitscan.h"
 
 /**
  * Delete a pipeline object.
@@ -535,7 +534,6 @@ _mesa_bind_pipeline(struct gl_context *ctx,
       }
 
       _mesa_update_vertex_processing_mode(ctx);
-      _mesa_update_allow_draw_out_of_order(ctx);
    }
 }
 

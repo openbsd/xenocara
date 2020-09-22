@@ -46,7 +46,6 @@
 #include "strndup.h"
 #include "xmlconfig.h"
 #include "u_process.h"
-#include "os_file.h"
 
 /* For systems like Hurd */
 #ifndef PATH_MAX
@@ -715,9 +714,7 @@ struct OptConfData {
     const char *driverName, *execName;
     const char *kernelDriverName;
     const char *engineName;
-    const char *applicationName;
     uint32_t engineVersion;
-    uint32_t applicationVersion;
     uint32_t ignoringDevice;
     uint32_t ignoringApp;
     uint32_t inDriConf;
@@ -783,64 +780,13 @@ parseAppAttr(struct OptConfData *data, const XML_Char **attr)
 {
     uint32_t i;
     const XML_Char *exec = NULL;
-    const XML_Char *sha1 = NULL;
-    const XML_Char *application_name_match = NULL;
-    const XML_Char *application_versions = NULL;
-    driOptionInfo version_ranges = {
-       .type = DRI_INT,
-    };
-
     for (i = 0; attr[i]; i += 2) {
         if (!strcmp (attr[i], "name")) /* not needed here */;
         else if (!strcmp (attr[i], "executable")) exec = attr[i+1];
-        else if (!strcmp (attr[i], "sha1")) sha1 = attr[i+1];
-        else if (!strcmp (attr[i], "application_name_match"))
-           application_name_match = attr[i+1];
-        else if (!strcmp (attr[i], "application_versions"))
-           application_versions = attr[i+1];
         else XML_WARNING("unknown application attribute: %s.", attr[i]);
     }
-    if (exec && strcmp (exec, data->execName)) {
+    if (exec && strcmp (exec, data->execName))
         data->ignoringApp = data->inApp;
-    } else if (sha1) {
-        /* SHA1_DIGEST_STRING_LENGTH includes terminating null byte */
-        if (strlen(sha1) != (SHA1_DIGEST_STRING_LENGTH - 1)) {
-            XML_WARNING("Incorrect sha1 application attribute");
-            data->ignoringApp = data->inApp;
-        } else {
-            size_t len;
-            char* content;
-            char path[PATH_MAX];
-            if (util_get_process_exec_path(path, ARRAY_SIZE(path)) > 0 &&
-                (content = os_read_file(path, &len))) {
-                uint8_t sha1x[SHA1_DIGEST_LENGTH];
-                char sha1s[SHA1_DIGEST_STRING_LENGTH];
-                _mesa_sha1_compute(content, len, sha1x);
-                _mesa_sha1_format((char*) sha1s, sha1x);
-                free(content);
-
-                if (strcmp(sha1, sha1s)) {
-                    data->ignoringApp = data->inApp;
-                }
-            } else {
-                data->ignoringApp = data->inApp;
-            }
-        }
-    } else if (application_name_match) {
-       regex_t re;
-
-       if (regcomp (&re, application_name_match, REG_EXTENDED|REG_NOSUB) == 0) {
-          if (regexec (&re, data->applicationName, 0, NULL, 0) == REG_NOMATCH)
-             data->ignoringApp = data->inApp;
-          regfree (&re);
-       } else
-          XML_WARNING ("Invalid application_name_match=\"%s\".", application_name_match);
-    }
-    if (application_versions) {
-       if (parseRanges (&version_ranges, application_versions) &&
-           !valueInRanges (&version_ranges, data->applicationVersion))
-          data->ignoringApp = data->inApp;
-    }
 }
 
 /** \brief Parse attributes of an application element. */
@@ -1129,7 +1075,6 @@ void
 driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
                     int screenNum, const char *driverName,
                     const char *kernelDriverName,
-                    const char *applicationName, uint32_t applicationVersion,
                     const char *engineName, uint32_t engineVersion)
 {
 #if defined(__OpenBSD__)
@@ -1149,8 +1094,6 @@ driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
     userData.screenNum = screenNum;
     userData.driverName = driverName;
     userData.kernelDriverName = kernelDriverName;
-    userData.applicationName = applicationName ? applicationName : "";
-    userData.applicationVersion = applicationVersion;
     userData.engineName = engineName ? engineName : "";
     userData.engineVersion = engineVersion;
     userData.execName = util_get_process_name();

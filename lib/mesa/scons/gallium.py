@@ -404,7 +404,6 @@ def generate(env):
         ]
         if gcc_compat:
             cppdefines += [('__MSVCRT_VERSION__', '0x0700')]
-            cppdefines += ['_USE_MATH_DEFINES']
         if msvc:
             cppdefines += [
                 'VC_EXTRALEAN',
@@ -497,7 +496,6 @@ def generate(env):
             cflags += ['-std=gnu11']
         else:
             cflags += ['-std=gnu99']
-        cxxflags += ['-std=c++14']
     if icc:
         cflags += [
             '-std=gnu99',

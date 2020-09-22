@@ -33,7 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "drm-uapi/amdgpu_drm.h"
+#include <llvm/Config/llvm-config.h>
+#include <amdgpu_drm.h>
 #include <assert.h>
 #include "radv_amdgpu_cs.h"
 #include "radv_amdgpu_bo.h"
@@ -55,7 +56,7 @@ do_winsys_init(struct radv_amdgpu_winsys *ws, int fd)
 	ws->info.use_display_dcc_unaligned = false;
 	ws->info.use_display_dcc_with_retile_blit = false;
 
-	ws->addrlib = ac_addrlib_create(&ws->info, &ws->amdinfo, &ws->info.max_alignment);
+	ws->addrlib = amdgpu_addr_create(&ws->info, &ws->amdinfo, &ws->info.max_alignment);
 	if (!ws->addrlib) {
 		fprintf(stderr, "amdgpu: Cannot create addrlib.\n");
 		return false;
@@ -156,7 +157,7 @@ static void radv_amdgpu_winsys_destroy(struct radeon_winsys *rws)
 {
 	struct radv_amdgpu_winsys *ws = (struct radv_amdgpu_winsys*)rws;
 
-	ac_addrlib_destroy(ws->addrlib);
+	AddrDestroy(ws->addrlib);
 	amdgpu_device_deinitialize(ws->dev);
 	FREE(rws);
 }
@@ -188,6 +189,7 @@ radv_amdgpu_winsys_create(int fd, uint64_t debug_flags, uint64_t perftest_flags)
 
 	ws->use_local_bos = perftest_flags & RADV_PERFTEST_LOCAL_BOS;
 	ws->zero_all_vram_allocs = debug_flags & RADV_DEBUG_ZERO_VRAM;
+	ws->batchchain = !(perftest_flags & RADV_PERFTEST_NO_BATCHCHAIN);
 	list_inithead(&ws->global_bo_list);
 	pthread_mutex_init(&ws->global_bo_list_lock, NULL);
 	ws->base.query_info = radv_amdgpu_winsys_query_info;

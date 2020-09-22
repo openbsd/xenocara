@@ -31,8 +31,6 @@
 #ifndef PROG_PARAMETER_H
 #define PROG_PARAMETER_H
 
-#include <stdbool.h>
-#include <stdint.h>
 #include "prog_statevars.h"
 
 #include <string.h>

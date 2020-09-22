@@ -1121,22 +1121,22 @@ track_params(struct i915_fragment_program *p)
 }
 
 static struct gl_program *
-i915NewProgram(struct gl_context * ctx, gl_shader_stage stage, GLuint id,
+i915NewProgram(struct gl_context * ctx, GLenum target, GLuint id,
                bool is_arb_asm)
 {
-   switch (stage) {
-   case MESA_SHADER_VERTEX: {
+   switch (target) {
+   case GL_VERTEX_PROGRAM_ARB: {
       struct gl_program *prog = rzalloc(NULL, struct gl_program);
-      return _mesa_init_gl_program(prog, stage, id, is_arb_asm);
+      return _mesa_init_gl_program(prog, target, id, is_arb_asm);
    }
 
-   case MESA_SHADER_FRAGMENT:{
+   case GL_FRAGMENT_PROGRAM_ARB:{
          struct i915_fragment_program *prog =
             rzalloc(NULL, struct i915_fragment_program);
          if (prog) {
             i915_init_program(I915_CONTEXT(ctx), prog);
 
-            return _mesa_init_gl_program(&prog->FragProg, stage, id,
+            return _mesa_init_gl_program(&prog->FragProg, target, id,
                                          is_arb_asm);
          }
          else
@@ -1146,7 +1146,7 @@ i915NewProgram(struct gl_context * ctx, gl_shader_stage stage, GLuint id,
    default:
       /* Just fallback:
        */
-      return _mesa_new_program(ctx, stage, id, is_arb_asm);
+      return _mesa_new_program(ctx, target, id, is_arb_asm);
    }
 }
 

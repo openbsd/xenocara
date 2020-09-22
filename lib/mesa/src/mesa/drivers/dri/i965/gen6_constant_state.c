@@ -22,7 +22,6 @@
  */
 
 #include "brw_context.h"
-#include "brw_cs.h"
 #include "brw_state.h"
 #include "brw_defines.h"
 #include "brw_program.h"
@@ -63,10 +62,6 @@ brw_param_value(struct brw_context *brw,
          return f_as_u32(ctx->TessCtrlProgram.patch_default_inner_level[0]);
       } else if (param == BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_Y) {
          return f_as_u32(ctx->TessCtrlProgram.patch_default_inner_level[1]);
-      } else if (param >= BRW_PARAM_BUILTIN_WORK_GROUP_SIZE_X &&
-                 param <= BRW_PARAM_BUILTIN_WORK_GROUP_SIZE_Z) {
-         unsigned i = param - BRW_PARAM_BUILTIN_WORK_GROUP_SIZE_X;
-         return brw->compute.group_size[i];
       } else {
          unreachable("Invalid param builtin");
       }
@@ -308,19 +303,14 @@ brw_upload_cs_push_constants(struct brw_context *brw,
    /* XXX: Should this happen somewhere before to get our state flag set? */
    _mesa_load_state_parameters(ctx, prog->Parameters);
 
-   const unsigned threads =
-      DIV_ROUND_UP(brw_cs_group_size(brw), cs_prog_data->simd_size);
-   const unsigned push_const_size =
-      brw_cs_push_const_total_size(cs_prog_data, threads);
-
-   if (push_const_size == 0) {
+   if (cs_prog_data->push.total.size == 0) {
       stage_state->push_const_size = 0;
       return;
    }
 
 
    uint32_t *param =
-      brw_state_batch(brw, ALIGN(push_const_size, 64),
+      brw_state_batch(brw, ALIGN(cs_prog_data->push.total.size, 64),
                       64, &stage_state->push_const_offset);
    assert(param);
 
@@ -338,7 +328,7 @@ brw_upload_cs_push_constants(struct brw_context *brw,
    }
 
    if (cs_prog_data->push.per_thread.size > 0) {
-      for (unsigned t = 0; t < threads; t++) {
+      for (unsigned t = 0; t < cs_prog_data->threads; t++) {
          unsigned dst =
             8 * (cs_prog_data->push.per_thread.regs * t +
                  cs_prog_data->push.cross_thread.regs);

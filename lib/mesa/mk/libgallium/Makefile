@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -23,7 +23,6 @@ SRCS=	cso_cache.c \
 	draw_pipe_stipple.c \
 	draw_pipe_twoside.c \
 	draw_pipe_unfilled.c \
-	draw_pipe_user_cull.c \
 	draw_pipe_util.c \
 	draw_pipe_validate.c \
 	draw_pipe_vbuf.c \
@@ -40,7 +39,6 @@ SRCS=	cso_cache.c \
 	draw_pt_so_emit.c \
 	draw_pt_util.c \
 	draw_pt_vsplit.c \
-	draw_tess.c \
 	draw_vertex.c \
 	draw_vs.c \
 	draw_vs_exec.c \
@@ -122,10 +120,12 @@ SRCS=	cso_cache.c \
 	u_blitter.c \
 	u_cache.c \
 	u_compute.c \
+	u_debug_gallium.c \
 	u_debug_describe.c \
 	u_debug_flush.c \
 	u_debug_image.c \
 	u_debug_refcnt.c \
+	u_debug_stack.c \
 	u_debug_symbol.c \
 	u_dl.c \
 	u_draw.c \
@@ -153,6 +153,7 @@ SRCS=	cso_cache.c \
 	u_split_draw.c \
 	u_suballoc.c \
 	u_surface.c \
+	u_surfaces.c \
 	u_tests.c \
 	u_texture.c \
 	u_tile.c \
@@ -164,8 +165,7 @@ SRCS=	cso_cache.c \
 	tgsi_to_nir.c \
 	nir_draw_helpers.c
 
-SRCS+=	u_debug_stack.c \
-	renderonly.c
+SRCS+=	renderonly.c
 
 SRCS+=	u_indices_gen.c \
 	u_unfilled_gen.c
@@ -214,8 +214,6 @@ SRCS+=	lp_bld_arit.c \
 	draw_llvm_sample.c \
 	draw_pt_fetch_shade_pipeline_llvm.c \
 	draw_vs_llvm.c \
-	tessellator.cpp \
-	p_tessellator.cpp \
 	nir_to_tgsi_info.c
 
 LLVM_CXXFLAGS!=	llvm-config --cxxflags

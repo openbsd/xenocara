@@ -37,7 +37,7 @@
 
 
 #include "main/errors.h"
-
+#include "main/imports.h"
 #include "main/image.h"
 #include "main/bufferobj.h"
 #include "main/macros.h"
@@ -85,7 +85,8 @@ setup_primitive_restart(struct gl_context *ctx, struct pipe_draw_info *info)
    if (ctx->Array._PrimitiveRestart) {
       unsigned index_size = info->index_size;
 
-      info->restart_index = ctx->Array._RestartIndex[index_size - 1];
+      info->restart_index =
+         _mesa_primitive_restart_index(ctx, index_size);
 
       /* Enable primitive restart only when the restart index can have an
        * effect. This is required for correctness in radeonsi GFX8 support.
@@ -171,10 +172,9 @@ st_draw_vbo(struct gl_context *ctx,
 	    GLboolean index_bounds_valid,
             GLuint min_index,
             GLuint max_index,
-            GLuint num_instances,
-            GLuint base_instance,
             struct gl_transform_feedback_object *tfb_vertcount,
-            unsigned stream)
+            unsigned stream,
+            struct gl_buffer_object *indirect)
 {
    struct st_context *st = st_context(ctx);
    struct pipe_draw_info info;
@@ -189,8 +189,6 @@ st_draw_vbo(struct gl_context *ctx,
    info.indirect = NULL;
    info.count_from_stream_output = NULL;
    info.restart_index = 0;
-   info.start_instance = base_instance;
-   info.instance_count = num_instances;
 
    if (ib) {
       struct gl_buffer_object *bufobj = ib->obj;
@@ -201,11 +199,11 @@ st_draw_vbo(struct gl_context *ctx,
                                 nr_prims);
       }
 
-      info.index_size = 1 << ib->index_size_shift;
+      info.index_size = ib->index_size;
       info.min_index = min_index;
       info.max_index = max_index;
 
-      if (bufobj) {
+      if (_mesa_is_bufferobj(bufobj)) {
          /* indices are in a real VBO */
          info.has_user_indices = false;
          info.index.resource = st_buffer_object(bufobj)->buffer;
@@ -216,7 +214,7 @@ st_draw_vbo(struct gl_context *ctx,
          if (!info.index.resource)
             return;
 
-         start = pointer_to_offset(ib->ptr) >> ib->index_size_shift;
+         start = pointer_to_offset(ib->ptr) / info.index_size;
       } else {
          /* indices are in user space memory */
          info.has_user_indices = true;
@@ -237,6 +235,8 @@ st_draw_vbo(struct gl_context *ctx,
       }
    }
 
+   assert(!indirect);
+
    /* do actual drawing */
    for (i = 0; i < nr_prims; i++) {
       info.count = prims[i].count;
@@ -247,6 +247,8 @@ st_draw_vbo(struct gl_context *ctx,
 
       info.mode = translate_prim(ctx, prims[i].mode);
       info.start = start + prims[i].start;
+      info.start_instance = prims[i].base_instance;
+      info.instance_count = prims[i].num_instances;
       info.index_bias = prims[i].basevertex;
       info.drawid = prims[i].draw_id;
       if (!ib) {
@@ -294,11 +296,11 @@ st_indirect_draw_vbo(struct gl_context *ctx,
       struct gl_buffer_object *bufobj = ib->obj;
 
       /* indices are always in a real VBO */
-      assert(bufobj);
+      assert(_mesa_is_bufferobj(bufobj));
 
-      info.index_size = 1 << ib->index_size_shift;
+      info.index_size = ib->index_size;
       info.index.resource = st_buffer_object(bufobj)->buffer;
-      info.start = pointer_to_offset(ib->ptr) >> ib->index_size_shift;
+      info.start = pointer_to_offset(ib->ptr) / info.index_size;
 
       /* Primitive restart is not handled by the VBO module in this case. */
       setup_primitive_restart(ctx, &info);

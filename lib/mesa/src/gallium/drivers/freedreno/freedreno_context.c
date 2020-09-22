@@ -28,7 +28,6 @@
 #include "freedreno_blitter.h"
 #include "freedreno_draw.h"
 #include "freedreno_fence.h"
-#include "freedreno_log.h"
 #include "freedreno_program.h"
 #include "freedreno_resource.h"
 #include "freedreno_texture.h"
@@ -38,12 +37,6 @@
 #include "freedreno_query_hw.h"
 #include "freedreno_util.h"
 #include "util/u_upload_mgr.h"
-
-#if DETECT_OS_ANDROID
-#include "util/u_process.h"
-#include <sys/stat.h>
-#include <sys/types.h>
-#endif
 
 static void
 fd_context_flush(struct pipe_context *pctx, struct pipe_fence_handle **fencep,
@@ -96,9 +89,6 @@ out:
 	fd_fence_ref(&ctx->last_fence, fence);
 
 	fd_fence_ref(&fence, NULL);
-
-	if (flags & PIPE_FLUSH_END_OF_FRAME)
-		fd_log_eof(ctx);
 }
 
 static void
@@ -177,13 +167,6 @@ fd_context_destroy(struct pipe_context *pctx)
 	unsigned i;
 
 	DBG("");
-
-	mtx_lock(&ctx->screen->lock);
-	list_del(&ctx->node);
-	mtx_unlock(&ctx->screen->lock);
-
-	fd_log_process(ctx, true);
-	assert(list_is_empty(&ctx->log_chunks));
 
 	fd_fence_ref(&ctx->last_fence, NULL);
 
@@ -384,7 +367,6 @@ fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
 	 * set some state:
 	 */
 	ctx->sample_mask = 0xffff;
-	ctx->active_queries = true;
 
 	pctx = &ctx->base;
 	pctx->screen = pscreen;
@@ -421,31 +403,6 @@ fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
 
 	list_inithead(&ctx->hw_active_queries);
 	list_inithead(&ctx->acc_active_queries);
-	list_inithead(&ctx->log_chunks);
-
-	mtx_lock(&ctx->screen->lock);
-	list_add(&ctx->node, &ctx->screen->context_list);
-	mtx_unlock(&ctx->screen->lock);
-
-	ctx->log_out = stdout;
-
-	if ((fd_mesa_debug & FD_DBG_LOG) &&
-			!(ctx->record_timestamp && ctx->ts_to_ns)) {
-		printf("logging not supported!\n");
-		fd_mesa_debug &= ~FD_DBG_LOG;
-	}
-
-#if DETECT_OS_ANDROID
-	if (fd_mesa_debug & FD_DBG_LOG) {
-		static unsigned idx = 0;
-		char *p;
-		asprintf(&p, "/data/fdlog/%s-%d.log", util_get_process_name(), idx++);
-
-		FILE *f = fopen(p, "w");
-		if (f)
-			ctx->log_out = f;
-	}
-#endif
 
 	return pctx;
 

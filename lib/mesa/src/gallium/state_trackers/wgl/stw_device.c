@@ -29,6 +29,7 @@
 
 #include "glapi/glapi.h"
 #include "util/u_debug.h"
+#include "util/u_debug_gallium.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "pipe/p_screen.h"
@@ -36,7 +37,7 @@
 #include "stw_device.h"
 #include "stw_winsys.h"
 #include "stw_pixelformat.h"
-#include "gldrv.h"
+#include "stw_icd.h"
 #include "stw_tls.h"
 #include "stw_framebuffer.h"
 #include "stw_st.h"
@@ -80,30 +81,16 @@ get_refresh_rate(void)
    }
 }
 
-static bool
-init_screen(const struct stw_winsys *stw_winsys)
-{
-   struct pipe_screen *screen = stw_winsys->create_screen();
-   if (!screen)
-      return false;
-
-   if (stw_winsys->get_adapter_luid)
-      stw_winsys->get_adapter_luid(screen, &stw_dev->AdapterLuid);
-
-   stw_dev->smapi->screen = screen;
-   stw_dev->screen = screen;
-
-   stw_dev->max_2d_length = screen->get_param(screen,
-                                              PIPE_CAP_MAX_TEXTURE_2D_SIZE);
-   return true;
-}
 
 boolean
 stw_init(const struct stw_winsys *stw_winsys)
 {
    static struct stw_device stw_dev_storage;
+   struct pipe_screen *screen;
 
    debug_disable_error_message_boxes();
+
+   debug_printf("%s\n", __FUNCTION__);
 
    assert(!stw_dev);
 
@@ -112,6 +99,10 @@ stw_init(const struct stw_winsys *stw_winsys)
    stw_dev = &stw_dev_storage;
    memset(stw_dev, 0, sizeof(*stw_dev));
 
+#ifdef DEBUG
+   stw_dev->memdbg_no = debug_memory_begin();
+#endif
+
    stw_dev->stw_winsys = stw_winsys;
 
    stw_dev->stapi = stw_st_create_api();
@@ -119,9 +110,21 @@ stw_init(const struct stw_winsys *stw_winsys)
    if (!stw_dev->stapi || !stw_dev->smapi)
       goto error1;
 
-   stw_dev->smapi->get_param = stw_get_param;
+   screen = stw_winsys->create_screen();
+   if (!screen)
+      goto error1;
 
-   InitializeCriticalSection(&stw_dev->screen_mutex);
+   if (stw_winsys->get_adapter_luid)
+      stw_winsys->get_adapter_luid(screen, &stw_dev->AdapterLuid);
+
+   stw_dev->smapi->screen = screen;
+   stw_dev->smapi->get_param = stw_get_param;
+   stw_dev->screen = screen;
+
+   stw_dev->max_2d_levels = util_last_bit(screen->get_param(screen,
+                                                            PIPE_CAP_MAX_TEXTURE_2D_SIZE));
+   stw_dev->max_2d_length = 1 << (stw_dev->max_2d_levels - 1);
+
    InitializeCriticalSection(&stw_dev->ctx_mutex);
    InitializeCriticalSection(&stw_dev->fb_mutex);
 
@@ -129,6 +132,8 @@ stw_init(const struct stw_winsys *stw_winsys)
    if (!stw_dev->ctx_table) {
       goto error1;
    }
+
+   stw_pixelformat_init();
 
    /* env var override for WGL_EXT_swap_control, useful for testing/debugging */
    const char *s = os_get_option("WGL_SWAP_INTERVAL");
@@ -150,23 +155,6 @@ error1:
    return FALSE;
 }
 
-boolean
-stw_init_screen()
-{
-   EnterCriticalSection(&stw_dev->screen_mutex);
-
-   if (!stw_dev->screen_initialized) {
-      stw_dev->screen_initialized = true;
-      if (!init_screen(stw_dev->stw_winsys)) {
-         LeaveCriticalSection(&stw_dev->screen_mutex);
-         return false;
-      }
-      stw_pixelformat_init();
-   }
-
-   LeaveCriticalSection(&stw_dev->screen_mutex);
-   return stw_dev->screen != NULL;
-}
 
 boolean
 stw_init_thread(void)
@@ -211,7 +199,6 @@ stw_cleanup(void)
 
    DeleteCriticalSection(&stw_dev->fb_mutex);
    DeleteCriticalSection(&stw_dev->ctx_mutex);
-   DeleteCriticalSection(&stw_dev->screen_mutex);
 
    if (stw_dev->smapi->destroy)
       stw_dev->smapi->destroy(stw_dev->smapi);
@@ -224,6 +211,10 @@ stw_cleanup(void)
    /* glapi is statically linked: we can call the local destroy function. */
 #ifdef _GLAPI_NO_EXPORTS
    _glapi_destroy_multithread();
+#endif
+
+#ifdef DEBUG
+   debug_memory_end(stw_dev->memdbg_no);
 #endif
 
    stw_tls_cleanup();

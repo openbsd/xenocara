@@ -67,14 +67,14 @@ dump_validation_list(struct intel_batchbuffer *batch)
       uint64_t flags = batch->validation_list[i].flags;
       assert(batch->validation_list[i].handle ==
              batch->exec_bos[i]->gem_handle);
-      fprintf(stderr, "[%2d]: %2d %-14s %p %s%-7s @ 0x%"PRIx64"%s (%"PRIu64"B)\n",
+      fprintf(stderr, "[%2d]: %2d %-14s %p %s%-7s @ 0x%016llx%s (%"PRIu64"B)\n",
               i,
               batch->validation_list[i].handle,
               batch->exec_bos[i]->name,
               batch->exec_bos[i],
               (flags & EXEC_OBJECT_SUPPORTS_48B_ADDRESS) ? "(48b" : "(32b",
               (flags & EXEC_OBJECT_WRITE) ? " write)" : ")",
-              (uint64_t)batch->validation_list[i].offset,
+              batch->validation_list[i].offset,
               (flags & EXEC_OBJECT_PINNED) ? " (pinned)" : "",
               batch->exec_bos[i]->size);
    }
@@ -579,8 +579,6 @@ brw_new_batch(struct brw_context *brw)
     */
    if (INTEL_DEBUG & DEBUG_SHADER_TIME)
       brw_collect_and_report_shader_time(brw);
-
-   intel_batchbuffer_maybe_noop(brw);
 }
 
 /**
@@ -729,9 +727,9 @@ execbuffer(int fd,
 
       /* Update brw_bo::gtt_offset */
       if (batch->validation_list[i].offset != bo->gtt_offset) {
-         DBG("BO %d migrated: 0x%" PRIx64 " -> 0x%" PRIx64 "\n",
+         DBG("BO %d migrated: 0x%" PRIx64 " -> 0x%llx\n",
              bo->gem_handle, bo->gtt_offset,
-             (uint64_t)batch->validation_list[i].offset);
+             batch->validation_list[i].offset);
          assert(!(bo->kflags & EXEC_OBJECT_PINNED));
          bo->gtt_offset = batch->validation_list[i].offset;
       }
@@ -895,17 +893,6 @@ _intel_batchbuffer_flush_fence(struct brw_context *brw,
    brw_new_batch(brw);
 
    return ret;
-}
-
-void
-intel_batchbuffer_maybe_noop(struct brw_context *brw)
-{
-   if (!brw->frontend_noop || USED_BATCH(brw->batch) != 0)
-      return;
-
-   BEGIN_BATCH(1);
-   OUT_BATCH(MI_BATCH_BUFFER_END);
-   ADVANCE_BATCH();
 }
 
 bool

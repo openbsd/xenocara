@@ -24,6 +24,7 @@
  */
 
 #include "main/enums.h"
+#include "main/imports.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/fbobject.h"
@@ -35,7 +36,6 @@
 #include "main/condrender.h"
 #include "util/hash_table.h"
 #include "util/set.h"
-#include "util/u_memory.h"
 
 #include "swrast/swrast.h"
 #include "drivers/common/meta.h"

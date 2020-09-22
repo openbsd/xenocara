@@ -1,8 +1,8 @@
 /**************************************************************************
- *
+ * 
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
+ * 
  **************************************************************************/
  /*
   * Authors:
@@ -32,7 +32,7 @@
 
 
 #include "main/errors.h"
-
+#include "main/imports.h"
 #include "main/hash.h"
 #include "main/mtypes.h"
 #include "program/prog_parameter.h"
@@ -41,7 +41,6 @@
 #include "program/programopt.h"
 
 #include "compiler/nir/nir.h"
-#include "compiler/nir/nir_serialize.h"
 #include "draw/draw_context.h"
 
 #include "pipe/p_context.h"
@@ -52,8 +51,6 @@
 #include "tgsi/tgsi_emulate.h"
 #include "tgsi/tgsi_parse.h"
 #include "tgsi/tgsi_ureg.h"
-
-#include "util/u_memory.h"
 
 #include "st_debug.h"
 #include "st_cb_bitmap.h"
@@ -510,19 +507,13 @@ st_translate_vertex_program(struct st_context *st,
          stp->affected_states |= ST_NEW_VS_CONSTANTS;
 
       /* Translate to NIR if preferred. */
-      if (PIPE_SHADER_IR_NIR ==
-          st->pipe->screen->get_shader_param(st->pipe->screen,
+      if (st->pipe->screen->get_shader_param(st->pipe->screen,
                                              PIPE_SHADER_VERTEX,
                                              PIPE_SHADER_CAP_PREFERRED_IR)) {
          assert(!stp->glsl_to_tgsi);
 
          if (stp->Base.nir)
             ralloc_free(stp->Base.nir);
-
-         if (stp->serialized_nir) {
-            free(stp->serialized_nir);
-            stp->serialized_nir = NULL;
-         }
 
          stp->state.type = PIPE_SHADER_IR_NIR;
          stp->Base.nir = st_translate_prog_to_nir(st, &stp->Base,
@@ -646,29 +637,6 @@ st_translate_vertex_program(struct st_context *st,
    return stp->state.tokens != NULL;
 }
 
-static struct nir_shader *
-get_nir_shader(struct st_context *st, struct st_program *stp)
-{
-   if (stp->Base.nir) {
-      nir_shader *nir = stp->Base.nir;
-
-      /* The first shader variant takes ownership of NIR, so that there is
-       * no cloning. Additional shader variants are always generated from
-       * serialized NIR to save memory.
-       */
-      stp->Base.nir = NULL;
-      assert(stp->serialized_nir && stp->serialized_nir_size);
-      return nir;
-   }
-
-   struct blob_reader blob_reader;
-   const struct nir_shader_compiler_options *options =
-      st->ctx->Const.ShaderCompilerOptions[stp->Base.info.stage].NirOptions;
-
-   blob_reader_init(&blob_reader, stp->serialized_nir, stp->serialized_nir_size);
-   return nir_deserialize(NULL, options, &blob_reader);
-}
-
 static const gl_state_index16 depth_range_state[STATE_LENGTH] =
    { STATE_DEPTH_RANGE };
 
@@ -695,7 +663,7 @@ st_create_vp_variant(struct st_context *st,
       bool finalize = false;
 
       state.type = PIPE_SHADER_IR_NIR;
-      state.ir.nir = get_nir_shader(st, stvp);
+      state.ir.nir = nir_shader_clone(NULL, stvp->Base.nir);
       if (key->clamp_color) {
          NIR_PASS_V(state.ir.nir, nir_lower_clamp_color_outputs);
          finalize = true;
@@ -884,7 +852,6 @@ st_translate_fragment_program(struct st_context *st,
 
       /* Translate to NIR. */
       if (!stfp->ati_fs &&
-          PIPE_SHADER_IR_NIR ==
           st->pipe->screen->get_shader_param(st->pipe->screen,
                                              PIPE_SHADER_FRAGMENT,
                                              PIPE_SHADER_CAP_PREFERRED_IR)) {
@@ -893,10 +860,6 @@ st_translate_fragment_program(struct st_context *st,
 
          if (stfp->Base.nir)
             ralloc_free(stfp->Base.nir);
-         if (stfp->serialized_nir) {
-            free(stfp->serialized_nir);
-            stfp->serialized_nir = NULL;
-         }
          stfp->state.type = PIPE_SHADER_IR_NIR;
          stfp->Base.nir = nir;
          return true;
@@ -1254,7 +1217,7 @@ st_create_fp_variant(struct st_context *st,
       bool finalize = false;
 
       state.type = PIPE_SHADER_IR_NIR;
-      state.ir.nir = get_nir_shader(st, stfp);
+      state.ir.nir = nir_shader_clone(NULL, stfp->Base.nir);
 
       if (key->clamp_color) {
          NIR_PASS_V(state.ir.nir, nir_lower_clamp_color_outputs);
@@ -1785,7 +1748,7 @@ st_get_common_variant(struct st_context *st,
             bool finalize = false;
 
 	    state.type = PIPE_SHADER_IR_NIR;
-	    state.ir.nir = get_nir_shader(st, prog);
+	    state.ir.nir = nir_shader_clone(NULL, prog->Base.nir);
 
             if (key->clamp_color) {
                NIR_PASS_V(state.ir.nir, nir_lower_clamp_color_outputs);
@@ -2024,20 +1987,6 @@ st_precompile_shader_variant(struct st_context *st,
 }
 
 void
-st_serialize_nir(struct st_program *stp)
-{
-   if (!stp->serialized_nir) {
-      struct blob blob;
-      size_t size;
-
-      blob_init(&blob);
-      nir_serialize(&blob, stp->Base.nir, false);
-      blob_finish_get_buffer(&blob, &stp->serialized_nir, &size);
-      stp->serialized_nir_size = size;
-   }
-}
-
-void
 st_finalize_program(struct st_context *st, struct gl_program *prog)
 {
    if (st->current_program[prog->info.stage] == prog) {
@@ -2047,15 +1996,8 @@ st_finalize_program(struct st_context *st, struct gl_program *prog)
          st->dirty |= ((struct st_program *)prog)->affected_states;
    }
 
-   if (prog->nir) {
+   if (prog->nir)
       nir_sweep(prog->nir);
-
-      /* This is only needed for ARB_vp/fp programs and when the disk cache
-       * is disabled. If the disk cache is enabled, GLSL programs are
-       * serialized in write_nir_to_cache.
-       */
-      st_serialize_nir(st_program(prog));
-   }
 
    /* Create Gallium shaders now instead of on demand. */
    if (ST_DEBUG & DEBUG_PRECOMPILE ||

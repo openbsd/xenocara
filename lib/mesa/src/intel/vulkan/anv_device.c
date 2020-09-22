@@ -454,8 +454,18 @@ anv_physical_device_try_create(struct anv_instance *instance,
    device->always_flush_cache =
       driQueryOptionb(&instance->dri_options, "always_flush_cache");
 
-   device->has_mmap_offset =
-      anv_gem_get_param(fd, I915_PARAM_MMAP_GTT_VERSION) >= 4;
+   /* Starting with Gen10, the timestamp frequency of the command streamer may
+    * vary from one part to another. We can query the value from the kernel.
+    */
+   if (device->info.gen >= 10) {
+      int timestamp_frequency =
+         anv_gem_get_param(fd, I915_PARAM_CS_TIMESTAMP_FREQUENCY);
+
+      if (timestamp_frequency < 0)
+         intel_logw("Kernel 4.16-rc1+ required to properly query CS timestamp frequency");
+      else
+         device->info.timestamp_frequency = timestamp_frequency;
+   }
 
    /* GENs prior to 8 do not support EU/Subslice info */
    if (device->info.gen >= 8) {
@@ -740,8 +750,6 @@ VkResult anv_CreateInstance(
    driParseOptionInfo(&instance->available_dri_options, anv_dri_options_xml);
    driParseConfigFiles(&instance->dri_options, &instance->available_dri_options,
                        0, "anv", NULL,
-                       instance->app_info.app_name,
-                       instance->app_info.app_version,
                        instance->app_info.engine_name,
                        instance->app_info.engine_version);
 
@@ -1220,14 +1228,6 @@ void anv_GetPhysicalDeviceFeatures2(
          break;
       }
 
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT: {
-         VkPhysicalDeviceRobustness2FeaturesEXT *features = (void *)ext;
-         features->robustBufferAccess2 = true;
-         features->robustImageAccess2 = true;
-         features->nullDescriptor = true;
-         break;
-      }
-
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES: {
          VkPhysicalDeviceSamplerYcbcrConversionFeatures *features =
             (VkPhysicalDeviceSamplerYcbcrConversionFeatures *) ext;
@@ -1273,13 +1273,6 @@ void anv_GetPhysicalDeviceFeatures2(
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES: {
          VkPhysicalDeviceShaderDrawParametersFeatures *features = (void *)ext;
          CORE_FEATURE(1, 1, shaderDrawParameters);
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: {
-         VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *features =
-            (VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *)ext;
-         features->shaderIntegerFunctions2 = true;
          break;
       }
 
@@ -1489,7 +1482,8 @@ void anv_GetPhysicalDeviceProperties(
        * case of R32G32B32A32 which is 16 bytes.
        */
       .minTexelBufferOffsetAlignment            = 16,
-      .minUniformBufferOffsetAlignment          = ANV_UBO_ALIGNMENT,
+      /* We need 16 for UBO block reads to work and 32 for push UBOs */
+      .minUniformBufferOffsetAlignment          = 32,
       .minStorageBufferOffsetAlignment          = 4,
       .minTexelOffset                           = -8,
       .maxTexelOffset                           = 7,
@@ -1895,15 +1889,6 @@ void anv_GetPhysicalDeviceProperties2(
          break;
       }
 
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT: {
-         VkPhysicalDeviceRobustness2PropertiesEXT *properties = (void *)ext;
-         properties->robustStorageBufferAccessSizeAlignment =
-            ANV_SSBO_BOUNDS_CHECK_ALIGNMENT;
-         properties->robustUniformBufferAccessSizeAlignment =
-            ANV_UBO_ALIGNMENT;
-         break;
-      }
-
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES_EXT: {
          VkPhysicalDeviceSamplerFilterMinmaxPropertiesEXT *properties =
             (VkPhysicalDeviceSamplerFilterMinmaxPropertiesEXT *)ext;
@@ -2208,11 +2193,6 @@ PFN_vkVoidFunction anv_GetInstanceProcAddr(
    LOOKUP_ANV_ENTRYPOINT(EnumerateInstanceLayerProperties);
    LOOKUP_ANV_ENTRYPOINT(EnumerateInstanceVersion);
    LOOKUP_ANV_ENTRYPOINT(CreateInstance);
-
-   /* GetInstanceProcAddr() can also be called with a NULL instance.
-    * See https://gitlab.khronos.org/vulkan/vulkan/issues/2057
-    */
-   LOOKUP_ANV_ENTRYPOINT(GetInstanceProcAddr);
 
 #undef LOOKUP_ANV_ENTRYPOINT
 
@@ -2893,18 +2873,6 @@ VkResult anv_CreateDevice(
    result = anv_device_init_trivial_batch(device);
    if (result != VK_SUCCESS)
       goto fail_workaround_bo;
-
-   /* Allocate a null surface state at surface state offset 0.  This makes
-    * NULL descriptor handling trivial because we can just memset structures
-    * to zero and they have a valid descriptor.
-    */
-   device->null_surface_state =
-      anv_state_pool_alloc(&device->surface_state_pool,
-                           device->isl_dev.ss.size,
-                           device->isl_dev.ss.align);
-   isl_null_fill_state(&device->isl_dev, device->null_surface_state.map,
-                       isl_extent3d(1, 1, 1) /* This shouldn't matter */);
-   assert(device->null_surface_state.offset == 0);
 
    if (device->info.gen >= 10) {
       result = anv_device_init_hiz_clear_value_bo(device);
@@ -3722,11 +3690,7 @@ VkResult anv_MapMemory(
       gem_flags |= I915_MMAP_WC;
 
    /* GEM will fail to map if the offset isn't 4k-aligned.  Round down. */
-   uint64_t map_offset;
-   if (!device->physical->has_mmap_offset)
-      map_offset = offset & ~4095ull;
-   else
-      map_offset = 0;
+   uint64_t map_offset = offset & ~4095ull;
    assert(offset >= map_offset);
    uint64_t map_size = (offset + size) - map_offset;
 
@@ -3750,13 +3714,12 @@ void anv_UnmapMemory(
     VkDevice                                    _device,
     VkDeviceMemory                              _memory)
 {
-   ANV_FROM_HANDLE(anv_device, device, _device);
    ANV_FROM_HANDLE(anv_device_memory, mem, _memory);
 
    if (mem == NULL || mem->host_ptr)
       return;
 
-   anv_gem_munmap(device, mem->map, mem->map_size);
+   anv_gem_munmap(mem->map, mem->map_size);
 
    mem->map = NULL;
    mem->map_size = 0;
@@ -3833,8 +3796,9 @@ void anv_GetBufferMemoryRequirements(
    /* Base alignment requirement of a cache line */
    uint32_t alignment = 16;
 
+   /* We need an alignment of 32 for pushing UBOs */
    if (buffer->usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
-      alignment = MAX2(alignment, ANV_UBO_ALIGNMENT);
+      alignment = MAX2(alignment, 32);
 
    pMemoryRequirements->size = buffer->size;
    pMemoryRequirements->alignment = alignment;
@@ -3895,6 +3859,12 @@ void anv_GetImageMemoryRequirements(
     */
    uint32_t memory_types = (1ull << device->physical->memory.type_count) - 1;
 
+   /* We must have image allocated or imported at this point. According to the
+    * specification, external images must have been bound to memory before
+    * calling GetImageMemoryRequirements.
+    */
+   assert(image->size > 0);
+
    pMemoryRequirements->size = image->size;
    pMemoryRequirements->alignment = image->alignment;
    pMemoryRequirements->memoryTypeBits = memory_types;
@@ -3933,6 +3903,12 @@ void anv_GetImageMemoryRequirements2(
           */
          pMemoryRequirements->memoryRequirements.memoryTypeBits =
                (1ull << device->physical->memory.type_count) - 1;
+
+         /* We must have image allocated or imported at this point. According to the
+          * specification, external images must have been bound to memory before
+          * calling GetImageMemoryRequirements.
+          */
+         assert(image->planes[plane].size > 0);
 
          pMemoryRequirements->memoryRequirements.size = image->planes[plane].size;
          pMemoryRequirements->memoryRequirements.alignment =

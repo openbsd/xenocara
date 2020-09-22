@@ -25,7 +25,7 @@
 import argparse
 import math
 import os
-import xml.etree.ElementTree as et
+import xml.etree.cElementTree as et
 
 from collections import OrderedDict, namedtuple
 from mako.template import Template

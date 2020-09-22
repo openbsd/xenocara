@@ -40,9 +40,6 @@
  * named function in the specified dispatch table.
  */
 
-#include "main/glheader.h"
-
-#include "main/glheader.h"
 #define CALL_by_offset(disp, cast, offset, parameters) \
     (*(cast (GET_by_offset(disp, offset)))) parameters
 #define GET_by_offset(disp, offset) \
@@ -60,7 +57,7 @@
     } while(0)
 
 /* total number of offsets below */
-#define _gloffset_COUNT 1610
+#define _gloffset_COUNT 1607
 
 #define _gloffset_NewList 0
 #define _gloffset_EndList 1
@@ -470,7 +467,7 @@
 #define _gloffset_MultiTexCoord4iv 405
 #define _gloffset_MultiTexCoord4s 406
 #define _gloffset_MultiTexCoord4sv 407
-#define driDispatchRemapTable_size 1202
+#define driDispatchRemapTable_size 1199
 extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
 #define CompressedTexImage1D_remap_index 0
@@ -1672,9 +1669,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define GetNamedStringivARB_remap_index 1196
 #define EGLImageTargetTexStorageEXT_remap_index 1197
 #define EGLImageTargetTextureStorageEXT_remap_index 1198
-#define CopyImageSubDataNV_remap_index 1199
-#define ViewportSwizzleNV_remap_index 1200
-#define AlphaToCoverageDitherControlNV_remap_index 1201
 
 #define _gloffset_CompressedTexImage1D driDispatchRemapTable[CompressedTexImage1D_remap_index]
 #define _gloffset_CompressedTexImage2D driDispatchRemapTable[CompressedTexImage2D_remap_index]
@@ -2875,9 +2869,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetNamedStringivARB driDispatchRemapTable[GetNamedStringivARB_remap_index]
 #define _gloffset_EGLImageTargetTexStorageEXT driDispatchRemapTable[EGLImageTargetTexStorageEXT_remap_index]
 #define _gloffset_EGLImageTargetTextureStorageEXT driDispatchRemapTable[EGLImageTargetTextureStorageEXT_remap_index]
-#define _gloffset_CopyImageSubDataNV driDispatchRemapTable[CopyImageSubDataNV_remap_index]
-#define _gloffset_ViewportSwizzleNV driDispatchRemapTable[ViewportSwizzleNV_remap_index]
-#define _gloffset_AlphaToCoverageDitherControlNV driDispatchRemapTable[AlphaToCoverageDitherControlNV_remap_index]
 
 typedef void (GLAPIENTRYP _glptr_NewList)(GLuint, GLenum);
 #define CALL_NewList(disp, parameters) \
@@ -20554,39 +20545,6 @@ static inline _glptr_EGLImageTargetTextureStorageEXT GET_EGLImageTargetTextureSt
 
 static inline void SET_EGLImageTargetTextureStorageEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLvoid *, const GLint *)) {
    SET_by_offset(disp, _gloffset_EGLImageTargetTextureStorageEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CopyImageSubDataNV)(GLuint, GLenum, GLint, GLint, GLint, GLint, GLuint, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei);
-#define CALL_CopyImageSubDataNV(disp, parameters) \
-    (* GET_CopyImageSubDataNV(disp)) parameters
-static inline _glptr_CopyImageSubDataNV GET_CopyImageSubDataNV(struct _glapi_table *disp) {
-   return (_glptr_CopyImageSubDataNV) (GET_by_offset(disp, _gloffset_CopyImageSubDataNV));
-}
-
-static inline void SET_CopyImageSubDataNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint, GLint, GLint, GLint, GLuint, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei)) {
-   SET_by_offset(disp, _gloffset_CopyImageSubDataNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ViewportSwizzleNV)(GLuint, GLenum, GLenum, GLenum, GLenum);
-#define CALL_ViewportSwizzleNV(disp, parameters) \
-    (* GET_ViewportSwizzleNV(disp)) parameters
-static inline _glptr_ViewportSwizzleNV GET_ViewportSwizzleNV(struct _glapi_table *disp) {
-   return (_glptr_ViewportSwizzleNV) (GET_by_offset(disp, _gloffset_ViewportSwizzleNV));
-}
-
-static inline void SET_ViewportSwizzleNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLenum, GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_ViewportSwizzleNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_AlphaToCoverageDitherControlNV)(GLenum);
-#define CALL_AlphaToCoverageDitherControlNV(disp, parameters) \
-    (* GET_AlphaToCoverageDitherControlNV(disp)) parameters
-static inline _glptr_AlphaToCoverageDitherControlNV GET_AlphaToCoverageDitherControlNV(struct _glapi_table *disp) {
-   return (_glptr_AlphaToCoverageDitherControlNV) (GET_by_offset(disp, _gloffset_AlphaToCoverageDitherControlNV));
-}
-
-static inline void SET_AlphaToCoverageDitherControlNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum)) {
-   SET_by_offset(disp, _gloffset_AlphaToCoverageDitherControlNV, fn);
 }
 
 

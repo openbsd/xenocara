@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	llvmpipe
 
@@ -42,7 +42,6 @@ SRCS=	lp_bld_alpha.c \
 	lp_state_setup.c \
 	lp_state_so.c \
 	lp_state_surface.c \
-	lp_state_tess.c \
 	lp_state_vertex.c \
 	lp_state_vs.c \
 	lp_surface.c \

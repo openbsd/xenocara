@@ -210,13 +210,7 @@ test_disk_cache_create(void)
    expect_null(cache_exists(cache), "disk_cache_create with XDG_CACHE_HOME set "
                "with a non-existing parent directory");
 
-   err = mkdir(CACHE_TEST_TMP, 0755);
-   if (err != 0) {
-      fprintf(stderr, "Error creating %s: %s\n", CACHE_TEST_TMP, strerror(errno));
-      error = true;
-      return;
-   }
-
+   mkdir(CACHE_TEST_TMP, 0755);
    cache = disk_cache_create("test", "make_check", 0);
    expect_non_null(cache_exists(cache), "disk_cache_create with XDG_CACHE_HOME "
                    "set");
@@ -235,13 +229,7 @@ test_disk_cache_create(void)
    expect_null(cache_exists(cache), "disk_cache_create with MESA_GLSL_CACHE_DIR"
                " set with a non-existing parent directory");
 
-   err = mkdir(CACHE_TEST_TMP, 0755);
-   if (err != 0) {
-      fprintf(stderr, "Error creating %s: %s\n", CACHE_TEST_TMP, strerror(errno));
-      error = true;
-      return;
-   }
-
+   mkdir(CACHE_TEST_TMP, 0755);
    cache = disk_cache_create("test", "make_check", 0);
    expect_non_null(cache_exists(cache), "disk_cache_create with "
                    "MESA_GLSL_CACHE_DIR set");

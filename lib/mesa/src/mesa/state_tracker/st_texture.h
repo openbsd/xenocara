@@ -78,12 +78,6 @@ struct st_sampler_views
    struct st_sampler_view views[0];
 };
 
-struct st_compressed_data
-{
-   struct pipe_reference reference;
-   GLubyte *ptr;
-};
-
 
 /**
  * Subclass of gl_texure_image.
@@ -107,7 +101,7 @@ struct st_texture_image
     * the original data. This is necessary for mapping/unmapping,
     * as well as image copies.
     */
-   struct st_compressed_data* compressed_data;
+   GLubyte *compressed_data;
 };
 
 

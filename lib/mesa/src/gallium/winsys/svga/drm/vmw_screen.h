@@ -108,7 +108,6 @@ struct vmw_winsys_screen
    mtx_t cs_mutex;
 
    boolean force_coherent;
-   boolean cache_maps;
 };
 
 

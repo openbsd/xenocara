@@ -54,8 +54,27 @@ static FILE *stream;
  */
 static mtx_t serials_mutex = _MTX_INITIALIZER_NP;
 
-static struct hash_table *serials_hash;
+static struct util_hash_table *serials_hash;
 static unsigned serials_last;
+
+
+static unsigned
+hash_ptr(void *p)
+{
+   return (unsigned) (uintptr_t) p;
+}
+
+
+static int
+compare_ptr(void *a, void *b)
+{
+   if (a == b)
+      return 0;
+   else if (a < b)
+      return -1;
+   else
+      return 1;
+}
 
 
 /**
@@ -77,7 +96,7 @@ debug_serial(void *p, unsigned *pserial)
 
    mtx_lock(&serials_mutex);
    if (!serials_hash)
-      serials_hash = util_hash_table_create_ptr_keys();
+      serials_hash = util_hash_table_create(hash_ptr, compare_ptr);
 
    serial = (unsigned) (uintptr_t) util_hash_table_get(serials_hash, p);
    if (!serial) {
@@ -90,7 +109,7 @@ debug_serial(void *p, unsigned *pserial)
          os_abort();
       }
 
-      _mesa_hash_table_insert(serials_hash, p, (void *) (uintptr_t) serial);
+      util_hash_table_set(serials_hash, p, (void *) (uintptr_t) serial);
       found = FALSE;
    }
    mtx_unlock(&serials_mutex);
@@ -108,7 +127,7 @@ static void
 debug_serial_delete(void *p)
 {
    mtx_lock(&serials_mutex);
-   _mesa_hash_table_remove_key(serials_hash, p);
+   util_hash_table_remove(serials_hash, p);
    mtx_unlock(&serials_mutex);
 }
 

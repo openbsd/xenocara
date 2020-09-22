@@ -447,7 +447,8 @@ struct brw_vertex_buffer {
    GLuint step_rate;
 };
 struct brw_vertex_element {
-   const struct gl_vertex_format *glformat;
+   const struct gl_array_attributes *glattrib;
+   const struct gl_vertex_buffer_binding *glbinding;
 
    int buffer;
    bool is_dual_slot;
@@ -853,9 +854,6 @@ struct brw_context
    /* The last PMA stall bits programmed. */
    uint32_t pma_stall_bits;
 
-   /* Whether INTEL_black_render is active. */
-   bool frontend_noop;
-
    struct {
       struct {
          /**
@@ -907,13 +905,6 @@ struct brw_context
        */
       struct brw_bo *draw_params_count_bo;
       uint32_t draw_params_count_offset;
-
-      /**
-       * Draw indirect buffer.
-       */
-      unsigned draw_indirect_stride;
-      GLsizeiptr draw_indirect_offset;
-      struct gl_buffer_object *draw_indirect_data;
    } draw;
 
    struct {
@@ -925,11 +916,6 @@ struct brw_context
       struct brw_bo *num_work_groups_bo;
       GLintptr num_work_groups_offset;
       const GLuint *num_work_groups;
-      /**
-       * This is only used alongside ARB_compute_variable_group_size when the
-       * local work group size is variable, otherwise it's NULL.
-       */
-      const GLuint *group_size;
    } compute;
 
    struct {
@@ -1513,6 +1499,8 @@ gen6_get_sample_position(struct gl_context *ctx,
                          struct gl_framebuffer *fb,
                          GLuint index,
                          GLfloat *result);
+void
+gen6_set_sample_maps(struct gl_context *ctx);
 
 /* gen8_multisample_state.c */
 void gen8_emit_3dstate_sample_pattern(struct brw_context *brw);

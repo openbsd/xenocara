@@ -14728,30 +14728,6 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1606)(GLuint texture, GLvoid * im
    DISPATCH(EGLImageTargetTextureStorageEXT, (texture, image, attrib_list), (F, "glEGLImageTargetTextureStorageEXT(%d, %p, %p);\n", texture, (const void *) image, (const void *) attrib_list));
 }
 
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1607)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
-
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1607)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth)
-{
-    (void) srcName; (void) srcTarget; (void) srcLevel; (void) srcX; (void) srcY; (void) srcZ; (void) dstName; (void) dstTarget; (void) dstLevel; (void) dstX; (void) dstY; (void) dstZ; (void) width; (void) height; (void) depth;
-   DISPATCH(CopyImageSubDataNV, (srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth), (F, "glCopyImageSubDataNV(%d, 0x%x, %d, %d, %d, %d, %d, 0x%x, %d, %d, %d, %d, %d, %d, %d);\n", srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth));
-}
-
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1608)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew);
-
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1608)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew)
-{
-    (void) index; (void) swizzlex; (void) swizzley; (void) swizzlez; (void) swizzlew;
-   DISPATCH(ViewportSwizzleNV, (index, swizzlex, swizzley, swizzlez, swizzlew), (F, "glViewportSwizzleNV(%d, 0x%x, 0x%x, 0x%x, 0x%x);\n", index, swizzlex, swizzley, swizzlez, swizzlew));
-}
-
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1609)(GLenum mode);
-
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1609)(GLenum mode)
-{
-    (void) mode;
-   DISPATCH(AlphaToCoverageDitherControlNV, (mode), (F, "glAlphaToCoverageDitherControlNV(0x%x);\n", mode));
-}
-
 
 #endif /* _GLAPI_SKIP_NORMAL_ENTRY_POINTS */
 
@@ -16514,9 +16490,6 @@ _glapi_proc DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_1604),
    TABLE_ENTRY(_dispatch_stub_1605),
    TABLE_ENTRY(_dispatch_stub_1606),
-   TABLE_ENTRY(_dispatch_stub_1607),
-   TABLE_ENTRY(_dispatch_stub_1608),
-   TABLE_ENTRY(_dispatch_stub_1609),
    /* A whole bunch of no-op functions.  These might be called
     * when someone tries to call a dynamically-registered
     * extension function without a current rendering context.

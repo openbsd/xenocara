@@ -5200,7 +5200,6 @@ struct GEN12_3DSTATE_HS {
    uint32_t                             PerThreadScratchSpace;
    __gen_address_type                   ScratchSpaceBasePointer;
    bool                                 IncludePrimitiveID;
-   uint32_t                             PatchCountThreshold;
    uint32_t                             VertexURBEntryReadOffset;
    uint32_t                             VertexURBEntryReadLength;
    uint32_t                             DispatchMode;
@@ -5256,7 +5255,6 @@ GEN12_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[7] =
       __gen_uint(values->IncludePrimitiveID, 0, 0) |
-      __gen_uint(values->PatchCountThreshold, 1, 3) |
       __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
       __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
       __gen_uint(values->DispatchMode, 17, 18) |
@@ -5614,86 +5612,6 @@ GEN12_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data 
 
    dw[32] =
       __gen_uint(values->PatternRow[31], 0, 31);
-}
-
-#define GEN12_3DSTATE_PRIMITIVE_REPLICATION_length      6
-#define GEN12_3DSTATE_PRIMITIVE_REPLICATION_length_bias      2
-#define GEN12_3DSTATE_PRIMITIVE_REPLICATION_header\
-   .DWordLength                         =      4,  \
-   ._3DCommandSubOpcode                 =    108,  \
-   ._3DCommandOpcode                    =      0,  \
-   .CommandSubType                      =      3,  \
-   .CommandType                         =      3
-
-struct GEN12_3DSTATE_PRIMITIVE_REPLICATION {
-   uint32_t                             DWordLength;
-   uint32_t                             _3DCommandSubOpcode;
-   uint32_t                             _3DCommandOpcode;
-   uint32_t                             CommandSubType;
-   uint32_t                             CommandType;
-   uint32_t                             ReplicationCount;
-   uint32_t                             ReplicaMask;
-   uint32_t                             ViewportOffset[16];
-   uint32_t                             RTAIOffset[16];
-};
-
-static inline __attribute__((always_inline)) void
-GEN12_3DSTATE_PRIMITIVE_REPLICATION_pack(__attribute__((unused)) __gen_user_data *data,
-                                         __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN12_3DSTATE_PRIMITIVE_REPLICATION * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
-
-   dw[1] =
-      __gen_uint(values->ReplicationCount, 0, 3) |
-      __gen_uint(values->ReplicaMask, 16, 31);
-
-   dw[2] =
-      __gen_uint(values->ViewportOffset[0], 0, 3) |
-      __gen_uint(values->ViewportOffset[1], 4, 7) |
-      __gen_uint(values->ViewportOffset[2], 8, 11) |
-      __gen_uint(values->ViewportOffset[3], 12, 15) |
-      __gen_uint(values->ViewportOffset[4], 16, 19) |
-      __gen_uint(values->ViewportOffset[5], 20, 23) |
-      __gen_uint(values->ViewportOffset[6], 24, 27) |
-      __gen_uint(values->ViewportOffset[7], 28, 31);
-
-   dw[3] =
-      __gen_uint(values->ViewportOffset[8], 0, 3) |
-      __gen_uint(values->ViewportOffset[9], 4, 7) |
-      __gen_uint(values->ViewportOffset[10], 8, 11) |
-      __gen_uint(values->ViewportOffset[11], 12, 15) |
-      __gen_uint(values->ViewportOffset[12], 16, 19) |
-      __gen_uint(values->ViewportOffset[13], 20, 23) |
-      __gen_uint(values->ViewportOffset[14], 24, 27) |
-      __gen_uint(values->ViewportOffset[15], 28, 31);
-
-   dw[4] =
-      __gen_uint(values->RTAIOffset[0], 0, 3) |
-      __gen_uint(values->RTAIOffset[1], 4, 7) |
-      __gen_uint(values->RTAIOffset[2], 8, 11) |
-      __gen_uint(values->RTAIOffset[3], 12, 15) |
-      __gen_uint(values->RTAIOffset[4], 16, 19) |
-      __gen_uint(values->RTAIOffset[5], 20, 23) |
-      __gen_uint(values->RTAIOffset[6], 24, 27) |
-      __gen_uint(values->RTAIOffset[7], 28, 31);
-
-   dw[5] =
-      __gen_uint(values->RTAIOffset[8], 0, 3) |
-      __gen_uint(values->RTAIOffset[9], 4, 7) |
-      __gen_uint(values->RTAIOffset[10], 8, 11) |
-      __gen_uint(values->RTAIOffset[11], 12, 15) |
-      __gen_uint(values->RTAIOffset[12], 16, 19) |
-      __gen_uint(values->RTAIOffset[13], 20, 23) |
-      __gen_uint(values->RTAIOffset[14], 24, 27) |
-      __gen_uint(values->RTAIOffset[15], 28, 31);
 }
 
 #define GEN12_3DSTATE_PS_length               12
@@ -11238,44 +11156,6 @@ GEN12_CL_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CLPrimitivesCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
-}
-
-#define GEN12_COMMON_SLICE_CHICKEN1_num   0x7010
-#define GEN12_COMMON_SLICE_CHICKEN1_length      1
-struct GEN12_COMMON_SLICE_CHICKEN1 {
-   bool                                 HIZPlaneOptimizationdisablebit;
-   bool                                 HIZPlaneOptimizationdisablebitMask;
-};
-
-static inline __attribute__((always_inline)) void
-GEN12_COMMON_SLICE_CHICKEN1_pack(__attribute__((unused)) __gen_user_data *data,
-                                 __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN12_COMMON_SLICE_CHICKEN1 * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_uint(values->HIZPlaneOptimizationdisablebit, 9, 9) |
-      __gen_uint(values->HIZPlaneOptimizationdisablebitMask, 25, 25);
-}
-
-#define GEN12_HIZ_CHICKEN_num             0x7018
-#define GEN12_HIZ_CHICKEN_length               1
-struct GEN12_HIZ_CHICKEN {
-   bool                                 HZDepthTestLEGEOptimizationDisable;
-   bool                                 HZDepthTestLEGEOptimizationDisableMask;
-};
-
-static inline __attribute__((always_inline)) void
-GEN12_HIZ_CHICKEN_pack(__attribute__((unused)) __gen_user_data *data,
-                       __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN12_HIZ_CHICKEN * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_uint(values->HZDepthTestLEGEOptimizationDisable, 13, 13) |
-      __gen_uint(values->HZDepthTestLEGEOptimizationDisableMask, 29, 29);
 }
 
 #define GEN12_COMMON_SLICE_CHICKEN3_num   0x7304

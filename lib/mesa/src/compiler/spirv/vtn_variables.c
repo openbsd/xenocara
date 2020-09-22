@@ -132,18 +132,6 @@ vtn_mode_uses_ssa_offset(struct vtn_builder *b,
 }
 
 static bool
-vtn_mode_is_cross_invocation(struct vtn_builder *b,
-                             enum vtn_variable_mode mode)
-{
-   return mode == vtn_variable_mode_ssbo ||
-          mode == vtn_variable_mode_ubo ||
-          mode == vtn_variable_mode_phys_ssbo ||
-          mode == vtn_variable_mode_push_constant ||
-          mode == vtn_variable_mode_workgroup ||
-          mode == vtn_variable_mode_cross_workgroup;
-}
-
-static bool
 vtn_pointer_is_external_block(struct vtn_builder *b,
                               struct vtn_pointer *ptr)
 {
@@ -621,6 +609,23 @@ vtn_pointer_dereference(struct vtn_builder *b,
    }
 }
 
+struct vtn_pointer *
+vtn_pointer_for_variable(struct vtn_builder *b,
+                         struct vtn_variable *var, struct vtn_type *ptr_type)
+{
+   struct vtn_pointer *pointer = rzalloc(b, struct vtn_pointer);
+
+   pointer->mode = var->mode;
+   pointer->type = var->type;
+   vtn_assert(ptr_type->base_type == vtn_base_type_pointer);
+   vtn_assert(ptr_type->deref->type == var->type->type);
+   pointer->ptr_type = ptr_type;
+   pointer->var = var;
+   pointer->access = var->access | var->type->access;
+
+   return pointer;
+}
+
 /* Returns an atomic_uint type based on the original uint type. The returned
  * type will be equivalent to the original one but will have an atomic_uint
  * type as leaf instead of an uint.
@@ -730,7 +735,11 @@ vtn_local_load(struct vtn_builder *b, nir_deref_instr *src,
 
    if (src_tail != src) {
       val->type = src->type;
-      val->def = nir_vector_extract(&b->nb, val->def, src->arr.index.ssa);
+      if (nir_src_is_const(src->arr.index))
+         val->def = vtn_vector_extract(b, val->def,
+                                       nir_src_as_uint(src->arr.index));
+      else
+         val->def = vtn_vector_extract_dynamic(b, val->def, src->arr.index.ssa);
    }
 
    return val;
@@ -746,8 +755,12 @@ vtn_local_store(struct vtn_builder *b, struct vtn_ssa_value *src,
       struct vtn_ssa_value *val = vtn_create_ssa_value(b, dest_tail->type);
       _vtn_local_load_store(b, true, dest_tail, val, access);
 
-      val->def = nir_vector_insert(&b->nb, val->def, src->def,
-                                   dest->arr.index.ssa);
+      if (nir_src_is_const(dest->arr.index))
+         val->def = vtn_vector_insert(b, val->def, src->def,
+                                      nir_src_as_uint(dest->arr.index));
+      else
+         val->def = vtn_vector_insert_dynamic(b, val->def, src->def,
+                                              dest->arr.index.ssa);
       _vtn_local_load_store(b, false, dest_tail, val, access);
    } else {
       _vtn_local_load_store(b, false, dest_tail, src, access);
@@ -1105,11 +1118,11 @@ _vtn_variable_load_store(struct vtn_builder *b, bool load,
       if (glsl_type_is_vector_or_scalar(ptr->type->type)) {
          /* We hit a vector or scalar; go ahead and emit the load[s] */
          nir_deref_instr *deref = vtn_pointer_to_deref(b, ptr);
-         if (vtn_mode_is_cross_invocation(b, ptr->mode)) {
-            /* If it's cross-invocation, we call nir_load/store_deref
-             * directly.  The vtn_local_load/store helpers are too clever and
-             * do magic to avoid array derefs of vectors.  That magic is both
-             * less efficient than the direct load/store and, in the case of
+         if (vtn_pointer_is_external_block(b, ptr)) {
+            /* If it's external, we call nir_load/store_deref directly.  The
+             * vtn_local_load/store helpers are too clever and do magic to
+             * avoid array derefs of vectors.  That magic is both less
+             * efficient than the direct load/store and, in the case of
              * stores, is broken because it creates a race condition if two
              * threads are writing to different components of the same vector
              * due to the load+insert+store it uses to emulate the array
@@ -1194,8 +1207,7 @@ static void
 _vtn_variable_copy(struct vtn_builder *b, struct vtn_pointer *dest,
                    struct vtn_pointer *src)
 {
-   vtn_assert(glsl_get_bare_type(src->type->type) ==
-              glsl_get_bare_type(dest->type->type));
+   vtn_assert(src->type->type == dest->type->type);
    enum glsl_base_type base_type = glsl_get_base_type(src->type->type);
    switch (base_type) {
    case GLSL_TYPE_UINT:
@@ -2144,7 +2156,7 @@ assign_missing_member_locations(struct vtn_variable *var)
 static void
 vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
                     struct vtn_type *ptr_type, SpvStorageClass storage_class,
-                    nir_constant *const_initializer, nir_variable *var_initializer)
+                    nir_constant *initializer)
 {
    vtn_assert(ptr_type->base_type == vtn_base_type_pointer);
    struct vtn_type *type = ptr_type->deref;
@@ -2208,12 +2220,8 @@ vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
    var->mode = mode;
    var->base_location = -1;
 
-   val->pointer = rzalloc(b, struct vtn_pointer);
-   val->pointer->mode = var->mode;
-   val->pointer->type = var->type;
-   val->pointer->ptr_type = ptr_type;
-   val->pointer->var = var;
-   val->pointer->access = var->type->access;
+   vtn_assert(val->value_type == vtn_value_type_pointer);
+   val->pointer = vtn_pointer_for_variable(b, var, ptr_type);
 
    switch (var->mode) {
    case vtn_variable_mode_function:
@@ -2371,20 +2379,13 @@ vtn_create_variable(struct vtn_builder *b, struct vtn_value *val,
       unreachable("Should have been caught before");
    }
 
-   /* We can only have one type of initializer */
-   assert(!(const_initializer && var_initializer));
-   if (const_initializer) {
+   if (initializer) {
       var->var->constant_initializer =
-         nir_constant_clone(const_initializer, var->var);
+         nir_constant_clone(initializer, var->var);
    }
-   if (var_initializer)
-      var->var->pointer_initializer = var_initializer;
 
    vtn_foreach_decoration(b, val, var_decoration_cb, var);
    vtn_foreach_decoration(b, val, ptr_decoration_cb, val->pointer);
-
-   /* Propagate access flags from the OpVariable decorations. */
-   val->pointer->access |= var->access;
 
    if ((var->mode == vtn_variable_mode_input ||
         var->mode == vtn_variable_mode_output) &&
@@ -2503,25 +2504,11 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
       struct vtn_value *val = vtn_push_value(b, w[2], vtn_value_type_pointer);
 
       SpvStorageClass storage_class = w[3];
-      nir_constant *const_initializer = NULL;
-      nir_variable *var_initializer = NULL;
-      if (count > 4) {
-         struct vtn_value *init = vtn_untyped_value(b, w[4]);
-         switch (init->value_type) {
-         case vtn_value_type_constant:
-            const_initializer = init->constant;
-            break;
-         case vtn_value_type_pointer:
-            var_initializer = init->pointer->var->var;
-            break;
-         default:
-            vtn_fail("SPIR-V variable initializer %u must be constant or pointer",
-               w[4]);
-         }
-      }
+      nir_constant *initializer = NULL;
+      if (count > 4)
+         initializer = vtn_value(b, w[4], vtn_value_type_constant)->constant;
 
-      vtn_create_variable(b, val, ptr_type, storage_class, const_initializer, var_initializer);
-
+      vtn_create_variable(b, val, ptr_type, storage_class, initializer);
       break;
    }
 

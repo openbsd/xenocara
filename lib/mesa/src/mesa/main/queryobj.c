@@ -28,10 +28,9 @@
 #include "context.h"
 #include "enums.h"
 #include "hash.h"
-
+#include "imports.h"
 #include "queryobj.h"
 #include "mtypes.h"
-#include "util/u_memory.h"
 
 
 /**
@@ -826,7 +825,7 @@ get_query_object(struct gl_context *ctx, const char *func,
       return;
    }
 
-   if (buf) {
+   if (buf && buf != ctx->Shared->NullBufferObj) {
       bool is_64bit = ptype == GL_INT64_ARB ||
          ptype == GL_UNSIGNED_INT64_ARB;
       if (!_mesa_has_ARB_query_buffer_object(ctx)) {

@@ -278,7 +278,7 @@ void brw_bo_unreference(struct brw_bo *bo);
 #define MAP_PERSISTENT  GL_MAP_PERSISTENT_BIT
 #define MAP_COHERENT    GL_MAP_COHERENT_BIT
 /* internal */
-#define MAP_INTERNAL_MASK       (0xffu << 24)
+#define MAP_INTERNAL_MASK       (0xff << 24)
 #define MAP_RAW                 (0x01 << 24)
 
 /**

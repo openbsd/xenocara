@@ -34,7 +34,6 @@
 #include <stdbool.h>
 #include "util/hash_table.h"
 #include "util/set.h"
-#include "util/u_memory.h"
 #include "context.h"
 #include "glformats.h"
 #include "texobj.h"

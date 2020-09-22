@@ -105,12 +105,6 @@
 #else
 #   define VK_USE_PLATFORM_GGP false
 #endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-#   undef VK_ENABLE_BETA_EXTENSIONS
-#   define VK_ENABLE_BETA_EXTENSIONS true
-#else
-#   define VK_ENABLE_BETA_EXTENSIONS false
-#endif
 
 /* And ANDROID too */
 #ifdef ANDROID
@@ -232,7 +226,6 @@ const VkExtensionProperties anv_device_extensions[ANV_DEVICE_EXTENSION_COUNT] = 
    {"VK_KHR_shader_draw_parameters", 1},
    {"VK_KHR_shader_float16_int8", 1},
    {"VK_KHR_shader_float_controls", 1},
-   {"VK_KHR_shader_non_semantic_info", 1},
    {"VK_KHR_shader_subgroup_extended_types", 1},
    {"VK_KHR_spirv_1_4", 1},
    {"VK_KHR_storage_buffer_storage_class", 1},
@@ -262,7 +255,6 @@ const VkExtensionProperties anv_device_extensions[ANV_DEVICE_EXTENSION_COUNT] = 
    {"VK_EXT_pipeline_creation_feedback", 1},
    {"VK_EXT_post_depth_coverage", 1},
    {"VK_EXT_queue_family_foreign", 1},
-   {"VK_EXT_robustness2", 1},
    {"VK_EXT_sampler_filter_minmax", 1},
    {"VK_EXT_scalar_block_layout", 1},
    {"VK_EXT_separate_stencil_usage", 1},
@@ -327,7 +319,6 @@ anv_physical_device_get_supported_extensions(const struct anv_physical_device *d
       .KHR_shader_draw_parameters = true,
       .KHR_shader_float16_int8 = device->info.gen >= 8,
       .KHR_shader_float_controls = device->info.gen >= 8,
-      .KHR_shader_non_semantic_info = true,
       .KHR_shader_subgroup_extended_types = device->info.gen >= 8,
       .KHR_spirv_1_4 = true,
       .KHR_storage_buffer_storage_class = true,
@@ -357,7 +348,6 @@ anv_physical_device_get_supported_extensions(const struct anv_physical_device *d
       .EXT_pipeline_creation_feedback = true,
       .EXT_post_depth_coverage = device->info.gen >= 9,
       .EXT_queue_family_foreign = ANDROID,
-      .EXT_robustness2 = true,
       .EXT_sampler_filter_minmax = device->info.gen >= 9,
       .EXT_scalar_block_layout = true,
       .EXT_separate_stencil_usage = true,

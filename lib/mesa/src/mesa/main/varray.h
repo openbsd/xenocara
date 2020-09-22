@@ -45,7 +45,7 @@ static inline const GLubyte *
 _mesa_vertex_attrib_address(const struct gl_array_attributes *array,
                             const struct gl_vertex_buffer_binding *binding)
 {
-   if (binding->BufferObj)
+   if (_mesa_is_bufferobj(binding->BufferObj))
       return (const GLubyte *) (binding->Offset + array->RelativeOffset);
    else
       return array->Ptr;
@@ -109,8 +109,7 @@ _mesa_bind_vertex_buffer(struct gl_context *ctx,
                          struct gl_vertex_array_object *vao,
                          GLuint index,
                          struct gl_buffer_object *vbo,
-                         GLintptr offset, GLsizei stride,
-                         bool offset_is_int32, bool take_vbo_ownership);
+                         GLintptr offset, GLsizei stride);
 
 extern void GLAPIENTRY
 _mesa_VertexPointer_no_error(GLint size, GLenum type, GLsizei stride,
@@ -322,10 +321,10 @@ extern void GLAPIENTRY
 _mesa_VertexArrayVertexAttribDivisorEXT(GLuint vaobj, GLuint index, GLuint divisor);
 
 static inline unsigned
-_mesa_get_prim_restart_index(bool fixed_index, unsigned restart_index,
-                             unsigned index_size)
+_mesa_primitive_restart_index(const struct gl_context *ctx,
+                              unsigned index_size)
 {
-   /* The index_size parameter is meant to be in bytes. */
+   /* The index_size parameter is menat to be in bytes. */
    assert(index_size == 1 || index_size == 2 || index_size == 4);
 
    /* From the OpenGL 4.3 core specification, page 302:
@@ -333,20 +332,12 @@ _mesa_get_prim_restart_index(bool fixed_index, unsigned restart_index,
     *  enabled, the index value determined by PRIMITIVE_RESTART_FIXED_INDEX
     *  is used."
     */
-   if (fixed_index) {
+   if (ctx->Array.PrimitiveRestartFixedIndex) {
       /* 1 -> 0xff, 2 -> 0xffff, 4 -> 0xffffffff */
       return 0xffffffffu >> 8 * (4 - index_size);
    }
 
-   return restart_index;
-}
-
-static inline unsigned
-_mesa_primitive_restart_index(const struct gl_context *ctx,
-                              unsigned index_size)
-{
-   return _mesa_get_prim_restart_index(ctx->Array.PrimitiveRestartFixedIndex,
-                                       ctx->Array.RestartIndex, index_size);
+   return ctx->Array.RestartIndex;
 }
 
 extern void GLAPIENTRY

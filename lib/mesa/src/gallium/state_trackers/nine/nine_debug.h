@@ -24,7 +24,6 @@
 #define _NINE_DEBUG_H_
 
 #include "util/u_debug.h"
-#include "pipe/p_compiler.h"
 
 void
 _nine_debug_printf( unsigned long flag,

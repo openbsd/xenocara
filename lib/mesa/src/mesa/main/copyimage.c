@@ -66,14 +66,11 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
                    GLuint *width,
                    GLuint *height,
                    GLuint *num_samples,
-                   const char *dbg_prefix,
-                   bool is_arb_version)
+                   const char *dbg_prefix)
 {
-   const char *suffix = is_arb_version ? "" : "NV";
-
    if (name == 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sName = %d)", suffix, dbg_prefix, name);
+                  "glCopyImageSubData(%sName = %d)", dbg_prefix, name);
       return false;
    }
 
@@ -104,7 +101,7 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
    case GL_TEXTURE_BUFFER:
    default:
       _mesa_error(ctx, GL_INVALID_ENUM,
-                  "glCopyImageSubData%s(%sTarget = %s)", suffix, dbg_prefix,
+                  "glCopyImageSubData(%sTarget = %s)", dbg_prefix,
                   _mesa_enum_to_string(target));
       return false;
    }
@@ -114,19 +111,19 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
 
       if (!rb) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyImageSubData%s(%sName = %u)", suffix, dbg_prefix, name);
+                     "glCopyImageSubData(%sName = %u)", dbg_prefix, name);
          return false;
       }
 
       if (!rb->Name) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glCopyImageSubData%s(%sName incomplete)", suffix, dbg_prefix);
+                     "glCopyImageSubData(%sName incomplete)", dbg_prefix);
          return false;
       }
 
       if (level != 0) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyImageSubData%s(%sLevel = %u)", suffix, dbg_prefix, level);
+                     "glCopyImageSubData(%sLevel = %u)", dbg_prefix, level);
          return false;
       }
 
@@ -148,7 +145,7 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
           * to the corresponding target parameter."
           */
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyImageSubData%s(%sName = %u)", suffix, dbg_prefix, name);
+                     "glCopyImageSubData(%sName = %u)", dbg_prefix, name);
          return false;
       }
 
@@ -211,7 +208,7 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
                                                   : texObj->_BaseComplete;
       if (!texture_complete_aside_from_formats) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glCopyImageSubData%s(%sName incomplete)", suffix, dbg_prefix);
+                     "glCopyImageSubData(%sName incomplete)", dbg_prefix);
          return false;
       }
 
@@ -223,14 +220,14 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
           * of the object."
           */
          _mesa_error(ctx, GL_INVALID_ENUM,
-                     "glCopyImageSubData%s(%sTarget = %s)", suffix, dbg_prefix,
+                     "glCopyImageSubData(%sTarget = %s)", dbg_prefix,
                      _mesa_enum_to_string(target));
          return false;
       }
 
       if (level < 0 || level >= MAX_TEXTURE_LEVELS) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyImageSubData%s(%sLevel = %d)", suffix, dbg_prefix, level);
+                     "glCopyImageSubData(%sLevel = %d)", dbg_prefix, level);
          return false;
       }
 
@@ -257,7 +254,7 @@ prepare_target_err(struct gl_context *ctx, GLuint name, GLenum target,
 
       if (!*tex_image) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyImageSubData%s(%sLevel = %u)", suffix, dbg_prefix, level);
+                     "glCopyImageSubData(%sLevel = %u)", dbg_prefix, level);
          return false;
       }
 
@@ -308,23 +305,21 @@ check_region_bounds(struct gl_context *ctx,
                     const struct gl_texture_image *tex_image,
                     const struct gl_renderbuffer *renderbuffer,
                     int x, int y, int z, int width, int height, int depth,
-                    const char *dbg_prefix,
-                    bool is_arb_version)
+                    const char *dbg_prefix)
 {
    int surfWidth, surfHeight, surfDepth;
-   const char *suffix = is_arb_version ? "" : "NV";
 
    if (width < 0 || height < 0 || depth < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sWidth, %sHeight, or %sDepth is negative)",
-                  suffix, dbg_prefix, dbg_prefix, dbg_prefix);
+                  "glCopyImageSubData(%sWidth, %sHeight, or %sDepth is negative)",
+                  dbg_prefix, dbg_prefix, dbg_prefix);
       return false;
    }
 
    if (x < 0 || y < 0 || z < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sX, %sY, or %sZ is negative)",
-                  suffix, dbg_prefix, dbg_prefix, dbg_prefix);
+                  "glCopyImageSubData(%sX, %sY, or %sZ is negative)",
+                  dbg_prefix, dbg_prefix, dbg_prefix);
       return false;
    }
 
@@ -338,8 +333,8 @@ check_region_bounds(struct gl_context *ctx,
 
    if (x + width > surfWidth) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sX or %sWidth exceeds image bounds)",
-                  suffix, dbg_prefix, dbg_prefix);
+                  "glCopyImageSubData(%sX or %sWidth exceeds image bounds)",
+                  dbg_prefix, dbg_prefix);
       return false;
    }
 
@@ -358,8 +353,8 @@ check_region_bounds(struct gl_context *ctx,
 
    if (y + height > surfHeight) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sY or %sHeight exceeds image bounds)",
-                  suffix, dbg_prefix, dbg_prefix);
+                  "glCopyImageSubData(%sY or %sHeight exceeds image bounds)",
+                  dbg_prefix, dbg_prefix);
       return false;
    }
 
@@ -384,8 +379,8 @@ check_region_bounds(struct gl_context *ctx,
 
    if (z < 0 || z + depth > surfDepth) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubData%s(%sZ or %sDepth exceeds image bounds)",
-                  suffix, dbg_prefix, dbg_prefix);
+                  "glCopyImageSubData(%sZ or %sDepth exceeds image bounds)",
+                  dbg_prefix, dbg_prefix);
       return false;
    }
 
@@ -635,13 +630,13 @@ _mesa_CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
    if (!prepare_target_err(ctx, srcName, srcTarget, srcLevel, srcZ, srcDepth,
                            &srcTexImage, &srcRenderbuffer, &srcFormat,
                            &srcIntFormat, &src_w, &src_h, &src_num_samples,
-                           "src",true))
+                           "src"))
       return;
 
    if (!prepare_target_err(ctx, dstName, dstTarget, dstLevel, dstZ, srcDepth,
                            &dstTexImage, &dstRenderbuffer, &dstFormat,
                            &dstIntFormat, &dst_w, &dst_h, &dst_num_samples,
-                           "dst",true))
+                           "dst"))
       return;
 
    _mesa_get_format_block_size(srcFormat, &src_bw, &src_bh);
@@ -703,12 +698,12 @@ _mesa_CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
 
    if (!check_region_bounds(ctx, srcTarget, srcTexImage, srcRenderbuffer,
                             srcX, srcY, srcZ, srcWidth, srcHeight, srcDepth,
-                            "src", true))
+                            "src"))
       return;
 
    if (!check_region_bounds(ctx, dstTarget, dstTexImage, dstRenderbuffer,
                             dstX, dstY, dstZ, dstWidth, dstHeight, dstDepth,
-                            "dst", true))
+                            "dst"))
       return;
 
    /* Section 18.3.2 (Copying Between Images) of the OpenGL 4.5 Core Profile
@@ -729,149 +724,6 @@ _mesa_CopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
                   "glCopyImageSubData(number of samples mismatch)");
       return;
    }
-
-   copy_image_subdata(ctx, srcTexImage, srcRenderbuffer, srcX, srcY, srcZ,
-                      srcLevel, dstTexImage, dstRenderbuffer, dstX, dstY, dstZ,
-                      dstLevel, srcWidth, srcHeight, srcDepth);
-}
-
-void GLAPIENTRY
-_mesa_CopyImageSubDataNV_no_error(GLuint srcName, GLenum srcTarget, GLint srcLevel,
-                                  GLint srcX, GLint srcY, GLint srcZ,
-                                  GLuint dstName, GLenum dstTarget, GLint dstLevel,
-                                  GLint dstX, GLint dstY, GLint dstZ,
-                                  GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth)
-{
-   struct gl_texture_image *srcTexImage, *dstTexImage;
-   struct gl_renderbuffer *srcRenderbuffer, *dstRenderbuffer;
-
-   GET_CURRENT_CONTEXT(ctx);
-
-   prepare_target(ctx, srcName, srcTarget, srcLevel, srcZ, &srcTexImage,
-                  &srcRenderbuffer);
-
-   prepare_target(ctx, dstName, dstTarget, dstLevel, dstZ, &dstTexImage,
-                  &dstRenderbuffer);
-
-   copy_image_subdata(ctx, srcTexImage, srcRenderbuffer, srcX, srcY, srcZ,
-                      srcLevel, dstTexImage, dstRenderbuffer, dstX, dstY, dstZ,
-                      dstLevel, srcWidth, srcHeight, srcDepth);
-}
-
-void GLAPIENTRY
-_mesa_CopyImageSubDataNV(GLuint srcName, GLenum srcTarget, GLint srcLevel,
-                         GLint srcX, GLint srcY, GLint srcZ,
-                         GLuint dstName, GLenum dstTarget, GLint dstLevel,
-                         GLint dstX, GLint dstY, GLint dstZ,
-                         GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_image *srcTexImage, *dstTexImage;
-   struct gl_renderbuffer *srcRenderbuffer, *dstRenderbuffer;
-   mesa_format srcFormat, dstFormat;
-   GLenum srcIntFormat, dstIntFormat;
-   GLuint src_w, src_h, dst_w, dst_h;
-   GLuint src_bw, src_bh, dst_bw, dst_bh;
-   GLuint src_num_samples, dst_num_samples;
-
-   if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glCopyImageSubDataNV(%u, %s, %d, %d, %d, %d, "
-                                            "%u, %s, %d, %d, %d, %d, "
-                                            "%d, %d, %d)\n",
-                  srcName, _mesa_enum_to_string(srcTarget), srcLevel,
-                  srcX, srcY, srcZ,
-                  dstName, _mesa_enum_to_string(dstTarget), dstLevel,
-                  dstX, dstY, dstZ,
-                  srcWidth, srcHeight, srcDepth);
-
-   if (!ctx->Extensions.NV_copy_image) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCopyImageSubDataNV(extension not available)");
-      return;
-   }
-
-   if (!prepare_target_err(ctx, srcName, srcTarget, srcLevel, srcZ, srcDepth,
-                           &srcTexImage, &srcRenderbuffer, &srcFormat,
-                           &srcIntFormat, &src_w, &src_h, &src_num_samples,
-                           "src", false))
-      return;
-
-   if (!prepare_target_err(ctx, dstName, dstTarget, dstLevel, dstZ, srcDepth,
-                           &dstTexImage, &dstRenderbuffer, &dstFormat,
-                           &dstIntFormat, &dst_w, &dst_h, &dst_num_samples,
-                           "dst", false))
-      return;
-
-   /*
-    * The NV_copy_image spec says:
-    *
-    *    INVALID_OPERATION is generated if either object is a texture
-    *    and the texture is not consistent, or if the source and destination
-    *    internal formats or number of samples do not match.
-    *
-    * In the absence of any definition of texture consistency the texture
-    * completeness check, which is affected in the prepare_target_err function,
-    * is used instead in keeping with the ARB version.
-    * The check related to the internal format here is different from the ARB
-    * version which adds the ability to copy between images which have
-    * different formats where the formats are compatible for texture views.
-    */
-   if (srcIntFormat != dstIntFormat) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCopyImageSubDataNV(internalFormat mismatch)");
-      return;
-   }
-
-   if (src_num_samples != dst_num_samples) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCopyImageSubDataNV(number of samples mismatch)");
-      return;
-   }
-
-   /*
-    * The NV_copy_image spec says:
-    *
-    *    INVALID_VALUE is generated if the image format is compressed
-    *    and the dimensions of the subregion fail to meet the alignment
-    *    constraints of the format.
-    *
-    * The check here is identical to the ARB version.
-    */
-   _mesa_get_format_block_size(srcFormat, &src_bw, &src_bh);
-   if ((srcX % src_bw != 0) || (srcY % src_bh != 0) ||
-       (srcWidth % src_bw != 0 && (srcX + srcWidth) != src_w) ||
-       (srcHeight % src_bh != 0 && (srcY + srcHeight) != src_h)) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubDataNV(unaligned src rectangle)");
-      return;
-   }
-
-   _mesa_get_format_block_size(dstFormat, &dst_bw, &dst_bh);
-   if ((dstX % dst_bw != 0) || (dstY % dst_bh != 0)) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyImageSubDataNV(unaligned dst rectangle)");
-      return;
-   }
-
-   /*
-    * The NV_copy_image spec says:
-    *
-    *    INVALID_VALUE is generated if the dimensions of the either subregion
-    *    exceeds the boundaries of the corresponding image object.
-    *
-    * The check here is similar to the ARB version except for the fact that
-    * block sizes are not considered owing to the fact that copying across
-    * compressed and uncompressed formats is not supported.
-    */
-   if (!check_region_bounds(ctx, srcTarget, srcTexImage, srcRenderbuffer,
-                            srcX, srcY, srcZ, srcWidth, srcHeight, srcDepth,
-                            "src", false))
-      return;
-
-   if (!check_region_bounds(ctx, dstTarget, dstTexImage, dstRenderbuffer,
-                            dstX, dstY, dstZ, srcWidth, srcHeight, srcDepth,
-                            "dst", false))
-      return;
 
    copy_image_subdata(ctx, srcTexImage, srcRenderbuffer, srcX, srcY, srcZ,
                       srcLevel, dstTexImage, dstRenderbuffer, dstX, dstY, dstZ,

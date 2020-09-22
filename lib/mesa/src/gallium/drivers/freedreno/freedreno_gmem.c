@@ -26,7 +26,6 @@
 
 #include "pipe/p_state.h"
 #include "util/hash_table.h"
-#include "util/u_dump.h"
 #include "util/u_string.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
@@ -35,7 +34,6 @@
 #include "freedreno_gmem.h"
 #include "freedreno_context.h"
 #include "freedreno_fence.h"
-#include "freedreno_log.h"
 #include "freedreno_resource.h"
 #include "freedreno_query_hw.h"
 #include "freedreno_util.h"
@@ -353,7 +351,7 @@ __fd_gmem_destroy(struct fd_gmem_stateobj *gmem)
 }
 
 static struct gmem_key *
-gmem_key_init(struct fd_batch *batch, bool assume_zs)
+key_init(struct fd_batch *batch)
 {
 	struct fd_screen *screen = batch->ctx->screen;
 	struct pipe_framebuffer_state *pfb = &batch->framebuffer;
@@ -361,7 +359,7 @@ gmem_key_init(struct fd_batch *batch, bool assume_zs)
 		FD_GMEM_STENCIL_ENABLED | FD_GMEM_CLEARS_DEPTH_STENCIL));
 	struct gmem_key *key = rzalloc(screen->gmem_cache.ht, struct gmem_key);
 
-	if (has_zs || assume_zs) {
+	if (has_zs) {
 		struct fd_resource *rsc = fd_resource(pfb->zsbuf->texture);
 		key->zsbuf_cpp[0] = rsc->layout.cpp;
 		if (rsc->stencil)
@@ -412,12 +410,12 @@ gmem_key_init(struct fd_batch *batch, bool assume_zs)
 }
 
 static struct fd_gmem_stateobj *
-lookup_gmem_state(struct fd_batch *batch, bool assume_zs)
+lookup_gmem_state(struct fd_batch *batch)
 {
 	struct fd_screen *screen = batch->ctx->screen;
 	struct fd_gmem_cache *cache = &screen->gmem_cache;
 	struct fd_gmem_stateobj *gmem = NULL;
-	struct gmem_key *key = gmem_key_init(batch, assume_zs);
+	struct gmem_key *key = key_init(batch);
 	uint32_t hash = gmem_key_hash(key);
 
 	mtx_lock(&screen->lock);
@@ -472,7 +470,7 @@ render_tiles(struct fd_batch *batch, struct fd_gmem_stateobj *gmem)
 	for (i = 0; i < (gmem->nbins_x * gmem->nbins_y); i++) {
 		struct fd_tile *tile = &gmem->tile[i];
 
-		fd_log(batch, "bin_h=%d, yoff=%d, bin_w=%d, xoff=%d",
+		DBG("bin_h=%d, yoff=%d, bin_w=%d, xoff=%d",
 			tile->bin_h, tile->yoff, tile->bin_w, tile->xoff);
 
 		ctx->emit_tile_prep(batch, tile);
@@ -487,13 +485,11 @@ render_tiles(struct fd_batch *batch, struct fd_gmem_stateobj *gmem)
 			ctx->query_prepare_tile(batch, i, batch->gmem);
 
 		/* emit IB to drawcmds: */
-		fd_log(batch, "TILE[%d]: START DRAW IB", i);
 		if (ctx->emit_tile) {
 			ctx->emit_tile(batch, tile);
 		} else {
 			ctx->screen->emit_ib(batch->gmem, batch->draw);
 		}
-		fd_log(batch, "TILE[%d]: END DRAW IB", i);
 		fd_reset_wfi(batch);
 
 		/* emit gmem2mem to transfer tile back to system memory: */
@@ -517,9 +513,7 @@ render_sysmem(struct fd_batch *batch)
 		ctx->query_prepare_tile(batch, 0, batch->gmem);
 
 	/* emit IB to drawcmds: */
-	fd_log(batch, "SYSMEM: START DRAW IB");
 	ctx->screen->emit_ib(batch->gmem, batch->draw);
-	fd_log(batch, "SYSMEM: END DRAW IB");
 	fd_reset_wfi(batch);
 
 	if (ctx->emit_sysmem_fini)
@@ -537,7 +531,6 @@ flush_ring(struct fd_batch *batch)
 			&timestamp);
 
 	fd_fence_populate(batch->fence, timestamp, out_fence_fd);
-	fd_log_flush(batch);
 }
 
 void
@@ -551,7 +544,7 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 		if (batch->cleared || batch->gmem_reason ||
 				((batch->num_draws > 5) && !batch->blit) ||
 				(pfb->samples > 1)) {
-			fd_log(batch, "GMEM: cleared=%x, gmem_reason=%x, num_draws=%u, samples=%u",
+			DBG("GMEM: cleared=%x, gmem_reason=%x, num_draws=%u, samples=%u",
 				batch->cleared, batch->gmem_reason, batch->num_draws,
 				pfb->samples);
 		} else if (!(fd_mesa_debug & FD_DBG_NOBYPASS)) {
@@ -588,19 +581,11 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 
 	ctx->stats.batch_total++;
 
-	if (unlikely(fd_mesa_debug & FD_DBG_LOG) && !batch->nondraw) {
-		fd_log_stream(batch, stream, util_dump_framebuffer_state(stream, pfb));
-		for (unsigned i = 0; i < pfb->nr_cbufs; i++) {
-			fd_log_stream(batch, stream, util_dump_surface(stream, pfb->cbufs[i]));
-		}
-		fd_log_stream(batch, stream, util_dump_surface(stream, pfb->zsbuf));
-	}
-
 	if (batch->nondraw) {
 		DBG("%p: rendering non-draw", batch);
 		ctx->stats.batch_nondraw++;
 	} else if (sysmem) {
-		fd_log(batch, "%p: rendering sysmem %ux%u (%s/%s), num_draws=%u",
+		DBG("%p: rendering sysmem %ux%u (%s/%s), num_draws=%u",
 			batch, pfb->width, pfb->height,
 			util_format_short_name(pipe_surface_format(pfb->cbufs[0])),
 			util_format_short_name(pipe_surface_format(pfb->zsbuf)),
@@ -610,9 +595,9 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 		render_sysmem(batch);
 		ctx->stats.batch_sysmem++;
 	} else {
-		struct fd_gmem_stateobj *gmem = lookup_gmem_state(batch, false);
+		struct fd_gmem_stateobj *gmem = lookup_gmem_state(batch);
 		batch->gmem_state = gmem;
-		fd_log(batch, "%p: rendering %dx%d tiles %ux%u (%s/%s)",
+		DBG("%p: rendering %dx%d tiles %ux%u (%s/%s)",
 			batch, pfb->width, pfb->height, gmem->nbins_x, gmem->nbins_y,
 			util_format_short_name(pipe_surface_format(pfb->cbufs[0])),
 			util_format_short_name(pipe_surface_format(pfb->zsbuf)));
@@ -629,24 +614,6 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 	}
 
 	flush_ring(batch);
-}
-
-/* Determine a worst-case estimate (ie. assuming we don't eliminate an
- * unused depth/stencil) number of bins per vsc pipe.
- */
-unsigned
-fd_gmem_estimate_bins_per_pipe(struct fd_batch *batch)
-{
-	struct pipe_framebuffer_state *pfb = &batch->framebuffer;
-	struct fd_screen *screen = batch->ctx->screen;
-	struct fd_gmem_stateobj *gmem = lookup_gmem_state(batch, !!pfb->zsbuf);
-	unsigned nbins = gmem->maxpw * gmem->maxph;
-
-	mtx_lock(&screen->lock);
-	fd_gmem_reference(&gmem, NULL);
-	mtx_unlock(&screen->lock);
-
-	return nbins;
 }
 
 /* When deciding whether a tile needs mem2gmem, we need to take into

@@ -96,7 +96,6 @@ struct etna_resource {
 
    enum etna_resource_status status;
 
-   mtx_t lock; /* Lock to protect pending_ctx */
    struct set *pending_ctx;
 };
 
@@ -150,6 +149,9 @@ etna_resource(struct pipe_resource *p)
 {
    return (struct etna_resource *)p;
 }
+
+enum etna_resource_status
+etna_resource_get_status(struct etna_context *ctx, struct etna_resource *rsc);
 
 void
 etna_resource_used(struct etna_context *ctx, struct pipe_resource *prsc,

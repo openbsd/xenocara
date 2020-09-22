@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 /* Forward declarations. */
-struct ac_addrlib;
+typedef void* ADDR_HANDLE;
 
 struct amdgpu_gpu_info;
 struct radeon_info;
@@ -49,14 +49,12 @@ enum radeon_surf_mode {
     RADEON_SURF_MODE_2D = 3,
 };
 
-/* This describes D/S/Z/R swizzle modes.
- * Defined in the GB_TILE_MODEn.MICRO_TILE_MODE_NEW order.
- */
+/* These are defined exactly like GB_TILE_MODEn.MICRO_TILE_MODE_NEW. */
 enum radeon_micro_mode {
     RADEON_MICRO_MODE_DISPLAY = 0,
-    RADEON_MICRO_MODE_STANDARD = 1,
+    RADEON_MICRO_MODE_THIN = 1,
     RADEON_MICRO_MODE_DEPTH = 2,
-    RADEON_MICRO_MODE_RENDER = 3, /* gfx9 and older: rotated */
+    RADEON_MICRO_MODE_ROTATED = 3, /* gfx10+: render target */
 };
 
 /* the first 16 bits are reserved for libdrm_radeon, don't use them */
@@ -69,11 +67,9 @@ enum radeon_micro_mode {
 #define RADEON_SURF_DISABLE_DCC                 (1 << 22)
 #define RADEON_SURF_TC_COMPATIBLE_HTILE         (1 << 23)
 #define RADEON_SURF_IMPORTED                    (1 << 24)
-/* gap */
+#define RADEON_SURF_OPTIMIZE_FOR_SPACE          (1 << 25)
 #define RADEON_SURF_SHAREABLE                   (1 << 26)
 #define RADEON_SURF_NO_RENDER_TARGET            (1 << 27)
-/* Force a swizzle mode (gfx9+) or tile mode (gfx6-8).
- * If this is not set, optimize for space. */
 #define RADEON_SURF_FORCE_SWIZZLE_MODE          (1 << 28)
 #define RADEON_SURF_NO_FMASK                    (1 << 29)
 #define RADEON_SURF_NO_HTILE                    (1 << 30)
@@ -139,9 +135,6 @@ struct gfx9_surf_flags {
 struct gfx9_surf_meta_flags {
     unsigned                    rb_aligned:1;   /* optimal for RBs */
     unsigned                    pipe_aligned:1; /* optimal for TC */
-    unsigned                    independent_64B_blocks:1;
-    unsigned                    independent_128B_blocks:1;
-    unsigned                    max_compressed_block_size:2;
 };
 
 struct gfx9_surf_layout {
@@ -177,7 +170,7 @@ struct gfx9_surf_layout {
     uint16_t                    display_dcc_pitch_max;  /* (mip chain pitch - 1) */
     bool                        dcc_retile_use_uint16; /* if all values fit into uint16_t */
     uint32_t                    dcc_retile_num_elements;
-    void                        *dcc_retile_map;
+    uint32_t                    *dcc_retile_map;
 };
 
 struct radeon_surf {
@@ -279,12 +272,11 @@ struct ac_surf_config {
 	unsigned is_cube : 1;
 };
 
-struct ac_addrlib *ac_addrlib_create(const struct radeon_info *info,
-				     const struct amdgpu_gpu_info *amdinfo,
-				     uint64_t *max_alignment);
-void ac_addrlib_destroy(struct ac_addrlib *addrlib);
+ADDR_HANDLE amdgpu_addr_create(const struct radeon_info *info,
+			       const struct amdgpu_gpu_info *amdinfo,
+			       uint64_t *max_alignment);
 
-int ac_compute_surface(struct ac_addrlib *addrlib, const struct radeon_info *info,
+int ac_compute_surface(ADDR_HANDLE addrlib, const struct radeon_info *info,
 		       const struct ac_surf_config * config,
 		       enum radeon_surf_mode mode,
 		       struct radeon_surf *surf);

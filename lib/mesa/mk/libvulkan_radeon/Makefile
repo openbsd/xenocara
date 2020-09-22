@@ -1,17 +1,13 @@
-#	$OpenBSD: Makefile,v 1.3 2020/09/04 11:27:58 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	vulkan_radeon
 
 NOPROFILE=
 
-SRCS=	radv_sqtt_layer.c \
-	radv_amdgpu_bo.c \
+SRCS=	radv_amdgpu_bo.c \
 	radv_amdgpu_cs.c \
 	radv_amdgpu_surface.c \
 	radv_amdgpu_winsys.c \
-	radv_null_bo.c \
-	radv_null_cs.c \
-	radv_null_winsys.c \
 	radv_android.c \
 	radv_cmd_buffer.c \
 	radv_debug.c \
@@ -38,11 +34,9 @@ SRCS=	radv_sqtt_layer.c \
 	radv_pass.c \
 	radv_pipeline.c \
 	radv_pipeline_cache.c \
-	radv_rgp.c \
 	radv_shader.c \
 	radv_shader_args.c \
 	radv_shader_info.c \
-	radv_sqtt.c \
 	radv_query.c \
 	radv_util.c \
 	radv_wsi.c \
@@ -65,6 +59,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
+		-I${MESA_SRC}/src/amd \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/amd/compiler \
 		-I${MESA_SRC}/src/amd/llvm \
@@ -128,7 +123,6 @@ LDADD+=		-L${X11BASE}/lib -ldrm -ldrm_amdgpu \
 		-lxshmfence
 
 LDADD+=		-Wl,--gc-sections \
-		-Wl,--version-script ${MESA_SRC}/src/amd/vulkan/vulkan.sym \
 		-Wl,--end-group
 
 all:	lib${LIB}.so

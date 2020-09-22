@@ -420,7 +420,8 @@ struct ${type}${width}_vec {
       % else:
          ## Splat the value to all components.  This way expressions which
          ## write the same value to all components don't need to explicitly
-         ## write to dest.
+         ## write to dest.  One such example is fnoise which has a
+         ## const_expr of 0.0f.
          dst.x = dst.y = dst.z = dst.w = ${op.const_expr};
       % endif
 

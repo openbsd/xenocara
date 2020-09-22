@@ -134,6 +134,7 @@ occlusion_predicate_result(struct fd_acc_query *aq, void *buf,
 
 static const struct fd_acc_sample_provider occlusion_counter = {
 		.query_type = PIPE_QUERY_OCCLUSION_COUNTER,
+		.active = FD_STAGE_DRAW,
 		.size = sizeof(struct fd5_query_sample),
 		.resume = occlusion_resume,
 		.pause = occlusion_pause,
@@ -142,6 +143,7 @@ static const struct fd_acc_sample_provider occlusion_counter = {
 
 static const struct fd_acc_sample_provider occlusion_predicate = {
 		.query_type = PIPE_QUERY_OCCLUSION_PREDICATE,
+		.active = FD_STAGE_DRAW,
 		.size = sizeof(struct fd5_query_sample),
 		.resume = occlusion_resume,
 		.pause = occlusion_pause,
@@ -150,6 +152,7 @@ static const struct fd_acc_sample_provider occlusion_predicate = {
 
 static const struct fd_acc_sample_provider occlusion_predicate_conservative = {
 		.query_type = PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE,
+		.active = FD_STAGE_DRAW,
 		.size = sizeof(struct fd5_query_sample),
 		.resume = occlusion_resume,
 		.pause = occlusion_pause,
@@ -166,7 +169,7 @@ timestamp_resume(struct fd_acc_query *aq, struct fd_batch *batch)
 	struct fd_ringbuffer *ring = batch->draw;
 
 	OUT_PKT7(ring, CP_EVENT_WRITE, 4);
-	OUT_RING(ring, CP_EVENT_WRITE_0_EVENT(RB_DONE_TS) |
+	OUT_RING(ring, CP_EVENT_WRITE_0_EVENT(CACHE_FLUSH_AND_INV_EVENT) |
 			CP_EVENT_WRITE_0_TIMESTAMP);
 	OUT_RELOCW(ring, query_sample(aq, start));
 	OUT_RING(ring, 0x00000000);
@@ -180,7 +183,7 @@ timestamp_pause(struct fd_acc_query *aq, struct fd_batch *batch)
 	struct fd_ringbuffer *ring = batch->draw;
 
 	OUT_PKT7(ring, CP_EVENT_WRITE, 4);
-	OUT_RING(ring, CP_EVENT_WRITE_0_EVENT(RB_DONE_TS) |
+	OUT_RING(ring, CP_EVENT_WRITE_0_EVENT(CACHE_FLUSH_AND_INV_EVENT) |
 			CP_EVENT_WRITE_0_TIMESTAMP);
 	OUT_RELOCW(ring, query_sample(aq, stop));
 	OUT_RING(ring, 0x00000000);
@@ -226,7 +229,7 @@ timestamp_accumulate_result(struct fd_acc_query *aq, void *buf,
 
 static const struct fd_acc_sample_provider time_elapsed = {
 		.query_type = PIPE_QUERY_TIME_ELAPSED,
-		.always = true,
+		.active = FD_STAGE_DRAW | FD_STAGE_CLEAR,
 		.size = sizeof(struct fd5_query_sample),
 		.resume = timestamp_resume,
 		.pause = timestamp_pause,
@@ -242,7 +245,7 @@ static const struct fd_acc_sample_provider time_elapsed = {
 
 static const struct fd_acc_sample_provider timestamp = {
 		.query_type = PIPE_QUERY_TIMESTAMP,
-		.always = true,
+		.active = FD_STAGE_ALL,
 		.size = sizeof(struct fd5_query_sample),
 		.resume = timestamp_resume,
 		.pause = timestamp_pause,
@@ -363,7 +366,7 @@ perfcntr_accumulate_result(struct fd_acc_query *aq, void *buf,
 
 static const struct fd_acc_sample_provider perfcntr = {
 		.query_type = FD_QUERY_FIRST_PERFCNTR,
-		.always = true,
+		.active = FD_STAGE_DRAW | FD_STAGE_CLEAR,
 		.resume = perfcntr_resume,
 		.pause = perfcntr_pause,
 		.result = perfcntr_accumulate_result,

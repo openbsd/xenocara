@@ -26,7 +26,7 @@
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_builder.h"
 #include "compiler/glsl/list.h"
-
+#include "main/imports.h"
 #include "main/mtypes.h"
 #include "util/ralloc.h"
 
@@ -534,13 +534,30 @@ ptn_tex(struct ptn_compile *c, nir_alu_dest dest, nir_ssa_def **src,
       abort();
    }
 
-   instr->coord_components =
-      glsl_get_sampler_dim_coordinate_components(instr->sampler_dim);
+   switch (instr->sampler_dim) {
+   case GLSL_SAMPLER_DIM_1D:
+   case GLSL_SAMPLER_DIM_BUF:
+      instr->coord_components = 1;
+      break;
+   case GLSL_SAMPLER_DIM_2D:
+   case GLSL_SAMPLER_DIM_RECT:
+   case GLSL_SAMPLER_DIM_EXTERNAL:
+   case GLSL_SAMPLER_DIM_MS:
+      instr->coord_components = 2;
+      break;
+   case GLSL_SAMPLER_DIM_3D:
+   case GLSL_SAMPLER_DIM_CUBE:
+      instr->coord_components = 3;
+      break;
+   case GLSL_SAMPLER_DIM_SUBPASS:
+   case GLSL_SAMPLER_DIM_SUBPASS_MS:
+      unreachable("can't reach");
+   }
 
    nir_variable *var = c->sampler_vars[prog_inst->TexSrcUnit];
    if (!var) {
       const struct glsl_type *type =
-         glsl_sampler_type(instr->sampler_dim, instr->is_shadow, false, GLSL_TYPE_FLOAT);
+         glsl_sampler_type(instr->sampler_dim, false, false, GLSL_TYPE_FLOAT);
       var = nir_variable_create(b->shader, nir_var_uniform, type, "sampler");
       var->data.binding = prog_inst->TexSrcUnit;
       var->data.explicit_binding = true;

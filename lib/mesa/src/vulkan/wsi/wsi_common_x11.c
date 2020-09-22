@@ -450,33 +450,6 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
    return VK_SUCCESS;
 }
 
-static uint32_t
-x11_get_min_image_count(struct wsi_device *wsi_device)
-{
-   if (wsi_device->x11.override_minImageCount)
-      return wsi_device->x11.override_minImageCount;
-
-   /* For IMMEDIATE and FIFO, most games work in a pipelined manner where the
-    * can produce frames at a rate of 1/MAX(CPU duration, GPU duration), but
-    * the render latency is CPU duration + GPU duration.
-    *
-    * This means that with scanout from pageflipping we need 3 frames to run
-    * full speed:
-    * 1) CPU rendering work
-    * 2) GPU rendering work
-    * 3) scanout
-    *
-    * Once we have a nonblocking acquire that returns a semaphore we can merge
-    * 1 and 3. Hence the ideal implementation needs only 2 images, but games
-    * cannot tellwe currently do not have an ideal implementation and that
-    * hence they need to allocate 3 images. So let us do it for them.
-    *
-    * This is a tradeoff as it uses more memory than needed for non-fullscreen
-    * and non-performance intensive applications.
-    */
-   return 3;
-}
-
 static VkResult
 x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                              struct wsi_device *wsi_device,
@@ -529,9 +502,30 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                                       VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    }
 
-   caps->minImageCount = x11_get_min_image_count(wsi_device);
+   /* For IMMEDIATE and FIFO, most games work in a pipelined manner where the
+    * can produce frames at a rate of 1/MAX(CPU duration, GPU duration), but
+    * the render latency is CPU duration + GPU duration.
+    *
+    * This means that with scanout from pageflipping we need 3 frames to run
+    * full speed:
+    * 1) CPU rendering work
+    * 2) GPU rendering work
+    * 3) scanout
+    *
+    * Once we have a nonblocking acquire that returns a semaphore we can merge
+    * 1 and 3. Hence the ideal implementation needs only 2 images, but games
+    * cannot tellwe currently do not have an ideal implementation and that
+    * hence they need to allocate 3 images. So let us do it for them.
+    *
+    * This is a tradeoff as it uses more memory than needed for non-fullscreen
+    * and non-performance intensive applications.
+    */
+   caps->minImageCount = 3;
    /* There is no real maximum */
    caps->maxImageCount = 0;
+
+   if (wsi_device->x11.override_minImageCount)
+      caps->minImageCount = wsi_device->x11.override_minImageCount;
 
    caps->supportedTransforms = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
    caps->currentTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -772,7 +766,6 @@ struct x11_swapchain {
    uint64_t                                     send_sbc;
    uint64_t                                     last_present_msc;
    uint32_t                                     stamp;
-   int                                          sent_image_count;
 
    bool                                         has_present_queue;
    bool                                         has_acquire_queue;
@@ -855,8 +848,6 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
       for (unsigned i = 0; i < chain->base.image_count; i++) {
          if (chain->images[i].pixmap == idle->pixmap) {
             chain->images[i].busy = false;
-            chain->sent_image_count--;
-            assert(chain->sent_image_count >= 0);
             if (chain->has_acquire_queue)
                wsi_queue_push(&chain->acquire_queue, i);
             break;
@@ -1037,11 +1028,7 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
 
    xshmfence_reset(image->shm_fence);
 
-   ++chain->sent_image_count;
-   assert(chain->sent_image_count <= chain->base.image_count);
-
    ++chain->send_sbc;
-
    xcb_void_cookie_t cookie =
       xcb_present_pixmap(chain->conn,
                          chain->window,
@@ -1112,9 +1099,11 @@ x11_manage_fifo_queues(void *state)
 
    assert(chain->has_present_queue);
    while (chain->status >= 0) {
-      /* We can block here unconditionally because after an image was sent to
-       * the server (later on in this loop) we ensure at least one image is
-       * acquirable by the consumer or wait there on such an event.
+      /* It should be safe to unconditionally block here.  Later in the loop
+       * we blocks until the previous present has landed on-screen.  At that
+       * point, we should have received IDLE_NOTIFY on all images presented
+       * before that point so the client should be able to acquire any image
+       * other than the currently presented one.
        */
       uint32_t image_index = 0;
       result = wsi_queue_pull(&chain->present_queue, &image_index, INT64_MAX);
@@ -1147,12 +1136,7 @@ x11_manage_fifo_queues(void *state)
          goto fail;
 
       if (chain->has_acquire_queue) {
-         /* Wait for our presentation to occur and ensure we have at least one
-          * image that can be acquired by the client afterwards. This ensures we
-          * can pull on the present-queue on the next loop.
-          */
-         while (chain->last_present_msc < target_msc ||
-                chain->sent_image_count == chain->base.image_count) {
+         while (chain->last_present_msc < target_msc) {
             xcb_generic_event_t *event =
                xcb_wait_for_special_event(chain->conn, chain->special_event);
             if (!event) {
@@ -1455,8 +1439,6 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
       num_images = pCreateInfo->minImageCount;
    else if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
       num_images = MAX2(num_images, 5);
-   else if (wsi_device->x11.ensure_minImageCount)
-      num_images = MAX2(num_images, x11_get_min_image_count(wsi_device));
 
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
    struct wsi_x11_connection *wsi_conn =
@@ -1495,7 +1477,6 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->depth = bit_depth;
    chain->extent = pCreateInfo->imageExtent;
    chain->send_sbc = 0;
-   chain->sent_image_count = 0;
    chain->last_present_msc = 0;
    chain->has_acquire_queue = false;
    chain->has_present_queue = false;
@@ -1677,11 +1658,6 @@ wsi_x11_init_wsi(struct wsi_device *wsi_device,
          wsi_device->x11.strict_imageCount =
             driQueryOptionb(dri_options, "vk_x11_strict_image_count");
       }
-      if (driCheckOption(dri_options, "vk_x11_ensure_min_image_count", DRI_BOOL)) {
-         wsi_device->x11.ensure_minImageCount =
-            driQueryOptionb(dri_options, "vk_x11_ensure_min_image_count");
-      }
-
    }
 
    wsi->base.get_support = x11_surface_get_support;

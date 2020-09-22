@@ -37,10 +37,6 @@
 #include "tgsi/tgsi_scan.h"
 #include "tgsi/tgsi_ureg.h"
 
-#include "nir.h"
-#include "nir/nir_to_tgsi_info.h"
-#include "tgsi/tgsi_from_mesa.h"
-
 void r600_init_command_buffer(struct r600_command_buffer *cb, unsigned num_dw)
 {
 	assert(!cb->buf);
@@ -910,19 +906,14 @@ int r600_shader_select(struct pipe_context *ctx,
 }
 
 struct r600_pipe_shader_selector *r600_create_shader_state_tokens(struct pipe_context *ctx,
-								  const void *prog, enum pipe_shader_ir ir,
+								  const struct tgsi_token *tokens,
 								  unsigned pipe_shader_type)
 {
 	struct r600_pipe_shader_selector *sel = CALLOC_STRUCT(r600_pipe_shader_selector);
 
 	sel->type = pipe_shader_type;
-	if (ir == PIPE_SHADER_IR_TGSI) {
-		sel->tokens = tgsi_dup_tokens((const struct tgsi_token *)prog);
-		tgsi_scan_shader(sel->tokens, &sel->info);
-	} else if (ir == PIPE_SHADER_IR_NIR){
-		sel->nir = nir_shader_clone(NULL, (const nir_shader *)prog);
-		nir_tgsi_scan_shader(sel->nir, &sel->info, true);
-	}
+	sel->tokens = tgsi_dup_tokens(tokens);
+	tgsi_scan_shader(tokens, &sel->info);
 	return sel;
 }
 
@@ -931,16 +922,8 @@ static void *r600_create_shader_state(struct pipe_context *ctx,
 			       unsigned pipe_shader_type)
 {
 	int i;
-	struct r600_pipe_shader_selector *sel;
-	
-	if (state->type == PIPE_SHADER_IR_TGSI)
-		sel = r600_create_shader_state_tokens(ctx, state->tokens, state->type, pipe_shader_type);
-	else if (state->type == PIPE_SHADER_IR_NIR) {
-		sel = r600_create_shader_state_tokens(ctx, state->ir.nir, state->type, pipe_shader_type);
-	} else
-		assert(0 && "Unknown shader type\n");
-	
-	sel->ir_type = state->type;
+	struct r600_pipe_shader_selector *sel = r600_create_shader_state_tokens(ctx, state->tokens, pipe_shader_type);
+
 	sel->so = state->stream_output;
 
 	switch (pipe_shader_type) {
@@ -956,7 +939,6 @@ static void *r600_create_shader_state(struct pipe_context *ctx,
 	case PIPE_SHADER_TESS_CTRL:
 		sel->lds_patch_outputs_written_mask = 0;
 		sel->lds_outputs_written_mask = 0;
-		bool texxcoord_semantic = ctx->screen->get_param(ctx->screen, PIPE_CAP_TGSI_TEXCOORD);
 
 		for (i = 0; i < sel->info.num_outputs; i++) {
 			unsigned name = sel->info.output_semantic_name[i];
@@ -967,11 +949,11 @@ static void *r600_create_shader_state(struct pipe_context *ctx,
 			case TGSI_SEMANTIC_TESSOUTER:
 			case TGSI_SEMANTIC_PATCH:
 				sel->lds_patch_outputs_written_mask |=
-					1ull << r600_get_lds_unique_index(name, index, texxcoord_semantic);
+					1ull << r600_get_lds_unique_index(name, index);
 				break;
 			default:
 				sel->lds_outputs_written_mask |=
-					1ull << r600_get_lds_unique_index(name, index, texxcoord_semantic);
+					1ull << r600_get_lds_unique_index(name, index);
 			}
 		}
 		break;
@@ -1100,14 +1082,7 @@ void r600_delete_shader_selector(struct pipe_context *ctx,
 		p = c;
 	}
 
-	if (sel->ir_type == PIPE_SHADER_IR_TGSI) {
-		free(sel->tokens);
-		/* We might have converted the TGSI shader to a NIR shader */
-		if (sel->nir)
-			ralloc_free(sel->nir);
-	}
-	else if (sel->ir_type == PIPE_SHADER_IR_NIR)
-		ralloc_free(sel->nir);
+	free(sel->tokens);
 	free(sel);
 }
 

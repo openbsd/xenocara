@@ -26,6 +26,7 @@
 
 #include "c99_math.h"
 #include "glheader.h"
+#include "imports.h"
 #include "context.h"
 #include "enums.h"
 #include "light.h"
@@ -612,7 +613,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
 {
    GLfloat (*mat)[4] = ctx->Light.Material.Attrib;
 
-   if (MESA_VERBOSE & VERBOSE_MATERIAL)
+   if (MESA_VERBOSE & VERBOSE_MATERIAL) 
       _mesa_debug(ctx, "_mesa_update_material, mask 0x%x\n", bitmask);
 
    if (!bitmask)
@@ -624,7 +625,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
       while (mask) {
          const int i = u_bit_scan(&mask);
          struct gl_light *light = &ctx->Light.Light[i];
-         SCALE_3V( light->_MatAmbient[0], light->Ambient,
+         SCALE_3V( light->_MatAmbient[0], light->Ambient, 
 		   mat[MAT_ATTRIB_FRONT_AMBIENT]);
       }
    }
@@ -634,7 +635,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
       while (mask) {
          const int i = u_bit_scan(&mask);
          struct gl_light *light = &ctx->Light.Light[i];
-         SCALE_3V( light->_MatAmbient[1], light->Ambient,
+         SCALE_3V( light->_MatAmbient[1], light->Ambient, 
 		   mat[MAT_ATTRIB_BACK_AMBIENT]);
       }
    }
@@ -658,7 +659,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
       while (mask) {
          const int i = u_bit_scan(&mask);
          struct gl_light *light = &ctx->Light.Light[i];
-	 SCALE_3V( light->_MatDiffuse[0], light->Diffuse,
+	 SCALE_3V( light->_MatDiffuse[0], light->Diffuse, 
 		   mat[MAT_ATTRIB_FRONT_DIFFUSE] );
       }
    }
@@ -668,7 +669,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
       while (mask) {
          const int i = u_bit_scan(&mask);
          struct gl_light *light = &ctx->Light.Light[i];
-	 SCALE_3V( light->_MatDiffuse[1], light->Diffuse,
+	 SCALE_3V( light->_MatDiffuse[1], light->Diffuse, 
 		   mat[MAT_ATTRIB_BACK_DIFFUSE] );
       }
    }
@@ -679,7 +680,7 @@ _mesa_update_material( struct gl_context *ctx, GLuint bitmask )
       while (mask) {
          const int i = u_bit_scan(&mask);
          struct gl_light *light = &ctx->Light.Light[i];
-	 SCALE_3V( light->_MatSpecular[0], light->Specular,
+	 SCALE_3V( light->_MatSpecular[0], light->Specular, 
 		   mat[MAT_ATTRIB_FRONT_SPECULAR]);
       }
    }
@@ -856,12 +857,12 @@ _mesa_GetMaterialiv( GLenum face, GLenum pname, GLint *params )
          params[3] = FLOAT_TO_INT( mat[MAT_ATTRIB_EMISSION(f)][3] );
 	 break;
       case GL_SHININESS:
-         *params = lroundf( mat[MAT_ATTRIB_SHININESS(f)][0] );
+         *params = IROUND( mat[MAT_ATTRIB_SHININESS(f)][0] );
 	 break;
       case GL_COLOR_INDEXES:
-	 params[0] = lroundf( mat[MAT_ATTRIB_INDEXES(f)][0] );
-	 params[1] = lroundf( mat[MAT_ATTRIB_INDEXES(f)][1] );
-	 params[2] = lroundf( mat[MAT_ATTRIB_INDEXES(f)][2] );
+	 params[0] = IROUND( mat[MAT_ATTRIB_INDEXES(f)][0] );
+	 params[1] = IROUND( mat[MAT_ATTRIB_INDEXES(f)][1] );
+	 params[2] = IROUND( mat[MAT_ATTRIB_INDEXES(f)][2] );
 	 break;
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetMaterialfv(pname)" );
@@ -1116,7 +1117,7 @@ _mesa_allow_light_in_model( struct gl_context *ctx, GLboolean flag )
  * Initialize the n-th light data structure.
  *
  * \param l pointer to the gl_light structure to be initialized.
- * \param n number of the light.
+ * \param n number of the light. 
  * \note The defaults for light 0 are different than the other lights.
  */
 static void
@@ -1160,7 +1161,7 @@ init_lightmodel( struct gl_lightmodel *lm )
 
 /**
  * Initialize the material data structure.
- *
+ * 
  * \param m pointer to the gl_material structure to be initialized.
  */
 static void
@@ -1172,7 +1173,7 @@ init_material( struct gl_material *m )
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_EMISSION], 0.0F, 0.0F, 0.0F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_SHININESS], 0.0F, 0.0F, 0.0F, 0.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_INDEXES], 0.0F, 1.0F, 1.0F, 0.0F );
-
+ 
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_AMBIENT],  0.2F, 0.2F, 0.2F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_DIFFUSE],  0.8F, 0.8F, 0.8F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_SPECULAR], 0.0F, 0.0F, 0.0F, 1.0F );

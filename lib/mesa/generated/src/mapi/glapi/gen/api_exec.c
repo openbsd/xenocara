@@ -73,6 +73,7 @@
 #include "main/genmipmap.h"
 #include "main/hint.h"
 #include "main/histogram.h"
+#include "main/imports.h"
 #include "main/light.h"
 #include "main/lines.h"
 #include "main/matrix.h"
@@ -189,7 +190,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_TextureView(exec, _mesa_TextureView);
       SET_VertexAttribBinding(exec, _mesa_VertexAttribBinding);
       SET_VertexBindingDivisor(exec, _mesa_VertexBindingDivisor);
-      SET_ViewportSwizzleNV(exec, _mesa_ViewportSwizzleNV);
    }
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
       SET_BufferStorageMemEXT(exec, _mesa_BufferStorageMemEXT);
@@ -396,7 +396,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_PrimitiveBoundingBox(exec, _mesa_PrimitiveBoundingBox);
    }
    if (_mesa_is_desktop_gl(ctx)) {
-      SET_AlphaToCoverageDitherControlNV(exec, _mesa_AlphaToCoverageDitherControlNV);
       SET_BeginQueryIndexed(exec, _mesa_BeginQueryIndexed);
       SET_BindBuffersBase(exec, _mesa_BindBuffersBase);
       SET_BindBuffersRange(exec, _mesa_BindBuffersRange);
@@ -428,7 +427,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_CompressedTextureSubImage1DEXT(exec, _mesa_CompressedTextureSubImage1DEXT);
       SET_CompressedTextureSubImage2DEXT(exec, _mesa_CompressedTextureSubImage2DEXT);
       SET_CompressedTextureSubImage3DEXT(exec, _mesa_CompressedTextureSubImage3DEXT);
-      SET_CopyImageSubDataNV(exec, _mesa_CopyImageSubDataNV);
       SET_CopyMultiTexImage1DEXT(exec, _mesa_CopyMultiTexImage1DEXT);
       SET_CopyMultiTexImage2DEXT(exec, _mesa_CopyMultiTexImage2DEXT);
       SET_CopyMultiTexSubImage1DEXT(exec, _mesa_CopyMultiTexSubImage1DEXT);
@@ -447,10 +445,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_DisableClientStateiEXT(exec, _mesa_DisableClientStateiEXT);
       SET_DisableVertexArrayAttribEXT(exec, _mesa_DisableVertexArrayAttribEXT);
       SET_DisableVertexArrayEXT(exec, _mesa_DisableVertexArrayEXT);
-      SET_DrawTransformFeedback(exec, _mesa_DrawTransformFeedback);
-      SET_DrawTransformFeedbackInstanced(exec, _mesa_DrawTransformFeedbackInstanced);
-      SET_DrawTransformFeedbackStream(exec, _mesa_DrawTransformFeedbackStream);
-      SET_DrawTransformFeedbackStreamInstanced(exec, _mesa_DrawTransformFeedbackStreamInstanced);
       SET_EGLImageTargetTextureStorageEXT(exec, _mesa_EGLImageTargetTextureStorageEXT);
       SET_EnableClientStateiEXT(exec, _mesa_EnableClientStateiEXT);
       SET_EnableVertexArrayAttribEXT(exec, _mesa_EnableVertexArrayAttribEXT);
@@ -544,10 +538,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_MatrixScalefEXT(exec, _mesa_MatrixScalefEXT);
       SET_MatrixTranslatedEXT(exec, _mesa_MatrixTranslatedEXT);
       SET_MatrixTranslatefEXT(exec, _mesa_MatrixTranslatefEXT);
-      SET_MultiDrawArraysIndirect(exec, _mesa_MultiDrawArraysIndirect);
-      SET_MultiDrawArraysIndirectCountARB(exec, _mesa_MultiDrawArraysIndirectCountARB);
-      SET_MultiDrawElementsIndirect(exec, _mesa_MultiDrawElementsIndirect);
-      SET_MultiDrawElementsIndirectCountARB(exec, _mesa_MultiDrawElementsIndirectCountARB);
       SET_MultiModeDrawArraysIBM(exec, _mesa_MultiModeDrawArraysIBM);
       SET_MultiModeDrawElementsIBM(exec, _mesa_MultiModeDrawElementsIBM);
       SET_MultiTexBufferEXT(exec, _mesa_MultiTexBufferEXT);
@@ -718,12 +708,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_ColorMaski(exec, _mesa_ColorMaski);
       SET_DeleteTransformFeedbacks(exec, _mesa_DeleteTransformFeedbacks);
       SET_Disablei(exec, _mesa_Disablei);
-      SET_DrawArraysInstancedARB(exec, _mesa_DrawArraysInstancedARB);
-      SET_DrawArraysInstancedBaseInstance(exec, _mesa_DrawArraysInstancedBaseInstance);
-      SET_DrawElementsInstancedARB(exec, _mesa_DrawElementsInstancedARB);
-      SET_DrawElementsInstancedBaseInstance(exec, _mesa_DrawElementsInstancedBaseInstance);
-      SET_DrawElementsInstancedBaseVertex(exec, _mesa_DrawElementsInstancedBaseVertex);
-      SET_DrawElementsInstancedBaseVertexBaseInstance(exec, _mesa_DrawElementsInstancedBaseVertexBaseInstance);
       SET_EGLImageTargetTexStorageEXT(exec, _mesa_EGLImageTargetTexStorageEXT);
       SET_Enablei(exec, _mesa_Enablei);
       SET_GenTransformFeedbacks(exec, _mesa_GenTransformFeedbacks);
@@ -790,8 +774,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_WindowRectanglesEXT(exec, _mesa_WindowRectanglesEXT);
    }
    if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
-      SET_DrawArraysIndirect(exec, _mesa_DrawArraysIndirect);
-      SET_DrawElementsIndirect(exec, _mesa_DrawElementsIndirect);
       SET_EvaluateDepthValuesARB(exec, _mesa_EvaluateDepthValuesARB);
       SET_GetBooleani_v(exec, _mesa_GetBooleani_v);
       SET_GetFloati_v(exec, _mesa_GetFloati_v);
@@ -1070,7 +1052,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_TextureView(exec, _mesa_TextureView_no_error);
       SET_VertexAttribBinding(exec, _mesa_VertexAttribBinding_no_error);
       SET_VertexBindingDivisor(exec, _mesa_VertexBindingDivisor_no_error);
-      SET_ViewportSwizzleNV(exec, _mesa_ViewportSwizzleNV_no_error);
    }
    if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
       SET_BufferStorageMemEXT(exec, _mesa_BufferStorageMemEXT_no_error);
@@ -1407,10 +1388,10 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_EndList(exec, _mesa_EndList);
       SET_EvalCoord1d(exec, _mesa_EvalCoord1d);
       SET_EvalCoord1dv(exec, _mesa_EvalCoord1dv);
+      SET_EvalCoord1fv(exec, _mesa_EvalCoord1fv);
       SET_EvalCoord2d(exec, _mesa_EvalCoord2d);
       SET_EvalCoord2dv(exec, _mesa_EvalCoord2dv);
-      SET_EvalMesh1(exec, _mesa_EvalMesh1);
-      SET_EvalMesh2(exec, _mesa_EvalMesh2);
+      SET_EvalCoord2fv(exec, _mesa_EvalCoord2fv);
       SET_FeedbackBuffer(exec, _mesa_FeedbackBuffer);
       SET_FogCoordd(exec, _mesa_FogCoordd);
       SET_FogCoorddv(exec, _mesa_FogCoorddv);
@@ -1878,6 +1859,14 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_VertexArrayAttribFormat(exec, _mesa_VertexArrayAttribFormat);
       SET_VertexArrayAttribIFormat(exec, _mesa_VertexArrayAttribIFormat);
       SET_VertexArrayAttribLFormat(exec, _mesa_VertexArrayAttribLFormat);
+      SET_VertexAttribL1d(exec, _mesa_VertexAttribL1d);
+      SET_VertexAttribL1dv(exec, _mesa_VertexAttribL1dv);
+      SET_VertexAttribL2d(exec, _mesa_VertexAttribL2d);
+      SET_VertexAttribL2dv(exec, _mesa_VertexAttribL2dv);
+      SET_VertexAttribL3d(exec, _mesa_VertexAttribL3d);
+      SET_VertexAttribL3dv(exec, _mesa_VertexAttribL3dv);
+      SET_VertexAttribL4d(exec, _mesa_VertexAttribL4d);
+      SET_VertexAttribL4dv(exec, _mesa_VertexAttribL4dv);
    }
    if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
       SET_FramebufferParameteri(exec, _mesa_FramebufferParameteri);

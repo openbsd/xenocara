@@ -357,7 +357,7 @@ vec4_visitor::opt_cmod_propagation()
    }
 
    if (progress)
-      invalidate_analysis(DEPENDENCY_INSTRUCTIONS);
+      invalidate_live_intervals();
 
    return progress;
 }

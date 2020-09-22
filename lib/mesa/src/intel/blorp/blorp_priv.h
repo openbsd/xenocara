@@ -319,8 +319,6 @@ struct brw_blorp_blit_prog_key
     */
    bool dst_rgb;
 
-   isl_surf_usage_flags_t dst_usage;
-
    enum blorp_filter filter;
 
    /* True if the rectangle being sent through the rendering pipeline might be

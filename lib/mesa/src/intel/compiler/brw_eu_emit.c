@@ -593,7 +593,7 @@ gen7_set_dp_scratch_message(struct brw_codegen *p,
    const struct gen_device_info *devinfo = p->devinfo;
    assert(num_regs == 1 || num_regs == 2 || num_regs == 4 ||
           (devinfo->gen >= 8 && num_regs == 8));
-   const unsigned block_size = (devinfo->gen >= 8 ? util_logbase2(num_regs) :
+   const unsigned block_size = (devinfo->gen >= 8 ? _mesa_logbase2(num_regs) :
                                 num_regs - 1);
 
    brw_set_desc(p, inst, brw_message_desc(
@@ -3150,24 +3150,57 @@ brw_memory_fence(struct brw_codegen *p,
                  struct brw_reg dst,
                  struct brw_reg src,
                  enum opcode send_op,
-                 enum brw_message_target sfid,
-                 bool commit_enable,
+                 bool stall,
                  unsigned bti)
 {
    const struct gen_device_info *devinfo = p->devinfo;
+   const bool commit_enable = stall ||
+      devinfo->gen >= 10 || /* HSD ES # 1404612949 */
+      (devinfo->gen == 7 && !devinfo->is_haswell);
+   struct brw_inst *insn;
 
+   brw_push_insn_state(p);
+   brw_set_default_mask_control(p, BRW_MASK_DISABLE);
+   brw_set_default_exec_size(p, BRW_EXECUTE_1);
    dst = retype(vec1(dst), BRW_REGISTER_TYPE_UW);
    src = retype(vec1(src), BRW_REGISTER_TYPE_UD);
 
    /* Set dst as destination for dependency tracking, the MEMORY_FENCE
     * message doesn't write anything back.
     */
-   struct brw_inst *insn = next_insn(p, send_op);
-   brw_inst_set_mask_control(devinfo, insn, BRW_MASK_DISABLE);
-   brw_inst_set_exec_size(devinfo, insn, BRW_EXECUTE_1);
+   insn = next_insn(p, send_op);
    brw_set_dest(p, insn, dst);
    brw_set_src0(p, insn, src);
-   brw_set_memory_fence_message(p, insn, sfid, commit_enable, bti);
+   brw_set_memory_fence_message(p, insn, GEN7_SFID_DATAPORT_DATA_CACHE,
+                                commit_enable, bti);
+
+   if (devinfo->gen == 7 && !devinfo->is_haswell) {
+      /* IVB does typed surface access through the render cache, so we need to
+       * flush it too.  Use a different register so both flushes can be
+       * pipelined by the hardware.
+       */
+      insn = next_insn(p, send_op);
+      brw_set_dest(p, insn, offset(dst, 1));
+      brw_set_src0(p, insn, src);
+      brw_set_memory_fence_message(p, insn, GEN6_SFID_DATAPORT_RENDER_CACHE,
+                                   commit_enable, bti);
+
+      /* Now write the response of the second message into the response of the
+       * first to trigger a pipeline stall -- This way future render and data
+       * cache messages will be properly ordered with respect to past data and
+       * render cache messages.
+       */
+      brw_MOV(p, dst, offset(dst, 1));
+   }
+
+   if (stall) {
+      brw_set_default_swsb(p, tgl_swsb_sbid(TGL_SBID_DST,
+                                            brw_get_default_swsb(p).sbid));
+
+      brw_MOV(p, retype(brw_null_reg(), BRW_REGISTER_TYPE_UW), dst);
+   }
+
+   brw_pop_insn_state(p);
 }
 
 void
@@ -3350,18 +3383,9 @@ brw_broadcast(struct brw_codegen *p,
        * asserting would be mean.
        */
       const unsigned i = idx.file == BRW_IMMEDIATE_VALUE ? idx.ud : 0;
-      src = align1 ? stride(suboffset(src, i), 0, 1, 0) :
-                     stride(suboffset(src, 4 * i), 0, 4, 1);
-
-      if (type_sz(src.type) > 4 && !devinfo->has_64bit_float) {
-         brw_MOV(p, subscript(dst, BRW_REGISTER_TYPE_D, 0),
-                    subscript(src, BRW_REGISTER_TYPE_D, 0));
-         brw_set_default_swsb(p, tgl_swsb_null());
-         brw_MOV(p, subscript(dst, BRW_REGISTER_TYPE_D, 1),
-                    subscript(src, BRW_REGISTER_TYPE_D, 1));
-      } else {
-         brw_MOV(p, dst, src);
-      }
+      brw_MOV(p, dst,
+              (align1 ? stride(suboffset(src, i), 0, 1, 0) :
+               stride(suboffset(src, 4 * i), 0, 4, 1)));
    } else {
       /* From the Haswell PRM section "Register Region Restrictions":
        *
@@ -3391,7 +3415,7 @@ brw_broadcast(struct brw_codegen *p,
          /* Take into account the component size and horizontal stride. */
          assert(src.vstride == src.hstride + src.width);
          brw_SHL(p, addr, vec1(idx),
-                 brw_imm_ud(util_logbase2(type_sz(src.type)) +
+                 brw_imm_ud(_mesa_logbase2(type_sz(src.type)) +
                             src.hstride - 1));
 
          /* We can only address up to limit bytes using the indirect
@@ -3410,8 +3434,7 @@ brw_broadcast(struct brw_codegen *p,
 
          /* Use indirect addressing to fetch the specified component. */
          if (type_sz(src.type) > 4 &&
-             (devinfo->is_cherryview || gen_device_info_is_9lp(devinfo) ||
-              !devinfo->has_64bit_float)) {
+             (devinfo->is_cherryview || gen_device_info_is_9lp(devinfo))) {
             /* From the Cherryview PRM Vol 7. "Register Region Restrictions":
              *
              *    "When source or destination datatype is 64b or operation is

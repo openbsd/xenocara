@@ -25,7 +25,6 @@
 #define UTIL_FUTEX_H
 
 #if defined(HAVE_LINUX_FUTEX_H)
-#define UTIL_FUTEX_SUPPORTED 1
 
 #include <limits.h>
 #include <stdint.h>
@@ -53,7 +52,6 @@ static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespe
 }
 
 #elif defined(__FreeBSD__)
-#define UTIL_FUTEX_SUPPORTED 1
 
 #include <assert.h>
 #include <errno.h>
@@ -88,7 +86,6 @@ static inline int futex_wait(uint32_t *addr, int32_t value, struct timespec *tim
 }
 
 #elif defined(__OpenBSD__)
-#define UTIL_FUTEX_SUPPORTED 1
 
 #include <sys/time.h>
 #include <sys/futex.h>
@@ -113,8 +110,6 @@ static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespe
    return futex(addr, FUTEX_WAIT, value, &tsrel, NULL);
 }
 
-#else
-#define UTIL_FUTEX_SUPPORTED 0
 #endif
 
 #endif /* UTIL_FUTEX_H */

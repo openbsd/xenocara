@@ -104,17 +104,9 @@ gen8_cmd_buffer_emit_depth_viewport(struct anv_cmd_buffer *cmd_buffer,
    for (uint32_t i = 0; i < count; i++) {
       const VkViewport *vp = &viewports[i];
 
-      /* From the Vulkan spec:
-       *
-       *    "It is valid for minDepth to be greater than or equal to
-       *    maxDepth."
-       */
-      float min_depth = MIN2(vp->minDepth, vp->maxDepth);
-      float max_depth = MAX2(vp->minDepth, vp->maxDepth);
-
       struct GENX(CC_VIEWPORT) cc_viewport = {
-         .MinimumDepth = depth_clamp_enable ? min_depth : 0.0f,
-         .MaximumDepth = depth_clamp_enable ? max_depth : 1.0f,
+         .MinimumDepth = depth_clamp_enable ? vp->minDepth : 0.0f,
+         .MaximumDepth = depth_clamp_enable ? vp->maxDepth : 1.0f,
       };
 
       GENX(CC_VIEWPORT_pack)(NULL, cc_state.map + i * 8, &cc_viewport);
@@ -252,7 +244,7 @@ want_depth_pma_fix(struct anv_cmd_buffer *cmd_buffer)
       return false;
 
    /* 3DSTATE_PS_EXTRA::PixelShaderValid */
-   struct anv_graphics_pipeline *pipeline = cmd_buffer->state.gfx.pipeline;
+   struct anv_pipeline *pipeline = cmd_buffer->state.gfx.base.pipeline;
    if (!anv_pipeline_has_stage(pipeline, MESA_SHADER_FRAGMENT))
       return false;
 
@@ -362,7 +354,7 @@ want_stencil_pma_fix(struct anv_cmd_buffer *cmd_buffer)
    assert(ds_iview && ds_iview->image->planes[0].aux_usage == ISL_AUX_USAGE_HIZ);
 
    /* 3DSTATE_PS_EXTRA::PixelShaderValid */
-   struct anv_graphics_pipeline *pipeline = cmd_buffer->state.gfx.pipeline;
+   struct anv_pipeline *pipeline = cmd_buffer->state.gfx.base.pipeline;
    if (!anv_pipeline_has_stage(pipeline, MESA_SHADER_FRAGMENT))
       return false;
 
@@ -417,7 +409,7 @@ want_stencil_pma_fix(struct anv_cmd_buffer *cmd_buffer)
 void
 genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct anv_graphics_pipeline *pipeline = cmd_buffer->state.gfx.pipeline;
+   struct anv_pipeline *pipeline = cmd_buffer->state.gfx.base.pipeline;
    struct anv_dynamic_state *d = &cmd_buffer->state.gfx.dynamic;
 
    if (cmd_buffer->state.gfx.dirty & (ANV_CMD_DIRTY_PIPELINE |

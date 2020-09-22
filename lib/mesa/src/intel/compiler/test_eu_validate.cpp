@@ -110,7 +110,7 @@ validate(struct brw_codegen *p)
                                         p->next_insn_offset, disasm);
 
    if (print) {
-      dump_assembly(p->store, disasm, NULL);
+      dump_assembly(p->store, disasm);
    }
    ralloc_free(disasm);
 

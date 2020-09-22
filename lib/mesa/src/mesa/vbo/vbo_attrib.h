@@ -116,6 +116,6 @@ enum vbo_attrib {
 
 
 
-#define VBO_MAX_COPIED_VERTS 31
+#define VBO_MAX_COPIED_VERTS 3
 
 #endif

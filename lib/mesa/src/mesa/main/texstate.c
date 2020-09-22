@@ -670,13 +670,11 @@ update_single_program_texture(struct gl_context *ctx, struct gl_program *prog,
       texUnit->Sampler : &texObj->Sampler;
 
    if (likely(texObj)) {
-      if (_mesa_is_texture_complete(texObj, sampler,
-                                    ctx->Const.ForceIntegerTexNearest))
+      if (_mesa_is_texture_complete(texObj, sampler))
          return texObj;
 
       _mesa_test_texobj_completeness(ctx, texObj);
-      if (_mesa_is_texture_complete(texObj, sampler,
-                                    ctx->Const.ForceIntegerTexNearest))
+      if (_mesa_is_texture_complete(texObj, sampler))
          return texObj;
    }
 
@@ -818,12 +816,10 @@ update_ff_texture_state(struct gl_context *ctx,
          struct gl_sampler_object *sampler = texUnit->Sampler ?
             texUnit->Sampler : &texObj->Sampler;
 
-         if (!_mesa_is_texture_complete(texObj, sampler,
-                                        ctx->Const.ForceIntegerTexNearest)) {
+         if (!_mesa_is_texture_complete(texObj, sampler)) {
             _mesa_test_texobj_completeness(ctx, texObj);
          }
-         if (_mesa_is_texture_complete(texObj, sampler,
-                                       ctx->Const.ForceIntegerTexNearest)) {
+         if (_mesa_is_texture_complete(texObj, sampler)) {
             _mesa_reference_texobj(&texUnit->_Current, texObj);
             complete = true;
             break;
@@ -1076,7 +1072,8 @@ _mesa_init_texture(struct gl_context *ctx)
       return GL_FALSE;
 
    /* GL_ARB_texture_buffer_object */
-   _mesa_reference_buffer_object(ctx, &ctx->Texture.BufferObject, NULL);
+   _mesa_reference_buffer_object(ctx, &ctx->Texture.BufferObject,
+                                 ctx->Shared->NullBufferObj);
 
    ctx->Texture.NumCurrentTexUsed = 0;
 

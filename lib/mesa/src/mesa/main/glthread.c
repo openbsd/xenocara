@@ -34,8 +34,8 @@
 
 #include "main/mtypes.h"
 #include "main/glthread.h"
-#include "main/glthread_marshal.h"
-#include "main/hash.h"
+#include "main/marshal.h"
+#include "main/marshal_generated.h"
 #include "util/u_atomic.h"
 #include "util/u_thread.h"
 
@@ -45,21 +45,14 @@ glthread_unmarshal_batch(void *job, int thread_index)
 {
    struct glthread_batch *batch = (struct glthread_batch*)job;
    struct gl_context *ctx = batch->ctx;
-   int pos = 0;
-   int used = batch->used;
-   uint8_t *buffer = batch->buffer;
+   size_t pos = 0;
 
    _glapi_set_dispatch(ctx->CurrentServerDispatch);
 
-   while (pos < used) {
-      const struct marshal_cmd_base *cmd =
-         (const struct marshal_cmd_base *)&buffer[pos];
+   while (pos < batch->used)
+      pos += _mesa_unmarshal_dispatch_cmd(ctx, &batch->buffer[pos]);
 
-      _mesa_unmarshal_dispatch[cmd->cmd_id](ctx, cmd);
-      pos += cmd->cmd_size;
-   }
-
-   assert(pos == used);
+   assert(pos == batch->used);
    batch->used = 0;
 }
 
@@ -68,33 +61,28 @@ glthread_thread_initialization(void *job, int thread_index)
 {
    struct gl_context *ctx = (struct gl_context*)job;
 
-   ctx->Driver.SetBackgroundContext(ctx, &ctx->GLThread.stats);
+   ctx->Driver.SetBackgroundContext(ctx, &ctx->GLThread->stats);
    _glapi_set_context(ctx);
 }
 
 void
 _mesa_glthread_init(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = &ctx->GLThread;
+   struct glthread_state *glthread = calloc(1, sizeof(*glthread));
 
-   assert(!glthread->enabled);
+   if (!glthread)
+      return;
 
    if (!util_queue_init(&glthread->queue, "gl", MARSHAL_MAX_BATCHES - 2,
                         1, 0)) {
+      free(glthread);
       return;
    }
-
-   glthread->VAOs = _mesa_NewHashTable();
-   if (!glthread->VAOs) {
-      util_queue_destroy(&glthread->queue);
-      return;
-   }
-   glthread->CurrentVAO = &glthread->DefaultVAO;
 
    ctx->MarshalExec = _mesa_create_marshal_table(ctx);
    if (!ctx->MarshalExec) {
-      _mesa_DeleteHashTable(glthread->VAOs);
       util_queue_destroy(&glthread->queue);
+      free(glthread);
       return;
    }
 
@@ -102,11 +90,10 @@ _mesa_glthread_init(struct gl_context *ctx)
       glthread->batches[i].ctx = ctx;
       util_queue_fence_init(&glthread->batches[i].fence);
    }
-   glthread->next_batch = &glthread->batches[glthread->next];
 
-   glthread->enabled = true;
    glthread->stats.queue = &glthread->queue;
    ctx->CurrentClientDispatch = ctx->MarshalExec;
+   ctx->GLThread = glthread;
 
    /* Execute the thread initialization function in the thread. */
    struct util_queue_fence fence;
@@ -117,18 +104,12 @@ _mesa_glthread_init(struct gl_context *ctx)
    util_queue_fence_destroy(&fence);
 }
 
-static void
-free_vao(GLuint key, void *data, void *userData)
-{
-   free(data);
-}
-
 void
 _mesa_glthread_destroy(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = &ctx->GLThread;
+   struct glthread_state *glthread = ctx->GLThread;
 
-   if (!glthread->enabled)
+   if (!glthread)
       return;
 
    _mesa_glthread_finish(ctx);
@@ -137,10 +118,8 @@ _mesa_glthread_destroy(struct gl_context *ctx)
    for (unsigned i = 0; i < MARSHAL_MAX_BATCHES; i++)
       util_queue_fence_destroy(&glthread->batches[i].fence);
 
-   _mesa_HashDeleteAll(glthread->VAOs, free_vao, NULL);
-   _mesa_DeleteHashTable(glthread->VAOs);
-
-   ctx->GLThread.enabled = false;
+   free(glthread);
+   ctx->GLThread = NULL;
 
    _mesa_glthread_restore_dispatch(ctx, "destroy");
 }
@@ -164,20 +143,13 @@ _mesa_glthread_restore_dispatch(struct gl_context *ctx, const char *func)
 }
 
 void
-_mesa_glthread_disable(struct gl_context *ctx, const char *func)
-{
-   _mesa_glthread_finish_before(ctx, func);
-   _mesa_glthread_restore_dispatch(ctx, func);
-}
-
-void
 _mesa_glthread_flush_batch(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = &ctx->GLThread;
-   if (!glthread->enabled)
+   struct glthread_state *glthread = ctx->GLThread;
+   if (!glthread)
       return;
 
-   struct glthread_batch *next = glthread->next_batch;
+   struct glthread_batch *next = &glthread->batches[glthread->next];
    if (!next->used)
       return;
 
@@ -198,7 +170,6 @@ _mesa_glthread_flush_batch(struct gl_context *ctx)
                       glthread_unmarshal_batch, NULL, 0);
    glthread->last = glthread->next;
    glthread->next = (glthread->next + 1) % MARSHAL_MAX_BATCHES;
-   glthread->next_batch = &glthread->batches[glthread->next];
 }
 
 /**
@@ -210,8 +181,8 @@ _mesa_glthread_flush_batch(struct gl_context *ctx)
 void
 _mesa_glthread_finish(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = &ctx->GLThread;
-   if (!glthread->enabled)
+   struct glthread_state *glthread = ctx->GLThread;
+   if (!glthread)
       return;
 
    /* If this is called from the worker thread, then we've hit a path that
@@ -223,7 +194,7 @@ _mesa_glthread_finish(struct gl_context *ctx)
       return;
 
    struct glthread_batch *last = &glthread->batches[glthread->last];
-   struct glthread_batch *next = glthread->next_batch;
+   struct glthread_batch *next = &glthread->batches[glthread->next];
    bool synced = false;
 
    if (!util_queue_fence_is_signalled(&last->fence)) {
@@ -249,13 +220,4 @@ _mesa_glthread_finish(struct gl_context *ctx)
 
    if (synced)
       p_atomic_inc(&glthread->stats.num_syncs);
-}
-
-void
-_mesa_glthread_finish_before(struct gl_context *ctx, const char *func)
-{
-   _mesa_glthread_finish(ctx);
-
-   /* Uncomment this if you want to know where glthread syncs. */
-   /*printf("fallback to sync: %s\n", func);*/
 }

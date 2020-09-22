@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -42,7 +42,6 @@ SRCS=	brw_cfg.cpp \
 	brw_fs_validate.cpp \
 	brw_fs_visitor.cpp \
 	brw_interpolation_map.c \
-	brw_ir_performance.cpp \
 	brw_nir.c \
 	brw_nir_analyze_boolean_resolves.c \
 	brw_nir_analyze_ubo_ranges.c \

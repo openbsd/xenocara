@@ -104,7 +104,6 @@ public:
               const void *mem_ctx) const;
    const tfeedback_candidate *find_candidate(gl_shader_program *prog,
                                              hash_table *tfeedback_candidates);
-   void set_lowered_candidate(const tfeedback_candidate *candidate);
 
    bool is_next_buffer_separator() const
    {
@@ -122,11 +121,6 @@ public:
    bool is_varying() const
    {
       return !this->next_buffer_separator && !this->skip_components;
-   }
-
-   bool is_aligned(unsigned dmul, unsigned offset) const
-   {
-      return (dmul * (this->array_subscript + offset)) % 4 == 0;
    }
 
    const char *name() const

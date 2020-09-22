@@ -206,12 +206,9 @@ all:
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_enums.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/registry/gl.xml \
 	    > src/mapi/glapi/gen/enums.c
-.for INDEX in 0 1 2 3 4 5 6 7
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_marshal.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
-	    -i ${INDEX} -n 8 \
-	    > src/mapi/glapi/gen/marshal_generated${INDEX}.c
-.endfor
+	    > src/mapi/glapi/gen/marshal_generated.c
 	${PYTHON} ${MESA_SRC}/src/mesa/main/format_fallback.py \
 	    ${MESA_SRC}/src/mesa/main/formats.csv \
 	    src/mesa/format_fallback.c
@@ -338,9 +335,7 @@ clean:
 	rm -f src/intel/vulkan/anv_extensions.h
 	rm -f src/mapi/glapi/gen/api_exec.c
 	rm -f src/mapi/glapi/gen/enums.c
-.for INDEX in 0 1 2 3 4 5 6 7
-	rm -f src/mapi/glapi/gen/marshal_generated${INDEX}.c
-.endfor
+	rm -f src/mapi/glapi/gen/marshal_generated.c
 	rm -f src/mesa/format_fallback.c
 	rm -f src/mesa/format_info.h
 	rm -f src/mesa/format_pack.c

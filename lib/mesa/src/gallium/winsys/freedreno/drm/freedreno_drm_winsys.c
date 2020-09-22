@@ -32,14 +32,13 @@
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
 #include "util/u_hash_table.h"
-#include "util/u_pointer.h"
 #include "os/os_thread.h"
 
 #include "freedreno_drm_public.h"
 
 #include "freedreno/freedreno_screen.h"
 
-static struct hash_table *fd_tab = NULL;
+static struct util_hash_table *fd_tab = NULL;
 
 static mtx_t fd_screen_mutex = _MTX_INITIALIZER_NP;
 
@@ -53,7 +52,7 @@ fd_drm_screen_destroy(struct pipe_screen *pscreen)
 	destroy = --screen->refcnt == 0;
 	if (destroy) {
 		int fd = fd_device_fd(screen->dev);
-		_mesa_hash_table_remove_key(fd_tab, intptr_to_pointer(fd));
+		util_hash_table_remove(fd_tab, intptr_to_pointer(fd));
 	}
 	mtx_unlock(&fd_screen_mutex);
 
@@ -63,6 +62,28 @@ fd_drm_screen_destroy(struct pipe_screen *pscreen)
 	}
 }
 
+static unsigned hash_fd(void *key)
+{
+	int fd = pointer_to_intptr(key);
+	struct stat stat;
+	fstat(fd, &stat);
+
+	return stat.st_dev ^ stat.st_ino ^ stat.st_rdev;
+}
+
+static int compare_fd(void *key1, void *key2)
+{
+	int fd1 = pointer_to_intptr(key1);
+	int fd2 = pointer_to_intptr(key2);
+	struct stat stat1, stat2;
+	fstat(fd1, &stat1);
+	fstat(fd2, &stat2);
+
+	return stat1.st_dev != stat2.st_dev ||
+			stat1.st_ino != stat2.st_ino ||
+			stat1.st_rdev != stat2.st_rdev;
+}
+
 struct pipe_screen *
 fd_drm_screen_create(int fd, struct renderonly *ro)
 {
@@ -70,7 +91,7 @@ fd_drm_screen_create(int fd, struct renderonly *ro)
 
 	mtx_lock(&fd_screen_mutex);
 	if (!fd_tab) {
-		fd_tab = util_hash_table_create_fd_keys();
+		fd_tab = util_hash_table_create(hash_fd, compare_fd);
 		if (!fd_tab)
 			goto unlock;
 	}
@@ -87,7 +108,7 @@ fd_drm_screen_create(int fd, struct renderonly *ro)
 		if (pscreen) {
 			int fd = fd_device_fd(dev);
 
-			_mesa_hash_table_insert(fd_tab, intptr_to_pointer(fd), pscreen);
+			util_hash_table_set(fd_tab, intptr_to_pointer(fd), pscreen);
 
 			/* Bit of a hack, to avoid circular linkage dependency,
 			 * ie. pipe driver having to call in to winsys, we

@@ -932,6 +932,9 @@ copy_prop_vars_block(struct copy_prop_var_state *state,
       case nir_intrinsic_store_deref: {
          if (debug) dump_instr(instr);
 
+         if (nir_intrinsic_access(intrin) & ACCESS_VOLATILE)
+            break;
+
          nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
          assert(glsl_type_is_vector_or_scalar(dst->type));
 
@@ -952,12 +955,6 @@ copy_prop_vars_block(struct copy_prop_var_state *state,
                state->progress = true;
                break;
             }
-         }
-
-         if (nir_intrinsic_access(intrin) & ACCESS_VOLATILE) {
-            unsigned wrmask = nir_intrinsic_write_mask(intrin);
-            kill_aliases(copies, dst, wrmask);
-            break;
          }
 
          struct copy_entry *entry =
@@ -984,20 +981,12 @@ copy_prop_vars_block(struct copy_prop_var_state *state,
       case nir_intrinsic_copy_deref: {
          if (debug) dump_instr(instr);
 
+         if ((nir_intrinsic_src_access(intrin) & ACCESS_VOLATILE) ||
+             (nir_intrinsic_dst_access(intrin) & ACCESS_VOLATILE))
+            break;
+
          nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
          nir_deref_instr *src = nir_src_as_deref(intrin->src[1]);
-
-         /* The copy_deref intrinsic doesn't keep track of num_components, so
-          * get it ourselves.
-          */
-         unsigned num_components = glsl_get_vector_elements(dst->type);
-         unsigned full_mask = (1 << num_components) - 1;
-
-         if ((nir_intrinsic_src_access(intrin) & ACCESS_VOLATILE) ||
-             (nir_intrinsic_dst_access(intrin) & ACCESS_VOLATILE)) {
-            kill_aliases(copies, dst, full_mask);
-            break;
-         }
 
          if (nir_compare_derefs(src, dst) & nir_derefs_equal_bit) {
             /* This is a no-op self-copy.  Get rid of it */
@@ -1005,6 +994,12 @@ copy_prop_vars_block(struct copy_prop_var_state *state,
             state->progress = true;
             continue;
          }
+
+         /* The copy_deref intrinsic doesn't keep track of num_components, so
+          * get it ourselves.
+          */
+         unsigned num_components = glsl_get_vector_elements(dst->type);
+         unsigned full_mask = (1 << num_components) - 1;
 
          /* Copy of direct array derefs of vectors are not handled.  Just
           * invalidate what's written and bail.
@@ -1067,6 +1062,9 @@ copy_prop_vars_block(struct copy_prop_var_state *state,
       case nir_intrinsic_deref_atomic_exchange:
       case nir_intrinsic_deref_atomic_comp_swap:
          if (debug) dump_instr(instr);
+
+         if (nir_intrinsic_access(intrin) & ACCESS_VOLATILE)
+            break;
 
          nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
          unsigned num_components = glsl_get_vector_elements(dst->type);

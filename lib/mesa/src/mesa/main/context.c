@@ -77,7 +77,7 @@
 
 
 #include "glheader.h"
-
+#include "imports.h"
 #include "accum.h"
 #include "api_exec.h"
 #include "api_loopback.h"
@@ -152,7 +152,6 @@
 #include "compiler/glsl/builtin_functions.h"
 #include "compiler/glsl/glsl_parser_extras.h"
 #include <stdbool.h>
-#include "util/u_memory.h"
 
 
 #ifndef MESA_VERBOSE
@@ -182,7 +181,7 @@ _mesa_notifySwapBuffers(struct gl_context *ctx)
 {
    if (MESA_VERBOSE & VERBOSE_SWAPBUFFERS)
       _mesa_debug(ctx, "SwapBuffers\n");
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_CURRENT( ctx, 0 );
    if (ctx->Driver.Flush) {
       ctx->Driver.Flush(ctx);
    }
@@ -368,15 +367,15 @@ one_time_fini(void)
  *
  * \sa _math_init().
  */
-void
-_mesa_initialize(void)
+static void
+one_time_init( struct gl_context *ctx )
 {
-   static bool initialized;
+   static GLbitfield api_init_mask = 0x0;
 
    mtx_lock(&OneTimeLock);
 
    /* truly one-time init */
-   if (!initialized) {
+   if (!api_init_mask) {
       GLuint i;
 
       STATIC_ASSERT(sizeof(GLbyte) == 1);
@@ -388,7 +387,7 @@ _mesa_initialize(void)
 
       _mesa_locale_init();
 
-      _mesa_one_time_init_extension_overrides();
+      _mesa_one_time_init_extension_overrides(ctx);
 
       _mesa_get_cpu_features();
 
@@ -400,7 +399,7 @@ _mesa_initialize(void)
 
 #if defined(DEBUG)
       if (MESA_VERBOSE != 0) {
-         _mesa_debug(NULL, "Mesa " PACKAGE_VERSION " DEBUG build" MESA_GIT_SHA1 "\n");
+         _mesa_debug(ctx, "Mesa " PACKAGE_VERSION " DEBUG build" MESA_GIT_SHA1 "\n");
       }
 #endif
 
@@ -408,11 +407,14 @@ _mesa_initialize(void)
        * unecessary creation/destruction of glsl types.
        */
       glsl_type_singleton_init_or_ref();
+   }
 
+   /* per-API one-time init */
+   if (!(api_init_mask & (1 << ctx->API))) {
       _mesa_init_remap_table();
    }
 
-   initialized = true;
+   api_init_mask |= 1 << ctx->API;
 
    mtx_unlock(&OneTimeLock);
 }
@@ -752,8 +754,6 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
    consts->ConservativeRasterDilateRange[0] = 0.0;
    consts->ConservativeRasterDilateRange[1] = 0.0;
    consts->ConservativeRasterDilateGranularity = 0.0;
-
-   consts->glBeginEndBufferSize = 512 * 1024;
 }
 
 
@@ -1204,7 +1204,7 @@ _mesa_initialize_context(struct gl_context *ctx,
    _mesa_override_gl_version(ctx);
 
    /* misc one-time initializations */
-   _mesa_initialize();
+   one_time_init(ctx);
 
    /* Plug in driver functions and context pointer here.
     * This is important because when we call alloc_shared_state() below
@@ -1763,7 +1763,6 @@ _mesa_make_current( struct gl_context *newCtx,
              * changed since the last time this FBO was bound).
              */
             _mesa_update_draw_buffers(newCtx);
-            _mesa_update_allow_draw_out_of_order(newCtx);
          }
          if (!newCtx->ReadBuffer || _mesa_is_winsys_fbo(newCtx->ReadBuffer)) {
             _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);
@@ -1875,6 +1874,7 @@ void
 _mesa_flush(struct gl_context *ctx)
 {
    FLUSH_VERTICES( ctx, 0 );
+   FLUSH_CURRENT( ctx, 0 );
    if (ctx->Driver.Flush) {
       ctx->Driver.Flush(ctx);
    }
@@ -1895,6 +1895,7 @@ _mesa_Finish(void)
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    FLUSH_VERTICES(ctx, 0);
+   FLUSH_CURRENT(ctx, 0);
 
    if (ctx->Driver.Finish) {
       ctx->Driver.Finish(ctx);

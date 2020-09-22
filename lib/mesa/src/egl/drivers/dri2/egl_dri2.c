@@ -85,49 +85,41 @@
 #define NUM_ATTRIBS 12
 
 static const struct dri2_pbuffer_visual {
-   const char *format_name;
    unsigned int dri_image_format;
    int rgba_shifts[4];
    unsigned int rgba_sizes[4];
 } dri2_pbuffer_visuals[] = {
    {
-      "ABGR16F",
       __DRI_IMAGE_FORMAT_ABGR16161616F,
       { 0, 16, 32, 48 },
       { 16, 16, 16, 16 }
    },
    {
-      "XBGR16F",
       __DRI_IMAGE_FORMAT_XBGR16161616F,
       { 0, 16, 32, -1 },
       { 16, 16, 16, 0 }
    },
    {
-      "A2RGB10",
       __DRI_IMAGE_FORMAT_ARGB2101010,
       { 20, 10, 0, 30 },
       { 10, 10, 10, 2 }
    },
    {
-      "X2RGB10",
       __DRI_IMAGE_FORMAT_XRGB2101010,
       { 20, 10, 0, -1 },
       { 10, 10, 10, 0 }
    },
    {
-      "ARGB8888",
       __DRI_IMAGE_FORMAT_ARGB8888,
       { 16, 8, 0, 24 },
       { 8, 8, 8, 8 }
    },
    {
-      "RGB888",
       __DRI_IMAGE_FORMAT_XRGB8888,
       { 16, 8, 0, -1 },
       { 8, 8, 8, 0 }
    },
    {
-      "RGB565",
       __DRI_IMAGE_FORMAT_RGB565,
       { 11, 5, 0, -1 },
       { 5, 6, 5, 0 }
@@ -440,14 +432,15 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
       switch (attrib) {
       case __DRI_ATTRIB_RENDER_TYPE:
          if (value & __DRI_ATTRIB_FLOAT_BIT)
-            base.ComponentType = EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT;
+            _eglSetConfigKey(&base, EGL_COLOR_COMPONENT_TYPE_EXT,
+                             EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT);
          if (value & __DRI_ATTRIB_RGBA_BIT)
             value = EGL_RGB_BUFFER;
          else if (value & __DRI_ATTRIB_LUMINANCE_BIT)
             value = EGL_LUMINANCE_BUFFER;
          else
             return NULL;
-         base.ColorBufferType = value;
+         _eglSetConfigKey(&base, EGL_COLOR_BUFFER_TYPE, value);
          break;
 
       case __DRI_ATTRIB_CONFIG_CAVEAT:
@@ -457,7 +450,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
             value = EGL_SLOW_CONFIG;
          else
             value = EGL_NONE;
-         base.ConfigCaveat = value;
+         _eglSetConfigKey(&base, EGL_CONFIG_CAVEAT, value);
          break;
 
       case __DRI_ATTRIB_BIND_TO_TEXTURE_RGB:
@@ -474,7 +467,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
 
       case __DRI_ATTRIB_RED_SIZE:
          dri_sizes[0] = value;
-         base.RedSize = value;
+         _eglSetConfigKey(&base, EGL_RED_SIZE, value);
          break;
 
       case __DRI_ATTRIB_RED_MASK:
@@ -487,7 +480,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
 
       case __DRI_ATTRIB_GREEN_SIZE:
          dri_sizes[1] = value;
-         base.GreenSize = value;
+         _eglSetConfigKey(&base, EGL_GREEN_SIZE, value);
          break;
 
       case __DRI_ATTRIB_GREEN_MASK:
@@ -500,7 +493,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
 
       case __DRI_ATTRIB_BLUE_SIZE:
          dri_sizes[2] = value;
-         base.BlueSize = value;
+         _eglSetConfigKey(&base, EGL_BLUE_SIZE, value);
          break;
 
       case __DRI_ATTRIB_BLUE_MASK:
@@ -513,7 +506,7 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
 
      case __DRI_ATTRIB_ALPHA_SIZE:
          dri_sizes[3] = value;
-         base.AlphaSize = value;
+         _eglSetConfigKey(&base, EGL_ALPHA_SIZE, value);
          break;
 
       case __DRI_ATTRIB_ALPHA_MASK:
@@ -540,10 +533,12 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
          break;
 
       case __DRI_ATTRIB_MAX_PBUFFER_WIDTH:
-         base.MaxPbufferWidth = _EGL_MAX_PBUFFER_WIDTH;
+         _eglSetConfigKey(&base, EGL_MAX_PBUFFER_WIDTH,
+                          _EGL_MAX_PBUFFER_WIDTH);
          break;
       case __DRI_ATTRIB_MAX_PBUFFER_HEIGHT:
-         base.MaxPbufferHeight = _EGL_MAX_PBUFFER_HEIGHT;
+         _eglSetConfigKey(&base, EGL_MAX_PBUFFER_HEIGHT,
+                          _EGL_MAX_PBUFFER_HEIGHT);
          break;
       case __DRI_ATTRIB_MUTABLE_RENDER_BUFFER:
          if (disp->Extensions.KHR_mutable_render_buffer)
@@ -640,39 +635,6 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
    conf->base.SurfaceType |= surface_type;
 
    return conf;
-}
-
-EGLBoolean
-dri2_add_pbuffer_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
-{
-   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
-   unsigned int format_count[ARRAY_SIZE(dri2_pbuffer_visuals)] = { 0 };
-   unsigned int config_count = 0;
-
-   for (unsigned i = 0; dri2_dpy->driver_configs[i] != NULL; i++) {
-      for (unsigned j = 0; j < ARRAY_SIZE(dri2_pbuffer_visuals); j++) {
-         struct dri2_egl_config *dri2_conf;
-
-         dri2_conf = dri2_add_config(disp, dri2_dpy->driver_configs[i],
-               config_count + 1, EGL_PBUFFER_BIT, NULL,
-               dri2_pbuffer_visuals[j].rgba_shifts, dri2_pbuffer_visuals[j].rgba_sizes);
-
-         if (dri2_conf) {
-            if (dri2_conf->base.ConfigID == config_count + 1)
-               config_count++;
-            format_count[j]++;
-         }
-      }
-   }
-
-   for (unsigned i = 0; i < ARRAY_SIZE(format_count); i++) {
-      if (!format_count[i]) {
-         _eglLog(_EGL_DEBUG, "No DRI config supports native format %s",
-               dri2_pbuffer_visuals[i].format_name);
-      }
-   }
-
-   return (config_count != 0);
 }
 
 __DRIimage *
@@ -1006,6 +968,11 @@ dri2_setup_screen(_EGLDisplay *disp)
       if (dri2_dpy->image->base.version >= 8 &&
           dri2_dpy->image->createImageFromDmaBufs) {
          disp->Extensions.EXT_image_dma_buf_import = EGL_TRUE;
+      }
+      if (dri2_dpy->image->base.version >= 15 &&
+          dri2_dpy->image->createImageFromDmaBufs2 &&
+          dri2_dpy->image->queryDmaBufFormats &&
+          dri2_dpy->image->queryDmaBufModifiers) {
          disp->Extensions.EXT_image_dma_buf_import_modifiers = EGL_TRUE;
       }
 #endif
@@ -1767,22 +1734,32 @@ dri2_make_current(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *dsurf,
    _EGLSurface *tmp_dsurf, *tmp_rsurf;
    __DRIdrawable *ddraw, *rdraw;
    __DRIcontext *cctx;
-   EGLint egl_error = EGL_SUCCESS;
+   EGLBoolean unbind;
 
    if (!dri2_dpy)
       return _eglError(EGL_NOT_INITIALIZED, "eglMakeCurrent");
 
-   /* make new bindings, set the EGL error otherwise */
-   if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf))
+   /* make new bindings */
+   if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf)) {
+      /* _eglBindContext already sets the EGL error (in _eglCheckMakeCurrent) */
       return EGL_FALSE;
+   }
+
+   if (old_ctx) {
+      old_disp = old_ctx->Resource.Display;
+      old_dri2_dpy = dri2_egl_display(old_disp);
+   }
+
+   /* flush before context switch */
+   if (old_ctx)
+      dri2_gl_flush();
+
+   ddraw = (dsurf) ? dri2_dpy->vtbl->get_dri_drawable(dsurf) : NULL;
+   rdraw = (rsurf) ? dri2_dpy->vtbl->get_dri_drawable(rsurf) : NULL;
+   cctx = (dri2_ctx) ? dri2_ctx->dri_context : NULL;
 
    if (old_ctx) {
       __DRIcontext *old_cctx = dri2_egl_context(old_ctx)->dri_context;
-      old_disp = old_ctx->Resource.Display;
-      old_dri2_dpy = dri2_egl_display(old_disp);
-
-      /* flush before context switch */
-      dri2_gl_flush();
 
       if (old_dsurf)
          dri2_surf_update_fence_fd(old_ctx, disp, old_dsurf);
@@ -1796,81 +1773,45 @@ dri2_make_current(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *dsurf,
       dri2_dpy->core->unbindContext(old_cctx);
    }
 
-   ddraw = (dsurf) ? dri2_dpy->vtbl->get_dri_drawable(dsurf) : NULL;
-   rdraw = (rsurf) ? dri2_dpy->vtbl->get_dri_drawable(rsurf) : NULL;
-   cctx = (dri2_ctx) ? dri2_ctx->dri_context : NULL;
+   unbind = (cctx == NULL && ddraw == NULL && rdraw == NULL);
 
-   if (cctx || ddraw || rdraw) {
-      if (!dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
-         _EGLContext *tmp_ctx;
+   if (!unbind && !dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
+      /* undo the previous _eglBindContext */
+      _eglBindContext(old_ctx, old_dsurf, old_rsurf, &ctx, &tmp_dsurf, &tmp_rsurf);
+      assert(&dri2_ctx->base == ctx &&
+             tmp_dsurf == dsurf &&
+             tmp_rsurf == rsurf);
 
-         /* dri2_dpy->core->bindContext failed. We cannot tell for sure why, but
-          * setting the error to EGL_BAD_MATCH is surely better than leaving it
-          * as EGL_SUCCESS.
-          */
-         egl_error = EGL_BAD_MATCH;
-
-         /* undo the previous _eglBindContext */
-         _eglBindContext(old_ctx, old_dsurf, old_rsurf, &ctx, &tmp_dsurf, &tmp_rsurf);
-         assert(&dri2_ctx->base == ctx &&
-                tmp_dsurf == dsurf &&
-                tmp_rsurf == rsurf);
-
-         _eglPutSurface(dsurf);
-         _eglPutSurface(rsurf);
-         _eglPutContext(ctx);
-
-         _eglPutSurface(old_dsurf);
-         _eglPutSurface(old_rsurf);
-         _eglPutContext(old_ctx);
-
-         ddraw = (old_dsurf) ? dri2_dpy->vtbl->get_dri_drawable(old_dsurf) : NULL;
-         rdraw = (old_rsurf) ? dri2_dpy->vtbl->get_dri_drawable(old_rsurf) : NULL;
-         cctx = (old_ctx) ? dri2_egl_context(old_ctx)->dri_context : NULL;
-
-         /* undo the previous dri2_dpy->core->unbindContext */
-         if (dri2_dpy->core->bindContext(cctx, ddraw, rdraw)) {
-            if (old_dsurf && _eglSurfaceInSharedBufferMode(old_dsurf) &&
-                old_dri2_dpy->vtbl->set_shared_buffer_mode) {
-               old_dri2_dpy->vtbl->set_shared_buffer_mode(old_disp, old_dsurf, true);
-            }
-
-            return _eglError(egl_error, "eglMakeCurrent");
-         }
-
-         /* We cannot restore the same state as it was before calling
-          * eglMakeCurrent() and the spec isn't clear about what to do. We
-          * can prevent EGL from calling into the DRI driver with no DRI
-          * context bound.
-          */
-         dsurf = rsurf = NULL;
-         ctx = NULL;
-
-         _eglBindContext(ctx, dsurf, rsurf, &tmp_ctx, &tmp_dsurf, &tmp_rsurf);
-         assert(tmp_ctx == old_ctx && tmp_dsurf == old_dsurf &&
-                tmp_rsurf == old_rsurf);
-
-         _eglLog(_EGL_WARNING, "DRI2: failed to rebind the previous context");
-      } else {
-         /* dri2_dpy->core->bindContext succeeded, so take a reference on the
-          * dri2_dpy. This prevents dri2_dpy from being reinitialized when a
-          * EGLDisplay is terminated and then initialized again while a
-          * context is still bound. See dri2_intitialize() for a more in depth
-          * explanation. */
-         dri2_dpy->ref_count++;
+      if (old_dsurf && _eglSurfaceInSharedBufferMode(old_dsurf) &&
+          old_dri2_dpy->vtbl->set_shared_buffer_mode) {
+         old_dri2_dpy->vtbl->set_shared_buffer_mode(old_disp, old_dsurf, true);
       }
+
+      _eglPutSurface(dsurf);
+      _eglPutSurface(rsurf);
+      _eglPutContext(ctx);
+
+      _eglPutSurface(old_dsurf);
+      _eglPutSurface(old_rsurf);
+      _eglPutContext(old_ctx);
+
+      /* dri2_dpy->core->bindContext failed. We cannot tell for sure why, but
+       * setting the error to EGL_BAD_MATCH is surely better than leaving it
+       * as EGL_SUCCESS.
+       */
+      return _eglError(EGL_BAD_MATCH, "eglMakeCurrent");
    }
 
    dri2_destroy_surface(drv, disp, old_dsurf);
    dri2_destroy_surface(drv, disp, old_rsurf);
 
+   if (!unbind)
+      dri2_dpy->ref_count++;
+
    if (old_ctx) {
       dri2_destroy_context(drv, disp, old_ctx);
       dri2_display_release(old_disp);
    }
-
-   if (egl_error != EGL_SUCCESS)
-      return _eglError(egl_error, "eglMakeCurrent");
 
    if (dsurf && _eglSurfaceHasMutableRenderBuffer(dsurf) &&
        dri2_dpy->vtbl->set_shared_buffer_mode) {

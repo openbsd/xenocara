@@ -99,21 +99,33 @@ private:
 };
 
 static void
-init_gl_program(struct gl_program *prog, bool is_arb_asm, gl_shader_stage stage)
+init_gl_program(struct gl_program *prog, bool is_arb_asm, GLenum target)
 {
    prog->RefCount = 1;
    prog->Format = GL_PROGRAM_FORMAT_ASCII_ARB;
    prog->is_arb_asm = is_arb_asm;
-   prog->info.stage = stage;
+   prog->info.stage = (gl_shader_stage)_mesa_program_enum_to_shader_stage(target);
 }
 
 static struct gl_program *
-new_program(UNUSED struct gl_context *ctx, gl_shader_stage stage,
+new_program(UNUSED struct gl_context *ctx, GLenum target,
             UNUSED GLuint id, bool is_arb_asm)
 {
-   struct gl_program *prog = rzalloc(NULL, struct gl_program);
-   init_gl_program(prog, is_arb_asm, stage);
-   return prog;
+   switch (target) {
+   case GL_VERTEX_PROGRAM_ARB: /* == GL_VERTEX_PROGRAM_NV */
+   case GL_GEOMETRY_PROGRAM_NV:
+   case GL_TESS_CONTROL_PROGRAM_NV:
+   case GL_TESS_EVALUATION_PROGRAM_NV:
+   case GL_FRAGMENT_PROGRAM_ARB:
+   case GL_COMPUTE_PROGRAM_NV: {
+      struct gl_program *prog = rzalloc(NULL, struct gl_program);
+      init_gl_program(prog, is_arb_asm, target);
+      return prog;
+   }
+   default:
+      printf("bad target in new_program\n");
+      return NULL;
+   }
 }
 
 static const struct standalone_options *options;
@@ -432,14 +444,6 @@ standalone_compile_shader(const struct standalone_options *_options,
       initialize_context(ctx, API_OPENGLES2);
    } else {
       initialize_context(ctx, options->glsl_version > 130 ? API_OPENGL_CORE : API_OPENGL_COMPAT);
-   }
-
-   if (options->lower_precision) {
-      for (unsigned i = MESA_SHADER_VERTEX; i <= MESA_SHADER_FRAGMENT; i++) {
-         struct gl_shader_compiler_options *options =
-            &ctx->Const.ShaderCompilerOptions[i];
-         options->LowerPrecision = true;
-      }
    }
 
    struct gl_shader_program *whole_program;

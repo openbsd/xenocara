@@ -548,6 +548,7 @@ nir_tex_instr_create(nir_shader *shader, unsigned num_srcs)
       src_init(&instr->src[i].src);
 
    instr->texture_index = 0;
+   instr->texture_array_size = 0;
    instr->sampler_index = 0;
    memcpy(instr->tg4_offsets, default_tg4_offsets, sizeof(instr->tg4_offsets));
 
@@ -1323,8 +1324,8 @@ nir_src_is_dynamically_uniform(nir_src src)
    /* As are uniform variables */
    if (src.ssa->parent_instr->type == nir_instr_type_intrinsic) {
       nir_intrinsic_instr *intr = nir_instr_as_intrinsic(src.ssa->parent_instr);
-      if (intr->intrinsic == nir_intrinsic_load_uniform &&
-          nir_src_is_dynamically_uniform(intr->src[0]))
+
+      if (intr->intrinsic == nir_intrinsic_load_uniform)
          return true;
    }
 
@@ -2252,15 +2253,4 @@ nir_rewrite_image_intrinsic(nir_intrinsic_instr *intrin, nir_ssa_def *src,
 
    nir_instr_rewrite_src(&intrin->instr, &intrin->src[0],
                          nir_src_for_ssa(src));
-}
-
-unsigned
-nir_image_intrinsic_coord_components(const nir_intrinsic_instr *instr)
-{
-   enum glsl_sampler_dim dim = nir_intrinsic_image_dim(instr);
-   int coords = glsl_get_sampler_dim_coordinate_components(dim);
-   if (dim == GLSL_SAMPLER_DIM_CUBE)
-      return coords;
-   else
-      return coords + nir_intrinsic_image_array(instr);
 }

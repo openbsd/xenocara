@@ -1640,9 +1640,6 @@ offsets = {
     "GetNamedStringivARB": 1604,
     "EGLImageTargetTexStorageEXT" : 1605,
     "EGLImageTargetTextureStorageEXT" : 1606,
-    "CopyImageSubDataNV": 1607,
-    "ViewportSwizzleNV": 1608,
-    "AlphaToCoverageDitherControlNV": 1609,
 }
 
 functions = [

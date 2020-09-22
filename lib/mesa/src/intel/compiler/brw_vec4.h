@@ -28,9 +28,7 @@
 
 #ifdef __cplusplus
 #include "brw_ir_vec4.h"
-#include "brw_ir_performance.h"
 #include "brw_vec4_builder.h"
-#include "brw_vec4_live_variables.h"
 #endif
 
 #include "compiler/glsl/ir.h"
@@ -48,13 +46,15 @@ brw_vec4_generate_assembly(const struct brw_compiler *compiler,
                            const nir_shader *nir,
                            struct brw_vue_prog_data *prog_data,
                            const struct cfg_t *cfg,
-                           const brw::performance &perf,
                            struct brw_compile_stats *stats);
 
 #ifdef __cplusplus
 } /* extern "C" */
 
 namespace brw {
+
+class vec4_live_variables;
+
 /**
  * The vertex shader front-end.
  *
@@ -107,10 +107,9 @@ public:
 
    int first_non_payload_grf;
    unsigned int max_grf;
-   BRW_ANALYSIS(live_analysis, brw::vec4_live_variables,
-                backend_shader *) live_analysis;
-   BRW_ANALYSIS(performance_analysis, brw::performance,
-                vec4_visitor *) performance_analysis;
+   int *virtual_grf_start;
+   int *virtual_grf_end;
+   brw::vec4_live_variables *live_intervals;
 
    bool need_all_constants_in_pull_buffer;
 
@@ -139,14 +138,18 @@ public:
    void move_push_constants_to_pull_constants();
    void split_uniform_registers();
    void pack_uniform_registers();
-   virtual void invalidate_analysis(brw::analysis_dependency_class c);
+   void calculate_live_intervals();
+   void invalidate_live_intervals();
    void split_virtual_grfs();
    bool opt_vector_float();
    bool opt_reduce_swizzle();
    bool dead_code_eliminate();
+   int var_range_start(unsigned v, unsigned n) const;
+   int var_range_end(unsigned v, unsigned n) const;
+   bool virtual_grf_interferes(int a, int b);
    bool opt_cmod_propagation();
    bool opt_copy_propagation(bool do_constant_prop = true);
-   bool opt_cse_local(bblock_t *block, const vec4_live_variables &live);
+   bool opt_cse_local(bblock_t *block);
    bool opt_cse();
    bool opt_algebraic();
    bool opt_register_coalesce();
@@ -227,6 +230,8 @@ public:
 #undef EMIT1
 #undef EMIT2
 #undef EMIT3
+
+   int implied_mrf_writes(vec4_instruction *inst);
 
    vec4_instruction *emit_minmax(enum brw_conditional_mod conditionalmod, dst_reg dst,
                                  src_reg src0, src_reg src1);
@@ -309,15 +314,15 @@ public:
 
    src_reg get_timestamp();
 
-   void dump_instruction(const backend_instruction *inst) const;
-   void dump_instruction(const backend_instruction *inst, FILE *file) const;
+   void dump_instruction(backend_instruction *inst);
+   void dump_instruction(backend_instruction *inst, FILE *file);
 
    bool is_high_sampler(src_reg sampler);
 
    bool optimize_predicate(nir_alu_instr *instr, enum brw_predicate *predicate);
 
-   void emit_conversion_from_double(dst_reg dst, src_reg src);
-   void emit_conversion_to_double(dst_reg dst, src_reg src);
+   void emit_conversion_from_double(dst_reg dst, src_reg src, bool saturate);
+   void emit_conversion_to_double(dst_reg dst, src_reg src, bool saturate);
 
    vec4_instruction *shuffle_64bit_data(dst_reg dst, src_reg src,
                                         bool for_write,

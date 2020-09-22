@@ -147,23 +147,23 @@ namespace clover {
       NULL, // clEnqueueAcquireEGLObjectsKHR
       NULL, // clEnqueueReleaseEGLObjectsKHR
       NULL, // clCreateEventFromEGLSyncKHR
-      clCreateCommandQueueWithProperties,
+      NULL, // clCreateCommandQueueWithProperties
       NULL, // clCreatePipe
       NULL, // clGetPipeInfo
-      clSVMAlloc,
-      clSVMFree,
-      clEnqueueSVMFree,
-      clEnqueueSVMMemcpy,
-      clEnqueueSVMMemFill,
-      clEnqueueSVMMap,
-      clEnqueueSVMUnmap,
+      NULL, // clSVMAlloc
+      NULL, // clSVMFree
+      NULL, // clEnqueueSVMFree
+      NULL, // clEnqueueSVMMemcpy
+      NULL, // clEnqueueSVMMemFill
+      NULL, // clEnqueueSVMMap
+      NULL, // clEnqueueSVMUnmap
       NULL, // clCreateSamplerWithProperties
-      clSetKernelArgSVMPointer,
-      clSetKernelExecInfo,
+      NULL, // clSetKernelArgSVMPointer
+      NULL, // clSetKernelExecInfo
       NULL, // clGetKernelSubGroupInfoKHR
       NULL, // clCloneKernel
       NULL, // clCreateProgramWithIL
-      clEnqueueSVMMigrateMem,
+      NULL, // clEnqueueSVMMigrateMem
       NULL, // clGetDeviceAndHostTimer
       NULL, // clGetHostTimer
       NULL, // clGetKernelSubGroupInfo

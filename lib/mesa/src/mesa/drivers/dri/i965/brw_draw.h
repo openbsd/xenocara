@@ -51,10 +51,9 @@ void brw_draw_prims(struct gl_context *ctx,
 		     GLboolean index_bounds_valid,
 		     GLuint min_index,
 		     GLuint max_index,
-                     GLuint num_instances,
-                     GLuint base_instance,
 		     struct gl_transform_feedback_object *unused_tfb_object,
-                     unsigned stream);
+                     unsigned stream,
+		     struct gl_buffer_object *indirect );
 
 void brw_init_draw_functions(struct dd_function_table *functions);
 void brw_draw_init( struct brw_context *brw );
@@ -68,7 +67,7 @@ brw_handle_primitive_restart(struct gl_context *ctx,
                              const struct _mesa_prim *prims,
                              GLuint nr_prims,
                              const struct _mesa_index_buffer *ib,
-                             GLuint num_instances, GLuint base_instance);
+                             struct gl_buffer_object *indirect);
 
 void
 brw_draw_indirect_prims(struct gl_context *ctx,

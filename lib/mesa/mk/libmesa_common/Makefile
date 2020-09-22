@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	mesa_common
 
@@ -74,15 +74,14 @@ SRCS=	arbprogparse.c \
 	glformats.c \
 	glspirv.c \
 	glthread.c \
-	glthread_bufferobj.c \
-	glthread_shaderobj.c \
-	glthread_varray.c \
 	hash.c \
 	hint.c \
 	histogram.c \
 	image.c \
+	imports.c \
 	light.c \
 	lines.c \
+	marshal.c \
 	matrix.c \
 	mipmap.c \
 	multisample.c \
@@ -204,9 +203,7 @@ SRCS+=	lex.yy.c \
 	enums.c \
 	format_fallback.c
 
-.for INDEX in 0 1 2 3 4 5 6 7
-SRCS+=	marshal_generated${INDEX}.c
-.endfor
+SRCS+=	marshal_generated.c
 
 .include "../Makefile.inc"
 

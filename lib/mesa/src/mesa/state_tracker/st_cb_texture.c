@@ -34,7 +34,7 @@
 #include "main/format_utils.h"
 #include "main/glformats.h"
 #include "main/image.h"
-
+#include "main/imports.h"
 #include "main/macros.h"
 #include "main/mipmap.h"
 #include "main/pack.h"
@@ -215,9 +215,7 @@ st_FreeTextureImageBuffer(struct gl_context *ctx,
    stImage->transfer = NULL;
    stImage->num_transfers = 0;
 
-   if (stImage->compressed_data &&
-       pipe_reference(&stImage->compressed_data->reference, NULL)) {
-      free(stImage->compressed_data->ptr);
+   if (stImage->compressed_data) {
       free(stImage->compressed_data);
       stImage->compressed_data = NULL;
    }
@@ -266,21 +264,16 @@ compressed_tex_fallback_allocate(struct st_context *st,
    if (!st_compressed_format_fallback(st, texImage->TexFormat))
       return;
 
-   if (stImage->compressed_data &&
-       pipe_reference(&stImage->compressed_data->reference, NULL)) {
-      free(stImage->compressed_data->ptr);
+   if (stImage->compressed_data)
       free(stImage->compressed_data);
-   }
 
    unsigned data_size = _mesa_format_image_size(texImage->TexFormat,
                                                 texImage->Width2,
                                                 texImage->Height2,
                                                 texImage->Depth2);
 
-   stImage->compressed_data = ST_CALLOC_STRUCT(st_compressed_data);
-   stImage->compressed_data->ptr =
+   stImage->compressed_data =
       malloc(data_size * _mesa_num_tex_faces(texImage->TexObject->Target));
-   pipe_reference_init(&stImage->compressed_data->reference, 1);
 }
 
 
@@ -327,9 +320,8 @@ st_MapTextureImage(struct gl_context *ctx,
             _mesa_format_row_stride(texImage->TexFormat, texImage->Width2);
          unsigned block_size = _mesa_get_format_bytes(texImage->TexFormat);
 
-         assert(stImage->compressed_data);
          *mapOut = itransfer->temp_data =
-            stImage->compressed_data->ptr +
+            stImage->compressed_data +
             (z * y_blocks + (y / blk_h)) * stride +
             (x / blk_w) * block_size;
          itransfer->map = map;
@@ -1495,7 +1487,7 @@ st_TexSubImage(struct gl_context *ctx, GLuint dims,
 
    /* Try texture_subdata, which should be the fastest memcpy path. */
    if (pixels &&
-       !unpack->BufferObj &&
+       !_mesa_is_bufferobj(unpack->BufferObj) &&
        _mesa_texstore_can_use_memcpy(ctx, texImage->_BaseFormat,
                                      texImage->TexFormat, format, type,
                                      unpack)) {
@@ -1565,7 +1557,7 @@ st_TexSubImage(struct gl_context *ctx, GLuint dims,
       goto fallback;
    }
 
-   if (unpack->BufferObj) {
+   if (_mesa_is_bufferobj(unpack->BufferObj)) {
       if (try_pbo_upload(ctx, dims, texImage, format, type, dst_format,
                          xoffset, yoffset, zoffset,
                          width, height, depth, pixels, unpack))
@@ -1785,7 +1777,7 @@ st_CompressedTexSubImage(struct gl_context *ctx, GLuint dims,
       goto fallback;
    }
 
-   if (!ctx->Unpack.BufferObj)
+   if (!_mesa_is_bufferobj(ctx->Unpack.BufferObj))
       goto fallback;
 
    if (st_compressed_format_fallback(st, texImage->TexFormat))
@@ -2243,8 +2235,8 @@ st_GetTexSubImage(struct gl_context * ctx,
                                           slice, 0, 0);
 
          /* get float[4] rgba row from surface */
-         pipe_get_tile_rgba(tex_xfer, map, 0, 0, width, height, dst_format,
-                            rgba);
+         pipe_get_tile_rgba_format(tex_xfer, map, 0, 0, width, height,
+                                   dst_format, rgba);
 
          _mesa_format_convert(dest, dstMesaFormat, dstStride,
                               rgba, RGBA32_FLOAT, srcStride,
@@ -2320,10 +2312,6 @@ fallback_copy_texsubimage(struct gl_context *ctx,
                            PIPE_TRANSFER_READ,
                            srcX, srcY,
                            width, height, &src_trans);
-   if (!map) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexSubImage()");
-      return;
-   }
 
    if ((baseFormat == GL_DEPTH_COMPONENT ||
         baseFormat == GL_DEPTH_STENCIL) &&
@@ -2336,10 +2324,6 @@ fallback_copy_texsubimage(struct gl_context *ctx,
                                   destX, destY, slice,
                                   dst_width, dst_height, dst_depth,
                                   &transfer);
-   if (!texDest) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexSubImage()");
-      goto err;
-   }
 
    if (baseFormat == GL_DEPTH_COMPONENT ||
        baseFormat == GL_DEPTH_STENCIL) {
@@ -2361,19 +2345,20 @@ fallback_copy_texsubimage(struct gl_context *ctx,
       data = malloc(width * sizeof(uint));
 
       if (data) {
-         unsigned dst_stride = (stImage->pt->target == PIPE_TEXTURE_1D_ARRAY ?
-                                transfer->layer_stride : transfer->stride);
          /* To avoid a large temp memory allocation, do copy row by row */
          for (row = 0; row < height; row++, srcY += yStep) {
-            util_format_unpack_z_32unorm(strb->texture->format,
-                                         data, (uint8_t *)map + src_trans->stride * srcY,
-                                         width);
+            pipe_get_tile_z(src_trans, map, 0, srcY, width, 1, data);
             if (scaleOrBias) {
                _mesa_scale_and_bias_depth_uint(ctx, width, data);
             }
 
-            util_format_pack_z_32unorm(stImage->pt->format,
-                                       texDest + row * dst_stride, data, width);
+            if (stImage->pt->target == PIPE_TEXTURE_1D_ARRAY) {
+               pipe_put_tile_z(transfer, texDest + row*transfer->layer_stride,
+                               0, 0, width, 1, data);
+            }
+            else {
+               pipe_put_tile_z(transfer, texDest, 0, row, width, 1, data);
+            }
          }
       }
       else {
@@ -2387,7 +2372,7 @@ fallback_copy_texsubimage(struct gl_context *ctx,
       GLfloat *tempSrc =
          malloc(width * height * 4 * sizeof(GLfloat));
 
-      if (tempSrc) {
+      if (tempSrc && texDest) {
          const GLint dims = 2;
          GLint dstRowStride;
          struct gl_texture_image *texImage = &stImage->base;
@@ -2408,9 +2393,9 @@ fallback_copy_texsubimage(struct gl_context *ctx,
          /* XXX this usually involves a lot of int/float conversion.
           * try to avoid that someday.
           */
-         pipe_get_tile_rgba(src_trans, map, 0, 0, width, height,
-                            util_format_linear(strb->texture->format),
-                            tempSrc);
+         pipe_get_tile_rgba_format(src_trans, map, 0, 0, width, height,
+                                   util_format_linear(strb->texture->format),
+                                   tempSrc);
 
          /* Store into texture memory.
           * Note that this does some special things such as pixel transfer
@@ -2435,7 +2420,6 @@ fallback_copy_texsubimage(struct gl_context *ctx,
    }
 
    st_texture_image_unmap(st, stImage, slice);
-err:
    pipe->transfer_unmap(pipe, src_trans);
 }
 
@@ -3073,7 +3057,7 @@ st_TestProxyTexImage(struct gl_context *ctx, GLenum target,
       }
       else {
          /* assume a full set of mipmaps */
-         pt.last_level = util_logbase2(MAX3(width, height, depth));
+         pt.last_level = _mesa_logbase2(MAX3(width, height, depth));
       }
 
       return pipe->screen->can_create_resource(pipe->screen, &pt);
@@ -3108,15 +3092,7 @@ st_TextureView(struct gl_context *ctx,
       for (face = 0; face < numFaces; face++) {
          struct st_texture_image *stImage =
             st_texture_image(texObj->Image[face][level]);
-         struct st_texture_image *origImage =
-            st_texture_image(origTexObj->Image[face][level]);
          pipe_resource_reference(&stImage->pt, tex->pt);
-         if (origImage &&
-             origImage->compressed_data) {
-            pipe_reference(NULL,
-                           &origImage->compressed_data->reference);
-            stImage->compressed_data = origImage->compressed_data;
-         }
       }
    }
 

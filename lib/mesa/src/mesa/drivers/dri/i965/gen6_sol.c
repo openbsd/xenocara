@@ -33,7 +33,6 @@
 #include "brw_defines.h"
 #include "brw_state.h"
 #include "main/transformfeedback.h"
-#include "util/u_memory.h"
 
 static void
 gen6_update_sol_surfaces(struct brw_context *brw)

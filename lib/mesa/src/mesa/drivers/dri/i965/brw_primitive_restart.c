@@ -25,6 +25,7 @@
  *
  */
 
+#include "main/imports.h"
 #include "main/bufferobj.h"
 #include "main/varray.h"
 #include "vbo/vbo.h"
@@ -51,14 +52,14 @@ can_cut_index_handle_restart_index(struct gl_context *ctx,
 
    bool cut_index_will_work;
 
-   switch (ib->index_size_shift) {
-   case 0:
+   switch (ib->index_size) {
+   case 1:
       cut_index_will_work = ctx->Array.RestartIndex == 0xff;
       break;
-   case 1:
+   case 2:
       cut_index_will_work = ctx->Array.RestartIndex == 0xffff;
       break;
-   case 2:
+   case 4:
       cut_index_will_work = ctx->Array.RestartIndex == 0xffffffff;
       break;
    default:
@@ -130,7 +131,7 @@ brw_handle_primitive_restart(struct gl_context *ctx,
                              const struct _mesa_prim *prims,
                              GLuint nr_prims,
                              const struct _mesa_index_buffer *ib,
-                             GLuint num_instances, GLuint base_instance)
+                             struct gl_buffer_object *indirect)
 {
    struct brw_context *brw = brw_context(ctx);
 
@@ -162,21 +163,14 @@ brw_handle_primitive_restart(struct gl_context *ctx,
       /* Cut index should work for primitive restart, so use it
        */
       brw->prim_restart.enable_cut_index = true;
-      brw_draw_prims(ctx, prims, nr_prims, ib, GL_FALSE, -1, -1,
-                     num_instances, base_instance, NULL, 0);
+      brw_draw_prims(ctx, prims, nr_prims, ib, GL_FALSE, -1, -1, NULL, 0,
+                     indirect);
       brw->prim_restart.enable_cut_index = false;
    } else {
       /* Not all the primitive draw modes are supported by the cut index,
        * so take the software path
        */
-      struct gl_buffer_object *indirect_data = brw->draw.draw_indirect_data;
-
-      /* Clear this to make the draw direct. */
-      brw->draw.draw_indirect_data = NULL;
-
-      vbo_sw_primitive_restart(ctx, prims, nr_prims, ib, num_instances,
-                               base_instance, indirect_data,
-                               brw->draw.draw_indirect_offset);
+      vbo_sw_primitive_restart(ctx, prims, nr_prims, ib, indirect);
    }
 
    brw->prim_restart.in_progress = false;

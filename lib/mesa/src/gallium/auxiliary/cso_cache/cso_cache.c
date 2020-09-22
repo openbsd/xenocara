@@ -37,7 +37,7 @@
 
 
 struct cso_cache {
-   struct cso_hash hashes[CSO_CACHE_MAX];
+   struct cso_hash *hashes[CSO_CACHE_MAX];
    int    max_size;
 
    cso_sanitize_callback sanitize_cb;
@@ -82,7 +82,9 @@ unsigned cso_construct_key(void *item, int item_size)
 
 static inline struct cso_hash *_cso_hash_for_type(struct cso_cache *sc, enum cso_cache_type type)
 {
-   return &sc->hashes[type];
+   struct cso_hash *hash;
+   hash = sc->hashes[type];
+   return hash;
 }
 
 static void delete_blend_state(void *state, UNUSED void *data)
@@ -250,7 +252,7 @@ struct cso_cache *cso_cache_create(void)
 
    sc->max_size           = 4096;
    for (i = 0; i < CSO_CACHE_MAX; i++)
-      cso_hash_init(&sc->hashes[i]);
+      sc->hashes[i] = cso_hash_create();
 
    sc->sanitize_cb        = sanitize_cb;
    sc->sanitize_data      = 0;
@@ -290,7 +292,7 @@ void cso_cache_delete(struct cso_cache *sc)
    cso_for_each_state(sc, CSO_VELEMENTS, delete_velements, 0);
 
    for (i = 0; i < CSO_CACHE_MAX; i++)
-      cso_hash_deinit(&sc->hashes[i]);
+      cso_hash_delete(sc->hashes[i]);
 
    FREE(sc);
 }
@@ -302,7 +304,7 @@ void cso_set_maximum_cache_size(struct cso_cache *sc, int number)
    sc->max_size = number;
 
    for (i = 0; i < CSO_CACHE_MAX; i++)
-      sanitize_hash(sc, &sc->hashes[i], i, sc->max_size);
+      sanitize_hash(sc, sc->hashes[i], i, sc->max_size);
 }
 
 int cso_maximum_cache_size(const struct cso_cache *sc)

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 LIB=	amdgpuwinsys
 
@@ -15,6 +15,7 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/winsys/amdgpu/drm \
+		-I${MESA_SRC}/src/amd \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/amd/llvm \
 		-I${MESA_SRC}/generated/src/amd/common

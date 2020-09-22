@@ -38,7 +38,6 @@
 #include "util/list.h"
 #include "vbo/vbo.h"
 #include "util/list.h"
-#include "cso_cache/cso_context.h"
 
 
 #ifdef __cplusplus
@@ -148,6 +147,7 @@ struct st_context
    boolean has_indep_blend_func;
    boolean needs_rgb_dst_alpha_override;
    boolean can_bind_const_buffer_as_vertex;
+   boolean has_signed_vertex_buffer_offset;
    boolean lower_flatshade;
    boolean lower_alpha_test;
    boolean lower_point_size;
@@ -181,10 +181,6 @@ struct st_context
    boolean invalidate_on_gl_viewport;
    boolean draw_needs_minmax_index;
    boolean has_hw_atomics;
-
-
-   /* driver supports scissored clears */
-   boolean can_scissor_clear;
 
    /* Some state is contained in constant objects.
     * Other state is just parameter values.
@@ -327,7 +323,7 @@ struct st_context
    } pbo;
 
    /** for drawing with st_util_vertex */
-   struct cso_velems_state util_velems;
+   struct pipe_vertex_element util_velems[3];
 
    /** passthrough vertex shader matching the util_velem attributes */
    void *passthrough_vs;

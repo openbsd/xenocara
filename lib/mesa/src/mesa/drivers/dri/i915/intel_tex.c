@@ -4,7 +4,6 @@
 #include "main/teximage.h"
 #include "main/mipmap.h"
 #include "drivers/common/meta.h"
-#include "util/u_memory.h"
 #include "intel_context.h"
 #include "intel_mipmap_tree.h"
 #include "intel_tex.h"

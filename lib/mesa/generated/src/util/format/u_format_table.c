@@ -6927,7 +6927,7 @@ util_format_a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_a16_float pixel;
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -6979,7 +6979,7 @@ util_format_a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_a16_float pixel;
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -7024,7 +7024,7 @@ util_format_l16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_l16_float pixel;
-         pixel.rgb = util_float_to_half_rtz(src[0]);
+         pixel.rgb = util_float_to_half(src[0]);
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -7076,7 +7076,7 @@ util_format_l16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_l16_float pixel;
-         pixel.rgb = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
+         pixel.rgb = util_float_to_half((float)(src[0] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -7137,13 +7137,13 @@ util_format_l16a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_l16a16_float pixel;
-         pixel.rgb = util_float_to_half_rtz(src[0]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.rgb = util_float_to_half(src[0]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_l16a16_float pixel;
-         pixel.rgb = util_float_to_half_rtz(src[0]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.rgb = util_float_to_half(src[0]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -7215,13 +7215,13 @@ util_format_l16a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_l16a16_float pixel;
-         pixel.rgb = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.rgb = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_l16a16_float pixel;
-         pixel.rgb = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.rgb = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -7267,7 +7267,7 @@ util_format_i16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_i16_float pixel;
-         pixel.rgba = util_float_to_half_rtz(src[0]);
+         pixel.rgba = util_float_to_half(src[0]);
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -7319,7 +7319,7 @@ util_format_i16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_i16_float pixel;
-         pixel.rgba = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
+         pixel.rgba = util_float_to_half((float)(src[0] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -13885,7 +13885,7 @@ util_format_r16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_r16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
+         pixel.r = util_float_to_half(src[0]);
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -13937,7 +13937,7 @@ util_format_r16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          struct util_format_r16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 2;
@@ -13998,13 +13998,13 @@ util_format_r16g16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14076,13 +14076,13 @@ util_format_r16g16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14146,15 +14146,15 @@ util_format_r16g16b16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14226,15 +14226,15 @@ util_format_r16g16b16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stri
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14300,17 +14300,17 @@ util_format_r16g16b16a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16a16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16a16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14382,17 +14382,17 @@ util_format_r16g16b16a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16a16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16a16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -23213,6 +23213,29 @@ util_format_r8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED uns
 }
 
 static inline void
+util_format_r8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t r;
+         r = value;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -23319,6 +23342,43 @@ util_format_r8g8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED u
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r8g8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         r = value >> 8;
+         g = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         r = (value) & 0xff;
+         g = value >> 8;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -23438,6 +23498,37 @@ util_format_r8g8b8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = (unsigned)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r8g8b8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r8g8b8_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r8g8b8_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 3;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -23580,6 +23671,51 @@ util_format_r8g8b8a8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_r8g8b8a8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         uint32_t a;
+         r = value >> 24;
+         g = (value >> 16) & 0xff;
+         b = (value >> 8) & 0xff;
+         a = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         uint32_t a;
+         r = (value) & 0xff;
+         g = (value >> 8) & 0xff;
+         b = (value >> 16) & 0xff;
+         a = value >> 24;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r8g8b8a8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -23662,6 +23798,29 @@ util_format_r8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned i
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_r8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t r;
+         r = (int8_t)(value) ;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -23771,6 +23930,43 @@ util_format_r8g8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r8g8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t r;
+         int16_t g;
+         r = ((int16_t)(value) ) >> 8;
+         g = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t r;
+         int16_t g;
+         r = ((int16_t)(value << 8) ) >> 8;
+         g = ((int16_t)(value) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -23890,6 +24086,37 @@ util_format_r8g8b8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = (int)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r8g8b8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r8g8b8_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r8g8b8_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 3;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24032,6 +24259,51 @@ util_format_r8g8b8a8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsi
 }
 
 static inline void
+util_format_r8g8b8a8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         int32_t a;
+         r = ((int32_t)(value) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         a = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         int32_t a;
+         r = ((int32_t)(value << 24) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         a = ((int32_t)(value) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r8g8b8a8_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -24114,6 +24386,29 @@ util_format_r16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_r16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         r = value;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24223,6 +24518,43 @@ util_format_r16g16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         r = value >> 16;
+         g = (value) & 0xffff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         r = (value) & 0xffff;
+         g = value >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24342,6 +24674,37 @@ util_format_r16g16b16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNU
          dst[2] = (unsigned)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16b16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r16g16b16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 6;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24470,6 +24833,37 @@ util_format_r16g16b16a16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, 
 }
 
 static inline void
+util_format_r16g16b16a16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16a16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = (int)pixel.a; /* a */
+#else
+         struct util_format_r16g16b16a16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = (int)pixel.a; /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r16g16b16a16_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -24552,6 +24946,29 @@ util_format_r16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_r16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t r;
+         r = (int16_t)(value) ;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24661,6 +25078,43 @@ util_format_r16g16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         r = ((int32_t)(value) ) >> 16;
+         g = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         r = ((int32_t)(value << 16) ) >> 16;
+         g = ((int32_t)(value) ) >> 16;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24780,6 +25234,37 @@ util_format_r16g16b16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED uns
          dst[2] = (int)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16b16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r16g16b16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 6;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -24908,6 +25393,37 @@ util_format_r16g16b16a16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED 
 }
 
 static inline void
+util_format_r16g16b16a16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16a16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#else
+         struct util_format_r16g16b16a16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r16g16b16a16_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -24990,6 +25506,29 @@ util_format_r32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_r32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         r = value;
+         dst[0] = (int)MIN2(r, 2147483647); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25097,6 +25636,37 @@ util_format_r32g32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r32g32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25216,6 +25786,37 @@ util_format_r32g32b32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNU
          dst[2] = pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r32g32b32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32b32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 12;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25344,6 +25945,37 @@ util_format_r32g32b32a32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, 
 }
 
 static inline void
+util_format_r32g32b32a32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#else
+         struct util_format_r32g32b32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#endif
+         src += 16;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r32g32b32a32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -25426,6 +26058,29 @@ util_format_r32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_r32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         r = (int32_t)(value) ;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25533,6 +26188,37 @@ util_format_r32g32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r32g32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25652,6 +26338,37 @@ util_format_r32g32b32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED uns
          dst[2] = pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r32g32b32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32b32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 12;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -25780,6 +26497,37 @@ util_format_r32g32b32a32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED 
 }
 
 static inline void
+util_format_r32g32b32a32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#else
+         struct util_format_r32g32b32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#endif
+         src += 16;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r32g32b32a32_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -25865,6 +26613,29 @@ util_format_a8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED uns
 }
 
 static inline void
+util_format_a8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t a;
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -25938,6 +26709,29 @@ util_format_i8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED uns
 }
 
 static inline void
+util_format_i8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t rgba;
+         rgba = value;
+         dst[0] = (int)rgba; /* r */
+         dst[1] = (int)rgba; /* g */
+         dst[2] = (int)rgba; /* b */
+         dst[3] = (int)rgba; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26008,6 +26802,29 @@ util_format_l8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED uns
          dst[1] = (unsigned)rgb; /* g */
          dst[2] = (unsigned)rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t rgb;
+         rgb = value;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -26120,6 +26937,43 @@ util_format_l8a8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED u
 }
 
 static inline void
+util_format_l8a8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgb;
+         uint16_t a;
+         rgb = value >> 8;
+         a = (value) & 0xff;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgb;
+         uint16_t a;
+         rgb = (value) & 0xff;
+         a = value >> 8;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_l8a8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26201,6 +27055,29 @@ util_format_a8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned i
 }
 
 static inline void
+util_format_a8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t a;
+         a = (int8_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a8_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26274,6 +27151,29 @@ util_format_i8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned i
 }
 
 static inline void
+util_format_i8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgba;
+         rgba = (int8_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgba, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgba, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgba, 0); /* b */
+         dst[3] = (unsigned)MAX2(rgba, 0); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i8_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26344,6 +27244,29 @@ util_format_l8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned i
          dst[1] = (int)rgb; /* g */
          dst[2] = (int)rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgb;
+         rgb = (int8_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -26456,6 +27379,43 @@ util_format_l8a8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned
 }
 
 static inline void
+util_format_l8a8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         int16_t a;
+         rgb = ((int16_t)(value) ) >> 8;
+         a = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         int16_t a;
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         a = ((int16_t)(value) ) >> 8;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_l8a8_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26537,6 +27497,29 @@ util_format_a16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
 }
 
 static inline void
+util_format_a16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a16_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26610,6 +27593,29 @@ util_format_i16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
 }
 
 static inline void
+util_format_i16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgba;
+         rgba = value;
+         dst[0] = (int)rgba; /* r */
+         dst[1] = (int)rgba; /* g */
+         dst[2] = (int)rgba; /* b */
+         dst[3] = (int)rgba; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i16_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26680,6 +27686,29 @@ util_format_l16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
          dst[1] = (unsigned)rgb; /* g */
          dst[2] = (unsigned)rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgb;
+         rgb = value;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -26792,6 +27821,43 @@ util_format_l16a16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_l16a16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         uint32_t a;
+         rgb = value >> 16;
+         a = (value) & 0xffff;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         uint32_t a;
+         rgb = (value) & 0xffff;
+         a = value >> 16;
+         dst[0] = (int)rgb; /* r */
+         dst[1] = (int)rgb; /* g */
+         dst[2] = (int)rgb; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_l16a16_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26873,6 +27939,29 @@ util_format_a16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
 }
 
 static inline void
+util_format_a16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         a = (int16_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a16_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -26946,6 +28035,29 @@ util_format_i16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
 }
 
 static inline void
+util_format_i16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgba;
+         rgba = (int16_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgba, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgba, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgba, 0); /* b */
+         dst[3] = (unsigned)MAX2(rgba, 0); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i16_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27016,6 +28128,29 @@ util_format_l16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
          dst[1] = (int)rgb; /* g */
          dst[2] = (int)rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         rgb = (int16_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -27128,6 +28263,43 @@ util_format_l16a16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
 }
 
 static inline void
+util_format_l16a16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         int32_t a;
+         rgb = ((int32_t)(value) ) >> 16;
+         a = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         int32_t a;
+         rgb = ((int32_t)(value << 16) ) >> 16;
+         a = ((int32_t)(value) ) >> 16;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_l16a16_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27209,6 +28381,29 @@ util_format_a32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
 }
 
 static inline void
+util_format_a32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)MIN2(a, 2147483647); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27282,6 +28477,29 @@ util_format_i32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
 }
 
 static inline void
+util_format_i32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgba;
+         rgba = value;
+         dst[0] = (int)MIN2(rgba, 2147483647); /* r */
+         dst[1] = (int)MIN2(rgba, 2147483647); /* g */
+         dst[2] = (int)MIN2(rgba, 2147483647); /* b */
+         dst[3] = (int)MIN2(rgba, 2147483647); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27352,6 +28570,29 @@ util_format_l32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED un
          dst[1] = rgb; /* g */
          dst[2] = rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         rgb = value;
+         dst[0] = (int)MIN2(rgb, 2147483647); /* r */
+         dst[1] = (int)MIN2(rgb, 2147483647); /* g */
+         dst[2] = (int)MIN2(rgb, 2147483647); /* b */
+         dst[3] = 1; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -27462,6 +28703,37 @@ util_format_l32a32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_l32a32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_l32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.rgb, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.rgb, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.rgb, 2147483647); /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#else
+         struct util_format_l32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.rgb, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.rgb, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.rgb, 2147483647); /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_l32a32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27543,6 +28815,29 @@ util_format_a32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
 }
 
 static inline void
+util_format_a32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         a = (int32_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a32_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27616,6 +28911,29 @@ util_format_i32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
 }
 
 static inline void
+util_format_i32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgba;
+         rgba = (int32_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgba, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgba, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgba, 0); /* b */
+         dst[3] = (unsigned)MAX2(rgba, 0); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_i32_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -27686,6 +29004,29 @@ util_format_l32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned 
          dst[1] = rgb; /* g */
          dst[2] = rgb; /* b */
          dst[3] = 1; /* a */
+}
+
+static inline void
+util_format_l32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         rgb = (int32_t)(value) ;
+         dst[0] = (unsigned)MAX2(rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(rgb, 0); /* b */
+         dst[3] = 1; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -27793,6 +29134,37 @@ util_format_l32a32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = pixel.rgb; /* b */
          dst[3] = pixel.a; /* a */
 #endif
+}
+
+static inline void
+util_format_l32a32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_l32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#else
+         struct util_format_l32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.rgb, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.rgb, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.rgb, 0); /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -27912,6 +29284,37 @@ util_format_b8g8r8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = (unsigned)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_b8g8r8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_b8g8r8_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_b8g8r8_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 3;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -28054,6 +29457,51 @@ util_format_b8g8r8a8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_b8g8r8a8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         uint32_t a;
+         b = value >> 24;
+         g = (value >> 16) & 0xff;
+         r = (value >> 8) & 0xff;
+         a = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         uint32_t a;
+         b = (value) & 0xff;
+         g = (value >> 8) & 0xff;
+         r = (value >> 16) & 0xff;
+         a = value >> 24;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_b8g8r8a8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -28174,6 +29622,37 @@ util_format_b8g8r8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = (int)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_b8g8r8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_b8g8r8_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_b8g8r8_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 3;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -28313,6 +29792,51 @@ util_format_b8g8r8a8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsi
          dst[2] = (int)b; /* b */
          dst[3] = (int)a; /* a */
 #endif
+}
+
+static inline void
+util_format_b8g8r8a8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         int32_t a;
+         b = ((int32_t)(value) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value << 16) ) >> 24;
+         a = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         int32_t a;
+         b = ((int32_t)(value << 24) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 8) ) >> 24;
+         a = ((int32_t)(value) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -28457,6 +29981,51 @@ util_format_a8r8g8b8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_a8r8g8b8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 24;
+         r = (value >> 16) & 0xff;
+         g = (value >> 8) & 0xff;
+         b = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = (value) & 0xff;
+         r = (value >> 8) & 0xff;
+         g = (value >> 16) & 0xff;
+         b = value >> 24;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a8r8g8b8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -28595,6 +30164,51 @@ util_format_a8b8g8r8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_a8b8g8r8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 24;
+         b = (value >> 16) & 0xff;
+         g = (value >> 8) & 0xff;
+         r = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = (value) & 0xff;
+         b = (value >> 8) & 0xff;
+         g = (value >> 16) & 0xff;
+         r = value >> 24;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -28739,6 +30353,51 @@ util_format_a2r10g10b10_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, U
 }
 
 static inline void
+util_format_a2r10g10b10_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         uint32_t a;
+         b = value >> 22;
+         g = (value >> 12) & 0x3ff;
+         r = (value >> 2) & 0x3ff;
+         a = (value) & 0x3;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = (value) & 0x3;
+         r = (value >> 2) & 0x3ff;
+         g = (value >> 12) & 0x3ff;
+         b = value >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a2r10g10b10_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -28877,6 +30536,51 @@ util_format_a2b10g10r10_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, U
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_a2b10g10r10_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         uint32_t a;
+         r = value >> 22;
+         g = (value >> 12) & 0x3ff;
+         b = (value >> 2) & 0x3ff;
+         a = (value) & 0x3;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = (value) & 0x3;
+         b = (value >> 2) & 0x3ff;
+         g = (value >> 12) & 0x3ff;
+         r = value >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -29021,6 +30725,51 @@ util_format_b10g10r10a2_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, U
 }
 
 static inline void
+util_format_b10g10r10a2_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         uint32_t a;
+         b = (value) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value >> 20) & 0x3ff;
+         a = value >> 30;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_b10g10r10a2_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -29162,6 +30911,51 @@ util_format_b10g10r10a2_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED u
 }
 
 static inline void
+util_format_b10g10r10a2_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         int32_t a;
+         b = ((int32_t)(value << 22) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 2) ) >> 22;
+         a = ((int32_t)(value) ) >> 30;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_b10g10r10a2_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -29290,6 +31084,47 @@ util_format_r5g6b5_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = (unsigned)b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r5g6b5_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         b = value >> 11;
+         g = (value >> 5) & 0x3f;
+         r = (value) & 0x1f;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         r = (value) & 0x1f;
+         g = (value >> 5) & 0x3f;
+         b = value >> 11;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -29422,6 +31257,47 @@ util_format_b5g6r5_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_b5g6r5_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
+         g = (value >> 5) & 0x3f;
+         b = (value) & 0x1f;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         b = (value) & 0x1f;
+         g = (value >> 5) & 0x3f;
+         r = value >> 11;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_b5g6r5_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -29551,6 +31427,47 @@ util_format_r3g3b2_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_r3g3b2_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t b;
+         uint8_t g;
+         uint8_t r;
+         b = value >> 5;
+         g = (value >> 2) & 0x7;
+         r = (value) & 0x3;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t r;
+         uint8_t g;
+         uint8_t b;
+         r = (value) & 0x7;
+         g = (value >> 3) & 0x7;
+         b = value >> 6;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r3g3b2_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -29677,6 +31594,47 @@ util_format_b2g3r3_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
          dst[2] = (unsigned)b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_b2g3r3_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t r;
+         uint8_t g;
+         uint8_t b;
+         r = value >> 5;
+         g = (value >> 2) & 0x7;
+         b = (value) & 0x3;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t b;
+         uint8_t g;
+         uint8_t r;
+         b = (value) & 0x3;
+         g = (value >> 2) & 0x7;
+         r = value >> 5;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -29816,6 +31774,51 @@ util_format_r4g4b4a4_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_r4g4b4a4_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         a = value >> 12;
+         b = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         r = (value) & 0xf;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         uint16_t a;
+         r = (value) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value >> 8) & 0xf;
+         a = value >> 12;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -29960,6 +31963,51 @@ util_format_b4g4r4a4_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_b4g4r4a4_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 12;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         uint16_t a;
+         b = (value) & 0xf;
+         g = (value >> 4) & 0xf;
+         r = (value >> 8) & 0xf;
+         a = value >> 12;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_b4g4r4a4_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -30098,6 +32146,51 @@ util_format_a4r4g4b4_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_a4r4g4b4_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         uint16_t a;
+         b = value >> 12;
+         g = (value >> 8) & 0xf;
+         r = (value >> 4) & 0xf;
+         a = (value) & 0xf;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = (value) & 0xf;
+         r = (value >> 4) & 0xf;
+         g = (value >> 8) & 0xf;
+         b = value >> 12;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -30242,6 +32335,51 @@ util_format_a4b4g4r4_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_a4b4g4r4_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         uint16_t a;
+         r = value >> 12;
+         g = (value >> 8) & 0xf;
+         b = (value >> 4) & 0xf;
+         a = (value) & 0xf;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         a = (value) & 0xf;
+         b = (value >> 4) & 0xf;
+         g = (value >> 8) & 0xf;
+         r = value >> 12;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a4b4g4r4_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -30380,6 +32518,51 @@ util_format_a1r5g5b5_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_a1r5g5b5_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         uint16_t a;
+         b = value >> 11;
+         g = (value >> 6) & 0x1f;
+         r = (value >> 1) & 0x1f;
+         a = (value) & 0x1;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         a = (value) & 0x1;
+         b = (value >> 1) & 0x1f;
+         g = (value >> 6) & 0x1f;
+         r = value >> 11;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -30524,6 +32707,51 @@ util_format_a1b5g5r5_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_a1b5g5r5_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         uint16_t a;
+         r = value >> 11;
+         g = (value >> 6) & 0x1f;
+         b = (value >> 1) & 0x1f;
+         a = (value) & 0x1;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         a = (value) & 0x1;
+         b = (value >> 1) & 0x1f;
+         g = (value >> 6) & 0x1f;
+         r = value >> 11;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a1b5g5r5_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -30665,6 +32893,51 @@ util_format_r5g5b5a1_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_r5g5b5a1_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         a = value >> 11;
+         b = (value >> 6) & 0x1f;
+         g = (value >> 1) & 0x1f;
+         r = (value) & 0x1;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         uint16_t a;
+         r = (value) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value >> 10) & 0x1f;
+         a = value >> 15;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r5g5b5a1_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -30803,6 +33076,51 @@ util_format_b5g5r5a1_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_b5g5r5a1_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 15;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t b;
+         uint16_t g;
+         uint16_t r;
+         uint16_t a;
+         b = (value) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         r = (value >> 10) & 0x1f;
+         a = value >> 15;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -31277,6 +33595,47 @@ util_format_r8g8b8x8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUS
 }
 
 static inline void
+util_format_r8g8b8x8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         r = value >> 24;
+         g = (value >> 16) & 0xff;
+         b = (value >> 8) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         r = (value) & 0xff;
+         g = (value >> 8) & 0xff;
+         b = (value >> 16) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r8g8b8x8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -31403,6 +33762,47 @@ util_format_r8g8b8x8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsi
          dst[2] = (int)b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r8g8b8x8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         r = ((int32_t)(value) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         r = ((int32_t)(value << 24) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -31967,15 +34367,15 @@ util_format_r16g16b16x16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16x16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16x16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.g = util_float_to_half_rtz(src[1]);
-         pixel.b = util_float_to_half_rtz(src[2]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.g = util_float_to_half(src[1]);
+         pixel.b = util_float_to_half(src[2]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -32047,15 +34447,15 @@ util_format_r16g16b16x16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16g16b16x16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16g16b16x16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.g = util_float_to_half_rtz((float)(src[1] * (1.0f/0xff)));
-         pixel.b = util_float_to_half_rtz((float)(src[2] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.g = util_float_to_half((float)(src[1] * (1.0f/0xff)));
+         pixel.b = util_float_to_half((float)(src[2] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -32158,6 +34558,37 @@ util_format_r16g16b16x16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, 
          dst[2] = (unsigned)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16b16x16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16x16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r16g16b16x16_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)pixel.r; /* r */
+         dst[1] = (int)pixel.g; /* g */
+         dst[2] = (int)pixel.b; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -32281,6 +34712,37 @@ util_format_r16g16b16x16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED 
          dst[2] = (int)pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r16g16b16x16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r16g16b16x16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r16g16b16x16_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -32561,6 +35023,37 @@ util_format_r32g32b32x32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, 
 }
 
 static inline void
+util_format_r32g32b32x32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32x32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32b32x32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = (int)MIN2(pixel.g, 2147483647); /* g */
+         dst[2] = (int)MIN2(pixel.b, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 16;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r32g32b32x32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -32681,6 +35174,37 @@ util_format_r32g32b32x32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED 
          dst[2] = pixel.b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_r32g32b32x32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32g32b32x32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r32g32b32x32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = (unsigned)MAX2(pixel.g, 0); /* g */
+         dst[2] = (unsigned)MAX2(pixel.b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 16;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -33225,13 +35749,13 @@ util_format_r16a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16a16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16a16_float pixel;
-         pixel.r = util_float_to_half_rtz(src[0]);
-         pixel.a = util_float_to_half_rtz(src[3]);
+         pixel.r = util_float_to_half(src[0]);
+         pixel.a = util_float_to_half(src[3]);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -33303,13 +35827,13 @@ util_format_r16a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #if UTIL_ARCH_BIG_ENDIAN
          struct util_format_r16a16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #else
          struct util_format_r16a16_float pixel;
-         pixel.r = util_float_to_half_rtz((float)(src[0] * (1.0f/0xff)));
-         pixel.a = util_float_to_half_rtz((float)(src[3] * (1.0f/0xff)));
+         pixel.r = util_float_to_half((float)(src[0] * (1.0f/0xff)));
+         pixel.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -33557,6 +36081,43 @@ util_format_r8a8_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED u
 }
 
 static inline void
+util_format_r8a8_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t a;
+         r = value >> 8;
+         a = (value) & 0xff;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t r;
+         uint16_t a;
+         r = (value) & 0xff;
+         a = value >> 8;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r8a8_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -33671,6 +36232,43 @@ util_format_r8a8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned
          dst[2] = 0; /* b */
          dst[3] = (int)a; /* a */
 #endif
+}
+
+static inline void
+util_format_r8a8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t r;
+         int16_t a;
+         r = ((int16_t)(value) ) >> 8;
+         a = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t r;
+         int16_t a;
+         r = ((int16_t)(value << 8) ) >> 8;
+         a = ((int16_t)(value) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -33791,6 +36389,43 @@ util_format_r16a16_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_r16a16_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t a;
+         r = value >> 16;
+         a = (value) & 0xffff;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t a;
+         r = (value) & 0xffff;
+         a = value >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r16a16_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -33905,6 +36540,43 @@ util_format_r16a16_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = 0; /* b */
          dst[3] = (int)a; /* a */
 #endif
+}
+
+static inline void
+util_format_r16a16_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t a;
+         r = ((int32_t)(value) ) >> 16;
+         a = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t a;
+         r = ((int32_t)(value << 16) ) >> 16;
+         a = ((int32_t)(value) ) >> 16;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -34023,6 +36695,37 @@ util_format_r32a32_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, UNUSED
 }
 
 static inline void
+util_format_r32a32_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#else
+         struct util_format_r32a32_uint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)MIN2(pixel.r, 2147483647); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (int)MIN2(pixel.a, 2147483647); /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_r32a32_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, const int *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -34135,6 +36838,37 @@ util_format_r32a32_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsign
          dst[2] = 0; /* b */
          dst[3] = pixel.a; /* a */
 #endif
+}
+
+static inline void
+util_format_r32a32_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#else
+         struct util_format_r32a32_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (unsigned)MAX2(pixel.r, 0); /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (unsigned)MAX2(pixel.a, 0); /* a */
+#endif
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -34272,6 +37006,51 @@ util_format_r10g10b10a2_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, U
          dst[2] = (unsigned)b; /* b */
          dst[3] = (unsigned)a; /* a */
 #endif
+}
+
+static inline void
+util_format_r10g10b10a2_uint_unpack_signed(int *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      int *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         uint32_t a;
+         r = (value) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value >> 20) & 0x3ff;
+         a = value >> 30;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = (int)a; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -34413,6 +37192,51 @@ util_format_r10g10b10a2_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED u
          dst[2] = (int)b; /* b */
          dst[3] = (int)a; /* a */
 #endif
+}
+
+static inline void
+util_format_r10g10b10a2_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         int32_t a;
+         r = ((int32_t)(value << 22) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 2) ) >> 22;
+         a = ((int32_t)(value) ) >> 30;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -35012,6 +37836,43 @@ util_format_g8r8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsigned
          dst[2] = 0; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_g8r8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value) ) >> 8;
+         r = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value << 8) ) >> 8;
+         r = ((int16_t)(value) ) >> 8;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -35646,6 +38507,51 @@ util_format_a8b8g8r8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsi
 }
 
 static inline void
+util_format_a8b8g8r8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value << 24) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = (unsigned)MAX2(a, 0); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static inline void
 util_format_a8b8g8r8_sint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride, const unsigned *src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y;
@@ -35944,6 +38850,47 @@ util_format_x8b8g8r8_sint_fetch_signed(int *dst, const uint8_t *src, UNUSED unsi
          dst[2] = (int)b; /* b */
          dst[3] = 1; /* a */
 #endif
+}
+
+static inline void
+util_format_x8b8g8r8_sint_unpack_unsigned(unsigned *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      unsigned *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (unsigned)MAX2(r, 0); /* r */
+         dst[1] = (unsigned)MAX2(g, 0); /* g */
+         dst[2] = (unsigned)MAX2(b, 0); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
 }
 
 static inline void
@@ -50757,7 +53704,7 @@ util_format_r8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -50821,7 +53768,7 @@ util_format_r8g8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8g8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8g8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8g8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -50885,7 +53832,7 @@ util_format_r8g8b8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8g8b8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8g8b8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8g8b8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -50949,7 +53896,7 @@ util_format_r8g8b8a8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8g8b8a8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8a8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8g8b8a8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8a8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8g8b8a8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -50993,7 +53940,7 @@ util_format_r8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8_sint_pack_signed,  /* pack_rgba_sint */
@@ -51057,7 +54004,7 @@ util_format_r8g8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8g8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8g8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8_sint_pack_signed,  /* pack_rgba_sint */
@@ -51121,7 +54068,7 @@ util_format_r8g8b8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8g8b8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8g8b8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8_sint_pack_signed,  /* pack_rgba_sint */
@@ -51185,7 +54132,7 @@ util_format_r8g8b8a8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8g8b8a8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8a8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8g8b8a8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8a8_sint_pack_signed,  /* pack_rgba_sint */
@@ -51233,7 +54180,7 @@ util_format_r16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51297,7 +54244,7 @@ util_format_r16g16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16g16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16g16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16g16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51361,7 +54308,7 @@ util_format_r16g16b16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16g16b16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16g16b16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16g16b16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51425,7 +54372,7 @@ util_format_r16g16b16a16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16g16b16a16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16a16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16g16b16a16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16a16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16g16b16a16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51469,7 +54416,7 @@ util_format_r16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16_sint_pack_signed,  /* pack_rgba_sint */
@@ -51533,7 +54480,7 @@ util_format_r16g16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16g16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16g16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16_sint_pack_signed,  /* pack_rgba_sint */
@@ -51597,7 +54544,7 @@ util_format_r16g16b16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16g16b16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16g16b16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16_sint_pack_signed,  /* pack_rgba_sint */
@@ -51661,7 +54608,7 @@ util_format_r16g16b16a16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16g16b16a16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16a16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16g16b16a16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16a16_sint_pack_signed,  /* pack_rgba_sint */
@@ -51709,7 +54656,7 @@ util_format_r32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51773,7 +54720,7 @@ util_format_r32g32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32g32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32g32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32g32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51837,7 +54784,7 @@ util_format_r32g32b32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32g32b32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32g32b32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32g32b32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51901,7 +54848,7 @@ util_format_r32g32b32a32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32g32b32a32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32a32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32g32b32a32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32a32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32g32b32a32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -51945,7 +54892,7 @@ util_format_r32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32_sint_pack_signed,  /* pack_rgba_sint */
@@ -52009,7 +54956,7 @@ util_format_r32g32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32g32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32g32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32_sint_pack_signed,  /* pack_rgba_sint */
@@ -52073,7 +55020,7 @@ util_format_r32g32b32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32g32b32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32g32b32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32_sint_pack_signed,  /* pack_rgba_sint */
@@ -52137,7 +55084,7 @@ util_format_r32g32b32a32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32g32b32a32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32a32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32g32b32a32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32a32_sint_pack_signed,  /* pack_rgba_sint */
@@ -52185,7 +55132,7 @@ util_format_a8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52231,7 +55178,7 @@ util_format_i8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_i8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_i8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_i8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52277,7 +55224,7 @@ util_format_l8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52341,7 +55288,7 @@ util_format_l8a8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l8a8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l8a8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l8a8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l8a8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l8a8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52385,7 +55332,7 @@ util_format_a8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_a8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_a8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a8_sint_pack_signed,  /* pack_rgba_sint */
@@ -52431,7 +55378,7 @@ util_format_i8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_i8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_i8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i8_sint_pack_signed,  /* pack_rgba_sint */
@@ -52477,7 +55424,7 @@ util_format_l8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l8_sint_pack_signed,  /* pack_rgba_sint */
@@ -52541,7 +55488,7 @@ util_format_l8a8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l8a8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l8a8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l8a8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l8a8_sint_pack_signed,  /* pack_rgba_sint */
@@ -52589,7 +55536,7 @@ util_format_a16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52635,7 +55582,7 @@ util_format_i16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_i16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_i16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_i16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52681,7 +55628,7 @@ util_format_l16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52745,7 +55692,7 @@ util_format_l16a16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l16a16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l16a16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l16a16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l16a16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l16a16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -52789,7 +55736,7 @@ util_format_a16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_a16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_a16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a16_sint_pack_signed,  /* pack_rgba_sint */
@@ -52835,7 +55782,7 @@ util_format_i16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_i16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_i16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i16_sint_pack_signed,  /* pack_rgba_sint */
@@ -52881,7 +55828,7 @@ util_format_l16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l16_sint_pack_signed,  /* pack_rgba_sint */
@@ -52945,7 +55892,7 @@ util_format_l16a16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l16a16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l16a16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l16a16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l16a16_sint_pack_signed,  /* pack_rgba_sint */
@@ -52993,7 +55940,7 @@ util_format_a32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53039,7 +55986,7 @@ util_format_i32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_i32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_i32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_i32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53085,7 +56032,7 @@ util_format_l32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53149,7 +56096,7 @@ util_format_l32a32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_l32a32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l32a32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_l32a32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l32a32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_l32a32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53193,7 +56140,7 @@ util_format_a32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_a32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_a32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a32_sint_pack_signed,  /* pack_rgba_sint */
@@ -53239,7 +56186,7 @@ util_format_i32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_i32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_i32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_i32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_i32_sint_pack_signed,  /* pack_rgba_sint */
@@ -53285,7 +56232,7 @@ util_format_l32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l32_sint_pack_signed,  /* pack_rgba_sint */
@@ -53349,7 +56296,7 @@ util_format_l32a32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_l32a32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_l32a32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_l32a32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_l32a32_sint_pack_signed,  /* pack_rgba_sint */
@@ -53415,7 +56362,7 @@ util_format_b8g8r8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b8g8r8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b8g8r8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b8g8r8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b8g8r8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b8g8r8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53479,7 +56426,7 @@ util_format_b8g8r8a8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b8g8r8a8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b8g8r8a8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b8g8r8a8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b8g8r8a8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b8g8r8a8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53541,7 +56488,7 @@ util_format_b8g8r8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_b8g8r8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b8g8r8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_b8g8r8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b8g8r8_sint_pack_signed,  /* pack_rgba_sint */
@@ -53605,7 +56552,7 @@ util_format_b8g8r8a8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_b8g8r8a8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b8g8r8a8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_b8g8r8a8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b8g8r8a8_sint_pack_signed,  /* pack_rgba_sint */
@@ -53671,7 +56618,7 @@ util_format_a8r8g8b8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a8r8g8b8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a8r8g8b8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a8r8g8b8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a8r8g8b8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a8r8g8b8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53735,7 +56682,7 @@ util_format_a8b8g8r8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a8b8g8r8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a8b8g8r8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a8b8g8r8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a8b8g8r8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a8b8g8r8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53799,7 +56746,7 @@ util_format_a2r10g10b10_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a2r10g10b10_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a2r10g10b10_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a2r10g10b10_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a2r10g10b10_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a2r10g10b10_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53863,7 +56810,7 @@ util_format_a2b10g10r10_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a2b10g10r10_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a2b10g10r10_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a2b10g10r10_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a2b10g10r10_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a2b10g10r10_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53927,7 +56874,7 @@ util_format_b10g10r10a2_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b10g10r10a2_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b10g10r10a2_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b10g10r10a2_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b10g10r10a2_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b10g10r10a2_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -53989,7 +56936,7 @@ util_format_b10g10r10a2_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_b10g10r10a2_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b10g10r10a2_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_b10g10r10a2_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b10g10r10a2_sint_pack_signed,  /* pack_rgba_sint */
@@ -54055,7 +57002,7 @@ util_format_r5g6b5_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r5g6b5_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r5g6b5_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r5g6b5_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r5g6b5_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r5g6b5_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54119,7 +57066,7 @@ util_format_b5g6r5_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b5g6r5_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b5g6r5_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b5g6r5_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b5g6r5_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b5g6r5_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54183,7 +57130,7 @@ util_format_r3g3b2_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r3g3b2_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r3g3b2_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r3g3b2_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r3g3b2_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r3g3b2_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54247,7 +57194,7 @@ util_format_b2g3r3_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b2g3r3_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b2g3r3_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b2g3r3_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b2g3r3_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b2g3r3_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54311,7 +57258,7 @@ util_format_r4g4b4a4_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r4g4b4a4_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r4g4b4a4_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r4g4b4a4_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r4g4b4a4_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r4g4b4a4_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54375,7 +57322,7 @@ util_format_b4g4r4a4_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b4g4r4a4_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b4g4r4a4_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b4g4r4a4_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b4g4r4a4_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b4g4r4a4_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54439,7 +57386,7 @@ util_format_a4r4g4b4_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a4r4g4b4_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a4r4g4b4_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a4r4g4b4_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a4r4g4b4_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a4r4g4b4_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54503,7 +57450,7 @@ util_format_a4b4g4r4_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a4b4g4r4_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a4b4g4r4_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a4b4g4r4_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a4b4g4r4_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a4b4g4r4_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54567,7 +57514,7 @@ util_format_a1r5g5b5_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a1r5g5b5_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a1r5g5b5_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a1r5g5b5_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a1r5g5b5_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a1r5g5b5_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54631,7 +57578,7 @@ util_format_a1b5g5r5_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_a1b5g5r5_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a1b5g5r5_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_a1b5g5r5_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a1b5g5r5_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_a1b5g5r5_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54695,7 +57642,7 @@ util_format_r5g5b5a1_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r5g5b5a1_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r5g5b5a1_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r5g5b5a1_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r5g5b5a1_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r5g5b5a1_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54759,7 +57706,7 @@ util_format_b5g5r5a1_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_b5g5r5a1_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_b5g5r5a1_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_b5g5r5a1_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_b5g5r5a1_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_b5g5r5a1_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -54951,7 +57898,7 @@ util_format_r8g8b8x8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8g8b8x8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8x8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8g8b8x8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8x8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8g8b8x8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -55013,7 +57960,7 @@ util_format_r8g8b8x8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8g8b8x8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8g8b8x8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8g8b8x8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8g8b8x8_sint_pack_signed,  /* pack_rgba_sint */
@@ -55335,7 +58282,7 @@ util_format_r16g16b16x16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16g16b16x16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16x16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16g16b16x16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16x16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16g16b16x16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -55397,7 +58344,7 @@ util_format_r16g16b16x16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16g16b16x16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16g16b16x16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16g16b16x16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16g16b16x16_sint_pack_signed,  /* pack_rgba_sint */
@@ -55527,7 +58474,7 @@ util_format_r32g32b32x32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32g32b32x32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32x32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32g32b32x32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32x32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32g32b32x32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -55589,7 +58536,7 @@ util_format_r32g32b32x32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32g32b32x32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32g32b32x32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32g32b32x32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32g32b32x32_sint_pack_signed,  /* pack_rgba_sint */
@@ -55975,7 +58922,7 @@ util_format_r8a8_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r8a8_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8a8_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r8a8_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8a8_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r8a8_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -56037,7 +58984,7 @@ util_format_r8a8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r8a8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r8a8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r8a8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r8a8_sint_pack_signed,  /* pack_rgba_sint */
@@ -56103,7 +59050,7 @@ util_format_r16a16_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r16a16_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16a16_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r16a16_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16a16_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r16a16_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -56165,7 +59112,7 @@ util_format_r16a16_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r16a16_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r16a16_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r16a16_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r16a16_sint_pack_signed,  /* pack_rgba_sint */
@@ -56231,7 +59178,7 @@ util_format_r32a32_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r32a32_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32a32_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r32a32_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32a32_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r32a32_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -56293,7 +59240,7 @@ util_format_r32a32_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r32a32_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r32a32_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r32a32_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r32a32_sint_pack_signed,  /* pack_rgba_sint */
@@ -56359,7 +59306,7 @@ util_format_r10g10b10a2_uint_description = {
    NULL, /* pack_s_8uint */
    &util_format_r10g10b10a2_uint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r10g10b10a2_uint_pack_unsigned, /* pack_rgba_uint */
-   NULL, /* unpack_rgba_sint */
+   &util_format_r10g10b10a2_uint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r10g10b10a2_uint_pack_signed,  /* pack_rgba_sint */
    &util_format_r10g10b10a2_uint_fetch_unsigned,  /* fetch_rgba_uint */
    NULL  /* fetch_rgba_sint */
@@ -56421,7 +59368,7 @@ util_format_r10g10b10a2_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_r10g10b10a2_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_r10g10b10a2_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_r10g10b10a2_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_r10g10b10a2_sint_pack_signed,  /* pack_rgba_sint */
@@ -56677,7 +59624,7 @@ util_format_g8r8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_g8r8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_g8r8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_g8r8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_g8r8_sint_pack_signed,  /* pack_rgba_sint */
@@ -56933,7 +59880,7 @@ util_format_a8b8g8r8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_a8b8g8r8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_a8b8g8r8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_a8b8g8r8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_a8b8g8r8_sint_pack_signed,  /* pack_rgba_sint */
@@ -57061,7 +60008,7 @@ util_format_x8b8g8r8_sint_description = {
    NULL, /* pack_z_float */
    NULL, /* unpack_s_8uint */
    NULL, /* pack_s_8uint */
-   NULL, /* unpack_rgba_uint */
+   &util_format_x8b8g8r8_sint_unpack_unsigned, /* unpack_rgba_uint */
    &util_format_x8b8g8r8_sint_pack_unsigned, /* pack_rgba_uint */
    &util_format_x8b8g8r8_sint_unpack_signed, /* unpack_rgba_sint */
    &util_format_x8b8g8r8_sint_pack_signed,  /* pack_rgba_sint */

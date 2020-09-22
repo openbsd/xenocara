@@ -100,9 +100,6 @@ draw_need_pipeline(const struct draw_context *draw,
       /* point sprites */
       if (rasterizer->sprite_coord_enable && draw->pipeline.point_sprite)
          return TRUE;
-
-      if (draw_current_shader_num_written_culldistances(draw))
-         return TRUE;
    }
    else if (reduced_prim == PIPE_PRIM_TRIANGLES) {
       /* polygon stipple */
@@ -255,7 +252,8 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
     * to less work emitting vertices, smaller vertex buffers, etc.
     * It's difficult to say whether this will be true in general.
     */
-   if (need_det || rast->cull_face != PIPE_FACE_NONE) {
+   if (need_det || rast->cull_face != PIPE_FACE_NONE ||
+       draw_current_shader_num_written_culldistances(draw)) {
       draw->pipeline.cull->next = next;
       next = draw->pipeline.cull;
    }
@@ -266,11 +264,6 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
    {
       draw->pipeline.clip->next = next;
       next = draw->pipeline.clip;
-   }
-
-   if (draw_current_shader_num_written_culldistances(draw)) {
-      draw->pipeline.user_cull->next = next;
-      next = draw->pipeline.user_cull;
    }
 
    draw->pipeline.first = next;

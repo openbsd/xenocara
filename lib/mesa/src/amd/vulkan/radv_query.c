@@ -95,6 +95,7 @@ radv_store_availability(nir_builder *b, nir_ssa_def *flags, nir_ssa_def *dst_buf
 
 	b->cursor = nir_after_cf_list(&availability_if->then_list);
 
+
 	nir_if *store_64bit_if = nir_if_create(b->shader);
 	store_64bit_if->condition = nir_src_for_ssa(result_is_64bit);
 	nir_cf_node_insert(b->cursor, &store_64bit_if->cf_node);
@@ -1265,7 +1266,7 @@ radv_query_pool_needs_gds(struct radv_device *device,
 	 * TODO: fix use of NGG GS and non-NGG GS inside the same begin/end
 	 * query.
 	 */
-	return device->physical_device->use_ngg_gs &&
+	return device->physical_device->use_ngg &&
 	       (pool->pipeline_stats_mask & VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT);
 }
 

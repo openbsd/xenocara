@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -17,7 +17,7 @@ SRCS=	ast_array_index.cpp \
 	builtin_variables.cpp \
 	generate_ir.cpp \
 	gl_nir_lower_atomics.c \
-	gl_nir_lower_images.c \
+	gl_nir_lower_bindless_images.c \
 	gl_nir_lower_buffers.c \
 	gl_nir_lower_samplers.c \
 	gl_nir_lower_samplers_as_deref.c \
@@ -64,7 +64,6 @@ SRCS=	ast_array_index.cpp \
 	loop_unroll.cpp \
 	lower_blend_equation_advanced.cpp \
 	lower_buffer_access.cpp \
-	lower_builtins.cpp \
 	lower_const_arrays_to_uniforms.cpp \
 	lower_cs_derived.cpp \
 	lower_discard.cpp \
@@ -75,11 +74,11 @@ SRCS=	ast_array_index.cpp \
 	lower_int64.cpp \
 	lower_jumps.cpp \
 	lower_mat_op_to_vec.cpp \
+	lower_noise.cpp \
 	lower_offset_array.cpp \
 	lower_packed_varyings.cpp \
 	lower_named_interface_blocks.cpp \
 	lower_packing_builtins.cpp \
-	lower_precision.cpp \
 	lower_subroutine.cpp \
 	lower_tess_level.cpp \
 	lower_texture_projection.cpp \
@@ -93,7 +92,6 @@ SRCS=	ast_array_index.cpp \
 	lower_output_reads.cpp \
 	lower_shared_reference.cpp \
 	lower_ubo_reference.cpp \
-	lower_xfb_varying.cpp \
 	opt_algebraic.cpp \
 	opt_array_splitting.cpp \
 	opt_conditional_discard.cpp \

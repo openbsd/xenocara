@@ -431,7 +431,6 @@ class gl_parameter(object):
             self.count = 0
             self.counter = c
 
-        self.marshal_count = element.get("marshal_count")
         self.count_scale = int(element.get( "count_scale", "1" ))
 
         elements = (count * self.count_scale)
@@ -494,7 +493,7 @@ class gl_parameter(object):
 
 
     def is_variable_length(self):
-        return len(self.count_parameter_list) or self.counter or self.marshal_count
+        return len(self.count_parameter_list) or self.counter
 
 
     def is_64_bit(self):
@@ -565,7 +564,7 @@ class gl_parameter(object):
         return c
 
 
-    def size_string(self, use_parens = 1, marshal = 0):
+    def size_string(self, use_parens = 1):
         base_size_str = ""
 
         count = self.get_element_count()
@@ -574,12 +573,10 @@ class gl_parameter(object):
 
         base_size_str += "sizeof(%s)" % ( self.get_base_type_string() )
 
-        if self.counter or self.count_parameter_list or (self.marshal_count and marshal):
+        if self.counter or self.count_parameter_list:
             list = [ "compsize" ]
 
-            if self.marshal_count and marshal:
-                list = [ self.marshal_count ]
-            elif self.counter and self.count_parameter_list:
+            if self.counter and self.count_parameter_list:
                 list.append( self.counter )
             elif self.counter:
                 list = [ self.counter ]

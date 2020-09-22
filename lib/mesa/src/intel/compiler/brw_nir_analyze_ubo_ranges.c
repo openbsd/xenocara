@@ -313,10 +313,8 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
     */
 
    /* Sort the list so the most beneficial ranges are at the front. */
-   if (nr_entries > 0) {
-      qsort(ranges.data, nr_entries, sizeof(struct ubo_range_entry),
-            cmp_ubo_range_entry);
-   }
+   qsort(ranges.data, nr_entries, sizeof(struct ubo_range_entry),
+         cmp_ubo_range_entry);
 
    struct ubo_range_entry *entries = ranges.data;
 

@@ -125,8 +125,7 @@ static void check_program_state( struct st_context *st )
    struct gl_program *last_prim_shader = new_gp ? new_gp :
                                          new_tep ? new_tep : new_vp;
    if (last_prim_shader &&
-       last_prim_shader->info.outputs_written & (
-             VARYING_BIT_VIEWPORT | VARYING_BIT_VIEWPORT_MASK))
+       last_prim_shader->info.outputs_written & VARYING_BIT_VIEWPORT)
       num_viewports = ctx->Const.MaxViewports;
 
    if (st->state.num_viewports != num_viewports) {
@@ -181,7 +180,7 @@ void st_validate_state( struct st_context *st, enum st_pipeline pipeline )
     * Inactive states are shader states not used by shaders at the moment.
     */
    st->dirty |= ctx->NewDriverState & st->active_states & ST_ALL_STATES_MASK;
-   ctx->NewDriverState &= ~st->dirty;
+   ctx->NewDriverState = 0;
 
    /* Get pipeline state. */
    switch (pipeline) {

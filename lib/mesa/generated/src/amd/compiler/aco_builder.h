@@ -393,7 +393,6 @@ public:
 
    Result copy(Definition dst, Op op_) {
       Operand op = op_.op;
-      assert(op.bytes() == dst.bytes());
       if (dst.regClass() == s1 && op.size() == 1 && op.isLiteral()) {
          uint32_t imm = op.constantValue();
          if (imm == 0x3e22f983) {
@@ -414,24 +413,15 @@ public:
          }
       }
 
-      if (dst.regClass() == s1) {
-        return sop1(aco_opcode::s_mov_b32, dst, op);
-      } else if (dst.regClass() == s2) {
+      if (dst.regClass() == s2) {
         return sop1(aco_opcode::s_mov_b64, dst, op);
+      } else if (op.size() > 1) {
+         return pseudo(aco_opcode::p_create_vector, dst, op);
       } else if (dst.regClass() == v1 || dst.regClass() == v1.as_linear()) {
         return vop1(aco_opcode::v_mov_b32, dst, op);
-      } else if (op.bytes() > 2) {
-         return pseudo(aco_opcode::p_create_vector, dst, op);
-      } else if (dst.regClass().is_subdword()) {
-        aco_ptr<SDWA_instruction> sdwa{create_instruction<SDWA_instruction>(aco_opcode::v_mov_b32, asSDWA(Format::VOP1), 1, 1)};
-        sdwa->operands[0] = op;
-        sdwa->definitions[0] = dst;
-        sdwa->sel[0] = op.bytes() == 1 ? sdwa_ubyte : sdwa_uword;
-        sdwa->dst_sel = dst.bytes() == 1 ? sdwa_ubyte : sdwa_uword;
-        sdwa->dst_preserve = true;
-        return insert(std::move(sdwa));
       } else {
-        unreachable("Unhandled case in bld.copy()");
+        assert(dst.regClass() == s1);
+        return sop1(aco_opcode::s_mov_b32, dst, op);
       }
    }
 
@@ -516,7 +506,6 @@ public:
    Result pseudo(aco_opcode opcode)
    {
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 0, 0);
-            
       return insert(instr);
    }
 
@@ -525,7 +514,6 @@ public:
    {
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 1, 0);
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -535,7 +523,6 @@ public:
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 2, 0);
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -546,7 +533,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -558,7 +544,6 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
-            
       return insert(instr);
    }
 
@@ -567,7 +552,6 @@ public:
    {
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 0, 1);
             instr->definitions[0] = def0;
-            
       return insert(instr);
    }
 
@@ -577,7 +561,6 @@ public:
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -588,7 +571,6 @@ public:
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -600,7 +582,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -613,7 +594,6 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
-            
       return insert(instr);
    }
 
@@ -623,7 +603,6 @@ public:
       Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 0, 2);
             instr->definitions[0] = def0;
             instr->definitions[1] = def1;
-            
       return insert(instr);
    }
 
@@ -634,7 +613,6 @@ public:
             instr->definitions[0] = def0;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -646,7 +624,6 @@ public:
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -659,7 +636,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -673,7 +649,6 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
-            
       return insert(instr);
    }
 
@@ -684,7 +659,6 @@ public:
             instr->definitions[0] = def0;
             instr->definitions[1] = def1;
             instr->definitions[2] = def2;
-            
       return insert(instr);
    }
 
@@ -696,7 +670,6 @@ public:
             instr->definitions[1] = def1;
             instr->definitions[2] = def2;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -709,7 +682,6 @@ public:
             instr->definitions[2] = def2;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -723,7 +695,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -738,7 +709,6 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
-            
       return insert(instr);
    }
 
@@ -750,7 +720,6 @@ public:
             instr->definitions[1] = def1;
             instr->definitions[2] = def2;
             instr->definitions[3] = def3;
-            
       return insert(instr);
    }
 
@@ -763,7 +732,6 @@ public:
             instr->definitions[2] = def2;
             instr->definitions[3] = def3;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -777,7 +745,6 @@ public:
             instr->definitions[3] = def3;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -792,7 +759,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -808,7 +774,6 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
-            
       return insert(instr);
    }
 
@@ -825,7 +790,6 @@ public:
             instr->definitions[6] = def6;
             instr->definitions[7] = def7;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -842,7 +806,6 @@ public:
             instr->operands[5] = op5.op;
             instr->operands[6] = op6.op;
             instr->operands[7] = op7.op;
-            
       return insert(instr);
    }
 
@@ -852,7 +815,6 @@ public:
       SOP1_instruction *instr = create_instruction<SOP1_instruction>(opcode, (Format)((int)Format::SOP1), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -869,7 +831,6 @@ public:
             instr->definitions[0] = def0;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -888,7 +849,6 @@ public:
             instr->definitions[2] = def2;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -905,7 +865,6 @@ public:
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -923,7 +882,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -941,7 +899,6 @@ public:
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -960,7 +917,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -975,7 +931,6 @@ public:
    {
       SOPK_instruction *instr = create_instruction<SOPK_instruction>(opcode, (Format)((int)Format::SOPK), 0, 0);
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -985,7 +940,6 @@ public:
       SOPK_instruction *instr = create_instruction<SOPK_instruction>(opcode, (Format)((int)Format::SOPK), 1, 0);
             instr->operands[0] = op0.op;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -995,7 +949,6 @@ public:
       SOPK_instruction *instr = create_instruction<SOPK_instruction>(opcode, (Format)((int)Format::SOPK), 0, 1);
             instr->definitions[0] = def0;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1006,7 +959,6 @@ public:
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1017,7 +969,6 @@ public:
             instr->definitions[0] = def0;
             instr->definitions[1] = def1;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1029,7 +980,6 @@ public:
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1039,7 +989,6 @@ public:
       SOPP_instruction *instr = create_instruction<SOPP_instruction>(opcode, (Format)((int)Format::SOPP), 0, 0);
       instr->block = block;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1050,7 +999,6 @@ public:
             instr->operands[0] = op0.op;
       instr->block = block;
       instr->imm = imm;
-            
       return insert(instr);
    }
 
@@ -1061,7 +1009,6 @@ public:
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1083,7 +1030,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1098,7 +1044,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1111,7 +1056,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1127,7 +1071,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1142,7 +1085,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1154,7 +1096,6 @@ public:
       instr->glc = glc;
       instr->dlc = dlc;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1167,7 +1108,6 @@ public:
       instr->offset0 = offset0;
       instr->offset1 = offset1;
       instr->gds = gds;
-            
       return insert(instr);
    }
 
@@ -1181,7 +1121,6 @@ public:
       instr->offset0 = offset0;
       instr->offset1 = offset1;
       instr->gds = gds;
-            
       return insert(instr);
    }
 
@@ -1195,7 +1134,6 @@ public:
       instr->offset0 = offset0;
       instr->offset1 = offset1;
       instr->gds = gds;
-            
       return insert(instr);
    }
 
@@ -1210,7 +1148,6 @@ public:
       instr->offset0 = offset0;
       instr->offset1 = offset1;
       instr->gds = gds;
-            
       return insert(instr);
    }
 
@@ -1232,7 +1169,6 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lds = lds;
-            
       return insert(instr);
    }
 
@@ -1254,7 +1190,6 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lds = lds;
-            
       return insert(instr);
    }
 
@@ -1276,7 +1211,6 @@ public:
       instr->dlc = dlc;
       instr->slc = slc;
       instr->tfe = tfe;
-            
       return insert(instr);
    }
 
@@ -1298,7 +1232,6 @@ public:
       instr->dlc = dlc;
       instr->slc = slc;
       instr->tfe = tfe;
-            
       return insert(instr);
    }
 
@@ -1320,7 +1253,6 @@ public:
       instr->lwe = lwe;
       instr->r128 = r128_a16;
       instr->d16 = d16;
-            
       return insert(instr);
    }
 
@@ -1343,7 +1275,6 @@ public:
       instr->lwe = lwe;
       instr->r128 = r128_a16;
       instr->d16 = d16;
-            
       return insert(instr);
    }
 
@@ -1360,7 +1291,6 @@ public:
       instr->compressed = compr;
       instr->done = done;
       instr->valid_mask = vm;
-            
       return insert(instr);
    }
 
@@ -1370,7 +1300,6 @@ public:
       Pseudo_branch_instruction *instr = create_instruction<Pseudo_branch_instruction>(opcode, (Format)((int)Format::PSEUDO_BRANCH), 0, 0);
       instr->target[0] = target0;
       instr->target[1] = target1;
-            
       return insert(instr);
    }
 
@@ -1381,7 +1310,6 @@ public:
             instr->operands[0] = op0.op;
       instr->target[0] = target0;
       instr->target[1] = target1;
-            
       return insert(instr);
    }
 
@@ -1389,7 +1317,6 @@ public:
    Result barrier(aco_opcode opcode)
    {
       Pseudo_barrier_instruction *instr = create_instruction<Pseudo_barrier_instruction>(opcode, (Format)((int)Format::PSEUDO_BARRIER), 0, 0);
-            
       return insert(instr);
    }
 
@@ -1404,7 +1331,6 @@ public:
             instr->operands[1] = op1.op;
       instr->reduce_op = op;
       instr->cluster_size = cluster_size;
-            
       return insert(instr);
    }
 
@@ -1421,7 +1347,6 @@ public:
             instr->operands[3] = op3.op;
       instr->reduce_op = op;
       instr->cluster_size = cluster_size;
-            
       return insert(instr);
    }
 
@@ -1431,7 +1356,6 @@ public:
       VOP1_instruction *instr = create_instruction<VOP1_instruction>(opcode, (Format)((int)Format::VOP1), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -1443,7 +1367,6 @@ public:
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1454,7 +1377,6 @@ public:
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1466,7 +1388,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -1478,7 +1399,6 @@ public:
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1491,71 +1411,6 @@ public:
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
-      return insert(instr);
-   }
-
-        
-   Result vop2_sdwa(aco_opcode opcode, Definition def0, Op op0, Op op1)
-   {
-      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::SDWA), 2, 1);
-            instr->definitions[0] = def0;
-            instr->operands[0] = op0.op;
-            instr->operands[1] = op1.op;
-            
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
-      return insert(instr);
-   }
-
-        
-   Result vop2_sdwa(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2)
-   {
-      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::SDWA), 3, 1);
-            instr->definitions[0] = def0;
-            instr->operands[0] = op0.op;
-            instr->operands[1] = op1.op;
-            instr->operands[2] = op2.op;
-            
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
-      return insert(instr);
-   }
-
-        
-   Result vop2_sdwa(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
-   {
-      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::SDWA), 2, 2);
-            instr->definitions[0] = def0;
-            instr->definitions[1] = def1;
-            instr->operands[0] = op0.op;
-            instr->operands[1] = op1.op;
-            
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
-      return insert(instr);
-   }
-
-        
-   Result vop2_sdwa(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2)
-   {
-      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::SDWA), 3, 2);
-            instr->definitions[0] = def0;
-            instr->definitions[1] = def1;
-            instr->operands[0] = op0.op;
-            instr->operands[1] = op1.op;
-            instr->operands[2] = op2.op;
-            
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
       return insert(instr);
    }
 
@@ -1566,7 +1421,6 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1578,7 +1432,6 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1590,7 +1443,6 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       return insert(instr);
    }
 
@@ -1601,7 +1453,6 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1611,7 +1462,6 @@ instr->dst_preserve = true;
       VOP3A_instruction *instr = create_instruction<VOP3A_instruction>(opcode, (Format)((int)Format::VOP3A), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
       return insert(instr);
    }
 
@@ -1623,7 +1473,6 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       return insert(instr);
    }
 
@@ -1636,7 +1485,6 @@ instr->dst_preserve = true;
             instr->operands[1] = op1.op;
       instr->attribute = attribute;
       instr->component = component;
-            
       return insert(instr);
    }
 
@@ -1650,7 +1498,6 @@ instr->dst_preserve = true;
             instr->operands[2] = op2.op;
       instr->attribute = attribute;
       instr->component = component;
-            
       return insert(instr);
    }
 
@@ -1660,12 +1507,10 @@ instr->dst_preserve = true;
       DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1676,12 +1521,10 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1693,12 +1536,10 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1710,12 +1551,10 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1728,12 +1567,10 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1744,12 +1581,10 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1761,12 +1596,10 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
       instr->dpp_ctrl = dpp_ctrl;
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
-            
       return insert(instr);
    }
 
@@ -1776,8 +1609,6 @@ instr->dst_preserve = true;
       VOP3A_instruction *instr = create_instruction<VOP3A_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::VOP3A), 1, 1);
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
-            
-            
       return insert(instr);
    }
 
@@ -1788,8 +1619,6 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
-            
       return insert(instr);
    }
 
@@ -1801,8 +1630,6 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
-            
       return insert(instr);
    }
 
@@ -1814,8 +1641,6 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
-            
       return insert(instr);
    }
 
@@ -1828,8 +1653,6 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
-            
-            
       return insert(instr);
    }
 
@@ -1840,8 +1663,6 @@ instr->dst_preserve = true;
             instr->definitions[0] = def0;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
-            
       return insert(instr);
    }
 
@@ -1853,8 +1674,6 @@ instr->dst_preserve = true;
             instr->definitions[1] = def1;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
-            
-            
       return insert(instr);
    }
 
@@ -1871,7 +1690,6 @@ instr->dst_preserve = true;
       instr->slc = slc;
       instr->lds = lds;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1888,7 +1706,6 @@ instr->dst_preserve = true;
       instr->slc = slc;
       instr->lds = lds;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1905,7 +1722,6 @@ instr->dst_preserve = true;
       instr->slc = slc;
       instr->lds = lds;
       instr->nv = nv;
-            
       return insert(instr);
    }
 
@@ -1922,7 +1738,6 @@ instr->dst_preserve = true;
       instr->slc = slc;
       instr->lds = lds;
       instr->nv = nv;
-            
       return insert(instr);
    }
 

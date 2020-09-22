@@ -28,6 +28,7 @@
  * Batched upload via BOs.
  */
 
+#include "main/imports.h"
 #include "main/macros.h"
 #include "brw_bufmgr.h"
 #include "brw_context.h"

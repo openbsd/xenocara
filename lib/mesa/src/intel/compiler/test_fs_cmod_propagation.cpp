@@ -94,14 +94,14 @@ cmod_propagation(fs_visitor *v)
 
    if (print) {
       fprintf(stderr, "= Before =\n");
-      v->cfg->dump();
+      v->cfg->dump(v);
    }
 
    bool ret = v->opt_cmod_propagation();
 
    if (print) {
       fprintf(stderr, "\n= After =\n");
-      v->cfg->dump();
+      v->cfg->dump(v);
    }
 
    return ret;

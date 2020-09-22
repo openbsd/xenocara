@@ -299,8 +299,8 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
                struct radv_image *src_image,
                struct radv_image_view *src_iview,
 	       VkImageLayout src_image_layout,
-               float src_offset_0[3],
-               float src_offset_1[3],
+               VkOffset3D src_offset_0,
+               VkOffset3D src_offset_1,
                struct radv_image *dest_image,
                struct radv_image_view *dest_iview,
 	       VkImageLayout dest_image_layout,
@@ -319,11 +319,11 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 	assert(src_image->info.samples == dest_image->info.samples);
 
 	float vertex_push_constants[5] = {
-		src_offset_0[0] / (float)src_width,
-		src_offset_0[1] / (float)src_height,
-		src_offset_1[0] / (float)src_width,
-		src_offset_1[1] / (float)src_height,
-		src_offset_0[2] / (float)src_depth,
+		(float)src_offset_0.x / (float)src_width,
+		(float)src_offset_0.y / (float)src_height,
+		(float)src_offset_1.x / (float)src_width,
+		(float)src_offset_1.y / (float)src_height,
+		(float)src_offset_0.z / (float)src_depth,
 	};
 
 	radv_CmdPushConstants(radv_cmd_buffer_to_handle(cmd_buffer),
@@ -350,18 +350,18 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 		unsigned dst_layout = radv_meta_dst_layout_from_layout(dest_image_layout);
 		fs_key = radv_format_meta_fs_key(dest_image->vk_format);
 
-		radv_cmd_buffer_begin_render_pass(cmd_buffer,
-						  &(VkRenderPassBeginInfo) {
-							.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-								.renderPass = device->meta_state.blit.render_pass[fs_key][dst_layout],
-								.framebuffer = fb,
-								.renderArea = {
-									.offset = { dest_box.offset.x, dest_box.offset.y },
-									.extent = { dest_box.extent.width, dest_box.extent.height },
-								},
-							.clearValueCount = 0,
-							.pClearValues = NULL,
-						});
+		radv_CmdBeginRenderPass(radv_cmd_buffer_to_handle(cmd_buffer),
+					      &(VkRenderPassBeginInfo) {
+						      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+							      .renderPass = device->meta_state.blit.render_pass[fs_key][dst_layout],
+							      .framebuffer = fb,
+							      .renderArea = {
+							      .offset = { dest_box.offset.x, dest_box.offset.y },
+							      .extent = { dest_box.extent.width, dest_box.extent.height },
+						      },
+							      .clearValueCount = 0,
+								       .pClearValues = NULL,
+						       }, VK_SUBPASS_CONTENTS_INLINE);
 		switch (src_image->type) {
 		case VK_IMAGE_TYPE_1D:
 			pipeline = &device->meta_state.blit.pipeline_1d_src[fs_key];
@@ -379,18 +379,18 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 	}
 	case VK_IMAGE_ASPECT_DEPTH_BIT: {
 		enum radv_blit_ds_layout ds_layout = radv_meta_blit_ds_to_type(dest_image_layout);
-		radv_cmd_buffer_begin_render_pass(cmd_buffer,
-						  &(VkRenderPassBeginInfo) {
-							.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-							.renderPass = device->meta_state.blit.depth_only_rp[ds_layout],
-							.framebuffer = fb,
-							.renderArea = {
-								.offset = { dest_box.offset.x, dest_box.offset.y },
-								.extent = { dest_box.extent.width, dest_box.extent.height },
-							},
-							.clearValueCount = 0,
-							.pClearValues = NULL,
-						  });
+		radv_CmdBeginRenderPass(radv_cmd_buffer_to_handle(cmd_buffer),
+					      &(VkRenderPassBeginInfo) {
+						      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+							      .renderPass = device->meta_state.blit.depth_only_rp[ds_layout],
+							      .framebuffer = fb,
+							      .renderArea = {
+							      .offset = { dest_box.offset.x, dest_box.offset.y },
+							      .extent = { dest_box.extent.width, dest_box.extent.height },
+						      },
+							      .clearValueCount = 0,
+								       .pClearValues = NULL,
+						       }, VK_SUBPASS_CONTENTS_INLINE);
 		switch (src_image->type) {
 		case VK_IMAGE_TYPE_1D:
 			pipeline = &device->meta_state.blit.depth_only_1d_pipeline;
@@ -408,18 +408,18 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 	}
 	case VK_IMAGE_ASPECT_STENCIL_BIT: {
 		enum radv_blit_ds_layout ds_layout = radv_meta_blit_ds_to_type(dest_image_layout);
-		radv_cmd_buffer_begin_render_pass(cmd_buffer,
-						  &(VkRenderPassBeginInfo) {
-							.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-							.renderPass = device->meta_state.blit.stencil_only_rp[ds_layout],
-							.framebuffer = fb,
-							.renderArea = {
-								.offset = { dest_box.offset.x, dest_box.offset.y },
-								.extent = { dest_box.extent.width, dest_box.extent.height },
-						        },
-							.clearValueCount = 0,
-							.pClearValues = NULL,
-						  });
+		radv_CmdBeginRenderPass(radv_cmd_buffer_to_handle(cmd_buffer),
+					      &(VkRenderPassBeginInfo) {
+						      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+							      .renderPass = device->meta_state.blit.stencil_only_rp[ds_layout],
+							      .framebuffer = fb,
+							      .renderArea = {
+							      .offset = { dest_box.offset.x, dest_box.offset.y },
+							      .extent = { dest_box.extent.width, dest_box.extent.height },
+						              },
+							      .clearValueCount = 0,
+								       .pClearValues = NULL,
+						       }, VK_SUBPASS_CONTENTS_INLINE);
 		switch (src_image->type) {
 		case VK_IMAGE_TYPE_1D:
 			pipeline = &device->meta_state.blit.stencil_only_1d_pipeline;
@@ -438,9 +438,6 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 	default:
 		unreachable("bad VkImageType");
 	}
-
-	radv_cmd_buffer_set_subpass(cmd_buffer,
-				    &cmd_buffer->state.pass->subpasses[0]);
 
 	if (!*pipeline) {
 		VkResult ret = build_pipeline(device, src_iview->aspect_mask, translate_sampler_dim(src_image->type), fs_key, pipeline);
@@ -494,7 +491,7 @@ meta_emit_blit(struct radv_cmd_buffer *cmd_buffer,
 	radv_CmdDraw(radv_cmd_buffer_to_handle(cmd_buffer), 3, 1, 0, 0);
 
 fail_pipeline:
-	radv_cmd_buffer_end_render_pass(cmd_buffer);
+	radv_CmdEndRenderPass(radv_cmd_buffer_to_handle(cmd_buffer));
 
 	/* At the point where we emit the draw call, all data from the
 	 * descriptor sets, etc. has been used.  We are free to delete it.
@@ -599,19 +596,12 @@ void radv_CmdBlitImage(
 		}
 
 		bool flip_z = flip_coords(&src_start, &src_end, &dst_start, &dst_end);
-		float src_z_step = (float)(src_end - src_start) /
-			(float)(dst_end - dst_start);
-
-		/* There is no interpolation to the pixel center during
-		 * rendering, so add the 0.5 offset ourselves here. */
-		float depth_center_offset = 0;
-		if (src_image->type == VK_IMAGE_TYPE_3D)
-			depth_center_offset = 0.5 / (dst_end - dst_start) * (src_end - src_start);
+		float src_z_step = (float)(src_end + 1 - src_start) /
+			(float)(dst_end + 1 - dst_start);
 
 		if (flip_z) {
 			src_start = src_end;
 			src_z_step *= -1;
-			depth_center_offset *= -1;
 		}
 
 		unsigned src_x0 = pRegions[r].srcOffsets[0].x;
@@ -642,16 +632,15 @@ void radv_CmdBlitImage(
 				.x = dst_x1,
 				.y = dst_y1,
 			};
-
-			float src_offset_0[3] = {
-				src_x0,
-				src_y0,
-				src_start + i * src_z_step + depth_center_offset,
+			VkOffset3D src_offset_0 = {
+				.x = src_x0,
+				.y = src_y0,
+				.z = src_start + i * src_z_step,
 			};
-			float src_offset_1[3] = {
-				src_x1,
-				src_y1,
-				src_start + i * src_z_step + depth_center_offset,
+			VkOffset3D src_offset_1 = {
+				.x = src_x1,
+				.y = src_y1,
+				.z = src_start + i * src_z_step,
 			};
 			const uint32_t dest_array_slice = dst_start + i;
 

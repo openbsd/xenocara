@@ -55,10 +55,9 @@ st_feedback_draw_vbo(struct gl_context *ctx,
 		     GLboolean index_bounds_valid,
                      GLuint min_index,
                      GLuint max_index,
-                     GLuint num_instances,
-                     GLuint base_instance,
                      struct gl_transform_feedback_object *tfb_vertcount,
-                     unsigned stream);
+                     unsigned stream,
+                     struct gl_buffer_object *indirect);
 
 /**
  * When drawing with VBOs, the addresses specified with

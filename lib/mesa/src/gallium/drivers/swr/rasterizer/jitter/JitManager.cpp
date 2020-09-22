@@ -313,11 +313,7 @@ DIType* JitManager::GetDebugType(Type* pTy)
     case Type::PointerTyID:
         return builder.createPointerType(GetDebugType(pTy->getPointerElementType()), 64, 64);
         break;
-#if LLVM_VERSION_MAJOR >= 11
-    case Type::FixedVectorTyID:
-#else
     case Type::VectorTyID:
-#endif
         return GetDebugVectorType(pTy);
         break;
     case Type::FunctionTyID:
@@ -386,20 +382,11 @@ DIType* JitManager::GetDebugVectorType(Type* pTy)
     uint32_t                  size      = DL.getTypeAllocSizeInBits(pVecTy);
     uint32_t                  alignment = DL.getABITypeAlignment(pVecTy);
     SmallVector<Metadata*, 1> Elems;
-
-#if LLVM_VERSION_MAJOR >= 11
-    Elems.push_back(builder.getOrCreateSubrange(0, pVecTy->getNumElements()));
-#else
     Elems.push_back(builder.getOrCreateSubrange(0, pVecTy->getVectorNumElements()));
-#endif
 
     return builder.createVectorType(size,
                                     alignment,
-#if LLVM_VERSION_MAJOR >= 11
-                                    GetDebugType(pVecTy->getElementType()),
-#else
                                     GetDebugType(pVecTy->getVectorElementType()),
-#endif
                                     builder.getOrCreateArray(Elems));
 }
 

@@ -783,21 +783,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
-   .name = "bindless_resource_ir3",
-   .num_srcs = 1,
-   .src_components = {
-      1
-   },
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 1,
-   .index_map = {
-      [NIR_INTRINSIC_DESC_SET] = 1,
-    },
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
    .name = "cond_end_ir3",
    .num_srcs = 1,
    .src_components = {
@@ -2343,12 +2328,10 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .has_dest = true,
    .dest_components = 0,
    .dest_bit_sizes = 0x0,
-   .num_indices = 4,
+   .num_indices = 2,
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
       [NIR_INTRINSIC_RANGE] = 2,
-      [NIR_INTRINSIC_ALIGN_MUL] = 3,
-      [NIR_INTRINSIC_ALIGN_OFFSET] = 4,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
@@ -2636,21 +2619,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .dest_components = 1,
    .dest_bit_sizes = 0x20,
    .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
-   .name = "load_local_shared_r600",
-   .num_srcs = 1,
-   .src_components = {
-      0
-   },
-   .has_dest = true,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 1,
-   .index_map = {
-      [NIR_INTRINSIC_COMPONENT] = 1,
-    },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
@@ -2945,18 +2913,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
-   .name = "load_ssbo_address",
-   .num_srcs = 1,
-   .src_components = {
-      1
-   },
-   .has_dest = true,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
    .name = "load_ssbo_ir3",
    .num_srcs = 3,
    .src_components = {
@@ -3055,42 +3011,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
-   .name = "load_tcs_in_param_base_r600",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 4,
-   .dest_bit_sizes = 0x20,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
-   .name = "load_tcs_out_param_base_r600",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 4,
-   .dest_bit_sizes = 0x20,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
-   .name = "load_tcs_rel_patch_id_r600",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x20,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
-   .name = "load_tcs_tess_factor_base_r600",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x20,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
    .name = "load_tess_coord",
    .num_srcs = 0,
    .has_dest = true,
@@ -3171,38 +3091,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
 },
 {
    .name = "load_ubo",
-   .num_srcs = 2,
-   .src_components = {
-      1, 1
-   },
-   .has_dest = true,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 3,
-   .index_map = {
-      [NIR_INTRINSIC_ACCESS] = 1,
-      [NIR_INTRINSIC_ALIGN_MUL] = 2,
-      [NIR_INTRINSIC_ALIGN_OFFSET] = 3,
-    },
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
-   .name = "load_ubo_ir3",
-   .num_srcs = 2,
-   .src_components = {
-      1, 1
-   },
-   .has_dest = true,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x20,
-   .num_indices = 1,
-   .index_map = {
-      [NIR_INTRINSIC_BASE] = 1,
-    },
-   .flags = NIR_INTRINSIC_CAN_REORDER | NIR_INTRINSIC_CAN_ELIMINATE,
-},
-{
-   .name = "load_ubo_r600",
    .num_srcs = 2,
    .src_components = {
       1, 1
@@ -4257,21 +4145,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
-   .name = "store_local_shared_r600",
-   .num_srcs = 2,
-   .src_components = {
-      0, 1
-   },
-   .has_dest = false,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 1,
-   .index_map = {
-      [NIR_INTRINSIC_WRMASK] = 1,
-    },
-   .flags = 0,
-},
-{
    .name = "store_output",
    .num_srcs = 2,
    .src_components = {
@@ -4408,18 +4281,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
-   .name = "store_tf_r600",
-   .num_srcs = 1,
-   .src_components = {
-      0
-   },
-   .has_dest = false,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 0,
-   .flags = 0,
-},
-{
    .name = "store_tlb_sample_color_v3d",
    .num_srcs = 2,
    .src_components = {
@@ -4433,21 +4294,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_BASE] = 1,
       [NIR_INTRINSIC_COMPONENT] = 2,
       [NIR_INTRINSIC_TYPE] = 3,
-    },
-   .flags = 0,
-},
-{
-   .name = "store_zs_output_pan",
-   .num_srcs = 1,
-   .src_components = {
-      0
-   },
-   .has_dest = false,
-   .dest_components = 0,
-   .dest_bit_sizes = 0x0,
-   .num_indices = 1,
-   .index_map = {
-      [NIR_INTRINSIC_COMPONENT] = 1,
     },
    .flags = 0,
 },

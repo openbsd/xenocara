@@ -32,7 +32,7 @@
 #include "nine_state.h"
 
 struct gen_mipmap_state;
-struct hash_table;
+struct util_hash_table;
 struct pipe_screen;
 struct pipe_context;
 struct cso_context;
@@ -102,8 +102,8 @@ struct NineDevice9
     struct gen_mipmap_state *gen_mipmap;
 
     struct {
-        struct hash_table *ht_vs;
-        struct hash_table *ht_ps;
+        struct util_hash_table *ht_vs;
+        struct util_hash_table *ht_ps;
         struct NineVertexShader9 *vs;
         struct NinePixelShader9 *ps;
         unsigned num_vs;
@@ -111,7 +111,7 @@ struct NineDevice9
         float *vs_const;
         float *ps_const;
 
-        struct hash_table *ht_fvf;
+        struct util_hash_table *ht_fvf;
     } ff;
 
     struct {

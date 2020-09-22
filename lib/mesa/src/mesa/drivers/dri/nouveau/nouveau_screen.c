@@ -38,7 +38,6 @@
 #include "main/framebuffer.h"
 #include "main/fbobject.h"
 #include "main/renderbuffer.h"
-#include "util/u_memory.h"
 #include "swrast/s_renderbuffer.h"
 
 #include <nvif/class.h>

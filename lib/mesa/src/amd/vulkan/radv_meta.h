@@ -167,14 +167,14 @@ void radv_meta_clear_image_cs(struct radv_cmd_buffer *cmd_buffer,
 			      struct radv_meta_blit2d_surf *dst,
 			      const VkClearColorValue *clear_color);
 
-void radv_decompress_depth_stencil(struct radv_cmd_buffer *cmd_buffer,
-				   struct radv_image *image,
-				   const VkImageSubresourceRange *subresourceRange,
-				   struct radv_sample_locations_state *sample_locs);
-void radv_resummarize_depth_stencil(struct radv_cmd_buffer *cmd_buffer,
-				    struct radv_image *image,
-				    const VkImageSubresourceRange *subresourceRange,
-				    struct radv_sample_locations_state *sample_locs);
+void radv_decompress_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
+					 struct radv_image *image,
+					 const VkImageSubresourceRange *subresourceRange,
+					 struct radv_sample_locations_state *sample_locs);
+void radv_resummarize_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
+					  struct radv_image *image,
+					  const VkImageSubresourceRange *subresourceRange,
+					  struct radv_sample_locations_state *sample_locs);
 void radv_fast_clear_flush_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					 struct radv_image *image,
 					 const VkImageSubresourceRange *subresourceRange);
@@ -248,25 +248,6 @@ radv_is_dcc_decompress_pipeline(struct radv_cmd_buffer *cmd_buffer)
 
 	return radv_pipeline_to_handle(pipeline) ==
 	       meta_state->fast_clear_flush.dcc_decompress_pipeline;
-}
-
-/**
- * Return whether the bound pipeline is the hardware resolve path.
- */
-static inline bool
-radv_is_hw_resolve_pipeline(struct radv_cmd_buffer *cmd_buffer)
-{
-	struct radv_meta_state *meta_state = &cmd_buffer->device->meta_state;
-	struct radv_pipeline *pipeline = cmd_buffer->state.pipeline;
-
-	for (uint32_t i = 0; i < NUM_META_FS_KEYS; ++i) {
-		VkFormat format = radv_fs_key_format_exemplars[i];
-		unsigned fs_key = radv_format_meta_fs_key(format);
-
-		if (radv_pipeline_to_handle(pipeline) == meta_state->resolve.pipeline[fs_key])
-			return true;
-	}
-	return false;
 }
 
 /* common nir builder helpers */

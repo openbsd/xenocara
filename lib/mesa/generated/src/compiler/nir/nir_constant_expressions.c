@@ -3475,330 +3475,6 @@ evaluate_b16csel(nir_const_value *_dst_val,
       }
 }
 static void
-evaluate_b2b1(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                  unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      switch (bit_size) {
-      case 1: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool1_t src0 =
-                  _src[0][_i].b;
-
-            bool1_t dst = src0 != 0;
-
-            _dst_val[_i].b = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 8: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool8_t src0 =
-                  _src[0][_i].i8;
-
-            bool1_t dst = src0 != 0;
-
-            _dst_val[_i].b = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 16: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool16_t src0 =
-                  _src[0][_i].i16;
-
-            bool1_t dst = src0 != 0;
-
-            _dst_val[_i].b = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 32: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool32_t src0 =
-                  _src[0][_i].i32;
-
-            bool1_t dst = src0 != 0;
-
-            _dst_val[_i].b = -(int)dst;
-
-      }
-
-         break;
-      }
-
-      default:
-         unreachable("unknown bit width");
-      }
-}
-static void
-evaluate_b2b16(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                  unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      switch (bit_size) {
-      case 1: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool1_t src0 =
-                  _src[0][_i].b;
-
-            bool16_t dst = src0 != 0;
-
-            _dst_val[_i].i16 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 8: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool8_t src0 =
-                  _src[0][_i].i8;
-
-            bool16_t dst = src0 != 0;
-
-            _dst_val[_i].i16 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 16: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool16_t src0 =
-                  _src[0][_i].i16;
-
-            bool16_t dst = src0 != 0;
-
-            _dst_val[_i].i16 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 32: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool32_t src0 =
-                  _src[0][_i].i32;
-
-            bool16_t dst = src0 != 0;
-
-            _dst_val[_i].i16 = -(int)dst;
-
-      }
-
-         break;
-      }
-
-      default:
-         unreachable("unknown bit width");
-      }
-}
-static void
-evaluate_b2b32(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                  unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      switch (bit_size) {
-      case 1: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool1_t src0 =
-                  _src[0][_i].b;
-
-            bool32_t dst = src0 != 0;
-
-            _dst_val[_i].i32 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 8: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool8_t src0 =
-                  _src[0][_i].i8;
-
-            bool32_t dst = src0 != 0;
-
-            _dst_val[_i].i32 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 16: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool16_t src0 =
-                  _src[0][_i].i16;
-
-            bool32_t dst = src0 != 0;
-
-            _dst_val[_i].i32 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 32: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool32_t src0 =
-                  _src[0][_i].i32;
-
-            bool32_t dst = src0 != 0;
-
-            _dst_val[_i].i32 = -(int)dst;
-
-      }
-
-         break;
-      }
-
-      default:
-         unreachable("unknown bit width");
-      }
-}
-static void
-evaluate_b2b8(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                  unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      switch (bit_size) {
-      case 1: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool1_t src0 =
-                  _src[0][_i].b;
-
-            bool8_t dst = src0 != 0;
-
-            _dst_val[_i].i8 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 8: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool8_t src0 =
-                  _src[0][_i].i8;
-
-            bool8_t dst = src0 != 0;
-
-            _dst_val[_i].i8 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 16: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool16_t src0 =
-                  _src[0][_i].i16;
-
-            bool8_t dst = src0 != 0;
-
-            _dst_val[_i].i8 = -(int)dst;
-
-      }
-
-         break;
-      }
-      case 32: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const bool32_t src0 =
-                  _src[0][_i].i32;
-
-            bool8_t dst = src0 != 0;
-
-            _dst_val[_i].i8 = -(int)dst;
-
-      }
-
-         break;
-      }
-
-      default:
-         unreachable("unknown bit width");
-      }
-}
-static void
 evaluate_b2f16(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
                   unsigned bit_size,
@@ -13354,9 +13030,9 @@ evaluate_cube_face_coord(nir_const_value *_dst_val,
 
          
 dst.x = dst.y = 0.0;
-float absX = fabsf(src0.x);
-float absY = fabsf(src0.y);
-float absZ = fabsf(src0.z);
+float absX = fabs(src0.x);
+float absY = fabs(src0.y);
+float absZ = fabs(src0.z);
 
 float ma = 0.0;
 if (absX >= absY && absX >= absZ) { ma = 2 * src0.x; }
@@ -13419,9 +13095,9 @@ evaluate_cube_face_index(nir_const_value *_dst_val,
       struct float32_vec dst;
 
          
-float absX = fabsf(src0.x);
-float absY = fabsf(src0.y);
-float absZ = fabsf(src0.z);
+float absX = fabs(src0.x);
+float absY = fabs(src0.y);
+float absZ = fabs(src0.z);
 if (src0.x >= 0 && absX >= absY && absX >= absZ) dst.x = 0;
 if (src0.x < 0 && absX >= absY && absX >= absZ) dst.x = 1;
 if (src0.y >= 0 && absY >= absX && absY >= absZ) dst.x = 2;
@@ -14592,91 +14268,6 @@ evaluate_f2f64(nir_const_value *_dst_val,
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
                   constant_denorm_flush_to_zero(&_dst_val[_i], 64);
-               }
-      }
-
-         break;
-      }
-
-      default:
-         unreachable("unknown bit width");
-      }
-}
-static void
-evaluate_f2fmp(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                  unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      switch (bit_size) {
-      case 16: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const float src0 =
-                  _mesa_half_to_float(_src[0][_i].u16);
-
-            float16_t dst = src0;
-
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
-            } else {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
-               }
-      }
-
-         break;
-      }
-      case 32: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const float32_t src0 =
-                  _src[0][_i].f32;
-
-            float16_t dst = src0;
-
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
-            } else {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
-               }
-      }
-
-         break;
-      }
-      case 64: {
-         
-   
-
-         
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const float64_t src0 =
-                  _src[0][_i].f64;
-
-            float16_t dst = src0;
-
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
-            } else {
-               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
       }
 
@@ -20765,6 +20356,1550 @@ evaluate_fneg(nir_const_value *_dst_val,
                   constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
       }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise1_1(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise1_2(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise1_3(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise1_4(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise2_1(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise2_2(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise2_3(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise2_4(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise3_1(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise3_2(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise3_3(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise3_4(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise4_1(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
+            } else {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+            _dst_val[3].f32 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+            _dst_val[3].f64 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise4_2(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
+            } else {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+            _dst_val[3].f32 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+            _dst_val[3].f64 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise4_3(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
+            } else {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+            _dst_val[3].f32 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+            _dst_val[3].f64 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
+               }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
+}
+static void
+evaluate_fnoise4_4(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                  unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      struct float16_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+            } else {
+               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
+            } else {
+               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
+            } else {
+               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
+               }
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
+            } else {
+               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
+               }
+
+         break;
+      }
+      case 32: {
+         
+   
+
+         
+      struct float32_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f32 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
+               }
+            _dst_val[1].f32 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+               }
+            _dst_val[2].f32 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
+               }
+            _dst_val[3].f32 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
+               }
+
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      struct float64_vec dst;
+
+         dst.x = dst.y = dst.z = dst.w = 0.0f;
+
+            _dst_val[0].f64 = dst.x;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
+               }
+            _dst_val[1].f64 = dst.y;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+               }
+            _dst_val[2].f64 = dst.z;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
+               }
+            _dst_val[3].f64 = dst.w;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
+               }
 
          break;
       }
@@ -31889,32 +33024,6 @@ evaluate_ult8(nir_const_value *_dst_val,
       }
 }
 static void
-evaluate_umad24(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                 UNUSED unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      
-   
-
-                           
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const uint32_t src0 =
-                  _src[0][_i].u32;
-               const uint32_t src1 =
-                  _src[1][_i].u32;
-               const uint32_t src2 =
-                  _src[2][_i].u32;
-
-            uint32_t dst = (((uint32_t)src0 << 8) >> 8) * (((uint32_t)src1 << 8) >> 8) + src2;
-
-            _dst_val[_i].u32 = dst;
-
-      }
-
-}
-static void
 evaluate_umax(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
                   unsigned bit_size,
@@ -32659,30 +33768,6 @@ evaluate_umod(nir_const_value *_dst_val,
       default:
          unreachable("unknown bit width");
       }
-}
-static void
-evaluate_umul24(nir_const_value *_dst_val,
-                 UNUSED unsigned num_components,
-                 UNUSED unsigned bit_size,
-                 UNUSED nir_const_value **_src,
-                 UNUSED unsigned execution_mode)
-{
-      
-   
-
-                  
-      for (unsigned _i = 0; _i < num_components; _i++) {
-               const int32_t src0 =
-                  _src[0][_i].i32;
-               const int32_t src1 =
-                  _src[1][_i].i32;
-
-            int32_t dst = (((uint32_t)src0 << 8) >> 8) * (((uint32_t)src1 << 8) >> 8);
-
-            _dst_val[_i].i32 = dst;
-
-      }
-
 }
 static void
 evaluate_umul_2x32_64(nir_const_value *_dst_val,
@@ -38480,18 +39565,6 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_b16csel:
       evaluate_b16csel(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
-   case nir_op_b2b1:
-      evaluate_b2b1(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
-   case nir_op_b2b16:
-      evaluate_b2b16(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
-   case nir_op_b2b32:
-      evaluate_b2b32(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
-   case nir_op_b2b8:
-      evaluate_b2b8(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
    case nir_op_b2f16:
       evaluate_b2f16(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
@@ -38696,9 +39769,6 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_f2f64:
       evaluate_f2f64(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
-   case nir_op_f2fmp:
-      evaluate_f2fmp(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
    case nir_op_f2i1:
       evaluate_f2i1(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
@@ -38899,6 +39969,54 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
       return;
    case nir_op_fneg:
       evaluate_fneg(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise1_1:
+      evaluate_fnoise1_1(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise1_2:
+      evaluate_fnoise1_2(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise1_3:
+      evaluate_fnoise1_3(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise1_4:
+      evaluate_fnoise1_4(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise2_1:
+      evaluate_fnoise2_1(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise2_2:
+      evaluate_fnoise2_2(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise2_3:
+      evaluate_fnoise2_3(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise2_4:
+      evaluate_fnoise2_4(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise3_1:
+      evaluate_fnoise3_1(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise3_2:
+      evaluate_fnoise3_2(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise3_3:
+      evaluate_fnoise3_3(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise3_4:
+      evaluate_fnoise3_4(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise4_1:
+      evaluate_fnoise4_1(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise4_2:
+      evaluate_fnoise4_2(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise4_3:
+      evaluate_fnoise4_3(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fnoise4_4:
+      evaluate_fnoise4_4(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_fpow:
       evaluate_fpow(dest, num_components, bit_width, src, float_controls_execution_mode);
@@ -39269,9 +40387,6 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_ult8:
       evaluate_ult8(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
-   case nir_op_umad24:
-      evaluate_umad24(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
    case nir_op_umax:
       evaluate_umax(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
@@ -39295,9 +40410,6 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
       return;
    case nir_op_umod:
       evaluate_umod(dest, num_components, bit_width, src, float_controls_execution_mode);
-      return;
-   case nir_op_umul24:
-      evaluate_umul24(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_umul_2x32_64:
       evaluate_umul_2x32_64(dest, num_components, bit_width, src, float_controls_execution_mode);

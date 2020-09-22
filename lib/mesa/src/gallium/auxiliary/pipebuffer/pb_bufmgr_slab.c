@@ -215,7 +215,6 @@ pb_slab_buffer_destroy(struct pb_buffer *_buf)
    if (slab->numFree == slab->numBuffers) {
       list = &slab->head;
       list_delinit(list);
-      pb_unmap(slab->bo);
       pb_reference(&slab->bo, NULL);
       FREE(slab->buffers);
       FREE(slab);
@@ -316,16 +315,15 @@ pb_slab_create(struct pb_slab_manager *mgr)
    }
 
    /* Note down the slab virtual address. All mappings are accessed directly 
-    * through this address so it is required that the buffer is mapped
-    * persistent */
+    * through this address so it is required that the buffer is pinned. */
    slab->virtual = pb_map(slab->bo, 
                           PB_USAGE_CPU_READ |
-                          PB_USAGE_CPU_WRITE |
-                          PB_USAGE_PERSISTENT, NULL);
+                          PB_USAGE_CPU_WRITE, NULL);
    if(!slab->virtual) {
       ret = PIPE_ERROR_OUT_OF_MEMORY;
       goto out_err1;
    }
+   pb_unmap(slab->bo);
 
    numBuffers = slab->bo->size / mgr->bufSize;
 

@@ -45,7 +45,6 @@
 #include "utils.h"
 #include "util/disk_cache.h"
 #include "util/xmlpool.h"
-#include "util/u_memory.h"
 
 #include "common/gen_defines.h"
 
@@ -711,7 +710,8 @@ intel_create_image_common(__DRIscreen *dri_screen,
    bool ok;
 
    /* Callers of this may specify a modifier, or a dri usage, but not both. The
-    * newer modifier interface deprecates the older usage flags.
+    * newer modifier interface deprecates the older usage flags newer modifier
+    * interface deprecates the older usage flags.
     */
    assert(!(use && count));
 
@@ -2555,7 +2555,7 @@ __DRIconfig **intelInitScreen2(__DRIscreen *dri_screen)
 
    driParseOptionInfo(&options, brw_config_options.xml);
    driParseConfigFiles(&screen->optionCache, &options, dri_screen->myNum,
-                       "i965", NULL, NULL, 0, NULL, 0);
+                       "i965", NULL, NULL, 0);
    driDestroyOptionCache(&options);
 
    screen->driScrnPriv = dri_screen;

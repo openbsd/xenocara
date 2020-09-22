@@ -97,11 +97,9 @@ static void vlVaGetBox(struct pipe_video_buffer *buf, unsigned idx,
    width = region->width;
    height = region->height;
 
-   vl_video_buffer_adjust_size(&x, &y, plane,
-                               pipe_format_to_chroma_format(buf->buffer_format),
+   vl_video_buffer_adjust_size(&x, &y, plane, buf->chroma_format,
                                buf->interlaced);
-   vl_video_buffer_adjust_size(&width, &height, plane,
-                               pipe_format_to_chroma_format(buf->buffer_format),
+   vl_video_buffer_adjust_size(&width, &height, plane, buf->chroma_format,
                                buf->interlaced);
 
    box->x = region->x < 0 ? -x : x;
@@ -130,6 +128,9 @@ static VAStatus vlVaPostProcBlit(vlVaDriver *drv, vlVaContext *context,
        !src->interlaced)
       grab = true;
 
+   if (src->interlaced != dst->interlaced && dst->interlaced && !grab)
+      return VA_STATUS_ERROR_INVALID_SURFACE;
+
    if ((src->width != dst->width || src->height != dst->height) &&
        (src->interlaced && dst->interlaced))
       scale = true;
@@ -138,7 +139,7 @@ static VAStatus vlVaPostProcBlit(vlVaDriver *drv, vlVaContext *context,
    if (!src_surfaces || !src_surfaces[0])
       return VA_STATUS_ERROR_INVALID_SURFACE;
 
-   if (scale || (src->interlaced != dst->interlaced && dst->interlaced)) {
+   if (scale || (grab && dst->interlaced)) {
       vlVaSurface *surf;
 
       surf = handle_table_get(drv->htab, context->target_id);
