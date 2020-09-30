@@ -1,15 +1,13 @@
-# $OpenBSD: Makefile,v 1.7 2008/01/06 18:13:58 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2020/09/30 20:42:12 kn Exp $
 
 .include "../Makefile.inc"
 
-OSRELEASE=`/sbin/sysctl -n kern.osrelease 2>&1`
 RM?=rm
 
 depend:
 
 all:
-	@sed -e "s,__osrelease__,${OSRELEASE}," \
-		${.CURDIR}/system.fvwmrc > .fvwmrc
+	@cat ${.CURDIR}/system.fvwmrc > .fvwmrc
 
 install:
 	${INSTALL_DATA} .fvwmrc \
