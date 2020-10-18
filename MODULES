@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.443 2020/09/11 06:29:17 matthieu Exp $
+# $OpenBSD: MODULES,v 1.444 2020/10/18 08:32:11 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -191,7 +191,7 @@ lib/xcb-util-keysyms		0.4.0
 lib/xcb-util-renderutil		0.3.9
 lib/xcb-util-wm			0.4.1
 
-proto/xcb-proto			1.14
+proto/xcb-proto			1.14.1		needs-update
 proto/xorgproto			2020.1		needs-update
 
 util/cf				1.0.4
