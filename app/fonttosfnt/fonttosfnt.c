@@ -106,6 +106,12 @@ main(int argc, char **argv)
 
     font = makeFont();
 
+    if(argc - i > 1)
+	fprintf(stderr,
+	    "You are requesting to put more than one font into a single OpenType font.\n"
+	    "This is not recommended. The global font metrics will not match every font face.\n"
+	    "The creation of an OpenType font collection is recommended.\n");
+
     if(i == argc) {
         rc = readFile(NULL, font);
         if(rc != 0)

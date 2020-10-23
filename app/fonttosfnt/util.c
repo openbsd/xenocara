@@ -213,10 +213,10 @@ macTime(int *hi, unsigned *lo)
     tm.tm_isdst = -1;
 
     macEpoch = mktime_gmt(&tm);
-    if(macEpoch < 0) return -1;
+    if(macEpoch == -1) return -1;
 
     current = time(NULL);
-    if(current < 0)
+    if(current == -1)
         return -1;
 
     if(current < macEpoch) {
@@ -280,8 +280,11 @@ faceFoundry(FT_Face face)
             return makeName("URW ");
         else if(strcasecmp(prop.u.atom, "y&y") == 0)
             return makeName("Y&Y ");
-        else
-            return makeName("UNKN");
+        else {
+	    char buf[5];
+	    snprintf(buf, sizeof(buf), "%-4s", prop.u.atom);
+            return makeName(buf);
+	}
     }
     /* For now */
     return makeName("UNKN");
@@ -302,7 +305,7 @@ faceWeight(FT_Face face)
         else if(strcasecmp(prop.u.atom, "light") == 0)
             return 300;
         else if(strcasecmp(prop.u.atom, "medium") == 0)
-            return 500;
+            return 400;
         else if(strcasecmp(prop.u.atom, "semibold") == 0)
             return 600;
         else if(strcasecmp(prop.u.atom, "bold") == 0)
@@ -312,9 +315,9 @@ faceWeight(FT_Face face)
         else if(strcasecmp(prop.u.atom, "black") == 0)
             return 900;
         else
-            return 500;
+            return 400;
     } else
-        return 500;             /* for now */
+        return 400;             /* for now */
 }
 
 int
@@ -386,6 +389,19 @@ faceFlags(FT_Face face)
             flags |= FACE_ITALIC;
     }
     return flags;
+}
+
+int
+faceIntProp(FT_Face face, const char *name)
+{
+    int rc;
+    BDF_PropertyRec prop;
+
+    rc = FT_Get_BDF_Property(face, name, &prop);
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_INTEGER)
+	return prop.u.integer;
+    else
+	return UNDEF;
 }
 
 char *

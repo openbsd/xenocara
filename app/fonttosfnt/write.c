@@ -61,7 +61,6 @@ static int writemaxp(FILE*, FontPtr);
 static int writename(FILE*, FontPtr);
 static int writepost(FILE*, FontPtr);
 
-int max_awidth, min_x, min_y, max_x, max_y;
 static CmapPtr current_cmap = NULL;
 static int numglyphs, nummetrics;
 static int write_error_occurred, read_error_occurred;
@@ -206,6 +205,117 @@ readULONG(FILE *out)
     return ntohl(val);
 }
 
+void
+fontMetrics(FontPtr font)
+{
+    int i, rc;
+    double sumAwidth = 0;
+    unsigned count = 0;
+
+    font->metrics.maxAwidth = 0;
+    font->metrics.maxX = -10000 * TWO_SIXTEENTH;
+    font->metrics.maxY = -10000 * TWO_SIXTEENTH;
+    font->metrics.minX = 10000 * TWO_SIXTEENTH;
+    font->metrics.minY = 10000 * TWO_SIXTEENTH;
+
+    for(i = 0; i < FONT_CODES; i++) {
+        int awidth, x0, y0, x1, y1;
+        rc = glyphMetrics(font, i, &awidth, &x0, &y0, &x1, &y1);
+        if(rc < 0)
+            continue;
+
+        if(awidth > font->metrics.maxAwidth) font->metrics.maxAwidth = awidth;
+        if(x0 < font->metrics.minX) font->metrics.minX = x0;
+        if(y0 < font->metrics.minY) font->metrics.minY = y0;
+        if(x1 > font->metrics.maxX) font->metrics.maxX = x1;
+        if(y1 > font->metrics.maxY) font->metrics.maxY = y1;
+
+	if(awidth > 0) {
+	    sumAwidth += awidth;
+	    count++;
+	}
+    }
+
+    if (count) font->metrics.awidth = sumAwidth / count;
+
+    font->metrics.height = TWO_SIXTEENTH;
+
+    if(font->pxMetrics.size == UNDEF) {
+	font->pxMetrics.size = font->pxMetrics.height;
+	font->metrics.size = font->metrics.height;
+    }
+
+    font->metrics.size = font->pxMetrics.size
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+
+    if(font->pxMetrics.ascent == UNDEF) {
+	font->metrics.ascent = font->metrics.maxY;
+	font->pxMetrics.ascent =
+	    font->metrics.ascent
+	    * font->pxMetrics.height / TWO_SIXTEENTH;
+    }
+    else
+	font->metrics.ascent =
+	    font->pxMetrics.ascent
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+
+    if(font->pxMetrics.descent == UNDEF) {
+	font->metrics.descent = font->metrics.minY;
+	font->pxMetrics.descent =
+	    font->metrics.descent
+	    * font->pxMetrics.height / TWO_SIXTEENTH;
+    }
+    else
+	font->metrics.descent =
+	    font->pxMetrics.descent
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+
+    if(font->pxMetrics.capHeight == UNDEF) {
+	if(glyphMetrics(font, 'X', NULL, NULL, NULL, NULL, &font->metrics.capHeight) != 1)
+	    font->metrics.capHeight = font->metrics.ascent;
+	font->pxMetrics.capHeight =
+	    font->metrics.capHeight * font->pxMetrics.height / TWO_SIXTEENTH;
+    }
+    else
+	font->metrics.capHeight =
+	    font->pxMetrics.capHeight
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+
+    if(font->pxMetrics.xHeight == UNDEF) {
+	if(glyphMetrics(font, 'x', NULL, NULL, NULL, NULL, &font->metrics.xHeight) != 1)
+	    font->metrics.xHeight = font->metrics.capHeight * 2 / 3;
+	font->pxMetrics.xHeight =
+	    font->metrics.xHeight * font->pxMetrics.height / TWO_SIXTEENTH;
+    }
+    else
+	font->metrics.xHeight =
+	    font->pxMetrics.xHeight
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+
+    if(font->pxMetrics.underlinePosition == UNDEF)
+	font->metrics.underlinePosition = - font->metrics.descent * 2;
+    else {
+	fprintf(stderr, "Setting underlinePosition. pxMetrics.underlinePosition is %d. height is %d\n",
+		font->pxMetrics.underlinePosition, font->pxMetrics.height);
+	font->metrics.underlinePosition =
+	    font->pxMetrics.underlinePosition
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+    }
+
+    if(font->pxMetrics.underlineThickness == UNDEF)
+	/* make sure thickness is at least one pixel. */
+	/* TODO: this could be refined according to
+	 * X Logical Font Description Conventions (xlfd.txt)
+	 * by also considering the font weight. */
+	font->metrics.underlineThickness =
+	    TWO_SIXTEENTH
+	    / (font->pxMetrics.height < 9 ? font->pxMetrics.height : 9);
+    else
+	font->metrics.underlineThickness =
+	    font->pxMetrics.underlineThickness
+	    * TWO_SIXTEENTH / font->pxMetrics.height;
+}
+
 int 
 writeFile(char *filename, FontPtr font)
 {
@@ -219,8 +329,6 @@ writeFile(char *filename, FontPtr font)
     int offset[15], length[15];
     StrikePtr strike;
 
-    fontMetrics(font, &max_awidth, &min_x, &min_y, &max_x, &max_y);
-
     out = fopen(filename, "wb+");
     if(out == NULL)
         return -1;
@@ -230,6 +338,8 @@ writeFile(char *filename, FontPtr font)
         fprintf(stderr, "Couldn't build cmap.\n");
         return -1;
     }
+
+    fontMetrics(font);
 
     write_error_occurred = 0;
     read_error_occurred = 0;
@@ -434,8 +544,8 @@ fixupChecksum(FILE *out, int full_length, int head_position)
 static int 
 writehead(FILE* out, FontPtr font)
 {
-    int time_hi;
-    unsigned time_lo;
+    int time_hi = 0;
+    unsigned time_lo = 0;
 
     macTime(&time_hi, &time_lo);
 
@@ -451,10 +561,12 @@ writehead(FILE* out, FontPtr font)
     writeLONG(out, time_hi);    /* modified */
     writeULONG(out, time_lo);
 
-    writeUSHORT(out, FONT_UNITS_FLOOR(min_x));
-    writeUSHORT(out, FONT_UNITS_FLOOR(min_y));
-    writeUSHORT(out, FONT_UNITS_CEIL(max_x));
-    writeUSHORT(out, FONT_UNITS_CEIL(max_y));
+    /* bounding box for all glyphs */
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.minX));
+    writeUSHORT(out, FONT_UNITS_FLOOR(font->metrics.minY));
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.maxX));
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.maxY));
+
     writeUSHORT(out, font->flags); /* macStyle */
     writeUSHORT(out, 1);        /* lowestRecPPEM */
     writeSHORT(out, 0);         /* fontDirectionHint */
@@ -549,27 +661,6 @@ writeEBDT(FILE* out, FontPtr font)
     return 0;
 }
 
-static int
-writeSbitLineMetrics(FILE *out, StrikePtr strike, int num, int den)
-{
-    int width_max, x_min, y_min, x_max, y_max;
-    strikeMetrics(strike, &width_max, &x_min, &y_min, &x_max, &y_max);
-
-    writeCHAR(out, y_max);      /* ascender */
-    writeCHAR(out, y_min);      /* descender */
-    writeBYTE(out, width_max);  /* widthMax */
-    writeCHAR(out, num);          /* caretSlopeNumerator */
-    writeCHAR(out, den);          /* caretSlopeDenominator */
-    writeCHAR(out, 0);          /* caretOffset */
-    writeCHAR(out, 0);          /* minOriginSB */
-    writeCHAR(out, 0);          /* minAdvanceSB */
-    writeCHAR(out, 0);          /* maxBeforeBL */
-    writeCHAR(out, 0);          /* minAfterBL */
-    writeCHAR(out, 0);          /* pad1 */
-    writeCHAR(out, 0);          /* pad2 */
-    return 0;
-}
-
 static int 
 writeEBLC(FILE* out, FontPtr font)
 {
@@ -599,8 +690,20 @@ writeEBLC(FILE* out, FontPtr font)
         writeULONG(out, 0xDEADFACE); /* indexTablesSize */
         writeULONG(out, 0xDEADFACE); /* numberOfIndexSubTables */
         writeULONG(out, 0);     /* colorRef */
-        writeSbitLineMetrics(out, strike, num, den);
-        writeSbitLineMetrics(out, strike, num, den);
+	for (i = 0; i <= 1; i++) {
+	  writeCHAR(out, font->pxMetrics.ascent);	/* ascender */
+	  writeCHAR(out, -font->pxMetrics.descent);	/* descender */
+	  writeBYTE(out, strikeMaxWidth(strike));	/* widthMax */
+	  writeCHAR(out, num);				/* caretSlopeNumerator */
+	  writeCHAR(out, den);				/* caretSlopeDenominator */
+	  writeCHAR(out, 0);				/* caretOffset */
+	  writeCHAR(out, 0);				/* minOriginSB */
+	  writeCHAR(out, 0);				/* minAdvanceSB */
+	  writeCHAR(out, 0);				/* maxBeforeBL */
+	  writeCHAR(out, 0);				/* minAfterBL */
+	  writeCHAR(out, 0);				/* pad1 */
+	  writeCHAR(out, 0);				/* pad2 */
+	}
         writeUSHORT(out, 0);    /* startGlyphIndex */
         writeUSHORT(out, 0xFFFD); /* endGlyphIndex */
         writeBYTE(out, strike->sizeX); /* ppemX */
@@ -648,9 +751,6 @@ writeEBLC(FILE* out, FontPtr font)
     /* actual indexSubTables */
     strike = font->strikes;
     while(strike) {
-        int vertAdvance, y_min, y_max;
-        strikeMetrics(strike, NULL, NULL, &y_min, NULL, &y_max);
-        vertAdvance = y_max - y_min;
         table = strike->indexSubTables;
         while(table) {
             int location;
@@ -718,7 +818,7 @@ writeEBLC(FILE* out, FontPtr font)
                 writeBYTE(out, bitmap->advanceWidth);
                 writeCHAR(out, bitmap->horiBearingX); /* vertBearingX */
                 writeCHAR(out, bitmap->horiBearingY); /* vertBearingY */
-                writeBYTE(out, vertAdvance); /* vertAdvance */
+                writeBYTE(out, font->metrics.maxAwidth); /* vertAdvance */
             } else {
                 for(i = table->firstGlyphIndex; 
                     i <= table->lastGlyphIndex; i++) {
@@ -849,13 +949,15 @@ writehhea(FILE* out, FontPtr font)
     degreesToFraction(font->italicAngle, &num, &den);
 
     writeULONG(out, 0x00010000); /* version */
-    writeSHORT(out, FONT_UNITS_CEIL(max_y)); /* ascender */
-    writeSHORT(out, FONT_UNITS_FLOOR(min_y)); /* descender */
-    writeSHORT(out, FONT_UNITS(TWO_SIXTEENTH / 20)); /* lineGap */
-    writeUSHORT(out, FONT_UNITS(max_awidth)); /* advanceWidthMax */
-    writeSHORT(out, FONT_UNITS_FLOOR(min_x)); /* minLeftSideBearing */
-    writeSHORT(out, FONT_UNITS_FLOOR(min_x)); /* minRightSideBearing */
-    writeSHORT(out, FONT_UNITS_CEIL(max_x)); /* xMaxExtent */
+    writeSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* ascender */
+    writeSHORT(out, -FONT_UNITS_CEIL(font->metrics.descent)); /* descender */
+    writeSHORT(out, FONT_UNITS(font->metrics.size - font->metrics.ascent - font->metrics.descent));	/* lineGap */
+    writeUSHORT(out, FONT_UNITS(font->metrics.maxAwidth)); /* advanceWidthMax */
+    /* TODO: the next three are not calculated according to spec, are they ?
+     * https://docs.microsoft.com/en-us/typography/opentype/spec/hhea */
+    writeSHORT(out, FONT_UNITS_FLOOR(font->metrics.minX)); /* minLeftSideBearing */
+    writeSHORT(out, FONT_UNITS_FLOOR(font->metrics.minX)); /* minRightSideBearing */
+    writeSHORT(out, FONT_UNITS_CEIL(font->metrics.maxX)); /* xMaxExtent */
     writeSHORT(out, den);       /* caretSlopeRise */
     writeSHORT(out, num);       /* caretSlopeRun */
     writeSHORT(out, 0);         /* reserved */
@@ -974,8 +1076,8 @@ writepost(FILE* out, FontPtr font)
     
     writeULONG(out, 0x00030000); /* FormatType */
     writeULONG(out, font->italicAngle); /* italicAngle */
-    writeSHORT(out, FONT_UNITS(font->underlinePosition));
-    writeSHORT(out, FONT_UNITS(font->underlineThickness));
+    writeSHORT(out, FONT_UNITS(font->metrics.underlinePosition));
+    writeSHORT(out, FONT_UNITS(font->metrics.underlineThickness));
     writeULONG(out, fixed_pitch); /* isFixedPitch */
     writeULONG(out, 0);         /* minMemType42 */
     writeULONG(out, 0);         /* maxMemType42 */
@@ -989,8 +1091,8 @@ writeOS2(FILE* out, FontPtr font)
 {
     int i;
 
-    writeUSHORT(out, 0x0001);
-    writeSHORT(out, FONT_UNITS(max_awidth / 2)); /* xAvgCharWidth; */
+    writeUSHORT(out, 5); /* version */
+    writeSHORT(out, FONT_UNITS(font->metrics.awidth)); /* xAvgCharWidth; */
     writeUSHORT(out, font->weight);  /* usWeightClass; */
     writeUSHORT(out, font->width); /* usWidthClass; */
     writeSHORT(out, 0);         /* fsType; */
@@ -1002,7 +1104,7 @@ writeOS2(FILE* out, FontPtr font)
     writeSHORT(out, UNITS_PER_EM / 5); /* ySuperscriptYSize; */
     writeSHORT(out, 0);         /* ySuperscriptXOffset; */
     writeSHORT(out, UNITS_PER_EM / 5); /* ySuperscriptYOffset; */
-    writeSHORT(out, FONT_UNITS(font->underlineThickness)); 
+    writeSHORT(out, FONT_UNITS(font->metrics.underlineThickness));
     /* yStrikeoutSize; */
     writeSHORT(out, UNITS_PER_EM / 4); /* yStrikeoutPosition; */
     writeSHORT(out, 0);         /* sFamilyClass; */
@@ -1013,17 +1115,38 @@ writeOS2(FILE* out, FontPtr font)
     writeULONG(out, 0x03FF);    /* ulUnicodeRange3; */
     writeULONG(out, 0U);        /* ulUnicodeRange4; */
     writeULONG(out, font->foundry); /* achVendID[4]; */
-    writeUSHORT(out, 0x0040);   /* fsSelection; */
+    i = 0;
+    if (font->flags & FACE_ITALIC)
+	i |= 1 << 0;
+    if (font->flags & FACE_BOLD)
+	i |= 1 << 5;
+    if (!i)
+	i |= 1 << 6;
+#ifndef NO_TYPO_METRICS
+    i |= 1 << 7; /* USE_TYPO_METRICS instead usWin metrics for line spacing. */
+#endif
+    writeUSHORT(out, i);	/* fsSelection; */
     writeUSHORT(out, 0x20);     /* usFirstCharIndex; */
     writeUSHORT(out, 0xFFFD);   /* usLastCharIndex; */
-    writeUSHORT(out, FONT_UNITS_CEIL(max_y)); /* sTypoAscender; */
-    writeUSHORT(out, -FONT_UNITS_FLOOR(min_y)); /* sTypoDescender; */
-    writeUSHORT(out, FONT_UNITS(max_y - min_y));
-    /* sTypoLineGap; */
-    writeUSHORT(out, FONT_UNITS_CEIL(max_y)); /* usWinAscent; */
-    writeUSHORT(out, -FONT_UNITS_FLOOR(min_y)); /* usWinDescent; */
-    writeULONG(out, 3);         /* ulCodePageRange1; */
-    writeULONG(out, 0);         /* ulCodePageRange2; */
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* sTypoAscender; */
+    writeSHORT(out, -FONT_UNITS_CEIL(font->metrics.descent)); /* sTypoDescender; */
+    writeSHORT(out, FONT_UNITS(font->metrics.size - font->metrics.ascent - font->metrics.descent));	/* sTypoLineGap */
+#ifdef NO_TYPO_METRICS
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.ascent)); /* usWinAscent; */
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.descent)); /* usWinDescent; */
+#else
+    writeUSHORT(out, FONT_UNITS_CEIL(font->metrics.maxY)); /* usWinAscent; */
+    writeUSHORT(out, -FONT_UNITS_FLOOR(font->metrics.minY)); /* usWinDescent; */
+#endif
+    writeULONG(out, 3);						/* ulCodePageRange1; */
+    writeULONG(out, 0);         				/* ulCodePageRange2; */
+    writeSHORT(out, FONT_UNITS_CEIL(font->metrics.xHeight));	/* sxHeight; */
+    writeSHORT(out, FONT_UNITS_CEIL(font->metrics.capHeight));	/* sCapHeight; */
+    writeUSHORT(out, 0); 					/* usDefaultChar; */
+    writeUSHORT(out, 20); 					/* usBreakChar; */
+    writeUSHORT(out, 0); 					/* usMaxContext; */
+    writeUSHORT(out, 0); 					/* usLowerOpticalPointSize; */
+    writeUSHORT(out, 0xffff); 					/* usUpperOpticalPointSize; */
     return 0;
 }
 
@@ -1061,11 +1184,11 @@ writePCLT(FILE* out, FontPtr font)
 
     writeULONG(out, 0x00010000); /* version */
     writeULONG(out, 0);         /* FontNumber */
-    writeUSHORT(out, FONT_UNITS(max_awidth)); /* pitch */
-    writeUSHORT(out, FONT_UNITS(max_y));    /* xHeight */
+    writeUSHORT(out, FONT_UNITS(font->metrics.maxAwidth)); /* pitch */
+    writeUSHORT(out, FONT_UNITS(font->metrics.xHeight));    /* xHeight */
     writeUSHORT(out, style);    /* style */
     writeUSHORT(out, 6 << 12);  /* TypeFamily */
-    writeUSHORT(out, FONT_UNITS(max_y)); /* CapHeight */
+    writeUSHORT(out, FONT_UNITS(font->metrics.xHeight)); /* CapHeight */
     writeUSHORT(out, 0);        /* SymbolSet */
     writeCHARs(out, name, 16);  /* TypeFace */
     writeBYTEs(out, charComplement, 8); /* CharacterComplement */

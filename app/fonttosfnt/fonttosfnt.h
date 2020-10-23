@@ -29,6 +29,7 @@ THE SOFTWARE.
 #endif
 
 #include <stdarg.h>
+#include <math.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -69,23 +70,38 @@ extern int reencode_flag;
 
 #define UNITS_PER_EM 2048
 
-#define EPSILON 0.000000001
-#define FLOOR(x) ((x) < 0.0 ? -(int)(-(x)) : (x))
-#define CEIL(x) FLOOR((x) + 1.0 - EPSILON)
+#define UNDEF 0x80000000
 
 /* Convert a fixed-point value into FUnits */
 #define FONT_UNITS(x) \
-  FLOOR(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM + 0.5)
+  round(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM)
 #define FONT_UNITS_FLOOR(x) \
-  FLOOR(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM)
+  floor(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM)
 #define FONT_UNITS_CEIL(x) \
-  CEIL(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM)
+  ceil(((double)(x)) / TWO_SIXTEENTH * UNITS_PER_EM)
 
 typedef struct _FontNameEntry {
     int nid;                    /* name id */
     int size;                   /* bytes in value */
     char *value;
 } FontNameEntryRec, *FontNameEntryPtr;
+
+typedef struct _Metrics {
+    int height;
+    int size;
+    int maxX;
+    int minX;
+    int maxY;
+    int minY;
+    int xHeight;
+    int capHeight;
+    int maxAwidth;
+    int awidth;
+    int ascent;
+    int descent;
+    int underlinePosition;
+    int underlineThickness;
+} MetricsRec, *MetricsPtr;
 
 typedef struct _Font {
     int numNames;
@@ -94,8 +110,8 @@ typedef struct _Font {
     int weight;                 /* as in the OS/2 table */
     int width;                  /* as in the OS/2 table */
     int italicAngle;            /* degrees c-clockwise from the vertical */
-    int underlinePosition;
-    int underlineThickness;
+    MetricsRec pxMetrics;
+    MetricsRec metrics;
     unsigned foundry;
     struct _Strike *strikes;
 } FontRec, *FontPtr;
@@ -152,9 +168,9 @@ CmapPtr makeCmap(FontPtr);
 int findIndex(CmapPtr, int);
 int findCode(CmapPtr, int);
 BitmapPtr strikeBitmapIndex(StrikePtr, CmapPtr, int);
-void strikeMetrics(StrikePtr, int*, int*, int*, int*, int*);
+int strikeMaxWidth(StrikePtr);
 int glyphMetrics(FontPtr, int, int*, int*, int*, int*, int*);
-void fontMetrics(FontPtr, int*, int*, int*, int*, int*);
+void fontMetrics(FontPtr);
 int maxIndex(CmapPtr);
 
 int readFile(char *filename, FontPtr);
@@ -174,6 +190,7 @@ int macTime(int *, unsigned *);
 unsigned faceFoundry(FT_Face);
 char *faceEncoding(FT_Face);
 int faceFlags(FT_Face);
+int faceIntProp(FT_Face, const char *);
 int faceWeight(FT_Face);
 int faceWidth(FT_Face);
 int faceItalicAngle(FT_Face);

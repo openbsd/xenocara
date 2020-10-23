@@ -42,8 +42,32 @@ makeFont(void)
     font->weight = 500;
     font->width = 5;
     font->italicAngle = 0;
-    font->underlinePosition = - TWO_SIXTEENTH;
-    font->underlineThickness = TWO_SIXTEENTH;
+    font->pxMetrics.height = UNDEF;
+    font->pxMetrics.maxX = UNDEF;
+    font->pxMetrics.minX = UNDEF;
+    font->pxMetrics.maxY = UNDEF;
+    font->pxMetrics.minY = UNDEF;
+    font->pxMetrics.xHeight = UNDEF;
+    font->pxMetrics.capHeight = UNDEF;
+    font->pxMetrics.maxAwidth = UNDEF;
+    font->pxMetrics.awidth = UNDEF;
+    font->pxMetrics.ascent = UNDEF;
+    font->pxMetrics.descent = UNDEF;
+    font->pxMetrics.underlinePosition = UNDEF;
+    font->pxMetrics.underlineThickness = UNDEF;
+    font->metrics.height = UNDEF;
+    font->metrics.maxX = UNDEF;
+    font->metrics.minX = UNDEF;
+    font->metrics.maxY = UNDEF;
+    font->metrics.minY = UNDEF;
+    font->metrics.xHeight = UNDEF;
+    font->metrics.capHeight = UNDEF;
+    font->metrics.maxAwidth = UNDEF;
+    font->metrics.awidth = UNDEF;
+    font->metrics.ascent = UNDEF;
+    font->metrics.descent = UNDEF;
+    font->metrics.underlinePosition = UNDEF;
+    font->metrics.underlineThickness = UNDEF;
     font->foundry = makeName("UNKN");
     font->strikes = NULL;
     return font;
@@ -401,19 +425,12 @@ strikeBitmapIndex(StrikePtr strike, CmapPtr cmap, int index)
     return STRIKE_BITMAP(strike, code);
 }
 
-void
-strikeMetrics(StrikePtr strike,
-              int *width_max_return, 
-              int *x_min_return, int *y_min_return,
-              int *x_max_return, int *y_max_return)
+int
+strikeMaxWidth(StrikePtr strike)
 {
     BitmapPtr bitmap;
     int i;
     int width_max = 0;
-    int x_min = 10000;
-    int y_min = 10000;
-    int x_max = -10000;
-    int y_max = -10000;
 
     for(i = 0; i < FONT_CODES; i++) {
         bitmap = STRIKE_BITMAP(strike, i);
@@ -421,21 +438,9 @@ strikeMetrics(StrikePtr strike,
             continue;
         if(bitmap->advanceWidth > width_max)
             width_max = bitmap->advanceWidth;
-        if(bitmap->horiBearingX < x_min)
-            x_min = bitmap->horiBearingX;
-        if(bitmap->horiBearingY > y_max)
-            y_max = bitmap->horiBearingY;
-        if(bitmap->horiBearingX + bitmap->width > x_max)
-            x_max = bitmap->horiBearingX + bitmap->width;
-        if(bitmap->horiBearingY - bitmap->height < y_min)
-            y_min = bitmap->horiBearingY - bitmap->height;
     }
 
-    if(width_max_return) *width_max_return = width_max;
-    if(x_min_return) *x_min_return = x_min;
-    if(y_min_return) *y_min_return = y_min;
-    if(x_max_return) *x_max_return = x_max;
-    if(y_max_return) *y_max_return = y_max;
+    return width_max;
 }
 
 int
@@ -453,7 +458,7 @@ glyphMetrics(FontPtr font, int code,
         if(bitmap) {
             if(width_return)
                 *width_return = 
-                    (((float)bitmap->advanceWidth + 0.5) / strike->sizeX) *
+                    (((float)bitmap->advanceWidth) / strike->sizeX) *
                     TWO_SIXTEENTH;
             if(x_min_return)
                 *x_min_return =
@@ -463,17 +468,13 @@ glyphMetrics(FontPtr font, int code,
                 *y_min_return =
                     (((float)bitmap->horiBearingY - bitmap->height) 
                      / strike->sizeY) * TWO_SIXTEENTH;
-            /* For the following two, 0.9 instead of 0.5 might make
-               more sense.  However, using different rounding rules
-               for x_max and awidth causes problems for detecting
-               charcell fonts. */
             if(x_max_return)
                 *x_max_return =
-                    (((float)bitmap->horiBearingX + bitmap->width + 0.5)
+                    (((float)bitmap->horiBearingX + bitmap->width)
                      / strike->sizeX) * TWO_SIXTEENTH;
             if(y_max_return)
                 *y_max_return =
-                    (((float)bitmap->horiBearingY + 0.5) / strike->sizeY) *
+                    (((float)bitmap->horiBearingY) / strike->sizeY) *
                     TWO_SIXTEENTH;
             return 1;
         }
@@ -482,33 +483,3 @@ glyphMetrics(FontPtr font, int code,
 
     return -1;
 }
-
-void
-fontMetrics(FontPtr font,
-            int *max_awidth_return,
-            int *min_x_return, int *min_y_return,
-            int *max_x_return, int *max_y_return)
-{
-    int i, rc;
-    int max_awidth = 0;
-    int min_x = 10000 * 65536, min_y = 10000 * 65536;
-    int max_x = -10000 * 65536, max_y = -10000 * 65536;
-    for(i = 0; i < FONT_CODES; i++) {
-        int awidth, x0, y0, x1, y1;
-        rc = glyphMetrics(font, i, &awidth, &x0, &y0, &x1, &y1);
-        if(rc < 0)
-            continue;
-        if(awidth > max_awidth)
-            max_awidth = awidth;
-        if(x0 < min_x) min_x = x0;
-        if(y0 < min_y) min_y = y0;
-        if(x1 > max_x) max_x = x1;
-        if(y1 > max_y) max_y = y1;
-    }
-    if(max_awidth_return) *max_awidth_return = max_awidth;
-    if(min_x_return) *min_x_return = min_x;
-    if(min_y_return) *min_y_return = min_y;
-    if(max_x_return) *max_x_return = max_x;
-    if(max_y_return) *max_y_return = max_y;
-}
-

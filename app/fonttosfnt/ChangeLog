@@ -1,3 +1,135 @@
+commit 91af80a0aa18c969cd90668eed80bcbfc1e40661
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 21 16:36:30 2020 +1000
+
+    Bump to 1.2.0
+
+commit ca9ad454496bebbc37125959d049cf2173c07c2a
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sun Aug 16 21:56:15 2020 +0200
+
+    use PIXEL_SIZE to calculate lineGap
+
+commit 0447b81053d4ccaa1e1b0087bf6076abae431cae
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Fri Jul 31 00:07:26 2020 +0200
+
+    fix sign of sTypoDescender
+
+commit 747c58aa17b9adc016aed0caab049417a20f0b22
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Thu Jul 30 22:46:50 2020 +0200
+
+    calculate capHeight and xHeight as recommended
+
+commit 64e7f386baf69fa6857047fc8ad9b4cd9a8185f1
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Thu Jul 30 21:34:59 2020 +0200
+
+    move metrics calculation to write.c
+
+commit 19412d9ac3fb7f00346273cfe914601c844f5872
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sat Jul 18 08:39:01 2020 +0200
+
+    Add warnings when wrapping multiple fonts and on PCF fonts
+
+commit 1fa97fdc6dc900728be8523be89096b4cb117d4d
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sun Jul 12 15:36:18 2020 +0200
+
+    provide version 5 OS/2 table
+    
+    this was an attempt to fix linespacing, which did not help, but
+    would still keep it around to avoid double efforts.
+
+commit facf71184163d50adf0b8fccffcaffa18b7bd277
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sun Jul 12 15:12:59 2020 +0200
+
+    use design metrics in eblc instead of calculated metrics
+    
+    This will probably not work for a font providing multiple strikes.
+    But .bdf fonts don't provide multiple strikes (or do they?!?)
+    I don't know about .pcf fonts, but I would recommend against running fonttosfnt
+    on .pcf fonts because bdf2pcf seems to loose some attributes during conversion.
+
+commit 9fb05de7d6c57d045b4a88516f3c28cf3cf98722
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Tue Jul 7 21:02:56 2020 +0200
+
+    use more properties according to XLFD
+
+commit 58cbf737557f34744b950668e3354ec2f2dae766
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Mon Jul 6 22:50:23 2020 +0200
+
+    use standard C rounding functions
+
+commit f8fa7919397659fb0ac5dade75152343d57f20ce
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Tue Jun 16 18:43:12 2020 +0200
+
+    correctly set OS2 fsSelection for italic and bold fonts
+
+commit 1df352c9e862686692ac053b838d76a36d721805
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Mon Jun 15 14:08:49 2020 +0200
+
+    truncate foundry if there is no known abbreviation.
+    
+    Honestly I have no idea why the foundry needs to fit in four bytes.
+    But anyway truncation might indeed be better then "UNKN" ?
+    
+    Anyone more knowledgeable than me out there?
+
+commit 8532812f1eddfadc0bcfad220b283bf5990bba10
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sun May 31 08:02:24 2020 +0200
+
+    use zero lineGap, sTypoDescender should be negative
+    
+    According to
+    https://simoncozens.github.io/fonts-and-layout/opentype.html#vertical-metrics-hhea-and-os2
+    sTypoDescender should be negative and lineGap should be zero.
+
+commit de8068f9c4251fb6cb9407c07bf245e1937270bc
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sun May 31 07:58:10 2020 +0200
+
+    don't add arbitrary number to the glypth metrics
+    
+    This caused pango to calculate wrong, too large font extents and in
+    consequence gvim used too large character cells.
+
+commit 7096c58f3fe3b6c79508cb16daac5c5bb2f042e7
+Author: Peng Wu <pwu@redhat.com>
+Date:   Thu Jun 11 14:09:35 2020 +0800
+
+    Guess Regular style for Medium Weight
+    
+    X Logical Font Description recognize "Medium" as "Regular".
+    Update the faceWeight function to change style from "Medium" to "Regular".
+
+commit 81a61c049e6de80120531f0770b22e7637c9acb9
+Author: rnhmjoj <rnhmjoj@inventati.org>
+Date:   Fri Feb 7 17:47:52 2020 +0100
+
+    Fix uninitialised memory write
+    
+    If macTime() fails write zeros instead of unitialized memory to
+    the date fields.
+
+commit 51e8117654fb092ae5412d7aa184bfc6b498c954
+Author: rnhmjoj <rnhmjoj@inventati.org>
+Date:   Fri Feb 7 17:46:54 2020 +0100
+
+    Fix incorrect error handling in macTime()
+    
+    mktime() and time() return (time_t -1) to signal an error.
+    Checking for negative values will incorrectly assume an error
+    happened for any calendar date before the unix epoch.
+
 commit 1d757ff6fa30079790fc44b141f6d0e4d5411f13
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Jan 6 12:55:31 2020 +1000
