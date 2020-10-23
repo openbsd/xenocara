@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.444 2020/10/18 08:32:11 matthieu Exp $
+# $OpenBSD: MODULES,v 1.445 2020/10/23 11:18:47 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -8,7 +8,7 @@ app/bdftopcf		1.1
 app/beforelight		1.0.5
 app/bitmap		1.0.9
 app/editres		1.0.7
-app/fonttosfnt		1.1.0
+app/fonttosfnt		1.2.0
 app/iceauth		1.0.8
 app/ico			1.0.5		XXX
 app/listres		1.0.4
