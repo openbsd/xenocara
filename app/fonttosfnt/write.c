@@ -295,8 +295,6 @@ fontMetrics(FontPtr font)
     if(font->pxMetrics.underlinePosition == UNDEF)
 	font->metrics.underlinePosition = - font->metrics.descent * 2;
     else {
-	fprintf(stderr, "Setting underlinePosition. pxMetrics.underlinePosition is %d. height is %d\n",
-		font->pxMetrics.underlinePosition, font->pxMetrics.height);
 	font->metrics.underlinePosition =
 	    font->pxMetrics.underlinePosition
 	    * TWO_SIXTEENTH / font->pxMetrics.height;
