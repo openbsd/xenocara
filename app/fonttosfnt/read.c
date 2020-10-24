@@ -250,8 +250,14 @@ readFile(char *filename, FontPtr font)
         rc = FT_Get_BDF_Property(face, "FOUNDRY", &prop);
         if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
             font->names[i].nid = 8;
-            font->names[i].size = 2 * strlen(prop.u.atom);
-            font->names[i].value = makeUTF16((char*)prop.u.atom);
+	    if(prop.u.atom) {
+		font->names[i].size = 2 * strlen(prop.u.atom);
+		font->names[i].value = makeUTF16((char*)prop.u.atom);
+	    }
+	    else {
+		font->names[i].size = 0;
+		font->names[i].value = makeUTF16("");
+	    }
             i++;
         }
 
