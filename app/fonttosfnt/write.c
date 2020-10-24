@@ -260,7 +260,7 @@ fontMetrics(FontPtr font)
 	    * TWO_SIXTEENTH / font->pxMetrics.height;
 
     if(font->pxMetrics.descent == UNDEF) {
-	font->metrics.descent = font->metrics.minY;
+	font->metrics.descent = - font->metrics.minY;
 	font->pxMetrics.descent =
 	    font->metrics.descent
 	    * font->pxMetrics.height / TWO_SIXTEENTH;
