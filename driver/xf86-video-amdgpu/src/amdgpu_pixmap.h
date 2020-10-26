@@ -162,7 +162,7 @@ amdgpu_pixmap_get_fb(PixmapPtr pix)
 					   handle);
 	}
 
-	return *fb_ptr;
+	return fb_ptr ? *fb_ptr : NULL;
 }
 
 enum {
