@@ -61,3 +61,10 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
+./usr/X11R6/lib/modules/dri/r200_dri.so
+./usr/X11R6/lib/modules/dri/r300_dri.so
+./usr/X11R6/lib/modules/dri/r600_dri.so
+./usr/X11R6/lib/modules/dri/radeon_dri.so
+./usr/X11R6/lib/modules/dri/radeonsi_dri.so
+./usr/X11R6/lib/libvulkan_radeon.so
+./usr/X11R6/share/vulkan/icd.d/radeon_icd.powerpc64.json
