@@ -287,6 +287,12 @@
 ./usr/X11R6/lib/libxshmfence.a
 ./usr/X11R6/lib/libxshmfence.la
 ./usr/X11R6/lib/libxshmfence.so.0.0
+./usr/X11R6/lib/modules/drivers/ati_drv.la
+./usr/X11R6/lib/modules/drivers/ati_drv.so
+./usr/X11R6/lib/modules/drivers/radeon_drv.la
+./usr/X11R6/lib/modules/drivers/radeon_drv.so
+./usr/X11R6/lib/modules/drivers/wsudl_drv.la
+./usr/X11R6/lib/modules/drivers/wsudl_drv.so
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
 ./usr/X11R6/lib/pkgconfig/epoxy.pc
@@ -358,6 +364,7 @@
 ./usr/X11R6/man/man7/drm-kms.7
 ./usr/X11R6/man/man7/drm-memory.7
 ./usr/X11R6/man/man7/drm.7
+./usr/X11R6/share/X11/xorg.conf.d/10-radeon.conf
 ./usr/X11R6/share/libdrm/amdgpu.ids
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be64.cache-7
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be64.cache-7
