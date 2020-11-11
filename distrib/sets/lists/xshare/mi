@@ -580,6 +580,9 @@
 ./usr/X11R6/include/freetype2/freetype/config/ftmodule.h
 ./usr/X11R6/include/freetype2/freetype/config/ftoption.h
 ./usr/X11R6/include/freetype2/freetype/config/ftstdlib.h
+./usr/X11R6/include/freetype2/freetype/config/integer-types.h
+./usr/X11R6/include/freetype2/freetype/config/mac-support.h
+./usr/X11R6/include/freetype2/freetype/config/public-macros.h
 ./usr/X11R6/include/freetype2/freetype/freetype.h
 ./usr/X11R6/include/freetype2/freetype/ftadvanc.h
 ./usr/X11R6/include/freetype2/freetype/ftbbox.h
