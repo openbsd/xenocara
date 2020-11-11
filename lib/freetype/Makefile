@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.54 2020/06/27 09:06:07 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.55 2020/11/11 09:27:24 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 23.2.17
+FT_VERSION_INFO= 23.4.17
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -26,7 +26,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c \
 	type42.c winfnt.c
 
-CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
+CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY -DFT_CONFIG_CONFIG_H='<ftconfig.h>'
 
 .if ${COMPILER_VERSION} != "gcc3"
 CFLAGS+= -fvisibility=hidden
