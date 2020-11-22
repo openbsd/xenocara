@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.446 2020/11/11 09:28:58 matthieu Exp $
+# $OpenBSD: MODULES,v 1.447 2020/11/22 10:13:52 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -61,7 +61,7 @@ app/xmessage		1.0.5
 app/xmodmap		1.0.10
 app/xmore		1.0.3
 app/xpr			1.0.5
-app/xprop		1.2.4
+app/xprop		1.2.5		needs-update
 app/xrandr		1.5.1
 app/xrdb		1.2.0
 app/xrefresh		1.0.6
@@ -150,7 +150,7 @@ font/xfree86-type1		1.0.4
 
 lib/libICE			1.0.10
 lib/libSM			1.2.3
-lib/libX11			1.6.12		needs-update
+lib/libX11			1.7.0		needs-update
 lib/libXScrnSaver		1.2.3
 lib/libXau			1.0.9
 lib/libXaw			1.0.13
