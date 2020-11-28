@@ -66,6 +66,8 @@ in this Software without prior written authorization from The Open Group.
 
 /* in lcWrap.c */
 extern LockInfoPtr _Xi18n_lock;
+/* in lcConv.c */
+extern LockInfoPtr _conv_lock;
 
 #ifdef WIN32
 static DWORD _X_TlsIndex = (DWORD)-1;
@@ -98,6 +100,7 @@ static xthread_t _Xthread_self(void)
 
 static LockInfoRec global_lock;
 static LockInfoRec i18n_lock;
+static LockInfoRec conv_lock;
 
 static void _XLockMutex(
     LockInfoPtr lip
@@ -130,6 +133,7 @@ static void _XFreeMutex(
 {
     xmutex_clear(lip->lock);
     xmutex_free(lip->lock);
+    lip->lock = NULL;
 }
 
 #ifdef XTHREADS_WARN
@@ -453,6 +457,9 @@ static void _XLockDisplay(
     XTHREADS_FILE_LINE_ARGS
     )
 {
+#ifdef XTHREADS
+    struct _XErrorThreadInfo *ti;
+#endif
 #ifdef XTHREADS_WARN
     _XLockDisplayWarn(dpy, file, line);
 #else
@@ -460,6 +467,15 @@ static void _XLockDisplay(
 #endif
     if (dpy->lock->locking_level > 0)
 	_XDisplayLockWait(dpy);
+#ifdef XTHREADS
+    /*
+     * Skip the two function calls below which may generate requests
+     * when LockDisplay is called from within _XError.
+     */
+    for (ti = dpy->error_threads; ti; ti = ti->next)
+	    if (ti->error_thread == xthread_self())
+		    return;
+#endif
     _XIDHandler(dpy);
     _XSeqSyncFunction(dpy);
 }
@@ -594,12 +610,22 @@ Status XInitThreads(void)
 	global_lock.lock = NULL;
 	return 0;
     }
+    if (!(conv_lock.lock = xmutex_malloc())) {
+	xmutex_free(global_lock.lock);
+	global_lock.lock = NULL;
+	xmutex_free(i18n_lock.lock);
+	i18n_lock.lock = NULL;
+	return 0;
+    }
     _Xglobal_lock = &global_lock;
     xmutex_init(_Xglobal_lock->lock);
     xmutex_set_name(_Xglobal_lock->lock, "Xlib global");
     _Xi18n_lock = &i18n_lock;
     xmutex_init(_Xi18n_lock->lock);
     xmutex_set_name(_Xi18n_lock->lock, "Xlib i18n");
+    _conv_lock = &conv_lock;
+    xmutex_init(_conv_lock->lock);
+    xmutex_set_name(_conv_lock->lock, "Xlib conv");
     _XLockMutex_fn = _XLockMutex;
     _XUnlockMutex_fn = _XUnlockMutex;
     _XCreateMutex_fn = _XCreateMutex;

@@ -47,7 +47,8 @@ _XimLocalFilter(Display *d, Window w, XEvent *ev, XPointer client_data)
     unsigned    currstate;
     DefTree	*b = ic->private.local.base.tree;
     DTIndex	 t;
-    Bool	 braille = False, anymodifier = False;
+    Bool	 anymodifier = False;
+    unsigned char braillePattern = 0;
 
     if(ev->xkey.keycode == 0)
 	return (False);
@@ -67,10 +68,10 @@ _XimLocalFilter(Display *d, Window w, XEvent *ev, XPointer client_data)
 	    }
 	    ic->private.local.brl_pressed &= ~(1<<(keysym-XK_braille_dot_1));
 	    if(!ic->private.local.brl_pressed && ic->private.local.brl_committing) {
-		/* Commited a braille pattern, let it go through compose tree */
+		/* Committed a braille pattern, let it go through compose tree */
 		keysym = XK_braille_blank | ic->private.local.brl_committing;
 		ev->type = KeyPress;
-		braille = True;
+		braillePattern = ic->private.local.brl_committing;
 		ic->private.local.brl_committing = 0;
 	    } else {
 	        return(True);
@@ -139,16 +140,16 @@ _XimLocalFilter(Display *d, Window w, XEvent *ev, XPointer client_data)
 	   (ev->type == KeyRelease && !anymodifier)) {
 	    goto emit_braille;
 	}
-	/* Error (Sequence Unmatch occured) */
+	/* Error (Sequence Unmatch occurred) */
 	/* initialize internal state for next key sequence */
 	ic->private.local.context = ((Xim)ic->core.im)->private.local.top;
 	return (ev->type == KeyPress);
     }
 
 emit_braille:
-    if(braille) {
+    if(braillePattern) {
 	/* Braille pattern is not in compose tree, emit alone */
-	ic->private.local.brl_committed = ic->private.local.brl_committing;
+	ic->private.local.brl_committed = braillePattern;
 	ic->private.local.composed = 0;
 	ev->xkey.keycode = 0;
 	_XPutBackEvent(d, ev);

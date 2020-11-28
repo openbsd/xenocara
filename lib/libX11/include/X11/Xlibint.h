@@ -203,8 +203,10 @@ struct _XDisplay
 	unsigned long request_upper32bit;
 #endif
 
-	/* avoid recursion on requests sequence number synchronization */
-	Bool req_seq_syncing; /* requests syncing is in-progress */
+	struct _XErrorThreadInfo *error_threads;
+
+	XIOErrorExitHandler exit_handler;
+	void *exit_handler_data;
 };
 
 #define XAllocIDs(dpy,ids,n) (*(dpy)->idlist_alloc)(dpy,ids,n)
@@ -447,15 +449,15 @@ extern LockInfoPtr _Xglobal_lock;
  */
 #if defined(MALLOC_0_RETURNS_NULL) || defined(__clang_analyzer__)
 
-# define Xmalloc(size) malloc(((size) == 0 ? 1 : (size)))
-# define Xrealloc(ptr, size) realloc((ptr), ((size) == 0 ? 1 : (size)))
-# define Xcalloc(nelem, elsize) calloc(((nelem) == 0 ? 1 : (nelem)), (elsize))
+# define Xmalloc(size) malloc((size_t)((size) == 0 ? 1 : (size)))
+# define Xrealloc(ptr, size) realloc((ptr), (size_t)((size) == 0 ? 1 : (size)))
+# define Xcalloc(nelem, elsize) calloc((size_t)((nelem) == 0 ? 1 : (nelem)), (size_t)(elsize))
 
 #else
 
-# define Xmalloc(size) malloc((size))
-# define Xrealloc(ptr, size) realloc((ptr), (size))
-# define Xcalloc(nelem, elsize) calloc((nelem), (elsize))
+# define Xmalloc(size) malloc((size_t)(size))
+# define Xrealloc(ptr, size) realloc((ptr), (size_t)(size))
+# define Xcalloc(nelem, elsize) calloc((size_t)(nelem), (size_t)(elsize))
 
 #endif
 
@@ -639,7 +641,7 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
 #ifndef DataRoutineIsProcedure
 #define Data(dpy, data, len) {\
 	if (dpy->bufptr + (len) <= dpy->bufmax) {\
-		memcpy(dpy->bufptr, data, (int)len);\
+		memcpy(dpy->bufptr, data, (int)(len));\
 		dpy->bufptr += ((len) + 3) & ~3;\
 	} else\
 		_XSend(dpy, data, len);\
@@ -675,12 +677,12 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
 #define Data32(dpy, data, len) _XData32(dpy, (_Xconst long *)data, len)
 extern int _XData32(
 	     Display *dpy,
-	     register _Xconst long *data,
+	     _Xconst long *data,
 	     unsigned len
 );
 extern void _XRead32(
 	     Display *dpy,
-	     register long *data,
+	     long *data,
 	     long len
 );
 #else
@@ -918,15 +920,6 @@ typedef struct _XExten {		/* private to extension mechanism */
 	struct _XExten *next_flush;	/* next in list of those with flushes */
 } _XExtension;
 
-/* Temporary definition until we can depend on an xproto release with it */
-#ifdef _X_COLD
-# define _XLIB_COLD _X_COLD
-#elif defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 403) /* 4.3+ */
-# define _XLIB_COLD __attribute__((__cold__))
-#else
-# define _XLIB_COLD /* nothing */
-#endif
-
 /* extension hooks */
 
 #ifdef DataRoutineIsProcedure
@@ -938,7 +931,7 @@ extern int _XError(
 );
 extern int _XIOError(
     Display*	/* dpy */
-) _X_NORETURN;
+);
 extern int (*_XIOErrorFunction)(
     Display*	/* dpy */
 );
@@ -949,11 +942,11 @@ extern int (*_XErrorFunction)(
 extern void _XEatData(
     Display*		/* dpy */,
     unsigned long	/* n */
-) _XLIB_COLD;
+) _X_COLD;
 extern void _XEatDataWords(
     Display*		/* dpy */,
     unsigned long	/* n */
-) _XLIB_COLD;
+) _X_COLD;
 #if defined(__SUNPRO_C) /* Studio compiler alternative to "cold" attribute */
 # pragma rarely_called(_XEatData, _XEatDataWords)
 #endif
@@ -1382,10 +1375,10 @@ extern int _XF86LoadQueryLocaleFont(
 );
 
 extern void _XProcessWindowAttributes (
-    register Display *dpy,
+    Display *dpy,
     xChangeWindowAttributesReq *req,
-    register unsigned long valuemask,
-    register XSetWindowAttributes *attributes);
+    unsigned long valuemask,
+    XSetWindowAttributes *attributes);
 
 extern int _XDefaultError(
         Display *dpy,
@@ -1394,8 +1387,12 @@ extern int _XDefaultError(
 extern int _XDefaultIOError(
         Display *dpy);
 
+extern void _XDefaultIOErrorExit(
+    Display *dpy,
+    void *user_data);
+
 extern void _XSetClipRectangles (
-    register Display *dpy,
+    Display *dpy,
     GC gc,
     int clip_x_origin, int clip_y_origin,
     XRectangle *rectangles,
@@ -1403,13 +1400,13 @@ extern void _XSetClipRectangles (
     int ordering);
 
 Status _XGetWindowAttributes(
-    register Display *dpy,
+    Display *dpy,
     Window w,
     XWindowAttributes *attr);
 
 int _XPutBackEvent (
-    register Display *dpy,
-    register XEvent *event);
+    Display *dpy,
+    XEvent *event);
 
 extern Bool _XIsEventCookie(
         Display *dpy,

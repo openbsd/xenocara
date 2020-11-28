@@ -188,7 +188,7 @@ void _XPollfdCacheDel(
 static int sync_hazard(Display *dpy)
 {
     /*
-     * "span" and "hazard" need to be signed such that the ">=" comparision
+     * "span" and "hazard" need to be signed such that the ">=" comparison
      * works correctly in the case that hazard is greater than 65525
      */
     int64_t span = X_DPY_GET_REQUEST(dpy) - X_DPY_GET_LAST_REQUEST_READ(dpy);
@@ -218,12 +218,10 @@ void _XSeqSyncFunction(
     xGetInputFocusReply rep;
     _X_UNUSED register xReq *req;
 
-    if ((X_DPY_GET_REQUEST(dpy) - X_DPY_GET_LAST_REQUEST_READ(dpy)) >= (65535 - BUFSIZE/SIZEOF(xReq)) && !dpy->req_seq_syncing) {
-	dpy->req_seq_syncing = True;
+    if ((X_DPY_GET_REQUEST(dpy) - X_DPY_GET_LAST_REQUEST_READ(dpy)) >= (65535 - BUFSIZE/SIZEOF(xReq))) {
 	GetEmptyReq(GetInputFocus, req);
 	(void) _XReply (dpy, (xReply *)&rep, 0, xTrue);
 	sync_while_locked(dpy);
-	dpy->req_seq_syncing = False;
     } else if (sync_hazard(dpy))
 	_XSetPrivSyncFunction(dpy);
 }
@@ -269,7 +267,7 @@ void _XSetSeqSyncFunction(Display *dpy)
 #ifdef LONG64
 void _XRead32(
     Display *dpy,
-    register long *data,
+    long *data,
     long len)
 {
     register int *buf;
@@ -652,11 +650,10 @@ _XFreeEventCookies(Display *dpy)
     head = (struct stored_event**)&dpy->cookiejar;
 
     DL_FOREACH_SAFE(*head, e, tmp) {
-        if (dpy->cookiejar == e)
-            dpy->cookiejar = NULL;
         XFree(e->ev.data);
         XFree(e);
     }
+    dpy->cookiejar = NULL;
 }
 
 /**
@@ -678,6 +675,7 @@ _XStoreEventCookie(Display *dpy, XEvent *event)
     if (!add) {
         ESET(ENOMEM);
         _XIOError(dpy);
+        return;
     }
     add->ev = *cookie;
     DL_APPEND(*head, add);
@@ -752,6 +750,7 @@ void _XEnq(
 		/* Malloc call failed! */
 		ESET(ENOMEM);
 		_XIOError(dpy);
+		return;
 	}
 	qelt->next = NULL;
 
@@ -1271,6 +1270,14 @@ SocketBytesReadable(Display *dpy)
     return bytes;
 }
 
+_X_NORETURN void _XDefaultIOErrorExit(
+	Display *dpy,
+	void *user_data)
+{
+    exit(1);
+    /*NOTREACHED*/
+}
+
 /*
  * _XDefaultIOError - Default fatal system error reporting routine.  Called
  * when an X internal system error is encountered.
@@ -1484,6 +1491,11 @@ int _XError (
     if (_XErrorFunction != NULL) {
 	int rtn_val;
 #ifdef XTHREADS
+	struct _XErrorThreadInfo thread_info = {
+		.error_thread = xthread_self(),
+		.next = dpy->error_threads
+	}, **prev;
+	dpy->error_threads = &thread_info;
 	if (dpy->lock)
 	    (*dpy->lock->user_lock_display)(dpy);
 	UnlockDisplay(dpy);
@@ -1493,6 +1505,11 @@ int _XError (
 	LockDisplay(dpy);
 	if (dpy->lock)
 	    (*dpy->lock->user_unlock_display)(dpy);
+
+	/* unlink thread_info from the list */
+	for (prev = &dpy->error_threads; *prev != &thread_info; prev = &(*prev)->next)
+		;
+	*prev = thread_info.next;
 #endif
 	return rtn_val;
     } else {
@@ -1507,6 +1524,9 @@ int
 _XIOError (
     Display *dpy)
 {
+    XIOErrorExitHandler exit_handler;
+    void *exit_handler_data;
+
     dpy->flags |= XlibDisplayIOError;
 #ifdef WIN32
     errno = WSAGetLastError();
@@ -1520,14 +1540,17 @@ _XIOError (
     if (dpy->lock)
 	(*dpy->lock->user_lock_display)(dpy);
 #endif
+    exit_handler = dpy->exit_handler;
+    exit_handler_data = dpy->exit_handler_data;
     UnlockDisplay(dpy);
 
     if (_XIOErrorFunction != NULL)
 	(*_XIOErrorFunction)(dpy);
     else
 	_XDefaultIOError(dpy);
-    exit (1);
-    /*NOTREACHED*/
+
+    exit_handler(dpy, exit_handler_data);
+    return 1;
 }
 
 
@@ -1648,7 +1671,7 @@ void Data(
 int
 _XData32(
     Display *dpy,
-    register _Xconst long *data,
+    _Xconst long *data,
     unsigned len)
 {
     register int *buf;
@@ -1708,9 +1731,9 @@ int _XGetHostname (
 	return 0;
 
     uname (&name);
-    len = strlen (name.nodename);
+    len = (int) strlen (name.nodename);
     if (len >= maxlen) len = maxlen - 1;
-    strncpy (buf, name.nodename, len);
+    strncpy (buf, name.nodename, (size_t) len);
     buf[len] = '\0';
 #else
     if (maxlen <= 0 || buf == NULL)
@@ -1719,7 +1742,7 @@ int _XGetHostname (
     buf[0] = '\0';
     (void) gethostname (buf, maxlen);
     buf [maxlen - 1] = '\0';
-    len = strlen(buf);
+    len = (int) strlen(buf);
 #endif /* NEED_UTSNAME */
     return len;
 }

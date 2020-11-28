@@ -874,7 +874,7 @@ _XimOpen(
     _XimSetIMMode(im->private.proto.im_inner_resources,
 				im->private.proto.im_num_inner_resources);
 
-    /* Transport Callbak */
+    /* Transport Callback */
     _XimRegProtoIntrCallback(im, XIM_SET_EVENT_MASK, 0,
 				 _XimSetEventMaskCallback, (XPointer)im);
     _XimRegProtoIntrCallback(im, XIM_FORWARD_EVENT, 0,
@@ -1565,10 +1565,10 @@ _XimSetEncodingByName(
     *buf = (char *)ret;
 
     ret[0] = (BYTE)encoding_len;
-    (void)strncpy((char *)&ret[1], encoding, encoding_len);
+    memcpy(&ret[1], encoding, encoding_len);
     ret += (encoding_len + sizeof(BYTE));
     ret[0] = (BYTE)compound_len;
-    (void)strncpy((char *)&ret[1], "COMPOUND_TEXT", compound_len);
+    memcpy(&ret[1], "COMPOUND_TEXT", compound_len);
     return True;
 }
 

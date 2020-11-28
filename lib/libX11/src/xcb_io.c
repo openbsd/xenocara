@@ -55,7 +55,7 @@ static void return_socket(void *closure)
 	UnlockDisplay(dpy);
 }
 
-static void require_socket(Display *dpy)
+static Bool require_socket(Display *dpy)
 {
 	if(dpy->bufmax == dpy->buffer)
 	{
@@ -66,12 +66,15 @@ static void require_socket(Display *dpy)
 		if(dpy->xcb->event_owner != XlibOwnsEventQueue)
 			flags = XCB_REQUEST_CHECKED;
 		if(!xcb_take_socket(dpy->xcb->connection, return_socket, dpy,
-		                    flags, &sent))
+		                    flags, &sent)) {
 			_XIOError(dpy);
+			return False;
+		}
 		dpy->xcb->last_flushed = sent;
 		X_DPY_SET_REQUEST(dpy, sent);
 		dpy->bufmax = dpy->xcb->real_bufmax;
 	}
+	return True;
 }
 
 /* Call internal connection callbacks for any fds that are currently
@@ -91,7 +94,7 @@ static void require_socket(Display *dpy)
  *  _XEatData
  * _XReadPad
  */
-static void check_internal_connections(Display *dpy)
+static Bool check_internal_connections(Display *dpy)
 {
 	struct _XConnectionInfo *ilist;
 	fd_set r_mask;
@@ -100,7 +103,7 @@ static void check_internal_connections(Display *dpy)
 	int highest_fd = -1;
 
 	if(dpy->flags & XlibDisplayProcConni || !dpy->im_fd_info)
-		return;
+		return True;
 
 	FD_ZERO(&r_mask);
 	for(ilist = dpy->im_fd_info; ilist; ilist = ilist->next)
@@ -118,9 +121,12 @@ static void check_internal_connections(Display *dpy)
 
 	if(result == -1)
 	{
-		if(errno == EINTR)
-			return;
-		_XIOError(dpy);
+		if(errno != EINTR) {
+			_XIOError(dpy);
+			return False;
+		}
+
+		return True;
 	}
 
 	for(ilist = dpy->im_fd_info; result && ilist; ilist = ilist->next)
@@ -129,6 +135,8 @@ static void check_internal_connections(Display *dpy)
 			_XProcessInternalConnection(dpy, ilist);
 			--result;
 		}
+
+	return True;
 }
 
 static PendingRequest *append_pending_request(Display *dpy, uint64_t sequence)
@@ -233,7 +241,8 @@ static void widen(uint64_t *wide, unsigned int narrow)
 static xcb_generic_reply_t *poll_for_event(Display *dpy, Bool queued_only)
 {
 	/* Make sure the Display's sequence numbers are valid */
-	require_socket(dpy);
+	if (!require_socket(dpy))
+		return NULL;
 
 	/* Precondition: This thread can safely get events from XCB. */
 	assert(dpy->xcb->event_owner == XlibOwnsEventQueue && !dpy->xcb->event_waiter);
@@ -273,22 +282,83 @@ static xcb_generic_reply_t *poll_for_event(Display *dpy, Bool queued_only)
 static xcb_generic_reply_t *poll_for_response(Display *dpy)
 {
 	void *response;
-	xcb_generic_error_t *error;
+	xcb_generic_reply_t *event;
 	PendingRequest *req;
-	while(!(response = poll_for_event(dpy, False)) &&
-	      (req = dpy->xcb->pending_requests) &&
-	      !req->reply_waiter)
-	{
-		uint64_t request;
 
-		if(!xcb_poll_for_reply64(dpy->xcb->connection, req->sequence,
-					 &response, &error)) {
-			/* xcb_poll_for_reply64 may have read events even if
-			 * there is no reply. */
-			response = poll_for_event(dpy, True);
+	while(1)
+	{
+		xcb_generic_error_t *error = NULL;
+		uint64_t request;
+		Bool poll_queued_only = dpy->xcb->next_response != NULL;
+
+		/* Step 1: is there an event in our queue before the next
+		 * reply/error? Return that first.
+		 *
+		 * If we don't have a reply/error saved from an earlier
+		 * invocation we check incoming events too, otherwise only
+		 * the ones already queued.
+		 */
+		response = poll_for_event(dpy, poll_queued_only);
+		if(response)
 			break;
+
+		/* Step 2:
+		 * Response is NULL, i.e. we have no events.
+		 * If we are not waiting for a reply or some other thread
+		 * had dibs on the next reply, exit.
+		 */
+		req = dpy->xcb->pending_requests;
+		if(!req || req->reply_waiter)
+			break;
+
+		/* Step 3:
+		 * We have some response (error or reply) related to req
+		 * saved from an earlier invocation of this function. Let's
+		 * use that one.
+		 */
+		if(dpy->xcb->next_response)
+		{
+			if (((xcb_generic_reply_t*)dpy->xcb->next_response)->response_type == X_Error)
+			{
+				error = dpy->xcb->next_response;
+				response = NULL;
+			}
+			else
+			{
+				response = dpy->xcb->next_response;
+				error = NULL;
+			}
+			dpy->xcb->next_response = NULL;
+		}
+		else
+		{
+			/* Step 4: pull down the next response from the wire. This
+			 * should be the 99% case.
+			 * xcb_poll_for_reply64() may also pull down events that
+			 * happened before the reply.
+			 */
+			if(!xcb_poll_for_reply64(dpy->xcb->connection, req->sequence,
+						 &response, &error)) {
+				/* if there is no reply/error, xcb_poll_for_reply64
+				 * may have read events. Return that. */
+				response = poll_for_event(dpy, True);
+				break;
+			}
+
+			/* Step 5: we have a new response, but we may also have some
+			 * events that happened before that response. Return those
+			 * first and save our reply/error for the next invocation.
+			 */
+			event = poll_for_event(dpy, True);
+			if(event)
+			{
+				dpy->xcb->next_response = error ? error : response;
+				response = event;
+				break;
+			}
 		}
 
+		/* Step 6: actually handle the reply/error now... */
 		request = X_DPY_GET_REQUEST(dpy);
 		if(XLIB_SEQUENCE_COMPARE(req->sequence, >, request))
 		{
@@ -351,8 +421,8 @@ int _XEventsQueued(Display *dpy, int mode)
 
 	if(mode == QueuedAfterFlush)
 		_XSend(dpy, NULL, 0);
-	else
-		check_internal_connections(dpy);
+	else if (!check_internal_connections(dpy))
+		return 0;
 
 	/* If another thread is blocked waiting for events, then we must
 	 * let that thread pick up the next event. Since it blocked, we
@@ -361,8 +431,10 @@ int _XEventsQueued(Display *dpy, int mode)
 	{
 		while((response = poll_for_response(dpy)))
 			handle_response(dpy, response, False);
-		if(xcb_connection_has_error(dpy->xcb->connection))
+		if(xcb_connection_has_error(dpy->xcb->connection)) {
 			_XIOError(dpy);
+			return 0;
+		}
 	}
 	return dpy->qlen;
 }
@@ -380,7 +452,8 @@ void _XReadEvents(Display *dpy)
 	_XSend(dpy, NULL, 0);
 	if(dpy->xcb->event_owner != XlibOwnsEventQueue)
 		return;
-	check_internal_connections(dpy);
+	if (!check_internal_connections(dpy))
+		return;
 
 	serial = dpy->next_event_serial_num;
 	while(serial == dpy->next_event_serial_num || dpy->qlen == 0)
@@ -410,7 +483,10 @@ void _XReadEvents(Display *dpy)
 			dpy->xcb->event_waiter = 0;
 			ConditionBroadcast(dpy, dpy->xcb->event_notify);
 			if(!event)
+			{
 				_XIOError(dpy);
+				return;
+			}
 			dpy->xcb->next_event = event;
 		}
 
@@ -428,7 +504,10 @@ void _XReadEvents(Display *dpy)
 			ConditionWait(dpy, dpy->xcb->reply_notify);
 		}
 		else
-			_XIOError(dpy);
+		{
+		        _XIOError(dpy);
+		        return;
+		}
 	}
 
 	/* The preceding loop established that there is no
@@ -496,12 +575,15 @@ void _XSend(Display *dpy, const char *data, long size)
 				ext->before_flush(dpy, &ext->codes, vec[i].iov_base, vec[i].iov_len);
 	}
 
-	if(xcb_writev(c, vec, 3, requests) < 0)
+	if(xcb_writev(c, vec, 3, requests) < 0) {
 		_XIOError(dpy);
+		return;
+	}
 	dpy->bufptr = dpy->buffer;
 	dpy->last_req = (char *) &dummy_request;
 
-	check_internal_connections(dpy);
+	if (!check_internal_connections(dpy))
+		return;
 
 	_XSetSeqSyncFunction(dpy);
 }
@@ -512,7 +594,9 @@ void _XSend(Display *dpy, const char *data, long size)
  */
 void _XFlush(Display *dpy)
 {
-	require_socket(dpy);
+	if (!require_socket(dpy))
+		return;
+
 	_XSend(dpy, NULL, 0);
 
 	_XEventsQueued(dpy, QueuedAfterReading);
@@ -657,7 +741,8 @@ Status _XReply(Display *dpy, xReply *rep, int extra, Bool discard)
 		else if(response)
 			handle_response(dpy, response, True);
 	}
-	check_internal_connections(dpy);
+	if (!check_internal_connections(dpy))
+		return 0;
 
 	if(dpy->xcb->next_event && dpy->xcb->next_event->response_type == X_Error)
 	{
@@ -712,8 +797,10 @@ Status _XReply(Display *dpy, xReply *rep, int extra, Bool discard)
 
 	/* it's not an error, but we don't have a reply, so it's an I/O
 	 * error. */
-	if(!reply)
+	if(!reply) {
 		_XIOError(dpy);
+		return 0;
+	}
 
 	/* there's no error and we have a reply. */
 	dpy->xcb->reply_data = reply;

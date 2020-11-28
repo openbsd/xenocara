@@ -182,7 +182,7 @@ _XlcParsePath(
     for (i = 0; i < n; ++i) {
 	int len;
 	p = argv[i];
-	len = strlen(p);
+	len = (int) strlen(p);
 	if (len > 0 && p[len - 1] == '/') {
 	    /* eliminate trailing slash */
 	    p[len - 1] = '\0';
@@ -212,7 +212,7 @@ xlocaledir(
     if (dir) {
 #ifndef WIN32
 	/*
-	 * Only use the user-supplied path if the process isn't priviledged.
+	 * Only use the user-supplied path if the process isn't privileged.
 	 */
 	if (getuid() == geteuid() && getgid() == getegid()) {
 #if defined(HASSETUGID)
@@ -227,7 +227,7 @@ xlocaledir(
 	    }
 #else
 	    /*
-	     * If there are saved ID's the process might still be priviledged
+	     * If there are saved ID's the process might still be privileged
 	     * even though the above test succeeded.  If issetugid() and
 	     * getresgid() aren't available, test this by trying to set
 	     * euid to 0.
@@ -242,7 +242,7 @@ xlocaledir(
 		priv = 0;
 	    } else {
 		if (seteuid(oldeuid) == -1) {
-		    /* XXX ouch, coudn't get back to original uid
+		    /* XXX ouch, couldn't get back to original uid
 		     what can we do ??? */
 		    _exit(127);
 		}
@@ -254,8 +254,8 @@ xlocaledir(
 	priv = 0;
 #endif
 	if (!priv) {
-	    len = strlen(dir);
-	    strncpy(p, dir, buf_len);
+	    len = (int) strlen(dir);
+	    strncpy(p, dir, (size_t) buf_len);
 	    if (len < buf_len) {
 	        p[len++] = LC_PATHDELIM;
 	        p += len;
@@ -266,7 +266,7 @@ xlocaledir(
 
     if (len < buf_len)
 #ifndef __UNIXOS2__
-      strncpy(p, XLOCALEDIR, buf_len - len);
+      strncpy(p, XLOCALEDIR, (size_t) (buf_len - len));
 #else
       strncpy(p,__XOS2RedirRoot(XLOCALEDIR), buf_len - len);
 #endif
@@ -290,7 +290,7 @@ xlocalelibdir(
     if (dir) {
 #ifndef WIN32
 	/*
-	 * Only use the user-supplied path if the process isn't priviledged.
+	 * Only use the user-supplied path if the process isn't privileged.
 	 */
 	if (getuid() == geteuid() && getgid() == getegid()) {
 #if defined(HASSETUGID)
@@ -305,7 +305,7 @@ xlocalelibdir(
 	    }
 #else
 	    /*
-	     * If there are saved ID's the process might still be priviledged
+	     * If there are saved ID's the process might still be privileged
 	     * even though the above test succeeded.  If issetugid() and
 	     * getresgid() aren't available, test this by trying to set
 	     * euid to 0.
@@ -320,7 +320,7 @@ xlocalelibdir(
 		priv = 0;
 	    } else {
 		if (seteuid(oldeuid) == -1) {
-		    /* XXX ouch, coudn't get back to original uid
+		    /* XXX ouch, couldn't get back to original uid
 		     what can we do ??? */
 		    _exit(127);
 		}
@@ -332,8 +332,8 @@ xlocalelibdir(
 	priv = 0;
 #endif
 	if (!priv) {
-	    len = strlen(dir);
-	    strncpy(p, dir, buf_len);
+	    len = (int) strlen(dir);
+	    strncpy(p, dir, (size_t) buf_len);
 	    if (len < buf_len) {
 	        p[len++] = LC_PATHDELIM;
 	        p += len;
@@ -344,9 +344,9 @@ xlocalelibdir(
 
     if (len < buf_len)
 #ifndef __UNIXOS2__
-      strncpy(p, XLOCALELIBDIR, buf_len - len);
+      strncpy(p, XLOCALELIBDIR, (size_t) (buf_len - len));
 #else
-      strncpy(p,__XOS2RedirRoot(XLOCALELIBDIR), buf_len - len);
+      strncpy(p,__XOS2RedirRoot(XLOCALELIBDIR), (size_t) (buf_len - len));
 #endif
     buf[buf_len-1] = '\0';
 }
@@ -420,7 +420,7 @@ lowercase(
     char *t;
 
     for (s = src, t = dst; *s; ++s, ++t)
-	*t = c_tolower(*s);
+	*t = (char) c_tolower(*s);
     *t = '\0';
     return dst;
 }
@@ -446,7 +446,7 @@ normalize_lcname (const char *name)
 	    *p++ = *tmp++;
 	while (*tmp) {
 	    if (*tmp != '-')
-		*p++ = c_tolower(*tmp);
+		*p++ = (char) c_tolower(*tmp);
 	    tmp++;
 	}
     }
@@ -563,7 +563,7 @@ _XlcResolveLocaleName(
 	pub->siname = name;
     }
 
-    sinamelen = strlen (pub->siname);
+    sinamelen = (int) strlen (pub->siname);
     if (sinamelen == 1 && pub->siname[0] == 'C') {
 	pub->language = pub->siname;
 	pub->territory = pub->codeset = NULL;

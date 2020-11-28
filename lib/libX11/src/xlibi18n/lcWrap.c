@@ -111,8 +111,8 @@ Bool _XlcValidModSyntax(
 	if (*mods == '@')
 	    break;
 	for (ptr = valid_mods; *ptr; ptr++) {
-	    i = strlen(*ptr);
-	    if (strncmp(mods, *ptr, i) || ((mods[i] != '=')
+	    i = (int) strlen(*ptr);
+	    if (strncmp(mods, *ptr, (size_t) i) || ((mods[i] != '=')
 #ifdef WIN32
 					   && (mods[i] != '#')
 #endif
@@ -141,9 +141,9 @@ _XlcDefaultMapModifiers(
 	return (char *)NULL;
     if (!_XlcValidModSyntax(user_mods, im_valid))
 	return (char *)NULL;
-    i = strlen(prog_mods) + 1;
+    i = (int) strlen(prog_mods) + 1;
     if (user_mods)
-	i += strlen(user_mods);
+	i = (int) ((size_t) i + strlen(user_mods));
     mods = Xmalloc(i);
     if (mods) {
 	strcpy(mods, prog_mods);
@@ -169,7 +169,6 @@ _XlcDefaultMapModifiers(
 typedef struct _XLCdListRec {
     struct _XLCdListRec *next;
     XLCd lcd;
-    int ref_count;
 } XLCdListRec, *XLCdList;
 
 static XLCdList lcd_list = NULL;
@@ -262,7 +261,7 @@ _XOpenLC(
          * _XlMapOSLocaleName will return the same string or a substring
          * of name, so strlen(name) is okay
          */
-        if ((len = strlen(name)) >= sizeof sinamebuf) {
+        if ((len = (int) strlen(name)) >= sizeof sinamebuf) {
             siname = Xmalloc (len + 1);
             if (siname == NULL)
                 return NULL;
@@ -279,7 +278,6 @@ _XOpenLC(
     for (cur = lcd_list; cur; cur = cur->next) {
 	if (!strcmp (cur->lcd->core->name, name)) {
 	    lcd = cur->lcd;
-	    cur->ref_count++;
 	    goto found;
 	}
     }
@@ -296,7 +294,6 @@ _XOpenLC(
 	    cur = Xmalloc (sizeof(XLCdListRec));
 	    if (cur) {
 		cur->lcd = lcd;
-		cur->ref_count = 1;
 		cur->next = lcd_list;
 		lcd_list = cur;
 	    } else {
@@ -323,23 +320,7 @@ void
 _XCloseLC(
     XLCd lcd)
 {
-    XLCdList cur, *prev;
-
-    for (prev = &lcd_list; (cur = *prev); prev = &cur->next) {
-	if (cur->lcd == lcd) {
-	    if (--cur->ref_count < 1) {
-		_XlcDestroyLC(lcd);
-		*prev = cur->next;
-		Xfree(cur);
-	    }
-	    break;
-	}
-    }
-
-    if(loader_list) {
-	_XlcDeInitLoader();
-	loader_list = NULL;
-    }
+    (void) lcd;
 }
 
 /*
@@ -349,17 +330,7 @@ _XCloseLC(
 XLCd
 _XlcCurrentLC(void)
 {
-    XLCd lcd;
-    static XLCd last_lcd = NULL;
-
-    lcd = _XOpenLC((char *) NULL);
-
-    if (last_lcd)
-	_XCloseLC(last_lcd);
-
-    last_lcd = lcd;
-
-    return lcd;
+    return _XOpenLC(NULL);
 }
 
 XrmMethods
@@ -515,9 +486,9 @@ _XlcCopyFromArg(
     else if (size == sizeof(XPointer))
 	*((XPointer *) dst) = (XPointer) src;
     else if (size > sizeof(XPointer))
-	memcpy(dst, (char *) src, size);
+	memcpy(dst, (char *) src, (size_t) size);
     else
-	memcpy(dst, (char *) &src, size);
+	memcpy(dst, (char *) &src, (size_t) size);
 }
 
 void
@@ -541,7 +512,7 @@ _XlcCopyToArg(
     else if (size == sizeof(XPointer))
 	*((XPointer *) *dst) = *((XPointer *) src);
     else
-	memcpy(*dst, src, size);
+	memcpy(*dst, src, (size_t) size);
 }
 
 void

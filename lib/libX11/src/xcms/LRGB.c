@@ -795,7 +795,7 @@ LINEAR_RGB_InitSCCData(
 
     return(XcmsSuccess);
 
-FreeBlueTblElements:
+FreeBlueTblElements: _X_UNUSED
     Xfree(pScreenData->pBlueTbl->pBase);
 
 FreeBlueTbl:
@@ -1178,7 +1178,7 @@ _XcmsTableSearch(
 
 /*
  *	DESCRIPTION
- *		A binary search through the specificied table.
+ *		A binary search through the specified table.
  *
  *	RETURNS
  *		Returns 0 if failed; otherwise non-zero.
@@ -1293,7 +1293,7 @@ XcmsLRGB_RGB_ParseString(
 	 * Attempt to parse the value portion.
 	 */
 	spec++;
-	n = strlen(spec);
+	n = (int)strlen(spec);
 	if (n != 3 && n != 6 && n != 9 && n != 12) {
 	    return(XcmsFailure);
 	}
@@ -1337,7 +1337,7 @@ XcmsLRGB_RGB_ParseString(
 	/*
 	 * Check for proper prefix.
 	 */
-	if (strncmp(spec, _XcmsRGB_prefix, n) != 0) {
+	if (strncmp(spec, _XcmsRGB_prefix, (size_t)n) != 0) {
 	    return(XcmsFailure);
 	}
 

@@ -63,9 +63,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/depcomp reallocarray.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_gcc_builtin.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -486,6 +487,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -607,7 +609,7 @@ libX11_xcb_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 @XLOCALE_TRUE@USE_I18N_LIBS = $(I18N_LIBS)
 @XCMS_TRUE@USE_XCMS_LIBS = $(XCMS_LIBS)
 @XKB_TRUE@USE_XKB_LIBS = $(XKB_LIBS)
-libX11_la_LDFLAGS = -version-number 6:3:0 -no-undefined
+libX11_la_LDFLAGS = -version-number 6:4:0 -no-undefined
 libX11_la_LIBADD = \
 	$(LTLIBOBJS) \
 	$(USE_I18N_LIBS) \

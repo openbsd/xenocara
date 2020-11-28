@@ -146,13 +146,14 @@ static void _XFreeContextDB(Display *display)
 	Xfree(db->table);
 	_XFreeMutex(&db->linfo);
 	Xfree(db);
+	display->context_db = NULL;
     }
 }
 
 /* Public routines. */
 
 /* Save the given value of data to correspond with the keys XID and context.
-   Returns nonzero error code if an error has occured, 0 otherwise.
+   Returns nonzero error code if an error has occurred, 0 otherwise.
    Possible errors are Out-of-memory.
 */
 
@@ -230,7 +231,7 @@ int XSaveContext(
 
 /* Given an XID and context, returns the associated data.  Note that data
    here is a pointer since it is a return value.  Returns nonzero error code
-   if an error has occured, 0 otherwise.  Possible errors are Entry-not-found.
+   if an error has occurred, 0 otherwise.  Possible errors are Entry-not-found.
 */
 
 int XFindContext(Display *display, XID rid, XContext context, XPointer *data)

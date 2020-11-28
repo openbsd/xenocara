@@ -219,7 +219,7 @@ initialize(
      * _XlMapOSLocaleName will return the same string or a substring
      * of name, so strlen(name) is okay
      */
-    if ((len = strlen(name)) < sizeof sinamebuf)
+    if ((len = (int) strlen(name)) < sizeof sinamebuf)
         siname = sinamebuf;
     else
         siname = Xmalloc (len + 1);
@@ -258,6 +258,7 @@ destroy_core(
     if (lcd) {
         if (lcd->core) {
             Xfree(lcd->core->name);
+            Xfree(lcd->core->modifiers);
             Xfree(lcd->core);
         }
         Xfree(lcd->methods);

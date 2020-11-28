@@ -59,9 +59,10 @@ DIST_COMMON = $(nobase_dist_x11locale_DATA) $(srcdir)/Makefile.am \
 subdir = nls
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_gcc_builtin.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -297,6 +298,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -328,7 +330,8 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[	 ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
                        -e '/^[	 ]*XHASH/s/XHASH/\#/' \
                        -e 's,X11_LOCALEDATADIR,$(X11_LOCALEDATADIR),g' \
-                       -e '/\@\@$$/s/\@\@$$/\\/'
+                       -e '/\@\@$$/s/\@\@$$/\\/' \
+                       -e '/^$$/d'
 
 @HAVE_PERL_TRUE@LOG_COMPILER = $(PERL)
 @HAVE_PERL_TRUE@TESTS = compose-check.pl

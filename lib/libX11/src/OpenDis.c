@@ -188,6 +188,7 @@ XOpenDisplay (
 	dpy->flushes		= NULL;
 	dpy->xcmisc_opcode	= 0;
 	dpy->xkb_info		= NULL;
+	dpy->exit_handler_data	= NULL;
 
 /*
  * Setup other information in this display structure.
@@ -201,7 +202,8 @@ XOpenDisplay (
 	X_DPY_SET_LAST_REQUEST_READ(dpy, 0);
 	dpy->default_screen = iscreen;  /* Value returned by ConnectDisplay */
 	dpy->last_req = (char *)&_dummy_request;
-	dpy->req_seq_syncing = False;
+	dpy->error_threads = NULL;
+	dpy->exit_handler = _XDefaultIOErrorExit;
 
 	/* Initialize the display lock */
 	if (InitDisplayLock(dpy) != 0) {
@@ -333,7 +335,7 @@ XOpenDisplay (
 	}
 
  	u.setup = (xConnSetup *) (((char *) u.setup) + sz_xConnSetup);
-  	(void) strncpy(dpy->vendor, u.vendor, vendorlen);
+  	(void) strncpy(dpy->vendor, u.vendor, (size_t) vendorlen);
 	dpy->vendor[vendorlen] = '\0';
  	vendorlen = (vendorlen + 3) & ~3;	/* round up */
 	u.vendor += vendorlen;

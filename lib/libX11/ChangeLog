@@ -1,3 +1,905 @@
+commit ca8115186f810eccb7d86b0979980eff3ba95f0b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Nov 19 11:30:41 2020 -0800
+
+    Version 1.7.0
+    
+    Release notes in README.md, version bump in configure.ac
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 325ac177fb6d38f4c7689d9ce059792eaef388ef
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Nov 16 15:48:40 2020 -0800
+
+    Update libX11 .so version to 6.4.0
+    
+    There have been API additions since the previous release, so the
+    .so version needs to change.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 103e2e11519984aa5746c06e7d90d1f5bc8174a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 31 09:24:01 2020 -0700
+
+    Don't leave dangling pointers in Free functions
+    
+    While these are mostly called during teardown of larger structures
+    that are about to themselves be freed, there's no guarantee that
+    will always be the case, so try to be safer here.
+    
+    [ This bug was found by the Parfait 4.0 bug checking tool.
+      http://labs.oracle.com/pls/apex/f?p=labs:49:::::P49_PROJECT_ID:13 ]
+    
+    v2: Deduplicate & simplify pointer clearing in _XFreeEventCookies
+        as suggested by @keithp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d70e302218e2ec8518548ddcdc02d828e7889af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 31 08:56:34 2020 -0700
+
+    XimProto.h: wrap XIM_HEADER_SIZE definition in parens
+    
+    Resolves parfait warning of potential macro misinterpretation if
+    expanded in the midst of other arithmetic operations with higher
+    precedence.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3c0b5dbd6b12ae64bc78b11795647a7f6df0c7a
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Nov 17 13:15:18 2020 -0800
+
+    Copy locale modifiers when creating XimInstCallback [v2]
+    
+    Locale modifiers may be freed whenever XSetLocaleModifiers gets
+    called, even if the locale hasn't changed. This means that we cannot
+    save a pointer to those modifiers in the XimInstCallback record and
+    must, instead, make a copy of them instead.
+    
+    This fixes a problem uncovered when running wish under libasan as
+    follows (on current Debian unstable):
+    
+            $ LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.6 wish
+    
+    Reported-by: Vittorio Zecca <zeccav@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    
+    v2:
+            Remove incorrect 'else' token found by @alanc
+
+commit 960e2e0cfac12c3477c672d0d40818a0dc74aca5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Nov 16 09:34:57 2020 +1000
+
+    gitlab CI: add a basic build test
+    
+    Using Arch as base distribution here because we can expect our dependencies to
+    be up-to-date. We rely on the Arch for our dependencies rather than building
+    those from git (notably: xorg-macros, xtrans and libxcb).
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dbb55e1a5e82870466b095097d9e46046680ec25
+Author: Frediano Ziglio <fziglio@redhat.com>
+Date:   Wed Jan 29 09:06:54 2020 +0000
+
+    Fix poll_for_response race condition
+    
+    In poll_for_response is it possible that event replies are skipped
+    and a more up to date message reply is returned.
+    This will cause next poll_for_event call to fail aborting the program.
+    
+    This was proved using some slow ssh tunnel or using some program
+    to slow down server replies (I used a combination of xtrace and strace).
+    
+    How the race happens:
+    - program enters into poll_for_response;
+    - poll_for_event is called but the server didn't still send the reply;
+    - pending_requests is not NULL because we send a request (see call
+      to  append_pending_request in _XSend);
+    - xcb_poll_for_reply64 is called from poll_for_response;
+    - xcb_poll_for_reply64 will read from server, at this point
+      server reply with an event (say sequence N) and the reply to our
+      last request (say sequence N+1);
+    - xcb_poll_for_reply64 returns the reply for the request we asked;
+    - last_request_read is set to N+1 sequence in poll_for_response;
+    - poll_for_response returns the response to the request;
+    - poll_for_event is called (for instance from another poll_for_response);
+    - event with sequence N is retrieved;
+    - the N sequence is widen, however, as the "new" number computed from
+      last_request_read is less than N the number is widened to N + 2^32
+      (assuming last_request_read is still contained in 32 bit);
+    - poll_for_event enters the nested if statement as req is NULL;
+    - we compare the widen N (which now does not fit into 32 bit) with
+      request (which fits into 32 bit) hitting the throw_thread_fail_assert.
+    
+    To avoid the race condition and to avoid the sequence to go back
+    I check again for new events after getting the response and
+    return this last event if present saving the reply to return it
+    later.
+    
+    To test the race and the fix it's helpful to add a delay (I used a
+    "usleep(5000)") before calling xcb_poll_for_reply64.
+    
+    Original patch written by Frediano Ziglio, see
+    https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/34
+    
+    Reworked primarily for readability by Peter Hutterer, see
+    https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/53
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 30ccef3a48029bf4fc31d4abda2d2778d0ad6277
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Nov 7 22:22:47 2020 -0800
+
+    Avoid recursing through _XError due to sequence adjustment
+    
+    This patch is based on research done by Dmitry Osipenko to uncover the
+    cause of a large class of Xlib lockups.
+    
+    _XError must unlock and re-lock the display around the call to the
+    user error handler function. When re-locking the display, two
+    functions are called to ensure that the display is ready to generate a request:
+    
+        _XIDHandler(dpy);
+        _XSeqSyncFunction(dpy);
+    
+    The first ensures that there is at least one XID available to use
+    (possibly calling _xcb_generate_id to do so). The second makes sure a
+    reply is received at least every 65535 requests to keep sequence
+    numbers in sync (possibly generating a GetInputFocus request and
+    synchronously awaiting the reply).
+    
+    If the second of these does generate a GetInputFocus request and wait
+    for the reply, then a pending error will cause recursion into _XError,
+    which deadlocks the display.
+    
+    One seemingly easy fix is to have _XError avoid those calls by
+    invoking InternalLockDisplay instead of LockDisplay. That function
+    does everything that LockDisplay does *except* call those final two
+    functions which may end up receiving an error.
+    
+    However, that doesn't protect the system from applications which call
+    some legal Xlib function from within their error handler. Any Xlib
+    function which cannot generate protocol or wait for events is valid,
+    including many which invoke LockDisplay.
+    
+    What we need to do is make LockDisplay skip these two function calls
+    precisely when it is called from within the _XError context for the
+    same display.
+    
+    This patch accomplishes this by creating a list of threads in the
+    display which are in _XError, and then having LockDisplay check the
+    current thread against those list elements.
+    
+    Inspired-by: Dmitry Osipenko <digetx@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Tested-by: Dmitry Osipenko <digetx@gmail.com>
+    Reviewed-by: Dmitry Osipenko <digetx@gmail.com>
+
+commit c9c4d6efbf92ab51695e2e740319503221d68eed
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Nov 13 11:34:04 2020 +0100
+
+    nls: improve the comments for the Serbian compose sequences
+    
+    Also put an extra space before the lone combining characters
+    so they have some room to breathe.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 3497dae3d9c52a252110b2a0983b82000be0fe8e
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Nov 13 11:23:09 2020 +0100
+
+    nls: remove mistaken Serbian compose sequences with combining diacritics
+    
+    Combining characters are not dead keys -- they have an immediate effect
+    and combine with the preceding character.  So they cannot be used in
+    compose sequences.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 5cd60398b7787297008b13a848ed3cfbd7ef178d
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Mon Nov 2 16:34:39 2020 +0100
+
+    nls: rename the obsolete sr_CS locale to sr_RS
+    
+    Fixes #107, for the most part.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 7cf1729590534e257b851899cf03421b65c538e3
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Nov 7 17:02:56 2020 -0800
+
+    Don't attempt to unload locale context data
+    
+    Most locale context users call _XlcCurrentLC, which returns a pointer
+    which never needs to be passed to _XCloseLC, meaning it has unbounded
+    lifetime, so that locale data can never be freed.
+    
+    Remove all reference counting and just leave all locales that were
+    ever used in memory.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Acked-by: Martin Peres <martin.peres@mupuf.org>
+
+commit 87a8fd8051b823636c3c4f3c37c4cfd11fdb880d
+Author: Jacek Caban <jacek@codeweavers.com>
+Date:   Mon Aug 14 19:20:19 2017 +0200
+
+    Don't cache last lcd in _XlcCurrentLC.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=55678
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=68538
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=69088
+    
+    The way it's currently cached is not thread safe. As long as locale doesn't change, the same object is reused anyway.
+    
+    Signed-off-by: Jacek Caban <jacek@codeweavers.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Acked-by: Martin Peres <martin.peres@mupuf.org>
+
+commit 7a38c09b82ee2522d987c3da4af8af186e562c61
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Nov 7 16:59:37 2020 -0800
+
+    Don't cache converters in _Xlcmbtowc and Xlcwctomb
+    
+    These functions were caching encoding conversion functions in static
+    variables which is not thread safe. Let the conversion loader do its
+    job and cache locale to converters there. It's less efficient, but
+    it's also (now) thread safe.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Acked-by: Martin Peres <martin.peres@mupuf.org>
+
+commit b52ba5c209165fc2c533b77b86147b31763299f3
+Author: Jacek Caban <jacek@codeweavers.com>
+Date:   Mon Aug 14 19:20:20 2017 +0200
+
+    Make conv_list thread safe.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=55678
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=68538
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=69088
+    Signed-off-by: Jacek Caban <jacek@codeweavers.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Acked-by: Martin Peres <martin.peres@mupuf.org>
+
+commit 8b5ce3a9b1219c81711944880e5a1e1cfad3d956
+Author: Antti Savolainen <antti.savo@gmail.com>
+Date:   Wed Sep 16 07:47:26 2020 +0000
+
+    Added DOWNWARD ARROW support
+
+commit 7138826dccba9d538dfb142ce9af1a40d64ea849
+Author: Antti Savolainen <antti.savo@gmail.com>
+Date:   Tue Sep 8 00:54:23 2020 +0300
+
+    Added support for UPWARDS ARROW and ALMOST EQUAL TO
+    
+    Signed-off-by: Antti Savolainen <antti.savo@gmail.com>
+
+commit 56d59299f7433cdeb88bac970b06eb7df44df5bb
+Author: Jonathan Belsewir <jonbel@jonasund.de>
+Date:   Thu Nov 5 22:57:50 2020 +0000
+
+    Add less and greater to characters that are difficult to access on some keyboards
+
+commit 5caf45f8d3bebad5b72ac88545adc156ccfd754d
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Oct 23 17:12:22 2020 +0200
+
+    nls: Allow all letters with a caron to be composed also with v.
+    
+    It was strange that the accented letters Ž and ž can be composed with
+    sequences that start with "v" ("v Z" and "v z"), but not Č and č and
+    Š and š (and other letters with a caron).  For these letters, compose
+    sequences that start with a "c" had to be used, which was frustrating
+    because it is hard to remember that "c" stands for "caron", AND the
+    graphically more obvious "v" is right next to it.
+    
+    (Unfortunately, the sequence "v l" is already taken for vertical line.
+    Maybe the compose sequences for vertical line could be reduced to just
+    "V L" and "L V"?)
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 62de4ac9025e2cb3f62a890241c06ebc75acce62
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Nov 1 20:23:55 2020 +0100
+
+    nls: vertically align the target column of aliases
+    
+    Also improve the grammar of the initial comment.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit f5b26a16ef959fc6860e9cf58b97a042600900b4
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Nov 1 20:17:05 2020 +0100
+
+    nls: remove some twenty aliases that have been obsolete for fifteen years
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 3e61f3b49660e081108f06bc514366f1784cb2e0
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Nov 1 19:50:56 2020 +0100
+
+    nls: remove country-specific aliases for two constructed languages
+    
+    These artificial languages are meant to be international and are
+    thus not specific to any country.  If one would want to support
+    aliases like ia_FR or ia_CH, then one would also have to support
+    ia_AU, ia_DE, ia_ES, et cetera, et cetera.  That would be silly.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 3f9c43adde22bb2ab4bef5837bc8401af9bb537c
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Nov 1 17:28:24 2020 +0100
+
+    nls: remove four aliases where the name is identical to the definition
+    
+    They were found with:
+    
+        while read one two; do
+            if [[ $one == $two: ]]; then echo $two; fi;
+        done  <nls/locale.alias.pre
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 9f9c5365816bdd036fd80d54b22e86764ea4b7a7
+Author: Carlos Garnacho <carlosg@gnome.org>
+Date:   Fri Jun 14 17:55:14 2019 +0200
+
+    Add XSetIOErrorExitHandler() function
+    
+    This function complements XSetIOErrorHandler(), allowing to override
+    the default behavior that trusts on I/O errors never coming back
+    (i.e. exit()ing the process).
+    
+    This is meant as a mechanism for Wayland compositors (that are too
+    a X11 client + compositing manager) to unfasten seatbelts and jump
+    through the car window. It might get lucky and land on a stack of
+    pillows.
+    
+    In consequence, some functions labeled as _X_NORETURN can as a
+    matter of fact return. So those hints were removed.
+    
+    Signed-off-by: Carlos Garnacho <carlosg@gnome.org>
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
+commit 4cb758019e374fa7c022fe79d28444e13441717b
+Author: Carlos Garnacho <carlosg@gnome.org>
+Date:   Fri Jun 14 17:54:47 2019 +0200
+
+    Prepare for _XIOError() possibly returning
+    
+    Ensure current state is cut short on _XIOError(), possible reentrancy
+    should be skipped through the XlibDisplayIOError flag checks.
+    
+    Signed-off-by: Carlos Garnacho <carlosg@gnome.org>
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
+commit a37986f7a7d4ae9b8292b132dbb0da2885ea919c
+Author: Ross Burton <ross.burton@intel.com>
+Date:   Wed Jan 22 17:11:23 2020 +0000
+
+    cpprules.in: squash whitespace in generated files
+    
+    CPP is used to generate files, but as cpp reads files from the build host the
+    output has a number of blank lines at the beginning which varies depending on
+    what GCC and friends is used.
+    
+    Pathalogical example:
+    
+     $ cpp -undef -traditional /dev/null
+     # 1 "/dev/null"
+     # 1 "<built-in>"
+     # 1 "<command-line>"
+     # 31 "<command-line>"
+     # 1 "/usr/include/stdc-predef.h" 1 3 4
+    
+     # 17 "/usr/include/stdc-predef.h" 3 4
+    
+     [ 40 blank line ]
+    
+     # 32 "<command-line>" 2
+     # 1 "/dev/null"
+    
+    So depending on the content of stdc-predef.h and what other headers CPP will
+    load, the amount of whitespace in the generates files varies. This can result in
+    differences in reproducible environments, and file conflicts in multilib
+    environments.
+    
+    As whitespace is irrelevant to these machine-readable files, extend the sed to
+    just delete blank lines.
+
+commit 16192ce2a7e462e09f95aa45ce9eaa180e483c43
+Author: Carmina16 <mistresssilvara@hotmail.com>
+Date:   Sun Jun 16 02:54:25 2019 +0000
+
+    Adding ia and ie locales
+
+commit caa71668af7fd3ebdd56353c8f0ab90824773969
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 28 16:16:07 2020 -0700
+
+    Use __builtin_popcountl if available to replace Ones() in GetImage.c
+    
+    If the compiler knows of a better algorithm for counting the number of
+    bits set in a word for the target CPU, let it use that, instead of the
+    classic algorithm optimized for PDP-6.
+    
+    Based on libXext commit 490a25e6f8a4d2482af4364c700b68ad11a4d10b
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a9269a95c353e3de9f4d33bab9f1363d84e79db
+Author: Krzesimir Nowak <qdlacz@gmail.com>
+Date:   Mon Jun 1 12:58:30 2020 +0000
+
+    Fix leaking modifiers string.
+    
+    Reported by valgrind:
+    
+    ```
+    ==118175== 17 bytes in 1 blocks are definitely lost in loss record 13 of 1,675
+    ==118175==    at 0x483A809: malloc (vg_replace_malloc.c:307)
+    ==118175==    by 0x5CD1B46: _XlcDefaultMapModifiers (in /usr/lib64/libX11.so.6.3.0)
+    ==118175==    by 0x5CD1F1A: XSetLocaleModifiers (in /usr/lib64/libX11.so.6.3.0)
+    ==118175==    by 0x496841C: X11_InitKeyboard (SDL_x11keyboard.c:324)
+    ==118175==    by 0x496F0CA: X11_VideoInit (SDL_x11video.c:455)
+    ==118175==    by 0x494747B: SDL_VideoInit_REAL (SDL_video.c:532)
+    ==118175==    by 0x489E886: SDL_InitSubSystem_REAL (SDL.c:206)
+    ==118175==    by 0x402634: main (fade.cc:35)
+    ```
+
+commit d127217f26df1bf7566c1f372d8b5329a06754ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 17:03:24 2020 -0700
+
+    Exempt XLookupKeysym from XKeycodeToKeysym deprecation warnings
+    
+    Gets rid of:
+    src/xkb/XKBBind.c: In function ‘XLookupKeysym’:
+    src/xkb/XKBBind.c:234:5: warning: ‘XKeycodeToKeysym’ is deprecated
+    [https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wdeprecated-declarations-Wdeprecated-declarations]
+      234 |     return XKeycodeToKeysym(dpy, event->keycode, col);
+          |     ^~~~~~
+    src/xkb/XKBBind.c:96:1: note: declared here
+       96 | XKeycodeToKeysym(Display *dpy,
+          | ^~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a64eb5f478c6ca84ef3457a01f9a7c3db8ecf1e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 16:50:43 2020 -0700
+
+    lcUTF8: Increase string buffer size from 20 to 32 bytes
+    
+    While we don't expect large enough ints to need it, we don't
+    enforce a maximum size, so gcc assumes the worst and warns:
+    
+    ../../../src/xlibi18n/lcUTF8.c: In function ‘create_tofontcs_conv’:
+    ../../../src/xlibi18n/lcUTF8.c:1736:34: warning: ‘.charset.name’ directive output may be truncated writing 13 bytes into a region of size between 8 and 17 [-Wformat-truncation=]
+     1736 |  snprintf(buf, sizeof(buf), "fs%d.charset.name", i);
+          |                                  ^~~~~~~~~~~~~
+    ../../../src/xlibi18n/lcUTF8.c:1736:2: note: ‘snprintf’ output between 17 and 26 bytes into a destination of size 20
+     1736 |  snprintf(buf, sizeof(buf), "fs%d.charset.name", i);
+          |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ../../../src/xlibi18n/lcUTF8.c:1739:46: warning: ‘snprintf’ output may be truncated before the last format character [-Wformat-truncation=]
+     1739 |      snprintf(buf, sizeof(buf), "fs%d.charset", i);
+          |                                              ^
+    ../../../src/xlibi18n/lcUTF8.c:1739:6: note: ‘snprintf’ output between 12 and 21 bytes into a destination of size 20
+     1739 |      snprintf(buf, sizeof(buf), "fs%d.charset", i);
+          |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ../../../src/xlibi18n/lcUTF8.c:1754:41: warning: ‘.charset.name’ directive output may be truncated writing 13 bytes into a region of size between 8 and 17 [-Wformat-truncation=]
+     1754 |         snprintf(buf, sizeof(buf), "fs%d.charset.name", i);
+          |                                         ^~~~~~~~~~~~~
+    ../../../src/xlibi18n/lcUTF8.c:1754:9: note: ‘snprintf’ output between 17 and 26 bytes into a destination of size 20
+     1754 |         snprintf(buf, sizeof(buf), "fs%d.charset.name", i);
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ../../../src/xlibi18n/lcUTF8.c:1757:53: warning: ‘snprintf’ output may be truncated before the last format character [-Wformat-truncation=]
+     1757 |             snprintf(buf, sizeof(buf), "fs%d.charset", i);
+          |                                                     ^
+    ../../../src/xlibi18n/lcUTF8.c:1757:13: note: ‘snprintf’ output between 12 and 21 bytes into a destination of size 20
+     1757 |             snprintf(buf, sizeof(buf), "fs%d.charset", i);
+          |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54925250ad9c825bea671dcade5c913bad88abee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 16:33:59 2020 -0700
+
+    i18n: use memcpy instead of strncpy on unterminated char arrays
+    
+    Avoids gcc warnings that we're using strncpy wrong to copy a known-length
+    set of characters without a terminating '\0' to a buffer whose length we
+    are checking separately.  (Should also be imperceptibly faster since we
+    no longer check if each byte is '\0' when we already know it won't be.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8754868dbbbc5fa096282df0504aa7880488eeb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 16:02:01 2020 -0700
+
+    Mark FreeBlueTblElements label unused in LRGB.c
+    
+    Quiets gcc 10.2 warning of:
+    src/xcms/LRGB.c: In function ‘LINEAR_RGB_InitSCCData’:
+    src/xcms/LRGB.c:798:1: warning: label ‘FreeBlueTblElements’ defined
+     but not used
+    [https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-label-Wunused-label]
+      798 | FreeBlueTblElements:
+          | ^~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52b0cd67073f2f4665884b5a7decfedeb3b7ca1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 14:54:47 2020 -0700
+
+    Raise minimum required xproto version to 7.0.25 (released 2013-11-23)
+    
+    Allows us to depend on _X_COLD directly instead of having to check for it.
+    
+    (Since we also use _X_UNUSED, 7.0.22 or later was implicitly required
+     already but not checked for.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit deafb99fd8faf8b044eaee13d072440ce4db76af
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Sun Aug 23 21:19:33 2020 +0300
+
+    Avoid the use of "register" keyword in public headers.
+    
+    This causes issues when compiling code for C++17.
+
+commit 505420662577749e36640db48f6b6b9ae0236e09
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Aug 24 15:42:25 2020 +0200
+
+    libX11 1.6.12
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit acdaaadcb3d85c61fd43669fc5dddf0f8c3f911d
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Thu Aug 13 18:02:58 2020 +0200
+
+    Fix an integer overflow in init_om()
+    
+    CVE-2020-14363
+    
+    This can lead to a double free later, as reported by Jayden Rivers.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit d15c24c8b44be5e4054c8ecd0ff9dcf2c8e18e5b
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Tue Aug 11 13:44:38 2020 +0200
+
+    Fix input clients connecting to server
+    
+    Fix a bug where some input clients can't connect to the input server.
+    This fixes #117.
+    
+    FreeBSD bugzilla reference:
+    https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=248549
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit 6dd618e5ea8e7558dd8e99a2777ab7b69211789c
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Sat Aug 15 00:48:56 2020 +0300
+
+    Avoid the use of "register" keyword in XkbTranslateKeySym.
+    
+    This causes issues when compiling code for C++17.
+    While here, make function prototype match the header with regards
+    to removal of another register keyword.
+
+commit 780d222343098b4bfe3ec529b4a0dc2aadea19bf
+Author: Christopher Chavez <chrischavez@gmx.us>
+Date:   Mon Aug 10 17:08:39 2020 +0000
+
+    Fix typo GCCLipYOrigin -> GCClipYOrigin in XCreateGC() manpage
+
+commit 29a8251a456bb7dc10146b4713f499a624d6dacd
+Author: Felix Yan <felixonmars@archlinux.org>
+Date:   Thu Aug 6 16:03:38 2020 +0000
+
+    Correct a typo in GetStCmap.c
+
+commit 0d8f038db83f68724a84ef9d4ccd0d5e33ec6a70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 6 08:07:57 2020 -0700
+
+    libX11 1.6.11
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 93fce3f4e79cbc737d6468a4f68ba3de1b83953b
+Author: Yichao Yu <yyc1992@gmail.com>
+Date:   Sun Aug 2 13:43:58 2020 -0400
+
+    Fix size calculation in `_XimAttributeToValue`.
+    
+    The check here guards the read below.
+    For `XimType_XIMStyles`, these are `num` of `CARD32` and for `XimType_XIMHotKeyTriggers`
+    these are `num` of `XIMTRIGGERKEY` ref[1] which is defined as 3 x `CARD32`.
+    (There are data after the `XIMTRIGGERKEY` according to the spec but they are not read by this
+    function and doesn't need to be checked.)
+    
+    The old code here used the native datatype size instead of the wire protocol size causing
+    the check to always fail.
+    
+    Also fix the size calculation for the header (size). It is 2 x CARD16 for both types
+    despite the unused `CARD16` for `XimType_XIMStyles`.
+    
+    [1] https://www.x.org/releases/X11R7.6/doc/libX11/specs/XIM/xim.html#Input_Method_Styles
+    
+    This fixes a regression caused by 388b303c62aa35a245f1704211a023440ad2c488 in 1.6.10.
+    
+    Fix #116
+
+commit 9949364ea761ab7efa2a9930ec7718f966a740c0
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Thu Jul 30 21:36:22 2020 +0200
+
+    libX11 1.6.10
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 1703b9f3435079d3c6021e1ee2ec34fd4978103d
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Fri Jul 24 21:09:10 2020 +0200
+
+    Change the data_len parameter of _XimAttributeToValue() to CARD16
+    
+    It's coming from a length in the protocol (unsigned) and passed
+    to functions that expect unsigned int parameters (_XCopyToArg()
+    and memcpy()).
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Todd Carson <toc@daybefore.net>
+
+commit 1a566c9e00e5f35c1f9e7f3d741a02e5170852b2
+Author: Todd Carson <tc@daybefore.net>
+Date:   Fri Jul 24 20:59:32 2020 +0200
+
+    Zero out buffers in functions
+    
+    It looks like uninitialized stack or heap memory can leak
+    out via padding bytes.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 2fcfcc49f3b1be854bb9085993a01d17c62acf60
+Author: Todd Carson <tc@daybefore.net>
+Date:   Fri Jul 24 20:22:44 2020 +0200
+
+    Fix more unchecked lengths
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 388b303c62aa35a245f1704211a023440ad2c488
+Author: Todd Carson <tc@daybefore.net>
+Date:   Fri Jul 24 19:36:51 2020 +0200
+
+    fix integer overflows in _XimAttributeToValue()
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 0e6561efcfaa0ae7b5c74eac7e064b76d687544e
+Author: Todd Carson <tc@daybefore.net>
+Date:   Fri Jul 24 19:33:30 2020 +0200
+
+    Fix signed length values in _XimGetAttributeID()
+    
+    The lengths are unsigned according to the specification. Passing
+    negative values can lead to data corruption.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 2b7598221d87049d03e9a95fcb541c37c8728184
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 22 15:19:58 2020 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9e3378ebcfc79ff00591b8617a68e97580a741e
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Jul 19 22:19:24 2020 +0200
+
+    xlibi18n: Fix converting horizline keysyms to UCS
+    
+    U+23BA - U+23BD are meant to represent the scan lines, and U+2500 is
+    unified with scan line 5.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 4385a84c4a79c1b60bf12839899a1544198de975
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Jun 4 02:19:13 2020 +0200
+
+    Braille: Fix default lookup
+    
+    cbb59d172 ('Braille: Fix typing quickly') broke the default lookup that
+    translates Braille keysym patterns to Braille Unicode patterns since it
+    rightfully clears brl_committing, but then we do not have it any more to
+    fill brl_committed.
+    
+    This change saves the committed pattern so we can return it in the
+    default lookup.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit fb65b67169105c82c243f265e0f993cf72efdacd
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Fri Feb 28 13:59:36 2020 +0200
+
+    Update Finnish compose sequences for SFS 5966:2019 standard
+    
+    U0219, U0218, U021B, U021A are now part of the standard.
+    
+    Fixes #70 which was printed incorrectly in the earlier standard version.
+
+commit 07724ce046348a21cc82a874853b14b9a285df75
+Author: Tristan Miller <psychonaut@nothingisreal.com>
+Date:   Wed Sep 25 13:34:01 2019 +0200
+
+    Add acute accent compose sequences for Russian vowels.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libx11/issues/104
+    
+    Signed-off-by: Tristan Miller <psychonaut@nothingisreal.com>
+
+commit 3ec9264d01a3a66c0fa0145a7c1db06a64be1507
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Apr 25 14:40:54 2020 -0400
+
+    document an ancient performance problem (see Debian #954845).
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 791c93816ce0520d54925b0b3ccbc29823370041
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Apr 25 14:22:11 2020 -0400
+
+    update/correct function prototypes in manpages to match headers
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 844271305a28e87031562dfeb43defbea02960a2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 21 20:53:35 2020 -0400
+
+    reduce gcc-normal warnings using casts (no object change)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 53b59ddfc114a55d26e9717a1b4822f1b18c40ca
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Apr 21 18:13:22 2020 -0400
+
+    reduce gcc-normal warnings using casts (no object change)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 68c72a7341b114277ab232f2499ee3bd035af8a0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Dec 11 11:53:11 2019 -0500
+
+    Fix XTS regression in XCopyColormapAndFree
+    
+    XCopyColormapAndFree/5 threw an assertion:
+    
+        520|4 5 00014017 1 2|Assertion XCopyColormapAndFree-5.(A)
+        520|4 5 00014017 1 3|When a colourmap argument does not name a valid colourmap,
+        520|4 5 00014017 1 4|then a BadColor error occurs.
+        520|4 5 00014017 1 5|METH: Create a bad colourmap by creating and freeing a colourmap.
+        520|4 5 00014017 1 6|METH: Call test function using bad colourmap as the colourmap argument.
+        520|4 5 00014017 1 7|METH: Verify that a BadColor error occurs.
+        520|4 5 00014017 1 8|unexpected signal 6 (SIGABRT) received
+        220|4 5 2 15:05:53|UNRESOLVED
+        410|4 5 1 15:05:53|IC End
+        510|4|system 0: Abandoning testset: caught unexpected signal 11 (SIGSEGV)
+    
+    More specifically:
+    
+        lt-XCopyColormapAndFree: xcb_io.c:533: _XAllocID: Assertion `ret != inval_id' failed.
+    
+    This bug was introduced (by following my advice, d'oh) in:
+    
+        commit 99a2cf1aa0b58391078d5d3edf0a7dab18c7745d
+        Author: Tapani Pälli <tapani.palli@intel.com>
+        Date:   Mon May 13 08:29:49 2019 +0300
+    
+            Protect colormap add/removal with display lock
+    
+    In that patch we moved the call to _XcmsCopyCmapRecAndFree inside the
+    display lock. The problem is said routine has side effects, including
+    trying to implicitly create a colormap in some cases. Since we don't run
+    the XID handler until SyncHandle() we would see inconsistent internal
+    xlib state, triggering the above assert.
+    
+    Fix this by dropping and re-taking the display lock before calling into
+    XCMS.
+    
+    Reviewed-by: Tapani Pälli <tapani.palli@intel.com>
+
+commit 7f46a38139f66fda734f3a6c445b84ea89c8f310
+Author: Alex Henrie <alexhenrie24@gmail.com>
+Date:   Wed Jan 1 14:54:06 2020 -0700
+
+    Handle small final sigma in XConvertCase
+    
+    lowercase: GREEK SMALL LETTER FINAL SIGMA (U+03C2)
+    uppercase: GREEK CAPITAL LETTER SIGMA (U+03A3)
+    
+    This mapping was correct in UCSConvertCase, but the "legacy" mapping
+    must also be correct for Caps Lock to work with the final sigma key.
+    
+    https://gitlab.freedesktop.org/xorg/lib/libx11/issues/5
+    
+    Signed-off-by: Alex Henrie <alexhenrie24@gmail.com>
+
+commit a48787d3d155c8a09cead345f5055da30c1db537
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 11 14:12:27 2019 +1000
+
+    Handle ssharp in XConvertCase()
+    
+    lowercase: LATIN SMALL LETTER SHARP S (U+00DF)
+    uppercase: LATIN CAPITAL LETTER SHARP S (U+1E9E)
+    
+    The uppercase sharp s (XK_ssharp) is a relatively recent addition to unicode
+    but was added to the relevant keyboard layouts in xkeyboard-config-2.25
+    (d1411e5e95c)
+    https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/issues/144
+    
+    Alas, the CapsLock behavior was broken on the finnish layout (maybe others).
+    This was due to xkbcomp using XConvertCase() to determine whether a key
+    requires the type FOUR_LEVEL_ALPHABETIC or FOUR_LEVEL_SEMIALPHABETIC.
+    
+    Let's make this function return the right lower/upper symbols for the sharp s
+    and hope that the world won't get any worse because of it.
+    
+    https://gitlab.freedesktop.org/xorg/lib/libx11/issues/110
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b8766a438461e20b5c6f7a6111b703d4cb71501f
+Author: Raul Fernandes <rgfernandes@gmail.com>
+Date:   Wed Oct 9 18:39:26 2019 +0000
+
+    Use memcmp and memcpy
+
 commit db7cca17ad7807e92a928da9d4c68a00f4836da2
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Oct 9 13:41:29 2019 -0400
