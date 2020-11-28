@@ -214,7 +214,7 @@
 ./usr/X11R6/lib/libX11-xcb.so.2.0
 ./usr/X11R6/lib/libX11.a
 ./usr/X11R6/lib/libX11.la
-./usr/X11R6/lib/libX11.so.17.0
+./usr/X11R6/lib/libX11.so.17.1
 ./usr/X11R6/lib/libXRes.a
 ./usr/X11R6/lib/libXRes.la
 ./usr/X11R6/lib/libXRes.so.5.1
