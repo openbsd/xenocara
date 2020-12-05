@@ -1,5 +1,7 @@
 ./usr/X11R6/bin/X
 ./usr/X11R6/bin/Xorg
+./usr/X11R6/lib/modules/drivers/wsfb_drv.la
+./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/input/kbd_drv.la
 ./usr/X11R6/lib/modules/input/kbd_drv.so
 ./usr/X11R6/lib/modules/input/mouse_drv.la
