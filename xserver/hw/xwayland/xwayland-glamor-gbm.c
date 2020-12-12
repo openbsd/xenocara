@@ -111,21 +111,6 @@ wl_drm_format_for_depth(int depth)
 }
 
 static char
-is_fd_render_node(int fd)
-{
-    struct stat render;
-
-    if (fstat(fd, &render))
-        return 0;
-    if (!S_ISCHR(render.st_mode))
-        return 0;
-    if (render.st_rdev & 0x80)
-        return 1;
-
-    return 0;
-}
-
-static char
 is_device_path_render_node (const char *device_path)
 {
     char is_render_node;
@@ -135,7 +120,7 @@ is_device_path_render_node (const char *device_path)
     if (fd < 0)
         return 0;
 
-    is_render_node = is_fd_render_node(fd);
+    is_render_node = (drmGetNodeTypeFromFd(fd) == DRM_NODE_RENDER);
     close(fd);
 
     return is_render_node;
@@ -285,6 +270,9 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap,
     struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
     unsigned short width = pixmap->drawable.width;
     unsigned short height = pixmap->drawable.height;
+    uint32_t format;
+    struct xwl_format *xwl_format = NULL;
+    Bool modifier_supported = FALSE;
     int prime_fd;
     int num_planes;
     uint32_t strides[4];
@@ -309,6 +297,8 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap,
     if (!xwl_pixmap->bo)
        return NULL;
 
+    format = wl_drm_format_for_depth(pixmap->drawable.depth);
+
     prime_fd = gbm_bo_get_fd(xwl_pixmap->bo);
     if (prime_fd == -1)
         return NULL;
@@ -327,7 +317,23 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap,
     offsets[0] = 0;
 #endif
 
-    if (xwl_gbm->dmabuf && modifier != DRM_FORMAT_MOD_INVALID) {
+    for (i = 0; i < xwl_screen->num_formats; i++) {
+       if (xwl_screen->formats[i].format == format) {
+          xwl_format = &xwl_screen->formats[i];
+          break;
+       }
+    }
+
+    if (xwl_format) {
+        for (i = 0; i < xwl_format->num_modifiers; i++) {
+            if (xwl_format->modifiers[i] == modifier) {
+                modifier_supported = TRUE;
+                break;
+            }
+        }
+    }
+
+    if (xwl_gbm->dmabuf && modifier_supported) {
         struct zwp_linux_buffer_params_v1 *params;
 
         params = zwp_linux_dmabuf_v1_create_params(xwl_gbm->dmabuf);
@@ -339,13 +345,12 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap,
 
         xwl_pixmap->buffer =
            zwp_linux_buffer_params_v1_create_immed(params, width, height,
-                                                   wl_drm_format_for_depth(pixmap->drawable.depth),
-                                                   0);
+                                                   format, 0);
         zwp_linux_buffer_params_v1_destroy(params);
     } else if (num_planes == 1) {
         xwl_pixmap->buffer =
             wl_drm_create_prime_buffer(xwl_gbm->drm, prime_fd, width, height,
-                                       wl_drm_format_for_depth(pixmap->drawable.depth),
+                                       format,
                                        0, gbm_bo_get_stride(xwl_pixmap->bo),
                                        0, 0,
                                        0, 0);
@@ -501,7 +506,8 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
           data.strides[i] = strides[i];
           data.offsets[i] = offsets[i];
        }
-       bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD_MODIFIER, &data, 0);
+       bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD_MODIFIER, &data,
+                          GBM_BO_USE_RENDERING);
 #endif
     } else if (num_fds == 1) {
        struct gbm_import_fd_data data;
@@ -512,7 +518,7 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
        data.stride = strides[0];
        data.format = gbm_format_for_depth(depth);
        bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD, &data,
-             GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+                          GBM_BO_USE_RENDERING);
     } else {
        goto error;
     }
@@ -746,7 +752,7 @@ xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
        return;
    }
 
-   if (is_fd_render_node(xwl_gbm->drm_fd)) {
+   if (drmGetNodeTypeFromFd(xwl_gbm->drm_fd) == DRM_NODE_RENDER) {
        xwl_gbm->fd_render_node = 1;
        xwl_screen->expecting_event--;
    } else {

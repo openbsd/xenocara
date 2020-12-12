@@ -111,6 +111,27 @@ xwl_present_reset_timer(struct xwl_present_window *xwl_present_window)
     }
 }
 
+static void
+xwl_present_free_event(struct xwl_present_event *event)
+{
+    if (!event)
+        return;
+
+    if (event->pixmap) {
+        if (!event->buffer_released) {
+            struct wl_buffer *buffer =
+                xwl_glamor_pixmap_get_wl_buffer(event->pixmap, NULL);
+
+            wl_buffer_set_user_data(buffer, NULL);
+        }
+
+        dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
+    }
+
+    xorg_list_del(&event->list);
+    free(event);
+}
+
 void
 xwl_present_cleanup(WindowPtr window)
 {
@@ -128,26 +149,13 @@ xwl_present_cleanup(WindowPtr window)
     }
 
     /* Clear remaining events */
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list) {
-        xorg_list_del(&event->list);
-        free(event);
-    }
+    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list)
+        xwl_present_free_event(event);
 
-    /* Clear remaining buffer releases and inform Present about free ressources */
-    event = xwl_present_window->sync_flip;
-    xwl_present_window->sync_flip = NULL;
-    if (event) {
-        if (event->buffer_released) {
-            free(event);
-        } else {
-            event->pending = FALSE;
-            event->abort = TRUE;
-        }
-    }
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->release_queue, list) {
-        xorg_list_del(&event->list);
-        event->abort = TRUE;
-    }
+    xwl_present_free_event(xwl_present_window->sync_flip);
+
+    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->release_queue, list)
+        xwl_present_free_event(event);
 
     /* Clear timer */
     xwl_present_free_timer(xwl_present_window);
@@ -158,13 +166,6 @@ xwl_present_cleanup(WindowPtr window)
                   NULL);
 
     free(xwl_present_window);
-}
-
-static void
-xwl_present_free_event(struct xwl_present_event *event)
-{
-    xorg_list_del(&event->list);
-    free(event);
 }
 
 static void
@@ -216,7 +217,7 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
             /* If the buffer was already released, clean up now */
             present_wnmd_event_notify(xwl_present_window->window, event->event_id,
                                       xwl_present_window->ust, msc);
-            free(event);
+            xwl_present_free_event(event);
         } else {
             xorg_list_add(&event->list, &xwl_present_window->release_queue);
         }
@@ -355,6 +356,7 @@ xwl_present_queue_vblank(WindowPtr present_window,
         return BadAlloc;
 
     event->event_id = event_id;
+    event->pixmap = NULL;
     event->xwl_present_window = xwl_present_window;
     event->target_msc = msc;
 
@@ -392,8 +394,7 @@ xwl_present_abort_vblank(WindowPtr present_window,
 
     xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list) {
         if (event->event_id == event_id) {
-            xorg_list_del(&event->list);
-            free(event);
+            xwl_present_free_event(event);
             return;
         }
     }
@@ -420,8 +421,16 @@ xwl_present_check_flip2(RRCrtcPtr crtc,
                         PresentFlipReason *reason)
 {
     struct xwl_window *xwl_window = xwl_window_from_window(present_window);
+    ScreenPtr screen = pixmap->drawable.pScreen;
 
     if (!xwl_window)
+        return FALSE;
+
+    /* Can't flip if the window pixmap doesn't match the xwl_window parent
+     * window's, e.g. because a client redirected this window or one of its
+     * parents.
+     */
+    if (screen->GetWindowPixmap(xwl_window->window) != screen->GetWindowPixmap(present_window))
         return FALSE;
 
     /*
@@ -460,11 +469,12 @@ xwl_present_flip(WindowPtr present_window,
     if (!event)
         return FALSE;
 
+    pixmap->refcnt++;
     buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap, &buffer_created);
 
     event->event_id = event_id;
     event->xwl_present_window = xwl_present_window;
-    event->buffer = buffer;
+    event->pixmap = pixmap;
     event->target_msc = target_msc;
     event->pending = TRUE;
     event->abort = FALSE;
@@ -495,7 +505,9 @@ xwl_present_flip(WindowPtr present_window,
     /* Realign timer */
     xwl_present_reset_timer(xwl_present_window);
 
-    wl_surface_damage(xwl_window->surface, 0, 0,
+    wl_surface_damage(xwl_window->surface,
+                      damage_box->x1 - present_window->drawable.x,
+                      damage_box->y1 - present_window->drawable.y,
                       damage_box->x2 - damage_box->x1,
                       damage_box->y2 - damage_box->y1);
 

@@ -87,6 +87,8 @@ ddxInputThreadInit(void)
 }
 #endif
 
+#define DEFAULT_DPI 96
+
  _X_NORETURN
 static void _X_ATTRIBUTE_PRINTF(1, 2)
 xwl_give_up(const char *f, ...)
@@ -191,8 +193,6 @@ static void
 xwl_window_property_allow_commits(struct xwl_window *xwl_window,
                                   PropertyStateRec *propstate)
 {
-    Bool old_allow_commits = xwl_window->allow_commits;
-
     switch (propstate->state) {
     case PropertyNewValue:
         xwl_window_set_allow_commits_from_property(xwl_window, propstate->prop);
@@ -204,17 +204,6 @@ xwl_window_property_allow_commits(struct xwl_window *xwl_window,
 
     default:
         break;
-    }
-
-    /* If allow_commits turned from off to on, discard any frame
-     * callback we might be waiting for so that a new buffer is posted
-     * immediately through block_handler() if there is damage to post.
-     */
-    if (!old_allow_commits && xwl_window->allow_commits) {
-        if (xwl_window->frame_callback) {
-            wl_callback_destroy(xwl_window->frame_callback);
-            xwl_window->frame_callback = NULL;
-        }
     }
 }
 
@@ -538,7 +527,7 @@ ensure_surface_for_window(WindowPtr window)
     struct xwl_window *xwl_window;
     struct wl_region *region;
 
-    if (xwl_window_get(window))
+    if (xwl_window_from_window(window))
         return TRUE;
 
     xwl_screen = xwl_screen_get(screen);
@@ -1043,6 +1032,19 @@ xwl_sync_events (struct xwl_screen *xwl_screen)
     xwl_read_events (xwl_screen);
 }
 
+void
+xwl_screen_roundtrip(struct xwl_screen *xwl_screen)
+{
+    int ret;
+
+    ret = wl_display_roundtrip(xwl_screen->display);
+    while (ret >= 0 && xwl_screen->expecting_event)
+        ret = wl_display_roundtrip(xwl_screen->display);
+
+    if (ret < 0)
+        xwl_give_up("could not connect to wayland server\n");
+}
+
 static CARD32
 add_client_fd(OsTimerPtr timer, CARD32 time, void *arg)
 {
@@ -1117,6 +1119,19 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-rootless") == 0) {
             xwl_screen->rootless = 1;
+
+            /* Disable the XSS extension on Xwayland rootless.
+             *
+             * Xwayland is just a Wayland client, no X11 screensaver
+             * should be expected to work reliably on Xwayland rootless.
+             */
+#ifdef SCREENSAVER
+            noScreenSaverExtension = TRUE;
+#endif
+            ScreenSaverTime = 0;
+            ScreenSaverInterval = 0;
+            defaultScreenSaverTime = 0;
+            defaultScreenSaverInterval = 0;
         }
         else if (strcmp(argv[i], "-wm") == 0) {
             xwl_screen->wm_fd = atoi(argv[i + 1]);
@@ -1169,6 +1184,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xorg_list_init(&xwl_screen->damage_window_list);
     xwl_screen->depth = 24;
 
+    if (!monitorResolution)
+        monitorResolution = DEFAULT_DPI;
+
     xwl_screen->display = wl_display_connect(NULL);
     if (xwl_screen->display == NULL) {
         ErrorF("could not connect to wayland server\n");
@@ -1182,14 +1200,12 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xwl_screen->registry = wl_display_get_registry(xwl_screen->display);
     wl_registry_add_listener(xwl_screen->registry,
                              &registry_listener, xwl_screen);
-    ret = wl_display_roundtrip(xwl_screen->display);
-    if (ret == -1) {
-        ErrorF("could not connect to wayland server\n");
+    xwl_screen_roundtrip(xwl_screen);
+
+    if (!xwl_screen->rootless && !xwl_screen->shell) {
+        ErrorF("missing wl_shell protocol\n");
         return FALSE;
     }
-
-    while (xwl_screen->expecting_event > 0)
-        wl_display_roundtrip(xwl_screen->display);
 
     bpc = xwl_screen->depth / 3;
     green_bpc = xwl_screen->depth - 2 * bpc;
@@ -1206,7 +1222,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     ret = fbScreenInit(pScreen, NULL,
                        xwl_screen->width, xwl_screen->height,
-                       96, 96, 0,
+                       monitorResolution, monitorResolution, 0,
                        BitsPerPixel(xwl_screen->depth));
     if (!ret)
         return FALSE;
@@ -1281,9 +1297,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     AddCallback(&PropertyStateCallback, xwl_property_callback, pScreen);
 
-    wl_display_roundtrip(xwl_screen->display);
-    while (xwl_screen->expecting_event)
-        wl_display_roundtrip(xwl_screen->display);
+    xwl_screen_roundtrip(xwl_screen);
 
     return ret;
 }

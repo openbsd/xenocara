@@ -41,6 +41,7 @@
 #include "compiler.h"
 #include "xf86Pci.h"
 #include "mipointer.h"
+#include "mipointrst.h"
 #include "micmap.h"
 #include <X11/extensions/randr.h>
 #include "fb.h"
@@ -710,7 +711,7 @@ msBlockHandler_oneshot(ScreenPtr pScreen, void *pTimeout)
 
     msBlockHandler(pScreen, pTimeout);
 
-    drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE);
+    drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE, FALSE);
 }
 
 static void
@@ -1353,7 +1354,7 @@ CreateScreenResources(ScreenPtr pScreen)
     ret = pScreen->CreateScreenResources(pScreen);
     pScreen->CreateScreenResources = CreateScreenResources;
 
-    if (!drmmode_set_desired_modes(pScrn, &ms->drmmode, pScrn->is_gpu))
+    if (!drmmode_set_desired_modes(pScrn, &ms->drmmode, pScrn->is_gpu, FALSE))
         return FALSE;
 
     if (!drmmode_glamor_handle_new_screen_pixmap(&ms->drmmode))
@@ -1662,6 +1663,21 @@ ScreenInit(ScreenPtr pScreen, int argc, char **argv)
     xf86SetSilkenMouse(pScreen);
     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
 
+    /* If pageflip is enabled hook the screen's cursor-sprite (swcursor) funcs.
+     * So that we can disabe page-flipping on fallback to a swcursor. */
+    if (ms->drmmode.pageflip) {
+        miPointerScreenPtr PointPriv =
+            dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
+
+        if (!dixRegisterScreenPrivateKey(&ms->drmmode.spritePrivateKeyRec,
+                                         pScreen, PRIVATE_DEVICE,
+                                         sizeof(msSpritePrivRec)))
+            return FALSE;
+
+        ms->SpriteFuncs = PointPriv->spriteFuncs;
+        PointPriv->spriteFuncs = &drmmode_sprite_funcs;
+    }
+
     /* Need to extend HWcursor support to handle mask interleave */
     if (!ms->drmmode.sw_cursor)
         xf86_cursors_init(pScreen, ms->cursor_width, ms->cursor_height,
@@ -1810,8 +1826,25 @@ EnterVT(ScrnInfoPtr pScrn)
 
     SetMaster(pScrn);
 
-    if (!drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE))
-        return FALSE;
+    drmmode_update_kms_state(&ms->drmmode);
+
+    /* allow not all modes to be set successfully since some events might have
+     * happened while not being master that could prevent the previous
+     * configuration from being re-applied.
+     */
+    if (!drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE, TRUE)) {
+        xf86DisableUnusedFunctions(pScrn);
+
+        /* TODO: check that at least one screen is on, to allow the user to fix
+         * their setup if all modeset failed...
+         */
+
+        /* Tell the desktop environment that something changed, so that they
+         * can hopefully correct the situation
+         */
+        RRSetChanged(xf86ScrnToScreen(pScrn));
+        RRTellChanged(xf86ScrnToScreen(pScrn));
+    }
 
     return TRUE;
 }
@@ -1857,6 +1890,14 @@ CloseScreen(ScreenPtr pScreen)
     drmmode_uevent_fini(pScrn, &ms->drmmode);
 
     drmmode_free_bos(pScrn, &ms->drmmode);
+
+    if (ms->drmmode.pageflip) {
+        miPointerScreenPtr PointPriv =
+            dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
+
+        if (PointPriv->spriteFuncs == &drmmode_sprite_funcs)
+            PointPriv->spriteFuncs = ms->SpriteFuncs;        
+    }
 
     if (pScrn->vtSema) {
         LeaveVT(pScrn);

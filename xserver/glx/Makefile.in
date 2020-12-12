@@ -76,7 +76,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libglx_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libglx_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/Xext/libhashtable.la
 am__objects_1 = indirect_dispatch.lo indirect_dispatch_swap.lo \
 	indirect_reqsize.lo indirect_size_get.lo indirect_table.lo
 am_libglx_la_OBJECTS = $(am__objects_1) clientinfo.lo createcontext.lo \
@@ -97,7 +98,7 @@ am__libglxdri_la_SOURCES_DIST = glxdri2.c
 am_libglxdri_la_OBJECTS = $(am__objects_2)
 libglxdri_la_OBJECTS = $(am_libglxdri_la_OBJECTS)
 @DRI2_TRUE@am_libglxdri_la_rpath =
-libglxvnd_la_LIBADD =
+libglxvnd_la_DEPENDENCIES = $(top_builddir)/Xext/libhashtable.la
 am_libglxvnd_la_OBJECTS = vndcmds.lo vndext.lo vndservermapping.lo \
 	vndservervendor.lo
 libglxvnd_la_OBJECTS = $(am_libglxvnd_la_OBJECTS)
@@ -523,6 +524,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
@@ -607,7 +609,7 @@ libglx_la_SOURCES = \
         unpack.h \
         xfont.c
 
-libglx_la_LIBADD = $(DLOPEN_LIBS)
+libglx_la_LIBADD = $(DLOPEN_LIBS) $(top_builddir)/Xext/libhashtable.la
 libglxvnd_la_SOURCES = \
 	vndcmds.c \
 	vndext.c \
@@ -615,6 +617,7 @@ libglxvnd_la_SOURCES = \
 	vndservervendor.h \
 	vndservervendor.c
 
+libglxvnd_la_LIBADD = $(top_builddir)/Xext/libhashtable.la
 EXTRA_DIST = vnd_dispatch_stubs.c
 all: all-am
 

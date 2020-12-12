@@ -114,6 +114,9 @@ typedef struct {
     void *shadow_fb2;
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
+    DevScreenPrivateKeyRec spritePrivateKeyRec;
+    /* Number of SW cursors currently visible on this screen */
+    int sprites_visible;
 
     Bool reverse_prime_offload_mode;
 
@@ -245,6 +248,15 @@ extern DevPrivateKeyRec msPixmapPrivateKeyRec;
 
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
 
+typedef struct _msSpritePriv {
+    CursorPtr cursor;
+    Bool sprite_visible;
+} msSpritePrivRec, *msSpritePrivPtr;
+
+#define msGetSpritePriv(dev, ms, screen) dixLookupScreenPrivate(&(dev)->devPrivates, &(ms)->drmmode.spritePrivateKeyRec, screen)
+
+extern miPointerSpriteFuncRec drmmode_sprite_funcs;
+
 Bool drmmode_is_format_supported(ScrnInfoPtr scrn, uint32_t format,
                                  uint64_t modifier);
 int drmmode_bo_import(drmmode_ptr drmmode, drmmode_bo *bo,
@@ -269,9 +281,11 @@ void drmmode_DisableSharedPixmapFlipping(xf86CrtcPtr crtc, drmmode_ptr drmmode);
 extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 extern Bool drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
-extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode, Bool set_hw);
+extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode,
+                                      Bool set_hw, Bool ign_err);
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
 
+extern void drmmode_update_kms_state(drmmode_ptr drmmode);
 extern void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 extern void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 

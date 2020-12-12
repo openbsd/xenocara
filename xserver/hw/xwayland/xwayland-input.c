@@ -48,6 +48,8 @@ struct sync_pending {
     DeviceIntPtr pending_dev;
 };
 
+static DevPrivateKeyRec xwl_tablet_private_key;
+
 static void
 xwl_pointer_warp_emulator_handle_motion(struct xwl_pointer_warp_emulator *warp_emulator,
                                         double dx,
@@ -831,6 +833,9 @@ remove_sync_pending(DeviceIntPtr dev)
     struct xwl_seat *xwl_seat = dev->public.devicePrivate;
     struct sync_pending *p, *npd;
 
+    if (!xwl_seat)
+        return;
+
     xorg_list_for_each_entry_safe(p, npd, &xwl_seat->sync_pending, l) {
         if (p->pending_dev == dev) {
             xorg_list_del(&xwl_seat->sync_pending);
@@ -857,11 +862,15 @@ static Bool
 keyboard_check_repeat (DeviceIntPtr dev, XkbSrvInfoPtr xkbi, unsigned key)
 {
     struct xwl_seat *xwl_seat = dev->public.devicePrivate;
-    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    struct xwl_screen *xwl_screen;
     struct wl_callback *callback;
     struct sync_pending *p;
 
+    if (!xwl_seat)
+        return FALSE;
+
     /* Make sure we didn't miss a possible reply from the compositor */
+    xwl_screen = xwl_seat->xwl_screen;
     xwl_sync_events (xwl_screen);
 
     xorg_list_for_each_entry(p, &xwl_seat->sync_pending, l) {
@@ -1150,6 +1159,21 @@ add_device(struct xwl_seat *xwl_seat,
 }
 
 static void
+disable_device(DeviceIntPtr dev)
+{
+    DisableDevice(dev, TRUE);
+    dev->public.devicePrivate = NULL;
+}
+
+static void
+enable_device(struct xwl_seat *xwl_seat, DeviceIntPtr dev)
+{
+    dev->public.devicePrivate = xwl_seat;
+    EnableDevice(dev, TRUE);
+}
+
+
+static void
 init_pointer(struct xwl_seat *xwl_seat)
 {
     xwl_seat->wl_pointer = wl_seat_get_pointer(xwl_seat->seat);
@@ -1162,7 +1186,7 @@ init_pointer(struct xwl_seat *xwl_seat)
             add_device(xwl_seat, "xwayland-pointer", xwl_pointer_proc);
         ActivateDevice(xwl_seat->pointer, TRUE);
     }
-    EnableDevice(xwl_seat->pointer, TRUE);
+    enable_device(xwl_seat, xwl_seat->pointer);
 }
 
 static void
@@ -1172,7 +1196,7 @@ release_pointer(struct xwl_seat *xwl_seat)
     xwl_seat->wl_pointer = NULL;
 
     if (xwl_seat->pointer)
-        DisableDevice(xwl_seat->pointer, TRUE);
+        disable_device(xwl_seat->pointer);
 }
 
 static void
@@ -1196,7 +1220,7 @@ init_relative_pointer(struct xwl_seat *xwl_seat)
                        xwl_pointer_proc_relative);
         ActivateDevice(xwl_seat->relative_pointer, TRUE);
     }
-    EnableDevice(xwl_seat->relative_pointer, TRUE);
+    enable_device(xwl_seat, xwl_seat->relative_pointer);
 }
 
 static void
@@ -1208,7 +1232,7 @@ release_relative_pointer(struct xwl_seat *xwl_seat)
     }
 
     if (xwl_seat->relative_pointer)
-        DisableDevice(xwl_seat->relative_pointer, TRUE);
+        disable_device(xwl_seat->relative_pointer);
 }
 
 static void
@@ -1225,7 +1249,7 @@ init_keyboard(struct xwl_seat *xwl_seat)
             add_device(xwl_seat, "xwayland-keyboard", xwl_keyboard_proc);
         ActivateDevice(xwl_seat->keyboard, TRUE);
     }
-    EnableDevice(xwl_seat->keyboard, TRUE);
+    enable_device(xwl_seat, xwl_seat->keyboard);
     xwl_seat->keyboard->key->xkbInfo->checkRepeat = keyboard_check_repeat;
 
     if (xwl_seat->xwl_screen->wp_grab) {
@@ -1245,7 +1269,7 @@ release_keyboard(struct xwl_seat *xwl_seat)
 
     if (xwl_seat->keyboard) {
         remove_sync_pending(xwl_seat->keyboard);
-        DisableDevice(xwl_seat->keyboard, TRUE);
+        disable_device(xwl_seat->keyboard);
     }
 }
 
@@ -1261,8 +1285,7 @@ init_touch(struct xwl_seat *xwl_seat)
             add_device(xwl_seat, "xwayland-touch", xwl_touch_proc);
         ActivateDevice(xwl_seat->touch, TRUE);
     }
-    EnableDevice(xwl_seat->touch, TRUE);
-
+    enable_device(xwl_seat, xwl_seat->touch);
 }
 
 static void
@@ -1272,7 +1295,7 @@ release_touch(struct xwl_seat *xwl_seat)
     xwl_seat->wl_touch = NULL;
 
     if (xwl_seat->touch)
-        DisableDevice(xwl_seat->touch, TRUE);
+        disable_device(xwl_seat->touch);
 }
 
 static void
@@ -1431,19 +1454,19 @@ tablet_handle_done(void *data, struct zwp_tablet_v2 *tablet)
         xwl_seat->stylus = add_device(xwl_seat, "xwayland-stylus", xwl_tablet_proc);
         ActivateDevice(xwl_seat->stylus, TRUE);
     }
-    EnableDevice(xwl_seat->stylus, TRUE);
+    enable_device(xwl_seat, xwl_seat->stylus);
 
     if (xwl_seat->eraser == NULL) {
         xwl_seat->eraser = add_device(xwl_seat, "xwayland-eraser", xwl_tablet_proc);
         ActivateDevice(xwl_seat->eraser, TRUE);
     }
-    EnableDevice(xwl_seat->eraser, TRUE);
+    enable_device(xwl_seat, xwl_seat->eraser);
 
     if (xwl_seat->puck == NULL) {
         xwl_seat->puck = add_device(xwl_seat, "xwayland-cursor", xwl_tablet_proc);
         ActivateDevice(xwl_seat->puck, TRUE);
     }
-    EnableDevice(xwl_seat->puck, TRUE);
+    enable_device(xwl_seat, xwl_seat->puck);
 }
 
 static void
@@ -1458,11 +1481,11 @@ tablet_handle_removed(void *data, struct zwp_tablet_v2 *tablet)
        will re-use the same X devices */
     if (xorg_list_is_empty(&xwl_seat->tablets)) {
         if (xwl_seat->stylus)
-            DisableDevice(xwl_seat->stylus, TRUE);
+            disable_device(xwl_seat->stylus);
         if (xwl_seat->eraser)
-            DisableDevice(xwl_seat->eraser, TRUE);
+            disable_device(xwl_seat->eraser);
         if (xwl_seat->puck)
-            DisableDevice(xwl_seat->puck, TRUE);
+            disable_device(xwl_seat->puck);
         /* pads are removed separately */
     }
 
@@ -2064,7 +2087,8 @@ static struct zwp_tablet_pad_group_v2_listener tablet_pad_group_listener = {
 static int
 xwl_tablet_pad_proc(DeviceIntPtr device, int what)
 {
-    struct xwl_tablet_pad *pad = device->public.devicePrivate;
+    struct xwl_tablet_pad *pad = dixGetPrivate(&device->devPrivates,
+                                               &xwl_tablet_private_key);
     /* Axis layout mirrors that of xf86-input-wacom to have better
        compatibility with existing clients */
 #define NAXES 7
@@ -2188,7 +2212,7 @@ tablet_pad_done(void *data,
 
     pad->xdevice = add_device(pad->seat, "xwayland-pad",
                               xwl_tablet_pad_proc);
-    pad->xdevice->public.devicePrivate = pad;
+    dixSetPrivate(&pad->xdevice->devPrivates, &xwl_tablet_private_key, pad);
     ActivateDevice(pad->xdevice, TRUE);
     EnableDevice(pad->xdevice, TRUE);
 }
@@ -2524,6 +2548,8 @@ sprite_check_lost_focus(SpritePtr sprite, WindowPtr window)
         return FALSE;
 
     xwl_seat = device->public.devicePrivate;
+    if (!xwl_seat)
+        return FALSE;
 
     master = GetMaster(device, POINTER_OR_FLOAT);
     if (!master || !master->lastSlave)
@@ -2757,7 +2783,15 @@ xwl_seat_create_pointer_warp_emulator(struct xwl_seat *xwl_seat)
 static Bool
 xwl_seat_can_emulate_pointer_warp(struct xwl_seat *xwl_seat)
 {
-    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    struct xwl_screen *xwl_screen;
+
+    if (!xwl_seat)
+        return FALSE;
+
+    if (!xwl_seat->pointer)
+        return FALSE;
+
+    xwl_screen = xwl_seat->xwl_screen;
 
     if (!xwl_screen->relative_pointer_manager)
         return FALSE;
@@ -2851,6 +2885,9 @@ xwl_seat_confine_pointer(struct xwl_seat *xwl_seat,
     if (!pointer_constraints)
         return;
 
+    if (!xwl_seat->wl_pointer)
+        return;
+
     if (xwl_seat->cursor_confinement_window == xwl_window &&
         xwl_seat->confined_pointer)
         return;
@@ -2895,6 +2932,11 @@ InitInput(int argc, char *argv[])
     ScreenPtr pScreen = screenInfo.screens[0];
     struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
 
+    if (!dixRegisterPrivateKey(&xwl_tablet_private_key, PRIVATE_DEVICE, 0)) {
+        ErrorF("Failed to register private key\n");
+        return;
+    }
+
     mieqInit();
 
     xwl_screen->input_registry = wl_display_get_registry(xwl_screen->display);
@@ -2904,9 +2946,7 @@ InitInput(int argc, char *argv[])
     xwl_screen->XYToWindow = pScreen->XYToWindow;
     pScreen->XYToWindow = xwl_xy_to_window;
 
-    wl_display_roundtrip(xwl_screen->display);
-    while (xwl_screen->expecting_event)
-        wl_display_roundtrip(xwl_screen->display);
+    xwl_screen_roundtrip(xwl_screen);
 }
 
 void
