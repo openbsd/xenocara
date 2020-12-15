@@ -251,6 +251,10 @@ if test "x$ac_cv_prog_c_openmp" != "xunsupported" && test "x$ac_cv_prog_c_openmp
 fi
 AC_SUBST(OPENMP_CFLAGS)
 
+dnl ========================================================================
+dnl make the tests pass with clang
+PIXMAN_CHECK_CFLAG([-ftrapping-math])
+
 dnl =========================================================================
 dnl -fvisibility stuff
 
