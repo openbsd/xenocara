@@ -41,6 +41,12 @@
 #include <errno.h>
 #include <libgen.h>
 
+#ifdef X_PRIVSEP
+extern int priv_open_device(const char *);
+#else
+#define priv_open_device(n)	open(n,O_RDWR|O_CLOEXEC);
+#endif
+
 static int open_master_node(ScreenPtr screen, int *out)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
@@ -49,7 +55,7 @@ static int open_master_node(ScreenPtr screen, int *out)
 	drm_magic_t magic;
 	int fd;
 
-	fd = open(info->dri2.device_name, O_RDWR | O_CLOEXEC);
+	fd = priv_open_device(info->dri2.device_name);
 	if (fd < 0)
 		return BadAlloc;
 
@@ -93,7 +99,7 @@ static int open_render_node(ScreenPtr screen, int *out)
 	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
 	int fd;
 
-	fd = open(pRADEONEnt->render_node, O_RDWR | O_CLOEXEC);
+	fd = priv_open_device(pRADEONEnt->render_node);
 	if (fd < 0)
 		return BadAlloc;
 
