@@ -160,7 +160,7 @@ to a new release of XCB:
 
 1) Update proto/xcb-proto.
 2) Update the x11/py-xcbgen port to the same version and install the
-   package.
+   python3 package.
 3) Update dist/libxcb.
 4) Check lib/libxcb/src/Makefile if new files need to be generated.
 5) Run 'make' in lib/xcb/src to generate the files for the new version.
@@ -211,4 +211,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.42 2018/07/19 12:14:37 matthieu Exp $
+$OpenBSD: README,v 1.43 2020/12/29 07:47:22 matthieu Exp $
