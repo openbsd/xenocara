@@ -53,7 +53,7 @@ static char **includePath; /* Holds all directories we might be including data f
  * @param nextop_rtrn Set to the next operation in the complete statement.
  * @param extra_data Set to the string between ( and ), if any.
  *
- * @return True if parsing was succcessful, False for an illegal string.
+ * @return True if parsing was successful, False for an illegal string.
  *
  * Example: "evdev+aliases(qwerty)"
  *      str_inout = aliases(qwerty)
@@ -212,7 +212,7 @@ XkbAddDirectoryToPath(const char *dir)
     len = strlen(dir);
     if (len + 2 >= PATH_MAX)
     {                           /* allow for '/' and at least one character */
-        ERROR2("Path entry (%s) too long (maxiumum length is %d)\n",
+        ERROR2("Path entry (%s) too long (maximum length is %d)\n",
                dir, PATH_MAX - 3);
         return False;
     }

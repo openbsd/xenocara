@@ -1,3 +1,54 @@
+commit 790b998647ec171133bf196a3d84c5153cd64840
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 5 14:24:24 2020 +1000
+
+    xkbcomp 1.4.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a0a4f112c5858ac2b932247dba2d85061bb59145
+Author: Miroslav Koškár <mk@mkoskar.com>
+Date:   Mon Jul 6 07:48:48 2020 +0200
+
+    Fix lockdevbtn to be XkbSA_LockDeviceBtn action
+
+commit 101d5f2bce9ee13521fe9cb47b7cfd00d01f5914
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 23 10:25:08 2020 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+      codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c8cfca25ab2ed65013448f7502bae933c66390ae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 5 14:23:09 2020 +1000
+
+    Don't pretend unresolved symbols are an error
+    
+    Whenever xkeyboard-config is newer than xorgproto, or libX11 just hasn't yet
+    been rebuilt against the protocol we end up with some unresolved symbols.
+    That's not an error, it just happens. Let's downgrade this to a warning
+    instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dcaa947c488b4cb458946ab9c19579f7c866cbd4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 17 15:07:14 2019 +1000
+
+    For -R and after chdir, add the current directory to the path
+    
+    This restores the behavior pre 1aecdffaa0db7bbf85bc0aae9043e9437b25c30d, at
+    least when -R is given. For a normal invocation without -R we don't add the
+    current directory, because 1aecdff isn't totally wrong about whether that's a
+    good idea.
+    
+    Fixes https://gitlab.freedesktop.org/xorg/app/xkbcomp/issues/3
+
 commit d373c9b434c603bf6a5eb442b6427992d23ef874
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Feb 20 09:47:30 2020 -0800

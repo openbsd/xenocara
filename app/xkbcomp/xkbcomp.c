@@ -305,7 +305,7 @@ parseArgs(int argc, char *argv[])
             {
                 if (warningLevel > 0)
                 {
-                    WARN("Multiple pre-error messsages specified\n");
+                    WARN("Multiple pre-error messages specified\n");
                     ACTION2("Compiling %s, ignoring %s\n",
                             preErrorMsg, argv[i]);
                 }
@@ -549,11 +549,14 @@ parseArgs(int argc, char *argv[])
                 {
                     WARN1("Changing root directory to \"%s\"\n", rootDir);
                 }
-                if ((chdir(rootDir) < 0) && (warningLevel > 0))
+                if (chdir(rootDir) == 0)
                 {
-                    WARN1("Couldn't change directory to \"%s\"\n", rootDir);
-                    ACTION("Root directory (-R) option ignored\n");
-                    rootDir = NULL;
+                    XkbAddDirectoryToPath(".");
+                } else if (warningLevel > 0)
+                {
+                       WARN1("Couldn't change directory to \"%s\"\n", rootDir);
+                       ACTION("Root directory (-R) option ignored\n");
+                       rootDir = NULL;
                 }
             }
         }

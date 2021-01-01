@@ -370,7 +370,7 @@ AddKeyName(KeyNamesInfo * info,
             else if (reportCollisions)
             {
                 WARN("Multiple identical key name definitions\n");
-                ACTION2("Later occurences of \"<%s> = %d\" ignored\n",
+                ACTION2("Later occurrences of \"<%s> = %d\" ignored\n",
                         buf, kc);
             }
             return True;
@@ -648,7 +648,7 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
     else
     {
         ERROR("Unknown field encountered\n");
-        ACTION1("Assigment to field %s ignored\n", field.str);
+        ACTION1("Assignment to field %s ignored\n", field.str);
         return 0;
     }
     if (arrayNdx != NULL)

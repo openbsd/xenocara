@@ -111,7 +111,7 @@ stringToAction(const char *str, unsigned *type_rtrn)
     else if (uStrCaseCmp(str, "devicebutton") == 0)
         *type_rtrn = XkbSA_DeviceBtn;
     else if (uStrCaseCmp(str, "lockdevbtn") == 0)
-        *type_rtrn = XkbSA_DeviceBtn;
+        *type_rtrn = XkbSA_LockDeviceBtn;
     else if (uStrCaseCmp(str, "lockdevicebtn") == 0)
         *type_rtrn = XkbSA_LockDeviceBtn;
     else if (uStrCaseCmp(str, "lockdevbutton") == 0)

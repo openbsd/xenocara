@@ -2882,7 +2882,7 @@ HandleGeometryFile(XkbFile * file,
             break;
         case StmtVModDef:
             if (!failWhat)
-                failWhat = "virtual modfier";
+                failWhat = "virtual modifier";
         case StmtInterpDef:
             if (!failWhat)
                 failWhat = "symbol interpretation";
@@ -3256,7 +3256,7 @@ VerifyDoodadInfo(DoodadInfo * di, GeometryInfo * info)
         }
         break;
     default:
-        WSGO1("Uknown doodad type %d in VerifyDoodad\n",
+        WSGO1("Unknown doodad type %d in VerifyDoodad\n",
               (unsigned int) di->type);
         return False;
     }

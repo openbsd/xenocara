@@ -644,7 +644,7 @@ AddMapEntry(XkbDescPtr xkb,
         }
         else if (warningLevel > 9)
         {
-            WARN3("Multiple occurences of map[%s]= %d in %s\n",
+            WARN3("Multiple occurrences of map[%s]= %d in %s\n",
                   MapEntryTxt(type, xkb, new), new->level + 1, TypeTxt(type));
             ACTION("Ignored\n");
             return True;

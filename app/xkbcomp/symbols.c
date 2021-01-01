@@ -968,7 +968,7 @@ AddSymbolsToKey(KeyInfo * key,
     key->symsDefined |= (1 << ndx);
     for (i = 0; i < nSyms; i++) {
         if (!LookupKeysym(value->value.list.syms[i], &key->syms[ndx][i])) {
-            WSGO1("Could not resolve keysym %s\n", value->value.list.syms[i]);
+            WARN2("Could not resolve keysym %s\n", value->value.list.syms[i]);
             key->syms[ndx][i] = NoSymbol;
         }
     }
@@ -1898,7 +1898,7 @@ PrepareKeyDef(KeyInfo * key)
         }
     }
     /* If all groups are completely identical remove them all */
-    /* exept the first one. */
+    /* except the first one. */
     identical = True;
     for (i = lastGroup; i > 0; i--)
     {
@@ -2084,7 +2084,7 @@ CopySymbolsDef(XkbFileInfo * result, KeyInfo * key, int start_from)
         /* assign kt_index[i] to the index of the type in map->types.
          * kt_index[i] may have been set by a previous run (if we have two
          * layouts specified). Let's not overwrite it with the ONE_LEVEL
-         * default group if we dont even have keys for this group anyway.
+         * default group if we don't even have keys for this group anyway.
          *
          * FIXME: There should be a better fix for this.
          */
