@@ -153,7 +153,7 @@ CleanUpFileName (char *src, char *dst, int len)
 }
 
 /* Checks to see if specified directory exists, makes it if not
- * Returns: 0 if already exists, 1 if created, < 0 if error occured
+ * Returns: 0 if already exists, 1 if created, < 0 if error occurred
  */
 static int
 CheckServerAuthDir (const char *path, struct stat *statb, int mode)

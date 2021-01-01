@@ -257,7 +257,7 @@ StopAll (int n)
     {
 	/*
 	 * We are a child xdm process that was killed by the
-	 * master xdm before we were able to return from fork()
+	 * parent xdm before we were able to return from fork()
 	 * and remove this signal handler.
 	 *
 	 * See defect XWSog08655 for more information.

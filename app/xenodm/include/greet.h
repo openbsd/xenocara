@@ -34,7 +34,7 @@ from The Open Group.
 
 /*
  * Return values for GreetUser();
- * Values must be explictly defined because the greet library
+ * Values must be explicitly defined because the greet library
  * may come from a different vendor.
  * Negative values indicate an error.
  */
@@ -50,7 +50,7 @@ typedef enum {
  * should start a session.
  *
  * GreetUser is passed the xdm struct display pointer, a pointer to a
- * Display, and pointers to greet and verify structs.  If it expectes xdm
+ * Display, and pointers to greet and verify structs.  If it expects xdm
  * to run the session, it fills in the Display pointer and the fields
  * of the greet and verify structs.
  *
