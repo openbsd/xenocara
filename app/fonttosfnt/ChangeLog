@@ -1,3 +1,56 @@
+commit 33f944705c6c42e1b52f6ec62131d31f737c638f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 16 15:14:11 2020 +1000
+
+    Bump to 1.2.1
+
+commit 2d30328f9c5390eb38d4052028cd00bafaa151d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 31 21:01:02 2020 -0700
+
+    writeFile: avoid file leak on errors
+    
+    Resolves issues found by Oracle Parfait 4.0 static analyser:
+    
+       File Leak [file-ptr-leak]:
+          Leaked File out
+            at line 337 of app/fonttosfnt/write.c in function 'writeFile'.
+              out initialized at line 330 with fopen
+       File Leak [file-ptr-leak]:
+          Leaked File out
+            at line 366 of app/fonttosfnt/write.c in function 'writeFile'.
+              out initialized at line 330 with fopen
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 899eadee6750ea39ddb6b874529c29c011599bb2
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sat Oct 24 11:41:32 2020 +0200
+
+    Fall back to using FONT property as family name
+
+commit 5f2307d883de6ddf55f499f1690840747b1a3ad9
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Sat Oct 24 09:53:32 2020 +0200
+
+    fix sign of calculated descent
+    
+    I discovered this bug when converting the Tamsyn font from pcf to otb.
+
+commit 4d418c1602c8b939d3e5e479c44985a505ecad83
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Fri Oct 23 21:35:24 2020 +0200
+
+    handle empty foundry encoded as NULL
+    
+    to fix a segfault
+
+commit 5727003b1df9071a2bc9a42bc0b25d7c03c8de09
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Fri Oct 23 21:00:06 2020 +0200
+
+    remove leftover debug printf
+
 commit 91af80a0aa18c969cd90668eed80bcbfc1e40661
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Oct 21 16:36:30 2020 +1000

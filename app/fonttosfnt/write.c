@@ -334,7 +334,7 @@ writeFile(char *filename, FontPtr font)
     current_cmap = makeCmap(font);
     if(current_cmap == NULL) {
         fprintf(stderr, "Couldn't build cmap.\n");
-        return -1;
+        goto fail;
     }
 
     fontMetrics(font);
@@ -363,7 +363,7 @@ writeFile(char *filename, FontPtr font)
         strike->indexSubTables = makeIndexSubTables(strike, current_cmap);
         if(!strike->indexSubTables) {
             fprintf(stderr, "Couldn't build indexSubTable.\n");
-            return -1;
+            goto fail;
         }
         strike = strike->next;
     }
@@ -449,6 +449,7 @@ writeFile(char *filename, FontPtr font)
     return 0;
 
  fail:
+    fclose(out);
     unlink(filename);
     return -1;
 }

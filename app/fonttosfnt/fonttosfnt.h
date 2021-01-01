@@ -191,6 +191,7 @@ unsigned faceFoundry(FT_Face);
 char *faceEncoding(FT_Face);
 int faceFlags(FT_Face);
 int faceIntProp(FT_Face, const char *);
+char *faceStringProp(FT_Face, const char *);
 int faceWeight(FT_Face);
 int faceWidth(FT_Face);
 int faceItalicAngle(FT_Face);

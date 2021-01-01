@@ -103,7 +103,7 @@ readFile(char *filename, FontPtr font)
     BitmapPtr bitmap;
     int symbol = 0;
     int force_unicode = 1;
-    const char *encoding_name, *file_format;
+    const char *family_name, *encoding_name, *file_format;
     FontMapPtr mapping = NULL;
     FontMapReversePtr reverse = NULL;
     
@@ -171,6 +171,11 @@ readFile(char *filename, FontPtr font)
         }
     }
 
+    if(face->family_name)
+        family_name = face->family_name;
+    else
+	family_name = faceStringProp(face, "FONT");
+
     if(verbose_flag) {
         fprintf(stderr, "%s %s %s: %d sizes%s\n",
                 filename ? filename : "<stdin>",
@@ -178,15 +183,14 @@ readFile(char *filename, FontPtr font)
                 symbol ? " (symbol)" : "");
     }
 
-    if(font->numNames == 0 && face->style_name && face->family_name) {
-        char *full_name, *unique_name;
-        BDF_PropertyRec prop;
+    if(font->numNames == 0 && face->style_name && family_name) {
+        char *full_name, *unique_name, *buf;
         int i;
         if(strcmp(face->style_name, "Regular") == 0)
-            full_name = sprintf_alloc("%s", face->family_name);
+            full_name = sprintf_alloc("%s", family_name);
         else
             full_name = sprintf_alloc("%s %s", 
-                                      face->family_name, face->style_name);
+                                      family_name, face->style_name);
 
         /* The unique name doesn't actually need to be globally
            unique; it only needs to be unique among all installed fonts on a
@@ -214,17 +218,18 @@ readFile(char *filename, FontPtr font)
         }
         i = 0;
 
-        rc = FT_Get_BDF_Property(face, "COPYRIGHT", &prop);
-        if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+	buf = faceStringProp(face, "COPYRIGHT");
+	if(buf) {
             font->names[i].nid = 0;
-            font->names[i].size = 2 * strlen(prop.u.atom);
-            font->names[i].value = makeUTF16((char*)prop.u.atom);
+            font->names[i].size = 2 * strlen(buf);
+            font->names[i].value = makeUTF16(buf);
+	    free(buf);
             i++;
-        }
+	}
 
         font->names[i].nid = 1;
-        font->names[i].size = 2 * strlen(face->family_name);
-        font->names[i].value = makeUTF16(face->family_name);
+        font->names[i].size = 2 * strlen(family_name);
+        font->names[i].value = makeUTF16(family_name);
         i++;
 
         font->names[i].nid = 2;
@@ -247,19 +252,14 @@ readFile(char *filename, FontPtr font)
         font->names[i].value = makeUTF16("Version 0.0");
         i++;
 
-        rc = FT_Get_BDF_Property(face, "FOUNDRY", &prop);
-        if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+	buf = faceStringProp(face, "FOUNDRY");
+	if(buf) {
             font->names[i].nid = 8;
-	    if(prop.u.atom) {
-		font->names[i].size = 2 * strlen(prop.u.atom);
-		font->names[i].value = makeUTF16((char*)prop.u.atom);
-	    }
-	    else {
-		font->names[i].size = 0;
-		font->names[i].value = makeUTF16("");
-	    }
+	    font->names[i].size = 2 * strlen(buf);
+	    font->names[i].value = makeUTF16(buf);
+	    free(buf);
             i++;
-        }
+	}
 
         font->names[i].nid = 10;
         font->names[i].size = 2 * strlen(XVENDORNAMESHORT

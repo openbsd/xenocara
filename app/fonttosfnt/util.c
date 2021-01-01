@@ -405,6 +405,24 @@ faceIntProp(FT_Face face, const char *name)
 }
 
 char *
+faceStringProp(FT_Face face, const char *name)
+{
+    int rc;
+    BDF_PropertyRec prop;
+    char *buf = NULL;
+
+    rc = FT_Get_BDF_Property(face, name, &prop);
+    if(rc == 0 && prop.type == BDF_PROPERTY_TYPE_ATOM) {
+	buf = sprintf_alloc("%s", prop.u.atom ? prop.u.atom : "");
+	if(buf == NULL) {
+	    perror("sprintf_alloc failed");
+	    exit(1);
+	}
+    }
+    return buf;
+}
+
+char *
 faceEncoding(FT_Face face)
 {
     BDF_PropertyRec p1, p2;
