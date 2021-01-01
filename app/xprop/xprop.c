@@ -33,6 +33,7 @@ from The Open Group.
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
 #include <X11/Xutil.h>
+#include <sys/ioctl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -64,6 +65,8 @@ from The Open Group.
 
 /* isprint() in "C" locale */
 #define c_isprint(c) ((c) >= 0x20 && (c) < 0x7f)
+
+static int term_width = 144 + 8;
 
 /*
  *
@@ -748,6 +751,17 @@ is_utf8_locale (void)
 #endif
 }
 
+static int
+is_truecolor_term (void)
+{
+    char *colorterm = getenv( "COLORTERM" );
+
+    if (colorterm && !strcmp(colorterm,"truecolor"))
+	return 1;
+
+    return 0;
+}
+
 static const char *
 Format_Icons (const unsigned long *icon, int len)
 {
@@ -763,17 +777,29 @@ Format_Icons (const unsigned long *icon, int len)
 
     while (icon < end)
     {
-	unsigned long width, height;
+	unsigned long width, height, display_width;
+	unsigned int icon_pixel_bytes;
+	unsigned int icon_line_bytes;
 	int w, h;
 	int offset;
 	
 	width = *icon++;
 	height = *icon++;
+	display_width = width * 2; /* Two characters per icon pixel. */
+
+	icon_pixel_bytes = 1;
+	if (is_truecolor_term())
+	    icon_pixel_bytes = 25; /* 16 control characters, and up to 9 chars of RGB. */
+	else if (is_utf8_locale())
+	    icon_pixel_bytes = 3; /* Up to 3 bytes per character in that mode. */
+
+	/* Initial tab, pixels, and newline. */
+	icon_line_bytes = 8 + display_width * icon_pixel_bytes + 1;
 
 	offset = (tail - result);
 	
-	alloced += 80;				/* For the header */
-	alloced += (width*4 + 8) * height;	/* For the rows (plus padding) */
+	alloced += 80;				/* For the header, final newline, color reset */
+	alloced += icon_line_bytes * height;	/* For the rows */
 	
 	result = realloc (result, alloced);
 	if (!result)
@@ -785,9 +811,9 @@ Format_Icons (const unsigned long *icon, int len)
 
 	tail += sprintf (tail, "\tIcon (%lu x %lu):\n", width, height);
 
-	if (width > 144 || height > 144)
+	if ((display_width + 8) > term_width || height > 144)
 	{
-	    tail += sprintf (tail, "\t(not shown)");
+	    tail += sprintf (tail, "\t(not shown)\n");
 	    icon += width * height;
 	    continue;
 	}
@@ -812,7 +838,17 @@ Format_Icons (const unsigned long *icon, int len)
 					   (587 * (g / 255.0)) +
 					   (114 * (b / 255.0))));
 
-		if (is_utf8_locale())
+		if (is_truecolor_term())
+		{
+		    float opacity = a / 255.0;
+
+		    r = r * opacity;
+		    g = g * opacity;
+		    b = b * opacity;
+
+		    tail += sprintf (tail, "\033[38;2;%d;%d;%dm\342\226\210\342\226\210", r, g, b );
+		}
+		else if (is_utf8_locale())
 		{
 		    static const char palette[][4] =
 		    {
@@ -826,7 +862,7 @@ Format_Icons (const unsigned long *icon, int len)
 
 		    idx = (brightness * ((sizeof (palette)/sizeof(palette[0])) - 1)) / 1000;
 
-		    tail += sprintf (tail, "%s", palette[idx]);
+		    tail += sprintf (tail, "%s%s", palette[idx], palette[idx]);
 		}
 		else
 		{
@@ -837,11 +873,16 @@ Format_Icons (const unsigned long *icon, int len)
 		    idx = (brightness * (sizeof(palette) - 2)) / 1000;
 		    
 		    *tail++ = palette[idx];
+		    *tail++ = palette[idx];
 		}
 	    }
 
 	    tail += sprintf (tail, "\n");
 	}
+
+	/* Reset colors. */
+	if (is_truecolor_term())
+	    tail += sprintf (tail, "\033[0m");
 
 	tail += sprintf (tail, "\n");
     }
@@ -853,7 +894,7 @@ static const char *
 Format_Len_Text (const char *string, int len, Atom encoding)
 {
     XTextProperty textprop;
-    char **list;
+    char **list, **start_list;
     int count;
 
     /* Try to convert to local encoding. */
@@ -861,7 +902,8 @@ Format_Len_Text (const char *string, int len, Atom encoding)
     textprop.format = 8;
     textprop.value = (unsigned char *) string;
     textprop.nitems = len;
-    if (XmbTextPropertyToTextList(dpy, &textprop, &list, &count) == Success) {
+    if (XmbTextPropertyToTextList(dpy, &textprop, &start_list, &count) == Success) {
+	list = start_list;
 	_buf_ptr = _formatting_buffer;
 	_buf_len = MAXSTR;
 	*_buf_ptr++ = '"';
@@ -895,6 +937,7 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 		_buf_len -= 4;
 	    }
 	}
+	XFreeStringList(start_list);
 	*_buf_ptr++ = '"';
 	*_buf_ptr++ = '\0';
 	return _formatting_buffer;
@@ -1772,10 +1815,11 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
  */
 
 void
-usage (const char *errmsg)
+print_help (void)
 {
     static const char *help_message =
 "where options include:\n"
+"    -help                          print out a summary of command line options\n"
 "    -grammar                       print out full grammar for command line\n"
 "    -display host:dpy              the X server to contact\n"
 "    -id id                         resource id of window to examine\n"
@@ -1795,13 +1839,24 @@ usage (const char *errmsg)
 
     fflush (stdout);
 
-    if (errmsg != NULL)
-	fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
-
     fprintf (stderr,
 	     "usage:  %s [-options ...] [[format [dformat]] atom] ...\n\n", 
 	     program_name);
     fprintf (stderr, "%s\n", help_message);
+}
+
+void help (void) {
+	print_help();
+	exit(0);
+}
+
+void
+usage (const char *errmsg)
+{
+    if (errmsg != NULL)
+	fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
+
+    print_help();
     exit (1);
 }
 
@@ -1888,6 +1943,13 @@ main (int argc, char **argv)
     int n;
     char **nargv;
 
+#ifdef TIOCGWINSZ
+    struct winsize ws;
+    ws.ws_col = 0;
+    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col != 0)
+	term_width = ws.ws_col;
+#endif
+
     INIT_NAME;
 
     /* Set locale for XmbTextProptertyToTextList and iswprint(). */
@@ -1918,6 +1980,10 @@ main (int argc, char **argv)
     while (argv++, --argc>0 && **argv == '-') {
 	if (!strcmp(argv[0], "-"))
 	    continue;
+	if (!strcmp(argv[0], "-help")) {
+	    help ();
+	    /* NOTREACHED */
+	}
 	if (!strcmp(argv[0], "-grammar")) {
 	    grammar ();
 	    /* NOTREACHED */
