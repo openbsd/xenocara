@@ -35,6 +35,7 @@ from the X Consortium.
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -78,31 +79,80 @@ Atom wm_protocols;
 Bool have_rr;
 int rr_event_base, rr_error_base;
 
+Bool single_line = False;
+
 enum EventMaskIndex {
     EVENT_MASK_INDEX_CORE,
     EVENT_MASK_INDEX_RANDR,
     NUM_EVENT_MASKS
 };
 
+enum OutputFlags {
+    InitialNewLine = 1,
+    Indent         = 2,
+    NewLine        = 4,
+};
+
 static void usage(const char *errmsg) _X_NORETURN;
+
+static void
+output_new_line(void)
+{
+    if (!single_line) {
+        printf("\n");
+    }
+}
+
+static void
+_X_ATTRIBUTE_PRINTF(2, 3)
+output(enum OutputFlags flags, const char* format, ...)
+{
+    va_list args;
+
+    if (flags & InitialNewLine) {
+        output_new_line();
+    }
+    if (flags & Indent) {
+        printf(single_line ? " " : "    ");
+    }
+
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+
+    if (flags & NewLine) {
+        output_new_line();
+    }
+}
+
+static void
+graceful_exit(int status)
+{
+    if (single_line) {
+        printf("\n");
+    }
+    fflush(stdout);
+    exit(status);
+}
 
 static void
 prologue(XEvent *eventp, const char *event_name)
 {
     XAnyEvent *e = (XAnyEvent *) eventp;
 
-    printf("\n%s event, serial %ld, synthetic %s, window 0x%lx,\n",
+    output(InitialNewLine | NewLine,
+           "%s event, serial %ld, synthetic %s, window 0x%lx,",
            event_name, e->serial, e->send_event ? Yes : No, e->window);
 }
 
 static void
 dump(char *str, int len)
 {
-    printf("(");
+    output(0, "(");
     len--;
     while (len-- > 0)
-        printf("%02x ", (unsigned char) *str++);
-    printf("%02x)", (unsigned char) *str++);
+        output(0, "%02x ", (unsigned char) *str++);
+    output(0, "%02x)", (unsigned char) *str++);
 }
 
 static void
@@ -146,40 +196,42 @@ do_KeyPress(XEvent *eventp)
         kc_set = True;
     }
 
-    printf("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    output(Indent | NewLine,
+           "root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    printf("    state 0x%x, keycode %u (keysym 0x%lx, %s), same_screen %s,\n",
+    output(Indent | NewLine,
+           "state 0x%x, keycode %u (keysym 0x%lx, %s), same_screen %s,",
            e->state, e->keycode, (unsigned long) ks, ksname,
            e->same_screen ? Yes : No);
     if (kc_set && e->keycode != kc)
-        printf("    XKeysymToKeycode returns keycode: %u\n", kc);
+        output(Indent | NewLine, "XKeysymToKeycode returns keycode: %u", kc);
     if (nbytes < 0)
         nbytes = 0;
     if (nbytes > 256)
         nbytes = 256;
     str[nbytes] = '\0';
-    printf("    XLookupString gives %d bytes: ", nbytes);
+    output(Indent, "XLookupString gives %d bytes: ", nbytes);
     if (nbytes > 0) {
         dump(str, nbytes);
-        printf(" \"%s\"\n", str);
+        output(NewLine, " \"%s\"", str);
     }
     else {
-        printf("\n");
+        output_new_line();
     }
 
     /* not supposed to call XmbLookupString on a key release event */
     if (e->type == KeyPress && xic) {
-        printf("    XmbLookupString gives %d bytes: ", nmbbytes);
+        output(Indent, "XmbLookupString gives %d bytes: ", nmbbytes);
         if (nmbbytes > 0) {
             dump(buf, nmbbytes);
-            printf(" \"%s\"\n", buf);
+            output(NewLine, " \"%s\"", buf);
         }
         else {
-            printf("\n");
+            output_new_line();
         }
     }
 
-    printf("    XFilterEvent returns: %s\n",
+    output(Indent | NewLine, "XFilterEvent returns: %s",
            XFilterEvent(eventp, e->window) ? "True" : "False");
 }
 
@@ -194,9 +246,10 @@ do_ButtonPress(XEvent *eventp)
 {
     XButtonEvent *e = (XButtonEvent *) eventp;
 
-    printf("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    output(Indent | NewLine,
+           "root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    printf("    state 0x%x, button %u, same_screen %s\n",
+    output(Indent | NewLine, "state 0x%x, button %u, same_screen %s",
            e->state, e->button, e->same_screen ? Yes : No);
 }
 
@@ -211,9 +264,10 @@ do_MotionNotify(XEvent *eventp)
 {
     XMotionEvent *e = (XMotionEvent *) eventp;
 
-    printf("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    output(Indent | NewLine,
+           "root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    printf("    state 0x%x, is_hint %u, same_screen %s\n",
+    output(Indent | NewLine, "state 0x%x, is_hint %u, same_screen %s",
            e->state, e->is_hint, e->same_screen ? Yes : No);
 }
 
@@ -274,11 +328,13 @@ do_EnterNotify(XEvent *eventp)
         break;
     }
 
-    printf("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    output(Indent | NewLine,
+           "root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    printf("    mode %s, detail %s, same_screen %s,\n",
+    output(Indent | NewLine, "mode %s, detail %s, same_screen %s,",
            mode, detail, e->same_screen ? Yes : No);
-    printf("    focus %s, state %u\n", e->focus ? Yes : No, e->state);
+    output(Indent | NewLine, "focus %s, state %u",
+           e->focus ? Yes : No, e->state);
 }
 
 static void
@@ -344,7 +400,7 @@ do_FocusIn(XEvent *eventp)
         break;
     }
 
-    printf("    mode %s, detail %s\n", mode, detail);
+    output(Indent | NewLine, "mode %s, detail %s", mode, detail);
 }
 
 static void
@@ -359,13 +415,14 @@ do_KeymapNotify(XEvent *eventp)
     XKeymapEvent *e = (XKeymapEvent *) eventp;
     int i;
 
-    printf("    keys:  ");
+    output(Indent, "keys:  ");
     for (i = 0; i < 32; i++) {
-        if (i == 16)
-            printf("\n           ");
-        printf("%-3u ", (unsigned int) e->key_vector[i]);
+        if (i == 16 && !single_line) {
+            output(InitialNewLine | Indent, "       ");
+        }
+        output(0, "%-3u ", (unsigned int) e->key_vector[i]);
     }
-    printf("\n");
+    output_new_line();
 }
 
 static void
@@ -373,7 +430,7 @@ do_Expose(XEvent *eventp)
 {
     XExposeEvent *e = (XExposeEvent *) eventp;
 
-    printf("    (%d,%d), width %d, height %d, count %d\n",
+    output(Indent | NewLine, "(%d,%d), width %d, height %d, count %d",
            e->x, e->y, e->width, e->height, e->count);
 }
 
@@ -397,9 +454,9 @@ do_GraphicsExpose(XEvent *eventp)
         break;
     }
 
-    printf("    (%d,%d), width %d, height %d, count %d,\n",
+    output(Indent | NewLine, "(%d,%d), width %d, height %d, count %d,",
            e->x, e->y, e->width, e->height, e->count);
-    printf("    major %s, minor %d\n", m, e->minor_code);
+    output(Indent | NewLine, "major %s, minor %d", m, e->minor_code);
 }
 
 static void
@@ -422,7 +479,7 @@ do_NoExpose(XEvent *eventp)
         break;
     }
 
-    printf("    major %s, minor %d\n", m, e->minor_code);
+    output(Indent | NewLine, "major %s, minor %d", m, e->minor_code);
     return;
 }
 
@@ -449,7 +506,7 @@ do_VisibilityNotify(XEvent *eventp)
         break;
     }
 
-    printf("    state %s\n", v);
+    output(Indent | NewLine, "state %s", v);
 }
 
 static void
@@ -457,9 +514,10 @@ do_CreateNotify(XEvent *eventp)
 {
     XCreateWindowEvent *e = (XCreateWindowEvent *) eventp;
 
-    printf("    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d\n",
+    output(Indent | NewLine,
+           "parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d",
            e->parent, e->window, e->x, e->y, e->width, e->height);
-    printf("border_width %d, override %s\n",
+    output(NewLine, "border_width %d, override %s",
            e->border_width, e->override_redirect ? Yes : No);
 }
 
@@ -468,7 +526,7 @@ do_DestroyNotify(XEvent *eventp)
 {
     XDestroyWindowEvent *e = (XDestroyWindowEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx\n", e->event, e->window);
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx", e->event, e->window);
 }
 
 static void
@@ -476,7 +534,7 @@ do_UnmapNotify(XEvent *eventp)
 {
     XUnmapEvent *e = (XUnmapEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx, from_configure %s\n",
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx, from_configure %s",
            e->event, e->window, e->from_configure ? Yes : No);
 }
 
@@ -485,7 +543,7 @@ do_MapNotify(XEvent *eventp)
 {
     XMapEvent *e = (XMapEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx, override %s\n",
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx, override %s",
            e->event, e->window, e->override_redirect ? Yes : No);
 }
 
@@ -494,7 +552,8 @@ do_MapRequest(XEvent *eventp)
 {
     XMapRequestEvent *e = (XMapRequestEvent *) eventp;
 
-    printf("    parent 0x%lx, window 0x%lx\n", e->parent, e->window);
+    output(Indent | NewLine, "parent 0x%lx, window 0x%lx",
+           e->parent, e->window);
 }
 
 static void
@@ -502,9 +561,9 @@ do_ReparentNotify(XEvent *eventp)
 {
     XReparentEvent *e = (XReparentEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx, parent 0x%lx,\n",
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx, parent 0x%lx,",
            e->event, e->window, e->parent);
-    printf("    (%d,%d), override %s\n", e->x, e->y,
+    output(Indent | NewLine, "(%d,%d), override %s", e->x, e->y,
            e->override_redirect ? Yes : No);
 }
 
@@ -513,9 +572,10 @@ do_ConfigureNotify(XEvent *eventp)
 {
     XConfigureEvent *e = (XConfigureEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,\n",
+    output(Indent | NewLine,
+           "event 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,",
            e->event, e->window, e->x, e->y, e->width, e->height);
-    printf("    border_width %d, above 0x%lx, override %s\n",
+    output(Indent | NewLine, "border_width %d, above 0x%lx, override %s",
            e->border_width, e->above, e->override_redirect ? Yes : No);
 }
 
@@ -548,9 +608,11 @@ do_ConfigureRequest(XEvent *eventp)
         break;
     }
 
-    printf("    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,\n",
+    output(Indent | NewLine,
+           "parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,",
            e->parent, e->window, e->x, e->y, e->width, e->height);
-    printf("    border_width %d, above 0x%lx, detail %s, value 0x%lx\n",
+    output(Indent | NewLine,
+           "border_width %d, above 0x%lx, detail %s, value 0x%lx",
            e->border_width, e->above, detail, e->value_mask);
 }
 
@@ -559,7 +621,7 @@ do_GravityNotify(XEvent *eventp)
 {
     XGravityEvent *e = (XGravityEvent *) eventp;
 
-    printf("    event 0x%lx, window 0x%lx, (%d,%d)\n",
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx, (%d,%d)",
            e->event, e->window, e->x, e->y);
 }
 
@@ -568,7 +630,7 @@ do_ResizeRequest(XEvent *eventp)
 {
     XResizeRequestEvent *e = (XResizeRequestEvent *) eventp;
 
-    printf("    width %d, height %d\n", e->width, e->height);
+    output(Indent | NewLine, "width %d, height %d", e->width, e->height);
 }
 
 static void
@@ -591,7 +653,8 @@ do_CirculateNotify(XEvent *eventp)
         break;
     }
 
-    printf("    event 0x%lx, window 0x%lx, place %s\n", e->event, e->window, p);
+    output(Indent | NewLine, "event 0x%lx, window 0x%lx, place %s",
+           e->event, e->window, p);
 }
 
 static void
@@ -614,7 +677,7 @@ do_CirculateRequest(XEvent *eventp)
         break;
     }
 
-    printf("    parent 0x%lx, window 0x%lx, place %s\n",
+    output(Indent | NewLine, "parent 0x%lx, window 0x%lx, place %s",
            e->parent, e->window, p);
 }
 
@@ -639,7 +702,7 @@ do_PropertyNotify(XEvent *eventp)
         break;
     }
 
-    printf("    atom 0x%lx (%s), time %lu, state %s\n",
+    output(Indent | NewLine, "atom 0x%lx (%s), time %lu, state %s",
            e->atom, aname ? aname : Unknown, e->time, s);
 
     XFree(aname);
@@ -651,7 +714,7 @@ do_SelectionClear(XEvent *eventp)
     XSelectionClearEvent *e = (XSelectionClearEvent *) eventp;
     char *sname = XGetAtomName(dpy, e->selection);
 
-    printf("    selection 0x%lx (%s), time %lu\n",
+    output(Indent | NewLine, "selection 0x%lx (%s), time %lu",
            e->selection, sname ? sname : Unknown, e->time);
 
     XFree(sname);
@@ -665,9 +728,11 @@ do_SelectionRequest(XEvent *eventp)
     char *tname = XGetAtomName(dpy, e->target);
     char *pname = XGetAtomName(dpy, e->property);
 
-    printf("    owner 0x%lx, requestor 0x%lx, selection 0x%lx (%s),\n",
+    output(Indent | NewLine,
+           "owner 0x%lx, requestor 0x%lx, selection 0x%lx (%s),",
            e->owner, e->requestor, e->selection, sname ? sname : Unknown);
-    printf("    target 0x%lx (%s), property 0x%lx (%s), time %lu\n",
+    output(Indent | NewLine,
+           "target 0x%lx (%s), property 0x%lx (%s), time %lu",
            e->target, tname ? tname : Unknown, e->property,
            pname ? pname : Unknown, e->time);
 
@@ -684,10 +749,10 @@ do_SelectionNotify(XEvent *eventp)
     char *tname = XGetAtomName(dpy, e->target);
     char *pname = XGetAtomName(dpy, e->property);
 
-    printf("    selection 0x%lx (%s), target 0x%lx (%s),\n",
+    output(Indent | NewLine, "selection 0x%lx (%s), target 0x%lx (%s),",
            e->selection, sname ? sname : Unknown, e->target,
            tname ? tname : Unknown);
-    printf("    property 0x%lx (%s), time %lu\n",
+    output(Indent | NewLine, "property 0x%lx (%s), time %lu",
            e->property, pname ? pname : Unknown, e->time);
 
     XFree(sname);
@@ -715,7 +780,7 @@ do_ColormapNotify(XEvent *eventp)
         break;
     }
 
-    printf("    colormap 0x%lx, new %s, state %s\n",
+    output(Indent | NewLine, "colormap 0x%lx, new %s, state %s",
            e->colormap, e->new ? Yes : No, s);
 }
 
@@ -729,13 +794,14 @@ do_ClientMessage(XEvent *eventp)
     if (e->message_type == wm_protocols) {
         char *message = XGetAtomName(dpy, e->data.l[0]);
 
-        printf("    message_type 0x%lx (%s), format %d, message 0x%lx (%s)\n",
+        output(Indent | NewLine,
+               "message_type 0x%lx (%s), format %d, message 0x%lx (%s)",
                e->message_type, mname ? mname : Unknown, e->format,
                e->data.l[0], message);
         XFree(message);
     }
     else {
-        printf("    message_type 0x%lx (%s), format %d\n",
+        output(Indent | NewLine, "message_type 0x%lx (%s), format %d",
                e->message_type, mname ? mname : Unknown, e->format);
     }
 
@@ -743,8 +809,10 @@ do_ClientMessage(XEvent *eventp)
 
     if (e->format == 32
         && e->message_type == wm_protocols
-        && (Atom) e->data.l[0] == wm_delete_window)
-        exit(0);
+        && (Atom) e->data.l[0] == wm_delete_window
+    ) {
+        graceful_exit(0);
+    }
 }
 
 static void
@@ -770,7 +838,7 @@ do_MappingNotify(XEvent *eventp)
         break;
     }
 
-    printf("    request %s, first_keycode %d, count %d\n",
+    output(Indent | NewLine, "request %s, first_keycode %d, count %d",
            r, e->first_keycode, e->count);
     XRefreshKeyboardMapping(e);
 }
@@ -780,25 +848,25 @@ print_SubPixelOrder(SubpixelOrder subpixel_order)
 {
     switch (subpixel_order) {
     case SubPixelUnknown:
-        printf("SubPixelUnknown");
+        output(0, "SubPixelUnknown");
         return;
     case SubPixelHorizontalRGB:
-        printf("SubPixelHorizontalRGB");
+        output(0, "SubPixelHorizontalRGB");
         return;
     case SubPixelHorizontalBGR:
-        printf("SubPixelHorizontalBGR");
+        output(0, "SubPixelHorizontalBGR");
         return;
     case SubPixelVerticalRGB:
-        printf("SubPixelVerticalRGB");
+        output(0, "SubPixelVerticalRGB");
         return;
     case SubPixelVerticalBGR:
-        printf("SubPixelVerticalBGR");
+        output(0, "SubPixelVerticalBGR");
         return;
     case SubPixelNone:
-        printf("SubPixelNone");
+        output(0, "SubPixelNone");
         return;
     default:
-        printf("%d", subpixel_order);
+        output(0, "%d", subpixel_order);
     }
 }
 
@@ -806,21 +874,21 @@ static void
 print_Rotation(Rotation rotation)
 {
     if (rotation & RR_Rotate_0)
-        printf("RR_Rotate_0");
+        output(0, "RR_Rotate_0");
     else if (rotation & RR_Rotate_90)
-        printf("RR_Rotate_90");
+        output(0, "RR_Rotate_90");
     else if (rotation & RR_Rotate_180)
-        printf("RR_Rotate_180");
+        output(0, "RR_Rotate_180");
     else if (rotation & RR_Rotate_270)
-        printf("RR_Rotate_270");
+        output(0, "RR_Rotate_270");
     else {
-        printf("%d", rotation);
+        output(0, "%d", rotation);
         return;
     }
     if (rotation & RR_Reflect_X)
-        printf(", RR_Reflect_X");
+        output(0, ", RR_Reflect_X");
     if (rotation & RR_Reflect_Y)
-        printf(", RR_Reflect_Y");
+        output(0, ", RR_Reflect_Y");
 }
 
 static void
@@ -828,16 +896,16 @@ print_Connection(Connection connection)
 {
     switch (connection) {
     case RR_Connected:
-        printf("RR_Connected");
+        output(0, "RR_Connected");
         return;
     case RR_Disconnected:
-        printf("RR_Disconnected");
+        output(0, "RR_Disconnected");
         return;
     case RR_UnknownConnection:
-        printf("RR_UnknownConnection");
+        output(0, "RR_UnknownConnection");
         return;
     default:
-        printf("%d", connection);
+        output(0, "%d", connection);
     }
 }
 
@@ -847,14 +915,15 @@ do_RRScreenChangeNotify(XEvent *eventp)
     XRRScreenChangeNotifyEvent *e = (XRRScreenChangeNotifyEvent *) eventp;
 
     XRRUpdateConfiguration(eventp);
-    printf("    root 0x%lx, timestamp %lu, config_timestamp %lu\n",
+    output(Indent | NewLine, "root 0x%lx, timestamp %lu, config_timestamp %lu",
            e->root, e->timestamp, e->config_timestamp);
-    printf("    size_index %hu", e->size_index);
-    printf(", subpixel_order ");
+    output(Indent, "size_index %hu", e->size_index);
+    output(0, ", subpixel_order ");
     print_SubPixelOrder(e->subpixel_order);
-    printf("\n    rotation ");
+    output(InitialNewLine | Indent, "rotation ");
     print_Rotation(e->rotation);
-    printf("\n    width %d, height %d, mwidth %d, mheight %d\n",
+    output(InitialNewLine | Indent | NewLine,
+           "width %d, height %d, mwidth %d, mheight %d",
            e->width, e->height, e->mwidth, e->mheight);
 }
 
@@ -875,29 +944,29 @@ do_RRNotify_OutputChange(XEvent *eventp, XRRScreenResources *screen_resources)
                 break;
             }
     }
-    printf("    subtype XRROutputChangeNotifyEvent\n");
+    output(Indent | NewLine, "subtype XRROutputChangeNotifyEvent");
     if (output_info)
-        printf("    output %s, ", output_info->name);
+        output(Indent, "output %s, ", output_info->name);
     else
-        printf("    output %lu, ", e->output);
+        output(Indent, "output %lu, ", e->output);
     if (e->crtc)
-        printf("crtc %lu, ", e->crtc);
+        output(0, "crtc %lu, ", e->crtc);
     else
-        printf("crtc None, ");
+        output(0, "crtc None, ");
     if (mode_info)
-        printf("mode %s (%dx%d)\n", mode_info->name, mode_info->width,
+        output(NewLine, "mode %s (%dx%d)", mode_info->name, mode_info->width,
                mode_info->height);
     else if (e->mode)
-        printf("mode %lu\n", e->mode);
+        output(NewLine, "mode %lu", e->mode);
     else
-        printf("mode None\n");
-    printf("    rotation ");
+        output(NewLine, "mode None");
+    output(Indent, "rotation ");
     print_Rotation(e->rotation);
-    printf("\n    connection ");
+    output(InitialNewLine | Indent, "connection ");
     print_Connection(e->connection);
-    printf(", subpixel_order ");
+    output(0, ", subpixel_order ");
     print_SubPixelOrder(e->subpixel_order);
-    printf("\n");
+    output_new_line();
     XRRFreeOutputInfo(output_info);
 }
 
@@ -916,20 +985,20 @@ do_RRNotify_CrtcChange(XEvent *eventp, XRRScreenResources *screen_resources)
                 break;
             }
     }
-    printf("    subtype XRRCrtcChangeNotifyEvent\n");
+    output(Indent | NewLine, "subtype XRRCrtcChangeNotifyEvent");
     if (e->crtc)
-        printf("    crtc %lu, ", e->crtc);
+        output(Indent, "crtc %lu, ", e->crtc);
     else
-        printf("    crtc None, ");
+        output(Indent, "crtc None, ");
     if (mode_info)
-        printf("mode %s, ", mode_info->name);
+        output(0, "mode %s, ", mode_info->name);
     else if (e->mode)
-        printf("mode %lu, ", e->mode);
+        output(0, "mode %lu, ", e->mode);
     else
-        printf("mode None, ");
-    printf("rotation ");
+        output(0, "mode None, ");
+    output(0, "rotation ");
     print_Rotation(e->rotation);
-    printf("\n    x %d, y %d, width %d, height %d\n",
+    output(InitialNewLine | Indent | NewLine, "x %d, y %d, width %d, height %d",
            e->x, e->y, e->width, e->height);
 }
 
@@ -943,18 +1012,18 @@ do_RRNotify_OutputProperty(XEvent *eventp,
 
     if (screen_resources)
         output_info = XRRGetOutputInfo(dpy, screen_resources, e->output);
-    printf("    subtype XRROutputPropertyChangeNotifyEvent\n");
+    output(Indent | NewLine, "subtype XRROutputPropertyChangeNotifyEvent");
     if (output_info)
-        printf("    output %s, ", output_info->name);
+        output(Indent, "output %s, ", output_info->name);
     else
-        printf("    output %lu, ", e->output);
-    printf("property %s, timestamp %lu, state ", property, e->timestamp);
+        output(Indent, "output %lu, ", e->output);
+    output(0, "property %s, timestamp %lu, state ", property, e->timestamp);
     if (e->state == PropertyNewValue)
-        printf("NewValue\n");
+        output(NewLine, "NewValue");
     else if (e->state == PropertyDelete)
-        printf("Delete\n");
+        output(NewLine, "Delete");
     else
-        printf("%d\n", e->state);
+        output(NewLine, "%d", e->state);
     XRRFreeOutputInfo(output_info);
     XFree(property);
 }
@@ -979,7 +1048,7 @@ do_RRNotify(XEvent *eventp)
         do_RRNotify_OutputProperty(eventp, screen_resources);
         break;
     default:
-        printf("    subtype %d\n", e->subtype);
+        output(Indent | NewLine, "subtype %d", e->subtype);
     }
     XRRFreeScreenResources(screen_resources);
 }
@@ -1054,6 +1123,7 @@ usage(const char *errmsg)
 "                                  owner_grab_button randr button\n"
 "           This option can be specified multiple times to select multiple\n"
 "           event masks.\n"
+"    -1                                  display only a single line per event\n"
 "    -version                            print version and exit\n"
 "\n";
 
@@ -1255,6 +1325,9 @@ main(int argc, char **argv)
                 if (!parse_event_mask(argv[i], event_masks))
                     usage(NULL);
                 event_mask_specified = True;
+                continue;
+            case '1':
+                single_line = True;
                 continue;
             case 'v':
                 puts(PACKAGE_STRING);
@@ -1550,8 +1623,11 @@ main(int argc, char **argv)
                     break;
                 }
             }
-            printf("Unknown event type %d\n", event.type);
+            output(NewLine, "Unknown event type %d", event.type);
             break;
+        }
+        if (single_line) {
+            printf("\n");
         }
         fflush(stdout);
     }

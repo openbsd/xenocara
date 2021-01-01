@@ -1,3 +1,17 @@
+commit b798a62cb701050381ed8b05c2fb7204357a7241
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Fri Jul 17 15:07:14 2020 -0700
+
+    xev 1.2.4
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit c51ca8f59ce5fff6b8c0705bd296460d8116cff2
+Author: Piotr Henryk Dabrowski <phd@phd.re>
+Date:   Mon Apr 6 05:11:28 2020 +0200
+
+    Add option "-1" to display only a single line per event
+
 commit 699ec4772f024e70dbb5474921acd4977ecfce4c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 19 14:21:20 2019 -0800
