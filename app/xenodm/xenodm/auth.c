@@ -541,6 +541,7 @@ doneAddrs (void)
 		free (a->number);
 		free (a);
 	}
+	addrs = NULL;
 }
 
 static int checkEntry (Xauth *auth);
