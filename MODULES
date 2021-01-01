@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.451 2021/01/01 12:29:16 matthieu Exp $
+# $OpenBSD: MODULES,v 1.452 2021/01/01 13:21:03 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -8,7 +8,7 @@ app/bdftopcf		1.1
 app/beforelight		1.0.5
 app/bitmap		1.0.9
 app/editres		1.0.7
-app/fonttosfnt		1.2.1		needs-update
+app/fonttosfnt		1.2.1
 app/iceauth		1.0.8
 app/ico			1.0.5		remove?
 app/listres		1.0.4
@@ -36,7 +36,7 @@ app/xdm			1.1.11
 app/xdpyinfo		1.3.2
 app/xdriinfo		1.0.6
 app/xedit		1.2.2
-app/xev			1.2.4		needs-update
+app/xev			1.2.4
 app/xeyes		1.1.2
 app/xf86dga		1.0.3
 app/xfd			1.1.3
@@ -44,9 +44,9 @@ app/xfontsel		1.0.6
 app/xgamma		1.0.6
 app/xgc			1.0.5		remove?
 app/xhost		1.0.8
-app/xinit		1.4.1		needs-update
+app/xinit		1.4.1
 app/xinput		1.6.3
-app/xkbcomp		1.4.4		needs-update
+app/xkbcomp		1.4.4
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5
 app/xkbutils		1.0.4
@@ -61,7 +61,7 @@ app/xmessage		1.0.5
 app/xmodmap		1.0.10
 app/xmore		1.0.3
 app/xpr			1.0.5
-app/xprop		1.2.5		needs-update
+app/xprop		1.2.5
 app/xrandr		1.5.1
 app/xrdb		1.2.0
 app/xrefresh		1.0.6
