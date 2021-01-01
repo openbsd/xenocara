@@ -54,25 +54,19 @@ Arguments immediately following the
 command are used to start a client in the same manner as
 .BR xinit (__appmansuffix__).
 The special argument
-.RB '--'
+.RB '\-\^\-'
 marks the end of client arguments and the beginning of server options.
-It may be convenient to specify server options with startx to change on a
-per-session basis the
-default color depth, the server's notion of the number of dots-per-inch the
-display device presents, or take advantage of a different server layout, as
-permitted by the
-.BR __XSERVERNAME__ (__appmansuffix__)
-server and specified in the
-.BR __XCONFIGFILEMAN__
-configuration.  Some examples of specifying server arguments follow; consult
+It may be convenient to specify server options with startx to change them on a
+per-session basis.
+Some examples of specifying server arguments follow; consult
 the manual page for your X server to determine which arguments are legal.
 .RS
 .PP
-startx -- -depth 16
+startx \-\^\- \-depth 16
 .PP
-startx -- -dpi 100
+startx \-\^\- \-dpi 100
 .PP
-startx -- -layout Multihead
+startx \-\^\- \-layout Multihead
 .RE
 .PP
 To determine the client to run,

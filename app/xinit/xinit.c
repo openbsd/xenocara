@@ -151,7 +151,6 @@ main(int argc, char *argv[])
     register char **ptr;
     pid_t pid;
     int client_given = 0, server_given = 0;
-    int client_args_given = 0, server_args_given = 0;
     int start_of_client_args, start_of_server_args;
     struct sigaction sa, si;
 #ifdef __APPLE__
@@ -174,7 +173,8 @@ main(int argc, char *argv[])
     }
     start_of_client_args = (cptr - client);
     while (argc && strcmp(*argv, "--")) {
-        client_args_given++;
+        if (cptr > clientargv + sizeof(clientargv) / sizeof(*clientargv) - 2)
+            Fatalx("too many client arguments");
         *cptr++ = *argv++;
         argc--;
     }
@@ -202,7 +202,8 @@ main(int argc, char *argv[])
 
     start_of_server_args = (sptr - server);
     while (--argc >= 0) {
-        server_args_given++;
+        if (sptr > serverargv + sizeof(serverargv) / sizeof(*serverargv) - 2)
+            Fatalx("too many server arguments");
         *sptr++ = *argv++;
     }
     *sptr = NULL;

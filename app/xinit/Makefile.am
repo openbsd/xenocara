@@ -63,7 +63,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx
 
 EXTRA_DIST = xinitrc.cpp startx.cpp \
-		autogen.sh
+		autogen.sh README.md
 
 .PHONY: ChangeLog INSTALL
 

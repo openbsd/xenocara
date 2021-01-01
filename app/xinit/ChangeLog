@@ -1,3 +1,67 @@
+commit 9a8b937bcfd84575e13039f316cbcb14c9729df4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 11:56:43 2019 -0800
+
+    xinit 1.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3dc751212e5f2f6b5d263e009cc2b85e56bfdbf
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Thu Feb 7 20:54:37 2019 +0100
+
+    Buffer overflow with many arguments.
+    
+    Command line arguments are copied into clientargv and serverargv without
+    verifying that enough space is available. A high amount of arguments can
+    therefore trigger a buffer overflow like this:
+    
+    $ xinit $(seq 1 500)
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Walter Harms wharms@bfs,de
+
+commit f727023c1a75dcc467dd99a3db69a5834a0718f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:06:34 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce311771ca86a4134511aecda5601d7c76d763dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:19:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 752ef176eb99f6315be27f00896b37ce217758b9
+Author: Laurent Bigonville <bigon@bigon.be>
+Date:   Fri Sep 12 15:35:49 2014 +0200
+
+    Fix some miscellaneous stuffs in the manpages
+    
+    See: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=726962
+    https://bugs.freedesktop.org/show_bug.cgi?id=83797
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aac8e17d28665dd35a73ee188c007f0b0f9cd9fe
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Oct 26 13:55:35 2009 +0000
+
+    Make text about supplying X server arguments via startx more generic
+    
+    Make text about supplying X server arguments via startx more generic,
+    rather than assuming the started server will be Xorg, and hence will
+    take Xorg's arguments.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2df7937c6d57a4f44288d13fc50218fe088c4185
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:44:47 2018 -0800

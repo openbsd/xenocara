@@ -161,7 +161,7 @@ novice users:
 .in +8
 .nf
 \&#!/bin/sh
-xinit __configdir__/site.xinitrc \-\^\- __bindir__/X -br
+xinit __configdir__/site.xinitrc \-\^\- __bindir__/X \-br
 .fi
 .in -8
 .sp

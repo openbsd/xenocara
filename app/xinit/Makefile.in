@@ -82,7 +82,7 @@ build_triplet = @build@
 host_triplet = @host@
 @LAUNCHD_TRUE@am__append_1 = launchd
 bin_PROGRAMS = xinit$(EXEEXT)
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure $(top_srcdir)/cpprules.in COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -366,6 +366,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -414,7 +415,7 @@ xinitrc_DATA = xinitrc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx
 EXTRA_DIST = xinitrc.cpp startx.cpp \
-		autogen.sh
+		autogen.sh README.md
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
