@@ -12137,7 +12137,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
 #if OPT_BLINK_CURS
-    SetCursorBlink(screen, screen->cursor_blink_i);
+    SetCursorBlink(xw, screen->cursor_blink_i);
     screen->cursor_blink_esc = 0;
     TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
