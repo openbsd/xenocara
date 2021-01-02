@@ -2456,7 +2456,6 @@ typedef struct {
 	char *		cursor_blink_s;	/* ...resource cursorBlink	*/
 	int		cursor_blink_esc; /* cursor blink escape-state	*/
 	Boolean		cursor_blink_xor; /* how to merge menu/escapes	*/
-	int		cursor_blink_esc_i; /* cursor blink escape-state*/
 #endif
 #if OPT_BLINK_TEXT
 	Boolean		blink_as_bold;	/* text blink disable		*/
