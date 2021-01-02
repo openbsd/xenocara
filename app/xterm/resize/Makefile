@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2014/07/31 20:13:40 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2021/01/02 10:24:36 matthieu Exp $
 
 PROG=	resize
 MAN=	resize.1
@@ -7,8 +7,7 @@ VPATH=	${.CURDIR}/..
 
 CPPFLAGS+=	-I${.CURDIR}/.. -I${X11BASE}/include \
 		-I${X11BASE}/include/freetype2 \
-		-DHAVE_CONFIG_H -DCSRG_BASED \
-		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP
+		-DHAVE_CONFIG_H -DUTMP
 
 X11BASE?=	/usr/X11R6
 MANDIR=		${X11BASE}/man/man
