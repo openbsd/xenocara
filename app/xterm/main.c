@@ -2861,7 +2861,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
     {
         String data = NULL;
-        getKeymapResources(term, "vt100", "VT100", XtRString, &data, sizeof(data));
+        getKeymapResources(SHELL_OF(term), "vt100", "VT100", XtRString, &data, sizeof(data));
         if (data &&
             (strstr(data, "exec-formatted") || strstr(data, "exec-selectable"))) {
 
