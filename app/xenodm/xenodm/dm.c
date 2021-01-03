@@ -549,7 +549,7 @@ SetWindowPath(struct display *d)
 	XFree(buf);
 	windowpath = getenv("WINDOWPATH");
 	if (!windowpath) {
-		if (asprintf(&newwindowpath, "ttyC%lu", num - 1) == -1)
+		if (asprintf(&newwindowpath, "%lu", num) == -1)
 			return;
 	} else {
 		if (asprintf(&newwindowpath, "%s:%lu", windowpath, num) == -1)
