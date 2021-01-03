@@ -799,6 +799,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -923,6 +924,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1175,6 +1177,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1312,7 +1323,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1465,6 +1476,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -18787,6 +18799,20 @@ $as_echo "#define LOCALCONN 1" >>confdefs.h
 
  fi
 
+ # Other functions Xtrans may need
+ for ac_func in strcasecmp strlcpy
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
+
+
 
 
 # Figure out where everything goes in the filesystem
@@ -18944,8 +18970,8 @@ esac
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XENODM" >&5
-$as_echo_n "checking for XENODM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xmu x11 xau" >&5
+$as_echo_n "checking for xmu x11 xau... " >&6; }
 
 if test -n "$XENODM_CFLAGS"; then
     pkg_cv_XENODM_CFLAGS="$XENODM_CFLAGS"
@@ -18985,7 +19011,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19012,7 +19038,7 @@ Alternatively, you may set the environment variables XENODM_CFLAGS
 and XENODM_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19037,8 +19063,8 @@ fi
 # Xinerama support
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XINERAMA" >&5
-$as_echo_n "checking for XINERAMA... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xinerama" >&5
+$as_echo_n "checking for xinerama... " >&6; }
 
 if test -n "$XINERAMA_CFLAGS"; then
     pkg_cv_XINERAMA_CFLAGS="$XINERAMA_CFLAGS"
@@ -19078,7 +19104,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19105,7 +19131,7 @@ Alternatively, you may set the environment variables XINERAMA_CFLAGS
 and XINERAMA_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19132,8 +19158,8 @@ GREETER_LIBS="$GREETER_LIBS $XINERAMA_LIBS"
 # Xft text drawing for the greeter screen
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XFT" >&5
-$as_echo_n "checking for XFT... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xft xrender" >&5
+$as_echo_n "checking for xft xrender... " >&6; }
 
 if test -n "$XFT_CFLAGS"; then
     pkg_cv_XFT_CFLAGS="$XFT_CFLAGS"
@@ -19173,7 +19199,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19200,7 +19226,7 @@ Alternatively, you may set the environment variables XFT_CFLAGS
 and XFT_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19227,8 +19253,8 @@ GREETER_LIBS="$GREETER_LIBS $XFT_LIBS"
 # XPM logos for the greeter screen
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XPM" >&5
-$as_echo_n "checking for XPM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xpm" >&5
+$as_echo_n "checking for xpm... " >&6; }
 
 if test -n "$XPM_CFLAGS"; then
     pkg_cv_XPM_CFLAGS="$XPM_CFLAGS"
@@ -19268,7 +19294,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19295,7 +19321,7 @@ Alternatively, you may set the environment variables XPM_CFLAGS
 and XPM_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19352,8 +19378,8 @@ fi
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XENODM_TOOLKIT" >&5
-$as_echo_n "checking for XENODM_TOOLKIT... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xaw7" >&5
+$as_echo_n "checking for xaw7... " >&6; }
 
 if test -n "$XENODM_TOOLKIT_CFLAGS"; then
     pkg_cv_XENODM_TOOLKIT_CFLAGS="$XENODM_TOOLKIT_CFLAGS"
@@ -19393,7 +19419,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19420,7 +19446,7 @@ Alternatively, you may set the environment variables XENODM_TOOLKIT_CFLAGS
 and XENODM_TOOLKIT_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19443,8 +19469,8 @@ $as_echo "yes" >&6; }
 fi
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XLIB" >&5
-$as_echo_n "checking for XLIB... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for x11" >&5
+$as_echo_n "checking for x11... " >&6; }
 
 if test -n "$XLIB_CFLAGS"; then
     pkg_cv_XLIB_CFLAGS="$XLIB_CFLAGS"
@@ -19484,7 +19510,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19511,7 +19537,7 @@ Alternatively, you may set the environment variables XLIB_CFLAGS
 and XLIB_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19534,8 +19560,8 @@ $as_echo "yes" >&6; }
 fi
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for AUTH" >&5
-$as_echo_n "checking for AUTH... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xau" >&5
+$as_echo_n "checking for xau... " >&6; }
 
 if test -n "$AUTH_CFLAGS"; then
     pkg_cv_AUTH_CFLAGS="$AUTH_CFLAGS"
@@ -19575,7 +19601,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19602,7 +19628,7 @@ Alternatively, you may set the environment variables AUTH_CFLAGS
 and AUTH_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19629,8 +19655,8 @@ fi
 #
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XDMGREET" >&5
-$as_echo_n "checking for XDMGREET... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xt >= 1.0 x11 xext" >&5
+$as_echo_n "checking for xt >= 1.0 x11 xext... " >&6; }
 
 if test -n "$XDMGREET_CFLAGS"; then
     pkg_cv_XDMGREET_CFLAGS="$XDMGREET_CFLAGS"
@@ -19670,7 +19696,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19697,7 +19723,7 @@ Alternatively, you may set the environment variables XDMGREET_CFLAGS
 and XDMGREET_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19992,8 +20018,8 @@ _ACEOF
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for APPDEFS" >&5
-$as_echo_n "checking for APPDEFS... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xt" >&5
+$as_echo_n "checking for xt... " >&6; }
 
 if test -n "$APPDEFS_CFLAGS"; then
     pkg_cv_APPDEFS_CFLAGS="$APPDEFS_CFLAGS"
@@ -20033,7 +20059,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20060,7 +20086,7 @@ Alternatively, you may set the environment variables APPDEFS_CFLAGS
 and APPDEFS_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
