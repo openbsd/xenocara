@@ -309,7 +309,7 @@ StartClient (
     	    exit(25);
 
     if (vinfo->argv) {
-	Debug ("StartSession %s: ", vinfo->argv[0]);
+	Debug("StartClient %s: ", vinfo->argv[0]);
 	for (f = vinfo->argv; *f; f++)
 		Debug ("%s ", *f);
 	Debug ("; ");
@@ -371,12 +371,12 @@ StartClient (
 	execute (failsafeArgv, vinfo->userEnviron);
 	exit (1);
     case -1:
-	Debug ("StartSession, fork failed\n");
+	Debug("StartClient, fork failed\n");
 	LogError ("can't start session on \"%s\", fork failed: %s\n",
 		  d->name, _SysErrorMsg (errno));
 	return 0;
     default:
-	Debug ("StartSession, fork succeeded %d\n", pid);
+	Debug("StartClient, fork succeeded %d\n", pid);
 	*pidp = pid;
 	return 1;
     }
