@@ -64,6 +64,12 @@
 #include "intel_driver.h"
 #include "fd.h"
 
+#ifdef X_PRIVSEP
+extern int priv_open_device(const char *);
+#else
+#define priv_open_device(n)	open(n,O_RDWR|O_CLOEXEC)
+#endif
+
 struct intel_device {
 	char *master_node;
 	char *render_node;
@@ -696,9 +702,7 @@ int intel_get_client_fd(ScrnInfoPtr scrn)
 	assert(dev->fd != -1);
 	assert(dev->render_node);
 
-#ifdef O_CLOEXEC
-	fd = open(dev->render_node, O_RDWR | O_CLOEXEC);
-#endif
+	fd = priv_open_device(dev->render_node);
 	if (fd < 0)
 		fd = fd_set_cloexec(open(dev->render_node, O_RDWR));
 	if (fd < 0)
