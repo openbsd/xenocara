@@ -148,6 +148,9 @@ static int ListenTransCount;
 
 static void ErrorConnMax(XtransConnInfo /* trans_conn */ );
 
+static int FdReserve = 5;
+static Bool Backoff = FALSE;
+
 static XtransConnInfo
 lookup_trans_conn(int fd)
 {
@@ -689,6 +692,11 @@ EstablishNewConnections(ClientPtr clientUnused, void *closure)
     if ((trans_conn = lookup_trans_conn(curconn)) == NULL)
         return TRUE;
 
+    if ((getdtablecount() + FdReserve) >= getdtablesize())
+        Backoff = TRUE;
+    else
+        Backoff = FALSE;
+
     if ((new_trans_conn = _XSERVTransAccept(trans_conn, &status)) == NULL)
         return TRUE;
 
@@ -699,7 +707,7 @@ EstablishNewConnections(ClientPtr clientUnused, void *closure)
     if (trans_conn->flags & TRANS_NOXAUTH)
         new_trans_conn->flags = new_trans_conn->flags | TRANS_NOXAUTH;
 
-    if (!AllocNewConnection(new_trans_conn, newconn, connect_time)) {
+    if (Backoff || !AllocNewConnection(new_trans_conn, newconn, connect_time)) {
         ErrorConnMax(new_trans_conn);
     }
     return TRUE;
@@ -753,6 +761,8 @@ ConnMaxNotify(int fd, int events, void *data)
     }
     RemoveNotifyFd(trans_conn->fd);
     _XSERVTransClose(trans_conn);
+
+    Backoff = FALSE;
 }
 
 static void
