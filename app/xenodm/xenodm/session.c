@@ -188,8 +188,9 @@ ManageSession (struct display *d)
     /*
      * run system-wide reset file
      */
-    if (d->windowPath != NULL)
-        login_fbtab(d->windowPath, 0, 0);
+    if (d->consolePath != NULL) {
+        login_fbtab(d->consolePath, 0, 0);
+    }
     Debug ("Source reset program %s\n", d->reset);
     source (verify.systemEnviron, d->reset);
     SessionExit (d, OBEYSESS_DISPLAY, true);
@@ -305,7 +306,7 @@ StartClient (
     pid_t	pid;
     struct passwd* pwd;
 
-    if (pledge("stdio rpath wpath cpath fattr proc getpw id exec dns", NULL) != 0)
+    if (pledge("stdio rpath wpath cpath chown fattr proc getpw id exec dns", NULL) == -1)
     	    exit(25);
 
     if (vinfo->argv) {
@@ -329,10 +330,9 @@ StartClient (
 	 */
 	pwd = getpwnam(name);
 	if (pwd) {
-	    if (d->windowPath != NULL)  {
-                /* XXX not working because of pledge() */
-	        Debug("login_fbtab %s %d\n", d->windowPath, geteuid());
-	        login_fbtab(d->windowPath, pwd->pw_uid, pwd->pw_gid);
+	    if (d->consolePath != NULL)  {
+	        Debug("login_fbtab %s %d\n", d->consolePath, geteuid());
+	        login_fbtab(d->consolePath, pwd->pw_uid, pwd->pw_gid);
 	    }
 	    if (setusercontext(NULL, pwd, pwd->pw_uid, LOGIN_SETALL) == -1) {
 		LogError ("setusercontext for \"%s\" failed: %s\n",
@@ -377,6 +377,9 @@ StartClient (
 	return 0;
     default:
 	Debug("StartClient, fork succeeded %d\n", pid);
+        if (pledge("stdio rpath wpath cpath fattr proc exec id dns", NULL) == -1)
+            exit(25);
+
 	*pidp = pid;
 	return 1;
     }
