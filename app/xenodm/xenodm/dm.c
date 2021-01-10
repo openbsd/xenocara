@@ -37,6 +37,7 @@ from The Open Group.
 #include	"dm_auth.h"
 #include	"dm_error.h"
 
+#include	<paths.h>
 #include	<stdio.h>
 #include	<signal.h>
 
@@ -492,6 +493,44 @@ StartDisplays (void)
 }
 
 static void
+SetConsolePath(struct display *d)
+{
+	Atom prop;
+	Atom actualtype;
+	int actualformat;
+	unsigned long nitems;
+	unsigned long bytes_after;
+	unsigned char *buf;
+
+	prop = XInternAtom(d->dpy, "Xorg_Console", False);
+	if (prop == None) {
+		LogError("no Xorg_Console atom\n");
+		return;
+	}
+	if (XGetWindowProperty(d->dpy, DefaultRootWindow(d->dpy), prop, 0,
+		TTY_NAME_MAX << 2,
+		False, AnyPropertyType, &actualtype, &actualformat,
+		&nitems, &bytes_after, &buf)) {
+		LogError("no Xorg_Console property\n");
+		return;
+	}
+	if (actualtype != XA_STRING) {
+		LogError("type %lx in Xorg_Console property!\n", actualtype);
+		XFree(buf);
+		return;
+	}
+	if (actualformat != 8) {
+		LogError("format %d in Xorg_Console property!\n", actualformat);
+		XFree(buf);
+		return;
+	}
+	d->consolePath = strdup(buf + strlen(_PATH_DEV));
+	LogInfo("consolePath: %s\n", d->consolePath);
+	XFree(buf);
+}
+
+
+static void
 SetWindowPath(struct display *d)
 {
 	/* setting WINDOWPATH for clients */
@@ -595,6 +634,7 @@ StartDisplay (struct display *d)
 	SetAuthorization (d);
 	if (!WaitForServer (d))
 	    exit (OPENFAILED_DISPLAY);
+	SetConsolePath(d);
 	SetWindowPath(d);
 	if (pledge("stdio rpath cpath wpath fattr flock proc dns inet unix exec prot_exec getpw id", NULL) != 0)
 	    exit(OPENFAILED_DISPLAY);

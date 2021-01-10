@@ -134,6 +134,7 @@ RemoveDisplay (struct display *old)
 	    free (d->authNames);
 	    free (d->authNameLens);
 	    free (d->windowPath);
+	    free (d->consolePath);
 	    free (d);
 	    break;
 	}
@@ -210,6 +211,7 @@ NewDisplay (char *name, char *class)
     d->grabTimeout = 0;
     d->dpy = NULL;
     d->windowPath = NULL;
+    d->consolePath = NULL;
     displays = d;
     return d;
 }

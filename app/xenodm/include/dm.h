@@ -135,6 +135,7 @@ struct display {
 
 	Display		*dpy;		/* Display */
 	char		*windowPath;	/* path to server "window" */
+        char		*consolePath;	/* path to the console device */
 
 	/* autologin */
 	char		*autoLogin;	/* user to auto-login */
