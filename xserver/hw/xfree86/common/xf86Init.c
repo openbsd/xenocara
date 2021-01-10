@@ -276,6 +276,27 @@ AddSeatId(CallbackListPtr *pcbl, void *data, void *screen)
 }
 
 static void
+AddConsole(CallbackListPtr *pcbl, void *data, void *screen)
+{
+#define VT_ATOM_CONSOLE	     "Xorg_Console"
+    int err;
+    ScreenPtr pScreen = screen;
+    Atom ConsoleAtom = MakeAtom(VT_ATOM_CONSOLE, sizeof(VT_ATOM_CONSOLE) - 1,
+                                TRUE);
+    char *device = ttyname(xf86Info.consoleFd);
+
+    if (device == NULL)
+	    return;
+
+    err = dixChangeWindowProperty(serverClient, pScreen->root, ConsoleAtom,
+                                  XA_STRING, 8, PropModeReplace,
+                                  strlen(device) + 1, device, FALSE);
+    if (err != Success)
+        xf86DrvMsg(pScreen->myNum, X_WARNING,
+                   "Failed to register Console property\n");
+}
+
+static void
 AddVTAtoms(CallbackListPtr *pcbl, void *data, void *screen)
 {
 #define VT_ATOM_NAME         "XFree86_VT"
@@ -646,6 +667,9 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
         if (xorgHWAccess)
             xf86EnableIO();
     }
+
+    if (xf86Info.consoleFd >= 0)
+        AddCallback(&RootWindowFinalizeCallback, AddConsole, NULL);
 
     if (xf86Info.vtno >= 0)
         AddCallback(&RootWindowFinalizeCallback, AddVTAtoms, NULL);
