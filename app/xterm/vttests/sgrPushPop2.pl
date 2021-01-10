@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: sgrPushPop2.pl,v 1.2 2019/05/03 23:59:26 tom Exp $
+# $XTermId: sgrPushPop2.pl,v 1.4 2020/12/13 15:05:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -34,7 +34,6 @@
 
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 
@@ -200,14 +199,14 @@ printf "Testing white-on-black with columns %s,%s,%s\n",
 
 for my $row ( 0 .. $opt_n ) {
 
-    &pushSGR("10;11");    # save/restore only foreground/background color
+    &pushSGR("30;31");    # save/restore only foreground/background color
     &set_video($row);     # this attribute is set for the whole row
     &run_example(0);
     &popSGR;
 
     &run_example(1);
 
-    &pushSGR("10;11");    # save/restore only foreground/background color
+    &pushSGR("30;31");    # save/restore only foreground/background color
     &run_example(2);
     &popSGR;
     printf "END!";        # this is in the last color used in the middle column

@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.208 2019/07/19 00:40:41 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.210 2020/12/10 19:43:26 tom Exp $ */
 
 /*
- * Copyright 2000-2018,2019 by Thomas E. Dickey
+ * Copyright 2000-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -373,10 +373,11 @@ ResizeScrollBar(XtermWidget xw)
 }
 
 void
-WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
+WindowScroll(XtermWidget xw, int top, Bool always)
 {
     TScreen *screen = TScreenOf(xw);
 
+    (void) always;
 #if OPT_SCROLL_LOCK
     if (screen->allowScrollLock && (screen->scroll_lock && !always)) {
 	if (screen->scroll_dirty) {
@@ -399,7 +400,7 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 	    int scrolltop, scrollheight, refreshtop;
 
 	    if (screen->cursor_state)
-		HideCursor();
+		HideCursor(xw);
 	    lines = i > 0 ? i : -i;
 	    if (lines > MaxRows(screen))
 		lines = MaxRows(screen);
@@ -622,7 +623,8 @@ CompareWidths(const char *a, const char *b, int *modifier)
 	cb = x_toupper(*b);
 	if (ca != cb || ca == '\0')
 	    break;		/* if not eq else both nul */
-	a++, b++;
+	a++;
+	b++;
     }
     if (cb != '\0')
 	return 0;

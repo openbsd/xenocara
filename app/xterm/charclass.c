@@ -1,7 +1,7 @@
-/* $XTermId: charclass.c,v 1.29 2017/05/29 17:43:54 tom Exp $ */
+/* $XTermId: charclass.c,v 1.43 2020/11/08 20:06:53 tom Exp $ */
 
 /*
- * Copyright 2002-2014,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -58,49 +58,31 @@
 
 #if OPT_WIDE_CHARS
 
+#ifdef TEST_DRIVER
+
+#include <ctype.h>
+#include <wchar.h>
+#include <wctype.h>
+
+#if OPT_TRACE
+#define Trace if (opt_v) printf
+#endif
+
+#undef OPT_REPORT_CCLASS
+#define OPT_REPORT_CCLASS 1
+#endif /* TEST_DRIVER */
+
 static struct classentry {
     int cclass;
     int first;
     int last;
 } *classtab;
 
-/*
- * Special convention for classtab[0]:
- * - classtab[0].cclass is the allocated number of entries in classtab
- * - classtab[0].first = 1 (first used entry in classtab)
- * - classtab[0].last is the last used entry in classtab
- */
-
-int
-SetCharacterClassRange(int low, int high, int value)
-{
-    TRACE(("...SetCharacterClassRange (%#x .. %#x) = %d\n", low, high, value));
-
-    if (high < low)
-	return -1;		/* nothing to do */
-
-    /* make sure we have at least one free entry left at table end */
-    if (classtab[0].last > classtab[0].cclass - 2) {
-	classtab[0].cclass += 5 + classtab[0].cclass / 4;
-	classtab = TypeRealloc(struct classentry,
-			         (unsigned) classtab[0].cclass, classtab);
-	if (!classtab)
-	    abort();
-    }
-
-    /* simply append new interval to end of interval array */
-    classtab[0].last++;
-    classtab[classtab[0].last].first = low;
-    classtab[classtab[0].last].last = high;
-    classtab[classtab[0].last].cclass = value;
-
-    return 0;
-}
-
 typedef enum {
     IDENT = -1,
-    ALNUM = 48,
+    OTHER = 0,
     CNTRL = 1,
+    ALNUM = 48,
     BLANK = 32,
     U_CJK = 0x4e00,
     U_SUP = 0x2070,
@@ -109,6 +91,13 @@ typedef enum {
     U_KAT = 0x30a0,
     U_HAN = 0xac00
 } Classes;
+
+#ifdef TEST_DRIVER
+static int opt_all;
+static int opt_check;
+static int opt_quiet;
+static int opt_v;
+#endif
 
 void
 init_classtab(void)
@@ -195,17 +184,20 @@ class_name(Classes code)
     static char buffer[80];
     const char *result = "?";
     switch (code) {
-    case IDENT:
-	result = "IDENT";
-	break;
     case ALNUM:
 	result = "ALNUM";
+	break;
+    case BLANK:
+	result = "BLANK";
 	break;
     case CNTRL:
 	result = "CNTRL";
 	break;
-    case BLANK:
-	result = "BLANK";
+    case OTHER:
+	result = "OTHER";
+	break;
+    case IDENT:
+	result = "IDENT";
 	break;
     case U_SUP:
 	result = "superscript";
@@ -233,6 +225,40 @@ class_name(Classes code)
     return result;
 }
 
+/*
+ * Special convention for classtab[0]:
+ * - classtab[0].cclass is the allocated number of entries in classtab
+ * - classtab[0].first = 1 (first used entry in classtab)
+ * - classtab[0].last is the last used entry in classtab
+ */
+
+int
+SetCharacterClassRange(int low, int high, int value)
+{
+    TRACE(("...SetCharacterClassRange (U+%04X .. U+%04X) = %s\n",
+	   low, high, class_name(value)));
+
+    if (high < low)
+	return -1;		/* nothing to do */
+
+    /* make sure we have at least one free entry left at table end */
+    if (classtab[0].last > classtab[0].cclass - 2) {
+	classtab[0].cclass += 5 + classtab[0].cclass / 4;
+	classtab = TypeRealloc(struct classentry,
+			         (unsigned) classtab[0].cclass, classtab);
+	if (!classtab)
+	    abort();
+    }
+
+    /* simply append new interval to end of interval array */
+    classtab[0].last++;
+    classtab[classtab[0].last].first = low;
+    classtab[classtab[0].last].last = high;
+    classtab[classtab[0].last].cclass = value;
+
+    return 0;
+}
+
 void
 report_wide_char_class(void)
 {
@@ -247,7 +273,7 @@ report_wide_char_class(void)
 	printf("\tU+%04X .. U+%04X %s\n",
 	       classtab[i].first,
 	       classtab[i].last,
-	       class_name(classtab[i].cclass));
+	       class_name((Classes) classtab[i].cclass));
     }
     printf("\n");
     printf("These class-names are used internally (the first character code in a class):\n");
@@ -263,11 +289,223 @@ report_wide_char_class(void)
 void
 noleaks_CharacterClass(void)
 {
-    if (classtab != 0) {
-	free(classtab);
-	classtab = 0;
-    }
+    FreeAndNull(classtab);
 }
 #endif
-
 #endif /* OPT_WIDE_CHARS */
+
+#ifdef TEST_DRIVER
+#if OPT_WIDE_CHARS
+static void
+usage(void)
+{
+    static const char *msg[] =
+    {
+	"Usage: test_charclass [options] [c1[-c1b] [c2-[c2b] [...]]]",
+	"",
+	"Options:",
+	" -a  show all data",
+	" -s  show only summary",
+	" -v  verbose"
+    };
+    size_t n;
+    for (n = 0; n < sizeof(msg) / sizeof(msg[0]); ++n) {
+	fprintf(stderr, "%s\n", msg[n]);
+    }
+    exit(EXIT_FAILURE);
+}
+
+static int
+expected_class(int wch)
+{
+    int result = wch;
+    wint_t ch = (wint_t) wch;
+    if (ch == '\0' || ch == '\t') {
+	result = BLANK;
+    } else if (iswcntrl(ch)) {
+	result = CNTRL;
+    } else if (iswspace(ch)) {
+	result = BLANK;
+    } else if (ch < 127) {
+	if (isalnum(ch) || ch == '_') {
+	    result = ALNUM;
+	}
+    } else if (ch == 170 || ch == 181 || ch == 186) {
+	;
+    } else if (iswalnum(ch)) {
+	result = ALNUM;
+    }
+    return result;
+}
+
+static int
+show_cclass_range(int lo, int hi)
+{
+    int cclass = CharacterClass(lo);
+    int ident = (cclass == lo);
+    int more = 0;
+    if (ident) {
+	int ch;
+	for (ch = lo + 1; ch <= hi; ch++) {
+	    if (CharacterClass(ch) != ch) {
+		ident = 0;
+		break;
+	    }
+	}
+	if (ident && (hi < 255)) {
+	    ch = hi + 1;
+	    if (CharacterClass(ch) == ch) {
+		if (ch >= 255 || CharacterClass(ch + 1) != ch) {
+		    more = 1;
+		}
+	    }
+	}
+    }
+    if (!more) {
+	if (lo == hi) {
+	    printf("\t%d", lo);
+	} else {
+	    printf("\t%d-%d", lo, hi);
+	}
+	if (!ident)
+	    printf(":%d", cclass);
+	if (hi < 255)
+	    printf(", \\");
+	printf("\n");
+    }
+    return !more;
+}
+
+static void
+report_resource(int first, int last)
+{
+    int class_p;
+    int ch;
+    int dh;
+
+    class_p = CharacterClass(dh = first);
+    for (ch = first; ch < last; ++ch) {
+	int class_c = CharacterClass(ch);
+	if (class_c != class_p) {
+	    if (show_cclass_range(dh, ch - 1)) {
+		dh = ch;
+		class_p = class_c;
+	    }
+	}
+    }
+    if (dh < last - 1) {
+	show_cclass_range(dh, last - 1);
+    }
+}
+
+static int
+decode_one(const char *source, char **target)
+{
+    int result = -1;
+    long check;
+    int radix = 0;
+    if ((source[0] == 'u' || source[0] == 'U') && source[1] == '+') {
+	source += 2;
+	radix = 16;
+    }
+    check = strtol(source, target, radix);
+    if (*target != NULL && *target != source)
+	result = (int) check;
+    return result;
+}
+
+static int
+decode_range(const char *source, int *lo, int *hi)
+{
+    int result = 0;
+    char *after1;
+    char *after2;
+    if ((*lo = decode_one(source, &after1)) >= 0) {
+	after1 += strspn(after1, ":-.\t ");
+	if ((*hi = decode_one(after1, &after2)) < 0) {
+	    *hi = *lo;
+	}
+	result = 1;
+    }
+    return result;
+}
+
+static void
+do_range(const char *source)
+{
+    int lo, hi;
+    if (decode_range(source, &lo, &hi)) {
+	if (opt_all) {
+	    while (lo <= hi) {
+		int other_rc = CharacterClass(lo);
+		if (!opt_quiet)
+		    printf("U+%04X\t%s\n", lo, class_name(other_rc));
+		++lo;
+	    }
+	} else if (opt_check) {
+	    while (lo <= hi) {
+		int expect = expected_class(lo);
+		int actual = CharacterClass(lo);
+		if (actual != expect)
+		    printf("U+%04X\t%s ->%s\n", lo,
+			   class_name(expect),
+			   class_name(actual));
+		++lo;
+	    }
+	} else {
+	    printf("\"charClass\" resource for [%d..%d]:\n", lo, hi);
+	    report_resource(lo, hi + 1);
+	}
+    }
+}
+#endif /* OPT_WIDE_CHARS */
+
+/*
+ * TODO: add option to show do_range in hex
+ */
+int
+main(int argc, char **argv ENVP_ARG)
+{
+#if OPT_WIDE_CHARS
+    int ch;
+#endif
+
+    (void) argc;
+    (void) argv;
+
+#if OPT_WIDE_CHARS
+    setlocale(LC_ALL, "");
+    while ((ch = getopt(argc, argv, "acsv")) != -1) {
+	switch (ch) {
+	case 'a':
+	    opt_all = 1;
+	    break;
+	case 'c':
+	    opt_check = 1;
+	    break;
+	case 's':
+	    opt_quiet = 1;
+	    break;
+	case 'v':
+	    opt_v = 1;
+	    break;
+	default:
+	    usage();
+	}
+    }
+    init_classtab();
+
+    if (optind >= argc) {
+	do_range("0-255");
+    } else {
+	while (optind < argc) {
+	    do_range(argv[optind++]);
+	}
+    }
+    report_wide_char_class();
+#else
+    printf("wide-character support is not configured\n");
+#endif /* OPT_WIDE_CHARS */
+    return 0;
+}
+#endif /* TEST_DRIVER */

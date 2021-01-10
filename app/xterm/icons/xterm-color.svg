@@ -13,13 +13,13 @@
    height="48px"
    id="svg2985"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="xterm-color.svg"
    sodipodi:version="0.32"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    enable-background="new">
   <title
-     id="title2983">terminal</title>
+     id="title2983">xterm-color</title>
   <defs
      id="defs2987">
     <inkscape:perspective
@@ -38,16 +38,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="11.313708"
-     inkscape:cx="23.637681"
+     inkscape:cx="12.500749"
      inkscape:cy="25.479115"
      inkscape:current-layer="layer3"
      showgrid="true"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
-     inkscape:window-width="1258"
-     inkscape:window-height="786"
-     inkscape:window-x="3"
-     inkscape:window-y="44"
+     inkscape:window-width="1172"
+     inkscape:window-height="741"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
      inkscape:window-maximized="0"
      objecttolerance="2">
     <inkscape:grid
@@ -66,9 +66,9 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>xterm</dc:title>
+        <dc:title>xterm-color</dc:title>
         <cc:license
-           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
+           rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
         <dc:creator>
           <cc:Agent>
             <dc:title>Thomas E. Dickey</dc:title>
@@ -81,11 +81,11 @@
         </dc:rights>
         <dc:description>XTerm icon, in SVG format.</dc:description>
         <dc:date>June 14, 2012</dc:date>
-        <dc:source>http://invisible-island.net/xterm/</dc:source>
-        <dc:identifier>http://invisible-island.net/xterm/xterm</dc:identifier>
+        <dc:source>https://invisible-island.net/xterm/xterm.icon.html</dc:source>
+        <dc:identifier>https://invisible-island.net/xterm/images/icons-xterm-color_226.png</dc:identifier>
       </cc:Work>
       <cc:License
-         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+         rdf:about="http://creativecommons.org/licenses/by/4.0/">
         <cc:permits
            rdf:resource="http://creativecommons.org/ns#Reproduction" />
         <cc:permits
@@ -687,27 +687,27 @@
      inkscape:groupmode="layer"
      sodipodi:insensitive="true">
     <text
-       sodipodi:linespacing="125%"
        id="text3038"
        y="17.392376"
        x="9.3944197"
-       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Serif;-inkscape-font-specification:Serif"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:serif;-inkscape-font-specification:Serif;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"><tspan
          y="17.392376"
          x="9.3944197"
          id="tspan3040"
-         sodipodi:role="line">X</tspan></text>
+         sodipodi:role="line"
+         style="font-size:14px;line-height:1.25;font-family:serif">X</tspan></text>
     <text
-       sodipodi:linespacing="125%"
        id="text3042"
        y="27.796949"
        x="9.2934036"
-       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Verdana';-inkscape-font-specification:'Verdana';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"><tspan
          y="27.796949"
          x="9.2934036"
          id="tspan3044"
-         sodipodi:role="line">TERM</tspan></text>
+         sodipodi:role="line"
+         style="font-size:10px;line-height:1.25">TERM</tspan></text>
     <path
        inkscape:connector-curvature="0"
        id="path3046"

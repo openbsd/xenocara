@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: mouse-codes,v 1.6 2019/01/04 00:49:41 tom Exp $
+# $XTermId: mouse-codes,v 1.7 2020/12/13 15:07:02 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018,2019 by Thomas E. Dickey
+# Copyright 2018-2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -35,7 +35,6 @@
 # event state) versus output (xterm mouse-code).
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 

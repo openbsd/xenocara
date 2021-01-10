@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.123 2019/11/18 00:46:31 tom Exp $
+# $XTermId: xterm.spec,v 1.138 2020/11/15 16:38:35 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 351
+Version: 363
 Release: 1
 License: X11
 Group: User Interface/X
@@ -66,8 +66,7 @@ for the program and its resource class, to avoid conflict with other packages.
 
 %prep
 
-%global desktop_vendor  dickey
-%global target_appdata %{desktop_vendor}-%{fullname}.appdata.xml
+%global target_appdata %{fullname}.appdata.xml
 
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
 %define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
@@ -124,7 +123,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
         --enable-mini-luit \
         --enable-regis-graphics \
         --enable-sco-fkeys \
-        --enable-sixel-graphics \
         --enable-toolbar \
         --enable-xmc-glitch \
         --with-app-defaults=%{_xresdir} \
@@ -171,7 +169,7 @@ make install-bin install-man install-app install-icon \
 
 %if "%{desktop_utils}"
 make install-desktop \
-        DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
+        DESKTOP_FLAGS="--dir $RPM_BUILD_ROOT%{_datadir}/applications"
 
 test -n "%{my_suffix}" && \
 ( cd $RPM_BUILD_ROOT%{_datadir}/applications
@@ -185,7 +183,7 @@ mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata && \
 install -m 644 xterm.appdata.xml $RPM_BUILD_ROOT%{_datadir}/appdata/%{target_appdata} && \
 ( cd $RPM_BUILD_ROOT%{_datadir}/appdata
   sed -i \
-      -e 's/>xterm\.desktop</>%{desktop_vendor}-%{fullname}.desktop</' \
+      -e 's/>xterm\.desktop</>%{fullname}.desktop</' \
       -e 's/>XTerm</>%{my_class}</' \
       %{target_appdata}
 )
@@ -234,8 +232,8 @@ exit 0
 
 %if "%{desktop_utils}"
 %config(missingok) %{_datadir}/appdata/%{target_appdata}
-%config(missingok) %{_datadir}/applications/%{desktop_vendor}-%{fullname}.desktop
-%config(missingok) %{_datadir}/applications/%{desktop_vendor}-u%{fullname}.desktop
+%config(missingok) %{_datadir}/applications/%{fullname}.desktop
+%config(missingok) %{_datadir}/applications/u%{fullname}.desktop
 %endif
 
 %if "%{icon_theme}"
@@ -247,6 +245,12 @@ exit 0
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Sat Jul 25 2020 Thomas E. Dickey
+- sixels are enabled by default
+
+* Sun Mar 08 2020 Thomas E. Dickey
+- remove "--vendor" option from desktop-file-install
 
 * Sun Nov 17 2019 Thomas E. Dickey
 - install appdata.xml file

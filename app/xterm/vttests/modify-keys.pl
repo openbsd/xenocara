@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: modify-keys.pl,v 1.89 2019/10/29 00:22:23 tom Exp $
+# $XTermId: modify-keys.pl,v 1.91 2020/11/15 16:43:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -988,7 +988,7 @@ sub print_data() {
                         # different modifier combinations can produce the same
                         # keysym.  Since it appears that the slots that the
                         # user would expect are filled in first, just ignoring
-                        # the duplicate works well enought.
+                        # the duplicate works well enough.
                         if ( not $linkUsed{$value} ) {
                             $props .= " name=\"$value\"";
                             $linkUsed{$value} = 1;
@@ -1404,11 +1404,16 @@ sub report_keys_used() {
         $Shifted{$code} = $code unless ( $Shifted{$code} );
 
         for my $t ( 1 .. $type{SIZE} - 1 ) {
-            $sym             = $symCache[ $obj{CODE} + $t ];
-            $code            = "";
-            $code            = $keySyms{$sym} if ( $keySyms{$sym} );
-            $keysUsed{$code} = $sym;
-            $links[0] = &link_data( "symmap", "summary", 4, $sym );
+            $sym = $symCache[ $obj{CODE} + $t ];
+            if ( $keySyms{$sym} ) {
+                $code = $keySyms{$sym};
+                $keysUsed{$code} = $sym;
+                $links[0] = &link_data( "symmap", "summary", 4, $sym );
+            }
+            else {
+                $code  = "";
+                @links = ();
+            }
             &print_data(
                 \@links,
                 5,  "",                                         #

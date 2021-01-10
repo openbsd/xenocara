@@ -13,13 +13,13 @@
    height="48px"
    id="svg2985"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="filled-xterm.svg"
    sodipodi:version="0.32"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    enable-background="new">
   <title
-     id="title2983">terminal</title>
+     id="title2983">filled-xterm</title>
   <defs
      id="defs2987">
     <inkscape:perspective
@@ -38,16 +38,16 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="9.8994949"
-     inkscape:cx="28.142409"
+     inkscape:cx="2.6865649"
      inkscape:cy="22.28651"
      inkscape:current-layer="layer2"
      showgrid="true"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
      inkscape:window-width="961"
-     inkscape:window-height="767"
+     inkscape:window-height="741"
      inkscape:window-x="28"
-     inkscape:window-y="33"
+     inkscape:window-y="31"
      inkscape:window-maximized="0"
      objecttolerance="2">
     <inkscape:grid
@@ -66,9 +66,9 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>xterm</dc:title>
+        <dc:title>filled-xterm</dc:title>
         <cc:license
-           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
+           rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
         <dc:creator>
           <cc:Agent>
             <dc:title>Thomas E. Dickey</dc:title>
@@ -81,11 +81,11 @@
         </dc:rights>
         <dc:description>XTerm icon, in SVG format.</dc:description>
         <dc:date>June 14, 2012</dc:date>
-        <dc:source>http://invisible-island.net/xterm/</dc:source>
-        <dc:identifier>http://invisible-island.net/xterm/xterm</dc:identifier>
+        <dc:source>https://invisible-island.net/xterm/xterm.icon.html</dc:source>
+        <dc:identifier>https://invisible-island.net/xterm/images/icons-xterm_281.png</dc:identifier>
       </cc:Work>
       <cc:License
-         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+         rdf:about="http://creativecommons.org/licenses/by/4.0/">
         <cc:permits
            rdf:resource="http://creativecommons.org/ns#Reproduction" />
         <cc:permits
@@ -628,26 +628,26 @@
        d="M 33,44.5 A 0.5,0.5 0 1 1 32,44.5 A 0.5,0.5 0 1 1 33,44.5 z" />
     <text
        xml:space="preserve"
-       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Serif;-inkscape-font-specification:Serif"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:serif;-inkscape-font-specification:Serif;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="9.3944197"
        y="17.392376"
-       id="text2446"
-       sodipodi:linespacing="125%"><tspan
+       id="text2446"><tspan
          sodipodi:role="line"
          id="tspan2448"
          x="9.3944197"
-         y="17.392376">X</tspan></text>
+         y="17.392376"
+         style="font-size:14px;line-height:1.25;font-family:serif">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Verdana';-inkscape-font-specification:'Verdana';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="9.2934036"
        y="27.796949"
-       id="text2450"
-       sodipodi:linespacing="125%"><tspan
+       id="text2450"><tspan
          sodipodi:role="line"
          id="tspan2452"
          x="9.2934036"
-         y="27.796949">TERM</tspan></text>
+         y="27.796949"
+         style="font-size:10px;line-height:1.25">TERM</tspan></text>
     <path
        style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ff0000;stroke-width:0.06060915000000000;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        d="m 6.4143258,32.603522 -0.3740542,-0.383067 0,-14.749406 0,-14.7494054 0.3331086,-0.3228616 0.3331087,-0.3228616 16.3145921,0 16.314593,0 0.322861,0.3331086 0.322862,0.3331086 0,14.7481714 0,14.74817 -0.383066,0.374055 -0.383067,0.374054 -16.213441,0 -16.213443,0 -0.3740542,-0.383066 z m 31.4694872,-1.711421 1.188447,-1.185351 0,-12.222844 0,-12.2228439 -1.134774,-1.1380022 -1.134774,-1.1380022 -13.788649,0 -13.7886497,0 -1.1380022,1.1347738 -1.1380022,1.1347739 0,12.2229766 0,12.222976 1.1853501,1.188447 1.1853502,1.188446 13.6876288,0 13.687629,0 1.188446,-1.18535 z"

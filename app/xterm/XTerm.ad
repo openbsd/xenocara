@@ -1,8 +1,8 @@
-! $XTermId: XTerm.ad,v 1.102 2016/12/22 02:07:39 tom Exp $
+! $XTermId: XTerm.ad,v 1.104 2020/09/15 21:08:00 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
-! Copyright 1996-2011,2016 by Thomas E. Dickey
+! Copyright 1996-2016,2020 by Thomas E. Dickey
 ! 
 !                         All Rights Reserved
 ! 
@@ -120,6 +120,9 @@
 *VT100.font5:		9x15
 *fontMenu*font6*Label:	Huge
 *VT100.font6:		10x20
+*fontMenu*font7*Label:	Enormous
+!*VT100.font7:		12x24
+*VT100.font7:		-adobe-courier-medium-r-normal--24-240-75-75-m-150-iso10646-1
 *fontMenu*fontescape*Label:	Escape Sequence
 *fontMenu*fontsel*Label:	Selection
 !fontescape and fontsel overridden by application
@@ -146,6 +149,13 @@
 *VT100.utf8Fonts.font4:	-misc-fixed-medium-r-normal--13-120-75-75-c-80-iso10646-1
 *VT100.utf8Fonts.font5:	-misc-fixed-medium-r-normal--18-120-100-100-c-90-iso10646-1
 *VT100.utf8Fonts.font6:	-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso10646-1
+
+! The default fixed font and font2-font6 are commonly aliased to iso106461 (Unicode)
+! with XXX glyphs, but 12x24 is usually just iso8859-1 (about 200 glyphs).
+! The adobe-courier is more commonly available than the b&h font.
+!*VT100.utf8Fonts.font7: -sony-fixed-medium-r-normal--24-170-100-100-c-120-iso8859-1
+*VT100.utf8Fonts.font7: -adobe-courier-medium-r-normal--24-240-75-75-m-150-iso10646-1
+!*VT100.utf8Fonts.font7: -b&h-lucidatypewriter-medium-r-normal-sans-24-240-75-75-m-140-iso10646-1
 
 *tekMenu.Label:  Tek Options
 *tekMenu*tektextlarge*Label:  Large Characters

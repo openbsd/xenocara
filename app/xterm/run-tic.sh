@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.11 2019/05/12 00:44:47 tom Exp $
+# $XTermId: run-tic.sh,v 1.12 2020/01/18 16:27:34 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2007,2019 by Thomas E. Dickey
+# Copyright 2006-2019,2020 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -36,6 +36,25 @@
 # messages for the extensions which are otherwise ignored by other versions of
 # tic.
 
+USE_NCURSES=20190609
+
+failed() {
+	echo "? $*" >&2
+	exit 1
+}
+
+need_ncurses() {
+	failed "This terminal description relies on ncurses 6.1 $USE_NCURSES"
+}
+
+use_ncurses6() {
+	VER=`infocmp6 -V 2>/dev/null`
+	test -n "$VER" && INFOCMP_PROG=infocmp6
+	VER=`tic6 -V 2>/dev/null`
+	test -n "$VER" && TIC_PROG=tic6
+	test -z "$VER" && need_ncurses
+}
+
 MYTEMP=`mktemp -d 2>/dev/null`
 if test -z "$MYTEMP"
 then
@@ -64,22 +83,21 @@ case "x$VER" in
 	# large numbers (used in xterm-direct) and large entries (an issue with
 	# xterm-nrc).
 	case "$VER" in
-	*\ [789].*|*\ 6.[123456789].*)
+	*\ [7-9].*|*\ 6.[1-9].20[12][0-9]*)
+		check=`echo "$VER" | sed -e 's/^.*\.//' -e 's/[^0-9].*$//'`
+		[ "$check" -lt "$USE_NCURSES" ] && use_ncurses6
 		;;
 	*)
 		# On systems with only ncurses 5, check for development version
 		# of ncurses.
-		VER=`infocmp6 -V 2>/dev/null`
-		test -n "$VER" && INFOCMP_PROG=infocmp6
-		VER=`tic6 -V 2>/dev/null`
-		test -n "$VER" && TIC_PROG=tic6
+		use_ncurses6
 		;;
 	esac
 	echo "** using tic from $VER"
 	# If this is 6.1.20180127 or later and using ABI 6, then it supports
 	# entries larger than 4096 bytes (up to 32768).
 	case "$VER" in
-	*\ [789].*|*\ 6.[123456789].*)
+	*\ [7-9].*|*\ 6.[1-9].20[12][0-9]*)
 		expect="	cols#100000,"
 		cat >$MYTEMP/fake.ti <<EOF
 fake|test 32-bit numbers,

@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.215 2019/11/16 14:48:19 tom Exp $ */
+/* $XTermId: trace.c,v 1.230 2020/12/25 15:15:37 tom Exp $ */
 
 /*
- * Copyright 1997-2018,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -89,37 +89,30 @@ TraceOpen(void)
     trace_out = trace_who;
 
     if (!trace_fp) {
+	static char dot[] = ".";
 	mode_t oldmask = umask(077);
-	char name[BUFSIZ];
-#if 0				/* usually I do not want unique names */
+	/*
+	 * Put the trace-file in user's home-directory if the current
+	 * directory is not writable.
+	 */
+	char *home = (access(dot, R_OK | W_OK) == 0) ? dot : getenv("HOME");
+	char *name = malloc(strlen(home) + strlen(trace_who) + 50);
+#if OPT_TRACE_UNIQUE		/* usually I do not want unique names */
 	int unique;
 	for (unique = 0;; ++unique) {
 	    if (unique)
-		sprintf(name, "Trace-%s.out-%d", trace_who, unique);
+		sprintf(name, "%s/Trace-%s.out-%d", home, trace_who, unique);
 	    else
-		sprintf(name, "Trace-%s.out", trace_who);
+		sprintf(name, "%s/Trace-%s.out", home, trace_who);
 	    if ((trace_fp = fopen(name, "r")) == 0) {
 		break;
 	    }
 	    fclose(trace_fp);
 	}
 #else
-	sprintf(name, "Trace-%s.out", trace_who);
+	sprintf(name, "%s/Trace-%s.out", home, trace_who);
 #endif
 	trace_fp = fopen(name, "w");
-	/*
-	 * Try to put the trace-file in user's home-directory if the current
-	 * directory is not writable.
-	 */
-	if (trace_fp == 0) {
-	    char *home = getenv("HOME");
-	    if (home != 0) {
-		sprintf(name, "%.*s/Trace-%.8s.out",
-			(BUFSIZ - 21), home,
-			trace_who);
-		trace_fp = fopen(name, "w");
-	    }
-	}
 	if (trace_fp != 0) {
 	    fprintf(trace_fp, "%s\n", xtermVersion());
 	    TraceIds(NULL, 0);
@@ -129,6 +122,7 @@ TraceOpen(void)
 	    exit(EXIT_FAILURE);
 	}
 	(void) umask(oldmask);
+	free(name);
     }
     return trace_fp;
 }
@@ -264,7 +258,7 @@ visibleScsCode(DECNRCM_codes chrset)
 	MAP("B", nrc_ASCII);
 	MAP("A", nrc_British);
 	MAP("A", nrc_British_Latin_1);
-	MAP("&4", nrc_Cyrillic);
+	MAP("&4", nrc_DEC_Cyrillic);
 	MAP("0", nrc_DEC_Spec_Graphic);
 	MAP("1", nrc_DEC_Alt_Chars);
 	MAP("2", nrc_DEC_Alt_Graphics);
@@ -286,6 +280,8 @@ visibleScsCode(DECNRCM_codes chrset)
 	MAP("%=", nrc_Hebrew);
 	MAP("H", nrc_ISO_Hebrew_Supp);
 	MAP("Y", nrc_Italian);
+	MAP("A", nrc_ISO_Latin_1_Supp);
+	MAP("B", nrc_ISO_Latin_2_Supp);
 	MAP("M", nrc_ISO_Latin_5_Supp);
 	MAP("L", nrc_ISO_Latin_Cyrillic);
 	MAP("`", nrc_Norwegian_Danish);
@@ -328,9 +324,8 @@ visibleChars(const Char *buf, unsigned len)
 		dst += strlen(dst);
 	    }
 	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
+    } else {
+	FreeAndNull(result);
 	used = 0;
     }
     return NonNull(result);
@@ -384,9 +379,8 @@ visibleIChars(const IChar *buf, unsigned len)
 		dst += strlen(dst);
 	    }
 	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
+    } else {
+	FreeAndNull(result);
 	used = 0;
     }
     return NonNull(result);
@@ -396,7 +390,7 @@ const char *
 visibleUChar(unsigned chr)
 {
     IChar buf[1];
-    buf[0] = chr;
+    buf[0] = (IChar) chr;
     return visibleIChars(buf, 1);
 }
 
@@ -438,6 +432,18 @@ visibleEventType(int type)
 	CASETYPE(ColormapNotify);
 	CASETYPE(ClientMessage);
 	CASETYPE(MappingNotify);
+    }
+    return result;
+}
+
+const char *
+visibleMappingMode(int code)
+{
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(MappingModifier);
+	CASETYPE(MappingKeyboard);
+	CASETYPE(MappingPointer);
     }
     return result;
 }
@@ -790,14 +796,17 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
     case ButtonPress:
 	/* FALLTHRU */
     case ButtonRelease:
-	TRACE((" button %u %s",
+	TRACE((" button %u state %#x %s",
 	       ev->xbutton.button,
+	       ev->xbutton.state,
 	       formatEventMask(mask_buffer, ev->xbutton.state, True)));
 	break;
     case MotionNotify:
-	TRACE((" (%d,%d)",
+	TRACE((" (%d,%d) state %#x %s",
 	       ev->xmotion.y_root,
-	       ev->xmotion.x_root));
+	       ev->xmotion.x_root,
+	       ev->xmotion.state,
+	       formatEventMask(mask_buffer, ev->xmotion.state, True)));
 	break;
     case EnterNotify:
     case LeaveNotify:
@@ -842,6 +851,19 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xconfigure.border_width,
 	       ev->xconfigure.above));
 	break;
+    case CreateNotify:
+	TRACE((" at %d,%d size %dx%d bd %d",
+	       ev->xcreatewindow.y,
+	       ev->xcreatewindow.x,
+	       ev->xcreatewindow.height,
+	       ev->xcreatewindow.width,
+	       ev->xcreatewindow.border_width));
+	break;
+    case ResizeRequest:
+	TRACE((" size %dx%d",
+	       ev->xresizerequest.height,
+	       ev->xresizerequest.width));
+	break;
     case PropertyNotify:
 	TRACE((" %s %s",
 	       TraceAtomName(XtDisplay(toplevel), ev->xproperty.atom),
@@ -860,8 +882,59 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xexpose.width,
 	       ev->xexpose.count));
 	break;
+    case MappingNotify:
+	TRACE((" %s first_keycode %d count %d",
+	       visibleMappingMode(ev->xmapping.request),
+	       ev->xmapping.first_keycode,
+	       ev->xmapping.count));
+	break;
+    case VisibilityNotify:
+	TRACE((" state %d",
+	       ev->xvisibility.state));
+	break;
+    case KeymapNotify:
+	{
+	    Cardinal j;
+	    for (j = 0; j < XtNumber(ev->xkeymap.key_vector); ++j) {
+		if (ev->xkeymap.key_vector[j] != 0) {
+		    Cardinal k;
+		    for (k = 0; k < 8; ++k) {
+			if (ev->xkeymap.key_vector[j] & (1 << k)) {
+			    TRACE((" key%u", (j * 8) + k));
+			}
+		    }
+		}
+	    }
+	}
+	break;
+    case NoExpose:
+	TRACE((" send_event:%d display %p major:%d minor:%d",
+	       ev->xnoexpose.send_event,
+	       (void *) ev->xnoexpose.display,
+	       ev->xnoexpose.major_code,
+	       ev->xnoexpose.minor_code));
+	break;
+    case SelectionClear:
+	TRACE((" selection:%s",
+	       TraceAtomName(ev->xselectionclear.display,
+			     ev->xselectionclear.selection)));
+	break;
+    case SelectionRequest:
+	TRACE((" owner:%#lx requestor:%#lx",
+	       ev->xselectionrequest.owner,
+	       ev->xselectionrequest.requestor));
+	TRACE((" selection:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.selection)));
+	TRACE((" target:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.target)));
+	TRACE((" property:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.property)));
+	break;
     default:
-	TRACE(("FIXME\n"));
+	TRACE((":FIXME"));
 	break;
     }
     TRACE(("\n"));
@@ -1063,17 +1136,6 @@ TraceWMSizeHints(XtermWidget xw)
     xw->hints = sizehints;
 }
 
-/*
- * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
- * our own error-handler.
- */
-/* ARGSUSED */
-static int
-no_error(Display *dpy GCC_UNUSED, XErrorEvent *event GCC_UNUSED)
-{
-    return 1;
-}
-
 const char *
 ModifierName(unsigned modifier)
 {
@@ -1101,7 +1163,7 @@ void
 TraceTranslations(const char *name, Widget w)
 {
     String result;
-    XErrorHandler save = XSetErrorHandler(no_error);
+    XErrorHandler save = XSetErrorHandler(ignore_x11_error);
     XtTranslations xlations;
     Widget xcelerat;
 

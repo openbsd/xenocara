@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2018,2019 by Thomas E. Dickey                              *
+ * Copyright 1997-2019,2020 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,15 +30,13 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2132 2019/11/18 01:50:54 tom Exp $
+  $XTermId: xterm.log.html,v 1.2289 2020/12/26 15:38:13 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-
 <html>
 <head>
   <meta name="generator" content=
-  "HTML Tidy for HTML5 for Linux version 5.2.0">
-
+  "HTML Tidy for HTML5 for Linux version 5.6.0">
   <title>XTERM - Change Log</title>
   <link rel="author" href="mailto:dickey@invisible-island.net">
   <meta http-equiv="Content-Type" content=
@@ -49,11 +47,10 @@
   <link rel="SHORTCUT ICON" href="/img/icons/xterm.ico" type=
   "image/x-icon">
 </head>
-
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2018,2019 by <a href=
+  <p>Copyright &copy; 1997-2019,2020 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -73,6 +70,30 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_363">Patch #363 - 2020/12/26</a></li>
+
+    <li><a href="#xterm_362">Patch #362 - 2020/11/11</a></li>
+
+    <li><a href="#xterm_361">Patch #361 - 2020/10/14</a></li>
+
+    <li><a href="#xterm_360">Patch #360 - 2020/09/20</a></li>
+
+    <li><a href="#xterm_359">Patch #359 - 2020/08/17</a></li>
+
+    <li><a href="#xterm_358">Patch #358 - 2020/07/12</a></li>
+
+    <li><a href="#xterm_357">Patch #357 - 2020/07/05</a></li>
+
+    <li><a href="#xterm_356">Patch #356 - 2020/05/02</a></li>
+
+    <li><a href="#xterm_355">Patch #355 - 2020/05/01</a></li>
+
+    <li><a href="#xterm_354">Patch #354 - 2020/04/26</a></li>
+
+    <li><a href="#xterm_353">Patch #353 - 2020/02/01</a></li>
+
+    <li><a href="#xterm_352">Patch #352 - 2020/01/16</a></li>
+
     <li><a href="#xterm_351">Patch #351 - 2019/11/17</a></li>
 
     <li><a href="#xterm_350">Patch #350 - 2019/11/02</a></li>
@@ -983,6 +1004,586 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_363" id="xterm_363">Patch #363 -
+  2020/12/26</a></h1>
+
+  <ul>
+    <li>disable groff hyphenation in generated html when using
+    man2html.</li>
+
+    <li>change SCS &ldquo;<code>&amp;4</code>&rdquo; Cyrillic to
+    non-NRCS, per VT520 manual.</li>
+
+    <li>amend fix for SCS in <a href="#xterm_198">patch #198</a> to
+    remove <code>DEL</code> rather than converting it to a space
+    (report by Thomas Wolff).</li>
+
+    <li>modify state transitions for selecting character sets to
+    eliminate an ambiguity between the &ldquo;A&rdquo; used in
+    VT220 versus VT320.</li>
+
+    <li>improve error recovery when selecting characters by
+    resetting to US ASCII when no suitable encoding is found, e.g.,
+    attempting to use an NRCS sequence when NRCS is not
+    enabled.</li>
+
+    <li>turn off hyphenation in &ldquo;<code>.txt</code>&rdquo;
+    conversion, prompted by groff changes.</li>
+
+    <li>add VT5xx ISO Latin-2 (prompted by discussion with Thomas
+    Wolff).</li>
+
+    <li>amend change from <a href="#xterm_361">patch #361</a> to
+    event-handling in <code>CopyWait</code> to handle active-icon
+    as a special case (Debian #975687).</li>
+
+    <li>add call to <code>loadColorTable</code> to get the visual
+    information needed to decode BE RGBA32 color format (patch by
+    Leandro Lupori).</li>
+
+    <li>modify the resource-parsing for
+    <code>disallowedPasteControls</code> and similar lists of
+    names/numbers to recognize &ldquo;~;&rdquo; (tilde) for
+    cancelling a given name/number.</li>
+
+    <li>add ENQ, EOT and NUL to default for
+    <code>disallowedPasteControls</code>.</li>
+
+    <li>change default for <code>disallowedPasteControls</code> to
+    omit the tab character (suggested by Harald Dunkel).</li>
+
+    <li>fix swapped height/width in <code>regisScreenSize</code>
+    and <code>maxGraphicSize</code> resources using "auto" value,
+    from <a href="#xterm_314">patch #314</a> (report by Anton
+    Lavrentiev)</li>
+
+    <li>revise <a href="#xterm_362">patch #362</a> change for
+    shift-modifier versus mouse protocol and select/paste by adding
+    resource <code>shiftEscape</code>, which can be enabled via a
+    control sequence (prompted by discussion with Matthijs van
+    Duin).</li>
+
+    <li>simplify/improve ifdef in trace code for using a separate
+    set of files for each run of xterm.</li>
+
+    <li>add options <code>-r</code> and <code>-t</code> to
+    <code>vttests/query-color.pl</code> to show the 6-digit RGB
+    code and actual colors.</li>
+
+    <li>add <code>nel</code> to <code>xterm-basic</code>
+    terminfo.</li>
+
+    <li>alter <code>vttests/modify-keys.pl</code> to omit HTML
+    reference links to the modified-keys table where no keycode was
+    available.</li>
+  </ul>
+
+  <h1><a name="xterm_362" id="xterm_362">Patch #362 -
+  2020/11/11</a></h1>
+
+  <ul>
+    <li>cleanup of calls to <code>free</code>, removing checks for
+    null (Walter Harms).</li>
+
+    <li>improved mouse-button reporting (prompted by discussion
+    with Stephane Chazelas)
+      <ul>
+        <li>narrow the scope of the change for shift-key in
+        <a href="#xterm_361">patch #361</a> to make it apply only
+        when the <code>modifyOtherKeys</code> resource is set to 2
+        (i.e., &ldquo;program mode&rdquo;). Also, when checking the
+        shift-key, ignore modifiers other than shift, control and
+        &ldquo;meta&rdquo;</li>
+
+        <li>use the alt/meta modifier information obtained in
+        <code>VTInitModifiers</code> to replace a hard-coded
+        <em>mod1</em> used to detect &ldquo;Meta&rdquo; for
+        mouse-button responses.</li>
+      </ul>
+    </li>
+
+    <li>reduce <code>SIGWINCH</code>'s sent to the client by
+    filtering out duplicates.</li>
+
+    <li>improve display when <code>scaleHeight</code> is greater
+    than 1:
+      <ul>
+        <li>the text-cursor is vertically-centered on the current
+        line, rather than only extending below the current line
+        (report by Manu Chaturvedi).</li>
+
+        <li>the built-in line-drawing characters extend to the
+        scaled cell-height.</li>
+      </ul>
+    </li>
+
+    <li>fill-in special case for motion-events to match the changes
+    for shift-key in pointer-button events from <a href=
+    "#xterm_361">patch #361</a>.</li>
+  </ul>
+
+  <h1><a name="xterm_361" id="xterm_361">Patch #361 -
+  2020/10/14</a></h1>
+
+  <ul>
+    <li>treat the return value of <code>strerror</code> as readonly
+    (patch by Philipp Klaus Krause).</li>
+
+    <li>modify event-handling in <code>CopyWait</code> to work
+    around hanging while writing large amounts of text to an active
+    icon and at the same time iconifying/deiconifying (report by
+    Dave Kemper).</li>
+
+    <li>initialize double-buffer for active-icon window.</li>
+
+    <li>improve manual page description of scrollbar resources
+    (report by Brian Lindholm).</li>
+
+    <li>correct ifdef for menu entry for active-icon, when
+    initializing it with toolbar configuration.</li>
+
+    <li>add preprocessor option to makefile to set internal
+    definition of pixmaps directory to match the
+    install-configuration (FreeBSD #250036).</li>
+
+    <li>cleanup of calls to <code>free</code>, removing checks for
+    null (Walter Harms).</li>
+
+    <li>add fallback actions <code>pointer-button</code> and
+    <code>pointer-motion</code> which handle events for the mouse
+    control-sequences protocol if the <em>select</em>-related
+    translations are omitted with
+    <code>*omitTranslation:select</code> (prompted by discussion
+    with "Ergus")</li>
+
+    <li>amend rule for using shift-key to override mouse-protocol
+    for select/paste to limit that feature to mouse-buttons which
+    are actually bound to select/paste actions (prompted by
+    discussion with "Ergus").</li>
+
+    <li>corrected mapping in special case for repainting wrap-marks
+    when viewing the scrollback area.</li>
+
+    <li>use separate <em>GCs</em> for <code>showWrapMarks</code>
+    feature, to work around cursor coloring change in <a href=
+    "#xterm_345">patch #345</a> (report by Paulo Silva de
+    Al&iacute;bano).</li>
+  </ul>
+
+  <h1><a name="xterm_360" id="xterm_360">Patch #360 -
+  2020/09/20</a></h1>
+
+  <ul>
+    <li>mention <code>decGraphicsID</code> in
+    <code>ctlseqs.ms</code> (suggested by Thomas Wolff).</li>
+
+    <li>modify pixel-coordinate mouse reponse to use as origin the
+    VT100-window rather than the underlying widget, which includes
+    the scrollbar (report by Thomas Wolff).</li>
+
+    <li>add configure option <code>--disable-print-graphics</code>
+    (Ross Combs).</li>
+
+    <li>add <code>test_ptydata</code> to &ldquo;make check&rdquo;
+    rule.</li>
+
+    <li>minor fixes for <code>ctlseqs.ms</code> (report by
+    Jean-Marc Bourguet).</li>
+
+    <li>minor fixes for manpage style (report/patch by
+    "a1346054").</li>
+
+    <li>correct cleanup from switch between italics/normal font in
+    the show/hide cursor functions (report/testcase by Peter
+    Fabinski).</li>
+
+    <li>integrated patch by Ross Combs:
+      <ul>
+        <li>internal renaming of GraphicsID symbols, for
+        readability.</li>
+
+        <li>adjust logic for VT125, treating it as a ReGIS
+        terminal.</li>
+      </ul>
+    </li>
+
+    <li>update configure macros, for compiler-warning fixes.</li>
+
+    <li>integrated patch by Ross Combs:
+      <ul>
+        <li>add control sequence modes for graphics printing.</li>
+
+        <li>improve conversion to bitmaps for TrueType fonts in
+        ReGIS</li>
+
+        <li>add <code>font7</code> resource, for an
+        &ldquo;enormous&rdquo; bitmap font.</li>
+
+        <li>do not reset graphics in a soft-reset.</li>
+
+        <li>add <code>pointerFont</code> resource, and
+        <code>-pf</code> command-line option.</li>
+      </ul>
+    </li>
+
+    <li>improve typography of manual page (patch by Branden
+    Robinson).</li>
+
+    <li>amend <a href="#xterm_359">patch #359</a> change to
+    <code>df-install.in</code> to ignore a command-line assignment
+    to <code>DESTDIR</code> if followed by an explicit
+    <code>--dir</code> (report by Sven Joachim).</li>
+  </ul>
+
+  <h1><a name="xterm_359" id="xterm_359">Patch #359 -
+  2020/08/17</a></h1>
+
+  <ul>
+    <li>add special case in <code>WriteText</code> to allow colors
+    8-15 to override <code>colorBDMode</code> (patch by Ingo
+    Br&uuml;ckl).</li>
+
+    <li>add <code>utf8Weblike</code> resource, to provide an
+    alternate scheme for handling ill-formed UTF-8 sequences
+    (adapted from patch by Dan Gohman).</li>
+
+    <li>improve computation for the number of lines needed to
+    scroll-up a SIXEL graphic (report/patch by Ben Wong).</li>
+
+    <li>correct manpage description for default value of
+    <code>disallowWindowOps</code> from changes in <a href=
+    "#xterm_331">xterm #331</a> (patch by Ben Wong).</li>
+
+    <li>correct a loop starting-point in
+    <code>refresh_graphics</code> from optimization in <a href=
+    "#xterm_358">patch #358</a> changes (report by Ben Wong).</li>
+
+    <li>add a new mouse mode 1016, which uses the same format as
+    mode 1006, but sends the mouse's position in pixels (suggested
+    by Igor van den Hoven).</li>
+
+    <li>fix an issue from <a href="#xterm_338">patch #338</a>
+    changes where only the first selection buffer specified in the
+    request would be updated using OSC 52 (patch by Michael
+    Gulick).</li>
+
+    <li>modify makefile/scripts to allow <code>DESTDIR</code> to
+    prefix the target directory for desktop-file-install (report by
+    Fred Heitkamp).</li>
+
+    <li>enable SIXEL feature by default.</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_358" id="xterm_358">Patch #358 -
+  2020/07/12</a></h1>
+
+  <ul>
+    <li>correct logic for decodeTerminalID changes in <a href=
+    "#xterm_357">patch #357</a> (report by "Chartreuse").</li>
+
+    <li>modify makefile to use <code>plink.sh</code> when linking
+    test-programs, to fix build when using pcre (report by H Merijn
+    Brand)</li>
+
+    <li>build-fix for test_ptydata program (patch by H Merijn
+    Brand)</li>
+  </ul>
+
+  <h1><a name="xterm_357" id="xterm_357">Patch #357 -
+  2020/07/05</a></h1>
+
+  <ul>
+    <li>several minor optimizations for the ReGIS and SIXEL
+    features, improving performance by 10%.</li>
+
+    <li>add resource <code>decGraphicsID</code> to allow displaying
+    graphics when the emulation level would ordinarily disallow
+    this (prompted by discussion with Thomas Wolff).</li>
+
+    <li>add control sequences for fast switching of color palettes:
+    <code>XTPUSHCOLORS</code>, <code>XTPOPCOLORS</code>,
+    <code>XTREPORTCOLORS</code></li>
+
+    <li>amend change for soft-hyphen from <a href=
+    "#xterm_328">patch #328</a> to avoid stripping
+    replacement-characters which would be shown with malformed or
+    overlong UTF-8 input.</li>
+
+    <li>corrected an error-handling case in
+    <code>decodeUtf8</code>, matching a similar fix in <a href=
+    "#xterm_268">patch #268</a> (report/patch by Dan Gohman).</li>
+
+    <li>add a test-driver for <code>ptydata.c</code></li>
+
+    <li>minor cleanup of macros (adapted from patch by Walter
+    Harms).</li>
+
+    <li>fix some errata in <code>ctlseqs.ms</code> (report by
+    Thomas Wolff).</li>
+
+    <li>allow immediate repaint-on-palette-changed if
+    double-buffering is enabled.</li>
+
+    <li>deprecate codes 10/11 in sgr push controls, changing those
+    to 30/31, to avoid confusion with sgr 10-19.</li>
+
+    <li>modify <code>SGR</code> parameter handling to stop if an
+    unrecognized parameter is encountered, to guard against
+    malformed or nonstandard sequences (report by Bram
+    Moolenaar).</li>
+
+    <li>modify <code>DECERA</code> color for consistency with other
+    erasures/clearing (report by Thomas Wolff).</li>
+
+    <li><code>ECH</code> should not be masked by
+    <code>DECSCA</code> (report by Thomas Wolff).</li>
+
+    <li>extend <code>DECFRA</code> and <code>REP</code> to accept
+    any &ldquo;graphic&rdquo; character rather than just Latin1,
+    etc. (report by Thomas Wolff).</li>
+
+    <li>add <code>-C</code> option to 256colors2.pl and
+    88colors2.pl, to demonstrate mixed semicolon/colon separators
+    which are implied by ECMA-48.</li>
+
+    <li>update sample terminfo to reflect the documentation
+    improvements.</li>
+
+    <li>update description of 88/256/direct color in
+    <code>ctlseqs.ms</code> to point out that using semicolons is a
+    deprecated legacy feature, and standard terminal applications
+    should use colons (prompted by discussion with Bram
+    Moolenaar).</li>
+
+    <li>modify configure-check for <code>tgetent</code> to
+    conditionally include <code>termcap.h</code>, enabling
+    configuration using <code>clang</code>'s pedantic-errors option
+    (report by Dennis Clarke). See <a href=
+    "https://invisible-island.net/ncurses/man/curs_termcap.3x.html#h3-Other-Compatibility">
+    <em>Other Compatibility</em></a> in ncurses'
+    <em>curs_termcap(3X)</em>.</li>
+
+    <li>remove some unnecessary pointer checks (patch by Walter
+    Harms).</li>
+
+    <li>accept terminal-id and add DA response for VT131,
+    VT132.</li>
+  </ul>
+
+  <h1><a name="xterm_356" id="xterm_356">Patch #356 -
+  2020/05/02</a></h1>
+
+  <ul>
+    <li>revise fix for Debian #954730, which interfered with wheel
+    mouse events (report by Gabriele Balducci).</li>
+  </ul>
+
+  <h1><a name="xterm_355" id="xterm_355">Patch #355 -
+  2020/05/01</a></h1>
+
+  <ul>
+    <li>revise fix for Debian #954730, which interfered with wheel
+    mouse events (report by Henri Menke).</li>
+
+    <li>fix typos in documentation (reports by Stephen Hurd, Stefan
+    Assmann).</li>
+
+    <li>add mapping for <code>decTerminalID</code> for
+    &ldquo;100&rdquo; overlooked in <a href="#xterm_354">patch
+    #354</a>.</li>
+
+    <li>update tables in wcwidth.c based on Unicode 13.0.0</li>
+
+    <li>build-fix for &ldquo;make check&rdquo; when building
+    out-of-tree (report by Sven Joachim).</li>
+  </ul>
+
+  <h1><a name="xterm_354" id="xterm_354">Patch #354 -
+  2020/04/26</a></h1>
+
+  <ul>
+    <li>work around performance problems of
+    <code>XDrawImageString</code> and
+    <code>XDrawImageString16</code> functions (Debian
+    #954845).</li>
+
+    <li>add a control sequence which reports xterm's version (patch
+    by Nicholas Marriott, mintty #881).</li>
+
+    <li>temporarily set numeric locale category to "C" when parsing
+    resources, so that <code>scaleHeight</code> and
+    <code>faceSize</code> settings do not depend on locale (Debian
+    #820803).</li>
+
+    <li>improve DA/DA2 response by ensuring that the
+    <code>decTerminalID</code> maps to one of the known
+    identifiers, as well as providing DA2 response for VT241 and
+    VT382.</li>
+
+    <li>terminfo improvements:
+      <ul>
+        <li>add (my) comments from ncurses which explain the keypad
+        layouts.</li>
+
+        <li>add <code>vt52+keypad</code> from ncurses</li>
+
+        <li>use improved <code>xm</code> example for
+        <code>xterm+x11mouse</code>, <code>xterm+sm+1006</code>
+        from ncurses 6.2 terminfo.src</li>
+      </ul>
+    </li>
+
+    <li>two fixes for left/right wheel mouse event reporting
+    (Debian #954730):
+      <ul>
+        <li>filter identical button-events</li>
+
+        <li>correct order of button-range versus protocol type (see
+        <a href="#xterm_345">patch #345</a>)</li>
+      </ul>
+    </li>
+
+    <li>change &ldquo;make check&rdquo; makefile-rule to use
+    test-drivers for charclass and wcwidth data.</li>
+
+    <li>quiet &ldquo;did not find a usable <em>xxx</em> TrueType
+    font&rdquo; warnings by making <code>fontWarnings</code> apply
+    to these messages (report by Jim Rees).</li>
+
+    <li>improve reinitialization of parameter list (report/testcase
+    by James Holderness).</li>
+
+    <li>temporarily set numeric locale category to "C" when
+    formatting SVG or XHTML screendumps, to make the radix
+    separator used in RGB values consistent (adapted from patch by
+    George Kouryachy).</li>
+
+    <li>add resource <code>forceXftHeight</code> to control whether
+    workaround from Debian #880407 is used.</li>
+
+    <li>apply updated ascent/descent in workaround from Debian
+    #880407 to fix a 1-pixel gap in built-in vertical lines
+    (report/testcase by Stefan Assmann).</li>
+
+    <li>improve round-off of scaling for built-in line-drawing
+    (prompted by discussion with Stefan Assmann).</li>
+
+    <li>adjust fonts in svg-icon files to accommodate reduced
+    functionality of new pango (report/analysis by YOKOTA
+    Hiroshi).</li>
+
+    <li>improve configure check for X Toolkit library.</li>
+
+    <li>correct Y-coordinate transformation in
+    <code>ClearCurBackground</code>, overlooked in changes for
+    <a href="#xterm_334">patch #334</a> (report/analysis by Chuck
+    Silvers).</li>
+
+    <li>remove <code>--vendor</code> option from test-packages'
+    install of desktop files; the feature is badly broken in
+    <em>gnome-shell</em>.</li>
+
+    <li>modify <code>uxterm</code> to make it possible to select
+    nonstandard locale <em>C.UTF-8</em>, e.g, if the user's locale
+    is set to &ldquo;C&rdquo; (Debian #940626).</li>
+
+    <li>re-save/tweak &ldquo;.svg&rdquo; icon-files to work around
+    breakage in toolset since the files were created in <a href=
+    "#xterm_283">patch #283</a>.</li>
+  </ul>
+
+  <h1><a name="xterm_353" id="xterm_353">Patch #353 -
+  2020/02/01</a></h1>
+
+  <ul>
+    <li>amend change in <a href="#xterm_352">patch #352</a> for
+    button-events to fix a case where some followup events were not
+    processed soon enough (report/patch by Jimmy Aguilar
+    Mena).</li>
+
+    <li>handle <em>MappingNotify</em> X event, to improve recovery
+    when switching keyboard configurations using
+    <code>xkbcomp</code> (prompted by discussion with Frank Mosch,
+    Debian #661295). There is more work needed here, possibly in
+    the X libraries.</li>
+
+    <li>improve discussion of mouse-mode in <code>ctlseqs.ms</code>
+    (suggested by Igor van den Hoven).</li>
+
+    <li>further improve checks for Xft <em>max-advance-width</em>
+    to take into account fonts which use two cells for ambiguous
+    width characters. Also improve the time used for these checks
+    (reports by Yuri Pankov, Frank Mosch).</li>
+
+    <li>fix a few spelling errors reported by codespell (report by
+    Jens Schleusener).</li>
+
+    <li>modify <code>run-tic.sh</code> to prefer development
+    version of ncurses since changes to terminfo file in <a href=
+    "#xterm_345">patch #345</a> rely upon bug-fixes in ncurses
+    (prompted by discussion with Will Senn).</li>
+  </ul>
+
+  <h1><a name="xterm_352" id="xterm_352">Patch #352 -
+  2020/01/16</a></h1>
+
+  <ul>
+    <li>adjust fontsize data to handle a minor inconsistency from
+    recent Xft versions (Debian #880407, adapted from patch by
+    Vincent Lef&egrave;vre).</li>
+
+    <li>add a table to the manual page description of
+    <code>forceBoxChars</code> to alert the reader to the special
+    characters aside from &ldquo;line-drawing&rdquo; which are
+    drawn directly when this resource is set (Debian #931305).</li>
+
+    <li>improve <code>checkXft</code> logic which attempts to
+    detect fonts whose <em>max-advance-width</em> is inconsistent
+    with the actual glyph widths. For some fonts, it is necessary
+    to check additional characters (report/analysis by Jan
+    Engelhardt).</li>
+
+    <li>improve configure-checks for X headers and libraries on
+    recent MacOS, which has moved those files under
+    <code>/usr/X11</code>.</li>
+
+    <li>improve portability of iconify/deiconify feature by taking
+    into account some window managers which manipulate the EWMH
+    <code>_NET_WM_STATE</code> property, adding/removing
+    <code>_NET_WM_STATE_HIDDEN</code> rather than actually
+    <em>minimizing</em> the window (prompted by discussion with
+    J&ouml;rg Breitbart).</li>
+
+    <li>improve workaround from <a href="#xterm_287">patch #287</a>
+    for the <code>-iconic</code> option when configured with
+    toolbar by postponing the extra request for minimizing the
+    window to the end of menu-initialization.</li>
+
+    <li>modify <code>xevents</code> special-case for mouse-events
+    to include button-events so that the meta key by itself can
+    generate button-events (report/analysis by Mattias
+    Engdeg&aring;rd).</li>
+
+    <li>amend SGR-stack change from <a href="#xterm_348">patch
+    #348</a> to not associate bold attribute with background color
+    (report by Nicholas Marriott).</li>
+
+    <li>fix copy/paste error in manual page (patch by Larry
+    Hynes).</li>
+
+    <li>add definitions in <code>xterm_io.h</code> so that GNU/Hurd
+    will use <code>posix_openpty</code> (patch by Samuel
+    Thibault).</li>
+
+    <li>build-fix in debug-tracing, for <code>esctest</code>.</li>
+
+    <li>updated autoconf macros</li>
+
+    <li>update config.guess</li>
+  </ul>
+
   <h1><a name="xterm_351" id="xterm_351">Patch #351 -
   2019/11/17</a></h1>
 
@@ -995,7 +1596,6 @@
     <li>add <code>-report-icons</code> to help-message.</li>
 
     <li>improved autoconf macros:
-
       <ul>
         <li><code>CF_ADD_LIBS</code>: the change to filter out
         duplicates caused this to append rather than prepend.
@@ -1020,7 +1620,7 @@
     struct-notify event handler to prevent recursion in the
     Xft+buffered workaround in some cases when doing manual
     resizing rather than resizing via escape sequences (reports by
-    Stefan Assman, Mike Thornburg).</li>
+    Stefan Assmann, Mike Thornburg).</li>
 
     <li>amend the workaround for Xft+buffered blanking by moving
     the switch to bitmap-fonts to account for differences in font
@@ -1100,7 +1700,6 @@
     <li>document window properties in the manual page.</li>
 
     <li>improve title-string feature:
-
       <ul>
         <li>if any of <code>allowC1Printable</code>,
         <code>utf8Title</code> or <code>titleModes</code> hint that
@@ -1256,7 +1855,6 @@
     <li>two fixes for the double-buffer configuration, prompted by
     MacPorts' switch to double-buffering (patch by Mike Thornburg,
     MacPorts #58313):
-
       <ul>
         <li>ensure that the needSwap flag is set after drawing
         TrueType text</li>
@@ -1278,8 +1876,8 @@
 
     <li>reset flags including wraparound and reverse-wrap when
     switching to VT52 mode, while noting that DEC's standard
-    documention leaves that behavior <em>undefined</em> (report by
-    Thomas Wolff).</li>
+    documentation leaves that behavior <em>undefined</em> (report
+    by Thomas Wolff).</li>
 
     <li>ensure that italic font is turned off on hard/soft resets
     (report by Martin Hostettler).</li>
@@ -1422,7 +2020,6 @@
     P Wall).</li>
 
     <li>modified configure script:
-
       <ul>
         <li>check/workaround for non-POSIX manipulation of
         predefined symbols</li>
@@ -1480,7 +2077,6 @@
       #940</a>). The <a href=
       "https://developer.gnome.org/gio/stable/gio-Desktop-file-based-GAppInfo.html#g-desktop-app-info-search">
       documentation</a> reads:
-
       <blockquote>
         <p>Searches desktop files for ones that match
         <em><code>search_string</code></em>.</p>
@@ -1649,7 +2245,6 @@
     is set to a non-directory value.</li>
 
     <li>updated configure macros:
-
       <ul>
         <li><code>CF_WITH_PCRE2</code>, modified to work with
         Debian's (mis-numbered) pcre3 package.</li>
@@ -1761,7 +2356,6 @@
     xterm at a given time (Debian #901249).</li>
 
     <li>documentation fixes (report by Lars Krueger):
-
       <ul>
         <li>document <code>SL</code> and <code>SR</code>.</li>
 
@@ -1779,7 +2373,6 @@
 
     <li>several fixes for parsing/state (report/testcases by Martin
     Hostettler):
-
       <ul>
         <li>remove an old/unimplemented entry for xterm-title from
         state table.</li>
@@ -2080,7 +2673,6 @@
 
     <li>fixes prompted by review of George Nachman's
     <code>esctest</code> script:
-
       <ul>
         <li>add a null-pointer check and a limit-check in
         <code>xtermCheckRect</code>.</li>
@@ -2147,7 +2739,6 @@
     <li>improve a special case where a non-Unicode font's
     line-drawing characters were not used, when specifying it via
     the <code>utf8Fonts</code> resource, e.g.,
-
       <blockquote>
         <pre>
         -fs 15 \
@@ -2257,7 +2848,6 @@
 
     <li>improve legacy/NRC character set mapping (patch by Thomas
     Wolff), e.g.,
-
       <ul>
         <li>enable alternate NRC set designators for French and
         French Canadian, &lsquo;9&rsquo; and &lsquo;f&rsquo;
@@ -2269,7 +2859,6 @@
         table to show capital delta.</li>
 
         <li>referring to
-
           <blockquote>
             <p><a href=
             "http://vt100.net/docs/vt220-rm/table2-3b.html">http://vt100.net/docs/vt220-rm/table2-3b.html</a><br>
@@ -2284,7 +2873,6 @@
         </li>
 
         <li>referring to
-
           <blockquote>
             <p><a href=
             "http://www.vt100.net/charsets/technical.html">http://www.vt100.net/charsets/technical.html</a></p>
@@ -2360,7 +2948,6 @@
 
   <ul>
     <li>updates for ReGIS (Ross Combs):
-
       <ul>
         <li>remove redundant text command error check which broke
         <code>T(B)</code> and <code>T(E)</code>.</li>
@@ -2439,7 +3026,6 @@
     (Debian #858304).</li>
 
     <li>updates for ReGIS (Ross Combs):
-
       <ul>
         <li>Strings specified with no command are used as
         "comments". Print these in the log when tracing.</li>
@@ -2499,7 +3085,6 @@
   <ul>
     <li>revise parser for <code>charClass</code> resource, making
     these improvements:
-
       <ul>
         <li>accept octal and hexadecimal values</li>
 
@@ -2535,7 +3120,6 @@
     (see <a href="#xterm_311">patch #311</a>).</li>
 
     <li>updates for ReGIS (Ross Combs):
-
       <ul>
         <li>the "H" option of the "T" command should multiply by
         10, not 20.</li>
@@ -2559,7 +3143,6 @@
     <code>smxx</code> and <code>rmxx</code>.</li>
 
     <li>fixes from J&ouml;rg Sommer:
-
       <ul>
         <li>corrected a trace-message regarding maximum
         graphics-size; it used the similar ReGIS maximum size which
@@ -2604,7 +3187,6 @@
 
     <li>review/cleanup resources which were not in the manual page
     (report by Maxwell Anselm):
-
       <ul>
         <li>add manual page description as needed.</li>
 
@@ -2635,7 +3217,6 @@
     ".desktop" files, including &ldquo;Terminal&rdquo;</li>
 
     <li>several minor improvements to font utility functions:
-
       <ul>
         <li>provide for later modification to implement font-sets
         by parsing the font resources as comma-separated
@@ -2717,7 +3298,6 @@
       sort in an order not expected by <em>fontconfig</em>, causing
       the request for a monospaced font to return <em>italics</em>,
       e.g.,
-
       <blockquote>
         <pre>
 $ fc-match 'Go Mono:spacing=monospace'
@@ -2859,7 +3439,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>fixed most <code>cppcheck --enable=all</code> warnings,
     including for style (prompted by report by David Binderman).
     There was one bug-fix:
-
       <ul>
         <li>RGB least-squares computation in
         <code>allocateClosestRGB</code> used only one ordinate</li>
@@ -2873,7 +3452,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     lifetime issue (Ross Combs).</li>
 
     <li>updates for SIXEL and ReGIS (Ross Combs):
-
       <ul>
         <li>Sixel drawing should still happen after an error if
         some commands have been processed</li>
@@ -3028,7 +3606,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>fix a few minor bugs found with Coverity.</li>
 
     <li>update pixelvector handling (Ross Combs):
-
       <ul>
         <li>split pixel-based and coord-based functions with common
         parts factored out to a "raw" function</li>
@@ -3202,7 +3779,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     William Bulley).</li>
 
     <li>fix/improve autoconf macros:
-
       <ul>
         <li>CF_WITH_APP_DEFAULTS, add paths for OSX</li>
 
@@ -3225,7 +3801,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     report).</li>
 
     <li>improve paste64 feature (report by Olaf Rogalsky)
-
       <ul>
         <li>fix &ldquo;<code>p</code>;&rdquo; command in
         <code>paste64.pl</code> example.</li>
@@ -3251,7 +3826,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>review and modify resource-settings which can be set via
     control sequences, etc:
-
       <ul>
         <li>add <code>OSC&nbsp;6</code>, to enable/disable colors
         set via <code>OSC&nbsp;5</code>, without changing the color
@@ -3273,7 +3847,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <code>-S</code> option value (report by Ben Longbons).</li>
 
     <li>improve ReGIS graphics initialization (Ross Combs):
-
       <ul>
         <li>add a new string resource to set the default ReGIS
         font.</li>
@@ -3327,7 +3900,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>fix some minor issues in manpage (Jens Schweikhardt).</li>
 
     <li>improve ReGIS font-handling (Ross Combs):
-
       <ul>
         <li>remove "random junk" generation for unknown
         characters</li>
@@ -3349,7 +3921,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     </li>
 
     <li>improve ReGIS colorspec conversion (Ross Combs):
-
       <ul>
         <li>avoid some floating point math for colorspace
         conversion</li>
@@ -3389,7 +3960,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>change the way that ReGIS graphics are refreshed (patch by
     Ross Combs):
-
       <ul>
         <li>it pre-composes any overlapping graphics to avoid
         unnecessary and flickering draws</li>
@@ -3565,7 +4135,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>fix memory leaks in bitmap font-name caching.</li>
 
     <li>other changes to hard-reset behavior:
-
       <ul>
         <li>reset keyboard-type on hard-reset.</li>
 
@@ -3605,7 +4174,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>minor reorganization to implement &ldquo;filler&rdquo; SGR
     features. There are no established applications which rely upon
     these; some people find them amusing.
-
       <ul>
         <li>separate bits used to manage drawing state from
         attribute-bits.</li>
@@ -3619,7 +4187,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     </li>
 
     <li>additional changes for ReGIS support (Ross Combs):
-
       <ul>
         <li>fix some arc drawing bugs and add support for pattern
         shading.</li>
@@ -3643,7 +4210,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>improve handling of the <code>fontsel</code>
     (font-selection) menu item:
-
       <ul>
         <li>initialize the menu entry differently if the toolbar
         configuration is used, i.e., enabling it without attempting
@@ -3669,7 +4235,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     by Matthieu Herrb).</li>
 
     <li>configure macro updates:
-
       <ul>
         <li>drop the <code>-no-gcc</code> option from
         CF_INTEL_COMPILER</li>
@@ -3683,7 +4248,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     cleanup storage usage in other modules.</li>
 
     <li>initial changes for ReGIS support (Ross Combs):
-
       <ul>
         <li>document control-sequences</li>
 
@@ -3898,7 +4462,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>review/extend <code>DECNRCM</code> support (prompted by
     report by Hayaki Saito asking about the two "A" codes).
-
       <ul>
         <li>make pasting of DECNRCM data work by translating the
         pasted data into the selected encoding.</li>
@@ -4121,7 +4684,8 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>revert of <a href="#xterm_282">patch #282</a> change was
     incomplete (report by Jim Reisert).</li>
 
-    <li>fix typo in manpage (report by Vincent Lefevre).</li>
+    <li>fix typo in manpage (report by Vincent
+    Lef&egrave;vre).</li>
   </ul>
 
   <h1><a name="xterm_289" id="xterm_289">Patch #289 -
@@ -4249,7 +4813,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>remove deprecated files: proto.h, os2main.c</li>
 
     <li>minor fixes based on Coverity scan, including:
-
       <ul>
         <li>correct caching of Atom value for the font menu's
         "Selection" entry.</li>
@@ -4286,7 +4849,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     whose detail is <code>NotifyPointer</code>, since those are
     sent in addition to focus-change events directed to the old/new
     windows having focus. In particular, this prevents the
-    urgency-hint from being reset inadvertantly (prompted by patch
+    urgency-hint from being reset inadvertently (prompted by patch
     by Balazs Kezes).</li>
 
     <li>modify description of <code>iconName</code> in manpage to
@@ -4378,7 +4941,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <code>Shell</code> widget (report by Emanuel Haupt).</li>
 
     <li>fix documentation errata reported by Miroslav Lichvar:
-
       <ul>
         <li>correct manpage default for <code>allowTcapOps</code>
         (see <a href="#xterm_243">patch #243</a></li>
@@ -4473,7 +5035,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>integrated patches from Arch Linux forum posting (patches
     by Balazs Kezes):
-
       <ul>
         <li>modify reallocation limit of line-data when resizing
         screen so that "lost" text will be restored if the screen
@@ -4739,7 +5300,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>fixes to improve vttest vt52 screen when running as a
     VT420:
-
       <ul>
         <li>add checks for some VT2xx and up controls for
         consistency: DECSCL, S1C8T, S1C7T.</li>
@@ -4841,7 +5401,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>add four new actions for making the selection or data
     directly copied from the screen (prompted by discussion in
     Debian #637001, as well as report by Arjen van Tol):
-
       <ul>
         <li>exec-formatted</li>
 
@@ -4886,7 +5445,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     honoring the option nor flagging an error.</li>
 
     <li>add SGR 1006, as a better technical solution than SGR 1015:
-
       <ul>
         <li>the responses will not be confused with line-deletion
         and scrolling controls.</li>
@@ -4916,7 +5474,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>add some changes for OpenBSD and MirBSD (adapted from patch
     by Thorsten Glaser):
-
       <ul>
         <li>disable search for non-Unix96 ptys.</li>
 
@@ -5150,7 +5707,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>append a timestamp to filename used in
     <code>printFileOnXError</code> feature, and restrict its
-    permissions (request by Vincent Lefevre).</li>
+    permissions (request by Vincent Lef&egrave;vre).</li>
 
     <li>add a check when cancelling cursor-blinking, in case the
     cursor is blinked off. Fix so that the cursor is repainted
@@ -5245,7 +5802,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     a bitmap font is not installed.</li>
 
     <li>improve behavior when there is no app-defaults file:
-
       <ul>
         <li>set the <code>toolBar</code> resource to false</li>
 
@@ -5319,7 +5875,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>add <code>omitTranslation</code> resource, which can be
     used to suppress the default translations for these features:
-
       <ul>
         <li>fullscreen</li>
 
@@ -5332,7 +5887,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     </li>
 
     <li>make the fullscreen feature configurable (Debian #612978)
-
       <ul>
         <li>add it to the configurable list
         <code>disallowedWindowOps</code>.</li>
@@ -5434,7 +5988,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     values.</li>
 
     <li>configure script improvements:
-
       <ul>
         <li>add workaround for removal of X11 dependency from Xt's
         package file (report by Robert Hooker).</li>
@@ -5472,7 +6025,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
   <ul>
     <li>fix a regression in fontname logic from <a href=
     "#xterm_263">patch #263</a> changes (Debian #600707, reported
-    by Vincent Lefevre).</li>
+    by Vincent Lef&egrave;vre).</li>
 
     <li>revert modification of any-event/any-button protocol from
     <a href="#xterm_263">patch #263</a> changes. It interferes with
@@ -5517,7 +6070,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     is hidden (Debian #594856).</li>
 
     <li>further extend initialization for active-icon font to check
-    if the font was not loaded succesfully, to retry with
+    if the font was not loaded successfully, to retry with
     <code>font1</code>, or as even (if TrueType fonts are used) to
     use a TrueType font. The retries are to help with cases as in
     <a href="#xterm_241">patch #241</a> where the bitmap fonts are
@@ -5588,7 +6141,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     data to the screen (Debian #584801).</li>
 
     <li>document in manpage some actions which were overlooked:
-
       <ul>
         <li>readline-button</li>
 
@@ -5697,7 +6249,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     "#xterm_249">249</a> (report by Thomas Wolff).</li>
 
     <li>improve configure script:
-
       <ul>
         <li>corrected check for <code>_XOPEN_SOURCE</code> for
         OpenSolaris.</li>
@@ -5816,7 +6367,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>improve font-setting/querying control
     (<code>OSC&nbsp;50</code>):
-
       <ul>
         <li>when TrueType font is selected, the TrueType
         <code>faceName</code> will be set, rather than the bitmap
@@ -6346,7 +6896,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     non-colored cell. This improves a special case where the cursor
     is on a blank cell which had foreground color scrolled in
     (report by Miroslav Lichvar).
-
       <p>Also add the same logic when hiding cursor, so the outline
       matches the in-focus cursor.</p>
     </li>
@@ -6537,7 +7086,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
   <ul>
     <li>add control sequences for some of the recent resource/menu
     settings:
-
       <ul>
         <li><code>altSendsEscape</code> (private mode 1039)</li>
 
@@ -6611,7 +7159,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>bug-fixes for bugs.opensolaris.org (patches from Alan
     Coopersmith)
-
       <dl>
         <dt>4029911</dt>
 
@@ -6757,7 +7304,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     fonts, to work with wide-characters (Debian #441354).</li>
 
     <li>fixes/improvements for double-size characters:
-
       <ul>
         <li>correct old clipping calculation which used total
         height of glyphs where ascent was needed.</li>
@@ -6835,7 +7381,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>synchronize terminfo with ncurses (report by Stephane
     Chazelas)
-
       <ul>
         <li>equate <code>xterm-xfree86</code> and
         <code>xterm-xf86-v44</code>.</li>
@@ -6906,7 +7451,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>correct index expression used to set line-wrapping flag,
     making selection from scrollback work consistently (Debian
-    #430121, report by Vincent Lefevre).</li>
+    #430121, report by Vincent Lef&egrave;vre).</li>
 
     <li>amend changes to handshake in <a href="#xterm_226">patch
     #226</a> to accommodate Solaris, which relies on the extra
@@ -7105,7 +7650,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>add "spawn-new-terminal" action, which can be assigned to
     key translation, allowing one to spawn a new copy of xterm
-    using the current process' working directory (adapted from
+    using the current process's working directory (adapted from
     patch by Daniel Colascione).</li>
 
     <li>improve select/paste between UTF-8 and Latin1 xterms by
@@ -7407,11 +7952,9 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     patch.</li>
 
     <li>several changes to terminfo:
-
       <ul>
         <li>incorporate some minor changes from ncurses to help
         keep these synchronized:
-
           <dl>
             <dt>2005-02-26</dt>
 
@@ -7643,7 +8186,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <code>_POSIX_C_SOURCE</code>, etc.</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>ifdef-out chmod of terminal device for OS/2 (XFree86
         #1663, Frank Giessler).</li>
@@ -8052,7 +8594,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     installed setuid or setgid (report by Jeremy C. Reed).</li>
 
     <li>patches from Emanuele Giaquinta:
-
       <ul>
         <li>ctlseqs.ms says that primary and secondary DA accept a
         nonzero parameter, which is incorrect. Also modify code to
@@ -8071,7 +8612,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     </li>
 
     <li>fixes for configure script:
-
       <ul>
         <li>add special case for QNX, defining _QNX_SOURCE.</li>
 
@@ -8095,7 +8635,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     around recent font server changes.</li>
 
     <li>fixes for Novell #113277:
-
       <ul>
         <li>specify weight for wide font which may be derived from
         normal fontname.</li>
@@ -9212,7 +9751,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
   <ul>
     <li>several fixes for rendering using Xft via option
     <code>-fa</code>:
-
       <ul>
         <li>translate Unicode values, i.e,. from UTF-8 output to
         xterm, for line-drawing to xterm's internal code, etc.,
@@ -9231,7 +9769,6 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     </li>
 
     <li>patches by Ilya Zakharevich:
-
       <ul>
         <li>improve drawXtermText() by making the recursive calls
         communicate through arguments, and not through
@@ -9315,7 +9852,6 @@ Klanderman).
     process-id rather than a random value.</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>Enable SCO function keys in xterm</li>
 
@@ -9575,7 +10111,6 @@ Klanderman).
   <ul>
     <li>fixes to make repainting of 256-color example work properly
     (reports by Abigail Brady and Scott A Crosby).
-
       <ul>
         <li>set flag in <code>AllocateAnsiColor()</code> to ensure
         the color is allocated once only.</li>
@@ -9608,7 +10143,6 @@ Klanderman).
 
     <li>fix a few problems with the <code>$TERMCAP</code> string
     generated by <code>resize</code>:
-
       <ul>
         <li>for Bourne shell, add an <code>export</code> command.
         This was missing as far back as X11R5.</li>
@@ -9673,7 +10207,6 @@ Klanderman).
     <li>update config.guess, config.sub</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>fix va_args glitches for xterm/libfontconfig: 0 ==
         (void*)0 isn't true for all platforms (Egbert Eich).</li>
@@ -9770,8 +10303,8 @@ Klanderman).
     <li>modify logic for <code>metaSendsEscape</code> to allow it
     to work in a setup where the Meta-key is not recognized as a
     modifier by the key-translations logic (discussion of
-    eightBitInput with H.J.Lu). Note however that Vincent Lefevre
-    reported this in January).</li>
+    eightBitInput with H.J.Lu). Note however that Vincent
+    Lef&egrave;vre reported this in January).</li>
 
     <li>use null pointer values consistently, rather than literal
     "0", for ending variable-length argument lists, e.g., for
@@ -9845,7 +10378,6 @@ Klanderman).
     resource (reported by Tony Finch).</li>
 
     <li>changes from OpenBSD:
-
       <ul>
         <li>Make xterm setgid utmp to be able to update utmp even
         with root privileges revoked.</li>
@@ -9856,7 +10388,6 @@ Klanderman).
     </li>
 
     <li>changes from NetBSD:
-
       <ul>
         <li>Check that the return value from ttyslot() is greater
         than 0 before writing the utmp file. Fixes w's "w: Stale
@@ -9905,7 +10436,7 @@ Klanderman).
   <ul>
     <li>correct a bug in selection: double clicking on a word which
     was partly scrolled off the screen may select that text (report
-    by Vincent Lefevre &lt;vincent@vinc17.org&gt;).</li>
+    by Vincent Lef&egrave;vre &lt;vincent@vinc17.org&gt;).</li>
 
     <li>implement <code>veryBoldColors</code> resource to control
     whether the corresponding video attribute such as
@@ -9958,7 +10489,6 @@ Klanderman).
     that case (fixes Debian #134130).</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>Fix some xterm build warnings on *BSD (patch by David
         Dawes).</li>
@@ -10016,7 +10546,6 @@ Klanderman).
     (David Krause &lt;xfree86@davidkrause.com&gt;).</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>update language of copyrights in some files to reflect
         the fact that they were reassigned from X Consortium to The
@@ -10069,7 +10598,7 @@ Klanderman).
     rules to define location of app-defaults directory (Debian
     #87611).</li>
 
-    <li>review/update list of conflicting preprocesor symbols to
+    <li>review/update list of conflicting preprocessor symbols to
     remove from $CPPFLAGS at the end of the configure script. In
     particular, this allows one to configure xterm without the
     utempter library on Redhat 7.1 (report/patch by Adam
@@ -10131,7 +10660,6 @@ Klanderman).
     <li>add configure check for <code>&lt;ncurses/term.h&gt;</code>
     to get rid of hardcoded <code>__CYGWIN__</code> ifdef in
     resize.c
-
       <p>NOTE: The CYGWIN port should not be linking
       <code>resize</code> with ncurses. It appears that the only
       reason it is, is because both the ncurses and termcap ports
@@ -10152,7 +10680,6 @@ Klanderman).
     "#xterm_141">UXTerm</a> app-defaults file.</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>Modified xterm app default to use LFD fontnames instead
         of old type (Michael Schroeder).</li>
@@ -10205,7 +10732,6 @@ Klanderman).
 
     <li>implement "OverTheSpot" preedit type of XIM input (patch by
     Tomohiro Kubota):
-
       <ul>
         <li>This preedit type is a reasonable compromise between
         simpleness of implementation and usefulness. "Root" preedit
@@ -10242,7 +10768,7 @@ Klanderman).
         behavior of other programs such as Rxvt, Kterm, Gedit.</li>
 
         <li>A tiny XIM bugfix is also included. By calling
-        XSetLocaleModifiers() with parameter of "", it can consier
+        XSetLocaleModifiers() with parameter of "", it can consider
         XMODIFIERS environmental variable which is a standard way
         for users to specify XIM server to be used.</li>
       </ul>
@@ -10268,7 +10794,6 @@ Klanderman).
     application flashes the screen (Bugzilla #38872).</li>
 
     <li>resync with XFree86 CVS
-
       <ul>
         <li>remove ifdef's for X_NOT_STDC_ENV (patch by David
         Dawes).</li>
@@ -10300,11 +10825,10 @@ Klanderman).
     experiment with more complex versions without making the core
     of XTerm more difficult to maintain. The functionality of the
     emulation is as follows.
-
       <ul>
         <li>Xutf8TextListToTextProperty fully handles XStringstyle
         and XUTF8StringStyle. It will only generate STRING for
-        XStdICCTextStyle, and wil only generate Latin-1 in
+        XStdICCTextStyle, and will only generate Latin-1 in
         XCompoundTextStyle (but label it as COMPOUND_TEXT, as the
         spec requires). (I have hesitated to make this function
         fail for XStdICCTextStyle and XCompoundTextStyle; this
@@ -10339,7 +10863,6 @@ Klanderman).
     &lt;fletcher@catsreach.org&gt;).</li>
 
     <li>two patches by Denis Zaitsev &lt;zzz@cd-club.ru&gt;:
-
       <ul>
         <li>added <code>forceBoxChars</code> resource to control
         the "line-drawing characters" option.</li>
@@ -10408,7 +10931,6 @@ Klanderman).
     &lt;vojta@math.berkeley.edu&gt;).</li>
 
     <li>resync with XFree86 4.1.0:
-
       <ul>
         <li>Use TermcapLibrary as -lncurses instead of -ltermcap,
         fixes problem building xterm/resize on Cygwin/XFree86
@@ -10470,7 +10992,6 @@ Klanderman).
 
     <li>fixes/improvements for the <code>i18nSelection</code>
     resource from patch #153, by Bruno Haible:
-
       <ul>
         <li>add missing initialization for
         <code>i18nSelection</code> resource.</li>
@@ -10562,13 +11083,11 @@ Klanderman).
     Juliusz Chroboczek). It is believed to follow the ICCCM +
     UTF8_STRING to the letter, both in UTF-8 and in eight-bit mode.
     From his description:
-
       <ul>
         <li>When compiled against XFree86 4.0.2, the patched XTerm
         will make the selection available as COMPOUND_TEXT, STRING
         or UTF8_STRING in both modes. It will request selections in
         the following order:
-
           <p>UTF-8 mode: UTF8_STRING, TEXT, COMPOUND_TEXT,
           STRING.<br>
           eight-bit mode: TEXT, COMPOUND_TEXT, UTF8_STRING,
@@ -10610,7 +11129,6 @@ Klanderman).
     manager hints make it simple to resize xterm in terms of
     character cells rather than pixels (reports by Christian
     Weisgerber, Debian #79939).
-
       <p>This applies to the normal configuration. When built with
       toolbar support, the hints are applied to a different widget
       level (more work will be needed to make hints work with the
@@ -10670,7 +11188,6 @@ Klanderman).
     Alison Winters &lt;alison@mirrabooka.com&gt;).</li>
 
     <li>fixes for wide/combining characters (Robert Brady):
-
       <ul>
         <li>fix a scrolling / combining characters display
         anomaly</li>
@@ -10768,7 +11285,6 @@ Klanderman).
     Moolenaar).</li>
 
     <li>resync with XFree86 4.0.1g:
-
       <ul>
         <li>Rewrite Xft library for Render extension/core text and
         font management Change xterm to use new interface (Keith
@@ -10794,7 +11310,6 @@ Klanderman).
     (patch by Bram Moolenaar).</li>
 
     <li>patch by Kiyokazu Suto &lt;suto@ks-and-ks.ne.jp&gt;:
-
       <ul>
         <li>add support for bold font for double width characters.
         The font name may be specified with the command line option
@@ -10812,7 +11327,6 @@ Klanderman).
     </li>
 
     <li>some changes to align terminfo with ncurses 5.2:
-
       <ul>
         <li>remove xtermm description, retaining xterm-mono since
         the former conflicts with ncurses.</li>
@@ -10837,7 +11351,6 @@ Klanderman).
     to coerce the parameter to an unsigned char.</li>
 
     <li>resync with XFree86 4.0.1d:
-
       <ul>
         <li>Add primitive support in xterm for Xft based fonts
         (Keith Packard). The changes are ifdef'd with
@@ -10892,7 +11405,6 @@ Klanderman).
 
   <ul>
     <li>changes for UTF-8 configuration (Robert Brady):
-
       <ul>
         <li>doublewide characters don't lose their accents when the
         cursor moves onto or from them (a visual bug)</li>
@@ -10917,7 +11429,6 @@ Klanderman).
 
     <li>several changes to PTY logic (based on request by Tim Ryan
     &lt;timryan@nortelnetworks.com&gt;).
-
       <ul>
         <li>modify treatment of <code>-S</code> option to to make
         it work with Unix98 PTY's.</li>
@@ -11198,7 +11709,6 @@ Klanderman).
     predefined.</li>
 
     <li>patches from Stephen P Wall:
-
       <ul>
         <li>add support for two Sun-specific function keys. These
         keys are labeled F11 and F12 on Sun Type 5 keyboards, but
@@ -11222,7 +11732,6 @@ Klanderman).
     </li>
 
     <li>fixes for os390 (Paul Gilmartin):
-
       <ul>
         <li>regularize the definition of CONTROL() and remove an
         acknowledged "trial and error" table.</li>
@@ -11303,7 +11812,6 @@ Klanderman).
     list in charproc.c</li>
 
     <li>resync with XFree86 4.0a:
-
       <ul>
         <li>correct a typo in os2main.c (Holger Veit, from
         4.0a).</li>
@@ -11317,7 +11825,6 @@ Klanderman).
   <ul>
     <li>improve logfile security (integrated patch by Branden
     Robinson)
-
       <ul>
         <li>make the <code>creat_as()</code> function more strict
         by using O_EXCL rather than O_APPEND.</li>
@@ -11558,7 +12065,6 @@ Klanderman).
     adapted from Redhat 6.1 patch for XFree86 3.3.5</li>
 
     <li>resync with XFree86 3.9.17a:
-
       <ul>
         <li>correction to QNX support (Frank Guangxin Liu)</li>
 
@@ -11600,7 +12106,6 @@ Klanderman).
 
     <li>two corrections to simulation of bold font via
     overstriking:
-
       <ul>
         <li>use clipping to avoid leaving trash at end of the text,
         and</li>
@@ -11644,7 +12149,6 @@ Klanderman).
 
     <li>modify default for OPT_I18N_SUPPORT to assume that
     <code>XtSetLanguageProc()</code> is available in X11R5.
-
       <p>Caveat: <code>XtSetLanguageProc()</code> was added fairly
       late in the X11R5 patches, and some vendors shipped buggy
       versions of this function (request by Tomas Vanhala).</p>
@@ -11831,7 +12335,6 @@ Klanderman).
 
     <li>work around problem observed in XFree86 3.3.5 (patch by
     Alexander V Lukyanov, Redhat #5419). From the problem report:
-
       <blockquote>
         <p>xterm consumes cpu when selecting text with mouse
         (holding down left mouse button) and when a program working
@@ -11882,7 +12385,6 @@ Klanderman).
                 DECSLE, "Select Locator Events"
                 DECRQLP, "Request Locator Position"
 </pre>
-
       <p>This allows the xterm mouse to be used with applications
       that use the DEC Locator sequences, such as VAX Tpu, or SMG$
       based applications.</p>
@@ -11890,7 +12392,6 @@ Klanderman).
 
     <li>improve print action (patch by Matthias Baake). From his
     notes,
-
       <ul>
         <li>Bug 1<br>
         Underlined text is preceded by ESC&nbsp;[0;2m . This should
@@ -12006,7 +12507,6 @@ Klanderman).
     <li>corrected position of scrollbar set in ResizeScrollBar(),
     which left it positioned incorrectly if the right scrollbar
     were enabled from the popup menu but was not initially enabled.
-
       <p>I have noticed some additional problems with
       right-scrollbar on X11R5 which I will correct later.</p>
     </li>
@@ -12044,7 +12544,6 @@ Klanderman).
     colors 16-255.</li>
 
     <li>fixes for os390 (Greg Smith):
-
       <ul>
         <li>add README.os390</li>
 
@@ -12058,7 +12557,6 @@ Klanderman).
     </li>
 
     <li>patches by Todd Larason:
-
       <ul>
         <li>enable SGR 48 5 in ISO color mode, not just 256 color
         mode</li>
@@ -12223,7 +12721,6 @@ Klanderman).
 
   <ul>
     <li>Two changes from Stephen P Wall. From his description:
-
       <blockquote>
         <p>The first change is simple - I added ESC[3J to erase the
         stored lines above the screen. That's what the changes to
@@ -12239,7 +12736,6 @@ Klanderman).
 
     <li>improve selection (integrated patch by Juliusz Chroboczek).
     From his description:
-
       <blockquote>
         <p>With this patch, selection conversion works
         properly:</p>
@@ -12250,7 +12746,6 @@ Klanderman).
         UTF-8 xterm -&gt; ISO 8859-1 xterm (transferred as STRING);
         UTF-8 xterm -&gt; UTF-8 xterm (transferred as UTF-8).
 </pre>
-
         <p>It will not work properly if one xterm is in, say, ISO
         8859-2. Actually, for this case xterm breaks the ICCCM
         routinely (sending ISO 8859-2 data as STRING), so I
@@ -12324,7 +12819,6 @@ Klanderman).
     <li>improved support for Unix98 PTY's, using patch in Debian
     bug report #35650, by J.H.M. Dassen
     &lt;jdassen@wi.leidenuniv.nl&gt;. From the patch description:
-
       <blockquote>
         <ul>
           <li>No longer links xterm against libutil on a glibc2.1
@@ -12499,7 +12993,6 @@ Klanderman).
     keyboard with the <em>sunKeyboard</em> resources in patch #94,
     so that it normally matches the value of the stty erase
     character:
-
       <ul>
         <li>Reported by Jae Gangemi
         &lt;jgangemi@ccf.rutgers.edu&gt;, this caused emacs to not
@@ -12523,13 +13016,11 @@ Klanderman).
     usable, i.e., display and refresh work, and I am able to
     display the test cases which Markus provides. More work is
     needed to complete this feature:
-
       <ul>
         <li>the control sequences for switching in/out of UTF-8
         mode are partly implemented (don't use them). Similarly,
         the switching between vt100 and tek4014 emulations when
         UTF-8 mode is enabled will not work properly.
-
           <p>You must use the -u8 command line option to use this
           feature, as well as compile with the OPT_WIDE_CHARS
           definition.</p>
@@ -12689,7 +13180,6 @@ Klanderman).
 
     <li>changes for Linux-2.2.x with GLibc-2.1 and /dev/ptmx
     support (integrated patch from Pavel Roskin):
-
       <ul>
         <li>main.c and resize.c were using different rules to
         determine whether ATT should be defined (actually
@@ -12878,7 +13368,6 @@ Klanderman).
     sequence, this clears the alternate screen when switching to it
     rather than when switching to the normal screen, thus retaining
     the alternate screen contents for select/paste operations.
-
       <p>When I implemented the popup menu entry to toggle between
       the normal and alternate screens, I considered only pasting
       from the normal screen to the alternate; this improvement
@@ -12895,7 +13384,6 @@ Klanderman).
     capabilities will restore the cursor to the original position
     on the normal screen rather than to the most recent place where
     a save-cursor operation was performed.
-
       <p>I note that a real VT100 terminal would not behave in this
       way, but it is a moot point since the VT100 does not
       implement alternate screen, and therefore the save/restore
@@ -12975,7 +13463,6 @@ Klanderman).
         -bitstream-courier-medium-r-normal--0-0-0-0-m-0-iso8859-1
         9x15
 </pre>
-
   <p>The iso8859 font does not include box characters, of course,
   but looks good.</p>
 
@@ -13230,7 +13717,6 @@ Klanderman).
     &lt;juphoff@tarsier.cv.nrao.edu&gt;)</li>
 
     <li>modifications to terminfo file:
-
       <ul>
         <li>rename description to xterm-xfree86, adding an entry
         'xterm' which is derived from xterm-xfree86 to simplify
@@ -13288,7 +13774,6 @@ Klanderman).
 
     <li>document SGR 8, 28 (invisible/visible), add corresponding
     capabilities to terminfo description.
-
       <p>I would also add the 'prot protected capability, but the
       control sequences for that would not be recognized or
       properly ignored by the older xterm programs.</p>
@@ -13465,7 +13950,6 @@ Klanderman).
     doing. (Occasionally during an exposure event xterm fails to
     restore the proper colors for highlighted text, and printing
     the screen will show the internal states nicely).
-
       <p>The print facility now also displays the color
       information. (I will probably make this a resource).</p>
     </li>
@@ -13476,7 +13960,6 @@ Klanderman).
 
     <li>reduced some clutter of the ifdef/includes (e.g., stdlib.h,
     unistd.h, errno) making the configure script test for these.
-
       <p>I removed the symbols Size_t and Time_t, since they no
       longer serve a useful purpose.</p>
     </li>
@@ -13484,7 +13967,6 @@ Klanderman).
     <li>added some debugging traces to show the initial screen
     size, and the success/failure of the ioctl calls pass handle
     window resizing events to the application (for Clint Olsen).
-
       <p>I also modified the trace code to produce two files since
       some of the information is produced by the child process. So
       now they are Trace-parent.out and Trace-child.out</p>
@@ -13621,7 +14103,6 @@ Klanderman).
     attempt to use that unless it is different from the foreground
     and background colors (reported by Stefan Dalibor
     &lt;Stefan.Dalibor@informatik.uni-erlangen.de&gt;.
-
       <p>I could not reproduce this until I noticed that the -rev
       option exposed it nicely.</p>
     </li>
@@ -13682,7 +14163,6 @@ Klanderman).
     vim, which apparently assumed that switching between the normal
     and alternate screens resets the colors (reported by Jim Battle
     &lt;jb@chromatic.com&gt;).
-
       <p>It would be nice to implement save/restore cursor as a
       stack (and solve this type of problem completely), but that
       would lead to incompatibility with applications which assume
@@ -13795,7 +14275,6 @@ Klanderman).
 
   <ul>
     <li>add support for blinking text.
-
       <ul>
         <li>This does not actually cause the text to flash, but
         text with the blink attribute can be displayed in color,
@@ -13851,7 +14330,6 @@ Klanderman).
   <ul>
     <li>implement logic to permit xterm to work with proportional
     fonts.
-
       <ul>
         <li>Thomas Wolff &lt;Thomas.Wolff@sietec.de&gt; requested
         this (but it isn't exactly what he's asking for - that's a
@@ -13935,7 +14413,6 @@ Klanderman).
               ~Shift&lt;BtnUp&gt;:       select-end(PRIMARY, CUT_BUFFER0)\n\
               Shift&lt;BtnUp&gt;:        select-end(CLIPBOARD, CUT_BUFFER1)
 </pre>
-
     <p>(The above resources intention is to be able to paste the
     latest selection even if the xterm was cleared.)</p>
 
@@ -14195,7 +14672,6 @@ Klanderman).
   <ul>
     <li>minor correction to positioning of underlines for small
     (e.g., 5x8) font size.
-
       <p>The existing behavior allowed underlines to be drawn
       outside the character-cell, so they weren't cleared properly
       under some circumstances.</p>
@@ -14501,7 +14977,6 @@ Klanderman).
   <pre>
         -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
 </pre>
-
   <p>but that's a known xterm limitation (the box characters must
   be part of the font, in the first 32 locations).</p>
 
@@ -14626,7 +15101,6 @@ Klanderman).
     <li>used that ifdef to isolate/modify logic so that if the user
     doesn't have the colorMode enabled, then ISO color support is
     disabled (saving memory).
-
       <p>(If anyone needs numbers, I had savedLines set to 2000,
       and found a reduction from ~700k to ~400k of allocated
       memory, according to Purify).</p>
@@ -14648,7 +15122,6 @@ Klanderman).
 
   <ul>
     <li>fixes the core dump that I reported on IRIX 5.2 (in main.c)
-
       <p>(it's worth noting that this bug exists in X11R6.1, so I'd
       like to assume that someone's already submitted a fix to X
       Consortium...)</p>
@@ -14775,7 +15248,6 @@ Klanderman).
 
     <li>in both, corrected home/end keys to match the code
     correction made by Thomas Mueller in 3.1.2Bk
-
       <p>=&gt; (I'm still considering modifying the code &amp;
       description to match the rxvt program).</p>
     </li>
@@ -14804,7 +15276,6 @@ Klanderman).
 
   <ul>
     <li>button.c
-
       <ul>
         <li>(compiler warnings: shadowing of 'time', redundant
         cast)</li>
@@ -14812,7 +15283,6 @@ Klanderman).
     </li>
 
     <li>charproc.c
-
       <ul>
         <li>renamed screen.colors[] array to screen.Acolors[] to
         more easily distinguish the non-ANSI colors from the ANSI
@@ -14834,7 +15304,6 @@ Klanderman).
     <li>ctlseqs.ms</li>
 
     <li>xterm.man
-
       <ul>
         <li>(correct a misconception which I'd added that the
         color0 through color6 resource values apply to non-ANSI
@@ -14843,7 +15312,6 @@ Klanderman).
     </li>
 
     <li>ptyx.h
-
       <ul>
         <li>added original_fg, original_bg to TScreen
         structure.</li>
@@ -14851,14 +15319,12 @@ Klanderman).
     </li>
 
     <li>scrollbar.c
-
       <ul>
         <li>(compiler warnings: redundant cast)</li>
       </ul>
     </li>
 
     <li>util.c
-
       <ul>
         <li>new functions getXtermForeground and getXtermBackground
         replace the macros GET_FG and GET_BG, with the added
@@ -14975,14 +15441,12 @@ Klanderman).
 
   <ul>
     <li>charproc.c:
-
       <ul>
         <li>add/use new macros GET_FG, GET_BG - n/c.</li>
 
         <li>add/use new functions SGR_Foreground() and
         SGR_Background() to set corresponding colors in GC's, and
         to retain sense of "original" colors.
-
           <p>=&gt; This makes redundant some of the corresponding
           logic in HideCursor to set the foreground and background,
           but I left it in since it <em>may</em> be fixing an
@@ -14991,7 +15455,6 @@ Klanderman).
 
         <li>set GC's in LoadNewFont() according to whether the SGR
         fg/bg colors are active.
-
           <p>=&gt; This fixes some glitches in the accompanying
           resize, that leaves parts of the window in the original
           background color.</p>
@@ -15000,7 +15463,6 @@ Klanderman).
     </li>
 
     <li>screen.c:
-
       <ul>
         <li>modified ClearBufRows() to use the SGR fg/bg colors if
         they're set.</li>
@@ -15008,7 +15470,6 @@ Klanderman).
         <li>added function ScrnClearLines(), used this to replace
         portions of ScrnInsertLine() and ScrnDeleteLine(). The new
         function uses the SGR fg/bg colors if they're set.
-
           <p>=&gt; Otherwise, selection after an index or reverse
           index will paint the wrong colors.</p>
         </li>
@@ -15019,7 +15480,6 @@ Klanderman).
     </li>
 
     <li>util.c:
-
       <ul>
         <li>modified ClearRight() so that if either of the SGR
         fg/bg colors is set, we don't bzero the attributes and
@@ -15046,7 +15506,6 @@ Klanderman).
 
   <ul>
     <li>charproc.c:
-
       <ul>
         <li>recode index expressions in ShowCursor() and
         HideCursor() using SCRN_BUF_xxxxS macros - changes
@@ -15057,7 +15516,6 @@ Klanderman).
     </li>
 
     <li>ptyx.h:
-
       <ul>
         <li>defined the SCRN_BUF_xxxxS macros in terms of BUF_xxxxS
         macros, to pick up references to ScrnBuf data directly, and
@@ -15067,7 +15525,6 @@ Klanderman).
     </li>
 
     <li>screen.c:
-
       <ul>
         <li>recode index expressions in ScreenWrite() using
         SCRN_BUF_xxxxS macros - changes object.</li>
@@ -15082,7 +15539,6 @@ Klanderman).
     </li>
 
     <li>scrollbar.c:
-
       <ul>
         <li>replace constant '4' by MAX_PTRS - n/c.</li>
 
@@ -15101,21 +15557,18 @@ Klanderman).
 
   <ul>
     <li>button.c:
-
       <ul>
         <li>use SCRN_BUF_xxxxS macros - n/c</li>
       </ul>
     </li>
 
     <li>charproc.c:
-
       <ul>
         <li>use SCRN_BUF_xxxxS macros - n/c</li>
       </ul>
     </li>
 
     <li>ptyx.h:
-
       <ul>
         <li>added four macros: SCRN_BUF_CHARS, SCRN_BUF_ATTRS,
         SCRN_BUF_FORES, SCRN_BUF_BACKS to represent the four arrays
@@ -15124,14 +15577,12 @@ Klanderman).
     </li>
 
     <li>screen.c:
-
       <ul>
         <li>use SCRN_BUF_xxxxS macros - n/c</li>
       </ul>
     </li>
 
     <li>util.c:
-
       <ul>
         <li>use SCRN_BUF_xxxxS macros - n/c</li>
       </ul>
@@ -15153,7 +15604,6 @@ Klanderman).
 
   <ul>
     <li>Tekproc.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15161,7 +15611,6 @@ Klanderman).
     </li>
 
     <li>charproc.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15172,7 +15621,6 @@ Klanderman).
     </li>
 
     <li>main.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15189,14 +15637,12 @@ Klanderman).
     </li>
 
     <li>main.h:
-
       <ul>
         <li>deleted unused definition of DEFBORDERWIDTH - n/c</li>
       </ul>
     </li>
 
     <li>misc.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15207,7 +15653,6 @@ Klanderman).
     </li>
 
     <li>ptyx.h:
-
       <ul>
         <li>change sbuf_address and abuf_address to 'Char *' -
         n/c</li>
@@ -15215,7 +15660,6 @@ Klanderman).
     </li>
 
     <li>resize.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15223,14 +15667,12 @@ Klanderman).
     </li>
 
     <li>screen.c:
-
       <ul>
         <li>remove unnecessary 'Char **' casts - n/c</li>
       </ul>
     </li>
 
     <li>util.c:
-
       <ul>
         <li>changed several functions to 'static' that aren't used
         outside this module -- changes object</li>
@@ -15251,7 +15693,6 @@ Klanderman).
   <pre>
         -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wnested-externs
 </pre>
-
   <p>(I also compiled with -Wshadow, but while that found some
   things that I wanted to find, there's far too many warnings from
   the X headers to be usable in this context).</p>
@@ -15260,7 +15701,6 @@ Klanderman).
 
   <ul>
     <li>Tekproc.c:
-
       <ul>
         <li>parenthesized expression to avoid gcc warning --
         n/c.</li>
@@ -15272,7 +15712,6 @@ Klanderman).
     </li>
 
     <li>charproc.c:
-
       <ul>
         <li>corrected potentially-unintialized variables 'scstype',
         'xim', and 'input_style' -- changes object.</li>
@@ -15289,7 +15728,6 @@ Klanderman).
     </li>
 
     <li>cursor.c:
-
       <ul>
         <li>corrected nested-extern declaration of 'term' --
         n/c</li>
@@ -15300,7 +15738,6 @@ Klanderman).
     </li>
 
     <li>input.c:
-
       <ul>
         <li>change interface of StringInput to assume size_t (i.e.,
         unsigned) nbytes -- changes object.</li>
@@ -15311,7 +15748,6 @@ Klanderman).
     </li>
 
     <li>main.c:
-
       <ul>
         <li>moved definitions of SIGNAL_T, SIGNAL_RETURN to proto.h
         - n/c</li>
@@ -15333,7 +15769,6 @@ Klanderman).
     </li>
 
     <li>menu.c:
-
       <ul>
         <li>removed redundant prototype for 'do_hangup()' --
         n/c.</li>
@@ -15344,7 +15779,6 @@ Klanderman).
     </li>
 
     <li>menu.h:
-
       <ul>
         <li>renamed 'time' parameters to avoid gcc -Wshadow warning
         - n/c</li>
@@ -15352,7 +15786,6 @@ Klanderman).
     </li>
 
     <li>misc.c:
-
       <ul>
         <li>corrected definition of 'HandleFocusChange()' --
         changes object</li>
@@ -15367,7 +15800,6 @@ Klanderman).
     </li>
 
     <li>proto.h:
-
       <ul>
         <li>moved definition of SIGNAL_T (and SIGNAL_RETURN) here
         from main.c, resize.c to allow use of this symbol in
@@ -15379,7 +15811,6 @@ Klanderman).
     </li>
 
     <li>resize.c:
-
       <ul>
         <li>moved SIGNAL_T definition to proto.h -- n/c.</li>
 
@@ -15388,14 +15819,12 @@ Klanderman).
     </li>
 
     <li>screen.c:
-
       <ul>
         <li>use Size_t type - n/c.</li>
       </ul>
     </li>
 
     <li>tabs.c:
-
       <ul>
         <li>corrected nested-extern declaration of 'term' --
         n/c</li>
@@ -15403,7 +15832,6 @@ Klanderman).
     </li>
 
     <li>util.c:
-
       <ul>
         <li>corrected/supplied parameters to 'TekExpose()' --
         changes object (note: 'TekExpose()' doesn't use its
@@ -15418,7 +15846,6 @@ Klanderman).
     </li>
 
     <li>xterm.h:
-
       <ul>
         <li>prototype 'do_hangup()', 'HandleFocusChange()',
         'TekExpose()', 'Error()', 'Exit()' - forces changes in
@@ -15454,7 +15881,6 @@ Klanderman).
         proto.h
         xterm.h
 </pre>
-
   <p>I expect this to be the biggest patch by far. However (barring
   a misplaced prototype), it shouldn't break anything, since the
   intent of the patch is to provide missing declarations.</p>

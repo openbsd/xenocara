@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.366 2019/11/02 20:49:15 tom Exp $
+dnl $XTermId: configure.in,v 1.372 2020/09/19 16:50:26 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2018,2019 by Thomas E. Dickey
+dnl Copyright 1997-2019,2020 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20170501)
+AC_PREREQ(2.52.20200802)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -265,6 +265,7 @@ CF_TTY_GROUP
 
 ###	checks for system services and user specified options
 
+AC_PATH_XTRA
 CF_POSIX_WAIT
 CF_SYSV
 CF_SVR4
@@ -288,7 +289,7 @@ CF_TERMIO_C_ISPEED
 CF_TERMIOS_TYPES
 
 # If we notice Xcursor, there is a workaround needed.
-AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR)])
+AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR,1,[Define to 1 if we have the Xcursor library])])
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
@@ -1035,10 +1036,10 @@ if test "$enable_regis_graphics" = yes ; then
 fi
 
 AC_MSG_CHECKING(if you want sixel graphics support)
-CF_ARG_ENABLE(sixel-graphics,
-	[  --enable-sixel-graphics enable sixel graphics support],
-	[enable_sixel_graphics=yes],
-	[enable_sixel_graphics=no])
+CF_ARG_DISABLE(sixel-graphics,
+	[  --disable-sixel-graphics disable sixel graphics support],
+	[enable_sixel_graphics=no],
+	[enable_sixel_graphics=yes])
 AC_MSG_RESULT($enable_sixel_graphics)
 if test "$enable_sixel_graphics" = yes ; then
 	AC_DEFINE(OPT_SIXEL_GRAPHICS,1,[Define to 1 to enable sixel graphics support])
@@ -1052,6 +1053,16 @@ if test "$enable_regis_graphics" = yes || test "$enable_sixel_graphics" = yes ; 
 	EXTRAHDRS="$EXTRAHDRS graphics.h"
 	EXTRASRCS="$EXTRASRCS graphics.c"
 	EXTRAOBJS="$EXTRAOBJS graphics.o"
+fi
+
+AC_MSG_CHECKING(if you want sixel screen dump support)
+CF_ARG_DISABLE(print-graphics,
+	[  --disable-print-graphics disable screen dump to sixel support],
+	[enable_print_graphics=no],
+	[enable_print_graphics=$enable_regis_graphics])
+AC_MSG_RESULT($enable_print_graphics)
+if test "$enable_print_graphics" = yes ; then
+	AC_DEFINE(OPT_PRINT_GRAPHICS,1,[Define to 1 to enable screen dump to sixel support])
 fi
 
 AC_MSG_CHECKING(if you want VT420 rectangle support)
@@ -1110,19 +1121,7 @@ if test -n "$cf_cv_lib_part_tgetent"; then
     AC_CHECK_FUNCS(use_extended_names)
 fi
 
-if test -n "$GCC" ; then
-AC_MSG_CHECKING(if you want to turn on gcc warnings)
-CF_ARG_ENABLE(warnings,
-	[  --enable-warnings       test: turn on GCC compiler warnings],
-	[with_warnings=yes],
-	[with_warnings=no])
-AC_MSG_RESULT($with_warnings)
-if test "$with_warnings" = yes
-then
-	CF_GCC_ATTRIBUTES
-	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
-fi
-fi
+CF_ENABLE_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
 
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(CHARPROC_DEPS)

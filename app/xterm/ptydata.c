@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.121 2019/09/18 23:28:41 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.150 2020/10/12 18:46:28 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,6 +35,14 @@
 #if OPT_WIDE_CHARS
 #include <menu.h>
 #include <wcwidth.h>
+#endif
+
+#ifdef TEST_DRIVER
+#undef TRACE
+#define TRACE(p) if (1) printf p
+#undef TRACE2
+#define TRACE2(p) if (0) printf p
+#define visibleChars(buf, len) "buffer"
 #endif
 
 /*
@@ -99,6 +107,22 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		data->utf_data = (IChar) (screen->c1_printable ? c : UCS_REPL);
 		data->utf_size = (i + 1);
 		break;
+	    } else if (screen->utf8_weblike
+		       && (utf_count == 3
+			   && utf_char == 0x04
+			   && c >= 0x90)) {
+		/* The encoding would form a code point beyond U+10FFFF. */
+		data->utf_size = i;
+		data->utf_data = UCS_REPL;
+		break;
+	    } else if (screen->utf8_weblike
+		       && (utf_count == 2
+			   && utf_char == 0x0d
+			   && c >= 0xa0)) {
+		/* The encoding would form a surrogate code point. */
+		data->utf_size = i;
+		data->utf_data = UCS_REPL;
+		break;
 	    } else {
 		/* Check for overlong UTF-8 sequences for which a shorter
 		 * encoding would exist and replace them with UCS_REPL.
@@ -111,7 +135,14 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		 *   11111100 100000xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
 		 */
 		if (!utf_char && !((c & 0x7f) >> (7 - utf_count))) {
-		    utf_char = UCS_REPL;
+		    if (screen->utf8_weblike) {
+			/* overlong sequence continued */
+			data->utf_data = UCS_REPL;
+			data->utf_size = i;
+			break;
+		    } else {
+			utf_char = UCS_REPL;
+		    }
 		}
 		utf_char <<= 6;
 		utf_char |= (c & 0x3f);
@@ -138,32 +169,57 @@ decodeUtf8(TScreen *screen, PtyData *data)
 	} else {
 	    /* We received a sequence start byte */
 	    if (utf_count > 0) {
-		data->utf_data = UCS_REPL;	/* prev. sequence incomplete */
-		data->utf_size = (i + 1);
+		/* previous sequence is incomplete */
+		data->utf_data = UCS_REPL;
+		data->utf_size = i;
 		break;
 	    }
-	    if (c < 0xe0) {
-		utf_count = 1;
-		utf_char = (c & 0x1f);
-		if (!(c & 0x1e)) {
-		    utf_char = UCS_REPL;	/* overlong sequence */
+	    if (screen->utf8_weblike) {
+		if (c < 0xe0) {
+		    if (!(c & 0x1e)) {
+			/* overlong sequence start */
+			data->utf_data = UCS_REPL;
+			data->utf_size = (i + 1);
+			break;
+		    }
+		    utf_count = 1;
+		    utf_char = (c & 0x1f);
+		} else if (c < 0xf0) {
+		    utf_count = 2;
+		    utf_char = (c & 0x0f);
+		} else if (c < 0xf5) {
+		    utf_count = 3;
+		    utf_char = (c & 0x07);
+		} else {
+		    data->utf_data = UCS_REPL;
+		    data->utf_size = (i + 1);
+		    break;
 		}
-	    } else if (c < 0xf0) {
-		utf_count = 2;
-		utf_char = (c & 0x0f);
-	    } else if (c < 0xf8) {
-		utf_count = 3;
-		utf_char = (c & 0x07);
-	    } else if (c < 0xfc) {
-		utf_count = 4;
-		utf_char = (c & 0x03);
-	    } else if (c < 0xfe) {
-		utf_count = 5;
-		utf_char = (c & 0x01);
 	    } else {
-		data->utf_data = UCS_REPL;
-		data->utf_size = (i + 1);
-		break;
+		if (c < 0xe0) {
+		    utf_count = 1;
+		    utf_char = (c & 0x1f);
+		    if (!(c & 0x1e)) {
+			/* overlong sequence */
+			utf_char = UCS_REPL;
+		    }
+		} else if (c < 0xf0) {
+		    utf_count = 2;
+		    utf_char = (c & 0x0f);
+		} else if (c < 0xf8) {
+		    utf_count = 3;
+		    utf_char = (c & 0x07);
+		} else if (c < 0xfc) {
+		    utf_count = 4;
+		    utf_char = (c & 0x03);
+		} else if (c < 0xfe) {
+		    utf_count = 5;
+		    utf_char = (c & 0x01);
+		} else {
+		    data->utf_data = UCS_REPL;
+		    data->utf_size = (i + 1);
+		    break;
+		}
 	    }
 	}
     }
@@ -305,8 +361,8 @@ initPtyData(PtyData **result)
 {
     PtyData *data;
 
-    TRACE(("initPtyData given minBufSize %d, maxBufSize %d\n",
-	   FRG_SIZE, BUF_SIZE));
+    TRACE2(("initPtyData given minBufSize %d, maxBufSize %d\n",
+	    FRG_SIZE, BUF_SIZE));
 
     if (FRG_SIZE < 64)
 	FRG_SIZE = 64;
@@ -315,8 +371,8 @@ initPtyData(PtyData **result)
     if (BUF_SIZE % FRG_SIZE)
 	BUF_SIZE = BUF_SIZE + FRG_SIZE - (BUF_SIZE % FRG_SIZE);
 
-    TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
-	   FRG_SIZE, BUF_SIZE));
+    TRACE2(("initPtyData using minBufSize %d, maxBufSize %d\n",
+	    FRG_SIZE, BUF_SIZE));
 
     data = TypeXtMallocX(PtyData, (BUF_SIZE + FRG_SIZE));
 
@@ -348,8 +404,9 @@ fakePtyData(PtyData *result, Char *next, Char *last)
  * e.g., a continuation-read.
  */
 void
-trimPtyData(XtermWidget xw GCC_UNUSED, PtyData *data)
+trimPtyData(XtermWidget xw, PtyData *data)
 {
+    (void) xw;
     FlushLog(xw);
 
     if (data->next != data->buffer) {
@@ -561,7 +618,7 @@ writePtyData(int f, IChar *d, unsigned len)
     for (n = 0; n < len; n++)
 	VTbuffer->write_buf[n] = (Char) d[n];
 
-    TRACE(("writePtyData %d:%s\n", n,
+    TRACE(("writePtyData %u:%s\n", n,
 	   visibleChars(VTbuffer->write_buf, n)));
     v_write(f, VTbuffer->write_buf, n);
 }
@@ -573,51 +630,149 @@ noleaks_ptydata(void)
 {
     if (VTbuffer != 0) {
 #if OPT_WIDE_CHARS
-	if (VTbuffer->write_buf != 0)
-	    free(VTbuffer->write_buf);
+	free(VTbuffer->write_buf);
 #endif
-	free(VTbuffer);
-	VTbuffer = 0;
+	FreeAndNull(VTbuffer);
     }
 }
 #endif
 
-#ifdef TEST_PTYDATA
+#ifdef TEST_DRIVER
+
+#include "data.c"
+
 void
-test_ptydata(XtermWidget xw)
+NormalExit(void)
 {
-    TScreen *screen = TScreenOf(xw);
-    unsigned code;
-    PtyData *data;
-    Char *next;
-
-    for (code = 0; code < 256; code++) {
-	initPtyData(&data);
-	next = convertToUTF8(data->buffer, code);
-	*next = 0;
-	data->next = data->buffer;
-	data->last = next;
-	decodeUtf8(screen, data);
-	TRACE(("TEST %04X (%d:%s) ->%04X\n", code,
-	       (int) (next - data->buffer),
-	       data->buffer,
-	       data->utf_data));
-	if (code != data->utf_data) {
-	    fprintf(stderr, "Mismatch: %04X vs %04X\n", code, data->utf_data);
-	}
-	free(data);
-    }
+    fprintf(stderr, "NormalExit!\n");
+    exit(EXIT_SUCCESS);
 }
-#endif /* TEST_PTYDATA */
 
-#ifdef TEST_UTF8_CONVERT
 void
+Panic(const char *s, int a)
+{
+    (void) s;
+    (void) a;
+    fprintf(stderr, "Panic!\n");
+    exit(EXIT_FAILURE);
+}
+
+#if OPT_WIDE_CHARS
+
+#ifdef ALLOWLOGGING
+void
+FlushLog(XtermWidget xw)
+{
+    (void) xw;
+}
+#endif
+
+void
+v_write(int f, const Char *data, unsigned len)
+{
+    (void) f;
+    (void) data;
+    (void) len;
+}
+
+void
+mk_wcwidth_init(int mode)
+{
+    (void) mode;
+}
+
+void
+update_font_utf8_mode(void)
+{
+}
+
+static int message_level = 0;
+static int opt_all = 0;
+static int opt_illegal = 0;
+static int opt_convert = 0;
+static int opt_reverse = 0;
+static long total_test = 0;
+static long total_errs = 0;
+
+static void
+usage(void)
+{
+    static const char *msg[] =
+    {
+	"Usage: test_ptydata [options] [c1[-c1b] [c2-[c2b] [...]]]",
+	"",
+	"Options:",
+	" -a  exercise all legal encode/decode to/from UTF-8",
+	" -c  call convertFromUTF8 rather than decodeUTF8",
+	" -i  ignore illegal UTF-8 when testing -r option",
+	" -q  quieter",
+	" -r  reverse/decode from UTF-8 byte-string to/from Unicode",
+	" -v  more verbose"
+    };
+    size_t n;
+    for (n = 0; n < sizeof(msg) / sizeof(msg[0]); ++n) {
+	fprintf(stderr, "%s\n", msg[n]);
+    }
+    exit(EXIT_FAILURE);
+}
+
+/*
+ * http://www.unicode.org/versions/corrigendum1.html, table 3.1B
+ */
+#define OkRange(n,lo,hi) \
+ 	if (value[n] < lo || value[n] > hi) { \
+	    result = False; \
+	    break; \
+	}
+static Bool
+is_legal_utf8(const Char *value)
+{
+    Bool result = True;
+    Char ch;
+    while ((ch = *value) != '\0') {
+	if (ch <= 0x7f) {
+	    ++value;
+	} else if (ch >= 0xc2 && ch <= 0xdf) {
+	    OkRange(1, 0x80, 0xbf);
+	    value += 2;
+	} else if (ch == 0xe0) {
+	    OkRange(1, 0xa0, 0xbf);
+	    OkRange(2, 0x80, 0xbf);
+	    value += 3;
+	} else if (ch >= 0xe1 && ch <= 0xef) {
+	    OkRange(1, 0x80, 0xbf);
+	    OkRange(2, 0x80, 0xbf);
+	    value += 3;
+	} else if (ch == 0xf0) {
+	    OkRange(1, 0x90, 0xbf);
+	    OkRange(2, 0x80, 0xbf);
+	    OkRange(3, 0x80, 0xbf);
+	    value += 4;
+	} else if (ch >= 0xf1 && ch <= 0xf3) {
+	    OkRange(1, 0x80, 0xbf);
+	    OkRange(2, 0x80, 0xbf);
+	    OkRange(3, 0x80, 0xbf);
+	    value += 4;
+	} else if (ch == 0xf4) {
+	    OkRange(1, 0x80, 0x8f);
+	    OkRange(2, 0x80, 0xbf);
+	    OkRange(3, 0x80, 0xbf);
+	    value += 4;
+	} else {
+	    result = False;
+	    break;
+	}
+    }
+    return result;
+}
+
+static void
 test_utf8_convert(void)
 {
     unsigned c_in, c_out;
     Char buffer[10];
     Char *result;
-    unsigned limit = 1 << 24;
+    unsigned limit = 0x110000;
     unsigned success = 0;
     unsigned bucket[256];
 
@@ -640,7 +795,7 @@ test_utf8_convert(void)
 	    }
 	}
     }
-    TRACE(("test_utf8_convert: %u/%u successful\n", success, limit));
+    TRACE(("%u/%u successful\n", success, limit));
     for (c_in = 0; c_in < 256; ++c_in) {
 	if ((c_in % 8) == 0) {
 	    TRACE((" %02X:", c_in));
@@ -651,4 +806,209 @@ test_utf8_convert(void)
 	}
     }
 }
+
+static int
+decode_one(const char *source, char **target)
+{
+    int result = -1;
+    long check;
+    int radix = 0;
+    if ((source[0] == 'u' || source[0] == 'U') && source[1] == '+') {
+	source += 2;
+	radix = 16;
+    } else if (source[0] == '0' && source[1] == 'b') {
+	source += 2;
+	radix = 2;
+    }
+    check = strtol(source, target, radix);
+    if (*target != NULL && *target != source)
+	result = (int) check;
+    return result;
+}
+
+static int
+decode_range(const char *source, int *lo, int *hi)
+{
+    int result = 0;
+    char *after1;
+    char *after2;
+    if ((*lo = decode_one(source, &after1)) >= 0) {
+	after1 += strspn(after1, ":-.\t ");
+	if ((*hi = decode_one(after1, &after2)) < 0) {
+	    *hi = *lo;
+	}
+	result = 1;
+    }
+    return result;
+}
+
+#define MAX_BYTES 6
+
+static void
+do_range(const char *source)
+{
+    int lo, hi;
+
+    TScreen screen;
+    memset(&screen, 0, sizeof(screen));
+
+    if (decode_range(source, &lo, &hi)) {
+	while (lo <= hi) {
+	    unsigned c_in = (unsigned) lo++;
+	    PtyData *data;
+	    Char *next;
+	    Char buffer[MAX_BYTES + 1];
+
+	    if (opt_reverse) {
+		Bool skip = False;
+		Bool first = True;
+		int j, k;
+		for (j = 0; j < MAX_BYTES; ++j) {
+		    unsigned long bits = ((unsigned long) c_in >> (8 * j));
+		    if ((buffer[j] = (Char) bits) == 0) {
+			skip = (bits != 0);
+			break;
+		    }
+		}
+		if (skip)
+		    continue;
+		initPtyData(&data);
+		for (k = 0; k <= j; ++k) {
+		    data->buffer[k] = buffer[j - k - 1];
+		}
+		if (opt_illegal && !is_legal_utf8(data->buffer)) {
+		    free(data);
+		    continue;
+		}
+		if (message_level > 1) {
+		    printf("TEST ");
+		    for (k = 0; k < j; ++k) {
+			printf("%02X", data->buffer[k]);
+		    }
+		}
+		data->next = data->buffer;
+		data->last = data->buffer + j;
+		while (decodeUtf8(&screen, data)) {
+		    total_test++;
+		    if (data->utf_data == UCS_REPL)
+			total_errs++;
+		    data->next += data->utf_size;
+		    if (message_level > 1) {
+			printf("%s%04X", first ? " ->" : ", ", data->utf_data);
+		    }
+		    first = False;
+		}
+		if (!first)
+		    total_test--;
+		if (message_level > 1) {
+		    printf("\n");
+		    fflush(stdout);
+		}
+		free(data);
+	    } else if (opt_convert) {
+		unsigned c_out;
+		Char *result;
+
+		memset(buffer, 0, sizeof(buffer));
+		if ((result = next = convertToUTF8(buffer, c_in)) == 0) {
+		    fprintf(stderr,
+			    "conversion of U+%04X to UTF-8 failed\n", c_in);
+		} else if ((result = convertFromUTF8(buffer, &c_out)) == 0) {
+		    fprintf(stderr,
+			    "conversion of U+%04X from UTF-8 failed\n", c_in);
+		    total_errs++;
+		} else if (c_in != c_out) {
+		    fprintf(stderr,
+			    "conversion of U+%04X to/from UTF-8 gave U+%04X\n",
+			    c_in, c_out);
+		} else if (message_level > 1) {
+		    *next = '\0';
+		    printf("TEST %04X (%d:%s) ->%04X\n", c_in,
+			   (int) (next - buffer),
+			   buffer,
+			   c_out);
+		    fflush(stdout);
+		}
+	    } else {
+		initPtyData(&data);
+		next = convertToUTF8(data->buffer, c_in);
+		*next = 0;
+		data->next = data->buffer;
+		data->last = next;
+		decodeUtf8(&screen, data);
+		if (message_level > 1) {
+		    printf("TEST %04X (%d:%s) ->%04X\n", c_in,
+			   (int) (next - data->buffer),
+			   data->buffer,
+			   data->utf_data);
+		    fflush(stdout);
+		}
+		if (c_in != data->utf_data) {
+		    fprintf(stderr, "Mismatch: %04X vs %04X\n", c_in, data->utf_data);
+		    total_errs++;
+		}
+		free(data);
+	    }
+	    total_test++;
+	}
+    }
+}
+
+int
+main(int argc, char **argv)
+{
+    int ch;
+
+    setlocale(LC_ALL, "");
+    while ((ch = getopt(argc, argv, "aciqrv")) != -1) {
+	switch (ch) {
+	case 'a':
+	    opt_all = 1;
+	    break;
+	case 'c':
+	    opt_convert = 1;
+	    break;
+	case 'i':
+	    opt_illegal = 1;
+	    break;
+	case 'q':
+	    message_level--;
+	    break;
+	case 'r':
+	    opt_reverse = 1;
+	    break;
+	case 'v':
+	    message_level++;
+	    break;
+	default:
+	    usage();
+	}
+    }
+    if (opt_all) {
+	test_utf8_convert();
+    } else {
+	if (optind >= argc)
+	    usage();
+	while (optind < argc) {
+	    do_range(argv[optind++]);
+	}
+	if (total_test) {
+	    printf("%ld/%ld mismatches (%.0f%%)\n",
+		   total_errs,
+		   total_test,
+		   (100.0 * (double) total_errs) / (double) total_test);
+	}
+    }
+    return EXIT_SUCCESS;
+}
+#else
+int
+main(int argc, char **argv)
+{
+    (void) argc;
+    (void) argv;
+    printf("Nothing to be done here...\n");
+    return EXIT_SUCCESS;
+}
+#endif /* OPT_WIDE_CHARS */
 #endif

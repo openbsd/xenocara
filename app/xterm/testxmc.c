@@ -1,7 +1,7 @@
-/* $XTermId: testxmc.c,v 1.53 2019/06/30 18:56:50 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.54 2020/11/08 20:12:21 tom Exp $ */
 
 /*
- * Copyright 1997-2014,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -150,7 +150,7 @@ Mark_XMC(XtermWidget xw, int param)
 	xw->flags ^= whichone;
 	TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs,
 	       whichone, param));
-	dotext(xw, '?', glitch, screen->xmc_glitch);
+	dotext(xw, (DECNRCM_codes) '?', glitch, screen->xmc_glitch);
 	xw->flags = save;
     }
 }

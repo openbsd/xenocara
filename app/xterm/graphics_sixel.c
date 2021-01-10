@@ -1,7 +1,8 @@
-/* $XTermId: graphics_sixel.c,v 1.18 2016/06/05 20:04:01 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.28 2020/08/06 20:32:33 Ben.Wong Exp $ */
 
 /*
- * Copyright 2014,2016 by Ross Combs
+ * Copyright 2014-2016,2020 by Ross Combs
+ * Copyright 2014-2016,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -122,7 +123,9 @@ typedef struct {
 static void
 init_sixel_background(Graphic *graphic, SixelContext const *context)
 {
-    const int mw = graphic->max_width;
+    RegisterNum *source;
+    RegisterNum *target;
+    size_t length;
     int r, c;
 
     TRACE(("initializing sixel background to size=%dx%d bgcolor=%hu\n",
@@ -133,10 +136,15 @@ init_sixel_background(Graphic *graphic, SixelContext const *context)
     if (context->background == COLOR_HOLE)
 	return;
 
-    for (r = 0; r < graphic->actual_height; r++) {
-	for (c = 0; c < graphic->actual_width; c++) {
-	    graphic->pixels[r * mw + c] = context->background;
-	}
+    source = graphic->pixels;
+    for (c = 0; c < graphic->actual_width; c++) {
+	source[c] = context->background;
+    }
+    target = source;
+    length = (size_t) graphic->actual_width * sizeof(*target);
+    for (r = 1; r < graphic->actual_height; r++) {
+	target += graphic->max_width;
+	memcpy(target, source, length);
     }
     graphic->color_registers_used[context->background] = 1;
 }
@@ -248,9 +256,12 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
 	    new_col = 0;
 	}
 
-	TRACE(("setting text position after %dx%d graphic starting on row=%d col=%d: cursor new_row=%d new_col=%d\n",
+	TRACE(("setting text position after %dx%d\t%.1f start (%d %d): cursor (%d,%d)\n",
 	       graphic->actual_width * graphic->pixw,
 	       graphic->actual_height * graphic->pixh,
+	       ((double) graphic->charrow
+		+ ((double) (graphic->actual_height * graphic->pixh)
+		   / (double) FontHeight(screen))),
 	       graphic->charrow,
 	       graphic->charcol,
 	       new_row, new_col));
@@ -451,7 +462,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		init_sixel_background(graphic, &context);
 		graphic->valid = 1;
 	    }
-	    set_sixel(graphic, &context, sixel);
+	    if (sixel)
+		set_sixel(graphic, &context, sixel);
 	    context.col++;
 	} else if (ch == '$') {	/* DECGCR */
 	    /* ignore DECCRNLM in sixel mode */
@@ -462,7 +474,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    TRACE(("sixel NL\n"));
 	    scroll_lines = 0;
 	    while (graphic->charrow - scroll_lines +
-		   (((context.row + 6) * graphic->pixh
+		   (((context.row + Min(6, graphic->actual_height - context.row))
+		     * graphic->pixh
 		     + FontHeight(screen) - 1)
 		    / FontHeight(screen)) > screen->bot_marg) {
 		scroll_lines++;
@@ -491,24 +504,11 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    int Pcount;
 	    const char *start;
 	    int sixel;
-	    int i;
 
 	    start = ++string;
 	    for (;;) {
 		ch = CharOf(*string);
-		if (ch != '0' &&
-		    ch != '1' &&
-		    ch != '2' &&
-		    ch != '3' &&
-		    ch != '4' &&
-		    ch != '5' &&
-		    ch != '6' &&
-		    ch != '7' &&
-		    ch != '8' &&
-		    ch != '9' &&
-		    ch != ' ' &&
-		    ch != '\r' &&
-		    ch != '\n')
+		if (!(isdigit(ch) || isspace(ch)))
 		    break;
 		string++;
 	    }
@@ -528,9 +528,14 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		init_sixel_background(graphic, &context);
 		graphic->valid = 1;
 	    }
-	    for (i = 0; i < Pcount; i++) {
-		set_sixel(graphic, &context, sixel);
-		context.col++;
+	    if (sixel) {
+		int i;
+		for (i = 0; i < Pcount; i++) {
+		    set_sixel(graphic, &context, sixel);
+		    context.col++;
+		}
+	    } else {
+		context.col += Pcount;
 	    }
 	} else if (ch == '#') {	/* DECGCI */
 	    ANSI color_params;
@@ -540,7 +545,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    Pregister = color_params.a_param[0];
 	    if (Pregister >= (int) graphic->valid_registers) {
 		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
-		/* FIXME: supposedly the DEC terminals wrapped register indicies -- verify */
+		/* FIXME: supposedly the DEC terminals wrapped register indices -- verify */
 		while (Pregister >= (int) graphic->valid_registers)
 		    Pregister -= (int) graphic->valid_registers;
 		TRACE(("DATA_WARNING: converted to %d\n", Pregister));

@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.20 2019/05/19 08:56:22 tom Exp $
+# $XTermId: query-color.pl,v 1.26 2020/12/13 18:17:40 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012-2018,2019 by Thomas E. Dickey
+# Copyright 2012-2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -33,26 +33,25 @@
 # -----------------------------------------------------------------------------
 # Test the color-query features of xterm using OSC 4 or OSC 5.
 
-# TODO: optionally show result in #rrggbb format.
-
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_4, $opt_a, $opt_n, $opt_q, $opt_s );
+our ( $opt_4, $opt_a, $opt_n, $opt_q, $opt_r, $opt_s, $opt_t );
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('4an:qs') || die(
+&getopts('4an:qrst') || die(
     "Usage: $0 [options] [color1[-color2]]\n
 Options:\n
   -4      use OSC 4 for special colors rather than OSC 5
   -a      query all \"ANSI\" colors
   -n NUM  assume terminal supports NUM \"ANSI\" colors rather than 256
   -q      quicker results by merging queries
+  -r      show reported color in #rrggbb format
   -s      use ^G rather than ST
+  -t      show actual color
 "
 );
 
@@ -147,19 +146,56 @@ sub add_param($) {
 
 sub show_reply($) {
     my $reply = shift;
-    printf "data={%s}", &visible($reply);
-    if ( $reply =~ /^\d+;rgb:.*/ and ( $opt_4 or ( $this_op == 5 ) ) ) {
-        my $num = $reply;
-        my $max = $opt_4 ? $num_ansi_colors : 0;
-        $num =~ s/;.*//;
-        if ( $num >= $max ) {
-            my $name = &code2special( $num - $max );
-            printf "  %s", $name if ($name);
+    my $shown = sprintf "data={%s}", &visible($reply);
+    my $limit = 30;
+    if ( $reply =~ /^\d+;rgb:.*/ ) {
+        my $color = $reply;
+        $color =~ s/^\d+;rgb://;
+        if ( $color =~ /^[[:xdigit:]]{4}(\/[[:xdigit:]]{4}){2}/ ) {
+            $color =~ s/..$//;
+            $color =~ s/..\///g;
+            if ($opt_r) {
+                $shown = sprintf "#%s", $color;
+                $limit = 7;
+            }
         }
+        printf "%s", $shown;
+        if ( $opt_4 or ( $this_op == 5 ) ) {
+            my $num = $reply;
+            my $max = $opt_4 ? $num_ansi_colors : 0;
+            $num =~ s/;.*//;
+            if ( $num >= $max ) {
+                my $name = &code2special( $num - $max );
+                printf "  %s", $name if ($name);
+            }
+        }
+        if ($opt_t) {
+            my $num = $reply;
+            $num =~ s/;.*//;
+            printf "%*s", $limit - length($shown), " ";
+            if ( $num < 8 ) {
+                printf "\x1b[%dm", 40 + $num;
+            }
+            elsif ( $num < 16 ) {
+                printf "\x1b[%dm", 100 + $num - 8;
+            }
+            elsif ( $num < $num_ansi_colors ) {
+                printf "\x1b[48;5;%dm", $num;
+            }
+            else {
+            }
+            printf "   ";
+            printf "\x1b[K";
+            printf "\x1b[m";
+        }
+    }
+    else {
+        printf "%s", $shown;
     }
 }
 
 sub finish_query() {
+    my $query;
     my $reply;
     my $n;
     my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
@@ -167,13 +203,20 @@ sub finish_query() {
     my $match = qr/^(${osc}.*${st})+$/;
 
     my $params = sprintf "%s;?;", ( join( ";?;", @query_params ) );
-    $reply = &get_reply( "\x1b]$this_op;" . $params . $ST );
+    $query = "\x1b]$this_op;" . $params . $ST;
+    $reply = &get_reply($query);
 
-    printf "query%s{%s}%*s", $this_op, &visible($params), 3 - length($params),
-      " ";
+    if ($opt_q) {
+        printf "query %s\n", &visible($query);
+    }
+    else {
+        printf "query %s%*s ", &visible($query),
+          15 - length( &visible($query) ),
+          " ";
+    }
 
     if ( defined $reply ) {
-        printf "len=%2d ", length($reply);
+        printf "reply len=%2d ", length($reply);
         if ( $reply =~ /${match}/ ) {
             my @chunks = split /${st}${osc}/, $reply;
             printf "\n" if ( $#chunks > 0 );
@@ -181,7 +224,7 @@ sub finish_query() {
                 $chunks[$c] =~ s/^${osc}// if ( $c == 0 );
                 $chunks[$c] =~ s/${st}$//  if ( $c == $#chunks );
                 $chunks[$c] =~ s/^;//;
-                printf "\t%d: ", $c if ( $#chunks > 0 );
+                printf "%3d: ", $c if ( $#chunks > 0 );
                 &show_reply( $chunks[$c] );
                 printf "\n" if ( $c < $#chunks );
             }

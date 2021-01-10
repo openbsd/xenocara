@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: closest-rgb.pl,v 1.11 2018/08/10 18:02:55 tom Exp $
+# $XTermId: closest-rgb.pl,v 1.12 2020/12/13 15:07:02 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2017,2018 by Thomas E. Dickey
+# Copyright 2017-2018,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -36,7 +36,6 @@
 
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 

@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.52 2018/12/15 15:15:00 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.56 2020/10/12 18:51:05 tom Exp $ */
 
 /*
- * Copyright 2007-2016,2018 by Thomas E. Dickey
+ * Copyright 2007-2018,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -50,8 +50,10 @@
 
 #if USE_TERMINFO
 #define TcapInit(buffer, name) (setupterm(name, fileno(stdout), &ignored) == OK)
+#define TcapFree()             (del_curterm(cur_term))
 #else
 #define TcapInit(buffer, name) (tgetent(buffer, name) == 1)
+#define TcapFree()		/*nothing */
 #endif
 
 #define NO_STRING (char *)(-1)
@@ -543,13 +545,14 @@ get_tcap_buffer(XtermWidget xw)
  * Retrieve the erase-key, for initialization in main program.
  */
 char *
-get_tcap_erase(XtermWidget xw GCC_UNUSED)
+get_tcap_erase(XtermWidget xw)
 {
 #if !USE_TERMINFO
     char *area = TScreenOf(xw)->tcap_area;
 #endif
     char *fkey;
 
+    (void) xw;
 #if USE_TERMINFO
     fkey = tigetstr("kbs");
 #else
@@ -638,12 +641,12 @@ free_termcap(XtermWidget xw)
 
 	for (have = 0; have < want; ++have) {
 	    char *fkey = screen->tcap_fkeys[have];
-	    if (fkey != 0 && fkey != NO_STRING) {
+	    if (fkey != NO_STRING) {
 		free(fkey);
 	    }
 	}
-	free(screen->tcap_fkeys);
-	screen->tcap_fkeys = 0;
+	FreeAndNull(screen->tcap_fkeys);
     }
 #endif
+    TcapFree();
 }

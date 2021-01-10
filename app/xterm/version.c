@@ -1,7 +1,7 @@
-/* $XTermId: version.c,v 1.6 2019/11/13 23:52:20 tom Exp $ */
+/* $XTermId: version.c,v 1.7 2020/06/23 22:46:02 tom Exp $ */
 
 /*
- * Copyright 2013-2018,2019 by Thomas E. Dickey
+ * Copyright 2013-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -49,7 +49,7 @@ xtermVersion(void)
     if (buffer == 0) {
 	const char *vendor = vendor_version;
 
-	buffer = TextAlloc(sizeof(vendor_version) + 256);
+	buffer = malloc(sizeof(vendor_version) + 256);
 	if (buffer == 0) {
 	    result = vendor;
 	} else {

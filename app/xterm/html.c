@@ -1,8 +1,8 @@
-/* $XTermId: html.c,v 1.17 2019/11/02 15:03:43 tom Exp $ */
+/* $XTermId: html.c,v 1.19 2020/06/02 23:24:26 tom Exp $ */
 
 /*
- * Copyright 2018,2019	Thomas E. Dickey
- * Copyright 2015,2018	Jens Schweikhardt
+ * Copyright 2018-2019,2020	Thomas E. Dickey
+ * Copyright 2015,2018		Jens Schweikhardt
  *
  * All Rights Reserved
  *
@@ -50,9 +50,11 @@ static void writeStyle(XtermWidget, FILE *fp);
 void
 xtermDumpHtml(XtermWidget xw)
 {
+    char *saveLocale;
     FILE *fp;
 
     TRACE(("xtermDumpHtml...\n"));
+    saveLocale = xtermSetLocale(LC_NUMERIC, "C");
     fp = create_printfile(xw, ".xhtml");
     if (fp != 0) {
 	dumpHtmlHeader(xw, fp);
@@ -60,6 +62,7 @@ xtermDumpHtml(XtermWidget xw)
 	dumpHtmlFooter(xw, fp);
 	fclose(fp);
     }
+    xtermResetLocale(LC_NUMERIC, saveLocale);
     TRACE(("...xtermDumpHtml done\n"));
 }
 
@@ -273,7 +276,7 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 }
 
 static void
-dumpHtmlFooter(XtermWidget xw GCC_UNUSED, FILE *fp)
+dumpHtmlFooter(XtermWidget xw, FILE *fp)
 {
     fputs("</pre>\n", fp);
     fputs("  </div>\n", fp);

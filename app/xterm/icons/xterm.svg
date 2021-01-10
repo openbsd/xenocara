@@ -13,13 +13,13 @@
    height="48px"
    id="svg2985"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="xterm.svg"
    sodipodi:version="0.32"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    enable-background="new">
   <title
-     id="title2983">terminal</title>
+     id="title2983">xterm</title>
   <defs
      id="defs2987">
     <inkscape:perspective
@@ -32,13 +32,13 @@
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#000000"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0"
+     inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="9.8994949"
-     inkscape:cx="10.099708"
+     inkscape:cx="-15.356136"
      inkscape:cy="22.28651"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -68,7 +68,7 @@
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:title>xterm</dc:title>
         <cc:license
-           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
+           rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
         <dc:creator>
           <cc:Agent>
             <dc:title>Thomas E. Dickey</dc:title>
@@ -81,11 +81,11 @@
         </dc:rights>
         <dc:description>XTerm icon, in SVG format.</dc:description>
         <dc:date>June 14, 2012</dc:date>
-        <dc:source>http://invisible-island.net/xterm/</dc:source>
-        <dc:identifier>http://invisible-island.net/xterm/xterm</dc:identifier>
+        <dc:source>https://invisible-island.net/xterm/xterm.icon.html</dc:source>
+        <dc:identifier>https://invisible-island.net/xterm/images/icons-xterm_281.png</dc:identifier>
       </cc:Work>
       <cc:License
-         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+         rdf:about="http://creativecommons.org/licenses/by/4.0/">
         <cc:permits
            rdf:resource="http://creativecommons.org/ns#Reproduction" />
         <cc:permits
@@ -628,25 +628,25 @@
        d="M 33,44.5 A 0.5,0.5 0 1 1 32,44.5 A 0.5,0.5 0 1 1 33,44.5 z" />
     <text
        xml:space="preserve"
-       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Serif;-inkscape-font-specification:Serif"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:serif;-inkscape-font-specification:Serif;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="9.3944197"
        y="17.392376"
-       id="text2446"
-       sodipodi:linespacing="125%"><tspan
+       id="text2446"><tspan
          sodipodi:role="line"
          id="tspan2448"
          x="9.3944197"
-         y="17.392376">X</tspan></text>
+         y="17.392376"
+         style="font-size:14px;line-height:1.25;font-family:serif">X</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Verdana';-inkscape-font-specification:'Verdana';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="9.2934036"
        y="27.796949"
-       id="text2450"
-       sodipodi:linespacing="125%"><tspan
+       id="text2450"><tspan
          sodipodi:role="line"
          id="tspan2452"
          x="9.2934036"
-         y="27.796949">TERM</tspan></text>
+         y="27.796949"
+         style="font-size:10px;line-height:1.25">TERM</tspan></text>
   </g>
 </svg>

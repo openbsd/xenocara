@@ -1,7 +1,8 @@
-/* $XTermId: graphics_regis.c,v 1.113 2019/11/13 23:24:03 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.126 2020/10/14 19:04:43 tom Exp $ */
 
 /*
- * Copyright 2014-2018,2019 by Ross Combs
+ * Copyright 2014-2019,2020 by Ross Combs
+ * Copyright 2014-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -48,30 +49,6 @@
 #define y1 my_y1
 #define y0 my_y0
 
-#define IS_HEX_DIGIT(CH) ( \
-  (CH) == '0' || \
-  (CH) == '1' || \
-  (CH) == '2' || \
-  (CH) == '3' || \
-  (CH) == '4' || \
-  (CH) == '5' || \
-  (CH) == '6' || \
-  (CH) == '7' || \
-  (CH) == '8' || \
-  (CH) == '9' || \
-  (CH) == 'a' || \
-  (CH) == 'b' || \
-  (CH) == 'c' || \
-  (CH) == 'd' || \
-  (CH) == 'e' || \
-  (CH) == 'f' || \
-  (CH) == 'A' || \
-  (CH) == 'B' || \
-  (CH) == 'C' || \
-  (CH) == 'D' || \
-  (CH) == 'E' || \
-  (CH) == 'F' )
-
 #define SCALE_FIXED_POINT 16U
 
 #undef DEBUG_PARSING
@@ -92,7 +69,8 @@
 #undef DEBUG_FONT_NAME
 #undef DEBUG_FONT_SIZE_SEARCH
 #undef DEBUG_XFT_GLYPH
-#undef DEBUG_USER_GLYPH
+#undef DEBUG_GLYPH_RETRIEVAL
+#undef DEBUG_XFT_GLYPH_LOADING
 #undef DEBUG_LOAD
 
 /* controls for extensions over VT3x0 limitations */
@@ -162,7 +140,7 @@ typedef struct RegisAlphabet {
     char           fontname[REGIS_FONTNAME_LEN];
     int            use_font;
     int            loaded[MAX_GLYPHS];
-    unsigned char *bytes;
+    Char          *bytes;
 } RegisAlphabet;
 
 typedef struct RegisDataFragment {
@@ -222,7 +200,7 @@ typedef struct RegisGraphicsContext {
     XtermWidget current_widget;
     Graphic *destination_graphic;
     Graphic *display_graphic;
-    int terminal_id;
+    int graphics_termid;
     int x_off, y_off;
     int x_div, y_div;
     int width, height;
@@ -292,13 +270,13 @@ static RegisParseState persistent_state;
 #define DRAW_ALL(C, COL) \
     draw_solid_rectangle((C)->destination_graphic, 0, 0, (C)->width, (C)->height, (COL))
 
-static unsigned get_shade_character_pixel(unsigned char const *pixels,
+static unsigned get_shade_character_pixel(Char const *pixels,
 					  unsigned w, unsigned h,
 					  unsigned smaxf, unsigned scale,
 					  int slant_dx, int px, int py);
 static void get_bitmap_of_character(RegisGraphicsContext const *context,
 				    int ch, unsigned maxw, unsigned maxh,
-				    unsigned char *pixels,
+				    Char *pixels,
 				    unsigned *w, unsigned *h,
 				    unsigned max_pixels);
 
@@ -310,7 +288,7 @@ init_regis_load_state(RegisParseState *state)
     state->load_h = 10U;
     state->load_alphabet = 1U;	/* FIXME: is this the correct default */
     state->load_name[0] = '\0';
-    state->load_glyph = (unsigned) (unsigned char) '\0';
+    state->load_glyph = (unsigned) (Char) '\0';
     state->load_row = 0U;
 }
 
@@ -448,7 +426,7 @@ shade_pattern_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 }
 
 static void
-shade_char_to_pixel(RegisGraphicsContext *context, unsigned char const *pixels,
+shade_char_to_pixel(RegisGraphicsContext *context, Char const *pixels,
 		    unsigned w, unsigned h, unsigned dim, int ref, int x, int y)
 {
     unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
@@ -513,7 +491,7 @@ shade_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 	unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
 	unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
 	char ch = context->temporary_write_controls.shading_character;
-	unsigned char pixels[MAX_GLYPH_PIXELS];
+	Char pixels[MAX_GLYPH_PIXELS];
 	unsigned w, h;
 
 	get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
@@ -575,24 +553,22 @@ sort_points(void const *l, void const *r)
 }
 
 static void
-draw_filled_polygon(RegisGraphicsContext *context)
+draw_shaded_polygon(RegisGraphicsContext *context)
 {
     unsigned p;
     int old_x, old_y;
     int inside;
-    unsigned char pixels[MAX_GLYPH_PIXELS];
+    Char pixels[MAX_GLYPH_PIXELS];
     unsigned w = 1, h = 1;
 
-    if (context->temporary_write_controls.shading_character != '\0') {
-	char ch = context->temporary_write_controls.shading_character;
-	unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
-	unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
+    char ch = context->temporary_write_controls.shading_character;
+    unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
+    unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
 
-	get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
-				MAX_GLYPH_PIXELS);
-	if (w < 1U || h < 1U) {
-	    return;
-	}
+    get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
+			    MAX_GLYPH_PIXELS);
+    if (w < 1U || h < 1U) {
+	return;
     }
 
     qsort(context->fill_points, (size_t) context->fill_point_count,
@@ -627,26 +603,76 @@ draw_filled_polygon(RegisGraphicsContext *context)
 		 * Just draw the vertical line when there is not a matching
 		 * edge on the right side.
 		 */
-		if (context->temporary_write_controls.shading_character != '\0') {
-		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X,
-					old_x, old_x, old_y);
-		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
-					   old_x, old_x, old_y);
-		}
+		shade_char_to_pixel(context, pixels, w, h,
+				    WRITE_SHADING_REF_X,
+				    old_x, old_x, old_y);
 	    }
 	    inside = 1;
 	} else {
 	    if (inside) {
-		if (context->temporary_write_controls.shading_character != '\0') {
-		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X,
-					old_x, new_x, new_y);
-		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
-					   old_x, new_x, new_y);
-		}
+		shade_char_to_pixel(context, pixels, w, h,
+				    WRITE_SHADING_REF_X,
+				    old_x, new_x, new_y);
+	    }
+	    if (new_x > old_x + 1) {
+		inside = !inside;
+	    }
+	}
+
+	old_x = new_x;
+	old_y = new_y;
+    }
+
+    context->destination_graphic->dirty = 1;
+}
+
+static void
+draw_filled_polygon(RegisGraphicsContext *context)
+{
+    unsigned p;
+    int old_x, old_y;
+    int inside;
+
+    qsort(context->fill_points, (size_t) context->fill_point_count,
+	  sizeof(context->fill_points[0]), sort_points);
+
+    old_x = DUMMY_STACK_X;
+    old_y = DUMMY_STACK_Y;
+    inside = 0;
+    for (p = 0U; p < context->fill_point_count; p++) {
+	int new_x = context->fill_points[p].x;
+	int new_y = context->fill_points[p].y;
+#if 0
+	printf("got %d,%d (%d,%d) inside=%d\n", new_x, new_y, old_x, old_y, inside);
+#endif
+
+	/*
+	 * FIXME: This is using pixels to represent lines which loses
+	 * information about exact slope and how many lines are present which
+	 * causes misbehavior with some inputs (especially complex polygons).
+	 * It also takes more room than remembering vertices, but I'd rather
+	 * not have to implement line segments for arcs.  Maybe store a count
+	 * at each vertex instead (doesn't fix the slope problem).
+	 */
+	/*
+	 * FIXME: Change this to only draw inside of polygons, and round
+	 * points in a uniform direction to avoid overlapping drawing.  As an
+	 * option we could continue to support drawing the outline.
+	 */
+	if (new_y != old_y) {
+	    if (inside) {
+		/*
+		 * Just draw the vertical line when there is not a matching
+		 * edge on the right side.
+		 */
+		shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+				       old_x, old_x, old_y);
+	    }
+	    inside = 1;
+	} else {
+	    if (inside) {
+		shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+				       old_x, new_x, new_y);
 	    }
 	    if (new_x > old_x + 1) {
 		inside = !inside;
@@ -882,7 +908,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
 }
 
 /*
- * The plot* functions are based on optimized rasterization primitves written by Zingl Alois.
+ * The plot* functions are based on optimized rasterization primitives written
+ * by Zingl Alois.
  * See http://members.chello.at/easyfilter/bresenham.html
  */
 
@@ -943,7 +970,7 @@ plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
 	y0 = sy + y1;
 	cur = -cur;		/* swap P0 P2 */
     }
-    if (cur != 0) {		/* no straight line */
+    if (cur != 0.0) {		/* no straight line */
 	long xy;
 	double dx, dy, err;
 
@@ -1060,7 +1087,7 @@ plotCubicBezierSeg(int x0, int y0,
     assert((y1 - y0) * (y2 - y3) < EP &&
 	   ((y3 - y0) * (y1 - y2) < EP || yb * yb < ya * yc + EP));
 
-    if (xa == 0 && ya == 0) {	/* quadratic Bezier */
+    if (xa == 0.0 && ya == 0.0) {	/* quadratic Bezier */
 	sx = ifloor((3 * x1 - x0 + 1) / 2);
 	sy = ifloor((3 * y1 - y0 + 1) / 2);	/* new midpoint */
 	plotQuadBezierSeg(x0, y0, sx, sy, x3, y3);
@@ -1513,7 +1540,7 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
 
 #ifdef DEBUG_SPECIFIC_CHAR_METRICS
 static void
-dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
+dump_bitmap_pixels(Char const *pixels, unsigned w, unsigned h)
 {
     unsigned yy, xx;
 
@@ -1533,71 +1560,99 @@ dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
 
 #if OPT_RENDERFONT && defined(HAVE_TYPE_FCCHAR32)
 static int
-copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
-			  unsigned char *pixels, unsigned w, unsigned h,
+copy_bitmap_from_xft_font(XtermWidget xw, XftFont *font, FcChar32 ch,
+			  Char *pixels, unsigned w, unsigned h,
 			  unsigned xmin, unsigned ymin)
 {
     /*
      * FIXME: cache:
      * - the bitmap for the last M characters and target dimensions
-     * - resuse the pixmap object where possible
+     * - reuse the pixmap object where possible
      */
+    Display *display = XtDisplay(xw);
+    Screen *screen = XtScreen(xw);
     XftColor bg, fg;
     Pixmap bitmap;
     XftDraw *draw;
     XImage *image;
+    GC glyph_gc;
     unsigned bmw, bmh;
     unsigned xx, yy;
+
+    bmw = w + xmin;
+    bmh = h;
+    if (bmw < 1 || bmh < 1) {
+	TRACE(("refusing impossible bitmap size w=%d h=%d xmin=%d ymin=%d for ch='%c'\n",
+	       bmw, bmh, xmin, ymin, ch));
+	return 0;
+    }
+    bitmap = XCreatePixmap(display,
+			   DefaultRootWindow(display),
+			   bmw, bmh, (unsigned) getVisualDepth(xw));
+    if (bitmap == None) {
+	TRACE(("unable to create Pixmap for Xft\n"));
+	return 0;
+    }
+    draw = XftDrawCreate(display, bitmap, xw->visInfo->visual,
+			 XDefaultColormap(display,
+					  XScreenNumberOfScreen(screen)));
+    if (!draw) {
+	TRACE(("unable to create XftDraw\n"));
+	XFreePixmap(display, bitmap);
+	return 0;
+    }
 
     bg.pixel = 0UL;
     bg.color.red = 0;
     bg.color.green = 0;
     bg.color.blue = 0;
     bg.color.alpha = 0x0;
+    XftDrawRect(draw, &bg, 0, 0, bmw, bmh);
 
     fg.pixel = 1UL;
     fg.color.red = 0xffff;
     fg.color.green = 0xffff;
     fg.color.blue = 0xffff;
     fg.color.alpha = 0xffff;
+    XftDrawString32(draw, &fg, font, -(int) xmin, font->ascent - (int) ymin,
+		    &ch, 1);
 
-    bmw = w + xmin;
-    bmh = h;
-    bitmap = XCreatePixmap(display,
-			   DefaultRootWindow(display),
-			   bmw, bmh,
-			   1);
-    if (bitmap == None) {
-	TRACE(("Unable to create Pixmap\n"));
-	return 0;
-    }
-    draw = XftDrawCreateBitmap(display, bitmap);
-    if (!draw) {
-	TRACE(("Unable to create XftDraw\n"));
+    glyph_gc = XCreateGC(display, bitmap, 0UL, NULL);
+    if (!glyph_gc) {
+	TRACE(("unable to create GC\n"));
+	XftDrawDestroy(draw);
 	XFreePixmap(display, bitmap);
 	return 0;
     }
-
-    XftDrawRect(draw, &bg, 0, 0, bmw, bmh);
-    XftDrawString32(draw, &fg, font, 0, font->ascent - (int) ymin,
-		    &ch, 1);
-
-    image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1UL, XYPixmap);
+    XSetForeground(display, glyph_gc, 1UL);
+    XSetBackground(display, glyph_gc, 0UL);
+    image = XGetImage(display, bitmap, 0, 0, w, h, 1UL, XYPixmap);
     if (!image) {
-	TRACE(("Unable to create XImage\n"));
+	TRACE(("unable to create XImage\n"));
+	XFreeGC(display, glyph_gc);
 	XftDrawDestroy(draw);
 	XFreePixmap(display, bitmap);
 	return 0;
     }
 
     for (yy = 0U; yy < h; yy++) {
+#ifdef DEBUG_XFT_GLYPH_COPY
+	TRACE(("'%c'[%02u]:", ch, yy));
+#endif
 	for (xx = 0U; xx < w; xx++) {
-	    pixels[yy * w + xx] = (unsigned char) XGetPixel(image,
-							    (int) xx,
-							    (int) yy);
+	    unsigned long pix;
+	    pix = XGetPixel(image, (int) xx, (int) yy);
+	    pixels[yy * w + xx] = (unsigned char) pix;
+#ifdef DEBUG_XFT_GLYPH_COPY
+	    TRACE((" %lu", pix));
+#endif
 	}
+#ifdef DEBUG_XFT_GLYPH_COPY
+	TRACE(("\n"));
+#endif
     }
 
+    XFreeGC(display, glyph_gc);
     XDestroyImage(image);
     XftDrawDestroy(draw);
     XFreePixmap(display, bitmap);
@@ -1605,12 +1660,13 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
 }
 
 static void
-get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
+get_xft_glyph_dimensions(XtermWidget xw, XftFont *font, unsigned *w,
 			 unsigned *h, unsigned *xmin, unsigned *ymin)
 {
     unsigned workw, workh;
     FcChar32 ch;
-    unsigned char *pixels;
+    Char *pixels;
+    Char *pixelp;
     unsigned yy, xx;
     unsigned char_count, pixel_count;
     unsigned real_minx, real_maxx, real_miny, real_maxy;
@@ -1643,6 +1699,13 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
     if (!(pixels = malloc((size_t) (workw * workh)))) {
 	*w = 0U;
 	*h = 0U;
+#ifdef DEBUG_COMPUTED_FONT_METRICS
+	TRACE(("reported metrics:\n"));
+	TRACE((" %ux%u ascent=%u descent=%u\n", font->max_advance_width,
+	       font->height, font->ascent, font->descent));
+	TRACE(("computed metrics:\n"));
+	TRACE((" (unable to allocate pixel array)\n"));
+#endif
 	return;
     }
 
@@ -1653,37 +1716,60 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
     real_miny = workh - 1U;
     real_maxy = 0U;
     for (ch = 33; ch < 256; ++ch) {
-	if (ch >= 127 && ch <= 160)
+	if (ch >= 127 && ch <= 160) {
+#ifdef DEBUG_SPECIFIC_CHAR_METRICS
+	    if (IS_DEBUG_CHAR(ch))
+		printf("char: '%c' not in interesting range; ignoring\n",
+		       (char) ch);
+#endif
 	    continue;
-	if (!FcCharSetHasChar(font->charset, ch))
+	}
+	if (!FcCharSetHasChar(font->charset, ch)) {
+#ifdef DEBUG_SPECIFIC_CHAR_METRICS
+	    if (IS_DEBUG_CHAR(ch))
+		printf("char: '%c' not in charset; ignoring\n", (char) ch);
+#endif
 	    continue;
+	}
 
-	copy_bitmap_from_xft_font(display, font, ch, pixels,
-				  workw, workh, 0U, 0U);
+	if (!copy_bitmap_from_xft_font(xw, font, ch, pixels,
+				       workw, workh, 0U, 0U)) {
+#ifdef DEBUG_SPECIFIC_CHAR_METRICS
+	    if (IS_DEBUG_CHAR(ch))
+		printf("char: '%c' bitmap could not be copied; ignoring\n",
+		       (char) ch);
+#endif
+	    continue;
+	}
 
 	pixel_count = 0U;
 	char_minx = workh - 1U;
 	char_maxx = 0U;
 	char_miny = workh - 1U;
 	char_maxy = 0U;
+	pixelp = pixels;
 	for (yy = 0U; yy < workh; yy++) {
 	    for (xx = 0U; xx < workw; xx++) {
-		if (pixels[yy * workw + xx]) {
+		if (*pixelp++) {
 		    if (xx < char_minx)
 			char_minx = xx;
-		    if (xx > char_maxx)
+		    else if (xx > char_maxx)
 			char_maxx = xx;
 		    if (yy < char_miny)
 			char_miny = yy;
-		    if (yy > char_maxy)
+		    else if (yy > char_maxy)
 			char_maxy = yy;
 		    pixel_count++;
 		}
 	    }
 	}
-	if (pixel_count < 1U)
+	if (pixel_count < 1U) {
+#ifdef DEBUG_SPECIFIC_CHAR_METRICS
+	    if (IS_DEBUG_CHAR(ch))
+		printf("char: '%c' has no pixels; ignoring\n", (char) ch);
+#endif
 	    continue;
-
+	}
 #ifdef DEBUG_SPECIFIC_CHAR_METRICS
 	if (IS_DEBUG_CHAR(ch)) {
 	    printf("char: '%c' (%d)\n", (char) ch, ch);
@@ -1710,6 +1796,13 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
     free(pixels);
 
     if (char_count < 1U) {
+#ifdef DEBUG_COMPUTED_FONT_METRICS
+	TRACE(("reported metrics:\n"));
+	TRACE((" %ux%u ascent=%u descent=%u\n", font->max_advance_width,
+	       font->height, font->ascent, font->descent));
+	TRACE(("computed metrics:\n"));
+	TRACE((" (no characters found)\n"));
+#endif
 	*w = 0U;
 	*h = 0U;
 	return;
@@ -1748,6 +1841,9 @@ find_best_xft_font_size(XtermWidget xw,
     XftFont *font;
     unsigned targeth;
     unsigned ii, cacheindex;
+    /* FIXME: change cache to just cache the final result and put it in a
+     * wrapper function
+     */
     static struct {
 	char fontname[REGIS_FONTNAME_LEN];
 	unsigned maxw, maxh, max_pixels;
@@ -1765,6 +1861,10 @@ find_best_xft_font_size(XtermWidget xw,
     assert(xmin);
     assert(ymin);
 
+#ifdef DEBUG_FONT_SIZE_SEARCH
+    TRACE(("determining best size of font '%s' for %ux%u glyph with max_pixels=%u\n",
+	   fontname, maxw, maxh, max_pixels));
+#endif
     cacheindex = FONT_SIZE_CACHE_SIZE;
     for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
 	if (cache[ii].maxw == maxw && cache[ii].maxh == maxh &&
@@ -1782,8 +1882,8 @@ find_best_xft_font_size(XtermWidget xw,
     }
     for (;;) {
 	if (targeth <= 5U) {
-	    TRACE(("Giving up finding suitable Xft font size for %ux%u.\n",
-		   maxw, maxh));
+	    TRACE(("Giving up finding suitable Xft font size for \"%s\" at %ux%u.\n",
+		   fontname, maxw, maxh));
 	    return NULL;
 	}
 
@@ -1795,8 +1895,10 @@ find_best_xft_font_size(XtermWidget xw,
 	 *    doesn't appear to matter).
 	 *
 	 * In those two cases it literally drops pixels, sometimes whole
-	 * columns, making the glyphs unreadable and ugly even when readable.
+	 * columns, making the glyphs unreadable and at least ugly even when
+	 * readable.
 	 */
+	font = NULL;
 	/*
 	 * FIXME:
 	 * Also, we need to scale the width and height separately.  The
@@ -1810,11 +1912,15 @@ find_best_xft_font_size(XtermWidget xw,
 	    XftPattern *match;
 	    XftResult status;
 
-	    font = NULL;
 	    if ((pat = XftNameParse(fontname))) {
+#ifdef DEBUG_FONT_SIZE_SEARCH
+		TRACE(("trying targeth=%g\n", targeth / 10.0));
+#endif
 		XftPatternBuild(pat,
+#if 0
 		/* arbitrary value */
 				XFT_SIZE, XftTypeDouble, 12.0,
+#endif
 				XFT_PIXEL_SIZE, XftTypeDouble, (double)
 				targeth / 10.0,
 #if 0
@@ -1836,7 +1942,16 @@ find_best_xft_font_size(XtermWidget xw,
 	    }
 	}
 	if (!font) {
-	    TRACE(("Unable to open a monospaced Xft font.\n"));
+#ifdef DEBUG_FONT_SIZE_SEARCH
+	    {
+		char buffer[1024];
+
+		if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer)))
+		    printf("font name unparsed: \"%s\"\n", buffer);
+	    }
+#endif
+	    TRACE(("unable to open a monospaced Xft font matching '%s' with pixelsize %g\n",
+		   fontname, targeth / 10.0));
 	    return NULL;
 	}
 #ifdef DEBUG_FONT_SIZE_SEARCH
@@ -1844,9 +1959,9 @@ find_best_xft_font_size(XtermWidget xw,
 	    char buffer[1024];
 
 	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
-		printf("Testing font named \"%s\"\n", buffer);
+		TRACE(("Testing font named \"%s\"\n", buffer));
 	    } else {
-		printf("Testing unknown font\n");
+		TRACE(("Testing unknown font\n"));
 	    }
 	}
 #endif
@@ -1858,17 +1973,26 @@ find_best_xft_font_size(XtermWidget xw,
 	    *xmin = cache[cacheindex].xmin;
 	    *ymin = cache[cacheindex].ymin;
 	} else {
-	    get_xft_glyph_dimensions(display, font, w, h, xmin, ymin);
+	    get_xft_glyph_dimensions(xw, font, w, h, xmin, ymin);
+
+	    if (*w < 1 || *h < 1) {
+#ifdef DEBUG_FONT_SIZE_SEARCH
+		TRACE(("got %ux%u dimensions for target size targeth=%d; trying reduced target size\n",
+		       *w, *h, targeth));
+#endif
+		targeth--;
+		continue;
+	    }
 	}
 #ifdef DEBUG_FONT_SIZE_SEARCH
-	printf("checking max=%ux%u targeth=%u.%u\n", maxw, maxh, targeth /
-	       10U, targeth % 10U);
+	TRACE(("checking max=%ux%u targeth=%u.%u\n", maxw, maxh, targeth /
+	       10U, targeth % 10U));
 #endif
 
 	if (*h > maxh) {
 	    XftFontClose(display, font);
 #ifdef DEBUG_FONT_SIZE_SEARCH
-	    printf("got %ux%u glyph; too tall; reducing target size\n", *w, *h);
+	    TRACE(("got %ux%u glyph; too tall; reducing target size\n", *w, *h));
 #endif
 	    if (*h > 2U * maxh) {
 		targeth /= (*h / maxh);
@@ -1882,7 +2006,7 @@ find_best_xft_font_size(XtermWidget xw,
 	if (*w > maxw) {
 	    XftFontClose(display, font);
 #ifdef DEBUG_FONT_SIZE_SEARCH
-	    printf("got %ux%u glyph; too wide; reducing target size\n", *w, *h);
+	    TRACE(("got %ux%u glyph; too wide; reducing target size\n", *w, *h));
 #endif
 	    if (*w > 2U * maxw) {
 		targeth /= (*w / maxw);
@@ -1896,8 +2020,8 @@ find_best_xft_font_size(XtermWidget xw,
 	if (*w * *h > max_pixels) {
 	    XftFontClose(display, font);
 #ifdef DEBUG_FONT_SIZE_SEARCH
-	    printf("got %ux%u glyph; too many pixels; reducing target size\n",
-		   *w, *h);
+	    TRACE(("got %ux%u glyph; too many pixels; reducing target size\n",
+		   *w, *h));
 #endif
 	    if (*w * *h > 2U * max_pixels) {
 		unsigned min = *w < *h ? *w : *h;
@@ -1919,11 +2043,11 @@ find_best_xft_font_size(XtermWidget xw,
 	    char buffer[1024];
 
 	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
-		printf("Final font for \"%s\" max %dx%d is \"%s\"\n",
-		       fontname, maxw, maxh, buffer);
+		TRACE(("Final font for \"%s\" max %dx%d is \"%s\"\n",
+		       fontname, maxw, maxh, buffer));
 	    } else {
-		printf("Final font for \"%s\" max %dx%d is unknown\n",
-		       fontname, maxw, maxh);
+		TRACE(("Final font for \"%s\" max %dx%d is unknown\n",
+		       fontname, maxw, maxh));
 	    }
 	}
 #endif
@@ -1965,7 +2089,7 @@ find_best_xft_font_size(XtermWidget xw,
 static int
 get_xft_bitmap_of_character(RegisGraphicsContext const *context,
 			    char const *fontname, int ch,
-			    unsigned maxw, unsigned maxh, unsigned char *pixels,
+			    unsigned maxw, unsigned maxh, Char *pixels,
 			    unsigned max_pixels, unsigned *w, unsigned *h)
 {
     /*
@@ -1974,7 +2098,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      */
     /*
      * FIXME: cache:
-     * - resuse the font where possible
+     * - reuse the font where possible
      */
 #ifdef XRENDERFONT
     XtermWidget xw = context->destination_graphic->xw;
@@ -1982,19 +2106,32 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
+# ifdef DEBUG_XFT_GLYPH_LOADING
+    TRACE(("trying to load glyph '%c' at max size %dx%d\n", ch, maxw, maxh));
+# endif
     if (!(font = find_best_xft_font_size(xw, fontname, maxw, maxh,
 					 max_pixels, w, h, &xmin, &ymin))) {
 	TRACE(("Unable to find suitable Xft font\n"));
 	return 0;
     }
 
-    if (!copy_bitmap_from_xft_font(display, font, CharOf(ch), pixels, *w, *h,
+    if (*w == 0U || *h == 0U) {
+	TRACE(("empty glyph found for '%c'\n", ch));
+	XftFontClose(display, font);
+	return 1;
+    }
+
+    if (!copy_bitmap_from_xft_font(xw, font, CharOf(ch), pixels, *w, *h,
 				   xmin, ymin)) {
 	TRACE(("Unable to create bitmap for '%c'\n", ch));
 	XftFontClose(display, font);
 	return 0;
     }
     XftFontClose(display, font);
+# ifdef DEBUG_XFT_GLYPH_LOADING
+    TRACE(("loaded glyph '%c' at max size %dx%d\n", ch, maxw, maxh));
+# endif
+
     return 1;
 #else
     (void) context;
@@ -2007,6 +2144,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
     (void) w;
     (void) h;
 
+    TRACE(("Not rendering Xft font for ReGIS (support not compiled in).\n"));
     return 0;
 #endif
 }
@@ -2014,7 +2152,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
 static unsigned
 find_best_alphabet_index(RegisGraphicsContext const *context,
 			 unsigned minw, unsigned minh,
-			 unsigned maxw, unsigned maxh,
+			 unsigned targetw, unsigned targeth,
 			 unsigned max_pixels)
 {
     unsigned ii;
@@ -2022,8 +2160,9 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
     unsigned bestw, besth;
 
     assert(context);
-    assert(maxw);
-    assert(maxh);
+    assert(targetw);
+    assert(targeth);
+    assert(max_pixels);
 
     bestmatch = MAX_REGIS_ALPHABETS;
     bestw = 0U;
@@ -2033,10 +2172,12 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	    context->current_text_controls->alphabet_num &&
 	    context->alphabets[ii].pixw >= minw &&
 	    context->alphabets[ii].pixh >= minh &&
-	    context->alphabets[ii].pixw <= maxw &&
-	    context->alphabets[ii].pixh <= maxh &&
-	    context->alphabets[ii].pixw > bestw &&
-	    context->alphabets[ii].pixh > besth &&
+	    context->alphabets[ii].pixw <= targetw &&
+	    context->alphabets[ii].pixh <= targeth &&
+	    ((context->alphabets[ii].pixw >= bestw &&
+	      context->alphabets[ii].pixh > besth) ||
+	     (context->alphabets[ii].pixw > bestw &&
+	      context->alphabets[ii].pixh >= besth)) &&
 	    context->alphabets[ii].pixw *
 	    context->alphabets[ii].pixh <= max_pixels) {
 	    bestmatch = ii;
@@ -2045,13 +2186,38 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	}
     }
 
+    /* If we can't find one to scale up, look for one to scale down. */
+    if (bestmatch == MAX_REGIS_ALPHABETS) {
+	bestw = max_pixels;
+	besth = max_pixels;
+	for (ii = 0U; ii < MAX_REGIS_ALPHABETS; ii++) {
+	    if (context->alphabets[ii].alphabet_num ==
+		context->current_text_controls->alphabet_num &&
+		context->alphabets[ii].pixw >= minw &&
+		context->alphabets[ii].pixh >= minh &&
+		((context->alphabets[ii].pixw <= bestw &&
+		  context->alphabets[ii].pixh < besth) ||
+		 (context->alphabets[ii].pixw < bestw &&
+		  context->alphabets[ii].pixh <= besth)) &&
+		context->alphabets[ii].pixw *
+		context->alphabets[ii].pixh <= max_pixels) {
+		bestmatch = ii;
+		bestw = context->alphabets[ii].pixw;
+		besth = context->alphabets[ii].pixh;
+	    }
+	}
+    }
 #ifdef DEBUG_ALPHABET_LOOKUP
     if (bestmatch < MAX_REGIS_ALPHABETS) {
-	TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
-	       context->current_text_controls->alphabet_num, bestmatch,
+	TRACE(("for target size %ux%u alphabet %u found index %u size %ux%u font=%s\n",
+	       targetw, targeth, context->current_text_controls->alphabet_num,
+	       bestmatch,
 	       bestw, besth,
 	       context->alphabets[bestmatch].use_font ?
 	       context->alphabets[bestmatch].fontname : "(none)"));
+    } else {
+	TRACE(("for target size %ux%u alphabet %u found no suitable alphabets\n",
+	       targetw, targeth, context->current_text_controls->alphabet_num));
     }
 #endif
 
@@ -2064,9 +2230,10 @@ static int
 get_user_bitmap_of_character(RegisGraphicsContext const *context,
 			     int ch,
 			     unsigned alphabet_index,
-			     unsigned char *pixels)
+			     Char *pixels,
+			     unsigned int max_pixels)
 {
-    const unsigned char *glyph;
+    const Char *glyph;
     unsigned w, h;
     unsigned xx, yy;
     unsigned byte, bit;
@@ -2074,8 +2241,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     assert(context);
     assert(pixels);
 
-    if (!context->alphabets[alphabet_index].loaded[(unsigned char) ch]) {
-	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
+    if (!context->alphabets[alphabet_index].loaded[(Char) ch]) {
+	TRACE(("BUG: in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
 	       context->current_text_controls->alphabet_num, alphabet_index,
 	       ch));
 	return 0;
@@ -2086,13 +2253,21 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     w = context->alphabets[alphabet_index].pixw;
     h = context->alphabets[alphabet_index].pixh;
     glyph = &context->alphabets[alphabet_index]
-	.bytes[(unsigned char) ch * GLYPH_WIDTH_BYTES(w) * h];
+	.bytes[(Char) ch * GLYPH_WIDTH_BYTES(w) * h];
+
+    if (w * h > max_pixels) {
+	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' is too large: %ux%u (max_pixels=%u)\n",
+	       context->current_text_controls->alphabet_num, alphabet_index,
+	       ch, w, h, max_pixels));
+	return 0;
+    }
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
 	    byte = yy * GLYPH_WIDTH_BYTES(w) + (xx >> 3U);
 	    bit = xx & 7U;
-	    pixels[yy * w + xx] = ((unsigned) glyph[byte] >> (7U - bit)) & 1U;
+	    pixels[yy * w + xx] = (Char) (((unsigned) glyph[byte]
+					   >> (7U - bit)) & 1U);
 	}
     }
 
@@ -2135,7 +2310,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
  */
 static void
 get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
-			unsigned maxw, unsigned maxh, unsigned char *pixels,
+			unsigned maxw, unsigned maxh, Char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
     unsigned bestmatch;
@@ -2144,6 +2319,17 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
     assert(context);
     assert(w);
     assert(h);
+
+#ifdef DEBUG_GLYPH_RETRIEVAL
+    TRACE(("getting bitmap of glyph %d, current alphabet %d\n", ch,
+	   context->current_text_controls->alphabet_num));
+#endif
+
+    if (maxw < 1U || maxh < 1U || max_pixels < 1U) {
+	*w = 0U;
+	*h = 0U;
+	return;
+    }
 
     if (context->current_text_controls->alphabet_num == 0)
 	fontname = context->builtin_font;
@@ -2156,11 +2342,17 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
     if (bestmatch < MAX_REGIS_ALPHABETS) {
 	RegisAlphabet const *alpha = &context->alphabets[bestmatch];
 
+#ifdef DEBUG_GLYPH_RETRIEVAL
+	TRACE(("checking user glyph for slot=%u alphabet=%d use_font=%d loaded=%d\n",
+	       bestmatch, alpha->alphabet_num, alpha->use_font,
+	       alpha->loaded[ch]));
+#endif
 	if (!alpha->use_font &&
-	    get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
-#ifdef DEBUG_USER_GLYPH
+	    get_user_bitmap_of_character(context, ch, bestmatch, pixels,
+					 max_pixels)) {
+#ifdef DEBUG_GLYPH_RETRIEVAL
 	    TRACE(("found user glyph for alphabet number %d (index %u)\n\n",
-		   context->current_text_controls->alphabet_num, bestmatch));
+		   alpha->alphabet_num, bestmatch));
 #endif
 	    *w = alpha->pixw;
 	    *h = alpha->pixh;
@@ -2172,6 +2364,9 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
     }
 
     if (fontname) {
+#ifdef DEBUG_GLYPH_RETRIEVAL
+	TRACE(("using xft font %s\n", fontname));
+#endif
 	if (get_xft_bitmap_of_character(context, fontname, ch,
 					maxw, maxh, pixels,
 					max_pixels, w, h)) {
@@ -2223,7 +2418,7 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 #define SIGNED_UNSIGNED_MOD(VAL, BASE) ( (((VAL) % (int) (BASE)) + (int) (BASE)) % (int) (BASE) )
 
 static unsigned
-get_shade_character_pixel(unsigned char const *pixels, unsigned w, unsigned h,
+get_shade_character_pixel(Char const *pixels, unsigned w, unsigned h,
 			  unsigned smaxf, unsigned scale, int slant_dx,
 			  int px, int py)
 {
@@ -2262,7 +2457,7 @@ draw_character(RegisGraphicsContext *context, int ch,
     int ox, oy;
     unsigned pad_left, pad_right;
     unsigned pad_top, pad_bottom;
-    unsigned char pixels[MAX_GLYPH_PIXELS];
+    Char pixels[MAX_GLYPH_PIXELS];
     unsigned value;
 
     get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
@@ -3214,18 +3409,10 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     /* FIXME: handle exponential notation and rounding */
     /* FIXME: check for junk after the number */
     ch = peek_fragment(input);
-    if (ch != '0' &&
-	ch != '1' &&
-	ch != '2' &&
-	ch != '3' &&
-	ch != '4' &&
-	ch != '5' &&
-	ch != '6' &&
-	ch != '7' &&
-	ch != '8' &&
-	ch != '9' &&
+    if (!isdigit(CharOf(ch)) &&
 	ch != '+' &&
 	ch != '-') {
+	*out = 0;
 	return 0;
     }
 
@@ -3444,7 +3631,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     /*
      * The VT240 and VT330 models convert to the closest grayscale value.
      */
-    if (context->terminal_id == 240 || context->terminal_id == 330) {
+    if (context->graphics_termid == 240 || context->graphics_termid == 330) {
 	hls2rgb(0, l, 0, &r, &g, &b);
 	TRACE(("converted to grayscale: %hd,%hd,%hd\n", r, g, b));
     }
@@ -4372,7 +4559,7 @@ load_regis_write_control_set(RegisParseState *state,
 }
 
 static void
-init_regis_write_controls(int terminal_id, unsigned all_planes,
+init_regis_write_controls(int graphics_termid, unsigned all_planes,
 			  RegisWriteControls *controls)
 {
     controls->pv_multiplier = 1U;
@@ -4381,7 +4568,7 @@ init_regis_write_controls(int terminal_id, unsigned all_planes,
     controls->invert_pattern = 0U;
     controls->plane_mask = all_planes;
     controls->write_style = WRITE_STYLE_OVERLAY;
-    switch (terminal_id) {
+    switch (graphics_termid) {
     case 125:			/* FIXME: verify */
     case 240:			/* FIXME: verify */
     case 241:			/* FIXME: verify */
@@ -4535,7 +4722,7 @@ init_regis_alphabets(RegisGraphicsContext *context)
 }
 
 static void
-init_regis_graphics_context(int terminal_id, int width, int height,
+init_regis_graphics_context(int graphics_termid, int width, int height,
 			    unsigned max_colors, const char *builtin_font,
 			    RegisGraphicsContext *context)
 {
@@ -4543,7 +4730,7 @@ init_regis_graphics_context(int terminal_id, int width, int height,
     context->display_graphic = NULL;
     context->display_page = 0U;
     context->destination_page = 0U;
-    context->terminal_id = terminal_id;
+    context->graphics_termid = graphics_termid;
 
     /* reset addressing / clear user coordinates */
     context->width = width;
@@ -4567,7 +4754,7 @@ init_regis_graphics_context(int terminal_id, int width, int height,
 
     context->builtin_font = builtin_font;
 
-    init_regis_write_controls(terminal_id, context->all_planes,
+    init_regis_write_controls(graphics_termid, context->all_planes,
 			      &context->persistent_write_controls);
     copy_regis_write_controls(&context->persistent_write_controls,
 			      &context->temporary_write_controls);
@@ -4679,7 +4866,7 @@ parse_regis_command(RegisParseState *state)
 	 * (M(=)  # macrograph storage (free bytes of total bytes)
 	 * (P)  # absolute output cursor position
 	 * (P(I))  # interactive locator mode (in one-shot or multiple mode)
-	 * (P(I[xmul,ymul]))  # interactive locator mode with arrow key movement multiplers
+	 * (P(I[xmul,ymul]))  # interactive locator mode with arrow key movement multipliers
 	 */
 	TRACE(("found ReGIS command \"%c\" (report status)\n", ch));
 	state->command = 'r';
@@ -4689,7 +4876,7 @@ parse_regis_command(RegisParseState *state)
 	/* Screen
 
 	 * S
-	 * (A[<upper left>][<lower right>])  # adjust screen cordinates
+	 * (A[<upper left>][<lower right>])  # adjust screen coordinates
 	 * (C<setting>  # 0 (cursor output off), 1 (cursor output on)
 	 * (E)  # erase to background color, resets shades, curves, and stacks
 	 * (F)  # print the graphic and erase the screen (DECprint extension)
@@ -5575,14 +5762,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			if (suboption == 'i' || suboption == 'I') {
 			    output = 0;		/* input location report */
 			} else {
-			    TRACE(("DATA_ERROR: unknown ReGIS postion report suboption '%c'\n",
+			    TRACE(("DATA_ERROR: unknown ReGIS position report suboption '%c'\n",
 				   suboption));
 			    break;
 			}
 
 			skip_regis_whitespace(&suboptionarg);
 			if (!fragment_consumed(&optionarg)) {
-			    TRACE(("DATA_ERROR: unexpected content in ReGIS postion report suboptions: \"%s\"\n",
+			    TRACE(("DATA_ERROR: unexpected content in ReGIS position report suboptions: \"%s\"\n",
 				   fragment_to_tempstr(&suboptionarg)));
 			    break;
 			}
@@ -5916,8 +6103,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			}
 
 			if (color_only &&
-			    (context->terminal_id == 240 ||
-			     context->terminal_id == 330)) {
+			    (context->graphics_termid == 240 ||
+			     context->graphics_termid == 330)) {
 			    TRACE(("NOT setting color register %d to %hd,%hd,%hd\n",
 				   register_num, r, g, b));
 			} else {
@@ -7038,7 +7225,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	case 'l':
 	    /* FIXME: confirm that extra characters are ignored */
 	    TRACE(("found character to load: \"%s\"\n", state->temp));
-	    state->load_glyph = (unsigned) (unsigned char) state->temp[0];
+	    state->load_glyph = (unsigned) (Char) state->temp[0];
 	    state->load_row = 0U;
 	    break;
 	case 't':
@@ -7063,7 +7250,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	for (digit = 0U; digit < (state->load_w + 3U) >> 2U; digit++) {
 	    char ch = peek_fragment(input);
 
-	    if (!IS_HEX_DIGIT(ch)) {
+	    if (!isxdigit(CharOf(ch))) {
 		if (ch != ',' && ch != ';' &&
 		    ch != ' ' && ch != '\r' &&
 		    ch != '\n') {
@@ -7117,13 +7304,13 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		* context->alphabets[state->load_index].pixh;
 	    if (context->alphabets[state->load_index].bytes == NULL) {
 		if (!(context->alphabets[state->load_index].bytes =
-		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(unsigned char)))) {
+		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(Char)))) {
 		    TRACE(("ERROR: unable to allocate %u bytes for glyph storage\n",
 			   MAX_GLYPHS * glyph_size));
 		    return 0;
 		}
 	    } {
-		unsigned char *glyph;
+		Char *glyph;
 		unsigned bytew;
 		unsigned byte;
 		unsigned unused_bits;
@@ -7139,9 +7326,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		for (byte = 0U; byte < bytew; byte++) {
 		    glyph[state->load_row * bytew + byte] =
-			(unsigned char) (((val << unused_bits) >>
-					  ((bytew - (byte + 1U)) << 3U))
-					 & 255U);
+			(Char) (((val << unused_bits) >>
+				 ((bytew - (byte + 1U)) << 3U))
+				& 255U);
 #ifdef DEBUG_LOAD
 		    TRACE(("bytew=%u val=%lx byte=%u output=%x\n",
 			   bytew, val,
@@ -7151,6 +7338,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		}
 
 		state->load_row++;
+		context->alphabets[state->load_index].use_font = 0;
 		context->alphabets[state->load_index]
 		    .loaded[state->load_glyph] = 1;
 #ifdef DEBUG_LOAD
@@ -7273,7 +7461,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     }
     /* Load statements contain hex values which may look like commands. */
     ch = peek_fragment(&state->input);
-    if (state->command != 'l' || !IS_HEX_DIGIT(ch)) {
+    if (state->command != 'l' || !isxdigit(CharOf(ch))) {
 #ifdef DEBUG_PARSING
 	TRACE(("checking for top level command...\n"));
 #endif
@@ -7308,7 +7496,11 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	    context->fill_point_count = 0U;
 	    while (!fragment_consumed(&state->input))
 		parse_regis_toplevel(state, context);
-	    draw_filled_polygon(context);
+	    if (context->temporary_write_controls.shading_character != '\0') {
+		draw_shaded_polygon(context);
+	    } else {
+		draw_filled_polygon(context);
+	    }
 	    context->fill_point_count = 0U;
 	    context->fill_mode = 0;
 	    state->command = 'f';
@@ -7431,7 +7623,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     if (context->width == 0 || context->height == 0 ||
 	Pmode == 1 || Pmode == 3) {
 	init_regis_parse_state(state);
-	init_regis_graphics_context(screen->terminal_id,
+	init_regis_graphics_context(GraphicsTermId(screen),
 				    screen->graphics_regis_def_wide,
 				    screen->graphics_regis_def_high,
 				    get_color_register_count(screen),
@@ -7456,6 +7648,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	     * end of the fill command.
 	     */
 	    iterations++;
+	    memset(&curr_tv, 0, sizeof(curr_tv));
 	    if (context->force_refresh) {
 		X_GETTIMEOFDAY(&curr_tv);
 		need_refresh = 1;

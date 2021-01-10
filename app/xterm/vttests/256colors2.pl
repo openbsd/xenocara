@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: 256colors2.pl,v 1.24 2018/08/10 15:03:34 tom Exp $
+# $XTermId: 256colors2.pl,v 1.25 2020/06/07 22:52:05 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2016,2018 by Thomas E. Dickey
+# Copyright 1999-2018,2020 by Thomas E. Dickey
 # Copyright 2002 by Steve Wall
 # Copyright 1999 by Todd Larason
 #
@@ -44,15 +44,16 @@ use warnings;
 use Getopt::Std;
 use Encode 'encode_utf8';
 
-our ( $opt_8, $opt_c, $opt_d, $opt_h, $opt_q, $opt_r, $opt_s, $opt_u );
+our ( $opt_8, $opt_c, $opt_C, $opt_d, $opt_h, $opt_q, $opt_r, $opt_s, $opt_u );
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('8cdhqrsu') || die("Usage: $0 [options]");
+&getopts('8cCdhqrsu') || die("Usage: $0 [options]");
 die(
     "Usage: $0 [options]\n
 Options:
   -8  use 8-bit controls
   -c  use colons for separating parameter values in SGR 38/48
+  -C  like -c, but allow semicolon plus colon
   -d  use rgb values rather than palette index
   -h  display this message
   -q  quieter output by merging all palette initialization
@@ -66,7 +67,7 @@ our $cube = 6;
 our (@steps);
 our ( $red,  $green, $blue );
 our ( $gray, $level, $color );
-our ( $csi,  $osc,   $sep, $st );
+our ( $csi,  $osc,   $sep, $sep2, $st );
 
 our @rgb;
 
@@ -98,10 +99,10 @@ sub define_color($$$$) {
 sub select_color($) {
     my $index = $_[0];
     if ( $opt_d and defined( $rgb[$index] ) ) {
-        printf "%s48;2%s%sm  ", $csi, $sep, $rgb[$index];
+        printf "%s48%s2%s%sm  ", $csi, $sep, $sep2, $rgb[$index];
     }
     else {
-        printf "%s48;5%s%sm  ", $csi, $sep, $index;
+        printf "%s48%s5%s%sm  ", $csi, $sep, $sep2, $index;
     }
 }
 
@@ -131,6 +132,12 @@ if ($opt_c) {
 else {
     $sep = ";";
 }
+$sep2 = $sep;
+
+if ($opt_C) {
+    $sep  = ";";
+    $sep2 = ":";
+}
 
 if ( $opt_8 and $opt_u ) {
     my $lc_ctype = `locale 2>/dev/null | fgrep LC_CTYPE | sed -e 's/^.*=//'`;
@@ -140,6 +147,7 @@ if ( $opt_8 and $opt_u ) {
 }
 
 printf( "%s4", $osc ) if ($opt_q);
+
 if ($opt_s) {
     &system_color( 0,  0,   0,   0 );
     &system_color( 1,  205, 0,   0 );

@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.101 2019/09/12 00:24:07 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.104 2020/12/10 19:43:26 tom Exp $ */
 
 /*
- * Copyright 1997-2018,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -68,7 +68,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
 		   visibleDblChrset(oldChrSet),
 		   visibleDblChrset(newChrSet)));
-	    HideCursor();
+	    HideCursor(xw);
 
 	    /* If switching from single-width, keep the cursor in the visible part
 	     * of the line.
@@ -105,11 +105,12 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
  * we'll be using it for the top (true) or bottom (false) of the line.
  */
 void
-xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
+xterm_DECDHL(XtermWidget xw, Bool top)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, (unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
 #else
+    (void) xw;
     (void) top;
 #endif
 }
@@ -118,10 +119,12 @@ xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
  * Set the line to single-width characters (the normal state).
  */
 void
-xterm_DECSWL(XtermWidget xw GCC_UNUSED)
+xterm_DECSWL(XtermWidget xw)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_SWL);
+#else
+    (void) xw;
 #endif
 }
 
@@ -129,10 +132,12 @@ xterm_DECSWL(XtermWidget xw GCC_UNUSED)
  * Set the line to double-width characters
  */
 void
-xterm_DECDWL(XtermWidget xw GCC_UNUSED)
+xterm_DECDWL(XtermWidget xw)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_DWL);
+#else
+    (void) xw;
 #endif
 }
 
@@ -179,10 +184,7 @@ discard_font(XtermWidget xw, int n)
 
     data->chrset = 0;
     data->flags = 0;
-    if (data->fn != 0) {
-	free(data->fn);
-	data->fn = 0;
-    }
+    FreeAndNull(data->fn);
     xtermCloseFont(xw, data);
 
     screen->fonts_used -= 1;
@@ -274,8 +276,7 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 		if (!strcmp(data->fn, name)
 		    && data->fs != 0) {
 		    found = True;
-		    free(name);
-		    name = NULL;
+		    FreeAndNull(name);
 		} else {
 		    discard_font(params->xw, n);
 		}

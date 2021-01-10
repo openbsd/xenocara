@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.166 2017/12/19 23:47:15 tom Exp $ */
+/* $XTermId: print.c,v 1.170 2020/09/19 16:28:48 Ross.Combs Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -73,6 +73,13 @@ static void send_SGR(XtermWidget /* xw */ ,
 		     unsigned /* bg */ );
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
+
+#if OPT_PRINT_GRAPHICS
+static void setGraphicsPrintToHost(XtermWidget /* xw */ ,
+				   int /* enabled */ );
+#else
+#define setGraphicsPrintToHost(xw, enabled) /* nothing */
+#endif
 
 static void
 closePrinter(XtermWidget xw)
@@ -417,7 +424,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	     * This implementation only knows how to write to a file.  When the
 	     * file is closed the print command executes.  Print command must
 	     * be of the form:
-	     *   print/que=name/delete [/otherflags].
+	     *   print/queue=name/delete [/otherflags].
 	     */
 	    SPS.fp = fopen(VMS_TEMP_PRINT_FILE, "w");
 #else
@@ -534,19 +541,28 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 
     if (private_seq) {
 	switch (param) {
+	case -1:
+	case 0:		/* VT125 */
+	    setGraphicsPrintToHost(xw, 0);	/* graphics to printer */
+	    break;
 	case 1:
 	    printCursorLine(xw);
 	    break;
+	case 2:		/* VT125 */
+	    setGraphicsPrintToHost(xw, 1);	/* graphics to host */
+	    break;
 	case 4:
-	    setPrinterControlMode(xw, 0);
+	    setPrinterControlMode(xw, 0);	/* autoprint disable */
 	    break;
 	case 5:
-	    setPrinterControlMode(xw, 1);
+	    setPrinterControlMode(xw, 1);	/* autoprint enable */
 	    break;
 	case 10:		/* VT320 */
+	    /* print whole screen, across sessions */
 	    xtermPrintScreen(xw, False, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 11:		/* VT320 */
+	    /* print all pages in current session */
 	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
 	    break;
 	}
@@ -557,10 +573,10 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	    xtermPrintScreen(xw, True, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 4:
-	    setPrinterControlMode(xw, 0);
+	    setPrinterControlMode(xw, 0);	/* printer controller mode off */
 	    break;
 	case 5:
-	    setPrinterControlMode(xw, 2);
+	    setPrinterControlMode(xw, 2);	/* printer controller mode on */
 	    break;
 #if OPT_SCREEN_DUMPS
 	case 10:
@@ -703,6 +719,17 @@ xtermHasPrinter(XtermWidget xw)
 
     return result;
 }
+
+#if OPT_PRINT_GRAPHICS
+static void
+setGraphicsPrintToHost(XtermWidget xw, int enabled)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("graphics print to host enabled=%d\n", enabled));
+    screen->graphics_print_to_host = (Boolean) enabled;
+}
+#endif
 
 #define showPrinterControlMode(mode) \
 		(((mode) == 0) \

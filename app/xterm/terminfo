@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.184 2019/11/04 21:55:11 tom Exp $
+# $XTermId: terminfo,v 1.190 2020/12/11 09:23:14 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2017,2019 by Thomas E. Dickey
+# Copyright 1996-2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -919,8 +919,8 @@ xterm+sm+1006|xterm SGR-mouse,
 		%e
 			l
 		%;,
-	xm=\E[<
-		%p1%d;%p2%d;%p3%d;
+	xm=\E[<%i
+		%p3%d;%p1%d;%p2%d;
 		%?
 			%p4
 			%tM
@@ -942,10 +942,10 @@ xterm+x11mouse|X11 xterm mouse protocol,
 	xm=\E[M
 		%?
 			%p4
-			%t3
-		%e
-			%p3%'\s'%+%c
+			%t%p3
+		%e%{3}
 		%;
+		%'\s'%+%c
 		%p2%'!'%+%c%p1%'!'%+%c,
 
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
@@ -1012,6 +1012,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	mc5=\E[5i,
 	meml=\El,
 	memu=\Em,
+	nel=\EE,
 	op=\E[39;49m,
 	rc=\E8,
 	rev=\E[7m,
@@ -1194,6 +1195,47 @@ xterm-vt52|xterm emulating dec vt52,
 	rmacs=\EG,
 	smacs=\EF,
 	use=xterm+kbs,
+	use=vt52+keypad,
+
+# from ncurses 6.2:
+# DECScope of course had no "function keys", but this building block assigns
+# the three blank keys at the top of the auxiliary (numeric) keypad, using
+# the same analogy as vt100 (also lacking function-keys).
+#
+# These assignments use the same layout for 0-9 as vt100+keypad; the vt52
+# keypad had its cursor-keys on the right-column as shown -TD
+#   _______________________________________
+#  |   PF1   |   PF2   |   PF3   | c-up    |
+#  |   \EP   |   \EQ   |   \ER   |   \EA   |
+#  |_kf1__k1_|_kf2__k2_|_kf3__k3_|kcuu1_k4_|
+#  |    7         8         9      c-down  |
+#  |   \E?w  |   \E?x  |   \E?y  |   \EB   |
+#  |_kf9__k9_|_kf10_k;_|_kf0__k0_|kcud1____|
+#  |    4    |    5    |    6    | c-right |
+#  |   \E?t  |   \E?u  |   \E?v  |   \EC   |
+#  |_kf5__k5_|_kf6__k6_|_kf7__k7_|kcuf1_k8_|
+#  |    1    |    2    |    3    | c-left  |
+#  |   \E?q  |   \E?r  |   \E?s  |   \ED   |
+#  |_ka1__K1_|_kb2__K2_|_ka3__K3_|kcub1____|
+#  |         0         |   .     |  enter  |
+#  |        \E?p       |  \E?n   |  \E?M   |
+#  |___kc1_______K4____|_kc3__K5_|_kent_@8_|
+#
+vt52+keypad|DECScope auxiliary keypad,
+	ka1=\E?q,
+	ka3=\E?s,
+	kb2=\E?r,
+	kc1=\E?p,
+	kc3=\E?n,
+	kf0=\E?y,
+	kf1=\EP,
+	kf2=\EQ,
+	kf3=\ER,
+	kf5=\E?t,
+	kf6=\E?u,
+	kf7=\E?v,
+	kf8=\E?w,
+	kf9=\E?x,
 #
 # Sun does not number the function keys this way in their sparse termcap; their
 # terminal descriptions ignore the keypads.  kb(7M) states that there are codes
@@ -1522,7 +1564,32 @@ xterm+alt+title|xterm 90 and 251 features combined,
 	rmcup=\E[?1049l\E[23;0;0t,
 	smcup=\E[?1049h\E[22;0;0t,
 
-# from development after ncurses 6.1
+# from development after ncurses 6.1:
+# Xterm's emulation of the VT100 numeric keypad on a PC-keyboard runs into the
+# problem that the keypad layout is different, and that the natural choice for
+# PF1 is NumLock (which happens to be reserved for other use).  To work around
+# that, PF1-PF4 are emulated via F1-F4, which leaves the "/", "*" and "+" not
+# directly related to VT100.
+#
+# With the VT220 keypad block that uses the 1-9 keys as suggested in
+# terminfo(5), the other keys can be handled with user-defined capabilities:
+#
+#   _______________________________________
+#  | NumLock |    /    |    *    |    -    |
+#  |         |   $Oo   |   $Oj   |   $OS   |
+#  |_________|__kpDIV__|__kpMUL__|__kpSUB__|
+#  |    7         8         9    |         |
+#  |   $Ow   |   $Ox   |   $Oy   |    +    |
+#  |_ka1__K1_|_________|_ka3__K3_|   $Ok   |
+#  |    4    |    5    |    6    |  kpADD  |
+#  |   $Ot   |   $Ou   |   $Ov   |         |
+#  |_________|_kb2__K2_|_________|_________|
+#  |    1    |    2    |    3    |         |
+#  |   $Oq   |   $Or   |   $Os   |         |
+#  |_kc1__K4_|_________|_kc3__K5_|  enter  |
+#  |         0         |   .     |   $OM   |
+#  |        $Op        |  $On    |         |
+#  |___________________|_________|_kent_@8_|
 xterm+keypad|xterm emulating VT100/VT220 numeric keypad,
 	kp5=\EOE,
 	kpADD=\EOk,
@@ -1534,7 +1601,27 @@ xterm+keypad|xterm emulating VT100/VT220 numeric keypad,
 	kpZRO=\EOp,
 	use=vt220+keypad,
 
-# from develoment after ncurses 5.2
+# from development after ncurses 5.2:
+# A better adaptation to modern keyboards such as the PC's, which have a dozen
+# function keys and the keypad 2,4,6,8 keys are labeled with arrows keys, is to
+# use the 5-key arrangement to model the arrow keys as suggested in the
+# terminfo guidelines:
+#   _______________________________________
+#  |   PF1   |   PF2   |   PF3   |   PF4   |
+#  |   $OP   |   $OQ   |   $OR   |   $OS   |
+#  |_kf1__k1_|_kf2__k2_|_kf3__k3_|_kf4__k4_|
+#  |    7         8         9         -    |
+#  |   $Ow   |   $Ox   |   $Oy   |   $Om   |
+#  |_ka1__K1_|_________|_ka3__K3_|_________|
+#  |    4    |    5    |    6    |    ,    |
+#  |   $Ot   |   $Ou   |   $Ov   |   $Ol   |
+#  |_________|_kb2__K2_|_________|_________|
+#  |    1    |    2    |    3    |         |
+#  |   $Oq   |   $Or   |   $Os   |  enter  |
+#  |_kc1__K4_|_________|_kc3__K5_|  $OM    |
+#  |         0         |   .     |         |
+#  |        $Op        |  $On    |         |
+#  |___________________|_________|_kent_@8_|
 vt220+keypad|dec vt220 numeric keypad,
 	ka1=\EOw,
 	ka3=\EOy,
@@ -1754,7 +1841,7 @@ xterm-16color|xterm with 16 colors,
 		%e%ga%d
 		%;
 		m,
-	use=xterm+256color,
+	use=xterm+256color2,
 	use=xterm+osc104,
 	use=xterm-new,
 
@@ -1777,7 +1864,7 @@ xterm+osc104|reset color palette,
 # in a signed short.  Most people will not notice problems with only 32767
 # pairs.  With ncurses 6.1, numbers are stored in a signed integer (at least
 # 32-bits), and the inconsistency regarding pairs is eliminated.
-xterm+256color|xterm 256-color feature,
+xterm+256color|original xterm 256-color feature,
 	ccc,
 	colors#0x100,
 	pairs#0x10000,
@@ -1808,8 +1895,32 @@ xterm+256color|xterm 256-color feature,
 		m,
 	setb@,
 	setf@,
-xterm-256color|xterm with 256 colors,
+xterm+256color2|xterm 256-color feature,
+	setab=\E[
+		%?
+			%p1%{8}%<
+			%t4%p1%d
+		%e
+			%p1%{16}%<
+			%t10%p1%{8}%-%d
+		%e48\:5\:
+			%p1%d
+		%;
+		m,
+	setaf=\E[
+		%?
+			%p1%{8}%<
+			%t3%p1%d
+		%e
+			%p1%{16}%<
+			%t9%p1%{8}%-%d
+		%e38\:5\:
+			%p1%d
+		%;
+		m,
 	use=xterm+256color,
+xterm-256color|xterm with 256 colors,
+	use=xterm+256color2,
 	use=xterm+osc104,
 	use=xterm-new,
 xterm-88color|xterm with 88 colors,
@@ -1833,6 +1944,7 @@ xterm+direct|xterm with direct-color indexing,
 	RGB,
 	colors#0x1000000,
 	pairs#0x10000,
+	CO#8,
 	initc@,
 	op=\E[39;49m,
 	setab=\E[

@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.916 2019/11/14 01:11:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.965 2020/12/23 00:21:44 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -68,7 +68,6 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
-#include <X11/Xlocale.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
@@ -204,10 +203,10 @@ selectwindow(XtermWidget xw, int flag)
 #endif
 
 	if (screen->cursor_state && CursorMoved(screen))
-	    HideCursor();
+	    HideCursor(xw);
 	screen->select |= flag;
 	if (screen->cursor_state)
-	    ShowCursor();
+	    ShowCursor(xw);
     }
     GetScrollLock(screen);
 }
@@ -243,9 +242,9 @@ unselectwindow(XtermWidget xw, int flag)
 
 	    screen->select &= ~flag;
 	    if (screen->cursor_state && CursorMoved(screen))
-		HideCursor();
+		HideCursor(xw);
 	    if (screen->cursor_state)
-		ShowCursor();
+		ShowCursor(xw);
 	}
     }
 }
@@ -486,6 +485,41 @@ mergeConfigureEvents(XEvent *target)
 }
 
 /*
+ * Work around a bug in the X mouse code, which delivers duplicate events.
+ */
+static XtInputMask
+mergeButtonEvents(XEvent *target)
+{
+    XEvent next_event;
+    XButtonEvent *p;
+
+    XtAppNextEvent(app_con, target);
+    p = (XButtonEvent *) target;
+
+    if (XtAppPending(app_con)
+	&& XtAppPeekEvent(app_con, &next_event)
+	&& !memcmp(target, &next_event, sizeof(XButtonEvent))) {
+	Boolean merge_this = False;
+	XButtonEvent *q = (XButtonEvent *) (&next_event);
+
+	XtAppNextEvent(app_con, &next_event);
+	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
+
+	if (p->window == q->window) {
+	    TRACE(("pending ButtonEvent...merged\n"));
+	    merge_this = True;
+	}
+	if (!merge_this) {
+	    TRACE(("pending ButtonEvent...skipped\n"));
+	    XtDispatchEvent(target);
+	}
+	*target = next_event;
+    }
+    XtDispatchEvent(target);
+    return XtAppPending(app_con);
+}
+
+/*
  * Filter redundant Expose- and ConfigureNotify-events.  This is limited to
  * adjacent events because there could be other event-loop processing.  Absent
  * that limitation, it might be possible to scan ahead to find when the screen
@@ -508,6 +542,9 @@ xtermAppPending(void)
 	    result = mergeExposeEvents(&this_event);
 	} else if (this_event.type == ConfigureNotify) {
 	    result = mergeConfigureEvents(&this_event);
+	} else if (this_event.type == ButtonPress ||
+		   this_event.type == ButtonRelease) {
+	    result = mergeButtonEvents(&this_event);
 	} else {
 	    break;
 	}
@@ -583,16 +620,20 @@ xevents(XtermWidget xw)
 	    DoSpecialEnterNotify(xw, &event.xcrossing);
 	} else if (OUR_EVENT(event, LeaveNotify)) {
 	    DoSpecialLeaveNotify(xw, &event.xcrossing);
-	} else if ((screen->send_mouse_pos == ANY_EVENT_MOUSE
-#if OPT_DEC_LOCATOR
-		    || screen->send_mouse_pos == DEC_LOCATOR
-#endif /* OPT_DEC_LOCATOR */
-		   )
-		   && event.xany.type == MotionNotify
+	} else if (event.xany.type == MotionNotify
 		   && event.xcrossing.window == XtWindow(xw)) {
-	    SendMousePosition(xw, &event);
-	    xtermShowPointer(xw, True);
-	    continue;
+	    switch (screen->send_mouse_pos) {
+	    case ANY_EVENT_MOUSE:
+#if OPT_DEC_LOCATOR
+	    case DEC_LOCATOR:
+#endif /* OPT_DEC_LOCATOR */
+		SendMousePosition(xw, &event);
+		xtermShowPointer(xw, True);
+		continue;
+	    case BTN_EVENT_MOUSE:
+		SendMousePosition(xw, &event);
+		xtermShowPointer(xw, True);
+	    }
 	}
 
 	/*
@@ -633,6 +674,10 @@ xevents(XtermWidget xw)
 	     (event.xany.type != ButtonPress) &&
 	     (event.xany.type != ButtonRelease))) {
 
+	    if (event.xany.type == MappingNotify) {
+		XRefreshKeyboardMapping(&(event.xmapping));
+		VTInitModifiers(xw);
+	    }
 	    XtDispatchEvent(&event);
 	}
     } while (xtermAppPending() & XtIMXEvent);
@@ -659,15 +704,15 @@ make_hidden_cursor(XtermWidget xw)
 	fn = XLoadQueryFont(dpy, DEFFONT);
     }
 
-    if (fn != 0) {
+    if (fn != None) {
 	/* a space character seems to work as a cursor (dots are not needed) */
 	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
 	XFreeFont(dpy, fn);
     } else {
-	c = 0;
+	c = None;
     }
     TRACE(("XCreateGlyphCursor ->%#lx\n", c));
-    return (c);
+    return c;
 }
 
 /*
@@ -766,19 +811,56 @@ cleanup_colored_cursor(void)
 }
 
 Cursor
-make_colored_cursor(unsigned cursorindex,	/* index into font */
+make_colored_cursor(unsigned c_index,		/* index into font */
 		    unsigned long fg,	/* pixel value */
 		    unsigned long bg)	/* pixel value */
 {
     TScreen *screen = TScreenOf(term);
-    Cursor c;
+    Cursor c = None;
     Display *dpy = screen->display;
 
-    c = XCreateFontCursor(dpy, cursorindex);
+    TRACE(("alternate cursor font is \"%s\"\n", screen->cursor_font_name));
+    if (!IsEmpty(screen->cursor_font_name)) {
+	static XTermFonts myFont;
+
+	/* adapted from XCreateFontCursor(), which hardcodes the font name */
+	TRACE(("loading cursor from alternate cursor font\n"));
+	if ((myFont.fs = XLoadQueryFont(dpy, screen->cursor_font_name)) != 0) {
+	    if (!xtermMissingChar(c_index, &myFont)
+		&& !xtermMissingChar(c_index + 1, &myFont)) {
+#define DATA(c) { 0UL, c, c, c, 0, 0 }
+		static XColor foreground = DATA(0);
+		static XColor background = DATA(65535);
+#undef DATA
+
+		/*
+		 * Cursor fonts follow each shape glyph with a mask glyph; so
+		 * that character position 0 contains a shape, 1 the mask for
+		 * 0, 2 a shape, 3 a mask for 2, etc.  <X11/cursorfont.h>
+		 * contains defined names for each shape.
+		 */
+		c = XCreateGlyphCursor(dpy,
+				       myFont.fs->fid,	/* source_font */
+				       myFont.fs->fid,	/* mask_font */
+				       c_index + 0,	/* source_char */
+				       c_index + 1,	/* mask_char */
+				       &foreground,
+				       &background);
+	    }
+	    XFreeFont(dpy, myFont.fs);
+	}
+	if (c == None) {
+	    xtermWarning("cannot load cursor %u from alternate cursor font \"%s\"\n",
+			 c_index, screen->cursor_font_name);
+	}
+    }
+    if (c == None)
+	c = XCreateFontCursor(dpy, c_index);
+
     if (c != None) {
 	recolor_cursor(screen, c, fg, bg);
     }
-    return (c);
+    return c;
 }
 
 /* ARGSUSED */
@@ -936,8 +1018,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
     }
 
     /* We are the parent; clean up */
-    if (child_cwd)
-	free(child_cwd);
+    free(child_cwd);
     free(child_exe);
 }
 #endif /* OPT_EXEC_XTERM */
@@ -1290,7 +1371,7 @@ void
 xtermPerror(const char *fmt, ...)
 {
     int save_err = errno;
-    char *msg = strerror(errno);
+    const char *msg = strerror(errno);
     va_list ap;
 
     fflush(stdout);
@@ -1426,13 +1507,11 @@ dabbrev_expand(XtermWidget xw)
 	cell.col = screen->cur_col;
 	cell.row = screen->cur_row;
 
-	if (dabbrev_hint != 0)
-	    free(dabbrev_hint);
+	free(dabbrev_hint);
 
 	if ((dabbrev_hint = dabbrev_prev_word(xw, &cell, &ld)) != 0) {
 
-	    if (lastexpansion != 0)
-		free(lastexpansion);
+	    free(lastexpansion);
 
 	    if ((lastexpansion = strdup(dabbrev_hint)) != 0) {
 
@@ -1448,10 +1527,8 @@ dabbrev_expand(XtermWidget xw)
 	    return result;
 	}
 	if (!screen->dabbrev_working) {
-	    if (lastexpansion != 0) {
-		free(lastexpansion);
-		lastexpansion = 0;
-	    }
+	    free(lastexpansion);
+	    lastexpansion = 0;
 	    return result;
 	}
     }
@@ -1521,6 +1598,104 @@ HandleDabbrevExpand(Widget w,
 }
 #endif /* OPT_DABBREV */
 
+void
+xtermDeiconify(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Window target = VShellWindow(xw);
+    XEvent e;
+    Atom atom_state = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+
+    if (xtermIsIconified(xw)) {
+	TRACE(("...de-iconify window %#lx\n", target));
+	XMapWindow(dpy, target);
+
+	memset(&e, 0, sizeof(e));
+	e.xclient.type = ClientMessage;
+	e.xclient.message_type = atom_state;
+	e.xclient.display = dpy;
+	e.xclient.window = target;
+	e.xclient.format = 32;
+	e.xclient.data.l[0] = 1;
+	e.xclient.data.l[1] = CurrentTime;
+
+	XSendEvent(dpy, DefaultRootWindow(dpy), False,
+		   SubstructureRedirectMask | SubstructureNotifyMask, &e);
+	xevents(xw);
+    }
+}
+
+void
+xtermIconify(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Window target = VShellWindow(xw);
+
+    if (!xtermIsIconified(xw)) {
+	TRACE(("...iconify window %#lx\n", target));
+	XIconifyWindow(screen->display,
+		       target,
+		       DefaultScreen(screen->display));
+	xevents(xw);
+    }
+}
+
+Boolean
+xtermIsIconified(XtermWidget xw)
+{
+    XWindowAttributes win_attrs;
+    TScreen *screen = TScreenOf(xw);
+    Window target = VShellWindow(xw);
+    Display *dpy = screen->display;
+    Boolean result = False;
+
+    if (xtermGetWinAttrs(dpy, target, &win_attrs)) {
+	Atom actual_return_type;
+	int actual_format_return = 0;
+	unsigned long nitems_return = 0;
+	unsigned long bytes_after_return = 0;
+	unsigned char *prop_return = 0;
+	long long_length = 1024;
+	Atom requested_type = XA_ATOM;
+	Atom is_hidden = XInternAtom(dpy, "_NET_WM_STATE_HIDDEN", False);
+	Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+
+	/* this works with non-EWMH */
+	result = (win_attrs.map_state != IsViewable) ? True : False;
+
+	/* this is a convention used by some EWMH applications */
+	if (xtermGetWinProp(dpy,
+			    target,
+			    wm_state,
+			    0L,
+			    long_length,
+			    requested_type,
+			    &actual_return_type,
+			    &actual_format_return,
+			    &nitems_return,
+			    &bytes_after_return,
+			    &prop_return)
+	    && prop_return != 0
+	    && actual_return_type == requested_type
+	    && actual_format_return == 32) {
+	    unsigned long n;
+	    for (n = 0; n < nitems_return; ++n) {
+		unsigned long check = (((unsigned long *)
+					(void *) prop_return)[n]);
+		if (check == is_hidden) {
+		    result = True;
+		    break;
+		}
+	    }
+	}
+    }
+    TRACE(("...window %#lx is%s iconified\n",
+	   target,
+	   result ? "" : " not"));
+    return result;
+}
+
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
@@ -1532,8 +1707,7 @@ HandleDeIconify(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
-	XMapWindow(screen->display, VShellWindow(xw));
+	xtermDeiconify(xw);
     }
 }
 
@@ -1547,10 +1721,7 @@ HandleIconify(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
-	XIconifyWindow(screen->display,
-		       VShellWindow(xw),
-		       DefaultScreen(screen->display));
+	xtermIconify(xw);
     }
 }
 
@@ -1616,7 +1787,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 {
     TScreen *screen = TScreenOf(xw);
     XWindowAttributes wm_attrs, vshell_attrs;
-    unsigned root_width, root_height;
+    unsigned root_width = 0, root_height = 0;
     Boolean success = False;
 
     TRACE(("RequestMaximize %d:%s\n",
@@ -2370,11 +2541,17 @@ loadColorTable(XtermWidget xw, unsigned length)
 
 	if (screen->cmap_data != 0) {
 	    unsigned i;
+	    unsigned shift;
+
+	    if (getVisualInfo(xw))
+		shift = xw->rgb_shifts[2];
+	    else
+		shift = 0;
 
 	    screen->cmap_size = length;
 
 	    for (i = 0; i < screen->cmap_size; i++) {
-		screen->cmap_data[i].pixel = (unsigned long) i;
+		screen->cmap_data[i].pixel = (unsigned long) i << shift;
 	    }
 	    result = (Boolean) (XQueryColors(screen->display,
 					     cmap,
@@ -3167,7 +3344,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 			screen->selection_time =
 			    XtLastTimestampProcessed(TScreenOf(xw)->display);
 
-			for (j = 0, buf = old; j < n; ++j) {
+			for (j = 0; j < n; ++j) {
+			    buf = old;
 			    ClearSelectionBuffer(screen, select_args[j]);
 			    while (*buf != '\0') {
 				AppendToSelectionBuffer(screen,
@@ -3364,7 +3542,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 }
 
 static Bool
-UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
+UpdateOldColors(XtermWidget xw, ScrnColors * pNew)
 {
     int i;
 
@@ -3800,6 +3978,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    xw->work.palette_changed = False;
 	    xtermRepaint(xw);
 	    break;
+	default:
+	    xtermNeedSwap(xw, 1);
+	    break;
 	}
     }
 
@@ -3991,8 +4172,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	if (strcmp(buf, "?")) {
 	    char *bp;
 	    if ((bp = x_strdup(buf)) != NULL) {
-		if (screen->logfile)
-		    free(screen->logfile);
+		free(screen->logfile);
 		screen->logfile = bp;
 		break;
 	    }
@@ -4062,11 +4242,8 @@ reset_decudk(XtermWidget xw)
 {
     int n;
     for (n = 0; n < MAX_UDK; n++) {
-	if (xw->work.user_keys[n].str != 0) {
-	    free(xw->work.user_keys[n].str);
-	    xw->work.user_keys[n].str = 0;
-	    xw->work.user_keys[n].len = 0;
-	}
+	FreeAndNull(xw->work.user_keys[n].str);
+	xw->work.user_keys[n].len = 0;
     }
 }
 
@@ -4078,7 +4255,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = TextAlloc(strlen(cp) + 2);
+	char *str = malloc(strlen(cp) + 3);
 	unsigned key = 0;
 	int len = 0;
 
@@ -4099,8 +4276,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 	}
 	if (len > 0 && key < MAX_UDK) {
 	    str[len] = '\0';
-	    if (xw->work.user_keys[key].str != 0)
-		free(xw->work.user_keys[key].str);
+	    free(xw->work.user_keys[key].str);
 	    xw->work.user_keys[key].str = str;
 	    xw->work.user_keys[key].len = len;
 	    TRACE(("parse_decudk %d:%.*s\n", key, len, str));
@@ -4377,9 +4553,9 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     /* SCS designators */
     for (value = 0; value < NUM_GSETS; ++value) {
 	if (*cp == '%') {
-	    xtermDecodeSCS(xw, value, '%', *++cp);
+	    xtermDecodeSCS(xw, value, 0, '%', *++cp);
 	} else if (*cp != '\0') {
-	    xtermDecodeSCS(xw, value, '\0', *cp);
+	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
 	} else {
 	    return;
 	}
@@ -4567,14 +4743,14 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			/* XK_COLORS is a fake code for the "Co" entry (maximum
 			 * number of colors) */
 			if (code == XK_COLORS) {
-			    unparseputn(xw, (UParm) NUM_ANSI_COLORS);
+			    unparseputn(xw, (unsigned) NUM_ANSI_COLORS);
 			} else
 #if OPT_DIRECT_COLOR
 			if (code == XK_RGB) {
 			    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
 				if (xw->rgb_widths[0] == xw->rgb_widths[1] &&
 				    xw->rgb_widths[1] == xw->rgb_widths[2]) {
-				    unparseputn(xw, (UParm) xw->rgb_widths[0]);
+				    unparseputn(xw, xw->rgb_widths[0]);
 				} else {
 				    char temp[1024];
 				    sprintf(temp, "%d/%d/%d",
@@ -4695,31 +4871,23 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 	/* FALLTHRU */
     default:
-	if (screen->terminal_id == 125 ||
+	if (optRegisGraphics(screen) ||
+	    optSixelGraphics(screen) ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
-	    case 'p':
+	    case 'p':		/* ReGIS */
 #if OPT_REGIS_GRAPHICS
-		if (screen->terminal_id == 125 ||
-		    screen->terminal_id == 240 ||
-		    screen->terminal_id == 241 ||
-		    screen->terminal_id == 330 ||
-		    screen->terminal_id == 340) {
+		if (optRegisGraphics(screen)) {
 		    parse_regis(xw, &params, cp);
 		}
 #else
 		TRACE(("ignoring ReGIS graphic (compilation flag not enabled)\n"));
 #endif
 		break;
-	    case 'q':
+	    case 'q':		/* sixel */
 #if OPT_SIXEL_GRAPHICS
-		if (screen->terminal_id == 125 ||
-		    screen->terminal_id == 240 ||
-		    screen->terminal_id == 241 ||
-		    screen->terminal_id == 330 ||
-		    screen->terminal_id == 340 ||
-		    screen->terminal_id == 382) {
+		if (optSixelGraphics(screen)) {
 		    (void) parse_sixel(xw, &params, cp);
 		}
 #else
@@ -4941,26 +5109,39 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
 	    break;
-	case srm_REVERSEWRAP:	/* reverse wraparound   */
-	    result = MdFlag(xw->flags, REVERSEWRAP);
+#if OPT_PRINT_GRAPHICS
+	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
+	    result = MdBool(screen->graphics_expanded_print_mode);
 	    break;
-#ifdef ALLOWLOGGING
+#endif
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
+		result = MdFlag(xw->flags, REVERSEWRAP);
+	    break;
+#if defined(ALLOWLOGGING)
 	case srm_ALLOWLOGGING:	/* logging              */
-#ifdef ALLOWLOGFILEONOFF
-	    result = MdBool(screen->logging);
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+#if defined(ALLOWLOGFILEONOFF)
+		result = MdBool(screen->logging);
 #else
-	    result = ((MdBool(screen->logging) == mdMaybeSet)
-		      ? mdAlwaysSet
-		      : mdAlwaysReset);
-#endif /* ALLOWLOGFILEONOFF */
+		result = ((MdBool(screen->logging) == mdMaybeSet)
+			  ? mdAlwaysSet
+			  : mdAlwaysReset);
+#endif
+	    break;
+#elif OPT_PRINT_GRAPHICS
+	case srm_DECGPBM:	/* Graphics Print Background Mode */
+	    result = MdBool(screen->graphics_print_background_mode);
 	    break;
 #endif
 	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    /* FALLTHRU */
 	case srm_OPT_ALTBUF:
-	    /* FALLTHRU */
-	case srm_ALTBUF:
 	    result = MdBool(screen->whichBuf);
+	    break;
+	case srm_ALTBUF:
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+		result = MdBool(screen->whichBuf);
 	    break;
 	case srm_DECNKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECKPAM);
@@ -4987,7 +5168,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 		result = 0;
 	    }
 	    break;
-	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
+	case srm_VT200_MOUSE:	/* xterm bogus sequence */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
 	    break;
 	case srm_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
@@ -5009,6 +5190,8 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
 	case srm_URXVT_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case srm_PIXEL_POSITION_MOUSE:
 	    result = MdBool(screen->extend_coords == params[0]);
 	    break;
 	case srm_ALTERNATE_SCROLL:
@@ -5206,10 +5389,7 @@ x_find_icon(char **work, int *state, const char *filename, const char *suffix)
     if (*state >= 0) {
 	size_t length;
 
-	if (*work) {
-	    free(*work);
-	    *work = 0;
-	}
+	FreeAndNull(*work);
 	length = 3 + strlen(prefix) + strlen(filename) + strlen(larger) +
 	    strlen(suffix);
 	if ((result = malloc(length)) != 0) {
@@ -5384,11 +5564,11 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 	}
     }
 
-    if (workname != 0)
-	free(workname);
+    free(workname);
 
 #else
     (void) xw;
+    (void) icon_hint;
 #endif
 }
 
@@ -5500,7 +5680,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
 	TRACE(("ChangeGroup: assume ISO-8859-1\n"));
 	for (c1 = (Char *) value; *c1 != '\0'; ++c1) {
-	    *c1 = OnlyLatin1(*c1);
+	    *c1 = (Char) OnlyLatin1(*c1);
 	}
     }
 
@@ -5682,7 +5862,7 @@ ReverseOldColors(XtermWidget xw)
     char *tmpName;
 
     if (pOld) {
-	/* change text cursor, if necesary */
+	/* change text cursor, if necessary */
 	if (pOld->colors[TEXT_CURSOR] == pOld->colors[TEXT_FG]) {
 	    pOld->colors[TEXT_CURSOR] = pOld->colors[TEXT_BG];
 	    if (pOld->names[TEXT_CURSOR]) {
@@ -5706,6 +5886,7 @@ ReverseOldColors(XtermWidget xw)
 	EXCHANGE(pOld->colors[TEK_FG], pOld->colors[TEK_BG], tmpPix);
 	EXCHANGE(pOld->names[TEK_FG], pOld->names[TEK_BG], tmpName);
 #endif
+	FreeMarkGCs(xw);
     }
     return;
 }
@@ -5763,7 +5944,7 @@ const char *
 SysErrorMsg(int code)
 {
     static const char unknown[] = "unknown error";
-    char *s = strerror(code);
+    const char *s = strerror(code);
     return s ? s : unknown;
 }
 
@@ -6137,7 +6318,7 @@ xtermSetenv(const char *var, const char *value)
 	    environ = environ;
 	}
 
-	environ[found] = TextAlloc(1 + len + strlen(value));
+	environ[found] = malloc(2 + len + strlen(value));
 	if (environ[found] == 0) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
@@ -6413,10 +6594,7 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 
 #ifdef NO_LEAKS
     if (descs == 0) {
-	if (res_array != 0) {
-	    free(res_array);
-	    res_array = 0;
-	}
+	FreeAndNull(res_array);
     } else
 #endif
     if (res_array == 0) {
@@ -6447,8 +6625,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #ifdef NO_LEAKS
     if (descs == 0 && opt_array != 0) {
 	sortedOptDescs(descs, numDescs);
-	free(opt_array);
-	opt_array = 0;
+	FreeAndNull(opt_array);
 	return 0;
     } else if (options == 0 || descs == 0) {
 	return 0;
@@ -6508,9 +6685,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
 			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = TextAlloc(strlen(mesg)
-						    + 1
-						    + strlen(opt_array[j].desc));
+				char *s = malloc(strlen(mesg)
+						 + strlen(opt_array[j].desc)
+						 + 2);
 				if (s != 0) {
 				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
 				    opt_array[j].desc = s;
@@ -6563,7 +6740,7 @@ xtermEnvEncoding(void)
 #ifdef HAVE_LANGINFO_CODESET
 	result = nl_langinfo(CODESET);
 #else
-	char *locale = xtermEnvLocale();
+	const char *locale = xtermEnvLocale();
 	if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
 	    result = x_strdup("ASCII");
 	} else {
@@ -6731,6 +6908,17 @@ xtermOpenApplication(XtAppContext * app_context_return,
     return result;
 }
 
+/*
+ * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
+ * our own error-handler.
+ */
+/* ARGSUSED */
+int
+ignore_x11_error(Display *dpy GCC_UNUSED, XErrorEvent *event GCC_UNUSED)
+{
+    return 1;
+}
+
 static int x11_errors;
 
 static int
@@ -6834,23 +7022,31 @@ free_string(String value)
 }
 
 /* Set tty's idea of window size, using the given file descriptor 'fd'. */
-void
+int
 update_winsize(int fd, int rows, int cols, int height, int width)
 {
+    int code = -1;
 #ifdef TTYSIZE_STRUCT
-    TTYSIZE_STRUCT ts;
-    int code;
+    static int last_rows = -1;
+    static int last_cols = -1;
 
-    setup_winsize(ts, rows, cols, height, width);
-    TRACE_RC(code, SET_TTYSIZE(fd, ts));
-    trace_winsize(ts, "from SET_TTYSIZE");
-    (void) code;
+    if (rows != last_rows || cols != last_cols) {
+	TTYSIZE_STRUCT ts;
+
+	last_rows = rows;
+	last_cols = cols;
+	setup_winsize(ts, rows, cols, height, width);
+	TRACE_RC(code, SET_TTYSIZE(fd, ts));
+	trace_winsize(ts, "from SET_TTYSIZE");
+    }
 #endif
 
     (void) rows;
     (void) cols;
     (void) height;
     (void) width;
+
+    return code;
 }
 
 /*
@@ -7096,5 +7292,144 @@ xtermPopSGR(XtermWidget xw)
 	       traceIFlags(xw->flags)));
 #endif
     }
+}
+
+#if OPT_ISO_COLORS
+static ColorSlot *
+allocColorSlot(XtermWidget xw, int slot)
+{
+    SavedColors *s = &(xw->saved_colors);
+    ColorSlot *result = NULL;
+
+    if (slot >= 0 && slot < MAX_SAVED_SGR) {
+	if (s->palettes[slot] == NULL) {
+	    s->palettes[slot] = (ColorSlot *) calloc((size_t) 1,
+						     sizeof(ColorSlot)
+						     + (sizeof(ColorRes)
+							* MAXCOLORS));
+	}
+	result = s->palettes[slot];
+    }
+    return result;
+}
+
+static void
+popOldColors(XtermWidget xw, ScrnColors * source)
+{
+    Boolean changed = False;
+    ScrnColors *target = xw->work.oldColors;
+
+    if (source->which != target->which) {
+	changed = True;
+    } else {
+	int n;
+	for (n = 0; n < NCOLORS; ++n) {
+	    if (COLOR_DEFINED(source, n)) {
+		if (COLOR_DEFINED(target, n)) {
+		    if (source->colors[n] != target->colors[n]) {
+			changed = True;
+			break;
+		    }
+		} else {
+		    changed = True;
+		    break;
+		}
+	    } else if (COLOR_DEFINED(target, n)) {
+		changed = True;
+		break;
+	    }
+	}
+    }
+    if (changed) {
+	ChangeColors(xw, source);
+	UpdateOldColors(xw, source);
+    }
+}
+#endif /* OPT_ISO_COLORS */
+
+#define DiffColorSlot(d,s,n) (memcmp((d), (s), (n) * sizeof(ColorRes)) ? True : False)
+#define CopyColorSlot(d,s,n) memcpy((d), (s), (n) * sizeof(ColorRes))
+
+/*
+ * By default, a "push" increments the stack after copying to the current
+ * slot.  But a specific target allows one to copy into a specific slot.
+ */
+void
+xtermPushColors(XtermWidget xw, int value)
+{
+#if OPT_ISO_COLORS
+    SavedColors *s = &(xw->saved_colors);
+    int pushed = s->used;
+    int actual = (value <= 0) ? pushed : (value - 1);
+
+    TRACE(("xtermPushColors %d:%d\n", actual, pushed));
+    if (actual < MAX_SAVED_SGR && actual >= 0) {
+	TScreen *screen = TScreenOf(xw);
+	ColorSlot *palette;
+
+	if ((palette = allocColorSlot(xw, actual)) != NULL) {
+	    GetColors(xw, &(palette->base));
+	    CopyColorSlot(&(palette->ansi[0]), screen->Acolors, MAXCOLORS);
+	    if (value < 0) {
+		s->used++;
+		if (s->last < s->used)
+		    s->last = s->used;
+	    } else {
+		s->used = value;
+	    }
+	}
+    }
+#else
+    (void) xw;
+    (void) value;
+#endif
+}
+
+void
+xtermPopColors(XtermWidget xw, int value)
+{
+#if OPT_ISO_COLORS
+    SavedColors *s = &(xw->saved_colors);
+    int popped = (s->used - 1);
+    int actual = (value <= 0) ? popped : (value - 1);
+
+    TRACE(("xtermPopColors %d:%d\n", actual, popped));
+    if (actual < MAX_SAVED_SGR && actual >= 0) {
+	TScreen *screen = TScreenOf(xw);
+	ColorSlot *palette;
+
+	if ((palette = s->palettes[actual]) != NULL) {
+	    Boolean changed = DiffColorSlot(screen->Acolors,
+					    palette->ansi,
+					    MAXCOLORS);
+
+	    GetOldColors(xw);
+	    popOldColors(xw, &(palette->base));
+	    CopyColorSlot(screen->Acolors, &(palette->ansi[0]), MAXCOLORS);
+	    s->used = actual;
+	    if (changed)
+		xtermRepaint(xw);
+	}
+    }
+#else
+    (void) xw;
+    (void) value;
+#endif
+}
+
+void
+xtermReportColors(XtermWidget xw)
+{
+    ANSI reply;
+    SavedColors *s = &(xw->saved_colors);
+
+    memset(&reply, 0, sizeof(reply));
+    reply.a_type = ANSI_CSI;
+    reply.a_pintro = '?';
+    reply.a_param[reply.a_nparam++] = (ParmType) s->used;
+    reply.a_param[reply.a_nparam++] = (ParmType) s->last;
+    reply.a_inters = '#';
+    reply.a_final = 'Q';
+    unparseseq(xw, &reply);
 }
 #endif /* OPT_XTERM_SGR */

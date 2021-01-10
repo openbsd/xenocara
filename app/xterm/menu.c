@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.358 2019/09/17 08:11:55 tom Exp $ */
+/* $XTermId: menu.c,v 1.364 2020/10/13 08:07:27 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -58,8 +58,6 @@
 #include <menu.h>
 #include <fontutils.h>
 #include <xstrings.h>
-
-#include <locale.h>
 
 #include <X11/Xmu/CharSet.h>
 
@@ -151,14 +149,14 @@ static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
 static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
-static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
+static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 #if OPT_SCREEN_DUMPS
 static void do_dump_html       PROTO_XT_CALLBACK_ARGS;
 static void do_dump_svg        PROTO_XT_CALLBACK_ARGS;
 #endif
-static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
+static void do_hardreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_keepClipboard   PROTO_XT_CALLBACK_ARGS;
@@ -168,7 +166,7 @@ static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
-static void do_quit            PROTO_XT_CALLBACK_ARGS;
+static void do_quit            PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
 static void do_reversevideo    PROTO_XT_CALLBACK_ARGS;
 static void do_reversewrap     PROTO_XT_CALLBACK_ARGS;
@@ -177,7 +175,7 @@ static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
-static void do_softreset       PROTO_XT_CALLBACK_ARGS;
+static void do_softreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
@@ -412,6 +410,7 @@ MenuEntry fontMenuEntries[] = {
     { "font4",		do_vtfont,	NULL },
     { "font5",		do_vtfont,	NULL },
     { "font6",		do_vtfont,	NULL },
+    { "font7",		do_vtfont,	NULL },
     /* this is after the last builtin font; the other entries are special */
     { "fontescape",	do_vtfont,	NULL },
     { "fontsel",	do_vtfont,	NULL },
@@ -508,31 +507,11 @@ static MenuList vt_shell[NUM_POPUP_MENUS];
 static MenuList tek_shell[NUM_POPUP_MENUS];
 #endif
 
-static String
-setMenuLocale(Bool before, String substitute)
-{
-    String result = setlocale(LC_CTYPE, 0);
-
-    if (before) {
-	result = x_strdup(result);
-    }
-    (void) setlocale(LC_CTYPE, substitute);
-    TRACE(("setMenuLocale %s:%s\n",
-	   (before
-	    ? "before"
-	    : "after"),
-	   NonNull(result)));
-    if (!before) {
-	free((void *) substitute);
-    }
-    return result;
-}
-
 /*
  * Returns a pointer to the MenuList entry that matches the popup menu.
  */
 static MenuList *
-select_menu(Widget w GCC_UNUSED, MenuIndex num)
+select_menu(Widget w, MenuIndex num)
 {
 #if OPT_TEK4014 && OPT_TOOLBAR
     while (w != 0) {
@@ -541,6 +520,8 @@ select_menu(Widget w GCC_UNUSED, MenuIndex num)
 	}
 	w = XtParent(w);
     }
+#else
+    (void) w;
 #endif
     return &vt_shell[num];
 }
@@ -618,7 +599,7 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 	}
 	break;
     case vtMenu:
-#ifndef NO_ACTIVE_ICON
+#if !defined(NO_ACTIVE_ICON) && !OPT_TOOLBAR
 	if (!getIconicFont(screen)->fs || !screen->iconVwin.window) {
 	    result[vtMenu_activeicon] = True;
 	}
@@ -687,7 +668,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     struct _MenuEntry *entries = data->entry_list;
     Cardinal nentries = data->entry_len;
 #if !OPT_TOOLBAR
-    String saveLocale;
+    char *saveLocale;
 #endif
 
     if (screen->menu_item_bitmap == None) {
@@ -708,7 +689,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 				  (char *) check_bits, check_width, check_height);
     }
 #if !OPT_TOOLBAR
-    saveLocale = setMenuLocale(True, resource.menuLocale);
+    saveLocale = xtermSetLocale(LC_CTYPE, resource.menuLocale);
     list->w = XtCreatePopupShell(data->internal_name,
 				 simpleMenuWidgetClass,
 				 toplevel,
@@ -745,7 +726,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 #endif
     }
 #if !OPT_TOOLBAR
-    (void) setMenuLocale(False, saveLocale);
+    xtermResetLocale(LC_CTYPE, saveLocale);
 #endif
 
     /* do not realize at this point */
@@ -868,7 +849,7 @@ domenu(Widget w,
 	    int n;
 
 	    set_menu_font(True);
-	    for (n = fontMenu_font1; n <= fontMenu_font6; ++n) {
+	    for (n = fontMenu_font1; n <= fontMenu_font7; ++n) {
 		if (IsEmpty(screen->menu_font_names[n][fNorm]))
 		    SetItemSensitivity(fontMenuEntries[n].widget, False);
 	    }
@@ -2181,8 +2162,8 @@ HandleWriteError(Widget w,
 void
 HandlePrintScreen(Widget w GCC_UNUSED,
 		  XEvent *event GCC_UNUSED,
-		  String *params GCC_UNUSED,
-		  Cardinal *param_count GCC_UNUSED)
+		  String *params,
+		  Cardinal *param_count)
 {
     xtermPrintScreen(term, True, getPrinterFlags(term, params, param_count));
 }
@@ -2313,8 +2294,8 @@ do_fullscreen(Widget gw GCC_UNUSED,
 void
 HandleFullscreen(Widget w,
 		 XEvent *event GCC_UNUSED,
-		 String *params GCC_UNUSED,
-		 Cardinal *param_count GCC_UNUSED)
+		 String *params,
+		 Cardinal *param_count)
 {
     XtermWidget xw = term;
 
@@ -3042,7 +3023,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
     char *external_name = 0;
     Dimension button_height;
     Dimension button_border;
-    String saveLocale = setMenuLocale(True, resource.menuLocale);
+    char *saveLocale = xtermSetLocale(LC_CTYPE, resource.menuLocale);
 
     shell[n].w = XtVaCreatePopupShell(menu_names[n].internal_name,
 				      simpleMenuWidgetClass,
@@ -3075,7 +3056,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 		  XtNborderWidth, &button_border,
 		  (XtPointer) 0);
 
-    (void) setMenuLocale(False, saveLocale);
+    xtermResetLocale(LC_CTYPE, saveLocale);
     return (Dimension) (button_height + (button_border * 2));
 }
 #endif /* OPT_TOOLBAR */
@@ -3305,13 +3286,35 @@ ShowToolbar(Bool enable)
 	resource.toolBar = (Boolean) enable;
 	update_toolbar();
     }
+#if OPT_TOOLBAR
+    /*
+     * Layout for the toolbar confuses the Shell widget.  Remind it that we
+     * would like to be iconified if the corresponding resource was set.
+     */
+    {
+	static Bool first = True;
+	if (first && XtIsRealized(toplevel)) {
+	    Boolean iconic = 0;
+
+	    XtVaGetValues(toplevel,
+			  XtNiconic, &iconic,
+			  (XtPointer) 0);
+
+	    if (iconic) {
+		TRACE(("...please iconify window %#lx\n", XtWindow(toplevel)));
+		xtermIconify(xw);
+	    }
+	    first = False;
+	}
+    }
+#endif
 }
 
 void
 HandleToolbar(Widget w,
 	      XEvent *event GCC_UNUSED,
-	      String *params GCC_UNUSED,
-	      Cardinal *param_count GCC_UNUSED)
+	      String *params,
+	      Cardinal *param_count)
 {
     XtermWidget xw = term;
 

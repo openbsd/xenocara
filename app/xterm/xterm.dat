@@ -91,6 +91,8 @@
 *VT100*font5:              -bitstream-terminal-medium-r-normal-gs-36-280-100-100-c-220-iso8859-1
 *fontMenu*font6*Label:     Large-Narrow
 *VT100*font6:              -bitstream-terminal-medium-r-narrow--18-180-75-75-c-70-iso8859-1
+*fontMenu*font7*Label:     Enormous
+*VT100*font7:              -bitstream-terminal-medium-r-normal--*-200-100-100-c-*-iso8859-1
 *fontMenu*fontescape*Label:        Escape Sequence
 *fontMenu*fontsel*Label:           Selection
 !fontescape and fontsel overridden by application

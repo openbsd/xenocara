@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.987 2019/11/17 20:07:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1026 2020/12/25 15:15:37 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -111,8 +111,6 @@
 #define TypeXtMallocN(type,n)	(type *)(void *)XtMalloc((Cardinal)(sizeof(type) * (size_t) (n)))
 #define TypeXtMalloc(type)	TypeXtMallocN(type, 1)
 
-/* use these to allocate partly-structured data */
-#define TextAlloc(n)		(char *)malloc(sizeof(char) * (size_t) ((n) + 1))
 #define CastMalloc(type)	(type *)malloc(sizeof(type))
 
 #define BumpBuffer(type, buffer, size, want) \
@@ -132,11 +130,16 @@
 	BumpBuffer(type, BfBuf(type), BfLen(type), want)
 
 #define FreeTypedBuffer(type) \
-	if (BfBuf(type) != 0) { \
-	    free(BfBuf(type)); \
-	    BfBuf(type) = 0; \
-	} \
-	BfLen(type) = 0
+	do { \
+	    FreeAndNull(BfBuf(type)); \
+	    BfLen(type) = 0; \
+	} while (0)
+
+#define FreeAndNull(value) \
+	do { \
+	    free((void *)(value)); \
+	    value = NULL; \
+	} while (0)
 
 /*
 ** System V definitions
@@ -397,7 +400,7 @@ typedef struct {
 #define MAX_DECID 525			/* ...through VT525 */
 
 #ifndef DFT_DECID
-#define DFT_DECID "vt420"		/* default VT420 */
+#define DFT_DECID "420"			/* default VT420 */
 #endif
 
 #ifndef DFT_KBD_DIALECT
@@ -412,7 +415,7 @@ typedef struct {
 
 #define MAX_XLFD_FONTS	1
 #define MAX_XFT_FONTS	1
-#define NMENUFONTS	9		/* font entries in fontMenu */
+#define NMENUFONTS	10		/* font entries in fontMenu */
 
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	30			/* Max. parameters		*/
@@ -563,6 +566,10 @@ typedef enum {
 
 #ifndef OPT_SIXEL_GRAPHICS
 #define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
+#endif
+
+#ifndef OPT_PRINT_GRAPHICS
+#define OPT_PRINT_GRAPHICS 0 /* true if xterm supports screen dumps as sixel graphics */
 #endif
 
 #ifndef OPT_SCREEN_DUMPS
@@ -801,6 +808,10 @@ typedef enum {
 #define OPT_TRACE_FLAGS 0 /* additional tracing used for SCRN_BUF_FLAGS */
 #endif
 
+#ifndef OPT_TRACE_UNIQUE
+#define OPT_TRACE_UNIQUE 0 /* true if we're using multiple trace files */
+#endif
+
 #ifndef OPT_VT52_MODE
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
 #endif
@@ -1015,7 +1026,7 @@ typedef enum {
     nrc_ASCII = 0
     ,nrc_British		/* vt100 */
     ,nrc_British_Latin_1	/* vt3xx */
-    ,nrc_Cyrillic		/* vt5xx */
+    ,nrc_DEC_Cyrillic		/* vt5xx */
     ,nrc_DEC_Spec_Graphic	/* vt100 */
     ,nrc_DEC_Alt_Chars		/* vt100 */
     ,nrc_DEC_Alt_Graphics	/* vt100 */
@@ -1037,6 +1048,8 @@ typedef enum {
     ,nrc_Hebrew			/* vt5xx */
     ,nrc_ISO_Hebrew_Supp	/* vt5xx */
     ,nrc_Italian		/* vt2xx */
+    ,nrc_ISO_Latin_1_Supp	/* vt5xx */
+    ,nrc_ISO_Latin_2_Supp	/* vt5xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */
     ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
     ,nrc_Norwegian_Danish	/* vt3xx */
@@ -1089,12 +1102,17 @@ typedef enum {
     ,srm_132COLS = 40
     ,srm_CURSES_HACK = 41
     ,srm_DECNRCM = 42
-    ,srm_MARGIN_BELL = 44
-    ,srm_REVERSEWRAP = 45
-#ifdef ALLOWLOGGING
-    ,srm_ALLOWLOGGING = 46
+#if OPT_PRINT_GRAPHICS
+    ,srm_DECGEPM = 43		/* Graphics Expanded Print Mode */
 #endif
-    ,srm_ALTBUF = 47
+    ,srm_MARGIN_BELL = 44	/* also DECGPCM (Graphics Print Color Mode) */
+    ,srm_REVERSEWRAP = 45	/* also DECGPCS (Graphics Print Color Syntax) */
+#ifdef ALLOWLOGGING
+    ,srm_ALLOWLOGGING = 46	/* also DECGPBM (Graphics Print Background Mode) */
+#elif OPT_PRINT_GRAPHICS
+    ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
+#endif
+    ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
     ,srm_DECNKM = 66
     ,srm_DECBKM = 67
     ,srm_DECLRMM = 69
@@ -1112,6 +1130,7 @@ typedef enum {
     ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
     ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
     ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
+    ,srm_PIXEL_POSITION_MOUSE = SET_PIXEL_POSITION_MOUSE
     ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
@@ -1245,16 +1264,53 @@ typedef enum {
 } MouseOps;
 
 typedef enum {
-    epC0 = 1
-    , epBS
-    , epCR
-    , epDEL
-    , epESC
-    , epFF
-    , epHT
-    , epNL
+#define DATA(name) ep##name
+    DATA(NUL) = 0
+    , DATA(SOH) =  1
+    , DATA(STX) =  2
+    , DATA(ETX) =  3
+    , DATA(EOT) =  4
+    , DATA(ENQ) =  5
+    , DATA(ACK) =  6
+    , DATA(BEL) =  7
+    , DATA(BS)  =  8
+    , DATA(HT)  =  9
+    , DATA(LF)  = 10
+    , DATA(VT)  = 11
+    , DATA(FF)  = 12
+    , DATA(CR)  = 13
+    , DATA(SO)  = 14
+    , DATA(SI)  = 15
+    , DATA(DLE) = 16
+    , DATA(DC1) = 17
+    , DATA(DC2) = 18
+    , DATA(DC3) = 19
+    , DATA(DC4) = 20
+    , DATA(NAK) = 21
+    , DATA(SYN) = 22
+    , DATA(ETB) = 23
+    , DATA(CAN) = 24
+    , DATA(EM)  = 25
+    , DATA(SUB) = 26
+    , DATA(ESC) = 27
+    , DATA(FS)  = 28
+    , DATA(GS)  = 29
+    , DATA(RS)  = 30
+    , DATA(US)  = 31
+    /* aliases */
+    , DATA(C0)
+    , DATA(DEL)
+#undef DATA
     , epLAST
 } PasteControls;
+
+typedef enum {			/* legal values for keyboard.shift_escape */
+    ssFalse = 0
+    , ssTrue = 1
+    , ssAlways = 2
+    , ssNever = 3
+    , ssLAST
+} ShiftEscapeOps;
 
 /*
  * xterm uses these codes for the its push-SGR feature.  They match where
@@ -1275,12 +1331,18 @@ typedef enum {
 #if OPT_WIDE_ATTRS
     , psATR_STRIKEOUT = 9
 #endif
+    /* SGR 10-19 correspond to primary/alternate fonts, currently unused */
 #if OPT_ISO_COLORS
-    , psFG_COLOR = 10
-    , psBG_COLOR = 11
+    , psFG_COLOR_obs = 10
+    , psBG_COLOR_obs = 11
 #endif
 #if OPT_WIDE_ATTRS
     , psATR_DBL_UNDER = 21
+#endif
+    /* SGR 22-29 mostly are used to reset SGR 1-9 */
+#if OPT_ISO_COLORS
+    , psFG_COLOR = 30	/* stack maps many colors to one state */
+    , psBG_COLOR = 31
 #endif
     , MAX_PUSH_SGR
 } PushSGR;
@@ -1497,9 +1559,9 @@ typedef enum {
 #define SetLineDblCS(ld,cs)   (ld)->bufHead = (RowData) ((ld->bufHead & LINEFLAG_MASK) | (cs << LINEFLAG_BITS))
 
 #define LineCharSet(screen, ld) \
-	((CSET_DOUBLE(GetLineDblCS(ld))) \
-		? GetLineDblCS(ld) \
-		: (screen)->cur_chrset)
+	(unsigned) ((CSET_DOUBLE(GetLineDblCS(ld))) \
+		    ? GetLineDblCS(ld) \
+		    : (screen)->cur_chrset)
 #define LineMaxCol(screen, ld) \
 	(CSET_DOUBLE(GetLineDblCS(ld)) \
 	 ? (screen->max_col / 2) \
@@ -1516,8 +1578,8 @@ typedef enum {
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
 #define CSET_SWL                        0
-#define GetLineDblCS(ld)                0
-#define LineCharSet(screen, ld)         0
+#define GetLineDblCS(ld)                0U
+#define LineCharSet(screen, ld)         0U
 #define LineMaxCol(screen, ld)          screen->max_col
 #define LineCursorX(screen, ld, col)    CursorX(screen, col)
 #define LineFontWidth(screen, ld)       FontWidth(screen)
@@ -1986,9 +2048,18 @@ typedef enum {
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
 #endif
+#if OPT_GRAPHICS
 	DP_X_PRIVATE_COLOR_REGISTERS,
+#endif
 #if OPT_SIXEL_GRAPHICS
 	DP_SIXEL_SCROLLS_RIGHT,
+#endif
+#if OPT_PRINT_GRAPHICS
+	DP_DECGEPM,  /* Graphics Expanded Print Mode */
+	DP_DECGPCM,  /* Graphics Print Color Mode */
+	DP_DECGPCS,  /* Graphics Print Color Syntax */
+	DP_DECGPBM,  /* Graphics Print Background Mode */
+	DP_DECGRPM,  /* Graphics Rotated Print Mode */
 #endif
 	DP_LAST
 } SaveModes;
@@ -2107,8 +2178,8 @@ typedef struct {
 
 typedef struct {
 	Window		window;		/* X window id			*/
-	int		width;		/* width of columns		*/
-	int		height;		/* height of rows		*/
+	int		width;		/* width of columns in pixels	*/
+	int		height;		/* height of rows in pixels	*/
 	Dimension	fullwidth;	/* full width of window		*/
 	Dimension	fullheight;	/* full height of window	*/
 	int		f_width;	/* width of fonts in pixels	*/
@@ -2118,6 +2189,7 @@ typedef struct {
 	SbInfo		sb_info;
 	GC		filler_gc;	/* filler's fg/bg		*/
 	GC		border_gc;	/* inner border's fg/bg		*/
+	GC		marker_gc[2];	/* wrap-marks			*/
 #if USE_DOUBLE_BUFFER
 	Drawable	drawable;	/* X drawable id                */
 #endif
@@ -2202,6 +2274,43 @@ typedef enum {
 	, STEADY_BAR
 } XtCursorStyle;
 
+#if OPT_GRAPHICS
+#define GraphicsTermId(screen) (\
+	(screen)->graphics_termid \
+	 ? (screen)->graphics_termid \
+	 : (screen)->terminal_id)
+#else
+#define GraphicsTermId(screen) (screen)->terminal_id
+#endif
+
+#if OPT_REGIS_GRAPHICS
+#define optRegisGraphics(screen) \
+	(GraphicsTermId(screen) == 125 || \
+	 GraphicsTermId(screen) == 240 || \
+	 GraphicsTermId(screen) == 241 || \
+	 GraphicsTermId(screen) == 330 || \
+	 GraphicsTermId(screen) == 340)
+#else
+#define optRegisGraphics(screen) False
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+#define optSixelGraphics(screen) \
+	(GraphicsTermId(screen) == 240 || \
+	 GraphicsTermId(screen) == 241 || \
+	 GraphicsTermId(screen) == 330 || \
+	 GraphicsTermId(screen) == 340 || \
+	 GraphicsTermId(screen) == 382)
+#else
+#define optSixelGraphics(screen) False
+#endif
+
+#if OPT_PRINT_GRAPHICS
+#define if_PRINT_GRAPHICS2(statement) if (optRegisGraphics(screen)) { statement; } else
+#else
+#define if_PRINT_GRAPHICS2(statement) /* nothing */
+#endif
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
@@ -2275,6 +2384,7 @@ typedef struct {
 	int		utf8_title;	/* use UTF-8 EWHM props: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
 	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
+	Boolean		utf8_weblike;	/* use UTF-8 with browser bias	*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/
 	int		utf_count;	/* state of utf_char		*/
@@ -2407,6 +2517,7 @@ typedef struct {
 	int		pointer_mode;	/* when to use hidden_cursor	*/
 	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
+	String		pointer_shape;	/* name of shape in cursor font */
 	Cursor		pointer_cursor;	/* pointer cursor in window	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
@@ -2602,6 +2713,8 @@ typedef struct {
 #endif
 
 #if OPT_GRAPHICS
+	String		graph_termid;		/* resource for graphics_termid */
+	int		graphics_termid;	/* based on terminal_id   */
 	String		graphics_max_size;	/* given a size in pixels */
 	Dimension	graphics_max_wide;	/* ...corresponding width */
 	Dimension	graphics_max_high;	/* ...and height          */
@@ -2622,6 +2735,16 @@ typedef struct {
 #if OPT_GRAPHICS
 	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
+#endif
+
+	/* Graphics Printing */
+#if OPT_PRINT_GRAPHICS
+	Boolean		graphics_print_to_host;
+	Boolean		graphics_expanded_print_mode;
+	Boolean		graphics_print_color_mode;
+	Boolean		graphics_print_color_syntax;
+	Boolean		graphics_print_background_mode;
+	Boolean		graphics_rotated_print_mode;
 #endif
 
 #if OPT_VT52_MODE
@@ -2753,6 +2876,7 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
+	Boolean		force_xft_height;
 	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
@@ -2778,6 +2902,7 @@ typedef struct {
 #if OPT_TCAP_FKEYS
 	char **		tcap_fkeys;
 #endif
+	String		cursor_font_name;	/* alternate cursor font */
 } TScreen;
 
 typedef XTermFonts *(*MyGetFont) (TScreen *, int);
@@ -2942,9 +3067,13 @@ typedef struct
 {
     xtermKeyboardType type;
     IFlags flags;
-    char *shell_translations;
-    char *xterm_translations;
+    char *shell_translations;	/* shell's translations, for input check */
+    char *xterm_translations;	/* xterm's translations, for input check */
     char *extra_translations;
+    char *print_translations;	/* printable translations for buttons */
+    unsigned shift_buttons;	/* special shift-modifier for mouse-buttons */
+    int shift_escape;		/* working value of shiftEscape */
+    char * shift_escape_s;	/* resource for shiftEscape */
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
@@ -3143,7 +3272,18 @@ typedef	struct {
 #endif
     } stack[MAX_SAVED_SGR];
 } SavedSGR;
-#endif
+
+typedef struct {
+    ScrnColors base;
+    ColorRes ansi[1];
+} ColorSlot;
+
+typedef struct {
+    int		used;		/* currently saved or restored	*/
+    int		last;		/* maximum number of saved palettes */
+    ColorSlot	*palettes[MAX_SAVED_SGR];
+} SavedColors;
+#endif /* OPT_XTERM_SGR */
 
 typedef struct _XtermWidgetRec {
     CorePart	core;
@@ -3174,6 +3314,7 @@ typedef struct _XtermWidgetRec {
     Work	work;		/* workspace (no resources)	*/
 #if OPT_XTERM_SGR
     SavedSGR	saved_sgr;
+    SavedColors	saved_colors;
 #endif
 } XtermWidgetRec, *XtermWidget;
 
@@ -3415,6 +3556,13 @@ extern Window VDrawable(TScreen * /* screen */);
 #endif
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
+
+/* y -> y_shift, to center text versus the cursor */
+#define ScaleShift(screen) \
+	    (int) ((IsIcon(screen) || (screen->scale_height <= 1.0f)) \
+	           ? 0.0f \
+	           : ((float) WhichVWin(screen)->f_height \
+		      * ((float) screen->scale_height - 1.0f) / 2.0f))
 
 #define BorderGC(w,sp)		WhichVWin(sp)->border_gc
 #define FillerGC(w,sp)		WhichVWin(sp)->filler_gc

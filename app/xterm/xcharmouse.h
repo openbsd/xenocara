@@ -1,8 +1,8 @@
-/* $XTermId: xcharmouse.h,v 1.18 2012/09/26 00:39:14 tom Exp $ */
+/* $XTermId: xcharmouse.h,v 1.19 2020/08/03 23:14:06 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2011,2012 by Thomas E. Dickey
+Copyright 1997-2012,2020 by Thomas E. Dickey
 Copyright 1998 by Jason Bacon <acadix@execpc.com>
 
                         All Rights Reserved
@@ -50,12 +50,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define SET_FOCUS_EVENT_MOUSE       1004 /* can be combined with above */
 #endif
 
+#define SET_ALTERNATE_SCROLL        1007 /* wheel mouse may send cursor-keys */
+
 /* Extend mouse tracking for terminals wider(taller) than 223 cols(rows) */
 #define SET_EXT_MODE_MOUSE          1005 /* compatible with above */
 #define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
 
-#define SET_ALTERNATE_SCROLL        1007 /* wheel mouse may send cursor-keys */
+#define SET_PIXEL_POSITION_MOUSE    1016 /* like 1006, but pixels not chars */
 
 #define SET_BUTTON1_MOVE_POINT      2001 /* click1 emit Esc seq to move point*/
 #define SET_BUTTON2_MOVE_POINT      2002 /* press2 emit Esc seq to move point*/

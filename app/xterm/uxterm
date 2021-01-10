@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: uxterm,v 1.26 2007/12/30 16:33:36 tom Exp $
+# $XTermId: uxterm,v 1.29 2020/03/07 15:52:31 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2006,2007 by Thomas E. Dickey
+# Copyright 2001-2007,2020 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -36,7 +36,7 @@
 
 whoami=uxterm
 
-: ${XTERM_PROGRAM=xterm}
+: "${XTERM_PROGRAM=xterm}"
 
 # Check if there is a workable locale program.  If there is not, we will read
 # something via the standard error.  Ignore whatever is written to the
@@ -56,7 +56,7 @@ then
 	esac
 fi
 
-# Check environment variables that xterm does, in the same order:
+# Check environment variables that might be used for encoding:
 for name in LC_ALL LC_CTYPE LANG
 do
 	eval 'value=$'$name
@@ -68,10 +68,9 @@ do
 		*.utf8@*|*.UTF8@*|*.utf-8@*|*.UTF-8@*)
 			found=yes
 			;;
-		C|POSIX)
-			# Yes, I know this is not the same - but why are you
-			# here then?
-			value=en_US
+		*)
+			value=""	# ignore
+			continue	# keep trying
 			;;
 		esac
 		break
@@ -86,8 +85,43 @@ if test $found != yes ; then
 	if test -n "$value" ; then
 		value=`echo ${value} |sed -e 's/[.@].*//'`.UTF-8
 	else
-		name="LC_CTYPE"
-		value="en_US.UTF-8"
+		expect=
+		for name in LC_ALL LC_CTYPE LANG
+		do
+			eval 'check=$'$name
+			if test -n "$check"
+			then
+				expect=`echo "$check" | sed -e 's/[.@].*$//'`
+				test -n "$expect" && break
+			fi
+		done
+		if test -z "$expect" ; then
+			name="LC_CTYPE"
+			expect="en_US"
+		fi
+		value=`locale -a | awk -v "expect=$expect" 'BEGIN {
+			exact=""
+			maybe=""
+		}
+		/[.](utf|UTF)[-]?8(@.*)?$/ {
+			if (index($0, "C.") == 1) {
+				maybe=$0;
+			}
+			if (index($0, expect ".") == 1) {
+				exact=$0;
+			}
+		}
+		END {
+			if ( exact != "" ) {
+				print exact;
+			} else if ( maybe != "" ) {
+				print maybe;
+			} else {
+				print "";
+			}
+		}
+		'`
+		test -z "$value" && value="en_US.UTF-8"
 	fi
 	eval save=\$${name}
 	eval ${name}=${value}
@@ -96,7 +130,7 @@ if test $found != yes ; then
 		# The 'locale' program tries to do a sanity check.
 		check=`sh -c "locale >/dev/null" 2>&1`
 		if test -n "$check" ; then
-			eval ${name}=${save}
+			eval ${name}="${save}"
 			eval export ${name}
 
 			echo "$whoami tried to use locale $value by setting \$$name" >&2
@@ -112,4 +146,4 @@ fi
 # for testing:
 #test -f ./xterm && XTERM_PROGRAM=./xterm
 
-exec $XTERM_PROGRAM -class UXTerm -title $whoami -en UTF-8 "$@"
+exec "$XTERM_PROGRAM" -class UXTerm -title "$whoami" -u8 "$@"

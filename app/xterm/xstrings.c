@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.73 2019/10/06 23:09:43 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.78 2020/10/12 18:50:28 tom Exp $ */
 
 /*
- * Copyright 2000-2018,2019 by Thomas E. Dickey
+ * Copyright 2000-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -175,8 +175,7 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 		/* use the other passwd-data including shell */
 		alloc_pw(in_out, &pw2);
 	    } else {
-		free(login_name);
-		login_name = NULL;
+		FreeAndNull(login_name);
 	    }
 	    if (ok2)
 		free_pw(&pw2);
@@ -388,8 +387,7 @@ void
 x_freeargs(char **argv)
 {
     if (argv != 0) {
-	if (*argv != 0)
-	    free(*argv);
+	free(*argv);
 	free(argv);
     }
 }
@@ -415,7 +413,8 @@ x_strncasecmp(const char *s1, const char *s2, unsigned n)
 	    return 1;
 	if (c1 == 0)
 	    break;
-	s1++, s2++;
+	s1++;
+	s2++;
     }
 
     return 0;
@@ -430,7 +429,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = TextAlloc(4 + strlen(s));
+	char *t = malloc(strlen(s) + 5);
 	if (t != 0) {
 	    strcpy(t, s);
 	}
@@ -465,7 +464,9 @@ x_strtrim(const char *source)
 {
     char *result;
 
-    if (source != 0 && *source != '\0') {
+    if (IsEmpty(source)) {
+	result = x_strdup("");
+    } else {
 	char *t = x_strdup(source);
 	if (t != 0) {
 	    char *s = t;
@@ -483,8 +484,6 @@ x_strtrim(const char *source)
 	    }
 	}
 	result = t;
-    } else {
-	result = x_strdup("");
     }
     return result;
 }
@@ -497,7 +496,9 @@ x_strrtrim(const char *source)
 {
     char *result;
 
-    if (source != 0 && *source != '\0') {
+    if (IsEmpty(source)) {
+	result = x_strdup("");
+    } else {
 	char *t = x_strdup(source);
 	if (t != 0) {
 	    if (*t != '\0') {
@@ -508,8 +509,6 @@ x_strrtrim(const char *source)
 	    }
 	}
 	result = t;
-    } else {
-	result = x_strdup("");
     }
     return result;
 }

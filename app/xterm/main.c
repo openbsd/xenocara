@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.859 2019/11/17 20:11:09 tom Exp $ */
+/* $XTermId: main.c,v 1.866 2020/10/12 18:37:02 tom Exp $ */
 
 /*
- * Copyright 2002-2018,2019 by Thomas E. Dickey
+ * Copyright 2002-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -94,7 +94,6 @@
 #include <graphics.h>
 
 #include <X11/cursorfont.h>
-#include <X11/Xlocale.h>
 
 #if OPT_TOOLBAR
 
@@ -137,6 +136,7 @@
 #include <grp.h>		/* initgroups() */
 #endif
 
+static void hungtty(int) GCC_NORETURN;
 static void Syntax(char *) GCC_NORETURN;
 static void HsSysError(int) GCC_NORETURN;
 
@@ -1086,6 +1086,7 @@ DATA("-nul",		"*underLine",	XrmoptionNoArg,		"off"),
 DATA("+nul",		"*underLine",	XrmoptionNoArg,		"on"),
 DATA("-pc",		"*boldColors",	XrmoptionNoArg,		"on"),
 DATA("+pc",		"*boldColors",	XrmoptionNoArg,		"off"),
+DATA("-pf",		"*pointerFont",	XrmoptionSepArg,	NULL),
 DATA("-rw",		"*reverseWrap",	XrmoptionNoArg,		"on"),
 DATA("+rw",		"*reverseWrap",	XrmoptionNoArg,		"off"),
 DATA("-s",		"*multiScroll",	XrmoptionNoArg,		"on"),
@@ -1255,6 +1256,7 @@ static OptionHelp xtermOptions[] = {
 { "-cc classrange",        "specify additional character classes" },
 { "-/+cm",                 "turn off/on ANSI color mode" },
 { "-/+cn",                 "turn on/off cut newline inhibit" },
+{ "-pf fontname",          "cursor font for text area pointer" },
 { "-cr color",             "text cursor color" },
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",                 "turn off/on dynamic color selection" },
@@ -1556,7 +1558,6 @@ parseArg(int *num, char **argv, char **valuep)
     };
 #undef DATA
     /* *INDENT-ON* */
-
     XrmOptionDescRec *result = 0;
     Cardinal inlist;
     Cardinal limit = XtNumber(optionDescList) + XtNumber(opTable);
@@ -2578,12 +2579,14 @@ main(int argc, char *argv[]ENVP_ARG)
 	case 'b':
 	    if (strcmp(argv[0], "-baudrate"))
 		Syntax(*argv);
-	    argc--, argv++;
+	    argc--;
+	    argv++;
 	    continue;
 	case 'c':
 	    if (strcmp(argv[0], "-class"))
 		Syntax(*argv);
-	    argc--, argv++;
+	    argc--;
+	    argv++;
 	    continue;
 	case 'e':
 	    if (strcmp(argv[0], "-e"))
@@ -2593,7 +2596,8 @@ main(int argc, char *argv[]ENVP_ARG)
 	case 'i':
 	    if (strcmp(argv[0], "-into"))
 		Syntax(*argv);
-	    argc--, argv++;
+	    argc--;
+	    argv++;
 	    continue;
 
 	default:
@@ -3177,7 +3181,7 @@ static const char *const vtterm[] =
     "x11term",			/* for people who want special term name */
 #endif
     DFT_TERMTYPE,		/* for people who want special term name */
-    "xterm",			/* the prefered name, should be fastest */
+    "xterm",			/* the preferred name, should be fastest */
     "vt102",
     "vt100",
     "ansi",
@@ -3224,7 +3228,7 @@ typedef struct {
 
 /* the buffer is large enough that we can always have a trailing null */
 #define copy_handshake(dst, src) \
-	strncpy(dst.buffer, src, HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
+	strncpy(dst.buffer, src, (size_t)HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
 
 #if OPT_TRACE
 static void
@@ -3615,8 +3619,7 @@ resetShell(char *oldPath)
 {
     char *newPath = x_strdup("/bin/sh");
     char *envPath = getenv("SHELL");
-    if (oldPath != 0)
-	free(oldPath);
+    free(oldPath);
     if (!IsEmpty(envPath))
 	xtermSetenv("SHELL", newPath);
     return newPath;
@@ -5056,7 +5059,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = TextAlloc(strlen(shname) + 1)) != 0) {
+	    if ((shname_minus = malloc(strlen(shname) + 2)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {

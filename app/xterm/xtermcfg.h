@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.216 2018/02/08 10:01:08 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.220 2020/10/05 22:42:06 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -41,8 +41,7 @@
  * ALLOWLOGFILEONOFF
  * CANT_OPEN_DEV_TTY
  * DEBUG* (any debug-option)
- * DUMP_BITMAP
- * DUMP_COLORS
+ * DUMP_* (mostly in the ReGIS/SIXEL code)
  * HAS_LTCHARS
  * HAVE_SYS_PTEM_H
  * PUCC_PTYD
@@ -126,6 +125,7 @@
 #define HAVE_X11_EXTENSIONS_XINERAMA_H 1 /* AC_CHECK_HEADERS(X11/extensions/Xinerama.h) */
 #define HAVE_X11_EXTENSIONS_XKB_H 1 /* AC_CHECK_HEADERS(X11/extensions/XKB.h) */
 #define HAVE_X11_SUNKEYSYM_H 1	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
+#define HAVE_X11_TRANSLATEI_H 1	/* AC_CHECK_HEADERS(X11/TranslateI.h) */
 #define HAVE_X11_XF86KEYSYM_H 1	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
 #define HAVE_X11_XKBLIB_H	/* AC_CHECK_HEADERS(X11/XKBlib.h) */
 #define HAVE_X11_XPOLL_H 1		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
@@ -138,7 +138,6 @@
 #define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
 /* #undef NO_LEAKS */			/* CF_ARG_DISABLE(leaks) */
-#define OPT_DIRECT_COLOR 1		/* CF_ARG_ENABLE(direct-color) */
 #define OPT_256_COLORS 1		/* CF_ARG_ENABLE(256-color) */
 /* #undef OPT_88_COLORS */		/* CF_ARG_ENABLE(88-color) */
 /* #undef OPT_AIX_COLORS */		/* CF_ARG_DISABLE(16-color) */
@@ -153,10 +152,12 @@
 /* #undef OPT_DABBREV */		/* CF_ARG_ENABLE(dabbrev) */
 /* #undef OPT_DEC_CHRSET */		/* CF_ARG_DISABLE(doublechars) */
 /* #undef OPT_DEC_LOCATOR */		/* CF_ARG_ENABLE(dec-locator) */
-/* #undef OPT_DOUBLE_BUFFER */	/* CF_ARG_ENABLE(double-buffer) */
 #define OPT_DEC_RECTOPS 1		/* CF_ARG_ENABLE(rectangles) */
+#define OPT_DIRECT_COLOR 1		/* CF_ARG_ENABLE(direct-color) */
+/* #undef OPT_DOUBLE_BUFFER */		/* CF_ARG_ENABLE(double-buffer) */
 /* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
 /* #undef OPT_FIFO_LINES */		/* CF_ARG_ENABLE(fifo-lines) */
+/* #undef OPT_GRAPHICS */		/* CF_ARG_ENABLE(graphics) */
 /* #undef OPT_HIGHLIGHT_COLOR */	/* CF_ARG_DISABLE(highlighting) */
 /* #undef OPT_HP_FUNC_KEYS */		/* CF_ARG_ENABLE(hp-fkeys) */
 /* #undef OPT_I18N_SUPPORT */		/* CF_ARG_DISABLE(i18n) */
@@ -170,17 +171,17 @@
 /* #undef OPT_NUM_LOCK */		/* CF_ARG_DISABLE(num-lock) */
 #define OPT_PASTE64 0			/* CF_ARG_ENABLE(past64) */
 /* #undef OPT_PC_COLORS */		/* CF_ARG_DISABLE(pc-color) */
-#define OPT_SCREEN_DUMPS 0		/* CF_ARG_ENABLE(screen-dumps) */
+#define OPT_PRINT_GRAPHICS 0		/* CF_ARG_ENABLE(print-graphics) */
 #define OPT_PTY_HANDSHAKE 1	/* CF_ARG_ENABLE(pty-handshake) */
 #define OPT_READLINE 0		/* CF_ARG_ENABLE(readline-mouse) */
+/* #undef OPT_REGIS_GRAPHICS */		/* CF_ARG_ENABLE(regis-graphics) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
 /* #undef OPT_SCO_FUNC_KEYS */	/* CF_ARG_ENABLE(sco-fkeys) */
+#define OPT_SCREEN_DUMPS 0		/* CF_ARG_ENABLE(screen-dumps) */
 /* #undef OPT_SELECTION_OPS */	/* CF_ARG_DISABLE(selection-ops) */
 #define OPT_SELECT_REGEX 1		/* CF_ARG_DISABLE(regex) */
 /* #undef OPT_SESSION_MGT */		/* CF_ARG_DISABLE(session-mgt) */
-/* #undef OPT_REGIS_GRAPHICS */	/* CF_ARG_ENABLE(regis-graphics) */
 /* #undef OPT_SIXEL_GRAPHICS */	/* CF_ARG_ENABLE(sixel-graphics) */
-/* #undef OPT_GRAPHICS */		/* CF_ARG_ENABLE(graphics) */
 /* #undef OPT_SUN_FUNC_KEYS */	/* CF_ARG_ENABLE(sun-fkeys) */
 #define OPT_TCAP_FKEYS 0		/* CF_ARG_ENABLE(tcap-fkeys) */
 #define OPT_TCAP_QUERY 0		/* CF_ARG_ENABLE(tcap-query) */

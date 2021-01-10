@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.15 2019/11/02 15:04:31 tom Exp $ */
+/* $XTermId: svg.c,v 1.17 2020/06/02 23:24:31 tom Exp $ */
 
 /*
- * Copyright 2017,2019		Thomas E. Dickey
+ * Copyright 2017-2019,2020	Thomas E. Dickey
  * Copyright 2015-2016,2017	Jens Schweikhardt
  *
  * All Rights Reserved
@@ -57,10 +57,11 @@ static int ib = 0;		/* internalBorder */
 void
 xtermDumpSvg(XtermWidget xw)
 {
+    char *saveLocale;
     FILE *fp;
 
     TRACE(("xtermDumpSvg...\n"));
-
+    saveLocale = xtermSetLocale(LC_NUMERIC, "C");
     fp = create_printfile(xw, ".svg");
     if (fp != 0) {
 	dumpSvgHeader(xw, fp);
@@ -68,6 +69,7 @@ xtermDumpSvg(XtermWidget xw)
 	dumpSvgFooter(xw, fp);
 	fclose(fp);
     }
+    xtermResetLocale(LC_NUMERIC, saveLocale);
     TRACE(("...xtermDumpSvg done\n"));
 }
 
@@ -276,7 +278,7 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 }
 
 static void
-dumpSvgFooter(XtermWidget xw GCC_UNUSED, FILE *fp)
+dumpSvgFooter(XtermWidget xw, FILE *fp)
 {
     fputs(" </g>\n</svg>\n", fp);
     xevents(xw);

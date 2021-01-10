@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.105 2019/02/11 00:41:13 tom Exp $ */
+/* $XTermId: charsets.c,v 1.113 2020/12/25 15:15:37 tom Exp $ */
 
 /*
- * Copyright 1998-2018,2019 by Thomas E. Dickey
+ * Copyright 1998-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -689,6 +689,108 @@
 	    UNI(0x7e, 0x200f);	/* RIGHT-TO-LEFT MARK */ \
 	} \
 	end_CODEPAGE()
+	/* ISO Latin-2 is 8859-2 */
+#define map_ISO_Latin_2(code) \
+	begin_CODEPAGE(); \
+	switch (code) { \
+	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
+	    UNI(0x21, 0x0104);	/* LATIN CAPITAL LETTER A WITH OGONEK */ \
+	    UNI(0x22, 0x02d8);	/* BREVE */ \
+	    UNI(0x23, 0x0141);	/* LATIN CAPITAL LETTER L WITH STROKE */ \
+	    UNI(0x24, 0x00a4);	/* CURRENCY SIGN */ \
+	    UNI(0x25, 0x013d);	/* LATIN CAPITAL LETTER L WITH CARON */ \
+	    UNI(0x26, 0x015a);	/* LATIN CAPITAL LETTER S WITH ACUTE */ \
+	    UNI(0x27, 0x00a7);	/* SECTION SIGN */ \
+	    UNI(0x28, 0x00a8);	/* DIAERESIS */ \
+	    UNI(0x29, 0x0160);	/* LATIN CAPITAL LETTER S WITH CARON */ \
+	    UNI(0x2a, 0x015e);	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    UNI(0x2b, 0x0164);	/* LATIN CAPITAL LETTER T WITH CARON */ \
+	    UNI(0x2c, 0x0179);	/* LATIN CAPITAL LETTER Z WITH ACUTE */ \
+	    UNI(0x2d, 0x00ad);	/* SOFT HYPHEN */ \
+	    UNI(0x2e, 0x017d);	/* LATIN CAPITAL LETTER Z WITH CARON */ \
+	    UNI(0x2f, 0x017b);	/* LATIN CAPITAL LETTER Z WITH DOT ABOVE */ \
+	    UNI(0x30, 0x00b0);	/* DEGREE SIGN */ \
+	    UNI(0x31, 0x0105);	/* LATIN SMALL LETTER A WITH OGONEK */ \
+	    UNI(0x32, 0x02db);	/* OGONEK */ \
+	    UNI(0x33, 0x0142);	/* LATIN SMALL LETTER L WITH STROKE */ \
+	    UNI(0x34, 0x00b4);	/* ACUTE ACCENT */ \
+	    UNI(0x35, 0x013e);	/* LATIN SMALL LETTER L WITH CARON */ \
+	    UNI(0x36, 0x015b);	/* LATIN SMALL LETTER S WITH ACUTE */ \
+	    UNI(0x37, 0x02c7);	/* CARON */ \
+	    UNI(0x38, 0x00b8);	/* CEDILLA */ \
+	    UNI(0x39, 0x0161);	/* LATIN SMALL LETTER S WITH CARON */ \
+	    UNI(0x3a, 0x015f);	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    UNI(0x3b, 0x0165);	/* LATIN SMALL LETTER T WITH CARON */ \
+	    UNI(0x3c, 0x017a);	/* LATIN SMALL LETTER Z WITH ACUTE */ \
+	    UNI(0x3d, 0x02dd);	/* DOUBLE ACUTE ACCENT */ \
+	    UNI(0x3e, 0x017e);	/* LATIN SMALL LETTER Z WITH CARON */ \
+	    UNI(0x3f, 0x017c);	/* LATIN SMALL LETTER Z WITH DOT ABOVE */ \
+	    UNI(0x40, 0x0154);	/* LATIN CAPITAL LETTER R WITH ACUTE */ \
+	    UNI(0x41, 0x00c1);	/* LATIN CAPITAL LETTER A WITH ACUTE */ \
+	    UNI(0x42, 0x00c2);	/* LATIN CAPITAL LETTER A WITH CIRCUMFLEX */ \
+	    UNI(0x43, 0x0102);	/* LATIN CAPITAL LETTER A WITH BREVE */ \
+	    UNI(0x44, 0x00c4);	/* LATIN CAPITAL LETTER A WITH DIAERESIS */ \
+	    UNI(0x45, 0x0139);	/* LATIN CAPITAL LETTER L WITH ACUTE */ \
+	    UNI(0x46, 0x0106);	/* LATIN CAPITAL LETTER C WITH ACUTE */ \
+	    UNI(0x47, 0x00c7);	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
+	    UNI(0x48, 0x010c);	/* LATIN CAPITAL LETTER C WITH CARON */ \
+	    UNI(0x49, 0x00c9);	/* LATIN CAPITAL LETTER E WITH ACUTE */ \
+	    UNI(0x4a, 0x0118);	/* LATIN CAPITAL LETTER E WITH OGONEK */ \
+	    UNI(0x4b, 0x00cb);	/* LATIN CAPITAL LETTER E WITH DIAERESIS */ \
+	    UNI(0x4c, 0x011a);	/* LATIN CAPITAL LETTER E WITH CARON */ \
+	    UNI(0x4d, 0x00cd);	/* LATIN CAPITAL LETTER I WITH ACUTE */ \
+	    UNI(0x4e, 0x00ce);	/* LATIN CAPITAL LETTER I WITH CIRCUMFLEX */ \
+	    UNI(0x4f, 0x010e);	/* LATIN CAPITAL LETTER D WITH CARON */ \
+	    UNI(0x50, 0x0110);	/* LATIN CAPITAL LETTER D WITH STROKE */ \
+	    UNI(0x51, 0x0143);	/* LATIN CAPITAL LETTER N WITH ACUTE */ \
+	    UNI(0x52, 0x0147);	/* LATIN CAPITAL LETTER N WITH CARON */ \
+	    UNI(0x53, 0x00d3);	/* LATIN CAPITAL LETTER O WITH ACUTE */ \
+	    UNI(0x54, 0x00d4);	/* LATIN CAPITAL LETTER O WITH CIRCUMFLEX */ \
+	    UNI(0x55, 0x0150);	/* LATIN CAPITAL LETTER O WITH DOUBLE ACUTE */ \
+	    UNI(0x56, 0x00d6);	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
+	    UNI(0x57, 0x00d7);	/* MULTIPLICATION SIGN */ \
+	    UNI(0x58, 0x0158);	/* LATIN CAPITAL LETTER R WITH CARON */ \
+	    UNI(0x59, 0x016e);	/* LATIN CAPITAL LETTER U WITH RING ABOVE */ \
+	    UNI(0x5a, 0x00da);	/* LATIN CAPITAL LETTER U WITH ACUTE */ \
+	    UNI(0x5b, 0x0170);	/* LATIN CAPITAL LETTER U WITH DOUBLE ACUTE */ \
+	    UNI(0x5c, 0x00dc);	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
+	    UNI(0x5d, 0x00dd);	/* LATIN CAPITAL LETTER Y WITH ACUTE */ \
+	    UNI(0x5e, 0x0162);	/* LATIN CAPITAL LETTER T WITH CEDILLA */ \
+	    UNI(0x5f, 0x00df);	/* LATIN SMALL LETTER SHARP S */ \
+	    UNI(0x60, 0x0155);	/* LATIN SMALL LETTER R WITH ACUTE */ \
+	    UNI(0x61, 0x00e1);	/* LATIN SMALL LETTER A WITH ACUTE */ \
+	    UNI(0x62, 0x00e2);	/* LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
+	    UNI(0x63, 0x0103);	/* LATIN SMALL LETTER A WITH BREVE */ \
+	    UNI(0x64, 0x00e4);	/* LATIN SMALL LETTER A WITH DIAERESIS */ \
+	    UNI(0x65, 0x013a);	/* LATIN SMALL LETTER L WITH ACUTE */ \
+	    UNI(0x66, 0x0107);	/* LATIN SMALL LETTER C WITH ACUTE */ \
+	    UNI(0x67, 0x00e7);	/* LATIN SMALL LETTER C WITH CEDILLA */ \
+	    UNI(0x68, 0x010d);	/* LATIN SMALL LETTER C WITH CARON */ \
+	    UNI(0x69, 0x00e9);	/* LATIN SMALL LETTER E WITH ACUTE */ \
+	    UNI(0x6a, 0x0119);	/* LATIN SMALL LETTER E WITH OGONEK */ \
+	    UNI(0x6b, 0x00eb);	/* LATIN SMALL LETTER E WITH DIAERESIS */ \
+	    UNI(0x6c, 0x011b);	/* LATIN SMALL LETTER E WITH CARON */ \
+	    UNI(0x6d, 0x00ed);	/* LATIN SMALL LETTER I WITH ACUTE */ \
+	    UNI(0x6e, 0x00ee);	/* LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
+	    UNI(0x6f, 0x010f);	/* LATIN SMALL LETTER D WITH CARON */ \
+	    UNI(0x70, 0x0111);	/* LATIN SMALL LETTER D WITH STROKE */ \
+	    UNI(0x71, 0x0144);	/* LATIN SMALL LETTER N WITH ACUTE */ \
+	    UNI(0x72, 0x0148);	/* LATIN SMALL LETTER N WITH CARON */ \
+	    UNI(0x73, 0x00f3);	/* LATIN SMALL LETTER O WITH ACUTE */ \
+	    UNI(0x74, 0x00f4);	/* LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
+	    UNI(0x75, 0x0151);	/* LATIN SMALL LETTER O WITH DOUBLE ACUTE */ \
+	    UNI(0x76, 0x00f6);	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
+	    UNI(0x77, 0x00f7);	/* DIVISION SIGN */ \
+	    UNI(0x78, 0x0159);	/* LATIN SMALL LETTER R WITH CARON */ \
+	    UNI(0x79, 0x016f);	/* LATIN SMALL LETTER U WITH RING ABOVE */ \
+	    UNI(0x7a, 0x00fa);	/* LATIN SMALL LETTER U WITH ACUTE */ \
+	    UNI(0x7b, 0x0171);	/* LATIN SMALL LETTER U WITH DOUBLE ACUTE */ \
+	    UNI(0x7c, 0x00fc);	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
+	    UNI(0x7d, 0x00fd);	/* LATIN SMALL LETTER Y WITH ACUTE */ \
+	    UNI(0x7e, 0x0163);	/* LATIN SMALL LETTER T WITH CEDILLA */ \
+	    UNI(0x7f, 0x02d9);	/* DOT ABOVE */ \
+	} \
+	end_CODEPAGE()
 	/* ISO Latin-5 is 8859-9 */
 #define map_ISO_Latin_5(code) \
 	begin_CODEPAGE(); \
@@ -892,7 +994,7 @@
 	    UNI(0x7c, 0x042d);	/* CYRILLIC CAPITAL LETTER E */ \
 	    UNI(0x7d, 0x0429);	/* CYRILLIC CAPITAL LETTER SHCHA */ \
 	    UNI(0x7e, 0x0427);	/* CYRILLIC CAPITAL LETTER CHE */ \
-	    UNI(0x7f, 0x042a);	/* CYRILLIC CAPITAL LETTER HARD SIGN */ \
+	    XXX(0x7f, UNDEF); \
 	    \
 	} \
 	end_CODEPAGE()
@@ -1284,6 +1386,7 @@
 #define map_DEC_Turkish_Supp(code)	/* nothing */
 #define map_ISO_Greek_Supp(code)	/* nothing */
 #define map_ISO_Hebrew(code)	/* nothing */
+#define map_ISO_Latin_2(code)	/* nothing */
 #define map_ISO_Latin_5(code)	/* nothing */
 #define map_ISO_Latin_Cyrillic(code)	/* nothing */
 #define map_NRCS_Greek(code)	/* nothing */
@@ -1392,6 +1495,10 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_NRCS_Italian(code);
 	break;
 
+    case nrc_ISO_Latin_2_Supp:
+	map_ISO_Latin_2(code);
+	break;
+
     case nrc_ISO_Latin_5_Supp:
 	map_ISO_Latin_5(code);
 	break;
@@ -1435,10 +1542,11 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_DEC_Turkish_Supp(code);
 	break;
 
-    case nrc_Cyrillic:
+    case nrc_DEC_Cyrillic:
 	map_DEC_Cyrillic(code);
 	break;
 
+    case nrc_ISO_Latin_1_Supp:
     case nrc_British_Latin_1:
     case nrc_Russian:
     case nrc_French_Canadian2:
@@ -1492,7 +1600,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	count++;
 #if OPT_WIDE_CHARS
 	/*
-	 * This is only partly right - prevent inadvertant remapping of
+	 * This is only partly right - prevent inadvertent remapping of
 	 * the replacement character and other non-8bit codes into bogus
 	 * 8bit codes.
 	 */
@@ -1505,6 +1613,8 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    continue;
 
 	switch (cs) {
+	case nrc_ISO_Latin_1_Supp:
+	    /* FALLTHRU */
 	case nrc_British_Latin_1:
 	    /* FALLTHRU */
 	case nrc_British:	/* United Kingdom set (or Latin 1)      */
@@ -1609,6 +1719,10 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    map_NRCS_Italian(chr = seven);
 	    break;
 
+	case nrc_ISO_Latin_2_Supp:
+	    map_ISO_Latin_2(chr = seven);
+	    break;
+
 	case nrc_ISO_Latin_5_Supp:
 	    map_ISO_Latin_5(chr = seven);
 	    break;
@@ -1652,7 +1766,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    map_DEC_Turkish_Supp(chr = seven);
 	    break;
 
-	case nrc_Cyrillic:
+	case nrc_DEC_Cyrillic:
 	    map_DEC_Cyrillic(chr = seven);
 	    break;
 
@@ -1664,12 +1778,17 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	}
 	/*
 	 * The state machine already treated DEL as a nonprinting and
-	 * nonspacing character.  If we have DEL now, simply render
-	 * it as a blank.
+	 * nonspacing character.  If we have DEL now, remove it.
 	 */
-	if (chr == ANSI_DEL)
-	    chr = ' ';
-	*s = (IChar) A2E(chr);
+	if (chr == ANSI_DEL) {
+	    IChar *s1;
+	    --ptr;
+	    for (s1 = s; s1 < ptr; ++s1) {
+		s1[0] = s1[1];
+	    }
+	} else {
+	    *s = (IChar) A2E(chr);
+	}
     }
     TRACE(("%d\t%s\n",
 	   count,

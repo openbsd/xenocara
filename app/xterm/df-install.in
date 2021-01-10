@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.15 2018/04/30 23:29:27 tom Exp $
+# $XTermId: df-install.in,v 1.17 2020/08/18 20:44:00 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2011-2012,2018 by Thomas E. Dickey
+# Copyright 2011-2018,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -37,6 +37,12 @@
 #
 # Parameters are passed to the desktop-file-install program.  The last
 # parameter is the name of the ".desktop" file to install.
+
+failed() {
+	echo "? $*" >&2
+	exit 1
+}
+
 OPTS=
 
 if test $# != 0
@@ -51,12 +57,20 @@ then
 	shift 1
 fi
 
+TOOL=desktop-file-install
+
 CDPATH=:
 export CDPATH
 
 while test $# != 0
 do
 	case .$1 in #(vi
+	.DESTDIR=*) #(vi
+		if test "$1" != "DESTDIR="
+		then
+			DESTDIR=`echo "$1" | sed -e 's,^DESTDIR=,,'`
+		fi
+		;;
 	*.desktop) #(vi
 		if test $# = 1
 		then
@@ -65,6 +79,10 @@ do
 			OPTS="$OPTS $1"
 		fi
 		;;
+	.--dir=*) #(vi
+		OPTS="$OPTS $1"
+		DESTDIR=
+		;;
 	*)
 		OPTS="$OPTS $1"
 		;;
@@ -72,17 +90,51 @@ do
 	shift 1
 done
 
+# If DESTDIR is set (either as an environment variable, or command-line
+# parameter), attempt to determine the full pathname (needed by the installer)
+# to tell it to use the alternate location.  Because the installer has no
+# useful options for this purpose, we search along the path to find the tool,
+# and from that get the prefix, and assume that was the extent of customization
+# when the tool was configured/installed.
+if test -n "$DESTDIR"
+then
+	if test -d "$DESTDIR"
+	then
+		prefix=
+
+		save_IFS="$IFS"
+		IFS=':'
+		for P in $PATH
+		do
+			test -z "$P" && P=.
+			if test -f "$P/$TOOL"
+			then
+				prefix=`echo "$P" | sed -e 's,/[^/]*$,,'`
+				break
+			fi
+		done
+		IFS="$save_IFS"
+
+		test -z "$prefix" && failed "could not find $TOOL in PATH"
+
+		TARGET="${DESTDIR}${prefix}/share/applications"
+		mkdir -p "$TARGET"
+
+		OPTS="$OPTS --dir=${TARGET}"
+	else
+		failed "DESTDIR is not a directory: $DESTDIR"
+	fi
+fi
+
 MY_TEMP=tempdir$$
 rm -rf $MY_TEMP
 
 if test -z "$OLD_FILE"
 then
-	echo "? not found: $OLD_FILE"
-	exit 1
+	failed "not found: $OLD_FILE"
 elif ! mkdir $MY_TEMP
 then
-	echo "? cannot mkdir: $MY_TEMP"
-	exit 1
+	failed "cannot mkdir: $MY_TEMP"
 fi
 
 # The newer dfi whines about deprecation of encoding, but no release provides
@@ -94,19 +146,19 @@ else
 	NO_ENCODING="Encoding"
 fi
 
-NEW_FILE=`basename $OLD_FILE`
+NEW_FILE=`basename "$OLD_FILE"`
 sed \
-	-e '/^Encoding=/s%Encoding%'$NO_ENCODING'%' \
-	-e '/^[^#]*Icon=/s%=.*%='$ICON_NAME'%' \
+	-e '/^Encoding=/s%Encoding%'"$NO_ENCODING"'%' \
+	-e '/^[^#]*Icon=/s%=.*%='"$ICON_NAME"'%' \
 	-e '/^[^#]*Category=/s%=.*%=@DESKTOP_CATEGORY@%' \
 	-e '/^[^#]*Categories=/s%=.*%=@DESKTOP_CATEGORY@%' \
-	-e '/^[^#]/s%xterm%'$APP_NAME'%g' \
+	-e '/^[^#]/s%xterm%'"$APP_NAME"'%g' \
 	-e '/^[^#]/s%XTerm%@APP_CLASS@%g' \
-	$OLD_FILE >$MY_TEMP/$NEW_FILE
-diff -u $OLD_FILE $MY_TEMP/$NEW_FILE
-cd $MY_TEMP
+	"$OLD_FILE" >"$MY_TEMP/$NEW_FILE"
+diff -u "$OLD_FILE" "$MY_TEMP/$NEW_FILE"
+cd $MY_TEMP || exit 1
 
-desktop-file-install $OPTS $NEW_FILE
+"$TOOL" $OPTS "$NEW_FILE"
 
 cd ..
 rm -rf $MY_TEMP

@@ -75,7 +75,6 @@ configure-stamp:
 		--enable-mini-luit \
 		--enable-regis-graphics \
 		--enable-sco-fkeys \
-		--enable-sixel-graphics \
 		--enable-toolbar \
 		--enable-xmc-glitch \
 		--with-app-defaults=$(PKG_APPDEFAULTS) \
@@ -153,10 +152,14 @@ binary-indep: build install
 		done' ; \
 	  exit 0 )
 
-	# The Debian package does not install desktop files.
+	# The Debian package stopped installing xterm's desktop files; a
+	# subsequent revision added that back with limitations.  xterm's
+	# configure script checks for categories which are used by other
+	# terminal emulators.  The Debian package overrides that to a single
+	# category.
 	# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=486317
 	$(MAKE) install-desktop \
-		DESKTOP_FLAGS="--vendor='$(DESKTOP_VENDOR)' --dir $(MY_DESKTOP)"
+		DESKTOP_FLAGS="--dir $(MY_DESKTOP)"
 
 	( cd $(DSTDIR)$(PKG_DESKTOP) \
 	  && $(SHELL) -c 'for p in *;do \

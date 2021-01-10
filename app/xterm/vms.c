@@ -1,4 +1,4 @@
-/* $XTermId: vms.c,v 1.13 2010/10/11 08:05:35 tom Exp $ */
+/* $XTermId: vms.c,v 1.14 2020/01/18 18:32:45 tom Exp $ */
 
 /*  vms.c
  *
@@ -314,7 +314,7 @@ void spawn (void)
   /*  has special code for DECWINDOWS that will:                  */
   /*    1) do a DEFINE/JOB DECW$DISPLAY 'f$trnlnm(sys$error)'     */
   /*    2) then redefine SYS$ERROR to match SYS$OUTPUT!           */
-  /*  This will propogate DECW$DISPLAY to the XTERM process!!!    */
+  /*  This will propagate DECW$DISPLAY to the XTERM process!!!    */
   /*  Thanks go to Joel M Snyder who posted this info to INFO-VAX */
 
   flags = PRC$M_INTER | PRC$M_NOPASSWORD | PRC$M_DETACH;
@@ -381,8 +381,8 @@ static void tt_echo_ast(TT_BUF_STRUCT *buff_addr)
 
 /*
  * This routine writes to the pseudo terminal.  If there is a free
- * buffer then write with an echo buffer completing asyncronously, else
- * write syncronously using the buffer reserved for writing.  All errors
+ * buffer then write with an echo buffer completing asynchronously, else
+ * write synchronously using the buffer reserved for writing.  All errors
  *  are fatal, except DATAOVERUN and DATALOST,these errors can be ignored.
 
  CAREFUL! Whatever calls this must NOT pass more than VMS_TERM_BUFFER_SIZE
@@ -554,7 +554,7 @@ static void send_bell(void)
  * page size changed.  If it did, resize the widget, otherwise, ignore
  * it!  This routine just gets the new term dimensions and sets a flag
  * to indicate the term chars have changed.  The widget gets resized in
- * the routine in_put in the module CHARPROC.C.  You cant resize the
+ * the routine in_put in the module CHARPROC.C.  You can't resize the
  * widget in this routine because this is an AST and X is not reenterent.
  */
 
@@ -563,7 +563,7 @@ static void char_change(void)
   int status;
 
   /*
-   * Dont do anything if in Tek mode
+   * Don't do anything if in Tek mode
    */
 
   if(!(TScreenOf(term)->TekEmu))

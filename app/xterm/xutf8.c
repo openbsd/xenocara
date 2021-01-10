@@ -1,7 +1,7 @@
-/* $XTermId: xutf8.c,v 1.17 2019/09/16 20:29:20 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.18 2020/06/23 22:45:51 tom Exp $ */
 
 /*
- * Copyright 2002-2017,2019 by Thomas E. Dickey
+ * Copyright 2002-2019,2020 by Thomas E. Dickey
  * Copyright (c) 2001 by Juliusz Chroboczek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -226,7 +226,7 @@ Xutf8TextPropertyToTextList(Display *dpy,
     else
 	len = l1countUtf8Bytes((char *) tp->value, datalen);
 
-    start = TextAlloc(len);
+    start = malloc(len + 1);
     if (!start) {
 	free(list);
 	return XNoMemory;

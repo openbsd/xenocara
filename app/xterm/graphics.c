@@ -1,7 +1,8 @@
-/* $XTermId: graphics.c,v 1.79 2019/06/29 17:29:09 tom Exp $ */
+/* $XTermId: graphics.c,v 1.92 2020/10/12 17:58:12 Walter.Harms Exp $ */
 
 /*
- * Copyright 2013-2018,2019 by Ross Combs
+ * Copyright 2013-2019,2020 by Ross Combs
+ * Copyright 2013-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -150,6 +151,14 @@ static Graphic *displayed_graphics[MAX_GRAPHICS];
 static unsigned next_graphic_id = 0U;
 static unsigned used_graphics;	/* 0 to MAX_GRAPHICS */
 
+#define DiffColor(this,that) \
+	(this.r != that.r || \
+	 this.g != that.g || \
+	 this.b != that.b)
+
+static ColorRegister null_color =
+{-1, -1, -1};
+
 static ColorRegister *
 allocRegisters(void)
 {
@@ -160,10 +169,8 @@ static Graphic *
 freeGraphic(Graphic *obj)
 {
     if (obj) {
-	if (obj->pixels)
-	    free(obj->pixels);
-	if (obj->private_color_registers)
-	    free(obj->private_color_registers);
+	free(obj->pixels);
+	free(obj->private_color_registers);
 	free(obj);
     }
     return NULL;
@@ -523,9 +530,9 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 }
 
 static void
-init_color_registers(ColorRegister *color_registers, int terminal_id)
+init_color_registers(ColorRegister *color_registers, int graphics_termid)
 {
-    TRACE(("setting initial colors for terminal %d\n", terminal_id));
+    TRACE(("setting initial colors for terminal %d\n", graphics_termid));
     {
 	unsigned i;
 
@@ -580,7 +587,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
      * dxterm:
      *  ?
      */
-    switch (terminal_id) {
+    switch (graphics_termid) {
     case 125:
     case 241:
 	set_color_register(color_registers, 0, 0, 0, 0);
@@ -663,7 +670,7 @@ get_color_register_count(TScreen const *screen)
      * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
      * dxterm      ?
      */
-    switch (screen->terminal_id) {
+    switch (screen->graphics_termid) {
     case 125:
 	return 4U;
     case 240:
@@ -685,7 +692,7 @@ get_color_register_count(TScreen const *screen)
 static void
 init_graphic(Graphic *graphic,
 	     unsigned type,
-	     int terminal_id,
+	     int graphics_termid,
 	     int charrow,
 	     int charcol,
 	     unsigned num_color_registers,
@@ -695,7 +702,7 @@ init_graphic(Graphic *graphic,
 					    graphic->max_height);
     unsigned i;
 
-    TRACE(("initializing graphic object\n"));
+    TRACE(("init_graphic at %d,%d\n", charrow, charcol));
 
     graphic->hidden = 0;
     graphic->dirty = 1;
@@ -735,7 +742,7 @@ init_graphic(Graphic *graphic,
     graphic->private_colors = private_colors;
     if (graphic->private_colors) {
 	TRACE(("using private color registers\n"));
-	init_color_registers(graphic->private_color_registers, terminal_id);
+	init_color_registers(graphic->private_color_registers, graphics_termid);
 	graphic->color_registers = graphic->private_color_registers;
     } else {
 	TRACE(("using shared color registers\n"));
@@ -753,8 +760,8 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 {
     TScreen const *screen = TScreenOf(xw);
     int bufferid = screen->whichBuf;
-    int terminal_id = screen->terminal_id;
-    Graphic *graphic;
+    int graphics_termid = GraphicsTermId(screen);
+    Graphic *graphic = NULL;
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {
@@ -789,7 +796,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->id = next_graphic_id++;
 	init_graphic(graphic,
 		     type,
-		     terminal_id,
+		     graphics_termid,
 		     charrow,
 		     charcol,
 		     num_color_registers,
@@ -845,27 +852,6 @@ get_new_or_matching_graphic(XtermWidget xw,
     return graphic;
 }
 
-static int
-lookup_allocated_color(const ColorRegister *reg, Pixel *pix)
-{
-    unsigned const rr = ((unsigned) reg->r * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
-    unsigned const gg = ((unsigned) reg->g * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
-    unsigned const bb = ((unsigned) reg->b * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
-    const AllocatedColorRegister *search;
-
-    for (search = allocated_colors[rr][gg][bb]; search; search = search->next) {
-	if (search->r == reg->r &&
-	    search->g == reg->g &&
-	    search->b == reg->b) {
-	    *pix = search->pix;
-	    return 1;
-	}
-    }
-
-    *pix = 0UL;
-    return 0;
-}
-
 #define ScaleForXColor(s) (unsigned short) ((long)(s) * 65535 / CHANNEL_MAX)
 
 static int
@@ -886,37 +872,48 @@ save_allocated_color(const ColorRegister *reg, XtermWidget xw, Pixel *pix)
 	TRACE(("unable to allocate xcolor\n"));
 	*pix = 0UL;
 	return 0;
+    } else {
+	*pix = xcolor.pixel;
+
+	if (!(new_color = malloc(sizeof(*new_color)))) {
+	    TRACE(("unable to save pixel %lu\n", (unsigned long) *pix));
+	    return 0;
+	} else {
+	    new_color->r = reg->r;
+	    new_color->g = reg->g;
+	    new_color->b = reg->b;
+	    new_color->pix = *pix;
+	    new_color->next = allocated_colors[rr][gg][bb];
+
+	    allocated_colors[rr][gg][bb] = new_color;
+
+	    return 1;
+	}
     }
-
-    *pix = xcolor.pixel;
-
-    if (!(new_color = malloc(sizeof(*new_color)))) {
-	TRACE(("unable to save pixel %lu\n", (unsigned long) *pix));
-	return 0;
-    }
-    new_color->r = reg->r;
-    new_color->g = reg->g;
-    new_color->b = reg->b;
-    new_color->pix = *pix;
-    new_color->next = allocated_colors[rr][gg][bb];
-
-    allocated_colors[rr][gg][bb] = new_color;
-
-    return 1;
 }
 
+/* FIXME: with so many possible colors we need to determine
+ * when to free them to be nice to PseudoColor displays
+ */
 static Pixel
 color_register_to_xpixel(const ColorRegister *reg, XtermWidget xw)
 {
-    Pixel pix;
+    Pixel result;
+    unsigned const rr = ((unsigned) reg->r * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const gg = ((unsigned) reg->g * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const bb = ((unsigned) reg->b * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    const AllocatedColorRegister *search;
 
-    if (!lookup_allocated_color(reg, &pix))
-	save_allocated_color(reg, xw, &pix);
+    for (search = allocated_colors[rr][gg][bb]; search; search = search->next) {
+	if (search->r == reg->r &&
+	    search->g == reg->g &&
+	    search->b == reg->b) {
+	    return search->pix;
+	}
+    }
 
-    /* FIXME: with so many possible colors we need to determine
-     * when to free them to be nice to PseudoColor displays
-     */
-    return pix;
+    save_allocated_color(reg, xw, &result);
+    return result;
 }
 
 static void
@@ -940,7 +937,6 @@ refresh_graphic(TScreen const *screen,
     int const graph_h = graphic->actual_height;
     int const mw = graphic->max_width;
     int r, c;
-    int fillx, filly;
     int holes, total, out_of_range;
     RegisterNum regnum;
 
@@ -966,6 +962,12 @@ refresh_graphic(TScreen const *screen,
 	if (pmy > draw_y + draw_h - 1)
 	    break;
 
+	if (pmy < draw_y || pmy > draw_y + draw_h - 1 ||
+	    pmy < refresh_y || pmy > refresh_y + refresh_h - 1) {
+	    out_of_range++;
+	    continue;
+	}
+
 	for (c = 0; c < graph_w; c++) {
 	    int pmx = graph_x + c * pw;
 
@@ -974,33 +976,20 @@ refresh_graphic(TScreen const *screen,
 	    if (pmx > draw_x + draw_w - 1)
 		break;
 
+	    if (pmx < draw_x || pmx > draw_x + draw_w - 1 ||
+		pmx < refresh_x || pmx > refresh_x + refresh_w - 1) {
+		out_of_range++;
+		continue;
+	    }
+
 	    total++;
 	    regnum = graphic->pixels[r * mw + c];
 	    if (regnum == COLOR_HOLE) {
 		holes++;
-		continue;
-	    }
-
-	    for (fillx = 0; fillx < pw; fillx++) {
-		for (filly = 0; filly < ph; filly++) {
-		    if (pmx < draw_x || pmx > draw_x + draw_w - 1 ||
-			pmy < draw_y || pmy > draw_y + draw_h - 1) {
-			out_of_range++;
-			continue;
-		    }
-
-		    /* this shouldn't happen, but it doesn't hurt to check */
-		    if (pmx < refresh_x || pmx > refresh_x + refresh_w - 1 ||
-			pmy < refresh_y || pmy > refresh_y + refresh_h - 1) {
-			TRACE(("OUT OF RANGE: %d,%d (%d,%d)\n", pmx, pmy, r, c));
-			out_of_range++;
-			continue;
-		    }
-
-		    buffer[(pmy - refresh_y) * refresh_w +
-			   (pmx - refresh_x)] =
-			graphic->color_registers[regnum];
-		}
+	    } else {
+		buffer[(pmy - refresh_y) * refresh_w +
+		       (pmx - refresh_x)] =
+		    graphic->color_registers[regnum];
 	    }
 	}
     }
@@ -1400,9 +1389,7 @@ refresh_graphics(XtermWidget xw,
     }
     for (yy = 0; yy < refresh_h; yy++) {
 	for (xx = 0; xx < refresh_w; xx++) {
-	    buffer[yy * refresh_w + xx].r = -1;
-	    buffer[yy * refresh_w + xx].g = -1;
-	    buffer[yy * refresh_w + xx].b = -1;
+	    buffer[yy * refresh_w + xx] = null_color;
 	}
     }
 
@@ -1496,14 +1483,24 @@ refresh_graphics(XtermWidget xw,
 
     holes = 0U;
     non_holes = 0U;
-    for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
-	for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x; xx++) {
-	    const ColorRegister color = buffer[yy * refresh_w + xx];
-	    if (color.r < 0 || color.g < 0 || color.b < 0) {
-		holes++;
-	    } else {
-		non_holes++;
+    {
+	int y_min = draw_y_min - refresh_y;
+	int y_max = draw_y_max - refresh_y;
+	int x_min = draw_x_min - refresh_x;
+	int x_max = draw_x_max - refresh_x;
+	const ColorRegister *base = buffer + (y_min * refresh_w);
+
+	for (yy = y_min; yy <= y_max; yy++) {
+	    const ColorRegister *scan = base + x_min;
+	    for (xx = x_min; xx <= x_max; xx++) {
+		if (scan->r < 0 || scan->g < 0 || scan->b < 0) {
+		    holes++;
+		} else {
+		    non_holes++;
+		}
+		++scan;
 	    }
+	    base += refresh_w;
 	}
     }
 
@@ -1537,12 +1534,8 @@ refresh_graphics(XtermWidget xw,
 	    return;
 	}
 
-	last_color.r = -1;
-	last_color.g = -1;
-	last_color.b = -1;
-	gc_color.r = -1;
-	gc_color.g = -1;
-	gc_color.b = -1;
+	last_color = null_color;
+	gc_color = null_color;
 	run = 0;
 	for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
 	    for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x;
@@ -1562,9 +1555,7 @@ refresh_graphics(XtermWidget xw,
 		    continue;
 		}
 
-		if (color.r != last_color.r ||
-		    color.g != last_color.g ||
-		    color.b != last_color.b) {
+		if (DiffColor(color, last_color)) {
 		    last_color = color;
 		    if (run > 0) {
 			XDrawLine(display, drawable, graphics_gc,
@@ -1575,9 +1566,7 @@ refresh_graphics(XtermWidget xw,
 			run = 0;
 		    }
 
-		    if (color.r != gc_color.r ||
-			color.g != gc_color.g ||
-			color.b != gc_color.b) {
+		    if (DiffColor(color, gc_color)) {
 			xgcv.foreground =
 			    color_register_to_xpixel(&color, xw);
 			XChangeGC(display, graphics_gc, GCForeground, &xgcv);
@@ -1587,9 +1576,7 @@ refresh_graphics(XtermWidget xw,
 		run++;
 	    }
 	    if (run > 0) {
-		last_color.r = -1;
-		last_color.g = -1;
-		last_color.b = -1;
+		last_color = null_color;
 		XDrawLine(display, drawable, graphics_gc,
 			  OriginX(screen) + refresh_x + xx - run,
 			  (OriginY(screen) - scroll_y) + refresh_y + yy,
@@ -1603,11 +1590,12 @@ refresh_graphics(XtermWidget xw,
     } else {
 	XGCValues xgcv;
 	GC graphics_gc;
-	ColorRegister old_color;
-	Pixel fg;
+	ColorRegister old_colors[2];
+	Pixel fg, old_result[2];
 	XImage *image;
 	char *imgdata;
 	unsigned image_w, image_h;
+	int nn;
 
 	memset(&xgcv, 0, sizeof(xgcv));
 	xgcv.graphics_exposures = False;
@@ -1644,22 +1632,33 @@ refresh_graphics(XtermWidget xw,
 	image->data = imgdata;
 
 	fg = 0U;
-	old_color.r = -1;
-	old_color.g = -1;
-	old_color.b = -1;
+	nn = 0;
+
+	/* two-level cache cuts down on lookup-calls */
+	old_result[0] = 0U;
+	old_result[1] = 0U;
+	old_colors[0] = null_color;
+	old_colors[1] = null_color;
+
 	for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
 	    for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x;
 		 xx++) {
 		const ColorRegister color = buffer[yy * refresh_w + xx];
 
-		if (color.r != old_color.r ||
-		    color.g != old_color.g ||
-		    color.b != old_color.b) {
-		    fg = color_register_to_xpixel(&color, xw);
-		    old_color = color;
+		if (DiffColor(color, old_colors[nn])) {
+		    if (DiffColor(color, old_colors[!nn])) {
+			nn = !nn;
+			fg = color_register_to_xpixel(&color, xw);
+			old_result[nn] = fg;
+			old_colors[nn] = color;
+		    } else {
+			nn = !nn;
+			fg = old_result[nn];
+		    }
 		}
 
-		XPutPixel(image, xx + refresh_x - draw_x_min,
+		XPutPixel(image,
+			  xx + refresh_x - draw_x_min,
 			  yy + refresh_y - draw_y_min, fg);
 	    }
 	}
@@ -1789,7 +1788,7 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    init_color_registers(getSharedRegisters(), screen->terminal_id);
+    init_color_registers(getSharedRegisters(), GraphicsTermId(screen));
 
     if (used_graphics) {
 	unsigned ii;

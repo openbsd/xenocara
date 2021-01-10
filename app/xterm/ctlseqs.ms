@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.561 2019/11/02 14:26:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.609 2020/12/25 14:17:03 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2018,2019 by Thomas E. Dickey
+.\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #350
-.ds RF 2019/11/02
+.ds LF Patch #363
+.ds RF 2020/12/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2019)
+invisible-island.net (2006-2020)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -719,7 +719,7 @@ There are a few other 94-character sets:
   \*(Cc = \*< \(-> DEC Supplemental, VT200.
   \*(Cc = \*> \(-> DEC Technical, VT300.
 .br
-These are documented as NRCS:
+These are documented as 94-character sets (like USASCII) without NRCS:
   \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
   \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
   \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
@@ -757,6 +757,7 @@ Unlike the 94-character sets, these can have different values than
 ASCII space and DEL for the mapping of 0x20 and 0x7f.
 The valid final characters \*(Cc for this control are:
   \*(Cc = \*A \(-> ISO Latin-1 Supplemental, VT300.
+  \*(Cc = \*(cB \(-> ISO Latin-2 Supplemental, VT500.
   \*(Cc = \*F \(-> ISO Greek Supplemental, VT500.
   \*(Cc = \*H \(-> ISO Hebrew Supplemental, VT500.
   \*(Cc = \*L \(-> ISO Latin-Cyrillic, VT500.
@@ -818,11 +819,11 @@ Memory Unlock (per HP terminals).
 .
 .iP
 .IP \\*(Es\\*n
-Invoke the G2 Character Set as GL (LS2) as GL.
+Invoke the G2 Character Set as GL (LS2).
 .
 .iP
 .IP \\*(Es\\*o
-Invoke the G3 Character Set as GL (LS3) as GL.
+Invoke the G3 Character Set as GL (LS3).
 .
 .iP
 .IP \\*(Es\\*|
@@ -858,8 +859,8 @@ The second parameter:
   \*(Ps = \*0 \(<- Lock the keys (default).
   \*(Ps = \*1 \(<- Do not lock.
 .iP
-The third parameter is a ';'-separated list of strings denoting
-the key-code separated by a '/' from the hex-encoded key value.
+The third parameter is a \*(``;\*(''-separated list of strings denoting
+the key-code separated by a \*(``/\*('' from the hex-encoded key value.
 The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .
 .iP
@@ -1050,12 +1051,35 @@ Delete \*(Ps Line(s) (default = 1) (DL).
 Delete \*(Ps Character(s) (default = 1) (DCH).
 .
 .iP
+.IP \\*(Cs\\*#\\*P
+.IP \\*(Cs\\*(Pm\\*s\\*#\\*P
+Push current dynamic- and ANSI-palette colors onto stack
+(XTPUSHCOLORS), \fI\*(xt\fP.
+Parameters (integers in the range 1 through 10, since the default 0 will push)
+may be used to store the palette into the stack without pushing.
+.
+.iP
+.IP \\*(Cs\\*#\\*Q
+.IP \\*(Cs\\*(Pm\\*s\\*#\\*Q
+Pop stack to set dynamic- and ANSI-palette colors
+(XTPOPCOLORS), \fI\*(xt\fP.
+Parameters (integers in the range 1 through 10, since the default 0 will pop)
+may be used to restore the palette from the stack without popping.
+.
+.iP
+.IP \\*(Cs\\*#\\*R
+Report the current entry on the palette stack, and the number of
+palettes stored on the stack, using the same form as XTPOPCOLOR
+(default = 0)
+(XTREPORTCOLORS), \fI\*(xt\fP.
+.
+.iP
 .IP \\*(Cs\\*(Ps\\*s\\*S
 Scroll up \*(Ps lines (default = 1) (SU), VT420, ECMA-48.
 .
 .iP
 .IP \\*(Cs\\*?\\*(Pi\\*s\\*;\\*(Pa\\*s\\*;\\*(Pv\\*s\\*S
-Set or request graphics attribute, \fI\*(xt\fP.
+Set or request graphics attribute (XTSMGRAPHICS), \fI\*(xt\fP.
 If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
 \fI\*(xt\fP accepts a three-parameter control sequence, where \*(Pi,
 \*(Pa and \*(Pv are the \fIitem\fP, \fIaction\fP and \fIvalue\fP:
@@ -1069,7 +1093,7 @@ If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
   \*(Pa = \*3 \(-> set to value in \*(Pv.
   \*(Pa = \*4 \(-> read the maximum allowed value.
 .sP
-  \*(Pv can be omitted except when setting (\*(Pa == \*3).
+  \*(Pv is ignored by \fI\*(xt\fP except when setting (\*(Pa == \*3).
   \*(Pv = \fIn\fP \(<- A single integer is used for color registers.
   \*(Pv = \fIwidth\fP\*s\*;\fIheight\fP \(<- Two integers for graphics geometry.
 .sP
@@ -1109,13 +1133,13 @@ Scroll down \*(Ps lines (default = 1) (SD), VT420.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*T
-Initiate highlight mouse tracking.
+Initiate highlight mouse tracking (XTHIMOUSE), \*(xt.
 Parameters are [func;startx;starty;firstrow;lastrow].
 See the section \fBMouse Tracking\fP.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Pm\\*s\\*T
-Reset title mode features to default value, \fI\*(xt\fP.
+Reset title mode features to default value (XTRMTITLE), \fI\*(xt\fP.
 Normally, \*(``reset\*('' disables the feature.
 It is possible to disable the ability to reset features
 by compiling a different default for the title modes into \fI\*(xt\fP.
@@ -1143,11 +1167,11 @@ This was a publication error in the original ECMA-48 5th edition (1991)
 corrected in 2003.
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*`
+.IP \\*(Cs\\*(Ps\\*s\\*`
 Character Position Absolute  [column] (default = [row,1]) (HPA).
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*a
+.IP \\*(Cs\\*(Ps\\*s\\*a
 Character Position Relative  [columns] (default = [row,col+1]) (HPR).
 .
 .iP
@@ -1161,10 +1185,13 @@ Send Device Attributes (Primary DA).
 The response depends on the \fBdecTerminalID\fP resource setting.
   \(->\ \*(Cs\*?\*1\*;\*2\*c (\*(``VT100 with Advanced Video Option\*('')
   \(->\ \*(Cs\*?\*1\*;\*0\*c (\*(``VT101 with No Options\*('')
+  \(->\ \*(Cs\*?\*4\*;\*6\*c (\*(``VT132 with Advanced Video and Graphics\*('')
   \(->\ \*(Cs\*?\*6\*c (\*(``VT102\*('')
-  \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (\*(``VT220\*('')
-  \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (\*(``VT320\*('')
-  \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*c (\*(``VT420\*('')
+  \(->\ \*(Cs\*?\*7\*c (\*(``VT131\*('')
+  \(->\ \*(Cs\*?\*1\*2\*;\*(Ps\*s\*c (\*(``VT125\*('')
+  \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*s\*c (\*(``VT220\*('')
+  \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*s\*c (\*(``VT320\*('')
+  \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*s\*c (\*(``VT420\*('')
 .iP
 The VT100-style response parameters do not mean anything by themselves.
 VT220 (and higher) parameters do,
@@ -1209,10 +1236,11 @@ It should apply only to VT220 and up, but \fI\*(xt\fP extends this to VT100.
 where \*(Pp denotes the terminal type
   \*(Pp = \*0 \(-> \*(``VT100\*(''.
   \*(Pp = \*1 \(-> \*(``VT220\*(''.
-  \*(Pp = \*2 \(-> \*(``VT240\*(''.
+  \*(Pp = \*2 \(-> \*(``VT240\*('' or \*(``VT241\*(''.
   \*(Pp = \*1\*8 \(-> \*(``VT330\*(''.
   \*(Pp = \*1\*9 \(-> \*(``VT340\*(''.
   \*(Pp = \*2\*4 \(-> \*(``VT320\*(''.
+  \*(Pp = \*3\*2 \(-> \*(``VT382\*(''.
   \*(Pp = \*4\*1 \(-> \*(``VT420\*(''.
   \*(Pp = \*6\*1 \(-> \*(``VT510\*(''.
   \*(Pp = \*6\*4 \(-> \*(``VT520\*(''.
@@ -1224,11 +1252,11 @@ In a DEC terminal, \*(Pc indicates the ROM cartridge
 registration number and is always zero.
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*d
+.IP \\*(Cs\\*(Ps\\*s\\*d
 Line Position Absolute  [row] (default = [1,column]) (VPA).
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*e
+.IP \\*(Cs\\*(Ps\\*s\\*e
 Line Position Relative  [rows] (default = [row+1,column]) (VPR).
 .
 .iP
@@ -1244,7 +1272,7 @@ Tab Clear (TBC).
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*h
 Set Mode (SM).
-  \*(Ps = \*2 \(-> Keyboard Action Mode (AM).
+  \*(Ps = \*2 \(-> Keyboard Action Mode (KAM).
   \*(Ps = \*4 \(-> Insert Mode (IRM).
   \*(Ps = \*1\*2 \(-> Send/receive (SRM).
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM).
@@ -1259,33 +1287,38 @@ and set VT100 mode.
   \*(Ps = \*4 \(-> Smooth (Slow) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Reverse Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Origin Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> Auto-wrap Mode (DECAWM), VT100.
-  \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM), VT100.
+  \*(Ps = \*7 \(-> Auto-Wrap Mode (DECAWM), VT100.
+  \*(Ps = \*8 \(-> Auto-Repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
 This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0 \(-> Show toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Start Blinking Cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Start Blinking Cursor (set only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Enable XOR of Blinking Cursor control sequence and menu.
-  \*(Ps = \*1\*8 \(-> Print form feed (DECPFF), VT220.
+  \*(Ps = \*1\*2 \(-> Start blinking cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Start blinking cursor (set only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*8 \(-> Print Form Feed (DECPFF), VT220.
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX), VT220.
-  \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM), VT220.
+  \*(Ps = \*2\*5 \(-> Show cursor (DECTCEM), VT220.
   \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
-  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK), VT240, \fI\*(xt\fP.
-  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
+  \*(Ps = \*3\*8 \(-> Enter Tektronix mode (DECTEK), VT240, \fI\*(xt\fP.
+  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 mode, \fI\*(xt\fP.
   \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets
 (DECNRCM), VT220.
-  \*(Ps = \*4\*4 \(-> Turn On Margin Bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*6 \(-> Start Logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*3 \(-> Enable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*4 \(-> Turn on margin bell, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Enable Graphics Print Color Mode (DECGPCM).
+  \*(Ps = \*4\*5 \(-> Reverse-wraparound mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Enable Graphics Print ColorSpace (DECGPCS).
+  \*(Ps = \*4\*6 \(-> Start logging, \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
   \*(Ps = \*4\*7 \(-> Use \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This may be disabled by the \fBtiteInhibit\fP resource.
-  \*(Ps = \*6\*6 \(-> Application keypad (DECNKM), VT320.
-  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.  This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
+  \*(Ps = \*4\*7 \(-> Enable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*6\*6 \(-> Application keypad mode (DECNKM), VT320.
+  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
+This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
   \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
@@ -1294,16 +1327,21 @@ This may be disabled by the \fBtiteInhibit\fP resource.
 See the section \fBMouse Tracking\fP.
 This is the X11 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBButton-event tracking\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBAny-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBButton-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBAny-event tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Send \fBFocusIn/FocusOut\fP events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*7 \(-> Enable \fIAlternate Scroll Mode\fP, \fI\*(xt\fP.
 This corresponds to the \fBalternateScroll\fP resource.
-  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).  This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
-  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).  This sets the \fBscrollKey\fP resource to \*(``true\*(''.
+  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
+This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
+  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
+This sets the \fBscrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
+  \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
 (and enables the \fBeightBitInput\fP resource).
@@ -1353,7 +1391,7 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*2\*0\*0\*4 \(-> Set bracketed paste mode, \fI\*(xt\fP.
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*i
+.IP \\*(Cs\\*(Ps\\*s\\*i
 Media Copy (MC).
   \*(Ps = \*0 \(-> Print screen (default).
   \*(Ps = \*4 \(-> Turn off printer controller mode.
@@ -1362,7 +1400,7 @@ Media Copy (MC).
   \*(Ps = \*1\*1 \(-> SVG screen dump, \fI\*(xt\fP.
 .
 .iP
-.IP \\*(Cs\\*?\\*(Pm\\*s\\*i
+.IP \\*(Cs\\*?\\*(Ps\\*s\\*i
 Media Copy (MC), DEC-specific.
   \*(Ps = \*1 \(-> Print line containing cursor.
   \*(Ps = \*4 \(-> Turn off autoprint mode.
@@ -1373,7 +1411,7 @@ Media Copy (MC), DEC-specific.
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*l
 Reset Mode (RM).
-  \*(Ps = \*2 \(-> Keyboard Action Mode (AM).
+  \*(Ps = \*2 \(-> Keyboard Action Mode (KAM).
   \*(Ps = \*4 \(-> Replace Mode (IRM).
   \*(Ps = \*1\*2 \(-> Send/receive (SRM).
   \*(Ps = \*2\*0 \(-> Normal Linefeed (LNM).
@@ -1387,29 +1425,34 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*4 \(-> Jump (Fast) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Normal Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> No Auto-wrap Mode (DECAWM), VT100.
-  \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM), VT100.
+  \*(Ps = \*7 \(-> No Auto-Wrap Mode (DECAWM), VT100.
+  \*(Ps = \*8 \(-> No Auto-Repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Don't send Mouse X & Y on button press, \fI\*(xt\fP.
   \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Disable Blinking Cursor (reset only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Disable XOR of Blinking Cursor control sequence and menu.
-  \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF).
-  \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX).
-  \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM), VT220.
+  \*(Ps = \*1\*2 \(-> Stop blinking cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Disable blinking cursor (reset only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Disable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*8 \(-> Don't Print Form Feed (DECPFF), VT220.
+  \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX), VT220.
+  \*(Ps = \*2\*5 \(-> Hide cursor (DECTCEM), VT220.
   \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
-  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 mode, \fI\*(xt\fP.
   \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM),
 VT220.
-  \*(Ps = \*4\*4 \(-> Turn Off Margin Bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*6 \(-> Stop Logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*3 \(-> Disable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*4 \(-> Turn off margin bell, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Disable Graphics Print Color Mode (DECGPCM).
+  \*(Ps = \*4\*5 \(-> No Reverse-wraparound mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Disable Graphics Print ColorSpace (DECGPCS).
+  \*(Ps = \*4\*6 \(-> Stop logging, \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
-  \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer, \fI\*(xt\fP.
-  \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM), VT320.
-  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.  This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
+  \*(Ps = \*4\*7 \(-> Use \fINormal Screen Buffer\fP, \fI\*(xt\fP.
+  \*(Ps = \*4\*7 \(-> Disable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*6\*6 \(-> Numeric keypad mode (DECNKM), VT320.
+  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.
+This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
   \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
@@ -1419,16 +1462,21 @@ VT510 and up.
 release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Don't use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBButton-event tracking\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBAny-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBButton-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBAny-event tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send \fBFocusIn/FocusOut\fP events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*7 \(-> Disable \fIAlternate Scroll Mode\fP, \fI\*(xt\fP.
 This corresponds to the \fBalternateScroll\fP resource.
-  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).  This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
-  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).  This sets the \fBscrollKey\fP resource to \*(``false\*(''.
+  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
+This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
+  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
+This sets the \fBscrollKey\fP resource to \*(``false\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
+  \*(Ps = \*1\*0\*1\*6 \(-> Disable SGR Mouse Pixel-Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This disables the \fBeightBitInput\fP resource.
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for
@@ -1580,39 +1628,50 @@ All parameters are decimal integers.
 .bP
 RGB values range from zero (0) to 255.
 .bP
-ISO-8613-6 has been interpreted in more than one way;
-\fI\*(xt\fP allows the semicolons separating the subparameters
-in this control to be replaced by colons
+The 88- and 256-color support uses \fIsubparameters\fP described in ISO-8613-6
+for \fIindexed\fP color.
+ISO-8613-6 also mentions \fIdirect color\fP, using a similar scheme.
+\fI\*(xt\fP supports that, too.
+.bP
+\fI\*(xt\fP allows either colons (standard) or semicolons (legacy)
+to separate the subparameters
 (but after the first colon, colons must be used).
 .RE
+.sP
+The indexed- and direct-color features are summarized in the FAQ,
+which explains why semicolon is accepted as a subparameter delimiter:
+.ID 2
+.\" https://invisible-island.net/xterm/xterm.faq.html#color_by_number
+\fICan I set a color by its number?\fP
+.DE
 .sP
 These ISO-8613-6 controls (marked in ECMA-48 5th edition as
 \*(``reserved for future standardization\*('')
 are supported by \fI\*(xt\fP:
-  \*(Pm = \*3\*8\*;\*2\*;\*(Pi\*s\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set foreground
+  \*(Ps = \*3\*8\*:\*2\*:\*(Pi\*s\*:\*(Pr\*s\*:\*(Pg\*s\*:\*(Pb \(-> Set foreground
 color using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
 for the given RGB \*(Pr/\*(Pg/\*(Pb.
 The color space identifier \*(Pi is ignored.
-  \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to \*(Ps,
+  \*(Ps = \*3\*8\*:\*5\*:\*(Ps \(-> Set foreground color to \*(Ps,
 using indexed color.
-  \*(Pm = \*4\*8\*;\*2\*;\*(Pi\*s\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set background
+  \*(Ps = \*4\*8\*:\*2\*:\*(Pi\*s\*:\*(Pr\*s\*:\*(Pg\*s\*:\*(Pb \(-> Set background
 color using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
 for the given RGB \*(Pr/\*(Pg/\*(Pb.
 The color space identifier \*(Pi is ignored.
-  \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps,
+  \*(Ps = \*4\*8\*:\*5\*:\*(Ps \(-> Set background color to \*(Ps,
 using indexed color.
 .sP
 This variation on ISO-8613-6 is supported for compatibility with KDE konsole:
-  \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set foreground color
+  \*(Ps = \*3\*8\*;\*2\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set foreground color
 using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
 for the given RGB \*(Pr/\*(Pg/\*(Pb.
-  \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set background color
+  \*(Ps = \*4\*8\*;\*2\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set background color
 using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
@@ -1627,7 +1686,7 @@ rather than choosing the closest match,
 .iP
 .IP \\*(Cs\\*>\\*(Pp\\*s\\*;\*(Pv\\*s\\*m
 .IP \\*(Cs\\*>\\*(Pp\\*s\\*m
-Set/reset key modifier options, \fI\*(xt\fP.
+Set/reset key modifier options (XTMODKEYS), \fI\*(xt\fP.
 Set or reset resource-values used by \fI\*(xt\fP to decide whether to
 construct escape sequences holding information about the modifiers
 pressed with a given key.
@@ -1677,7 +1736,7 @@ The \fBmodifyFunctionKeys\fP and \fBmodifyKeyboard\fP resources
 can change the form of the string sent from the modified F1 key.
 .
 .iP
-.IP \\*(Cs\\*>\\*(Pm\\*s\\*n
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*n
 Disable key modifier options, \fI\*(xt\fP.
 These modifiers may be enabled via the
 \*(Cs\*>\*(Pm\*s\*m
@@ -1746,9 +1805,9 @@ The response is
   \*(Ps = \*6\*2 \(-> Report macro space (DECMSR).
 The response is
 \*(Cs\*(Pn\*s\**\*s\*{.
-  \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR).
+  \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR), VT420 and up.
 The response is
-\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST.
+\*(Dc\*(Pt\*s\*!\*~x\*sx\*sx\*sx\*s\*(ST.
 .br
     \*(Pt is the request id (from an optional parameter to the request).
     The x's are hexadecimal digits 0-9 and A-F.
@@ -1761,7 +1820,7 @@ The response is
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*p
-Set resource value \fBpointerMode\fP.
+Set resource value \fBpointerMode\fP (XTSMPOINTER), \*(xt.
 This is used by \fI\*(xt\fP to decide whether to
 hide the pointer cursor as the user types.
 .iP
@@ -1806,7 +1865,7 @@ but DECSCL is preferred.
 Request ANSI mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*(Ps\*;\*(Pm\*$\*y
+  \*(Cs\*(Ps\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in SM/RM,
 and \*(Pm is the mode value:
@@ -1822,7 +1881,7 @@ and \*(Pm is the mode value:
 Request DEC private mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*?\*(Ps\*;\*(Pm\*$\*y
+  \*(Cs\*?\*(Ps\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in DECSET/DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
@@ -1838,6 +1897,10 @@ Push video attributes onto stack (XTPUSHSGR), \fI\*(xt\fP.
 This is an alias for \*(Cs\*#\*{,
 used to work around language limitations of C#.
 .
+.iP
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*q
+\*(Ps = \*0 \(-> Report \fI\*(xt\fP name and version (XTVERSION).
+The response is a DSR sequence identifying the version: \*(Dc\*>\*|text \*(ST
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*q
 Load LEDs (DECLL), VT100.
@@ -1862,7 +1925,7 @@ Set cursor style (DECSCUSR), VT520.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Dq\\*q
-Select character protection attribute (DECSCA).
+Select character protection attribute (DECSCA), VT220.
 Valid values for the parameter:
   \*(Ps = \*0 \(-> DECSED and DECSEL can erase (default).
   \*(Ps = \*1 \(-> DECSED and DECSEL cannot erase.
@@ -1881,7 +1944,7 @@ Set Scrolling Region [top;bottom] (default = full size of window)
 .
 .iP
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*r
-Restore DEC Private Mode Values.
+Restore DEC Private Mode Values (XTRESTORE), \*(xt.
 The value of \*(Ps previously saved is restored.
 \*(Ps values are the same as for DECSET.
 .
@@ -1901,13 +1964,29 @@ Set left and right margins (DECSLRM), VT420 and up.
 This is available only when DECLRMM is enabled.
 .
 .iP
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*(cs
+Set/reset shift-escape options (XTSHIFTESCAPE), \fI\*(xt\fP.
+This corresponds to the \fBshiftEscape\fP resource.
+.iP
+Valid values for the parameter:
+  \*(Ps = \*0 \(-> allow shift-key to override mouse protocol.
+  \*(Ps = \*1 \(-> conditionally allow shift-key as modifier in mouse protocol.
+.iP
+These resource values are disallowed in the control sequence:
+  \*(Ps = \*2 \(-> always allow shift-key as modifier in mouse protocol.
+  \*(Ps = \*3 \(-> never allow shift-key as modifier in mouse protocol.
+.iP
+If no parameter is given, \fI\*(xt\fP uses the default,
+which is \*0.
+.
+.iP
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
-Save DEC Private Mode Values.
+Save DEC Private Mode Values (XTSAVE), \*(xt.
 \*(Ps values are the same as for DECSET.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
-Window manipulation (from \fIdtterm\fP, as well as extensions by \fI\*(xt\fP).
+Window manipulation (XTWINOPS), \fIdtterm\fP, extended by \fI\*(xt\fP.
 These controls may be disabled using the \fBallowWindowOps\fP resource.
 .iP
 \fI\*(xt\fP uses \fIExtended Window Manager Hints\fP (EWMH) to maximize
@@ -2009,7 +2088,7 @@ from stack.
 .iP
 .IP \\*(Cs\\*>\\*(Pm\\*s\\*t
 This \fI\*(xt\fP control
-sets one or more features of the title modes.
+sets one or more features of the title modes (XTSMTITLE), \*(xt.
 Each parameter enables a single feature.
   \*(Ps = \*0 \(-> Set window/icon labels using hexadecimal.
   \*(Ps = \*1 \(-> Query window/icon labels using hexadecimal.
@@ -2081,7 +2160,7 @@ an outside rectangle event is generated and the rectangle is disabled.
 Filter rectangles are always treated as \*(``one-shot\*('' events.
 Any parameters that are omitted default to the current locator position.
 If all parameters are omitted, any locator motion will be reported.
-DECELR always cancels any prevous rectangle definition.
+DECELR always cancels any previous rectangle definition.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*x
@@ -2184,9 +2263,9 @@ except for colors (which do not have a unique SGR code):
   \*(Ps = \*7 \(-> Inverse.
   \*(Ps = \*8 \(-> Invisible.
   \*(Ps = \*9 \(-> Crossed-out characters.
-  \*(Ps = \*1\*0 \(-> Foreground color.
-  \*(Ps = \*1\*1 \(-> Background color.
   \*(Ps = \*2\*1 \(-> Doubly-underlined.
+  \*(Ps = \*3\*0 \(-> Foreground color.
+  \*(Ps = \*3\*1 \(-> Background color.
 .iP
 .IP
 If no parameters are given, all of the video attributes are saved.
@@ -2265,11 +2344,11 @@ Popping restores the video-attributes which were saved using XTPUSHSGR
 to their previous state.
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}
+.IP \\*(Cs\\*(Ps\\*s\\*(qu\\*}
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
 .
 .iP
-.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*~
+.IP \\*(Cs\\*(Ps\\*s\\*(qu\\*~
 Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .
 .Ed
@@ -2281,12 +2360,32 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .iP
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 Set Text Parameters.
+Some control sequences return information:
+.RS
+.bP
 For colors and font,
 if \*(Pt is a \*(``?\*('',
 the control sequence elicits a response which consists
 of the control sequence which would set the corresponding value.
+.bP
 The \fIdtterm\fP control sequences allow you to determine the icon name
 and window title.
+.RE
+.sP
+\*(XT accepts either \*(Be or \*(ST for terminating \*(Os sequences,
+and when returning information, uses the same terminator used in a query.
+While the latter is preferred,
+the former is supported for legacy applications:
+.RS
+.bP
+Although documented in the changes for X.V10R4 (December 1986),
+\*(Be as a string terminator dates from X11R4 (December 1989).
+.bP
+Since XFree86-3.1.2Ee (August 1996), \*(xt has accepted \*(ST
+(the documented string terminator in ECMA-48).
+.RE
+.sP
+\*(Ps specifies the type of operation to perform:
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt.
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt.
@@ -2351,8 +2450,8 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*0 \(-> Change VT100 text foreground color to \*(Pt.
   \*(Ps = \*1\*1 \(-> Change VT100 text background color to \*(Pt.
   \*(Ps = \*1\*2 \(-> Change text cursor color to \*(Pt.
-  \*(Ps = \*1\*3 \(-> Change mouse foreground color to \*(Pt.
-  \*(Ps = \*1\*4 \(-> Change mouse background color to \*(Pt.
+  \*(Ps = \*1\*3 \(-> Change pointer foreground color to \*(Pt.
+  \*(Ps = \*1\*4 \(-> Change pointer background color to \*(Pt.
   \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt.
   \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt.
   \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt.
@@ -2447,8 +2546,8 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.
   \*(Ps = \*1\*1\*1 \(-> Reset VT100 text background color.
   \*(Ps = \*1\*1\*2 \(-> Reset text cursor color.
-  \*(Ps = \*1\*1\*3 \(-> Reset mouse foreground color.
-  \*(Ps = \*1\*1\*4 \(-> Reset mouse background color.
+  \*(Ps = \*1\*1\*3 \(-> Reset pointer foreground color.
+  \*(Ps = \*1\*1\*4 \(-> Reset pointer background color.
   \*(Ps = \*1\*1\*5 \(-> Reset Tektronix foreground color.
   \*(Ps = \*1\*1\*6 \(-> Reset Tektronix background color.
   \*(Ps = \*1\*1\*7 \(-> Reset highlight color.
@@ -2533,14 +2632,17 @@ for example \fIalt-Tab\fP sends
 One drawback to this format is that applications may confuse it with
 \*(Cs\*u (restore-cursor).
 .LP
-The \fI\*(xt\fP FAQ section
+The \fI\*(xt\fP FAQ sections
 .br
 .ID 3
 .\" https://invisible-island.net/xterm/xterm.faq.html#xterm_modother
 \fIHow can my program distinguish control-I from tab?\fP
+.ID 3
+.\" https://invisible-island.net/xterm/modified-keys.html
+\fIXTerm - \*(``Other\*('' Modified Keys\fP
 .DE
 .br
-goes into greater detail on this topic.
+go into greater detail on this topic.
 .LP
 The table shows the result for a given character \*(``x\*('' with modifiers
 according to the default translations with the resources set on or off.
@@ -3073,11 +3175,12 @@ are defined in \fIxcharmouse.h\fP as follows:
 .sP
 #define SET_FOCUS_EVENT_MOUSE       1004
 .sP
+#define SET_ALTERNATE_SCROLL        1007
+.sP
 #define SET_EXT_MODE_MOUSE          1005
 #define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
-.sP
-#define SET_ALTERNATE_SCROLL        1007
+#define SET_PIXEL_POSITION_MOUSE    1016
 .ft 1
 .DE
 .br
@@ -3116,15 +3219,40 @@ On button press or release, \fI\*(xt\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy.
 .bP
 The low two bits of \*(Cb encode button information:
-0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
+.RS
+.IP
+0=MB1 pressed,
+.br
+1=MB2 pressed,
+.br
+2=MB3 pressed, and
+.br
+3=release.
+.RE
 .bP
 The next three bits encode the modifiers which were down when the button was
-pressed and are added together:  4=Shift, 8=Meta, 16=Control.
-Note however that the shift and control bits are normally unavailable
-because \fI\*(xt\fP uses the control modifier with mouse for popup menus,
-and the shift modifier is used in the default translations for button events.
-The \fIMeta\fP modifier recognized by \fI\*(xt\fP is the \fImod1\fP mask,
-and is not necessarily the \*(``Meta\*('' key (see \fBxmodmap\fP(1)).
+pressed and are added together:
+.RS
+.IP
+4=Shift,
+.br
+8=Meta, and
+.br
+16=Control.
+.RE
+.IP
+The \fIshift\fP and \fIcontrol\fP modifiers are normally irrelevant
+because \fI\*(xt\fP uses the \fIcontrol\fP modifier with mouse for popup menus,
+and the \fIshift\fP modifier is used in the default translations for button
+events.
+.IP
+There is no predefined \fImeta\fP modifier.
+\fI\*(XT\fP checks first if the keysyms listed in the predefined modifiers
+include \fBMeta_L\fP or \fBMeta_R\fP.
+If found, \fI\*(xt\fP uses that modifier for \fImeta\fP.
+Next, it tries \fBAlt_L\fP or \fBAlt_R\fP.
+If none of those are found, \fI\*(xt\fP uses the \fImod1\fP modifier,
+This is not necessarily the \*(``Meta\*('' key according to \fBxmodmap\fP(1).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
@@ -3135,17 +3263,23 @@ Those buttons are represented by the same event codes
 as buttons 1 and 2 respectively,
 except that 64 is added to the event code.
 Release events for the wheel buttons are not reported.
+.LP
 By default,
-the wheel mouse events are translated to \fIscroll-back\fP
-and \fIscroll-forw\fP actions.
+the wheel mouse events (buttons 4 and 5)
+are translated to \fIscroll-back\fP
+and \fIscroll-forw\fP actions, respectively.
 Those actions normally scroll the whole window,
 as if the scrollbar was used.
+.LP
 However if \fIAlternate Scroll\fP mode is set,
 then cursor up/down controls are sent when the terminal is displaying
 the \fIAlternate Screen Buffer\fP.
 The initial state of \fIAlternate Scroll\fP mode is set
 using the \fBalternateScroll\fP resource.
 .Ss Other buttons
+.LP
+Some wheel mice can send additional button events,
+e.g., by tilting the scroll wheel left and right.
 .LP
 Additional buttons are encoded like the wheel mice,
 .bP
@@ -3155,9 +3289,12 @@ by adding 128 (for buttons 8 through 11).
 .LP
 Past button 11, the encoding is ambiguous because the same code
 may correspond to different button/modifier combinations.
+.LP
 It is not possible to use these buttons (6-11) in \fI\*(xt\fP's
 \fBtranslations\fP resource because their names are not in the X Toolkit's
 symbol table.
+However, applications can check for the reports, e.g.,
+button 7 (left) and button 6 (right) with a Logitech mouse.
 .Ss Highlight tracking
 .LP
 Mouse highlight tracking notifies a program of a button press, receives a
@@ -3323,7 +3460,10 @@ However, \*(Cs\*M can be mistaken for DL (delete lines),
 while the highlight tracking \*(Cs\*T can be mistaken for SD (scroll down),
 and the Window manipulation controls.
 For these reasons, the 1015 control is not recommended;
-it is not an improvement over 1005.
+it is not an improvement over 1006.
+.IP "SGR-Pixels (1016)"
+Use the same mouse response format as the 1006 control,
+but report position in \fIpixels\fP rather than character \fIcells\fP.
 .
 .Sh "Sixel Graphics"
 .LP
@@ -3333,7 +3473,10 @@ VT241,
 VT330,
 VT340 or
 VT382
-using the \fBdecTerminalID\fP resource,
+using the
+\fBdecTerminalID\fP or
+\fBdecGraphicsID\fP
+resource,
 it supports Sixel Graphics controls, a palleted bitmap graphics system
 using sets of six vertical pixels as the basic element.
 .St
@@ -3375,7 +3518,10 @@ VT240,
 VT241,
 VT330 or
 VT340
-using the \fBdecTerminalID\fP resource,
+using the
+\fBdecTerminalID\fP or
+\fBdecGraphicsID\fP
+resource,
 it supports Remote Graphic Instruction Set, a graphics description language.
 .St
 .IP \\*(Cs\\*(Ps\\*s\\*c
@@ -3839,7 +3985,7 @@ The change-notes for \fI\*(xt\fP's \fIresize\fP program in X10.4 (1986)
 mention its use of these \*(``Sun tty emulation escape sequences\*(''
 for resizing the window.
 The X10.4 \fI\*(xt\fP program recognized these sequences for resizing
-the terminal, except for the iconfig/deiconfy pair.
+the terminal, except for the iconify/deiconify pair.
 SunView also introduced the SIGWINCH signal,
 used by the X10.4 \fI\*(xt\fP and mentioned in its \fICHANGES\fP file:
 .iP
@@ -3866,8 +4012,8 @@ Starting in July 1996,
 and further extended the group of window controls.
 .IP
 There were two sets of controls
-(\*(Cs\*(Ps[\*s\*;\*(Pm\*s\*;\*(Pm]\*t,
-and \*(Os\*(Ps\fItext\fP\*(ST) implemented
+(\*(Cs\*(Ps\*s\fI[\fP\*s\*;\*(Pm\*s\*;\*(Pm\*s\fI]\fP\*s\*t,
+and \*(Os\*(Ps\*s\fItext\fP\*s\*(ST) implemented
 by \fIshelltool\fP, documented in appendix E of both
 \fIPHIGS Programming Manual\fP (1992), and the unpublished
 \fIX Window System User's Guide (OPEN LOOK Edition)\fP (1995).
@@ -3927,13 +4073,11 @@ The latter was introduced in X10.4:
 .RS
 .ft C
 .na
-.hy 0
-Most Dec Private mode settings can be save away internally using \\E[?ns,
+Most Dec Private mode settings can be saved away internally using \\E[?ns,
 where n is the same number to set or reset the Dec Private mode.  The
 mode can be restored using \\E[?nr.  This can be used in termcap for vi, for
 example, to turn off saving of lines, but restore whatever the original
 state was on exit.
-.hy
 .ad
 .ft R
 .RE
@@ -3948,7 +4092,6 @@ That is implied by the description's mention of \fIHFT\fP:
 .iP
 .RS
 .na
-.hy 0
 .ft C
 The aixterm command provides a standard terminal type for programs that
 do not interact directly with Enhanced X-Windows.
@@ -3958,7 +4101,6 @@ The VT102 mode is activated by the -v flag.
 .ft R
 .ad
 .RE
-.hy
 .IP
 Unlike \fI\*(xt\fP, there are no resource names for the 16 colors,
 leaving the reader to assume that the mapping is hard-coded.

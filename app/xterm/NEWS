@@ -1,30 +1,42 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #351 - 2019/11/17
+                            Patch #363 - 2020/12/26
 
-     * correct  logic  in property_to_string for deciding when to fallback
-       from  UTF-8  decoding  to ISO-8859-1 decoding, broken in xterm #350
-       (FreeBSD #241961).
-     * add -report-icons to help-message.
-     * improved autoconf macros:
-          + CF_ADD_LIBS:  the  change to filter out duplicates caused this
-            to append rather than prepend. revise to fix that.
-          + CF_GCC_VERSION and CF_GCC_WARNINGS: move checks to distinguish
-            icc/clang   from   gcc   from  the  macro  which  handles  the
-            --enable-warnings  option,  to make this work without-warnings
-            for the inline-checks.
-     * update config.guess, config.sub
-     * correct  status  in  XTGETXRES  replies  when  the resource was not
-       found.
-     * fix some gcc, cppcheck, clang and coverity warnings.
-     * guard call to RequestResize from the struct-notify event handler to
-       prevent recursion in the Xft+buffered workaround in some cases when
-       doing  manual  resizing  rather  than resizing via escape sequences
-       (reports by Stefan Assman, Mike Thornburg).
-     * amend the workaround for Xft+buffered blanking by moving the switch
-       to  bitmap-fonts to account for differences in font metrics between
-       bitmap- and TrueType-fonts (report by Stefan Assmann).
-     * improve  the  note  on  the  xterm-rep  terminfo entry (prompted by
-       discussion with Sven Joachim).
+     * disable groff hyphenation in generated html when using man2html.
+     * change SCS “&4” Cyrillic to non-NRCS, per VT520 manual.
+     * amend  fix  for  SCS  in  patch  #198  to  remove  DEL  rather than
+       converting it to a space (report by Thomas Wolff).
+     * modify  state transitions for selecting character sets to eliminate
+       an ambiguity between the “A” used in VT220 versus VT320.
+     * improve error recovery when selecting characters by resetting to US
+       ASCII  when  no suitable encoding is found, e.g., attempting to use
+       an NRCS sequence when NRCS is not enabled.
+     * turn  off  hyphenation  in “.txt” conversion, prompted by groff
+       changes.
+     * add VT5xx ISO Latin-2 (prompted by discussion with Thomas Wolff).
+     * amend  change  from  patch  #361  to  event-handling in CopyWait to
+       handle active-icon as a special case (Debian #975687).
+     * add  call to loadColorTable to get the visual information needed to
+       decode BE RGBA32 color format (patch by Leandro Lupori).
+     * modify the resource-parsing for disallowedPasteControls and similar
+       lists of names/numbers to recognize “~;” (tilde) for cancelling a
+       given name/number.
+     * add ENQ, EOT and NUL to default for disallowedPasteControls.
+     * change   default   for  disallowedPasteControls  to  omit  the  tab
+       character (suggested by Harald Dunkel).
+     * fix  swapped  height/width  in  regisScreenSize  and maxGraphicSize
+       resources  using  "auto"  value,  from  patch #314 (report by Anton
+       Lavrentiev)
+     * revise  patch  #362 change for shift-modifier versus mouse protocol
+       and  select/paste  by  adding  resource  shiftEscape,  which can be
+       enabled  via  a  control  sequence  (prompted  by  discussion  with
+       Matthijs van Duin).
+     * simplify/improve  ifdef  in  trace code for using a separate set of
+       files for each run of xterm.
+     * add options -r and -t to vttests/query-color.pl to show the 6-digit
+       RGB code and actual colors.
+     * add nel to xterm-basic terminfo.
+     * alter  vttests/modify-keys.pl  to  omit HTML reference links to the
+       modified-keys table where no keycode was available.
 

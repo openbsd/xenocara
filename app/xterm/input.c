@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.363 2019/11/13 23:05:06 tom Exp $ */
+/* $XTermId: input.c,v 1.365 2020/10/12 19:21:53 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2050,14 +2050,8 @@ VTInitModifiers(XtermWidget xw)
 	    /*
 	     * Force TranslationsUseKeyword() to reload.
 	     */
-	    if (xw->keyboard.shell_translations) {
-		free(xw->keyboard.shell_translations);
-		xw->keyboard.shell_translations = 0;
-	    }
-	    if (xw->keyboard.xterm_translations) {
-		free(xw->keyboard.xterm_translations);
-		xw->keyboard.xterm_translations = 0;
-	    }
+	    FreeAndNull(xw->keyboard.shell_translations);
+	    FreeAndNull(xw->keyboard.xterm_translations);
 
 	    /*
 	     * If the Alt modifier is used in translations, we would rather not

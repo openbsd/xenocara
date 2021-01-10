@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.24 2019/07/22 22:27:54 tom Exp $
+-- $XTermId: THANKS,v 1.28 2020/12/16 13:11:18 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -51,9 +51,11 @@ Chris Clayton
 Christian Biere
 Christian Weisgerber
 Chuck Blake
+Chuck Silvers
 Colum Paget
 D Roland Walker
 Dan Church
+Dan Gohman
 Dan Thompson
 Daniel Colascione
 Daniel Drake
@@ -85,6 +87,7 @@ Frank Giessler
 Frank Guangxin Liu
 Frank Liu
 Gael Roualland
+George Kouryachy
 George Nachman
 George Peter Staplin
 Gertjan Halkes
@@ -98,6 +101,7 @@ Ilya Zakharevich
 Ingo Brückl
 Iwamoto Kouichi
 James Armstrong
+Jan Engelhardt
 Jason Bacon
 Jason Vas Dias
 Jeff Chua
@@ -108,6 +112,7 @@ Jeremy Huddleston
 Jeroen Ruigrok
 Jess Thrysoee
 Jim Paris
+Jimmy Aguilar Mena
 Jochen Voss
 Joe Allen
 Joe Peterson
@@ -146,6 +151,7 @@ Matthieu Herrb
 Matthieu Lagouge
 Mattias Engdegård
 Max Mikhanosha
+Michael Gulick
 Michael Riepe
 Michael Rohleder
 Michael Schroeder
@@ -160,6 +166,7 @@ Min Sik Kim
 Miroslav Lichvar
 Nam SungHyun
 Nelson Beebe
+Nicholas Marriott
 Nicolas George
 Németh Márton
 Olaf Rogalsky
@@ -177,8 +184,10 @@ Peder Stray
 Per Hedeland
 Peter Berg Larsen
 Phil Sidler
+Philipp Klaus Krause
 Pierre Lombard
 Pierre Pronchery
+Quinn Strahl
 Rajesh Mandalemula
 Richard Braakman
 Richard Griswold
@@ -193,6 +202,7 @@ Ross Combs
 Ross Paterson
 Ryan Johnson
 Sam Stephenson
+Samuel Thibault
 Scott Sewall
 Semen A Ustimenko
 Sergei Laskavy
@@ -224,8 +234,10 @@ Torrey Lyons
 Victor Stinner
 Victor Vaile
 Vincent Lefèvre
+Walter Harms
 Werner Fink
 Werner Lemberg
 Will Day
+YOKOTA Hiroshi
 Zarick Lau
 Zdenek Sekera
