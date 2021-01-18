@@ -262,7 +262,7 @@ Bool drmmode_wait_vblank(xf86CrtcPtr crtc, drmVBlankSeqType type,
 			 uint64_t *ust, uint32_t *result_seq);
 
 
-miPointerSpriteFuncRec drmmode_sprite_funcs;
+extern miPointerSpriteFuncRec drmmode_sprite_funcs;
 
 
 #endif
