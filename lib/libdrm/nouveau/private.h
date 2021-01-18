@@ -10,7 +10,7 @@
 #include "nouveau.h"
 
 #ifdef DEBUG
-drm_private uint32_t nouveau_debug;
+drm_private extern uint32_t nouveau_debug;
 #define dbg_on(lvl) (nouveau_debug & (1 << lvl))
 #define dbg(lvl, fmt, args...) do {                                            \
 	if (dbg_on((lvl)))                                                     \
