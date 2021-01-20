@@ -51,7 +51,7 @@ typedef struct _viaSiI164 {
 } viaSiI164Rec, *viaSiI164RecPtr;
 
 
-const xf86OutputFuncsRec via_sii164_funcs;
+extern const xf86OutputFuncsRec via_sii164_funcs;
 
 Bool viaSiI164Probe(ScrnInfoPtr pScrn, I2CBusPtr pI2CBus);
 void viaSiI164Init(ScrnInfoPtr pScrn);

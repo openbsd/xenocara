@@ -49,7 +49,7 @@ typedef struct _VIAVT1632 {
 } viaVT1632Rec, *viaVT1632RecPtr;
 
 
-const xf86OutputFuncsRec via_vt1632_funcs;
+extern const xf86OutputFuncsRec via_vt1632_funcs;
 
 Bool viaVT1632Probe(ScrnInfoPtr pScrn, I2CBusPtr pI2CBus);
 void viaVT1632Init(ScrnInfoPtr pScrn);
