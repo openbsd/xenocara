@@ -17,9 +17,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
+#include <X11/Xproto.h>
 
 #include "../../libs/fvwmlib.h"
 
+#include "FvwmWinList.h"
 #include "ButtonArray.h"
 #include "Mallocs.h"
 

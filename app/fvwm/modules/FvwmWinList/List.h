@@ -44,6 +44,7 @@ void PrintList(List *list);
 char *ItemName(List *list, int n);
 long ItemFlags(List *list, long id );
 long ItemFlags(List *list, long id );
+long ItemDesk(List *list, long id);
 long XorFlags(List *list, int n, long value);
 int ItemCount(List *list);
 int ItemCountDesk(List *list, long desk);
