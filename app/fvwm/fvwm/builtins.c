@@ -3597,8 +3597,8 @@ static Boolean ReadMenuFace(char *s, MenuFace *mf, int verbose)
       if(verbose)
 	fvwm_msg(ERR, "ReadMenuFace", "missing pixmap name for style %s",
 		 style);
-	free(style);
-	return False;
+      free(style);
+      return False;
     }
   }
 #endif /* PIXMAP_BUTTONS */
@@ -3827,17 +3827,19 @@ void UpdateDecor(XEvent *eventp,Window junk,FvwmWindow *tmp_win,
              int i; \
              if (multi) { \
                if (multi&1) \
-                 for (i=0;i<5;++i) \
+                 for (i=0;i<5;++i) { \
                    if (set) \
                      fl->left_buttons[i].flags |= (a); \
                    else \
                      fl->left_buttons[i].flags &= ~(a); \
+                 } \
                if (multi&2) \
-                 for (i=0;i<5;++i) \
+                 for (i=0;i<5;++i) { \
                    if (set) \
                      fl->right_buttons[i].flags |= (a); \
                    else \
                      fl->right_buttons[i].flags &= ~(a); \
+                 } \
              } else \
                  if (set) \
                    tb->flags |= (a); \
