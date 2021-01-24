@@ -3,7 +3,7 @@
 #include "xmanager.h"
 
 static char const rcsid[] =
-  "$Id: functions.c,v 1.1.1.1 2006/11/26 10:53:49 matthieu Exp $";
+  "$Id: functions.c,v 1.2 2021/01/24 09:21:21 matthieu Exp $";
 
 static Button *get_select_button (void);
 
@@ -414,7 +414,7 @@ int builtin_ret (int numargs, BuiltinArg *args)
 
 int builtin_print (int numargs, BuiltinArg *args)
 {
-  char *s, buf[256];
+  char *s;
 
   ConsoleDebug (FUNCTIONS, "print: %s\n", args[0].value.string_value);
 
@@ -423,8 +423,7 @@ int builtin_print (int numargs, BuiltinArg *args)
     ConsoleMessage ("String too long\n");
   }
   else {
-    sprintf (buf, "%s\n", s);
-    ConsoleMessage (buf);
+    ConsoleMessage ("%s\n", s);
   }
 
   return 0;
