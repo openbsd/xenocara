@@ -119,9 +119,6 @@ int x_fd,fd_width;
 char *config_file = NULL;
 
 static Atom _XA_WM_DEL_WIN;
-Atom _XA_WM_PROTOCOLS;
-Atom _XA_WM_NORMAL_HINTS;
-Atom _XA_WM_NAME;
 
 char *iconPath = NULL;
 char *pixmapPath = NULL;
@@ -1238,7 +1235,6 @@ void CreateWindow(button_info *ub,int maxx,int maxy)
 # endif
 
   _XA_WM_DEL_WIN = XInternAtom(Dpy,"WM_DELETE_WINDOW",0);
-  _XA_WM_PROTOCOLS = XInternAtom (Dpy, "WM_PROTOCOLS",0);
 
 # ifdef DEBUG_INIT
   fprintf(stderr,"sizing...");

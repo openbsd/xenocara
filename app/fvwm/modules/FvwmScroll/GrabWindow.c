@@ -39,10 +39,8 @@
 #include <X11/Intrinsic.h>
 
 #include "FvwmScroll.h"
-char *MyName;
 
-Display *dpy;			/* which display are we talking to */
-int x_fd,fd_width;
+
 int Width = 300, Height = 300;
 int target_width, target_height;
 int target_x_offset = 0, target_y_offset = 0;
@@ -56,10 +54,6 @@ int Reduction_V = 2;
 #define PAD_WIDTH2 3
 #define PAD_WIDTH3 5
 
-Window Root;
-int screen;
-int d_depth;
-
 Window main_win,holder_win;
 Pixel back_pix, fore_pix, hilite_pix,shadow_pix;
 GC ReliefGC, ShadowGC;
@@ -69,8 +63,8 @@ extern char *BackColor;
 		     ButtonPressMask | ButtonMotionMask | FocusChangeMask)
 
 Atom wm_del_win;
-Atom _XA_WM_PROTOCOLS;
-Atom _XA_WM_COLORMAP_WINDOWS;
+static Atom _XA_WM_PROTOCOLS;
+static Atom _XA_WM_COLORMAP_WINDOWS;
 
 /****************************************************************************
  *

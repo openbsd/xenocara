@@ -368,7 +368,7 @@ extern XContext FvwmContext;
 
 extern Window BlackoutWin;
 
-Bool fFvwmInStartup;
+extern Bool fFvwmInStartup;
 
 extern Boolean ShapesSupported;
 

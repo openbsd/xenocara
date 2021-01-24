@@ -1,5 +1,12 @@
 #include "fvwmlib.h"       
 
+extern Display *dpy;
+extern char *MyName;
+extern Window Root;
+extern int screen;
+extern int d_depth;
+extern int x_fd,fd_width;
+
 char *safemalloc(int length);
 void DeadPipe(int nonsense);
 void GetTargetWindow(Window *app_win);
