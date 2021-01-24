@@ -687,7 +687,7 @@ void HandleExpose()
 
   if (Tmp_win)
     {
-      if ((Event.xany.window == Tmp_win->title_w))
+      if (Event.xany.window == Tmp_win->title_w)
 	{
 	  SetTitleBar(Tmp_win,(Scr.Hilite == Tmp_win),False);
 	}
