@@ -27,7 +27,7 @@
 #define XK_MISCELLANY
 #include <X11/keysymdef.h>
 
-void dummy () {
+void dummy (FILE *f, const char *fmt, ...) {
 }
 
 #ifdef DEBUG
