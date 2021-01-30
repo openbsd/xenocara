@@ -112,7 +112,7 @@ void GXSetVideoPosition(int x, int y, int width, int height,
 
 extern void GXAccelSync(ScrnInfoPtr pScrni);
 
-int DeltaX, DeltaY;
+extern int DeltaX, DeltaY;
 
 unsigned long graphics_lut[256];
 static int lutflag = 0;
