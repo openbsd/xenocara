@@ -49,7 +49,7 @@
 #define must_check
 #define constant
 #define pure
-#define tighly_packed
+#define tightly_packed
 #define flatten
 #define page_aligned
 #endif
