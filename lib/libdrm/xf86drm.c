@@ -395,7 +395,8 @@ static int drmOpenDevice(dev_t dev, int minor, int type)
         devmode &= ~(S_IXUSR|S_IXGRP|S_IXOTH);
     }
 
-#if !UDEV && !defined(__OpenBSD__)
+#ifndef __OpenBSD__
+#if !UDEV
     if (stat(DRM_DIR_NAME, &st)) {
         if (!isroot)
             return DRM_ERR_NOT_ROOT;
@@ -441,6 +442,7 @@ wait_for_udev:
         }
     }
 #endif
+#endif /* __OpenBSD__ */
 
 #ifndef X_PRIVSEP
     fd = open(buf, O_RDWR | O_CLOEXEC, 0);
