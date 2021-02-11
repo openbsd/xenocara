@@ -47,8 +47,11 @@ pkg.generate(
 )
 
 test(
-  'exynos-symbol-check',
-  find_program('exynos-symbol-check'),
-  env : env_test,
-  args : libdrm_exynos,
+  'exynos-symbols-check',
+  symbols_check,
+  args : [
+    '--lib', libdrm_exynos,
+    '--symbols-file', files('exynos-symbols.txt'),
+    '--nm', prog_nm.path(),
+  ],
 )

@@ -51,9 +51,10 @@
 #include <errno.h>
 #include <poll.h>
 #include <sys/time.h>
-#ifdef HAVE_SYS_SELECT_H
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#include <math.h>
 
 #include "xf86drm.h"
 #include "xf86drmMode.h"
@@ -99,14 +100,16 @@ struct plane {
 };
 
 struct resources {
-	drmModeRes *res;
-	drmModePlaneRes *plane_res;
-
 	struct crtc *crtcs;
+	int count_crtcs;
 	struct encoder *encoders;
+	int count_encoders;
 	struct connector *connectors;
+	int count_connectors;
 	struct fb *fbs;
+	int count_fbs;
 	struct plane *planes;
+	uint32_t count_planes;
 };
 
 struct device {
@@ -130,6 +133,12 @@ struct device {
 static inline int64_t U642I64(uint64_t val)
 {
 	return (int64_t)*((int64_t *)&val);
+}
+
+static float mode_vrefresh(drmModeModeInfo *mode)
+{
+	return  mode->clock * 1000.00
+			/ (mode->htotal * mode->vtotal);
 }
 
 #define bit_name_fn(res)					\
@@ -192,7 +201,7 @@ static void dump_encoders(struct device *dev)
 
 	printf("Encoders:\n");
 	printf("id\tcrtc\ttype\tpossible crtcs\tpossible clones\t\n");
-	for (i = 0; i < dev->resources->res->count_encoders; i++) {
+	for (i = 0; i < dev->resources->count_encoders; i++) {
 		encoder = dev->resources->encoders[i].encoder;
 		if (!encoder)
 			continue;
@@ -207,11 +216,12 @@ static void dump_encoders(struct device *dev)
 	printf("\n");
 }
 
-static void dump_mode(drmModeModeInfo *mode)
+static void dump_mode(drmModeModeInfo *mode, int index)
 {
-	printf("  %s %d %d %d %d %d %d %d %d %d %d",
+	printf("  #%i %s %.2f %d %d %d %d %d %d %d %d %d",
+	       index,
 	       mode->name,
-	       mode->vrefresh,
+	       mode_vrefresh(mode),
 	       mode->hdisplay,
 	       mode->hsync_start,
 	       mode->hsync_end,
@@ -426,7 +436,7 @@ static void dump_connectors(struct device *dev)
 
 	printf("Connectors:\n");
 	printf("id\tencoder\tstatus\t\tname\t\tsize (mm)\tmodes\tencoders\n");
-	for (i = 0; i < dev->resources->res->count_connectors; i++) {
+	for (i = 0; i < dev->resources->count_connectors; i++) {
 		struct connector *_connector = &dev->resources->connectors[i];
 		drmModeConnector *connector = _connector->connector;
 		if (!connector)
@@ -446,10 +456,10 @@ static void dump_connectors(struct device *dev)
 
 		if (connector->count_modes) {
 			printf("  modes:\n");
-			printf("\tname refresh (Hz) hdisp hss hse htot vdisp "
-			       "vss vse vtot)\n");
+			printf("\tindex name refresh (Hz) hdisp hss hse htot vdisp "
+			       "vss vse vtot\n");
 			for (j = 0; j < connector->count_modes; j++)
-				dump_mode(&connector->modes[j]);
+				dump_mode(&connector->modes[j], j);
 		}
 
 		if (_connector->props) {
@@ -470,7 +480,7 @@ static void dump_crtcs(struct device *dev)
 
 	printf("CRTCs:\n");
 	printf("id\tfb\tpos\tsize\n");
-	for (i = 0; i < dev->resources->res->count_crtcs; i++) {
+	for (i = 0; i < dev->resources->count_crtcs; i++) {
 		struct crtc *_crtc = &dev->resources->crtcs[i];
 		drmModeCrtc *crtc = _crtc->crtc;
 		if (!crtc)
@@ -481,7 +491,7 @@ static void dump_crtcs(struct device *dev)
 		       crtc->buffer_id,
 		       crtc->x, crtc->y,
 		       crtc->width, crtc->height);
-		dump_mode(&crtc->mode);
+		dump_mode(&crtc->mode, 0);
 
 		if (_crtc->props) {
 			printf("  props:\n");
@@ -503,7 +513,7 @@ static void dump_framebuffers(struct device *dev)
 
 	printf("Frame buffers:\n");
 	printf("id\tsize\tpitch\n");
-	for (i = 0; i < dev->resources->res->count_fbs; i++) {
+	for (i = 0; i < dev->resources->count_fbs; i++) {
 		fb = dev->resources->fbs[i].fb;
 		if (!fb)
 			continue;
@@ -523,10 +533,7 @@ static void dump_planes(struct device *dev)
 	printf("Planes:\n");
 	printf("id\tcrtc\tfb\tCRTC x,y\tx,y\tgamma size\tpossible crtcs\n");
 
-	if (!dev->resources->plane_res)
-		return;
-
-	for (i = 0; i < dev->resources->plane_res->count_planes; i++) {
+	for (i = 0; i < dev->resources->count_planes; i++) {
 		struct plane *plane = &dev->resources->planes[i];
 		drmModePlane *ovr = plane->plane;
 		if (!ovr)
@@ -567,11 +574,11 @@ static void free_resources(struct resources *res)
 	if (!res)
 		return;
 
-#define free_resource(_res, __res, type, Type)					\
+#define free_resource(_res, type, Type)					\
 	do {									\
 		if (!(_res)->type##s)						\
 			break;							\
-		for (i = 0; i < (int)(_res)->__res->count_##type##s; ++i) {	\
+		for (i = 0; i < (int)(_res)->count_##type##s; ++i) {	\
 			if (!(_res)->type##s[i].type)				\
 				break;						\
 			drmModeFree##Type((_res)->type##s[i].type);		\
@@ -579,42 +586,38 @@ static void free_resources(struct resources *res)
 		free((_res)->type##s);						\
 	} while (0)
 
-#define free_properties(_res, __res, type)					\
+#define free_properties(_res, type)					\
 	do {									\
-		for (i = 0; i < (int)(_res)->__res->count_##type##s; ++i) {	\
-			drmModeFreeObjectProperties(res->type##s[i].props);	\
+		for (i = 0; i < (int)(_res)->count_##type##s; ++i) {	\
+			unsigned int j;										\
+			for (j = 0; j < res->type##s[i].props->count_props; ++j)\
+				drmModeFreeProperty(res->type##s[i].props_info[j]);\
 			free(res->type##s[i].props_info);			\
+			drmModeFreeObjectProperties(res->type##s[i].props);	\
 		}								\
 	} while (0)
 
-	if (res->res) {
-		free_properties(res, res, crtc);
+	free_properties(res, plane);
+	free_resource(res, plane, Plane);
 
-		free_resource(res, res, crtc, Crtc);
-		free_resource(res, res, encoder, Encoder);
+	free_properties(res, connector);
+	free_properties(res, crtc);
 
-		for (i = 0; i < res->res->count_connectors; i++)
-			free(res->connectors[i].name);
+	for (i = 0; i < res->count_connectors; i++)
+		free(res->connectors[i].name);
 
-		free_resource(res, res, connector, Connector);
-		free_resource(res, res, fb, FB);
-
-		drmModeFreeResources(res->res);
-	}
-
-	if (res->plane_res) {
-		free_properties(res, plane_res, plane);
-
-		free_resource(res, plane_res, plane, Plane);
-
-		drmModeFreePlaneResources(res->plane_res);
-	}
+	free_resource(res, fb, FB);
+	free_resource(res, connector, Connector);
+	free_resource(res, encoder, Encoder);
+	free_resource(res, crtc, Crtc);
 
 	free(res);
 }
 
 static struct resources *get_resources(struct device *dev)
 {
+	drmModeRes *_res;
+	drmModePlaneRes *plane_res;
 	struct resources *res;
 	int i;
 
@@ -624,40 +627,51 @@ static struct resources *get_resources(struct device *dev)
 
 	drmSetClientCap(dev->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 
-	res->res = drmModeGetResources(dev->fd);
-	if (!res->res) {
+	_res = drmModeGetResources(dev->fd);
+	if (!_res) {
 		fprintf(stderr, "drmModeGetResources failed: %s\n",
 			strerror(errno));
-		goto error;
+		free(res);
+		return NULL;
 	}
 
-	res->crtcs = calloc(res->res->count_crtcs, sizeof(*res->crtcs));
-	res->encoders = calloc(res->res->count_encoders, sizeof(*res->encoders));
-	res->connectors = calloc(res->res->count_connectors, sizeof(*res->connectors));
-	res->fbs = calloc(res->res->count_fbs, sizeof(*res->fbs));
+	res->count_crtcs = _res->count_crtcs;
+	res->count_encoders = _res->count_encoders;
+	res->count_connectors = _res->count_connectors;
+	res->count_fbs = _res->count_fbs;
 
-	if (!res->crtcs || !res->encoders || !res->connectors || !res->fbs)
+	res->crtcs = calloc(res->count_crtcs, sizeof(*res->crtcs));
+	res->encoders = calloc(res->count_encoders, sizeof(*res->encoders));
+	res->connectors = calloc(res->count_connectors, sizeof(*res->connectors));
+	res->fbs = calloc(res->count_fbs, sizeof(*res->fbs));
+
+	if (!res->crtcs || !res->encoders || !res->connectors || !res->fbs) {
+	    drmModeFreeResources(_res);
 		goto error;
+    }
 
 #define get_resource(_res, __res, type, Type)					\
 	do {									\
-		for (i = 0; i < (int)(_res)->__res->count_##type##s; ++i) {	\
-			(_res)->type##s[i].type =				\
-				drmModeGet##Type(dev->fd, (_res)->__res->type##s[i]); \
-			if (!(_res)->type##s[i].type)				\
+		for (i = 0; i < (int)(_res)->count_##type##s; ++i) {	\
+			uint32_t type##id = (__res)->type##s[i];			\
+			(_res)->type##s[i].type =							\
+				drmModeGet##Type(dev->fd, type##id);			\
+			if (!(_res)->type##s[i].type)						\
 				fprintf(stderr, "could not get %s %i: %s\n",	\
-					#type, (_res)->__res->type##s[i],	\
+					#type, type##id,							\
 					strerror(errno));			\
 		}								\
 	} while (0)
 
-	get_resource(res, res, crtc, Crtc);
-	get_resource(res, res, encoder, Encoder);
-	get_resource(res, res, connector, Connector);
-	get_resource(res, res, fb, FB);
+	get_resource(res, _res, crtc, Crtc);
+	get_resource(res, _res, encoder, Encoder);
+	get_resource(res, _res, connector, Connector);
+	get_resource(res, _res, fb, FB);
+
+	drmModeFreeResources(_res);
 
 	/* Set the name of all connectors based on the type name and the per-type ID. */
-	for (i = 0; i < res->res->count_connectors; i++) {
+	for (i = 0; i < res->count_connectors; i++) {
 		struct connector *connector = &res->connectors[i];
 		drmModeConnector *conn = connector->connector;
 		int num;
@@ -669,9 +683,9 @@ static struct resources *get_resources(struct device *dev)
 			goto error;
 	}
 
-#define get_properties(_res, __res, type, Type)					\
+#define get_properties(_res, type, Type)					\
 	do {									\
-		for (i = 0; i < (int)(_res)->__res->count_##type##s; ++i) {	\
+		for (i = 0; i < (int)(_res)->count_##type##s; ++i) {	\
 			struct type *obj = &res->type##s[i];			\
 			unsigned int j;						\
 			obj->props =						\
@@ -694,25 +708,30 @@ static struct resources *get_resources(struct device *dev)
 		}								\
 	} while (0)
 
-	get_properties(res, res, crtc, CRTC);
-	get_properties(res, res, connector, CONNECTOR);
+	get_properties(res, crtc, CRTC);
+	get_properties(res, connector, CONNECTOR);
 
-	for (i = 0; i < res->res->count_crtcs; ++i)
+	for (i = 0; i < res->count_crtcs; ++i)
 		res->crtcs[i].mode = &res->crtcs[i].crtc->mode;
 
-	res->plane_res = drmModeGetPlaneResources(dev->fd);
-	if (!res->plane_res) {
+	plane_res = drmModeGetPlaneResources(dev->fd);
+	if (!plane_res) {
 		fprintf(stderr, "drmModeGetPlaneResources failed: %s\n",
 			strerror(errno));
 		return res;
 	}
 
-	res->planes = calloc(res->plane_res->count_planes, sizeof(*res->planes));
-	if (!res->planes)
+	res->count_planes = plane_res->count_planes;
+
+	res->planes = calloc(res->count_planes, sizeof(*res->planes));
+	if (!res->planes) {
+		drmModeFreePlaneResources(plane_res);
 		goto error;
+	}
 
 	get_resource(res, plane_res, plane, Plane);
-	get_properties(res, plane_res, plane, PLANE);
+	drmModeFreePlaneResources(plane_res);
+	get_properties(res, plane, PLANE);
 
 	return res;
 
@@ -721,17 +740,31 @@ error:
 	return NULL;
 }
 
-static int get_crtc_index(struct device *dev, uint32_t id)
+static struct crtc *get_crtc_by_id(struct device *dev, uint32_t id)
 {
 	int i;
 
-	for (i = 0; i < dev->resources->res->count_crtcs; ++i) {
+	for (i = 0; i < dev->resources->count_crtcs; ++i) {
 		drmModeCrtc *crtc = dev->resources->crtcs[i].crtc;
 		if (crtc && crtc->crtc_id == id)
-			return i;
+			return &dev->resources->crtcs[i];
 	}
 
-	return -1;
+	return NULL;
+}
+
+static uint32_t get_crtc_mask(struct device *dev, struct crtc *crtc)
+{
+	unsigned int i;
+
+	for (i = 0; i < (unsigned int)dev->resources->count_crtcs; i++) {
+		if (crtc->crtc->crtc_id == dev->resources->crtcs[i].crtc->crtc_id)
+			return 1 << i;
+	}
+    /* Unreachable: crtc->crtc is one of resources->crtcs[] */
+    /* Don't return zero or static analysers will complain */
+	abort();
+	return 0;
 }
 
 static drmModeConnector *get_connector_by_name(struct device *dev, const char *name)
@@ -739,7 +772,7 @@ static drmModeConnector *get_connector_by_name(struct device *dev, const char *n
 	struct connector *connector;
 	int i;
 
-	for (i = 0; i < dev->resources->res->count_connectors; i++) {
+	for (i = 0; i < dev->resources->count_connectors; i++) {
 		connector = &dev->resources->connectors[i];
 
 		if (strcmp(connector->name, name) == 0)
@@ -754,7 +787,7 @@ static drmModeConnector *get_connector_by_id(struct device *dev, uint32_t id)
 	drmModeConnector *connector;
 	int i;
 
-	for (i = 0; i < dev->resources->res->count_connectors; i++) {
+	for (i = 0; i < dev->resources->count_connectors; i++) {
 		connector = dev->resources->connectors[i].connector;
 		if (connector && connector->connector_id == id)
 			return connector;
@@ -768,7 +801,7 @@ static drmModeEncoder *get_encoder_by_id(struct device *dev, uint32_t id)
 	drmModeEncoder *encoder;
 	int i;
 
-	for (i = 0; i < dev->resources->res->count_encoders; i++) {
+	for (i = 0; i < dev->resources->count_encoders; i++) {
 		encoder = dev->resources->encoders[i].encoder;
 		if (encoder && encoder->encoder_id == id)
 			return encoder;
@@ -795,7 +828,7 @@ struct pipe_arg {
 	uint32_t crtc_id;
 	char mode_str[64];
 	char format_str[5];
-	unsigned int vrefresh;
+	float vrefresh;
 	unsigned int fourcc;
 	drmModeModeInfo *mode;
 	struct crtc *crtc;
@@ -822,7 +855,7 @@ struct plane_arg {
 
 static drmModeModeInfo *
 connector_find_mode(struct device *dev, uint32_t con_id, const char *mode_str,
-        const unsigned int vrefresh)
+	const float vrefresh)
 {
 	drmModeConnector *connector;
 	drmModeModeInfo *mode;
@@ -832,16 +865,27 @@ connector_find_mode(struct device *dev, uint32_t con_id, const char *mode_str,
 	if (!connector || !connector->count_modes)
 		return NULL;
 
+	/* Pick by Index */
+	if (mode_str[0] == '#') {
+		int index = atoi(mode_str + 1);
+
+		if (index >= connector->count_modes || index < 0)
+			return NULL;
+		return &connector->modes[index];
+	}
+
+	/* Pick by Name */
 	for (i = 0; i < connector->count_modes; i++) {
 		mode = &connector->modes[i];
 		if (!strcmp(mode->name, mode_str)) {
-			/* If the vertical refresh frequency is not specified then return the
-			 * first mode that match with the name. Else, return the mode that match
-			 * the name and the specified vertical refresh frequency.
+			/* If the vertical refresh frequency is not specified
+			 * then return the first mode that match with the name.
+			 * Else, return the mode that match the name and
+			 * the specified vertical refresh frequency.
 			 */
 			if (vrefresh == 0)
 				return mode;
-			else if (mode->vrefresh == vrefresh)
+			else if (fabs(mode_vrefresh(mode) - vrefresh) < 0.005)
 				return mode;
 		}
 	}
@@ -861,7 +905,7 @@ static struct crtc *pipe_find_crtc(struct device *dev, struct pipe_arg *pipe)
 		uint32_t crtcs_for_connector = 0;
 		drmModeConnector *connector;
 		drmModeEncoder *encoder;
-		int idx;
+		struct crtc *crtc;
 
 		connector = get_connector_by_id(dev, pipe->con_ids[i]);
 		if (!connector)
@@ -873,10 +917,10 @@ static struct crtc *pipe_find_crtc(struct device *dev, struct pipe_arg *pipe)
 				continue;
 
 			crtcs_for_connector |= encoder->possible_crtcs;
-
-			idx = get_crtc_index(dev, encoder->crtc_id);
-			if (idx >= 0)
-				active_crtcs |= 1 << idx;
+			crtc = get_crtc_by_id(dev, encoder->crtc_id);
+			if (!crtc)
+				continue;
+			active_crtcs |= get_crtc_mask(dev, crtc);
 		}
 
 		possible_crtcs &= crtcs_for_connector;
@@ -907,7 +951,13 @@ static int pipe_find_crtc_and_mode(struct device *dev, struct pipe_arg *pipe)
 		mode = connector_find_mode(dev, pipe->con_ids[i],
 					   pipe->mode_str, pipe->vrefresh);
 		if (mode == NULL) {
-			fprintf(stderr,
+			if (pipe->vrefresh)
+				fprintf(stderr,
+				"failed to find mode "
+				"\"%s-%.2fHz\" for connector %s\n",
+				pipe->mode_str, pipe->vrefresh, pipe->cons[i]);
+			else
+				fprintf(stderr,
 				"failed to find mode \"%s\" for connector %s\n",
 				pipe->mode_str, pipe->cons[i]);
 			return -EINVAL;
@@ -918,16 +968,10 @@ static int pipe_find_crtc_and_mode(struct device *dev, struct pipe_arg *pipe)
 	 * locate a CRTC that can be attached to all the connectors.
 	 */
 	if (pipe->crtc_id != (uint32_t)-1) {
-		for (i = 0; i < dev->resources->res->count_crtcs; i++) {
-			struct crtc *crtc = &dev->resources->crtcs[i];
-
-			if (pipe->crtc_id == crtc->crtc->crtc_id) {
-				pipe->crtc = crtc;
-				break;
-			}
-		}
+		pipe->crtc = get_crtc_by_id(dev, pipe->crtc_id);
 	} else {
 		pipe->crtc = pipe_find_crtc(dev, pipe);
+		pipe->crtc_id = pipe->crtc->crtc->crtc_id;
 	}
 
 	if (!pipe->crtc) {
@@ -965,9 +1009,9 @@ static bool set_property(struct device *dev, struct property_arg *p)
 	p->obj_type = 0;
 	p->prop_id = 0;
 
-#define find_object(_res, __res, type, Type)					\
+#define find_object(_res, type, Type)					\
 	do {									\
-		for (i = 0; i < (int)(_res)->__res->count_##type##s; ++i) {	\
+		for (i = 0; i < (int)(_res)->count_##type##s; ++i) {	\
 			struct type *obj = &(_res)->type##s[i];			\
 			if (obj->type->type##_id != p->obj_id)			\
 				continue;					\
@@ -978,11 +1022,11 @@ static bool set_property(struct device *dev, struct property_arg *p)
 		}								\
 	} while(0)								\
 
-	find_object(dev->resources, res, crtc, CRTC);
+	find_object(dev->resources, crtc, CRTC);
 	if (p->obj_type == 0)
-		find_object(dev->resources, res, connector, CONNECTOR);
+		find_object(dev->resources, connector, CONNECTOR);
 	if (p->obj_type == 0)
-		find_object(dev->resources, plane_res, plane, PLANE);
+		find_object(dev->resources, plane, PLANE);
 	if (p->obj_type == 0) {
 		fprintf(stderr, "Object %i not found, can't set property\n",
 			p->obj_id);
@@ -1041,7 +1085,7 @@ page_flip_handler(int fd, unsigned int frame,
 	else
 		new_fb_id = pipe->fb_id[0];
 
-	drmModePageFlip(fd, pipe->crtc->crtc->crtc_id, new_fb_id,
+	drmModePageFlip(fd, pipe->crtc_id, new_fb_id,
 			DRM_MODE_PAGE_FLIP_EVENT, pipe);
 	pipe->current_fb_id = new_fb_id;
 	pipe->swap_count++;
@@ -1128,26 +1172,41 @@ static void set_gamma(struct device *dev, unsigned crtc_id, unsigned fourcc)
 	}
 }
 
+static int
+bo_fb_create(int fd, unsigned int fourcc, const uint32_t w, const uint32_t h,
+             enum util_fill_pattern pat, struct bo **out_bo, unsigned int *out_fb_id)
+{
+	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
+	struct bo *bo;
+	unsigned int fb_id;
+
+	bo = bo_create(fd, fourcc, w, h, handles, pitches, offsets, pat);
+
+	if (bo == NULL)
+		return -1;
+
+	if (drmModeAddFB2(fd, w, h, fourcc, handles, pitches, offsets, &fb_id, 0)) {
+		fprintf(stderr, "failed to add fb (%ux%u): %s\n", w, h, strerror(errno));
+		bo_destroy(bo);
+		return -1;
+	}
+	*out_bo = bo;
+	*out_fb_id = fb_id;
+	return 0;
+}
+
 static int atomic_set_plane(struct device *dev, struct plane_arg *p,
 							int pattern, bool update)
 {
-	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
 	struct bo *plane_bo;
 	int crtc_x, crtc_y, crtc_w, crtc_h;
 	struct crtc *crtc = NULL;
-	unsigned int i;
 	unsigned int old_fb_id;
 
 	/* Find an unused plane which can be connected to our CRTC. Find the
 	 * CRTC index first, then iterate over available planes.
 	 */
-	for (i = 0; i < (unsigned int)dev->resources->res->count_crtcs; i++) {
-		if (p->crtc_id == dev->resources->res->crtcs[i]) {
-			crtc = &dev->resources->crtcs[i];
-			break;
-		}
-	}
-
+	crtc = get_crtc_by_id(dev, p->crtc_id);
 	if (!crtc) {
 		fprintf(stderr, "CRTC %u not found\n", p->crtc_id);
 		return -1;
@@ -1161,17 +1220,9 @@ static int atomic_set_plane(struct device *dev, struct plane_arg *p,
 	p->old_bo = p->bo;
 
 	if (!plane_bo) {
-		plane_bo = bo_create(dev->fd, p->fourcc, p->w, p->h,
-				     handles, pitches, offsets, pattern);
-
-		if (plane_bo == NULL)
+		if (bo_fb_create(dev->fd, p->fourcc, p->w, p->h,
+                         pattern, &plane_bo, &p->fb_id))
 			return -1;
-
-		if (drmModeAddFB2(dev->fd, p->w, p->h, p->fourcc,
-			handles, pitches, offsets, &p->fb_id, 0)) {
-			fprintf(stderr, "failed to add fb: %s\n", strerror(errno));
-			return -1;
-		}
 	}
 
 	p->bo = plane_bo;
@@ -1207,34 +1258,23 @@ static int atomic_set_plane(struct device *dev, struct plane_arg *p,
 static int set_plane(struct device *dev, struct plane_arg *p)
 {
 	drmModePlane *ovr;
-	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
 	uint32_t plane_id;
-	struct bo *plane_bo;
-	uint32_t plane_flags = 0;
 	int crtc_x, crtc_y, crtc_w, crtc_h;
 	struct crtc *crtc = NULL;
-	unsigned int pipe;
-	unsigned int i;
+	unsigned int i, crtc_mask;
 
 	/* Find an unused plane which can be connected to our CRTC. Find the
 	 * CRTC index first, then iterate over available planes.
 	 */
-	for (i = 0; i < (unsigned int)dev->resources->res->count_crtcs; i++) {
-		if (p->crtc_id == dev->resources->res->crtcs[i]) {
-			crtc = &dev->resources->crtcs[i];
-			pipe = i;
-			break;
-		}
-	}
-
+	crtc = get_crtc_by_id(dev, p->crtc_id);
 	if (!crtc) {
 		fprintf(stderr, "CRTC %u not found\n", p->crtc_id);
 		return -1;
 	}
-
+	crtc_mask = get_crtc_mask(dev, crtc);
 	plane_id = p->plane_id;
 
-	for (i = 0; i < dev->resources->plane_res->count_planes; i++) {
+	for (i = 0; i < dev->resources->count_planes; i++) {
 		ovr = dev->resources->planes[i].plane;
 		if (!ovr)
 			continue;
@@ -1245,35 +1285,26 @@ static int set_plane(struct device *dev, struct plane_arg *p)
 		if (!format_support(ovr, p->fourcc))
 			continue;
 
-		if ((ovr->possible_crtcs & (1 << pipe)) &&
+		if ((ovr->possible_crtcs & crtc_mask) &&
 		    (ovr->crtc_id == 0 || ovr->crtc_id == p->crtc_id)) {
 			plane_id = ovr->plane_id;
 			break;
 		}
 	}
 
-	if (i == dev->resources->plane_res->count_planes) {
+	if (i == dev->resources->count_planes) {
 		fprintf(stderr, "no unused plane available for CRTC %u\n",
-			crtc->crtc->crtc_id);
+			p->crtc_id);
 		return -1;
 	}
 
 	fprintf(stderr, "testing %dx%d@%s overlay plane %u\n",
 		p->w, p->h, p->format_str, plane_id);
 
-	plane_bo = bo_create(dev->fd, p->fourcc, p->w, p->h, handles,
-			     pitches, offsets, secondary_fill);
-	if (plane_bo == NULL)
-		return -1;
-
-	p->bo = plane_bo;
-
 	/* just use single plane format for now.. */
-	if (drmModeAddFB2(dev->fd, p->w, p->h, p->fourcc,
-			handles, pitches, offsets, &p->fb_id, plane_flags)) {
-		fprintf(stderr, "failed to add fb: %s\n", strerror(errno));
+	if (bo_fb_create(dev->fd, p->fourcc, p->w, p->h,
+	                 secondary_fill, &p->bo, &p->fb_id))
 		return -1;
-	}
 
 	crtc_w = p->w * p->scale;
 	crtc_h = p->h * p->scale;
@@ -1287,15 +1318,15 @@ static int set_plane(struct device *dev, struct plane_arg *p)
 	}
 
 	/* note src coords (last 4 args) are in Q16 format */
-	if (drmModeSetPlane(dev->fd, plane_id, crtc->crtc->crtc_id, p->fb_id,
-			    plane_flags, crtc_x, crtc_y, crtc_w, crtc_h,
+	if (drmModeSetPlane(dev->fd, plane_id, p->crtc_id, p->fb_id,
+			    0, crtc_x, crtc_y, crtc_w, crtc_h,
 			    0, 0, p->w << 16, p->h << 16)) {
 		fprintf(stderr, "failed to enable plane: %s\n",
 			strerror(errno));
 		return -1;
 	}
 
-	ovr->crtc_id = crtc->crtc->crtc_id;
+	ovr->crtc_id = p->crtc_id;
 
 	return 0;
 }
@@ -1314,6 +1345,41 @@ static void atomic_set_planes(struct device *dev, struct plane_arg *p,
 
 		if (atomic_set_plane(dev, &p[i], pattern, update))
 			return;
+	}
+}
+
+static void
+atomic_test_page_flip(struct device *dev, struct pipe_arg *pipe_args,
+              struct plane_arg *plane_args, unsigned int plane_count)
+{
+    int ret;
+
+	gettimeofday(&pipe_args->start, NULL);
+	pipe_args->swap_count = 0;
+
+	while (true) {
+		drmModeAtomicFree(dev->req);
+		dev->req = drmModeAtomicAlloc();
+		atomic_set_planes(dev, plane_args, plane_count, true);
+
+		ret = drmModeAtomicCommit(dev->fd, dev->req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+		if (ret) {
+			fprintf(stderr, "Atomic Commit failed [2]\n");
+			return;
+		}
+
+		pipe_args->swap_count++;
+		if (pipe_args->swap_count == 60) {
+			struct timeval end;
+			double t;
+
+			gettimeofday(&end, NULL);
+			t = end.tv_sec + end.tv_usec * 1e-6 -
+			    (pipe_args->start.tv_sec + pipe_args->start.tv_usec * 1e-6);
+			fprintf(stderr, "freq: %.02fHz\n", pipe_args->swap_count / t);
+			pipe_args->swap_count = 0;
+			pipe_args->start = end;
+		}
 	}
 }
 
@@ -1372,18 +1438,194 @@ static void clear_planes(struct device *dev, struct plane_arg *p, unsigned int c
 	}
 }
 
-static void atomic_set_mode(struct device *dev, struct pipe_arg *pipes, unsigned int count)
+static int pipe_resolve_connectors(struct device *dev, struct pipe_arg *pipe)
+{
+	drmModeConnector *connector;
+	unsigned int i;
+	uint32_t id;
+	char *endp;
+
+	for (i = 0; i < pipe->num_cons; i++) {
+		id = strtoul(pipe->cons[i], &endp, 10);
+		if (endp == pipe->cons[i]) {
+			connector = get_connector_by_name(dev, pipe->cons[i]);
+			if (!connector) {
+				fprintf(stderr, "no connector named '%s'\n",
+					pipe->cons[i]);
+				return -ENODEV;
+			}
+
+			id = connector->connector_id;
+		}
+
+		pipe->con_ids[i] = id;
+	}
+
+	return 0;
+}
+
+static int pipe_attempt_connector(struct device *dev, drmModeConnector *con,
+		struct pipe_arg *pipe)
+{
+	char *con_str;
+	int i;
+
+	con_str = calloc(8, sizeof(char));
+	if (!con_str)
+		return -1;
+
+	sprintf(con_str, "%d", con->connector_id);
+	strcpy(pipe->format_str, "XR24");
+	pipe->fourcc = util_format_fourcc(pipe->format_str);
+	pipe->num_cons = 1;
+	pipe->con_ids = calloc(1, sizeof(*pipe->con_ids));
+	pipe->cons = calloc(1, sizeof(*pipe->cons));
+
+	if (!pipe->con_ids || !pipe->cons)
+		goto free_con_str;
+
+	pipe->con_ids[0] = con->connector_id;
+	pipe->cons[0] = (const char*)con_str;
+
+	pipe->crtc = pipe_find_crtc(dev, pipe);
+	if (!pipe->crtc)
+		goto free_all;
+
+	pipe->crtc_id = pipe->crtc->crtc->crtc_id;
+
+	/* Return the first mode if no preferred. */
+	pipe->mode = &con->modes[0];
+
+	for (i = 0; i < con->count_modes; i++) {
+		drmModeModeInfo *current_mode = &con->modes[i];
+
+		if (current_mode->type & DRM_MODE_TYPE_PREFERRED) {
+			pipe->mode = current_mode;
+			break;
+		}
+	}
+
+	sprintf(pipe->mode_str, "%dx%d", pipe->mode->hdisplay, pipe->mode->vdisplay);
+
+	return 0;
+
+free_all:
+	free(pipe->cons);
+	free(pipe->con_ids);
+free_con_str:
+	free(con_str);
+	return -1;
+}
+
+static int pipe_find_preferred(struct device *dev, struct pipe_arg **out_pipes)
+{
+	struct pipe_arg *pipes;
+	struct resources *res = dev->resources;
+	drmModeConnector *con = NULL;
+	int i, connected = 0, attempted = 0;
+
+	for (i = 0; i < res->count_connectors; i++) {
+		con = res->connectors[i].connector;
+		if (!con || con->connection != DRM_MODE_CONNECTED)
+			continue;
+		connected++;
+	}
+	if (!connected) {
+		printf("no connected connector!\n");
+		return 0;
+	}
+
+	pipes = calloc(connected, sizeof(struct pipe_arg));
+	if (!pipes)
+		return 0;
+
+	for (i = 0; i < res->count_connectors && attempted < connected; i++) {
+		con = res->connectors[i].connector;
+		if (!con || con->connection != DRM_MODE_CONNECTED)
+			continue;
+
+		if (pipe_attempt_connector(dev, con, &pipes[attempted]) < 0) {
+			printf("failed fetching preferred mode for connector\n");
+			continue;
+		}
+		attempted++;
+	}
+
+	*out_pipes = pipes;
+	return attempted;
+}
+
+static struct plane *get_primary_plane_by_crtc(struct device *dev, struct crtc *crtc)
 {
 	unsigned int i;
-	unsigned int j;
-	int ret;
+
+	for (i = 0; i < dev->resources->count_planes; i++) {
+		struct plane *plane = &dev->resources->planes[i];
+		drmModePlane *ovr = plane->plane;
+		if (!ovr)
+			continue;
+
+		// XXX: add is_primary_plane and (?) format checks
+
+		if (ovr->possible_crtcs & get_crtc_mask(dev, crtc))
+            return plane;
+	}
+	return NULL;
+}
+
+static void set_mode(struct device *dev, struct pipe_arg *pipes, unsigned int count)
+{
+	unsigned int i, j;
+	int ret, x = 0;
+	int preferred = count == 0;
 
 	for (i = 0; i < count; i++) {
 		struct pipe_arg *pipe = &pipes[i];
 
+		ret = pipe_resolve_connectors(dev, pipe);
+		if (ret < 0)
+			return;
+
 		ret = pipe_find_crtc_and_mode(dev, pipe);
 		if (ret < 0)
 			continue;
+	}
+	if (preferred) {
+		struct pipe_arg *pipe_args;
+
+		count = pipe_find_preferred(dev, &pipe_args);
+		if (!count) {
+			fprintf(stderr, "can't find any preferred connector/mode.\n");
+			return;
+		}
+		pipes = pipe_args;
+	}
+
+	if (!dev->use_atomic) {
+		for (i = 0; i < count; i++) {
+			struct pipe_arg *pipe = &pipes[i];
+
+			if (pipe->mode == NULL)
+				continue;
+
+			if (!preferred) {
+				dev->mode.width += pipe->mode->hdisplay;
+				if (dev->mode.height < pipe->mode->vdisplay)
+					dev->mode.height = pipe->mode->vdisplay;
+			} else {
+				/* XXX: Use a clone mode, more like atomic. We could do per
+				 * connector bo/fb, so we don't have the stretched image.
+				 */
+				if (dev->mode.width < pipe->mode->hdisplay)
+					dev->mode.width = pipe->mode->hdisplay;
+				if (dev->mode.height < pipe->mode->vdisplay)
+					dev->mode.height = pipe->mode->vdisplay;
+			}
+		}
+
+		if (bo_fb_create(dev->fd, pipes[0].fourcc, dev->mode.width, dev->mode.height,
+			             primary_fill, &dev->mode.bo, &dev->mode.fb_id))
+			return;
 	}
 
 	for (i = 0; i < count; i++) {
@@ -1393,17 +1635,53 @@ static void atomic_set_mode(struct device *dev, struct pipe_arg *pipes, unsigned
 		if (pipe->mode == NULL)
 			continue;
 
-		printf("setting mode %s-%dHz on connectors ",
-		       pipe->mode_str, pipe->mode->vrefresh);
+		printf("setting mode %s-%.2fHz on connectors ",
+		       pipe->mode->name, mode_vrefresh(pipe->mode));
 		for (j = 0; j < pipe->num_cons; ++j) {
 			printf("%s, ", pipe->cons[j]);
-			add_property(dev, pipe->con_ids[j], "CRTC_ID", pipe->crtc->crtc->crtc_id);
+			if (dev->use_atomic)
+				add_property(dev, pipe->con_ids[j], "CRTC_ID", pipe->crtc_id);
 		}
-		printf("crtc %d\n", pipe->crtc->crtc->crtc_id);
+		printf("crtc %d\n", pipe->crtc_id);
 
-		drmModeCreatePropertyBlob(dev->fd, pipe->mode, sizeof(*pipe->mode), &blob_id);
-		add_property(dev, pipe->crtc->crtc->crtc_id, "MODE_ID", blob_id);
-		add_property(dev, pipe->crtc->crtc->crtc_id, "ACTIVE", 1);
+		if (!dev->use_atomic) {
+			ret = drmModeSetCrtc(dev->fd, pipe->crtc_id, dev->mode.fb_id,
+								 x, 0, pipe->con_ids, pipe->num_cons,
+								 pipe->mode);
+
+			/* XXX: Actually check if this is needed */
+			drmModeDirtyFB(dev->fd, dev->mode.fb_id, NULL, 0);
+
+			if (!preferred)
+				x += pipe->mode->hdisplay;
+
+			if (ret) {
+				fprintf(stderr, "failed to set mode: %s\n", strerror(errno));
+				return;
+			}
+
+			set_gamma(dev, pipe->crtc_id, pipe->fourcc);
+		} else {
+			drmModeCreatePropertyBlob(dev->fd, pipe->mode, sizeof(*pipe->mode), &blob_id);
+			add_property(dev, pipe->crtc_id, "MODE_ID", blob_id);
+			add_property(dev, pipe->crtc_id, "ACTIVE", 1);
+
+			/* By default atomic modeset does not set a primary plane, shrug */
+			if (preferred) {
+				struct plane *plane = get_primary_plane_by_crtc(dev, pipe->crtc);
+				struct plane_arg plane_args = {
+					.plane_id = plane->plane->plane_id,
+					.crtc_id = pipe->crtc_id,
+					.w = pipe->mode->hdisplay,
+					.h = pipe->mode->vdisplay,
+					.scale = 1.0,
+					.format_str = "XR24",
+					.fourcc = util_format_fourcc(pipe->format_str),
+				};
+
+				atomic_set_planes(dev, &plane_args, 1, false);
+			}
+		}
 	}
 }
 
@@ -1421,82 +1699,8 @@ static void atomic_clear_mode(struct device *dev, struct pipe_arg *pipes, unsign
 		for (j = 0; j < pipe->num_cons; ++j)
 			add_property(dev, pipe->con_ids[j], "CRTC_ID",0);
 
-		add_property(dev, pipe->crtc->crtc->crtc_id, "MODE_ID", 0);
-		add_property(dev, pipe->crtc->crtc->crtc_id, "ACTIVE", 0);
-	}
-}
-
-static void set_mode(struct device *dev, struct pipe_arg *pipes, unsigned int count)
-{
-	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
-	unsigned int fb_id;
-	struct bo *bo;
-	unsigned int i;
-	unsigned int j;
-	int ret, x;
-
-	dev->mode.width = 0;
-	dev->mode.height = 0;
-	dev->mode.fb_id = 0;
-
-	for (i = 0; i < count; i++) {
-		struct pipe_arg *pipe = &pipes[i];
-
-		ret = pipe_find_crtc_and_mode(dev, pipe);
-		if (ret < 0)
-			continue;
-
-		dev->mode.width += pipe->mode->hdisplay;
-		if (dev->mode.height < pipe->mode->vdisplay)
-			dev->mode.height = pipe->mode->vdisplay;
-	}
-
-	bo = bo_create(dev->fd, pipes[0].fourcc, dev->mode.width,
-		       dev->mode.height, handles, pitches, offsets,
-		       primary_fill);
-	if (bo == NULL)
-		return;
-
-	dev->mode.bo = bo;
-
-	ret = drmModeAddFB2(dev->fd, dev->mode.width, dev->mode.height,
-			    pipes[0].fourcc, handles, pitches, offsets, &fb_id, 0);
-	if (ret) {
-		fprintf(stderr, "failed to add fb (%ux%u): %s\n",
-			dev->mode.width, dev->mode.height, strerror(errno));
-		return;
-	}
-
-	dev->mode.fb_id = fb_id;
-
-	x = 0;
-	for (i = 0; i < count; i++) {
-		struct pipe_arg *pipe = &pipes[i];
-
-		if (pipe->mode == NULL)
-			continue;
-
-		printf("setting mode %s-%dHz@%s on connectors ",
-		       pipe->mode_str, pipe->mode->vrefresh, pipe->format_str);
-		for (j = 0; j < pipe->num_cons; ++j)
-			printf("%s, ", pipe->cons[j]);
-		printf("crtc %d\n", pipe->crtc->crtc->crtc_id);
-
-		ret = drmModeSetCrtc(dev->fd, pipe->crtc->crtc->crtc_id, fb_id,
-				     x, 0, pipe->con_ids, pipe->num_cons,
-				     pipe->mode);
-
-		/* XXX: Actually check if this is needed */
-		drmModeDirtyFB(dev->fd, fb_id, NULL, 0);
-
-		x += pipe->mode->hdisplay;
-
-		if (ret) {
-			fprintf(stderr, "failed to set mode: %s\n", strerror(errno));
-			return;
-		}
-
-		set_gamma(dev, pipe->crtc->crtc->crtc_id, pipe->fourcc);
+		add_property(dev, pipe->crtc_id, "MODE_ID", 0);
+		add_property(dev, pipe->crtc_id, "ACTIVE", 0);
 	}
 }
 
@@ -1542,7 +1746,7 @@ static void set_cursors(struct device *dev, struct pipe_arg *pipes, unsigned int
 	for (i = 0; i < count; i++) {
 		struct pipe_arg *pipe = &pipes[i];
 		ret = cursor_init(dev->fd, handles[0],
-				pipe->crtc->crtc->crtc_id,
+				pipe->crtc_id,
 				pipe->mode->hdisplay, pipe->mode->vdisplay,
 				cw, ch);
 		if (ret) {
@@ -1565,26 +1769,15 @@ static void clear_cursors(struct device *dev)
 
 static void test_page_flip(struct device *dev, struct pipe_arg *pipes, unsigned int count)
 {
-	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
 	unsigned int other_fb_id;
 	struct bo *other_bo;
 	drmEventContext evctx;
 	unsigned int i;
 	int ret;
 
-	other_bo = bo_create(dev->fd, pipes[0].fourcc, dev->mode.width,
-			     dev->mode.height, handles, pitches, offsets,
-			     UTIL_PATTERN_PLAIN);
-	if (other_bo == NULL)
+	if (bo_fb_create(dev->fd, pipes[0].fourcc, dev->mode.width, dev->mode.height,
+	                 UTIL_PATTERN_PLAIN, &other_bo, &other_fb_id))
 		return;
-
-	ret = drmModeAddFB2(dev->fd, dev->mode.width, dev->mode.height,
-			    pipes[0].fourcc, handles, pitches, offsets,
-			    &other_fb_id, 0);
-	if (ret) {
-		fprintf(stderr, "failed to add fb: %s\n", strerror(errno));
-		goto err;
-	}
 
 	for (i = 0; i < count; i++) {
 		struct pipe_arg *pipe = &pipes[i];
@@ -1592,7 +1785,7 @@ static void test_page_flip(struct device *dev, struct pipe_arg *pipes, unsigned 
 		if (pipe->mode == NULL)
 			continue;
 
-		ret = drmModePageFlip(dev->fd, pipe->crtc->crtc->crtc_id,
+		ret = drmModePageFlip(dev->fd, pipe->crtc_id,
 				      other_fb_id, DRM_MODE_PAGE_FLIP_EVENT,
 				      pipe);
 		if (ret) {
@@ -1650,7 +1843,6 @@ static void test_page_flip(struct device *dev, struct pipe_arg *pipes, unsigned 
 
 err_rmfb:
 	drmModeRmFB(dev->fd, other_fb_id);
-err:
 	bo_destroy(other_bo);
 }
 
@@ -1695,6 +1887,8 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 		return -1;
 
 	/* Parse the remaining parameters. */
+	if (!endp)
+		return -1;
 	if (*endp == '@') {
 		arg = endp + 1;
 		pipe->crtc_id = strtoul(arg, &endp, 10);
@@ -1713,7 +1907,7 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 	pipe->mode_str[len] = '\0';
 
 	if (*p == '-') {
-		pipe->vrefresh = strtoul(p + 1, &endp, 10);
+		pipe->vrefresh = strtof(p + 1, &endp);
 		p = endp;
 	}
 
@@ -1811,7 +2005,7 @@ static void parse_fill_patterns(char *arg)
 
 static void usage(char *name)
 {
-	fprintf(stderr, "usage: %s [-acDdefMPpsCvw]\n", name);
+	fprintf(stderr, "usage: %s [-acDdefMPpsCvrw]\n", name);
 
 	fprintf(stderr, "\n Query options:\n\n");
 	fprintf(stderr, "\t-c\tlist connectors\n");
@@ -1821,9 +2015,10 @@ static void usage(char *name)
 
 	fprintf(stderr, "\n Test options:\n\n");
 	fprintf(stderr, "\t-P <plane_id>@<crtc_id>:<w>x<h>[+<x>+<y>][*<scale>][@<format>]\tset a plane\n");
-	fprintf(stderr, "\t-s <connector_id>[,<connector_id>][@<crtc_id>]:<mode>[-<vrefresh>][@<format>]\tset a mode\n");
+	fprintf(stderr, "\t-s <connector_id>[,<connector_id>][@<crtc_id>]:[#<mode index>]<mode>[-<vrefresh>][@<format>]\tset a mode\n");
 	fprintf(stderr, "\t-C\ttest hw cursor\n");
 	fprintf(stderr, "\t-v\ttest vsynced page flipping\n");
+	fprintf(stderr, "\t-r\tset the preferred mode for all connectors\n");
 	fprintf(stderr, "\t-w <obj_id>:<prop_name>:<value>\tset property\n");
 	fprintf(stderr, "\t-a \tuse atomic API\n");
 	fprintf(stderr, "\t-F pattern1,pattern2\tspecify fill patterns\n");
@@ -1837,60 +2032,7 @@ static void usage(char *name)
 	exit(0);
 }
 
-static int page_flipping_supported(void)
-{
-	/*FIXME: generic ioctl needed? */
-	return 1;
-#if 0
-	int ret, value;
-	struct drm_i915_getparam gp;
-
-	gp.param = I915_PARAM_HAS_PAGEFLIPPING;
-	gp.value = &value;
-
-	ret = drmCommandWriteRead(fd, DRM_I915_GETPARAM, &gp, sizeof(gp));
-	if (ret) {
-		fprintf(stderr, "drm_i915_getparam: %m\n");
-		return 0;
-	}
-
-	return *gp.value;
-#endif
-}
-
-static int cursor_supported(void)
-{
-	/*FIXME: generic ioctl needed? */
-	return 1;
-}
-
-static int pipe_resolve_connectors(struct device *dev, struct pipe_arg *pipe)
-{
-	drmModeConnector *connector;
-	unsigned int i;
-	uint32_t id;
-	char *endp;
-
-	for (i = 0; i < pipe->num_cons; i++) {
-		id = strtoul(pipe->cons[i], &endp, 10);
-		if (endp == pipe->cons[i]) {
-			connector = get_connector_by_name(dev, pipe->cons[i]);
-			if (!connector) {
-				fprintf(stderr, "no connector named '%s'\n",
-					pipe->cons[i]);
-				return -ENODEV;
-			}
-
-			id = connector->connector_id;
-		}
-
-		pipe->con_ids[i] = id;
-	}
-
-	return 0;
-}
-
-static char optstr[] = "acdD:efF:M:P:ps:Cvw:";
+static char optstr[] = "acdD:efF:M:P:ps:Cvrw:";
 
 int main(int argc, char **argv)
 {
@@ -1901,6 +2043,7 @@ int main(int argc, char **argv)
 	int drop_master = 0;
 	int test_vsync = 0;
 	int test_cursor = 0;
+	int set_preferred = 0;
 	int use_atomic = 0;
 	char *device = NULL;
 	char *module = NULL;
@@ -1922,12 +2065,15 @@ int main(int argc, char **argv)
 		switch (c) {
 		case 'a':
 			use_atomic = 1;
+			/* Preserve the default behaviour of dumping all information. */
+			args--;
 			break;
 		case 'c':
 			connectors = 1;
 			break;
 		case 'D':
 			device = optarg;
+			/* Preserve the default behaviour of dumping all information. */
 			args--;
 			break;
 		case 'd':
@@ -1985,6 +2131,9 @@ int main(int argc, char **argv)
 		case 'v':
 			test_vsync = 1;
 			break;
+		case 'r':
+			set_preferred = 1;
+			break;
 		case 'w':
 			prop_args = realloc(prop_args,
 					   (prop_count + 1) * sizeof *prop_args);
@@ -2005,49 +2154,43 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (!args || (args == 1 && use_atomic))
+	/* Dump all the details when no* arguments are provided. */
+	if (!args)
 		encoders = connectors = crtcs = planes = framebuffers = 1;
-
-	dev.fd = util_open(device, module);
-	if (dev.fd < 0)
-		return -1;
-
-	ret = drmSetClientCap(dev.fd, DRM_CLIENT_CAP_ATOMIC, 1);
-	if (ret && use_atomic) {
-		fprintf(stderr, "no atomic modesetting support: %s\n", strerror(errno));
-		drmClose(dev.fd);
-		return -1;
-	}
-
-	dev.use_atomic = use_atomic;
-
-	if (test_vsync && !page_flipping_supported()) {
-		fprintf(stderr, "page flipping not supported by drm.\n");
-		return -1;
-	}
 
 	if (test_vsync && !count) {
 		fprintf(stderr, "page flipping requires at least one -s option.\n");
 		return -1;
 	}
-
-	if (test_cursor && !cursor_supported()) {
-		fprintf(stderr, "hw cursor not supported by drm.\n");
+	if (set_preferred && count) {
+		fprintf(stderr, "cannot use -r (preferred) when -s (mode) is set\n");
 		return -1;
 	}
+
+	if (set_preferred && plane_count) {
+		fprintf(stderr, "cannot use -r (preferred) when -P (plane) is set\n");
+		return -1;
+	}
+
+	dev.fd = util_open(device, module);
+	if (dev.fd < 0)
+		return -1;
+
+	if (use_atomic) {
+		ret = drmSetClientCap(dev.fd, DRM_CLIENT_CAP_ATOMIC, 1);
+		if (ret) {
+			fprintf(stderr, "no atomic modesetting support: %s\n", strerror(errno));
+			drmClose(dev.fd);
+			return -1;
+		}
+	}
+
+	dev.use_atomic = use_atomic;
 
 	dev.resources = get_resources(&dev);
 	if (!dev.resources) {
 		drmClose(dev.fd);
 		return 1;
-	}
-
-	for (i = 0; i < count; i++) {
-		if (pipe_resolve_connectors(&dev, &pipe_args[i]) < 0) {
-			free_resources(dev.resources);
-			drmClose(dev.fd);
-			return 1;
-		}
 	}
 
 #define dump_resource(dev, res) if (res) dump_##res(dev)
@@ -2064,7 +2207,7 @@ int main(int argc, char **argv)
 	if (dev.use_atomic) {
 		dev.req = drmModeAtomicAlloc();
 
-		if (count && plane_count) {
+		if (set_preferred || (count && plane_count)) {
 			uint64_t cap = 0;
 
 			ret = drmGetCap(dev.fd, DRM_CAP_DUMB_BUFFER, &cap);
@@ -2073,8 +2216,11 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
-			atomic_set_mode(&dev, pipe_args, count);
-			atomic_set_planes(&dev, plane_args, plane_count, false);
+			if (set_preferred || count)
+				set_mode(&dev, pipe_args, count);
+
+			if (plane_count)
+				atomic_set_planes(&dev, plane_args, plane_count, false);
 
 			ret = drmModeAtomicCommit(dev.fd, dev.req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 			if (ret) {
@@ -2082,33 +2228,8 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
-			gettimeofday(&pipe_args->start, NULL);
-			pipe_args->swap_count = 0;
-
-			while (test_vsync) {
-				drmModeAtomicFree(dev.req);
-				dev.req = drmModeAtomicAlloc();
-				atomic_set_planes(&dev, plane_args, plane_count, true);
-
-				ret = drmModeAtomicCommit(dev.fd, dev.req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-				if (ret) {
-					fprintf(stderr, "Atomic Commit failed [2]\n");
-					return 1;
-				}
-
-				pipe_args->swap_count++;
-				if (pipe_args->swap_count == 60) {
-					struct timeval end;
-					double t;
-
-					gettimeofday(&end, NULL);
-					t = end.tv_sec + end.tv_usec * 1e-6 -
-				    (pipe_args->start.tv_sec + pipe_args->start.tv_usec * 1e-6);
-					fprintf(stderr, "freq: %.02fHz\n", pipe_args->swap_count / t);
-					pipe_args->swap_count = 0;
-					pipe_args->start = end;
-				}
-			}
+			if (test_vsync)
+				atomic_test_page_flip(&dev, pipe_args, plane_args, plane_count);
 
 			if (drop_master)
 				drmDropMaster(dev.fd);
@@ -2118,20 +2239,24 @@ int main(int argc, char **argv)
 			drmModeAtomicFree(dev.req);
 			dev.req = drmModeAtomicAlloc();
 
-			atomic_clear_mode(&dev, pipe_args, count);
-			atomic_clear_planes(&dev, plane_args, plane_count);
-			ret = drmModeAtomicCommit(dev.fd, dev.req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-			if (ret) {
-				fprintf(stderr, "Atomic Commit failed\n");
-				return 1;
-			}
+			/* XXX: properly teardown the preferred mode/plane state */
+			if (plane_count)
+				atomic_clear_planes(&dev, plane_args, plane_count);
 
-			atomic_clear_FB(&dev, plane_args, plane_count);
+			if (count)
+				atomic_clear_mode(&dev, pipe_args, count);
+
+			ret = drmModeAtomicCommit(dev.fd, dev.req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+			if (ret)
+				fprintf(stderr, "Atomic Commit failed\n");
+
+			if (plane_count)
+				atomic_clear_FB(&dev, plane_args, plane_count);
 		}
 
 		drmModeAtomicFree(dev.req);
 	} else {
-		if (count || plane_count) {
+		if (set_preferred || count || plane_count) {
 			uint64_t cap = 0;
 
 			ret = drmGetCap(dev.fd, DRM_CAP_DUMB_BUFFER, &cap);
@@ -2140,7 +2265,7 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
-			if (count)
+			if (set_preferred || count)
 				set_mode(&dev, pipe_args, count);
 
 			if (plane_count)
@@ -2163,12 +2288,13 @@ int main(int argc, char **argv)
 			if (plane_count)
 				clear_planes(&dev, plane_args, plane_count);
 
-			if (count)
+			if (set_preferred || count)
 				clear_mode(&dev);
 		}
 	}
 
 	free_resources(dev.resources);
+	drmClose(dev.fd);
 
 	return 0;
 }

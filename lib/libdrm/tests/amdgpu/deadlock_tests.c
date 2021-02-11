@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#ifdef HAVE_ALLOCA_H
+#if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
 
@@ -114,10 +114,17 @@ static void amdgpu_deadlock_compute(void);
 static void amdgpu_illegal_reg_access();
 static void amdgpu_illegal_mem_access();
 static void amdgpu_deadlock_sdma(void);
+static void amdgpu_dispatch_hang_gfx(void);
+static void amdgpu_dispatch_hang_compute(void);
+static void amdgpu_dispatch_hang_slow_gfx(void);
+static void amdgpu_dispatch_hang_slow_compute(void);
+static void amdgpu_draw_hang_gfx(void);
+static void amdgpu_draw_hang_slow_gfx(void);
 
 CU_BOOL suite_deadlock_tests_enable(void)
 {
 	CU_BOOL enable = CU_TRUE;
+	uint32_t asic_id;
 
 	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
 					     &minor_version, &device_handle))
@@ -132,6 +139,15 @@ CU_BOOL suite_deadlock_tests_enable(void)
 	    device_handle->info.family_id != AMDGPU_FAMILY_CI) {
 		printf("\n\nGPU reset is not enabled for the ASIC, deadlock suite disabled\n");
 		enable = CU_FALSE;
+	}
+
+	asic_id = device_handle->info.asic_id;
+	if (asic_is_arcturus(asic_id)) {
+		if (amdgpu_set_test_active("Deadlock Tests",
+					"gfx ring block test (set amdgpu.lockup_timeout=50)",
+					CU_FALSE))
+			fprintf(stderr, "test deactivation failed - %s\n",
+				CU_get_error_msg());
 	}
 
 	if (device_handle->info.family_id >= AMDGPU_FAMILY_AI)
@@ -178,6 +194,12 @@ CU_TestInfo deadlock_tests[] = {
 	{ "sdma ring block test (set amdgpu.lockup_timeout=50)", amdgpu_deadlock_sdma },
 	{ "illegal reg access test", amdgpu_illegal_reg_access },
 	{ "illegal mem access test (set amdgpu.vm_fault_stop=2)", amdgpu_illegal_mem_access },
+	{ "gfx ring bad dispatch test (set amdgpu.lockup_timeout=50)", amdgpu_dispatch_hang_gfx },
+	{ "compute ring bad dispatch test (set amdgpu.lockup_timeout=50,50)", amdgpu_dispatch_hang_compute },
+	{ "gfx ring bad slow dispatch test (set amdgpu.lockup_timeout=50)", amdgpu_dispatch_hang_slow_gfx },
+	{ "compute ring bad slow dispatch test (set amdgpu.lockup_timeout=50,50)", amdgpu_dispatch_hang_slow_compute },
+	{ "gfx ring bad draw test (set amdgpu.lockup_timeout=50)", amdgpu_draw_hang_gfx },
+	{ "gfx ring slow bad draw test (set amdgpu.lockup_timeout=50)", amdgpu_draw_hang_slow_gfx },
 	CU_TEST_INFO_NULL,
 };
 
@@ -477,4 +499,58 @@ static void amdgpu_illegal_reg_access()
 static void amdgpu_illegal_mem_access()
 {
 	bad_access_helper(0);
+}
+
+static void amdgpu_dispatch_hang_gfx(void)
+{
+	amdgpu_dispatch_hang_helper(device_handle, AMDGPU_HW_IP_GFX);
+}
+
+static void amdgpu_dispatch_hang_compute(void)
+{
+	amdgpu_dispatch_hang_helper(device_handle, AMDGPU_HW_IP_COMPUTE);
+}
+
+static void amdgpu_dispatch_hang_slow_gfx(void)
+{
+	amdgpu_dispatch_hang_slow_helper(device_handle, AMDGPU_HW_IP_GFX);
+}
+
+static void amdgpu_dispatch_hang_slow_compute(void)
+{
+	amdgpu_dispatch_hang_slow_helper(device_handle, AMDGPU_HW_IP_COMPUTE);
+}
+
+static void amdgpu_draw_hang_gfx(void)
+{
+	int r;
+	struct drm_amdgpu_info_hw_ip info;
+	uint32_t ring_id;
+
+	r = amdgpu_query_hw_ip_info(device_handle, AMDGPU_HW_IP_GFX, 0, &info);
+	CU_ASSERT_EQUAL(r, 0);
+	if (!info.available_rings)
+		printf("SKIP ... as there's no graphic ring\n");
+
+	for (ring_id = 0; (1 << ring_id) & info.available_rings; ring_id++) {
+		amdgpu_memcpy_draw_test(device_handle, ring_id, 0);
+		amdgpu_memcpy_draw_test(device_handle, ring_id, 1);
+		amdgpu_memcpy_draw_test(device_handle, ring_id, 0);
+	}
+}
+
+static void amdgpu_draw_hang_slow_gfx(void)
+{
+	struct drm_amdgpu_info_hw_ip info;
+	uint32_t ring_id;
+	int r;
+
+	r = amdgpu_query_hw_ip_info(device_handle, AMDGPU_HW_IP_GFX, 0, &info);
+	CU_ASSERT_EQUAL(r, 0);
+
+	for (ring_id = 0; (1 << ring_id) & info.available_rings; ring_id++) {
+		amdgpu_memcpy_draw_test(device_handle, ring_id, 0);
+		amdgpu_memcpy_draw_hang_slow_test(device_handle, ring_id);
+		amdgpu_memcpy_draw_test(device_handle, ring_id, 0);
+	}
 }

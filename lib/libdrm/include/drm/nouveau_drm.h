@@ -73,15 +73,11 @@ struct drm_nouveau_gpuobj_free {
 	uint32_t handle;
 };
 
-/* FIXME : maybe unify {GET,SET}PARAMs */
 #define NOUVEAU_GETPARAM_PCI_VENDOR      3
 #define NOUVEAU_GETPARAM_PCI_DEVICE      4
 #define NOUVEAU_GETPARAM_BUS_TYPE        5
-#define NOUVEAU_GETPARAM_FB_PHYSICAL     6
-#define NOUVEAU_GETPARAM_AGP_PHYSICAL    7
 #define NOUVEAU_GETPARAM_FB_SIZE         8
 #define NOUVEAU_GETPARAM_AGP_SIZE        9
-#define NOUVEAU_GETPARAM_PCI_PHYSICAL    10
 #define NOUVEAU_GETPARAM_CHIPSET_ID      11
 #define NOUVEAU_GETPARAM_VM_VRAM_BASE    12
 #define NOUVEAU_GETPARAM_GRAPH_UNITS     13
@@ -175,12 +171,12 @@ struct drm_nouveau_gem_pushbuf {
 	__u64 push;
 	__u32 suffix0;
 	__u32 suffix1;
+#define NOUVEAU_GEM_PUSHBUF_SYNC                                    (1ULL << 0)
 	__u64 vram_available;
 	__u64 gart_available;
 };
 
 #define NOUVEAU_GEM_CPU_PREP_NOWAIT                                  0x00000001
-#define NOUVEAU_GEM_CPU_PREP_NOBLOCK                                 0x00000002
 #define NOUVEAU_GEM_CPU_PREP_WRITE                                   0x00000004
 struct drm_nouveau_gem_cpu_prep {
 	__u32 handle;
@@ -191,28 +187,67 @@ struct drm_nouveau_gem_cpu_fini {
 	__u32 handle;
 };
 
-enum nouveau_bus_type {
-	NV_AGP     = 0,
-	NV_PCI     = 1,
-	NV_PCIE    = 2,
-};
-
-struct drm_nouveau_sarea {
-};
-
-#define DRM_NOUVEAU_GETPARAM           0x00
-#define DRM_NOUVEAU_SETPARAM           0x01
-#define DRM_NOUVEAU_CHANNEL_ALLOC      0x02
-#define DRM_NOUVEAU_CHANNEL_FREE       0x03
-#define DRM_NOUVEAU_GROBJ_ALLOC        0x04
-#define DRM_NOUVEAU_NOTIFIEROBJ_ALLOC  0x05
-#define DRM_NOUVEAU_GPUOBJ_FREE        0x06
+#define DRM_NOUVEAU_GETPARAM           0x00 /* deprecated */
+#define DRM_NOUVEAU_SETPARAM           0x01 /* deprecated */
+#define DRM_NOUVEAU_CHANNEL_ALLOC      0x02 /* deprecated */
+#define DRM_NOUVEAU_CHANNEL_FREE       0x03 /* deprecated */
+#define DRM_NOUVEAU_GROBJ_ALLOC        0x04 /* deprecated */
+#define DRM_NOUVEAU_NOTIFIEROBJ_ALLOC  0x05 /* deprecated */
+#define DRM_NOUVEAU_GPUOBJ_FREE        0x06 /* deprecated */
 #define DRM_NOUVEAU_NVIF               0x07
+#define DRM_NOUVEAU_SVM_INIT           0x08
+#define DRM_NOUVEAU_SVM_BIND           0x09
 #define DRM_NOUVEAU_GEM_NEW            0x40
 #define DRM_NOUVEAU_GEM_PUSHBUF        0x41
 #define DRM_NOUVEAU_GEM_CPU_PREP       0x42
 #define DRM_NOUVEAU_GEM_CPU_FINI       0x43
 #define DRM_NOUVEAU_GEM_INFO           0x44
+
+struct drm_nouveau_svm_init {
+	__u64 unmanaged_addr;
+	__u64 unmanaged_size;
+};
+
+struct drm_nouveau_svm_bind {
+	__u64 header;
+	__u64 va_start;
+	__u64 va_end;
+	__u64 npages;
+	__u64 stride;
+	__u64 result;
+	__u64 reserved0;
+	__u64 reserved1;
+};
+
+#define NOUVEAU_SVM_BIND_COMMAND_SHIFT          0
+#define NOUVEAU_SVM_BIND_COMMAND_BITS           8
+#define NOUVEAU_SVM_BIND_COMMAND_MASK           ((1 << 8) - 1)
+#define NOUVEAU_SVM_BIND_PRIORITY_SHIFT         8
+#define NOUVEAU_SVM_BIND_PRIORITY_BITS          8
+#define NOUVEAU_SVM_BIND_PRIORITY_MASK          ((1 << 8) - 1)
+#define NOUVEAU_SVM_BIND_TARGET_SHIFT           16
+#define NOUVEAU_SVM_BIND_TARGET_BITS            32
+#define NOUVEAU_SVM_BIND_TARGET_MASK            0xffffffff
+
+/*
+ * Below is use to validate ioctl argument, userspace can also use it to make
+ * sure that no bit are set beyond known fields for a given kernel version.
+ */
+#define NOUVEAU_SVM_BIND_VALID_BITS     48
+#define NOUVEAU_SVM_BIND_VALID_MASK     ((1ULL << NOUVEAU_SVM_BIND_VALID_BITS) - 1)
+
+
+/*
+ * NOUVEAU_BIND_COMMAND__MIGRATE: synchronous migrate to target memory.
+ * result: number of page successfuly migrate to the target memory.
+ */
+#define NOUVEAU_SVM_BIND_COMMAND__MIGRATE               0
+
+/*
+ * NOUVEAU_SVM_BIND_HEADER_TARGET__GPU_VRAM: target the GPU VRAM memory.
+ */
+#define NOUVEAU_SVM_BIND_TARGET__GPU_VRAM               (1UL << 31)
+
 
 #if defined(__cplusplus)
 }

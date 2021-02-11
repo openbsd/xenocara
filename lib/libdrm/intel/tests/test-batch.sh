@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TEST_FILENAME=`echo "$0" | sed 's|.sh||'`
+TEST_FILENAME=`echo "$0" | sed 's|\.sh$||'`
 ./test_decode $TEST_FILENAME
 
 ret=$?

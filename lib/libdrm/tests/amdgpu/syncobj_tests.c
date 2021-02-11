@@ -96,7 +96,7 @@ static int syncobj_command_submission_helper(uint32_t syncobj_handle, bool
 	struct amdgpu_cs_fence fence_status;
 	amdgpu_bo_list_handle bo_list;
 	amdgpu_va_handle va_handle;
-	uint32_t expired, flags;
+	uint32_t expired;
 	int i, r;
 	uint64_t seq_no;
 	static uint32_t *ptr;

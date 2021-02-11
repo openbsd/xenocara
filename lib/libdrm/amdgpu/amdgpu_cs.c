@@ -28,7 +28,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_ALLOCA_H
+#if HAVE_ALLOCA_H
 # include <alloca.h>
 #endif
 
@@ -220,15 +220,15 @@ drm_public int amdgpu_cs_query_reset_state2(amdgpu_context_handle context,
 static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 				struct amdgpu_cs_request *ibs_request)
 {
-	union drm_amdgpu_cs cs;
-	uint64_t *chunk_array;
 	struct drm_amdgpu_cs_chunk *chunks;
 	struct drm_amdgpu_cs_chunk_data *chunk_data;
 	struct drm_amdgpu_cs_chunk_dep *dependencies = NULL;
 	struct drm_amdgpu_cs_chunk_dep *sem_dependencies = NULL;
+	amdgpu_device_handle dev = context->dev;
 	struct list_head *sem_list;
 	amdgpu_semaphore_handle sem, tmp;
-	uint32_t i, size, sem_count = 0;
+	uint32_t i, size, num_chunks, bo_list_handle = 0, sem_count = 0;
+	uint64_t seq_no;
 	bool user_fence;
 	int r = 0;
 
@@ -244,23 +244,18 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 
 	size = ibs_request->number_of_ibs + (user_fence ? 2 : 1) + 1;
 
-	chunk_array = alloca(sizeof(uint64_t) * size);
 	chunks = alloca(sizeof(struct drm_amdgpu_cs_chunk) * size);
 
 	size = ibs_request->number_of_ibs + (user_fence ? 1 : 0);
 
 	chunk_data = alloca(sizeof(struct drm_amdgpu_cs_chunk_data) * size);
 
-	memset(&cs, 0, sizeof(cs));
-	cs.in.chunks = (uint64_t)(uintptr_t)chunk_array;
-	cs.in.ctx_id = context->id;
 	if (ibs_request->resources)
-		cs.in.bo_list_handle = ibs_request->resources->handle;
-	cs.in.num_chunks = ibs_request->number_of_ibs;
+		bo_list_handle = ibs_request->resources->handle;
+	num_chunks = ibs_request->number_of_ibs;
 	/* IB chunks */
 	for (i = 0; i < ibs_request->number_of_ibs; i++) {
 		struct amdgpu_cs_ib_info *ib;
-		chunk_array[i] = (uint64_t)(uintptr_t)&chunks[i];
 		chunks[i].chunk_id = AMDGPU_CHUNK_ID_IB;
 		chunks[i].length_dw = sizeof(struct drm_amdgpu_cs_chunk_ib) / 4;
 		chunks[i].chunk_data = (uint64_t)(uintptr_t)&chunk_data[i];
@@ -279,10 +274,9 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 	pthread_mutex_lock(&context->sequence_mutex);
 
 	if (user_fence) {
-		i = cs.in.num_chunks++;
+		i = num_chunks++;
 
 		/* fence chunk */
-		chunk_array[i] = (uint64_t)(uintptr_t)&chunks[i];
 		chunks[i].chunk_id = AMDGPU_CHUNK_ID_FENCE;
 		chunks[i].length_dw = sizeof(struct drm_amdgpu_cs_chunk_fence) / 4;
 		chunks[i].chunk_data = (uint64_t)(uintptr_t)&chunk_data[i];
@@ -295,7 +289,7 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 	}
 
 	if (ibs_request->number_of_dependencies) {
-		dependencies = malloc(sizeof(struct drm_amdgpu_cs_chunk_dep) *
+		dependencies = alloca(sizeof(struct drm_amdgpu_cs_chunk_dep) *
 			ibs_request->number_of_dependencies);
 		if (!dependencies) {
 			r = -ENOMEM;
@@ -312,10 +306,9 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 			dep->handle = info->fence;
 		}
 
-		i = cs.in.num_chunks++;
+		i = num_chunks++;
 
 		/* dependencies chunk */
-		chunk_array[i] = (uint64_t)(uintptr_t)&chunks[i];
 		chunks[i].chunk_id = AMDGPU_CHUNK_ID_DEPENDENCIES;
 		chunks[i].length_dw = sizeof(struct drm_amdgpu_cs_chunk_dep) / 4
 			* ibs_request->number_of_dependencies;
@@ -326,7 +319,7 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 	LIST_FOR_EACH_ENTRY(sem, sem_list, list)
 		sem_count++;
 	if (sem_count) {
-		sem_dependencies = malloc(sizeof(struct drm_amdgpu_cs_chunk_dep) * sem_count);
+		sem_dependencies = alloca(sizeof(struct drm_amdgpu_cs_chunk_dep) * sem_count);
 		if (!sem_dependencies) {
 			r = -ENOMEM;
 			goto error_unlock;
@@ -345,26 +338,23 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 			amdgpu_cs_reset_sem(sem);
 			amdgpu_cs_unreference_sem(sem);
 		}
-		i = cs.in.num_chunks++;
+		i = num_chunks++;
 
 		/* dependencies chunk */
-		chunk_array[i] = (uint64_t)(uintptr_t)&chunks[i];
 		chunks[i].chunk_id = AMDGPU_CHUNK_ID_DEPENDENCIES;
 		chunks[i].length_dw = sizeof(struct drm_amdgpu_cs_chunk_dep) / 4 * sem_count;
 		chunks[i].chunk_data = (uint64_t)(uintptr_t)sem_dependencies;
 	}
 
-	r = drmCommandWriteRead(context->dev->fd, DRM_AMDGPU_CS,
-				&cs, sizeof(cs));
+	r = amdgpu_cs_submit_raw2(dev, context, bo_list_handle, num_chunks,
+				  chunks, &seq_no);
 	if (r)
 		goto error_unlock;
 
-	ibs_request->seq_no = cs.out.handle;
+	ibs_request->seq_no = seq_no;
 	context->last_seq[ibs_request->ip_type][ibs_request->ip_instance][ibs_request->ring] = ibs_request->seq_no;
 error_unlock:
 	pthread_mutex_unlock(&context->sequence_mutex);
-	free(dependencies);
-	free(sem_dependencies);
 	return r;
 }
 
@@ -738,6 +728,16 @@ drm_public int amdgpu_cs_syncobj_query(amdgpu_device_handle dev,
 		return -EINVAL;
 
 	return drmSyncobjQuery(dev->fd, handles, points, num_handles);
+}
+
+drm_public int amdgpu_cs_syncobj_query2(amdgpu_device_handle dev,
+					uint32_t *handles, uint64_t *points,
+					unsigned num_handles, uint32_t flags)
+{
+	if (!dev)
+		return -EINVAL;
+
+	return drmSyncobjQuery2(dev->fd, handles, points, num_handles, flags);
 }
 
 drm_public int amdgpu_cs_export_syncobj(amdgpu_device_handle dev,

@@ -96,7 +96,7 @@ CU_TestInfo vce_tests[] = {
 
 CU_BOOL suite_vce_tests_enable(void)
 {
-	uint32_t version, feature;
+	uint32_t version, feature, asic_id;
 	CU_BOOL ret_mv = CU_FALSE;
 
 	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
@@ -107,6 +107,7 @@ CU_BOOL suite_vce_tests_enable(void)
 	chip_rev = device_handle->info.chip_rev;
 	chip_id = device_handle->info.chip_external_rev;
 	ids_flags = device_handle->info.ids_flags;
+	asic_id = device_handle->info.asic_id;
 
 	amdgpu_query_firmware_version(device_handle, AMDGPU_INFO_FW_VCE, 0,
 					  0, &version, &feature);
@@ -114,7 +115,8 @@ CU_BOOL suite_vce_tests_enable(void)
 	if (amdgpu_device_deinitialize(device_handle))
 		return CU_FALSE;
 
-	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI) {
+	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI ||
+		asic_is_arcturus(asic_id)) {
 		printf("\n\nThe ASIC NOT support VCE, suite disabled\n");
 		return CU_FALSE;
 	}

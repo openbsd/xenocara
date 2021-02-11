@@ -102,7 +102,7 @@ struct amdgpu_bo {
 
 	pthread_mutex_t cpu_access_mutex;
 	void *cpu_ptr;
-	int cpu_map_count;
+	int64_t cpu_map_count;
 };
 
 struct amdgpu_bo_list {

@@ -46,8 +46,11 @@ pkg.generate(
 )
 
 test(
-  'tegra-symbol-check',
-  find_program('tegra-symbol-check'),
-  env : env_test,
-  args : libdrm_tegra,
+  'tegra-symbols-check',
+  symbols_check,
+  args : [
+    '--lib', libdrm_tegra,
+    '--symbols-file', files('tegra-symbols.txt'),
+    '--nm', prog_nm.path(),
+  ],
 )

@@ -1606,6 +1606,24 @@ int amdgpu_cs_syncobj_timeline_wait(amdgpu_device_handle dev,
 int amdgpu_cs_syncobj_query(amdgpu_device_handle dev,
 			    uint32_t *handles, uint64_t *points,
 			    unsigned num_handles);
+/**
+ *  Query sync objects last signaled or submitted point.
+ *
+ * \param   dev	    - \c [in] self-explanatory
+ * \param   handles - \c [in] array of sync object handles
+ * \param   points - \c [out] array of sync points returned, which presents
+ * syncobj payload.
+ * \param   num_handles - \c [in] self-explanatory
+ * \param   flags   - \c [in] a bitmask of DRM_SYNCOBJ_QUERY_FLAGS_*
+ *
+ * \return   0 on success\n
+ *          -ETIME - Timeout
+ *          <0 - Negative POSIX Error code
+ *
+ */
+int amdgpu_cs_syncobj_query2(amdgpu_device_handle dev,
+			     uint32_t *handles, uint64_t *points,
+			     unsigned num_handles, uint32_t flags);
 
 /**
  *  Export kernel sync object to shareable fd.

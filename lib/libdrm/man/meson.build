@@ -18,50 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-xsltproc_args = [
-  '--stringparam', 'man.authors.section.enabled', '0',
-  '--stringparam', 'man.copyright.section.enabled', '0',
-  '--stringparam', 'funcsynopsis.style', 'ansi',
-  '--stringparam', 'man.output.quietly', '1',
-  '--nonet', manpage_style,
+rst_pages = [
+  ['drm', '7'],
+  ['drm-kms', '7'],
+  ['drm-memory', '7'],
+  ['drmAvailable', '3'],
+  ['drmHandleEvent', '3'],
+  ['drmModeGetResources', '3'],
 ]
-
-xmls = [
-  ['drm', '7'], ['drm-kms', '7'], ['drm-memory', '7'], ['drmAvailable', '3'],
-  ['drmHandleEvent', '3'], ['drmModeGetResources', '3']
-]
-foreach x : xmls
-  m = x[0]
-  s = x[1]
+foreach page : rst_pages
+  name = page[0] + '.' + page[1]
+  rst = files(name + '.rst')
   custom_target(
-    m,
-    input : files('@0@.xml'.format(m)),
-    output : '@0@.@1@'.format(m, s),
-    command : [prog_xslt, '-o', '@OUTPUT@', xsltproc_args, '@INPUT0@'],
+    name,
+    input : rst,
+    output : name,
+    command : [prog_rst2man, '@INPUT@', '@OUTPUT@'],
     install : true,
-    install_dir : join_paths(get_option('mandir'), 'man@0@'.format(s)),
-    build_by_default : true,
-  )
-endforeach
-
-foreach x : ['drm-mm', 'drm-gem', 'drm-ttm']
-  gen = custom_target(
-    'gen-@0@'.format(x),
-    input : 'drm-memory.xml',
-    output : '@0@.xml'.format(x),
-    command : [
-      prog_sed, '-e', 's@^\.so \([a-z_]\+\)\.\([0-9]\)$$@\.so man\2\/\1\.\2@',
-      '@INPUT@',
-    ],
-    capture : true,
-  )
-  custom_target(
-    '@0@.7'.format(x),
-    input : gen,
-    output : '@0@.7'.format(x, '7'),
-    command : [prog_xslt, '-o', '@OUTPUT@', xsltproc_args, '@INPUT@'],
-    install : true,
-    install_dir : join_paths(get_option('mandir'), 'man7'),
-    build_by_default : true,
+    install_dir : join_paths(get_option('mandir'), 'man' + page[1]),
   )
 endforeach

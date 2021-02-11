@@ -147,6 +147,27 @@ static void gen_cmd_stream(struct etna_cmd_stream *stream, struct etna_bo *bmp, 
 	etna_set_state(stream, VIVS_GL_FLUSH_CACHE, VIVS_GL_FLUSH_CACHE_PE2D);
 }
 
+int etna_check_image(uint32_t *p, int width, int height)
+{
+	int i;
+	uint32_t expected;
+
+	for (i = 0; i < width * height; i++) {
+		if (i%8 < 4 && i%(width*8) < width*4 && i%width < 8*16 && i < width*8*16)
+			expected = 0xff40ff40;
+		else
+			expected = 0x00000000;
+
+		if (p[i] != expected) {
+			fprintf(stderr, "Offset %d: expected: 0x%08x, got: 0x%08x\n",
+				i, expected, p[i]);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	const int width = 256;
@@ -161,10 +182,19 @@ int main(int argc, char *argv[])
 
 	drmVersionPtr version;
 	int fd, ret = 0;
+	uint64_t feat;
+	int core = 0;
+
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s /dev/dri/<device> [<etna.bmp>]\n", argv[0]);
+		return 1;
+	}
 
 	fd = open(argv[1], O_RDWR);
-	if (fd < 0)
+	if (fd < 0) {
+		perror(argv[1]);
 		return 1;
+	}
 
 	version = drmGetVersion(fd);
 	if (version) {
@@ -178,25 +208,44 @@ int main(int argc, char *argv[])
 
 	dev = etna_device_new(fd);
 	if (!dev) {
+		perror("etna_device_new");
 		ret = 2;
 		goto out;
 	}
 
-	/* TODO: we assume that core 0 is a 2D capable one */
-	gpu = etna_gpu_new(dev, 0);
-	if (!gpu) {
-		ret = 3;
-		goto out_device;
-	}
+	do {
+		gpu = etna_gpu_new(dev, core);
+		if (!gpu) {
+			perror("etna_gpu_new");
+			ret = 3;
+			goto out_device;
+		}
+
+		if (etna_gpu_get_param(gpu, ETNA_GPU_FEATURES_0, &feat)) {
+			perror("etna_gpu_get_param");
+			ret = 4;
+			goto out_device;
+		}
+
+		if ((feat & (1 << 9)) == 0) {
+			/* GPU not 2D capable. */
+			etna_gpu_del(gpu);
+			gpu = NULL;
+		}
+
+		core++;
+	} while (!gpu);
 
 	pipe = etna_pipe_new(gpu, ETNA_PIPE_2D);
 	if (!pipe) {
+		perror("etna_pipe_new");
 		ret = 4;
 		goto out_gpu;
 	}
 
 	bmp = etna_bo_new(dev, bmp_size, ETNA_BO_UNCACHED);
 	if (!bmp) {
+		perror("etna_bo_new");
 		ret = 5;
 		goto out_pipe;
 	}
@@ -204,6 +253,7 @@ int main(int argc, char *argv[])
 
 	stream = etna_cmd_stream_new(pipe, 0x300, NULL, NULL);
 	if (!stream) {
+		perror("etna_cmd_stream_new");
 		ret = 6;
 		goto out_bo;
 	}
@@ -213,7 +263,11 @@ int main(int argc, char *argv[])
 
 	etna_cmd_stream_finish(stream);
 
-	bmp_dump32(etna_bo_map(bmp), width, height, false, "/tmp/etna.bmp");
+	if (argc > 2)
+		bmp_dump32(etna_bo_map(bmp), width, height, false, argv[2]);
+
+	if (etna_check_image(etna_bo_map(bmp), width, height))
+		ret = 7;
 
 	etna_cmd_stream_del(stream);
 

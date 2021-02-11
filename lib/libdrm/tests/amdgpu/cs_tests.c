@@ -64,17 +64,21 @@ CU_TestInfo cs_tests[] = {
 
 CU_BOOL suite_cs_tests_enable(void)
 {
+	uint32_t asic_id;
+
 	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
 					     &minor_version, &device_handle))
 		return CU_FALSE;
 
 	family_id = device_handle->info.family_id;
+	asic_id = device_handle->info.asic_id;
 
 	if (amdgpu_device_deinitialize(device_handle))
 		return CU_FALSE;
 
 
-	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI) {
+	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI ||
+		asic_is_arcturus(asic_id)) {
 		printf("\n\nThe ASIC NOT support UVD, suite disabled\n");
 		return CU_FALSE;
 	}
@@ -358,6 +362,7 @@ static void amdgpu_cs_uvd_decode(void)
 		bs_addr = fb_addr + 4*1024;
 	dpb_addr = ALIGN(bs_addr + sizeof(uvd_bitstream), 4*1024);
 
+	ctx_addr = 0;
 	if (family_id >= AMDGPU_FAMILY_VI) {
 		if ((family_id == AMDGPU_FAMILY_AI) ||
 		    (chip_id == chip_rev+0x50 || chip_id == chip_rev+0x5A ||

@@ -92,9 +92,13 @@ test(
   find_program('tests/gen7-2d-copy.batch.sh'),
   workdir : meson.current_build_dir(),
 )
+
 test(
-  'intel-symbol-check',
-  find_program('intel-symbol-check'),
-  env : env_test,
-  args : libdrm_intel,
+  'intel-symbols-check',
+  symbols_check,
+  args : [
+    '--lib', libdrm_intel,
+    '--symbols-file', files('intel-symbols.txt'),
+    '--nm', prog_nm.path(),
+  ],
 )
