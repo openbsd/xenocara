@@ -33,16 +33,11 @@
  *
  */
 
-/*
- * TODO the types we are after are defined in different headers on different
- * platforms find which headers to include to get uint32_t
- */
-
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_SYS_SYSCTL_H
+#if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
 #include <stdio.h>
@@ -683,6 +678,7 @@ drm_public void drmModeFreeProperty(drmModePropertyPtr ptr)
 
 	drmFree(ptr->values);
 	drmFree(ptr->enums);
+	drmFree(ptr->blob_ids);
 	drmFree(ptr);
 }
 
@@ -800,21 +796,13 @@ drm_public int drmCheckModesettingSupported(const char *busid)
 	if (found)
 		return 0;
 #elif defined (__FreeBSD__) || defined (__FreeBSD_kernel__)
-	char kbusid[1024], sbusid[1024];
+	char sbusid[1024];
 	char oid[128];
-	int domain, bus, dev, func;
 	int i, modesetting, ret;
 	size_t len;
 
-	ret = sscanf(busid, "pci:%04x:%02x:%02x.%d", &domain, &bus, &dev,
-	    &func);
-	if (ret != 4)
-		return -EINVAL;
-	snprintf(kbusid, sizeof(kbusid), "pci:%04x:%02x:%02x.%d", domain, bus,
-	    dev, func);
-
 	/* How many GPUs do we expect in the machine ? */
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < 10; i++) {
 		snprintf(oid, sizeof(oid), "hw.dri.%d.busid", i);
 		len = sizeof(sbusid);
 		ret = sysctlbyname(oid, sbusid, &len, NULL, 0);
@@ -823,7 +811,7 @@ drm_public int drmCheckModesettingSupported(const char *busid)
 				continue;
 			return -EINVAL;
 		}
-		if (strcmp(sbusid, kbusid) != 0)
+		if (strcmp(sbusid, busid) != 0)
 			continue;
 		snprintf(oid, sizeof(oid), "hw.dri.%d.modesetting", i);
 		len = sizeof(modesetting);
@@ -1593,4 +1581,39 @@ drmModeRevokeLease(int fd, uint32_t lessee_id)
 	if (ret == 0)
 		return 0;
 	return -errno;
+}
+
+drm_public drmModeFB2Ptr
+drmModeGetFB2(int fd, uint32_t fb_id)
+{
+	struct drm_mode_fb_cmd2 get = {
+		.fb_id = fb_id,
+	};
+	drmModeFB2Ptr ret;
+	int err;
+
+	err = DRM_IOCTL(fd, DRM_IOCTL_MODE_GETFB2, &get);
+	if (err != 0)
+		return NULL;
+
+	ret = drmMalloc(sizeof(drmModeFB2));
+	if (!ret)
+		return NULL;
+
+	ret->fb_id = fb_id;
+	ret->width = get.width;
+	ret->height = get.height;
+	ret->pixel_format = get.pixel_format;
+	ret->flags = get.flags;
+	ret->modifier = get.modifier[0];
+	memcpy(ret->handles, get.handles, sizeof(uint32_t) * 4);
+	memcpy(ret->pitches, get.pitches, sizeof(uint32_t) * 4);
+	memcpy(ret->offsets, get.offsets, sizeof(uint32_t) * 4);
+
+	return ret;
+}
+
+drm_public void drmModeFreeFB2(drmModeFB2Ptr ptr)
+{
+	drmFree(ptr);
 }

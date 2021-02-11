@@ -1069,6 +1069,28 @@ check_bo_alloc_userptr(drm_intel_bufmgr *bufmgr,
 					  tiling_mode, stride, size, flags);
 }
 
+static int get_tiling_mode(drm_intel_bufmgr_gem *bufmgr_gem,
+			   uint32_t gem_handle,
+			   uint32_t *tiling_mode,
+			   uint32_t *swizzle_mode)
+{
+	struct drm_i915_gem_get_tiling get_tiling = {
+		.handle = gem_handle,
+	};
+	int ret;
+
+	ret = drmIoctl(bufmgr_gem->fd,
+		       DRM_IOCTL_I915_GEM_GET_TILING,
+		       &get_tiling);
+	if (ret != 0 && errno != EOPNOTSUPP)
+		return ret;
+
+	*tiling_mode = get_tiling.tiling_mode;
+	*swizzle_mode = get_tiling.swizzle_mode;
+
+	return 0;
+}
+
 /**
  * Returns a drm_intel_bo wrapping the given buffer object handle.
  *
@@ -1084,7 +1106,6 @@ drm_intel_bo_gem_create_from_name(drm_intel_bufmgr *bufmgr,
 	drm_intel_bo_gem *bo_gem;
 	int ret;
 	struct drm_gem_open open_arg;
-	struct drm_i915_gem_get_tiling get_tiling;
 
 	/* At the moment most applications only have a few named bo.
 	 * For instance, in a DRI client only the render buffers passed
@@ -1146,16 +1167,11 @@ drm_intel_bo_gem_create_from_name(drm_intel_bufmgr *bufmgr,
 	HASH_ADD(name_hh, bufmgr_gem->name_table,
 		 global_name, sizeof(bo_gem->global_name), bo_gem);
 
-	memclear(get_tiling);
-	get_tiling.handle = bo_gem->gem_handle;
-	ret = drmIoctl(bufmgr_gem->fd,
-		       DRM_IOCTL_I915_GEM_GET_TILING,
-		       &get_tiling);
+	ret = get_tiling_mode(bufmgr_gem, bo_gem->gem_handle,
+			      &bo_gem->tiling_mode, &bo_gem->swizzle_mode);
 	if (ret != 0)
 		goto err_unref;
 
-	bo_gem->tiling_mode = get_tiling.tiling_mode;
-	bo_gem->swizzle_mode = get_tiling.swizzle_mode;
 	/* XXX stride is unknown */
 	drm_intel_bo_gem_set_in_aperture_size(bufmgr_gem, bo_gem, 0);
 	DBG("bo_create_from_handle: %d (%s)\n", handle, bo_gem->name);
@@ -2634,7 +2650,6 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 	int ret;
 	uint32_t handle;
 	drm_intel_bo_gem *bo_gem;
-	struct drm_i915_gem_get_tiling get_tiling;
 
 	pthread_mutex_lock(&bufmgr_gem->lock);
 	ret = drmPrimeFDToHandle(bufmgr_gem->fd, prime_fd, &handle);
@@ -2688,15 +2703,11 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 	bo_gem->has_error = false;
 	bo_gem->reusable = false;
 
-	memclear(get_tiling);
-	get_tiling.handle = bo_gem->gem_handle;
-	if (drmIoctl(bufmgr_gem->fd,
-		     DRM_IOCTL_I915_GEM_GET_TILING,
-		     &get_tiling))
+	ret = get_tiling_mode(bufmgr_gem, handle,
+			      &bo_gem->tiling_mode, &bo_gem->swizzle_mode);
+	if (ret)
 		goto err;
 
-	bo_gem->tiling_mode = get_tiling.tiling_mode;
-	bo_gem->swizzle_mode = get_tiling.swizzle_mode;
 	/* XXX stride is unknown */
 	drm_intel_bo_gem_set_in_aperture_size(bufmgr_gem, bo_gem, 0);
 
@@ -2717,7 +2728,7 @@ drm_intel_bo_gem_export_to_prime(drm_intel_bo *bo, int *prime_fd)
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
 
 	if (drmPrimeHandleToFD(bufmgr_gem->fd, bo_gem->gem_handle,
-			       DRM_CLOEXEC, prime_fd) != 0)
+			       DRM_CLOEXEC | DRM_RDWR, prime_fd) != 0)
 		return -errno;
 
 	bo_gem->reusable = false;

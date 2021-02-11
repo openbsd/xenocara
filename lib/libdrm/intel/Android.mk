@@ -1,4 +1,5 @@
-# Copyright © 2016 Broadcom
+#
+# Copyright © 2011 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -18,18 +19,20 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
+#
 
-include Makefile.sources
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
 
-AM_CFLAGS = \
-	$(WARN_CFLAGS) \
-	-fvisibility=hidden \
-	-I$(top_srcdir) \
-	$(PTHREADSTUBS_CFLAGS) \
-	$(VALGRIND_CFLAGS) \
-	-I$(top_srcdir)/include/drm
+# Import variables LIBDRM_INTEL_FILES, LIBDRM_INTEL_H_FILES
+include $(LOCAL_PATH)/Makefile.sources
 
-libdrm_vc4includedir = ${includedir}/libdrm
-libdrm_vc4include_HEADERS = $(LIBDRM_VC4_H_FILES)
+LOCAL_MODULE := libdrm_intel
 
-pkgconfig_DATA = libdrm_vc4.pc
+LOCAL_SRC_FILES := $(LIBDRM_INTEL_FILES)
+
+LOCAL_SHARED_LIBRARIES := \
+	libdrm
+
+include $(LIBDRM_COMMON_MK)
+include $(BUILD_SHARED_LIBRARY)

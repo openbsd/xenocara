@@ -41,12 +41,12 @@ extern "C" {
 #endif
 
 #include <drm.h>
+#include <drm_mode.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /*
  * This is the interface for modesetting for drm.
- *
- * In order to use this interface you must include either <stdint.h> or another
- * header defining uint32_t, int32_t and uint16_t.
  *
  * It aims to provide a randr1.2 compatible interface for modesettings in the
  * kernel, the interface is also meant to be used by libraries like EGL.
@@ -58,120 +58,6 @@ extern "C" {
  * need to create the memory object of the framebuffer yourself with the ttm
  * buffer object interface. This object needs to be pinned.
  */
-
-/*
- * If we pickup an old version of drm.h which doesn't include drm_mode.h
- * we should redefine defines. This is so that builds doesn't breaks with
- * new libdrm on old kernels.
- */
-#ifndef _DRM_MODE_H
-
-#define DRM_DISPLAY_INFO_LEN    32
-#define DRM_CONNECTOR_NAME_LEN  32
-#define DRM_DISPLAY_MODE_LEN    32
-#define DRM_PROP_NAME_LEN       32
-
-#define DRM_MODE_TYPE_BUILTIN   (1<<0)
-#define DRM_MODE_TYPE_CLOCK_C   ((1<<1) | DRM_MODE_TYPE_BUILTIN)
-#define DRM_MODE_TYPE_CRTC_C    ((1<<2) | DRM_MODE_TYPE_BUILTIN)
-#define DRM_MODE_TYPE_PREFERRED (1<<3)
-#define DRM_MODE_TYPE_DEFAULT   (1<<4)
-#define DRM_MODE_TYPE_USERDEF   (1<<5)
-#define DRM_MODE_TYPE_DRIVER    (1<<6)
-
-/* Video mode flags */
-/* bit compatible with the xorg definitions. */
-#define DRM_MODE_FLAG_PHSYNC			(1<<0)
-#define DRM_MODE_FLAG_NHSYNC			(1<<1)
-#define DRM_MODE_FLAG_PVSYNC			(1<<2)
-#define DRM_MODE_FLAG_NVSYNC			(1<<3)
-#define DRM_MODE_FLAG_INTERLACE			(1<<4)
-#define DRM_MODE_FLAG_DBLSCAN			(1<<5)
-#define DRM_MODE_FLAG_CSYNC			(1<<6)
-#define DRM_MODE_FLAG_PCSYNC			(1<<7)
-#define DRM_MODE_FLAG_NCSYNC			(1<<8)
-#define DRM_MODE_FLAG_HSKEW			(1<<9) /* hskew provided */
-#define DRM_MODE_FLAG_BCAST			(1<<10)
-#define DRM_MODE_FLAG_PIXMUX			(1<<11)
-#define DRM_MODE_FLAG_DBLCLK			(1<<12)
-#define DRM_MODE_FLAG_CLKDIV2			(1<<13)
-#define DRM_MODE_FLAG_3D_MASK			(0x1f<<14)
-#define  DRM_MODE_FLAG_3D_NONE			(0<<14)
-#define  DRM_MODE_FLAG_3D_FRAME_PACKING		(1<<14)
-#define  DRM_MODE_FLAG_3D_FIELD_ALTERNATIVE	(2<<14)
-#define  DRM_MODE_FLAG_3D_LINE_ALTERNATIVE	(3<<14)
-#define  DRM_MODE_FLAG_3D_SIDE_BY_SIDE_FULL	(4<<14)
-#define  DRM_MODE_FLAG_3D_L_DEPTH		(5<<14)
-#define  DRM_MODE_FLAG_3D_L_DEPTH_GFX_GFX_DEPTH	(6<<14)
-#define  DRM_MODE_FLAG_3D_TOP_AND_BOTTOM	(7<<14)
-#define  DRM_MODE_FLAG_3D_SIDE_BY_SIDE_HALF	(8<<14)
-
-/* DPMS flags */
-/* bit compatible with the xorg definitions. */
-#define DRM_MODE_DPMS_ON        0
-#define DRM_MODE_DPMS_STANDBY   1
-#define DRM_MODE_DPMS_SUSPEND   2
-#define DRM_MODE_DPMS_OFF       3
-
-/* Scaling mode options */
-#define DRM_MODE_SCALE_NON_GPU          0
-#define DRM_MODE_SCALE_FULLSCREEN       1
-#define DRM_MODE_SCALE_NO_SCALE         2
-#define DRM_MODE_SCALE_ASPECT           3
-
-/* Dithering mode options */
-#define DRM_MODE_DITHERING_OFF  0
-#define DRM_MODE_DITHERING_ON   1
-
-#define DRM_MODE_ENCODER_NONE    0
-#define DRM_MODE_ENCODER_DAC     1
-#define DRM_MODE_ENCODER_TMDS    2
-#define DRM_MODE_ENCODER_LVDS    3
-#define DRM_MODE_ENCODER_TVDAC   4
-#define DRM_MODE_ENCODER_VIRTUAL 5
-#define DRM_MODE_ENCODER_DSI     6
-#define DRM_MODE_ENCODER_DPMST   7
-#define DRM_MODE_ENCODER_DPI     8
-
-#define DRM_MODE_SUBCONNECTOR_Automatic 0
-#define DRM_MODE_SUBCONNECTOR_Unknown   0
-#define DRM_MODE_SUBCONNECTOR_DVID      3
-#define DRM_MODE_SUBCONNECTOR_DVIA      4
-#define DRM_MODE_SUBCONNECTOR_Composite 5
-#define DRM_MODE_SUBCONNECTOR_SVIDEO    6
-#define DRM_MODE_SUBCONNECTOR_Component 8
-#define DRM_MODE_SUBCONNECTOR_SCART     9
-
-#define DRM_MODE_CONNECTOR_Unknown      0
-#define DRM_MODE_CONNECTOR_VGA          1
-#define DRM_MODE_CONNECTOR_DVII         2
-#define DRM_MODE_CONNECTOR_DVID         3
-#define DRM_MODE_CONNECTOR_DVIA         4
-#define DRM_MODE_CONNECTOR_Composite    5
-#define DRM_MODE_CONNECTOR_SVIDEO       6
-#define DRM_MODE_CONNECTOR_LVDS         7
-#define DRM_MODE_CONNECTOR_Component    8
-#define DRM_MODE_CONNECTOR_9PinDIN      9
-#define DRM_MODE_CONNECTOR_DisplayPort  10
-#define DRM_MODE_CONNECTOR_HDMIA        11
-#define DRM_MODE_CONNECTOR_HDMIB        12
-#define DRM_MODE_CONNECTOR_TV           13
-#define DRM_MODE_CONNECTOR_eDP          14
-#define DRM_MODE_CONNECTOR_VIRTUAL      15
-#define DRM_MODE_CONNECTOR_DSI          16
-#define DRM_MODE_CONNECTOR_DPI          17
-
-#define DRM_MODE_PROP_PENDING   (1<<0)
-#define DRM_MODE_PROP_RANGE     (1<<1)
-#define DRM_MODE_PROP_IMMUTABLE (1<<2)
-#define DRM_MODE_PROP_ENUM      (1<<3) /* enumerated type with text strings */
-#define DRM_MODE_PROP_BLOB      (1<<4)
-
-#define DRM_MODE_CURSOR_BO      (1<<0)
-#define DRM_MODE_CURSOR_MOVE    (1<<1)
-
-#endif /* _DRM_MODE_H */
-
 
 /*
  * Feature defines
@@ -223,6 +109,19 @@ typedef struct _drmModeFB {
 	uint32_t handle;
 } drmModeFB, *drmModeFBPtr;
 
+typedef struct _drmModeFB2 {
+	uint32_t fb_id;
+	uint32_t width, height;
+	uint32_t pixel_format; /* fourcc code from drm_fourcc.h */
+	uint64_t modifier; /* applies to all buffers */
+	uint32_t flags;
+
+	/* per-plane GEM handle; may be duplicate entries for multiple planes */
+	uint32_t handles[4];
+	uint32_t pitches[4]; /* bytes */
+	uint32_t offsets[4]; /* bytes */
+} drmModeFB2, *drmModeFB2Ptr;
+
 typedef struct drm_clip_rect drmModeClip, *drmModeClipPtr;
 
 typedef struct _drmModePropertyBlob {
@@ -273,6 +172,18 @@ typedef struct _drmModeEncoder {
 	uint32_t possible_clones;
 } drmModeEncoder, *drmModeEncoderPtr;
 
+/**
+ * Describes the connector status.
+ *
+ * DRM_MODE_CONNECTED means that the connector has a sink plugged in.
+ * DRM_MODE_DISCONNECTED means the contrary. DRM_MODE_UNKNOWNCONNECTION is used
+ * when it could be either.
+ *
+ * User-space should first try to enable DRM_MODE_CONNECTED connectors and
+ * ignore other connectors. If there are no DRM_MODE_CONNECTED connectors,
+ * user-space should then try to probe and enable DRM_MODE_UNKNOWNCONNECTION
+ * connectors.
+ */
 typedef enum {
 	DRM_MODE_CONNECTED         = 1,
 	DRM_MODE_DISCONNECTED      = 2,
@@ -341,6 +252,7 @@ typedef struct _drmModePlaneRes {
 extern void drmModeFreeModeInfo( drmModeModeInfoPtr ptr );
 extern void drmModeFreeResources( drmModeResPtr ptr );
 extern void drmModeFreeFB( drmModeFBPtr ptr );
+extern void drmModeFreeFB2( drmModeFB2Ptr ptr );
 extern void drmModeFreeCrtc( drmModeCrtcPtr ptr );
 extern void drmModeFreeConnector( drmModeConnectorPtr ptr );
 extern void drmModeFreeEncoder( drmModeEncoderPtr ptr );
@@ -360,6 +272,7 @@ extern drmModeResPtr drmModeGetResources(int fd);
  * Retrieve information about framebuffer bufferId
  */
 extern drmModeFBPtr drmModeGetFB(int fd, uint32_t bufferId);
+extern drmModeFB2Ptr drmModeGetFB2(int fd, uint32_t bufferId);
 
 /**
  * Creates a new framebuffer with an buffer object as its scanout buffer.
@@ -530,14 +443,14 @@ extern int drmModeCreateLease(int fd, const uint32_t *objects, int num_objects, 
 
 typedef struct drmModeLesseeList {
 	uint32_t count;
-	uint32_t lessees[0];
+	uint32_t lessees[];
 } drmModeLesseeListRes, *drmModeLesseeListPtr;
 
 extern drmModeLesseeListPtr drmModeListLessees(int fd);
 
 typedef struct drmModeObjectList {
 	uint32_t count;
-	uint32_t objects[0];
+	uint32_t objects[];
 } drmModeObjectListRes, *drmModeObjectListPtr;
 
 extern drmModeObjectListPtr drmModeGetLease(int fd);
