@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.32 2020/04/20 18:17:26 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.33 2021/02/12 10:40:15 jsg Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -124,6 +124,10 @@ struct okdev {
 	{"/dev/drm1", O_RDWR },
 	{"/dev/drm2", O_RDWR },
 	{"/dev/drm3", O_RDWR },
+	{"/dev/dri/card0", O_RDWR },
+	{"/dev/dri/card1", O_RDWR },
+	{"/dev/dri/card2", O_RDWR },
+	{"/dev/dri/card3", O_RDWR },
 	{"/dev/amdmsr", O_RDWR | O_EXCL},
 	{NULL, 0}
 };
