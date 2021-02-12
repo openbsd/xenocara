@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.33 2021/02/12 10:40:15 jsg Exp $ */
+/* $OpenBSD: privsep.c,v 1.34 2021/02/12 12:51:53 jsg Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -286,7 +286,7 @@ priv_init(uid_t uid, gid_t gid)
 	priv_vendor_init();
 
 	for (dev = allowed_devices; dev->name != NULL; dev++) {
-		if (unveil(dev->name, "rw") == -1)
+		if (unveil(dev->name, "rw") == -1 && errno != ENOENT)
 			err(1, "unveil");
 	}
 	if (pledge("stdio rpath wpath sendfd proc", NULL) == -1)
