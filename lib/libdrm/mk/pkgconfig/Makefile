@@ -1,6 +1,13 @@
-#	$OpenBSD: Makefile,v 1.1 2021/02/11 10:34:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/02/12 01:16:05 jsg Exp $
 
-PC_FILES= libdrm.pc libdrm_amdgpu.pc libdrm_intel.pc libdrm_radeon.pc
+.include "../config.mk"
+
+PC_FILES= libdrm.pc libdrm_amdgpu.pc libdrm_radeon.pc
+
+.if ${WITH_INTEL} == "yes"
+PC_FILES+= libdrm_intel.pc
+.endif
+
 CLEANFILES+=${PC_FILES}
 
 all: ${PC_FILES}
