@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2019,2020 by Thomas E. Dickey                              *
+ * Copyright 1997-2020,2021 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2289 2020/12/26 15:38:13 tom Exp $
+  $XTermId: xterm.log.html,v 1.2313 2021/02/10 22:27:30 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2019,2020 by <a href=
+  <p>Copyright &copy; 1997-2020,2021 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,12 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_366">Patch #366 - 2021/02/10</a></li>
+
+    <li><a href="#xterm_365">Patch #365 - 2021/02/03</a></li>
+
+    <li><a href="#xterm_364">Patch #364 - 2021/02/02</a></li>
+
     <li><a href="#xterm_363">Patch #363 - 2020/12/26</a></li>
 
     <li><a href="#xterm_362">Patch #362 - 2020/11/11</a></li>
@@ -1002,6 +1008,83 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_366" id="xterm_366">Patch #366 -
+  2021/02/10</a></h1>
+
+  <ul>
+    <li>correct a compiler-warning fix in <a href=
+    "#xterm_352">patch #352</a> which allowed sign-extension of
+    coordinate values (report by "CismonX").</li>
+
+    <li>correct upper-limit for selection buffer, accounting for
+    combining characters (report/testcase by Tavis Ormandy).</li>
+
+    <li>with <code>alwaysHighlight</code> true, xterm does not
+    properly track focus. The <em>screen-&gt;select</em>
+    <code>FOCUS</code> flag remains always on, which prevents
+    <code>bellIsUrgent</code> from working, as the urgent
+    <code>WM_HINT</code> flag is only set in
+    <code>setXUrgency()</code> when the window is not focused. Fix
+    this by updating <em>screen-&gt;select</em> in
+    <code>unselectwindow()</code> regardless of the value of
+    <code>always_highlight</code> (patch by Jiri Bohac).</li>
+
+    <li>improve fix for interaction between SRM and ENQ (report by
+    Grant Taylor).</li>
+
+    <li>build-fix for <code>--with-Xaw3dxft</code>, needed when
+    <code>--with-toolbar</code> is omitted (report by Jimmy Olgeni,
+    Emanuel Haupt).</li>
+  </ul>
+
+  <h1><a name="xterm_365" id="xterm_365">Patch #365 -
+  2021/02/03</a></h1>
+
+  <ul>
+    <li>amend fix for &ldquo;word&rdquo; selection in <a href=
+    "#xterm_364">patch #364</a> to limit that to the
+    <code>insert-selectable</code> <em>action</em>, which reads
+    data from the screen. This restores the interactive behavior
+    where double-clicking on a &ldquo;word&rdquo; would make
+    subsequent selection extensions by words as well as suppressing
+    some boundary-checks (report by David Wolfskill, FreeBSD
+    #253225).</li>
+  </ul>
+
+  <h1><a name="xterm_364" id="xterm_364">Patch #364 -
+  2021/02/02</a></h1>
+
+  <ul>
+    <li>add <code>-fc</code> option.</li>
+
+    <li>correct/improve limit-checks for SRM versus ENQ from
+    <a href="#xterm_344">patch #344</a> (report by Tom
+    Szilagyi).</li>
+
+    <li>enable <code>XftFont</code> resource in Xaw3dxft
+    configuration (patch by Tavis Ormandy).</li>
+
+    <li>improve quoting/escaping in build-scripts per
+    shellcheck.</li>
+
+    <li>add <code>libpcre2-posix</code> to the packages tested for
+    <code>--with-pcre2</code> option, needed with Fedora (report by
+    Tomas Korbar).</li>
+
+    <li>correct a typo in manual page, and note that
+    <code>KeepClipboard</code> may not be compiled-in (report/patch
+    by Sean C Farley).</li>
+
+    <li>corrected boundary-checks for &ldquo;word&rdquo; selection
+    used in <code>on<em>N</em>Clicks</code> resources (report by
+    Tavis Ormandy).</li>
+
+    <li>update to autoconf-2.52-20210101, to improve shellcheck
+    warnings.</li>
+
+    <li>improve configure check for desktop categories.</li>
   </ul>
 
   <h1><a name="xterm_363" id="xterm_363">Patch #363 -

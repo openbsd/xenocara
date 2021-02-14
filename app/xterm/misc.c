@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.965 2020/12/23 00:21:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.968 2021/02/10 00:50:59 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -223,12 +223,13 @@ unselectwindow(XtermWidget xw, int flag)
 	xtermDisplayCursor(xw);
     }
 
+    screen->select &= ~flag;
+
     if (!screen->always_highlight) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(xw)) {
 	    if (!Ttoggled)
 		TCursorToggle(tekWidget, TOGGLE);
-	    screen->select &= ~flag;
 	    if (!Ttoggled)
 		TCursorToggle(tekWidget, TOGGLE);
 	} else
@@ -240,7 +241,6 @@ unselectwindow(XtermWidget xw, int flag)
 		XUnsetICFocus(input->xic);
 #endif
 
-	    screen->select &= ~flag;
 	    if (screen->cursor_state && CursorMoved(screen))
 		HideCursor(xw);
 	    if (screen->cursor_state)
@@ -484,6 +484,24 @@ mergeConfigureEvents(XEvent *target)
     return XtAppPending(app_con);
 }
 
+#define SAME(a,b,name) ((a)->xbutton.name == (b)->xbutton.name)
+#define SameButtonEvent(a,b) ( \
+	SAME(a,b,type) && \
+	SAME(a,b,serial) && \
+	SAME(a,b,send_event) && \
+	SAME(a,b,display) && \
+	SAME(a,b,window) && \
+	SAME(a,b,root) && \
+	SAME(a,b,subwindow) && \
+	SAME(a,b,time) && \
+	SAME(a,b,x) && \
+	SAME(a,b,y) && \
+	SAME(a,b,x_root) && \
+	SAME(a,b,y_root) && \
+	SAME(a,b,state) && \
+	SAME(a,b,button) && \
+	SAME(a,b,same_screen))
+
 /*
  * Work around a bug in the X mouse code, which delivers duplicate events.
  */
@@ -498,7 +516,7 @@ mergeButtonEvents(XEvent *target)
 
     if (XtAppPending(app_con)
 	&& XtAppPeekEvent(app_con, &next_event)
-	&& !memcmp(target, &next_event, sizeof(XButtonEvent))) {
+	&& SameButtonEvent(target, &next_event)) {
 	Boolean merge_this = False;
 	XButtonEvent *q = (XButtonEvent *) (&next_event);
 
@@ -4512,7 +4530,7 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     screen->cur_col = (value - 1);
 
     /* page */
-    if ((value = parse_int_param(&cp)) != 1)
+    if (parse_int_param(&cp) != 1)
 	return;
 
     /* rendition */
@@ -4547,7 +4565,7 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     screen->curgr = (Char) value;
 
     /* character-set size */
-    if ((value = parse_chr_param(&cp)) != 0x4f)		/* works for xterm */
+    if (parse_chr_param(&cp) != 0x4f)	/* works for xterm */
 	return;
 
     /* SCS designators */

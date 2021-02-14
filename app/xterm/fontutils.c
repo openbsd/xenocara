@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.697 2020/11/08 20:06:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.701 2021/02/02 00:40:30 tom Exp $ */
 
 /*
- * Copyright 1998-2019,2020 by Thomas E. Dickey
+ * Copyright 1998-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1279,7 +1279,7 @@ xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 }
 #endif
 
-#if OPT_TRACE
+#if OPT_TRACE && OPT_BOX_CHARS
 static void
 show_font_misses(const char *name, XTermFonts * fp)
 {
@@ -2419,7 +2419,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     unsigned too_wide = 0;
     Boolean skip = False;
 
-    TRACE(("dumpXft {{\n"));
+    TRACE(("dumpXft " TRACE_L "\n"));
     TRACE(("\tdata range U+%04X..U+%04X\n", first, last));
     TRACE(("\tcode\tcells\tdimensions\n"));
 #if OPT_TRACE < 2
@@ -2460,7 +2460,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 	    ++count;
 	}
     }
-    TRACE(("}} %u total, %u too-high, %u too-wide\n", count, too_high, too_wide));
+    TRACE((TRACE_R " %u total, %u too-high, %u too-wide\n", count, too_high, too_wide));
 }
 #define DUMP_XFT(xw, data) dumpXft(xw, data)
 #else
@@ -3135,8 +3135,11 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 	for (n = 0; n < pub->limit; ++n) {
 	    if (pub->cache[n].font) {
 		closeCachedXft(screen, pub->cache[n].font);
+		pub->cache[n].font = 0;
 	    }
 	}
+	free(pub->cache);
+	pub->cache = NULL;
     }
 }
 
@@ -3567,11 +3570,11 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 	if (VWindow(screen)) {
 	    xtermClear(xw);
 	}
-	TRACE(("xtermUpdateFontInfo {{\n"));
+	TRACE(("xtermUpdateFontInfo " TRACE_L "\n"));
 	DoResizeScreen(xw);	/* set to the new natural size */
 	ResizeScrollBar(xw);
 	Redraw();
-	TRACE(("... }} xtermUpdateFontInfo\n"));
+	TRACE((TRACE_R " xtermUpdateFontInfo\n"));
 #ifdef SCROLLBAR_RIGHT
 	updateRightScrollbar(xw);
 #endif
@@ -4542,7 +4545,7 @@ useFaceSizes(XtermWidget xw)
 {
     Boolean result = False;
 
-    TRACE(("useFaceSizes {{\n"));
+    TRACE(("useFaceSizes " TRACE_L "\n"));
     if (UsingRenderFont(xw)) {
 	Boolean nonzero = True;
 	int n;
@@ -4579,7 +4582,7 @@ useFaceSizes(XtermWidget xw)
 	}
 	result = True;
     }
-    TRACE(("...}}useFaceSizes %d\n", result));
+    TRACE((TRACE_R " useFaceSizes %d\n", result));
     return result;
 }
 #endif /* OPT_RENDERFONT */
@@ -4756,6 +4759,7 @@ xtermGetFont(const char *param)
 	fontnum = -1;
 	break;
     }
+    TRACE(("xtermGetFont(%s) ->%d\n", NonNull(param), fontnum));
     return fontnum;
 }
 

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.35 2021/01/02 10:24:36 matthieu Exp $
+# $OpenBSD: Makefile,v 1.36 2021/02/14 09:14:06 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize

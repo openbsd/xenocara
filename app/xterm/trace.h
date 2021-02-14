@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.91 2020/01/29 18:48:24 tom Exp $ */
+/* $XTermId: trace.h,v 1.92 2021/02/01 23:58:05 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -62,6 +62,9 @@ extern	void	TraceClose (void);
 #if OPT_TRACE > 1
 #define TRACE2(p) Trace p
 #endif
+
+#define TRACE_L "{{"
+#define TRACE_R "}}"
 
 extern	const char * visibleChars(const Char * /* buf */, unsigned /* len */);
 extern	const char * visibleEventMode(EventMode);

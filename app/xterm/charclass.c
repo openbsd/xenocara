@@ -1,7 +1,7 @@
-/* $XTermId: charclass.c,v 1.43 2020/11/08 20:06:53 tom Exp $ */
+/* $XTermId: charclass.c,v 1.44 2021/02/02 00:19:32 tom Exp $ */
 
 /*
- * Copyright 2002-2017,2020 by Thomas E. Dickey
+ * Copyright 2002-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -104,7 +104,7 @@ init_classtab(void)
 {
     const int size = 50;
 
-    TRACE(("init_classtab {{\n"));
+    TRACE(("init_classtab " TRACE_L "\n"));
 
     classtab = TypeMallocN(struct classentry, (unsigned) size);
     if (!classtab)
@@ -157,7 +157,7 @@ init_classtab(void)
     SetCharacterClassRange(0xff3b, 0xff40, IDENT);	/* half/fullwidth ASCII */
     SetCharacterClassRange(0xff5b, 0xff64, IDENT);	/* half/fullwidth ASCII */
 
-    TRACE(("}} init_classtab\n"));
+    TRACE((TRACE_R " init_classtab\n"));
     return;
 }
 

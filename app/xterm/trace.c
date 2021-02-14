@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.230 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: trace.c,v 1.232 2021/02/02 00:20:30 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -359,7 +359,7 @@ visibleIChars(const IChar *buf, unsigned len)
     static unsigned used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
+	unsigned limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
 	    used = limit;
@@ -1167,7 +1167,8 @@ TraceTranslations(const char *name, Widget w)
     XtTranslations xlations;
     Widget xcelerat;
 
-    TRACE(("TraceTranslations for %s (widget %#lx) {{\n", name, (long) w));
+    TRACE(("TraceTranslations for %s (widget %#lx) " TRACE_L "\n",
+	   name, (long) w));
     if (w) {
 	XtVaGetValues(w,
 		      XtNtranslations, &xlations,
@@ -1182,7 +1183,7 @@ TraceTranslations(const char *name, Widget w)
     } else {
 	TRACE(("none (widget is null)\n"));
     }
-    TRACE(("}}\n"));
+    TRACE((TRACE_R "\n"));
     XSetErrorHandler(save);
 }
 

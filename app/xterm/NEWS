@@ -1,42 +1,20 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #363 - 2020/12/26
+                            Patch #366 - 2021/02/10
 
-     * disable groff hyphenation in generated html when using man2html.
-     * change SCS “&4” Cyrillic to non-NRCS, per VT520 manual.
-     * amend  fix  for  SCS  in  patch  #198  to  remove  DEL  rather than
-       converting it to a space (report by Thomas Wolff).
-     * modify  state transitions for selecting character sets to eliminate
-       an ambiguity between the “A” used in VT220 versus VT320.
-     * improve error recovery when selecting characters by resetting to US
-       ASCII  when  no suitable encoding is found, e.g., attempting to use
-       an NRCS sequence when NRCS is not enabled.
-     * turn  off  hyphenation  in “.txt” conversion, prompted by groff
-       changes.
-     * add VT5xx ISO Latin-2 (prompted by discussion with Thomas Wolff).
-     * amend  change  from  patch  #361  to  event-handling in CopyWait to
-       handle active-icon as a special case (Debian #975687).
-     * add  call to loadColorTable to get the visual information needed to
-       decode BE RGBA32 color format (patch by Leandro Lupori).
-     * modify the resource-parsing for disallowedPasteControls and similar
-       lists of names/numbers to recognize “~;” (tilde) for cancelling a
-       given name/number.
-     * add ENQ, EOT and NUL to default for disallowedPasteControls.
-     * change   default   for  disallowedPasteControls  to  omit  the  tab
-       character (suggested by Harald Dunkel).
-     * fix  swapped  height/width  in  regisScreenSize  and maxGraphicSize
-       resources  using  "auto"  value,  from  patch #314 (report by Anton
-       Lavrentiev)
-     * revise  patch  #362 change for shift-modifier versus mouse protocol
-       and  select/paste  by  adding  resource  shiftEscape,  which can be
-       enabled  via  a  control  sequence  (prompted  by  discussion  with
-       Matthijs van Duin).
-     * simplify/improve  ifdef  in  trace code for using a separate set of
-       files for each run of xterm.
-     * add options -r and -t to vttests/query-color.pl to show the 6-digit
-       RGB code and actual colors.
-     * add nel to xterm-basic terminfo.
-     * alter  vttests/modify-keys.pl  to  omit HTML reference links to the
-       modified-keys table where no keycode was available.
+     * correct   a  compiler-warning  fix  in  patch  #352  which  allowed
+       sign-extension of coordinate values (report by "CismonX").
+     * correct  upper-limit for selection buffer, accounting for combining
+       characters (report/testcase by Tavis Ormandy).
+     * with alwaysHighlight true, xterm does not properly track focus. The
+       screen->select   FOCUS  flag  remains  always  on,  which  prevents
+       bellIsUrgent  from  working, as the urgent WM_HINT flag is only set
+       in  setXUrgency()  when  the  window  is  not  focused. Fix this by
+       updating screen->select in unselectwindow() regardless of the value
+       of always_highlight (patch by Jiri Bohac).
+     * improve  fix  for  interaction between SRM and ENQ (report by Grant
+       Taylor).
+     * build-fix   for  --with-Xaw3dxft,  needed  when  --with-toolbar  is
+       omitted (report by Jimmy Olgeni, Emanuel Haupt).
 

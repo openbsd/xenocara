@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: koi8rxterm,v 1.5 2007/12/30 16:33:06 tom Exp $
+# $XTermId: koi8rxterm,v 1.6 2021/01/27 01:35:34 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2007 by Thomas E. Dickey
+# Copyright 2007,2021 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -36,7 +36,7 @@
 
 whoami=koi8rxterm
 
-: ${XTERM_PROGRAM=xterm}
+: "${XTERM_PROGRAM=xterm}"
 
 # Check if there is a workable locale program.  If there is not, we will read
 # something via the standard error.  Ignore whatever is written to the
@@ -96,7 +96,7 @@ if test $found != yes ; then
 		# The 'locale' program tries to do a sanity check.
 		check=`sh -c "locale >/dev/null" 2>&1`
 		if test -n "$check" ; then
-			eval ${name}=${save}
+			eval ${name}="${save}"
 			eval export ${name}
 
 			echo "$whoami tried to use locale $value by setting \$$name" >&2
@@ -112,4 +112,4 @@ fi
 # for testing:
 #test -f ./xterm && XTERM_PROGRAM=./xterm
 
-exec $XTERM_PROGRAM -class KOI8RXTerm -title $whoami -k8 "$@"
+exec "$XTERM_PROGRAM" -class KOI8RXTerm -title "$whoami" -k8 "$@"

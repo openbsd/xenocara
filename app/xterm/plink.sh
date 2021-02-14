@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.10 2013/07/07 01:20:48 tom Exp $
+# $XTermId: plink.sh,v 1.12 2021/01/27 00:18:09 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2010,2013 by Thomas E. Dickey
+# Copyright 2001-2013,2021 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -41,9 +41,9 @@ do
 	then
 		ASNEED=yes
 		OPT=-Wl,-as-needed
-		if ( eval $LINKIT $OPT $* >/dev/null 2>/dev/null )
+		if ( eval $LINKIT $OPT "$@" >/dev/null 2>/dev/null )
 		then
-			WARNED=`eval $LINKIT $OPT $* 2>&1`
+			WARNED=`eval $LINKIT $OPT "$@" 2>&1`
 			case ".$WARNED" in
 			*Warning*|*nsupported*|*nrecognized*|*nknown*)
 				;;
@@ -60,11 +60,12 @@ do
 	case $OPT in
 	-k*)
 		OPT=`echo "$OPT" | sed -e 's/^-k/-l/'`
+		echo "always use $OPT (cannot test if needed)"
 		LINKIT="$LINKIT $OPT"
 		;;
 	-l*)
 		echo "testing if $OPT is needed"
-		if ( eval $LINKIT $* >/dev/null 2>/dev/null )
+		if ( eval $LINKIT "$@" >/dev/null 2>/dev/null )
 		then
 			: echo ...no
 		else

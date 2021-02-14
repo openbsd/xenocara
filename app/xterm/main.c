@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.866 2020/10/12 18:37:02 tom Exp $ */
+/* $XTermId: main.c,v 1.872 2021/02/10 00:33:22 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2020 by Thomas E. Dickey
+ * Copyright 2002-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -103,10 +103,17 @@
 #include <X11/Xaw3d/Form.h>
 #elif defined(HAVE_LIB_XAW3DXFT)
 #include <X11/Xaw3dxft/Form.h>
+#include <X11/Xaw3dxft/Xaw3dXft.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
 #include <X11/XawPlus/Form.h>
+#endif
+
+#else
+
+#if defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Xaw3dXft.h>
 #endif
 
 #endif /* OPT_TOOLBAR */
@@ -1026,6 +1033,7 @@ DATA("-fbb",		"*freeBoldBox", XrmoptionNoArg,		"off"),
 DATA("+fbb",		"*freeBoldBox", XrmoptionNoArg,		"on"),
 DATA("-fbx",		"*forceBoxChars", XrmoptionNoArg,	"off"),
 DATA("+fbx",		"*forceBoxChars", XrmoptionNoArg,	"on"),
+DATA("-fc",		"*initialFont",	XrmoptionSepArg,	NULL),
 #ifndef NO_ACTIVE_ICON
 DATA("-fi",		"*iconFont",	XrmoptionSepArg,	NULL),
 #endif /* NO_ACTIVE_ICON */
@@ -1221,6 +1229,7 @@ static OptionHelp xtermOptions[] = {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
+{ "-fc fontmenu",          "start with named fontmenu choice" },
 { "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
 #if OPT_RENDERFONT
@@ -2207,6 +2216,9 @@ main(int argc, char *argv[]ENVP_ARG)
     char *my_class = x_strdup(DEFCLASS);
     unsigned line_speed = VAL_LINE_SPEED;
     Window winToEmbedInto = None;
+#if defined(HAVE_LIB_XAW3DXFT)
+    Xaw3dXftData *xaw3dxft_data;
+#endif
 
     ProgramName = argv[0];
 
@@ -2324,6 +2336,12 @@ main(int argc, char *argv[]ENVP_ARG)
     /* This dumped core on HP-UX 9.05 with X11R5 */
 #if OPT_I18N_SUPPORT
     XtSetLanguageProc(NULL, NULL, NULL);
+#endif
+
+    /* enable Xft support in Xaw3DXft */
+#if defined(HAVE_LIB_XAW3DXFT)
+    GET_XAW3DXFT_DATA(xaw3dxft_data);
+    xaw3dxft_data->encoding = -1;
 #endif
 
 #ifdef TERMIO_STRUCT		/* { */
@@ -3500,7 +3518,7 @@ findValidShell(const char *haystack, const char *needle)
 
     TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
 
-    for (s = t = haystack; (s != 0) && (*s != '\0'); s = t) {
+    for (s = haystack; (s != 0) && (*s != '\0'); s = t) {
 	++count;
 	if ((t = strchr(s, '\n')) == 0) {
 	    t = s + strlen(s);

@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.629 2020/12/20 17:02:30 tom Exp $ */
+/* $XTermId: button.c,v 1.636 2021/02/10 01:14:51 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -161,7 +161,8 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
-static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
+static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool
+			  extend, Bool normal);
 static void EditorButton(XtermWidget xw, XButtonEvent *event);
 static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
 		      num_params, Bool use_cursor_loc);
@@ -408,7 +409,7 @@ xtermButtonInit(XtermWidget xw)
 	unsigned allowed = 0;
 	unsigned disallow = 0;
 
-	TRACE(("xtermButtonInit length %ld\n", strlen(result)));
+	TRACE(("xtermButtonInit length %ld\n", (long) strlen(result)));
 	xw->keyboard.print_translations = data;
 	while ((next = scanTrans(data, &state, &state2, &first, &last)) != 0) {
 	    unsigned len = (last - first);
@@ -2983,7 +2984,7 @@ StartSelect(XtermWidget xw, const CELL *cell)
 	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = *cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False, True);
 }
 
 static void
@@ -3188,7 +3189,7 @@ do_start_extend(XtermWidget xw,
 	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True, True);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -3220,7 +3221,7 @@ ExtendExtend(XtermWidget xw, const CELL *cell)
     } else {
 	screen->endExt = *cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False, True);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -3660,8 +3661,12 @@ okPosition(TScreen *screen,
 
     if (cell->row > screen->max_row) {
 	result = False;
+	TRACE(("okPosition cell row %d > screen max %d\n", cell->row, screen->max_row));
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
+	TRACE(("okPosition cell col %d > screen max %d\n", cell->col,
+	       (LastTextCol(screen, *ld, cell->row) + 1)));
 	if (cell->row < screen->max_row) {
+	    TRACE(("okPosition cell row %d < screen max %d\n", cell->row, screen->max_row));
 	    cell->col = 0;
 	    *ld = GET_LINEDATA(screen, ++cell->row);
 	    result = False;
@@ -3997,7 +4002,8 @@ static void
 ComputeSelect(XtermWidget xw,
 	      CELL *startc,
 	      CELL *endc,
-	      Bool extend)
+	      Bool extend,
+	      Bool normal)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4054,8 +4060,11 @@ ComputeSelect(XtermWidget xw,
     case Select_WORD:
 	TRACE(("Select_WORD\n"));
 	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
+	    CELL mark;
 	    cclass = CClassOf(startSel);
+	    TRACE(("...starting with class %d\n", cclass));
 	    do {
+		mark = screen->startSel;
 		--screen->startSel.col;
 		if (screen->startSel.col < 0
 		    && isPrevWrapped(startSel)) {
@@ -4064,18 +4073,29 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->startSel.col >= 0
 		     && CClassSelects(startSel, cclass));
-	    ++screen->startSel.col;
+	    if (normal)
+		++screen->startSel.col;
+	    else
+		screen->startSel = mark;
 	}
 #if OPT_WIDE_CHARS
-	if (screen->startSel.col
-	    && XTERM_CELL(screen->startSel.row,
-			  screen->startSel.col) == HIDDEN_CHAR)
-	    screen->startSel.col++;
+#define SkipHiddenCell(mark) \
+	if (mark.col && XTERM_CELL(mark.row, mark.col) == HIDDEN_CHAR) \
+	    mark.col++
+#else
+#define SkipHiddenCell(mark)	/* nothing */
 #endif
+	SkipHiddenCell(screen->startSel);
+
+	if (!normal) {
+	    screen->endSel = screen->startSel;
+	    ld.endSel = ld.startSel;
+	}
 
 	if (okPosition(screen, &(ld.endSel), &(screen->endSel))) {
 	    int length = LastTextCol(screen, ld.endSel, screen->endSel.row);
 	    cclass = CClassOf(endSel);
+	    TRACE(("...ending with class %d\n", cclass));
 	    do {
 		++screen->endSel.col;
 		if (screen->endSel.col > length
@@ -4088,22 +4108,14 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->endSel.col <= length
 		     && CClassSelects(endSel, cclass));
-	    /* Word-select selects if pointing to any char in "word",
-	     * especially note that it includes the last character in a word.
-	     * So we do no --endSel.col and do special eol handling.
-	     */
-	    if (screen->endSel.col > length + 1
+	    if (normal
+		&& screen->endSel.col > length + 1
 		&& MoreRows(endSel)) {
 		screen->endSel.col = 0;
 		NextRow(endSel);
 	    }
 	}
-#if OPT_WIDE_CHARS
-	if (screen->endSel.col
-	    && XTERM_CELL(screen->endSel.row,
-			  screen->endSel.col) == HIDDEN_CHAR)
-	    screen->endSel.col++;
-#endif
+	SkipHiddenCell(screen->endSel);
 
 	screen->saveStartW = screen->startSel;
 	break;
@@ -4311,6 +4323,7 @@ SaltTextAway(XtermWidget xw,
     int i;
     int eol;
     int need = 0;
+    size_t have = 0;
     Char *line;
     Char *lp;
     CELL first = *cellc;
@@ -4345,7 +4358,11 @@ SaltTextAway(XtermWidget xw,
 
     /* UTF-8 may require more space */
     if_OPT_WIDE_CHARS(screen, {
-	need *= 4;
+	if (need > 0) {
+	    if (screen->max_combining > 0)
+		need += screen->max_combining;
+	    need *= 6;
+	}
     });
 
     /* now get some memory to save it in */
@@ -4383,10 +4400,26 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%u:%s\n", (unsigned) (lp - line),
-	   visibleChars(line, (unsigned) (lp - line))));
+    have = (size_t) (lp - line);
+    /*
+     * Scanning the buffer twice is unnecessary.  Discard unwanted memory if
+     * the estimate is too-far off.
+     */
+    if ((have * 2) < (size_t) need) {
+	Char *next;
+	scp->data_limit = have + 1;
+	next = realloc(line, scp->data_limit);
+	if (next == NULL) {
+	    free(line);
+	    scp->data_length = 0;
+	    scp->data_limit = 0;
+	}
+	scp->data_buffer = next;
+    }
+    scp->data_length = have;
 
-    scp->data_length = (size_t) (lp - line);
+    TRACE(("Salted TEXT:%u:%s\n", (unsigned) have,
+	   visibleChars(scp->data_buffer, (unsigned) have)));
 }
 
 #if OPT_PASTE64
@@ -4865,7 +4898,7 @@ _OwnSelection(XtermWidget xw,
 	    scp = &(screen->selected_cells[CutBufferToCode(cutbuffer)]);
 	    if (scp->data_length > limit) {
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-		       scp->data_length, cutbuffer));
+		       (unsigned long) scp->data_length, cutbuffer));
 		xtermWarning("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			     (unsigned long) scp->data_length, cutbuffer);
 	    } else {
@@ -4921,8 +4954,8 @@ _OwnSelection(XtermWidget xw,
 				   SelectionDone);
 	    }
 	}
-	TRACE(("... _OwnSelection used length %ld value %s\n",
-	       scp->data_length,
+	TRACE(("... _OwnSelection used length %lu value %s\n",
+	       (unsigned long) scp->data_length,
 	       visibleChars(scp->data_buffer,
 			    (unsigned) scp->data_length)));
     }
@@ -5562,7 +5595,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 	finish->col = screen->max_col;
     }
 
-    ComputeSelect(xw, start, finish, False);
+    ComputeSelect(xw, start, finish, False, False);
     SaltTextAway(xw,
 		 TargetToSelection(screen, PRIMARY_NAME),
 		 &(screen->startSel), &(screen->endSel));

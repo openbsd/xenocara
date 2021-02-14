@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.12 2020/01/18 16:27:34 tom Exp $
+# $XTermId: run-tic.sh,v 1.13 2021/01/27 01:04:54 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2019,2020 by Thomas E. Dickey
+# Copyright 2006-2020,2021 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -60,7 +60,7 @@ if test -z "$MYTEMP"
 then
 	MYTEMP=${TMPDIR:-/tmp}/run-tic$$
 fi
-mkdir -p $MYTEMP || failed "cannot mkdir $MYTEMP"
+mkdir -p "$MYTEMP" || failed "cannot mkdir $MYTEMP"
 trap "rm -rf $MYTEMP" EXIT INT QUIT HUP TERM
 
 STDERR=$MYTEMP/run-tic$$.log
@@ -68,13 +68,12 @@ VER=`tic -V 2>/dev/null`
 OPT=
 
 TIC_PROG=tic
-TPUT_PROG=tput
 INFOCMP_PROG=infocmp
 unset TERM
 unset TERMINFO_DIRS
 
-PASS1="$@"
-PASS2="$@"
+PASS1="$*"
+PASS2="$*"
 
 case "x$VER" in
 *ncurses*)
@@ -99,12 +98,12 @@ case "x$VER" in
 	case "$VER" in
 	*\ [7-9].*|*\ 6.[1-9].20[12][0-9]*)
 		expect="	cols#100000,"
-		cat >$MYTEMP/fake.ti <<EOF
+		cat >"$MYTEMP"/fake.ti <<EOF
 fake|test 32-bit numbers,
 $expect
 EOF
-		TERMINFO=$MYTEMP $TIC_PROG $OPT $MYTEMP/fake.ti 2>/dev/null
-		check=`TERMINFO=$MYTEMP TERM=fake $INFOCMP_PROG -1 fake 2>/dev/null |grep "$expect"`
+		TERMINFO="$MYTEMP" $TIC_PROG $OPT "$MYTEMP"/fake.ti 2>/dev/null
+		check=`TERMINFO="$MYTEMP" TERM=fake $INFOCMP_PROG -1 fake 2>/dev/null |grep "$expect"`
 		test "x$check" = "x$expect" || BIG=no
 		;;
 	*)
@@ -117,20 +116,20 @@ EOF
 		# than 4096 bytes.
 		echo "...this version does not support large terminal descriptions"
 		PASS2=$MYTEMP/input
-		sed -e 's/use=xterm+sm+1006,//' -e '/^[	 ][	 ]*$/d' "$PASS1" >$PASS2
-		set $PASS2
+		sed -e 's/use=xterm+sm+1006,//' -e '/^[	 ][	 ]*$/d' "$PASS1" >"$PASS2"
+		set "$PASS2"
 	fi
 	;;
 esac
 
-echo "** $TIC_PROG $OPT" "$PASS1"
-$TIC_PROG $OPT "$PASS2" 2>$STDERR
+echo "** $TIC_PROG $OPT $PASS1"
+$TIC_PROG $OPT "$PASS2" 2>"$STDERR"
 RET=$?
 
-sed -e "s%$PASS2%$PASS1%" $STDERR | \
-fgrep -v 'Unknown Capability' | \
-fgrep -v 'Capability is not recognized:' | \
-fgrep -v 'tic: Warning near line ' >&2
-rm -f $STDERR
+sed -e "s%$PASS2%$PASS1%" "$STDERR" | \
+${FGREP-fgrep} -v 'Unknown Capability' | \
+${FGREP-fgrep} -v 'Capability is not recognized:' | \
+${FGREP-fgrep} -v 'tic: Warning near line ' >&2
+rm -f "$STDERR"
 
 exit $RET

@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.833 2020/12/24 12:49:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.839 2021/02/02 00:24:46 tom Exp $
 .\"
-.\" Copyright 1996-2019,2020 by Thomas E. Dickey
+.\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -645,6 +645,10 @@ It sets the \fBforceBoxChars\fP resource to \*(``false\*(''.
 This option indicates that \fI\*n\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
 It sets the \fBforceBoxChars\fP resource to \*(``true\*(''.
+.TP 8
+.BI \-fc " fontchoice"
+Specify the initial font chosen from the font menu.
+The option value corresponds to the \fBinitialFont\fP resource.
 .TP 8
 .BI \-fd " pattern"
 This option sets the pattern for double-width fonts selected from the FreeType
@@ -1498,7 +1502,7 @@ X Toolkit accepts alternate names for a few of these options, e.g.,
 \*(``\fB\-foreground\fP\*('' for \*(``\fB\-fg\fP\*(''
 .PP
 Abbreviated options also are supported, e.g.,
-\*(``\fB\-v\fP\*('' for \*(``\fB\-verbose\fP.\*(''
+\*(``\fB\-v\fP\*('' for \*(``\fB\-version\fP.\*(''
 .
 .
 .SH RESOURCES
@@ -3147,7 +3151,7 @@ The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
 The default value is
 .NS
-BS,DEL,ENT,EOT,ESC,NUL
+BS,DEL,ENQ,EOT,ESC,NUL
 .NE
 .IP
 The names are listed below:
@@ -3867,7 +3871,8 @@ copied to the clipboard rather than asking the clipboard for its
 current contents when told to provide the selection.
 The default is \*(``false\*(''.
 .IP
-The menu entry \fBKeep Clipboard\fP allows you to change this at runtime.
+If compiled into \fI\*n\fP, the menu entry \fBKeep Clipboard\fP allows you to
+change this at runtime.
 .TP 8
 .B "keepSelection\fP (class\fB KeepSelection\fP)"
 Specifies whether \fI\*n\fR will keep the selection even after the
@@ -4340,6 +4345,16 @@ The resource value can be one of these:
 .B word
 Select a \*(``word\*('' as determined by the \fBcharClass\fP resource.
 See the \fBCHARACTER CLASSES\fP section.
+.IP
+If the pointer is on a \*(``word\*('' then \fI\*n\fP searches back
+to the beginning of the word, and then to the end.
+.IP
+If the pointer is not on a \*(``word\*('' then the result depends
+on whether it is on whitespace (including a newline), or past
+the end of the line.
+In the latter case \fI\*n\fP may select
+a \*(``word\*('' beginning after the newline,
+if there is no additional whitespace.
 .TP
 .B line
 Select a line (counting wrapping).

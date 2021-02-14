@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.79 2019/11/13 23:07:08 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.80 2021/02/02 00:20:11 tom Exp $ */
 
 /*
- * Copyright 2007-2018,2019 by Thomas E. Dickey
+ * Copyright 2007-2019,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -767,7 +767,8 @@ copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 	    TRACE(("copyCgs from %s to %s\n",
 		   traceCgsEnum(srcCgsId),
 		   traceCgsEnum(dstCgsId)));
-	    TRACE2(("copyCgs from %s (me %p, fg %s, bg %s, cset %s) to %s {{\n",
+	    TRACE2(("copyCgs from %s (me %p, fg %s, bg %s, cset %s) to %s "
+		    TRACE_L "\n",
 		    traceCgsEnum(srcCgsId),
 		    me,
 		    tracePixel(xw, THIS(fg)),
@@ -778,7 +779,7 @@ copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 	    setCgsFore(xw, cgsWin, dstCgsId, THIS(fg));
 	    setCgsBack(xw, cgsWin, dstCgsId, THIS(bg));
 	    setCgsFont(xw, cgsWin, dstCgsId, THIS(font));
-	    TRACE2(("...copyCgs }}\n"));
+	    TRACE2(("...copyCgs " TRACE_R "\n"));
 	}
     }
 }

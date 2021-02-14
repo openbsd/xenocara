@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.210 2020/12/10 19:43:26 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.211 2021/02/02 00:19:32 tom Exp $ */
 
 /*
- * Copyright 2000-2019,2020 by Thomas E. Dickey
+ * Copyright 2000-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -541,14 +541,14 @@ ToggleScrollBar(XtermWidget xw)
     if (IsIcon(screen)) {
 	Bell(xw, XkbBI_MinorError, 0);
     } else {
-	TRACE(("ToggleScrollBar{{\n"));
+	TRACE(("ToggleScrollBar" TRACE_L "\n"));
 	if (screen->fullVwin.sb_info.width) {
 	    ScrollBarOff(xw);
 	} else {
 	    ScrollBarOn(xw, False);
 	}
 	update_scrollbar();
-	TRACE(("...ToggleScrollBar}}\n"));
+	TRACE((TRACE_R " ToggleScrollBar\n"));
     }
 }
 

@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.372 2020/09/19 16:50:26 tom Exp $
+dnl $XTermId: configure.in,v 1.378 2021/01/06 20:58:29 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2019,2020 by Thomas E. Dickey
+dnl Copyright 1997-2020,2021 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20200802)
+AC_PREREQ(2.52.20210105)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -44,12 +44,12 @@ CF_CHECK_CACHE
 dnl Only add to this case statement when a system has a compiler that is not
 dnl detected by AC_PROG_CC.
 case "$host_os" in
-(openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
-		: ${CPPFLAGS="-D_ALL_SOURCE"}
-		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
-		: ${CC=c89};;
+(openedition)	: "${CFLAGS=\"-O2 -Wc,dll -Wl,EDIT=NO\"}"
+		: "${CPPFLAGS=\"-D_ALL_SOURCE\"}"
+		: "${LIBS=\"/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x\"}"
+		: "${CC=c89}";;
 (darwin*)
-		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
+		: "${LDFLAGS}=\"${LDFLAGS} -Wl,-bind_at_load\"";;
 esac
 
 CF_PROG_CC
@@ -121,7 +121,7 @@ cf_cv_icon_list=
 for my_item in $srcdir/icons/*.svg
 do
 	test -f "$my_item" || continue
-	cf_icon_name=`echo $my_item |sed -e "s,.svg,," -e "s,^$srcdir/,,"`
+	cf_icon_name=`echo "$my_item" |sed -e "s,.svg,," -e "s,^$srcdir/,,"`
 	case $cf_icon_name in
 	(*_48x48)
 		continue
@@ -169,7 +169,7 @@ AC_MSG_RESULT($with_symlink)
 test "$with_symlink" = yes && with_symlink=xterm
 test -n "$with_symlink" && \
 	test "$with_symlink" != no && \
-	test "$with_symlink" != $cf_name && \
+	test "$with_symlink" != "$cf_name" && \
 	XTERM_SYMLINK="$with_symlink"
 fi
 
@@ -409,7 +409,7 @@ if test "$cf_tic_prog" = yes ; then
 	if test "$TERMINFO_DIR" = yes ; then
 		AC_MSG_WARN(no value given)
 	elif test "$TERMINFO_DIR" != none ; then
-		if test -d $TERMINFO_DIR ; then
+		if test -d "$TERMINFO_DIR" ; then
 			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR",[Define to override default TERMINFO value])
 			AC_MSG_CHECKING(if \$TERMINFO should also be set)
 			AC_ARG_ENABLE(env-terminfo,

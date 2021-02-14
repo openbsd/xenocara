@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.25 2019/07/19 00:53:57 tom Exp $
+# $XTermId: minstall.in,v 1.26 2021/01/27 01:36:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2016,2019 by Thomas E. Dickey
+# Copyright 2001-2019,2021 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -60,8 +60,8 @@ XTERM_LOCALE=C	export XTERM_LOCALE
 for p in /bin /usr/bin
 do
 if test -f $p/cat ; then
-MANPAGER=cat;   export MANPAGER
-PAGER=cat;      export PAGER
+MANPAGER="cat";   export MANPAGER
+PAGER="cat";      export PAGER
 break
 fi
 done
@@ -115,6 +115,9 @@ do
 done
 WTMP_PATH=$WTMP_PATH/$WTMP_NAME
 
+lower=abcdefghijklmnopqrstuvwxyz
+upper=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
 # "X" is usually in the miscellaneous section, along with "undocumented".
 # Use that to guess an appropriate section.  This relies on having the manpage
 # installed.
@@ -123,48 +126,48 @@ X_MANSECT=`man $X_MANPAGE 2>&1 | grep $X_MANPAGE'([^)]*)' | head -n 1 | tr '\012
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 VERSION_H=`echo "$OLD_FILE" | sed -e 's,/[^/]*$,/version.h,' -e s',^[^/]*$,version.h,'`
-PATCH_NUM=`fgrep XTERM_PATCH $VERSION_H|sed -e 's/[^0-9]*//g'`
-PATCH_YMD=`fgrep XTERM_DATE  $VERSION_H|sed -e 's,[^0-9/.-]*,,g'`
+PATCH_NUM=`${FGREP-fgrep} XTERM_PATCH "$VERSION_H" | sed -e 's/[^0-9]*//g'`
+PATCH_YMD=`${FGREP-fgrep} XTERM_DATE  "$VERSION_H" | sed -e 's,[^0-9/.-]*,,g'`
 
 # Make capitalization variants
-APP_chr0=`echo "$APP_name" | sed -e 's/^\(.\).*/\1/' | tr '[a-z]' '[A-Z]'`
+APP_chr0=`echo "$APP_name" | sed -e 's/^\(.\).*/\1/' | tr "$lower" "$upper"`
 APP_chr1=`echo "$APP_name" | sed -e 's/^.//'`
 APP_Name=${APP_chr0}${APP_chr1}
-APP_NAME=`echo "$APP_name" | tr '[a-z]' '[A-Z]'`
+# APP_NAME=`echo "$APP_name" | tr "$lower" "$upper"`
 
 # Provide for renaming in test-builds:
-USE_chr0=`echo "$USE_name" | sed -e 's/^\(.\).*/\1/' | tr '[a-z]' '[A-Z]'`
+USE_chr0=`echo "$USE_name" | sed -e 's/^\(.\).*/\1/' | tr "$lower" "$upper"`
 USE_chr1=`echo "$USE_name" | sed -e 's/^.//'`
 USE_Name=${USE_chr0}${USE_chr1}
-USE_NAME=`echo "$USE_name" | tr '[a-z]' '[A-Z]'`
+USE_NAME=`echo "$USE_name" | tr "$lower" "$upper"`
 
 sed	-e 's%__vendorversion__%"X Window System"%' \
-	-e 's%__app_version__%Patch\ \#'$PATCH_NUM% \
-	-e 's%__app_date__%'$PATCH_YMD% \
-	-e "s%^\.TH [^ ][^ ]*%.TH $USE_NAME%" \
-	-e "s%^\.ds N $APP_Name%.ds N $USE_Name%" \
-	-e "s%^\.ds n $APP_name%.ds n $USE_name%" \
+	-e 's%__app_version__%Patch\ \#'"$PATCH_NUM"% \
+	-e 's%__app_date__%'"$PATCH_YMD"% \
+	-e 's%^\.TH [^ ][^ ]*%.TH '"$USE_NAME"% \
+	-e 's%^\.ds N '"$APP_Name"'%.ds N '"$USE_Name"% \
+	-e 's%^\.ds n '"$APP_name"'%.ds n '"$USE_name"% \
 	-e 's%^'"$APP_name"' \\- %'"$USE_name"' \- %' \
-	-e s%__default_termname__%@default_TERM@% \
-	-e s%__default_termid__%@default_termid@% \
-	-e s%__alt_sends_esc__%@alt_sends_esc@% \
-	-e s%__meta_sends_esc__%@meta_sends_esc@% \
-	-e s%__backarrow_is_bs__%@backarrow_is_bs@% \
-	-e s%__backarrow_is_erase__%@backarrow_is_erase@% \
-	-e s%__delete_is_del__%@delete_is_del@% \
-	-e s%__double_buffer__%@double_buffer@% \
-	-e s%__initial_erase__%@initial_erase@% \
-	-e s%__default_class__%$APP_TYPE% \
-	-e s%__apploaddir__%$APPS_DIR% \
-	-e s%__mansuffix__%$MY_MANSECT%g \
-	-e s%__miscmansuffix__%$X_MANSECT%g \
-	-e s%__pixmapsdir__%$XPMS_DIR% \
-	-e s%fIutmp'\\%fI'$UTMP_NAME'\\%g' \
-	-e s%/etc/utmp%$UTMP_PATH%g \
-	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \
-	-e s%/etc/wtmp%$WTMP_PATH%g \
+	-e "s%__default_termname__%@default_TERM@%" \
+	-e "s%__default_termid__%@default_termid@%" \
+	-e "s%__alt_sends_esc__%@alt_sends_esc@%" \
+	-e "s%__meta_sends_esc__%@meta_sends_esc@%" \
+	-e "s%__backarrow_is_bs__%@backarrow_is_bs@%" \
+	-e "s%__backarrow_is_erase__%@backarrow_is_erase@%" \
+	-e "s%__delete_is_del__%@delete_is_del@%" \
+	-e "s%__double_buffer__%@double_buffer@%" \
+	-e "s%__initial_erase__%@initial_erase@%" \
+	-e "s%__default_class__%$APP_TYPE%" \
+	-e "s%__apploaddir__%$APPS_DIR%" \
+	-e "s%__mansuffix__%$MY_MANSECT%g" \
+	-e "s%__miscmansuffix__%$X_MANSECT%g" \
+	-e "s%__pixmapsdir__%$XPMS_DIR%" \
+	-e 's%fIutmp\\%fI'$UTMP_NAME'\\%g' \
+	-e "s%/etc/utmp%$UTMP_PATH%g" \
+	-e 's%fIwtmp\\%fI'$WTMP_NAME'\\%g' \
+	-e "s%/etc/wtmp%$WTMP_PATH%g" \
 	-e 's%/\\(\*\*%/*%g' \
-	$OLD_FILE >$NEW_FILE
+	"$OLD_FILE" >$NEW_FILE
 # diff -u $OLD_FILE $NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"

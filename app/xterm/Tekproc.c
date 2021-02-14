@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.240 2020/09/15 09:21:12 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.241 2021/02/02 00:19:32 tom Exp $ */
 
 /*
- * Copyright 2001-2019,2020 by Thomas E. Dickey
+ * Copyright 2001-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -976,12 +976,12 @@ TekResize(Widget w)
     TekWidget tw = getTekWidget(w);
     if (tw != 0) {
 
-	TRACE(("TekResize {{\n"));
+	TRACE(("TekResize " TRACE_L "\n"));
 	TekClear(tw);
 
 	compute_sizes(tw);
 
-	TRACE(("}} TekResize\n"));
+	TRACE((TRACE_R " TekResize\n"));
     }
 }
 
@@ -995,7 +995,7 @@ TekExpose(Widget w,
     if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
-	TRACE(("TekExpose {{\n"));
+	TRACE(("TekExpose " TRACE_L "\n"));
 
 #ifdef lint
 	region = region;
@@ -1021,7 +1021,7 @@ TekExpose(Widget w,
 	first_map_occurred();
 	if (!tekscr->waitrefresh)
 	    TekRefresh(tw);
-	TRACE(("}} TekExpose\n"));
+	TRACE((TRACE_R " TekExpose\n"));
     }
 }
 
@@ -1439,7 +1439,7 @@ TekInitialize(Widget wrequest,
     (void) args;
     (void) num_args;
 
-    TRACE(("TekInitialize {{\n"));
+    TRACE(("TekInitialize " TRACE_L "\n"));
     memset(tekscr, 0, sizeof(*tekscr));
 
     /*
@@ -1603,7 +1603,7 @@ TekInitialize(Widget wrequest,
 		     wnew->tek.gin_terminator_str);
     TRACE(("Tek gin_terminator=%d\n", tekscr->gin_terminator));
 
-    TRACE(("}} TekInitialize\n"));
+    TRACE((TRACE_R " TekInitialize\n"));
 }
 
 static void
@@ -1621,7 +1621,7 @@ TekRealize(Widget gw,
     unsigned width, height;
     unsigned long TEKgcFontMask;
 
-    TRACE(("TekRealize {{\n"));
+    TRACE(("TekRealize " TRACE_L "\n"));
 
     if (!TekPtyData())
 	return;
@@ -1753,7 +1753,7 @@ TekRealize(Widget gw,
     Ttoggled      = True;
     tekscr->page  = tekscr->cur;
 
-    TRACE(("}} TekRealize\n"));
+    TRACE((TRACE_R " TekRealize\n"));
 }
 
 int

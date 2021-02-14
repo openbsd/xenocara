@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.871 2020/12/21 22:01:11 tom Exp $ */
+/* $XTermId: util.c,v 1.872 2021/01/31 18:12:09 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4293,7 +4293,7 @@ drawXtermText(XTermDraw * params,
 #define DrawFlags() recur.draw_flags
 #else
 #define AttrFlags() (recur.attr_flags & DRAWX_MASK)
-#define DrawFlags() (recur.draw_flags & ~DRAWX_MASK)
+#define DrawFlags() (recur.draw_flags & (unsigned)~DRAWX_MASK)
 #endif
     TRACE(("drawtext%c[%4d,%4d] {%#x,%#x} (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',

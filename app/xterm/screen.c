@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.596 2020/12/10 19:43:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.597 2021/02/02 00:19:32 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1534,7 +1534,7 @@ ScrnRefresh(XtermWidget xw,
     unsigned old_attrs = xw->flags;
 #endif
 
-    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s {{\n",
+    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
 	   screen->topline, toprow, leftcol,
 	   nrows, ncols,
 	   force ? " force" : ""));
@@ -1898,7 +1898,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
     recurse--;
 
-    TRACE(("...}} ScrnRefresh\n"));
+    TRACE((TRACE_R " ScrnRefresh\n"));
     return;
 }
 
