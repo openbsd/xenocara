@@ -73,8 +73,6 @@
 ./usr/X11R6/include/libdrm/sis_drm.h
 ./usr/X11R6/include/libdrm/tegra_drm.h
 ./usr/X11R6/include/libdrm/vc4_drm.h
-./usr/X11R6/include/libdrm/vc4_packet.h
-./usr/X11R6/include/libdrm/vc4_qpu_defines.h
 ./usr/X11R6/include/libdrm/via_drm.h
 ./usr/X11R6/include/libdrm/virtgpu_drm.h
 ./usr/X11R6/include/libdrm/vmwgfx_drm.h
@@ -296,7 +294,6 @@
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/lib/pkgconfig/libdrm_amdgpu.pc
 ./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
-./usr/X11R6/lib/pkgconfig/libdrm_vc4.pc
 ./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/lib/pkgconfig/xshmfence.pc
