@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.39 2020/09/07 10:35:22 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.40 2021/02/16 13:57:41 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -2056,6 +2056,8 @@ cleanup(struct video *vid, int excode)
 	if (vid->dev.fd >= 0) {
 		if (vid->mmap_on)
 			mmap_stop(vid);
+		else
+			(void)ioctl(vid->dev.fd, VIDIOC_STREAMOFF, &type);
 		close(vid->dev.fd);
 	}
 
