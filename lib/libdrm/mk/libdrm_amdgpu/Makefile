@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2021/02/11 10:34:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/02/19 12:29:37 matthieu Exp $
 
 LIB=	drm_amdgpu
 
@@ -14,7 +14,7 @@ SRCS=	amdgpu_asic_id.c \
 .include "../Makefile.inc"
 
 CPPFLAGS+=	-I${DRM_SRC}/amdgpu \
-		-DAMDGPU_ASIC_ID_TABLE=\"${DRM_SRC}/data/amdgpu.ids\"
+		-DAMDGPU_ASIC_ID_TABLE=\"${X11BASE}/share/libdrm/amdgpu.ids\"
 
 LDADD+= -L${.CURDIR}/../libdrm/${__objdir} -ldrm
 
