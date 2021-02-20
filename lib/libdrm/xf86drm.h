@@ -76,18 +76,11 @@ extern "C" {
 	(S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)
 #define DRM_DEV_MODE	 (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)
 
-#ifdef __OpenBSD__
-#define DRM_DIR_NAME  "/dev"
-#define DRM_PRIMARY_MINOR_NAME  "drm"
-#define DRM_CONTROL_MINOR_NAME  "drmC"
-#define DRM_RENDER_MINOR_NAME   "drmR"
-#else
 #define DRM_DIR_NAME  "/dev/dri"
 #define DRM_PRIMARY_MINOR_NAME  "card"
 #define DRM_CONTROL_MINOR_NAME  "controlD"
 #define DRM_RENDER_MINOR_NAME   "renderD"
 #define DRM_PROC_NAME "/proc/dri/" /* For backward Linux compatibility */
-#endif
 
 #define DRM_DEV_NAME          "%s/" DRM_PRIMARY_MINOR_NAME "%d"
 #define DRM_CONTROL_DEV_NAME  "%s/" DRM_CONTROL_MINOR_NAME "%d"

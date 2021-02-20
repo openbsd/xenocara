@@ -226,7 +226,7 @@ open_hw(const char *dev)
     else {
         dev = getenv("KMSDEVICE");
         if ((NULL == dev) || ((fd = priv_open_device(dev)) == -1)) {
-            dev = "/dev/drm0";
+            dev = "/dev/dri/card0";
             fd = priv_open_device(dev);
         }
     }
