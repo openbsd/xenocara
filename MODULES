@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.452 2021/01/01 13:21:03 matthieu Exp $
+# $OpenBSD: MODULES,v 1.453 2021/03/08 18:15:42 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -170,7 +170,7 @@ lib/libXpresent			1.0.0
 lib/libXrandr			1.5.2
 lib/libXrender			0.9.10
 lib/libXres			1.2.0
-lib/libXt			1.2.0
+lib/libXt			1.2.1
 lib/libXtst			1.2.3
 lib/libXv			1.0.11
 lib/libXvMC			1.0.12
@@ -192,11 +192,11 @@ lib/xcb-util-renderutil		0.3.9
 lib/xcb-util-wm			0.4.1
 
 proto/xcb-proto			1.14.1
-proto/xorgproto			2020.1		needs-update
+proto/xorgproto			2021.3		needs-update
 
 util/cf				1.0.4
 util/gccmakedep			1.0.3
-util/macros			1.19.2
+util/macros			1.19.3
 util/makedepend			1.0.6
 
 xserver				1.20.10
