@@ -122,7 +122,6 @@ struct display {
 	char		**authNames;	/* authorization protocol names */
 	unsigned short	*authNameLens;	/* authorization protocol name lens */
 	char		*clientAuthFile;/* client specified auth file */
-	char		*userAuthDir;	/* backup directory for tickets */
 	int		authComplain;	/* complain when no auth for XDMCP */
 
 	/* information potentially derived from resources */

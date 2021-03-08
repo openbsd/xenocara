@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: August 15 2019 $
+.Dd $Mdocdate: March 8 2021 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -582,18 +582,6 @@ to occur, during which time the new authorization information will be read.
 The default is
 .Cm false ,
 which will work for all MIT servers.
-.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .userAuthDir
-When
-.Nm
-is unable to write to the usual user authorization file
-.Pq Pa $HOME/.Xauthority ,
-it creates a unique file name in this directory and points the environment
-variable
-.Ev XAUTHORITY
-at the created file.
-It uses
-.Pa /tmp
-by default.
 .El
 .Sh CONFIGURATION FILE
 First, the

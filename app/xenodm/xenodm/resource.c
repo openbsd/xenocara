@@ -91,9 +91,6 @@ char	**exportList;
 #ifndef DEF_AUTH_DIR
 # define DEF_AUTH_DIR "/usr/lib/X11/xenodm"
 #endif
-#ifndef DEF_USER_AUTH_DIR
-# define DEF_USER_AUTH_DIR	"/tmp"
-#endif
 #ifndef DEF_ACCESS_FILE
 # define DEF_ACCESS_FILE	""
 #endif
@@ -200,8 +197,6 @@ struct displayResource sessionResources[] = {
 				DEF_SYSTEM_SHELL },
 { "failsafeClient","FailsafeClient",	DM_STRING,	boffset(failsafeClient),
 				DEF_FAILSAFE_CLIENT },
-{ "userAuthDir","UserAuthDir",	DM_STRING,	boffset(userAuthDir),
-				DEF_USER_AUTH_DIR },
 };
 
 #define NUM_SESSION_RESOURCES	(sizeof sessionResources/\

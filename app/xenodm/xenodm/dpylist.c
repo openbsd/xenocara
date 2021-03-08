@@ -128,7 +128,6 @@ RemoveDisplay (struct display *old)
 	    if (d->authFile)
 		(void) unlink (d->authFile);
 	    free (d->authFile);
-	    free (d->userAuthDir);
 	    for (x = d->authNames; x && *x; x++)
 		free (*x);
 	    free (d->authNames);
@@ -195,7 +194,6 @@ NewDisplay (char *name, char *class)
     d->authNameNum = 0;
     d->clientAuthFile = NULL;
     d->authFile = NULL;
-    d->userAuthDir = NULL;
     d->authNames = NULL;
     d->authNameLens = NULL;
     d->authComplain = 1;

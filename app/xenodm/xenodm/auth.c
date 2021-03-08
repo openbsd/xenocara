@@ -752,7 +752,7 @@ void
 SetUserAuthorization (struct display *d, struct verify_info *verify)
 {
     FILE	*old = NULL, *new;
-    char	home_name[1024], backup_name[1024], new_name[1024];
+    char	home_name[1024], new_name[1024];
     char	*name = NULL;
     char	*home;
     char	*envname = NULL;
@@ -762,7 +762,6 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
     struct stat	statb;
     int		i;
     int		magicCookie;
-    int		fd;
 
     Debug ("SetUserAuthorization\n");
     auths = d->authorizations;
@@ -793,45 +792,10 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	    }
 	}
 	if (lockStatus != LOCK_SUCCESS) {
-	    snprintf (backup_name, sizeof(backup_name),
-		      "%s/.XauthXXXXXX", d->userAuthDir);
-	    fd = mkstemp (backup_name);
-	    if (fd >= 0) {
-		old = fdopen (fd, "r");
-		if (old == NULL)
-		    (void) close(fd);
-	    }
-
-	    if (old != NULL)
-	    {
-		lockStatus = XauLockAuth (backup_name, 1, 2, 10);
-		Debug ("backup lock is %d\n", lockStatus);
-		if (lockStatus == LOCK_SUCCESS) {
-		    if (openFiles (backup_name, new_name, sizeof(new_name),
-                                   &old, &new)
-			&& (old != NULL) && (new != NULL)) {
-			name = backup_name;
-			setenv = 1;
-		    } else {
-			XauUnlockAuth (backup_name);
-			lockStatus = LOCK_ERROR;
-			if (old != NULL) {
-			    (void) fclose (old);
-			    old = NULL;
-			}
-			if (new != NULL)
-			    (void) fclose (new);
-		    }
-		} else {
-		    (void) fclose (old);
-		}
-	    }
-	}
-	if (lockStatus != LOCK_SUCCESS) {
-	    Debug ("can't lock auth file %s or backup %s\n",
-			    home_name, backup_name);
-	    LogError ("can't lock authorization file %s or backup %s\n",
-			    home_name, backup_name);
+	    Debug ("can't lock auth file %s\n",
+			    home_name);
+	    LogError ("can't lock authorization file %s\n",
+			    home_name);
 	    return;
 	}
 	initAddrs ();
