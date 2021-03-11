@@ -978,20 +978,6 @@ radv_shader_variant_create(struct radv_device *device,
 			return NULL;
 		}
 
-		/* Enable 64-bit and 16-bit denormals, because there is no performance
-		 * cost.
-		 *
-		 * If denormals are enabled, all floating-point output modifiers are
-		 * ignored.
-		 *
-		 * Don't enable denormals for 32-bit floats, because:
-		 * - Floating-point output modifiers would be ignored by the hw.
-		 * - Some opcodes don't support denormals, such as v_mad_f32. We would
-		 *   have to stop using those.
-		 * - GFX6 & GFX7 would be very slow.
-		 */
-		config.float_mode |= V_00B028_FP_64_DENORMS;
-
 		if (rtld_binary.lds_size > 0) {
 			unsigned alloc_granularity = device->physical_device->rad_info.chip_class >= GFX7 ? 512 : 256;
 			config.lds_size = align(rtld_binary.lds_size, alloc_granularity) / alloc_granularity;

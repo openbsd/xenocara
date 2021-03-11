@@ -130,24 +130,7 @@ bool si_compile_llvm(struct si_screen *sscreen,
 
 	bool ok = ac_rtld_read_config(&rtld, conf);
 	ac_rtld_close(&rtld);
-	if (!ok)
-		return false;
-
-	/* Enable 64-bit and 16-bit denormals, because there is no performance
-	 * cost.
-	 *
-	 * If denormals are enabled, all floating-point output modifiers are
-	 * ignored.
-	 *
-	 * Don't enable denormals for 32-bit floats, because:
-	 * - Floating-point output modifiers would be ignored by the hw.
-	 * - Some opcodes don't support denormals, such as v_mad_f32. We would
-	 *   have to stop using those.
-	 * - GFX6 & GFX7 would be very slow.
-	 */
-	conf->float_mode |= V_00B028_FP_64_DENORMS;
-
-	return true;
+	return ok;
 }
 
 void si_llvm_context_init(struct si_shader_context *ctx,
