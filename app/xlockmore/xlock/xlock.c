@@ -624,7 +624,6 @@ extern int  XHPEnableReset(Display * dsp);
 
 #endif
 #ifdef USE_DPMS
-#define MIN_DPMS 30		/* 30 second minimum */
 #if 1
 #include <X11/Xmd.h>
 #include <X11/Xdmcp.h>
@@ -1114,9 +1113,9 @@ SetDPMS(Display * display, int nstandby, int nsuspend, int noff)
 			DPMSSetTimeouts(display, standby, suspend, off);
 		else
 			DPMSSetTimeouts(display,
-					(nstandby <= 0 ? 0 : (nstandby > MIN_DPMS ? nstandby : MIN_DPMS)),
-					(nsuspend <= 0 ? 0 : (nsuspend > MIN_DPMS ? nsuspend : MIN_DPMS)),
-					(noff <= 0 ? 0 : (noff > MIN_DPMS ? noff : MIN_DPMS)));
+					(nstandby <= 0 ? 0 : nstandby),
+					(nsuspend <= 0 ? 0 : nsuspend),
+					(noff <= 0 ? 0 : noff));
 	}
 }
 
