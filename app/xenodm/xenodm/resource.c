@@ -169,6 +169,8 @@ struct displayResource serverResources[] = {
 				"" },
 { "autoLogin",	"AutoLogin",	DM_STRING,	boffset(autoLogin),
 				"" },
+{ "listenTcp",	"ListenTcp",   DM_BOOL,	       boffset(listenTcp),
+			       "false" }, 
 };
 
 #define NUM_SERVER_RESOURCES	(sizeof serverResources/\

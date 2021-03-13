@@ -736,13 +736,14 @@ setAuthNumber (Xauth *auth, char *name)
 }
 
 static void
-writeLocalAuth (FILE *file, Xauth *auth, char *name)
+writeLocalAuth (FILE *file, Xauth *auth, char *name, int listenTcp)
 {
 
     Debug ("writeLocalAuth: %s %.*s\n", name, auth->name_length, auth->name);
     setAuthNumber (auth, name);
 #ifdef TCPCONN
-    DefineSelf (file, auth);
+    if (listenTcp)
+        DefineSelf (file, auth);
 #endif
     DefineLocal (file, auth);
 }
@@ -762,8 +763,21 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
     struct stat	statb;
     int		i;
     int		magicCookie;
+    char	**arg;
+    int		foundListen = 0;
 
     Debug ("SetUserAuthorization\n");
+    for (arg = d->argv; *arg!= NULL; arg++) {
+        if (strcmp(*arg, "tcp") == 0 && foundListen) {
+            Debug("setUserAuthorization: found listenTcp \n");
+            d->listenTcp = 1;
+            break;
+        }
+        if (strcmp(*arg, "-listen") == 0)
+            foundListen = 1;
+        else
+            foundListen = 0;
+    }
     auths = d->authorizations;
     if (auths) {
 	home = getEnv (verify->userEnviron, "HOME");
@@ -813,7 +827,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		!strncmp (auths[i]->name, "MIT-MAGIC-COOKIE-1", 18))
 	    {
 		magicCookie = i;
-		writeLocalAuth (new, auths[i], d->name);
+		writeLocalAuth (new, auths[i], d->name, d->listenTcp);
 		break;
 	    }
 	}
@@ -893,7 +907,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	initAddrs ();
 	doWrite = 0;
 	for (i = 0; i < d->authNum; i++)
-	    writeLocalAuth (new, auths[i], d->name);
+            writeLocalAuth (new, auths[i], d->name, d->listenTcp);
 	doWrite = 1;
 	if (old) {
 	    if (fstat (fileno (old), &statb) != -1)

@@ -123,6 +123,7 @@ struct display {
 	unsigned short	*authNameLens;	/* authorization protocol name lens */
 	char		*clientAuthFile;/* client specified auth file */
 	int		authComplain;	/* complain when no auth for XDMCP */
+	int		listenTcp;	/* assume server is listening on TCP */
 
 	/* information potentially derived from resources */
 	int		authNameNum;	/* number of protocol names */

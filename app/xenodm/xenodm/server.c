@@ -86,6 +86,8 @@ StartServerOnce (struct display *d)
 	    snprintf (arg, sizeof(arg), "-auth %s", d->authFile);
 	    argv = parseArgs (argv, arg);
 	}
+	if (d->listenTcp)
+	    argv = parseArgs(argv, "-listen tcp");
 	if (!argv) {
 	    LogError ("StartServer: no arguments\n");
 	    sleep ((unsigned) d->openDelay);

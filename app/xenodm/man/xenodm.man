@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: March 8 2021 $
+.Dd $Mdocdate: March 13 2021 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -582,6 +582,21 @@ to occur, during which time the new authorization information will be read.
 The default is
 .Cm false ,
 which will work for all MIT servers.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .listenTcp
+If set to
+.Cm true ,
+enable the
+.Ic listen Ic tcp
+option for the given X server.
+When this setting is set to
+.Cm false ,
+.Nm
+will only generate authorizations for the local (ie Unix socket)
+transport mechanism.
+Otherwise full authorization for all possible transport mechanisms
+will be generated.
+The default is
+.Cm false .
 .El
 .Sh CONFIGURATION FILE
 First, the
