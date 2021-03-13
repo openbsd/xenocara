@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.38 2019/07/27 07:48:19 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.39 2021/03/13 14:00:04 kettenis Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -443,6 +443,8 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			defaultDepth = 8;
 		else if (depths & WSDISPLAYIO_DEPTH_24)
 			defaultDepth = 24;
+		else if (depths & WSDISPLAYIO_DEPTH_30)
+			defaultDepth = 30;
 		else if (depths & WSDISPLAYIO_DEPTH_4)
 			defaultDepth = 4;
 		else if (depths & WSDISPLAYIO_DEPTH_1)
