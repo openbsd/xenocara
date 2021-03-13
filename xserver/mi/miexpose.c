@@ -411,7 +411,7 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
     int i;
     BoxPtr pbox;
     xRectangle *prect;
-    int numRects;
+    int numRects, regionnumrects;
 
     /*
      * Distance from screen to destination drawable, use this
@@ -515,7 +515,10 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
         gcmask |= GCFillStyle | GCTile | GCTileStipXOrigin | GCTileStipYOrigin;
     }
 
-    prect = xallocarray(RegionNumRects(prgn), sizeof(xRectangle));
+    regionnumrects = RegionNumRects(prgn);
+    if (regionnumrects == 0)
+        return;
+    prect = xallocarray(regionnumrects, sizeof(xRectangle));
     if (!prect)
         return;
 
