@@ -623,8 +623,8 @@ writeAuth (FILE *file, Xauth *auth)
         Debug ("writeAuth: doWrite = %d\n", doWrite);
 	dumpAuth (auth);	/* does Debug only */
     }
-	if (doWrite)
-	    XauWriteAuth (file, auth);
+    if (doWrite)
+        XauWriteAuth (file, auth);
 }
 
 static void
