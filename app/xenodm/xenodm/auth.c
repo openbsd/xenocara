@@ -694,6 +694,10 @@ DefineSelf(FILE *file, Xauth *auth)
 		Debug ("Skipping IPv6 localhost address\n");
 		continue;
 	    }
+	    if (IN6_IS_ADDR_LINKLOCAL(((struct in6_addr *)addr))) {
+                Debug("Skipping IPv6 link local address\n");
+                continue;
+            }
 	    /* Also skip XDM-AUTHORIZATION-1 */
 	    if (auth->name_length == 19 &&
 		strcmp(auth->name, "XDM-AUTHORIZATION-1") == 0) {
