@@ -502,7 +502,7 @@ SetConsolePath(struct display *d)
 	unsigned long bytes_after;
 	unsigned char *buf;
 
-	prop = XInternAtom(d->dpy, "Xorg_Console", False);
+	prop = XInternAtom(d->dpy, "Xorg_Console", True);
 	if (prop == None) {
 		LogError("no Xorg_Console atom\n");
 		return;
@@ -544,7 +544,7 @@ SetWindowPath(struct display *d)
 	char *newwindowpath = NULL;
 	unsigned long num;
 
-	prop = XInternAtom(d->dpy, "XFree86_VT", False);
+	prop = XInternAtom(d->dpy, "XFree86_VT", True);
 	if (prop == None) {
 		fprintf(stderr, "no XFree86_VT atom\n");
 		return;
