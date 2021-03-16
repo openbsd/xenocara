@@ -98,11 +98,11 @@ struct display {
 	int		startAttempts;	/* number of attempts at starting */
 	int		reservAttempts;	/* allowed start-IO error sequences */
 	bool		terminateServer;/* restart for each session */
-	int		grabServer;	/* keep server grabbed for Login */
+	bool		grabServer;	/* keep server grabbed for Login */
 	int		grabTimeout;	/* time to wait for grab */
 	int		resetSignal;	/* signal to reset server */
 	int		termSignal;	/* signal to terminate server */
-	int		resetForAuth;	/* server reads auth file at reset */
+	bool		resetForAuth;	/* server reads auth file at reset */
 	char            *keymaps;       /* binary compat with DEC */
 
 	/* session resources */
@@ -122,8 +122,8 @@ struct display {
 	char		**authNames;	/* authorization protocol names */
 	unsigned short	*authNameLens;	/* authorization protocol name lens */
 	char		*clientAuthFile;/* client specified auth file */
-	int		authComplain;	/* complain when no auth for XDMCP */
-	int		listenTcp;	/* assume server is listening on TCP */
+	bool		authComplain;	/* complain when no auth for XDMCP */
+	bool		listenTcp;	/* assume server is listening on TCP */
 
 	/* information potentially derived from resources */
 	int		authNameNum;	/* number of protocol names */
@@ -179,10 +179,10 @@ extern char	*servers;
 extern int	request_port;
 extern int	debugLevel;
 extern char	*errorLogFile;
-extern int	daemonMode;
+extern bool	daemonMode;
 extern char	*authDir;
-extern int	autoRescan;
-extern int	removeDomainname;
+extern bool	autoRescan;
+extern bool	removeDomainname;
 extern char	**exportList;
 
 extern struct display	*FindDisplayByName (char *name),

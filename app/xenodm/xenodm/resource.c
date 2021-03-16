@@ -45,11 +45,11 @@ char	*servers;
 int	request_port;
 int	debugLevel;
 char	*errorLogFile;
-int	daemonMode;
-int	sourceAddress;
+bool	daemonMode;
+bool	sourceAddress;
 char	*authDir;
-int	autoRescan;
-int	removeDomainname;
+bool	autoRescan;
+bool	removeDomainname;
 char	**exportList;
 
 #define DM_STRING	0
@@ -267,11 +267,11 @@ GetResource (
 	if (!strcmp (str_buf, "true") ||
 	    !strcmp (str_buf, "on") ||
 	    !strcmp (str_buf, "yes"))
-		*((int *) valuep) = 1;
+		*((bool *) valuep) = true;
 	else if (!strcmp (str_buf, "false") ||
 		 !strcmp (str_buf, "off") ||
 		 !strcmp (str_buf, "no"))
-		*((int *) valuep) = 0;
+		*((bool *) valuep) = false;
 	break;
     case DM_ARGV:
 	freeArgs (*(char ***) valuep);
