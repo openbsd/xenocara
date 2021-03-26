@@ -31,7 +31,9 @@ R128_DRI_SRCS = r128_dri.c
 endif
 
 if USE_EXA
-R128_EXA_SRCS = r128_exa.c
+R128_EXA_SRCS = \
+	r128_exa.c \
+	r128_exa_render.c
 endif
 
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
@@ -40,18 +42,26 @@ r128_drv_la_LTLIBRARIES = r128_drv.la
 r128_drv_la_LDFLAGS = -module -avoid-version
 r128_drv_ladir = @moduledir@/drivers
 r128_drv_la_SOURCES = \
-	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
-	r128_video.c r128_misc.c r128_probe.c $(R128_EXA_SRCS) $(R128_DRI_SRCS)
+	r128_accel.c \
+	r128_crtc.c \
+	r128_cursor.c \
+	r128_driver.c \
+	r128_misc.c \
+	r128_output.c \
+	r128_probe.c \
+	r128_video.c \
+	$(R128_EXA_SRCS) \
+	$(R128_DRI_SRCS)
 
 EXTRA_DIST = \
-        compat-api.h \
+	compat-api.h \
+	r128.h \
 	r128_common.h \
 	r128_dri.h \
 	r128_dripriv.h \
-	r128.h \
 	r128_probe.h \
 	r128_reg.h \
+	r128_rop.h \
 	r128_sarea.h \
 	r128_version.h \
-	r128_exa_render.c \
 	atipcirename.h

@@ -57,12 +57,12 @@
 #define OUTREG16(addr, val) MMIO_OUT16(R128MMIO, addr, val)
 #define OUTREG(addr, val)   MMIO_OUT32(R128MMIO, addr, val)
 
-#define ADDRREG(addr)       ((volatile CARD32 *)(pointer)(R128MMIO + (addr)))
+#define ADDRREG(addr)       ((volatile uint32_t *)(pointer)(R128MMIO + (addr)))
 
 
 #define OUTREGP(addr, val, mask)   \
     do {                           \
-	CARD32 tmp = INREG(addr);  \
+	uint32_t tmp = INREG(addr);  \
 	tmp &= (mask);             \
 	tmp |= ((val) & ~(mask));  \
 	OUTREG(addr, tmp);         \
@@ -78,7 +78,7 @@
 
 #define OUTPLLP(pScrn, addr, val, mask)                                   \
     do {                                                                  \
-	CARD32 tmp = INPLL(pScrn, addr);                                  \
+	uint32_t tmp = INPLL(pScrn, addr);                                  \
 	tmp &= (mask);                                                    \
 	tmp |= ((val) & ~(mask));                                         \
 	OUTPLL(addr, tmp);                                                \
@@ -94,7 +94,7 @@
 	OUTREG(R128_PALETTE_DATA, ((r) << 16) | ((g) << 8) | (b));        \
     } while (0)
 
-#define OUTPAL_NEXT_CARD32(v)                                             \
+#define OUTPAL_NEXT_uint32_t(v)                                             \
     do {                                                                  \
 	OUTREG(R128_PALETTE_DATA, (v & 0x00ffffff));                      \
     } while (0)
@@ -114,12 +114,12 @@
 
 #define PAL_SELECT(idx)                                                   \
     do {                                                                  \
-	CARD32 tmp = INREG(R128_DAC_CNTL);                                \
+	uint32_t tmp = INREG(R128_DAC_CNTL);                                \
 	if (idx) {                                                        \
 	    OUTREG(R128_DAC_CNTL, tmp | R128_DAC_PALETTE_ACC_CTL);        \
 	} else {                                                          \
 	    OUTREG(R128_DAC_CNTL, tmp &                                   \
-		   (CARD32)~R128_DAC_PALETTE_ACC_CTL);                    \
+		   (uint32_t)~R128_DAC_PALETTE_ACC_CTL);                    \
 	}                                                                 \
     } while (0)
 
@@ -599,7 +599,7 @@
 #define R128_FP_GEN_CNTL                  0x0284
 #       define R128_FP_FPON                  (1 << 0)
 #       define R128_FP_BLANK_DIS             (1 << 1)
-#       define R128_FP_TDMS_EN               (1 <<  2)
+#       define R128_FP_TMDS_EN               (1 <<  2)
 #       define R128_FP_DETECT_SENSE          (1 <<  8)
 #       define R128_FP_SEL_CRTC2             (1 << 13)
 #       define R128_FP_CRTC_DONT_SHADOW_VPAR (1 << 16)
@@ -905,6 +905,8 @@
 #       define R128_PPLL_ATOMIC_UPDATE_EN     (1 << 16)
 #       define R128_PPLL_VGA_ATOMIC_UPDATE_EN (1 << 17)
 #define R128_PPLL_DIV_0                   0x0004 /* PLL */
+#       define R128_PPLL_FB0_DIV_MASK     0x07ff
+#       define R128_PPLL_POST0_DIV_MASK   0x00070000
 #define R128_PPLL_DIV_1                   0x0005 /* PLL */
 #define R128_PPLL_DIV_2                   0x0006 /* PLL */
 #define R128_PPLL_DIV_3                   0x0007 /* PLL */

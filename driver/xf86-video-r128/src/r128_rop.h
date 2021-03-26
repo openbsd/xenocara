@@ -34,14 +34,31 @@
  *
  */
 
-#ifndef _R128_DRIPRIV_H_
-#define _R128_DRIPRIV_H_
+#ifndef _R128_ROP_H_
+#define _R128_ROP_H_
 
-#define R128_MAX_DRAWABLES 256
+#include "r128_reg.h"
 
-typedef struct {
-    /* Nothing here yet */
-    int dummy;
-} R128DRIContextRec, *R128DRIContextPtr;
-
+static struct {
+    int rop;
+    int pattern;
+} R128_ROP[] = {
+    { R128_ROP3_ZERO, R128_ROP3_ZERO }, /* GXclear        */
+    { R128_ROP3_DSa,  R128_ROP3_DPa  }, /* Gxand          */
+    { R128_ROP3_SDna, R128_ROP3_PDna }, /* GXandReverse   */
+    { R128_ROP3_S,    R128_ROP3_P    }, /* GXcopy         */
+    { R128_ROP3_DSna, R128_ROP3_DPna }, /* GXandInverted  */
+    { R128_ROP3_D,    R128_ROP3_D    }, /* GXnoop         */
+    { R128_ROP3_DSx,  R128_ROP3_DPx  }, /* GXxor          */
+    { R128_ROP3_DSo,  R128_ROP3_DPo  }, /* GXor           */
+    { R128_ROP3_DSon, R128_ROP3_DPon }, /* GXnor          */
+    { R128_ROP3_DSxn, R128_ROP3_PDxn }, /* GXequiv        */
+    { R128_ROP3_Dn,   R128_ROP3_Dn   }, /* GXinvert       */
+    { R128_ROP3_SDno, R128_ROP3_PDno }, /* GXorReverse    */
+    { R128_ROP3_Sn,   R128_ROP3_Pn   }, /* GXcopyInverted */
+    { R128_ROP3_DSno, R128_ROP3_DPno }, /* GXorInverted   */
+    { R128_ROP3_DSan, R128_ROP3_DPan }, /* GXnand         */
+    { R128_ROP3_ONE,  R128_ROP3_ONE  }  /* GXset          */
+};
 #endif
+

@@ -36,30 +36,9 @@
 #include "exa.h"
 
 #include "r128_reg.h"
+#include "r128_rop.h"
 
 #include "xf86.h"
-
-static struct {
-    int rop;
-    int pattern;
-} R128_ROP[] = {
-    { R128_ROP3_ZERO, R128_ROP3_ZERO }, /* GXclear        */
-    { R128_ROP3_DSa,  R128_ROP3_DPa  }, /* Gxand          */
-    { R128_ROP3_SDna, R128_ROP3_PDna }, /* GXandReverse   */
-    { R128_ROP3_S,    R128_ROP3_P    }, /* GXcopy         */
-    { R128_ROP3_DSna, R128_ROP3_DPna }, /* GXandInverted  */
-    { R128_ROP3_D,    R128_ROP3_D    }, /* GXnoop         */
-    { R128_ROP3_DSx,  R128_ROP3_DPx  }, /* GXxor          */
-    { R128_ROP3_DSo,  R128_ROP3_DPo  }, /* GXor           */
-    { R128_ROP3_DSon, R128_ROP3_DPon }, /* GXnor          */
-    { R128_ROP3_DSxn, R128_ROP3_PDxn }, /* GXequiv        */
-    { R128_ROP3_Dn,   R128_ROP3_Dn   }, /* GXinvert       */
-    { R128_ROP3_SDno, R128_ROP3_PDno }, /* GXorReverse    */
-    { R128_ROP3_Sn,   R128_ROP3_Pn   }, /* GXcopyInverted */
-    { R128_ROP3_DSno, R128_ROP3_DPno }, /* GXorInverted   */
-    { R128_ROP3_DSan, R128_ROP3_DPan }, /* GXnand         */
-    { R128_ROP3_ONE,  R128_ROP3_ONE  }  /* GXset          */
-};
 
 /* Assumes that depth 15 and 16 can be used as depth 16, which is okay since we
  * require src and dest datatypes to be equal.
@@ -92,12 +71,14 @@ static Bool R128GetOffsetPitch(PixmapPtr pPix, int bpp, uint32_t *pitch_offset,
     R128InfoPtr   info      = R128PTR(pScrn);
 
     if (pitch > 16320 || pitch % info->ExaDriver->pixmapPitchAlign != 0) {
-        R128TRACE(("Bad pitch 0x%08x\n", pitch));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "Bad pitch 0x%08x\n", pitch));
 	return FALSE;
     }
 
     if (offset % info->ExaDriver->pixmapOffsetAlign != 0) {
-        R128TRACE(("Bad offset 0x%08x\n", offset));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "Bad offset 0x%08x\n", offset));
 	return FALSE;
     }
 
@@ -143,7 +124,7 @@ static void Emit2DState(ScrnInfoPtr pScrn)
 }
 
 #ifdef R128DRI
-static void EmitCCE2DState(ScrnInfoPtr pScrn)
+void EmitCCE2DState(ScrnInfoPtr pScrn)
 {
     R128InfoPtr   info      = R128PTR(pScrn);
     int has_src		    = info->state_2d.src_pitch_offset;
@@ -182,11 +163,13 @@ R128PrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
     uint32_t datatype, dst_pitch_offset;
 
     if (!R128GetDatatypeBpp(bpp, &datatype)) {
-        R128TRACE(("R128GetDatatypeBpp failed\n"));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "R128GetDatatypeBpp failed\n"));
 	return FALSE;
     }
     if (!R128GetPixmapOffsetPitch(pPixmap, &dst_pitch_offset)) {
-        R128TRACE(("R128GetPixmapOffsetPitch failed\n"));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "R128GetPixmapOffsetPitch failed\n"));
 	return FALSE;
     }
     if (info->state_2d.in_use) return FALSE;
@@ -281,15 +264,19 @@ R128PrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir, 
     uint32_t datatype, src_pitch_offset, dst_pitch_offset;
 
     if (!R128GetDatatypeBpp(bpp, &datatype)) {
-        R128TRACE(("R128GetDatatypeBpp failed\n"));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "R128GetDatatypeBpp failed\n"));
 	return FALSE;
     }
     if (!R128GetPixmapOffsetPitch(pSrcPixmap, &src_pitch_offset)) {
-        R128TRACE(("R128GetPixmapOffsetPitch source failed\n"));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "R128GetPixmapOffsetPitch source "
+                            "failed\n"));
 	return FALSE;
     }
     if (!R128GetPixmapOffsetPitch(pDstPixmap, &dst_pitch_offset)) {
-        R128TRACE(("R128GetPixmapOffsetPitch dest failed\n"));
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "R128GetPixmapOffsetPitch dest failed\n"));
 	return FALSE;
     }
     if (info->state_2d.in_use) return FALSE;
@@ -327,7 +314,7 @@ R128Sync(ScreenPtr pScreen, int marker)
     R128WaitForIdle(xf86ScreenToScrn(pScreen));
 }
 
-static void
+void
 R128Done(PixmapPtr pPixmap)
 {
     ScreenPtr     pScreen   = pPixmap->drawable.pScreen;
@@ -404,22 +391,29 @@ R128CCESync(ScreenPtr pScreen, int marker)
     R128CCEWaitForIdle(xf86ScreenToScrn(pScreen));
 }
 
-#ifdef RENDER
-#include "r128_exa_render.c"
-#endif
-
 #endif
 
 Bool
-R128EXAInit(ScreenPtr pScreen)
+R128EXAInit(ScreenPtr pScreen, int total)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr info  = R128PTR(pScrn);
+
+    info->ExaDriver = exaDriverAlloc();
+    if (!info->ExaDriver) {
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                    "Could not allocate EXA driver...\n");
+        return FALSE;
+    }
 
     info->ExaDriver->exa_major = EXA_VERSION_MAJOR;
     info->ExaDriver->exa_minor = EXA_VERSION_MINOR;
 
     info->ExaDriver->memoryBase = info->FB + pScrn->fbOffset;
+    info->ExaDriver->offScreenBase = pScrn->virtualY *
+                                        (pScrn->displayWidth *
+                                        info->CurrentLayout.pixel_bytes);
+    info->ExaDriver->memorySize = total;
     info->ExaDriver->flags = EXA_OFFSCREEN_PIXMAPS | EXA_OFFSCREEN_ALIGN_POT;
 
 #if EXA_VERSION_MAJOR > 2 || (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 3)
@@ -476,7 +470,7 @@ R128EXAInit(ScreenPtr pScreen)
     }
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "Initalizing 2D acceleration engine...\n");
+	       "Initializing 2D acceleration engine...\n");
 
     R128EngineInit(pScrn);
 

@@ -1,3 +1,1253 @@
+commit 38216bdc81321a8bb70a4c7ce226194537cc63d6
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Oct 22 21:01:12 2018 -0700
+
+    Version bumped to 6.12.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0dc8f6d099e74a61a280e8cd8b7b93b229f95c7f
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Oct 22 20:58:43 2018 -0700
+
+    Remove Dac6Bit option from man page
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 3c292d8f90eae03e6e6806a68a4f749bb39db9ba
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Oct 22 20:46:20 2018 -0700
+
+    Fix for build failure when --disable-dri option is specified
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 9d62b878ce40d9b5f7887c63a4e2498a52253c36
+Author: Helmut Grohne <helmut@subdivi.de>
+Date:   Mon Oct 22 19:06:15 2018 -0700
+
+    Another fix for cross build failure
+    
+    While commit 11b230b removed most usage of AC_CHECK_FILE, one more of
+    it was left in the compilation build script. This will hopefully fix
+    the cross build failure for good.
+    
+    Signed-off-by: Helmut Grohne <helmut@subdivi.de>
+
+commit 1b17c78941762c38e3ea37e0b259270286c18455
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Aug 4 13:38:53 2018 -0700
+
+    Version bumped to 6.11.102
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit b93302435030a8dc878ea330eafd5d8b87f0df03
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 13:11:42 2018 -0700
+
+    Consolidate acquisition of many options into two functions
+    
+    Move acquiring of the option settings into r128AcquireOption and
+    r128UMSOption functions.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit d82464bce67d9f7286c10fcb6c0a72d8e2fa6501
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 12:59:30 2018 -0700
+
+    Rename R128UMSOption to r128UMSOption
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 1fe5b0c0ab444d7c902a1d348ae4d982cf5c1790
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 12:47:54 2018 -0700
+
+    Version bumped to 6.11.101
+    
+    Performed DRI1 and EXA / XAA initialization code refactoring.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit fb625410051dcf2e0bbd3bbcefe83dbc53f9a33c
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 12:41:31 2018 -0700
+
+    Hold off enabling acceleration until EXA / XAA are fully initialized
+    
+    The turn on timing is premature. Wait until completion of the
+    initialization process.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit b395a05428831faf7a0502b52c78c99a8a4d6a8e
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 12:38:39 2018 -0700
+
+    Consolidate EXA initialization code into R128EXAInit
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 78b21efdce6f1231b0c9c8a4e801ee476acd5dc4
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 10:44:15 2018 -0700
+
+    Deprecate R128VerboseInitEXA
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 370dc01505718dc07d444b4534794d0b988d27ad
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 10:43:18 2018 -0700
+
+    Deprecate R128AccelInit
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 4685a918ff68e4a9e20df31c37028626b96743cb
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 10:42:03 2018 -0700
+
+    Deprecate R128EXAAccelInit
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit d9c7c8306bb8ff4812707bd8a533da4b0b917c1b
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Aug 2 10:22:29 2018 -0700
+
+    Consolidate frame buffer initialization code
+    
+    The previous implementation had duplicated code depending on which
+    standard is being used (i.e., DRI1 and / or EXA).
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit ec61d090f8286703a6557a6917976cffb141dc92
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Jul 27 16:52:03 2018 -0700
+
+    Prevent disabling of EXA inside R128ScreenInit
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 641d3d42b7214d01addfd21efb692531849b4603
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Jul 27 11:22:49 2018 -0700
+
+    Version bumped to 6.11.100
+    
+    Performed code refactoring and made tweaks to initialization behavior.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 7dbb89d6fd11d3521b8a0085f4d9640910081bf2
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Jul 27 11:08:29 2018 -0700
+
+    Move loading of EXA and XAA modules into R128PreInitAccel
+    
+    Moving them away from R128ScreenInit callback function. This is how
+    other DDXs do it.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c4c05c95ae9f1b02fcbc9f6ee431d466c1c0b519
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 19:58:06 2018 -0700
+
+    Move RAMDAC module initialization into R128LegacyMS
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit f54469efcad4a68d86abbd55b79f4660667a5fff
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 19:43:27 2018 -0700
+
+    Delete OPTION_DISPLAY option enumeration
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 2a903d7c00d67716815b68fb492b4d40e2f5684d
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 19:41:06 2018 -0700
+
+    Delete USE_CRT_ONLY conditional compilation directive
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit b5f0862bbbe604605be19621ba22d60aeb68d4b9
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 19:36:22 2018 -0700
+
+    Move many DDX UMS options into R128UMSOption
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0ef4fbad35a1e6d20cf72c7702ffd7ebf215cdb9
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 13:38:16 2018 -0700
+
+    Remove OPTION_DAC_8BIT option
+    
+    It is no longer used.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 4e3638c612831dea400be7d0d85d4d1ea9f9a4c2
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 26 10:11:59 2018 -0700
+
+    Evaluate software cursor option inside R128PreInit
+    
+    Since SWCursor option is referenced only once, it should be handled
+    inside R128PreInit callback function rather than R128ScreenInit
+    callback function.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 15d245de2814128b04dea2b640c4ba0b12926f24
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Wed Jul 25 20:19:06 2018 -0700
+
+    Evaluate EXA related options inside R128PreInit
+    
+    Since AccelMethod and RenderAccel options are referenced only once,
+    it should be handled inside R128PreInit callback function rather
+    than R128ScreenInit callback function.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 680aeee6730aa5b00bbc457b199b7643a6b0a1cb
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Wed Jul 25 19:50:40 2018 -0700
+
+    Evaluate NoAccel option inside R128PreInit
+    
+    Since NoAccel option is referenced only once, it should be handled
+    inside R128PreInit callback function rather than R128ScreenInit
+    callback function.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 23012b520e16fe2687e50c635e6c0a1f9d740c4e
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Tue Jul 24 13:39:57 2018 -0700
+
+    Separate EXA and XAA initialization
+    
+    Starting the process of separating legacy XAA and newer EXA
+    initialization code.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit fbbbcc0d33eb95869bcd0df26f3351f1531711db
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jul 21 06:15:39 2018 -0700
+
+    Version bumped to 6.11.99
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 321b8997ef72507ac70b5531789ff08ca9d40ce8
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 19 12:02:44 2018 -0700
+
+    Version bumped to 6.11.0
+    
+    Added a temporary fix for some RAGE 128 Pro models misidentifying
+    VGA as DVI and not able to automatically select the proper screen
+    resolution via the use of EDID (Extended Display Identification).
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 1f424303840091a3b96e0a3830a966316c5e4e7f
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 19 09:46:23 2018 -0700
+
+    Reorganize r128_exa.c
+    
+    Stop the use of #include to include r128_exa_render.c inside
+    r128_exa.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 3acc004c6bfc17aca397ff2cc8c0b1a0e2d4ee63
+Author: Dylan Aïssi <bob.dybian@gmail.com>
+Date:   Wed Jul 18 07:25:45 2018 -0700
+
+    Fix typo: Initalizing --> Initializing
+    
+    Signed-off-by: Dylan Aïssi <bob.dybian@gmail.com>
+
+commit 11b230ba61c00c69b23c5be592cf88492113355e
+Author: Helmut Grohne <helmut@subdivi.de>
+Date:   Wed Jul 18 07:04:27 2018 -0700
+
+    Fix for cross build failure
+    
+    configure.ac fails to cross build from source, because it abuses
+    AC_CHECK_FILE for finding headers. AC_CHECK_FILE is supposed to find
+    files on the host system. You cannot usually expect the host system
+    to have headers, so this use is incorrect. It happens to also break
+    cross compilation.
+    
+    Signed-off-by: Helmut Grohne <helmut@subdivi.de>
+
+commit d87d1aac04415d74ab32e820e9e351432c66cfdb
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Jul 13 07:18:18 2018 -0700
+
+    Fix for some RAGE 128 Pro causing out of range display error
+    
+    Due to faulty assumptions made by commit 2072d9a, many RAGE 128 Pro
+    VGA display will be detected as DVI, and causes out of range display
+    error with the attached monitor. While this commit is less than
+    perfect and only works on x86 platform, it avoids causing out of
+    range display error. With this fix, there is no longer the need to
+    specify the supported frequency range of the monitor inside xorg.conf.
+    The code was tested on RAGE 128 Pro Ultra 16 MB AGP.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c857cc319809790a5414ee75fc299d835fe964a7
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jul 12 16:11:07 2018 -0700
+
+    Convert tabs to white spaces for r128_output.c
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0a6d7d93acf57bfd8c0005b4a08e6cd054d7a76d
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 30 23:55:19 2018 -0500
+
+    Using __func__ string for debug message function identification
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 09f14ae89073c31118b747b8cd3663d4da9aa170
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 30 22:56:27 2018 -0500
+
+    Remove compilation warnings related to debug messages
+    
+    The variable sizes were not matching the intended print format.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 951af95a6ddb07b13304632eb4faf8b1256399a7
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 30 22:07:08 2018 -0500
+
+    Deprecate R128TRACE macro when generating debug messages
+    
+    Deprecating R128TRACE macro in favor of DEBUG macro used inside
+    OpenChrome DDX.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 16822a6a31731cb457ab35b79e5cd6f04c060625
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Tue Jun 26 17:40:11 2018 -0500
+
+    Move the location R128PreInitDRI is called
+    
+    Merge it into R128LegacyMS function.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c4c878d2ccb75fa75afe46e0e50ee9975c5c57fc
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Mon Jun 25 15:57:02 2018 +0200
+
+    Include <stdint.h> in order to declare uint32_t
+    
+    Apparently this is needed in src/atipcirename.h since xorg-server
+    1.20 in order to still build this driver.
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 6f18a15d237b5a6f4ee9d61634ff9bae827398bd
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 20:20:06 2018 -0500
+
+    Move R128InitDDA2Registers to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0be9774d038322a779c34a02461342794090cd58
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 20:20:05 2018 -0500
+
+    Move R128InitDDARegisters to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 732ab99127538b701f71c43086c617b39d9522aa
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 20:20:04 2018 -0500
+
+    Move R128RestorePLL2Registers to r128_crtc.c
+    
+    r128_crtc.c is the more logical place this function should be located.
+    R128PLL2WaitForReadUpdateComplete and R128PLL2WriteUpdate functions were
+    moved as well.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 9cf18d3f147e38c2c560c5904a71c993ca50a25e
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 20:20:03 2018 -0500
+
+    Move R128RestorePLLRegisters to r128_crtc.c
+    
+    r128_crtc.c is the more logical place this function should be located.
+    R128PLLWaitForReadUpdateComplete and R128PLLWriteUpdate functions were
+    moved as well.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit b4edfdf93e2d73e149ff550dfc19de3de145fb71
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 12:39:33 2018 -0500
+
+    Move R128RestoreDACRegisters to r128_output.c
+    
+    r128_output.c is the more logical place this function should be located.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 61a116603e57e48714fd3e62310f3df79a9fecc3
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 12:39:32 2018 -0500
+
+    Move R128InitDACRegisters to r128_output.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_output.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 6713ef02c5ee44f9c519f99934a595e5a5ac378c
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 12:39:31 2018 -0500
+
+    Move R128RestoreCrtc2Registers to r128_crtc.c
+    
+    r128_crtc.c is the more logical place this function should be located.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit dc218b45075ff1ffe497e25b34c528c5259ef398
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 17 12:39:30 2018 -0500
+
+    Move R128RestoreCrtcRegisters to r128_crtc.c
+    
+    r128_crtc.c is the more logical place this function should be located.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit e9564ed077af772dc3f82f15ac4c507ee1c16415
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 16 10:24:37 2018 -0500
+
+    Move R128InitPLL2Registers to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 07796aa604200a323edeb79d65d16945b60cbc63
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 16 10:24:36 2018 -0500
+
+    Move R128InitPLLRegisters to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c63eb246927f263b20966a76d80efd9acf9713af
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 16 10:24:35 2018 -0500
+
+    Convert R128Div to an inline function
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 5c494ca862257f1ce839febc8eda68a26353e544
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 16 10:24:34 2018 -0500
+
+    Move R128InitCrtc2Base to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 4e3da789346add1ce4505eb06a7e2c18daa2e843
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Jun 16 10:24:33 2018 -0500
+
+    Move R128InitCrtcBase to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 7d0526f74f85f4286396cd6b761a0b908d2936df
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jun 7 16:38:54 2018 -0500
+
+    Move R128InitCrtc2Registers to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 1f4d3e04e51d4665a99ea567a19b43bb351ae631
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Jun 7 16:38:22 2018 -0500
+
+    Move R128InitCrtcRegisters to r128_crtc.c
+    
+    It does not make sense for this function to be inside r128_driver.c
+    since it is only called from a function inside r128_crtc.c.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 80158cdedb8b0c2320c917aefd10e90869b00ef8
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Jun 4 19:45:40 2018 -0500
+
+    Move existing mode setting initialization code into R128LegacyMS
+    
+    In preparation of adding a new mode setting code path.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 6572c6cd14e60994e5cd1dc2f8fcc6f88c895c36
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Jun 4 19:45:20 2018 -0500
+
+    Move the location xf86CrtcConfigInit is called inside R128PreInit
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 656f5c276a2a18204d923eabcc1d0d98144505f8
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Jun 4 19:44:59 2018 -0500
+
+    Refactor R128PreInitWeight
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 73cbe46437a9a5affcdd9d605421ceff38616a6a
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Jun 4 19:44:39 2018 -0500
+
+    Remove R128ProbeDDC
+    
+    This removes a VBE (VESA BIOS Extension) related call when probing.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 600c2f47f0edc30adb67b58121be5c4d587ddff4
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 3 01:43:40 2018 -0500
+
+    Move R128PreInitVisual and R128PreInitGamma calls
+    
+    This is similar to how the sample code for PreInit callback function
+    shown in XFree86 DDX Design (ddxDesign.pdf) design guide does it.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 237cfee9d77d8adca0ad00661e6dc99caa28ad26
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 3 01:43:39 2018 -0500
+
+    Move the assignment to monitor field of ScrnInfoRec record
+    
+    This is similar to how the sample code for PreInit callback function
+    shown in XFree86 DDX Design (ddxDesign.pdf) design guide does it.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 3c2a02971b423359747d328e1ce16e6f4f800d9a
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 3 01:43:38 2018 -0500
+
+    Move assignment of color depth variables away from R128PreInitVisual
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 56ff44e0afd4d11d9a9daa4efd3031733b14d464
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sun Jun 3 01:43:37 2018 -0500
+
+    Move the location where R128PreInitGamma is called
+    
+    This is similar to how the sample code for PreInit callback function
+    shown in XFree86 DDX Design (ddxDesign.pdf) design guide does it.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 71d49f8697906eb0a9a7e4b5956203abef672da7
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Mon Jul 17 13:29:14 2017 +0100
+
+    xf86-video-r128: remove the GlxSetVisualConfigs stub and friends
+    
+    The function was an empty since 2008 at least. Remove it alongside the
+    unused GLX visuals code.
+    
+    With this all the GL/GLX dependencies in the driver are gone.
+    
+    Cc: Adam Jackson <ajax@redhat.com>
+    Cc: Connor Behan <connor.behan@gmail.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Tested-by: Connor Behan <connor.behan@gmail.com>
+
+commit 07273966d12c2693302b13c57c5f3abe8896e11c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit b4c89cbe61828abe5e561a886db3c2e0e9ece2ef
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 96940667038cdba4775fb810da2d77290c9eda62
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 5129d4dbc57e3a00144b6ccc23ca4c6ede9b6509
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bb4015a6b9394766d92186b4b71bbd49fa207532
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:19:23 2017 +1000
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b93b78f41154d24371acb1081c423351e8f370fd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:43:12 2017 -0800
+
+    xf86-video-r128 6.10.2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 5ab23b3a8ef18ab9ff96ac8be174380d36e185e5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a589dd6baf7fa26f8ea7008ba6bd533a5ba3e76e
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Apr 13 12:41:00 2016 -0400
+
+    Remove gatos advertisement
+    
+    There are many current working ways to use a TV tuner with Linux. This
+    is not one of them.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=94915
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 3328547c840664896c12d0fd2db8f63e3a398a62
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Wed Mar 16 18:59:23 2016 -0700
+
+    xextproto 7.1 support update to the source code
+    
+    While the compilation script was updated, for some reason, the source
+    code did not get the update.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
+commit d3f3c9549119629ddd9447a0f9b699a909b916d5
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Jan 21 22:12:25 2016 -0500
+
+    Bump to version 6.10.1
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Christopher Chavez <chrischavez@gmx.us>
+
+commit 562681414f38c6925da01b3fec0802f532cd9e53
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sun Jan 17 16:45:31 2016 -0500
+
+    Assume CRT in the absence of other monitors
+    
+    This patch is still untested, but it sounds like a lot of people need
+    it. Assuming that there are no monitors when DDC fails (which causes X
+    to abort with UMS) does not make sense. Some people will always have DDC
+    fail. For example, the pins are not connected on an iMac G3. For another
+    example, some RAGE128TF cards are known to lie that there is no VGA port
+    in the connector table.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit d6dd6c9ad5ba8e4950c9398d93298fea48745263
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Jul 2 18:20:58 2015 -0400
+
+    Really fix bitmasks for DDC
+    
+    For DDC, there is actually no difference between Pro2 cards and other
+    VGA desktop cards. Mobility / dualhead cards are the only ones that
+    differ.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=91113
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0b0f74ac7db42c772c8dda0167154bbdcb904d4f
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri May 1 19:43:42 2015 -0400
+
+    Bump to version 6.10.0
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit d05022a1c398787d3f21d023a8251cb128ba9f9f
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 23 21:57:10 2015 -0400
+
+    Update bitmasks for DDC
+    
+    A RAGE128TR chipset with a VGA port uses different i2c clock bits than
+    the VGA cards previously tested. It seems reasonable to assume that
+    other Pro2 cards are set up this way as well. In case this is incorrect,
+    a newly added xf86I2CProbeAddress() should still allow a monitor to be
+    detected.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Tobias Powalowski <tobias.powalowski@googlemail.com>
+
+commit b9c9779398828d4a1491e32f731aad6f79653976
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 23 21:51:45 2015 -0400
+
+    Look for VGA ports in the VBIOS
+    
+    It appears that not all r128 chipsets marked as DFP capable have DVI
+    ports. Some have VGA which we should detect. The old driver "detected"
+    this by attempting a DVI based probe for monitors. Anything that failed
+    this was assumed to be VGA.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Tobias Powalowski <tobias.powalowski@googlemail.com>
+
+commit cd72de385b5600229226c3a7248a89569b452136
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 23 21:47:52 2015 -0400
+
+    Fix allocation of private entity
+    
+    In the past, pR128Ent was only used for Xinerama-style dualhead and
+    therefore only allocated for cards with two outputs. However, recent
+    patches have repurposed pR128Ent as a general struct for things that are
+    card-specific instead of instance-specific. It therefore needs to be
+    allocated for all cards.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=89236
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Tobias Powalowski <tobias.powalowski@googlemail.com>
+
+commit 8c7daa148796a037ae2518154345719a735833c3
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Mar 4 00:31:33 2015 -0500
+
+    Restore PLL0 as well as PLL3
+    
+    Apparently, the text mode driver can use either register to store the
+    pixel clock. The assumption made previously was apparently corrupting
+    the console on PowerPC systems. Thanks to Michael Lorenz for the patch.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=32606
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit bfff401440c5bb72fb1ce90c804f3a5623d733b0
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 2 16:15:16 2015 -0500
+
+    Make it easier to find EXA
+    
+    As of commit e31564e1a21e73f4d20d6471da4fc7a9b63e4062, the xserver is
+    more picky about the order in which headers are included. We need to
+    account for this in order for the compile time exa.h check to succeed.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit e13dd1d338e4501c9d98c86c60806cc3d6801ea8
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 2 15:21:17 2015 -0500
+
+    Include dpmsconst header
+    
+    Fixes the build on some systems. Thank-you to Andrew Randrianasulu for
+    the patch.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 86533afa3dd9a3567330f157d03cd8188f89cc72
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Mar 2 15:18:19 2015 -0500
+
+    Typo fix
+    
+    This only affects XAA builds but still. Thank-you to Andrew
+    Randrianasulu for the patch.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit fcee44e469b22934a04bd3ee19ed101aaa176a54
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sat Aug 23 01:24:42 2014 -0400
+
+    Silence the non-debug warnings
+    
+    Some declarations of pScrn are only there for debugging purposes. This
+    should make gcc quieter on most systems.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 089c81ed6b6efc4610e0c5e5fcb36dfd58b83439
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sat Aug 23 01:19:25 2014 -0400
+
+    Fix whitespace near panel code
+    
+    This has been bugging me.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 0519b7b3aac61dfd57cbf3bb0da561ca9bd079cb
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sat Aug 23 01:13:18 2014 -0400
+
+    Improve panel code
+    
+    Since the driver uses PanelXRes and PanelYRes to calculate stretch
+    ratios, it should try harder to set them. For LVDS, we need to move the
+    xorg.conf check so that it executes before the BIOS check. For DVI, we
+    should read them from the mode that the X server has identified as being
+    the native one. Even then, PanelXRes and PanelYRes are not guaranteed to
+    be positive, so the driver should verify this before dividing by them.
+    
+    Another problem with the old panel code was that PanelPwrDly had no sane
+    default. It was also missing the check for Rage Pro 2 which lacks RMX.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit d49c3431e92a6120b054959ce6910e8decf61c67
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Jul 25 13:39:08 2014 -0700
+
+    Remove custom DGA code
+    
+    I have yet to see a use for the DGA code included in the driver.
+    According to radeon commits, it should be safe to replace it with DiDGA.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 6140081f0e8f41cf85b8e86f7a9474c20be9a2e9
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Aug 6 15:51:33 2014 -0700
+
+    Remove custom dualhead code
+    
+    There are probably no reasons left to use Xinerama over xrandr. This
+    removes the screen based dualhead code and the BIOS Display option in
+    xorg.conf. Additionally, R128ValidMode() is wrapped so that it can be
+    aware of multiple displays.
+    
+    Even though some Crtc functions refer to them, PanelXRes and PanelYRes
+    should be properties of the Output. If this change to the code seems
+    awkward, see http://marc.info/?t=107222330700001 for more information.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2072d9aa1a144e699f020a7f9e6a870e410bc9d7
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Aug 6 15:41:02 2014 -0700
+
+    Improve handling of monitor and output types
+    
+    Checking for OUTPUT_DVI is not the same as checking for MT_DFP. There
+    might be r128 cards with a DVI-I connector. These have the capability of
+    driving an MT_CRT so we now check the monitor type before programming
+    DAC or TMDS registers.
+    
+    This patch also removes R128ConnectorType and R128BIOSConnector because
+    they were not doing much. These data structures are more useful for the
+    radeon driver where there is a much wider range of cards.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 6dc5e9ab12dc31ae5de24f1d5c10c4fe80e7fe07
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Jul 24 00:01:46 2014 -0700
+
+    Unify byte swappers
+    
+    The cursor loading function was using a lot of code to swap bytes for
+    big endian systems. For awhile now, the solid picture support for EXA
+    has had a more optimized function that does the same thing.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 48e9b2359e8ab07095e1cb024e61b223a67cbc1a
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Jul 24 00:00:24 2014 -0700
+
+    Unify allocators
+    
+    RandR and Xv were using almost the same code to grab offscreen memory
+    from EXA and XAA.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 0d901460b375599c727928634d5f1067d2279844
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 17:47:44 2014 -0700
+
+    Use standard integers
+    
+    To fix another warning, we need to be consistent about when we use
+    CARD32 an when we use uint32_t. Xorg developers have decided on the
+    latter as a convention.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit b632e89b923179b16d0d38128209427f666b963c
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 02:20:18 2014 -0700
+
+    Remove pointless output
+    
+    This removes a debug line to fix a compiler warning and make the
+    crtc1 and crtc2 code more symmetric. The number of bits per pixel is
+    easy to find out anyway.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 866d0ad5295a7ca819b990f607d3e68582144b3b
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 17:39:59 2014 -0700
+
+    Cleanup info struct
+    
+    This removes some dead code from info. It also fixes some indentation
+    errors that were likely caused by sed.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit d05123eab19705d23310d06a299e61093abbe6cc
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 17:23:37 2014 -0700
+
+    Cleanup entity struct
+    
+    This moves HasCRTC2 into the entity to make it more similar to radeon.
+    It also removes IsDRIEnabled for being dead code.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit c95ce4251921f09101911ca5c4ff3940c38cc6b5
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 01:29:19 2014 -0700
+
+    Get entity without code duplication
+    
+    This fixes the parts of the code that were not using the helper function
+    to find the entity.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit e9ea36390ea0478c4b867df3bffdf2b122e0cb15
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 16 00:57:18 2014 -0700
+
+    Change register name
+    
+    Surely this is a typo.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 3bbce42414abea6c9977ff2b023ce3210d78f008
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 9 11:40:35 2014 -0700
+
+    Move display enabling code to DPMS
+    
+    This ensures that DAC, TMDS and LVDS enable bits are properly saved and
+    only set in the dpms hook.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit de7fa61b06c887df7a89154bf0f07703a665263a
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 9 11:37:12 2014 -0700
+
+    Split up output register functions
+    
+    The old code was writing registers more often than it needed to. TMDS
+    writes were triggered by changing the mode for an LVDS panel and RMX
+    writes were triggered by changing the mode for the second crtc. This
+    splits TMDS, LVDS, DAC and RMX calls into their own functions.
+    
+    Also note that routing bits have been specified. R128_FP_SEL_CRTC2 and
+    R128_LVDS_SEL_CRTC2 are always unset to make the panels use the first
+    crtc. R128_DAC_CRT_SEL_CRTC2 is unset unless LVDS is already using the
+    first crtc.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4c6457e1893e16546c03ca85a2fa7378b6c927f3
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Jul 7 18:49:15 2014 -0700
+
+    Map and unmap the MMIO better
+    
+    Now that the MMIO stays mapped during several function calls, we need to
+    remember to unmap it if any of them fail. This also fixes a PowerPC code
+    path that was not updated to work with the longer lived MMIO.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 539320429ff1cf8918862da3f950c8740ba63ec4
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Jul 4 12:44:30 2014 -0700
+
+    Only enable CRTCs for DPMSModeOn
+    
+    This was suggested as a power saving tip.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 3ed5035074540785f820906529fcce3148e0b387
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Jul 2 02:18:48 2014 -0700
+
+    Port to RandR
+    
+    This rearranges the r128 code to use the Crtc and Output interfaces
+    which should make the driver easier to maintain in the long run. User
+    visible changes include DDC detection working in more cases and the
+    ability to have multiple monitors with DRI.
+    
+    Some choices have been made to conserve memory. Modes can be switched up
+    to the highest resolution in xorg.conf. If this is 1024x768 for example,
+    the front buffer will be 1024x768 instead of 1024x1024. This means 90
+    and 270 degree rotations will not work. However, scalings, reflection
+    and 180 degree rotations can be set with the xrandr client program.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=75629
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4efc87f41d770c753ddf7f54fe334b6dbd7daf79
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Apr 28 21:26:44 2014 -0700
+
+    Fix ScreenInit with noAccel
+    
+    Now that EXA is on by default, we must remember to turn it off again if
+    acceleration is disabled.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 5ef5812a7a272aa08543cfd9b633f33c35e34dbd
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Mar 4 01:43:00 2014 -0800
+
+    Remove overuse of COMPOSITE_SETUP()
+    
+    COMPOSITE_SETUP() involves expensive register writes so
+    R128EnterServer() should call it once when there are 3D windows and 0
+    times when there are no 3D windows.
+    
+    Instead the code was calling it once when there were no 3D windows and
+    arbitrarily many times when there were 3D windows.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 9eb693640136bc8bcbe706d642519b4eb23286d4
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Nov 27 18:14:43 2013 -0800
+
+    Only declare PCITAG if we need it
+    
+    If libpciaccess is available, we do not need to declare the deprecated
+    PciTag member because it will not be used.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 35dc7faf9f87332f51ff0a6aa866a56eb017a950
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Nov 21 22:09:57 2013 -0800
+
+    Do not disable gouraud shading for a render op
+    
+    The EXA Composite hooks should not overwrite any register values
+    expected by DRI. Initial testing of the EXA support revealed that
+    R128_WINDOW_XY_OFFSET is one register where we have to be careful.
+    However, it was mostly tested using glxgears which does not stress the
+    driver very much. Going through the various 3D screensavers one by one
+    reveals a bug where certain models turn green if compositing is enabled.
+    
+    It seems that if we slightly alter the values passed to R128_SETUP_CNTL
+    and R128_PM4_VC_FPU_SETUP, the 3D driver will be happy and compositing
+    will still work. The proper way would be to constantly save and restore
+    register values but this showed poor performance when dragging 3D
+    windows across the screen.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d757fe10b9ce9493ef3cf854bc03088366aa7256
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Nov 22 22:55:59 2013 -0800
+
+    Drop dependence on xf86PciInfo.h
+    
+    It is about time we stop using this deprecated file and include pciids
+    locally.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d5da29d2ff94c80c8edefd6ccf5fd05fc6018870
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Fri Oct 25 20:31:05 2013 +0200
+
+    Do not use int10 or VBE on powerpc
+    
+    VBE was already skipped in the normal path, but not when setting
+    the PROBE_DETECT flag.
+    
+    Should avoid bus error seen in
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=622606 and
+    http://lists.x.org/archives/xorg/2012-February/053969.html
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ccdfcf5c05ccade823c9734212dcb865d8958cbb
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Wed Oct 2 20:36:38 2013 +0200
+
+    r128: bump to version 6.9.2
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 255cf857af35e4024486cbc2693872d020f09a29
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Sep 30 23:24:54 2013 -0700
+
+    Specify NULL for the platform probe function
+    
+    Apparently this has been required by the ABI since server 1.13.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit a98077959a65dfda1db900373969bd08479d3e43
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Sep 30 21:12:20 2013 -0700
+
+    Minor spacing changes
+    
+    A log message needed a space added, two source files needed whitespace
+    removed.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit aca6aa127f43deeed42c4d3bef8d1e6a735b4c50
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Mar 8 01:02:22 2013 -0800
+
+    Swap pixmap bytes for a solid picture on big endian host
+    
+    Some PowerPC users were reporting color errors that only happened with
+    EXA+DRI. This implements a recent bugfix in the Radeon driver which will
+    solve at least one of these problems.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 24f28a78fdcd056357f137650ca7f0f01c257d97
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Dec 19 10:41:14 2012 -0800
+
+    Remove call to obsolete miInitializeBackingStore()
+    
+    Definition was deleted from Xorg during 1.14 merge window, but has been
+    a no-op since 1.10 merge window.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
 commit ef4467b4aac70b9a8a1ef1194eb02d7551be2602
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Sep 28 11:25:17 2012 +1000

@@ -59,8 +59,8 @@ typedef struct {
    void*         BufferHandle;
    int		 videoOffset;
    RegionRec     clip;
-   CARD32        colorKey;
-   CARD32        videoStatus;
+   uint32_t      colorKey;
+   uint32_t      videoStatus;
    Time          offTime;
    Time          freeTime;
    int           ecp_div;
@@ -226,7 +226,7 @@ R128SetupImageVideo(ScreenPtr pScreen)
 	return NULL;
 
     adapt->type = XvWindowMask | XvInputMask | XvImageMask;
-    adapt->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
+    adapt->flags = VIDEO_OVERLAID_IMAGES /*| VIDEO_CLIP_TO_VIEWPORT*/;
     adapt->name = "ATI Rage128 Video Overlay";
     adapt->nEncodings = 1;
     adapt->pEncodings = &DummyEncoding;
@@ -405,7 +405,7 @@ R128DMA(
 #define BUFSIZE (R128_BUFFER_SIZE - R128_HOSTDATA_BLIT_OFFSET)
 #define MAXPASSES (MAXHEIGHT/(BUFSIZE/(MAXWIDTH*2))+1)
 
-    unsigned char *fb = (CARD8*)info->FB;
+    unsigned char *fb = (uint8_t*)info->FB;
     unsigned char *buf;
     int err=-1, i, idx, offset, hpass, passes, srcpassbytes, dstpassbytes;
     int sizes[MAXPASSES], list[MAXPASSES];
@@ -572,78 +572,80 @@ R128CopyData420(
 }
 
 
-static CARD32
+uint32_t
 R128AllocateMemory(
-   ScrnInfoPtr pScrn,
-   void **mem_struct,
-   int size
+    ScrnInfoPtr pScrn,
+    void **mem_struct,
+    int size,
+    int align,
+    Bool need_accel
 ){
-   R128InfoPtr info = R128PTR(pScrn);
-   ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
-   int offset = 0;
+    R128InfoPtr info = R128PTR(pScrn);
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    Bool do_linear = !need_accel;
+    uint32_t offset = 0;
 
-   if(!info->useEXA) {
+#ifdef HAVE_XAA_H
+    if (!info->accel && need_accel)
+        do_linear = FALSE;
+    else
+        do_linear = TRUE;
+#endif
+#ifdef USE_EXA
+    if (info->ExaDriver) {
+        ExaOffscreenArea *area = *mem_struct;
+
+        if (area != NULL) {
+            if (area->size >= size) return area->offset;
+
+            exaOffscreenFree(pScreen, area);
+        }
+
+        area = exaOffscreenAlloc(pScreen, size, align, TRUE, NULL, NULL);
+        *mem_struct = area;
+
+        if (area == NULL) return 0;
+        offset = area->offset;
+    }
+#endif
+    if (!info->useEXA && do_linear) {
         FBLinearPtr linear = *mem_struct;
         int cpp = info->CurrentLayout.pixel_bytes;
 
-	/* XAA allocates in units of pixels at the screen bpp, so adjust size appropriately. */
-	size = (size + cpp - 1) / cpp;
+        /* XAA allocates in units of pixels at the screen bpp, so adjust size appropriately. */
+        size  = (size  + cpp - 1) / cpp;
+        align = (align + cpp - 1) / cpp;
 
         if(linear) {
-	     if(linear->size >= size)
-	        return linear->offset * cpp;
+            if(linear->size >= size)
+                return linear->offset * cpp;
 
-	     if(xf86ResizeOffscreenLinear(linear, size))
-	        return linear->offset * cpp;
+            if(xf86ResizeOffscreenLinear(linear, size))
+                return linear->offset * cpp;
 
-	     xf86FreeOffscreenLinear(linear);
+            xf86FreeOffscreenLinear(linear);
         }
 
-
-        linear = xf86AllocateOffscreenLinear(pScreen, size, 8,
-						NULL, NULL, NULL);
+        linear = xf86AllocateOffscreenLinear(pScreen, size, align, NULL, NULL, NULL);
 	*mem_struct = linear;
 
         if(!linear) {
-	     int max_size;
+            int max_size;
 
-	     xf86QueryLargestOffscreenLinear(pScreen, &max_size, 8,
-						PRIORITY_EXTREME);
+            xf86QueryLargestOffscreenLinear(pScreen, &max_size, align, PRIORITY_EXTREME);
+            if(max_size < size) return 0;
 
-	     if(max_size < size)
-	        return 0;
+            xf86PurgeUnlockedOffscreenAreas(pScreen);
+            linear = xf86AllocateOffscreenLinear(pScreen, size, align, NULL, NULL, NULL);
 
-	     xf86PurgeUnlockedOffscreenAreas(pScreen);
-	     linear = xf86AllocateOffscreenLinear(pScreen, size, 8,
-						NULL, NULL, NULL);
-
-	     if(!linear) return 0;
+            *mem_struct = linear;
+            if(!linear) return 0;
         }
 
-	offset = linear->offset * cpp;
-   }
-#ifdef USE_EXA
-   else {
-        /* EXA support based on mga driver */
-	ExaOffscreenArea *area = *mem_struct;
+        offset = linear->offset * cpp;
+    }
 
-	if(area) {
-	     if(area->size >= size)
-	        return area->offset;
-
-	     exaOffscreenFree(pScrn->pScreen, area);
-	}
-
-	area = exaOffscreenAlloc(pScrn->pScreen, size, 64, TRUE, NULL, NULL);
-	*mem_struct = area;
-
-	if(!area) return 0;
-
-	offset = area->offset;
-   }
-#endif
-
-   return offset;
+    return offset;
 }
 
 static void
@@ -659,12 +661,16 @@ R128DisplayVideo422(
     short drw_w, short drw_h
 ){
     R128InfoPtr info = R128PTR(pScrn);
+    R128EntPtr pR128Ent = R128EntPriv(pScrn);
+    xf86OutputPtr output = R128FirstOutput(pR128Ent->pCrtc[0]);
+    R128OutputPrivatePtr r128_output = output->driver_private;
     unsigned char *R128MMIO = info->MMIO;
     R128PortPrivPtr pPriv = info->adaptor->pPortPrivates[0].ptr;
+
     int v_inc, h_inc, step_by, tmp, v_inc_shift;
     int p1_h_accum_init, p23_h_accum_init;
     int p1_v_accum_init;
-    Bool rmx_active;
+    Bool rmx_active = FALSE;
 
     R128ECP(pScrn, pPriv);
 
@@ -673,10 +679,11 @@ R128DisplayVideo422(
         v_inc_shift++;
     if (pScrn->currentMode->Flags & V_DBLSCAN)
         v_inc_shift--;
-    
-    rmx_active = INREG(R128_FP_VERT_STRETCH) & R128_VERT_STRETCH_ENABLE;
+
+    if (r128_output->PanelYRes > 0)
+        rmx_active = INREG(R128_FP_VERT_STRETCH) & R128_VERT_STRETCH_ENABLE;
     if (rmx_active) {
-        v_inc = ((src_h * pScrn->currentMode->CrtcVDisplay / info->PanelYRes) << v_inc_shift) / drw_h;
+        v_inc = ((src_h * pScrn->currentMode->CrtcVDisplay / r128_output->PanelYRes) << v_inc_shift) / drw_h;
     } else {
         v_inc = (src_h << v_inc_shift) / drw_h;
     }
@@ -745,22 +752,26 @@ R128DisplayVideo420(
     short drw_w, short drw_h
 ){
     R128InfoPtr info = R128PTR(pScrn);
+    R128EntPtr pR128Ent = R128EntPriv(pScrn);
+    xf86OutputPtr output = R128FirstOutput(pR128Ent->pCrtc[0]);
+    R128OutputPrivatePtr r128_output = output->driver_private;
     unsigned char *R128MMIO = info->MMIO;
     R128PortPrivPtr pPriv = info->adaptor->pPortPrivates[0].ptr;
     int v_inc, h_inc, step_by, tmp, leftUV, v_inc_shift;
     int p1_h_accum_init, p23_h_accum_init;
     int p1_v_accum_init, p23_v_accum_init;
-    Bool rmx_active;
+    Bool rmx_active = FALSE;
 
     v_inc_shift = 20;
     if (pScrn->currentMode->Flags & V_INTERLACE)
         v_inc_shift++;
     if (pScrn->currentMode->Flags & V_DBLSCAN)
         v_inc_shift--;
-    
-    rmx_active = INREG(R128_FP_VERT_STRETCH) & R128_VERT_STRETCH_ENABLE;
+
+    if (r128_output->PanelYRes > 0)
+        rmx_active = INREG(R128_FP_VERT_STRETCH) & R128_VERT_STRETCH_ENABLE;
     if (rmx_active) {
-        v_inc = ((src_h * pScrn->currentMode->CrtcVDisplay / info->PanelYRes) << v_inc_shift) / drw_h;
+        v_inc = ((src_h * pScrn->currentMode->CrtcVDisplay / r128_output->PanelYRes) << v_inc_shift) / drw_h;
     } else {
         v_inc = (src_h << v_inc_shift) / drw_h;
     }
@@ -841,17 +852,24 @@ R128PutImage(
 ){
    R128InfoPtr info = R128PTR(pScrn);
    R128PortPrivPtr pPriv = (R128PortPrivPtr)data;
-   unsigned char *fb = (CARD8*)info->FB;
+   unsigned char *fb = (uint8_t*)info->FB;
    INT32 xa, xb, ya, yb;
    int new_size, offset, s1offset, s2offset, s3offset;
    int srcPitch, srcPitch2, dstPitch;
    int d1line, d2line, d3line, d1offset, d2offset, d3offset;
    int top, left, npixels, nlines;
    BoxRec dstBox;
-   CARD32 tmp;
+   uint32_t tmp;
+
+   /* Currently, the video is only visible on the first monitor.
+    * In the future we could try to make this smarter, or just implement
+    * textured video. */
+   xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+   xf86CrtcPtr crtc = xf86_config->crtc[0];
+
 #if X_BYTE_ORDER == X_BIG_ENDIAN
    unsigned char *R128MMIO = info->MMIO;
-   CARD32 config_cntl = INREG(R128_CONFIG_CNTL);
+   uint32_t config_cntl = INREG(R128_CONFIG_CNTL);
 
    /* We need to disable byte swapping, or the data gets mangled */
    OUTREG(R128_CONFIG_CNTL, config_cntl &
@@ -893,10 +911,10 @@ R128PutImage(
 			     clipBoxes, width, height))
 	return Success;
 
-   dstBox.x1 -= pScrn->frameX0;
-   dstBox.x2 -= pScrn->frameX0;
-   dstBox.y1 -= pScrn->frameY0;
-   dstBox.y2 -= pScrn->frameY0;
+   dstBox.x1 -= crtc->x;
+   dstBox.x2 -= crtc->x;
+   dstBox.y1 -= crtc->y;
+   dstBox.y2 -= crtc->y;
 
    switch(id) {
    case FOURCC_YV12:
@@ -922,11 +940,12 @@ R128PutImage(
 	break;
    }
 
-   if(!(pPriv->videoOffset = R128AllocateMemory(pScrn, &(pPriv->BufferHandle),
-		pPriv->doubleBuffer ? (new_size << 1) : new_size)))
-   {
-	return BadAlloc;
-   }
+   pPriv->videoOffset = R128AllocateMemory(pScrn, &(pPriv->BufferHandle),
+                                           pPriv->doubleBuffer ? (new_size << 1) : new_size,
+                                           64, FALSE);
+
+   if (pPriv->videoOffset == 0)
+        return BadAlloc;
 
    pPriv->currentBuffer ^= 1;
 

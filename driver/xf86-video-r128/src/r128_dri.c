@@ -53,13 +53,11 @@
 
 				/* X and server generic header files */
 #include "xf86.h"
-#include "xf86PciInfo.h"
 #include "windowstr.h"
 
 #include "shadowfb.h"
-				/* GLX/DRI/DRM definitions */
+				/* DRI/DRM definitions */
 #define _XF86DRI_SERVER_
-#include "GL/glxtokens.h"
 #include "sarea.h"
 
 static size_t r128_drm_page_size;
@@ -70,209 +68,6 @@ static void R128DRITransitionMultiToSingle3d(ScreenPtr pScreen);
 static void R128DRITransitionSingleToMulti3d(ScreenPtr pScreen);
 
 static void R128DRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
-
-/* Initialize the visual configs that are supported by the hardware.
-   These are combined with the visual configs that the indirect
-   rendering core supports, and the intersection is exported to the
-   client. */
-static Bool R128InitVisualConfigs(ScreenPtr pScreen)
-{
-    ScrnInfoPtr       pScrn            = xf86ScreenToScrn(pScreen);
-    R128InfoPtr       info             = R128PTR(pScrn);
-    int               numConfigs       = 0;
-    __GLXvisualConfig *pConfigs        = NULL;
-    R128ConfigPrivPtr pR128Configs     = NULL;
-    R128ConfigPrivPtr *pR128ConfigPtrs = NULL;
-    int               i, accum, stencil, db;
-
-    switch (info->CurrentLayout.pixel_code) {
-    case 8:  /* 8bpp mode is not support */
-    case 15: /* FIXME */
-    case 24: /* FIXME */
-	xf86DrvMsg(pScreen->myNum, X_ERROR,
-		   "[dri] R128DRIScreenInit failed (depth %d not supported).  "
-		   "Disabling DRI.\n", info->CurrentLayout.pixel_code);
-	return FALSE;
-
-#define R128_USE_ACCUM   1
-#define R128_USE_STENCIL 1
-#define R128_USE_DB      1
-
-    case 16:
-	numConfigs = 1;
-	if (R128_USE_ACCUM)   numConfigs *= 2;
-	if (R128_USE_STENCIL) numConfigs *= 2;
-	if (R128_USE_DB)      numConfigs *= 2;
-
-	if (!(pConfigs
-	      = (__GLXvisualConfig*)calloc(sizeof(__GLXvisualConfig),
-					      numConfigs))) {
-	    return FALSE;
-	}
-	if (!(pR128Configs
-	      = (R128ConfigPrivPtr)calloc(sizeof(R128ConfigPrivRec),
-					     numConfigs))) {
-	    free(pConfigs);
-	    return FALSE;
-	}
-	if (!(pR128ConfigPtrs
-	      = (R128ConfigPrivPtr*)calloc(sizeof(R128ConfigPrivPtr),
-					      numConfigs))) {
-	    free(pConfigs);
-	    free(pR128Configs);
-	    return FALSE;
-	}
-
-	i = 0;
-	for (db = 0; db <= R128_USE_DB; db++) {
-	  for (accum = 0; accum <= R128_USE_ACCUM; accum++) {
-	    for (stencil = 0; stencil <= R128_USE_STENCIL; stencil++) {
-		pR128ConfigPtrs[i] = &pR128Configs[i];
-
-		pConfigs[i].vid                = (VisualID)(-1);
-		pConfigs[i].class              = -1;
-		pConfigs[i].rgba               = TRUE;
-		pConfigs[i].redSize            = 5;
-		pConfigs[i].greenSize          = 6;
-		pConfigs[i].blueSize           = 5;
-		pConfigs[i].alphaSize          = 0;
-		pConfigs[i].redMask            = 0x0000F800;
-		pConfigs[i].greenMask          = 0x000007E0;
-		pConfigs[i].blueMask           = 0x0000001F;
-		pConfigs[i].alphaMask          = 0x00000000;
-		if (accum) { /* Simulated in software */
-		    pConfigs[i].accumRedSize   = 16;
-		    pConfigs[i].accumGreenSize = 16;
-		    pConfigs[i].accumBlueSize  = 16;
-		    pConfigs[i].accumAlphaSize = 0;
-		} else {
-		    pConfigs[i].accumRedSize   = 0;
-		    pConfigs[i].accumGreenSize = 0;
-		    pConfigs[i].accumBlueSize  = 0;
-		    pConfigs[i].accumAlphaSize = 0;
-		}
-		if (db)
-		    pConfigs[i].doubleBuffer       = TRUE;
-		else
-		    pConfigs[i].doubleBuffer       = FALSE;
-		pConfigs[i].stereo             = FALSE;
-		pConfigs[i].bufferSize         = 16;
-		pConfigs[i].depthSize          = 16;
-		if (stencil)
-		    pConfigs[i].stencilSize    = 8; /* Simulated in software */
-		else
-		    pConfigs[i].stencilSize    = 0;
-		pConfigs[i].auxBuffers         = 0;
-		pConfigs[i].level              = 0;
-		if (accum || stencil) {
-		   pConfigs[i].visualRating    = GLX_SLOW_CONFIG;
-		} else {
-		   pConfigs[i].visualRating    = GLX_NONE;
-		}
-		pConfigs[i].transparentPixel   = GLX_NONE;
-		pConfigs[i].transparentRed     = 0;
-		pConfigs[i].transparentGreen   = 0;
-		pConfigs[i].transparentBlue    = 0;
-		pConfigs[i].transparentAlpha   = 0;
-		pConfigs[i].transparentIndex   = 0;
-		i++;
-	    }
-	  }
-	}
-	break;
-
-    case 32:
-	numConfigs = 1;
-	if (R128_USE_ACCUM)   numConfigs *= 2;
-	if (R128_USE_STENCIL) numConfigs *= 2;
-	if (R128_USE_DB)      numConfigs *= 2;
-
-	if (!(pConfigs
-	      = (__GLXvisualConfig*)calloc(sizeof(__GLXvisualConfig),
-					      numConfigs))) {
-	    return FALSE;
-	}
-	if (!(pR128Configs
-	      = (R128ConfigPrivPtr)calloc(sizeof(R128ConfigPrivRec),
-					     numConfigs))) {
-	    free(pConfigs);
-	    return FALSE;
-	}
-	if (!(pR128ConfigPtrs
-	      = (R128ConfigPrivPtr*)calloc(sizeof(R128ConfigPrivPtr),
-					      numConfigs))) {
-	    free(pConfigs);
-	    free(pR128Configs);
-	    return FALSE;
-	}
-
-	i = 0;
-	for (db = 0; db <= R128_USE_DB; db++) {
-	  for (accum = 0; accum <= R128_USE_ACCUM; accum++) {
-	    for (stencil = 0; stencil <= R128_USE_STENCIL; stencil++) {
-		pR128ConfigPtrs[i] = &pR128Configs[i];
-
-		pConfigs[i].vid                = (VisualID)(-1);
-		pConfigs[i].class              = -1;
-		pConfigs[i].rgba               = TRUE;
-		pConfigs[i].redSize            = 8;
-		pConfigs[i].greenSize          = 8;
-		pConfigs[i].blueSize           = 8;
-		pConfigs[i].alphaSize          = 0;
-		pConfigs[i].redMask            = 0x00FF0000;
-		pConfigs[i].greenMask          = 0x0000FF00;
-		pConfigs[i].blueMask           = 0x000000FF;
-		pConfigs[i].alphaMask          = 0x00000000;
-		if (accum) { /* Simulated in software */
-		    pConfigs[i].accumRedSize   = 16;
-		    pConfigs[i].accumGreenSize = 16;
-		    pConfigs[i].accumBlueSize  = 16;
-		    pConfigs[i].accumAlphaSize = 0;
-		} else {
-		    pConfigs[i].accumRedSize   = 0;
-		    pConfigs[i].accumGreenSize = 0;
-		    pConfigs[i].accumBlueSize  = 0;
-		    pConfigs[i].accumAlphaSize = 0;
-		}
-		if (db)
-		    pConfigs[i].doubleBuffer       = TRUE;
-		else
-		    pConfigs[i].doubleBuffer       = FALSE;
-		pConfigs[i].stereo             = FALSE;
-		pConfigs[i].bufferSize         = 24;
-		if (stencil) {
-		    pConfigs[i].depthSize      = 24;
-		    pConfigs[i].stencilSize    = 8;
-		} else {
-		    pConfigs[i].depthSize      = 24;
-		    pConfigs[i].stencilSize    = 0;
-		}
-		pConfigs[i].auxBuffers         = 0;
-		pConfigs[i].level              = 0;
-		if (accum) {
-		   pConfigs[i].visualRating    = GLX_SLOW_CONFIG;
-		} else {
-		   pConfigs[i].visualRating    = GLX_NONE;
-		}
-		pConfigs[i].transparentPixel   = GLX_NONE;
-		pConfigs[i].transparentRed     = 0;
-		pConfigs[i].transparentGreen   = 0;
-		pConfigs[i].transparentBlue    = 0;
-		pConfigs[i].transparentAlpha   = 0;
-		pConfigs[i].transparentIndex   = 0;
-		i++;
-	    }
-	  }
-	}
-	break;
-    }
-
-    info->numVisualConfigs   = numConfigs;
-    info->pVisualConfigs     = pConfigs;
-    info->pVisualConfigsPriv = pR128Configs;
-    GlxSetVisualConfigs(numConfigs, pConfigs, (void**)pR128ConfigPtrs);
-    return TRUE;
-}
 
 /* Create the Rage 128-specific context information */
 static Bool R128CreateContext(ScreenPtr pScreen, VisualPtr visual,
@@ -309,7 +104,11 @@ static void R128EnterServer(ScreenPtr pScreen)
 #endif
 #ifdef USE_EXA
     if (info->ExaDriver) exaMarkSync(pScreen);
-    info->state_2d.composite_setup = FALSE;
+    /* EXA and DRI are fighting over control of the texture hardware.
+     * That means we need to setup compositing when the server wakes
+     * up if a 3D app is running.
+     */
+    if (info->have3DWindows) info->state_2d.composite_setup = FALSE;
 #endif
 }
 
@@ -394,7 +193,7 @@ static void R128DRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 indx)
     pboxSave = pbox = REGION_RECTS(prgn);
     nboxSave = nbox = REGION_NUM_RECTS(prgn);
 
-    (*info->accel->SetupForSolidFill)(pScrn, 0, GXcopy, (CARD32)(-1));
+    (*info->accel->SetupForSolidFill)(pScrn, 0, GXcopy, (uint32_t)(-1));
     for (; nbox; nbox--, pbox++) {
 	(*info->accel->SubsequentSolidFillRect)(pScrn,
 						pbox->x1 + info->fbX,
@@ -412,7 +211,7 @@ static void R128DRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 indx)
     nbox = nboxSave;
 
     /* FIXME: this needs to consider depth tiling. */
-    (*info->accel->SetupForSolidFill)(pScrn, depth, GXcopy, (CARD32)(-1));
+    (*info->accel->SetupForSolidFill)(pScrn, depth, GXcopy, (uint32_t)(-1));
     for (; nbox; nbox--, pbox++)
 	(*info->accel->SubsequentSolidFillRect)(pScrn,
 						pbox->x1 + info->depthX,
@@ -644,7 +443,7 @@ static Bool R128DRIAgpInit(R128InfoPtr info, ScreenPtr pScreen)
 static Bool R128DRIPciInit(R128InfoPtr info, ScreenPtr pScreen)
 {
     unsigned char *R128MMIO = info->MMIO;
-    CARD32 chunk;
+    uint32_t chunk;
     int ret;
     int flags;
 
@@ -985,9 +784,8 @@ Bool R128DRIScreenInit(ScreenPtr pScreen)
     int           major, minor, patch;
     drmVersionPtr version;
 
-    /* Check that the GLX, DRI, and DRM modules have been loaded by testing
+    /* Check that the DRI, and DRM modules have been loaded by testing
      * for known symbols in each module. */
-    if (!xf86LoaderCheckSymbol("GlxSetVisualConfigs")) return FALSE;
     if (!xf86LoaderCheckSymbol("drmAvailable"))        return FALSE;
     if (!xf86LoaderCheckSymbol("DRIQueryVersion")) {
       xf86DrvMsg(pScreen->myNum, X_ERROR,
@@ -1201,10 +999,6 @@ Bool R128DRIScreenInit(ScreenPtr pScreen)
 
 				/* FIXME: When are these mappings unmapped? */
 
-    if (!R128InitVisualConfigs(pScreen)) {
-	R128DRICloseScreen(pScreen);
-	return FALSE;
-    }
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "[dri] Visual configs initialized\n");
 
     return TRUE;
@@ -1367,14 +1161,6 @@ void R128DRICloseScreen(ScreenPtr pScreen)
 	DRIDestroyInfoRec(info->pDRIInfo);
 	info->pDRIInfo = NULL;
     }
-    if (info->pVisualConfigs) {
-	free(info->pVisualConfigs);
-	info->pVisualConfigs = NULL;
-    }
-    if (info->pVisualConfigsPriv) {
-	free(info->pVisualConfigsPriv);
-	info->pVisualConfigsPriv = NULL;
-    }
 }
 
 /* Use callbacks from dri.c to support pageflipping mode for a single
@@ -1410,12 +1196,12 @@ static void R128DRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     if (!info->useEXA) {
 	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
 					       1, 1, GXcopy,
-					       (CARD32)(-1), -1);
+					       (uint32_t)(-1), -1);
     }
 #endif
 #ifdef USE_EXA
     if (info->useEXA) {
-        CARD32 src_pitch_offset, dst_pitch_offset, datatype;
+        uint32_t src_pitch_offset, dst_pitch_offset, datatype;
 
 	R128GetPixmapOffsetPitch(pPix, &src_pitch_offset);
 	dst_pitch_offset = src_pitch_offset + (info->backOffset >> 5);
@@ -1462,7 +1248,7 @@ static void R128EnablePageFlip(ScreenPtr pScreen)
 	if (!info->useEXA) {
 	    (*info->accel->SetupForScreenToScreenCopy)(pScrn,
 						   1, 1, GXcopy,
-						   (CARD32)(-1), -1);
+						   (uint32_t)(-1), -1);
 
 	    (*info->accel->SubsequentScreenToScreenCopy)(pScrn,
 						     0,
@@ -1475,7 +1261,7 @@ static void R128EnablePageFlip(ScreenPtr pScreen)
 #endif
 #ifdef USE_EXA
 	if (info->useEXA) {
-	    CARD32 src_pitch_offset, dst_pitch_offset, datatype;
+	    uint32_t src_pitch_offset, dst_pitch_offset, datatype;
 
 	    R128GetPixmapOffsetPitch(pPix, &src_pitch_offset);
 	    dst_pitch_offset = src_pitch_offset + (info->backOffset >> 5);
@@ -1522,9 +1308,6 @@ static void R128DRITransitionTo3d(ScreenPtr pScreen)
     R128EnablePageFlip(pScreen);
 
     info->have3DWindows = 1;
-
-    if (info->cursor_start)
-        xf86ForceHWCursor(pScreen, TRUE);
 }
 
 static void R128DRITransitionTo2d(ScreenPtr pScreen)
@@ -1547,7 +1330,4 @@ static void R128DRITransitionTo2d(ScreenPtr pScreen)
     }
 
     info->have3DWindows = 0;
-
-    if (info->cursor_start)
-        xf86ForceHWCursor(pScreen, FALSE);
 }

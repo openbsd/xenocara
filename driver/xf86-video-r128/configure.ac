@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-r128],
-        [6.9.1],
+        [6.12.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-r128])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -38,8 +38,6 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
-
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_DISABLE_STATIC
@@ -76,7 +74,7 @@ XORG_DRIVER_CHECK_EXT(XF86MISC, xf86miscproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.3 xproto fontsproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
@@ -86,14 +84,26 @@ sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
 # Checks for libraries.
 
 if test "$DRI" != no; then
-	AC_CHECK_FILE([${sdkdir}/dri.h],
-                      [have_dri_h="yes"], [have_dri_h="no"])
-	AC_CHECK_FILE([${sdkdir}/sarea.h],
-                      [have_sarea_h="yes"], [have_sarea_h="no"])
-	AC_CHECK_FILE([${sdkdir}/dristruct.h],
-                      [have_dristruct_h="yes"], [have_dristruct_h="no"])
-	AC_CHECK_FILE([${sdkdir}/damage.h],
-                      [have_damage_h="yes"], [have_damage_h="no"])
+	if test -f "${sdkdir}/dri.h"; then
+		have_dri_h="yes"
+	else
+		have_dri_h="no"
+	fi
+	if test -f "${sdkdir}/sarea.h"; then
+		have_sarea_h="yes"
+	else
+		have_sarea_h="no"
+	fi
+	if test -f "${sdkdir}/dristruct.h"; then
+		have_dristruct_h="yes"
+	else
+		have_dristruct_h="no"
+	fi
+	if test -f "${sdkdir}/damage.h"; then
+		have_damage_h="yes"
+	else
+		have_damage_h="no"
+	fi
 fi
 
 AC_MSG_CHECKING([whether to include DRI support])
@@ -121,7 +131,7 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 AC_MSG_CHECKING([whether to enable EXA support])
 if test "x$EXA" = xyes; then
         AC_MSG_RESULT(yes)
-	AC_CHECK_FILE(${sdkdir}/exa.h, [have_exa_h="yes"], [have_exa_h="no"])
+        AS_IF([test -f "${sdkdir}/exa.h"], [have_exa_h="yes"], [have_exa_h="no"])
 else
         AC_MSG_RESULT(no)
 fi
@@ -131,7 +141,7 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 if test "x$have_exa_h" = xyes; then
         AC_MSG_CHECKING([whether EXA version is at least 2.0.0])
         AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-#include <xorg-server.h>
+#include "xorg-server.h"
 #include "exa.h"
 #if EXA_VERSION_MAJOR < 2
 #error OLD EXA!

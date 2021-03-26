@@ -43,14 +43,11 @@
 #include "atipcirename.h"
 
 #include "xf86.h"
-#include "xf86PciInfo.h"
-
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #endif
 
-#include "compat-api.h"
 #include "r128_probe.h"
 
 #ifndef XSERVER_LIBPCIACCESS
@@ -237,6 +234,7 @@ r128_get_scrninfo(int entity_num)
 {
     ScrnInfoPtr   pScrn = NULL;
     EntityInfoPtr pEnt;
+    DevUnion*     pPriv;
 
     pScrn = xf86ConfigPciEntity(pScrn, 0, entity_num, R128PciChipsets,
                                 NULL,
@@ -264,6 +262,20 @@ r128_get_scrninfo(int entity_num)
 
     pEnt = xf86GetEntityInfo(entity_num);
 
+    /* Allocate private entity used for convenience with one or two heads. */
+    if (gR128EntityIndex < 0) {
+        gR128EntityIndex = xf86AllocateEntityPrivateIndex();
+        pPriv = xf86GetEntityPrivate(pScrn->entityList[0], gR128EntityIndex);
+
+        if (!pPriv->ptr) {
+            R128EntPtr pR128Ent;
+            pPriv->ptr = xnfcalloc(sizeof(R128EntRec), 1);
+            pR128Ent = pPriv->ptr;
+            pR128Ent->HasSecondary = FALSE;
+            pR128Ent->IsSecondaryRestored = FALSE;
+        }
+    }
+
     /* mobility cards support Dual-Head, mark the entity as sharable*/
     if (pEnt->chipset == PCI_CHIP_RAGE128LE ||
         pEnt->chipset == PCI_CHIP_RAGE128LF ||
@@ -271,7 +283,6 @@ r128_get_scrninfo(int entity_num)
         pEnt->chipset == PCI_CHIP_RAGE128ML)
     {
         static int instance = 0;
-        DevUnion* pPriv;
 
         xf86SetEntitySharable(entity_num);
 
@@ -279,24 +290,6 @@ r128_get_scrninfo(int entity_num)
                                        pScrn->entityList[0],
                                        instance);
 
-        if (gR128EntityIndex < 0)
-        {
-            gR128EntityIndex = xf86AllocateEntityPrivateIndex();
-
-            pPriv = xf86GetEntityPrivate(pScrn->entityList[0],
-                                         gR128EntityIndex);
-
-            if (!pPriv->ptr)
-            {
-                R128EntPtr pR128Ent;
-                pPriv->ptr = xnfcalloc(sizeof(R128EntRec), 1);
-                pR128Ent = pPriv->ptr;
-                pR128Ent->IsDRIEnabled = FALSE;
-                pR128Ent->BypassSecondary = FALSE;
-                pR128Ent->HasSecondary = FALSE;
-                pR128Ent->IsSecondaryRestored = FALSE;
-            }
-        }
         instance++;
     }
 
@@ -379,6 +372,9 @@ _X_EXPORT DriverRec R128 =
     NULL,
 #ifdef XSERVER_LIBPCIACCESS
     r128_device_match,
-    r128_pci_probe
+    r128_pci_probe,
+#endif
+#ifdef XSERVER_PLATFORM_BUS
+    NULL
 #endif
 };

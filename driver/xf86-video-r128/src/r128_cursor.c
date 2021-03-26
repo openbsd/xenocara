@@ -59,197 +59,137 @@
 #include "exa.h"
 #endif
 
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-#define P_SWAP32( a , b )                \
-       ((char *)a)[0] = ((char *)b)[3];  \
-       ((char *)a)[1] = ((char *)b)[2];  \
-       ((char *)a)[2] = ((char *)b)[1];  \
-       ((char *)a)[3] = ((char *)b)[0]
+#define CURSOR_WIDTH    64
+#define CURSOR_HEIGHT   64
 
-#define P_SWAP16( a , b )                \
-       ((char *)a)[0] = ((char *)b)[1];  \
-       ((char *)a)[1] = ((char *)b)[0];  \
-       ((char *)a)[2] = ((char *)b)[3];  \
-       ((char *)a)[3] = ((char *)b)[2]
-#endif
-
-
-/* Set cursor foreground and background colors. */
-static void R128SetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
+void r128_crtc_show_cursor(xf86CrtcPtr crtc)
 {
-    R128InfoPtr   info      = R128PTR(pScrn);
+    ScrnInfoPtr pScrn = crtc->scrn;
+    R128CrtcPrivatePtr r128_crtc = crtc->driver_private;
+    R128InfoPtr info = R128PTR(pScrn);
     unsigned char *R128MMIO = info->MMIO;
+    int crtc_id = r128_crtc->crtc_id;
 
-    if(info->IsSecondary)
-    {
+    switch (crtc_id) {
+    case 0:
+        OUTREGP(R128_CRTC_GEN_CNTL, R128_CRTC_CUR_EN, ~R128_CRTC_CUR_EN);
+        break;
+    case 1:
+        OUTREGP(R128_CRTC2_GEN_CNTL, R128_CRTC2_CUR_EN, ~R128_CRTC2_CUR_EN);
+        break;
+    default:
+        return;
+    }
+}
+
+void r128_crtc_hide_cursor(xf86CrtcPtr crtc)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    R128CrtcPrivatePtr r128_crtc = crtc->driver_private;
+    R128InfoPtr info = R128PTR(pScrn);
+    unsigned char *R128MMIO = info->MMIO;
+    int crtc_id = r128_crtc->crtc_id;
+
+    switch (crtc_id) {
+    case 0:
+        OUTREGP(R128_CRTC_GEN_CNTL, 0, ~R128_CRTC_CUR_EN);
+        break;
+    case 1:
+        OUTREGP(R128_CRTC2_GEN_CNTL, 0, ~R128_CRTC2_CUR_EN);
+        break;
+    default:
+        return;
+    }
+}
+
+void r128_crtc_set_cursor_colors(xf86CrtcPtr crtc, int bg, int fg)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    R128CrtcPrivatePtr r128_crtc = crtc->driver_private;
+    R128InfoPtr info = R128PTR(pScrn);
+    unsigned char *R128MMIO = info->MMIO;
+    int crtc_id = r128_crtc->crtc_id;
+
+    switch (crtc_id) {
+    case 0:
+        OUTREG(R128_CUR_CLR0, bg);
+        OUTREG(R128_CUR_CLR1, fg);
+        break;
+    case 1:
         OUTREG(R128_CUR2_CLR0, bg);
         OUTREG(R128_CUR2_CLR1, fg);
-    }
-    else
-    {
-    	OUTREG(R128_CUR_CLR0, bg);
-    	OUTREG(R128_CUR_CLR1, fg);
+        break;
+    default:
+        return;
     }
 }
 
-/* Set cursor position to (x,y) with offset into cursor bitmap at
-   (xorigin,yorigin). */
-static void R128SetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
+void r128_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
 {
-    R128InfoPtr           info      = R128PTR(pScrn);
-    unsigned char         *R128MMIO = info->MMIO;
-    xf86CursorInfoPtr     cursor    = info->cursor;
-    int                   xorigin   = 0;
-    int                   yorigin   = 0;
-    int                   total_y   = pScrn->frameY1 - pScrn->frameY0;
+    ScrnInfoPtr           pScrn         = crtc->scrn;
+    R128InfoPtr           info          = R128PTR(pScrn);
+    R128CrtcPrivatePtr    r128_crtc     = crtc->driver_private;
+    unsigned char         *R128MMIO     = info->MMIO;
+    int                   crtc_id       = r128_crtc->crtc_id;
 
-    if (x < 0)                        xorigin = -x;
-    if (y < 0)                        yorigin = -y;
-    if (y > total_y)                  y       = total_y;
-    if (info->Flags & V_DBLSCAN)      y       *= 2;
-    if (xorigin >= cursor->MaxWidth)  xorigin = cursor->MaxWidth - 1;
-    if (yorigin >= cursor->MaxHeight) yorigin = cursor->MaxHeight - 1;
+    int xorigin = 0, yorigin = 0;
+    DisplayModePtr mode = &crtc->mode;
 
-    if(!info->IsSecondary)
-    {
-    	OUTREG(R128_CUR_HORZ_VERT_OFF,  R128_CUR_LOCK | (xorigin << 16) | yorigin);
-    	OUTREG(R128_CUR_HORZ_VERT_POSN, (R128_CUR_LOCK
-				     | ((xorigin ? 0 : x) << 16)
-				     | (yorigin ? 0 : y)));
-    	OUTREG(R128_CUR_OFFSET,         info->cursor_start + yorigin * 16);
-    } 
-    else 
-    {
-        OUTREG(R128_CUR2_HORZ_VERT_OFF,  (R128_CUR2_LOCK
-				       | (xorigin << 16)
-				       | yorigin));
-        OUTREG(R128_CUR2_HORZ_VERT_POSN, (R128_CUR2_LOCK
-				       | ((xorigin ? 0 : x) << 16)
-				       | (yorigin ? 0 : y)));
-        OUTREG(R128_CUR2_OFFSET,         
-			info->cursor_start + pScrn->fbOffset + yorigin * 16);
+    if (x < 0) xorigin = -x + 1;
+    if (y < 0) yorigin = -y + 1;
+    if (xorigin >= CURSOR_WIDTH)  xorigin = CURSOR_WIDTH - 1;
+    if (yorigin >= CURSOR_HEIGHT) yorigin = CURSOR_HEIGHT - 1;
+
+    if (mode->Flags & V_INTERLACE)
+        y /= 2;
+    else if (mode->Flags & V_DBLSCAN)
+        y *= 2;
+
+    if(crtc_id == 0) {
+        OUTREG(R128_CUR_HORZ_VERT_OFF, (R128_CUR_LOCK | (xorigin << 16) | yorigin));
+        OUTREG(R128_CUR_HORZ_VERT_POSN, (R128_CUR_LOCK | ((xorigin ? 0 : x) << 16) | (yorigin ? 0 : y)));
+        OUTREG(R128_CUR_OFFSET, r128_crtc->cursor_offset + pScrn->fbOffset + yorigin * 16);
+    } else if (crtc_id == 1) {
+        OUTREG(R128_CUR2_HORZ_VERT_OFF, (R128_CUR2_LOCK | (xorigin << 16) | yorigin));
+        OUTREG(R128_CUR2_HORZ_VERT_POSN, (R128_CUR2_LOCK | ((xorigin ? 0 : x) << 16) | (yorigin ? 0 : y)));
+        OUTREG(R128_CUR2_OFFSET, r128_crtc->cursor_offset + pScrn->fbOffset + yorigin * 16);
     }
 }
 
-/* Copy cursor image from `image' to video memory.  R128SetCursorPosition
-   will be called after this, so we can ignore xorigin and yorigin. */
-static void R128LoadCursorImage(ScrnInfoPtr pScrn, unsigned char *image)
+void r128_crtc_load_cursor_image(xf86CrtcPtr crtc, unsigned char *src)
 {
+    ScrnInfoPtr pScrn = crtc->scrn;
+    R128CrtcPrivatePtr r128_crtc = crtc->driver_private;
+    int crtc_id = r128_crtc->crtc_id;
+
     R128InfoPtr   info      = R128PTR(pScrn);
     unsigned char *R128MMIO = info->MMIO;
-    CARD32        *s        = (pointer)image;
-    CARD32        *d        = (pointer)((CARD8*)info->FB + info->cursor_start);
-    int           y;
-    CARD32        save;
+    uint32_t      save1     = 0;
+    uint32_t      save2     = 0;
 
-    if(!info->IsSecondary)
-    {
-    	save = INREG(R128_CRTC_GEN_CNTL);
-    	OUTREG(R128_CRTC_GEN_CNTL, save & (CARD32)~R128_CRTC_CUR_EN);
-    }
-    else
-    {
-        save = INREG(R128_CRTC2_GEN_CNTL);
-        OUTREG(R128_CRTC2_GEN_CNTL, save & (CARD32)~R128_CRTC2_CUR_EN);
+    if (crtc_id == 0) {
+	save1 = INREG(R128_CRTC_GEN_CNTL);
+	OUTREG(R128_CRTC_GEN_CNTL, save1 & (uint32_t)~R128_CRTC_CUR_EN);
+    } else if (crtc_id == 1) {
+	save2 = INREG(R128_CRTC2_GEN_CNTL);
+	OUTREG(R128_CRTC2_GEN_CNTL, save2 & (uint32_t)~R128_CRTC2_CUR_EN);
     }
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
-    switch(info->CurrentLayout.pixel_bytes) {
-    case 4:
-    case 3:
-	for (y = 0; y < 64; y++) {
-	    P_SWAP32(d,s);
-	    d++; s++;
-	    P_SWAP32(d,s);
-	    d++; s++;
-	    P_SWAP32(d,s);
-	    d++; s++;
-	    P_SWAP32(d,s);
-	    d++; s++;
-	}
-	break;
-    case 2:
-	for (y = 0; y < 64; y++) {
-	    P_SWAP16(d,s);
-	    d++; s++;
-	    P_SWAP16(d,s);
-	    d++; s++;
-	    P_SWAP16(d,s);
-	    d++; s++;
-	    P_SWAP16(d,s);
-	    d++; s++;
-	}
-	break;
-    default:
-	for (y = 0; y < 64; y++) {
-	    *d++ = *s++;
-	    *d++ = *s++;
-	    *d++ = *s++;
-	    *d++ = *s++;
-	}
-    }
-#else
-    for (y = 0; y < 64; y++) {
-	*d++ = *s++;
-	*d++ = *s++;
-	*d++ = *s++;
-	*d++ = *s++;
-    }
+    if (info->CurrentLayout.pixel_bytes == 4 || info->CurrentLayout.pixel_bytes == 3)
+        R128CopySwap(info->FB + r128_crtc->cursor_offset + pScrn->fbOffset, src,
+                     CURSOR_WIDTH * CURSOR_HEIGHT / 4, APER_0_BIG_ENDIAN_32BPP_SWAP);
+    else if (info->CurrentLayout.pixel_bytes == 2)
+        R128CopySwap(info->FB + r128_crtc->cursor_offset + pScrn->fbOffset, src,
+                     CURSOR_WIDTH * CURSOR_HEIGHT / 4, APER_0_BIG_ENDIAN_16BPP_SWAP);
+    else
 #endif
+    memcpy(info->FB + r128_crtc->cursor_offset + pScrn->fbOffset, src, CURSOR_WIDTH * CURSOR_HEIGHT / 4);
 
-    /* Set the area after the cursor to be all transparent so that we
-       won't display corrupted cursors on the screen */
-    for (y = 0; y < 64; y++) {
-	*d++ = 0xffffffff; /* The AND bits */
-	*d++ = 0xffffffff;
-	*d++ = 0x00000000; /* The XOR bits */
-	*d++ = 0x00000000;
-    }
-
-
-    if(!info->IsSecondary)
-    	OUTREG(R128_CRTC_GEN_CNTL, save);
+    if (crtc_id == 0)
+	OUTREG(R128_CRTC_GEN_CNTL, save1);
     else
-        OUTREG(R128_CRTC2_GEN_CNTL, save);
-
-}
-
-/* Hide hardware cursor. */
-static void R128HideCursor(ScrnInfoPtr pScrn)
-{
-    R128InfoPtr   info      = R128PTR(pScrn);
-    unsigned char *R128MMIO = info->MMIO;
-
-     if(info->IsSecondary)
-        OUTREGP(R128_CRTC2_GEN_CNTL, 0, ~R128_CRTC2_CUR_EN);
-     else
-    	OUTREGP(R128_CRTC_GEN_CNTL, 0, ~R128_CRTC_CUR_EN);
-}
-
-/* Show hardware cursor. */
-static void R128ShowCursor(ScrnInfoPtr pScrn)
-{
-    R128InfoPtr   info      = R128PTR(pScrn);
-    unsigned char *R128MMIO = info->MMIO;
-
-    if(info->IsSecondary)
-    {
-         OUTREGP(R128_CRTC2_GEN_CNTL, R128_CRTC2_CUR_EN,
-               ~R128_CRTC2_CUR_EN);
-    }
-    else
-    {
-    	OUTREGP(R128_CRTC_GEN_CNTL, R128_CRTC_CUR_EN, ~R128_CRTC_CUR_EN);
-    }
-}
-
-/* Determine if hardware cursor is in use. */
-static Bool R128UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
-{
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-    R128InfoPtr info  = R128PTR(pScrn);
-
-    return info->cursor_start ? TRUE : FALSE;
+        OUTREG(R128_CRTC2_GEN_CNTL, save2);
 }
 
 /* Initialize hardware cursor support. */
@@ -257,77 +197,72 @@ Bool R128CursorInit(ScreenPtr pScreen)
 {
     ScrnInfoPtr           pScrn   = xf86ScreenToScrn(pScreen);
     R128InfoPtr           info    = R128PTR(pScrn);
-    xf86CursorInfoPtr     cursor;
     FBAreaPtr             fbarea  = NULL;
 #ifdef USE_EXA
     ExaOffscreenArea*	  osArea  = NULL;
 #else
     void*		  osArea  = NULL;
 #endif
+    xf86CrtcConfigPtr     xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    uint32_t              cursor_offset = 0;
+    int                   cpp = info->CurrentLayout.pixel_bytes;
     int                   width;
+    int                   width_bytes;
     int                   height;
     int                   size;
+    int                   size_bytes;
+    int                   c;
 
-    int                   cpp = info->CurrentLayout.pixel_bytes;
-
-    if (!(cursor = info->cursor = xf86CreateCursorInfoRec())) return FALSE;
-
-    cursor->MaxWidth          = 64;
-    cursor->MaxHeight         = 64;
-    cursor->Flags             = (HARDWARE_CURSOR_TRUECOLOR_AT_8BPP
-				 | HARDWARE_CURSOR_SHOW_TRANSPARENT
-				 | HARDWARE_CURSOR_UPDATE_UNHIDDEN
-#if X_BYTE_ORDER == X_LITTLE_ENDIAN
-				 | HARDWARE_CURSOR_BIT_ORDER_MSBFIRST
-#endif
-				 | HARDWARE_CURSOR_INVERT_MASK
-				 | HARDWARE_CURSOR_AND_SOURCE_WITH_MASK
-				 | HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_64
-				 | HARDWARE_CURSOR_SWAP_SOURCE_AND_MASK);
-
-    cursor->SetCursorColors   = R128SetCursorColors;
-    cursor->SetCursorPosition = R128SetCursorPosition;
-    cursor->LoadCursorImage   = R128LoadCursorImage;
-    cursor->HideCursor        = R128HideCursor;
-    cursor->ShowCursor        = R128ShowCursor;
-    cursor->UseHWCursor       = R128UseHWCursor;
-
-    size                      = (cursor->MaxWidth/4) * cursor->MaxHeight;
+    size                      = CURSOR_WIDTH * CURSOR_HEIGHT / 4;
+    size_bytes                = size * 2;
     width                     = pScrn->displayWidth;
-    height                    = (size*2 + 1023) / pScrn->displayWidth;
+    width_bytes               = width * (pScrn->bitsPerPixel / 8);
+    height                    = ((size_bytes * xf86_config->num_crtc) + width_bytes - 1) / width_bytes;
 
     if(!info->useEXA) {
 	fbarea = xf86AllocateOffscreenArea(pScreen, width, height,
 					   16, NULL, NULL, NULL);
 
-	if (fbarea) {
-	    info->cursor_start    = R128_ALIGN((fbarea->box.x1
-					    + width * fbarea->box.y1)
-					    * cpp, 16);
-	    info->cursor_end      = info->cursor_start + size;
-	}
+	if (fbarea)
+	    cursor_offset = R128_ALIGN((fbarea->box.x1 + width * fbarea->box.y1) * cpp, 16);
     }
 #ifdef USE_EXA
     else {
 	osArea = exaOffscreenAlloc(pScreen, width * height, 16,
 				   TRUE, NULL, NULL);
 
-	if (osArea) {
-	    info->cursor_start	  = osArea->offset;
-	    info->cursor_end	  = osArea->offset + osArea->size;
-	}
+	if (osArea)
+	    cursor_offset = osArea->offset;
     }
 #endif
 
     if ((!info->useEXA && !fbarea) || (info->useEXA && !osArea)) {
-	info->cursor_start    = 0;
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Hardware cursor disabled"
 		   " due to insufficient offscreen memory\n");
+        return FALSE;
+    } else {
+        for (c = 0; c < xf86_config->num_crtc; c++) {
+            xf86CrtcPtr crtc = xf86_config->crtc[c];
+	    R128CrtcPrivatePtr r128_crtc = crtc->driver_private;
+
+            r128_crtc->cursor_offset = cursor_offset + (c * size);
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Will use %d kb for hardware cursor %d at offset 0x%08x\n",
+		       (size_bytes * xf86_config->num_crtc) / 1024, c,
+		       (unsigned int)r128_crtc->cursor_offset);
+        }
     }
 
-    R128TRACE(("R128CursorInit (0x%08x-0x%08x)\n",
-	       info->cursor_start, info->cursor_end));
-
-    return xf86InitCursor(pScreen, cursor);
+    return xf86_cursors_init(pScreen, CURSOR_WIDTH, CURSOR_HEIGHT,
+			     (HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+			      HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
+			      HARDWARE_CURSOR_SHOW_TRANSPARENT |
+			      HARDWARE_CURSOR_UPDATE_UNHIDDEN |
+#if X_BYTE_ORDER == X_LITTLE_ENDIAN
+			      HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
+#endif
+			      HARDWARE_CURSOR_INVERT_MASK |
+			      HARDWARE_CURSOR_SWAP_SOURCE_AND_MASK |
+			      HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_64));
 }

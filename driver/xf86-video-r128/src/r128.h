@@ -70,10 +70,10 @@
 #define _XF86DRI_SERVER_
 #include "r128_dripriv.h"
 #include "dri.h"
-#include "GL/glxint.h"
 #endif
 
 #include "fb.h"
+#include "xf86Crtc.h"
 
 #include "compat-api.h"
 #include "atipcirename.h"
@@ -120,13 +120,14 @@
 #if R128_DEBUG
 #include "r128_version.h"
 
-#define R128TRACE(x)                                          \
-    do {                                                      \
-	ErrorF("(**) %s(%d): ", R128_NAME, pScrn->scrnIndex); \
-	ErrorF x;                                             \
-    } while (0);
+#endif
+
+#if R128_DEBUG
+#define DEBUG(x) x
+
 #else
-#define R128TRACE(x)
+#define DEBUG(x)
+
 #endif
 
 
@@ -134,6 +135,14 @@
 #define R128_ARRAY_SIZE(x)  (sizeof(x)/sizeof(x[0]))
 #define R128_ALIGN(x,bytes) (((x) + ((bytes) - 1)) & ~((bytes) - 1))
 #define R128PTR(pScrn) ((R128InfoPtr)(pScrn)->driverPrivate)
+
+#define R128_BIOS8(v)  ((info->VBIOS[(v)]))
+#define R128_BIOS16(v) ((info->VBIOS[(v)])           | \
+			(info->VBIOS[(v) + 1] << 8))
+#define R128_BIOS32(v) ((info->VBIOS[(v)])           | \
+			(info->VBIOS[(v) + 1] << 8)  | \
+			(info->VBIOS[(v) + 2] << 16) | \
+			(info->VBIOS[(v) + 3] << 24))
 
 typedef struct {        /* All values in XCLKS    */
     int  ML;            /* Memory Read Latency    */
@@ -150,105 +159,106 @@ typedef struct {        /* All values in XCLKS    */
 
 typedef struct {
 				/* Common registers */
-    CARD32     ovr_clr;
-    CARD32     ovr_wid_left_right;
-    CARD32     ovr_wid_top_bottom;
-    CARD32     ov0_scale_cntl;
-    CARD32     mpp_tb_config;
-    CARD32     mpp_gp_config;
-    CARD32     subpic_cntl;
-    CARD32     viph_control;
-    CARD32     i2c_cntl_1;
-    CARD32     gen_int_cntl;
-    CARD32     cap0_trig_cntl;
-    CARD32     cap1_trig_cntl;
-    CARD32     bus_cntl;
-    CARD32     config_cntl;
+    uint32_t   ovr_clr;
+    uint32_t   ovr_wid_left_right;
+    uint32_t   ovr_wid_top_bottom;
+    uint32_t   ov0_scale_cntl;
+    uint32_t   mpp_tb_config;
+    uint32_t   mpp_gp_config;
+    uint32_t   subpic_cntl;
+    uint32_t   viph_control;
+    uint32_t   i2c_cntl_1;
+    uint32_t   gen_int_cntl;
+    uint32_t   cap0_trig_cntl;
+    uint32_t   cap1_trig_cntl;
+    uint32_t   bus_cntl;
+    uint32_t   config_cntl;
 
 				/* Other registers to save for VT switches */
-    CARD32     dp_datatype;
-    CARD32     gen_reset_cntl;
-    CARD32     clock_cntl_index;
-    CARD32     amcgpio_en_reg;
-    CARD32     amcgpio_mask;
+    uint32_t   dp_datatype;
+    uint32_t   gen_reset_cntl;
+    uint32_t   clock_cntl_index;
+    uint32_t   amcgpio_en_reg;
+    uint32_t   amcgpio_mask;
 
 				/* CRTC registers */
-    CARD32     crtc_gen_cntl;
-    CARD32     crtc_ext_cntl;
-    CARD32     dac_cntl;
-    CARD32     crtc_h_total_disp;
-    CARD32     crtc_h_sync_strt_wid;
-    CARD32     crtc_v_total_disp;
-    CARD32     crtc_v_sync_strt_wid;
-    CARD32     crtc_offset;
-    CARD32     crtc_offset_cntl;
-    CARD32     crtc_pitch;
+    uint32_t   crtc_gen_cntl;
+    uint32_t   crtc_ext_cntl;
+    uint32_t   dac_cntl;
+    uint32_t   crtc_h_total_disp;
+    uint32_t   crtc_h_sync_strt_wid;
+    uint32_t   crtc_v_total_disp;
+    uint32_t   crtc_v_sync_strt_wid;
+    uint32_t   crtc_offset;
+    uint32_t   crtc_offset_cntl;
+    uint32_t   crtc_pitch;
 
 				/* CRTC2 registers */
-    CARD32     crtc2_gen_cntl;
-    CARD32     crtc2_h_total_disp;
-    CARD32     crtc2_h_sync_strt_wid;
-    CARD32     crtc2_v_total_disp;
-    CARD32     crtc2_v_sync_strt_wid;
-    CARD32     crtc2_offset;
-    CARD32     crtc2_offset_cntl;
-    CARD32     crtc2_pitch;
+    uint32_t   crtc2_gen_cntl;
+    uint32_t   crtc2_h_total_disp;
+    uint32_t   crtc2_h_sync_strt_wid;
+    uint32_t   crtc2_v_total_disp;
+    uint32_t   crtc2_v_sync_strt_wid;
+    uint32_t   crtc2_offset;
+    uint32_t   crtc2_offset_cntl;
+    uint32_t   crtc2_pitch;
 
 				/* Flat panel registers */
-    CARD32     fp_crtc_h_total_disp;
-    CARD32     fp_crtc_v_total_disp;
-    CARD32     fp_gen_cntl;
-    CARD32     fp_h_sync_strt_wid;
-    CARD32     fp_horz_stretch;
-    CARD32     fp_panel_cntl;
-    CARD32     fp_v_sync_strt_wid;
-    CARD32     fp_vert_stretch;
-    CARD32     lvds_gen_cntl;
-    CARD32     tmds_crc;
-    CARD32     tmds_transmitter_cntl;
+    uint32_t   fp_crtc_h_total_disp;
+    uint32_t   fp_crtc_v_total_disp;
+    uint32_t   fp_gen_cntl;
+    uint32_t   fp_h_sync_strt_wid;
+    uint32_t   fp_horz_stretch;
+    uint32_t   fp_panel_cntl;
+    uint32_t   fp_v_sync_strt_wid;
+    uint32_t   fp_vert_stretch;
+    uint32_t   lvds_gen_cntl;
+    uint32_t   tmds_crc;
+    uint32_t   tmds_transmitter_cntl;
 
 				/* Computed values for PLL */
-    CARD32     dot_clock_freq;
-    CARD32     pll_output_freq;
+    uint32_t   dot_clock_freq;
+    uint32_t   pll_output_freq;
     int        feedback_div;
     int        post_div;
 
 				/* PLL registers */
-    CARD32     ppll_ref_div;
-    CARD32     ppll_div_3;
-    CARD32     htotal_cntl;
+    uint32_t   ppll_ref_div;
+    uint32_t   ppll_div_3;
+    uint32_t   ppll_div_0;
+    uint32_t   htotal_cntl;
 
 				/* Computed values for PLL2 */
-    CARD32     dot_clock_freq_2;
-    CARD32     pll_output_freq_2;
+    uint32_t   dot_clock_freq_2;
+    uint32_t   pll_output_freq_2;
     int        feedback_div_2;
     int        post_div_2;
 
 				/* PLL2 registers */
-    CARD32     p2pll_ref_div;
-    CARD32     p2pll_div_0;
-    CARD32     htotal_cntl2;
+    uint32_t   p2pll_ref_div;
+    uint32_t   p2pll_div_0;
+    uint32_t   htotal_cntl2;
 
 				/* DDA register */
-    CARD32     dda_config;
-    CARD32     dda_on_off;
+    uint32_t   dda_config;
+    uint32_t   dda_on_off;
 
 				/* DDA2 register */
-    CARD32     dda2_config;
-    CARD32     dda2_on_off;
+    uint32_t   dda2_config;
+    uint32_t   dda2_on_off;
 
 				/* Pallet */
     Bool       palette_valid;
-    CARD32     palette[256];
-    CARD32     palette2[256];
+    uint32_t   palette[256];
+    uint32_t   palette2[256];
 } R128SaveRec, *R128SavePtr;
 
 typedef struct {
-    CARD16        reference_freq;
-    CARD16        reference_div;
+    uint16_t      reference_freq;
+    uint16_t      reference_div;
     unsigned      min_pll_freq;
     unsigned      max_pll_freq;
-    CARD16        xclk;
+    uint16_t      xclk;
 } R128PLLRec, *R128PLLPtr;
 
 typedef struct {
@@ -259,16 +269,6 @@ typedef struct {
     int                pixel_bytes;
     DisplayModePtr     mode;
 } R128FBLayout;
-
-typedef enum
-{
-    MT_NONE,
-    MT_CRT,
-    MT_LCD,
-    MT_DFP,
-    MT_CTV,
-    MT_STV
-} R128MonitorType;
 
 #ifdef USE_EXA
 struct r128_2d_state {
@@ -305,7 +305,6 @@ typedef struct {
     PCITAG            PciTag;
 #endif
     int               Chipset;
-    Bool              Primary;
 
     Bool              FBDev;
 
@@ -315,28 +314,13 @@ typedef struct {
 
     void              *MMIO;        /* Map of MMIO region                    */
     void              *FB;          /* Map of frame buffer                   */
-
-    CARD32            MemCntl;
-    CARD32            BusCntl;
-    unsigned long     FbMapSize;    /* Size of frame buffer, in bytes        */
-    int               Flags;        /* Saved copy of mode flags              */
-
-    CARD8             BIOSDisplay;  /* Device the BIOS is set to display to  */
-
-    Bool              HasPanelRegs; /* Current chip can connect to a FP      */
-    CARD8             *VBIOS;       /* Video BIOS for mode validation on FPs */
+    uint8_t           *VBIOS;       /* Video BIOS for mode validation on FPs */
     int               FPBIOSstart;  /* Start of the flat panel info          */
 
-				/* Computed values for FPs */
-    int               PanelXRes;
-    int               PanelYRes;
-    int               HOverPlus;
-    int               HSyncWidth;
-    int               HBlank;
-    int               VOverPlus;
-    int               VSyncWidth;
-    int               VBlank;
-    int               PanelPwrDly;
+    uint32_t          MemCntl;
+    uint32_t          BusCntl;
+    unsigned long     FbMapSize;    /* Size of frame buffer, in bytes        */
+    Bool              HasPanelRegs; /* Current chip can connect to a FP      */
 
     R128PLLRec        pll;
     R128RAMPtr        ram;
@@ -351,8 +335,9 @@ typedef struct {
 #ifdef HAVE_XAA_H
     XAAInfoRecPtr     accel;
 #endif
-    Bool              accelOn;
 
+    Bool              noAccel;
+    Bool              accelOn;
     Bool	      useEXA;
     Bool	      RenderAccel;
 #ifdef USE_EXA
@@ -361,24 +346,15 @@ typedef struct {
     struct r128_2d_state state_2d;
 #endif
 
-    xf86CursorInfoPtr cursor;
-    unsigned long     cursor_start;
-    unsigned long     cursor_end;
-
-    /*
-     * XAAForceTransBlit is used to change the behavior of the XAA
-     * SetupForScreenToScreenCopy function, to make it DGA-friendly.
-     */
-    Bool              XAAForceTransBlit;
-
     int               fifo_slots;   /* Free slots in the FIFO (64 max)       */
     int               pix24bpp;     /* Depth of pixmap for 24bpp framebuffer */
     Bool              dac6bits;     /* Use 6 bit DAC?                        */
+    Bool              swCursor;
 
 				/* Computed values for Rage 128 */
     int               pitch;
     int               datatype;
-    CARD32            dp_gui_master_cntl;
+    uint32_t          dp_gui_master_cntl;
 
 				/* Saved values for ScreenToScreenCopy */
     int               xdir;
@@ -403,30 +379,21 @@ typedef struct {
     int               scanline_direct;
     int               scanline_bpp; /* Only used for ImageWrite */
 
-    DGAModePtr        DGAModes;
-    int               numDGAModes;
-    Bool              DGAactive;
-    int               DGAViewportStatus;
-    DGAFunctionRec    DGAFuncs;
-
     R128FBLayout      CurrentLayout;
 #ifdef R128DRI
     Bool              directRenderingEnabled;
     DRIInfoPtr        pDRIInfo;
     int               drmFD;
-    drm_context_t        drmCtx;
-    int               numVisualConfigs;
-    __GLXvisualConfig *pVisualConfigs;
-    R128ConfigPrivPtr pVisualConfigsPriv;
+    drm_context_t     drmCtx;
 
-    drm_handle_t         fbHandle;
+    drm_handle_t      fbHandle;
 
     drmSize           registerSize;
-    drm_handle_t         registerHandle;
+    drm_handle_t      registerHandle;
 
     Bool              IsPCI;            /* Current card is a PCI card */
     drmSize           pciSize;
-    drm_handle_t         pciMemHandle;
+    drm_handle_t      pciMemHandle;
     drmAddress        PCI;              /* Map */
 
     Bool              allowPageFlip;    /* Enable 3d page flipping */
@@ -434,7 +401,7 @@ typedef struct {
     int               drmMinor;
 
     drmSize           agpSize;
-    drm_handle_t         agpMemHandle;     /* Handle from drmAgpAlloc */
+    drm_handle_t      agpMemHandle;     /* Handle from drmAgpAlloc */
     unsigned long     agpOffset;
     drmAddress        AGP;              /* Map */
     int               agpMode;
@@ -447,20 +414,20 @@ typedef struct {
 
 				/* CCE ring buffer data */
     unsigned long     ringStart;        /* Offset into AGP space */
-    drm_handle_t         ringHandle;       /* Handle from drmAddMap */
+    drm_handle_t      ringHandle;       /* Handle from drmAddMap */
     drmSize           ringMapSize;      /* Size of map */
     int               ringSize;         /* Size of ring (in MB) */
     drmAddress        ring;             /* Map */
     int               ringSizeLog2QW;
 
     unsigned long     ringReadOffset;   /* Offset into AGP space */
-    drm_handle_t         ringReadPtrHandle; /* Handle from drmAddMap */
+    drm_handle_t      ringReadPtrHandle;/* Handle from drmAddMap */
     drmSize           ringReadMapSize;  /* Size of map */
     drmAddress        ringReadPtr;      /* Map */
 
 				/* CCE vertex/indirect buffer data */
     unsigned long     bufStart;        /* Offset into AGP space */
-    drm_handle_t         bufHandle;       /* Handle from drmAddMap */
+    drm_handle_t      bufHandle;       /* Handle from drmAddMap */
     drmSize           bufMapSize;      /* Size of map */
     int               bufSize;         /* Size of buffers (in MB) */
     drmAddress        buf;             /* Map */
@@ -469,7 +436,7 @@ typedef struct {
 
 				/* CCE AGP Texture data */
     unsigned long     agpTexStart;      /* Offset into AGP space */
-    drm_handle_t         agpTexHandle;     /* Handle from drmAddMap */
+    drm_handle_t      agpTexHandle;     /* Handle from drmAddMap */
     drmSize           agpTexMapSize;    /* Size of map */
     int               agpTexSize;       /* Size of AGP tex space (in MB) */
     drmAddress        agpTex;           /* Map */
@@ -499,18 +466,18 @@ typedef struct {
     int               log2TexGran;
 
 				/* Saved scissor values */
-    CARD32            sc_left;
-    CARD32            sc_right;
-    CARD32            sc_top;
-    CARD32            sc_bottom;
+    uint32_t          sc_left;
+    uint32_t          sc_right;
+    uint32_t          sc_top;
+    uint32_t          sc_bottom;
 
-    CARD32            re_top_left;
-    CARD32            re_width_height;
+    uint32_t          re_top_left;
+    uint32_t          re_width_height;
 
-    CARD32            aux_sc_cntl;
+    uint32_t          aux_sc_cntl;
 
     int               irq;
-    CARD32            gen_int_cntl;
+    uint32_t          gen_int_cntl;
 
     Bool              DMAForXv;
 #endif
@@ -523,19 +490,10 @@ typedef struct {
 
     Bool              isDFP;
     Bool              isPro2;
-    I2CBusPtr         pI2CBus;
-    CARD32            DDCReg;
+    Bool              SwitchingMode;
+    Bool              DDC;
 
     Bool              VGAAccess;
-
-    /****** Added for dualhead support *******************/
-    BOOL              HasCRTC2;     /* M3/M4 */
-    BOOL              IsSecondary;  /* second Screen */
-    BOOL	      IsPrimary;    /* primary Screen */
-    BOOL              UseCRT;       /* force use CRT port as primary */
-    BOOL              SwitchingMode;
-    R128MonitorType DisplayType;  /* Monitor connected on*/
-
 } R128InfoRec, *R128InfoPtr;
 
 #define R128WaitForFifo(pScrn, entries)                                      \
@@ -543,6 +501,12 @@ do {                                                                         \
     if (info->fifo_slots < entries) R128WaitForFifoFunction(pScrn, entries); \
     info->fifo_slots -= entries;                                             \
 } while (0)
+
+/* Compute n/d with rounding. */
+static inline int R128Div(int n, int d)
+{
+    return (n + (d / 2)) / d;
+}
 
 extern R128EntPtr R128EntPriv(ScrnInfoPtr pScrn);
 extern void        R128WaitForFifoFunction(ScrnInfoPtr pScrn, int entries);
@@ -553,14 +517,47 @@ extern void        R128EngineFlush(ScrnInfoPtr pScrn);
 extern unsigned    R128INPLL(ScrnInfoPtr pScrn, int addr);
 extern void        R128WaitForVerticalSync(ScrnInfoPtr pScrn);
 
-extern Bool        R128AccelInit(ScreenPtr pScreen);
+extern Bool R128XAAAccelInit(ScreenPtr pScreen);
 extern void        R128EngineInit(ScrnInfoPtr pScrn);
 extern Bool        R128CursorInit(ScreenPtr pScreen);
-extern Bool        R128DGAInit(ScreenPtr pScreen);
 
 extern int         R128MinBits(int val);
+extern xf86OutputPtr R128FirstOutput(xf86CrtcPtr crtc);
 
 extern void        R128InitVideo(ScreenPtr pScreen);
+
+extern void        R128InitCommonRegisters(R128SavePtr save, R128InfoPtr info);
+extern void        R128InitRMXRegisters(R128SavePtr orig, R128SavePtr save, xf86OutputPtr output, DisplayModePtr mode);
+extern void        R128InitFPRegisters(R128SavePtr orig, R128SavePtr save, xf86OutputPtr output);
+extern void        R128InitLVDSRegisters(R128SavePtr orig, R128SavePtr save, xf86OutputPtr output);
+extern void        R128RestoreCommonRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreDACRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreRMXRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreFPRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreLVDSRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreCrtcRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestorePLLRegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreDDARegisters(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreCrtc2Registers(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestorePLL2Registers(ScrnInfoPtr pScrn, R128SavePtr restore);
+extern void        R128RestoreDDA2Registers(ScrnInfoPtr pScrn, R128SavePtr restore);
+
+extern void        r128_crtc_set_cursor_colors(xf86CrtcPtr crtc, int bg, int fg);
+extern void        r128_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y);
+extern void        r128_crtc_show_cursor(xf86CrtcPtr crtc);
+extern void        r128_crtc_hide_cursor(xf86CrtcPtr crtc);
+extern void        r128_crtc_load_cursor_image(xf86CrtcPtr crtc, unsigned char *src);
+
+extern uint32_t    R128AllocateMemory(ScrnInfoPtr pScrn, void **mem_struct, int size, int align, Bool need_accel);
+extern Bool        R128SetupConnectors(ScrnInfoPtr pScrn);
+extern Bool        R128AllocateControllers(ScrnInfoPtr pScrn);
+extern void        R128GetPanelInfoFromBIOS(xf86OutputPtr output);
+extern void        R128Blank(ScrnInfoPtr pScrn);
+extern void        R128Unblank(ScrnInfoPtr pScrn);
+extern void        R128DPMSSetOn(xf86OutputPtr output);
+extern void        R128DPMSSetOff(xf86OutputPtr output);
+extern ModeStatus     R128DoValidMode(xf86OutputPtr output, DisplayModePtr mode, int flags);
+extern DisplayModePtr R128ProbeOutputModes(xf86OutputPtr output);
 
 #ifdef R128DRI
 extern Bool        R128DRIScreenInit(ScreenPtr pScreen);
@@ -604,13 +601,38 @@ extern void        R128CCEFlushIndirect(ScrnInfoPtr pScrn, int discard);
 extern void        R128CCEReleaseIndirect(ScrnInfoPtr pScrn);
 extern void        R128CCEWaitForIdle(ScrnInfoPtr pScrn);
 extern int         R128CCEStop(ScrnInfoPtr pScrn);
+extern void	   R128CopySwap(uint8_t *dst, uint8_t *src, unsigned int size, int swap);
 
 #ifdef USE_EXA
-extern Bool	   R128EXAInit(ScreenPtr pScreen);
+extern Bool	   R128EXAInit(ScreenPtr pScreen, int total);
 extern Bool	   R128GetDatatypeBpp(int bpp, uint32_t *type);
 extern Bool	   R128GetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset);
 extern void	   R128DoPrepareCopy(ScrnInfoPtr pScrn, uint32_t src_pitch_offset,
 				    uint32_t dst_pitch_offset, uint32_t datatype, int alu, Pixel planemask);
+extern void R128Done(PixmapPtr pPixmap);
+
+#ifdef R128DRI
+extern void EmitCCE2DState(ScrnInfoPtr pScrn);
+#endif
+
+#ifdef RENDER
+extern Bool R128CCECheckComposite(int op,
+                                    PicturePtr pSrcPicture,
+                                    PicturePtr pMaskPicture,
+                                    PicturePtr pDstPicture);
+extern Bool R128CCEPrepareComposite(int op,                                    PicturePtr pSrcPicture,
+                                    PicturePtr pMaskPicture,
+                                    PicturePtr pDstPicture,
+                                    PixmapPtr pSrc,
+                                    PixmapPtr pMask,
+                                    PixmapPtr pDst);
+extern void R128CCEComposite(PixmapPtr pDst,
+                                int srcX, int srcY,
+                                int maskX, int maskY,
+                                int dstX, int dstY,
+                                int w, int h);
+#define R128CCEDoneComposite R128Done
+#endif
 #endif
 
 
@@ -626,7 +648,7 @@ extern void	   R128DoPrepareCopy(ScrnInfoPtr pScrn, uint32_t src_pitch_offset,
 
 #define R128_VERBOSE	0
 
-#define RING_LOCALS	CARD32 *__head; int __count;
+#define RING_LOCALS	uint32_t *__head; int __count;
 
 #define R128CCE_REFRESH(pScrn, info)					\
 do {									\
@@ -667,12 +689,12 @@ do {									\
       xf86DrvMsg( pScrn->scrnIndex, X_INFO,				\
 		  "ADVANCE_RING() used: %d+%d=%d/%d\n",			\
 		  info->indirectBuffer->used - info->indirectStart,	\
-		  __count * (int)sizeof(CARD32),			\
+		  __count * (int)sizeof(uint32_t),			\
 		  info->indirectBuffer->used - info->indirectStart +	\
-		  __count * (int)sizeof(CARD32),			\
+		  __count * (int)sizeof(uint32_t),			\
 		  info->indirectBuffer->total - info->indirectStart );	\
    }									\
-   info->indirectBuffer->used += __count * (int)sizeof(CARD32);		\
+   info->indirectBuffer->used += __count * (int)sizeof(uint32_t);		\
 } while (0)
 
 #define OUT_RING( x ) do {						\
