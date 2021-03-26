@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.453 2021/03/08 18:15:42 matthieu Exp $
+# $OpenBSD: MODULES,v 1.454 2021/03/26 18:24:28 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -46,7 +46,7 @@ app/xgc			1.0.5		remove?
 app/xhost		1.0.8
 app/xinit		1.4.1
 app/xinput		1.6.3
-app/xkbcomp		1.4.4
+app/xkbcomp		1.4.5		needs-update
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5
 app/xkbutils		1.0.4
@@ -102,7 +102,7 @@ driver/xf86-video-mach64	6.9.6
 driver/xf86-video-mga		2.0.0
 driver/xf86-video-nv		2.1.21
 driver/xf86-video-openchrome	0.6.179		needs-update
-driver/xf86-video-r128		6.12.0		needs-update
+driver/xf86-video-r128		6.12.0
 driver/xf86-video-savage	2.3.9
 driver/xf86-video-siliconmotion	1.7.9
 driver/xf86-video-sunffb	1.2.2
