@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.65 2020/09/13 10:26:31 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.66 2021/03/28 15:57:45 jcs Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -66,6 +66,8 @@ static Atom prop_swap;
 #ifdef DEBUG
 int ws_debug_level = 0;
 #endif
+
+#define WSMOUSE_MUX_DEVICE "/dev/wsmouse"
 
 static XF86ModuleVersionInfo VersionRec = {
 	"ws",
@@ -212,8 +214,17 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 	if (wsOpen(pInfo) != Success)
 		goto fail;
-	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0)
-		goto fail;
+	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0) {
+		if (strcmp(priv->devName, WSMOUSE_MUX_DEVICE) == 0)
+			/*
+			 * No mice are currently connected to the mux, assume
+			 * any traffic we see on it later will come from a USB
+			 * mouse.
+			 */
+			priv->type = WSMOUSE_TYPE_USB;
+		else
+			goto fail;
+	}
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		pInfo->type_name = XI_TOUCHSCREEN;
 		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
