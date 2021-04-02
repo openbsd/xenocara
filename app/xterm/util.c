@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.872 2021/01/31 18:12:09 tom Exp $ */
+/* $XTermId: util.c,v 1.877 2021/03/21 21:27:08 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2102,9 +2102,9 @@ CopyWait(XtermWidget xw)
 				  &reply)) {
 		retries = 0;
 	    } else {
-		if (++retries >= 10)
+		if (++retries >= 1000)
 		    return;
-		usleep(10000U);	/* wait 10msec */
+		usleep(100U);	/* wait 0.1msec */
 		continue;
 	    }
 	} else
@@ -2804,7 +2804,7 @@ ReverseVideo(XtermWidget xw)
     TRACE(("...swapping done, set ReverseVideo %s\n", BtoS(xw->misc.re_verse)));
 
     if (XtIsRealized((Widget) xw)) {
-	xtermDisplayCursor(xw);
+	xtermDisplayPointer(xw);
     }
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {
@@ -4638,8 +4638,13 @@ xtermSizeHints(XtermWidget xw, int scrollbarWidth)
     xw->hints.base_width += BorderWidth(xw) * 2;
 #endif
 
-    xw->hints.width_inc = FontWidth(screen);
-    xw->hints.height_inc = FontHeight(screen);
+    if (xw->misc.resizeByPixel) {
+	xw->hints.width_inc = 1;
+	xw->hints.height_inc = 1;
+    } else {
+	xw->hints.width_inc = FontWidth(screen);
+	xw->hints.height_inc = FontHeight(screen);
+    }
     xw->hints.min_width = xw->hints.base_width + xw->hints.width_inc;
     xw->hints.min_height = xw->hints.base_height + xw->hints.height_inc;
 
@@ -5503,7 +5508,9 @@ XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geom
 	parsestring = buf;
 	parse_xinerama_screen(display, at + 1, ret);
     }
-    return XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h);
+    return ((strlen(parsestring) <= MAX_U_STRING)
+	    ? XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h)
+	    : 0);
 }
 
 #if USE_DOUBLE_BUFFER

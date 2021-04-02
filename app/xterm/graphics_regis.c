@@ -1,8 +1,8 @@
-/* $XTermId: graphics_regis.c,v 1.126 2020/10/14 19:04:43 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.128 2021/02/25 23:17:48 tom Exp $ */
 
 /*
- * Copyright 2014-2019,2020 by Ross Combs
- * Copyright 2014-2019,2020 by Thomas E. Dickey
+ * Copyright 2014-2020,2021 by Ross Combs
+ * Copyright 2014-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -6177,7 +6177,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   fragment_to_tempstr(&delayarg)));
 		    break;
 		}
-		if (delay < 0 || delay > 32767) {
+		if (delay < 0 || delay > MAX_I_DELAY) {
 		    TRACE(("DATA_ERROR: delay out of range: \"%d\"\n", delay));
 		    break;
 		}

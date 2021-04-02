@@ -1,12 +1,12 @@
 #!/bin/sh
-# $XTermId: fonts.sh,v 1.12 2015/08/10 20:43:05 tom Exp $
+# $XTermId: fonts.sh,v 1.16 2021/03/03 01:16:53 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2011,2015 by Thomas E. Dickey
-# 
+# Copyright 1999-2015,2021 by Thomas E. Dickey
+#
 #                         All Rights Reserved
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 # Except as contained in this notice, the name(s) of the above copyright
 # holders shall not be used in advertising or otherwise to promote the
 # sale, use or other dealings in this Software without prior written
@@ -34,13 +34,14 @@
 # Demonstrate control sequence which sets relative fonts.
 
 ESC=""
+CSI="${ESC}["
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=/tmp/xterm$$
+TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-( test ! -f $TMP || test -s $TMP ) &&
-for verb in printf print ; do
+{ test ! -f $TMP || test -s $TMP; } &&
+for verb in "printf" "print" ; do
     rm -f $TMP
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
     if test -f $TMP ; then
@@ -66,9 +67,9 @@ original="${original}${SUF}"
 
 if ( trap "echo exit" EXIT 2>/dev/null ) >/dev/null
 then
-    trap '$CMD $OPT "$original" >/dev/tty; exit' EXIT HUP INT TRAP TERM
+    trap '$CMD $OPT "$original" >/dev/tty; exit' EXIT HUP INT QUIT TERM
 else
-    trap '$CMD $OPT "$original" >/dev/tty; exit' 0    1   2   5    15
+    trap '$CMD $OPT "$original" >/dev/tty; exit' 0    1   2   3    15
 fi
 
 F=1
@@ -77,7 +78,7 @@ T=6
 while true
 do
     $CMD $OPT "${ESC}]50;#$F${SUF}" >/dev/tty
-    #sleep 1
+    sleep 1
     if test .$D = .1 ; then
 	test $F = $T && D=-1
     else

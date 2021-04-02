@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.170 2020/09/19 16:28:48 Ross.Combs Exp $ */
+/* $XTermId: print.c,v 1.172 2021/03/02 00:19:13 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -78,7 +78,7 @@ static void stringToPrinter(XtermWidget /* xw */ ,
 static void setGraphicsPrintToHost(XtermWidget /* xw */ ,
 				   int /* enabled */ );
 #else
-#define setGraphicsPrintToHost(xw, enabled) /* nothing */
+#define setGraphicsPrintToHost(xw, enabled)	/* nothing */
 #endif
 
 static void
@@ -325,16 +325,16 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
 	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
 	}
 	if (p->print_everything & 4) {
-	    screen->whichBuf = 1;
+	    SwitchBufPtrs(screen, 1);
 	    done_which |= 2;
 	    printLines(xw, 0, screen->max_row, p);
-	    screen->whichBuf = save_which;
+	    SwitchBufPtrs(screen, save_which);
 	}
 	if (p->print_everything & 2) {
-	    screen->whichBuf = 0;
+	    SwitchBufPtrs(screen, 0);
 	    done_which |= 1;
 	    printLines(xw, 0, screen->max_row, p);
-	    screen->whichBuf = save_which;
+	    SwitchBufPtrs(screen, save_which);
 	}
 	if (p->print_everything & 1) {
 	    if (!(done_which & (1 << screen->whichBuf))) {
@@ -836,6 +836,7 @@ xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
 
 	umask(save_umask);
 	screen->printer_state = save_state;
+	free(my_filename);
     }
 }
 

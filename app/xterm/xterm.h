@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.884 2020/12/23 00:21:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.890 2021/03/21 22:44:36 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -272,6 +272,12 @@ extern int errno;
 #endif
 
 #include <X11/Xlocale.h>
+
+#ifdef HAVE_STDNORETURN_H
+#include <stdnoreturn.h>
+#undef GCC_NORETURN
+#define GCC_NORETURN STDC_NORETURN
+#endif
 
 /*
  * FIXME:  Toggling logging from xterm hangs under Linux 2.0.29 with libc5 if
@@ -590,6 +596,7 @@ extern char **environ;
 #define XtNregisDefaultFont	"regisDefaultFont"
 #define XtNregisScreenSize	"regisScreenSize"
 #define XtNrenderFont		"renderFont"
+#define XtNresizeByPixel	"resizeByPixel"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
@@ -789,6 +796,7 @@ extern char **environ;
 #define XtCRegisDefaultFont	"RegisDefaultFont"
 #define XtCRegisScreenSize	"RegisScreenSize"
 #define XtCRenderFont		"RenderFont"
+#define XtCResizeByPixel	"ResizeByPixel"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
@@ -994,7 +1002,7 @@ extern void ShowCursor (XtermWidget /* xw */);
 extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
-extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
+extern GCC_NORETURN void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, DECNRCM_codes /* charset */, IChar * /* buf */, Cardinal  /* len */);
 extern void getKeymapResources(Widget /* w */, const char * /*mapName */, const char * /* mapClass */, const char * /* type */, void * /* result */, size_t /* size */);
@@ -1122,7 +1130,7 @@ extern void first_map_occurred (void);
 #define first_map_occurred() /* nothing */
 #endif
 
-extern void Exit (int /* n */) GCC_NORETURN;
+extern GCC_NORETURN void Exit (int /* n */);
 
 #ifndef SIG_ATOMIC_T
 #define SIG_ATOMIC_T int
@@ -1180,7 +1188,7 @@ extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
-extern void Cleanup (int /* code */) GCC_NORETURN;
+extern GCC_NORETURN void Cleanup (int /* code */);
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;
 extern void HandleEnterWindow          PROTO_XT_EV_HANDLER_ARGS;
@@ -1194,7 +1202,7 @@ extern void NormalExit (void);
 extern void Panic (const char * /* s */, int /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (XtermWidget /* xw */);
-extern void SysError (int /* i */) GCC_NORETURN;
+extern GCC_NORETURN void SysError (int /* i */);
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);
 extern void do_ansi_rqm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
@@ -1207,7 +1215,7 @@ extern void end_vt_mode (void);
 extern void free_string(String value);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
-extern void ice_error (IceConn /* iceConn */) GCC_NORETURN;
+extern GCC_NORETURN void ice_error (IceConn /* iceConn */);
 extern void init_colored_cursor (Display * /* dpy */);
 extern void reset_decudk (XtermWidget /* xw */);
 extern void set_tek_visibility (Bool /* on */);
@@ -1215,16 +1223,17 @@ extern void set_vt_visibility (Bool /* on */);
 extern void switch_modes (Bool /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
 extern void xevents (XtermWidget /* xw */);
-extern void xt_error (String /* message */) GCC_NORETURN;
+extern GCC_NORETURN void xt_error (String /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
-extern void xtermDisplayCursor (XtermWidget /* xw */);
+extern void xtermDisplayPointer (XtermWidget /* xw */);
 extern void xtermDeiconify (XtermWidget /* xw */);
 extern void xtermEmbedWindow (Window /* winToEmbedInfo */);
 extern void xtermIconify (XtermWidget /* xw */);
 extern void xtermLoadIcon (XtermWidget /* xw */, const char * /* icon_hint */);
 extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
+extern void xtermSetupPointer (XtermWidget /* xw */, const char * /* theShape */);
 extern void xtermSetWinSize (XtermWidget /* xw */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 extern void xtermUnsetenv (const char * /* var */);

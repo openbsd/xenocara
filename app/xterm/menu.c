@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.364 2020/10/13 08:07:27 tom Exp $ */
+/* $XTermId: menu.c,v 1.365 2021/03/21 20:03:03 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -149,14 +149,12 @@ static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
 static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
-static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 #if OPT_SCREEN_DUMPS
 static void do_dump_html       PROTO_XT_CALLBACK_ARGS;
 static void do_dump_svg        PROTO_XT_CALLBACK_ARGS;
 #endif
-static void do_hardreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_keepClipboard   PROTO_XT_CALLBACK_ARGS;
@@ -166,7 +164,6 @@ static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
-static void do_quit            PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
 static void do_reversevideo    PROTO_XT_CALLBACK_ARGS;
 static void do_reversewrap     PROTO_XT_CALLBACK_ARGS;
@@ -175,12 +172,16 @@ static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
-static void do_softreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
 static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
 static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
+
+static GCC_NORETURN void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
+static GCC_NORETURN void do_hardreset       PROTO_XT_CALLBACK_ARGS;
+static GCC_NORETURN void do_quit            PROTO_XT_CALLBACK_ARGS;
+static GCC_NORETURN void do_softreset       PROTO_XT_CALLBACK_ARGS;
 
 #ifdef ALLOWLOGGING
 static void do_logging         PROTO_XT_CALLBACK_ARGS;

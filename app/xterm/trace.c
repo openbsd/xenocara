@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.232 2021/02/02 00:20:30 tom Exp $ */
+/* $XTermId: trace.c,v 1.233 2021/03/09 01:14:50 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -1233,6 +1233,9 @@ TraceXtermResources(void)
     XRES_S(menuLocale);
     XRES_S(omitTranslation);
     XRES_S(keyboardType);
+#ifdef HAVE_LIB_XCURSOR
+    XRES_S(cursorTheme);
+#endif
 #if OPT_PRINT_ON_EXIT
     XRES_I(printModeNow);
     XRES_I(printModeOnXError);

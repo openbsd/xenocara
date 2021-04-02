@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.190 2020/12/11 09:23:14 tom Exp $
+# $XTermId: terminfo,v 1.197 2021/02/28 12:02:56 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2019,2020 by Thomas E. Dickey
+# Copyright 1996-2020,2021 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -134,7 +134,8 @@ xterm-new|modern xterm terminal emulator,
 	indn=\E[%p1%dS,
 	kcbt=\E[Z,
 	kent=\EOM,
-	rin=\E[%p1%dT,
+	nel=\EE,
+	use=ecma+index,
 	use=xterm+keypad,
 	use=vt420+lrmm,
 	use=xterm+sm+1006,
@@ -142,7 +143,7 @@ xterm-new|modern xterm terminal emulator,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
-	use=xterm-basic,
+	use=xterm+nofkeys,
 
 # Left/right margins are supported in xterm since patch #279 (2012/05/10)
 vt420+lrmm|VT420 left/right margins,
@@ -904,10 +905,20 @@ xterm+pce0|fragment with modifyCursorKeys:0,
 	kPRV7=\E[5;7~,
 	use=xterm+edit,
 
+ecma+italics|ECMA-48 italics,
+	ritm=\E[23m,
+	sitm=\E[3m,
+
 # The rmxx/smxx capabilities are an ncurses extension
 ecma+strikeout|ECMA-48 strikeout/crossed-out,
 	rmxx=\E[29m,
 	smxx=\E[9m,
+
+# ECMA-48 does not include the VT100 indexing and scroll-margins.  It has its
+# own variation.
+ecma+index|ECMA-48 scroll up/down,
+	indn=\E[%p1%dS,
+	rin=\E[%p1%dT,
 
 # The XM capability is an ncurses extension
 xterm+sm+1006|xterm SGR-mouse,
@@ -1012,12 +1023,10 @@ xterm-basic|modern xterm terminal emulator - common,
 	mc5=\E[5i,
 	meml=\El,
 	memu=\Em,
-	nel=\EE,
 	op=\E[39;49m,
 	rc=\E8,
 	rev=\E[7m,
 	ri=\EM,
-	ritm=\E[23m,
 	rmacs=\E(B,
 	rmam=\E[?7l,
 	rmir=\E[4l,
@@ -1098,7 +1107,6 @@ xterm-basic|modern xterm terminal emulator - common,
 		%;
 		m,
 	sgr0=\E(B\E[m,
-	sitm=\E[3m,
 	smacs=\E(0,
 	smam=\E[?7h,
 	smir=\E[4h,
@@ -1112,6 +1120,21 @@ xterm-basic|modern xterm terminal emulator - common,
 	use=ansi+enq,
 	use=xterm+alt+title,
 	use=xterm+kbs,
+
+xterm+nofkeys|building block for xterm fkey-variants,
+	npc,
+	kcbt=\E[Z,
+	kent=\EOM,
+	nel=\EE,
+	use=ecma+index,
+	use=ansi+rep,
+	use=ecma+strikeout,
+	use=vt420+lrmm,
+	use=xterm+sm+1006,
+	use=xterm+tmux,
+	use=ecma+italics,
+	use=xterm+keypad,
+	use=xterm-basic,
 #
 # The xterm-new description has all of the features, but is not completely
 # compatible with vt220.  If you are using a Sun or PC keyboard, set the
@@ -1127,15 +1150,14 @@ xterm-basic|modern xterm terminal emulator - common,
 # interferes with the DECUDK functionality.
 #
 xterm-vt220|xterm emulating vt220,
-	ka1=\EOw,
-	ka3=\EOy,
-	kb2=\EOu,
-	kc1=\EOq,
-	kc3=\EOs,
+	npc,
 	kcbt=\E[Z,
+	kcub1=\EOD,
+	kcud1=\EOB,
+	kcuf1=\EOC,
+	kcuu1=\EOA,
 	kend=\E[4~,
 	kent=\EOM,
-	kf1=\EOP,
 	kf10=\E[21~,
 	kf11=\E[23~,
 	kf12=\E[24~,
@@ -1146,10 +1168,7 @@ xterm-vt220|xterm emulating vt220,
 	kf17=\E[31~,
 	kf18=\E[32~,
 	kf19=\E[33~,
-	kf2=\EOQ,
 	kf20=\E[34~,
-	kf3=\EOR,
-	kf4=\EOS,
 	kf5=\E[15~,
 	kf6=\E[17~,
 	kf7=\E[18~,
@@ -1157,14 +1176,20 @@ xterm-vt220|xterm emulating vt220,
 	kf9=\E[20~,
 	khome=\E[1~,
 	kich1=\E[2~,
+	kmous=\E[M,
 	knp=\E[6~,
 	kpp=\E[5~,
-	ka2=\EOx,
-	kb1=\EOt,
-	kb3=\EOv,
-	kc2=\EOr,
+	nel=\EE,
 	use=xterm+app,
 	use=xterm+edit,
+	use=vt220+keypad,
+	use=ecma+italics,
+	use=ecma+index,
+	use=ansi+rep,
+	use=ecma+strikeout,
+	use=xterm+sm+1006,
+	use=xterm+tmux,
+	use=xterm+keypad,
 	use=xterm-basic,
 #
 xterm-vt52|xterm emulating dec vt52,
@@ -1322,7 +1347,7 @@ xterm-sun|xterm with sun function keys,
 	knp=\E[222z,
 	kpp=\E[216z,
 	kund=\E[195z,
-	use=xterm-basic,
+	use=xterm+nofkeys,
 #
 xterm-hp|xterm with hpterm function keys,
 	kclr=\EJ,
@@ -1344,7 +1369,7 @@ xterm-hp|xterm with hpterm function keys,
 	kich1=\EQ,
 	knp=\ES,
 	kpp=\ET,
-	use=xterm-basic,
+	use=xterm+nofkeys,
 #
 # scoterm implements 48 function-keys using shift- and control-modifiers to
 # multiple 12 function-keys.  X has a hard-coded limit of 35 function-keys,
@@ -1415,7 +1440,7 @@ xterm-sco|xterm with SCO function keys,
 	knp=\E[G,
 	kpp=\E[I,
 	use=xterm+noapp,
-	use=xterm-basic,
+	use=xterm+nofkeys,
 #
 # Other variants (these are all very old entries, from X11R5):
 xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
@@ -1454,16 +1479,6 @@ xterm-boldso|xterm with bold for standout (X Window System),
 	smso=\E[1m,
 	use=xterm-old,
 xterm-mono|monochrome xterm,
-	bce@,
-	colors@,
-	ncv@,
-	pairs@,
-	op@,
-	setab@,
-	setaf@,
-	setb@,
-	setf@,
-	sgr@,
 	use=xterm-old,
 #
 # VTxxx terminals are usually set up so that full-screen applications will use
@@ -1869,7 +1884,7 @@ xterm+256color|original xterm 256-color feature,
 	colors#0x100,
 	pairs#0x10000,
 	initc=\E]4;
-		%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
+		%p1%d;rgb:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
 	oc=\E]104\007,
 	setab=\E[
 		%?
@@ -1903,7 +1918,7 @@ xterm+256color2|xterm 256-color feature,
 		%e
 			%p1%{16}%<
 			%t10%p1%{8}%-%d
-		%e48\:5\:
+		%e48:5:
 			%p1%d
 		%;
 		m,
@@ -1914,10 +1929,12 @@ xterm+256color2|xterm 256-color feature,
 		%e
 			%p1%{16}%<
 			%t9%p1%{8}%-%d
-		%e38\:5\:
+		%e38:5:
 			%p1%d
 		%;
 		m,
+	setb@,
+	setf@,
 	use=xterm+256color,
 xterm-256color|xterm with 256 colors,
 	use=xterm+256color2,
@@ -1951,16 +1968,16 @@ xterm+direct|xterm with direct-color indexing,
 		%?
 			%p1%{8}%<
 			%t4%p1%d
-		%e48\:2\:\:
-			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+		%e48:2::
+			%p1%{65536}%/%d:%p1%{256}%/%{255}%&%d:%p1%{255}%&%d
 		%;
 		m,
 	setaf=\E[
 		%?
 			%p1%{8}%<
 			%t3%p1%d
-		%e38\:2\:\:
-			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+		%e38:2::
+			%p1%{65536}%/%d:%p1%{256}%/%{255}%&%d:%p1%{255}%&%d
 		%;
 		m,
 	setb@,

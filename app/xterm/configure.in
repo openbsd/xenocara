@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.378 2021/01/06 20:58:29 tom Exp $
+dnl $XTermId: configure.in,v 1.379 2021/03/21 16:48:26 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -288,8 +288,20 @@ CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
 CF_TERMIOS_TYPES
 
-# If we notice Xcursor, there is a workaround needed.
-AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR,1,[Define to 1 if we have the Xcursor library])])
+# The Xcursor library is normally (weakly) linked via the X11 library rather
+# than directly to applications.  xterm can select a cursor theme; users can
+# also use environment variables to select cursor size.  We would only notice
+# the library if there are development files for it.  Provide a way to disable
+# the feature if it is unwanted.
+AC_MSG_CHECKING(if we expect to use the Xcursor library)
+CF_ARG_DISABLE(xcursor,
+	[  --disable-xcursor        disable cursorTheme resource],
+	[enable_xcursor=no],
+	[enable_xcursor=yes])
+AC_MSG_RESULT($enable_xcursor)
+if test "$enable_xcursor" = yes; then
+	AC_DEFINE(HAVE_LIB_XCURSOR,1,[Define to 1 if we expect to use the Xcursor library])
+fi
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 

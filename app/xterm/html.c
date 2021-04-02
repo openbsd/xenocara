@@ -1,7 +1,7 @@
-/* $XTermId: html.c,v 1.19 2020/06/02 23:24:26 tom Exp $ */
+/* $XTermId: html.c,v 1.21 2021/02/25 23:19:16 tom Exp $ */
 
 /*
- * Copyright 2018-2019,2020	Thomas E. Dickey
+ * Copyright 2018-2020,2021	Thomas E. Dickey
  * Copyright 2015,2018		Jens Schweikhardt
  *
  * All Rights Reserved
@@ -181,8 +181,8 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 
 	if (ld->attribs[col] & BLINK) {
 	    /* White on red. */
-	    fgcolor.red = fgcolor.green = fgcolor.blue = 65535u;
-	    bgcolor.red = 65535u;
+	    fgcolor.red = fgcolor.green = fgcolor.blue = MAX_U_COLOR;
+	    bgcolor.red = MAX_U_COLOR;
 	    bgcolor.green = bgcolor.blue = 0u;
 	}
 #if OPT_WIDE_ATTRS

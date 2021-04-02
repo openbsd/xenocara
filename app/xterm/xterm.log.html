@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2313 2021/02/10 22:27:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.2326 2021/03/26 23:02:54 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -70,6 +70,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_367">Patch #367 - 2021/03/26</a></li>
+
     <li><a href="#xterm_366">Patch #366 - 2021/02/10</a></li>
 
     <li><a href="#xterm_365">Patch #365 - 2021/02/03</a></li>
@@ -1010,6 +1012,43 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_367" id="xterm_367">Patch #367 -
+  2021/03/26</a></h1>
+
+  <ul>
+    <li>add <code>OSC&nbsp;22</code> to allow programs to select
+    different pointer cursor at runtime.</li>
+
+    <li>change configuration for <em>no-return</em> functions to
+    use <code>_Noreturn</code> when it is available, because
+    <code>clang --analyze</code> does not properly handle the gcc
+    noreturn attribute.</li>
+
+    <li>add <code>cursorTheme</code> resource to provide a way to
+    enable or disable the cursor theme feature.</li>
+
+    <li>modified <code>CopyWait</code> event retries to use shorter
+    sleeps, to improve responsiveness (tmux #2556).</li>
+
+    <li>improve quoting/escaping in demo-scripts per
+    shellcheck.</li>
+
+    <li>add <code>resizeByPixel</code> resource, to permit
+    disabling window manager resizing-hints (patch by Tim
+    Oehl).</li>
+
+    <li>corrected <code>printOptsImmediate</code> handling of
+    alternate-screen (report by Abhijit Dasgupta).</li>
+
+    <li>update sample terminfo to more closely match ncurses.</li>
+
+    <li>add/improve limit-checks for Xlib calls (report by Roman
+    Fiedler).</li>
+
+    <li>fix a typo in the help-message (report by Tomas
+    Korbar).</li>
+  </ul>
+
   <h1><a name="xterm_366" id="xterm_366">Patch #366 -
   2021/02/10</a></h1>
 
@@ -1260,7 +1299,7 @@
     <li>mention <code>decGraphicsID</code> in
     <code>ctlseqs.ms</code> (suggested by Thomas Wolff).</li>
 
-    <li>modify pixel-coordinate mouse reponse to use as origin the
+    <li>modify pixel-coordinate mouse response to use as origin the
     VT100-window rather than the underlying widget, which includes
     the scrollbar (report by Thomas Wolff).</li>
 

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.701 2021/02/02 00:40:30 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.703 2021/03/02 00:25:24 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -1020,6 +1020,20 @@ noUsableXft(XtermWidget xw, const char *name)
 }
 #endif
 
+XFontStruct *
+xtermLoadQueryFont(XtermWidget xw, const char *name)
+{
+    XFontStruct *result = NULL;
+    size_t have = strlen(name);
+    if (have == 0 || have > MAX_U_STRING) {
+	;			/* just ignore it */
+    } else {
+	TScreen *screen = TScreenOf(xw);
+	result = XLoadQueryFont(screen->display, name);
+    }
+    return result;
+}
+
 /*
  * Open the given font and verify that it is non-empty.  Return a null on
  * failure.
@@ -1031,12 +1045,11 @@ xtermOpenFont(XtermWidget xw,
 	      Bool force)
 {
     Bool code = False;
-    TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermOpenFont %d:%d '%s'\n",
 	   result->warn, xw->misc.fontWarnings, NonNull(name)));
     if (!IsEmpty(name)) {
-	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
+	if ((result->fs = xtermLoadQueryFont(xw, name)) != 0) {
 	    code = True;
 	    if (EmptyFont(result->fs)) {
 		xtermCloseFont(xw, result);
@@ -5105,7 +5118,7 @@ save2FontList(XtermWidget xw,
 		    next[count++] = value;
 		    next[count] = 0;
 		    *list = next;
-		    TRACE(("... saved %s %s %lu:%s\n",
+		    TRACE(("... saved \"%s\" \"%s\" %lu:\"%s\"\n",
 			   whichFontList(xw, target),
 			   whichFontList2(xw, *list),
 			   (unsigned long) count,
@@ -5163,7 +5176,8 @@ allocFontList(XtermWidget xw,
 	int pass;
 	char **list = 0;
 
-	TRACE(("allocFontList %s %s '%s'\n", whichFontEnum(which), name, blob));
+	TRACE(("allocFontList %s name=\"%s\" source=\"%s\"\n",
+	       whichFontEnum(which), name, blob));
 
 	for (pass = 0; pass < 2; ++pass) {
 	    unsigned count = 0;

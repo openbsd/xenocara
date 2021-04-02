@@ -1,8 +1,8 @@
-/* $XTermId: graphics.c,v 1.92 2020/10/12 17:58:12 Walter.Harms Exp $ */
+/* $XTermId: graphics.c,v 1.94 2021/02/25 23:42:01 tom Exp $ */
 
 /*
- * Copyright 2013-2019,2020 by Ross Combs
- * Copyright 2013-2019,2020 by Thomas E. Dickey
+ * Copyright 2013-2020,2021 by Ross Combs
+ * Copyright 2013-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -852,7 +852,7 @@ get_new_or_matching_graphic(XtermWidget xw,
     return graphic;
 }
 
-#define ScaleForXColor(s) (unsigned short) ((long)(s) * 65535 / CHANNEL_MAX)
+#define ScaleForXColor(s) (unsigned short) ((long)(s) * MAX_U_COLOR / CHANNEL_MAX)
 
 static int
 save_allocated_color(const ColorRegister *reg, XtermWidget xw, Pixel *pix)
@@ -1054,9 +1054,9 @@ outline_refresh(TScreen const *screen,
 	      BASEX(draw_w - 1), BASEY(draw_h - 1),
 	      BASEX(0), BASEY(0));
 
-    def.red = (short) (0.7 * 65535.0);
-    def.green = (short) (0.1 * 65535.0);
-    def.blue = (short) (1.0 * 65535.0);
+    def.red = (short) (0.7 * MAX_U_COLOR);
+    def.green = (short) (0.1 * MAX_U_COLOR);
+    def.blue = (short) (1.0 * MAX_U_COLOR);
     def.flags = DoRed | DoGreen | DoBlue;
     if (allocateBestRGB(graphic->xw, &def)) {
 	xgcv.foreground = def.pixel;

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.872 2021/02/10 00:33:22 tom Exp $ */
+/* $XTermId: main.c,v 1.877 2021/03/21 22:09:06 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -93,8 +93,6 @@
 #include <version.h>
 #include <graphics.h>
 
-#include <X11/cursorfont.h>
-
 #if OPT_TOOLBAR
 
 #if defined(HAVE_LIB_XAW)
@@ -143,9 +141,9 @@
 #include <grp.h>		/* initgroups() */
 #endif
 
-static void hungtty(int) GCC_NORETURN;
-static void Syntax(char *) GCC_NORETURN;
-static void HsSysError(int) GCC_NORETURN;
+static GCC_NORETURN void hungtty(int);
+static GCC_NORETURN void Syntax(char *);
+static GCC_NORETURN void HsSysError(int);
 
 #if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || ( defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 1) )
 #define USE_POSIX_SIGNALS
@@ -904,6 +902,9 @@ static XtResource application_resources[] =
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
+#ifdef HAVE_LIB_XCURSOR
+    Sres("cursorTheme", "CursorTheme", cursorTheme, "none"),
+#endif
 #if OPT_PRINT_ON_EXIT
     Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
     Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
@@ -1395,7 +1396,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+sm",                 "turn on/off the session-management support" },
 #endif
 #if OPT_MAXIMIZE
-{"-/+maximized",           "turn on/off maxmize on startup" },
+{"-/+maximized",           "turn on/off maximize on startup" },
 {"-/+fullscreen",          "turn on/off fullscreen on startup" },
 #endif
 { NULL, NULL }};
@@ -2477,6 +2478,18 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#ifdef HAVE_LIB_XCURSOR
+	if (!strcmp(resource.cursorTheme, "none")) {
+	    TRACE(("startup with no cursorTheme\n"));
+	    init_colored_cursor(XtDisplay(toplevel));
+	} else {
+	    const char *theme = resource.cursorTheme;
+	    if (IsEmpty(theme))
+		theme = "default";
+	    TRACE(("startup with \"%s\" cursorTheme\n", theme));
+	    xtermSetenv("XCURSOR_THEME", theme);
+	}
+#endif
 #if USE_DOUBLE_BUFFER
 	if (resource.buffered_fps <= 0)
 	    resource.buffered_fps = DEF_BUFFER_RATE;

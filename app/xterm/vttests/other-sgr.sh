@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: other-sgr.sh,v 1.1 2018/09/12 22:45:06 tom Exp $
+# $XTermId: other-sgr.sh,v 1.6 2021/03/03 01:16:53 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018 by Thomas E. Dickey
+# Copyright 2018,2021 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -34,13 +34,14 @@
 # Show non-VTxx SGRs combined with the conventional VT100/VT220 SGRs
 
 ESC=""
+CSI="${ESC}["
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=/tmp/xterm$$
+TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-( test ! -f $TMP || test -s $TMP ) &&
-for verb in printf print ; do
+{ test ! -f $TMP || test -s $TMP; } &&
+for verb in "printf" "print" ; do
     rm -f $TMP
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
     if test -f $TMP ; then
@@ -56,12 +57,12 @@ rm -f $TMP
 
 if ( trap "echo exit" EXIT 2>/dev/null ) >/dev/null
 then
-    trap '$CMD $OPT "[0m"; exit' EXIT HUP INT TRAP TERM
+    trap '$CMD $OPT "${CSI}0m"; exit' EXIT HUP INT QUIT TERM
 else
-    trap '$CMD $OPT "[0m"; exit' 0    1   2   5    15
+    trap '$CMD $OPT "${CSI}0m"; exit' 0    1   2   3    15
 fi
 
-echo "[0m"
+echo "${CSI}0m"
 while true
 do
     # blink(5) and conceal(8) are omitted because they are distracting, but the
@@ -95,28 +96,28 @@ do
 		# video attributes from the first two columns intentionally
 		# "bleed through" to the other columns to help show some of
 		# the possible combinations of attributes.
-		$CMD $OPT "$GRP:[${GRP}m$attr"
-		$CMD $OPT "[${ROW}m$rlabel"
+		$CMD $OPT "$GRP:${CSI}${GRP}m$attr${SUF}"
+		$CMD $OPT "${CSI}${ROW}m$rlabel${SUF}"
 		for COL in $NUL "3" "9" "2;3" "2;9" "3;9" "2;3;9"
 		do
 		    END=""
 		    case $COL in
 		    "0")     clabel="normal  ";;
-		    "21")    clabel="double  "; END="[24m";;
-		    "2")     clabel="dim     "; END="[22m";;
-		    "3")     clabel="italic  "; END="[23m";;
-		    "2;3")   clabel="di/it   "; END="[22;23m";;
-		    "9")     clabel="crossout"; END="[29m";;
-		    "2;9")   clabel="di/cr   "; END="[22;29m";;
-		    "3;9")   clabel="it/cr   "; END="[23;29m";;
-		    "2;3;9") clabel="di/it/cr"; END="[23;29m";;
+		    "21")    clabel="double  "; END="${CSI}24m";;
+		    "2")     clabel="dim     "; END="${CSI}22m";;
+		    "3")     clabel="italic  "; END="${CSI}23m";;
+		    "2;3")   clabel="di/it   "; END="${CSI}22;23m";;
+		    "9")     clabel="crossout"; END="${CSI}29m";;
+		    "2;9")   clabel="di/cr   "; END="${CSI}22;29m";;
+		    "3;9")   clabel="it/cr   "; END="${CSI}23;29m";;
+		    "2;3;9") clabel="di/it/cr"; END="${CSI}23;29m";;
 		    *)       clabel="UNKNOWN ";;
 		    esac
 		    # The remaining columns (try to) reset their respective
 		    # attribute, to make the result somewhat readable.
-		    $CMD $OPT "[${COL}m$clabel${END}"
+		    $CMD $OPT "${CSI}${COL}m$clabel${END}${SUF}"
 		done
-		echo "[0m:$GRP"
+		echo "${CSI}0m:$GRP"
 	    done
 	done
 	[ -t 1 ] && sleep 3

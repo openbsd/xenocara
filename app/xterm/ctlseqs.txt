@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2020)
-               updated for XTerm Patch #363 (2020/12/25)
+                    invisible-island.net (2006-2021)
+               updated for XTerm Patch #367 (2021/03/23)
 
 
 
@@ -1751,6 +1751,8 @@ OSC Ps ; Pt ST
             Ps = 1 7  -> Change highlight background color to Pt.
             Ps = 1 8  -> Change Tektronix cursor color to Pt.
             Ps = 1 9  -> Change highlight foreground color to Pt.
+
+            Ps = 2 2  -> Change pointer cursor to Pt.
 
             Ps = 4 6  -> Change Log File to Pt.  This is normally
           disabled by a compile-time option.

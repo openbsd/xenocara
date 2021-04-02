@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.144 2020/06/03 00:26:23 tom Exp $ */
+/* $XTermId: resize.c,v 1.145 2021/03/21 20:03:17 tom Exp $ */
 
 /*
- * Copyright 2003-2018,2020 by Thomas E. Dickey
+ * Copyright 2003-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -103,7 +103,6 @@ int ignore_unused;
 #define	SHELL_UNKNOWN	0
 #define	SHELL_C		1
 #define	SHELL_BOURNE	2
-
 /* *INDENT-OFF* */
 static struct {
     const char *name;
@@ -182,10 +181,10 @@ static const char *wsize[EMULATIONS] =
 };
 #endif /* USE_STRUCT_WINSIZE */
 
-static void failed(const char *) GCC_NORETURN;
-static void onintr(int) GCC_NORETURN;
-static void resize_timeout(int) GCC_NORETURN;
-static void Usage(void) GCC_NORETURN;
+static GCC_NORETURN void failed(const char *);
+static GCC_NORETURN void onintr(int);
+static GCC_NORETURN void resize_timeout(int);
+static GCC_NORETURN void Usage(void);
 
 static void
 failed(const char *s)

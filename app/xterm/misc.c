@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.968 2021/02/10 00:50:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.979 2021/03/24 00:27:48 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -67,7 +67,6 @@
 
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
-#include <X11/cursorfont.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
@@ -220,7 +219,7 @@ unselectwindow(XtermWidget xw, int flag)
 
     if (screen->hide_pointer && screen->pointer_mode < pFocused) {
 	screen->hide_pointer = False;
-	xtermDisplayCursor(xw);
+	xtermDisplayPointer(xw);
     }
 
     screen->select &= ~flag;
@@ -314,16 +313,16 @@ do_xevents(XtermWidget xw)
 }
 
 void
-xtermDisplayCursor(XtermWidget xw)
+xtermDisplayPointer(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
     if (screen->Vshow) {
 	if (screen->hide_pointer) {
-	    TRACE(("Display hidden_cursor\n"));
+	    TRACE(("Display text pointer (hidden)\n"));
 	    XDefineCursor(screen->display, VWindow(screen), screen->hidden_cursor);
 	} else {
-	    TRACE(("Display pointer_cursor\n"));
+	    TRACE(("Display text pointer (visible)\n"));
 	    recolor_cursor(screen,
 			   screen->pointer_cursor,
 			   T_COLOR(screen, MOUSE_FG),
@@ -366,7 +365,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     if (enable) {
 	if (screen->hide_pointer) {
 	    screen->hide_pointer = False;
-	    xtermDisplayCursor(xw);
+	    xtermDisplayPointer(xw);
 	    switch (screen->send_mouse_pos) {
 	    case ANY_EVENT_MOUSE:
 		break;
@@ -384,7 +383,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 	} else {
 	    tried = 0;
 	    screen->hide_pointer = True;
-	    xtermDisplayCursor(xw);
+	    xtermDisplayPointer(xw);
 	    MotionOn(screen, xw);
 	}
     }
@@ -717,9 +716,9 @@ make_hidden_cursor(XtermWidget xw)
      * server insists on drawing _something_.
      */
     TRACE(("Ask for nil2 font\n"));
-    if ((fn = XLoadQueryFont(dpy, "nil2")) == 0) {
+    if ((fn = xtermLoadQueryFont(xw, "nil2")) == 0) {
 	TRACE(("...Ask for fixed font\n"));
-	fn = XLoadQueryFont(dpy, DEFFONT);
+	fn = xtermLoadQueryFont(xw, DEFFONT);
     }
 
     if (fn != None) {
@@ -739,10 +738,10 @@ make_hidden_cursor(XtermWidget xw)
  * default theme.  Testing seems to show that we only have to provide this
  * until the window is initialized.
  */
+#ifdef HAVE_LIB_XCURSOR
 void
 init_colored_cursor(Display *dpy)
 {
-#ifdef HAVE_LIB_XCURSOR
     static const char theme[] = "index.theme";
     static const char pattern[] = "xtermXXXXXXXX";
     char *env = getenv("XCURSOR_THEME");
@@ -753,7 +752,11 @@ init_colored_cursor(Display *dpy)
      */
     if (IsEmpty(env)) {
 	env = XGetDefault(dpy, "Xcursor", "theme");
+	TRACE(("XGetDefault Xcursor theme \"%s\"\n", NonNull(env)));
+    } else {
+	TRACE(("getenv(XCURSOR_THEME) \"%s\"\n", NonNull(env)));
     }
+
     /*
      * If neither found, provide our own default theme.
      */
@@ -761,6 +764,8 @@ init_colored_cursor(Display *dpy)
 	const char *tmp_dir;
 	char *filename;
 	size_t needed;
+
+	TRACE(("init_colored_cursor will make an empty Xcursor theme\n"));
 
 	if ((tmp_dir = getenv("TMPDIR")) == 0) {
 	    tmp_dir = P_tmpdir;
@@ -790,21 +795,25 @@ init_colored_cursor(Display *dpy)
 
 		strcat(leaf, "/");
 		strcat(leaf, theme);
+
 		if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
 		    fprintf(fp, "[Icon Theme]\n");
 		    fclose(fp);
 		    *leaf = '\0';
 		    xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
 		    *leaf = '/';
+
+		    TRACE(("...initialized xterm_cursor_theme \"%s\"\n",
+			   xterm_cursor_theme));
+		    atexit(cleanup_colored_cursor);
+		} else {
+		    FreeAndNull(xterm_cursor_theme);
 		}
-		atexit(cleanup_colored_cursor);
 	    }
 	}
     }
-#else
-    (void) dpy;
-#endif /* HAVE_LIB_XCURSOR */
 }
+#endif /* HAVE_LIB_XCURSOR */
 
 /*
  * Once done, discard the file and directory holding it.
@@ -821,9 +830,8 @@ cleanup_colored_cursor(void)
 	    && (sb.st_mode & S_IFMT) == S_IFDIR) {
 	    unlink(xterm_cursor_theme);
 	    rmdir(my_path);
-	    free(xterm_cursor_theme);
-	    xterm_cursor_theme = 0;
 	}
+	FreeAndNull(xterm_cursor_theme);
     }
 #endif /* HAVE_LIB_XCURSOR */
 }
@@ -843,7 +851,8 @@ make_colored_cursor(unsigned c_index,		/* index into font */
 
 	/* adapted from XCreateFontCursor(), which hardcodes the font name */
 	TRACE(("loading cursor from alternate cursor font\n"));
-	if ((myFont.fs = XLoadQueryFont(dpy, screen->cursor_font_name)) != 0) {
+	myFont.fs = xtermLoadQueryFont(term, screen->cursor_font_name);
+	if (myFont.fs != NULL) {
 	    if (!xtermMissingChar(c_index, &myFont)
 		&& !xtermMissingChar(c_index + 1, &myFont)) {
 #define DATA(c) { 0UL, c, c, c, 0, 0 }
@@ -879,6 +888,148 @@ make_colored_cursor(unsigned c_index,		/* index into font */
 	recolor_cursor(screen, c, fg, bg);
     }
     return c;
+}
+
+/* adapted from <X11/cursorfont.h> */
+static int
+LookupCursorShape(const char *name)
+{
+#define DATA(name) { XC_##name, #name }
+    static struct {
+	int code;
+	const char name[25];
+    } table[] = {
+	DATA(X_cursor),
+	    DATA(arrow),
+	    DATA(based_arrow_down),
+	    DATA(based_arrow_up),
+	    DATA(boat),
+	    DATA(bogosity),
+	    DATA(bottom_left_corner),
+	    DATA(bottom_right_corner),
+	    DATA(bottom_side),
+	    DATA(bottom_tee),
+	    DATA(box_spiral),
+	    DATA(center_ptr),
+	    DATA(circle),
+	    DATA(clock),
+	    DATA(coffee_mug),
+	    DATA(cross),
+	    DATA(cross_reverse),
+	    DATA(crosshair),
+	    DATA(diamond_cross),
+	    DATA(dot),
+	    DATA(dotbox),
+	    DATA(double_arrow),
+	    DATA(draft_large),
+	    DATA(draft_small),
+	    DATA(draped_box),
+	    DATA(exchange),
+	    DATA(fleur),
+	    DATA(gobbler),
+	    DATA(gumby),
+	    DATA(hand1),
+	    DATA(hand2),
+	    DATA(heart),
+	    DATA(icon),
+	    DATA(iron_cross),
+	    DATA(left_ptr),
+	    DATA(left_side),
+	    DATA(left_tee),
+	    DATA(leftbutton),
+	    DATA(ll_angle),
+	    DATA(lr_angle),
+	    DATA(man),
+	    DATA(middlebutton),
+	    DATA(mouse),
+	    DATA(pencil),
+	    DATA(pirate),
+	    DATA(plus),
+	    DATA(question_arrow),
+	    DATA(right_ptr),
+	    DATA(right_side),
+	    DATA(right_tee),
+	    DATA(rightbutton),
+	    DATA(rtl_logo),
+	    DATA(sailboat),
+	    DATA(sb_down_arrow),
+	    DATA(sb_h_double_arrow),
+	    DATA(sb_left_arrow),
+	    DATA(sb_right_arrow),
+	    DATA(sb_up_arrow),
+	    DATA(sb_v_double_arrow),
+	    DATA(shuttle),
+	    DATA(sizing),
+	    DATA(spider),
+	    DATA(spraycan),
+	    DATA(star),
+	    DATA(target),
+	    DATA(tcross),
+	    DATA(top_left_arrow),
+	    DATA(top_left_corner),
+	    DATA(top_right_corner),
+	    DATA(top_side),
+	    DATA(top_tee),
+	    DATA(trek),
+	    DATA(ul_angle),
+	    DATA(umbrella),
+	    DATA(ur_angle),
+	    DATA(watch),
+	    DATA(xterm),
+    };
+#undef DATA
+    Cardinal j;
+    int result = -1;
+    if (!IsEmpty(name)) {
+	for (j = 0; j < XtNumber(table); ++j) {
+	    if (!strcmp(name, table[j].name)) {
+		result = table[j].code;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+void
+xtermSetupPointer(XtermWidget xw, const char *theShape)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned shape = XC_xterm;
+    int other = LookupCursorShape(theShape);
+    unsigned which;
+
+    if (other >= 0 && other < XC_num_glyphs)
+	shape = (unsigned) other;
+
+    TRACE(("looked up shape index %d from shape name \"%s\"\n", other,
+	   NonNull(theShape)));
+
+    which = (unsigned) (shape / 2);
+    if (xw->work.pointer_cursors[which] == None) {
+	TRACE(("creating text pointer cursor from shape %d\n", shape));
+	xw->work.pointer_cursors[which] =
+	    make_colored_cursor(shape,
+				T_COLOR(screen, MOUSE_FG),
+				T_COLOR(screen, MOUSE_BG));
+    } else {
+	TRACE(("updating text pointer cursor for shape %d\n", shape));
+	recolor_cursor(screen,
+		       screen->pointer_cursor,
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
+    }
+    if (screen->pointer_cursor != xw->work.pointer_cursors[which]) {
+	screen->pointer_cursor = xw->work.pointer_cursors[which];
+	TRACE(("defining text pointer cursor with shape %d\n", shape));
+	XDefineCursor(screen->display, VShellWindow(xw), screen->pointer_cursor);
+	if (XtIsRealized((Widget) xw)) {
+	    /* briefly override pointerMode after changing the pointer */
+	    if (screen->pointer_mode != pNever)
+		screen->hide_pointer = True;
+	    xtermShowPointer(xw, True);
+	}
+    }
 }
 
 /* ARGSUSED */
@@ -3092,8 +3243,13 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
     Boolean result = False;
     TScreen *screen = TScreenOf(xw);
     Colormap cmap = xw->core.colormap;
+    size_t have = strlen(spec);
 
-    if (XParseColor(screen->display, cmap, spec, def)) {
+    if (have == 0 || have > MAX_U_STRING) {
+	if (resource.reportColors) {
+	    printf("color  (ignored, length %lu)\n", have);
+	}
+    } else if (XParseColor(screen->display, cmap, spec, def)) {
 	XColor save_def = *def;
 	if (resource.reportColors) {
 	    printf("color  %04x/%04x/%04x = \"%s\"\n",
@@ -4173,6 +4329,10 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	if (xw->misc.dynamicColors) {
 	    ResetColorsRequest(xw, mode);
 	}
+	break;
+
+    case 22:
+	xtermSetupPointer(xw, buf);
 	break;
 
     case 30:
@@ -6919,8 +7079,6 @@ xtermOpenApplication(XtAppContext * app_context_return,
 			     fallback_resources,
 			     NULL, 0);
 #endif /* OPT_SESSION_MGT */
-    init_colored_cursor(XtDisplay(result));
-
     XtSetErrorHandler(NULL);
 
     return result;

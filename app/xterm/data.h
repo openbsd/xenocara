@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.138 2019/10/06 20:16:02 tom Exp $ */
+/* $XTermId: data.h,v 1.139 2021/03/09 01:08:15 tom Exp $ */
 
 /*
- * Copyright 2002-2018,2019 by Thomas E. Dickey
+ * Copyright 2002-2019,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -164,6 +164,10 @@ typedef struct XTERM_RESOURCE {
     Boolean utmpInhibit;
     Boolean utmpDisplayId;
     Boolean messages;
+
+#ifdef HAVE_LIB_XCURSOR
+    String cursorTheme;
+#endif
 
     String menuLocale;
     String omitTranslation;

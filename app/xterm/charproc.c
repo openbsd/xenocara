@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1825 2021/02/10 00:49:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1830 2021/03/21 22:45:24 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -83,7 +83,6 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <X11/cursorfont.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
@@ -481,6 +480,7 @@ static XtResource xterm_resources[] =
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
     Bres(XtNprinterNewLine, XtCPrinterNewLine, SPS.printer_newline, True),
     Bres(XtNquietGrab, XtCQuietGrab, screen.quiet_grab, False),
+    Bres(XtNresizeByPixel, XtCResizeByPixel, misc.resizeByPixel, False),
     Bres(XtNreverseVideo, XtCReverseVideo, misc.re_verse, False),
     Bres(XtNreverseWrap, XtCReverseWrap, misc.reverseWrap, False),
     Bres(XtNscrollBar, XtCScrollBar, misc.scrollbar, False),
@@ -2831,8 +2831,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam > 0) {
 		value = zero_if_default(nparam - 1);
 		SetParam(nparam - 1, (10 * value) + ((int) c - '0'));
-		if (GetParam(nparam - 1) > 65535)
-		    SetParam(nparam - 1, 65535);
+		if (GetParam(nparam - 1) > MAX_I_PARAM)
+		    SetParam(nparam - 1, MAX_I_PARAM);
 		if (sp->parsestate == csi_table)
 		    sp->parsestate = csi2_table;
 	    }
@@ -8188,7 +8188,7 @@ VTResize(Widget w)
     }
 }
 
-#define okDimension(src,dst) ((src <= 32767) \
+#define okDimension(src,dst) ((src <= MAX_U_COORD) \
 			  && ((dst = (Dimension) src) == src))
 
 static void
@@ -9503,8 +9503,8 @@ VTInitialize(Widget wrequest,
 
 #ifndef NO_ACTIVE_ICON
     init_Sres(screen.icon_fontname);
-    getIconicFont(screen)->fs = XLoadQueryFont(screen->display,
-					       screen->icon_fontname);
+    getIconicFont(screen)->fs = xtermLoadQueryFont(wnew,
+						   screen->icon_fontname);
     TRACE(("iconFont '%s' %sloaded successfully\n",
 	   screen->icon_fontname,
 	   getIconicFont(screen)->fs ? "" : "NOT "));
@@ -9522,6 +9522,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.cdXtraScroll);
     init_Bres(misc.color_inner_border);
     init_Bres(misc.dynamicColors);
+    init_Bres(misc.resizeByPixel);
 
 #if OPT_DEC_CHRSET
     for (i = 0; i < NUM_CHRSET; i++) {
@@ -10845,108 +10846,6 @@ initBorderGC(XtermWidget xw, VTwin *win)
     }
 #endif
 }
-
-/* adapted from <X11/cursorfont.h> */
-static int
-LookupCursorShape(const char *name)
-{
-#define DATA(name) { XC_##name, #name }
-    static struct {
-	int code;
-	const char name[25];
-    } table[] = {
-	DATA(X_cursor),
-	    DATA(arrow),
-	    DATA(based_arrow_down),
-	    DATA(based_arrow_up),
-	    DATA(boat),
-	    DATA(bogosity),
-	    DATA(bottom_left_corner),
-	    DATA(bottom_right_corner),
-	    DATA(bottom_side),
-	    DATA(bottom_tee),
-	    DATA(box_spiral),
-	    DATA(center_ptr),
-	    DATA(circle),
-	    DATA(clock),
-	    DATA(coffee_mug),
-	    DATA(cross),
-	    DATA(cross_reverse),
-	    DATA(crosshair),
-	    DATA(diamond_cross),
-	    DATA(dot),
-	    DATA(dotbox),
-	    DATA(double_arrow),
-	    DATA(draft_large),
-	    DATA(draft_small),
-	    DATA(draped_box),
-	    DATA(exchange),
-	    DATA(fleur),
-	    DATA(gobbler),
-	    DATA(gumby),
-	    DATA(hand1),
-	    DATA(hand2),
-	    DATA(heart),
-	    DATA(icon),
-	    DATA(iron_cross),
-	    DATA(left_ptr),
-	    DATA(left_side),
-	    DATA(left_tee),
-	    DATA(leftbutton),
-	    DATA(ll_angle),
-	    DATA(lr_angle),
-	    DATA(man),
-	    DATA(middlebutton),
-	    DATA(mouse),
-	    DATA(pencil),
-	    DATA(pirate),
-	    DATA(plus),
-	    DATA(question_arrow),
-	    DATA(right_ptr),
-	    DATA(right_side),
-	    DATA(right_tee),
-	    DATA(rightbutton),
-	    DATA(rtl_logo),
-	    DATA(sailboat),
-	    DATA(sb_down_arrow),
-	    DATA(sb_h_double_arrow),
-	    DATA(sb_left_arrow),
-	    DATA(sb_right_arrow),
-	    DATA(sb_up_arrow),
-	    DATA(sb_v_double_arrow),
-	    DATA(shuttle),
-	    DATA(sizing),
-	    DATA(spider),
-	    DATA(spraycan),
-	    DATA(star),
-	    DATA(target),
-	    DATA(tcross),
-	    DATA(top_left_arrow),
-	    DATA(top_left_corner),
-	    DATA(top_right_corner),
-	    DATA(top_side),
-	    DATA(top_tee),
-	    DATA(trek),
-	    DATA(ul_angle),
-	    DATA(umbrella),
-	    DATA(ur_angle),
-	    DATA(watch),
-	    DATA(xterm),
-    };
-#undef DATA
-    Cardinal j;
-    int result = -1;
-    if (!IsEmpty(name)) {
-	for (j = 0; j < XtNumber(table); ++j) {
-	    if (!strcmp(name, table[j].name)) {
-		result = table[j].code;
-		break;
-	    }
-	}
-    }
-    return result;
-}
-
 #if USE_DOUBLE_BUFFER
 static Boolean
 allocateDbe(XtermWidget xw, VTwin *target)
@@ -11040,28 +10939,7 @@ VTRealize(Widget w,
     }
 #endif
 
-    /* making cursor */
-    if (screen->pointer_cursor == None) {
-	unsigned shape = XC_xterm;
-	int other = LookupCursorShape(screen->pointer_shape);
-
-	TRACE(("looked up shape index %d from shape name \"%s\"\n", other,
-	       NonNull(screen->pointer_shape)));
-	if (other >= 0)
-	    shape = (unsigned) other;
-
-	TRACE(("creating text pointer cursor from shape %d\n", shape));
-	screen->pointer_cursor =
-	    make_colored_cursor(shape,
-				T_COLOR(screen, MOUSE_FG),
-				T_COLOR(screen, MOUSE_BG));
-    } else {
-	TRACE(("recoloring existing text pointer cursor\n"));
-	recolor_cursor(screen,
-		       screen->pointer_cursor,
-		       T_COLOR(screen, MOUSE_FG),
-		       T_COLOR(screen, MOUSE_BG));
-    }
+    xtermSetupPointer(xw, screen->pointer_shape);
 
     /* set defaults */
     pos.x = 1;
@@ -11210,8 +11088,7 @@ VTRealize(Widget w,
     screen->icon_fontnum = -1;
     if (getIconicFont(screen)->fs == 0) {
 	getIconicFont(screen)->fs =
-	    XLoadQueryFont(screen->display,
-			   screen->MenuFontName(fontMenu_font1));
+	    xtermLoadQueryFont(xw, screen->MenuFontName(fontMenu_font1));
 	ReportIcons(("%susing font1 '%s' as iconFont\n",
 		     (getIconicFont(screen)->fs
 		      ? ""

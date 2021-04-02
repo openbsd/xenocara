@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.30 2021/02/09 01:32:10 tom Exp $
+-- $XTermId: THANKS,v 1.31 2021/03/01 22:00:49 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -225,6 +225,7 @@ Thierry Reding
 Thomas Wolff
 Thorsten Glaser
 Tim Adye
+Tim Oehl
 Tim Pope
 Tobias Stoeckmann
 Todd Eigenschink

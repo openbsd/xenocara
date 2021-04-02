@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.17 2020/06/02 23:24:31 tom Exp $ */
+/* $XTermId: svg.c,v 1.19 2021/02/25 23:20:05 tom Exp $ */
 
 /*
- * Copyright 2017-2019,2020	Thomas E. Dickey
+ * Copyright 2017-2020,2021	Thomas E. Dickey
  * Copyright 2015-2016,2017	Jens Schweikhardt
  *
  * All Rights Reserved
@@ -172,8 +172,8 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 
 	if (ld->attribs[col] & BLINK) {
 	    /* White on red. */
-	    fgcolor.red = fgcolor.green = fgcolor.blue = 65535u;
-	    bgcolor.red = 65535u;
+	    fgcolor.red = fgcolor.green = fgcolor.blue = MAX_U_COLOR;
+	    bgcolor.red = MAX_U_COLOR;
 	    bgcolor.green = bgcolor.blue = 0u;
 	}
 #if OPT_WIDE_ATTRS

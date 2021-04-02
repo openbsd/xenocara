@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1026 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1030 2021/03/21 22:11:10 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,6 +67,8 @@
 #include <X11/Shell.h>		/* for XtNdieCallback, etc. */
 #include <X11/StringDefs.h>	/* for standard resource names */
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
+#include <X11/cursorfont.h>
+
 
 #undef bcopy
 #undef bzero
@@ -406,6 +408,12 @@ typedef struct {
 #ifndef DFT_KBD_DIALECT
 #define DFT_KBD_DIALECT "B"		/* default USASCII */
 #endif
+
+#define MAX_I_PARAM	65535		/* parameters */
+#define MAX_I_DELAY	32767		/* time-delay in ReGIS */
+#define MAX_U_COLOR	65535u		/* colors */
+#define MAX_U_COORD	32767u		/* coordinates */
+#define MAX_U_STRING	65535u		/* string-length */
 
 /* constants used for utf8 mode */
 #define UCS_REPL	0xfffd
@@ -2518,7 +2526,7 @@ typedef struct {
 	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
 	String		pointer_shape;	/* name of shape in cursor font */
-	Cursor		pointer_cursor;	/* pointer cursor in window	*/
+	Cursor		pointer_cursor;	/* current pointer cursor	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
@@ -3112,6 +3120,7 @@ typedef struct _Misc {
     Boolean login_shell;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
+    Boolean resizeByPixel;
     XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;
@@ -3177,6 +3186,8 @@ typedef struct _Work {
 	char *str;
 	int len;
     } user_keys[MAX_UDK];
+#define MAX_POINTER (XC_num_glyphs/2)
+    Cursor pointer_cursors[MAX_POINTER]; /* saved cursors	*/
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
     char *wm_name;

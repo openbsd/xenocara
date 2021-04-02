@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.597 2021/02/02 00:19:32 tom Exp $ */
+/* $XTermId: screen.c,v 1.598 2021/03/01 08:54:26 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3213,7 +3213,9 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 	    unset_resize_increments(xw);
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
 	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
-	    set_resize_increments(xw);
+	    if (!xw->misc.resizeByPixel) {
+		set_resize_increments(xw);
+	    }
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
 	} else {
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);

@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.145 2020/09/15 11:09:06 tom Exp $ */
+/* $XTermId: menu.h,v 1.146 2021/03/21 20:03:03 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -95,7 +95,6 @@ extern void HandleAutoLineFeed     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAutoWrap         PROTO_XT_ACTIONS_ARGS;
 extern void HandleBackarrow        PROTO_XT_ACTIONS_ARGS;
 extern void HandleBellIsUrgent     PROTO_XT_ACTIONS_ARGS;
-extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS GCC_NORETURN;
 extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursorBlink      PROTO_XT_ACTIONS_ARGS;
@@ -107,7 +106,6 @@ extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontPacked       PROTO_XT_ACTIONS_ARGS;
 extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
-extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS GCC_NORETURN;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeepClipboard    PROTO_XT_ACTIONS_ARGS;
@@ -123,7 +121,6 @@ extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintImmediate   PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintOnError     PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
-extern void HandleQuit             PROTO_XT_ACTIONS_ARGS GCC_NORETURN;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
@@ -141,7 +138,6 @@ extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
 extern void HandleSixelScrolling   PROTO_XT_ACTIONS_ARGS;
-extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS GCC_NORETURN;
 extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunKeyboard      PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
@@ -155,6 +151,11 @@ extern void HandleUTF8Title        PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 extern void HandleWriteError       PROTO_XT_ACTIONS_ARGS;
 extern void HandleWriteNow         PROTO_XT_ACTIONS_ARGS;
+
+extern GCC_NORETURN void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
+extern GCC_NORETURN void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
+extern GCC_NORETURN void HandleQuit             PROTO_XT_ACTIONS_ARGS;
+extern GCC_NORETURN void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
 
 extern void SetupMenus (Widget /*shell*/, Widget */*forms*/, Widget */*menus*/, Dimension * /*menu_high*/);
 

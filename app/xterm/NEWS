@@ -1,20 +1,23 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #366 - 2021/02/10
+                            Patch #367 - 2021/03/26
 
-     * correct   a  compiler-warning  fix  in  patch  #352  which  allowed
-       sign-extension of coordinate values (report by "CismonX").
-     * correct  upper-limit for selection buffer, accounting for combining
-       characters (report/testcase by Tavis Ormandy).
-     * with alwaysHighlight true, xterm does not properly track focus. The
-       screen->select   FOCUS  flag  remains  always  on,  which  prevents
-       bellIsUrgent  from  working, as the urgent WM_HINT flag is only set
-       in  setXUrgency()  when  the  window  is  not  focused. Fix this by
-       updating screen->select in unselectwindow() regardless of the value
-       of always_highlight (patch by Jiri Bohac).
-     * improve  fix  for  interaction between SRM and ENQ (report by Grant
-       Taylor).
-     * build-fix   for  --with-Xaw3dxft,  needed  when  --with-toolbar  is
-       omitted (report by Jimmy Olgeni, Emanuel Haupt).
+     * add  OSC 22 to allow programs to select different pointer cursor at
+       runtime.
+     * change  configuration for no-return functions to use _Noreturn when
+       it  is  available, because clang --analyze does not properly handle
+       the gcc noreturn attribute.
+     * add  cursorTheme resource to provide a way to enable or disable the
+       cursor theme feature.
+     * modified  CopyWait  event retries to use shorter sleeps, to improve
+       responsiveness (tmux #2556).
+     * improve quoting/escaping in demo-scripts per shellcheck.
+     * add  resizeByPixel  resource,  to  permit  disabling window manager
+       resizing-hints (patch by Tim Oehl).
+     * corrected  printOptsImmediate  handling of alternate-screen (report
+       by Abhijit Dasgupta).
+     * update sample terminfo to more closely match ncurses.
+     * add/improve limit-checks for Xlib calls (report by Roman Fiedler).
+     * fix a typo in the help-message (report by Tomas Korbar).
 

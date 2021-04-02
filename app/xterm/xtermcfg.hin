@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.220 2020/10/05 22:42:06 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.221 2021/03/21 19:51:33 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -97,6 +97,7 @@
 #undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #undef HAVE_STDINT_H		/* AC_PROG_CC_STDC */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
+#undef HAVE_STDNORETURN_H	/* CF_C11_NORETURN */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
 #undef HAVE_SYS_TTYDEFAULTS_H	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
@@ -198,6 +199,7 @@
 #undef PROCFS_ROOT		/* CF_ARG_ENABLE(exec-xterm) */
 #undef SCROLLBAR_RIGHT		/* CF_ARG_ENABLE(rightbar) */
 #undef SIG_ATOMIC_T		/* CF_SIG_ATOMIC_T */
+#undef STDC_NORETURN		/* CF_C11_NORETURN */
 #undef SVR4			/* CF_SVR4, imake */
 #undef SYSV			/* CF_SYSV, imake */
 #undef TIME_WITH_SYS_TIME	/* AC_HEADER_TIME */

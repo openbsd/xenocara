@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.136 2020/10/30 00:09:09 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.137 2021/02/25 23:03:24 tom Exp $ */
 
 /*
- * Copyright 1998-2019,2020 by Thomas E. Dickey
+ * Copyright 1998-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -38,6 +38,7 @@
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
 extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, Bool /* force */);
+extern XFontStruct * xtermLoadQueryFont(XtermWidget /* xw */, const char * /*name */);
 extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
 extern XTermFonts * getItalicFont (TScreen * /* screen */, int /* which */);
 extern XTermFonts * getNormalFont (TScreen * /* screen */, int /* which */);

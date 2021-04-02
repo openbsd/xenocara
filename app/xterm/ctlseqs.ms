@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.609 2020/12/25 14:17:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.612 2021/03/24 00:41:44 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2019,2020 by Thomas E. Dickey
+.\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #363
-.ds RF 2020/12/25
+.ds LF Patch #367
+.ds RF 2021/03/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2020)
+invisible-island.net (2006-2021)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -2457,6 +2457,8 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt.
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt.
   \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt.
+.sp
+  \*(Ps = \*2\*2 \(-> Change pointer cursor to \*(Pt.
 .sP
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt.
 This is normally disabled by a compile-time option.

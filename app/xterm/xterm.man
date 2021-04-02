@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.839 2021/02/02 00:24:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.844 2021/03/26 23:11:13 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1626,6 +1626,34 @@ this gives the maximum number of frames/second.
 The default is
 \*(``40\*(''
 and is limited to the range 1 through 100.
+.TP 8
+.B "cursorTheme\fP (class\fB CursorTheme\fP)"
+The Xcursor(__miscmansuffix__) library provides a way to 
+The X11 library uses this library to extend the font- and glyph-cursor
+calls used by applications such as \fI\*n\fP  to substitute external
+files for the built-in \*(``core\*('' cursors provided by X.
+.IP
+\fI\*N\fP uses the \fBpointerShape\fP resource to select the X cursor shape.
+Most of the available sets of cursor themes provide an incomplete set
+of \*(``core\*('' cursors (while possibly adding other cursors).
+Because of this limitation, \fI\*n\fP disables the feature by default.
+.IP
+The cursor theme feature can be useful because X cursors are not scalable
+and on a high-resolution display, the cursors are hard to find.
+Some of the cursor themes include
+larger cursors to work around this limitation:
+.RS
+.bP
+The default core cursors are 8x8 pixels;
+.bP
+Some cursor themes include cursors up to the X server limit of 64x64 pixels.
+.RE
+.IP
+At startup, \fI\*n\fP sets the \fBXCURSOR_THEME\fP environment variable
+to enable or disable the cursor theme feature.
+The default value is \*(``none\*(''.
+Other values (including \*(``default\*('') are passed to the Xcursor
+library to select a cursor theme.
 .TP 8
 .B "fullscreen\fP (class\fB Fullscreen\fP)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -4449,6 +4477,94 @@ always.
 .B "pointerShape\fP (class\fB Cursor\fP)"
 Specifies the name of the shape of the pointer.
 The default is \*(``xterm\*(''.
+.IP
+Other shapes can be selected.
+Here is a list of the \*(``core\*('' (i.e., \fIstandard\fP) names
+extracted from <X11/cursorfont.h>:
+.RS 5
+.IP
+X_cursor,
+arrow,
+based_arrow_down,
+based_arrow_up,
+boat,
+bogosity,
+bottom_left_corner,
+bottom_right_corner,
+bottom_side,
+bottom_tee,
+box_spiral,
+center_ptr,
+circle,
+clock,
+coffee_mug,
+cross,
+cross_reverse,
+crosshair,
+diamond_cross,
+dot,
+dotbox,
+double_arrow,
+draft_large,
+draft_small,
+draped_box,
+exchange,
+fleur,
+gobbler,
+gumby,
+hand1,
+hand2,
+heart,
+icon,
+iron_cross,
+left_ptr,
+left_side,
+left_tee,
+leftbutton,
+ll_angle,
+lr_angle,
+man,
+middlebutton,
+mouse,
+pencil,
+pirate,
+plus,
+question_arrow,
+right_ptr,
+right_side,
+right_tee,
+rightbutton,
+rtl_logo,
+sailboat,
+sb_down_arrow,
+sb_h_double_arrow,
+sb_left_arrow,
+sb_right_arrow,
+sb_up_arrow,
+sb_v_double_arrow,
+shuttle,
+sizing,
+spider,
+spraycan,
+star,
+target,
+tcross,
+top_left_arrow,
+top_left_corner,
+top_right_corner,
+top_side,
+top_tee,
+trek,
+ul_angle,
+umbrella,
+ur_angle,
+watch,
+xterm
+.RE
+.IP
+If you are using a \fIcursor theme\fP,
+expect it to provide about a third of those names,
+while adding others.
 .TP 8
 .B "popOnBell\fP (class\fB PopOnBell\fP)"
 Specifies whether the window would be raised when Control-G is received.
@@ -4696,6 +4812,20 @@ If the \fBfaceName\fP resource is set,
 then start by using the TrueType font rather than the bitmap font.
 .RE
 .RE
+.TP 8
+.B "resizeByPixel\fP (class\fB ResizeByPixel\fP)"
+Set this \*(``true\*(''
+to disable hints to the window manager that request resizing
+by character rather than pixels.
+.IP
+Most window managers provide visual feedback showing the size of a
+window as you resize it, using these hints.
+When you maximize \fI\*n\fP, it disables those hints to allow
+the window manager to make better use of fractional rows or columns.
+Setting this resource disables the hints all the time.
+.IP
+The default is
+\*(``false\*(''.
 .TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
 Affects the behavior when the window is resized to be taller or shorter.
@@ -6872,70 +7002,70 @@ UTF-8 mode, only the first 256 entries of this table will be used.
 The default table starts as follows \-
 .NS
 static int charClass[256] = {
-/\(** NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
+/* NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,   1,   1,   1,   1,   1,   1,   1,
-/\(**  BS   HT   NL   VT   NP   CR   SO   SI */
+/*  BS   HT   NL   VT   NP   CR   SO   SI */
      1,  32,   1,   1,   1,   1,   1,   1,
-/\(** DLE  DC1  DC2  DC3  DC4  NAK  SYN  ETB */
+/* DLE  DC1  DC2  DC3  DC4  NAK  SYN  ETB */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(** CAN   EM  SUB  ESC   FS   GS   RS   US */
+/* CAN   EM  SUB  ESC   FS   GS   RS   US */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(**  SP    !    "    #    $    %    &    \*(AQ */
+/*  SP    !    "    #    $    %    &    \*(AQ */
 .\"   " <- for emacs autocolor to work well :-)
     32,  33,  34,  35,  36,  37,  38,  39,
-/\(**   (    )    *    +    ,    \-    .    / */
+/*   (    )    *    +    ,    \-    .    / */
     40,  41,  42,  43,  44,  45,  46,  47,
-/\(**   0    1    2    3    4    5    6    7 */
+/*   0    1    2    3    4    5    6    7 */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   8    9    :    ;    <    =    >    ? */
+/*   8    9    :    ;    <    =    >    ? */
     48,  48,  58,  59,  60,  61,  62,  63,
-/\(**   @    A    B    C    D    E    F    G */
+/*   @    A    B    C    D    E    F    G */
     64,  48,  48,  48,  48,  48,  48,  48,
-/\(**   H    I    J    K    L    M    N    O */
+/*   H    I    J    K    L    M    N    O */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   P    Q    R    S    T    U    V    W */
+/*   P    Q    R    S    T    U    V    W */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   X    Y    Z    [    \\    ]    ^    _ */
+/*   X    Y    Z    [    \\    ]    ^    _ */
     48,  48,  48,  91,  92,  93,  94,  48,
-/\(**   `    a    b    c    d    e    f    g */
+/*   `    a    b    c    d    e    f    g */
     96,  48,  48,  48,  48,  48,  48,  48,
-/\(**   h    i    j    k    l    m    n    o */
+/*   h    i    j    k    l    m    n    o */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   p    q    r    s    t    u    v    w */
+/*   p    q    r    s    t    u    v    w */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   x    y    z    {    |    }    ~  DEL */
+/*   x    y    z    {    |    }    ~  DEL */
     48,  48,  48, 123, 124, 125, 126,   1,
-/\(** x80  x81  x82  x83  IND  NEL  SSA  ESA */
+/* x80  x81  x82  x83  IND  NEL  SSA  ESA */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(** HTS  HTJ  VTS  PLD  PLU   RI  SS2  SS3 */
+/* HTS  HTJ  VTS  PLD  PLU   RI  SS2  SS3 */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(** DCS  PU1  PU2  STS  CCH   MW  SPA  EPA */
+/* DCS  PU1  PU2  STS  CCH   MW  SPA  EPA */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(** x98  x99  x9A  CSI   ST  OSC   PM  APC */
+/* x98  x99  x9A  CSI   ST  OSC   PM  APC */
      1,   1,   1,   1,   1,   1,   1,   1,
-/\(**   \-    i   c/    L   ox   Y\-    |   So */
+/*   \-    i   c/    L   ox   Y\-    |   So */
    160, 161, 162, 163, 164, 165, 166, 167,
-/\(**  ..   c0   ip   <<    _        R0    \- */
+/*  ..   c0   ip   <<    _        R0    \- */
    168, 169, 170, 171, 172, 173, 174, 175,
-/\(**   o   +\-    2    3    \*(AQ    u   q|    . */
+/*   o   +\-    2    3    \*(AQ    u   q|    . */
    176, 177, 178, 179, 180, 181, 182, 183,
-/\(**   ,    1    2   >>  1/4  1/2  3/4    ? */
+/*   ,    1    2   >>  1/4  1/2  3/4    ? */
    184, 185, 186, 187, 188, 189, 190, 191,
-/\(**  A`   A\*(AQ   A^   A~   A:   Ao   AE   C, */
+/*  A`   A\*(AQ   A^   A~   A:   Ao   AE   C, */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**  E`   E\*(AQ   E^   E:   I`   I\*(AQ   I^   I: */
+/*  E`   E\*(AQ   E^   E:   I`   I\*(AQ   I^   I: */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**  D\-   N~   O`   O\*(AQ   O^   O~   O:    X */
+/*  D\-   N~   O`   O\*(AQ   O^   O~   O:    X */
     48,  48,  48,  48,  48,  48,  48, 215,
-/\(**  O/   U`   U\*(AQ   U^   U:   Y\*(AQ    P    B */
+/*  O/   U`   U\*(AQ   U^   U:   Y\*(AQ    P    B */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**  a`   a\*(AQ   a^   a~   a:   ao   ae   c, */
+/*  a`   a\*(AQ   a^   a~   a:   ao   ae   c, */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**  e`   e\*(AQ   e^   e:   i`   i\*(AQ   i^   i: */
+/*  e`   e\*(AQ   e^   e:   i`   i\*(AQ   i^   i: */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**   d   n~   o`   o\*(AQ   o^   o~   o:   \-: */
+/*   d   n~   o`   o\*(AQ   o^   o~   o:   \-: */
     48,  48,  48,  48,  48,  48,  48, 247,
-/\(**  o/   u`   u\*(AQ   u^   u:   y\*(AQ    P   y: */
+/*  o/   u`   u\*(AQ   u^   u:   y\*(AQ    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
 .NE
 .IP
@@ -7130,14 +7260,14 @@ the data as in the \fBon2Clicks\fP resource.
 .B "fullscreen(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfullscreen\fP resource.
 .TP 8
-.B "iconify()"
-Iconifies the window.
-.TP 8
 .B "hard\-reset()"
 This action resets the scrolling region, tabs, window size, and cursor keys
 and clears the screen.
 It is also invoked from the \fBhardreset\fP
 entry in \fIvtMenu\fP.
+.TP 8
+.B "iconify()"
+Iconifies the window.
 .TP 8
 .B "ignore()"
 This action ignores the event but checks for special pointer position
@@ -7371,11 +7501,6 @@ mouse reporting is enabled.
 This action is similar to \fBscroll\-back\fP except that it scrolls
 in the other direction.
 .TP 8
-.B "secure()"
-This action toggles the \fISecure Keyboard\fP mode
-(see \fBSECURITY\fP), and is invoked from the \fBsecurekbd\fP
-entry in \fImainMenu\fP.
-.TP 8
 .B "scroll\-lock(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles internal state which tells
 \fI\*n\fP whether Scroll Lock is active,
@@ -7393,6 +7518,11 @@ Scroll to the beginning of the saved lines.
 .B scroll\-to(end)
 Scroll to the end of the saved lines, i.e., to the currently active page.
 .RE
+.TP 8
+.B "secure()"
+This action toggles the \fISecure Keyboard\fP mode
+(see \fBSECURITY\fP), and is invoked from the \fBsecurekbd\fP
+entry in \fImainMenu\fP.
 .TP 8
 .B "select\-cursor\-end(\fIdestname\fP [, \&...\&])"
 This action is similar to \fBselect\-end\fP except that it should be used
@@ -7481,25 +7611,17 @@ It is also invoked from the \fBbackarrow key\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBbellIsUrgent\fP resource.
 It is also invoked by the \fBbellIsUrgent\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set\-cursorblink(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBcursorBlink\fP resource.
-It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
-.TP 8
 .B "set\-cursesemul(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBcurses\fP resource.
 It is also invoked from the \fBcursesemul\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set\-cursorblink(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBcursorBlink\fP resource.
+It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set\-font\-doublesize(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfontDoublesize\fP resource.
 It is also invoked by the \fBfont\-doublesize\fP entry in \fIfontMenu\fP.
-.TP 8
-.B "set\-hp\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
-It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
-.TP 8
-.B "set\-jumpscroll(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBjumpscroll\fP resource.
-It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set\-font\-linedrawing(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fI\*n\fR's state regarding whether
@@ -7518,6 +7640,14 @@ This action sets, unsets or toggles the \fBforcePackedFont\fR resource
 which controls use of the font's minimum or maximum glyph width.
 It is also invoked by the \fBfont\-packed\fP entry in \fIfontMenu\fP.
 .TP 8
+.B "set\-hp\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
+It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
+.B "set\-jumpscroll(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBjumpscroll\fP resource.
+It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set\-keep\-clipboard(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBkeepClipboard\fP resource.
 .TP 8
@@ -7528,15 +7658,15 @@ It is also invoked by the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .B "set\-logging(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the state of the logging option.
 .TP 8
-.B "set\-old\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the state of legacy function keys.
-It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
-.TP 8
 .B "set\-marginbell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBmarginBell\fP resource.
 .TP 8
 .B "set\-num\-lock(\fIon/off/toggle\fP)"
 This action toggles the state of the \fBnumLock\fP resource.
+.TP 8
+.B "set\-old\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the state of legacy function keys.
+It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set\-pop\-on\-bell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBpopOnBell\fP resource.
@@ -7557,6 +7687,10 @@ It is also invoked by the \fBreversevideo\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBreverseWrap\fP resource.
 It is also invoked by the \fBreversewrap\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set\-sco\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
+It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set\-scroll\-on\-key(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollKey\fP resource.
 It is also invoked from the \fBscrollkey\fP entry in \fIvtMenu\fP.
@@ -7568,10 +7702,6 @@ It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 .B "set\-scrollbar(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollbar\fP resource.
 It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set\-sco\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
-It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set\-select(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
@@ -7697,13 +7827,13 @@ Otherwise, use the \fB$PATH\fP variable to find \fI\*n\fP.
 If parameters are given in the action,
 pass them to the new \fI\*n\fP process.
 .TP 8
-.B "start\-extend()"
-This action is similar to \fBselect\-start\fP except that the
-selection is extended to the current pointer location.
-.TP 8
 .B "start\-cursor\-extend()"
 This action is similar to \fBselect\-extend\fP except that the
 selection is extended to the current text cursor position.
+.TP 8
+.B "start\-extend()"
+This action is similar to \fBselect\-start\fP except that the
+selection is extended to the current pointer location.
 .TP 8
 .B "string(\fIstring\fP)"
 This action inserts the specified text string as if it had been typed.
@@ -8652,6 +8782,7 @@ resize(__mansuffix__),
 luit(__mansuffix__),
 u\*n(__mansuffix__),
 X(__miscmansuffix__),
+Xcursor(__miscmansuffix__),
 pty(4),
 tty(4)
 .ad
