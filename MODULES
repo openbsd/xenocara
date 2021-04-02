@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.454 2021/03/26 18:24:28 matthieu Exp $
+# $OpenBSD: MODULES,v 1.455 2021/04/02 18:46:01 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -153,7 +153,7 @@ lib/libSM			1.2.3
 lib/libX11			1.7.0
 lib/libXScrnSaver		1.2.3
 lib/libXau			1.0.9
-lib/libXaw			1.0.13
+lib/libXaw			1.0.14		needs-update
 lib/libXcomposite		0.4.5
 lib/libXcursor			1.2.0
 lib/libXdamage			1.1.5
@@ -169,7 +169,7 @@ lib/libXpm			3.5.13
 lib/libXpresent			1.0.0
 lib/libXrandr			1.5.2
 lib/libXrender			0.9.10
-lib/libXres			1.2.0
+lib/libXres			1.2.1		needs-update		
 lib/libXt			1.2.1
 lib/libXtst			1.2.3
 lib/libXv			1.0.11
