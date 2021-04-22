@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.263 2020/04/16 13:32:35 okan Exp $
+ * $OpenBSD: client.c,v 1.264 2021/04/22 10:02:55 kn Exp $
  */
 
 #include <sys/types.h>
@@ -336,6 +336,7 @@ client_toggle_fullscreen(struct client_ctx *cc)
 resize:
 	client_resize(cc, 0);
 	xu_ewmh_set_net_wm_state(cc);
+	client_ptr_inbound(cc, 1);
 }
 
 void
@@ -376,6 +377,7 @@ client_toggle_maximize(struct client_ctx *cc)
 resize:
 	client_resize(cc, 0);
 	xu_ewmh_set_net_wm_state(cc);
+	client_ptr_inbound(cc, 1);
 }
 
 void
@@ -408,6 +410,7 @@ client_toggle_vmaximize(struct client_ctx *cc)
 resize:
 	client_resize(cc, 0);
 	xu_ewmh_set_net_wm_state(cc);
+	client_ptr_inbound(cc, 1);
 }
 
 void
@@ -440,6 +443,7 @@ client_toggle_hmaximize(struct client_ctx *cc)
 resize:
 	client_resize(cc, 0);
 	xu_ewmh_set_net_wm_state(cc);
+	client_ptr_inbound(cc, 1);
 }
 
 void
