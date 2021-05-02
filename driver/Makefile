@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.76 2020/10/28 22:18:10 kettenis Exp $
+# $OpenBSD: Makefile,v 1.77 2021/05/02 10:22:57 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -30,8 +30,6 @@ INPUT_DRV_luna88k= xf86-input-keyboard xf86-input-mouse xf86-input-void \
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
 INPUT_DRV_octeon=
-
-INPUT_DRV_sgi= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
 
@@ -84,8 +82,6 @@ VIDEO_DRV_octeon=
 
 VIDEO_DRV_powerpc64= \
 	xf86-video-ati xf86-video-wsfb xf86-video-wsudl
-
-VIDEO_DRV_sgi= xf86-video-wsfb
 
 VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-mach64 xf86-video-r128 \
