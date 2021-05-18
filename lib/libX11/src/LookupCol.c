@@ -27,7 +27,9 @@ in this Software without prior written authorization from The Open Group.
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <limits.h>
 #include <stdio.h>
+#include <sys/limits.h>
 #include "Xlibint.h"
 #include "Xcmsint.h"
 
@@ -46,6 +48,9 @@ XLookupColor (
 	XcmsCCC ccc;
 	XcmsColor cmsColor_exact;
 
+	n = (int) strlen (spec);
+	if (n >= USHRT_MAX)
+            return 0;
 #ifdef XCMS
 	/*
 	 * Let's Attempt to use Xcms and i18n approach to Parse Color
@@ -79,6 +84,8 @@ XLookupColor (
 	 */
 
 	n = (int) strlen (spec);
+	if (n > SHRT_MAX)
+		return(0);
 	LockDisplay(dpy);
 	GetReq (LookupColor, req);
 	req->cmap = cmap;
