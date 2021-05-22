@@ -29,7 +29,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <limits.h>
 #include <stdio.h>
-#include <sys/limits.h>
 #include "Xlibint.h"
 #include "Xcmsint.h"
 
@@ -82,10 +81,6 @@ XLookupColor (
 	 * Xcms and i18n methods failed, so lets pass it to the server
 	 * for parsing.
 	 */
-
-	n = (int) strlen (spec);
-	if (n > SHRT_MAX)
-		return(0);
 	LockDisplay(dpy);
 	GetReq (LookupColor, req);
 	req->cmap = cmap;
