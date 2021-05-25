@@ -1301,13 +1301,6 @@ void si_init_perfcounters(struct si_screen *screen)
 		return; /* not implemented */
 	}
 
-	if (screen->info.max_sh_per_se != 1) {
-		/* This should not happen on non-GFX6 chips. */
-		fprintf(stderr, "si_init_perfcounters: max_sh_per_se = %d not "
-			"supported (inaccurate performance counters)\n",
-			screen->info.max_sh_per_se);
-	}
-
 	screen->perfcounters = pc = CALLOC_STRUCT(si_perfcounters);
 	if (!pc)
 		return;
