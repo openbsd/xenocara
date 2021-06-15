@@ -1067,6 +1067,8 @@ ARM_VIDEO_FALSE
 ARM_VIDEO_TRUE
 ALPHA_VIDEO_FALSE
 ALPHA_VIDEO_TRUE
+RISCV64_VIDEO_FALSE
+RISCV64_VIDEO_TRUE
 GLX_ARCH_DEFINES
 BSD_KQUEUE_APM_FALSE
 BSD_KQUEUE_APM_TRUE
@@ -22476,6 +22478,10 @@ $as_echo "#define USE_ALPHA_PIO 1" >>confdefs.h
 	SGI_VIDEO=yes
 	BSD_ARCH_SOURCES="sgi_video.c ioperm_noop.c"
 	;;
+  riscv64*)
+	RISCV64_VIDEO=yes
+	BSD_ARCH_SOURCES="riscv64_video.c ioperm_noop.c"
+	;;
   sparc*)
 	SPARC64_VIDEO=yes
 	BSD_ARCH_SOURCES="sparc64_video.c ioperm_noop.c"
@@ -22572,6 +22578,14 @@ fi
 else
   PPC_VIDEO_TRUE='#'
   PPC_VIDEO_FALSE=
+fi
+
+ if test "x$RISCV64_VIDEO" = xyes; then
+  RISCV64_VIDEO_TRUE=
+  RISCV64_VIDEO_FALSE='#'
+else
+  RISCV64_VIDEO_TRUE='#'
+  RISCV64_VIDEO_FALSE=
 fi
 
  if test "x$SGI_VIDEO" = xyes; then
@@ -32272,6 +32286,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${PPC_VIDEO_TRUE}" && test -z "${PPC_VIDEO_FALSE}"; then
   as_fn_error $? "conditional \"PPC_VIDEO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${RISCV64_VIDEO_TRUE}" && test -z "${RISCV64_VIDEO_FALSE}"; then
+  as_fn_error $? "conditional \"RISCV64_VIDEO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${SGI_VIDEO_TRUE}" && test -z "${SGI_VIDEO_FALSE}"; then

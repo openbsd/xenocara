@@ -78,16 +78,19 @@ am__libbsd_la_SOURCES_DIST = $(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/sigio.c $(srcdir)/../shared/vidmem.c \
 	bsd_VTsw.c bsd_init.c bsd_bell.c alpha_video.c arm64_video.c \
 	$(srcdir)/../shared/ioperm_noop.c arm_video.c hppa_video.c \
-	i386_video.c luna88k_video.c ppc_video.c sgi_video.c \
-	sparc64_video.c bsd_sbus.c $(srcdir)/../shared/agp_noop.c \
-	bsd_agp.c $(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
+	i386_video.c luna88k_video.c ppc_video.c riscv64_video.c \
+	sgi_video.c sparc64_video.c bsd_sbus.c \
+	$(srcdir)/../shared/agp_noop.c bsd_agp.c \
+	$(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
 	$(srcdir)/bsd_kqueue_apm.c $(srcdir)/../shared/kmod_noop.c \
 	bsd_kmod.c
-@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
-@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	bsd_sbus.lo \
-@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	ioperm_noop.lo
-@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@am__objects_1 = sgi_video.lo \
-@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_TRUE@	ioperm_noop.lo
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	bsd_sbus.lo \
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@	ioperm_noop.lo
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_FALSE@@SGI_VIDEO_TRUE@am__objects_1 = sgi_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_FALSE@@SGI_VIDEO_TRUE@	ioperm_noop.lo
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_TRUE@am__objects_1 = riscv64_video.lo \
+@ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@RISCV64_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_TRUE@am__objects_1 = ppc_video.lo \
 @ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM64_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_TRUE@am__objects_1 = luna88k_video.lo \
@@ -506,7 +509,6 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
-runstatedir = @runstatedir@
 sbindir = @sbindir@
 sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
@@ -548,6 +550,9 @@ noinst_LTLIBRARIES = libbsd.la
 
 @PPC_VIDEO_TRUE@ARCH_SOURCES = ppc_video.c \
 @PPC_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
+
+@RISCV64_VIDEO_TRUE@ARCH_SOURCES = riscv64_video.c \
+@RISCV64_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
 
 @SGI_VIDEO_TRUE@ARCH_SOURCES = sgi_video.c \
 @SGI_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
@@ -657,6 +662,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pm_noop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/posix_tty.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc_video.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/riscv64_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sgi_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparc64_video.Plo@am__quote@

@@ -58,6 +58,11 @@ ARCH_SOURCES = ppc_video.c \
 	$(srcdir)/../shared/ioperm_noop.c
 endif
 
+if RISCV64_VIDEO
+ARCH_SOURCES = riscv64_video.c \
+	$(srcdir)/../shared/ioperm_noop.c
+endif
+
 if SGI_VIDEO
 ARCH_SOURCES = sgi_video.c \
 	$(srcdir)/../shared/ioperm_noop.c
