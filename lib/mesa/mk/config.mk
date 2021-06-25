@@ -176,17 +176,18 @@ CPPFLAGS+=	-DLLVM_AVAILABLE \
 WITH_SSE41=yes
 .endif
 
-.if ${MACHINE} == amd64 || ${MACHINE} == arm64 || ${MACHINE} == i386 || \
-    ${MACHINE} == loongson || ${MACHINE} == macppc || \
-    ${MACHINE} == powerpc64 || ${MACHINE} == sparc64
+.if ${MACHINE} == "amd64" || ${MACHINE} == "arm64" || ${MACHINE} == "i386" || \
+    ${MACHINE} == "loongson" || ${MACHINE} == "macppc" || \
+    ${MACHINE} == "powerpc64" || ${MACHINE} == "riscv64" || \
+    ${MACHINE} == "sparc64"
 WITH_DRI_R100=yes
 WITH_DRI_R200=yes
 WITH_GALLIUM_R300=yes
 WITH_GALLIUM_R600=yes
 .endif
 
-.if ${MACHINE} == "amd64" || ${MACHINE} == arm64 || ${MACHINE} == "i386" || \
-    ${MACHINE} == "powerpc64"
+.if ${MACHINE} == "amd64" || ${MACHINE} == "arm64" || ${MACHINE} == "i386" || \
+    ${MACHINE} == "powerpc64" || ${MACHINE} == "riscv64"
 WITH_GALLIUM_RADEONSI=yes
 WITH_AMD_VK=yes
 .endif
