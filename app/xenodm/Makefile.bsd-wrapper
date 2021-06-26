@@ -1,11 +1,12 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2020/12/06 16:37:53 kettenis Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2021/06/26 06:54:34 matthieu Exp $
 .include <bsd.own.mk>
 
 XENODMCONFIGDIR=/etc/X11/xenodm
 PIXMAPDIR=$(XENODMCONFIGDIR)/pixmaps
 
 .if ${MACHINE} == amd64 || ${MACHINE} == arm64 || ${MACHINE} == armv7 \
-    || ${MACHINE} == i386 || ${MACHINE} == macppc || ${MACHINE} == powerpc64
+    || ${MACHINE} == i386 || ${MACHINE} == macppc || ${MACHINE} == powerpc64 \
+    || ${MACHINE} == riscv64
 DEFAULT_VT= --with-default-vt=vt05
 .endif
 
@@ -27,6 +28,9 @@ XENODMCONFIGFILES= \
 	xenodm-config Xresources Xservers
 XENODMCONFIGSCRIPTS= \
 	Xsession GiveConsole TakeConsole Xsetup_0 Xstartup Xreset
+
+foo:
+	@echo $(MACHINE)
 
 afterinstall:
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_1bpp.xpm $(DESTDIR)$(PIXMAPDIR)
