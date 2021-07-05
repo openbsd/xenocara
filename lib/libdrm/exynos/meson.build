@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-libdrm_exynos = shared_library(
+libdrm_exynos = library(
   'drm_exynos',
   [files('exynos_drm.c', 'exynos_fimg2d.c'), config_file],
   c_args : libdrm_c_args,

@@ -985,7 +985,6 @@ static void fill_tiles_rgb16fp(const struct util_format_info *info, void *mem,
 			       unsigned int stride)
 {
 	const struct util_rgb_info *rgb = &info->rgb;
-	void *mem_base = mem;
 	unsigned int x, y;
 
 	/* TODO: Give this actual fp16 precision */
@@ -1113,7 +1112,7 @@ static void fill_gradient_rgb32(const struct util_rgb_info *rgb,
 				unsigned int width, unsigned int height,
 				unsigned int stride)
 {
-	int i, j;
+	unsigned int i, j;
 
 	for (i = 0; i < height / 2; i++) {
 		uint32_t *row = mem;
@@ -1141,7 +1140,7 @@ static void fill_gradient_rgb16fp(const struct util_rgb_info *rgb,
 				  unsigned int width, unsigned int height,
 				  unsigned int stride)
 {
-	int i, j;
+	unsigned int i, j;
 
 	for (i = 0; i < height / 2; i++) {
 		uint64_t *row = mem;

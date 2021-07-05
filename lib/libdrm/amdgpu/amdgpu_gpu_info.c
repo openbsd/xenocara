@@ -331,3 +331,18 @@ drm_public int amdgpu_query_sensor_info(amdgpu_device_handle dev, unsigned senso
 	return drmCommandWrite(dev->fd, DRM_AMDGPU_INFO, &request,
 			       sizeof(struct drm_amdgpu_info));
 }
+
+drm_public int amdgpu_query_video_caps_info(amdgpu_device_handle dev, unsigned cap_type,
+                                            unsigned size, void *value)
+{
+	struct drm_amdgpu_info request;
+
+	memset(&request, 0, sizeof(request));
+	request.return_pointer = (uintptr_t)value;
+	request.return_size = size;
+	request.query = AMDGPU_INFO_VIDEO_CAPS;
+	request.sensor_info.type = cap_type;
+
+	return drmCommandWrite(dev->fd, DRM_AMDGPU_INFO, &request,
+			       sizeof(struct drm_amdgpu_info));
+}

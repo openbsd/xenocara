@@ -273,6 +273,29 @@ amdgpu_command_submission_write_linear_helper_with_secure(amdgpu_device_handle
 							  unsigned ip_type,
 							  bool secure);
 
+
+
+/**
+ * Initialize hotunplug test suite
+ */
+int suite_hotunplug_tests_init();
+
+/**
+ * Deinitialize hotunplug test suite
+ */
+int suite_hotunplug_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_hotunplug_tests_enable(void);
+
+/**
+ * Tests in uvd enc test suite
+ */
+extern CU_TestInfo hotunplug_tests[];
+
+
 /**
  * Helper functions
  */
@@ -449,13 +472,18 @@ static inline CU_ErrorCode amdgpu_set_test_active(const char *suite_name,
 	return r;
 }
 
-static inline bool asic_is_arcturus(uint32_t asic_id)
+
+static inline bool asic_is_gfx_pipe_removed(uint32_t family_id, uint32_t chip_id, uint32_t chip_rev)
 {
-	switch(asic_id) {
-	/* Arcturus asic DID */
-	case 0x738C:
-	case 0x7388:
-	case 0x738E:
+
+	if (family_id != AMDGPU_FAMILY_AI)
+	return false;
+
+	switch (chip_id - chip_rev) {
+	/* Arcturus */
+	case 0x32:
+	/* Aldebaran */
+	case 0x3c:
 		return true;
 	default:
 		return false;
@@ -470,5 +498,9 @@ void amdgpu_test_exec_cs_helper_raw(amdgpu_device_handle device_handle,
 				    struct amdgpu_cs_ib_info *ib_info,
 				    struct amdgpu_cs_request *ibs_request,
 				    bool secure);
+
+void amdgpu_close_devices();
+int amdgpu_open_device_on_test_index(int render_node);
+char *amdgpu_get_device_from_fd(int fd);
 
 #endif  /* #ifdef _AMDGPU_TEST_H_ */

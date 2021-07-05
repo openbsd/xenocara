@@ -21,7 +21,7 @@
 
 datadir_amdgpu = join_paths(get_option('prefix'), get_option('datadir'), 'libdrm')
 
-libdrm_amdgpu = shared_library(
+libdrm_amdgpu = library(
   'drm_amdgpu',
   [
     files(
@@ -36,7 +36,7 @@ libdrm_amdgpu = shared_library(
   ],
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
-  dependencies : [dep_pthread_stubs, dep_atomic_ops],
+  dependencies : [dep_pthread_stubs, dep_atomic_ops, dep_rt],
   version : '1.0.0',
   install : true,
 )

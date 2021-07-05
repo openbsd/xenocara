@@ -21,9 +21,9 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.104',
+  version : '2.4.107',
   license : 'MIT',
-  meson_version : '>= 0.43',
+  meson_version : '>= 0.46',
   default_options : ['buildtype=debugoptimized', 'c_std=gnu99'],
 )
 
@@ -50,6 +50,11 @@ prog_nm = find_program('nm')
 # Check for atomics
 intel_atomics = false
 lib_atomics = false
+
+python3 = import('python').find_installation()
+format_mod_static_table = custom_target('format_mod_static_table',
+  output : 'generated_static_table_fourcc.h', input: 'include/drm/drm_fourcc.h',
+  command : [python3, files('gen_table_fourcc.py'), '@INPUT@', '@OUTPUT@'])
 
 dep_atomic_ops = dependency('atomic_ops', required : false)
 if cc.links('''
@@ -261,7 +266,7 @@ else
 endif
 
 with_man_pages = get_option('man-pages')
-prog_rst2man = find_program('rst2man', required: with_man_pages == 'true')
+prog_rst2man = find_program('rst2man', 'rst2man.py', required: with_man_pages == 'true')
 with_man_pages = with_man_pages != 'false' and prog_rst2man.found()
 
 config.set10('HAVE_VISIBILITY',
@@ -294,13 +299,13 @@ add_project_arguments('-include', '@0@'.format(config_file), language : 'c')
 inc_root = include_directories('.')
 inc_drm = include_directories('include/drm')
 
-libdrm = shared_library(
+libdrm = library(
   'drm',
   [files(
      'xf86drm.c', 'xf86drmHash.c', 'xf86drmRandom.c', 'xf86drmSL.c',
      'xf86drmMode.c'
    ),
-   config_file,
+   config_file, format_mod_static_table
   ],
   c_args : libdrm_c_args,
   dependencies : [dep_valgrind, dep_rt, dep_m],

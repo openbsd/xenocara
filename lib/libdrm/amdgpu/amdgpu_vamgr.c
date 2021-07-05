@@ -69,65 +69,99 @@ drm_private void amdgpu_vamgr_deinit(struct amdgpu_bo_va_mgr *mgr)
 	pthread_mutex_destroy(&mgr->bo_va_mutex);
 }
 
-static drm_private uint64_t
+static drm_private int
+amdgpu_vamgr_subtract_hole(struct amdgpu_bo_va_hole *hole, uint64_t start_va,
+			   uint64_t end_va)
+{
+	if (start_va > hole->offset && end_va - hole->offset < hole->size) {
+		struct amdgpu_bo_va_hole *n = calloc(1, sizeof(struct amdgpu_bo_va_hole));
+		if (!n)
+			return -ENOMEM;
+
+		n->size = start_va - hole->offset;
+		n->offset = hole->offset;
+		list_add(&n->list, &hole->list);
+
+		hole->size -= (end_va - hole->offset);
+		hole->offset = end_va;
+	} else if (start_va > hole->offset) {
+		hole->size = start_va - hole->offset;
+	} else if (end_va - hole->offset < hole->size) {
+		hole->size -= (end_va - hole->offset);
+		hole->offset = end_va;
+	} else {
+		list_del(&hole->list);
+		free(hole);
+	}
+
+	return 0;
+}
+
+static drm_private int
 amdgpu_vamgr_find_va(struct amdgpu_bo_va_mgr *mgr, uint64_t size,
-		     uint64_t alignment, uint64_t base_required)
+		     uint64_t alignment, uint64_t base_required,
+		     bool search_from_top, uint64_t *va_out)
 {
 	struct amdgpu_bo_va_hole *hole, *n;
-	uint64_t offset = 0, waste = 0;
+	uint64_t offset = 0;
+	int ret;
 
 
 	alignment = MAX2(alignment, mgr->va_alignment);
 	size = ALIGN(size, mgr->va_alignment);
 
 	if (base_required % alignment)
-		return AMDGPU_INVALID_VA_ADDRESS;
+		return -EINVAL;
 
 	pthread_mutex_lock(&mgr->bo_va_mutex);
-	LIST_FOR_EACH_ENTRY_SAFE_REV(hole, n, &mgr->va_holes, list) {
-		if (base_required) {
-			if (hole->offset > base_required ||
-			    (hole->offset + hole->size) < (base_required + size))
-				continue;
-			waste = base_required - hole->offset;
-			offset = base_required;
-		} else {
-			offset = hole->offset;
-			waste = offset % alignment;
-			waste = waste ? alignment - waste : 0;
-			offset += waste;
-			if (offset >= (hole->offset + hole->size)) {
-				continue;
+	if (!search_from_top) {
+		LIST_FOR_EACH_ENTRY_SAFE_REV(hole, n, &mgr->va_holes, list) {
+			if (base_required) {
+				if (hole->offset > base_required ||
+				   (hole->offset + hole->size) < (base_required + size))
+					continue;
+				offset = base_required;
+			} else {
+				uint64_t waste = hole->offset % alignment;
+				waste = waste ? alignment - waste : 0;
+				offset = hole->offset + waste;
+				if (offset >= (hole->offset + hole->size) ||
+				    size > (hole->offset + hole->size) - offset) {
+					continue;
+				}
 			}
-		}
-		if (!waste && hole->size == size) {
-			offset = hole->offset;
-			list_del(&hole->list);
-			free(hole);
+			ret = amdgpu_vamgr_subtract_hole(hole, offset, offset + size);
 			pthread_mutex_unlock(&mgr->bo_va_mutex);
-			return offset;
+			*va_out = offset;
+			return ret;
 		}
-		if ((hole->size - waste) > size) {
-			if (waste) {
-				n = calloc(1, sizeof(struct amdgpu_bo_va_hole));
-				n->size = waste;
-				n->offset = hole->offset;
-				list_add(&n->list, &hole->list);
+	} else {
+		LIST_FOR_EACH_ENTRY_SAFE(hole, n, &mgr->va_holes, list) {
+			if (base_required) {
+				if (hole->offset > base_required ||
+				   (hole->offset + hole->size) < (base_required + size))
+					continue;
+				offset = base_required;
+			} else {
+				if (size > hole->size)
+					continue;
+
+				offset = hole->offset + hole->size - size;
+				offset -= offset % alignment;
+				if (offset < hole->offset) {
+					continue;
+				}
 			}
-			hole->size -= (size + waste);
-			hole->offset += size + waste;
+
+			ret = amdgpu_vamgr_subtract_hole(hole, offset, offset + size);
 			pthread_mutex_unlock(&mgr->bo_va_mutex);
-			return offset;
-		}
-		if ((hole->size - waste) == size) {
-			hole->size = waste;
-			pthread_mutex_unlock(&mgr->bo_va_mutex);
-			return offset;
+			*va_out = offset;
+			return ret;
 		}
 	}
 
 	pthread_mutex_unlock(&mgr->bo_va_mutex);
-	return AMDGPU_INVALID_VA_ADDRESS;
+	return -ENOMEM;
 }
 
 static drm_private void
@@ -196,6 +230,8 @@ drm_public int amdgpu_va_range_alloc(amdgpu_device_handle dev,
 				     uint64_t flags)
 {
 	struct amdgpu_bo_va_mgr *vamgr;
+	bool search_from_top = !!(flags & AMDGPU_VA_RANGE_REPLAYABLE);
+	int ret;
 
 	/* Clear the flag when the high VA manager is not initialized */
 	if (flags & AMDGPU_VA_RANGE_HIGH && !dev->vamgr_high_32.va_max)
@@ -216,21 +252,22 @@ drm_public int amdgpu_va_range_alloc(amdgpu_device_handle dev,
 	va_base_alignment = MAX2(va_base_alignment, vamgr->va_alignment);
 	size = ALIGN(size, vamgr->va_alignment);
 
-	*va_base_allocated = amdgpu_vamgr_find_va(vamgr, size,
-					va_base_alignment, va_base_required);
+	ret = amdgpu_vamgr_find_va(vamgr, size,
+				   va_base_alignment, va_base_required,
+				   search_from_top, va_base_allocated);
 
-	if (!(flags & AMDGPU_VA_RANGE_32_BIT) &&
-	    (*va_base_allocated == AMDGPU_INVALID_VA_ADDRESS)) {
+	if (!(flags & AMDGPU_VA_RANGE_32_BIT) && ret) {
 		/* fallback to 32bit address */
 		if (flags & AMDGPU_VA_RANGE_HIGH)
 			vamgr = &dev->vamgr_high_32;
 		else
 			vamgr = &dev->vamgr_32;
-		*va_base_allocated = amdgpu_vamgr_find_va(vamgr, size,
-					va_base_alignment, va_base_required);
+		ret = amdgpu_vamgr_find_va(vamgr, size,
+					   va_base_alignment, va_base_required,
+					   search_from_top, va_base_allocated);
 	}
 
-	if (*va_base_allocated != AMDGPU_INVALID_VA_ADDRESS) {
+	if (!ret) {
 		struct amdgpu_va* va;
 		va = calloc(1, sizeof(struct amdgpu_va));
 		if(!va){
@@ -243,11 +280,9 @@ drm_public int amdgpu_va_range_alloc(amdgpu_device_handle dev,
 		va->range = va_range_type;
 		va->vamgr = vamgr;
 		*va_range_handle = va;
-	} else {
-		return -EINVAL;
 	}
 
-	return 0;
+	return ret;
 }
 
 drm_public int amdgpu_va_range_free(amdgpu_va_handle va_range_handle)

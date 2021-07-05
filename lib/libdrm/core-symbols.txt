@@ -83,6 +83,7 @@ drmHashInsert
 drmHashLookup
 drmHashNext
 drmIoctl
+drmIsKMS
 drmIsMaster
 drmMalloc
 drmMap
@@ -195,3 +196,5 @@ drmUnmap
 drmUnmapBufs
 drmUpdateDrawableInfo
 drmWaitVBlank
+drmGetFormatModifierName
+drmGetFormatModifierVendor

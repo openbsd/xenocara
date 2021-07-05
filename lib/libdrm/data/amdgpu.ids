@@ -135,7 +135,9 @@
 67C2,	01,	AMD Radeon (TM) Pro V7350x2
 67C2,	02,	AMD Radeon (TM) Pro V7300X
 67C4,	00,	AMD Radeon (TM) Pro WX 7100 Graphics
+67C4,	80,	AMD Radeon (TM) E9560/E9565 Graphics
 67C7,	00,	AMD Radeon (TM) Pro WX 5100 Graphics
+67C7,	80,	AMD Radeon (TM) Pro E9390 Graphics
 67C0,	00,	AMD Radeon (TM) Pro WX 7100 Graphics
 67D0,	01,	AMD Radeon (TM) Pro V7350x2
 67D0,	02,	AMD Radeon (TM) Pro V7300X
@@ -254,6 +256,8 @@
 7300,	CB,	AMD Radeon (TM) R9 Fury Series
 7300,	CA,	AMD Radeon (TM) R9 Fury Series
 7312,	00,	AMD Radeon Pro W5700
+731E,	C6,	AMD Radeon RX 5700XTB
+731E,	C7,	AMD Radeon RX 5700B
 731F,	C0,	AMD Radeon RX 5700 XT 50th Anniversary
 731F,	C1,	AMD Radeon RX 5700 XT
 731F,	C2,	AMD Radeon RX 5600M
@@ -265,9 +269,19 @@
 7340,	C1,	Radeon RX 5500M
 7340,	C5,	Radeon RX 5500 XT
 7340,	C7,	Radeon RX 5500
+7340,	C9,	AMD Radeon RX 5500XTB
 7340,	CF,	Radeon RX 5300
 7341,	00,	AMD Radeon Pro W5500
 7347,	00,	AMD Radeon Pro W5500M
+73A3,	00,	AMD Radeon PRO W6800
+73AF,	C0,	AMD Radeon RX 6900 XT
+73BF,	C0,	AMD Radeon RX 6900 XT
+73BF,	C1,	AMD Radeon RX 6800 XT
+73BF,	C3,	AMD Radeon RX 6800
+73DF,	C1,	AMD Radeon RX 6700 XT
+73DF,	C5,	AMD Radeon RX 6700 XT
+73E1,	00,	AMD Radeon PRO W6600M
+73E3,	00,	AMD Radeon PRO W6600
 9874,	C4,	AMD Radeon R7 Graphics
 9874,	C5,	AMD Radeon R6 Graphics
 9874,	C6,	AMD Radeon R6 Graphics

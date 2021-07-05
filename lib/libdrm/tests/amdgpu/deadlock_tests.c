@@ -106,6 +106,10 @@ static  uint32_t  minor_version;
 static pthread_t stress_thread;
 static uint32_t *ptr;
 
+static uint32_t family_id;
+static uint32_t chip_rev;
+static uint32_t chip_id;
+
 int use_uc_mtype = 0;
 
 static void amdgpu_deadlock_helper(unsigned ip_type);
@@ -124,25 +128,27 @@ static void amdgpu_draw_hang_slow_gfx(void);
 CU_BOOL suite_deadlock_tests_enable(void)
 {
 	CU_BOOL enable = CU_TRUE;
-	uint32_t asic_id;
 
 	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
 					     &minor_version, &device_handle))
 		return CU_FALSE;
 
+	family_id = device_handle->info.family_id;
+	chip_id = device_handle->info.chip_external_rev;
+	chip_rev = device_handle->info.chip_rev;
+
 	/*
 	 * Only enable for ASICs supporting GPU reset and for which it's enabled
 	 * by default (currently GFX8/9 dGPUS)
 	 */
-	if (device_handle->info.family_id != AMDGPU_FAMILY_VI &&
-	    device_handle->info.family_id != AMDGPU_FAMILY_AI &&
-	    device_handle->info.family_id != AMDGPU_FAMILY_CI) {
+	if (family_id != AMDGPU_FAMILY_VI &&
+	    family_id != AMDGPU_FAMILY_AI &&
+	    family_id != AMDGPU_FAMILY_CI) {
 		printf("\n\nGPU reset is not enabled for the ASIC, deadlock suite disabled\n");
 		enable = CU_FALSE;
 	}
 
-	asic_id = device_handle->info.asic_id;
-	if (asic_is_arcturus(asic_id)) {
+	if (asic_is_gfx_pipe_removed(family_id, chip_id, chip_rev)) {
 		if (amdgpu_set_test_active("Deadlock Tests",
 					"gfx ring block test (set amdgpu.lockup_timeout=50)",
 					CU_FALSE))

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-libdrm_omap = shared_library(
+libdrm_omap = library(
   'drm_omap',
   [files('omap_drm.c'), config_file],
   include_directories : [inc_root, inc_drm],

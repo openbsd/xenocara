@@ -116,7 +116,7 @@ CU_BOOL suite_vce_tests_enable(void)
 		return CU_FALSE;
 
 	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI ||
-		asic_is_arcturus(asic_id)) {
+		asic_is_gfx_pipe_removed(family_id, chip_id, chip_rev)) {
 		printf("\n\nThe ASIC NOT support VCE, suite disabled\n");
 		return CU_FALSE;
 	}

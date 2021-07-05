@@ -46,19 +46,35 @@
 #include "nvif/ioctl.h"
 #include "nvif/unpack.h"
 
-#ifdef DEBUG
+drm_private FILE *nouveau_out = NULL;
 drm_private uint32_t nouveau_debug = 0;
 
 static void
-debug_init(char *args)
+debug_init(void)
 {
-	if (args) {
-		int n = strtol(args, NULL, 0);
+	static bool once = false;
+	char *debug, *out;
+
+	if (once)
+		return;
+	once = true;
+
+	debug = getenv("NOUVEAU_LIBDRM_DEBUG");
+	if (debug) {
+		int n = strtol(debug, NULL, 0);
 		if (n >= 0)
 			nouveau_debug = n;
+
+	}
+
+	nouveau_out = stderr;
+	out = getenv("NOUVEAU_LIBDRM_OUT");
+	if (out) {
+		FILE *fout = fopen(out, "w");
+		if (fout)
+			nouveau_out = fout;
 	}
 }
-#endif
 
 static int
 nouveau_object_ioctl(struct nouveau_object *obj, void *data, uint32_t size)
@@ -327,9 +343,7 @@ nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
 	struct nouveau_drm *drm;
 	drmVersionPtr ver;
 
-#ifdef DEBUG
-	debug_init(getenv("NOUVEAU_LIBDRM_DEBUG"));
-#endif
+	debug_init();
 
 	if (!(drm = calloc(1, sizeof(*drm))))
 		return -ENOMEM;

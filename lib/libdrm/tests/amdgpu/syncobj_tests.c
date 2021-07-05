@@ -33,6 +33,10 @@ static  amdgpu_device_handle device_handle;
 static  uint32_t  major_version;
 static  uint32_t  minor_version;
 
+static  uint32_t  family_id;
+static  uint32_t  chip_id;
+static  uint32_t  chip_rev;
+
 static void amdgpu_syncobj_timeline_test(void);
 
 CU_BOOL suite_syncobj_timeline_tests_enable(void)
@@ -100,6 +104,18 @@ static int syncobj_command_submission_helper(uint32_t syncobj_handle, bool
 	int i, r;
 	uint64_t seq_no;
 	static uint32_t *ptr;
+	struct amdgpu_gpu_info gpu_info = {0};
+	unsigned gc_ip_type;
+
+	r = amdgpu_query_gpu_info(device_handle, &gpu_info);
+	CU_ASSERT_EQUAL(r, 0);
+
+	family_id = device_handle->info.family_id;
+	chip_id = device_handle->info.chip_external_rev;
+	chip_rev = device_handle->info.chip_rev;
+
+	gc_ip_type = (asic_is_gfx_pipe_removed(family_id, chip_id, chip_rev)) ?
+			AMDGPU_HW_IP_COMPUTE : AMDGPU_HW_IP_GFX;
 
 	r = amdgpu_cs_ctx_create(device_handle, &context_handle);
 	CU_ASSERT_EQUAL(r, 0);
@@ -125,11 +141,11 @@ static int syncobj_command_submission_helper(uint32_t syncobj_handle, bool
 	chunk_data.ib_data._pad = 0;
 	chunk_data.ib_data.va_start = ib_result_mc_address;
 	chunk_data.ib_data.ib_bytes = 16 * 4;
-	chunk_data.ib_data.ip_type = wait_or_signal ? AMDGPU_HW_IP_GFX :
+	chunk_data.ib_data.ip_type = wait_or_signal ? gc_ip_type :
 		AMDGPU_HW_IP_DMA;
 	chunk_data.ib_data.ip_instance = 0;
 	chunk_data.ib_data.ring = 0;
-	chunk_data.ib_data.flags = 0;
+	chunk_data.ib_data.flags = AMDGPU_IB_FLAG_EMIT_MEM_SYNC;
 
 	chunks[1].chunk_id = wait_or_signal ?
 		AMDGPU_CHUNK_ID_SYNCOBJ_TIMELINE_WAIT :
@@ -151,7 +167,7 @@ static int syncobj_command_submission_helper(uint32_t syncobj_handle, bool
 
 	memset(&fence_status, 0, sizeof(struct amdgpu_cs_fence));
 	fence_status.context = context_handle;
-	fence_status.ip_type = wait_or_signal ? AMDGPU_HW_IP_GFX:
+	fence_status.ip_type = wait_or_signal ? gc_ip_type :
 		AMDGPU_HW_IP_DMA;
 	fence_status.ip_instance = 0;
 	fence_status.ring = 0;

@@ -265,52 +265,37 @@ static void dump_blob(struct device *dev, uint32_t blob_id)
 
 static const char *modifier_to_string(uint64_t modifier)
 {
-	switch (modifier) {
-	case DRM_FORMAT_MOD_INVALID:
-		return "INVALID";
-	case DRM_FORMAT_MOD_LINEAR:
-		return "LINEAR";
-	case I915_FORMAT_MOD_X_TILED:
-		return "X_TILED";
-	case I915_FORMAT_MOD_Y_TILED:
-		return "Y_TILED";
-	case I915_FORMAT_MOD_Yf_TILED:
-		return "Yf_TILED";
-	case I915_FORMAT_MOD_Y_TILED_CCS:
-		return "Y_TILED_CCS";
-	case I915_FORMAT_MOD_Yf_TILED_CCS:
-		return "Yf_TILED_CCS";
-	case DRM_FORMAT_MOD_SAMSUNG_64_32_TILE:
-		return "SAMSUNG_64_32_TILE";
-	case DRM_FORMAT_MOD_VIVANTE_TILED:
-		return "VIVANTE_TILED";
-	case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED:
-		return "VIVANTE_SUPER_TILED";
-	case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED:
-		return "VIVANTE_SPLIT_TILED";
-	case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED:
-		return "VIVANTE_SPLIT_SUPER_TILED";
-	case DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED:
-		return "NVIDIA_TEGRA_TILED";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(0):
-		return "NVIDIA_16BX2_BLOCK(0)";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(1):
-		return "NVIDIA_16BX2_BLOCK(1)";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(2):
-		return "NVIDIA_16BX2_BLOCK(2)";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(3):
-		return "NVIDIA_16BX2_BLOCK(3)";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(4):
-		return "NVIDIA_16BX2_BLOCK(4)";
-	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(5):
-		return "NVIDIA_16BX2_BLOCK(5)";
-	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED:
-		return "MOD_BROADCOM_VC4_T_TILED";
-	case DRM_FORMAT_MOD_QCOM_COMPRESSED:
-		return "QCOM_COMPRESSED";
-	default:
-		return "(UNKNOWN MODIFIER)";
+	static char mod_string[4096];
+
+	char *modifier_name = drmGetFormatModifierName(modifier);
+	char *vendor_name = drmGetFormatModifierVendor(modifier);
+	memset(mod_string, 0x00, sizeof(mod_string));
+
+	if (!modifier_name) {
+		if (vendor_name)
+			snprintf(mod_string, sizeof(mod_string), "%s_%s",
+				 vendor_name, "UNKNOWN_MODIFIER");
+		else
+			snprintf(mod_string, sizeof(mod_string), "%s_%s",
+				 "UNKNOWN_VENDOR", "UNKNOWN_MODIFIER");
+		/* safe, as free is no-op for NULL */
+		free(vendor_name);
+		return mod_string;
 	}
+
+	if (modifier == DRM_FORMAT_MOD_LINEAR) {
+		snprintf(mod_string, sizeof(mod_string), "%s", modifier_name);
+		free(modifier_name);
+		free(vendor_name);
+		return mod_string;
+	}
+
+	snprintf(mod_string, sizeof(mod_string), "%s_%s",
+		 vendor_name, modifier_name);
+
+	free(modifier_name);
+	free(vendor_name);
+	return mod_string;
 }
 
 static void dump_in_formats(struct device *dev, uint32_t blob_id)

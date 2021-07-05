@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 
-libdrm_nouveau = shared_library(
+libdrm_nouveau = library(
   'drm_nouveau',
   [files( 'nouveau.c', 'pushbuf.c', 'bufctx.c', 'abi16.c'), config_file],
   c_args : libdrm_c_args,
