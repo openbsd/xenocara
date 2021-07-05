@@ -10,7 +10,7 @@ beforeinstall:
 # maintainer target, not used duing build or install
 mdoc:
 .for n s in ${MDOCS}
-	rst2man-3 ${DRM_SRC}/man/${n}.${s}.rst> ${.CURDIR}/${n}.${s}
+	rst2man ${DRM_SRC}/man/${n}.${s}.rst> ${.CURDIR}/${n}.${s}
 .endfor
 
 obj: _xenocara_obj

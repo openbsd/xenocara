@@ -25,6 +25,9 @@
  *
  **************************************************************************/
 
+#ifdef __FreeBSD__
+#define _WANT_KERNEL_ERRNO
+#endif
 
 #include <errno.h>
 #include <stdlib.h>

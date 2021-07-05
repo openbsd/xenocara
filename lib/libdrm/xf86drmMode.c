@@ -38,6 +38,9 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #if HAVE_SYS_SYSCTL_H
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#endif
 #include <sys/sysctl.h>
 #endif
 #include <stdio.h>
@@ -145,6 +148,16 @@ drm_public void drmModeFreeEncoder(drmModeEncoderPtr ptr)
 /*
  * ModeSetting functions.
  */
+
+drm_public int drmIsKMS(int fd)
+{
+	struct drm_mode_card_res res = {0};
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res) != 0)
+		return 0;
+
+	return res.count_crtcs > 0 && res.count_connectors > 0 && res.count_encoders > 0;
+}
 
 drm_public drmModeResPtr drmModeGetResources(int fd)
 {

@@ -1732,6 +1732,82 @@ drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
 	return drm_intel_gem_bo_unmap(bo);
 }
 
+static bool is_cache_coherent(drm_intel_bo *bo)
+{
+	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
+	struct drm_i915_gem_caching arg = {};
+
+	arg.handle = bo_gem->gem_handle;
+	if (drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_GET_CACHING, &arg))
+		assert(false);
+	return arg.caching != I915_CACHING_NONE;
+}
+
+static void set_domain(drm_intel_bo *bo, uint32_t read, uint32_t write)
+{
+	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
+	struct drm_i915_gem_set_domain arg = {};
+
+	arg.handle = bo_gem->gem_handle;
+	arg.read_domains = read;
+	arg.write_domain = write;
+	if (drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_SET_DOMAIN, &arg))
+		assert(false);
+}
+
+static int mmap_write(drm_intel_bo *bo, unsigned long offset,
+		      unsigned long length, const void *buf)
+{
+	void *map = NULL;
+
+	if (!length)
+		return 0;
+
+	if (is_cache_coherent(bo)) {
+		map = drm_intel_gem_bo_map__cpu(bo);
+		if (map)
+			set_domain(bo, I915_GEM_DOMAIN_CPU, I915_GEM_DOMAIN_CPU);
+	}
+	if (!map) {
+		map = drm_intel_gem_bo_map__wc(bo);
+		if (map)
+			set_domain(bo, I915_GEM_DOMAIN_WC, I915_GEM_DOMAIN_WC);
+	}
+
+	assert(map);
+	memcpy((char *)map + offset, buf, length);
+	drm_intel_gem_bo_unmap(bo);
+	return 0;
+}
+
+static int mmap_read(drm_intel_bo *bo, unsigned long offset,
+		      unsigned long length, void *buf)
+{
+	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+	void *map = NULL;
+
+	if (!length)
+		return 0;
+
+	if (bufmgr_gem->has_llc || is_cache_coherent(bo)) {
+		map = drm_intel_gem_bo_map__cpu(bo);
+		if (map)
+			set_domain(bo, I915_GEM_DOMAIN_CPU, 0);
+	}
+	if (!map) {
+		map = drm_intel_gem_bo_map__wc(bo);
+		if (map)
+			set_domain(bo, I915_GEM_DOMAIN_WC, 0);
+	}
+
+	assert(map);
+	memcpy(buf, (char *)map + offset, length);
+	drm_intel_gem_bo_unmap(bo);
+	return 0;
+}
+
 static int
 drm_intel_gem_bo_subdata(drm_intel_bo *bo, unsigned long offset,
 			 unsigned long size, const void *data)
@@ -1752,14 +1828,20 @@ drm_intel_gem_bo_subdata(drm_intel_bo *bo, unsigned long offset,
 	ret = drmIoctl(bufmgr_gem->fd,
 		       DRM_IOCTL_I915_GEM_PWRITE,
 		       &pwrite);
-	if (ret != 0) {
+	if (ret)
 		ret = -errno;
+
+	if (ret != 0 && ret != -EOPNOTSUPP) {
 		DBG("%s:%d: Error writing data to buffer %d: (%d %d) %s .\n",
 		    __FILE__, __LINE__, bo_gem->gem_handle, (int)offset,
 		    (int)size, strerror(errno));
+		return ret;
 	}
 
-	return ret;
+	if (ret == -EOPNOTSUPP)
+		mmap_write(bo, offset, size, data);
+
+	return 0;
 }
 
 static int
@@ -1807,14 +1889,20 @@ drm_intel_gem_bo_get_subdata(drm_intel_bo *bo, unsigned long offset,
 	ret = drmIoctl(bufmgr_gem->fd,
 		       DRM_IOCTL_I915_GEM_PREAD,
 		       &pread);
-	if (ret != 0) {
+	if (ret)
 		ret = -errno;
+
+	if (ret != 0 && ret != -EOPNOTSUPP) {
 		DBG("%s:%d: Error reading data from buffer %d: (%d %d) %s .\n",
 		    __FILE__, __LINE__, bo_gem->gem_handle, (int)offset,
 		    (int)size, strerror(errno));
+		return ret;
 	}
 
-	return ret;
+	if (ret == -EOPNOTSUPP)
+		mmap_read(bo, offset, size, data);
+
+	return 0;
 }
 
 /** Waits for all GPU rendering with the object to have completed. */

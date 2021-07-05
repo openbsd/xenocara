@@ -61,6 +61,7 @@
 #include <sys/sysctl.h>
 #endif
 #include <math.h>
+#include <inttypes.h>
 
 #if defined(__FreeBSD__)
 #include <sys/param.h>
@@ -76,6 +77,7 @@
 
 #include "xf86drm.h"
 #include "libdrm_macros.h"
+#include "drm_fourcc.h"
 
 #include "util_math.h"
 
@@ -127,6 +129,362 @@ static drmServerInfoPtr drm_server_info;
 
 static bool drmNodeIsDRM(int maj, int min);
 static char *drmGetMinorNameForFD(int fd, int type);
+
+#define DRM_MODIFIER(v, f, f_name) \
+       .modifier = DRM_FORMAT_MOD_##v ## _ ##f, \
+       .modifier_name = #f_name
+
+#define DRM_MODIFIER_INVALID(v, f_name) \
+       .modifier = DRM_FORMAT_MOD_INVALID, .modifier_name = #f_name
+
+#define DRM_MODIFIER_LINEAR(v, f_name) \
+       .modifier = DRM_FORMAT_MOD_LINEAR, .modifier_name = #f_name
+
+/* Intel is abit special as the format doesn't follow other vendors naming
+ * scheme */
+#define DRM_MODIFIER_INTEL(f, f_name) \
+       .modifier = I915_FORMAT_MOD_##f, .modifier_name = #f_name
+
+struct drmFormatModifierInfo {
+    uint64_t modifier;
+    const char *modifier_name;
+};
+
+struct drmFormatModifierVendorInfo {
+    uint8_t vendor;
+    const char *vendor_name;
+};
+
+#include "generated_static_table_fourcc.h"
+
+struct drmVendorInfo {
+    uint8_t vendor;
+    char *(*vendor_cb)(uint64_t modifier);
+};
+
+struct drmFormatVendorModifierInfo {
+    uint64_t modifier;
+    const char *modifier_name;
+};
+
+static char *
+drmGetFormatModifierNameFromArm(uint64_t modifier);
+
+static char *
+drmGetFormatModifierNameFromNvidia(uint64_t modifier);
+
+static char *
+drmGetFormatModifierNameFromAmd(uint64_t modifier);
+
+static char *
+drmGetFormatModifierNameFromAmlogic(uint64_t modifier);
+
+static const struct drmVendorInfo modifier_format_vendor_table[] = {
+    { DRM_FORMAT_MOD_VENDOR_ARM, drmGetFormatModifierNameFromArm },
+    { DRM_FORMAT_MOD_VENDOR_NVIDIA, drmGetFormatModifierNameFromNvidia },
+    { DRM_FORMAT_MOD_VENDOR_AMD, drmGetFormatModifierNameFromAmd },
+    { DRM_FORMAT_MOD_VENDOR_AMLOGIC, drmGetFormatModifierNameFromAmlogic },
+};
+
+#ifndef AFBC_FORMAT_MOD_MODE_VALUE_MASK
+#define AFBC_FORMAT_MOD_MODE_VALUE_MASK	0x000fffffffffffffULL
+#endif
+
+static const struct drmFormatVendorModifierInfo arm_mode_value_table[] = {
+    { AFBC_FORMAT_MOD_YTR,          "YTR" },
+    { AFBC_FORMAT_MOD_SPLIT,        "SPLIT" },
+    { AFBC_FORMAT_MOD_SPARSE,       "SPARSE" },
+    { AFBC_FORMAT_MOD_CBR,          "CBR" },
+    { AFBC_FORMAT_MOD_TILED,        "TILED" },
+    { AFBC_FORMAT_MOD_SC,           "SC" },
+    { AFBC_FORMAT_MOD_DB,           "DB" },
+    { AFBC_FORMAT_MOD_BCH,          "BCH" },
+    { AFBC_FORMAT_MOD_USM,          "USM" },
+};
+
+static bool is_x_t_amd_gfx9_tile(uint64_t tile)
+{
+    switch (tile) {
+    case AMD_FMT_MOD_TILE_GFX9_64K_S_X:
+    case AMD_FMT_MOD_TILE_GFX9_64K_D_X:
+    case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
+           return true;
+    }
+
+    return false;
+}
+
+static char *
+drmGetFormatModifierNameFromArm(uint64_t modifier)
+{
+    uint64_t type = (modifier >> 52) & 0xf;
+    uint64_t mode_value = modifier & AFBC_FORMAT_MOD_MODE_VALUE_MASK;
+    uint64_t block_size = mode_value & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK;
+
+    FILE *fp;
+    char *modifier_name = NULL;
+    size_t size = 0;
+    unsigned int i;
+
+    const char *block = NULL;
+    const char *mode = NULL;
+    bool did_print_mode = false;
+
+    /* misc type is already handled by the static table */
+    if (type != DRM_FORMAT_MOD_ARM_TYPE_AFBC)
+        return NULL;
+
+    fp = open_memstream(&modifier_name, &size);
+    if (!fp)
+        return NULL;
+
+    /* add block, can only have a (single) block */
+    switch (block_size) {
+    case AFBC_FORMAT_MOD_BLOCK_SIZE_16x16:
+        block = "16x16";
+        break;
+    case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8:
+        block = "32x8";
+        break;
+    case AFBC_FORMAT_MOD_BLOCK_SIZE_64x4:
+        block = "64x4";
+        break;
+    case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8_64x4:
+        block = "32x8_64x4";
+        break;
+    }
+
+    if (!block) {
+        fclose(fp);
+        free(modifier_name);
+        return NULL;
+    }
+
+    fprintf(fp, "BLOCK_SIZE=%s,", block);
+
+    /* add mode */
+    for (i = 0; i < ARRAY_SIZE(arm_mode_value_table); i++) {
+        if (arm_mode_value_table[i].modifier & mode_value) {
+            mode = arm_mode_value_table[i].modifier_name;
+            if (!did_print_mode) {
+                fprintf(fp, "MODE=%s", mode);
+                did_print_mode = true;
+            } else {
+                fprintf(fp, "|%s", mode);
+            }
+        }
+    }
+
+    fclose(fp);
+    return modifier_name;
+}
+
+static char *
+drmGetFormatModifierNameFromNvidia(uint64_t modifier)
+{
+    uint64_t height, kind, gen, sector, compression;
+
+    height = modifier & 0xf;
+    kind = (modifier >> 12) & 0xff;
+
+    gen = (modifier >> 20) & 0x3;
+    sector = (modifier >> 22) & 0x1;
+    compression = (modifier >> 23) & 0x7;
+
+    /* just in case there could other simpler modifiers, not yet added, avoid
+     * testing against TEGRA_TILE */
+    if ((modifier & 0x10) == 0x10) {
+        char *mod_nvidia;
+        asprintf(&mod_nvidia, "BLOCK_LINEAR_2D,HEIGHT=%"PRIu64",KIND=%"PRIu64","
+                 "GEN=%"PRIu64",SECTOR=%"PRIu64",COMPRESSION=%"PRIu64"", height,
+                 kind, gen, sector, compression);
+        return mod_nvidia;
+    }
+
+    return  NULL;
+}
+
+static void
+drmGetFormatModifierNameFromAmdDcc(uint64_t modifier, FILE *fp)
+{
+    uint64_t dcc_max_compressed_block =
+                AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier);
+    uint64_t dcc_retile = AMD_FMT_MOD_GET(DCC_RETILE, modifier);
+
+    const char *dcc_max_compressed_block_str = NULL;
+
+    fprintf(fp, ",DCC");
+
+    if (dcc_retile)
+        fprintf(fp, ",DCC_RETILE");
+
+    if (!dcc_retile && AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier))
+        fprintf(fp, ",DCC_PIPE_ALIGN");
+
+    if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier))
+        fprintf(fp, ",DCC_INDEPENDENT_64B");
+
+    if (AMD_FMT_MOD_GET(DCC_INDEPENDENT_128B, modifier))
+        fprintf(fp, ",DCC_INDEPENDENT_128B");
+
+    switch (dcc_max_compressed_block) {
+    case AMD_FMT_MOD_DCC_BLOCK_64B:
+        dcc_max_compressed_block_str = "64B";
+        break;
+    case AMD_FMT_MOD_DCC_BLOCK_128B:
+        dcc_max_compressed_block_str = "128B";
+        break;
+    case AMD_FMT_MOD_DCC_BLOCK_256B:
+        dcc_max_compressed_block_str = "256B";
+        break;
+    }
+
+    if (dcc_max_compressed_block_str)
+        fprintf(fp, ",DCC_MAX_COMPRESSED_BLOCK=%s",
+                dcc_max_compressed_block_str);
+
+    if (AMD_FMT_MOD_GET(DCC_CONSTANT_ENCODE, modifier))
+        fprintf(fp, ",DCC_CONSTANT_ENCODE");
+}
+
+static void
+drmGetFormatModifierNameFromAmdTile(uint64_t modifier, FILE *fp)
+{
+    uint64_t pipe_xor_bits, bank_xor_bits, packers, rb;
+    uint64_t pipe, pipe_align, dcc, dcc_retile, tile_version;
+
+    pipe_align = AMD_FMT_MOD_GET(DCC_PIPE_ALIGN, modifier);
+    pipe_xor_bits = AMD_FMT_MOD_GET(PIPE_XOR_BITS, modifier);
+    dcc = AMD_FMT_MOD_GET(DCC, modifier);
+    dcc_retile = AMD_FMT_MOD_GET(DCC_RETILE, modifier);
+    tile_version = AMD_FMT_MOD_GET(TILE_VERSION, modifier);
+
+    fprintf(fp, ",PIPE_XOR_BITS=%"PRIu64, pipe_xor_bits);
+
+    if (tile_version == AMD_FMT_MOD_TILE_VER_GFX9) {
+        bank_xor_bits = AMD_FMT_MOD_GET(BANK_XOR_BITS, modifier);
+        fprintf(fp, ",BANK_XOR_BITS=%"PRIu64, bank_xor_bits);
+    }
+
+    if (tile_version == AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS) {
+        packers = AMD_FMT_MOD_GET(PACKERS, modifier);
+        fprintf(fp, ",PACKERS=%"PRIu64, packers);
+    }
+
+    if (dcc && tile_version == AMD_FMT_MOD_TILE_VER_GFX9) {
+        rb = AMD_FMT_MOD_GET(RB, modifier);
+        fprintf(fp, ",RB=%"PRIu64, rb);
+    }
+
+    if (dcc && tile_version == AMD_FMT_MOD_TILE_VER_GFX9 &&
+        (dcc_retile || pipe_align)) {
+        pipe = AMD_FMT_MOD_GET(PIPE, modifier);
+        fprintf(fp, ",PIPE_%"PRIu64, pipe);
+    }
+}
+
+static char *
+drmGetFormatModifierNameFromAmd(uint64_t modifier)
+{
+    uint64_t tile, tile_version, dcc;
+    FILE *fp;
+    char *mod_amd = NULL;
+    size_t size = 0;
+
+    const char *str_tile = NULL;
+    const char *str_tile_version = NULL;
+
+    tile = AMD_FMT_MOD_GET(TILE, modifier);
+    tile_version = AMD_FMT_MOD_GET(TILE_VERSION, modifier);
+    dcc = AMD_FMT_MOD_GET(DCC, modifier);
+
+    fp = open_memstream(&mod_amd, &size);
+    if (!fp)
+        return NULL;
+
+    /* add tile  */
+    switch (tile_version) {
+    case AMD_FMT_MOD_TILE_VER_GFX9:
+        str_tile_version = "GFX9";
+        break;
+    case AMD_FMT_MOD_TILE_VER_GFX10:
+        str_tile_version = "GFX10";
+        break;
+    case AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS:
+        str_tile_version = "GFX10_RBPLUS";
+        break;
+    }
+
+    if (str_tile_version) {
+        fprintf(fp, "%s", str_tile_version);
+    } else {
+        fclose(fp);
+        free(mod_amd);
+        return NULL;
+    }
+
+    /* add tile str */
+    switch (tile) {
+    case AMD_FMT_MOD_TILE_GFX9_64K_S:
+        str_tile = "GFX9_64K_S";
+        break;
+    case AMD_FMT_MOD_TILE_GFX9_64K_D:
+        str_tile = "GFX9_64K_D";
+        break;
+    case AMD_FMT_MOD_TILE_GFX9_64K_S_X:
+        str_tile = "GFX9_64K_S_X";
+        break;
+    case AMD_FMT_MOD_TILE_GFX9_64K_D_X:
+        str_tile = "GFX9_64K_D_X";
+        break;
+    case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
+        str_tile = "GFX9_64K_R_X";
+        break;
+    }
+
+    if (str_tile)
+        fprintf(fp, ",%s", str_tile);
+
+    if (dcc)
+        drmGetFormatModifierNameFromAmdDcc(modifier, fp);
+
+    if (tile_version >= AMD_FMT_MOD_TILE_VER_GFX9 && is_x_t_amd_gfx9_tile(tile))
+        drmGetFormatModifierNameFromAmdTile(modifier, fp);
+
+    fclose(fp);
+    return mod_amd;
+}
+
+static char *
+drmGetFormatModifierNameFromAmlogic(uint64_t modifier)
+{
+    uint64_t layout = modifier & 0xff;
+    uint64_t options = (modifier >> 8) & 0xff;
+    char *mod_amlogic = NULL;
+
+    const char *layout_str;
+    const char *opts_str;
+
+    switch (layout) {
+    case AMLOGIC_FBC_LAYOUT_BASIC:
+       layout_str = "BASIC";
+       break;
+    case AMLOGIC_FBC_LAYOUT_SCATTER:
+       layout_str = "SCATTER";
+       break;
+    default:
+       layout_str = "INVALID_LAYOUT";
+       break;
+    }
+
+    if (options & AMLOGIC_FBC_OPTION_MEM_SAVING)
+        opts_str = "MEM_SAVING";
+    else
+        opts_str = "0";
+
+    asprintf(&mod_amlogic, "FBC,LAYOUT=%s,OPTIONS=%s", layout_str, opts_str);
+    return mod_amlogic;
+}
 
 static unsigned log2_int(unsigned x)
 {
@@ -1378,7 +1736,12 @@ drm_public drmBufInfoPtr drmGetBufInfo(int fd)
 
         retval = drmMalloc(sizeof(*retval));
         retval->count = info.count;
-        retval->list  = drmMalloc(info.count * sizeof(*retval->list));
+        if (!(retval->list = drmMalloc(info.count * sizeof(*retval->list)))) {
+                drmFree(retval);
+                drmFree(info.list);
+                return NULL;
+        }
+
         for (i = 0; i < info.count; i++) {
             retval->list[i].count     = info.list[i].count;
             retval->list[i].size      = info.list[i].size;
@@ -4299,6 +4662,10 @@ drm_public int drmGetDevices2(uint32_t flags, drmDevicePtr devices[],
     }
 
     closedir(sysdir);
+
+    if (devices != NULL)
+        return MIN2(device_count, max_devices);
+
     return device_count;
 }
 
@@ -4602,4 +4969,67 @@ drm_public int drmSyncobjTransfer(int fd,
     ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_TRANSFER, &args);
 
     return ret;
+}
+
+static char *
+drmGetFormatModifierFromSimpleTokens(uint64_t modifier)
+{
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(drm_format_modifier_table); i++) {
+        if (drm_format_modifier_table[i].modifier == modifier)
+            return strdup(drm_format_modifier_table[i].modifier_name);
+    }
+
+    return NULL;
+}
+
+/** Retrieves a human-readable representation of a vendor (as a string) from
+ * the format token modifier
+ *
+ * \param modifier the format modifier token
+ * \return a char pointer to the human-readable form of the vendor. Caller is
+ * responsible for freeing it.
+ */
+drm_public char *
+drmGetFormatModifierVendor(uint64_t modifier)
+{
+    unsigned int i;
+    uint8_t vendor = fourcc_mod_get_vendor(modifier);
+
+    for (i = 0; i < ARRAY_SIZE(drm_format_modifier_vendor_table); i++) {
+        if (drm_format_modifier_vendor_table[i].vendor == vendor)
+            return strdup(drm_format_modifier_vendor_table[i].vendor_name);
+    }
+
+    return NULL;
+}
+
+/** Retrieves a human-readable representation string from a format token
+ * modifier
+ *
+ * If the dedicated function was not able to extract a valid name or searching
+ * the format modifier was not in the table, this function would return NULL.
+ *
+ * \param modifier the token format
+ * \return a malloc'ed string representation of the modifier. Caller is
+ * responsible for freeing the string returned.
+ *
+ */
+drm_public char *
+drmGetFormatModifierName(uint64_t modifier)
+{
+    uint8_t vendorid = fourcc_mod_get_vendor(modifier);
+    char *modifier_found = NULL;
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(modifier_format_vendor_table); i++) {
+        if (modifier_format_vendor_table[i].vendor == vendorid)
+            modifier_found = modifier_format_vendor_table[i].vendor_cb(modifier);
+    }
+
+    if (!modifier_found)
+        return drmGetFormatModifierFromSimpleTokens(modifier);
+
+    return modifier_found;
 }

@@ -806,6 +806,24 @@ extern char *drmGetDeviceNameFromFd(int fd);
 extern char *drmGetDeviceNameFromFd2(int fd);
 extern int drmGetNodeTypeFromFd(int fd);
 
+/* Convert between GEM handles and DMA-BUF file descriptors.
+ *
+ * Warning: since GEM handles are not reference-counted and are unique per
+ * DRM file description, the caller is expected to perform its own reference
+ * counting. drmPrimeFDToHandle is guaranteed to return the same handle for
+ * different FDs if they reference the same underlying buffer object. This
+ * could even be a buffer object originally created on the same DRM FD.
+ *
+ * When sharing a DRM FD with an API such as EGL or GBM, the caller must not
+ * use drmPrimeHandleToFD nor drmPrimeFDToHandle. A single user-space
+ * reference-counting implementation is necessary to avoid double-closing GEM
+ * handles.
+ *
+ * Two processes can't share the same DRM FD and both use it to create or
+ * import GEM handles, even when using a single user-space reference-counting
+ * implementation like GBM, because GBM doesn't share its state between
+ * processes.
+ */
 extern int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd);
 extern int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle);
 
@@ -918,6 +936,17 @@ extern int drmSyncobjTransfer(int fd,
 			      uint32_t dst_handle, uint64_t dst_point,
 			      uint32_t src_handle, uint64_t src_point,
 			      uint32_t flags);
+
+extern char *
+drmGetFormatModifierVendor(uint64_t modifier);
+
+extern char *
+drmGetFormatModifierName(uint64_t modifier);
+
+#ifndef fourcc_mod_get_vendor
+#define fourcc_mod_get_vendor(modifier) \
+       (((modifier) >> 56) & 0xff)
+#endif
 
 #if defined(__cplusplus)
 }
