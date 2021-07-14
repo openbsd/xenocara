@@ -32,7 +32,7 @@ organisation used in X.Org:
 In addition Xenocara uses the following directories:
 
 - dist:	    contains some of the 3rd party sources, when keeping them
-  	    separate helps the build system (fontconfig, xcb and
+	    separate helps the build system (fontconfig, xcb and
             xkeyboard-config)
 - distrib:  all binary distribution related tools and data
 - etc:	    some default config files
@@ -211,4 +211,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.43 2020/12/29 07:47:22 matthieu Exp $
+$OpenBSD: README,v 1.44 2021/07/14 18:46:21 sthen Exp $
