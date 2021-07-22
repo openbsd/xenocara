@@ -13,6 +13,10 @@ typedef int GLclampx;
 #include "GL/gl.h"
 #include "GL/glext.h"
 
+#ifdef MemoryBarrier
+#undef MemoryBarrier
+#endif
+
 GLAPI void APIENTRY GLAPI_PREFIX(NewList)(GLuint list, GLenum mode);
 GLAPI void APIENTRY GLAPI_PREFIX(EndList)(void);
 GLAPI void APIENTRY GLAPI_PREFIX(CallList)(GLuint list);
@@ -1124,7 +1128,7 @@ GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribBinding)(GLuint attribindex, GLuint
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribFormat)(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribIFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribLFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset);
-GLAPI void APIENTRY GLAPI_PREFIX(VertexBindingDivisor)(GLuint attribindex, GLuint divisor);
+GLAPI void APIENTRY GLAPI_PREFIX(VertexBindingDivisor)(GLuint bindingindex, GLuint divisor);
 GLAPI void APIENTRY GLAPI_PREFIX(FramebufferParameteri)(GLenum target, GLenum pname, GLint param);
 GLAPI void APIENTRY GLAPI_PREFIX(GetFramebufferParameteriv)(GLenum target, GLenum pname, GLint *params);
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawArraysIndirect)(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride);
@@ -9096,11 +9100,11 @@ GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribLFormat)(GLuint attribindex, GLint 
    ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)) _func)(attribindex, size, type, relativeoffset);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(VertexBindingDivisor)(GLuint attribindex, GLuint divisor)
+GLAPI void APIENTRY GLAPI_PREFIX(VertexBindingDivisor)(GLuint bindingindex, GLuint divisor)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[887];
-   ((void (APIENTRY *)(GLuint attribindex, GLuint divisor)) _func)(attribindex, divisor);
+   ((void (APIENTRY *)(GLuint bindingindex, GLuint divisor)) _func)(bindingindex, divisor);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(FramebufferParameteri)(GLenum target, GLenum pname, GLint param)

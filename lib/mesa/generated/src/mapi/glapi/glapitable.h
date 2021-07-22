@@ -42,6 +42,10 @@
 extern "C" {
 #endif
 
+#ifdef MemoryBarrier
+#undef MemoryBarrier
+#endif
+
 struct _glapi_table
 {
    void (GLAPIENTRYP NewList)(GLuint list, GLenum mode); /* 0 */
@@ -931,7 +935,7 @@ struct _glapi_table
    void (GLAPIENTRYP VertexAttribFormat)(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset); /* 884 */
    void (GLAPIENTRYP VertexAttribIFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset); /* 885 */
    void (GLAPIENTRYP VertexAttribLFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset); /* 886 */
-   void (GLAPIENTRYP VertexBindingDivisor)(GLuint attribindex, GLuint divisor); /* 887 */
+   void (GLAPIENTRYP VertexBindingDivisor)(GLuint bindingindex, GLuint divisor); /* 887 */
    void (GLAPIENTRYP FramebufferParameteri)(GLenum target, GLenum pname, GLint param); /* 888 */
    void (GLAPIENTRYP GetFramebufferParameteriv)(GLenum target, GLenum pname, GLint * params); /* 889 */
    void (GLAPIENTRYP GetInternalformati64v)(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint64 * params); /* 890 */
@@ -1641,7 +1645,7 @@ struct _glapi_table
    void (GLAPIENTRYP VertexArrayVertexAttribIFormatEXT)(GLuint vaobj, GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset); /* 1594 */
    void (GLAPIENTRYP VertexArrayVertexAttribLFormatEXT)(GLuint vaobj, GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset); /* 1595 */
    void (GLAPIENTRYP VertexArrayVertexAttribBindingEXT)(GLuint vaobj, GLuint attribindex, GLuint bindingindex); /* 1596 */
-   void (GLAPIENTRYP VertexArrayVertexBindingDivisorEXT)(GLuint vaobj, GLuint attribindex, GLuint divisor); /* 1597 */
+   void (GLAPIENTRYP VertexArrayVertexBindingDivisorEXT)(GLuint vaobj, GLuint bindingindex, GLuint divisor); /* 1597 */
    void (GLAPIENTRYP NamedBufferPageCommitmentEXT)(GLuint buffer, GLintptr offset, GLsizeiptr size, GLboolean commit); /* 1598 */
    void (GLAPIENTRYP NamedStringARB)(GLenum type, GLint namelen, const GLchar * name, GLint stringlen, const GLchar * string); /* 1599 */
    void (GLAPIENTRYP DeleteNamedStringARB)(GLint namelen, const GLchar * name); /* 1600 */
@@ -1651,6 +1655,55 @@ struct _glapi_table
    void (GLAPIENTRYP GetNamedStringivARB)(GLint namelen, const GLchar * name, GLenum pname, GLint * params); /* 1604 */
    void (GLAPIENTRYP EGLImageTargetTexStorageEXT)(GLenum target, GLvoid * image, const GLint * attrib_list); /* 1605 */
    void (GLAPIENTRYP EGLImageTargetTextureStorageEXT)(GLuint texture, GLvoid * image, const GLint * attrib_list); /* 1606 */
+   void (GLAPIENTRYP CopyImageSubDataNV)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth); /* 1607 */
+   void (GLAPIENTRYP ViewportSwizzleNV)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew); /* 1608 */
+   void (GLAPIENTRYP AlphaToCoverageDitherControlNV)(GLenum mode); /* 1609 */
+   void (GLAPIENTRYP InternalBufferSubDataCopyMESA)(GLintptr srcBuffer, GLuint srcOffset, GLuint dstTargetOrName, GLintptr dstOffset, GLsizeiptr size, GLboolean named, GLboolean ext_dsa); /* 1610 */
+   void (GLAPIENTRYP Vertex2hNV)(GLhalfNV x, GLhalfNV y); /* 1611 */
+   void (GLAPIENTRYP Vertex2hvNV)(const GLhalfNV * v); /* 1612 */
+   void (GLAPIENTRYP Vertex3hNV)(GLhalfNV x, GLhalfNV y, GLhalfNV z); /* 1613 */
+   void (GLAPIENTRYP Vertex3hvNV)(const GLhalfNV * v); /* 1614 */
+   void (GLAPIENTRYP Vertex4hNV)(GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w); /* 1615 */
+   void (GLAPIENTRYP Vertex4hvNV)(const GLhalfNV * v); /* 1616 */
+   void (GLAPIENTRYP Normal3hNV)(GLhalfNV nx, GLhalfNV ny, GLhalfNV nz); /* 1617 */
+   void (GLAPIENTRYP Normal3hvNV)(const GLhalfNV * v); /* 1618 */
+   void (GLAPIENTRYP Color3hNV)(GLhalfNV red, GLhalfNV green, GLhalfNV blue); /* 1619 */
+   void (GLAPIENTRYP Color3hvNV)(const GLhalfNV * v); /* 1620 */
+   void (GLAPIENTRYP Color4hNV)(GLhalfNV red, GLhalfNV green, GLhalfNV blue, GLhalfNV alpha); /* 1621 */
+   void (GLAPIENTRYP Color4hvNV)(const GLhalfNV * v); /* 1622 */
+   void (GLAPIENTRYP TexCoord1hNV)(GLhalfNV s); /* 1623 */
+   void (GLAPIENTRYP TexCoord1hvNV)(const GLhalfNV * v); /* 1624 */
+   void (GLAPIENTRYP TexCoord2hNV)(GLhalfNV s, GLhalfNV t); /* 1625 */
+   void (GLAPIENTRYP TexCoord2hvNV)(const GLhalfNV * v); /* 1626 */
+   void (GLAPIENTRYP TexCoord3hNV)(GLhalfNV s, GLhalfNV t, GLhalfNV r); /* 1627 */
+   void (GLAPIENTRYP TexCoord3hvNV)(const GLhalfNV * v); /* 1628 */
+   void (GLAPIENTRYP TexCoord4hNV)(GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q); /* 1629 */
+   void (GLAPIENTRYP TexCoord4hvNV)(const GLhalfNV * v); /* 1630 */
+   void (GLAPIENTRYP MultiTexCoord1hNV)(GLenum target, GLhalfNV s); /* 1631 */
+   void (GLAPIENTRYP MultiTexCoord1hvNV)(GLenum target, const GLhalfNV * v); /* 1632 */
+   void (GLAPIENTRYP MultiTexCoord2hNV)(GLenum target, GLhalfNV s, GLhalfNV t); /* 1633 */
+   void (GLAPIENTRYP MultiTexCoord2hvNV)(GLenum target, const GLhalfNV * v); /* 1634 */
+   void (GLAPIENTRYP MultiTexCoord3hNV)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r); /* 1635 */
+   void (GLAPIENTRYP MultiTexCoord3hvNV)(GLenum target, const GLhalfNV * v); /* 1636 */
+   void (GLAPIENTRYP MultiTexCoord4hNV)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q); /* 1637 */
+   void (GLAPIENTRYP MultiTexCoord4hvNV)(GLenum target, const GLhalfNV * v); /* 1638 */
+   void (GLAPIENTRYP FogCoordhNV)(GLhalfNV x); /* 1639 */
+   void (GLAPIENTRYP FogCoordhvNV)(const GLhalfNV * v); /* 1640 */
+   void (GLAPIENTRYP SecondaryColor3hNV)(GLhalfNV red, GLhalfNV green, GLhalfNV blue); /* 1641 */
+   void (GLAPIENTRYP SecondaryColor3hvNV)(const GLhalfNV * v); /* 1642 */
+   void (GLAPIENTRYP InternalSetError)(GLenum error); /* 1643 */
+   void (GLAPIENTRYP VertexAttrib1hNV)(GLuint index, GLhalfNV x); /* 1644 */
+   void (GLAPIENTRYP VertexAttrib1hvNV)(GLuint index, const GLhalfNV * v); /* 1645 */
+   void (GLAPIENTRYP VertexAttrib2hNV)(GLuint index, GLhalfNV x, GLhalfNV y); /* 1646 */
+   void (GLAPIENTRYP VertexAttrib2hvNV)(GLuint index, const GLhalfNV * v); /* 1647 */
+   void (GLAPIENTRYP VertexAttrib3hNV)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z); /* 1648 */
+   void (GLAPIENTRYP VertexAttrib3hvNV)(GLuint index, const GLhalfNV * v); /* 1649 */
+   void (GLAPIENTRYP VertexAttrib4hNV)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w); /* 1650 */
+   void (GLAPIENTRYP VertexAttrib4hvNV)(GLuint index, const GLhalfNV * v); /* 1651 */
+   void (GLAPIENTRYP VertexAttribs1hvNV)(GLuint index, GLsizei n, const GLhalfNV * v); /* 1652 */
+   void (GLAPIENTRYP VertexAttribs2hvNV)(GLuint index, GLsizei n, const GLhalfNV * v); /* 1653 */
+   void (GLAPIENTRYP VertexAttribs3hvNV)(GLuint index, GLsizei n, const GLhalfNV * v); /* 1654 */
+   void (GLAPIENTRYP VertexAttribs4hvNV)(GLuint index, GLsizei n, const GLhalfNV * v); /* 1655 */
 };
 
 #ifdef __cplusplus

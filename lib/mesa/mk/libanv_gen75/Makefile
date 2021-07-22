@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
 
 GEN=	75
 LIB=	anv_gen${GEN}
@@ -12,7 +12,7 @@ SRCS=	genX_blorp_exec.c \
 	genX_query.c \
 	genX_state.c \
 
-SRCS+=	gen7_cmd_buffer.c
+SRCS+=	gfx7_cmd_buffer.c
 
 .include "../Makefile.inc"
 
@@ -36,7 +36,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-DVK_USE_PLATFORM_XLIB_KHR \
 		-DVK_USE_PLATFORM_DISPLAY_KHR \
 		-DVK_USE_PLATFORM_XLIB_XRANDR_EXT \
-		-DGEN_VERSIONx10=${GEN}
+		-DGFX_VERx10=${GEN}
 
 install:
 

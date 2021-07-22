@@ -32,7 +32,6 @@
 
 
 #include "main/accum.h"
-#include "main/api_loopback.h"
 #include "main/api_exec.h"
 #include "main/arbprogram.h"
 #include "main/atifragshader.h"
@@ -73,7 +72,6 @@
 #include "main/genmipmap.h"
 #include "main/hint.h"
 #include "main/histogram.h"
-#include "main/imports.h"
 #include "main/light.h"
 #include "main/lines.h"
 #include "main/matrix.h"
@@ -136,8 +134,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
 
    assert(ctx->Version > 0);
 
-   _mesa_initialize_exec_dispatch(ctx, exec);
-
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30))) {
       SET_BeginTransformFeedback(exec, _mesa_BeginTransformFeedback);
       SET_BindBufferRange(exec, _mesa_BindBufferRange);
@@ -190,6 +186,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_TextureView(exec, _mesa_TextureView);
       SET_VertexAttribBinding(exec, _mesa_VertexAttribBinding);
       SET_VertexBindingDivisor(exec, _mesa_VertexBindingDivisor);
+      SET_ViewportSwizzleNV(exec, _mesa_ViewportSwizzleNV);
    }
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
       SET_BufferStorageMemEXT(exec, _mesa_BufferStorageMemEXT);
@@ -396,6 +393,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_PrimitiveBoundingBox(exec, _mesa_PrimitiveBoundingBox);
    }
    if (_mesa_is_desktop_gl(ctx)) {
+      SET_AlphaToCoverageDitherControlNV(exec, _mesa_AlphaToCoverageDitherControlNV);
       SET_BeginQueryIndexed(exec, _mesa_BeginQueryIndexed);
       SET_BindBuffersBase(exec, _mesa_BindBuffersBase);
       SET_BindBuffersRange(exec, _mesa_BindBuffersRange);
@@ -427,6 +425,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_CompressedTextureSubImage1DEXT(exec, _mesa_CompressedTextureSubImage1DEXT);
       SET_CompressedTextureSubImage2DEXT(exec, _mesa_CompressedTextureSubImage2DEXT);
       SET_CompressedTextureSubImage3DEXT(exec, _mesa_CompressedTextureSubImage3DEXT);
+      SET_CopyImageSubDataNV(exec, _mesa_CopyImageSubDataNV);
       SET_CopyMultiTexImage1DEXT(exec, _mesa_CopyMultiTexImage1DEXT);
       SET_CopyMultiTexImage2DEXT(exec, _mesa_CopyMultiTexImage2DEXT);
       SET_CopyMultiTexSubImage1DEXT(exec, _mesa_CopyMultiTexSubImage1DEXT);
@@ -445,6 +444,10 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_DisableClientStateiEXT(exec, _mesa_DisableClientStateiEXT);
       SET_DisableVertexArrayAttribEXT(exec, _mesa_DisableVertexArrayAttribEXT);
       SET_DisableVertexArrayEXT(exec, _mesa_DisableVertexArrayEXT);
+      SET_DrawTransformFeedback(exec, _mesa_DrawTransformFeedback);
+      SET_DrawTransformFeedbackInstanced(exec, _mesa_DrawTransformFeedbackInstanced);
+      SET_DrawTransformFeedbackStream(exec, _mesa_DrawTransformFeedbackStream);
+      SET_DrawTransformFeedbackStreamInstanced(exec, _mesa_DrawTransformFeedbackStreamInstanced);
       SET_EGLImageTargetTextureStorageEXT(exec, _mesa_EGLImageTargetTextureStorageEXT);
       SET_EnableClientStateiEXT(exec, _mesa_EnableClientStateiEXT);
       SET_EnableVertexArrayAttribEXT(exec, _mesa_EnableVertexArrayAttribEXT);
@@ -538,6 +541,10 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_MatrixScalefEXT(exec, _mesa_MatrixScalefEXT);
       SET_MatrixTranslatedEXT(exec, _mesa_MatrixTranslatedEXT);
       SET_MatrixTranslatefEXT(exec, _mesa_MatrixTranslatefEXT);
+      SET_MultiDrawArraysIndirect(exec, _mesa_MultiDrawArraysIndirect);
+      SET_MultiDrawArraysIndirectCountARB(exec, _mesa_MultiDrawArraysIndirectCountARB);
+      SET_MultiDrawElementsIndirect(exec, _mesa_MultiDrawElementsIndirect);
+      SET_MultiDrawElementsIndirectCountARB(exec, _mesa_MultiDrawElementsIndirectCountARB);
       SET_MultiModeDrawArraysIBM(exec, _mesa_MultiModeDrawArraysIBM);
       SET_MultiModeDrawElementsIBM(exec, _mesa_MultiModeDrawElementsIBM);
       SET_MultiTexBufferEXT(exec, _mesa_MultiTexBufferEXT);
@@ -667,40 +674,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_VertexArrayVertexAttribOffsetEXT(exec, _mesa_VertexArrayVertexAttribOffsetEXT);
       SET_VertexArrayVertexBindingDivisorEXT(exec, _mesa_VertexArrayVertexBindingDivisorEXT);
       SET_VertexArrayVertexOffsetEXT(exec, _mesa_VertexArrayVertexOffsetEXT);
-      SET_VertexAttrib1d(exec, _mesa_VertexAttrib1d);
-      SET_VertexAttrib1dv(exec, _mesa_VertexAttrib1dv);
-      SET_VertexAttrib1s(exec, _mesa_VertexAttrib1s);
-      SET_VertexAttrib1sv(exec, _mesa_VertexAttrib1sv);
-      SET_VertexAttrib2d(exec, _mesa_VertexAttrib2d);
-      SET_VertexAttrib2dv(exec, _mesa_VertexAttrib2dv);
-      SET_VertexAttrib2s(exec, _mesa_VertexAttrib2s);
-      SET_VertexAttrib2sv(exec, _mesa_VertexAttrib2sv);
-      SET_VertexAttrib3d(exec, _mesa_VertexAttrib3d);
-      SET_VertexAttrib3dv(exec, _mesa_VertexAttrib3dv);
-      SET_VertexAttrib3s(exec, _mesa_VertexAttrib3s);
-      SET_VertexAttrib3sv(exec, _mesa_VertexAttrib3sv);
-      SET_VertexAttrib4Nbv(exec, _mesa_VertexAttrib4Nbv);
-      SET_VertexAttrib4Niv(exec, _mesa_VertexAttrib4Niv);
-      SET_VertexAttrib4Nsv(exec, _mesa_VertexAttrib4Nsv);
-      SET_VertexAttrib4Nub(exec, _mesa_VertexAttrib4Nub);
-      SET_VertexAttrib4Nubv(exec, _mesa_VertexAttrib4Nubv);
-      SET_VertexAttrib4Nuiv(exec, _mesa_VertexAttrib4Nuiv);
-      SET_VertexAttrib4Nusv(exec, _mesa_VertexAttrib4Nusv);
-      SET_VertexAttrib4bv(exec, _mesa_VertexAttrib4bv);
-      SET_VertexAttrib4d(exec, _mesa_VertexAttrib4d);
-      SET_VertexAttrib4dv(exec, _mesa_VertexAttrib4dv);
-      SET_VertexAttrib4iv(exec, _mesa_VertexAttrib4iv);
-      SET_VertexAttrib4s(exec, _mesa_VertexAttrib4s);
-      SET_VertexAttrib4sv(exec, _mesa_VertexAttrib4sv);
-      SET_VertexAttrib4ubv(exec, _mesa_VertexAttrib4ubv);
-      SET_VertexAttrib4uiv(exec, _mesa_VertexAttrib4uiv);
-      SET_VertexAttrib4usv(exec, _mesa_VertexAttrib4usv);
-      SET_VertexAttribI1iv(exec, _mesa_VertexAttribI1iv);
-      SET_VertexAttribI1uiv(exec, _mesa_VertexAttribI1uiv);
-      SET_VertexAttribI4bv(exec, _mesa_VertexAttribI4bv);
-      SET_VertexAttribI4sv(exec, _mesa_VertexAttribI4sv);
-      SET_VertexAttribI4ubv(exec, _mesa_VertexAttribI4ubv);
-      SET_VertexAttribI4usv(exec, _mesa_VertexAttribI4usv);
       SET_VertexAttribLFormat(exec, _mesa_VertexAttribLFormat);
    }
    if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
@@ -708,6 +681,14 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_ColorMaski(exec, _mesa_ColorMaski);
       SET_DeleteTransformFeedbacks(exec, _mesa_DeleteTransformFeedbacks);
       SET_Disablei(exec, _mesa_Disablei);
+      SET_DrawArraysInstancedARB(exec, _mesa_DrawArraysInstancedARB);
+      SET_DrawArraysInstancedBaseInstance(exec, _mesa_DrawArraysInstancedBaseInstance);
+      SET_DrawElementsInstancedARB(exec, _mesa_DrawElementsInstancedARB);
+      SET_DrawElementsInstancedBaseInstance(exec, _mesa_DrawElementsInstancedBaseInstance);
+      SET_DrawElementsInstancedBaseVertex(exec, _mesa_DrawElementsInstancedBaseVertex);
+      SET_DrawElementsInstancedBaseVertexBaseInstance(exec, _mesa_DrawElementsInstancedBaseVertexBaseInstance);
+      SET_DrawRangeElements(exec, _mesa_DrawRangeElements);
+      SET_DrawRangeElementsBaseVertex(exec, _mesa_DrawRangeElementsBaseVertex);
       SET_EGLImageTargetTexStorageEXT(exec, _mesa_EGLImageTargetTexStorageEXT);
       SET_Enablei(exec, _mesa_Enablei);
       SET_GenTransformFeedbacks(exec, _mesa_GenTransformFeedbacks);
@@ -774,6 +755,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_WindowRectanglesEXT(exec, _mesa_WindowRectanglesEXT);
    }
    if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
+      SET_DrawArraysIndirect(exec, _mesa_DrawArraysIndirect);
+      SET_DrawElementsIndirect(exec, _mesa_DrawElementsIndirect);
       SET_EvaluateDepthValuesARB(exec, _mesa_EvaluateDepthValuesARB);
       SET_GetBooleani_v(exec, _mesa_GetBooleani_v);
       SET_GetFloati_v(exec, _mesa_GetFloati_v);
@@ -838,6 +821,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_DepthMask(exec, _mesa_DepthMask);
       SET_DepthRangef(exec, _mesa_DepthRangef);
       SET_Disable(exec, _mesa_Disable);
+      SET_DrawArrays(exec, _mesa_DrawArrays);
+      SET_DrawElements(exec, _mesa_DrawElements);
       SET_EGLImageTargetRenderbufferStorageOES(exec, _mesa_EGLImageTargetRenderbufferStorageOES);
       SET_EGLImageTargetTexture2DOES(exec, _mesa_EGLImageTargetTexture2DOES);
       SET_Enable(exec, _mesa_Enable);
@@ -865,6 +850,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_IsFramebuffer(exec, _mesa_IsFramebuffer);
       SET_IsRenderbuffer(exec, _mesa_IsRenderbuffer);
       SET_IsTexture(exec, _mesa_IsTexture);
+      SET_MultiDrawArrays(exec, _mesa_MultiDrawArrays);
+      SET_MultiDrawElementsEXT(exec, _mesa_MultiDrawElementsEXT);
       SET_ObjectLabel(exec, _mesa_ObjectLabel);
       SET_ObjectPtrLabel(exec, _mesa_ObjectPtrLabel);
       SET_PolygonOffset(exec, _mesa_PolygonOffset);
@@ -895,6 +882,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_DeleteProgramPipelines(exec, _mesa_DeleteProgramPipelines);
       SET_DeleteQueries(exec, _mesa_DeleteQueries);
       SET_DeleteShader(exec, _mesa_DeleteShader);
+      SET_DrawElementsBaseVertex(exec, _mesa_DrawElementsBaseVertex);
       SET_EndPerfMonitorAMD(exec, _mesa_EndPerfMonitorAMD);
       SET_EndPerfQueryINTEL(exec, _mesa_EndPerfQueryINTEL);
       SET_EndQuery(exec, _mesa_EndQuery);
@@ -941,12 +929,15 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_GetnUniformfvARB(exec, _mesa_GetnUniformfvARB);
       SET_GetnUniformivARB(exec, _mesa_GetnUniformivARB);
       SET_GetnUniformuivARB(exec, _mesa_GetnUniformuivARB);
+      SET_InternalBufferSubDataCopyMESA(exec, _mesa_InternalBufferSubDataCopyMESA);
+      SET_InternalSetError(exec, _mesa_InternalSetError);
       SET_IsProgram(exec, _mesa_IsProgram);
       SET_IsProgramPipeline(exec, _mesa_IsProgramPipeline);
       SET_IsQuery(exec, _mesa_IsQuery);
       SET_IsShader(exec, _mesa_IsShader);
       SET_IsVertexArray(exec, _mesa_IsVertexArray);
       SET_MaxShaderCompilerThreadsKHR(exec, _mesa_MaxShaderCompilerThreadsKHR);
+      SET_MultiDrawElementsBaseVertex(exec, _mesa_MultiDrawElementsBaseVertex);
       SET_ProgramBinary(exec, _mesa_ProgramBinary);
       SET_ProgramUniform1f(exec, _mesa_ProgramUniform1f);
       SET_ProgramUniform1fv(exec, _mesa_ProgramUniform1fv);
@@ -1052,6 +1043,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_TextureView(exec, _mesa_TextureView_no_error);
       SET_VertexAttribBinding(exec, _mesa_VertexAttribBinding_no_error);
       SET_VertexBindingDivisor(exec, _mesa_VertexBindingDivisor_no_error);
+      SET_ViewportSwizzleNV(exec, _mesa_ViewportSwizzleNV_no_error);
    }
    if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
       SET_BufferStorageMemEXT(exec, _mesa_BufferStorageMemEXT_no_error);
@@ -1331,33 +1323,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_ClearAccum(exec, _mesa_ClearAccum);
       SET_ClearIndex(exec, _mesa_ClearIndex);
       SET_ClipPlane(exec, _mesa_ClipPlane);
-      SET_Color3b(exec, _mesa_Color3b);
-      SET_Color3bv(exec, _mesa_Color3bv);
-      SET_Color3d(exec, _mesa_Color3d);
-      SET_Color3dv(exec, _mesa_Color3dv);
-      SET_Color3i(exec, _mesa_Color3i);
-      SET_Color3iv(exec, _mesa_Color3iv);
-      SET_Color3s(exec, _mesa_Color3s);
-      SET_Color3sv(exec, _mesa_Color3sv);
-      SET_Color3ub(exec, _mesa_Color3ub);
-      SET_Color3ubv(exec, _mesa_Color3ubv);
-      SET_Color3ui(exec, _mesa_Color3ui);
-      SET_Color3uiv(exec, _mesa_Color3uiv);
-      SET_Color3us(exec, _mesa_Color3us);
-      SET_Color3usv(exec, _mesa_Color3usv);
-      SET_Color4b(exec, _mesa_Color4b);
-      SET_Color4bv(exec, _mesa_Color4bv);
-      SET_Color4d(exec, _mesa_Color4d);
-      SET_Color4dv(exec, _mesa_Color4dv);
-      SET_Color4i(exec, _mesa_Color4i);
-      SET_Color4iv(exec, _mesa_Color4iv);
-      SET_Color4s(exec, _mesa_Color4s);
-      SET_Color4sv(exec, _mesa_Color4sv);
-      SET_Color4ubv(exec, _mesa_Color4ubv);
-      SET_Color4ui(exec, _mesa_Color4ui);
-      SET_Color4uiv(exec, _mesa_Color4uiv);
-      SET_Color4us(exec, _mesa_Color4us);
-      SET_Color4usv(exec, _mesa_Color4usv);
       SET_ColorFragmentOp1ATI(exec, _mesa_ColorFragmentOp1ATI);
       SET_ColorFragmentOp2ATI(exec, _mesa_ColorFragmentOp2ATI);
       SET_ColorFragmentOp3ATI(exec, _mesa_ColorFragmentOp3ATI);
@@ -1383,18 +1348,11 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_DeleteProgramsARB(exec, _mesa_DeleteProgramsARB);
       SET_DrawPixels(exec, _mesa_DrawPixels);
       SET_EdgeFlagPointerEXT(exec, _mesa_EdgeFlagPointerEXT);
-      SET_EdgeFlagv(exec, _mesa_EdgeFlagv);
       SET_EndFragmentShaderATI(exec, _mesa_EndFragmentShaderATI);
       SET_EndList(exec, _mesa_EndList);
-      SET_EvalCoord1d(exec, _mesa_EvalCoord1d);
-      SET_EvalCoord1dv(exec, _mesa_EvalCoord1dv);
-      SET_EvalCoord1fv(exec, _mesa_EvalCoord1fv);
-      SET_EvalCoord2d(exec, _mesa_EvalCoord2d);
-      SET_EvalCoord2dv(exec, _mesa_EvalCoord2dv);
-      SET_EvalCoord2fv(exec, _mesa_EvalCoord2fv);
+      SET_EvalMesh1(exec, _mesa_EvalMesh1);
+      SET_EvalMesh2(exec, _mesa_EvalMesh2);
       SET_FeedbackBuffer(exec, _mesa_FeedbackBuffer);
-      SET_FogCoordd(exec, _mesa_FogCoordd);
-      SET_FogCoorddv(exec, _mesa_FogCoorddv);
       SET_Fogi(exec, _mesa_Fogi);
       SET_Fogiv(exec, _mesa_Fogiv);
       SET_Frustum(exec, _mesa_Frustum);
@@ -1445,14 +1403,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_Histogram(exec, _mesa_Histogram);
       SET_IndexMask(exec, _mesa_IndexMask);
       SET_IndexPointerEXT(exec, _mesa_IndexPointerEXT);
-      SET_Indexd(exec, _mesa_Indexd);
-      SET_Indexdv(exec, _mesa_Indexdv);
-      SET_Indexi(exec, _mesa_Indexi);
-      SET_Indexiv(exec, _mesa_Indexiv);
-      SET_Indexs(exec, _mesa_Indexs);
-      SET_Indexsv(exec, _mesa_Indexsv);
-      SET_Indexub(exec, _mesa_Indexub);
-      SET_Indexubv(exec, _mesa_Indexubv);
       SET_InitNames(exec, _mesa_InitNames);
       SET_InterleavedArrays(exec, _mesa_InterleavedArrays);
       SET_IsList(exec, _mesa_IsList);
@@ -1476,45 +1426,11 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_MapGrid1f(exec, _mesa_MapGrid1f);
       SET_MapGrid2d(exec, _mesa_MapGrid2d);
       SET_MapGrid2f(exec, _mesa_MapGrid2f);
-      SET_Materiali(exec, _mesa_Materiali);
-      SET_Materialiv(exec, _mesa_Materialiv);
       SET_Minmax(exec, _mesa_Minmax);
       SET_MultMatrixd(exec, _mesa_MultMatrixd);
       SET_MultTransposeMatrixd(exec, _mesa_MultTransposeMatrixd);
       SET_MultTransposeMatrixf(exec, _mesa_MultTransposeMatrixf);
-      SET_MultiTexCoord1d(exec, _mesa_MultiTexCoord1d);
-      SET_MultiTexCoord1dv(exec, _mesa_MultiTexCoord1dv);
-      SET_MultiTexCoord1i(exec, _mesa_MultiTexCoord1i);
-      SET_MultiTexCoord1iv(exec, _mesa_MultiTexCoord1iv);
-      SET_MultiTexCoord1s(exec, _mesa_MultiTexCoord1s);
-      SET_MultiTexCoord1sv(exec, _mesa_MultiTexCoord1sv);
-      SET_MultiTexCoord2d(exec, _mesa_MultiTexCoord2d);
-      SET_MultiTexCoord2dv(exec, _mesa_MultiTexCoord2dv);
-      SET_MultiTexCoord2i(exec, _mesa_MultiTexCoord2i);
-      SET_MultiTexCoord2iv(exec, _mesa_MultiTexCoord2iv);
-      SET_MultiTexCoord2s(exec, _mesa_MultiTexCoord2s);
-      SET_MultiTexCoord2sv(exec, _mesa_MultiTexCoord2sv);
-      SET_MultiTexCoord3d(exec, _mesa_MultiTexCoord3d);
-      SET_MultiTexCoord3dv(exec, _mesa_MultiTexCoord3dv);
-      SET_MultiTexCoord3i(exec, _mesa_MultiTexCoord3i);
-      SET_MultiTexCoord3iv(exec, _mesa_MultiTexCoord3iv);
-      SET_MultiTexCoord3s(exec, _mesa_MultiTexCoord3s);
-      SET_MultiTexCoord3sv(exec, _mesa_MultiTexCoord3sv);
-      SET_MultiTexCoord4d(exec, _mesa_MultiTexCoord4d);
-      SET_MultiTexCoord4dv(exec, _mesa_MultiTexCoord4dv);
-      SET_MultiTexCoord4i(exec, _mesa_MultiTexCoord4i);
-      SET_MultiTexCoord4iv(exec, _mesa_MultiTexCoord4iv);
-      SET_MultiTexCoord4s(exec, _mesa_MultiTexCoord4s);
-      SET_MultiTexCoord4sv(exec, _mesa_MultiTexCoord4sv);
       SET_NewList(exec, _mesa_NewList);
-      SET_Normal3b(exec, _mesa_Normal3b);
-      SET_Normal3bv(exec, _mesa_Normal3bv);
-      SET_Normal3d(exec, _mesa_Normal3d);
-      SET_Normal3dv(exec, _mesa_Normal3dv);
-      SET_Normal3i(exec, _mesa_Normal3i);
-      SET_Normal3iv(exec, _mesa_Normal3iv);
-      SET_Normal3s(exec, _mesa_Normal3s);
-      SET_Normal3sv(exec, _mesa_Normal3sv);
       SET_NormalPointerEXT(exec, _mesa_NormalPointerEXT);
       SET_Ortho(exec, _mesa_Ortho);
       SET_PassTexCoordATI(exec, _mesa_PassTexCoordATI);
@@ -1570,6 +1486,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_RasterPos4sv(exec, _mesa_RasterPos4sv);
       SET_Rectd(exec, _mesa_Rectd);
       SET_Rectdv(exec, _mesa_Rectdv);
+      SET_Rectf(exec, _mesa_Rectf);
       SET_Rectfv(exec, _mesa_Rectfv);
       SET_Recti(exec, _mesa_Recti);
       SET_Rectiv(exec, _mesa_Rectiv);
@@ -1581,102 +1498,15 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_Rotated(exec, _mesa_Rotated);
       SET_SampleMapATI(exec, _mesa_SampleMapATI);
       SET_Scaled(exec, _mesa_Scaled);
-      SET_SecondaryColor3b(exec, _mesa_SecondaryColor3b);
-      SET_SecondaryColor3bv(exec, _mesa_SecondaryColor3bv);
-      SET_SecondaryColor3d(exec, _mesa_SecondaryColor3d);
-      SET_SecondaryColor3dv(exec, _mesa_SecondaryColor3dv);
-      SET_SecondaryColor3i(exec, _mesa_SecondaryColor3i);
-      SET_SecondaryColor3iv(exec, _mesa_SecondaryColor3iv);
-      SET_SecondaryColor3s(exec, _mesa_SecondaryColor3s);
-      SET_SecondaryColor3sv(exec, _mesa_SecondaryColor3sv);
-      SET_SecondaryColor3ub(exec, _mesa_SecondaryColor3ub);
-      SET_SecondaryColor3ubv(exec, _mesa_SecondaryColor3ubv);
-      SET_SecondaryColor3ui(exec, _mesa_SecondaryColor3ui);
-      SET_SecondaryColor3uiv(exec, _mesa_SecondaryColor3uiv);
-      SET_SecondaryColor3us(exec, _mesa_SecondaryColor3us);
-      SET_SecondaryColor3usv(exec, _mesa_SecondaryColor3usv);
       SET_SelectBuffer(exec, _mesa_SelectBuffer);
       SET_SeparableFilter2D(exec, _mesa_SeparableFilter2D);
       SET_SetFragmentShaderConstantATI(exec, _mesa_SetFragmentShaderConstantATI);
       SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
-      SET_TexCoord1d(exec, _mesa_TexCoord1d);
-      SET_TexCoord1dv(exec, _mesa_TexCoord1dv);
-      SET_TexCoord1i(exec, _mesa_TexCoord1i);
-      SET_TexCoord1iv(exec, _mesa_TexCoord1iv);
-      SET_TexCoord1s(exec, _mesa_TexCoord1s);
-      SET_TexCoord1sv(exec, _mesa_TexCoord1sv);
-      SET_TexCoord2d(exec, _mesa_TexCoord2d);
-      SET_TexCoord2dv(exec, _mesa_TexCoord2dv);
-      SET_TexCoord2i(exec, _mesa_TexCoord2i);
-      SET_TexCoord2iv(exec, _mesa_TexCoord2iv);
-      SET_TexCoord2s(exec, _mesa_TexCoord2s);
-      SET_TexCoord2sv(exec, _mesa_TexCoord2sv);
-      SET_TexCoord3d(exec, _mesa_TexCoord3d);
-      SET_TexCoord3dv(exec, _mesa_TexCoord3dv);
-      SET_TexCoord3i(exec, _mesa_TexCoord3i);
-      SET_TexCoord3iv(exec, _mesa_TexCoord3iv);
-      SET_TexCoord3s(exec, _mesa_TexCoord3s);
-      SET_TexCoord3sv(exec, _mesa_TexCoord3sv);
-      SET_TexCoord4d(exec, _mesa_TexCoord4d);
-      SET_TexCoord4dv(exec, _mesa_TexCoord4dv);
-      SET_TexCoord4i(exec, _mesa_TexCoord4i);
-      SET_TexCoord4iv(exec, _mesa_TexCoord4iv);
-      SET_TexCoord4s(exec, _mesa_TexCoord4s);
-      SET_TexCoord4sv(exec, _mesa_TexCoord4sv);
       SET_TexCoordPointerEXT(exec, _mesa_TexCoordPointerEXT);
       SET_TexGend(exec, _mesa_TexGend);
       SET_TexGendv(exec, _mesa_TexGendv);
       SET_Translated(exec, _mesa_Translated);
       SET_UnlockArraysEXT(exec, _mesa_UnlockArraysEXT);
-      SET_Vertex2d(exec, _mesa_Vertex2d);
-      SET_Vertex2dv(exec, _mesa_Vertex2dv);
-      SET_Vertex2i(exec, _mesa_Vertex2i);
-      SET_Vertex2iv(exec, _mesa_Vertex2iv);
-      SET_Vertex2s(exec, _mesa_Vertex2s);
-      SET_Vertex2sv(exec, _mesa_Vertex2sv);
-      SET_Vertex3d(exec, _mesa_Vertex3d);
-      SET_Vertex3dv(exec, _mesa_Vertex3dv);
-      SET_Vertex3i(exec, _mesa_Vertex3i);
-      SET_Vertex3iv(exec, _mesa_Vertex3iv);
-      SET_Vertex3s(exec, _mesa_Vertex3s);
-      SET_Vertex3sv(exec, _mesa_Vertex3sv);
-      SET_Vertex4d(exec, _mesa_Vertex4d);
-      SET_Vertex4dv(exec, _mesa_Vertex4dv);
-      SET_Vertex4i(exec, _mesa_Vertex4i);
-      SET_Vertex4iv(exec, _mesa_Vertex4iv);
-      SET_Vertex4s(exec, _mesa_Vertex4s);
-      SET_Vertex4sv(exec, _mesa_Vertex4sv);
-      SET_VertexAttrib1dNV(exec, _mesa_VertexAttrib1dNV);
-      SET_VertexAttrib1dvNV(exec, _mesa_VertexAttrib1dvNV);
-      SET_VertexAttrib1sNV(exec, _mesa_VertexAttrib1sNV);
-      SET_VertexAttrib1svNV(exec, _mesa_VertexAttrib1svNV);
-      SET_VertexAttrib2dNV(exec, _mesa_VertexAttrib2dNV);
-      SET_VertexAttrib2dvNV(exec, _mesa_VertexAttrib2dvNV);
-      SET_VertexAttrib2sNV(exec, _mesa_VertexAttrib2sNV);
-      SET_VertexAttrib2svNV(exec, _mesa_VertexAttrib2svNV);
-      SET_VertexAttrib3dNV(exec, _mesa_VertexAttrib3dNV);
-      SET_VertexAttrib3dvNV(exec, _mesa_VertexAttrib3dvNV);
-      SET_VertexAttrib3sNV(exec, _mesa_VertexAttrib3sNV);
-      SET_VertexAttrib3svNV(exec, _mesa_VertexAttrib3svNV);
-      SET_VertexAttrib4dNV(exec, _mesa_VertexAttrib4dNV);
-      SET_VertexAttrib4dvNV(exec, _mesa_VertexAttrib4dvNV);
-      SET_VertexAttrib4sNV(exec, _mesa_VertexAttrib4sNV);
-      SET_VertexAttrib4svNV(exec, _mesa_VertexAttrib4svNV);
-      SET_VertexAttrib4ubNV(exec, _mesa_VertexAttrib4ubNV);
-      SET_VertexAttrib4ubvNV(exec, _mesa_VertexAttrib4ubvNV);
-      SET_VertexAttribs1dvNV(exec, _mesa_VertexAttribs1dvNV);
-      SET_VertexAttribs1fvNV(exec, _mesa_VertexAttribs1fvNV);
-      SET_VertexAttribs1svNV(exec, _mesa_VertexAttribs1svNV);
-      SET_VertexAttribs2dvNV(exec, _mesa_VertexAttribs2dvNV);
-      SET_VertexAttribs2fvNV(exec, _mesa_VertexAttribs2fvNV);
-      SET_VertexAttribs2svNV(exec, _mesa_VertexAttribs2svNV);
-      SET_VertexAttribs3dvNV(exec, _mesa_VertexAttribs3dvNV);
-      SET_VertexAttribs3fvNV(exec, _mesa_VertexAttribs3fvNV);
-      SET_VertexAttribs3svNV(exec, _mesa_VertexAttribs3svNV);
-      SET_VertexAttribs4dvNV(exec, _mesa_VertexAttribs4dvNV);
-      SET_VertexAttribs4fvNV(exec, _mesa_VertexAttribs4fvNV);
-      SET_VertexAttribs4svNV(exec, _mesa_VertexAttribs4svNV);
-      SET_VertexAttribs4ubvNV(exec, _mesa_VertexAttribs4ubvNV);
       SET_VertexPointerEXT(exec, _mesa_VertexPointerEXT);
       SET_WindowPos2d(exec, _mesa_WindowPos2d);
       SET_WindowPos2dv(exec, _mesa_WindowPos2dv);
@@ -1706,7 +1536,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
    if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES) {
       SET_AlphaFunc(exec, _mesa_AlphaFunc);
       SET_ClientActiveTexture(exec, _mesa_ClientActiveTexture);
-      SET_Color4ub(exec, _mesa_Color4ub);
       SET_DisableClientState(exec, _mesa_DisableClientState);
       SET_EnableClientState(exec, _mesa_EnableClientState);
       SET_Fogf(exec, _mesa_Fogf);
@@ -1723,7 +1552,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_Lightfv(exec, _mesa_Lightfv);
       SET_LoadIdentity(exec, _mesa_LoadIdentity);
       SET_LoadMatrixf(exec, _mesa_LoadMatrixf);
-      SET_Materialf(exec, _mesa_Materialf);
       SET_MatrixMode(exec, _mesa_MatrixMode);
       SET_MultMatrixf(exec, _mesa_MultMatrixf);
       SET_PopMatrix(exec, _mesa_PopMatrix);
@@ -1859,14 +1687,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_VertexArrayAttribFormat(exec, _mesa_VertexArrayAttribFormat);
       SET_VertexArrayAttribIFormat(exec, _mesa_VertexArrayAttribIFormat);
       SET_VertexArrayAttribLFormat(exec, _mesa_VertexArrayAttribLFormat);
-      SET_VertexAttribL1d(exec, _mesa_VertexAttribL1d);
-      SET_VertexAttribL1dv(exec, _mesa_VertexAttribL1dv);
-      SET_VertexAttribL2d(exec, _mesa_VertexAttribL2d);
-      SET_VertexAttribL2dv(exec, _mesa_VertexAttribL2dv);
-      SET_VertexAttribL3d(exec, _mesa_VertexAttribL3d);
-      SET_VertexAttribL3dv(exec, _mesa_VertexAttribL3dv);
-      SET_VertexAttribL4d(exec, _mesa_VertexAttribL4d);
-      SET_VertexAttribL4dv(exec, _mesa_VertexAttribL4dv);
    }
    if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
       SET_FramebufferParameteri(exec, _mesa_FramebufferParameteri);

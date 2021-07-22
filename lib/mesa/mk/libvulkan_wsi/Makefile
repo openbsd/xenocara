@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	vulkan_wsi
 
 NOPROFILE=
 
 SRCS=	wsi_common.c \
+	wsi_common_drm.c \
 	wsi_common_x11.c \
 	wsi_common_display.c
 
@@ -13,6 +14,7 @@ SRCS=	wsi_common.c \
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/vulkan/util \
+		-I${MESA_SRC}/generated/src/vulkan/util \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
 		-DVK_USE_PLATFORM_DISPLAY_KHR \

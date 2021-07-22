@@ -331,6 +331,10 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpSubgroupAnyKHR: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupAllEqualKHR: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupReadInvocationKHR: return (struct type_args){ 1, 0 };
+   case SpvOpConvertUToAccelerationStructureKHR: return (struct type_args){ 1, 0 };
+   case SpvOpTypeRayQueryKHR: return (struct type_args){ 0, -1 };
+   case SpvOpRayQueryProceedKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionTypeKHR: return (struct type_args){ 1, 0 };
    case SpvOpGroupIAddNonUniformAMD: return (struct type_args){ 1, 0 };
    case SpvOpGroupFAddNonUniformAMD: return (struct type_args){ 1, 0 };
    case SpvOpGroupFMinNonUniformAMD: return (struct type_args){ 1, 0 };
@@ -372,6 +376,14 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpUSubSatINTEL: return (struct type_args){ 1, 0 };
    case SpvOpIMul32x16INTEL: return (struct type_args){ 1, 0 };
    case SpvOpUMul32x16INTEL: return (struct type_args){ 1, 0 };
+   case SpvOpConstFunctionPointerINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpFunctionPointerCallINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpAsmTargetINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpAsmINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpAsmCallINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpAtomicFMinEXT: return (struct type_args){ 1, 0 };
+   case SpvOpAtomicFMaxEXT: return (struct type_args){ 1, 0 };
+   case SpvOpExpectKHR: return (struct type_args){ 1, 0 };
    case SpvOpVmeImageINTEL: return (struct type_args){ 1, 0 };
    case SpvOpTypeVmeImageINTEL: return (struct type_args){ 0, -1 };
    case SpvOpTypeAvcImePayloadINTEL: return (struct type_args){ 0, -1 };
@@ -490,6 +502,32 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpSubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupAvcSicGetInterRawSadsINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpVariableLengthArrayINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpSaveMemoryINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpPtrCastToCrossWorkgroupINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpCrossWorkgroupCastToPtrINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpReadPipeBlockingINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpWritePipeBlockingINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpFPGARegINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetRayTMinKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetRayFlagsKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionTKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionInstanceCustomIndexKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionInstanceIdKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionGeometryIndexKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionPrimitiveIndexKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionBarycentricsKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionFrontFaceKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionCandidateAABBOpaqueKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionObjectRayDirectionKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionObjectRayOriginKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetWorldRayDirectionKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetWorldRayOriginKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionObjectToWorldKHR: return (struct type_args){ 1, 0 };
+   case SpvOpRayQueryGetIntersectionWorldToObjectKHR: return (struct type_args){ 1, 0 };
+   case SpvOpAtomicFAddEXT: return (struct type_args){ 1, 0 };
+   case SpvOpTypeBufferSurfaceINTEL: return (struct type_args){ 0, -1 };
    default: return (struct type_args){ -1, -1 };
    }
 }

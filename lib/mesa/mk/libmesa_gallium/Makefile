@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	mesa_gallium
 
 NOPROFILE=
 
-SRCS=	st_atifs_to_tgsi.c \
+SRCS=	st_atifs_to_nir.c \
 	st_atom_array.c \
 	st_atom_atomicbuf.c \
 	st_atom_blend.c \
@@ -70,7 +70,6 @@ SRCS=	st_atifs_to_tgsi.c \
 	st_glsl_to_tgsi_private.cpp \
 	st_glsl_to_tgsi_temprename.cpp \
 	st_manager.c \
-	st_mesa_to_tgsi.c \
 	st_nir_builtins.c \
 	st_nir_lower_builtin.c \
 	st_nir_lower_tex_src_plane.c \

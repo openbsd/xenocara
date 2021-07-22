@@ -1,13 +1,13 @@
-#	$OpenBSD: Makefile,v 1.4 2020/09/22 02:09:02 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	vulkan_radeon
 
 NOPROFILE=
 
-SRCS=	radv_amdgpu_bo.c \
-	radv_amdgpu_cs.c \
-	radv_amdgpu_surface.c \
-	radv_amdgpu_winsys.c \
+SRCS=	radv_sqtt_layer.c \
+	radv_null_bo.c \
+	radv_null_cs.c \
+	radv_null_winsys.c \
 	radv_android.c \
 	radv_cmd_buffer.c \
 	radv_debug.c \
@@ -23,6 +23,8 @@ SRCS=	radv_amdgpu_bo.c \
 	radv_meta_bufimage.c \
 	radv_meta_clear.c \
 	radv_meta_copy.c \
+	radv_meta_copy_vrs_htile.c \
+	radv_meta_dcc_retile.c \
 	radv_meta_decompress.c \
 	radv_meta_fast_clear.c \
 	radv_meta_fmask_expand.c \
@@ -37,14 +39,18 @@ SRCS=	radv_amdgpu_bo.c \
 	radv_shader.c \
 	radv_shader_args.c \
 	radv_shader_info.c \
+	radv_sqtt.c \
 	radv_query.c \
 	radv_util.c \
 	radv_wsi.c \
 	si_cmd_buffer.c \
 
-SRCS+=	radv_entrypoints.c \
-	radv_extensions.c \
-	vk_format_table.c
+SRCS+=	radv_amdgpu_bo.c \
+	radv_amdgpu_cs.c \
+	radv_amdgpu_surface.c \
+	radv_amdgpu_winsys.c
+
+SRCS+=	radv_entrypoints.c
 
 .include "../Makefile.inc"
 
@@ -59,7 +65,6 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
-		-I${MESA_SRC}/src/amd \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/amd/compiler \
 		-I${MESA_SRC}/src/amd/llvm \
@@ -103,7 +108,6 @@ SLIBS=	libamd_common \
 	libamd_common_llvm \
 	libaddrlib \
 	libvulkan_wsi \
-	libvulkan_util \
 	libxmlconfig \
 	libmesa_util \
 	libmesa_format \
@@ -112,6 +116,11 @@ SLIBS=	libamd_common \
 	libcompiler
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
+
+LDADD+=		-Wl,--whole-archive
+LDADD+=		${.CURDIR}/../libvulkan_util/${__objdir}/libvulkan_util.a
+LDADD+=		-Wl,--no-whole-archive
+
 .for slib in ${SLIBS}
 LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 .endfor
@@ -123,6 +132,7 @@ LDADD+=		-L${X11BASE}/lib -ldrm -ldrm_amdgpu \
 		-lxshmfence
 
 LDADD+=		-Wl,--gc-sections \
+		-Wl,--version-script ${MESA_SRC}/src/amd/vulkan/vulkan.sym \
 		-Wl,--end-group
 
 all:	lib${LIB}.so

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -61,20 +61,19 @@ SLIBS+= libi965_gen40 \
 	libi965_gen75 \
 	libi965_gen80 \
 	libi965_gen90 \
-	libi965_gen100 \
 	libi965_gen110 \
 	libintel_dev \
 	libisl \
-	libisl_gen40 \
-	libisl_gen50 \
-	libisl_gen60 \
-	libisl_gen70 \
-	libisl_gen75 \
-	libisl_gen80 \
-	libisl_gen90 \
-	libisl_gen100 \
-	libisl_gen110 \
-	libisl_gen120 \
+	libisl_gfx40 \
+	libisl_gfx50 \
+	libisl_gfx60 \
+	libisl_gfx70 \
+	libisl_gfx75 \
+	libisl_gfx80 \
+	libisl_gfx90 \
+	libisl_gfx110 \
+	libisl_gfx120 \
+	libisl_gfx125 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libintel_compiler \

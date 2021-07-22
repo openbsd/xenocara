@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -21,7 +21,7 @@ SRCS+=	drisw.c \
 
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-DGALLIUM_SOFTPIPE \
-		-I${MESA_SRC}/src/gallium/state_trackers/dri \
+		-I${MESA_SRC}/src/gallium/frontends/dri \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
@@ -35,4 +35,4 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.PATH: ${MESA_SRC}/src/gallium/state_trackers/dri
+.PATH: ${MESA_SRC}/src/gallium/frontends/dri

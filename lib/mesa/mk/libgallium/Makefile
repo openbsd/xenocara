@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:09 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -23,6 +23,7 @@ SRCS=	cso_cache.c \
 	draw_pipe_stipple.c \
 	draw_pipe_twoside.c \
 	draw_pipe_unfilled.c \
+	draw_pipe_user_cull.c \
 	draw_pipe_util.c \
 	draw_pipe_validate.c \
 	draw_pipe_vbuf.c \
@@ -39,6 +40,7 @@ SRCS=	cso_cache.c \
 	draw_pt_so_emit.c \
 	draw_pt_util.c \
 	draw_pt_vsplit.c \
+	draw_tess.c \
 	draw_vertex.c \
 	draw_vs.c \
 	draw_vs_exec.c \
@@ -94,6 +96,7 @@ SRCS=	cso_cache.c \
 	tgsi_aa_point.c \
 	tgsi_build.c \
 	tgsi_dump.c \
+	tgsi_dynamic_indexing.c \
 	tgsi_exec.c \
 	tgsi_emulate.c \
 	tgsi_from_mesa.c \
@@ -110,23 +113,20 @@ SRCS=	cso_cache.c \
 	tgsi_two_side.c \
 	tgsi_ureg.c \
 	tgsi_util.c \
+	tgsi_vpos.c \
 	translate.c \
 	translate_cache.c \
 	translate_generic.c \
 	translate_sse.c \
 	u_async_debug.c \
 	u_bitmask.c \
-	u_blit.c \
 	u_blitter.c \
 	u_cache.c \
 	u_compute.c \
-	u_debug_gallium.c \
 	u_debug_describe.c \
 	u_debug_flush.c \
 	u_debug_image.c \
 	u_debug_refcnt.c \
-	u_debug_stack.c \
-	u_debug_symbol.c \
 	u_dl.c \
 	u_draw.c \
 	u_draw_quad.c \
@@ -137,7 +137,6 @@ SRCS=	cso_cache.c \
 	u_handle_table.c \
 	u_hash_table.c \
 	u_helpers.c \
-	u_idalloc.c \
 	u_index_modify.c \
 	u_linear.c \
 	u_live_shader_cache.c \
@@ -153,7 +152,6 @@ SRCS=	cso_cache.c \
 	u_split_draw.c \
 	u_suballoc.c \
 	u_surface.c \
-	u_surfaces.c \
 	u_tests.c \
 	u_texture.c \
 	u_tile.c \
@@ -163,6 +161,7 @@ SRCS=	cso_cache.c \
 	u_upload_mgr.c \
 	u_vbuf.c \
 	tgsi_to_nir.c \
+	nir_to_tgsi.c \
 	nir_draw_helpers.c
 
 SRCS+=	renderonly.c
@@ -214,6 +213,8 @@ SRCS+=	lp_bld_arit.c \
 	draw_llvm_sample.c \
 	draw_pt_fetch_shade_pipeline_llvm.c \
 	draw_vs_llvm.c \
+	tessellator.cpp \
+	p_tessellator.cpp \
 	nir_to_tgsi_info.c
 
 LLVM_CXXFLAGS!=	llvm-config --cxxflags

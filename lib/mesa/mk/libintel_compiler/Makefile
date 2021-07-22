@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:10 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -42,6 +42,7 @@ SRCS=	brw_cfg.cpp \
 	brw_fs_validate.cpp \
 	brw_fs_visitor.cpp \
 	brw_interpolation_map.c \
+	brw_ir_performance.cpp \
 	brw_nir.c \
 	brw_nir_analyze_boolean_resolves.c \
 	brw_nir_analyze_ubo_ranges.c \
@@ -50,8 +51,13 @@ SRCS=	brw_cfg.cpp \
 	brw_nir_lower_cs_intrinsics.c \
 	brw_nir_lower_alpha_to_coverage.c \
 	brw_nir_lower_image_load_store.c \
+	brw_nir_lower_intersection_shader.c \
 	brw_nir_lower_mem_access_bit_sizes.c \
+	brw_nir_lower_rt_intrinsics.c \
+	brw_nir_lower_scoped_barriers.c \
+	brw_nir_lower_shader_calls.c \
 	brw_nir_opt_peephole_ffma.c \
+	brw_nir_rt.c \
 	brw_nir_tcs_workarounds.c \
 	brw_nir_clamp_image_1d_2d_array_sizes.c \
 	brw_packed_float.c \
@@ -77,7 +83,7 @@ SRCS=	brw_cfg.cpp \
 	brw_vec4_vs_visitor.cpp \
 	brw_vue_map.c \
 	brw_wm_iz.cpp \
-	gen6_gs_visitor.cpp
+	gfx6_gs_visitor.cpp
 
 SRCS+=	brw_nir_trig_workarounds.c
 

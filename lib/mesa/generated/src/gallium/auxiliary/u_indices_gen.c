@@ -64,9 +64,9 @@ static u_generate_func  generate[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT];
 static void generate_points_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -76,9 +76,9 @@ static void generate_points_ushort_first2first(
 static void generate_lines_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -89,9 +89,9 @@ static void generate_lines_ushort_first2first(
 static void generate_linestrip_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -102,24 +102,26 @@ static void generate_linestrip_ushort_first2first(
 static void generate_lineloop_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
+      end = i+1;
    }
-      (out+j)[0] = (ushort)(i);
+      (out+j)[0] = (ushort)(end);
       (out+j)[1] = (ushort)(start);
 }
 static void generate_tris_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -131,9 +133,9 @@ static void generate_tris_ushort_first2first(
 static void generate_tristrip_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -145,23 +147,23 @@ static void generate_tristrip_ushort_first2first(
 static void generate_trifan_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)(start);
-      (out+j)[1] = (ushort)(i+1);
-      (out+j)[2] = (ushort)(i+2);
+      (out+j)[0] = (ushort)(i+1);
+      (out+j)[1] = (ushort)(i+2);
+      (out+j)[2] = (ushort)(start);
    }
 }
 static void generate_quads_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -176,9 +178,9 @@ static void generate_quads_ushort_first2first(
 static void generate_quadstrip_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -193,9 +195,9 @@ static void generate_quadstrip_ushort_first2first(
 static void generate_polygon_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -207,9 +209,9 @@ static void generate_polygon_ushort_first2first(
 static void generate_linesadj_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -222,9 +224,9 @@ static void generate_linesadj_ushort_first2first(
 static void generate_linestripadj_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -237,9 +239,9 @@ static void generate_linestripadj_ushort_first2first(
 static void generate_trisadj_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -254,9 +256,9 @@ static void generate_trisadj_ushort_first2first(
 static void generate_tristripadj_ushort_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -282,9 +284,9 @@ static void generate_tristripadj_ushort_first2first(
 static void generate_points_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -294,9 +296,9 @@ static void generate_points_ushort_first2last(
 static void generate_lines_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -307,9 +309,9 @@ static void generate_lines_ushort_first2last(
 static void generate_linestrip_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -320,24 +322,26 @@ static void generate_linestrip_ushort_first2last(
 static void generate_lineloop_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
+      end = i+1;
    }
       (out+j)[0] = (ushort)(start);
-      (out+j)[1] = (ushort)(i);
+      (out+j)[1] = (ushort)(end);
 }
 static void generate_tris_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -349,9 +353,9 @@ static void generate_tris_ushort_first2last(
 static void generate_tristrip_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -363,23 +367,23 @@ static void generate_tristrip_ushort_first2last(
 static void generate_trifan_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)(i+1);
-      (out+j)[1] = (ushort)(i+2);
-      (out+j)[2] = (ushort)(start);
+      (out+j)[0] = (ushort)(i+2);
+      (out+j)[1] = (ushort)(start);
+      (out+j)[2] = (ushort)(i+1);
    }
 }
 static void generate_quads_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -394,9 +398,9 @@ static void generate_quads_ushort_first2last(
 static void generate_quadstrip_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -411,9 +415,9 @@ static void generate_quadstrip_ushort_first2last(
 static void generate_polygon_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -425,9 +429,9 @@ static void generate_polygon_ushort_first2last(
 static void generate_linesadj_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -440,9 +444,9 @@ static void generate_linesadj_ushort_first2last(
 static void generate_linestripadj_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -455,9 +459,9 @@ static void generate_linestripadj_ushort_first2last(
 static void generate_trisadj_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -472,9 +476,9 @@ static void generate_trisadj_ushort_first2last(
 static void generate_tristripadj_ushort_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -500,9 +504,9 @@ static void generate_tristripadj_ushort_first2last(
 static void generate_points_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -512,9 +516,9 @@ static void generate_points_ushort_last2first(
 static void generate_lines_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -525,9 +529,9 @@ static void generate_lines_ushort_last2first(
 static void generate_linestrip_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -538,24 +542,26 @@ static void generate_linestrip_ushort_last2first(
 static void generate_lineloop_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
+      end = i+1;
    }
       (out+j)[0] = (ushort)(start);
-      (out+j)[1] = (ushort)(i);
+      (out+j)[1] = (ushort)(end);
 }
 static void generate_tris_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -567,9 +573,9 @@ static void generate_tris_ushort_last2first(
 static void generate_tristrip_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -581,9 +587,9 @@ static void generate_tristrip_ushort_last2first(
 static void generate_trifan_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -595,9 +601,9 @@ static void generate_trifan_ushort_last2first(
 static void generate_quads_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -612,9 +618,9 @@ static void generate_quads_ushort_last2first(
 static void generate_quadstrip_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -629,9 +635,9 @@ static void generate_quadstrip_ushort_last2first(
 static void generate_polygon_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -643,9 +649,9 @@ static void generate_polygon_ushort_last2first(
 static void generate_linesadj_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -658,9 +664,9 @@ static void generate_linesadj_ushort_last2first(
 static void generate_linestripadj_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -673,9 +679,9 @@ static void generate_linestripadj_ushort_last2first(
 static void generate_trisadj_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -690,9 +696,9 @@ static void generate_trisadj_ushort_last2first(
 static void generate_tristripadj_ushort_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -718,9 +724,9 @@ static void generate_tristripadj_ushort_last2first(
 static void generate_points_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -730,9 +736,9 @@ static void generate_points_ushort_last2last(
 static void generate_lines_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -743,9 +749,9 @@ static void generate_lines_ushort_last2last(
 static void generate_linestrip_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -756,24 +762,26 @@ static void generate_linestrip_ushort_last2last(
 static void generate_lineloop_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
+      end = i+1;
    }
-      (out+j)[0] = (ushort)(i);
+      (out+j)[0] = (ushort)(end);
       (out+j)[1] = (ushort)(start);
 }
 static void generate_tris_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -785,9 +793,9 @@ static void generate_tris_ushort_last2last(
 static void generate_tristrip_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -799,9 +807,9 @@ static void generate_tristrip_ushort_last2last(
 static void generate_trifan_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -813,9 +821,9 @@ static void generate_trifan_ushort_last2last(
 static void generate_quads_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -830,9 +838,9 @@ static void generate_quads_ushort_last2last(
 static void generate_quadstrip_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -847,9 +855,9 @@ static void generate_quadstrip_ushort_last2last(
 static void generate_polygon_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -861,9 +869,9 @@ static void generate_polygon_ushort_last2last(
 static void generate_linesadj_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -876,9 +884,9 @@ static void generate_linesadj_ushort_last2last(
 static void generate_linestripadj_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -891,9 +899,9 @@ static void generate_linestripadj_ushort_last2last(
 static void generate_trisadj_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -908,9 +916,9 @@ static void generate_trisadj_ushort_last2last(
 static void generate_tristripadj_ushort_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  ushort *out = (ushort*)_out;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -936,9 +944,9 @@ static void generate_tristripadj_ushort_last2last(
 static void generate_points_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -948,9 +956,9 @@ static void generate_points_uint_first2first(
 static void generate_lines_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -961,9 +969,9 @@ static void generate_lines_uint_first2first(
 static void generate_linestrip_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -974,24 +982,26 @@ static void generate_linestrip_uint_first2first(
 static void generate_lineloop_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
+      end = i+1;
    }
-      (out+j)[0] = (uint)(i);
+      (out+j)[0] = (uint)(end);
       (out+j)[1] = (uint)(start);
 }
 static void generate_tris_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -1003,9 +1013,9 @@ static void generate_tris_uint_first2first(
 static void generate_tristrip_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1017,23 +1027,23 @@ static void generate_tristrip_uint_first2first(
 static void generate_trifan_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)(start);
-      (out+j)[1] = (uint)(i+1);
-      (out+j)[2] = (uint)(i+2);
+      (out+j)[0] = (uint)(i+1);
+      (out+j)[1] = (uint)(i+2);
+      (out+j)[2] = (uint)(start);
    }
 }
 static void generate_quads_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -1048,9 +1058,9 @@ static void generate_quads_uint_first2first(
 static void generate_quadstrip_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -1065,9 +1075,9 @@ static void generate_quadstrip_uint_first2first(
 static void generate_polygon_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1079,9 +1089,9 @@ static void generate_polygon_uint_first2first(
 static void generate_linesadj_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -1094,9 +1104,9 @@ static void generate_linesadj_uint_first2first(
 static void generate_linestripadj_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -1109,9 +1119,9 @@ static void generate_linestripadj_uint_first2first(
 static void generate_trisadj_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -1126,9 +1136,9 @@ static void generate_trisadj_uint_first2first(
 static void generate_tristripadj_uint_first2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -1154,9 +1164,9 @@ static void generate_tristripadj_uint_first2first(
 static void generate_points_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -1166,9 +1176,9 @@ static void generate_points_uint_first2last(
 static void generate_lines_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -1179,9 +1189,9 @@ static void generate_lines_uint_first2last(
 static void generate_linestrip_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -1192,24 +1202,26 @@ static void generate_linestrip_uint_first2last(
 static void generate_lineloop_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
+      end = i+1;
    }
       (out+j)[0] = (uint)(start);
-      (out+j)[1] = (uint)(i);
+      (out+j)[1] = (uint)(end);
 }
 static void generate_tris_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -1221,9 +1233,9 @@ static void generate_tris_uint_first2last(
 static void generate_tristrip_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1235,23 +1247,23 @@ static void generate_tristrip_uint_first2last(
 static void generate_trifan_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)(i+1);
-      (out+j)[1] = (uint)(i+2);
-      (out+j)[2] = (uint)(start);
+      (out+j)[0] = (uint)(i+2);
+      (out+j)[1] = (uint)(start);
+      (out+j)[2] = (uint)(i+1);
    }
 }
 static void generate_quads_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -1266,9 +1278,9 @@ static void generate_quads_uint_first2last(
 static void generate_quadstrip_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -1283,9 +1295,9 @@ static void generate_quadstrip_uint_first2last(
 static void generate_polygon_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1297,9 +1309,9 @@ static void generate_polygon_uint_first2last(
 static void generate_linesadj_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -1312,9 +1324,9 @@ static void generate_linesadj_uint_first2last(
 static void generate_linestripadj_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -1327,9 +1339,9 @@ static void generate_linestripadj_uint_first2last(
 static void generate_trisadj_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -1344,9 +1356,9 @@ static void generate_trisadj_uint_first2last(
 static void generate_tristripadj_uint_first2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -1372,9 +1384,9 @@ static void generate_tristripadj_uint_first2last(
 static void generate_points_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -1384,9 +1396,9 @@ static void generate_points_uint_last2first(
 static void generate_lines_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -1397,9 +1409,9 @@ static void generate_lines_uint_last2first(
 static void generate_linestrip_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -1410,24 +1422,26 @@ static void generate_linestrip_uint_last2first(
 static void generate_lineloop_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
+      end = i+1;
    }
       (out+j)[0] = (uint)(start);
-      (out+j)[1] = (uint)(i);
+      (out+j)[1] = (uint)(end);
 }
 static void generate_tris_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -1439,9 +1453,9 @@ static void generate_tris_uint_last2first(
 static void generate_tristrip_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1453,9 +1467,9 @@ static void generate_tristrip_uint_last2first(
 static void generate_trifan_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1467,9 +1481,9 @@ static void generate_trifan_uint_last2first(
 static void generate_quads_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -1484,9 +1498,9 @@ static void generate_quads_uint_last2first(
 static void generate_quadstrip_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -1501,9 +1515,9 @@ static void generate_quadstrip_uint_last2first(
 static void generate_polygon_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1515,9 +1529,9 @@ static void generate_polygon_uint_last2first(
 static void generate_linesadj_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -1530,9 +1544,9 @@ static void generate_linesadj_uint_last2first(
 static void generate_linestripadj_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -1545,9 +1559,9 @@ static void generate_linestripadj_uint_last2first(
 static void generate_trisadj_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -1562,9 +1576,9 @@ static void generate_trisadj_uint_last2first(
 static void generate_tristripadj_uint_last2first(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -1590,9 +1604,9 @@ static void generate_tristripadj_uint_last2first(
 static void generate_points_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -1602,9 +1616,9 @@ static void generate_points_uint_last2last(
 static void generate_lines_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -1615,9 +1629,9 @@ static void generate_lines_uint_last2last(
 static void generate_linestrip_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -1628,24 +1642,26 @@ static void generate_linestrip_uint_last2last(
 static void generate_lineloop_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
+      end = i+1;
    }
-      (out+j)[0] = (uint)(i);
+      (out+j)[0] = (uint)(end);
       (out+j)[1] = (uint)(start);
 }
 static void generate_tris_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -1657,9 +1673,9 @@ static void generate_tris_uint_last2last(
 static void generate_tristrip_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1671,9 +1687,9 @@ static void generate_tristrip_uint_last2last(
 static void generate_trifan_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1685,9 +1701,9 @@ static void generate_trifan_uint_last2last(
 static void generate_quads_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -1702,9 +1718,9 @@ static void generate_quads_uint_last2last(
 static void generate_quadstrip_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -1719,9 +1735,9 @@ static void generate_quadstrip_uint_last2last(
 static void generate_polygon_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1733,9 +1749,9 @@ static void generate_polygon_uint_last2last(
 static void generate_linesadj_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -1748,9 +1764,9 @@ static void generate_linesadj_uint_last2last(
 static void generate_linestripadj_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -1763,9 +1779,9 @@ static void generate_linestripadj_uint_last2last(
 static void generate_trisadj_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -1780,9 +1796,9 @@ static void generate_trisadj_uint_last2last(
 static void generate_tristripadj_uint_last2last(
     unsigned start,
     unsigned out_nr,
-    void *_out )
+    void * restrict _out )
 {
-  uint *out = (uint*)_out;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -1806,15 +1822,15 @@ static void generate_tristripadj_uint_last2last(
   }
 }
 static void translate_points_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -1822,15 +1838,15 @@ static void translate_points_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_lines_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -1839,15 +1855,15 @@ static void translate_lines_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_linestrip_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -1856,34 +1872,36 @@ static void translate_linestrip_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_lineloop_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -1893,15 +1911,15 @@ static void translate_tris_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_tristrip_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1911,33 +1929,33 @@ static void translate_tristrip_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_trifan_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -1950,15 +1968,15 @@ static void translate_quads_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -1971,15 +1989,15 @@ static void translate_quadstrip_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_polygon_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -1989,15 +2007,15 @@ static void translate_polygon_ubyte2ushort_first2first_prdisable(
    }
 }
 static void translate_linesadj_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -2008,15 +2026,15 @@ static void translate_linesadj_ubyte2ushort_first2first_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -2027,15 +2045,15 @@ static void translate_linestripadj_ubyte2ushort_first2first_prdisable(
   }
 }
 static void translate_trisadj_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -2048,15 +2066,15 @@ static void translate_trisadj_ubyte2ushort_first2first_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -2080,15 +2098,15 @@ static void translate_tristripadj_ubyte2ushort_first2first_prdisable(
   }
 }
 static void translate_points_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -2096,15 +2114,15 @@ static void translate_points_ubyte2ushort_first2first_prenable(
    }
 }
 static void translate_lines_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -2113,15 +2131,15 @@ static void translate_lines_ubyte2ushort_first2first_prenable(
    }
 }
 static void translate_linestrip_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -2130,34 +2148,60 @@ static void translate_linestrip_ubyte2ushort_first2first_prenable(
    }
 }
 static void translate_lineloop_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -2167,15 +2211,15 @@ static void translate_tris_ubyte2ushort_first2first_prenable(
    }
 }
 static void translate_tristrip_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2185,33 +2229,55 @@ static void translate_tristrip_ubyte2ushort_first2first_prenable(
    }
 }
 static void translate_trifan_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -2250,15 +2316,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -2297,15 +2363,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2337,15 +2403,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -2356,15 +2422,15 @@ static void translate_linesadj_ubyte2ushort_first2first_prenable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -2375,15 +2441,15 @@ static void translate_linestripadj_ubyte2ushort_first2first_prenable(
   }
 }
 static void translate_trisadj_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -2396,15 +2462,15 @@ static void translate_trisadj_ubyte2ushort_first2first_prenable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -2428,15 +2494,15 @@ static void translate_tristripadj_ubyte2ushort_first2first_prenable(
   }
 }
 static void translate_points_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -2444,15 +2510,15 @@ static void translate_points_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_lines_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -2461,15 +2527,15 @@ static void translate_lines_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_linestrip_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -2478,34 +2544,36 @@ static void translate_linestrip_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_lineloop_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -2515,15 +2583,15 @@ static void translate_tris_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_tristrip_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2533,33 +2601,33 @@ static void translate_tristrip_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_trifan_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -2572,15 +2640,15 @@ static void translate_quads_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -2593,15 +2661,15 @@ static void translate_quadstrip_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_polygon_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2611,15 +2679,15 @@ static void translate_polygon_ubyte2ushort_first2last_prdisable(
    }
 }
 static void translate_linesadj_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -2630,15 +2698,15 @@ static void translate_linesadj_ubyte2ushort_first2last_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -2649,15 +2717,15 @@ static void translate_linestripadj_ubyte2ushort_first2last_prdisable(
   }
 }
 static void translate_trisadj_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -2670,15 +2738,15 @@ static void translate_trisadj_ubyte2ushort_first2last_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -2702,15 +2770,15 @@ static void translate_tristripadj_ubyte2ushort_first2last_prdisable(
   }
 }
 static void translate_points_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -2718,15 +2786,15 @@ static void translate_points_ubyte2ushort_first2last_prenable(
    }
 }
 static void translate_lines_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -2735,15 +2803,15 @@ static void translate_lines_ubyte2ushort_first2last_prenable(
    }
 }
 static void translate_linestrip_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -2752,34 +2820,60 @@ static void translate_linestrip_ubyte2ushort_first2last_prenable(
    }
 }
 static void translate_lineloop_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -2789,15 +2883,15 @@ static void translate_tris_ubyte2ushort_first2last_prenable(
    }
 }
 static void translate_tristrip_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2807,33 +2901,55 @@ static void translate_tristrip_ubyte2ushort_first2last_prenable(
    }
 }
 static void translate_trifan_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -2872,15 +2988,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -2919,15 +3035,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -2959,15 +3075,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -2978,15 +3094,15 @@ static void translate_linesadj_ubyte2ushort_first2last_prenable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -2997,15 +3113,15 @@ static void translate_linestripadj_ubyte2ushort_first2last_prenable(
   }
 }
 static void translate_trisadj_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -3018,15 +3134,15 @@ static void translate_trisadj_ubyte2ushort_first2last_prenable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -3050,15 +3166,15 @@ static void translate_tristripadj_ubyte2ushort_first2last_prenable(
   }
 }
 static void translate_points_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -3066,15 +3182,15 @@ static void translate_points_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_lines_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -3083,15 +3199,15 @@ static void translate_lines_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_linestrip_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -3100,34 +3216,36 @@ static void translate_linestrip_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_lineloop_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -3137,15 +3255,15 @@ static void translate_tris_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_tristrip_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3155,15 +3273,15 @@ static void translate_tristrip_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_trifan_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3173,15 +3291,15 @@ static void translate_trifan_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_quads_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -3194,15 +3312,15 @@ static void translate_quads_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -3215,15 +3333,15 @@ static void translate_quadstrip_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_polygon_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3233,15 +3351,15 @@ static void translate_polygon_ubyte2ushort_last2first_prdisable(
    }
 }
 static void translate_linesadj_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -3252,15 +3370,15 @@ static void translate_linesadj_ubyte2ushort_last2first_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -3271,15 +3389,15 @@ static void translate_linestripadj_ubyte2ushort_last2first_prdisable(
   }
 }
 static void translate_trisadj_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -3292,15 +3410,15 @@ static void translate_trisadj_ubyte2ushort_last2first_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -3324,15 +3442,15 @@ static void translate_tristripadj_ubyte2ushort_last2first_prdisable(
   }
 }
 static void translate_points_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -3340,15 +3458,15 @@ static void translate_points_ubyte2ushort_last2first_prenable(
    }
 }
 static void translate_lines_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -3357,15 +3475,15 @@ static void translate_lines_ubyte2ushort_last2first_prenable(
    }
 }
 static void translate_linestrip_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -3374,34 +3492,60 @@ static void translate_linestrip_ubyte2ushort_last2first_prenable(
    }
 }
 static void translate_lineloop_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -3411,15 +3555,15 @@ static void translate_tris_ubyte2ushort_last2first_prenable(
    }
 }
 static void translate_tristrip_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3429,33 +3573,55 @@ static void translate_tristrip_ubyte2ushort_last2first_prenable(
    }
 }
 static void translate_trifan_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[start];
       (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -3494,15 +3660,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -3541,15 +3707,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3581,15 +3747,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -3600,15 +3766,15 @@ static void translate_linesadj_ubyte2ushort_last2first_prenable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -3619,15 +3785,15 @@ static void translate_linestripadj_ubyte2ushort_last2first_prenable(
   }
 }
 static void translate_trisadj_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -3640,15 +3806,15 @@ static void translate_trisadj_ubyte2ushort_last2first_prenable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -3672,15 +3838,15 @@ static void translate_tristripadj_ubyte2ushort_last2first_prenable(
   }
 }
 static void translate_points_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -3688,15 +3854,15 @@ static void translate_points_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_lines_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -3705,15 +3871,15 @@ static void translate_lines_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_linestrip_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -3722,34 +3888,36 @@ static void translate_linestrip_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_lineloop_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -3759,15 +3927,15 @@ static void translate_tris_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_tristrip_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3777,15 +3945,15 @@ static void translate_tristrip_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_trifan_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3795,15 +3963,15 @@ static void translate_trifan_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_quads_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -3816,15 +3984,15 @@ static void translate_quads_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -3837,15 +4005,15 @@ static void translate_quadstrip_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_polygon_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -3855,15 +4023,15 @@ static void translate_polygon_ubyte2ushort_last2last_prdisable(
    }
 }
 static void translate_linesadj_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -3874,15 +4042,15 @@ static void translate_linesadj_ubyte2ushort_last2last_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -3893,15 +4061,15 @@ static void translate_linestripadj_ubyte2ushort_last2last_prdisable(
   }
 }
 static void translate_trisadj_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -3914,15 +4082,15 @@ static void translate_trisadj_ubyte2ushort_last2last_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -3946,15 +4114,15 @@ static void translate_tristripadj_ubyte2ushort_last2last_prdisable(
   }
 }
 static void translate_points_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -3962,15 +4130,15 @@ static void translate_points_ubyte2ushort_last2last_prenable(
    }
 }
 static void translate_lines_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -3979,15 +4147,15 @@ static void translate_lines_ubyte2ushort_last2last_prenable(
    }
 }
 static void translate_linestrip_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -3996,34 +4164,60 @@ static void translate_linestrip_ubyte2ushort_last2last_prenable(
    }
 }
 static void translate_lineloop_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -4033,15 +4227,15 @@ static void translate_tris_ubyte2ushort_last2last_prenable(
    }
 }
 static void translate_tristrip_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4051,33 +4245,55 @@ static void translate_tristrip_ubyte2ushort_last2last_prenable(
    }
 }
 static void translate_trifan_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[start];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
    }
 }
 static void translate_quads_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -4116,15 +4332,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -4163,15 +4379,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4203,15 +4419,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -4222,15 +4438,15 @@ static void translate_linesadj_ubyte2ushort_last2last_prenable(
   }
 }
 static void translate_linestripadj_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -4241,15 +4457,15 @@ static void translate_linestripadj_ubyte2ushort_last2last_prenable(
   }
 }
 static void translate_trisadj_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -4262,15 +4478,15 @@ static void translate_trisadj_ubyte2ushort_last2last_prenable(
   }
 }
 static void translate_tristripadj_ubyte2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  ushort *out = (ushort*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -4294,15 +4510,15 @@ static void translate_tristripadj_ubyte2ushort_last2last_prenable(
   }
 }
 static void translate_points_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -4310,15 +4526,15 @@ static void translate_points_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_lines_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -4327,15 +4543,15 @@ static void translate_lines_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_linestrip_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -4344,34 +4560,36 @@ static void translate_linestrip_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_lineloop_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -4381,15 +4599,15 @@ static void translate_tris_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_tristrip_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4399,33 +4617,33 @@ static void translate_tristrip_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_trifan_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -4438,15 +4656,15 @@ static void translate_quads_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -4459,15 +4677,15 @@ static void translate_quadstrip_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_polygon_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4477,15 +4695,15 @@ static void translate_polygon_ubyte2uint_first2first_prdisable(
    }
 }
 static void translate_linesadj_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -4496,15 +4714,15 @@ static void translate_linesadj_ubyte2uint_first2first_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -4515,15 +4733,15 @@ static void translate_linestripadj_ubyte2uint_first2first_prdisable(
   }
 }
 static void translate_trisadj_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -4536,15 +4754,15 @@ static void translate_trisadj_ubyte2uint_first2first_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -4568,15 +4786,15 @@ static void translate_tristripadj_ubyte2uint_first2first_prdisable(
   }
 }
 static void translate_points_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -4584,15 +4802,15 @@ static void translate_points_ubyte2uint_first2first_prenable(
    }
 }
 static void translate_lines_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -4601,15 +4819,15 @@ static void translate_lines_ubyte2uint_first2first_prenable(
    }
 }
 static void translate_linestrip_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -4618,34 +4836,60 @@ static void translate_linestrip_ubyte2uint_first2first_prenable(
    }
 }
 static void translate_lineloop_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -4655,15 +4899,15 @@ static void translate_tris_ubyte2uint_first2first_prenable(
    }
 }
 static void translate_tristrip_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4673,33 +4917,55 @@ static void translate_tristrip_ubyte2uint_first2first_prenable(
    }
 }
 static void translate_trifan_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -4738,15 +5004,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -4785,15 +5051,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -4825,15 +5091,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -4844,15 +5110,15 @@ static void translate_linesadj_ubyte2uint_first2first_prenable(
   }
 }
 static void translate_linestripadj_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -4863,15 +5129,15 @@ static void translate_linestripadj_ubyte2uint_first2first_prenable(
   }
 }
 static void translate_trisadj_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -4884,15 +5150,15 @@ static void translate_trisadj_ubyte2uint_first2first_prenable(
   }
 }
 static void translate_tristripadj_ubyte2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -4916,15 +5182,15 @@ static void translate_tristripadj_ubyte2uint_first2first_prenable(
   }
 }
 static void translate_points_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -4932,15 +5198,15 @@ static void translate_points_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_lines_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -4949,15 +5215,15 @@ static void translate_lines_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_linestrip_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -4966,34 +5232,36 @@ static void translate_linestrip_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_lineloop_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -5003,15 +5271,15 @@ static void translate_tris_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_tristrip_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5021,33 +5289,33 @@ static void translate_tristrip_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_trifan_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -5060,15 +5328,15 @@ static void translate_quads_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -5081,15 +5349,15 @@ static void translate_quadstrip_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_polygon_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5099,15 +5367,15 @@ static void translate_polygon_ubyte2uint_first2last_prdisable(
    }
 }
 static void translate_linesadj_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -5118,15 +5386,15 @@ static void translate_linesadj_ubyte2uint_first2last_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -5137,15 +5405,15 @@ static void translate_linestripadj_ubyte2uint_first2last_prdisable(
   }
 }
 static void translate_trisadj_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -5158,15 +5426,15 @@ static void translate_trisadj_ubyte2uint_first2last_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -5190,15 +5458,15 @@ static void translate_tristripadj_ubyte2uint_first2last_prdisable(
   }
 }
 static void translate_points_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -5206,15 +5474,15 @@ static void translate_points_ubyte2uint_first2last_prenable(
    }
 }
 static void translate_lines_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -5223,15 +5491,15 @@ static void translate_lines_ubyte2uint_first2last_prenable(
    }
 }
 static void translate_linestrip_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -5240,34 +5508,60 @@ static void translate_linestrip_ubyte2uint_first2last_prenable(
    }
 }
 static void translate_lineloop_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -5277,15 +5571,15 @@ static void translate_tris_ubyte2uint_first2last_prenable(
    }
 }
 static void translate_tristrip_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5295,33 +5589,55 @@ static void translate_tristrip_ubyte2uint_first2last_prenable(
    }
 }
 static void translate_trifan_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -5360,15 +5676,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -5407,15 +5723,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5447,15 +5763,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -5466,15 +5782,15 @@ static void translate_linesadj_ubyte2uint_first2last_prenable(
   }
 }
 static void translate_linestripadj_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -5485,15 +5801,15 @@ static void translate_linestripadj_ubyte2uint_first2last_prenable(
   }
 }
 static void translate_trisadj_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -5506,15 +5822,15 @@ static void translate_trisadj_ubyte2uint_first2last_prenable(
   }
 }
 static void translate_tristripadj_ubyte2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -5538,15 +5854,15 @@ static void translate_tristripadj_ubyte2uint_first2last_prenable(
   }
 }
 static void translate_points_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -5554,15 +5870,15 @@ static void translate_points_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_lines_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -5571,15 +5887,15 @@ static void translate_lines_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_linestrip_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -5588,34 +5904,36 @@ static void translate_linestrip_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_lineloop_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -5625,15 +5943,15 @@ static void translate_tris_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_tristrip_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5643,15 +5961,15 @@ static void translate_tristrip_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_trifan_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5661,15 +5979,15 @@ static void translate_trifan_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_quads_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -5682,15 +6000,15 @@ static void translate_quads_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -5703,15 +6021,15 @@ static void translate_quadstrip_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_polygon_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5721,15 +6039,15 @@ static void translate_polygon_ubyte2uint_last2first_prdisable(
    }
 }
 static void translate_linesadj_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -5740,15 +6058,15 @@ static void translate_linesadj_ubyte2uint_last2first_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -5759,15 +6077,15 @@ static void translate_linestripadj_ubyte2uint_last2first_prdisable(
   }
 }
 static void translate_trisadj_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -5780,15 +6098,15 @@ static void translate_trisadj_ubyte2uint_last2first_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -5812,15 +6130,15 @@ static void translate_tristripadj_ubyte2uint_last2first_prdisable(
   }
 }
 static void translate_points_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -5828,15 +6146,15 @@ static void translate_points_ubyte2uint_last2first_prenable(
    }
 }
 static void translate_lines_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -5845,15 +6163,15 @@ static void translate_lines_ubyte2uint_last2first_prenable(
    }
 }
 static void translate_linestrip_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -5862,34 +6180,60 @@ static void translate_linestrip_ubyte2uint_last2first_prenable(
    }
 }
 static void translate_lineloop_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -5899,15 +6243,15 @@ static void translate_tris_ubyte2uint_last2first_prenable(
    }
 }
 static void translate_tristrip_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -5917,33 +6261,55 @@ static void translate_tristrip_ubyte2uint_last2first_prenable(
    }
 }
 static void translate_trifan_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[start];
       (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -5982,15 +6348,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -6029,15 +6395,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6069,15 +6435,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -6088,15 +6454,15 @@ static void translate_linesadj_ubyte2uint_last2first_prenable(
   }
 }
 static void translate_linestripadj_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -6107,15 +6473,15 @@ static void translate_linestripadj_ubyte2uint_last2first_prenable(
   }
 }
 static void translate_trisadj_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -6128,15 +6494,15 @@ static void translate_trisadj_ubyte2uint_last2first_prenable(
   }
 }
 static void translate_tristripadj_ubyte2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -6160,15 +6526,15 @@ static void translate_tristripadj_ubyte2uint_last2first_prenable(
   }
 }
 static void translate_points_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -6176,15 +6542,15 @@ static void translate_points_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_lines_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -6193,15 +6559,15 @@ static void translate_lines_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_linestrip_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -6210,34 +6576,36 @@ static void translate_linestrip_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_lineloop_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -6247,15 +6615,15 @@ static void translate_tris_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_tristrip_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6265,15 +6633,15 @@ static void translate_tristrip_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_trifan_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6283,15 +6651,15 @@ static void translate_trifan_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_quads_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -6304,15 +6672,15 @@ static void translate_quads_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_quadstrip_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -6325,15 +6693,15 @@ static void translate_quadstrip_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_polygon_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6343,15 +6711,15 @@ static void translate_polygon_ubyte2uint_last2last_prdisable(
    }
 }
 static void translate_linesadj_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -6362,15 +6730,15 @@ static void translate_linesadj_ubyte2uint_last2last_prdisable(
   }
 }
 static void translate_linestripadj_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -6381,15 +6749,15 @@ static void translate_linestripadj_ubyte2uint_last2last_prdisable(
   }
 }
 static void translate_trisadj_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -6402,15 +6770,15 @@ static void translate_trisadj_ubyte2uint_last2last_prdisable(
   }
 }
 static void translate_tristripadj_ubyte2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -6434,15 +6802,15 @@ static void translate_tristripadj_ubyte2uint_last2last_prdisable(
   }
 }
 static void translate_points_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -6450,15 +6818,15 @@ static void translate_points_ubyte2uint_last2last_prenable(
    }
 }
 static void translate_lines_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -6467,15 +6835,15 @@ static void translate_lines_ubyte2uint_last2last_prenable(
    }
 }
 static void translate_linestrip_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -6484,34 +6852,60 @@ static void translate_linestrip_ubyte2uint_last2last_prenable(
    }
 }
 static void translate_lineloop_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -6521,15 +6915,15 @@ static void translate_tris_ubyte2uint_last2last_prenable(
    }
 }
 static void translate_tristrip_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6539,33 +6933,55 @@ static void translate_tristrip_ubyte2uint_last2last_prenable(
    }
 }
 static void translate_trifan_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[start];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
    }
 }
 static void translate_quads_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -6604,15 +7020,15 @@ restart:
    }
 }
 static void translate_quadstrip_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -6651,15 +7067,15 @@ restart:
    }
 }
 static void translate_polygon_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6691,15 +7107,15 @@ restart:
    }
 }
 static void translate_linesadj_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -6710,15 +7126,15 @@ static void translate_linesadj_ubyte2uint_last2last_prenable(
   }
 }
 static void translate_linestripadj_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -6729,15 +7145,15 @@ static void translate_linestripadj_ubyte2uint_last2last_prenable(
   }
 }
 static void translate_trisadj_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -6750,15 +7166,15 @@ static void translate_trisadj_ubyte2uint_last2last_prenable(
   }
 }
 static void translate_tristripadj_ubyte2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ubyte*in = (const ubyte*)_in;
-  uint *out = (uint*)_out;
+  const ubyte* restrict in = (const ubyte* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -6782,15 +7198,15 @@ static void translate_tristripadj_ubyte2uint_last2last_prenable(
   }
 }
 static void translate_points_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -6798,15 +7214,15 @@ static void translate_points_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_lines_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -6815,15 +7231,15 @@ static void translate_lines_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_linestrip_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -6832,34 +7248,36 @@ static void translate_linestrip_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_lineloop_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -6869,15 +7287,15 @@ static void translate_tris_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_tristrip_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6887,33 +7305,33 @@ static void translate_tristrip_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_trifan_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -6926,15 +7344,15 @@ static void translate_quads_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_quadstrip_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -6947,15 +7365,15 @@ static void translate_quadstrip_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_polygon_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -6965,15 +7383,15 @@ static void translate_polygon_ushort2ushort_first2first_prdisable(
    }
 }
 static void translate_linesadj_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -6984,15 +7402,15 @@ static void translate_linesadj_ushort2ushort_first2first_prdisable(
   }
 }
 static void translate_linestripadj_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -7003,15 +7421,15 @@ static void translate_linestripadj_ushort2ushort_first2first_prdisable(
   }
 }
 static void translate_trisadj_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -7024,15 +7442,15 @@ static void translate_trisadj_ushort2ushort_first2first_prdisable(
   }
 }
 static void translate_tristripadj_ushort2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -7056,15 +7474,15 @@ static void translate_tristripadj_ushort2ushort_first2first_prdisable(
   }
 }
 static void translate_points_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -7072,15 +7490,15 @@ static void translate_points_ushort2ushort_first2first_prenable(
    }
 }
 static void translate_lines_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -7089,15 +7507,15 @@ static void translate_lines_ushort2ushort_first2first_prenable(
    }
 }
 static void translate_linestrip_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -7106,34 +7524,60 @@ static void translate_linestrip_ushort2ushort_first2first_prenable(
    }
 }
 static void translate_lineloop_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -7143,15 +7587,15 @@ static void translate_tris_ushort2ushort_first2first_prenable(
    }
 }
 static void translate_tristrip_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7161,33 +7605,55 @@ static void translate_tristrip_ushort2ushort_first2first_prenable(
    }
 }
 static void translate_trifan_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -7226,15 +7692,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -7273,15 +7739,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7313,15 +7779,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -7332,15 +7798,15 @@ static void translate_linesadj_ushort2ushort_first2first_prenable(
   }
 }
 static void translate_linestripadj_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -7351,15 +7817,15 @@ static void translate_linestripadj_ushort2ushort_first2first_prenable(
   }
 }
 static void translate_trisadj_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -7372,15 +7838,15 @@ static void translate_trisadj_ushort2ushort_first2first_prenable(
   }
 }
 static void translate_tristripadj_ushort2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -7404,15 +7870,15 @@ static void translate_tristripadj_ushort2ushort_first2first_prenable(
   }
 }
 static void translate_points_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -7420,15 +7886,15 @@ static void translate_points_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_lines_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -7437,15 +7903,15 @@ static void translate_lines_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_linestrip_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -7454,34 +7920,36 @@ static void translate_linestrip_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_lineloop_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -7491,15 +7959,15 @@ static void translate_tris_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_tristrip_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7509,33 +7977,33 @@ static void translate_tristrip_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_trifan_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -7548,15 +8016,15 @@ static void translate_quads_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_quadstrip_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -7569,15 +8037,15 @@ static void translate_quadstrip_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_polygon_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7587,15 +8055,15 @@ static void translate_polygon_ushort2ushort_first2last_prdisable(
    }
 }
 static void translate_linesadj_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -7606,15 +8074,15 @@ static void translate_linesadj_ushort2ushort_first2last_prdisable(
   }
 }
 static void translate_linestripadj_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -7625,15 +8093,15 @@ static void translate_linestripadj_ushort2ushort_first2last_prdisable(
   }
 }
 static void translate_trisadj_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -7646,15 +8114,15 @@ static void translate_trisadj_ushort2ushort_first2last_prdisable(
   }
 }
 static void translate_tristripadj_ushort2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -7678,15 +8146,15 @@ static void translate_tristripadj_ushort2ushort_first2last_prdisable(
   }
 }
 static void translate_points_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -7694,15 +8162,15 @@ static void translate_points_ushort2ushort_first2last_prenable(
    }
 }
 static void translate_lines_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -7711,15 +8179,15 @@ static void translate_lines_ushort2ushort_first2last_prenable(
    }
 }
 static void translate_linestrip_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -7728,34 +8196,60 @@ static void translate_linestrip_ushort2ushort_first2last_prenable(
    }
 }
 static void translate_lineloop_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -7765,15 +8259,15 @@ static void translate_tris_ushort2ushort_first2last_prenable(
    }
 }
 static void translate_tristrip_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7783,33 +8277,55 @@ static void translate_tristrip_ushort2ushort_first2last_prenable(
    }
 }
 static void translate_trifan_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -7848,15 +8364,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -7895,15 +8411,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -7935,15 +8451,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -7954,15 +8470,15 @@ static void translate_linesadj_ushort2ushort_first2last_prenable(
   }
 }
 static void translate_linestripadj_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -7973,15 +8489,15 @@ static void translate_linestripadj_ushort2ushort_first2last_prenable(
   }
 }
 static void translate_trisadj_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -7994,15 +8510,15 @@ static void translate_trisadj_ushort2ushort_first2last_prenable(
   }
 }
 static void translate_tristripadj_ushort2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -8026,15 +8542,15 @@ static void translate_tristripadj_ushort2ushort_first2last_prenable(
   }
 }
 static void translate_points_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -8042,15 +8558,15 @@ static void translate_points_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_lines_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -8059,15 +8575,15 @@ static void translate_lines_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_linestrip_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -8076,34 +8592,36 @@ static void translate_linestrip_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_lineloop_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -8113,15 +8631,15 @@ static void translate_tris_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_tristrip_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8131,15 +8649,15 @@ static void translate_tristrip_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_trifan_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8149,15 +8667,15 @@ static void translate_trifan_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_quads_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -8170,15 +8688,15 @@ static void translate_quads_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_quadstrip_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -8191,15 +8709,15 @@ static void translate_quadstrip_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_polygon_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8209,15 +8727,15 @@ static void translate_polygon_ushort2ushort_last2first_prdisable(
    }
 }
 static void translate_linesadj_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -8228,15 +8746,15 @@ static void translate_linesadj_ushort2ushort_last2first_prdisable(
   }
 }
 static void translate_linestripadj_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -8247,15 +8765,15 @@ static void translate_linestripadj_ushort2ushort_last2first_prdisable(
   }
 }
 static void translate_trisadj_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -8268,15 +8786,15 @@ static void translate_trisadj_ushort2ushort_last2first_prdisable(
   }
 }
 static void translate_tristripadj_ushort2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -8300,15 +8818,15 @@ static void translate_tristripadj_ushort2ushort_last2first_prdisable(
   }
 }
 static void translate_points_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -8316,15 +8834,15 @@ static void translate_points_ushort2ushort_last2first_prenable(
    }
 }
 static void translate_lines_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -8333,15 +8851,15 @@ static void translate_lines_ushort2ushort_last2first_prenable(
    }
 }
 static void translate_linestrip_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -8350,34 +8868,60 @@ static void translate_linestrip_ushort2ushort_last2first_prenable(
    }
 }
 static void translate_lineloop_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -8387,15 +8931,15 @@ static void translate_tris_ushort2ushort_last2first_prenable(
    }
 }
 static void translate_tristrip_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8405,33 +8949,55 @@ static void translate_tristrip_ushort2ushort_last2first_prenable(
    }
 }
 static void translate_trifan_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[start];
       (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -8470,15 +9036,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -8517,15 +9083,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8557,15 +9123,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -8576,15 +9142,15 @@ static void translate_linesadj_ushort2ushort_last2first_prenable(
   }
 }
 static void translate_linestripadj_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -8595,15 +9161,15 @@ static void translate_linestripadj_ushort2ushort_last2first_prenable(
   }
 }
 static void translate_trisadj_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -8616,15 +9182,15 @@ static void translate_trisadj_ushort2ushort_last2first_prenable(
   }
 }
 static void translate_tristripadj_ushort2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -8648,15 +9214,15 @@ static void translate_tristripadj_ushort2ushort_last2first_prenable(
   }
 }
 static void translate_points_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -8664,15 +9230,15 @@ static void translate_points_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_lines_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -8681,15 +9247,15 @@ static void translate_lines_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_linestrip_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -8698,34 +9264,36 @@ static void translate_linestrip_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_lineloop_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -8735,15 +9303,15 @@ static void translate_tris_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_tristrip_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8753,15 +9321,15 @@ static void translate_tristrip_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_trifan_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8771,15 +9339,15 @@ static void translate_trifan_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_quads_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -8792,15 +9360,15 @@ static void translate_quads_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_quadstrip_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -8813,15 +9381,15 @@ static void translate_quadstrip_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_polygon_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -8831,15 +9399,15 @@ static void translate_polygon_ushort2ushort_last2last_prdisable(
    }
 }
 static void translate_linesadj_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -8850,15 +9418,15 @@ static void translate_linesadj_ushort2ushort_last2last_prdisable(
   }
 }
 static void translate_linestripadj_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -8869,15 +9437,15 @@ static void translate_linestripadj_ushort2ushort_last2last_prdisable(
   }
 }
 static void translate_trisadj_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -8890,15 +9458,15 @@ static void translate_trisadj_ushort2ushort_last2last_prdisable(
   }
 }
 static void translate_tristripadj_ushort2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -8922,15 +9490,15 @@ static void translate_tristripadj_ushort2ushort_last2last_prdisable(
   }
 }
 static void translate_points_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -8938,15 +9506,15 @@ static void translate_points_ushort2ushort_last2last_prenable(
    }
 }
 static void translate_lines_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -8955,15 +9523,15 @@ static void translate_lines_ushort2ushort_last2last_prenable(
    }
 }
 static void translate_linestrip_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -8972,34 +9540,60 @@ static void translate_linestrip_ushort2ushort_last2last_prenable(
    }
 }
 static void translate_lineloop_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -9009,15 +9603,15 @@ static void translate_tris_ushort2ushort_last2last_prenable(
    }
 }
 static void translate_tristrip_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9027,33 +9621,55 @@ static void translate_tristrip_ushort2ushort_last2last_prenable(
    }
 }
 static void translate_trifan_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[start];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
    }
 }
 static void translate_quads_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -9092,15 +9708,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -9139,15 +9755,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9179,15 +9795,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -9198,15 +9814,15 @@ static void translate_linesadj_ushort2ushort_last2last_prenable(
   }
 }
 static void translate_linestripadj_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -9217,15 +9833,15 @@ static void translate_linestripadj_ushort2ushort_last2last_prenable(
   }
 }
 static void translate_trisadj_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -9238,15 +9854,15 @@ static void translate_trisadj_ushort2ushort_last2last_prenable(
   }
 }
 static void translate_tristripadj_ushort2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  ushort *out = (ushort*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -9270,15 +9886,15 @@ static void translate_tristripadj_ushort2ushort_last2last_prenable(
   }
 }
 static void translate_points_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -9286,15 +9902,15 @@ static void translate_points_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_lines_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -9303,15 +9919,15 @@ static void translate_lines_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_linestrip_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -9320,34 +9936,36 @@ static void translate_linestrip_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_lineloop_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -9357,15 +9975,15 @@ static void translate_tris_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_tristrip_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9375,33 +9993,33 @@ static void translate_tristrip_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_trifan_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -9414,15 +10032,15 @@ static void translate_quads_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_quadstrip_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -9435,15 +10053,15 @@ static void translate_quadstrip_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_polygon_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9453,15 +10071,15 @@ static void translate_polygon_ushort2uint_first2first_prdisable(
    }
 }
 static void translate_linesadj_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -9472,15 +10090,15 @@ static void translate_linesadj_ushort2uint_first2first_prdisable(
   }
 }
 static void translate_linestripadj_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -9491,15 +10109,15 @@ static void translate_linestripadj_ushort2uint_first2first_prdisable(
   }
 }
 static void translate_trisadj_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -9512,15 +10130,15 @@ static void translate_trisadj_ushort2uint_first2first_prdisable(
   }
 }
 static void translate_tristripadj_ushort2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -9544,15 +10162,15 @@ static void translate_tristripadj_ushort2uint_first2first_prdisable(
   }
 }
 static void translate_points_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -9560,15 +10178,15 @@ static void translate_points_ushort2uint_first2first_prenable(
    }
 }
 static void translate_lines_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -9577,15 +10195,15 @@ static void translate_lines_ushort2uint_first2first_prenable(
    }
 }
 static void translate_linestrip_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -9594,34 +10212,60 @@ static void translate_linestrip_ushort2uint_first2first_prenable(
    }
 }
 static void translate_lineloop_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -9631,15 +10275,15 @@ static void translate_tris_ushort2uint_first2first_prenable(
    }
 }
 static void translate_tristrip_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9649,33 +10293,55 @@ static void translate_tristrip_ushort2uint_first2first_prenable(
    }
 }
 static void translate_trifan_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -9714,15 +10380,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -9761,15 +10427,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9801,15 +10467,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -9820,15 +10486,15 @@ static void translate_linesadj_ushort2uint_first2first_prenable(
   }
 }
 static void translate_linestripadj_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -9839,15 +10505,15 @@ static void translate_linestripadj_ushort2uint_first2first_prenable(
   }
 }
 static void translate_trisadj_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -9860,15 +10526,15 @@ static void translate_trisadj_ushort2uint_first2first_prenable(
   }
 }
 static void translate_tristripadj_ushort2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -9892,15 +10558,15 @@ static void translate_tristripadj_ushort2uint_first2first_prenable(
   }
 }
 static void translate_points_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -9908,15 +10574,15 @@ static void translate_points_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_lines_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -9925,15 +10591,15 @@ static void translate_lines_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_linestrip_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -9942,34 +10608,36 @@ static void translate_linestrip_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_lineloop_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -9979,15 +10647,15 @@ static void translate_tris_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_tristrip_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -9997,33 +10665,33 @@ static void translate_tristrip_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_trifan_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -10036,15 +10704,15 @@ static void translate_quads_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_quadstrip_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -10057,15 +10725,15 @@ static void translate_quadstrip_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_polygon_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10075,15 +10743,15 @@ static void translate_polygon_ushort2uint_first2last_prdisable(
    }
 }
 static void translate_linesadj_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -10094,15 +10762,15 @@ static void translate_linesadj_ushort2uint_first2last_prdisable(
   }
 }
 static void translate_linestripadj_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -10113,15 +10781,15 @@ static void translate_linestripadj_ushort2uint_first2last_prdisable(
   }
 }
 static void translate_trisadj_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -10134,15 +10802,15 @@ static void translate_trisadj_ushort2uint_first2last_prdisable(
   }
 }
 static void translate_tristripadj_ushort2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -10166,15 +10834,15 @@ static void translate_tristripadj_ushort2uint_first2last_prdisable(
   }
 }
 static void translate_points_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -10182,15 +10850,15 @@ static void translate_points_ushort2uint_first2last_prenable(
    }
 }
 static void translate_lines_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -10199,15 +10867,15 @@ static void translate_lines_ushort2uint_first2last_prenable(
    }
 }
 static void translate_linestrip_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -10216,34 +10884,60 @@ static void translate_linestrip_ushort2uint_first2last_prenable(
    }
 }
 static void translate_lineloop_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -10253,15 +10947,15 @@ static void translate_tris_ushort2uint_first2last_prenable(
    }
 }
 static void translate_tristrip_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10271,33 +10965,55 @@ static void translate_tristrip_ushort2uint_first2last_prenable(
    }
 }
 static void translate_trifan_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -10336,15 +11052,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -10383,15 +11099,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10423,15 +11139,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -10442,15 +11158,15 @@ static void translate_linesadj_ushort2uint_first2last_prenable(
   }
 }
 static void translate_linestripadj_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -10461,15 +11177,15 @@ static void translate_linestripadj_ushort2uint_first2last_prenable(
   }
 }
 static void translate_trisadj_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -10482,15 +11198,15 @@ static void translate_trisadj_ushort2uint_first2last_prenable(
   }
 }
 static void translate_tristripadj_ushort2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -10514,15 +11230,15 @@ static void translate_tristripadj_ushort2uint_first2last_prenable(
   }
 }
 static void translate_points_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -10530,15 +11246,15 @@ static void translate_points_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_lines_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -10547,15 +11263,15 @@ static void translate_lines_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_linestrip_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -10564,34 +11280,36 @@ static void translate_linestrip_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_lineloop_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -10601,15 +11319,15 @@ static void translate_tris_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_tristrip_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10619,15 +11337,15 @@ static void translate_tristrip_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_trifan_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10637,15 +11355,15 @@ static void translate_trifan_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_quads_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -10658,15 +11376,15 @@ static void translate_quads_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_quadstrip_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -10679,15 +11397,15 @@ static void translate_quadstrip_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_polygon_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10697,15 +11415,15 @@ static void translate_polygon_ushort2uint_last2first_prdisable(
    }
 }
 static void translate_linesadj_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -10716,15 +11434,15 @@ static void translate_linesadj_ushort2uint_last2first_prdisable(
   }
 }
 static void translate_linestripadj_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -10735,15 +11453,15 @@ static void translate_linestripadj_ushort2uint_last2first_prdisable(
   }
 }
 static void translate_trisadj_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -10756,15 +11474,15 @@ static void translate_trisadj_ushort2uint_last2first_prdisable(
   }
 }
 static void translate_tristripadj_ushort2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -10788,15 +11506,15 @@ static void translate_tristripadj_ushort2uint_last2first_prdisable(
   }
 }
 static void translate_points_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -10804,15 +11522,15 @@ static void translate_points_ushort2uint_last2first_prenable(
    }
 }
 static void translate_lines_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -10821,15 +11539,15 @@ static void translate_lines_ushort2uint_last2first_prenable(
    }
 }
 static void translate_linestrip_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -10838,34 +11556,60 @@ static void translate_linestrip_ushort2uint_last2first_prenable(
    }
 }
 static void translate_lineloop_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -10875,15 +11619,15 @@ static void translate_tris_ushort2uint_last2first_prenable(
    }
 }
 static void translate_tristrip_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -10893,33 +11637,55 @@ static void translate_tristrip_ushort2uint_last2first_prenable(
    }
 }
 static void translate_trifan_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[start];
       (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -10958,15 +11724,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -11005,15 +11771,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11045,15 +11811,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -11064,15 +11830,15 @@ static void translate_linesadj_ushort2uint_last2first_prenable(
   }
 }
 static void translate_linestripadj_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -11083,15 +11849,15 @@ static void translate_linestripadj_ushort2uint_last2first_prenable(
   }
 }
 static void translate_trisadj_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -11104,15 +11870,15 @@ static void translate_trisadj_ushort2uint_last2first_prenable(
   }
 }
 static void translate_tristripadj_ushort2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -11136,15 +11902,15 @@ static void translate_tristripadj_ushort2uint_last2first_prenable(
   }
 }
 static void translate_points_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -11152,15 +11918,15 @@ static void translate_points_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_lines_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -11169,15 +11935,15 @@ static void translate_lines_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_linestrip_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -11186,34 +11952,36 @@ static void translate_linestrip_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_lineloop_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -11223,15 +11991,15 @@ static void translate_tris_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_tristrip_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11241,15 +12009,15 @@ static void translate_tristrip_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_trifan_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11259,15 +12027,15 @@ static void translate_trifan_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_quads_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -11280,15 +12048,15 @@ static void translate_quads_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_quadstrip_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -11301,15 +12069,15 @@ static void translate_quadstrip_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_polygon_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11319,15 +12087,15 @@ static void translate_polygon_ushort2uint_last2last_prdisable(
    }
 }
 static void translate_linesadj_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -11338,15 +12106,15 @@ static void translate_linesadj_ushort2uint_last2last_prdisable(
   }
 }
 static void translate_linestripadj_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -11357,15 +12125,15 @@ static void translate_linestripadj_ushort2uint_last2last_prdisable(
   }
 }
 static void translate_trisadj_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -11378,15 +12146,15 @@ static void translate_trisadj_ushort2uint_last2last_prdisable(
   }
 }
 static void translate_tristripadj_ushort2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -11410,15 +12178,15 @@ static void translate_tristripadj_ushort2uint_last2last_prdisable(
   }
 }
 static void translate_points_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -11426,15 +12194,15 @@ static void translate_points_ushort2uint_last2last_prenable(
    }
 }
 static void translate_lines_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -11443,15 +12211,15 @@ static void translate_lines_ushort2uint_last2last_prenable(
    }
 }
 static void translate_linestrip_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -11460,34 +12228,60 @@ static void translate_linestrip_ushort2uint_last2last_prenable(
    }
 }
 static void translate_lineloop_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -11497,15 +12291,15 @@ static void translate_tris_ushort2uint_last2last_prenable(
    }
 }
 static void translate_tristrip_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11515,33 +12309,55 @@ static void translate_tristrip_ushort2uint_last2last_prenable(
    }
 }
 static void translate_trifan_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[start];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
    }
 }
 static void translate_quads_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -11580,15 +12396,15 @@ restart:
    }
 }
 static void translate_quadstrip_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -11627,15 +12443,15 @@ restart:
    }
 }
 static void translate_polygon_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11667,15 +12483,15 @@ restart:
    }
 }
 static void translate_linesadj_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -11686,15 +12502,15 @@ static void translate_linesadj_ushort2uint_last2last_prenable(
   }
 }
 static void translate_linestripadj_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -11705,15 +12521,15 @@ static void translate_linestripadj_ushort2uint_last2last_prenable(
   }
 }
 static void translate_trisadj_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -11726,15 +12542,15 @@ static void translate_trisadj_ushort2uint_last2last_prenable(
   }
 }
 static void translate_tristripadj_ushort2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const ushort*in = (const ushort*)_in;
-  uint *out = (uint*)_out;
+  const ushort* restrict in = (const ushort* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -11758,15 +12574,15 @@ static void translate_tristripadj_ushort2uint_last2last_prenable(
   }
 }
 static void translate_points_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -11774,15 +12590,15 @@ static void translate_points_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_lines_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -11791,15 +12607,15 @@ static void translate_lines_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_linestrip_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -11808,34 +12624,36 @@ static void translate_linestrip_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_lineloop_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -11845,15 +12663,15 @@ static void translate_tris_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_tristrip_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11863,33 +12681,33 @@ static void translate_tristrip_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_trifan_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -11902,15 +12720,15 @@ static void translate_quads_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_quadstrip_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -11923,15 +12741,15 @@ static void translate_quadstrip_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_polygon_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -11941,15 +12759,15 @@ static void translate_polygon_uint2ushort_first2first_prdisable(
    }
 }
 static void translate_linesadj_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -11960,15 +12778,15 @@ static void translate_linesadj_uint2ushort_first2first_prdisable(
   }
 }
 static void translate_linestripadj_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -11979,15 +12797,15 @@ static void translate_linestripadj_uint2ushort_first2first_prdisable(
   }
 }
 static void translate_trisadj_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -12000,15 +12818,15 @@ static void translate_trisadj_uint2ushort_first2first_prdisable(
   }
 }
 static void translate_tristripadj_uint2ushort_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -12032,15 +12850,15 @@ static void translate_tristripadj_uint2ushort_first2first_prdisable(
   }
 }
 static void translate_points_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -12048,15 +12866,15 @@ static void translate_points_uint2ushort_first2first_prenable(
    }
 }
 static void translate_lines_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -12065,15 +12883,15 @@ static void translate_lines_uint2ushort_first2first_prenable(
    }
 }
 static void translate_linestrip_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -12082,34 +12900,60 @@ static void translate_linestrip_uint2ushort_first2first_prenable(
    }
 }
 static void translate_lineloop_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -12119,15 +12963,15 @@ static void translate_tris_uint2ushort_first2first_prenable(
    }
 }
 static void translate_tristrip_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12137,33 +12981,55 @@ static void translate_tristrip_uint2ushort_first2first_prenable(
    }
 }
 static void translate_trifan_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j)[2] = (ushort)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+1];
+      (out+j)[1] = (ushort)in[i+2];
+      (out+j)[2] = (ushort)in[start];
    }
 }
 static void translate_quads_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -12202,15 +13068,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -12249,15 +13115,15 @@ restart:
    }
 }
 static void translate_polygon_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12289,15 +13155,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -12308,15 +13174,15 @@ static void translate_linesadj_uint2ushort_first2first_prenable(
   }
 }
 static void translate_linestripadj_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -12327,15 +13193,15 @@ static void translate_linestripadj_uint2ushort_first2first_prenable(
   }
 }
 static void translate_trisadj_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -12348,15 +13214,15 @@ static void translate_trisadj_uint2ushort_first2first_prenable(
   }
 }
 static void translate_tristripadj_uint2ushort_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -12380,15 +13246,15 @@ static void translate_tristripadj_uint2ushort_first2first_prenable(
   }
 }
 static void translate_points_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -12396,15 +13262,15 @@ static void translate_points_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_lines_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -12413,15 +13279,15 @@ static void translate_lines_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_linestrip_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -12430,34 +13296,36 @@ static void translate_linestrip_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_lineloop_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -12467,15 +13335,15 @@ static void translate_tris_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_tristrip_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12485,33 +13353,33 @@ static void translate_tristrip_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_trifan_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -12524,15 +13392,15 @@ static void translate_quads_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_quadstrip_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -12545,15 +13413,15 @@ static void translate_quadstrip_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_polygon_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12563,15 +13431,15 @@ static void translate_polygon_uint2ushort_first2last_prdisable(
    }
 }
 static void translate_linesadj_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -12582,15 +13450,15 @@ static void translate_linesadj_uint2ushort_first2last_prdisable(
   }
 }
 static void translate_linestripadj_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -12601,15 +13469,15 @@ static void translate_linestripadj_uint2ushort_first2last_prdisable(
   }
 }
 static void translate_trisadj_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -12622,15 +13490,15 @@ static void translate_trisadj_uint2ushort_first2last_prdisable(
   }
 }
 static void translate_tristripadj_uint2ushort_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -12654,15 +13522,15 @@ static void translate_tristripadj_uint2ushort_first2last_prdisable(
   }
 }
 static void translate_points_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -12670,15 +13538,15 @@ static void translate_points_uint2ushort_first2last_prenable(
    }
 }
 static void translate_lines_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -12687,15 +13555,15 @@ static void translate_lines_uint2ushort_first2last_prenable(
    }
 }
 static void translate_linestrip_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -12704,34 +13572,60 @@ static void translate_linestrip_uint2ushort_first2last_prenable(
    }
 }
 static void translate_lineloop_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -12741,15 +13635,15 @@ static void translate_tris_uint2ushort_first2last_prenable(
    }
 }
 static void translate_tristrip_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12759,33 +13653,55 @@ static void translate_tristrip_uint2ushort_first2last_prenable(
    }
 }
 static void translate_trifan_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (ushort)in[i+1];
-      (out+j)[1] = (ushort)in[i+2];
-      (out+j)[2] = (ushort)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (ushort)in[i+2];
+      (out+j)[1] = (ushort)in[start];
+      (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -12824,15 +13740,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -12871,15 +13787,15 @@ restart:
    }
 }
 static void translate_polygon_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -12911,15 +13827,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -12930,15 +13846,15 @@ static void translate_linesadj_uint2ushort_first2last_prenable(
   }
 }
 static void translate_linestripadj_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -12949,15 +13865,15 @@ static void translate_linestripadj_uint2ushort_first2last_prenable(
   }
 }
 static void translate_trisadj_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -12970,15 +13886,15 @@ static void translate_trisadj_uint2ushort_first2last_prenable(
   }
 }
 static void translate_tristripadj_uint2ushort_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -13002,15 +13918,15 @@ static void translate_tristripadj_uint2ushort_first2last_prenable(
   }
 }
 static void translate_points_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -13018,15 +13934,15 @@ static void translate_points_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_lines_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -13035,15 +13951,15 @@ static void translate_lines_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_linestrip_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -13052,34 +13968,36 @@ static void translate_linestrip_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_lineloop_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -13089,15 +14007,15 @@ static void translate_tris_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_tristrip_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13107,15 +14025,15 @@ static void translate_tristrip_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_trifan_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13125,15 +14043,15 @@ static void translate_trifan_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_quads_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -13146,15 +14064,15 @@ static void translate_quads_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_quadstrip_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -13167,15 +14085,15 @@ static void translate_quadstrip_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_polygon_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13185,15 +14103,15 @@ static void translate_polygon_uint2ushort_last2first_prdisable(
    }
 }
 static void translate_linesadj_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -13204,15 +14122,15 @@ static void translate_linesadj_uint2ushort_last2first_prdisable(
   }
 }
 static void translate_linestripadj_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -13223,15 +14141,15 @@ static void translate_linestripadj_uint2ushort_last2first_prdisable(
   }
 }
 static void translate_trisadj_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -13244,15 +14162,15 @@ static void translate_trisadj_uint2ushort_last2first_prdisable(
   }
 }
 static void translate_tristripadj_uint2ushort_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -13276,15 +14194,15 @@ static void translate_tristripadj_uint2ushort_last2first_prdisable(
   }
 }
 static void translate_points_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -13292,15 +14210,15 @@ static void translate_points_uint2ushort_last2first_prenable(
    }
 }
 static void translate_lines_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -13309,15 +14227,15 @@ static void translate_lines_uint2ushort_last2first_prenable(
    }
 }
 static void translate_linestrip_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -13326,34 +14244,60 @@ static void translate_linestrip_uint2ushort_last2first_prenable(
    }
 }
 static void translate_lineloop_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[start];
+      (out+j)[1] = (ushort)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
+      end = i+1;
    }
       (out+j)[0] = (ushort)in[start];
-      (out+j)[1] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[end];
 }
 static void translate_tris_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -13363,15 +14307,15 @@ static void translate_tris_uint2ushort_last2first_prenable(
    }
 }
 static void translate_tristrip_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13381,33 +14325,55 @@ static void translate_tristrip_uint2ushort_last2first_prenable(
    }
 }
 static void translate_trifan_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[start];
       (out+j)[2] = (ushort)in[i+1];
    }
 }
 static void translate_quads_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -13446,15 +14412,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -13493,15 +14459,15 @@ restart:
    }
 }
 static void translate_polygon_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13533,15 +14499,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -13552,15 +14518,15 @@ static void translate_linesadj_uint2ushort_last2first_prenable(
   }
 }
 static void translate_linestripadj_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -13571,15 +14537,15 @@ static void translate_linestripadj_uint2ushort_last2first_prenable(
   }
 }
 static void translate_trisadj_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -13592,15 +14558,15 @@ static void translate_trisadj_uint2ushort_last2first_prenable(
   }
 }
 static void translate_tristripadj_uint2ushort_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -13624,15 +14590,15 @@ static void translate_tristripadj_uint2ushort_last2first_prenable(
   }
 }
 static void translate_points_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -13640,15 +14606,15 @@ static void translate_points_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_lines_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -13657,15 +14623,15 @@ static void translate_lines_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_linestrip_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -13674,34 +14640,36 @@ static void translate_linestrip_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_lineloop_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -13711,15 +14679,15 @@ static void translate_tris_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_tristrip_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13729,15 +14697,15 @@ static void translate_tristrip_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_trifan_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13747,15 +14715,15 @@ static void translate_trifan_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_quads_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -13768,15 +14736,15 @@ static void translate_quads_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_quadstrip_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -13789,15 +14757,15 @@ static void translate_quadstrip_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_polygon_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -13807,15 +14775,15 @@ static void translate_polygon_uint2ushort_last2last_prdisable(
    }
 }
 static void translate_linesadj_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -13826,15 +14794,15 @@ static void translate_linesadj_uint2ushort_last2last_prdisable(
   }
 }
 static void translate_linestripadj_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -13845,15 +14813,15 @@ static void translate_linestripadj_uint2ushort_last2last_prdisable(
   }
 }
 static void translate_trisadj_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -13866,15 +14834,15 @@ static void translate_trisadj_uint2ushort_last2last_prdisable(
   }
 }
 static void translate_tristripadj_uint2ushort_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -13898,15 +14866,15 @@ static void translate_tristripadj_uint2ushort_last2last_prdisable(
   }
 }
 static void translate_points_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -13914,15 +14882,15 @@ static void translate_points_uint2ushort_last2last_prenable(
    }
 }
 static void translate_lines_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -13931,15 +14899,15 @@ static void translate_lines_uint2ushort_last2last_prenable(
    }
 }
 static void translate_linestrip_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -13948,34 +14916,60 @@ static void translate_linestrip_uint2ushort_last2last_prenable(
    }
 }
 static void translate_lineloop_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (ushort)in[end];
+      (out+j)[1] = (ushort)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (ushort)in[i];
+      (out+j)[0] = (ushort)in[end];
       (out+j)[1] = (ushort)in[start];
 }
 static void translate_tris_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -13985,15 +14979,15 @@ static void translate_tris_uint2ushort_last2last_prenable(
    }
 }
 static void translate_tristrip_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14003,33 +14997,55 @@ static void translate_tristrip_uint2ushort_last2last_prenable(
    }
 }
 static void translate_trifan_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (ushort)in[start];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
    }
 }
 static void translate_quads_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -14068,15 +15084,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -14115,15 +15131,15 @@ restart:
    }
 }
 static void translate_polygon_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14155,15 +15171,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -14174,15 +15190,15 @@ static void translate_linesadj_uint2ushort_last2last_prenable(
   }
 }
 static void translate_linestripadj_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -14193,15 +15209,15 @@ static void translate_linestripadj_uint2ushort_last2last_prenable(
   }
 }
 static void translate_trisadj_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -14214,15 +15230,15 @@ static void translate_trisadj_uint2ushort_last2last_prenable(
   }
 }
 static void translate_tristripadj_uint2ushort_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  ushort *out = (ushort*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  ushort * restrict out = (ushort* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -14246,15 +15262,15 @@ static void translate_tristripadj_uint2ushort_last2last_prenable(
   }
 }
 static void translate_points_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -14262,15 +15278,15 @@ static void translate_points_uint2uint_first2first_prdisable(
    }
 }
 static void translate_lines_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -14279,15 +15295,15 @@ static void translate_lines_uint2uint_first2first_prdisable(
    }
 }
 static void translate_linestrip_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -14296,34 +15312,36 @@ static void translate_linestrip_uint2uint_first2first_prdisable(
    }
 }
 static void translate_lineloop_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -14333,15 +15351,15 @@ static void translate_tris_uint2uint_first2first_prdisable(
    }
 }
 static void translate_tristrip_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14351,33 +15369,33 @@ static void translate_tristrip_uint2uint_first2first_prdisable(
    }
 }
 static void translate_trifan_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -14390,15 +15408,15 @@ static void translate_quads_uint2uint_first2first_prdisable(
    }
 }
 static void translate_quadstrip_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -14411,15 +15429,15 @@ static void translate_quadstrip_uint2uint_first2first_prdisable(
    }
 }
 static void translate_polygon_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14429,15 +15447,15 @@ static void translate_polygon_uint2uint_first2first_prdisable(
    }
 }
 static void translate_linesadj_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -14448,15 +15466,15 @@ static void translate_linesadj_uint2uint_first2first_prdisable(
   }
 }
 static void translate_linestripadj_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -14467,15 +15485,15 @@ static void translate_linestripadj_uint2uint_first2first_prdisable(
   }
 }
 static void translate_trisadj_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -14488,15 +15506,15 @@ static void translate_trisadj_uint2uint_first2first_prdisable(
   }
 }
 static void translate_tristripadj_uint2uint_first2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -14520,15 +15538,15 @@ static void translate_tristripadj_uint2uint_first2first_prdisable(
   }
 }
 static void translate_points_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -14536,15 +15554,15 @@ static void translate_points_uint2uint_first2first_prenable(
    }
 }
 static void translate_lines_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -14553,15 +15571,15 @@ static void translate_lines_uint2uint_first2first_prenable(
    }
 }
 static void translate_linestrip_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -14570,34 +15588,60 @@ static void translate_linestrip_uint2uint_first2first_prenable(
    }
 }
 static void translate_lineloop_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -14607,15 +15651,15 @@ static void translate_tris_uint2uint_first2first_prenable(
    }
 }
 static void translate_tristrip_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14625,33 +15669,55 @@ static void translate_tristrip_uint2uint_first2first_prenable(
    }
 }
 static void translate_trifan_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j)[2] = (uint)in[i+2];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+1];
+      (out+j)[1] = (uint)in[i+2];
+      (out+j)[2] = (uint)in[start];
    }
 }
 static void translate_quads_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -14690,15 +15756,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -14737,15 +15803,15 @@ restart:
    }
 }
 static void translate_polygon_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14777,15 +15843,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -14796,15 +15862,15 @@ static void translate_linesadj_uint2uint_first2first_prenable(
   }
 }
 static void translate_linestripadj_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -14815,15 +15881,15 @@ static void translate_linestripadj_uint2uint_first2first_prenable(
   }
 }
 static void translate_trisadj_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -14836,15 +15902,15 @@ static void translate_trisadj_uint2uint_first2first_prenable(
   }
 }
 static void translate_tristripadj_uint2uint_first2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -14868,15 +15934,15 @@ static void translate_tristripadj_uint2uint_first2first_prenable(
   }
 }
 static void translate_points_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -14884,15 +15950,15 @@ static void translate_points_uint2uint_first2last_prdisable(
    }
 }
 static void translate_lines_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -14901,15 +15967,15 @@ static void translate_lines_uint2uint_first2last_prdisable(
    }
 }
 static void translate_linestrip_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -14918,34 +15984,36 @@ static void translate_linestrip_uint2uint_first2last_prdisable(
    }
 }
 static void translate_lineloop_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -14955,15 +16023,15 @@ static void translate_tris_uint2uint_first2last_prdisable(
    }
 }
 static void translate_tristrip_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -14973,33 +16041,33 @@ static void translate_tristrip_uint2uint_first2last_prdisable(
    }
 }
 static void translate_trifan_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -15012,15 +16080,15 @@ static void translate_quads_uint2uint_first2last_prdisable(
    }
 }
 static void translate_quadstrip_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -15033,15 +16101,15 @@ static void translate_quadstrip_uint2uint_first2last_prdisable(
    }
 }
 static void translate_polygon_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15051,15 +16119,15 @@ static void translate_polygon_uint2uint_first2last_prdisable(
    }
 }
 static void translate_linesadj_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -15070,15 +16138,15 @@ static void translate_linesadj_uint2uint_first2last_prdisable(
   }
 }
 static void translate_linestripadj_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -15089,15 +16157,15 @@ static void translate_linestripadj_uint2uint_first2last_prdisable(
   }
 }
 static void translate_trisadj_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -15110,15 +16178,15 @@ static void translate_trisadj_uint2uint_first2last_prdisable(
   }
 }
 static void translate_tristripadj_uint2uint_first2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -15142,15 +16210,15 @@ static void translate_tristripadj_uint2uint_first2last_prdisable(
   }
 }
 static void translate_points_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -15158,15 +16226,15 @@ static void translate_points_uint2uint_first2last_prenable(
    }
 }
 static void translate_lines_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -15175,15 +16243,15 @@ static void translate_lines_uint2uint_first2last_prenable(
    }
 }
 static void translate_linestrip_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -15192,34 +16260,60 @@ static void translate_linestrip_uint2uint_first2last_prenable(
    }
 }
 static void translate_lineloop_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -15229,15 +16323,15 @@ static void translate_tris_uint2uint_first2last_prenable(
    }
 }
 static void translate_tristrip_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15247,33 +16341,55 @@ static void translate_tristrip_uint2uint_first2last_prenable(
    }
 }
 static void translate_trifan_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
-      (out+j)[0] = (uint)in[i+1];
-      (out+j)[1] = (uint)in[i+2];
-      (out+j)[2] = (uint)in[start];
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
+      (out+j)[0] = (uint)in[i+2];
+      (out+j)[1] = (uint)in[start];
+      (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -15312,15 +16428,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -15359,15 +16475,15 @@ restart:
    }
 }
 static void translate_polygon_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15399,15 +16515,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -15418,15 +16534,15 @@ static void translate_linesadj_uint2uint_first2last_prenable(
   }
 }
 static void translate_linestripadj_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -15437,15 +16553,15 @@ static void translate_linestripadj_uint2uint_first2last_prenable(
   }
 }
 static void translate_trisadj_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -15458,15 +16574,15 @@ static void translate_trisadj_uint2uint_first2last_prenable(
   }
 }
 static void translate_tristripadj_uint2uint_first2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -15490,15 +16606,15 @@ static void translate_tristripadj_uint2uint_first2last_prenable(
   }
 }
 static void translate_points_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -15506,15 +16622,15 @@ static void translate_points_uint2uint_last2first_prdisable(
    }
 }
 static void translate_lines_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -15523,15 +16639,15 @@ static void translate_lines_uint2uint_last2first_prdisable(
    }
 }
 static void translate_linestrip_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -15540,34 +16656,36 @@ static void translate_linestrip_uint2uint_last2first_prdisable(
    }
 }
 static void translate_lineloop_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -15577,15 +16695,15 @@ static void translate_tris_uint2uint_last2first_prdisable(
    }
 }
 static void translate_tristrip_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15595,15 +16713,15 @@ static void translate_tristrip_uint2uint_last2first_prdisable(
    }
 }
 static void translate_trifan_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15613,15 +16731,15 @@ static void translate_trifan_uint2uint_last2first_prdisable(
    }
 }
 static void translate_quads_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -15634,15 +16752,15 @@ static void translate_quads_uint2uint_last2first_prdisable(
    }
 }
 static void translate_quadstrip_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -15655,15 +16773,15 @@ static void translate_quadstrip_uint2uint_last2first_prdisable(
    }
 }
 static void translate_polygon_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15673,15 +16791,15 @@ static void translate_polygon_uint2uint_last2first_prdisable(
    }
 }
 static void translate_linesadj_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -15692,15 +16810,15 @@ static void translate_linesadj_uint2uint_last2first_prdisable(
   }
 }
 static void translate_linestripadj_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -15711,15 +16829,15 @@ static void translate_linestripadj_uint2uint_last2first_prdisable(
   }
 }
 static void translate_trisadj_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -15732,15 +16850,15 @@ static void translate_trisadj_uint2uint_last2first_prdisable(
   }
 }
 static void translate_tristripadj_uint2uint_last2first_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -15764,15 +16882,15 @@ static void translate_tristripadj_uint2uint_last2first_prdisable(
   }
 }
 static void translate_points_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -15780,15 +16898,15 @@ static void translate_points_uint2uint_last2first_prenable(
    }
 }
 static void translate_lines_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -15797,15 +16915,15 @@ static void translate_lines_uint2uint_last2first_prenable(
    }
 }
 static void translate_linestrip_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -15814,34 +16932,60 @@ static void translate_linestrip_uint2uint_last2first_prenable(
    }
 }
 static void translate_lineloop_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[start];
+      (out+j)[1] = (uint)in[end];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
+      end = i+1;
    }
       (out+j)[0] = (uint)in[start];
-      (out+j)[1] = (uint)in[i];
+      (out+j)[1] = (uint)in[end];
 }
 static void translate_tris_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -15851,15 +16995,15 @@ static void translate_tris_uint2uint_last2first_prenable(
    }
 }
 static void translate_tristrip_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -15869,33 +17013,55 @@ static void translate_tristrip_uint2uint_last2first_prenable(
    }
 }
 static void translate_trifan_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[start];
       (out+j)[2] = (uint)in[i+1];
    }
 }
 static void translate_quads_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -15934,15 +17100,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -15981,15 +17147,15 @@ restart:
    }
 }
 static void translate_polygon_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16021,15 +17187,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -16040,15 +17206,15 @@ static void translate_linesadj_uint2uint_last2first_prenable(
   }
 }
 static void translate_linestripadj_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -16059,15 +17225,15 @@ static void translate_linestripadj_uint2uint_last2first_prenable(
   }
 }
 static void translate_trisadj_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -16080,15 +17246,15 @@ static void translate_trisadj_uint2uint_last2first_prenable(
   }
 }
 static void translate_tristripadj_uint2uint_last2first_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -16112,15 +17278,15 @@ static void translate_tristripadj_uint2uint_last2first_prenable(
   }
 }
 static void translate_points_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -16128,15 +17294,15 @@ static void translate_points_uint2uint_last2last_prdisable(
    }
 }
 static void translate_lines_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -16145,15 +17311,15 @@ static void translate_lines_uint2uint_last2last_prdisable(
    }
 }
 static void translate_linestrip_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -16162,34 +17328,36 @@ static void translate_linestrip_uint2uint_last2last_prdisable(
    }
 }
 static void translate_lineloop_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -16199,15 +17367,15 @@ static void translate_tris_uint2uint_last2last_prdisable(
    }
 }
 static void translate_tristrip_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16217,15 +17385,15 @@ static void translate_tristrip_uint2uint_last2last_prdisable(
    }
 }
 static void translate_trifan_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16235,15 +17403,15 @@ static void translate_trifan_uint2uint_last2last_prdisable(
    }
 }
 static void translate_quads_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -16256,15 +17424,15 @@ static void translate_quads_uint2uint_last2last_prdisable(
    }
 }
 static void translate_quadstrip_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -16277,15 +17445,15 @@ static void translate_quadstrip_uint2uint_last2last_prdisable(
    }
 }
 static void translate_polygon_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16295,15 +17463,15 @@ static void translate_polygon_uint2uint_last2last_prdisable(
    }
 }
 static void translate_linesadj_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -16314,15 +17482,15 @@ static void translate_linesadj_uint2uint_last2last_prdisable(
   }
 }
 static void translate_linestripadj_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -16333,15 +17501,15 @@ static void translate_linestripadj_uint2uint_last2last_prdisable(
   }
 }
 static void translate_trisadj_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -16354,15 +17522,15 @@ static void translate_trisadj_uint2uint_last2last_prdisable(
   }
 }
 static void translate_tristripadj_uint2uint_last2last_prdisable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 
@@ -16386,15 +17554,15 @@ static void translate_tristripadj_uint2uint_last2last_prdisable(
   }
 }
 static void translate_points_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j++, i++) { 
@@ -16402,15 +17570,15 @@ static void translate_points_uint2uint_last2last_prenable(
    }
 }
 static void translate_lines_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i+=2) { 
@@ -16419,15 +17587,15 @@ static void translate_lines_uint2uint_last2last_prenable(
    }
 }
 static void translate_linestrip_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=2, i++) { 
@@ -16436,34 +17604,60 @@ static void translate_linestrip_uint2uint_last2last_prenable(
    }
 }
 static void translate_lineloop_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
+  unsigned end = start;
   for (i = start, j = 0; j < out_nr - 2; j+=2, i++) { 
+restart:
+      if (i + 2 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+      (out+j)[0] = (uint)in[end];
+      (out+j)[1] = (uint)in[start];
+         start = i;
+         end = start;
+         j += 2;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
+      end = i+1;
    }
-      (out+j)[0] = (uint)in[i];
+      (out+j)[0] = (uint)in[end];
       (out+j)[1] = (uint)in[start];
 }
 static void translate_tris_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i+=3) { 
@@ -16473,15 +17667,15 @@ static void translate_tris_uint2uint_last2last_prenable(
    }
 }
 static void translate_tristrip_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16491,33 +17685,55 @@ static void translate_tristrip_uint2uint_last2last_prenable(
    }
 }
 static void translate_trifan_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
+restart:
+      if (i + 3 > in_nr) {
+         (out+j+0)[0] = restart_index;
+         (out+j+0)[1] = restart_index;
+         (out+j+0)[2] = restart_index;
+         continue;
+      }
+      if (in[i + 0] == restart_index) {
+         i += 1;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 1] == restart_index) {
+         i += 2;
+         start = i;
+         goto restart;
+      }
+      if (in[i + 2] == restart_index) {
+         i += 3;
+         start = i;
+         goto restart;
+      }
       (out+j)[0] = (uint)in[start];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
    }
 }
 static void translate_quads_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=4) { 
@@ -16556,15 +17772,15 @@ restart:
    }
 }
 static void translate_quadstrip_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=2) { 
@@ -16603,15 +17819,15 @@ restart:
    }
 }
 static void translate_polygon_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=3, i++) { 
@@ -16643,15 +17859,15 @@ restart:
    }
 }
 static void translate_linesadj_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i+=4) { 
@@ -16662,15 +17878,15 @@ static void translate_linesadj_uint2uint_last2last_prenable(
   }
 }
 static void translate_linestripadj_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=4, i++) {
@@ -16681,15 +17897,15 @@ static void translate_linestripadj_uint2uint_last2last_prenable(
   }
 }
 static void translate_trisadj_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; j+=6, i+=6) { 
@@ -16702,15 +17918,15 @@ static void translate_trisadj_uint2uint_last2last_prenable(
   }
 }
 static void translate_tristripadj_uint2uint_last2last_prenable(
-    const void * _in,
+    const void * restrict _in,
     unsigned start,
     unsigned in_nr,
     unsigned out_nr,
     unsigned restart_index,
-    void *_out )
+    void * restrict _out )
 {
-  const uint*in = (const uint*)_in;
-  uint *out = (uint*)_out;
+  const uint* restrict in = (const uint* restrict)_in;
+  uint * restrict out = (uint* restrict)_out;
   unsigned i, j;
   (void)j;
   for (i = start, j = 0; j < out_nr; i+=2, j+=6) { 

@@ -4332,10 +4332,8 @@ void __indirect_glDeleteTextures(GLsizei n, const GLuint * textures)
 #define X_GLvop_DeleteTexturesEXT 12
 void glDeleteTexturesEXT(GLsizei n, const GLuint * textures)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLDELETETEXTURESEXTPROC p =
             (PFNGLDELETETEXTURESEXTPROC) disp_table[327];
@@ -4396,10 +4394,8 @@ void __indirect_glGenTextures(GLsizei n, GLuint * textures)
 #define X_GLvop_GenTexturesEXT 13
 void glGenTexturesEXT(GLsizei n, GLuint * textures)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGENTEXTURESEXTPROC p =
             (PFNGLGENTEXTURESEXTPROC) disp_table[328];
@@ -4453,10 +4449,8 @@ GLboolean __indirect_glIsTexture(GLuint texture)
 #define X_GLvop_IsTextureEXT 14
 GLboolean glIsTextureEXT(GLuint texture)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLISTEXTUREEXTPROC p =
             (PFNGLISTEXTUREEXTPROC) disp_table[330];
@@ -4720,10 +4714,8 @@ void __indirect_glGetColorTable(GLenum target, GLenum format, GLenum type, GLvoi
 #define X_GLvop_GetColorTableSGI 4098
 void gl_dispatch_stub_343(GLenum target, GLenum format, GLenum type, GLvoid * table)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCOLORTABLESGIPROC p =
             (PFNGLGETCOLORTABLESGIPROC) disp_table[343];
@@ -4783,10 +4775,8 @@ void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat 
 #define X_GLvop_GetColorTableParameterfvSGI 4099
 void gl_dispatch_stub_344(GLenum target, GLenum pname, GLfloat * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCOLORTABLEPARAMETERFVSGIPROC p =
             (PFNGLGETCOLORTABLEPARAMETERFVSGIPROC) disp_table[344];
@@ -4842,10 +4832,8 @@ void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint * 
 #define X_GLvop_GetColorTableParameterivSGI 4100
 void gl_dispatch_stub_345(GLenum target, GLenum pname, GLint * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCOLORTABLEPARAMETERIVSGIPROC p =
             (PFNGLGETCOLORTABLEPARAMETERIVSGIPROC) disp_table[345];
@@ -5113,10 +5101,8 @@ void __indirect_glGetConvolutionFilter(GLenum target, GLenum format, GLenum type
 #define X_GLvop_GetConvolutionFilterEXT 1
 void gl_dispatch_stub_356(GLenum target, GLenum format, GLenum type, GLvoid * image)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCONVOLUTIONFILTEREXTPROC p =
             (PFNGLGETCONVOLUTIONFILTEREXTPROC) disp_table[356];
@@ -5176,10 +5162,8 @@ void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat
 #define X_GLvop_GetConvolutionParameterfvEXT 2
 void gl_dispatch_stub_357(GLenum target, GLenum pname, GLfloat * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCONVOLUTIONPARAMETERFVEXTPROC p =
             (PFNGLGETCONVOLUTIONPARAMETERFVEXTPROC) disp_table[357];
@@ -5235,10 +5219,8 @@ void __indirect_glGetConvolutionParameteriv(GLenum target, GLenum pname, GLint *
 #define X_GLvop_GetConvolutionParameterivEXT 3
 void gl_dispatch_stub_358(GLenum target, GLenum pname, GLint * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETCONVOLUTIONPARAMETERIVEXTPROC p =
             (PFNGLGETCONVOLUTIONPARAMETERIVEXTPROC) disp_table[358];
@@ -5294,10 +5276,8 @@ void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GL
 #define X_GLvop_GetHistogramEXT 5
 void gl_dispatch_stub_361(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETHISTOGRAMEXTPROC p =
             (PFNGLGETHISTOGRAMEXTPROC) disp_table[361];
@@ -5358,10 +5338,8 @@ void __indirect_glGetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *
 #define X_GLvop_GetHistogramParameterfvEXT 6
 void gl_dispatch_stub_362(GLenum target, GLenum pname, GLfloat * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETHISTOGRAMPARAMETERFVEXTPROC p =
             (PFNGLGETHISTOGRAMPARAMETERFVEXTPROC) disp_table[362];
@@ -5417,10 +5395,8 @@ void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint * p
 #define X_GLvop_GetHistogramParameterivEXT 7
 void gl_dispatch_stub_363(GLenum target, GLenum pname, GLint * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETHISTOGRAMPARAMETERIVEXTPROC p =
             (PFNGLGETHISTOGRAMPARAMETERIVEXTPROC) disp_table[363];
@@ -5476,10 +5452,8 @@ void __indirect_glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenu
 #define X_GLvop_GetMinmaxEXT 8
 void gl_dispatch_stub_364(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETMINMAXEXTPROC p =
             (PFNGLGETMINMAXEXTPROC) disp_table[364];
@@ -5540,10 +5514,8 @@ void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * pa
 #define X_GLvop_GetMinmaxParameterfvEXT 9
 void gl_dispatch_stub_365(GLenum target, GLenum pname, GLfloat * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETMINMAXPARAMETERFVEXTPROC p =
             (PFNGLGETMINMAXPARAMETERFVEXTPROC) disp_table[365];
@@ -5599,10 +5571,8 @@ void __indirect_glGetMinmaxParameteriv(GLenum target, GLenum pname, GLint * para
 #define X_GLvop_GetMinmaxParameterivEXT 10
 void gl_dispatch_stub_366(GLenum target, GLenum pname, GLint * params)
 {
-    struct glx_context * const gc = __glXGetCurrentContext();
-
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (gc->isDirect) {
+    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
         const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
         PFNGLGETMINMAXPARAMETERIVEXTPROC p =
             (PFNGLGETMINMAXPARAMETERIVEXTPROC) disp_table[366];

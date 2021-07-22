@@ -79,6 +79,10 @@
 #error RETURN_DISPATCH must be defined
 #endif
 
+#ifdef MemoryBarrier
+#undef MemoryBarrier
+#endif
+
 
 #ifndef _GLAPI_SKIP_NORMAL_ENTRY_POINTS
 
@@ -8332,10 +8336,10 @@ KEYWORD1 void KEYWORD2 NAME(VertexAttribLFormat)(GLuint attribindex, GLint size,
    DISPATCH(VertexAttribLFormat, (attribindex, size, type, relativeoffset), (F, "glVertexAttribLFormat(%d, %d, 0x%x, %d);\n", attribindex, size, type, relativeoffset));
 }
 
-KEYWORD1 void KEYWORD2 NAME(VertexBindingDivisor)(GLuint attribindex, GLuint divisor)
+KEYWORD1 void KEYWORD2 NAME(VertexBindingDivisor)(GLuint bindingindex, GLuint divisor)
 {
-    (void) attribindex; (void) divisor;
-   DISPATCH(VertexBindingDivisor, (attribindex, divisor), (F, "glVertexBindingDivisor(%d, %d);\n", attribindex, divisor));
+    (void) bindingindex; (void) divisor;
+   DISPATCH(VertexBindingDivisor, (bindingindex, divisor), (F, "glVertexBindingDivisor(%d, %d);\n", bindingindex, divisor));
 }
 
 KEYWORD1 void KEYWORD2 NAME(FramebufferParameteri)(GLenum target, GLenum pname, GLint param)
@@ -14648,12 +14652,12 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1596)(GLuint vaobj, GLuint attrib
    DISPATCH(VertexArrayVertexAttribBindingEXT, (vaobj, attribindex, bindingindex), (F, "glVertexArrayVertexAttribBindingEXT(%d, %d, %d);\n", vaobj, attribindex, bindingindex));
 }
 
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1597)(GLuint vaobj, GLuint attribindex, GLuint divisor);
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1597)(GLuint vaobj, GLuint bindingindex, GLuint divisor);
 
-KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1597)(GLuint vaobj, GLuint attribindex, GLuint divisor)
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1597)(GLuint vaobj, GLuint bindingindex, GLuint divisor)
 {
-    (void) vaobj; (void) attribindex; (void) divisor;
-   DISPATCH(VertexArrayVertexBindingDivisorEXT, (vaobj, attribindex, divisor), (F, "glVertexArrayVertexBindingDivisorEXT(%d, %d, %d);\n", vaobj, attribindex, divisor));
+    (void) vaobj; (void) bindingindex; (void) divisor;
+   DISPATCH(VertexArrayVertexBindingDivisorEXT, (vaobj, bindingindex, divisor), (F, "glVertexArrayVertexBindingDivisorEXT(%d, %d, %d);\n", vaobj, bindingindex, divisor));
 }
 
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1598)(GLuint buffer, GLintptr offset, GLsizeiptr size, GLboolean commit);
@@ -14726,6 +14730,398 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1606)(GLuint texture, GLvoid * im
 {
     (void) texture; (void) image; (void) attrib_list;
    DISPATCH(EGLImageTargetTextureStorageEXT, (texture, image, attrib_list), (F, "glEGLImageTargetTextureStorageEXT(%d, %p, %p);\n", texture, (const void *) image, (const void *) attrib_list));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1607)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1607)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth)
+{
+    (void) srcName; (void) srcTarget; (void) srcLevel; (void) srcX; (void) srcY; (void) srcZ; (void) dstName; (void) dstTarget; (void) dstLevel; (void) dstX; (void) dstY; (void) dstZ; (void) width; (void) height; (void) depth;
+   DISPATCH(CopyImageSubDataNV, (srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth), (F, "glCopyImageSubDataNV(%d, 0x%x, %d, %d, %d, %d, %d, 0x%x, %d, %d, %d, %d, %d, %d, %d);\n", srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1608)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1608)(GLuint index, GLenum swizzlex, GLenum swizzley, GLenum swizzlez, GLenum swizzlew)
+{
+    (void) index; (void) swizzlex; (void) swizzley; (void) swizzlez; (void) swizzlew;
+   DISPATCH(ViewportSwizzleNV, (index, swizzlex, swizzley, swizzlez, swizzlew), (F, "glViewportSwizzleNV(%d, 0x%x, 0x%x, 0x%x, 0x%x);\n", index, swizzlex, swizzley, swizzlez, swizzlew));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1609)(GLenum mode);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1609)(GLenum mode)
+{
+    (void) mode;
+   DISPATCH(AlphaToCoverageDitherControlNV, (mode), (F, "glAlphaToCoverageDitherControlNV(0x%x);\n", mode));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1610)(GLintptr srcBuffer, GLuint srcOffset, GLuint dstTargetOrName, GLintptr dstOffset, GLsizeiptr size, GLboolean named, GLboolean ext_dsa);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1610)(GLintptr srcBuffer, GLuint srcOffset, GLuint dstTargetOrName, GLintptr dstOffset, GLsizeiptr size, GLboolean named, GLboolean ext_dsa)
+{
+    (void) srcBuffer; (void) srcOffset; (void) dstTargetOrName; (void) dstOffset; (void) size; (void) named; (void) ext_dsa;
+   DISPATCH(InternalBufferSubDataCopyMESA, (srcBuffer, srcOffset, dstTargetOrName, dstOffset, size, named, ext_dsa), (F, "glInternalBufferSubDataCopyMESA(%d, %d, %d, %d, %d, %d, %d);\n", srcBuffer, srcOffset, dstTargetOrName, dstOffset, size, named, ext_dsa));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1611)(GLhalfNV x, GLhalfNV y);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1611)(GLhalfNV x, GLhalfNV y)
+{
+    (void) x; (void) y;
+   DISPATCH(Vertex2hNV, (x, y), (F, "glVertex2hNV(%f, %f);\n", x, y));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1612)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1612)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Vertex2hvNV, (v), (F, "glVertex2hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1613)(GLhalfNV x, GLhalfNV y, GLhalfNV z);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1613)(GLhalfNV x, GLhalfNV y, GLhalfNV z)
+{
+    (void) x; (void) y; (void) z;
+   DISPATCH(Vertex3hNV, (x, y, z), (F, "glVertex3hNV(%f, %f, %f);\n", x, y, z));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1614)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1614)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Vertex3hvNV, (v), (F, "glVertex3hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1615)(GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1615)(GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w)
+{
+    (void) x; (void) y; (void) z; (void) w;
+   DISPATCH(Vertex4hNV, (x, y, z, w), (F, "glVertex4hNV(%f, %f, %f, %f);\n", x, y, z, w));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1616)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1616)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Vertex4hvNV, (v), (F, "glVertex4hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1617)(GLhalfNV nx, GLhalfNV ny, GLhalfNV nz);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1617)(GLhalfNV nx, GLhalfNV ny, GLhalfNV nz)
+{
+    (void) nx; (void) ny; (void) nz;
+   DISPATCH(Normal3hNV, (nx, ny, nz), (F, "glNormal3hNV(%f, %f, %f);\n", nx, ny, nz));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1618)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1618)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Normal3hvNV, (v), (F, "glNormal3hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1619)(GLhalfNV red, GLhalfNV green, GLhalfNV blue);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1619)(GLhalfNV red, GLhalfNV green, GLhalfNV blue)
+{
+    (void) red; (void) green; (void) blue;
+   DISPATCH(Color3hNV, (red, green, blue), (F, "glColor3hNV(%f, %f, %f);\n", red, green, blue));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1620)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1620)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Color3hvNV, (v), (F, "glColor3hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1621)(GLhalfNV red, GLhalfNV green, GLhalfNV blue, GLhalfNV alpha);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1621)(GLhalfNV red, GLhalfNV green, GLhalfNV blue, GLhalfNV alpha)
+{
+    (void) red; (void) green; (void) blue; (void) alpha;
+   DISPATCH(Color4hNV, (red, green, blue, alpha), (F, "glColor4hNV(%f, %f, %f, %f);\n", red, green, blue, alpha));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1622)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1622)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(Color4hvNV, (v), (F, "glColor4hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1623)(GLhalfNV s);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1623)(GLhalfNV s)
+{
+    (void) s;
+   DISPATCH(TexCoord1hNV, (s), (F, "glTexCoord1hNV(%f);\n", s));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1624)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1624)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(TexCoord1hvNV, (v), (F, "glTexCoord1hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1625)(GLhalfNV s, GLhalfNV t);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1625)(GLhalfNV s, GLhalfNV t)
+{
+    (void) s; (void) t;
+   DISPATCH(TexCoord2hNV, (s, t), (F, "glTexCoord2hNV(%f, %f);\n", s, t));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1626)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1626)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(TexCoord2hvNV, (v), (F, "glTexCoord2hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1627)(GLhalfNV s, GLhalfNV t, GLhalfNV r);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1627)(GLhalfNV s, GLhalfNV t, GLhalfNV r)
+{
+    (void) s; (void) t; (void) r;
+   DISPATCH(TexCoord3hNV, (s, t, r), (F, "glTexCoord3hNV(%f, %f, %f);\n", s, t, r));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1628)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1628)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(TexCoord3hvNV, (v), (F, "glTexCoord3hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1629)(GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1629)(GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q)
+{
+    (void) s; (void) t; (void) r; (void) q;
+   DISPATCH(TexCoord4hNV, (s, t, r, q), (F, "glTexCoord4hNV(%f, %f, %f, %f);\n", s, t, r, q));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1630)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1630)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(TexCoord4hvNV, (v), (F, "glTexCoord4hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1631)(GLenum target, GLhalfNV s);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1631)(GLenum target, GLhalfNV s)
+{
+    (void) target; (void) s;
+   DISPATCH(MultiTexCoord1hNV, (target, s), (F, "glMultiTexCoord1hNV(0x%x, %f);\n", target, s));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1632)(GLenum target, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1632)(GLenum target, const GLhalfNV * v)
+{
+    (void) target; (void) v;
+   DISPATCH(MultiTexCoord1hvNV, (target, v), (F, "glMultiTexCoord1hvNV(0x%x, %p);\n", target, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1633)(GLenum target, GLhalfNV s, GLhalfNV t);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1633)(GLenum target, GLhalfNV s, GLhalfNV t)
+{
+    (void) target; (void) s; (void) t;
+   DISPATCH(MultiTexCoord2hNV, (target, s, t), (F, "glMultiTexCoord2hNV(0x%x, %f, %f);\n", target, s, t));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1634)(GLenum target, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1634)(GLenum target, const GLhalfNV * v)
+{
+    (void) target; (void) v;
+   DISPATCH(MultiTexCoord2hvNV, (target, v), (F, "glMultiTexCoord2hvNV(0x%x, %p);\n", target, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1635)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1635)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r)
+{
+    (void) target; (void) s; (void) t; (void) r;
+   DISPATCH(MultiTexCoord3hNV, (target, s, t, r), (F, "glMultiTexCoord3hNV(0x%x, %f, %f, %f);\n", target, s, t, r));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1636)(GLenum target, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1636)(GLenum target, const GLhalfNV * v)
+{
+    (void) target; (void) v;
+   DISPATCH(MultiTexCoord3hvNV, (target, v), (F, "glMultiTexCoord3hvNV(0x%x, %p);\n", target, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1637)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1637)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q)
+{
+    (void) target; (void) s; (void) t; (void) r; (void) q;
+   DISPATCH(MultiTexCoord4hNV, (target, s, t, r, q), (F, "glMultiTexCoord4hNV(0x%x, %f, %f, %f, %f);\n", target, s, t, r, q));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1638)(GLenum target, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1638)(GLenum target, const GLhalfNV * v)
+{
+    (void) target; (void) v;
+   DISPATCH(MultiTexCoord4hvNV, (target, v), (F, "glMultiTexCoord4hvNV(0x%x, %p);\n", target, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1639)(GLhalfNV x);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1639)(GLhalfNV x)
+{
+    (void) x;
+   DISPATCH(FogCoordhNV, (x), (F, "glFogCoordhNV(%f);\n", x));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1640)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1640)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(FogCoordhvNV, (v), (F, "glFogCoordhvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1641)(GLhalfNV red, GLhalfNV green, GLhalfNV blue);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1641)(GLhalfNV red, GLhalfNV green, GLhalfNV blue)
+{
+    (void) red; (void) green; (void) blue;
+   DISPATCH(SecondaryColor3hNV, (red, green, blue), (F, "glSecondaryColor3hNV(%f, %f, %f);\n", red, green, blue));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1642)(const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1642)(const GLhalfNV * v)
+{
+    (void) v;
+   DISPATCH(SecondaryColor3hvNV, (v), (F, "glSecondaryColor3hvNV(%p);\n", (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1643)(GLenum error);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1643)(GLenum error)
+{
+    (void) error;
+   DISPATCH(InternalSetError, (error), (F, "glInternalSetError(0x%x);\n", error));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1644)(GLuint index, GLhalfNV x);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1644)(GLuint index, GLhalfNV x)
+{
+    (void) index; (void) x;
+   DISPATCH(VertexAttrib1hNV, (index, x), (F, "glVertexAttrib1hNV(%d, %f);\n", index, x));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1645)(GLuint index, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1645)(GLuint index, const GLhalfNV * v)
+{
+    (void) index; (void) v;
+   DISPATCH(VertexAttrib1hvNV, (index, v), (F, "glVertexAttrib1hvNV(%d, %p);\n", index, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1646)(GLuint index, GLhalfNV x, GLhalfNV y);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1646)(GLuint index, GLhalfNV x, GLhalfNV y)
+{
+    (void) index; (void) x; (void) y;
+   DISPATCH(VertexAttrib2hNV, (index, x, y), (F, "glVertexAttrib2hNV(%d, %f, %f);\n", index, x, y));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1647)(GLuint index, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1647)(GLuint index, const GLhalfNV * v)
+{
+    (void) index; (void) v;
+   DISPATCH(VertexAttrib2hvNV, (index, v), (F, "glVertexAttrib2hvNV(%d, %p);\n", index, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1648)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1648)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z)
+{
+    (void) index; (void) x; (void) y; (void) z;
+   DISPATCH(VertexAttrib3hNV, (index, x, y, z), (F, "glVertexAttrib3hNV(%d, %f, %f, %f);\n", index, x, y, z));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1649)(GLuint index, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1649)(GLuint index, const GLhalfNV * v)
+{
+    (void) index; (void) v;
+   DISPATCH(VertexAttrib3hvNV, (index, v), (F, "glVertexAttrib3hvNV(%d, %p);\n", index, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1650)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1650)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w)
+{
+    (void) index; (void) x; (void) y; (void) z; (void) w;
+   DISPATCH(VertexAttrib4hNV, (index, x, y, z, w), (F, "glVertexAttrib4hNV(%d, %f, %f, %f, %f);\n", index, x, y, z, w));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1651)(GLuint index, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1651)(GLuint index, const GLhalfNV * v)
+{
+    (void) index; (void) v;
+   DISPATCH(VertexAttrib4hvNV, (index, v), (F, "glVertexAttrib4hvNV(%d, %p);\n", index, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1652)(GLuint index, GLsizei n, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1652)(GLuint index, GLsizei n, const GLhalfNV * v)
+{
+    (void) index; (void) n; (void) v;
+   DISPATCH(VertexAttribs1hvNV, (index, n, v), (F, "glVertexAttribs1hvNV(%d, %d, %p);\n", index, n, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1653)(GLuint index, GLsizei n, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1653)(GLuint index, GLsizei n, const GLhalfNV * v)
+{
+    (void) index; (void) n; (void) v;
+   DISPATCH(VertexAttribs2hvNV, (index, n, v), (F, "glVertexAttribs2hvNV(%d, %d, %p);\n", index, n, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1654)(GLuint index, GLsizei n, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1654)(GLuint index, GLsizei n, const GLhalfNV * v)
+{
+    (void) index; (void) n; (void) v;
+   DISPATCH(VertexAttribs3hvNV, (index, n, v), (F, "glVertexAttribs3hvNV(%d, %d, %p);\n", index, n, (const void *) v));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1655)(GLuint index, GLsizei n, const GLhalfNV * v);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1655)(GLuint index, GLsizei n, const GLhalfNV * v)
+{
+    (void) index; (void) n; (void) v;
+   DISPATCH(VertexAttribs4hvNV, (index, n, v), (F, "glVertexAttribs4hvNV(%d, %d, %p);\n", index, n, (const void *) v));
 }
 
 
@@ -16490,6 +16886,55 @@ _glapi_proc DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_1604),
    TABLE_ENTRY(_dispatch_stub_1605),
    TABLE_ENTRY(_dispatch_stub_1606),
+   TABLE_ENTRY(_dispatch_stub_1607),
+   TABLE_ENTRY(_dispatch_stub_1608),
+   TABLE_ENTRY(_dispatch_stub_1609),
+   TABLE_ENTRY(_dispatch_stub_1610),
+   TABLE_ENTRY(_dispatch_stub_1611),
+   TABLE_ENTRY(_dispatch_stub_1612),
+   TABLE_ENTRY(_dispatch_stub_1613),
+   TABLE_ENTRY(_dispatch_stub_1614),
+   TABLE_ENTRY(_dispatch_stub_1615),
+   TABLE_ENTRY(_dispatch_stub_1616),
+   TABLE_ENTRY(_dispatch_stub_1617),
+   TABLE_ENTRY(_dispatch_stub_1618),
+   TABLE_ENTRY(_dispatch_stub_1619),
+   TABLE_ENTRY(_dispatch_stub_1620),
+   TABLE_ENTRY(_dispatch_stub_1621),
+   TABLE_ENTRY(_dispatch_stub_1622),
+   TABLE_ENTRY(_dispatch_stub_1623),
+   TABLE_ENTRY(_dispatch_stub_1624),
+   TABLE_ENTRY(_dispatch_stub_1625),
+   TABLE_ENTRY(_dispatch_stub_1626),
+   TABLE_ENTRY(_dispatch_stub_1627),
+   TABLE_ENTRY(_dispatch_stub_1628),
+   TABLE_ENTRY(_dispatch_stub_1629),
+   TABLE_ENTRY(_dispatch_stub_1630),
+   TABLE_ENTRY(_dispatch_stub_1631),
+   TABLE_ENTRY(_dispatch_stub_1632),
+   TABLE_ENTRY(_dispatch_stub_1633),
+   TABLE_ENTRY(_dispatch_stub_1634),
+   TABLE_ENTRY(_dispatch_stub_1635),
+   TABLE_ENTRY(_dispatch_stub_1636),
+   TABLE_ENTRY(_dispatch_stub_1637),
+   TABLE_ENTRY(_dispatch_stub_1638),
+   TABLE_ENTRY(_dispatch_stub_1639),
+   TABLE_ENTRY(_dispatch_stub_1640),
+   TABLE_ENTRY(_dispatch_stub_1641),
+   TABLE_ENTRY(_dispatch_stub_1642),
+   TABLE_ENTRY(_dispatch_stub_1643),
+   TABLE_ENTRY(_dispatch_stub_1644),
+   TABLE_ENTRY(_dispatch_stub_1645),
+   TABLE_ENTRY(_dispatch_stub_1646),
+   TABLE_ENTRY(_dispatch_stub_1647),
+   TABLE_ENTRY(_dispatch_stub_1648),
+   TABLE_ENTRY(_dispatch_stub_1649),
+   TABLE_ENTRY(_dispatch_stub_1650),
+   TABLE_ENTRY(_dispatch_stub_1651),
+   TABLE_ENTRY(_dispatch_stub_1652),
+   TABLE_ENTRY(_dispatch_stub_1653),
+   TABLE_ENTRY(_dispatch_stub_1654),
+   TABLE_ENTRY(_dispatch_stub_1655),
    /* A whole bunch of no-op functions.  These might be called
     * when someone tries to call a dynamically-registered
     * extension function without a current rendering context.

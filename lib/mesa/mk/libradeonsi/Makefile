@@ -1,11 +1,10 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	radeonsi
 
 NOPROFILE=
 
-SRCS=	cik_sdma.c \
-	gfx10_query.c \
+SRCS=	gfx10_query.c \
 	gfx10_shader_ngg.c \
 	si_blit.c \
 	si_buffer.c \
@@ -14,9 +13,9 @@ SRCS=	cik_sdma.c \
 	si_compute_prim_discard.c \
 	si_compute_blit.c \
 	si_cp_dma.c \
+	si_cp_reg_shadowing.c \
 	si_debug.c \
 	si_descriptors.c \
-	si_dma_cs.c \
 	si_fence.c \
 	si_get.c \
 	si_gfx_cs.c \
@@ -33,21 +32,24 @@ SRCS=	cik_sdma.c \
 	si_shader_llvm_tess.c \
 	si_shader_llvm_vs.c \
 	si_shader_nir.c \
+	si_shaderlib_nir.c \
 	si_shaderlib_tgsi.c \
+	si_sqtt.c \
 	si_state.c \
 	si_state_binning.c \
-	si_state_draw.c \
+	si_state_draw.cpp \
 	si_state_msaa.c \
 	si_state_shaders.c \
 	si_state_streamout.c \
 	si_state_viewport.c \
-	si_test_dma.c \
+	si_test_blit.c \
 	si_test_dma_perf.c \
 	si_texture.c \
 	si_uvd.c \
 	radeon_uvd.c \
 	radeon_vcn_enc_1_2.c \
 	radeon_vcn_enc_2_0.c \
+	radeon_vcn_enc_3_0.c \
 	radeon_vcn_enc.c \
 	radeon_vcn_dec_jpeg.c \
 	radeon_vcn_dec.c \

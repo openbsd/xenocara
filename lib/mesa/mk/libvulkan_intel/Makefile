@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -18,6 +18,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/intel/vulkan \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
+		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
@@ -49,21 +50,20 @@ beforeinstall:
 SLIBS=	libintel_compiler \
 	libintel_dev \
 	libisl \
-	libisl_gen40 \
-	libisl_gen50 \
-	libisl_gen60 \
-	libisl_gen70 \
-	libisl_gen75 \
-	libisl_gen80 \
-	libisl_gen90 \
-	libisl_gen100 \
-	libisl_gen110 \
-	libisl_gen120 \
+	libisl_gfx40 \
+	libisl_gfx50 \
+	libisl_gfx60 \
+	libisl_gfx70 \
+	libisl_gfx75 \
+	libisl_gfx80 \
+	libisl_gfx90 \
+	libisl_gfx110 \
+	libisl_gfx120 \
+	libisl_gfx125 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libblorp \
 	libvulkan_wsi \
-	libvulkan_util \
 	libxmlconfig \
 	libmesa_util \
 	libmesa_format \
@@ -76,9 +76,10 @@ LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libanv_common/${__objdir}/libanv_common.a
-.for gen in 70 75 80 90 100 110 120
+.for gen in 70 75 80 90 110 120 125
 LDADD+=		${.CURDIR}/../libanv_gen${gen}/${__objdir}/libanv_gen${gen}.a
 .endfor
+LDADD+=		${.CURDIR}/../libvulkan_util/${__objdir}/libvulkan_util.a
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}

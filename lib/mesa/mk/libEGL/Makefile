@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:08 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -11,7 +11,6 @@ SRCS=	eglapi.c \
 	eglcurrent.c \
 	egldevice.c \
 	egldisplay.c \
-	egldriver.c \
 	eglglobals.c \
 	eglimage.c \
 	egllog.c \
@@ -22,6 +21,7 @@ SRCS=	eglapi.c \
 SRCS+=	egl_dri2.c \
 	platform_device.c \
 	platform_drm.c \
+	platform_surfaceless.c \
 	platform_x11.c
 .endif
 

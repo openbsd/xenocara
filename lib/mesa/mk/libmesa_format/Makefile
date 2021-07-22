@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	mesa_format
 
@@ -7,6 +7,7 @@ NOPROFILE=
 SRCS=	u_format.c \
 	u_format_bptc.c \
 	u_format_etc.c \
+	u_format_fxt1.c \
 	u_format_latc.c \
 	u_format_other.c \
 	u_format_rgtc.c \
@@ -23,7 +24,9 @@ CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/util/format \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
-		-I${MESA_SRC}/src/mesa
+		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/generated/src \
+		-I${MESA_SRC}/generated/src/util/format
 
 install:
 

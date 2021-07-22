@@ -1,22 +1,29 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
 
 LIB=	i965
 
 NOPROFILE=
 
-SRCS=	brw_binding_tables.c \
+SRCS=	brw_batch.c \
+	brw_binding_tables.c \
+	brw_blit.c \
 	brw_blorp.c \
+	brw_buffer_objects.c \
+	brw_buffers.c \
 	brw_bufmgr.c \
 	brw_clear.c \
 	brw_clip.c \
 	brw_compute.c \
 	brw_conditional_render.c \
 	brw_context.c \
+	brw_copy_image.c \
 	brw_cs.c \
 	brw_curbe.c \
 	brw_disk_cache.c \
 	brw_draw.c \
 	brw_draw_upload.c \
+	brw_extensions.c \
+	brw_fbo.c \
 	brw_ff_gs.c \
 	brw_ff_gs_emit.c \
 	brw_formatquery.c \
@@ -25,18 +32,26 @@ SRCS=	brw_binding_tables.c \
 	brw_gs_surface_state.c \
 	brw_link.cpp \
 	brw_meta_util.c \
+	brw_mipmap_tree.c \
 	brw_misc_state.c \
 	brw_nir_uniforms.cpp \
 	brw_object_purgeable.c \
-	brw_pipe_control.c \
 	brw_performance_query.c \
+	brw_pipe_control.c \
+	brw_pixel.c \
+	brw_pixel_bitmap.c \
+	brw_pixel_copy.c \
+	brw_pixel_draw.c \
+	brw_pixel_read.c \
+	brw_primitive_restart.c \
 	brw_program.c \
 	brw_program_binary.c \
 	brw_program_cache.c \
-	brw_primitive_restart.c \
 	brw_queryobj.c \
 	brw_reset.c \
+	brw_screen.c \
 	brw_sf.c \
+	brw_state.c \
 	brw_state_upload.c \
 	brw_surface_formats.c \
 	brw_sync.c \
@@ -44,46 +59,31 @@ SRCS=	brw_binding_tables.c \
 	brw_tcs_surface_state.c \
 	brw_tes.c \
 	brw_tes_surface_state.c \
+	brw_tex.c \
+	brw_tex_copy.c \
+	brw_tex_image.c \
+	brw_tex_validate.c \
+	brw_upload.c \
 	brw_urb.c \
 	brw_util.c \
 	brw_vs.c \
 	brw_vs_surface_state.c \
 	brw_wm.c \
 	brw_wm_surface_state.c \
-	gen6_clip_state.c \
-	gen6_constant_state.c \
-	gen6_multisample_state.c \
-	gen6_queryobj.c \
-	gen6_sampler_state.c \
-	gen6_sol.c \
-	gen6_urb.c \
-	gen7_l3_state.c \
-	gen7_sol_state.c \
-	gen7_urb.c \
-	gen8_depth_state.c \
-	gen8_multisample_state.c \
+	gfx6_clip_state.c \
+	gfx6_constant_state.c \
+	gfx6_multisample_state.c \
+	gfx6_queryobj.c \
+	gfx6_sampler_state.c \
+	gfx6_sol.c \
+	gfx6_urb.c \
+	gfx7_l3_state.c \
+	gfx7_sol_state.c \
+	gfx7_urb.c \
+	gfx8_depth_state.c \
+	gfx8_multisample_state.c \
 	hsw_queryobj.c \
-	hsw_sol.c \
-	intel_batchbuffer.c \
-	intel_blit.c \
-	intel_buffer_objects.c \
-	intel_buffers.c \
-	intel_copy_image.c \
-	intel_extensions.c \
-	intel_fbo.c \
-	intel_mipmap_tree.c \
-	intel_pixel_bitmap.c \
-	intel_pixel.c \
-	intel_pixel_copy.c \
-	intel_pixel_draw.c \
-	intel_pixel_read.c \
-	intel_screen.c \
-	intel_state.c \
-	intel_tex.c \
-	intel_tex_copy.c \
-	intel_tex_image.c \
-	intel_tex_validate.c \
-	intel_upload.c
+	hsw_sol.c
 
 .include "../Makefile.inc"
 

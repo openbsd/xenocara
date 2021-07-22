@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	mesa_util
 
@@ -8,14 +8,20 @@ SRCS=	anon_file.c \
 	bitscan.c \
 	blob.c \
 	build_id.c \
+	compress.c \
 	crc32.c \
 	dag.c \
 	debug.c \
 	disk_cache.c \
+	disk_cache_os.c \
 	double.c \
 	fast_idiv_by_const.c \
+	fossilize_db.c \
 	half_float.c \
 	hash_table.c \
+	u_idalloc.c \
+	log.c \
+	memstream.c \
 	mesa-sha1.c \
 	os_file.c \
 	os_misc.c \
@@ -35,6 +41,7 @@ SRCS=	anon_file.c \
 	strtod.c \
 	u_atomic.c \
 	u_cpu_detect.c \
+	u_printf.cpp \
 	u_debug.c \
 	u_debug_memory.c \
 	u_math.c \
@@ -43,6 +50,9 @@ SRCS=	anon_file.c \
 	u_queue.c \
 	u_vector.c \
 	vma.c
+
+SRCS+=	u_debug_stack.c \
+	u_debug_symbol.c
 
 SRCS+=	format_srgb.c
 

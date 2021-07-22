@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
 
 LIB=	anv_common
 
@@ -10,14 +10,14 @@ SRCS=	anv_allocator.c \
 	anv_cmd_buffer.c \
 	anv_descriptor_set.c \
 	anv_device.c \
-	anv_dump.c \
 	anv_formats.c \
 	anv_image.c \
-	anv_intel.c \
+	anv_measure.c \
 	anv_nir_add_base_work_group_id.c \
 	anv_nir_apply_pipeline_layout.c \
 	anv_nir_compute_push_layout.c \
 	anv_nir_lower_multiview.c \
+	anv_nir_lower_ubo_loads.c \
 	anv_nir_lower_ycbcr_textures.c \
 	anv_pass.c \
 	anv_perf.c \
@@ -27,8 +27,11 @@ SRCS=	anv_allocator.c \
 	anv_util.c \
 	anv_wsi.c
 
-SRCS+=	anv_entrypoints.c \
-	anv_extensions.c
+SRCS+=	anv_wsi_x11.c \
+	anv_wsi_display.c \
+	anv_android_stubs.c
+
+SRCS+=	anv_entrypoints.c
 
 .include "../Makefile.inc"
 

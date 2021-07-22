@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:11 jsg Exp $
 
 LIB=	isl
 
 NOPROFILE=
 
 SRCS=	isl.c \
+	isl_aux_info.c \
 	isl_drm.c \
 	isl_format.c \
 	isl_storage_image.c

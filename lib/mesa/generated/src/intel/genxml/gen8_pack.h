@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GEN8_PACK_H
-#define GEN8_PACK_H
+#ifndef GFX8_PACK_H
+#define GFX8_PACK_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -40,8 +40,8 @@
 #define __gen_validate_value(x)
 #endif
 
-#ifndef __gen_field_functions
-#define __gen_field_functions
+#ifndef __intel_field_functions
+#define __intel_field_functions
 
 #ifdef NDEBUG
 #define NDEBUG_UNUSED __attribute__((unused))
@@ -49,7 +49,7 @@
 #define NDEBUG_UNUSED
 #endif
 
-union __gen_value {
+union __intel_value {
    float f;
    uint32_t dw;
 };
@@ -109,11 +109,27 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
    return v;
 }
 
+static inline __attribute__((always_inline)) uint64_t
+__gen_address(__gen_user_data *data, void *location,
+              __gen_address_type address, uint32_t delta,
+              __attribute__((unused)) uint32_t start, uint32_t end)
+{
+   uint64_t addr_u64 = __gen_combine_address(data, location, address, delta);
+   if (end == 31) {
+      return addr_u64;
+   } else if (end < 63) {
+      const unsigned shift = 63 - end;
+      return (addr_u64 << shift) >> shift;
+   } else {
+      return addr_u64;
+   }
+}
+
 static inline __attribute__((always_inline)) uint32_t
 __gen_float(float v)
 {
    __gen_validate_value(v);
-   return ((union __gen_value) { .f = (v) }).dw;
+   return ((union __intel_value) { .f = (v) }).dw;
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -166,7 +182,7 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
 #endif
 
 
-enum GEN8_3D_Color_Buffer_Blend_Factor {
+enum GFX8_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_ONE                      =      1,
    BLENDFACTOR_SRC_COLOR                =      2,
    BLENDFACTOR_SRC_ALPHA                =      3,
@@ -188,7 +204,7 @@ enum GEN8_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_INV_SRC1_ALPHA           =     26,
 };
 
-enum GEN8_3D_Color_Buffer_Blend_Function {
+enum GFX8_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_ADD                    =      0,
    BLENDFUNCTION_SUBTRACT               =      1,
    BLENDFUNCTION_REVERSE_SUBTRACT       =      2,
@@ -196,7 +212,7 @@ enum GEN8_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_MAX                    =      4,
 };
 
-enum GEN8_3D_Compare_Function {
+enum GFX8_3D_Compare_Function {
    COMPAREFUNCTION_ALWAYS               =      0,
    COMPAREFUNCTION_NEVER                =      1,
    COMPAREFUNCTION_LESS                 =      2,
@@ -207,7 +223,7 @@ enum GEN8_3D_Compare_Function {
    COMPAREFUNCTION_GEQUAL               =      7,
 };
 
-enum GEN8_3D_Logic_Op_Function {
+enum GFX8_3D_Logic_Op_Function {
    LOGICOP_CLEAR                        =      0,
    LOGICOP_NOR                          =      1,
    LOGICOP_AND_INVERTED                 =      2,
@@ -226,7 +242,7 @@ enum GEN8_3D_Logic_Op_Function {
    LOGICOP_SET                          =     15,
 };
 
-enum GEN8_3D_Prim_Topo_Type {
+enum GFX8_3D_Prim_Topo_Type {
    _3DPRIM_POINTLIST                    =      1,
    _3DPRIM_LINELIST                     =      2,
    _3DPRIM_LINESTRIP                    =      3,
@@ -282,7 +298,7 @@ enum GEN8_3D_Prim_Topo_Type {
    _3DPRIM_PATCHLIST_32                 =     63,
 };
 
-enum GEN8_3D_Stencil_Operation {
+enum GFX8_3D_Stencil_Operation {
    STENCILOP_KEEP                       =      0,
    STENCILOP_ZERO                       =      1,
    STENCILOP_REPLACE                    =      2,
@@ -293,7 +309,7 @@ enum GEN8_3D_Stencil_Operation {
    STENCILOP_INVERT                     =      7,
 };
 
-enum GEN8_3D_Vertex_Component_Control {
+enum GFX8_3D_Vertex_Component_Control {
    VFCOMP_NOSTORE                       =      0,
    VFCOMP_STORE_SRC                     =      1,
    VFCOMP_STORE_0                       =      2,
@@ -302,12 +318,12 @@ enum GEN8_3D_Vertex_Component_Control {
    VFCOMP_STORE_PID                     =      7,
 };
 
-enum GEN8_ClearColor {
+enum GFX8_ClearColor {
    CC_ZERO                              =      0,
    CC_ONE                               =      1,
 };
 
-enum GEN8_ShaderChannelSelect {
+enum GFX8_ShaderChannelSelect {
    SCS_ZERO                             =      0,
    SCS_ONE                              =      1,
    SCS_RED                              =      4,
@@ -316,7 +332,7 @@ enum GEN8_ShaderChannelSelect {
    SCS_ALPHA                            =      7,
 };
 
-enum GEN8_TextureCoordinateMode {
+enum GFX8_TextureCoordinateMode {
    TCM_WRAP                             =      0,
    TCM_MIRROR                           =      1,
    TCM_CLAMP                            =      2,
@@ -326,7 +342,7 @@ enum GEN8_TextureCoordinateMode {
    TCM_HALF_BORDER                      =      6,
 };
 
-enum GEN8_WRAP_SHORTEST_ENABLE {
+enum GFX8_WRAP_SHORTEST_ENABLE {
    WSE_X                                =      1,
    WSE_Y                                =      2,
    WSE_XY                               =      3,
@@ -344,16 +360,16 @@ enum GEN8_WRAP_SHORTEST_ENABLE {
    WSE_XYZW                             =     15,
 };
 
-#define GEN8_3DSTATE_CONSTANT_BODY_length     10
-struct GEN8_3DSTATE_CONSTANT_BODY {
+#define GFX8_3DSTATE_CONSTANT_BODY_length     10
+struct GFX8_3DSTATE_CONSTANT_BODY {
    uint32_t                             ReadLength[4];
    __gen_address_type                   Buffer[4];
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_BODY * restrict values)
+                                __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_BODY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -366,36 +382,36 @@ GEN8_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ReadLength[3], 16, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->Buffer[0], 0);
+      __gen_address(data, &dw[2], values->Buffer[0], 0, 5, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->Buffer[1], 0);
+      __gen_address(data, &dw[4], values->Buffer[1], 0, 5, 63);
    dw[4] = v4_address;
    dw[5] = v4_address >> 32;
 
    const uint64_t v6_address =
-      __gen_combine_address(data, &dw[6], values->Buffer[2], 0);
+      __gen_address(data, &dw[6], values->Buffer[2], 0, 5, 63);
    dw[6] = v6_address;
    dw[7] = v6_address >> 32;
 
    const uint64_t v8_address =
-      __gen_combine_address(data, &dw[8], values->Buffer[3], 0);
+      __gen_address(data, &dw[8], values->Buffer[3], 0, 5, 63);
    dw[8] = v8_address;
    dw[9] = v8_address >> 32;
 }
 
-#define GEN8_BINDING_TABLE_EDIT_ENTRY_length      1
-struct GEN8_BINDING_TABLE_EDIT_ENTRY {
+#define GFX8_BINDING_TABLE_EDIT_ENTRY_length      1
+struct GFX8_BINDING_TABLE_EDIT_ENTRY {
    uint64_t                             SurfaceStatePointer;
    uint32_t                             BindingTableIndex;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BINDING_TABLE_EDIT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BINDING_TABLE_EDIT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                                    __attribute__((unused)) void * restrict dst,
-                                   __attribute__((unused)) const struct GEN8_BINDING_TABLE_EDIT_ENTRY * restrict values)
+                                   __attribute__((unused)) const struct GFX8_BINDING_TABLE_EDIT_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -404,15 +420,15 @@ GEN8_BINDING_TABLE_EDIT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data
       __gen_uint(values->BindingTableIndex, 16, 23);
 }
 
-#define GEN8_BINDING_TABLE_STATE_length        1
-struct GEN8_BINDING_TABLE_STATE {
+#define GFX8_BINDING_TABLE_STATE_length        1
+struct GFX8_BINDING_TABLE_STATE {
    uint64_t                             SurfaceStatePointer;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_BINDING_TABLE_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX8_BINDING_TABLE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -420,18 +436,18 @@ GEN8_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SurfaceStatePointer, 6, 31);
 }
 
-#define GEN8_BLEND_STATE_ENTRY_length          2
-struct GEN8_BLEND_STATE_ENTRY {
+#define GFX8_BLEND_STATE_ENTRY_length          2
+struct GFX8_BLEND_STATE_ENTRY {
    bool                                 WriteDisableBlue;
    bool                                 WriteDisableGreen;
    bool                                 WriteDisableRed;
    bool                                 WriteDisableAlpha;
-   enum GEN8_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
-   enum GEN8_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
-   enum GEN8_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
-   enum GEN8_3D_Color_Buffer_Blend_Function ColorBlendFunction;
-   enum GEN8_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
-   enum GEN8_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
+   enum GFX8_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
+   enum GFX8_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
+   enum GFX8_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
+   enum GFX8_3D_Color_Buffer_Blend_Function ColorBlendFunction;
+   enum GFX8_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
+   enum GFX8_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
    bool                                 ColorBufferBlendEnable;
    bool                                 PostBlendColorClampEnable;
    bool                                 PreBlendColorClampEnable;
@@ -440,14 +456,14 @@ struct GEN8_BLEND_STATE_ENTRY {
 #define COLORCLAMP_SNORM                         1
 #define COLORCLAMP_RTFORMAT                      2
    bool                                 PreBlendSourceOnlyClampEnable;
-   enum GEN8_3D_Logic_Op_Function       LogicOpFunction;
+   enum GFX8_3D_Logic_Op_Function       LogicOpFunction;
    bool                                 LogicOpEnable;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_BLEND_STATE_ENTRY * restrict values)
+                            __attribute__((unused)) const struct GFX8_BLEND_STATE_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -473,12 +489,12 @@ GEN8_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->LogicOpEnable, 31, 31);
 }
 
-#define GEN8_BLEND_STATE_length                1
-struct GEN8_BLEND_STATE {
+#define GFX8_BLEND_STATE_length                1
+struct GFX8_BLEND_STATE {
    uint32_t                             YDitherOffset;
    uint32_t                             XDitherOffset;
    bool                                 ColorDitherEnable;
-   enum GEN8_3D_Compare_Function        AlphaTestFunction;
+   enum GFX8_3D_Compare_Function        AlphaTestFunction;
    bool                                 AlphaTestEnable;
    bool                                 AlphaToCoverageDitherEnable;
    bool                                 AlphaToOneEnable;
@@ -488,9 +504,9 @@ struct GEN8_BLEND_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BLEND_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BLEND_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN8_BLEND_STATE * restrict values)
+                      __attribute__((unused)) const struct GFX8_BLEND_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -506,16 +522,16 @@ GEN8_BLEND_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AlphaToCoverageEnable, 31, 31);
 }
 
-#define GEN8_CC_VIEWPORT_length                2
-struct GEN8_CC_VIEWPORT {
+#define GFX8_CC_VIEWPORT_length                2
+struct GFX8_CC_VIEWPORT {
    float                                MinimumDepth;
    float                                MaximumDepth;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN8_CC_VIEWPORT * restrict values)
+                      __attribute__((unused)) const struct GFX8_CC_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -526,8 +542,8 @@ GEN8_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->MaximumDepth);
 }
 
-#define GEN8_COLOR_CALC_STATE_length           6
-struct GEN8_COLOR_CALC_STATE {
+#define GFX8_COLOR_CALC_STATE_length           6
+struct GFX8_COLOR_CALC_STATE {
    uint32_t                             AlphaTestFormat;
 #define ALPHATEST_UNORM8                         0
 #define ALPHATEST_FLOAT32                        1
@@ -543,9 +559,9 @@ struct GEN8_COLOR_CALC_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_COLOR_CALC_STATE * restrict values)
+                           __attribute__((unused)) const struct GFX8_COLOR_CALC_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -572,15 +588,15 @@ GEN8_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->BlendConstantColorAlpha);
 }
 
-#define GEN8_FILTER_COEFFICIENT_length         1
-struct GEN8_FILTER_COEFFICIENT {
+#define GFX8_FILTER_COEFFICIENT_length         1
+struct GFX8_FILTER_COEFFICIENT {
    float                                FilterCoefficient;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_FILTER_COEFFICIENT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_FILTER_COEFFICIENT_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN8_FILTER_COEFFICIENT * restrict values)
+                             __attribute__((unused)) const struct GFX8_FILTER_COEFFICIENT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -588,17 +604,17 @@ GEN8_FILTER_COEFFICIENT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sfixed(values->FilterCoefficient, 0, 7, 6);
 }
 
-#define GEN8_GATHER_CONSTANT_ENTRY_length      1
-struct GEN8_GATHER_CONSTANT_ENTRY {
+#define GFX8_GATHER_CONSTANT_ENTRY_length      1
+struct GFX8_GATHER_CONSTANT_ENTRY {
    uint32_t                             BindingTableIndexOffset;
    uint32_t                             ChannelMask;
    uint64_t                             ConstantBufferOffset;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GATHER_CONSTANT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GATHER_CONSTANT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_GATHER_CONSTANT_ENTRY * restrict values)
+                                __attribute__((unused)) const struct GFX8_GATHER_CONSTANT_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -608,8 +624,8 @@ GEN8_GATHER_CONSTANT_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->ConstantBufferOffset, 8, 15);
 }
 
-#define GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_length      3
-struct GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT {
+#define GFX8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_length      3
+struct GFX8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT {
    bool                                 MBErrorConcealmentPSliceWeightPredictionDisable;
    bool                                 MBErrorConcealmentPSliceMotionVectorsOverrideDisable;
    bool                                 MBErrorConcealmentBSpatialWeightPredictionDisable;
@@ -650,9 +666,9 @@ struct GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
                                                          __attribute__((unused)) void * restrict dst,
-                                                         __attribute__((unused)) const struct GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT * restrict values)
+                                                         __attribute__((unused)) const struct GFX8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -694,8 +710,8 @@ GEN8_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused))
       __gen_uint(values->ISliceConcealmentMode, 31, 31);
 }
 
-#define GEN8_INTERFACE_DESCRIPTOR_DATA_length      8
-struct GEN8_INTERFACE_DESCRIPTOR_DATA {
+#define GFX8_INTERFACE_DESCRIPTOR_DATA_length      8
+struct GFX8_INTERFACE_DESCRIPTOR_DATA {
    uint64_t                             KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
    bool                                 MaskStackExceptionEnable;
@@ -739,9 +755,9 @@ struct GEN8_INTERFACE_DESCRIPTOR_DATA {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN8_INTERFACE_DESCRIPTOR_DATA * restrict values)
+                                    __attribute__((unused)) const struct GFX8_INTERFACE_DESCRIPTOR_DATA * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -781,8 +797,8 @@ GEN8_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->CrossThreadConstantDataReadLength, 0, 7);
 }
 
-#define GEN8_MEMORYADDRESSATTRIBUTES_length      1
-struct GEN8_MEMORYADDRESSATTRIBUTES {
+#define GFX8_MEMORYADDRESSATTRIBUTES_length      1
+struct GFX8_MEMORYADDRESSATTRIBUTES {
    uint32_t                             AgeforQUADLRU;
    uint32_t                             TargetCache;
 #define eLLCOnly                                 0
@@ -793,9 +809,9 @@ struct GEN8_MEMORYADDRESSATTRIBUTES {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEMORYADDRESSATTRIBUTES_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEMORYADDRESSATTRIBUTES_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_MEMORYADDRESSATTRIBUTES * restrict values)
+                                  __attribute__((unused)) const struct GFX8_MEMORYADDRESSATTRIBUTES * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -805,8 +821,8 @@ GEN8_MEMORYADDRESSATTRIBUTES_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ArbitrationPriorityControl, 7, 8);
 }
 
-#define GEN8_MEMORY_OBJECT_CONTROL_STATE_length      1
-struct GEN8_MEMORY_OBJECT_CONTROL_STATE {
+#define GFX8_MEMORY_OBJECT_CONTROL_STATE_length      1
+struct GFX8_MEMORY_OBJECT_CONTROL_STATE {
    uint32_t                             AgeforQUADLRU;
    uint32_t                             TargetCache;
 #define eLLCOnlywheneDRAMispresentelsegetsallocatedinLLC 0
@@ -821,9 +837,9 @@ struct GEN8_MEMORY_OBJECT_CONTROL_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                       __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GEN8_MEMORY_OBJECT_CONTROL_STATE * restrict values)
+                                      __attribute__((unused)) const struct GFX8_MEMORY_OBJECT_CONTROL_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -833,8 +849,8 @@ GEN8_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->MemoryTypeLLCeLLCCacheabilityControl, 5, 6);
 }
 
-#define GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_length      2
-struct GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION {
+#define GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_length      2
+struct GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION {
    uint32_t                             FirstMBBitOffset;
    bool                                 LastMB;
    bool                                 LastPicSlice;
@@ -849,9 +865,9 @@ struct GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_pack(__attribute__((unused)) __gen_user_data *data,
                                                        __attribute__((unused)) void * restrict dst,
-                                                       __attribute__((unused)) const struct GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION * restrict values)
+                                                       __attribute__((unused)) const struct GFX8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -871,8 +887,8 @@ GEN8_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_pack(__attribute__((unused)) _
       __gen_uint(values->QuantizerScaleCode, 24, 28);
 }
 
-#define GEN8_MI_MATH_ALU_INSTRUCTION_length      1
-struct GEN8_MI_MATH_ALU_INSTRUCTION {
+#define GFX8_MI_MATH_ALU_INSTRUCTION_length      1
+struct GFX8_MI_MATH_ALU_INSTRUCTION {
    uint32_t                             Operand2;
 #define MI_ALU_REG0                              0
 #define MI_ALU_REG1                              1
@@ -933,9 +949,9 @@ struct GEN8_MI_MATH_ALU_INSTRUCTION {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_MATH_ALU_INSTRUCTION_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_MATH_ALU_INSTRUCTION_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_MI_MATH_ALU_INSTRUCTION * restrict values)
+                                  __attribute__((unused)) const struct GFX8_MI_MATH_ALU_INSTRUCTION * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -945,8 +961,8 @@ GEN8_MI_MATH_ALU_INSTRUCTION_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ALUOpcode, 20, 31);
 }
 
-#define GEN8_PALETTE_ENTRY_length              1
-struct GEN8_PALETTE_ENTRY {
+#define GFX8_PALETTE_ENTRY_length              1
+struct GFX8_PALETTE_ENTRY {
    uint32_t                             Blue;
    uint32_t                             Green;
    uint32_t                             Red;
@@ -954,9 +970,9 @@ struct GEN8_PALETTE_ENTRY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_PALETTE_ENTRY * restrict values)
+                        __attribute__((unused)) const struct GFX8_PALETTE_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -967,8 +983,8 @@ GEN8_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Alpha, 24, 31);
 }
 
-#define GEN8_RENDER_SURFACE_STATE_length      16
-struct GEN8_RENDER_SURFACE_STATE {
+#define GFX8_RENDER_SURFACE_STATE_length      16
+struct GFX8_RENDER_SURFACE_STATE {
    bool                                 CubeFaceEnablePositiveZ;
    bool                                 CubeFaceEnableNegativeZ;
    bool                                 CubeFaceEnablePositiveY;
@@ -1049,14 +1065,14 @@ struct GEN8_RENDER_SURFACE_STATE {
    uint32_t                             XOffsetforUorUVPlane;
    bool                                 SeparateUVPlaneEnable;
    float                                ResourceMinLOD;
-   enum GEN8_ShaderChannelSelect        ShaderChannelSelectAlpha;
-   enum GEN8_ShaderChannelSelect        ShaderChannelSelectBlue;
-   enum GEN8_ShaderChannelSelect        ShaderChannelSelectGreen;
-   enum GEN8_ShaderChannelSelect        ShaderChannelSelectRed;
-   enum GEN8_ClearColor                 AlphaClearColor;
-   enum GEN8_ClearColor                 BlueClearColor;
-   enum GEN8_ClearColor                 GreenClearColor;
-   enum GEN8_ClearColor                 RedClearColor;
+   enum GFX8_ShaderChannelSelect        ShaderChannelSelectAlpha;
+   enum GFX8_ShaderChannelSelect        ShaderChannelSelectBlue;
+   enum GFX8_ShaderChannelSelect        ShaderChannelSelectGreen;
+   enum GFX8_ShaderChannelSelect        ShaderChannelSelectRed;
+   enum GFX8_ClearColor                 AlphaClearColor;
+   enum GFX8_ClearColor                 BlueClearColor;
+   enum GFX8_ClearColor                 GreenClearColor;
+   enum GFX8_ClearColor                 RedClearColor;
    __gen_address_type                   SurfaceBaseAddress;
    __gen_address_type                   AuxiliarySurfaceBaseAddress;
    uint32_t                             AuxiliaryTableIndexforMediaCompressedSurface;
@@ -1065,9 +1081,9 @@ struct GEN8_RENDER_SURFACE_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_RENDER_SURFACE_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX8_RENDER_SURFACE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1139,7 +1155,7 @@ GEN8_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->RedClearColor, 31, 31);
 
    const uint64_t v8_address =
-      __gen_combine_address(data, &dw[8], values->SurfaceBaseAddress, 0);
+      __gen_address(data, &dw[8], values->SurfaceBaseAddress, 0, 0, 63);
    dw[8] = v8_address;
    dw[9] = v8_address >> 32;
 
@@ -1148,7 +1164,7 @@ GEN8_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->YOffsetforVPlane, 32, 45) |
       __gen_uint(values->XOffsetforVPlane, 48, 61);
    const uint64_t v10_address =
-      __gen_combine_address(data, &dw[10], values->AuxiliarySurfaceBaseAddress, v10);
+      __gen_address(data, &dw[10], values->AuxiliarySurfaceBaseAddress, v10, 12, 63);
    dw[10] = v10_address;
    dw[11] = (v10_address >> 32) | (v10 >> 32);
 
@@ -1161,8 +1177,8 @@ GEN8_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[15] = 0;
 }
 
-#define GEN8_SAMPLER_BORDER_COLOR_STATE_length      4
-struct GEN8_SAMPLER_BORDER_COLOR_STATE {
+#define GFX8_SAMPLER_BORDER_COLOR_STATE_length      4
+struct GFX8_SAMPLER_BORDER_COLOR_STATE {
    float                                BorderColorFloatRed;
    uint32_t                             BorderColor32bitRed;
    float                                BorderColorFloatGreen;
@@ -1174,9 +1190,9 @@ struct GEN8_SAMPLER_BORDER_COLOR_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_SAMPLER_BORDER_COLOR_STATE * restrict values)
+                                     __attribute__((unused)) const struct GFX8_SAMPLER_BORDER_COLOR_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1197,8 +1213,8 @@ GEN8_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *da
       __gen_uint(values->BorderColor32bitAlpha, 0, 31);
 }
 
-#define GEN8_SAMPLER_STATE_length              4
-struct GEN8_SAMPLER_STATE {
+#define GFX8_SAMPLER_STATE_length              4
+struct GFX8_SAMPLER_STATE {
    uint32_t                             AnisotropicAlgorithm;
 #define LEGACY                                   0
 #define EWAApproximation                         1
@@ -1248,9 +1264,9 @@ struct GEN8_SAMPLER_STATE {
 #define MIPNONE                                  0
 #define MIPFILTER                                1
    uint64_t                             BorderColorPointer;
-   enum GEN8_TextureCoordinateMode      TCZAddressControlMode;
-   enum GEN8_TextureCoordinateMode      TCYAddressControlMode;
-   enum GEN8_TextureCoordinateMode      TCXAddressControlMode;
+   enum GFX8_TextureCoordinateMode      TCZAddressControlMode;
+   enum GFX8_TextureCoordinateMode      TCYAddressControlMode;
+   enum GFX8_TextureCoordinateMode      TCXAddressControlMode;
    bool                                 NonnormalizedCoordinateEnable;
    uint32_t                             TrilinearFilterQuality;
 #define FULL                                     0
@@ -1275,9 +1291,9 @@ struct GEN8_SAMPLER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_SAMPLER_STATE * restrict values)
+                        __attribute__((unused)) const struct GFX8_SAMPLER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1320,8 +1336,8 @@ GEN8_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MaximumAnisotropy, 19, 21);
 }
 
-#define GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_length      8
-struct GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS {
+#define GFX8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_length      8
+struct GFX8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS {
    float                                Table0XFilterCoefficientn0;
    float                                Table0YFilterCoefficientn0;
    float                                Table0XFilterCoefficientn1;
@@ -1349,9 +1365,9 @@ struct GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_pack(__attribute__((unused)) __gen_user_data *data,
                                              __attribute__((unused)) void * restrict dst,
-                                             __attribute__((unused)) const struct GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS * restrict values)
+                                             __attribute__((unused)) const struct GFX8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1396,8 +1412,8 @@ GEN8_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_pack(__attribute__((unused)) __gen_user_
       __gen_sfixed(values->Table1YFilterCoefficientn5, 8, 15, 6);
 }
 
-#define GEN8_SCISSOR_RECT_length               2
-struct GEN8_SCISSOR_RECT {
+#define GFX8_SCISSOR_RECT_length               2
+struct GFX8_SCISSOR_RECT {
    uint32_t                             ScissorRectangleXMin;
    uint32_t                             ScissorRectangleYMin;
    uint32_t                             ScissorRectangleXMax;
@@ -1405,9 +1421,9 @@ struct GEN8_SCISSOR_RECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_SCISSOR_RECT * restrict values)
+                       __attribute__((unused)) const struct GFX8_SCISSOR_RECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1420,8 +1436,8 @@ GEN8_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ScissorRectangleYMax, 16, 31);
 }
 
-#define GEN8_SF_CLIP_VIEWPORT_length          16
-struct GEN8_SF_CLIP_VIEWPORT {
+#define GFX8_SF_CLIP_VIEWPORT_length          16
+struct GFX8_SF_CLIP_VIEWPORT {
    float                                ViewportMatrixElementm00;
    float                                ViewportMatrixElementm11;
    float                                ViewportMatrixElementm22;
@@ -1439,9 +1455,9 @@ struct GEN8_SF_CLIP_VIEWPORT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SF_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SF_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SF_CLIP_VIEWPORT * restrict values)
+                           __attribute__((unused)) const struct GFX8_SF_CLIP_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1492,8 +1508,8 @@ GEN8_SF_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->YMaxViewPort);
 }
 
-#define GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_length      1
-struct GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL {
+#define GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_length      1
+struct GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL {
    uint32_t                             SourceAttribute;
    uint32_t                             SwizzleSelect;
 #define INPUTATTR                                0
@@ -1513,9 +1529,9 @@ struct GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL * restrict values)
+                                     __attribute__((unused)) const struct GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1530,8 +1546,8 @@ GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *da
       __gen_uint(values->ComponentOverrideW, 15, 15);
 }
 
-#define GEN8_SO_DECL_length                    1
-struct GEN8_SO_DECL {
+#define GFX8_SO_DECL_length                    1
+struct GFX8_SO_DECL {
    uint32_t                             ComponentMask;
    uint32_t                             RegisterIndex;
    bool                                 HoleFlag;
@@ -1539,9 +1555,9 @@ struct GEN8_SO_DECL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_DECL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_DECL_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN8_SO_DECL * restrict values)
+                  __attribute__((unused)) const struct GFX8_SO_DECL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1552,44 +1568,44 @@ GEN8_SO_DECL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->OutputBufferSlot, 12, 13);
 }
 
-#define GEN8_SO_DECL_ENTRY_length              2
-struct GEN8_SO_DECL_ENTRY {
-   struct GEN8_SO_DECL                  Stream0Decl;
-   struct GEN8_SO_DECL                  Stream1Decl;
-   struct GEN8_SO_DECL                  Stream2Decl;
-   struct GEN8_SO_DECL                  Stream3Decl;
+#define GFX8_SO_DECL_ENTRY_length              2
+struct GFX8_SO_DECL_ENTRY {
+   struct GFX8_SO_DECL                  Stream0Decl;
+   struct GFX8_SO_DECL                  Stream1Decl;
+   struct GFX8_SO_DECL                  Stream2Decl;
+   struct GFX8_SO_DECL                  Stream3Decl;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_DECL_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_DECL_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_SO_DECL_ENTRY * restrict values)
+                        __attribute__((unused)) const struct GFX8_SO_DECL_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    uint32_t v0_0;
-   GEN8_SO_DECL_pack(data, &v0_0, &values->Stream0Decl);
+   GFX8_SO_DECL_pack(data, &v0_0, &values->Stream0Decl);
 
    uint32_t v0_1;
-   GEN8_SO_DECL_pack(data, &v0_1, &values->Stream1Decl);
+   GFX8_SO_DECL_pack(data, &v0_1, &values->Stream1Decl);
 
    dw[0] =
       __gen_uint(v0_0, 0, 15) |
       __gen_uint(v0_1, 16, 31);
 
    uint32_t v1_0;
-   GEN8_SO_DECL_pack(data, &v1_0, &values->Stream2Decl);
+   GFX8_SO_DECL_pack(data, &v1_0, &values->Stream2Decl);
 
    uint32_t v1_1;
-   GEN8_SO_DECL_pack(data, &v1_1, &values->Stream3Decl);
+   GFX8_SO_DECL_pack(data, &v1_1, &values->Stream3Decl);
 
    dw[1] =
       __gen_uint(v1_0, 0, 15) |
       __gen_uint(v1_1, 16, 31);
 }
 
-#define GEN8_VERTEX_BUFFER_STATE_length        4
-struct GEN8_VERTEX_BUFFER_STATE {
+#define GFX8_VERTEX_BUFFER_STATE_length        4
+struct GFX8_VERTEX_BUFFER_STATE {
    uint32_t                             BufferPitch;
    bool                                 NullVertexBuffer;
    bool                                 AddressModifyEnable;
@@ -1600,9 +1616,9 @@ struct GEN8_VERTEX_BUFFER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_VERTEX_BUFFER_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX8_VERTEX_BUFFER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1614,7 +1630,7 @@ GEN8_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VertexBufferIndex, 26, 31);
 
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->BufferStartingAddress, 0);
+      __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 63);
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 
@@ -1622,23 +1638,23 @@ GEN8_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferSize, 0, 31);
 }
 
-#define GEN8_VERTEX_ELEMENT_STATE_length       2
-struct GEN8_VERTEX_ELEMENT_STATE {
+#define GFX8_VERTEX_ELEMENT_STATE_length       2
+struct GFX8_VERTEX_ELEMENT_STATE {
    uint32_t                             SourceElementOffset;
    bool                                 EdgeFlagEnable;
    uint32_t                             SourceElementFormat;
    bool                                 Valid;
    uint32_t                             VertexBufferIndex;
-   enum GEN8_3D_Vertex_Component_Control Component3Control;
-   enum GEN8_3D_Vertex_Component_Control Component2Control;
-   enum GEN8_3D_Vertex_Component_Control Component1Control;
-   enum GEN8_3D_Vertex_Component_Control Component0Control;
+   enum GFX8_3D_Vertex_Component_Control Component3Control;
+   enum GFX8_3D_Vertex_Component_Control Component2Control;
+   enum GFX8_3D_Vertex_Component_Control Component1Control;
+   enum GFX8_3D_Vertex_Component_Control Component0Control;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_VERTEX_ELEMENT_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX8_VERTEX_ELEMENT_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1656,16 +1672,16 @@ GEN8_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Component0Control, 28, 30);
 }
 
-#define GEN8_3DPRIMITIVE_length                7
-#define GEN8_3DPRIMITIVE_length_bias           2
-#define GEN8_3DPRIMITIVE_header                 \
+#define GFX8_3DPRIMITIVE_length                7
+#define GFX8_3DPRIMITIVE_length_bias           2
+#define GFX8_3DPRIMITIVE_header                 \
    .DWordLength                         =      5,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      3,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DPRIMITIVE {
+struct GFX8_3DPRIMITIVE {
    uint32_t                             DWordLength;
    bool                                 PredicateEnable;
    bool                                 UAVCoherencyRequired;
@@ -1674,7 +1690,7 @@ struct GEN8_3DPRIMITIVE {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   enum GEN8_3D_Prim_Topo_Type          PrimitiveTopologyType;
+   enum GFX8_3D_Prim_Topo_Type          PrimitiveTopologyType;
    uint32_t                             VertexAccessType;
 #define SEQUENTIAL                               0
 #define RANDOM                                   1
@@ -1687,9 +1703,9 @@ struct GEN8_3DPRIMITIVE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN8_3DPRIMITIVE * restrict values)
+                      __attribute__((unused)) const struct GFX8_3DPRIMITIVE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1724,16 +1740,16 @@ GEN8_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->BaseVertexLocation, 0, 31);
 }
 
-#define GEN8_3DSTATE_AA_LINE_PARAMETERS_length      3
-#define GEN8_3DSTATE_AA_LINE_PARAMETERS_length_bias      2
-#define GEN8_3DSTATE_AA_LINE_PARAMETERS_header  \
+#define GFX8_3DSTATE_AA_LINE_PARAMETERS_length      3
+#define GFX8_3DSTATE_AA_LINE_PARAMETERS_length_bias      2
+#define GFX8_3DSTATE_AA_LINE_PARAMETERS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     10,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_AA_LINE_PARAMETERS {
+struct GFX8_3DSTATE_AA_LINE_PARAMETERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1750,9 +1766,9 @@ struct GEN8_3DSTATE_AA_LINE_PARAMETERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_AA_LINE_PARAMETERS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_AA_LINE_PARAMETERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1776,15 +1792,15 @@ GEN8_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_ufixed(values->AAPointCoverageEndCapBias, 24, 31, 8);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_DS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_DS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_DS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_DS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     70,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_EDIT_DS {
+struct GFX8_3DSTATE_BINDING_TABLE_EDIT_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1799,9 +1815,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_EDIT_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_EDIT_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_EDIT_DS_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_EDIT_DS * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_EDIT_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1817,15 +1833,15 @@ GEN8_3DSTATE_BINDING_TABLE_EDIT_DS_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->BindingTableBlockClear, 16, 31);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_GS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_GS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_GS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_GS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     68,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_EDIT_GS {
+struct GFX8_3DSTATE_BINDING_TABLE_EDIT_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1840,9 +1856,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_EDIT_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_EDIT_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_EDIT_GS_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_EDIT_GS * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_EDIT_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1858,15 +1874,15 @@ GEN8_3DSTATE_BINDING_TABLE_EDIT_GS_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->BindingTableBlockClear, 16, 31);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_HS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_HS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_HS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_HS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     69,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_EDIT_HS {
+struct GFX8_3DSTATE_BINDING_TABLE_EDIT_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1881,9 +1897,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_EDIT_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_EDIT_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_EDIT_HS_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_EDIT_HS * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_EDIT_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1899,15 +1915,15 @@ GEN8_3DSTATE_BINDING_TABLE_EDIT_HS_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->BindingTableBlockClear, 16, 31);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_PS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_PS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_PS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_PS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     71,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_EDIT_PS {
+struct GFX8_3DSTATE_BINDING_TABLE_EDIT_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1922,9 +1938,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_EDIT_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_EDIT_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_EDIT_PS_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_EDIT_PS * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_EDIT_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1940,15 +1956,15 @@ GEN8_3DSTATE_BINDING_TABLE_EDIT_PS_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->BindingTableBlockClear, 16, 31);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_VS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_EDIT_VS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_VS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_EDIT_VS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     67,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_EDIT_VS {
+struct GFX8_3DSTATE_BINDING_TABLE_EDIT_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1963,9 +1979,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_EDIT_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_EDIT_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_EDIT_VS_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_EDIT_VS * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_EDIT_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1981,16 +1997,16 @@ GEN8_3DSTATE_BINDING_TABLE_EDIT_VS_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->BindingTableBlockClear, 16, 31);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS_length      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS_length      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     40,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS {
+struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2000,9 +2016,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2017,16 +2033,16 @@ GEN8_3DSTATE_BINDING_TABLE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoDSBindingTable, 5, 15);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS_length      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS_length      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     41,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS {
+struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2036,9 +2052,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2053,16 +2069,16 @@ GEN8_3DSTATE_BINDING_TABLE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoGSBindingTable, 5, 15);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS_length      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS_length      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     39,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS {
+struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2072,9 +2088,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2089,16 +2105,16 @@ GEN8_3DSTATE_BINDING_TABLE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoHSBindingTable, 5, 15);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS_length      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS_length      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     42,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS {
+struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2108,9 +2124,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2125,16 +2141,16 @@ GEN8_3DSTATE_BINDING_TABLE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoPSBindingTable, 5, 15);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS_length      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS_length      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     38,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS {
+struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2144,9 +2160,9 @@ struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POINTERS_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2161,32 +2177,32 @@ GEN8_3DSTATE_BINDING_TABLE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoVSBindingTable, 5, 15);
 }
 
-#define GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_length      4
-#define GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_length_bias      2
-#define GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_header\
+#define GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC_length      4
+#define GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC_length_bias      2
+#define GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC_header\
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     25,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC {
+struct GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
    uint32_t                             MOCS;
-   uint32_t                             BindingTablePoolEnable;
+   bool                                 BindingTablePoolEnable;
    __gen_address_type                   BindingTablePoolBaseAddress;
    uint32_t                             BindingTablePoolBufferSize;
 #define NoValidData                              0
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
                                            __attribute__((unused)) void * restrict dst,
-                                           __attribute__((unused)) const struct GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC * restrict values)
+                                           __attribute__((unused)) const struct GFX8_3DSTATE_BINDING_TABLE_POOL_ALLOC * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2201,7 +2217,7 @@ GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_da
       __gen_uint(values->MOCS, 0, 6) |
       __gen_uint(values->BindingTablePoolEnable, 11, 11);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->BindingTablePoolBaseAddress, v1);
+      __gen_address(data, &dw[1], values->BindingTablePoolBaseAddress, v1, 12, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -2209,16 +2225,16 @@ GEN8_3DSTATE_BINDING_TABLE_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_da
       __gen_uint(values->BindingTablePoolBufferSize, 12, 31);
 }
 
-#define GEN8_3DSTATE_BLEND_STATE_POINTERS_length      2
-#define GEN8_3DSTATE_BLEND_STATE_POINTERS_length_bias      2
-#define GEN8_3DSTATE_BLEND_STATE_POINTERS_header\
+#define GFX8_3DSTATE_BLEND_STATE_POINTERS_length      2
+#define GFX8_3DSTATE_BLEND_STATE_POINTERS_length_bias      2
+#define GFX8_3DSTATE_BLEND_STATE_POINTERS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     36,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_BLEND_STATE_POINTERS {
+struct GFX8_3DSTATE_BLEND_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2229,9 +2245,9 @@ struct GEN8_3DSTATE_BLEND_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_BLEND_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_BLEND_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                        __attribute__((unused)) void * restrict dst,
-                                       __attribute__((unused)) const struct GEN8_3DSTATE_BLEND_STATE_POINTERS * restrict values)
+                                       __attribute__((unused)) const struct GFX8_3DSTATE_BLEND_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2247,16 +2263,16 @@ GEN8_3DSTATE_BLEND_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *
       __gen_offset(values->BlendStatePointer, 6, 31);
 }
 
-#define GEN8_3DSTATE_CC_STATE_POINTERS_length      2
-#define GEN8_3DSTATE_CC_STATE_POINTERS_length_bias      2
-#define GEN8_3DSTATE_CC_STATE_POINTERS_header   \
+#define GFX8_3DSTATE_CC_STATE_POINTERS_length      2
+#define GFX8_3DSTATE_CC_STATE_POINTERS_length_bias      2
+#define GFX8_3DSTATE_CC_STATE_POINTERS_header   \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     14,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CC_STATE_POINTERS {
+struct GFX8_3DSTATE_CC_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2267,9 +2283,9 @@ struct GEN8_3DSTATE_CC_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN8_3DSTATE_CC_STATE_POINTERS * restrict values)
+                                    __attribute__((unused)) const struct GFX8_3DSTATE_CC_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2285,16 +2301,16 @@ GEN8_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_offset(values->ColorCalcStatePointer, 6, 31);
 }
 
-#define GEN8_3DSTATE_CHROMA_KEY_length         4
-#define GEN8_3DSTATE_CHROMA_KEY_length_bias      2
-#define GEN8_3DSTATE_CHROMA_KEY_header          \
+#define GFX8_3DSTATE_CHROMA_KEY_length         4
+#define GFX8_3DSTATE_CHROMA_KEY_length_bias      2
+#define GFX8_3DSTATE_CHROMA_KEY_header          \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CHROMA_KEY {
+struct GFX8_3DSTATE_CHROMA_KEY {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2306,9 +2322,9 @@ struct GEN8_3DSTATE_CHROMA_KEY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN8_3DSTATE_CHROMA_KEY * restrict values)
+                             __attribute__((unused)) const struct GFX8_3DSTATE_CHROMA_KEY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2329,16 +2345,16 @@ GEN8_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ChromaKeyHighValue, 0, 31);
 }
 
-#define GEN8_3DSTATE_CLEAR_PARAMS_length       3
-#define GEN8_3DSTATE_CLEAR_PARAMS_length_bias      2
-#define GEN8_3DSTATE_CLEAR_PARAMS_header        \
+#define GFX8_3DSTATE_CLEAR_PARAMS_length       3
+#define GFX8_3DSTATE_CLEAR_PARAMS_length_bias      2
+#define GFX8_3DSTATE_CLEAR_PARAMS_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CLEAR_PARAMS {
+struct GFX8_3DSTATE_CLEAR_PARAMS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2349,9 +2365,9 @@ struct GEN8_3DSTATE_CLEAR_PARAMS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_CLEAR_PARAMS * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_CLEAR_PARAMS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2369,16 +2385,16 @@ GEN8_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DepthClearValueValid, 0, 0);
 }
 
-#define GEN8_3DSTATE_CLIP_length               4
-#define GEN8_3DSTATE_CLIP_length_bias          2
-#define GEN8_3DSTATE_CLIP_header                \
+#define GFX8_3DSTATE_CLIP_length               4
+#define GFX8_3DSTATE_CLIP_length_bias          2
+#define GFX8_3DSTATE_CLIP_header                \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     18,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CLIP {
+struct GFX8_3DSTATE_CLIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2416,9 +2432,9 @@ struct GEN8_3DSTATE_CLIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_3DSTATE_CLIP * restrict values)
+                       __attribute__((unused)) const struct GFX8_3DSTATE_CLIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2458,29 +2474,29 @@ GEN8_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->MinimumPointWidth, 17, 27, 3);
 }
 
-#define GEN8_3DSTATE_CONSTANT_DS_length       11
-#define GEN8_3DSTATE_CONSTANT_DS_length_bias      2
-#define GEN8_3DSTATE_CONSTANT_DS_header         \
+#define GFX8_3DSTATE_CONSTANT_DS_length       11
+#define GFX8_3DSTATE_CONSTANT_DS_length_bias      2
+#define GFX8_3DSTATE_CONSTANT_DS_header         \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     26,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CONSTANT_DS {
+struct GFX8_3DSTATE_CONSTANT_DS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX8_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_DS * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2492,32 +2508,32 @@ GEN8_3DSTATE_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN8_3DSTATE_CONSTANT_GS_length       11
-#define GEN8_3DSTATE_CONSTANT_GS_length_bias      2
-#define GEN8_3DSTATE_CONSTANT_GS_header         \
+#define GFX8_3DSTATE_CONSTANT_GS_length       11
+#define GFX8_3DSTATE_CONSTANT_GS_length_bias      2
+#define GFX8_3DSTATE_CONSTANT_GS_header         \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     22,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CONSTANT_GS {
+struct GFX8_3DSTATE_CONSTANT_GS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX8_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_GS * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2529,32 +2545,32 @@ GEN8_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN8_3DSTATE_CONSTANT_HS_length       11
-#define GEN8_3DSTATE_CONSTANT_HS_length_bias      2
-#define GEN8_3DSTATE_CONSTANT_HS_header         \
+#define GFX8_3DSTATE_CONSTANT_HS_length       11
+#define GFX8_3DSTATE_CONSTANT_HS_length_bias      2
+#define GFX8_3DSTATE_CONSTANT_HS_header         \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     25,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CONSTANT_HS {
+struct GFX8_3DSTATE_CONSTANT_HS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX8_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_HS * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2566,32 +2582,32 @@ GEN8_3DSTATE_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN8_3DSTATE_CONSTANT_PS_length       11
-#define GEN8_3DSTATE_CONSTANT_PS_length_bias      2
-#define GEN8_3DSTATE_CONSTANT_PS_header         \
+#define GFX8_3DSTATE_CONSTANT_PS_length       11
+#define GFX8_3DSTATE_CONSTANT_PS_length_bias      2
+#define GFX8_3DSTATE_CONSTANT_PS_header         \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     23,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CONSTANT_PS {
+struct GFX8_3DSTATE_CONSTANT_PS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX8_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_PS * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2603,32 +2619,32 @@ GEN8_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN8_3DSTATE_CONSTANT_VS_length       11
-#define GEN8_3DSTATE_CONSTANT_VS_length_bias      2
-#define GEN8_3DSTATE_CONSTANT_VS_header         \
+#define GFX8_3DSTATE_CONSTANT_VS_length       11
+#define GFX8_3DSTATE_CONSTANT_VS_length_bias      2
+#define GFX8_3DSTATE_CONSTANT_VS_header         \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     21,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_CONSTANT_VS {
+struct GFX8_3DSTATE_CONSTANT_VS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX8_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_CONSTANT_VS * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_CONSTANT_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2640,19 +2656,19 @@ GEN8_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX8_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN8_3DSTATE_DEPTH_BUFFER_length       8
-#define GEN8_3DSTATE_DEPTH_BUFFER_length_bias      2
-#define GEN8_3DSTATE_DEPTH_BUFFER_header        \
+#define GFX8_3DSTATE_DEPTH_BUFFER_length       8
+#define GFX8_3DSTATE_DEPTH_BUFFER_length_bias      2
+#define GFX8_3DSTATE_DEPTH_BUFFER_header        \
    .DWordLength                         =      6,  \
    ._3DCommandSubOpcode                 =      5,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_DEPTH_BUFFER {
+struct GFX8_3DSTATE_DEPTH_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2684,9 +2700,9 @@ struct GEN8_3DSTATE_DEPTH_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_DEPTH_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_DEPTH_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2706,7 +2722,7 @@ GEN8_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceType, 29, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+      __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -2727,16 +2743,16 @@ GEN8_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->RenderTargetViewExtent, 21, 31);
 }
 
-#define GEN8_3DSTATE_DRAWING_RECTANGLE_length      4
-#define GEN8_3DSTATE_DRAWING_RECTANGLE_length_bias      2
-#define GEN8_3DSTATE_DRAWING_RECTANGLE_header   \
+#define GFX8_3DSTATE_DRAWING_RECTANGLE_length      4
+#define GFX8_3DSTATE_DRAWING_RECTANGLE_length_bias      2
+#define GFX8_3DSTATE_DRAWING_RECTANGLE_header   \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_DRAWING_RECTANGLE {
+struct GFX8_3DSTATE_DRAWING_RECTANGLE {
    uint32_t                             DWordLength;
    uint32_t                             CoreModeSelect;
 #define Legacy                                   0
@@ -2755,9 +2771,9 @@ struct GEN8_3DSTATE_DRAWING_RECTANGLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN8_3DSTATE_DRAWING_RECTANGLE * restrict values)
+                                    __attribute__((unused)) const struct GFX8_3DSTATE_DRAWING_RECTANGLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2782,16 +2798,16 @@ GEN8_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_sint(values->DrawingRectangleOriginY, 16, 31);
 }
 
-#define GEN8_3DSTATE_DS_length                 9
-#define GEN8_3DSTATE_DS_length_bias            2
-#define GEN8_3DSTATE_DS_header                  \
+#define GFX8_3DSTATE_DS_length                 9
+#define GFX8_3DSTATE_DS_length_bias            2
+#define GFX8_3DSTATE_DS_header                  \
    .DWordLength                         =      7,  \
    ._3DCommandSubOpcode                 =     29,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_DS {
+struct GFX8_3DSTATE_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2835,9 +2851,9 @@ struct GEN8_3DSTATE_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_DS * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2867,7 +2883,7 @@ GEN8_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v4 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->ScratchSpaceBasePointer, v4);
+      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
    dw[4] = v4_address;
    dw[5] = (v4_address >> 32) | (v4 >> 32);
 
@@ -2891,15 +2907,15 @@ GEN8_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VertexURBEntryOutputReadOffset, 21, 26);
 }
 
-#define GEN8_3DSTATE_GATHER_CONSTANT_DS_length_bias      2
-#define GEN8_3DSTATE_GATHER_CONSTANT_DS_header  \
+#define GFX8_3DSTATE_GATHER_CONSTANT_DS_length_bias      2
+#define GFX8_3DSTATE_GATHER_CONSTANT_DS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     55,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_CONSTANT_DS {
+struct GFX8_3DSTATE_GATHER_CONSTANT_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2913,9 +2929,9 @@ struct GEN8_3DSTATE_GATHER_CONSTANT_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_CONSTANT_DS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_CONSTANT_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2935,15 +2951,15 @@ GEN8_3DSTATE_GATHER_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_offset(values->GatherBufferOffset, 6, 22);
 }
 
-#define GEN8_3DSTATE_GATHER_CONSTANT_GS_length_bias      2
-#define GEN8_3DSTATE_GATHER_CONSTANT_GS_header  \
+#define GFX8_3DSTATE_GATHER_CONSTANT_GS_length_bias      2
+#define GFX8_3DSTATE_GATHER_CONSTANT_GS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     53,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_CONSTANT_GS {
+struct GFX8_3DSTATE_GATHER_CONSTANT_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2957,9 +2973,9 @@ struct GEN8_3DSTATE_GATHER_CONSTANT_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_CONSTANT_GS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_CONSTANT_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2979,15 +2995,15 @@ GEN8_3DSTATE_GATHER_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_offset(values->GatherBufferOffset, 6, 22);
 }
 
-#define GEN8_3DSTATE_GATHER_CONSTANT_HS_length_bias      2
-#define GEN8_3DSTATE_GATHER_CONSTANT_HS_header  \
+#define GFX8_3DSTATE_GATHER_CONSTANT_HS_length_bias      2
+#define GFX8_3DSTATE_GATHER_CONSTANT_HS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     54,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_CONSTANT_HS {
+struct GFX8_3DSTATE_GATHER_CONSTANT_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3001,9 +3017,9 @@ struct GEN8_3DSTATE_GATHER_CONSTANT_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_CONSTANT_HS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_CONSTANT_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3023,15 +3039,15 @@ GEN8_3DSTATE_GATHER_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_offset(values->GatherBufferOffset, 6, 22);
 }
 
-#define GEN8_3DSTATE_GATHER_CONSTANT_PS_length_bias      2
-#define GEN8_3DSTATE_GATHER_CONSTANT_PS_header  \
+#define GFX8_3DSTATE_GATHER_CONSTANT_PS_length_bias      2
+#define GFX8_3DSTATE_GATHER_CONSTANT_PS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     56,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_CONSTANT_PS {
+struct GFX8_3DSTATE_GATHER_CONSTANT_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3046,9 +3062,9 @@ struct GEN8_3DSTATE_GATHER_CONSTANT_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_CONSTANT_PS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_CONSTANT_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3069,15 +3085,15 @@ GEN8_3DSTATE_GATHER_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_offset(values->GatherBufferOffset, 6, 22);
 }
 
-#define GEN8_3DSTATE_GATHER_CONSTANT_VS_length_bias      2
-#define GEN8_3DSTATE_GATHER_CONSTANT_VS_header  \
+#define GFX8_3DSTATE_GATHER_CONSTANT_VS_length_bias      2
+#define GFX8_3DSTATE_GATHER_CONSTANT_VS_header  \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     52,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_CONSTANT_VS {
+struct GFX8_3DSTATE_GATHER_CONSTANT_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3092,9 +3108,9 @@ struct GEN8_3DSTATE_GATHER_CONSTANT_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_CONSTANT_VS * restrict values)
+                                     __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_CONSTANT_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3115,16 +3131,16 @@ GEN8_3DSTATE_GATHER_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_offset(values->GatherBufferOffset, 6, 22);
 }
 
-#define GEN8_3DSTATE_GATHER_POOL_ALLOC_length      4
-#define GEN8_3DSTATE_GATHER_POOL_ALLOC_length_bias      2
-#define GEN8_3DSTATE_GATHER_POOL_ALLOC_header   \
+#define GFX8_3DSTATE_GATHER_POOL_ALLOC_length      4
+#define GFX8_3DSTATE_GATHER_POOL_ALLOC_length_bias      2
+#define GFX8_3DSTATE_GATHER_POOL_ALLOC_header   \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     26,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GATHER_POOL_ALLOC {
+struct GFX8_3DSTATE_GATHER_POOL_ALLOC {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3137,9 +3153,9 @@ struct GEN8_3DSTATE_GATHER_POOL_ALLOC {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GATHER_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GATHER_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN8_3DSTATE_GATHER_POOL_ALLOC * restrict values)
+                                    __attribute__((unused)) const struct GFX8_3DSTATE_GATHER_POOL_ALLOC * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3154,7 +3170,7 @@ GEN8_3DSTATE_GATHER_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->MOCS, 0, 6) |
       __gen_uint(values->GatherPoolEnable, 11, 11);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->GatherPoolBaseAddress, v1);
+      __gen_address(data, &dw[1], values->GatherPoolBaseAddress, v1, 12, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -3162,16 +3178,16 @@ GEN8_3DSTATE_GATHER_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->GatherPoolBufferSize, 12, 31);
 }
 
-#define GEN8_3DSTATE_GS_length                10
-#define GEN8_3DSTATE_GS_length_bias            2
-#define GEN8_3DSTATE_GS_header                  \
+#define GFX8_3DSTATE_GS_length                10
+#define GFX8_3DSTATE_GS_length_bias            2
+#define GFX8_3DSTATE_GS_header                  \
    .DWordLength                         =      8,  \
    ._3DCommandSubOpcode                 =     17,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_GS {
+struct GFX8_3DSTATE_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3203,7 +3219,7 @@ struct GEN8_3DSTATE_GS {
    uint32_t                             VertexURBEntryReadOffset;
    bool                                 IncludeVertexHandles;
    uint32_t                             VertexURBEntryReadLength;
-   enum GEN8_3D_Prim_Topo_Type          OutputTopology;
+   enum GFX8_3D_Prim_Topo_Type          OutputTopology;
    uint32_t                             OutputVertexSize;
    bool                                 Enable;
    bool                                 DiscardAdjacency;
@@ -3234,9 +3250,9 @@ struct GEN8_3DSTATE_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_GS * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3268,7 +3284,7 @@ GEN8_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v4 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->ScratchSpaceBasePointer, v4);
+      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
    dw[4] = v4_address;
    dw[5] = (v4_address >> 32) | (v4 >> 32);
 
@@ -3306,16 +3322,16 @@ GEN8_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VertexURBEntryOutputReadOffset, 21, 26);
 }
 
-#define GEN8_3DSTATE_HIER_DEPTH_BUFFER_length      5
-#define GEN8_3DSTATE_HIER_DEPTH_BUFFER_length_bias      2
-#define GEN8_3DSTATE_HIER_DEPTH_BUFFER_header   \
+#define GFX8_3DSTATE_HIER_DEPTH_BUFFER_length      5
+#define GFX8_3DSTATE_HIER_DEPTH_BUFFER_length_bias      2
+#define GFX8_3DSTATE_HIER_DEPTH_BUFFER_header   \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      7,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_HIER_DEPTH_BUFFER {
+struct GFX8_3DSTATE_HIER_DEPTH_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3328,9 +3344,9 @@ struct GEN8_3DSTATE_HIER_DEPTH_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN8_3DSTATE_HIER_DEPTH_BUFFER * restrict values)
+                                    __attribute__((unused)) const struct GFX8_3DSTATE_HIER_DEPTH_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3346,7 +3362,7 @@ GEN8_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->MOCS, 25, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+      __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -3354,16 +3370,16 @@ GEN8_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->SurfaceQPitch, 0, 14);
 }
 
-#define GEN8_3DSTATE_HS_length                 9
-#define GEN8_3DSTATE_HS_length_bias            2
-#define GEN8_3DSTATE_HS_header                  \
+#define GFX8_3DSTATE_HS_length                 9
+#define GFX8_3DSTATE_HS_length_bias            2
+#define GFX8_3DSTATE_HS_header                  \
    .DWordLength                         =      7,  \
    ._3DCommandSubOpcode                 =     27,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_HS {
+struct GFX8_3DSTATE_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3400,9 +3416,9 @@ struct GEN8_3DSTATE_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_HS * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3435,7 +3451,7 @@ GEN8_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v5 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
    const uint64_t v5_address =
-      __gen_combine_address(data, &dw[5], values->ScratchSpaceBasePointer, v5);
+      __gen_address(data, &dw[5], values->ScratchSpaceBasePointer, v5, 10, 63);
    dw[5] = v5_address;
    dw[6] = (v5_address >> 32) | (v5 >> 32);
 
@@ -3451,16 +3467,16 @@ GEN8_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[8] = 0;
 }
 
-#define GEN8_3DSTATE_INDEX_BUFFER_length       5
-#define GEN8_3DSTATE_INDEX_BUFFER_length_bias      2
-#define GEN8_3DSTATE_INDEX_BUFFER_header        \
+#define GFX8_3DSTATE_INDEX_BUFFER_length       5
+#define GFX8_3DSTATE_INDEX_BUFFER_length_bias      2
+#define GFX8_3DSTATE_INDEX_BUFFER_header        \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     10,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_INDEX_BUFFER {
+struct GFX8_3DSTATE_INDEX_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3476,9 +3492,9 @@ struct GEN8_3DSTATE_INDEX_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_INDEX_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_INDEX_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3494,7 +3510,7 @@ GEN8_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->IndexFormat, 8, 9);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->BufferStartingAddress, 0);
+      __gen_address(data, &dw[2], values->BufferStartingAddress, 0, 0, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -3502,16 +3518,16 @@ GEN8_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferSize, 0, 31);
 }
 
-#define GEN8_3DSTATE_LINE_STIPPLE_length       3
-#define GEN8_3DSTATE_LINE_STIPPLE_length_bias      2
-#define GEN8_3DSTATE_LINE_STIPPLE_header        \
+#define GFX8_3DSTATE_LINE_STIPPLE_length       3
+#define GFX8_3DSTATE_LINE_STIPPLE_length_bias      2
+#define GFX8_3DSTATE_LINE_STIPPLE_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_LINE_STIPPLE {
+struct GFX8_3DSTATE_LINE_STIPPLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3526,9 +3542,9 @@ struct GEN8_3DSTATE_LINE_STIPPLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_LINE_STIPPLE * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_LINE_STIPPLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3550,16 +3566,16 @@ GEN8_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->LineStippleInverseRepeatCount, 15, 31, 16);
 }
 
-#define GEN8_3DSTATE_MONOFILTER_SIZE_length      2
-#define GEN8_3DSTATE_MONOFILTER_SIZE_length_bias      2
-#define GEN8_3DSTATE_MONOFILTER_SIZE_header     \
+#define GFX8_3DSTATE_MONOFILTER_SIZE_length      2
+#define GFX8_3DSTATE_MONOFILTER_SIZE_length_bias      2
+#define GFX8_3DSTATE_MONOFILTER_SIZE_header     \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     17,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_MONOFILTER_SIZE {
+struct GFX8_3DSTATE_MONOFILTER_SIZE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3570,9 +3586,9 @@ struct GEN8_3DSTATE_MONOFILTER_SIZE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_3DSTATE_MONOFILTER_SIZE * restrict values)
+                                  __attribute__((unused)) const struct GFX8_3DSTATE_MONOFILTER_SIZE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3588,16 +3604,16 @@ GEN8_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MonochromeFilterWidth, 3, 5);
 }
 
-#define GEN8_3DSTATE_MULTISAMPLE_length        2
-#define GEN8_3DSTATE_MULTISAMPLE_length_bias      2
-#define GEN8_3DSTATE_MULTISAMPLE_header         \
+#define GFX8_3DSTATE_MULTISAMPLE_length        2
+#define GFX8_3DSTATE_MULTISAMPLE_length_bias      2
+#define GFX8_3DSTATE_MULTISAMPLE_header         \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     13,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_MULTISAMPLE {
+struct GFX8_3DSTATE_MULTISAMPLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3611,9 +3627,9 @@ struct GEN8_3DSTATE_MULTISAMPLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_MULTISAMPLE * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_MULTISAMPLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3630,16 +3646,16 @@ GEN8_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelPositionOffsetEnable, 5, 5);
 }
 
-#define GEN8_3DSTATE_POLY_STIPPLE_OFFSET_length      2
-#define GEN8_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
-#define GEN8_3DSTATE_POLY_STIPPLE_OFFSET_header \
+#define GFX8_3DSTATE_POLY_STIPPLE_OFFSET_length      2
+#define GFX8_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
+#define GFX8_3DSTATE_POLY_STIPPLE_OFFSET_header \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      6,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_POLY_STIPPLE_OFFSET {
+struct GFX8_3DSTATE_POLY_STIPPLE_OFFSET {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3650,9 +3666,9 @@ struct GEN8_3DSTATE_POLY_STIPPLE_OFFSET {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
                                       __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GEN8_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
+                                      __attribute__((unused)) const struct GFX8_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3668,16 +3684,16 @@ GEN8_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->PolygonStippleXOffset, 8, 12);
 }
 
-#define GEN8_3DSTATE_POLY_STIPPLE_PATTERN_length     33
-#define GEN8_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
-#define GEN8_3DSTATE_POLY_STIPPLE_PATTERN_header\
+#define GFX8_3DSTATE_POLY_STIPPLE_PATTERN_length     33
+#define GFX8_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
+#define GFX8_3DSTATE_POLY_STIPPLE_PATTERN_header\
    .DWordLength                         =     31,  \
    ._3DCommandSubOpcode                 =      7,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_POLY_STIPPLE_PATTERN {
+struct GFX8_3DSTATE_POLY_STIPPLE_PATTERN {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3687,9 +3703,9 @@ struct GEN8_3DSTATE_POLY_STIPPLE_PATTERN {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
                                        __attribute__((unused)) void * restrict dst,
-                                       __attribute__((unused)) const struct GEN8_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
+                                       __attribute__((unused)) const struct GFX8_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3797,16 +3813,16 @@ GEN8_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *
       __gen_uint(values->PatternRow[31], 0, 31);
 }
 
-#define GEN8_3DSTATE_PS_length                12
-#define GEN8_3DSTATE_PS_length_bias            2
-#define GEN8_3DSTATE_PS_header                  \
+#define GFX8_3DSTATE_PS_length                12
+#define GFX8_3DSTATE_PS_length_bias            2
+#define GFX8_3DSTATE_PS_header                  \
    .DWordLength                         =     10,  \
    ._3DCommandSubOpcode                 =     32,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PS {
+struct GFX8_3DSTATE_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3859,9 +3875,9 @@ struct GEN8_3DSTATE_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_PS * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3893,7 +3909,7 @@ GEN8_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v4 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->ScratchSpaceBasePointer, v4);
+      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
    dw[4] = v4_address;
    dw[5] = (v4_address >> 32) | (v4 >> 32);
 
@@ -3923,16 +3939,16 @@ GEN8_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[11] = v10 >> 32;
 }
 
-#define GEN8_3DSTATE_PS_BLEND_length           2
-#define GEN8_3DSTATE_PS_BLEND_length_bias      2
-#define GEN8_3DSTATE_PS_BLEND_header            \
+#define GFX8_3DSTATE_PS_BLEND_length           2
+#define GFX8_3DSTATE_PS_BLEND_length_bias      2
+#define GFX8_3DSTATE_PS_BLEND_header            \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     77,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PS_BLEND {
+struct GFX8_3DSTATE_PS_BLEND {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3950,9 +3966,9 @@ struct GEN8_3DSTATE_PS_BLEND {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PS_BLEND_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PS_BLEND_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_3DSTATE_PS_BLEND * restrict values)
+                           __attribute__((unused)) const struct GFX8_3DSTATE_PS_BLEND * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3975,16 +3991,16 @@ GEN8_3DSTATE_PS_BLEND_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AlphaToCoverageEnable, 31, 31);
 }
 
-#define GEN8_3DSTATE_PS_EXTRA_length           2
-#define GEN8_3DSTATE_PS_EXTRA_length_bias      2
-#define GEN8_3DSTATE_PS_EXTRA_header            \
+#define GFX8_3DSTATE_PS_EXTRA_length           2
+#define GFX8_3DSTATE_PS_EXTRA_length_bias      2
+#define GFX8_3DSTATE_PS_EXTRA_header            \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     79,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PS_EXTRA {
+struct GFX8_3DSTATE_PS_EXTRA {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4010,9 +4026,9 @@ struct GEN8_3DSTATE_PS_EXTRA {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_3DSTATE_PS_EXTRA * restrict values)
+                           __attribute__((unused)) const struct GFX8_3DSTATE_PS_EXTRA * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4039,16 +4055,16 @@ GEN8_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelShaderValid, 31, 31);
 }
 
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_length      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_length_bias      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_header\
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_length      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_length_bias      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     20,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS {
+struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4059,9 +4075,9 @@ struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4077,16 +4093,16 @@ GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_DS_pack(__attribute__((unused)) __gen_user_data
       __gen_uint(values->ConstantBufferOffset, 16, 20);
 }
 
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_length      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_length_bias      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_header\
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_length      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_length_bias      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     21,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS {
+struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4097,9 +4113,9 @@ struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4115,16 +4131,16 @@ GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_GS_pack(__attribute__((unused)) __gen_user_data
       __gen_uint(values->ConstantBufferOffset, 16, 20);
 }
 
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_length      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_length_bias      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_header\
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_length      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_length_bias      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     19,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS {
+struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4135,9 +4151,9 @@ struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4153,16 +4169,16 @@ GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_HS_pack(__attribute__((unused)) __gen_user_data
       __gen_uint(values->ConstantBufferOffset, 16, 20);
 }
 
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_length      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_length_bias      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_header\
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_length      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_length_bias      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     22,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS {
+struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4173,9 +4189,9 @@ struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4191,16 +4207,16 @@ GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_PS_pack(__attribute__((unused)) __gen_user_data
       __gen_uint(values->ConstantBufferOffset, 16, 20);
 }
 
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_length      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_length_bias      2
-#define GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_header\
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_length      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_length_bias      2
+#define GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     18,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS {
+struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4211,9 +4227,9 @@ struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_PUSH_CONSTANT_ALLOC_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4229,16 +4245,16 @@ GEN8_3DSTATE_PUSH_CONSTANT_ALLOC_VS_pack(__attribute__((unused)) __gen_user_data
       __gen_uint(values->ConstantBufferOffset, 16, 20);
 }
 
-#define GEN8_3DSTATE_RASTER_length             5
-#define GEN8_3DSTATE_RASTER_length_bias        2
-#define GEN8_3DSTATE_RASTER_header              \
+#define GFX8_3DSTATE_RASTER_length             5
+#define GFX8_3DSTATE_RASTER_length_bias        2
+#define GFX8_3DSTATE_RASTER_header              \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     80,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_RASTER {
+struct GFX8_3DSTATE_RASTER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4291,9 +4307,9 @@ struct GEN8_3DSTATE_RASTER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_RASTER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_RASTER_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_3DSTATE_RASTER * restrict values)
+                         __attribute__((unused)) const struct GFX8_3DSTATE_RASTER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4332,14 +4348,14 @@ GEN8_3DSTATE_RASTER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->GlobalDepthOffsetClamp);
 }
 
-#define GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0_header\
+#define GFX8_3DSTATE_SAMPLER_PALETTE_LOAD0_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_PALETTE_LOAD0_header\
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0 {
+struct GFX8_3DSTATE_SAMPLER_PALETTE_LOAD0 {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4349,9 +4365,9 @@ struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0 * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_PALETTE_LOAD0 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4363,15 +4379,15 @@ GEN8_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1_header\
+#define GFX8_3DSTATE_SAMPLER_PALETTE_LOAD1_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_PALETTE_LOAD1_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     12,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1 {
+struct GFX8_3DSTATE_SAMPLER_PALETTE_LOAD1 {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4381,9 +4397,9 @@ struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1 * restrict values)
+                                        __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_PALETTE_LOAD1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4395,16 +4411,16 @@ GEN8_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS_length      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS_header\
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS_length      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     45,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS {
+struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4414,9 +4430,9 @@ struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4431,16 +4447,16 @@ GEN8_3DSTATE_SAMPLER_STATE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoDSSamplerState, 5, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS_length      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS_header\
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS_length      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     46,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS {
+struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4450,9 +4466,9 @@ struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4467,16 +4483,16 @@ GEN8_3DSTATE_SAMPLER_STATE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoGSSamplerState, 5, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS_length      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS_header\
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS_length      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     44,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS {
+struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4486,9 +4502,9 @@ struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4503,16 +4519,16 @@ GEN8_3DSTATE_SAMPLER_STATE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoHSSamplerState, 5, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS_length      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS_header\
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS_length      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     47,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS {
+struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4522,9 +4538,9 @@ struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4539,16 +4555,16 @@ GEN8_3DSTATE_SAMPLER_STATE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoPSSamplerState, 5, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS_length      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS_length_bias      2
-#define GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS_header\
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS_length      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS_length_bias      2
+#define GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     43,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS {
+struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4558,9 +4574,9 @@ struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS * restrict values)
+                                            __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLER_STATE_POINTERS_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4575,16 +4591,16 @@ GEN8_3DSTATE_SAMPLER_STATE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_d
       __gen_offset(values->PointertoVSSamplerState, 5, 31);
 }
 
-#define GEN8_3DSTATE_SAMPLE_MASK_length        2
-#define GEN8_3DSTATE_SAMPLE_MASK_length_bias      2
-#define GEN8_3DSTATE_SAMPLE_MASK_header         \
+#define GFX8_3DSTATE_SAMPLE_MASK_length        2
+#define GFX8_3DSTATE_SAMPLE_MASK_length_bias      2
+#define GFX8_3DSTATE_SAMPLE_MASK_header         \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     24,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLE_MASK {
+struct GFX8_3DSTATE_SAMPLE_MASK {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4594,9 +4610,9 @@ struct GEN8_3DSTATE_SAMPLE_MASK {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLE_MASK * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLE_MASK * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4611,16 +4627,16 @@ GEN8_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SampleMask, 0, 15);
 }
 
-#define GEN8_3DSTATE_SAMPLE_PATTERN_length      9
-#define GEN8_3DSTATE_SAMPLE_PATTERN_length_bias      2
-#define GEN8_3DSTATE_SAMPLE_PATTERN_header      \
+#define GFX8_3DSTATE_SAMPLE_PATTERN_length      9
+#define GFX8_3DSTATE_SAMPLE_PATTERN_length_bias      2
+#define GFX8_3DSTATE_SAMPLE_PATTERN_header      \
    .DWordLength                         =      7,  \
    ._3DCommandSubOpcode                 =     28,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SAMPLE_PATTERN {
+struct GFX8_3DSTATE_SAMPLE_PATTERN {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4659,9 +4675,9 @@ struct GEN8_3DSTATE_SAMPLE_PATTERN {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SAMPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SAMPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN8_3DSTATE_SAMPLE_PATTERN * restrict values)
+                                 __attribute__((unused)) const struct GFX8_3DSTATE_SAMPLE_PATTERN * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4719,16 +4735,16 @@ GEN8_3DSTATE_SAMPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->_1xSample0XOffset, 20, 23, 4);
 }
 
-#define GEN8_3DSTATE_SBE_length                4
-#define GEN8_3DSTATE_SBE_length_bias           2
-#define GEN8_3DSTATE_SBE_header                 \
+#define GFX8_3DSTATE_SBE_length                4
+#define GFX8_3DSTATE_SBE_length_bias           2
+#define GFX8_3DSTATE_SBE_header                 \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     31,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SBE {
+struct GFX8_3DSTATE_SBE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4753,9 +4769,9 @@ struct GEN8_3DSTATE_SBE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN8_3DSTATE_SBE * restrict values)
+                      __attribute__((unused)) const struct GFX8_3DSTATE_SBE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4787,29 +4803,29 @@ GEN8_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ConstantInterpolationEnable, 0, 31);
 }
 
-#define GEN8_3DSTATE_SBE_SWIZ_length          11
-#define GEN8_3DSTATE_SBE_SWIZ_length_bias      2
-#define GEN8_3DSTATE_SBE_SWIZ_header            \
+#define GFX8_3DSTATE_SBE_SWIZ_length          11
+#define GFX8_3DSTATE_SBE_SWIZ_length_bias      2
+#define GFX8_3DSTATE_SBE_SWIZ_header            \
    .DWordLength                         =      9,  \
    ._3DCommandSubOpcode                 =     81,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SBE_SWIZ {
+struct GFX8_3DSTATE_SBE_SWIZ {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL Attribute[16];
+   struct GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL Attribute[16];
    uint32_t                             AttributeWrapShortestEnables[16];
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SBE_SWIZ_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SBE_SWIZ_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_3DSTATE_SBE_SWIZ * restrict values)
+                           __attribute__((unused)) const struct GFX8_3DSTATE_SBE_SWIZ * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4821,80 +4837,80 @@ GEN8_3DSTATE_SBE_SWIZ_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    uint32_t v1_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v1_0, &values->Attribute[0]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v1_0, &values->Attribute[0]);
 
    uint32_t v1_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v1_1, &values->Attribute[1]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v1_1, &values->Attribute[1]);
 
    dw[1] =
       __gen_uint(v1_0, 0, 15) |
       __gen_uint(v1_1, 16, 31);
 
    uint32_t v2_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_0, &values->Attribute[2]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_0, &values->Attribute[2]);
 
    uint32_t v2_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_1, &values->Attribute[3]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_1, &values->Attribute[3]);
 
    dw[2] =
       __gen_uint(v2_0, 0, 15) |
       __gen_uint(v2_1, 16, 31);
 
    uint32_t v3_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_0, &values->Attribute[4]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_0, &values->Attribute[4]);
 
    uint32_t v3_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_1, &values->Attribute[5]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_1, &values->Attribute[5]);
 
    dw[3] =
       __gen_uint(v3_0, 0, 15) |
       __gen_uint(v3_1, 16, 31);
 
    uint32_t v4_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_0, &values->Attribute[6]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_0, &values->Attribute[6]);
 
    uint32_t v4_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_1, &values->Attribute[7]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_1, &values->Attribute[7]);
 
    dw[4] =
       __gen_uint(v4_0, 0, 15) |
       __gen_uint(v4_1, 16, 31);
 
    uint32_t v5_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_0, &values->Attribute[8]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_0, &values->Attribute[8]);
 
    uint32_t v5_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_1, &values->Attribute[9]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_1, &values->Attribute[9]);
 
    dw[5] =
       __gen_uint(v5_0, 0, 15) |
       __gen_uint(v5_1, 16, 31);
 
    uint32_t v6_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_0, &values->Attribute[10]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_0, &values->Attribute[10]);
 
    uint32_t v6_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_1, &values->Attribute[11]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_1, &values->Attribute[11]);
 
    dw[6] =
       __gen_uint(v6_0, 0, 15) |
       __gen_uint(v6_1, 16, 31);
 
    uint32_t v7_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_0, &values->Attribute[12]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_0, &values->Attribute[12]);
 
    uint32_t v7_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_1, &values->Attribute[13]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_1, &values->Attribute[13]);
 
    dw[7] =
       __gen_uint(v7_0, 0, 15) |
       __gen_uint(v7_1, 16, 31);
 
    uint32_t v8_0;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_0, &values->Attribute[14]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_0, &values->Attribute[14]);
 
    uint32_t v8_1;
-   GEN8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_1, &values->Attribute[15]);
+   GFX8_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_1, &values->Attribute[15]);
 
    dw[8] =
       __gen_uint(v8_0, 0, 15) |
@@ -4921,16 +4937,16 @@ GEN8_3DSTATE_SBE_SWIZ_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AttributeWrapShortestEnables[15], 28, 31);
 }
 
-#define GEN8_3DSTATE_SCISSOR_STATE_POINTERS_length      2
-#define GEN8_3DSTATE_SCISSOR_STATE_POINTERS_length_bias      2
-#define GEN8_3DSTATE_SCISSOR_STATE_POINTERS_header\
+#define GFX8_3DSTATE_SCISSOR_STATE_POINTERS_length      2
+#define GFX8_3DSTATE_SCISSOR_STATE_POINTERS_length_bias      2
+#define GFX8_3DSTATE_SCISSOR_STATE_POINTERS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     15,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SCISSOR_STATE_POINTERS {
+struct GFX8_3DSTATE_SCISSOR_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4940,9 +4956,9 @@ struct GEN8_3DSTATE_SCISSOR_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN8_3DSTATE_SCISSOR_STATE_POINTERS * restrict values)
+                                         __attribute__((unused)) const struct GFX8_3DSTATE_SCISSOR_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4957,16 +4973,16 @@ GEN8_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data
       __gen_offset(values->ScissorRectPointer, 5, 31);
 }
 
-#define GEN8_3DSTATE_SF_length                 4
-#define GEN8_3DSTATE_SF_length_bias            2
-#define GEN8_3DSTATE_SF_header                  \
+#define GFX8_3DSTATE_SF_length                 4
+#define GFX8_3DSTATE_SF_length_bias            2
+#define GFX8_3DSTATE_SF_header                  \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     19,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SF {
+struct GFX8_3DSTATE_SF {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4999,9 +5015,9 @@ struct GEN8_3DSTATE_SF {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_SF * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_SF * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5034,16 +5050,16 @@ GEN8_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->LastPixelEnable, 31, 31);
 }
 
-#define GEN8_3DSTATE_SO_BUFFER_length          8
-#define GEN8_3DSTATE_SO_BUFFER_length_bias      2
-#define GEN8_3DSTATE_SO_BUFFER_header           \
+#define GFX8_3DSTATE_SO_BUFFER_length          8
+#define GFX8_3DSTATE_SO_BUFFER_length_bias      2
+#define GFX8_3DSTATE_SO_BUFFER_header           \
    .DWordLength                         =      6,  \
    ._3DCommandSubOpcode                 =     24,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SO_BUFFER {
+struct GFX8_3DSTATE_SO_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5061,9 +5077,9 @@ struct GEN8_3DSTATE_SO_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_3DSTATE_SO_BUFFER * restrict values)
+                            __attribute__((unused)) const struct GFX8_3DSTATE_SO_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5082,7 +5098,7 @@ GEN8_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SOBufferEnable, 31, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+      __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 2, 47);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -5090,7 +5106,7 @@ GEN8_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceSize, 0, 29);
 
    const uint64_t v5_address =
-      __gen_combine_address(data, &dw[5], values->StreamOutputBufferOffsetAddress, 0);
+      __gen_address(data, &dw[5], values->StreamOutputBufferOffsetAddress, 0, 2, 47);
    dw[5] = v5_address;
    dw[6] = v5_address >> 32;
 
@@ -5098,14 +5114,14 @@ GEN8_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StreamOffset, 0, 31);
 }
 
-#define GEN8_3DSTATE_SO_DECL_LIST_length_bias      2
-#define GEN8_3DSTATE_SO_DECL_LIST_header        \
+#define GFX8_3DSTATE_SO_DECL_LIST_length_bias      2
+#define GFX8_3DSTATE_SO_DECL_LIST_header        \
    ._3DCommandSubOpcode                 =     23,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_SO_DECL_LIST {
+struct GFX8_3DSTATE_SO_DECL_LIST {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5123,9 +5139,9 @@ struct GEN8_3DSTATE_SO_DECL_LIST {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_SO_DECL_LIST_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_SO_DECL_LIST_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_SO_DECL_LIST * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_SO_DECL_LIST * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5149,16 +5165,16 @@ GEN8_3DSTATE_SO_DECL_LIST_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->NumEntries3, 24, 31);
 }
 
-#define GEN8_3DSTATE_STENCIL_BUFFER_length      5
-#define GEN8_3DSTATE_STENCIL_BUFFER_length_bias      2
-#define GEN8_3DSTATE_STENCIL_BUFFER_header      \
+#define GFX8_3DSTATE_STENCIL_BUFFER_length      5
+#define GFX8_3DSTATE_STENCIL_BUFFER_length_bias      2
+#define GFX8_3DSTATE_STENCIL_BUFFER_header      \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      6,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_STENCIL_BUFFER {
+struct GFX8_3DSTATE_STENCIL_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5172,9 +5188,9 @@ struct GEN8_3DSTATE_STENCIL_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN8_3DSTATE_STENCIL_BUFFER * restrict values)
+                                 __attribute__((unused)) const struct GFX8_3DSTATE_STENCIL_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5191,7 +5207,7 @@ GEN8_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StencilBufferEnable, 31, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+      __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -5199,16 +5215,16 @@ GEN8_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceQPitch, 0, 14);
 }
 
-#define GEN8_3DSTATE_STREAMOUT_length          5
-#define GEN8_3DSTATE_STREAMOUT_length_bias      2
-#define GEN8_3DSTATE_STREAMOUT_header           \
+#define GFX8_3DSTATE_STREAMOUT_length          5
+#define GFX8_3DSTATE_STREAMOUT_length_bias      2
+#define GFX8_3DSTATE_STREAMOUT_header           \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     30,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_STREAMOUT {
+struct GFX8_3DSTATE_STREAMOUT {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5240,9 +5256,9 @@ struct GEN8_3DSTATE_STREAMOUT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_STREAMOUT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_STREAMOUT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_3DSTATE_STREAMOUT * restrict values)
+                            __attribute__((unused)) const struct GFX8_3DSTATE_STREAMOUT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5280,16 +5296,16 @@ GEN8_3DSTATE_STREAMOUT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Buffer3SurfacePitch, 16, 27);
 }
 
-#define GEN8_3DSTATE_TE_length                 4
-#define GEN8_3DSTATE_TE_length_bias            2
-#define GEN8_3DSTATE_TE_header                  \
+#define GFX8_3DSTATE_TE_length                 4
+#define GFX8_3DSTATE_TE_length_bias            2
+#define GFX8_3DSTATE_TE_header                  \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     28,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_TE {
+struct GFX8_3DSTATE_TE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5317,9 +5333,9 @@ struct GEN8_3DSTATE_TE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_TE * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_TE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5344,16 +5360,16 @@ GEN8_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->MaximumTessellationFactorNotOdd);
 }
 
-#define GEN8_3DSTATE_URB_DS_length             2
-#define GEN8_3DSTATE_URB_DS_length_bias        2
-#define GEN8_3DSTATE_URB_DS_header              \
+#define GFX8_3DSTATE_URB_DS_length             2
+#define GFX8_3DSTATE_URB_DS_length_bias        2
+#define GFX8_3DSTATE_URB_DS_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     50,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_URB_DS {
+struct GFX8_3DSTATE_URB_DS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5365,9 +5381,9 @@ struct GEN8_3DSTATE_URB_DS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_URB_DS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_URB_DS_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_3DSTATE_URB_DS * restrict values)
+                         __attribute__((unused)) const struct GFX8_3DSTATE_URB_DS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5384,16 +5400,16 @@ GEN8_3DSTATE_URB_DS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DSURBStartingAddress, 25, 31);
 }
 
-#define GEN8_3DSTATE_URB_GS_length             2
-#define GEN8_3DSTATE_URB_GS_length_bias        2
-#define GEN8_3DSTATE_URB_GS_header              \
+#define GFX8_3DSTATE_URB_GS_length             2
+#define GFX8_3DSTATE_URB_GS_length_bias        2
+#define GFX8_3DSTATE_URB_GS_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     51,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_URB_GS {
+struct GFX8_3DSTATE_URB_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5405,9 +5421,9 @@ struct GEN8_3DSTATE_URB_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_URB_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_URB_GS_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_3DSTATE_URB_GS * restrict values)
+                         __attribute__((unused)) const struct GFX8_3DSTATE_URB_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5424,16 +5440,16 @@ GEN8_3DSTATE_URB_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GSURBStartingAddress, 25, 31);
 }
 
-#define GEN8_3DSTATE_URB_HS_length             2
-#define GEN8_3DSTATE_URB_HS_length_bias        2
-#define GEN8_3DSTATE_URB_HS_header              \
+#define GFX8_3DSTATE_URB_HS_length             2
+#define GFX8_3DSTATE_URB_HS_length_bias        2
+#define GFX8_3DSTATE_URB_HS_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     49,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_URB_HS {
+struct GFX8_3DSTATE_URB_HS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5445,9 +5461,9 @@ struct GEN8_3DSTATE_URB_HS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_URB_HS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_URB_HS_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_3DSTATE_URB_HS * restrict values)
+                         __attribute__((unused)) const struct GFX8_3DSTATE_URB_HS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5464,16 +5480,16 @@ GEN8_3DSTATE_URB_HS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->HSURBStartingAddress, 25, 31);
 }
 
-#define GEN8_3DSTATE_URB_VS_length             2
-#define GEN8_3DSTATE_URB_VS_length_bias        2
-#define GEN8_3DSTATE_URB_VS_header              \
+#define GFX8_3DSTATE_URB_VS_length             2
+#define GFX8_3DSTATE_URB_VS_length_bias        2
+#define GFX8_3DSTATE_URB_VS_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     48,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_URB_VS {
+struct GFX8_3DSTATE_URB_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5485,9 +5501,9 @@ struct GEN8_3DSTATE_URB_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_URB_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_URB_VS_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_3DSTATE_URB_VS * restrict values)
+                         __attribute__((unused)) const struct GFX8_3DSTATE_URB_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5504,15 +5520,15 @@ GEN8_3DSTATE_URB_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VSURBStartingAddress, 25, 31);
 }
 
-#define GEN8_3DSTATE_VERTEX_BUFFERS_length_bias      2
-#define GEN8_3DSTATE_VERTEX_BUFFERS_header      \
+#define GFX8_3DSTATE_VERTEX_BUFFERS_length_bias      2
+#define GFX8_3DSTATE_VERTEX_BUFFERS_header      \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VERTEX_BUFFERS {
+struct GFX8_3DSTATE_VERTEX_BUFFERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5522,9 +5538,9 @@ struct GEN8_3DSTATE_VERTEX_BUFFERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN8_3DSTATE_VERTEX_BUFFERS * restrict values)
+                                 __attribute__((unused)) const struct GFX8_3DSTATE_VERTEX_BUFFERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5536,15 +5552,15 @@ GEN8_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_3DSTATE_VERTEX_ELEMENTS_length_bias      2
-#define GEN8_3DSTATE_VERTEX_ELEMENTS_header     \
+#define GFX8_3DSTATE_VERTEX_ELEMENTS_length_bias      2
+#define GFX8_3DSTATE_VERTEX_ELEMENTS_header     \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      9,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VERTEX_ELEMENTS {
+struct GFX8_3DSTATE_VERTEX_ELEMENTS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5554,9 +5570,9 @@ struct GEN8_3DSTATE_VERTEX_ELEMENTS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_3DSTATE_VERTEX_ELEMENTS * restrict values)
+                                  __attribute__((unused)) const struct GFX8_3DSTATE_VERTEX_ELEMENTS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5568,16 +5584,16 @@ GEN8_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_3DSTATE_VF_length                 2
-#define GEN8_3DSTATE_VF_length_bias            2
-#define GEN8_3DSTATE_VF_header                  \
+#define GFX8_3DSTATE_VF_length                 2
+#define GFX8_3DSTATE_VF_length_bias            2
+#define GFX8_3DSTATE_VF_header                  \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     12,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VF {
+struct GFX8_3DSTATE_VF {
    uint32_t                             DWordLength;
    bool                                 IndexedDrawCutIndexEnable;
    uint32_t                             _3DCommandSubOpcode;
@@ -5588,9 +5604,9 @@ struct GEN8_3DSTATE_VF {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VF_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VF_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_VF * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_VF * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5606,16 +5622,16 @@ GEN8_3DSTATE_VF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CutIndex, 0, 31);
 }
 
-#define GEN8_3DSTATE_VF_INSTANCING_length      3
-#define GEN8_3DSTATE_VF_INSTANCING_length_bias      2
-#define GEN8_3DSTATE_VF_INSTANCING_header       \
+#define GFX8_3DSTATE_VF_INSTANCING_length      3
+#define GFX8_3DSTATE_VF_INSTANCING_length_bias      2
+#define GFX8_3DSTATE_VF_INSTANCING_header       \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     73,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VF_INSTANCING {
+struct GFX8_3DSTATE_VF_INSTANCING {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5627,9 +5643,9 @@ struct GEN8_3DSTATE_VF_INSTANCING {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VF_INSTANCING_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VF_INSTANCING_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_3DSTATE_VF_INSTANCING * restrict values)
+                                __attribute__((unused)) const struct GFX8_3DSTATE_VF_INSTANCING * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5648,16 +5664,16 @@ GEN8_3DSTATE_VF_INSTANCING_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstanceDataStepRate, 0, 31);
 }
 
-#define GEN8_3DSTATE_VF_SGVS_length            2
-#define GEN8_3DSTATE_VF_SGVS_length_bias       2
-#define GEN8_3DSTATE_VF_SGVS_header             \
+#define GFX8_3DSTATE_VF_SGVS_length            2
+#define GFX8_3DSTATE_VF_SGVS_length_bias       2
+#define GFX8_3DSTATE_VF_SGVS_header             \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     74,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VF_SGVS {
+struct GFX8_3DSTATE_VF_SGVS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5680,9 +5696,9 @@ struct GEN8_3DSTATE_VF_SGVS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VF_SGVS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VF_SGVS_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN8_3DSTATE_VF_SGVS * restrict values)
+                          __attribute__((unused)) const struct GFX8_3DSTATE_VF_SGVS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5702,15 +5718,15 @@ GEN8_3DSTATE_VF_SGVS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstanceIDEnable, 31, 31);
 }
 
-#define GEN8_3DSTATE_VF_STATISTICS_length      1
-#define GEN8_3DSTATE_VF_STATISTICS_length_bias      1
-#define GEN8_3DSTATE_VF_STATISTICS_header       \
+#define GFX8_3DSTATE_VF_STATISTICS_length      1
+#define GFX8_3DSTATE_VF_STATISTICS_length_bias      1
+#define GFX8_3DSTATE_VF_STATISTICS_header       \
    ._3DCommandSubOpcode                 =     11,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      1,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VF_STATISTICS {
+struct GFX8_3DSTATE_VF_STATISTICS {
    bool                                 StatisticsEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5719,9 +5735,9 @@ struct GEN8_3DSTATE_VF_STATISTICS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_3DSTATE_VF_STATISTICS * restrict values)
+                                __attribute__((unused)) const struct GFX8_3DSTATE_VF_STATISTICS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5733,28 +5749,28 @@ GEN8_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_3DSTATE_VF_TOPOLOGY_length        2
-#define GEN8_3DSTATE_VF_TOPOLOGY_length_bias      2
-#define GEN8_3DSTATE_VF_TOPOLOGY_header         \
+#define GFX8_3DSTATE_VF_TOPOLOGY_length        2
+#define GFX8_3DSTATE_VF_TOPOLOGY_length_bias      2
+#define GFX8_3DSTATE_VF_TOPOLOGY_header         \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     75,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VF_TOPOLOGY {
+struct GFX8_3DSTATE_VF_TOPOLOGY {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   enum GEN8_3D_Prim_Topo_Type          PrimitiveTopologyType;
+   enum GFX8_3D_Prim_Topo_Type          PrimitiveTopologyType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VF_TOPOLOGY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VF_TOPOLOGY_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_3DSTATE_VF_TOPOLOGY * restrict values)
+                              __attribute__((unused)) const struct GFX8_3DSTATE_VF_TOPOLOGY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5769,16 +5785,16 @@ GEN8_3DSTATE_VF_TOPOLOGY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PrimitiveTopologyType, 0, 5);
 }
 
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_length      2
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_length_bias      2
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_header\
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_length      2
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_length_bias      2
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     35,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC {
+struct GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5788,9 +5804,9 @@ struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_pack(__attribute__((unused)) __gen_user_data *data,
                                              __attribute__((unused)) void * restrict dst,
-                                             __attribute__((unused)) const struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC * restrict values)
+                                             __attribute__((unused)) const struct GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_CC * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5805,16 +5821,16 @@ GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_CC_pack(__attribute__((unused)) __gen_user_
       __gen_offset(values->CCViewportPointer, 5, 31);
 }
 
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_length      2
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_length_bias      2
-#define GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_header\
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_length      2
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_length_bias      2
+#define GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     33,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP {
+struct GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5824,9 +5840,9 @@ struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
                                                   __attribute__((unused)) void * restrict dst,
-                                                  __attribute__((unused)) const struct GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP * restrict values)
+                                                  __attribute__((unused)) const struct GFX8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5841,16 +5857,16 @@ GEN8_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_pack(__attribute__((unused)) __gen_
       __gen_offset(values->SFClipViewportPointer, 6, 31);
 }
 
-#define GEN8_3DSTATE_VS_length                 9
-#define GEN8_3DSTATE_VS_length_bias            2
-#define GEN8_3DSTATE_VS_header                  \
+#define GFX8_3DSTATE_VS_length                 9
+#define GFX8_3DSTATE_VS_length_bias            2
+#define GFX8_3DSTATE_VS_header                  \
    .DWordLength                         =      7,  \
    ._3DCommandSubOpcode                 =     16,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_VS {
+struct GFX8_3DSTATE_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -5891,9 +5907,9 @@ struct GEN8_3DSTATE_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_VS * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5923,7 +5939,7 @@ GEN8_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v4 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->ScratchSpaceBasePointer, v4);
+      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
    dw[4] = v4_address;
    dw[5] = (v4_address >> 32) | (v4 >> 32);
 
@@ -5946,16 +5962,16 @@ GEN8_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VertexURBEntryOutputReadOffset, 21, 26);
 }
 
-#define GEN8_3DSTATE_WM_length                 2
-#define GEN8_3DSTATE_WM_length_bias            2
-#define GEN8_3DSTATE_WM_header                  \
+#define GFX8_3DSTATE_WM_length                 2
+#define GFX8_3DSTATE_WM_length_bias            2
+#define GFX8_3DSTATE_WM_header                  \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     20,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_WM {
+struct GFX8_3DSTATE_WM {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -6005,9 +6021,9 @@ struct GEN8_3DSTATE_WM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_3DSTATE_WM * restrict values)
+                     __attribute__((unused)) const struct GFX8_3DSTATE_WM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6036,16 +6052,16 @@ GEN8_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StatisticsEnable, 31, 31);
 }
 
-#define GEN8_3DSTATE_WM_CHROMAKEY_length       2
-#define GEN8_3DSTATE_WM_CHROMAKEY_length_bias      2
-#define GEN8_3DSTATE_WM_CHROMAKEY_header        \
+#define GFX8_3DSTATE_WM_CHROMAKEY_length       2
+#define GFX8_3DSTATE_WM_CHROMAKEY_length_bias      2
+#define GFX8_3DSTATE_WM_CHROMAKEY_header        \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     76,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_WM_CHROMAKEY {
+struct GFX8_3DSTATE_WM_CHROMAKEY {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -6055,9 +6071,9 @@ struct GEN8_3DSTATE_WM_CHROMAKEY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_WM_CHROMAKEY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_WM_CHROMAKEY_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_3DSTATE_WM_CHROMAKEY * restrict values)
+                               __attribute__((unused)) const struct GFX8_3DSTATE_WM_CHROMAKEY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6072,16 +6088,16 @@ GEN8_3DSTATE_WM_CHROMAKEY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ChromaKeyKillEnable, 31, 31);
 }
 
-#define GEN8_3DSTATE_WM_DEPTH_STENCIL_length      3
-#define GEN8_3DSTATE_WM_DEPTH_STENCIL_length_bias      2
-#define GEN8_3DSTATE_WM_DEPTH_STENCIL_header    \
+#define GFX8_3DSTATE_WM_DEPTH_STENCIL_length      3
+#define GFX8_3DSTATE_WM_DEPTH_STENCIL_length_bias      2
+#define GFX8_3DSTATE_WM_DEPTH_STENCIL_header    \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     78,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_WM_DEPTH_STENCIL {
+struct GFX8_3DSTATE_WM_DEPTH_STENCIL {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -6092,15 +6108,15 @@ struct GEN8_3DSTATE_WM_DEPTH_STENCIL {
    bool                                 StencilBufferWriteEnable;
    bool                                 StencilTestEnable;
    bool                                 DoubleSidedStencilEnable;
-   enum GEN8_3D_Compare_Function        DepthTestFunction;
-   enum GEN8_3D_Compare_Function        StencilTestFunction;
-   enum GEN8_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
-   enum GEN8_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
-   enum GEN8_3D_Stencil_Operation       BackfaceStencilFailOp;
-   enum GEN8_3D_Compare_Function        BackfaceStencilTestFunction;
-   enum GEN8_3D_Stencil_Operation       StencilPassDepthPassOp;
-   enum GEN8_3D_Stencil_Operation       StencilPassDepthFailOp;
-   enum GEN8_3D_Stencil_Operation       StencilFailOp;
+   enum GFX8_3D_Compare_Function        DepthTestFunction;
+   enum GFX8_3D_Compare_Function        StencilTestFunction;
+   enum GFX8_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
+   enum GFX8_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
+   enum GFX8_3D_Stencil_Operation       BackfaceStencilFailOp;
+   enum GFX8_3D_Compare_Function        BackfaceStencilTestFunction;
+   enum GFX8_3D_Stencil_Operation       StencilPassDepthPassOp;
+   enum GFX8_3D_Stencil_Operation       StencilPassDepthFailOp;
+   enum GFX8_3D_Stencil_Operation       StencilFailOp;
    uint32_t                             BackfaceStencilWriteMask;
    uint32_t                             BackfaceStencilTestMask;
    uint32_t                             StencilWriteMask;
@@ -6108,9 +6124,9 @@ struct GEN8_3DSTATE_WM_DEPTH_STENCIL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_WM_DEPTH_STENCIL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_WM_DEPTH_STENCIL_pack(__attribute__((unused)) __gen_user_data *data,
                                    __attribute__((unused)) void * restrict dst,
-                                   __attribute__((unused)) const struct GEN8_3DSTATE_WM_DEPTH_STENCIL * restrict values)
+                                   __attribute__((unused)) const struct GFX8_3DSTATE_WM_DEPTH_STENCIL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6144,16 +6160,16 @@ GEN8_3DSTATE_WM_DEPTH_STENCIL_pack(__attribute__((unused)) __gen_user_data *data
       __gen_uint(values->StencilTestMask, 24, 31);
 }
 
-#define GEN8_3DSTATE_WM_HZ_OP_length           5
-#define GEN8_3DSTATE_WM_HZ_OP_length_bias      2
-#define GEN8_3DSTATE_WM_HZ_OP_header            \
+#define GFX8_3DSTATE_WM_HZ_OP_length           5
+#define GFX8_3DSTATE_WM_HZ_OP_length_bias      2
+#define GFX8_3DSTATE_WM_HZ_OP_header            \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     82,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_3DSTATE_WM_HZ_OP {
+struct GFX8_3DSTATE_WM_HZ_OP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -6176,9 +6192,9 @@ struct GEN8_3DSTATE_WM_HZ_OP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_3DSTATE_WM_HZ_OP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_3DSTATE_WM_HZ_OP_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_3DSTATE_WM_HZ_OP * restrict values)
+                           __attribute__((unused)) const struct GFX8_3DSTATE_WM_HZ_OP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6212,16 +6228,16 @@ GEN8_3DSTATE_WM_HZ_OP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SampleMask, 0, 15);
 }
 
-#define GEN8_GPGPU_CSR_BASE_ADDRESS_length      3
-#define GEN8_GPGPU_CSR_BASE_ADDRESS_length_bias      2
-#define GEN8_GPGPU_CSR_BASE_ADDRESS_header      \
+#define GFX8_GPGPU_CSR_BASE_ADDRESS_length      3
+#define GFX8_GPGPU_CSR_BASE_ADDRESS_length_bias      2
+#define GFX8_GPGPU_CSR_BASE_ADDRESS_header      \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN8_GPGPU_CSR_BASE_ADDRESS {
+struct GFX8_GPGPU_CSR_BASE_ADDRESS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -6231,9 +6247,9 @@ struct GEN8_GPGPU_CSR_BASE_ADDRESS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GPGPU_CSR_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GPGPU_CSR_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN8_GPGPU_CSR_BASE_ADDRESS * restrict values)
+                                 __attribute__((unused)) const struct GFX8_GPGPU_CSR_BASE_ADDRESS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6245,21 +6261,21 @@ GEN8_GPGPU_CSR_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->GPGPUCSRBaseAddress, 0);
+      __gen_address(data, &dw[1], values->GPGPUCSRBaseAddress, 0, 12, 63);
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 }
 
-#define GEN8_GPGPU_WALKER_length              15
-#define GEN8_GPGPU_WALKER_length_bias          2
-#define GEN8_GPGPU_WALKER_header                \
+#define GFX8_GPGPU_WALKER_length              15
+#define GFX8_GPGPU_WALKER_length_bias          2
+#define GFX8_GPGPU_WALKER_header                \
    .DWordLength                         =     13,  \
    .SubOpcode                           =      5,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_GPGPU_WALKER {
+struct GFX8_GPGPU_WALKER {
    uint32_t                             DWordLength;
    bool                                 PredicateEnable;
    bool                                 IndirectParameterEnable;
@@ -6288,9 +6304,9 @@ struct GEN8_GPGPU_WALKER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_GPGPU_WALKER * restrict values)
+                       __attribute__((unused)) const struct GFX8_GPGPU_WALKER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6347,16 +6363,16 @@ GEN8_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BottomExecutionMask, 0, 31);
 }
 
-#define GEN8_MEDIA_CURBE_LOAD_length           4
-#define GEN8_MEDIA_CURBE_LOAD_length_bias      2
-#define GEN8_MEDIA_CURBE_LOAD_header            \
+#define GFX8_MEDIA_CURBE_LOAD_length           4
+#define GFX8_MEDIA_CURBE_LOAD_length_bias      2
+#define GFX8_MEDIA_CURBE_LOAD_header            \
    .DWordLength                         =      2,  \
    .SubOpcode                           =      1,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_CURBE_LOAD {
+struct GFX8_MEDIA_CURBE_LOAD {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6367,9 +6383,9 @@ struct GEN8_MEDIA_CURBE_LOAD {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_MEDIA_CURBE_LOAD * restrict values)
+                           __attribute__((unused)) const struct GFX8_MEDIA_CURBE_LOAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6389,16 +6405,16 @@ GEN8_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CURBEDataStartAddress, 0, 31);
 }
 
-#define GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length      4
-#define GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length_bias      2
-#define GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_header\
+#define GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length      4
+#define GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length_bias      2
+#define GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_header\
    .DWordLength                         =      2,  \
    .SubOpcode                           =      2,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
+struct GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6409,9 +6425,9 @@ struct GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
                                           __attribute__((unused)) void * restrict dst,
-                                          __attribute__((unused)) const struct GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD * restrict values)
+                                          __attribute__((unused)) const struct GFX8_MEDIA_INTERFACE_DESCRIPTOR_LOAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6431,15 +6447,15 @@ GEN8_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_dat
       __gen_offset(values->InterfaceDescriptorDataStartAddress, 0, 31);
 }
 
-#define GEN8_MEDIA_OBJECT_length_bias          2
-#define GEN8_MEDIA_OBJECT_header                \
+#define GFX8_MEDIA_OBJECT_length_bias          2
+#define GFX8_MEDIA_OBJECT_header                \
    .DWordLength                         =      4,  \
    .MediaCommandSubOpcode               =      0,  \
    .MediaCommandOpcode                  =      1,  \
    .MediaCommandPipeline                =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_OBJECT {
+struct GFX8_MEDIA_OBJECT {
    uint32_t                             DWordLength;
    uint32_t                             MediaCommandSubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6472,9 +6488,9 @@ struct GEN8_MEDIA_OBJECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_MEDIA_OBJECT * restrict values)
+                       __attribute__((unused)) const struct GFX8_MEDIA_OBJECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6497,7 +6513,7 @@ GEN8_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ThreadSynchronization, 24, 24) |
       __gen_uint(values->ChildrenPresent, 31, 31);
 
-   dw[3] = __gen_combine_address(data, &dw[3], values->IndirectDataStartAddress, 0);
+   dw[3] = __gen_address(data, &dw[3], values->IndirectDataStartAddress, 0, 0, 31);
 
    dw[4] =
       __gen_uint(values->ScoreboardX, 0, 8) |
@@ -6508,15 +6524,15 @@ GEN8_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ScoreboardColor, 16, 19);
 }
 
-#define GEN8_MEDIA_OBJECT_GRPID_length_bias      2
-#define GEN8_MEDIA_OBJECT_GRPID_header          \
+#define GFX8_MEDIA_OBJECT_GRPID_length_bias      2
+#define GFX8_MEDIA_OBJECT_GRPID_header          \
    .DWordLength                         =      5,  \
    .MediaCommandSubOpcode               =      6,  \
    .MediaCommandOpcode                  =      1,  \
    .MediaCommandPipeline                =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_OBJECT_GRPID {
+struct GFX8_MEDIA_OBJECT_GRPID {
    uint32_t                             DWordLength;
    uint32_t                             MediaCommandSubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6547,9 +6563,9 @@ struct GEN8_MEDIA_OBJECT_GRPID {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_OBJECT_GRPID_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_OBJECT_GRPID_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN8_MEDIA_OBJECT_GRPID * restrict values)
+                             __attribute__((unused)) const struct GFX8_MEDIA_OBJECT_GRPID * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6571,7 +6587,7 @@ GEN8_MEDIA_OBJECT_GRPID_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ForceDestination, 22, 22) |
       __gen_uint(values->EndofThreadGroup, 23, 23);
 
-   dw[3] = __gen_combine_address(data, &dw[3], values->IndirectDataStartAddress, 0);
+   dw[3] = __gen_address(data, &dw[3], values->IndirectDataStartAddress, 0, 0, 31);
 
    dw[4] =
       __gen_uint(values->ScoreboardX, 0, 8) |
@@ -6585,16 +6601,16 @@ GEN8_MEDIA_OBJECT_GRPID_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GroupID, 0, 31);
 }
 
-#define GEN8_MEDIA_OBJECT_PRT_length          16
-#define GEN8_MEDIA_OBJECT_PRT_length_bias      2
-#define GEN8_MEDIA_OBJECT_PRT_header            \
+#define GFX8_MEDIA_OBJECT_PRT_length          16
+#define GFX8_MEDIA_OBJECT_PRT_length_bias      2
+#define GFX8_MEDIA_OBJECT_PRT_header            \
    .DWordLength                         =     14,  \
    .SubOpcode                           =      2,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_OBJECT_PRT {
+struct GFX8_MEDIA_OBJECT_PRT {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6610,9 +6626,9 @@ struct GEN8_MEDIA_OBJECT_PRT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_MEDIA_OBJECT_PRT * restrict values)
+                           __attribute__((unused)) const struct GFX8_MEDIA_OBJECT_PRT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6670,15 +6686,15 @@ GEN8_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InlineData[11], 0, 31);
 }
 
-#define GEN8_MEDIA_OBJECT_WALKER_length_bias      2
-#define GEN8_MEDIA_OBJECT_WALKER_header         \
+#define GFX8_MEDIA_OBJECT_WALKER_length_bias      2
+#define GFX8_MEDIA_OBJECT_WALKER_header         \
    .DWordLength                         =     15,  \
    .SubOpcode                           =      3,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_OBJECT_WALKER {
+struct GFX8_MEDIA_OBJECT_WALKER {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6722,9 +6738,9 @@ struct GEN8_MEDIA_OBJECT_WALKER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_MEDIA_OBJECT_WALKER * restrict values)
+                              __attribute__((unused)) const struct GFX8_MEDIA_OBJECT_WALKER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6798,16 +6814,16 @@ GEN8_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->GlobalInnerLoopUnitY, 16, 25);
 }
 
-#define GEN8_MEDIA_STATE_FLUSH_length          2
-#define GEN8_MEDIA_STATE_FLUSH_length_bias      2
-#define GEN8_MEDIA_STATE_FLUSH_header           \
+#define GFX8_MEDIA_STATE_FLUSH_length          2
+#define GFX8_MEDIA_STATE_FLUSH_length_bias      2
+#define GFX8_MEDIA_STATE_FLUSH_header           \
    .DWordLength                         =      0,  \
    .SubOpcode                           =      4,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_STATE_FLUSH {
+struct GFX8_MEDIA_STATE_FLUSH {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6819,9 +6835,9 @@ struct GEN8_MEDIA_STATE_FLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_MEDIA_STATE_FLUSH * restrict values)
+                            __attribute__((unused)) const struct GFX8_MEDIA_STATE_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6838,16 +6854,16 @@ GEN8_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->FlushtoGO, 7, 7);
 }
 
-#define GEN8_MEDIA_VFE_STATE_length            9
-#define GEN8_MEDIA_VFE_STATE_length_bias       2
-#define GEN8_MEDIA_VFE_STATE_header             \
+#define GFX8_MEDIA_VFE_STATE_length            9
+#define GFX8_MEDIA_VFE_STATE_length_bias       2
+#define GFX8_MEDIA_VFE_STATE_header             \
    .DWordLength                         =      7,  \
    .SubOpcode                           =      0,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN8_MEDIA_VFE_STATE {
+struct GFX8_MEDIA_VFE_STATE {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -6894,9 +6910,9 @@ struct GEN8_MEDIA_VFE_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN8_MEDIA_VFE_STATE * restrict values)
+                          __attribute__((unused)) const struct GFX8_MEDIA_VFE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6911,7 +6927,7 @@ GEN8_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PerThreadScratchSpace, 0, 3) |
       __gen_uint(values->StackSize, 4, 7);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->ScratchSpaceBasePointer, v1);
+      __gen_address(data, &dw[1], values->ScratchSpaceBasePointer, v1, 10, 47);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -6954,21 +6970,21 @@ GEN8_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->Scoreboard7DeltaY, 28, 31);
 }
 
-#define GEN8_MI_ARB_CHECK_length               1
-#define GEN8_MI_ARB_CHECK_length_bias          1
-#define GEN8_MI_ARB_CHECK_header                \
+#define GFX8_MI_ARB_CHECK_length               1
+#define GFX8_MI_ARB_CHECK_length_bias          1
+#define GFX8_MI_ARB_CHECK_header                \
    .MICommandOpcode                     =      5,  \
    .CommandType                         =      0
 
-struct GEN8_MI_ARB_CHECK {
+struct GFX8_MI_ARB_CHECK {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_MI_ARB_CHECK * restrict values)
+                       __attribute__((unused)) const struct GFX8_MI_ARB_CHECK * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -6977,23 +6993,23 @@ GEN8_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_ARB_ON_OFF_length              1
-#define GEN8_MI_ARB_ON_OFF_length_bias         1
-#define GEN8_MI_ARB_ON_OFF_header               \
+#define GFX8_MI_ARB_ON_OFF_length              1
+#define GFX8_MI_ARB_ON_OFF_length_bias         1
+#define GFX8_MI_ARB_ON_OFF_header               \
    .ArbitrationEnable                   =      1,  \
    .MICommandOpcode                     =      8,  \
    .CommandType                         =      0
 
-struct GEN8_MI_ARB_ON_OFF {
+struct GFX8_MI_ARB_ON_OFF {
    bool                                 ArbitrationEnable;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_MI_ARB_ON_OFF * restrict values)
+                        __attribute__((unused)) const struct GFX8_MI_ARB_ON_OFF * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7003,14 +7019,14 @@ GEN8_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_ATOMIC_length                  3
-#define GEN8_MI_ATOMIC_length_bias             2
-#define GEN8_MI_ATOMIC_header                   \
+#define GFX8_MI_ATOMIC_length                  3
+#define GFX8_MI_ATOMIC_length_bias             2
+#define GFX8_MI_ATOMIC_header                   \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     47,  \
    .CommandType                         =      0
 
-struct GEN8_MI_ATOMIC {
+struct GFX8_MI_ATOMIC {
    uint32_t                             DWordLength;
    uint32_t                             ATOMICOPCODE;
    uint32_t                             ReturnDataControl;
@@ -7039,9 +7055,9 @@ struct GEN8_MI_ATOMIC {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_ATOMIC_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_ATOMIC_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN8_MI_ATOMIC * restrict values)
+                    __attribute__((unused)) const struct GFX8_MI_ATOMIC * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7058,26 +7074,26 @@ GEN8_MI_ATOMIC_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->MemoryAddress, 0);
+      __gen_address(data, &dw[1], values->MemoryAddress, 0, 2, 47);
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 }
 
-#define GEN8_MI_BATCH_BUFFER_END_length        1
-#define GEN8_MI_BATCH_BUFFER_END_length_bias      1
-#define GEN8_MI_BATCH_BUFFER_END_header         \
+#define GFX8_MI_BATCH_BUFFER_END_length        1
+#define GFX8_MI_BATCH_BUFFER_END_length_bias      1
+#define GFX8_MI_BATCH_BUFFER_END_header         \
    .MICommandOpcode                     =     10,  \
    .CommandType                         =      0
 
-struct GEN8_MI_BATCH_BUFFER_END {
+struct GFX8_MI_BATCH_BUFFER_END {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_MI_BATCH_BUFFER_END * restrict values)
+                              __attribute__((unused)) const struct GFX8_MI_BATCH_BUFFER_END * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7086,14 +7102,14 @@ GEN8_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_BATCH_BUFFER_START_length      3
-#define GEN8_MI_BATCH_BUFFER_START_length_bias      2
-#define GEN8_MI_BATCH_BUFFER_START_header       \
+#define GFX8_MI_BATCH_BUFFER_START_length      3
+#define GFX8_MI_BATCH_BUFFER_START_length_bias      2
+#define GFX8_MI_BATCH_BUFFER_START_header       \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     49,  \
    .CommandType                         =      0
 
-struct GEN8_MI_BATCH_BUFFER_START {
+struct GFX8_MI_BATCH_BUFFER_START {
    uint32_t                             DWordLength;
    uint32_t                             AddressSpaceIndicator;
 #define ASI_GGTT                                 0
@@ -7110,9 +7126,9 @@ struct GEN8_MI_BATCH_BUFFER_START {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_MI_BATCH_BUFFER_START * restrict values)
+                                __attribute__((unused)) const struct GFX8_MI_BATCH_BUFFER_START * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7127,18 +7143,18 @@ GEN8_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->BatchBufferStartAddress, 0);
+      __gen_address(data, &dw[1], values->BatchBufferStartAddress, 0, 2, 47);
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 }
 
-#define GEN8_MI_CLFLUSH_length_bias            2
-#define GEN8_MI_CLFLUSH_header                  \
+#define GFX8_MI_CLFLUSH_length_bias            2
+#define GFX8_MI_CLFLUSH_header                  \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     39,  \
    .CommandType                         =      0
 
-struct GEN8_MI_CLFLUSH {
+struct GFX8_MI_CLFLUSH {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTT;
    uint32_t                             MICommandOpcode;
@@ -7149,9 +7165,9 @@ struct GEN8_MI_CLFLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_MI_CLFLUSH * restrict values)
+                     __attribute__((unused)) const struct GFX8_MI_CLFLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7164,20 +7180,20 @@ GEN8_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v1 =
       __gen_uint(values->StartingCachelineOffset, 6, 11);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->PageBaseAddress, v1);
+      __gen_address(data, &dw[1], values->PageBaseAddress, v1, 12, 47);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 }
 
-#define GEN8_MI_CONDITIONAL_BATCH_BUFFER_END_length      3
-#define GEN8_MI_CONDITIONAL_BATCH_BUFFER_END_length_bias      2
-#define GEN8_MI_CONDITIONAL_BATCH_BUFFER_END_header\
+#define GFX8_MI_CONDITIONAL_BATCH_BUFFER_END_length      3
+#define GFX8_MI_CONDITIONAL_BATCH_BUFFER_END_length_bias      2
+#define GFX8_MI_CONDITIONAL_BATCH_BUFFER_END_header\
    .DWordLength                         =      1,  \
    .CompareSemaphore                    =      0,  \
    .MICommandOpcode                     =     54,  \
    .CommandType                         =      0
 
-struct GEN8_MI_CONDITIONAL_BATCH_BUFFER_END {
+struct GFX8_MI_CONDITIONAL_BATCH_BUFFER_END {
    uint32_t                             DWordLength;
    uint32_t                             CompareSemaphore;
    bool                                 UseGlobalGTT;
@@ -7188,9 +7204,9 @@ struct GEN8_MI_CONDITIONAL_BATCH_BUFFER_END {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
                                           __attribute__((unused)) void * restrict dst,
-                                          __attribute__((unused)) const struct GEN8_MI_CONDITIONAL_BATCH_BUFFER_END * restrict values)
+                                          __attribute__((unused)) const struct GFX8_MI_CONDITIONAL_BATCH_BUFFER_END * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7205,19 +7221,19 @@ GEN8_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_dat
       __gen_uint(values->CompareDataDword, 0, 31);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->CompareAddress, 0);
+      __gen_address(data, &dw[2], values->CompareAddress, 0, 3, 47);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 }
 
-#define GEN8_MI_COPY_MEM_MEM_length            5
-#define GEN8_MI_COPY_MEM_MEM_length_bias       2
-#define GEN8_MI_COPY_MEM_MEM_header             \
+#define GFX8_MI_COPY_MEM_MEM_length            5
+#define GFX8_MI_COPY_MEM_MEM_length_bias       2
+#define GFX8_MI_COPY_MEM_MEM_header             \
    .DWordLength                         =      3,  \
    .MICommandOpcode                     =     46,  \
    .CommandType                         =      0
 
-struct GEN8_MI_COPY_MEM_MEM {
+struct GFX8_MI_COPY_MEM_MEM {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTTDestination;
    bool                                 UseGlobalGTTSource;
@@ -7228,9 +7244,9 @@ struct GEN8_MI_COPY_MEM_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_COPY_MEM_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_COPY_MEM_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN8_MI_COPY_MEM_MEM * restrict values)
+                          __attribute__((unused)) const struct GFX8_MI_COPY_MEM_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7242,24 +7258,24 @@ GEN8_MI_COPY_MEM_MEM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->DestinationMemoryAddress, 0);
+      __gen_address(data, &dw[1], values->DestinationMemoryAddress, 0, 2, 63);
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 
    const uint64_t v3_address =
-      __gen_combine_address(data, &dw[3], values->SourceMemoryAddress, 0);
+      __gen_address(data, &dw[3], values->SourceMemoryAddress, 0, 2, 63);
    dw[3] = v3_address;
    dw[4] = v3_address >> 32;
 }
 
-#define GEN8_MI_LOAD_REGISTER_IMM_length       3
-#define GEN8_MI_LOAD_REGISTER_IMM_length_bias      2
-#define GEN8_MI_LOAD_REGISTER_IMM_header        \
+#define GFX8_MI_LOAD_REGISTER_IMM_length       3
+#define GFX8_MI_LOAD_REGISTER_IMM_length_bias      2
+#define GFX8_MI_LOAD_REGISTER_IMM_header        \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     34,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_REGISTER_IMM {
+struct GFX8_MI_LOAD_REGISTER_IMM {
    uint32_t                             DWordLength;
    uint32_t                             ByteWriteDisables;
    uint32_t                             MICommandOpcode;
@@ -7270,9 +7286,9 @@ struct GEN8_MI_LOAD_REGISTER_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_MI_LOAD_REGISTER_IMM * restrict values)
+                               __attribute__((unused)) const struct GFX8_MI_LOAD_REGISTER_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7289,14 +7305,14 @@ GEN8_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord, 0, 31);
 }
 
-#define GEN8_MI_LOAD_REGISTER_MEM_length       4
-#define GEN8_MI_LOAD_REGISTER_MEM_length_bias      2
-#define GEN8_MI_LOAD_REGISTER_MEM_header        \
+#define GFX8_MI_LOAD_REGISTER_MEM_length       4
+#define GFX8_MI_LOAD_REGISTER_MEM_length_bias      2
+#define GFX8_MI_LOAD_REGISTER_MEM_header        \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     41,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_REGISTER_MEM {
+struct GFX8_MI_LOAD_REGISTER_MEM {
    uint32_t                             DWordLength;
    bool                                 AsyncModeEnable;
    bool                                 UseGlobalGTT;
@@ -7307,9 +7323,9 @@ struct GEN8_MI_LOAD_REGISTER_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_MI_LOAD_REGISTER_MEM * restrict values)
+                               __attribute__((unused)) const struct GFX8_MI_LOAD_REGISTER_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7324,19 +7340,19 @@ GEN8_MI_LOAD_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->RegisterAddress, 2, 22);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+      __gen_address(data, &dw[2], values->MemoryAddress, 0, 2, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 }
 
-#define GEN8_MI_LOAD_REGISTER_REG_length       3
-#define GEN8_MI_LOAD_REGISTER_REG_length_bias      2
-#define GEN8_MI_LOAD_REGISTER_REG_header        \
+#define GFX8_MI_LOAD_REGISTER_REG_length       3
+#define GFX8_MI_LOAD_REGISTER_REG_length_bias      2
+#define GFX8_MI_LOAD_REGISTER_REG_header        \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     42,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_REGISTER_REG {
+struct GFX8_MI_LOAD_REGISTER_REG {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7345,9 +7361,9 @@ struct GEN8_MI_LOAD_REGISTER_REG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_REGISTER_REG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_REGISTER_REG_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_MI_LOAD_REGISTER_REG * restrict values)
+                               __attribute__((unused)) const struct GFX8_MI_LOAD_REGISTER_REG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7363,14 +7379,14 @@ GEN8_MI_LOAD_REGISTER_REG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->DestinationRegisterAddress, 2, 22);
 }
 
-#define GEN8_MI_LOAD_SCAN_LINES_EXCL_length      2
-#define GEN8_MI_LOAD_SCAN_LINES_EXCL_length_bias      2
-#define GEN8_MI_LOAD_SCAN_LINES_EXCL_header     \
+#define GFX8_MI_LOAD_SCAN_LINES_EXCL_length      2
+#define GFX8_MI_LOAD_SCAN_LINES_EXCL_length_bias      2
+#define GFX8_MI_LOAD_SCAN_LINES_EXCL_header     \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     19,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_SCAN_LINES_EXCL {
+struct GFX8_MI_LOAD_SCAN_LINES_EXCL {
    uint32_t                             DWordLength;
    uint32_t                             DisplayPlaneSelect;
 #define DisplayPlaneA                            0
@@ -7383,9 +7399,9 @@ struct GEN8_MI_LOAD_SCAN_LINES_EXCL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_MI_LOAD_SCAN_LINES_EXCL * restrict values)
+                                  __attribute__((unused)) const struct GFX8_MI_LOAD_SCAN_LINES_EXCL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7400,14 +7416,14 @@ GEN8_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StartScanLineNumber, 16, 28);
 }
 
-#define GEN8_MI_LOAD_SCAN_LINES_INCL_length      2
-#define GEN8_MI_LOAD_SCAN_LINES_INCL_length_bias      2
-#define GEN8_MI_LOAD_SCAN_LINES_INCL_header     \
+#define GFX8_MI_LOAD_SCAN_LINES_INCL_length      2
+#define GFX8_MI_LOAD_SCAN_LINES_INCL_length_bias      2
+#define GFX8_MI_LOAD_SCAN_LINES_INCL_header     \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     18,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_SCAN_LINES_INCL {
+struct GFX8_MI_LOAD_SCAN_LINES_INCL {
    uint32_t                             DWordLength;
    uint32_t                             ScanLineEventDoneForward;
    uint32_t                             DisplayPlaneSelect;
@@ -7421,9 +7437,9 @@ struct GEN8_MI_LOAD_SCAN_LINES_INCL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_SCAN_LINES_INCL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_SCAN_LINES_INCL_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_MI_LOAD_SCAN_LINES_INCL * restrict values)
+                                  __attribute__((unused)) const struct GFX8_MI_LOAD_SCAN_LINES_INCL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7439,14 +7455,14 @@ GEN8_MI_LOAD_SCAN_LINES_INCL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StartScanLineNumber, 16, 28);
 }
 
-#define GEN8_MI_LOAD_URB_MEM_length            4
-#define GEN8_MI_LOAD_URB_MEM_length_bias       2
-#define GEN8_MI_LOAD_URB_MEM_header             \
+#define GFX8_MI_LOAD_URB_MEM_length            4
+#define GFX8_MI_LOAD_URB_MEM_length_bias       2
+#define GFX8_MI_LOAD_URB_MEM_header             \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     44,  \
    .CommandType                         =      0
 
-struct GEN8_MI_LOAD_URB_MEM {
+struct GFX8_MI_LOAD_URB_MEM {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7455,9 +7471,9 @@ struct GEN8_MI_LOAD_URB_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_LOAD_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_LOAD_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN8_MI_LOAD_URB_MEM * restrict values)
+                          __attribute__((unused)) const struct GFX8_MI_LOAD_URB_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7470,18 +7486,18 @@ GEN8_MI_LOAD_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->URBAddress, 2, 14);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+      __gen_address(data, &dw[2], values->MemoryAddress, 0, 6, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 }
 
-#define GEN8_MI_MATH_length_bias               2
-#define GEN8_MI_MATH_header                     \
+#define GFX8_MI_MATH_length_bias               2
+#define GFX8_MI_MATH_header                     \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     26,  \
    .CommandType                         =      0
 
-struct GEN8_MI_MATH {
+struct GFX8_MI_MATH {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7489,9 +7505,9 @@ struct GEN8_MI_MATH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_MATH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_MATH_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN8_MI_MATH * restrict values)
+                  __attribute__((unused)) const struct GFX8_MI_MATH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7501,13 +7517,13 @@ GEN8_MI_MATH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_NOOP_length                    1
-#define GEN8_MI_NOOP_length_bias               1
-#define GEN8_MI_NOOP_header                     \
+#define GFX8_MI_NOOP_length                    1
+#define GFX8_MI_NOOP_length_bias               1
+#define GFX8_MI_NOOP_header                     \
    .MICommandOpcode                     =      0,  \
    .CommandType                         =      0
 
-struct GEN8_MI_NOOP {
+struct GFX8_MI_NOOP {
    uint32_t                             IdentificationNumber;
    bool                                 IdentificationNumberRegisterWriteEnable;
    uint32_t                             MICommandOpcode;
@@ -7515,9 +7531,9 @@ struct GEN8_MI_NOOP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN8_MI_NOOP * restrict values)
+                  __attribute__((unused)) const struct GFX8_MI_NOOP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7528,13 +7544,13 @@ GEN8_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_PREDICATE_length               1
-#define GEN8_MI_PREDICATE_length_bias          1
-#define GEN8_MI_PREDICATE_header                \
+#define GFX8_MI_PREDICATE_length               1
+#define GFX8_MI_PREDICATE_length_bias          1
+#define GFX8_MI_PREDICATE_header                \
    .MICommandOpcode                     =     12,  \
    .CommandType                         =      0
 
-struct GEN8_MI_PREDICATE {
+struct GFX8_MI_PREDICATE {
    uint32_t                             CompareOperation;
 #define COMPARE_TRUE                             0
 #define COMPARE_FALSE                            1
@@ -7554,9 +7570,9 @@ struct GEN8_MI_PREDICATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_MI_PREDICATE * restrict values)
+                       __attribute__((unused)) const struct GFX8_MI_PREDICATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7568,21 +7584,21 @@ GEN8_MI_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_REPORT_HEAD_length             1
-#define GEN8_MI_REPORT_HEAD_length_bias        1
-#define GEN8_MI_REPORT_HEAD_header              \
+#define GFX8_MI_REPORT_HEAD_length             1
+#define GFX8_MI_REPORT_HEAD_length_bias        1
+#define GFX8_MI_REPORT_HEAD_header              \
    .MICommandOpcode                     =      7,  \
    .CommandType                         =      0
 
-struct GEN8_MI_REPORT_HEAD {
+struct GFX8_MI_REPORT_HEAD {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_MI_REPORT_HEAD * restrict values)
+                         __attribute__((unused)) const struct GFX8_MI_REPORT_HEAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7591,14 +7607,14 @@ GEN8_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_REPORT_PERF_COUNT_length       4
-#define GEN8_MI_REPORT_PERF_COUNT_length_bias      2
-#define GEN8_MI_REPORT_PERF_COUNT_header        \
+#define GFX8_MI_REPORT_PERF_COUNT_length       4
+#define GFX8_MI_REPORT_PERF_COUNT_length_bias      2
+#define GFX8_MI_REPORT_PERF_COUNT_header        \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     40,  \
    .CommandType                         =      0
 
-struct GEN8_MI_REPORT_PERF_COUNT {
+struct GFX8_MI_REPORT_PERF_COUNT {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7609,9 +7625,9 @@ struct GEN8_MI_REPORT_PERF_COUNT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_REPORT_PERF_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_REPORT_PERF_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_MI_REPORT_PERF_COUNT * restrict values)
+                               __attribute__((unused)) const struct GFX8_MI_REPORT_PERF_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7624,7 +7640,7 @@ GEN8_MI_REPORT_PERF_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->UseGlobalGTT, 0, 0) |
       __gen_uint(values->CoreModeEnable, 4, 4);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->MemoryAddress, v1);
+      __gen_address(data, &dw[1], values->MemoryAddress, v1, 6, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -7632,13 +7648,13 @@ GEN8_MI_REPORT_PERF_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ReportID, 0, 31);
 }
 
-#define GEN8_MI_RS_CONTEXT_length              1
-#define GEN8_MI_RS_CONTEXT_length_bias         1
-#define GEN8_MI_RS_CONTEXT_header               \
+#define GFX8_MI_RS_CONTEXT_length              1
+#define GFX8_MI_RS_CONTEXT_length_bias         1
+#define GFX8_MI_RS_CONTEXT_header               \
    .MICommandOpcode                     =     15,  \
    .CommandType                         =      0
 
-struct GEN8_MI_RS_CONTEXT {
+struct GFX8_MI_RS_CONTEXT {
    uint32_t                             ResourceStreamerSave;
 #define RS_Restore                               0
 #define RS_Save                                  1
@@ -7647,9 +7663,9 @@ struct GEN8_MI_RS_CONTEXT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_RS_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_RS_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_MI_RS_CONTEXT * restrict values)
+                        __attribute__((unused)) const struct GFX8_MI_RS_CONTEXT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7659,13 +7675,13 @@ GEN8_MI_RS_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_RS_CONTROL_length              1
-#define GEN8_MI_RS_CONTROL_length_bias         1
-#define GEN8_MI_RS_CONTROL_header               \
+#define GFX8_MI_RS_CONTROL_length              1
+#define GFX8_MI_RS_CONTROL_length_bias         1
+#define GFX8_MI_RS_CONTROL_header               \
    .MICommandOpcode                     =      6,  \
    .CommandType                         =      0
 
-struct GEN8_MI_RS_CONTROL {
+struct GFX8_MI_RS_CONTROL {
    uint32_t                             ResourceStreamerControl;
 #define RS_Stop                                  0
 #define RS_Start                                 1
@@ -7674,9 +7690,9 @@ struct GEN8_MI_RS_CONTROL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_RS_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_RS_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_MI_RS_CONTROL * restrict values)
+                        __attribute__((unused)) const struct GFX8_MI_RS_CONTROL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7686,14 +7702,14 @@ GEN8_MI_RS_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_RS_STORE_DATA_IMM_length       4
-#define GEN8_MI_RS_STORE_DATA_IMM_length_bias      2
-#define GEN8_MI_RS_STORE_DATA_IMM_header        \
+#define GFX8_MI_RS_STORE_DATA_IMM_length       4
+#define GFX8_MI_RS_STORE_DATA_IMM_length_bias      2
+#define GFX8_MI_RS_STORE_DATA_IMM_header        \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     43,  \
    .CommandType                         =      0
 
-struct GEN8_MI_RS_STORE_DATA_IMM {
+struct GFX8_MI_RS_STORE_DATA_IMM {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7703,9 +7719,9 @@ struct GEN8_MI_RS_STORE_DATA_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_RS_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_RS_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_MI_RS_STORE_DATA_IMM * restrict values)
+                               __attribute__((unused)) const struct GFX8_MI_RS_STORE_DATA_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7717,7 +7733,7 @@ GEN8_MI_RS_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v1 =
       __gen_uint(values->CoreModeEnable, 0, 0);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->DestinationAddress, v1);
+      __gen_address(data, &dw[1], values->DestinationAddress, v1, 2, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -7725,14 +7741,14 @@ GEN8_MI_RS_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord0, 0, 31);
 }
 
-#define GEN8_MI_SEMAPHORE_SIGNAL_length        2
-#define GEN8_MI_SEMAPHORE_SIGNAL_length_bias      2
-#define GEN8_MI_SEMAPHORE_SIGNAL_header         \
+#define GFX8_MI_SEMAPHORE_SIGNAL_length        2
+#define GFX8_MI_SEMAPHORE_SIGNAL_length_bias      2
+#define GFX8_MI_SEMAPHORE_SIGNAL_header         \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     27,  \
    .CommandType                         =      0
 
-struct GEN8_MI_SEMAPHORE_SIGNAL {
+struct GFX8_MI_SEMAPHORE_SIGNAL {
    uint32_t                             DWordLength;
    uint32_t                             TargetEngineSelect;
 #define RCS                                      0
@@ -7747,9 +7763,9 @@ struct GEN8_MI_SEMAPHORE_SIGNAL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_SEMAPHORE_SIGNAL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_SEMAPHORE_SIGNAL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_MI_SEMAPHORE_SIGNAL * restrict values)
+                              __attribute__((unused)) const struct GFX8_MI_SEMAPHORE_SIGNAL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7764,14 +7780,14 @@ GEN8_MI_SEMAPHORE_SIGNAL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TargetContextID, 0, 31);
 }
 
-#define GEN8_MI_SEMAPHORE_WAIT_length          4
-#define GEN8_MI_SEMAPHORE_WAIT_length_bias      2
-#define GEN8_MI_SEMAPHORE_WAIT_header           \
+#define GFX8_MI_SEMAPHORE_WAIT_length          4
+#define GFX8_MI_SEMAPHORE_WAIT_length_bias      2
+#define GFX8_MI_SEMAPHORE_WAIT_header           \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     28,  \
    .CommandType                         =      0
 
-struct GEN8_MI_SEMAPHORE_WAIT {
+struct GFX8_MI_SEMAPHORE_WAIT {
    uint32_t                             DWordLength;
    uint32_t                             CompareOperation;
 #define COMPARE_SAD_GREATER_THAN_SDD             0
@@ -7794,9 +7810,9 @@ struct GEN8_MI_SEMAPHORE_WAIT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_SEMAPHORE_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_SEMAPHORE_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_MI_SEMAPHORE_WAIT * restrict values)
+                            __attribute__((unused)) const struct GFX8_MI_SEMAPHORE_WAIT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7811,19 +7827,19 @@ GEN8_MI_SEMAPHORE_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       __gen_uint(values->SemaphoreDataDword, 0, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->SemaphoreAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->SemaphoreAddress, 0, 2, 31);
 
-   dw[3] = __gen_combine_address(data, &dw[3], values->SemaphoreAddressHigh, 0);
+   dw[3] = __gen_address(data, &dw[3], values->SemaphoreAddressHigh, 0, 0, 15);
 }
 
-#define GEN8_MI_SET_CONTEXT_length             2
-#define GEN8_MI_SET_CONTEXT_length_bias        2
-#define GEN8_MI_SET_CONTEXT_header              \
+#define GFX8_MI_SET_CONTEXT_length             2
+#define GFX8_MI_SET_CONTEXT_length_bias        2
+#define GFX8_MI_SET_CONTEXT_header              \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     24,  \
    .CommandType                         =      0
 
-struct GEN8_MI_SET_CONTEXT {
+struct GFX8_MI_SET_CONTEXT {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -7837,9 +7853,9 @@ struct GEN8_MI_SET_CONTEXT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_MI_SET_CONTEXT * restrict values)
+                         __attribute__((unused)) const struct GFX8_MI_SET_CONTEXT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7855,16 +7871,16 @@ GEN8_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ResourceStreamerStateSaveEnable, 3, 3) |
       __gen_uint(values->CoreModeEnable, 4, 4) |
       __gen_uint(values->ReservedMustbe1, 8, 8);
-   dw[1] = __gen_combine_address(data, &dw[1], values->LogicalContextAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->LogicalContextAddress, v1, 12, 31);
 }
 
-#define GEN8_MI_SET_PREDICATE_length           1
-#define GEN8_MI_SET_PREDICATE_length_bias      1
-#define GEN8_MI_SET_PREDICATE_header            \
+#define GFX8_MI_SET_PREDICATE_length           1
+#define GFX8_MI_SET_PREDICATE_length_bias      1
+#define GFX8_MI_SET_PREDICATE_header            \
    .MICommandOpcode                     =      1,  \
    .CommandType                         =      0
 
-struct GEN8_MI_SET_PREDICATE {
+struct GFX8_MI_SET_PREDICATE {
    uint32_t                             PREDICATEENABLE;
 #define NOOPNever                                0
 #define NOOPonResult2clear                       1
@@ -7880,9 +7896,9 @@ struct GEN8_MI_SET_PREDICATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_SET_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_SET_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_MI_SET_PREDICATE * restrict values)
+                           __attribute__((unused)) const struct GFX8_MI_SET_PREDICATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7892,14 +7908,14 @@ GEN8_MI_SET_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_STORE_DATA_IMM_length          4
-#define GEN8_MI_STORE_DATA_IMM_length_bias      2
-#define GEN8_MI_STORE_DATA_IMM_header           \
+#define GFX8_MI_STORE_DATA_IMM_length          4
+#define GFX8_MI_STORE_DATA_IMM_length_bias      2
+#define GFX8_MI_STORE_DATA_IMM_header           \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     32,  \
    .CommandType                         =      0
 
-struct GEN8_MI_STORE_DATA_IMM {
+struct GFX8_MI_STORE_DATA_IMM {
    uint32_t                             DWordLength;
    uint32_t                             StoreQword;
    bool                                 UseGlobalGTT;
@@ -7911,9 +7927,9 @@ struct GEN8_MI_STORE_DATA_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_MI_STORE_DATA_IMM * restrict values)
+                            __attribute__((unused)) const struct GFX8_MI_STORE_DATA_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7927,7 +7943,7 @@ GEN8_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v1 =
       __gen_uint(values->CoreModeEnable, 0, 0);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->Address, v1);
+      __gen_address(data, &dw[1], values->Address, v1, 2, 47);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -7937,14 +7953,14 @@ GEN8_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = v3 >> 32;
 }
 
-#define GEN8_MI_STORE_DATA_INDEX_length        3
-#define GEN8_MI_STORE_DATA_INDEX_length_bias      2
-#define GEN8_MI_STORE_DATA_INDEX_header         \
+#define GFX8_MI_STORE_DATA_INDEX_length        3
+#define GFX8_MI_STORE_DATA_INDEX_length_bias      2
+#define GFX8_MI_STORE_DATA_INDEX_header         \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     33,  \
    .CommandType                         =      0
 
-struct GEN8_MI_STORE_DATA_INDEX {
+struct GFX8_MI_STORE_DATA_INDEX {
    uint32_t                             DWordLength;
    uint32_t                             UsePerProcessHardwareStatusPage;
    uint32_t                             MICommandOpcode;
@@ -7955,9 +7971,9 @@ struct GEN8_MI_STORE_DATA_INDEX {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_MI_STORE_DATA_INDEX * restrict values)
+                              __attribute__((unused)) const struct GFX8_MI_STORE_DATA_INDEX * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -7974,14 +7990,14 @@ GEN8_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord0, 0, 31);
 }
 
-#define GEN8_MI_STORE_REGISTER_MEM_length      4
-#define GEN8_MI_STORE_REGISTER_MEM_length_bias      2
-#define GEN8_MI_STORE_REGISTER_MEM_header       \
+#define GFX8_MI_STORE_REGISTER_MEM_length      4
+#define GFX8_MI_STORE_REGISTER_MEM_length_bias      2
+#define GFX8_MI_STORE_REGISTER_MEM_header       \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     36,  \
    .CommandType                         =      0
 
-struct GEN8_MI_STORE_REGISTER_MEM {
+struct GFX8_MI_STORE_REGISTER_MEM {
    uint32_t                             DWordLength;
    bool                                 PredicateEnable;
    bool                                 UseGlobalGTT;
@@ -7992,9 +8008,9 @@ struct GEN8_MI_STORE_REGISTER_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_MI_STORE_REGISTER_MEM * restrict values)
+                                __attribute__((unused)) const struct GFX8_MI_STORE_REGISTER_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8009,19 +8025,19 @@ GEN8_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->RegisterAddress, 2, 22);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+      __gen_address(data, &dw[2], values->MemoryAddress, 0, 2, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 }
 
-#define GEN8_MI_STORE_URB_MEM_length           4
-#define GEN8_MI_STORE_URB_MEM_length_bias      2
-#define GEN8_MI_STORE_URB_MEM_header            \
+#define GFX8_MI_STORE_URB_MEM_length           4
+#define GFX8_MI_STORE_URB_MEM_length_bias      2
+#define GFX8_MI_STORE_URB_MEM_header            \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     45,  \
    .CommandType                         =      0
 
-struct GEN8_MI_STORE_URB_MEM {
+struct GFX8_MI_STORE_URB_MEM {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -8030,9 +8046,9 @@ struct GEN8_MI_STORE_URB_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_STORE_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_STORE_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_MI_STORE_URB_MEM * restrict values)
+                           __attribute__((unused)) const struct GFX8_MI_STORE_URB_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8045,27 +8061,27 @@ GEN8_MI_STORE_URB_MEM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->URBAddress, 2, 14);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+      __gen_address(data, &dw[2], values->MemoryAddress, 0, 6, 63);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 }
 
-#define GEN8_MI_SUSPEND_FLUSH_length           1
-#define GEN8_MI_SUSPEND_FLUSH_length_bias      1
-#define GEN8_MI_SUSPEND_FLUSH_header            \
+#define GFX8_MI_SUSPEND_FLUSH_length           1
+#define GFX8_MI_SUSPEND_FLUSH_length_bias      1
+#define GFX8_MI_SUSPEND_FLUSH_header            \
    .MICommandOpcode                     =     11,  \
    .CommandType                         =      0
 
-struct GEN8_MI_SUSPEND_FLUSH {
+struct GFX8_MI_SUSPEND_FLUSH {
    bool                                 SuspendFlush;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_MI_SUSPEND_FLUSH * restrict values)
+                           __attribute__((unused)) const struct GFX8_MI_SUSPEND_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8075,22 +8091,22 @@ GEN8_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_TOPOLOGY_FILTER_length         1
-#define GEN8_MI_TOPOLOGY_FILTER_length_bias      1
-#define GEN8_MI_TOPOLOGY_FILTER_header          \
+#define GFX8_MI_TOPOLOGY_FILTER_length         1
+#define GFX8_MI_TOPOLOGY_FILTER_length_bias      1
+#define GFX8_MI_TOPOLOGY_FILTER_header          \
    .MICommandOpcode                     =     13,  \
    .CommandType                         =      0
 
-struct GEN8_MI_TOPOLOGY_FILTER {
-   enum GEN8_3D_Prim_Topo_Type          TopologyFilterValue;
+struct GFX8_MI_TOPOLOGY_FILTER {
+   enum GFX8_3D_Prim_Topo_Type          TopologyFilterValue;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_TOPOLOGY_FILTER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_TOPOLOGY_FILTER_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN8_MI_TOPOLOGY_FILTER * restrict values)
+                             __attribute__((unused)) const struct GFX8_MI_TOPOLOGY_FILTER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8100,13 +8116,13 @@ GEN8_MI_TOPOLOGY_FILTER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_URB_ATOMIC_ALLOC_length        1
-#define GEN8_MI_URB_ATOMIC_ALLOC_length_bias      1
-#define GEN8_MI_URB_ATOMIC_ALLOC_header         \
+#define GFX8_MI_URB_ATOMIC_ALLOC_length        1
+#define GFX8_MI_URB_ATOMIC_ALLOC_length_bias      1
+#define GFX8_MI_URB_ATOMIC_ALLOC_header         \
    .MICommandOpcode                     =      9,  \
    .CommandType                         =      0
 
-struct GEN8_MI_URB_ATOMIC_ALLOC {
+struct GFX8_MI_URB_ATOMIC_ALLOC {
    uint32_t                             URBAtomicStorageSize;
    uint32_t                             URBAtomicStorageOffset;
    uint32_t                             MICommandOpcode;
@@ -8114,9 +8130,9 @@ struct GEN8_MI_URB_ATOMIC_ALLOC {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_URB_ATOMIC_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_URB_ATOMIC_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_MI_URB_ATOMIC_ALLOC * restrict values)
+                              __attribute__((unused)) const struct GFX8_MI_URB_ATOMIC_ALLOC * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8127,14 +8143,14 @@ GEN8_MI_URB_ATOMIC_ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_URB_CLEAR_length               2
-#define GEN8_MI_URB_CLEAR_length_bias          2
-#define GEN8_MI_URB_CLEAR_header                \
+#define GFX8_MI_URB_CLEAR_length               2
+#define GFX8_MI_URB_CLEAR_length_bias          2
+#define GFX8_MI_URB_CLEAR_header                \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     25,  \
    .CommandType                         =      0
 
-struct GEN8_MI_URB_CLEAR {
+struct GFX8_MI_URB_CLEAR {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -8143,9 +8159,9 @@ struct GEN8_MI_URB_CLEAR {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_MI_URB_CLEAR * restrict values)
+                       __attribute__((unused)) const struct GFX8_MI_URB_CLEAR * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8159,21 +8175,21 @@ GEN8_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->URBClearLength, 16, 29);
 }
 
-#define GEN8_MI_USER_INTERRUPT_length          1
-#define GEN8_MI_USER_INTERRUPT_length_bias      1
-#define GEN8_MI_USER_INTERRUPT_header           \
+#define GFX8_MI_USER_INTERRUPT_length          1
+#define GFX8_MI_USER_INTERRUPT_length_bias      1
+#define GFX8_MI_USER_INTERRUPT_header           \
    .MICommandOpcode                     =      2,  \
    .CommandType                         =      0
 
-struct GEN8_MI_USER_INTERRUPT {
+struct GFX8_MI_USER_INTERRUPT {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_MI_USER_INTERRUPT * restrict values)
+                            __attribute__((unused)) const struct GFX8_MI_USER_INTERRUPT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8182,13 +8198,13 @@ GEN8_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_MI_WAIT_FOR_EVENT_length          1
-#define GEN8_MI_WAIT_FOR_EVENT_length_bias      1
-#define GEN8_MI_WAIT_FOR_EVENT_header           \
+#define GFX8_MI_WAIT_FOR_EVENT_length          1
+#define GFX8_MI_WAIT_FOR_EVENT_length_bias      1
+#define GFX8_MI_WAIT_FOR_EVENT_header           \
    .MICommandOpcode                     =      3,  \
    .CommandType                         =      0
 
-struct GEN8_MI_WAIT_FOR_EVENT {
+struct GFX8_MI_WAIT_FOR_EVENT {
    bool                                 DisplayPipeAScanLineWaitEnable;
    bool                                 DisplayPlaneAFlipPendingWaitEnable;
    bool                                 DisplaySpriteAFlipPendingWaitEnable;
@@ -8206,9 +8222,9 @@ struct GEN8_MI_WAIT_FOR_EVENT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_MI_WAIT_FOR_EVENT * restrict values)
+                            __attribute__((unused)) const struct GFX8_MI_WAIT_FOR_EVENT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8229,15 +8245,15 @@ GEN8_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_PIPELINE_SELECT_length            1
-#define GEN8_PIPELINE_SELECT_length_bias       1
-#define GEN8_PIPELINE_SELECT_header             \
+#define GFX8_PIPELINE_SELECT_length            1
+#define GFX8_PIPELINE_SELECT_length_bias       1
+#define GFX8_PIPELINE_SELECT_header             \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      1,  \
    .CommandType                         =      3
 
-struct GEN8_PIPELINE_SELECT {
+struct GFX8_PIPELINE_SELECT {
    uint32_t                             PipelineSelection;
 #define _3D                                      0
 #define Media                                    1
@@ -8249,9 +8265,9 @@ struct GEN8_PIPELINE_SELECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN8_PIPELINE_SELECT * restrict values)
+                          __attribute__((unused)) const struct GFX8_PIPELINE_SELECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8263,16 +8279,16 @@ GEN8_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN8_PIPE_CONTROL_length               6
-#define GEN8_PIPE_CONTROL_length_bias          2
-#define GEN8_PIPE_CONTROL_header                \
+#define GFX8_PIPE_CONTROL_length               6
+#define GFX8_PIPE_CONTROL_length_bias          2
+#define GFX8_PIPE_CONTROL_header                \
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      2,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN8_PIPE_CONTROL {
+struct GFX8_PIPE_CONTROL {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -8312,9 +8328,9 @@ struct GEN8_PIPE_CONTROL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_PIPE_CONTROL * restrict values)
+                       __attribute__((unused)) const struct GFX8_PIPE_CONTROL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8349,7 +8365,7 @@ GEN8_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DestinationAddressType, 24, 24);
 
    const uint64_t v2_address =
-      __gen_combine_address(data, &dw[2], values->Address, 0);
+      __gen_address(data, &dw[2], values->Address, 0, 2, 47);
    dw[2] = v2_address;
    dw[3] = v2_address >> 32;
 
@@ -8359,16 +8375,16 @@ GEN8_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[5] = v4 >> 32;
 }
 
-#define GEN8_STATE_BASE_ADDRESS_length        16
-#define GEN8_STATE_BASE_ADDRESS_length_bias      2
-#define GEN8_STATE_BASE_ADDRESS_header          \
+#define GFX8_STATE_BASE_ADDRESS_length        16
+#define GFX8_STATE_BASE_ADDRESS_length_bias      2
+#define GFX8_STATE_BASE_ADDRESS_header          \
    .DWordLength                         =     14,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN8_STATE_BASE_ADDRESS {
+struct GFX8_STATE_BASE_ADDRESS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -8401,9 +8417,9 @@ struct GEN8_STATE_BASE_ADDRESS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN8_STATE_BASE_ADDRESS * restrict values)
+                             __attribute__((unused)) const struct GFX8_STATE_BASE_ADDRESS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8418,7 +8434,7 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->GeneralStateMOCS, 4, 10);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->GeneralStateBaseAddress, v1);
+      __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
@@ -8429,7 +8445,7 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->SurfaceStateMOCS, 4, 10);
    const uint64_t v4_address =
-      __gen_combine_address(data, &dw[4], values->SurfaceStateBaseAddress, v4);
+      __gen_address(data, &dw[4], values->SurfaceStateBaseAddress, v4, 12, 63);
    dw[4] = v4_address;
    dw[5] = (v4_address >> 32) | (v4 >> 32);
 
@@ -8437,7 +8453,7 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DynamicStateBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->DynamicStateMOCS, 4, 10);
    const uint64_t v6_address =
-      __gen_combine_address(data, &dw[6], values->DynamicStateBaseAddress, v6);
+      __gen_address(data, &dw[6], values->DynamicStateBaseAddress, v6, 12, 63);
    dw[6] = v6_address;
    dw[7] = (v6_address >> 32) | (v6 >> 32);
 
@@ -8445,7 +8461,7 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->IndirectObjectMOCS, 4, 10);
    const uint64_t v8_address =
-      __gen_combine_address(data, &dw[8], values->IndirectObjectBaseAddress, v8);
+      __gen_address(data, &dw[8], values->IndirectObjectBaseAddress, v8, 12, 63);
    dw[8] = v8_address;
    dw[9] = (v8_address >> 32) | (v8 >> 32);
 
@@ -8453,7 +8469,7 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstructionBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->InstructionMOCS, 4, 10);
    const uint64_t v10_address =
-      __gen_combine_address(data, &dw[10], values->InstructionBaseAddress, v10);
+      __gen_address(data, &dw[10], values->InstructionBaseAddress, v10, 12, 63);
    dw[10] = v10_address;
    dw[11] = (v10_address >> 32) | (v10 >> 32);
 
@@ -8474,16 +8490,16 @@ GEN8_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstructionBufferSize, 12, 31);
 }
 
-#define GEN8_STATE_PREFETCH_length             2
-#define GEN8_STATE_PREFETCH_length_bias        2
-#define GEN8_STATE_PREFETCH_header              \
+#define GFX8_STATE_PREFETCH_length             2
+#define GFX8_STATE_PREFETCH_length_bias        2
+#define GFX8_STATE_PREFETCH_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      3,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN8_STATE_PREFETCH {
+struct GFX8_STATE_PREFETCH {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -8494,9 +8510,9 @@ struct GEN8_STATE_PREFETCH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_STATE_PREFETCH * restrict values)
+                         __attribute__((unused)) const struct GFX8_STATE_PREFETCH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8509,19 +8525,19 @@ GEN8_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->PrefetchCount, 0, 2);
-   dw[1] = __gen_combine_address(data, &dw[1], values->PrefetchPointer, v1);
+   dw[1] = __gen_address(data, &dw[1], values->PrefetchPointer, v1, 6, 31);
 }
 
-#define GEN8_STATE_SIP_length                  3
-#define GEN8_STATE_SIP_length_bias             2
-#define GEN8_STATE_SIP_header                   \
+#define GFX8_STATE_SIP_length                  3
+#define GFX8_STATE_SIP_length_bias             2
+#define GFX8_STATE_SIP_header                   \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN8_STATE_SIP {
+struct GFX8_STATE_SIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -8531,9 +8547,9 @@ struct GEN8_STATE_SIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN8_STATE_SIP * restrict values)
+                    __attribute__((unused)) const struct GFX8_STATE_SIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8550,16 +8566,16 @@ GEN8_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
    dw[2] = v1 >> 32;
 }
 
-#define GEN8_SWTESS_BASE_ADDRESS_length        2
-#define GEN8_SWTESS_BASE_ADDRESS_length_bias      2
-#define GEN8_SWTESS_BASE_ADDRESS_header         \
+#define GFX8_SWTESS_BASE_ADDRESS_length        2
+#define GFX8_SWTESS_BASE_ADDRESS_length_bias      2
+#define GFX8_SWTESS_BASE_ADDRESS_header         \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      3,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN8_SWTESS_BASE_ADDRESS {
+struct GFX8_SWTESS_BASE_ADDRESS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -8570,9 +8586,9 @@ struct GEN8_SWTESS_BASE_ADDRESS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SWTESS_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SWTESS_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_SWTESS_BASE_ADDRESS * restrict values)
+                              __attribute__((unused)) const struct GFX8_SWTESS_BASE_ADDRESS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8586,21 +8602,21 @@ GEN8_SWTESS_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    const uint64_t v1 =
       __gen_uint(values->SWTessellationMOCS, 8, 11);
    const uint64_t v1_address =
-      __gen_combine_address(data, &dw[1], values->SWTessellationBaseAddress, v1);
+      __gen_address(data, &dw[1], values->SWTessellationBaseAddress, v1, 12, 47);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 }
 
-#define GEN8_ACTHD_UDW_num                0x205c
-#define GEN8_ACTHD_UDW_length                  1
-struct GEN8_ACTHD_UDW {
+#define GFX8_ACTHD_UDW_num                0x205c
+#define GFX8_ACTHD_UDW_length                  1
+struct GFX8_ACTHD_UDW {
    uint32_t                             HeadPointerUpperDWORD;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN8_ACTHD_UDW * restrict values)
+                    __attribute__((unused)) const struct GFX8_ACTHD_UDW * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8608,16 +8624,16 @@ GEN8_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
 }
 
-#define GEN8_BCS_ACTHD_UDW_num            0x2205c
-#define GEN8_BCS_ACTHD_UDW_length              1
-struct GEN8_BCS_ACTHD_UDW {
+#define GFX8_BCS_ACTHD_UDW_num            0x2205c
+#define GFX8_BCS_ACTHD_UDW_length              1
+struct GFX8_BCS_ACTHD_UDW {
    uint32_t                             HeadPointerUpperDWORD;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_BCS_ACTHD_UDW * restrict values)
+                        __attribute__((unused)) const struct GFX8_BCS_ACTHD_UDW * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8625,9 +8641,9 @@ GEN8_BCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
 }
 
-#define GEN8_BCS_INSTDONE_num             0x2206c
-#define GEN8_BCS_INSTDONE_length               1
-struct GEN8_BCS_INSTDONE {
+#define GFX8_BCS_INSTDONE_num             0x2206c
+#define GFX8_BCS_INSTDONE_length               1
+struct GFX8_BCS_INSTDONE {
    bool                                 RingEnable;
    bool                                 BlitterIDLE;
    bool                                 GABIDLE;
@@ -8635,9 +8651,9 @@ struct GEN8_BCS_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_BCS_INSTDONE * restrict values)
+                       __attribute__((unused)) const struct GFX8_BCS_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8648,9 +8664,9 @@ GEN8_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BCSDone, 3, 3);
 }
 
-#define GEN8_BCS_RING_BUFFER_CTL_num      0x2203c
-#define GEN8_BCS_RING_BUFFER_CTL_length        1
-struct GEN8_BCS_RING_BUFFER_CTL {
+#define GFX8_BCS_RING_BUFFER_CTL_num      0x2203c
+#define GFX8_BCS_RING_BUFFER_CTL_length        1
+struct GFX8_BCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -8664,9 +8680,9 @@ struct GEN8_BCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_BCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX8_BCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8679,9 +8695,9 @@ GEN8_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN8_CACHE_MODE_1_num             0x7004
-#define GEN8_CACHE_MODE_1_length               1
-struct GEN8_CACHE_MODE_1 {
+#define GFX8_CACHE_MODE_1_num             0x7004
+#define GFX8_CACHE_MODE_1_length               1
+struct GFX8_CACHE_MODE_1 {
    bool                                 RCZReadafterexpansioncontrolfix2;
    bool                                 DepthReadHitWriteOnlyOptimizationDisable;
    bool                                 MCSCacheDisable;
@@ -8703,9 +8719,9 @@ struct GEN8_CACHE_MODE_1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_CACHE_MODE_1 * restrict values)
+                       __attribute__((unused)) const struct GFX8_CACHE_MODE_1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8730,16 +8746,16 @@ GEN8_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MSCResolveOptimizationDisableMask, 30, 30);
 }
 
-#define GEN8_CL_INVOCATION_COUNT_num      0x2338
-#define GEN8_CL_INVOCATION_COUNT_length        2
-struct GEN8_CL_INVOCATION_COUNT {
+#define GFX8_CL_INVOCATION_COUNT_num      0x2338
+#define GFX8_CL_INVOCATION_COUNT_length        2
+struct GFX8_CL_INVOCATION_COUNT {
    uint64_t                             CLInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_CL_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_CL_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_CL_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_CL_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8749,16 +8765,16 @@ GEN8_CL_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_CL_PRIMITIVES_COUNT_num      0x2340
-#define GEN8_CL_PRIMITIVES_COUNT_length        2
-struct GEN8_CL_PRIMITIVES_COUNT {
+#define GFX8_CL_PRIMITIVES_COUNT_num      0x2340
+#define GFX8_CL_PRIMITIVES_COUNT_length        2
+struct GFX8_CL_PRIMITIVES_COUNT {
    uint64_t                             CLPrimitivesCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_CL_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_CL_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_CL_PRIMITIVES_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_CL_PRIMITIVES_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8768,16 +8784,16 @@ GEN8_CL_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_CS_INVOCATION_COUNT_num      0x2290
-#define GEN8_CS_INVOCATION_COUNT_length        2
-struct GEN8_CS_INVOCATION_COUNT {
+#define GFX8_CS_INVOCATION_COUNT_num      0x2290
+#define GFX8_CS_INVOCATION_COUNT_length        2
+struct GFX8_CS_INVOCATION_COUNT {
    uint64_t                             CSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_CS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_CS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_CS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_CS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8787,16 +8803,16 @@ GEN8_CS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_DS_INVOCATION_COUNT_num      0x2308
-#define GEN8_DS_INVOCATION_COUNT_length        2
-struct GEN8_DS_INVOCATION_COUNT {
+#define GFX8_DS_INVOCATION_COUNT_num      0x2308
+#define GFX8_DS_INVOCATION_COUNT_length        2
+struct GFX8_DS_INVOCATION_COUNT {
    uint64_t                             DSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_DS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_DS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_DS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_DS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8806,9 +8822,9 @@ GEN8_DS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_FAULT_REG_num                0x4094
-#define GEN8_FAULT_REG_length                  1
-struct GEN8_FAULT_REG {
+#define GFX8_FAULT_REG_num                0x4094
+#define GFX8_FAULT_REG_length                  1
+struct GFX8_FAULT_REG {
    bool                                 ValidBit;
    uint32_t                             FaultType;
 #define InvalidPTEFault                          0
@@ -8829,9 +8845,9 @@ struct GEN8_FAULT_REG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN8_FAULT_REG * restrict values)
+                    __attribute__((unused)) const struct GFX8_FAULT_REG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8843,9 +8859,9 @@ GEN8_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->EngineID, 12, 14);
 }
 
-#define GEN8_GFX_ARB_ERROR_RPT_num        0x40a0
-#define GEN8_GFX_ARB_ERROR_RPT_length          1
-struct GEN8_GFX_ARB_ERROR_RPT {
+#define GFX8_GFX_ARB_ERROR_RPT_num        0x40a0
+#define GFX8_GFX_ARB_ERROR_RPT_length          1
+struct GFX8_GFX_ARB_ERROR_RPT {
    bool                                 TLBPageFaultError;
    bool                                 RSTRMPAVPReadInvalid;
    bool                                 InvalidPageDirectoryEntryError;
@@ -8864,9 +8880,9 @@ struct GEN8_GFX_ARB_ERROR_RPT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_GFX_ARB_ERROR_RPT * restrict values)
+                            __attribute__((unused)) const struct GFX8_GFX_ARB_ERROR_RPT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8888,16 +8904,16 @@ GEN8_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ContextWasNotMarkedAsPresentWhenDoingDMA, 15, 15);
 }
 
-#define GEN8_GS_INVOCATION_COUNT_num      0x2328
-#define GEN8_GS_INVOCATION_COUNT_length        2
-struct GEN8_GS_INVOCATION_COUNT {
+#define GFX8_GS_INVOCATION_COUNT_num      0x2328
+#define GFX8_GS_INVOCATION_COUNT_length        2
+struct GFX8_GS_INVOCATION_COUNT {
    uint64_t                             GSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_GS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_GS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8907,16 +8923,16 @@ GEN8_GS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_GS_PRIMITIVES_COUNT_num      0x2330
-#define GEN8_GS_PRIMITIVES_COUNT_length        2
-struct GEN8_GS_PRIMITIVES_COUNT {
+#define GFX8_GS_PRIMITIVES_COUNT_num      0x2330
+#define GFX8_GS_PRIMITIVES_COUNT_length        2
+struct GFX8_GS_PRIMITIVES_COUNT {
    uint64_t                             GSPrimitivesCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_GS_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_GS_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_GS_PRIMITIVES_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_GS_PRIMITIVES_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8926,16 +8942,16 @@ GEN8_GS_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_HS_INVOCATION_COUNT_num      0x2300
-#define GEN8_HS_INVOCATION_COUNT_length        2
-struct GEN8_HS_INVOCATION_COUNT {
+#define GFX8_HS_INVOCATION_COUNT_num      0x2300
+#define GFX8_HS_INVOCATION_COUNT_length        2
+struct GFX8_HS_INVOCATION_COUNT {
    uint64_t                             HSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_HS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_HS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_HS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_HS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8945,16 +8961,16 @@ GEN8_HS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_IA_PRIMITIVES_COUNT_num      0x2318
-#define GEN8_IA_PRIMITIVES_COUNT_length        2
-struct GEN8_IA_PRIMITIVES_COUNT {
+#define GFX8_IA_PRIMITIVES_COUNT_num      0x2318
+#define GFX8_IA_PRIMITIVES_COUNT_length        2
+struct GFX8_IA_PRIMITIVES_COUNT {
    uint64_t                             IAPrimitivesCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_IA_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_IA_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_IA_PRIMITIVES_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_IA_PRIMITIVES_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8964,16 +8980,16 @@ GEN8_IA_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_IA_VERTICES_COUNT_num        0x2310
-#define GEN8_IA_VERTICES_COUNT_length          2
-struct GEN8_IA_VERTICES_COUNT {
+#define GFX8_IA_VERTICES_COUNT_num        0x2310
+#define GFX8_IA_VERTICES_COUNT_length          2
+struct GFX8_IA_VERTICES_COUNT {
    uint64_t                             IAVerticesCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_IA_VERTICES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_IA_VERTICES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN8_IA_VERTICES_COUNT * restrict values)
+                            __attribute__((unused)) const struct GFX8_IA_VERTICES_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -8983,9 +8999,9 @@ GEN8_IA_VERTICES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_INSTDONE_1_num               0x206c
-#define GEN8_INSTDONE_1_length                 1
-struct GEN8_INSTDONE_1 {
+#define GFX8_INSTDONE_1_num               0x206c
+#define GFX8_INSTDONE_1_length                 1
+struct GFX8_INSTDONE_1 {
    bool                                 PRB0RingEnable;
    bool                                 VFGDone;
    bool                                 VSDone;
@@ -9011,9 +9027,9 @@ struct GEN8_INSTDONE_1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN8_INSTDONE_1 * restrict values)
+                     __attribute__((unused)) const struct GFX8_INSTDONE_1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9042,9 +9058,9 @@ GEN8_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->RCCFBCCSDone, 23, 23);
 }
 
-#define GEN8_INSTPM_num                   0x20c0
-#define GEN8_INSTPM_length                     1
-struct GEN8_INSTPM {
+#define GFX8_INSTPM_num                   0x20c0
+#define GFX8_INSTPM_length                     1
+struct GFX8_INSTPM {
    bool                                 _3DStateInstructionDisable;
    bool                                 _3DRenderingInstructionDisable;
    bool                                 MediaInstructionDisable;
@@ -9056,9 +9072,9 @@ struct GEN8_INSTPM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
                  __attribute__((unused)) void * restrict dst,
-                 __attribute__((unused)) const struct GEN8_INSTPM * restrict values)
+                 __attribute__((unused)) const struct GFX8_INSTPM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9073,9 +9089,9 @@ GEN8_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CONSTANT_BUFFERAddressOffsetDisableMask, 22, 22);
 }
 
-#define GEN8_L3CNTLREG_num                0x7034
-#define GEN8_L3CNTLREG_length                  1
-struct GEN8_L3CNTLREG {
+#define GFX8_L3CNTLREG_num                0x7034
+#define GFX8_L3CNTLREG_length                  1
+struct GFX8_L3CNTLREG {
    bool                                 SLMEnable;
    uint32_t                             URBAllocation;
    uint32_t                             ROAllocation;
@@ -9084,9 +9100,9 @@ struct GEN8_L3CNTLREG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_L3CNTLREG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_L3CNTLREG_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN8_L3CNTLREG * restrict values)
+                    __attribute__((unused)) const struct GFX8_L3CNTLREG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9098,9 +9114,9 @@ GEN8_L3CNTLREG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AllAllocation, 25, 31);
 }
 
-#define GEN8_PERFCNT1_num                 0x91b8
-#define GEN8_PERFCNT1_length                   2
-struct GEN8_PERFCNT1 {
+#define GFX8_PERFCNT1_num                 0x91b8
+#define GFX8_PERFCNT1_length                   2
+struct GFX8_PERFCNT1 {
    uint64_t                             Value;
    uint32_t                             EventSelection;
    bool                                 CounterClear;
@@ -9110,9 +9126,9 @@ struct GEN8_PERFCNT1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PERFCNT1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PERFCNT1_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN8_PERFCNT1 * restrict values)
+                   __attribute__((unused)) const struct GFX8_PERFCNT1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9127,9 +9143,9 @@ GEN8_PERFCNT1_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_PERFCNT2_num                 0x91c0
-#define GEN8_PERFCNT2_length                   2
-struct GEN8_PERFCNT2 {
+#define GFX8_PERFCNT2_num                 0x91c0
+#define GFX8_PERFCNT2_length                   2
+struct GFX8_PERFCNT2 {
    uint64_t                             Value;
    uint32_t                             EventSelection;
    bool                                 CounterClear;
@@ -9139,9 +9155,9 @@ struct GEN8_PERFCNT2 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PERFCNT2_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PERFCNT2_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN8_PERFCNT2 * restrict values)
+                   __attribute__((unused)) const struct GFX8_PERFCNT2 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9156,16 +9172,16 @@ GEN8_PERFCNT2_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_PS_INVOCATION_COUNT_num      0x2348
-#define GEN8_PS_INVOCATION_COUNT_length        2
-struct GEN8_PS_INVOCATION_COUNT {
+#define GFX8_PS_INVOCATION_COUNT_num      0x2348
+#define GFX8_PS_INVOCATION_COUNT_length        2
+struct GFX8_PS_INVOCATION_COUNT {
    uint64_t                             PSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_PS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_PS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9175,9 +9191,9 @@ GEN8_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_RCS_RING_BUFFER_CTL_num      0x203c
-#define GEN8_RCS_RING_BUFFER_CTL_length        1
-struct GEN8_RCS_RING_BUFFER_CTL {
+#define GFX8_RCS_RING_BUFFER_CTL_num      0x203c
+#define GFX8_RCS_RING_BUFFER_CTL_length        1
+struct GFX8_RCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -9190,9 +9206,9 @@ struct GEN8_RCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_RCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX8_RCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9204,9 +9220,9 @@ GEN8_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN8_ROW_INSTDONE_num             0xe164
-#define GEN8_ROW_INSTDONE_length               1
-struct GEN8_ROW_INSTDONE {
+#define GFX8_ROW_INSTDONE_num             0xe164
+#define GFX8_ROW_INSTDONE_length               1
+struct GFX8_ROW_INSTDONE {
    bool                                 BCDone;
    bool                                 PSDDone;
    bool                                 DAPRDone;
@@ -9225,9 +9241,9 @@ struct GEN8_ROW_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_ROW_INSTDONE * restrict values)
+                       __attribute__((unused)) const struct GFX8_ROW_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9249,17 +9265,17 @@ GEN8_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MA1DoneSS0, 26, 26);
 }
 
-#define GEN8_RPSTAT1_num                  0xa01c
-#define GEN8_RPSTAT1_length                    1
-struct GEN8_RPSTAT1 {
+#define GFX8_RPSTAT1_num                  0xa01c
+#define GFX8_RPSTAT1_length                    1
+struct GFX8_RPSTAT1 {
    uint32_t                             PreviousGTFrequency;
    uint32_t                             CurrentGTFrequency;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN8_RPSTAT1 * restrict values)
+                  __attribute__((unused)) const struct GFX8_RPSTAT1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9268,9 +9284,9 @@ GEN8_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CurrentGTFrequency, 7, 14);
 }
 
-#define GEN8_SAMPLER_INSTDONE_num         0xe160
-#define GEN8_SAMPLER_INSTDONE_length           1
-struct GEN8_SAMPLER_INSTDONE {
+#define GFX8_SAMPLER_INSTDONE_num         0xe160
+#define GFX8_SAMPLER_INSTDONE_length           1
+struct GFX8_SAMPLER_INSTDONE {
    bool                                 IMEDone;
    bool                                 PL0Done;
    bool                                 SO0Done;
@@ -9294,9 +9310,9 @@ struct GEN8_SAMPLER_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SAMPLER_INSTDONE * restrict values)
+                           __attribute__((unused)) const struct GFX8_SAMPLER_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9323,9 +9339,9 @@ GEN8_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BDMDone, 19, 19);
 }
 
-#define GEN8_SC_INSTDONE_num              0x7100
-#define GEN8_SC_INSTDONE_length                1
-struct GEN8_SC_INSTDONE {
+#define GFX8_SC_INSTDONE_num              0x7100
+#define GFX8_SC_INSTDONE_length                1
+struct GFX8_SC_INSTDONE {
    bool                                 SVLDone;
    bool                                 WMFEDone;
    bool                                 WMBEDone;
@@ -9350,9 +9366,9 @@ struct GEN8_SC_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN8_SC_INSTDONE * restrict values)
+                      __attribute__((unused)) const struct GFX8_SC_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9380,16 +9396,16 @@ GEN8_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TDCDone, 24, 24);
 }
 
-#define GEN8_SO_NUM_PRIMS_WRITTEN0_num    0x5200
-#define GEN8_SO_NUM_PRIMS_WRITTEN0_length      2
-struct GEN8_SO_NUM_PRIMS_WRITTEN0 {
+#define GFX8_SO_NUM_PRIMS_WRITTEN0_num    0x5200
+#define GFX8_SO_NUM_PRIMS_WRITTEN0_length      2
+struct GFX8_SO_NUM_PRIMS_WRITTEN0 {
    uint64_t                             NumPrimsWrittenCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_NUM_PRIMS_WRITTEN0_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_NUM_PRIMS_WRITTEN0_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_SO_NUM_PRIMS_WRITTEN0 * restrict values)
+                                __attribute__((unused)) const struct GFX8_SO_NUM_PRIMS_WRITTEN0 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9399,16 +9415,16 @@ GEN8_SO_NUM_PRIMS_WRITTEN0_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_NUM_PRIMS_WRITTEN1_num    0x5208
-#define GEN8_SO_NUM_PRIMS_WRITTEN1_length      2
-struct GEN8_SO_NUM_PRIMS_WRITTEN1 {
+#define GFX8_SO_NUM_PRIMS_WRITTEN1_num    0x5208
+#define GFX8_SO_NUM_PRIMS_WRITTEN1_length      2
+struct GFX8_SO_NUM_PRIMS_WRITTEN1 {
    uint64_t                             NumPrimsWrittenCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_NUM_PRIMS_WRITTEN1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_NUM_PRIMS_WRITTEN1_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_SO_NUM_PRIMS_WRITTEN1 * restrict values)
+                                __attribute__((unused)) const struct GFX8_SO_NUM_PRIMS_WRITTEN1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9418,16 +9434,16 @@ GEN8_SO_NUM_PRIMS_WRITTEN1_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_NUM_PRIMS_WRITTEN2_num    0x5210
-#define GEN8_SO_NUM_PRIMS_WRITTEN2_length      2
-struct GEN8_SO_NUM_PRIMS_WRITTEN2 {
+#define GFX8_SO_NUM_PRIMS_WRITTEN2_num    0x5210
+#define GFX8_SO_NUM_PRIMS_WRITTEN2_length      2
+struct GFX8_SO_NUM_PRIMS_WRITTEN2 {
    uint64_t                             NumPrimsWrittenCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_NUM_PRIMS_WRITTEN2_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_NUM_PRIMS_WRITTEN2_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_SO_NUM_PRIMS_WRITTEN2 * restrict values)
+                                __attribute__((unused)) const struct GFX8_SO_NUM_PRIMS_WRITTEN2 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9437,16 +9453,16 @@ GEN8_SO_NUM_PRIMS_WRITTEN2_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_NUM_PRIMS_WRITTEN3_num    0x5218
-#define GEN8_SO_NUM_PRIMS_WRITTEN3_length      2
-struct GEN8_SO_NUM_PRIMS_WRITTEN3 {
+#define GFX8_SO_NUM_PRIMS_WRITTEN3_num    0x5218
+#define GFX8_SO_NUM_PRIMS_WRITTEN3_length      2
+struct GFX8_SO_NUM_PRIMS_WRITTEN3 {
    uint64_t                             NumPrimsWrittenCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_NUM_PRIMS_WRITTEN3_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_NUM_PRIMS_WRITTEN3_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN8_SO_NUM_PRIMS_WRITTEN3 * restrict values)
+                                __attribute__((unused)) const struct GFX8_SO_NUM_PRIMS_WRITTEN3 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9456,16 +9472,16 @@ GEN8_SO_NUM_PRIMS_WRITTEN3_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_PRIM_STORAGE_NEEDED0_num  0x5240
-#define GEN8_SO_PRIM_STORAGE_NEEDED0_length      2
-struct GEN8_SO_PRIM_STORAGE_NEEDED0 {
+#define GFX8_SO_PRIM_STORAGE_NEEDED0_num  0x5240
+#define GFX8_SO_PRIM_STORAGE_NEEDED0_length      2
+struct GFX8_SO_PRIM_STORAGE_NEEDED0 {
    uint64_t                             PrimStorageNeededCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_PRIM_STORAGE_NEEDED0_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_PRIM_STORAGE_NEEDED0_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_SO_PRIM_STORAGE_NEEDED0 * restrict values)
+                                  __attribute__((unused)) const struct GFX8_SO_PRIM_STORAGE_NEEDED0 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9475,16 +9491,16 @@ GEN8_SO_PRIM_STORAGE_NEEDED0_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_PRIM_STORAGE_NEEDED1_num  0x5248
-#define GEN8_SO_PRIM_STORAGE_NEEDED1_length      2
-struct GEN8_SO_PRIM_STORAGE_NEEDED1 {
+#define GFX8_SO_PRIM_STORAGE_NEEDED1_num  0x5248
+#define GFX8_SO_PRIM_STORAGE_NEEDED1_length      2
+struct GFX8_SO_PRIM_STORAGE_NEEDED1 {
    uint64_t                             PrimStorageNeededCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_PRIM_STORAGE_NEEDED1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_PRIM_STORAGE_NEEDED1_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_SO_PRIM_STORAGE_NEEDED1 * restrict values)
+                                  __attribute__((unused)) const struct GFX8_SO_PRIM_STORAGE_NEEDED1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9494,16 +9510,16 @@ GEN8_SO_PRIM_STORAGE_NEEDED1_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_PRIM_STORAGE_NEEDED2_num  0x5250
-#define GEN8_SO_PRIM_STORAGE_NEEDED2_length      2
-struct GEN8_SO_PRIM_STORAGE_NEEDED2 {
+#define GFX8_SO_PRIM_STORAGE_NEEDED2_num  0x5250
+#define GFX8_SO_PRIM_STORAGE_NEEDED2_length      2
+struct GFX8_SO_PRIM_STORAGE_NEEDED2 {
    uint64_t                             PrimStorageNeededCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_PRIM_STORAGE_NEEDED2_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_PRIM_STORAGE_NEEDED2_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_SO_PRIM_STORAGE_NEEDED2 * restrict values)
+                                  __attribute__((unused)) const struct GFX8_SO_PRIM_STORAGE_NEEDED2 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9513,16 +9529,16 @@ GEN8_SO_PRIM_STORAGE_NEEDED2_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_PRIM_STORAGE_NEEDED3_num  0x5258
-#define GEN8_SO_PRIM_STORAGE_NEEDED3_length      2
-struct GEN8_SO_PRIM_STORAGE_NEEDED3 {
+#define GFX8_SO_PRIM_STORAGE_NEEDED3_num  0x5258
+#define GFX8_SO_PRIM_STORAGE_NEEDED3_length      2
+struct GFX8_SO_PRIM_STORAGE_NEEDED3 {
    uint64_t                             PrimStorageNeededCount;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_PRIM_STORAGE_NEEDED3_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_PRIM_STORAGE_NEEDED3_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN8_SO_PRIM_STORAGE_NEEDED3 * restrict values)
+                                  __attribute__((unused)) const struct GFX8_SO_PRIM_STORAGE_NEEDED3 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9532,16 +9548,16 @@ GEN8_SO_PRIM_STORAGE_NEEDED3_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#define GEN8_SO_WRITE_OFFSET0_num         0x5280
-#define GEN8_SO_WRITE_OFFSET0_length           1
-struct GEN8_SO_WRITE_OFFSET0 {
+#define GFX8_SO_WRITE_OFFSET0_num         0x5280
+#define GFX8_SO_WRITE_OFFSET0_length           1
+struct GFX8_SO_WRITE_OFFSET0 {
    uint64_t                             WriteOffset;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_WRITE_OFFSET0_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_WRITE_OFFSET0_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SO_WRITE_OFFSET0 * restrict values)
+                           __attribute__((unused)) const struct GFX8_SO_WRITE_OFFSET0 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9549,16 +9565,16 @@ GEN8_SO_WRITE_OFFSET0_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->WriteOffset, 2, 31);
 }
 
-#define GEN8_SO_WRITE_OFFSET1_num         0x5284
-#define GEN8_SO_WRITE_OFFSET1_length           1
-struct GEN8_SO_WRITE_OFFSET1 {
+#define GFX8_SO_WRITE_OFFSET1_num         0x5284
+#define GFX8_SO_WRITE_OFFSET1_length           1
+struct GFX8_SO_WRITE_OFFSET1 {
    uint64_t                             WriteOffset;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_WRITE_OFFSET1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_WRITE_OFFSET1_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SO_WRITE_OFFSET1 * restrict values)
+                           __attribute__((unused)) const struct GFX8_SO_WRITE_OFFSET1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9566,16 +9582,16 @@ GEN8_SO_WRITE_OFFSET1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->WriteOffset, 2, 31);
 }
 
-#define GEN8_SO_WRITE_OFFSET2_num         0x5288
-#define GEN8_SO_WRITE_OFFSET2_length           1
-struct GEN8_SO_WRITE_OFFSET2 {
+#define GFX8_SO_WRITE_OFFSET2_num         0x5288
+#define GFX8_SO_WRITE_OFFSET2_length           1
+struct GFX8_SO_WRITE_OFFSET2 {
    uint64_t                             WriteOffset;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_WRITE_OFFSET2_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_WRITE_OFFSET2_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SO_WRITE_OFFSET2 * restrict values)
+                           __attribute__((unused)) const struct GFX8_SO_WRITE_OFFSET2 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9583,16 +9599,16 @@ GEN8_SO_WRITE_OFFSET2_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->WriteOffset, 2, 31);
 }
 
-#define GEN8_SO_WRITE_OFFSET3_num         0x528c
-#define GEN8_SO_WRITE_OFFSET3_length           1
-struct GEN8_SO_WRITE_OFFSET3 {
+#define GFX8_SO_WRITE_OFFSET3_num         0x528c
+#define GFX8_SO_WRITE_OFFSET3_length           1
+struct GFX8_SO_WRITE_OFFSET3 {
    uint64_t                             WriteOffset;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_SO_WRITE_OFFSET3_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_SO_WRITE_OFFSET3_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN8_SO_WRITE_OFFSET3 * restrict values)
+                           __attribute__((unused)) const struct GFX8_SO_WRITE_OFFSET3 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9600,9 +9616,9 @@ GEN8_SO_WRITE_OFFSET3_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->WriteOffset, 2, 31);
 }
 
-#define GEN8_VCS2_RING_BUFFER_CTL_num     0x1203c
-#define GEN8_VCS2_RING_BUFFER_CTL_length       1
-struct GEN8_VCS2_RING_BUFFER_CTL {
+#define GFX8_VCS2_RING_BUFFER_CTL_num     0x1203c
+#define GFX8_VCS2_RING_BUFFER_CTL_length       1
+struct GFX8_VCS2_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -9616,9 +9632,9 @@ struct GEN8_VCS2_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VCS2_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VCS2_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_VCS2_RING_BUFFER_CTL * restrict values)
+                               __attribute__((unused)) const struct GFX8_VCS2_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9631,16 +9647,16 @@ GEN8_VCS2_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN8_VCS_ACTHD_UDW_num            0x1205c
-#define GEN8_VCS_ACTHD_UDW_length              1
-struct GEN8_VCS_ACTHD_UDW {
+#define GFX8_VCS_ACTHD_UDW_num            0x1205c
+#define GFX8_VCS_ACTHD_UDW_length              1
+struct GFX8_VCS_ACTHD_UDW {
    uint32_t                             HeadPointerUpperDWORD;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_VCS_ACTHD_UDW * restrict values)
+                        __attribute__((unused)) const struct GFX8_VCS_ACTHD_UDW * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9648,9 +9664,9 @@ GEN8_VCS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
 }
 
-#define GEN8_VCS_INSTDONE_num             0x1206c
-#define GEN8_VCS_INSTDONE_length               1
-struct GEN8_VCS_INSTDONE {
+#define GFX8_VCS_INSTDONE_num             0x1206c
+#define GFX8_VCS_INSTDONE_length               1
+struct GFX8_VCS_INSTDONE {
    bool                                 RingEnable;
    bool                                 USBDone;
    bool                                 QRCDone;
@@ -9686,9 +9702,9 @@ struct GEN8_VCS_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN8_VCS_INSTDONE * restrict values)
+                       __attribute__((unused)) const struct GFX8_VCS_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9727,9 +9743,9 @@ GEN8_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GACDone, 31, 31);
 }
 
-#define GEN8_VCS_RING_BUFFER_CTL_num      0x1203c
-#define GEN8_VCS_RING_BUFFER_CTL_length        1
-struct GEN8_VCS_RING_BUFFER_CTL {
+#define GFX8_VCS_RING_BUFFER_CTL_num      0x1203c
+#define GFX8_VCS_RING_BUFFER_CTL_length        1
+struct GFX8_VCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -9743,9 +9759,9 @@ struct GEN8_VCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_VCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX8_VCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9758,16 +9774,16 @@ GEN8_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN8_VECS_ACTHD_UDW_num           0x1a05c
-#define GEN8_VECS_ACTHD_UDW_length             1
-struct GEN8_VECS_ACTHD_UDW {
+#define GFX8_VECS_ACTHD_UDW_num           0x1a05c
+#define GFX8_VECS_ACTHD_UDW_length             1
+struct GFX8_VECS_ACTHD_UDW {
    uint32_t                             HeadPointerUpperDWORD;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VECS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VECS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN8_VECS_ACTHD_UDW * restrict values)
+                         __attribute__((unused)) const struct GFX8_VECS_ACTHD_UDW * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9775,18 +9791,18 @@ GEN8_VECS_ACTHD_UDW_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
 }
 
-#define GEN8_VECS_INSTDONE_num            0x1a06c
-#define GEN8_VECS_INSTDONE_length              1
-struct GEN8_VECS_INSTDONE {
+#define GFX8_VECS_INSTDONE_num            0x1a06c
+#define GFX8_VECS_INSTDONE_length              1
+struct GFX8_VECS_INSTDONE {
    bool                                 RingEnable;
    bool                                 VECSDone;
    bool                                 GAMDone;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VECS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VECS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN8_VECS_INSTDONE * restrict values)
+                        __attribute__((unused)) const struct GFX8_VECS_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9796,9 +9812,9 @@ GEN8_VECS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GAMDone, 31, 31);
 }
 
-#define GEN8_VECS_RING_BUFFER_CTL_num     0x1a03c
-#define GEN8_VECS_RING_BUFFER_CTL_length       1
-struct GEN8_VECS_RING_BUFFER_CTL {
+#define GFX8_VECS_RING_BUFFER_CTL_num     0x1a03c
+#define GFX8_VECS_RING_BUFFER_CTL_length       1
+struct GFX8_VECS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -9812,9 +9828,9 @@ struct GEN8_VECS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VECS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VECS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN8_VECS_RING_BUFFER_CTL * restrict values)
+                               __attribute__((unused)) const struct GFX8_VECS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9827,16 +9843,16 @@ GEN8_VECS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN8_VS_INVOCATION_COUNT_num      0x2320
-#define GEN8_VS_INVOCATION_COUNT_length        2
-struct GEN8_VS_INVOCATION_COUNT {
+#define GFX8_VS_INVOCATION_COUNT_num      0x2320
+#define GFX8_VS_INVOCATION_COUNT_length        2
+struct GFX8_VS_INVOCATION_COUNT {
    uint64_t                             VSInvocationCountReport;
 };
 
 static inline __attribute__((always_inline)) void
-GEN8_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX8_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN8_VS_INVOCATION_COUNT * restrict values)
+                              __attribute__((unused)) const struct GFX8_VS_INVOCATION_COUNT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -9846,4 +9862,4 @@ GEN8_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GEN8_PACK_H */
+#endif /* GFX8_PACK_H */

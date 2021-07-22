@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/09/22 04:39:21 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:10 jsg Exp $
 
 LIB=	iris
 
@@ -13,7 +13,9 @@ SRCS=	iris_batch.c \
 	iris_context.c \
 	iris_draw.c \
 	iris_fence.c \
+	iris_fine_fence.c \
 	iris_formats.c \
+	iris_measure.c \
 	iris_monitor.c \
 	iris_perf.c \
 	iris_performance_query.c \
@@ -27,7 +29,7 @@ SRCS=	iris_batch.c \
 
 .include "../Makefile.inc"
 
-CFLAGS+=	${C_VIS_ARGS} ${C_SSE2_ARGS} -Wno-initializer-overrides
+CFLAGS+=	${C_VIS_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-DGALLIUM_IRIS \
 		-I${MESA_SRC}/src/gallium/drivers/iris \
 		-I${MESA_SRC}/src/gallium/include \

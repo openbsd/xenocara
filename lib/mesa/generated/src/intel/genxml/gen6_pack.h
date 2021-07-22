@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GEN6_PACK_H
-#define GEN6_PACK_H
+#ifndef GFX6_PACK_H
+#define GFX6_PACK_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -40,8 +40,8 @@
 #define __gen_validate_value(x)
 #endif
 
-#ifndef __gen_field_functions
-#define __gen_field_functions
+#ifndef __intel_field_functions
+#define __intel_field_functions
 
 #ifdef NDEBUG
 #define NDEBUG_UNUSED __attribute__((unused))
@@ -49,7 +49,7 @@
 #define NDEBUG_UNUSED
 #endif
 
-union __gen_value {
+union __intel_value {
    float f;
    uint32_t dw;
 };
@@ -109,11 +109,27 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
    return v;
 }
 
+static inline __attribute__((always_inline)) uint64_t
+__gen_address(__gen_user_data *data, void *location,
+              __gen_address_type address, uint32_t delta,
+              __attribute__((unused)) uint32_t start, uint32_t end)
+{
+   uint64_t addr_u64 = __gen_combine_address(data, location, address, delta);
+   if (end == 31) {
+      return addr_u64;
+   } else if (end < 63) {
+      const unsigned shift = 63 - end;
+      return (addr_u64 << shift) >> shift;
+   } else {
+      return addr_u64;
+   }
+}
+
 static inline __attribute__((always_inline)) uint32_t
 __gen_float(float v)
 {
    __gen_validate_value(v);
-   return ((union __gen_value) { .f = (v) }).dw;
+   return ((union __intel_value) { .f = (v) }).dw;
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -166,7 +182,7 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
 #endif
 
 
-enum GEN6_3D_Color_Buffer_Blend_Factor {
+enum GFX6_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_ONE                      =      1,
    BLENDFACTOR_SRC_COLOR                =      2,
    BLENDFACTOR_SRC_ALPHA                =      3,
@@ -188,7 +204,7 @@ enum GEN6_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_INV_SRC1_ALPHA           =     26,
 };
 
-enum GEN6_3D_Color_Buffer_Blend_Function {
+enum GFX6_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_ADD                    =      0,
    BLENDFUNCTION_SUBTRACT               =      1,
    BLENDFUNCTION_REVERSE_SUBTRACT       =      2,
@@ -196,7 +212,7 @@ enum GEN6_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_MAX                    =      4,
 };
 
-enum GEN6_3D_Compare_Function {
+enum GFX6_3D_Compare_Function {
    COMPAREFUNCTION_ALWAYS               =      0,
    COMPAREFUNCTION_NEVER                =      1,
    COMPAREFUNCTION_LESS                 =      2,
@@ -207,7 +223,7 @@ enum GEN6_3D_Compare_Function {
    COMPAREFUNCTION_GEQUAL               =      7,
 };
 
-enum GEN6_3D_Logic_Op_Function {
+enum GFX6_3D_Logic_Op_Function {
    LOGICOP_CLEAR                        =      0,
    LOGICOP_NOR                          =      1,
    LOGICOP_AND_INVERTED                 =      2,
@@ -226,7 +242,7 @@ enum GEN6_3D_Logic_Op_Function {
    LOGICOP_SET                          =     15,
 };
 
-enum GEN6_3D_Prim_Topo_Type {
+enum GFX6_3D_Prim_Topo_Type {
    _3DPRIM_POINTLIST                    =      1,
    _3DPRIM_LINELIST                     =      2,
    _3DPRIM_LINESTRIP                    =      3,
@@ -250,7 +266,7 @@ enum GEN6_3D_Prim_Topo_Type {
    _3DPRIM_TRIFAN_NOSTIPPLE             =     22,
 };
 
-enum GEN6_3D_Stencil_Operation {
+enum GFX6_3D_Stencil_Operation {
    STENCILOP_KEEP                       =      0,
    STENCILOP_ZERO                       =      1,
    STENCILOP_REPLACE                    =      2,
@@ -261,7 +277,7 @@ enum GEN6_3D_Stencil_Operation {
    STENCILOP_INVERT                     =      7,
 };
 
-enum GEN6_3D_Vertex_Component_Control {
+enum GFX6_3D_Vertex_Component_Control {
    VFCOMP_NOSTORE                       =      0,
    VFCOMP_STORE_SRC                     =      1,
    VFCOMP_STORE_0                       =      2,
@@ -272,7 +288,7 @@ enum GEN6_3D_Vertex_Component_Control {
    VFCOMP_STORE_PID                     =      7,
 };
 
-enum GEN6_TextureCoordinateMode {
+enum GFX6_TextureCoordinateMode {
    TCM_WRAP                             =      0,
    TCM_MIRROR                           =      1,
    TCM_CLAMP                            =      2,
@@ -281,8 +297,8 @@ enum GEN6_TextureCoordinateMode {
    TCM_MIRROR_ONCE                      =      5,
 };
 
-#define GEN6_3DSTATE_CONSTANT_BODY_length      4
-struct GEN6_3DSTATE_CONSTANT_BODY {
+#define GFX6_3DSTATE_CONSTANT_BODY_length      4
+struct GFX6_3DSTATE_CONSTANT_BODY {
    uint32_t                             ConstantBuffer0ReadLength;
    uint64_t                             PointertoConstantBuffer0;
    uint32_t                             ConstantBuffer1ReadLength;
@@ -294,9 +310,9 @@ struct GEN6_3DSTATE_CONSTANT_BODY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN6_3DSTATE_CONSTANT_BODY * restrict values)
+                                __attribute__((unused)) const struct GFX6_3DSTATE_CONSTANT_BODY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -306,26 +322,26 @@ GEN6_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->ConstantBuffer1ReadLength, 0, 4);
-   dw[1] = __gen_combine_address(data, &dw[1], values->PointertoConstantBuffer1, v1);
+   dw[1] = __gen_address(data, &dw[1], values->PointertoConstantBuffer1, v1, 5, 31);
 
    const uint32_t v2 =
       __gen_uint(values->ConstantBuffer2ReadLength, 0, 4);
-   dw[2] = __gen_combine_address(data, &dw[2], values->PointertoConstantBuffer2, v2);
+   dw[2] = __gen_address(data, &dw[2], values->PointertoConstantBuffer2, v2, 5, 31);
 
    const uint32_t v3 =
       __gen_uint(values->ConstantBuffer3ReadLength, 0, 4);
-   dw[3] = __gen_combine_address(data, &dw[3], values->PointertoConstantBuffer3, v3);
+   dw[3] = __gen_address(data, &dw[3], values->PointertoConstantBuffer3, v3, 5, 31);
 }
 
-#define GEN6_BINDING_TABLE_STATE_length        1
-struct GEN6_BINDING_TABLE_STATE {
+#define GFX6_BINDING_TABLE_STATE_length        1
+struct GFX6_BINDING_TABLE_STATE {
    uint64_t                             SurfaceStatePointer;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_BINDING_TABLE_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX6_BINDING_TABLE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -333,14 +349,14 @@ GEN6_BINDING_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SurfaceStatePointer, 5, 31);
 }
 
-#define GEN6_BLEND_STATE_ENTRY_length          2
-struct GEN6_BLEND_STATE_ENTRY {
-   enum GEN6_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
-   enum GEN6_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
-   enum GEN6_3D_Color_Buffer_Blend_Function ColorBlendFunction;
-   enum GEN6_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
-   enum GEN6_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
-   enum GEN6_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
+#define GFX6_BLEND_STATE_ENTRY_length          2
+struct GFX6_BLEND_STATE_ENTRY {
+   enum GFX6_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
+   enum GFX6_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
+   enum GFX6_3D_Color_Buffer_Blend_Function ColorBlendFunction;
+   enum GFX6_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
+   enum GFX6_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
+   enum GFX6_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
    bool                                 IndependentAlphaBlendEnable;
    bool                                 ColorBufferBlendEnable;
    bool                                 PostBlendColorClampEnable;
@@ -352,9 +368,9 @@ struct GEN6_BLEND_STATE_ENTRY {
    uint32_t                             YDitherOffset;
    uint32_t                             XDitherOffset;
    bool                                 ColorDitherEnable;
-   enum GEN6_3D_Compare_Function        AlphaTestFunction;
+   enum GFX6_3D_Compare_Function        AlphaTestFunction;
    bool                                 AlphaTestEnable;
-   enum GEN6_3D_Logic_Op_Function       LogicOpFunction;
+   enum GFX6_3D_Logic_Op_Function       LogicOpFunction;
    bool                                 LogicOpEnable;
    bool                                 WriteDisableBlue;
    bool                                 WriteDisableGreen;
@@ -366,9 +382,9 @@ struct GEN6_BLEND_STATE_ENTRY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_BLEND_STATE_ENTRY * restrict values)
+                            __attribute__((unused)) const struct GFX6_BLEND_STATE_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -402,28 +418,28 @@ GEN6_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AlphaToCoverageEnable, 31, 31);
 }
 
-#define GEN6_BLEND_STATE_length                0
-struct GEN6_BLEND_STATE {
+#define GFX6_BLEND_STATE_length                0
+struct GFX6_BLEND_STATE {
    /* variable length fields follow */
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BLEND_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BLEND_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN6_BLEND_STATE * restrict values)
+                      __attribute__((unused)) const struct GFX6_BLEND_STATE * restrict values)
 {
 }
 
-#define GEN6_CC_VIEWPORT_length                2
-struct GEN6_CC_VIEWPORT {
+#define GFX6_CC_VIEWPORT_length                2
+struct GFX6_CC_VIEWPORT {
    float                                MinimumDepth;
    float                                MaximumDepth;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN6_CC_VIEWPORT * restrict values)
+                      __attribute__((unused)) const struct GFX6_CC_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -434,8 +450,8 @@ GEN6_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->MaximumDepth);
 }
 
-#define GEN6_CLIP_VIEWPORT_length              4
-struct GEN6_CLIP_VIEWPORT {
+#define GFX6_CLIP_VIEWPORT_length              4
+struct GFX6_CLIP_VIEWPORT {
    float                                XMinClipGuardband;
    float                                XMaxClipGuardband;
    float                                YMinClipGuardband;
@@ -443,9 +459,9 @@ struct GEN6_CLIP_VIEWPORT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_CLIP_VIEWPORT * restrict values)
+                        __attribute__((unused)) const struct GFX6_CLIP_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -462,8 +478,8 @@ GEN6_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->YMaxClipGuardband);
 }
 
-#define GEN6_COLOR_CALC_STATE_length           6
-struct GEN6_COLOR_CALC_STATE {
+#define GFX6_COLOR_CALC_STATE_length           6
+struct GFX6_COLOR_CALC_STATE {
    uint32_t                             AlphaTestFormat;
 #define ALPHATEST_UNORM8                         0
 #define ALPHATEST_FLOAT32                        1
@@ -479,9 +495,9 @@ struct GEN6_COLOR_CALC_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN6_COLOR_CALC_STATE * restrict values)
+                           __attribute__((unused)) const struct GFX6_COLOR_CALC_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -508,32 +524,32 @@ GEN6_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->BlendConstantColorAlpha);
 }
 
-#define GEN6_DEPTH_STENCIL_STATE_length        3
-struct GEN6_DEPTH_STENCIL_STATE {
-   enum GEN6_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
-   enum GEN6_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
-   enum GEN6_3D_Stencil_Operation       BackfaceStencilFailOp;
-   enum GEN6_3D_Compare_Function        BackfaceStencilTestFunction;
+#define GFX6_DEPTH_STENCIL_STATE_length        3
+struct GFX6_DEPTH_STENCIL_STATE {
+   enum GFX6_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
+   enum GFX6_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
+   enum GFX6_3D_Stencil_Operation       BackfaceStencilFailOp;
+   enum GFX6_3D_Compare_Function        BackfaceStencilTestFunction;
    bool                                 DoubleSidedStencilEnable;
    bool                                 StencilBufferWriteEnable;
-   enum GEN6_3D_Stencil_Operation       StencilPassDepthPassOp;
-   enum GEN6_3D_Stencil_Operation       StencilPassDepthFailOp;
-   enum GEN6_3D_Stencil_Operation       StencilFailOp;
-   enum GEN6_3D_Compare_Function        StencilTestFunction;
+   enum GFX6_3D_Stencil_Operation       StencilPassDepthPassOp;
+   enum GFX6_3D_Stencil_Operation       StencilPassDepthFailOp;
+   enum GFX6_3D_Stencil_Operation       StencilFailOp;
+   enum GFX6_3D_Compare_Function        StencilTestFunction;
    bool                                 StencilTestEnable;
    uint32_t                             BackfaceStencilWriteMask;
    uint32_t                             BackfaceStencilTestMask;
    uint32_t                             StencilWriteMask;
    uint32_t                             StencilTestMask;
    bool                                 DepthBufferWriteEnable;
-   enum GEN6_3D_Compare_Function        DepthTestFunction;
+   enum GFX6_3D_Compare_Function        DepthTestFunction;
    bool                                 DepthTestEnable;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_DEPTH_STENCIL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_DEPTH_STENCIL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_DEPTH_STENCIL_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX6_DEPTH_STENCIL_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -562,8 +578,8 @@ GEN6_DEPTH_STENCIL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DepthTestEnable, 31, 31);
 }
 
-#define GEN6_INTERFACE_DESCRIPTOR_DATA_length      8
-struct GEN6_INTERFACE_DESCRIPTOR_DATA {
+#define GFX6_INTERFACE_DESCRIPTOR_DATA_length      8
+struct GFX6_INTERFACE_DESCRIPTOR_DATA {
    uint64_t                             KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
    bool                                 MaskStackExceptionEnable;
@@ -592,9 +608,9 @@ struct GEN6_INTERFACE_DESCRIPTOR_DATA {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN6_INTERFACE_DESCRIPTOR_DATA * restrict values)
+                                    __attribute__((unused)) const struct GFX6_INTERFACE_DESCRIPTOR_DATA * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -631,16 +647,16 @@ GEN6_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *dat
    dw[7] = 0;
 }
 
-#define GEN6_MEMORY_OBJECT_CONTROL_STATE_length      1
-struct GEN6_MEMORY_OBJECT_CONTROL_STATE {
+#define GFX6_MEMORY_OBJECT_CONTROL_STATE_length      1
+struct GFX6_MEMORY_OBJECT_CONTROL_STATE {
    uint32_t                             CacheabilityControl;
    uint32_t                             GraphicsDataTypeGFDT;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                       __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GEN6_MEMORY_OBJECT_CONTROL_STATE * restrict values)
+                                      __attribute__((unused)) const struct GFX6_MEMORY_OBJECT_CONTROL_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -649,8 +665,8 @@ GEN6_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->GraphicsDataTypeGFDT, 2, 2);
 }
 
-#define GEN6_PALETTE_ENTRY_length              1
-struct GEN6_PALETTE_ENTRY {
+#define GFX6_PALETTE_ENTRY_length              1
+struct GFX6_PALETTE_ENTRY {
    uint32_t                             Blue;
    uint32_t                             Green;
    uint32_t                             Red;
@@ -658,9 +674,9 @@ struct GEN6_PALETTE_ENTRY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_PALETTE_ENTRY * restrict values)
+                        __attribute__((unused)) const struct GFX6_PALETTE_ENTRY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -671,8 +687,8 @@ GEN6_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Alpha, 24, 31);
 }
 
-#define GEN6_RENDER_SURFACE_STATE_length       6
-struct GEN6_RENDER_SURFACE_STATE {
+#define GFX6_RENDER_SURFACE_STATE_length       6
+struct GFX6_RENDER_SURFACE_STATE {
    bool                                 CubeFaceEnablePositiveZ;
    bool                                 CubeFaceEnableNegativeZ;
    bool                                 CubeFaceEnablePositiveY;
@@ -734,9 +750,9 @@ struct GEN6_RENDER_SURFACE_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_RENDER_SURFACE_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX6_RENDER_SURFACE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -757,7 +773,7 @@ GEN6_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataReturnFormat, 27, 27) |
       __gen_uint(values->SurfaceType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->SurfaceBaseAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[2] =
       __gen_uint(values->RenderTargetRotation, 0, 1) |
@@ -785,8 +801,8 @@ GEN6_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->XOffset, 25, 31);
 }
 
-#define GEN6_SAMPLER_BORDER_COLOR_STATE_length     12
-struct GEN6_SAMPLER_BORDER_COLOR_STATE {
+#define GFX6_SAMPLER_BORDER_COLOR_STATE_length     12
+struct GFX6_SAMPLER_BORDER_COLOR_STATE {
    uint32_t                             BorderColorUnormRed;
    uint32_t                             BorderColorUnormGreen;
    uint32_t                             BorderColorUnormBlue;
@@ -814,9 +830,9 @@ struct GEN6_SAMPLER_BORDER_COLOR_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN6_SAMPLER_BORDER_COLOR_STATE * restrict values)
+                                     __attribute__((unused)) const struct GFX6_SAMPLER_BORDER_COLOR_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -869,8 +885,8 @@ GEN6_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *da
       __gen_sint(values->BorderColorSnorm8Alpha, 24, 31);
 }
 
-#define GEN6_SAMPLER_STATE_length              4
-struct GEN6_SAMPLER_STATE {
+#define GFX6_SAMPLER_STATE_length              4
+struct GFX6_SAMPLER_STATE {
    uint32_t                             ShadowFunction;
 #define PREFILTEROP_ALWAYS                       0
 #define PREFILTEROP_NEVER                        1
@@ -901,9 +917,9 @@ struct GEN6_SAMPLER_STATE {
 #define DX10OGL                                  0
 #define DX9                                      1
    bool                                 SamplerDisable;
-   enum GEN6_TextureCoordinateMode      TCZAddressControlMode;
-   enum GEN6_TextureCoordinateMode      TCYAddressControlMode;
-   enum GEN6_TextureCoordinateMode      TCXAddressControlMode;
+   enum GFX6_TextureCoordinateMode      TCZAddressControlMode;
+   enum GFX6_TextureCoordinateMode      TCYAddressControlMode;
+   enum GFX6_TextureCoordinateMode      TCXAddressControlMode;
    uint32_t                             CubeSurfaceControlMode;
 #define CUBECTRLMODE_PROGRAMMED                  0
 #define CUBECTRLMODE_OVERRIDE                    1
@@ -936,9 +952,9 @@ struct GEN6_SAMPLER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_SAMPLER_STATE * restrict values)
+                        __attribute__((unused)) const struct GFX6_SAMPLER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -981,8 +997,8 @@ GEN6_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MonochromeFilterHeightReserved, 29, 31);
 }
 
-#define GEN6_SCISSOR_RECT_length               2
-struct GEN6_SCISSOR_RECT {
+#define GFX6_SCISSOR_RECT_length               2
+struct GFX6_SCISSOR_RECT {
    uint32_t                             ScissorRectangleXMin;
    uint32_t                             ScissorRectangleYMin;
    uint32_t                             ScissorRectangleXMax;
@@ -990,9 +1006,9 @@ struct GEN6_SCISSOR_RECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_SCISSOR_RECT * restrict values)
+                       __attribute__((unused)) const struct GFX6_SCISSOR_RECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1005,8 +1021,8 @@ GEN6_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ScissorRectangleYMax, 16, 31);
 }
 
-#define GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_length      1
-struct GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL {
+#define GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_length      1
+struct GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL {
    uint32_t                             SourceAttribute;
    uint32_t                             SwizzleSelect;
 #define INPUTATTR                                0
@@ -1026,9 +1042,9 @@ struct GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL * restrict values)
+                                     __attribute__((unused)) const struct GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1043,8 +1059,8 @@ GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *da
       __gen_uint(values->ComponentOverrideW, 15, 15);
 }
 
-#define GEN6_SF_VIEWPORT_length                8
-struct GEN6_SF_VIEWPORT {
+#define GFX6_SF_VIEWPORT_length                8
+struct GFX6_SF_VIEWPORT {
    float                                ViewportMatrixElementm00;
    float                                ViewportMatrixElementm11;
    float                                ViewportMatrixElementm22;
@@ -1055,9 +1071,9 @@ struct GEN6_SF_VIEWPORT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN6_SF_VIEWPORT * restrict values)
+                      __attribute__((unused)) const struct GFX6_SF_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1084,8 +1100,8 @@ GEN6_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[7] = 0;
 }
 
-#define GEN6_VERTEX_BUFFER_STATE_length        4
-struct GEN6_VERTEX_BUFFER_STATE {
+#define GFX6_VERTEX_BUFFER_STATE_length        4
+struct GFX6_VERTEX_BUFFER_STATE {
    uint32_t                             BufferPitch;
    bool                                 VertexFetchInvalidate;
    bool                                 NullVertexBuffer;
@@ -1100,9 +1116,9 @@ struct GEN6_VERTEX_BUFFER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_VERTEX_BUFFER_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX6_VERTEX_BUFFER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1114,31 +1130,31 @@ GEN6_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferAccessType, 20, 20) |
       __gen_uint(values->VertexBufferIndex, 26, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->BufferStartingAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->EndAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->EndAddress, 0, 0, 31);
 
    dw[3] =
       __gen_uint(values->InstanceDataStepRate, 0, 31);
 }
 
-#define GEN6_VERTEX_ELEMENT_STATE_length       2
-struct GEN6_VERTEX_ELEMENT_STATE {
+#define GFX6_VERTEX_ELEMENT_STATE_length       2
+struct GFX6_VERTEX_ELEMENT_STATE {
    uint32_t                             SourceElementOffset;
    bool                                 EdgeFlagEnable;
    uint32_t                             SourceElementFormat;
    bool                                 Valid;
    uint32_t                             VertexBufferIndex;
-   enum GEN6_3D_Vertex_Component_Control Component3Control;
-   enum GEN6_3D_Vertex_Component_Control Component2Control;
-   enum GEN6_3D_Vertex_Component_Control Component1Control;
-   enum GEN6_3D_Vertex_Component_Control Component0Control;
+   enum GFX6_3D_Vertex_Component_Control Component3Control;
+   enum GFX6_3D_Vertex_Component_Control Component2Control;
+   enum GFX6_3D_Vertex_Component_Control Component1Control;
+   enum GFX6_3D_Vertex_Component_Control Component0Control;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_VERTEX_ELEMENT_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX6_VERTEX_ELEMENT_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1156,19 +1172,19 @@ GEN6_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Component0Control, 28, 30);
 }
 
-#define GEN6_3DPRIMITIVE_length                6
-#define GEN6_3DPRIMITIVE_length_bias           2
-#define GEN6_3DPRIMITIVE_header                 \
+#define GFX6_3DPRIMITIVE_length                6
+#define GFX6_3DPRIMITIVE_length_bias           2
+#define GFX6_3DPRIMITIVE_header                 \
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      3,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DPRIMITIVE {
+struct GFX6_3DPRIMITIVE {
    uint32_t                             DWordLength;
    uint32_t                             InternalVertexCount;
-   enum GEN6_3D_Prim_Topo_Type          PrimitiveTopologyType;
+   enum GFX6_3D_Prim_Topo_Type          PrimitiveTopologyType;
    uint32_t                             VertexAccessType;
 #define SEQUENTIAL                               0
 #define RANDOM                                   1
@@ -1186,9 +1202,9 @@ struct GEN6_3DPRIMITIVE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN6_3DPRIMITIVE * restrict values)
+                      __attribute__((unused)) const struct GFX6_3DPRIMITIVE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1218,16 +1234,16 @@ GEN6_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->BaseVertexLocation, 0, 31);
 }
 
-#define GEN6_3DSTATE_AA_LINE_PARAMETERS_length      3
-#define GEN6_3DSTATE_AA_LINE_PARAMETERS_length_bias      2
-#define GEN6_3DSTATE_AA_LINE_PARAMETERS_header  \
+#define GFX6_3DSTATE_AA_LINE_PARAMETERS_length      3
+#define GFX6_3DSTATE_AA_LINE_PARAMETERS_length_bias      2
+#define GFX6_3DSTATE_AA_LINE_PARAMETERS_header  \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     10,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_AA_LINE_PARAMETERS {
+struct GFX6_3DSTATE_AA_LINE_PARAMETERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1240,9 +1256,9 @@ struct GEN6_3DSTATE_AA_LINE_PARAMETERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN6_3DSTATE_AA_LINE_PARAMETERS * restrict values)
+                                     __attribute__((unused)) const struct GFX6_3DSTATE_AA_LINE_PARAMETERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1262,16 +1278,16 @@ GEN6_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_ufixed(values->AACoverageEndCapBias, 16, 23, 8);
 }
 
-#define GEN6_3DSTATE_BINDING_TABLE_POINTERS_length      4
-#define GEN6_3DSTATE_BINDING_TABLE_POINTERS_length_bias      2
-#define GEN6_3DSTATE_BINDING_TABLE_POINTERS_header\
+#define GFX6_3DSTATE_BINDING_TABLE_POINTERS_length      4
+#define GFX6_3DSTATE_BINDING_TABLE_POINTERS_length_bias      2
+#define GFX6_3DSTATE_BINDING_TABLE_POINTERS_header\
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_BINDING_TABLE_POINTERS {
+struct GFX6_3DSTATE_BINDING_TABLE_POINTERS {
    uint32_t                             DWordLength;
    bool                                 VSBindingTableChange;
    bool                                 GSBindingTableChange;
@@ -1286,9 +1302,9 @@ struct GEN6_3DSTATE_BINDING_TABLE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN6_3DSTATE_BINDING_TABLE_POINTERS * restrict values)
+                                         __attribute__((unused)) const struct GFX6_3DSTATE_BINDING_TABLE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1312,16 +1328,16 @@ GEN6_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data
       __gen_offset(values->PointertoPSBindingTable, 5, 31);
 }
 
-#define GEN6_3DSTATE_CC_STATE_POINTERS_length      4
-#define GEN6_3DSTATE_CC_STATE_POINTERS_length_bias      2
-#define GEN6_3DSTATE_CC_STATE_POINTERS_header   \
+#define GFX6_3DSTATE_CC_STATE_POINTERS_length      4
+#define GFX6_3DSTATE_CC_STATE_POINTERS_length_bias      2
+#define GFX6_3DSTATE_CC_STATE_POINTERS_header   \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     14,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CC_STATE_POINTERS {
+struct GFX6_3DSTATE_CC_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1336,9 +1352,9 @@ struct GEN6_3DSTATE_CC_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN6_3DSTATE_CC_STATE_POINTERS * restrict values)
+                                    __attribute__((unused)) const struct GFX6_3DSTATE_CC_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1362,16 +1378,16 @@ GEN6_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_offset(values->ColorCalcStatePointer, 6, 31);
 }
 
-#define GEN6_3DSTATE_CHROMA_KEY_length         4
-#define GEN6_3DSTATE_CHROMA_KEY_length_bias      2
-#define GEN6_3DSTATE_CHROMA_KEY_header          \
+#define GFX6_3DSTATE_CHROMA_KEY_length         4
+#define GFX6_3DSTATE_CHROMA_KEY_length_bias      2
+#define GFX6_3DSTATE_CHROMA_KEY_header          \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CHROMA_KEY {
+struct GFX6_3DSTATE_CHROMA_KEY {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1383,9 +1399,9 @@ struct GEN6_3DSTATE_CHROMA_KEY {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN6_3DSTATE_CHROMA_KEY * restrict values)
+                             __attribute__((unused)) const struct GFX6_3DSTATE_CHROMA_KEY * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1406,16 +1422,16 @@ GEN6_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ChromaKeyHighValue, 0, 31);
 }
 
-#define GEN6_3DSTATE_CLEAR_PARAMS_length       2
-#define GEN6_3DSTATE_CLEAR_PARAMS_length_bias      2
-#define GEN6_3DSTATE_CLEAR_PARAMS_header        \
+#define GFX6_3DSTATE_CLEAR_PARAMS_length       2
+#define GFX6_3DSTATE_CLEAR_PARAMS_length_bias      2
+#define GFX6_3DSTATE_CLEAR_PARAMS_header        \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     16,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CLEAR_PARAMS {
+struct GFX6_3DSTATE_CLEAR_PARAMS {
    uint32_t                             DWordLength;
    bool                                 DepthClearValueValid;
    uint32_t                             _3DCommandSubOpcode;
@@ -1426,9 +1442,9 @@ struct GEN6_3DSTATE_CLEAR_PARAMS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_3DSTATE_CLEAR_PARAMS * restrict values)
+                               __attribute__((unused)) const struct GFX6_3DSTATE_CLEAR_PARAMS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1444,16 +1460,16 @@ GEN6_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DepthClearValue, 0, 31);
 }
 
-#define GEN6_3DSTATE_CLIP_length               4
-#define GEN6_3DSTATE_CLIP_length_bias          2
-#define GEN6_3DSTATE_CLIP_header                \
+#define GFX6_3DSTATE_CLIP_length               4
+#define GFX6_3DSTATE_CLIP_length_bias          2
+#define GFX6_3DSTATE_CLIP_header                \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     18,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CLIP {
+struct GFX6_3DSTATE_CLIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1476,7 +1492,6 @@ struct GEN6_3DSTATE_CLIP {
    bool                                 PerspectiveDivideDisable;
    uint32_t                             ClipMode;
 #define CLIPMODE_NORMAL                          0
-#define reserved                                 2
 #define CLIPMODE_REJECT_ALL                      3
 #define CLIPMODE_ACCEPT_ALL                      4
    uint32_t                             UserClipDistanceClipTestEnableBitmask;
@@ -1494,9 +1509,9 @@ struct GEN6_3DSTATE_CLIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_3DSTATE_CLIP * restrict values)
+                       __attribute__((unused)) const struct GFX6_3DSTATE_CLIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1532,16 +1547,16 @@ GEN6_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->MinimumPointWidth, 17, 27, 3);
 }
 
-#define GEN6_3DSTATE_CONSTANT_GS_length        5
-#define GEN6_3DSTATE_CONSTANT_GS_length_bias      2
-#define GEN6_3DSTATE_CONSTANT_GS_header         \
+#define GFX6_3DSTATE_CONSTANT_GS_length        5
+#define GFX6_3DSTATE_CONSTANT_GS_length_bias      2
+#define GFX6_3DSTATE_CONSTANT_GS_header         \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     22,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CONSTANT_GS {
+struct GFX6_3DSTATE_CONSTANT_GS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    bool                                 Buffer0Valid;
@@ -1552,13 +1567,13 @@ struct GEN6_3DSTATE_CONSTANT_GS {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN6_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX6_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_3DSTATE_CONSTANT_GS * restrict values)
+                              __attribute__((unused)) const struct GFX6_3DSTATE_CONSTANT_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1574,19 +1589,19 @@ GEN6_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN6_3DSTATE_CONSTANT_PS_length        5
-#define GEN6_3DSTATE_CONSTANT_PS_length_bias      2
-#define GEN6_3DSTATE_CONSTANT_PS_header         \
+#define GFX6_3DSTATE_CONSTANT_PS_length        5
+#define GFX6_3DSTATE_CONSTANT_PS_length_bias      2
+#define GFX6_3DSTATE_CONSTANT_PS_header         \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     23,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CONSTANT_PS {
+struct GFX6_3DSTATE_CONSTANT_PS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    bool                                 Buffer0Valid;
@@ -1597,13 +1612,13 @@ struct GEN6_3DSTATE_CONSTANT_PS {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN6_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX6_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_3DSTATE_CONSTANT_PS * restrict values)
+                              __attribute__((unused)) const struct GFX6_3DSTATE_CONSTANT_PS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1619,19 +1634,19 @@ GEN6_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN6_3DSTATE_CONSTANT_VS_length        5
-#define GEN6_3DSTATE_CONSTANT_VS_length_bias      2
-#define GEN6_3DSTATE_CONSTANT_VS_header         \
+#define GFX6_3DSTATE_CONSTANT_VS_length        5
+#define GFX6_3DSTATE_CONSTANT_VS_length_bias      2
+#define GFX6_3DSTATE_CONSTANT_VS_header         \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =     21,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_CONSTANT_VS {
+struct GFX6_3DSTATE_CONSTANT_VS {
    uint32_t                             DWordLength;
    uint32_t                             MOCS;
    bool                                 Buffer0Valid;
@@ -1642,13 +1657,13 @@ struct GEN6_3DSTATE_CONSTANT_VS {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
-   struct GEN6_3DSTATE_CONSTANT_BODY    ConstantBody;
+   struct GFX6_3DSTATE_CONSTANT_BODY    ConstantBody;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_3DSTATE_CONSTANT_VS * restrict values)
+                              __attribute__((unused)) const struct GFX6_3DSTATE_CONSTANT_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1664,19 +1679,19 @@ GEN6_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   GEN6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+   GFX6_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
-#define GEN6_3DSTATE_DEPTH_BUFFER_length       7
-#define GEN6_3DSTATE_DEPTH_BUFFER_length_bias      2
-#define GEN6_3DSTATE_DEPTH_BUFFER_header        \
+#define GFX6_3DSTATE_DEPTH_BUFFER_length       7
+#define GFX6_3DSTATE_DEPTH_BUFFER_length_bias      2
+#define GFX6_3DSTATE_DEPTH_BUFFER_header        \
    .DWordLength                         =      5,  \
    ._3DCommandSubOpcode                 =      5,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_DEPTH_BUFFER {
+struct GFX6_3DSTATE_DEPTH_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1720,9 +1735,9 @@ struct GEN6_3DSTATE_DEPTH_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_3DSTATE_DEPTH_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX6_3DSTATE_DEPTH_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1743,7 +1758,7 @@ GEN6_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TiledSurface, 27, 27) |
       __gen_uint(values->SurfaceType, 29, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[3] =
       __gen_uint(values->MIPMapLayoutMode, 1, 1) |
@@ -1764,16 +1779,16 @@ GEN6_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MOCS, 27, 31);
 }
 
-#define GEN6_3DSTATE_DRAWING_RECTANGLE_length      4
-#define GEN6_3DSTATE_DRAWING_RECTANGLE_length_bias      2
-#define GEN6_3DSTATE_DRAWING_RECTANGLE_header   \
+#define GFX6_3DSTATE_DRAWING_RECTANGLE_length      4
+#define GFX6_3DSTATE_DRAWING_RECTANGLE_length_bias      2
+#define GFX6_3DSTATE_DRAWING_RECTANGLE_header   \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_DRAWING_RECTANGLE {
+struct GFX6_3DSTATE_DRAWING_RECTANGLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1788,9 +1803,9 @@ struct GEN6_3DSTATE_DRAWING_RECTANGLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN6_3DSTATE_DRAWING_RECTANGLE * restrict values)
+                                    __attribute__((unused)) const struct GFX6_3DSTATE_DRAWING_RECTANGLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1814,16 +1829,16 @@ GEN6_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_sint(values->DrawingRectangleOriginY, 16, 31);
 }
 
-#define GEN6_3DSTATE_GS_length                 7
-#define GEN6_3DSTATE_GS_length_bias            2
-#define GEN6_3DSTATE_GS_header                  \
+#define GFX6_3DSTATE_GS_length                 7
+#define GFX6_3DSTATE_GS_length_bias            2
+#define GFX6_3DSTATE_GS_header                  \
    .DWordLength                         =      5,  \
    ._3DCommandSubOpcode                 =     17,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_GS {
+struct GFX6_3DSTATE_GS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1868,9 +1883,9 @@ struct GEN6_3DSTATE_GS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_3DSTATE_GS * restrict values)
+                     __attribute__((unused)) const struct GFX6_3DSTATE_GS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1897,7 +1912,7 @@ GEN6_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v3 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[3] = __gen_combine_address(data, &dw[3], values->ScratchSpaceBasePointer, v3);
+   dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -1919,16 +1934,16 @@ GEN6_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ReorderMode, 30, 30);
 }
 
-#define GEN6_3DSTATE_GS_SVB_INDEX_length       7
-#define GEN6_3DSTATE_GS_SVB_INDEX_length_bias      2
-#define GEN6_3DSTATE_GS_SVB_INDEX_header        \
+#define GFX6_3DSTATE_GS_SVB_INDEX_length       7
+#define GFX6_3DSTATE_GS_SVB_INDEX_length_bias      2
+#define GFX6_3DSTATE_GS_SVB_INDEX_header        \
    .DWordLength                         =      5,  \
    ._3DCommandSubOpcode                 =     11,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_GS_SVB_INDEX {
+struct GFX6_3DSTATE_GS_SVB_INDEX {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1941,9 +1956,9 @@ struct GEN6_3DSTATE_GS_SVB_INDEX {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_GS_SVB_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_GS_SVB_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_3DSTATE_GS_SVB_INDEX * restrict values)
+                               __attribute__((unused)) const struct GFX6_3DSTATE_GS_SVB_INDEX * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1971,16 +1986,16 @@ GEN6_3DSTATE_GS_SVB_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
    dw[6] = 0;
 }
 
-#define GEN6_3DSTATE_HIER_DEPTH_BUFFER_length      3
-#define GEN6_3DSTATE_HIER_DEPTH_BUFFER_length_bias      2
-#define GEN6_3DSTATE_HIER_DEPTH_BUFFER_header   \
+#define GFX6_3DSTATE_HIER_DEPTH_BUFFER_length      3
+#define GFX6_3DSTATE_HIER_DEPTH_BUFFER_length_bias      2
+#define GFX6_3DSTATE_HIER_DEPTH_BUFFER_header   \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     15,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_HIER_DEPTH_BUFFER {
+struct GFX6_3DSTATE_HIER_DEPTH_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1992,9 +2007,9 @@ struct GEN6_3DSTATE_HIER_DEPTH_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN6_3DSTATE_HIER_DEPTH_BUFFER * restrict values)
+                                    __attribute__((unused)) const struct GFX6_3DSTATE_HIER_DEPTH_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2009,19 +2024,19 @@ GEN6_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_uint(values->SurfacePitch, 0, 16) |
       __gen_uint(values->MOCS, 25, 28);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 }
 
-#define GEN6_3DSTATE_INDEX_BUFFER_length       3
-#define GEN6_3DSTATE_INDEX_BUFFER_length_bias      2
-#define GEN6_3DSTATE_INDEX_BUFFER_header        \
+#define GFX6_3DSTATE_INDEX_BUFFER_length       3
+#define GFX6_3DSTATE_INDEX_BUFFER_length_bias      2
+#define GFX6_3DSTATE_INDEX_BUFFER_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     10,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_INDEX_BUFFER {
+struct GFX6_3DSTATE_INDEX_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             IndexFormat;
 #define INDEX_BYTE                               0
@@ -2038,9 +2053,9 @@ struct GEN6_3DSTATE_INDEX_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_3DSTATE_INDEX_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX6_3DSTATE_INDEX_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2054,21 +2069,21 @@ GEN6_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->BufferStartingAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->BufferEndingAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->BufferEndingAddress, 0, 0, 31);
 }
 
-#define GEN6_3DSTATE_LINE_STIPPLE_length       3
-#define GEN6_3DSTATE_LINE_STIPPLE_length_bias      2
-#define GEN6_3DSTATE_LINE_STIPPLE_header        \
+#define GFX6_3DSTATE_LINE_STIPPLE_length       3
+#define GFX6_3DSTATE_LINE_STIPPLE_length_bias      2
+#define GFX6_3DSTATE_LINE_STIPPLE_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_LINE_STIPPLE {
+struct GFX6_3DSTATE_LINE_STIPPLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2083,9 +2098,9 @@ struct GEN6_3DSTATE_LINE_STIPPLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_3DSTATE_LINE_STIPPLE * restrict values)
+                               __attribute__((unused)) const struct GFX6_3DSTATE_LINE_STIPPLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2107,16 +2122,16 @@ GEN6_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->LineStippleInverseRepeatCount, 16, 31, 13);
 }
 
-#define GEN6_3DSTATE_MONOFILTER_SIZE_length      2
-#define GEN6_3DSTATE_MONOFILTER_SIZE_length_bias      2
-#define GEN6_3DSTATE_MONOFILTER_SIZE_header     \
+#define GFX6_3DSTATE_MONOFILTER_SIZE_length      2
+#define GFX6_3DSTATE_MONOFILTER_SIZE_length_bias      2
+#define GFX6_3DSTATE_MONOFILTER_SIZE_header     \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     17,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_MONOFILTER_SIZE {
+struct GFX6_3DSTATE_MONOFILTER_SIZE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2127,9 +2142,9 @@ struct GEN6_3DSTATE_MONOFILTER_SIZE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN6_3DSTATE_MONOFILTER_SIZE * restrict values)
+                                  __attribute__((unused)) const struct GFX6_3DSTATE_MONOFILTER_SIZE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2145,16 +2160,16 @@ GEN6_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MonochromeFilterWidth, 3, 5);
 }
 
-#define GEN6_3DSTATE_MULTISAMPLE_length        3
-#define GEN6_3DSTATE_MULTISAMPLE_length_bias      2
-#define GEN6_3DSTATE_MULTISAMPLE_header         \
+#define GFX6_3DSTATE_MULTISAMPLE_length        3
+#define GFX6_3DSTATE_MULTISAMPLE_length_bias      2
+#define GFX6_3DSTATE_MULTISAMPLE_header         \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     13,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_MULTISAMPLE {
+struct GFX6_3DSTATE_MULTISAMPLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2177,9 +2192,9 @@ struct GEN6_3DSTATE_MULTISAMPLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_3DSTATE_MULTISAMPLE * restrict values)
+                              __attribute__((unused)) const struct GFX6_3DSTATE_MULTISAMPLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2205,16 +2220,16 @@ GEN6_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->Sample3XOffset, 28, 31, 4);
 }
 
-#define GEN6_3DSTATE_POLY_STIPPLE_OFFSET_length      2
-#define GEN6_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
-#define GEN6_3DSTATE_POLY_STIPPLE_OFFSET_header \
+#define GFX6_3DSTATE_POLY_STIPPLE_OFFSET_length      2
+#define GFX6_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
+#define GFX6_3DSTATE_POLY_STIPPLE_OFFSET_header \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      6,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_POLY_STIPPLE_OFFSET {
+struct GFX6_3DSTATE_POLY_STIPPLE_OFFSET {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2225,9 +2240,9 @@ struct GEN6_3DSTATE_POLY_STIPPLE_OFFSET {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
                                       __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GEN6_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
+                                      __attribute__((unused)) const struct GFX6_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2243,16 +2258,16 @@ GEN6_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->PolygonStippleXOffset, 8, 12);
 }
 
-#define GEN6_3DSTATE_POLY_STIPPLE_PATTERN_length     33
-#define GEN6_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
-#define GEN6_3DSTATE_POLY_STIPPLE_PATTERN_header\
+#define GFX6_3DSTATE_POLY_STIPPLE_PATTERN_length     33
+#define GFX6_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
+#define GFX6_3DSTATE_POLY_STIPPLE_PATTERN_header\
    .DWordLength                         =     31,  \
    ._3DCommandSubOpcode                 =      7,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_POLY_STIPPLE_PATTERN {
+struct GFX6_3DSTATE_POLY_STIPPLE_PATTERN {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2262,9 +2277,9 @@ struct GEN6_3DSTATE_POLY_STIPPLE_PATTERN {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
                                        __attribute__((unused)) void * restrict dst,
-                                       __attribute__((unused)) const struct GEN6_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
+                                       __attribute__((unused)) const struct GFX6_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2372,14 +2387,14 @@ GEN6_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *
       __gen_uint(values->PatternRow[31], 0, 31);
 }
 
-#define GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0_length_bias      2
-#define GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0_header\
+#define GFX6_3DSTATE_SAMPLER_PALETTE_LOAD0_length_bias      2
+#define GFX6_3DSTATE_SAMPLER_PALETTE_LOAD0_header\
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0 {
+struct GFX6_3DSTATE_SAMPLER_PALETTE_LOAD0 {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2389,9 +2404,9 @@ struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0 * restrict values)
+                                        __attribute__((unused)) const struct GFX6_3DSTATE_SAMPLER_PALETTE_LOAD0 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2403,15 +2418,15 @@ GEN6_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1_length_bias      2
-#define GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1_header\
+#define GFX6_3DSTATE_SAMPLER_PALETTE_LOAD1_length_bias      2
+#define GFX6_3DSTATE_SAMPLER_PALETTE_LOAD1_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     12,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1 {
+struct GFX6_3DSTATE_SAMPLER_PALETTE_LOAD1 {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2421,9 +2436,9 @@ struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data *data,
                                         __attribute__((unused)) void * restrict dst,
-                                        __attribute__((unused)) const struct GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1 * restrict values)
+                                        __attribute__((unused)) const struct GFX6_3DSTATE_SAMPLER_PALETTE_LOAD1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2435,16 +2450,16 @@ GEN6_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data 
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_3DSTATE_SAMPLER_STATE_POINTERS_length      4
-#define GEN6_3DSTATE_SAMPLER_STATE_POINTERS_length_bias      2
-#define GEN6_3DSTATE_SAMPLER_STATE_POINTERS_header\
+#define GFX6_3DSTATE_SAMPLER_STATE_POINTERS_length      4
+#define GFX6_3DSTATE_SAMPLER_STATE_POINTERS_length_bias      2
+#define GFX6_3DSTATE_SAMPLER_STATE_POINTERS_header\
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SAMPLER_STATE_POINTERS {
+struct GFX6_3DSTATE_SAMPLER_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             VSSamplerStateChange;
    uint32_t                             GSSamplerStateChange;
@@ -2459,9 +2474,9 @@ struct GEN6_3DSTATE_SAMPLER_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SAMPLER_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SAMPLER_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN6_3DSTATE_SAMPLER_STATE_POINTERS * restrict values)
+                                         __attribute__((unused)) const struct GFX6_3DSTATE_SAMPLER_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2485,16 +2500,16 @@ GEN6_3DSTATE_SAMPLER_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data
       __gen_offset(values->PointertoPSSamplerState, 5, 31);
 }
 
-#define GEN6_3DSTATE_SAMPLE_MASK_length        2
-#define GEN6_3DSTATE_SAMPLE_MASK_length_bias      2
-#define GEN6_3DSTATE_SAMPLE_MASK_header         \
+#define GFX6_3DSTATE_SAMPLE_MASK_length        2
+#define GFX6_3DSTATE_SAMPLE_MASK_length_bias      2
+#define GFX6_3DSTATE_SAMPLE_MASK_header         \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     24,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SAMPLE_MASK {
+struct GFX6_3DSTATE_SAMPLE_MASK {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2504,9 +2519,9 @@ struct GEN6_3DSTATE_SAMPLE_MASK {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_3DSTATE_SAMPLE_MASK * restrict values)
+                              __attribute__((unused)) const struct GFX6_3DSTATE_SAMPLE_MASK * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2521,16 +2536,16 @@ GEN6_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SampleMask, 0, 3);
 }
 
-#define GEN6_3DSTATE_SCISSOR_STATE_POINTERS_length      2
-#define GEN6_3DSTATE_SCISSOR_STATE_POINTERS_length_bias      2
-#define GEN6_3DSTATE_SCISSOR_STATE_POINTERS_header\
+#define GFX6_3DSTATE_SCISSOR_STATE_POINTERS_length      2
+#define GFX6_3DSTATE_SCISSOR_STATE_POINTERS_length_bias      2
+#define GFX6_3DSTATE_SCISSOR_STATE_POINTERS_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =     15,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SCISSOR_STATE_POINTERS {
+struct GFX6_3DSTATE_SCISSOR_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2540,9 +2555,9 @@ struct GEN6_3DSTATE_SCISSOR_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN6_3DSTATE_SCISSOR_STATE_POINTERS * restrict values)
+                                         __attribute__((unused)) const struct GFX6_3DSTATE_SCISSOR_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2557,16 +2572,16 @@ GEN6_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data
       __gen_offset(values->ScissorRectPointer, 5, 31);
 }
 
-#define GEN6_3DSTATE_SF_length                20
-#define GEN6_3DSTATE_SF_length_bias            2
-#define GEN6_3DSTATE_SF_header                  \
+#define GFX6_3DSTATE_SF_length                20
+#define GFX6_3DSTATE_SF_length_bias            2
+#define GFX6_3DSTATE_SF_header                  \
    .DWordLength                         =     18,  \
    ._3DCommandSubOpcode                 =     19,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_SF {
+struct GFX6_3DSTATE_SF {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2638,7 +2653,7 @@ struct GEN6_3DSTATE_SF {
    float                                GlobalDepthOffsetConstant;
    float                                GlobalDepthOffsetScale;
    float                                GlobalDepthOffsetClamp;
-   struct GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL Attribute[16];
+   struct GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL Attribute[16];
    uint32_t                             PointSpriteTextureCoordinateEnable;
    uint32_t                             ConstantInterpolationEnable;
    uint32_t                             Attribute0WrapShortestEnables;
@@ -2660,9 +2675,9 @@ struct GEN6_3DSTATE_SF {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_3DSTATE_SF * restrict values)
+                     __attribute__((unused)) const struct GFX6_3DSTATE_SF * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2719,80 +2734,80 @@ GEN6_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->GlobalDepthOffsetClamp);
 
    uint32_t v8_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_0, &values->Attribute[0]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_0, &values->Attribute[0]);
 
    uint32_t v8_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_1, &values->Attribute[1]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_1, &values->Attribute[1]);
 
    dw[8] =
       __gen_uint(v8_0, 0, 15) |
       __gen_uint(v8_1, 16, 31);
 
    uint32_t v9_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_0, &values->Attribute[2]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_0, &values->Attribute[2]);
 
    uint32_t v9_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_1, &values->Attribute[3]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_1, &values->Attribute[3]);
 
    dw[9] =
       __gen_uint(v9_0, 0, 15) |
       __gen_uint(v9_1, 16, 31);
 
    uint32_t v10_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v10_0, &values->Attribute[4]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v10_0, &values->Attribute[4]);
 
    uint32_t v10_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v10_1, &values->Attribute[5]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v10_1, &values->Attribute[5]);
 
    dw[10] =
       __gen_uint(v10_0, 0, 15) |
       __gen_uint(v10_1, 16, 31);
 
    uint32_t v11_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v11_0, &values->Attribute[6]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v11_0, &values->Attribute[6]);
 
    uint32_t v11_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v11_1, &values->Attribute[7]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v11_1, &values->Attribute[7]);
 
    dw[11] =
       __gen_uint(v11_0, 0, 15) |
       __gen_uint(v11_1, 16, 31);
 
    uint32_t v12_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v12_0, &values->Attribute[8]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v12_0, &values->Attribute[8]);
 
    uint32_t v12_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v12_1, &values->Attribute[9]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v12_1, &values->Attribute[9]);
 
    dw[12] =
       __gen_uint(v12_0, 0, 15) |
       __gen_uint(v12_1, 16, 31);
 
    uint32_t v13_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v13_0, &values->Attribute[10]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v13_0, &values->Attribute[10]);
 
    uint32_t v13_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v13_1, &values->Attribute[11]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v13_1, &values->Attribute[11]);
 
    dw[13] =
       __gen_uint(v13_0, 0, 15) |
       __gen_uint(v13_1, 16, 31);
 
    uint32_t v14_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v14_0, &values->Attribute[12]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v14_0, &values->Attribute[12]);
 
    uint32_t v14_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v14_1, &values->Attribute[13]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v14_1, &values->Attribute[13]);
 
    dw[14] =
       __gen_uint(v14_0, 0, 15) |
       __gen_uint(v14_1, 16, 31);
 
    uint32_t v15_0;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v15_0, &values->Attribute[14]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v15_0, &values->Attribute[14]);
 
    uint32_t v15_1;
-   GEN6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v15_1, &values->Attribute[15]);
+   GFX6_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v15_1, &values->Attribute[15]);
 
    dw[15] =
       __gen_uint(v15_0, 0, 15) |
@@ -2825,16 +2840,16 @@ GEN6_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Attribute15WrapShortestEnables, 28, 31);
 }
 
-#define GEN6_3DSTATE_STENCIL_BUFFER_length      3
-#define GEN6_3DSTATE_STENCIL_BUFFER_length_bias      2
-#define GEN6_3DSTATE_STENCIL_BUFFER_header      \
+#define GFX6_3DSTATE_STENCIL_BUFFER_length      3
+#define GFX6_3DSTATE_STENCIL_BUFFER_length_bias      2
+#define GFX6_3DSTATE_STENCIL_BUFFER_header      \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     14,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_STENCIL_BUFFER {
+struct GFX6_3DSTATE_STENCIL_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2846,9 +2861,9 @@ struct GEN6_3DSTATE_STENCIL_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN6_3DSTATE_STENCIL_BUFFER * restrict values)
+                                 __attribute__((unused)) const struct GFX6_3DSTATE_STENCIL_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2863,19 +2878,19 @@ GEN6_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfacePitch, 0, 16) |
       __gen_uint(values->MOCS, 25, 28);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 }
 
-#define GEN6_3DSTATE_URB_length                3
-#define GEN6_3DSTATE_URB_length_bias           2
-#define GEN6_3DSTATE_URB_header                 \
+#define GFX6_3DSTATE_URB_length                3
+#define GFX6_3DSTATE_URB_length_bias           2
+#define GFX6_3DSTATE_URB_header                 \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      5,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_URB {
+struct GFX6_3DSTATE_URB {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2888,9 +2903,9 @@ struct GEN6_3DSTATE_URB {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_URB_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_URB_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN6_3DSTATE_URB * restrict values)
+                      __attribute__((unused)) const struct GFX6_3DSTATE_URB * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2910,15 +2925,15 @@ GEN6_3DSTATE_URB_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GSNumberofURBEntries, 8, 17);
 }
 
-#define GEN6_3DSTATE_VERTEX_BUFFERS_length_bias      2
-#define GEN6_3DSTATE_VERTEX_BUFFERS_header      \
+#define GFX6_3DSTATE_VERTEX_BUFFERS_length_bias      2
+#define GFX6_3DSTATE_VERTEX_BUFFERS_header      \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_VERTEX_BUFFERS {
+struct GFX6_3DSTATE_VERTEX_BUFFERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2928,9 +2943,9 @@ struct GEN6_3DSTATE_VERTEX_BUFFERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN6_3DSTATE_VERTEX_BUFFERS * restrict values)
+                                 __attribute__((unused)) const struct GFX6_3DSTATE_VERTEX_BUFFERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2942,15 +2957,15 @@ GEN6_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_3DSTATE_VERTEX_ELEMENTS_length_bias      2
-#define GEN6_3DSTATE_VERTEX_ELEMENTS_header     \
+#define GFX6_3DSTATE_VERTEX_ELEMENTS_length_bias      2
+#define GFX6_3DSTATE_VERTEX_ELEMENTS_header     \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      9,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_VERTEX_ELEMENTS {
+struct GFX6_3DSTATE_VERTEX_ELEMENTS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2960,9 +2975,9 @@ struct GEN6_3DSTATE_VERTEX_ELEMENTS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN6_3DSTATE_VERTEX_ELEMENTS * restrict values)
+                                  __attribute__((unused)) const struct GFX6_3DSTATE_VERTEX_ELEMENTS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2974,15 +2989,15 @@ GEN6_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_3DSTATE_VF_STATISTICS_length      1
-#define GEN6_3DSTATE_VF_STATISTICS_length_bias      1
-#define GEN6_3DSTATE_VF_STATISTICS_header       \
+#define GFX6_3DSTATE_VF_STATISTICS_length      1
+#define GFX6_3DSTATE_VF_STATISTICS_length_bias      1
+#define GFX6_3DSTATE_VF_STATISTICS_header       \
    ._3DCommandSubOpcode                 =     11,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      1,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_VF_STATISTICS {
+struct GFX6_3DSTATE_VF_STATISTICS {
    bool                                 StatisticsEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2991,9 +3006,9 @@ struct GEN6_3DSTATE_VF_STATISTICS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN6_3DSTATE_VF_STATISTICS * restrict values)
+                                __attribute__((unused)) const struct GFX6_3DSTATE_VF_STATISTICS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3005,16 +3020,16 @@ GEN6_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_3DSTATE_VIEWPORT_STATE_POINTERS_length      4
-#define GEN6_3DSTATE_VIEWPORT_STATE_POINTERS_length_bias      2
-#define GEN6_3DSTATE_VIEWPORT_STATE_POINTERS_header\
+#define GFX6_3DSTATE_VIEWPORT_STATE_POINTERS_length      4
+#define GFX6_3DSTATE_VIEWPORT_STATE_POINTERS_length_bias      2
+#define GFX6_3DSTATE_VIEWPORT_STATE_POINTERS_header\
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     13,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_VIEWPORT_STATE_POINTERS {
+struct GFX6_3DSTATE_VIEWPORT_STATE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             CLIPViewportStateChange;
    uint32_t                             SFViewportStateChange;
@@ -3029,9 +3044,9 @@ struct GEN6_3DSTATE_VIEWPORT_STATE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_VIEWPORT_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_VIEWPORT_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                           __attribute__((unused)) void * restrict dst,
-                                          __attribute__((unused)) const struct GEN6_3DSTATE_VIEWPORT_STATE_POINTERS * restrict values)
+                                          __attribute__((unused)) const struct GFX6_3DSTATE_VIEWPORT_STATE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3055,16 +3070,16 @@ GEN6_3DSTATE_VIEWPORT_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_dat
       __gen_offset(values->PointertoCC_VIEWPORT, 5, 31);
 }
 
-#define GEN6_3DSTATE_VS_length                 6
-#define GEN6_3DSTATE_VS_length_bias            2
-#define GEN6_3DSTATE_VS_header                  \
+#define GFX6_3DSTATE_VS_length                 6
+#define GFX6_3DSTATE_VS_length_bias            2
+#define GFX6_3DSTATE_VS_header                  \
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =     16,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_VS {
+struct GFX6_3DSTATE_VS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3097,9 +3112,9 @@ struct GEN6_3DSTATE_VS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_3DSTATE_VS * restrict values)
+                     __attribute__((unused)) const struct GFX6_3DSTATE_VS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3124,7 +3139,7 @@ GEN6_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v3 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[3] = __gen_combine_address(data, &dw[3], values->ScratchSpaceBasePointer, v3);
+   dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
       __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
@@ -3138,16 +3153,16 @@ GEN6_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MaximumNumberofThreads, 25, 31);
 }
 
-#define GEN6_3DSTATE_WM_length                 9
-#define GEN6_3DSTATE_WM_length_bias            2
-#define GEN6_3DSTATE_WM_header                  \
+#define GFX6_3DSTATE_WM_length                 9
+#define GFX6_3DSTATE_WM_length_bias            2
+#define GFX6_3DSTATE_WM_header                  \
    .DWordLength                         =      7,  \
    ._3DCommandSubOpcode                 =     20,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_3DSTATE_WM {
+struct GFX6_3DSTATE_WM {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -3231,9 +3246,9 @@ struct GEN6_3DSTATE_WM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_3DSTATE_WM * restrict values)
+                     __attribute__((unused)) const struct GFX6_3DSTATE_WM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3260,7 +3275,7 @@ GEN6_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v3 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[3] = __gen_combine_address(data, &dw[3], values->ScratchSpaceBasePointer, v3);
+   dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
       __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData2, 0, 6) |
@@ -3305,16 +3320,16 @@ GEN6_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->KernelStartPointer2, 6, 31);
 }
 
-#define GEN6_MEDIA_CURBE_LOAD_length           4
-#define GEN6_MEDIA_CURBE_LOAD_length_bias      2
-#define GEN6_MEDIA_CURBE_LOAD_header            \
+#define GFX6_MEDIA_CURBE_LOAD_length           4
+#define GFX6_MEDIA_CURBE_LOAD_length_bias      2
+#define GFX6_MEDIA_CURBE_LOAD_header            \
    .DWordLength                         =      2,  \
    .SubOpcode                           =      1,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_CURBE_LOAD {
+struct GFX6_MEDIA_CURBE_LOAD {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3325,9 +3340,9 @@ struct GEN6_MEDIA_CURBE_LOAD {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN6_MEDIA_CURBE_LOAD * restrict values)
+                           __attribute__((unused)) const struct GFX6_MEDIA_CURBE_LOAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3347,16 +3362,16 @@ GEN6_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CURBEDataStartAddress, 0, 31);
 }
 
-#define GEN6_MEDIA_GATEWAY_STATE_length        2
-#define GEN6_MEDIA_GATEWAY_STATE_length_bias      2
-#define GEN6_MEDIA_GATEWAY_STATE_header         \
+#define GFX6_MEDIA_GATEWAY_STATE_length        2
+#define GFX6_MEDIA_GATEWAY_STATE_length_bias      2
+#define GFX6_MEDIA_GATEWAY_STATE_header         \
    .DWordLength                         =      0,  \
    .SubOpcode                           =      3,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_GATEWAY_STATE {
+struct GFX6_MEDIA_GATEWAY_STATE {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3368,9 +3383,9 @@ struct GEN6_MEDIA_GATEWAY_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_GATEWAY_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_GATEWAY_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_MEDIA_GATEWAY_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX6_MEDIA_GATEWAY_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3387,16 +3402,16 @@ GEN6_MEDIA_GATEWAY_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BarrierID, 16, 23);
 }
 
-#define GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length      4
-#define GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length_bias      2
-#define GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_header\
+#define GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length      4
+#define GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length_bias      2
+#define GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_header\
    .DWordLength                         =      2,  \
    .SubOpcode                           =      2,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
+struct GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3407,9 +3422,9 @@ struct GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
                                           __attribute__((unused)) void * restrict dst,
-                                          __attribute__((unused)) const struct GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD * restrict values)
+                                          __attribute__((unused)) const struct GFX6_MEDIA_INTERFACE_DESCRIPTOR_LOAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3429,15 +3444,15 @@ GEN6_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_dat
       __gen_offset(values->InterfaceDescriptorDataStartAddress, 0, 31);
 }
 
-#define GEN6_MEDIA_OBJECT_length_bias          2
-#define GEN6_MEDIA_OBJECT_header                \
+#define GFX6_MEDIA_OBJECT_length_bias          2
+#define GFX6_MEDIA_OBJECT_header                \
    .DWordLength                         =      4,  \
    .MediaCommandSubOpcode               =      0,  \
    .MediaCommandOpcode                  =      1,  \
    .MediaCommandPipeline                =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_OBJECT {
+struct GFX6_MEDIA_OBJECT {
    uint32_t                             DWordLength;
    uint32_t                             MediaCommandSubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3461,9 +3476,9 @@ struct GEN6_MEDIA_OBJECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_MEDIA_OBJECT * restrict values)
+                       __attribute__((unused)) const struct GFX6_MEDIA_OBJECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3483,7 +3498,7 @@ GEN6_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ThreadSynchronization, 24, 24) |
       __gen_uint(values->ChildrenPresent, 31, 31);
 
-   dw[3] = __gen_combine_address(data, &dw[3], values->IndirectDataStartAddress, 0);
+   dw[3] = __gen_address(data, &dw[3], values->IndirectDataStartAddress, 0, 0, 31);
 
    dw[4] =
       __gen_uint(values->ScoreboardX, 0, 8) |
@@ -3494,16 +3509,16 @@ GEN6_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ScoreboardColor, 16, 19);
 }
 
-#define GEN6_MEDIA_OBJECT_PRT_length          16
-#define GEN6_MEDIA_OBJECT_PRT_length_bias      2
-#define GEN6_MEDIA_OBJECT_PRT_header            \
+#define GFX6_MEDIA_OBJECT_PRT_length          16
+#define GFX6_MEDIA_OBJECT_PRT_length_bias      2
+#define GFX6_MEDIA_OBJECT_PRT_header            \
    .DWordLength                         =     14,  \
    .SubOpcode                           =      2,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_OBJECT_PRT {
+struct GFX6_MEDIA_OBJECT_PRT {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3519,9 +3534,9 @@ struct GEN6_MEDIA_OBJECT_PRT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN6_MEDIA_OBJECT_PRT * restrict values)
+                           __attribute__((unused)) const struct GFX6_MEDIA_OBJECT_PRT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3579,15 +3594,15 @@ GEN6_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InlineData[11], 0, 31);
 }
 
-#define GEN6_MEDIA_OBJECT_WALKER_length_bias      2
-#define GEN6_MEDIA_OBJECT_WALKER_header         \
+#define GFX6_MEDIA_OBJECT_WALKER_length_bias      2
+#define GFX6_MEDIA_OBJECT_WALKER_header         \
    .DWordLength                         =     15,  \
    .SubOpcode                           =      3,  \
    .MediaCommandOpcode                  =      1,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_OBJECT_WALKER {
+struct GFX6_MEDIA_OBJECT_WALKER {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3634,9 +3649,9 @@ struct GEN6_MEDIA_OBJECT_WALKER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_MEDIA_OBJECT_WALKER * restrict values)
+                              __attribute__((unused)) const struct GFX6_MEDIA_OBJECT_WALKER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3713,16 +3728,16 @@ GEN6_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->GlobalInnerLoopUnitY, 16, 25);
 }
 
-#define GEN6_MEDIA_STATE_FLUSH_length          2
-#define GEN6_MEDIA_STATE_FLUSH_length_bias      2
-#define GEN6_MEDIA_STATE_FLUSH_header           \
+#define GFX6_MEDIA_STATE_FLUSH_length          2
+#define GFX6_MEDIA_STATE_FLUSH_length_bias      2
+#define GFX6_MEDIA_STATE_FLUSH_header           \
    .DWordLength                         =      0,  \
    .SubOpcode                           =      4,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_STATE_FLUSH {
+struct GFX6_MEDIA_STATE_FLUSH {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3735,9 +3750,9 @@ struct GEN6_MEDIA_STATE_FLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_MEDIA_STATE_FLUSH * restrict values)
+                            __attribute__((unused)) const struct GFX6_MEDIA_STATE_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3753,16 +3768,16 @@ GEN6_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ThreadCountWaterMark, 16, 23);
 }
 
-#define GEN6_MEDIA_VFE_STATE_length            8
-#define GEN6_MEDIA_VFE_STATE_length_bias       2
-#define GEN6_MEDIA_VFE_STATE_header             \
+#define GFX6_MEDIA_VFE_STATE_length            8
+#define GFX6_MEDIA_VFE_STATE_length_bias       2
+#define GFX6_MEDIA_VFE_STATE_header             \
    .DWordLength                         =      6,  \
    .SubOpcode                           =      0,  \
    .MediaCommandOpcode                  =      0,  \
    .Pipeline                            =      2,  \
    .CommandType                         =      3
 
-struct GEN6_MEDIA_VFE_STATE {
+struct GFX6_MEDIA_VFE_STATE {
    uint32_t                             DWordLength;
    uint32_t                             SubOpcode;
    uint32_t                             MediaCommandOpcode;
@@ -3807,9 +3822,9 @@ struct GEN6_MEDIA_VFE_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN6_MEDIA_VFE_STATE * restrict values)
+                          __attribute__((unused)) const struct GFX6_MEDIA_VFE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3822,7 +3837,7 @@ GEN6_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[1] = __gen_combine_address(data, &dw[1], values->ScratchSpaceBasePointer, v1);
+   dw[1] = __gen_address(data, &dw[1], values->ScratchSpaceBasePointer, v1, 10, 31);
 
    dw[2] =
       __gen_uint(values->FastPreempt, 5, 5) |
@@ -3863,21 +3878,21 @@ GEN6_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->Scoreboard7DeltaY, 28, 31);
 }
 
-#define GEN6_MI_ARB_CHECK_length               1
-#define GEN6_MI_ARB_CHECK_length_bias          1
-#define GEN6_MI_ARB_CHECK_header                \
+#define GFX6_MI_ARB_CHECK_length               1
+#define GFX6_MI_ARB_CHECK_length_bias          1
+#define GFX6_MI_ARB_CHECK_header                \
    .MICommandOpcode                     =      5,  \
    .CommandType                         =      0
 
-struct GEN6_MI_ARB_CHECK {
+struct GFX6_MI_ARB_CHECK {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_MI_ARB_CHECK * restrict values)
+                       __attribute__((unused)) const struct GFX6_MI_ARB_CHECK * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3886,22 +3901,22 @@ GEN6_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_ARB_ON_OFF_length              1
-#define GEN6_MI_ARB_ON_OFF_length_bias         1
-#define GEN6_MI_ARB_ON_OFF_header               \
+#define GFX6_MI_ARB_ON_OFF_length              1
+#define GFX6_MI_ARB_ON_OFF_length_bias         1
+#define GFX6_MI_ARB_ON_OFF_header               \
    .MICommandOpcode                     =      8,  \
    .CommandType                         =      0
 
-struct GEN6_MI_ARB_ON_OFF {
+struct GFX6_MI_ARB_ON_OFF {
    bool                                 ArbitrationEnable;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_MI_ARB_ON_OFF * restrict values)
+                        __attribute__((unused)) const struct GFX6_MI_ARB_ON_OFF * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3911,21 +3926,21 @@ GEN6_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_BATCH_BUFFER_END_length        1
-#define GEN6_MI_BATCH_BUFFER_END_length_bias      1
-#define GEN6_MI_BATCH_BUFFER_END_header         \
+#define GFX6_MI_BATCH_BUFFER_END_length        1
+#define GFX6_MI_BATCH_BUFFER_END_length_bias      1
+#define GFX6_MI_BATCH_BUFFER_END_header         \
    .MICommandOpcode                     =     10,  \
    .CommandType                         =      0
 
-struct GEN6_MI_BATCH_BUFFER_END {
+struct GFX6_MI_BATCH_BUFFER_END {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_MI_BATCH_BUFFER_END * restrict values)
+                              __attribute__((unused)) const struct GFX6_MI_BATCH_BUFFER_END * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3934,14 +3949,14 @@ GEN6_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_BATCH_BUFFER_START_length      2
-#define GEN6_MI_BATCH_BUFFER_START_length_bias      2
-#define GEN6_MI_BATCH_BUFFER_START_header       \
+#define GFX6_MI_BATCH_BUFFER_START_length      2
+#define GFX6_MI_BATCH_BUFFER_START_length_bias      2
+#define GFX6_MI_BATCH_BUFFER_START_header       \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     49,  \
    .CommandType                         =      0
 
-struct GEN6_MI_BATCH_BUFFER_START {
+struct GFX6_MI_BATCH_BUFFER_START {
    uint32_t                             DWordLength;
    uint32_t                             AddressSpaceIndicator;
 #define ASI_GGTT                                 0
@@ -3953,9 +3968,9 @@ struct GEN6_MI_BATCH_BUFFER_START {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN6_MI_BATCH_BUFFER_START * restrict values)
+                                __attribute__((unused)) const struct GFX6_MI_BATCH_BUFFER_START * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -3966,16 +3981,16 @@ GEN6_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MICommandOpcode, 23, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->BatchBufferStartAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->BatchBufferStartAddress, 0, 2, 31);
 }
 
-#define GEN6_MI_CLFLUSH_length_bias            2
-#define GEN6_MI_CLFLUSH_header                  \
+#define GFX6_MI_CLFLUSH_length_bias            2
+#define GFX6_MI_CLFLUSH_header                  \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     39,  \
    .CommandType                         =      0
 
-struct GEN6_MI_CLFLUSH {
+struct GFX6_MI_CLFLUSH {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTT;
    uint32_t                             MICommandOpcode;
@@ -3986,9 +4001,9 @@ struct GEN6_MI_CLFLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_MI_CLFLUSH * restrict values)
+                     __attribute__((unused)) const struct GFX6_MI_CLFLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4000,18 +4015,18 @@ GEN6_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->StartingCachelineOffset, 6, 11);
-   dw[1] = __gen_combine_address(data, &dw[1], values->PageBaseAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->PageBaseAddress, v1, 12, 31);
 }
 
-#define GEN6_MI_CONDITIONAL_BATCH_BUFFER_END_length      2
-#define GEN6_MI_CONDITIONAL_BATCH_BUFFER_END_length_bias      2
-#define GEN6_MI_CONDITIONAL_BATCH_BUFFER_END_header\
+#define GFX6_MI_CONDITIONAL_BATCH_BUFFER_END_length      2
+#define GFX6_MI_CONDITIONAL_BATCH_BUFFER_END_length_bias      2
+#define GFX6_MI_CONDITIONAL_BATCH_BUFFER_END_header\
    .DWordLength                         =      0,  \
    .CompareSemaphore                    =      0,  \
    .MICommandOpcode                     =     54,  \
    .CommandType                         =      0
 
-struct GEN6_MI_CONDITIONAL_BATCH_BUFFER_END {
+struct GFX6_MI_CONDITIONAL_BATCH_BUFFER_END {
    uint32_t                             DWordLength;
    uint32_t                             CompareSemaphore;
    bool                                 UseGlobalGTT;
@@ -4022,9 +4037,9 @@ struct GEN6_MI_CONDITIONAL_BATCH_BUFFER_END {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
                                           __attribute__((unused)) void * restrict dst,
-                                          __attribute__((unused)) const struct GEN6_MI_CONDITIONAL_BATCH_BUFFER_END * restrict values)
+                                          __attribute__((unused)) const struct GFX6_MI_CONDITIONAL_BATCH_BUFFER_END * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4039,13 +4054,13 @@ GEN6_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_dat
       __gen_uint(values->CompareDataDword, 0, 31);
 }
 
-#define GEN6_MI_FLUSH_length                   1
-#define GEN6_MI_FLUSH_length_bias              1
-#define GEN6_MI_FLUSH_header                    \
+#define GFX6_MI_FLUSH_length                   1
+#define GFX6_MI_FLUSH_length_bias              1
+#define GFX6_MI_FLUSH_header                    \
    .MICommandOpcode                     =      4,  \
    .CommandType                         =      0
 
-struct GEN6_MI_FLUSH {
+struct GFX6_MI_FLUSH {
    uint32_t                             StateInstructionCacheInvalidate;
 #define DontInvalidate                           0
 #define Invalidate                               1
@@ -4062,9 +4077,9 @@ struct GEN6_MI_FLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN6_MI_FLUSH * restrict values)
+                   __attribute__((unused)) const struct GFX6_MI_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4078,14 +4093,14 @@ GEN6_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_LOAD_REGISTER_IMM_length       3
-#define GEN6_MI_LOAD_REGISTER_IMM_length_bias      2
-#define GEN6_MI_LOAD_REGISTER_IMM_header        \
+#define GFX6_MI_LOAD_REGISTER_IMM_length       3
+#define GFX6_MI_LOAD_REGISTER_IMM_length_bias      2
+#define GFX6_MI_LOAD_REGISTER_IMM_header        \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     34,  \
    .CommandType                         =      0
 
-struct GEN6_MI_LOAD_REGISTER_IMM {
+struct GFX6_MI_LOAD_REGISTER_IMM {
    uint32_t                             DWordLength;
    uint32_t                             ByteWriteDisables;
    uint32_t                             MICommandOpcode;
@@ -4096,9 +4111,9 @@ struct GEN6_MI_LOAD_REGISTER_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN6_MI_LOAD_REGISTER_IMM * restrict values)
+                               __attribute__((unused)) const struct GFX6_MI_LOAD_REGISTER_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4115,14 +4130,14 @@ GEN6_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord, 0, 31);
 }
 
-#define GEN6_MI_LOAD_SCAN_LINES_EXCL_length      2
-#define GEN6_MI_LOAD_SCAN_LINES_EXCL_length_bias      2
-#define GEN6_MI_LOAD_SCAN_LINES_EXCL_header     \
+#define GFX6_MI_LOAD_SCAN_LINES_EXCL_length      2
+#define GFX6_MI_LOAD_SCAN_LINES_EXCL_length_bias      2
+#define GFX6_MI_LOAD_SCAN_LINES_EXCL_header     \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     19,  \
    .CommandType                         =      0
 
-struct GEN6_MI_LOAD_SCAN_LINES_EXCL {
+struct GFX6_MI_LOAD_SCAN_LINES_EXCL {
    uint32_t                             DWordLength;
    uint32_t                             DisplayPlaneSelect;
 #define DisplayPlaneA                            0
@@ -4135,9 +4150,9 @@ struct GEN6_MI_LOAD_SCAN_LINES_EXCL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN6_MI_LOAD_SCAN_LINES_EXCL * restrict values)
+                                  __attribute__((unused)) const struct GFX6_MI_LOAD_SCAN_LINES_EXCL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4152,13 +4167,13 @@ GEN6_MI_LOAD_SCAN_LINES_EXCL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StartScanLineNumber, 16, 28);
 }
 
-#define GEN6_MI_NOOP_length                    1
-#define GEN6_MI_NOOP_length_bias               1
-#define GEN6_MI_NOOP_header                     \
+#define GFX6_MI_NOOP_length                    1
+#define GFX6_MI_NOOP_length_bias               1
+#define GFX6_MI_NOOP_header                     \
    .MICommandOpcode                     =      0,  \
    .CommandType                         =      0
 
-struct GEN6_MI_NOOP {
+struct GFX6_MI_NOOP {
    uint32_t                             IdentificationNumber;
    bool                                 IdentificationNumberRegisterWriteEnable;
    uint32_t                             MICommandOpcode;
@@ -4166,9 +4181,9 @@ struct GEN6_MI_NOOP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN6_MI_NOOP * restrict values)
+                  __attribute__((unused)) const struct GFX6_MI_NOOP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4179,21 +4194,21 @@ GEN6_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_REPORT_HEAD_length             1
-#define GEN6_MI_REPORT_HEAD_length_bias        1
-#define GEN6_MI_REPORT_HEAD_header              \
+#define GFX6_MI_REPORT_HEAD_length             1
+#define GFX6_MI_REPORT_HEAD_length_bias        1
+#define GFX6_MI_REPORT_HEAD_header              \
    .MICommandOpcode                     =      7,  \
    .CommandType                         =      0
 
-struct GEN6_MI_REPORT_HEAD {
+struct GFX6_MI_REPORT_HEAD {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN6_MI_REPORT_HEAD * restrict values)
+                         __attribute__((unused)) const struct GFX6_MI_REPORT_HEAD * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4202,14 +4217,14 @@ GEN6_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_SEMAPHORE_MBOX_length          3
-#define GEN6_MI_SEMAPHORE_MBOX_length_bias      2
-#define GEN6_MI_SEMAPHORE_MBOX_header           \
+#define GFX6_MI_SEMAPHORE_MBOX_length          3
+#define GFX6_MI_SEMAPHORE_MBOX_length_bias      2
+#define GFX6_MI_SEMAPHORE_MBOX_header           \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     22,  \
    .CommandType                         =      0
 
-struct GEN6_MI_SEMAPHORE_MBOX {
+struct GFX6_MI_SEMAPHORE_MBOX {
    uint32_t                             DWordLength;
    uint32_t                             RegisterSelect;
 #define RVSYNC                                   0
@@ -4221,9 +4236,9 @@ struct GEN6_MI_SEMAPHORE_MBOX {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_SEMAPHORE_MBOX_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_SEMAPHORE_MBOX_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_MI_SEMAPHORE_MBOX * restrict values)
+                            __attribute__((unused)) const struct GFX6_MI_SEMAPHORE_MBOX * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4239,14 +4254,14 @@ GEN6_MI_SEMAPHORE_MBOX_pack(__attribute__((unused)) __gen_user_data *data,
    dw[2] = 0;
 }
 
-#define GEN6_MI_SET_CONTEXT_length             2
-#define GEN6_MI_SET_CONTEXT_length_bias        2
-#define GEN6_MI_SET_CONTEXT_header              \
+#define GFX6_MI_SET_CONTEXT_length             2
+#define GFX6_MI_SET_CONTEXT_length_bias        2
+#define GFX6_MI_SET_CONTEXT_header              \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     24,  \
    .CommandType                         =      0
 
-struct GEN6_MI_SET_CONTEXT {
+struct GFX6_MI_SET_CONTEXT {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -4260,9 +4275,9 @@ struct GEN6_MI_SET_CONTEXT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN6_MI_SET_CONTEXT * restrict values)
+                         __attribute__((unused)) const struct GFX6_MI_SET_CONTEXT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4278,17 +4293,17 @@ GEN6_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ExtendedStateSaveEnable, 3, 3) |
       __gen_uint(values->ReservedMustbe1, 8, 8) |
       __gen_uint(values->HDDVDContext, 9, 9);
-   dw[1] = __gen_combine_address(data, &dw[1], values->LogicalContextAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->LogicalContextAddress, v1, 12, 31);
 }
 
-#define GEN6_MI_STORE_DATA_IMM_length          4
-#define GEN6_MI_STORE_DATA_IMM_length_bias      2
-#define GEN6_MI_STORE_DATA_IMM_header           \
+#define GFX6_MI_STORE_DATA_IMM_length          4
+#define GFX6_MI_STORE_DATA_IMM_length_bias      2
+#define GFX6_MI_STORE_DATA_IMM_header           \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     32,  \
    .CommandType                         =      0
 
-struct GEN6_MI_STORE_DATA_IMM {
+struct GFX6_MI_STORE_DATA_IMM {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTT;
    uint32_t                             MICommandOpcode;
@@ -4299,9 +4314,9 @@ struct GEN6_MI_STORE_DATA_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_MI_STORE_DATA_IMM * restrict values)
+                            __attribute__((unused)) const struct GFX6_MI_STORE_DATA_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4315,7 +4330,7 @@ GEN6_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->CoreModeEnable, 0, 0);
-   dw[2] = __gen_combine_address(data, &dw[2], values->Address, v2);
+   dw[2] = __gen_address(data, &dw[2], values->Address, v2, 2, 31);
 
    const uint64_t v3 =
       __gen_uint(values->ImmediateData, 0, 63);
@@ -4323,14 +4338,14 @@ GEN6_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = v3 >> 32;
 }
 
-#define GEN6_MI_STORE_DATA_INDEX_length        3
-#define GEN6_MI_STORE_DATA_INDEX_length_bias      2
-#define GEN6_MI_STORE_DATA_INDEX_header         \
+#define GFX6_MI_STORE_DATA_INDEX_length        3
+#define GFX6_MI_STORE_DATA_INDEX_length_bias      2
+#define GFX6_MI_STORE_DATA_INDEX_header         \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     33,  \
    .CommandType                         =      0
 
-struct GEN6_MI_STORE_DATA_INDEX {
+struct GFX6_MI_STORE_DATA_INDEX {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -4340,9 +4355,9 @@ struct GEN6_MI_STORE_DATA_INDEX {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_MI_STORE_DATA_INDEX * restrict values)
+                              __attribute__((unused)) const struct GFX6_MI_STORE_DATA_INDEX * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4358,14 +4373,14 @@ GEN6_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord0, 0, 31);
 }
 
-#define GEN6_MI_STORE_REGISTER_MEM_length      3
-#define GEN6_MI_STORE_REGISTER_MEM_length_bias      2
-#define GEN6_MI_STORE_REGISTER_MEM_header       \
+#define GFX6_MI_STORE_REGISTER_MEM_length      3
+#define GFX6_MI_STORE_REGISTER_MEM_length_bias      2
+#define GFX6_MI_STORE_REGISTER_MEM_header       \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     36,  \
    .CommandType                         =      0
 
-struct GEN6_MI_STORE_REGISTER_MEM {
+struct GFX6_MI_STORE_REGISTER_MEM {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTT;
    uint32_t                             MICommandOpcode;
@@ -4375,9 +4390,9 @@ struct GEN6_MI_STORE_REGISTER_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN6_MI_STORE_REGISTER_MEM * restrict values)
+                                __attribute__((unused)) const struct GFX6_MI_STORE_REGISTER_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4390,25 +4405,25 @@ GEN6_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       __gen_offset(values->RegisterAddress, 2, 22);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->MemoryAddress, 0, 2, 31);
 }
 
-#define GEN6_MI_SUSPEND_FLUSH_length           1
-#define GEN6_MI_SUSPEND_FLUSH_length_bias      1
-#define GEN6_MI_SUSPEND_FLUSH_header            \
+#define GFX6_MI_SUSPEND_FLUSH_length           1
+#define GFX6_MI_SUSPEND_FLUSH_length_bias      1
+#define GFX6_MI_SUSPEND_FLUSH_header            \
    .MICommandOpcode                     =     11,  \
    .CommandType                         =      0
 
-struct GEN6_MI_SUSPEND_FLUSH {
+struct GFX6_MI_SUSPEND_FLUSH {
    bool                                 SuspendFlush;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN6_MI_SUSPEND_FLUSH * restrict values)
+                           __attribute__((unused)) const struct GFX6_MI_SUSPEND_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4418,14 +4433,14 @@ GEN6_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_URB_CLEAR_length               2
-#define GEN6_MI_URB_CLEAR_length_bias          2
-#define GEN6_MI_URB_CLEAR_header                \
+#define GFX6_MI_URB_CLEAR_length               2
+#define GFX6_MI_URB_CLEAR_length_bias          2
+#define GFX6_MI_URB_CLEAR_header                \
    .DWordLength                         =      0,  \
    .MICommandOpcode                     =     25,  \
    .CommandType                         =      0
 
-struct GEN6_MI_URB_CLEAR {
+struct GFX6_MI_URB_CLEAR {
    uint32_t                             DWordLength;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
@@ -4434,9 +4449,9 @@ struct GEN6_MI_URB_CLEAR {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_MI_URB_CLEAR * restrict values)
+                       __attribute__((unused)) const struct GFX6_MI_URB_CLEAR * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4450,21 +4465,21 @@ GEN6_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->URBClearLength, 16, 28);
 }
 
-#define GEN6_MI_USER_INTERRUPT_length          1
-#define GEN6_MI_USER_INTERRUPT_length_bias      1
-#define GEN6_MI_USER_INTERRUPT_header           \
+#define GFX6_MI_USER_INTERRUPT_length          1
+#define GFX6_MI_USER_INTERRUPT_length_bias      1
+#define GFX6_MI_USER_INTERRUPT_header           \
    .MICommandOpcode                     =      2,  \
    .CommandType                         =      0
 
-struct GEN6_MI_USER_INTERRUPT {
+struct GFX6_MI_USER_INTERRUPT {
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_MI_USER_INTERRUPT * restrict values)
+                            __attribute__((unused)) const struct GFX6_MI_USER_INTERRUPT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4473,13 +4488,13 @@ GEN6_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_MI_WAIT_FOR_EVENT_length          1
-#define GEN6_MI_WAIT_FOR_EVENT_length_bias      1
-#define GEN6_MI_WAIT_FOR_EVENT_header           \
+#define GFX6_MI_WAIT_FOR_EVENT_length          1
+#define GFX6_MI_WAIT_FOR_EVENT_length_bias      1
+#define GFX6_MI_WAIT_FOR_EVENT_header           \
    .MICommandOpcode                     =      3,  \
    .CommandType                         =      0
 
-struct GEN6_MI_WAIT_FOR_EVENT {
+struct GFX6_MI_WAIT_FOR_EVENT {
    bool                                 DisplayPipeAScanLineWaitEnable;
    bool                                 DisplayPlaneAFlipPendingWaitEnable;
    bool                                 DisplaySpriteAFlipPendingWaitEnable;
@@ -4497,9 +4512,9 @@ struct GEN6_MI_WAIT_FOR_EVENT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_MI_WAIT_FOR_EVENT * restrict values)
+                            __attribute__((unused)) const struct GFX6_MI_WAIT_FOR_EVENT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4519,15 +4534,15 @@ GEN6_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_PIPELINE_SELECT_length            1
-#define GEN6_PIPELINE_SELECT_length_bias       1
-#define GEN6_PIPELINE_SELECT_header             \
+#define GFX6_PIPELINE_SELECT_length            1
+#define GFX6_PIPELINE_SELECT_length_bias       1
+#define GFX6_PIPELINE_SELECT_header             \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      1,  \
    .CommandType                         =      3
 
-struct GEN6_PIPELINE_SELECT {
+struct GFX6_PIPELINE_SELECT {
    uint32_t                             PipelineSelection;
 #define _3D                                      0
 #define Media                                    1
@@ -4538,9 +4553,9 @@ struct GEN6_PIPELINE_SELECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN6_PIPELINE_SELECT * restrict values)
+                          __attribute__((unused)) const struct GFX6_PIPELINE_SELECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4552,16 +4567,16 @@ GEN6_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN6_PIPE_CONTROL_length               5
-#define GEN6_PIPE_CONTROL_length_bias          2
-#define GEN6_PIPE_CONTROL_header                \
+#define GFX6_PIPE_CONTROL_length               5
+#define GFX6_PIPE_CONTROL_length_bias          2
+#define GFX6_PIPE_CONTROL_header                \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      2,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN6_PIPE_CONTROL {
+struct GFX6_PIPE_CONTROL {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4596,9 +4611,9 @@ struct GEN6_PIPE_CONTROL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_PIPE_CONTROL * restrict values)
+                       __attribute__((unused)) const struct GFX6_PIPE_CONTROL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4631,7 +4646,7 @@ GEN6_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->DestinationAddressType, 2, 2);
-   dw[2] = __gen_combine_address(data, &dw[2], values->Address, v2);
+   dw[2] = __gen_address(data, &dw[2], values->Address, v2, 3, 31);
 
    const uint64_t v3 =
       __gen_uint(values->ImmediateData, 0, 63);
@@ -4639,16 +4654,16 @@ GEN6_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = v3 >> 32;
 }
 
-#define GEN6_STATE_BASE_ADDRESS_length        10
-#define GEN6_STATE_BASE_ADDRESS_length_bias      2
-#define GEN6_STATE_BASE_ADDRESS_header          \
+#define GFX6_STATE_BASE_ADDRESS_length        10
+#define GFX6_STATE_BASE_ADDRESS_length_bias      2
+#define GFX6_STATE_BASE_ADDRESS_header          \
    .DWordLength                         =      8,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN6_STATE_BASE_ADDRESS {
+struct GFX6_STATE_BASE_ADDRESS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4682,9 +4697,9 @@ struct GEN6_STATE_BASE_ADDRESS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN6_STATE_BASE_ADDRESS * restrict values)
+                             __attribute__((unused)) const struct GFX6_STATE_BASE_ADDRESS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4700,55 +4715,55 @@ GEN6_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StatelessDataPortAccessForceWriteThru, 3, 3) |
       __gen_uint(values->StatelessDataPortAccessMOCS, 4, 7) |
       __gen_uint(values->GeneralStateMOCS, 8, 11);
-   dw[1] = __gen_combine_address(data, &dw[1], values->GeneralStateBaseAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 31);
 
    const uint32_t v2 =
       __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->SurfaceStateMOCS, 8, 11);
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceStateBaseAddress, v2);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceStateBaseAddress, v2, 12, 31);
 
    const uint32_t v3 =
       __gen_uint(values->DynamicStateBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->DynamicStateMOCS, 8, 11);
-   dw[3] = __gen_combine_address(data, &dw[3], values->DynamicStateBaseAddress, v3);
+   dw[3] = __gen_address(data, &dw[3], values->DynamicStateBaseAddress, v3, 12, 31);
 
    const uint32_t v4 =
       __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->IndirectObjectMOCS, 8, 11);
-   dw[4] = __gen_combine_address(data, &dw[4], values->IndirectObjectBaseAddress, v4);
+   dw[4] = __gen_address(data, &dw[4], values->IndirectObjectBaseAddress, v4, 12, 31);
 
    const uint32_t v5 =
       __gen_uint(values->InstructionBaseAddressModifyEnable, 0, 0) |
       __gen_uint(values->InstructionMOCS, 8, 11);
-   dw[5] = __gen_combine_address(data, &dw[5], values->InstructionBaseAddress, v5);
+   dw[5] = __gen_address(data, &dw[5], values->InstructionBaseAddress, v5, 12, 31);
 
    const uint32_t v6 =
       __gen_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
-   dw[6] = __gen_combine_address(data, &dw[6], values->GeneralStateAccessUpperBound, v6);
+   dw[6] = __gen_address(data, &dw[6], values->GeneralStateAccessUpperBound, v6, 12, 31);
 
    const uint32_t v7 =
       __gen_uint(values->DynamicStateAccessUpperBoundModifyEnable, 0, 0);
-   dw[7] = __gen_combine_address(data, &dw[7], values->DynamicStateAccessUpperBound, v7);
+   dw[7] = __gen_address(data, &dw[7], values->DynamicStateAccessUpperBound, v7, 12, 31);
 
    const uint32_t v8 =
       __gen_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
-   dw[8] = __gen_combine_address(data, &dw[8], values->IndirectObjectAccessUpperBound, v8);
+   dw[8] = __gen_address(data, &dw[8], values->IndirectObjectAccessUpperBound, v8, 12, 31);
 
    const uint32_t v9 =
       __gen_uint(values->InstructionAccessUpperBoundModifyEnable, 0, 0);
-   dw[9] = __gen_combine_address(data, &dw[9], values->InstructionAccessUpperBound, v9);
+   dw[9] = __gen_address(data, &dw[9], values->InstructionAccessUpperBound, v9, 12, 31);
 }
 
-#define GEN6_STATE_PREFETCH_length             2
-#define GEN6_STATE_PREFETCH_length_bias        2
-#define GEN6_STATE_PREFETCH_header              \
+#define GFX6_STATE_PREFETCH_length             2
+#define GFX6_STATE_PREFETCH_length_bias        2
+#define GFX6_STATE_PREFETCH_header              \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      3,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN6_STATE_PREFETCH {
+struct GFX6_STATE_PREFETCH {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4759,9 +4774,9 @@ struct GEN6_STATE_PREFETCH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
                          __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GEN6_STATE_PREFETCH * restrict values)
+                         __attribute__((unused)) const struct GFX6_STATE_PREFETCH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4774,19 +4789,19 @@ GEN6_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->PrefetchCount, 0, 2);
-   dw[1] = __gen_combine_address(data, &dw[1], values->PrefetchPointer, v1);
+   dw[1] = __gen_address(data, &dw[1], values->PrefetchPointer, v1, 6, 31);
 }
 
-#define GEN6_STATE_SIP_length                  2
-#define GEN6_STATE_SIP_length_bias             2
-#define GEN6_STATE_SIP_header                   \
+#define GFX6_STATE_SIP_length                  2
+#define GFX6_STATE_SIP_length_bias             2
+#define GFX6_STATE_SIP_header                   \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN6_STATE_SIP {
+struct GFX6_STATE_SIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -4796,9 +4811,9 @@ struct GEN6_STATE_SIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN6_STATE_SIP * restrict values)
+                    __attribute__((unused)) const struct GFX6_STATE_SIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4813,9 +4828,9 @@ GEN6_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SystemInstructionPointer, 4, 31);
 }
 
-#define GEN6_BCS_FAULT_REG_num            0x4294
-#define GEN6_BCS_FAULT_REG_length              1
-struct GEN6_BCS_FAULT_REG {
+#define GFX6_BCS_FAULT_REG_num            0x4294
+#define GFX6_BCS_FAULT_REG_length              1
+struct GFX6_BCS_FAULT_REG {
    bool                                 ValidBit;
    uint32_t                             FaultType;
 #define PageFault                                0
@@ -4830,9 +4845,9 @@ struct GEN6_BCS_FAULT_REG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_BCS_FAULT_REG * restrict values)
+                        __attribute__((unused)) const struct GFX6_BCS_FAULT_REG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4841,12 +4856,12 @@ GEN6_BCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->FaultType, 1, 2) |
       __gen_uint(values->SRCIDofFault, 3, 10) |
       __gen_uint(values->GTTSEL, 11, 11);
-   dw[0] = __gen_combine_address(data, &dw[0], values->VirtualAddressofFault, v0);
+   dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
-#define GEN6_BCS_INSTDONE_num             0x2206c
-#define GEN6_BCS_INSTDONE_length               1
-struct GEN6_BCS_INSTDONE {
+#define GFX6_BCS_INSTDONE_num             0x2206c
+#define GFX6_BCS_INSTDONE_length               1
+struct GFX6_BCS_INSTDONE {
    bool                                 RingEnable;
    bool                                 BlitterIDLE;
    bool                                 GABIDLE;
@@ -4854,9 +4869,9 @@ struct GEN6_BCS_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_BCS_INSTDONE * restrict values)
+                       __attribute__((unused)) const struct GFX6_BCS_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4867,9 +4882,9 @@ GEN6_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BCSDone, 3, 3);
 }
 
-#define GEN6_BCS_RING_BUFFER_CTL_num      0x2203c
-#define GEN6_BCS_RING_BUFFER_CTL_length        1
-struct GEN6_BCS_RING_BUFFER_CTL {
+#define GFX6_BCS_RING_BUFFER_CTL_num      0x2203c
+#define GFX6_BCS_RING_BUFFER_CTL_length        1
+struct GFX6_BCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -4883,9 +4898,9 @@ struct GEN6_BCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_BCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX6_BCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4898,9 +4913,9 @@ GEN6_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN6_GFX_ARB_ERROR_RPT_num        0x40a0
-#define GEN6_GFX_ARB_ERROR_RPT_length          1
-struct GEN6_GFX_ARB_ERROR_RPT {
+#define GFX6_GFX_ARB_ERROR_RPT_num        0x40a0
+#define GFX6_GFX_ARB_ERROR_RPT_length          1
+struct GFX6_GFX_ARB_ERROR_RPT {
    bool                                 TLBPageFaultError;
    bool                                 ContextPageFaultError;
    bool                                 InvalidPageDirectoryentryerror;
@@ -4913,9 +4928,9 @@ struct GEN6_GFX_ARB_ERROR_RPT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN6_GFX_ARB_ERROR_RPT * restrict values)
+                            __attribute__((unused)) const struct GFX6_GFX_ARB_ERROR_RPT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -4931,9 +4946,9 @@ GEN6_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->UnloadedPDError, 8, 8);
 }
 
-#define GEN6_INSTDONE_1_num               0x206c
-#define GEN6_INSTDONE_1_length                 1
-struct GEN6_INSTDONE_1 {
+#define GFX6_INSTDONE_1_num               0x206c
+#define GFX6_INSTDONE_1_length                 1
+struct GFX6_INSTDONE_1 {
    bool                                 PRB0RingEnable;
    bool                                 AVSDone;
    bool                                 HIZDone;
@@ -4968,9 +4983,9 @@ struct GEN6_INSTDONE_1 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_INSTDONE_1 * restrict values)
+                     __attribute__((unused)) const struct GFX6_INSTDONE_1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5008,9 +5023,9 @@ GEN6_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MA3Done, 31, 31);
 }
 
-#define GEN6_INSTDONE_2_num               0x207c
-#define GEN6_INSTDONE_2_length                 1
-struct GEN6_INSTDONE_2 {
+#define GFX6_INSTDONE_2_num               0x207c
+#define GFX6_INSTDONE_2_length                 1
+struct GFX6_INSTDONE_2 {
    bool                                 VFDone;
    bool                                 VS0Done;
    bool                                 GSDone;
@@ -5046,9 +5061,9 @@ struct GEN6_INSTDONE_2 {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_INSTDONE_2_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_INSTDONE_2_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN6_INSTDONE_2 * restrict values)
+                     __attribute__((unused)) const struct GFX6_INSTDONE_2 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5087,9 +5102,9 @@ GEN6_INSTDONE_2_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GAMDone, 31, 31);
 }
 
-#define GEN6_INSTPM_num                   0x20c0
-#define GEN6_INSTPM_length                     1
-struct GEN6_INSTPM {
+#define GFX6_INSTPM_num                   0x20c0
+#define GFX6_INSTPM_length                     1
+struct GFX6_INSTPM {
    bool                                 _3DStateInstructionDisable;
    bool                                 _3DRenderingInstructionDisable;
    bool                                 MediaInstructionDisable;
@@ -5101,9 +5116,9 @@ struct GEN6_INSTPM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
                  __attribute__((unused)) void * restrict dst,
-                 __attribute__((unused)) const struct GEN6_INSTPM * restrict values)
+                 __attribute__((unused)) const struct GFX6_INSTPM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5118,9 +5133,9 @@ GEN6_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CONSTANT_BUFFERAddressOffsetDisableMask, 22, 22);
 }
 
-#define GEN6_RCS_FAULT_REG_num            0x4094
-#define GEN6_RCS_FAULT_REG_length              1
-struct GEN6_RCS_FAULT_REG {
+#define GFX6_RCS_FAULT_REG_num            0x4094
+#define GFX6_RCS_FAULT_REG_length              1
+struct GFX6_RCS_FAULT_REG {
    bool                                 ValidBit;
    uint32_t                             FaultType;
 #define PageFault                                0
@@ -5135,9 +5150,9 @@ struct GEN6_RCS_FAULT_REG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_RCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_RCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_RCS_FAULT_REG * restrict values)
+                        __attribute__((unused)) const struct GFX6_RCS_FAULT_REG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5146,12 +5161,12 @@ GEN6_RCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->FaultType, 1, 2) |
       __gen_uint(values->SRCIDofFault, 3, 10) |
       __gen_uint(values->GTTSEL, 11, 11);
-   dw[0] = __gen_combine_address(data, &dw[0], values->VirtualAddressofFault, v0);
+   dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
-#define GEN6_RCS_RING_BUFFER_CTL_num      0x203c
-#define GEN6_RCS_RING_BUFFER_CTL_length        1
-struct GEN6_RCS_RING_BUFFER_CTL {
+#define GFX6_RCS_RING_BUFFER_CTL_num      0x203c
+#define GFX6_RCS_RING_BUFFER_CTL_length        1
+struct GFX6_RCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -5163,9 +5178,9 @@ struct GEN6_RCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_RCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX6_RCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5177,17 +5192,17 @@ GEN6_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#define GEN6_RPSTAT1_num                  0xa01c
-#define GEN6_RPSTAT1_length                    1
-struct GEN6_RPSTAT1 {
+#define GFX6_RPSTAT1_num                  0xa01c
+#define GFX6_RPSTAT1_length                    1
+struct GFX6_RPSTAT1 {
    uint32_t                             PreviousGTFrequency;
    uint32_t                             CurrentGTFrequency;
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
                   __attribute__((unused)) void * restrict dst,
-                  __attribute__((unused)) const struct GEN6_RPSTAT1 * restrict values)
+                  __attribute__((unused)) const struct GFX6_RPSTAT1 * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5196,9 +5211,9 @@ GEN6_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CurrentGTFrequency, 7, 14);
 }
 
-#define GEN6_VCS_FAULT_REG_num            0x4194
-#define GEN6_VCS_FAULT_REG_length              1
-struct GEN6_VCS_FAULT_REG {
+#define GFX6_VCS_FAULT_REG_num            0x4194
+#define GFX6_VCS_FAULT_REG_length              1
+struct GFX6_VCS_FAULT_REG {
    bool                                 ValidBit;
    uint32_t                             FaultType;
 #define PageFault                                0
@@ -5213,9 +5228,9 @@ struct GEN6_VCS_FAULT_REG {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_VCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_VCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN6_VCS_FAULT_REG * restrict values)
+                        __attribute__((unused)) const struct GFX6_VCS_FAULT_REG * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5224,12 +5239,12 @@ GEN6_VCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->FaultType, 1, 2) |
       __gen_uint(values->SRCIDofFault, 3, 10) |
       __gen_uint(values->GTTSEL, 11, 11);
-   dw[0] = __gen_combine_address(data, &dw[0], values->VirtualAddressofFault, v0);
+   dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
-#define GEN6_VCS_INSTDONE_num             0x1206c
-#define GEN6_VCS_INSTDONE_length               1
-struct GEN6_VCS_INSTDONE {
+#define GFX6_VCS_INSTDONE_num             0x1206c
+#define GFX6_VCS_INSTDONE_length               1
+struct GFX6_VCS_INSTDONE {
    bool                                 RingEnable;
    bool                                 USBDone;
    bool                                 QRCDone;
@@ -5264,9 +5279,9 @@ struct GEN6_VCS_INSTDONE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN6_VCS_INSTDONE * restrict values)
+                       __attribute__((unused)) const struct GFX6_VCS_INSTDONE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5304,9 +5319,9 @@ GEN6_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GACDone, 31, 31);
 }
 
-#define GEN6_VCS_RING_BUFFER_CTL_num      0x1203c
-#define GEN6_VCS_RING_BUFFER_CTL_length        1
-struct GEN6_VCS_RING_BUFFER_CTL {
+#define GFX6_VCS_RING_BUFFER_CTL_num      0x1203c
+#define GFX6_VCS_RING_BUFFER_CTL_length        1
+struct GFX6_VCS_RING_BUFFER_CTL {
    bool                                 RingBufferEnable;
    uint32_t                             AutomaticReportHeadPointer;
 #define MI_AUTOREPORT_OFF                        0
@@ -5320,9 +5335,9 @@ struct GEN6_VCS_RING_BUFFER_CTL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN6_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX6_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN6_VCS_RING_BUFFER_CTL * restrict values)
+                              __attribute__((unused)) const struct GFX6_VCS_RING_BUFFER_CTL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -5335,4 +5350,4 @@ GEN6_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#endif /* GEN6_PACK_H */
+#endif /* GFX6_PACK_H */

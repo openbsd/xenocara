@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GEN4_PACK_H
-#define GEN4_PACK_H
+#ifndef GFX4_PACK_H
+#define GFX4_PACK_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -40,8 +40,8 @@
 #define __gen_validate_value(x)
 #endif
 
-#ifndef __gen_field_functions
-#define __gen_field_functions
+#ifndef __intel_field_functions
+#define __intel_field_functions
 
 #ifdef NDEBUG
 #define NDEBUG_UNUSED __attribute__((unused))
@@ -49,7 +49,7 @@
 #define NDEBUG_UNUSED
 #endif
 
-union __gen_value {
+union __intel_value {
    float f;
    uint32_t dw;
 };
@@ -109,11 +109,27 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
    return v;
 }
 
+static inline __attribute__((always_inline)) uint64_t
+__gen_address(__gen_user_data *data, void *location,
+              __gen_address_type address, uint32_t delta,
+              __attribute__((unused)) uint32_t start, uint32_t end)
+{
+   uint64_t addr_u64 = __gen_combine_address(data, location, address, delta);
+   if (end == 31) {
+      return addr_u64;
+   } else if (end < 63) {
+      const unsigned shift = 63 - end;
+      return (addr_u64 << shift) >> shift;
+   } else {
+      return addr_u64;
+   }
+}
+
 static inline __attribute__((always_inline)) uint32_t
 __gen_float(float v)
 {
    __gen_validate_value(v);
-   return ((union __gen_value) { .f = (v) }).dw;
+   return ((union __intel_value) { .f = (v) }).dw;
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -166,7 +182,7 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
 #endif
 
 
-enum GEN4_3D_Color_Buffer_Blend_Factor {
+enum GFX4_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_ONE                      =      1,
    BLENDFACTOR_SRC_COLOR                =      2,
    BLENDFACTOR_SRC_ALPHA                =      3,
@@ -188,7 +204,7 @@ enum GEN4_3D_Color_Buffer_Blend_Factor {
    BLENDFACTOR_INV_SRC1_ALPHA           =     26,
 };
 
-enum GEN4_3D_Color_Buffer_Blend_Function {
+enum GFX4_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_ADD                    =      0,
    BLENDFUNCTION_SUBTRACT               =      1,
    BLENDFUNCTION_REVERSE_SUBTRACT       =      2,
@@ -196,7 +212,7 @@ enum GEN4_3D_Color_Buffer_Blend_Function {
    BLENDFUNCTION_MAX                    =      4,
 };
 
-enum GEN4_3D_Compare_Function {
+enum GFX4_3D_Compare_Function {
    COMPAREFUNCTION_ALWAYS               =      0,
    COMPAREFUNCTION_NEVER                =      1,
    COMPAREFUNCTION_LESS                 =      2,
@@ -207,7 +223,7 @@ enum GEN4_3D_Compare_Function {
    COMPAREFUNCTION_GEQUAL               =      7,
 };
 
-enum GEN4_3D_Logic_Op_Function {
+enum GFX4_3D_Logic_Op_Function {
    LOGICOP_CLEAR                        =      0,
    LOGICOP_NOR                          =      1,
    LOGICOP_AND_INVERTED                 =      2,
@@ -226,7 +242,7 @@ enum GEN4_3D_Logic_Op_Function {
    LOGICOP_SET                          =     15,
 };
 
-enum GEN4_3D_Prim_Topo_Type {
+enum GFX4_3D_Prim_Topo_Type {
    _3DPRIM_POINTLIST                    =      1,
    _3DPRIM_LINELIST                     =      2,
    _3DPRIM_LINESTRIP                    =      3,
@@ -250,7 +266,7 @@ enum GEN4_3D_Prim_Topo_Type {
    _3DPRIM_TRIFAN_NOSTIPPLE             =     22,
 };
 
-enum GEN4_3D_Stencil_Operation {
+enum GFX4_3D_Stencil_Operation {
    STENCILOP_KEEP                       =      0,
    STENCILOP_ZERO                       =      1,
    STENCILOP_REPLACE                    =      2,
@@ -261,7 +277,7 @@ enum GEN4_3D_Stencil_Operation {
    STENCILOP_INVERT                     =      7,
 };
 
-enum GEN4_3D_Vertex_Component_Control {
+enum GFX4_3D_Vertex_Component_Control {
    VFCOMP_NOSTORE                       =      0,
    VFCOMP_STORE_SRC                     =      1,
    VFCOMP_STORE_0                       =      2,
@@ -272,7 +288,7 @@ enum GEN4_3D_Vertex_Component_Control {
    VFCOMP_STORE_PID                     =      7,
 };
 
-enum GEN4_Texture_Coordinate_Mode {
+enum GFX4_Texture_Coordinate_Mode {
    TCM_WRAP                             =      0,
    TCM_MIRROR                           =      1,
    TCM_CLAMP                            =      2,
@@ -281,16 +297,16 @@ enum GEN4_Texture_Coordinate_Mode {
    TCM_MIRROR_ONCE                      =      5,
 };
 
-#define GEN4_CC_VIEWPORT_length                2
-struct GEN4_CC_VIEWPORT {
+#define GFX4_CC_VIEWPORT_length                2
+struct GFX4_CC_VIEWPORT {
    float                                MinimumDepth;
    float                                MaximumDepth;
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN4_CC_VIEWPORT * restrict values)
+                      __attribute__((unused)) const struct GFX4_CC_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -301,8 +317,8 @@ GEN4_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->MaximumDepth);
 }
 
-#define GEN4_CLIP_STATE_length                11
-struct GEN4_CLIP_STATE {
+#define GFX4_CLIP_STATE_length                11
+struct GFX4_CLIP_STATE {
    uint32_t                             GRFRegisterCount;
    __gen_address_type                   KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
@@ -353,15 +369,15 @@ struct GEN4_CLIP_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                      __attribute__((unused)) void * restrict dst,
-                     __attribute__((unused)) const struct GEN4_CLIP_STATE * restrict values)
+                     __attribute__((unused)) const struct GFX4_CLIP_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
       __gen_uint(values->GRFRegisterCount, 1, 3);
-   dw[0] = __gen_combine_address(data, &dw[0], values->KernelStartPointer, v0);
+   dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
       __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
@@ -374,7 +390,7 @@ GEN4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[2] = __gen_combine_address(data, &dw[2], values->ScratchSpaceBasePointer, v2);
+   dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -400,7 +416,7 @@ GEN4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VertexPositionSpace, 29, 29) |
       __gen_uint(values->APIMode, 30, 30);
 
-   dw[6] = __gen_combine_address(data, &dw[6], values->ClipperViewportStatePointer, 0);
+   dw[6] = __gen_address(data, &dw[6], values->ClipperViewportStatePointer, 0, 5, 31);
 
    dw[7] =
       __gen_float(values->ScreenSpaceViewportXMin);
@@ -415,8 +431,8 @@ GEN4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->ScreenSpaceViewportYMax);
 }
 
-#define GEN4_CLIP_VIEWPORT_length              4
-struct GEN4_CLIP_VIEWPORT {
+#define GFX4_CLIP_VIEWPORT_length              4
+struct GFX4_CLIP_VIEWPORT {
    float                                XMinClipGuardband;
    float                                XMaxClipGuardband;
    float                                YMinClipGuardband;
@@ -424,9 +440,9 @@ struct GEN4_CLIP_VIEWPORT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN4_CLIP_VIEWPORT * restrict values)
+                        __attribute__((unused)) const struct GFX4_CLIP_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -443,18 +459,18 @@ GEN4_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->YMaxClipGuardband);
 }
 
-#define GEN4_COLOR_CALC_STATE_length           8
-struct GEN4_COLOR_CALC_STATE {
-   enum GEN4_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
-   enum GEN4_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
-   enum GEN4_3D_Stencil_Operation       BackfaceStencilFailOp;
-   enum GEN4_3D_Compare_Function        BackfaceStencilTestFunction;
+#define GFX4_COLOR_CALC_STATE_length           8
+struct GFX4_COLOR_CALC_STATE {
+   enum GFX4_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
+   enum GFX4_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
+   enum GFX4_3D_Stencil_Operation       BackfaceStencilFailOp;
+   enum GFX4_3D_Compare_Function        BackfaceStencilTestFunction;
    bool                                 DoubleSidedStencilEnable;
    bool                                 StencilBufferWriteEnable;
-   enum GEN4_3D_Stencil_Operation       StencilPassDepthPassOp;
-   enum GEN4_3D_Stencil_Operation       StencilPassDepthFailOp;
-   enum GEN4_3D_Stencil_Operation       StencilFailOp;
-   enum GEN4_3D_Compare_Function        StencilTestFunction;
+   enum GFX4_3D_Stencil_Operation       StencilPassDepthPassOp;
+   enum GFX4_3D_Stencil_Operation       StencilPassDepthFailOp;
+   enum GFX4_3D_Stencil_Operation       StencilFailOp;
+   enum GFX4_3D_Compare_Function        StencilTestFunction;
    bool                                 StencilTestEnable;
    uint32_t                             BackfaceStencilReferenceValue;
    uint32_t                             StencilWriteMask;
@@ -462,11 +478,11 @@ struct GEN4_COLOR_CALC_STATE {
    uint32_t                             StencilReferenceValue;
    bool                                 LogicOpEnable;
    bool                                 DepthBufferWriteEnable;
-   enum GEN4_3D_Compare_Function        DepthTestFunction;
+   enum GFX4_3D_Compare_Function        DepthTestFunction;
    bool                                 DepthTestEnable;
    uint32_t                             BackfaceStencilWriteMask;
    uint32_t                             BackfaceStencilTestMask;
-   enum GEN4_3D_Compare_Function        AlphaTestFunction;
+   enum GFX4_3D_Compare_Function        AlphaTestFunction;
    bool                                 AlphaTestEnable;
    bool                                 ColorBufferBlendEnable;
    bool                                 IndependentAlphaBlendEnable;
@@ -474,11 +490,11 @@ struct GEN4_COLOR_CALC_STATE {
 #define ALPHATEST_UNORM8                         0
 #define ALPHATEST_FLOAT32                        1
    __gen_address_type                   CCViewportStatePointer;
-   enum GEN4_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
-   enum GEN4_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
-   enum GEN4_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
+   enum GFX4_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
+   enum GFX4_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
+   enum GFX4_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
    bool                                 StatisticsEnable;
-   enum GEN4_3D_Logic_Op_Function       LogicOpFunction;
+   enum GFX4_3D_Logic_Op_Function       LogicOpFunction;
    bool                                 RoundDisableFunctionDisable;
    bool                                 ColorDitherEnable;
    bool                                 PostBlendColorClampEnable;
@@ -489,17 +505,17 @@ struct GEN4_COLOR_CALC_STATE {
 #define COLORCLAMP_RTFORMAT                      2
    uint32_t                             YDitherOffset;
    uint32_t                             XDitherOffset;
-   enum GEN4_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
-   enum GEN4_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
-   enum GEN4_3D_Color_Buffer_Blend_Function ColorBlendFunction;
+   enum GFX4_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
+   enum GFX4_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
+   enum GFX4_3D_Color_Buffer_Blend_Function ColorBlendFunction;
    uint32_t                             AlphaReferenceValueAsUNORM8;
    float                                AlphaReferenceValueAsFLOAT32;
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                            __attribute__((unused)) void * restrict dst,
-                           __attribute__((unused)) const struct GEN4_COLOR_CALC_STATE * restrict values)
+                           __attribute__((unused)) const struct GFX4_COLOR_CALC_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -537,7 +553,7 @@ GEN4_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->IndependentAlphaBlendEnable, 13, 13) |
       __gen_uint(values->AlphaTestFormat, 15, 15);
 
-   dw[4] = __gen_combine_address(data, &dw[4], values->CCViewportStatePointer, 0);
+   dw[4] = __gen_address(data, &dw[4], values->CCViewportStatePointer, 0, 5, 31);
 
    dw[5] =
       __gen_uint(values->DestinationAlphaBlendFactor, 2, 6) |
@@ -563,8 +579,8 @@ GEN4_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->AlphaReferenceValueAsFLOAT32);
 }
 
-#define GEN4_GS_STATE_length                   7
-struct GEN4_GS_STATE {
+#define GFX4_GS_STATE_length                   7
+struct GFX4_GS_STATE {
    uint32_t                             GRFRegisterCount;
    __gen_address_type                   KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
@@ -593,15 +609,15 @@ struct GEN4_GS_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN4_GS_STATE * restrict values)
+                   __attribute__((unused)) const struct GFX4_GS_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
       __gen_uint(values->GRFRegisterCount, 1, 3);
-   dw[0] = __gen_combine_address(data, &dw[0], values->KernelStartPointer, v0);
+   dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
       __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
@@ -613,7 +629,7 @@ GEN4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[2] = __gen_combine_address(data, &dw[2], values->ScratchSpaceBasePointer, v2);
+   dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -629,7 +645,7 @@ GEN4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v5 =
       __gen_uint(values->SamplerCount, 0, 2);
-   dw[5] = __gen_combine_address(data, &dw[5], values->SamplerStatePointer, v5);
+   dw[5] = __gen_address(data, &dw[5], values->SamplerStatePointer, v5, 5, 31);
 
    dw[6] =
       __gen_uint(values->MaximumVPIndex, 0, 3) |
@@ -637,8 +653,8 @@ GEN4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ReorderEnable, 30, 30);
 }
 
-#define GEN4_RENDER_SURFACE_STATE_length       5
-struct GEN4_RENDER_SURFACE_STATE {
+#define GFX4_RENDER_SURFACE_STATE_length       5
+struct GFX4_RENDER_SURFACE_STATE {
    bool                                 CubeFaceEnablePositiveZ;
    bool                                 CubeFaceEnableNegativeZ;
    bool                                 CubeFaceEnablePositiveY;
@@ -688,9 +704,9 @@ struct GEN4_RENDER_SURFACE_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_RENDER_SURFACE_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX4_RENDER_SURFACE_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -712,7 +728,7 @@ GEN4_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataReturnFormat, 27, 27) |
       __gen_uint(values->SurfaceType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->SurfaceBaseAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[2] =
       __gen_uint(values->MIPCountLOD, 2, 5) |
@@ -731,8 +747,8 @@ GEN4_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceMinLOD, 28, 31);
 }
 
-#define GEN4_SAMPLER_BORDER_COLOR_STATE_length     12
-struct GEN4_SAMPLER_BORDER_COLOR_STATE {
+#define GFX4_SAMPLER_BORDER_COLOR_STATE_length     12
+struct GFX4_SAMPLER_BORDER_COLOR_STATE {
    float                                BorderColorRed;
    float                                BorderColorGreen;
    float                                BorderColorBlue;
@@ -740,9 +756,9 @@ struct GEN4_SAMPLER_BORDER_COLOR_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN4_SAMPLER_BORDER_COLOR_STATE * restrict values)
+                                     __attribute__((unused)) const struct GFX4_SAMPLER_BORDER_COLOR_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -775,8 +791,8 @@ GEN4_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *da
    dw[11] = 0;
 }
 
-#define GEN4_SAMPLER_STATE_length              4
-struct GEN4_SAMPLER_STATE {
+#define GFX4_SAMPLER_STATE_length              4
+struct GFX4_SAMPLER_STATE {
    uint32_t                             ShadowFunction;
 #define PREFILTEROP_ALWAYS                       0
 #define PREFILTEROP_NEVER                        1
@@ -800,9 +816,9 @@ struct GEN4_SAMPLER_STATE {
    float                                BaseMipLevel;
    bool                                 LODPreClampEnable;
    bool                                 SamplerDisable;
-   enum GEN4_Texture_Coordinate_Mode    TCZAddressControlMode;
-   enum GEN4_Texture_Coordinate_Mode    TCYAddressControlMode;
-   enum GEN4_Texture_Coordinate_Mode    TCXAddressControlMode;
+   enum GFX4_Texture_Coordinate_Mode    TCZAddressControlMode;
+   enum GFX4_Texture_Coordinate_Mode    TCYAddressControlMode;
+   enum GFX4_Texture_Coordinate_Mode    TCXAddressControlMode;
    uint32_t                             CubeSurfaceControlMode;
 #define CUBECTRLMODE_PROGRAMMED                  0
 #define CUBECTRLMODE_OVERRIDE                    1
@@ -832,9 +848,9 @@ struct GEN4_SAMPLER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                         __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GEN4_SAMPLER_STATE * restrict values)
+                        __attribute__((unused)) const struct GFX4_SAMPLER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -856,7 +872,7 @@ GEN4_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->MaxLOD, 12, 21, 6) |
       __gen_ufixed(values->MinLOD, 22, 31, 6);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->BorderColorPointer, 0);
+   dw[2] = __gen_address(data, &dw[2], values->BorderColorPointer, 0, 5, 31);
 
    dw[3] =
       __gen_uint(values->RAddressMinFilterRoundingEnable, 13, 13) |
@@ -871,8 +887,8 @@ GEN4_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ChromaKeyEnable, 25, 25);
 }
 
-#define GEN4_SCISSOR_RECT_length               2
-struct GEN4_SCISSOR_RECT {
+#define GFX4_SCISSOR_RECT_length               2
+struct GFX4_SCISSOR_RECT {
    uint32_t                             ScissorRectangleXMin;
    uint32_t                             ScissorRectangleYMin;
    uint32_t                             ScissorRectangleXMax;
@@ -880,9 +896,9 @@ struct GEN4_SCISSOR_RECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN4_SCISSOR_RECT * restrict values)
+                       __attribute__((unused)) const struct GFX4_SCISSOR_RECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -895,8 +911,8 @@ GEN4_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ScissorRectangleYMax, 16, 31);
 }
 
-#define GEN4_SF_STATE_length                   8
-struct GEN4_SF_STATE {
+#define GFX4_SF_STATE_length                   8
+struct GFX4_SF_STATE {
    uint32_t                             GRFRegisterCount;
    __gen_address_type                   KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
@@ -969,15 +985,15 @@ struct GEN4_SF_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN4_SF_STATE * restrict values)
+                   __attribute__((unused)) const struct GFX4_SF_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
       __gen_uint(values->GRFRegisterCount, 1, 3);
-   dw[0] = __gen_combine_address(data, &dw[0], values->KernelStartPointer, v0);
+   dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
       __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
@@ -990,7 +1006,7 @@ GEN4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[2] = __gen_combine_address(data, &dw[2], values->ScratchSpaceBasePointer, v2);
+   dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -1007,7 +1023,7 @@ GEN4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    const uint32_t v5 =
       __gen_uint(values->FrontWinding, 0, 0) |
       __gen_uint(values->ViewportTransformEnable, 1, 1);
-   dw[5] = __gen_combine_address(data, &dw[5], values->SetupViewportStateOffset, v5);
+   dw[5] = __gen_address(data, &dw[5], values->SetupViewportStateOffset, v5, 5, 31);
 
    dw[6] =
       __gen_ufixed(values->DestinationOriginVerticalBias, 9, 12, 4) |
@@ -1033,21 +1049,21 @@ GEN4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->LastPixelEnable, 31, 31);
 }
 
-#define GEN4_SF_VIEWPORT_length                8
-struct GEN4_SF_VIEWPORT {
+#define GFX4_SF_VIEWPORT_length                8
+struct GFX4_SF_VIEWPORT {
    float                                ViewportMatrixElementm00;
    float                                ViewportMatrixElementm11;
    float                                ViewportMatrixElementm22;
    float                                ViewportMatrixElementm30;
    float                                ViewportMatrixElementm31;
    float                                ViewportMatrixElementm32;
-   struct GEN4_SCISSOR_RECT             ScissorRectangle;
+   struct GFX4_SCISSOR_RECT             ScissorRectangle;
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN4_SF_VIEWPORT * restrict values)
+                      __attribute__((unused)) const struct GFX4_SF_VIEWPORT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1069,11 +1085,11 @@ GEN4_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[5] =
       __gen_float(values->ViewportMatrixElementm32);
 
-   GEN4_SCISSOR_RECT_pack(data, &dw[6], &values->ScissorRectangle);
+   GFX4_SCISSOR_RECT_pack(data, &dw[6], &values->ScissorRectangle);
 }
 
-#define GEN4_VERTEX_BUFFER_STATE_length        4
-struct GEN4_VERTEX_BUFFER_STATE {
+#define GFX4_VERTEX_BUFFER_STATE_length        4
+struct GFX4_VERTEX_BUFFER_STATE {
    uint32_t                             BufferPitch;
    uint32_t                             BufferAccessType;
 #define VERTEXDATA                               0
@@ -1085,9 +1101,9 @@ struct GEN4_VERTEX_BUFFER_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                               __attribute__((unused)) void * restrict dst,
-                              __attribute__((unused)) const struct GEN4_VERTEX_BUFFER_STATE * restrict values)
+                              __attribute__((unused)) const struct GFX4_VERTEX_BUFFER_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1096,7 +1112,7 @@ GEN4_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferAccessType, 26, 26) |
       __gen_uint(values->VertexBufferIndex, 27, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->BufferStartingAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
    dw[2] =
       __gen_uint(values->MaxIndex, 0, 31);
@@ -1105,23 +1121,23 @@ GEN4_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstanceDataStepRate, 0, 31);
 }
 
-#define GEN4_VERTEX_ELEMENT_STATE_length       2
-struct GEN4_VERTEX_ELEMENT_STATE {
+#define GFX4_VERTEX_ELEMENT_STATE_length       2
+struct GFX4_VERTEX_ELEMENT_STATE {
    uint32_t                             SourceElementOffset;
    uint32_t                             SourceElementFormat;
    bool                                 Valid;
    uint32_t                             VertexBufferIndex;
    uint32_t                             DestinationElementOffset;
-   enum GEN4_3D_Vertex_Component_Control Component3Control;
-   enum GEN4_3D_Vertex_Component_Control Component2Control;
-   enum GEN4_3D_Vertex_Component_Control Component1Control;
-   enum GEN4_3D_Vertex_Component_Control Component0Control;
+   enum GFX4_3D_Vertex_Component_Control Component3Control;
+   enum GFX4_3D_Vertex_Component_Control Component2Control;
+   enum GFX4_3D_Vertex_Component_Control Component1Control;
+   enum GFX4_3D_Vertex_Component_Control Component0Control;
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_VERTEX_ELEMENT_STATE * restrict values)
+                               __attribute__((unused)) const struct GFX4_VERTEX_ELEMENT_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1139,8 +1155,8 @@ GEN4_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Component0Control, 28, 30);
 }
 
-#define GEN4_VS_STATE_length                   7
-struct GEN4_VS_STATE {
+#define GFX4_VS_STATE_length                   7
+struct GFX4_VS_STATE {
    uint32_t                             GRFRegisterCount;
    __gen_address_type                   KernelStartPointer;
    bool                                 SoftwareExceptionEnable;
@@ -1172,15 +1188,15 @@ struct GEN4_VS_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_VS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_VS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN4_VS_STATE * restrict values)
+                   __attribute__((unused)) const struct GFX4_VS_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
       __gen_uint(values->GRFRegisterCount, 1, 3);
-   dw[0] = __gen_combine_address(data, &dw[0], values->KernelStartPointer, v0);
+   dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
       __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
@@ -1193,7 +1209,7 @@ GEN4_VS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[2] = __gen_combine_address(data, &dw[2], values->ScratchSpaceBasePointer, v2);
+   dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -1210,15 +1226,15 @@ GEN4_VS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v5 =
       __gen_uint(values->SamplerCount, 0, 2);
-   dw[5] = __gen_combine_address(data, &dw[5], values->SamplerStatePointer, v5);
+   dw[5] = __gen_address(data, &dw[5], values->SamplerStatePointer, v5, 5, 31);
 
    dw[6] =
       __gen_uint(values->Enable, 0, 0) |
       __gen_uint(values->VertexCacheDisable, 1, 1);
 }
 
-#define GEN4_WM_STATE_length                   8
-struct GEN4_WM_STATE {
+#define GFX4_WM_STATE_length                   8
+struct GFX4_WM_STATE {
    uint32_t                             GRFRegisterCount0;
    __gen_address_type                   KernelStartPointer0;
    bool                                 SoftwareExceptionEnable;
@@ -1271,15 +1287,15 @@ struct GEN4_WM_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN4_WM_STATE * restrict values)
+                   __attribute__((unused)) const struct GFX4_WM_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
       __gen_uint(values->GRFRegisterCount0, 1, 3);
-   dw[0] = __gen_combine_address(data, &dw[0], values->KernelStartPointer0, v0);
+   dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer0, v0, 6, 31);
 
    dw[1] =
       __gen_uint(values->SoftwareExceptionEnable, 1, 1) |
@@ -1293,7 +1309,7 @@ GEN4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v2 =
       __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   dw[2] = __gen_combine_address(data, &dw[2], values->ScratchSpaceBasePointer, v2);
+   dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
       __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData0, 0, 3) |
@@ -1305,7 +1321,7 @@ GEN4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    const uint32_t v4 =
       __gen_uint(values->StatisticsEnable, 0, 0) |
       __gen_uint(values->SamplerCount, 2, 4);
-   dw[4] = __gen_combine_address(data, &dw[4], values->SamplerStatePointer, v4);
+   dw[4] = __gen_address(data, &dw[4], values->SamplerStatePointer, v4, 5, 31);
 
    dw[5] =
       __gen_uint(values->_8PixelDispatchEnable, 0, 0) |
@@ -1332,9 +1348,9 @@ GEN4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->GlobalDepthOffsetScale);
 }
 
-#define GEN4_3DPRIMITIVE_length                6
-#define GEN4_3DPRIMITIVE_length_bias           2
-#define GEN4_3DPRIMITIVE_header                 \
+#define GFX4_3DPRIMITIVE_length                6
+#define GFX4_3DPRIMITIVE_length_bias           2
+#define GFX4_3DPRIMITIVE_header                 \
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      3,  \
@@ -1342,9 +1358,9 @@ GEN4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    .CommandType                         =      3,  \
    .InstanceCount                       =      1
 
-struct GEN4_3DPRIMITIVE {
+struct GFX4_3DPRIMITIVE {
    uint32_t                             DWordLength;
-   enum GEN4_3D_Prim_Topo_Type          PrimitiveTopologyType;
+   enum GFX4_3D_Prim_Topo_Type          PrimitiveTopologyType;
    uint32_t                             VertexAccessType;
 #define SEQUENTIAL                               0
 #define RANDOM                                   1
@@ -1361,9 +1377,9 @@ struct GEN4_3DPRIMITIVE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
                       __attribute__((unused)) void * restrict dst,
-                      __attribute__((unused)) const struct GEN4_3DPRIMITIVE * restrict values)
+                      __attribute__((unused)) const struct GFX4_3DPRIMITIVE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1391,16 +1407,16 @@ GEN4_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->BaseVertexLocation, 0, 31);
 }
 
-#define GEN4_3DSTATE_BINDING_TABLE_POINTERS_length      6
-#define GEN4_3DSTATE_BINDING_TABLE_POINTERS_length_bias      2
-#define GEN4_3DSTATE_BINDING_TABLE_POINTERS_header\
+#define GFX4_3DSTATE_BINDING_TABLE_POINTERS_length      6
+#define GFX4_3DSTATE_BINDING_TABLE_POINTERS_length_bias      2
+#define GFX4_3DSTATE_BINDING_TABLE_POINTERS_header\
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_BINDING_TABLE_POINTERS {
+struct GFX4_3DSTATE_BINDING_TABLE_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1414,9 +1430,9 @@ struct GEN4_3DSTATE_BINDING_TABLE_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                          __attribute__((unused)) void * restrict dst,
-                                         __attribute__((unused)) const struct GEN4_3DSTATE_BINDING_TABLE_POINTERS * restrict values)
+                                         __attribute__((unused)) const struct GFX4_3DSTATE_BINDING_TABLE_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1443,16 +1459,16 @@ GEN4_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data
       __gen_offset(values->PointertoPSBindingTable, 5, 31);
 }
 
-#define GEN4_3DSTATE_CONSTANT_COLOR_length      5
-#define GEN4_3DSTATE_CONSTANT_COLOR_length_bias      2
-#define GEN4_3DSTATE_CONSTANT_COLOR_header      \
+#define GFX4_3DSTATE_CONSTANT_COLOR_length      5
+#define GFX4_3DSTATE_CONSTANT_COLOR_length_bias      2
+#define GFX4_3DSTATE_CONSTANT_COLOR_header      \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_CONSTANT_COLOR {
+struct GFX4_3DSTATE_CONSTANT_COLOR {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1465,9 +1481,9 @@ struct GEN4_3DSTATE_CONSTANT_COLOR {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_CONSTANT_COLOR_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_CONSTANT_COLOR_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN4_3DSTATE_CONSTANT_COLOR * restrict values)
+                                 __attribute__((unused)) const struct GFX4_3DSTATE_CONSTANT_COLOR * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1491,16 +1507,16 @@ GEN4_3DSTATE_CONSTANT_COLOR_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->BlendConstantColorAlpha);
 }
 
-#define GEN4_3DSTATE_DEPTH_BUFFER_length       5
-#define GEN4_3DSTATE_DEPTH_BUFFER_length_bias      2
-#define GEN4_3DSTATE_DEPTH_BUFFER_header        \
+#define GFX4_3DSTATE_DEPTH_BUFFER_length       5
+#define GFX4_3DSTATE_DEPTH_BUFFER_length_bias      2
+#define GFX4_3DSTATE_DEPTH_BUFFER_header        \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      5,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_DEPTH_BUFFER {
+struct GFX4_3DSTATE_DEPTH_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1542,9 +1558,9 @@ struct GEN4_3DSTATE_DEPTH_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_3DSTATE_DEPTH_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX4_3DSTATE_DEPTH_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1564,7 +1580,7 @@ GEN4_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TiledSurface, 27, 27) |
       __gen_uint(values->SurfaceType, 29, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceBaseAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[3] =
       __gen_uint(values->MIPMapLayoutMode, 1, 1) |
@@ -1578,16 +1594,16 @@ GEN4_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Depth, 21, 31);
 }
 
-#define GEN4_3DSTATE_DRAWING_RECTANGLE_length      4
-#define GEN4_3DSTATE_DRAWING_RECTANGLE_length_bias      2
-#define GEN4_3DSTATE_DRAWING_RECTANGLE_header   \
+#define GFX4_3DSTATE_DRAWING_RECTANGLE_length      4
+#define GFX4_3DSTATE_DRAWING_RECTANGLE_length_bias      2
+#define GFX4_3DSTATE_DRAWING_RECTANGLE_header   \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_DRAWING_RECTANGLE {
+struct GFX4_3DSTATE_DRAWING_RECTANGLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1602,9 +1618,9 @@ struct GEN4_3DSTATE_DRAWING_RECTANGLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *data,
                                     __attribute__((unused)) void * restrict dst,
-                                    __attribute__((unused)) const struct GEN4_3DSTATE_DRAWING_RECTANGLE * restrict values)
+                                    __attribute__((unused)) const struct GFX4_3DSTATE_DRAWING_RECTANGLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1628,16 +1644,16 @@ GEN4_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_sint(values->DrawingRectangleOriginY, 16, 31);
 }
 
-#define GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_length      2
-#define GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_length_bias      2
-#define GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_header\
+#define GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_length      2
+#define GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_length_bias      2
+#define GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_header\
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      9,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP {
+struct GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1647,9 +1663,9 @@ struct GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_pack(__attribute__((unused)) __gen_user_data *data,
                                             __attribute__((unused)) void * restrict dst,
-                                            __attribute__((unused)) const struct GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP * restrict values)
+                                            __attribute__((unused)) const struct GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1664,16 +1680,16 @@ GEN4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_pack(__attribute__((unused)) __gen_user_d
       __gen_float(values->GlobalDepthOffsetClamp);
 }
 
-#define GEN4_3DSTATE_INDEX_BUFFER_length       3
-#define GEN4_3DSTATE_INDEX_BUFFER_length_bias      2
-#define GEN4_3DSTATE_INDEX_BUFFER_header        \
+#define GFX4_3DSTATE_INDEX_BUFFER_length       3
+#define GFX4_3DSTATE_INDEX_BUFFER_length_bias      2
+#define GFX4_3DSTATE_INDEX_BUFFER_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =     10,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_INDEX_BUFFER {
+struct GFX4_3DSTATE_INDEX_BUFFER {
    uint32_t                             DWordLength;
    uint32_t                             IndexFormat;
 #define INDEX_BYTE                               0
@@ -1689,9 +1705,9 @@ struct GEN4_3DSTATE_INDEX_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_3DSTATE_INDEX_BUFFER * restrict values)
+                               __attribute__((unused)) const struct GFX4_3DSTATE_INDEX_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1704,21 +1720,21 @@ GEN4_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->BufferStartingAddress, 0);
+   dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->BufferEndingAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->BufferEndingAddress, 0, 0, 31);
 }
 
-#define GEN4_3DSTATE_LINE_STIPPLE_length       3
-#define GEN4_3DSTATE_LINE_STIPPLE_length_bias      2
-#define GEN4_3DSTATE_LINE_STIPPLE_header        \
+#define GFX4_3DSTATE_LINE_STIPPLE_length       3
+#define GFX4_3DSTATE_LINE_STIPPLE_length_bias      2
+#define GFX4_3DSTATE_LINE_STIPPLE_header        \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_LINE_STIPPLE {
+struct GFX4_3DSTATE_LINE_STIPPLE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1733,9 +1749,9 @@ struct GEN4_3DSTATE_LINE_STIPPLE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_3DSTATE_LINE_STIPPLE * restrict values)
+                               __attribute__((unused)) const struct GFX4_3DSTATE_LINE_STIPPLE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1757,16 +1773,16 @@ GEN4_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->LineStippleInverseRepeatCount, 16, 31, 13);
 }
 
-#define GEN4_3DSTATE_PIPELINED_POINTERS_length      7
-#define GEN4_3DSTATE_PIPELINED_POINTERS_length_bias      2
-#define GEN4_3DSTATE_PIPELINED_POINTERS_header  \
+#define GFX4_3DSTATE_PIPELINED_POINTERS_length      7
+#define GFX4_3DSTATE_PIPELINED_POINTERS_length_bias      2
+#define GFX4_3DSTATE_PIPELINED_POINTERS_header  \
    .DWordLength                         =      5,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_PIPELINED_POINTERS {
+struct GFX4_3DSTATE_PIPELINED_POINTERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1783,9 +1799,9 @@ struct GEN4_3DSTATE_PIPELINED_POINTERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_PIPELINED_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_PIPELINED_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
                                      __attribute__((unused)) void * restrict dst,
-                                     __attribute__((unused)) const struct GEN4_3DSTATE_PIPELINED_POINTERS * restrict values)
+                                     __attribute__((unused)) const struct GFX4_3DSTATE_PIPELINED_POINTERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1796,33 +1812,33 @@ GEN4_3DSTATE_PIPELINED_POINTERS_pack(__attribute__((unused)) __gen_user_data *da
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->PointertoVSState, 0);
+   dw[1] = __gen_address(data, &dw[1], values->PointertoVSState, 0, 5, 31);
 
    const uint32_t v2 =
       __gen_uint(values->GSEnable, 0, 0);
-   dw[2] = __gen_combine_address(data, &dw[2], values->PointertoGSState, v2);
+   dw[2] = __gen_address(data, &dw[2], values->PointertoGSState, v2, 5, 31);
 
    const uint32_t v3 =
       __gen_uint(values->ClipEnable, 0, 0);
-   dw[3] = __gen_combine_address(data, &dw[3], values->PointertoCLIPState, v3);
+   dw[3] = __gen_address(data, &dw[3], values->PointertoCLIPState, v3, 5, 31);
 
-   dw[4] = __gen_combine_address(data, &dw[4], values->PointertoSFState, 0);
+   dw[4] = __gen_address(data, &dw[4], values->PointertoSFState, 0, 5, 31);
 
-   dw[5] = __gen_combine_address(data, &dw[5], values->PointertoWMState, 0);
+   dw[5] = __gen_address(data, &dw[5], values->PointertoWMState, 0, 5, 31);
 
-   dw[6] = __gen_combine_address(data, &dw[6], values->PointertoColorCalcState, 0);
+   dw[6] = __gen_address(data, &dw[6], values->PointertoColorCalcState, 0, 5, 31);
 }
 
-#define GEN4_3DSTATE_POLY_STIPPLE_OFFSET_length      2
-#define GEN4_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
-#define GEN4_3DSTATE_POLY_STIPPLE_OFFSET_header \
+#define GFX4_3DSTATE_POLY_STIPPLE_OFFSET_length      2
+#define GFX4_3DSTATE_POLY_STIPPLE_OFFSET_length_bias      2
+#define GFX4_3DSTATE_POLY_STIPPLE_OFFSET_header \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      6,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_POLY_STIPPLE_OFFSET {
+struct GFX4_3DSTATE_POLY_STIPPLE_OFFSET {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1833,9 +1849,9 @@ struct GEN4_3DSTATE_POLY_STIPPLE_OFFSET {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *data,
                                       __attribute__((unused)) void * restrict dst,
-                                      __attribute__((unused)) const struct GEN4_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
+                                      __attribute__((unused)) const struct GFX4_3DSTATE_POLY_STIPPLE_OFFSET * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1851,16 +1867,16 @@ GEN4_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->PolygonStippleXOffset, 8, 12);
 }
 
-#define GEN4_3DSTATE_POLY_STIPPLE_PATTERN_length     33
-#define GEN4_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
-#define GEN4_3DSTATE_POLY_STIPPLE_PATTERN_header\
+#define GFX4_3DSTATE_POLY_STIPPLE_PATTERN_length     33
+#define GFX4_3DSTATE_POLY_STIPPLE_PATTERN_length_bias      2
+#define GFX4_3DSTATE_POLY_STIPPLE_PATTERN_header\
    .DWordLength                         =     31,  \
    ._3DCommandSubOpcode                 =      7,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_POLY_STIPPLE_PATTERN {
+struct GFX4_3DSTATE_POLY_STIPPLE_PATTERN {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1870,9 +1886,9 @@ struct GEN4_3DSTATE_POLY_STIPPLE_PATTERN {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *data,
                                        __attribute__((unused)) void * restrict dst,
-                                       __attribute__((unused)) const struct GEN4_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
+                                       __attribute__((unused)) const struct GFX4_3DSTATE_POLY_STIPPLE_PATTERN * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -1980,15 +1996,15 @@ GEN4_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *
       __gen_uint(values->PatternRow[31], 0, 31);
 }
 
-#define GEN4_3DSTATE_VERTEX_BUFFERS_length_bias      2
-#define GEN4_3DSTATE_VERTEX_BUFFERS_header      \
+#define GFX4_3DSTATE_VERTEX_BUFFERS_length_bias      2
+#define GFX4_3DSTATE_VERTEX_BUFFERS_header      \
    .DWordLength                         =      3,  \
    ._3DCommandSubOpcode                 =      8,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_VERTEX_BUFFERS {
+struct GFX4_3DSTATE_VERTEX_BUFFERS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -1998,9 +2014,9 @@ struct GEN4_3DSTATE_VERTEX_BUFFERS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
                                  __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GEN4_3DSTATE_VERTEX_BUFFERS * restrict values)
+                                 __attribute__((unused)) const struct GFX4_3DSTATE_VERTEX_BUFFERS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2012,15 +2028,15 @@ GEN4_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN4_3DSTATE_VERTEX_ELEMENTS_length_bias      2
-#define GEN4_3DSTATE_VERTEX_ELEMENTS_header     \
+#define GFX4_3DSTATE_VERTEX_ELEMENTS_length_bias      2
+#define GFX4_3DSTATE_VERTEX_ELEMENTS_header     \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      9,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_VERTEX_ELEMENTS {
+struct GFX4_3DSTATE_VERTEX_ELEMENTS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2030,9 +2046,9 @@ struct GEN4_3DSTATE_VERTEX_ELEMENTS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
                                   __attribute__((unused)) void * restrict dst,
-                                  __attribute__((unused)) const struct GEN4_3DSTATE_VERTEX_ELEMENTS * restrict values)
+                                  __attribute__((unused)) const struct GFX4_3DSTATE_VERTEX_ELEMENTS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2044,15 +2060,15 @@ GEN4_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN4_3DSTATE_VF_STATISTICS_length      1
-#define GEN4_3DSTATE_VF_STATISTICS_length_bias      1
-#define GEN4_3DSTATE_VF_STATISTICS_header       \
+#define GFX4_3DSTATE_VF_STATISTICS_length      1
+#define GFX4_3DSTATE_VF_STATISTICS_length_bias      1
+#define GFX4_3DSTATE_VF_STATISTICS_header       \
    ._3DCommandSubOpcode                 =     11,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_3DSTATE_VF_STATISTICS {
+struct GFX4_3DSTATE_VF_STATISTICS {
    bool                                 StatisticsEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2061,9 +2077,9 @@ struct GEN4_3DSTATE_VF_STATISTICS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN4_3DSTATE_VF_STATISTICS * restrict values)
+                                __attribute__((unused)) const struct GFX4_3DSTATE_VF_STATISTICS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2075,9 +2091,9 @@ GEN4_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN4_CONSTANT_BUFFER_length            2
-#define GEN4_CONSTANT_BUFFER_length_bias       2
-#define GEN4_CONSTANT_BUFFER_header             \
+#define GFX4_CONSTANT_BUFFER_length            2
+#define GFX4_CONSTANT_BUFFER_length_bias       2
+#define GFX4_CONSTANT_BUFFER_header             \
    .DWordLength                         =      0,  \
    .Valid                               =      0,  \
    ._3DCommandSubOpcode                 =      2,  \
@@ -2085,7 +2101,7 @@ GEN4_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_CONSTANT_BUFFER {
+struct GFX4_CONSTANT_BUFFER {
    uint32_t                             DWordLength;
    bool                                 Valid;
    uint32_t                             _3DCommandSubOpcode;
@@ -2097,9 +2113,9 @@ struct GEN4_CONSTANT_BUFFER {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_CONSTANT_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_CONSTANT_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN4_CONSTANT_BUFFER * restrict values)
+                          __attribute__((unused)) const struct GFX4_CONSTANT_BUFFER * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2113,19 +2129,19 @@ GEN4_CONSTANT_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->BufferLength, 0, 5);
-   dw[1] = __gen_combine_address(data, &dw[1], values->BufferStartingAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, v1, 6, 31);
 }
 
-#define GEN4_CS_URB_STATE_length               2
-#define GEN4_CS_URB_STATE_length_bias          2
-#define GEN4_CS_URB_STATE_header                \
+#define GFX4_CS_URB_STATE_length               2
+#define GFX4_CS_URB_STATE_length_bias          2
+#define GFX4_CS_URB_STATE_header                \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_CS_URB_STATE {
+struct GFX4_CS_URB_STATE {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2136,9 +2152,9 @@ struct GEN4_CS_URB_STATE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_CS_URB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_CS_URB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN4_CS_URB_STATE * restrict values)
+                       __attribute__((unused)) const struct GFX4_CS_URB_STATE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2154,13 +2170,13 @@ GEN4_CS_URB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->URBEntryAllocationSize, 4, 8);
 }
 
-#define GEN4_MI_FLUSH_length                   1
-#define GEN4_MI_FLUSH_length_bias              1
-#define GEN4_MI_FLUSH_header                    \
+#define GFX4_MI_FLUSH_length                   1
+#define GFX4_MI_FLUSH_length_bias              1
+#define GFX4_MI_FLUSH_header                    \
    .MICommandOpcode                     =      4,  \
    .CommandType                         =      0
 
-struct GEN4_MI_FLUSH {
+struct GFX4_MI_FLUSH {
    uint32_t                             StateInstructionCacheInvalidate;
 #define DontInvalidate                           0
 #define Invalidate                               1
@@ -2175,9 +2191,9 @@ struct GEN4_MI_FLUSH {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
                    __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GEN4_MI_FLUSH * restrict values)
+                   __attribute__((unused)) const struct GFX4_MI_FLUSH * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2189,14 +2205,14 @@ GEN4_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN4_MI_LOAD_REGISTER_IMM_length       3
-#define GEN4_MI_LOAD_REGISTER_IMM_length_bias      2
-#define GEN4_MI_LOAD_REGISTER_IMM_header        \
+#define GFX4_MI_LOAD_REGISTER_IMM_length       3
+#define GFX4_MI_LOAD_REGISTER_IMM_length_bias      2
+#define GFX4_MI_LOAD_REGISTER_IMM_header        \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     34,  \
    .CommandType                         =      0
 
-struct GEN4_MI_LOAD_REGISTER_IMM {
+struct GFX4_MI_LOAD_REGISTER_IMM {
    uint32_t                             DWordLength;
    uint32_t                             ByteWriteDisables;
    uint32_t                             MICommandOpcode;
@@ -2207,9 +2223,9 @@ struct GEN4_MI_LOAD_REGISTER_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                                __attribute__((unused)) void * restrict dst,
-                               __attribute__((unused)) const struct GEN4_MI_LOAD_REGISTER_IMM * restrict values)
+                               __attribute__((unused)) const struct GFX4_MI_LOAD_REGISTER_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2226,14 +2242,14 @@ GEN4_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord, 0, 31);
 }
 
-#define GEN4_MI_STORE_DATA_IMM_length          5
-#define GEN4_MI_STORE_DATA_IMM_length_bias      2
-#define GEN4_MI_STORE_DATA_IMM_header           \
+#define GFX4_MI_STORE_DATA_IMM_length          5
+#define GFX4_MI_STORE_DATA_IMM_length_bias      2
+#define GFX4_MI_STORE_DATA_IMM_header           \
    .DWordLength                         =      2,  \
    .MICommandOpcode                     =     32,  \
    .CommandType                         =      0
 
-struct GEN4_MI_STORE_DATA_IMM {
+struct GFX4_MI_STORE_DATA_IMM {
    uint32_t                             DWordLength;
    uint32_t                             BitFieldName;
    bool                                 MemoryAddressType;
@@ -2246,9 +2262,9 @@ struct GEN4_MI_STORE_DATA_IMM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
                             __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GEN4_MI_STORE_DATA_IMM * restrict values)
+                            __attribute__((unused)) const struct GFX4_MI_STORE_DATA_IMM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2259,9 +2275,9 @@ GEN4_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->MICommandOpcode, 23, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
-   dw[1] = __gen_combine_address(data, &dw[1], values->PhysicalStartAddressExtension, 0);
+   dw[1] = __gen_address(data, &dw[1], values->PhysicalStartAddressExtension, 0, 0, 3);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->Address, 0);
+   dw[2] = __gen_address(data, &dw[2], values->Address, 0, 2, 31);
 
    dw[3] =
       __gen_uint(values->DataDWord0, 0, 31);
@@ -2270,14 +2286,14 @@ GEN4_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DataDWord1, 0, 31);
 }
 
-#define GEN4_MI_STORE_REGISTER_MEM_length      3
-#define GEN4_MI_STORE_REGISTER_MEM_length_bias      2
-#define GEN4_MI_STORE_REGISTER_MEM_header       \
+#define GFX4_MI_STORE_REGISTER_MEM_length      3
+#define GFX4_MI_STORE_REGISTER_MEM_length_bias      2
+#define GFX4_MI_STORE_REGISTER_MEM_header       \
    .DWordLength                         =      1,  \
    .MICommandOpcode                     =     36,  \
    .CommandType                         =      0
 
-struct GEN4_MI_STORE_REGISTER_MEM {
+struct GFX4_MI_STORE_REGISTER_MEM {
    uint32_t                             DWordLength;
    bool                                 UseGlobalGTT;
    uint32_t                             MICommandOpcode;
@@ -2288,9 +2304,9 @@ struct GEN4_MI_STORE_REGISTER_MEM {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
                                 __attribute__((unused)) void * restrict dst,
-                                __attribute__((unused)) const struct GEN4_MI_STORE_REGISTER_MEM * restrict values)
+                                __attribute__((unused)) const struct GFX4_MI_STORE_REGISTER_MEM * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2302,20 +2318,20 @@ GEN4_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_offset(values->RegisterAddress, 2, 22);
-   dw[1] = __gen_combine_address(data, &dw[1], values->PhysicalStartAddressExtension, v1);
+   dw[1] = __gen_address(data, &dw[1], values->PhysicalStartAddressExtension, v1, 28, 31);
 
-   dw[2] = __gen_combine_address(data, &dw[2], values->MemoryAddress, 0);
+   dw[2] = __gen_address(data, &dw[2], values->MemoryAddress, 0, 2, 31);
 }
 
-#define GEN4_PIPELINE_SELECT_length            1
-#define GEN4_PIPELINE_SELECT_length_bias       1
-#define GEN4_PIPELINE_SELECT_header             \
+#define GFX4_PIPELINE_SELECT_length            1
+#define GFX4_PIPELINE_SELECT_length_bias       1
+#define GFX4_PIPELINE_SELECT_header             \
    ._3DCommandSubOpcode                 =      4,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_PIPELINE_SELECT {
+struct GFX4_PIPELINE_SELECT {
    uint32_t                             PipelineSelection;
 #define _3D                                      0
 #define Media                                    1
@@ -2326,9 +2342,9 @@ struct GEN4_PIPELINE_SELECT {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
                           __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GEN4_PIPELINE_SELECT * restrict values)
+                          __attribute__((unused)) const struct GFX4_PIPELINE_SELECT * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2340,16 +2356,16 @@ GEN4_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 }
 
-#define GEN4_PIPE_CONTROL_length               4
-#define GEN4_PIPE_CONTROL_length_bias          2
-#define GEN4_PIPE_CONTROL_header                \
+#define GFX4_PIPE_CONTROL_length               4
+#define GFX4_PIPE_CONTROL_length_bias          2
+#define GFX4_PIPE_CONTROL_header                \
    .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      2,  \
    .CommandSubType                      =      3,  \
    .CommandType                         =      3
 
-struct GEN4_PIPE_CONTROL {
+struct GFX4_PIPE_CONTROL {
    uint32_t                             DWordLength;
    bool                                 NotifyEnable;
    bool                                 InstructionCacheInvalidateEnable;
@@ -2371,9 +2387,9 @@ struct GEN4_PIPE_CONTROL {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
                        __attribute__((unused)) void * restrict dst,
-                       __attribute__((unused)) const struct GEN4_PIPE_CONTROL * restrict values)
+                       __attribute__((unused)) const struct GFX4_PIPE_CONTROL * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2391,7 +2407,7 @@ GEN4_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->DestinationAddressType, 2, 2);
-   dw[1] = __gen_combine_address(data, &dw[1], values->Address, v1);
+   dw[1] = __gen_address(data, &dw[1], values->Address, v1, 3, 31);
 
    const uint64_t v2 =
       __gen_uint(values->ImmediateData, 0, 63);
@@ -2399,16 +2415,16 @@ GEN4_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[3] = v2 >> 32;
 }
 
-#define GEN4_STATE_BASE_ADDRESS_length         6
-#define GEN4_STATE_BASE_ADDRESS_length_bias      2
-#define GEN4_STATE_BASE_ADDRESS_header          \
+#define GFX4_STATE_BASE_ADDRESS_length         6
+#define GFX4_STATE_BASE_ADDRESS_length_bias      2
+#define GFX4_STATE_BASE_ADDRESS_header          \
    .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =      1,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_STATE_BASE_ADDRESS {
+struct GFX4_STATE_BASE_ADDRESS {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2427,9 +2443,9 @@ struct GEN4_STATE_BASE_ADDRESS {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
                              __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GEN4_STATE_BASE_ADDRESS * restrict values)
+                             __attribute__((unused)) const struct GFX4_STATE_BASE_ADDRESS * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2442,35 +2458,35 @@ GEN4_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint32_t v1 =
       __gen_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0);
-   dw[1] = __gen_combine_address(data, &dw[1], values->GeneralStateBaseAddress, v1);
+   dw[1] = __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 31);
 
    const uint32_t v2 =
       __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0);
-   dw[2] = __gen_combine_address(data, &dw[2], values->SurfaceStateBaseAddress, v2);
+   dw[2] = __gen_address(data, &dw[2], values->SurfaceStateBaseAddress, v2, 12, 31);
 
    const uint32_t v3 =
       __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0);
-   dw[3] = __gen_combine_address(data, &dw[3], values->IndirectObjectBaseAddress, v3);
+   dw[3] = __gen_address(data, &dw[3], values->IndirectObjectBaseAddress, v3, 12, 31);
 
    const uint32_t v4 =
       __gen_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
-   dw[4] = __gen_combine_address(data, &dw[4], values->GeneralStateAccessUpperBound, v4);
+   dw[4] = __gen_address(data, &dw[4], values->GeneralStateAccessUpperBound, v4, 12, 31);
 
    const uint32_t v5 =
       __gen_uint(values->InstructionAccessUpperBoundModifyEnable, 0, 0);
-   dw[5] = __gen_combine_address(data, &dw[5], values->InstructionAccessUpperBound, v5);
+   dw[5] = __gen_address(data, &dw[5], values->InstructionAccessUpperBound, v5, 12, 31);
 }
 
-#define GEN4_STATE_SIP_length                  2
-#define GEN4_STATE_SIP_length_bias             2
-#define GEN4_STATE_SIP_header                   \
+#define GFX4_STATE_SIP_length                  2
+#define GFX4_STATE_SIP_length_bias             2
+#define GFX4_STATE_SIP_header                   \
    .DWordLength                         =      0,  \
    ._3DCommandSubOpcode                 =      2,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_STATE_SIP {
+struct GFX4_STATE_SIP {
    uint32_t                             DWordLength;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
@@ -2480,9 +2496,9 @@ struct GEN4_STATE_SIP {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN4_STATE_SIP * restrict values)
+                    __attribute__((unused)) const struct GFX4_STATE_SIP * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2497,16 +2513,16 @@ GEN4_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SystemInstructionPointer, 4, 31);
 }
 
-#define GEN4_URB_FENCE_length                  3
-#define GEN4_URB_FENCE_length_bias             2
-#define GEN4_URB_FENCE_header                   \
+#define GFX4_URB_FENCE_length                  3
+#define GFX4_URB_FENCE_length_bias             2
+#define GFX4_URB_FENCE_header                   \
    .DWordLength                         =      1,  \
    ._3DCommandSubOpcode                 =      0,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      0,  \
    .CommandType                         =      3
 
-struct GEN4_URB_FENCE {
+struct GFX4_URB_FENCE {
    uint32_t                             DWordLength;
    bool                                 VSUnitURBReallocationRequest;
    bool                                 GSUnitURBReallocationRequest;
@@ -2527,9 +2543,9 @@ struct GEN4_URB_FENCE {
 };
 
 static inline __attribute__((always_inline)) void
-GEN4_URB_FENCE_pack(__attribute__((unused)) __gen_user_data *data,
+GFX4_URB_FENCE_pack(__attribute__((unused)) __gen_user_data *data,
                     __attribute__((unused)) void * restrict dst,
-                    __attribute__((unused)) const struct GEN4_URB_FENCE * restrict values)
+                    __attribute__((unused)) const struct GFX4_URB_FENCE * restrict values)
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
@@ -2557,4 +2573,4 @@ GEN4_URB_FENCE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CSFence, 20, 30);
 }
 
-#endif /* GEN4_PACK_H */
+#endif /* GFX4_PACK_H */

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -14,8 +14,8 @@ CFLAGS+=	${C_VIS_ARGS}
 CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
-		-I${MESA_SRC}/src/gallium/state_trackers/dri \
 		-I${MESA_SRC}/src/gallium/drivers \
+		-I${MESA_SRC}/src/gallium/frontends/dri \
 		-I${MESA_SRC}/src/gallium/winsys \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
@@ -112,22 +112,22 @@ SLIBS+= libamdgpuwinsys \
 .if ${WITH_GALLIUM_IRIS} == "yes"
 SLIBS+= libiris_gen80 \
 	libiris_gen90 \
-	libiris_gen100 \
 	libiris_gen110 \
 	libiris_gen120 \
+	libiris_gen125 \
 	libintel_compiler \
 	libintel_dev \
 	libisl \
-	libisl_gen40 \
-	libisl_gen50 \
-	libisl_gen60 \
-	libisl_gen70 \
-	libisl_gen75 \
-	libisl_gen80 \
-	libisl_gen90 \
-	libisl_gen100 \
-	libisl_gen110 \
-	libisl_gen120 \
+	libisl_gfx40 \
+	libisl_gfx50 \
+	libisl_gfx60 \
+	libisl_gfx70 \
+	libisl_gfx75 \
+	libisl_gfx80 \
+	libisl_gfx90 \
+	libisl_gfx110 \
+	libisl_gfx120 \
+	libisl_gfx125 \
 	libisl_tiled_memcpy \
 	libisl_tiled_memcpy_sse41 \
 	libblorp \

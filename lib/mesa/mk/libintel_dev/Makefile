@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:10 jsg Exp $
 
 LIB=	intel_dev
 
@@ -10,7 +10,8 @@ SRCS=	gen_debug.c \
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS}
-CPPFLAGS+=	-I${MESA_SRC}/src/intel
+CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/generated/src
 
 install:
 

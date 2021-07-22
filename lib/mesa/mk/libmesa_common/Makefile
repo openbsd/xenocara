@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/09/22 02:09:02 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	mesa_common
 
@@ -23,7 +23,6 @@ SRCS=	arbprogparse.c \
 	prog_to_nir.c \
 	accum.c \
 	api_arrayelt.c \
-	api_loopback.c \
 	arbprogram.c \
 	arrayobj.c \
 	atifragshader.c \
@@ -74,14 +73,17 @@ SRCS=	arbprogparse.c \
 	glformats.c \
 	glspirv.c \
 	glthread.c \
+	glthread_bufferobj.c \
+	glthread_draw.c \
+	glthread_get.c \
+	glthread_shaderobj.c \
+	glthread_varray.c \
 	hash.c \
 	hint.c \
 	histogram.c \
 	image.c \
-	imports.c \
 	light.c \
 	lines.c \
-	marshal.c \
 	matrix.c \
 	mipmap.c \
 	multisample.c \
@@ -160,7 +162,6 @@ SRCS=	arbprogparse.c \
 	vbo_exec_eval.c \
 	vbo_minmax_index.c \
 	vbo_noop.c \
-	vbo_primitive_restart.c \
 	vbo_save_api.c \
 	vbo_save.c \
 	vbo_save_draw.c \
@@ -194,8 +195,7 @@ SRCS+=		sparc_clip.S \
 CPPFLAGS+=	-I${MESA_SRC}/src/mesa/sparc
 .endif
 
-SRCS+=	format_pack.c \
-	format_unpack.c
+SRCS+=	format_pack.c
 
 SRCS+=	lex.yy.c \
 	program_parse.tab.c \
@@ -203,7 +203,9 @@ SRCS+=	lex.yy.c \
 	enums.c \
 	format_fallback.c
 
-SRCS+=	marshal_generated.c
+.for INDEX in 0 1 2 3 4 5 6 7
+SRCS+=	marshal_generated${INDEX}.c
+.endfor
 
 .include "../Makefile.inc"
 

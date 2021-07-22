@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.3.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -31,8 +31,9 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_SRC_MESA_PROGRAM_PROGRAM_PARSE_TAB_H_INCLUDED
 # define YY_YY_SRC_MESA_PROGRAM_PROGRAM_PARSE_TAB_H_INCLUDED
@@ -44,124 +45,128 @@
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    ARBvp_10 = 258,
-    ARBfp_10 = 259,
-    ADDRESS = 260,
-    ALIAS = 261,
-    ATTRIB = 262,
-    OPTION = 263,
-    OUTPUT = 264,
-    PARAM = 265,
-    TEMP = 266,
-    END = 267,
-    BIN_OP = 268,
-    BINSC_OP = 269,
-    SAMPLE_OP = 270,
-    SCALAR_OP = 271,
-    TRI_OP = 272,
-    VECTOR_OP = 273,
-    ARL = 274,
-    KIL = 275,
-    SWZ = 276,
-    TXD_OP = 277,
-    INTEGER = 278,
-    REAL = 279,
-    AMBIENT = 280,
-    ATTENUATION = 281,
-    BACK = 282,
-    CLIP = 283,
-    COLOR = 284,
-    DEPTH = 285,
-    DIFFUSE = 286,
-    DIRECTION = 287,
-    EMISSION = 288,
-    ENV = 289,
-    EYE = 290,
-    FOG = 291,
-    FOGCOORD = 292,
-    FRAGMENT = 293,
-    FRONT = 294,
-    HALF = 295,
-    INVERSE = 296,
-    INVTRANS = 297,
-    LIGHT = 298,
-    LIGHTMODEL = 299,
-    LIGHTPROD = 300,
-    LOCAL = 301,
-    MATERIAL = 302,
-    MAT_PROGRAM = 303,
-    MATRIX = 304,
-    MATRIXINDEX = 305,
-    MODELVIEW = 306,
-    MVP = 307,
-    NORMAL = 308,
-    OBJECT = 309,
-    PALETTE = 310,
-    PARAMS = 311,
-    PLANE = 312,
-    POINT_TOK = 313,
-    POINTSIZE = 314,
-    POSITION = 315,
-    PRIMARY = 316,
-    PROGRAM = 317,
-    PROJECTION = 318,
-    RANGE = 319,
-    RESULT = 320,
-    ROW = 321,
-    SCENECOLOR = 322,
-    SECONDARY = 323,
-    SHININESS = 324,
-    SIZE_TOK = 325,
-    SPECULAR = 326,
-    SPOT = 327,
-    STATE = 328,
-    TEXCOORD = 329,
-    TEXENV = 330,
-    TEXGEN = 331,
-    TEXGEN_Q = 332,
-    TEXGEN_R = 333,
-    TEXGEN_S = 334,
-    TEXGEN_T = 335,
-    TEXTURE = 336,
-    TRANSPOSE = 337,
-    TEXTURE_UNIT = 338,
-    TEX_1D = 339,
-    TEX_2D = 340,
-    TEX_3D = 341,
-    TEX_CUBE = 342,
-    TEX_RECT = 343,
-    TEX_SHADOW1D = 344,
-    TEX_SHADOW2D = 345,
-    TEX_SHADOWRECT = 346,
-    TEX_ARRAY1D = 347,
-    TEX_ARRAY2D = 348,
-    TEX_ARRAYSHADOW1D = 349,
-    TEX_ARRAYSHADOW2D = 350,
-    VERTEX = 351,
-    VTXATTRIB = 352,
-    IDENTIFIER = 353,
-    USED_IDENTIFIER = 354,
-    MASK4 = 355,
-    MASK3 = 356,
-    MASK2 = 357,
-    MASK1 = 358,
-    SWIZZLE = 359,
-    DOT_DOT = 360,
-    DOT = 361
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    ARBvp_10 = 258,                /* ARBvp_10  */
+    ARBfp_10 = 259,                /* ARBfp_10  */
+    ADDRESS = 260,                 /* ADDRESS  */
+    ALIAS = 261,                   /* ALIAS  */
+    ATTRIB = 262,                  /* ATTRIB  */
+    OPTION = 263,                  /* OPTION  */
+    OUTPUT = 264,                  /* OUTPUT  */
+    PARAM = 265,                   /* PARAM  */
+    TEMP = 266,                    /* TEMP  */
+    END = 267,                     /* END  */
+    BIN_OP = 268,                  /* BIN_OP  */
+    BINSC_OP = 269,                /* BINSC_OP  */
+    SAMPLE_OP = 270,               /* SAMPLE_OP  */
+    SCALAR_OP = 271,               /* SCALAR_OP  */
+    TRI_OP = 272,                  /* TRI_OP  */
+    VECTOR_OP = 273,               /* VECTOR_OP  */
+    ARL = 274,                     /* ARL  */
+    KIL = 275,                     /* KIL  */
+    SWZ = 276,                     /* SWZ  */
+    TXD_OP = 277,                  /* TXD_OP  */
+    INTEGER = 278,                 /* INTEGER  */
+    REAL = 279,                    /* REAL  */
+    AMBIENT = 280,                 /* AMBIENT  */
+    ATTENUATION = 281,             /* ATTENUATION  */
+    BACK = 282,                    /* BACK  */
+    CLIP = 283,                    /* CLIP  */
+    COLOR = 284,                   /* COLOR  */
+    DEPTH = 285,                   /* DEPTH  */
+    DIFFUSE = 286,                 /* DIFFUSE  */
+    DIRECTION = 287,               /* DIRECTION  */
+    EMISSION = 288,                /* EMISSION  */
+    ENV = 289,                     /* ENV  */
+    EYE = 290,                     /* EYE  */
+    FOG = 291,                     /* FOG  */
+    FOGCOORD = 292,                /* FOGCOORD  */
+    FRAGMENT = 293,                /* FRAGMENT  */
+    FRONT = 294,                   /* FRONT  */
+    HALF = 295,                    /* HALF  */
+    INVERSE = 296,                 /* INVERSE  */
+    INVTRANS = 297,                /* INVTRANS  */
+    LIGHT = 298,                   /* LIGHT  */
+    LIGHTMODEL = 299,              /* LIGHTMODEL  */
+    LIGHTPROD = 300,               /* LIGHTPROD  */
+    LOCAL = 301,                   /* LOCAL  */
+    MATERIAL = 302,                /* MATERIAL  */
+    MAT_PROGRAM = 303,             /* MAT_PROGRAM  */
+    MATRIX = 304,                  /* MATRIX  */
+    MATRIXINDEX = 305,             /* MATRIXINDEX  */
+    MODELVIEW = 306,               /* MODELVIEW  */
+    MVP = 307,                     /* MVP  */
+    NORMAL = 308,                  /* NORMAL  */
+    OBJECT = 309,                  /* OBJECT  */
+    PALETTE = 310,                 /* PALETTE  */
+    PARAMS = 311,                  /* PARAMS  */
+    PLANE = 312,                   /* PLANE  */
+    POINT_TOK = 313,               /* POINT_TOK  */
+    POINTSIZE = 314,               /* POINTSIZE  */
+    POSITION = 315,                /* POSITION  */
+    PRIMARY = 316,                 /* PRIMARY  */
+    PROGRAM = 317,                 /* PROGRAM  */
+    PROJECTION = 318,              /* PROJECTION  */
+    RANGE = 319,                   /* RANGE  */
+    RESULT = 320,                  /* RESULT  */
+    ROW = 321,                     /* ROW  */
+    SCENECOLOR = 322,              /* SCENECOLOR  */
+    SECONDARY = 323,               /* SECONDARY  */
+    SHININESS = 324,               /* SHININESS  */
+    SIZE_TOK = 325,                /* SIZE_TOK  */
+    SPECULAR = 326,                /* SPECULAR  */
+    SPOT = 327,                    /* SPOT  */
+    STATE = 328,                   /* STATE  */
+    TEXCOORD = 329,                /* TEXCOORD  */
+    TEXENV = 330,                  /* TEXENV  */
+    TEXGEN = 331,                  /* TEXGEN  */
+    TEXGEN_Q = 332,                /* TEXGEN_Q  */
+    TEXGEN_R = 333,                /* TEXGEN_R  */
+    TEXGEN_S = 334,                /* TEXGEN_S  */
+    TEXGEN_T = 335,                /* TEXGEN_T  */
+    TEXTURE = 336,                 /* TEXTURE  */
+    TRANSPOSE = 337,               /* TRANSPOSE  */
+    TEXTURE_UNIT = 338,            /* TEXTURE_UNIT  */
+    TEX_1D = 339,                  /* TEX_1D  */
+    TEX_2D = 340,                  /* TEX_2D  */
+    TEX_3D = 341,                  /* TEX_3D  */
+    TEX_CUBE = 342,                /* TEX_CUBE  */
+    TEX_RECT = 343,                /* TEX_RECT  */
+    TEX_SHADOW1D = 344,            /* TEX_SHADOW1D  */
+    TEX_SHADOW2D = 345,            /* TEX_SHADOW2D  */
+    TEX_SHADOWRECT = 346,          /* TEX_SHADOWRECT  */
+    TEX_ARRAY1D = 347,             /* TEX_ARRAY1D  */
+    TEX_ARRAY2D = 348,             /* TEX_ARRAY2D  */
+    TEX_ARRAYSHADOW1D = 349,       /* TEX_ARRAYSHADOW1D  */
+    TEX_ARRAYSHADOW2D = 350,       /* TEX_ARRAYSHADOW2D  */
+    VERTEX = 351,                  /* VERTEX  */
+    VTXATTRIB = 352,               /* VTXATTRIB  */
+    IDENTIFIER = 353,              /* IDENTIFIER  */
+    USED_IDENTIFIER = 354,         /* USED_IDENTIFIER  */
+    MASK4 = 355,                   /* MASK4  */
+    MASK3 = 356,                   /* MASK3  */
+    MASK2 = 357,                   /* MASK2  */
+    MASK1 = 358,                   /* MASK1  */
+    SWIZZLE = 359,                 /* SWIZZLE  */
+    DOT_DOT = 360,                 /* DOT_DOT  */
+    DOT = 361                      /* DOT  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-
 union YYSTYPE
 {
-#line 129 "../src/mesa/program/program_parse.y" /* yacc.c:1921  */
+#line 137 "../src/mesa/program/program_parse.y"
 
    struct asm_instruction *inst;
    struct asm_symbol *sym;
@@ -187,9 +192,9 @@ union YYSTYPE
       unsigned negate:1;
    } ext_swizzle;
 
-#line 191 "src/mesa/program/program_parse.tab.h" /* yacc.c:1921  */
-};
+#line 196 "src/mesa/program/program_parse.tab.h"
 
+};
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:10 jsg Exp $
 
 GEN=	50
 LIB=	i965_gen${GEN}
@@ -20,7 +20,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa/drivers/dri/i965 \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/intel \
-		-DGEN_VERSIONx10=${GEN}
+		-DGFX_VERx10=${GEN}
 
 install:
 

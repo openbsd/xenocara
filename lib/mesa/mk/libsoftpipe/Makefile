@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
 
 LIB=	softpipe
 
@@ -43,7 +43,9 @@ SRCS=	sp_buffer.c \
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
-		-I${MESA_SRC}/src/gallium/drivers/softpipe
+		-I${MESA_SRC}/src/gallium/drivers/softpipe \
+		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:09 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -45,9 +45,7 @@ SRCS+=	indirect.c \
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 SRCS+=	dri2.c \
-	dri2_glx.c \
-	dri_glx.c \
-	XF86dri.c
+	dri2_glx.c
 .endif
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
@@ -62,8 +60,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/glx \
 		-I${MESA_SRC}/src/mapi/glapi \
 		-I${MESA_SRC}/generated/src/mapi/glapi/gen
 
-LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXdamage -lXfixes -lX11-xcb -lxcb-glx \
-	-lxcb-dri2 -lXxf86vm -lXext -lX11 -lxcb \
+LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXfixes -lX11-xcb -lxcb-glx \
+	-lxcb-dri2 -lxcb-shm -lXxf86vm -lXext -lX11 -lxcb \
 	-ldrm -lm -lpthread -lXau -lXdmcp
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
