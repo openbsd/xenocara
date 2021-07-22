@@ -417,18 +417,18 @@ util_make_fs_blit_zs(struct pipe_context *pipe, unsigned zs_mask,
 
    if (zs_mask & PIPE_MASK_S) {
       stencil_sampler = ureg_DECL_sampler(ureg, zs_mask & PIPE_MASK_Z ? 1 : 0);
-      ureg_DECL_sampler_view(ureg, 0, tex_target,
+      ureg_DECL_sampler_view(ureg, zs_mask & PIPE_MASK_Z ? 1 : 0, tex_target,
                              TGSI_RETURN_TYPE_UINT,
                              TGSI_RETURN_TYPE_UINT,
                              TGSI_RETURN_TYPE_UINT,
                              TGSI_RETURN_TYPE_UINT);
 
-      ureg_load_tex(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_X), coord,
+      ureg_load_tex(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_Y), coord,
                     stencil_sampler, tex_target, load_level_zero, use_txf);
 
       stencil = ureg_DECL_output(ureg, TGSI_SEMANTIC_STENCIL, 0);
       ureg_MOV(ureg, ureg_writemask(stencil, TGSI_WRITEMASK_Y),
-               ureg_scalar(ureg_src(tmp), TGSI_SWIZZLE_X));
+               ureg_scalar(ureg_src(tmp), TGSI_SWIZZLE_Y));
    }
 
    ureg_END(ureg);
@@ -530,6 +530,7 @@ util_make_fs_blit_msaa_gen(struct pipe_context *pipe,
                            const char *samp_type,
                            const char *output_semantic,
                            const char *output_mask,
+                           const char *swizzle,
                            const char *conversion_decl,
                            const char *conversion)
 {
@@ -545,7 +546,7 @@ util_make_fs_blit_msaa_gen(struct pipe_context *pipe,
          "F2U TEMP[0], IN[0]\n"
          "TXF TEMP[0], TEMP[0], SAMP[0], %s\n"
          "%s"
-         "MOV OUT[0]%s, TEMP[0]\n"
+         "MOV OUT[0]%s, TEMP[0]%s\n"
          "END\n";
 
    const char *type = tgsi_texture_names[tgsi_tex];
@@ -557,7 +558,7 @@ util_make_fs_blit_msaa_gen(struct pipe_context *pipe,
           tgsi_tex == TGSI_TEXTURE_2D_ARRAY_MSAA);
 
    snprintf(text, sizeof(text), shader_templ, type, samp_type,
-            output_semantic, conversion_decl, type, conversion, output_mask);
+            output_semantic, conversion_decl, type, conversion, output_mask, swizzle);
 
    if (!tgsi_text_translate(text, tokens, ARRAY_SIZE(tokens))) {
       puts(text);
@@ -608,7 +609,7 @@ util_make_fs_blit_msaa_color(struct pipe_context *pipe,
    }
 
    return util_make_fs_blit_msaa_gen(pipe, tgsi_tex, samp_type,
-                                     "COLOR[0]", "", conversion_decl,
+                                     "COLOR[0]", "", "", conversion_decl,
                                      conversion);
 }
 
@@ -623,7 +624,7 @@ util_make_fs_blit_msaa_depth(struct pipe_context *pipe,
                              enum tgsi_texture_type tgsi_tex)
 {
    return util_make_fs_blit_msaa_gen(pipe, tgsi_tex, "FLOAT",
-                                     "POSITION", ".z", "", "");
+                                     "POSITION", ".z", ".xxxx", "", "");
 }
 
 
@@ -637,7 +638,7 @@ util_make_fs_blit_msaa_stencil(struct pipe_context *pipe,
                                enum tgsi_texture_type tgsi_tex)
 {
    return util_make_fs_blit_msaa_gen(pipe, tgsi_tex, "UINT",
-                                     "STENCIL", ".y", "", "");
+                                     "STENCIL", ".y", "", "", "");
 }
 
 
@@ -656,13 +657,15 @@ util_make_fs_blit_msaa_depthstencil(struct pipe_context *pipe,
          "FRAG\n"
          "DCL IN[0], GENERIC[0], LINEAR\n"
          "DCL SAMP[0..1]\n"
-         "DCL SVIEW[0..1], %s, FLOAT\n"
+         "DCL SVIEW[0], %s, FLOAT\n"
+         "DCL SVIEW[1], %s, UINT\n"
          "DCL OUT[0], POSITION\n"
          "DCL OUT[1], STENCIL\n"
-         "DCL TEMP[0]\n"
+         "DCL TEMP[0..1]\n"
 
          "F2U TEMP[0], IN[0]\n"
-         "TXF OUT[0].z, TEMP[0], SAMP[0], %s\n"
+         "TXF TEMP[1], TEMP[0], SAMP[0], %s\n"
+         "MOV OUT[0].z, TEMP[1].xxxx\n"
          "TXF OUT[1].y, TEMP[0], SAMP[1], %s\n"
          "END\n";
 
@@ -674,7 +677,7 @@ util_make_fs_blit_msaa_depthstencil(struct pipe_context *pipe,
    assert(tgsi_tex == TGSI_TEXTURE_2D_MSAA ||
           tgsi_tex == TGSI_TEXTURE_2D_ARRAY_MSAA);
 
-   sprintf(text, shader_templ, type, type, type);
+   sprintf(text, shader_templ, type, type, type, type);
 
    if (!tgsi_text_translate(text, tokens, ARRAY_SIZE(tokens))) {
       assert(0);
@@ -895,6 +898,7 @@ util_make_geometry_passthrough_shader(struct pipe_context *pipe,
    return ureg_create_shader_and_destroy(ureg, pipe);
 }
 
+
 /**
  * Blit from color to ZS or from ZS to color in a manner that is equivalent
  * to memcpy.
@@ -1055,4 +1059,148 @@ util_make_fs_pack_color_zs(struct pipe_context *pipe,
    ureg_END(ureg);
 
    return ureg_create_shader_and_destroy(ureg, pipe);
+}
+
+
+/**
+ * Create passthrough tessellation control shader.
+ * Passthrough tessellation control shader has output of vertex shader
+ * as input and input of tessellation eval shader as output.
+ */
+void *
+util_make_tess_ctrl_passthrough_shader(struct pipe_context *pipe,
+                                       uint num_vs_outputs,
+                                       uint num_tes_inputs,
+                                       const ubyte *vs_semantic_names,
+                                       const ubyte *vs_semantic_indexes,
+                                       const ubyte *tes_semantic_names,
+                                       const ubyte *tes_semantic_indexes,
+                                       const unsigned vertices_per_patch)
+{
+   unsigned i, j;
+   unsigned num_regs;
+
+   struct ureg_program *ureg;
+   struct ureg_dst temp, addr;
+   struct ureg_src invocationID;
+   struct ureg_dst dst[PIPE_MAX_SHADER_OUTPUTS];
+   struct ureg_src src[PIPE_MAX_SHADER_INPUTS];
+
+   ureg = ureg_create(PIPE_SHADER_TESS_CTRL);
+
+   if (!ureg)
+      return NULL;
+
+   ureg_property(ureg, TGSI_PROPERTY_TCS_VERTICES_OUT, vertices_per_patch);
+
+   num_regs = 0;
+
+   for (i = 0; i < num_tes_inputs; i++) {
+      switch (tes_semantic_names[i]) {
+      case TGSI_SEMANTIC_POSITION:
+      case TGSI_SEMANTIC_PSIZE:
+      case TGSI_SEMANTIC_COLOR:
+      case TGSI_SEMANTIC_BCOLOR:
+      case TGSI_SEMANTIC_CLIPDIST:
+      case TGSI_SEMANTIC_CLIPVERTEX:
+      case TGSI_SEMANTIC_TEXCOORD:
+      case TGSI_SEMANTIC_FOG:
+      case TGSI_SEMANTIC_GENERIC:
+         for (j = 0; j < num_vs_outputs; j++) {
+            if (tes_semantic_names[i] == vs_semantic_names[j] &&
+                tes_semantic_indexes[i] == vs_semantic_indexes[j]) {
+
+               dst[num_regs] = ureg_DECL_output(ureg,
+                                               tes_semantic_names[i],
+                                               tes_semantic_indexes[i]);
+               src[num_regs] = ureg_DECL_input(ureg, vs_semantic_names[j],
+                                               vs_semantic_indexes[j],
+                                               0, 1);
+
+               if (tes_semantic_names[i] == TGSI_SEMANTIC_GENERIC ||
+                   tes_semantic_names[i] == TGSI_SEMANTIC_POSITION) {
+                  src[num_regs] = ureg_src_dimension(src[num_regs], 0);
+                  dst[num_regs] = ureg_dst_dimension(dst[num_regs], 0);
+               }
+
+               num_regs++;
+               break;
+            }
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   dst[num_regs] = ureg_DECL_output(ureg, TGSI_SEMANTIC_TESSOUTER,
+                                    num_regs);
+   src[num_regs] = ureg_DECL_constant(ureg, 0);
+   num_regs++;
+   dst[num_regs] = ureg_DECL_output(ureg, TGSI_SEMANTIC_TESSINNER,
+                                    num_regs);
+   src[num_regs] = ureg_DECL_constant(ureg, 1);
+   num_regs++;
+
+   if (vertices_per_patch > 1) {
+      invocationID = ureg_DECL_system_value(ureg,
+                        TGSI_SEMANTIC_INVOCATIONID, 0);
+      temp = ureg_DECL_local_temporary(ureg);
+      addr = ureg_DECL_address(ureg);
+      ureg_UARL(ureg, ureg_writemask(addr, TGSI_WRITEMASK_X),
+                ureg_scalar(invocationID, TGSI_SWIZZLE_X));
+   }
+
+   for (i = 0; i < num_regs; i++) {
+      if (dst[i].Dimension && vertices_per_patch > 1) {
+         struct ureg_src addr_x = ureg_scalar(ureg_src(addr), TGSI_SWIZZLE_X);
+         ureg_MOV(ureg, temp, ureg_src_dimension_indirect(src[i],
+                  addr_x, 0));
+         ureg_MOV(ureg, ureg_dst_dimension_indirect(dst[i],
+                  addr_x, 0), ureg_src(temp));
+      }
+      else
+         ureg_MOV(ureg, dst[i], src[i]);
+   }
+
+   ureg_END(ureg);
+
+   return ureg_create_shader_and_destroy(ureg, pipe);
+}
+
+void *
+util_make_fs_stencil_blit(struct pipe_context *pipe, bool msaa_src)
+{
+   static const char shader_templ[] =
+      "FRAG\n"
+      "DCL IN[0], GENERIC[0], LINEAR\n"
+      "DCL SAMP[0]\n"
+      "DCL CONST[0][0]\n"
+      "DCL TEMP[0]\n"
+
+      "F2U TEMP[0], IN[0]\n"
+      "TXF_LZ TEMP[0].x, TEMP[0], SAMP[0], %s\n"
+      "AND TEMP[0].x, TEMP[0], CONST[0][0]\n"
+      "USNE TEMP[0].x, TEMP[0], CONST[0][0]\n"
+      "U2F TEMP[0].x, TEMP[0]\n"
+      "KILL_IF -TEMP[0].xxxx\n"
+      "END\n";
+
+   char text[sizeof(shader_templ)+100];
+   struct tgsi_token tokens[1000];
+   struct pipe_shader_state state = { 0 };
+
+   enum tgsi_texture_type tgsi_tex = msaa_src ? TGSI_TEXTURE_2D_MSAA :
+                                                TGSI_TEXTURE_2D;
+
+   sprintf(text, shader_templ, tgsi_texture_names[tgsi_tex]);
+
+   if (!tgsi_text_translate(text, tokens, ARRAY_SIZE(tokens))) {
+      assert(0);
+      return NULL;
+   }
+
+   pipe_shader_state_from_tgsi(&state, tokens);
+
+   return pipe->create_fs_state(pipe, &state);
 }

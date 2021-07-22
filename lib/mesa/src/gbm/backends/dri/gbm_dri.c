@@ -490,10 +490,13 @@ dri_screen_create_sw(struct gbm_dri_device *dri)
       return -errno;
 
    ret = dri_screen_create_dri2(dri, driver_name);
-   if (ret == 0)
+   if (ret != 0)
+      ret = dri_screen_create_swrast(dri);
+   if (ret != 0)
       return ret;
 
-   return dri_screen_create_swrast(dri);
+   dri->software = true;
+   return 0;
 }
 
 static const struct gbm_dri_visual gbm_dri_visuals_table[] = {
@@ -622,14 +625,12 @@ gbm_dri_is_format_supported(struct gbm_device *gbm,
       }
    }
 
-   /* Check if the driver returns any modifiers for this format; since linear
-    * is counted as a modifier, we will have at least one modifier for any
-    * supported format. */
+   /* This returns false if the format isn't supported */
    if (!dri->image->queryDmaBufModifiers(dri->screen, format, 0, NULL, NULL,
                                          &count))
       return 0;
 
-   return (count > 0);
+   return 1;
 }
 
 static int
@@ -754,6 +755,45 @@ gbm_dri_bo_get_handle_for_plane(struct gbm_bo *_bo, int plane)
    }
 
    return ret;
+}
+
+static int
+gbm_dri_bo_get_plane_fd(struct gbm_bo *_bo, int plane)
+{
+   struct gbm_dri_device *dri = gbm_dri_device(_bo->gbm);
+   struct gbm_dri_bo *bo = gbm_dri_bo(_bo);
+   int fd = -1;
+
+   if (!dri->image || dri->image->base.version < 13 || !dri->image->fromPlanar) {
+      /* Preserve legacy behavior if plane is 0 */
+      if (plane == 0)
+         return gbm_dri_bo_get_fd(_bo);
+
+      errno = ENOSYS;
+      return -1;
+   }
+
+   /* dumb BOs can only utilize non-planar formats */
+   if (!bo->image) {
+      errno = EINVAL;
+      return -1;
+   }
+
+   if (plane >= get_number_planes(dri, bo->image)) {
+      errno = EINVAL;
+      return -1;
+   }
+
+   __DRIimage *image = dri->image->fromPlanar(bo->image, plane, NULL);
+   if (image) {
+      dri->image->queryImage(image, __DRI_IMAGE_ATTRIB_FD, &fd);
+      dri->image->destroyImage(image);
+   } else {
+      assert(plane == 0);
+      dri->image->queryImage(bo->image, __DRI_IMAGE_ATTRIB_FD, &fd);
+   }
+
+   return fd;
 }
 
 static uint32_t
@@ -1115,7 +1155,8 @@ gbm_dri_bo_create(struct gbm_device *gbm,
    struct gbm_dri_device *dri = gbm_dri_device(gbm);
    struct gbm_dri_bo *bo;
    int dri_format;
-   unsigned dri_use = 0;
+   unsigned dri_use = 0, i;
+   bool has_valid_modifier;
 
    /* Callers of this may specify a modifier, or a dri usage, but not both. The
     * newer modifier interface deprecates the older usage flags.
@@ -1148,6 +1189,8 @@ gbm_dri_bo_create(struct gbm_device *gbm,
       dri_use |= __DRI_IMAGE_USE_CURSOR;
    if (usage & GBM_BO_USE_LINEAR)
       dri_use |= __DRI_IMAGE_USE_LINEAR;
+   if (usage & GBM_BO_USE_PROTECTED)
+      dri_use |= __DRI_IMAGE_USE_PROTECTED;
 
    /* Gallium drivers requires shared in order to get the handle/stride */
    dri_use |= __DRI_IMAGE_USE_SHARE;
@@ -1155,7 +1198,6 @@ gbm_dri_bo_create(struct gbm_device *gbm,
    if (modifiers) {
       if (!dri->image || dri->image->base.version < 14 ||
           !dri->image->createImageWithModifiers) {
-         fprintf(stderr, "Modifiers specified, but DRI is too old\n");
          errno = ENOSYS;
          goto failed;
       }
@@ -1166,8 +1208,14 @@ gbm_dri_bo_create(struct gbm_device *gbm,
        * the check here is a convenient debug check likely pointing at whatever
        * interface the client is using to build its modifier list.
        */
-      if (count == 1 && modifiers[0] == DRM_FORMAT_MOD_INVALID) {
-         fprintf(stderr, "Only invalid modifier specified\n");
+      has_valid_modifier = false;
+      for (i = 0; i < count; i++) {
+         if (modifiers[i] != DRM_FORMAT_MOD_INVALID) {
+            has_valid_modifier = true;
+            break;
+         }
+      }
+      if (!has_valid_modifier) {
          errno = EINVAL;
          goto failed;
       }
@@ -1380,6 +1428,7 @@ dri_device_create(int fd)
    dri->base.bo_get_fd = gbm_dri_bo_get_fd;
    dri->base.bo_get_planes = gbm_dri_bo_get_planes;
    dri->base.bo_get_handle = gbm_dri_bo_get_handle_for_plane;
+   dri->base.bo_get_plane_fd = gbm_dri_bo_get_plane_fd;
    dri->base.bo_get_stride = gbm_dri_bo_get_stride;
    dri->base.bo_get_offset = gbm_dri_bo_get_offset;
    dri->base.bo_get_modifier = gbm_dri_bo_get_modifier;

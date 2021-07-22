@@ -28,10 +28,10 @@
  * \author Brian Paul
  */
 
-
 #include "main/glheader.h"
-#include "main/imports.h"
 #include "main/macros.h"
+#include "main/errors.h"
+#include "util/u_memory.h"
 #include "prog_instruction.h"
 #include "prog_parameter.h"
 #include "prog_statevars.h"
@@ -66,7 +66,7 @@ lookup_parameter_constant(const struct gl_program_parameter_list *list,
 
    for (i = 0; i < list->NumParameters; i++) {
       if (list->Parameters[i].Type == PROGRAM_CONSTANT) {
-         unsigned offset = list->ParameterValueOffset[i];
+         unsigned offset = list->Parameters[i].ValueOffset;
 
          if (!swizzleOut) {
             /* swizzle not allowed */
@@ -135,7 +135,15 @@ lookup_parameter_constant(const struct gl_program_parameter_list *list,
 struct gl_program_parameter_list *
 _mesa_new_parameter_list(void)
 {
-   return CALLOC_STRUCT(gl_program_parameter_list);
+   struct gl_program_parameter_list *list =
+      CALLOC_STRUCT(gl_program_parameter_list);
+   if (!list)
+      return NULL;
+
+   list->UniformBytes = 0;
+   list->FirstStateVarIndex = INT_MAX;
+   list->LastStateVarIndex = 0;
+   return list;
 }
 
 
@@ -144,22 +152,13 @@ _mesa_new_parameter_list_sized(unsigned size)
 {
    struct gl_program_parameter_list *p = _mesa_new_parameter_list();
 
+
    if ((p != NULL) && (size != 0)) {
-      p->Size = size;
-
-      /* alloc arrays */
-      p->Parameters = (struct gl_program_parameter *)
-         calloc(size, sizeof(struct gl_program_parameter));
-
-      p->ParameterValueOffset = (unsigned *) calloc(size, sizeof(unsigned));
-
-      p->ParameterValues = (gl_constant_value *)
-         _mesa_align_malloc(size * 4 *sizeof(gl_constant_value), 16);
-
+      _mesa_reserve_parameter_storage(p, size, size);
 
       if ((p->Parameters == NULL) || (p->ParameterValues == NULL)) {
          free(p->Parameters);
-         _mesa_align_free(p->ParameterValues);
+         align_free(p->ParameterValues);
          free(p);
          p = NULL;
       }
@@ -180,8 +179,7 @@ _mesa_free_parameter_list(struct gl_program_parameter_list *paramList)
       free((void *)paramList->Parameters[i].Name);
    }
    free(paramList->Parameters);
-   free(paramList->ParameterValueOffset);
-   _mesa_align_free(paramList->ParameterValues);
+   align_free(paramList->ParameterValues);
    free(paramList);
 }
 
@@ -191,33 +189,64 @@ _mesa_free_parameter_list(struct gl_program_parameter_list *paramList)
  * if needed.
  *
  * \param paramList        where to reserve parameter slots
- * \param reserve_slots    number of slots to reserve
+ * \param reserve_params   number of parameter description slots
+ * \param reserve_values   number of parameter vec4 slots
  */
 void
 _mesa_reserve_parameter_storage(struct gl_program_parameter_list *paramList,
-                                unsigned reserve_slots)
+                                unsigned reserve_params,
+                                unsigned reserve_values)
 {
    const GLuint oldNum = paramList->NumParameters;
+   const unsigned oldValNum = paramList->NumParameterValues;
+   const unsigned needSizeValues = oldValNum + reserve_values * 4;
 
-   if (oldNum + reserve_slots > paramList->Size) {
+   if (paramList->DisallowRealloc &&
+       (oldNum + reserve_params > paramList->Size ||
+        needSizeValues > paramList->SizeValues)) {
+      _mesa_problem(NULL, "Parameter storage reallocation disallowed. This "
+              "is a Mesa bug. Increase the reservation size in the code.");
+      abort();
+   }
+
+   if (oldNum + reserve_params > paramList->Size) {
       /* Need to grow the parameter list array (alloc some extra) */
-      paramList->Size = paramList->Size + 4 * reserve_slots;
+      paramList->Size += 4 * reserve_params;
 
       /* realloc arrays */
       paramList->Parameters =
          realloc(paramList->Parameters,
                  paramList->Size * sizeof(struct gl_program_parameter));
+   }
 
-      paramList->ParameterValueOffset =
-         realloc(paramList->ParameterValueOffset,
-                 paramList->Size * sizeof(unsigned));
+   if (needSizeValues > paramList->SizeValues) {
+      unsigned oldSize = paramList->SizeValues;
+      paramList->SizeValues = needSizeValues + 16; /* alloc some extra */
 
       paramList->ParameterValues = (gl_constant_value *)
-         _mesa_align_realloc(paramList->ParameterValues,         /* old buf */
-                             oldNum * 4 * sizeof(gl_constant_value),/* old sz */
-                             paramList->Size*4*sizeof(gl_constant_value),/*new*/
-                             16);
+         align_realloc(paramList->ParameterValues,         /* old buf */
+                       oldValNum * sizeof(gl_constant_value),/* old sz */
+                       /* Overallocate the size by 12 because matrix rows can
+                        * be allocated partially but fetch_state always writes
+                        * 4 components (16 bytes).
+                        */
+                       paramList->SizeValues * sizeof(gl_constant_value) +
+                       12, 16);
+      /* The values are written to the shader cache, so clear them. */
+      memset(paramList->ParameterValues + oldSize, 0,
+             (paramList->SizeValues - oldSize) * sizeof(gl_constant_value));
    }
+}
+
+
+/**
+ * Disallow reallocating the parameter storage, so that uniform storage
+ * can have pointers pointing to it.
+ */
+void
+_mesa_disallow_parameter_storage_realloc(struct gl_program_parameter_list *paramList)
+{
+   paramList->DisallowRealloc = true;
 }
 
 
@@ -228,7 +257,7 @@ _mesa_reserve_parameter_storage(struct gl_program_parameter_list *paramList,
  * store all the values (in blocks of 4).
  *
  * \param paramList  the list to add the parameter to
- * \param type  type of parameter, such as 
+ * \param type  type of parameter, such as
  * \param name  the parameter name, will be duplicated/copied!
  * \param size  number of elements in 'values' vector (1..4, or more)
  * \param datatype  GL_FLOAT, GL_FLOAT_VECx, GL_INT, GL_INT_VECx or GL_NONE.
@@ -244,29 +273,31 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
                     const gl_state_index16 state[STATE_LENGTH],
                     bool pad_and_align)
 {
-   assert(0 < size && size <=4);
-   const GLuint oldNum = paramList->NumParameters;
+   assert(0 < size);
+   const int oldNum = paramList->NumParameters;
    unsigned oldValNum = paramList->NumParameterValues;
+   const unsigned padded_size = pad_and_align ? align(size, 4) : size;
 
    if (pad_and_align)
       oldValNum = align(oldValNum, 4); /* pad start to a vec4 boundary */
    else if (_mesa_gl_datatype_is_64bit(datatype))
       oldValNum = align(oldValNum, 2); /* pad start to 64-bit */
 
-   _mesa_reserve_parameter_storage(paramList, 1);
+   unsigned elements = (oldValNum - paramList->NumParameterValues) + padded_size;
+   _mesa_reserve_parameter_storage(paramList, 1, DIV_ROUND_UP(elements, 4));
 
-   if (!paramList->Parameters || !paramList->ParameterValueOffset ||
+   if (!paramList->Parameters ||
        !paramList->ParameterValues) {
       /* out of memory */
       paramList->NumParameters = 0;
       paramList->Size = 0;
+      paramList->SizeValues = 0;
       return -1;
    }
 
    paramList->NumParameters = oldNum + 1;
 
-   unsigned pad = pad_and_align ? align(size, 4) : size;
-   paramList->NumParameterValues = oldValNum + pad;
+   paramList->NumParameterValues = oldValNum + padded_size;
 
    memset(&paramList->Parameters[oldNum], 0,
           sizeof(struct gl_program_parameter));
@@ -278,10 +309,11 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
    p->Padded = pad_and_align;
    p->DataType = datatype;
 
-   paramList->ParameterValueOffset[oldNum] = oldValNum;
+   paramList->Parameters[oldNum].ValueOffset = oldValNum;
    if (values) {
       if (size >= 4) {
-         COPY_4V(paramList->ParameterValues + oldValNum, values);
+         memcpy(paramList->ParameterValues + oldValNum, values,
+                size * sizeof(values[0]));
       } else {
          /* copy 1, 2 or 3 values */
          assert(size < 4);
@@ -291,12 +323,12 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
          }
 
          /* Zero out padding (if any) to avoid valgrind errors */
-         for (; j < pad; j++) {
+         for (; j < padded_size; j++) {
             paramList->ParameterValues[oldValNum + j].f = 0;
          }
       }
    } else {
-      for (unsigned j = 0; j < 4; j++) {
+      for (unsigned j = 0; j < padded_size; j++) {
          paramList->ParameterValues[oldValNum + j].f = 0;
       }
    }
@@ -304,7 +336,26 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
    if (state) {
       for (unsigned i = 0; i < STATE_LENGTH; i++)
          paramList->Parameters[oldNum].StateIndexes[i] = state[i];
+   } else {
+      paramList->Parameters[oldNum].StateIndexes[0] = STATE_NOT_STATE_VAR;
    }
+
+   if (type == PROGRAM_UNIFORM || type == PROGRAM_CONSTANT) {
+      paramList->UniformBytes =
+         MAX2(paramList->UniformBytes,
+              (paramList->Parameters[oldNum].ValueOffset +
+               paramList->Parameters[oldNum].Size) * 4);
+   } else if (type == PROGRAM_STATE_VAR) {
+      paramList->FirstStateVarIndex =
+         MIN2(paramList->FirstStateVarIndex, oldNum);
+      paramList->LastStateVarIndex =
+         MAX2(paramList->LastStateVarIndex, oldNum);
+   } else {
+      unreachable("invalid parameter type");
+   }
+
+   assert(paramList->NumParameters <= paramList->Size);
+   assert(paramList->NumParameterValues <= paramList->SizeValues);
 
    return (GLint) oldNum;
 }
@@ -343,7 +394,7 @@ _mesa_add_typed_unnamed_constant(struct gl_program_parameter_list *paramList,
    if (size == 1 && swizzleOut) {
       for (pos = 0; pos < (GLint) paramList->NumParameters; pos++) {
          struct gl_program_parameter *p = paramList->Parameters + pos;
-         unsigned offset = paramList->ParameterValueOffset[pos];
+         unsigned offset = paramList->Parameters[pos].ValueOffset;
          if (p->Type == PROGRAM_CONSTANT && p->Size + size <= 4) {
             /* ok, found room */
             gl_constant_value *pVal = paramList->ParameterValues + offset;
@@ -404,7 +455,7 @@ _mesa_add_sized_state_reference(struct gl_program_parameter_list *paramList,
  *    PARAM ambient = state.material.front.ambient;
  *
  * \param paramList  the parameter list
- * \param stateTokens  an array of 5 (STATE_LENGTH) state tokens
+ * \param stateTokens  an array of STATE_LENGTH state tokens
  * \return index of the new parameter.
  */
 GLint
@@ -412,4 +463,23 @@ _mesa_add_state_reference(struct gl_program_parameter_list *paramList,
                           const gl_state_index16 stateTokens[STATE_LENGTH])
 {
    return _mesa_add_sized_state_reference(paramList, stateTokens, 4, true);
+}
+
+void
+_mesa_recompute_parameter_bounds(struct gl_program_parameter_list *list)
+{
+   list->UniformBytes = 0;
+   list->FirstStateVarIndex = INT_MAX;
+   list->LastStateVarIndex = 0;
+
+   for (int i = 0; i < (int)list->NumParameters; i++) {
+      if (list->Parameters[i].Type == PROGRAM_STATE_VAR) {
+         list->FirstStateVarIndex = MIN2(list->FirstStateVarIndex, i);
+         list->LastStateVarIndex = MAX2(list->LastStateVarIndex, i);
+      } else {
+         list->UniformBytes = MAX2(list->UniformBytes,
+                                   (list->Parameters[i].ValueOffset +
+                                    list->Parameters[i].Size) * 4);
+      }
+   }
 }

@@ -92,7 +92,7 @@ extern "C" void
 brw_vec4_alloc_reg_set(struct brw_compiler *compiler)
 {
    int base_reg_count =
-      compiler->devinfo->gen >= 7 ? GEN7_MRF_HACK_START : BRW_MAX_GRF;
+      compiler->devinfo->ver >= 7 ? GFX7_MRF_HACK_START : BRW_MAX_GRF;
 
    /* After running split_virtual_grfs(), almost all VGRFs will be of size 1.
     * SEND-from-GRF sources cannot be split, so we also need classes for each
@@ -114,7 +114,7 @@ brw_vec4_alloc_reg_set(struct brw_compiler *compiler)
    compiler->vec4_reg_set.ra_reg_to_grf = ralloc_array(compiler, uint8_t, ra_reg_count);
    ralloc_free(compiler->vec4_reg_set.regs);
    compiler->vec4_reg_set.regs = ra_alloc_reg_set(compiler, ra_reg_count, false);
-   if (compiler->devinfo->gen >= 6)
+   if (compiler->devinfo->ver >= 6)
       ra_set_allocate_round_robin(compiler->vec4_reg_set.regs);
    ralloc_free(compiler->vec4_reg_set.classes);
    compiler->vec4_reg_set.classes = ralloc_array(compiler, int, class_count);
@@ -201,8 +201,7 @@ vec4_visitor::reg_allocate()
    if (0)
       return reg_allocate_trivial();
 
-   calculate_live_intervals();
-
+   const vec4_live_variables &live = live_analysis.require();
    int node_count = alloc.count;
    int first_payload_node = node_count;
    node_count += payload_reg_count;
@@ -215,7 +214,7 @@ vec4_visitor::reg_allocate()
       ra_set_node_class(g, i, compiler->vec4_reg_set.classes[size - 1]);
 
       for (unsigned j = 0; j < i; j++) {
-	 if (virtual_grf_interferes(i, j)) {
+	 if (live.vgrfs_interfere(i, j)) {
 	    ra_add_node_interference(g, i, j);
 	 }
       }
@@ -331,8 +330,8 @@ can_use_scratch_for_source(const vec4_instruction *inst, unsigned i,
        * other registers (that won't read/write scratch_reg) do not stop us from
        * reusing scratch_reg for this instruction.
        */
-      if (prev_inst->opcode == SHADER_OPCODE_GEN4_SCRATCH_WRITE ||
-          prev_inst->opcode == SHADER_OPCODE_GEN4_SCRATCH_READ)
+      if (prev_inst->opcode == SHADER_OPCODE_GFX4_SCRATCH_WRITE ||
+          prev_inst->opcode == SHADER_OPCODE_GFX4_SCRATCH_READ)
          continue;
 
       /* If the previous instruction does not write to scratch_reg, then check
@@ -467,8 +466,9 @@ vec4_visitor::evaluate_spill_costs(float *spill_costs, bool *no_spill)
          loop_scale /= 10;
          break;
 
-      case SHADER_OPCODE_GEN4_SCRATCH_READ:
-      case SHADER_OPCODE_GEN4_SCRATCH_WRITE:
+      case SHADER_OPCODE_GFX4_SCRATCH_READ:
+      case SHADER_OPCODE_GFX4_SCRATCH_WRITE:
+      case VEC4_OPCODE_MOV_FOR_SCRATCH:
          for (int i = 0; i < 3; i++) {
             if (inst->src[i].file == VGRF)
                no_spill[inst->src[i].nr] = true;
@@ -540,7 +540,7 @@ vec4_visitor::spill_reg(unsigned spill_reg_nr)
       }
    }
 
-   invalidate_live_intervals();
+   invalidate_analysis(DEPENDENCY_INSTRUCTIONS | DEPENDENCY_VARIABLES);
 }
 
 } /* namespace brw */

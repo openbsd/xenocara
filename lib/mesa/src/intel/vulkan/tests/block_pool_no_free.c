@@ -118,7 +118,7 @@ static void run_test()
 
    pthread_mutex_init(&device.mutex, NULL);
    anv_bo_cache_init(&device.bo_cache);
-   anv_block_pool_init(&pool, &device, 4096, 4096);
+   anv_block_pool_init(&pool, &device, "test", 4096, 4096);
 
    for (unsigned i = 0; i < NUM_THREADS; i++) {
       jobs[i].pool = &pool;
@@ -144,7 +144,7 @@ static void run_test()
    pthread_mutex_destroy(&device.mutex);
 }
 
-int main(int argc, char **argv)
+int main(void)
 {
    for (unsigned i = 0; i < NUM_RUNS; i++)
       run_test();

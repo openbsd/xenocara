@@ -77,10 +77,9 @@
 
 
 #include "glheader.h"
-#include "imports.h"
+
 #include "accum.h"
 #include "api_exec.h"
-#include "api_loopback.h"
 #include "arrayobj.h"
 #include "attrib.h"
 #include "bbox.h"
@@ -94,6 +93,7 @@
 #include "debug_output.h"
 #include "depth.h"
 #include "dlist.h"
+#include "draw_validate.h"
 #include "eval.h"
 #include "extensions.h"
 #include "fbobject.h"
@@ -152,6 +152,7 @@
 #include "compiler/glsl/builtin_functions.h"
 #include "compiler/glsl/glsl_parser_extras.h"
 #include <stdbool.h>
+#include "util/u_memory.h"
 
 
 #ifndef MESA_VERBOSE
@@ -181,7 +182,7 @@ _mesa_notifySwapBuffers(struct gl_context *ctx)
 {
    if (MESA_VERBOSE & VERBOSE_SWAPBUFFERS)
       _mesa_debug(ctx, "SwapBuffers\n");
-   FLUSH_CURRENT( ctx, 0 );
+   FLUSH_VERTICES(ctx, 0, 0);
    if (ctx->Driver.Flush) {
       ctx->Driver.Flush(ctx);
    }
@@ -234,15 +235,11 @@ _mesa_create_visual( GLboolean dbFlag,
 {
    struct gl_config *vis = CALLOC_STRUCT(gl_config);
    if (vis) {
-      if (!_mesa_initialize_visual(vis, dbFlag, stereoFlag,
-                                   redBits, greenBits, blueBits, alphaBits,
-                                   depthBits, stencilBits,
-                                   accumRedBits, accumGreenBits,
-                                   accumBlueBits, accumAlphaBits,
-                                   numSamples)) {
-         free(vis);
-         return NULL;
-      }
+      _mesa_initialize_visual(vis, dbFlag, stereoFlag,
+                              redBits, greenBits, blueBits, alphaBits,
+                              depthBits, stencilBits,
+                              accumRedBits, accumGreenBits, accumBlueBits,
+                              accumAlphaBits, numSamples);
    }
    return vis;
 }
@@ -258,7 +255,7 @@ _mesa_create_visual( GLboolean dbFlag,
  *
  * \sa _mesa_create_visual() above for the parameter description.
  */
-GLboolean
+void
 _mesa_initialize_visual( struct gl_config *vis,
                          GLboolean dbFlag,
                          GLboolean stereoFlag,
@@ -276,17 +273,6 @@ _mesa_initialize_visual( struct gl_config *vis,
 {
    assert(vis);
 
-   if (depthBits < 0 || depthBits > 32) {
-      return GL_FALSE;
-   }
-   if (stencilBits < 0 || stencilBits > 8) {
-      return GL_FALSE;
-   }
-   assert(accumRedBits >= 0);
-   assert(accumGreenBits >= 0);
-   assert(accumBlueBits >= 0);
-   assert(accumAlphaBits >= 0);
-
    vis->doubleBufferMode = dbFlag;
    vis->stereoMode       = stereoFlag;
 
@@ -294,7 +280,7 @@ _mesa_initialize_visual( struct gl_config *vis,
    vis->greenBits        = greenBits;
    vis->blueBits         = blueBits;
    vis->alphaBits        = alphaBits;
-   vis->rgbBits          = redBits + greenBits + blueBits;
+   vis->rgbBits          = redBits + greenBits + blueBits + alphaBits;
 
    vis->depthBits      = depthBits;
    vis->stencilBits    = stencilBits;
@@ -304,12 +290,7 @@ _mesa_initialize_visual( struct gl_config *vis,
    vis->accumBlueBits  = accumBlueBits;
    vis->accumAlphaBits = accumAlphaBits;
 
-   vis->numAuxBuffers = 0;
-   vis->level = 0;
-   vis->sampleBuffers = numSamples > 0 ? 1 : 0;
    vis->samples = numSamples;
-
-   return GL_TRUE;
 }
 
 
@@ -340,14 +321,6 @@ _mesa_destroy_visual( struct gl_config *vis )
 
 
 /**
- * One-time initialization mutex lock.
- *
- * \sa Used by one_time_init().
- */
-mtx_t OneTimeLock = _MTX_INITIALIZER_NP;
-
-
-/**
  * Calls all the various one-time-fini functions in Mesa
  */
 
@@ -359,6 +332,56 @@ one_time_fini(void)
 }
 
 /**
+ * Calls all the various one-time-init functions in Mesa
+ */
+
+static void
+one_time_init(void)
+{
+   GLuint i;
+
+   STATIC_ASSERT(sizeof(GLbyte) == 1);
+   STATIC_ASSERT(sizeof(GLubyte) == 1);
+   STATIC_ASSERT(sizeof(GLshort) == 2);
+   STATIC_ASSERT(sizeof(GLushort) == 2);
+   STATIC_ASSERT(sizeof(GLint) == 4);
+   STATIC_ASSERT(sizeof(GLuint) == 4);
+
+   _mesa_locale_init();
+
+   _mesa_one_time_init_extension_overrides();
+
+   _mesa_get_cpu_features();
+
+   for (i = 0; i < 256; i++) {
+      _mesa_ubyte_to_float_color_tab[i] = (float) i / 255.0F;
+   }
+
+   atexit(one_time_fini);
+
+#if defined(DEBUG)
+   if (MESA_VERBOSE != 0) {
+      _mesa_debug(NULL, "Mesa " PACKAGE_VERSION " DEBUG build" MESA_GIT_SHA1 "\n");
+   }
+#endif
+
+   /* Take a glsl type reference for the duration of libGL's life to avoid
+    * unecessary creation/destruction of glsl types.
+    */
+   glsl_type_singleton_init_or_ref();
+
+   _mesa_init_remap_table();
+}
+
+/**
+ * One-time initialization flag
+ *
+ * \sa Used by _mesa_initialize().
+ */
+static once_flag init_once = ONCE_FLAG_INIT;
+
+
+/**
  * Calls all the various one-time-init functions in Mesa.
  *
  * While holding a global mutex lock, calls several initialization functions,
@@ -367,56 +390,10 @@ one_time_fini(void)
  *
  * \sa _math_init().
  */
-static void
-one_time_init( struct gl_context *ctx )
+void
+_mesa_initialize(void)
 {
-   static GLbitfield api_init_mask = 0x0;
-
-   mtx_lock(&OneTimeLock);
-
-   /* truly one-time init */
-   if (!api_init_mask) {
-      GLuint i;
-
-      STATIC_ASSERT(sizeof(GLbyte) == 1);
-      STATIC_ASSERT(sizeof(GLubyte) == 1);
-      STATIC_ASSERT(sizeof(GLshort) == 2);
-      STATIC_ASSERT(sizeof(GLushort) == 2);
-      STATIC_ASSERT(sizeof(GLint) == 4);
-      STATIC_ASSERT(sizeof(GLuint) == 4);
-
-      _mesa_locale_init();
-
-      _mesa_one_time_init_extension_overrides(ctx);
-
-      _mesa_get_cpu_features();
-
-      for (i = 0; i < 256; i++) {
-         _mesa_ubyte_to_float_color_tab[i] = (float) i / 255.0F;
-      }
-
-      atexit(one_time_fini);
-
-#if defined(DEBUG)
-      if (MESA_VERBOSE != 0) {
-         _mesa_debug(ctx, "Mesa " PACKAGE_VERSION " DEBUG build" MESA_GIT_SHA1 "\n");
-      }
-#endif
-
-      /* Take a glsl type reference for the duration of libGL's life to avoid
-       * unecessary creation/destruction of glsl types.
-       */
-      glsl_type_singleton_init_or_ref();
-   }
-
-   /* per-API one-time init */
-   if (!(api_init_mask & (1 << ctx->API))) {
-      _mesa_init_remap_table();
-   }
-
-   api_init_mask |= 1 << ctx->API;
-
-   mtx_unlock(&OneTimeLock);
+   call_once(&init_once, one_time_init);
 }
 
 
@@ -555,8 +532,8 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
    /* Constants, may be overriden (usually only reduced) by device drivers */
    consts->MaxTextureMbytes = MAX_TEXTURE_MBYTES;
    consts->MaxTextureSize = 1 << (MAX_TEXTURE_LEVELS - 1);
-   consts->Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
-   consts->MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
+   consts->Max3DTextureLevels = MAX_TEXTURE_LEVELS;
+   consts->MaxCubeTextureLevels = MAX_TEXTURE_LEVELS;
    consts->MaxTextureRectSize = MAX_TEXTURE_RECT_SIZE;
    consts->MaxArrayTextureLayers = MAX_ARRAY_TEXTURE_LAYERS;
    consts->MaxTextureCoordUnits = MAX_TEXTURE_COORD_UNITS;
@@ -754,6 +731,8 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
    consts->ConservativeRasterDilateRange[0] = 0.0;
    consts->ConservativeRasterDilateRange[1] = 0.0;
    consts->ConservativeRasterDilateGranularity = 0.0;
+
+   consts->glBeginEndBufferSize = 512 * 1024;
 }
 
 
@@ -795,13 +774,9 @@ check_context_limits(struct gl_context *ctx)
 
    /* Texture size checks */
    assert(ctx->Const.MaxTextureSize <= (1 << (MAX_TEXTURE_LEVELS - 1)));
-   assert(ctx->Const.Max3DTextureLevels <= MAX_3D_TEXTURE_LEVELS);
-   assert(ctx->Const.MaxCubeTextureLevels <= MAX_CUBE_TEXTURE_LEVELS);
+   assert(ctx->Const.Max3DTextureLevels <= MAX_TEXTURE_LEVELS);
+   assert(ctx->Const.MaxCubeTextureLevels <= MAX_TEXTURE_LEVELS);
    assert(ctx->Const.MaxTextureRectSize <= MAX_TEXTURE_RECT_SIZE);
-
-   /* Texture level checks */
-   assert(MAX_TEXTURE_LEVELS >= MAX_3D_TEXTURE_LEVELS);
-   assert(MAX_TEXTURE_LEVELS >= MAX_CUBE_TEXTURE_LEVELS);
 
    /* Max texture size should be <= max viewport size (render to texture) */
    assert(ctx->Const.MaxTextureSize <= ctx->Const.MaxViewportWidth);
@@ -848,7 +823,6 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_debug_output( ctx );
    _mesa_init_display_list( ctx );
    _mesa_init_eval( ctx );
-   _mesa_init_fbobjects( ctx );
    _mesa_init_feedback( ctx );
    _mesa_init_fog( ctx );
    _mesa_init_hint( ctx );
@@ -887,7 +861,8 @@ init_attrib_groups(struct gl_context *ctx)
    ctx->NewDriverState = ~0;
    ctx->ErrorValue = GL_NO_ERROR;
    ctx->ShareGroupReset = false;
-   ctx->varying_vp_inputs = VERT_BIT_ALL;
+   ctx->VertexProgram._VaryingInputs = VERT_BIT_ALL;
+   ctx->IntelBlackholeRender = env_var_as_boolean("INTEL_BLACKHOLE_DEFAULT", false);
 
    return GL_TRUE;
 }
@@ -1085,7 +1060,7 @@ _mesa_alloc_dispatch_table(void)
  *      OPERATION."
  *
  * The table entries for specifying vertex attributes are set up by
- * install_vtxfmt() and _mesa_loopback_init_api_table(), and End() and dlists
+ * install_vtxfmt(), and End() and dlists
  * are set by install_vtxfmt() as well.
  */
 static struct _glapi_table *
@@ -1130,8 +1105,6 @@ create_beginend_table(const struct gl_context *ctx)
    COPY_DISPATCH(MapBufferRange);
    COPY_DISPATCH(ObjectPurgeableAPPLE);
    COPY_DISPATCH(ObjectUnpurgeableAPPLE);
-
-   _mesa_loopback_init_api_table(ctx, table);
 
    return table;
 }
@@ -1204,7 +1177,7 @@ _mesa_initialize_context(struct gl_context *ctx,
    _mesa_override_gl_version(ctx);
 
    /* misc one-time initializations */
-   one_time_init(ctx);
+   _mesa_initialize();
 
    /* Plug in driver functions and context pointer here.
     * This is important because when we call alloc_shared_state() below
@@ -1254,6 +1227,7 @@ _mesa_initialize_context(struct gl_context *ctx,
    if (ctx->VertexProgram._MaintainTnlProgram) {
       /* this is required... */
       ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
+      _mesa_reset_vertex_processing_mode(ctx);
    }
 
    /* Mesa core handles all the formats that mesa core knows about.
@@ -1271,7 +1245,7 @@ _mesa_initialize_context(struct gl_context *ctx,
       if (!ctx->BeginEnd || !ctx->Save)
          goto fail;
 
-      /* fall-through */
+      FALLTHROUGH;
    case API_OPENGL_CORE:
       break;
    case API_OPENGLES:
@@ -1294,10 +1268,12 @@ _mesa_initialize_context(struct gl_context *ctx,
    case API_OPENGLES2:
       ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
       ctx->VertexProgram._MaintainTnlProgram = GL_TRUE;
+      _mesa_reset_vertex_processing_mode(ctx);
       break;
    }
 
    ctx->FirstTimeCurrent = GL_TRUE;
+   ctx->_PrimitiveIDIsUnused = true;
 
    return GL_TRUE;
 
@@ -1318,7 +1294,7 @@ fail:
  * \sa _mesa_initialize_context() and init_attrib_groups().
  */
 void
-_mesa_free_context_data(struct gl_context *ctx)
+_mesa_free_context_data(struct gl_context *ctx, bool destroy_debug_output)
 {
    if (!_mesa_get_current_context()){
       /* No current context, but we may need one in order to delete
@@ -1353,7 +1329,6 @@ _mesa_free_context_data(struct gl_context *ctx)
    _mesa_reference_vao(ctx, &ctx->Array._DrawVAO, NULL);
 
    _mesa_free_attrib_data(ctx);
-   _mesa_free_buffer_objects(ctx);
    _mesa_free_eval_data( ctx );
    _mesa_free_texture_data( ctx );
    _mesa_free_image_textures(ctx);
@@ -1374,6 +1349,11 @@ _mesa_free_context_data(struct gl_context *ctx)
    _mesa_reference_buffer_object(ctx, &ctx->DefaultPacking.BufferObj, NULL);
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
 
+   /* This must be called after all buffers are unbound because global buffer
+    * references that this context holds will be removed.
+    */
+   _mesa_free_buffer_objects(ctx);
+
    /* free dispatch tables */
    free(ctx->BeginEnd);
    free(ctx->OutsideBeginEnd);
@@ -1384,10 +1364,8 @@ _mesa_free_context_data(struct gl_context *ctx)
    /* Shared context state (display lists, textures, etc) */
    _mesa_reference_shared_state(ctx, &ctx->Shared, NULL);
 
-   /* needs to be after freeing shared state */
-   _mesa_free_display_list_data(ctx);
-
-   _mesa_free_errors_data(ctx);
+   if (destroy_debug_output)
+      _mesa_destroy_debug_output(ctx);
 
    free((void *)ctx->Extensions.String);
 
@@ -1407,23 +1385,6 @@ _mesa_free_context_data(struct gl_context *ctx)
    }
 
    free(ctx->Const.SpirVExtensions);
-}
-
-
-/**
- * Destroy a struct gl_context structure.
- *
- * \param ctx GL context.
- *
- * Calls _mesa_free_context_data() and frees the gl_context object itself.
- */
-void
-_mesa_destroy_context( struct gl_context *ctx )
-{
-   if (ctx) {
-      _mesa_free_context_data(ctx);
-      free( (void *) ctx );
-   }
 }
 
 
@@ -1763,6 +1724,8 @@ _mesa_make_current( struct gl_context *newCtx,
              * changed since the last time this FBO was bound).
              */
             _mesa_update_draw_buffers(newCtx);
+            _mesa_update_allow_draw_out_of_order(newCtx);
+            _mesa_update_valid_to_render_state(newCtx);
          }
          if (!newCtx->ReadBuffer || _mesa_is_winsys_fbo(newCtx->ReadBuffer)) {
             _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);
@@ -1873,8 +1836,7 @@ _mesa_get_dispatch(struct gl_context *ctx)
 void
 _mesa_flush(struct gl_context *ctx)
 {
-   FLUSH_VERTICES( ctx, 0 );
-   FLUSH_CURRENT( ctx, 0 );
+   FLUSH_VERTICES(ctx, 0, 0);
    if (ctx->Driver.Flush) {
       ctx->Driver.Flush(ctx);
    }
@@ -1894,8 +1856,7 @@ _mesa_Finish(void)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   FLUSH_VERTICES(ctx, 0);
-   FLUSH_CURRENT(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (ctx->Driver.Finish) {
       ctx->Driver.Finish(ctx);

@@ -36,8 +36,8 @@ static char const *get_qual_name(int mode)
 }
 
 static void
-gen4_frag_prog_set_interp_modes(struct brw_wm_prog_data *prog_data,
-                                struct brw_vue_map *vue_map,
+gfx4_frag_prog_set_interp_modes(struct brw_wm_prog_data *prog_data,
+                                const struct brw_vue_map *vue_map,
                                 unsigned location, unsigned slot_count,
                                 enum glsl_interp_mode interp)
 {
@@ -57,7 +57,7 @@ gen4_frag_prog_set_interp_modes(struct brw_wm_prog_data *prog_data,
 
 /* Set up interpolation modes for every element in the VUE */
 void
-brw_setup_vue_interpolation(struct brw_vue_map *vue_map, nir_shader *nir,
+brw_setup_vue_interpolation(const struct brw_vue_map *vue_map, nir_shader *nir,
                             struct brw_wm_prog_data *prog_data)
 {
    /* Initialise interp_mode. INTERP_MODE_NONE == 0 */
@@ -75,21 +75,21 @@ brw_setup_vue_interpolation(struct brw_vue_map *vue_map, nir_shader *nir,
       prog_data->contains_noperspective_varying = true;
    }
 
-   foreach_list_typed(nir_variable, var, node, &nir->inputs) {
+   nir_foreach_shader_in_variable(var, nir) {
       unsigned location = var->data.location;
       unsigned slot_count = glsl_count_attribute_slots(var->type, false);
 
-      gen4_frag_prog_set_interp_modes(prog_data, vue_map, location, slot_count,
+      gfx4_frag_prog_set_interp_modes(prog_data, vue_map, location, slot_count,
                                       var->data.interpolation);
 
       if (location == VARYING_SLOT_COL0 || location == VARYING_SLOT_COL1) {
          location = location + VARYING_SLOT_BFC0 - VARYING_SLOT_COL0;
-         gen4_frag_prog_set_interp_modes(prog_data, vue_map, location,
+         gfx4_frag_prog_set_interp_modes(prog_data, vue_map, location,
                                          slot_count, var->data.interpolation);
       }
    }
 
-   bool debug = false;
+   const bool debug = false;
    if (debug) {
       fprintf(stderr, "VUE map:\n");
       for (int i = 0; i < vue_map->num_slots; i++) {

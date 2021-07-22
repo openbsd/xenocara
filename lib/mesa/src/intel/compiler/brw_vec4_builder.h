@@ -403,7 +403,6 @@ namespace brw {
       ALU3(BFI2)
       ALU1(BFREV)
       ALU1(CBIT)
-      ALU2(CMPN)
       ALU3(CSEL)
       ALU1(DIM)
       ALU2(DP2)
@@ -456,7 +455,7 @@ namespace brw {
           *
           * CMP null<d> src0<f> src1<f>
           *
-          * Original gen4 does type conversion to the destination type
+          * Original gfx4 does type conversion to the destination type
           * before comparison, producing garbage results for floating
           * point comparisons.
           *
@@ -471,7 +470,32 @@ namespace brw {
       }
 
       /**
-       * Gen4 predicated IF.
+       * CMPN: Behaves like CMP, but produces true if src1 is NaN.
+       */
+      instruction *
+      CMPN(const dst_reg &dst, const src_reg &src0, const src_reg &src1,
+          brw_conditional_mod condition) const
+      {
+         /* Take the instruction:
+          *
+          * CMPN null<d> src0<f> src1<f>
+          *
+          * Original gfx4 does type conversion to the destination type
+          * before comparison, producing garbage results for floating
+          * point comparisons.
+          *
+          * The destination type doesn't matter on newer generations,
+          * so we set the type to match src0 so we can compact the
+          * instruction.
+          */
+         return set_condmod(condition,
+                            emit(BRW_OPCODE_CMPN, retype(dst, src0.type),
+                                 fix_unsigned_negate(src0),
+                                 fix_unsigned_negate(src1)));
+      }
+
+      /**
+       * Gfx4 predicated IF.
        */
       instruction *
       IF(brw_predicate predicate) const
@@ -480,13 +504,13 @@ namespace brw {
       }
 
       /**
-       * Gen6 IF with embedded comparison.
+       * Gfx6 IF with embedded comparison.
        */
       instruction *
       IF(const src_reg &src0, const src_reg &src1,
          brw_conditional_mod condition) const
       {
-         assert(shader->devinfo->gen == 6);
+         assert(shader->devinfo->ver == 6);
          return set_condmod(condition,
                             emit(BRW_OPCODE_IF,
                                  null_reg_d(),
@@ -501,23 +525,11 @@ namespace brw {
       LRP(const dst_reg &dst, const src_reg &x, const src_reg &y,
           const src_reg &a) const
       {
-         if (shader->devinfo->gen >= 6 && shader->devinfo->gen <= 10) {
-            /* The LRP instruction actually does op1 * op0 + op2 * (1 - op0), so
-             * we need to reorder the operands.
-             */
-            return emit(BRW_OPCODE_LRP, dst, a, y, x);
-
-         } else {
-            /* We can't use the LRP instruction.  Emit x*(1-a) + y*a. */
-            const dst_reg y_times_a = vgrf(dst.type);
-            const dst_reg one_minus_a = vgrf(dst.type);
-            const dst_reg x_times_one_minus_a = vgrf(dst.type);
-
-            MUL(y_times_a, y, a);
-            ADD(one_minus_a, negate(a), brw_imm_f(1.0f));
-            MUL(x_times_one_minus_a, x, src_reg(one_minus_a));
-            return ADD(dst, src_reg(x_times_one_minus_a), src_reg(y_times_a));
-         }
+         /* The LRP instruction actually does op1 * op0 + op2 * (1 - op0), so
+          * we need to reorder the operands.
+          */
+         assert(shader->devinfo->ver >= 6 && shader->devinfo->ver <= 9);
+         return emit(BRW_OPCODE_LRP, dst, a, y, x);
       }
 
       backend_shader *shader;
@@ -575,18 +587,18 @@ namespace brw {
       src_reg
       fix_math_operand(const src_reg &src) const
       {
-         /* The gen6 math instruction ignores the source modifiers --
+         /* The gfx6 math instruction ignores the source modifiers --
           * swizzle, abs, negate, and at least some parts of the register
           * region description.
           *
           * Rather than trying to enumerate all these cases, *always* expand the
-          * operand to a temp GRF for gen6.
+          * operand to a temp GRF for gfx6.
           *
-          * For gen7, keep the operand as-is, except if immediate, which gen7 still
+          * For gfx7, keep the operand as-is, except if immediate, which gfx7 still
           * can't use.
           */
-         if (shader->devinfo->gen == 6 ||
-             (shader->devinfo->gen == 7 && src.file == IMM)) {
+         if (shader->devinfo->ver == 6 ||
+             (shader->devinfo->ver == 7 && src.file == IMM)) {
             const dst_reg tmp = vgrf(src.type);
             MOV(tmp, src);
             return src_reg(tmp);
@@ -601,13 +613,13 @@ namespace brw {
       instruction *
       fix_math_instruction(instruction *inst) const
       {
-         if (shader->devinfo->gen == 6 &&
+         if (shader->devinfo->ver == 6 &&
              inst->dst.writemask != WRITEMASK_XYZW) {
             const dst_reg tmp = vgrf(inst->dst.type);
             MOV(inst->dst, src_reg(tmp));
             inst->dst = tmp;
 
-         } else if (shader->devinfo->gen < 6) {
+         } else if (shader->devinfo->ver < 6) {
             const unsigned sources = (inst->src[1].file == BAD_FILE ? 1 : 2);
             inst->base_mrf = 1;
             inst->mlen = sources;

@@ -77,17 +77,15 @@
  * - stream_output_target_destroy
  * - transfer_map (only unsychronized buffer mappings)
  * - get_query_result (when threaded_query::flushed == true)
- *
- * Create calls causing a sync that can't be async due to driver limitations:
  * - create_stream_output_target
  *
  *
  * Transfer_map rules for buffer mappings
  * --------------------------------------
  *
- * 1) If transfer_map has PIPE_TRANSFER_UNSYNCHRONIZED, the call is made
+ * 1) If transfer_map has PIPE_MAP_UNSYNCHRONIZED, the call is made
  *    in the non-driver thread without flushing the queue. The driver will
- *    receive TC_TRANSFER_MAP_THREADED_UNSYNC in addition to PIPE_TRANSFER_-
+ *    receive TC_TRANSFER_MAP_THREADED_UNSYNC in addition to PIPE_MAP_-
  *    UNSYNCHRONIZED to indicate this.
  *    Note that transfer_unmap is always enqueued and called from the driver
  *    thread.
@@ -106,6 +104,9 @@
  *    TC_TRANSFER_MAP_NO_INVALIDATE into transfer_map and buffer_subdata to
  *    indicate this. Ignoring the flag will lead to failures.
  *    The threaded context uses its own buffer invalidation mechanism.
+ *
+ * 4) PIPE_MAP_ONCE can no longer be used to infer that a buffer will not be mapped
+ *    a second time before it is unmapped.
  *
  *
  * Rules for fences
@@ -181,17 +182,19 @@
 #ifndef U_THREADED_CONTEXT_H
 #define U_THREADED_CONTEXT_H
 
+#include "c11/threads.h"
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
 #include "util/u_inlines.h"
 #include "util/u_queue.h"
 #include "util/u_range.h"
+#include "util/u_thread.h"
 #include "util/slab.h"
 
 struct threaded_context;
 struct tc_unflushed_batch_token;
 
-/* These are transfer flags sent to drivers. */
+/* These are map flags sent to drivers. */
 /* Never infer whether it's safe to use unsychronized mappings: */
 #define TC_TRANSFER_MAP_NO_INFER_UNSYNCHRONIZED (1u << 29)
 /* Don't invalidate buffers: */
@@ -280,6 +283,14 @@ struct threaded_resource {
     * are too large for the visible VRAM window.
     */
    int max_forced_staging_uploads;
+
+   /* If positive, then a staging transfer is in progress.
+    */
+   int pending_staging_uploads;
+   /* If staging uploads are pending, this will hold the union of the mapped
+    * ranges.
+    */
+   struct util_range pending_staging_uploads_range;
 };
 
 struct threaded_transfer {
@@ -311,16 +322,10 @@ union tc_payload {
    struct pipe_transfer *transfer;
    struct pipe_fence_handle *fence;
    uint64_t handle;
+   bool boolean;
 };
 
-#ifdef _MSC_VER
-#define ALIGN16 __declspec(align(16))
-#else
-#define ALIGN16 __attribute__((aligned(16)))
-#endif
-
-/* Each call slot should be aligned to its own size for optimal cache usage. */
-struct ALIGN16 tc_call {
+struct tc_call {
    unsigned sentinel;
    ushort num_call_slots;
    ushort call_id;
@@ -338,7 +343,7 @@ struct tc_unflushed_batch_token {
 };
 
 struct tc_batch {
-   struct pipe_context *pipe;
+   struct threaded_context *tc;
    unsigned sentinel;
    unsigned num_total_call_slots;
    struct tc_unflushed_batch_token *token;
@@ -353,6 +358,7 @@ struct threaded_context {
    tc_replace_buffer_storage_func replace_buffer_storage;
    tc_create_fence_func create_fence;
    unsigned map_buffer_alignment;
+   unsigned ubo_alignment;
 
    struct list_head unflushed_queries;
 
@@ -361,8 +367,25 @@ struct threaded_context {
    unsigned num_direct_slots;
    unsigned num_syncs;
 
+   bool use_forced_staging_uploads;
+
+   /* Estimation of how much vram/gtt bytes are mmap'd in
+    * the current tc_batch.
+    */
+   uint64_t bytes_mapped_estimate;
+   uint64_t bytes_mapped_limit;
+
    struct util_queue queue;
    struct util_queue_fence *fence;
+
+#ifndef NDEBUG
+   /**
+    * The driver thread is normally the queue thread, but
+    * there are cases where the queue is flushed directly
+    * from the frontend thread
+    */
+   thread_id driver_thread;
+#endif
 
    unsigned last, next;
    struct tc_batch batch_slots[TC_MAX_BATCHES];
@@ -383,6 +406,12 @@ void
 threaded_context_flush(struct pipe_context *_pipe,
                        struct tc_unflushed_batch_token *token,
                        bool prefer_async);
+
+void
+tc_draw_vbo(struct pipe_context *_pipe, const struct pipe_draw_info *info,
+            const struct pipe_draw_indirect_info *indirect,
+            const struct pipe_draw_start_count *draws,
+            unsigned num_draws);
 
 static inline struct threaded_context *
 threaded_context(struct pipe_context *pipe)
@@ -415,6 +444,22 @@ tc_unflushed_batch_token_reference(struct tc_unflushed_batch_token **dst,
    if (pipe_reference((struct pipe_reference *)*dst, (struct pipe_reference *)src))
       free(*dst);
    *dst = src;
+}
+
+/**
+ * Helper for !NDEBUG builds to assert that it is called from driver
+ * thread.  This is to help drivers ensure that various code-paths
+ * are not hit indirectly from pipe entry points that are called from
+ * front-end/state-tracker thread.
+ */
+static inline void
+tc_assert_driver_thread(struct threaded_context *tc)
+{
+   if (!tc)
+      return;
+#ifndef NDEBUG
+   assert(util_thread_id_equal(tc->driver_thread, util_get_thread_id()));
+#endif
 }
 
 #endif

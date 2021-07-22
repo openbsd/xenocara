@@ -31,6 +31,8 @@
 #include "brw_shader.h"
 #include "brw_ir_fs.h"
 #include "brw_fs_builder.h"
+#include "brw_fs_live_variables.h"
+#include "brw_ir_performance.h"
 #include "compiler/nir/nir.h"
 
 struct bblock_t;
@@ -38,8 +40,34 @@ namespace {
    struct acp_entry;
 }
 
+class fs_visitor;
+
 namespace brw {
-   class fs_live_variables;
+   /**
+    * Register pressure analysis of a shader.  Estimates how many registers
+    * are live at any point of the program in GRF units.
+    */
+   struct register_pressure {
+      register_pressure(const fs_visitor *v);
+      ~register_pressure();
+
+      analysis_dependency_class
+      dependency_class() const
+      {
+         return (DEPENDENCY_INSTRUCTION_IDENTITY |
+                 DEPENDENCY_INSTRUCTION_DATA_FLOW |
+                 DEPENDENCY_VARIABLES);
+      }
+
+      bool
+      validate(const fs_visitor *) const
+      {
+         /* FINISHME */
+         return true;
+      }
+
+      unsigned *regs_live_at_ip;
+   };
 }
 
 struct brw_gs_compile;
@@ -72,13 +100,14 @@ public:
               const nir_shader *shader,
               unsigned dispatch_width,
               int shader_time_index,
-              const struct brw_vue_map *input_vue_map = NULL);
+              bool debug_enabled);
    fs_visitor(const struct brw_compiler *compiler, void *log_data,
               void *mem_ctx,
               struct brw_gs_compile *gs_compile,
               struct brw_gs_prog_data *prog_data,
               const nir_shader *shader,
-              int shader_time_index);
+              int shader_time_index,
+              bool debug_enabled);
    void init();
    ~fs_visitor();
 
@@ -89,7 +118,8 @@ public:
                                    const fs_reg &dst,
                                    const fs_reg &surf_index,
                                    const fs_reg &varying_offset,
-                                   uint32_t const_offset);
+                                   uint32_t const_offset,
+                                   uint8_t alignment);
    void DEP_RESOLVE_MOV(const brw::fs_builder &bld, int grf);
 
    bool run_fs(bool allow_spilling, bool do_rep_send);
@@ -97,11 +127,12 @@ public:
    bool run_tcs();
    bool run_tes();
    bool run_gs();
-   bool run_cs(unsigned min_dispatch_width);
+   bool run_cs(bool allow_spilling);
+   bool run_bs(bool allow_spilling);
    void optimize();
-   void allocate_registers(unsigned min_dispatch_width, bool allow_spilling);
-   void setup_fs_payload_gen4();
-   void setup_fs_payload_gen6();
+   void allocate_registers(bool allow_spilling);
+   void setup_fs_payload_gfx4();
+   void setup_fs_payload_gfx6();
    void setup_vs_payload();
    void setup_gs_payload();
    void setup_cs_payload();
@@ -118,21 +149,20 @@ public:
    bool assign_regs(bool allow_spilling, bool spill_all);
    void assign_regs_trivial();
    void calculate_payload_ranges(int payload_node_count,
-                                 int *payload_last_use_ip);
+                                 int *payload_last_use_ip) const;
    void split_virtual_grfs();
    bool compact_virtual_grfs();
    void assign_constant_locations();
    bool get_pull_locs(const fs_reg &src, unsigned *out_surf_index,
                       unsigned *out_pull_index);
    void lower_constant_loads();
-   void invalidate_live_intervals();
-   void calculate_live_intervals();
-   void calculate_register_pressure();
+   virtual void invalidate_analysis(brw::analysis_dependency_class c);
    void validate();
    bool opt_algebraic();
-   bool opt_redundant_discard_jumps();
+   bool opt_redundant_halt();
    bool opt_cse();
-   bool opt_cse_local(bblock_t *block, int &ip);
+   bool opt_cse_local(const brw::fs_live_variables &live, bblock_t *block, int &ip);
+
    bool opt_copy_propagation();
    bool try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry);
    bool try_constant_propagate(fs_inst *inst, acp_entry *entry);
@@ -141,7 +171,6 @@ public:
    bool opt_drop_redundant_mov_to_flags();
    bool opt_register_renaming();
    bool opt_bank_conflicts();
-   unsigned bank_conflict_cycles(const fs_inst *inst) const;
    bool register_coalesce();
    bool compute_to_mrf();
    bool eliminate_find_live_channel();
@@ -149,13 +178,11 @@ public:
    bool remove_duplicate_mrf_writes();
    bool remove_extra_rounding_modes();
 
-   bool opt_sampler_eot();
-   bool virtual_grf_interferes(int a, int b);
    void schedule_instructions(instruction_scheduler_mode mode);
-   void insert_gen4_send_dependency_workarounds();
-   void insert_gen4_pre_send_dependency_workarounds(bblock_t *block,
+   void insert_gfx4_send_dependency_workarounds();
+   void insert_gfx4_pre_send_dependency_workarounds(bblock_t *block,
                                                     fs_inst *inst);
-   void insert_gen4_post_send_dependency_workarounds(bblock_t *block,
+   void insert_gfx4_post_send_dependency_workarounds(bblock_t *block,
                                                      fs_inst *inst);
    void vfail(const char *msg, va_list args);
    void fail(const char *msg, ...);
@@ -180,15 +207,14 @@ public:
    fs_reg *emit_samplepos_setup();
    fs_reg *emit_sampleid_setup();
    fs_reg *emit_samplemaskin_setup();
-   void emit_interpolation_setup_gen4();
-   void emit_interpolation_setup_gen6();
+   void emit_interpolation_setup_gfx4();
+   void emit_interpolation_setup_gfx6();
    void compute_sample_position(fs_reg dst, fs_reg int_sample_pos);
    fs_reg emit_mcs_fetch(const fs_reg &coordinate, unsigned components,
                          const fs_reg &texture,
                          const fs_reg &texture_handle);
-   void emit_gen6_gather_wa(uint8_t wa, fs_reg dst);
+   void emit_gfx6_gather_wa(uint8_t wa, fs_reg dst);
    fs_reg resolve_source_modifiers(const fs_reg &src);
-   void emit_discard_jump();
    void emit_fsign(const class brw::fs_builder &, const nir_alu_instr *instr,
                    fs_reg result, fs_reg *op, unsigned fsign_src);
    void emit_shader_float_controls_execution_mode();
@@ -225,6 +251,8 @@ public:
    void nir_emit_fs_intrinsic(const brw::fs_builder &bld,
                               nir_intrinsic_instr *instr);
    void nir_emit_cs_intrinsic(const brw::fs_builder &bld,
+                              nir_intrinsic_instr *instr);
+   void nir_emit_bs_intrinsic(const brw::fs_builder &bld,
                               nir_intrinsic_instr *instr);
    fs_reg get_nir_image_intrinsic_image(const brw::fs_builder &bld,
                                         nir_intrinsic_instr *instr);
@@ -305,10 +333,10 @@ public:
 
    fs_reg interp_reg(int location, int channel);
 
-   virtual void dump_instructions();
-   virtual void dump_instructions(const char *name);
-   void dump_instruction(backend_instruction *inst);
-   void dump_instruction(backend_instruction *inst, FILE *file);
+   virtual void dump_instructions() const;
+   virtual void dump_instructions(const char *name) const;
+   void dump_instruction(const backend_instruction *inst) const;
+   void dump_instruction(const backend_instruction *inst, FILE *file) const;
 
    const brw_base_prog_key *const key;
    const struct brw_sampler_prog_key_data *key_tex;
@@ -317,13 +345,9 @@ public:
 
    struct brw_stage_prog_data *prog_data;
 
-   const struct brw_vue_map *input_vue_map;
-
-   int *virtual_grf_start;
-   int *virtual_grf_end;
-   brw::fs_live_variables *live_intervals;
-
-   int *regs_live_at_ip;
+   brw_analysis<brw::fs_live_variables, backend_shader> live_analysis;
+   brw_analysis<brw::register_pressure, fs_visitor> regpressure_analysis;
+   brw_analysis<brw::performance, fs_visitor> performance_analysis;
 
    /** Number of uniform variable components visited. */
    unsigned uniforms;
@@ -344,6 +368,7 @@ public:
    int *push_constant_loc;
 
    fs_reg subgroup_id;
+   fs_reg group_size[3];
    fs_reg scratch_base;
    fs_reg frag_depth;
    fs_reg frag_stencil;
@@ -351,7 +376,7 @@ public:
    fs_reg outputs[VARYING_SLOT_MAX];
    fs_reg dual_src_output;
    int first_non_payload_grf;
-   /** Either BRW_MAX_GRF or GEN7_MRF_HACK_START */
+   /** Either BRW_MAX_GRF or GFX7_MRF_HACK_START */
    unsigned max_grf;
 
    fs_reg *nir_locals;
@@ -418,6 +443,19 @@ private:
 };
 
 /**
+ * Return the flag register used in fragment shaders to keep track of live
+ * samples.  On Gfx7+ we use f1.0-f1.1 to allow discard jumps in SIMD32
+ * dispatch mode, while earlier generations are constrained to f0.1, which
+ * limits the dispatch width to SIMD16 for fragment shaders that use discard.
+ */
+static inline unsigned
+sample_mask_flag_subreg(const fs_visitor *shader)
+{
+   assert(shader->stage == MESA_SHADER_FRAGMENT);
+   return shader->devinfo->ver >= 7 ? 2 : 1;
+}
+
+/**
  * The fragment shader code generator.
  *
  * Translates FS IR to actual i965 assembly code.
@@ -428,14 +466,16 @@ public:
    fs_generator(const struct brw_compiler *compiler, void *log_data,
                 void *mem_ctx,
                 struct brw_stage_prog_data *prog_data,
-                struct shader_stats shader_stats,
                 bool runtime_check_aads_emit,
                 gl_shader_stage stage);
    ~fs_generator();
 
    void enable_debug(const char *shader_name);
    int generate_code(const cfg_t *cfg, int dispatch_width,
+                     struct shader_stats shader_stats,
+                     const brw::performance &perf,
                      struct brw_compile_stats *stats);
+   void add_const_data(void *data, unsigned size);
    const unsigned *get_assembly();
 
 private:
@@ -470,15 +510,16 @@ private:
                      struct brw_reg dst, struct brw_reg src);
    void generate_scratch_write(fs_inst *inst, struct brw_reg src);
    void generate_scratch_read(fs_inst *inst, struct brw_reg dst);
-   void generate_scratch_read_gen7(fs_inst *inst, struct brw_reg dst);
+   void generate_scratch_read_gfx7(fs_inst *inst, struct brw_reg dst);
+   void generate_scratch_header(fs_inst *inst, struct brw_reg dst);
    void generate_uniform_pull_constant_load(fs_inst *inst, struct brw_reg dst,
                                             struct brw_reg index,
                                             struct brw_reg offset);
-   void generate_uniform_pull_constant_load_gen7(fs_inst *inst,
+   void generate_uniform_pull_constant_load_gfx7(fs_inst *inst,
                                                  struct brw_reg dst,
                                                  struct brw_reg surf_index,
                                                  struct brw_reg payload);
-   void generate_varying_pull_constant_load_gen4(fs_inst *inst,
+   void generate_varying_pull_constant_load_gfx4(fs_inst *inst,
                                                  struct brw_reg dst,
                                                  struct brw_reg index);
    void generate_mov_dispatch_to_flags(fs_inst *inst);
@@ -494,7 +535,7 @@ private:
                                struct brw_reg src0,
                                struct brw_reg src1);
 
-   void generate_discard_jump(fs_inst *inst);
+   void generate_halt(fs_inst *inst);
 
    void generate_pack_half_2x16_split(fs_inst *inst,
                                       struct brw_reg dst,
@@ -520,7 +561,7 @@ private:
                               struct brw_reg dst, struct brw_reg src,
                               unsigned swiz);
 
-   bool patch_discard_jumps_to_fb_writes();
+   bool patch_halt_jumps();
 
    const struct brw_compiler *compiler;
    void *log_data; /* Passed to compiler->*_log functions */
@@ -533,7 +574,6 @@ private:
    unsigned dispatch_width; /**< 8, 16 or 32 */
 
    exec_list discard_halt_patches;
-   struct shader_stats shader_stats;
    bool runtime_check_aads_emit;
    bool debug_flag;
    const char *shader_name;

@@ -94,14 +94,8 @@
 /** Max memory to allow for a single texture image (in megabytes) */
 #define MAX_TEXTURE_MBYTES 1024
 
-/** Number of 1D/2D texture mipmap levels */
+/** Number of texture mipmap levels */
 #define MAX_TEXTURE_LEVELS 15
-
-/** Number of 3D texture mipmap levels */
-#define MAX_3D_TEXTURE_LEVELS 15
-
-/** Number of cube texture mipmap levels - GL_ARB_texture_cube_map */
-#define MAX_CUBE_TEXTURE_LEVELS 15
 
 /** Maximum rectangular texture size - GL_NV_texture_rectangle */
 #define MAX_TEXTURE_RECT_SIZE 16384
@@ -110,13 +104,6 @@
  * Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array
  */
 #define MAX_ARRAY_TEXTURE_LAYERS 64
-
-/**
- * Max number of texture coordinate units.  This mainly just applies to
- * the fixed-function vertex code.  This will be difficult to raise above
- * eight because of various vertex attribute bitvectors.
- */
-#define MAX_TEXTURE_COORD_UNITS 8
 
 /**
  * Max number of texture image units.  Also determines number of texture
@@ -219,7 +206,6 @@
 
 /** For GL_ARB_vertex_shader */
 /*@{*/
-#define MAX_VERTEX_GENERIC_ATTRIBS 16
 /* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
 #define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_TEXTURE_IMAGE_UNITS * 6)
 /*@}*/

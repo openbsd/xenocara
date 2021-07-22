@@ -38,23 +38,21 @@
 #include <xf86drm.h>
 #include "drm-uapi/drm_fourcc.h"
 #include "util/hash_table.h"
+#include "util/u_thread.h"
 #include "util/xmlconfig.h"
 
 #include "vk_util.h"
+#include "vk_enum_to_str.h"
 #include "wsi_common_private.h"
 #include "wsi_common_x11.h"
 #include "wsi_common_queue.h"
-
-#define typed_memcpy(dest, src, count) ({ \
-   STATIC_ASSERT(sizeof(*src) == sizeof(*dest)); \
-   memcpy((dest), (src), (count) * sizeof(*(src))); \
-})
 
 struct wsi_x11_connection {
    bool has_dri3;
    bool has_dri3_modifiers;
    bool has_present;
    bool is_proprietary_x11;
+   bool is_xwayland;
 };
 
 struct wsi_x11 {
@@ -118,12 +116,58 @@ wsi_x11_check_dri3_compatible(const struct wsi_device *wsi_dev,
    return match;
 }
 
+static bool
+wsi_x11_detect_xwayland(xcb_connection_t *conn)
+{
+   xcb_randr_query_version_cookie_t ver_cookie =
+      xcb_randr_query_version_unchecked(conn, 1, 3);
+   xcb_randr_query_version_reply_t *ver_reply =
+      xcb_randr_query_version_reply(conn, ver_cookie, NULL);
+   bool has_randr_v1_3 = ver_reply && (ver_reply->major_version > 1 ||
+                                       ver_reply->minor_version >= 3);
+   free(ver_reply);
+
+   if (!has_randr_v1_3)
+      return false;
+
+   const xcb_setup_t *setup = xcb_get_setup(conn);
+   xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
+
+   xcb_randr_get_screen_resources_current_cookie_t gsr_cookie =
+      xcb_randr_get_screen_resources_current_unchecked(conn, iter.data->root);
+   xcb_randr_get_screen_resources_current_reply_t *gsr_reply =
+      xcb_randr_get_screen_resources_current_reply(conn, gsr_cookie, NULL);
+
+   if (!gsr_reply || gsr_reply->num_outputs == 0) {
+      free(gsr_reply);
+      return false;
+   }
+
+   xcb_randr_output_t *randr_outputs =
+      xcb_randr_get_screen_resources_current_outputs(gsr_reply);
+   xcb_randr_get_output_info_cookie_t goi_cookie =
+      xcb_randr_get_output_info(conn, randr_outputs[0], gsr_reply->config_timestamp);
+   free(gsr_reply);
+
+   xcb_randr_get_output_info_reply_t *goi_reply =
+      xcb_randr_get_output_info_reply(conn, goi_cookie, NULL);
+   if (!goi_reply) {
+      return false;
+   }
+
+   char *output_name = (char*)xcb_randr_get_output_info_name(goi_reply);
+   bool is_xwayland = output_name && strncmp(output_name, "XWAYLAND", 8) == 0;
+   free(goi_reply);
+
+   return is_xwayland;
+}
+
 static struct wsi_x11_connection *
 wsi_x11_connection_create(struct wsi_device *wsi_dev,
                           xcb_connection_t *conn)
 {
-   xcb_query_extension_cookie_t dri3_cookie, pres_cookie, amd_cookie, nv_cookie;
-   xcb_query_extension_reply_t *dri3_reply, *pres_reply, *amd_reply, *nv_reply;
+   xcb_query_extension_cookie_t dri3_cookie, pres_cookie, randr_cookie, amd_cookie, nv_cookie;
+   xcb_query_extension_reply_t *dri3_reply, *pres_reply, *randr_reply, *amd_reply, *nv_reply;
    bool has_dri3_v1_2 = false;
    bool has_present_v1_2 = false;
 
@@ -135,6 +179,7 @@ wsi_x11_connection_create(struct wsi_device *wsi_dev,
 
    dri3_cookie = xcb_query_extension(conn, 4, "DRI3");
    pres_cookie = xcb_query_extension(conn, 7, "Present");
+   randr_cookie = xcb_query_extension(conn, 5, "RANDR");
 
    /* We try to be nice to users and emit a warning if they try to use a
     * Vulkan application on a system without DRI3 enabled.  However, this ends
@@ -150,11 +195,13 @@ wsi_x11_connection_create(struct wsi_device *wsi_dev,
 
    dri3_reply = xcb_query_extension_reply(conn, dri3_cookie, NULL);
    pres_reply = xcb_query_extension_reply(conn, pres_cookie, NULL);
+   randr_reply = xcb_query_extension_reply(conn, randr_cookie, NULL);
    amd_reply = xcb_query_extension_reply(conn, amd_cookie, NULL);
    nv_reply = xcb_query_extension_reply(conn, nv_cookie, NULL);
    if (!dri3_reply || !pres_reply) {
       free(dri3_reply);
       free(pres_reply);
+      free(randr_reply);
       free(amd_reply);
       free(nv_reply);
       vk_free(&wsi_dev->instance_alloc, wsi_conn);
@@ -189,6 +236,11 @@ wsi_x11_connection_create(struct wsi_device *wsi_dev,
    }
 #endif
 
+   if (randr_reply && randr_reply->present != 0)
+      wsi_conn->is_xwayland = wsi_x11_detect_xwayland(conn);
+   else
+      wsi_conn->is_xwayland = false;
+
    wsi_conn->has_dri3_modifiers = has_dri3_v1_2 && has_present_v1_2;
    wsi_conn->is_proprietary_x11 = false;
    if (amd_reply && amd_reply->present)
@@ -198,6 +250,7 @@ wsi_x11_connection_create(struct wsi_device *wsi_dev,
 
    free(dri3_reply);
    free(pres_reply);
+   free(randr_reply);
    free(amd_reply);
    free(nv_reply);
 
@@ -269,6 +322,7 @@ static const VkPresentModeKHR present_modes[] = {
    VK_PRESENT_MODE_IMMEDIATE_KHR,
    VK_PRESENT_MODE_MAILBOX_KHR,
    VK_PRESENT_MODE_FIFO_KHR,
+   VK_PRESENT_MODE_FIFO_RELAXED_KHR,
 };
 
 static xcb_screen_t *
@@ -450,6 +504,33 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
    return VK_SUCCESS;
 }
 
+static uint32_t
+x11_get_min_image_count(struct wsi_device *wsi_device)
+{
+   if (wsi_device->x11.override_minImageCount)
+      return wsi_device->x11.override_minImageCount;
+
+   /* For IMMEDIATE and FIFO, most games work in a pipelined manner where the
+    * can produce frames at a rate of 1/MAX(CPU duration, GPU duration), but
+    * the render latency is CPU duration + GPU duration.
+    *
+    * This means that with scanout from pageflipping we need 3 frames to run
+    * full speed:
+    * 1) CPU rendering work
+    * 2) GPU rendering work
+    * 3) scanout
+    *
+    * Once we have a nonblocking acquire that returns a semaphore we can merge
+    * 1 and 3. Hence the ideal implementation needs only 2 images, but games
+    * cannot tellwe currently do not have an ideal implementation and that
+    * hence they need to allocate 3 images. So let us do it for them.
+    *
+    * This is a tradeoff as it uses more memory than needed for non-fullscreen
+    * and non-performance intensive applications.
+    */
+   return 3;
+}
+
 static VkResult
 x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                              struct wsi_device *wsi_device,
@@ -484,7 +565,7 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
        * to come back from the compositor.  In that case, we don't know the
        * size of the window so we just return valid "I don't know" stuff.
        */
-      caps->currentExtent = (VkExtent2D) { -1, -1 };
+      caps->currentExtent = (VkExtent2D) { UINT32_MAX, UINT32_MAX };
       caps->minImageExtent = (VkExtent2D) { 1, 1 };
       caps->maxImageExtent = (VkExtent2D) {
          wsi_device->maxImageDimension2D,
@@ -502,30 +583,9 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                                       VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    }
 
-   /* For IMMEDIATE and FIFO, most games work in a pipelined manner where the
-    * can produce frames at a rate of 1/MAX(CPU duration, GPU duration), but
-    * the render latency is CPU duration + GPU duration.
-    *
-    * This means that with scanout from pageflipping we need 3 frames to run
-    * full speed:
-    * 1) CPU rendering work
-    * 2) GPU rendering work
-    * 3) scanout
-    *
-    * Once we have a nonblocking acquire that returns a semaphore we can merge
-    * 1 and 3. Hence the ideal implementation needs only 2 images, but games
-    * cannot tellwe currently do not have an ideal implementation and that
-    * hence they need to allocate 3 images. So let us do it for them.
-    *
-    * This is a tradeoff as it uses more memory than needed for non-fullscreen
-    * and non-performance intensive applications.
-    */
-   caps->minImageCount = 3;
+   caps->minImageCount = x11_get_min_image_count(wsi_device);
    /* There is no real maximum */
    caps->maxImageCount = 0;
-
-   if (wsi_device->x11.override_minImageCount)
-      caps->minImageCount = wsi_device->x11.override_minImageCount;
 
    caps->supportedTransforms = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
    caps->currentTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -646,25 +706,6 @@ x11_surface_get_present_modes(VkIcdSurfaceBase *surface,
       VK_INCOMPLETE : VK_SUCCESS;
 }
 
-static bool
-x11_surface_is_local_to_gpu(struct wsi_device *wsi_dev,
-                            xcb_connection_t *conn)
-{
-   struct wsi_x11_connection *wsi_conn =
-      wsi_x11_get_connection(wsi_dev, conn);
-
-   if (!wsi_conn)
-      return false;
-
-   if (!wsi_x11_check_for_dri3(wsi_conn))
-      return false;
-
-   if (!wsi_x11_check_dri3_compatible(wsi_dev, conn))
-      return false;
-
-   return true;
-}
-
 static VkResult
 x11_surface_get_present_rectangles(VkIcdSurfaceBase *icd_surface,
                                    struct wsi_device *wsi_device,
@@ -675,30 +716,28 @@ x11_surface_get_present_rectangles(VkIcdSurfaceBase *icd_surface,
    xcb_window_t window = x11_surface_get_window(icd_surface);
    VK_OUTARRAY_MAKE(out, pRects, pRectCount);
 
-   if (x11_surface_is_local_to_gpu(wsi_device, conn)) {
-      vk_outarray_append(&out, rect) {
-         xcb_generic_error_t *err = NULL;
-         xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(conn, window);
-         xcb_get_geometry_reply_t *geom =
-            xcb_get_geometry_reply(conn, geom_cookie, &err);
-         free(err);
-         if (geom) {
-            *rect = (VkRect2D) {
-               .offset = { 0, 0 },
-               .extent = { geom->width, geom->height },
-            };
-         } else {
-            /* This can happen if the client didn't wait for the configure event
-             * to come back from the compositor.  In that case, we don't know the
-             * size of the window so we just return valid "I don't know" stuff.
-             */
-            *rect = (VkRect2D) {
-               .offset = { 0, 0 },
-               .extent = { -1, -1 },
-            };
-         }
-         free(geom);
+   vk_outarray_append(&out, rect) {
+      xcb_generic_error_t *err = NULL;
+      xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(conn, window);
+      xcb_get_geometry_reply_t *geom =
+         xcb_get_geometry_reply(conn, geom_cookie, &err);
+      free(err);
+      if (geom) {
+         *rect = (VkRect2D) {
+            .offset = { 0, 0 },
+            .extent = { geom->width, geom->height },
+         };
+      } else {
+         /* This can happen if the client didn't wait for the configure event
+          * to come back from the compositor.  In that case, we don't know the
+          * size of the window so we just return valid "I don't know" stuff.
+          */
+         *rect = (VkRect2D) {
+            .offset = { 0, 0 },
+            .extent = { UINT32_MAX, UINT32_MAX },
+         };
       }
+      free(geom);
    }
 
    return vk_outarray_status(&out);
@@ -766,6 +805,7 @@ struct x11_swapchain {
    uint64_t                                     send_sbc;
    uint64_t                                     last_present_msc;
    uint32_t                                     stamp;
+   int                                          sent_image_count;
 
    bool                                         has_present_queue;
    bool                                         has_acquire_queue;
@@ -777,7 +817,8 @@ struct x11_swapchain {
 
    struct x11_image                             images[0];
 };
-WSI_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, VkSwapchainKHR)
+VK_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, base.base, VkSwapchainKHR,
+                               VK_OBJECT_TYPE_SWAPCHAIN_KHR)
 
 /**
  * Update the swapchain status with the result of an operation, and return
@@ -789,7 +830,8 @@ WSI_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, VkSwapchainKHR)
  * this has not been seen, success will be returned.
  */
 static VkResult
-x11_swapchain_result(struct x11_swapchain *chain, VkResult result)
+_x11_swapchain_result(struct x11_swapchain *chain, VkResult result,
+                      const char *file, int line)
 {
    /* Prioritise returning existing errors for consistency. */
    if (chain->status < 0)
@@ -797,6 +839,10 @@ x11_swapchain_result(struct x11_swapchain *chain, VkResult result)
 
    /* If we have a new error, mark it as permanent on the chain and return. */
    if (result < 0) {
+#ifndef NDEBUG
+      fprintf(stderr, "%s:%d: Swapchain status changed to %s\n",
+              file, line, vk_Result_to_str(result));
+#endif
       chain->status = result;
       return result;
    }
@@ -809,6 +855,12 @@ x11_swapchain_result(struct x11_swapchain *chain, VkResult result)
     * and is always returned rather than success.
     */
    if (result == VK_SUBOPTIMAL_KHR) {
+#ifndef NDEBUG
+      if (chain->status != VK_SUBOPTIMAL_KHR) {
+         fprintf(stderr, "%s:%d: Swapchain status changed to %s\n",
+                 file, line, vk_Result_to_str(result));
+      }
+#endif
       chain->status = result;
       return result;
    }
@@ -816,6 +868,8 @@ x11_swapchain_result(struct x11_swapchain *chain, VkResult result)
    /* No changes, so return the last status. */
    return chain->status;
 }
+#define x11_swapchain_result(chain, result) \
+   _x11_swapchain_result(chain, result, __FILE__, __LINE__)
 
 static struct wsi_image *
 x11_get_wsi_image(struct wsi_swapchain *wsi_chain, uint32_t image_index)
@@ -848,6 +902,8 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
       for (unsigned i = 0; i < chain->base.image_count; i++) {
          if (chain->images[i].pixmap == idle->pixmap) {
             chain->images[i].busy = false;
+            chain->sent_image_count--;
+            assert(chain->sent_image_count >= 0);
             if (chain->has_acquire_queue)
                wsi_queue_push(&chain->acquire_queue, i);
             break;
@@ -993,8 +1049,8 @@ x11_acquire_next_image_from_queue(struct x11_swapchain *chain,
 }
 
 static VkResult
-x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
-                   uint32_t target_msc)
+x11_present_to_x11_dri3(struct x11_swapchain *chain, uint32_t image_index,
+                        uint64_t target_msc)
 {
    struct x11_image *image = &chain->images[image_index];
 
@@ -1005,7 +1061,15 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
    int64_t divisor = 0;
    int64_t remainder = 0;
 
-   if (chain->base.present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+   struct wsi_x11_connection *wsi_conn =
+      wsi_x11_get_connection((struct wsi_device*)chain->base.wsi, chain->conn);
+   if (!wsi_conn)
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   if (chain->base.present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR ||
+       (chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR &&
+        wsi_conn->is_xwayland) ||
+       chain->base.present_mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
       options |= XCB_PRESENT_OPTION_ASYNC;
 
 #ifdef HAVE_DRI3_MODIFIERS
@@ -1028,7 +1092,11 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
 
    xshmfence_reset(image->shm_fence);
 
+   ++chain->sent_image_count;
+   assert(chain->sent_image_count <= chain->base.image_count);
+
    ++chain->send_sbc;
+
    xcb_void_cookie_t cookie =
       xcb_present_pixmap(chain->conn,
                          chain->window,
@@ -1053,6 +1121,41 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
 }
 
 static VkResult
+x11_present_to_x11_sw(struct x11_swapchain *chain, uint32_t image_index,
+                      uint64_t target_msc)
+{
+   struct x11_image *image = &chain->images[image_index];
+
+   xcb_void_cookie_t cookie;
+   void *myptr;
+   chain->base.wsi->MapMemory(chain->base.device,
+                              image->base.memory,
+                              0, 0, 0, &myptr);
+
+   cookie = xcb_put_image(chain->conn, XCB_IMAGE_FORMAT_Z_PIXMAP,
+                          chain->window,
+                          chain->gc,
+			  image->base.row_pitches[0] / 4,
+                          chain->extent.height,
+                          0,0,0,24,
+                          image->base.row_pitches[0] * chain->extent.height,
+                          myptr);
+
+   chain->base.wsi->UnmapMemory(chain->base.device, image->base.memory);
+   xcb_discard_reply(chain->conn, cookie.sequence);
+   xcb_flush(chain->conn);
+   return x11_swapchain_result(chain, VK_SUCCESS);
+}
+static VkResult
+x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
+                   uint64_t target_msc)
+{
+   if (chain->base.wsi->sw)
+      return x11_present_to_x11_sw(chain, image_index, target_msc);
+   return x11_present_to_x11_dri3(chain, image_index, target_msc);
+}
+
+static VkResult
 x11_acquire_next_image(struct wsi_swapchain *anv_chain,
                        const VkAcquireNextImageInfoKHR *info,
                        uint32_t *image_index)
@@ -1064,6 +1167,10 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
    if (chain->status < 0)
       return chain->status;
 
+   if (chain->base.wsi->sw) {
+      *image_index = 0;
+      return VK_SUCCESS;
+   }
    if (chain->has_acquire_queue) {
       return x11_acquire_next_image_from_queue(chain, image_index, timeout);
    } else {
@@ -1095,15 +1202,18 @@ static void *
 x11_manage_fifo_queues(void *state)
 {
    struct x11_swapchain *chain = state;
+   struct wsi_x11_connection *wsi_conn =
+      wsi_x11_get_connection((struct wsi_device*)chain->base.wsi, chain->conn);
    VkResult result = VK_SUCCESS;
 
    assert(chain->has_present_queue);
+
+   u_thread_setname("WSI swapchain queue");
+
    while (chain->status >= 0) {
-      /* It should be safe to unconditionally block here.  Later in the loop
-       * we blocks until the previous present has landed on-screen.  At that
-       * point, we should have received IDLE_NOTIFY on all images presented
-       * before that point so the client should be able to acquire any image
-       * other than the currently presented one.
+      /* We can block here unconditionally because after an image was sent to
+       * the server (later on in this loop) we ensure at least one image is
+       * acquirable by the consumer or wait there on such an event.
        */
       uint32_t image_index = 0;
       result = wsi_queue_pull(&chain->present_queue, &image_index, INT64_MAX);
@@ -1117,7 +1227,9 @@ x11_manage_fifo_queues(void *state)
          return NULL;
       }
 
-      if (chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+      if (chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR ||
+          (chain->base.present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR &&
+           wsi_conn->is_xwayland)) {
          result = chain->base.wsi->WaitForFences(chain->base.device, 1,
                                         &chain->base.fences[image_index],
                                         true, UINT64_MAX);
@@ -1136,7 +1248,12 @@ x11_manage_fifo_queues(void *state)
          goto fail;
 
       if (chain->has_acquire_queue) {
-         while (chain->last_present_msc < target_msc) {
+         /* Wait for our presentation to occur and ensure we have at least one
+          * image that can be acquired by the client afterwards. This ensures we
+          * can pull on the present-queue on the next loop.
+          */
+         while (chain->last_present_msc < target_msc ||
+                chain->sent_image_count == chain->base.image_count) {
             xcb_generic_event_t *event =
                xcb_wait_for_special_event(chain->conn, chain->special_event);
             if (!event) {
@@ -1183,6 +1300,10 @@ x11_image_init(VkDevice device_h, struct x11_swapchain *chain,
    if (result < 0)
       return result;
 
+   if (chain->base.wsi->sw) {
+      image->busy = false;
+      return VK_SUCCESS;
+   }
    image->pixmap = xcb_generate_id(chain->conn);
 
 #ifdef HAVE_DRI3_MODIFIERS
@@ -1271,12 +1392,14 @@ x11_image_finish(struct x11_swapchain *chain,
 {
    xcb_void_cookie_t cookie;
 
-   cookie = xcb_sync_destroy_fence(chain->conn, image->sync_fence);
-   xcb_discard_reply(chain->conn, cookie.sequence);
-   xshmfence_unmap_shm(image->shm_fence);
+   if (!chain->base.wsi->sw) {
+      cookie = xcb_sync_destroy_fence(chain->conn, image->sync_fence);
+      xcb_discard_reply(chain->conn, cookie.sequence);
+      xshmfence_unmap_shm(image->shm_fence);
 
-   cookie = xcb_free_pixmap(chain->conn, image->pixmap);
-   xcb_discard_reply(chain->conn, cookie.sequence);
+      cookie = xcb_free_pixmap(chain->conn, image->pixmap);
+      xcb_discard_reply(chain->conn, cookie.sequence);
+   }
 
    wsi_destroy_image(&chain->base, &image->base);
 }
@@ -1434,17 +1557,21 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
 
    assert(pCreateInfo->sType == VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
 
-   unsigned num_images = pCreateInfo->minImageCount;
-   if (wsi_device->x11.strict_imageCount)
-      num_images = pCreateInfo->minImageCount;
-   else if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
-      num_images = MAX2(num_images, 5);
-
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
    struct wsi_x11_connection *wsi_conn =
       wsi_x11_get_connection(wsi_device, conn);
    if (!wsi_conn)
       return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   unsigned num_images = pCreateInfo->minImageCount;
+   if (wsi_device->x11.strict_imageCount)
+      num_images = pCreateInfo->minImageCount;
+   else if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR ||
+            (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR &&
+             wsi_conn->is_xwayland))
+      num_images = MAX2(num_images, 5);
+   else if (wsi_device->x11.ensure_minImageCount)
+      num_images = MAX2(num_images, x11_get_min_image_count(wsi_device));
 
    /* Check for whether or not we have a window up-front */
    xcb_window_t window = x11_surface_get_window(icd_surface);
@@ -1477,6 +1604,7 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->depth = bit_depth;
    chain->extent = pCreateInfo->imageExtent;
    chain->send_sbc = 0;
+   chain->sent_image_count = 0;
    chain->last_present_msc = 0;
    chain->has_acquire_queue = false;
    chain->has_present_queue = false;
@@ -1489,14 +1617,15 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
     * mode which provokes reallocation when anything changes, to make
     * sure we have the most optimal allocation.
     */
-   WSI_FROM_HANDLE(x11_swapchain, old_chain, pCreateInfo->oldSwapchain);
+   VK_FROM_HANDLE(x11_swapchain, old_chain, pCreateInfo->oldSwapchain);
    if (old_chain)
       chain->last_present_mode = old_chain->last_present_mode;
    else
       chain->last_present_mode = XCB_PRESENT_COMPLETE_MODE_COPY;
 
-   if (!wsi_x11_check_dri3_compatible(wsi_device, conn))
-       chain->base.use_prime_blit = true;
+   if (!wsi_device->sw)
+      if (!wsi_x11_check_dri3_compatible(wsi_device, conn))
+         chain->base.use_prime_blit = true;
 
    chain->event_id = xcb_generate_id(chain->conn);
    xcb_present_select_input(chain->conn, chain->event_id, chain->window,
@@ -1544,8 +1673,11 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
          goto fail_init_images;
    }
 
-   if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR ||
-       chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+   if ((chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR ||
+       chain->base.present_mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR ||
+       chain->base.present_mode == VK_PRESENT_MODE_MAILBOX_KHR ||
+        (chain->base.present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR &&
+         wsi_conn->is_xwayland)) && !chain->base.wsi->sw) {
       chain->has_present_queue = true;
 
       /* Initialize our queues.  We make them base.image_count + 1 because we will
@@ -1558,7 +1690,8 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
          goto fail_init_images;
       }
 
-      if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR) {
+      if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR ||
+          chain->base.present_mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR) {
          chain->has_acquire_queue = true;
 
          ret = wsi_queue_init(&chain->acquire_queue, chain->base.image_count + 1);
@@ -1658,6 +1791,11 @@ wsi_x11_init_wsi(struct wsi_device *wsi_device,
          wsi_device->x11.strict_imageCount =
             driQueryOptionb(dri_options, "vk_x11_strict_image_count");
       }
+      if (driCheckOption(dri_options, "vk_x11_ensure_min_image_count", DRI_BOOL)) {
+         wsi_device->x11.ensure_minImageCount =
+            driQueryOptionb(dri_options, "vk_x11_ensure_min_image_count");
+      }
+
    }
 
    wsi->base.get_support = x11_surface_get_support;

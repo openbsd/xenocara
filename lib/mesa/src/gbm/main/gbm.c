@@ -363,6 +363,26 @@ gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane)
    return bo->gbm->bo_get_handle(bo, plane);
 }
 
+/** Get a DMA-BUF file descriptor for the specified plane of the buffer object
+ *
+ * This function creates a DMA-BUF (also known as PRIME) file descriptor
+ * handle for the specified plane of the buffer object.  Each call to
+ * gbm_bo_get_fd_for_plane() returns a new file descriptor and the caller is
+ * responsible for closing the file descriptor.
+
+ * \param bo The buffer object
+ * \param plane The plane to get a DMA-BUF for
+ * \return Returns a file descriptor referring to the underlying buffer or -1
+ * if an error occurs.
+ *
+ * \sa gbm_bo_get_fd()
+ */
+GBM_EXPORT int
+gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane)
+{
+   return bo->gbm->bo_get_plane_fd(bo, plane);
+}
+
 /**
  * Get the chosen modifier for the buffer object
  *
@@ -533,6 +553,11 @@ gbm_bo_import(struct gbm_device *gbm,
  *
  * This function maps a region of a gbm bo for cpu read and/or write
  * access.
+ *
+ * The mapping exposes a linear view of the buffer object even if the buffer
+ * has a non-linear modifier.
+ *
+ * This function may require intermediate buffer copies (ie. it may be slow).
  *
  * \param bo The buffer object
  * \param x The X (top left origin) starting position of the mapped region for

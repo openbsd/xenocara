@@ -32,10 +32,12 @@
 typedef struct {
    nir_builder   b;
    nir_shader   *shader;
+   bool face_sysval;
    struct {
       nir_variable *front;        /* COLn */
       nir_variable *back;         /* BFCn */
    } colors[MAX_COLORS];
+   nir_variable *face;
    int colors_count;
 } lower_2side_state;
 
@@ -46,22 +48,37 @@ typedef struct {
  */
 
 static nir_variable *
-create_input(nir_shader *shader, unsigned drvloc, gl_varying_slot slot,
+create_input(nir_shader *shader, gl_varying_slot slot,
              enum glsl_interp_mode interpolation)
 {
-   nir_variable *var = rzalloc(shader, nir_variable);
+   nir_variable *var = nir_variable_create(shader, nir_var_shader_in,
+                                           glsl_vec4_type(), NULL);
 
-   var->data.driver_location = drvloc;
-   var->type = glsl_vec4_type();
-   var->data.mode = nir_var_shader_in;
-   var->name = ralloc_asprintf(var, "in_%d", drvloc);
+   var->data.driver_location = shader->num_inputs++;
+   var->name = ralloc_asprintf(var, "in_%d", var->data.driver_location);
    var->data.index = 0;
    var->data.location = slot;
    var->data.interpolation = interpolation;
 
-   exec_list_push_tail(&shader->inputs, &var->node);
+   return var;
+}
 
-   shader->num_inputs++;     /* TODO use type_size() */
+static nir_variable *
+create_face_input(nir_shader *shader)
+{
+   nir_variable *var =
+      nir_find_variable_with_location(shader, nir_var_shader_in,
+                                      VARYING_SLOT_FACE);
+
+   if (var == NULL) {
+      var = nir_variable_create(shader, nir_var_shader_in,
+                                glsl_bool_type(), "gl_FrontFacing");
+
+      var->data.driver_location = shader->num_inputs++;
+      var->data.index = 0;
+      var->data.location = VARYING_SLOT_FACE;
+      var->data.interpolation = INTERP_MODE_FLAT;
+   }
 
    return var;
 }
@@ -69,32 +86,15 @@ create_input(nir_shader *shader, unsigned drvloc, gl_varying_slot slot,
 static nir_ssa_def *
 load_input(nir_builder *b, nir_variable *in)
 {
-   nir_intrinsic_instr *load;
-
-   load = nir_intrinsic_instr_create(b->shader, nir_intrinsic_load_input);
-   load->num_components = 4;
-   nir_intrinsic_set_base(load, in->data.driver_location);
-   load->src[0] = nir_src_for_ssa(nir_imm_int(b, 0));
-   nir_ssa_dest_init(&load->instr, &load->dest, 4, 32, NULL);
-   nir_builder_instr_insert(b, &load->instr);
-
-   return &load->dest.ssa;
+   return nir_load_input(b, 4, 32, nir_imm_int(b, 0),
+                         .base = in->data.driver_location);
 }
 
 static int
 setup_inputs(lower_2side_state *state)
 {
-   int maxloc = -1;
-
    /* find color inputs: */
-   nir_foreach_variable(var, &state->shader->inputs) {
-      int loc = var->data.driver_location;
-
-      /* keep track of last used driver-location.. we'll be
-       * appending BCLr after last existing input:
-       */
-      maxloc = MAX2(maxloc, loc);
-
+   nir_foreach_shader_in_variable(var, state->shader) {
       switch (var->data.location) {
       case VARYING_SLOT_COL0:
       case VARYING_SLOT_COL1:
@@ -119,9 +119,12 @@ setup_inputs(lower_2side_state *state)
          slot = VARYING_SLOT_BFC1;
 
       state->colors[i].back = create_input(
-            state->shader, ++maxloc, slot,
+            state->shader, slot,
             state->colors[i].front->data.interpolation);
    }
+
+   if (!state->face_sysval)
+      state->face = create_face_input(state->shader);
 
    return 0;
 }
@@ -171,7 +174,12 @@ nir_lower_two_sided_color_block(nir_block *block,
       /* gl_FrontFace is a boolean but the intrinsic constructor creates
        * 32-bit value by default.
        */
-      nir_ssa_def *face = nir_load_front_face(b, 1);
+      nir_ssa_def *face;
+      if (state->face_sysval)
+         face = nir_load_front_face(b, 1);
+      else
+         face = nir_load_var(b, state->face);
+
       nir_ssa_def *front, *back;
       if (intr->intrinsic == nir_intrinsic_load_deref) {
          front = nir_load_var(b, state->colors[idx].front);
@@ -183,7 +191,7 @@ nir_lower_two_sided_color_block(nir_block *block,
       nir_ssa_def *color = nir_bcsel(b, face, front, back);
 
       assert(intr->dest.is_ssa);
-      nir_ssa_def_rewrite_uses(&intr->dest.ssa, nir_src_for_ssa(color));
+      nir_ssa_def_rewrite_uses(&intr->dest.ssa, color);
    }
 
    return true;
@@ -206,10 +214,11 @@ nir_lower_two_sided_color_impl(nir_function_impl *impl,
 }
 
 void
-nir_lower_two_sided_color(nir_shader *shader)
+nir_lower_two_sided_color(nir_shader *shader, bool face_sysval)
 {
    lower_2side_state state = {
       .shader = shader,
+      .face_sysval = face_sysval,
    };
 
    if (shader->info.stage != MESA_SHADER_FRAGMENT)

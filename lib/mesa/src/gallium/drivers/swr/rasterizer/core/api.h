@@ -97,13 +97,13 @@ struct SWR_RECT
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Function signature for load hot tiles
-/// @param hPrivateContext - handle to private data
+/// @param hDC - handle to DRAW_CONTEXT
 /// @param dstFormat - format of the hot tile
 /// @param renderTargetIndex - render target to store, can be color, depth or stencil
 /// @param x - destination x coordinate
 /// @param y - destination y coordinate
 /// @param pDstHotTile - pointer to the hot tile surface
-typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hPrivateContext,
+typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hDC,
                                      HANDLE                      hWorkerPrivateData,
                                      SWR_FORMAT                  dstFormat,
                                      SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
@@ -114,13 +114,13 @@ typedef void(SWR_API* PFN_LOAD_TILE)(HANDLE                      hPrivateContext
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Function signature for store hot tiles
-/// @param hPrivateContext - handle to private data
+/// @param hDC - handle to DRAW_CONTEXT
 /// @param srcFormat - format of the hot tile
 /// @param renderTargetIndex - render target to store, can be color, depth or stencil
 /// @param x - destination x coordinate
 /// @param y - destination y coordinate
 /// @param pSrcHotTile - pointer to the hot tile surface
-typedef void(SWR_API* PFN_STORE_TILE)(HANDLE                      hPrivateContext,
+typedef void(SWR_API* PFN_STORE_TILE)(HANDLE                      hDC,
                                       HANDLE                      hWorkerPrivateData,
                                       SWR_FORMAT                  srcFormat,
                                       SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
@@ -235,7 +235,7 @@ struct SWR_API_THREADING_INFO
 /// SWR_CONTEXT
 /// Forward Declaration (see context.h for full definition)
 /////////////////////////////////////////////////////////////////////////
-class SWR_CONTEXT;
+struct SWR_CONTEXT;
 
 //////////////////////////////////////////////////////////////////////////
 /// SWR_WORKER_PRIVATE_STATE
@@ -291,7 +291,7 @@ struct SWR_CREATECONTEXT_INFO
     // ArchRast event manager.
     HANDLE hArEventManager;
 
-    // handle to external memory for worker datas to create memory contexts
+    // handle to external memory for worker data to create memory contexts
     HANDLE hExternalMemory;
 
     // Input (optional): Threading info that overrides any set KNOB values.
@@ -610,7 +610,7 @@ SWR_FUNC(void,
 /// @note this enum needs to be kept in sync with HOTTILE_STATE!
 enum SWR_TILE_STATE
 {
-    SWR_TILE_INVALID = 0, // tile is in unitialized state and should be loaded with surface contents
+    SWR_TILE_INVALID = 0, // tile is in uninitialized state and should be loaded with surface contents
                           // before rendering
     SWR_TILE_DIRTY    = 2, // tile contains newer data than surface it represents
     SWR_TILE_RESOLVED = 3, // is in sync with surface it represents

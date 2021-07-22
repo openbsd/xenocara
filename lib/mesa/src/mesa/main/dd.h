@@ -34,6 +34,15 @@
 #include "glheader.h"
 #include "formats.h"
 #include "menums.h"
+#include "compiler/shader_enums.h"
+
+/* Windows winnt.h defines MemoryBarrier as a macro on some platforms,
+ * including as a function-like macro in some cases. That either causes
+ * the table entry below to have a weird name, or fail to compile.
+ */
+#ifdef MemoryBarrier
+#undef MemoryBarrier
+#endif
 
 struct gl_bitmap_atlas;
 struct gl_buffer_object;
@@ -55,6 +64,8 @@ struct ati_fragment_shader;
 struct util_queue_monitoring;
 struct _mesa_prim;
 struct _mesa_index_buffer;
+struct pipe_draw_info;
+struct pipe_draw_start_count;
 
 /* GL_ARB_vertex_buffer_object */
 /* Modifies GL_MAP_UNSYNCHRONIZED_BIT to allow driver to fail (return
@@ -69,6 +80,12 @@ struct _mesa_index_buffer;
  * respect the contents of already referenced data.
  */
 #define MESA_MAP_NOWAIT_BIT       0x4000
+
+/* Mapping a buffer is allowed from any thread. */
+#define MESA_MAP_THREAD_SAFE_BIT  0x8000
+
+/* This buffer will only be mapped/unmapped once */
+#define MESA_MAP_ONCE            0x10000
 
 
 /**
@@ -367,6 +384,12 @@ struct dd_function_table {
    void (*DeleteTexture)(struct gl_context *ctx,
                          struct gl_texture_object *texObj);
 
+   /**
+    * Called to notify that texture is removed from ctx->Shared->TexObjects
+    */
+   void (*TextureRemovedFromShared)(struct gl_context *ctx,
+                                   struct gl_texture_object *texObj);
+
    /** Called to allocate a new texture image object. */
    struct gl_texture_image * (*NewTextureImage)(struct gl_context *ctx);
 
@@ -450,7 +473,8 @@ struct dd_function_table {
     */
    /*@{*/
    /** Allocate a new program */
-   struct gl_program * (*NewProgram)(struct gl_context *ctx, GLenum target,
+   struct gl_program * (*NewProgram)(struct gl_context *ctx,
+                                     gl_shader_stage stage,
                                      GLuint id, bool is_arb_asm);
    /** Delete a program */
    void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
@@ -528,23 +552,58 @@ struct dd_function_table {
     * \param index_bounds_valid  are min_index and max_index valid?
     * \param min_index  lowest vertex index used
     * \param max_index  highest vertex index used
-    * \param tfb_vertcount  if non-null, indicates which transform feedback
-    *                       object has the vertex count.
-    * \param tfb_stream  If called via DrawTransformFeedbackStream, specifies
-    *                    the vertex stream buffer from which to get the vertex
-    *                    count.
-    * \param indirect  If any prims are indirect, this specifies the buffer
-    *                  to find the "DrawArrays/ElementsIndirectCommand" data.
-    *                  This may be deprecated in the future
+    * \param num_instances  instance count from ARB_draw_instanced
+    * \param base_instance  base instance from ARB_base_instance
     */
    void (*Draw)(struct gl_context *ctx,
-                const struct _mesa_prim *prims, GLuint nr_prims,
+                const struct _mesa_prim *prims, unsigned nr_prims,
                 const struct _mesa_index_buffer *ib,
-                GLboolean index_bounds_valid,
-                GLuint min_index, GLuint max_index,
-                struct gl_transform_feedback_object *tfb_vertcount,
-                unsigned tfb_stream, struct gl_buffer_object *indirect);
+                bool index_bounds_valid,
+                bool primitive_restart,
+                unsigned restart_index,
+                unsigned min_index, unsigned max_index,
+                unsigned num_instances, unsigned base_instance);
 
+   /**
+    * Optimal Gallium version of Draw() that doesn't require translation
+    * of draw info in the state tracker.
+    *
+    * The interface is identical to pipe_context::draw_vbo
+    * with indirect == NULL.
+    *
+    * "info" is not const and the following fields can be changed by
+    * the callee, so callers should be aware:
+    * - info->index_bounds_valid (if false)
+    * - info->min_index (if index_bounds_valid is false)
+    * - info->max_index (if index_bounds_valid is false)
+    * - info->drawid (if increment_draw_id is true)
+    * - info->index.gl_bo (if index_size && !has_user_indices)
+    */
+   void (*DrawGallium)(struct gl_context *ctx,
+                       struct pipe_draw_info *info,
+                       const struct pipe_draw_start_count *draws,
+                       unsigned num_draws);
+
+   /**
+    * Same as DrawGallium, but base_vertex and mode can also change between draws.
+    *
+    * If index_bias != NULL, index_bias changes for each draw.
+    * If mode != NULL, mode changes for each draw.
+    * At least one of them must be non-NULL.
+    *
+    * "info" is not const and the following fields can be changed by
+    * the callee in addition to the fields listed by DrawGallium:
+    * - info->mode (if mode != NULL)
+    * - info->index_bias (if index_bias != NULL)
+    *
+    * This function exists to decrease complexity of DrawGallium.
+    */
+   void (*DrawGalliumComplex)(struct gl_context *ctx,
+                              struct pipe_draw_info *info,
+                              const struct pipe_draw_start_count *draws,
+                              const unsigned char *mode,
+                              const int *base_vertex,
+                              unsigned num_draws);
 
    /**
     * Draw a primitive, getting the vertex count, instance count, start
@@ -569,7 +628,24 @@ struct dd_function_table {
                         unsigned stride,
                         struct gl_buffer_object *indirect_draw_count_buffer,
                         GLsizeiptr indirect_draw_count_offset,
-                        const struct _mesa_index_buffer *ib);
+                        const struct _mesa_index_buffer *ib,
+                        bool primitive_restart,
+                        unsigned restart_index);
+
+   /**
+    * Driver implementation of glDrawTransformFeedback.
+    *
+    * \param mode    Primitive type
+    * \param num_instances  instance count from ARB_draw_instanced
+    * \param stream  If called via DrawTransformFeedbackStream, specifies
+    *                the vertex stream buffer from which to get the vertex
+    *                count.
+    * \param tfb_vertcount  if non-null, indicates which transform feedback
+    *                       object has the vertex count.
+    */
+   void (*DrawTransformFeedback)(struct gl_context *ctx, GLenum mode,
+                                 unsigned num_instances, unsigned stream,
+                                 struct gl_transform_feedback_object *tfb_vertcount);
    /*@}*/
 
 
@@ -875,7 +951,7 @@ struct dd_function_table {
                          struct gl_perf_query_object *obj);
    bool (*IsPerfQueryReady)(struct gl_context *ctx,
                             struct gl_perf_query_object *obj);
-   void (*GetPerfQueryData)(struct gl_context *ctx,
+   bool (*GetPerfQueryData)(struct gl_context *ctx,
                             struct gl_perf_query_object *obj,
                             GLsizei dataSize,
                             GLuint *data,
@@ -1312,6 +1388,8 @@ struct dd_function_table {
    void (*SetMaxShaderCompilerThreads)(struct gl_context *ctx, unsigned count);
    bool (*GetShaderProgramCompletionStatus)(struct gl_context *ctx,
                                             struct gl_shader_program *shprog);
+
+   void (*PinDriverToL3Cache)(struct gl_context *ctx, unsigned L3_cache);
 };
 
 
@@ -1489,6 +1567,263 @@ typedef struct {
 
    void (GLAPIENTRYP VertexAttribL1ui64ARB)( GLuint index, GLuint64EXT x);
    void (GLAPIENTRYP VertexAttribL1ui64vARB)( GLuint index, const GLuint64EXT *v);
+
+   /* GL_NV_half_float */
+   void (GLAPIENTRYP Vertex2hNV)( GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Vertex2hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP Vertex3hNV)( GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Vertex3hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP Vertex4hNV)( GLhalfNV, GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Vertex4hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP Normal3hNV)( GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Normal3hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP Color3hNV)( GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Color3hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP Color4hNV)( GLhalfNV, GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP Color4hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP TexCoord1hNV)( GLhalfNV );
+   void (GLAPIENTRYP TexCoord1hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP TexCoord2hNV)( GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP TexCoord2hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP TexCoord3hNV)( GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP TexCoord3hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP TexCoord4hNV)( GLhalfNV, GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP TexCoord4hvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP MultiTexCoord1hNV)( GLenum, GLhalfNV );
+   void (GLAPIENTRYP MultiTexCoord1hvNV)( GLenum, const GLhalfNV * );
+   void (GLAPIENTRYP MultiTexCoord2hNV)( GLenum, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP MultiTexCoord2hvNV)( GLenum, const GLhalfNV * );
+   void (GLAPIENTRYP MultiTexCoord3hNV)( GLenum, GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP MultiTexCoord3hvNV)( GLenum, const GLhalfNV * );
+   void (GLAPIENTRYP MultiTexCoord4hNV)( GLenum, GLhalfNV, GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP MultiTexCoord4hvNV)( GLenum, const GLhalfNV * );
+   void (GLAPIENTRYP VertexAttrib1hNV)( GLuint index, GLhalfNV x );
+   void (GLAPIENTRYP VertexAttrib1hvNV)( GLuint index, const GLhalfNV *v );
+   void (GLAPIENTRYP VertexAttrib2hNV)( GLuint index, GLhalfNV x, GLhalfNV y );
+   void (GLAPIENTRYP VertexAttrib2hvNV)( GLuint index, const GLhalfNV *v );
+   void (GLAPIENTRYP VertexAttrib3hNV)( GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z );
+   void (GLAPIENTRYP VertexAttrib3hvNV)( GLuint index, const GLhalfNV *v );
+   void (GLAPIENTRYP VertexAttrib4hNV)( GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w );
+   void (GLAPIENTRYP VertexAttrib4hvNV)( GLuint index, const GLhalfNV *v );
+   void (GLAPIENTRYP VertexAttribs1hvNV)(GLuint index, GLsizei n, const GLhalfNV *v);
+   void (GLAPIENTRYP VertexAttribs2hvNV)(GLuint index, GLsizei n, const GLhalfNV *v);
+   void (GLAPIENTRYP VertexAttribs3hvNV)(GLuint index, GLsizei n, const GLhalfNV *v);
+   void (GLAPIENTRYP VertexAttribs4hvNV)(GLuint index, GLsizei n, const GLhalfNV *v);
+   void (GLAPIENTRYP FogCoordhNV)( GLhalfNV );
+   void (GLAPIENTRYP FogCoordhvNV)( const GLhalfNV * );
+   void (GLAPIENTRYP SecondaryColor3hNV)( GLhalfNV, GLhalfNV, GLhalfNV );
+   void (GLAPIENTRYP SecondaryColor3hvNV)( const GLhalfNV * );
+
+   void (GLAPIENTRYP Color3b)( GLbyte red, GLbyte green, GLbyte blue );
+   void (GLAPIENTRYP Color3d)( GLdouble red, GLdouble green, GLdouble blue );
+   void (GLAPIENTRYP Color3i)( GLint red, GLint green, GLint blue );
+   void (GLAPIENTRYP Color3s)( GLshort red, GLshort green, GLshort blue );
+   void (GLAPIENTRYP Color3ui)( GLuint red, GLuint green, GLuint blue );
+   void (GLAPIENTRYP Color3us)( GLushort red, GLushort green, GLushort blue );
+   void (GLAPIENTRYP Color3ub)( GLubyte red, GLubyte green, GLubyte blue );
+   void (GLAPIENTRYP Color3bv)( const GLbyte *v );
+   void (GLAPIENTRYP Color3dv)( const GLdouble *v );
+   void (GLAPIENTRYP Color3iv)( const GLint *v );
+   void (GLAPIENTRYP Color3sv)( const GLshort *v );
+   void (GLAPIENTRYP Color3uiv)( const GLuint *v );
+   void (GLAPIENTRYP Color3usv)( const GLushort *v );
+   void (GLAPIENTRYP Color3ubv)( const GLubyte *v );
+   void (GLAPIENTRYP Color4b)( GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha );
+   void (GLAPIENTRYP Color4d)( GLdouble red, GLdouble green, GLdouble blue,
+                       GLdouble alpha );
+   void (GLAPIENTRYP Color4i)( GLint red, GLint green, GLint blue, GLint alpha );
+   void (GLAPIENTRYP Color4s)( GLshort red, GLshort green, GLshort blue,
+                       GLshort alpha );
+   void (GLAPIENTRYP Color4ui)( GLuint red, GLuint green, GLuint blue, GLuint alpha );
+   void (GLAPIENTRYP Color4us)( GLushort red, GLushort green, GLushort blue,
+                        GLushort alpha );
+   void (GLAPIENTRYP Color4ub)( GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha );
+   void (GLAPIENTRYP Color4iv)( const GLint *v );
+   void (GLAPIENTRYP Color4bv)( const GLbyte *v );
+   void (GLAPIENTRYP Color4dv)( const GLdouble *v );
+   void (GLAPIENTRYP Color4sv)( const GLshort *v);
+   void (GLAPIENTRYP Color4uiv)( const GLuint *v);
+   void (GLAPIENTRYP Color4usv)( const GLushort *v);
+   void (GLAPIENTRYP Color4ubv)( const GLubyte *v);
+   void (GLAPIENTRYP FogCoordd)( GLdouble d );
+   void (GLAPIENTRYP FogCoorddv)( const GLdouble *v );
+   void (GLAPIENTRYP Indexd)( GLdouble c );
+   void (GLAPIENTRYP Indexi)( GLint c );
+   void (GLAPIENTRYP Indexs)( GLshort c );
+   void (GLAPIENTRYP Indexub)( GLubyte c );
+   void (GLAPIENTRYP Indexdv)( const GLdouble *c );
+   void (GLAPIENTRYP Indexiv)( const GLint *c );
+   void (GLAPIENTRYP Indexsv)( const GLshort *c );
+   void (GLAPIENTRYP Indexubv)( const GLubyte *c );
+   void (GLAPIENTRYP EdgeFlagv)(const GLboolean *flag);
+   void (GLAPIENTRYP Normal3b)( GLbyte nx, GLbyte ny, GLbyte nz );
+   void (GLAPIENTRYP Normal3d)( GLdouble nx, GLdouble ny, GLdouble nz );
+   void (GLAPIENTRYP Normal3i)( GLint nx, GLint ny, GLint nz );
+   void (GLAPIENTRYP Normal3s)( GLshort nx, GLshort ny, GLshort nz );
+   void (GLAPIENTRYP Normal3bv)( const GLbyte *v );
+   void (GLAPIENTRYP Normal3dv)( const GLdouble *v );
+   void (GLAPIENTRYP Normal3iv)( const GLint *v );
+   void (GLAPIENTRYP Normal3sv)( const GLshort *v );
+   void (GLAPIENTRYP TexCoord1d)( GLdouble s );
+   void (GLAPIENTRYP TexCoord1i)( GLint s );
+   void (GLAPIENTRYP TexCoord1s)( GLshort s );
+   void (GLAPIENTRYP TexCoord2d)( GLdouble s, GLdouble t );
+   void (GLAPIENTRYP TexCoord2s)( GLshort s, GLshort t );
+   void (GLAPIENTRYP TexCoord2i)( GLint s, GLint t );
+   void (GLAPIENTRYP TexCoord3d)( GLdouble s, GLdouble t, GLdouble r );
+   void (GLAPIENTRYP TexCoord3i)( GLint s, GLint t, GLint r );
+   void (GLAPIENTRYP TexCoord3s)( GLshort s, GLshort t, GLshort r );
+   void (GLAPIENTRYP TexCoord4d)( GLdouble s, GLdouble t, GLdouble r, GLdouble q );
+   void (GLAPIENTRYP TexCoord4i)( GLint s, GLint t, GLint r, GLint q );
+   void (GLAPIENTRYP TexCoord4s)( GLshort s, GLshort t, GLshort r, GLshort q );
+   void (GLAPIENTRYP TexCoord1dv)( const GLdouble *v );
+   void (GLAPIENTRYP TexCoord1iv)( const GLint *v );
+   void (GLAPIENTRYP TexCoord1sv)( const GLshort *v );
+   void (GLAPIENTRYP TexCoord2dv)( const GLdouble *v );
+   void (GLAPIENTRYP TexCoord2iv)( const GLint *v );
+   void (GLAPIENTRYP TexCoord2sv)( const GLshort *v );
+   void (GLAPIENTRYP TexCoord3dv)( const GLdouble *v );
+   void (GLAPIENTRYP TexCoord3iv)( const GLint *v );
+   void (GLAPIENTRYP TexCoord3sv)( const GLshort *v );
+   void (GLAPIENTRYP TexCoord4dv)( const GLdouble *v );
+   void (GLAPIENTRYP TexCoord4iv)( const GLint *v );
+   void (GLAPIENTRYP TexCoord4sv)( const GLshort *v );
+   void (GLAPIENTRYP Vertex2d)( GLdouble x, GLdouble y );
+   void (GLAPIENTRYP Vertex2i)( GLint x, GLint y );
+   void (GLAPIENTRYP Vertex2s)( GLshort x, GLshort y );
+   void (GLAPIENTRYP Vertex3d)( GLdouble x, GLdouble y, GLdouble z );
+   void (GLAPIENTRYP Vertex3i)( GLint x, GLint y, GLint z );
+   void (GLAPIENTRYP Vertex3s)( GLshort x, GLshort y, GLshort z );
+   void (GLAPIENTRYP Vertex4d)( GLdouble x, GLdouble y, GLdouble z, GLdouble w );
+   void (GLAPIENTRYP Vertex4i)( GLint x, GLint y, GLint z, GLint w );
+   void (GLAPIENTRYP Vertex4s)( GLshort x, GLshort y, GLshort z, GLshort w );
+   void (GLAPIENTRYP Vertex2dv)( const GLdouble *v );
+   void (GLAPIENTRYP Vertex2iv)( const GLint *v );
+   void (GLAPIENTRYP Vertex2sv)( const GLshort *v );
+   void (GLAPIENTRYP Vertex3dv)( const GLdouble *v );
+   void (GLAPIENTRYP Vertex3iv)( const GLint *v );
+   void (GLAPIENTRYP Vertex3sv)( const GLshort *v );
+   void (GLAPIENTRYP Vertex4dv)( const GLdouble *v );
+   void (GLAPIENTRYP Vertex4iv)( const GLint *v );
+   void (GLAPIENTRYP Vertex4sv)( const GLshort *v );
+   void (GLAPIENTRYP MultiTexCoord1d)(GLenum target, GLdouble s);
+   void (GLAPIENTRYP MultiTexCoord1dv)(GLenum target, const GLdouble *v);
+   void (GLAPIENTRYP MultiTexCoord1i)(GLenum target, GLint s);
+   void (GLAPIENTRYP MultiTexCoord1iv)(GLenum target, const GLint *v);
+   void (GLAPIENTRYP MultiTexCoord1s)(GLenum target, GLshort s);
+   void (GLAPIENTRYP MultiTexCoord1sv)(GLenum target, const GLshort *v);
+   void (GLAPIENTRYP MultiTexCoord2d)(GLenum target, GLdouble s, GLdouble t);
+   void (GLAPIENTRYP MultiTexCoord2dv)(GLenum target, const GLdouble *v);
+   void (GLAPIENTRYP MultiTexCoord2i)(GLenum target, GLint s, GLint t);
+   void (GLAPIENTRYP MultiTexCoord2iv)(GLenum target, const GLint *v);
+   void (GLAPIENTRYP MultiTexCoord2s)(GLenum target, GLshort s, GLshort t);
+   void (GLAPIENTRYP MultiTexCoord2sv)(GLenum target, const GLshort *v);
+   void (GLAPIENTRYP MultiTexCoord3d)(GLenum target, GLdouble s, GLdouble t, GLdouble r);
+   void (GLAPIENTRYP MultiTexCoord3dv)(GLenum target, const GLdouble *v);
+   void (GLAPIENTRYP MultiTexCoord3i)(GLenum target, GLint s, GLint t, GLint r);
+   void (GLAPIENTRYP MultiTexCoord3iv)(GLenum target, const GLint *v);
+   void (GLAPIENTRYP MultiTexCoord3s)(GLenum target, GLshort s, GLshort t, GLshort r);
+   void (GLAPIENTRYP MultiTexCoord3sv)(GLenum target, const GLshort *v);
+   void (GLAPIENTRYP MultiTexCoord4d)(GLenum target, GLdouble s, GLdouble t, GLdouble r,
+                               GLdouble q);
+   void (GLAPIENTRYP MultiTexCoord4dv)(GLenum target, const GLdouble *v);
+   void (GLAPIENTRYP MultiTexCoord4i)(GLenum target, GLint s, GLint t, GLint r, GLint q);
+   void (GLAPIENTRYP MultiTexCoord4iv)(GLenum target, const GLint *v);
+   void (GLAPIENTRYP MultiTexCoord4s)(GLenum target, GLshort s, GLshort t, GLshort r,
+                               GLshort q);
+   void (GLAPIENTRYP MultiTexCoord4sv)(GLenum target, const GLshort *v);
+   void (GLAPIENTRYP EvalCoord2dv)( const GLdouble *u );
+   void (GLAPIENTRYP EvalCoord2d)( GLdouble u, GLdouble v );
+   void (GLAPIENTRYP EvalCoord1dv)( const GLdouble *u );
+   void (GLAPIENTRYP EvalCoord1d)( GLdouble u );
+   void (GLAPIENTRYP Materialf)( GLenum face, GLenum pname, GLfloat param );
+   void (GLAPIENTRYP Materiali)(GLenum face, GLenum pname, GLint param );
+   void (GLAPIENTRYP Materialiv)(GLenum face, GLenum pname, const GLint *params );
+   void (GLAPIENTRYP SecondaryColor3b)( GLbyte red, GLbyte green, GLbyte blue );
+   void (GLAPIENTRYP SecondaryColor3d)( GLdouble red, GLdouble green, GLdouble blue );
+   void (GLAPIENTRYP SecondaryColor3i)( GLint red, GLint green, GLint blue );
+   void (GLAPIENTRYP SecondaryColor3s)( GLshort red, GLshort green, GLshort blue );
+   void (GLAPIENTRYP SecondaryColor3ui)( GLuint red, GLuint green, GLuint blue );
+   void (GLAPIENTRYP SecondaryColor3us)( GLushort red, GLushort green, GLushort blue );
+   void (GLAPIENTRYP SecondaryColor3ub)( GLubyte red, GLubyte green, GLubyte blue );
+   void (GLAPIENTRYP SecondaryColor3bv)( const GLbyte *v );
+   void (GLAPIENTRYP SecondaryColor3dv)( const GLdouble *v );
+   void (GLAPIENTRYP SecondaryColor3iv)( const GLint *v );
+   void (GLAPIENTRYP SecondaryColor3sv)( const GLshort *v );
+   void (GLAPIENTRYP SecondaryColor3uiv)( const GLuint *v );
+   void (GLAPIENTRYP SecondaryColor3usv)( const GLushort *v );
+   void (GLAPIENTRYP SecondaryColor3ubv)( const GLubyte *v );
+   void (GLAPIENTRYP VertexAttrib1sNV)(GLuint index, GLshort x);
+   void (GLAPIENTRYP VertexAttrib1dNV)(GLuint index, GLdouble x);
+   void (GLAPIENTRYP VertexAttrib2sNV)(GLuint index, GLshort x, GLshort y);
+   void (GLAPIENTRYP VertexAttrib2dNV)(GLuint index, GLdouble x, GLdouble y);
+   void (GLAPIENTRYP VertexAttrib3sNV)(GLuint index, GLshort x, GLshort y, GLshort z);
+   void (GLAPIENTRYP VertexAttrib3dNV)(GLuint index, GLdouble x, GLdouble y, GLdouble z);
+   void (GLAPIENTRYP VertexAttrib4sNV)(GLuint index, GLshort x, GLshort y, GLshort z,
+                             GLshort w);
+   void (GLAPIENTRYP VertexAttrib4dNV)(GLuint index, GLdouble x, GLdouble y, GLdouble z,
+                             GLdouble w);
+   void (GLAPIENTRYP VertexAttrib4ubNV)(GLuint index, GLubyte x, GLubyte y, GLubyte z,
+                              GLubyte w);
+   void (GLAPIENTRYP VertexAttrib1svNV)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib1dvNV)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib2svNV)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib2dvNV)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib3svNV)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib3dvNV)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib4svNV)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib4dvNV)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib4ubvNV)(GLuint index, const GLubyte *v);
+   void (GLAPIENTRYP VertexAttribs1svNV)(GLuint index, GLsizei n, const GLshort *v);
+   void (GLAPIENTRYP VertexAttribs1fvNV)(GLuint index, GLsizei n, const GLfloat *v);
+   void (GLAPIENTRYP VertexAttribs1dvNV)(GLuint index, GLsizei n, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttribs2svNV)(GLuint index, GLsizei n, const GLshort *v);
+   void (GLAPIENTRYP VertexAttribs2fvNV)(GLuint index, GLsizei n, const GLfloat *v);
+   void (GLAPIENTRYP VertexAttribs2dvNV)(GLuint index, GLsizei n, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttribs3svNV)(GLuint index, GLsizei n, const GLshort *v);
+   void (GLAPIENTRYP VertexAttribs3fvNV)(GLuint index, GLsizei n, const GLfloat *v);
+   void (GLAPIENTRYP VertexAttribs3dvNV)(GLuint index, GLsizei n, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttribs4svNV)(GLuint index, GLsizei n, const GLshort *v);
+   void (GLAPIENTRYP VertexAttribs4fvNV)(GLuint index, GLsizei n, const GLfloat *v);
+   void (GLAPIENTRYP VertexAttribs4dvNV)(GLuint index, GLsizei n, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttribs4ubvNV)(GLuint index, GLsizei n, const GLubyte *v);
+   void (GLAPIENTRYP VertexAttrib1s)(GLuint index, GLshort x);
+   void (GLAPIENTRYP VertexAttrib1d)(GLuint index, GLdouble x);
+   void (GLAPIENTRYP VertexAttrib2s)(GLuint index, GLshort x, GLshort y);
+   void (GLAPIENTRYP VertexAttrib2d)(GLuint index, GLdouble x, GLdouble y);
+   void (GLAPIENTRYP VertexAttrib3s)(GLuint index, GLshort x, GLshort y, GLshort z);
+   void (GLAPIENTRYP VertexAttrib3d)(GLuint index, GLdouble x, GLdouble y, GLdouble z);
+   void (GLAPIENTRYP VertexAttrib4s)(GLuint index, GLshort x, GLshort y, GLshort z,
+                              GLshort w);
+   void (GLAPIENTRYP VertexAttrib4d)(GLuint index, GLdouble x, GLdouble y, GLdouble z,
+                              GLdouble w);
+   void (GLAPIENTRYP VertexAttrib1sv)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib1dv)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib2sv)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib2dv)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib3sv)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib3dv)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib4sv)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttrib4dv)(GLuint index, const GLdouble *v);
+   void (GLAPIENTRYP VertexAttrib4bv)(GLuint index, const GLbyte * v);
+   void (GLAPIENTRYP VertexAttrib4iv)(GLuint index, const GLint * v);
+   void (GLAPIENTRYP VertexAttrib4ubv)(GLuint index, const GLubyte * v);
+   void (GLAPIENTRYP VertexAttrib4usv)(GLuint index, const GLushort * v);
+   void (GLAPIENTRYP VertexAttrib4uiv)(GLuint index, const GLuint * v);
+   void (GLAPIENTRYP VertexAttrib4Nbv)(GLuint index, const GLbyte * v);
+   void (GLAPIENTRYP VertexAttrib4Nsv)(GLuint index, const GLshort * v);
+   void (GLAPIENTRYP VertexAttrib4Niv)(GLuint index, const GLint * v);
+   void (GLAPIENTRYP VertexAttrib4Nub)(GLuint index, GLubyte x, GLubyte y, GLubyte z,
+                                GLubyte w);
+   void (GLAPIENTRYP VertexAttrib4Nubv)(GLuint index, const GLubyte * v);
+   void (GLAPIENTRYP VertexAttrib4Nusv)(GLuint index, const GLushort * v);
+   void (GLAPIENTRYP VertexAttrib4Nuiv)(GLuint index, const GLuint * v);
+   void (GLAPIENTRYP VertexAttribI1iv)(GLuint index, const GLint *v);
+   void (GLAPIENTRYP VertexAttribI1uiv)(GLuint index, const GLuint *v);
+   void (GLAPIENTRYP VertexAttribI4bv)(GLuint index, const GLbyte *v);
+   void (GLAPIENTRYP VertexAttribI4sv)(GLuint index, const GLshort *v);
+   void (GLAPIENTRYP VertexAttribI4ubv)(GLuint index, const GLubyte *v);
+   void (GLAPIENTRYP VertexAttribI4usv)(GLuint index, const GLushort *v);
 } GLvertexformat;
 
 

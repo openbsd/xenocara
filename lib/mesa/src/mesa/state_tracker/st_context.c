@@ -25,13 +25,15 @@
  *
  **************************************************************************/
 
-#include "main/imports.h"
+
 #include "main/accum.h"
 #include "main/api_exec.h"
 #include "main/context.h"
+#include "main/debug_output.h"
 #include "main/glthread.h"
 #include "main/samplerobj.h"
 #include "main/shaderobj.h"
+#include "main/state.h"
 #include "main/version.h"
 #include "main/vtxfmt.h"
 #include "main/hash.h"
@@ -85,9 +87,10 @@
 #include "util/u_inlines.h"
 #include "util/u_upload_mgr.h"
 #include "util/u_vbuf.h"
+#include "util/u_memory.h"
 #include "cso_cache/cso_context.h"
 #include "compiler/glsl/glsl_parser_extras.h"
-
+#include "nir/nir_to_tgsi.h"
 
 DEBUG_GET_ONCE_BOOL_OPTION(mesa_mvp_dp4, "MESA_MVP_DP4", FALSE)
 
@@ -96,7 +99,7 @@ DEBUG_GET_ONCE_BOOL_OPTION(mesa_mvp_dp4, "MESA_MVP_DP4", FALSE)
  * Called via ctx->Driver.Enable()
  */
 static void
-st_Enable(struct gl_context *ctx, GLenum cap, GLboolean state)
+st_Enable(struct gl_context *ctx, GLenum cap, UNUSED GLboolean state)
 {
    struct st_context *st = st_context(ctx);
 
@@ -104,6 +107,9 @@ st_Enable(struct gl_context *ctx, GLenum cap, GLboolean state)
    case GL_DEBUG_OUTPUT:
    case GL_DEBUG_OUTPUT_SYNCHRONOUS:
       st_update_debug_callback(st);
+      break;
+   case GL_BLACKHOLE_RENDER_INTEL:
+      st->pipe->set_frontend_noop(st->pipe, ctx->IntelBlackholeRender);
       break;
    default:
       break;
@@ -117,7 +123,7 @@ st_Enable(struct gl_context *ctx, GLenum cap, GLboolean state)
 static void
 st_query_memory_info(struct gl_context *ctx, struct gl_memory_info *out)
 {
-   struct pipe_screen *screen = st_context(ctx)->pipe->screen;
+   struct pipe_screen *screen = st_context(ctx)->screen;
    struct pipe_memory_info info;
 
    assert(screen->query_memory_info);
@@ -215,26 +221,22 @@ st_invalidate_state(struct gl_context *ctx)
 
       if (new_state & _NEW_FOG)
          st->dirty |= ST_NEW_FS_STATE;
-
-      if (new_state & _NEW_FRAG_CLAMP) {
-         if (st->clamp_frag_color_in_shader)
-            st->dirty |= ST_NEW_FS_STATE;
-         else
-            st->dirty |= ST_NEW_RASTERIZER;
-      }
    }
 
-   if (new_state & (_NEW_LIGHT |
+   if (new_state & (_NEW_LIGHT_STATE |
                     _NEW_POINT))
       st->dirty |= ST_NEW_RASTERIZER;
 
-   if ((new_state & _NEW_LIGHT) &&
+   if ((new_state & _NEW_LIGHT_STATE) &&
        (st->lower_flatshade || st->lower_two_sided_color))
       st->dirty |= ST_NEW_FS_STATE;
 
    if (new_state & _NEW_PROJECTION &&
        st_user_clip_planes_enabled(ctx))
       st->dirty |= ST_NEW_CLIP_STATE;
+
+   if (new_state & _NEW_POINT && st->lower_texcoord_replace)
+      st->dirty |= ST_NEW_FS_STATE;
 
    if (new_state & _NEW_PIXEL)
       st->dirty |= ST_NEW_PIXEL_TRANSFER;
@@ -253,12 +255,16 @@ st_invalidate_state(struct gl_context *ctx)
    }
 
    /* Update the vertex shader if ctx->Light._ClampVertexColor was changed. */
-   if (st->clamp_vert_color_in_shader && (new_state & _NEW_LIGHT)) {
+   if (st->clamp_vert_color_in_shader && (new_state & _NEW_LIGHT_STATE)) {
       st->dirty |= ST_NEW_VS_STATE;
       if (st->ctx->API == API_OPENGL_COMPAT && ctx->Version >= 32) {
          st->dirty |= ST_NEW_GS_STATE | ST_NEW_TES_STATE;
       }
    }
+
+   /* Update the vertex shader if ctx->Point was changed. */
+   if (st->lower_point_size && new_state & _NEW_POINT)
+      st->dirty |= ST_NEW_VS_STATE | ST_NEW_TES_STATE | ST_NEW_GS_STATE;
 
    /* Which shaders are dirty will be determined manually. */
    if (new_state & _NEW_PROGRAM) {
@@ -273,9 +279,11 @@ st_invalidate_state(struct gl_context *ctx)
                    (ST_NEW_SAMPLER_VIEWS |
                     ST_NEW_SAMPLERS |
                     ST_NEW_IMAGE_UNITS);
-      if (ctx->FragmentProgram._Current &&
-          ctx->FragmentProgram._Current->ExternalSamplersUsed) {
-         st->dirty |= ST_NEW_FS_STATE;
+      if (ctx->FragmentProgram._Current) {
+         struct st_program *stfp = st_program(ctx->FragmentProgram._Current);
+
+         if (stfp->Base.ExternalSamplersUsed || stfp->ati_fs)
+            st->dirty |= ST_NEW_FS_STATE;
       }
    }
 }
@@ -466,7 +474,7 @@ st_destroy_context_priv(struct st_context *st, bool destroy_pipe)
 
    /* free glReadPixels cache data */
    st_invalidate_readpix_cache(st);
-   util_throttle_deinit(st->pipe->screen, &st->throttle);
+   util_throttle_deinit(st->screen, &st->throttle);
 
    cso_destroy_context(st->cso_context);
 
@@ -510,7 +518,7 @@ st_init_driver_flags(struct st_context *st)
    f->NewScissorTest = ST_NEW_SCISSOR | ST_NEW_RASTERIZER;
 
    if (st->lower_alpha_test)
-      f->NewAlphaTest = ST_NEW_FS_STATE;
+      f->NewAlphaTest = ST_NEW_FS_STATE | ST_NEW_FS_CONSTANTS;
    else
       f->NewAlphaTest = ST_NEW_DSA;
 
@@ -538,6 +546,12 @@ st_init_driver_flags(struct st_context *st)
    f->NewClipControl = ST_NEW_VIEWPORT | ST_NEW_RASTERIZER;
    f->NewClipPlane = ST_NEW_CLIP_STATE;
 
+   if (st->clamp_frag_color_in_shader) {
+      f->NewFragClamp = ST_NEW_FS_STATE;
+   } else {
+      f->NewFragClamp = ST_NEW_RASTERIZER;
+   }
+
    if (st->clamp_frag_depth_in_shader) {
       f->NewClipControl |= ST_NEW_VS_STATE | ST_NEW_GS_STATE |
                            ST_NEW_TES_STATE;
@@ -549,7 +563,7 @@ st_init_driver_flags(struct st_context *st)
    }
 
    if (st->lower_ucp)
-      f->NewClipPlaneEnable = ST_NEW_VS_STATE;
+      f->NewClipPlaneEnable = ST_NEW_VS_STATE | ST_NEW_GS_STATE;
    else
       f->NewClipPlaneEnable = ST_NEW_RASTERIZER;
 
@@ -560,6 +574,12 @@ st_init_driver_flags(struct st_context *st)
    f->NewNvConservativeRasterization = ST_NEW_RASTERIZER;
    f->NewNvConservativeRasterizationParams = ST_NEW_RASTERIZER;
    f->NewIntelConservativeRasterization = ST_NEW_RASTERIZER;
+
+   if (st->emulate_gl_clamp)
+      f->NewSamplersWithClamp = ST_NEW_SAMPLERS |
+                                ST_NEW_VS_STATE | ST_NEW_TCS_STATE |
+                                ST_NEW_TES_STATE | ST_NEW_GS_STATE |
+                                ST_NEW_FS_STATE | ST_NEW_CS_STATE;
 }
 
 
@@ -576,11 +596,8 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
    ctx->st = st;
 
    st->ctx = ctx;
+   st->screen = screen;
    st->pipe = pipe;
-
-   /* state tracker needs the VBO module */
-   _vbo_CreateContext(ctx);
-
    st->dirty = ST_ALL_STATES_MASK;
 
    st->can_bind_const_buffer_as_vertex =
@@ -592,8 +609,20 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
     * profile, so that u_vbuf is bypassed completely if there is nothing else
     * to do.
     */
-   unsigned cso_flags =
-      ctx->API == API_OPENGL_CORE ? CSO_NO_USER_VERTEX_BUFFERS : 0;
+   unsigned cso_flags;
+   switch (ctx->API) {
+   case API_OPENGL_CORE:
+      cso_flags = CSO_NO_USER_VERTEX_BUFFERS;
+      break;
+   case API_OPENGLES:
+   case API_OPENGLES2:
+      cso_flags = CSO_NO_64B_VERTEX_BUFFERS;
+      break;
+   default:
+      cso_flags = 0;
+      break;
+   }
+
    st->cso_context = cso_create_context(pipe, cso_flags);
 
    st_init_atoms(st);
@@ -601,7 +630,7 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
    st_init_pbo_helpers(st);
 
    /* Choose texture target for glDrawPixels, glBitmap, renderbuffers */
-   if (pipe->screen->get_param(pipe->screen, PIPE_CAP_NPOT_TEXTURES))
+   if (screen->get_param(screen, PIPE_CAP_NPOT_TEXTURES))
       st->internal_target = PIPE_TEXTURE_2D;
    else
       st->internal_target = PIPE_TEXTURE_RECT;
@@ -612,29 +641,22 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       STATIC_ASSERT(sizeof(struct st_util_vertex) == 9 * sizeof(float));
 
       memset(&st->util_velems, 0, sizeof(st->util_velems));
-      st->util_velems[0].src_offset = 0;
-      st->util_velems[0].vertex_buffer_index = 0;
-      st->util_velems[0].src_format = PIPE_FORMAT_R32G32B32_FLOAT;
-      st->util_velems[1].src_offset = 3 * sizeof(float);
-      st->util_velems[1].vertex_buffer_index = 0;
-      st->util_velems[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
-      st->util_velems[2].src_offset = 7 * sizeof(float);
-      st->util_velems[2].vertex_buffer_index = 0;
-      st->util_velems[2].src_format = PIPE_FORMAT_R32G32_FLOAT;
+      st->util_velems.velems[0].src_offset = 0;
+      st->util_velems.velems[0].vertex_buffer_index = 0;
+      st->util_velems.velems[0].src_format = PIPE_FORMAT_R32G32B32_FLOAT;
+      st->util_velems.velems[1].src_offset = 3 * sizeof(float);
+      st->util_velems.velems[1].vertex_buffer_index = 0;
+      st->util_velems.velems[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+      st->util_velems.velems[2].src_offset = 7 * sizeof(float);
+      st->util_velems.velems[2].vertex_buffer_index = 0;
+      st->util_velems.velems[2].src_format = PIPE_FORMAT_R32G32_FLOAT;
    }
-
-   /* we want all vertex data to be placed in buffer objects */
-   vbo_use_buffer_objects(ctx);
-
-
-   /* make sure that no VBOs are left mapped when we're drawing. */
-   vbo_always_unmap_buffers(ctx);
 
    /* Need these flags:
     */
    ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
-
    ctx->VertexProgram._MaintainTnlProgram = GL_TRUE;
+   _mesa_reset_vertex_processing_mode(ctx);
 
    if (no_error)
       ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR;
@@ -655,6 +677,10 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
    st->has_etc2 = screen->is_format_supported(screen, PIPE_FORMAT_ETC2_RGB8,
                                               PIPE_TEXTURE_2D, 0, 0,
                                               PIPE_BIND_SAMPLER_VIEW);
+   st->transcode_etc = options->transcode_etc &&
+                       screen->is_format_supported(screen, PIPE_FORMAT_DXT1_SRGBA,
+                                                   PIPE_TEXTURE_2D, 0, 0,
+                                                   PIPE_BIND_SAMPLER_VIEW);
    st->has_astc_2d_ldr =
       screen->is_format_supported(screen, PIPE_FORMAT_ASTC_4x4_SRGB,
                                   PIPE_TEXTURE_2D, 0, 0, PIPE_BIND_SAMPLER_VIEW);
@@ -674,6 +700,10 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       !!(screen->get_param(screen, PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK) &
          (PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_NV50 |
           PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_R600));
+   st->emulate_gl_clamp =
+      !screen->get_param(screen, PIPE_CAP_GL_CLAMP);
+   st->texture_buffer_sampler =
+      screen->get_param(screen, PIPE_CAP_TEXTURE_BUFFER_SAMPLER);
    st->has_time_elapsed =
       screen->get_param(screen, PIPE_CAP_QUERY_TIME_ELAPSED);
    st->has_half_float_packing =
@@ -686,8 +716,6 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       screen->get_param(screen, PIPE_CAP_INDEP_BLEND_FUNC);
    st->needs_rgb_dst_alpha_override =
       screen->get_param(screen, PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND);
-   st->has_signed_vertex_buffer_offset =
-      screen->get_param(screen, PIPE_CAP_SIGNED_VERTEX_BUFFER_OFFSET);
    st->lower_flatshade =
       !screen->get_param(screen, PIPE_CAP_FLATSHADE);
    st->lower_alpha_test =
@@ -698,6 +726,14 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       !screen->get_param(screen, PIPE_CAP_TWO_SIDED_COLOR);
    st->lower_ucp =
       !screen->get_param(screen, PIPE_CAP_CLIP_PLANES);
+   st->prefer_real_buffer_in_constbuf0 =
+      screen->get_param(screen, PIPE_CAP_PREFER_REAL_BUFFER_IN_CONSTBUF0);
+   st->has_conditional_render =
+      screen->get_param(screen, PIPE_CAP_CONDITIONAL_RENDER);
+   st->lower_texcoord_replace =
+      !screen->get_param(screen, PIPE_CAP_POINT_SPRITE);
+   st->lower_rect_tex =
+      !screen->get_param(screen, PIPE_CAP_TEXRECT);
    st->allow_st_finalize_nir_twice = screen->finalize_nir != NULL;
 
    st->has_hw_atomics =
@@ -710,21 +746,9 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
                                         PIPE_CAP_MAX_TEXTURE_UPLOAD_MEMORY_BUDGET));
 
    /* GL limits and extensions */
-   st_init_limits(pipe->screen, &ctx->Const, &ctx->Extensions);
-   st_init_extensions(pipe->screen, &ctx->Const,
+   st_init_limits(screen, &ctx->Const, &ctx->Extensions);
+   st_init_extensions(screen, &ctx->Const,
                       &ctx->Extensions, &st->options, ctx->API);
-
-   /* FIXME: add support for geometry and tessellation shaders for
-    * lower_point_size
-    */
-   assert(!ctx->Extensions.OES_geometry_shader || !st->lower_point_size);
-   assert(!ctx->Extensions.ARB_tessellation_shader || !st->lower_point_size);
-
-   /* FIXME: add support for geometry and tessellation shaders for
-    * lower_ucp
-    */
-   assert(!ctx->Extensions.OES_geometry_shader || !st->lower_ucp);
-   assert(!ctx->Extensions.ARB_tessellation_shader || !st->lower_ucp);
 
    if (st_have_perfmon(st)) {
       ctx->Extensions.AMD_performance_monitor = GL_TRUE;
@@ -763,6 +787,10 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
     */
    ctx->Point.MaxSize = MAX2(ctx->Const.MaxPointSize,
                              ctx->Const.MaxPointSizeAA);
+
+   ctx->Const.NoClippingOnCopyTex = screen->get_param(screen,
+                                                      PIPE_CAP_NO_CLIP_ON_COPY_TEX);
+
    /* For vertex shaders, make sure not to emit saturate when SM 3.0
     * is not supported
     */
@@ -796,20 +824,50 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
          !st->clamp_frag_color_in_shader &&
          !st->clamp_frag_depth_in_shader &&
          !st->force_persample_in_shader &&
-         !st->lower_two_sided_color;
+         !st->lower_two_sided_color &&
+         !st->lower_texcoord_replace;
 
    st->shader_has_one_variant[MESA_SHADER_TESS_CTRL] = st->has_shareable_shaders;
    st->shader_has_one_variant[MESA_SHADER_TESS_EVAL] =
          st->has_shareable_shaders &&
          !st->clamp_frag_depth_in_shader &&
-         !st->clamp_vert_color_in_shader;
+         !st->clamp_vert_color_in_shader &&
+         !st->lower_point_size &&
+         !st->lower_ucp;
+
    st->shader_has_one_variant[MESA_SHADER_GEOMETRY] =
          st->has_shareable_shaders &&
          !st->clamp_frag_depth_in_shader &&
-         !st->clamp_vert_color_in_shader;
+         !st->clamp_vert_color_in_shader &&
+         !st->lower_point_size &&
+         !st->lower_ucp;
    st->shader_has_one_variant[MESA_SHADER_COMPUTE] = st->has_shareable_shaders;
 
+   util_cpu_detect();
+
+   if (util_get_cpu_caps()->num_L3_caches == 1 ||
+       !st->pipe->set_context_param)
+      st->pin_thread_counter = ST_L3_PINNING_DISABLED;
+
    st->bitmap.cache.empty = true;
+
+   if (ctx->Const.ForceGLNamesReuse && ctx->Shared->RefCount == 1) {
+      _mesa_HashEnableNameReuse(ctx->Shared->TexObjects);
+      _mesa_HashEnableNameReuse(ctx->Shared->ShaderObjects);
+      _mesa_HashEnableNameReuse(ctx->Shared->BufferObjects);
+      _mesa_HashEnableNameReuse(ctx->Shared->SamplerObjects);
+      _mesa_HashEnableNameReuse(ctx->Shared->FrameBuffers);
+      _mesa_HashEnableNameReuse(ctx->Shared->RenderBuffers);
+      _mesa_HashEnableNameReuse(ctx->Shared->MemoryObjects);
+      _mesa_HashEnableNameReuse(ctx->Shared->SemaphoreObjects);
+   }
+   /* SPECviewperf13/sw-04 crashes since a56849ddda6 if Mesa is build with
+    * -O3 on gcc 7.5, which doesn't happen with ForceGLNamesReuse, which is
+    * the default setting for SPECviewperf because it simulates glGen behavior
+    * of closed source drivers.
+    */
+   if (ctx->Const.ForceGLNamesReuse)
+      _mesa_HashEnableNameReuse(ctx->Query.QueryObjects);
 
    _mesa_override_extensions(ctx);
    _mesa_compute_version(ctx);
@@ -821,6 +879,11 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       st_destroy_context_priv(st, false);
       return NULL;
    }
+
+   /* This must be done after extensions are initialized to enable persistent
+    * mappings immediately.
+    */
+   _vbo_CreateContext(ctx, true);
 
    _mesa_initialize_dispatch_tables(ctx);
    _mesa_initialize_vbo_vtxfmt(ctx);
@@ -862,7 +925,7 @@ st_set_background_context(struct gl_context *ctx,
 static void
 st_get_device_uuid(struct gl_context *ctx, char *uuid)
 {
-   struct pipe_screen *screen = st_context(ctx)->pipe->screen;
+   struct pipe_screen *screen = st_context(ctx)->screen;
 
    assert(GL_UUID_SIZE_EXT >= PIPE_UUID_SIZE);
    memset(uuid, 0, GL_UUID_SIZE_EXT);
@@ -873,11 +936,21 @@ st_get_device_uuid(struct gl_context *ctx, char *uuid)
 static void
 st_get_driver_uuid(struct gl_context *ctx, char *uuid)
 {
-   struct pipe_screen *screen = st_context(ctx)->pipe->screen;
+   struct pipe_screen *screen = st_context(ctx)->screen;
 
    assert(GL_UUID_SIZE_EXT >= PIPE_UUID_SIZE);
    memset(uuid, 0, GL_UUID_SIZE_EXT);
    screen->get_driver_uuid(screen, uuid);
+}
+
+
+static void
+st_pin_driver_to_l3_cache(struct gl_context *ctx, unsigned L3_cache)
+{
+   struct pipe_context *pipe = st_context(ctx)->pipe;
+
+   pipe->set_context_param(pipe, PIPE_CONTEXT_PARAM_PIN_THREADS_TO_L3_CACHE,
+                           L3_cache);
 }
 
 
@@ -972,12 +1045,17 @@ st_create_context(gl_api api, struct pipe_context *pipe,
    memset(&funcs, 0, sizeof(funcs));
    st_init_driver_functions(pipe->screen, &funcs);
 
-   ctx = calloc(1, sizeof(struct gl_context));
+   if (pipe->set_context_param)
+      funcs.PinDriverToL3Cache = st_pin_driver_to_l3_cache;
+
+   /* gl_context must be 16-byte aligned due to the alignment on GLmatrix. */
+   ctx = align_malloc(sizeof(struct gl_context), 16);
    if (!ctx)
       return NULL;
+   memset(ctx, 0, sizeof(*ctx));
 
    if (!_mesa_initialize_context(ctx, api, visual, shareCtx, &funcs)) {
-      free(ctx);
+      align_free(ctx);
       return NULL;
    }
 
@@ -994,7 +1072,8 @@ st_create_context(gl_api api, struct pipe_context *pipe,
 
    st = st_create_context_priv(ctx, pipe, options, no_error);
    if (!st) {
-      _mesa_destroy_context(ctx);
+      _mesa_free_context_data(ctx, true);
+      align_free(ctx);
    }
 
    return st;
@@ -1009,7 +1088,7 @@ st_create_context(gl_api api, struct pipe_context *pipe,
  * texture's sampler views which belong to the context.
  */
 static void
-destroy_tex_sampler_cb(GLuint id, void *data, void *userData)
+destroy_tex_sampler_cb(void *data, void *userData)
 {
    struct gl_texture_object *texObj = (struct gl_texture_object *) data;
    struct st_context *st = (struct st_context *) userData;
@@ -1018,7 +1097,7 @@ destroy_tex_sampler_cb(GLuint id, void *data, void *userData)
 }
 
 static void
-destroy_framebuffer_attachment_sampler_cb(GLuint id, void *data, void *userData)
+destroy_framebuffer_attachment_sampler_cb(void *data, void *userData)
 {
    struct gl_framebuffer* glfb = (struct gl_framebuffer*) data;
    struct st_context *st = (struct st_context *) userData;
@@ -1097,14 +1176,20 @@ st_destroy_context(struct st_context *st)
 
    st_destroy_program_variants(st);
 
-   _mesa_free_context_data(ctx);
+   /* Do not release debug_output yet because it might be in use by other threads.
+    * These threads will be terminated by _mesa_free_context_data and
+    * st_destroy_context_priv.
+    */
+   _mesa_free_context_data(ctx, false);
 
    /* This will free the st_context too, so 'st' must not be accessed
     * afterwards. */
    st_destroy_context_priv(st, true);
    st = NULL;
 
-   free(ctx);
+   _mesa_destroy_debug_output(ctx);
+
+   align_free(ctx);
 
    if (save_ctx == ctx) {
       /* unbind the context we just deleted */
@@ -1112,5 +1197,20 @@ st_destroy_context(struct st_context *st)
    } else {
       /* Restore the current context and draw/read buffers (may be NULL) */
       _mesa_make_current(save_ctx, save_drawbuffer, save_readbuffer);
+   }
+}
+
+const struct nir_shader_compiler_options *
+st_get_nir_compiler_options(struct st_context *st, gl_shader_stage stage)
+{
+   const struct nir_shader_compiler_options *options =
+      st->ctx->Const.ShaderCompilerOptions[stage].NirOptions;
+
+   if (options) {
+      return options;
+   } else {
+      return nir_to_tgsi_get_compiler_options(st->screen,
+                                              PIPE_SHADER_IR_NIR,
+                                              pipe_shader_type_from_mesa(stage));
    }
 }

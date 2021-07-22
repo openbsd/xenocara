@@ -238,6 +238,12 @@ enum gbm_bo_flags {
     * Buffer is linear, i.e. not tiled.
     */
    GBM_BO_USE_LINEAR = (1 << 4),
+   /**
+    * Buffer is protected, i.e. encrypted and not readable by CPU or any
+    * other non-secure / non-trusted components nor by non-trusted OpenGL,
+    * OpenCL, and Vulkan applications.
+    */
+   GBM_BO_USE_PROTECTED = (1 << 5),
 };
 
 int
@@ -310,7 +316,7 @@ gbm_bo_import(struct gbm_device *gbm, uint32_t type,
  * These flags are independent of the GBM_BO_USE_* creation flags. However,
  * mapping the buffer may require copying to/from a staging buffer.
  *
- * See also: pipe_transfer_usage
+ * See also: pipe_map_flags
  */
 enum gbm_bo_transfer_flags {
    /**
@@ -375,6 +381,9 @@ gbm_bo_get_plane_count(struct gbm_bo *bo);
 
 union gbm_bo_handle
 gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane);
+
+int
+gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane);
 
 int
 gbm_bo_write(struct gbm_bo *bo, const void *buf, size_t count);

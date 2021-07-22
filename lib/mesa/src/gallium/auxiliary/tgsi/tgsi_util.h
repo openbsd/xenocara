@@ -28,6 +28,7 @@
 #ifndef TGSI_UTIL_H
 #define TGSI_UTIL_H
 
+#include <stdbool.h>
 #include "pipe/p_shader_tokens.h"
 
 #if defined __cplusplus
@@ -56,21 +57,6 @@ tgsi_util_set_src_register_swizzle(struct tgsi_src_register *reg,
                                    unsigned swizzle,
                                    unsigned component);
 
-
-#define TGSI_UTIL_SIGN_CLEAR    0   /* Force positive */
-#define TGSI_UTIL_SIGN_SET      1   /* Force negative */
-#define TGSI_UTIL_SIGN_TOGGLE   2   /* Negate */
-#define TGSI_UTIL_SIGN_KEEP     3   /* No change */
-
-unsigned
-tgsi_util_get_full_src_register_sign_mode(
-   const struct tgsi_full_src_register *reg,
-   unsigned component);
-
-void
-tgsi_util_set_full_src_register_sign_mode(struct tgsi_full_src_register *reg,
-                                          unsigned sign_mode);
-
 unsigned
 tgsi_util_get_inst_usage_mask(const struct tgsi_full_instruction *inst,
                               unsigned src_idx);
@@ -84,11 +70,11 @@ tgsi_util_get_texture_coord_dim(enum tgsi_texture_type tgsi_tex);
 int
 tgsi_util_get_shadow_ref_src_index(enum tgsi_texture_type tgsi_tex);
 
-boolean
+bool
 tgsi_is_shadow_target(enum tgsi_texture_type target);
 
 
-static inline boolean
+static inline bool
 tgsi_is_msaa_target(enum tgsi_texture_type target)
 {
    return (target == TGSI_TEXTURE_2D_MSAA ||

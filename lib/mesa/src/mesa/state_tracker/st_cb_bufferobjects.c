@@ -34,7 +34,7 @@
 #include <inttypes.h>  /* for PRId64 macro */
 
 #include "main/errors.h"
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 #include "main/arrayobj.h"
 #include "main/bufferobj.h"
@@ -70,6 +70,28 @@ st_bufferobj_alloc(struct gl_context *ctx, GLuint name)
 }
 
 
+static void
+release_buffer(struct gl_buffer_object *obj)
+{
+   struct st_buffer_object *st_obj = st_buffer_object(obj);
+
+   if (!st_obj->buffer)
+      return;
+
+   /* Subtract the remaining private references before unreferencing
+    * the buffer. See the header file for explanation.
+    */
+   if (st_obj->private_refcount) {
+      assert(st_obj->private_refcount > 0);
+      p_atomic_add(&st_obj->buffer->reference.count,
+                   -st_obj->private_refcount);
+      st_obj->private_refcount = 0;
+   }
+   st_obj->ctx = NULL;
+
+   pipe_resource_reference(&st_obj->buffer, NULL);
+}
+
 
 /**
  * Deallocate/free a vertex/pixel buffer object.
@@ -78,14 +100,9 @@ st_bufferobj_alloc(struct gl_context *ctx, GLuint name)
 static void
 st_bufferobj_free(struct gl_context *ctx, struct gl_buffer_object *obj)
 {
-   struct st_buffer_object *st_obj = st_buffer_object(obj);
-
    assert(obj->RefCount == 0);
    _mesa_buffer_unmap_all_mappings(ctx, obj);
-
-   if (st_obj->buffer)
-      pipe_resource_reference(&st_obj->buffer, NULL);
-
+   release_buffer(obj);
    _mesa_delete_buffer_object(ctx, obj);
 }
 
@@ -133,13 +150,13 @@ st_bufferobj_subdata(struct gl_context *ctx,
     * buffer directly.
     *
     * If the buffer is mapped, suppress implicit buffer range invalidation
-    * by using PIPE_TRANSFER_MAP_DIRECTLY.
+    * by using PIPE_MAP_DIRECTLY.
     */
    struct pipe_context *pipe = st_context(ctx)->pipe;
 
    pipe->buffer_subdata(pipe, st_obj->buffer,
                         _mesa_bufferobj_mapped(obj, MAP_USER) ?
-                           PIPE_TRANSFER_MAP_DIRECTLY : 0,
+                           PIPE_MAP_DIRECTLY : 0,
                         offset, size, data);
 }
 
@@ -284,7 +301,7 @@ bufferobj_data(struct gl_context *ctx,
 {
    struct st_context *st = st_context(ctx);
    struct pipe_context *pipe = st->pipe;
-   struct pipe_screen *screen = pipe->screen;
+   struct pipe_screen *screen = st->screen;
    struct st_buffer_object *st_obj = st_buffer_object(obj);
    struct st_memory_object *st_mem_obj = st_memory_object(memObj);
    bool is_mapped = _mesa_bufferobj_mapped(obj, MAP_USER);
@@ -310,12 +327,12 @@ bufferobj_data(struct gl_context *ctx,
           *
           * If the buffer is mapped, we can't discard it.
           *
-          * PIPE_TRANSFER_MAP_DIRECTLY supresses implicit buffer range
+          * PIPE_MAP_DIRECTLY supresses implicit buffer range
           * invalidation.
           */
          pipe->buffer_subdata(pipe, st_obj->buffer,
-                              is_mapped ? PIPE_TRANSFER_MAP_DIRECTLY :
-                                          PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE,
+                              is_mapped ? PIPE_MAP_DIRECTLY :
+                                          PIPE_MAP_DISCARD_WHOLE_RESOURCE,
                               0, size, data);
          return GL_TRUE;
       } else if (is_mapped) {
@@ -330,7 +347,7 @@ bufferobj_data(struct gl_context *ctx,
    st_obj->Base.Usage = usage;
    st_obj->Base.StorageFlags = storageFlags;
 
-   pipe_resource_reference( &st_obj->buffer, NULL );
+   release_buffer(obj);
 
    const unsigned bindings = buffer_target_to_bind_flags(target);
 
@@ -375,6 +392,8 @@ bufferobj_data(struct gl_context *ctx,
          st_obj->Base.Size = 0;
          return GL_FALSE;
       }
+
+      st_obj->ctx = ctx;
    }
 
    /* The current buffer may be bound, so we have to revalidate all atoms that
@@ -453,47 +472,51 @@ st_bufferobj_invalidate(struct gl_context *ctx,
 
 
 /**
- * Convert GLbitfield of GL_MAP_x flags to gallium pipe_transfer_usage flags.
+ * Convert GLbitfield of GL_MAP_x flags to gallium pipe_map_flags flags.
  * \param wholeBuffer  is the whole buffer being mapped?
  */
-enum pipe_transfer_usage
+enum pipe_map_flags
 st_access_flags_to_transfer_flags(GLbitfield access, bool wholeBuffer)
 {
-   enum pipe_transfer_usage flags = 0;
+   enum pipe_map_flags flags = 0;
 
    if (access & GL_MAP_WRITE_BIT)
-      flags |= PIPE_TRANSFER_WRITE;
+      flags |= PIPE_MAP_WRITE;
 
    if (access & GL_MAP_READ_BIT)
-      flags |= PIPE_TRANSFER_READ;
+      flags |= PIPE_MAP_READ;
 
    if (access & GL_MAP_FLUSH_EXPLICIT_BIT)
-      flags |= PIPE_TRANSFER_FLUSH_EXPLICIT;
+      flags |= PIPE_MAP_FLUSH_EXPLICIT;
 
    if (access & GL_MAP_INVALIDATE_BUFFER_BIT) {
-      flags |= PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE;
+      flags |= PIPE_MAP_DISCARD_WHOLE_RESOURCE;
    }
    else if (access & GL_MAP_INVALIDATE_RANGE_BIT) {
       if (wholeBuffer)
-         flags |= PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE;
+         flags |= PIPE_MAP_DISCARD_WHOLE_RESOURCE;
       else
-         flags |= PIPE_TRANSFER_DISCARD_RANGE;
+         flags |= PIPE_MAP_DISCARD_RANGE;
    }
 
    if (access & GL_MAP_UNSYNCHRONIZED_BIT)
-      flags |= PIPE_TRANSFER_UNSYNCHRONIZED;
+      flags |= PIPE_MAP_UNSYNCHRONIZED;
 
    if (access & GL_MAP_PERSISTENT_BIT)
-      flags |= PIPE_TRANSFER_PERSISTENT;
+      flags |= PIPE_MAP_PERSISTENT;
 
    if (access & GL_MAP_COHERENT_BIT)
-      flags |= PIPE_TRANSFER_COHERENT;
+      flags |= PIPE_MAP_COHERENT;
 
    /* ... other flags ...
    */
 
    if (access & MESA_MAP_NOWAIT_BIT)
-      flags |= PIPE_TRANSFER_DONTBLOCK;
+      flags |= PIPE_MAP_DONTBLOCK;
+   if (access & MESA_MAP_THREAD_SAFE_BIT)
+      flags |= PIPE_MAP_THREAD_SAFE;
+   if (access & MESA_MAP_ONCE)
+      flags |= PIPE_MAP_ONCE;
 
    return flags;
 }
@@ -516,9 +539,19 @@ st_bufferobj_map_range(struct gl_context *ctx,
    assert(offset < obj->Size);
    assert(offset + length <= obj->Size);
 
-   const enum pipe_transfer_usage transfer_flags =
+   enum pipe_map_flags transfer_flags =
       st_access_flags_to_transfer_flags(access,
                                         offset == 0 && length == obj->Size);
+
+   /* Sometimes games do silly things like MapBufferRange(UNSYNC|DISCARD_RANGE)
+    * In this case, the the UNSYNC is a bit redundant, but the games rely
+    * on the driver rebinding/replacing the backing storage rather than
+    * going down the UNSYNC path (ie. honoring DISCARD_x first before UNSYNC).
+    */
+   if (unlikely(st_context(ctx)->options.ignore_map_unsynchronized)) {
+      if (transfer_flags & (PIPE_MAP_DISCARD_RANGE | PIPE_MAP_DISCARD_WHOLE_RESOURCE))
+         transfer_flags &= ~PIPE_MAP_UNSYNCHRONIZED;
+   }
 
    obj->Mappings[index].Pointer = pipe_buffer_map_range(pipe,
                                                         st_obj->buffer,
@@ -603,7 +636,7 @@ st_copy_buffer_subdata(struct gl_context *ctx,
 
    /* buffer should not already be mapped */
    assert(!_mesa_check_disallowed_mapping(src));
-   assert(!_mesa_check_disallowed_mapping(dst));
+   /* dst can be mapped, just not the same range as the target range */
 
    u_box_1d(readOffset, size, &box);
 

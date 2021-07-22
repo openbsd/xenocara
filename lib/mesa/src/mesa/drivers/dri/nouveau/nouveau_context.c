@@ -133,7 +133,7 @@ nouveau_context_init(struct gl_context *ctx, gl_api api,
 	nouveau_scratch_init(ctx);
 	_mesa_meta_init(ctx);
 	_swrast_CreateContext(ctx);
-	_vbo_CreateContext(ctx);
+	_vbo_CreateContext(ctx, true);
 	_tnl_CreateContext(ctx);
 	nouveau_span_functions_init(ctx);
 	_mesa_allow_light_in_model(ctx, GL_FALSE);
@@ -217,7 +217,7 @@ nouveau_context_deinit(struct gl_context *ctx)
 	nouveau_object_del(&nctx->hw.chan);
 
 	nouveau_scratch_destroy(ctx);
-	_mesa_free_context_data(ctx);
+	_mesa_free_context_data(ctx, true);
 }
 
 void
@@ -238,7 +238,7 @@ nouveau_update_renderbuffers(__DRIcontext *dri_ctx, __DRIdrawable *draw)
 	__DRIscreen *screen = dri_ctx->driScreenPriv;
 	struct gl_framebuffer *fb = draw->driverPrivate;
 	struct nouveau_framebuffer *nfb = to_nouveau_framebuffer(fb);
-	unsigned int attachments[10];
+	unsigned int attachments[__DRI_BUFFER_COUNT];
 	__DRIbuffer *buffers = NULL;
 	int i = 0, count, ret;
 

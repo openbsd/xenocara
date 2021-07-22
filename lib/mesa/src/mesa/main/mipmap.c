@@ -28,7 +28,7 @@
  */
 
 #include "errors.h"
-#include "imports.h"
+
 #include "formats.h"
 #include "glformats.h"
 #include "mipmap.h"
@@ -57,12 +57,12 @@ _mesa_compute_num_levels(struct gl_context *ctx,
    const struct gl_texture_image *baseImage;
    GLuint numLevels;
 
-   baseImage = _mesa_get_tex_image(ctx, texObj, target, texObj->BaseLevel);
+   baseImage = _mesa_get_tex_image(ctx, texObj, target, texObj->Attrib.BaseLevel);
 
-   numLevels = texObj->BaseLevel + baseImage->MaxNumLevels;
-   numLevels = MIN2(numLevels, (GLuint) texObj->MaxLevel + 1);
+   numLevels = texObj->Attrib.BaseLevel + baseImage->MaxNumLevels;
+   numLevels = MIN2(numLevels, (GLuint) texObj->Attrib.MaxLevel + 1);
    if (texObj->Immutable)
-      numLevels = MIN2(numLevels, texObj->NumLevels);
+      numLevels = MIN2(numLevels, texObj->Attrib.NumLevels);
    assert(numLevels >= 1);
 
    return numLevels;
@@ -1620,7 +1620,7 @@ make_3d_mipmap(GLenum datatype, GLuint comps, GLint border,
       GLubyte *dstImgRow = imgDst;
 
       for (row = 0; row < dstHeightNB; row++) {
-         do_row_3D(datatype, comps, srcWidthNB, 
+         do_row_3D(datatype, comps, srcWidthNB,
                    srcImgARowA, srcImgARowB,
                    srcImgBRowA, srcImgBRowB,
                    dstWidthNB, dstImgRow);
@@ -1892,6 +1892,7 @@ prepare_mipmap_level(struct gl_context *ctx,
          _mesa_update_fbo_texture(ctx, texObj, face, level);
 
          ctx->NewState |= _NEW_TEXTURE_OBJECT;
+         ctx->PopAttribState |= GL_TEXTURE_BIT;
       }
    }
 
@@ -1912,6 +1913,10 @@ _mesa_prepare_mipmap_levels(struct gl_context *ctx,
 {
    const struct gl_texture_image *baseImage =
       _mesa_select_tex_image(texObj, texObj->Target, baseLevel);
+
+   if (baseImage == NULL)
+      return;
+
    const GLint border = 0;
    GLint width = baseImage->Width;
    GLint height = baseImage->Height;
@@ -1954,7 +1959,7 @@ generate_mipmap_uncompressed(struct gl_context *ctx, GLenum target,
 
    _mesa_uncompressed_format_to_type_and_comps(srcImage->TexFormat, &datatype, &comps);
 
-   for (level = texObj->BaseLevel; level < maxLevel; level++) {
+   for (level = texObj->Attrib.BaseLevel; level < maxLevel; level++) {
       /* generate image[level+1] from image[level] */
       struct gl_texture_image *srcImage, *dstImage;
       GLint srcRowStride, dstRowStride;
@@ -2130,7 +2135,7 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
       ctx->Pack = ctx->DefaultPacking;
 
       /* Get the uncompressed image */
-      assert(srcImage->Level == texObj->BaseLevel);
+      assert(srcImage->Level == texObj->Attrib.BaseLevel);
       ctx->Driver.GetTexSubImage(ctx,
                                  0, 0, 0,
                                  srcImage->Width, srcImage->Height,
@@ -2141,7 +2146,7 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
       ctx->Pack = save;
    }
 
-   for (level = texObj->BaseLevel; level < maxLevel; level++) {
+   for (level = texObj->Attrib.BaseLevel; level < maxLevel; level++) {
       /* generate image[level+1] from image[level] */
       const struct gl_texture_image *srcImage;
       struct gl_texture_image *dstImage;
@@ -2237,15 +2242,15 @@ _mesa_generate_mipmap(struct gl_context *ctx, GLenum target,
    GLint maxLevel;
 
    assert(texObj);
-   srcImage = _mesa_select_tex_image(texObj, target, texObj->BaseLevel);
+   srcImage = _mesa_select_tex_image(texObj, target, texObj->Attrib.BaseLevel);
    assert(srcImage);
 
    maxLevel = _mesa_max_texture_levels(ctx, texObj->Target) - 1;
    assert(maxLevel >= 0);  /* bad target */
 
-   maxLevel = MIN2(maxLevel, texObj->MaxLevel);
+   maxLevel = MIN2(maxLevel, texObj->Attrib.MaxLevel);
 
-   _mesa_prepare_mipmap_levels(ctx, texObj, texObj->BaseLevel, maxLevel);
+   _mesa_prepare_mipmap_levels(ctx, texObj, texObj->Attrib.BaseLevel, maxLevel);
 
    if (_mesa_is_format_compressed(srcImage->TexFormat)) {
       generate_mipmap_compressed(ctx, target, texObj, srcImage, maxLevel);

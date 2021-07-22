@@ -64,6 +64,10 @@ class PrintGlTable(gl_XML.gl_print_base):
         print('extern "C" {')
         print('#endif')
         print('')
+        print('#ifdef MemoryBarrier')
+        print('#undef MemoryBarrier')
+        print('#endif')
+        print('')
         print('struct _glapi_table')
         print('{')
         return
@@ -100,7 +104,10 @@ class PrintRemapTable(gl_XML.gl_print_base):
  * can SET_FuncName, are used to get and set the dispatch pointer for the
  * named function in the specified dispatch table.
  */
+
+#include "main/glheader.h"
 """)
+        print('#include "main/glheader.h"')
         return
 
 

@@ -24,12 +24,13 @@
 #include "draw/draw_context.h"
 
 #include "util/u_framebuffer.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 #include "util/u_helpers.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/u_pack_color.h"
 #include "util/u_transfer.h"
+#include "util/u_blend.h"
 
 #include "tgsi/tgsi_parse.h"
 
@@ -46,7 +47,7 @@
 #include "r300_texture.h"
 #include "r300_vs.h"
 
-/* r300_state: Functions used to intialize state context by translating
+/* r300_state: Functions used to initialize state context by translating
  * Gallium state objects into semi-native r300 state objects. */
 
 #define UPDATE_STATE(cso, atom) \
@@ -284,15 +285,8 @@ static unsigned blend_read_enable(unsigned eqRGB, unsigned eqA,
         eqRGB == PIPE_BLEND_MAX || eqA == PIPE_BLEND_MAX ||
         dstRGB != PIPE_BLENDFACTOR_ZERO ||
         dstA != PIPE_BLENDFACTOR_ZERO ||
-        srcRGB == PIPE_BLENDFACTOR_DST_COLOR ||
-        srcRGB == PIPE_BLENDFACTOR_DST_ALPHA ||
-        srcRGB == PIPE_BLENDFACTOR_INV_DST_COLOR ||
-        srcRGB == PIPE_BLENDFACTOR_INV_DST_ALPHA ||
-        srcA == PIPE_BLENDFACTOR_DST_COLOR ||
-        srcA == PIPE_BLENDFACTOR_DST_ALPHA ||
-        srcA == PIPE_BLENDFACTOR_INV_DST_COLOR ||
-        srcA == PIPE_BLENDFACTOR_INV_DST_ALPHA ||
-        srcRGB == PIPE_BLENDFACTOR_SRC_ALPHA_SATURATE) {
+        util_blend_factor_uses_dest(srcRGB, false) ||
+        util_blend_factor_uses_dest(srcA, true)) {
         /* Enable reading from the colorbuffer. */
         blend_control |= R300_READ_ENABLE;
 
@@ -626,10 +620,10 @@ static void r300_set_blend_color(struct pipe_context* pipe,
         switch (cb ? cb->format : 0) {
         case PIPE_FORMAT_R16G16B16A16_FLOAT:
         case PIPE_FORMAT_R16G16B16X16_FLOAT:
-            OUT_CB(util_float_to_half(c.color[2]) |
-                   (util_float_to_half(c.color[3]) << 16));
-            OUT_CB(util_float_to_half(c.color[0]) |
-                   (util_float_to_half(c.color[1]) << 16));
+            OUT_CB(_mesa_float_to_half(c.color[2]) |
+                   (_mesa_float_to_half(c.color[3]) << 16));
+            OUT_CB(_mesa_float_to_half(c.color[0]) |
+                   (_mesa_float_to_half(c.color[1]) << 16));
             break;
 
         default:
@@ -695,15 +689,15 @@ static void* r300_create_dsa_state(struct pipe_context* pipe,
     dsa->dsa = *state;
 
     /* Depth test setup. - separate write mask depth for decomp flush */
-    if (state->depth.writemask) {
+    if (state->depth_writemask) {
         z_buffer_control |= R300_Z_WRITE_ENABLE;
     }
 
-    if (state->depth.enabled) {
+    if (state->depth_enabled) {
         z_buffer_control |= R300_Z_ENABLE;
 
         z_stencil_control |=
-            (r300_translate_depth_stencil_function(state->depth.func) <<
+            (r300_translate_depth_stencil_function(state->depth_func) <<
                 R300_Z_FUNC_SHIFT);
     }
 
@@ -753,13 +747,13 @@ static void* r300_create_dsa_state(struct pipe_context* pipe,
     }
 
     /* Alpha test setup. */
-    if (state->alpha.enabled) {
+    if (state->alpha_enabled) {
         dsa->alpha_function =
-            r300_translate_alpha_function(state->alpha.func) |
+            r300_translate_alpha_function(state->alpha_func) |
             R300_FG_ALPHA_FUNC_ENABLE;
 
-        dsa->alpha_function |= float_to_ubyte(state->alpha.ref_value);
-        alpha_value_fp16 = util_float_to_half(state->alpha.ref_value);
+        dsa->alpha_function |= float_to_ubyte(state->alpha_ref_value);
+        alpha_value_fp16 = _mesa_float_to_half(state->alpha_ref_value);
     }
 
     BEGIN_CB(&dsa->cb_begin, 8);
@@ -823,11 +817,11 @@ static void r300_delete_dsa_state(struct pipe_context* pipe,
 }
 
 static void r300_set_stencil_ref(struct pipe_context* pipe,
-                                 const struct pipe_stencil_ref* sr)
+                                 const struct pipe_stencil_ref sr)
 {
     struct r300_context* r300 = r300_context(pipe);
 
-    r300->stencil_ref = *sr;
+    r300->stencil_ref = sr;
 
     r300_dsa_inject_stencilref(r300);
     r300_mark_atom_dirty(r300, &r300->dsa_state);
@@ -1508,7 +1502,7 @@ static uint32_t r300_assign_texture_cache_region(unsigned index, unsigned num)
      * EIGHTH_0     = 8
      * EIGHTH_1     = 9
      *
-     * First 3 textures will get 3/4 of size of the cache, divived evenly
+     * First 3 textures will get 3/4 of size of the cache, divided evenly
      * between them. The last 1/4 of the cache must be divided between
      * the last 2 textures, each will therefore get 1/8 of the cache.
      * Why not just to use "5 + texture_index" ?
@@ -1524,6 +1518,7 @@ static uint32_t r300_assign_texture_cache_region(unsigned index, unsigned num)
 static void r300_set_sampler_views(struct pipe_context* pipe,
                                    enum pipe_shader_type shader,
                                    unsigned start, unsigned count,
+                                   unsigned unbind_num_trailing_slots,
                                    struct pipe_sampler_view** views)
 {
     struct r300_context* r300 = r300_context(pipe);
@@ -1624,7 +1619,7 @@ r300_create_sampler_view_custom(struct pipe_context *pipe,
                                             dxtc_swizzle);
 
         if (hwformat == ~0) {
-            fprintf(stderr, "r300: Ooops. Got unsupported format %s in %s.\n",
+            fprintf(stderr, "r300: Oops. Got unsupported format %s in %s.\n",
                     util_format_short_name(templ->format), __func__);
         }
         assert(hwformat != ~0);
@@ -1738,19 +1733,22 @@ static void r300_set_viewport_states(struct pipe_context* pipe,
 
 static void r300_set_vertex_buffers_hwtcl(struct pipe_context* pipe,
                                     unsigned start_slot, unsigned count,
+                                    unsigned unbind_num_trailing_slots,
+                                    bool take_ownership,
                                     const struct pipe_vertex_buffer* buffers)
 {
     struct r300_context* r300 = r300_context(pipe);
 
     util_set_vertex_buffers_count(r300->vertex_buffer,
                                   &r300->nr_vertex_buffers,
-                                  buffers, start_slot, count);
+                                  buffers, start_slot, count,
+                                  unbind_num_trailing_slots, take_ownership);
 
     /* There must be at least one vertex buffer set, otherwise it locks up. */
     if (!r300->nr_vertex_buffers) {
         util_set_vertex_buffers_count(r300->vertex_buffer,
                                       &r300->nr_vertex_buffers,
-                                      &r300->dummy_vb, 0, 1);
+                                      &r300->dummy_vb, 0, 1, 0, false);
     }
 
     r300->vertex_arrays_dirty = TRUE;
@@ -1758,6 +1756,8 @@ static void r300_set_vertex_buffers_hwtcl(struct pipe_context* pipe,
 
 static void r300_set_vertex_buffers_swtcl(struct pipe_context* pipe,
                                     unsigned start_slot, unsigned count,
+                                    unsigned unbind_num_trailing_slots,
+                                    bool take_ownership,
                                     const struct pipe_vertex_buffer* buffers)
 {
     struct r300_context* r300 = r300_context(pipe);
@@ -1765,8 +1765,10 @@ static void r300_set_vertex_buffers_swtcl(struct pipe_context* pipe,
 
     util_set_vertex_buffers_count(r300->vertex_buffer,
                                   &r300->nr_vertex_buffers,
-                                  buffers, start_slot, count);
-    draw_set_vertex_buffers(r300->draw, start_slot, count, buffers);
+                                  buffers, start_slot, count,
+                                  unbind_num_trailing_slots, take_ownership);
+    draw_set_vertex_buffers(r300->draw, start_slot, count,
+                            unbind_num_trailing_slots, buffers);
 
     if (!buffers)
         return;
@@ -1972,6 +1974,7 @@ static void r300_delete_vs_state(struct pipe_context* pipe, void* shader)
 
 static void r300_set_constant_buffer(struct pipe_context *pipe,
                                      enum pipe_shader_type shader, uint index,
+                                     bool take_ownership,
                                      const struct pipe_constant_buffer *cb)
 {
     struct r300_context* r300 = r300_context(pipe);

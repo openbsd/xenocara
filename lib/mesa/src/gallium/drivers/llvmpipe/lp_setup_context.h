@@ -50,7 +50,6 @@
 #define LP_SETUP_NEW_SCISSOR     0x08
 #define LP_SETUP_NEW_VIEWPORTS   0x10
 #define LP_SETUP_NEW_SSBOS       0x20
-#define LP_SETUP_NEW_IMAGES      0x40
 
 struct lp_setup_variant;
 
@@ -76,6 +75,7 @@ struct lp_setup_context
 
    struct pipe_context *pipe;
    struct vertex_info *vertex_info;
+   uint view_index;
    uint prim;
    uint vertex_size;
    uint nr_vertices;
@@ -101,6 +101,7 @@ struct lp_setup_context
    boolean scissor_test;
    boolean point_size_per_vertex;
    boolean rasterizer_discard;
+   boolean multisample;
    unsigned cullmode;
    unsigned bottom_edge_rule;
    float pixel_offset;

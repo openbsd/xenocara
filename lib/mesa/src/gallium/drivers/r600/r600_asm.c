@@ -362,7 +362,7 @@ static int assign_alu_units(struct r600_bytecode *bc, struct r600_bytecode_alu *
 			}
 			assignment[4] = alu;
 		} else {
-			if (assignment[chan]) {
+			if (assignment[chan]) {                           
 				assert(0); /* ALU.chan has already been allocated. */
 				return -1;
 			}
@@ -686,7 +686,7 @@ static int replace_gpr_with_pv_ps(struct r600_bytecode *bc,
 	return 0;
 }
 
-void r600_bytecode_special_constants(uint32_t value, unsigned *sel, unsigned *neg, unsigned abs)
+void r600_bytecode_special_constants(uint32_t value, unsigned *sel)
 {
 	switch(value) {
 	case 0:
@@ -703,14 +703,6 @@ void r600_bytecode_special_constants(uint32_t value, unsigned *sel, unsigned *ne
 		break;
 	case 0x3F000000: /* 0.5f */
 		*sel = V_SQ_ALU_SRC_0_5;
-		break;
-	case 0xBF800000: /* -1.0f */
-		*sel = V_SQ_ALU_SRC_1;
-		*neg ^= !abs;
-		break;
-	case 0xBF000000: /* -0.5f */
-		*sel = V_SQ_ALU_SRC_0_5;
-		*neg ^= !abs;
 		break;
 	default:
 		*sel = V_SQ_ALU_SRC_LITERAL;
@@ -1232,7 +1224,7 @@ int r600_bytecode_add_alu_type(struct r600_bytecode *bc,
 	/* Load index register if required */
 	if (bc->chip_class >= EVERGREEN) {
 		for (i = 0; i < 3; i++)
-			if (nalu->src[i].kc_bank && nalu->src[i].kc_rel)
+			if (nalu->src[i].kc_bank &&  nalu->src[i].kc_rel)
 				egcm_load_index_reg(bc, 0, true);
 	}
 
@@ -1261,7 +1253,7 @@ int r600_bytecode_add_alu_type(struct r600_bytecode *bc,
 		}
 		if (nalu->src[i].sel == V_SQ_ALU_SRC_LITERAL)
 			r600_bytecode_special_constants(nalu->src[i].value,
-				&nalu->src[i].sel, &nalu->src[i].neg, nalu->src[i].abs);
+				&nalu->src[i].sel);
 	}
 	if (nalu->dst.sel >= bc->ngpr) {
 		bc->ngpr = nalu->dst.sel + 1;
@@ -1450,7 +1442,9 @@ int r600_bytecode_add_tex(struct r600_bytecode *bc, const struct r600_bytecode_t
 		bc->cf_last->op == CF_OP_TEX) {
 		struct r600_bytecode_tex *ttex;
 		LIST_FOR_EACH_ENTRY(ttex, &bc->cf_last->tex, list) {
-			if (ttex->dst_gpr == ntex->src_gpr) {
+			if (ttex->dst_gpr == ntex->src_gpr &&
+                            (ttex->dst_sel_x < 4 || ttex->dst_sel_y < 4 ||
+                             ttex->dst_sel_z < 4 || ttex->dst_sel_w < 4)) {
 				bc->force_add_cf = 1;
 				break;
 			}
@@ -2638,7 +2632,8 @@ void *r600_create_vertex_fetch_shader(struct pipe_context *ctx,
 	uint32_t *bytecode;
 	int i, j, r, fs_size;
 	struct r600_fetch_shader *shader;
-	unsigned no_sb = rctx->screen->b.debug_flags & DBG_NO_SB;
+	unsigned no_sb = rctx->screen->b.debug_flags & DBG_NO_SB ||
+                         (rctx->screen->b.debug_flags & DBG_NIR);
 	unsigned sb_disasm = !no_sb || (rctx->screen->b.debug_flags & DBG_SB_DISASM);
 
 	assert(count < 32);
@@ -2763,7 +2758,7 @@ void *r600_create_vertex_fetch_shader(struct pipe_context *ctx,
 		return NULL;
 	}
 
-	u_suballocator_alloc(rctx->allocator_fetch_shader, fs_size, 256,
+	u_suballocator_alloc(&rctx->allocator_fetch_shader, fs_size, 256,
 			     &shader->offset,
 			     (struct pipe_resource**)&shader->buffer);
 	if (!shader->buffer) {
@@ -2774,7 +2769,7 @@ void *r600_create_vertex_fetch_shader(struct pipe_context *ctx,
 
 	bytecode = r600_buffer_map_sync_with_rings
 		(&rctx->b, shader->buffer,
-		PIPE_TRANSFER_WRITE | PIPE_TRANSFER_UNSYNCHRONIZED | RADEON_TRANSFER_TEMPORARY);
+		PIPE_MAP_WRITE | PIPE_MAP_UNSYNCHRONIZED | RADEON_MAP_TEMPORARY);
 	bytecode += shader->offset / 4;
 
 	if (R600_BIG_ENDIAN) {
@@ -2784,7 +2779,7 @@ void *r600_create_vertex_fetch_shader(struct pipe_context *ctx,
 	} else {
 		memcpy(bytecode, bc.bytecode, fs_size);
 	}
-	rctx->b.ws->buffer_unmap(shader->buffer->buf);
+	rctx->b.ws->buffer_unmap(rctx->b.ws, shader->buffer->buf);
 
 	r600_bytecode_clear(&bc);
 	return shader;

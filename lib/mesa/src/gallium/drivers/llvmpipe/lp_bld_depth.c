@@ -66,6 +66,7 @@
 #include "gallivm/lp_bld_pack.h"
 
 #include "lp_bld_depth.h"
+#include "lp_state_fs.h"
 
 
 /** Used to select fields from pipe_stencil_state */
@@ -435,7 +436,7 @@ lp_build_occlusion_count(struct gallivm_state *gallivm,
    assert(type.length <= 16);
    assert(type.floating);
 
-   if(util_cpu_caps.has_sse && type.length == 4) {
+   if(util_get_cpu_caps()->has_sse && type.length == 4) {
       const char *movmskintr = "llvm.x86.sse.movmsk.ps";
       const char *popcntintr = "llvm.ctpop.i32";
       LLVMValueRef bits = LLVMBuildBitCast(builder, maskvalue,
@@ -446,7 +447,7 @@ lp_build_occlusion_count(struct gallivm_state *gallivm,
                                        LLVMInt32TypeInContext(context), bits);
       count = LLVMBuildZExt(builder, count, LLVMIntTypeInContext(context, 64), "");
    }
-   else if(util_cpu_caps.has_avx && type.length == 8) {
+   else if(util_get_cpu_caps()->has_avx && type.length == 8) {
       const char *movmskintr = "llvm.x86.avx.movmsk.ps.256";
       const char *popcntintr = "llvm.ctpop.i32";
       LLVMValueRef bits = LLVMBuildBitCast(builder, maskvalue,
@@ -469,7 +470,11 @@ lp_build_occlusion_count(struct gallivm_state *gallivm,
       countv = LLVMBuildBitCast(builder, countv, i8vntype, "");
 
        for (i = 0; i < type.length; i++) {
+#if UTIL_ARCH_LITTLE_ENDIAN
           shuffles[i] = lp_build_const_int32(gallivm, 4*i);
+#else
+          shuffles[i] = lp_build_const_int32(gallivm, (4*i) + 3);
+#endif
        }
 
        shufflev = LLVMConstVector(shuffles, type.length);
@@ -599,6 +604,12 @@ lp_build_depth_stencil_load_swizzled(struct gallivm_state *gallivm,
                                   LLVMConstVector(shuffles, zs_type.length), "");
    *s_fb = *z_fb;
 
+   if (format_desc->block.bits == 8) {
+      /* Extend stencil-only 8 bit values (S8_UINT) */
+      *s_fb = LLVMBuildZExt(builder, *s_fb,
+                            lp_build_int_vec_type(gallivm, z_src_type), "");
+   }
+
    if (format_desc->block.bits < z_src_type.width) {
       /* Extend destination ZS values (e.g., when reading from Z16_UNORM) */
       *z_fb = LLVMBuildZExt(builder, *z_fb,
@@ -648,7 +659,7 @@ lp_build_depth_stencil_load_swizzled(struct gallivm_state *gallivm,
  * \param type  the data type of the fragment depth/stencil values
  * \param format_desc  description of the depth/stencil surface
  * \param is_1d  whether this resource has only one dimension
- * \param mask  the alive/dead pixel mask for the quad (vector)
+ * \param mask_value the alive/dead pixel mask for the quad (vector)
  * \param z_fb  z values read from fb (with padding)
  * \param s_fb  s values read from fb (with padding)
  * \param loop_counter  the current loop iteration
@@ -662,7 +673,7 @@ lp_build_depth_stencil_write_swizzled(struct gallivm_state *gallivm,
                                       struct lp_type z_src_type,
                                       const struct util_format_description *format_desc,
                                       boolean is_1d,
-                                      struct lp_build_mask_context *mask,
+                                      LLVMValueRef mask_value,
                                       LLVMValueRef z_fb,
                                       LLVMValueRef s_fb,
                                       LLVMValueRef loop_counter,
@@ -674,7 +685,6 @@ lp_build_depth_stencil_write_swizzled(struct gallivm_state *gallivm,
    struct lp_build_context z_bld;
    LLVMValueRef shuffles[LP_MAX_VECTOR_LENGTH / 4];
    LLVMBuilderRef builder = gallivm->builder;
-   LLVMValueRef mask_value = NULL;
    LLVMValueRef zs_dst1, zs_dst2;
    LLVMValueRef zs_dst_ptr1, zs_dst_ptr2;
    LLVMValueRef depth_offset1, depth_offset2;
@@ -732,8 +742,7 @@ lp_build_depth_stencil_write_swizzled(struct gallivm_state *gallivm,
       s_value = LLVMBuildBitCast(builder, s_value, z_bld.vec_type, "");
    }
 
-   if (mask) {
-      mask_value = lp_build_mask_value(mask);
+   if (mask_value) {
       z_value = lp_build_select(&z_bld, mask_value, z_value, z_fb);
       if (format_desc->block.bits > 32) {
          s_fb = LLVMBuildBitCast(builder, s_fb, z_bld.vec_type, "");
@@ -806,6 +815,7 @@ lp_build_depth_stencil_write_swizzled(struct gallivm_state *gallivm,
  * \param type  the data type of the fragment depth/stencil values
  * \param format_desc  description of the depth/stencil surface
  * \param mask  the alive/dead pixel mask for the quad (vector)
+ * \param cov_mask coverage mask
  * \param stencil_refs  the front/back stencil ref values (scalar)
  * \param z_src  the incoming depth/stencil values (n 2x2 quad values, float32)
  * \param zs_dst  the depth/stencil values in framebuffer
@@ -813,11 +823,12 @@ lp_build_depth_stencil_write_swizzled(struct gallivm_state *gallivm,
  */
 void
 lp_build_depth_stencil_test(struct gallivm_state *gallivm,
-                            const struct pipe_depth_state *depth,
+                            const struct lp_depth_state *depth,
                             const struct pipe_stencil_state stencil[2],
                             struct lp_type z_src_type,
                             const struct util_format_description *format_desc,
                             struct lp_build_mask_context *mask,
+                            LLVMValueRef *cov_mask,
                             LLVMValueRef stencil_refs[2],
                             LLVMValueRef z_src,
                             LLVMValueRef z_fb,
@@ -837,7 +848,7 @@ lp_build_depth_stencil_test(struct gallivm_state *gallivm,
    LLVMValueRef stencil_vals = NULL;
    LLVMValueRef z_bitmask = NULL, stencil_shift = NULL;
    LLVMValueRef z_pass = NULL, s_pass_mask = NULL;
-   LLVMValueRef current_mask = lp_build_mask_value(mask);
+   LLVMValueRef current_mask = mask ? lp_build_mask_value(mask) : *cov_mask;
    LLVMValueRef front_facing = NULL;
    boolean have_z, have_s;
 
@@ -870,8 +881,8 @@ lp_build_depth_stencil_test(struct gallivm_state *gallivm,
 
    /* Sanity checking */
    {
-      const unsigned z_swizzle = format_desc->swizzle[0];
-      const unsigned s_swizzle = format_desc->swizzle[1];
+      ASSERTED const unsigned z_swizzle = format_desc->swizzle[0];
+      ASSERTED const unsigned s_swizzle = format_desc->swizzle[1];
 
       assert(z_swizzle != PIPE_SWIZZLE_NONE ||
              s_swizzle != PIPE_SWIZZLE_NONE);
@@ -1066,7 +1077,7 @@ lp_build_depth_stencil_test(struct gallivm_state *gallivm,
          current_mask = LLVMBuildAnd(builder, current_mask, s_pass_mask, "");
       }
 
-      if (!stencil[0].enabled) {
+      if (!stencil[0].enabled && mask) {
          /* We can potentially skip all remaining operations here, but only
           * if stencil is disabled because we still need to update the stencil
           * buffer values.  Don't need to update Z buffer values.
@@ -1141,10 +1152,21 @@ lp_build_depth_stencil_test(struct gallivm_state *gallivm,
       *s_value = stencil_vals;
    }
 
-   if (s_pass_mask)
-      lp_build_mask_update(mask, s_pass_mask);
+   if (mask) {
+      if (s_pass_mask)
+         lp_build_mask_update(mask, s_pass_mask);
 
-   if (depth->enabled && stencil[0].enabled)
-      lp_build_mask_update(mask, z_pass);
+      if (depth->enabled && stencil[0].enabled)
+         lp_build_mask_update(mask, z_pass);
+   } else {
+      LLVMValueRef tmp_mask = *cov_mask;
+      if (s_pass_mask)
+         tmp_mask = LLVMBuildAnd(builder, tmp_mask, s_pass_mask, "");
+
+      /* for multisample we don't do the stencil optimisation so update always */
+      if (depth->enabled)
+         tmp_mask = LLVMBuildAnd(builder, tmp_mask, z_pass, "");
+      *cov_mask = tmp_mask;
+   }
 }
 

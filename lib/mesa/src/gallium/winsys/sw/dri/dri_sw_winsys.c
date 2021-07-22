@@ -29,6 +29,12 @@
 #ifdef HAVE_SYS_SHM_H
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#ifdef __FreeBSD__
+/* sys/ipc.h -> sys/_types.h -> machine/param.h
+ * - defines ALIGN which clashes with our ALIGN
+ */
+#undef ALIGN
+#endif
 #endif
 
 #include "pipe/p_compiler.h"
@@ -39,7 +45,7 @@
 #include "util/u_math.h"
 #include "util/u_memory.h"
 
-#include "state_tracker/sw_winsys.h"
+#include "frontend/sw_winsys.h"
 #include "dri_sw_winsys.h"
 
 
@@ -117,7 +123,7 @@ dri_sw_displaytarget_create(struct sw_winsys *winsys,
                             const void *front_private,
                             unsigned *stride)
 {
-   struct dri_sw_winsys *ws = dri_sw_winsys(winsys);
+   UNUSED struct dri_sw_winsys *ws = dri_sw_winsys(winsys);
    struct dri_sw_displaytarget *dri_sw_dt;
    unsigned nblocksy, size, format_stride;
 
@@ -184,7 +190,7 @@ dri_sw_displaytarget_map(struct sw_winsys *ws,
    struct dri_sw_displaytarget *dri_sw_dt = dri_sw_displaytarget(dt);
    dri_sw_dt->mapped = dri_sw_dt->data;
 
-   if (dri_sw_dt->front_private && (flags & PIPE_TRANSFER_READ)) {
+   if (dri_sw_dt->front_private && (flags & PIPE_MAP_READ)) {
       struct dri_sw_winsys *dri_sw_ws = dri_sw_winsys(ws);
       dri_sw_ws->lf->get_image((void *)dri_sw_dt->front_private, 0, 0, dri_sw_dt->width, dri_sw_dt->height, dri_sw_dt->stride, dri_sw_dt->data);
    }
@@ -197,7 +203,7 @@ dri_sw_displaytarget_unmap(struct sw_winsys *ws,
                            struct sw_displaytarget *dt)
 {
    struct dri_sw_displaytarget *dri_sw_dt = dri_sw_displaytarget(dt);
-   if (dri_sw_dt->front_private && (dri_sw_dt->map_flags & PIPE_TRANSFER_WRITE)) {
+   if (dri_sw_dt->front_private && (dri_sw_dt->map_flags & PIPE_MAP_WRITE)) {
       struct dri_sw_winsys *dri_sw_ws = dri_sw_winsys(ws);
       dri_sw_ws->lf->put_image2((void *)dri_sw_dt->front_private, dri_sw_dt->data, 0, 0, dri_sw_dt->width, dri_sw_dt->height, dri_sw_dt->stride);
    }

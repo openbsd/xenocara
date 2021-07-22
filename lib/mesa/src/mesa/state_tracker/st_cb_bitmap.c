@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
  /*
@@ -31,7 +31,7 @@
   */
 
 #include "main/errors.h"
-#include "main/imports.h"
+
 #include "main/image.h"
 #include "main/bufferobj.h"
 #include "main/dlist.h"
@@ -144,7 +144,7 @@ make_bitmap_texture(struct gl_context *ctx, GLsizei width, GLsizei height,
    }
 
    dest = pipe_transfer_map(st->pipe, pt, 0, 0,
-                            PIPE_TRANSFER_WRITE,
+                            PIPE_MAP_WRITE,
                             0, 0, width, height, &transfer);
 
    /* Put image into texture transfer */
@@ -170,6 +170,7 @@ setup_render_state(struct gl_context *ctx,
                    bool atlas)
 {
    struct st_context *st = st_context(ctx);
+   struct pipe_context *pipe = st->pipe;
    struct cso_context *cso = st->cso_context;
    struct st_fp_variant *fpv;
    struct st_fp_variant_key key;
@@ -179,6 +180,7 @@ setup_render_state(struct gl_context *ctx,
    key.bitmap = GL_TRUE;
    key.clamp_color = st->clamp_frag_color_in_shader &&
                      ctx->Color._ClampFragmentColor;
+   key.lower_alpha_func = COMPARE_FUNC_ALWAYS;
 
    fpv = st_get_fp_variant(st, st->fp, &key);
 
@@ -193,17 +195,15 @@ setup_render_state(struct gl_context *ctx,
       GLfloat colorSave[4];
       COPY_4V(colorSave, ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
       COPY_4V(ctx->Current.Attrib[VERT_ATTRIB_COLOR0], color);
-      st_upload_constants(st, &st->fp->Base);
+      st_upload_constants(st, &st->fp->Base, MESA_SHADER_FRAGMENT);
       COPY_4V(ctx->Current.Attrib[VERT_ATTRIB_COLOR0], colorSave);
    }
 
    cso_save_state(cso, (CSO_BIT_RASTERIZER |
                         CSO_BIT_FRAGMENT_SAMPLERS |
-                        CSO_BIT_FRAGMENT_SAMPLER_VIEWS |
                         CSO_BIT_VIEWPORT |
                         CSO_BIT_STREAM_OUTPUTS |
                         CSO_BIT_VERTEX_ELEMENTS |
-                        CSO_BIT_AUX_VERTEX_BUFFER_SLOT |
                         CSO_BITS_ALL_SHADERS));
 
 
@@ -247,7 +247,10 @@ setup_render_state(struct gl_context *ctx,
       memcpy(sampler_views, st->state.frag_sampler_views,
              sizeof(sampler_views));
       sampler_views[fpv->bitmap_sampler] = sv;
-      cso_set_sampler_views(cso, PIPE_SHADER_FRAGMENT, num, sampler_views);
+      pipe->set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, num, 0,
+                              sampler_views);
+      st->state.num_sampler_views[PIPE_SHADER_FRAGMENT] =
+         MAX2(st->state.num_sampler_views[PIPE_SHADER_FRAGMENT], num);
    }
 
    /* viewport state: viewport matching window dims */
@@ -255,7 +258,8 @@ setup_render_state(struct gl_context *ctx,
                          st->state.fb_height,
                          st->state.fb_orientation == Y_0_TOP);
 
-   cso_set_vertex_elements(cso, 3, st->util_velems);
+   st->util_velems.count = 3;
+   cso_set_vertex_elements(cso, &st->util_velems);
 
    cso_set_stream_outputs(st->cso_context, 0, NULL, NULL);
 }
@@ -269,8 +273,20 @@ restore_render_state(struct gl_context *ctx)
 {
    struct st_context *st = st_context(ctx);
    struct cso_context *cso = st->cso_context;
+   struct pipe_context *pipe = st->pipe;
 
    cso_restore_state(cso);
+
+   /* Unbind all because st/mesa won't do it if the current shader doesn't
+    * use them.
+    */
+   pipe->set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, 0,
+                           st->state.num_sampler_views[PIPE_SHADER_FRAGMENT],
+                           NULL);
+   st->state.num_sampler_views[PIPE_SHADER_FRAGMENT] = 0;
+
+   st->dirty |= ST_NEW_VERTEX_ARRAYS |
+                ST_NEW_FS_SAMPLER_VIEWS;
 }
 
 
@@ -284,7 +300,6 @@ draw_bitmap_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
                  const GLfloat *color)
 {
    struct st_context *st = st_context(ctx);
-   struct pipe_context *pipe = st->pipe;
    const float fb_width = (float) st->state.fb_width;
    const float fb_height = (float) st->state.fb_height;
    const float x0 = (float) x;
@@ -304,7 +319,7 @@ draw_bitmap_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
        * it up into chunks.
        */
       ASSERTED GLuint maxSize =
-         pipe->screen->get_param(pipe->screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE);
+         st->screen->get_param(st->screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE);
       assert(width <= (GLsizei) maxSize);
       assert(height <= (GLsizei) maxSize);
    }
@@ -392,7 +407,7 @@ create_cache_trans(struct st_context *st)
     * Subsequent glBitmap calls will write into the texture image.
     */
    cache->buffer = pipe_transfer_map(pipe, cache->texture, 0, 0,
-                                     PIPE_TRANSFER_WRITE, 0, 0,
+                                     PIPE_MAP_WRITE, 0, 0,
                                      BITMAP_CACHE_WIDTH,
                                      BITMAP_CACHE_HEIGHT, &cache->trans);
 
@@ -478,7 +493,7 @@ accum_bitmap(struct gl_context *ctx,
       if (px < 0 || px + width > BITMAP_CACHE_WIDTH ||
           py < 0 || py + height > BITMAP_CACHE_HEIGHT ||
           !TEST_EQ_4V(ctx->Current.RasterColor, cache->color) ||
-          ((fabs(z - cache->zpos) > Z_EPSILON))) {
+          ((fabsf(z - cache->zpos) > Z_EPSILON))) {
          /* This bitmap would extend beyond cache bounds, or the bitmap
           * color is changing
           * so flush and continue.
@@ -534,8 +549,7 @@ accum_bitmap(struct gl_context *ctx,
 static void
 init_bitmap_state(struct st_context *st)
 {
-   struct pipe_context *pipe = st->pipe;
-   struct pipe_screen *screen = pipe->screen;
+   struct pipe_screen *screen = st->screen;
 
    /* This function should only be called once */
    assert(!st->bitmap.tex_format);
@@ -545,9 +559,9 @@ init_bitmap_state(struct st_context *st)
 
    /* init sampler state once */
    memset(&st->bitmap.sampler, 0, sizeof(st->bitmap.sampler));
-   st->bitmap.sampler.wrap_s = PIPE_TEX_WRAP_CLAMP;
-   st->bitmap.sampler.wrap_t = PIPE_TEX_WRAP_CLAMP;
-   st->bitmap.sampler.wrap_r = PIPE_TEX_WRAP_CLAMP;
+   st->bitmap.sampler.wrap_s = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
+   st->bitmap.sampler.wrap_t = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
+   st->bitmap.sampler.wrap_r = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
    st->bitmap.sampler.min_img_filter = PIPE_TEX_FILTER_NEAREST;
    st->bitmap.sampler.min_mip_filter = PIPE_TEX_MIPFILTER_NONE;
    st->bitmap.sampler.mag_img_filter = PIPE_TEX_FILTER_NEAREST;
@@ -610,8 +624,8 @@ st_Bitmap(struct gl_context *ctx, GLint x, GLint y,
     * for bitmap drawing uses no constants and the FS constants are
     * explicitly uploaded in the draw_bitmap_quad() function.
     */
-   if ((st->dirty | ctx->NewDriverState) & ~ST_NEW_CONSTANTS &
-       ST_PIPELINE_RENDER_STATE_MASK ||
+   if ((st->dirty | ctx->NewDriverState) & st->active_states &
+       ~ST_NEW_CONSTANTS & ST_PIPELINE_RENDER_STATE_MASK ||
        st->gfx_shaders_may_be_dirty) {
       st_validate_state(st, ST_PIPELINE_META);
    }
@@ -697,8 +711,8 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
       const float xorig = g->xorig, yorig = g->yorig;
       const float s0 = g->x, t0 = g->y;
       const float s1 = s0 + g->w, t1 = t0 + g->h;
-      const float x0 = IFLOOR(ctx->Current.RasterPos[0] - xorig + epsilon);
-      const float y0 = IFLOOR(ctx->Current.RasterPos[1] - yorig + epsilon);
+      const float x0 = util_ifloor(ctx->Current.RasterPos[0] - xorig + epsilon);
+      const float y0 = util_ifloor(ctx->Current.RasterPos[1] - yorig + epsilon);
       const float x1 = x0 + g->w, y1 = y0 + g->h;
       const float clip_x0 = x0 * clip_x_scale - 1.0f;
       const float clip_y0 = y0 * clip_y_scale - 1.0f;
@@ -756,11 +770,14 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
       /* Update the raster position */
       ctx->Current.RasterPos[0] += xmove;
       ctx->Current.RasterPos[1] += ymove;
+      ctx->PopAttribState |= GL_CURRENT_BIT;
    }
 
    u_upload_unmap(pipe->stream_uploader);
 
    cso_set_vertex_buffers(st->cso_context, 0, 1, &vb);
+   st->last_num_vbuffers = MAX2(st->last_num_vbuffers, 1);
+
    cso_draw_arrays(st->cso_context, PIPE_PRIM_QUADS, 0, num_verts);
 
 out:

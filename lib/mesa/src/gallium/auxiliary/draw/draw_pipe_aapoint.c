@@ -411,7 +411,6 @@ fail:
 static boolean
 generate_aapoint_fs_nir(struct aapoint_stage *aapoint)
 {
-#ifdef LLVM_AVAILABLE
    struct pipe_context *pipe = aapoint->stage.draw->pipe;
    const struct pipe_shader_state *orig_fs = &aapoint->fs->state;
    struct pipe_shader_state aapoint_fs;
@@ -429,7 +428,6 @@ generate_aapoint_fs_nir(struct aapoint_stage *aapoint)
    return TRUE;
 
 fail:
-#endif
    return FALSE;
 }
 
@@ -580,7 +578,7 @@ aapoint_first_point(struct draw_stage *stage, struct prim_header *header)
    const struct pipe_rasterizer_state *rast = draw->rasterizer;
    void *r;
 
-   assert(draw->rasterizer->point_smooth);
+   assert(draw->rasterizer->point_smooth && !draw->rasterizer->multisample);
 
    if (draw->rasterizer->point_size <= 2.0)
       aapoint->radius = 1.0;
@@ -597,7 +595,7 @@ aapoint_first_point(struct draw_stage *stage, struct prim_header *header)
    draw->suspend_flushing = TRUE;
 
    /* Disable triangle culling, stippling, unfilled mode etc. */
-   r = draw_get_rasterizer_no_cull(draw, rast->scissor, rast->flatshade);
+   r = draw_get_rasterizer_no_cull(draw, rast);
    pipe->bind_rasterizer_state(pipe, r);
 
    draw->suspend_flushing = FALSE;
@@ -666,10 +664,10 @@ draw_aapoint_prepare_outputs(struct draw_context *draw,
    /* update vertex attrib info */
    aapoint->pos_slot = draw_current_shader_position_output(draw);
 
-   if (!rast->point_smooth)
+   if (!rast->point_smooth || rast->multisample)
       return;
 
-   if (aapoint->fs->aapoint_fs) {
+   if (aapoint->fs && aapoint->fs->aapoint_fs) {
       /* allocate the extra post-transformed vertex attribute */
       aapoint->tex_slot = draw_alloc_extra_vertex_attrib(draw,
                                                          TGSI_SEMANTIC_GENERIC,
@@ -734,7 +732,7 @@ aapoint_stage_from_pipe(struct pipe_context *pipe)
 
 /**
  * This function overrides the driver's create_fs_state() function and
- * will typically be called by the state tracker.
+ * will typically be called by the gallium frontend.
  */
 static void *
 aapoint_create_fs_state(struct pipe_context *pipe,
@@ -748,10 +746,8 @@ aapoint_create_fs_state(struct pipe_context *pipe,
    aafs->state.type = fs->type;
    if (fs->type == PIPE_SHADER_IR_TGSI)
       aafs->state.tokens = tgsi_dup_tokens(fs->tokens);
-#ifdef LLVM_AVAILABLE
    else
       aafs->state.ir.nir = nir_shader_clone(NULL, fs->ir.nir);
-#endif
    /* pass-through */
    aafs->driver_fs = aapoint->driver_create_fs_state(pipe, fs);
 

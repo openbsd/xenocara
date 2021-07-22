@@ -25,12 +25,42 @@
 #include "brw_context.h"
 #include "brw_cs.h"
 #include "brw_wm.h"
-#include "intel_mipmap_tree.h"
+#include "brw_mipmap_tree.h"
 #include "brw_state.h"
-#include "intel_batchbuffer.h"
+#include "brw_batch.h"
 #include "compiler/brw_nir.h"
 #include "brw_program.h"
 #include "compiler/glsl/ir_uniform.h"
+
+struct brw_cs_parameters
+brw_cs_get_parameters(const struct brw_context *brw)
+{
+   assert(brw->cs.base.prog_data);
+   struct brw_cs_prog_data *cs_prog_data =
+      brw_cs_prog_data(brw->cs.base.prog_data);
+
+   struct brw_cs_parameters params = {};
+
+   if (brw->compute.group_size) {
+      /* With ARB_compute_variable_group_size the group size is set at
+       * dispatch time, so we can't use the one provided by the compiler.
+       */
+      params.group_size = brw->compute.group_size[0] *
+                          brw->compute.group_size[1] *
+                          brw->compute.group_size[2];
+   } else {
+      params.group_size = cs_prog_data->local_size[0] *
+                          cs_prog_data->local_size[1] *
+                          cs_prog_data->local_size[2];
+   }
+
+   params.simd_size =
+      brw_cs_simd_size_for_group_size(&brw->screen->devinfo,
+                                      cs_prog_data, params.group_size);
+   params.threads = DIV_ROUND_UP(params.group_size, params.simd_size);
+
+   return params;
+}
 
 static void
 assign_cs_binding_table_offsets(const struct gen_device_info *devinfo,
@@ -62,7 +92,7 @@ brw_codegen_cs_prog(struct brw_context *brw,
 
    memset(&prog_data, 0, sizeof(prog_data));
 
-   if (cp->program.info.cs.shared_size > 64 * 1024) {
+   if (cp->program.info.shared_size > 64 * 1024) {
       cp->program.sh.data->LinkStatus = LINKING_FAILURE;
       const char *error_str =
          "Compute shader used more than 64KB of shared variables";
@@ -84,17 +114,27 @@ brw_codegen_cs_prog(struct brw_context *brw,
       start_time = get_time();
    }
 
-   int st_index = -1;
-   if (INTEL_DEBUG & DEBUG_SHADER_TIME)
-      st_index = brw_get_shader_time_index(brw, &cp->program, ST_CS, true);
 
-   char *error_str;
-   program = brw_compile_cs(brw->screen->compiler, brw, mem_ctx, key,
-                            &prog_data, nir, st_index, NULL, &error_str);
+   brw_nir_lower_cs_intrinsics(nir);
+
+   struct brw_compile_cs_params params = {
+      .nir = nir,
+      .key = key,
+      .prog_data = &prog_data,
+      .log_data = brw,
+   };
+
+   if (INTEL_DEBUG & DEBUG_SHADER_TIME) {
+      params.shader_time = true;
+      params.shader_time_index =
+         brw_get_shader_time_index(brw, &cp->program, ST_CS, true);
+   }
+
+   program = brw_compile_cs(brw->screen->compiler, mem_ctx, &params);
    if (program == NULL) {
       cp->program.sh.data->LinkStatus = LINKING_FAILURE;
-      ralloc_strcat(&cp->program.sh.data->InfoLog, error_str);
-      _mesa_problem(NULL, "Failed to compile compute shader: %s\n", error_str);
+      ralloc_strcat(&cp->program.sh.data->InfoLog, params.error_str);
+      _mesa_problem(NULL, "Failed to compile compute shader: %s\n", params.error_str);
 
       ralloc_free(mem_ctx);
       return false;

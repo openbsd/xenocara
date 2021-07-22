@@ -60,7 +60,7 @@ anv_gem_mmap(struct anv_device *device, uint32_t gem_handle,
  * this map is no longer valid.  Pair this with anv_gem_mmap().
  */
 void
-anv_gem_munmap(void *p, uint64_t size)
+anv_gem_munmap(struct anv_device *device, void *p, uint64_t size)
 {
    munmap(p, size);
 }
@@ -104,6 +104,12 @@ anv_gem_set_tiling(struct anv_device *device,
 }
 
 int
+anv_gem_get_tiling(struct anv_device *device, uint32_t gem_handle)
+{
+   return 0;
+}
+
+int
 anv_gem_set_caching(struct anv_device *device, uint32_t gem_handle,
                     uint32_t caching)
 {
@@ -121,6 +127,12 @@ int
 anv_gem_get_param(int fd, uint32_t param)
 {
    unreachable("Unused");
+}
+
+uint64_t
+anv_gem_get_drm_cap(int fd, uint32_t capability)
+{
+   return 0;
 }
 
 bool
@@ -160,14 +172,8 @@ anv_gem_has_context_priority(int fd)
 }
 
 int
-anv_gem_get_aperture(int fd, uint64_t *size)
-{
-   unreachable("Unused");
-}
-
-int
-anv_gem_gpu_get_reset_stats(struct anv_device *device,
-                            uint32_t *active, uint32_t *pending)
+anv_gem_context_get_reset_stats(int fd, int context,
+                                uint32_t *active, uint32_t *pending)
 {
    unreachable("Unused");
 }
@@ -240,16 +246,69 @@ anv_gem_supports_syncobj_wait(int fd)
 }
 
 int
+anv_i915_query(int fd, uint64_t query_id, void *buffer,
+               int32_t *buffer_len)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_create_context_engines(struct anv_device *device,
+                               const struct drm_i915_query_engine_info *info,
+                               int num_engines,
+                               uint16_t *engine_classes)
+{
+   unreachable("Unused");
+}
+
+struct drm_i915_query_engine_info *
+anv_gem_get_engine_info(int fd)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_count_engines(const struct drm_i915_query_engine_info *info,
+                      uint16_t engine_class)
+{
+   unreachable("Unused");
+}
+
+int
 anv_gem_syncobj_wait(struct anv_device *device,
-                     uint32_t *handles, uint32_t num_handles,
+                     const uint32_t *handles, uint32_t num_handles,
                      int64_t abs_timeout_ns, bool wait_all)
 {
    unreachable("Unused");
 }
 
 int
-anv_gem_reg_read(struct anv_device *device,
-                 uint32_t offset, uint64_t *result)
+anv_gem_reg_read(int fd, uint32_t offset, uint64_t *result)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_timeline_wait(struct anv_device *device,
+                              const uint32_t *handles, const uint64_t *points,
+                              uint32_t num_items, int64_t abs_timeout_ns,
+                              bool wait_all, bool wait_materialize)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_timeline_signal(struct anv_device *device,
+                                const uint32_t *handles, const uint64_t *points,
+                                uint32_t num_items)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_timeline_query(struct anv_device *device,
+                               const uint32_t *handles, uint64_t *points,
+                               uint32_t num_items)
 {
    unreachable("Unused");
 }

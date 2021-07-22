@@ -65,8 +65,14 @@ public:
                                 unsigned max_depth,
                                 unsigned min_branch_cost)
    {
+      this->found_unsupported_op = false;
+      this->found_expensive_op = false;
+      this->found_dynamic_arrayref = false;
+      this->is_then = false;
       this->progress = false;
       this->stage = stage;
+      this->then_cost = 0;
+      this->else_cost = 0;
       this->max_depth = max_depth;
       this->min_branch_cost = min_branch_cost;
       this->depth = 0;
@@ -152,7 +158,7 @@ check_ir_node(ir_instruction *ir, void *data)
 
       if (deref->array_index->ir_type != ir_type_constant)
          v->found_dynamic_arrayref = true;
-   } /* fall-through */
+   } FALLTHROUGH;
    case ir_type_expression:
    case ir_type_dereference_record:
       if (v->is_then)

@@ -38,10 +38,11 @@
 #include "framebuffer.h"
 #include "hash.h"
 #include "image.h"
-#include "imports.h"
+
 #include "macros.h"
 #include "mipmap.h"
 #include "multisample.h"
+#include "pixel.h"
 #include "pixelstore.h"
 #include "state.h"
 #include "texcompress.h"
@@ -575,7 +576,7 @@ _mesa_get_texture_dimensions(GLenum target)
    case GL_PROXY_TEXTURE_2D_MULTISAMPLE_ARRAY:
       return 3;
    case GL_TEXTURE_BUFFER:
-      /* fall-through */
+      FALLTHROUGH;
    default:
       _mesa_problem(NULL, "invalid target 0x%x in get_texture_dimensions()",
                     target);
@@ -718,7 +719,7 @@ _mesa_get_tex_max_num_levels(GLenum target, GLsizei width, GLsizei height,
       return 1;
    }
 
-   return _mesa_logbase2(size) + 1;
+   return util_logbase2(size) + 1;
 }
 
 
@@ -844,7 +845,7 @@ _mesa_init_teximage_fields_ms(struct gl_context *ctx,
    img->Depth = depth;
 
    img->Width2 = width - 2 * border;   /* == 1 << img->WidthLog2; */
-   img->WidthLog2 = _mesa_logbase2(img->Width2);
+   img->WidthLog2 = util_logbase2(img->Width2);
 
    switch(target) {
    case GL_TEXTURE_1D:
@@ -887,7 +888,7 @@ _mesa_init_teximage_fields_ms(struct gl_context *ctx,
    case GL_TEXTURE_2D_MULTISAMPLE:
    case GL_PROXY_TEXTURE_2D_MULTISAMPLE:
       img->Height2 = height - 2 * border; /* == 1 << img->HeightLog2; */
-      img->HeightLog2 = _mesa_logbase2(img->Height2);
+      img->HeightLog2 = util_logbase2(img->Height2);
       if (depth == 0)
          img->Depth2 = 0;
       else
@@ -901,16 +902,16 @@ _mesa_init_teximage_fields_ms(struct gl_context *ctx,
    case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
    case GL_PROXY_TEXTURE_2D_MULTISAMPLE_ARRAY:
       img->Height2 = height - 2 * border; /* == 1 << img->HeightLog2; */
-      img->HeightLog2 = _mesa_logbase2(img->Height2);
+      img->HeightLog2 = util_logbase2(img->Height2);
       img->Depth2 = depth; /* no border */
       img->DepthLog2 = 0; /* not used */
       break;
    case GL_TEXTURE_3D:
    case GL_PROXY_TEXTURE_3D:
       img->Height2 = height - 2 * border; /* == 1 << img->HeightLog2; */
-      img->HeightLog2 = _mesa_logbase2(img->Height2);
+      img->HeightLog2 = util_logbase2(img->Height2);
       img->Depth2 = depth - 2 * border;   /* == 1 << img->DepthLog2; */
-      img->DepthLog2 = _mesa_logbase2(img->Depth2);
+      img->DepthLog2 = util_logbase2(img->Depth2);
       break;
    default:
       _mesa_problem(NULL, "invalid target 0x%x in _mesa_init_teximage_fields()",
@@ -977,7 +978,7 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (width < 2 * border || width > 2 * border + maxSize)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -992,9 +993,9 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (height < 2 * border || height > 2 * border + maxSize)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         if (height > 0 && !util_is_power_of_two_nonzero(height - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1010,11 +1011,11 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (depth < 2 * border || depth > 2 * border + maxSize)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         if (height > 0 && !util_is_power_of_two_nonzero(height - 2 * border))
             return GL_FALSE;
-         if (depth > 0 && !_mesa_is_pow_two(depth - 2 * border))
+         if (depth > 0 && !util_is_power_of_two_nonzero(depth - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1047,9 +1048,9 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (height < 2 * border || height > 2 * border + maxSize)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         if (height > 0 && !util_is_power_of_two_nonzero(height - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1062,7 +1063,7 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (height < 0 || height > ctx->Const.MaxArrayTextureLayers)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1079,9 +1080,9 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (depth < 0 || depth > ctx->Const.MaxArrayTextureLayers)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         if (height > 0 && !util_is_power_of_two_nonzero(height - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1100,9 +1101,9 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
       if (level >= ctx->Const.MaxCubeTextureLevels)
          return GL_FALSE;
       if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         if (width > 0 && !util_is_power_of_two_nonzero(width - 2 * border))
             return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         if (height > 0 && !util_is_power_of_two_nonzero(height - 2 * border))
             return GL_FALSE;
       }
       return GL_TRUE;
@@ -1492,6 +1493,7 @@ _mesa_target_can_be_compressed(const struct gl_context *ctx, GLenum target,
       default:
          break;
       }
+      FALLTHROUGH;
    default:
       break;
    }
@@ -1892,7 +1894,7 @@ texture_error_check( struct gl_context *ctx,
     * requires GL_OES_texture_float) are filtered elsewhere.
     */
    char bufCallerName[20];
-   _mesa_snprintf(bufCallerName, 20, "glTexImage%dD", dimensions);
+   snprintf(bufCallerName, 20, "glTexImage%dD", dimensions);
    if (_mesa_is_gles(ctx) &&
        texture_format_error_check_gles(ctx, format, type,
                                        internalFormat, bufCallerName)) {
@@ -1921,7 +1923,7 @@ texture_error_check( struct gl_context *ctx,
       if (type != GL_UNSIGNED_SHORT_8_8_MESA &&
           type != GL_UNSIGNED_SHORT_8_8_REV_MESA) {
          char message[100];
-         _mesa_snprintf(message, sizeof(message),
+         snprintf(message, sizeof(message),
                         "glTexImage%dD(format/type YCBCR mismatch)",
                         dimensions);
          _mesa_error(ctx, GL_INVALID_ENUM, "%s", message);
@@ -1938,7 +1940,7 @@ texture_error_check( struct gl_context *ctx,
       }
       if (border != 0) {
          char message[100];
-         _mesa_snprintf(message, sizeof(message),
+         snprintf(message, sizeof(message),
                         "glTexImage%dD(format=GL_YCBCR_MESA and border=%d)",
                         dimensions, border);
          _mesa_error(ctx, GL_INVALID_VALUE, "%s", message);
@@ -2678,7 +2680,7 @@ struct cb_info
  * Check render to texture callback.  Called from _mesa_HashWalk().
  */
 static void
-check_rtt_cb(UNUSED GLuint key, void *data, void *userData)
+check_rtt_cb(void *data, void *userData)
 {
    struct gl_framebuffer *fb = (struct gl_framebuffer *) data;
    const struct cb_info *info = (struct cb_info *) userData;
@@ -2744,9 +2746,9 @@ static inline void
 check_gen_mipmap(struct gl_context *ctx, GLenum target,
                  struct gl_texture_object *texObj, GLint level)
 {
-   if (texObj->GenerateMipmap &&
-       level == texObj->BaseLevel &&
-       level < texObj->MaxLevel) {
+   if (texObj->Attrib.GenerateMipmap &&
+       level == texObj->Attrib.BaseLevel &&
+       level < texObj->Attrib.MaxLevel) {
       assert(ctx->Driver.GenerateMipmap);
       ctx->Driver.GenerateMipmap(ctx, target, texObj);
    }
@@ -2915,7 +2917,9 @@ lookup_texture_ext_dsa(struct gl_context *ctx, GLenum target, GLuint texture,
       texObj = ctx->Shared->DefaultTex[targetIndex];
       assert(texObj);
    } else {
+      bool isGenName;
       texObj = _mesa_lookup_texture(ctx, texture);
+      isGenName = texObj != NULL;
       if (!texObj && ctx->API == API_OPENGL_CORE) {
          _mesa_error(ctx, GL_INVALID_OPERATION, "%s(non-gen name)", caller);
          return NULL;
@@ -2929,7 +2933,7 @@ lookup_texture_ext_dsa(struct gl_context *ctx, GLenum target, GLuint texture,
          }
 
          /* insert into hash table */
-         _mesa_HashInsert(ctx->Shared->TexObjects, texObj->Name, texObj);
+         _mesa_HashInsert(ctx->Shared->TexObjects, texObj->Name, texObj, isGenName);
       }
 
       if (texObj->Target != boundTarget) {
@@ -2965,7 +2969,7 @@ teximage(struct gl_context *ctx, GLboolean compressed, GLuint dims,
    mesa_format texFormat;
    bool dimensionsOK = true, sizeOK = true;
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE)) {
       if (compressed)
@@ -3124,7 +3128,7 @@ teximage(struct gl_context *ctx, GLboolean compressed, GLuint dims,
       }
 
       if (ctx->NewState & _NEW_PIXEL)
-         _mesa_update_state(ctx);
+         _mesa_update_pixel(ctx);
 
       _mesa_lock_texture(ctx, texObj);
       {
@@ -3394,7 +3398,7 @@ egl_image_target_texture(struct gl_context *ctx,
 {
    struct gl_texture_image *texImage;
    bool valid_target;
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    switch (target) {
    case GL_TEXTURE_2D:
@@ -3419,9 +3423,6 @@ egl_image_target_texture(struct gl_context *ctx,
       _mesa_error(ctx, GL_INVALID_VALUE, "%s(image=%p)", caller, image);
       return;
    }
-
-   if (ctx->NewState & _NEW_PIXEL)
-      _mesa_update_state(ctx);
 
    _mesa_lock_texture(ctx, texObj);
 
@@ -3559,10 +3560,10 @@ texture_sub_image(struct gl_context *ctx, GLuint dims,
                   GLsizei width, GLsizei height, GLsizei depth,
                   GLenum format, GLenum type, const GLvoid *pixels)
 {
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (ctx->NewState & _NEW_PIXEL)
-      _mesa_update_state(ctx);
+      _mesa_update_pixel(ctx);
 
    _mesa_lock_texture(ctx, texObj);
    {
@@ -3572,11 +3573,11 @@ texture_sub_image(struct gl_context *ctx, GLuint dims,
          case 3:
             if (target != GL_TEXTURE_2D_ARRAY)
                zoffset += texImage->Border;
-            /* fall-through */
+            FALLTHROUGH;
          case 2:
             if (target != GL_TEXTURE_1D_ARRAY)
                yoffset += texImage->Border;
-            /* fall-through */
+            FALLTHROUGH;
          case 1:
             xoffset += texImage->Border;
          }
@@ -3703,7 +3704,7 @@ texturesubimage(struct gl_context *ctx, GLuint dims,
    if (!no_error) {
       /* check target (proxies not allowed) */
       if (!legal_texsubimage_target(ctx, dims, texObj->Target, true)) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "%s(target=%s)",
+         _mesa_error(ctx, GL_INVALID_OPERATION, "%s(target=%s)",
                      callerName, _mesa_enum_to_string(texObj->Target));
          return;
       }
@@ -4201,16 +4202,17 @@ copy_texture_sub_image(struct gl_context *ctx, GLuint dims,
    case 3:
       if (target != GL_TEXTURE_2D_ARRAY)
          zoffset += texImage->Border;
-      /* fall-through */
+      FALLTHROUGH;
    case 2:
       if (target != GL_TEXTURE_1D_ARRAY)
          yoffset += texImage->Border;
-      /* fall-through */
+      FALLTHROUGH;
    case 1:
       xoffset += texImage->Border;
    }
 
-   if (_mesa_clip_copytexsubimage(ctx, &xoffset, &yoffset, &x, &y,
+   if (ctx->Const.NoClippingOnCopyTex ||
+       _mesa_clip_copytexsubimage(ctx, &xoffset, &yoffset, &x, &y,
                                   &width, &height)) {
       struct gl_renderbuffer *srcRb =
          get_copy_tex_image_source(ctx, texImage->TexFormat);
@@ -4237,12 +4239,15 @@ copy_texture_sub_image_err(struct gl_context *ctx, GLuint dims,
                            GLint x, GLint y, GLsizei width, GLsizei height,
                            const char *caller)
 {
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE))
       _mesa_debug(ctx, "%s %s %d %d %d %d %d %d %d %d\n", caller,
                   _mesa_enum_to_string(target),
                   level, xoffset, yoffset, zoffset, x, y, width, height);
+
+   if (ctx->NewState & _NEW_PIXEL)
+      _mesa_update_pixel(ctx);
 
    if (ctx->NewState & NEW_COPY_TEX_STATE)
       _mesa_update_state(ctx);
@@ -4265,7 +4270,10 @@ copy_texture_sub_image_no_error(struct gl_context *ctx, GLuint dims,
                                 GLint xoffset, GLint yoffset, GLint zoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height)
 {
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
+
+   if (ctx->NewState & _NEW_PIXEL)
+      _mesa_update_pixel(ctx);
 
    if (ctx->NewState & NEW_COPY_TEX_STATE)
       _mesa_update_state(ctx);
@@ -4287,7 +4295,7 @@ copyteximage(struct gl_context *ctx, GLuint dims, struct gl_texture_object *texO
    struct gl_texture_image *texImage;
    mesa_format texFormat;
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE))
       _mesa_debug(ctx, "glCopyTexImage%uD %s %d %s %d %d %d %d %d\n",
@@ -4295,6 +4303,9 @@ copyteximage(struct gl_context *ctx, GLuint dims, struct gl_texture_object *texO
                   _mesa_enum_to_string(target), level,
                   _mesa_enum_to_string(internalFormat),
                   x, y, width, height, border);
+
+   if (ctx->NewState & _NEW_PIXEL)
+      _mesa_update_pixel(ctx);
 
    if (ctx->NewState & NEW_COPY_TEX_STATE)
       _mesa_update_state(ctx);
@@ -4416,7 +4427,8 @@ copyteximage(struct gl_context *ctx, GLuint dims, struct gl_texture_object *texO
             /* Allocate texture memory (no pixel data yet) */
             ctx->Driver.AllocTextureImageBuffer(ctx, texImage);
 
-            if (_mesa_clip_copytexsubimage(ctx, &dstX, &dstY, &srcX, &srcY,
+            if (ctx->Const.NoClippingOnCopyTex ||
+                _mesa_clip_copytexsubimage(ctx, &dstX, &dstY, &srcX, &srcY,
                                            &width, &height)) {
                struct gl_renderbuffer *srcRb =
                   get_copy_tex_image_source(ctx, texImage->TexFormat);
@@ -5654,7 +5666,7 @@ compressed_texture_sub_image(struct gl_context *ctx, GLuint dims,
                              GLsizei height, GLsizei depth, GLenum format,
                              GLsizei imageSize, const GLvoid *data)
 {
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    _mesa_lock_texture(ctx, texObj);
    {
@@ -5728,6 +5740,7 @@ compressed_tex_sub_image(unsigned dim, GLenum target, GLuint textureOrIndex,
          break;
       case TEX_MODE_CURRENT_NO_ERROR:
          no_error = true;
+         FALLTHROUGH;
       case TEX_MODE_CURRENT_ERROR:
       default:
          assert(textureOrIndex == 0);
@@ -6325,11 +6338,11 @@ texture_buffer_range(struct gl_context *ctx,
       return;
    }
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, GL_TEXTURE_BIT);
 
    _mesa_lock_texture(ctx, texObj);
    {
-      _mesa_reference_buffer_object(ctx, &texObj->BufferObject, bufObj);
+      _mesa_reference_buffer_object_shared(ctx, &texObj->BufferObject, bufObj);
       texObj->BufferObjectFormat = internalFormat;
       texObj->_BufferObjectFormat = format;
       texObj->BufferOffset = offset;
@@ -6729,8 +6742,8 @@ texture_image_multisample(struct gl_context *ctx, GLuint dims,
    bool dsa = strstr(func, "ture") ? true : false;
 
    if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE)) {
-      _mesa_debug(ctx, "%s(target=%s, samples=%d)\n", func,
-                  _mesa_enum_to_string(target), samples);
+      _mesa_debug(ctx, "%s(target=%s, samples=%d, internalformat=%s)\n", func,
+                  _mesa_enum_to_string(target), samples, _mesa_enum_to_string(internalformat));
    }
 
    if (!((ctx->Extensions.ARB_texture_multisample

@@ -57,14 +57,15 @@ class marshal_function(gl_XML.gl_function):
 
         # Store the "marshal" attribute, if present.
         self.marshal = element.get('marshal')
-        self.marshal_fail = element.get('marshal_fail')
+        self.marshal_sync = element.get('marshal_sync')
+        self.marshal_call_after = element.get('marshal_call_after')
 
     def marshal_flavor(self):
         """Find out how this function should be marshalled between
         client and server threads."""
         # If a "marshal" attribute was present, that overrides any
         # determination that would otherwise be made by this function.
-        if self.marshal not in (None, 'draw'):
+        if self.marshal is not None:
             return self.marshal
 
         if self.exec_flavor == 'skip':
@@ -77,9 +78,9 @@ class marshal_function(gl_XML.gl_function):
         for p in self.parameters:
             if p.is_output:
                 return 'sync'
-            if p.is_pointer() and not (p.count or p.counter) and not (self.marshal == 'draw' and p.name == 'indices'):
+            if (p.is_pointer() and not (p.count or p.counter or p.marshal_count)):
                 return 'sync'
-            if p.count_parameter_list:
+            if p.count_parameter_list and not p.marshal_count:
                 # Parameter size is determined by enums; haven't
                 # written logic to handle this yet.  TODO: fix.
                 return 'sync'

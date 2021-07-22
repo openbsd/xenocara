@@ -28,10 +28,10 @@
  *
  * Currently there are two possible counter sources exposed here:
  *
- * On Gen6+ hardware we have numerous 64bit Pipeline Statistics Registers
+ * On Gfx6+ hardware we have numerous 64bit Pipeline Statistics Registers
  * that we can snapshot at the beginning and end of a query.
  *
- * On Gen7.5+ we have Observability Architecture counters which are
+ * On Gfx7.5+ we have Observability Architecture counters which are
  * covered in separate document from the rest of the PRMs.  It is available at:
  * https://01.org/linuxgraphics/documentation/driver-documentation-prms
  * => 2013 Intel Core Processor Family => Observability Performance Counters
@@ -70,7 +70,7 @@
 
 #include "brw_context.h"
 #include "brw_defines.h"
-#include "intel_batchbuffer.h"
+#include "brw_batch.h"
 
 #include "perf/gen_perf.h"
 #include "perf/gen_perf_regs.h"
@@ -111,7 +111,7 @@ brw_is_perf_query_ready(struct gl_context *ctx,
                         struct gl_perf_query_object *o);
 
 static void
-dump_perf_query_callback(GLuint id, void *query_void, void *brw_void)
+dump_perf_query_callback(void *query_void, void *brw_void)
 {
    struct brw_context *ctx = brw_void;
    struct gen_perf_context *perf_ctx = ctx->perf_ctx;
@@ -120,7 +120,7 @@ dump_perf_query_callback(GLuint id, void *query_void, void *brw_void)
    struct gen_perf_query_object *obj = brw_query->query;
 
    DBG("%4d: %-6s %-8s ",
-       id,
+       o->Id,
        o->Used ? "Dirty," : "New,",
        o->Active ? "Active," : (o->Ready ? "Ready," : "Pending,"));
    gen_perf_dump_query(perf_ctx, obj, &ctx->batch);
@@ -157,7 +157,7 @@ brw_get_perf_query_info(struct gl_context *ctx,
 }
 
 static GLuint
-gen_counter_type_enum_to_gl_type(enum gen_perf_counter_type type)
+intel_counter_type_enum_to_gl_type(enum gen_perf_counter_type type)
 {
    switch (type) {
    case GEN_PERF_COUNTER_TYPE_EVENT: return GL_PERFQUERY_COUNTER_EVENT_INTEL;
@@ -211,7 +211,7 @@ brw_get_perf_counter_info(struct gl_context *ctx,
    *desc = counter->desc;
    *offset = counter->offset;
    *data_size = gen_perf_query_counter_get_size(counter);
-   *type_enum = gen_counter_type_enum_to_gl_type(counter->type);
+   *type_enum = intel_counter_type_enum_to_gl_type(counter->type);
    *data_type_enum = gen_counter_data_type_to_gl_type(counter->data_type);
    *raw_max = counter->raw_max;
 }
@@ -247,12 +247,12 @@ brw_begin_perf_query(struct gl_context *ctx,
 
    DBG("Begin(%d)\n", o->Id);
 
-   gen_perf_begin_query(perf_ctx, obj);
+   bool ret = gen_perf_begin_query(perf_ctx, obj);
 
    if (INTEL_DEBUG & DEBUG_PERFMON)
       dump_perf_queries(brw);
 
-   return true;
+   return ret;
 }
 
 /**
@@ -300,7 +300,7 @@ brw_is_perf_query_ready(struct gl_context *ctx,
 /**
  * Driver hook for glGetPerfQueryDataINTEL().
  */
-static void
+static bool
 brw_get_perf_query_data(struct gl_context *ctx,
                         struct gl_perf_query_object *o,
                         GLsizei data_size,
@@ -323,8 +323,10 @@ brw_get_perf_query_data(struct gl_context *ctx,
     */
    assert(o->Ready);
 
-   gen_perf_get_query_data(brw->perf_ctx, obj,
+   gen_perf_get_query_data(brw->perf_ctx, obj, &brw->batch,
                            data_size, data, bytes_written);
+
+   return true;
 }
 
 static struct gl_perf_query_object *
@@ -378,7 +380,7 @@ brw_delete_perf_query(struct gl_context *ctx,
 static bool
 oa_metrics_kernel_support(int fd, const struct gen_device_info *devinfo)
 {
-   if (devinfo->gen >= 10) {
+   if (devinfo->ver >= 10) {
       /* topology uAPI required for CNL+ (kernel 4.17+) make a call to the api
        * to verify support
        */
@@ -394,8 +396,8 @@ oa_metrics_kernel_support(int fd, const struct gen_device_info *devinfo)
       return drmIoctl(fd, DRM_IOCTL_I915_QUERY, &query) == 0;
    }
 
-   if (devinfo->gen >= 8) {
-      /* 4.13+ api required for gen8 - gen9 */
+   if (devinfo->ver >= 8) {
+      /* 4.13+ api required for gfx8 - gfx9 */
       int mask;
       struct drm_i915_getparam gp = {
          .param = I915_PARAM_SLICE_MASK,
@@ -405,7 +407,7 @@ oa_metrics_kernel_support(int fd, const struct gen_device_info *devinfo)
       return drmIoctl(fd, DRM_IOCTL_I915_GETPARAM, &gp) == 0;
    }
 
-   if (devinfo->gen == 7)
+   if (devinfo->ver == 7)
       /* default topology values are correct for HSW */
       return true;
 
@@ -442,7 +444,7 @@ static void
 brw_oa_batchbuffer_flush(void *c, const char *file, int line)
 {
    struct brw_context *ctx = c;
-   _intel_batchbuffer_flush_fence(ctx, -1, NULL, file,  line);
+   _brw_batch_flush_fence(ctx, -1, NULL, file,  line);
 }
 
 static void
@@ -487,7 +489,7 @@ brw_init_perf_query_info(struct gl_context *ctx)
    if (!oa_metrics_kernel_support(brw->screen->fd, devinfo))
       return 0;
 
-   perf_cfg = gen_perf_new(ctx);
+   perf_cfg = gen_perf_new(brw->mem_ctx);
 
    perf_cfg->vtbl.bo_alloc = brw_oa_bo_alloc;
    perf_cfg->vtbl.bo_unreference = (bo_unreference_t)brw_bo_unreference;
@@ -504,9 +506,10 @@ brw_init_perf_query_info(struct gl_context *ctx)
    perf_cfg->vtbl.bo_wait_rendering = (bo_wait_rendering_t)brw_bo_wait_rendering;
    perf_cfg->vtbl.bo_busy = (bo_busy_t)brw_bo_busy;
 
-   gen_perf_init_context(perf_ctx, perf_cfg, brw, brw->bufmgr, devinfo,
-                         brw->hw_ctx, brw->screen->fd);
-   gen_perf_init_metrics(perf_cfg, devinfo, brw->screen->fd);
+   gen_perf_init_context(perf_ctx, perf_cfg, brw->mem_ctx, brw, brw->bufmgr,
+                         devinfo, brw->hw_ctx, brw->screen->fd);
+   gen_perf_init_metrics(perf_cfg, devinfo, brw->screen->fd,
+                         true /* pipeline stats */);
 
    return perf_cfg->n_queries;
 }

@@ -38,7 +38,9 @@
 
 enum pipe_error
 svga_swtnl_draw_vbo(struct svga_context *svga,
-                    const struct pipe_draw_info *info)
+                    const struct pipe_draw_info *info,
+                    const struct pipe_draw_indirect_info *indirect,
+                    const struct pipe_draw_start_count *draw_one)
 {
    struct pipe_transfer *vb_transfer[PIPE_MAX_ATTRIBS] = { 0 };
    struct pipe_transfer *ib_transfer = NULL;
@@ -47,7 +49,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    ASSERTED unsigned old_num_vertex_buffers;
    unsigned i;
    const void *map;
-   enum pipe_error ret;
+   boolean retried;
 
    SVGA_STATS_TIME_PUSH(svga_sws(svga), SVGA_STATS_TIME_SWTNLDRAWVBO);
 
@@ -58,12 +60,9 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    /* Make sure that the need_swtnl flag does not go away */
    svga->state.sw.in_swtnl_draw = TRUE;
 
-   ret = svga_update_state(svga, SVGA_STATE_SWTNL_DRAW);
-   if (ret != PIPE_OK) {
-      svga_context_flush(svga, NULL);
-      ret = svga_update_state(svga, SVGA_STATE_SWTNL_DRAW);
+   SVGA_RETRY_CHECK(svga, svga_update_state(svga, SVGA_STATE_SWTNL_DRAW), retried);
+   if (retried) {
       svga->swtnl.new_vbuf = TRUE;
-      assert(ret == PIPE_OK);
    }
 
    /*
@@ -73,8 +72,8 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
       if (svga->curr.vb[i].buffer.resource) {
          map = pipe_buffer_map(&svga->pipe,
                                svga->curr.vb[i].buffer.resource,
-                               PIPE_TRANSFER_READ |
-                               PIPE_TRANSFER_UNSYNCHRONIZED,
+                               PIPE_MAP_READ |
+                               PIPE_MAP_UNSYNCHRONIZED,
                                &vb_transfer[i]);
 
          draw_set_mapped_vertex_buffer(draw, i, map, ~0);
@@ -89,8 +88,8 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
          map = (ubyte *) info->index.user;
       } else {
          map = pipe_buffer_map(&svga->pipe, info->index.resource,
-                               PIPE_TRANSFER_READ |
-                               PIPE_TRANSFER_UNSYNCHRONIZED, &ib_transfer);
+                               PIPE_MAP_READ |
+                               PIPE_MAP_UNSYNCHRONIZED, &ib_transfer);
       }
       draw_set_indexes(draw,
                        (const ubyte *) map,
@@ -105,8 +104,8 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
 
       map = pipe_buffer_map(&svga->pipe,
                             svga->curr.constbufs[PIPE_SHADER_VERTEX][i].buffer,
-                            PIPE_TRANSFER_READ |
-                            PIPE_TRANSFER_UNSYNCHRONIZED,
+                            PIPE_MAP_READ |
+                            PIPE_MAP_UNSYNCHRONIZED,
                             &cb_transfer[i]);
       assert(map);
       draw_set_mapped_constant_buffer(
@@ -115,7 +114,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
          svga->curr.constbufs[PIPE_SHADER_VERTEX][i].buffer->width0);
    }
 
-   draw_vbo(draw, info);
+   draw_vbo(draw, info, indirect, draw_one, 1);
 
    draw_flush(svga->swtnl.draw);
 
@@ -148,7 +147,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    svga->dirty |= SVGA_NEW_NEED_PIPELINE | SVGA_NEW_NEED_SWVFETCH;
 
    SVGA_STATS_TIME_POP(svga_sws(svga));
-   return ret;
+   return PIPE_OK;
 }
 
 

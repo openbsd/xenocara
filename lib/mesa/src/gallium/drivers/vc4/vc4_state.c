@@ -60,10 +60,10 @@ vc4_set_blend_color(struct pipe_context *pctx,
 
 static void
 vc4_set_stencil_ref(struct pipe_context *pctx,
-                    const struct pipe_stencil_ref *stencil_ref)
+                    const struct pipe_stencil_ref stencil_ref)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
-        vc4->stencil_ref =* stencil_ref;
+        vc4->stencil_ref = stencil_ref;
         vc4->dirty |= VC4_DIRTY_STENCIL_REF;
 }
 
@@ -220,19 +220,19 @@ vc4_create_depth_stencil_alpha_state(struct pipe_context *pctx,
          */
         so->config_bits[2] |= VC4_CONFIG_BITS_EARLY_Z_UPDATE;
 
-        if (cso->depth.enabled) {
-                if (cso->depth.writemask) {
+        if (cso->depth_enabled) {
+                if (cso->depth_writemask) {
                         so->config_bits[1] |= VC4_CONFIG_BITS_Z_UPDATE;
                 }
-                so->config_bits[1] |= (cso->depth.func <<
+                so->config_bits[1] |= (cso->depth_func <<
                                        VC4_CONFIG_BITS_DEPTH_FUNC_SHIFT);
 
                 /* We only handle early Z in the < direction because otherwise
                  * we'd have to runtime guess which direction to set in the
                  * render config.
                  */
-                if ((cso->depth.func == PIPE_FUNC_LESS ||
-                     cso->depth.func == PIPE_FUNC_LEQUAL) &&
+                if ((cso->depth_func == PIPE_FUNC_LESS ||
+                     cso->depth_func == PIPE_FUNC_LEQUAL) &&
                     (!cso->stencil[0].enabled ||
                      (cso->stencil[0].zfail_op == PIPE_STENCIL_OP_KEEP &&
                       (!cso->stencil[1].enabled ||
@@ -313,13 +313,17 @@ vc4_set_viewport_states(struct pipe_context *pctx,
 static void
 vc4_set_vertex_buffers(struct pipe_context *pctx,
                        unsigned start_slot, unsigned count,
+                       unsigned unbind_num_trailing_slots,
+                       bool take_ownership,
                        const struct pipe_vertex_buffer *vb)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
         struct vc4_vertexbuf_stateobj *so = &vc4->vertexbuf;
 
         util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb,
-                                     start_slot, count);
+                                     start_slot, count,
+                                     unbind_num_trailing_slots,
+                                     take_ownership);
         so->count = util_last_bit(so->enabled_mask);
 
         vc4->dirty |= VC4_DIRTY_VTXBUF;
@@ -382,12 +386,13 @@ vc4_vertex_state_bind(struct pipe_context *pctx, void *hwcso)
 static void
 vc4_set_constant_buffer(struct pipe_context *pctx,
                         enum pipe_shader_type shader, uint index,
+                        bool take_ownership,
                         const struct pipe_constant_buffer *cb)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
         struct vc4_constbuf_stateobj *so = &vc4->constbuf[shader];
 
-        /* Note that the state tracker can unbind constant buffers by
+        /* Note that the gallium frontend can unbind constant buffers by
          * passing NULL here.
          */
         if (unlikely(!cb)) {
@@ -399,10 +404,7 @@ vc4_set_constant_buffer(struct pipe_context *pctx,
         if (index == 1 && so->cb[index].buffer_size != cb->buffer_size)
                 vc4->dirty |= VC4_DIRTY_UBO_1_SIZE;
 
-        pipe_resource_reference(&so->cb[index].buffer, cb->buffer);
-        so->cb[index].buffer_offset = cb->buffer_offset;
-        so->cb[index].buffer_size   = cb->buffer_size;
-        so->cb[index].user_buffer   = cb->user_buffer;
+        util_copy_constant_buffer(&so->cb[index], cb, take_ownership);
 
         so->enabled_mask |= 1 << index;
         so->dirty_mask |= 1 << index;
@@ -649,6 +651,7 @@ static void
 vc4_set_sampler_views(struct pipe_context *pctx,
                       enum pipe_shader_type shader,
                       unsigned start, unsigned nr,
+                      unsigned unbind_num_trailing_slots,
                       struct pipe_sampler_view **views)
 {
         struct vc4_context *vc4 = vc4_context(pctx);

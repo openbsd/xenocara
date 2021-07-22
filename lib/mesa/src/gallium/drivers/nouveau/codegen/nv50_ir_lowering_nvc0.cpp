@@ -310,6 +310,14 @@ NVC0LegalizeSSA::handleSET(CmpInstruction *cmp)
    cmp->sType = hTy;
 }
 
+void
+NVC0LegalizeSSA::handleBREV(Instruction *i)
+{
+   i->op = OP_EXTBF;
+   i->subOp = NV50_IR_SUBOP_EXTBF_REV;
+   i->setSrc(1, bld.mkImm(0x2000));
+}
+
 bool
 NVC0LegalizeSSA::visit(Function *fn)
 {
@@ -353,6 +361,9 @@ NVC0LegalizeSSA::visit(BasicBlock *bb)
       case OP_SET_XOR:
          if (typeSizeof(i->sType) == 8 && i->sType != TYPE_F64)
             handleSET(i->asCmp());
+         break;
+      case OP_BREV:
+         handleBREV(i);
          break;
       default:
          break;
@@ -856,11 +867,11 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
                next = hi;
          }
 
-         if (i->op == OP_SAT || i->op == OP_NEG || i->op == OP_ABS)
-            replaceCvt(i);
-
          if (i->op != OP_MOV && i->op != OP_PFETCH)
             replaceZero(i);
+
+         if (i->op == OP_SAT || i->op == OP_NEG || i->op == OP_ABS)
+            replaceCvt(i);
       }
    }
    if (!bb->getEntry())
@@ -872,7 +883,8 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
    return true;
 }
 
-NVC0LoweringPass::NVC0LoweringPass(Program *prog) : targ(prog->getTarget())
+NVC0LoweringPass::NVC0LoweringPass(Program *prog) : targ(prog->getTarget()),
+   gpEmitAddress(NULL)
 {
    bld.setProgram(prog);
 }
@@ -887,6 +899,8 @@ NVC0LoweringPass::visit(Function *fn)
       gpEmitAddress = bld.loadImm(NULL, 0)->asLValue();
       if (fn->cfgExit) {
          bld.setPosition(BasicBlock::get(fn->cfgExit)->getExit(), false);
+         if (prog->getTarget()->getChipset() >= NVISA_GV100_CHIPSET)
+            bld.mkOp1(OP_FINAL, TYPE_NONE, NULL, gpEmitAddress)->fixed = 1;
          bld.mkMovToReg(0, gpEmitAddress);
       }
    }
@@ -1171,7 +1185,7 @@ bool
 NVC0LoweringPass::handleManualTXD(TexInstruction *i)
 {
    // Always done from the l0 perspective. This is the way that NVIDIA's
-   // driver does it, and doing it from the "current" lane's perpsective
+   // driver does it, and doing it from the "current" lane's perspective
    // doesn't seem to always work for reasons that aren't altogether clear,
    // even in frag shaders.
    //
@@ -1714,15 +1728,17 @@ NVC0LoweringPass::handleCasExch(Instruction *cas, bool needCctl)
          cctl->setPredicate(cas->cc, cas->getPredicate());
    }
 
-   if (cas->subOp == NV50_IR_SUBOP_ATOM_CAS) {
+   if (cas->subOp == NV50_IR_SUBOP_ATOM_CAS &&
+       targ->getChipset() < NVISA_GV100_CHIPSET) {
       // CAS is crazy. It's 2nd source is a double reg, and the 3rd source
       // should be set to the high part of the double reg or bad things will
       // happen elsewhere in the universe.
       // Also, it sometimes returns the new value instead of the old one
       // under mysterious circumstances.
-      Value *dreg = bld.getSSA(8);
+      DataType ty = typeOfSize(typeSizeof(cas->dType) * 2);
+      Value *dreg = bld.getSSA(typeSizeof(ty));
       bld.setPosition(cas, false);
-      bld.mkOp2(OP_MERGE, TYPE_U64, dreg, cas->getSrc(1), cas->getSrc(2));
+      bld.mkOp2(OP_MERGE, ty, dreg, cas->getSrc(1), cas->getSrc(2));
       cas->setSrc(1, dreg);
       cas->setSrc(2, dreg);
    }
@@ -2312,15 +2328,15 @@ NVC0LoweringPass::insertOOBSurfaceOpResult(TexInstruction *su)
    bld.setPosition(su, true);
 
    for (unsigned i = 0; su->defExists(i); ++i) {
-      ValueDef &def = su->def(i);
+      Value *def = su->getDef(i);
+      Value *newDef = bld.getSSA();
+      su->setDef(i, newDef);
 
       Instruction *mov = bld.mkMov(bld.getSSA(), bld.loadImm(NULL, 0));
       assert(su->cc == CC_NOT_P);
       mov->setPredicate(CC_P, su->getPredicate());
-      Instruction *uni = bld.mkOp2(OP_UNION, TYPE_U32, bld.getSSA(), NULL, mov->getDef(0));
-
-      def.replace(uni->getDef(0), false);
-      uni->setSrc(0, def.get());
+      Instruction *uni = bld.mkOp2(OP_UNION, TYPE_U32, bld.getSSA(), newDef, mov->getDef(0));
+      bld.mkMov(def, uni->getDef(0));
    }
 }
 
@@ -2597,10 +2613,12 @@ NVC0LoweringPass::processSurfaceCoordsGM107(TexInstruction *su, Instruction *ret
       for (unsigned i = 0; su->defExists(i); ++i) {
          assert(i < 4);
 
-         ValueDef &def = su->def(i);
+         Value *def = su->getDef(i);
+         Value *newDef = bld.getSSA();
          ValueDef &def2 = su2d->def(i);
          Instruction *mov = NULL;
 
+         su->setDef(i, newDef);
          if (pred) {
             mov = bld.mkMov(bld.getSSA(), bld.loadImm(NULL, 0));
             mov->setPredicate(CC_P, pred->getDef(0));
@@ -2608,11 +2626,10 @@ NVC0LoweringPass::processSurfaceCoordsGM107(TexInstruction *su, Instruction *ret
 
          Instruction *uni = ret[i] = bld.mkOp2(OP_UNION, TYPE_U32,
                                       bld.getSSA(),
-                                      NULL, def2.get());
-         def.replace(uni->getDef(0), false);
-         uni->setSrc(0, def.get());
+                                      newDef, def2.get());
          if (mov)
             uni->setSrc(2, mov->getDef(0));
+         bld.mkMov(def, uni->getDef(0));
       }
    } else if (pred) {
       // Create a UNION so that RA assigns the same registers
@@ -2620,16 +2637,17 @@ NVC0LoweringPass::processSurfaceCoordsGM107(TexInstruction *su, Instruction *ret
       for (unsigned i = 0; su->defExists(i); ++i) {
          assert(i < 4);
 
-         ValueDef &def = su->def(i);
+         Value *def = su->getDef(i);
+         Value *newDef = bld.getSSA();
+         su->setDef(i, newDef);
 
          Instruction *mov = bld.mkMov(bld.getSSA(), bld.loadImm(NULL, 0));
          mov->setPredicate(CC_P, pred->getDef(0));
 
          Instruction *uni = ret[i] = bld.mkOp2(OP_UNION, TYPE_U32,
                                       bld.getSSA(),
-                                      NULL, mov->getDef(0));
-         def.replace(uni->getDef(0), false);
-         uni->setSrc(0, def.get());
+                                      newDef, mov->getDef(0));
+         bld.mkMov(def, uni->getDef(0));
       }
    }
 
@@ -2808,7 +2826,7 @@ NVC0LoweringPass::readTessCoord(LValue *dst, int c)
       y = dst;
    } else {
       assert(c == 2);
-      if (prog->driver->prop.tp.domain != PIPE_PRIM_TRIANGLES) {
+      if (prog->driver_out->prop.tp.domain != PIPE_PRIM_TRIANGLES) {
          bld.mkMov(dst, bld.loadImm(NULL, 0));
          return;
       }
@@ -2897,7 +2915,7 @@ NVC0LoweringPass::handleRDSV(Instruction *i)
          i->setSrc(0, bld.mkImm(sv == SV_GRIDID ? 0 : 1));
          return true;
       }
-      // Fallthrough
+      FALLTHROUGH;
    case SV_WORK_DIM:
       addr += prog->driver->prop.cp.gridInfoBase;
       bld.mkLoad(TYPE_U32, i->getDef(0),
@@ -2917,7 +2935,7 @@ NVC0LoweringPass::handleRDSV(Instruction *i)
       ld->subOp = NV50_IR_SUBOP_PIXLD_SAMPLEID;
       Value *offset = calculateSampleOffset(sampleID);
 
-      assert(prog->driver->prop.fp.readsSampleLocations);
+      assert(prog->driver_out->prop.fp.readsSampleLocations);
 
       if (targ->getChipset() >= NVISA_GM200_CHIPSET) {
          bld.mkLoad(TYPE_F32,
@@ -2951,7 +2969,7 @@ NVC0LoweringPass::handleRDSV(Instruction *i)
          bld.mkOp2v(OP_AND, TYPE_U32, bld.getSSA(), ld->getDef(0),
                     bld.mkOp2v(OP_SHL, TYPE_U32, bld.getSSA(),
                                bld.loadImm(NULL, 1), sampleid->getDef(0)));
-      if (prog->driver->prop.fp.persampleInvocation) {
+      if (prog->persampleInvocation) {
          bld.mkMov(i->getDef(0), masked);
       } else {
          bld.mkOp3(OP_SELP, TYPE_U32, i->getDef(0), ld->getDef(0), masked,
@@ -3152,7 +3170,7 @@ NVC0LoweringPass::handlePIXLD(Instruction *i)
    if (targ->getChipset() < NVISA_GM200_CHIPSET)
       return;
 
-   assert(prog->driver->prop.fp.readsSampleLocations);
+   assert(prog->driver_out->prop.fp.readsSampleLocations);
 
    bld.mkLoad(TYPE_F32,
               i->getDef(0),

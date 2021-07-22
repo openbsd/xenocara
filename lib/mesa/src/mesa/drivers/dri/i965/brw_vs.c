@@ -30,7 +30,7 @@
   */
 
 
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "main/context.h"
 #include "brw_context.h"
 #include "brw_vs.h"
@@ -80,7 +80,7 @@ brw_vs_outputs_written(struct brw_context *brw, struct brw_vs_prog_key *key,
       outputs_written |= BITFIELD64_BIT(VARYING_SLOT_EDGE);
    }
 
-   if (devinfo->gen < 6) {
+   if (devinfo->ver < 6) {
       /* Put dummy slots into the VUE for the SF to put the replaced
        * point sprite coords in.  We shouldn't need these dummy slots,
        * which take up precious URB space, but it would mean that the SF
@@ -159,7 +159,7 @@ brw_codegen_vs_prog(struct brw_context *brw,
 
    brw_compute_vue_map(devinfo,
                        &prog_data.base.vue_map, outputs_written,
-                       nir->info.separate_shader);
+                       nir->info.separate_shader, 1);
 
    if (0) {
       _mesa_fprint_program_opt(stderr, &vp->program, PROG_PRINT_DEBUG, true);
@@ -171,29 +171,36 @@ brw_codegen_vs_prog(struct brw_context *brw,
       start_time = get_time();
    }
 
-   if (unlikely(INTEL_DEBUG & DEBUG_VS)) {
+   if (INTEL_DEBUG & DEBUG_VS) {
       if (vp->program.is_arb_asm)
          brw_dump_arb_asm("vertex", &vp->program);
    }
 
-   int st_index = -1;
+
+   /* Emit GFX4 code.
+    */
+   struct brw_compile_vs_params params = {
+      .nir = nir,
+      .key = key,
+      .prog_data = &prog_data,
+      .log_data = brw,
+   };
+
    if (INTEL_DEBUG & DEBUG_SHADER_TIME) {
-      st_index = brw_get_shader_time_index(brw, &vp->program, ST_VS,
-                                           !vp->program.is_arb_asm);
+      params.shader_time = true;
+      params.shader_time_index =
+         brw_get_shader_time_index(brw, &vp->program, ST_VS,
+                                   !vp->program.is_arb_asm);
    }
 
-   /* Emit GEN4 code.
-    */
-   char *error_str;
-   program = brw_compile_vs(compiler, brw, mem_ctx, key, &prog_data,
-                            nir, st_index, NULL, &error_str);
+   program = brw_compile_vs(compiler, mem_ctx, &params);
    if (program == NULL) {
       if (!vp->program.is_arb_asm) {
          vp->program.sh.data->LinkStatus = LINKING_FAILURE;
-         ralloc_strcat(&vp->program.sh.data->InfoLog, error_str);
+         ralloc_strcat(&vp->program.sh.data->InfoLog, params.error_str);
       }
 
-      _mesa_problem(NULL, "Failed to compile vertex shader: %s\n", error_str);
+      _mesa_problem(NULL, "Failed to compile vertex shader: %s\n", params.error_str);
 
       ralloc_free(mem_ctx);
       return false;
@@ -265,10 +272,10 @@ brw_vs_populate_key(struct brw_context *brw,
        (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES) &&
        vp->program.info.clip_distance_array_size == 0) {
       key->nr_userclip_plane_consts =
-         _mesa_logbase2(ctx->Transform.ClipPlanesEnabled) + 1;
+         util_logbase2(ctx->Transform.ClipPlanesEnabled) + 1;
    }
 
-   if (devinfo->gen < 6) {
+   if (devinfo->ver < 6) {
       /* _NEW_POLYGON */
       key->copy_edgeflag = (ctx->Polygon.FrontMode != GL_FILL ||
                             ctx->Polygon.BackMode != GL_FILL);
@@ -287,7 +294,7 @@ brw_vs_populate_key(struct brw_context *brw,
    }
 
    /* BRW_NEW_VS_ATTRIB_WORKAROUNDS */
-   if (devinfo->gen < 8 && !devinfo->is_haswell) {
+   if (devinfo->ver < 8 && !devinfo->is_haswell) {
       memcpy(key->gl_attrib_wa_flags, brw->vb.attrib_wa_flags,
              sizeof(brw->vb.attrib_wa_flags));
    }

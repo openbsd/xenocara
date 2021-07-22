@@ -27,7 +27,7 @@
 
 /* This head-up display module can draw transparent graphs on top of what
  * the app is rendering, visualizing various data like framerate, cpu load,
- * performance counters, etc. It can be hook up into any state tracker.
+ * performance counters, etc. It can be hook up into any gallium frontend.
  *
  * The HUD is controlled with the GALLIUM_HUD environment variable.
  * Set GALLIUM_HUD=help for more info.
@@ -40,6 +40,7 @@
 #include "hud/hud_context.h"
 #include "hud/hud_private.h"
 
+#include "frontend/api.h"
 #include "cso_cache/cso_context.h"
 #include "util/u_draw_quad.h"
 #include "util/format/u_format.h"
@@ -55,6 +56,7 @@
 
 /* Control the visibility of all HUD contexts */
 static boolean huds_visible = TRUE;
+static int hud_scale = 1;
 
 
 #ifdef PIPE_OS_UNIX
@@ -72,31 +74,29 @@ hud_draw_colored_prims(struct hud_context *hud, unsigned prim,
                        int xoffset, int yoffset, float yscale)
 {
    struct cso_context *cso = hud->cso;
-   unsigned size = num_vertices * hud->color_prims.vbuf.stride;
-
-   /* If a recording context is inactive, don't draw anything. */
-   if (size > hud->color_prims.buffer_size)
-      return;
-
-   memcpy(hud->color_prims.vertices, buffer, size);
+   struct pipe_context *pipe = hud->pipe;
+   struct pipe_vertex_buffer vbuffer = {0};
 
    hud->constants.color[0] = r;
    hud->constants.color[1] = g;
    hud->constants.color[2] = b;
    hud->constants.color[3] = a;
-   hud->constants.translate[0] = (float) xoffset;
-   hud->constants.translate[1] = (float) yoffset;
-   hud->constants.scale[0] = 1;
-   hud->constants.scale[1] = yscale;
-   cso_set_constant_buffer(cso, PIPE_SHADER_VERTEX, 0, &hud->constbuf);
+   hud->constants.translate[0] = (float) (xoffset * hud_scale);
+   hud->constants.translate[1] = (float) (yoffset * hud_scale);
+   hud->constants.scale[0] = hud_scale;
+   hud->constants.scale[1] = yscale * hud_scale;
+   pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, &hud->constbuf);
 
-   cso_set_vertex_buffers(cso, 0, 1, &hud->color_prims.vbuf);
+   u_upload_data(hud->pipe->stream_uploader, 0,
+                 num_vertices * 2 * sizeof(float), 16, buffer,
+                 &vbuffer.buffer_offset, &vbuffer.buffer.resource);
+   u_upload_unmap(hud->pipe->stream_uploader);
+   vbuffer.stride = 2 * sizeof(float);
+
+   cso_set_vertex_buffers(cso, 0, 1, &vbuffer);
+   pipe_resource_reference(&vbuffer.buffer.resource, NULL);
    cso_set_fragment_shader_handle(hud->cso, hud->fs_color);
    cso_draw_arrays(cso, prim, 0, num_vertices);
-
-   hud->color_prims.vertices += size / sizeof(float);
-   hud->color_prims.vbuf.buffer_offset += size;
-   hud->color_prims.buffer_size -= size;
 }
 
 static void
@@ -481,7 +481,6 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
                         CSO_BIT_BLEND |
                         CSO_BIT_DEPTH_STENCIL_ALPHA |
                         CSO_BIT_FRAGMENT_SHADER |
-                        CSO_BIT_FRAGMENT_SAMPLER_VIEWS |
                         CSO_BIT_FRAGMENT_SAMPLERS |
                         CSO_BIT_RASTERIZER |
                         CSO_BIT_VIEWPORT |
@@ -491,10 +490,8 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
                         CSO_BIT_TESSEVAL_SHADER |
                         CSO_BIT_VERTEX_SHADER |
                         CSO_BIT_VERTEX_ELEMENTS |
-                        CSO_BIT_AUX_VERTEX_BUFFER_SLOT |
                         CSO_BIT_PAUSE_QUERIES |
                         CSO_BIT_RENDER_CONDITION));
-   cso_save_constant_buffer_slot0(cso, PIPE_SHADER_VERTEX);
 
    /* set states */
    memset(&surf_templ, 0, sizeof(surf_templ));
@@ -522,10 +519,14 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
 
    viewport.scale[0] = 0.5f * hud->fb_width;
    viewport.scale[1] = 0.5f * hud->fb_height;
-   viewport.scale[2] = 1.0f;
+   viewport.scale[2] = 0.0f;
    viewport.translate[0] = 0.5f * hud->fb_width;
    viewport.translate[1] = 0.5f * hud->fb_height;
    viewport.translate[2] = 0.0f;
+   viewport.swizzle_x = PIPE_VIEWPORT_SWIZZLE_POSITIVE_X;
+   viewport.swizzle_y = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y;
+   viewport.swizzle_z = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z;
+   viewport.swizzle_w = PIPE_VIEWPORT_SWIZZLE_POSITIVE_W;
 
    cso_set_framebuffer(cso, &fb);
    cso_set_sample_mask(cso, ~0);
@@ -538,12 +539,12 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
    cso_set_tesseval_shader_handle(cso, NULL);
    cso_set_geometry_shader_handle(cso, NULL);
    cso_set_vertex_shader_handle(cso, hud->vs);
-   cso_set_vertex_elements(cso, 2, hud->velems);
+   cso_set_vertex_elements(cso, &hud->velems);
    cso_set_render_condition(cso, NULL, FALSE, 0);
-   cso_set_sampler_views(cso, PIPE_SHADER_FRAGMENT, 1,
-                         &hud->font_sampler_view);
+   pipe->set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, 1, 0,
+                           &hud->font_sampler_view);
    cso_set_samplers(cso, PIPE_SHADER_FRAGMENT, 1, sampler_states);
-   cso_set_constant_buffer(cso, PIPE_SHADER_VERTEX, 0, &hud->constbuf);
+   pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, &hud->constbuf);
 
    /* draw accumulated vertices for background quads */
    cso_set_blend(cso, &hud->alpha_blend);
@@ -556,10 +557,11 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
       hud->constants.color[3] = 0.666f;
       hud->constants.translate[0] = 0;
       hud->constants.translate[1] = 0;
-      hud->constants.scale[0] = 1;
-      hud->constants.scale[1] = 1;
+      hud->constants.scale[0] = hud_scale;
+      hud->constants.scale[1] = hud_scale;
 
-      cso_set_constant_buffer(cso, PIPE_SHADER_VERTEX, 0, &hud->constbuf);
+      pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, &hud->constbuf);
+
       cso_set_vertex_buffers(cso, 0, 1, &hud->bg.vbuf);
       cso_draw_arrays(cso, PIPE_PRIM_QUADS, 0, hud->bg.num_vertices);
    }
@@ -573,13 +575,8 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
    }
    pipe_resource_reference(&hud->text.vbuf.buffer.resource, NULL);
 
-   if (hud->simple) {
-      cso_restore_state(cso);
-      cso_restore_constant_buffer_slot0(cso, PIPE_SHADER_VERTEX);
-
-      pipe_surface_reference(&surf, NULL);
-      return;
-   }
+   if (hud->simple)
+      goto done;
 
    /* draw accumulated vertices for white lines */
    cso_set_blend(cso, &hud->no_blend);
@@ -590,9 +587,9 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
    hud->constants.color[3] = 1;
    hud->constants.translate[0] = 0;
    hud->constants.translate[1] = 0;
-   hud->constants.scale[0] = 1;
-   hud->constants.scale[1] = 1;
-   cso_set_constant_buffer(cso, PIPE_SHADER_VERTEX, 0, &hud->constbuf);
+   hud->constants.scale[0] = hud_scale;
+   hud->constants.scale[1] = hud_scale;
+   pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, &hud->constbuf);
 
    if (hud->whitelines.num_vertices) {
       cso_set_vertex_buffers(cso, 0, 1, &hud->whitelines.vbuf);
@@ -609,8 +606,21 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
          hud_pane_draw_colored_objects(hud, pane);
    }
 
+done:
    cso_restore_state(cso);
-   cso_restore_constant_buffer_slot0(cso, PIPE_SHADER_VERTEX);
+
+   /* Unbind resources that we have bound. */
+   pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, NULL);
+   pipe->set_vertex_buffers(pipe, 0, 0, 1, false, NULL);
+   pipe->set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, 0, 1, NULL);
+
+   /* restore states not restored by cso */
+   if (hud->st) {
+      hud->st->invalidate_state(hud->st,
+                                ST_INVALIDATE_FS_SAMPLER_VIEWS |
+                                ST_INVALIDATE_VS_CONSTBUF0 |
+                                ST_INVALIDATE_VERTEX_BUFFERS);
+   }
 
    pipe_surface_reference(&surf, NULL);
 }
@@ -643,7 +653,6 @@ hud_stop_queries(struct hud_context *hud, struct pipe_context *pipe)
    hud_prepare_vertices(hud, &hud->bg, 16 * 256, 2 * sizeof(float));
    hud_prepare_vertices(hud, &hud->whitelines, 4 * 256, 2 * sizeof(float));
    hud_prepare_vertices(hud, &hud->text, 16 * 1024, 4 * sizeof(float));
-   hud_prepare_vertices(hud, &hud->color_prims, 32 * 1024, 2 * sizeof(float));
 
    /* Allocate everything once and divide the storage into 3 portions
     * manually, because u_upload_alloc can unmap memory from previous calls.
@@ -651,8 +660,7 @@ hud_stop_queries(struct hud_context *hud, struct pipe_context *pipe)
    u_upload_alloc(pipe->stream_uploader, 0,
                   hud->bg.buffer_size +
                   hud->whitelines.buffer_size +
-                  hud->text.buffer_size +
-                  hud->color_prims.buffer_size,
+                  hud->text.buffer_size,
                   16, &hud->bg.vbuf.buffer_offset, &hud->bg.vbuf.buffer.resource,
                   (void**)&hud->bg.vertices);
    if (!hud->bg.vertices)
@@ -660,7 +668,6 @@ hud_stop_queries(struct hud_context *hud, struct pipe_context *pipe)
 
    pipe_resource_reference(&hud->whitelines.vbuf.buffer.resource, hud->bg.vbuf.buffer.resource);
    pipe_resource_reference(&hud->text.vbuf.buffer.resource, hud->bg.vbuf.buffer.resource);
-   pipe_resource_reference(&hud->color_prims.vbuf.buffer.resource, hud->bg.vbuf.buffer.resource);
 
    hud->whitelines.vbuf.buffer_offset = hud->bg.vbuf.buffer_offset +
                                         hud->bg.buffer_size;
@@ -671,11 +678,6 @@ hud_stop_queries(struct hud_context *hud, struct pipe_context *pipe)
                                   hud->whitelines.buffer_size;
    hud->text.vertices = hud->whitelines.vertices +
                         hud->whitelines.buffer_size / sizeof(float);
-
-   hud->color_prims.vbuf.buffer_offset = hud->text.vbuf.buffer_offset +
-                                         hud->text.buffer_size;
-   hud->color_prims.vertices = hud->text.vertices +
-                               hud->text.buffer_size / sizeof(float);
 
    /* prepare all graphs */
    hud_batch_query_update(hud->batch_query, pipe);
@@ -1647,13 +1649,15 @@ hud_unset_draw_context(struct hud_context *hud)
 }
 
 static bool
-hud_set_draw_context(struct hud_context *hud, struct cso_context *cso)
+hud_set_draw_context(struct hud_context *hud, struct cso_context *cso,
+                     struct st_context_iface *st)
 {
    struct pipe_context *pipe = cso_get_pipe_context(cso);
 
    assert(!hud->pipe);
    hud->pipe = pipe;
    hud->cso = cso;
+   hud->st = st;
 
    struct pipe_sampler_view view_templ;
    u_sampler_view_default_template(
@@ -1779,7 +1783,8 @@ hud_set_record_context(struct hud_context *hud, struct pipe_context *pipe)
  * record queries in one context and draw them in another.
  */
 struct hud_context *
-hud_create(struct cso_context *cso, struct hud_context *share)
+hud_create(struct cso_context *cso, struct st_context_iface *st,
+           struct hud_context *share)
 {
    const char *share_env = debug_get_option("GALLIUM_HUD_SHARE", NULL);
    unsigned record_ctx = 0, draw_ctx = 0;
@@ -1803,7 +1808,7 @@ hud_create(struct cso_context *cso, struct hud_context *share)
 
       if (context_id == draw_ctx) {
          assert(!share->pipe);
-         hud_set_draw_context(share, cso);
+         hud_set_draw_context(share, cso, st);
       }
 
       return share;
@@ -1821,6 +1826,7 @@ hud_create(struct cso_context *cso, struct hud_context *share)
    memset(&action, 0, sizeof(action));
 #endif
    huds_visible = debug_get_bool_option("GALLIUM_HUD_VISIBLE", TRUE);
+   hud_scale = debug_get_num_option("GALLIUM_HUD_SCALE", 1);
 
    if (!env || !*env)
       return NULL;
@@ -1871,10 +1877,11 @@ hud_create(struct cso_context *cso, struct hud_context *share)
    hud->rasterizer_aa_lines.line_smooth = 1;
 
    /* vertex elements */
+   hud->velems.count = 2;
    for (i = 0; i < 2; i++) {
-      hud->velems[i].src_offset = i * 2 * sizeof(float);
-      hud->velems[i].src_format = PIPE_FORMAT_R32G32_FLOAT;
-      hud->velems[i].vertex_buffer_index = 0;
+      hud->velems.velems[i].src_offset = i * 2 * sizeof(float);
+      hud->velems.velems[i].src_format = PIPE_FORMAT_R32G32_FLOAT;
+      hud->velems.velems[i].vertex_buffer_index = 0;
    }
 
    /* sampler state (for font drawing) */
@@ -1908,7 +1915,7 @@ hud_create(struct cso_context *cso, struct hud_context *share)
    if (record_ctx == 0)
       hud_set_record_context(hud, cso_get_pipe_context(cso));
    if (draw_ctx == 0)
-      hud_set_draw_context(hud, cso);
+      hud_set_draw_context(hud, cso, st);
 
    hud_parse_env_var(hud, screen, env);
    return hud;

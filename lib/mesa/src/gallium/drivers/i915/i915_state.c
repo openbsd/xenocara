@@ -113,7 +113,7 @@ i915_create_blend_state(struct pipe_context *pipe,
       unsigned dstA   = blend->rt[0].alpha_dst_factor;
 
       /* Special handling for MIN/MAX filter modes handled at
-       * state_tracker level.
+       * frontend level.
        */
 
       if (srcA != srcRGB ||
@@ -207,11 +207,11 @@ static void i915_set_blend_color( struct pipe_context *pipe,
 }
 
 static void i915_set_stencil_ref( struct pipe_context *pipe,
-                                  const struct pipe_stencil_ref *stencil_ref )
+                                  const struct pipe_stencil_ref stencil_ref )
 {
    struct i915_context *i915 = i915_context(pipe);
 
-   i915->stencil_ref = *stencil_ref;
+   i915->stencil_ref = stencil_ref;
 
    i915->dirty |= I915_NEW_DEPTH_STENCIL;
 }
@@ -432,7 +432,7 @@ i915_prepare_vertex_sampling(struct i915_context *i915)
                                  i,
                                  tex->width0, tex->height0, tex->depth0,
                                  view->u.tex.first_level, tex->last_level,
-                                 addr,
+                                 0, 0, addr,
                                  row_stride, img_stride, mip_offsets);
       } else
          i915->mapped_vs_tex[i] = NULL;
@@ -525,19 +525,19 @@ i915_create_depth_stencil_state(struct pipe_context *pipe,
       cso->bfo[1] = 0;
    }
 
-   if (depth_stencil->depth.enabled) {
-      int func = i915_translate_compare_func(depth_stencil->depth.func);
+   if (depth_stencil->depth_enabled) {
+      int func = i915_translate_compare_func(depth_stencil->depth_func);
 
       cso->depth_LIS6 |= (S6_DEPTH_TEST_ENABLE |
                           (func << S6_DEPTH_TEST_FUNC_SHIFT));
 
-      if (depth_stencil->depth.writemask)
+      if (depth_stencil->depth_writemask)
          cso->depth_LIS6 |= S6_DEPTH_WRITE_ENABLE;
    }
 
-   if (depth_stencil->alpha.enabled) {
-      int test = i915_translate_compare_func(depth_stencil->alpha.func);
-      ubyte refByte = float_to_ubyte(depth_stencil->alpha.ref_value);
+   if (depth_stencil->alpha_enabled) {
+      int test = i915_translate_compare_func(depth_stencil->alpha_func);
+      ubyte refByte = float_to_ubyte(depth_stencil->alpha_ref_value);
 
       cso->depth_LIS6 |= (S6_ALPHA_TEST_ENABLE |
 			  (test << S6_ALPHA_TEST_FUNC_SHIFT) |
@@ -676,6 +676,7 @@ static void i915_delete_vs_state(struct pipe_context *pipe, void *shader)
 
 static void i915_set_constant_buffer(struct pipe_context *pipe,
                                      enum pipe_shader_type shader, uint index,
+                                     bool take_ownership,
                                      const struct pipe_constant_buffer *cb)
 {
    struct i915_context *i915 = i915_context(pipe);
@@ -718,7 +719,12 @@ static void i915_set_constant_buffer(struct pipe_context *pipe,
       diff = i915->current.num_user_constants[shader] != 0;
    }
 
-   pipe_resource_reference(&i915->constants[shader], buf);
+   if (take_ownership) {
+      pipe_resource_reference(&i915->constants[shader], NULL);
+      i915->constants[shader] = buf;
+   } else {
+      pipe_resource_reference(&i915->constants[shader], buf);
+   }
    i915->current.num_user_constants[shader] = new_num;
 
    if (diff)
@@ -740,7 +746,7 @@ static void i915_set_fragment_sampler_views(struct pipe_context *pipe,
    assert(num <= PIPE_MAX_SAMPLERS);
 
    /* Check for no-op */
-   if (num == i915->num_fragment_sampler_views &&
+   if (views && num == i915->num_fragment_sampler_views &&
        !memcmp(i915->fragment_sampler_views, views, num * sizeof(struct pipe_sampler_view *)))
       return;
 
@@ -767,7 +773,7 @@ i915_set_vertex_sampler_views(struct pipe_context *pipe,
    assert(num <= ARRAY_SIZE(i915->vertex_sampler_views));
 
    /* Check for no-op */
-   if (num == i915->num_vertex_sampler_views &&
+   if (views && num == i915->num_vertex_sampler_views &&
        !memcmp(i915->vertex_sampler_views, views, num * sizeof(struct pipe_sampler_view *))) {
       return;
    }
@@ -789,7 +795,7 @@ i915_set_vertex_sampler_views(struct pipe_context *pipe,
 
 static void
 i915_set_sampler_views(struct pipe_context *pipe, enum pipe_shader_type shader,
-                       unsigned start, unsigned num,
+                       unsigned start, unsigned num, unsigned unbind_num_trailing_slots,
                        struct pipe_sampler_view **views)
 {
    assert(start == 0);
@@ -888,7 +894,7 @@ static void i915_set_clip_state( struct pipe_context *pipe,
 
 
 
-/* Called when driver state tracker notices changes to the viewport
+/* Called when gallium frontends notice changes to the viewport
  * matrix:
  */
 static void i915_set_viewport_states( struct pipe_context *pipe,
@@ -1001,6 +1007,8 @@ static void i915_delete_rasterizer_state(struct pipe_context *pipe,
 
 static void i915_set_vertex_buffers(struct pipe_context *pipe,
                                     unsigned start_slot, unsigned count,
+                                    unsigned unbind_num_trailing_slots,
+                                    bool take_ownership,
                                     const struct pipe_vertex_buffer *buffers)
 {
    struct i915_context *i915 = i915_context(pipe);
@@ -1008,10 +1016,13 @@ static void i915_set_vertex_buffers(struct pipe_context *pipe,
 
    util_set_vertex_buffers_count(i915->vertex_buffers,
                                  &i915->nr_vertex_buffers,
-                                 buffers, start_slot, count);
+                                 buffers, start_slot, count,
+                                 unbind_num_trailing_slots,
+                                 take_ownership);
 
    /* pass-through to draw module */
-   draw_set_vertex_buffers(draw, start_slot, count, buffers);
+   draw_set_vertex_buffers(draw, start_slot, count,
+                           unbind_num_trailing_slots, buffers);
 }
 
 static void *

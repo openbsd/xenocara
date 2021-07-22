@@ -108,11 +108,6 @@ struct __GLXDRIscreenRec {
 
    void (*destroyScreen)(struct glx_screen *psc);
 
-   struct glx_context *(*createContext)(struct glx_screen *psc,
-					struct glx_config *config,
-					struct glx_context *shareList,
-					int renderType);
-
    __GLXDRIdrawable *(*createDrawable)(struct glx_screen *psc,
 				       XID drawable,
 				       GLXDrawable glxDrawable,
@@ -132,6 +127,8 @@ struct __GLXDRIscreenRec {
    int (*setSwapInterval)(__GLXDRIdrawable *pdraw, int interval);
    int (*getSwapInterval)(__GLXDRIdrawable *pdraw);
    int (*getBufferAge)(__GLXDRIdrawable *pdraw);
+   void (*bindTexImage)(__GLXDRIdrawable *pdraw, int buffer, const int *attribs);
+   void (*releaseTexImage)(__GLXDRIdrawable *pdraw, int buffer);
 };
 
 struct __GLXDRIdrawableRec
@@ -152,7 +149,6 @@ struct __GLXDRIdrawableRec
 ** dependent methods.
 */
 extern __GLXDRIdisplay *driswCreateDisplay(Display * dpy);
-extern __GLXDRIdisplay *driCreateDisplay(Display * dpy);
 extern __GLXDRIdisplay *dri2CreateDisplay(Display * dpy);
 extern __GLXDRIdisplay *dri3_create_display(Display * dpy);
 extern __GLXDRIdisplay *driwindowsCreateDisplay(Display * dpy);
@@ -233,13 +229,6 @@ struct glx_context_vtable {
    void (*unbind)(struct glx_context *context, struct glx_context *new_ctx);
    void (*wait_gl)(struct glx_context *ctx);
    void (*wait_x)(struct glx_context *ctx);
-   void (*use_x_font)(struct glx_context *ctx,
-		      Font font, int first, int count, int listBase);
-   void (*bind_tex_image)(Display * dpy,
-			  GLXDrawable drawable,
-			  int buffer, const int *attrib_list);
-   void (*release_tex_image)(Display * dpy, GLXDrawable drawable, int buffer);
-   void * (*get_proc_address)(const char *symbol);
    int (*interop_query_device_info)(struct glx_context *ctx,
                                     struct mesa_glinterop_device_info *out);
    int (*interop_export_object)(struct glx_context *ctx,
@@ -500,6 +489,8 @@ struct glx_screen_vtable {
    int (*query_renderer_string)(struct glx_screen *psc,
                                 int attribute,
                                 const char **value);
+
+   char *(*get_driver_name)(struct glx_screen *psc);
 };
 
 struct glx_screen
@@ -542,8 +533,14 @@ struct glx_screen
      * libGL.
      */
    /*@{ */
-   unsigned char direct_support[8];
+   unsigned char direct_support[__GLX_EXT_BYTES];
    GLboolean ext_list_first_time;
+
+   unsigned char glx_force_enabled[__GLX_EXT_BYTES];
+   unsigned char glx_force_disabled[__GLX_EXT_BYTES];
+
+   unsigned char gl_force_enabled[__GL_EXT_BYTES];
+   unsigned char gl_force_disabled[__GL_EXT_BYTES];
    /*@} */
 
 };
@@ -605,7 +602,6 @@ struct glx_display
      * Per display direct rendering interface functions and data.
      */
    __GLXDRIdisplay *driswDisplay;
-   __GLXDRIdisplay *driDisplay;
    __GLXDRIdisplay *dri2Display;
    __GLXDRIdisplay *dri3Display;
 #endif
@@ -775,9 +771,6 @@ extern char *__glXGetString(Display * dpy, int opcode,
 extern const char __glXGLClientVersion[];
 extern const char __glXGLClientExtensions[];
 
-/* Get the unadjusted system time */
-extern int __glXGetUST(int64_t * ust);
-
 extern GLboolean __glXGetMscRateOML(Display * dpy, GLXDrawable drawable,
                                     int32_t * numerator,
                                     int32_t * denominator);
@@ -811,6 +804,9 @@ applegl_create_context(struct glx_screen *psc,
 
 extern int
 applegl_create_display(struct glx_display *display);
+
+extern void *
+applegl_get_proc_address(const char *symbol);
 #endif
 
 extern Bool validate_renderType_against_config(const struct glx_config *config,

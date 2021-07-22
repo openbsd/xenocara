@@ -1,10 +1,4 @@
-GENERATED_SOURCES := \
-	gfx10_format_table.h \
-	si_driinfo.h
-
 C_SOURCES := \
-	$(GENERATED_SOURCES) \
-	cik_sdma.c \
 	driinfo_radeonsi.h \
 	gfx10_query.c \
 	gfx10_shader_ngg.c \
@@ -17,9 +11,9 @@ C_SOURCES := \
 	si_compute.h \
 	si_compute_blit.c \
 	si_cp_dma.c \
+	si_cp_reg_shadowing.c \
 	si_debug.c \
 	si_descriptors.c \
-	si_dma_cs.c \
 	si_fence.c \
 	si_get.c \
 	si_gfx_cs.c \
@@ -42,16 +36,18 @@ C_SOURCES := \
 	si_shader_llvm_tess.c \
 	si_shader_llvm_vs.c \
 	si_shader_nir.c \
+        si_shaderlib_nir.c \
 	si_shaderlib_tgsi.c \
+	si_sqtt.c \
 	si_state.c \
 	si_state_binning.c \
-	si_state_draw.c \
+	si_state_draw.cpp \
 	si_state_msaa.c \
 	si_state_shaders.c \
 	si_state_streamout.c \
 	si_state_viewport.c \
 	si_state.h \
-	si_test_dma.c \
+	si_test_blit.c \
 	si_test_dma_perf.c \
 	si_texture.c \
 	si_uvd.c \
@@ -60,8 +56,10 @@ C_SOURCES := \
 	../radeon/radeon_vcn_dec_jpeg.c \
 	../radeon/radeon_vcn_dec.c \
 	../radeon/radeon_vcn_dec.h \
+	../radeon/radeon_vcn_av1_default.h \
 	../radeon/radeon_vcn_enc_1_2.c \
 	../radeon/radeon_vcn_enc_2_0.c \
+	../radeon/radeon_vcn_enc_3_0.c \
 	../radeon/radeon_vcn_enc.c \
 	../radeon/radeon_vcn_enc.h \
 	../radeon/radeon_uvd_enc_1_1.c \

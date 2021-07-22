@@ -33,7 +33,7 @@
  */
 
 
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/fbobject.h"
 #include "main/framebuffer.h"
@@ -114,7 +114,7 @@ st_renderbuffer_alloc_storage(struct gl_context * ctx,
                               GLuint width, GLuint height)
 {
    struct st_context *st = st_context(ctx);
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
    struct st_renderbuffer *strb = st_renderbuffer(rb);
    enum pipe_format format = PIPE_FORMAT_NONE;
    struct pipe_resource templ;
@@ -513,11 +513,12 @@ st_update_renderbuffer_surface(struct st_context *st,
    if (strb->is_rtt && resource->array_size > 1 &&
        stTexObj->base.Immutable) {
       const struct gl_texture_object *tex = &stTexObj->base;
-      first_layer += tex->MinLayer;
+      first_layer += tex->Attrib.MinLayer;
       if (!strb->rtt_layered)
-         last_layer += tex->MinLayer;
+         last_layer += tex->Attrib.MinLayer;
       else
-         last_layer = MIN2(first_layer + tex->NumLayers - 1, last_layer);
+         last_layer = MIN2(first_layer + tex->Attrib.NumLayers - 1,
+                           last_layer);
    }
 
    struct pipe_surface **psurf =
@@ -702,7 +703,7 @@ static void
 st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 {
    struct st_context *st = st_context(ctx);
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
    const struct gl_renderbuffer_attachment *depth =
          &fb->Attachment[BUFFER_DEPTH];
    const struct gl_renderbuffer_attachment *stencil =
@@ -893,7 +894,7 @@ st_MapRenderbuffer(struct gl_context *ctx,
                     GL_MAP_WRITE_BIT |
                     GL_MAP_INVALIDATE_RANGE_BIT)) == 0);
 
-   const enum pipe_transfer_usage transfer_flags =
+   const enum pipe_map_flags transfer_flags =
       st_access_flags_to_transfer_flags(mode, false);
 
    /* Note: y=0=bottom of buffer while y2=0=top of buffer.

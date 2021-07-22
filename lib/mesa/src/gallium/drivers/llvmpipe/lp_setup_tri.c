@@ -104,8 +104,9 @@ lp_setup_alloc_triangle(struct lp_scene *scene,
    tri->inputs.stride = input_array_sz;
 
    {
-      char *a = (char *)tri;
-      char *b = (char *)&GET_PLANES(tri)[nr_planes];
+      ASSERTED char *a = (char *)tri;
+      ASSERTED char *b = (char *)&GET_PLANES(tri)[nr_planes];
+
       assert(b - a == *tri_size);
    }
 
@@ -204,7 +205,18 @@ lp_rast_32_tri_tab[MAX_PLANES+1] = {
    LP_RAST_OP_TRIANGLE_32_8
 };
 
-
+static unsigned
+lp_rast_ms_tri_tab[MAX_PLANES+1] = {
+   0,               /* should be impossible */
+   LP_RAST_OP_MS_TRIANGLE_1,
+   LP_RAST_OP_MS_TRIANGLE_2,
+   LP_RAST_OP_MS_TRIANGLE_3,
+   LP_RAST_OP_MS_TRIANGLE_4,
+   LP_RAST_OP_MS_TRIANGLE_5,
+   LP_RAST_OP_MS_TRIANGLE_6,
+   LP_RAST_OP_MS_TRIANGLE_7,
+   LP_RAST_OP_MS_TRIANGLE_8
+};
 
 /**
  * The primitive covers the whole tile- shade whole tile.
@@ -249,7 +261,7 @@ lp_setup_whole_tile(struct lp_setup_context *setup,
    } else {
       LP_COUNT(nr_shade_64);
       return lp_scene_bin_cmd_with_state( scene, tx, ty,
-                                          setup->fs.stored, 
+                                          setup->fs.stored,
                                           LP_RAST_OP_SHADE_TILE,
                                           lp_rast_arg_inputs(inputs) );
    }
@@ -273,7 +285,7 @@ do_triangle_ccw(struct lp_setup_context *setup,
    const struct lp_setup_variant_key *key = &setup->setup.variant->key;
    struct lp_rast_triangle *tri;
    struct lp_rast_plane *plane;
-   const struct u_rect *scissor;
+   const struct u_rect *scissor = NULL;
    struct u_rect bbox, bboxpos;
    boolean s_planes[4];
    unsigned tri_bytes;
@@ -348,12 +360,9 @@ do_triangle_ccw(struct lp_setup_context *setup,
     * Determine how many scissor planes we need, that is drop scissor
     * edges if the bounding box of the tri is fully inside that edge.
     */
-   if (setup->scissor_test) {
-      /* why not just use draw_regions */
-      scissor = &setup->scissors[viewport_index];
-      scissor_planes_needed(s_planes, &bboxpos, scissor);
-      nr_planes += s_planes[0] + s_planes[1] + s_planes[2] + s_planes[3];
-   }
+   scissor = &setup->draw_regions[viewport_index];
+   scissor_planes_needed(s_planes, &bboxpos, scissor);
+   nr_planes += s_planes[0] + s_planes[1] + s_planes[2] + s_planes[3];
 
    tri = lp_setup_alloc_triangle(scene,
                                  key->num_inputs,
@@ -386,6 +395,7 @@ do_triangle_ccw(struct lp_setup_context *setup,
    tri->inputs.opaque = setup->fs.current.variant->opaque;
    tri->inputs.layer = layer;
    tri->inputs.viewport_index = viewport_index;
+   tri->inputs.view_index = setup->view_index;
 
    if (0)
       lp_dump_setup_coef(&setup->setup.variant->key,
@@ -759,6 +769,8 @@ lp_setup_bin_triangle(struct lp_setup_context *setup,
    struct lp_scene *scene = setup->scene;
    struct u_rect trimmed_box = *bbox;   
    int i;
+   unsigned cmd;
+
    /* What is the largest power-of-two boundary this triangle crosses:
     */
    int dx = floor_pot((bbox->x0 ^ bbox->x1) |
@@ -808,11 +820,12 @@ lp_setup_bin_triangle(struct lp_setup_context *setup,
              */
             assert(px + 4 <= TILE_SIZE);
             assert(py + 4 <= TILE_SIZE);
+            if (setup->multisample)
+               cmd = LP_RAST_OP_MS_TRIANGLE_3_4;
+            else
+               cmd = use_32bits ? LP_RAST_OP_TRIANGLE_32_3_4 : LP_RAST_OP_TRIANGLE_3_4;
             return lp_scene_bin_cmd_with_state( scene, ix0, iy0,
-                                                setup->fs.stored,
-                                                use_32bits ?
-                                                LP_RAST_OP_TRIANGLE_32_3_4 :
-                                                LP_RAST_OP_TRIANGLE_3_4,
+                                                setup->fs.stored, cmd,
                                                 lp_rast_arg_triangle_contained(tri, px, py) );
          }
 
@@ -832,11 +845,12 @@ lp_setup_bin_triangle(struct lp_setup_context *setup,
             assert(px + 16 <= TILE_SIZE);
             assert(py + 16 <= TILE_SIZE);
 
+            if (setup->multisample)
+               cmd = LP_RAST_OP_MS_TRIANGLE_3_16;
+            else
+               cmd = use_32bits ? LP_RAST_OP_TRIANGLE_32_3_16 : LP_RAST_OP_TRIANGLE_3_16;
             return lp_scene_bin_cmd_with_state( scene, ix0, iy0,
-                                                setup->fs.stored,
-                                                use_32bits ?
-                                                LP_RAST_OP_TRIANGLE_32_3_16 :
-                                                LP_RAST_OP_TRIANGLE_3_16,
+                                                setup->fs.stored, cmd,
                                                 lp_rast_arg_triangle_contained(tri, px, py) );
          }
       }
@@ -848,20 +862,24 @@ lp_setup_bin_triangle(struct lp_setup_context *setup,
          assert(px + 16 <= TILE_SIZE);
          assert(py + 16 <= TILE_SIZE);
 
+         if (setup->multisample)
+            cmd = LP_RAST_OP_MS_TRIANGLE_4_16;
+         else
+            cmd = use_32bits ? LP_RAST_OP_TRIANGLE_32_4_16 : LP_RAST_OP_TRIANGLE_4_16;
          return lp_scene_bin_cmd_with_state(scene, ix0, iy0,
-                                            setup->fs.stored,
-                                            use_32bits ?
-                                            LP_RAST_OP_TRIANGLE_32_4_16 :
-                                            LP_RAST_OP_TRIANGLE_4_16,
+                                            setup->fs.stored, cmd,
                                             lp_rast_arg_triangle_contained(tri, px, py));
       }
 
 
       /* Triangle is contained in a single tile:
        */
+      if (setup->multisample)
+         cmd = lp_rast_ms_tri_tab[nr_planes];
+      else
+         cmd = use_32bits ? lp_rast_32_tri_tab[nr_planes] : lp_rast_tri_tab[nr_planes];
       return lp_scene_bin_cmd_with_state(
-         scene, ix0, iy0, setup->fs.stored,
-         use_32bits ? lp_rast_32_tri_tab[nr_planes] : lp_rast_tri_tab[nr_planes],
+         scene, ix0, iy0, setup->fs.stored, cmd,
          lp_rast_arg_triangle(tri, (1<<nr_planes)-1));
    }
    else
@@ -933,12 +951,13 @@ lp_setup_bin_triangle(struct lp_setup_context *setup,
                 */
                int count = util_bitcount(partial);
                in = TRUE;
-               
+
+               if (setup->multisample)
+                  cmd = lp_rast_ms_tri_tab[count];
+               else
+                  cmd = use_32bits ? lp_rast_32_tri_tab[count] : lp_rast_tri_tab[count];
                if (!lp_scene_bin_cmd_with_state( scene, x, y,
-                                                 setup->fs.stored,
-                                                 use_32bits ?
-                                                 lp_rast_32_tri_tab[count] :
-                                                 lp_rast_tri_tab[count],
+                                                 setup->fs.stored, cmd,
                                                  lp_rast_arg_triangle(tri, partial) ))
                   goto fail;
 
@@ -1008,6 +1027,7 @@ calc_fixed_position(struct lp_setup_context *setup,
                     const float (*v1)[4],
                     const float (*v2)[4])
 {
+   float pixel_offset = setup->multisample ? 0.0 : setup->pixel_offset;
    /*
     * The rounding may not be quite the same with PIPE_ARCH_SSE
     * (util_iround right now only does nearest/even on x87,
@@ -1019,7 +1039,7 @@ calc_fixed_position(struct lp_setup_context *setup,
    __m128 vxy0xy2, vxy1xy0;
    __m128i vxy0xy2i, vxy1xy0i;
    __m128i dxdy0120, x0x2y0y2, x1x0y1y0, x0120, y0120;
-   __m128 pix_offset = _mm_set1_ps(setup->pixel_offset);
+   __m128 pix_offset = _mm_set1_ps(pixel_offset);
    __m128 fixed_one = _mm_set1_ps((float)FIXED_ONE);
    v0r = _mm_castpd_ps(_mm_load_sd((double *)v0[0]));
    vxy0xy2 = _mm_loadh_pi(v0r, (__m64 *)v2[0]);
@@ -1045,14 +1065,14 @@ calc_fixed_position(struct lp_setup_context *setup,
    _mm_store_si128((__m128i *)&position->y[0], y0120);
 
 #else
-   position->x[0] = subpixel_snap(v0[0][0] - setup->pixel_offset);
-   position->x[1] = subpixel_snap(v1[0][0] - setup->pixel_offset);
-   position->x[2] = subpixel_snap(v2[0][0] - setup->pixel_offset);
+   position->x[0] = subpixel_snap(v0[0][0] - pixel_offset);
+   position->x[1] = subpixel_snap(v1[0][0] - pixel_offset);
+   position->x[2] = subpixel_snap(v2[0][0] - pixel_offset);
    position->x[3] = 0; // should be unused
 
-   position->y[0] = subpixel_snap(v0[0][1] - setup->pixel_offset);
-   position->y[1] = subpixel_snap(v1[0][1] - setup->pixel_offset);
-   position->y[2] = subpixel_snap(v2[0][1] - setup->pixel_offset);
+   position->y[0] = subpixel_snap(v0[0][1] - pixel_offset);
+   position->y[1] = subpixel_snap(v1[0][1] - pixel_offset);
+   position->y[2] = subpixel_snap(v2[0][1] - pixel_offset);
    position->y[3] = 0; // should be unused
 
    position->dx01 = position->x[0] - position->x[1];

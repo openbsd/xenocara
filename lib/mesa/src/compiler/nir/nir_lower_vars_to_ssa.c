@@ -224,7 +224,7 @@ get_deref_node(nir_deref_instr *deref, struct lower_variables_state *state)
    /* This pass only works on local variables.  Just ignore any derefs with
     * a non-local mode.
     */
-   if (deref->mode != nir_var_function_temp)
+   if (!nir_deref_mode_must_be(deref, nir_var_function_temp))
       return NULL;
 
    struct deref_node *node = get_deref_node_recur(deref, state);
@@ -555,7 +555,7 @@ rename_variables(struct lower_variables_state *state)
          switch (intrin->intrinsic) {
          case nir_intrinsic_load_deref: {
             nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
-            if (deref->mode != nir_var_function_temp)
+            if (!nir_deref_mode_must_be(deref, nir_var_function_temp))
                continue;
 
             struct deref_node *node = get_deref_node(deref, state);
@@ -577,7 +577,7 @@ rename_variables(struct lower_variables_state *state)
                nir_instr_remove(&intrin->instr);
 
                nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
-                                        nir_src_for_ssa(&undef->def));
+                                        &undef->def);
                continue;
             }
 
@@ -602,13 +602,13 @@ rename_variables(struct lower_variables_state *state)
             nir_instr_remove(&intrin->instr);
 
             nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
-                                     nir_src_for_ssa(&mov->dest.dest.ssa));
+                                     &mov->dest.dest.ssa);
             break;
          }
 
          case nir_intrinsic_store_deref: {
             nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
-            if (deref->mode != nir_var_function_temp)
+            if (!nir_deref_mode_must_be(deref, nir_var_function_temp))
                continue;
 
             struct deref_node *node = get_deref_node(deref, state);
@@ -750,9 +750,7 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
    }
 
    if (!progress) {
-#ifndef NDEBUG
-      impl->valid_metadata &= ~nir_metadata_not_properly_reset;
-#endif
+      nir_metadata_preserve(impl, nir_metadata_all);
       return false;
    }
 
@@ -779,7 +777,8 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
       memset(store_blocks, 0,
              BITSET_WORDS(state.impl->num_blocks) * sizeof(*store_blocks));
 
-      assert(node->path.path[0]->var->constant_initializer == NULL);
+      assert(node->path.path[0]->var->constant_initializer == NULL &&
+             node->path.path[0]->var->pointer_initializer == NULL);
 
       if (node->stores) {
          set_foreach(node->stores, store_entry) {

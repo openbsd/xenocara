@@ -26,7 +26,7 @@
  */
 
 #include "main/errors.h"
-#include "main/imports.h"
+
 #include "main/bufferobj.h"
 #include "main/mtypes.h"
 #include "main/samplerobj.h"
@@ -139,7 +139,7 @@ _swrast_update_polygon( struct gl_context *ctx )
          backface_sign = 1.0F;
 	 break;
       case GL_FRONT_AND_BACK:
-         /* fallthrough */
+         FALLTHROUGH;
       default:
 	 backface_sign = 0.0F;
       }
@@ -582,7 +582,7 @@ _swrast_validate_derived( struct gl_context *ctx )
                               _NEW_TEXTURE))
          _swrast_update_active_attribs(ctx);
 
-      if (swrast->NewState & (_NEW_FOG | 
+      if (swrast->NewState & (_NEW_FOG |
                               _NEW_PROGRAM |
                               _NEW_LIGHT |
                               _NEW_TEXTURE))
@@ -893,7 +893,7 @@ _swrast_render_start( struct gl_context *ctx )
       swrast->Driver.SpanRenderStart( ctx );
    swrast->PointSpan.end = 0;
 }
- 
+
 void
 _swrast_render_finish( struct gl_context *ctx )
 {

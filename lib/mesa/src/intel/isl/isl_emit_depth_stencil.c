@@ -40,7 +40,7 @@ __gen_combine_address(__attribute__((unused)) void *data,
 #include "isl_priv.h"
 
 static const uint32_t isl_to_gen_ds_surftype[] = {
-#if GEN_GEN >= 9
+#if GFX_VER >= 9
    /* From the SKL PRM, "3DSTATE_DEPTH_STENCIL::SurfaceType":
     *
     *    "If depth/stencil is enabled with 1D render target, depth/stencil
@@ -107,15 +107,15 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
    }
 
    if (info->depth_surf) {
-#if GEN_GEN >= 7
+#if GFX_VER >= 7
       db.DepthWriteEnable = true;
 #endif
       db.SurfaceBaseAddress = info->depth_address;
-#if GEN_GEN >= 6
+#if GFX_VER >= 6
       db.MOCS = info->mocs;
 #endif
 
-#if GEN_GEN <= 6
+#if GFX_VER <= 6
       db.TiledSurface = info->depth_surf->tiling != ISL_TILING_LINEAR;
       db.TileWalk = info->depth_surf->tiling == ISL_TILING_Y0 ? TILEWALK_YMAJOR :
                                                                 TILEWALK_XMAJOR;
@@ -123,18 +123,18 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
 #endif
 
       db.SurfacePitch = info->depth_surf->row_pitch_B - 1;
-#if GEN_GEN >= 8
+#if GFX_VER >= 8
       db.SurfaceQPitch =
          isl_surf_get_array_pitch_el_rows(info->depth_surf) >> 2;
 #endif
 
-#if GEN_GEN >= 12
+#if GFX_VER >= 12
       db.ControlSurfaceEnable = db.DepthBufferCompressionEnable =
-         info->hiz_usage == ISL_AUX_USAGE_HIZ_CCS;
+         isl_aux_usage_has_ccs(info->hiz_usage);
 #endif
    }
 
-#if GEN_GEN == 5 || GEN_GEN == 6
+#if GFX_VER == 5 || GFX_VER == 6
    const bool separate_stencil =
       info->stencil_surf && info->stencil_surf->format == ISL_FORMAT_R8_UINT;
    if (separate_stencil || info->hiz_usage == ISL_AUX_USAGE_HIZ) {
@@ -144,7 +144,7 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
    }
 #endif
 
-#if GEN_GEN >= 6
+#if GFX_VER >= 6
    struct GENX(3DSTATE_STENCIL_BUFFER) sb = {
       GENX(3DSTATE_STENCIL_BUFFER_header),
    };
@@ -153,10 +153,10 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
 #endif
 
    if (info->stencil_surf) {
-#if GEN_GEN >= 7 && GEN_GEN < 12
+#if GFX_VER >= 7 && GFX_VER < 12
       db.StencilWriteEnable = true;
 #endif
-#if GEN_GEN >= 12
+#if GFX_VER >= 12
       sb.StencilWriteEnable = true;
       sb.SurfaceType = SURFTYPE_2D;
       sb.Width = info->stencil_surf->logical_level0_px.width - 1;
@@ -164,23 +164,25 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
       sb.Depth = sb.RenderTargetViewExtent = info->view->array_len - 1;
       sb.SurfLOD = info->view->base_level;
       sb.MinimumArrayElement = info->view->base_array_layer;
+      assert(info->stencil_aux_usage == ISL_AUX_USAGE_NONE ||
+             info->stencil_aux_usage == ISL_AUX_USAGE_STC_CCS);
       sb.StencilCompressionEnable =
-         info->stencil_aux_usage == ISL_AUX_USAGE_CCS_E;
+         info->stencil_aux_usage == ISL_AUX_USAGE_STC_CCS;
       sb.ControlSurfaceEnable = sb.StencilCompressionEnable;
-#elif GEN_GEN >= 8 || GEN_IS_HASWELL
+#elif GFX_VERx10 >= 75
       sb.StencilBufferEnable = true;
 #endif
       sb.SurfaceBaseAddress = info->stencil_address;
-#if GEN_GEN >= 6
+#if GFX_VER >= 6
       sb.MOCS = info->mocs;
 #endif
       sb.SurfacePitch = info->stencil_surf->row_pitch_B - 1;
-#if GEN_GEN >= 8
+#if GFX_VER >= 8
       sb.SurfaceQPitch =
          isl_surf_get_array_pitch_el_rows(info->stencil_surf) >> 2;
 #endif
    } else {
-#if GEN_GEN >= 12
+#if GFX_VER >= 12
       sb.SurfaceType = SURFTYPE_NULL;
 
       /* The docs seem to indicate that if surf-type is null, then we may need
@@ -194,7 +196,7 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
 #endif
    }
 
-#if GEN_GEN >= 6
+#if GFX_VER >= 6
    struct GENX(3DSTATE_HIER_DEPTH_BUFFER) hiz = {
       GENX(3DSTATE_HIER_DEPTH_BUFFER_header),
    };
@@ -203,23 +205,52 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
    };
 
    assert(info->hiz_usage == ISL_AUX_USAGE_NONE ||
-          info->hiz_usage == ISL_AUX_USAGE_HIZ ||
-          info->hiz_usage == ISL_AUX_USAGE_HIZ_CCS);
-   if (info->hiz_usage == ISL_AUX_USAGE_HIZ ||
-       info->hiz_usage == ISL_AUX_USAGE_HIZ_CCS) {
-      assert(GEN_GEN >= 12 || info->hiz_usage == ISL_AUX_USAGE_HIZ);
+          isl_aux_usage_has_hiz(info->hiz_usage));
+   if (isl_aux_usage_has_hiz(info->hiz_usage)) {
+      assert(GFX_VER >= 12 || info->hiz_usage == ISL_AUX_USAGE_HIZ);
       db.HierarchicalDepthBufferEnable = true;
 
       hiz.SurfaceBaseAddress = info->hiz_address;
       hiz.MOCS = info->mocs;
       hiz.SurfacePitch = info->hiz_surf->row_pitch_B - 1;
-#if GEN_GEN >= 12
+#if GFX_VER >= 12
       hiz.HierarchicalDepthBufferWriteThruEnable =
-         isl_surf_supports_hiz_ccs_wt(dev->info, info->depth_surf,
-                                      info->hiz_usage);
+         info->hiz_usage == ISL_AUX_USAGE_HIZ_CCS_WT;
+
+      /* The bspec docs for this bit are fairly unclear about exactly what is
+       * and isn't supported with HiZ write-through.  It's fairly clear that
+       * you can't sample from a multisampled depth buffer with CCS.  This
+       * limitation isn't called out explicitly but the docs for the CCS_E
+       * value of RENDER_SURFACE_STATE::AuxiliarySurfaceMode say:
+       *
+       *    "If Number of multisamples > 1, programming this value means MSAA
+       *    compression is enabled for that surface. Auxillary surface is MSC
+       *    with tile y."
+       *
+       * Since this interpretation ignores whether the surface is
+       * depth/stencil or not and since multisampled depth buffers use
+       * ISL_MSAA_LAYOUT_INTERLEAVED which is incompatible with MCS
+       * compression, this means that we can't even specify MSAA depth CCS in
+       * RENDER_SURFACE_STATE::AuxiliarySurfaceMode.  The BSpec also says, for
+       * 3DSTATE_HIER_DEPTH_BUFFER::HierarchicalDepthBufferWriteThruEnable,
+       *
+       *    "This bit must NOT be set for >1x MSAA modes, since sampler
+       *    doesn't support sampling from >1x MSAA depth buffer."
+       *
+       * Again, this is all focused around what the sampler can do and not
+       * what the depth hardware can do.
+       *
+       * Reading even more internal docs which can't be quoted here makes it
+       * pretty clear that, even if it's not currently called out in the
+       * BSpec, HiZ+CCS write-through isn't intended to work with MSAA and we
+       * shouldn't try to use it.  Treat it as if it's disallowed even if the
+       * BSpec doesn't explicitly document that.
+       */
+      if (hiz.HierarchicalDepthBufferWriteThruEnable)
+         assert(info->depth_surf->samples == 1);
 #endif
 
-#if GEN_GEN >= 8
+#if GFX_VER >= 8
       /* From the SKL PRM Vol2a:
        *
        *    The interpretation of this field is dependent on Surface Type
@@ -238,7 +269,7 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
 #endif
 
       clear.DepthClearValueValid = true;
-#if GEN_GEN >= 8
+#if GFX_VER >= 8
       clear.DepthClearValue = info->depth_clear_value;
 #else
       switch (info->depth_surf->format) {
@@ -259,19 +290,63 @@ isl_genX(emit_depth_stencil_hiz_s)(const struct isl_device *dev, void *batch,
       }
 #endif
    }
-#endif /* GEN_GEN >= 6 */
+#endif /* GFX_VER >= 6 */
 
    /* Pack everything into the batch */
    uint32_t *dw = batch;
    GENX(3DSTATE_DEPTH_BUFFER_pack)(NULL, dw, &db);
    dw += GENX(3DSTATE_DEPTH_BUFFER_length);
 
-#if GEN_GEN >= 6
+#if GFX_VER >= 6
    GENX(3DSTATE_STENCIL_BUFFER_pack)(NULL, dw, &sb);
    dw += GENX(3DSTATE_STENCIL_BUFFER_length);
 
    GENX(3DSTATE_HIER_DEPTH_BUFFER_pack)(NULL, dw, &hiz);
    dw += GENX(3DSTATE_HIER_DEPTH_BUFFER_length);
+
+#if GFX_VER == 12
+   /* Wa_14010455700
+    *
+    * To avoid sporadic corruptions “Set 0x7010[9] when Depth Buffer Surface
+    * Format is D16_UNORM , surface type is not NULL & 1X_MSAA”.
+    */
+   bool enable_14010455700 =
+      info->depth_surf && info->depth_surf->samples == 1 &&
+      db.SurfaceType != SURFTYPE_NULL && db.SurfaceFormat == D16_UNORM;
+   struct GENX(COMMON_SLICE_CHICKEN1) chicken1 = {
+      .HIZPlaneOptimizationdisablebit = enable_14010455700,
+      .HIZPlaneOptimizationdisablebitMask = true,
+   };
+   uint32_t chicken1_dw;
+   GENX(COMMON_SLICE_CHICKEN1_pack)(NULL, &chicken1_dw, &chicken1);
+
+   struct GENX(MI_LOAD_REGISTER_IMM) lri = {
+      GENX(MI_LOAD_REGISTER_IMM_header),
+      .RegisterOffset = GENX(COMMON_SLICE_CHICKEN1_num),
+      .DataDWord = chicken1_dw,
+   };
+   GENX(MI_LOAD_REGISTER_IMM_pack)(NULL, dw, &lri);
+   dw += GENX(MI_LOAD_REGISTER_IMM_length);
+
+   /* Wa_1806527549
+    *
+    * Set HIZ_CHICKEN (7018h) bit 13 = 1 when depth buffer is D16_UNORM.
+    */
+   struct GENX(HIZ_CHICKEN) hiz_chicken = {
+      .HZDepthTestLEGEOptimizationDisable = db.SurfaceFormat == D16_UNORM,
+      .HZDepthTestLEGEOptimizationDisableMask = true,
+   };
+   uint32_t hiz_chicken_dw;
+   GENX(HIZ_CHICKEN_pack)(NULL, &hiz_chicken_dw, &hiz_chicken);
+
+   struct GENX(MI_LOAD_REGISTER_IMM) lri2 = {
+      GENX(MI_LOAD_REGISTER_IMM_header),
+      .RegisterOffset = GENX(HIZ_CHICKEN_num),
+      .DataDWord = hiz_chicken_dw,
+   };
+   GENX(MI_LOAD_REGISTER_IMM_pack)(NULL, dw, &lri2);
+   dw += GENX(MI_LOAD_REGISTER_IMM_length);
+#endif
 
    GENX(3DSTATE_CLEAR_PARAMS_pack)(NULL, dw, &clear);
    dw += GENX(3DSTATE_CLEAR_PARAMS_length);

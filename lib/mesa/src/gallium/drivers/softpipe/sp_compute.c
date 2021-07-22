@@ -152,7 +152,7 @@ fill_grid_size(struct pipe_context *context,
    params = pipe_buffer_map_range(context, info->indirect,
                                   info->indirect_offset,
                                   3 * sizeof(uint32_t),
-                                  PIPE_TRANSFER_READ,
+                                  PIPE_MAP_READ,
                                   &transfer);
 
    if (!transfer)
@@ -225,6 +225,11 @@ softpipe_launch_grid(struct pipe_context *context,
             run_workgroup(cs, g_w, g_h, g_d, num_threads_in_group, machines);
          }
       }
+   }
+
+   if (softpipe->active_statistics_queries) {
+      softpipe->pipeline_statistics.cs_invocations +=
+          grid_size[0] * grid_size[1] * grid_size[2];
    }
 
    for (i = 0; i < num_threads_in_group; i++) {

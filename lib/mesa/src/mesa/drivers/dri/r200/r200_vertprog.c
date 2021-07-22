@@ -122,7 +122,7 @@ static GLboolean r200VertexProgUpdateParams(struct gl_context *ctx, struct r200_
    }
 
    for(pi = 0; pi < paramList->NumParameters; pi++) {
-      unsigned pvo = paramList->ParameterValueOffset[pi];
+      unsigned pvo = paramList->Parameters[pi].ValueOffset;
 
       switch(paramList->Parameters[pi].Type) {
       case PROGRAM_STATE_VAR:
@@ -460,7 +460,7 @@ static GLboolean r200_translate_vertex_program(struct gl_context *ctx, struct r2
    if ((mesa_vp->info.outputs_written & (1 << VARYING_SLOT_FOGC)) &&
        !vp->fogpidx) {
       struct gl_program_parameter_list *paramList;
-      gl_state_index16 tokens[STATE_LENGTH] = { STATE_FOG_PARAMS, 0, 0, 0, 0 };
+      gl_state_index16 tokens[STATE_LENGTH] = { STATE_FOG_PARAMS, 0, 0, 0 };
       paramList = mesa_vp->Parameters;
       vp->fogpidx = _mesa_add_state_reference(paramList, tokens);
    }
@@ -1183,18 +1183,18 @@ void r200SetupVertexProg( struct gl_context *ctx ) {
 
 
 static struct gl_program *
-r200NewProgram(struct gl_context *ctx, GLenum target, GLuint id,
+r200NewProgram(struct gl_context *ctx, gl_shader_stage stage, GLuint id,
                bool is_arb_asm)
 {
-   switch(target){
-   case GL_VERTEX_PROGRAM_ARB: {
+   switch(stage){
+   case MESA_SHADER_VERTEX: {
       struct r200_vertex_program *vp = rzalloc(NULL,
                                                struct r200_vertex_program);
-      return _mesa_init_gl_program(&vp->mesa_program, target, id, is_arb_asm);
+      return _mesa_init_gl_program(&vp->mesa_program, stage, id, is_arb_asm);
    }
-   case GL_FRAGMENT_PROGRAM_ARB: {
+   case MESA_SHADER_FRAGMENT: {
       struct gl_program *prog = rzalloc(NULL, struct gl_program);
-      return _mesa_init_gl_program(prog, target, id, is_arb_asm);
+      return _mesa_init_gl_program(prog, stage, id, is_arb_asm);
    }
    default:
       _mesa_problem(ctx, "Bad target in r200NewProgram");

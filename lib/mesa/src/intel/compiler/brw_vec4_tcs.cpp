@@ -41,10 +41,10 @@ vec4_tcs_visitor::vec4_tcs_visitor(const struct brw_compiler *compiler,
                                    const nir_shader *nir,
                                    void *mem_ctx,
                                    int shader_time_index,
-                                   const struct brw_vue_map *input_vue_map)
+                                   bool debug_enabled)
    : vec4_visitor(compiler, log_data, &key->base.tex, &prog_data->base,
-                  nir, mem_ctx, false, shader_time_index),
-     input_vue_map(input_vue_map), key(key)
+                  nir, mem_ctx, false, shader_time_index, debug_enabled),
+     key(key)
 {
 }
 
@@ -104,7 +104,7 @@ vec4_tcs_visitor::emit_thread_end()
       emit(BRW_OPCODE_ENDIF);
    }
 
-   if (devinfo->gen == 7) {
+   if (devinfo->ver == 7) {
       struct brw_tcs_prog_data *tcs_prog_data =
          (struct brw_tcs_prog_data *) prog_data;
 
@@ -143,7 +143,7 @@ vec4_tcs_visitor::emit_thread_end()
       emit(BRW_OPCODE_ENDIF);
    }
 
-   if (unlikely(INTEL_DEBUG & DEBUG_SHADER_TIME))
+   if (INTEL_DEBUG & DEBUG_SHADER_TIME)
       emit_shader_time_end();
 
    inst = emit(TCS_OPCODE_THREAD_END);
@@ -323,6 +323,36 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
    }
 }
 
+/**
+ * Return the number of patches to accumulate before an 8_PATCH mode thread is
+ * launched.  In cases with a large number of input control points and a large
+ * amount of VS outputs, the VS URB space needed to store an entire 8 patches
+ * worth of data can be prohibitive, so it can be beneficial to launch threads
+ * early.
+ *
+ * See the 3DSTATE_HS::Patch Count Threshold documentation for the recommended
+ * values.  Note that 0 means to "disable" early dispatch, meaning to wait for
+ * a full 8 patches as normal.
+ */
+static int
+get_patch_count_threshold(int input_control_points)
+{
+   if (input_control_points <= 4)
+      return 0;
+   else if (input_control_points <= 6)
+      return 5;
+   else if (input_control_points <= 8)
+      return 4;
+   else if (input_control_points <= 10)
+      return 3;
+   else if (input_control_points <= 14)
+      return 2;
+
+   /* Return patch count 1 for PATCHLIST_15 - PATCHLIST_32 */
+   return 1;
+}
+
+} /* namespace brw */
 
 extern "C" const unsigned *
 brw_compile_tcs(const struct brw_compiler *compiler,
@@ -338,14 +368,17 @@ brw_compile_tcs(const struct brw_compiler *compiler,
    const struct gen_device_info *devinfo = compiler->devinfo;
    struct brw_vue_prog_data *vue_prog_data = &prog_data->base;
    const bool is_scalar = compiler->scalar_stage[MESA_SHADER_TESS_CTRL];
+   const bool debug_enabled = INTEL_DEBUG & DEBUG_TCS;
    const unsigned *assembly;
+
+   vue_prog_data->base.stage = MESA_SHADER_TESS_CTRL;
 
    nir->info.outputs_written = key->outputs_written;
    nir->info.patch_outputs_written = key->patch_outputs_written;
 
    struct brw_vue_map input_vue_map;
    brw_compute_vue_map(devinfo, &input_vue_map, nir->info.inputs_read,
-                       nir->info.separate_shader);
+                       nir->info.separate_shader, 1);
    brw_compute_tess_vue_map(&vue_prog_data->vue_map,
                             nir->info.outputs_written,
                             nir->info.patch_outputs_written);
@@ -357,17 +390,20 @@ brw_compile_tcs(const struct brw_compiler *compiler,
    if (key->quads_workaround)
       brw_nir_apply_tcs_quads_workaround(nir);
 
-   brw_postprocess_nir(nir, compiler, is_scalar);
+   brw_postprocess_nir(nir, compiler, is_scalar, debug_enabled,
+                       key->base.robust_buffer_access);
 
    bool has_primitive_id =
-      nir->info.system_values_read & (1 << SYSTEM_VALUE_PRIMITIVE_ID);
+      BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_PRIMITIVE_ID);
+
+   prog_data->patch_count_threshold = brw::get_patch_count_threshold(key->input_vertices);
 
    if (compiler->use_tcs_8_patch &&
-       nir->info.tess.tcs_vertices_out <= (devinfo->gen >= 12 ? 32 : 16) &&
-       2 + has_primitive_id + key->input_vertices <= (devinfo->gen >= 12 ? 63 : 31)) {
+       nir->info.tess.tcs_vertices_out <= (devinfo->ver >= 12 ? 32 : 16) &&
+       2 + has_primitive_id + key->input_vertices <= (devinfo->ver >= 12 ? 63 : 31)) {
       /* 3DSTATE_HS imposes two constraints on using 8_PATCH mode. First, the
        * "Instance" field limits the number of output vertices to [1, 16] on
-       * gen11 and below, or [1, 32] on gen12 and above. Secondly, the
+       * gfx11 and below, or [1, 32] on gfx12 and above. Secondly, the
        * "Dispatch GRF Start Register for URB Data" field is limited to [0,
        * 31] - which imposes a limit on the input vertices.
        */
@@ -402,18 +438,11 @@ brw_compile_tcs(const struct brw_compiler *compiler,
                         num_per_vertex_slots * 16;
 
    assert(output_size_bytes >= 1);
-   if (output_size_bytes > GEN7_MAX_HS_URB_ENTRY_SIZE_BYTES)
+   if (output_size_bytes > GFX7_MAX_HS_URB_ENTRY_SIZE_BYTES)
       return NULL;
 
    /* URB entry sizes are stored as a multiple of 64 bytes. */
    vue_prog_data->urb_entry_size = ALIGN(output_size_bytes, 64) / 64;
-
-   /* On Cannonlake software shall not program an allocation size that
-    * specifies a size that is a multiple of 3 64B (512-bit) cachelines.
-    */
-   if (devinfo->gen == 10 &&
-       vue_prog_data->urb_entry_size % 3 == 0)
-      vue_prog_data->urb_entry_size++;
 
    /* HS does not use the usual payload pushing from URB to GRFs,
     * because we don't have enough registers for a full-size payload, and
@@ -421,17 +450,17 @@ brw_compile_tcs(const struct brw_compiler *compiler,
     */
    vue_prog_data->urb_read_length = 0;
 
-   if (unlikely(INTEL_DEBUG & DEBUG_TCS)) {
+   if (unlikely(debug_enabled)) {
       fprintf(stderr, "TCS Input ");
-      brw_print_vue_map(stderr, &input_vue_map);
+      brw_print_vue_map(stderr, &input_vue_map, MESA_SHADER_TESS_CTRL);
       fprintf(stderr, "TCS Output ");
-      brw_print_vue_map(stderr, &vue_prog_data->vue_map);
+      brw_print_vue_map(stderr, &vue_prog_data->vue_map, MESA_SHADER_TESS_CTRL);
    }
 
    if (is_scalar) {
       fs_visitor v(compiler, log_data, mem_ctx, &key->base,
                    &prog_data->base.base, nir, 8,
-                   shader_time_index, &input_vue_map);
+                   shader_time_index, debug_enabled);
       if (!v.run_tcs()) {
          if (error_str)
             *error_str = ralloc_strdup(mem_ctx, v.fail_msg);
@@ -441,9 +470,8 @@ brw_compile_tcs(const struct brw_compiler *compiler,
       prog_data->base.base.dispatch_grf_start_reg = v.payload.num_regs;
 
       fs_generator g(compiler, log_data, mem_ctx,
-                     &prog_data->base.base, v.shader_stats, false,
-                     MESA_SHADER_TESS_CTRL);
-      if (unlikely(INTEL_DEBUG & DEBUG_TCS)) {
+                     &prog_data->base.base, false, MESA_SHADER_TESS_CTRL);
+      if (unlikely(debug_enabled)) {
          g.enable_debug(ralloc_asprintf(mem_ctx,
                                         "%s tessellation control shader %s",
                                         nir->info.label ? nir->info.label
@@ -451,28 +479,31 @@ brw_compile_tcs(const struct brw_compiler *compiler,
                                         nir->info.name));
       }
 
-      g.generate_code(v.cfg, 8, stats);
+      g.generate_code(v.cfg, 8, v.shader_stats,
+                      v.performance_analysis.require(), stats);
+
+      g.add_const_data(nir->constant_data, nir->constant_data_size);
 
       assembly = g.get_assembly();
    } else {
-      vec4_tcs_visitor v(compiler, log_data, key, prog_data,
-                         nir, mem_ctx, shader_time_index, &input_vue_map);
+      brw::vec4_tcs_visitor v(compiler, log_data, key, prog_data,
+                              nir, mem_ctx, shader_time_index,
+                              debug_enabled);
       if (!v.run()) {
          if (error_str)
             *error_str = ralloc_strdup(mem_ctx, v.fail_msg);
          return NULL;
       }
 
-      if (unlikely(INTEL_DEBUG & DEBUG_TCS))
+      if (INTEL_DEBUG & DEBUG_TCS)
          v.dump_instructions();
 
 
       assembly = brw_vec4_generate_assembly(compiler, log_data, mem_ctx, nir,
-                                            &prog_data->base, v.cfg, stats);
+                                            &prog_data->base, v.cfg,
+                                            v.performance_analysis.require(),
+                                            stats, debug_enabled);
    }
 
    return assembly;
 }
-
-
-} /* namespace brw */

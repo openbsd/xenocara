@@ -29,6 +29,7 @@
  * Handles optimization of lowering of
  *  - if (cond) discard to discard_if(cond) and
  *  - if (cond) demote to demote_if(cond)
+ *  - if (cond) terminate to terminate_if(cond)
  */
 
 static bool
@@ -94,8 +95,12 @@ nir_opt_conditional_discard_block(nir_builder *b, nir_block *block)
    case nir_intrinsic_demote:
       op = nir_intrinsic_demote_if;
       break;
+   case nir_intrinsic_terminate:
+      op = nir_intrinsic_terminate_if;
+      break;
    case nir_intrinsic_discard_if:
    case nir_intrinsic_demote_if:
+   case nir_intrinsic_terminate_if:
       assert(intrin->src[0].is_ssa);
       cond = nir_iand(b, cond, intrin->src[0].ssa);
       break;
@@ -124,8 +129,18 @@ nir_opt_conditional_discard(nir_shader *shader)
    nir_foreach_function(function, shader) {
       if (function->impl) {
          nir_builder_init(&builder, function->impl);
+
+         bool impl_progress = false;
          nir_foreach_block_safe(block, function->impl) {
-            progress |= nir_opt_conditional_discard_block(&builder, block);
+            if (nir_opt_conditional_discard_block(&builder, block))
+               impl_progress = true;
+         }
+
+         if (impl_progress) {
+            nir_metadata_preserve(function->impl, nir_metadata_none);
+            progress = true;
+         } else {
+            nir_metadata_preserve(function->impl, nir_metadata_all);
          }
       }
    }

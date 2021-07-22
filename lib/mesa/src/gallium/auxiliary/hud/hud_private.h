@@ -32,6 +32,7 @@
 #include "pipe/p_state.h"
 #include "util/list.h"
 #include "hud/font.h"
+#include "cso_cache/cso_context.h"
 
 enum hud_counter {
    HUD_COUNTER_OFFLOADED,
@@ -49,6 +50,7 @@ struct hud_context {
    /* Context where the HUD is drawn: */
    struct pipe_context *pipe;
    struct cso_context *cso;
+   struct st_context_iface *st;
 
    struct hud_batch_query_context *batch_query;
    struct list_head pane_list;
@@ -61,7 +63,7 @@ struct hud_context {
    void *fs_color, *fs_text;
    struct pipe_rasterizer_state rasterizer, rasterizer_aa_lines;
    void *vs;
-   struct pipe_vertex_element velems[2];
+   struct cso_velems_state velems;
 
    /* font */
    struct util_font font;
@@ -89,7 +91,7 @@ struct hud_context {
       unsigned max_num_vertices;
       unsigned num_vertices;
       unsigned buffer_size;
-   } text, bg, whitelines, color_prims;
+   } text, bg, whitelines;
 
    bool has_srgb;
 };

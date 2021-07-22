@@ -12,8 +12,6 @@ MAIN_FILES = \
 	main/api_arrayelt.h \
 	main/api_exec.c \
 	main/api_exec.h \
-	main/api_loopback.c \
-	main/api_loopback.h \
 	main/arbprogram.c \
 	main/arbprogram.h \
 	main/arrayobj.c \
@@ -43,7 +41,6 @@ MAIN_FILES = \
 	main/colortab.h \
 	main/compute.c \
 	main/compute.h \
-	main/compiler.h \
 	main/condrender.c \
 	main/condrender.h \
 	main/config.h \
@@ -104,7 +101,6 @@ MAIN_FILES = \
 	main/format_pack.h \
 	main/format_pack.c \
 	main/format_unpack.h \
-	main/format_unpack.c \
 	main/formatquery.c \
 	main/formatquery.h \
 	main/formats.c \
@@ -125,6 +121,12 @@ MAIN_FILES = \
 	main/glspirv.h \
 	main/glthread.c \
 	main/glthread.h \
+	main/glthread_bufferobj.c \
+	main/glthread_draw.c \
+        main/glthread_get.c \
+	main/glthread_marshal.h \
+	main/glthread_shaderobj.c \
+	main/glthread_varray.c \
 	main/glheader.h \
 	main/hash.c \
 	main/hash.h \
@@ -134,16 +136,20 @@ MAIN_FILES = \
 	main/histogram.h \
 	main/image.c \
 	main/image.h \
-	main/imports.c \
-	main/imports.h \
+	main/mesa_private.h \
 	main/light.c \
 	main/light.h \
 	main/lines.c \
 	main/lines.h \
 	main/macros.h \
-	main/marshal.c \
-	main/marshal.h \
-	main/marshal_generated.c \
+	main/marshal_generated0.c \
+	main/marshal_generated1.c \
+	main/marshal_generated2.c \
+	main/marshal_generated3.c \
+	main/marshal_generated4.c \
+	main/marshal_generated5.c \
+	main/marshal_generated6.c \
+	main/marshal_generated7.c \
 	main/marshal_generated.h \
 	main/matrix.c \
 	main/matrix.h \
@@ -412,20 +418,21 @@ VBO_FILES = \
 	vbo/vbo_exec_eval.c \
 	vbo/vbo_exec.h \
 	vbo/vbo.h \
+	vbo/vbo_init_tmp.h \
 	vbo/vbo_minmax_index.c \
 	vbo/vbo_noop.c \
 	vbo/vbo_noop.h \
-	vbo/vbo_primitive_restart.c \
 	vbo/vbo_private.h \
 	vbo/vbo_save_api.c \
 	vbo/vbo_save.c \
 	vbo/vbo_save_draw.c \
 	vbo/vbo_save.h \
-	vbo/vbo_save_loopback.c
+	vbo/vbo_save_loopback.c \
+	vbo/vbo_util.h
 
 STATETRACKER_FILES = \
-	state_tracker/st_atifs_to_tgsi.c \
-	state_tracker/st_atifs_to_tgsi.h \
+	state_tracker/st_atifs_to_nir.c \
+	state_tracker/st_atifs_to_nir.h \
 	state_tracker/st_atom_array.c \
 	state_tracker/st_atom_atomicbuf.c \
 	state_tracker/st_atom_blend.c \
@@ -536,8 +543,6 @@ STATETRACKER_FILES = \
 	state_tracker/st_glsl_to_tgsi_temprename.h \
 	state_tracker/st_manager.c \
 	state_tracker/st_manager.h \
-	state_tracker/st_mesa_to_tgsi.c \
-	state_tracker/st_mesa_to_tgsi.h \
 	state_tracker/st_nir.h \
 	state_tracker/st_nir_builtins.c \
 	state_tracker/st_nir_lower_builtin.c \

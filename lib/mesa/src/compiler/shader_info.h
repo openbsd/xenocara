@@ -25,12 +25,15 @@
 #ifndef SHADER_INFO_H
 #define SHADER_INFO_H
 
+#include "util/bitset.h"
 #include "shader_enums.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define MAX_INLINABLE_UNIFORMS 4
 
 struct spirv_supported_capabilities {
    bool address;
@@ -42,27 +45,43 @@ struct spirv_supported_capabilities {
    bool descriptor_indexing;
    bool device_group;
    bool draw_parameters;
+   bool float16_atomic_min_max;
+   bool float32_atomic_add;
+   bool float32_atomic_min_max;
    bool float64;
+   bool float64_atomic_add;
+   bool float64_atomic_min_max;
    bool fragment_shader_sample_interlock;
    bool fragment_shader_pixel_interlock;
+   bool fragment_shading_rate;
+   bool generic_pointers;
    bool geometry_streams;
    bool image_ms_array;
    bool image_read_without_format;
    bool image_write_without_format;
+   bool image_atomic_int64;
    bool int8;
    bool int16;
    bool int64;
    bool int64_atomics;
    bool integer_functions2;
    bool kernel;
+   bool kernel_image;
+   bool kernel_image_read_write;
+   bool literal_sampler;
    bool min_lod;
    bool multiview;
    bool physical_storage_buffer_address;
    bool post_depth_coverage;
+   bool printf;
+   bool ray_tracing;
+   bool ray_query;
+   bool ray_traversal_primitive_culling;
    bool runtime_descriptor_array;
    bool float_controls;
    bool shader_clock;
    bool shader_viewport_index_layer;
+   bool sparse_residency;
    bool stencil_export;
    bool storage_8bit;
    bool storage_16bit;
@@ -78,6 +97,7 @@ struct spirv_supported_capabilities {
    bool variable_pointers;
    bool vk_memory_model;
    bool vk_memory_model_device_scope;
+   bool workgroup_memory_explicit_layout;
    bool float16;
    bool amd_fragment_mask;
    bool amd_gcn_shader;
@@ -85,6 +105,10 @@ struct spirv_supported_capabilities {
    bool amd_trinary_minmax;
    bool amd_image_read_write_lod;
    bool amd_shader_explicit_vertex_parameter;
+   bool amd_image_gather_bias_lod;
+
+   bool intel_subgroup_shuffle;
+   bool intel_subgroup_buffer_block_io;
 };
 
 typedef struct shader_info {
@@ -92,6 +116,9 @@ typedef struct shader_info {
 
    /* Descriptive name provided by the client; may be NULL */
    const char *label;
+
+   /* Shader is internal, and should be ignored by things like NIR_PRINT */
+   bool internal;
 
    /** The shader stage, such as MESA_SHADER_VERTEX. */
    gl_shader_stage stage:8;
@@ -115,8 +142,6 @@ typedef struct shader_info {
    uint8_t num_ssbos;
    /* Number of images used by this shader */
    uint8_t num_images;
-   /* Index of the last MSAA image. */
-   int8_t last_msaa_image;
 
    /* Which inputs are actually read */
    uint64_t inputs_read;
@@ -125,7 +150,16 @@ typedef struct shader_info {
    /* Which outputs are actually read */
    uint64_t outputs_read;
    /* Which system values are actually read */
-   uint64_t system_values_read;
+   BITSET_DECLARE(system_values_read, SYSTEM_VALUE_MAX);
+
+   /* Which 16-bit inputs and outputs are used corresponding to
+    * VARYING_SLOT_VARn_16BIT.
+    */
+   uint16_t inputs_read_16bit;
+   uint16_t outputs_written_16bit;
+   uint16_t outputs_read_16bit;
+   uint16_t inputs_read_indirectly_16bit;
+   uint16_t outputs_accessed_indirectly_16bit;
 
    /* Which patch inputs are actually read */
    uint32_t patch_inputs_read;
@@ -134,14 +168,38 @@ typedef struct shader_info {
    /* Which patch outputs are read */
    uint32_t patch_outputs_read;
 
+   /* Which inputs are read indirectly (subset of inputs_read) */
+   uint64_t inputs_read_indirectly;
+   /* Which outputs are read or written indirectly */
+   uint64_t outputs_accessed_indirectly;
+   /* Which patch inputs are read indirectly (subset of patch_inputs_read) */
+   uint64_t patch_inputs_read_indirectly;
+   /* Which patch outputs are read or written indirectly */
+   uint64_t patch_outputs_accessed_indirectly;
+
    /** Bitfield of which textures are used */
-   uint32_t textures_used;
+   BITSET_DECLARE(textures_used, 32);
 
    /** Bitfield of which textures are used by texelFetch() */
-   uint32_t textures_used_by_txf;
+   BITSET_DECLARE(textures_used_by_txf, 32);
+
+   /** Bitfield of which images are used */
+   uint32_t images_used;
+   /** Bitfield of which images are buffers. */
+   uint32_t image_buffers;
+   /** Bitfield of which images are MSAA. */
+   uint32_t msaa_images;
 
    /* SPV_KHR_float_controls: execution mode for floating point ops */
    uint16_t float_controls_execution_mode;
+
+   /**
+    * Size of shared variables accessed by compute/task/mesh shaders.
+    */
+   unsigned shared_size;
+
+   uint16_t inlinable_uniform_dw_offsets[MAX_INLINABLE_UNIFORMS];
+   uint8_t num_inlinable_uniforms:4;
 
    /* The size of the gl_ClipDistance[] array, if declared. */
    uint8_t clip_distance_array_size:4;
@@ -159,10 +217,9 @@ typedef struct shader_info {
     */
    bool uses_fddx_fddy:1;
 
-   /**
-    * True if this shader uses 64-bit ALU operations
-    */
-   bool uses_64bit:1;
+   /* Bitmask of bit-sizes used with ALU instructions. */
+   uint8_t bit_sizes_float;
+   uint8_t bit_sizes_int;
 
    /* Whether the first UBO is the default uniform buffer, i.e. uniforms. */
    bool first_ubo_is_default_ubo:1;
@@ -175,6 +232,27 @@ typedef struct shader_info {
 
    /* Whether flrp has been lowered. */
    bool flrp_lowered:1;
+
+   /* Whether nir_lower_io has been called to lower derefs.
+    * nir_variables for inputs and outputs might not be present in the IR.
+    */
+   bool io_lowered:1;
+
+   /* Whether the shader writes memory, including transform feedback. */
+   bool writes_memory:1;
+
+   /* Whether gl_Layer is viewport-relative */
+   bool layer_viewport_relative:1;
+
+   /* Whether explicit barriers are used */
+   bool uses_control_barrier : 1;
+   bool uses_memory_barrier : 1;
+
+   /**
+    * Shared memory types have explicit layout set.  Used for
+    * SPV_KHR_workgroup_storage_explicit_layout.
+    */
+   bool shared_memory_explicit_layout:1;
 
    union {
       struct {
@@ -205,18 +283,21 @@ typedef struct shader_info {
          /** 1 .. MAX_GEOMETRY_SHADER_INVOCATIONS */
          uint8_t invocations;
 
-         /** The number of vertices recieves per input primitive (max. 6) */
+         /** The number of vertices received per input primitive (max. 6) */
          uint8_t vertices_in:3;
 
          /** Whether or not this shader uses EndPrimitive */
          bool uses_end_primitive:1;
 
-         /** Whether or not this shader uses non-zero streams */
-         bool uses_streams:1;
+         /** The streams used in this shaders (max. 4) */
+         uint8_t active_stream_mask:4;
       } gs;
 
       struct {
          bool uses_discard:1;
+         bool uses_demote:1;
+         bool uses_fbfetch_output:1;
+         bool color_is_dual_source:1;
 
          /**
           * True if this fragment shader requires helper invocations.  This
@@ -224,12 +305,23 @@ typedef struct shader_info {
           * instructions which do implicit derivatives, and the use of quad
           * subgroup operations.
           */
-         bool needs_helper_invocations:1;
+         bool needs_quad_helper_invocations:1;
+
+         /**
+          * True if this fragment shader requires helper invocations for
+          * all subgroup operations, not just quad ops and derivatives.
+          */
+         bool needs_all_helper_invocations:1;
 
          /**
           * Whether any inputs are declared with the "sample" qualifier.
           */
          bool uses_sample_qualifier:1;
+
+         /**
+          * Whether sample shading is used.
+          */
+         bool uses_sample_shading:1;
 
          /**
           * Whether early fragment tests are enabled as defined by
@@ -278,10 +370,22 @@ typedef struct shader_info {
 
          /** gl_FragDepth layout for ARB_conservative_depth. */
          enum gl_frag_depth_layout depth_layout:3;
+
+         /**
+          * Interpolation qualifiers for drivers that lowers color inputs
+          * to system values.
+          */
+         unsigned color0_interp:3; /* glsl_interp_mode */
+         bool color0_sample:1;
+         bool color0_centroid:1;
+         unsigned color1_interp:3; /* glsl_interp_mode */
+         bool color1_sample:1;
+         bool color1_centroid:1;
       } fs;
 
       struct {
          uint16_t local_size[3];
+         uint16_t local_size_hint[3];
 
          bool local_size_variable:1;
          uint8_t user_data_components_amd:3;
@@ -292,10 +396,7 @@ typedef struct shader_info {
           */
          enum gl_derivative_group derivative_group:2;
 
-         /**
-          * Size of shared variables accessed by the compute shader.
-          */
-         unsigned shared_size;
+         bool zero_initialize_shared_memory;
 
          /**
           * pointer size is:
@@ -304,6 +405,11 @@ typedef struct shader_info {
           *   AddressingModelPhysical64: 64
           */
          unsigned ptr_size;
+
+         /**
+          * Uses subgroup intrinsics which can communicate across a quad.
+          */
+         bool uses_wide_subgroup_intrinsics;
       } cs;
 
       /* Applies to both TCS and TES. */
@@ -317,6 +423,16 @@ typedef struct shader_info {
          /** Is the vertex order counterclockwise? */
          bool ccw:1;
          bool point_mode:1;
+
+         /* Bit mask of TCS per-vertex inputs (VS outputs) that are used
+          * with a vertex index that is NOT the invocation id
+          */
+         uint64_t tcs_cross_invocation_inputs_read;
+
+         /* Bit mask of TCS per-vertex outputs that are used
+          * with a vertex index that is NOT the invocation id
+          */
+         uint64_t tcs_cross_invocation_outputs_read;
       } tess;
    };
 } shader_info;

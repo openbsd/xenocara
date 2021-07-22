@@ -37,7 +37,7 @@
 #include "util/u_memory.h"
 #include "util/u_math.h"
 #include "svgadump/svga_dump.h"
-#include "state_tracker/drm_driver.h"
+#include "frontend/drm_driver.h"
 #include "vmw_screen.h"
 #include "vmw_context.h"
 #include "vmw_fence.h"
@@ -52,7 +52,7 @@
 #include <unistd.h>
 
 #define VMW_MAX_DEFAULT_TEXTURE_SIZE   (128 * 1024 * 1024)
-#define VMW_FENCE_TIMEOUT_SECONDS 60
+#define VMW_FENCE_TIMEOUT_SECONDS 3600UL
 
 #define SVGA3D_FLAGS_64(upper32, lower32) (((uint64_t)upper32 << 32) | lower32)
 #define SVGA3D_FLAGS_UPPER_32(svga3d_flags) (svga3d_flags >> 32)
@@ -235,6 +235,7 @@ vmw_ioctl_gb_surface_create(struct vmw_winsys_screen *vws,
       req->version = drm_vmw_gb_surface_v1;
       req->multisample_pattern = multisamplePattern;
       req->quality_level = qualityLevel;
+      req->buffer_byte_stride = 0;
       req->must_be_zero = 0;
       req->base.svga3d_flags = SVGA3D_FLAGS_LOWER_32(flags);
       req->svga3d_flags_upper_32_bits = SVGA3D_FLAGS_UPPER_32(flags);
@@ -694,7 +695,10 @@ vmw_ioctl_region_map(struct vmw_region *region)
 	 return NULL;
       }
 
+// MADV_HUGEPAGE only exists on Linux
+#ifdef MADV_HUGEPAGE
       (void) madvise(map, region->size, MADV_HUGEPAGE);
+#endif
       region->data = map;
    }
 
@@ -708,7 +712,10 @@ vmw_ioctl_region_unmap(struct vmw_region *region)
 {
    vmw_printf("%s: gmrId = %u, offset = %u\n", __FUNCTION__,
               region->ptr.gmrId, region->ptr.offset);
+
    --region->map_count;
+   os_munmap(region->data, region->size);
+   region->data = NULL;
 }
 
 /**
@@ -994,6 +1001,8 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
       (version->version_major == 2 && version->version_minor > 15);
    vws->ioctl.have_drm_2_17 = version->version_major > 2 ||
       (version->version_major == 2 && version->version_minor > 16);
+   vws->ioctl.have_drm_2_18 = version->version_major > 2 ||
+      (version->version_major == 2 && version->version_minor > 17);
 
    vws->ioctl.drm_execbuf_version = vws->ioctl.have_drm_2_9 ? 2 : 1;
 
@@ -1101,6 +1110,16 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
                                    &gp_arg, sizeof(gp_arg));
          if (ret == 0 && gp_arg.value != 0) {
             vws->base.have_sm4_1 = TRUE;
+         }
+      }
+
+      if (vws->ioctl.have_drm_2_18 && vws->base.have_sm4_1) {
+         memset(&gp_arg, 0, sizeof(gp_arg));
+         gp_arg.param = DRM_VMW_PARAM_SM5;
+         ret = drmCommandWriteRead(vws->ioctl.drm_fd, DRM_VMW_GET_PARAM,
+                                   &gp_arg, sizeof(gp_arg));
+         if (ret == 0 && gp_arg.value != 0) {
+            vws->base.have_sm5 = TRUE;
          }
       }
 

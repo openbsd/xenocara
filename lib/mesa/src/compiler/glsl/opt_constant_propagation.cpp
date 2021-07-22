@@ -208,6 +208,9 @@ ir_constant_propagation_visitor::constant_propagation(ir_rvalue **rvalue) {
       case GLSL_TYPE_FLOAT:
 	 data.f[i] = found->constant->value.f[rhs_channel];
 	 break;
+      case GLSL_TYPE_FLOAT16:
+	 data.f16[i] = found->constant->value.f16[rhs_channel];
+	 break;
       case GLSL_TYPE_DOUBLE:
 	 data.d[i] = found->constant->value.d[rhs_channel];
 	 break;
@@ -216,6 +219,12 @@ ir_constant_propagation_visitor::constant_propagation(ir_rvalue **rvalue) {
 	 break;
       case GLSL_TYPE_UINT:
 	 data.u[i] = found->constant->value.u[rhs_channel];
+	 break;
+      case GLSL_TYPE_INT16:
+	 data.i16[i] = found->constant->value.i16[rhs_channel];
+	 break;
+      case GLSL_TYPE_UINT16:
+	 data.u16[i] = found->constant->value.u16[rhs_channel];
 	 break;
       case GLSL_TYPE_BOOL:
 	 data.b[i] = found->constant->value.b[rhs_channel];

@@ -62,7 +62,7 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/PrettyStackTrace.h>
-
+#include <llvm/ExecutionEngine/ObjectCache.h>
 #include <llvm/Support/TargetSelect.h>
 
 #if LLVM_VERSION_MAJOR < 11
@@ -143,11 +143,11 @@ static void init_native_targets()
 extern "C" void
 lp_set_target_options(void)
 {
-   /* The llvm target registry is not thread-safe, so drivers and state-trackers
+   /* The llvm target registry is not thread-safe, so drivers and gallium frontends
     * that want to initialize targets should use the lp_set_target_options()
     * function to safely initialize targets.
     *
-    * LLVM targets should be initialized before the driver or state-tracker tries
+    * LLVM targets should be initialized before the driver or gallium frontend tries
     * to access the registry.
     */
    call_once(&init_native_targets_once_flag, init_native_targets);
@@ -289,6 +289,36 @@ class ShaderMemoryManager : public DelegatingJITMemoryManager {
       }
 };
 
+class LPObjectCache : public llvm::ObjectCache {
+private:
+   bool has_object;
+   struct lp_cached_code *cache_out;
+public:
+   LPObjectCache(struct lp_cached_code *cache) {
+      cache_out = cache;
+      has_object = false;
+   }
+
+   ~LPObjectCache() {
+   }
+   void notifyObjectCompiled(const llvm::Module *M, llvm::MemoryBufferRef Obj) {
+      const std::string ModuleID = M->getModuleIdentifier();
+      if (has_object)
+         fprintf(stderr, "CACHE ALREADY HAS MODULE OBJECT\n");
+      has_object = true;
+      cache_out->data_size = Obj.getBufferSize();
+      cache_out->data = malloc(cache_out->data_size);
+      memcpy(cache_out->data, Obj.getBufferStart(), cache_out->data_size);
+   }
+
+   virtual std::unique_ptr<llvm::MemoryBuffer> getObject(const llvm::Module *M) {
+      if (cache_out->data_size) {
+         return llvm::MemoryBuffer::getMemBuffer(llvm::StringRef((const char *)cache_out->data, cache_out->data_size), "", false);
+      }
+      return NULL;
+   }
+
+};
 
 /**
  * Same as LLVMCreateJITCompilerForModule, but:
@@ -304,6 +334,7 @@ extern "C"
 LLVMBool
 lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
                                         lp_generated_code **OutCode,
+                                        struct lp_cached_code *cache_out,
                                         LLVMModuleRef M,
                                         LLVMMCJITMemoryManagerRef CMM,
                                         unsigned OptLevel,
@@ -369,22 +400,22 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * http://llvm.org/PR19429
     * http://llvm.org/PR16721
     */
-   MAttrs.push_back(util_cpu_caps.has_sse    ? "+sse"    : "-sse"   );
-   MAttrs.push_back(util_cpu_caps.has_sse2   ? "+sse2"   : "-sse2"  );
-   MAttrs.push_back(util_cpu_caps.has_sse3   ? "+sse3"   : "-sse3"  );
-   MAttrs.push_back(util_cpu_caps.has_ssse3  ? "+ssse3"  : "-ssse3" );
-   MAttrs.push_back(util_cpu_caps.has_sse4_1 ? "+sse4.1" : "-sse4.1");
-   MAttrs.push_back(util_cpu_caps.has_sse4_2 ? "+sse4.2" : "-sse4.2");
+   MAttrs.push_back(util_get_cpu_caps()->has_sse    ? "+sse"    : "-sse"   );
+   MAttrs.push_back(util_get_cpu_caps()->has_sse2   ? "+sse2"   : "-sse2"  );
+   MAttrs.push_back(util_get_cpu_caps()->has_sse3   ? "+sse3"   : "-sse3"  );
+   MAttrs.push_back(util_get_cpu_caps()->has_ssse3  ? "+ssse3"  : "-ssse3" );
+   MAttrs.push_back(util_get_cpu_caps()->has_sse4_1 ? "+sse4.1" : "-sse4.1");
+   MAttrs.push_back(util_get_cpu_caps()->has_sse4_2 ? "+sse4.2" : "-sse4.2");
    /*
     * AVX feature is not automatically detected from CPUID by the X86 target
     * yet, because the old (yet default) JIT engine is not capable of
     * emitting the opcodes. On newer llvm versions it is and at least some
     * versions (tested with 3.3) will emit avx opcodes without this anyway.
     */
-   MAttrs.push_back(util_cpu_caps.has_avx  ? "+avx"  : "-avx");
-   MAttrs.push_back(util_cpu_caps.has_f16c ? "+f16c" : "-f16c");
-   MAttrs.push_back(util_cpu_caps.has_fma  ? "+fma"  : "-fma");
-   MAttrs.push_back(util_cpu_caps.has_avx2 ? "+avx2" : "-avx2");
+   MAttrs.push_back(util_get_cpu_caps()->has_avx  ? "+avx"  : "-avx");
+   MAttrs.push_back(util_get_cpu_caps()->has_f16c ? "+f16c" : "-f16c");
+   MAttrs.push_back(util_get_cpu_caps()->has_fma  ? "+fma"  : "-fma");
+   MAttrs.push_back(util_get_cpu_caps()->has_avx2 ? "+avx2" : "-avx2");
    /* disable avx512 and all subvariants */
    MAttrs.push_back("-avx512cd");
    MAttrs.push_back("-avx512er");
@@ -395,7 +426,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    MAttrs.push_back("-avx512vl");
 #endif
 #if defined(PIPE_ARCH_ARM)
-   if (!util_cpu_caps.has_neon) {
+   if (!util_get_cpu_caps()->has_neon) {
       MAttrs.push_back("-neon");
       MAttrs.push_back("-crypto");
       MAttrs.push_back("-vfp2");
@@ -403,7 +434,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
 #endif
 
 #if defined(PIPE_ARCH_PPC)
-   MAttrs.push_back(util_cpu_caps.has_altivec ? "+altivec" : "-altivec");
+   MAttrs.push_back(util_get_cpu_caps()->has_altivec ? "+altivec" : "-altivec");
 #if (LLVM_VERSION_MAJOR < 4)
    /*
     * Make sure VSX instructions are disabled
@@ -413,7 +444,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * https://llvm.org/bugs/show_bug.cgi?id=33531 (fixed in 4.0)
     * https://llvm.org/bugs/show_bug.cgi?id=34647 (llc performance on certain unusual shader IR; intro'd in 4.0, pending as of 5.0)
     */
-   if (util_cpu_caps.has_altivec) {
+   if (util_get_cpu_caps()->has_altivec) {
       MAttrs.push_back("-vsx");
    }
 #else
@@ -427,8 +458,8 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * Make sure VSX instructions are ENABLED (if supported), unless
     * VSX instructions are explicitly enabled/disabled via GALLIVM_VSX=1 or 0.
     */
-   if (util_cpu_caps.has_altivec) {
-      MAttrs.push_back(util_cpu_caps.has_vsx ? "+vsx" : "-vsx");
+   if (util_get_cpu_caps()->has_altivec) {
+      MAttrs.push_back(util_get_cpu_caps()->has_vsx ? "+vsx" : "-vsx");
    }
 #endif
 #endif
@@ -501,6 +532,13 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    ExecutionEngine *JIT;
 
    JIT = builder.create();
+
+   if (cache_out) {
+      LPObjectCache *objcache = new LPObjectCache(cache_out);
+      JIT->setObjectCache(objcache);
+      cache_out->jit_obj_cache = (void *)objcache;
+   }
+
 #if LLVM_USE_INTEL_JITEVENTS
    JITEventListener *JEL = JITEventListener::createIntelJITEventListener();
    JIT->RegisterJITEventListener(JEL);
@@ -538,6 +576,13 @@ void
 lp_free_memory_manager(LLVMMCJITMemoryManagerRef memorymgr)
 {
    delete reinterpret_cast<BaseMemoryManager*>(memorymgr);
+}
+
+extern "C" void
+lp_free_objcache(void *objcache_ptr)
+{
+   LPObjectCache *objcache = (LPObjectCache *)objcache_ptr;
+   delete objcache;
 }
 
 extern "C" LLVMValueRef

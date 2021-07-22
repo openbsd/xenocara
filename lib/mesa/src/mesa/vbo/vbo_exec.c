@@ -109,13 +109,11 @@ _vbo_attribute_alias_map[VP_MODE_MAX][VERT_ATTRIB_MAX] = {
 
 
 void
-vbo_exec_init(struct gl_context *ctx)
+vbo_exec_init(struct gl_context *ctx, bool use_buffer_objects)
 {
    struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
 
-   exec->ctx = ctx;
-
-   vbo_exec_vtx_init(exec);
+   vbo_exec_vtx_init(exec, use_buffer_objects);
 
    ctx->Driver.NeedFlush = 0;
    ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
@@ -148,16 +146,15 @@ void vbo_exec_destroy( struct gl_context *ctx )
  * This function converts 2-vertex line strips/loops into GL_LINES, etc.
  */
 void
-vbo_try_prim_conversion(struct _mesa_prim *p)
+vbo_try_prim_conversion(GLubyte *mode, unsigned *count)
 {
-   if (p->mode == GL_LINE_STRIP && p->count == 2) {
+   if (*mode == GL_LINE_STRIP && *count == 2) {
       /* convert 2-vertex line strip to a separate line */
-      p->mode = GL_LINES;
-   }
-   else if ((p->mode == GL_TRIANGLE_STRIP || p->mode == GL_TRIANGLE_FAN)
-       && p->count == 3) {
+      *mode = GL_LINES;
+   } else if ((*mode == GL_TRIANGLE_STRIP || *mode == GL_TRIANGLE_FAN) &&
+              *count == 3) {
       /* convert 3-vertex tri strip or fan to a separate triangle */
-      p->mode = GL_TRIANGLES;
+      *mode = GL_TRIANGLES;
    }
 
    /* Note: we can't convert a 4-vertex quad strip to a separate quad
@@ -168,63 +165,196 @@ vbo_try_prim_conversion(struct _mesa_prim *p)
 
 
 /**
- * Helper function for determining if two subsequent glBegin/glEnd
- * primitives can be combined.  This is only possible for GL_POINTS,
- * GL_LINES, GL_TRIANGLES and GL_QUADS.
- * If we return true, it means that we can concatenate p1 onto p0 (and
- * discard p1).
+ * Function for merging two subsequent glBegin/glEnd draws.
+ * Return true if p1 was concatenated onto p0 (to discard p1 in the caller).
  */
 bool
-vbo_can_merge_prims(const struct _mesa_prim *p0, const struct _mesa_prim *p1)
+vbo_merge_draws(struct gl_context *ctx, bool in_dlist,
+                GLubyte mode0, GLubyte mode1,
+                unsigned start0, unsigned start1,
+                unsigned *count0, unsigned count1,
+                unsigned basevertex0, unsigned basevertex1,
+                bool *end0, bool begin1, bool end1)
 {
-   if (!p0->begin ||
-       !p1->begin ||
-       !p0->end ||
-       !p1->end)
-      return false;
-
    /* The prim mode must match (ex: both GL_TRIANGLES) */
-   if (p0->mode != p1->mode)
+   if (mode0 != mode1)
       return false;
 
    /* p1's vertices must come right after p0 */
-   if (p0->start + p0->count != p1->start)
+   if (start0 + *count0 != start1)
       return false;
 
-   if (p0->basevertex != p1->basevertex ||
-       p0->num_instances != p1->num_instances ||
-       p0->base_instance != p1->base_instance)
+   /* This checks whether mode is equal to any line primitive type, taking
+    * advantage of the fact that primitives types go from 0 to 14.
+    */
+   if ((1 << mode0) &
+       ((1 << GL_LINES) |
+        (1 << GL_LINE_LOOP) |
+        (1 << GL_LINE_STRIP) |
+        (1 << GL_LINES_ADJACENCY) |
+        (1 << GL_LINE_STRIP_ADJACENCY))) {
+      /* "begin" resets the line stipple pattern during line stipple emulation
+       * in tnl.
+       *
+       * StippleFlag can be unknown when compiling a display list.
+       *
+       * Other uses of "begin" are internal to the vbo module, and in those
+       * cases, "begin" is not used after merging draws.
+       */
+      if (begin1 == 1 && (in_dlist || ctx->Line.StippleFlag))
+         return false;
+
+      /* _mesa_prim::end is irrelevant at this point and is only used
+       * before this function is called.
+       */
+   }
+
+   assert(basevertex0 == basevertex1);
+
+   switch (mode0) {
+   case GL_POINTS:
+      /* can always merge subsequent GL_POINTS primitives */
+      break;
+   /* check independent primitives with no extra vertices */
+   case GL_LINES:
+      if (*count0 % 2)
+         return false;
+      break;
+   case GL_TRIANGLES:
+      if (*count0 % 3)
+         return false;
+      break;
+   case GL_QUADS:
+   case GL_LINES_ADJACENCY:
+      if (*count0 % 4)
+         return false;
+      break;
+   case GL_TRIANGLES_ADJACENCY:
+      if (*count0 % 6)
+         return false;
+      break;
+   case GL_PATCHES:
+      /* "patch_vertices" can be unknown when compiling a display list. */
+      if (in_dlist ||
+          *count0 % ctx->TessCtrlProgram.patch_vertices)
+         return false;
+      break;
+   default:
       return false;
+   }
 
-   /* can always merge subsequent GL_POINTS primitives */
-   if (p0->mode == GL_POINTS)
-      return true;
-
-   /* independent lines with no extra vertices */
-   if (p0->mode == GL_LINES && p0->count % 2 == 0 && p1->count % 2 == 0)
-      return true;
-
-   /* independent tris */
-   if (p0->mode == GL_TRIANGLES && p0->count % 3 == 0 && p1->count % 3 == 0)
-      return true;
-
-   /* independent quads */
-   if (p0->mode == GL_QUADS && p0->count % 4 == 0 && p1->count % 4 == 0)
-      return true;
-
-   return false;
+   /* Merge draws. */
+   *count0 += count1;
+   *end0 = end1;
+   return true;
 }
 
-
 /**
- * If we've determined that p0 and p1 can be merged, this function
- * concatenates p1 onto p0.
+ * Copy zero, one or two vertices from the current vertex buffer into
+ * the temporary "copy" buffer.
+ * This is used when a single primitive overflows a vertex buffer and
+ * we need to continue the primitive in a new vertex buffer.
+ * The temporary "copy" buffer holds the vertices which need to get
+ * copied from the old buffer to the new one.
  */
-void
-vbo_merge_prims(struct _mesa_prim *p0, const struct _mesa_prim *p1)
+unsigned
+vbo_copy_vertices(struct gl_context *ctx,
+                  GLenum mode,
+                  unsigned start, unsigned *pcount, bool begin,
+                  unsigned vertex_size,
+                  bool in_dlist,
+                  fi_type *dst,
+                  const fi_type *src)
 {
-   assert(vbo_can_merge_prims(p0, p1));
+   const unsigned count = *pcount;
+   unsigned copy = 0;
 
-   p0->count += p1->count;
-   p0->end = p1->end;
+   switch (mode) {
+   case GL_POINTS:
+      return 0;
+   case GL_LINES:
+      copy = count % 2;
+      break;
+   case GL_TRIANGLES:
+      copy = count % 3;
+      break;
+   case GL_QUADS:
+   case GL_LINES_ADJACENCY:
+      copy = count % 4;
+      break;
+   case GL_TRIANGLES_ADJACENCY:
+      copy = count % 6;
+      break;
+   case GL_LINE_STRIP:
+      copy = MIN2(1, count);
+      break;
+   case GL_LINE_STRIP_ADJACENCY:
+      /* We need to copy 3 vertices, because:
+       *    Last strip:  ---o---o---x     (last line)
+       *    Next strip:     x---o---o---  (next line)
+       */
+      copy = MIN2(3, count);
+      break;
+   case GL_PATCHES:
+      if (in_dlist) {
+         /* We don't know the value of GL_PATCH_VERTICES when compiling
+          * a display list.
+          *
+          * Fail an assertion in debug builds and use the value of 3
+          * in release builds, which is more likely than any other value.
+          */
+         assert(!"patch_vertices is unknown");
+         copy = count % 3;
+      } else {
+         copy = count % ctx->TessCtrlProgram.patch_vertices;
+      }
+      break;
+   case GL_LINE_LOOP:
+      if (!in_dlist && begin == 0) {
+         /* We're dealing with the second or later section of a split/wrapped
+          * GL_LINE_LOOP.  Since we're converting line loops to line strips,
+          * we've already incremented the last_prim->start counter by one to
+          * skip the 0th vertex in the loop.  We need to undo that (effectively
+          * subtract one from last_prim->start) so that we copy the 0th vertex
+          * to the next vertex buffer.
+          */
+         assert(start > 0);
+         src -= vertex_size;
+      }
+      FALLTHROUGH;
+   case GL_TRIANGLE_FAN:
+   case GL_POLYGON:
+      if (count == 0) {
+         return 0;
+      } else if (count == 1) {
+         memcpy(dst, src + 0, vertex_size * sizeof(GLfloat));
+         return 1;
+      } else {
+         memcpy(dst, src + 0, vertex_size * sizeof(GLfloat));
+         memcpy(dst + vertex_size, src + (count - 1) * vertex_size,
+                vertex_size * sizeof(GLfloat));
+         return 2;
+      }
+   case GL_TRIANGLE_STRIP:
+      /* Draw an even number of triangles to keep front/back facing the same. */
+      *pcount -= count % 2;
+      FALLTHROUGH;
+   case GL_QUAD_STRIP:
+      if (count <= 1)
+         copy = count;
+      else
+         copy = 2 + (count % 2);
+      break;
+   case PRIM_OUTSIDE_BEGIN_END:
+      return 0;
+   case GL_TRIANGLE_STRIP_ADJACENCY:
+      /* TODO: Splitting tri strips with adjacency is too complicated. */
+   default:
+      unreachable("Unexpected primitive type");
+      return 0;
+   }
+
+   memcpy(dst, src + (count - copy) * vertex_size,
+          copy * vertex_size * sizeof(GLfloat));
+   return copy;
 }

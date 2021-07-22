@@ -18,8 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-inc_common = [inc_include, include_directories(
-  '.', 'mapi', 'mesa', 'gallium/include', 'gallium/auxiliary')]
 inc_mesa = include_directories('mesa')
 inc_mapi = include_directories('mapi')
 inc_src = include_directories('.')
@@ -31,12 +29,14 @@ inc_amd_common_llvm = include_directories('amd/llvm')
 libglsl_util = static_library(
   'glsl_util',
   files(
-    'mesa/main/extensions_table.c', 'mesa/main/imports.c',
-    'mesa/program/prog_parameter.c', 'mesa/program/symbol_table.c',
+    'mesa/main/extensions_table.c',
+    'mesa/program/prog_parameter.c',
+    'mesa/program/symbol_table.c',
     'mesa/program/dummy_errors.c',
   ),
-  include_directories : [inc_common],
-  c_args : [c_vis_args],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  dependencies : dep_valgrind,
+  gnu_symbol_visibility : 'hidden',
   build_by_default : false,
 )
 
@@ -44,7 +44,8 @@ sha1_h = custom_target(
   'git_sha1.h',
   output : 'git_sha1.h',
   command : [prog_python, git_sha1_gen_py, '--output', '@OUTPUT@'],
-  build_always : true, # commit sha1 can change without having touched these files
+  build_by_default : true,
+  build_always_stale : true, # commit sha1 can change without having touched these files
 )
 
 subdir('gtest')
@@ -53,6 +54,7 @@ if cc.get_id() == 'msvc'
 else
   idep_getopt = null_dep
 endif
+subdir('android_stub')
 subdir('util')
 subdir('mapi')
 # TODO: opengl
@@ -66,13 +68,13 @@ endif
 if with_platform_wayland
   subdir('egl/wayland/wayland-drm')
 endif
-if with_any_vk
+if with_any_vk or with_gallium_zink
   subdir('vulkan')
 endif
 if with_gallium_radeonsi or with_amd_vk
   subdir('amd')
 endif
-if with_gallium_vc4 or with_gallium_v3d
+if with_any_broadcom
   subdir('broadcom')
 endif
 if with_gallium_etnaviv
@@ -84,8 +86,17 @@ endif
 if with_gallium_panfrost or with_gallium_lima
   subdir('panfrost')
 endif
-if with_dri_i965 or with_intel_vk or with_gallium_iris
+if with_gallium_virgl or with_virtio_vk
+  subdir('virtio')
+endif
+if with_any_intel
   subdir('intel')
+endif
+if with_microsoft_clc or with_gallium_d3d12 or with_spirv_to_dxil
+  subdir('microsoft')
+endif
+if with_gallium_nouveau
+  subdir('nouveau')
 endif
 subdir('mesa')
 subdir('loader')

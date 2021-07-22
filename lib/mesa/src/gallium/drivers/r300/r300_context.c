@@ -74,11 +74,11 @@ static void r300_destroy_context(struct pipe_context* context)
 {
     struct r300_context* r300 = r300_context(context);
 
-    if (r300->cs && r300->hyperz_enabled) {
-        r300->rws->cs_request_feature(r300->cs, RADEON_FID_R300_HYPERZ_ACCESS, FALSE);
+    if (r300->cs.priv && r300->hyperz_enabled) {
+        r300->rws->cs_request_feature(&r300->cs, RADEON_FID_R300_HYPERZ_ACCESS, FALSE);
     }
-    if (r300->cs && r300->cmask_access) {
-        r300->rws->cs_request_feature(r300->cs, RADEON_FID_R300_CMASK_ACCESS, FALSE);
+    if (r300->cs.priv && r300->cmask_access) {
+        r300->rws->cs_request_feature(&r300->cs, RADEON_FID_R300_CMASK_ACCESS, FALSE);
     }
 
     if (r300->blitter)
@@ -94,8 +94,7 @@ static void r300_destroy_context(struct pipe_context* context)
     /* XXX: This function assumes r300->query_list was initialized */
     r300_release_referenced_objects(r300);
 
-    if (r300->cs)
-        r300->rws->cs_destroy(r300->cs);
+    r300->rws->cs_destroy(&r300->cs);
     if (r300->ctx)
         r300->rws->ctx_destroy(r300->ctx);
 
@@ -262,7 +261,7 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     return TRUE;
 }
 
-/* Not every state tracker calls every driver function before the first draw
+/* Not every gallium frontend calls every driver function before the first draw
  * call and we must initialize the command buffers somehow. */
 static void r300_init_states(struct pipe_context *pipe)
 {
@@ -393,8 +392,8 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
     if (!r300->ctx)
         goto fail;
 
-    r300->cs = rws->cs_create(r300->ctx, RING_GFX, r300_flush_callback, r300, false);
-    if (r300->cs == NULL)
+
+    if (!rws->cs_create(&r300->cs, r300->ctx, RING_GFX, r300_flush_callback, r300, false))
         goto fail;
 
     if (!r300screen->caps.has_tcl) {
@@ -472,13 +471,13 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
         vb.depth0 = 1;
 
         r300->dummy_vb.buffer.resource = screen->resource_create(screen, &vb);
-        r300->context.set_vertex_buffers(&r300->context, 0, 1, &r300->dummy_vb);
+        r300->context.set_vertex_buffers(&r300->context, 0, 1, 0, false, &r300->dummy_vb);
     }
 
     {
         struct pipe_depth_stencil_alpha_state dsa;
         memset(&dsa, 0, sizeof(dsa));
-        dsa.depth.writemask = 1;
+        dsa.depth_writemask = 1;
 
         r300->dsa_decompress_zmask =
             r300->context.create_depth_stencil_alpha_state(&r300->context,

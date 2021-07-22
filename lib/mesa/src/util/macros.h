@@ -24,6 +24,7 @@
 #ifndef UTIL_MACROS_H
 #define UTIL_MACROS_H
 
+#include <stdio.h>
 #include <assert.h>
 
 #include "c99_compat.h"
@@ -37,6 +38,10 @@
 /* For compatibility with Clang's __has_builtin() */
 #ifndef __has_builtin
 #  define __has_builtin(x) 0
+#endif
+
+#ifndef __has_attribute
+#  define __has_attribute(x) 0
 #endif
 
 /**
@@ -56,17 +61,57 @@
 #  endif
 #endif
 
+/**
+ * __builtin_types_compatible_p compat
+ */
+#if defined(__cplusplus) || !defined(HAVE___BUILTIN_TYPES_COMPATIBLE_P)
+#  define __builtin_types_compatible_p(type1, type2) (1)
+#endif
 
 /**
  * Static (compile-time) assertion.
- * Basically, use COND to dimension an array.  If COND is false/zero the
- * array size will be -1 and we'll get a compilation error.
  */
-#define STATIC_ASSERT(COND) \
-   do { \
+#if defined(_MSC_VER)
+   /* MSVC doesn't like VLA's, but it also dislikes zero length arrays
+    * (which gcc is happy with), so we have to define STATIC_ASSERT()
+    * slightly differently.
+    */
+#  define STATIC_ASSERT(COND) do {         \
+      (void) sizeof(char [(COND) != 0]);   \
+   } while (0)
+#elif defined(__GNUC__)
+   /* This version of STATIC_ASSERT() relies on VLAs.  If COND is
+    * false/zero, the array size will be -1 and we'll get a compile
+    * error
+    */
+#  define STATIC_ASSERT(COND) do {         \
       (void) sizeof(char [1 - 2*!(COND)]); \
    } while (0)
+#else
+#  define STATIC_ASSERT(COND) do { } while (0)
+#endif
 
+/**
+ * container_of - cast a member of a structure out to the containing structure
+ * @ptr:        the pointer to the member.
+ * @type:       the type of the container struct this is embedded in.
+ * @member:     the name of the member within the struct.
+ */
+#ifndef __GNUC__
+   /* a grown-up compiler is required for the extra type checking: */
+#  define container_of(ptr, type, member)                               \
+      (type*)((uint8_t *)ptr - offsetof(type, member))
+#else
+#  define __same_type(a, b) \
+      __builtin_types_compatible_p(__typeof__(a), __typeof__(b))
+#  define container_of(ptr, type, member) ({                            \
+         uint8_t *__mptr = (uint8_t *)(ptr);                            \
+         STATIC_ASSERT(__same_type(*(ptr), ((type *)0)->member) ||      \
+                       __same_type(*(ptr), void) ||                     \
+                       !"pointer type mismatch in container_of()");     \
+         ((type *)(__mptr - offsetof(type, member)));                   \
+      })
+#endif
 
 /**
  * Unreachable macro. Useful for suppressing "control reaches end of non-void
@@ -126,7 +171,11 @@ do {                       \
 #endif
 
 #ifdef HAVE_FUNC_ATTRIBUTE_FORMAT
-#define PRINTFLIKE(f, a) __attribute__ ((format(__printf__, f, a)))
+#if defined (__MINGW_PRINTF_FORMAT)
+# define PRINTFLIKE(f, a) __attribute__ ((format(__MINGW_PRINTF_FORMAT, f, a)))
+#else
+# define PRINTFLIKE(f, a) __attribute__ ((format(__printf__, f, a)))
+#endif
 #else
 #define PRINTFLIKE(f, a)
 #endif
@@ -183,6 +232,12 @@ do {                       \
 #  endif
 #endif
 
+#ifdef _MSC_VER
+#define ALIGN16 __declspec(align(16))
+#else
+#define ALIGN16 __attribute__((aligned(16)))
+#endif
+
 #ifdef __cplusplus
 /**
  * Macro function that evaluates to true if T is a trivially
@@ -219,12 +274,12 @@ do {                       \
  * inline a static function that we later use in an alias. - ajax
  */
 #ifndef PUBLIC
-#  if defined(__GNUC__)
-#    define PUBLIC __attribute__((visibility("default")))
-#    define USED __attribute__((used))
-#  elif defined(_MSC_VER)
+#  if defined(_WIN32)
 #    define PUBLIC __declspec(dllexport)
 #    define USED
+#  elif defined(__GNUC__)
+#    define PUBLIC __attribute__((visibility("default")))
+#    define USED __attribute__((used))
 #  else
 #    define PUBLIC
 #    define USED
@@ -264,6 +319,8 @@ do {                       \
 
 #if defined(__GNUC__)
 #define ATTRIBUTE_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+#define ATTRIBUTE_NOINLINE __declspec(noinline)
 #else
 #define ATTRIBUTE_NOINLINE
 #endif
@@ -290,6 +347,9 @@ do {                       \
 
 /** Clamp X to [MIN,MAX].  Turn NaN into MIN, arbitrarily. */
 #define CLAMP( X, MIN, MAX )  ( (X)>(MIN) ? ((X)>(MAX) ? (MAX) : (X)) : (MIN) )
+
+/* Syntax sugar occuring frequently in graphics code */
+#define SATURATE( X ) CLAMP(X, 0.0f, 1.0f)
 
 /** Minimum of two values: */
 #define MIN2( A, B )   ( (A)<(B) ? (A) : (B) )
@@ -331,5 +391,57 @@ do {                       \
 /** Set count bits starting from bit b  */
 #define BITFIELD64_RANGE(b, count) \
    (BITFIELD64_MASK((b) + (count)) & ~BITFIELD64_MASK(b))
+
+/* TODO: In future we should try to move this to u_debug.h once header
+ * dependencies are reorganised to allow this.
+ */
+enum pipe_debug_type
+{
+   PIPE_DEBUG_TYPE_OUT_OF_MEMORY = 1,
+   PIPE_DEBUG_TYPE_ERROR,
+   PIPE_DEBUG_TYPE_SHADER_INFO,
+   PIPE_DEBUG_TYPE_PERF_INFO,
+   PIPE_DEBUG_TYPE_INFO,
+   PIPE_DEBUG_TYPE_FALLBACK,
+   PIPE_DEBUG_TYPE_CONFORMANCE,
+};
+
+#if !defined(alignof) && !defined(__cplusplus)
+#if __STDC_VERSION__ >= 201112L
+#define alignof(t) _Alignof(t)
+#elif defined(_MSC_VER)
+#define alignof(t) __alignof(t)
+#else
+#define alignof(t) __alignof__(t)
+#endif
+#endif
+
+/* Macros for static type-safety checking.
+ *
+ * https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+ */
+
+#if __has_attribute(capability)
+typedef int __attribute__((capability("mutex"))) lock_cap_t;
+
+#define guarded_by(l) __attribute__((guarded_by(l)))
+#define acquire_cap(l) __attribute((acquire_capability(l), no_thread_safety_analysis))
+#define release_cap(l) __attribute((release_capability(l), no_thread_safety_analysis))
+#define assert_cap(l) __attribute((assert_capability(l), no_thread_safety_analysis))
+#define requires_cap(l) __attribute((requires_capability(l)))
+#define disable_thread_safety_analysis __attribute((no_thread_safety_analysis))
+
+#else
+
+typedef int lock_cap_t;
+
+#define guarded_by(l)
+#define acquire_cap(l)
+#define release_cap(l)
+#define assert_cap(l)
+#define requires_cap(l)
+#define disable_thread_safety_analysis
+
+#endif
 
 #endif /* UTIL_MACROS_H */

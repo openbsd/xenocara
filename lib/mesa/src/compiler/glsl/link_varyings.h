@@ -77,10 +77,16 @@ struct tfeedback_candidate
    const glsl_type *type;
 
    /**
-    * Offset within the toplevel variable where this varying occurs (counted
-    * in multiples of the size of a float).
+    * Offset within the toplevel variable where this varying occurs.
+    * Counted in floats.
     */
-   unsigned offset;
+   unsigned struct_offset_floats;
+
+   /**
+    * Offset within the xfb with respect to alignment requirements.
+    * Counted in floats.
+    */
+   unsigned xfb_offset_floats;
 };
 
 
@@ -100,10 +106,11 @@ public:
               struct gl_transform_feedback_info *info, unsigned buffer,
               unsigned buffer_index, const unsigned max_outputs,
               BITSET_WORD *used_components[MAX_FEEDBACK_BUFFERS],
-              bool *explicit_stride, bool has_xfb_qualifiers,
-              const void *mem_ctx) const;
+              bool *explicit_stride, unsigned *max_member_alignment,
+              bool has_xfb_qualifiers, const void *mem_ctx) const;
    const tfeedback_candidate *find_candidate(gl_shader_program *prog,
                                              hash_table *tfeedback_candidates);
+   void set_lowered_candidate(const tfeedback_candidate *candidate);
 
    bool is_next_buffer_separator() const
    {
@@ -121,6 +128,11 @@ public:
    bool is_varying() const
    {
       return !this->next_buffer_separator && !this->skip_components;
+   }
+
+   bool is_aligned(unsigned dmul, unsigned offset) const
+   {
+      return (dmul * (this->array_subscript + offset)) % 4 == 0;
    }
 
    const char *name() const

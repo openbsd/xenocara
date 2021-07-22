@@ -66,7 +66,7 @@ vl_vb_upload_quads(struct pipe_context *pipe)
    (
       pipe,
       quad.buffer.resource,
-      PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+      PIPE_MAP_WRITE | PIPE_MAP_DISCARD_RANGE,
       &buf_transfer
    );
 
@@ -111,7 +111,7 @@ vl_vb_upload_pos(struct pipe_context *pipe, unsigned width, unsigned height)
    (
       pipe,
       pos.buffer.resource,
-      PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+      PIPE_MAP_WRITE | PIPE_MAP_DISCARD_RANGE,
       &buf_transfer
    );
 
@@ -301,7 +301,7 @@ vl_vb_map(struct vl_vertex_buffer *buffer, struct pipe_context *pipe)
       (
          pipe,
          buffer->ycbcr[i].resource,
-         PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+         PIPE_MAP_WRITE | PIPE_MAP_DISCARD_RANGE,
          &buffer->ycbcr[i].transfer
       );
    }
@@ -311,7 +311,7 @@ vl_vb_map(struct vl_vertex_buffer *buffer, struct pipe_context *pipe)
       (
          pipe,
          buffer->mv[i].resource,
-         PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+         PIPE_MAP_WRITE | PIPE_MAP_DISCARD_RANGE,
          &buffer->mv[i].transfer
       );
    }
@@ -352,11 +352,13 @@ vl_vb_unmap(struct vl_vertex_buffer *buffer, struct pipe_context *pipe)
    assert(buffer && pipe);
 
    for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
-      pipe_buffer_unmap(pipe, buffer->ycbcr[i].transfer);
+      if (buffer->ycbcr[i].transfer)
+         pipe_buffer_unmap(pipe, buffer->ycbcr[i].transfer);
    }
 
    for (i = 0; i < VL_MAX_REF_FRAMES; ++i) {
-      pipe_buffer_unmap(pipe, buffer->mv[i].transfer);
+      if (buffer->mv[i].transfer)
+         pipe_buffer_unmap(pipe, buffer->mv[i].transfer);
    }
 }
 

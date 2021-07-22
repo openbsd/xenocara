@@ -140,9 +140,9 @@ nve4_m2mf_transfer_rect(struct nvc0_context *nvc0,
    nouveau_pushbuf_bufctx(push, bctx);
    nouveau_pushbuf_validate(push);
 
-   exec = 0x400 /* REMAP_ENABLE */ | 0x200 /* 2D_ENABLE */ | 0x6 /* UNK */;
+   exec = NVE4_COPY_EXEC_SWIZZLE_ENABLE | NVE4_COPY_EXEC_2D_ENABLE | NVE4_COPY_EXEC_FLUSH | NVE4_COPY_EXEC_COPY_MODE_NON_PIPELINED;
 
-   BEGIN_NVC0(push, SUBC_COPY(0x0708), 1);
+   BEGIN_NVC0(push, NVE4_COPY(SWIZZLE), 1);
    PUSH_DATA (push, (cpbs[dst->cpp].nc - 1) << 24 |
                     (cpbs[src->cpp].nc - 1) << 20 |
                     (cpbs[src->cpp].cs - 1) << 16 |
@@ -152,8 +152,8 @@ nve4_m2mf_transfer_rect(struct nvc0_context *nvc0,
                     0 <<  0 /* DST_X = SRC_X */);
 
    if (nouveau_bo_memtype(dst->bo)) {
-      BEGIN_NVC0(push, SUBC_COPY(0x070c), 6);
-      PUSH_DATA (push, 0x1000 | dst->tile_mode);
+      BEGIN_NVC0(push, NVE4_COPY(DST_BLOCK_DIMENSIONS), 6);
+      PUSH_DATA (push, dst->tile_mode | NVE4_COPY_SRC_BLOCK_DIMENSIONS_GOB_HEIGHT_FERMI_8);
       PUSH_DATA (push, dst->width);
       PUSH_DATA (push, dst->height);
       PUSH_DATA (push, dst->depth);
@@ -162,12 +162,12 @@ nve4_m2mf_transfer_rect(struct nvc0_context *nvc0,
    } else {
       assert(!dst->z);
       dst_base += dst->y * dst->pitch + dst->x * dst->cpp;
-      exec |= 0x100; /* DST_MODE_2D_LINEAR */
+      exec |= NVE4_COPY_EXEC_DST_LAYOUT_BLOCKLINEAR;
    }
 
    if (nouveau_bo_memtype(src->bo)) {
-      BEGIN_NVC0(push, SUBC_COPY(0x0728), 6);
-      PUSH_DATA (push, 0x1000 | src->tile_mode);
+      BEGIN_NVC0(push, NVE4_COPY(SRC_BLOCK_DIMENSIONS), 6);
+      PUSH_DATA (push, src->tile_mode | NVE4_COPY_SRC_BLOCK_DIMENSIONS_GOB_HEIGHT_FERMI_8);
       PUSH_DATA (push, src->width);
       PUSH_DATA (push, src->height);
       PUSH_DATA (push, src->depth);
@@ -176,10 +176,10 @@ nve4_m2mf_transfer_rect(struct nvc0_context *nvc0,
    } else {
       assert(!src->z);
       src_base += src->y * src->pitch + src->x * src->cpp;
-      exec |= 0x080; /* SRC_MODE_2D_LINEAR */
+      exec |= NVE4_COPY_EXEC_SRC_LAYOUT_BLOCKLINEAR;
    }
 
-   BEGIN_NVC0(push, SUBC_COPY(0x0400), 8);
+   BEGIN_NVC0(push, NVE4_COPY(SRC_ADDRESS_HIGH), 8);
    PUSH_DATAh(push, src->bo->offset + src_base);
    PUSH_DATA (push, src->bo->offset + src_base);
    PUSH_DATAh(push, dst->bo->offset + dst_base);
@@ -189,7 +189,7 @@ nve4_m2mf_transfer_rect(struct nvc0_context *nvc0,
    PUSH_DATA (push, nblocksx);
    PUSH_DATA (push, nblocksy);
 
-   BEGIN_NVC0(push, SUBC_COPY(0x0300), 1);
+   BEGIN_NVC0(push, NVE4_COPY(EXEC), 1);
    PUSH_DATA (push, exec);
 
    nouveau_bufctx_reset(bctx, 0);
@@ -329,15 +329,18 @@ nve4_m2mf_copy_linear(struct nouveau_context *nv,
    nouveau_pushbuf_bufctx(push, bctx);
    nouveau_pushbuf_validate(push);
 
-   BEGIN_NVC0(push, SUBC_COPY(0x0400), 4);
+   BEGIN_NVC0(push, NVE4_COPY(SRC_ADDRESS_HIGH), 4);
    PUSH_DATAh(push, src->offset + srcoff);
    PUSH_DATA (push, src->offset + srcoff);
    PUSH_DATAh(push, dst->offset + dstoff);
    PUSH_DATA (push, dst->offset + dstoff);
-   BEGIN_NVC0(push, SUBC_COPY(0x0418), 1);
+   BEGIN_NVC0(push, NVE4_COPY(X_COUNT), 1);
    PUSH_DATA (push, size);
-   BEGIN_NVC0(push, SUBC_COPY(0x0300), 1);
-   PUSH_DATA (push, 0x186);
+   BEGIN_NVC0(push, NVE4_COPY(EXEC), 1);
+   PUSH_DATA (push, NVE4_COPY_EXEC_COPY_MODE_NON_PIPELINED |
+		    NVE4_COPY_EXEC_FLUSH |
+		    NVE4_COPY_EXEC_SRC_LAYOUT_BLOCKLINEAR |
+		    NVE4_COPY_EXEC_DST_LAYOUT_BLOCKLINEAR);
 
    nouveau_bufctx_reset(bctx, 0);
 }
@@ -357,11 +360,11 @@ static inline bool
 nvc0_mt_sync(struct nvc0_context *nvc0, struct nv50_miptree *mt, unsigned usage)
 {
    if (!mt->base.mm) {
-      uint32_t access = (usage & PIPE_TRANSFER_WRITE) ?
+      uint32_t access = (usage & PIPE_MAP_WRITE) ?
          NOUVEAU_BO_WR : NOUVEAU_BO_RD;
       return !nouveau_bo_wait(mt->base.bo, access, nvc0->base.client);
    }
-   if (usage & PIPE_TRANSFER_WRITE)
+   if (usage & PIPE_MAP_WRITE)
       return !mt->base.fence || nouveau_fence_wait(mt->base.fence, &nvc0->base.debug);
    return !mt->base.fence_wr || nouveau_fence_wait(mt->base.fence_wr, &nvc0->base.debug);
 }
@@ -387,12 +390,12 @@ nvc0_miptree_transfer_map(struct pipe_context *pctx,
       if (!ret)
          ret = nouveau_bo_map(mt->base.bo, 0, NULL);
       if (ret &&
-          (usage & PIPE_TRANSFER_MAP_DIRECTLY))
+          (usage & PIPE_MAP_DIRECTLY))
          return NULL;
       if (!ret)
-         usage |= PIPE_TRANSFER_MAP_DIRECTLY;
+         usage |= PIPE_MAP_DIRECTLY;
    } else
-   if (usage & PIPE_TRANSFER_MAP_DIRECTLY)
+   if (usage & PIPE_MAP_DIRECTLY)
       return NULL;
 
    tx = CALLOC_STRUCT(nvc0_transfer);
@@ -414,7 +417,7 @@ nvc0_miptree_transfer_map(struct pipe_context *pctx,
    }
    tx->nlayers = box->depth;
 
-   if (usage & PIPE_TRANSFER_MAP_DIRECTLY) {
+   if (usage & PIPE_MAP_DIRECTLY) {
       tx->base.stride = mt->level[level].pitch;
       tx->base.layer_stride = mt->layer_stride;
       uint32_t offset = box->y * tx->base.stride +
@@ -449,7 +452,7 @@ nvc0_miptree_transfer_map(struct pipe_context *pctx,
    tx->rect[1].pitch = tx->base.stride;
    tx->rect[1].domain = NOUVEAU_BO_GART;
 
-   if (usage & PIPE_TRANSFER_READ) {
+   if (usage & PIPE_MAP_READ) {
       unsigned base = tx->rect[0].base;
       unsigned z = tx->rect[0].z;
       unsigned i;
@@ -472,9 +475,9 @@ nvc0_miptree_transfer_map(struct pipe_context *pctx,
       return tx->rect[1].bo->map;
    }
 
-   if (usage & PIPE_TRANSFER_READ)
+   if (usage & PIPE_MAP_READ)
       flags = NOUVEAU_BO_RD;
-   if (usage & PIPE_TRANSFER_WRITE)
+   if (usage & PIPE_MAP_WRITE)
       flags |= NOUVEAU_BO_WR;
 
    ret = nouveau_bo_map(tx->rect[1].bo, flags, nvc0->screen->base.client);
@@ -498,14 +501,14 @@ nvc0_miptree_transfer_unmap(struct pipe_context *pctx,
    struct nv50_miptree *mt = nv50_miptree(tx->base.resource);
    unsigned i;
 
-   if (tx->base.usage & PIPE_TRANSFER_MAP_DIRECTLY) {
+   if (tx->base.usage & PIPE_MAP_DIRECTLY) {
       pipe_resource_reference(&transfer->resource, NULL);
 
       FREE(tx);
       return;
    }
 
-   if (tx->base.usage & PIPE_TRANSFER_WRITE) {
+   if (tx->base.usage & PIPE_MAP_WRITE) {
       for (i = 0; i < tx->nlayers; ++i) {
          nvc0->m2mf_copy_rect(nvc0, &tx->rect[0], &tx->rect[1],
                               tx->nblocksx, tx->nblocksy);
@@ -523,7 +526,7 @@ nvc0_miptree_transfer_unmap(struct pipe_context *pctx,
    } else {
       nouveau_bo_ref(NULL, &tx->rect[1].bo);
    }
-   if (tx->base.usage & PIPE_TRANSFER_READ)
+   if (tx->base.usage & PIPE_MAP_READ)
       NOUVEAU_DRV_STAT(&nvc0->screen->base, tex_transfers_rd, 1);
 
    pipe_resource_reference(&transfer->resource, NULL);

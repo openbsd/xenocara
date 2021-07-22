@@ -420,8 +420,7 @@ struct ${type}${width}_vec {
       % else:
          ## Splat the value to all components.  This way expressions which
          ## write the same value to all components don't need to explicitly
-         ## write to dest.  One such example is fnoise which has a
-         ## const_expr of 0.0f.
+         ## write to dest.
          dst.x = dst.y = dst.z = dst.w = ${op.const_expr};
       % endif
 
@@ -460,6 +459,11 @@ struct ${type}${width}_vec {
 </%def>
 
 % for name, op in sorted(opcodes.items()):
+% if op.name == "fsat":
+#if defined(_MSC_VER) && (defined(_M_ARM64) || defined(_M_ARM64EC))
+#pragma optimize("", off) /* Temporary work-around for MSVC compiler bug, present in VS2019 16.9.2 */
+#endif
+% endif
 static void
 evaluate_${name}(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
@@ -483,6 +487,11 @@ evaluate_${name}(nir_const_value *_dst_val,
       ${evaluate_op(op, 0, execution_mode)}
    % endif
 }
+% if op.name == "fsat":
+#if defined(_MSC_VER) && (defined(_M_ARM64) || defined(_M_ARM64EC))
+#pragma optimize("", on) /* Temporary work-around for MSVC compiler bug, present in VS2019 16.9.2 */
+#endif
+% endif
 % endfor
 
 void

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "state_tracker/graw.h"
+#include "frontend/graw.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
@@ -96,6 +96,11 @@ static void set_viewport( float x, float y,
    vp.translate[1] = half_height + y;
    vp.translate[2] = half_depth + z;
 
+   vp.swizzle_x = PIPE_VIEWPORT_SWIZZLE_POSITIVE_X;
+   vp.swizzle_y = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y;
+   vp.swizzle_z = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z;
+   vp.swizzle_w = PIPE_VIEWPORT_SWIZZLE_POSITIVE_W;
+
    ctx->set_viewport_states( ctx, 0, 1, &vp );
 }
 
@@ -147,7 +152,7 @@ static void set_vertices( void )
                                                  sizeof(inst_data),
                                                  inst_data);
 
-   ctx->set_vertex_buffers(ctx, 0, 2, vbuf);
+   ctx->set_vertex_buffers(ctx, 0, 2, 0, false, vbuf);
 }
 
 static void set_vertex_shader( void )
@@ -187,15 +192,16 @@ static void draw( void )
 {
    union pipe_color_union clear_color = { {1,0,1,1} };
    struct pipe_draw_info info;
+   struct pipe_draw_start_count draw;
 
-   ctx->clear(ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
+   ctx->clear(ctx, PIPE_CLEAR_COLOR, NULL, &clear_color, 0, 0);
 
 
    util_draw_init_info(&info);
    info.index_size = draw_elements ? 2 : 0;
    info.mode = PIPE_PRIM_TRIANGLES;
-   info.start = 0;
-   info.count = 3;
+   draw.start = 0;
+   draw.count = 3;
    /* draw NUM_INST triangles */
    info.instance_count = NUM_INST;
 
@@ -209,7 +215,7 @@ static void draw( void )
                                       indices);
    }
 
-   ctx->draw_vbo(ctx, &info);
+   ctx->draw_vbo(ctx, &info, NULL, &draw, 1);
 
    pipe_resource_reference(&info.index.resource, NULL);
 
@@ -217,7 +223,7 @@ static void draw( void )
 
    graw_save_surface_to_file(ctx, surf, NULL);
 
-   screen->flush_frontbuffer(screen, tex, 0, 0, window, NULL);
+   screen->flush_frontbuffer(screen, ctx, tex, 0, 0, window, NULL);
 }
 
 

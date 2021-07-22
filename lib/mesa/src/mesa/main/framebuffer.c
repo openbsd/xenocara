@@ -31,10 +31,11 @@
 
 #include <stdio.h>
 #include "glheader.h"
-#include "imports.h"
+
 #include "blend.h"
 #include "buffers.h"
 #include "context.h"
+#include "draw_validate.h"
 #include "enums.h"
 #include "formats.h"
 #include "macros.h"
@@ -45,6 +46,7 @@
 #include "texobj.h"
 #include "glformats.h"
 #include "state.h"
+#include "util/u_memory.h"
 
 
 
@@ -78,30 +80,10 @@ compute_depth_max(struct gl_framebuffer *fb)
 }
 
 /**
- * Create and initialize a gl_framebuffer object.
- * This is intended for creating _window_system_ framebuffers, not generic
- * framebuffer objects ala GL_EXT_framebuffer_object.
- *
- * \sa _mesa_new_framebuffer
- */
-struct gl_framebuffer *
-_mesa_create_framebuffer(const struct gl_config *visual)
-{
-   struct gl_framebuffer *fb = CALLOC_STRUCT(gl_framebuffer);
-   assert(visual);
-   if (fb) {
-      _mesa_initialize_window_framebuffer(fb, visual);
-   }
-   return fb;
-}
-
-
-/**
  * Allocate a new gl_framebuffer object.
  * This is the default function for ctx->Driver.NewFramebuffer().
  * This is for allocating user-created framebuffers, not window-system
  * framebuffers!
- * \sa _mesa_create_framebuffer
  */
 struct gl_framebuffer *
 _mesa_new_framebuffer(struct gl_context *ctx, GLuint name)
@@ -448,15 +430,14 @@ _mesa_update_framebuffer_visual(struct gl_context *ctx,
           * attachments).
           */
          fb->Visual.samples = rb->NumSamples;
-         fb->Visual.sampleBuffers = rb->NumSamples > 0 ? 1 : 0;
 
          if (_mesa_is_legal_color_format(ctx, baseFormat)) {
             fb->Visual.redBits = _mesa_get_format_bits(fmt, GL_RED_BITS);
             fb->Visual.greenBits = _mesa_get_format_bits(fmt, GL_GREEN_BITS);
             fb->Visual.blueBits = _mesa_get_format_bits(fmt, GL_BLUE_BITS);
             fb->Visual.alphaBits = _mesa_get_format_bits(fmt, GL_ALPHA_BITS);
-            fb->Visual.rgbBits = fb->Visual.redBits
-               + fb->Visual.greenBits + fb->Visual.blueBits;
+            fb->Visual.rgbBits = fb->Visual.redBits + fb->Visual.greenBits +
+                                 fb->Visual.blueBits + fb->Visual.alphaBits;
             if (_mesa_is_format_srgb(fmt))
                 fb->Visual.sRGBCapable = ctx->Extensions.EXT_sRGB;
             break;
@@ -502,6 +483,8 @@ _mesa_update_framebuffer_visual(struct gl_context *ctx,
    }
 
    compute_depth_max(fb);
+   _mesa_update_allow_draw_out_of_order(ctx);
+   _mesa_update_valid_to_render_state(ctx);
 }
 
 
@@ -751,6 +734,13 @@ renderbuffer_exists(struct gl_context *ctx,
       }
       break;
    case GL_DEPTH_STENCIL_EXT:
+      if (att[BUFFER_DEPTH].Type == GL_NONE ||
+          att[BUFFER_STENCIL].Type == GL_NONE) {
+         return GL_FALSE;
+      }
+      break;
+   case GL_DEPTH_STENCIL_TO_RGBA_NV:
+   case GL_DEPTH_STENCIL_TO_BGRA_NV:
       if (att[BUFFER_DEPTH].Type == GL_NONE ||
           att[BUFFER_STENCIL].Type == GL_NONE) {
          return GL_FALSE;

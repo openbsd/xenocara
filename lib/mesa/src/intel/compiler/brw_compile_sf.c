@@ -167,8 +167,8 @@ static void do_twoside_color( struct brw_sf_compile *c )
    brw_IF(p, BRW_EXECUTE_4);
    {
       switch (c->nr_verts) {
-      case 3: copy_bfc(c, c->vert[2]);
-      case 2: copy_bfc(c, c->vert[1]);
+      case 3: copy_bfc(c, c->vert[2]); FALLTHROUGH;
+      case 2: copy_bfc(c, c->vert[1]); FALLTHROUGH;
       case 1: copy_bfc(c, c->vert[0]);
       }
    }
@@ -226,7 +226,7 @@ static void do_flatshade_triangle( struct brw_sf_compile *c )
    if (c->key.primitive == BRW_SF_PRIM_UNFILLED_TRIS)
       return;
 
-   if (p->devinfo->gen == 5)
+   if (p->devinfo->ver == 5)
        jmpi = 2;
 
    nr = count_flatshaded_attributes(c);
@@ -258,7 +258,7 @@ static void do_flatshade_line( struct brw_sf_compile *c )
    if (c->key.primitive == BRW_SF_PRIM_UNFILLED_TRIS)
       return;
 
-   if (p->devinfo->gen == 5)
+   if (p->devinfo->ver == 5)
        jmpi = 2;
 
    nr = count_flatshaded_attributes(c);
@@ -345,7 +345,7 @@ static void invert_det( struct brw_sf_compile *c)
    /* Looks like we invert all 8 elements just to get 1/det in
     * position 2 !?!
     */
-   gen4_math(&c->func,
+   gfx4_math(&c->func,
 	     c->inv_det,
 	     BRW_MATH_FUNCTION_INV,
 	     0,
@@ -633,7 +633,7 @@ static void brw_emit_point_sprite_setup(struct brw_sf_compile *c, bool allocate)
       if (pc_coord_replace) {
 	 set_predicate_control_flag_value(p, c, pc_coord_replace);
 	 /* Caculate 1.0/PointWidth */
-	 gen4_math(&c->func,
+	 gfx4_math(&c->func,
 		   c->tmp,
 		   BRW_MATH_FUNCTION_INV,
 		   0,
@@ -868,10 +868,10 @@ brw_compile_sf(const struct brw_compiler *compiler,
 
    const unsigned *program = brw_get_program(&c.func, final_assembly_size);
 
-   if (unlikely(INTEL_DEBUG & DEBUG_SF)) {
+   if (INTEL_DEBUG & DEBUG_SF) {
       fprintf(stderr, "sf:\n");
-      brw_disassemble(compiler->devinfo,
-                      program, 0, *final_assembly_size, stderr);
+      brw_disassemble_with_labels(compiler->devinfo,
+                                  program, 0, *final_assembly_size, stderr);
       fprintf(stderr, "\n");
    }
 

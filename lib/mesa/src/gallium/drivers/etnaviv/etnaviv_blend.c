@@ -32,7 +32,7 @@
 #include "hw/common.xml.h"
 #include "pipe/p_defines.h"
 #include "util/u_memory.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 
 void *
 etna_blend_state_create(struct pipe_context *pctx,
@@ -42,6 +42,13 @@ etna_blend_state_create(struct pipe_context *pctx,
    const struct pipe_rt_blend_state *rt0 = &so->rt[0];
    struct etna_blend_state *co = CALLOC_STRUCT(etna_blend_state);
    bool alpha_enable, logicop_enable;
+
+   /* pipe_blend_func happens to match the hardware. */
+   STATIC_ASSERT(PIPE_BLEND_ADD == BLEND_EQ_ADD);
+   STATIC_ASSERT(PIPE_BLEND_SUBTRACT == BLEND_EQ_SUBTRACT);
+   STATIC_ASSERT(PIPE_BLEND_REVERSE_SUBTRACT == BLEND_EQ_REVERSE_SUBTRACT);
+   STATIC_ASSERT(PIPE_BLEND_MIN == BLEND_EQ_MIN);
+   STATIC_ASSERT(PIPE_BLEND_MAX == BLEND_EQ_MAX);
 
    if (!co)
       return NULL;
@@ -79,8 +86,8 @@ etna_blend_state_create(struct pipe_context *pctx,
          VIVS_PE_ALPHA_CONFIG_SRC_FUNC_ALPHA(translate_blend_factor(rt0->alpha_src_factor)) |
          VIVS_PE_ALPHA_CONFIG_DST_FUNC_COLOR(translate_blend_factor(rt0->rgb_dst_factor)) |
          VIVS_PE_ALPHA_CONFIG_DST_FUNC_ALPHA(translate_blend_factor(rt0->alpha_dst_factor)) |
-         VIVS_PE_ALPHA_CONFIG_EQ_COLOR(translate_blend(rt0->rgb_func)) |
-         VIVS_PE_ALPHA_CONFIG_EQ_ALPHA(translate_blend(rt0->alpha_func));
+         VIVS_PE_ALPHA_CONFIG_EQ_COLOR(rt0->rgb_func) |
+         VIVS_PE_ALPHA_CONFIG_EQ_ALPHA(rt0->alpha_func);
    } else {
       co->PE_ALPHA_CONFIG = 0;
    }
@@ -173,11 +180,11 @@ etna_update_blend_color(struct etna_context *ctx)
       VIVS_PE_ALPHA_BLEND_COLOR_A(etna_cfloat_to_uint8(cs->color[3]));
 
    cs->PE_ALPHA_COLOR_EXT0 =
-      VIVS_PE_ALPHA_COLOR_EXT0_B(util_float_to_half(cs->color[rb_swap ? 2 : 0])) |
-      VIVS_PE_ALPHA_COLOR_EXT0_G(util_float_to_half(cs->color[1]));
+      VIVS_PE_ALPHA_COLOR_EXT0_B(_mesa_float_to_half(cs->color[rb_swap ? 2 : 0])) |
+      VIVS_PE_ALPHA_COLOR_EXT0_G(_mesa_float_to_half(cs->color[1]));
    cs->PE_ALPHA_COLOR_EXT1 =
-      VIVS_PE_ALPHA_COLOR_EXT1_R(util_float_to_half(cs->color[rb_swap ? 0 : 2])) |
-      VIVS_PE_ALPHA_COLOR_EXT1_A(util_float_to_half(cs->color[3]));
+      VIVS_PE_ALPHA_COLOR_EXT1_R(_mesa_float_to_half(cs->color[rb_swap ? 0 : 2])) |
+      VIVS_PE_ALPHA_COLOR_EXT1_A(_mesa_float_to_half(cs->color[3]));
 
    return true;
 }

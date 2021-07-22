@@ -40,28 +40,16 @@
  * AMDGPU target. It should handle 32-bit idiv/irem/imod/udiv/umod exactly.
  */
 
-static bool
-convert_instr(nir_builder *bld, nir_alu_instr *alu)
+static nir_ssa_def *
+convert_instr(nir_builder *bld, nir_op op,
+      nir_ssa_def *numer, nir_ssa_def *denom)
 {
-   nir_ssa_def *numer, *denom, *af, *bf, *a, *b, *q, *r, *rt;
-   nir_op op = alu->op;
+   nir_ssa_def *af, *bf, *a, *b, *q, *r, *rt;
    bool is_signed;
-
-   if ((op != nir_op_idiv) &&
-       (op != nir_op_udiv) &&
-       (op != nir_op_imod) &&
-       (op != nir_op_umod) &&
-       (op != nir_op_irem))
-      return false;
 
    is_signed = (op == nir_op_idiv ||
                 op == nir_op_imod ||
                 op == nir_op_irem);
-
-   bld->cursor = nir_before_instr(&alu->instr);
-
-   numer = nir_ssa_for_alu_src(bld, alu, 0);
-   denom = nir_ssa_for_alu_src(bld, alu, 1);
 
    if (is_signed) {
       af = nir_i2f32(bld, numer);
@@ -120,7 +108,7 @@ convert_instr(nir_builder *bld, nir_alu_instr *alu)
             q = nir_imul(bld, q, denom);
             q = nir_isub(bld, numer, q);
             if (op == nir_op_imod) {
-               q = nir_bcsel(bld, nir_ieq(bld, q, nir_imm_int(bld, 0)),
+               q = nir_bcsel(bld, nir_ieq_imm(bld, q, 0),
                              nir_imm_int(bld, 0),
                              nir_bcsel(bld, r, nir_iadd(bld, q, denom), q));
             }
@@ -128,10 +116,7 @@ convert_instr(nir_builder *bld, nir_alu_instr *alu)
       }
    }
 
-   assert(alu->dest.dest.is_ssa);
-   nir_ssa_def_rewrite_uses(&alu->dest.dest.ssa, nir_src_for_ssa(q));
-
-   return true;
+   return q;
 }
 
 /* ported from LLVM's AMDGPUTargetLowering::LowerUDIVREM */
@@ -139,34 +124,35 @@ static nir_ssa_def *
 emit_udiv(nir_builder *bld, nir_ssa_def *numer, nir_ssa_def *denom, bool modulo)
 {
    nir_ssa_def *rcp = nir_frcp(bld, nir_u2f32(bld, denom));
-   rcp = nir_f2u32(bld, nir_fmul_imm(bld, rcp, 4294967296.0));
-   nir_ssa_def *rcp_lo = nir_imul(bld, rcp, denom);
-   nir_ssa_def *rcp_hi = nir_umul_high(bld, rcp, denom);
-   nir_ssa_def *rcp_hi_ne_zero = nir_ine(bld, rcp_hi, nir_imm_int(bld, 0));
-   nir_ssa_def *neg_rcp_lo = nir_ineg(bld, rcp_lo);
-   nir_ssa_def *abs_rcp_lo = nir_bcsel(bld, rcp_hi_ne_zero, rcp_lo, neg_rcp_lo);
-   nir_ssa_def *e = nir_umul_high(bld, abs_rcp_lo, rcp);
-   nir_ssa_def *rcp_plus_e = nir_iadd(bld, rcp, e);
-   nir_ssa_def *rcp_minus_e = nir_isub(bld, rcp, e);
-   nir_ssa_def *tmp0 = nir_bcsel(bld, rcp_hi_ne_zero, rcp_minus_e, rcp_plus_e);
-   nir_ssa_def *quotient = nir_umul_high(bld, tmp0, numer);
+   rcp = nir_f2u32(bld, nir_fmul_imm(bld, rcp, 4294966784.0));
+
+   nir_ssa_def *neg_rcp_times_denom =
+      nir_imul(bld, rcp, nir_ineg(bld, denom));
+   rcp = nir_iadd(bld, rcp, nir_umul_high(bld, rcp, neg_rcp_times_denom));
+
+   /* Get initial estimate for quotient/remainder, then refine the estimate
+    * in two iterations after */
+   nir_ssa_def *quotient = nir_umul_high(bld, numer, rcp);
    nir_ssa_def *num_s_remainder = nir_imul(bld, quotient, denom);
    nir_ssa_def *remainder = nir_isub(bld, numer, num_s_remainder);
-   nir_ssa_def *remainder_ge_den = nir_uge(bld, remainder, denom);
-   nir_ssa_def *remainder_ge_zero = nir_uge(bld, numer, num_s_remainder);
-   nir_ssa_def *tmp1 = nir_iand(bld, remainder_ge_den, remainder_ge_zero);
 
+   /* First refinement step */
+   nir_ssa_def *remainder_ge_den = nir_uge(bld, remainder, denom);
+   if (!modulo) {
+      quotient = nir_bcsel(bld, remainder_ge_den,
+                           nir_iadd_imm(bld, quotient, 1), quotient);
+   }
+   remainder = nir_bcsel(bld, remainder_ge_den,
+                         nir_isub(bld, remainder, denom), remainder);
+
+   /* Second refinement step */
+   remainder_ge_den = nir_uge(bld, remainder, denom);
    if (modulo) {
-      nir_ssa_def *rem = nir_bcsel(bld, tmp1,
-                                   nir_isub(bld, remainder, denom), remainder);
-      return nir_bcsel(bld, remainder_ge_zero,
-                       rem, nir_iadd(bld, remainder, denom));
+      return nir_bcsel(bld, remainder_ge_den, nir_isub(bld, remainder, denom),
+                       remainder);
    } else {
-      nir_ssa_def *one = nir_imm_int(bld, 1);
-      nir_ssa_def *div = nir_bcsel(bld, tmp1,
-                                   nir_iadd(bld, quotient, one), quotient);
-      return nir_bcsel(bld, remainder_ge_zero,
-                       div, nir_isub(bld, quotient, one));
+      return nir_bcsel(bld, remainder_ge_den, nir_iadd_imm(bld, quotient, 1),
+                       quotient);
    }
 }
 
@@ -194,7 +180,7 @@ emit_idiv(nir_builder *bld, nir_ssa_def *numer, nir_ssa_def *denom, nir_op op)
       res = nir_ixor(bld, res, lh_sign);
       res = nir_isub(bld, res, lh_sign);
       if (op == nir_op_imod) {
-         nir_ssa_def *cond = nir_ieq(bld, res, nir_imm_int(bld, 0));
+         nir_ssa_def *cond = nir_ieq_imm(bld, res, 0);
          cond = nir_ior(bld, nir_ieq(bld, lh_sign, rh_sign), cond);
          res = nir_bcsel(bld, cond, res, nir_iadd(bld, res, denom));
       }
@@ -202,70 +188,103 @@ emit_idiv(nir_builder *bld, nir_ssa_def *numer, nir_ssa_def *denom, nir_op op)
    }
 }
 
-static bool
-convert_instr_precise(nir_builder *bld, nir_alu_instr *alu)
+static nir_ssa_def *
+convert_instr_precise(nir_builder *bld, nir_op op,
+      nir_ssa_def *numer, nir_ssa_def *denom)
 {
-   nir_op op = alu->op;
-
-   if ((op != nir_op_idiv) &&
-       (op != nir_op_imod) &&
-       (op != nir_op_irem) &&
-       (op != nir_op_udiv) &&
-       (op != nir_op_umod))
-      return false;
-
-   if (alu->dest.dest.ssa.bit_size != 32)
-      return false;
-
-   bld->cursor = nir_before_instr(&alu->instr);
-
-   nir_ssa_def *numer = nir_ssa_for_alu_src(bld, alu, 0);
-   nir_ssa_def *denom = nir_ssa_for_alu_src(bld, alu, 1);
-
-   nir_ssa_def *res = NULL;
-
    if (op == nir_op_udiv || op == nir_op_umod)
-      res = emit_udiv(bld, numer, denom, op == nir_op_umod);
+      return emit_udiv(bld, numer, denom, op == nir_op_umod);
    else
-      res = emit_idiv(bld, numer, denom, op);
+      return emit_idiv(bld, numer, denom, op);
+}
 
-   assert(alu->dest.dest.is_ssa);
-   nir_ssa_def_rewrite_uses(&alu->dest.dest.ssa, nir_src_for_ssa(res));
+static nir_ssa_def *
+convert_instr_small(nir_builder *b, nir_op op,
+      nir_ssa_def *numer, nir_ssa_def *denom,
+      const nir_lower_idiv_options *options)
+{
+   unsigned sz = numer->bit_size;
+   nir_alu_type int_type = nir_op_infos[op].output_type | sz;
+   nir_alu_type float_type = nir_type_float | (options->allow_fp16 ? sz * 2 : 32);
 
-   return true;
+   nir_ssa_def *p = nir_type_convert(b, numer, int_type, float_type);
+   nir_ssa_def *q = nir_type_convert(b, denom, int_type, float_type);
+
+   /* Take 1/q but offset mantissa by 1 to correct for rounding. This is
+    * needed for correct results and has been checked exhaustively for
+    * all pairs of 16-bit integers */
+   nir_ssa_def *rcp = nir_iadd_imm(b, nir_frcp(b, q), 1);
+
+   /* Divide by multiplying by adjusted reciprocal */
+   nir_ssa_def *res = nir_fmul(b, p, rcp);
+
+   /* Convert back to integer space with rounding inferred by type */
+   res = nir_type_convert(b, res, float_type, int_type);
+
+   /* Get remainder given the quotient */
+   if (op == nir_op_umod || op == nir_op_imod || op == nir_op_irem)
+      res = nir_isub(b, numer, nir_imul(b, denom, res));
+
+   /* Adjust for sign, see constant folding definition */
+   if (op == nir_op_imod) {
+      nir_ssa_def *zero = nir_imm_zero(b, 1, sz);
+      nir_ssa_def *diff_sign =
+               nir_ine(b, nir_ige(b, numer, zero), nir_ige(b, denom, zero));
+
+      nir_ssa_def *adjust = nir_iand(b, diff_sign, nir_ine(b, res, zero));
+      res = nir_iadd(b, res, nir_bcsel(b, adjust, denom, zero));
+   }
+
+   return res;
+}
+
+static nir_ssa_def *
+lower_idiv(nir_builder *b, nir_instr *instr, void *_data)
+{
+   const nir_lower_idiv_options *options = _data;
+   nir_alu_instr *alu = nir_instr_as_alu(instr);
+
+   nir_ssa_def *numer = nir_ssa_for_alu_src(b, alu, 0);
+   nir_ssa_def *denom = nir_ssa_for_alu_src(b, alu, 1);
+
+   b->exact = true;
+
+   if (numer->bit_size < 32)
+      return convert_instr_small(b, alu->op, numer, denom, options);
+   else if (options->imprecise_32bit_lowering)
+      return convert_instr(b, alu->op, numer, denom);
+   else
+      return convert_instr_precise(b, alu->op, numer, denom);
 }
 
 static bool
-convert_impl(nir_function_impl *impl, enum nir_lower_idiv_path path)
+inst_is_idiv(const nir_instr *instr, UNUSED const void *_state)
 {
-   nir_builder b;
-   nir_builder_init(&b, impl);
-   bool progress = false;
+   if (instr->type != nir_instr_type_alu)
+      return false;
 
-   nir_foreach_block(block, impl) {
-      nir_foreach_instr_safe(instr, block) {
-         if (instr->type == nir_instr_type_alu && path == nir_lower_idiv_precise)
-            progress |= convert_instr_precise(&b, nir_instr_as_alu(instr));
-         else if (instr->type == nir_instr_type_alu)
-            progress |= convert_instr(&b, nir_instr_as_alu(instr));
-      }
+   nir_alu_instr *alu = nir_instr_as_alu(instr);
+
+   if (alu->dest.dest.ssa.bit_size > 32)
+      return false;
+
+   switch (alu->op) {
+   case nir_op_idiv:
+   case nir_op_udiv:
+   case nir_op_imod:
+   case nir_op_umod:
+   case nir_op_irem:
+      return true;
+   default:
+      return false;
    }
-
-   nir_metadata_preserve(impl, nir_metadata_block_index |
-                               nir_metadata_dominance);
-
-   return progress;
 }
 
 bool
-nir_lower_idiv(nir_shader *shader, enum nir_lower_idiv_path path)
+nir_lower_idiv(nir_shader *shader, const nir_lower_idiv_options *options)
 {
-   bool progress = false;
-
-   nir_foreach_function(function, shader) {
-      if (function->impl)
-         progress |= convert_impl(function->impl, path);
-   }
-
-   return progress;
+   return nir_shader_lower_instructions(shader,
+         inst_is_idiv,
+         lower_idiv,
+         (void *)options);
 }

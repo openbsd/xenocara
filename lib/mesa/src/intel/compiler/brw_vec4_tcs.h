@@ -46,7 +46,7 @@ public:
                     const nir_shader *nir,
                     void *mem_ctx,
                     int shader_time_index,
-                    const struct brw_vue_map *input_vue_map);
+                    bool debug_enabled);
 
 protected:
    virtual void setup_payload();
@@ -68,13 +68,11 @@ protected:
    void emit_urb_write(const src_reg &value, unsigned writemask,
                        unsigned base_offset, const src_reg &indirect_offset);
 
-   /* we do not use the normal end-of-shader URB write mechanism -- but every vec4 stage
-    * must provide implementations of these:
+   /* we do not use the normal end-of-shader URB write mechanism -- but every
+    * vec4 stage must provide implementations of these:
     */
-   virtual void emit_urb_write_header(int mrf) {}
-   virtual vec4_instruction *emit_urb_write_opcode(bool complete) { return NULL; }
-
-   const struct brw_vue_map *input_vue_map;
+   virtual void emit_urb_write_header(int /* mrf */) {}
+   virtual vec4_instruction *emit_urb_write_opcode(bool /* complete */) { return NULL; }
 
    const struct brw_tcs_prog_key *key;
    src_reg invocation_id;

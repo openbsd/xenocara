@@ -59,8 +59,19 @@
  */
 void
 softpipe_draw_vbo(struct pipe_context *pipe,
-                  const struct pipe_draw_info *info)
+                  const struct pipe_draw_info *info,
+                  const struct pipe_draw_indirect_info *indirect,
+                  const struct pipe_draw_start_count *draws,
+                  unsigned num_draws)
 {
+   if (num_draws > 1) {
+      util_draw_multi(pipe, info, indirect, draws, num_draws);
+      return;
+   }
+
+   if (!indirect && (!draws[0].count || !info->instance_count))
+      return;
+
    struct softpipe_context *sp = softpipe_context(pipe);
    struct draw_context *draw = sp->draw;
    const void *mapped_indices = NULL;
@@ -69,8 +80,8 @@ softpipe_draw_vbo(struct pipe_context *pipe,
    if (!softpipe_check_render_cond(sp))
       return;
 
-   if (info->indirect) {
-      util_draw_indirect(pipe, info);
+   if (indirect && indirect->buffer) {
+      util_draw_indirect(pipe, info, indirect);
       return;
    }
 
@@ -129,7 +140,7 @@ softpipe_draw_vbo(struct pipe_context *pipe,
                                     sp->active_statistics_queries > 0);
 
    /* draw! */
-   draw_vbo(draw, info);
+   draw_vbo(draw, info, indirect, draws, num_draws);
 
    /* unmap vertex/index buffers - will cause draw module to flush */
    for (i = 0; i < sp->num_vertex_buffers; i++) {

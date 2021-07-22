@@ -29,7 +29,7 @@
 #include "format_unpack.h"
 #include "format_pack.h"
 #include "framebuffer.h"
-#include "imports.h"
+
 #include "macros.h"
 #include "state.h"
 #include "mtypes.h"
@@ -49,6 +49,7 @@ _mesa_ClearAccum( GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha )
    if (TEST_EQ_4V(tmp, ctx->Accum.ClearColor))
       return;
 
+   ctx->PopAttribState |= GL_ACCUM_BUFFER_BIT;
    COPY_4FV( ctx->Accum.ClearColor, tmp );
 }
 
@@ -99,7 +100,7 @@ _mesa_clear_accum_buffer(struct gl_context *ctx)
 
       for (j = 0; j < height; j++) {
          GLshort *row = (GLshort *) accMap;
-         
+
          for (i = 0; i < width; i++) {
             row[i * 4 + 0] = clearR;
             row[i * 4 + 1] = clearG;
@@ -441,7 +442,7 @@ accum(struct gl_context *ctx, GLenum op, GLfloat value)
 }
 
 
-void 
+void
 _mesa_init_accum( struct gl_context *ctx )
 {
    /* Accumulate buffer group */
@@ -453,7 +454,7 @@ void GLAPIENTRY
 _mesa_Accum( GLenum op, GLfloat value )
 {
    GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    switch (op) {
    case GL_ADD:

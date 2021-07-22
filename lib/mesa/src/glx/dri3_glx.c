@@ -147,7 +147,7 @@ glx_dri3_show_fps(struct loader_dri3_drawable *draw, uint64_t current_ust)
    /* DRI3+Present together uses microseconds for UST. */
    if (priv->previous_ust + interval * 1000000 <= current_ust) {
       if (priv->previous_ust) {
-         fprintf(stderr, "libGL: FPS = %.1f\n",
+         fprintf(stderr, "libGL: FPS = %.2f\n",
                  ((uint64_t) priv->frames * 1000000) /
                  (double)(current_ust - priv->previous_ust));
       }
@@ -268,6 +268,13 @@ dri3_create_context_attribs(struct glx_screen *base,
        goto error_exit;
 
    if (shareList) {
+      /* If the shareList context is not a DRI3 context, we cannot possibly
+       * create a DRI3 context that shares it.
+       */
+      if (shareList->vtable->destroy != dri3_destroy_context) {
+	 return NULL;
+      }
+
       pcp_shared = (struct dri3_context *) shareList;
       shared = pcp_shared->driContext;
    }
@@ -334,18 +341,6 @@ error_exit:
    free(pcp);
 
    return NULL;
-}
-
-static struct glx_context *
-dri3_create_context(struct glx_screen *base,
-                    struct glx_config *config_base,
-                    struct glx_context *shareList, int renderType)
-{
-   unsigned int error;
-   uint32_t attribs[2] = { GLX_RENDER_TYPE, renderType };
-
-   return dri3_create_context_attribs(base, config_base, shareList,
-                                      1, attribs, &error);
 }
 
 static void
@@ -593,7 +588,7 @@ dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
 
    return loader_dri3_swap_buffers_msc(&priv->loader_drawable,
                                        target_msc, divisor, remainder,
-                                       flags, false);
+                                       flags, NULL, 0, false);
 }
 
 static int
@@ -669,13 +664,11 @@ dri3_get_swap_interval(__GLXDRIdrawable *pdraw)
 }
 
 static void
-dri3_bind_tex_image(Display * dpy,
-                    GLXDrawable drawable,
+dri3_bind_tex_image(__GLXDRIdrawable *base,
                     int buffer, const int *attrib_list)
 {
    struct glx_context *gc = __glXGetCurrentContext();
    struct dri3_context *pcp = (struct dri3_context *) gc;
-   __GLXDRIdrawable *base = GetGLXDRIDrawable(dpy, drawable);
    struct dri3_drawable *pdraw = (struct dri3_drawable *) base;
    struct dri3_screen *psc;
 
@@ -684,7 +677,7 @@ dri3_bind_tex_image(Display * dpy,
 
       psc->f->invalidate(pdraw->loader_drawable.dri_drawable);
 
-      XSync(dpy, false);
+      XSync(gc->currentDpy, false);
 
       (*psc->texBuffer->setTexBuffer2) (pcp->driContext,
                                         pdraw->base.textureTarget,
@@ -694,11 +687,10 @@ dri3_bind_tex_image(Display * dpy,
 }
 
 static void
-dri3_release_tex_image(Display * dpy, GLXDrawable drawable, int buffer)
+dri3_release_tex_image(__GLXDRIdrawable *base, int buffer)
 {
    struct glx_context *gc = __glXGetCurrentContext();
    struct dri3_context *pcp = (struct dri3_context *) gc;
-   __GLXDRIdrawable *base = GetGLXDRIDrawable(dpy, drawable);
    struct dri3_drawable *pdraw = (struct dri3_drawable *) base;
    struct dri3_screen *psc;
 
@@ -719,10 +711,6 @@ static const struct glx_context_vtable dri3_context_vtable = {
    .unbind              = dri3_unbind_context,
    .wait_gl             = dri3_wait_gl,
    .wait_x              = dri3_wait_x,
-   .use_x_font          = DRI_glXUseXFont,
-   .bind_tex_image      = dri3_bind_tex_image,
-   .release_tex_image   = dri3_release_tex_image,
-   .get_proc_address    = NULL,
    .interop_query_device_info = dri3_interop_query_device_info,
    .interop_export_object = dri3_interop_export_object
 };
@@ -741,6 +729,8 @@ dri3_bind_extensions(struct dri3_screen *psc, struct glx_display * priv,
 
    extensions = psc->core->getExtensions(psc->driScreen);
 
+   __glXEnableDirectExtension(&psc->base, "GLX_EXT_swap_control");
+   __glXEnableDirectExtension(&psc->base, "GLX_EXT_swap_control_tear");
    __glXEnableDirectExtension(&psc->base, "GLX_SGI_swap_control");
    __glXEnableDirectExtension(&psc->base, "GLX_MESA_swap_control");
    __glXEnableDirectExtension(&psc->base, "GLX_SGI_make_current_read");
@@ -804,11 +794,20 @@ dri3_bind_extensions(struct dri3_screen *psc, struct glx_display * priv,
    }
 }
 
+static char *
+dri3_get_driver_name(struct glx_screen *glx_screen)
+{
+    struct dri3_screen *psc = (struct dri3_screen *)glx_screen;
+
+    return loader_get_driver_for_fd(psc->fd);
+}
+
 static const struct glx_screen_vtable dri3_screen_vtable = {
-   .create_context         = dri3_create_context,
+   .create_context         = dri_common_create_context,
    .create_context_attribs = dri3_create_context_attribs,
    .query_renderer_integer = dri3_query_renderer_integer,
    .query_renderer_string  = dri3_query_renderer_string,
+   .get_driver_name        = dri3_get_driver_name,
 };
 
 /** dri3_create_screen
@@ -836,7 +835,6 @@ dri3_create_screen(int screen, struct glx_display * priv)
    struct glx_config *configs = NULL, *visuals = NULL;
    char *driverName, *tmp;
    int i;
-   unsigned char disable;
 
    psc = calloc(1, sizeof *psc);
    if (psc == NULL)
@@ -968,24 +966,28 @@ dri3_create_screen(int screen, struct glx_display * priv)
    psp->waitForSBC = dri3_wait_for_sbc;
    psp->setSwapInterval = dri3_set_swap_interval;
    psp->getSwapInterval = dri3_get_swap_interval;
-   if (psc->config->configQueryb(psc->driScreen,
-                                 "glx_disable_oml_sync_control",
-                                 &disable) || !disable)
-      __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
+   psp->bindTexImage = dri3_bind_tex_image;
+   psp->releaseTexImage = dri3_release_tex_image;
 
-   if (psc->config->configQueryb(psc->driScreen,
-                                 "glx_disable_sgi_video_sync",
-                                 &disable) || !disable)
-      __glXEnableDirectExtension(&psc->base, "GLX_SGI_video_sync");
+   __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
+   __glXEnableDirectExtension(&psc->base, "GLX_SGI_video_sync");
 
    psp->copySubBuffer = dri3_copy_sub_buffer;
    __glXEnableDirectExtension(&psc->base, "GLX_MESA_copy_sub_buffer");
 
    psp->getBufferAge = dri3_get_buffer_age;
-   if (psc->config->configQueryb(psc->driScreen,
-                                 "glx_disable_ext_buffer_age",
-                                 &disable) || !disable)
-      __glXEnableDirectExtension(&psc->base, "GLX_EXT_buffer_age");
+   __glXEnableDirectExtension(&psc->base, "GLX_EXT_buffer_age");
+
+   if (psc->config->base.version > 1 &&
+          psc->config->configQuerys(psc->driScreen, "glx_extension_override",
+                                    &tmp) == 0)
+      __glXParseExtensionOverride(&psc->base, tmp);
+
+   if (psc->config->base.version > 1 &&
+          psc->config->configQuerys(psc->driScreen,
+                                    "indirect_gl_extension_override",
+                                    &tmp) == 0)
+      __IndirectGlParseExtensionOverride(&psc->base, tmp);
 
    free(driverName);
 

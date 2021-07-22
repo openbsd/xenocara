@@ -32,7 +32,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "main/glheader.h"
-#include "main/imports.h"
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/image.h"
@@ -44,13 +43,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_ioctl.h"
 #include "radeon_tex.h"
 
-#include "util/xmlpool.h"
+#include "util/u_memory.h"
+#include "util/driconf.h"
 
 
 
 /**
  * Set the texture wrap modes.
- * 
+ *
  * \param t Texture object whose wrap modes are to be set
  * \param swrap Wrap mode for the \a s texture coordinate
  * \param twrap Wrap mode for the \a t texture coordinate
@@ -157,7 +157,7 @@ static void radeonSetTexMaxAnisotropy( radeonTexObjPtr t, GLfloat max )
 
 /**
  * Set the texture magnification and minification modes.
- * 
+ *
  * \param t Texture whose filter modes are to be set
  * \param minf Texture minification mode
  * \param magf Texture magnification mode
@@ -315,10 +315,10 @@ void radeonTexUpdateParameters(struct gl_context *ctx, GLuint unit)
    struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, unit);
    radeonTexObj* t = radeon_tex_obj(ctx->Texture.Unit[unit]._Current);
 
-   radeonSetTexMaxAnisotropy(t , samp->MaxAnisotropy);
-   radeonSetTexFilter(t, samp->MinFilter, samp->MagFilter);
-   radeonSetTexWrap(t, samp->WrapS, samp->WrapT);
-   radeonSetTexBorderColor(t, samp->BorderColor.f);
+   radeonSetTexMaxAnisotropy(t , samp->Attrib.MaxAnisotropy);
+   radeonSetTexFilter(t, samp->Attrib.MinFilter, samp->Attrib.MagFilter);
+   radeonSetTexWrap(t, samp->Attrib.WrapS, samp->Attrib.WrapT);
+   radeonSetTexBorderColor(t, samp->Attrib.BorderColor.f);
 }
 
 
@@ -337,6 +337,7 @@ static void radeonTexParameter( struct gl_context *ctx,
 	       _mesa_enum_to_string( pname ) );
 
    switch ( pname ) {
+   case GL_ALL_ATTRIB_BITS: /* meaning is all pnames, internal */
    case GL_TEXTURE_BASE_LEVEL:
    case GL_TEXTURE_MAX_LEVEL:
    case GL_TEXTURE_MIN_LOD:
@@ -377,13 +378,13 @@ static void radeonDeleteTexture( struct gl_context *ctx,
    _mesa_delete_texture_object(ctx, texObj);
 }
 
-/* Need:  
+/* Need:
  *  - Same GEN_MODE for all active bits
  *  - Same EyePlane/ObjPlane for all active bits when using Eye/Obj
  *  - STRQ presumably all supported (matrix means incoming R values
  *    can end up in STQ, this has implications for vertex support,
  *    presumably ok if maos is used, though?)
- *  
+ *
  * Basically impossible to do this on the fly - just collect some
  * basic info & do the checks from ValidateState().
  */
@@ -410,18 +411,18 @@ radeonNewTextureObject( struct gl_context *ctx, GLuint name, GLenum target )
    radeonTexObj* t = CALLOC_STRUCT(radeon_tex_obj);
 
    _mesa_initialize_texture_object(ctx, &t->base, name, target);
-   t->base.Sampler.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
+   t->base.Sampler.Attrib.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
 
    t->border_fallback = GL_FALSE;
 
    t->pp_txfilter = RADEON_BORDER_MODE_OGL;
    t->pp_txformat = (RADEON_TXFORMAT_ENDIAN_NO_SWAP |
 		     RADEON_TXFORMAT_PERSPECTIVE_ENABLE);
-   
-   radeonSetTexWrap( t, t->base.Sampler.WrapS, t->base.Sampler.WrapT );
-   radeonSetTexMaxAnisotropy( t, t->base.Sampler.MaxAnisotropy );
-   radeonSetTexFilter( t, t->base.Sampler.MinFilter, t->base.Sampler.MagFilter );
-   radeonSetTexBorderColor( t, t->base.Sampler.BorderColor.f );
+
+   radeonSetTexWrap( t, t->base.Sampler.Attrib.WrapS, t->base.Sampler.Attrib.WrapT );
+   radeonSetTexMaxAnisotropy( t, t->base.Sampler.Attrib.MaxAnisotropy );
+   radeonSetTexFilter( t, t->base.Sampler.Attrib.MinFilter, t->base.Sampler.Attrib.MagFilter );
+   radeonSetTexBorderColor( t, t->base.Sampler.Attrib.BorderColor.f );
    return &t->base;
 }
 
@@ -432,7 +433,7 @@ radeonNewSamplerObject(struct gl_context *ctx, GLuint name)
    r100ContextPtr rmesa = R100_CONTEXT(ctx);
    struct gl_sampler_object *samp = _mesa_new_sampler_object(ctx, name);
    if (samp)
-      samp->MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
+      samp->Attrib.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
    return samp;
 }
 

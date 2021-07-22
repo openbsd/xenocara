@@ -463,6 +463,7 @@ static bool r600_decompress_subresource(struct pipe_context *ctx,
 }
 
 static void r600_clear(struct pipe_context *ctx, unsigned buffers,
+		       const struct pipe_scissor_state *scissor_state,
 		       const union pipe_color_union *color,
 		       double depth, unsigned stencil)
 {
@@ -660,7 +661,7 @@ static void r600_clear_buffer(struct pipe_context *ctx, struct pipe_resource *ds
 		r600_blitter_end(ctx);
 	} else {
 		uint32_t *map = r600_buffer_map_sync_with_rings(&rctx->b, r600_resource(dst),
-								 PIPE_TRANSFER_WRITE);
+								 PIPE_MAP_WRITE);
 		map += offset / 4;
 		size /= 4;
 		for (unsigned i = 0; i < size; i++)

@@ -77,7 +77,7 @@ draw_need_pipeline(const struct draw_context *draw,
          return TRUE;
 
       /* AA lines */
-      if (rasterizer->line_smooth && draw->pipeline.aaline)
+      if ((!rasterizer->multisample && rasterizer->line_smooth) && draw->pipeline.aaline)
          return TRUE;
 
       if (draw_current_shader_num_written_culldistances(draw))
@@ -94,11 +94,14 @@ draw_need_pipeline(const struct draw_context *draw,
          return TRUE;
 
       /* AA points */
-      if (rasterizer->point_smooth && draw->pipeline.aapoint)
+      if ((!rasterizer->multisample && rasterizer->point_smooth) && draw->pipeline.aapoint)
          return TRUE;
 
       /* point sprites */
       if (rasterizer->sprite_coord_enable && draw->pipeline.point_sprite)
+         return TRUE;
+
+      if (draw_current_shader_num_written_culldistances(draw))
          return TRUE;
    }
    else if (reduced_prim == PIPE_PRIM_TRIANGLES) {
@@ -159,12 +162,12 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
    /* drawing wide, non-AA lines? */
    wide_lines = rast->line_width != 1.0f &&
                 roundf(rast->line_width) > draw->pipeline.wide_line_threshold &&
-                !rast->line_smooth;
+                (!rast->line_smooth || rast->multisample);
 
    /* drawing large/sprite points (but not AA points)? */
    if (rast->sprite_coord_enable && draw->pipeline.point_sprite)
       wide_points = TRUE;
-   else if (rast->point_smooth && draw->pipeline.aapoint)
+   else if ((!rast->multisample && rast->point_smooth) && draw->pipeline.aapoint)
       wide_points = FALSE;
    else if (rast->point_size > draw->pipeline.wide_point_threshold)
       wide_points = TRUE;
@@ -180,13 +183,13 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
     * shorter pipelines for lines & points.
     */
 
-   if (rast->line_smooth && draw->pipeline.aaline) {
+   if ((!rast->multisample && rast->line_smooth) && draw->pipeline.aaline) {
       draw->pipeline.aaline->next = next;
       next = draw->pipeline.aaline;
       precalc_flat = TRUE;
    }
 
-   if (rast->point_smooth && draw->pipeline.aapoint) {
+   if ((!rast->multisample && rast->point_smooth) && draw->pipeline.aapoint) {
       draw->pipeline.aapoint->next = next;
       next = draw->pipeline.aapoint;
    }
@@ -252,8 +255,7 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
     * to less work emitting vertices, smaller vertex buffers, etc.
     * It's difficult to say whether this will be true in general.
     */
-   if (need_det || rast->cull_face != PIPE_FACE_NONE ||
-       draw_current_shader_num_written_culldistances(draw)) {
+   if (need_det || rast->cull_face != PIPE_FACE_NONE) {
       draw->pipeline.cull->next = next;
       next = draw->pipeline.cull;
    }
@@ -264,6 +266,11 @@ static struct draw_stage *validate_pipeline( struct draw_stage *stage )
    {
       draw->pipeline.clip->next = next;
       next = draw->pipeline.clip;
+   }
+
+   if (draw_current_shader_num_written_culldistances(draw)) {
+      draw->pipeline.user_cull->next = next;
+      next = draw->pipeline.user_cull;
    }
 
    draw->pipeline.first = next;

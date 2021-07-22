@@ -50,9 +50,10 @@
 
 #ifdef HAVE_LIBDRM
 #include <xf86drm.h>
+#define MAX_DRM_DEVICES 64
 #ifdef USE_DRICONF
 #include "util/xmlconfig.h"
-#include "util/xmlpool.h"
+#include "util/driconf.h"
 #endif
 #endif
 
@@ -91,6 +92,10 @@ loader_open_device(const char *device_name)
       if (fd != -1)
          fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
    }
+   if (fd == -1 && errno == EACCES) {
+      log_(_LOADER_WARNING, "failed to open %s: %s\n",
+           device_name, strerror(errno));
+   }
    return fd;
 }
 
@@ -106,6 +111,8 @@ static char *loader_get_kernel_driver_name(int fd)
    }
 
    driver = strndup(version->name, version->name_len);
+   log_(driver ? _LOADER_DEBUG : _LOADER_WARNING, "using driver %s for %d\n",
+        driver, fd);
 
    drmFreeVersion(version);
    return driver;
@@ -128,27 +135,14 @@ is_kernel_i915(int fd)
 int
 loader_open_render_node(const char *name)
 {
-   drmDevicePtr *devices, device;
-   int err, render = -ENOENT, fd;
-   unsigned int num, i;
+   drmDevicePtr devices[MAX_DRM_DEVICES], device;
+   int i, num_devices, fd = -1;
 
-   err = drmGetDevices2(0, NULL, 0);
-   if (err < 0)
-      return err;
+   num_devices = drmGetDevices2(0, devices, MAX_DRM_DEVICES);
+   if (num_devices <= 0)
+      return -ENOENT;
 
-   num = err;
-
-   devices = calloc(num, sizeof(*devices));
-   if (!devices)
-      return -ENOMEM;
-
-   err = drmGetDevices2(0, devices, num);
-   if (err < 0) {
-      render = err;
-      goto free;
-   }
-
-   for (i = 0; i < num; i++) {
+   for (i = 0; i < num_devices; i++) {
       device = devices[i];
 
       if ((device->available_nodes & (1 << DRM_NODE_RENDER)) &&
@@ -172,26 +166,24 @@ loader_open_render_node(const char *name)
          }
 
          drmFreeVersion(version);
-         render = fd;
          break;
       }
    }
+   drmFreeDevices(devices, num_devices);
 
-   drmFreeDevices(devices, num);
+   if (i == num_devices)
+      return -ENOENT;
 
-free:
-   free(devices);
-   return render;
+   return fd;
 }
 
 #ifdef USE_DRICONF
-static const char __driConfigOptionsLoader[] =
-DRI_CONF_BEGIN
+static const driOptionDescription __driConfigOptionsLoader[] = {
     DRI_CONF_SECTION_INITIALIZATION
         DRI_CONF_DEVICE_ID_PATH_TAG()
         DRI_CONF_DRI_DRIVER()
     DRI_CONF_SECTION_END
-DRI_CONF_END;
+};
 
 static char *loader_get_dri_config_driver(int fd)
 {
@@ -200,9 +192,10 @@ static char *loader_get_dri_config_driver(int fd)
    char *dri_driver = NULL;
    char *kernel_driver = loader_get_kernel_driver_name(fd);
 
-   driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader);
+   driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader,
+                      ARRAY_SIZE(__driConfigOptionsLoader));
    driParseConfigFiles(&userInitOptions, &defaultInitOptions, 0,
-                       "loader", kernel_driver, NULL, 0);
+                       "loader", kernel_driver, NULL, 0, NULL, 0);
    if (driCheckOption(&userInitOptions, "dri_driver", DRI_STRING)) {
       char *opt = driQueryOptionstr(&userInitOptions, "dri_driver");
       /* not an empty string */
@@ -222,9 +215,10 @@ static char *loader_get_dri_config_device_id(void)
    driOptionCache userInitOptions;
    char *prime = NULL;
 
-   driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader);
+   driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader,
+                      ARRAY_SIZE(__driConfigOptionsLoader));
    driParseConfigFiles(&userInitOptions, &defaultInitOptions, 0,
-                       "loader", NULL, NULL, 0);
+                       "loader", NULL, NULL, 0, NULL, 0);
    if (driCheckOption(&userInitOptions, "device_id", DRI_STRING))
       prime = strdup(driQueryOptionstr(&userInitOptions, "device_id"));
    driDestroyOptionCache(&userInitOptions);
@@ -306,13 +300,10 @@ static char *drm_get_id_path_tag_for_fd(int fd)
 
 int loader_get_user_preferred_fd(int default_fd, bool *different_device)
 {
-/* Arbitrary "maximum" value of drm devices. */
-#define MAX_DRM_DEVICES 32
    const char *dri_prime = getenv("DRI_PRIME");
    char *default_tag, *prime = NULL;
    drmDevicePtr devices[MAX_DRM_DEVICES];
-   int i, num_devices, fd;
-   bool found = false;
+   int i, num_devices, fd = -1;
 
    if (dri_prime)
       prime = strdup(dri_prime);
@@ -331,44 +322,34 @@ int loader_get_user_preferred_fd(int default_fd, bool *different_device)
       goto err;
 
    num_devices = drmGetDevices2(0, devices, MAX_DRM_DEVICES);
-   if (num_devices < 0)
+   if (num_devices <= 0)
       goto err;
 
-   /* two format are supported:
-    * "1": choose any other card than the card used by default.
-    * id_path_tag: (for example "pci-0000_02_00_0") choose the card
-    * with this id_path_tag.
-    */
-   if (!strcmp(prime,"1")) {
-      /* Hmm... detection for 2-7 seems to be broken. Oh well ...
-       * Pick the first render device that is not our own.
+   for (i = 0; i < num_devices; i++) {
+      if (!(devices[i]->available_nodes & 1 << DRM_NODE_RENDER))
+         continue;
+
+      /* two formats of DRI_PRIME are supported:
+       * "1": choose any other card than the card used by default.
+       * id_path_tag: (for example "pci-0000_02_00_0") choose the card
+       * with this id_path_tag.
        */
-      for (i = 0; i < num_devices; i++) {
-         if (devices[i]->available_nodes & 1 << DRM_NODE_RENDER &&
-             !drm_device_matches_tag(devices[i], default_tag)) {
-
-            found = true;
-            break;
-         }
+      if (!strcmp(prime,"1")) {
+         if (drm_device_matches_tag(devices[i], default_tag))
+            continue;
+      } else {
+         if (!drm_device_matches_tag(devices[i], prime))
+            continue;
       }
-   } else {
-      for (i = 0; i < num_devices; i++) {
-         if (devices[i]->available_nodes & 1 << DRM_NODE_RENDER &&
-            drm_device_matches_tag(devices[i], prime)) {
 
-            found = true;
-            break;
-         }
-      }
+      fd = loader_open_device(devices[i]->nodes[DRM_NODE_RENDER]);
+      break;
    }
-
-   if (!found) {
-      drmFreeDevices(devices, num_devices);
-      goto err;
-   }
-
-   fd = loader_open_device(devices[i]->nodes[DRM_NODE_RENDER]);
    drmFreeDevices(devices, num_devices);
+
+   if (i == num_devices)
+      goto err;
+
    if (fd < 0)
       goto err;
 
@@ -407,26 +388,22 @@ static bool
 drm_get_pci_id_for_fd(int fd, int *vendor_id, int *chip_id)
 {
    drmDevicePtr device;
-   bool ret;
 
-   if (drmGetDevice2(fd, 0, &device) == 0) {
-      if (device->bustype == DRM_BUS_PCI) {
-         *vendor_id = device->deviceinfo.pci->vendor_id;
-         *chip_id = device->deviceinfo.pci->device_id;
-         ret = true;
-      }
-      else {
-         log_(_LOADER_DEBUG, "MESA-LOADER: device is not located on the PCI bus\n");
-         ret = false;
-      }
-      drmFreeDevice(&device);
-   }
-   else {
+   if (drmGetDevice2(fd, 0, &device) != 0) {
       log_(_LOADER_WARNING, "MESA-LOADER: failed to retrieve device information\n");
-      ret = false;
+      return false;
    }
 
-   return ret;
+   if (device->bustype != DRM_BUS_PCI) {
+      drmFreeDevice(&device);
+      log_(_LOADER_DEBUG, "MESA-LOADER: device is not located on the PCI bus\n");
+      return false;
+   }
+
+   *vendor_id = device->deviceinfo.pci->vendor_id;
+   *chip_id = device->deviceinfo.pci->device_id;
+   drmFreeDevice(&device);
+   return true;
 }
 #endif
 
@@ -452,35 +429,14 @@ loader_get_device_name_for_fd(int fd)
    return result;
 }
 
-char *
-loader_get_driver_for_fd(int fd)
+static char *
+loader_get_pci_driver(int fd)
 {
    int vendor_id, chip_id, i, j;
    char *driver = NULL;
 
-   /* Allow an environment variable to force choosing a different driver
-    * binary.  If that driver binary can't survive on this FD, that's the
-    * user's problem, but this allows vc4 simulator to run on an i965 host,
-    * and may be useful for some touch testing of i915 on an i965 host.
-    */
-   if (issetugid() == 0 && geteuid() == getuid()) {
-      driver = getenv("MESA_LOADER_DRIVER_OVERRIDE");
-      if (driver)
-         return strdup(driver);
-   }
-
-#if defined(HAVE_LIBDRM) && defined(USE_DRICONF)
-   driver = loader_get_dri_config_driver(fd);
-   if (driver)
-      return driver;
-#endif
-
-   if (!loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
-      driver = loader_get_kernel_driver_name(fd);
-      if (driver)
-         log_(_LOADER_INFO, "using driver %s for %d\n", driver, fd);
-      return driver;
-   }
+   if (!loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id))
+      return NULL;
 
    for (i = 0; i < ARRAY_SIZE(driver_map); i++) {
       if (vendor_id != driver_map[i].vendor_id)
@@ -505,6 +461,35 @@ out:
    log_(driver ? _LOADER_DEBUG : _LOADER_WARNING,
          "pci id for fd %d: %04x:%04x, driver %s\n",
          fd, vendor_id, chip_id, driver);
+   return driver;
+}
+
+char *
+loader_get_driver_for_fd(int fd)
+{
+   char *driver;
+
+   /* Allow an environment variable to force choosing a different driver
+    * binary.  If that driver binary can't survive on this FD, that's the
+    * user's problem, but this allows vc4 simulator to run on an i965 host,
+    * and may be useful for some touch testing of i915 on an i965 host.
+    */
+   if (issetugid() == 0 && geteuid() == getuid()) {
+      driver = getenv("MESA_LOADER_DRIVER_OVERRIDE");
+      if (driver)
+         return strdup(driver);
+   }
+
+#if defined(HAVE_LIBDRM) && defined(USE_DRICONF)
+   driver = loader_get_dri_config_driver(fd);
+   if (driver)
+      return driver;
+#endif
+
+   driver = loader_get_pci_driver(fd);
+   if (!driver)
+      driver = loader_get_kernel_driver_name(fd);
+
    return driver;
 }
 
@@ -562,6 +547,7 @@ loader_open_driver(const char *driver_name,
       search_paths = DEFAULT_DRIVER_DIR;
 
    void *driver = NULL;
+   char *dl_error = NULL;
    end = search_paths + strlen(search_paths);
    for (char *p = search_paths; p < end; p = next + 1) {
       int len;
@@ -577,9 +563,11 @@ loader_open_driver(const char *driver_name,
       if (driver == NULL) {
          snprintf(path, sizeof(path), "%.*s/%s_dri.so", len, p, driver_name);
          driver = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
-         if (driver == NULL)
+         if (driver == NULL) {
+            dl_error = dlerror();
             log_(_LOADER_DEBUG, "MESA-LOADER: failed to open %s: %s\n",
-                 path, dlerror());
+                 path, dl_error);
+         }
       }
       /* not need continue to loop all paths once the driver is found */
       if (driver != NULL)
@@ -587,8 +575,8 @@ loader_open_driver(const char *driver_name,
    }
 
    if (driver == NULL) {
-      log_(_LOADER_WARNING, "MESA-LOADER: failed to open %s (search paths %s)\n",
-           driver_name, search_paths);
+      log_(_LOADER_WARNING, "MESA-LOADER: failed to open %s: %s (search paths %s)\n",
+           driver_name, dl_error, search_paths);
       *out_driver_handle = NULL;
       return NULL;
    }

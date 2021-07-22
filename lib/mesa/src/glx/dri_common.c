@@ -118,23 +118,6 @@ driOpenDriver(const char *driverName, void **out_driver_handle)
    return extensions;
 }
 
-static GLboolean
-__driGetMSCRate(__DRIdrawable *draw,
-		int32_t * numerator, int32_t * denominator,
-		void *loaderPrivate)
-{
-   __GLXDRIdrawable *glxDraw = loaderPrivate;
-
-   return __glxGetMscRate(glxDraw->psc, numerator, denominator);
-}
-
-_X_HIDDEN const __DRIsystemTimeExtension systemTimeExtension = {
-   .base = {__DRI_SYSTEM_TIME, 1 },
-
-   .getUST              = __glXGetUST,
-   .getMSCRate          = __driGetMSCRate
-};
-
 #define __ATTRIB(attrib, field) \
     { attrib, offsetof(struct glx_config, field) }
 
@@ -159,32 +142,10 @@ static const struct
       __ATTRIB(__DRI_ATTRIB_DOUBLE_BUFFER, doubleBufferMode),
       __ATTRIB(__DRI_ATTRIB_STEREO, stereoMode),
       __ATTRIB(__DRI_ATTRIB_AUX_BUFFERS, numAuxBuffers),
-#if 0
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_TYPE, transparentPixel),
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_INDEX_VALUE, transparentIndex),
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_RED_VALUE, transparentRed),
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_GREEN_VALUE, transparentGreen),
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_BLUE_VALUE, transparentBlue),
-      __ATTRIB(__DRI_ATTRIB_TRANSPARENT_ALPHA_VALUE, transparentAlpha),
-      __ATTRIB(__DRI_ATTRIB_RED_MASK, redMask),
-      __ATTRIB(__DRI_ATTRIB_GREEN_MASK, greenMask),
-      __ATTRIB(__DRI_ATTRIB_BLUE_MASK, blueMask),
-      __ATTRIB(__DRI_ATTRIB_ALPHA_MASK, alphaMask),
-      __ATTRIB(__DRI_ATTRIB_RED_SHIFT, redShift),
-      __ATTRIB(__DRI_ATTRIB_GREEN_SHIFT, greenShift),
-      __ATTRIB(__DRI_ATTRIB_BLUE_SHIFT, blueShift),
-      __ATTRIB(__DRI_ATTRIB_ALPHA_SHIFT, alphaShift),
-#endif
-      __ATTRIB(__DRI_ATTRIB_MAX_PBUFFER_WIDTH, maxPbufferWidth),
-      __ATTRIB(__DRI_ATTRIB_MAX_PBUFFER_HEIGHT, maxPbufferHeight),
-      __ATTRIB(__DRI_ATTRIB_MAX_PBUFFER_PIXELS, maxPbufferPixels),
-      __ATTRIB(__DRI_ATTRIB_OPTIMAL_PBUFFER_WIDTH, optimalPbufferWidth),
-      __ATTRIB(__DRI_ATTRIB_OPTIMAL_PBUFFER_HEIGHT, optimalPbufferHeight),
       __ATTRIB(__DRI_ATTRIB_SWAP_METHOD, swapMethod),
       __ATTRIB(__DRI_ATTRIB_BIND_TO_TEXTURE_RGB, bindToTextureRgb),
       __ATTRIB(__DRI_ATTRIB_BIND_TO_TEXTURE_RGBA, bindToTextureRgba),
-      __ATTRIB(__DRI_ATTRIB_BIND_TO_MIPMAP_TEXTURE,
-                     bindToMipmapTexture),
+      __ATTRIB(__DRI_ATTRIB_BIND_TO_MIPMAP_TEXTURE, bindToMipmapTexture),
       __ATTRIB(__DRI_ATTRIB_YINVERTED, yInverted),
       __ATTRIB(__DRI_ATTRIB_FRAMEBUFFER_SRGB_CAPABLE, sRGBCapable)
 };
@@ -231,17 +192,6 @@ driConfigEqual(const __DRIcoreExtension *core,
             return GL_FALSE;
          break;
 
-      case __DRI_ATTRIB_CONFIG_CAVEAT:
-         if (value & __DRI_ATTRIB_NON_CONFORMANT_CONFIG)
-            glxValue = GLX_NON_CONFORMANT_CONFIG;
-         else if (value & __DRI_ATTRIB_SLOW_BIT)
-            glxValue = GLX_SLOW_CONFIG;
-         else
-            glxValue = GLX_NONE;
-         if (glxValue != config->visualRating)
-            return GL_FALSE;
-         break;
-
       case __DRI_ATTRIB_BIND_TO_TEXTURE_TARGETS:
          glxValue = 0;
          if (value & __DRI_ATTRIB_TEXTURE_1D_BIT)
@@ -266,6 +216,54 @@ driConfigEqual(const __DRIcoreExtension *core,
          if (!scalarEqual(config, attrib, glxValue))
             return GL_FALSE;
 
+         break;
+
+      /* Nerf some attributes we can safely ignore if the server claims to
+       * support them but the driver does not.
+       */
+      case __DRI_ATTRIB_CONFIG_CAVEAT:
+         if (value & __DRI_ATTRIB_NON_CONFORMANT_CONFIG)
+            glxValue = GLX_NON_CONFORMANT_CONFIG;
+         else if (value & __DRI_ATTRIB_SLOW_BIT)
+            glxValue = GLX_SLOW_CONFIG;
+         else
+            glxValue = GLX_NONE;
+         if (glxValue != config->visualRating) {
+            if (config->visualRating == GLX_NONE) {
+               static int warned;
+               if (!warned) {
+                  dri_message(_LOADER_DEBUG,
+                              "Not downgrading visual rating\n");
+                  warned = 1;
+               }
+            } else {
+               return GL_FALSE;
+            }
+         }
+         break;
+
+      case __DRI_ATTRIB_AUX_BUFFERS:
+         if (!scalarEqual(config, attrib, value)) {
+            static int warned;
+            if (!warned) {
+               dri_message(_LOADER_DEBUG,
+                           "Disabling server's aux buffer support\n");
+               warned = 1;
+            }
+            config->numAuxBuffers = 0;
+         }
+         break;
+
+      case __DRI_ATTRIB_BIND_TO_MIPMAP_TEXTURE:
+         if (!scalarEqual(config, attrib, value)) {
+            static int warned;
+            if (!warned) {
+               dri_message(_LOADER_DEBUG,
+                           "Disabling server's tfp mipmap support\n");
+               warned = 1;
+            }
+            config->bindToMipmapTexture = 0;
+         }
          break;
 
       default:
@@ -621,6 +619,174 @@ dri2_check_no_error(uint32_t flags, struct glx_context *share_context,
    }
 
    return true;
+}
+
+struct glx_context *
+dri_common_create_context(struct glx_screen *base,
+                          struct glx_config *config_base,
+                          struct glx_context *shareList,
+                          int renderType)
+{
+   unsigned int error;
+   uint32_t attribs[2] = { GLX_RENDER_TYPE, renderType };
+
+   return base->vtable->create_context_attribs(base, config_base, shareList,
+                                               1, attribs, &error);
+}
+
+
+/*
+ * Given a display pointer and screen number, determine the name of
+ * the DRI driver for the screen (i.e., "i965", "radeon", "nouveau", etc).
+ * Return True for success, False for failure.
+ */
+static Bool
+driGetDriverName(Display * dpy, int scrNum, char **driverName)
+{
+   struct glx_screen *glx_screen = GetGLXScreenConfigs(dpy, scrNum);
+
+   if (!glx_screen || !glx_screen->vtable->get_driver_name)
+      return False;
+
+   *driverName = glx_screen->vtable->get_driver_name(glx_screen);
+   return True;
+}
+
+/*
+ * Exported function for querying the DRI driver for a given screen.
+ *
+ * The returned char pointer points to a static array that will be
+ * overwritten by subsequent calls.
+ */
+_GLX_PUBLIC const char *
+glXGetScreenDriver(Display * dpy, int scrNum)
+{
+   static char ret[32];
+   char *driverName;
+
+   if (driGetDriverName(dpy, scrNum, &driverName)) {
+      int len;
+      if (!driverName)
+         return NULL;
+      len = strlen(driverName);
+      if (len >= 31)
+         return NULL;
+      memcpy(ret, driverName, len + 1);
+      free(driverName);
+      return ret;
+   }
+   return NULL;
+}
+
+/* glXGetDriverConfig must return a pointer with a static lifetime. To avoid
+ * keeping drivers loaded and other leaks, we keep a cache of results here that
+ * is cleared by an atexit handler.
+ */
+struct driver_config_entry {
+   struct driver_config_entry *next;
+   char *driverName;
+   char *config;
+};
+
+static pthread_mutex_t driver_config_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct driver_config_entry *driver_config_cache = NULL;
+
+/* Called as an atexit function. Otherwise, this would have to be called with
+ * driver_config_mutex locked.
+ */
+static void
+clear_driver_config_cache()
+{
+   while (driver_config_cache) {
+      struct driver_config_entry *e = driver_config_cache;
+      driver_config_cache = e->next;
+
+      free(e->driverName);
+      free(e->config);
+      free(e);
+   }
+}
+
+static char *
+get_driver_config(const char *driverName)
+{
+   void *handle;
+   char *config = NULL;
+   const __DRIextension **extensions = driOpenDriver(driverName, &handle);
+   if (extensions) {
+      for (int i = 0; extensions[i]; i++) {
+         if (strcmp(extensions[i]->name, __DRI_CONFIG_OPTIONS) != 0)
+            continue;
+
+         __DRIconfigOptionsExtension *ext =
+            (__DRIconfigOptionsExtension *)extensions[i];
+
+         if (ext->base.version >= 2)
+            config = ext->getXml(driverName);
+         else
+            config = strdup(ext->xml);
+
+         break;
+      }
+   }
+
+   if (!config) {
+      /* Fall back to the old method */
+      config = dlsym(handle, "__driConfigOptions");
+      if (config)
+         config = strdup(config);
+   }
+
+   dlclose(handle);
+
+   return config;
+}
+
+/*
+ * Exported function for obtaining a driver's option list (UTF-8 encoded XML).
+ *
+ * The returned char pointer points directly into the driver. Therefore
+ * it should be treated as a constant.
+ *
+ * If the driver was not found or does not support configuration NULL is
+ * returned.
+ */
+_GLX_PUBLIC const char *
+glXGetDriverConfig(const char *driverName)
+{
+   struct driver_config_entry *e;
+
+   pthread_mutex_lock(&driver_config_mutex);
+
+   for (e = driver_config_cache; e; e = e->next) {
+      if (strcmp(e->driverName, driverName) == 0)
+         goto out;
+   }
+
+   e = malloc(sizeof(*e));
+   if (!e)
+      goto out;
+
+   e->config = get_driver_config(driverName);
+   e->driverName = strdup(driverName);
+   if (!e->config || !e->driverName) {
+      free(e->config);
+      free(e->driverName);
+      free(e);
+      e = NULL;
+      goto out;
+   }
+
+   e->next = driver_config_cache;
+   driver_config_cache = e;
+
+   if (!e->next)
+      atexit(clear_driver_config_cache);
+
+out:
+   pthread_mutex_unlock(&driver_config_mutex);
+
+   return e ? e->config : NULL;
 }
 
 #endif /* GLX_DIRECT_RENDERING */

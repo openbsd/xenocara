@@ -28,16 +28,16 @@
 #include "context.h"
 #include "debug_output.h"
 #include "enums.h"
-#include "imports.h"
+
 #include "hash.h"
 #include "mtypes.h"
 #include "version.h"
 #include "util/hash_table.h"
 #include "util/list.h"
+#include "util/u_memory.h"
 
 
-static simple_mtx_t DynamicIDMutex = _SIMPLE_MTX_INITIALIZER_NP;
-static GLuint NextDynamicID = 1;
+static GLuint PrevDynamicID = 0;
 
 
 /**
@@ -193,10 +193,7 @@ void
 _mesa_debug_get_id(GLuint *id)
 {
    if (!(*id)) {
-      simple_mtx_lock(&DynamicIDMutex);
-      if (!(*id))
-         *id = NextDynamicID++;
-      simple_mtx_unlock(&DynamicIDMutex);
+      *id = p_atomic_inc_return(&PrevDynamicID);
    }
 }
 
@@ -1280,7 +1277,7 @@ _mesa_init_debug_output(struct gl_context *ctx)
 
 
 void
-_mesa_free_errors_data(struct gl_context *ctx)
+_mesa_destroy_debug_output(struct gl_context *ctx)
 {
    if (ctx->Debug) {
       debug_destroy(ctx->Debug);

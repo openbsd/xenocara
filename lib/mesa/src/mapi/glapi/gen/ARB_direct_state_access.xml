@@ -194,7 +194,7 @@
    <function name="NamedFramebufferDrawBuffers" no_error="true">
       <param name="framebuffer" type="GLuint" />
       <param name="n" type="GLsizei" />
-      <param name="bufs" type="const GLenum *" />
+      <param name="bufs" type="const GLenum *" count="n"/>
    </function>
 
    <function name="NamedFramebufferReadBuffer" no_error="true">
@@ -205,13 +205,13 @@
    <function name="InvalidateNamedFramebufferData">
       <param name="framebuffer" type="GLuint" />
       <param name="numAttachments" type="GLsizei" />
-      <param name="attachments" type="const GLenum *" />
+      <param name="attachments" type="const GLenum *" count="numAttachments"/>
    </function>
 
    <function name="InvalidateNamedFramebufferSubData">
       <param name="framebuffer" type="GLuint" />
       <param name="numAttachments" type="GLsizei" />
-      <param name="attachments" type="const GLenum *" />
+      <param name="attachments" type="const GLenum *" count="numAttachments"/>
       <param name="x" type="GLint" />
       <param name="y" type="GLint" />
       <param name="width" type="GLsizei" />
@@ -222,21 +222,21 @@
       <param name="framebuffer" type="GLuint" />
       <param name="buffer" type="GLenum" />
       <param name="drawbuffer" type="GLint" />
-      <param name="value" type="const GLint *" />
+      <param name="value" type="const GLint *" count="_mesa_buffer_enum_to_count(buffer)"/>
    </function>
 
    <function name="ClearNamedFramebufferuiv">
       <param name="framebuffer" type="GLuint" />
       <param name="buffer" type="GLenum" />
       <param name="drawbuffer" type="GLint" />
-      <param name="value" type="const GLuint *" />
+      <param name="value" type="const GLuint *" count="_mesa_buffer_enum_to_count(buffer)"/>
    </function>
 
    <function name="ClearNamedFramebufferfv">
       <param name="framebuffer" type="GLuint" />
       <param name="buffer" type="GLenum" />
       <param name="drawbuffer" type="GLint" />
-      <param name="value" type="const GLfloat *" />
+      <param name="value" type="const GLfloat *" count="_mesa_buffer_enum_to_count(buffer)"/>
    </function>
 
    <function name="ClearNamedFramebufferfi">
@@ -374,7 +374,8 @@
       <param name="fixedsamplelocations" type="GLboolean" />
    </function>
 
-   <function name="TextureSubImage1D" no_error="true">
+   <function name="TextureSubImage1D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -384,7 +385,8 @@
       <param name="pixels" type="const GLvoid *" />
    </function>
 
-   <function name="TextureSubImage2D" no_error="true">
+   <function name="TextureSubImage2D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -396,7 +398,8 @@
       <param name="pixels" type="const GLvoid *" />
    </function>
 
-   <function name="TextureSubImage3D" no_error="true">
+   <function name="TextureSubImage3D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -410,7 +413,8 @@
       <param name="pixels" type="const GLvoid *" />
    </function>
 
-   <function name="CompressedTextureSubImage1D" no_error="true">
+   <function name="CompressedTextureSubImage1D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -420,7 +424,8 @@
       <param name="data" type="const GLvoid *" />
    </function>
 
-   <function name="CompressedTextureSubImage2D" no_error="true">
+   <function name="CompressedTextureSubImage2D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -432,7 +437,8 @@
       <param name="data" type="const GLvoid *" />
    </function>
 
-   <function name="CompressedTextureSubImage3D" no_error="true">
+   <function name="CompressedTextureSubImage3D" no_error="true"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_unpack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="xoffset" type="GLint" />
@@ -487,7 +493,7 @@
    <function name="TextureParameterfv">
       <param name="texture" type="GLuint" />
       <param name="pname" type="GLenum" />
-      <param name="param" type="const GLfloat *" />
+      <param name="param" type="const GLfloat *" count="_mesa_tex_param_enum_to_count(pname)"/>
    </function>
 
    <function name="TextureParameteri">
@@ -499,19 +505,19 @@
    <function name="TextureParameterIiv">
       <param name="texture" type="GLuint" />
       <param name="pname" type="GLenum" />
-      <param name="params" type="const GLint *" />
+      <param name="params" type="const GLint *" count="_mesa_tex_param_enum_to_count(pname)"/>
    </function>
 
    <function name="TextureParameterIuiv">
       <param name="texture" type="GLuint" />
       <param name="pname" type="GLenum" />
-      <param name="params" type="const GLuint *" />
+      <param name="params" type="const GLuint *" count="_mesa_tex_param_enum_to_count(pname)"/>
    </function>
 
    <function name="TextureParameteriv">
       <param name="texture" type="GLuint" />
       <param name="pname" type="GLenum" />
-      <param name="param" type="const GLint *" />
+      <param name="param" type="const GLint *" count="_mesa_tex_param_enum_to_count(pname)"/>
    </function>
 
    <function name="GenerateTextureMipmap" no_error="true">
@@ -523,7 +529,8 @@
       <param name="texture" type="GLuint" />
    </function>
 
-   <function name="GetTextureImage">
+   <function name="GetTextureImage"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_pack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="format" type="GLenum" />
@@ -532,7 +539,8 @@
       <param name="pixels" type="GLvoid *" />
    </function>
 
-   <function name="GetCompressedTextureImage">
+   <function name="GetCompressedTextureImage"
+             marshal="async" marshal_sync="_mesa_glthread_has_no_pack_buffer(ctx)">
       <param name="texture" type="GLuint" />
       <param name="level" type="GLint" />
       <param name="bufSize" type="GLsizei" />
@@ -579,27 +587,32 @@
 
    <!-- Vertex Array object functions -->
 
-   <function name="CreateVertexArrays" no_error="true">
+   <function name="CreateVertexArrays" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_GenVertexArrays(ctx, n, arrays);">
       <param name="n" type="GLsizei" />
       <param name="arrays" type="GLuint *" />
    </function>
 
-   <function name="DisableVertexArrayAttrib" no_error="true">
+   <function name="DisableVertexArrayAttrib" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_ClientState(ctx, &amp;vaobj, VERT_ATTRIB_GENERIC(index), false);">
       <param name="vaobj" type="GLuint" />
       <param name="index" type="GLuint" />
    </function>
 
-   <function name="EnableVertexArrayAttrib" no_error="true">
+   <function name="EnableVertexArrayAttrib" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_ClientState(ctx, &amp;vaobj, VERT_ATTRIB_GENERIC(index), true);">
       <param name="vaobj" type="GLuint" />
       <param name="index" type="GLuint" />
    </function>
 
-   <function name="VertexArrayElementBuffer" no_error="true">
+   <function name="VertexArrayElementBuffer" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAElementBuffer(ctx, vaobj, buffer);">
       <param name="vaobj" type="GLuint" />
       <param name="buffer" type="GLuint" />
    </function>
 
-   <function name="VertexArrayVertexBuffer" no_error="true">
+   <function name="VertexArrayVertexBuffer" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAVertexBuffer(ctx, vaobj, bindingindex, buffer, offset, stride);">
       <param name="vaobj" type="GLuint" />
       <param name="bindingindex" type="GLuint" />
       <param name="buffer" type="GLuint" />
@@ -607,16 +620,18 @@
       <param name="stride" type="GLsizei" />
    </function>
 
-   <function name="VertexArrayVertexBuffers" no_error="true">
+   <function name="VertexArrayVertexBuffers" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAVertexBuffers(ctx, vaobj, first, count, buffers, offsets, strides);">
       <param name="vaobj" type="GLuint" />
       <param name="first" type="GLuint" />
       <param name="count" type="GLsizei" />
-      <param name="buffers" type="const GLuint *" />
-      <param name="offsets" type="const GLintptr *" />
-      <param name="strides" type="const GLsizei *" />
+      <param name="buffers" type="const GLuint *" count="count"/>
+      <param name="offsets" type="const GLintptr *" count="count"/>
+      <param name="strides" type="const GLsizei *" count="count"/>
    </function>
 
-   <function name="VertexArrayAttribFormat">
+   <function name="VertexArrayAttribFormat"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAAttribFormat(ctx, vaobj, attribindex, size, type, relativeoffset);">
       <param name="vaobj" type="GLuint" />
       <param name="attribindex" type="GLuint" />
       <param name="size" type="GLint" />
@@ -625,7 +640,8 @@
       <param name="relativeoffset" type="GLuint" />
    </function>
 
-   <function name="VertexArrayAttribIFormat">
+   <function name="VertexArrayAttribIFormat"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAAttribFormat(ctx, vaobj, attribindex, size, type, relativeoffset);">
       <param name="vaobj" type="GLuint" />
       <param name="attribindex" type="GLuint" />
       <param name="size" type="GLint" />
@@ -633,7 +649,8 @@
       <param name="relativeoffset" type="GLuint" />
    </function>
 
-   <function name="VertexArrayAttribLFormat">
+   <function name="VertexArrayAttribLFormat"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAAttribFormat(ctx, vaobj, attribindex, size, type, relativeoffset);">
       <param name="vaobj" type="GLuint" />
       <param name="attribindex" type="GLuint" />
       <param name="size" type="GLint" />
@@ -641,13 +658,15 @@
       <param name="relativeoffset" type="GLuint" />
    </function>
 
-   <function name="VertexArrayAttribBinding" no_error="true">
+   <function name="VertexArrayAttribBinding" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSAAttribBinding(ctx, vaobj, attribindex, bindingindex);">
       <param name="vaobj" type="GLuint" />
       <param name="attribindex" type="GLuint" />
       <param name="bindingindex" type="GLuint" />
    </function>
 
-   <function name="VertexArrayBindingDivisor" no_error="true">
+   <function name="VertexArrayBindingDivisor" no_error="true"
+             marshal_call_after="if (COMPAT) _mesa_glthread_DSABindingDivisor(ctx, vaobj, bindingindex, divisor);">
       <param name="vaobj" type="GLuint" />
       <param name="bindingindex" type="GLuint" />
       <param name="divisor" type="GLuint" />

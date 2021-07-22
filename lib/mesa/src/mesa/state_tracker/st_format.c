@@ -1,9 +1,9 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * Copyright (c) 2008-2010 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -11,11 +11,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -23,7 +23,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 
@@ -32,7 +32,7 @@
  * \author Brian Paul
  */
 
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/formats.h"
@@ -62,13 +62,13 @@ enum pipe_format
 st_mesa_format_to_pipe_format(const struct st_context *st,
                               mesa_format mesaFormat)
 {
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
 
    /* The destination RGBA format mustn't be changed, because it's also
     * a destination format of the unpack/decompression function.
     */
    if (mesaFormat == MESA_FORMAT_ETC1_RGB8 && !st->has_etc1)
-      return PIPE_FORMAT_R8G8B8A8_UNORM;
+      return st->transcode_etc ? PIPE_FORMAT_DXT1_RGB : PIPE_FORMAT_R8G8B8A8_UNORM;
 
    /* ETC2 formats are emulated as uncompressed ones.
     * The destination formats mustn't be changed, because they are also
@@ -82,13 +82,15 @@ st_mesa_format_to_pipe_format(const struct st_context *st,
 
       switch (mesaFormat) {
       case MESA_FORMAT_ETC2_RGB8:
-         return PIPE_FORMAT_R8G8B8A8_UNORM;
+         return st->transcode_etc ? PIPE_FORMAT_DXT1_RGB : PIPE_FORMAT_R8G8B8A8_UNORM;
       case MESA_FORMAT_ETC2_SRGB8:
-         return has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
+         return st->transcode_etc ? PIPE_FORMAT_DXT1_SRGB :
+                has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
       case MESA_FORMAT_ETC2_RGBA8_EAC:
-         return PIPE_FORMAT_R8G8B8A8_UNORM;
+         return st->transcode_etc ? PIPE_FORMAT_DXT5_RGBA : PIPE_FORMAT_R8G8B8A8_UNORM;
       case MESA_FORMAT_ETC2_SRGB8_ALPHA8_EAC:
-         return has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
+         return st->transcode_etc ? PIPE_FORMAT_DXT5_SRGBA :
+                has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
       case MESA_FORMAT_ETC2_R11_EAC:
          return PIPE_FORMAT_R16_UNORM;
       case MESA_FORMAT_ETC2_RG11_EAC:
@@ -98,9 +100,10 @@ st_mesa_format_to_pipe_format(const struct st_context *st,
       case MESA_FORMAT_ETC2_SIGNED_RG11_EAC:
          return PIPE_FORMAT_R16G16_SNORM;
       case MESA_FORMAT_ETC2_RGB8_PUNCHTHROUGH_ALPHA1:
-         return PIPE_FORMAT_R8G8B8A8_UNORM;
+         return st->transcode_etc ? PIPE_FORMAT_DXT1_RGBA : PIPE_FORMAT_R8G8B8A8_UNORM;
       case MESA_FORMAT_ETC2_SRGB8_PUNCHTHROUGH_ALPHA1:
-         return has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
+         return st->transcode_etc ? PIPE_FORMAT_DXT1_SRGBA :
+                has_bgra_srgb ? PIPE_FORMAT_B8G8R8A8_SRGB : PIPE_FORMAT_R8G8B8A8_SRGB;
       default:
          unreachable("Unknown ETC2 format");
       }
@@ -229,23 +232,24 @@ static const struct format_mapping format_map[] = {
    },
    {
       { GL_R3_G3_B2, 0 },
-      { PIPE_FORMAT_B2G3R3_UNORM, PIPE_FORMAT_B5G6R5_UNORM,
-        PIPE_FORMAT_B5G5R5A1_UNORM, DEFAULT_RGB_FORMATS }
+      { PIPE_FORMAT_B2G3R3_UNORM, PIPE_FORMAT_R3G3B2_UNORM,
+        PIPE_FORMAT_B5G6R5_UNORM, PIPE_FORMAT_B5G5R5A1_UNORM,
+        DEFAULT_RGB_FORMATS }
    },
    {
-      { GL_RGB4 },
+      { GL_RGB4, 0 },
       { PIPE_FORMAT_B4G4R4X4_UNORM, PIPE_FORMAT_B4G4R4A4_UNORM,
         PIPE_FORMAT_A4B4G4R4_UNORM,
         DEFAULT_RGB_FORMATS }
    },
    {
-      { GL_RGB5 },
+      { GL_RGB5, 0 },
       { PIPE_FORMAT_B5G5R5X1_UNORM, PIPE_FORMAT_X1B5G5R5_UNORM,
         PIPE_FORMAT_B5G5R5A1_UNORM, PIPE_FORMAT_A1B5G5R5_UNORM,
         DEFAULT_RGB_FORMATS }
    },
    {
-      { GL_RGB565 },
+      { GL_RGB565, 0 },
       { PIPE_FORMAT_B5G6R5_UNORM, DEFAULT_RGB_FORMATS }
    },
 
@@ -425,6 +429,10 @@ static const struct format_mapping format_map[] = {
    {
       { GL_SR8_EXT, 0 },
       { PIPE_FORMAT_R8_SRGB, 0 }
+   },
+   {
+      { GL_SRG8_EXT, 0 },
+      { PIPE_FORMAT_R8G8_SRGB, 0 }
    },
 
    /* 16-bit float formats */
@@ -909,7 +917,7 @@ static const struct format_mapping format_map[] = {
    },
    {
      { GL_R8I, GL_RED_INTEGER_EXT, 0},
-     { PIPE_FORMAT_R8_SINT, 0},
+     { PIPE_FORMAT_R8_SINT, PIPE_FORMAT_R8G8_SINT, 0},
    },
    {
      { GL_R16I, 0},
@@ -921,7 +929,7 @@ static const struct format_mapping format_map[] = {
    },
   {
      { GL_R8UI, 0},
-     { PIPE_FORMAT_R8_UINT, 0},
+     { PIPE_FORMAT_R8_UINT, PIPE_FORMAT_R8G8_UINT, 0},
    },
    {
      { GL_R16UI, 0},
@@ -1100,7 +1108,7 @@ st_choose_format(struct st_context *st, GLenum internalFormat,
                  unsigned storage_sample_count,
                  unsigned bindings, bool swap_bytes, bool allow_dxt)
 {
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
    unsigned i;
    int j;
    enum pipe_format pf;
@@ -1214,7 +1222,7 @@ enum pipe_format
 st_choose_matching_format(struct st_context *st, unsigned bind,
                           GLenum format, GLenum type, GLboolean swapBytes)
 {
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
 
    if (swapBytes && !_mesa_swap_bytes_in_type_enum(&type))
       return PIPE_FORMAT_NONE;
@@ -1280,7 +1288,11 @@ st_ChooseTextureFormat(struct gl_context *ctx, GLenum target,
             internalFormat == GL_RGB16F ||
             internalFormat == GL_RGBA16F ||
             internalFormat == GL_RGB32F ||
-            internalFormat == GL_RGBA32F)
+            internalFormat == GL_RGBA32F ||
+            internalFormat == GL_RED ||
+            internalFormat == GL_RED_SNORM ||
+            internalFormat == GL_R8I ||
+            internalFormat == GL_R8UI)
       bindings |= PIPE_BIND_RENDER_TARGET;
 
    /* GLES allows the driver to choose any format which matches

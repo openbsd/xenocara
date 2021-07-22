@@ -53,7 +53,8 @@ svga_buffer_needs_hw_storage(const struct svga_screen *ss,
                              const struct pipe_resource *template)
 {
    unsigned bind_mask = (PIPE_BIND_VERTEX_BUFFER | PIPE_BIND_INDEX_BUFFER |
-                         PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_STREAM_OUTPUT);
+                         PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_STREAM_OUTPUT |
+                         PIPE_BIND_SHADER_BUFFER | PIPE_BIND_COMMAND_ARGS_BUFFER);
 
    if (ss->sws->have_vgpu10) {
       /*
@@ -61,14 +62,13 @@ svga_buffer_needs_hw_storage(const struct svga_screen *ss,
        * tagged with PIPE_BIND_CUSTOM
        */
       bind_mask |= PIPE_BIND_CUSTOM;
-      /* Uniform buffer objects.
-       * Make sure we don't create hardware storage for state-tracker
-       * const0 buffers, because we frequently map them for reading.
-       * They are distinguished by having PIPE_USAGE_STREAM, but not
-       * PIPE_BIND_CUSTOM.
+      /**
+       * Uniform buffer objects.
+       * Don't create hardware storage for state-tracker constant buffers,
+       * because we frequently map them for reading and writing, and
+       * the length of those buffers are always small, so it is better
+       * to just use system memory.
        */
-      if (template->usage != PIPE_USAGE_STREAM)
-         bind_mask |= PIPE_BIND_CONSTANT_BUFFER;
    }
 
    if (template->flags & PIPE_RESOURCE_FLAG_MAP_PERSISTENT)
@@ -122,16 +122,15 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
    transfer->stride = 0;
    transfer->layer_stride = 0;
 
-   if (usage & PIPE_TRANSFER_WRITE) {
+   if (usage & PIPE_MAP_WRITE) {
       /* If we write to the buffer for any reason, free any saved translated
        * vertices.
        */
       pipe_resource_reference(&sbuf->translated_indices.buffer, NULL);
    }
 
-   if ((usage & PIPE_TRANSFER_READ) && sbuf->dirty &&
+   if ((usage & PIPE_MAP_READ) && sbuf->dirty &&
        !sbuf->key.coherent && !svga->swc->force_coherent) {
-      enum pipe_error ret;
 
       /* Host-side buffers can only be dirtied with vgpu10 features
        * (streamout and buffer copy).
@@ -149,13 +148,8 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
 
       assert(sbuf->handle);
 
-      ret = SVGA3D_vgpu10_ReadbackSubResource(svga->swc, sbuf->handle, 0);
-      if (ret != PIPE_OK) {
-         svga_context_flush(svga, NULL);
-         ret = SVGA3D_vgpu10_ReadbackSubResource(svga->swc, sbuf->handle, 0);
-         assert(ret == PIPE_OK);
-      }
-
+      SVGA_RETRY(svga, SVGA3D_vgpu10_ReadbackSubResource(svga->swc,
+                                                         sbuf->handle, 0));
       svga->hud.num_readbacks++;
 
       svga_context_finish(svga);
@@ -163,8 +157,8 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
       sbuf->dirty = FALSE;
    }
 
-   if (usage & PIPE_TRANSFER_WRITE) {
-      if ((usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE) &&
+   if (usage & PIPE_MAP_WRITE) {
+      if ((usage & PIPE_MAP_DISCARD_WHOLE_RESOURCE) &&
           !(resource->flags & PIPE_RESOURCE_FLAG_MAP_PERSISTENT)) {
          /*
           * Flush any pending primitives, finish writing any pending DMA
@@ -181,7 +175,7 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
              * Instead of flushing the context command buffer, simply discard
              * the current hwbuf, and start a new one.
              * With GB objects, the map operation takes care of this
-             * if passed the PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE flag,
+             * if passed the PIPE_MAP_DISCARD_WHOLE_RESOURCE flag,
              * and the old backing store is busy.
              */
 
@@ -193,7 +187,7 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
          sbuf->dma.flags.discard = TRUE;
       }
 
-      if (usage & PIPE_TRANSFER_UNSYNCHRONIZED) {
+      if (usage & PIPE_MAP_UNSYNCHRONIZED) {
          if (!sbuf->map.num_ranges) {
             /*
              * No pending ranges to upload so far, so we can tell the host to
@@ -217,7 +211,7 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
                /*
                 * We have a pending DMA upload from a hardware buffer, therefore
                 * we need to ensure that the host finishes processing that DMA
-                * command before the state tracker can start overwriting the
+                * command before the gallium frontend can start overwriting the
                 * hardware buffer.
                 *
                 * XXX: This could be avoided by tying the hardware buffer to
@@ -229,7 +223,7 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
                 * without having to do a DMA download from the host.
                 */
 
-               if (usage & PIPE_TRANSFER_DONTBLOCK) {
+               if (usage & PIPE_MAP_DONTBLOCK) {
                   /*
                    * Flushing the command buffer here will most likely cause
                    * the map of the hwbuf below to block, so preemptively
@@ -277,15 +271,18 @@ svga_buffer_transfer_map(struct pipe_context *pipe,
    else if (svga_buffer_has_hw_storage(sbuf)) {
       boolean retry;
 
-      map = svga_buffer_hw_storage_map(svga, sbuf, transfer->usage, &retry);
+      map = SVGA_TRY_MAP(svga_buffer_hw_storage_map
+                         (svga, sbuf, transfer->usage, &retry), retry);
       if (map == NULL && retry) {
          /*
           * At this point, svga_buffer_get_transfer() has already
           * hit the DISCARD_WHOLE_RESOURCE path and flushed HWTNL
           * for this buffer.
           */
+         svga_retry_enter(svga);
          svga_context_flush(svga, NULL);
          map = svga_buffer_hw_storage_map(svga, sbuf, transfer->usage, &retry);
+         svga_retry_exit(svga);
       }
    }
    else {
@@ -319,8 +316,8 @@ svga_buffer_transfer_flush_region(struct pipe_context *pipe,
    unsigned offset = transfer->box.x + box->x;
    unsigned length = box->width;
 
-   assert(transfer->usage & PIPE_TRANSFER_WRITE);
-   assert(transfer->usage & PIPE_TRANSFER_FLUSH_EXPLICIT);
+   assert(transfer->usage & PIPE_MAP_WRITE);
+   assert(transfer->usage & PIPE_MAP_FLUSH_EXPLICIT);
 
    if (!(svga->swc->force_coherent || sbuf->key.coherent) || sbuf->swbuf) {
       mtx_lock(&ss->swc_mutex);
@@ -348,14 +345,15 @@ svga_buffer_transfer_unmap(struct pipe_context *pipe,
    }
 
    if (svga_buffer_has_hw_storage(sbuf)) {
+
       /* Note: we may wind up flushing here and unmapping other buffers
        * which leads to recursively locking ss->swc_mutex.
        */
       svga_buffer_hw_storage_unmap(svga, sbuf);
    }
 
-   if (transfer->usage & PIPE_TRANSFER_WRITE) {
-      if (!(transfer->usage & PIPE_TRANSFER_FLUSH_EXPLICIT)) {
+   if (transfer->usage & PIPE_MAP_WRITE) {
+      if (!(transfer->usage & PIPE_MAP_FLUSH_EXPLICIT)) {
          /*
           * Mapped range not flushed explicitly, so flush the whole buffer,
           * and tell the host to discard the contents when processing the DMA
@@ -368,6 +366,19 @@ svga_buffer_transfer_unmap(struct pipe_context *pipe,
 
          if (!(svga->swc->force_coherent || sbuf->key.coherent) || sbuf->swbuf)
             svga_buffer_add_range(sbuf, 0, sbuf->b.b.width0);
+      }
+
+      if (sbuf->swbuf &&
+          (!sbuf->bind_flags || (sbuf->bind_flags & PIPE_BIND_CONSTANT_BUFFER))) {
+         /*
+          * Since the constant buffer is in system buffer, we need
+          * to set the constant buffer dirty bits, so that the context
+          * can update the changes in the device.
+          * According to the GL spec, buffer bound to other contexts will
+          * have to be explicitly rebound by the user to have the changes take
+          * into effect.
+          */
+         svga->dirty |= SVGA_NEW_CONST_BUFFER;
       }
    }
 
@@ -464,7 +475,7 @@ svga_buffer_create(struct pipe_screen *screen,
       /* If the buffer is not used for constant buffer, set
        * the vertex/index bind flags as well so that the buffer will be
        * accepted for those uses.
-       * Note that the PIPE_BIND_ flags we get from the state tracker are
+       * Note that the PIPE_BIND_ flags we get from the gallium frontend are
        * just a hint about how the buffer may be used.  And OpenGL buffer
        * object may be used for many different things.
        * Also note that we do not unconditionally set the streamout
@@ -478,6 +489,9 @@ svga_buffer_create(struct pipe_screen *screen,
           */
          bind_flags |= (PIPE_BIND_VERTEX_BUFFER |
                         PIPE_BIND_INDEX_BUFFER);
+
+         /* It may be used for shader resource as well. */
+         bind_flags |= PIPE_BIND_SAMPLER_VIEW;
       }
 
       if (svga_buffer_create_host_surface(ss, sbuf, bind_flags) != PIPE_OK)
@@ -487,6 +501,13 @@ svga_buffer_create(struct pipe_screen *screen,
       sbuf->swbuf = align_malloc(sbuf->b.b.width0, 64);
       if (!sbuf->swbuf)
          goto error2;
+
+      /* Since constant buffer is usually small, it is much cheaper to
+       * use system memory for the data just as it is being done for
+       * the default constant buffer.
+       */
+      if ((bind_flags & PIPE_BIND_CONSTANT_BUFFER) || !bind_flags)
+         sbuf->use_swbuf = TRUE;
    }
 
    debug_reference(&sbuf->b.b.reference,

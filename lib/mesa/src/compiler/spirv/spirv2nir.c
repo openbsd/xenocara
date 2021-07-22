@@ -40,15 +40,97 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
 #define WORD_SIZE 4
 
+static gl_shader_stage
+stage_to_enum(char *stage)
+{
+   if (!strcmp(stage, "vertex"))
+      return MESA_SHADER_VERTEX;
+   else if (!strcmp(stage, "tess-ctrl"))
+      return MESA_SHADER_TESS_CTRL;
+   else if (!strcmp(stage, "tess-eval"))
+      return MESA_SHADER_TESS_EVAL;
+   else if (!strcmp(stage, "geometry"))
+      return MESA_SHADER_GEOMETRY;
+   else if (!strcmp(stage, "fragment"))
+      return MESA_SHADER_FRAGMENT;
+   else if (!strcmp(stage, "compute"))
+      return MESA_SHADER_COMPUTE;
+   else if (!strcmp(stage, "kernel"))
+      return MESA_SHADER_KERNEL;
+   else
+      return MESA_SHADER_NONE;
+}
+
+static void
+print_usage(char *exec_name, FILE *f)
+{
+   fprintf(f,
+"Usage: %s [options] file\n"
+"Options:\n"
+"  -h  --help              Print this help.\n"
+"  -s, --stage <stage>     Specify the shader stage.  Valid stages are:\n"
+"                          vertex, tess-ctrl, tess-eval, geometry, fragment,\n"
+"                          compute, and kernel (OpenCL-style compute).\n"
+"  -e, --entry <name>      Specify the entry-point name.\n"
+"  -g, --opengl            Use OpenGL environment instead of Vulkan for\n"
+"                          graphics stages.\n"
+   , exec_name);
+}
+
 int main(int argc, char **argv)
 {
-   int fd = open(argv[1], O_RDONLY);
+   gl_shader_stage shader_stage = MESA_SHADER_FRAGMENT;
+   char *entry_point = "main";
+   int ch;
+   enum nir_spirv_execution_environment env = NIR_SPIRV_VULKAN;
+
+   static struct option long_options[] =
+     {
+       {"help",         no_argument, 0, 'h'},
+       {"stage",  required_argument, 0, 's'},
+       {"entry",  required_argument, 0, 'e'},
+       {"opengl",       no_argument, 0, 'g'},
+       {0, 0, 0, 0}
+     };
+
+   while ((ch = getopt_long(argc, argv, "hs:e:g", long_options, NULL)) != -1)
+   {
+      switch (ch)
+      {
+      case 'h':
+         print_usage(argv[0], stdout);
+         return 0;
+      case 's':
+         shader_stage = stage_to_enum(optarg);
+         if (shader_stage == MESA_SHADER_NONE)
+         {
+            fprintf(stderr, "Unknown stage \"%s\"\n", optarg);
+            print_usage(argv[0], stderr);
+            return 1;
+         }
+         break;
+      case 'e':
+         entry_point = optarg;
+         break;
+      case 'g':
+         env = NIR_SPIRV_OPENGL;
+         break;
+      default:
+         fprintf(stderr, "Unrecognized option \"%s\".\n", optarg);
+         print_usage(argv[0], stderr);
+         return 1;
+      }
+   }
+
+   const char *filename = argv[optind];
+   int fd = open(filename, O_RDONLY);
    if (fd < 0)
    {
-      fprintf(stderr, "Failed to open %s\n", argv[1]);
+      fprintf(stderr, "Failed to open %s\n", filename);
       return 1;
    }
 
@@ -74,12 +156,29 @@ int main(int argc, char **argv)
 
    glsl_type_singleton_init_or_ref();
 
-   struct spirv_to_nir_options spirv_opts = {0};
+   struct spirv_to_nir_options spirv_opts = {
+      .environment = env,
+      .use_deref_buffer_array_length = env == NIR_SPIRV_OPENGL,
+   };
+
+   if (shader_stage == MESA_SHADER_KERNEL) {
+      spirv_opts.environment = NIR_SPIRV_OPENCL;
+      spirv_opts.caps.address = true;
+      spirv_opts.caps.float64 = true;
+      spirv_opts.caps.int8 = true;
+      spirv_opts.caps.int16 = true;
+      spirv_opts.caps.int64 = true;
+      spirv_opts.caps.kernel = true;
+   }
 
    nir_shader *nir = spirv_to_nir(map, word_count, NULL, 0,
-                                  MESA_SHADER_FRAGMENT, "main",
+                                  shader_stage, entry_point,
                                   &spirv_opts, NULL);
-   nir_print_shader(nir, stderr);
+
+   if (nir)
+      nir_print_shader(nir, stderr);
+   else
+      fprintf(stderr, "SPIRV to NIR compilation failed\n");
 
    glsl_type_singleton_decref();
 

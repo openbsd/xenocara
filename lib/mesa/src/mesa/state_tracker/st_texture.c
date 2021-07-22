@@ -66,7 +66,7 @@ st_texture_create(struct st_context *st,
                   GLuint bind)
 {
    struct pipe_resource pt, *newtex;
-   struct pipe_screen *screen = st->pipe->screen;
+   struct pipe_screen *screen = st->screen;
 
    assert(target < PIPE_MAX_TEXTURE_TYPES);
    assert(width0 > 0);
@@ -184,7 +184,7 @@ st_gl_texture_dims_to_pipe_dims(GLenum texture,
       break;
    default:
       assert(0 && "Unexpected texture in st_gl_texture_dims_to_pipe_dims()");
-      /* fall-through */
+      FALLTHROUGH;
    case GL_TEXTURE_3D:
    case GL_PROXY_TEXTURE_3D:
       *widthOut = widthIn;
@@ -241,13 +241,13 @@ st_texture_match_image(struct st_context *st,
  * Map a texture image and return the address for a particular 2D face/slice/
  * layer.  The stImage indicates the cube face and mipmap level.  The slice
  * of the 3D texture is passed in 'zoffset'.
- * \param usage  one of the PIPE_TRANSFER_x values
+ * \param usage  one of the PIPE_MAP_x values
  * \param x, y, w, h  the region of interest of the 2D image.
  * \return address of mapping or NULL if any error
  */
 GLubyte *
 st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
-                     enum pipe_transfer_usage usage,
+                     enum pipe_map_flags usage,
                      GLuint x, GLuint y, GLuint z,
                      GLuint w, GLuint h, GLuint d,
                      struct pipe_transfer **transfer)
@@ -268,10 +268,10 @@ st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
       level = stImage->base.Level;
 
    if (stObj->base.Immutable) {
-      level += stObj->base.MinLevel;
-      z += stObj->base.MinLayer;
+      level += stObj->base.Attrib.MinLevel;
+      z += stObj->base.Attrib.MinLayer;
       if (stObj->pt->array_size > 1)
-         d = MIN2(d, stObj->base.NumLayers);
+         d = MIN2(d, stObj->base.Attrib.NumLayers);
    }
 
    z += stImage->base.Face;
@@ -308,7 +308,7 @@ st_texture_image_unmap(struct st_context *st,
    struct pipe_transfer **transfer;
 
    if (stObj->base.Immutable)
-      slice += stObj->base.MinLayer;
+      slice += stObj->base.Attrib.MinLayer;
    transfer = &stImage->transfer[slice + stImage->base.Face].transfer;
 
    DBG("%s\n", __func__);
@@ -335,7 +335,7 @@ print_center_pixel(struct pipe_context *pipe, struct pipe_resource *src)
    region.height = 1;
    region.depth = 1;
 
-   map = pipe->transfer_map(pipe, src, 0, PIPE_TRANSFER_READ, &region, &xfer);
+   map = pipe->transfer_map(pipe, src, 0, PIPE_MAP_READ, &region, &xfer);
 
    printf("center pixel: %d %d %d %d\n", map[0], map[1], map[2], map[3]);
 

@@ -60,7 +60,7 @@ struct vmw_svga_winsys_surface
    mtx_t mutex;
    struct svga_winsys_buffer *buf; /* Current backing guest buffer */
    uint32_t mapcount; /* Number of mappers */
-   uint32_t map_mode; /* PIPE_TRANSFER_[READ|WRITE] */
+   uint32_t map_mode; /* PIPE_MAP_[READ|WRITE] */
    void *data; /* Pointer to data if mapcount != 0*/
    boolean shared; /* Shared surface. Never discard */
    uint32_t size; /* Size of backing buffer */
@@ -95,4 +95,10 @@ void
 vmw_svga_winsys_surface_unmap(struct svga_winsys_context *swc,
                               struct svga_winsys_surface *srf,
                               boolean *rebind);
+
+void
+vmw_svga_winsys_surface_init(struct svga_winsys_screen *sws,
+                             struct svga_winsys_surface *surface,
+                             unsigned surf_size, SVGA3dSurfaceAllFlags flags);
+ 
 #endif /* VMW_SURFACE_H_ */

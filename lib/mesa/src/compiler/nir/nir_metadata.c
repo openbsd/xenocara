@@ -37,6 +37,8 @@ nir_metadata_require(nir_function_impl *impl, nir_metadata required, ...)
 
    if (NEEDS_UPDATE(nir_metadata_block_index))
       nir_index_blocks(impl);
+   if (NEEDS_UPDATE(nir_metadata_instr_index))
+      nir_index_instrs(impl);
    if (NEEDS_UPDATE(nir_metadata_dominance))
       nir_calc_dominance_impl(impl);
    if (NEEDS_UPDATE(nir_metadata_live_ssa_defs))
@@ -57,6 +59,15 @@ void
 nir_metadata_preserve(nir_function_impl *impl, nir_metadata preserved)
 {
    impl->valid_metadata &= preserved;
+}
+
+void
+nir_shader_preserve_all_metadata(nir_shader *shader)
+{
+   nir_foreach_function(function, shader) {
+      if (function->impl)
+         nir_metadata_preserve(function->impl, nir_metadata_all);
+   }
 }
 
 #ifndef NDEBUG

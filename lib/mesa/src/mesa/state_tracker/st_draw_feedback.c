@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,10 +22,10 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
-#include "main/imports.h"
+
 #include "main/arrayobj.h"
 #include "main/image.h"
 #include "main/macros.h"
@@ -95,14 +95,15 @@ set_feedback_vertex_format(struct gl_context *ctx)
 void
 st_feedback_draw_vbo(struct gl_context *ctx,
                      const struct _mesa_prim *prims,
-                     GLuint nr_prims,
+                     unsigned nr_prims,
                      const struct _mesa_index_buffer *ib,
-		     GLboolean index_bounds_valid,
-                     GLuint min_index,
-                     GLuint max_index,
-                     struct gl_transform_feedback_object *tfb_vertcount,
-                     unsigned stream,
-                     struct gl_buffer_object *indirect)
+		     bool index_bounds_valid,
+                     bool primitive_restart,
+                     unsigned restart_index,
+                     unsigned min_index,
+                     unsigned max_index,
+                     unsigned num_instances,
+                     unsigned base_instance)
 {
    struct st_context *st = st_context(ctx);
    struct pipe_context *pipe = st->pipe;
@@ -111,7 +112,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
    struct st_common_variant *vp_variant;
    struct pipe_vertex_buffer vbuffers[PIPE_MAX_SHADER_INPUTS];
    unsigned num_vbuffers = 0;
-   struct pipe_vertex_element velements[PIPE_MAX_ATTRIBS];
+   struct cso_velems_state velements;
    struct pipe_transfer *vb_transfer[PIPE_MAX_ATTRIBS] = {NULL};
    struct pipe_transfer *ib_transfer = NULL;
    GLuint i;
@@ -123,18 +124,21 @@ st_feedback_draw_vbo(struct gl_context *ctx,
 
    /* Initialize pipe_draw_info. */
    info.primitive_restart = false;
+   info.take_index_buffer_ownership = false;
    info.vertices_per_patch = ctx->TessCtrlProgram.patch_vertices;
-   info.indirect = NULL;
-   info.count_from_stream_output = NULL;
    info.restart_index = 0;
+   info.view_mask = 0;
 
    st_flush_bitmap_cache(st);
    st_invalidate_readpix_cache(st);
 
    st_validate_state(st, ST_PIPELINE_RENDER);
 
-   if (!index_bounds_valid)
-      vbo_get_minmax_indices(ctx, prims, ib, &min_index, &max_index, nr_prims);
+   if (ib && !index_bounds_valid) {
+      vbo_get_minmax_indices(ctx, prims, ib, &min_index, &max_index, nr_prims,
+                             primitive_restart, restart_index);
+      index_bounds_valid = true;
+   }
 
    /* must get these after state validation! */
    struct st_common_variant_key key;
@@ -143,7 +147,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
    key.is_draw_shader = true;
 
    vp = (struct st_vertex_program *)st->vp;
-   vp_variant = st_get_vp_variant(st, st->vp, &key);
+   vp_variant = st_get_common_variant(st, st->vp, &key);
 
    /*
     * Set up the draw module's state.
@@ -161,10 +165,10 @@ st_feedback_draw_vbo(struct gl_context *ctx,
    /* Must setup these after state validation! */
    /* Setup arrays */
    bool uses_user_vertex_buffers;
-   st_setup_arrays(st, vp, vp_variant, velements, vbuffers, &num_vbuffers,
+   st_setup_arrays(st, vp, vp_variant, &velements, vbuffers, &num_vbuffers,
                    &uses_user_vertex_buffers);
    /* Setup current values as userspace arrays */
-   st_setup_current_user(st, vp, vp_variant, velements, vbuffers, &num_vbuffers);
+   st_setup_current_user(st, vp, vp_variant, &velements, vbuffers, &num_vbuffers);
 
    /* Map all buffers and tell draw about their mapping */
    for (unsigned buf = 0; buf < num_vbuffers; ++buf) {
@@ -174,20 +178,20 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          draw_set_mapped_vertex_buffer(draw, buf, vbuffer->buffer.user, ~0);
       } else {
          void *map = pipe_buffer_map(pipe, vbuffer->buffer.resource,
-                                     PIPE_TRANSFER_READ, &vb_transfer[buf]);
+                                     PIPE_MAP_READ, &vb_transfer[buf]);
          draw_set_mapped_vertex_buffer(draw, buf, map,
                                        vbuffer->buffer.resource->width0);
       }
    }
 
-   draw_set_vertex_buffers(draw, 0, num_vbuffers, vbuffers);
-   draw_set_vertex_elements(draw, vp->num_inputs, velements);
+   draw_set_vertex_buffers(draw, 0, num_vbuffers, 0, vbuffers);
+   draw_set_vertex_elements(draw, vp->num_inputs, velements.velems);
 
    unsigned start = 0;
 
    if (ib) {
       struct gl_buffer_object *bufobj = ib->obj;
-      unsigned index_size = ib->index_size;
+      unsigned index_size = 1 << ib->index_size_shift;
 
       if (index_size == 0)
          goto out_unref_vertex;
@@ -195,15 +199,16 @@ st_feedback_draw_vbo(struct gl_context *ctx,
       if (bufobj && bufobj->Name) {
          struct st_buffer_object *stobj = st_buffer_object(bufobj);
 
-         start = pointer_to_offset(ib->ptr) / index_size;
+         start = pointer_to_offset(ib->ptr) >> ib->index_size_shift;
          mapped_indices = pipe_buffer_map(pipe, stobj->buffer,
-                                          PIPE_TRANSFER_READ, &ib_transfer);
+                                          PIPE_MAP_READ, &ib_transfer);
       }
       else {
          mapped_indices = ib->ptr;
       }
 
-      info.index_size = ib->index_size;
+      info.index_size = index_size;
+      info.index_bounds_valid = index_bounds_valid;
       info.min_index = min_index;
       info.max_index = max_index;
       info.has_user_indices = true;
@@ -213,25 +218,36 @@ st_feedback_draw_vbo(struct gl_context *ctx,
                        (ubyte *) mapped_indices,
                        index_size, ~0);
 
-      if (ctx->Array._PrimitiveRestart) {
-         info.primitive_restart = true;
-         info.restart_index = _mesa_primitive_restart_index(ctx, info.index_size);
-      }
+      info.primitive_restart = primitive_restart;
+      info.restart_index = restart_index;
    } else {
       info.index_size = 0;
       info.has_user_indices = false;
    }
 
-   /* set constant buffers */
-   draw_set_mapped_constant_buffer(draw, PIPE_SHADER_VERTEX, 0,
-                                   st->state.constants[PIPE_SHADER_VERTEX].ptr,
-                                   st->state.constants[PIPE_SHADER_VERTEX].size);
+   /* set constant buffer 0 */
+   struct gl_program_parameter_list *params = st->vp->Base.Parameters;
 
+   /* Update the constants which come from fixed-function state, such as
+    * transformation matrices, fog factors, etc.
+    *
+    * It must be done here if the state tracker doesn't update state vars
+    * in gl_program_parameter_list because allow_constbuf0_as_real_buffer
+    * is set.
+    */
+   if (st->prefer_real_buffer_in_constbuf0 && params->StateFlags)
+      _mesa_load_state_parameters(st->ctx, params);
+
+   draw_set_mapped_constant_buffer(draw, PIPE_SHADER_VERTEX, 0,
+                                   params->ParameterValues,
+                                   params->NumParameterValues * 4);
+
+   /* set uniform buffers */
    const struct gl_program *prog = &vp->Base.Base;
    struct pipe_transfer *ubo_transfer[PIPE_MAX_CONSTANT_BUFFERS] = {0};
    assert(prog->info.num_ubos <= ARRAY_SIZE(ubo_transfer));
 
-   for (unsigned i = 0; i < prog->info.num_ubos; i++) {
+   for (unsigned i = 0; i < prog->sh.NumUniformBlocks; i++) {
       struct gl_buffer_binding *binding =
          &st->ctx->UniformBufferBindings[prog->sh.UniformBlocks[i]->Binding];
       struct st_buffer_object *st_obj = st_buffer_object(binding->BufferObject);
@@ -250,7 +266,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          size = MIN2(size, (unsigned) binding->Size);
 
       void *ptr = pipe_buffer_map_range(pipe, buf, offset, size,
-                                        PIPE_TRANSFER_READ, &ubo_transfer[i]);
+                                        PIPE_MAP_READ, &ubo_transfer[i]);
 
       draw_set_mapped_constant_buffer(draw, PIPE_SHADER_VERTEX, 1 + i, ptr,
                                       size);
@@ -280,7 +296,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          size = MIN2(size, (unsigned) binding->Size);
 
       void *ptr = pipe_buffer_map_range(pipe, buf, offset, size,
-                                        PIPE_TRANSFER_READ, &ssbo_transfer[i]);
+                                        PIPE_MAP_READ, &ssbo_transfer[i]);
 
       draw_set_mapped_shader_buffer(draw, PIPE_SHADER_VERTEX,
                                     i, ptr, size);
@@ -330,7 +346,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
             sv_transfer[i][j] = NULL;
             mip_addr[j] = (uintptr_t)
                           pipe_transfer_map_3d(pipe, res, j,
-                                               PIPE_TRANSFER_READ, 0, 0,
+                                               PIPE_MAP_READ, 0, 0,
                                                view->u.tex.first_layer,
                                                u_minify(res->width0, j),
                                                u_minify(res->height0, j),
@@ -363,13 +379,13 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          base_addr = (uintptr_t)
                      pipe_buffer_map_range(pipe, res, view->u.buf.offset,
                                            view->u.buf.size,
-                                           PIPE_TRANSFER_READ,
+                                           PIPE_MAP_READ,
                                            &sv_transfer[i][0]);
       }
 
       draw_set_mapped_texture(draw, PIPE_SHADER_VERTEX, i, width0,
                               res->height0, num_layers, first_level,
-                              last_level, (void*)base_addr, row_stride,
+                              last_level, 0, 0, (void*)base_addr, row_stride,
                               img_stride, mip_offset);
    }
 
@@ -396,7 +412,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          num_layers = img->u.tex.last_layer - img->u.tex.first_layer + 1;
 
          addr = pipe_transfer_map_3d(pipe, res, img->u.tex.level,
-                                     PIPE_TRANSFER_READ, 0, 0,
+                                     PIPE_MAP_READ, 0, 0,
                                      img->u.tex.first_layer,
                                      width, height, num_layers,
                                      &img_transfer[i]);
@@ -411,40 +427,44 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          height = num_layers = 1;
 
          addr = pipe_buffer_map_range(pipe, res, img->u.buf.offset,
-                                      img->u.buf.size, PIPE_TRANSFER_READ,
+                                      img->u.buf.size, PIPE_MAP_READ,
                                       &img_transfer[i]);
       }
 
       draw_set_mapped_image(draw, PIPE_SHADER_VERTEX, i, width, height,
-                            num_layers, addr, row_stride, img_stride);
+                            num_layers, addr, row_stride, img_stride, 0, 0);
    }
    draw_set_images(draw, PIPE_SHADER_VERTEX, images, prog->info.num_images);
 
+   info.start_instance = base_instance;
+   info.instance_count = num_instances;
+
    /* draw here */
    for (i = 0; i < nr_prims; i++) {
-      info.count = prims[i].count;
+      struct pipe_draw_start_count d;
 
-      if (!info.count)
+      d.count = prims[i].count;
+
+      if (!d.count)
          continue;
 
+      d.start = start + prims[i].start;
+
       info.mode = prims[i].mode;
-      info.start = start + prims[i].start;
-      info.start_instance = prims[i].base_instance;
-      info.instance_count = prims[i].num_instances;
       info.index_bias = prims[i].basevertex;
       info.drawid = prims[i].draw_id;
       if (!ib) {
-         info.min_index = info.start;
-         info.max_index = info.start + info.count - 1;
+         info.min_index = d.start;
+         info.max_index = d.start + d.count - 1;
       }
 
-      draw_vbo(draw, &info);
+      draw_vbo(draw, &info, NULL, &d, 1);
    }
 
    /* unmap images */
    for (unsigned i = 0; i < prog->info.num_images; i++) {
       if (img_transfer[i]) {
-         draw_set_mapped_image(draw, PIPE_SHADER_VERTEX, i, 0, 0, 0, NULL, 0, 0);
+         draw_set_mapped_image(draw, PIPE_SHADER_VERTEX, i, 0, 0, 0, NULL, 0, 0, 0, 0);
          pipe_transfer_unmap(pipe, img_transfer[i]);
       }
    }
@@ -499,5 +519,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
          pipe_buffer_unmap(pipe, vb_transfer[buf]);
       draw_set_mapped_vertex_buffer(draw, buf, NULL, 0);
    }
-   draw_set_vertex_buffers(draw, 0, num_vbuffers, NULL);
+   draw_set_vertex_buffers(draw, 0, 0, num_vbuffers, NULL);
+
+   draw_bind_vertex_shader(draw, NULL);
 }

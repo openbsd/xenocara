@@ -534,7 +534,7 @@ static void StreamOut(
 
     for (uint32_t primIndex = 0; primIndex < numPrims; ++primIndex)
     {
-        DWORD    slot   = 0;
+        unsigned long slot = 0;
         uint64_t soMask = soState.streamMasks[streamIndex];
 
         // Write all entries into primitive data buffer for SOS.
@@ -704,7 +704,6 @@ void ProcessStreamIdBuffer(uint32_t stream,
 {
     SWR_ASSERT(stream < MAX_SO_STREAMS);
 
-    uint32_t numInputBytes  = AlignUp(numEmittedVerts * 2, 8) / 8;
     uint32_t numOutputBytes = AlignUp(numEmittedVerts, 8) / 8;
 
     for (uint32_t b = 0; b < numOutputBytes; ++b)
@@ -1244,7 +1243,7 @@ static void AllocateTessellationData(SWR_CONTEXT* pContext)
     {
         gt_pTessellationThreadData =
             (TessellationThreadLocalData*)AlignedMalloc(sizeof(TessellationThreadLocalData), 64);
-        memset(gt_pTessellationThreadData, 0, sizeof(*gt_pTessellationThreadData));
+        memset((void*)gt_pTessellationThreadData, 0, sizeof(*gt_pTessellationThreadData));
     }
 }
 
@@ -1553,7 +1552,7 @@ static void TessellationStages(DRAW_CONTEXT* pDC,
                     // Gather data from the SVG if provided.
                     simd16scalari vViewportIdx = SIMD16::setzero_si();
                     simd16scalari vRtIdx       = SIMD16::setzero_si();
-                    SIMD16::Vec4  svgAttrib[4];
+                    SIMD16::Vec4 svgAttrib[4] = {SIMD16::setzero_ps()};
 
                     if (state.backendState.readViewportArrayIndex ||
                         state.backendState.readRenderTargetArrayIndex)
@@ -1857,9 +1856,11 @@ void ProcessDraw(SWR_CONTEXT* pContext, DRAW_CONTEXT* pDC, uint32_t workerId, vo
             vIndex = _simd16_add_epi32(_simd16_set1_epi32(work.startVertexID), vScale);
 
             fetchInfo_lo.xpIndices = pDC->pContext->pfnMakeGfxPtr(GetPrivateState(pDC), &vIndex);
-            fetchInfo_hi.xpIndices = pDC->pContext->pfnMakeGfxPtr(
-                GetPrivateState(pDC),
-                &vIndex + KNOB_SIMD_WIDTH * sizeof(int32_t)); // 1/2 of KNOB_SIMD16_WIDTH
+
+            int32_t* sysAddr = reinterpret_cast<int32_t*>(&vIndex);
+            sysAddr += KNOB_SIMD_WIDTH; // 1/2 of KNOB_SIMD16_WIDTH
+
+            fetchInfo_hi.xpIndices = pDC->pContext->pfnMakeGfxPtr(GetPrivateState(pDC), sysAddr);
         }
 
         fetchInfo_lo.CurInstance = instanceNum;

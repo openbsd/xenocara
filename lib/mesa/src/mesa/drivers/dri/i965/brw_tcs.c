@@ -98,7 +98,7 @@ brw_codegen_tcs_prog(struct brw_context *brw, struct brw_program *tcp,
    }
 
    int st_index = -1;
-   if (unlikely((INTEL_DEBUG & DEBUG_SHADER_TIME) && tep))
+   if (((INTEL_DEBUG & DEBUG_SHADER_TIME) && tep))
       st_index = brw_get_shader_time_index(brw, &tep->program, ST_TCS, true);
 
    if (unlikely(brw->perf_debug)) {
@@ -178,7 +178,7 @@ brw_tcs_populate_key(struct brw_context *brw,
       per_patch_slots |= prog->info.patch_outputs_written;
    }
 
-   if (devinfo->gen < 8 || !tcp || compiler->use_tcs_8_patch)
+   if (devinfo->ver < 8 || !tcp || compiler->use_tcs_8_patch)
       key->input_vertices = brw->ctx.TessCtrlProgram.patch_vertices;
    key->outputs_written = per_vertex_slots;
    key->patch_outputs_written = per_patch_slots;
@@ -187,7 +187,7 @@ brw_tcs_populate_key(struct brw_context *brw,
     * based on the domain the DS is expecting to tessellate.
     */
    key->tes_primitive_mode = tep->program.info.tess.primitive_mode;
-   key->quads_workaround = devinfo->gen < 9 &&
+   key->quads_workaround = devinfo->ver < 9 &&
                            tep->program.info.tess.primitive_mode == GL_QUADS &&
                            tep->program.info.tess.spacing == TESS_SPACING_EQUAL;
 
@@ -249,12 +249,12 @@ brw_tcs_populate_default_key(const struct brw_compiler *compiler,
    brw_populate_default_base_prog_key(devinfo, btcp, &key->base);
 
    /* Guess that the input and output patches have the same dimensionality. */
-   if (devinfo->gen < 8 || compiler->use_tcs_8_patch)
+   if (devinfo->ver < 8 || compiler->use_tcs_8_patch)
       key->input_vertices = prog->info.tess.tcs_vertices_out;
 
    if (tes) {
       key->tes_primitive_mode = tes->Program->info.tess.primitive_mode;
-      key->quads_workaround = devinfo->gen < 9 &&
+      key->quads_workaround = devinfo->ver < 9 &&
                               tes->Program->info.tess.primitive_mode == GL_QUADS &&
                               tes->Program->info.tess.spacing == TESS_SPACING_EQUAL;
    } else {

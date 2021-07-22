@@ -29,9 +29,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "c11/threads.h"
 #include "detect_os.h"
+#include "macros.h"
 
 #ifdef HAVE_PTHREAD
 #include <signal.h>
@@ -44,9 +46,37 @@
 #include <OS.h>
 #endif
 
+#if DETECT_OS_LINUX && !defined(ANDROID)
+#include <sched.h>
+#elif defined(_WIN32) && !defined(__CYGWIN__) && _WIN32_WINNT >= 0x0600
+#include <windows.h>
+#endif
+
 #ifdef __FreeBSD__
+/* pthread_np.h -> sys/param.h -> machine/param.h
+ * - defines ALIGN which clashes with our ALIGN
+ */
+#undef ALIGN
 #define cpu_set_t cpuset_t
 #endif
+
+/* For util_set_thread_affinity to size the mask. */
+#define UTIL_MAX_CPUS               1024  /* this should be enough */
+#define UTIL_MAX_L3_CACHES          UTIL_MAX_CPUS
+
+static inline int
+util_get_current_cpu(void)
+{
+#if DETECT_OS_LINUX && !defined(ANDROID)
+   return sched_getcpu();
+
+#elif defined(_WIN32) && !defined(__CYGWIN__) && _WIN32_WINNT >= 0x0600
+   return GetCurrentProcessorNumber();
+
+#else
+   return -1;
+#endif
+}
 
 static inline thrd_t u_thread_create(int (*routine)(void *), void *param)
 {
@@ -91,61 +121,85 @@ static inline void u_thread_setname( const char *name )
 }
 
 /**
- * An AMD Zen CPU consists of multiple modules where each module has its own L3
- * cache. Inter-thread communication such as locks and atomics between modules
- * is very expensive. It's desirable to pin a group of closely cooperating
- * threads to one group of cores sharing L3.
+ * Set thread affinity.
  *
- * \param thread        thread
- * \param L3_index      index of the L3 cache
- * \param cores_per_L3  number of CPU cores shared by one L3
+ * \param thread         Thread
+ * \param mask           Set this affinity mask
+ * \param old_mask       Previous affinity mask returned if not NULL
+ * \param num_mask_bits  Number of bits in both masks
+ * \return  true on success
  */
-static inline void
-util_pin_thread_to_L3(thrd_t thread, unsigned L3_index, unsigned cores_per_L3)
+static inline bool
+util_set_thread_affinity(thrd_t thread,
+                         const uint32_t *mask,
+                         uint32_t *old_mask,
+                         unsigned num_mask_bits)
 {
 #if defined(HAVE_PTHREAD_SETAFFINITY)
    cpu_set_t cpuset;
+
+   if (old_mask) {
+      if (pthread_getaffinity_np(thread, sizeof(cpuset), &cpuset) != 0)
+         return false;
+
+      memset(old_mask, 0, num_mask_bits / 8);
+      for (unsigned i = 0; i < num_mask_bits && i < CPU_SETSIZE; i++) {
+         if (CPU_ISSET(i, &cpuset))
+            old_mask[i / 32] |= 1u << (i % 32);
+      }
+   }
 
    CPU_ZERO(&cpuset);
-   for (unsigned i = 0; i < cores_per_L3; i++)
-      CPU_SET(L3_index * cores_per_L3 + i, &cpuset);
-   pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
+   for (unsigned i = 0; i < num_mask_bits && i < CPU_SETSIZE; i++) {
+      if (mask[i / 32] & (1u << (i % 32)))
+         CPU_SET(i, &cpuset);
+   }
+   return pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset) == 0;
+
+#elif defined(_WIN32) && !defined(__CYGWIN__)
+   DWORD_PTR m = mask[0];
+
+   if (sizeof(m) > 4 && num_mask_bits > 32)
+      m |= (uint64_t)mask[1] << 32;
+
+   m = SetThreadAffinityMask(thread, m);
+   if (!m)
+      return false;
+
+   if (old_mask) {
+      memset(old_mask, 0, num_mask_bits / 8);
+
+      old_mask[0] = m;
+#ifdef _WIN64
+      old_mask[1] = m >> 32;
+#endif
+   }
+
+   return true;
+#else
+   return false;
 #endif
 }
 
-/**
- * Return the index of L3 that the thread is pinned to. If the thread is
- * pinned to multiple L3 caches, return -1.
- *
- * \param thread        thread
- * \param cores_per_L3  number of CPU cores shared by one L3
- */
-static inline int
-util_get_L3_for_pinned_thread(thrd_t thread, unsigned cores_per_L3)
+static inline bool
+util_set_current_thread_affinity(const uint32_t *mask,
+                                 uint32_t *old_mask,
+                                 unsigned num_mask_bits)
 {
 #if defined(HAVE_PTHREAD_SETAFFINITY)
-   cpu_set_t cpuset;
+   return util_set_thread_affinity(pthread_self(), mask, old_mask,
+                                   num_mask_bits);
 
-   if (pthread_getaffinity_np(thread, sizeof(cpuset), &cpuset) == 0) {
-      int L3_index = -1;
+#elif defined(_WIN32) && !defined(__CYGWIN__)
+   /* The GetCurrentThreadId() handle is only valid within the current thread. */
+   return util_set_thread_affinity(GetCurrentThread(), mask, old_mask,
+                                   num_mask_bits);
 
-      for (unsigned i = 0; i < CPU_SETSIZE; i++) {
-         if (CPU_ISSET(i, &cpuset)) {
-            int x = i / cores_per_L3;
-
-            if (L3_index != x) {
-               if (L3_index == -1)
-                  L3_index = x;
-               else
-                  return -1; /* multiple L3s are set */
-            }
-         }
-      }
-      return L3_index;
-   }
+#else
+   return false;
 #endif
-   return -1;
 }
+
 
 /*
  * Thread statistics.
@@ -153,7 +207,7 @@ util_get_L3_for_pinned_thread(thrd_t thread, unsigned cores_per_L3)
 
 /* Return the time of a thread's CPU time clock. */
 static inline int64_t
-u_thread_get_time_nano(thrd_t thread)
+util_thread_get_time_nano(thrd_t thread)
 {
 #if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)
    struct timespec ts;
@@ -162,6 +216,22 @@ u_thread_get_time_nano(thrd_t thread)
    pthread_getcpuclockid(thread, &cid);
    clock_gettime(cid, &ts);
    return (int64_t)ts.tv_sec * 1000000000 + ts.tv_nsec;
+#else
+   return 0;
+#endif
+}
+
+/* Return the time of the current thread's CPU time clock. */
+static inline int64_t
+util_current_thread_get_time_nano(void)
+{
+#if defined(HAVE_PTHREAD)
+   return util_thread_get_time_nano(pthread_self());
+
+#elif defined(_WIN32) && !defined(__CYGWIN__)
+   /* The GetCurrentThreadId() handle is only valid within the current thread. */
+   return util_thread_get_time_nano(GetCurrentThread());
+
 #else
    return 0;
 #endif
@@ -179,7 +249,7 @@ static inline bool u_thread_is_self(thrd_t thread)
  * util_barrier
  */
 
-#if defined(HAVE_PTHREAD) && !defined(__APPLE__)
+#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)
 
 typedef pthread_barrier_t util_barrier;
 
@@ -248,5 +318,46 @@ static inline void util_barrier_wait(util_barrier *barrier)
 }
 
 #endif
+
+/*
+ * Thread-id's.
+ *
+ * thrd_current() is not portable to windows (or at least not in a desirable
+ * way), so thread_id's provide an alternative mechanism
+ */
+
+#ifdef _WIN32
+typedef DWORD thread_id;
+#else
+typedef thrd_t thread_id;
+#endif
+
+static inline thread_id
+util_get_thread_id(void)
+{
+   /*
+    * XXX: Callers of of this function assume it is a lightweight function.
+    * But unfortunately C11's thrd_current() gives no such guarantees.  In
+    * fact, it's pretty hard to have a compliant implementation of
+    * thrd_current() on Windows with such characteristics.  So for now, we
+    * side-step this mess and use Windows thread primitives directly here.
+    */
+#ifdef _WIN32
+   return GetCurrentThreadId();
+#else
+   return thrd_current();
+#endif
+}
+
+
+static inline int
+util_thread_id_equal(thread_id t1, thread_id t2)
+{
+#ifdef _WIN32
+   return t1 == t2;
+#else
+   return thrd_equal(t1, t2);
+#endif
+}
 
 #endif /* U_THREAD_H_ */

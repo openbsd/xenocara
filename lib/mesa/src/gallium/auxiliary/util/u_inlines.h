@@ -33,6 +33,7 @@
 #include "pipe/p_shader_tokens.h"
 #include "pipe/p_state.h"
 #include "pipe/p_screen.h"
+#include "util/compiler.h"
 #include "util/u_debug.h"
 #include "util/u_debug_describe.h"
 #include "util/u_debug_refcnt.h"
@@ -222,6 +223,14 @@ static inline void
 pipe_vertex_buffer_reference(struct pipe_vertex_buffer *dst,
                              const struct pipe_vertex_buffer *src)
 {
+   if (dst->buffer.resource == src->buffer.resource) {
+      /* Just copy the fields, don't touch reference counts. */
+      dst->stride = src->stride;
+      dst->is_user_buffer = src->is_user_buffer;
+      dst->buffer_offset = src->buffer_offset;
+      return;
+   }
+
    pipe_vertex_buffer_unreference(dst);
    if (!src->is_user_buffer)
       pipe_resource_reference(&dst->buffer.resource, src->buffer.resource);
@@ -321,7 +330,7 @@ pipe_buffer_create_const0(struct pipe_screen *screen,
  * Map a range of a resource.
  * \param offset  start of region, in bytes
  * \param length  size of region, in bytes
- * \param access  bitmask of PIPE_TRANSFER_x flags
+ * \param access  bitmask of PIPE_MAP_x flags
  * \param transfer  returns a transfer object
  */
 static inline void *
@@ -352,7 +361,7 @@ pipe_buffer_map_range(struct pipe_context *pipe,
 
 /**
  * Map whole resource.
- * \param access  bitmask of PIPE_TRANSFER_x flags
+ * \param access  bitmask of PIPE_MAP_x flags
  * \param transfer  returns a transfer object
  */
 static inline void *
@@ -405,7 +414,7 @@ pipe_buffer_write(struct pipe_context *pipe,
                   const void *data)
 {
    /* Don't set any other usage bits. Drivers should derive them. */
-   pipe->buffer_subdata(pipe, buf, PIPE_TRANSFER_WRITE, offset, size, data);
+   pipe->buffer_subdata(pipe, buf, PIPE_MAP_WRITE, offset, size, data);
 }
 
 /**
@@ -421,11 +430,28 @@ pipe_buffer_write_nooverlap(struct pipe_context *pipe,
                             const void *data)
 {
    pipe->buffer_subdata(pipe, buf,
-                        (PIPE_TRANSFER_WRITE |
-                         PIPE_TRANSFER_UNSYNCHRONIZED),
+                        (PIPE_MAP_WRITE |
+                         PIPE_MAP_UNSYNCHRONIZED),
                         offset, size, data);
 }
 
+/**
+ * Utility for simplifying pipe_context::resource_copy_region calls
+ */
+static inline void
+pipe_buffer_copy(struct pipe_context *pipe,
+                 struct pipe_resource *dst,
+                 struct pipe_resource *src,
+                 unsigned dst_offset,
+                 unsigned src_offset,
+                 unsigned size)
+{
+   struct pipe_box box;
+   /* only these fields are used */
+   box.x = (int)src_offset;
+   box.width = (int)size;
+   pipe->resource_copy_region(pipe, dst, 0, dst_offset, 0, 0, src, 0, &box);
+}
 
 /**
  * Create a new resource and immediately put data into it
@@ -458,7 +484,7 @@ pipe_buffer_read(struct pipe_context *pipe,
    map = (ubyte *) pipe_buffer_map_range(pipe,
                                          buf,
                                          offset, size,
-                                         PIPE_TRANSFER_READ,
+                                         PIPE_MAP_READ,
                                          &src_transfer);
    if (!map)
       return;
@@ -470,7 +496,7 @@ pipe_buffer_read(struct pipe_context *pipe,
 
 /**
  * Map a resource for reading/writing.
- * \param access  bitmask of PIPE_TRANSFER_x flags
+ * \param access  bitmask of PIPE_MAP_x flags
  */
 static inline void *
 pipe_transfer_map(struct pipe_context *context,
@@ -493,7 +519,7 @@ pipe_transfer_map(struct pipe_context *context,
 
 /**
  * Map a 3D (texture) resource for reading/writing.
- * \param access  bitmask of PIPE_TRANSFER_x flags
+ * \param access  bitmask of PIPE_MAP_x flags
  */
 static inline void *
 pipe_transfer_map_3d(struct pipe_context *context,
@@ -531,9 +557,9 @@ pipe_set_constant_buffer(struct pipe_context *pipe,
       cb.buffer_offset = 0;
       cb.buffer_size = buf->width0;
       cb.user_buffer = NULL;
-      pipe->set_constant_buffer(pipe, shader, index, &cb);
+      pipe->set_constant_buffer(pipe, shader, index, false, &cb);
    } else {
-      pipe->set_constant_buffer(pipe, shader, index, NULL);
+      pipe->set_constant_buffer(pipe, shader, index, false, NULL);
    }
 }
 
@@ -649,10 +675,16 @@ util_pipe_tex_to_tgsi_tex(enum pipe_texture_target pipe_tex_target,
 
 static inline void
 util_copy_constant_buffer(struct pipe_constant_buffer *dst,
-                          const struct pipe_constant_buffer *src)
+                          const struct pipe_constant_buffer *src,
+                          bool take_ownership)
 {
    if (src) {
-      pipe_resource_reference(&dst->buffer, src->buffer);
+      if (take_ownership) {
+         pipe_resource_reference(&dst->buffer, NULL);
+         dst->buffer = src->buffer;
+      } else {
+         pipe_resource_reference(&dst->buffer, src->buffer);
+      }
       dst->buffer_offset = src->buffer_offset;
       dst->buffer_size = src->buffer_size;
       dst->user_buffer = src->user_buffer;
@@ -708,7 +740,7 @@ util_max_layer(const struct pipe_resource *r, unsigned level)
       return u_minify(r->depth0, level) - 1;
    case PIPE_TEXTURE_CUBE:
       assert(r->array_size == 6);
-      /* fall-through */
+      FALLTHROUGH;
    case PIPE_TEXTURE_1D_ARRAY:
    case PIPE_TEXTURE_2D_ARRAY:
    case PIPE_TEXTURE_CUBE_ARRAY:
@@ -736,6 +768,52 @@ util_texrange_covers_whole_level(const struct pipe_resource *tex,
           depth == util_num_layers(tex, level);
 }
 
+static inline bool
+util_logicop_reads_dest(enum pipe_logicop op)
+{
+   switch (op) {
+   case PIPE_LOGICOP_NOR:
+   case PIPE_LOGICOP_AND_INVERTED:
+   case PIPE_LOGICOP_AND_REVERSE:
+   case PIPE_LOGICOP_INVERT:
+   case PIPE_LOGICOP_XOR:
+   case PIPE_LOGICOP_NAND:
+   case PIPE_LOGICOP_AND:
+   case PIPE_LOGICOP_EQUIV:
+   case PIPE_LOGICOP_NOOP:
+   case PIPE_LOGICOP_OR_INVERTED:
+   case PIPE_LOGICOP_OR_REVERSE:
+   case PIPE_LOGICOP_OR:
+      return true;
+   case PIPE_LOGICOP_CLEAR:
+   case PIPE_LOGICOP_COPY_INVERTED:
+   case PIPE_LOGICOP_COPY:
+   case PIPE_LOGICOP_SET:
+      return false;
+   }
+   unreachable("bad logicop");
+}
+
+static inline bool
+util_writes_stencil(const struct pipe_stencil_state *s)
+{
+   return s->enabled && s->writemask &&
+        ((s->fail_op != PIPE_STENCIL_OP_KEEP) ||
+         (s->zpass_op != PIPE_STENCIL_OP_KEEP) ||
+         (s->zfail_op != PIPE_STENCIL_OP_KEEP));
+}
+
+static inline bool
+util_writes_depth_stencil(const struct pipe_depth_stencil_alpha_state *zsa)
+{
+   if (zsa->depth_enabled && zsa->depth_writemask &&
+       (zsa->depth_func != PIPE_FUNC_NEVER))
+      return true;
+
+   return util_writes_stencil(&zsa->stencil[0]) ||
+          util_writes_stencil(&zsa->stencil[1]);
+}
+
 static inline struct pipe_context *
 pipe_create_multimedia_context(struct pipe_screen *screen)
 {
@@ -745,6 +823,11 @@ pipe_create_multimedia_context(struct pipe_screen *screen)
       flags |= PIPE_CONTEXT_COMPUTE_ONLY;
 
    return screen->context_create(screen, NULL, flags);
+}
+
+static inline unsigned util_res_sample_count(struct pipe_resource *res)
+{
+   return res->nr_samples > 0 ? res->nr_samples : 1;
 }
 
 #ifdef __cplusplus

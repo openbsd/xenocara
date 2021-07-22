@@ -29,9 +29,8 @@ blorp_nir_init_shader(nir_builder *b,
                       gl_shader_stage stage,
                       const char *name)
 {
-   nir_builder_init_simple_shader(b, mem_ctx, stage, NULL);
-   if (name != NULL)
-      b->shader->info.name = ralloc_strdup(b->shader, name);
+   *b = nir_builder_init_simple_shader(stage, NULL, "%s", name ? name : "");
+   ralloc_steal(mem_ctx, b->shader);
    if (stage == MESA_SHADER_FRAGMENT)
       b->shader->info.fs.origin_upper_left = true;
 }
@@ -42,7 +41,7 @@ blorp_nir_txf_ms_mcs(nir_builder *b, nir_ssa_def *xy_pos, nir_ssa_def *layer)
    nir_tex_instr *tex = nir_tex_instr_create(b->shader, 1);
    tex->op = nir_texop_txf_ms_mcs;
    tex->sampler_dim = GLSL_SAMPLER_DIM_MS;
-   tex->dest_type = nir_type_int;
+   tex->dest_type = nir_type_int32;
 
    nir_ssa_def *coord;
    if (layer) {
@@ -79,22 +78,20 @@ blorp_nir_mcs_is_clear_color(nir_builder *b,
       /* Empirical evidence suggests that the value returned from the
        * sampler is not always 0x3 for clear color so we need to mask it.
        */
-      return nir_ieq(b, nir_iand(b, nir_channel(b, mcs, 0),
-                                    nir_imm_int(b, 0x3)),
-                    nir_imm_int(b, 0x3));
+      return nir_ieq_imm(b, nir_iand(b, nir_channel(b, mcs, 0),
+                                        nir_imm_int(b, 0x3)),
+                            0x3);
 
    case 4:
-      return nir_ieq(b, nir_channel(b, mcs, 0), nir_imm_int(b, 0xff));
+      return nir_ieq_imm(b, nir_channel(b, mcs, 0), 0xff);
 
    case 8:
-      return nir_ieq(b, nir_channel(b, mcs, 0), nir_imm_int(b, ~0));
+      return nir_ieq_imm(b, nir_channel(b, mcs, 0), ~0);
 
    case 16:
       /* For 16x MSAA, the MCS is actually an ivec2 */
-      return nir_iand(b, nir_ieq(b, nir_channel(b, mcs, 0),
-                                    nir_imm_int(b, ~0)),
-                         nir_ieq(b, nir_channel(b, mcs, 1),
-                                    nir_imm_int(b, ~0)));
+      return nir_iand(b, nir_ieq_imm(b, nir_channel(b, mcs, 0), ~0),
+                         nir_ieq_imm(b, nir_channel(b, mcs, 1), ~0));
 
    default:
       unreachable("Invalid sample count");

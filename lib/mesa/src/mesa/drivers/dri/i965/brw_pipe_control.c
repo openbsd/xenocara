@@ -24,8 +24,8 @@
 #include "brw_context.h"
 #include "brw_defines.h"
 #include "brw_state.h"
-#include "intel_batchbuffer.h"
-#include "intel_fbo.h"
+#include "brw_batch.h"
+#include "brw_fbo.h"
 
 /**
  * Emit a PIPE_CONTROL with various flushing flags.
@@ -38,16 +38,16 @@ brw_emit_pipe_control_flush(struct brw_context *brw, uint32_t flags)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   if (devinfo->gen >= 6 &&
+   if (devinfo->ver >= 6 &&
        (flags & PIPE_CONTROL_CACHE_FLUSH_BITS) &&
        (flags & PIPE_CONTROL_CACHE_INVALIDATE_BITS)) {
       /* A pipe control command with flush and invalidate bits set
-       * simultaneously is an inherently racy operation on Gen6+ if the
+       * simultaneously is an inherently racy operation on Gfx6+ if the
        * contents of the flushed caches were intended to become visible from
        * any of the invalidated caches.  Split it in two PIPE_CONTROLs, the
        * first one should stall the pipeline to make sure that the flushed R/W
        * caches are coherent with memory once the specified R/O caches are
-       * invalidated.  On pre-Gen6 hardware the (implicit) R/O cache
+       * invalidated.  On pre-Gfx6 hardware the (implicit) R/O cache
        * invalidation seems to happen at the bottom of the pipeline together
        * with any write cache flush, so this shouldn't be a concern.  In order
        * to ensure a full stall, we do an end-of-pipe sync.
@@ -92,14 +92,14 @@ brw_emit_depth_stall_flushes(struct brw_context *brw)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   assert(devinfo->gen >= 6);
+   assert(devinfo->ver >= 6);
 
    /* Starting on BDW, these pipe controls are unnecessary.
     *
     *   WM HW will internally manage the draining pipe and flushing of the caches
     *   when this command is issued. The PIPE_CONTROL restrictions are removed.
     */
-   if (devinfo->gen >= 8)
+   if (devinfo->ver >= 8)
       return;
 
    brw_emit_pipe_control_flush(brw, PIPE_CONTROL_DEPTH_STALL);
@@ -116,15 +116,16 @@ brw_emit_depth_stall_flushes(struct brw_context *brw)
  *  to be sent before any combination of VS associated 3DSTATE."
  */
 void
-gen7_emit_vs_workaround_flush(struct brw_context *brw)
+gfx7_emit_vs_workaround_flush(struct brw_context *brw)
 {
    ASSERTED const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   assert(devinfo->gen == 7);
+   assert(devinfo->ver == 7);
    brw_emit_pipe_control_write(brw,
                                PIPE_CONTROL_WRITE_IMMEDIATE
                                | PIPE_CONTROL_DEPTH_STALL,
-                               brw->workaround_bo, 0, 0);
+                               brw->workaround_bo,
+                               brw->workaround_bo_offset, 0);
 }
 
 /**
@@ -165,7 +166,7 @@ gen7_emit_vs_workaround_flush(struct brw_context *brw)
  * so that it doesn't hang a previous 3DPRIMITIVE.
  */
 void
-gen10_emit_isp_disable(struct brw_context *brw)
+gfx7_emit_isp_disable(struct brw_context *brw)
 {
    brw->vtbl.emit_raw_pipe_control(brw,
                                    PIPE_CONTROL_STALL_AT_SCOREBOARD |
@@ -184,20 +185,21 @@ gen10_emit_isp_disable(struct brw_context *brw)
 }
 
 /**
- * Emit a PIPE_CONTROL command for gen7 with the CS Stall bit set.
+ * Emit a PIPE_CONTROL command for gfx7 with the CS Stall bit set.
  */
 void
-gen7_emit_cs_stall_flush(struct brw_context *brw)
+gfx7_emit_cs_stall_flush(struct brw_context *brw)
 {
    brw_emit_pipe_control_write(brw,
                                PIPE_CONTROL_CS_STALL
                                | PIPE_CONTROL_WRITE_IMMEDIATE,
-                               brw->workaround_bo, 0, 0);
+                               brw->workaround_bo,
+                               brw->workaround_bo_offset, 0);
 }
 
 /**
  * Emits a PIPE_CONTROL with a non-zero post-sync operation, for
- * implementing two workarounds on gen6.  From section 1.4.7.1
+ * implementing two workarounds on gfx6.  From section 1.4.7.1
  * "PIPE_CONTROL" of the Sandy Bridge PRM volume 2 part 1:
  *
  * [DevSNB-C+{W/A}] Before any depth stall flush (including those
@@ -240,7 +242,8 @@ brw_emit_post_sync_nonzero_flush(struct brw_context *brw)
                                PIPE_CONTROL_STALL_AT_SCOREBOARD);
 
    brw_emit_pipe_control_write(brw, PIPE_CONTROL_WRITE_IMMEDIATE,
-                               brw->workaround_bo, 0, 0);
+                               brw->workaround_bo,
+                               brw->workaround_bo_offset, 0);
 }
 
 /*
@@ -271,7 +274,7 @@ brw_emit_end_of_pipe_sync(struct brw_context *brw, uint32_t flags)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   if (devinfo->gen >= 6) {
+   if (devinfo->ver >= 6) {
       /* From Sandybridge PRM, volume 2, "1.7.3.1 Writing a Value to Memory":
        *
        *    "The most common action to perform upon reaching a synchronization
@@ -298,7 +301,8 @@ brw_emit_end_of_pipe_sync(struct brw_context *brw, uint32_t flags)
       brw_emit_pipe_control_write(brw,
                                   flags | PIPE_CONTROL_CS_STALL |
                                   PIPE_CONTROL_WRITE_IMMEDIATE,
-                                  brw->workaround_bo, 0, 0);
+                                  brw->workaround_bo,
+                                  brw->workaround_bo_offset, 0);
 
       if (devinfo->is_haswell) {
          /* Haswell needs addition work-arounds:
@@ -334,11 +338,11 @@ brw_emit_end_of_pipe_sync(struct brw_context *brw, uint32_t flags)
           * always re-load all of the indirect draw registers right before
           * 3DPRIMITIVE when needed anyway.
           */
-         brw_load_register_mem(brw, GEN7_3DPRIM_START_INSTANCE,
-                               brw->workaround_bo, 0);
+         brw_load_register_mem(brw, GFX7_3DPRIM_START_INSTANCE,
+                               brw->workaround_bo, brw->workaround_bo_offset);
       }
    } else {
-      /* On gen4-5, a regular pipe control seems to suffice. */
+      /* On gfx4-5, a regular pipe control seems to suffice. */
       brw_emit_pipe_control_flush(brw, flags);
    }
 }
@@ -355,7 +359,7 @@ brw_emit_mi_flush(struct brw_context *brw)
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
    int flags = PIPE_CONTROL_RENDER_TARGET_FLUSH;
-   if (devinfo->gen >= 6) {
+   if (devinfo->ver >= 6) {
       flags |= PIPE_CONTROL_INSTRUCTION_INVALIDATE |
                PIPE_CONTROL_CONST_CACHE_INVALIDATE |
                PIPE_CONTROL_DATA_CACHE_FLUSH |
@@ -367,46 +371,66 @@ brw_emit_mi_flush(struct brw_context *brw)
    brw_emit_pipe_control_flush(brw, flags);
 }
 
+static bool
+init_identifier_bo(struct brw_context *brw)
+{
+   void *bo_map;
+
+   if (!can_do_exec_capture(brw->screen))
+      return true;
+
+   bo_map = brw_bo_map(NULL, brw->workaround_bo, MAP_READ | MAP_WRITE);
+   if (!bo_map)
+      return false;
+
+   brw->workaround_bo->kflags |= EXEC_OBJECT_CAPTURE;
+   brw->workaround_bo_offset =
+      ALIGN(intel_debug_write_identifiers(bo_map, 4096, "i965") + 8, 8);
+
+   brw_bo_unmap(brw->workaround_bo);
+
+   return true;
+}
+
 int
 brw_init_pipe_control(struct brw_context *brw,
                       const struct gen_device_info *devinfo)
 {
-   switch (devinfo->gen) {
+   switch (devinfo->ver) {
    case 11:
-      brw->vtbl.emit_raw_pipe_control = gen11_emit_raw_pipe_control;
-      break;
-   case 10:
-      brw->vtbl.emit_raw_pipe_control = gen10_emit_raw_pipe_control;
+      brw->vtbl.emit_raw_pipe_control = gfx11_emit_raw_pipe_control;
       break;
    case 9:
-      brw->vtbl.emit_raw_pipe_control = gen9_emit_raw_pipe_control;
+      brw->vtbl.emit_raw_pipe_control = gfx9_emit_raw_pipe_control;
       break;
    case 8:
-      brw->vtbl.emit_raw_pipe_control = gen8_emit_raw_pipe_control;
+      brw->vtbl.emit_raw_pipe_control = gfx8_emit_raw_pipe_control;
       break;
    case 7:
       brw->vtbl.emit_raw_pipe_control =
-         devinfo->is_haswell ? gen75_emit_raw_pipe_control
-                             : gen7_emit_raw_pipe_control;
+         devinfo->is_haswell ? gfx75_emit_raw_pipe_control
+                             : gfx7_emit_raw_pipe_control;
       break;
    case 6:
-      brw->vtbl.emit_raw_pipe_control = gen6_emit_raw_pipe_control;
+      brw->vtbl.emit_raw_pipe_control = gfx6_emit_raw_pipe_control;
       break;
    case 5:
-      brw->vtbl.emit_raw_pipe_control = gen5_emit_raw_pipe_control;
+      brw->vtbl.emit_raw_pipe_control = gfx5_emit_raw_pipe_control;
       break;
    case 4:
       brw->vtbl.emit_raw_pipe_control =
-         devinfo->is_g4x ? gen45_emit_raw_pipe_control
-                         : gen4_emit_raw_pipe_control;
+         devinfo->is_g4x ? gfx45_emit_raw_pipe_control
+                         : gfx4_emit_raw_pipe_control;
       break;
+   default:
+      unreachable("Unhandled Gen.");
    }
 
-   if (devinfo->gen < 6)
+   if (devinfo->ver < 6)
       return 0;
 
    /* We can't just use brw_state_batch to get a chunk of space for
-    * the gen6 workaround because it involves actually writing to
+    * the gfx6 workaround because it involves actually writing to
     * the buffer, and the kernel doesn't let us write to the batch.
     */
    brw->workaround_bo = brw_bo_alloc(brw->bufmgr, "workaround", 4096,
@@ -414,6 +438,10 @@ brw_init_pipe_control(struct brw_context *brw,
    if (brw->workaround_bo == NULL)
       return -ENOMEM;
 
+   if (!init_identifier_bo(brw))
+      return -ENOMEM; /* Couldn't map workaround_bo?? */
+
+   brw->workaround_bo_offset = 0;
    brw->pipe_controls_since_last_cs_stall = 0;
 
    return 0;

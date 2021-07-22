@@ -253,7 +253,7 @@ brw_nir_opt_peephole_ffma_block(nir_builder *b, nir_block *block)
                         bit_size,
                         add->dest.dest.ssa.name);
       nir_ssa_def_rewrite_uses(&add->dest.dest.ssa,
-                               nir_src_for_ssa(&ffma->dest.dest.ssa));
+                               &ffma->dest.dest.ssa);
 
       nir_builder_instr_insert(b, &ffma->instr);
       assert(list_is_empty(&add->dest.dest.ssa.uses));
@@ -277,9 +277,12 @@ brw_nir_opt_peephole_ffma_impl(nir_function_impl *impl)
       progress |= brw_nir_opt_peephole_ffma_block(&builder, block);
    }
 
-   if (progress)
+   if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
+   }
 
    return progress;
 }

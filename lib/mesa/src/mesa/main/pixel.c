@@ -28,6 +28,7 @@
  * Pixel transfer functions (glPixelZoom, glPixelMap, glPixelTransfer)
  */
 
+#include "c99_math.h"
 #include "glheader.h"
 #include "bufferobj.h"
 #include "context.h"
@@ -50,7 +51,7 @@ _mesa_PixelZoom( GLfloat xfactor, GLfloat yfactor )
        ctx->Pixel.ZoomY == yfactor)
       return;
 
-   FLUSH_VERTICES(ctx, _NEW_PIXEL);
+   FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
    ctx->Pixel.ZoomX = xfactor;
    ctx->Pixel.ZoomY = yfactor;
 }
@@ -113,7 +114,7 @@ store_pixelmap(struct gl_context *ctx, GLenum map, GLsizei mapsize,
       /* special case */
       ctx->PixelMaps.StoS.Size = mapsize;
       for (i = 0; i < mapsize; i++) {
-         ctx->PixelMaps.StoS.Map[i] = (GLfloat)IROUND(values[i]);
+         ctx->PixelMaps.StoS.Map[i] = roundf(values[i]);
       }
       break;
    case GL_PIXEL_MAP_I_TO_I:
@@ -155,11 +156,10 @@ validate_pbo_access(struct gl_context *ctx,
 
    /* restore */
    _mesa_reference_buffer_object(ctx,
-                                 &ctx->DefaultPacking.BufferObj,
-                                 ctx->Shared->NullBufferObj);
+                                 &ctx->DefaultPacking.BufferObj, NULL);
 
    if (!ok) {
-      if (_mesa_is_bufferobj(pack->BufferObj)) {
+      if (pack->BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "gl[Get]PixelMap*v(out of bounds PBO access)");
       } else {
@@ -185,13 +185,13 @@ _mesa_PixelMapfv( GLenum map, GLsizei mapsize, const GLfloat *values )
 
    if (map >= GL_PIXEL_MAP_S_TO_S && map <= GL_PIXEL_MAP_I_TO_A) {
       /* test that mapsize is a power of two */
-      if (!_mesa_is_pow_two(mapsize)) {
+      if (!util_is_power_of_two_or_zero(mapsize)) {
 	 _mesa_error( ctx, GL_INVALID_VALUE, "glPixelMapfv(mapsize)" );
          return;
       }
    }
 
-   FLUSH_VERTICES(ctx, _NEW_PIXEL);
+   FLUSH_VERTICES(ctx, _NEW_PIXEL, 0);
 
    if (!validate_pbo_access(ctx, &ctx->Unpack, mapsize, GL_INTENSITY,
                             GL_FLOAT, INT_MAX, values)) {
@@ -200,7 +200,7 @@ _mesa_PixelMapfv( GLenum map, GLsizei mapsize, const GLfloat *values )
 
    values = (const GLfloat *) _mesa_map_pbo_source(ctx, &ctx->Unpack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Unpack.BufferObj)) {
+      if (ctx->Unpack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glPixelMapfv(PBO is mapped)");
       }
@@ -226,13 +226,13 @@ _mesa_PixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values )
 
    if (map >= GL_PIXEL_MAP_S_TO_S && map <= GL_PIXEL_MAP_I_TO_A) {
       /* test that mapsize is a power of two */
-      if (!_mesa_is_pow_two(mapsize)) {
+      if (!util_is_power_of_two_or_zero(mapsize)) {
 	 _mesa_error( ctx, GL_INVALID_VALUE, "glPixelMapuiv(mapsize)" );
          return;
       }
    }
 
-   FLUSH_VERTICES(ctx, _NEW_PIXEL);
+   FLUSH_VERTICES(ctx, _NEW_PIXEL, 0);
 
    if (!validate_pbo_access(ctx, &ctx->Unpack, mapsize, GL_INTENSITY,
                             GL_UNSIGNED_INT, INT_MAX, values)) {
@@ -241,7 +241,7 @@ _mesa_PixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values )
 
    values = (const GLuint *) _mesa_map_pbo_source(ctx, &ctx->Unpack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Unpack.BufferObj)) {
+      if (ctx->Unpack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glPixelMapuiv(PBO is mapped)");
       }
@@ -281,13 +281,13 @@ _mesa_PixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values )
 
    if (map >= GL_PIXEL_MAP_S_TO_S && map <= GL_PIXEL_MAP_I_TO_A) {
       /* test that mapsize is a power of two */
-      if (!_mesa_is_pow_two(mapsize)) {
+      if (!util_is_power_of_two_or_zero(mapsize)) {
 	 _mesa_error( ctx, GL_INVALID_VALUE, "glPixelMapusv(mapsize)" );
          return;
       }
    }
 
-   FLUSH_VERTICES(ctx, _NEW_PIXEL);
+   FLUSH_VERTICES(ctx, _NEW_PIXEL, 0);
 
    if (!validate_pbo_access(ctx, &ctx->Unpack, mapsize, GL_INTENSITY,
                             GL_UNSIGNED_SHORT, INT_MAX, values)) {
@@ -296,7 +296,7 @@ _mesa_PixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values )
 
    values = (const GLushort *) _mesa_map_pbo_source(ctx, &ctx->Unpack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Unpack.BufferObj)) {
+      if (ctx->Unpack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glPixelMapusv(PBO is mapped)");
       }
@@ -345,7 +345,7 @@ _mesa_GetnPixelMapfvARB( GLenum map, GLsizei bufSize, GLfloat *values )
 
    values = (GLfloat *) _mesa_map_pbo_dest(ctx, &ctx->Pack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
+      if (ctx->Pack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetPixelMapfv(PBO is mapped)");
       }
@@ -394,7 +394,7 @@ _mesa_GetnPixelMapuivARB( GLenum map, GLsizei bufSize, GLuint *values )
 
    values = (GLuint *) _mesa_map_pbo_dest(ctx, &ctx->Pack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
+      if (ctx->Pack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetPixelMapuiv(PBO is mapped)");
       }
@@ -443,7 +443,7 @@ _mesa_GetnPixelMapusvARB( GLenum map, GLsizei bufSize, GLushort *values )
 
    values = (GLushort *) _mesa_map_pbo_dest(ctx, &ctx->Pack, values);
    if (!values) {
-      if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
+      if (ctx->Pack.BufferObj) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetPixelMapusv(PBO is mapped)");
       }
@@ -497,85 +497,85 @@ _mesa_PixelTransferf( GLenum pname, GLfloat param )
       case GL_MAP_COLOR:
          if (ctx->Pixel.MapColorFlag == (param ? GL_TRUE : GL_FALSE))
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.MapColorFlag = param ? GL_TRUE : GL_FALSE;
 	 break;
       case GL_MAP_STENCIL:
          if (ctx->Pixel.MapStencilFlag == (param ? GL_TRUE : GL_FALSE))
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.MapStencilFlag = param ? GL_TRUE : GL_FALSE;
 	 break;
       case GL_INDEX_SHIFT:
          if (ctx->Pixel.IndexShift == (GLint) param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.IndexShift = (GLint) param;
 	 break;
       case GL_INDEX_OFFSET:
          if (ctx->Pixel.IndexOffset == (GLint) param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.IndexOffset = (GLint) param;
 	 break;
       case GL_RED_SCALE:
          if (ctx->Pixel.RedScale == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.RedScale = param;
 	 break;
       case GL_RED_BIAS:
          if (ctx->Pixel.RedBias == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.RedBias = param;
 	 break;
       case GL_GREEN_SCALE:
          if (ctx->Pixel.GreenScale == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.GreenScale = param;
 	 break;
       case GL_GREEN_BIAS:
          if (ctx->Pixel.GreenBias == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.GreenBias = param;
 	 break;
       case GL_BLUE_SCALE:
          if (ctx->Pixel.BlueScale == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.BlueScale = param;
 	 break;
       case GL_BLUE_BIAS:
          if (ctx->Pixel.BlueBias == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.BlueBias = param;
 	 break;
       case GL_ALPHA_SCALE:
          if (ctx->Pixel.AlphaScale == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.AlphaScale = param;
 	 break;
       case GL_ALPHA_BIAS:
          if (ctx->Pixel.AlphaBias == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.AlphaBias = param;
 	 break;
       case GL_DEPTH_SCALE:
          if (ctx->Pixel.DepthScale == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.DepthScale = param;
 	 break;
       case GL_DEPTH_BIAS:
          if (ctx->Pixel.DepthBias == param)
 	    return;
-	 FLUSH_VERTICES(ctx, _NEW_PIXEL);
+	 FLUSH_VERTICES(ctx, _NEW_PIXEL, GL_PIXEL_MODE_BIT);
          ctx->Pixel.DepthBias = param;
 	 break;
       default:

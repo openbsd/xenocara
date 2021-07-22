@@ -57,15 +57,8 @@ blend_depends_on_dst_color(struct vc4_compile *c)
 static nir_ssa_def *
 vc4_nir_get_dst_color(nir_builder *b, int sample)
 {
-        nir_intrinsic_instr *load =
-                nir_intrinsic_instr_create(b->shader,
-                                           nir_intrinsic_load_input);
-        load->num_components = 1;
-        nir_intrinsic_set_base(load, VC4_NIR_TLB_COLOR_READ_INPUT + sample);
-        load->src[0] = nir_src_for_ssa(nir_imm_int(b, 0));
-        nir_ssa_dest_init(&load->instr, &load->dest, 1, 32, NULL);
-        nir_builder_instr_insert(b, &load->instr);
-        return &load->dest.ssa;
+        return nir_load_input(b, 1, 32, nir_imm_int(b, 0),
+                              .base = VC4_NIR_TLB_COLOR_READ_INPUT + sample);
 }
 
 static nir_ssa_def *
@@ -100,7 +93,7 @@ vc4_blend_channel_f(nir_builder *b,
                 return nir_load_system_value(b,
                                              nir_intrinsic_load_blend_const_color_r_float +
                                              channel,
-                                             0, 32);
+                                             0, 1, 32);
         case PIPE_BLENDFACTOR_CONST_ALPHA:
                 return nir_load_blend_const_color_a_float(b);
         case PIPE_BLENDFACTOR_ZERO:
@@ -118,7 +111,7 @@ vc4_blend_channel_f(nir_builder *b,
                                 nir_load_system_value(b,
                                                       nir_intrinsic_load_blend_const_color_r_float +
                                                       channel,
-                                                      0, 32));
+                                                      0, 1, 32));
         case PIPE_BLENDFACTOR_INV_CONST_ALPHA:
                 return nir_fsub(b, nir_imm_float(b, 1.0),
                                 nir_load_blend_const_color_a_float(b));
@@ -413,7 +406,7 @@ vc4_logicop(nir_builder *b, int logicop_func,
                 return nir_imm_int(b, ~0);
         default:
                 fprintf(stderr, "Unknown logic op %d\n", logicop_func);
-                /* FALLTHROUGH */
+                FALLTHROUGH;
         case PIPE_LOGICOP_COPY:
                 return src;
         }
@@ -512,17 +505,6 @@ vc4_nir_blend_pipeline(struct vc4_compile *c, nir_builder *b, nir_ssa_def *src,
                                 nir_imm_int(b, ~colormask)));
 }
 
-static int
-vc4_nir_next_output_driver_location(nir_shader *s)
-{
-        int maxloc = -1;
-
-        nir_foreach_variable(var, &s->outputs)
-                maxloc = MAX2(maxloc, (int)var->data.driver_location);
-
-        return maxloc + 1;
-}
-
 static void
 vc4_nir_store_sample_mask(struct vc4_compile *c, nir_builder *b,
                           nir_ssa_def *val)
@@ -530,18 +512,11 @@ vc4_nir_store_sample_mask(struct vc4_compile *c, nir_builder *b,
         nir_variable *sample_mask = nir_variable_create(c->s, nir_var_shader_out,
                                                         glsl_uint_type(),
                                                         "sample_mask");
-        sample_mask->data.driver_location =
-                vc4_nir_next_output_driver_location(c->s);
+        sample_mask->data.driver_location = c->s->num_outputs++;
         sample_mask->data.location = FRAG_RESULT_SAMPLE_MASK;
 
-        nir_intrinsic_instr *intr =
-                nir_intrinsic_instr_create(c->s, nir_intrinsic_store_output);
-        intr->num_components = 1;
-        nir_intrinsic_set_base(intr, sample_mask->data.driver_location);
-
-        intr->src[0] = nir_src_for_ssa(val);
-        intr->src[1] = nir_src_for_ssa(nir_imm_int(b, 0));
-        nir_builder_instr_insert(b, &intr->instr);
+        nir_store_output(b, val, nir_imm_int(b, 0),
+                         .base = sample_mask->data.driver_location);
 }
 
 static void
@@ -601,7 +576,7 @@ vc4_nir_lower_blend_block(nir_block *block, struct vc4_compile *c)
                         continue;
 
                 nir_variable *output_var = NULL;
-                nir_foreach_variable(var, &c->s->outputs) {
+                nir_foreach_shader_out_variable(var, c->s) {
                         if (var->data.driver_location ==
                             nir_intrinsic_base(intr)) {
                                 output_var = var;

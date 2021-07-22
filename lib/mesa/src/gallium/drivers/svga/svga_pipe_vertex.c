@@ -43,13 +43,17 @@
 static void
 svga_set_vertex_buffers(struct pipe_context *pipe,
                         unsigned start_slot, unsigned count,
+                        unsigned unbind_num_trailing_slots,
+                        bool take_ownership,
                         const struct pipe_vertex_buffer *buffers)
 {
    struct svga_context *svga = svga_context(pipe);
 
    util_set_vertex_buffers_count(svga->curr.vb,
                                  &svga->curr.num_vertex_buffers,
-                                 buffers, start_slot, count);
+                                 buffers, start_slot, count,
+                                 unbind_num_trailing_slots,
+                                 take_ownership);
 
    svga->dirty |= SVGA_NEW_VBUFFER;
 }
@@ -120,7 +124,6 @@ define_input_element_object(struct svga_context *svga,
                             struct svga_velems_state *velems)
 {
    SVGA3dInputElementDesc elements[PIPE_MAX_ATTRIBS];
-   enum pipe_error ret;
    unsigned i;
 
    assert(velems->count <= PIPE_MAX_ATTRIBS);
@@ -186,14 +189,8 @@ define_input_element_object(struct svga_context *svga,
 
    velems->id = util_bitmask_add(svga->input_element_object_id_bm);
 
-   ret = SVGA3D_vgpu10_DefineElementLayout(svga->swc, velems->count,
-                                           velems->id, elements);
-   if (ret != PIPE_OK) {
-      svga_context_flush(svga, NULL);
-      ret = SVGA3D_vgpu10_DefineElementLayout(svga->swc, velems->count,
-                                              velems->id, elements);
-      assert(ret == PIPE_OK);
-   }
+   SVGA_RETRY(svga, SVGA3D_vgpu10_DefineElementLayout(svga->swc, velems->count,
+                                                      velems->id, elements));
 }
 
 
@@ -293,16 +290,10 @@ svga_delete_vertex_elements_state(struct pipe_context *pipe, void *state)
    struct svga_velems_state *velems = (struct svga_velems_state *) state;
 
    if (svga_have_vgpu10(svga)) {
-      enum pipe_error ret;
-
       svga_hwtnl_flush_retry(svga);
 
-      ret = SVGA3D_vgpu10_DestroyElementLayout(svga->swc, velems->id);
-      if (ret != PIPE_OK) {
-         svga_context_flush(svga, NULL);
-         ret = SVGA3D_vgpu10_DestroyElementLayout(svga->swc, velems->id);
-         assert(ret == PIPE_OK);
-      }
+      SVGA_RETRY(svga, SVGA3D_vgpu10_DestroyElementLayout(svga->swc,
+                                                          velems->id));
 
       if (velems->id == svga->state.hw_draw.layout_id)
          svga->state.hw_draw.layout_id = SVGA3D_INVALID_ID;

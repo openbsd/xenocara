@@ -91,6 +91,11 @@ nir_lower_to_source_mods_block(nir_block *block,
             continue;
          }
 
+         if (nir_src_bit_size(alu->src[i].src) == 64 &&
+             !(options & nir_lower_64bit_source_mods)) {
+            continue;
+         }
+
          /* We can only do a rewrite if the source we are copying is SSA.
           * Otherwise, moving the read might invalidly reorder reads/writes
           * on a register.
@@ -122,8 +127,7 @@ nir_lower_to_source_mods_block(nir_block *block,
             alu->src[i].swizzle[j] = parent->src[0].swizzle[alu->src[i].swizzle[j]];
          }
 
-         if (list_is_empty(&parent->dest.dest.ssa.uses) &&
-             list_is_empty(&parent->dest.dest.ssa.if_uses))
+         if (nir_ssa_def_is_unused(&parent->dest.dest.ssa))
             nir_instr_remove(&parent->instr);
 
          progress = true;
@@ -135,6 +139,11 @@ nir_lower_to_source_mods_block(nir_block *block,
 
       if (!alu->dest.dest.is_ssa)
          continue;
+
+      if (nir_dest_bit_size(alu->dest.dest) == 64 &&
+          !(options & nir_lower_64bit_source_mods)) {
+         continue;
+      }
 
       /* We can only saturate float destinations */
       if (nir_alu_type_get_base_type(nir_op_infos[alu->op].output_type) !=

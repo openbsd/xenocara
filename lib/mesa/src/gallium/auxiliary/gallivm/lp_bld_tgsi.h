@@ -171,6 +171,7 @@ struct lp_bld_tgsi_system_values {
    LLVMValueRef vertex_id_nobase;
    LLVMValueRef prim_id;
    LLVMValueRef basevertex;
+   LLVMValueRef firstvertex;
    LLVMValueRef invocation_id;
    LLVMValueRef draw_id;
    LLVMValueRef thread_id;
@@ -183,6 +184,12 @@ struct lp_bld_tgsi_system_values {
    LLVMValueRef tess_outer;
    LLVMValueRef tess_inner;
    LLVMValueRef vertices_in;
+   LLVMValueRef sample_id;
+   LLVMValueRef sample_pos;
+   LLVMValueRef sample_mask_in;
+   LLVMValueRef view_index;
+   LLVMValueRef subgroup_id;
+   LLVMValueRef num_subgroups;
 };
 
 
@@ -241,6 +248,20 @@ struct lp_build_image_soa
                        const struct lp_sampler_size_query_params *params);
 };
 
+struct lp_build_fs_iface;
+struct lp_build_fs_iface {
+   LLVMValueRef (*interp_fn)(const struct lp_build_fs_iface *iface,
+                             struct lp_build_context *bld,
+                             unsigned attrib, unsigned chan,
+                             bool centroid, bool sample,
+                             LLVMValueRef indir_index, LLVMValueRef offsets[2]);
+
+   void (*fb_fetch)(const struct lp_build_fs_iface *iface,
+                    struct lp_build_context *bld,
+                    unsigned cbuf,
+                    LLVMValueRef result[4]);
+};
+
 void
 lp_build_tgsi_info(const struct tgsi_token *tokens,
                    struct lp_tgsi_info *info);
@@ -266,6 +287,8 @@ struct lp_build_tgsi_params {
    LLVMValueRef shared_ptr;
    const struct lp_build_coro_suspend_info *coro;
    LLVMValueRef kernel_args;
+   const struct lp_build_fs_iface *fs_iface;
+   unsigned gs_vertex_streams;
 };
 
 void
@@ -415,16 +438,16 @@ struct lp_build_gs_iface
                        struct lp_build_context * bld,
                        LLVMValueRef (*outputs)[4],
                        LLVMValueRef emitted_vertices_vec,
-                       LLVMValueRef stream_id);
+                       LLVMValueRef mask_vec, LLVMValueRef stream_id);
    void (*end_primitive)(const struct lp_build_gs_iface *gs_iface,
                          struct lp_build_context * bld,
                          LLVMValueRef total_emitted_vertices_vec,
                          LLVMValueRef verts_per_prim_vec,
                          LLVMValueRef emitted_prims_vec,
-                         LLVMValueRef mask_vec);
+                         LLVMValueRef mask_vec, unsigned stream);
    void (*gs_epilogue)(const struct lp_build_gs_iface *gs_iface,
                        LLVMValueRef total_emitted_vertices_vec,
-                       LLVMValueRef emitted_prims_vec);
+                       LLVMValueRef emitted_prims_vec, unsigned stream);
 };
 
 struct lp_build_tcs_iface
@@ -440,8 +463,10 @@ struct lp_build_tcs_iface
                              LLVMValueRef vertex_index,
                              boolean is_aindex_indirect,
                              LLVMValueRef attrib_index,
+                             boolean is_sindex_indirect,
                              LLVMValueRef swizzle_index,
-                             LLVMValueRef value);
+                             LLVMValueRef value,
+                             LLVMValueRef mask_vec);
 
    LLVMValueRef (*emit_fetch_input)(const struct lp_build_tcs_iface *tcs_iface,
                                     struct lp_build_context * bld,
@@ -449,6 +474,7 @@ struct lp_build_tcs_iface
                                     LLVMValueRef vertex_index,
                                     boolean is_aindex_indirect,
                                     LLVMValueRef attrib_index,
+                                    boolean is_sindex_indirect,
                                     LLVMValueRef swizzle_index);
 
    LLVMValueRef (*emit_fetch_output)(const struct lp_build_tcs_iface *tcs_iface,
@@ -457,6 +483,7 @@ struct lp_build_tcs_iface
                                     LLVMValueRef vertex_index,
                                     boolean is_aindex_indirect,
                                     LLVMValueRef attrib_index,
+                                    boolean is_sindex_indirect,
                                     LLVMValueRef swizzle_index,
                                     uint32_t name);
 };
@@ -469,6 +496,7 @@ struct lp_build_tes_iface
                                       LLVMValueRef vertex_index,
                                       boolean is_aindex_indirect,
                                       LLVMValueRef attrib_index,
+                                      boolean is_sindex_indirect,
                                       LLVMValueRef swizzle_index);
 
    LLVMValueRef (*fetch_patch_input)(const struct lp_build_tes_iface *tes_iface,

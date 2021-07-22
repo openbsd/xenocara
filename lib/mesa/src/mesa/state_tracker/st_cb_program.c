@@ -43,10 +43,9 @@
 #include "st_context.h"
 #include "st_debug.h"
 #include "st_program.h"
-#include "st_mesa_to_tgsi.h"
 #include "st_cb_program.h"
 #include "st_glsl_to_ir.h"
-#include "st_atifs_to_tgsi.h"
+#include "st_atifs_to_nir.h"
 #include "st_util.h"
 
 
@@ -55,26 +54,21 @@
  * fragment program.
  */
 static struct gl_program *
-st_new_program(struct gl_context *ctx, GLenum target, GLuint id,
+st_new_program(struct gl_context *ctx, gl_shader_stage stage, GLuint id,
                bool is_arb_asm)
 {
-   switch (target) {
-   case GL_VERTEX_PROGRAM_ARB: {
-      struct st_vertex_program *prog = rzalloc(NULL, struct st_vertex_program);
-      return _mesa_init_gl_program(&prog->Base.Base, target, id, is_arb_asm);
-   }
-   case GL_TESS_CONTROL_PROGRAM_NV:
-   case GL_TESS_EVALUATION_PROGRAM_NV:
-   case GL_GEOMETRY_PROGRAM_NV:
-   case GL_FRAGMENT_PROGRAM_ARB:
-   case GL_COMPUTE_PROGRAM_NV: {
-      struct st_program *prog = rzalloc(NULL, struct st_program);
-      return _mesa_init_gl_program(&prog->Base, target, id, is_arb_asm);
-   }
+   struct st_program *prog;
+
+   switch (stage) {
+   case MESA_SHADER_VERTEX:
+      prog = (struct st_program*)rzalloc(NULL, struct st_vertex_program);
+      break;
    default:
-      assert(0);
-      return NULL;
+      prog = rzalloc(NULL, struct st_program);
+      break;
    }
+
+   return _mesa_init_gl_program(&prog->Base, stage, id, is_arb_asm);
 }
 
 
@@ -91,6 +85,8 @@ st_delete_program(struct gl_context *ctx, struct gl_program *prog)
 
    if (stp->glsl_to_tgsi)
       free_glsl_to_tgsi_visitor(stp->glsl_to_tgsi);
+
+   free(stp->serialized_nir);
 
    /* delete base class */
    _mesa_delete_program( ctx, prog );
@@ -144,7 +140,7 @@ st_program_string_notify( struct gl_context *ctx,
 static struct gl_program *
 st_new_ati_fs(struct gl_context *ctx, struct ati_fragment_shader *curProg)
 {
-   struct gl_program *prog = ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB,
+   struct gl_program *prog = ctx->Driver.NewProgram(ctx, MESA_SHADER_FRAGMENT,
          curProg->Id, true);
    struct st_program *stfp = (struct st_program *)prog;
    stfp->ati_fs = curProg;
@@ -154,7 +150,7 @@ st_new_ati_fs(struct gl_context *ctx, struct ati_fragment_shader *curProg)
 static void
 st_max_shader_compiler_threads(struct gl_context *ctx, unsigned count)
 {
-   struct pipe_screen *screen = st_context(ctx)->pipe->screen;
+   struct pipe_screen *screen = st_context(ctx)->screen;
 
    if (screen->set_max_shader_compiler_threads)
       screen->set_max_shader_compiler_threads(screen, count);
@@ -164,7 +160,7 @@ static bool
 st_get_shader_program_completion_status(struct gl_context *ctx,
                                         struct gl_shader_program *shprog)
 {
-   struct pipe_screen *screen = st_context(ctx)->pipe->screen;
+   struct pipe_screen *screen = st_context(ctx)->screen;
 
    if (!screen->is_parallel_shader_compilation_finished)
       return true;

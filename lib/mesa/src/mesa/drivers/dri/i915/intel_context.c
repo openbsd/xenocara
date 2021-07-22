@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 
@@ -31,7 +31,6 @@
 #include "main/extensions.h"
 #include "main/fbobject.h"
 #include "main/framebuffer.h"
-#include "main/imports.h"
 #include "main/points.h"
 #include "main/renderbuffer.h"
 
@@ -58,6 +57,7 @@
 #include "utils.h"
 #include "util/debug.h"
 #include "util/ralloc.h"
+#include "util/u_memory.h"
 
 int INTEL_DEBUG = (0);
 
@@ -111,7 +111,7 @@ intel_flush_front(struct gl_context *ctx)
     __DRIscreen *const screen = intel->intelScreen->driScrnPriv;
 
     if (intel->front_buffer_dirty && _mesa_is_winsys_fbo(ctx->DrawBuffer)) {
-      if (flushFront(screen) && 
+      if (flushFront(screen) &&
           driDrawable &&
           driDrawable->loaderPrivate) {
          flushFront(screen)(driDrawable, driDrawable->loaderPrivate);
@@ -446,7 +446,7 @@ intelInitContext(struct intel_context *intel,
 	  0, sizeof(ctx->TextureFormatSupported));
 
    driParseConfigFiles(&intel->optionCache, &intelScreen->optionCache,
-                       sPriv->myNum, "i915", NULL, NULL, 0);
+                       sPriv->myNum, "i915", NULL, NULL, 0, NULL, 0);
    intel->maxBatchSize = 4096;
 
    /* Estimate the size of the mappable aperture into the GTT.  There's an
@@ -499,7 +499,7 @@ intelInitContext(struct intel_context *intel,
    ctx->Const.MaxRenderbufferSize = 2048;
 
    _swrast_CreateContext(ctx);
-   _vbo_CreateContext(ctx);
+   _vbo_CreateContext(ctx, false);
    if (ctx->swrast_context) {
       _tnl_CreateContext(ctx);
       _swsetup_CreateContext(ctx);
@@ -599,11 +599,9 @@ intelDestroyContext(__DRIcontext * driContextPriv)
       driDestroyOptionCache(&intel->optionCache);
 
       /* free the Mesa context */
-      _mesa_free_context_data(&intel->ctx);
+      _mesa_free_context_data(&intel->ctx, true);
 
-      _math_matrix_dtr(&intel->ViewportMatrix);
-
-      ralloc_free(intel);
+      align_free(intel);
       driContextPriv->driverPrivate = NULL;
    }
 }
@@ -632,7 +630,7 @@ intelMakeCurrent(__DRIcontext * driContextPriv,
    if (driContextPriv) {
       struct gl_context *ctx = &intel->ctx;
       struct gl_framebuffer *fb, *readFb;
-      
+
       if (driDrawPriv == NULL && driReadPriv == NULL) {
 	 fb = _mesa_get_incomplete_framebuffer();
 	 readFb = _mesa_get_incomplete_framebuffer();
@@ -685,7 +683,7 @@ intel_query_dri2_buffers(struct intel_context *intel,
    __DRIscreen *screen = intel->intelScreen->driScrnPriv;
    struct gl_framebuffer *fb = drawable->driverPrivate;
    int i = 0;
-   unsigned attachments[8];
+   unsigned attachments[__DRI_BUFFER_COUNT];
 
    struct intel_renderbuffer *front_rb;
    struct intel_renderbuffer *back_rb;

@@ -24,6 +24,10 @@
 #ifndef BUILD_ID_H
 #define BUILD_ID_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(HAVE_DL_ITERATE_PHDR) && defined(HAVE_LD_BUILD_ID)
 
 #include <stdint.h>
@@ -41,4 +45,7 @@ build_id_data(const struct build_id_note *note);
 
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* BUILD_ID_H */

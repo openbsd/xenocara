@@ -37,7 +37,13 @@ struct etna_zsa_state {
    uint32_t PE_ALPHA_OP;
    uint32_t PE_STENCIL_OP[2];
    uint32_t PE_STENCIL_CONFIG[2];
+   uint32_t PE_STENCIL_CONFIG_EXT;
    uint32_t PE_STENCIL_CONFIG_EXT2[2];
+   uint32_t RA_DEPTH_CONFIG;
+   unsigned z_test_enabled:1;
+   unsigned z_write_enabled:1;
+   unsigned stencil_enabled:1;
+   unsigned stencil_modified:1;
 
 };
 

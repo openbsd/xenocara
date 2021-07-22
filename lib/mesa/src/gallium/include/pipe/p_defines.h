@@ -210,6 +210,12 @@ enum pipe_tex_compare {
    PIPE_TEX_COMPARE_R_TO_TEXTURE,
 };
 
+enum pipe_tex_reduction_mode {
+   PIPE_TEX_REDUCTION_WEIGHTED_AVERAGE,
+   PIPE_TEX_REDUCTION_MIN,
+   PIPE_TEX_REDUCTION_MAX,
+};
+
 /**
  * Clear buffer bits
  */
@@ -232,49 +238,49 @@ enum pipe_tex_compare {
 #define PIPE_CLEAR_DEPTHSTENCIL (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)
 
 /**
- * Transfer object usage flags
+ * CPU access map flags
  */
-enum pipe_transfer_usage
+enum pipe_map_flags
 {
    /**
     * Resource contents read back (or accessed directly) at transfer
     * create time.
     */
-   PIPE_TRANSFER_READ = (1 << 0),
+   PIPE_MAP_READ = (1 << 0),
    
    /**
     * Resource contents will be written back at transfer_unmap
     * time (or modified as a result of being accessed directly).
     */
-   PIPE_TRANSFER_WRITE = (1 << 1),
+   PIPE_MAP_WRITE = (1 << 1),
 
    /**
     * Read/modify/write
     */
-   PIPE_TRANSFER_READ_WRITE = PIPE_TRANSFER_READ | PIPE_TRANSFER_WRITE,
+   PIPE_MAP_READ_WRITE = PIPE_MAP_READ | PIPE_MAP_WRITE,
 
    /** 
     * The transfer should map the texture storage directly. The driver may
-    * return NULL if that isn't possible, and the state tracker needs to cope
+    * return NULL if that isn't possible, and the gallium frontend needs to cope
     * with that and use an alternative path without this flag.
     *
-    * E.g. the state tracker could have a simpler path which maps textures and
+    * E.g. the gallium frontend could have a simpler path which maps textures and
     * does read/modify/write cycles on them directly, and a more complicated
     * path which uses minimal read and write transfers.
     *
     * This flag supresses implicit "DISCARD" for buffer_subdata.
     */
-   PIPE_TRANSFER_MAP_DIRECTLY = (1 << 2),
+   PIPE_MAP_DIRECTLY = (1 << 2),
 
    /**
     * Discards the memory within the mapped region.
     *
-    * It should not be used with PIPE_TRANSFER_READ.
+    * It should not be used with PIPE_MAP_READ.
     *
     * See also:
     * - OpenGL's ARB_map_buffer_range extension, MAP_INVALIDATE_RANGE_BIT flag.
     */
-   PIPE_TRANSFER_DISCARD_RANGE = (1 << 8),
+   PIPE_MAP_DISCARD_RANGE = (1 << 8),
 
    /**
     * Fail if the resource cannot be mapped immediately.
@@ -284,36 +290,36 @@ enum pipe_transfer_usage
     * - Mesa's MESA_MAP_NOWAIT_BIT flag.
     * - WDDM's D3DDDICB_LOCKFLAGS.DonotWait flag.
     */
-   PIPE_TRANSFER_DONTBLOCK = (1 << 9),
+   PIPE_MAP_DONTBLOCK = (1 << 9),
 
    /**
     * Do not attempt to synchronize pending operations on the resource when mapping.
     *
-    * It should not be used with PIPE_TRANSFER_READ.
+    * It should not be used with PIPE_MAP_READ.
     *
     * See also:
     * - OpenGL's ARB_map_buffer_range extension, MAP_UNSYNCHRONIZED_BIT flag.
     * - Direct3D's D3DLOCK_NOOVERWRITE flag.
     * - WDDM's D3DDDICB_LOCKFLAGS.IgnoreSync flag.
     */
-   PIPE_TRANSFER_UNSYNCHRONIZED = (1 << 10),
+   PIPE_MAP_UNSYNCHRONIZED = (1 << 10),
 
    /**
     * Written ranges will be notified later with
     * pipe_context::transfer_flush_region.
     *
-    * It should not be used with PIPE_TRANSFER_READ.
+    * It should not be used with PIPE_MAP_READ.
     *
     * See also:
     * - pipe_context::transfer_flush_region
     * - OpenGL's ARB_map_buffer_range extension, MAP_FLUSH_EXPLICIT_BIT flag.
     */
-   PIPE_TRANSFER_FLUSH_EXPLICIT = (1 << 11),
+   PIPE_MAP_FLUSH_EXPLICIT = (1 << 11),
 
    /**
     * Discards all memory backing the resource.
     *
-    * It should not be used with PIPE_TRANSFER_READ.
+    * It should not be used with PIPE_MAP_READ.
     *
     * This is equivalent to:
     * - OpenGL's ARB_map_buffer_range extension, MAP_INVALIDATE_BUFFER_BIT
@@ -323,7 +329,7 @@ enum pipe_transfer_usage
     * - D3D10 DDI's D3D10_DDI_MAP_WRITE_DISCARD flag
     * - D3D10's D3D10_MAP_WRITE_DISCARD flag.
     */
-   PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE = (1 << 12),
+   PIPE_MAP_DISCARD_WHOLE_RESOURCE = (1 << 12),
 
    /**
     * Allows the resource to be used for rendering while mapped.
@@ -334,7 +340,7 @@ enum pipe_transfer_usage
     * If COHERENT is not set, memory_barrier(PIPE_BARRIER_MAPPED_BUFFER)
     * must be called to ensure the device can see what the CPU has written.
     */
-   PIPE_TRANSFER_PERSISTENT = (1 << 13),
+   PIPE_MAP_PERSISTENT = (1 << 13),
 
    /**
     * If PERSISTENT is set, this ensures any writes done by the device are
@@ -343,13 +349,35 @@ enum pipe_transfer_usage
     * PIPE_RESOURCE_FLAG_MAP_COHERENT must be set when creating
     * the resource.
     */
-   PIPE_TRANSFER_COHERENT = (1 << 14),
+   PIPE_MAP_COHERENT = (1 << 14),
+
+   /**
+    * Map a resource in a thread-safe manner, because the calling thread can
+    * be any thread. It can only be used if both WRITE and UNSYNCHRONIZED are
+    * set.
+    */
+   PIPE_MAP_THREAD_SAFE = 1 << 15,
+
+   /**
+    * Map only the depth aspect of a resource
+    */
+   PIPE_MAP_DEPTH_ONLY = 1 << 16,
+
+   /**
+    * Map only the stencil aspect of a resource
+    */
+   PIPE_MAP_STENCIL_ONLY = 1 << 17,
+
+   /**
+    * Mapping will be used only once (never remapped).
+    */
+   PIPE_MAP_ONCE = 1 << 18,
 
    /**
     * This and higher bits are reserved for private use by drivers. Drivers
-    * should use this as (PIPE_TRANSFER_DRV_PRV << i).
+    * should use this as (PIPE_MAP_DRV_PRV << i).
     */
-   PIPE_TRANSFER_DRV_PRV = (1 << 24)
+   PIPE_MAP_DRV_PRV = (1 << 24)
 };
 
 /**
@@ -441,7 +469,7 @@ enum pipe_flush_flags
 #define PIPE_TEXTURE_BARRIER_FRAMEBUFFER  (1 << 1)
 
 /**
- * Resource binding flags -- state tracker must specify in advance all
+ * Resource binding flags -- gallium frontends must specify in advance all
  * the ways a resource might be used.
  */
 #define PIPE_BIND_DEPTH_STENCIL        (1 << 0) /* create_surface */
@@ -455,7 +483,7 @@ enum pipe_flush_flags
 /* gap */
 #define PIPE_BIND_STREAM_OUTPUT        (1 << 10) /* set_stream_output_buffers */
 #define PIPE_BIND_CURSOR               (1 << 11) /* mouse cursor */
-#define PIPE_BIND_CUSTOM               (1 << 12) /* state-tracker/winsys usages */
+#define PIPE_BIND_CUSTOM               (1 << 12) /* gallium frontend/winsys usages */
 #define PIPE_BIND_GLOBAL               (1 << 13) /* set_global_binding */
 #define PIPE_BIND_SHADER_BUFFER        (1 << 14) /* set_shader_buffers */
 #define PIPE_BIND_SHADER_IMAGE         (1 << 15) /* set_shader_images */
@@ -470,10 +498,9 @@ enum pipe_flush_flags
  * below do not fit within that and probably need to be migrated to some
  * other place.
  *
- * It seems like scanout is used by the Xorg state tracker to ask for
- * a texture suitable for actual scanout (hence the name), which
- * implies extra layout constraints on some hardware.  It may also
- * have some special meaning regarding mouse cursor images.
+ * Scanout is used to ask for a texture suitable for actual scanout (hence
+ * the name), which implies extra layout constraints on some hardware.
+ * It may also have some special meaning regarding mouse cursor images.
  *
  * The shared flag is quite underspecified, but certainly isn't a
  * binding flag - it seems more like a message to the winsys to create
@@ -485,6 +512,7 @@ enum pipe_flush_flags
 #define PIPE_BIND_SCANOUT     (1 << 19) /*  */
 #define PIPE_BIND_SHARED      (1 << 20) /* get_texture_handle ??? */
 #define PIPE_BIND_LINEAR      (1 << 21)
+#define PIPE_BIND_PROTECTED   (1 << 22) /* Resource will be protected/encrypted */
 
 
 /**
@@ -495,8 +523,10 @@ enum pipe_flush_flags
 #define PIPE_RESOURCE_FLAG_TEXTURING_MORE_LIKELY (1 << 2)
 #define PIPE_RESOURCE_FLAG_SPARSE                (1 << 3)
 #define PIPE_RESOURCE_FLAG_SINGLE_THREAD_USE     (1 << 4)
+#define PIPE_RESOURCE_FLAG_ENCRYPTED             (1 << 5)
+#define PIPE_RESOURCE_FLAG_DONT_OVER_ALLOCATE    (1 << 6)
 #define PIPE_RESOURCE_FLAG_DRV_PRIV    (1 << 8) /* driver/winsys private */
-#define PIPE_RESOURCE_FLAG_ST_PRIV     (1 << 24) /* state-tracker/winsys private */
+#define PIPE_RESOURCE_FLAG_FRONTEND_PRIV         (1 << 24) /* gallium frontend private */
 
 /**
  * Hint about the expected lifecycle of a resource.
@@ -626,6 +656,20 @@ enum pipe_swizzle {
    PIPE_SWIZZLE_MAX, /**< Number of enums counter (must be last) */
 };
 
+/**
+ * Viewport swizzles
+ */
+enum pipe_viewport_swizzle {
+   PIPE_VIEWPORT_SWIZZLE_POSITIVE_X,
+   PIPE_VIEWPORT_SWIZZLE_NEGATIVE_X,
+   PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y,
+   PIPE_VIEWPORT_SWIZZLE_NEGATIVE_Y,
+   PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z,
+   PIPE_VIEWPORT_SWIZZLE_NEGATIVE_Z,
+   PIPE_VIEWPORT_SWIZZLE_POSITIVE_W,
+   PIPE_VIEWPORT_SWIZZLE_NEGATIVE_W,
+};
+
 #define PIPE_TIMEOUT_INFINITE 0xffffffffffffffffull
 
 
@@ -703,6 +747,10 @@ enum pipe_cap
    PIPE_CAP_BLEND_EQUATION_SEPARATE,
    PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS,
    PIPE_CAP_PRIMITIVE_RESTART,
+   /** subset of PRIMITIVE_RESTART where the restart index is always the fixed
+    * maximum value for the index type
+    */
+   PIPE_CAP_PRIMITIVE_RESTART_FIXED_INDEX,
    /** blend enables and write masks per rendertarget */
    PIPE_CAP_INDEP_BLEND_ENABLE,
    /** different blend funcs per rendertarget */
@@ -750,6 +798,7 @@ enum pipe_cap
    PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT,
    PIPE_CAP_BUFFER_SAMPLER_VIEW_RGBA_ONLY,
    PIPE_CAP_TGSI_TEXCOORD,
+   PIPE_CAP_TEXTURE_BUFFER_SAMPLER,
    PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER,
    PIPE_CAP_QUERY_PIPELINE_STATISTICS,
    PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK,
@@ -786,6 +835,7 @@ enum pipe_cap
    PIPE_CAP_POLYGON_OFFSET_CLAMP,
    PIPE_CAP_MULTISAMPLE_Z_RESOLVE,
    PIPE_CAP_RESOURCE_FROM_USER_MEMORY,
+   PIPE_CAP_RESOURCE_FROM_USER_MEMORY_COMPUTE_ONLY,
    PIPE_CAP_DEVICE_RESET_STATUS_QUERY,
    PIPE_CAP_MAX_SHADER_PATCH_VARYINGS,
    PIPE_CAP_TEXTURE_FLOAT_LINEAR,
@@ -796,6 +846,7 @@ enum pipe_cap
    PIPE_CAP_SHAREABLE_SHADERS,
    PIPE_CAP_COPY_BETWEEN_COMPRESSED_AND_PLAIN_FORMATS,
    PIPE_CAP_CLEAR_TEXTURE,
+   PIPE_CAP_CLEAR_SCISSORED,
    PIPE_CAP_DRAW_PARAMETERS,
    PIPE_CAP_TGSI_PACK_HALF_FLOAT,
    PIPE_CAP_MULTI_DRAW_INDIRECT,
@@ -912,6 +963,33 @@ enum pipe_cap
    PIPE_CAP_MAX_VERTEX_BUFFERS,
    PIPE_CAP_OPENCL_INTEGER_FUNCTIONS,
    PIPE_CAP_INTEGER_MULTIPLY_32X16,
+   /* Turn draw, dispatch, blit into NOOP */
+   PIPE_CAP_FRONTEND_NOOP,
+   PIPE_CAP_NIR_IMAGES_AS_DEREF,
+   PIPE_CAP_PACKED_STREAM_OUTPUT,
+   PIPE_CAP_VIEWPORT_TRANSFORM_LOWERED,
+   PIPE_CAP_PSIZ_CLAMPED,
+   PIPE_CAP_GL_BEGIN_END_BUFFER_SIZE,
+   PIPE_CAP_VIEWPORT_SWIZZLE,
+   PIPE_CAP_SYSTEM_SVM,
+   PIPE_CAP_VIEWPORT_MASK,
+   PIPE_CAP_ALPHA_TO_COVERAGE_DITHER_CONTROL,
+   PIPE_CAP_MAP_UNSYNCHRONIZED_THREAD_SAFE,
+   PIPE_CAP_GLSL_ZERO_INIT,
+   PIPE_CAP_BLEND_EQUATION_ADVANCED,
+   PIPE_CAP_NIR_ATOMICS_AS_DEREF,
+   PIPE_CAP_NO_CLIP_ON_COPY_TEX,
+   PIPE_CAP_MAX_TEXTURE_MB,
+   PIPE_CAP_SHADER_ATOMIC_INT64,
+   PIPE_CAP_DEVICE_PROTECTED_CONTENT,
+   PIPE_CAP_PREFER_REAL_BUFFER_IN_CONSTBUF0,
+   PIPE_CAP_GL_CLAMP,
+   PIPE_CAP_TEXRECT,
+   PIPE_CAP_SAMPLER_REDUCTION_MINMAX,
+   PIPE_CAP_ALLOW_DYNAMIC_VAO_FASTPATH,
+
+   PIPE_CAP_LAST,
+   /* XXX do not add caps after PIPE_CAP_LAST! */
 };
 
 /**
@@ -979,6 +1057,10 @@ enum pipe_shader_cap
    PIPE_SHADER_CAP_INTEGERS,
    PIPE_SHADER_CAP_INT64_ATOMICS,
    PIPE_SHADER_CAP_FP16,
+   PIPE_SHADER_CAP_FP16_DERIVATIVES,
+   PIPE_SHADER_CAP_FP16_CONST_BUFFERS,
+   PIPE_SHADER_CAP_INT16,
+   PIPE_SHADER_CAP_GLSL_16BIT_CONSTS,
    PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS,
    PIPE_SHADER_CAP_PREFERRED_IR,
    PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED,
@@ -1007,7 +1089,7 @@ enum pipe_shader_cap
  * get TGSI.
  *
  * Note that PIPE_SHADER_IR_TGSI should be zero for backwards compat with
- * state trackers that only understand TGSI.
+ * gallium frontends that only understand TGSI.
  */
 enum pipe_shader_ir
 {
@@ -1054,6 +1136,7 @@ enum pipe_resource_param
    PIPE_RESOURCE_PARAM_HANDLE_TYPE_SHARED,
    PIPE_RESOURCE_PARAM_HANDLE_TYPE_KMS,
    PIPE_RESOURCE_PARAM_HANDLE_TYPE_FD,
+   PIPE_RESOURCE_PARAM_LAYER_STRIDE,
 };
 
 /**
@@ -1236,17 +1319,6 @@ enum pipe_fd_type
 {
    PIPE_FD_TYPE_NATIVE_SYNC,
    PIPE_FD_TYPE_SYNCOBJ,
-};
-
-enum pipe_debug_type
-{
-   PIPE_DEBUG_TYPE_OUT_OF_MEMORY = 1,
-   PIPE_DEBUG_TYPE_ERROR,
-   PIPE_DEBUG_TYPE_SHADER_INFO,
-   PIPE_DEBUG_TYPE_PERF_INFO,
-   PIPE_DEBUG_TYPE_INFO,
-   PIPE_DEBUG_TYPE_FALLBACK,
-   PIPE_DEBUG_TYPE_CONFORMANCE,
 };
 
 /**

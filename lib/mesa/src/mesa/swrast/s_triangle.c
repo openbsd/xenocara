@@ -31,7 +31,7 @@
 
 #include "main/glheader.h"
 #include "main/context.h"
-#include "main/imports.h"
+
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/state.h"
@@ -553,7 +553,7 @@ affine_span(struct gl_context *ctx, SWspan *span,
    info.smask = texImg->Width - 1;					\
    info.tmask = texImg->Height - 1;					\
    info.format = texImg->TexFormat;					\
-   info.filter = obj->Sampler.MinFilter;				\
+   info.filter = obj->Sampler.Attrib.MinFilter;				\
    info.envmode = unit->EnvMode;					\
    info.er = 0;					\
    info.eg = 0;					\
@@ -621,8 +621,8 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
                                  (1.0 / tex_coord[2]) : 1.0;            \
            GLfloat s_tmp = (GLfloat) (tex_coord[0] * invQ);		\
            GLfloat t_tmp = (GLfloat) (tex_coord[1] * invQ);		\
-           GLint s = IFLOOR(s_tmp) & info->smask;	        	\
-           GLint t = IFLOOR(t_tmp) & info->tmask;	        	\
+           GLint s = util_ifloor(s_tmp) & info->smask;	        	\
+           GLint t = util_ifloor(t_tmp) & info->tmask;	        	\
            GLint pos = (t << info->twidth_log2) + s;			\
            const GLchan *tex00 = info->texture + COMP * pos;		\
            DO_TEX;							\
@@ -782,7 +782,7 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
       }
       break;
    }
-   
+
    assert(span->arrayMask & SPAN_RGBA);
    _swrast_write_rgba_span(ctx, span);
 
@@ -820,7 +820,7 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
    info.smask = texImg->Width - 1;					\
    info.tmask = texImg->Height - 1;					\
    info.format = texImg->TexFormat;					\
-   info.filter = obj->Sampler.MinFilter;				\
+   info.filter = obj->Sampler.Attrib.MinFilter;				\
    info.envmode = unit->EnvMode;					\
    info.er = 0;					\
    info.eg = 0;					\
@@ -1064,8 +1064,8 @@ _swrast_choose_triangle( struct gl_context *ctx )
          swImg = swrast_texture_image_const(texImg);
 
          format = texImg ? texImg->TexFormat : MESA_FORMAT_NONE;
-         minFilter = texObj2D ? samp->MinFilter : GL_NONE;
-         magFilter = texObj2D ? samp->MagFilter : GL_NONE;
+         minFilter = texObj2D ? samp->Attrib.MinFilter : GL_NONE;
+         magFilter = texObj2D ? samp->Attrib.MagFilter : GL_NONE;
          envMode = ctx->Texture.FixedFuncUnit[0].EnvMode;
 
          /* First see if we can use an optimized 2-D texture function */
@@ -1074,9 +1074,9 @@ _swrast_choose_triangle( struct gl_context *ctx )
              && !_mesa_ati_fragment_shader_enabled(ctx)
              && ctx->Texture._MaxEnabledTexImageUnit == 0
              && ctx->Texture.Unit[0]._Current->Target == GL_TEXTURE_2D
-             && samp->WrapS == GL_REPEAT
-             && samp->WrapT == GL_REPEAT
-             && texObj2D->_Swizzle == SWIZZLE_NOOP
+             && samp->Attrib.WrapS == GL_REPEAT
+             && samp->Attrib.WrapT == GL_REPEAT
+             && texObj2D->Attrib._Swizzle == SWIZZLE_NOOP
              && swImg->_IsPowerOfTwo
              && texImg->Border == 0
              && (_mesa_format_row_stride(format, texImg->Width) ==

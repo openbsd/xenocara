@@ -98,7 +98,7 @@ set_vertices(void)
                                               sizeof(vertices),
                                               vertices);
 
-   info.ctx->set_vertex_buffers(info.ctx, 0, 1, &vbuf);
+   info.ctx->set_vertex_buffers(info.ctx, 0, 1, 0, false, &vbuf);
 }
 
 
@@ -159,6 +159,7 @@ draw(void)
 
    info.ctx->clear(info.ctx,
               PIPE_CLEAR_COLOR | PIPE_CLEAR_DEPTHSTENCIL,
+              NULL,
               &clear_color, 1.0, 0);
    util_draw_arrays(info.ctx, PIPE_PRIM_QUADS, 0, NUM_VERTS);
    info.ctx->flush(info.ctx, NULL, 0);

@@ -51,8 +51,19 @@ typedef enum
    MESA_SHADER_GEOMETRY = 3,
    MESA_SHADER_FRAGMENT = 4,
    MESA_SHADER_COMPUTE = 5,
+
+   /* Vulkan-only stages. */
+   MESA_SHADER_TASK         = 6,
+   MESA_SHADER_MESH         = 7,
+   MESA_SHADER_RAYGEN       = 8,
+   MESA_SHADER_ANY_HIT      = 9,
+   MESA_SHADER_CLOSEST_HIT  = 10,
+   MESA_SHADER_MISS         = 11,
+   MESA_SHADER_INTERSECTION = 12,
+   MESA_SHADER_CALLABLE     = 13,
+
    /* must be last so it doesn't affect the GL pipeline */
-   MESA_SHADER_KERNEL = 6,
+   MESA_SHADER_KERNEL = 14,
 } gl_shader_stage;
 
 static inline bool
@@ -61,11 +72,21 @@ gl_shader_stage_is_compute(gl_shader_stage stage)
    return stage == MESA_SHADER_COMPUTE || stage == MESA_SHADER_KERNEL;
 }
 
+static inline bool
+gl_shader_stage_is_callable(gl_shader_stage stage)
+{
+   return stage == MESA_SHADER_ANY_HIT ||
+          stage == MESA_SHADER_CLOSEST_HIT ||
+          stage == MESA_SHADER_MISS ||
+          stage == MESA_SHADER_INTERSECTION ||
+          stage == MESA_SHADER_CALLABLE;
+}
+
 /**
  * Number of STATE_* values we need to address any GL state.
  * Used to dimension arrays.
  */
-#define STATE_LENGTH 5
+#define STATE_LENGTH 4
 
 typedef short gl_state_index16; /* see enum gl_state_index */
 
@@ -87,6 +108,11 @@ const char *_mesa_shader_stage_to_abbrev(unsigned stage);
  * GL related stages (not including CL)
  */
 #define MESA_SHADER_STAGES (MESA_SHADER_COMPUTE + 1)
+
+/**
+ * Vulkan stages (not including CL)
+ */
+#define MESA_VULKAN_SHADER_STAGES (MESA_SHADER_CALLABLE + 1)
 
 /**
  * All stages
@@ -139,6 +165,14 @@ typedef enum
 } gl_vert_attrib;
 
 const char *gl_vert_attrib_name(gl_vert_attrib attrib);
+
+/**
+ * Max number of texture coordinate units.  This mainly just applies to
+ * the fixed-function vertex code.  This will be difficult to raise above
+ * eight because of various vertex attribute bitvectors.
+ */
+#define MAX_TEXTURE_COORD_UNITS     8
+#define MAX_VERTEX_GENERIC_ATTRIBS  16
 
 /**
  * Symbolic constats to help iterating over
@@ -197,7 +231,7 @@ const char *gl_vert_attrib_name(gl_vert_attrib attrib);
 #define VERT_BIT_POINT_SIZE      BITFIELD_BIT(VERT_ATTRIB_POINT_SIZE)
 #define VERT_BIT_GENERIC0        BITFIELD_BIT(VERT_ATTRIB_GENERIC0)
 
-#define VERT_BIT(i)              BITFIELD_BIT(i)
+#define VERT_BIT(i)              BITFIELD64_BIT(i)
 #define VERT_BIT_ALL             BITFIELD_RANGE(0, VERT_ATTRIB_MAX)
 
 #define VERT_BIT_FF(i)           VERT_BIT(i)
@@ -227,6 +261,7 @@ const char *gl_vert_attrib_name(gl_vert_attrib attrib);
  * - vertResults (in prog_print.c's arb_output_attrib_string())
  * - fragAttribs (in prog_print.c's arb_input_attrib_string())
  * - _mesa_varying_slot_in_fs()
+ * - _mesa_varying_slot_name_for_stage()
  */
 typedef enum
 {
@@ -261,7 +296,9 @@ typedef enum
    VARYING_SLOT_BOUNDING_BOX0, /* Only appears as TCS output. */
    VARYING_SLOT_BOUNDING_BOX1, /* Only appears as TCS output. */
    VARYING_SLOT_VIEW_INDEX,
-   VARYING_SLOT_VAR0, /* First generic varying slot */
+   VARYING_SLOT_VIEWPORT_MASK, /* Does not appear in FS */
+   VARYING_SLOT_PRIMITIVE_SHADING_RATE = VARYING_SLOT_FACE, /* Does not appear in FS. */
+   VARYING_SLOT_VAR0 = 32, /* First generic varying slot */
    /* the remaining are simply for the benefit of gl_varying_slot_name()
     * and not to be construed as an upper bound:
     */
@@ -296,15 +333,80 @@ typedef enum
    VARYING_SLOT_VAR29,
    VARYING_SLOT_VAR30,
    VARYING_SLOT_VAR31,
+   /* Per-patch varyings for tessellation. */
+   VARYING_SLOT_PATCH0,
+   VARYING_SLOT_PATCH1,
+   VARYING_SLOT_PATCH2,
+   VARYING_SLOT_PATCH3,
+   VARYING_SLOT_PATCH4,
+   VARYING_SLOT_PATCH5,
+   VARYING_SLOT_PATCH6,
+   VARYING_SLOT_PATCH7,
+   VARYING_SLOT_PATCH8,
+   VARYING_SLOT_PATCH9,
+   VARYING_SLOT_PATCH10,
+   VARYING_SLOT_PATCH11,
+   VARYING_SLOT_PATCH12,
+   VARYING_SLOT_PATCH13,
+   VARYING_SLOT_PATCH14,
+   VARYING_SLOT_PATCH15,
+   VARYING_SLOT_PATCH16,
+   VARYING_SLOT_PATCH17,
+   VARYING_SLOT_PATCH18,
+   VARYING_SLOT_PATCH19,
+   VARYING_SLOT_PATCH20,
+   VARYING_SLOT_PATCH21,
+   VARYING_SLOT_PATCH22,
+   VARYING_SLOT_PATCH23,
+   VARYING_SLOT_PATCH24,
+   VARYING_SLOT_PATCH25,
+   VARYING_SLOT_PATCH26,
+   VARYING_SLOT_PATCH27,
+   VARYING_SLOT_PATCH28,
+   VARYING_SLOT_PATCH29,
+   VARYING_SLOT_PATCH30,
+   VARYING_SLOT_PATCH31,
+   /* 32 16-bit vec4 slots packed in 16 32-bit vec4 slots for GLES/mediump.
+    * They are really just additional generic slots used for 16-bit data to
+    * prevent conflicts between neighboring mediump and non-mediump varyings
+    * that can't be packed without breaking one or the other, which is
+    * a limitation of separate shaders. This allows linking shaders in 32 bits
+    * and then get an optimally packed 16-bit varyings by remapping the IO
+    * locations to these slots. The remapping can also be undone trivially.
+    *
+    * nir_io_semantics::high_16bit determines which half of the slot is
+    * accessed. The low and high halves share the same IO "base" number.
+    * Drivers can treat these as 32-bit slots everywhere except for FP16
+    * interpolation.
+    */
+   VARYING_SLOT_VAR0_16BIT,
+   VARYING_SLOT_VAR1_16BIT,
+   VARYING_SLOT_VAR2_16BIT,
+   VARYING_SLOT_VAR3_16BIT,
+   VARYING_SLOT_VAR4_16BIT,
+   VARYING_SLOT_VAR5_16BIT,
+   VARYING_SLOT_VAR6_16BIT,
+   VARYING_SLOT_VAR7_16BIT,
+   VARYING_SLOT_VAR8_16BIT,
+   VARYING_SLOT_VAR9_16BIT,
+   VARYING_SLOT_VAR10_16BIT,
+   VARYING_SLOT_VAR11_16BIT,
+   VARYING_SLOT_VAR12_16BIT,
+   VARYING_SLOT_VAR13_16BIT,
+   VARYING_SLOT_VAR14_16BIT,
+   VARYING_SLOT_VAR15_16BIT,
+
+   NUM_TOTAL_VARYING_SLOTS,
 } gl_varying_slot;
 
 
 #define VARYING_SLOT_MAX	(VARYING_SLOT_VAR0 + MAX_VARYING)
-#define VARYING_SLOT_PATCH0	(VARYING_SLOT_MAX)
 #define VARYING_SLOT_TESS_MAX	(VARYING_SLOT_PATCH0 + MAX_VARYING)
 #define MAX_VARYINGS_INCL_PATCH (VARYING_SLOT_TESS_MAX - VARYING_SLOT_VAR0)
 
-const char *gl_varying_slot_name(gl_varying_slot slot);
+const char *gl_varying_slot_name_for_stage(gl_varying_slot slot,
+                                           gl_shader_stage stage);
+
 
 /**
  * Bitflags for varying slots.
@@ -328,6 +430,10 @@ const char *gl_varying_slot_name(gl_varying_slot slot);
 #define VARYING_BIT_PSIZ BITFIELD64_BIT(VARYING_SLOT_PSIZ)
 #define VARYING_BIT_BFC0 BITFIELD64_BIT(VARYING_SLOT_BFC0)
 #define VARYING_BIT_BFC1 BITFIELD64_BIT(VARYING_SLOT_BFC1)
+#define VARYING_BITS_COLOR (VARYING_BIT_COL0 | \
+                            VARYING_BIT_COL1 |        \
+                            VARYING_BIT_BFC0 |        \
+                            VARYING_BIT_BFC1)
 #define VARYING_BIT_EDGE BITFIELD64_BIT(VARYING_SLOT_EDGE)
 #define VARYING_BIT_CLIP_VERTEX BITFIELD64_BIT(VARYING_SLOT_CLIP_VERTEX)
 #define VARYING_BIT_CLIP_DIST0 BITFIELD64_BIT(VARYING_SLOT_CLIP_DIST0)
@@ -343,16 +449,9 @@ const char *gl_varying_slot_name(gl_varying_slot slot);
 #define VARYING_BIT_TESS_LEVEL_INNER BITFIELD64_BIT(VARYING_SLOT_TESS_LEVEL_INNER)
 #define VARYING_BIT_BOUNDING_BOX0 BITFIELD64_BIT(VARYING_SLOT_BOUNDING_BOX0)
 #define VARYING_BIT_BOUNDING_BOX1 BITFIELD64_BIT(VARYING_SLOT_BOUNDING_BOX1)
+#define VARYING_BIT_VIEWPORT_MASK BITFIELD64_BIT(VARYING_SLOT_VIEWPORT_MASK)
 #define VARYING_BIT_VAR(V) BITFIELD64_BIT(VARYING_SLOT_VAR0 + (V))
 /*@}*/
-
-/**
- * Bitflags for system values.
- */
-#define SYSTEM_BIT_SAMPLE_ID ((uint64_t)1 << SYSTEM_VALUE_SAMPLE_ID)
-#define SYSTEM_BIT_SAMPLE_POS ((uint64_t)1 << SYSTEM_VALUE_SAMPLE_POS)
-#define SYSTEM_BIT_SAMPLE_MASK_IN ((uint64_t)1 << SYSTEM_VALUE_SAMPLE_MASK_IN)
-#define SYSTEM_BIT_LOCAL_INVOCATION_ID ((uint64_t)1 << SYSTEM_VALUE_LOCAL_INVOCATION_ID)
 
 /**
  * If the gl_register_file is PROGRAM_SYSTEM_VALUE, the register index will be
@@ -579,6 +678,7 @@ typedef enum
    /*@{*/
    SYSTEM_VALUE_FRAG_COORD,
    SYSTEM_VALUE_POINT_COORD,
+   SYSTEM_VALUE_LINE_COORD, /**< Coord along axis perpendicular to line */
    SYSTEM_VALUE_FRONT_FACE,
    SYSTEM_VALUE_SAMPLE_ID,
    SYSTEM_VALUE_SAMPLE_POS,
@@ -608,6 +708,7 @@ typedef enum
    SYSTEM_VALUE_LOCAL_INVOCATION_ID,
    SYSTEM_VALUE_LOCAL_INVOCATION_INDEX,
    SYSTEM_VALUE_GLOBAL_INVOCATION_ID,
+   SYSTEM_VALUE_BASE_GLOBAL_INVOCATION_ID,
    SYSTEM_VALUE_GLOBAL_INVOCATION_INDEX,
    SYSTEM_VALUE_WORK_GROUP_ID,
    SYSTEM_VALUE_NUM_WORK_GROUPS,
@@ -646,12 +747,37 @@ typedef enum
    SYSTEM_VALUE_BARYCENTRIC_PULL_MODEL,
 
    /**
+    * \name Ray tracing shader system values
+    */
+   /*@{*/
+   SYSTEM_VALUE_RAY_LAUNCH_ID,
+   SYSTEM_VALUE_RAY_LAUNCH_SIZE,
+   SYSTEM_VALUE_RAY_WORLD_ORIGIN,
+   SYSTEM_VALUE_RAY_WORLD_DIRECTION,
+   SYSTEM_VALUE_RAY_OBJECT_ORIGIN,
+   SYSTEM_VALUE_RAY_OBJECT_DIRECTION,
+   SYSTEM_VALUE_RAY_T_MIN,
+   SYSTEM_VALUE_RAY_T_MAX,
+   SYSTEM_VALUE_RAY_OBJECT_TO_WORLD,
+   SYSTEM_VALUE_RAY_WORLD_TO_OBJECT,
+   SYSTEM_VALUE_RAY_HIT_KIND,
+   SYSTEM_VALUE_RAY_FLAGS,
+   SYSTEM_VALUE_RAY_GEOMETRY_INDEX,
+   SYSTEM_VALUE_RAY_INSTANCE_CUSTOM_INDEX,
+   /*@}*/
+
+   /**
     * IR3 specific geometry shader and tesselation control shader system
     * values that packs invocation id, thread id and vertex id.  Having this
     * as a nir level system value lets us do the unpacking in nir.
     */
    SYSTEM_VALUE_GS_HEADER_IR3,
    SYSTEM_VALUE_TCS_HEADER_IR3,
+
+   /**
+    * Fragment shading rate used for KHR_fragment_shading_rate (Vulkan).
+    */
+   SYSTEM_VALUE_FRAG_SHADING_RATE,
 
    SYSTEM_VALUE_MAX             /**< Number of values */
 } gl_system_value;
@@ -672,6 +798,7 @@ enum glsl_interp_mode
    INTERP_MODE_FLAT,
    INTERP_MODE_NOPERSPECTIVE,
    INTERP_MODE_EXPLICIT,
+   INTERP_MODE_COLOR, /**< glShadeModel determines the interp mode */
    INTERP_MODE_COUNT /**< Number of interpolation qualifiers */
 };
 
@@ -742,7 +869,11 @@ enum gl_access_qualifier
    ACCESS_COHERENT      = (1 << 0),
    ACCESS_RESTRICT      = (1 << 1),
    ACCESS_VOLATILE      = (1 << 2),
+
+   /* The memory used by the access/variable is not read. */
    ACCESS_NON_READABLE  = (1 << 3),
+
+   /* The memory used by the access/variable is not written. */
    ACCESS_NON_WRITEABLE = (1 << 4),
 
    /** The access may use a non-uniform buffer or image index */
@@ -751,8 +882,7 @@ enum gl_access_qualifier
    /* This has the same semantics as NIR_INTRINSIC_CAN_REORDER, only to be
     * used with loads. In other words, it means that the load can be
     * arbitrarily reordered, or combined with other loads to the same address.
-    * It is implied by ACCESS_NON_WRITEABLE together with ACCESS_RESTRICT, and
-    * a lack of ACCESS_COHERENT and ACCESS_VOLATILE.
+    * It is implied by ACCESS_NON_WRITEABLE and a lack of ACCESS_VOLATILE.
     */
    ACCESS_CAN_REORDER = (1 << 6),
 
@@ -765,25 +895,22 @@ enum gl_access_qualifier
  */
 enum gl_advanced_blend_mode
 {
-   BLEND_NONE           = 0x0000,
-
-   BLEND_MULTIPLY       = 0x0001,
-   BLEND_SCREEN         = 0x0002,
-   BLEND_OVERLAY        = 0x0004,
-   BLEND_DARKEN         = 0x0008,
-   BLEND_LIGHTEN        = 0x0010,
-   BLEND_COLORDODGE     = 0x0020,
-   BLEND_COLORBURN      = 0x0040,
-   BLEND_HARDLIGHT      = 0x0080,
-   BLEND_SOFTLIGHT      = 0x0100,
-   BLEND_DIFFERENCE     = 0x0200,
-   BLEND_EXCLUSION      = 0x0400,
-   BLEND_HSL_HUE        = 0x0800,
-   BLEND_HSL_SATURATION = 0x1000,
-   BLEND_HSL_COLOR      = 0x2000,
-   BLEND_HSL_LUMINOSITY = 0x4000,
-
-   BLEND_ALL            = 0x7fff,
+   BLEND_NONE = 0,
+   BLEND_MULTIPLY,
+   BLEND_SCREEN,
+   BLEND_OVERLAY,
+   BLEND_DARKEN,
+   BLEND_LIGHTEN,
+   BLEND_COLORDODGE,
+   BLEND_COLORBURN,
+   BLEND_HARDLIGHT,
+   BLEND_SOFTLIGHT,
+   BLEND_DIFFERENCE,
+   BLEND_EXCLUSION,
+   BLEND_HSL_HUE,
+   BLEND_HSL_SATURATION,
+   BLEND_HSL_COLOR,
+   BLEND_HSL_LUMINOSITY,
 };
 
 enum blend_func
@@ -799,8 +926,10 @@ enum blend_factor
 {
    BLEND_FACTOR_ZERO,
    BLEND_FACTOR_SRC_COLOR,
+   BLEND_FACTOR_SRC1_COLOR,
    BLEND_FACTOR_DST_COLOR,
    BLEND_FACTOR_SRC_ALPHA,
+   BLEND_FACTOR_SRC1_ALPHA,
    BLEND_FACTOR_DST_ALPHA,
    BLEND_FACTOR_CONSTANT_COLOR,
    BLEND_FACTOR_CONSTANT_ALPHA,
@@ -891,6 +1020,23 @@ enum float_controls
    FLOAT_CONTROLS_ROUNDING_MODE_RTZ_FP16            = 0x1000,
    FLOAT_CONTROLS_ROUNDING_MODE_RTZ_FP32            = 0x2000,
    FLOAT_CONTROLS_ROUNDING_MODE_RTZ_FP64            = 0x4000,
+};
+
+/**
+* Enums to describe sampler properties used by OpenCL's inline constant samplers.
+* These values match the meanings described in the SPIR-V spec.
+*/
+enum cl_sampler_addressing_mode {
+   SAMPLER_ADDRESSING_MODE_NONE = 0,
+   SAMPLER_ADDRESSING_MODE_CLAMP_TO_EDGE = 1,
+   SAMPLER_ADDRESSING_MODE_CLAMP = 2,
+   SAMPLER_ADDRESSING_MODE_REPEAT = 3,
+   SAMPLER_ADDRESSING_MODE_REPEAT_MIRRORED = 4,
+};
+
+enum cl_sampler_filter_mode {
+   SAMPLER_FILTER_MODE_NEAREST = 0,
+   SAMPLER_FILTER_MODE_LINEAR = 1,
 };
 
 #ifdef __cplusplus

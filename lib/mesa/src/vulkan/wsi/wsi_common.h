@@ -109,7 +109,14 @@ struct wsi_device {
        * provided VkSwapchainCreateInfoKH::RminImageCount.
        */
       bool strict_imageCount;
+
+      /* Ensures to create at least the number of image specified by the
+       * driver in VkSurfaceCapabilitiesKHR::minImageCount.
+       */
+      bool ensure_minImageCount;
    } x11;
+
+   bool sw;
 
    /* Signals the semaphore such that any wait on the semaphore will wait on
     * any reads or writes on the give memory object.  This is used to
@@ -126,6 +133,22 @@ struct wsi_device {
    void (*signal_fence_for_memory)(VkDevice device,
                                    VkFence fence,
                                    VkDeviceMemory memory);
+
+   /*
+    * This sets the ownership for a WSI memory object:
+    *
+    * The ownership is true if and only if the application is allowed to submit
+    * command buffers that reference the buffer.
+    *
+    * This can be used to prune BO lists without too many adverse affects on
+    * implicit sync.
+    *
+    * Side note: care needs to be taken for internally delayed submissions wrt
+    * timeline semaphores.
+    */
+   void (*set_memory_ownership)(VkDevice device,
+                                VkDeviceMemory memory,
+                                VkBool32 ownership);
 
 #define WSI_CB(cb) PFN_vk##cb cb
    WSI_CB(AllocateMemory);
@@ -156,6 +179,8 @@ struct wsi_device {
    WSI_CB(ResetFences);
    WSI_CB(QueueSubmit);
    WSI_CB(WaitForFences);
+   WSI_CB(MapMemory);
+   WSI_CB(UnmapMemory);
 #undef WSI_CB
 
     struct wsi_interface *                  wsi[VK_ICD_WSI_PLATFORM_MAX];
@@ -169,7 +194,8 @@ wsi_device_init(struct wsi_device *wsi,
                 WSI_FN_GetPhysicalDeviceProcAddr proc_addr,
                 const VkAllocationCallbacks *alloc,
                 int display_fd,
-                const struct driOptionCache *dri_options);
+                const struct driOptionCache *dri_options,
+                bool sw_device);
 
 void
 wsi_device_finish(struct wsi_device *wsi,

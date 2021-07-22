@@ -78,6 +78,12 @@ struct st_sampler_views
    struct st_sampler_view views[0];
 };
 
+struct st_compressed_data
+{
+   struct pipe_reference reference;
+   GLubyte *ptr;
+};
+
 
 /**
  * Subclass of gl_texure_image.
@@ -101,7 +107,7 @@ struct st_texture_image
     * the original data. This is necessary for mapping/unmapping,
     * as well as image copies.
     */
-   GLubyte *compressed_data;
+   struct st_compressed_data* compressed_data;
 };
 
 
@@ -288,7 +294,7 @@ st_texture_match_image(struct st_context *st,
  */
 extern GLubyte *
 st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
-                     enum pipe_transfer_usage usage,
+                     enum pipe_map_flags usage,
                      GLuint x, GLuint y, GLuint z,
                      GLuint w, GLuint h, GLuint d,
                      struct pipe_transfer **transfer);

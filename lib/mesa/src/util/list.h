@@ -111,12 +111,20 @@ static inline bool list_is_empty(const struct list_head *list)
    return list->next == list;
 }
 
+static inline bool list_is_linked(const struct list_head *list)
+{
+   /* both must be NULL or both must be not NULL */
+   assert((list->prev != NULL) == (list->next != NULL));
+
+   return list->next != NULL;
+}
+
 /**
  * Returns whether the list has exactly one element.
  */
 static inline bool list_is_singular(const struct list_head *list)
 {
-   return list->next != NULL && list->next != list && list->next->next == list;
+   return list_is_linked(list) && !list_is_empty(list) && list->next->next == list;
 }
 
 static inline unsigned list_length(const struct list_head *list)
@@ -153,6 +161,7 @@ static inline void list_splicetail(struct list_head *src, struct list_head *dst)
 static inline void list_validate(const struct list_head *list)
 {
    struct list_head *node;
+   assert(list_is_linked(list));
    assert(list->next->prev == list && list->prev->next == list);
    for (node = list->next; node != list; node = node->next)
       assert(node->next->prev == node && node->prev->next == node);
@@ -166,11 +175,9 @@ static inline void list_validate(const struct list_head *list)
  *
  * 'sample' MUST be initialized, or else the result is undefined!
  */
-#ifndef container_of
-#define container_of(ptr, sample, member)				\
+#define list_container_of(ptr, sample, member)				\
     (void *)((char *)(ptr)						\
 	     - ((char *)&(sample)->member - (char *)(sample)))
-#endif
 
 #define list_first_entry(ptr, type, member) \
         LIST_ENTRY(type, (ptr)->next, member)
@@ -180,31 +187,31 @@ static inline void list_validate(const struct list_head *list)
 
 
 #define LIST_FOR_EACH_ENTRY(pos, head, member)				\
-   for (pos = NULL, pos = container_of((head)->next, pos, member);	\
+   for (pos = NULL, pos = list_container_of((head)->next, pos, member);	\
 	&pos->member != (head);						\
-	pos = container_of(pos->member.next, pos, member))
+	pos = list_container_of(pos->member.next, pos, member))
 
 #define LIST_FOR_EACH_ENTRY_SAFE(pos, storage, head, member)	\
-   for (pos = NULL, pos = container_of((head)->next, pos, member),	\
-	storage = container_of(pos->member.next, pos, member);	\
+   for (pos = NULL, pos = list_container_of((head)->next, pos, member),	\
+	storage = list_container_of(pos->member.next, pos, member);	\
 	&pos->member != (head);						\
-	pos = storage, storage = container_of(storage->member.next, storage, member))
+	pos = storage, storage = list_container_of(storage->member.next, storage, member))
 
 #define LIST_FOR_EACH_ENTRY_SAFE_REV(pos, storage, head, member)	\
-   for (pos = NULL, pos = container_of((head)->prev, pos, member),	\
-	storage = container_of(pos->member.prev, pos, member);		\
+   for (pos = NULL, pos = list_container_of((head)->prev, pos, member),	\
+	storage = list_container_of(pos->member.prev, pos, member);		\
 	&pos->member != (head);						\
-	pos = storage, storage = container_of(storage->member.prev, storage, member))
+	pos = storage, storage = list_container_of(storage->member.prev, storage, member))
 
 #define LIST_FOR_EACH_ENTRY_FROM(pos, start, head, member)		\
-   for (pos = NULL, pos = container_of((start), pos, member);		\
+   for (pos = NULL, pos = list_container_of((start), pos, member);		\
 	&pos->member != (head);						\
-	pos = container_of(pos->member.next, pos, member))
+	pos = list_container_of(pos->member.next, pos, member))
 
 #define LIST_FOR_EACH_ENTRY_FROM_REV(pos, start, head, member)		\
-   for (pos = NULL, pos = container_of((start), pos, member);		\
+   for (pos = NULL, pos = list_container_of((start), pos, member);		\
 	&pos->member != (head);						\
-	pos = container_of(pos->member.prev, pos, member))
+	pos = list_container_of(pos->member.prev, pos, member))
 
 #define list_for_each_entry(type, pos, head, member)                    \
    for (type *pos = LIST_ENTRY(type, (head)->next, member),             \
@@ -241,9 +248,23 @@ static inline void list_validate(const struct list_head *list)
 	&pos->member != (head);                                         \
 	pos = LIST_ENTRY(type, pos->member.next, member))
 
+#define list_for_each_entry_from_safe(type, pos, start, head, member)   \
+   for (type *pos = LIST_ENTRY(type, (start), member),                  \
+	     *__next = LIST_ENTRY(type, pos->member.next, member);      \
+	&pos->member != (head);                                         \
+	pos = __next,                                                   \
+	__next = LIST_ENTRY(type, __next->member.next, member))
+
 #define list_for_each_entry_from_rev(type, pos, start, head, member)    \
    for (type *pos = LIST_ENTRY(type, (start), member);                  \
 	&pos->member != (head);                                         \
 	pos = LIST_ENTRY(type, pos->member.prev, member))
+
+#define list_pair_for_each_entry(type, pos1, pos2, head1, head2, member) \
+   for (type *pos1 = LIST_ENTRY(type, (head1)->next, member),           \
+             *pos2 = LIST_ENTRY(type, (head2)->next, member);           \
+        &pos1->member != (head1) && &pos2->member != (head2);           \
+	pos1 = LIST_ENTRY(type, pos1->member.next, member),               \
+	pos2 = LIST_ENTRY(type, pos2->member.next, member))
 
 #endif /*_UTIL_LIST_H_*/

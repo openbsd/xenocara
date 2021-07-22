@@ -26,6 +26,7 @@ C_SOURCES := \
 	draw/draw_pipe_stipple.c \
 	draw/draw_pipe_twoside.c \
 	draw/draw_pipe_unfilled.c \
+	draw/draw_pipe_user_cull.c \
 	draw/draw_pipe_util.c \
 	draw/draw_pipe_validate.c \
 	draw/draw_pipe_vbuf.c \
@@ -50,6 +51,8 @@ C_SOURCES := \
 	draw/draw_pt_vsplit_tmp.h \
 	draw/draw_so_emit_tmp.h \
 	draw/draw_split_tmp.h \
+	draw/draw_tess.c \
+	draw/draw_tess.h \
 	draw/draw_vbuf.h \
 	draw/draw_vertex.c \
 	draw/draw_vertex.h \
@@ -154,12 +157,17 @@ C_SOURCES := \
 	rtasm/rtasm_execmem.h \
 	rtasm/rtasm_x86sse.c \
 	rtasm/rtasm_x86sse.h \
+	tessellator/p_tessellator.cpp \
+	tessellator/p_tessellator.h \
+	tessellator/tessellator.cpp \
+	tessellator/tessellator.hpp \
 	tgsi/tgsi_aa_point.c \
 	tgsi/tgsi_aa_point.h \
 	tgsi/tgsi_build.c \
 	tgsi/tgsi_build.h \
 	tgsi/tgsi_dump.c \
 	tgsi/tgsi_dump.h \
+	tgsi/tgsi_dynamic_indexing.c \
 	tgsi/tgsi_exec.c \
 	tgsi/tgsi_exec.h \
 	tgsi/tgsi_emulate.c \
@@ -194,6 +202,7 @@ C_SOURCES := \
 	tgsi/tgsi_ureg.h \
 	tgsi/tgsi_util.c \
 	tgsi/tgsi_util.h \
+	tgsi/tgsi_vpos.c \
 	translate/translate.c \
 	translate/translate.h \
 	translate/translate_cache.c \
@@ -207,8 +216,6 @@ C_SOURCES := \
 	util/u_bitmask.c \
 	util/u_bitmask.h \
 	util/u_blend.h \
-	util/u_blit.c \
-	util/u_blit.h \
 	util/u_blitter.c \
 	util/u_blitter.h \
 	util/u_box.h \
@@ -216,8 +223,6 @@ C_SOURCES := \
 	util/u_cache.h \
 	util/u_compute.c \
 	util/u_compute.h \
-	util/u_debug_gallium.h \
-	util/u_debug_gallium.c \
 	util/u_debug_describe.c \
 	util/u_debug_describe.h \
 	util/u_debug_flush.c \
@@ -226,10 +231,6 @@ C_SOURCES := \
 	util/u_debug_image.h \
 	util/u_debug_refcnt.c \
 	util/u_debug_refcnt.h \
-	util/u_debug_stack.c \
-	util/u_debug_stack.h \
-	util/u_debug_symbol.c \
-	util/u_debug_symbol.h \
 	util/u_dirty_flags.h \
 	util/u_dirty_surfaces.h \
 	util/u_dl.c \
@@ -247,15 +248,12 @@ C_SOURCES := \
 	util/u_framebuffer.h \
 	util/u_gen_mipmap.c \
 	util/u_gen_mipmap.h \
-	util/u_half.h \
 	util/u_handle_table.c \
 	util/u_handle_table.h \
 	util/u_hash_table.c \
 	util/u_hash_table.h \
 	util/u_helpers.c \
 	util/u_helpers.h \
-	util/u_idalloc.c \
-	util/u_idalloc.h \
 	util/u_index_modify.c \
 	util/u_index_modify.h \
 	util/u_inlines.h \
@@ -294,14 +292,15 @@ C_SOURCES := \
 	util/u_suballoc.h \
 	util/u_surface.c \
 	util/u_surface.h \
-	util/u_surfaces.c \
-	util/u_surfaces.h \
 	util/u_tests.c \
 	util/u_tests.h \
 	util/u_texture.c \
 	util/u_texture.h \
 	util/u_tile.c \
 	util/u_tile.h \
+	util/u_trace.c \
+	util/u_trace.h \
+	util/u_trace_priv.h \
 	util/u_transfer.c \
 	util/u_transfer.h \
 	util/u_transfer_helper.c \
@@ -319,6 +318,8 @@ C_SOURCES := \
 NIR_SOURCES := \
 	nir/tgsi_to_nir.c \
 	nir/tgsi_to_nir.h \
+	nir/nir_to_tgsi.c \
+	nir/nir_to_tgsi.h \
 	nir/nir_draw_helpers.c \
 	nir/nir_draw_helpers.h
 
@@ -379,7 +380,9 @@ VL_STUB_SOURCES := \
 
 GENERATED_SOURCES := \
 	indices/u_indices_gen.c \
-	indices/u_unfilled_gen.c
+	indices/u_unfilled_gen.c \
+	util/u_tracepoints.c \
+	util/u_tracepoints.h
 
 GALLIVM_SOURCES := \
 	gallivm/lp_bld_arit.c \

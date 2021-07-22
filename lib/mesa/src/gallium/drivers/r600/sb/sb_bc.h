@@ -495,6 +495,15 @@ struct bc_alu_src {
 	unsigned abs:1;
 	unsigned rel:1;
 	literal value;
+
+	void clear() {
+		sel = 0;
+		chan = 0;
+		neg = 0;
+		abs = 0;
+		rel = 0;
+		value = 0;
+	}
 };
 
 struct bc_alu {
@@ -528,6 +537,31 @@ struct bc_alu {
 	void set_op(unsigned op) {
 		this->op = op;
 		op_ptr = r600_isa_alu(op);
+	}
+	void clear() {
+		op_ptr = nullptr;
+		op = 0;
+		for (int i = 0; i < 3; ++i)
+			src[i].clear();
+		dst_gpr = 0;
+		dst_chan = 0;
+		dst_rel = 0;
+		clamp = 0;
+		omod = 0;
+		bank_swizzle = 0;
+		index_mode = 0;
+		last = 0;
+		pred_sel = 0;
+		fog_merge = 0;
+		write_mask = 0;
+		update_exec_mask = 0;
+		update_pred = 0;
+		slot = 0;
+		lds_idx_offset = 0;
+		slot_flags = AF_NONE;
+	}
+	bc_alu() {
+		clear();
 	}
 };
 
@@ -658,7 +692,12 @@ public:
 	static unsigned dskip_mode;
 
 	sb_context() : src_stats(), opt_stats(), isa(0),
-			hw_chip(HW_CHIP_UNKNOWN), hw_class(HW_CLASS_UNKNOWN) {}
+			hw_chip(HW_CHIP_UNKNOWN), hw_class(HW_CLASS_UNKNOWN),
+			alu_temp_gprs(0), max_fetch(0), has_trans(false), vtx_src_num(0),
+			num_slots(0), uses_mova_gpr(false),
+			r6xx_gpr_index_workaround(false), stack_workaround_8xx(false),
+			stack_workaround_9xx(false), wavefront_size(0),
+			stack_entry_size(0) {}
 
 	int init(r600_isa *isa, sb_hw_chip chip, sb_hw_class cclass);
 

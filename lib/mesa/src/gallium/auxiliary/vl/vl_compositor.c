@@ -193,9 +193,9 @@ init_pipe_state(struct vl_compositor *c)
            c->rast = c->pipe->create_rasterizer_state(c->pipe, &rast);
 
            memset(&dsa, 0, sizeof dsa);
-           dsa.depth.enabled = 0;
-           dsa.depth.writemask = 0;
-           dsa.depth.func = PIPE_FUNC_ALWAYS;
+           dsa.depth_enabled = 0;
+           dsa.depth_writemask = 0;
+           dsa.depth_func = PIPE_FUNC_ALWAYS;
            for (i = 0; i < 2; ++i) {
                    dsa.stencil[i].enabled = 0;
                    dsa.stencil[i].func = PIPE_FUNC_ALWAYS;
@@ -205,9 +205,9 @@ init_pipe_state(struct vl_compositor *c)
                    dsa.stencil[i].valuemask = 0;
                    dsa.stencil[i].writemask = 0;
            }
-           dsa.alpha.enabled = 0;
-           dsa.alpha.func = PIPE_FUNC_ALWAYS;
-           dsa.alpha.ref_value = 0;
+           dsa.alpha_enabled = 0;
+           dsa.alpha_func = PIPE_FUNC_ALWAYS;
+           dsa.alpha_ref_value = 0;
            c->dsa = c->pipe->create_depth_stencil_alpha_state(c->pipe, &dsa);
            c->pipe->bind_depth_stencil_alpha_state(c->pipe, c->dsa);
    }
@@ -328,6 +328,7 @@ set_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
 
    assert(layer < VL_COMPOSITOR_MAX_LAYERS);
 
+   s->interlaced = buffer->interlaced;
    s->used_layers |= 1 << layer;
    sampler_views = buffer->get_sampler_view_components(buffer);
    for (i = 0; i < 3; ++i) {
@@ -435,7 +436,7 @@ vl_compositor_clear_layers(struct vl_compositor_state *s)
    unsigned i, j;
 
    assert(s);
-
+   s->interlaced = false;
    s->used_layers = 0;
    for ( i = 0; i < VL_COMPOSITOR_MAX_LAYERS; ++i) {
       struct vertex4f v_one = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -445,6 +446,10 @@ vl_compositor_clear_layers(struct vl_compositor_state *s)
       s->layers[i].cs = NULL;
       s->layers[i].viewport.scale[2] = 1;
       s->layers[i].viewport.translate[2] = 0;
+      s->layers[i].viewport.swizzle_x = PIPE_VIEWPORT_SWIZZLE_POSITIVE_X;
+      s->layers[i].viewport.swizzle_y = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y;
+      s->layers[i].viewport.swizzle_z = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z;
+      s->layers[i].viewport.swizzle_w = PIPE_VIEWPORT_SWIZZLE_POSITIVE_W;
       s->layers[i].rotate = VL_COMPOSITOR_ROTATE_0;
 
       for ( j = 0; j < 3; j++)
@@ -474,7 +479,7 @@ vl_compositor_set_csc_matrix(struct vl_compositor_state *s,
    assert(s);
 
    float *ptr = pipe_buffer_map(s->pipe, s->shader_params,
-                               PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+                               PIPE_MAP_WRITE | PIPE_MAP_DISCARD_RANGE,
                                &buf_transfer);
 
    if (!ptr)
@@ -551,6 +556,7 @@ vl_compositor_set_buffer_layer(struct vl_compositor_state *s,
 
    assert(layer < VL_COMPOSITOR_MAX_LAYERS);
 
+   s->interlaced = buffer->interlaced;
    s->used_layers |= 1 << layer;
    sampler_views = buffer->get_sampler_view_components(buffer);
    for (i = 0; i < 3; ++i) {
@@ -813,7 +819,7 @@ vl_compositor_init_state(struct vl_compositor_state *s, struct pipe_context *pip
       pipe->screen,
       PIPE_BIND_CONSTANT_BUFFER,
       PIPE_USAGE_DEFAULT,
-      sizeof(csc_matrix) + 6*sizeof(float) + 6*sizeof(int)
+      sizeof(csc_matrix) + 6*sizeof(float) + 10*sizeof(int)
    );
 
    if (!s->shader_params)

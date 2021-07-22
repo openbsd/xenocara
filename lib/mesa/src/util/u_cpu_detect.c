@@ -33,10 +33,15 @@
  */
 
 #include "pipe/p_config.h"
+#include "pipe/p_compiler.h"
 
 #include "util/u_debug.h"
 #include "u_cpu_detect.h"
+#include "u_math.h"
 #include "c11/threads.h"
+
+#include <stdio.h>
+#include <inttypes.h>
 
 #if defined(PIPE_ARCH_PPC)
 #if defined(PIPE_OS_APPLE)
@@ -82,12 +87,10 @@
 #endif
 
 
-#ifdef DEBUG
-DEBUG_GET_ONCE_BOOL_OPTION(dump_cpu, "GALLIUM_DUMP_CPU", FALSE)
-#endif
+DEBUG_GET_ONCE_BOOL_OPTION(dump_cpu, "GALLIUM_DUMP_CPU", false)
 
 
-struct util_cpu_caps util_cpu_caps;
+struct util_cpu_caps_t util_cpu_caps;
 
 #if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
 static int has_cpuid(void);
@@ -434,21 +437,120 @@ check_os_arm_support(void)
 static void
 get_cpu_topology(void)
 {
-   /* Default. This is correct if L3 is not present or there is only one. */
-   util_cpu_caps.cores_per_L3 = util_cpu_caps.nr_cpus;
+   /* Default. This is OK if L3 is not present or there is only one. */
+   util_cpu_caps.num_L3_caches = 1;
+
+   memset(util_cpu_caps.cpu_to_L3, 0xff, sizeof(util_cpu_caps.cpu_to_L3));
 
 #if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
    /* AMD Zen */
-   if (util_cpu_caps.x86_cpu_type == 0x17) {
+   if (util_cpu_caps.family >= CPU_AMD_ZEN1_ZEN2 &&
+       util_cpu_caps.family < CPU_AMD_LAST) {
       uint32_t regs[4];
 
-      /* Query the L3 cache topology information. */
-      cpuid_count(0x8000001D, 3, regs);
-      unsigned cache_level = (regs[0] >> 5) & 0x7;
-      unsigned cores_per_cache = ((regs[0] >> 14) & 0xfff) + 1;
+      uint32_t saved_mask[UTIL_MAX_CPUS / 32] = {0};
+      uint32_t mask[UTIL_MAX_CPUS / 32] = {0};
+      bool saved = false;
 
-      if (cache_level == 3)
-         util_cpu_caps.cores_per_L3 = cores_per_cache;
+      uint32_t L3_found[UTIL_MAX_CPUS] = {0};
+      uint32_t num_L3_caches = 0;
+      util_affinity_mask *L3_affinity_masks = NULL;
+
+      /* Query APIC IDs from each CPU core.
+       *
+       * An APIC ID is a logical ID of the CPU with respect to the cache
+       * hierarchy, meaning that consecutive APIC IDs are neighbours in
+       * the hierarchy, e.g. sharing the same cache.
+       *
+       * For example, CPU 0 can have APIC ID 0 and CPU 12 can have APIC ID 1,
+       * which means that both CPU 0 and 12 are next to each other.
+       * (e.g. they are 2 threads belonging to 1 SMT2 core)
+       *
+       * We need to find out which CPUs share the same L3 cache and they can
+       * be all over the place.
+       *
+       * Querying the APIC ID can only be done by pinning the current thread
+       * to each core. The original affinity mask is saved.
+       */
+      for (unsigned i = 0; i < util_cpu_caps.nr_cpus && i < UTIL_MAX_CPUS;
+           i++) {
+         uint32_t cpu_bit = 1u << (i % 32);
+
+         mask[i / 32] = cpu_bit;
+
+         if (util_set_current_thread_affinity(mask,
+                                              !saved ? saved_mask : NULL,
+                                              util_cpu_caps.num_cpu_mask_bits)) {
+            saved = true;
+
+            /* Query the APIC ID of the current core. */
+            cpuid(0x00000001, regs);
+            unsigned apic_id = regs[1] >> 24;
+
+            /* Query the total core count for the CPU */
+            uint32_t core_count = 1;
+            if (regs[3] & (1 << 28))
+               core_count = (regs[1] >> 16) & 0xff;
+
+            core_count = util_next_power_of_two(core_count);
+
+            /* Query the L3 cache count. */
+            cpuid_count(0x8000001D, 3, regs);
+            unsigned cache_level = (regs[0] >> 5) & 0x7;
+            unsigned cores_per_L3 = ((regs[0] >> 14) & 0xfff) + 1;
+
+            if (cache_level != 3)
+               continue;
+
+            unsigned local_core_id = apic_id & (core_count - 1);
+            unsigned phys_id = (apic_id & ~(core_count - 1)) >> util_logbase2(core_count);
+            unsigned local_l3_cache_index = local_core_id / util_next_power_of_two(cores_per_L3);
+#define L3_ID(p, i) (p << 16 | i << 1 | 1);
+
+            unsigned l3_id = L3_ID(phys_id, local_l3_cache_index);
+            int idx = -1;
+            for (unsigned c = 0; c < num_L3_caches; c++) {
+               if (L3_found[c] == l3_id) {
+                  idx = c;
+                  break;
+               }
+            }
+            if (idx == -1) {
+               idx = num_L3_caches;
+               L3_found[num_L3_caches++] = l3_id;
+               L3_affinity_masks = realloc(L3_affinity_masks, sizeof(util_affinity_mask) * num_L3_caches);
+               if (!L3_affinity_masks)
+                  return;
+               memset(&L3_affinity_masks[num_L3_caches - 1], 0, sizeof(util_affinity_mask));
+            }
+            util_cpu_caps.cpu_to_L3[i] = idx;
+            L3_affinity_masks[idx][i / 32] |= cpu_bit;
+
+         }
+         mask[i / 32] = 0;
+      }
+
+      util_cpu_caps.num_L3_caches = num_L3_caches;
+      util_cpu_caps.L3_affinity_mask = L3_affinity_masks;
+
+      if (saved) {
+         if (debug_get_option_dump_cpu()) {
+            fprintf(stderr, "CPU <-> L3 cache mapping:\n");
+            for (unsigned i = 0; i < util_cpu_caps.num_L3_caches; i++) {
+               fprintf(stderr, "  - L3 %u mask = ", i);
+               for (int j = util_cpu_caps.nr_cpus - 1; j >= 0; j -= 32)
+                  fprintf(stderr, "%08x ", util_cpu_caps.L3_affinity_mask[i][j / 32]);
+               fprintf(stderr, "\n");
+            }
+         }
+
+         /* Restore the original affinity mask. */
+         util_set_current_thread_affinity(saved_mask, NULL,
+                                          util_cpu_caps.num_cpu_mask_bits);
+      } else {
+         if (debug_get_option_dump_cpu())
+            fprintf(stderr, "Cannot set thread affinity for any thread.\n");
+      }
    }
 #endif
 }
@@ -463,7 +565,7 @@ util_cpu_detect_once(void)
    {
       SYSTEM_INFO system_info;
       GetSystemInfo(&system_info);
-      util_cpu_caps.nr_cpus = system_info.dwNumberOfProcessors;
+      util_cpu_caps.nr_cpus = MAX2(1, system_info.dwNumberOfProcessors);
    }
 #elif defined(PIPE_OS_UNIX) && defined(_SC_NPROCESSORS_ONLN)
    util_cpu_caps.nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
@@ -484,6 +586,8 @@ util_cpu_detect_once(void)
 #else
    util_cpu_caps.nr_cpus = 1;
 #endif
+
+   util_cpu_caps.num_cpu_mask_bits = align(util_cpu_caps.nr_cpus, 32);
 
    /* Make the fallback cacheline size nonzero so that it can be
     * safely passed to align().
@@ -509,6 +613,18 @@ util_cpu_detect_once(void)
          /* Add "extended family". */
          if (util_cpu_caps.x86_cpu_type == 0xf)
              util_cpu_caps.x86_cpu_type += ((regs2[0] >> 20) & 0xff);
+
+         switch (util_cpu_caps.x86_cpu_type) {
+         case 0x17:
+            util_cpu_caps.family = CPU_AMD_ZEN1_ZEN2;
+            break;
+         case 0x18:
+            util_cpu_caps.family = CPU_AMD_ZEN_HYGON;
+            break;
+         case 0x19:
+            util_cpu_caps.family = CPU_AMD_ZEN3;
+            break;
+         }
 
          /* general feature flags */
          util_cpu_caps.has_tsc    = (regs2[3] >>  4) & 1; /* 0x0000010 */
@@ -608,7 +724,6 @@ util_cpu_detect_once(void)
 
    get_cpu_topology();
 
-#ifdef DEBUG
    if (debug_get_option_dump_cpu()) {
       debug_printf("util_cpu_caps.nr_cpus = %u\n", util_cpu_caps.nr_cpus);
 
@@ -645,7 +760,6 @@ util_cpu_detect_once(void)
       debug_printf("util_cpu_caps.has_avx512vl = %u\n", util_cpu_caps.has_avx512vl);
       debug_printf("util_cpu_caps.has_avx512vbmi = %u\n", util_cpu_caps.has_avx512vbmi);
    }
-#endif
 }
 
 static once_flag cpu_once_flag = ONCE_FLAG_INIT;

@@ -82,7 +82,13 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
    /* Set default language version and extensions */
    this->language_version = 110;
    this->forced_language_version = ctx->Const.ForceGLSLVersion;
-   this->zero_init = ctx->Const.GLSLZeroInit;
+   if (ctx->Const.GLSLZeroInit == 1) {
+      this->zero_init = (1u << ir_var_auto) | (1u << ir_var_temporary) | (1u << ir_var_shader_out);
+   } else if (ctx->Const.GLSLZeroInit == 2) {
+      this->zero_init = (1u << ir_var_auto) | (1u << ir_var_temporary) | (1u << ir_var_function_out);
+   } else {
+      this->zero_init = 0;
+   }
    this->gl_version = 20;
    this->compat_shader = true;
    this->es_shader = false;
@@ -311,10 +317,12 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
           sizeof(this->atomic_counter_offsets));
    this->allow_extension_directive_midshader =
       ctx->Const.AllowGLSLExtensionDirectiveMidShader;
+   this->allow_glsl_120_subset_in_110 =
+      ctx->Const.AllowGLSL120SubsetIn110;
    this->allow_builtin_variable_redeclaration =
       ctx->Const.AllowGLSLBuiltinVariableRedeclaration;
-   this->allow_layout_qualifier_on_function_parameter =
-      ctx->Const.AllowLayoutQualifiersOnFunctionParameters;
+   this->ignore_write_to_readonly_var =
+      ctx->Const.GLSLIgnoreWriteToReadonlyVar;
 
    this->cs_input_local_size_variable_specified = false;
 
@@ -323,6 +331,10 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
    this->bindless_image_specified = false;
    this->bound_sampler_specified = false;
    this->bound_image_specified = false;
+
+   this->language_version = this->forced_language_version ?
+      this->forced_language_version : this->language_version;
+   set_valid_gl_and_glsl_versions(NULL);
 }
 
 /**
@@ -374,6 +386,51 @@ _mesa_glsl_parse_state::check_version(unsigned required_glsl_version,
                     requirement_string);
 
    return false;
+}
+
+/**
+ * This makes sure any GLSL versions defined or overridden are valid. If not it
+ * sets a valid value.
+ */
+void
+_mesa_glsl_parse_state::set_valid_gl_and_glsl_versions(YYLTYPE *locp)
+{
+   bool supported = false;
+   for (unsigned i = 0; i < this->num_supported_versions; i++) {
+      if (this->supported_versions[i].ver == this->language_version
+          && this->supported_versions[i].es == this->es_shader) {
+         this->gl_version = this->supported_versions[i].gl_ver;
+         supported = true;
+         break;
+      }
+   }
+
+   if (!supported) {
+      if (locp) {
+         _mesa_glsl_error(locp, this, "%s is not supported. "
+                          "Supported versions are: %s",
+                          this->get_version_string(),
+                          this->supported_version_string);
+      }
+
+      /* On exit, the language_version must be set to a valid value.
+       * Later calls to _mesa_glsl_initialize_types will misbehave if
+       * the version is invalid.
+       */
+      switch (this->ctx->API) {
+      case API_OPENGL_COMPAT:
+      case API_OPENGL_CORE:
+	 this->language_version = this->ctx->Const.GLSLVersion;
+	 break;
+
+      case API_OPENGLES:
+	 FALLTHROUGH;
+
+      case API_OPENGLES2:
+	 this->language_version = 100;
+	 break;
+      }
+   }
 }
 
 /**
@@ -441,41 +498,7 @@ _mesa_glsl_parse_state::process_version_directive(YYLTYPE *locp, int version,
                           this->language_version == 140) ||
                          (!this->es_shader && this->language_version < 140);
 
-   bool supported = false;
-   for (unsigned i = 0; i < this->num_supported_versions; i++) {
-      if (this->supported_versions[i].ver == this->language_version
-          && this->supported_versions[i].es == this->es_shader) {
-         this->gl_version = this->supported_versions[i].gl_ver;
-         supported = true;
-         break;
-      }
-   }
-
-   if (!supported) {
-      _mesa_glsl_error(locp, this, "%s is not supported. "
-                       "Supported versions are: %s",
-                       this->get_version_string(),
-                       this->supported_version_string);
-
-      /* On exit, the language_version must be set to a valid value.
-       * Later calls to _mesa_glsl_initialize_types will misbehave if
-       * the version is invalid.
-       */
-      switch (this->ctx->API) {
-      case API_OPENGL_COMPAT:
-      case API_OPENGL_CORE:
-	 this->language_version = this->ctx->Const.GLSLVersion;
-	 break;
-
-      case API_OPENGLES:
-	 assert(!"Should not get here.");
-	 /* FALLTHROUGH */
-
-      case API_OPENGLES2:
-	 this->language_version = 100;
-	 break;
-      }
-   }
+   set_valid_gl_and_glsl_versions(locp);
 }
 
 
@@ -721,6 +744,7 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(EXT_demote_to_helper_invocation),
    EXT(EXT_frag_depth),
    EXT(EXT_draw_buffers),
+   EXT(EXT_draw_instanced),
    EXT(EXT_clip_cull_distance),
    EXT(EXT_geometry_point_size),
    EXT_AEP(EXT_geometry_shader),
@@ -730,6 +754,7 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(EXT_separate_shader_objects),
    EXT(EXT_shader_framebuffer_fetch),
    EXT(EXT_shader_framebuffer_fetch_non_coherent),
+   EXT(EXT_shader_group_vote),
    EXT(EXT_shader_image_load_formatted),
    EXT(EXT_shader_image_load_store),
    EXT(EXT_shader_implicit_conversions),
@@ -751,6 +776,8 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(NV_fragment_shader_interlock),
    EXT(NV_image_formats),
    EXT(NV_shader_atomic_float),
+   EXT(NV_shader_atomic_int64),
+   EXT(NV_viewport_array2),
 };
 
 #undef EXT
@@ -1176,6 +1203,7 @@ ast_node::print(void) const
 
 ast_node::ast_node(void)
 {
+   this->location.path = NULL;
    this->location.source = 0;
    this->location.first_line = 0;
    this->location.first_column = 0;
@@ -1929,6 +1957,8 @@ set_shader_inout_layout(struct gl_shader *shader,
    shader->bindless_image = state->bindless_image_specified;
    shader->bound_sampler = state->bound_sampler_specified;
    shader->bound_image = state->bound_image_specified;
+   shader->redeclares_gl_layer = state->redeclares_gl_layer;
+   shader->layer_viewport_relative = state->layer_viewport_relative;
 }
 
 /* src can be NULL if only the symbols found in the exec_list should be
@@ -2232,7 +2262,14 @@ _mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
    shader->Version = state->language_version;
    shader->IsES = state->es_shader;
 
+   struct gl_shader_compiler_options *options =
+      &ctx->Const.ShaderCompilerOptions[shader->Stage];
+
    if (!state->error && !shader->ir->is_empty()) {
+      if (state->es_shader &&
+          (options->LowerPrecisionFloat16 || options->LowerPrecisionInt16))
+         lower_precision(options, shader->ir);
+      lower_builtins(shader->ir);
       assign_subroutine_indexes(state);
       lower_subroutine(shader->ir, state);
       opt_shader_and_create_symbol_table(ctx, state->symbols, shader);

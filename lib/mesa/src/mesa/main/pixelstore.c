@@ -33,6 +33,7 @@
 #include "context.h"
 #include "pixelstore.h"
 #include "mtypes.h"
+#include "util/rounding.h"
 
 
 static ALWAYS_INLINE void
@@ -93,8 +94,12 @@ pixel_storei(GLenum pname, GLint param, bool no_error)
          ctx->Pack.Alignment = param;
          break;
       case GL_PACK_INVERT_MESA:
-         if (!no_error &&
-             (!_mesa_is_desktop_gl(ctx) || !ctx->Extensions.MESA_pack_invert))
+         if (!no_error && !_mesa_has_MESA_pack_invert(ctx))
+            goto invalid_enum_error;
+         ctx->Pack.Invert = param;
+         break;
+      case GL_PACK_REVERSE_ROW_ORDER_ANGLE:
+         if (!no_error && !_mesa_has_ANGLE_pack_reverse_row_order(ctx))
             goto invalid_enum_error;
          ctx->Pack.Invert = param;
          break;
@@ -234,7 +239,7 @@ _mesa_PixelStorei(GLenum pname, GLint param)
 void GLAPIENTRY
 _mesa_PixelStoref(GLenum pname, GLfloat param)
 {
-   _mesa_PixelStorei(pname, IROUND(param));
+   _mesa_PixelStorei(pname, lroundf(param));
 }
 
 
@@ -248,7 +253,7 @@ _mesa_PixelStorei_no_error(GLenum pname, GLint param)
 void GLAPIENTRY
 _mesa_PixelStoref_no_error(GLenum pname, GLfloat param)
 {
-   _mesa_PixelStorei_no_error(pname, IROUND(param));
+   _mesa_PixelStorei_no_error(pname, lroundf(param));
 }
 
 
@@ -272,8 +277,7 @@ _mesa_init_pixelstore(struct gl_context *ctx)
    ctx->Pack.CompressedBlockHeight = 0;
    ctx->Pack.CompressedBlockDepth = 0;
    ctx->Pack.CompressedBlockSize = 0;
-   _mesa_reference_buffer_object(ctx, &ctx->Pack.BufferObj,
-                                 ctx->Shared->NullBufferObj);
+   _mesa_reference_buffer_object(ctx, &ctx->Pack.BufferObj, NULL);
    ctx->Unpack.Alignment = 4;
    ctx->Unpack.RowLength = 0;
    ctx->Unpack.ImageHeight = 0;
@@ -287,8 +291,7 @@ _mesa_init_pixelstore(struct gl_context *ctx)
    ctx->Unpack.CompressedBlockHeight = 0;
    ctx->Unpack.CompressedBlockDepth = 0;
    ctx->Unpack.CompressedBlockSize = 0;
-   _mesa_reference_buffer_object(ctx, &ctx->Unpack.BufferObj,
-                                 ctx->Shared->NullBufferObj);
+   _mesa_reference_buffer_object(ctx, &ctx->Unpack.BufferObj, NULL);
 
    /*
     * _mesa_unpack_image() returns image data in this format.  When we
@@ -305,8 +308,7 @@ _mesa_init_pixelstore(struct gl_context *ctx)
    ctx->DefaultPacking.SwapBytes = GL_FALSE;
    ctx->DefaultPacking.LsbFirst = GL_FALSE;
    ctx->DefaultPacking.Invert = GL_FALSE;
-   _mesa_reference_buffer_object(ctx, &ctx->DefaultPacking.BufferObj,
-                                 ctx->Shared->NullBufferObj);
+   _mesa_reference_buffer_object(ctx, &ctx->DefaultPacking.BufferObj, NULL);
 }
 
 

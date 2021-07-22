@@ -127,9 +127,15 @@ lower_instr(nir_intrinsic_instr *instr, unsigned ssbo_offset, nir_builder *b)
       break;
    }
 
-   if (new_instr->intrinsic == nir_intrinsic_load_ssbo ||
-       new_instr->intrinsic == nir_intrinsic_store_ssbo)
+   if (new_instr->intrinsic == nir_intrinsic_load_ssbo) {
       nir_intrinsic_set_align(new_instr, 4, 0);
+
+      /* we could be replacing an intrinsic with fixed # of dest
+       * num_components with one that has variable number.  So
+       * best to take this from the dest:
+       */
+      new_instr->num_components = instr->dest.ssa.num_components;
+   }
 
    nir_ssa_dest_init(&new_instr->instr, &new_instr->dest,
                      instr->dest.ssa.num_components,
@@ -140,15 +146,10 @@ lower_instr(nir_intrinsic_instr *instr, unsigned ssbo_offset, nir_builder *b)
    if (instr->intrinsic == nir_intrinsic_atomic_counter_pre_dec) {
       b->cursor = nir_after_instr(&new_instr->instr);
       nir_ssa_def *result = nir_iadd(b, &new_instr->dest.ssa, temp);
-      nir_ssa_def_rewrite_uses(&instr->dest.ssa, nir_src_for_ssa(result));
+      nir_ssa_def_rewrite_uses(&instr->dest.ssa, result);
    } else {
-      nir_ssa_def_rewrite_uses(&instr->dest.ssa, nir_src_for_ssa(&new_instr->dest.ssa));
+      nir_ssa_def_rewrite_uses(&instr->dest.ssa, &new_instr->dest.ssa);
    }
-
-   /* we could be replacing an intrinsic with fixed # of dest num_components
-    * with one that has variable number.  So best to take this from the dest:
-    */
-   new_instr->num_components = instr->dest.ssa.num_components;
 
    return true;
 }
@@ -187,7 +188,7 @@ nir_lower_atomics_to_ssbo(nir_shader *shader)
    if (progress) {
       /* replace atomic_uint uniforms with ssbo's: */
       unsigned replaced = 0;
-      nir_foreach_variable_safe(var, &shader->uniforms) {
+      nir_foreach_uniform_variable_safe(var, shader) {
          if (is_atomic_uint(var->type)) {
             exec_node_remove(&var->node);
 
@@ -204,6 +205,7 @@ nir_lower_atomics_to_ssbo(nir_shader *shader)
 
             ssbo = nir_variable_create(shader, nir_var_mem_ssbo, type, name);
             ssbo->data.binding = ssbo_offset + var->data.binding;
+            ssbo->data.explicit_binding = var->data.explicit_binding;
 
             /* We can't use num_abos, because it only represents the number of
              * active atomic counters, and currently unlike SSBO's they aren't

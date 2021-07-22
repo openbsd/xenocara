@@ -27,11 +27,18 @@
 #include "u_queue.h"
 
 #include "c11/threads.h"
-
+#include "util/u_cpu_detect.h"
 #include "util/os_time.h"
 #include "util/u_string.h"
 #include "util/u_thread.h"
 #include "u_process.h"
+
+#if defined(__linux__)
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/syscall.h>
+#endif
+
 
 /* Define 256MB */
 #define S_256MB (256 * 1024 * 1024)
@@ -105,7 +112,7 @@ static bool
 do_futex_fence_wait(struct util_queue_fence *fence,
                     bool timeout, int64_t abs_timeout)
 {
-   uint32_t v = fence->val;
+   uint32_t v = p_atomic_read_relaxed(&fence->val);
    struct timespec ts;
    ts.tv_sec = abs_timeout / (1000*1000*1000);
    ts.tv_nsec = abs_timeout % (1000*1000*1000);
@@ -123,7 +130,7 @@ do_futex_fence_wait(struct util_queue_fence *fence,
             return false;
       }
 
-      v = fence->val;
+      v = p_atomic_read_relaxed(&fence->val);
    }
 
    return true;
@@ -176,7 +183,11 @@ _util_queue_fence_wait_timeout(struct util_queue_fence *fence,
    if (rel > 0) {
       struct timespec ts;
 
+#if defined(HAVE_TIMESPEC_GET) || defined(_WIN32)
       timespec_get(&ts, TIME_UTC);
+#else
+      clock_gettime(CLOCK_REALTIME, &ts);
+#endif
 
       ts.tv_sec += abs_timeout / (1000*1000*1000);
       ts.tv_nsec += abs_timeout % (1000*1000*1000);
@@ -244,17 +255,25 @@ util_queue_thread_func(void *input)
 
    free(input);
 
-#ifdef HAVE_PTHREAD_SETAFFINITY
    if (queue->flags & UTIL_QUEUE_INIT_SET_FULL_THREAD_AFFINITY) {
       /* Don't inherit the thread affinity from the parent thread.
        * Set the full mask.
        */
-      cpu_set_t cpuset;
-      CPU_ZERO(&cpuset);
-      for (unsigned i = 0; i < CPU_SETSIZE; i++)
-         CPU_SET(i, &cpuset);
+      uint32_t mask[UTIL_MAX_CPUS / 32];
 
-      pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+      memset(mask, 0xff, sizeof(mask));
+
+      /* Ensure util_cpu_caps.num_cpu_mask_bits is initialized: */
+      util_cpu_detect();
+
+      util_set_current_thread_affinity(mask, NULL,
+                                       util_get_cpu_caps()->num_cpu_mask_bits);
+   }
+
+#if defined(__linux__)
+   if (queue->flags & UTIL_QUEUE_INIT_USE_MINIMUM_PRIORITY) {
+      /* The nice() function can only set a maximum of 19. */
+      setpriority(PRIO_PROCESS, syscall(SYS_gettid), 19);
    }
 #endif
 
@@ -331,16 +350,17 @@ util_queue_create_thread(struct util_queue *queue, unsigned index)
    }
 
    if (queue->flags & UTIL_QUEUE_INIT_USE_MINIMUM_PRIORITY) {
-#if defined(__linux__) && defined(SCHED_IDLE)
+#if defined(__linux__) && defined(SCHED_BATCH)
       struct sched_param sched_param = {0};
 
       /* The nice() function can only set a maximum of 19.
-       * SCHED_IDLE is the same as nice = 20.
+       * SCHED_BATCH gives the scheduler a hint that this is a latency
+       * insensitive thread.
        *
        * Note that Linux only allows decreasing the priority. The original
        * priority can't be restored.
        */
-      pthread_setschedparam(queue->threads[index], SCHED_IDLE, &sched_param);
+      pthread_setschedparam(queue->threads[index], SCHED_BATCH, &sched_param);
 #endif
    }
    return true;
@@ -681,5 +701,5 @@ util_queue_get_thread_time_nano(struct util_queue *queue, unsigned thread_index)
    if (thread_index >= queue->num_threads)
       return 0;
 
-   return u_thread_get_time_nano(queue->threads[thread_index]);
+   return util_thread_get_time_nano(queue->threads[thread_index]);
 }

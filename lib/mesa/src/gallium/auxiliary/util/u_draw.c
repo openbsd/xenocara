@@ -107,7 +107,7 @@ util_draw_max_index(
             max_index = MIN2(max_index, buffer_max_index);
          }
          else {
-            /* Per-instance data. Simply make sure the state tracker didn't
+            /* Per-instance data. Simply make sure gallium frontends didn't
              * request more instances than those that fit in the buffer */
             if ((info->start_instance + info->instance_count)/element->instance_divisor
                 > (buffer_max_index + 1)) {
@@ -126,31 +126,32 @@ util_draw_max_index(
 }
 
 
-/* This extracts the draw arguments from the info_in->indirect resource,
+/* This extracts the draw arguments from the indirect resource,
  * puts them into a new instance of pipe_draw_info, and calls draw_vbo on it.
  */
 void
 util_draw_indirect(struct pipe_context *pipe,
-                   const struct pipe_draw_info *info_in)
+                   const struct pipe_draw_info *info_in,
+                   const struct pipe_draw_indirect_info *indirect)
 {
    struct pipe_draw_info info;
    struct pipe_transfer *transfer;
    uint32_t *params;
-   const unsigned num_params = info_in->index_size ? 5 : 4;
+   unsigned num_params = info_in->index_size ? 5 : 4;
 
-   assert(info_in->indirect);
-   assert(!info_in->count_from_stream_output);
+   assert(indirect);
+   assert(!indirect->count_from_stream_output);
 
    memcpy(&info, info_in, sizeof(info));
 
-   uint32_t draw_count = info_in->indirect->draw_count;
+   uint32_t draw_count = indirect->draw_count;
 
-   if (info_in->indirect->indirect_draw_count) {
+   if (indirect->indirect_draw_count) {
       struct pipe_transfer *dc_transfer;
       uint32_t *dc_param = pipe_buffer_map_range(pipe,
-                                                 info_in->indirect->indirect_draw_count,
-                                                 info_in->indirect->indirect_draw_count_offset,
-                                                 4, PIPE_TRANSFER_READ, &dc_transfer);
+                                                 indirect->indirect_draw_count,
+                                                 indirect->indirect_draw_count_offset,
+                                                 4, PIPE_MAP_READ, &dc_transfer);
       if (!dc_transfer) {
          debug_printf("%s: failed to map indirect draw count buffer\n", __FUNCTION__);
          return;
@@ -160,12 +161,14 @@ util_draw_indirect(struct pipe_context *pipe,
       pipe_buffer_unmap(pipe, dc_transfer);
    }
 
+   if (indirect->stride)
+      num_params = MIN2(indirect->stride / 4, num_params);
    params = (uint32_t *)
       pipe_buffer_map_range(pipe,
-                            info_in->indirect->buffer,
-                            info_in->indirect->offset,
-                            (num_params * info_in->indirect->draw_count) * sizeof(uint32_t),
-                            PIPE_TRANSFER_READ,
+                            indirect->buffer,
+                            indirect->offset,
+                            (num_params * indirect->draw_count) * sizeof(uint32_t),
+                            PIPE_MAP_READ,
                             &transfer);
    if (!transfer) {
       debug_printf("%s: failed to map indirect buffer\n", __FUNCTION__);
@@ -173,17 +176,39 @@ util_draw_indirect(struct pipe_context *pipe,
    }
 
    for (unsigned i = 0; i < draw_count; i++) {
-      info.count = params[0];
+      struct pipe_draw_start_count draw;
+
+      draw.count = params[0];
       info.instance_count = params[1];
-      info.start = params[2];
+      draw.start = params[2];
       info.index_bias = info_in->index_size ? params[3] : 0;
       info.start_instance = info_in->index_size ? params[4] : params[3];
       info.drawid = i;
-      info.indirect = NULL;
 
-      pipe->draw_vbo(pipe, &info);
+      pipe->draw_vbo(pipe, &info, NULL, &draw, 1);
 
-      params += info_in->indirect->stride / 4;
+      params += indirect->stride / 4;
    }
    pipe_buffer_unmap(pipe, transfer);
+}
+
+void
+util_draw_multi(struct pipe_context *pctx, const struct pipe_draw_info *info,
+                const struct pipe_draw_indirect_info *indirect,
+                const struct pipe_draw_start_count *draws,
+                unsigned num_draws)
+{
+   struct pipe_draw_info tmp_info = *info;
+
+   /* If you call this with num_draws==1, that is probably going to be
+    * an infinite loop
+    */
+   assert(num_draws > 1);
+
+   for (unsigned i = 0; i < num_draws; i++) {
+      if (indirect || (draws[i].count && info->instance_count))
+         pctx->draw_vbo(pctx, &tmp_info, indirect, &draws[i], 1);
+      if (tmp_info.increment_draw_id)
+         tmp_info.drawid++;
+   }
 }

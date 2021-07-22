@@ -26,7 +26,7 @@
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_builder.h"
 #include "compiler/glsl/list.h"
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 #include "util/ralloc.h"
 
@@ -166,12 +166,12 @@ ptn_get_src(struct ptn_compile *c, const struct prog_src_register *prog_src)
       case PROGRAM_CONSTANT:
          if ((c->prog->arb.IndirectRegisterFiles &
               (1 << PROGRAM_CONSTANT)) == 0) {
-            unsigned pvo = plist->ParameterValueOffset[prog_src->Index];
+            unsigned pvo = plist->Parameters[prog_src->Index].ValueOffset;
             float *v = (float *) plist->ParameterValues + pvo;
             src.src = nir_src_for_ssa(nir_imm_vec4(b, v[0], v[1], v[2], v[3]));
             break;
          }
-         /* FALLTHROUGH */
+         FALLTHROUGH;
       case PROGRAM_STATE_VAR: {
          assert(c->parameters != NULL);
 
@@ -461,10 +461,47 @@ ptn_kil(nir_builder *b, nir_ssa_def **src)
    nir_ssa_def *cmp = nir_bany(b, nir_flt(b, src[0], nir_imm_float(b, 0.0)));
    b->exact = false;
 
-   nir_intrinsic_instr *discard =
-      nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard_if);
-   discard->src[0] = nir_src_for_ssa(cmp);
-   nir_builder_instr_insert(b, &discard->instr);
+   nir_discard_if(b, cmp);
+}
+
+enum glsl_sampler_dim
+_mesa_texture_index_to_sampler_dim(gl_texture_index index, bool *is_array)
+{
+   *is_array = false;
+
+   switch (index) {
+   case TEXTURE_2D_MULTISAMPLE_INDEX:
+      return GLSL_SAMPLER_DIM_MS;
+   case TEXTURE_2D_MULTISAMPLE_ARRAY_INDEX:
+      *is_array = true;
+      return GLSL_SAMPLER_DIM_MS;
+   case TEXTURE_BUFFER_INDEX:
+      return GLSL_SAMPLER_DIM_BUF;
+   case TEXTURE_1D_INDEX:
+      return GLSL_SAMPLER_DIM_1D;
+   case TEXTURE_2D_INDEX:
+      return GLSL_SAMPLER_DIM_2D;
+   case TEXTURE_3D_INDEX:
+      return GLSL_SAMPLER_DIM_3D;
+   case TEXTURE_CUBE_INDEX:
+      return GLSL_SAMPLER_DIM_CUBE;
+   case TEXTURE_CUBE_ARRAY_INDEX:
+      *is_array = true;
+      return GLSL_SAMPLER_DIM_CUBE;
+   case TEXTURE_RECT_INDEX:
+      return GLSL_SAMPLER_DIM_RECT;
+   case TEXTURE_1D_ARRAY_INDEX:
+      *is_array = true;
+      return GLSL_SAMPLER_DIM_1D;
+   case TEXTURE_2D_ARRAY_INDEX:
+      *is_array = true;
+      return GLSL_SAMPLER_DIM_2D;
+   case TEXTURE_EXTERNAL_INDEX:
+      return GLSL_SAMPLER_DIM_EXTERNAL;
+   case NUM_TEXTURE_TARGETS:
+      break;
+   }
+   unreachable("unknown texture target");
 }
 
 static void
@@ -510,55 +547,22 @@ ptn_tex(struct ptn_compile *c, nir_alu_dest dest, nir_ssa_def **src,
 
    instr = nir_tex_instr_create(b->shader, num_srcs);
    instr->op = op;
-   instr->dest_type = nir_type_float;
+   instr->dest_type = nir_type_float32;
    instr->is_shadow = prog_inst->TexShadow;
 
-   switch (prog_inst->TexSrcTarget) {
-   case TEXTURE_1D_INDEX:
-      instr->sampler_dim = GLSL_SAMPLER_DIM_1D;
-      break;
-   case TEXTURE_2D_INDEX:
-      instr->sampler_dim = GLSL_SAMPLER_DIM_2D;
-      break;
-   case TEXTURE_3D_INDEX:
-      instr->sampler_dim = GLSL_SAMPLER_DIM_3D;
-      break;
-   case TEXTURE_CUBE_INDEX:
-      instr->sampler_dim = GLSL_SAMPLER_DIM_CUBE;
-      break;
-   case TEXTURE_RECT_INDEX:
-      instr->sampler_dim = GLSL_SAMPLER_DIM_RECT;
-      break;
-   default:
-      fprintf(stderr, "Unknown texture target %d\n", prog_inst->TexSrcTarget);
-      abort();
-   }
+   bool is_array;
+   instr->sampler_dim = _mesa_texture_index_to_sampler_dim(prog_inst->TexSrcTarget, &is_array);
 
-   switch (instr->sampler_dim) {
-   case GLSL_SAMPLER_DIM_1D:
-   case GLSL_SAMPLER_DIM_BUF:
-      instr->coord_components = 1;
-      break;
-   case GLSL_SAMPLER_DIM_2D:
-   case GLSL_SAMPLER_DIM_RECT:
-   case GLSL_SAMPLER_DIM_EXTERNAL:
-   case GLSL_SAMPLER_DIM_MS:
-      instr->coord_components = 2;
-      break;
-   case GLSL_SAMPLER_DIM_3D:
-   case GLSL_SAMPLER_DIM_CUBE:
-      instr->coord_components = 3;
-      break;
-   case GLSL_SAMPLER_DIM_SUBPASS:
-   case GLSL_SAMPLER_DIM_SUBPASS_MS:
-      unreachable("can't reach");
-   }
+   instr->coord_components =
+      glsl_get_sampler_dim_coordinate_components(instr->sampler_dim);
 
    nir_variable *var = c->sampler_vars[prog_inst->TexSrcUnit];
    if (!var) {
       const struct glsl_type *type =
-         glsl_sampler_type(instr->sampler_dim, false, false, GLSL_TYPE_FLOAT);
-      var = nir_variable_create(b->shader, nir_var_uniform, type, "sampler");
+         glsl_sampler_type(instr->sampler_dim, instr->is_shadow, false, GLSL_TYPE_FLOAT);
+      char samplerName[20];
+      snprintf(samplerName, sizeof(samplerName), "sampler_%d", prog_inst->TexSrcUnit);
+      var = nir_variable_create(b->shader, nir_var_uniform, type, samplerName);
       var->data.binding = prog_inst->TexSrcUnit;
       var->data.explicit_binding = true;
       c->sampler_vars[prog_inst->TexSrcUnit] = var;
@@ -830,7 +834,7 @@ ptn_add_output_stores(struct ptn_compile *c)
 {
    nir_builder *b = &c->build;
 
-   nir_foreach_variable(var, &b->shader->outputs) {
+   nir_foreach_shader_out_variable(var, b->shader) {
       nir_ssa_def *src = nir_load_reg(b, c->output_regs[var->data.location]);
       if (c->prog->Target == GL_FRAGMENT_PROGRAM_ARB &&
           var->data.location == FRAG_RESULT_DEPTH) {
@@ -900,10 +904,8 @@ setup_registers_and_variables(struct ptn_compile *c)
    }
 
    /* Create system value variables */
-   uint64_t system_values_read = c->prog->info.system_values_read;
-   while (system_values_read) {
-      const int i = u_bit_scan64(&system_values_read);
-
+   int i;
+   BITSET_FOREACH_SET(i, c->prog->info.system_values_read, SYSTEM_VALUE_MAX) {
       nir_variable *var =
          nir_variable_create(shader, nir_var_system_value, glsl_vec4_type(),
                              ralloc_asprintf(shader, "sv_%d", i));
@@ -928,22 +930,21 @@ setup_registers_and_variables(struct ptn_compile *c)
       nir_register *reg = nir_local_reg_create(b->impl);
       reg->num_components = 4;
 
-      nir_variable *var = rzalloc(shader, nir_variable);
+      const struct glsl_type *type;
       if ((c->prog->Target == GL_FRAGMENT_PROGRAM_ARB && i == FRAG_RESULT_DEPTH) ||
           (c->prog->Target == GL_VERTEX_PROGRAM_ARB && i == VARYING_SLOT_FOGC) ||
           (c->prog->Target == GL_VERTEX_PROGRAM_ARB && i == VARYING_SLOT_PSIZ))
-         var->type = glsl_float_type();
+         type = glsl_float_type();
       else
-         var->type = glsl_vec4_type();
-      var->data.mode = nir_var_shader_out;
-      var->name = ralloc_asprintf(var, "out_%d", i);
+         type = glsl_vec4_type();
 
+      nir_variable *var =
+         nir_variable_create(shader, nir_var_shader_out, type,
+                             ralloc_asprintf(shader, "out_%d", i));
       var->data.location = i;
       var->data.index = 0;
 
       c->output_regs[i] = reg;
-
-      exec_list_push_tail(&shader->outputs, &var->node);
       c->output_vars[i] = var;
    }
 
@@ -985,7 +986,7 @@ prog_to_nir(const struct gl_program *prog,
       return NULL;
    c->prog = prog;
 
-   nir_builder_init_simple_shader(&c->build, NULL, stage, options);
+   c->build = nir_builder_init_simple_shader(stage, options, NULL);
 
    /* Copy the shader_info from the gl_program */
    c->build.shader->info = prog->info;

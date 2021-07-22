@@ -45,19 +45,19 @@ struct locals_to_regs_state {
 static uint32_t
 hash_deref(const void *void_deref)
 {
-   uint32_t hash = _mesa_fnv32_1a_offset_bias;
+   uint32_t hash = 0;
 
    for (const nir_deref_instr *deref = void_deref; deref;
         deref = nir_deref_instr_parent(deref)) {
       switch (deref->deref_type) {
       case nir_deref_type_var:
-         return _mesa_fnv32_1a_accumulate(hash, deref->var);
+         return XXH32(&deref->var, sizeof(deref->var), hash);
 
       case nir_deref_type_array:
          continue; /* Do nothing */
 
       case nir_deref_type_struct:
-         hash = _mesa_fnv32_1a_accumulate(hash, deref->strct.index);
+         hash = XXH32(&deref->strct.index, sizeof(deref->strct.index), hash);
          continue;
 
       default:
@@ -101,7 +101,8 @@ get_reg_for_deref(nir_deref_instr *deref, struct locals_to_regs_state *state)
 {
    uint32_t hash = hash_deref(deref);
 
-   assert(nir_deref_instr_get_variable(deref)->constant_initializer == NULL);
+   assert(nir_deref_instr_get_variable(deref)->constant_initializer == NULL &&
+          nir_deref_instr_get_variable(deref)->pointer_initializer == NULL);
 
    struct hash_entry *entry =
       _mesa_hash_table_search_pre_hashed(state->regs_table, hash, deref);
@@ -168,7 +169,7 @@ get_deref_reg_src(nir_deref_instr *deref, struct locals_to_regs_state *state)
          nir_ssa_def *index = nir_i2i(b, nir_ssa_for_src(b, d->arr.index, 1), 32);
          src.reg.indirect->ssa =
             nir_iadd(b, src.reg.indirect->ssa,
-                        nir_imul(b, index, nir_imm_int(b, inner_array_size)));
+                        nir_imul_imm(b, index, inner_array_size));
       }
 
       inner_array_size *= glsl_get_length(nir_deref_instr_parent(d)->type);
@@ -192,7 +193,7 @@ lower_locals_to_regs_block(nir_block *block,
       switch (intrin->intrinsic) {
       case nir_intrinsic_load_deref: {
          nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
-         if (deref->mode != nir_var_function_temp)
+         if (!nir_deref_mode_is(deref, nir_var_function_temp))
             continue;
 
          b->cursor = nir_before_instr(&intrin->instr);
@@ -205,7 +206,7 @@ lower_locals_to_regs_block(nir_block *block,
                               intrin->num_components,
                               intrin->dest.ssa.bit_size, NULL);
             nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
-                                     nir_src_for_ssa(&mov->dest.dest.ssa));
+                                     &mov->dest.dest.ssa);
          } else {
             nir_dest_copy(&mov->dest.dest, &intrin->dest, &mov->instr);
          }
@@ -218,7 +219,7 @@ lower_locals_to_regs_block(nir_block *block,
 
       case nir_intrinsic_store_deref: {
          nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
-         if (deref->mode != nir_var_function_temp)
+         if (!nir_deref_mode_is(deref, nir_var_function_temp))
             continue;
 
          b->cursor = nir_before_instr(&intrin->instr);

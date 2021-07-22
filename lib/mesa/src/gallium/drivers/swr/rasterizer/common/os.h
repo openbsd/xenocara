@@ -33,11 +33,15 @@
 #define SWR_VISIBLE __declspec(dllexport)
 
 #ifndef NOMINMAX
+#undef UNICODE
 #define NOMINMAX
 #include <windows.h>
 #undef NOMINMAX
+#define UNICODE
 #else
+#undef UNICODE
 #include <windows.h>
+#define UNICODE
 #endif
 #include <intrin.h>
 #include <cstdint>
@@ -47,7 +51,11 @@
 #undef MemoryFence
 #endif
 
+#if defined(_MSC_VER)
 #define OSALIGN(RWORD, WIDTH) __declspec(align(WIDTH)) RWORD
+#elif defined(__GNUC__)
+#define OSALIGN(RWORD, WIDTH) RWORD __attribute__((aligned(WIDTH)))
+#endif
 
 #if defined(_DEBUG)
 // We compile Debug builds with inline function expansion enabled.  This allows
@@ -95,6 +103,40 @@ static inline void AlignedFree(void* p)
 #define BitScanReverseSizeT BitScanReverse
 #define BitScanForwardSizeT BitScanForward
 #define _mm_popcount_sizeT _mm_popcnt_u32
+#endif
+
+#if !defined(_WIN64)
+extern "C" {
+inline unsigned char _BitScanForward64(unsigned long* Index, uint64_t Mask)
+{
+    if (Mask == 0)
+      return 0;
+#ifdef __GNUC__
+    *Index = __builtin_ctzll(Mask);
+#else
+    *Index = 0;
+    for (int i = 0; i < 64; ++ i)
+      if ((1ULL << i) & Mask)
+        *Index = i;
+#endif
+    return 1;
+}
+
+inline unsigned char _BitScanReverse64(unsigned long* Index, uint64_t Mask)
+{
+    if (Mask == 0)
+      return 0;
+#ifdef __GNUC__
+    *Index = 63 - __builtin_clzll(Mask);
+#else
+    *Index = 0;
+    for (int i = 63; i >= 0; -- i)
+      if ((1ULL << i) & Mask)
+        *Index = i;
+#endif
+    return 1;
+}
+}
 #endif
 
 #elif defined(__APPLE__) || defined(FORCE_LINUX) || defined(__linux__) || defined(__gnu_linux__)
@@ -174,12 +216,14 @@ inline uint64_t      __rdtsc()
 #endif
 
 #if !defined(__clang__) && !defined(__INTEL_COMPILER)
-// Intrinsic not defined in gcc
+// Intrinsic not defined in gcc < 10
+#if (__GNUC__) && (GCC_VERSION < 100000)
 static INLINE void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i a)
 {
     _mm_storeu_si128((__m128i*)lo, _mm256_castsi256_si128(a));
     _mm_storeu_si128((__m128i*)hi, _mm256_extractf128_si256(a, 0x1));
 }
+#endif
 
 // gcc prior to 4.9 doesn't have _mm*_undefined_*
 #if (__GNUC__) && (GCC_VERSION < 40900)
@@ -188,32 +232,37 @@ static INLINE void _mm256_storeu2_m128i(__m128i* hi, __m128i* lo, __m256i a)
 #endif
 #endif
 
-inline unsigned char _BitScanForward(unsigned long* Index, unsigned long Mask)
+inline unsigned char _BitScanForward64(unsigned long* Index, uint64_t Mask)
 {
+    if (Mask == 0)
+      return 0;
+    *Index = __builtin_ctzll(Mask);
+    return 1;
+}
+
+inline unsigned char _BitScanForward(unsigned long* Index, uint32_t Mask)
+{
+    if (Mask == 0)
+      return 0;
     *Index = __builtin_ctz(Mask);
-    return (Mask != 0);
+    return 1;
 }
 
-inline unsigned char _BitScanForward(unsigned int* Index, unsigned int Mask)
+inline unsigned char _BitScanReverse64(unsigned long* Index, uint64_t Mask)
 {
-    *Index = __builtin_ctz(Mask);
-    return (Mask != 0);
+    if (Mask == 0)
+      return 0;
+    *Index = 63 - __builtin_clzll(Mask);
+    return 1;
 }
 
-inline unsigned char _BitScanReverse(unsigned long* Index, unsigned long Mask)
+inline unsigned char _BitScanReverse(unsigned long* Index, uint32_t Mask)
 {
-    *Index = 63 - __builtin_clz(Mask);
-    return (Mask != 0);
-}
-
-inline unsigned char _BitScanReverse(unsigned int* Index, unsigned int Mask)
-{
+    if (Mask == 0)
+      return 0;
     *Index = 31 - __builtin_clz(Mask);
-    return (Mask != 0);
+    return 1;
 }
-
-#define _BitScanForward64 _BitScanForward
-#define _BitScanReverse64 _BitScanReverse
 
 inline void* AlignedMalloc(size_t size, size_t alignment)
 {

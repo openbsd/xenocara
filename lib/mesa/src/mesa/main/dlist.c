@@ -31,10 +31,9 @@
 
 #include "c99_math.h"
 #include "glheader.h"
-#include "imports.h"
+
 #include "api_arrayelt.h"
 #include "api_exec.h"
-#include "api_loopback.h"
 #include "draw_validate.h"
 #include "atifragshader.h"
 #include "config.h"
@@ -64,43 +63,20 @@
 #include "varray.h"
 #include "arbprogram.h"
 #include "transformfeedback.h"
+#include "glthread_marshal.h"
 
 #include "math/m_matrix.h"
 
 #include "main/dispatch.h"
 
 #include "vbo/vbo.h"
+#include "vbo/vbo_util.h"
+#include "vbo/vbo_save.h"
+#include "util/format_r11g11b10f.h"
 
+#include "util/u_memory.h"
 
 #define USE_BITMAP_ATLAS 1
-
-
-
-/**
- * Other parts of Mesa (such as the VBO module) can plug into the display
- * list system.  This structure describes new display list instructions.
- */
-struct gl_list_instruction
-{
-   GLuint Size;
-   void (*Execute)( struct gl_context *ctx, void *data );
-   void (*Destroy)( struct gl_context *ctx, void *data );
-   void (*Print)( struct gl_context *ctx, void *data, FILE *f );
-};
-
-
-#define MAX_DLIST_EXT_OPCODES 16
-
-/**
- * Used by device drivers to hook new commands into display lists.
- */
-struct gl_list_extensions
-{
-   struct gl_list_instruction Opcode[MAX_DLIST_EXT_OPCODES];
-   GLuint NumOpcodes;
-};
-
-
 
 /**
  * Flush vertices.
@@ -505,14 +481,18 @@ typedef enum
    OPCODE_ATTR_2F_ARB,
    OPCODE_ATTR_3F_ARB,
    OPCODE_ATTR_4F_ARB,
+   OPCODE_ATTR_1I,
+   OPCODE_ATTR_2I,
+   OPCODE_ATTR_3I,
+   OPCODE_ATTR_4I,
    OPCODE_ATTR_1D,
    OPCODE_ATTR_2D,
    OPCODE_ATTR_3D,
    OPCODE_ATTR_4D,
+   OPCODE_ATTR_1UI64,
    OPCODE_MATERIAL,
    OPCODE_BEGIN,
    OPCODE_END,
-   OPCODE_RECTF,
    OPCODE_EVAL_C1,
    OPCODE_EVAL_C2,
    OPCODE_EVAL_P1,
@@ -648,6 +628,8 @@ typedef enum
    OPCODE_COMPRESSED_MULTITEX_SUB_IMAGE_3D,
    OPCODE_NAMED_PROGRAM_STRING,
    OPCODE_NAMED_PROGRAM_LOCAL_PARAMETER,
+
+   OPCODE_VERTEX_LIST,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -809,6 +791,54 @@ void mesa_print_display_list(GLuint list);
 
 
 /**
+ * Called by display list code when a display list is being deleted.
+ */
+static void
+vbo_destroy_vertex_list(struct gl_context *ctx, struct vbo_save_vertex_list *node)
+{
+   for (gl_vertex_processing_mode vpm = VP_MODE_FF; vpm < VP_MODE_MAX; ++vpm)
+      _mesa_reference_vao(ctx, &node->VAO[vpm], NULL);
+
+   if (--node->prim_store->refcount == 0) {
+      free(node->prim_store->prims);
+      free(node->prim_store);
+   }
+
+   free(node->merged.mode);
+   free(node->merged.start_count);
+
+   _mesa_reference_buffer_object(ctx, &node->merged.ib.obj, NULL);
+   free(node->current_data);
+   node->current_data = NULL;
+}
+
+static void
+vbo_print_vertex_list(struct gl_context *ctx, struct vbo_save_vertex_list *node, FILE *f)
+{
+   GLuint i;
+   struct gl_buffer_object *buffer = node->VAO[0]->BufferBinding[0].BufferObj;
+   const GLuint vertex_size = _vbo_save_get_stride(node)/sizeof(GLfloat);
+   (void) ctx;
+
+   fprintf(f, "VBO-VERTEX-LIST, %u vertices, %d primitives, %d vertsize, "
+           "buffer %p\n",
+           node->vertex_count, node->prim_count, vertex_size,
+           buffer);
+
+   for (i = 0; i < node->prim_count; i++) {
+      struct _mesa_prim *prim = &node->prims[i];
+      fprintf(f, "   prim %d: %s %d..%d %s %s\n",
+             i,
+             _mesa_lookup_prim_by_nr(prim->mode),
+             prim->start,
+             prim->start + prim->count,
+             (prim->begin) ? "BEGIN" : "(wrap)",
+             (prim->end) ? "END" : "(wrap)");
+   }
+}
+
+
+/**
  * Does the given display list only contain a single glBitmap call?
  */
 static bool
@@ -867,7 +897,7 @@ lookup_bitmap_atlas(struct gl_context *ctx, GLuint listBase)
  * Create new bitmap atlas and insert into hash table.
  */
 static struct gl_bitmap_atlas *
-alloc_bitmap_atlas(struct gl_context *ctx, GLuint listBase)
+alloc_bitmap_atlas(struct gl_context *ctx, GLuint listBase, bool isGenName)
 {
    struct gl_bitmap_atlas *atlas;
 
@@ -876,7 +906,8 @@ alloc_bitmap_atlas(struct gl_context *ctx, GLuint listBase)
 
    atlas = calloc(1, sizeof(*atlas));
    if (atlas) {
-      _mesa_HashInsert(ctx->Shared->BitmapAtlas, listBase, atlas);
+      _mesa_HashInsert(ctx->Shared->BitmapAtlas, listBase, atlas, isGenName);
+      atlas->Id = listBase;
    }
 
    return atlas;
@@ -990,9 +1021,9 @@ build_bitmap_atlas(struct gl_context *ctx, struct gl_bitmap_atlas *atlas,
       goto out_of_memory;
    }
 
-   atlas->texObj->Sampler.MinFilter = GL_NEAREST;
-   atlas->texObj->Sampler.MagFilter = GL_NEAREST;
-   atlas->texObj->MaxLevel = 0;
+   atlas->texObj->Sampler.Attrib.MinFilter = GL_NEAREST;
+   atlas->texObj->Sampler.Attrib.MagFilter = GL_NEAREST;
+   atlas->texObj->Attrib.MaxLevel = 0;
    atlas->texObj->Immutable = GL_TRUE;
 
    atlas->texImage = _mesa_get_tex_image(ctx, atlas->texObj,
@@ -1097,50 +1128,6 @@ _mesa_lookup_list(struct gl_context *ctx, GLuint list)
 }
 
 
-/** Is the given opcode an extension code? */
-static inline GLboolean
-is_ext_opcode(OpCode opcode)
-{
-   return (opcode >= OPCODE_EXT_0);
-}
-
-
-/** Destroy an extended opcode instruction */
-static GLint
-ext_opcode_destroy(struct gl_context *ctx, Node *node)
-{
-   const GLint i = node[0].opcode - OPCODE_EXT_0;
-   GLint step;
-   ctx->ListExt->Opcode[i].Destroy(ctx, &node[1]);
-   step = ctx->ListExt->Opcode[i].Size;
-   return step;
-}
-
-
-/** Execute an extended opcode instruction */
-static GLint
-ext_opcode_execute(struct gl_context *ctx, Node *node)
-{
-   const GLint i = node[0].opcode - OPCODE_EXT_0;
-   GLint step;
-   ctx->ListExt->Opcode[i].Execute(ctx, &node[1]);
-   step = ctx->ListExt->Opcode[i].Size;
-   return step;
-}
-
-
-/** Print an extended opcode instruction */
-static GLint
-ext_opcode_print(struct gl_context *ctx, Node *node, FILE *f)
-{
-   const GLint i = node[0].opcode - OPCODE_EXT_0;
-   GLint step;
-   ctx->ListExt->Opcode[i].Print(ctx, &node[1], f);
-   step = ctx->ListExt->Opcode[i].Size;
-   return step;
-}
-
-
 /**
  * Delete the named display list, but don't remove from hash table.
  * \param dlist - display list pointer
@@ -1149,20 +1136,19 @@ void
 _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
 {
    Node *n, *block;
-   GLboolean done;
+
+   if (!dlist->Head) {
+      free(dlist->Label);
+      free(dlist);
+      return;
+   }
 
    n = block = dlist->Head;
 
-   done = block ? GL_FALSE : GL_TRUE;
-   while (!done) {
+   while (1) {
       const OpCode opcode = n[0].opcode;
 
-      /* check for extension opcodes first */
-      if (is_ext_opcode(opcode)) {
-         n += ext_opcode_destroy(ctx, n);
-      }
-      else {
-         switch (opcode) {
+      switch (opcode) {
             /* for some commands, we need to free malloc'd memory */
          case OPCODE_MAP1:
             free(get_pointer(&n[6]));
@@ -1368,29 +1354,27 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
          case OPCODE_NAMED_PROGRAM_STRING:
             free(get_pointer(&n[5]));
             break;
+         case OPCODE_VERTEX_LIST:
+            vbo_destroy_vertex_list(ctx, (struct vbo_save_vertex_list *) &n[1]);
+            break;
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
             free(block);
             block = n;
-            break;
+            continue;
          case OPCODE_END_OF_LIST:
             free(block);
-            done = GL_TRUE;
-            break;
+            free(dlist->Label);
+            free(dlist);
+            return;
          default:
             /* just increment 'n' pointer, below */
             ;
-         }
-
-         if (opcode != OPCODE_CONTINUE) {
-            assert(InstSize[opcode] > 0);
-            n += InstSize[opcode];
-         }
       }
-   }
 
-   free(dlist->Label);
-   free(dlist);
+      assert(InstSize[opcode] > 0);
+      n += InstSize[opcode];
+   }
 }
 
 
@@ -1399,10 +1383,11 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
  * deleted belongs to a bitmap texture atlas.
  */
 static void
-check_atlas_for_deleted_list(GLuint atlas_id, void *data, void *userData)
+check_atlas_for_deleted_list(void *data, void *userData)
 {
    struct gl_bitmap_atlas *atlas = (struct gl_bitmap_atlas *) data;
    GLuint list_id = *((GLuint *) userData);  /* the list being deleted */
+   const GLuint atlas_id = atlas->Id;
 
    /* See if the list_id falls in the range contained in this texture atlas */
    if (atlas->complete &&
@@ -1449,63 +1434,6 @@ destroy_list(struct gl_context *ctx, GLuint list)
 }
 
 
-/*
- * Translate the nth element of list from <type> to GLint.
- */
-static GLint
-translate_id(GLsizei n, GLenum type, const GLvoid * list)
-{
-   GLbyte *bptr;
-   GLubyte *ubptr;
-   GLshort *sptr;
-   GLushort *usptr;
-   GLint *iptr;
-   GLuint *uiptr;
-   GLfloat *fptr;
-
-   switch (type) {
-   case GL_BYTE:
-      bptr = (GLbyte *) list;
-      return (GLint) bptr[n];
-   case GL_UNSIGNED_BYTE:
-      ubptr = (GLubyte *) list;
-      return (GLint) ubptr[n];
-   case GL_SHORT:
-      sptr = (GLshort *) list;
-      return (GLint) sptr[n];
-   case GL_UNSIGNED_SHORT:
-      usptr = (GLushort *) list;
-      return (GLint) usptr[n];
-   case GL_INT:
-      iptr = (GLint *) list;
-      return iptr[n];
-   case GL_UNSIGNED_INT:
-      uiptr = (GLuint *) list;
-      return (GLint) uiptr[n];
-   case GL_FLOAT:
-      fptr = (GLfloat *) list;
-      return (GLint) floorf(fptr[n]);
-   case GL_2_BYTES:
-      ubptr = ((GLubyte *) list) + 2 * n;
-      return (GLint) ubptr[0] * 256
-           + (GLint) ubptr[1];
-   case GL_3_BYTES:
-      ubptr = ((GLubyte *) list) + 3 * n;
-      return (GLint) ubptr[0] * 65536
-           + (GLint) ubptr[1] * 256
-           + (GLint) ubptr[2];
-   case GL_4_BYTES:
-      ubptr = ((GLubyte *) list) + 4 * n;
-      return (GLint) ubptr[0] * 16777216
-           + (GLint) ubptr[1] * 65536
-           + (GLint) ubptr[2] * 256
-           + (GLint) ubptr[3];
-   default:
-      return 0;
-   }
-}
-
-
 /**
  * Wrapper for _mesa_unpack_image/bitmap() that handles pixel buffer objects.
  * If width < 0 or height < 0 or format or type are invalid we'll just
@@ -1529,7 +1457,7 @@ unpack_image(struct gl_context *ctx, GLuint dimensions,
       return NULL;
    }
 
-   if (!_mesa_is_bufferobj(unpack->BufferObj)) {
+   if (!unpack->BufferObj) {
       /* no PBO */
       GLvoid *image;
 
@@ -1707,33 +1635,11 @@ _mesa_dlist_alloc_aligned(struct gl_context *ctx, GLuint opcode, GLuint bytes)
 }
 
 
-/**
- * This function allows modules and drivers to get their own opcodes
- * for extending display list functionality.
- * \param ctx  the rendering context
- * \param size  number of bytes for storing the new display list command
- * \param execute  function to execute the new display list command
- * \param destroy  function to destroy the new display list command
- * \param print  function to print the new display list command
- * \return  the new opcode number or -1 if error
- */
-GLint
-_mesa_dlist_alloc_opcode(struct gl_context *ctx,
-                         GLuint size,
-                         void (*execute) (struct gl_context *, void *),
-                         void (*destroy) (struct gl_context *, void *),
-                         void (*print) (struct gl_context *, void *, FILE *))
+void *
+_mesa_dlist_alloc_vertex_list(struct gl_context *ctx)
 {
-   if (ctx->ListExt->NumOpcodes < MAX_DLIST_EXT_OPCODES) {
-      const GLuint i = ctx->ListExt->NumOpcodes++;
-      ctx->ListExt->Opcode[i].Size =
-         1 + (size + sizeof(Node) - 1) / sizeof(Node);
-      ctx->ListExt->Opcode[i].Execute = execute;
-      ctx->ListExt->Opcode[i].Destroy = destroy;
-      ctx->ListExt->Opcode[i].Print = print;
-      return i + OPCODE_EXT_0;
-   }
-   return -1;
+   return _mesa_dlist_alloc_aligned(ctx, OPCODE_VERTEX_LIST,
+                                    sizeof(struct vbo_save_vertex_list));
 }
 
 
@@ -3774,7 +3680,7 @@ save_PointParameterfEXT(GLenum pname, GLfloat param)
 }
 
 static void GLAPIENTRY
-save_PointParameteriNV(GLenum pname, GLint param)
+save_PointParameteri(GLenum pname, GLint param)
 {
    GLfloat parray[3];
    parray[0] = (GLfloat) param;
@@ -3783,7 +3689,7 @@ save_PointParameteriNV(GLenum pname, GLint param)
 }
 
 static void GLAPIENTRY
-save_PointParameterivNV(GLenum pname, const GLint * param)
+save_PointParameteriv(GLenum pname, const GLint * param)
 {
    GLfloat parray[3];
    parray[0] = (GLfloat) param[0];
@@ -5894,188 +5800,6 @@ save_SetFragmentShaderConstantATI(GLuint dst, const GLfloat *value)
 }
 
 static void GLAPIENTRY
-save_Attr1fNV(GLenum attr, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_1F_NV, 2);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 1;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib1fNV(ctx->Exec, (attr, x));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr2fNV(GLenum attr, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_2F_NV, 3);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 2;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib2fNV(ctx->Exec, (attr, x, y));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_3F_NV, 4);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 3;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib3fNV(ctx->Exec, (attr, x, y, z));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_4F_NV, 5);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-      n[5].f = w;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 4;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib4fNV(ctx->Exec, (attr, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
-save_Attr1fARB(GLenum attr, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_1F_ARB, 2);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 1;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib1fARB(ctx->Exec, (attr, x));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr2fARB(GLenum attr, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_2F_ARB, 3);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 2;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib2fARB(ctx->Exec, (attr, x, y));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_3F_ARB, 4);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 3;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib3fARB(ctx->Exec, (attr, x, y, z));
-   }
-}
-
-static void GLAPIENTRY
-save_Attr4fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   SAVE_FLUSH_VERTICES(ctx);
-   n = alloc_instruction(ctx, OPCODE_ATTR_4F_ARB, 5);
-   if (n) {
-      n[1].e = attr;
-      n[2].f = x;
-      n[3].f = y;
-      n[4].f = z;
-      n[5].f = w;
-   }
-
-   assert(attr < MAX_VERTEX_GENERIC_ATTRIBS);
-   ctx->ListState.ActiveAttribSize[attr] = 4;
-   ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
-
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttrib4fARB(ctx->Exec, (attr, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
 save_EvalCoord1f(GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6148,24 +5872,6 @@ save_EvalPoint2(GLint x, GLint y)
    if (ctx->ExecuteFlag) {
       CALL_EvalPoint2(ctx->Exec, (x, y));
    }
-}
-
-static void GLAPIENTRY
-save_Indexf(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, x);
-}
-
-static void GLAPIENTRY
-save_Indexfv(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_COLOR_INDEX, v[0]);
-}
-
-static void GLAPIENTRY
-save_EdgeFlag(GLboolean x)
-{
-   save_Attr1fNV(VERT_ATTRIB_EDGEFLAG, x ? 1.0f : 0.0f);
 }
 
 
@@ -6290,462 +5996,6 @@ save_End(void)
    if (ctx->ExecuteFlag) {
       CALL_End(ctx->Exec, ());
    }
-}
-
-static void GLAPIENTRY
-save_Rectf(GLfloat a, GLfloat b, GLfloat c, GLfloat d)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_RECTF, 4);
-   if (n) {
-      n[1].f = a;
-      n[2].f = b;
-      n[3].f = c;
-      n[4].f = d;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_Rectf(ctx->Exec, (a, b, c, d));
-   }
-}
-
-
-static void GLAPIENTRY
-save_Vertex2f(GLfloat x, GLfloat y)
-{
-   save_Attr2fNV(VERT_ATTRIB_POS, x, y);
-}
-
-static void GLAPIENTRY
-save_Vertex2fv(const GLfloat * v)
-{
-   save_Attr2fNV(VERT_ATTRIB_POS, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_Vertex3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_POS, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Vertex3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_POS, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_Vertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_POS, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_Vertex4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_POS, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_TexCoord1f(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_TEX0, x);
-}
-
-static void GLAPIENTRY
-save_TexCoord1fv(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_TEX0, v[0]);
-}
-
-static void GLAPIENTRY
-save_TexCoord2f(GLfloat x, GLfloat y)
-{
-   save_Attr2fNV(VERT_ATTRIB_TEX0, x, y);
-}
-
-static void GLAPIENTRY
-save_TexCoord2fv(const GLfloat * v)
-{
-   save_Attr2fNV(VERT_ATTRIB_TEX0, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_TexCoord3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_TEX0, x, y, z);
-}
-
-static void GLAPIENTRY
-save_TexCoord3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_TEX0, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_TexCoord4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_TEX0, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_TexCoord4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_TEX0, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_Normal3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_NORMAL, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Normal3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_NORMAL, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_FogCoordfEXT(GLfloat x)
-{
-   save_Attr1fNV(VERT_ATTRIB_FOG, x);
-}
-
-static void GLAPIENTRY
-save_FogCoordfvEXT(const GLfloat * v)
-{
-   save_Attr1fNV(VERT_ATTRIB_FOG, v[0]);
-}
-
-static void GLAPIENTRY
-save_Color3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, x, y, z);
-}
-
-static void GLAPIENTRY
-save_Color3fv(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_Color4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_Color4fv(const GLfloat * v)
-{
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fEXT(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, x, y, z);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fvEXT(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, v[0], v[1], v[2]);
-}
-
-
-/* Just call the respective ATTR for texcoord
- */
-static void GLAPIENTRY
-save_MultiTexCoord1f(GLenum target, GLfloat x)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr1fNV(attr, x);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord1fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr1fNV(attr, v[0]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord2f(GLenum target, GLfloat x, GLfloat y)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr2fNV(attr, x, y);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord2fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr2fNV(attr, v[0], v[1]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord3f(GLenum target, GLfloat x, GLfloat y, GLfloat z)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr3fNV(attr, x, y, z);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord3fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr3fNV(attr, v[0], v[1], v[2]);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord4f(GLenum target, GLfloat x, GLfloat y,
-                     GLfloat z, GLfloat w)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr4fNV(attr, x, y, z, w);
-}
-
-static void GLAPIENTRY
-save_MultiTexCoord4fv(GLenum target, const GLfloat * v)
-{
-   GLuint attr = (target & 0x7) + VERT_ATTRIB_TEX0;
-   save_Attr4fNV(attr, v[0], v[1], v[2], v[3]);
-}
-
-
-/**
- * Record a GL_INVALID_VALUE error when an invalid vertex attribute
- * index is found.
- */
-static void
-index_error(void)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_VALUE, "VertexAttribf(index)");
-}
-
-
-
-static void GLAPIENTRY
-save_VertexAttrib1fARB(GLuint index, GLfloat x)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr1fARB(index, x);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib1fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr1fARB(index, v[0]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib2fARB(GLuint index, GLfloat x, GLfloat y)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr2fARB(index, x, y);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib2fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr2fARB(index, v[0], v[1]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib3fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr3fARB(index, x, y, z);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib3fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr3fARB(index, v[0], v[1], v[2]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib4fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z,
-                       GLfloat w)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr4fARB(index, x, y, z, w);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttrib4fvARB(GLuint index, const GLfloat * v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_Attr4fARB(index, v[0], v[1], v[2], v[3]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL1d(GLuint index, GLdouble x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_1D, 3);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 1;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2], sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL1d(ctx->Exec, (index, x));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL1dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL1d(index, v[0]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL2d(GLuint index, GLdouble x, GLdouble y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_2D, 5);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 2;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             2 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL2d(ctx->Exec, (index, x, y));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL2dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL2d(index, v[0], v[1]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL3d(GLuint index, GLdouble x, GLdouble y, GLdouble z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_3D, 7);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-         ASSIGN_DOUBLE_TO_NODES(n, 6, z);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 3;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             3 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL3d(ctx->Exec, (index, x, y, z));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL3dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL3d(index, v[0], v[1], v[2]);
-   else
-      index_error();
-}
-
-static void GLAPIENTRY
-save_VertexAttribL4d(GLuint index, GLdouble x, GLdouble y, GLdouble z,
-                       GLdouble w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
-      Node *n;
-      SAVE_FLUSH_VERTICES(ctx);
-      n = alloc_instruction(ctx, OPCODE_ATTR_4D, 9);
-      if (n) {
-         n[1].ui = index;
-         ASSIGN_DOUBLE_TO_NODES(n, 2, x);
-         ASSIGN_DOUBLE_TO_NODES(n, 4, y);
-         ASSIGN_DOUBLE_TO_NODES(n, 6, z);
-         ASSIGN_DOUBLE_TO_NODES(n, 8, w);
-      }
-
-      ctx->ListState.ActiveAttribSize[index] = 4;
-      memcpy(ctx->ListState.CurrentAttrib[index], &n[2],
-             4 * sizeof(GLdouble));
-
-      if (ctx->ExecuteFlag) {
-         CALL_VertexAttribL4d(ctx->Exec, (index, x, y, z, w));
-      }
-   } else {
-      index_error();
-   }
-}
-
-static void GLAPIENTRY
-save_VertexAttribL4dv(GLuint index, const GLdouble *v)
-{
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      save_VertexAttribL4d(index, v[0], v[1], v[2], v[3]);
-   else
-      index_error();
 }
 
 static void GLAPIENTRY
@@ -6972,6 +6222,171 @@ save_DispatchComputeIndirect(GLintptr indirect)
    _mesa_error(ctx, GL_INVALID_OPERATION,
                "glDispatchComputeIndirect() during display list compile");
 }
+
+static void ALWAYS_INLINE
+save_Attr32bit(struct gl_context *ctx, unsigned attr, unsigned size,
+               GLenum type, uint32_t x, uint32_t y, uint32_t z, uint32_t w)
+{
+   Node *n;
+   SAVE_FLUSH_VERTICES(ctx);
+   unsigned base_op;
+   unsigned index = attr;
+
+   /* We don't care about GL_INT vs GL_UNSIGNED_INT. The idea is to get W=1
+    * right for 3 or lower number of components, so only distinguish between
+    * FLOAT and INT.
+    */
+   if (type == GL_FLOAT) {
+      if (attr >= VERT_ATTRIB_GENERIC0) {
+         base_op = OPCODE_ATTR_1F_ARB;
+         attr -= VERT_ATTRIB_GENERIC0;
+      } else {
+         base_op = OPCODE_ATTR_1F_NV;
+      }
+   } else {
+      base_op = OPCODE_ATTR_1I;
+      attr -= VERT_ATTRIB_GENERIC0;
+   }
+
+   n = alloc_instruction(ctx, base_op + size - 1, 1 + size);
+   if (n) {
+      n[1].ui = attr;
+      n[2].ui = x;
+      if (size >= 2) n[3].ui = y;
+      if (size >= 3) n[4].ui = z;
+      if (size >= 4) n[5].ui = w;
+   }
+
+   ctx->ListState.ActiveAttribSize[index] = size;
+   ASSIGN_4V(ctx->ListState.CurrentAttrib[index], x, y, z, w);
+
+   if (ctx->ExecuteFlag) {
+      if (type == GL_FLOAT) {
+         if (base_op == OPCODE_ATTR_1F_NV) {
+            if (size == 4)
+               CALL_VertexAttrib4fNV(ctx->Exec, (attr, uif(x), uif(y), uif(z), uif(w)));
+            else if (size == 3)
+               CALL_VertexAttrib3fNV(ctx->Exec, (attr, uif(x), uif(y), uif(z)));
+            else if (size == 2)
+               CALL_VertexAttrib2fNV(ctx->Exec, (attr, uif(x), uif(y)));
+            else
+               CALL_VertexAttrib1fNV(ctx->Exec, (attr, uif(x)));
+         } else {
+            if (size == 4)
+               CALL_VertexAttrib4fARB(ctx->Exec, (attr, uif(x), uif(y), uif(z), uif(w)));
+            else if (size == 3)
+               CALL_VertexAttrib3fARB(ctx->Exec, (attr, uif(x), uif(y), uif(z)));
+            else if (size == 2)
+               CALL_VertexAttrib2fARB(ctx->Exec, (attr, uif(x), uif(y)));
+            else
+               CALL_VertexAttrib1fARB(ctx->Exec, (attr, uif(x)));
+         }
+      } else {
+         if (size == 4)
+            CALL_VertexAttribI4iEXT(ctx->Exec, (attr, x, y, z, w));
+         else if (size == 3)
+            CALL_VertexAttribI3iEXT(ctx->Exec, (attr, x, y, z));
+         else if (size == 2)
+            CALL_VertexAttribI2iEXT(ctx->Exec, (attr, x, y));
+         else
+            CALL_VertexAttribI1iEXT(ctx->Exec, (attr, x));
+      }
+   }
+}
+
+static void ALWAYS_INLINE
+save_Attr64bit(struct gl_context *ctx, unsigned attr, unsigned size,
+               GLenum type, uint64_t x, uint64_t y, uint64_t z, uint64_t w)
+{
+   Node *n;
+   SAVE_FLUSH_VERTICES(ctx);
+   unsigned base_op;
+   unsigned index = attr;
+
+   if (type == GL_DOUBLE) {
+      base_op = OPCODE_ATTR_1D;
+   } else {
+      base_op = OPCODE_ATTR_1UI64;
+      assert(size == 1);
+   }
+
+   attr -= VERT_ATTRIB_GENERIC0;
+   n = alloc_instruction(ctx, base_op + size - 1, 1 + size * 2);
+   if (n) {
+      n[1].ui = attr;
+      ASSIGN_UINT64_TO_NODES(n, 2, x);
+      if (size >= 2) ASSIGN_UINT64_TO_NODES(n, 4, y);
+      if (size >= 3) ASSIGN_UINT64_TO_NODES(n, 6, z);
+      if (size >= 4) ASSIGN_UINT64_TO_NODES(n, 8, w);
+   }
+
+   ctx->ListState.ActiveAttribSize[index] = size;
+   memcpy(ctx->ListState.CurrentAttrib[index], &n[2], size * sizeof(uint64_t));
+
+   if (ctx->ExecuteFlag) {
+      uint64_t v[] = {x, y, z, w};
+      if (type == GL_DOUBLE) {
+         if (size == 4)
+            CALL_VertexAttribL4dv(ctx->Exec, (attr, (GLdouble*)v));
+         else if (size == 3)
+            CALL_VertexAttribL3dv(ctx->Exec, (attr, (GLdouble*)v));
+         else if (size == 2)
+            CALL_VertexAttribL2dv(ctx->Exec, (attr, (GLdouble*)v));
+         else
+            CALL_VertexAttribL1d(ctx->Exec, (attr, UINT64_AS_DOUBLE(x)));
+      } else {
+         CALL_VertexAttribL1ui64ARB(ctx->Exec, (attr, x));
+      }
+   }
+}
+
+/**
+ * If index=0, does glVertexAttrib*() alias glVertex() to emit a vertex?
+ * It depends on a few things, including whether we're inside or outside
+ * of glBegin/glEnd.
+ */
+static inline bool
+is_vertex_position(const struct gl_context *ctx, GLuint index)
+{
+   return (index == 0 &&
+           _mesa_attr_zero_aliases_vertex(ctx) &&
+           _mesa_inside_dlist_begin_end(ctx));
+}
+
+/**
+ * This macro is used to implement all the glVertex, glColor, glTexCoord,
+ * glVertexAttrib, etc functions.
+ * \param A  VBO_ATTRIB_x attribute index
+ * \param N  attribute size (1..4)
+ * \param T  type (GL_FLOAT, GL_DOUBLE, GL_INT, GL_UNSIGNED_INT)
+ * \param C  cast type (uint32_t or uint64_t)
+ * \param V0, V1, v2, V3  attribute value
+ */
+#define ATTR_UNION(A, N, T, C, V0, V1, V2, V3)                          \
+do {                                                                    \
+   if (sizeof(C) == 4) {                                                \
+      save_Attr32bit(ctx, A, N, T, V0, V1, V2, V3);                     \
+   } else {                                                             \
+      save_Attr64bit(ctx, A, N, T, V0, V1, V2, V3);                     \
+   }                                                                    \
+} while (0)
+
+#undef ERROR
+#define ERROR(err) _mesa_error(ctx, err, __func__)
+#define TAG(x) save_##x
+
+#define VBO_ATTRIB_POS           VERT_ATTRIB_POS
+#define VBO_ATTRIB_NORMAL        VERT_ATTRIB_NORMAL
+#define VBO_ATTRIB_COLOR0        VERT_ATTRIB_COLOR0
+#define VBO_ATTRIB_COLOR1        VERT_ATTRIB_COLOR1
+#define VBO_ATTRIB_FOG           VERT_ATTRIB_FOG
+#define VBO_ATTRIB_COLOR_INDEX   VERT_ATTRIB_COLOR_INDEX
+#define VBO_ATTRIB_EDGEFLAG      VERT_ATTRIB_EDGEFLAG
+#define VBO_ATTRIB_TEX0          VERT_ATTRIB_TEX0
+#define VBO_ATTRIB_GENERIC0      VERT_ATTRIB_GENERIC0
+#define VBO_ATTRIB_MAX           VERT_ATTRIB_MAX
+
+#include "vbo/vbo_attrib_tmp.h"
 
 static void GLAPIENTRY
 save_UseProgram(GLuint program)
@@ -11773,15 +11188,17 @@ _mesa_compile_error(struct gl_context *ctx, GLenum error, const char *s)
 /**
  * Test if ID names a display list.
  */
-static GLboolean
-islist(struct gl_context *ctx, GLuint list)
+bool
+_mesa_get_list(struct gl_context *ctx, GLuint list,
+               struct gl_display_list **dlist)
 {
-   if (list > 0 && _mesa_lookup_list(ctx, list)) {
-      return GL_TRUE;
-   }
-   else {
-      return GL_FALSE;
-   }
+   struct gl_display_list * dl =
+      list > 0 ? _mesa_lookup_list(ctx, list) : NULL;
+
+   if (dlist)
+      *dlist = dl;
+
+   return dl != NULL;
 }
 
 
@@ -11802,9 +11219,8 @@ execute_list(struct gl_context *ctx, GLuint list)
 {
    struct gl_display_list *dlist;
    Node *n;
-   GLboolean done;
 
-   if (list == 0 || !islist(ctx, list))
+   if (list == 0 || !_mesa_get_list(ctx, list, &dlist))
       return;
 
    if (ctx->ListState.CallDepth == MAX_LIST_NESTING) {
@@ -11812,25 +11228,16 @@ execute_list(struct gl_context *ctx, GLuint list)
       return;
    }
 
-   dlist = _mesa_lookup_list(ctx, list);
-   if (!dlist)
-      return;
-
    ctx->ListState.CallDepth++;
 
    vbo_save_BeginCallList(ctx, dlist);
 
    n = dlist->Head;
 
-   done = GL_FALSE;
-   while (!done) {
+   while (1) {
       const OpCode opcode = n[0].opcode;
 
-      if (is_ext_opcode(opcode)) {
-         n += ext_opcode_execute(ctx, n);
-      }
-      else {
-         switch (opcode) {
+      switch (opcode) {
          case OPCODE_ERROR:
             _mesa_error(ctx, n[1].e, "%s", (const char *) get_pointer(&n[2]));
             break;
@@ -13339,6 +12746,18 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_ATTR_4F_ARB:
             CALL_VertexAttrib4fvARB(ctx->Exec, (n[1].e, &n[2].f));
             break;
+         case OPCODE_ATTR_1I:
+            CALL_VertexAttribI1iEXT(ctx->Exec, (n[1].e, n[2].i));
+            break;
+         case OPCODE_ATTR_2I:
+            CALL_VertexAttribI2ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
+         case OPCODE_ATTR_3I:
+            CALL_VertexAttribI3ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
+         case OPCODE_ATTR_4I:
+            CALL_VertexAttribI4ivEXT(ctx->Exec, (n[1].e, &n[2].i));
+            break;
          case OPCODE_ATTR_1D: {
             GLdouble *d = (GLdouble *) &n[2];
             CALL_VertexAttribL1d(ctx->Exec, (n[1].ui, *d));
@@ -13359,6 +12778,11 @@ execute_list(struct gl_context *ctx, GLuint list)
             CALL_VertexAttribL4dv(ctx->Exec, (n[1].ui, d));
             break;
          }
+         case OPCODE_ATTR_1UI64: {
+            uint64_t *ui64 = (uint64_t *) &n[2];
+            CALL_VertexAttribL1ui64ARB(ctx->Exec, (n[1].ui, *ui64));
+            break;
+         }
          case OPCODE_MATERIAL:
             CALL_Materialfv(ctx->Exec, (n[1].e, n[2].e, &n[3].f));
             break;
@@ -13367,9 +12791,6 @@ execute_list(struct gl_context *ctx, GLuint list)
             break;
          case OPCODE_END:
             CALL_End(ctx->Exec, ());
-            break;
-         case OPCODE_RECTF:
-            CALL_Rectf(ctx->Exec, (n[1].f, n[2].f, n[3].f, n[4].f));
             break;
          case OPCODE_EVAL_C1:
             CALL_EvalCoord1f(ctx->Exec, (n[1].f));
@@ -13984,36 +13405,34 @@ execute_list(struct gl_context *ctx, GLuint list)
                                              n[5].f, n[6].f, n[7].f));
             break;
 
+         case OPCODE_VERTEX_LIST:
+            vbo_save_playback_vertex_list(ctx, &n[1]);
+            break;
+
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
-            break;
+            continue;
          case OPCODE_NOP:
             /* no-op */
-            break;
-         case OPCODE_END_OF_LIST:
-            done = GL_TRUE;
             break;
          default:
             {
                char msg[1000];
-               _mesa_snprintf(msg, sizeof(msg), "Error in execute_list: opcode=%d",
+               snprintf(msg, sizeof(msg), "Error in execute_list: opcode=%d",
                              (int) opcode);
                _mesa_problem(ctx, "%s", msg);
             }
-            done = GL_TRUE;
-         }
-
-         /* increment n to point to next compiled command */
-         if (opcode != OPCODE_CONTINUE) {
-            assert(InstSize[opcode] > 0);
-            n += InstSize[opcode];
-         }
+            FALLTHROUGH;
+         case OPCODE_END_OF_LIST:
+            vbo_save_EndCallList(ctx);
+            ctx->ListState.CallDepth--;
+            return;
       }
+
+      /* increment n to point to next compiled command */
+      assert(InstSize[opcode] > 0);
+      n += InstSize[opcode];
    }
-
-   vbo_save_EndCallList(ctx);
-
-   ctx->ListState.CallDepth--;
 }
 
 
@@ -14029,9 +13448,9 @@ GLboolean GLAPIENTRY
 _mesa_IsList(GLuint list)
 {
    GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);      /* must be called before assert */
+   FLUSH_VERTICES(ctx, 0, 0);      /* must be called before assert */
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
-   return islist(ctx, list);
+   return _mesa_get_list(ctx, list, NULL);
 }
 
 
@@ -14043,7 +13462,7 @@ _mesa_DeleteLists(GLuint list, GLsizei range)
 {
    GET_CURRENT_CONTEXT(ctx);
    GLuint i;
-   FLUSH_VERTICES(ctx, 0);      /* must be called before assert */
+   FLUSH_VERTICES(ctx, 0, 0);      /* must be called before assert */
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (range < 0) {
@@ -14077,7 +13496,7 @@ _mesa_GenLists(GLsizei range)
 {
    GET_CURRENT_CONTEXT(ctx);
    GLuint base;
-   FLUSH_VERTICES(ctx, 0);      /* must be called before assert */
+   FLUSH_VERTICES(ctx, 0, 0);      /* must be called before assert */
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, 0);
 
    if (range < 0) {
@@ -14099,7 +13518,7 @@ _mesa_GenLists(GLsizei range)
       GLint i;
       for (i = 0; i < range; i++) {
          _mesa_HashInsertLocked(ctx->Shared->DisplayList, base + i,
-                                make_list(base + i, 1));
+                                make_list(base + i, 1), true);
       }
    }
 
@@ -14112,7 +13531,7 @@ _mesa_GenLists(GLsizei range)
        */
       struct gl_bitmap_atlas *atlas = lookup_bitmap_atlas(ctx, base);
       if (!atlas) {
-         atlas = alloc_bitmap_atlas(ctx, base);
+         atlas = alloc_bitmap_atlas(ctx, base, true);
       }
       if (atlas) {
          /* Atlas _should_ be new/empty now, but clobbering is OK */
@@ -14187,7 +13606,7 @@ _mesa_EndList(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    SAVE_FLUSH_VERTICES(ctx);
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glEndList\n");
@@ -14218,7 +13637,7 @@ _mesa_EndList(void)
    /* Install the new list */
    _mesa_HashInsert(ctx->Shared->DisplayList,
                     ctx->ListState.CurrentList->Name,
-                    ctx->ListState.CurrentList);
+                    ctx->ListState.CurrentList, true);
 
 
    if (MESA_VERBOSE & VERBOSE_DISPLAY_LIST)
@@ -14256,8 +13675,9 @@ _mesa_CallList(GLuint list)
    if (0)
       mesa_print_display_list( list );
 
-   /* VERY IMPORTANT:  Save the CompileFlag status, turn it off,
-    * execute the display list, and restore the CompileFlag.
+   /* Save the CompileFlag status, turn it off, execute the display list,
+    * and restore the CompileFlag. This is needed for GL_COMPILE_AND_EXECUTE
+    * because the call is already recorded and we just need to execute it.
     */
    save_compile_flag = ctx->CompileFlag;
    if (save_compile_flag) {
@@ -14305,7 +13725,7 @@ render_bitmap_atlas(struct gl_context *ctx, GLsizei n, GLenum type,
       /* Even if glGenLists wasn't called, we can still try to create
        * the atlas now.
        */
-      atlas = alloc_bitmap_atlas(ctx, ctx->List.ListBase);
+      atlas = alloc_bitmap_atlas(ctx, ctx->List.ListBase, false);
    }
 
    if (atlas && !atlas->complete && !atlas->incomplete) {
@@ -14344,26 +13764,12 @@ void GLAPIENTRY
 _mesa_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLint i;
    GLboolean save_compile_flag;
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glCallLists %d\n", n);
 
-   switch (type) {
-   case GL_BYTE:
-   case GL_UNSIGNED_BYTE:
-   case GL_SHORT:
-   case GL_UNSIGNED_SHORT:
-   case GL_INT:
-   case GL_UNSIGNED_INT:
-   case GL_FLOAT:
-   case GL_2_BYTES:
-   case GL_3_BYTES:
-   case GL_4_BYTES:
-      /* OK */
-      break;
-   default:
+   if (type < GL_BYTE || type > GL_4_BYTES) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glCallLists(type)");
       return;
    }
@@ -14380,15 +13786,87 @@ _mesa_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
       return;
    }
 
-   /* Save the CompileFlag status, turn it off, execute display list,
-    * and restore the CompileFlag.
+   /* Save the CompileFlag status, turn it off, execute the display lists,
+    * and restore the CompileFlag. This is needed for GL_COMPILE_AND_EXECUTE
+    * because the call is already recorded and we just need to execute it.
     */
    save_compile_flag = ctx->CompileFlag;
    ctx->CompileFlag = GL_FALSE;
 
-   for (i = 0; i < n; i++) {
-      GLuint list = (GLuint) (ctx->List.ListBase + translate_id(i, type, lists));
-      execute_list(ctx, list);
+   GLbyte *bptr;
+   GLubyte *ubptr;
+   GLshort *sptr;
+   GLushort *usptr;
+   GLint *iptr;
+   GLuint *uiptr;
+   GLfloat *fptr;
+
+   GLuint base = ctx->List.ListBase;
+
+   /* A loop inside a switch is faster than a switch inside a loop. */
+   switch (type) {
+   case GL_BYTE:
+      bptr = (GLbyte *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)bptr[i]);
+      break;
+   case GL_UNSIGNED_BYTE:
+      ubptr = (GLubyte *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)ubptr[i]);
+      break;
+   case GL_SHORT:
+      sptr = (GLshort *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)sptr[i]);
+      break;
+   case GL_UNSIGNED_SHORT:
+      usptr = (GLushort *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)usptr[i]);
+      break;
+   case GL_INT:
+      iptr = (GLint *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)iptr[i]);
+      break;
+   case GL_UNSIGNED_INT:
+      uiptr = (GLuint *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)uiptr[i]);
+      break;
+   case GL_FLOAT:
+      fptr = (GLfloat *) lists;
+      for (unsigned i = 0; i < n; i++)
+         execute_list(ctx, base + (int)fptr[i]);
+      break;
+   case GL_2_BYTES:
+      ubptr = (GLubyte *) lists;
+      for (unsigned i = 0; i < n; i++) {
+         execute_list(ctx, base +
+                      (int)ubptr[2 * i] * 256 +
+                      (int)ubptr[2 * i + 1]);
+      }
+      break;
+   case GL_3_BYTES:
+      ubptr = (GLubyte *) lists;
+      for (unsigned i = 0; i < n; i++) {
+         execute_list(ctx, base +
+                      (int)ubptr[3 * i] * 65536 +
+                      (int)ubptr[3 * i + 1] * 256 +
+                      (int)ubptr[3 * i + 2]);
+      }
+      break;
+   case GL_4_BYTES:
+      ubptr = (GLubyte *) lists;
+      for (unsigned i = 0; i < n; i++) {
+         execute_list(ctx, base +
+                      (int)ubptr[4 * i] * 16777216 +
+                      (int)ubptr[4 * i + 1] * 65536 +
+                      (int)ubptr[4 * i + 2] * 256 +
+                      (int)ubptr[4 * i + 3]);
+      }
+      break;
    }
 
    ctx->CompileFlag = save_compile_flag;
@@ -14411,7 +13889,7 @@ void GLAPIENTRY
 _mesa_ListBase(GLuint base)
 {
    GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);      /* must be called before assert */
+   FLUSH_VERTICES(ctx, 0, GL_LIST_BIT);   /* must be called before assert */
    ASSERT_OUTSIDE_BEGIN_END(ctx);
    ctx->List.ListBase = base;
 }
@@ -14435,8 +13913,6 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
     * that should be called directly instead of compiled into display lists.
     */
    memcpy(table, ctx->Exec, numEntries * sizeof(_glapi_proc));
-
-   _mesa_loopback_init_api_table(ctx, table);
 
    /* VBO functions */
    vbo_initialize_save_dispatch(ctx, table);
@@ -14551,7 +14027,6 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_RasterPos4s(table, save_RasterPos4s);
    SET_RasterPos4sv(table, save_RasterPos4sv);
    SET_ReadBuffer(table, save_ReadBuffer);
-   SET_Rectf(table, save_Rectf);
    SET_Rotated(table, save_Rotated);
    SET_Rotatef(table, save_Rotatef);
    SET_Scaled(table, save_Scaled);
@@ -14681,9 +14156,9 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_BindFragmentShaderATI(table, save_BindFragmentShaderATI);
    SET_SetFragmentShaderConstantATI(table, save_SetFragmentShaderConstantATI);
 
-   /* 262. GL_NV_point_sprite */
-   SET_PointParameteri(table, save_PointParameteriNV);
-   SET_PointParameteriv(table, save_PointParameterivNV);
+   /* 262. GL_ARB_point_sprite */
+   SET_PointParameteri(table, save_PointParameteri);
+   SET_PointParameteriv(table, save_PointParameteriv);
 
    /* 268. GL_EXT_stencil_two_side */
    SET_ActiveStencilFaceEXT(table, save_ActiveStencilFaceEXT);
@@ -15087,7 +14562,6 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
 {
    struct gl_display_list *dlist;
    Node *n;
-   GLboolean done;
    FILE *f = stdout;
 
    if (fname) {
@@ -15096,29 +14570,22 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
          return;
    }
 
-   if (!islist(ctx, list)) {
+   if (!_mesa_get_list(ctx, list, &dlist)) {
       fprintf(f, "%u is not a display list ID\n", list);
-      goto out;
-   }
-
-   dlist = _mesa_lookup_list(ctx, list);
-   if (!dlist) {
-      goto out;
+      fflush(f);
+      if (fname)
+         fclose(f);
+      return;
    }
 
    n = dlist->Head;
 
    fprintf(f, "START-LIST %u, address %p\n", list, (void *) n);
 
-   done = n ? GL_FALSE : GL_TRUE;
-   while (!done) {
+   while (1) {
       const OpCode opcode = n[0].opcode;
 
-      if (is_ext_opcode(opcode)) {
-         n += ext_opcode_print(ctx, n, f);
-      }
-      else {
-         switch (opcode) {
+      switch (opcode) {
          case OPCODE_ACCUM:
             fprintf(f, "Accum %s %g\n", enum_string(n[1].e), n[2].f);
             break;
@@ -15330,10 +14797,6 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
          case OPCODE_END:
             fprintf(f, "END\n");
             break;
-         case OPCODE_RECTF:
-            fprintf(f, "RECTF %f %f %f %f\n", n[1].f, n[2].f, n[3].f,
-                         n[4].f);
-            break;
          case OPCODE_EVAL_C1:
             fprintf(f, "EVAL_C1 %f\n", n[1].f);
             break;
@@ -15362,40 +14825,115 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
          case OPCODE_CONTINUE:
             fprintf(f, "DISPLAY-LIST-CONTINUE\n");
             n = (Node *) get_pointer(&n[1]);
-            break;
+            continue;
          case OPCODE_NOP:
             fprintf(f, "NOP\n");
             break;
-         case OPCODE_END_OF_LIST:
-            fprintf(f, "END-LIST %u\n", list);
-            done = GL_TRUE;
+         case OPCODE_VERTEX_LIST:
+            vbo_print_vertex_list(ctx, (struct vbo_save_vertex_list *) &n[1], f);
             break;
          default:
             if (opcode < 0 || opcode > OPCODE_END_OF_LIST) {
                printf
                   ("ERROR IN DISPLAY LIST: opcode = %d, address = %p\n",
                    opcode, (void *) n);
-               goto out;
-            }
-            else {
+            } else {
                fprintf(f, "command %d, %u operands\n", opcode,
                             InstSize[opcode]);
+               break;
             }
-         }
-         /* increment n to point to next compiled command */
-         if (opcode != OPCODE_CONTINUE) {
-            assert(InstSize[opcode] > 0);
-            n += InstSize[opcode];
-         }
+            FALLTHROUGH;
+         case OPCODE_END_OF_LIST:
+            fprintf(f, "END-LIST %u\n", list);
+            fflush(f);
+            if (fname)
+               fclose(f);
+            return;
       }
-   }
 
- out:
-   fflush(f);
-   if (fname)
-      fclose(f);
+      /* increment n to point to next compiled command */
+      assert(InstSize[opcode] > 0);
+      n += InstSize[opcode];
+   }
 }
 
+
+void
+_mesa_glthread_execute_list(struct gl_context *ctx, GLuint list)
+{
+   struct gl_display_list *dlist;
+
+   if (list == 0 ||
+       ctx->GLThread.ListCallDepth == MAX_LIST_NESTING ||
+       !_mesa_get_list(ctx, list, &dlist))
+      return;
+
+   ctx->GLThread.ListCallDepth++;
+
+   Node *n = dlist->Head;
+
+   while (1) {
+      const OpCode opcode = n[0].opcode;
+
+      switch (opcode) {
+         case OPCODE_CALL_LIST:
+            /* Generated by glCallList(), don't add ListBase */
+            if (ctx->GLThread.ListCallDepth < MAX_LIST_NESTING)
+               _mesa_glthread_execute_list(ctx, n[1].ui);
+            break;
+         case OPCODE_CALL_LISTS:
+            if (ctx->GLThread.ListCallDepth < MAX_LIST_NESTING)
+               _mesa_glthread_CallLists(ctx, n[1].i, n[2].e, get_pointer(&n[3]));
+            break;
+         case OPCODE_DISABLE:
+            _mesa_glthread_Disable(ctx, n[1].e);
+            break;
+         case OPCODE_ENABLE:
+            _mesa_glthread_Enable(ctx, n[1].e);
+            break;
+         case OPCODE_LIST_BASE:
+            _mesa_glthread_ListBase(ctx, n[1].ui);
+            break;
+         case OPCODE_MATRIX_MODE:
+            _mesa_glthread_MatrixMode(ctx, n[1].e);
+            break;
+         case OPCODE_POP_ATTRIB:
+            _mesa_glthread_PopAttrib(ctx);
+            break;
+         case OPCODE_POP_MATRIX:
+            _mesa_glthread_PopMatrix(ctx);
+            break;
+         case OPCODE_PUSH_ATTRIB:
+            _mesa_glthread_PushAttrib(ctx, n[1].bf);
+            break;
+         case OPCODE_PUSH_MATRIX:
+            _mesa_glthread_PushMatrix(ctx);
+            break;
+         case OPCODE_ACTIVE_TEXTURE:   /* GL_ARB_multitexture */
+            _mesa_glthread_ActiveTexture(ctx, n[1].e);
+            break;
+         case OPCODE_MATRIX_PUSH:
+            _mesa_glthread_MatrixPushEXT(ctx, n[1].e);
+            break;
+         case OPCODE_MATRIX_POP:
+            _mesa_glthread_MatrixPopEXT(ctx, n[1].e);
+            break;
+         case OPCODE_CONTINUE:
+            n = (Node *)get_pointer(&n[1]);
+            continue;
+         case OPCODE_END_OF_LIST:
+            ctx->GLThread.ListCallDepth--;
+            return;
+         default:
+            /* ignore */
+            break;
+      }
+
+      /* increment n to point to next compiled command */
+      assert(InstSize[opcode] > 0);
+      n += InstSize[opcode];
+   }
+}
 
 
 /**
@@ -15415,82 +14953,6 @@ mesa_print_display_list(GLuint list)
 /*****                      Initialization                        *****/
 /**********************************************************************/
 
-static void
-save_vtxfmt_init(GLvertexformat * vfmt)
-{
-   vfmt->ArrayElement = _ae_ArrayElement;
-
-   vfmt->Begin = save_Begin;
-
-   vfmt->CallList = save_CallList;
-   vfmt->CallLists = save_CallLists;
-
-   vfmt->Color3f = save_Color3f;
-   vfmt->Color3fv = save_Color3fv;
-   vfmt->Color4f = save_Color4f;
-   vfmt->Color4fv = save_Color4fv;
-   vfmt->EdgeFlag = save_EdgeFlag;
-   vfmt->End = save_End;
-
-   vfmt->EvalCoord1f = save_EvalCoord1f;
-   vfmt->EvalCoord1fv = save_EvalCoord1fv;
-   vfmt->EvalCoord2f = save_EvalCoord2f;
-   vfmt->EvalCoord2fv = save_EvalCoord2fv;
-   vfmt->EvalPoint1 = save_EvalPoint1;
-   vfmt->EvalPoint2 = save_EvalPoint2;
-
-   vfmt->FogCoordfEXT = save_FogCoordfEXT;
-   vfmt->FogCoordfvEXT = save_FogCoordfvEXT;
-   vfmt->Indexf = save_Indexf;
-   vfmt->Indexfv = save_Indexfv;
-   vfmt->Materialfv = save_Materialfv;
-   vfmt->MultiTexCoord1fARB = save_MultiTexCoord1f;
-   vfmt->MultiTexCoord1fvARB = save_MultiTexCoord1fv;
-   vfmt->MultiTexCoord2fARB = save_MultiTexCoord2f;
-   vfmt->MultiTexCoord2fvARB = save_MultiTexCoord2fv;
-   vfmt->MultiTexCoord3fARB = save_MultiTexCoord3f;
-   vfmt->MultiTexCoord3fvARB = save_MultiTexCoord3fv;
-   vfmt->MultiTexCoord4fARB = save_MultiTexCoord4f;
-   vfmt->MultiTexCoord4fvARB = save_MultiTexCoord4fv;
-   vfmt->Normal3f = save_Normal3f;
-   vfmt->Normal3fv = save_Normal3fv;
-   vfmt->SecondaryColor3fEXT = save_SecondaryColor3fEXT;
-   vfmt->SecondaryColor3fvEXT = save_SecondaryColor3fvEXT;
-   vfmt->TexCoord1f = save_TexCoord1f;
-   vfmt->TexCoord1fv = save_TexCoord1fv;
-   vfmt->TexCoord2f = save_TexCoord2f;
-   vfmt->TexCoord2fv = save_TexCoord2fv;
-   vfmt->TexCoord3f = save_TexCoord3f;
-   vfmt->TexCoord3fv = save_TexCoord3fv;
-   vfmt->TexCoord4f = save_TexCoord4f;
-   vfmt->TexCoord4fv = save_TexCoord4fv;
-   vfmt->Vertex2f = save_Vertex2f;
-   vfmt->Vertex2fv = save_Vertex2fv;
-   vfmt->Vertex3f = save_Vertex3f;
-   vfmt->Vertex3fv = save_Vertex3fv;
-   vfmt->Vertex4f = save_Vertex4f;
-   vfmt->Vertex4fv = save_Vertex4fv;
-   vfmt->VertexAttrib1fARB = save_VertexAttrib1fARB;
-   vfmt->VertexAttrib1fvARB = save_VertexAttrib1fvARB;
-   vfmt->VertexAttrib2fARB = save_VertexAttrib2fARB;
-   vfmt->VertexAttrib2fvARB = save_VertexAttrib2fvARB;
-   vfmt->VertexAttrib3fARB = save_VertexAttrib3fARB;
-   vfmt->VertexAttrib3fvARB = save_VertexAttrib3fvARB;
-   vfmt->VertexAttrib4fARB = save_VertexAttrib4fARB;
-   vfmt->VertexAttrib4fvARB = save_VertexAttrib4fvARB;
-   vfmt->VertexAttribL1d = save_VertexAttribL1d;
-   vfmt->VertexAttribL1dv = save_VertexAttribL1dv;
-   vfmt->VertexAttribL2d = save_VertexAttribL2d;
-   vfmt->VertexAttribL2dv = save_VertexAttribL2dv;
-   vfmt->VertexAttribL3d = save_VertexAttribL3d;
-   vfmt->VertexAttribL3dv = save_VertexAttribL3dv;
-   vfmt->VertexAttribL4d = save_VertexAttribL4d;
-   vfmt->VertexAttribL4dv = save_VertexAttribL4dv;
-
-   vfmt->PrimitiveRestartNV = save_PrimitiveRestartNV;
-}
-
-
 void
 _mesa_install_dlist_vtxfmt(struct _glapi_table *disp,
                            const GLvertexformat *vfmt)
@@ -15507,15 +14969,13 @@ void
 _mesa_init_display_list(struct gl_context *ctx)
 {
    static GLboolean tableInitialized = GL_FALSE;
+   GLvertexformat *vfmt = &ctx->ListState.ListVtxfmt;
 
    /* zero-out the instruction size table, just once */
    if (!tableInitialized) {
       memset(InstSize, 0, sizeof(InstSize));
       tableInitialized = GL_TRUE;
    }
-
-   /* extension info */
-   ctx->ListExt = CALLOC_STRUCT(gl_list_extensions);
 
    /* Display list */
    ctx->ListState.CallDepth = 0;
@@ -15527,15 +14987,13 @@ _mesa_init_display_list(struct gl_context *ctx)
    /* Display List group */
    ctx->List.ListBase = 0;
 
-   save_vtxfmt_init(&ctx->ListState.ListVtxfmt);
-
    InstSize[OPCODE_NOP] = 1;
-}
+   InstSize[OPCODE_VERTEX_LIST] = 1 + align(sizeof(struct vbo_save_vertex_list), sizeof(Node)) / sizeof(Node);
 
+#define NAME_AE(x) _ae_##x
+#define NAME_CALLLIST(x) save_##x
+#define NAME(x) save_##x
+#define NAME_ES(x) save_##x##ARB
 
-void
-_mesa_free_display_list_data(struct gl_context *ctx)
-{
-   free(ctx->ListExt);
-   ctx->ListExt = NULL;
+#include "vbo/vbo_init_tmp.h"
 }

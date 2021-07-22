@@ -169,7 +169,8 @@ vl_video_buffer_template(struct pipe_resource *templ,
                          const struct pipe_video_buffer *tmpl,
                          enum pipe_format resource_format,
                          unsigned depth, unsigned array_size,
-                         unsigned usage, unsigned plane)
+                         unsigned usage, unsigned plane,
+                         enum pipe_video_chroma_format chroma_format)
 {
    unsigned height = tmpl->height;
 
@@ -188,7 +189,7 @@ vl_video_buffer_template(struct pipe_resource *templ,
    templ->usage = usage;
 
    vl_video_buffer_adjust_size(&templ->width0, &height, plane,
-                               tmpl->chroma_format, false);
+                               chroma_format, false);
    templ->height0 = height;
 }
 
@@ -372,7 +373,8 @@ vl_video_buffer_create(struct pipe_context *pipe,
    result = vl_video_buffer_create_ex
    (
       pipe, &templat, resource_formats,
-      1, tmpl->interlaced ? 2 : 1, PIPE_USAGE_DEFAULT
+      1, tmpl->interlaced ? 2 : 1, PIPE_USAGE_DEFAULT,
+      pipe_format_to_chroma_format(templat.buffer_format)
    );
 
 
@@ -386,7 +388,8 @@ struct pipe_video_buffer *
 vl_video_buffer_create_ex(struct pipe_context *pipe,
                           const struct pipe_video_buffer *tmpl,
                           const enum pipe_format resource_formats[VL_NUM_COMPONENTS],
-                          unsigned depth, unsigned array_size, unsigned usage)
+                          unsigned depth, unsigned array_size, unsigned usage,
+                          enum pipe_video_chroma_format chroma_format)
 {
    struct pipe_resource res_tmpl;
    struct pipe_resource *resources[VL_NUM_COMPONENTS];
@@ -396,7 +399,8 @@ vl_video_buffer_create_ex(struct pipe_context *pipe,
 
    memset(resources, 0, sizeof resources);
 
-   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[0], depth, array_size, usage, 0);
+   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[0], depth, array_size,
+                            usage, 0, chroma_format);
    resources[0] = pipe->screen->resource_create(pipe->screen, &res_tmpl);
    if (!resources[0])
       goto error;
@@ -406,7 +410,8 @@ vl_video_buffer_create_ex(struct pipe_context *pipe,
       return vl_video_buffer_create_ex2(pipe, tmpl, resources);
    }
 
-   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[1], depth, array_size, usage, 1);
+   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[1], depth, array_size,
+                            usage, 1, chroma_format);
    resources[1] = pipe->screen->resource_create(pipe->screen, &res_tmpl);
    if (!resources[1])
       goto error;
@@ -414,7 +419,8 @@ vl_video_buffer_create_ex(struct pipe_context *pipe,
    if (resource_formats[2] == PIPE_FORMAT_NONE)
       return vl_video_buffer_create_ex2(pipe, tmpl, resources);
 
-   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[2], depth, array_size, usage, 2);
+   vl_video_buffer_template(&res_tmpl, tmpl, resource_formats[2], depth, array_size,
+                            usage, 2, chroma_format);
    resources[2] = pipe->screen->resource_create(pipe->screen, &res_tmpl);
    if (!resources[2])
       goto error;
@@ -460,7 +466,9 @@ vl_video_buffer_create_ex2(struct pipe_context *pipe,
 /* Create pipe_video_buffer by using resource_create with planar formats. */
 struct pipe_video_buffer *
 vl_video_buffer_create_as_resource(struct pipe_context *pipe,
-                                   const struct pipe_video_buffer *tmpl)
+                                   const struct pipe_video_buffer *tmpl,
+                                   const uint64_t *modifiers,
+                                   int modifiers_count)
 {
    struct pipe_resource templ, *resources[VL_NUM_COMPONENTS] = {0};
    unsigned array_size =  tmpl->interlaced ? 2 : 1;
@@ -481,7 +489,12 @@ vl_video_buffer_create_as_resource(struct pipe_context *pipe,
    else
       templ.format = tmpl->buffer_format;
 
-   resources[0] = pipe->screen->resource_create(pipe->screen, &templ);
+   if (modifiers)
+      resources[0] = pipe->screen->resource_create_with_modifiers(pipe->screen,
+                                                                  &templ, modifiers,
+                                                                  modifiers_count);
+   else
+      resources[0] = pipe->screen->resource_create(pipe->screen, &templ);
    if (!resources[0])
       return NULL;
 

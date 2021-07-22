@@ -46,7 +46,7 @@
 #endif
 #include <llvm-c/BitWriter.h>
 #if GALLIVM_HAVE_CORO
-#if LLVM_VERSION_MAJOR <= 8 && defined(PIPE_ARCH_AARCH64)
+#if LLVM_VERSION_MAJOR <= 8 && (defined(PIPE_ARCH_AARCH64) || defined (PIPE_ARCH_ARM) || defined(PIPE_ARCH_S390))
 #include <llvm-c/Transforms/IPO.h>
 #endif
 #include <llvm-c/Transforms/Coroutines.h>
@@ -137,7 +137,8 @@ create_pass_manager(struct gallivm_state *gallivm)
    }
 
 #if GALLIVM_HAVE_CORO
-#if LLVM_VERSION_MAJOR <= 8 && defined(PIPE_ARCH_AARCH64)
+#if LLVM_VERSION_MAJOR <= 8 && (defined(PIPE_ARCH_AARCH64) || defined (PIPE_ARCH_ARM) || defined(PIPE_ARCH_S390))
+   LLVMAddArgumentPromotionPass(gallivm->cgpassmgr);
    LLVMAddFunctionAttrsPass(gallivm->cgpassmgr);
 #endif
    LLVMAddCoroEarlyPass(gallivm->cgpassmgr);
@@ -168,12 +169,13 @@ create_pass_manager(struct gallivm_state *gallivm)
        */
       LLVMAddReassociatePass(gallivm->passmgr);
       LLVMAddPromoteMemoryToRegisterPass(gallivm->passmgr);
+#if LLVM_VERSION_MAJOR <= 11
       LLVMAddConstantPropagationPass(gallivm->passmgr);
+#else
+      LLVMAddInstructionSimplifyPass(gallivm->passmgr);
+#endif
       LLVMAddInstructionCombiningPass(gallivm->passmgr);
       LLVMAddGVNPass(gallivm->passmgr);
-#if GALLIVM_HAVE_CORO
-      LLVMAddCoroCleanupPass(gallivm->passmgr);
-#endif
    }
    else {
       /* We need at least this pass to prevent the backends to fail in
@@ -181,6 +183,9 @@ create_pass_manager(struct gallivm_state *gallivm)
        */
       LLVMAddPromoteMemoryToRegisterPass(gallivm->passmgr);
    }
+#if GALLIVM_HAVE_CORO
+   LLVMAddCoroCleanupPass(gallivm->passmgr);
+#endif
 
    return TRUE;
 }
@@ -210,6 +215,10 @@ gallivm_free_ir(struct gallivm_state *gallivm)
       LLVMDisposeModule(gallivm->module);
    }
 
+   if (gallivm->cache) {
+      lp_free_objcache(gallivm->cache->jit_obj_cache);
+      free(gallivm->cache->data);
+   }
    FREE(gallivm->module_name);
 
    if (gallivm->target) {
@@ -229,6 +238,7 @@ gallivm_free_ir(struct gallivm_state *gallivm)
    gallivm->passmgr = NULL;
    gallivm->context = NULL;
    gallivm->builder = NULL;
+   gallivm->cache = NULL;
 }
 
 
@@ -264,6 +274,7 @@ init_gallivm_engine(struct gallivm_state *gallivm)
 
       ret = lp_build_create_jit_compiler_for_module(&gallivm->engine,
                                                     &gallivm->code,
+                                                    gallivm->cache,
                                                     gallivm->module,
                                                     gallivm->memorymgr,
                                                     (unsigned) optlevel,
@@ -309,7 +320,7 @@ fail:
  */
 static boolean
 init_gallivm_state(struct gallivm_state *gallivm, const char *name,
-                   LLVMContextRef context)
+                   LLVMContextRef context, struct lp_cached_code *cache)
 {
    assert(!gallivm->context);
    assert(!gallivm->module);
@@ -318,7 +329,7 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
       return FALSE;
 
    gallivm->context = context;
-
+   gallivm->cache = cache;
    if (!gallivm->context)
       goto fail;
 
@@ -422,6 +433,7 @@ lp_build_init(void)
    /* For simulating less capable machines */
 #ifdef DEBUG
    if (debug_get_bool_option("LP_FORCE_SSE2", FALSE)) {
+      extern struct util_cpu_caps_t util_cpu_caps;
       assert(util_cpu_caps.has_sse2);
       util_cpu_caps.has_sse3 = 0;
       util_cpu_caps.has_ssse3 = 0;
@@ -434,15 +446,7 @@ lp_build_init(void)
    }
 #endif
 
-   /* AMD Bulldozer AVX's throughput is the same as SSE2; and because using
-    * 8-wide vector needs more floating ops than 4-wide (due to padding), it is
-    * actually more efficient to use 4-wide vectors on this processor.
-    *
-    * See also:
-    * - http://www.anandtech.com/show/4955/the-bulldozer-review-amd-fx8150-tested/2
-    */
-   if (util_cpu_caps.has_avx &&
-       util_cpu_caps.has_intel) {
+   if (util_get_cpu_caps()->has_avx2 || util_get_cpu_caps()->has_avx) {
       lp_native_vector_width = 256;
    } else {
       /* Leave it at 128, even when no SIMD extensions are available.
@@ -450,23 +454,25 @@ lp_build_init(void)
        */
       lp_native_vector_width = 128;
    }
- 
+
    lp_native_vector_width = debug_get_num_option("LP_NATIVE_VECTOR_WIDTH",
                                                  lp_native_vector_width);
 
+#if LLVM_VERSION_MAJOR < 4
    if (lp_native_vector_width <= 128) {
       /* Hide AVX support, as often LLVM AVX intrinsics are only guarded by
-       * "util_cpu_caps.has_avx" predicate, and lack the
+       * "util_get_cpu_caps()->has_avx" predicate, and lack the
        * "lp_native_vector_width > 128" predicate. And also to ensure a more
        * consistent behavior, allowing one to test SSE2 on AVX machines.
        * XXX: should not play games with util_cpu_caps directly as it might
        * get used for other things outside llvm too.
        */
-      util_cpu_caps.has_avx = 0;
-      util_cpu_caps.has_avx2 = 0;
-      util_cpu_caps.has_f16c = 0;
-      util_cpu_caps.has_fma = 0;
+      util_get_cpu_caps()->has_avx = 0;
+      util_get_cpu_caps()->has_avx2 = 0;
+      util_get_cpu_caps()->has_f16c = 0;
+      util_get_cpu_caps()->has_fma = 0;
    }
+#endif
 
 #ifdef PIPE_ARCH_PPC_64
    /* Set the NJ bit in VSCR to 0 so denormalized values are handled as
@@ -477,7 +483,7 @@ lp_build_init(void)
     * Right now denorms get explicitly disabled (but elsewhere) for x86,
     * whereas ppc64 explicitly enables them...
     */
-   if (util_cpu_caps.has_altivec) {
+   if (util_get_cpu_caps()->has_altivec) {
       unsigned short mask[] = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
                                 0xFFFF, 0xFFFF, 0xFFFE, 0xFFFF };
       __asm (
@@ -501,18 +507,20 @@ lp_build_init(void)
  * Create a new gallivm_state object.
  */
 struct gallivm_state *
-gallivm_create(const char *name, LLVMContextRef context)
+gallivm_create(const char *name, LLVMContextRef context,
+               struct lp_cached_code *cache)
 {
    struct gallivm_state *gallivm;
 
    gallivm = CALLOC_STRUCT(gallivm_state);
    if (gallivm) {
-      if (!init_gallivm_state(gallivm, name, context)) {
+      if (!init_gallivm_state(gallivm, name, context, cache)) {
          FREE(gallivm);
          gallivm = NULL;
       }
    }
 
+   assert(gallivm != NULL);
    return gallivm;
 }
 
@@ -569,6 +577,10 @@ gallivm_compile_module(struct gallivm_state *gallivm)
    if (gallivm->builder) {
       LLVMDisposeBuilder(gallivm->builder);
       gallivm->builder = NULL;
+   }
+
+   if (gallivm->cache && gallivm->cache->data_size) {
+      goto skip_cached;
    }
 
    /* Dump bitcode to a file */
@@ -638,6 +650,7 @@ gallivm_compile_module(struct gallivm_state *gallivm)
     * implicitly created by the EngineBuilder in
     * lp_build_create_jit_compiler_for_module()
     */
+ skip_cached:
    LLVMSetDataLayout(gallivm->module, "");
    assert(!gallivm->engine);
    if (!init_gallivm_engine(gallivm)) {
@@ -646,6 +659,9 @@ gallivm_compile_module(struct gallivm_state *gallivm)
    assert(gallivm->engine);
 
    ++gallivm->compiled;
+
+   if (gallivm->debug_printf_hook)
+      LLVMAddGlobalMapping(gallivm->engine, gallivm->debug_printf_hook, debug_printf);
 
    if (gallivm_debug & GALLIVM_DEBUG_ASM) {
       LLVMValueRef llvm_func = LLVMGetFirstFunction(gallivm->module);
@@ -707,4 +723,9 @@ gallivm_jit_function(struct gallivm_state *gallivm,
    }
 
    return jit_func;
+}
+
+unsigned gallivm_get_perf_flags(void)
+{
+   return gallivm_perf;
 }

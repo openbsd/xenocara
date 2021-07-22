@@ -94,8 +94,8 @@ nv30_render_map_vertices(struct vbuf_render *render)
    char *map = pipe_buffer_map_range(
          &r->nv30->base.pipe, r->buffer,
          r->offset, r->length,
-         PIPE_TRANSFER_WRITE |
-         PIPE_TRANSFER_DISCARD_RANGE,
+         PIPE_MAP_WRITE |
+         PIPE_MAP_DISCARD_RANGE,
          &r->transfer);
    assert(map);
    return map;
@@ -376,7 +376,8 @@ nv30_render_validate(struct nv30_context *nv30)
 }
 
 void
-nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
+nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+                const struct pipe_draw_start_count *draw_one)
 {
    struct nv30_context *nv30 = nv30_context(pipe);
    struct draw_context *draw = nv30->draw;
@@ -393,7 +394,7 @@ nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    if (nv30->draw_dirty & NV30_NEW_CLIP)
       draw_set_clip_state(draw, &nv30->clip);
    if (nv30->draw_dirty & NV30_NEW_ARRAYS) {
-      draw_set_vertex_buffers(draw, 0, nv30->num_vtxbufs, nv30->vtxbuf);
+      draw_set_vertex_buffers(draw, 0, nv30->num_vtxbufs, 0, nv30->vtxbuf);
       draw_set_vertex_elements(draw, nv30->vertex->num_elements, nv30->vertex->pipe);
    }
    if (nv30->draw_dirty & NV30_NEW_FRAGPROG) {
@@ -424,8 +425,8 @@ nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
       if (!map) {
          if (nv30->vtxbuf[i].buffer.resource)
             map = pipe_buffer_map(pipe, nv30->vtxbuf[i].buffer.resource,
-                                  PIPE_TRANSFER_UNSYNCHRONIZED |
-                                  PIPE_TRANSFER_READ, &transfer[i]);
+                                  PIPE_MAP_UNSYNCHRONIZED |
+                                  PIPE_MAP_READ, &transfer[i]);
       }
       draw_set_mapped_vertex_buffer(draw, i, map, ~0);
    }
@@ -434,8 +435,8 @@ nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
       const void *map = info->has_user_indices ? info->index.user : NULL;
       if (!map)
          map = pipe_buffer_map(pipe, info->index.resource,
-                               PIPE_TRANSFER_UNSYNCHRONIZED |
-                               PIPE_TRANSFER_READ, &transferi);
+                               PIPE_MAP_UNSYNCHRONIZED |
+                               PIPE_MAP_READ, &transferi);
       draw_set_indexes(draw,
                        (ubyte *) map,
                        info->index_size, ~0);
@@ -443,7 +444,7 @@ nv30_render_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
       draw_set_indexes(draw, NULL, 0, 0);
    }
 
-   draw_vbo(draw, info);
+   draw_vbo(draw, info, NULL, draw_one, 1);
    draw_flush(draw);
 
    if (info->index_size && transferi)

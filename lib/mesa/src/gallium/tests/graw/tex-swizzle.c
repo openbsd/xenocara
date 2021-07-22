@@ -61,7 +61,7 @@ static void set_vertices(void)
                                               sizeof(vertices),
                                               vertices);
 
-   info.ctx->set_vertex_buffers(info.ctx, 0, 1, &vbuf);
+   info.ctx->set_vertex_buffers(info.ctx, 0, 1, 0, false, &vbuf);
 }
 
 static void set_vertex_shader(void)
@@ -107,7 +107,7 @@ static void draw(void)
    clear_color.f[2] = 0.5;
    clear_color.f[3] = 1.0;
 
-   info.ctx->clear(info.ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
+   info.ctx->clear(info.ctx, PIPE_CLEAR_COLOR, NULL, &clear_color, 0, 0);
    util_draw_arrays(info.ctx, PIPE_PRIM_QUADS, 0, 4);
    info.ctx->flush(info.ctx, NULL, 0);
 
@@ -147,7 +147,7 @@ init_tex(const unsigned swizzle[4])
    if (sv == NULL)
       exit(5);
 
-   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, &sv);
+   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, 0, &sv);
 
    sampler = graw_util_create_simple_sampler(&info,
                                              PIPE_TEX_WRAP_REPEAT,

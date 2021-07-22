@@ -37,7 +37,7 @@
 #include "main/format_pack.h"
 #include "main/format_unpack.h"
 #include "main/macros.h"
-#include "main/imports.h"
+
 #include "main/image.h"
 #include "main/samplerobj.h"
 #include "main/state.h"
@@ -74,7 +74,7 @@ _swrast_span_default_attribs(struct gl_context *ctx, SWspan *span)
       if (ctx->DrawBuffer->Visual.depthBits <= 16)
          span->z = FloatToFixed(ctx->Current.RasterPos[2] * depthMax + 0.5F);
       else {
-         GLfloat tmpf = ctx->Current.RasterPos[2] * depthMax; 
+         GLfloat tmpf = ctx->Current.RasterPos[2] * depthMax;
          tmpf = MIN2(tmpf, depthMax);
          span->z = (GLint)tmpf;
       }
@@ -390,7 +390,7 @@ _swrast_span_interpolate_z( const struct gl_context *ctx, SWspan *span )
 
    if (ctx->DrawBuffer->Visual.depthBits <= 16) {
       GLfixed zval = span->z;
-      GLuint *z = span->array->z; 
+      GLuint *z = span->array->z;
       for (i = 0; i < n; i++) {
          z[i] = FixedToInt(zval);
          zval += span->zStep;
@@ -426,7 +426,7 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
    GLfloat x = sqrtf(dudx * dudx + dvdx * dvdx);
    GLfloat y = sqrtf(dudy * dudy + dvdy * dvdy);
    GLfloat rho = MAX2(x, y);
-   GLfloat lambda = LOG2(rho);
+   GLfloat lambda = log2f(rho);
    return lambda;
 }
 
@@ -453,7 +453,7 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
    maxU = MAX2(dsdx2, dsdy2) * texW;
    maxV = MAX2(dtdx2, dtdy2) * texH;
    rho = MAX2(maxU, maxV);
-   lambda = LOG2(rho);
+   lambda = logf2(rho);
    return lambda;
 }
 #endif
@@ -504,13 +504,13 @@ interpolate_texcoords(struct gl_context *ctx, SWspan *span)
                swrast_texture_image_const(img);
             const struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, u);
 
-            needLambda = (samp->MinFilter != samp->MagFilter)
+            needLambda = (samp->Attrib.MinFilter != samp->Attrib.MagFilter)
                || _swrast_use_fragment_program(ctx);
             /* LOD is calculated directly in the ansiotropic filter, we can
              * skip the normal lambda function as the result is ignored.
              */
-            if (samp->MaxAnisotropy > 1.0F &&
-                samp->MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
+            if (samp->Attrib.MaxAnisotropy > 1.0F &&
+                samp->Attrib.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
                needLambda = GL_FALSE;
             }
             texW = swImg->WidthScale;
@@ -1041,25 +1041,23 @@ put_values(struct gl_context *ctx, struct gl_renderbuffer *rb,
            GLuint count, const GLint x[], const GLint y[],
            const void *values, const GLubyte *mask)
 {
-   mesa_pack_ubyte_rgba_func pack_ubyte = NULL;
-   mesa_pack_float_rgba_func pack_float = NULL;
+   struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
    GLuint i;
-
-   if (datatype == GL_UNSIGNED_BYTE)
-      pack_ubyte = _mesa_get_pack_ubyte_rgba_function(rb->Format);
-   else
-      pack_float = _mesa_get_pack_float_rgba_function(rb->Format);
 
    for (i = 0; i < count; i++) {
       if (mask[i]) {
-         GLubyte *dst = _swrast_pixel_address(rb, x[i], y[i]);
-
          if (datatype == GL_UNSIGNED_BYTE) {
-            pack_ubyte((const GLubyte *) values + 4 * i, dst);
+            util_format_write_4ub(rb->Format,
+                                  (uint8_t *)values + 4 * i, 0,
+                                  srb->Map, srb->RowStride,
+                                  x[i], y[i], 1, 1);
          }
          else {
             assert(datatype == GL_FLOAT);
-            pack_float((const GLfloat *) values + 4 * i, dst);
+            util_format_write_4(rb->Format,
+                                (float *)values + 4 * i, 0,
+                                srb->Map, srb->RowStride,
+                                x[i], y[i], 1, 1);
          }
       }
    }
@@ -1314,7 +1312,7 @@ _swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
    {
       const GLuint numBuffers = fb->_NumColorDrawBuffers;
       const struct gl_program *fp = ctx->FragmentProgram._Current;
-      const GLboolean multiFragOutputs = 
+      const GLboolean multiFragOutputs =
          _swrast_use_fragment_program(ctx)
          && fp->info.outputs_written >= (1 << FRAG_RESULT_DATA0);
       /* Save srcColorType because convert_color_type() can change it */

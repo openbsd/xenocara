@@ -39,7 +39,12 @@
 extern "C" {
 #endif
 
-#if defined(ANDROID) || defined(_WIN32)
+/*
+ * Opening drirc files is disabled by default so sandboxed
+ * browser processes with OpenGL contexts can drop the ability
+ * to read files.
+ */
+#if defined(ANDROID) || defined(_WIN32) || defined(__OpenBSD__)
 #define WITH_XMLCONFIG 0
 #else
 #define WITH_XMLCONFIG 1

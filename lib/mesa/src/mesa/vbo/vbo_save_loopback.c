@@ -29,7 +29,7 @@
 #include "main/context.h"
 #include "main/glheader.h"
 #include "main/enums.h"
-#include "main/imports.h"
+#include "main/mesa_private.h"
 #include "main/dispatch.h"
 #include "glapi/glapi.h"
 
@@ -112,7 +112,7 @@ loopback_prim(struct gl_context *ctx,
              stride);
 
    if (prim->begin) {
-      CALL_Begin(GET_DISPATCH(), (prim->mode));
+      CALL_Begin(ctx->Exec, (prim->mode));
    }
    else {
       start += wrap_count;
@@ -128,7 +128,7 @@ loopback_prim(struct gl_context *ctx,
    }
 
    if (prim->end) {
-      CALL_End(GET_DISPATCH(), ());
+      CALL_End(ctx->Exec, ());
    }
 }
 

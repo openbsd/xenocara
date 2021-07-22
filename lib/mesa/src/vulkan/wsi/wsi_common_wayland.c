@@ -40,14 +40,10 @@
 #include "wayland-drm-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
 
+#include <util/compiler.h>
 #include <util/hash_table.h>
 #include <util/timespec.h>
 #include <util/u_vector.h>
-
-#define typed_memcpy(dest, src, count) ({ \
-   STATIC_ASSERT(sizeof(*src) == sizeof(*dest)); \
-   memcpy((dest), (src), (count) * sizeof(*(src))); \
-})
 
 struct wsi_wayland;
 
@@ -140,7 +136,7 @@ wsi_wl_display_add_wl_format(struct wsi_wl_display *display,
    case WL_DRM_FORMAT_XBGR8888:
       wsi_wl_display_add_vk_format(display, formats,
                                    VK_FORMAT_R8G8B8_UNORM);
-      /* fallthrough */
+      FALLTHROUGH;
    case WL_DRM_FORMAT_ABGR8888:
       wsi_wl_display_add_vk_format(display, formats,
                                    VK_FORMAT_R8G8B8A8_UNORM);
@@ -170,7 +166,7 @@ wsi_wl_display_add_wl_format(struct wsi_wl_display *display,
                                    VK_FORMAT_B8G8R8_SRGB);
       wsi_wl_display_add_vk_format(display, formats,
                                    VK_FORMAT_B8G8R8_UNORM);
-      /* fallthrough */
+      FALLTHROUGH;
    case WL_DRM_FORMAT_ARGB8888:
       wsi_wl_display_add_vk_format(display, formats,
                                    VK_FORMAT_B8G8R8A8_SRGB);
@@ -551,7 +547,7 @@ wsi_wl_surface_get_capabilities(VkIcdSurfaceBase *surface,
    /* There is no real maximum */
    caps->maxImageCount = 0;
 
-   caps->currentExtent = (VkExtent2D) { -1, -1 };
+   caps->currentExtent = (VkExtent2D) { UINT32_MAX, UINT32_MAX };
    caps->minImageExtent = (VkExtent2D) { 1, 1 };
    caps->maxImageExtent = (VkExtent2D) {
       wsi_device->maxImageDimension2D,
@@ -695,7 +691,7 @@ wsi_wl_surface_get_present_rectangles(VkIcdSurfaceBase *surface,
       /* We don't know a size so just return the usual "I don't know." */
       *rect = (VkRect2D) {
          .offset = { 0, 0 },
-         .extent = { -1, -1 },
+         .extent = { UINT32_MAX, UINT32_MAX },
       };
    }
 
@@ -755,7 +751,8 @@ struct wsi_wl_swapchain {
 
    struct wsi_wl_image                          images[0];
 };
-WSI_DEFINE_NONDISP_HANDLE_CASTS(wsi_wl_swapchain, VkSwapchainKHR)
+VK_DEFINE_NONDISP_HANDLE_CASTS(wsi_wl_swapchain, base.base, VkSwapchainKHR,
+                               VK_OBJECT_TYPE_SWAPCHAIN_KHR)
 
 static struct wsi_image *
 wsi_wl_swapchain_get_wsi_image(struct wsi_swapchain *wsi_chain,
@@ -1075,7 +1072,7 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
       /* If we have an oldSwapchain parameter, copy the display struct over
        * from the old one so we don't have to fully re-initialize it.
        */
-      WSI_FROM_HANDLE(wsi_wl_swapchain, old_chain, pCreateInfo->oldSwapchain);
+      VK_FROM_HANDLE(wsi_wl_swapchain, old_chain, pCreateInfo->oldSwapchain);
       chain->display = wsi_wl_display_ref(old_chain->display);
    } else {
       chain->display = NULL;

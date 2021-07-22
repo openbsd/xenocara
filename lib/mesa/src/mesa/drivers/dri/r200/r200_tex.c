@@ -32,7 +32,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "main/glheader.h"
-#include "main/imports.h"
+
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/image.h"
@@ -45,13 +45,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_ioctl.h"
 #include "r200_tex.h"
 
-#include "util/xmlpool.h"
+#include "util/u_memory.h"
+#include "util/driconf.h"
 
 
 
 /**
  * Set the texture wrap modes.
- * 
+ *
  * \param t Texture object whose wrap modes are to be set
  * \param swrap Wrap mode for the \a s texture coordinate
  * \param twrap Wrap mode for the \a t texture coordinate
@@ -204,7 +205,7 @@ static void r200SetTexMaxAnisotropy( radeonTexObjPtr t, GLfloat max )
 
 /**
  * Set the texture magnification and minification modes.
- * 
+ *
  * \param t Texture whose filter modes are to be set
  * \param minf Texture minification mode
  * \param magf Texture magnification mode
@@ -326,7 +327,7 @@ static void r200TexEnv( struct gl_context *ctx, GLenum target,
       const int fixed_one = R200_LOD_BIAS_FIXED_ONE;
 
       /* The R200's LOD bias is a signed 2's complement value with a
-       * range of -16.0 <= bias < 16.0. 
+       * range of -16.0 <= bias < 16.0.
        *
        * NOTE: Add a small bias to the bias for conform mipsel.c test.
        */
@@ -336,7 +337,7 @@ static void r200TexEnv( struct gl_context *ctx, GLenum target,
       bias = CLAMP( bias, min, 16.0 );
       b = ((int)(bias * fixed_one)
 		+ R200_LOD_BIAS_CORRECTION) & R200_LOD_BIAS_MASK;
-      
+
       if ( (rmesa->hw.tex[unit].cmd[TEX_PP_TXFORMAT_X] & R200_LOD_BIAS_MASK) != b ) {
 	 R200_STATECHANGE( rmesa, tex[unit] );
 	 rmesa->hw.tex[unit].cmd[TEX_PP_TXFORMAT_X] &= ~R200_LOD_BIAS_MASK;
@@ -364,10 +365,10 @@ void r200TexUpdateParameters(struct gl_context *ctx, GLuint unit)
    struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, unit);
    radeonTexObj* t = radeon_tex_obj(ctx->Texture.Unit[unit]._Current);
 
-   r200SetTexMaxAnisotropy(t , samp->MaxAnisotropy);
-   r200SetTexFilter(t, samp->MinFilter, samp->MagFilter);
-   r200SetTexWrap(t, samp->WrapS, samp->WrapT, samp->WrapR);
-   r200SetTexBorderColor(t, samp->BorderColor.f);
+   r200SetTexMaxAnisotropy(t , samp->Attrib.MaxAnisotropy);
+   r200SetTexFilter(t, samp->Attrib.MinFilter, samp->Attrib.MagFilter);
+   r200SetTexWrap(t, samp->Attrib.WrapS, samp->Attrib.WrapT, samp->Attrib.WrapR);
+   r200SetTexBorderColor(t, samp->Attrib.BorderColor.f);
 }
 
 /**
@@ -386,6 +387,7 @@ static void r200TexParameter(struct gl_context *ctx,
 	       _mesa_enum_to_string( pname ) );
 
    switch ( pname ) {
+   case GL_ALL_ATTRIB_BITS: /* meaning is all pnames, internal */
    case GL_TEXTURE_MIN_FILTER:
    case GL_TEXTURE_MAG_FILTER:
    case GL_TEXTURE_MAX_ANISOTROPY_EXT:
@@ -425,7 +427,7 @@ static void r200DeleteTexture(struct gl_context * ctx, struct gl_texture_object 
 	    rmesa->hw.tex[i].dirty = GL_FALSE;
 	    rmesa->hw.cube[i].dirty = GL_FALSE;
 	 }
-      }      
+      }
    }
 
    radeon_miptree_unreference(&t->mt);
@@ -433,13 +435,13 @@ static void r200DeleteTexture(struct gl_context * ctx, struct gl_texture_object 
    _mesa_delete_texture_object(ctx, texObj);
 }
 
-/* Need:  
+/* Need:
  *  - Same GEN_MODE for all active bits
  *  - Same EyePlane/ObjPlane for all active bits when using Eye/Obj
  *  - STRQ presumably all supported (matrix means incoming R values
  *    can end up in STQ, this has implications for vertex support,
  *    presumably ok if maos is used, though?)
- *  
+ *
  * Basically impossible to do this on the fly - just collect some
  * basic info & do the checks from ValidateState().
  */
@@ -475,13 +477,13 @@ static struct gl_texture_object *r200NewTextureObject(struct gl_context * ctx,
 	   _mesa_enum_to_string(target), t);
 
    _mesa_initialize_texture_object(ctx, &t->base, name, target);
-   t->base.Sampler.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
+   t->base.Sampler.Attrib.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
 
    /* Initialize hardware state */
-   r200SetTexWrap( t, t->base.Sampler.WrapS, t->base.Sampler.WrapT, t->base.Sampler.WrapR );
-   r200SetTexMaxAnisotropy( t, t->base.Sampler.MaxAnisotropy );
-   r200SetTexFilter(t, t->base.Sampler.MinFilter, t->base.Sampler.MagFilter);
-   r200SetTexBorderColor(t, t->base.Sampler.BorderColor.f);
+   r200SetTexWrap( t, t->base.Sampler.Attrib.WrapS, t->base.Sampler.Attrib.WrapT, t->base.Sampler.Attrib.WrapR );
+   r200SetTexMaxAnisotropy( t, t->base.Sampler.Attrib.MaxAnisotropy );
+   r200SetTexFilter(t, t->base.Sampler.Attrib.MinFilter, t->base.Sampler.Attrib.MagFilter);
+   r200SetTexBorderColor(t, t->base.Sampler.Attrib.BorderColor.f);
 
    return &t->base;
 }
@@ -492,7 +494,7 @@ r200NewSamplerObject(struct gl_context *ctx, GLuint name)
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    struct gl_sampler_object *samp = _mesa_new_sampler_object(ctx, name);
    if (samp)
-      samp->MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
+      samp->Attrib.MaxAnisotropy = rmesa->radeon.initialMaxAnisotropy;
    return samp;
 }
 

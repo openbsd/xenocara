@@ -79,7 +79,7 @@ set_vertices(struct vertex *verts, unsigned num_verts)
                                               num_verts * sizeof(struct vertex),
                                               verts);
 
-   info.ctx->set_vertex_buffers(info.ctx, 0, 1, &vbuf);
+   info.ctx->set_vertex_buffers(info.ctx, 0, 1, 0, false, &vbuf);
 }
 
 static void set_vertex_shader( void )
@@ -127,13 +127,13 @@ static void draw( void )
    clear_color.f[2] = 0.5;
    clear_color.f[3] = 1.0;
 
-   info.ctx->clear(info.ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
+   info.ctx->clear(info.ctx, PIPE_CLEAR_COLOR, NULL, &clear_color, 0, 0);
 
-   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, &linear_sv);
+   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, 0, &linear_sv);
    set_vertices(vertices1, 4);
    util_draw_arrays(info.ctx, PIPE_PRIM_QUADS, 0, 4);
 
-   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, &srgb_sv);
+   info.ctx->set_sampler_views(info.ctx, PIPE_SHADER_FRAGMENT, 0, 1, 0, &srgb_sv);
    set_vertices(vertices2, 4);
    util_draw_arrays(info.ctx, PIPE_PRIM_QUADS, 0, 4);
 

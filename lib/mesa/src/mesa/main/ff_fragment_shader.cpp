@@ -1,10 +1,10 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * Copyright 2009 VMware, Inc.  All Rights Reserved.
  * Copyright © 2010-2011 Intel Corporation
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -12,11 +12,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -24,12 +24,12 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "main/glheader.h"
 #include "main/context.h"
-#include "main/imports.h"
+
 #include "main/macros.h"
 #include "main/samplerobj.h"
 #include "main/shaderobj.h"
@@ -179,9 +179,8 @@ static GLbitfield filter_fp_input_mask( GLbitfield fp_inputs,
       /* Fixed function vertex logic */
       GLbitfield possible_inputs = 0;
 
-      /* _NEW_VARYING_VP_INPUTS */
-      GLbitfield varying_inputs = ctx->varying_vp_inputs;
-      /* We only update ctx->varying_vp_inputs when in VP_MODE_FF _VPMode */
+      GLbitfield varying_inputs = ctx->VertexProgram._VaryingInputs;
+      /* We only update ctx->VertexProgram._VaryingInputs when in VP_MODE_FF _VPMode */
       assert(VP_MODE_FF == ctx->VertexProgram._VPMode);
 
       /* These get generated in the setup routine regardless of the
@@ -193,7 +192,6 @@ static GLbitfield filter_fp_input_mask( GLbitfield fp_inputs,
          possible_inputs = VARYING_BITS_TEX_ANY;
       }
       else {
-         /* _NEW_TEXTURE_STATE */
          const GLbitfield possible_tex_inputs =
                ctx->Texture._TexGenEnabled |
                ctx->Texture._TexMatEnabled |
@@ -205,7 +203,6 @@ static GLbitfield filter_fp_input_mask( GLbitfield fp_inputs,
       /* First look at what values may be computed by the generated
        * vertex program:
        */
-      /* _NEW_LIGHT */
       if (ctx->Light.Enabled) {
          possible_inputs |= VARYING_BIT_COL0;
 
@@ -267,7 +264,7 @@ static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
 
    memset(key, 0, sizeof(*key));
 
-   /* _NEW_TEXTURE_OBJECT */
+   /* _NEW_TEXTURE_OBJECT | _NEW_TEXTURE_STATE */
    mask = ctx->Texture._EnabledCoordUnits;
    int i = -1;
    while (mask) {
@@ -286,7 +283,7 @@ static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
       key->unit[i].source_index = texObj->TargetIndex;
 
       const struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, i);
-      if (samp->CompareMode == GL_COMPARE_R_TO_TEXTURE) {
+      if (samp->Attrib.CompareMode == GL_COMPARE_R_TO_TEXTURE) {
          const GLenum format = _mesa_texture_base_format(texObj);
          key->unit[i].shadow = (format == GL_DEPTH_COMPONENT ||
 				format == GL_DEPTH_STENCIL_EXT);
@@ -305,7 +302,7 @@ static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
 
    key->nr_enabled_units = i + 1;
 
-   /* _NEW_LIGHT | _NEW_FOG */
+   /* _NEW_FOG */
    if (texenv_doing_secondary_color(ctx)) {
       key->separate_specular = 1;
       inputs_referenced |= VARYING_BIT_COL1;
@@ -347,13 +344,6 @@ public:
     * else undef.
     */
 
-   /* Texcoord override from bumpmapping. */
-   ir_variable *texcoord_tex[MAX_TEXTURE_COORD_UNITS];
-
-   /* Reg containing texcoord for a texture unit,
-    * needed for bump mapping, else undef.
-    */
-
    ir_rvalue *src_previous;	/**< Reg containing color from previous
 				 * stage.  May need to be decl'd.
 				 */
@@ -363,14 +353,13 @@ static ir_rvalue *
 get_current_attrib(texenv_fragment_program *p, GLuint attrib)
 {
    ir_variable *current;
-   ir_rvalue *val;
+   char name[128];
 
-   current = p->shader->symbols->get_variable("gl_CurrentAttribFragMESA");
+   snprintf(name, sizeof(name), "gl_CurrentAttribFrag%uMESA", attrib);
+
+   current = p->shader->symbols->get_variable(name);
    assert(current);
-   current->data.max_array_access = MAX2(current->data.max_array_access, (int)attrib);
-   val = new(p->mem_ctx) ir_dereference_variable(current);
-   ir_rvalue *index = new(p->mem_ctx) ir_constant(attrib);
-   return new(p->mem_ctx) ir_dereference_array(val, index);
+   return new(p->mem_ctx) ir_dereference_variable(current);
 }
 
 static ir_rvalue *
@@ -503,7 +492,7 @@ static GLboolean args_match( const struct state_key *key, GLuint unit )
 	    return GL_FALSE;
 	 }
 	 break;
-      default: 
+      default:
 	 return GL_FALSE;	/* impossible */
       }
    }
@@ -587,7 +576,7 @@ emit_combine(texenv_fragment_program *p,
    case TEXENV_MODE_ADD_PRODUCTS_SIGNED_NV:
       return add(add(mul(src[0], src[1]), mul(src[2], src[3])),
 		 new(p->mem_ctx) ir_constant(-0.5f));
-   default: 
+   default:
       assert(0);
       return src[0];
    }
@@ -606,7 +595,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
    if (!key->unit[unit].enabled) {
       return get_source(p, TEXENV_SRC_PREVIOUS, 0);
    }
-   
+
    switch (key->unit[unit].ModeRGB) {
    case TEXENV_MODE_DOT3_RGB_EXT:
       alpha_shift = key->unit[unit].ScaleShiftA;
@@ -621,7 +610,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
       alpha_shift = key->unit[unit].ScaleShiftA;
       break;
    }
-   
+
    /* If we'll do rgb/alpha shifting don't saturate in emit_combine().
     * We don't want to clamp twice.
     */
@@ -735,8 +724,6 @@ static void load_texture( texenv_fragment_program *p, GLuint unit )
 
    if (!(p->state->inputs_available & (VARYING_BIT_TEX0 << unit))) {
       texcoord = get_current_attrib(p, VERT_ATTRIB_TEX0 + unit);
-   } else if (p->texcoord_tex[unit]) {
-      texcoord = new(p->mem_ctx) ir_dereference_variable(p->texcoord_tex[unit]);
    } else {
       ir_variable *tc_array = p->shader->symbols->get_variable("gl_TexCoord");
       assert(tc_array);
@@ -869,7 +856,7 @@ load_texenv_source(texenv_fragment_program *p,
    case TEXENV_SRC_TEXTURE7:
       load_texture(p, src - TEXENV_SRC_TEXTURE0);
       break;
-      
+
    default:
       /* not a texture src - do nothing */
       break;
@@ -1089,10 +1076,8 @@ create_new_program(struct gl_context *ctx, struct state_key *key)
    _mesa_glsl_initialize_types(state);
    _mesa_glsl_initialize_variables(p.instructions, state);
 
-   for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++) {
+   for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++)
       p.src_texture[unit] = NULL;
-      p.texcoord_tex[unit] = NULL;
-   }
 
    p.src_previous = NULL;
 

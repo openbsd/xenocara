@@ -24,6 +24,7 @@
  */
 
 #include "util/format/u_format.h"
+#include "util/u_draw.h"
 #include "util/u_inlines.h"
 #include "util/u_prim.h"
 #include "translate/translate.h"
@@ -41,15 +42,13 @@ nv30_emit_vtxattr(struct nv30_context *nv30, struct pipe_vertex_buffer *vb,
    const unsigned nc = util_format_get_nr_components(ve->src_format);
    struct nouveau_pushbuf *push = nv30->base.pushbuf;
    struct nv04_resource *res = nv04_resource(vb->buffer.resource);
-   const struct util_format_description *desc =
-      util_format_description(ve->src_format);
    const void *data;
    float v[4];
 
    data = nouveau_resource_map_offset(&nv30->base, res, vb->buffer_offset +
                                       ve->src_offset, NOUVEAU_BO_RD);
 
-   desc->unpack_rgba_float(v, 0, data, 0, 1, 1);
+   util_format_unpack_rgba(ve->src_format, v, data, 1);
 
    switch (nc) {
    case 4:
@@ -517,7 +516,7 @@ nv30_draw_elements(struct nv30_context *nv30, bool shorten,
                                             nv04_resource(info->index.resource),
                                             start * index_size, NOUVEAU_BO_RD);
       else
-         data = info->index.user;
+         data = (char*)info->index.user + start * index_size;
       if (!data)
          return;
 
@@ -546,14 +545,25 @@ nv30_draw_elements(struct nv30_context *nv30, bool shorten,
 }
 
 static void
-nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
+nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+              const struct pipe_draw_indirect_info *indirect,
+              const struct pipe_draw_start_count *draws,
+              unsigned num_draws)
 {
+   if (num_draws > 1) {
+      util_draw_multi(pipe, info, indirect, draws, num_draws);
+      return;
+   }
+
+   if (!indirect && (!draws[0].count || !info->instance_count))
+      return;
+
    struct nv30_context *nv30 = nv30_context(pipe);
    struct nouveau_pushbuf *push = nv30->base.pushbuf;
    int i;
 
    if (!info->primitive_restart &&
-       !u_trim_pipe_prim(info->mode, (unsigned*)&info->count))
+       !u_trim_pipe_prim(info->mode, (unsigned*)&draws[0].count))
       return;
 
    /* For picking only a few vertices from a large user buffer, push is better,
@@ -561,10 +571,16 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
     */
    nv30->vbo_push_hint = /* the 64 is heuristic */
       !(info->index_size &&
-        ((info->max_index - info->min_index + 64) < info->count));
+        info->index_bounds_valid &&
+        ((info->max_index - info->min_index + 64) < draws[0].count));
 
-   nv30->vbo_min_index = info->min_index;
-   nv30->vbo_max_index = info->max_index;
+   if (info->index_bounds_valid) {
+      nv30->vbo_min_index = info->min_index;
+      nv30->vbo_max_index = info->max_index;
+   } else {
+      nv30->vbo_min_index = 0;
+      nv30->vbo_max_index = ~0;
+   }
 
    if (nv30->vbo_push_hint != !!nv30->vbo_fifo)
       nv30->dirty |= NV30_NEW_ARRAYS;
@@ -575,11 +591,11 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
 
    nv30_state_validate(nv30, ~0, true);
    if (nv30->draw_flags) {
-      nv30_render_vbo(pipe, info);
+      nv30_render_vbo(pipe, info, &draws[0]);
       return;
    } else
    if (nv30->vbo_fifo) {
-      nv30_push_vbo(nv30, info);
+      nv30_push_vbo(nv30, info, &draws[0]);
       return;
    }
 
@@ -602,10 +618,10 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
 
    if (!info->index_size) {
       nv30_draw_arrays(nv30,
-                       info->mode, info->start, info->count,
+                       info->mode, draws[0].start, draws[0].count,
                        info->instance_count);
    } else {
-      bool shorten = info->max_index <= 65535;
+      bool shorten = info->index_bounds_valid && info->max_index <= 65535;
 
       if (info->primitive_restart != nv30->state.prim_restart) {
          if (info->primitive_restart) {
@@ -630,7 +646,7 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
       }
 
       nv30_draw_elements(nv30, shorten, info,
-                         info->mode, info->start, info->count,
+                         info->mode, draws[0].start, draws[0].count,
                          info->instance_count, info->index_bias, info->index_size);
    }
 

@@ -71,7 +71,8 @@ set_viewport_no_notify(struct gl_context *ctx, unsigned idx,
        ctx->ViewportArray[idx].Height == height)
       return;
 
-   FLUSH_VERTICES(ctx, ctx->DriverFlags.NewViewport ? 0 : _NEW_VIEWPORT);
+   FLUSH_VERTICES(ctx, ctx->DriverFlags.NewViewport ? 0 : _NEW_VIEWPORT,
+                  GL_VIEWPORT_BIT);
    ctx->NewDriverState |= ctx->DriverFlags.NewViewport;
 
    ctx->ViewportArray[idx].X = x;
@@ -292,11 +293,11 @@ set_depth_range_no_notify(struct gl_context *ctx, unsigned idx,
       return;
 
    /* The depth range is needed by program state constants. */
-   FLUSH_VERTICES(ctx, _NEW_VIEWPORT);
+   FLUSH_VERTICES(ctx, _NEW_VIEWPORT, GL_VIEWPORT_BIT);
    ctx->NewDriverState |= ctx->DriverFlags.NewViewport;
 
-   ctx->ViewportArray[idx].Near = CLAMP(nearval, 0.0, 1.0);
-   ctx->ViewportArray[idx].Far = CLAMP(farval, 0.0, 1.0);
+   ctx->ViewportArray[idx].Near = SATURATE(nearval);
+   ctx->ViewportArray[idx].Far = SATURATE(farval);
 }
 
 void
@@ -488,6 +489,10 @@ void _mesa_init_viewport(struct gl_context *ctx)
       ctx->ViewportArray[i].Height = 0;
       ctx->ViewportArray[i].Near = 0.0;
       ctx->ViewportArray[i].Far = 1.0;
+      ctx->ViewportArray[i].SwizzleX = GL_VIEWPORT_SWIZZLE_POSITIVE_X_NV;
+      ctx->ViewportArray[i].SwizzleY = GL_VIEWPORT_SWIZZLE_POSITIVE_Y_NV;
+      ctx->ViewportArray[i].SwizzleZ = GL_VIEWPORT_SWIZZLE_POSITIVE_Z_NV;
+      ctx->ViewportArray[i].SwizzleW = GL_VIEWPORT_SWIZZLE_POSITIVE_W_NV;
    }
 
    ctx->SubpixelPrecisionBias[0] = 0;
@@ -516,7 +521,7 @@ clip_control(struct gl_context *ctx, GLenum origin, GLenum depth, bool no_error)
 
    /* Affects transform state and the viewport transform */
    FLUSH_VERTICES(ctx, ctx->DriverFlags.NewClipControl ? 0 :
-                  _NEW_TRANSFORM | _NEW_VIEWPORT);
+                  _NEW_TRANSFORM | _NEW_VIEWPORT, GL_TRANSFORM_BIT);
    ctx->NewDriverState |= ctx->DriverFlags.NewClipControl;
 
    if (ctx->Transform.ClipOrigin != origin) {
@@ -610,10 +615,11 @@ subpixel_precision_bias(struct gl_context *ctx, GLuint xbits, GLuint ybits)
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glSubpixelPrecisionBiasNV(%u, %u)\n", xbits, ybits);
 
+   FLUSH_VERTICES(ctx, 0, GL_VIEWPORT_BIT);
+
    ctx->SubpixelPrecisionBias[0] = xbits;
    ctx->SubpixelPrecisionBias[1] = ybits;
 
-   FLUSH_VERTICES(ctx, 0);
    ctx->NewDriverState |=
       ctx->DriverFlags.NewNvConservativeRasterizationParams;
 }
@@ -656,4 +662,97 @@ _mesa_SubpixelPrecisionBiasNV(GLuint xbits, GLuint ybits)
    }
 
    subpixel_precision_bias(ctx, xbits, ybits);
+}
+
+static void
+set_viewport_swizzle(struct gl_context *ctx, GLuint index,
+                     GLenum swizzlex, GLenum swizzley,
+                     GLenum swizzlez, GLenum swizzlew)
+{
+   struct gl_viewport_attrib *viewport = &ctx->ViewportArray[index];
+   if (viewport->SwizzleX == swizzlex &&
+       viewport->SwizzleY == swizzley &&
+       viewport->SwizzleZ == swizzlez &&
+       viewport->SwizzleW == swizzlew)
+      return;
+
+   FLUSH_VERTICES(ctx, _NEW_VIEWPORT, GL_VIEWPORT_BIT);
+   ctx->NewDriverState |= ctx->DriverFlags.NewViewport;
+
+   viewport->SwizzleX = swizzlex;
+   viewport->SwizzleY = swizzley;
+   viewport->SwizzleZ = swizzlez;
+   viewport->SwizzleW = swizzlew;
+}
+
+void GLAPIENTRY
+_mesa_ViewportSwizzleNV_no_error(GLuint index,
+                                 GLenum swizzlex, GLenum swizzley,
+                                 GLenum swizzlez, GLenum swizzlew)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API)
+      _mesa_debug(ctx, "glViewportSwizzleNV(%x, %x, %x, %x)\n",
+                  swizzlex, swizzley, swizzlez, swizzlew);
+
+   set_viewport_swizzle(ctx, index, swizzlex, swizzley, swizzlez, swizzlew);
+}
+
+static bool
+verify_viewport_swizzle(GLenum swizzle)
+{
+   return swizzle >= GL_VIEWPORT_SWIZZLE_POSITIVE_X_NV &&
+      swizzle <= GL_VIEWPORT_SWIZZLE_NEGATIVE_W_NV;
+}
+
+void GLAPIENTRY
+_mesa_ViewportSwizzleNV(GLuint index,
+                        GLenum swizzlex, GLenum swizzley,
+                        GLenum swizzlez, GLenum swizzlew)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API)
+      _mesa_debug(ctx, "glViewportSwizzleNV(%x, %x, %x, %x)\n",
+                  swizzlex, swizzley, swizzlez, swizzlew);
+
+   if (!ctx->Extensions.NV_viewport_swizzle) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+                  "glViewportSwizzleNV not supported");
+      return;
+   }
+
+   if (index >= ctx->Const.MaxViewports) {
+      _mesa_error(ctx, GL_INVALID_VALUE,
+                  "glViewportSwizzleNV: index (%d) >= MaxViewports (%d)",
+                  index, ctx->Const.MaxViewports);
+      return;
+   }
+
+   if (!verify_viewport_swizzle(swizzlex)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glViewportSwizzleNV(swizzlex=%x)", swizzlex);
+      return;
+   }
+
+   if (!verify_viewport_swizzle(swizzley)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glViewportSwizzleNV(swizzley=%x)", swizzley);
+      return;
+   }
+
+   if (!verify_viewport_swizzle(swizzlez)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glViewportSwizzleNV(swizzlez=%x)", swizzlez);
+      return;
+   }
+
+   if (!verify_viewport_swizzle(swizzlew)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glViewportSwizzleNV(swizzlew=%x)", swizzlew);
+      return;
+   }
+
+   set_viewport_swizzle(ctx, index, swizzlex, swizzley, swizzlez, swizzlew);
 }

@@ -71,7 +71,7 @@ struct context {
 
 static void init_ctx(struct context *ctx)
 {
-        int ret;
+        ASSERTED int ret;
 
         ret = pipe_loader_probe(&ctx->dev, 1);
         assert(ret);
@@ -153,7 +153,7 @@ static void init_prog(struct context *ctx, unsigned local_sz,
                 .req_input_mem = input_sz
         };
         char *psrc = preprocess_prog(ctx, src, defs);
-        int ret;
+        ASSERTED int ret;
 
         ret = tgsi_text_translate(psrc, prog, ARRAY_SIZE(prog));
         assert(ret);
@@ -204,7 +204,7 @@ static void init_tex(struct context *ctx, int slot,
         *tex = ctx->screen->resource_create(ctx->screen, &ttex);
         assert(*tex);
 
-        map = pipe->transfer_map(pipe, *tex, 0, PIPE_TRANSFER_WRITE,
+        map = pipe->transfer_map(pipe, *tex, 0, PIPE_MAP_WRITE,
                                   &(struct pipe_box) { .width = w,
                                                   .height = h,
                                                   .depth = 1 }, &xfer);
@@ -246,7 +246,7 @@ static void check_tex(struct context *ctx, int slot,
         if (!check)
                 check = default_check;
 
-        map = pipe->transfer_map(pipe, tex, 0, PIPE_TRANSFER_READ,
+        map = pipe->transfer_map(pipe, tex, 0, PIPE_MAP_READ,
                                   &(struct pipe_box) { .width = tex->width0,
                                         .height = tex->height0,
                                         .depth = 1 }, &xfer);
@@ -315,7 +315,7 @@ static void init_sampler_views(struct context *ctx, const int *slots)
                 assert(ctx->view[i]);
         }
 
-        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, i, ctx->view);
+        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, i, 0, ctx->view);
 }
 
 static void destroy_sampler_views(struct context *ctx)
@@ -323,7 +323,7 @@ static void destroy_sampler_views(struct context *ctx)
         struct pipe_context *pipe = ctx->pipe;
         int i;
 
-        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, MAX_RESOURCES, NULL);
+        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, 0, MAX_RESOURCES, NULL);
 
         for (i = 0; i < MAX_RESOURCES; ++i) {
                 if (ctx->view[i]) {
@@ -1072,7 +1072,7 @@ static void test_surface_ld_init0f(void *p, int s, int x, int y)
         float v[] = { 1.0, -.75, .50, -.25 };
         int i = 0;
 
-        util_format_write_4f(surface_fmts[i], v, 0, p, 0, 0, 0, 1, 1);
+        util_format_pack_rgba(surface_fmts[i], p, v, 1);
 }
 
 static void test_surface_ld_init0i(void *p, int s, int x, int y)
@@ -1080,7 +1080,7 @@ static void test_surface_ld_init0i(void *p, int s, int x, int y)
         int v[] = { 0xffffffff, 0xffff, 0xff, 0xf };
         int i = 0;
 
-        util_format_write_4i(surface_fmts[i], v, 0, p, 0, 0, 0, 1, 1);
+        util_format_pack_rgba(surface_fmts[i], p, v, 1);
 }
 
 static void test_surface_ld_expectf(void *p, int s, int x, int y)
@@ -1089,7 +1089,7 @@ static void test_surface_ld_expectf(void *p, int s, int x, int y)
         int i = 0;
 
         test_surface_ld_init0f(v, s, x / 4, y);
-        util_format_read_4f(surface_fmts[i], w, 0, v, 0, 0, 0, 1, 1);
+        util_format_unpack_rgba(surface_fmts[i], w, v, 1);
         *(float *)p = w[x % 4];
 }
 
@@ -1099,7 +1099,7 @@ static void test_surface_ld_expecti(void *p, int s, int x, int y)
         int i = 0;
 
         test_surface_ld_init0i(v, s, x / 4, y);
-        util_format_read_4i(surface_fmts[i], w, 0, v, 0, 0, 0, 1, 1);
+        util_format_unpack_rgba(surface_fmts[i], w, v, 1);
         *(uint32_t *)p = w[x % 4];
 }
 
@@ -1180,7 +1180,7 @@ static void test_surface_st_expectf(void *p, int s, int x, int y)
 
         for (j = 0; j < 4; j++)
                 test_surface_st_init0f(&vf[j], s, 4 * x + j, y);
-        util_format_write_4f(surface_fmts[i], vf, 0, p, 0, 0, 0, 1, 1);
+        util_format_pack_rgba(surface_fmts[i], p, vf, 1);
 }
 
 static void test_surface_st_expects(void *p, int s, int x, int y)
@@ -1190,7 +1190,7 @@ static void test_surface_st_expects(void *p, int s, int x, int y)
 
         for (j = 0; j < 4; j++)
                 test_surface_st_init0i(&v[j], s, 4 * x + j, y);
-        util_format_write_4i(surface_fmts[i], v, 0, p, 0, 0, 0, 1, 1);
+        util_format_pack_rgba(surface_fmts[i], p, v, 1);
 }
 
 static void test_surface_st_expectu(void *p, int s, int x, int y)
@@ -1200,7 +1200,7 @@ static void test_surface_st_expectu(void *p, int s, int x, int y)
 
         for (j = 0; j < 4; j++)
                 test_surface_st_init0i(&v[j], s, 4 * x + j, y);
-        util_format_write_4ui(surface_fmts[i], v, 0, p, 0, 0, 0, 1, 1);
+        util_format_pack_rgba(surface_fmts[i], p, v, 1);
 }
 
 static bool test_surface_st_check(void *x, void *y, int sz)

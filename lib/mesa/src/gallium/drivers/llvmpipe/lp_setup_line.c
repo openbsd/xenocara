@@ -298,7 +298,7 @@ try_setup_line( struct lp_setup_context *setup,
    int nr_planes = 4;
    unsigned viewport_index = 0;
    unsigned layer = 0;
-   
+   float pixel_offset = setup->multisample ? 0.0 : setup->pixel_offset;
    /* linewidth should be interpreted as integer */
    int fixed_width = util_iround(width) * FIXED_ONE;
 
@@ -319,6 +319,10 @@ try_setup_line( struct lp_setup_context *setup,
    boolean draw_end;
    boolean will_draw_start;
    boolean will_draw_end;
+
+   if (lp_context->active_statistics_queries) {
+      lp_context->pipeline_statistics.c_primitives++;
+   }
 
    if (0)
       print_line(setup, v1, v2);
@@ -357,10 +361,10 @@ try_setup_line( struct lp_setup_context *setup,
    if (fabsf(dx) >= fabsf(dy)) {
       float dydx = dy / dx;
 
-      x1diff = v1[0][0] - (float) floor(v1[0][0]) - 0.5;
-      y1diff = v1[0][1] - (float) floor(v1[0][1]) - 0.5;
-      x2diff = v2[0][0] - (float) floor(v2[0][0]) - 0.5;
-      y2diff = v2[0][1] - (float) floor(v2[0][1]) - 0.5;
+      x1diff = v1[0][0] - floorf(v1[0][0]) - 0.5f;
+      y1diff = v1[0][1] - floorf(v1[0][1]) - 0.5f;
+      x2diff = v2[0][0] - floorf(v2[0][0]) - 0.5f;
+      y2diff = v2[0][1] - floorf(v2[0][1]) - 0.5f;
 
       if (y2diff==-0.5 && dy<0){
          y2diff = 0.5;
@@ -440,25 +444,25 @@ try_setup_line( struct lp_setup_context *setup,
       }
   
       /* x/y positions in fixed point */
-      x[0] = subpixel_snap(v1[0][0] + x_offset     - setup->pixel_offset);
-      x[1] = subpixel_snap(v2[0][0] + x_offset_end - setup->pixel_offset);
-      x[2] = subpixel_snap(v2[0][0] + x_offset_end - setup->pixel_offset);
-      x[3] = subpixel_snap(v1[0][0] + x_offset     - setup->pixel_offset);
+      x[0] = subpixel_snap(v1[0][0] + x_offset     - pixel_offset);
+      x[1] = subpixel_snap(v2[0][0] + x_offset_end - pixel_offset);
+      x[2] = subpixel_snap(v2[0][0] + x_offset_end - pixel_offset);
+      x[3] = subpixel_snap(v1[0][0] + x_offset     - pixel_offset);
       
-      y[0] = subpixel_snap(v1[0][1] + y_offset     - setup->pixel_offset) - fixed_width/2;
-      y[1] = subpixel_snap(v2[0][1] + y_offset_end - setup->pixel_offset) - fixed_width/2;
-      y[2] = subpixel_snap(v2[0][1] + y_offset_end - setup->pixel_offset) + fixed_width/2;
-      y[3] = subpixel_snap(v1[0][1] + y_offset     - setup->pixel_offset) + fixed_width/2;
+      y[0] = subpixel_snap(v1[0][1] + y_offset     - pixel_offset) - fixed_width/2;
+      y[1] = subpixel_snap(v2[0][1] + y_offset_end - pixel_offset) - fixed_width/2;
+      y[2] = subpixel_snap(v2[0][1] + y_offset_end - pixel_offset) + fixed_width/2;
+      y[3] = subpixel_snap(v1[0][1] + y_offset     - pixel_offset) + fixed_width/2;
       
    }
    else {
       const float dxdy = dx / dy;
 
       /* Y-MAJOR LINE */      
-      x1diff = v1[0][0] - (float) floor(v1[0][0]) - 0.5;
-      y1diff = v1[0][1] - (float) floor(v1[0][1]) - 0.5;
-      x2diff = v2[0][0] - (float) floor(v2[0][0]) - 0.5;
-      y2diff = v2[0][1] - (float) floor(v2[0][1]) - 0.5;
+      x1diff = v1[0][0] - floorf(v1[0][0]) - 0.5f;
+      y1diff = v1[0][1] - floorf(v1[0][1]) - 0.5f;
+      x2diff = v2[0][0] - floorf(v2[0][0]) - 0.5f;
+      y2diff = v2[0][1] - floorf(v2[0][1]) - 0.5f;
 
       if (x2diff==-0.5 && dx<0) {
          x2diff = 0.5;
@@ -537,15 +541,15 @@ try_setup_line( struct lp_setup_context *setup,
       }
 
       /* x/y positions in fixed point */
-      x[0] = subpixel_snap(v1[0][0] + x_offset     - setup->pixel_offset) - fixed_width/2;
-      x[1] = subpixel_snap(v2[0][0] + x_offset_end - setup->pixel_offset) - fixed_width/2;
-      x[2] = subpixel_snap(v2[0][0] + x_offset_end - setup->pixel_offset) + fixed_width/2;
-      x[3] = subpixel_snap(v1[0][0] + x_offset     - setup->pixel_offset) + fixed_width/2;
+      x[0] = subpixel_snap(v1[0][0] + x_offset     - pixel_offset) - fixed_width/2;
+      x[1] = subpixel_snap(v2[0][0] + x_offset_end - pixel_offset) - fixed_width/2;
+      x[2] = subpixel_snap(v2[0][0] + x_offset_end - pixel_offset) + fixed_width/2;
+      x[3] = subpixel_snap(v1[0][0] + x_offset     - pixel_offset) + fixed_width/2;
      
-      y[0] = subpixel_snap(v1[0][1] + y_offset     - setup->pixel_offset); 
-      y[1] = subpixel_snap(v2[0][1] + y_offset_end - setup->pixel_offset);
-      y[2] = subpixel_snap(v2[0][1] + y_offset_end - setup->pixel_offset);
-      y[3] = subpixel_snap(v1[0][1] + y_offset     - setup->pixel_offset);
+      y[0] = subpixel_snap(v1[0][1] + y_offset     - pixel_offset);
+      y[1] = subpixel_snap(v2[0][1] + y_offset_end - pixel_offset);
+      y[2] = subpixel_snap(v2[0][1] + y_offset_end - pixel_offset);
+      y[3] = subpixel_snap(v1[0][1] + y_offset     - pixel_offset);
    }
 
    /* Bounding rectangle (in pixels) */
@@ -593,12 +597,9 @@ try_setup_line( struct lp_setup_context *setup,
     * Determine how many scissor planes we need, that is drop scissor
     * edges if the bounding box of the tri is fully inside that edge.
     */
-   if (setup->scissor_test) {
-      /* why not just use draw_regions */
-      scissor = &setup->scissors[viewport_index];
-      scissor_planes_needed(s_planes, &bboxpos, scissor);
-      nr_planes += s_planes[0] + s_planes[1] + s_planes[2] + s_planes[3];
-   }
+   scissor = &setup->draw_regions[viewport_index];
+   scissor_planes_needed(s_planes, &bboxpos, scissor);
+   nr_planes += s_planes[0] + s_planes[1] + s_planes[2] + s_planes[3];
 
    line = lp_setup_alloc_triangle(scene,
                                   key->num_inputs,
@@ -615,10 +616,6 @@ try_setup_line( struct lp_setup_context *setup,
 #endif
 
    LP_COUNT(nr_tris);
-
-   if (lp_context->active_statistics_queries) {
-      lp_context->pipeline_statistics.c_primitives++;
-   }
 
    /* calculate the deltas */
    plane = GET_PLANES(line);
@@ -651,6 +648,7 @@ try_setup_line( struct lp_setup_context *setup,
    line->inputs.opaque = FALSE;
    line->inputs.layer = layer;
    line->inputs.viewport_index = viewport_index;
+   line->inputs.view_index = setup->view_index;
 
    /*
     * XXX: this code is mostly identical to the one in lp_setup_tri, except it
@@ -673,7 +671,7 @@ try_setup_line( struct lp_setup_context *setup,
          plane[i].c++;
       }
       else if (plane[i].dcdx == 0) {
-         if (setup->pixel_offset == 0) {
+         if (setup->bottom_edge_rule == 0) {
             /* correct for top-left fill convention:
              */
             if (plane[i].dcdy > 0) plane[i].c++;

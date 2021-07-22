@@ -1,6 +1,6 @@
 /**
  * \file hash.h
- * Generic hash table. 
+ * Generic hash table.
  */
 
 /*
@@ -32,9 +32,14 @@
 #define HASH_H
 
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "glheader.h"
-#include "imports.h"
+
 #include "c11/threads.h"
+#include "util/simple_mtx.h"
+
+struct util_idalloc;
 
 /**
  * Magic GLuint object name that gets stored outside of the struct hash_table.
@@ -99,10 +104,15 @@ uint_key(GLuint id)
 struct _mesa_HashTable {
    struct hash_table *ht;
    GLuint MaxKey;                        /**< highest key inserted so far */
-   mtx_t Mutex;                          /**< mutual exclusion lock */
-   GLboolean InDeleteAll;                /**< Debug check */
+   simple_mtx_t Mutex;                   /**< mutual exclusion lock */
+   /* Used when name reuse is enabled */
+   struct util_idalloc* id_alloc;
+
    /** Value that would be in the table for DELETED_KEY_VALUE. */
    void *deleted_key_data;
+   #ifndef NDEBUG
+   GLboolean InDeleteAll;                /**< Debug check */
+   #endif
 };
 
 extern struct _mesa_HashTable *_mesa_NewHashTable(void);
@@ -111,7 +121,8 @@ extern void _mesa_DeleteHashTable(struct _mesa_HashTable *table);
 
 extern void *_mesa_HashLookup(struct _mesa_HashTable *table, GLuint key);
 
-extern void _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data);
+extern void _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data,
+                             GLboolean isGenName);
 
 extern void _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key);
 
@@ -128,7 +139,7 @@ static inline void
 _mesa_HashLockMutex(struct _mesa_HashTable *table)
 {
    assert(table);
-   mtx_lock(&table->Mutex);
+   simple_mtx_lock(&table->Mutex);
 }
 
 
@@ -141,39 +152,89 @@ static inline void
 _mesa_HashUnlockMutex(struct _mesa_HashTable *table)
 {
    assert(table);
-   mtx_unlock(&table->Mutex);
+   simple_mtx_unlock(&table->Mutex);
 }
 
 extern void *_mesa_HashLookupLocked(struct _mesa_HashTable *table, GLuint key);
 
 extern void _mesa_HashInsertLocked(struct _mesa_HashTable *table,
-                                   GLuint key, void *data);
+                                   GLuint key, void *data, GLboolean isGenName);
 
 extern void _mesa_HashRemoveLocked(struct _mesa_HashTable *table, GLuint key);
 
 extern void
 _mesa_HashDeleteAll(struct _mesa_HashTable *table,
-                    void (*callback)(GLuint key, void *data, void *userData),
+                    void (*callback)(void *data, void *userData),
                     void *userData);
 
 extern void
 _mesa_HashWalk(const struct _mesa_HashTable *table,
-               void (*callback)(GLuint key, void *data, void *userData),
+               void (*callback)(void *data, void *userData),
                void *userData);
 
 extern void
 _mesa_HashWalkLocked(const struct _mesa_HashTable *table,
-                     void (*callback)(GLuint key, void *data, void *userData),
+                     void (*callback)(void *data, void *userData),
                      void *userData);
 
 extern void _mesa_HashPrint(const struct _mesa_HashTable *table);
 
 extern GLuint _mesa_HashFindFreeKeyBlock(struct _mesa_HashTable *table, GLuint numKeys);
 
+extern bool
+_mesa_HashFindFreeKeys(struct _mesa_HashTable *table, GLuint* keys, GLuint numKeys);
+
 extern GLuint
 _mesa_HashNumEntries(const struct _mesa_HashTable *table);
 
 extern void _mesa_test_hash_functions(void);
 
+extern void _mesa_HashEnableNameReuse(struct _mesa_HashTable *table);
+
+static inline void
+_mesa_HashWalkMaybeLocked(const struct _mesa_HashTable *table,
+                            void (*callback)(void *data, void *userData),
+                            void *userData, bool locked)
+{
+   if (locked)
+      _mesa_HashWalkLocked(table, callback, userData);
+   else
+      _mesa_HashWalk(table, callback, userData);
+}
+
+static inline struct gl_buffer_object *
+_mesa_HashLookupMaybeLocked(struct _mesa_HashTable *table, GLuint key,
+                            bool locked)
+{
+   if (locked)
+      return _mesa_HashLookupLocked(table, key);
+   else
+      return _mesa_HashLookup(table, key);
+}
+
+static inline void
+_mesa_HashInsertMaybeLocked(struct _mesa_HashTable *table,
+                            GLuint key, void *data, GLboolean isGenName,
+                            bool locked)
+{
+   if (locked)
+      _mesa_HashInsertLocked(table, key, data, isGenName);
+   else
+      _mesa_HashInsert(table, key, data, isGenName);
+}
+
+static inline void
+_mesa_HashLockMaybeLocked(struct _mesa_HashTable *table, bool locked)
+{
+   if (!locked)
+      _mesa_HashLockMutex(table);
+}
+
+static inline void
+_mesa_HashUnlockMaybeLocked(struct _mesa_HashTable *table, bool locked)
+{
+   if (!locked)
+      _mesa_HashUnlockMutex(table);
+}
 
 #endif

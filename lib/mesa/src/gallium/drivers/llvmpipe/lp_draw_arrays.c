@@ -51,8 +51,14 @@
  * the drawing to the 'draw' module.
  */
 static void
-llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
+llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+                  const struct pipe_draw_indirect_info *indirect,
+                  const struct pipe_draw_start_count *draws,
+                  unsigned num_draws)
 {
+   if (!indirect && (!draws[0].count || !info->instance_count))
+      return;
+
    struct llvmpipe_context *lp = llvmpipe_context(pipe);
    struct draw_context *draw = lp->draw;
    const void *mapped_indices = NULL;
@@ -61,8 +67,8 @@ llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    if (!llvmpipe_check_render_cond(lp))
       return;
 
-   if (info->indirect) {
-      util_draw_indirect(pipe, info);
+   if (indirect && indirect->buffer) {
+      util_draw_indirect(pipe, info, indirect);
       return;
    }
 
@@ -105,6 +111,12 @@ llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    llvmpipe_prepare_geometry_sampling(lp,
                                       lp->num_sampler_views[PIPE_SHADER_GEOMETRY],
                                       lp->sampler_views[PIPE_SHADER_GEOMETRY]);
+   llvmpipe_prepare_tess_ctrl_sampling(lp,
+                                       lp->num_sampler_views[PIPE_SHADER_TESS_CTRL],
+                                       lp->sampler_views[PIPE_SHADER_TESS_CTRL]);
+   llvmpipe_prepare_tess_eval_sampling(lp,
+                                       lp->num_sampler_views[PIPE_SHADER_TESS_EVAL],
+                                       lp->sampler_views[PIPE_SHADER_TESS_EVAL]);
 
    llvmpipe_prepare_vertex_images(lp,
                                   lp->num_images[PIPE_SHADER_VERTEX],
@@ -112,6 +124,12 @@ llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    llvmpipe_prepare_geometry_images(lp,
                                     lp->num_images[PIPE_SHADER_GEOMETRY],
                                     lp->images[PIPE_SHADER_GEOMETRY]);
+   llvmpipe_prepare_tess_ctrl_images(lp,
+                                     lp->num_images[PIPE_SHADER_TESS_CTRL],
+                                     lp->images[PIPE_SHADER_TESS_CTRL]);
+   llvmpipe_prepare_tess_eval_images(lp,
+                                     lp->num_images[PIPE_SHADER_TESS_EVAL],
+                                     lp->images[PIPE_SHADER_TESS_EVAL]);
    if (lp->gs && lp->gs->no_tokens) {
       /* we have an empty geometry shader with stream output, so
          attach the stream output info to the current vertex shader */
@@ -127,7 +145,7 @@ llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
                                      !lp->queries_disabled);
 
    /* draw! */
-   draw_vbo(draw, info);
+   draw_vbo(draw, info, indirect, draws, num_draws);
 
    /*
     * unmap vertex/index buffers

@@ -43,7 +43,7 @@
 
 #include "GL/gl.h"
 #include "GL/glext.h"
-#include "main/compiler.h"
+#include "util/compiler.h"
 #include "main/api_exec.h"
 #include "main/context.h"
 #include "main/remap.h"
@@ -79,7 +79,9 @@ extern const struct function gles31_functions_possible[];
 class DispatchSanity_test : public ::testing::Test {
 public:
    virtual void SetUp();
+   virtual void TearDown();
    void SetUpCtx(gl_api api, unsigned int version);
+   void TearDownCtx();
 
    struct gl_config visual;
    struct dd_function_table driver_functions;
@@ -103,6 +105,12 @@ DispatchSanity_test::SetUp()
 }
 
 void
+DispatchSanity_test::TearDown()
+{
+   free(nop_table);
+}
+
+void
 DispatchSanity_test::SetUpCtx(gl_api api, unsigned int version)
 {
    _mesa_initialize_context(&ctx,
@@ -110,13 +118,20 @@ DispatchSanity_test::SetUpCtx(gl_api api, unsigned int version)
                             &visual,
                             NULL, // share_list
                             &driver_functions);
-   _vbo_CreateContext(&ctx);
+   _vbo_CreateContext(&ctx, false);
 
    _mesa_override_extensions(&ctx);
    ctx.Version = version;
 
    _mesa_initialize_dispatch_tables(&ctx);
    _mesa_initialize_vbo_vtxfmt(&ctx);
+}
+
+void
+DispatchSanity_test::TearDownCtx()
+{
+   _vbo_DestroyContext(&ctx);
+   _mesa_free_context_data(&ctx, false);
 }
 
 static const char *
@@ -182,6 +197,7 @@ TEST_F(DispatchSanity_test, GL31_CORE)
    validate_functions(&ctx, common_desktop_functions_possible, nop_table);
    validate_functions(&ctx, gl_core_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 TEST_F(DispatchSanity_test, GL30)
@@ -190,6 +206,7 @@ TEST_F(DispatchSanity_test, GL30)
    validate_functions(&ctx, common_desktop_functions_possible, nop_table);
    validate_functions(&ctx, gl_compatibility_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 TEST_F(DispatchSanity_test, GLES11)
@@ -197,6 +214,7 @@ TEST_F(DispatchSanity_test, GLES11)
    SetUpCtx(API_OPENGLES, 11);
    validate_functions(&ctx, gles11_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 TEST_F(DispatchSanity_test, GLES2)
@@ -204,6 +222,7 @@ TEST_F(DispatchSanity_test, GLES2)
    SetUpCtx(API_OPENGLES2, 20);
    validate_functions(&ctx, gles2_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 TEST_F(DispatchSanity_test, GLES3)
@@ -212,6 +231,7 @@ TEST_F(DispatchSanity_test, GLES3)
    validate_functions(&ctx, gles2_functions_possible, nop_table);
    validate_functions(&ctx, gles3_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 TEST_F(DispatchSanity_test, GLES31)
@@ -221,6 +241,7 @@ TEST_F(DispatchSanity_test, GLES31)
    validate_functions(&ctx, gles3_functions_possible, nop_table);
    validate_functions(&ctx, gles31_functions_possible, nop_table);
    validate_nops(&ctx, nop_table);
+   TearDownCtx();
 }
 
 const struct function common_desktop_functions_possible[] = {
@@ -562,6 +583,9 @@ const struct function common_desktop_functions_possible[] = {
    /* EXT_EGL_image_storage */
    { "glEGLImageTargetTexStorageEXT", 31, -1 },
    { "glEGLImageTargetTextureStorageEXT", 31, -1 },
+
+   /* GL_NV_copy_image */
+   { "glCopyImageSubDataNV", 31, -1 },
 
    /* GL 3.2 */
    { "glGetInteger64i_v", 32, -1 },
@@ -907,6 +931,10 @@ const struct function common_desktop_functions_possible[] = {
    { "glScissorIndexedv", 43, -1 },
    { "glDepthRangeArrayv", 43, -1 },
    { "glDepthRangeIndexed", 43, -1 },
+
+/* GL 4.4 */
+   /* GL_NV_alpha_to_coverage_dither_control */
+   { "glAlphaToCoverageDitherControlNV", 44, -1 },
 
 /* GL 4.5 */
    /* aliased versions checked above */
@@ -1432,6 +1460,12 @@ const struct function common_desktop_functions_possible[] = {
    { "glProgramUniform3ui64vARB", 40, -1 },
    { "glProgramUniform4ui64vARB", 40, -1 },
 
+   /* GL_NV_viewport_swizzle */
+   { "glViewportSwizzleNV", 11, -1 },
+
+   { "glInternalBufferSubDataCopyMESA", 11, -1 },
+   { "glInternalSetError", 20, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -1911,6 +1945,52 @@ const struct function gl_compatibility_functions_possible[] = {
    { "glProgramLocalParameters4fvEXT", 10, -1 },
    { "glPrimitiveRestartNV", 10, -1 },
 
+   /* GL_NV_half_float */
+   { "glVertex2hNV", 13, -1 },
+   { "glVertex2hvNV", 13, -1 },
+   { "glVertex3hNV", 13, -1 },
+   { "glVertex3hvNV", 13, -1 },
+   { "glVertex4hNV", 13, -1 },
+   { "glVertex4hvNV", 13, -1 },
+   { "glNormal3hNV", 13, -1 },
+   { "glNormal3hvNV", 13, -1 },
+   { "glColor3hNV", 13, -1 },
+   { "glColor3hvNV", 13, -1 },
+   { "glColor4hNV", 13, -1 },
+   { "glColor4hvNV", 13, -1 },
+   { "glTexCoord1hNV", 13, -1 },
+   { "glTexCoord1hvNV", 13, -1 },
+   { "glTexCoord2hNV", 13, -1 },
+   { "glTexCoord2hvNV", 13, -1 },
+   { "glTexCoord3hNV", 13, -1 },
+   { "glTexCoord3hvNV", 13, -1 },
+   { "glTexCoord4hNV", 13, -1 },
+   { "glTexCoord4hvNV", 13, -1 },
+   { "glMultiTexCoord1hNV", 13, -1 },
+   { "glMultiTexCoord1hvNV", 13, -1 },
+   { "glMultiTexCoord2hNV", 13, -1 },
+   { "glMultiTexCoord2hvNV", 13, -1 },
+   { "glMultiTexCoord3hNV", 13, -1 },
+   { "glMultiTexCoord3hvNV", 13, -1 },
+   { "glMultiTexCoord4hNV", 13, -1 },
+   { "glMultiTexCoord4hvNV", 13, -1 },
+   { "glFogCoordhNV", 13, -1 },
+   { "glFogCoordhvNV", 13, -1 },
+   { "glSecondaryColor3hNV", 13, -1 },
+   { "glSecondaryColor3hvNV", 13, -1 },
+   { "glVertexAttrib1hNV", 13, -1 },
+   { "glVertexAttrib1hvNV", 13, -1 },
+   { "glVertexAttrib2hNV", 13, -1 },
+   { "glVertexAttrib2hvNV", 13, -1 },
+   { "glVertexAttrib3hNV", 13, -1 },
+   { "glVertexAttrib3hvNV", 13, -1 },
+   { "glVertexAttrib4hNV", 13, -1 },
+   { "glVertexAttrib4hvNV", 13, -1 },
+   { "glVertexAttribs1hvNV", 13, -1 },
+   { "glVertexAttribs2hvNV", 13, -1 },
+   { "glVertexAttribs3hvNV", 13, -1 },
+   { "glVertexAttribs4hvNV", 13, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2196,6 +2276,7 @@ const struct function gles2_functions_possible[] = {
    { "glDrawArrays", 20, _gloffset_DrawArrays },
    { "glDrawBuffersNV", 20, -1 },
    { "glDrawElements", 20, _gloffset_DrawElements },
+   { "glDrawElementsBaseVertex", 20, -1 },
    { "glEGLImageTargetRenderbufferStorageOES", 20, -1 },
    { "glEGLImageTargetTexture2DOES", 20, -1 },
    { "glEnable", 20, _gloffset_Enable },
@@ -2255,6 +2336,7 @@ const struct function gles2_functions_possible[] = {
    { "glMapBufferRangeEXT", 20, -1 },
    { "glMultiDrawArraysEXT", 20, -1 },
    { "glMultiDrawElementsEXT", 20, -1 },
+   { "glMultiDrawElementsBaseVertex", 20, -1 },
    { "glPixelStorei", 20, _gloffset_PixelStorei },
    { "glPolygonOffset", 20, _gloffset_PolygonOffset },
    { "glReadBufferNV", 20, _gloffset_ReadBuffer },
@@ -2447,6 +2529,9 @@ const struct function gles2_functions_possible[] = {
    /* GL_KHR_parallel_shader_compile */
    { "glMaxShaderCompilerThreadsKHR", 20, -1 },
 
+   { "glInternalBufferSubDataCopyMESA", 20, -1 },
+   { "glInternalSetError", 20, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2485,6 +2570,7 @@ const struct function gles3_functions_possible[] = {
    // { "glDrawBuffers", 30, -1 },
    { "glDrawElementsInstanced", 30, -1 },
    { "glDrawRangeElements", 30, -1 },
+   { "glDrawRangeElementsBaseVertex", 30, -1 },
    // We check for the aliased -EXT version in GLES 2
    // { "glEndQuery", 30, -1 },
    { "glEndTransformFeedback", 30, -1 },
@@ -2644,6 +2730,8 @@ const struct function gles3_functions_possible[] = {
    /* EXT_EGL_image_storage */
    { "glEGLImageTargetTexStorageEXT", 30, -1 },
 
+   { "glDrawElementsInstancedBaseVertex", 30, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2766,6 +2854,9 @@ const struct function gles31_functions_possible[] = {
    { "glFramebufferSampleLocationsfvARB", 31, -1 },
    { "glNamedFramebufferSampleLocationsfvARB", 31, -1 },
    { "glEvaluateDepthValuesARB", 31, -1 },
+
+   /* GL_NV_viewport_swizzle */
+   { "glViewportSwizzleNV", 31, -1 },
 
    { NULL, 0, -1 },
  };

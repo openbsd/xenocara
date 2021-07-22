@@ -1106,7 +1106,7 @@ struct __DRIbufferRec {
 };
 
 #define __DRI_DRI2_LOADER "DRI_DRI2Loader"
-#define __DRI_DRI2_LOADER_VERSION 4
+#define __DRI_DRI2_LOADER_VERSION 5
 
 enum dri_loader_cap {
    /* Whether the loader handles RGBA channel ordering correctly. If not,
@@ -1177,6 +1177,15 @@ struct __DRIdri2LoaderExtensionRec {
      * \since 4
      */
     unsigned (*getCapability)(void *loaderPrivate, enum dri_loader_cap cap);
+
+    /**
+     * Clean up any loader state associated with an image.
+     *
+     * \param loaderPrivate  Loader's private data that was previously passed
+     *                       into a __DRIimageExtensionRec::createImage function
+     * \since 5
+     */
+    void (*destroyLoaderImageState)(void *loaderPrivate);
 };
 
 /**
@@ -1319,7 +1328,7 @@ struct __DRIdri2ExtensionRec {
  * extensions.
  */
 #define __DRI_IMAGE "DRI_IMAGE"
-#define __DRI_IMAGE_VERSION 17
+#define __DRI_IMAGE_VERSION 18
 
 /**
  * These formats correspond to the similarly named MESA_FORMAT_*
@@ -1367,6 +1376,7 @@ struct __DRIdri2ExtensionRec {
  * could be read after a flush."
  */
 #define __DRI_IMAGE_USE_BACKBUFFER      0x0010
+#define __DRI_IMAGE_USE_PROTECTED       0x0020
 
 
 #define __DRI_IMAGE_TRANSFER_READ            0x1
@@ -1485,6 +1495,11 @@ enum __DRIChromaSiting {
 
 #define __BLIT_FLAG_FLUSH		0x0001
 #define __BLIT_FLAG_FINISH		0x0002
+
+/**
+ * Flags for createImageFromDmaBufs3
+ */
+#define __DRI_IMAGE_PROTECTED_CONTENT_FLAG 0x00000001
 
 /**
  * queryDmaBufFormatModifierAttribs attributes
@@ -1768,6 +1783,26 @@ struct __DRIimageExtensionRec {
                                                 int renderbuffer,
                                                 void *loaderPrivate,
                                                 unsigned *error);
+
+   /*
+    * Like createImageFromDmaBufs2, but with an added flags parameter.
+    *
+    * See __DRI_IMAGE_*_FLAG for valid definitions of flags.
+    *
+    * \since 18
+    */
+   __DRIimage *(*createImageFromDmaBufs3)(__DRIscreen *screen,
+                                          int width, int height, int fourcc,
+                                          uint64_t modifier,
+                                          int *fds, int num_fds,
+                                          int *strides, int *offsets,
+                                          enum __DRIYUVColorSpace color_space,
+                                          enum __DRISampleRange sample_range,
+                                          enum __DRIChromaSiting horiz_siting,
+                                          enum __DRIChromaSiting vert_siting,
+                                          uint32_t flags,
+                                          unsigned *error,
+                                          void *loaderPrivate);
 };
 
 
@@ -1795,7 +1830,7 @@ struct __DRIimageLookupExtensionRec {
  * This extension allows for common DRI2 options
  */
 #define __DRI2_CONFIG_QUERY "DRI_CONFIG_QUERY"
-#define __DRI2_CONFIG_QUERY_VERSION 1
+#define __DRI2_CONFIG_QUERY_VERSION 2
 
 typedef struct __DRI2configQueryExtensionRec __DRI2configQueryExtension;
 struct __DRI2configQueryExtensionRec {
@@ -1804,6 +1839,7 @@ struct __DRI2configQueryExtensionRec {
    int (*configQueryb)(__DRIscreen *screen, const char *var, unsigned char *val);
    int (*configQueryi)(__DRIscreen *screen, const char *var, int *val);
    int (*configQueryf)(__DRIscreen *screen, const char *var, float *val);
+   int (*configQuerys)(__DRIscreen *screen, const char *var, char **val);
 };
 
 /**
@@ -1931,6 +1967,8 @@ typedef struct __DRIDriverVtableExtensionRec {
 #define   __DRI2_RENDERER_HAS_CONTEXT_PRIORITY_MEDIUM         (1 << 1)
 #define   __DRI2_RENDERER_HAS_CONTEXT_PRIORITY_HIGH           (1 << 2)
 
+#define __DRI2_RENDERER_HAS_PROTECTED_CONTENT                 0x000e
+
 typedef struct __DRI2rendererQueryExtensionRec __DRI2rendererQueryExtension;
 struct __DRI2rendererQueryExtensionRec {
    __DRIextension base;
@@ -2003,7 +2041,7 @@ struct __DRIimageList {
 };
 
 #define __DRI_IMAGE_LOADER "DRI_IMAGE_LOADER"
-#define __DRI_IMAGE_LOADER_VERSION 3
+#define __DRI_IMAGE_LOADER_VERSION 4
 
 struct __DRIimageLoaderExtensionRec {
     __DRIextension base;
@@ -2062,6 +2100,15 @@ struct __DRIimageLoaderExtensionRec {
      * \since 3
      */
     void (*flushSwapBuffers)(__DRIdrawable *driDrawable, void *loaderPrivate);
+
+    /**
+     * Clean up any loader state associated with an image.
+     *
+     * \param loaderPrivate  Loader's private data that was previously passed
+     *                       into a __DRIimageExtensionRec::createImage function
+     * \since 4
+     */
+    void (*destroyLoaderImageState)(void *loaderPrivate);
 };
 
 /**

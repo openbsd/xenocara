@@ -34,7 +34,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "main/glheader.h"
 #include "main/mtypes.h"
-#include "main/imports.h"
+
 #include "main/macros.h"
 #include "main/state.h"
 
@@ -71,7 +71,7 @@ do {						\
 #endif
 
 /* Emit any changed arrays to new GART memory, re-emit a packet to
- * update the arrays.  
+ * update the arrays.
  */
 void r200EmitArrays( struct gl_context *ctx, GLubyte *vimap_rev )
 {
@@ -92,7 +92,7 @@ void r200EmitArrays( struct gl_context *ctx, GLubyte *vimap_rev )
 	    switch (emitsize) {
 	    case 4:
 	       vfmt0 |= R200_VTX_W0;
-	       /* fallthrough */
+	       FALLTHROUGH;
 	    case 3:
 	       vfmt0 |= R200_VTX_Z0;
 	       break;
@@ -158,13 +158,12 @@ void r200EmitArrays( struct gl_context *ctx, GLubyte *vimap_rev )
 	    switch (emitsize) {
 	    case 2:
 	       vfmt0 |= R200_VTX_XY1;
-	       /* fallthrough */
+	       FALLTHROUGH;
 	    case 3:
 	       vfmt0 |= R200_VTX_Z1;
-	       /* fallthrough */
+	       FALLTHROUGH;
 	    case 4:
 	       vfmt0 |= R200_VTX_W1;
-	       /* fallthrough */
 	    }
 	    break;
 	 default:

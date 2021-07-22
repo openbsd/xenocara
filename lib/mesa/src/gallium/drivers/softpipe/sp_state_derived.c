@@ -420,7 +420,7 @@ update_polygon_stipple_enable(struct softpipe_context *softpipe, unsigned prim)
 
       /* sampler view state */
       softpipe_set_sampler_views(&softpipe->pipe, PIPE_SHADER_FRAGMENT,
-                                 unit, 1, &softpipe->pstipple.sampler_view);
+                                 unit, 1, 0, &softpipe->pstipple.sampler_view);
 
       softpipe->dirty |= SP_NEW_SAMPLER;
    }
@@ -428,7 +428,7 @@ update_polygon_stipple_enable(struct softpipe_context *softpipe, unsigned prim)
 
 
 /* Hopefully this will remain quite simple, otherwise need to pull in
- * something like the state tracker mechanism.
+ * something like the gallium frontend mechanism.
  */
 void
 softpipe_update_derived(struct softpipe_context *softpipe, unsigned prim)

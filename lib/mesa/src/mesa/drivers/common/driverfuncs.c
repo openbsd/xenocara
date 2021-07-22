@@ -24,7 +24,6 @@
 
 
 #include "main/glheader.h"
-#include "main/imports.h"
 #include "main/accum.h"
 #include "main/arrayobj.h"
 #include "main/context.h"
@@ -122,7 +121,10 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    /* Draw functions */
    driver->Draw = NULL;
-   driver->DrawIndirect = _mesa_draw_indirect;
+   driver->DrawGallium = _mesa_draw_gallium_fallback;
+   driver->DrawGalliumComplex = _mesa_draw_gallium_complex_fallback;
+   driver->DrawIndirect = NULL;
+   driver->DrawTransformFeedback = NULL;
 
    /* simple state commands */
    driver->AlphaFunc = NULL;

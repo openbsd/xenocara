@@ -45,6 +45,8 @@ typedef struct {
 
    /* The loop we store information for */
    nir_loop *loop;
+   nir_block *block_after_loop;
+   nir_block **exit_blocks;
 
    /* Whether to skip loop invariant variables */
    bool skip_invariants;
@@ -178,8 +180,8 @@ instr_is_invariant(nir_instr *instr, nir_loop *loop)
       nir_intrinsic_instr *intrinsic = nir_instr_as_intrinsic(instr);
       if (!(nir_intrinsic_infos[intrinsic->intrinsic].flags & NIR_INTRINSIC_CAN_REORDER))
          return not_invariant;
-      /* fallthrough */
    }
+   FALLTHROUGH;
    default:
       return nir_foreach_src(instr, src_is_invariant, loop) ? invariant : not_invariant;
    }
@@ -201,12 +203,9 @@ convert_loop_exit_for_ssa(nir_ssa_def *def, void *void_state)
          return true;
    }
 
-   nir_block *block_after_loop =
-      nir_cf_node_as_block(nir_cf_node_next(&state->loop->cf_node));
-
    nir_foreach_use(use, def) {
       if (use->parent_instr->type == nir_instr_type_phi &&
-          use->parent_instr->block == block_after_loop) {
+          use->parent_instr->block == state->block_after_loop) {
          continue;
       }
 
@@ -233,15 +232,16 @@ convert_loop_exit_for_ssa(nir_ssa_def *def, void *void_state)
    /* Create a phi node with as many sources pointing to the same ssa_def as
     * the block has predecessors.
     */
-   set_foreach(block_after_loop->predecessors, entry) {
+   uint32_t num_exits = state->block_after_loop->predecessors->entries;
+   for (uint32_t i = 0; i < num_exits; i++) {
       nir_phi_src *phi_src = ralloc(phi, nir_phi_src);
       phi_src->src = nir_src_for_ssa(def);
-      phi_src->pred = (nir_block *) entry->key;
+      phi_src->pred = state->exit_blocks[i];
 
       exec_list_push_tail(&phi->srcs, &phi_src->node);
    }
 
-   nir_instr_insert_before_block(block_after_loop, &phi->instr);
+   nir_instr_insert_before_block(state->block_after_loop, &phi->instr);
    nir_ssa_def *dest = &phi->dest.ssa;
 
    /* deref instructions need a cast after the phi */
@@ -250,15 +250,15 @@ convert_loop_exit_for_ssa(nir_ssa_def *def, void *void_state)
          nir_deref_instr_create(state->shader, nir_deref_type_cast);
 
       nir_deref_instr *instr = nir_instr_as_deref(def->parent_instr);
-      cast->mode = instr->mode;
+      cast->modes = instr->modes;
       cast->type = instr->type;
       cast->parent = nir_src_for_ssa(&phi->dest.ssa);
-      cast->cast.ptr_stride = nir_deref_instr_ptr_as_array_stride(instr);
+      cast->cast.ptr_stride = nir_deref_instr_array_stride(instr);
 
       nir_ssa_dest_init(&cast->instr, &cast->dest,
                         phi->dest.ssa.num_components,
                         phi->dest.ssa.bit_size, NULL);
-      nir_instr_insert(nir_after_phis(block_after_loop), &cast->instr);
+      nir_instr_insert(nir_after_phis(state->block_after_loop), &cast->instr);
       dest = &cast->dest.ssa;
    }
 
@@ -267,7 +267,7 @@ convert_loop_exit_for_ssa(nir_ssa_def *def, void *void_state)
     */
    nir_foreach_use_safe(use, def) {
       if (use->parent_instr->type == nir_instr_type_phi &&
-          block_after_loop == use->parent_instr->block) {
+          state->block_after_loop == use->parent_instr->block) {
          continue;
       }
 
@@ -284,6 +284,17 @@ convert_loop_exit_for_ssa(nir_ssa_def *def, void *void_state)
 
    state->progress = true;
    return true;
+}
+
+static void
+setup_loop_state(lcssa_state *state, nir_loop *loop)
+{
+   state->loop = loop;
+   state->block_after_loop =
+      nir_cf_node_as_block(nir_cf_node_next(&loop->cf_node));
+
+   ralloc_free(state->exit_blocks);
+   state->exit_blocks = nir_block_get_predecessors_sorted(state->block_after_loop, state);
 }
 
 static void
@@ -313,8 +324,18 @@ convert_to_lcssa(nir_cf_node *cf_node, lcssa_state *state)
       foreach_list_typed(nir_cf_node, nested_node, node, &loop->body)
          convert_to_lcssa(nested_node, state);
 
+      setup_loop_state(state, loop);
+
       /* mark loop-invariant instructions */
       if (state->skip_invariants) {
+         /* Without a loop all instructions are invariant.
+          * For outer loops, multiple breaks can still create phis.
+          * The variance then depends on all (nested) break conditions.
+          * We don't consider this, but assume all not_invariant.
+          */
+         if (nir_loop_first_block(loop)->predecessors->entries == 1)
+            goto end;
+
          nir_foreach_block_in_cf_node(block, cf_node) {
             nir_foreach_instr(instr, block) {
                if (instr->pass_flags == undefined)
@@ -323,7 +344,6 @@ convert_to_lcssa(nir_cf_node *cf_node, lcssa_state *state)
          }
       }
 
-      state->loop = loop;
       nir_foreach_block_in_cf_node(block, cf_node) {
          nir_foreach_instr(instr, block) {
             nir_foreach_ssa_def(instr, convert_loop_exit_for_ssa, state);
@@ -334,11 +354,10 @@ convert_to_lcssa(nir_cf_node *cf_node, lcssa_state *state)
          }
       }
 
+end:
       /* For outer loops, the LCSSA-phi should be considered not invariant */
       if (state->skip_invariants) {
-         nir_block *block_after_loop =
-            nir_cf_node_as_block(nir_cf_node_next(&state->loop->cf_node));
-         nir_foreach_instr(instr, block_after_loop) {
+         nir_foreach_instr(instr, state->block_after_loop) {
             if (instr->type == nir_instr_type_phi)
                instr->pass_flags = not_invariant;
             else
@@ -360,7 +379,7 @@ nir_convert_loop_to_lcssa(nir_loop *loop)
    nir_metadata_require(impl, nir_metadata_block_index);
 
    lcssa_state *state = rzalloc(NULL, lcssa_state);
-   state->loop = loop;
+   setup_loop_state(state, loop);
    state->shader = impl->function->shader;
    state->skip_invariants = false;
    state->skip_bool_invariants = false;
@@ -397,9 +416,7 @@ nir_convert_to_lcssa(nir_shader *shader, bool skip_invariants, bool skip_bool_in
          nir_metadata_preserve(function->impl, nir_metadata_block_index |
                                                nir_metadata_dominance);
       } else {
-#ifndef NDEBUG
-         function->impl->valid_metadata &= ~nir_metadata_not_properly_reset;
-#endif
+         nir_metadata_preserve(function->impl, nir_metadata_all);
       }
    }
 

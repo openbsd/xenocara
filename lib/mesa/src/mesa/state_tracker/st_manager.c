@@ -62,6 +62,7 @@
 #include "util/u_atomic.h"
 #include "util/u_surface.h"
 #include "util/list.h"
+#include "util/u_memory.h"
 
 struct hash_table;
 struct st_manager_private
@@ -98,7 +99,6 @@ attachment_to_buffer_index(enum st_attachment_type statt)
    case ST_ATTACHMENT_ACCUM:
       index = BUFFER_ACCUM;
       break;
-   case ST_ATTACHMENT_SAMPLE:
    default:
       index = BUFFER_COUNT;
       break;
@@ -423,7 +423,6 @@ st_visual_to_context_mode(const struct st_visual *visual,
    }
 
    if (visual->samples > 1) {
-      mode->sampleBuffers = 1;
       mode->samples = visual->samples;
    }
 }
@@ -470,7 +469,7 @@ st_framebuffer_create(struct st_context *st,
     * is also expressed by using the same extension flag
     */
    if (_mesa_has_EXT_framebuffer_sRGB(st->ctx)) {
-      struct pipe_screen *screen = st->pipe->screen;
+      struct pipe_screen *screen = st->screen;
       const enum pipe_format srgb_format =
          util_format_srgb(stfbi->visual->color_format);
 
@@ -661,17 +660,21 @@ st_context_flush(struct st_context_iface *stctxi, unsigned flags,
    if (flags & ST_FLUSH_FENCE_FD)
       pipe_flags |= PIPE_FLUSH_FENCE_FD;
 
-   FLUSH_VERTICES(st->ctx, 0);
-   FLUSH_CURRENT(st->ctx, 0);
+   /* If both the bitmap cache is dirty and there are unflushed vertices,
+    * it means that glBitmap was called first and then glBegin.
+    */
+   st_flush_bitmap_cache(st);
+   FLUSH_VERTICES(st->ctx, 0, 0);
+
    /* Notify the caller that we're ready to flush */
    if (before_flush_cb)
       before_flush_cb(args);
    st_flush(st, fence, pipe_flags);
 
    if ((flags & ST_FLUSH_WAIT) && fence && *fence) {
-      st->pipe->screen->fence_finish(st->pipe->screen, NULL, *fence,
+      st->screen->fence_finish(st->screen, NULL, *fence,
                                      PIPE_TIMEOUT_INFINITE);
-      st->pipe->screen->fence_reference(st->pipe->screen, fence, NULL);
+      st->screen->fence_reference(st->screen, fence, NULL);
    }
 
    if (flags & ST_FLUSH_FRONT)
@@ -816,17 +819,6 @@ st_start_thread(struct st_context_iface *stctxi)
    struct st_context *st = (struct st_context *) stctxi;
 
    _mesa_glthread_init(st->ctx);
-
-   /* Pin all driver threads to one L3 cache for optimal performance
-    * on AMD Zen. This is only done if glthread is enabled.
-    *
-    * If glthread is disabled, st_draw.c re-pins driver threads regularly
-    * based on the location of the app thread.
-    */
-   struct glthread_state *glthread = st->ctx->GLThread;
-   if (glthread && st->pipe->set_context_param) {
-      util_pin_driver_threads_to_random_L3(st->pipe, &glthread->queue.threads[0]);
-   }
 }
 
 
@@ -836,6 +828,23 @@ st_thread_finish(struct st_context_iface *stctxi)
    struct st_context *st = (struct st_context *) stctxi;
 
    _mesa_glthread_finish(st->ctx);
+}
+
+
+static void
+st_context_invalidate_state(struct st_context_iface *stctxi,
+                            unsigned flags)
+{
+   struct st_context *st = (struct st_context *) stctxi;
+
+   if (flags & ST_INVALIDATE_FS_SAMPLER_VIEWS)
+      st->dirty |= ST_NEW_FS_SAMPLER_VIEWS;
+   if (flags & ST_INVALIDATE_FS_CONSTBUF0)
+      st->dirty |= ST_NEW_FS_CONSTANTS;
+   if (flags & ST_INVALIDATE_VS_CONSTBUF0)
+      st->dirty |= ST_NEW_VS_CONSTANTS;
+   if (flags & ST_INVALIDATE_VERTEX_BUFFERS)
+      st->dirty |= ST_NEW_VERTEX_ARRAYS;
 }
 
 
@@ -862,8 +871,7 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
    struct st_context *shared_ctx = (struct st_context *) shared_stctxi;
    struct st_context *st;
    struct pipe_context *pipe;
-   struct gl_config* mode_ptr;
-   struct gl_config mode;
+   struct gl_config mode, *mode_ptr = &mode;
    gl_api api;
    bool no_error = false;
    unsigned ctx_flags = PIPE_CONTEXT_PREFER_THREADED;
@@ -888,6 +896,8 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       *error = ST_CONTEXT_ERROR_BAD_API;
       return NULL;
    }
+
+   _mesa_initialize();
 
    /* Create a hash table for the framebuffer interface objects
     * if it has not been created for this st manager.
@@ -925,12 +935,8 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
    }
 
    st_visual_to_context_mode(&attribs->visual, &mode);
-
-   if (attribs->visual.no_config)
+   if (attribs->visual.color_format == PIPE_FORMAT_NONE)
       mode_ptr = NULL;
-   else
-      mode_ptr = &mode;
-
    st = st_create_context(api, pipe, mode_ptr, shared_ctx,
                           &attribs->options, no_error);
    if (!st) {
@@ -977,6 +983,8 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       }
    }
 
+   st->can_scissor_clear = !!st->screen->get_param(st->screen, PIPE_CAP_CLEAR_SCISSORED);
+
    st->invalidate_on_gl_viewport =
       smapi->get_param(smapi, ST_MANAGER_BROKEN_INVALIDATE);
 
@@ -987,10 +995,15 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
    st->iface.share = st_context_share;
    st->iface.start_thread = st_start_thread;
    st->iface.thread_finish = st_thread_finish;
+   st->iface.invalidate_state = st_context_invalidate_state;
    st->iface.st_context_private = (void *) smapi;
    st->iface.cso_context = st->cso_context;
    st->iface.pipe = st->pipe;
    st->iface.state_manager = smapi;
+
+   if (st->ctx->IntelBlackholeRender &&
+       st->screen->get_param(st->screen, PIPE_CAP_FRONTEND_NOOP))
+      st->pipe->set_frontend_noop(st->pipe, st->ctx->IntelBlackholeRender);
 
    *error = ST_CONTEXT_SUCCESS;
    return &st->iface;
@@ -1075,6 +1088,10 @@ st_api_make_current(struct st_api *stapi, struct st_context_iface *stctxi,
          if (stdraw)
             st_framebuffer_reference(&stread, stdraw);
       }
+
+      /* If framebuffers were asked for, we'd better have allocated them */
+      if ((stdrawi && !stdraw) || (streadi && !stread))
+         return false;
 
       if (stdraw && stread) {
          st_framebuffer_validate(stdraw, st);
@@ -1239,7 +1256,7 @@ st_manager_add_color_renderbuffer(struct st_context *st,
    st_framebuffer_update_attachments(stfb);
 
    /*
-    * Force a call to the state tracker manager to validate the
+    * Force a call to the frontend manager to validate the
     * new renderbuffer. It might be that there is a window system
     * renderbuffer available.
     */

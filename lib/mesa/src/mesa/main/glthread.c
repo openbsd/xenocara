@@ -34,10 +34,11 @@
 
 #include "main/mtypes.h"
 #include "main/glthread.h"
-#include "main/marshal.h"
-#include "main/marshal_generated.h"
+#include "main/glthread_marshal.h"
+#include "main/hash.h"
 #include "util/u_atomic.h"
 #include "util/u_thread.h"
+#include "util/u_cpu_detect.h"
 
 
 static void
@@ -45,15 +46,37 @@ glthread_unmarshal_batch(void *job, int thread_index)
 {
    struct glthread_batch *batch = (struct glthread_batch*)job;
    struct gl_context *ctx = batch->ctx;
-   size_t pos = 0;
+   unsigned pos = 0;
+   unsigned used = batch->used;
+   uint64_t *buffer = batch->buffer;
 
    _glapi_set_dispatch(ctx->CurrentServerDispatch);
 
-   while (pos < batch->used)
-      pos += _mesa_unmarshal_dispatch_cmd(ctx, &batch->buffer[pos]);
+   _mesa_HashLockMutex(ctx->Shared->BufferObjects);
+   ctx->BufferObjectsLocked = true;
+   mtx_lock(&ctx->Shared->TexMutex);
+   ctx->TexturesLocked = true;
 
-   assert(pos == batch->used);
+   while (pos < used) {
+      const struct marshal_cmd_base *cmd =
+         (const struct marshal_cmd_base *)&buffer[pos];
+
+      _mesa_unmarshal_dispatch[cmd->cmd_id](ctx, cmd);
+      pos += cmd->cmd_size;
+   }
+
+   ctx->TexturesLocked = false;
+   mtx_unlock(&ctx->Shared->TexMutex);
+   ctx->BufferObjectsLocked = false;
+   _mesa_HashUnlockMutex(ctx->Shared->BufferObjects);
+
+   assert(pos == used);
    batch->used = 0;
+
+   unsigned batch_index = batch - ctx->GLThread.batches;
+   /* Atomically set this to -1 if it's equal to batch_index. */
+   p_atomic_cmpxchg(&ctx->GLThread.LastProgramChangeBatch, batch_index, -1);
+   p_atomic_cmpxchg(&ctx->GLThread.LastDListChangeBatchIndex, batch_index, -1);
 }
 
 static void
@@ -61,28 +84,35 @@ glthread_thread_initialization(void *job, int thread_index)
 {
    struct gl_context *ctx = (struct gl_context*)job;
 
-   ctx->Driver.SetBackgroundContext(ctx, &ctx->GLThread->stats);
+   ctx->Driver.SetBackgroundContext(ctx, &ctx->GLThread.stats);
    _glapi_set_context(ctx);
 }
 
 void
 _mesa_glthread_init(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = calloc(1, sizeof(*glthread));
+   struct glthread_state *glthread = &ctx->GLThread;
 
-   if (!glthread)
-      return;
+   assert(!glthread->enabled);
 
    if (!util_queue_init(&glthread->queue, "gl", MARSHAL_MAX_BATCHES - 2,
                         1, 0)) {
-      free(glthread);
       return;
    }
 
+   glthread->VAOs = _mesa_NewHashTable();
+   if (!glthread->VAOs) {
+      util_queue_destroy(&glthread->queue);
+      return;
+   }
+
+   _mesa_glthread_reset_vao(&glthread->DefaultVAO);
+   glthread->CurrentVAO = &glthread->DefaultVAO;
+
    ctx->MarshalExec = _mesa_create_marshal_table(ctx);
    if (!ctx->MarshalExec) {
+      _mesa_DeleteHashTable(glthread->VAOs);
       util_queue_destroy(&glthread->queue);
-      free(glthread);
       return;
    }
 
@@ -90,10 +120,26 @@ _mesa_glthread_init(struct gl_context *ctx)
       glthread->batches[i].ctx = ctx;
       util_queue_fence_init(&glthread->batches[i].fence);
    }
+   glthread->next_batch = &glthread->batches[glthread->next];
+   glthread->used = 0;
 
+   glthread->enabled = true;
    glthread->stats.queue = &glthread->queue;
+
+   glthread->SupportsBufferUploads =
+      ctx->Const.BufferCreateMapUnsynchronizedThreadSafe &&
+      ctx->Const.AllowMappedBuffersDuringExecution;
+
+   /* If the draw start index is non-zero, glthread can upload to offset 0,
+    * which means the attrib offset has to be -(first * stride).
+    * So require signed vertex buffer offsets.
+    */
+   glthread->SupportsNonVBOUploads = glthread->SupportsBufferUploads &&
+                                     ctx->Const.VertexBufferOffsetIsInt32;
+
    ctx->CurrentClientDispatch = ctx->MarshalExec;
-   ctx->GLThread = glthread;
+
+   glthread->LastDListChangeBatchIndex = -1;
 
    /* Execute the thread initialization function in the thread. */
    struct util_queue_fence fence;
@@ -104,12 +150,18 @@ _mesa_glthread_init(struct gl_context *ctx)
    util_queue_fence_destroy(&fence);
 }
 
+static void
+free_vao(void *data, UNUSED void *userData)
+{
+   free(data);
+}
+
 void
 _mesa_glthread_destroy(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = ctx->GLThread;
+   struct glthread_state *glthread = &ctx->GLThread;
 
-   if (!glthread)
+   if (!glthread->enabled)
       return;
 
    _mesa_glthread_finish(ctx);
@@ -118,8 +170,10 @@ _mesa_glthread_destroy(struct gl_context *ctx)
    for (unsigned i = 0; i < MARSHAL_MAX_BATCHES; i++)
       util_queue_fence_destroy(&glthread->batches[i].fence);
 
-   free(glthread);
-   ctx->GLThread = NULL;
+   _mesa_HashDeleteAll(glthread->VAOs, free_vao, NULL);
+   _mesa_DeleteHashTable(glthread->VAOs);
+
+   ctx->GLThread.enabled = false;
 
    _mesa_glthread_restore_dispatch(ctx, "destroy");
 }
@@ -143,15 +197,43 @@ _mesa_glthread_restore_dispatch(struct gl_context *ctx, const char *func)
 }
 
 void
+_mesa_glthread_disable(struct gl_context *ctx, const char *func)
+{
+   _mesa_glthread_finish_before(ctx, func);
+   _mesa_glthread_restore_dispatch(ctx, func);
+}
+
+void
 _mesa_glthread_flush_batch(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = ctx->GLThread;
-   if (!glthread)
+   struct glthread_state *glthread = &ctx->GLThread;
+   if (!glthread->enabled)
       return;
 
-   struct glthread_batch *next = &glthread->batches[glthread->next];
-   if (!next->used)
+   if (!glthread->used)
       return;
+
+   /* Pin threads regularly to the same Zen CCX that the main thread is
+    * running on. The main thread can move between CCXs.
+    */
+   if (util_get_cpu_caps()->num_L3_caches > 1 &&
+       /* driver support */
+       ctx->Driver.PinDriverToL3Cache &&
+       ++glthread->pin_thread_counter % 128 == 0) {
+      int cpu = util_get_current_cpu();
+
+      if (cpu >= 0) {
+         uint16_t L3_cache = util_get_cpu_caps()->cpu_to_L3[cpu];
+         if (L3_cache != U_CPU_INVALID_L3) {
+            util_set_thread_affinity(glthread->queue.threads[0],
+                                     util_get_cpu_caps()->L3_affinity_mask[L3_cache],
+                                     NULL, util_get_cpu_caps()->num_cpu_mask_bits);
+            ctx->Driver.PinDriverToL3Cache(ctx, L3_cache);
+         }
+      }
+   }
+
+   struct glthread_batch *next = glthread->next_batch;
 
    /* Debug: execute the batch immediately from this thread.
     *
@@ -164,12 +246,15 @@ _mesa_glthread_flush_batch(struct gl_context *ctx)
       return;
    }
 
-   p_atomic_add(&glthread->stats.num_offloaded_items, next->used);
+   p_atomic_add(&glthread->stats.num_offloaded_items, glthread->used);
+   next->used = glthread->used;
 
    util_queue_add_job(&glthread->queue, next, &next->fence,
                       glthread_unmarshal_batch, NULL, 0);
    glthread->last = glthread->next;
    glthread->next = (glthread->next + 1) % MARSHAL_MAX_BATCHES;
+   glthread->next_batch = &glthread->batches[glthread->next];
+   glthread->used = 0;
 }
 
 /**
@@ -181,8 +266,8 @@ _mesa_glthread_flush_batch(struct gl_context *ctx)
 void
 _mesa_glthread_finish(struct gl_context *ctx)
 {
-   struct glthread_state *glthread = ctx->GLThread;
-   if (!glthread)
+   struct glthread_state *glthread = &ctx->GLThread;
+   if (!glthread->enabled)
       return;
 
    /* If this is called from the worker thread, then we've hit a path that
@@ -194,7 +279,7 @@ _mesa_glthread_finish(struct gl_context *ctx)
       return;
 
    struct glthread_batch *last = &glthread->batches[glthread->last];
-   struct glthread_batch *next = &glthread->batches[glthread->next];
+   struct glthread_batch *next = glthread->next_batch;
    bool synced = false;
 
    if (!util_queue_fence_is_signalled(&last->fence)) {
@@ -202,8 +287,10 @@ _mesa_glthread_finish(struct gl_context *ctx)
       synced = true;
    }
 
-   if (next->used) {
-      p_atomic_add(&glthread->stats.num_direct_items, next->used);
+   if (glthread->used) {
+      p_atomic_add(&glthread->stats.num_direct_items, glthread->used);
+      next->used = glthread->used;
+      glthread->used = 0;
 
       /* Since glthread_unmarshal_batch changes the dispatch to direct,
        * restore it after it's done.
@@ -220,4 +307,34 @@ _mesa_glthread_finish(struct gl_context *ctx)
 
    if (synced)
       p_atomic_inc(&glthread->stats.num_syncs);
+}
+
+void
+_mesa_glthread_finish_before(struct gl_context *ctx, const char *func)
+{
+   _mesa_glthread_finish(ctx);
+
+   /* Uncomment this if you want to know where glthread syncs. */
+   /*printf("fallback to sync: %s\n", func);*/
+}
+
+void
+_mesa_error_glthread_safe(struct gl_context *ctx, GLenum error, bool glthread,
+                          const char *format, ...)
+{
+   if (glthread) {
+      _mesa_marshal_InternalSetError(error);
+   } else {
+      char s[MAX_DEBUG_MESSAGE_LENGTH];
+      va_list args;
+
+      va_start(args, format);
+      ASSERTED size_t len = vsnprintf(s, MAX_DEBUG_MESSAGE_LENGTH, format, args);
+      va_end(args);
+
+      /* Whoever calls _mesa_error should use shorter strings. */
+      assert(len < MAX_DEBUG_MESSAGE_LENGTH);
+
+      _mesa_error(ctx, error, "%s", s);
+   }
 }

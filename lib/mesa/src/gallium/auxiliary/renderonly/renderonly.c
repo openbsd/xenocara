@@ -31,25 +31,11 @@
 #include <stdio.h>
 #include <xf86drm.h>
 
-#include "state_tracker/drm_driver.h"
+#include "frontend/drm_driver.h"
 #include "pipe/p_screen.h"
 #include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
-
-struct renderonly *
-renderonly_dup(const struct renderonly *ro)
-{
-   struct renderonly *copy;
-
-   copy = CALLOC_STRUCT(renderonly);
-   if (!copy)
-      return NULL;
-
-   memcpy(copy, ro, sizeof(*ro));
-
-   return copy;
-}
 
 void
 renderonly_scanout_destroy(struct renderonly_scanout *scanout,

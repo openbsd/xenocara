@@ -44,7 +44,7 @@ intel_miptree_create_for_teximage(struct intel_context *intel,
 
    DBG("%s\n", __func__);
 
-   if (intelImage->base.Base.Level > intelObj->base.BaseLevel &&
+   if (intelImage->base.Base.Level > intelObj->base.Attrib.BaseLevel &&
        (width == 1 ||
         (intelObj->base.Target != GL_TEXTURE_1D && height == 1) ||
         (intelObj->base.Target == GL_TEXTURE_3D && depth == 1))) {
@@ -59,10 +59,10 @@ intel_miptree_create_for_teximage(struct intel_context *intel,
       /* If this image disrespects BaseLevel, allocate from level zero.
        * Usually BaseLevel == 0, so it's unlikely to happen.
        */
-      if (intelImage->base.Base.Level < intelObj->base.BaseLevel)
+      if (intelImage->base.Base.Level < intelObj->base.Attrib.BaseLevel)
 	 firstLevel = 0;
       else
-	 firstLevel = intelObj->base.BaseLevel;
+	 firstLevel = intelObj->base.Attrib.BaseLevel;
 
       /* Figure out image dimensions at start level. */
       for (i = intelImage->base.Base.Level; i > firstLevel; i--) {
@@ -78,8 +78,8 @@ intel_miptree_create_for_teximage(struct intel_context *intel,
        * resizable buffers, or require that buffers implement lazy
        * pagetable arrangements.
        */
-      if ((intelObj->base.Sampler.MinFilter == GL_NEAREST ||
-	   intelObj->base.Sampler.MinFilter == GL_LINEAR) &&
+      if ((intelObj->base.Sampler.Attrib.MinFilter == GL_NEAREST ||
+	   intelObj->base.Sampler.Attrib.MinFilter == GL_LINEAR) &&
 	  intelImage->base.Base.Level == firstLevel) {
 	 lastLevel = firstLevel;
       } else {
@@ -115,7 +115,7 @@ try_pbo_upload(struct gl_context *ctx,
    GLuint src_offset;
    drm_intel_bo *src_buffer;
 
-   if (!_mesa_is_bufferobj(unpack->BufferObj))
+   if (!unpack->BufferObj)
       return false;
 
    DBG("trying pbo upload\n");

@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
+#include "util/os_file.h"
+
 #include "renderonly/renderonly.h"
 #include "kmsro/drm/kmsro_drm_public.h"
 #include "vc4_drm_public.h"
@@ -46,7 +48,7 @@ vc4_drm_screen_create(int fd, const struct pipe_screen_config *config)
 #endif
 
    if (v3d_present)
-      return vc4_screen_create(fcntl(fd, F_DUPFD_CLOEXEC, 3), NULL);
+      return vc4_screen_create(os_dupfd_cloexec(fd), NULL);
 
 #ifdef GALLIUM_KMSRO
    return kmsro_drm_screen_create(fd, config);
@@ -59,5 +61,5 @@ struct pipe_screen *
 vc4_drm_screen_create_renderonly(struct renderonly *ro,
                                  const struct pipe_screen_config *config)
 {
-   return vc4_screen_create(ro->gpu_fd, ro);
+   return vc4_screen_create(fcntl(ro->gpu_fd, F_DUPFD_CLOEXEC, 3), ro);
 }

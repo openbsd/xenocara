@@ -59,11 +59,12 @@ struct RelocInfo
 };
 
 struct FixupData {
-   FixupData(bool force, bool flat, uint8_t alphatest) :
-      force_persample_interp(force), flatshade(flat), alphatest(alphatest) {}
+   FixupData(bool force, bool flat, uint8_t alphatest, bool msaa) :
+      force_persample_interp(force), flatshade(flat), alphatest(alphatest), msaa(msaa) {}
    bool force_persample_interp;
    bool flatshade;
    uint8_t alphatest;
+   bool msaa;
 };
 
 struct FixupEntry;
@@ -173,8 +174,9 @@ public:
    // The address chosen is supplied to the relocation routine.
    virtual void getBuiltinCode(const uint32_t **code, uint32_t *size) const = 0;
 
-   virtual void parseDriverInfo(const struct nv50_ir_prog_info *info) {
-      if (info->type == PIPE_SHADER_COMPUTE) {
+   virtual void parseDriverInfo(const struct nv50_ir_prog_info *info,
+                                const struct nv50_ir_prog_info_out *info_out) {
+      if (info_out->type == PIPE_SHADER_COMPUTE) {
          threads = info->prop.cp.numThreads[0] *
             info->prop.cp.numThreads[1] *
             info->prop.cp.numThreads[2];
@@ -200,7 +202,7 @@ public:
       uint8_t dstMods;
       uint16_t srcFiles[3];
       uint16_t dstFiles;
-      unsigned int minEncSize  : 4;
+      unsigned int minEncSize  : 5;
       unsigned int vector      : 1;
       unsigned int predicate   : 1;
       unsigned int commutative : 1;

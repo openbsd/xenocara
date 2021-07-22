@@ -40,7 +40,7 @@
  * TGSI translation limits.
  *
  * Some are slightly above SM 3.0 requirements to give some wiggle room to
- * the state trackers.
+ * the gallium frontends.
  */
 
 #define LP_MAX_TGSI_TEMPS 4096
@@ -59,7 +59,7 @@
 
 #define LP_MAX_TGSI_SHADER_BUFFER_SIZE (1 << 27)
 
-#define LP_MAX_TGSI_SHADER_IMAGES 8
+#define LP_MAX_TGSI_SHADER_IMAGES 16
 
 /*
  * For quick access we cache registers in statically
@@ -110,7 +110,7 @@ gallivm_get_shader_param(enum pipe_shader_cap param)
    case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
       return LP_MAX_TGSI_CONST_BUFFER_SIZE;
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
-      return PIPE_MAX_CONSTANT_BUFFERS;
+      return LP_MAX_TGSI_CONST_BUFFERS;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return LP_MAX_TGSI_TEMPS;
    case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
@@ -126,6 +126,10 @@ gallivm_get_shader_param(enum pipe_shader_cap param)
       return 1;
    case PIPE_SHADER_CAP_INT64_ATOMICS:
    case PIPE_SHADER_CAP_FP16:
+   case PIPE_SHADER_CAP_FP16_DERIVATIVES:
+   case PIPE_SHADER_CAP_FP16_CONST_BUFFERS:
+   case PIPE_SHADER_CAP_INT16:
+   case PIPE_SHADER_CAP_GLSL_16BIT_CONSTS:
       return 0;
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       return PIPE_MAX_SAMPLERS;

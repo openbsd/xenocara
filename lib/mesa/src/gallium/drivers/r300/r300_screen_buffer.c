@@ -90,13 +90,13 @@ r300_buffer_transfer_map( struct pipe_context *context,
         return rbuf->malloced_buffer + box->x;
     }
 
-    if (usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE &&
-        !(usage & PIPE_TRANSFER_UNSYNCHRONIZED)) {
-        assert(usage & PIPE_TRANSFER_WRITE);
+    if (usage & PIPE_MAP_DISCARD_WHOLE_RESOURCE &&
+        !(usage & PIPE_MAP_UNSYNCHRONIZED)) {
+        assert(usage & PIPE_MAP_WRITE);
 
         /* Check if mapping this buffer would cause waiting for the GPU. */
-        if (r300->rws->cs_is_buffer_referenced(r300->cs, rbuf->buf, RADEON_USAGE_READWRITE) ||
-            !r300->rws->buffer_wait(rbuf->buf, 0, RADEON_USAGE_READWRITE)) {
+        if (r300->rws->cs_is_buffer_referenced(&r300->cs, rbuf->buf, RADEON_USAGE_READWRITE) ||
+            !r300->rws->buffer_wait(r300->rws, rbuf->buf, 0, RADEON_USAGE_READWRITE)) {
             unsigned i;
             struct pb_buffer *new_buf;
 
@@ -123,11 +123,11 @@ r300_buffer_transfer_map( struct pipe_context *context,
 
     /* Buffers are never used for write, therefore mapping for read can be
      * unsynchronized. */
-    if (!(usage & PIPE_TRANSFER_WRITE)) {
-       usage |= PIPE_TRANSFER_UNSYNCHRONIZED;
+    if (!(usage & PIPE_MAP_WRITE)) {
+       usage |= PIPE_MAP_UNSYNCHRONIZED;
     }
 
-    map = rws->buffer_map(rbuf->buf, r300->cs, usage);
+    map = rws->buffer_map(rws, rbuf->buf, &r300->cs, usage);
 
     if (!map) {
         slab_free(&r300->pool_transfers, transfer);

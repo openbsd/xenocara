@@ -1,1 +1,0 @@
-VK_GOOGLE_user_type on ANV and RADV.

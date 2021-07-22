@@ -40,7 +40,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/api_exec.h"
 #include "main/context.h"
 #include "util/simple_list.h"
-#include "main/imports.h"
 #include "main/extensions.h"
 #include "main/version.h"
 #include "main/vtxfmt.h"
@@ -67,7 +66,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_fog.h"
 
 #include "utils.h"
-#include "util/xmlpool.h" /* for symbolic values of enum-type options */
+#include "util/driconf.h" /* for symbolic values of enum-type options */
+#include "util/u_memory.h"
 
 extern const struct tnl_pipeline_stage _radeon_render_stage;
 extern const struct tnl_pipeline_stage _radeon_tcl_stage;
@@ -76,7 +76,7 @@ static const struct tnl_pipeline_stage *radeon_pipeline[] = {
 
    /* Try and go straight to t&l
     */
-   &_radeon_tcl_stage,  
+   &_radeon_tcl_stage,
 
    /* Catch any t&l fallbacks
     */
@@ -95,7 +95,7 @@ static const struct tnl_pipeline_stage *radeon_pipeline[] = {
 static void r100_vtbl_pre_emit_state(radeonContextPtr radeon)
 {
    r100ContextPtr rmesa = (r100ContextPtr)radeon;
-   
+
    /* r100 always needs to emit ZBS to avoid TCL lockups */
    rmesa->hw.zbs.dirty = 1;
    radeon->hw.is_dirty = 1;
@@ -166,7 +166,7 @@ r100CreateContext( gl_api api,
    assert(screen);
 
    /* Allocate the Radeon context */
-   rmesa = calloc(1, sizeof(*rmesa));
+   rmesa = align_calloc(sizeof(*rmesa), 16);
    if ( !rmesa ) {
       *error = __DRI_CTX_ERROR_NO_MEMORY;
       return GL_FALSE;
@@ -183,7 +183,7 @@ r100CreateContext( gl_api api,
     * the default textures.
     */
    driParseConfigFiles (&rmesa->radeon.optionCache, &screen->optionCache,
-			screen->driScreen->myNum, "radeon", NULL, NULL, 0);
+			screen->driScreen->myNum, "radeon", NULL, NULL, 0, NULL, 0);
    rmesa->radeon.initialMaxAnisotropy = driQueryOptionf(&rmesa->radeon.optionCache,
                                                  "def_max_anisotropy");
 
@@ -201,7 +201,7 @@ r100CreateContext( gl_api api,
    if (!radeonInitContext(&rmesa->radeon, api, &functions,
 			  glVisual, driContextPriv,
 			  sharedContextPrivate)) {
-     free(rmesa);
+     align_free(rmesa);
      *error = __DRI_CTX_ERROR_NO_MEMORY;
      return GL_FALSE;
    }
@@ -216,7 +216,7 @@ r100CreateContext( gl_api api,
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
-   _vbo_CreateContext( ctx );
+   _vbo_CreateContext( ctx, false );
    _tnl_CreateContext( ctx );
    _swsetup_CreateContext( ctx );
 
@@ -228,7 +228,7 @@ r100CreateContext( gl_api api,
 
    ctx->Const.StripTextureBorder = GL_TRUE;
 
-   /* FIXME: When no memory manager is available we should set this 
+   /* FIXME: When no memory manager is available we should set this
     * to some reasonable value based on texture memory pool size */
    ctx->Const.MaxTextureSize = 2048;
    ctx->Const.Max3DTextureLevels = 9;
@@ -255,9 +255,9 @@ r100CreateContext( gl_api api,
     * fit in a single dma buffer for indexed rendering of quad strips,
     * etc.
     */
-   ctx->Const.MaxArrayLockSize = 
-      MIN2( ctx->Const.MaxArrayLockSize, 
- 	    RADEON_BUFFER_SIZE / RADEON_MAX_TCL_VERTSIZE ); 
+   ctx->Const.MaxArrayLockSize =
+      MIN2( ctx->Const.MaxArrayLockSize,
+ 	    RADEON_BUFFER_SIZE / RADEON_MAX_TCL_VERTSIZE );
 
    rmesa->boxes = 0;
 
@@ -319,7 +319,7 @@ r100CreateContext( gl_api api,
    radeonInitState( rmesa );
    radeonInitSwtcl( ctx );
 
-   _mesa_vector4f_alloc( &rmesa->tcl.ObjClean, 0, 
+   _mesa_vector4f_alloc( &rmesa->tcl.ObjClean, 0,
 			 ctx->Const.MaxArrayLockSize, 32 );
 
    fthrottle_mode = driQueryOptioni(&rmesa->radeon.optionCache, "fthrottle_mode");

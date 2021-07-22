@@ -27,7 +27,7 @@
 #include "pipe/p_state.h"
 
 #include "virgl_winsys.h"
-#include "virgl_protocol.h"
+#include "virtio-gpu/virgl_protocol.h"
 
 struct tgsi_token;
 
@@ -116,6 +116,12 @@ int virgl_encode_clear(struct virgl_context *ctx,
                       const union pipe_color_union *color,
                       double depth, unsigned stencil);
 
+int virgl_encode_clear_texture(struct virgl_context *ctx,
+                               struct virgl_resource *res,
+                               unsigned int level,
+                               const struct pipe_box *box,
+                               const void *data);
+
 int virgl_encode_bind_object(struct virgl_context *ctx,
                             uint32_t handle, uint32_t object);
 int virgl_encode_delete_object(struct virgl_context *ctx,
@@ -129,7 +135,9 @@ int virgl_encoder_set_viewport_states(struct virgl_context *ctx,
                                       const struct pipe_viewport_state *states);
 
 int virgl_encoder_draw_vbo(struct virgl_context *ctx,
-                          const struct pipe_draw_info *info);
+                           const struct pipe_draw_info *info,
+                           const struct pipe_draw_indirect_info *indirect,
+                           const struct pipe_draw_start_count *draw);
 
 
 int virgl_encoder_create_surface(struct virgl_context *ctx,
@@ -299,6 +307,11 @@ void virgl_encode_copy_transfer(struct virgl_context *ctx,
 void virgl_encode_end_transfers(struct virgl_cmd_buf *buf);
 
 int virgl_encode_tweak(struct virgl_context *ctx, enum vrend_tweak_type tweak, uint32_t value);
+
+void virgl_encode_get_memory_info(struct virgl_context *ctx, struct virgl_resource *res);
+
+void virgl_encode_emit_string_marker(struct virgl_context *ctx, const char *message,
+                                       int len);
 
 enum virgl_formats pipe_to_virgl_format(enum pipe_format format);
 #endif

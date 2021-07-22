@@ -319,7 +319,8 @@
     <enum name="POINT_SIZE_ARRAY_BUFFER_BINDING_OES"	  value="0x8B9F"/>
 
     <function name="PointSizePointerOES" es1="1.0" desktop="false"
-              no_error="true">
+              no_error="true" marshal="async"
+              marshal_call_after="if (COMPAT) _mesa_glthread_AttribPointer(ctx, VERT_ATTRIB_POINT_SIZE, 1, type, stride, pointer);">
         <param name="type" type="GLenum"/>
         <param name="stride" type="GLsizei"/>
         <param name="pointer" type="const GLvoid *"/>
@@ -818,6 +819,11 @@
 
 <xi:include href="EXT_multisampled_render_to_texture.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+<!-- 110. GL_ANGLE_pack_reverse_row_order -->
+<category name="GL_ANGLE_pack_reverse_row_order" number="110">
+    <enum name="PACK_REVERSE_ROW_ORDER_ANGLE"           value="0x93A4"/>
+</category>
+
 <!-- 111. GL_ANGLE_texture_compression_dxt -->
 <category name="GL_ANGLE_texture_compression_dxt" number="111">
     <enum name="COMPRESSED_RGBA_S3TC_DXT3_ANGLE"        value="0x83F2"/>
@@ -1070,7 +1076,7 @@
 <category name="GL_EXT_draw_elements_base_vertex" number="204">
 
     <function name="DrawElementsBaseVertexEXT" alias="DrawElementsBaseVertex"
-              es2="2.0" exec="dynamic">
+              es2="2.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1079,7 +1085,7 @@
     </function>
 
     <function name="DrawRangeElementsBaseVertexEXT" alias="DrawRangeElementsBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="start" type="GLuint"/>
         <param name="end" type="GLuint"/>
@@ -1090,7 +1096,7 @@
     </function>
 
     <function name="MultiDrawElementsBaseVertexEXT" alias="MultiDrawElementsBaseVertex"
-              es2="2.0" exec="dynamic">
+              es2="2.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="const GLsizei *"/>
         <param name="type" type="GLenum"/>
@@ -1100,7 +1106,7 @@
     </function>
 
     <function name="DrawElementsInstancedBaseVertexEXT" alias="DrawElementsInstancedBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1222,7 +1228,7 @@
 <category name="GL_OES_draw_elements_base_vertex" number="219">
 
     <function name="DrawElementsBaseVertexOES" alias="DrawElementsBaseVertex"
-              es2="2.0" exec="dynamic">
+              es2="2.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1231,7 +1237,7 @@
     </function>
 
     <function name="DrawRangeElementsBaseVertexOES" alias="DrawRangeElementsBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="start" type="GLuint"/>
         <param name="end" type="GLuint"/>
@@ -1242,7 +1248,7 @@
     </function>
 
     <function name="DrawElementsInstancedBaseVertexOES" alias="DrawElementsInstancedBaseVertex"
-              es2="3.0" exec="dynamic">
+              es2="3.0">
         <param name="mode" type="GLenum"/>
         <param name="count" type="GLsizei"/>
         <param name="type" type="GLenum"/>
@@ -1463,7 +1469,7 @@
     <function name="DepthRangeArrayfvOES" es2="3.1" desktop="false">
         <param name="first" type="GLuint"/>
         <param name="count" type="GLsizei"/>
-        <param name="v" type="const GLfloat *"/>
+        <param name="v" type="const GLfloat *" count="(2 * count)"/>
     </function>
     <function name="DepthRangeIndexedfOES" es2="3.1" desktop="false">
         <param name="index" type="GLuint"/>

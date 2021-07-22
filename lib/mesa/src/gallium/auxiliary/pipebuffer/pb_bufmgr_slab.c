@@ -67,10 +67,6 @@ struct pb_slab_buffer
    
    /** Offset relative to the start of the slab buffer. */
    pb_size start;
-   
-   /** Use when validating, to signal that all mappings are finished */
-   /* TODO: Actually validation does not reach this stage yet */
-   cnd_t event;
 };
 
 
@@ -191,7 +187,7 @@ pb_slab_range_manager(struct pb_manager *mgr)
  * it on the slab FREE list.
  */
 static void
-pb_slab_buffer_destroy(struct pb_buffer *_buf)
+pb_slab_buffer_destroy(void *winsys, struct pb_buffer *_buf)
 {
    struct pb_slab_buffer *buf = pb_slab_buffer(_buf);
    struct pb_slab *slab = buf->slab;
@@ -215,6 +211,7 @@ pb_slab_buffer_destroy(struct pb_buffer *_buf)
    if (slab->numFree == slab->numBuffers) {
       list = &slab->head;
       list_delinit(list);
+      pb_unmap(slab->bo);
       pb_reference(&slab->bo, NULL);
       FREE(slab->buffers);
       FREE(slab);
@@ -244,8 +241,6 @@ pb_slab_buffer_unmap(struct pb_buffer *_buf)
    struct pb_slab_buffer *buf = pb_slab_buffer(_buf);
 
    --buf->mapCount;
-   if (buf->mapCount == 0) 
-       cnd_broadcast(&buf->event);
 }
 
 
@@ -315,15 +310,16 @@ pb_slab_create(struct pb_slab_manager *mgr)
    }
 
    /* Note down the slab virtual address. All mappings are accessed directly 
-    * through this address so it is required that the buffer is pinned. */
+    * through this address so it is required that the buffer is mapped
+    * persistent */
    slab->virtual = pb_map(slab->bo, 
                           PB_USAGE_CPU_READ |
-                          PB_USAGE_CPU_WRITE, NULL);
+                          PB_USAGE_CPU_WRITE |
+                          PB_USAGE_PERSISTENT, NULL);
    if(!slab->virtual) {
       ret = PIPE_ERROR_OUT_OF_MEMORY;
       goto out_err1;
    }
-   pb_unmap(slab->bo);
 
    numBuffers = slab->bo->size / mgr->bufSize;
 
@@ -343,13 +339,12 @@ pb_slab_create(struct pb_slab_manager *mgr)
    for (i=0; i < numBuffers; ++i) {
       pipe_reference_init(&buf->base.reference, 0);
       buf->base.size = mgr->bufSize;
-      buf->base.alignment = 0;
+      buf->base.alignment_log2 = 0;
       buf->base.usage = 0;
       buf->base.vtbl = &pb_slab_buffer_vtbl;
       buf->slab = slab;
       buf->start = i* mgr->bufSize;
       buf->mapCount = 0;
-      cnd_init(&buf->event);
       list_addtail(&buf->head, &slab->freeBuffers);
       slab->numFree++;
       buf++;
@@ -421,7 +416,7 @@ pb_slab_manager_create_buffer(struct pb_manager *_mgr,
    buf = LIST_ENTRY(struct pb_slab_buffer, list, head);
    
    pipe_reference_init(&buf->base.reference, 1);
-   buf->base.alignment = desc->alignment;
+   buf->base.alignment_log2 = util_logbase2(desc->alignment);
    buf->base.usage = desc->usage;
    
    return &buf->base;

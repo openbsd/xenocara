@@ -47,7 +47,7 @@
  * that varies .x from 0 to 1 horizontally across the point and varies .y
  * vertically from 0 to 1 down the sprite.
  *
- * With geometry shaders, the state tracker could create a GS to do
+ * With geometry shaders, the gallium frontends could create a GS to do
  * most/all of this.
  */
 
@@ -213,7 +213,7 @@ widepoint_first_point(struct draw_stage *stage,
    }
 
    /* Disable triangle culling, stippling, unfilled mode etc. */
-   r = draw_get_rasterizer_no_cull(draw, rast->scissor, rast->flatshade);
+   r = draw_get_rasterizer_no_cull(draw, rast);
    draw->suspend_flushing = TRUE;
    pipe->bind_rasterizer_state(pipe, r);
    draw->suspend_flushing = FALSE;

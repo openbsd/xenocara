@@ -256,39 +256,6 @@ etna_resource_alloc(struct pipe_screen *pscreen, unsigned layout,
    if (!screen->specs.use_blt && templat->target != PIPE_BUFFER && layout == ETNA_LAYOUT_LINEAR)
       paddingY = align(paddingY, ETNA_RS_HEIGHT_MASK + 1);
 
-   if (templat->bind & PIPE_BIND_SCANOUT && screen->ro->kms_fd >= 0) {
-      struct pipe_resource scanout_templat = *templat;
-      struct renderonly_scanout *scanout;
-      struct winsys_handle handle;
-
-      /* pad scanout buffer size to be compatible with the RS */
-      if (!screen->specs.use_blt && modifier == DRM_FORMAT_MOD_LINEAR) {
-         paddingX = align(paddingX, ETNA_RS_WIDTH_MASK + 1);
-         paddingY = align(paddingY, ETNA_RS_HEIGHT_MASK + 1);
-      }
-
-      scanout_templat.width0 = align(scanout_templat.width0, paddingX);
-      scanout_templat.height0 = align(scanout_templat.height0, paddingY);
-
-      scanout = renderonly_scanout_for_resource(&scanout_templat,
-                                                screen->ro, &handle);
-      if (!scanout)
-         return NULL;
-
-      assert(handle.type == WINSYS_HANDLE_TYPE_FD);
-      handle.modifier = modifier;
-      rsc = etna_resource(pscreen->resource_from_handle(pscreen, templat,
-                                                        &handle,
-                                                        PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE));
-      close(handle.handle);
-      if (!rsc)
-         return NULL;
-
-      rsc->scanout = scanout;
-
-      return &rsc->base;
-   }
-
    rsc = CALLOC_STRUCT(etna_resource);
    if (!rsc)
       return NULL;
@@ -304,23 +271,47 @@ etna_resource_alloc(struct pipe_screen *pscreen, unsigned layout,
 
    size = setup_miptree(rsc, paddingX, paddingY, msaa_xscale, msaa_yscale);
 
-   uint32_t flags = DRM_ETNA_GEM_CACHE_WC;
-   if (templat->bind & PIPE_BIND_VERTEX_BUFFER)
-      flags |= DRM_ETNA_GEM_FORCE_MMU;
-   struct etna_bo *bo = etna_bo_new(screen->dev, size, flags);
-   if (unlikely(bo == NULL)) {
-      BUG("Problem allocating video memory for resource");
-      goto free_rsc;
-   }
+   if (unlikely(templat->bind & PIPE_BIND_SCANOUT) && screen->ro->kms_fd >= 0) {
+      struct pipe_resource scanout_templat = *templat;
+      struct winsys_handle handle;
 
-   rsc->bo = bo;
-   rsc->ts_bo = 0; /* TS is only created when first bound to surface */
+      scanout_templat.width0 = align(scanout_templat.width0, paddingX);
+      scanout_templat.height0 = align(scanout_templat.height0, paddingY);
+
+      rsc->scanout = renderonly_scanout_for_resource(&scanout_templat,
+                                                     screen->ro, &handle);
+      if (!rsc->scanout) {
+         BUG("Problem allocating kms memory for resource");
+         goto free_rsc;
+      }
+
+      assert(handle.type == WINSYS_HANDLE_TYPE_FD);
+      rsc->levels[0].stride = handle.stride;
+      rsc->bo = etna_screen_bo_from_handle(pscreen, &handle);
+      close(handle.handle);
+      if (unlikely(!rsc->bo))
+         goto free_rsc;
+   } else {
+      uint32_t flags = DRM_ETNA_GEM_CACHE_WC;
+
+      if (templat->bind & PIPE_BIND_VERTEX_BUFFER)
+         flags |= DRM_ETNA_GEM_FORCE_MMU;
+
+      rsc->bo = etna_bo_new(screen->dev, size, flags);
+      if (unlikely(!rsc->bo)) {
+         BUG("Problem allocating video memory for resource");
+         goto free_rsc;
+      }
+   }
 
    if (DBG_ENABLED(ETNA_DBG_ZERO)) {
-      void *map = etna_bo_map(bo);
+      void *map = etna_bo_map(rsc->bo);
+      etna_bo_cpu_prep(rsc->bo, DRM_ETNA_PREP_WRITE);
       memset(map, 0, size);
+      etna_bo_cpu_fini(rsc->bo);
    }
 
+   mtx_init(&rsc->lock, mtx_recursive);
    rsc->pending_ctx = _mesa_set_create(NULL, _mesa_hash_pointer,
                                        _mesa_key_pointer_equal);
    if (!rsc->pending_ctx)
@@ -351,7 +342,7 @@ etna_resource_create(struct pipe_screen *pscreen,
     * and a texture-compatible base buffer in other cases
     *
     */
-   if (templat->bind & (PIPE_BIND_SCANOUT | PIPE_BIND_DEPTH_STENCIL)) {
+   if (templat->bind & PIPE_BIND_DEPTH_STENCIL) {
       if (screen->specs.pixel_pipes > 1 && !screen->specs.single_buffer)
          layout |= ETNA_LAYOUT_BIT_MULTI;
       if (screen->specs.can_supertile)
@@ -361,7 +352,8 @@ etna_resource_create(struct pipe_screen *pscreen,
       layout |= ETNA_LAYOUT_BIT_SUPER;
    }
 
-   if ((templat->bind & PIPE_BIND_LINEAR) || /* linear base requested */
+   if (/* linear base or scanout without modifier requested */
+       (templat->bind & (PIPE_BIND_LINEAR | PIPE_BIND_SCANOUT)) ||
        templat->target == PIPE_BUFFER || /* buffer always linear */
        /* compressed textures don't use tiling, they have their own "tiles" */
        util_format_is_compressed(templat->format)) {
@@ -463,8 +455,10 @@ etna_resource_destroy(struct pipe_screen *pscreen, struct pipe_resource *prsc)
 {
    struct etna_resource *rsc = etna_resource(prsc);
 
+   mtx_lock(&rsc->lock);
    assert(!_mesa_set_next_entry(rsc->pending_ctx, NULL));
    _mesa_set_destroy(rsc->pending_ctx, NULL);
+   mtx_unlock(&rsc->lock);
 
    if (rsc->bo)
       etna_bo_del(rsc->bo);
@@ -482,6 +476,8 @@ etna_resource_destroy(struct pipe_screen *pscreen, struct pipe_resource *prsc)
 
    for (unsigned i = 0; i < ETNA_NUM_LOD; i++)
       FREE(rsc->levels[i].patch_offsets);
+
+   mtx_destroy(&rsc->lock);
 
    FREE(rsc);
 }
@@ -515,7 +511,7 @@ etna_resource_from_handle(struct pipe_screen *pscreen,
    util_range_init(&rsc->valid_buffer_range);
    prsc->screen = pscreen;
 
-   rsc->bo = etna_screen_bo_from_handle(pscreen, handle, &level->stride);
+   rsc->bo = etna_screen_bo_from_handle(pscreen, handle);
    if (!rsc->bo)
       goto fail;
 
@@ -526,6 +522,7 @@ etna_resource_from_handle(struct pipe_screen *pscreen,
    level->width = tmpl->width0;
    level->height = tmpl->height0;
    level->depth = tmpl->depth0;
+   level->stride = handle->stride;
    level->offset = handle->offset;
 
    /* Determine padding of the imported resource. */
@@ -559,6 +556,7 @@ etna_resource_from_handle(struct pipe_screen *pscreen,
       goto fail;
    }
 
+   mtx_init(&rsc->lock, mtx_recursive);
    rsc->pending_ctx = _mesa_set_create(NULL, _mesa_hash_pointer,
                                        _mesa_key_pointer_equal);
    if (!rsc->pending_ctx)
@@ -603,34 +601,6 @@ etna_resource_get_handle(struct pipe_screen *pscreen,
    }
 }
 
-enum etna_resource_status
-etna_resource_get_status(struct etna_context *ctx, struct etna_resource *rsc)
-{
-   enum etna_resource_status newstatus = 0;
-
-   set_foreach(rsc->pending_ctx, entry) {
-      struct etna_context *extctx = (struct etna_context *)entry->key;
-
-      set_foreach(extctx->used_resources_read, entry2) {
-         struct etna_resource *rsc2 = (struct etna_resource *)entry2->key;
-         if (ctx == extctx || rsc2 != rsc)
-            continue;
-
-         newstatus |= ETNA_PENDING_READ;
-      }
-
-      set_foreach(extctx->used_resources_write, entry2) {
-         struct etna_resource *rsc2 = (struct etna_resource *)entry2->key;
-         if (ctx == extctx || rsc2 != rsc)
-            continue;
-
-         newstatus |= ETNA_PENDING_WRITE;
-      }
-   }
-
-   return newstatus;
-}
-
 void
 etna_resource_used(struct etna_context *ctx, struct pipe_resource *prsc,
                    enum etna_resource_status status)
@@ -644,18 +614,41 @@ etna_resource_used(struct etna_context *ctx, struct pipe_resource *prsc,
    mtx_lock(&ctx->lock);
 
    rsc = etna_resource(prsc);
+again:
+   mtx_lock(&rsc->lock);
 
    set_foreach(rsc->pending_ctx, entry) {
       struct etna_context *extctx = (struct etna_context *)entry->key;
       struct pipe_context *pctx = &extctx->base;
+      bool need_flush = false;
+
+      if (mtx_trylock(&extctx->lock) != thrd_success) {
+         /*
+	  * The other context could be locked in etna_flush() and
+	  * stuck waiting for the resource lock, so release the
+	  * resource lock here, let etna_flush() finish, and try
+	  * again.
+	  */
+         mtx_unlock(&rsc->lock);
+         thrd_yield();
+         goto again;
+      }
 
       set_foreach(extctx->used_resources_read, entry2) {
          struct etna_resource *rsc2 = (struct etna_resource *)entry2->key;
          if (ctx == extctx || rsc2 != rsc)
             continue;
 
-         if (status & ETNA_PENDING_WRITE)
-            pctx->flush(pctx, NULL, 0);
+         if (status & ETNA_PENDING_WRITE) {
+            need_flush = true;
+            break;
+         }
+      }
+
+      if (need_flush) {
+         pctx->flush(pctx, NULL, 0);
+         mtx_unlock(&extctx->lock);
+	 continue;
       }
 
       set_foreach(extctx->used_resources_write, entry2) {
@@ -663,8 +656,14 @@ etna_resource_used(struct etna_context *ctx, struct pipe_resource *prsc,
          if (ctx == extctx || rsc2 != rsc)
             continue;
 
-         pctx->flush(pctx, NULL, 0);
+         need_flush = true;
+         break;
       }
+
+      if (need_flush)
+         pctx->flush(pctx, NULL, 0);
+
+      mtx_unlock(&extctx->lock);
    }
 
    rsc->status = status;
@@ -676,6 +675,7 @@ etna_resource_used(struct etna_context *ctx, struct pipe_resource *prsc,
       _mesa_set_add(rsc->pending_ctx, ctx);
    }
 
+   mtx_unlock(&rsc->lock);
    mtx_unlock(&ctx->lock);
 }
 

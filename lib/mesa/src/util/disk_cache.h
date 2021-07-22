@@ -43,6 +43,7 @@ extern "C" {
 #define CACHE_KEY_SIZE 20
 
 #define CACHE_DIR_NAME "mesa_shader_cache"
+#define CACHE_DIR_NAME_SF "mesa_shader_cache_sf"
 
 typedef uint8_t cache_key[CACHE_KEY_SIZE];
 
@@ -131,6 +132,12 @@ disk_cache_get_function_identifier(void *ptr, struct mesa_sha1 *ctx)
    } else
       return false;
    return true;
+}
+#else
+static inline bool
+disk_cache_get_function_identifier(void *ptr, struct mesa_sha1 *ctx)
+{
+   return false;
 }
 #endif
 

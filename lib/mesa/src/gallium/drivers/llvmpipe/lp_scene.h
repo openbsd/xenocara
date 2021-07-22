@@ -60,7 +60,7 @@ struct lp_rast_state;
 
 /* Scene temporary storage is clamped to this size:
  */
-#define LP_SCENE_MAX_SIZE (9*1024*1024)
+#define LP_SCENE_MAX_SIZE (36*1024*1024)
 
 /* The maximum amount of texture storage referenced by a scene is
  * clamped to this size:
@@ -117,6 +117,8 @@ struct data_block_list {
 
 struct resource_ref;
 
+struct shader_ref;
+
 /**
  * All bins and bin data are contained here.
  * Per-bin data goes into the 'tile' bins.
@@ -143,16 +145,27 @@ struct lp_scene {
       unsigned stride;
       unsigned layer_stride;
       unsigned format_bytes;
+      unsigned sample_stride;
+      unsigned nr_samples;
    } zsbuf, cbufs[PIPE_MAX_COLOR_BUFS];
 
    /* The amount of layers in the fb (minimum of all attachments) */
    unsigned fb_max_layer;
+
+   /* fixed point sample positions. */
+   int32_t fixed_sample_pos[LP_MAX_SAMPLES][2];
+
+   /* max samples for bound framebuffer */
+   unsigned fb_max_samples;
 
    /** the framebuffer to render the scene into */
    struct pipe_framebuffer_state fb;
 
    /** list of resources referenced by the scene commands */
    struct resource_ref *resources;
+
+   /** list of frag shaders referenced by the scene commands */
+   struct shader_ref *frag_shaders;
 
    /** Total memory used by the scene (in bytes).  This sums all the
     * data blocks and counts all bins, state, resource references and
@@ -200,6 +213,10 @@ boolean lp_scene_add_resource_reference(struct lp_scene *scene,
 
 boolean lp_scene_is_resource_referenced(const struct lp_scene *scene,
                                         const struct pipe_resource *resource );
+
+boolean lp_scene_add_frag_shader_reference(struct lp_scene *scene,
+                                           struct lp_fragment_shader_variant *variant);
+
 
 
 /**

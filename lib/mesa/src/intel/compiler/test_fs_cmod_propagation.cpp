@@ -30,11 +30,12 @@ using namespace brw;
 
 class cmod_propagation_test : public ::testing::Test {
    virtual void SetUp();
+   virtual void TearDown();
 
 public:
    struct brw_compiler *compiler;
    struct gen_device_info *devinfo;
-   struct gl_context *ctx;
+   void *ctx;
    struct brw_wm_prog_data *prog_data;
    struct gl_shader_program *shader_prog;
    fs_visitor *v;
@@ -54,27 +55,38 @@ class cmod_propagation_fs_visitor : public fs_visitor
 {
 public:
    cmod_propagation_fs_visitor(struct brw_compiler *compiler,
+                               void *mem_ctx,
                                struct brw_wm_prog_data *prog_data,
                                nir_shader *shader)
-      : fs_visitor(compiler, NULL, NULL, NULL,
-                   &prog_data->base, shader, 8, -1) {}
+      : fs_visitor(compiler, NULL, mem_ctx, NULL,
+                   &prog_data->base, shader, 8, -1, false) {}
 };
 
 
 void cmod_propagation_test::SetUp()
 {
-   ctx = (struct gl_context *)calloc(1, sizeof(*ctx));
-   compiler = (struct brw_compiler *)calloc(1, sizeof(*compiler));
-   devinfo = (struct gen_device_info *)calloc(1, sizeof(*devinfo));
+   ctx = ralloc_context(NULL);
+   compiler = rzalloc(ctx, struct brw_compiler);
+   devinfo = rzalloc(ctx, struct gen_device_info);
    compiler->devinfo = devinfo;
 
-   prog_data = ralloc(NULL, struct brw_wm_prog_data);
+   prog_data = ralloc(ctx, struct brw_wm_prog_data);
    nir_shader *shader =
-      nir_shader_create(NULL, MESA_SHADER_FRAGMENT, NULL, NULL);
+      nir_shader_create(ctx, MESA_SHADER_FRAGMENT, NULL, NULL);
 
-   v = new cmod_propagation_fs_visitor(compiler, prog_data, shader);
+   v = new cmod_propagation_fs_visitor(compiler, ctx, prog_data, shader);
 
-   devinfo->gen = 7;
+   devinfo->ver = 7;
+   devinfo->verx10 = devinfo->ver * 10;
+}
+
+void cmod_propagation_test::TearDown()
+{
+   delete v;
+   v = NULL;
+
+   ralloc_free(ctx);
+   ctx = NULL;
 }
 
 static fs_inst *
@@ -94,14 +106,14 @@ cmod_propagation(fs_visitor *v)
 
    if (print) {
       fprintf(stderr, "= Before =\n");
-      v->cfg->dump(v);
+      v->cfg->dump();
    }
 
    bool ret = v->opt_cmod_propagation();
 
    if (print) {
       fprintf(stderr, "\n= After =\n");
-      v->cfg->dump(v);
+      v->cfg->dump();
    }
 
    return ret;
@@ -2380,4 +2392,93 @@ TEST_F(cmod_propagation_test, not_to_or_intervening_mismatch_flag_read)
    EXPECT_EQ(BRW_OPCODE_SEL, instruction(block0, 1)->opcode);
    EXPECT_EQ(BRW_PREDICATE_NORMAL, instruction(block0, 1)->predicate);
    EXPECT_EQ(1, instruction(block0, 1)->flag_subreg);
+}
+
+TEST_F(cmod_propagation_test, cmp_to_add_float_e)
+{
+   const fs_builder &bld = v->bld;
+   fs_reg dest = v->vgrf(glsl_type::float_type);
+   fs_reg src0 = v->vgrf(glsl_type::float_type);
+   fs_reg neg10(brw_imm_f(-10.0f));
+   fs_reg pos10(brw_imm_f(10.0f));
+
+   bld.ADD(dest, src0, neg10)->saturate = true;
+   bld.CMP(bld.null_reg_f(), src0, pos10, BRW_CONDITIONAL_EQ);
+
+   /* = Before =
+    * 0: add.sat(8) vgrf0:F, vgrf1:F, -10f
+    * 1: cmp.z.f0.0(8) null:F, vgrf1:F, 10f
+    *
+    * = After =
+    * (no changes)
+    */
+
+   v->calculate_cfg();
+   bblock_t *block0 = v->cfg->blocks[0];
+
+   EXPECT_FALSE(cmod_propagation(v));
+   EXPECT_EQ(0, block0->start_ip);
+   EXPECT_EQ(1, block0->end_ip);
+   EXPECT_EQ(BRW_OPCODE_ADD, instruction(block0, 0)->opcode);
+   EXPECT_EQ(BRW_CONDITIONAL_NONE, instruction(block0, 0)->conditional_mod);
+   EXPECT_EQ(BRW_OPCODE_CMP, instruction(block0, 1)->opcode);
+   EXPECT_EQ(BRW_CONDITIONAL_EQ, instruction(block0, 1)->conditional_mod);
+}
+
+TEST_F(cmod_propagation_test, cmp_to_add_float_g)
+{
+   const fs_builder &bld = v->bld;
+   fs_reg dest = v->vgrf(glsl_type::float_type);
+   fs_reg src0 = v->vgrf(glsl_type::float_type);
+   fs_reg neg10(brw_imm_f(-10.0f));
+   fs_reg pos10(brw_imm_f(10.0f));
+
+   bld.ADD(dest, src0, neg10)->saturate = true;
+   bld.CMP(bld.null_reg_f(), src0, pos10, BRW_CONDITIONAL_G);
+
+   /* = Before =
+    * 0: add.sat(8) vgrf0:F, vgrf1:F, -10f
+    * 1: cmp.g.f0.0(8) null:F, vgrf1:F, 10f
+    *
+    * = After =
+    * 0: add.sat.g.f0.0(8) vgrf0:F, vgrf1:F, -10f
+    */
+
+   v->calculate_cfg();
+   bblock_t *block0 = v->cfg->blocks[0];
+
+   EXPECT_TRUE(cmod_propagation(v));
+   EXPECT_EQ(0, block0->start_ip);
+   EXPECT_EQ(0, block0->end_ip);
+   EXPECT_EQ(BRW_OPCODE_ADD, instruction(block0, 0)->opcode);
+   EXPECT_EQ(BRW_CONDITIONAL_G, instruction(block0, 0)->conditional_mod);
+}
+
+TEST_F(cmod_propagation_test, cmp_to_add_float_le)
+{
+   const fs_builder &bld = v->bld;
+   fs_reg dest = v->vgrf(glsl_type::float_type);
+   fs_reg src0 = v->vgrf(glsl_type::float_type);
+   fs_reg neg10(brw_imm_f(-10.0f));
+   fs_reg pos10(brw_imm_f(10.0f));
+
+   bld.ADD(dest, src0, neg10)->saturate = true;
+   bld.CMP(bld.null_reg_f(), src0, pos10, BRW_CONDITIONAL_LE);
+
+   /* = Before =
+    * 0: add.sat(8) vgrf0:F, vgrf1:F, -10f
+    * 1: cmp.le.f0.0(8) null:F, vgrf1:F, 10f
+    *
+    * = After =
+    * 0: add.sat.le.f0.0(8) vgrf0:F, vgrf1:F, -10f
+    */
+
+   v->calculate_cfg();
+   bblock_t *block0 = v->cfg->blocks[0];
+
+   EXPECT_TRUE(cmod_propagation(v));
+   EXPECT_EQ(0, block0->start_ip);
+   EXPECT_EQ(0, block0->end_ip);
+   EXPECT_EQ(BRW_OPCODE_ADD, instruction(block0, 0)->opcode);
+   EXPECT_EQ(BRW_CONDITIONAL_LE, instruction(block0, 0)->conditional_mod);
 }

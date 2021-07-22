@@ -202,7 +202,7 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
 {
    const struct gen_device_info *devinfo = compiler->devinfo;
 
-   if ((devinfo->gen <= 7 && !devinfo->is_haswell) ||
+   if ((devinfo->ver <= 7 && !devinfo->is_haswell) ||
        !compiler->scalar_stage[nir->info.stage]) {
       memset(out_ranges, 0, 4 * sizeof(struct brw_ubo_range));
       return;
@@ -313,8 +313,10 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
     */
 
    /* Sort the list so the most beneficial ranges are at the front. */
-   qsort(ranges.data, nr_entries, sizeof(struct ubo_range_entry),
-         cmp_ubo_range_entry);
+   if (nr_entries > 0) {
+      qsort(ranges.data, nr_entries, sizeof(struct ubo_range_entry),
+            cmp_ubo_range_entry);
+   }
 
    struct ubo_range_entry *entries = ranges.data;
 

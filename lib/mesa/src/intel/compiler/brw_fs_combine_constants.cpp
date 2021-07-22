@@ -48,7 +48,7 @@ static const bool debug = false;
 static bool
 could_coissue(const struct gen_device_info *devinfo, const fs_inst *inst)
 {
-   if (devinfo->gen != 7)
+   if (devinfo->ver != 7)
       return false;
 
    switch (inst->opcode) {
@@ -77,7 +77,7 @@ must_promote_imm(const struct gen_device_info *devinfo, const fs_inst *inst)
 {
    switch (inst->opcode) {
    case SHADER_OPCODE_POW:
-      return devinfo->gen < 8;
+      return devinfo->ver < 8;
    case BRW_OPCODE_MAD:
    case BRW_OPCODE_LRP:
       return true;
@@ -340,7 +340,7 @@ represent_src_as_imm(const struct gen_device_info *devinfo,
                      fs_reg *src)
 {
    /* TODO : consider specific platforms also */
-   if (devinfo->gen == 12) {
+   if (devinfo->ver == 12) {
       uint16_t hf;
       if (representable_as_hf(src->f, &hf)) {
          *src = retype(brw_imm_uw(hf), BRW_REGISTER_TYPE_HF);
@@ -360,7 +360,7 @@ fs_visitor::opt_combine_constants()
    table.len = 0;
    table.imm = ralloc_array(const_ctx, struct imm, table.size);
 
-   cfg->calculate_idom();
+   const brw::idom_tree &idom = idom_analysis.require();
    unsigned ip = -1;
 
    /* Make a pass through all instructions and count the number of times each
@@ -395,7 +395,7 @@ fs_visitor::opt_combine_constants()
          struct imm *imm = find_imm(&table, data, size);
 
          if (imm) {
-            bblock_t *intersection = cfg_t::intersect(block, imm->block);
+            bblock_t *intersection = idom.intersect(block, imm->block);
             if (intersection != imm->block)
                imm->inst = NULL;
             imm->block = intersection;
@@ -465,7 +465,7 @@ fs_visitor::opt_combine_constants()
        * replicating the single one we want. To avoid this, we always populate
        * both HF slots within a DWord with the constant.
        */
-      const uint32_t width = devinfo->gen == 8 && imm->is_half_float ? 2 : 1;
+      const uint32_t width = devinfo->ver == 8 && imm->is_half_float ? 2 : 1;
       const fs_builder ibld = bld.at(imm->block, n).exec_all().group(width, 0);
 
       /* Put the immediate in an offset aligned to its size. Some instructions
@@ -559,7 +559,7 @@ fs_visitor::opt_combine_constants()
    }
 
    ralloc_free(const_ctx);
-   invalidate_live_intervals();
+   invalidate_analysis(DEPENDENCY_INSTRUCTIONS | DEPENDENCY_VARIABLES);
 
    return true;
 }

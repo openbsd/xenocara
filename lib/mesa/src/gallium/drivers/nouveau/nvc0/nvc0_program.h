@@ -15,7 +15,9 @@ struct nvc0_transform_feedback_state {
 };
 
 
-#define NVC0_SHADER_HEADER_SIZE (20 * 4)
+#define GF100_SHADER_HEADER_SIZE (20 * 4)
+#define TU102_SHADER_HEADER_SIZE (32 * 4)
+#define NVC0_MAX_SHADER_HEADER_SIZE TU102_SHADER_HEADER_SIZE
 
 struct nvc0_program {
    struct pipe_shader_state pipe;
@@ -30,7 +32,7 @@ struct nvc0_program {
    unsigned code_size;
    unsigned parm_size; /* size of non-bindable uniforms (c0[]) */
 
-   uint32_t hdr[20];
+   uint32_t hdr[NVC0_MAX_SHADER_HEADER_SIZE/4];
    uint32_t flags[2];
 
    struct {
@@ -41,6 +43,7 @@ struct nvc0_program {
       uint8_t edgeflag; /* attribute index of edgeflag input */
       bool need_vertex_id;
       bool need_draw_parameters;
+      bool layer_viewport_relative; /* also applies go gp and tp */
    } vp;
    struct {
       uint8_t early_z;
@@ -51,6 +54,7 @@ struct nvc0_program {
       bool flatshade;
       bool reads_framebuffer;
       bool post_depth_coverage;
+      bool msaa;
    } fp;
    struct {
       uint32_t tess_mode; /* ~0 if defined by the other stage */
@@ -58,8 +62,6 @@ struct nvc0_program {
    struct {
       uint32_t lmem_size; /* local memory (TGSI PRIVATE resource) size */
       uint32_t smem_size; /* shared memory (TGSI LOCAL resource) size */
-      void *syms;
-      unsigned num_syms;
    } cp;
    uint8_t num_barriers;
 
@@ -71,4 +73,6 @@ struct nvc0_program {
    struct nouveau_heap *mem;
 };
 
+void
+nvc0_program_sp_start_id(struct nvc0_context *, int, struct nvc0_program *);
 #endif

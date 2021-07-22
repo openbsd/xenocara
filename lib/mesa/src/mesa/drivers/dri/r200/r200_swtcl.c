@@ -36,7 +36,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/mtypes.h"
 #include "main/enums.h"
 #include "main/image.h"
-#include "main/imports.h"
+
 #include "main/macros.h"
 #include "main/state.h"
 
@@ -324,9 +324,9 @@ static inline GLuint reduced_hw_prim( struct gl_context *ctx, GLuint prim)
       return ((!ctx->Point.SmoothFlag) ?
 	 R200_VF_PRIM_POINT_SPRITES : R200_VF_PRIM_POINTS);
    case GL_LINES:
-   /* fallthrough */
+   FALLTHROUGH;
    case GL_LINE_LOOP:
-   /* fallthrough */
+   FALLTHROUGH;
    case GL_LINE_STRIP:
       return R200_VF_PRIM_LINES;
    default:

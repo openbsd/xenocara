@@ -648,12 +648,16 @@ UNUSED static void dump_value(const nir_search_value *val)
 }
 
 static void
-add_uses_to_worklist(nir_instr *instr, nir_instr_worklist *worklist)
+add_uses_to_worklist(nir_instr *instr,
+                     nir_instr_worklist *worklist,
+                     struct util_dynarray *states,
+                     const struct per_op_table *pass_op_table)
 {
    nir_ssa_def *def = nir_instr_ssa_def(instr);
 
    nir_foreach_use_safe(use_src, def) {
-      nir_instr_worklist_push_tail(worklist, use_src->parent_instr);
+      if (nir_algebraic_automaton(use_src->parent_instr, states, pass_op_table))
+         nir_instr_worklist_push_tail(worklist, use_src->parent_instr);
    }
 }
 
@@ -669,15 +673,12 @@ nir_algebraic_update_automaton(nir_instr *new_instr,
    /* Walk through the tree of uses of our new instruction's SSA value,
     * recursively updating the automaton state until it stabilizes.
     */
-   add_uses_to_worklist(new_instr, automaton_worklist);
+   add_uses_to_worklist(new_instr, automaton_worklist, states, pass_op_table);
 
    nir_instr *instr;
    while ((instr = nir_instr_worklist_pop_head(automaton_worklist))) {
-      if (nir_algebraic_automaton(instr, states, pass_op_table)) {
-         nir_instr_worklist_push_tail(algebraic_worklist, instr);
-
-         add_uses_to_worklist(instr, automaton_worklist);
-      }
+      nir_instr_worklist_push_tail(algebraic_worklist, instr);
+      add_uses_to_worklist(instr, automaton_worklist, states, pass_op_table);
    }
 
    nir_instr_worklist_destroy(automaton_worklist);
@@ -736,7 +737,41 @@ nir_replace_instr(nir_builder *build, nir_alu_instr *instr,
    fprintf(stderr, " ssa_%d\n", instr->dest.dest.ssa.index);
 #endif
 
-   build->cursor = nir_before_instr(&instr->instr);
+   /* If the instruction at the root of the expression tree being replaced is
+    * a unary operation, insert the replacement instructions at the location
+    * of the source of the unary operation.  Otherwise, insert the replacement
+    * instructions at the location of the expression tree root.
+    *
+    * For the unary operation case, this is done to prevent some spurious code
+    * motion that can dramatically extend live ranges.  Imagine an expression
+    * like -(A+B) where the addtion and the negation are separated by flow
+    * control and thousands of instructions.  If this expression is replaced
+    * with -A+-B, inserting the new instructions at the site of the negation
+    * could extend the live range of A and B dramtically.  This could increase
+    * register pressure and cause spilling.
+    *
+    * It may well be that moving instructions around is a good thing, but
+    * keeping algebraic optimizations and code motion optimizations separate
+    * seems safest.
+    */
+   nir_alu_instr *const src_instr = nir_src_as_alu_instr(instr->src[0].src);
+   if (src_instr != NULL &&
+       (instr->op == nir_op_fneg || instr->op == nir_op_fabs ||
+        instr->op == nir_op_ineg || instr->op == nir_op_iabs ||
+        instr->op == nir_op_inot)) {
+      /* Insert new instructions *after*.  Otherwise a hypothetical
+       * replacement fneg(X) -> fabs(X) would insert the fabs() instruction
+       * before X!  This can also occur for things like fneg(X.wzyx) -> X.wzyx
+       * in vector mode.  A move instruction to handle the swizzle will get
+       * inserted before X.
+       *
+       * This manifested in a single OpenGL ES 2.0 CTS vertex shader test on
+       * older Intel GPU that use vector-mode vertex processing.
+       */
+      build->cursor = nir_after_instr(&src_instr->instr);
+   } else {
+      build->cursor = nir_before_instr(&instr->instr);
+   }
 
    state.states = states;
 
@@ -758,7 +793,7 @@ nir_replace_instr(nir_builder *build, nir_alu_instr *instr,
    /* Rewrite the uses of the old SSA value to the new one, and recurse
     * through the uses updating the automaton's state.
     */
-   nir_ssa_def_rewrite_uses(&instr->dest.dest.ssa, nir_src_for_ssa(ssa_val));
+   nir_ssa_def_rewrite_uses(&instr->dest.dest.ssa, ssa_val);
    nir_algebraic_update_automaton(ssa_val->parent_instr, algebraic_worklist,
                                   states, pass_op_table);
 
@@ -879,8 +914,10 @@ nir_algebraic_impl(nir_function_impl *impl,
     * anything other than constants and ALU instructions.
     */
    struct util_dynarray states = {0};
-   if (!util_dynarray_resize(&states, uint16_t, impl->ssa_alloc))
+   if (!util_dynarray_resize(&states, uint16_t, impl->ssa_alloc)) {
+      nir_metadata_preserve(impl, nir_metadata_all);
       return false;
+   }
    memset(states.data, 0, states.size);
 
    struct hash_table *range_ht = _mesa_pointer_hash_table_create(NULL);
@@ -900,7 +937,8 @@ nir_algebraic_impl(nir_function_impl *impl,
     */
    nir_foreach_block_reverse(block, impl) {
       nir_foreach_instr_reverse(instr, block) {
-         nir_instr_worklist_push_tail(worklist, instr);
+         if (instr->type == nir_instr_type_alu)
+            nir_instr_worklist_push_tail(worklist, instr);
       }
    }
 
@@ -926,11 +964,9 @@ nir_algebraic_impl(nir_function_impl *impl,
    if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
-    } else {
-#ifndef NDEBUG
-      impl->valid_metadata &= ~nir_metadata_not_properly_reset;
-#endif
-    }
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
+   }
 
    return progress;
 }

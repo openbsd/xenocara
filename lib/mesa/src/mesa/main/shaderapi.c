@@ -38,6 +38,7 @@
 
 #include "main/glheader.h"
 #include "main/context.h"
+#include "draw_validate.h"
 #include "main/enums.h"
 #include "main/glspirv.h"
 #include "main/hash.h"
@@ -63,6 +64,7 @@
 #include "util/crc32.h"
 #include "util/os_file.h"
 #include "util/simple_list.h"
+#include "util/u_string.h"
 
 /**
  * Return mask of GLSL_x flags by examining the MESA_GLSL env var.
@@ -340,7 +342,7 @@ create_shader(struct gl_context *ctx, GLenum type)
    name = _mesa_HashFindFreeKeyBlock(ctx->Shared->ShaderObjects, 1);
    sh = _mesa_new_shader(name, _mesa_shader_enum_to_shader_stage(type));
    sh->Type = type;
-   _mesa_HashInsertLocked(ctx->Shared->ShaderObjects, name, sh);
+   _mesa_HashInsertLocked(ctx->Shared->ShaderObjects, name, sh, true);
    _mesa_HashUnlockMutex(ctx->Shared->ShaderObjects);
 
    return name;
@@ -372,7 +374,7 @@ create_shader_program(struct gl_context *ctx)
 
    shProg = _mesa_new_shader_program(name);
 
-   _mesa_HashInsertLocked(ctx->Shared->ShaderObjects, name, shProg);
+   _mesa_HashInsertLocked(ctx->Shared->ShaderObjects, name, shProg, true);
 
    assert(shProg->RefCount == 1);
 
@@ -1249,6 +1251,29 @@ _mesa_compile_shader(struct gl_context *ctx, struct gl_shader *sh)
 }
 
 
+struct update_programs_in_pipeline_params
+{
+   struct gl_context *ctx;
+   struct gl_shader_program *shProg;
+};
+
+static void
+update_programs_in_pipeline(void *data, void *userData)
+{
+   struct update_programs_in_pipeline_params *params =
+      (struct update_programs_in_pipeline_params *) userData;
+   struct gl_pipeline_object *obj = (struct gl_pipeline_object *) data;
+
+   for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
+      if (obj->CurrentProgram[stage] &&
+          obj->CurrentProgram[stage]->Id == params->shProg->Name) {
+         struct gl_program *prog = params->shProg->_LinkedShaders[stage]->Program;
+         _mesa_use_program(params->ctx, stage, params->shProg, prog, obj);
+      }
+   }
+}
+
+
 /**
  * Link a program's shaders.
  */
@@ -1279,11 +1304,11 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
              ctx->_Shader->CurrentProgram[stage]->Id == shProg->Name) {
             programs_in_use |= 1 << stage;
          }
-   }
+      }
 
    ensure_builtin_types(ctx);
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
    _mesa_glsl_link_shader(ctx, shProg);
 
    /* From section 7.3 (Program Objects) of the OpenGL 4.5 spec:
@@ -1296,7 +1321,7 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
     *     the state of any program pipeline for all stages where the program
     *     is attached."
     */
-   if (shProg->data->LinkStatus && programs_in_use) {
+   if (shProg->data->LinkStatus) {
       while (programs_in_use) {
          const int stage = u_bit_scan(&programs_in_use);
 
@@ -1305,6 +1330,15 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
             prog = shProg->_LinkedShaders[stage]->Program;
 
          _mesa_use_program(ctx, stage, shProg, prog, ctx->_Shader);
+      }
+
+      if (ctx->Pipeline.Objects) {
+         struct update_programs_in_pipeline_params params = {
+            .ctx = ctx,
+            .shProg = shProg
+         };
+         _mesa_HashWalk(ctx->Pipeline.Objects, update_programs_in_pipeline,
+                        &params);
       }
    }
 
@@ -1360,6 +1394,7 @@ link_program(struct gl_context *ctx, struct gl_shader_program *shProg,
    }
 
    _mesa_update_vertex_processing_mode(ctx);
+   _mesa_update_valid_to_render_state(ctx);
 
    shProg->BinaryRetrievableHint = shProg->BinaryRetrievableHintPending;
 
@@ -1455,6 +1490,7 @@ _mesa_active_program(struct gl_context *ctx, struct gl_shader_program *shProg,
 
    if (ctx->Shader.ActiveProgram != shProg) {
       _mesa_reference_shader_program(ctx, &ctx->Shader.ActiveProgram, shProg);
+      _mesa_update_valid_to_render_state(ctx);
    }
 }
 
@@ -1647,7 +1683,7 @@ _mesa_DeleteObjectARB(GLhandleARB obj)
 
    if (obj) {
       GET_CURRENT_CONTEXT(ctx);
-      FLUSH_VERTICES(ctx, 0);
+      FLUSH_VERTICES(ctx, 0, 0);
       if (is_program(ctx, obj)) {
          delete_shader_program(ctx, obj);
       }
@@ -1666,7 +1702,7 @@ _mesa_DeleteProgram(GLuint name)
 {
    if (name) {
       GET_CURRENT_CONTEXT(ctx);
-      FLUSH_VERTICES(ctx, 0);
+      FLUSH_VERTICES(ctx, 0, 0);
       delete_shader_program(ctx, name);
    }
 }
@@ -1677,7 +1713,7 @@ _mesa_DeleteShader(GLuint name)
 {
    if (name) {
       GET_CURRENT_CONTEXT(ctx);
-      FLUSH_VERTICES(ctx, 0);
+      FLUSH_VERTICES(ctx, 0, 0);
       delete_shader(ctx, name);
    }
 }
@@ -2540,13 +2576,16 @@ _mesa_use_program(struct gl_context *ctx, gl_shader_stage stage,
    if (*target != prog) {
       /* Program is current, flush it */
       if (shTarget == ctx->_Shader) {
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS);
+         FLUSH_VERTICES(ctx, _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS, 0);
       }
 
       _mesa_reference_shader_program(ctx,
                                      &shTarget->ReferencedPrograms[stage],
                                      shProg);
       _mesa_reference_program(ctx, target, prog);
+      _mesa_update_allow_draw_out_of_order(ctx);
+      _mesa_update_primitive_id_is_unused(ctx);
+      _mesa_update_valid_to_render_state(ctx);
       if (stage == MESA_SHADER_VERTEX)
          _mesa_update_vertex_processing_mode(ctx);
       return;
@@ -2576,7 +2615,7 @@ _mesa_copy_linked_program_data(const struct gl_shader_program *src,
    case MESA_SHADER_GEOMETRY: {
       dst->info.gs.vertices_in = src->Geom.VerticesIn;
       dst->info.gs.uses_end_primitive = src->Geom.UsesEndPrimitive;
-      dst->info.gs.uses_streams = src->Geom.UsesStreams;
+      dst->info.gs.active_stream_mask = src->Geom.ActiveStreamMask;
       break;
    }
    case MESA_SHADER_FRAGMENT: {
@@ -2584,7 +2623,7 @@ _mesa_copy_linked_program_data(const struct gl_shader_program *src,
       break;
    }
    case MESA_SHADER_COMPUTE: {
-      dst->info.cs.shared_size = src->Comp.SharedSize;
+      dst->info.shared_size = src->Comp.SharedSize;
       break;
    }
    default:
@@ -2660,7 +2699,7 @@ void GLAPIENTRY
 _mesa_PatchParameteri_no_error(GLenum pname, GLint value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, GL_CURRENT_BIT);
    ctx->TessCtrlProgram.patch_vertices = value;
 }
 
@@ -2685,7 +2724,7 @@ _mesa_PatchParameteri(GLenum pname, GLint value)
       return;
    }
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, GL_CURRENT_BIT);
    ctx->TessCtrlProgram.patch_vertices = value;
 }
 
@@ -2702,13 +2741,13 @@ _mesa_PatchParameterfv(GLenum pname, const GLfloat *values)
 
    switch(pname) {
    case GL_PATCH_DEFAULT_OUTER_LEVEL:
-      FLUSH_VERTICES(ctx, 0);
+      FLUSH_VERTICES(ctx, 0, 0);
       memcpy(ctx->TessCtrlProgram.patch_default_outer_level, values,
              4 * sizeof(GLfloat));
       ctx->NewDriverState |= ctx->DriverFlags.NewDefaultTessLevels;
       return;
    case GL_PATCH_DEFAULT_INNER_LEVEL:
-      FLUSH_VERTICES(ctx, 0);
+      FLUSH_VERTICES(ctx, 0, 0);
       memcpy(ctx->TessCtrlProgram.patch_default_inner_level, values,
              2 * sizeof(GLfloat));
       ctx->NewDriverState |= ctx->DriverFlags.NewDefaultTessLevels;
@@ -2902,7 +2941,7 @@ _mesa_GetActiveSubroutineUniformName(GLuint program, GLenum shadertype,
    /* get program resource name */
    _mesa_get_program_resource_name(shProg, resource_type,
                                    index, bufsize,
-                                   length, name, api_name);
+                                   length, name, false, api_name);
 }
 
 
@@ -2934,7 +2973,7 @@ _mesa_GetActiveSubroutineName(GLuint program, GLenum shadertype,
    resource_type = _mesa_shader_stage_to_subroutine(stage);
    _mesa_get_program_resource_name(shProg, resource_type,
                                    index, bufsize,
-                                   length, name, api_name);
+                                   length, name, false, api_name);
 }
 
 GLvoid GLAPIENTRY

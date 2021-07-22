@@ -268,6 +268,9 @@ struct r600_gs_rings_state {
 #define DBG_SB_NO_FALLBACK	(1 << 26)
 #define DBG_SB_DISASM	(1 << 27)
 #define DBG_SB_SAFEMATH	(1 << 28)
+#define DBG_NIR_SB	(1 << 28)
+
+#define DBG_NIR_PREFERRED (DBG_NIR_SB | DBG_NIR)
 
 struct r600_screen {
 	struct r600_common_screen	b;
@@ -343,12 +346,14 @@ struct r600_pipe_shader_selector {
 	struct r600_pipe_shader *current;
 
 	struct tgsi_token       *tokens;
+        struct nir_shader       *nir;
 	struct pipe_stream_output_info  so;
 	struct tgsi_shader_info		info;
 
 	unsigned	num_shaders;
 
 	enum pipe_shader_type	type;
+        enum pipe_shader_ir ir_type;
 
 	/* geometry shader properties */
 	enum pipe_prim_type	gs_output_prim;
@@ -488,7 +493,7 @@ struct r600_context {
 	struct r600_common_context	b;
 	struct r600_screen		*screen;
 	struct blitter_context		*blitter;
-	struct u_suballocator		*allocator_fetch_shader;
+	struct u_suballocator		allocator_fetch_shader;
 
 	/* Hardware info. */
 	boolean				has_vertex_cache;
@@ -1055,7 +1060,8 @@ void eg_dump_debug_state(struct pipe_context *ctx, FILE *f,
 			 unsigned flags);
 
 struct r600_pipe_shader_selector *r600_create_shader_state_tokens(struct pipe_context *ctx,
-								  const struct tgsi_token *tokens,
+								  const void *tokens,
+								  enum pipe_shader_ir,
 								  unsigned pipe_shader_type);
 int r600_shader_select(struct pipe_context *ctx,
 		       struct r600_pipe_shader_selector* sel,

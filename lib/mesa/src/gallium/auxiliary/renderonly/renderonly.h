@@ -28,7 +28,7 @@
 #define RENDERONLY_H
 
 #include <stdint.h>
-#include "state_tracker/drm_driver.h"
+#include "frontend/drm_driver.h"
 #include "pipe/p_state.h"
 
 struct renderonly_scanout {
@@ -59,12 +59,10 @@ struct renderonly {
    struct renderonly_scanout *(*create_for_resource)(struct pipe_resource *rsc,
                                                      struct renderonly *ro,
                                                      struct winsys_handle *out_handle);
+   void (*destroy)(struct renderonly *ro);
    int kms_fd;
    int gpu_fd;
 };
-
-struct renderonly *
-renderonly_dup(const struct renderonly *ro);
 
 static inline struct renderonly_scanout *
 renderonly_scanout_for_resource(struct pipe_resource *rsc,

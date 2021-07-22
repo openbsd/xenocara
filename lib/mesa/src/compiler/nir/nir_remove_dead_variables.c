@@ -67,13 +67,29 @@ add_var_use_deref(nir_deref_instr *deref, struct set *live)
    if (deref->deref_type != nir_deref_type_var)
       return;
 
-   /* If it's not a local that never escapes the shader, then any access at
-    * all means we need to keep it alive.
+   /* Since these local variables don't escape the shader, writing doesn't
+    * make them live.  Only keep them if they are used by some intrinsic.
     */
-   assert(deref->mode == deref->var->data.mode);
-   if (!(deref->mode & (nir_var_function_temp | nir_var_shader_temp | nir_var_mem_shared)) ||
-       deref_used_for_not_store(deref))
-      _mesa_set_add(live, deref->var);
+   if ((deref->var->data.mode & (nir_var_function_temp |
+                                 nir_var_shader_temp)) &&
+       !deref_used_for_not_store(deref))
+      return;
+
+   /*
+    * Shared memory blocks (interface type) alias each other, so be
+    * conservative in that case.
+    */
+   if ((deref->var->data.mode & nir_var_mem_shared) &&
+       !glsl_type_is_interface(deref->var->type) &&
+       !deref_used_for_not_store(deref))
+      return;
+
+   nir_variable *var = deref->var;
+   do {
+      _mesa_set_add(live, var);
+      /* Also mark the chain of variables used to initialize it. */
+      var = var->pointer_initializer;
+   } while (var);
 }
 
 static void
@@ -92,7 +108,7 @@ add_var_use_shader(nir_shader *shader, struct set *live, nir_variable_mode modes
 }
 
 static void
-remove_dead_var_writes(nir_shader *shader, struct set *live)
+remove_dead_var_writes(nir_shader *shader)
 {
    nir_foreach_function(function, shader) {
       if (!function->impl)
@@ -107,17 +123,17 @@ remove_dead_var_writes(nir_shader *shader, struct set *live)
                    !nir_deref_instr_parent(deref))
                   continue;
 
-               nir_variable_mode parent_mode;
+               nir_variable_mode parent_modes;
                if (deref->deref_type == nir_deref_type_var)
-                  parent_mode = deref->var->data.mode;
+                  parent_modes = deref->var->data.mode;
                else
-                  parent_mode = nir_deref_instr_parent(deref)->mode;
+                  parent_modes = nir_deref_instr_parent(deref)->modes;
 
                /* If the parent mode is 0, then it references a dead variable.
                 * Flag this deref as dead and remove it.
                 */
-               if (parent_mode == 0) {
-                  deref->mode = 0;
+               if (parent_modes == 0) {
+                  deref->modes = 0;
                   nir_instr_remove(&deref->instr);
                }
                break;
@@ -129,7 +145,7 @@ remove_dead_var_writes(nir_shader *shader, struct set *live)
                    intrin->intrinsic != nir_intrinsic_store_deref)
                   break;
 
-               if (nir_src_as_deref(intrin->src[0])->mode == 0)
+               if (nir_src_as_deref(intrin->src[0])->modes == 0)
                   nir_instr_remove(instr);
                break;
             }
@@ -143,11 +159,19 @@ remove_dead_var_writes(nir_shader *shader, struct set *live)
 }
 
 static bool
-remove_dead_vars(struct exec_list *var_list, struct set *live)
+remove_dead_vars(struct exec_list *var_list, nir_variable_mode modes,
+                 struct set *live, const nir_remove_dead_variables_options *opts)
 {
    bool progress = false;
 
-   foreach_list_typed_safe(nir_variable, var, node, var_list) {
+   nir_foreach_variable_in_list_safe(var, var_list) {
+      if (!(var->data.mode & modes))
+         continue;
+
+      if (opts && opts->can_remove_var &&
+          !opts->can_remove_var(var, opts->can_remove_var_data))
+         continue;
+
       struct set_entry *entry = _mesa_set_search(live, var);
       if (entry == NULL) {
          /* Mark this variable as used by setting the mode to 0 */
@@ -161,51 +185,44 @@ remove_dead_vars(struct exec_list *var_list, struct set *live)
 }
 
 bool
-nir_remove_dead_variables(nir_shader *shader, nir_variable_mode modes)
+nir_remove_dead_variables(nir_shader *shader, nir_variable_mode modes,
+                          const nir_remove_dead_variables_options *opts)
 {
    bool progress = false;
    struct set *live = _mesa_pointer_set_create(NULL);
 
    add_var_use_shader(shader, live, modes);
 
-   if (modes & nir_var_uniform)
-      progress = remove_dead_vars(&shader->uniforms, live) || progress;
-
-   if (modes & nir_var_shader_in)
-      progress = remove_dead_vars(&shader->inputs, live) || progress;
-
-   if (modes & nir_var_shader_out)
-      progress = remove_dead_vars(&shader->outputs, live) || progress;
-
-   if (modes & nir_var_shader_temp)
-      progress = remove_dead_vars(&shader->globals, live) || progress;
-
-   if (modes & nir_var_system_value)
-      progress = remove_dead_vars(&shader->system_values, live) || progress;
-
-   if (modes & nir_var_mem_shared)
-      progress = remove_dead_vars(&shader->shared, live) || progress;
+   if (modes & ~nir_var_function_temp) {
+      progress = remove_dead_vars(&shader->variables, modes,
+                                  live, opts) || progress;
+   }
 
    if (modes & nir_var_function_temp) {
       nir_foreach_function(function, shader) {
          if (function->impl) {
-            if (remove_dead_vars(&function->impl->locals, live))
+            if (remove_dead_vars(&function->impl->locals,
+                                 nir_var_function_temp,
+                                 live, opts))
                progress = true;
          }
       }
    }
 
-   if (progress) {
-      remove_dead_var_writes(shader, live);
+   _mesa_set_destroy(live, NULL);
 
-      nir_foreach_function(function, shader) {
-         if (function->impl) {
-            nir_metadata_preserve(function->impl, nir_metadata_block_index |
-                                                  nir_metadata_dominance);
-         }
+   nir_foreach_function(function, shader) {
+      if (!function->impl)
+         continue;
+
+      if (progress) {
+         remove_dead_var_writes(shader);
+         nir_metadata_preserve(function->impl, nir_metadata_block_index |
+                                               nir_metadata_dominance);
+      } else {
+         nir_metadata_preserve(function->impl, nir_metadata_all);
       }
    }
 
-   _mesa_set_destroy(live, NULL);
    return progress;
 }

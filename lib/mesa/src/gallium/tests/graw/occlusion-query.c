@@ -101,7 +101,7 @@ set_vertices(struct vertex *vertices, unsigned bytes)
                                               bytes,
                                               vertices);
 
-   info.ctx->set_vertex_buffers(info.ctx, 0, 1, &vbuf);
+   info.ctx->set_vertex_buffers(info.ctx, 0, 1, 0, false, &vbuf);
 }
 
 
@@ -168,6 +168,7 @@ draw(void)
 
    info.ctx->clear(info.ctx,
                    PIPE_CLEAR_COLOR | PIPE_CLEAR_DEPTHSTENCIL,
+                   NULL,
                    &clear_color, 1.0, 0);
 
    q1 = info.ctx->create_query(info.ctx, PIPE_QUERY_OCCLUSION_COUNTER, 0);

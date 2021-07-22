@@ -28,8 +28,7 @@
 #include "main/macros.h"
 #include "util/hash_table.h"
 #include "util/u_string.h"
-
-static void print_type(FILE *f, const glsl_type *t);
+#include "util/half_float.h"
 
 void
 ir_instruction::print(void) const
@@ -60,7 +59,7 @@ _mesa_print_ir(FILE *f, exec_list *instructions,
 
 	 for (unsigned j = 0; j < s->length; j++) {
 	    fprintf(f, "\t((");
-	    print_type(f, s->fields.structure[j].type);
+	    glsl_print_type(f, s->fields.structure[j].type);
 	    fprintf(f, ")(%s))\n", s->fields.structure[j].name);
 	 }
 
@@ -142,20 +141,6 @@ ir_print_visitor::unique_name(ir_variable *var)
    return name;
 }
 
-static void
-print_type(FILE *f, const glsl_type *t)
-{
-   if (t->is_array()) {
-      fprintf(f, "(array ");
-      print_type(f, t->fields.array);
-      fprintf(f, " %u)", t->length);
-   } else if (t->is_struct() && !is_gl_identifier(t->name)) {
-      fprintf(f, "%s@%p", t->name, (void *) t);
-   } else {
-      fprintf(f, "%s", t->name);
-   }
-}
-
 void ir_print_visitor::visit(ir_rvalue *)
 {
    fprintf(f, "error");
@@ -213,19 +198,30 @@ void ir_print_visitor::visit(ir_variable *ir)
                                 "in ", "out ", "inout ",
 			        "const_in ", "sys ", "temporary " };
    STATIC_ASSERT(ARRAY_SIZE(mode) == ir_var_mode_count);
-   const char *const interp[] = { "", "smooth", "flat", "noperspective", "explicit" };
+   const char *const interp[] = { "", "smooth", "flat", "noperspective", "explicit", "color" };
    STATIC_ASSERT(ARRAY_SIZE(interp) == INTERP_MODE_COUNT);
+   const char *const precision[] = { "", "highp ", "mediump ", "lowp "};
 
-   fprintf(f, "(%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s) ",
+   fprintf(f, "(%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s) ",
            binding, loc, component, cent, bindless, bound,
            image_format, memory_read_only, memory_write_only,
            memory_coherent, memory_volatile, memory_restrict,
            samp, patc, inv, explicit_inv, prec, mode[ir->data.mode],
            stream,
-           interp[ir->data.interpolation]);
+           interp[ir->data.interpolation], precision[ir->data.precision]);
 
-   print_type(f, ir->type);
+   glsl_print_type(f, ir->type);
    fprintf(f, " %s)", unique_name(ir));
+
+   if (ir->constant_initializer) {
+      fprintf(f, " ");
+      visit(ir->constant_initializer);
+   }
+
+   if (ir->constant_value) {
+      fprintf(f, " ");
+      visit(ir->constant_value);
+   }
 }
 
 
@@ -235,7 +231,7 @@ void ir_print_visitor::visit(ir_function_signature *ir)
    fprintf(f, "(signature ");
    indentation++;
 
-   print_type(f, ir->return_type);
+   glsl_print_type(f, ir->return_type);
    fprintf(f, "\n");
    indent();
 
@@ -289,7 +285,7 @@ void ir_print_visitor::visit(ir_expression *ir)
 {
    fprintf(f, "(expression ");
 
-   print_type(f, ir->type);
+   glsl_print_type(f, ir->type);
 
    fprintf(f, " %s ", ir_expression_operation_strings[ir->operation]);
 
@@ -313,7 +309,7 @@ void ir_print_visitor::visit(ir_texture *ir)
       return;
    }
 
-   print_type(f, ir->type);
+   glsl_print_type(f, ir->type);
    fprintf(f, " ");
 
    ir->sampler->accept(this);
@@ -460,11 +456,24 @@ void ir_print_visitor::visit(ir_assignment *ir)
    fprintf(f, ") ");
 }
 
+static void
+print_float_constant(FILE *f, float val)
+{
+   if (val == 0.0f)
+      /* 0.0 == -0.0, so print with %f to get the proper sign. */
+      fprintf(f, "%f", val);
+   else if (fabs(val) < 0.000001f)
+      fprintf(f, "%a", val);
+   else if (fabs(val) > 1000000.0f)
+      fprintf(f, "%e", val);
+   else
+      fprintf(f, "%f", val);
+}
 
 void ir_print_visitor::visit(ir_constant *ir)
 {
    fprintf(f, "(constant ");
-   print_type(f, ir->type);
+   glsl_print_type(f, ir->type);
    fprintf(f, " (");
 
    if (ir->type->is_array()) {
@@ -481,18 +490,15 @@ void ir_print_visitor::visit(ir_constant *ir)
 	 if (i != 0)
 	    fprintf(f, " ");
 	 switch (ir->type->base_type) {
+         case GLSL_TYPE_UINT16:fprintf(f, "%u", ir->value.u16[i]); break;
+	 case GLSL_TYPE_INT16: fprintf(f, "%d", ir->value.i16[i]); break;
 	 case GLSL_TYPE_UINT:  fprintf(f, "%u", ir->value.u[i]); break;
 	 case GLSL_TYPE_INT:   fprintf(f, "%d", ir->value.i[i]); break;
 	 case GLSL_TYPE_FLOAT:
-            if (ir->value.f[i] == 0.0f)
-               /* 0.0 == -0.0, so print with %f to get the proper sign. */
-               fprintf(f, "%f", ir->value.f[i]);
-            else if (fabs(ir->value.f[i]) < 0.000001f)
-               fprintf(f, "%a", ir->value.f[i]);
-            else if (fabs(ir->value.f[i]) > 1000000.0f)
-               fprintf(f, "%e", ir->value.f[i]);
-            else
-               fprintf(f, "%f", ir->value.f[i]);
+            print_float_constant(f, ir->value.f[i]);
+            break;
+	 case GLSL_TYPE_FLOAT16:
+            print_float_constant(f, _mesa_half_to_float(ir->value.f16[i]));
             break;
 	 case GLSL_TYPE_SAMPLER:
 	 case GLSL_TYPE_IMAGE:

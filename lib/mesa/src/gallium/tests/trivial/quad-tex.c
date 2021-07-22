@@ -47,6 +47,7 @@
 /* constant state object helper */
 #include "cso_cache/cso_context.h"
 
+#include "util/macros.h"
 /* u_sampler_view_default_template */
 #include "util/u_sampler.h"
 /* debug_dump_surface_bmp */
@@ -73,7 +74,7 @@ struct program
 	struct pipe_sampler_state sampler;
 	struct pipe_viewport_state viewport;
 	struct pipe_framebuffer_state framebuffer;
-	struct pipe_vertex_element velem[2];
+	struct cso_velems_state velem;
 
 	void *vs;
 	void *fs;
@@ -89,7 +90,7 @@ struct program
 static void init_prog(struct program *p)
 {
 	struct pipe_surface surf_tmpl;
-	int ret;
+	ASSERTED int ret;
 
 	/* find a hardware device */
 	ret = pipe_loader_probe(&p->dev, 1);
@@ -176,7 +177,7 @@ static void init_prog(struct program *p)
 		box.height = 2;
 		box.depth = 1;
 
-		ptr = p->pipe->transfer_map(p->pipe, p->tex, 0, PIPE_TRANSFER_WRITE, &box, &t);
+		ptr = p->pipe->transfer_map(p->pipe, p->tex, 0, PIPE_MAP_WRITE, &box, &t);
 		ptr[0] = 0xffff0000;
 		ptr[1] = 0xff0000ff;
 		ptr[2] = 0xff00ff00;
@@ -249,19 +250,26 @@ static void init_prog(struct program *p)
 		p->viewport.translate[0] = half_width + x;
 		p->viewport.translate[1] = (half_height + y) * scale + bias;
 		p->viewport.translate[2] = half_depth + z;
+
+		p->viewport.swizzle_x = PIPE_VIEWPORT_SWIZZLE_POSITIVE_X;
+		p->viewport.swizzle_y = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y;
+		p->viewport.swizzle_z = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z;
+		p->viewport.swizzle_w = PIPE_VIEWPORT_SWIZZLE_POSITIVE_W;
 	}
 
 	/* vertex elements state */
-	memset(p->velem, 0, sizeof(p->velem));
-	p->velem[0].src_offset = 0 * 4 * sizeof(float); /* offset 0, first element */
-	p->velem[0].instance_divisor = 0;
-	p->velem[0].vertex_buffer_index = 0;
-	p->velem[0].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+	memset(&p->velem, 0, sizeof(p->velem));
+        p->velem.count = 2;
 
-	p->velem[1].src_offset = 1 * 4 * sizeof(float); /* offset 16, second element */
-	p->velem[1].instance_divisor = 0;
-	p->velem[1].vertex_buffer_index = 0;
-	p->velem[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+	p->velem.velems[0].src_offset = 0 * 4 * sizeof(float); /* offset 0, first element */
+	p->velem.velems[0].instance_divisor = 0;
+	p->velem.velems[0].vertex_buffer_index = 0;
+	p->velem.velems[0].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+
+	p->velem.velems[1].src_offset = 1 * 4 * sizeof(float); /* offset 16, second element */
+	p->velem.velems[1].instance_divisor = 0;
+	p->velem.velems[1].vertex_buffer_index = 0;
+	p->velem.velems[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
 
 	/* vertex shader */
 	{
@@ -307,7 +315,7 @@ static void draw(struct program *p)
 	cso_set_framebuffer(p->cso, &p->framebuffer);
 
 	/* clear the render target */
-	p->pipe->clear(p->pipe, PIPE_CLEAR_COLOR, &p->clear_color, 0, 0);
+	p->pipe->clear(p->pipe, PIPE_CLEAR_COLOR, NULL, &p->clear_color, 0, 0);
 
 	/* set misc state we care about */
 	cso_set_blend(p->cso, &p->blend);
@@ -319,14 +327,14 @@ static void draw(struct program *p)
 	cso_set_samplers(p->cso, PIPE_SHADER_FRAGMENT, 1, samplers);
 
 	/* texture sampler view */
-	cso_set_sampler_views(p->cso, PIPE_SHADER_FRAGMENT, 1, &p->view);
+	p->pipe->set_sampler_views(p->pipe, PIPE_SHADER_FRAGMENT, 0, 1, 0, &p->view);
 
 	/* shaders */
 	cso_set_fragment_shader_handle(p->cso, p->fs);
 	cso_set_vertex_shader_handle(p->cso, p->vs);
 
 	/* vertex element data */
-	cso_set_vertex_elements(p->cso, 2, p->velem);
+	cso_set_vertex_elements(p->cso, &p->velem);
 
 	util_draw_vertex_buffer(p->pipe, p->cso,
 	                        p->vbuf, 0, 0,

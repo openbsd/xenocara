@@ -283,17 +283,21 @@ class Constant(Value):
 
       return self.value == other.value
 
+# The $ at the end forces there to be an error if any part of the string
+# doesn't match one of the field patterns.
 _var_name_re = re.compile(r"(?P<const>#)?(?P<name>\w+)"
                           r"(?:@(?P<type>int|uint|bool|float)?(?P<bits>\d+)?)?"
                           r"(?P<cond>\([^\)]+\))?"
-                          r"(?P<swiz>\.[xyzw]+)?")
+                          r"(?P<swiz>\.[xyzw]+)?"
+                          r"$")
 
 class Variable(Value):
    def __init__(self, val, name, varset):
       Value.__init__(self, val, name, "variable")
 
       m = _var_name_re.match(val)
-      assert m and m.group('name') is not None
+      assert m and m.group('name') is not None, \
+            "Malformed variable name \"{}\".".format(val)
 
       self.var_name = m.group('name')
 
@@ -344,9 +348,13 @@ class Variable(Value):
 
    def swizzle(self):
       if self.swiz is not None:
-         swizzles = {'x' : 0, 'y' : 1, 'z' : 2, 'w': 3}
+         swizzles = {'x' : 0, 'y' : 1, 'z' : 2, 'w' : 3,
+                     'a' : 0, 'b' : 1, 'c' : 2, 'd' : 3,
+                     'e' : 4, 'f' : 5, 'g' : 6, 'h' : 7,
+                     'i' : 8, 'j' : 9, 'k' : 10, 'l' : 11,
+                     'm' : 12, 'n' : 13, 'o' : 14, 'p' : 15 }
          return '{' + ', '.join([str(swizzles[c]) for c in self.swiz[1:]]) + '}'
-      return '{0, 1, 2, 3}'
+      return '{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}'
 
 _opcode_re = re.compile(r"(?P<inexact>~)?(?P<exact>!)?(?P<opcode>\w+)(?:@(?P<bits>\d+))?"
                         r"(?P<cond>\([^\)]+\))?")
@@ -383,6 +391,9 @@ class Expression(Value):
 
       self.sources = [ Value.create(src, "{0}_{1}".format(name_base, i), varset)
                        for (i, src) in enumerate(expr[1:]) ]
+
+      # nir_search_expression::srcs is hard-coded to 4
+      assert len(self.sources) <= 4
 
       if self.opcode in conv_opcode_types:
          assert self._bit_size is None, \

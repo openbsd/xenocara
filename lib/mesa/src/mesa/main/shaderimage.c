@@ -36,21 +36,6 @@
 #include "teximage.h"
 #include "enums.h"
 
-/*
- * Define endian-invariant aliases for some mesa formats that are
- * defined in terms of their channel layout from LSB to MSB in a
- * 32-bit word.  The actual byte offsets matter here because the user
- * is allowed to bit-cast one format into another and get predictable
- * results.
- */
-#ifdef MESA_BIG_ENDIAN
-# define MESA_FORMAT_RGBA_8 MESA_FORMAT_A8B8G8R8_UNORM
-# define MESA_FORMAT_SIGNED_RGBA_8 MESA_FORMAT_A8B8G8R8_SNORM
-#else
-# define MESA_FORMAT_RGBA_8 MESA_FORMAT_R8G8B8A8_UNORM
-# define MESA_FORMAT_SIGNED_RGBA_8 MESA_FORMAT_R8G8B8A8_SNORM
-#endif
-
 mesa_format
 _mesa_get_shader_image_format(GLenum format)
 {
@@ -140,7 +125,7 @@ _mesa_get_shader_image_format(GLenum format)
       return MESA_FORMAT_R10G10B10A2_UNORM;
 
    case GL_RGBA8:
-      return MESA_FORMAT_RGBA_8;
+      return MESA_FORMAT_RGBA_UNORM8;
 
    case GL_RG16:
       return MESA_FORMAT_RG_UNORM16;
@@ -158,7 +143,7 @@ _mesa_get_shader_image_format(GLenum format)
       return MESA_FORMAT_RGBA_SNORM16;
 
    case GL_RGBA8_SNORM:
-      return MESA_FORMAT_SIGNED_RGBA_8;
+      return MESA_FORMAT_RGBA_SNORM8;
 
    case GL_RG16_SNORM:
       return MESA_FORMAT_RG_SNORM16;
@@ -286,7 +271,7 @@ get_image_format_class(mesa_format format)
    case MESA_FORMAT_R10G10B10A2_UNORM:
       return IMAGE_FORMAT_CLASS_2_10_10_10;
 
-   case MESA_FORMAT_RGBA_8:
+   case MESA_FORMAT_RGBA_UNORM8:
       return IMAGE_FORMAT_CLASS_4X8;
 
    case MESA_FORMAT_RG_UNORM16:
@@ -304,7 +289,7 @@ get_image_format_class(mesa_format format)
    case MESA_FORMAT_RGBA_SNORM16:
       return IMAGE_FORMAT_CLASS_4X16;
 
-   case MESA_FORMAT_SIGNED_RGBA_8:
+   case MESA_FORMAT_RGBA_SNORM8:
       return IMAGE_FORMAT_CLASS_4X8;
 
    case MESA_FORMAT_RG_SNORM16:
@@ -483,10 +468,10 @@ _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
    if (!t->_BaseComplete && !t->_MipmapComplete)
        _mesa_test_texobj_completeness(ctx, t);
 
-   if (u->Level < t->BaseLevel ||
+   if (u->Level < t->Attrib.BaseLevel ||
        u->Level > t->_MaxLevel ||
-       (u->Level == t->BaseLevel && !t->_BaseComplete) ||
-       (u->Level != t->BaseLevel && !t->_MipmapComplete))
+       (u->Level == t->Attrib.BaseLevel && !t->_BaseComplete) ||
+       (u->Level != t->Attrib.BaseLevel && !t->_MipmapComplete))
       return GL_FALSE;
 
    if (_mesa_tex_target_is_layered(t->Target) &&
@@ -510,7 +495,7 @@ _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
    if (!tex_format)
       return GL_FALSE;
 
-   switch (t->ImageFormatCompatibilityType) {
+   switch (t->Attrib.ImageFormatCompatibilityType) {
    case GL_IMAGE_FORMAT_COMPATIBILITY_BY_SIZE:
       if (_mesa_get_format_bytes(tex_format) !=
           _mesa_get_format_bytes(u->_ActualFormat))
@@ -603,7 +588,7 @@ bind_image_texture(struct gl_context *ctx, struct gl_texture_object *texObj,
 
    u = &ctx->ImageUnits[unit];
 
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
    ctx->NewDriverState |= ctx->DriverFlags.NewImageUnits;
 
    set_image_binding(u, texObj, level, layered, layer, access, format);
@@ -702,7 +687,7 @@ bind_image_textures(struct gl_context *ctx, GLuint first, GLuint count,
    int i;
 
    /* Assume that at least one binding will be changed */
-   FLUSH_VERTICES(ctx, 0);
+   FLUSH_VERTICES(ctx, 0, 0);
    ctx->NewDriverState |= ctx->DriverFlags.NewImageUnits;
 
    /* Note that the error semantics for multi-bind commands differ from

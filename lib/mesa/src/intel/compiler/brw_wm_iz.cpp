@@ -119,7 +119,7 @@ static const struct {
  * \param line_aa  BRW_WM_AA_NEVER, BRW_WM_AA_ALWAYS or BRW_WM_AA_SOMETIMES
  * \param lookup  bitmask of BRW_WM_IZ_* flags
  */
-void fs_visitor::setup_fs_payload_gen4()
+void fs_visitor::setup_fs_payload_gfx4()
 {
    assert(stage == MESA_SHADER_FRAGMENT);
    assert(dispatch_width <= 16);
@@ -144,8 +144,6 @@ void fs_visitor::setup_fs_payload_gen4()
 
    payload.subspan_coord_reg[0] = reg++;
 
-   prog_data->uses_src_depth =
-      (nir->info.system_values_read & (1ull << SYSTEM_VALUE_FRAG_COORD)) != 0;
    if (wm_iz_table[lookup].sd_present || prog_data->uses_src_depth ||
        kill_stats_promoted_workaround) {
       payload.source_depth_reg[0] = reg;

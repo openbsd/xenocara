@@ -280,7 +280,7 @@ struct r300_constant_buffer {
  * This is not a subclass of pipe_query because pipe_query is never
  * actually fully defined. So, rather than have it as a member, and do
  * subclass-style casting, we treat pipe_query as an opaque, and just
- * trust that our state tracker does not ever mess up query objects.
+ * trust that our gallium frontend does not ever mess up query objects.
  */
 struct r300_query {
     /* The kind of query. Currently only OQ is supported. */
@@ -449,7 +449,7 @@ struct r300_context {
     /* The submission context. */
     struct radeon_winsys_ctx *ctx;
     /* The command stream. */
-    struct radeon_cmdbuf *cs;
+    struct radeon_cmdbuf cs;
     /* Screen. */
     struct r300_screen *screen;
 

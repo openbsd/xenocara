@@ -58,6 +58,7 @@ struct nouveau_screen {
    int64_t cpu_gpu_time_delta;
 
    bool hint_buf_keep_sysmem_copy;
+   bool tegra_sector_layout;
 
    unsigned vram_domain;
 
@@ -70,6 +71,9 @@ struct nouveau_screen {
 
    bool prefer_nir;
    bool force_enable_cl;
+   bool has_svm;
+   void *svm_cutout;
+   size_t svm_cutout_size;
 
 #ifdef NOUVEAU_ENABLE_DRIVER_STATISTICS
    union {

@@ -113,6 +113,7 @@ namespace Tessellator
 
             default:
                 SWR_INVALID("Invalid Tessellation Domain: %d", Domain);
+                assert(false);
             }
 
             NumDomainPoints = (uint32_t)SUPER::GetPointCount();
@@ -165,10 +166,6 @@ INLINE HANDLE SWR_API
     }
 
     HANDLE tsCtx = pContextMem;
-    if (!tsCtx)
-    {
-        return tsCtx;
-    }
 
     SWR_TS* pTessellator = new (tsCtx) SWR_TS();
     SWR_ASSERT(pTessellator == tsCtx);

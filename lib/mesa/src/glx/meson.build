@@ -30,6 +30,12 @@ files_libglx = files(
   'clientinfo.c',
   'compsize.c',
   'create_context.c',
+  'dri_common.c',
+  'dri_common.h',
+  'dri_common_query_renderer.c',
+  'dri_common_interop.c',
+  'drisw_glx.c',
+  'drisw_priv.h',
   'eval.c',
   'glxclient.h',
   'glxcmds.c',
@@ -64,36 +70,20 @@ files_libglx = files(
   'single2.c',
   'singlepix.c',
   'vertarr.c',
+  'xfont.c',
 )
 
 extra_libs_libglx = []
 extra_deps_libgl = []
 extra_ld_args_libgl = []
 
-if with_glx == 'dri'
-  files_libglx += files(
-    'dri_common.c',
-    'dri_common.h',
-    'dri_common_query_renderer.c',
-    'dri_common_interop.c',
-    'xfont.c',
-    'drisw_glx.c',
-    'drisw_priv.h',
-  )
-endif
-
 # dri2
-if with_glx == 'dri' and with_dri_platform == 'drm' and dep_libdrm.found()
+if with_dri_platform == 'drm' and dep_libdrm.found()
   files_libglx += files(
     'dri2.c',
     'dri2_glx.c',
     'dri2.h',
     'dri2_priv.h',
-    'dri_glx.c',
-    'dri_sarea.h',
-    'XF86dri.c',
-    'xf86dri.h',
-    'xf86dristr.h',
   )
 endif
 
@@ -121,7 +111,7 @@ if not with_glvnd
   gl_lib_name = 'GL'
   gl_lib_version = '1.2.0'
 else
-  gl_lib_name = 'GLX_mesa'
+  gl_lib_name = 'GLX_@0@'.format(glvnd_vendor_name)
   gl_lib_version = '0.0.0'
   files_libglx += files(
     'g_glxglvnddispatchfuncs.c',
@@ -131,10 +121,6 @@ else
     'glxglvnddispatchfuncs.h',
   )
 endif
-
-gl_lib_cargs = [
-  '-D_REENTRANT',
-]
 
 if host_machine.system() != 'openbsd'
   gl_lib_define = [
@@ -149,10 +135,11 @@ endif
 libglx = static_library(
   'glx',
   [files_libglx, glx_generated],
-  include_directories : [inc_common, inc_glapi, inc_loader],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_glapi, inc_loader],
   c_args : [
-    c_vis_args, gl_lib_cargs, gl_lib_define,
+    gl_lib_define,
   ],
+  gnu_symbol_visibility : 'hidden',
   link_with : [
     libloader, libloader_dri3_helper,
     extra_libs_libglx,
@@ -171,10 +158,11 @@ libgl = shared_library(
   link_args : [ld_args_bsymbolic, ld_args_gc_sections, extra_ld_args_libgl],
   dependencies : [
     dep_libdrm, dep_dl, dep_m, dep_thread, dep_x11, dep_xcb_glx, dep_xcb,
-    dep_x11_xcb, dep_xcb_dri2, dep_xext, dep_xfixes, dep_xdamage, dep_xxf86vm,
-    extra_deps_libgl,
+    dep_x11_xcb, dep_xcb_dri2, dep_xext, dep_xfixes, dep_xxf86vm,
+    dep_xcb_shm, extra_deps_libgl,
   ],
   version : gl_lib_version,
+  darwin_versions : '4.0.0',
   install : true,
 )
 

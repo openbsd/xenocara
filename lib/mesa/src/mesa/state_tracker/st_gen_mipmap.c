@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,12 +22,12 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 
 #include "main/errors.h"
-#include "main/imports.h"
+
 #include "main/mipmap.h"
 #include "main/teximage.h"
 
@@ -56,7 +56,7 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
    struct st_context *st = st_context(ctx);
    struct st_texture_object *stObj = st_texture_object(texObj);
    struct pipe_resource *pt = st_get_texobj_resource(texObj);
-   uint baseLevel = texObj->BaseLevel;
+   uint baseLevel = texObj->Attrib.BaseLevel;
    enum pipe_format format;
    uint lastLevel, first_layer, last_layer;
 
@@ -64,7 +64,7 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
       return;
 
    if (texObj->Immutable)
-      baseLevel += texObj->MinLevel;
+      baseLevel += texObj->Attrib.MinLevel;
 
    /* not sure if this ultimately actually should work,
       but we're not supporting multisampled textures yet. */
@@ -74,7 +74,7 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
    lastLevel = _mesa_compute_num_levels(ctx, texObj, target) - 1;
 
    if (texObj->Immutable)
-      lastLevel += texObj->MinLevel;
+      lastLevel += texObj->Attrib.MinLevel;
 
    if (lastLevel == 0)
       return;
@@ -88,16 +88,16 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
    stObj->lastLevel = lastLevel;
 
    if (!texObj->Immutable) {
-      const GLboolean genSave = texObj->GenerateMipmap;
+      const GLboolean genSave = texObj->Attrib.GenerateMipmap;
 
       /* Temporarily set GenerateMipmap to true so that allocate_full_mipmap()
        * makes the right decision about full mipmap allocation.
        */
-      texObj->GenerateMipmap = GL_TRUE;
+      texObj->Attrib.GenerateMipmap = GL_TRUE;
 
       _mesa_prepare_mipmap_levels(ctx, texObj, baseLevel, lastLevel);
 
-      texObj->GenerateMipmap = genSave;
+      texObj->Attrib.GenerateMipmap = genSave;
 
       /* At this point, memory for all the texture levels has been
        * allocated.  However, the base level image may be in one resource
@@ -131,15 +131,15 @@ st_generate_mipmap(struct gl_context *ctx, GLenum target,
    else
       format = pt->format;
 
-   if (texObj->Sampler.sRGBDecode == GL_SKIP_DECODE_EXT)
+   if (texObj->Sampler.Attrib.sRGBDecode == GL_SKIP_DECODE_EXT)
       format = util_format_linear(format);
 
    /* First see if the driver supports hardware mipmap generation,
     * if not then generate the mipmap by rendering/texturing.
     * If that fails, use the software fallback.
     */
-   if (!st->pipe->screen->get_param(st->pipe->screen,
-                                    PIPE_CAP_GENERATE_MIPMAP) ||
+   if (!st->screen->get_param(st->screen,
+                              PIPE_CAP_GENERATE_MIPMAP) ||
        !st->pipe->generate_mipmap(st->pipe, pt, format, baseLevel,
                                   lastLevel, first_layer, last_layer)) {
 

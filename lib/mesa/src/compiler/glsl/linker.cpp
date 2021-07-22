@@ -86,7 +86,7 @@
 #include "util/u_string.h"
 #include "util/u_math.h"
 
-#include "main/imports.h"
+
 #include "main/shaderobj.h"
 #include "main/enums.h"
 #include "main/mtypes.h"
@@ -332,7 +332,7 @@ public:
         invalid_stream_id(0),
         invalid_stream_id_from_emit_vertex(false),
         end_primitive_found(false),
-        uses_non_zero_stream(false)
+        used_streams(0)
    {
       /* empty */
    }
@@ -353,8 +353,7 @@ public:
          return visit_stop;
       }
 
-      if (stream_id != 0)
-         uses_non_zero_stream = true;
+      used_streams |= 1 << stream_id;
 
       return visit_continue;
    }
@@ -377,8 +376,7 @@ public:
          return visit_stop;
       }
 
-      if (stream_id != 0)
-         uses_non_zero_stream = true;
+      used_streams |= 1 << stream_id;
 
       return visit_continue;
    }
@@ -399,9 +397,9 @@ public:
       return invalid_stream_id;
    }
 
-   bool uses_streams()
+   unsigned active_stream_mask()
    {
-      return uses_non_zero_stream;
+      return used_streams;
    }
 
    bool uses_end_primitive()
@@ -414,7 +412,7 @@ private:
    int invalid_stream_id;
    bool invalid_stream_id_from_emit_vertex;
    bool end_primitive_found;
-   bool uses_non_zero_stream;
+   unsigned used_streams;
 };
 
 /* Class that finds array derefs and check if indexes are dynamic. */
@@ -500,6 +498,7 @@ linker_warning(gl_shader_program *prog, const char *fmt, ...)
  */
 long
 parse_program_resource_name(const GLchar *name,
+                            const size_t len,
                             const GLchar **out_base_name_end)
 {
    /* Section 7.3.1 ("Program Interfaces") of the OpenGL 4.3 spec says:
@@ -510,7 +509,6 @@ parse_program_resource_name(const GLchar *name,
     *     string will not include white space anywhere in the string."
     */
 
-   const size_t len = strlen(name);
    *out_base_name_end = name + len;
 
    if (len == 0 || name[len-1] != ']')
@@ -811,7 +809,7 @@ validate_geometry_shader_emissions(struct gl_context *ctx,
                       emit_vertex.error_stream(),
                       ctx->Const.MaxVertexStreams - 1);
       }
-      prog->Geom.UsesStreams = emit_vertex.uses_streams();
+      prog->Geom.ActiveStreamMask = emit_vertex.active_stream_mask();
       prog->Geom.UsesEndPrimitive = emit_vertex.uses_end_primitive();
 
       /* From the ARB_gpu_shader5 spec:
@@ -834,11 +832,11 @@ validate_geometry_shader_emissions(struct gl_context *ctx,
        * Since we can call EmitVertex() and EndPrimitive() when we output
        * primitives other than points, calling EmitStreamVertex(0) or
        * EmitEndPrimitive(0) should not produce errors. This it also what Nvidia
-       * does. Currently we only set prog->Geom.UsesStreams to TRUE when
-       * EmitStreamVertex() or EmitEndPrimitive() are called with a non-zero
+       * does. We can use prog->Geom.ActiveStreamMask to check whether only the
+       * first (zero) stream is active.
        * stream.
        */
-      if (prog->Geom.UsesStreams &&
+      if (prog->Geom.ActiveStreamMask & ~(1 << 0) &&
           sh->Program->info.gs.output_primitive != GL_POINTS) {
          linker_error(prog, "EmitStreamVertex(n) and EndStreamPrimitive(n) "
                       "with n>0 requires point output\n");
@@ -1064,9 +1062,13 @@ cross_validate_globals(struct gl_context *ctx, struct gl_shader_program *prog,
           * no vendor actually implemented that behavior.  The 4.20
           * behavior matches the implemented behavior of at least one other
           * vendor, so we'll implement that for all GLSL versions.
+          * If (at least) one of these constant expressions is implicit,
+          * because it was added by glsl_zero_init, we skip the verification.
           */
          if (var->constant_initializer != NULL) {
-            if (existing->constant_initializer != NULL) {
+            if (existing->constant_initializer != NULL &&
+                !existing->data.is_implicit_initializer &&
+                !var->data.is_implicit_initializer) {
                if (!var->constant_initializer->has_value(existing->constant_initializer)) {
                   linker_error(prog, "initializers for %s "
                                "`%s' have differing values\n",
@@ -1078,7 +1080,8 @@ cross_validate_globals(struct gl_context *ctx, struct gl_shader_program *prog,
                 * not have an initializer but a later instance does,
                 * replace the former with the later.
                 */
-               variables->replace_variable(existing->name, var);
+               if (!var->data.is_implicit_initializer)
+                  variables->replace_variable(existing->name, var);
             }
          }
 
@@ -1817,6 +1820,40 @@ link_bindless_layout_qualifiers(struct gl_shader_program *prog,
 }
 
 /**
+ * Check for conflicting viewport_relative settings across shaders, and sets
+ * the value for the linked shader.
+ */
+static void
+link_layer_viewport_relative_qualifier(struct gl_shader_program *prog,
+                                       struct gl_program *gl_prog,
+                                       struct gl_shader **shader_list,
+                                       unsigned num_shaders)
+{
+   unsigned i;
+
+   /* Find first shader with explicit layer declaration */
+   for (i = 0; i < num_shaders; i++) {
+      if (shader_list[i]->redeclares_gl_layer) {
+         gl_prog->info.layer_viewport_relative =
+            shader_list[i]->layer_viewport_relative;
+         break;
+      }
+   }
+
+   /* Now make sure that each subsequent shader's explicit layer declaration
+    * matches the first one's.
+    */
+   for (; i < num_shaders; i++) {
+      if (shader_list[i]->redeclares_gl_layer &&
+          shader_list[i]->layer_viewport_relative !=
+          gl_prog->info.layer_viewport_relative) {
+         linker_error(prog, "all gl_Layer redeclarations must have identical "
+                      "viewport_relative settings");
+      }
+   }
+}
+
+/**
  * Performs the cross-validation of tessellation control shader vertices and
  * layout qualifiers for the attached tessellation control shaders,
  * and propagates them to the linked TCS and linked shader program.
@@ -2433,9 +2470,7 @@ link_intrastage_shaders(void *mem_ctx,
 
    /* Create program and attach it to the linked shader */
    struct gl_program *gl_prog =
-      ctx->Driver.NewProgram(ctx,
-                             _mesa_shader_stage_to_program(shader_list[0]->Stage),
-                             prog->Name, false);
+      ctx->Driver.NewProgram(ctx, shader_list[0]->Stage, prog->Name, false);
    if (!gl_prog) {
       prog->data->LinkStatus = LINKING_FAILURE;
       _mesa_delete_linked_shader(ctx, linked);
@@ -2460,6 +2495,8 @@ link_intrastage_shaders(void *mem_ctx,
       link_xfb_stride_layout_qualifiers(ctx, prog, shader_list, num_shaders);
 
    link_bindless_layout_qualifiers(prog, shader_list, num_shaders);
+
+   link_layer_viewport_relative_qualifier(prog, gl_prog, shader_list, num_shaders);
 
    populate_symbol_table(linked, shader_list[0]->symbols);
 
@@ -2534,6 +2571,7 @@ link_intrastage_shaders(void *mem_ctx,
    for (unsigned i = 0; i < num_ubo_blocks; i++) {
       linked->Program->sh.UniformBlocks[i] = &ubo_blocks[i];
    }
+   linked->Program->sh.NumUniformBlocks = num_ubo_blocks;
    linked->Program->info.num_ubos = num_ubo_blocks;
 
    /* Copy ssbo blocks to linked shader list */
@@ -3826,7 +3864,7 @@ add_shader_variable(const struct gl_context *ctx,
          }
          return true;
       }
-      /* fallthrough */
+      FALLTHROUGH;
    }
 
    default: {
@@ -4404,20 +4442,20 @@ static void
 link_and_validate_uniforms(struct gl_context *ctx,
                            struct gl_shader_program *prog)
 {
+   assert(!ctx->Const.UseNIRGLSLLinker);
+
    update_array_sizes(prog);
    link_assign_uniform_locations(prog, ctx);
 
    if (prog->data->LinkStatus == LINKING_FAILURE)
       return;
 
-   if (!ctx->Const.UseNIRGLSLLinker) {
-      link_util_calculate_subroutine_compat(prog);
-      link_util_check_uniform_resources(ctx, prog);
-      link_util_check_subroutine_resources(prog);
-      check_image_resources(ctx, prog);
-      link_assign_atomic_counter_resources(ctx, prog);
-      link_check_atomic_counter_resources(ctx, prog);
-   }
+   link_util_calculate_subroutine_compat(prog);
+   link_util_check_uniform_resources(ctx, prog);
+   link_util_check_subroutine_resources(prog);
+   check_image_resources(ctx, prog);
+   link_assign_atomic_counter_resources(ctx, prog);
+   link_check_atomic_counter_resources(ctx, prog);
 }
 
 static bool
@@ -4464,7 +4502,8 @@ link_varyings_and_uniforms(unsigned first, unsigned last,
    if (!link_varyings(prog, first, last, ctx, mem_ctx))
       return false;
 
-   link_and_validate_uniforms(ctx, prog);
+   if (!ctx->Const.UseNIRGLSLLinker)
+      link_and_validate_uniforms(ctx, prog);
 
    if (!prog->data->LinkStatus)
       return false;

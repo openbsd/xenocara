@@ -159,7 +159,7 @@ JitManager::JitManager(uint32_t simdWidth, const char* arch, const char* core) :
 
     mFetchShaderTy = FunctionType::get(Type::getVoidTy(mContext), fsArgs, false);
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
     // explicitly instantiate used symbols from potentially staticly linked libs
     sys::DynamicLibrary::AddSymbol("exp2f", &exp2f);
     sys::DynamicLibrary::AddSymbol("log2f", &log2f);
@@ -313,7 +313,11 @@ DIType* JitManager::GetDebugType(Type* pTy)
     case Type::PointerTyID:
         return builder.createPointerType(GetDebugType(pTy->getPointerElementType()), 64, 64);
         break;
+#if LLVM_VERSION_MAJOR >= 11
+    case Type::FixedVectorTyID:
+#else
     case Type::VectorTyID:
+#endif
         return GetDebugVectorType(pTy);
         break;
     case Type::FunctionTyID:
@@ -377,16 +381,31 @@ DIType* JitManager::GetDebugIntegerType(Type* pTy)
 DIType* JitManager::GetDebugVectorType(Type* pTy)
 {
     DIBuilder                 builder(*mpCurrentModule);
+#if LLVM_VERSION_MAJOR >= 12
+    FixedVectorType*          pVecTy    = cast<FixedVectorType>(pTy);
+#elif LLVM_VERSION_MAJOR >= 11
     VectorType*               pVecTy    = cast<VectorType>(pTy);
+#else
+    auto                      pVecTy    = pTy;
+#endif
     DataLayout                DL        = DataLayout(mpCurrentModule);
     uint32_t                  size      = DL.getTypeAllocSizeInBits(pVecTy);
     uint32_t                  alignment = DL.getABITypeAlignment(pVecTy);
     SmallVector<Metadata*, 1> Elems;
+
+#if LLVM_VERSION_MAJOR >= 11
+    Elems.push_back(builder.getOrCreateSubrange(0, pVecTy->getNumElements()));
+#else
     Elems.push_back(builder.getOrCreateSubrange(0, pVecTy->getVectorNumElements()));
+#endif
 
     return builder.createVectorType(size,
                                     alignment,
+#if LLVM_VERSION_MAJOR >= 11
+                                    GetDebugType(pVecTy->getElementType()),
+#else
                                     GetDebugType(pVecTy->getVectorElementType()),
+#endif
                                     builder.getOrCreateArray(Elems));
 }
 

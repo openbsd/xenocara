@@ -29,6 +29,8 @@
 #include <stdlib.h>
 
 #include "util/ralloc.h"
+#include "util/format/u_format.h"
+#include "util/half_float.h"
 #include "compiler/glsl_types.h"
 #include "list.h"
 #include "ir_visitor.h"
@@ -555,7 +557,7 @@ public:
    /**
     * Get the max_ifc_array_access pointer
     *
-    * A "set" function is not needed because the array is dynmically allocated
+    * A "set" function is not needed because the array is dynamically allocated
     * as necessary.
     */
    inline int *get_max_ifc_array_access()
@@ -757,6 +759,11 @@ public:
       unsigned has_initializer:1;
 
       /**
+       * Is the initializer created by the compiler (glsl_zero_init)
+       */
+      unsigned is_implicit_initializer:1;
+
+      /**
        * Is this variable a generic output or input that has not yet been matched
        * up to a variable in another stage of the pipeline?
        *
@@ -764,6 +771,13 @@ public:
        * to generic inputs and outputs.
        */
       unsigned is_unmatched_generic_inout:1;
+
+      /**
+       * Is this varying used by transform feedback?
+       *
+       * This is used by the linker to decide if it's safe to pack the varying.
+       */
+      unsigned is_xfb:1;
 
       /**
        * Is this varying used only by transform feedback?
@@ -879,14 +893,23 @@ public:
       unsigned bound:1;
 
       /**
+       * Non-zero if the variable shall not be implicitly converted during
+       * functions matching.
+       */
+      unsigned implicit_conversion_prohibited:1;
+
+      /**
        * Emit a warning if this variable is accessed.
        */
    private:
       uint8_t warn_extension_index;
 
    public:
-      /** Image internal format if specified explicitly, otherwise GL_NONE. */
-      uint16_t image_format;
+      /**
+       * Image internal format if specified explicitly, otherwise
+       * PIPE_FORMAT_NONE.
+       */
+      enum pipe_format image_format;
 
    private:
       /**
@@ -1259,7 +1282,7 @@ public:
       return intrinsic_id != ir_intrinsic_invalid;
    }
 
-   /** Indentifier for this intrinsic. */
+   /** Identifier for this intrinsic. */
    enum ir_intrinsic_id intrinsic_id;
 
    /** Whether or not a built-in is available for this shader. */
@@ -1836,7 +1859,7 @@ enum ir_texture_opcode {
    ir_tex,		/**< Regular texture look-up */
    ir_txb,		/**< Texture look-up with LOD bias */
    ir_txl,		/**< Texture look-up with explicit LOD */
-   ir_txd,		/**< Texture look-up with partial derivatvies */
+   ir_txd,		/**< Texture look-up with partial derivatives */
    ir_txf,		/**< Texel fetch with explicit LOD */
    ir_txf_ms,           /**< Multisample texture fetch */
    ir_txs,		/**< Texture size */
@@ -2035,6 +2058,12 @@ public:
     */
    virtual ir_variable *variable_referenced() const = 0;
 
+   /**
+    * Get the precision. This can either come from the eventual variable that
+    * is dereferenced, or from a record member.
+    */
+   virtual int precision() const = 0;
+
 protected:
    ir_dereference(enum ir_node_type t)
       : ir_rvalue(t)
@@ -2064,11 +2093,16 @@ public:
       return this->var;
    }
 
+   virtual int precision() const
+   {
+      return this->var->data.precision;
+   }
+
    virtual ir_variable *whole_variable_referenced()
    {
       /* ir_dereference_variable objects always dereference the entire
        * variable.  However, if this dereference is dereferenced by anything
-       * else, the complete deferefernce chain is not a whole-variable
+       * else, the complete dereference chain is not a whole-variable
        * dereference.  This method should only be called on the top most
        * ir_rvalue in a dereference chain.
        */
@@ -2112,6 +2146,16 @@ public:
       return this->array->variable_referenced();
    }
 
+   virtual int precision() const
+   {
+      ir_dereference *deref = this->array->as_dereference();
+
+      if (deref == NULL)
+         return GLSL_PRECISION_NONE;
+      else
+         return deref->precision();
+   }
+
    virtual void accept(ir_visitor *v)
    {
       v->visit(this);
@@ -2147,6 +2191,13 @@ public:
       return this->record->variable_referenced();
    }
 
+   virtual int precision() const
+   {
+      glsl_struct_field *field = record->type->fields.structure + field_idx;
+
+      return field->precision;
+   }
+
    virtual void accept(ir_visitor *v)
    {
       v->visit(this);
@@ -2168,6 +2219,9 @@ union ir_constant_data {
       float f[16];
       bool b[16];
       double d[16];
+      uint16_t f16[16];
+      uint16_t u16[16];
+      int16_t i16[16];
       uint64_t u64[16];
       int64_t i64[16];
 };
@@ -2177,8 +2231,11 @@ class ir_constant : public ir_rvalue {
 public:
    ir_constant(const struct glsl_type *type, const ir_constant_data *data);
    ir_constant(bool b, unsigned vector_elements=1);
+   ir_constant(int16_t i16, unsigned vector_elements=1);
+   ir_constant(uint16_t u16, unsigned vector_elements=1);
    ir_constant(unsigned int u, unsigned vector_elements=1);
    ir_constant(int i, unsigned vector_elements=1);
+   ir_constant(float16_t f16, unsigned vector_elements=1);
    ir_constant(float f, unsigned vector_elements=1);
    ir_constant(double d, unsigned vector_elements=1);
    ir_constant(uint64_t u64, unsigned vector_elements=1);
@@ -2231,7 +2288,10 @@ public:
    /*@{*/
    bool get_bool_component(unsigned i) const;
    float get_float_component(unsigned i) const;
+   uint16_t get_float16_component(unsigned i) const;
    double get_double_component(unsigned i) const;
+   int16_t get_int16_component(unsigned i) const;
+   uint16_t get_uint16_component(unsigned i) const;
    int get_int_component(unsigned i) const;
    unsigned get_uint_component(unsigned i) const;
    int64_t get_int64_component(unsigned i) const;
