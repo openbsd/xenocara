@@ -34,13 +34,21 @@ LOCAL_SRC_FILES := \
 	$(MESA_UTIL_FILES) \
 	$(XMLCONFIG_FILES)
 
+LOCAL_MODULE := libmesa_util
+
+LOCAL_MODULE_CLASS := STATIC_LIBRARIES
+
+intermediates := $(call local-generated-sources-dir)
+
 LOCAL_C_INCLUDES := \
 	external/zlib \
 	$(MESA_TOP)/src/mesa \
 	$(MESA_TOP)/src/mapi \
 	$(MESA_TOP)/src/gallium/include \
 	$(MESA_TOP)/src/gallium/auxiliary \
-	$(MESA_TOP)/src/util/format
+	$(MESA_TOP)/src/util/format \
+	$(intermediates)/util/format \
+	$(intermediates)
 
 # If Android version >=8 MESA should static link libexpat else should dynamic link
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 27; echo $$?), 0)
@@ -51,73 +59,41 @@ LOCAL_SHARED_LIBRARIES := \
 	libexpat
 endif
 
-LOCAL_SHARED_LIBRARIES += liblog
-
-LOCAL_MODULE := libmesa_util
+LOCAL_SHARED_LIBRARIES += liblog libsync libcutils
 
 # Generated sources
 
-LOCAL_MODULE_CLASS := STATIC_LIBRARIES
-
-intermediates := $(call local-generated-sources-dir)
-
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)
 
-UTIL_GENERATED_SOURCES := $(addprefix $(intermediates)/,$(MESA_UTIL_GENERATED_FILES))
+# Some sources do require "util/format/u_format_pack.h" generated header
+UTIL_GENERATED_SOURCES := $(addprefix $(intermediates)/,$(subst format/u_format_pack.h,util/format/u_format_pack.h,$(MESA_UTIL_GENERATED_FILES)))
 LOCAL_GENERATED_SOURCES := $(UTIL_GENERATED_SOURCES)
 
-MESA_DRI_OPTIONS_H := $(intermediates)/xmlpool/options.h
-LOCAL_GENERATED_SOURCES += $(MESA_DRI_OPTIONS_H)
+driconf_static_gen := $(LOCAL_PATH)/driconf_static.py
+driconf_static_deps := $(LOCAL_PATH)/00-mesa-defaults.conf
 
-
-#
-# Generate options.h from gettext translations.
-#
-
-MESA_DRI_OPTIONS_LANGS := de es nl fr sv
-POT := $(intermediates)/xmlpool.pot
-
-$(POT): $(LOCAL_PATH)/xmlpool/t_options.h
+$(intermediates)/driconf_static.h: $(driconf_static_deps)
 	@mkdir -p $(dir $@)
-	xgettext -L C --from-code utf-8 -o $@ $<
+	$(hide) $(MESA_PYTHON2) $(driconf_static_gen) $^ $@
 
-$(MESA_DRI_OPTIONS_LANGS:%=$(intermediates)/xmlpool/%.po): $(intermediates)/xmlpool/%.po: $(LOCAL_PATH)/xmlpool/%.po $(POT)
-	lang=$(basename $(notdir $@)); \
-	mkdir -p $(dir $@); \
-	if [ -f $< ]; then \
-		msgmerge -o $@ $^; \
-	else \
-		msginit -i $(POT) \
-			-o $@ \
-			--locale=$$lang \
-			--no-translator; \
-		sed -i -e 's/charset=.*\\n/charset=UTF-8\\n/' $@; \
-	fi
+format_srgb_gen := $(LOCAL_PATH)/format_srgb.py
 
-PRIVATE_SCRIPT := $(LOCAL_PATH)/xmlpool/gen_xmlpool.py
-PRIVATE_LOCALEDIR := $(intermediates)/xmlpool
-PRIVATE_TEMPLATE_HEADER := $(LOCAL_PATH)/xmlpool/t_options.h
-PRIVATE_MO_FILES := $(MESA_DRI_OPTIONS_LANGS:%=$(intermediates)/xmlpool/%.gmo)
+$(intermediates)/format_srgb.c: $(format_srgb_gen)
+	@mkdir -p $(dir $@)
+	$(hide) $(MESA_PYTHON2) $(format_srgb_gen) $< > $@
 
-LOCAL_GENERATED_SOURCES += $(PRIVATE_MO_FILES)
+u_format_gen := $(LOCAL_PATH)/format/u_format_table.py
+u_format_deps := $(LOCAL_PATH)/format/u_format.csv \
+	$(LOCAL_PATH)/format/u_format_pack.py \
+	$(LOCAL_PATH)/format/u_format_parse.py
 
-$(LOCAL_GENERATED_SOURCES): PRIVATE_PYTHON := $(MESA_PYTHON2)
+$(intermediates)/util/format/u_format_pack.h: $(u_format_deps)
+	@mkdir -p $(dir $@)
+	$(hide) $(MESA_PYTHON2) $(u_format_gen) --header $< > $@
 
-$(PRIVATE_MO_FILES): $(intermediates)/xmlpool/%.gmo: $(intermediates)/xmlpool/%.po
-	mkdir -p $(dir $@)
-	msgfmt -o $@ $<
-
-$(UTIL_GENERATED_SOURCES): PRIVATE_CUSTOM_TOOL = $(PRIVATE_PYTHON) $^ > $@
-$(UTIL_GENERATED_SOURCES): $(intermediates)/%.c: $(LOCAL_PATH)/%.py $(LOCAL_PATH)/format/u_format.csv
-	$(transform-generated-source)
-
-$(MESA_DRI_OPTIONS_H): PRIVATE_CUSTOM_TOOL = $(PRIVATE_PYTHON) $< \
-		--template $(PRIVATE_TEMPLATE_HEADER) \
-		--output $@ \
-		--localedir $(PRIVATE_LOCALEDIR) \
-		--languages $(MESA_DRI_OPTIONS_LANGS)
-$(MESA_DRI_OPTIONS_H): $(PRIVATE_SCRIPT) $(PRIVATE_TEMPLATE_HEADER) $(PRIVATE_MO_FILES)
-	$(transform-generated-source)
+$(intermediates)/format/u_format_table.c: $(u_format_deps)
+	@mkdir -p $(dir $@)
+	$(hide) $(MESA_PYTHON2) $(u_format_gen) $< > $@
 
 include $(MESA_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

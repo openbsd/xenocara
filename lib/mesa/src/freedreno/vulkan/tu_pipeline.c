@@ -25,8 +25,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "common/freedreno_guardband.h"
 #include "tu_private.h"
 
+#include "ir3/ir3_nir.h"
 #include "main/menums.h"
 #include "nir/nir.h"
 #include "nir/nir_builder.h"
@@ -39,6 +41,206 @@
 
 #include "tu_cs.h"
 
+/* Emit IB that preloads the descriptors that the shader uses */
+
+static void
+emit_load_state(struct tu_cs *cs, unsigned opcode, enum a6xx_state_type st,
+                enum a6xx_state_block sb, unsigned base, unsigned offset,
+                unsigned count)
+{
+   /* Note: just emit one packet, even if count overflows NUM_UNIT. It's not
+    * clear if emitting more packets will even help anything. Presumably the
+    * descriptor cache is relatively small, and these packets stop doing
+    * anything when there are too many descriptors.
+    */
+   tu_cs_emit_pkt7(cs, opcode, 3);
+   tu_cs_emit(cs,
+              CP_LOAD_STATE6_0_STATE_TYPE(st) |
+              CP_LOAD_STATE6_0_STATE_SRC(SS6_BINDLESS) |
+              CP_LOAD_STATE6_0_STATE_BLOCK(sb) |
+              CP_LOAD_STATE6_0_NUM_UNIT(MIN2(count, 1024-1)));
+   tu_cs_emit_qw(cs, offset | (base << 28));
+}
+
+static unsigned
+tu6_load_state_size(struct tu_pipeline *pipeline, bool compute)
+{
+   const unsigned load_state_size = 4;
+   unsigned size = 0;
+   for (unsigned i = 0; i < pipeline->layout->num_sets; i++) {
+      if (!(pipeline->active_desc_sets & (1u << i)))
+         continue;
+
+      struct tu_descriptor_set_layout *set_layout = pipeline->layout->set[i].layout;
+      for (unsigned j = 0; j < set_layout->binding_count; j++) {
+         struct tu_descriptor_set_binding_layout *binding = &set_layout->binding[j];
+         unsigned count = 0;
+         /* Note: some users, like amber for example, pass in
+          * VK_SHADER_STAGE_ALL which includes a bunch of extra bits, so
+          * filter these out by using VK_SHADER_STAGE_ALL_GRAPHICS explicitly.
+          */
+         VkShaderStageFlags stages = compute ?
+            binding->shader_stages & VK_SHADER_STAGE_COMPUTE_BIT :
+            binding->shader_stages & VK_SHADER_STAGE_ALL_GRAPHICS;
+         unsigned stage_count = util_bitcount(stages);
+
+         if (!binding->array_size)
+            continue;
+
+         switch (binding->type) {
+         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+         case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+         case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+            /* IBO-backed resources only need one packet for all graphics stages */
+            if (stages & ~VK_SHADER_STAGE_COMPUTE_BIT)
+               count += 1;
+            if (stages & VK_SHADER_STAGE_COMPUTE_BIT)
+               count += 1;
+            break;
+         case VK_DESCRIPTOR_TYPE_SAMPLER:
+         case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+         case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            /* Textures and UBO's needs a packet for each stage */
+            count = stage_count;
+            break;
+         case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+            /* Because of how we pack combined images and samplers, we
+             * currently can't use one packet for the whole array.
+             */
+            count = stage_count * binding->array_size * 2;
+            break;
+         case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+            break;
+         default:
+            unreachable("bad descriptor type");
+         }
+         size += count * load_state_size;
+      }
+   }
+   return size;
+}
+
+static void
+tu6_emit_load_state(struct tu_pipeline *pipeline, bool compute)
+{
+   unsigned size = tu6_load_state_size(pipeline, compute);
+   if (size == 0)
+      return;
+
+   struct tu_cs cs;
+   tu_cs_begin_sub_stream(&pipeline->cs, size, &cs);
+
+   struct tu_pipeline_layout *layout = pipeline->layout;
+   for (unsigned i = 0; i < layout->num_sets; i++) {
+      /* From 13.2.7. Descriptor Set Binding:
+       *
+       *    A compatible descriptor set must be bound for all set numbers that
+       *    any shaders in a pipeline access, at the time that a draw or
+       *    dispatch command is recorded to execute using that pipeline.
+       *    However, if none of the shaders in a pipeline statically use any
+       *    bindings with a particular set number, then no descriptor set need
+       *    be bound for that set number, even if the pipeline layout includes
+       *    a non-trivial descriptor set layout for that set number.
+       *
+       * This means that descriptor sets unused by the pipeline may have a
+       * garbage or 0 BINDLESS_BASE register, which will cause context faults
+       * when prefetching descriptors from these sets. Skip prefetching for
+       * descriptors from them to avoid this. This is also an optimization,
+       * since these prefetches would be useless.
+       */
+      if (!(pipeline->active_desc_sets & (1u << i)))
+         continue;
+
+      struct tu_descriptor_set_layout *set_layout = layout->set[i].layout;
+      for (unsigned j = 0; j < set_layout->binding_count; j++) {
+         struct tu_descriptor_set_binding_layout *binding = &set_layout->binding[j];
+         unsigned base = i;
+         unsigned offset = binding->offset / 4;
+         /* Note: some users, like amber for example, pass in
+          * VK_SHADER_STAGE_ALL which includes a bunch of extra bits, so
+          * filter these out by using VK_SHADER_STAGE_ALL_GRAPHICS explicitly.
+          */
+         VkShaderStageFlags stages = compute ?
+            binding->shader_stages & VK_SHADER_STAGE_COMPUTE_BIT :
+            binding->shader_stages & VK_SHADER_STAGE_ALL_GRAPHICS;
+         unsigned count = binding->array_size;
+         if (count == 0 || stages == 0)
+            continue;
+         switch (binding->type) {
+         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            base = MAX_SETS;
+            offset = (layout->set[i].dynamic_offset_start +
+                      binding->dynamic_offset_offset) * A6XX_TEX_CONST_DWORDS;
+            FALLTHROUGH;
+         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+         case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+         case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+            /* IBO-backed resources only need one packet for all graphics stages */
+            if (stages & ~VK_SHADER_STAGE_COMPUTE_BIT) {
+               emit_load_state(&cs, CP_LOAD_STATE6, ST6_SHADER, SB6_IBO,
+                               base, offset, count);
+            }
+            if (stages & VK_SHADER_STAGE_COMPUTE_BIT) {
+               emit_load_state(&cs, CP_LOAD_STATE6_FRAG, ST6_IBO, SB6_CS_SHADER,
+                               base, offset, count);
+            }
+            break;
+         case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+            /* nothing - input attachment doesn't use bindless */
+            break;
+         case VK_DESCRIPTOR_TYPE_SAMPLER:
+         case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+         case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER: {
+            tu_foreach_stage(stage, stages) {
+               emit_load_state(&cs, tu6_stage2opcode(stage),
+                               binding->type == VK_DESCRIPTOR_TYPE_SAMPLER ?
+                               ST6_SHADER : ST6_CONSTANTS,
+                               tu6_stage2texsb(stage), base, offset, count);
+            }
+            break;
+         }
+         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            base = MAX_SETS;
+            offset = (layout->set[i].dynamic_offset_start +
+                      binding->dynamic_offset_offset) * A6XX_TEX_CONST_DWORDS;
+            FALLTHROUGH;
+         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER: {
+            tu_foreach_stage(stage, stages) {
+               emit_load_state(&cs, tu6_stage2opcode(stage), ST6_UBO,
+                               tu6_stage2shadersb(stage), base, offset, count);
+            }
+            break;
+         }
+         case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: {
+            tu_foreach_stage(stage, stages) {
+               /* TODO: We could emit less CP_LOAD_STATE6 if we used
+                * struct-of-arrays instead of array-of-structs.
+                */
+               for (unsigned i = 0; i < count; i++) {
+                  unsigned tex_offset = offset + 2 * i * A6XX_TEX_CONST_DWORDS;
+                  unsigned sam_offset = offset + (2 * i + 1) * A6XX_TEX_CONST_DWORDS;
+                  emit_load_state(&cs, tu6_stage2opcode(stage),
+                                  ST6_CONSTANTS, tu6_stage2texsb(stage),
+                                  base, tex_offset, 1);
+                  emit_load_state(&cs, tu6_stage2opcode(stage),
+                                  ST6_SHADER, tu6_stage2texsb(stage),
+                                  base, sam_offset, 1);
+               }
+            }
+            break;
+         }
+         default:
+            unreachable("bad descriptor type");
+         }
+      }
+   }
+
+   pipeline->load_state = tu_cs_end_draw_state(&pipeline->cs, &cs);
+}
+
 struct tu_pipeline_builder
 {
    struct tu_device *device;
@@ -47,95 +249,27 @@ struct tu_pipeline_builder
    const VkAllocationCallbacks *alloc;
    const VkGraphicsPipelineCreateInfo *create_info;
 
-   struct tu_shader *shaders[MESA_SHADER_STAGES];
-   uint32_t shader_offsets[MESA_SHADER_STAGES];
-   uint32_t binning_vs_offset;
-   uint32_t shader_total_size;
+   struct tu_shader *shaders[MESA_SHADER_FRAGMENT + 1];
+   struct ir3_shader_variant *variants[MESA_SHADER_FRAGMENT + 1];
+   struct ir3_shader_variant *binning_variant;
+   uint64_t shader_iova[MESA_SHADER_FRAGMENT + 1];
+   uint64_t binning_vs_iova;
+
+   struct tu_pvtmem_config pvtmem;
 
    bool rasterizer_discard;
    /* these states are affectd by rasterizer_discard */
+   bool emit_msaa_state;
    VkSampleCountFlagBits samples;
-   bool use_depth_stencil_attachment;
    bool use_color_attachments;
+   bool use_dual_src_blend;
+   bool alpha_to_coverage;
    uint32_t color_attachment_count;
    VkFormat color_attachment_formats[MAX_RTS];
+   VkFormat depth_attachment_format;
+   uint32_t render_components;
+   uint32_t multiview_mask;
 };
-
-static enum tu_dynamic_state_bits
-tu_dynamic_state_bit(VkDynamicState state)
-{
-   switch (state) {
-   case VK_DYNAMIC_STATE_VIEWPORT:
-      return TU_DYNAMIC_VIEWPORT;
-   case VK_DYNAMIC_STATE_SCISSOR:
-      return TU_DYNAMIC_SCISSOR;
-   case VK_DYNAMIC_STATE_LINE_WIDTH:
-      return TU_DYNAMIC_LINE_WIDTH;
-   case VK_DYNAMIC_STATE_DEPTH_BIAS:
-      return TU_DYNAMIC_DEPTH_BIAS;
-   case VK_DYNAMIC_STATE_BLEND_CONSTANTS:
-      return TU_DYNAMIC_BLEND_CONSTANTS;
-   case VK_DYNAMIC_STATE_DEPTH_BOUNDS:
-      return TU_DYNAMIC_DEPTH_BOUNDS;
-   case VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK:
-      return TU_DYNAMIC_STENCIL_COMPARE_MASK;
-   case VK_DYNAMIC_STATE_STENCIL_WRITE_MASK:
-      return TU_DYNAMIC_STENCIL_WRITE_MASK;
-   case VK_DYNAMIC_STATE_STENCIL_REFERENCE:
-      return TU_DYNAMIC_STENCIL_REFERENCE;
-   default:
-      unreachable("invalid dynamic state");
-      return 0;
-   }
-}
-
-static gl_shader_stage
-tu_shader_stage(VkShaderStageFlagBits stage)
-{
-   switch (stage) {
-   case VK_SHADER_STAGE_VERTEX_BIT:
-      return MESA_SHADER_VERTEX;
-   case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-      return MESA_SHADER_TESS_CTRL;
-   case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-      return MESA_SHADER_TESS_EVAL;
-   case VK_SHADER_STAGE_GEOMETRY_BIT:
-      return MESA_SHADER_GEOMETRY;
-   case VK_SHADER_STAGE_FRAGMENT_BIT:
-      return MESA_SHADER_FRAGMENT;
-   case VK_SHADER_STAGE_COMPUTE_BIT:
-      return MESA_SHADER_COMPUTE;
-   default:
-      unreachable("invalid VkShaderStageFlagBits");
-      return MESA_SHADER_NONE;
-   }
-}
-
-static const VkVertexInputAttributeDescription *
-tu_find_vertex_input_attribute(
-   const VkPipelineVertexInputStateCreateInfo *vi_info, uint32_t slot)
-{
-   assert(slot >= VERT_ATTRIB_GENERIC0);
-   slot -= VERT_ATTRIB_GENERIC0;
-   for (uint32_t i = 0; i < vi_info->vertexAttributeDescriptionCount; i++) {
-      if (vi_info->pVertexAttributeDescriptions[i].location == slot)
-         return &vi_info->pVertexAttributeDescriptions[i];
-   }
-   return NULL;
-}
-
-static const VkVertexInputBindingDescription *
-tu_find_vertex_input_binding(
-   const VkPipelineVertexInputStateCreateInfo *vi_info,
-   const VkVertexInputAttributeDescription *vi_attr)
-{
-   assert(vi_attr);
-   for (uint32_t i = 0; i < vi_info->vertexBindingDescriptionCount; i++) {
-      if (vi_info->pVertexBindingDescriptions[i].binding == vi_attr->binding)
-         return &vi_info->pVertexBindingDescriptions[i];
-   }
-   return NULL;
-}
 
 static bool
 tu_logic_op_reads_dst(VkLogicOp op)
@@ -165,484 +299,851 @@ tu_blend_factor_no_dst_alpha(VkBlendFactor factor)
    }
 }
 
-static enum pc_di_primtype
-tu6_primtype(VkPrimitiveTopology topology)
-{
-   switch (topology) {
-   case VK_PRIMITIVE_TOPOLOGY_POINT_LIST:
-      return DI_PT_POINTLIST;
-   case VK_PRIMITIVE_TOPOLOGY_LINE_LIST:
-      return DI_PT_LINELIST;
-   case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP:
-      return DI_PT_LINESTRIP;
-   case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
-      return DI_PT_TRILIST;
-   case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
-      return DI_PT_TRISTRIP;
-   case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
-      return DI_PT_TRIFAN;
-   case VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
-      return DI_PT_LINE_ADJ;
-   case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
-      return DI_PT_LINESTRIP_ADJ;
-   case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
-      return DI_PT_TRI_ADJ;
-   case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
-      return DI_PT_TRISTRIP_ADJ;
-   case VK_PRIMITIVE_TOPOLOGY_PATCH_LIST:
-   default:
-      unreachable("invalid primitive topology");
-      return DI_PT_NONE;
-   }
-}
-
-static enum adreno_compare_func
-tu6_compare_func(VkCompareOp op)
-{
-   switch (op) {
-   case VK_COMPARE_OP_NEVER:
-      return FUNC_NEVER;
-   case VK_COMPARE_OP_LESS:
-      return FUNC_LESS;
-   case VK_COMPARE_OP_EQUAL:
-      return FUNC_EQUAL;
-   case VK_COMPARE_OP_LESS_OR_EQUAL:
-      return FUNC_LEQUAL;
-   case VK_COMPARE_OP_GREATER:
-      return FUNC_GREATER;
-   case VK_COMPARE_OP_NOT_EQUAL:
-      return FUNC_NOTEQUAL;
-   case VK_COMPARE_OP_GREATER_OR_EQUAL:
-      return FUNC_GEQUAL;
-   case VK_COMPARE_OP_ALWAYS:
-      return FUNC_ALWAYS;
-   default:
-      unreachable("invalid VkCompareOp");
-      return FUNC_NEVER;
-   }
-}
-
-static enum adreno_stencil_op
-tu6_stencil_op(VkStencilOp op)
-{
-   switch (op) {
-   case VK_STENCIL_OP_KEEP:
-      return STENCIL_KEEP;
-   case VK_STENCIL_OP_ZERO:
-      return STENCIL_ZERO;
-   case VK_STENCIL_OP_REPLACE:
-      return STENCIL_REPLACE;
-   case VK_STENCIL_OP_INCREMENT_AND_CLAMP:
-      return STENCIL_INCR_CLAMP;
-   case VK_STENCIL_OP_DECREMENT_AND_CLAMP:
-      return STENCIL_DECR_CLAMP;
-   case VK_STENCIL_OP_INVERT:
-      return STENCIL_INVERT;
-   case VK_STENCIL_OP_INCREMENT_AND_WRAP:
-      return STENCIL_INCR_WRAP;
-   case VK_STENCIL_OP_DECREMENT_AND_WRAP:
-      return STENCIL_DECR_WRAP;
-   default:
-      unreachable("invalid VkStencilOp");
-      return STENCIL_KEEP;
-   }
-}
-
-static enum a3xx_rop_code
-tu6_rop(VkLogicOp op)
-{
-   switch (op) {
-   case VK_LOGIC_OP_CLEAR:
-      return ROP_CLEAR;
-   case VK_LOGIC_OP_AND:
-      return ROP_AND;
-   case VK_LOGIC_OP_AND_REVERSE:
-      return ROP_AND_REVERSE;
-   case VK_LOGIC_OP_COPY:
-      return ROP_COPY;
-   case VK_LOGIC_OP_AND_INVERTED:
-      return ROP_AND_INVERTED;
-   case VK_LOGIC_OP_NO_OP:
-      return ROP_NOOP;
-   case VK_LOGIC_OP_XOR:
-      return ROP_XOR;
-   case VK_LOGIC_OP_OR:
-      return ROP_OR;
-   case VK_LOGIC_OP_NOR:
-      return ROP_NOR;
-   case VK_LOGIC_OP_EQUIVALENT:
-      return ROP_EQUIV;
-   case VK_LOGIC_OP_INVERT:
-      return ROP_INVERT;
-   case VK_LOGIC_OP_OR_REVERSE:
-      return ROP_OR_REVERSE;
-   case VK_LOGIC_OP_COPY_INVERTED:
-      return ROP_COPY_INVERTED;
-   case VK_LOGIC_OP_OR_INVERTED:
-      return ROP_OR_INVERTED;
-   case VK_LOGIC_OP_NAND:
-      return ROP_NAND;
-   case VK_LOGIC_OP_SET:
-      return ROP_SET;
-   default:
-      unreachable("invalid VkLogicOp");
-      return ROP_NOOP;
-   }
-}
-
-static enum adreno_rb_blend_factor
-tu6_blend_factor(VkBlendFactor factor)
+static bool tu_blend_factor_is_dual_src(VkBlendFactor factor)
 {
    switch (factor) {
-   case VK_BLEND_FACTOR_ZERO:
-      return FACTOR_ZERO;
-   case VK_BLEND_FACTOR_ONE:
-      return FACTOR_ONE;
-   case VK_BLEND_FACTOR_SRC_COLOR:
-      return FACTOR_SRC_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
-      return FACTOR_ONE_MINUS_SRC_COLOR;
-   case VK_BLEND_FACTOR_DST_COLOR:
-      return FACTOR_DST_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR:
-      return FACTOR_ONE_MINUS_DST_COLOR;
-   case VK_BLEND_FACTOR_SRC_ALPHA:
-      return FACTOR_SRC_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
-      return FACTOR_ONE_MINUS_SRC_ALPHA;
-   case VK_BLEND_FACTOR_DST_ALPHA:
-      return FACTOR_DST_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
-      return FACTOR_ONE_MINUS_DST_ALPHA;
-   case VK_BLEND_FACTOR_CONSTANT_COLOR:
-      return FACTOR_CONSTANT_COLOR;
-   case VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR:
-      return FACTOR_ONE_MINUS_CONSTANT_COLOR;
-   case VK_BLEND_FACTOR_CONSTANT_ALPHA:
-      return FACTOR_CONSTANT_ALPHA;
-   case VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA:
-      return FACTOR_ONE_MINUS_CONSTANT_ALPHA;
-   case VK_BLEND_FACTOR_SRC_ALPHA_SATURATE:
-      return FACTOR_SRC_ALPHA_SATURATE;
    case VK_BLEND_FACTOR_SRC1_COLOR:
-      return FACTOR_SRC1_COLOR;
    case VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR:
-      return FACTOR_ONE_MINUS_SRC1_COLOR;
    case VK_BLEND_FACTOR_SRC1_ALPHA:
-      return FACTOR_SRC1_ALPHA;
    case VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA:
-      return FACTOR_ONE_MINUS_SRC1_ALPHA;
+      return true;
    default:
-      unreachable("invalid VkBlendFactor");
-      return FACTOR_ZERO;
+      return false;
    }
 }
 
-static enum a3xx_rb_blend_opcode
-tu6_blend_op(VkBlendOp op)
+static bool
+tu_blend_state_is_dual_src(const VkPipelineColorBlendStateCreateInfo *info)
 {
-   switch (op) {
-   case VK_BLEND_OP_ADD:
-      return BLEND_DST_PLUS_SRC;
-   case VK_BLEND_OP_SUBTRACT:
-      return BLEND_SRC_MINUS_DST;
-   case VK_BLEND_OP_REVERSE_SUBTRACT:
-      return BLEND_DST_MINUS_SRC;
-   case VK_BLEND_OP_MIN:
-      return BLEND_MIN_DST_SRC;
-   case VK_BLEND_OP_MAX:
-      return BLEND_MAX_DST_SRC;
-   default:
-      unreachable("invalid VkBlendOp");
-      return BLEND_DST_PLUS_SRC;
+   if (!info)
+      return false;
+
+   for (unsigned i = 0; i < info->attachmentCount; i++) {
+      const VkPipelineColorBlendAttachmentState *blend = &info->pAttachments[i];
+      if (tu_blend_factor_is_dual_src(blend->srcColorBlendFactor) ||
+          tu_blend_factor_is_dual_src(blend->dstColorBlendFactor) ||
+          tu_blend_factor_is_dual_src(blend->srcAlphaBlendFactor) ||
+          tu_blend_factor_is_dual_src(blend->dstAlphaBlendFactor))
+         return true;
    }
+
+   return false;
 }
 
-static unsigned
-tu_shader_nibo(const struct tu_shader *shader)
+void
+tu6_emit_xs_config(struct tu_cs *cs,
+                   gl_shader_stage stage, /* xs->type, but xs may be NULL */
+                   const struct ir3_shader_variant *xs,
+                   const struct tu_pvtmem_config *pvtmem,
+                   uint64_t binary_iova)
 {
-   /* Don't use ir3_shader_nibo(), because that would include declared but
-    * unused storage images and SSBOs.
-    */
-   return shader->ssbo_map.num_desc + shader->image_map.num_desc;
-}
+   static const struct xs_config {
+      uint16_t reg_sp_xs_ctrl;
+      uint16_t reg_sp_xs_config;
+      uint16_t reg_hlsq_xs_ctrl;
+      uint16_t reg_sp_xs_first_exec_offset;
+   } xs_config[] = {
+      [MESA_SHADER_VERTEX] = {
+         REG_A6XX_SP_VS_CTRL_REG0,
+         REG_A6XX_SP_VS_CONFIG,
+         REG_A6XX_HLSQ_VS_CNTL,
+         REG_A6XX_SP_VS_OBJ_FIRST_EXEC_OFFSET,
+      },
+      [MESA_SHADER_TESS_CTRL] = {
+         REG_A6XX_SP_HS_CTRL_REG0,
+         REG_A6XX_SP_HS_CONFIG,
+         REG_A6XX_HLSQ_HS_CNTL,
+         REG_A6XX_SP_HS_OBJ_FIRST_EXEC_OFFSET,
+      },
+      [MESA_SHADER_TESS_EVAL] = {
+         REG_A6XX_SP_DS_CTRL_REG0,
+         REG_A6XX_SP_DS_CONFIG,
+         REG_A6XX_HLSQ_DS_CNTL,
+         REG_A6XX_SP_DS_OBJ_FIRST_EXEC_OFFSET,
+      },
+      [MESA_SHADER_GEOMETRY] = {
+         REG_A6XX_SP_GS_CTRL_REG0,
+         REG_A6XX_SP_GS_CONFIG,
+         REG_A6XX_HLSQ_GS_CNTL,
+         REG_A6XX_SP_GS_OBJ_FIRST_EXEC_OFFSET,
+      },
+      [MESA_SHADER_FRAGMENT] = {
+         REG_A6XX_SP_FS_CTRL_REG0,
+         REG_A6XX_SP_FS_CONFIG,
+         REG_A6XX_HLSQ_FS_CNTL,
+         REG_A6XX_SP_FS_OBJ_FIRST_EXEC_OFFSET,
+      },
+      [MESA_SHADER_COMPUTE] = {
+         REG_A6XX_SP_CS_CTRL_REG0,
+         REG_A6XX_SP_CS_CONFIG,
+         REG_A6XX_HLSQ_CS_CNTL,
+         REG_A6XX_SP_CS_OBJ_FIRST_EXEC_OFFSET,
+      },
+   };
+   const struct xs_config *cfg = &xs_config[stage];
 
-static void
-tu6_emit_vs_config(struct tu_cs *cs, struct tu_shader *shader,
-                   const struct ir3_shader_variant *vs)
-{
-   uint32_t sp_vs_ctrl =
-      A6XX_SP_VS_CTRL_REG0_THREADSIZE(FOUR_QUADS) |
-      A6XX_SP_VS_CTRL_REG0_FULLREGFOOTPRINT(vs->info.max_reg + 1) |
-      A6XX_SP_VS_CTRL_REG0_MERGEDREGS |
-      A6XX_SP_VS_CTRL_REG0_BRANCHSTACK(vs->branchstack);
-   if (vs->need_pixlod)
-      sp_vs_ctrl |= A6XX_SP_VS_CTRL_REG0_PIXLODENABLE;
-   if (vs->need_fine_derivatives)
-      sp_vs_ctrl |= A6XX_SP_VS_CTRL_REG0_DIFF_FINE;
+   if (!xs) {
+      /* shader stage disabled */
+      tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_config, 1);
+      tu_cs_emit(cs, 0);
 
-   uint32_t sp_vs_config = A6XX_SP_VS_CONFIG_NTEX(shader->texture_map.num_desc) |
-                           A6XX_SP_VS_CONFIG_NSAMP(shader->sampler_map.num_desc);
-   if (vs->instrlen)
-      sp_vs_config |= A6XX_SP_VS_CONFIG_ENABLED;
+      tu_cs_emit_pkt4(cs, cfg->reg_hlsq_xs_ctrl, 1);
+      tu_cs_emit(cs, 0);
+      return;
+   }
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_VS_CTRL_REG0, 1);
-   tu_cs_emit(cs, sp_vs_ctrl);
+   enum a6xx_threadsize thrsz =
+      xs->info.double_threadsize ? THREAD128 : THREAD64;
+   switch (stage) {
+   case MESA_SHADER_VERTEX:
+      tu_cs_emit_regs(cs, A6XX_SP_VS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+               .mergedregs = xs->mergedregs,
+      ));
+      break;
+   case MESA_SHADER_TESS_CTRL:
+      tu_cs_emit_regs(cs, A6XX_SP_HS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+      ));
+      break;
+   case MESA_SHADER_TESS_EVAL:
+      tu_cs_emit_regs(cs, A6XX_SP_DS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+               .mergedregs = xs->mergedregs,
+      ));
+      break;
+   case MESA_SHADER_GEOMETRY:
+      tu_cs_emit_regs(cs, A6XX_SP_GS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+      ));
+      break;
+   case MESA_SHADER_FRAGMENT:
+      tu_cs_emit_regs(cs, A6XX_SP_FS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+               .mergedregs = xs->mergedregs,
+               .threadsize = thrsz,
+               .pixlodenable = xs->need_pixlod,
+               .diff_fine = xs->need_fine_derivatives,
+               .varying = xs->total_in != 0,
+               /* unknown bit, seems unnecessary */
+               .unk24 = true,
+      ));
+      break;
+   case MESA_SHADER_COMPUTE:
+      tu_cs_emit_regs(cs, A6XX_SP_CS_CTRL_REG0(
+               .fullregfootprint = xs->info.max_reg + 1,
+               .halfregfootprint = xs->info.max_half_reg + 1,
+               .branchstack = xs->branchstack,
+               .mergedregs = xs->mergedregs,
+               .threadsize = thrsz,
+      ));
+      break;
+   default:
+      unreachable("bad shader stage");
+   }
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_VS_CONFIG, 2);
-   tu_cs_emit(cs, sp_vs_config);
-   tu_cs_emit(cs, vs->instrlen);
+   tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_config, 2);
+   tu_cs_emit(cs, A6XX_SP_VS_CONFIG_ENABLED |
+                  COND(xs->bindless_tex, A6XX_SP_VS_CONFIG_BINDLESS_TEX) |
+                  COND(xs->bindless_samp, A6XX_SP_VS_CONFIG_BINDLESS_SAMP) |
+                  COND(xs->bindless_ibo, A6XX_SP_VS_CONFIG_BINDLESS_IBO) |
+                  COND(xs->bindless_ubo, A6XX_SP_VS_CONFIG_BINDLESS_UBO) |
+                  A6XX_SP_VS_CONFIG_NTEX(xs->num_samp) |
+                  A6XX_SP_VS_CONFIG_NSAMP(xs->num_samp));
+   tu_cs_emit(cs, xs->instrlen);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_VS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_VS_CNTL_CONSTLEN(align(vs->constlen, 4)) |
+   tu_cs_emit_pkt4(cs, cfg->reg_hlsq_xs_ctrl, 1);
+   tu_cs_emit(cs, A6XX_HLSQ_VS_CNTL_CONSTLEN(xs->constlen) |
                   A6XX_HLSQ_VS_CNTL_ENABLED);
-}
 
-static void
-tu6_emit_hs_config(struct tu_cs *cs, struct tu_shader *shader,
-                   const struct ir3_shader_variant *hs)
-{
-   uint32_t sp_hs_config = 0;
-   if (hs->instrlen)
-      sp_hs_config |= A6XX_SP_HS_CONFIG_ENABLED;
+   /* emit program binary & private memory layout
+    * binary_iova should be aligned to 1 instrlen unit (128 bytes)
+    */
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_HS_UNKNOWN_A831, 1);
+   assert((binary_iova & 0x7f) == 0);
+   assert((pvtmem->iova & 0x1f) == 0);
+
+   tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_first_exec_offset, 7);
    tu_cs_emit(cs, 0);
+   tu_cs_emit_qw(cs, binary_iova);
+   tu_cs_emit(cs,
+              A6XX_SP_VS_PVT_MEM_PARAM_MEMSIZEPERITEM(pvtmem->per_fiber_size));
+   tu_cs_emit_qw(cs, pvtmem->iova);
+   tu_cs_emit(cs, A6XX_SP_VS_PVT_MEM_SIZE_TOTALPVTMEMSIZE(pvtmem->per_sp_size) |
+                  COND(pvtmem->per_wave, A6XX_SP_VS_PVT_MEM_SIZE_PERWAVEMEMLAYOUT));
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_HS_CONFIG, 2);
-   tu_cs_emit(cs, sp_hs_config);
-   tu_cs_emit(cs, hs->instrlen);
+   tu_cs_emit_pkt7(cs, tu6_stage2opcode(stage), 3);
+   tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(0) |
+                  CP_LOAD_STATE6_0_STATE_TYPE(ST6_SHADER) |
+                  CP_LOAD_STATE6_0_STATE_SRC(SS6_INDIRECT) |
+                  CP_LOAD_STATE6_0_STATE_BLOCK(tu6_stage2shadersb(stage)) |
+                  CP_LOAD_STATE6_0_NUM_UNIT(xs->instrlen));
+   tu_cs_emit_qw(cs, binary_iova);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_HS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_HS_CNTL_CONSTLEN(align(hs->constlen, 4)));
-}
+   /* emit immediates */
 
-static void
-tu6_emit_ds_config(struct tu_cs *cs, struct tu_shader *shader,
-                   const struct ir3_shader_variant *ds)
-{
-   uint32_t sp_ds_config = 0;
-   if (ds->instrlen)
-      sp_ds_config |= A6XX_SP_DS_CONFIG_ENABLED;
+   const struct ir3_const_state *const_state = ir3_const_state(xs);
+   uint32_t base = const_state->offsets.immediate;
+   int size = DIV_ROUND_UP(const_state->immediates_count, 4);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_DS_CONFIG, 2);
-   tu_cs_emit(cs, sp_ds_config);
-   tu_cs_emit(cs, ds->instrlen);
+   /* truncate size to avoid writing constants that shader
+    * does not use:
+    */
+   size = MIN2(size + base, xs->constlen) - base;
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_DS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_DS_CNTL_CONSTLEN(align(ds->constlen, 4)));
-}
+   if (size > 0) {
+      tu_cs_emit_pkt7(cs, tu6_stage2opcode(stage), 3 + size * 4);
+      tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(base) |
+                 CP_LOAD_STATE6_0_STATE_TYPE(ST6_CONSTANTS) |
+                 CP_LOAD_STATE6_0_STATE_SRC(SS6_DIRECT) |
+                 CP_LOAD_STATE6_0_STATE_BLOCK(tu6_stage2shadersb(stage)) |
+                 CP_LOAD_STATE6_0_NUM_UNIT(size));
+      tu_cs_emit(cs, CP_LOAD_STATE6_1_EXT_SRC_ADDR(0));
+      tu_cs_emit(cs, CP_LOAD_STATE6_2_EXT_SRC_ADDR_HI(0));
 
-static void
-tu6_emit_gs_config(struct tu_cs *cs, struct tu_shader *shader,
-                   const struct ir3_shader_variant *gs)
-{
-   uint32_t sp_gs_config = 0;
-   if (gs->instrlen)
-      sp_gs_config |= A6XX_SP_GS_CONFIG_ENABLED;
+      tu_cs_emit_array(cs, const_state->immediates, size * 4);
+   }
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_GS_UNKNOWN_A871, 1);
-   tu_cs_emit(cs, 0);
+   if (const_state->constant_data_ubo != -1) {
+      uint64_t iova = binary_iova + xs->info.constant_data_offset;
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_GS_CONFIG, 2);
-   tu_cs_emit(cs, sp_gs_config);
-   tu_cs_emit(cs, gs->instrlen);
+      /* Upload UBO state for the constant data. */
+      tu_cs_emit_pkt7(cs, tu6_stage2opcode(stage), 5);
+      tu_cs_emit(cs,
+                 CP_LOAD_STATE6_0_DST_OFF(const_state->constant_data_ubo) |
+                 CP_LOAD_STATE6_0_STATE_TYPE(ST6_UBO)|
+                 CP_LOAD_STATE6_0_STATE_SRC(SS6_DIRECT) |
+                 CP_LOAD_STATE6_0_STATE_BLOCK(tu6_stage2shadersb(stage)) |
+                 CP_LOAD_STATE6_0_NUM_UNIT(1));
+      tu_cs_emit(cs, CP_LOAD_STATE6_1_EXT_SRC_ADDR(0));
+      tu_cs_emit(cs, CP_LOAD_STATE6_2_EXT_SRC_ADDR_HI(0));
+      int size_vec4s = DIV_ROUND_UP(xs->constant_data_size, 16);
+      tu_cs_emit_qw(cs,
+                    iova |
+                    (uint64_t)A6XX_UBO_1_SIZE(size_vec4s) << 32);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_GS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_GS_CNTL_CONSTLEN(align(gs->constlen, 4)));
-}
+      /* Upload the constant data to the const file if needed. */
+      const struct ir3_ubo_analysis_state *ubo_state = &const_state->ubo_state;
 
-static void
-tu6_emit_fs_config(struct tu_cs *cs, struct tu_shader *shader,
-                   const struct ir3_shader_variant *fs)
-{
-   uint32_t sp_fs_ctrl =
-      A6XX_SP_FS_CTRL_REG0_THREADSIZE(FOUR_QUADS) | 0x1000000 |
-      A6XX_SP_FS_CTRL_REG0_FULLREGFOOTPRINT(fs->info.max_reg + 1) |
-      A6XX_SP_FS_CTRL_REG0_MERGEDREGS |
-      A6XX_SP_FS_CTRL_REG0_BRANCHSTACK(fs->branchstack);
-   if (fs->total_in > 0)
-      sp_fs_ctrl |= A6XX_SP_FS_CTRL_REG0_VARYING;
-   if (fs->need_pixlod)
-      sp_fs_ctrl |= A6XX_SP_FS_CTRL_REG0_PIXLODENABLE;
-   if (fs->need_fine_derivatives)
-      sp_fs_ctrl |= A6XX_SP_FS_CTRL_REG0_DIFF_FINE;
+      for (int i = 0; i < ubo_state->num_enabled; i++) {
+         if (ubo_state->range[i].ubo.block != const_state->constant_data_ubo ||
+             ubo_state->range[i].ubo.bindless) {
+            continue;
+         }
 
-   uint32_t sp_fs_config = A6XX_SP_FS_CONFIG_NTEX(shader->texture_map.num_desc) |
-                           A6XX_SP_FS_CONFIG_NSAMP(shader->sampler_map.num_desc) |
-                           A6XX_SP_FS_CONFIG_NIBO(tu_shader_nibo(shader));
-   if (fs->instrlen)
-      sp_fs_config |= A6XX_SP_FS_CONFIG_ENABLED;
+         uint32_t start = ubo_state->range[i].start;
+         uint32_t end = ubo_state->range[i].end;
+         uint32_t size = MIN2(end - start,
+                              (16 * xs->constlen) - ubo_state->range[i].offset);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_UNKNOWN_A9A8, 1);
-   tu_cs_emit(cs, 0);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_UNKNOWN_AB00, 1);
-   tu_cs_emit(cs, 0x5);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_CTRL_REG0, 1);
-   tu_cs_emit(cs, sp_fs_ctrl);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_CONFIG, 2);
-   tu_cs_emit(cs, sp_fs_config);
-   tu_cs_emit(cs, fs->instrlen);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_FS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_FS_CNTL_CONSTLEN(align(fs->constlen, 4)) |
-                  A6XX_HLSQ_FS_CNTL_ENABLED);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_IBO_COUNT, 1);
-   tu_cs_emit(cs, tu_shader_nibo(shader));
+         tu_cs_emit_pkt7(cs, tu6_stage2opcode(stage), 3);
+         tu_cs_emit(cs,
+                    CP_LOAD_STATE6_0_DST_OFF(ubo_state->range[i].offset / 16) |
+                    CP_LOAD_STATE6_0_STATE_TYPE(ST6_CONSTANTS) |
+                    CP_LOAD_STATE6_0_STATE_SRC(SS6_INDIRECT) |
+                    CP_LOAD_STATE6_0_STATE_BLOCK(tu6_stage2shadersb(stage)) |
+                    CP_LOAD_STATE6_0_NUM_UNIT(size / 16));
+         tu_cs_emit_qw(cs, iova + start);
+      }
+   }
 }
 
 static void
 tu6_emit_cs_config(struct tu_cs *cs, const struct tu_shader *shader,
-                   const struct ir3_shader_variant *v)
+                   const struct ir3_shader_variant *v,
+                   const struct tu_pvtmem_config *pvtmem,
+                   uint64_t binary_iova)
 {
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_UPDATE_CNTL, 1);
-   tu_cs_emit(cs, 0xff);
+   tu_cs_emit_regs(cs, A6XX_HLSQ_INVALIDATE_CMD(
+         .cs_state = true,
+         .cs_ibo = true));
 
-   unsigned constlen = align(v->constlen, 4);
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_CS_CNTL, 1);
-   tu_cs_emit(cs, A6XX_HLSQ_CS_CNTL_CONSTLEN(constlen) |
-              A6XX_HLSQ_CS_CNTL_ENABLED);
+   tu6_emit_xs_config(cs, MESA_SHADER_COMPUTE, v, pvtmem, binary_iova);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_CS_CONFIG, 2);
-   tu_cs_emit(cs, A6XX_SP_CS_CONFIG_ENABLED |
-              A6XX_SP_CS_CONFIG_NIBO(tu_shader_nibo(shader)) |
-              A6XX_SP_CS_CONFIG_NTEX(shader->texture_map.num_desc) |
-              A6XX_SP_CS_CONFIG_NSAMP(shader->sampler_map.num_desc));
-   tu_cs_emit(cs, v->instrlen);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_CS_CTRL_REG0, 1);
-   tu_cs_emit(cs, A6XX_SP_CS_CTRL_REG0_THREADSIZE(FOUR_QUADS) |
-              A6XX_SP_CS_CTRL_REG0_FULLREGFOOTPRINT(v->info.max_reg + 1) |
-              A6XX_SP_CS_CTRL_REG0_MERGEDREGS |
-              A6XX_SP_CS_CTRL_REG0_BRANCHSTACK(v->branchstack) |
-              COND(v->need_pixlod, A6XX_SP_CS_CTRL_REG0_PIXLODENABLE) |
-              COND(v->need_fine_derivatives, A6XX_SP_CS_CTRL_REG0_DIFF_FINE));
-
+   uint32_t shared_size = MAX2(((int)v->shared_size - 1) / 1024, 1);
    tu_cs_emit_pkt4(cs, REG_A6XX_SP_CS_UNKNOWN_A9B1, 1);
-   tu_cs_emit(cs, 0x41);
+   tu_cs_emit(cs, A6XX_SP_CS_UNKNOWN_A9B1_SHARED_SIZE(shared_size) |
+                  A6XX_SP_CS_UNKNOWN_A9B1_UNK6);
 
    uint32_t local_invocation_id =
       ir3_find_sysval_regid(v, SYSTEM_VALUE_LOCAL_INVOCATION_ID);
    uint32_t work_group_id =
       ir3_find_sysval_regid(v, SYSTEM_VALUE_WORK_GROUP_ID);
 
+   enum a6xx_threadsize thrsz = v->info.double_threadsize ? THREAD128 : THREAD64;
    tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_CS_CNTL_0, 2);
    tu_cs_emit(cs,
               A6XX_HLSQ_CS_CNTL_0_WGIDCONSTID(work_group_id) |
-              A6XX_HLSQ_CS_CNTL_0_UNK0(regid(63, 0)) |
-              A6XX_HLSQ_CS_CNTL_0_UNK1(regid(63, 0)) |
+              A6XX_HLSQ_CS_CNTL_0_WGSIZECONSTID(regid(63, 0)) |
+              A6XX_HLSQ_CS_CNTL_0_WGOFFSETCONSTID(regid(63, 0)) |
               A6XX_HLSQ_CS_CNTL_0_LOCALIDREGID(local_invocation_id));
-   tu_cs_emit(cs, 0x2fc);             /* HLSQ_CS_UNKNOWN_B998 */
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_CS_IBO_COUNT, 1);
-   tu_cs_emit(cs, tu_shader_nibo(shader));
+   tu_cs_emit(cs, A6XX_HLSQ_CS_CNTL_1_LINEARLOCALIDREGID(regid(63, 0)) |
+                  A6XX_HLSQ_CS_CNTL_1_THREADSIZE(thrsz));
 }
 
 static void
 tu6_emit_vs_system_values(struct tu_cs *cs,
-                          const struct ir3_shader_variant *vs)
+                          const struct ir3_shader_variant *vs,
+                          const struct ir3_shader_variant *hs,
+                          const struct ir3_shader_variant *ds,
+                          const struct ir3_shader_variant *gs,
+                          bool primid_passthru)
 {
    const uint32_t vertexid_regid =
-      ir3_find_sysval_regid(vs, SYSTEM_VALUE_VERTEX_ID);
+         ir3_find_sysval_regid(vs, SYSTEM_VALUE_VERTEX_ID);
    const uint32_t instanceid_regid =
-      ir3_find_sysval_regid(vs, SYSTEM_VALUE_INSTANCE_ID);
+         ir3_find_sysval_regid(vs, SYSTEM_VALUE_INSTANCE_ID);
+   const uint32_t tess_coord_x_regid = hs ?
+         ir3_find_sysval_regid(ds, SYSTEM_VALUE_TESS_COORD) :
+         regid(63, 0);
+   const uint32_t tess_coord_y_regid = VALIDREG(tess_coord_x_regid) ?
+         tess_coord_x_regid + 1 :
+         regid(63, 0);
+   const uint32_t hs_patch_regid = hs ?
+         ir3_find_sysval_regid(hs, SYSTEM_VALUE_PRIMITIVE_ID) :
+         regid(63, 0);
+   const uint32_t ds_patch_regid = hs ?
+         ir3_find_sysval_regid(ds, SYSTEM_VALUE_PRIMITIVE_ID) :
+         regid(63, 0);
+   const uint32_t hs_invocation_regid = hs ?
+         ir3_find_sysval_regid(hs, SYSTEM_VALUE_TCS_HEADER_IR3) :
+         regid(63, 0);
+   const uint32_t primitiveid_regid = gs ?
+         ir3_find_sysval_regid(gs, SYSTEM_VALUE_PRIMITIVE_ID) :
+         regid(63, 0);
+   const uint32_t gsheader_regid = gs ?
+         ir3_find_sysval_regid(gs, SYSTEM_VALUE_GS_HEADER_IR3) :
+         regid(63, 0);
+
+   /* Note: we currently don't support multiview with tess or GS. If we did,
+    * and the HW actually works, then we'd have to somehow share this across
+    * stages. Note that the blob doesn't support this either.
+    */
+   const uint32_t viewid_regid =
+      ir3_find_sysval_regid(vs, SYSTEM_VALUE_VIEW_INDEX);
 
    tu_cs_emit_pkt4(cs, REG_A6XX_VFD_CONTROL_1, 6);
    tu_cs_emit(cs, A6XX_VFD_CONTROL_1_REGID4VTX(vertexid_regid) |
-                     A6XX_VFD_CONTROL_1_REGID4INST(instanceid_regid) |
-                     0xfcfc0000);
-   tu_cs_emit(cs, 0x0000fcfc); /* VFD_CONTROL_2 */
-   tu_cs_emit(cs, 0xfcfcfcfc); /* VFD_CONTROL_3 */
+                  A6XX_VFD_CONTROL_1_REGID4INST(instanceid_regid) |
+                  A6XX_VFD_CONTROL_1_REGID4PRIMID(primitiveid_regid) |
+                  A6XX_VFD_CONTROL_1_REGID4VIEWID(viewid_regid));
+   tu_cs_emit(cs, A6XX_VFD_CONTROL_2_REGID_HSPATCHID(hs_patch_regid) |
+                  A6XX_VFD_CONTROL_2_REGID_INVOCATIONID(hs_invocation_regid));
+   tu_cs_emit(cs, A6XX_VFD_CONTROL_3_REGID_DSPATCHID(ds_patch_regid) |
+                  A6XX_VFD_CONTROL_3_REGID_TESSX(tess_coord_x_regid) |
+                  A6XX_VFD_CONTROL_3_REGID_TESSY(tess_coord_y_regid) |
+                  0xfc);
    tu_cs_emit(cs, 0x000000fc); /* VFD_CONTROL_4 */
-   tu_cs_emit(cs, 0x0000fcfc); /* VFD_CONTROL_5 */
-   tu_cs_emit(cs, 0x00000000); /* VFD_CONTROL_6 */
+   tu_cs_emit(cs, A6XX_VFD_CONTROL_5_REGID_GSHEADER(gsheader_regid) |
+                  0xfc00); /* VFD_CONTROL_5 */
+   tu_cs_emit(cs, COND(primid_passthru, A6XX_VFD_CONTROL_6_PRIMID_PASSTHRU)); /* VFD_CONTROL_6 */
 }
 
 static void
+tu6_setup_streamout(struct tu_cs *cs,
+                    const struct ir3_shader_variant *v,
+                    struct ir3_shader_linkage *l)
+{
+   const struct ir3_stream_output_info *info = &v->shader->stream_output;
+   /* Note: 64 here comes from the HW layout of the program RAM. The program
+    * for stream N is at DWORD 64 * N.
+    */
+#define A6XX_SO_PROG_DWORDS 64
+   uint32_t prog[A6XX_SO_PROG_DWORDS * IR3_MAX_SO_STREAMS] = {};
+   BITSET_DECLARE(valid_dwords, A6XX_SO_PROG_DWORDS * IR3_MAX_SO_STREAMS) = {0};
+   uint32_t ncomp[IR3_MAX_SO_BUFFERS] = {};
+
+   /* TODO: streamout state should be in a non-GMEM draw state */
+
+   /* no streamout: */
+   if (info->num_outputs == 0) {
+      tu_cs_emit_pkt7(cs, CP_CONTEXT_REG_BUNCH, 4);
+      tu_cs_emit(cs, REG_A6XX_VPC_SO_CNTL);
+      tu_cs_emit(cs, 0);
+      tu_cs_emit(cs, REG_A6XX_VPC_SO_STREAM_CNTL);
+      tu_cs_emit(cs, 0);
+      return;
+   }
+
+   /* is there something to do with info->stride[i]? */
+
+   for (unsigned i = 0; i < info->num_outputs; i++) {
+      const struct ir3_stream_output *out = &info->output[i];
+      unsigned k = out->register_index;
+      unsigned idx;
+
+      /* Skip it, if there's an unused reg in the middle of outputs. */
+      if (v->outputs[k].regid == INVALID_REG)
+         continue;
+
+      ncomp[out->output_buffer] += out->num_components;
+
+      /* linkage map sorted by order frag shader wants things, so
+       * a bit less ideal here..
+       */
+      for (idx = 0; idx < l->cnt; idx++)
+         if (l->var[idx].regid == v->outputs[k].regid)
+            break;
+
+      debug_assert(idx < l->cnt);
+
+      for (unsigned j = 0; j < out->num_components; j++) {
+         unsigned c   = j + out->start_component;
+         unsigned loc = l->var[idx].loc + c;
+         unsigned off = j + out->dst_offset;  /* in dwords */
+
+         assert(loc < A6XX_SO_PROG_DWORDS * 2);
+         unsigned dword = out->stream * A6XX_SO_PROG_DWORDS + loc/2;
+         if (loc & 1) {
+            prog[dword] |= A6XX_VPC_SO_PROG_B_EN |
+                           A6XX_VPC_SO_PROG_B_BUF(out->output_buffer) |
+                           A6XX_VPC_SO_PROG_B_OFF(off * 4);
+         } else {
+            prog[dword] |= A6XX_VPC_SO_PROG_A_EN |
+                           A6XX_VPC_SO_PROG_A_BUF(out->output_buffer) |
+                           A6XX_VPC_SO_PROG_A_OFF(off * 4);
+         }
+         BITSET_SET(valid_dwords, dword);
+      }
+   }
+
+   unsigned prog_count = 0;
+   unsigned start, end;
+   BITSET_FOREACH_RANGE(start, end, valid_dwords,
+                        A6XX_SO_PROG_DWORDS * IR3_MAX_SO_STREAMS) {
+      prog_count += end - start + 1;
+   }
+
+   tu_cs_emit_pkt7(cs, CP_CONTEXT_REG_BUNCH, 10 + 2 * prog_count);
+   tu_cs_emit(cs, REG_A6XX_VPC_SO_STREAM_CNTL);
+   tu_cs_emit(cs, A6XX_VPC_SO_STREAM_CNTL_STREAM_ENABLE(info->streams_written) |
+                  COND(ncomp[0] > 0,
+                       A6XX_VPC_SO_STREAM_CNTL_BUF0_STREAM(1 + info->buffer_to_stream[0])) |
+                  COND(ncomp[1] > 0,
+                       A6XX_VPC_SO_STREAM_CNTL_BUF1_STREAM(1 + info->buffer_to_stream[1])) |
+                  COND(ncomp[2] > 0,
+                       A6XX_VPC_SO_STREAM_CNTL_BUF2_STREAM(1 + info->buffer_to_stream[2])) |
+                  COND(ncomp[3] > 0,
+                       A6XX_VPC_SO_STREAM_CNTL_BUF3_STREAM(1 + info->buffer_to_stream[3])));
+   for (uint32_t i = 0; i < 4; i++) {
+      tu_cs_emit(cs, REG_A6XX_VPC_SO_NCOMP(i));
+      tu_cs_emit(cs, ncomp[i]);
+   }
+   bool first = true;
+   BITSET_FOREACH_RANGE(start, end, valid_dwords,
+                        A6XX_SO_PROG_DWORDS * IR3_MAX_SO_STREAMS) {
+      tu_cs_emit(cs, REG_A6XX_VPC_SO_CNTL);
+      tu_cs_emit(cs, COND(first, A6XX_VPC_SO_CNTL_RESET) |
+                     A6XX_VPC_SO_CNTL_ADDR(start));
+      for (unsigned i = start; i < end; i++) {
+         tu_cs_emit(cs, REG_A6XX_VPC_SO_PROG);
+         tu_cs_emit(cs, prog[i]);
+      }
+      first = false;
+   }
+}
+
+static void
+tu6_emit_const(struct tu_cs *cs, uint32_t opcode, uint32_t base,
+               enum a6xx_state_block block, uint32_t offset,
+               uint32_t size, const uint32_t *dwords) {
+   assert(size % 4 == 0);
+
+   tu_cs_emit_pkt7(cs, opcode, 3 + size);
+   tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(base) |
+         CP_LOAD_STATE6_0_STATE_TYPE(ST6_CONSTANTS) |
+         CP_LOAD_STATE6_0_STATE_SRC(SS6_DIRECT) |
+         CP_LOAD_STATE6_0_STATE_BLOCK(block) |
+         CP_LOAD_STATE6_0_NUM_UNIT(size / 4));
+
+   tu_cs_emit(cs, CP_LOAD_STATE6_1_EXT_SRC_ADDR(0));
+   tu_cs_emit(cs, CP_LOAD_STATE6_2_EXT_SRC_ADDR_HI(0));
+   dwords = (uint32_t *)&((uint8_t *)dwords)[offset];
+
+   tu_cs_emit_array(cs, dwords, size);
+}
+
+static void
+tu6_emit_link_map(struct tu_cs *cs,
+                  const struct ir3_shader_variant *producer,
+                  const struct ir3_shader_variant *consumer,
+                  enum a6xx_state_block sb)
+{
+   const struct ir3_const_state *const_state = ir3_const_state(consumer);
+   uint32_t base = const_state->offsets.primitive_map;
+   int size = DIV_ROUND_UP(consumer->input_size, 4);
+
+   size = (MIN2(size + base, consumer->constlen) - base) * 4;
+   if (size <= 0)
+      return;
+
+   tu6_emit_const(cs, CP_LOAD_STATE6_GEOM, base, sb, 0, size,
+                         producer->output_loc);
+}
+
+static uint16_t
+gl_primitive_to_tess(uint16_t primitive) {
+   switch (primitive) {
+   case GL_POINTS:
+      return TESS_POINTS;
+   case GL_LINE_STRIP:
+      return TESS_LINES;
+   case GL_TRIANGLE_STRIP:
+      return TESS_CW_TRIS;
+   default:
+      unreachable("");
+   }
+}
+
+void
 tu6_emit_vpc(struct tu_cs *cs,
              const struct ir3_shader_variant *vs,
+             const struct ir3_shader_variant *hs,
+             const struct ir3_shader_variant *ds,
+             const struct ir3_shader_variant *gs,
              const struct ir3_shader_variant *fs,
-             bool binning_pass)
+             uint32_t patch_control_points,
+             bool vshs_workgroup)
 {
-   struct ir3_shader_linkage linkage = { 0 };
-   ir3_link_shaders(&linkage, vs, fs);
+   /* note: doesn't compile as static because of the array regs.. */
+   const struct reg_config {
+      uint16_t reg_sp_xs_out_reg;
+      uint16_t reg_sp_xs_vpc_dst_reg;
+      uint16_t reg_vpc_xs_pack;
+      uint16_t reg_vpc_xs_clip_cntl;
+      uint16_t reg_gras_xs_cl_cntl;
+      uint16_t reg_pc_xs_out_cntl;
+      uint16_t reg_sp_xs_primitive_cntl;
+      uint16_t reg_vpc_xs_layer_cntl;
+      uint16_t reg_gras_xs_layer_cntl;
+   } reg_config[] = {
+      [MESA_SHADER_VERTEX] = {
+         REG_A6XX_SP_VS_OUT_REG(0),
+         REG_A6XX_SP_VS_VPC_DST_REG(0),
+         REG_A6XX_VPC_VS_PACK,
+         REG_A6XX_VPC_VS_CLIP_CNTL,
+         REG_A6XX_GRAS_VS_CL_CNTL,
+         REG_A6XX_PC_VS_OUT_CNTL,
+         REG_A6XX_SP_VS_PRIMITIVE_CNTL,
+         REG_A6XX_VPC_VS_LAYER_CNTL,
+         REG_A6XX_GRAS_VS_LAYER_CNTL
+      },
+      [MESA_SHADER_TESS_EVAL] = {
+         REG_A6XX_SP_DS_OUT_REG(0),
+         REG_A6XX_SP_DS_VPC_DST_REG(0),
+         REG_A6XX_VPC_DS_PACK,
+         REG_A6XX_VPC_DS_CLIP_CNTL,
+         REG_A6XX_GRAS_DS_CL_CNTL,
+         REG_A6XX_PC_DS_OUT_CNTL,
+         REG_A6XX_SP_DS_PRIMITIVE_CNTL,
+         REG_A6XX_VPC_DS_LAYER_CNTL,
+         REG_A6XX_GRAS_DS_LAYER_CNTL
+      },
+      [MESA_SHADER_GEOMETRY] = {
+         REG_A6XX_SP_GS_OUT_REG(0),
+         REG_A6XX_SP_GS_VPC_DST_REG(0),
+         REG_A6XX_VPC_GS_PACK,
+         REG_A6XX_VPC_GS_CLIP_CNTL,
+         REG_A6XX_GRAS_GS_CL_CNTL,
+         REG_A6XX_PC_GS_OUT_CNTL,
+         REG_A6XX_SP_GS_PRIMITIVE_CNTL,
+         REG_A6XX_VPC_GS_LAYER_CNTL,
+         REG_A6XX_GRAS_GS_LAYER_CNTL
+      },
+   };
 
-   if (vs->shader->stream_output.num_outputs && !binning_pass)
-      tu_finishme("stream output");
-
-   BITSET_DECLARE(vpc_var_enables, 128) = { 0 };
-   for (uint32_t i = 0; i < linkage.cnt; i++) {
-      const uint32_t comp_count = util_last_bit(linkage.var[i].compmask);
-      for (uint32_t j = 0; j < comp_count; j++)
-         BITSET_SET(vpc_var_enables, linkage.var[i].loc + j);
+   const struct ir3_shader_variant *last_shader;
+   if (gs) {
+      last_shader = gs;
+   } else if (hs) {
+      last_shader = ds;
+   } else {
+      last_shader = vs;
    }
+
+   const struct reg_config *cfg = &reg_config[last_shader->type];
+
+   struct ir3_shader_linkage linkage = {
+      .primid_loc = 0xff,
+      .clip0_loc = 0xff,
+      .clip1_loc = 0xff,
+   };
+   if (fs)
+      ir3_link_shaders(&linkage, last_shader, fs, true);
+
+   if (last_shader->shader->stream_output.num_outputs)
+      ir3_link_stream_out(&linkage, last_shader);
+
+   /* We do this after linking shaders in order to know whether PrimID
+    * passthrough needs to be enabled.
+    */
+   bool primid_passthru = linkage.primid_loc != 0xff;
+   tu6_emit_vs_system_values(cs, vs, hs, ds, gs, primid_passthru);
 
    tu_cs_emit_pkt4(cs, REG_A6XX_VPC_VAR_DISABLE(0), 4);
-   tu_cs_emit(cs, ~vpc_var_enables[0]);
-   tu_cs_emit(cs, ~vpc_var_enables[1]);
-   tu_cs_emit(cs, ~vpc_var_enables[2]);
-   tu_cs_emit(cs, ~vpc_var_enables[3]);
+   tu_cs_emit(cs, ~linkage.varmask[0]);
+   tu_cs_emit(cs, ~linkage.varmask[1]);
+   tu_cs_emit(cs, ~linkage.varmask[2]);
+   tu_cs_emit(cs, ~linkage.varmask[3]);
 
    /* a6xx finds position/pointsize at the end */
-   const uint32_t position_regid =
-      ir3_find_output_regid(vs, VARYING_SLOT_POS);
    const uint32_t pointsize_regid =
-      ir3_find_output_regid(vs, VARYING_SLOT_PSIZ);
-   uint32_t pointsize_loc = 0xff, position_loc = 0xff;
-   if (position_regid != regid(63, 0)) {
-      position_loc = linkage.max_loc;
-      ir3_link_add(&linkage, position_regid, 0xf, linkage.max_loc);
+      ir3_find_output_regid(last_shader, VARYING_SLOT_PSIZ);
+   const uint32_t layer_regid =
+      ir3_find_output_regid(last_shader, VARYING_SLOT_LAYER);
+   const uint32_t view_regid =
+      ir3_find_output_regid(last_shader, VARYING_SLOT_VIEWPORT);
+   const uint32_t clip0_regid =
+      ir3_find_output_regid(last_shader, VARYING_SLOT_CLIP_DIST0);
+   const uint32_t clip1_regid =
+      ir3_find_output_regid(last_shader, VARYING_SLOT_CLIP_DIST1);
+   uint32_t primitive_regid = gs ?
+      ir3_find_sysval_regid(gs, SYSTEM_VALUE_PRIMITIVE_ID) : regid(63, 0);
+   uint32_t flags_regid = gs ?
+      ir3_find_output_regid(gs, VARYING_SLOT_GS_VERTEX_FLAGS_IR3) : 0;
+
+   uint32_t pointsize_loc = 0xff, position_loc = 0xff, layer_loc = 0xff, view_loc = 0xff;
+
+   if (layer_regid != regid(63, 0)) {
+      layer_loc = linkage.max_loc;
+      ir3_link_add(&linkage, layer_regid, 0x1, linkage.max_loc);
    }
+
+   if (view_regid != regid(63, 0)) {
+      view_loc = linkage.max_loc;
+      ir3_link_add(&linkage, view_regid, 0x1, linkage.max_loc);
+   }
+
+   unsigned extra_pos = 0;
+
+   for (unsigned i = 0; i < last_shader->outputs_count; i++) {
+      if (last_shader->outputs[i].slot != VARYING_SLOT_POS)
+         continue;
+
+      if (position_loc == 0xff)
+         position_loc = linkage.max_loc;
+
+      ir3_link_add(&linkage, last_shader->outputs[i].regid,
+                   0xf, position_loc + 4 * last_shader->outputs[i].view);
+      extra_pos = MAX2(extra_pos, last_shader->outputs[i].view);
+   }
+
    if (pointsize_regid != regid(63, 0)) {
       pointsize_loc = linkage.max_loc;
       ir3_link_add(&linkage, pointsize_regid, 0x1, linkage.max_loc);
    }
 
-   /* map vs outputs to VPC */
+   uint8_t clip_cull_mask = last_shader->clip_mask | last_shader->cull_mask;
+
+   /* Handle the case where clip/cull distances aren't read by the FS */
+   uint32_t clip0_loc = linkage.clip0_loc, clip1_loc = linkage.clip1_loc;
+   if (clip0_loc == 0xff && clip0_regid != regid(63, 0)) {
+      clip0_loc = linkage.max_loc;
+      ir3_link_add(&linkage, clip0_regid, clip_cull_mask & 0xf, linkage.max_loc);
+   }
+   if (clip1_loc == 0xff && clip1_regid != regid(63, 0)) {
+      clip1_loc = linkage.max_loc;
+      ir3_link_add(&linkage, clip1_regid, clip_cull_mask >> 4, linkage.max_loc);
+   }
+
+   tu6_setup_streamout(cs, last_shader, &linkage);
+
+   /* The GPU hangs on some models when there are no outputs (xs_pack::CNT),
+    * at least when a DS is the last stage, so add a dummy output to keep it
+    * happy if there aren't any. We do this late in order to avoid emitting
+    * any unused code and make sure that optimizations don't remove it.
+    */
+   if (linkage.cnt == 0)
+      ir3_link_add(&linkage, 0, 0x1, linkage.max_loc);
+
+   /* map outputs of the last shader to VPC */
    assert(linkage.cnt <= 32);
-   const uint32_t sp_vs_out_count = (linkage.cnt + 1) / 2;
-   const uint32_t sp_vs_vpc_dst_count = (linkage.cnt + 3) / 4;
-   uint32_t sp_vs_out[16];
-   uint32_t sp_vs_vpc_dst[8];
-   sp_vs_out[sp_vs_out_count - 1] = 0;
-   sp_vs_vpc_dst[sp_vs_vpc_dst_count - 1] = 0;
+   const uint32_t sp_out_count = DIV_ROUND_UP(linkage.cnt, 2);
+   const uint32_t sp_vpc_dst_count = DIV_ROUND_UP(linkage.cnt, 4);
+   uint32_t sp_out[16];
+   uint32_t sp_vpc_dst[8];
    for (uint32_t i = 0; i < linkage.cnt; i++) {
-      ((uint16_t *) sp_vs_out)[i] =
+      ((uint16_t *) sp_out)[i] =
          A6XX_SP_VS_OUT_REG_A_REGID(linkage.var[i].regid) |
          A6XX_SP_VS_OUT_REG_A_COMPMASK(linkage.var[i].compmask);
-      ((uint8_t *) sp_vs_vpc_dst)[i] =
+      ((uint8_t *) sp_vpc_dst)[i] =
          A6XX_SP_VS_VPC_DST_REG_OUTLOC0(linkage.var[i].loc);
    }
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_VS_OUT_REG(0), sp_vs_out_count);
-   tu_cs_emit_array(cs, sp_vs_out, sp_vs_out_count);
+   tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_out_reg, sp_out_count);
+   tu_cs_emit_array(cs, sp_out, sp_out_count);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_VS_VPC_DST_REG(0), sp_vs_vpc_dst_count);
-   tu_cs_emit_array(cs, sp_vs_vpc_dst, sp_vs_vpc_dst_count);
+   tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_vpc_dst_reg, sp_vpc_dst_count);
+   tu_cs_emit_array(cs, sp_vpc_dst, sp_vpc_dst_count);
+
+   tu_cs_emit_pkt4(cs, cfg->reg_vpc_xs_pack, 1);
+   tu_cs_emit(cs, A6XX_VPC_VS_PACK_POSITIONLOC(position_loc) |
+                  A6XX_VPC_VS_PACK_PSIZELOC(pointsize_loc) |
+                  A6XX_VPC_VS_PACK_STRIDE_IN_VPC(linkage.max_loc) |
+                  A6XX_VPC_VS_PACK_EXTRAPOS(extra_pos));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_vpc_xs_clip_cntl, 1);
+   tu_cs_emit(cs, A6XX_VPC_VS_CLIP_CNTL_CLIP_MASK(clip_cull_mask) |
+                  A6XX_VPC_VS_CLIP_CNTL_CLIP_DIST_03_LOC(clip0_loc) |
+                  A6XX_VPC_VS_CLIP_CNTL_CLIP_DIST_47_LOC(clip1_loc));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_gras_xs_cl_cntl, 1);
+   tu_cs_emit(cs, A6XX_GRAS_VS_CL_CNTL_CLIP_MASK(last_shader->clip_mask) |
+                  A6XX_GRAS_VS_CL_CNTL_CULL_MASK(last_shader->cull_mask));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_pc_xs_out_cntl, 1);
+   tu_cs_emit(cs, A6XX_PC_VS_OUT_CNTL_STRIDE_IN_VPC(linkage.max_loc) |
+                  CONDREG(pointsize_regid, A6XX_PC_VS_OUT_CNTL_PSIZE) |
+                  CONDREG(layer_regid, A6XX_PC_VS_OUT_CNTL_LAYER) |
+                  CONDREG(view_regid, A6XX_PC_VS_OUT_CNTL_VIEW) |
+                  CONDREG(primitive_regid, A6XX_PC_VS_OUT_CNTL_PRIMITIVE_ID) |
+                  A6XX_PC_VS_OUT_CNTL_CLIP_MASK(clip_cull_mask));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_sp_xs_primitive_cntl, 1);
+   tu_cs_emit(cs, A6XX_SP_VS_PRIMITIVE_CNTL_OUT(linkage.cnt) |
+                  A6XX_SP_GS_PRIMITIVE_CNTL_FLAGS_REGID(flags_regid));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_vpc_xs_layer_cntl, 1);
+   tu_cs_emit(cs, A6XX_VPC_VS_LAYER_CNTL_LAYERLOC(layer_loc) |
+                  A6XX_VPC_VS_LAYER_CNTL_VIEWLOC(view_loc));
+
+   tu_cs_emit_pkt4(cs, cfg->reg_gras_xs_layer_cntl, 1);
+   tu_cs_emit(cs, CONDREG(layer_regid, A6XX_GRAS_GS_LAYER_CNTL_WRITES_LAYER) |
+                  CONDREG(view_regid, A6XX_GRAS_GS_LAYER_CNTL_WRITES_VIEW));
+
+   tu_cs_emit_regs(cs, A6XX_PC_PRIMID_PASSTHRU(primid_passthru));
 
    tu_cs_emit_pkt4(cs, REG_A6XX_VPC_CNTL_0, 1);
-   tu_cs_emit(cs, A6XX_VPC_CNTL_0_NUMNONPOSVAR(fs->total_in) |
-                     (fs->total_in > 0 ? A6XX_VPC_CNTL_0_VARYING : 0) |
-                     0xff00ff00);
+   tu_cs_emit(cs, A6XX_VPC_CNTL_0_NUMNONPOSVAR(fs ? fs->total_in : 0) |
+                  COND(fs && fs->total_in, A6XX_VPC_CNTL_0_VARYING) |
+                  A6XX_VPC_CNTL_0_PRIMIDLOC(linkage.primid_loc) |
+                  A6XX_VPC_CNTL_0_VIEWIDLOC(linkage.viewid_loc));
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_VPC_PACK, 1);
-   tu_cs_emit(cs, A6XX_VPC_PACK_POSITIONLOC(position_loc) |
-                     A6XX_VPC_PACK_PSIZELOC(pointsize_loc) |
-                     A6XX_VPC_PACK_STRIDE_IN_VPC(linkage.max_loc));
+   if (hs) {
+      shader_info *hs_info = &hs->shader->nir->info;
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_VPC_GS_SIV_CNTL, 1);
-   tu_cs_emit(cs, 0x0000ffff); /* XXX */
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_TESS_NUM_VERTEX, 1);
+      tu_cs_emit(cs, hs_info->tess.tcs_vertices_out);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_PRIMITIVE_CNTL, 1);
-   tu_cs_emit(cs, A6XX_SP_PRIMITIVE_CNTL_VSOUT(linkage.cnt));
+      /* Total attribute slots in HS incoming patch. */
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_HS_INPUT_SIZE, 1);
+      tu_cs_emit(cs, patch_control_points * vs->output_size / 4);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_PC_PRIMITIVE_CNTL_1, 1);
-   tu_cs_emit(cs, A6XX_PC_PRIMITIVE_CNTL_1_STRIDE_IN_VPC(linkage.max_loc) |
-                     (vs->writes_psize ? A6XX_PC_PRIMITIVE_CNTL_1_PSIZE : 0));
+      const uint32_t wavesize = 64;
+      const uint32_t max_wave_input_size = 64;
+
+      /* note: if HS is really just the VS extended, then this
+       * should be by MAX2(patch_control_points, hs_info->tess.tcs_vertices_out)
+       * however that doesn't match the blob, and fails some dEQP tests.
+       */
+      uint32_t prims_per_wave = wavesize / hs_info->tess.tcs_vertices_out;
+      uint32_t max_prims_per_wave =
+         max_wave_input_size * wavesize / (vs->output_size * patch_control_points);
+      prims_per_wave = MIN2(prims_per_wave, max_prims_per_wave);
+
+      uint32_t total_size = vs->output_size * patch_control_points * prims_per_wave;
+      uint32_t wave_input_size = DIV_ROUND_UP(total_size, wavesize);
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_SP_HS_WAVE_INPUT_SIZE, 1);
+      tu_cs_emit(cs, wave_input_size);
+
+      /* In SPIR-V generated from GLSL, the tessellation primitive params are
+       * are specified in the tess eval shader, but in SPIR-V generated from
+       * HLSL, they are specified in the tess control shader. */
+      shader_info *tess_info =
+            ds->shader->nir->info.tess.spacing == TESS_SPACING_UNSPECIFIED ?
+            &hs->shader->nir->info : &ds->shader->nir->info;
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_TESS_CNTL, 1);
+      uint32_t output;
+      if (tess_info->tess.point_mode)
+         output = TESS_POINTS;
+      else if (tess_info->tess.primitive_mode == GL_ISOLINES)
+         output = TESS_LINES;
+      else if (tess_info->tess.ccw)
+         output = TESS_CCW_TRIS;
+      else
+         output = TESS_CW_TRIS;
+
+      enum a6xx_tess_spacing spacing;
+      switch (tess_info->tess.spacing) {
+      case TESS_SPACING_EQUAL:
+         spacing = TESS_EQUAL;
+         break;
+      case TESS_SPACING_FRACTIONAL_ODD:
+         spacing = TESS_FRACTIONAL_ODD;
+         break;
+      case TESS_SPACING_FRACTIONAL_EVEN:
+         spacing = TESS_FRACTIONAL_EVEN;
+         break;
+      case TESS_SPACING_UNSPECIFIED:
+      default:
+         unreachable("invalid tess spacing");
+      }
+      tu_cs_emit(cs, A6XX_PC_TESS_CNTL_SPACING(spacing) |
+            A6XX_PC_TESS_CNTL_OUTPUT(output));
+
+      tu6_emit_link_map(cs, vs, hs, SB6_HS_SHADER);
+      tu6_emit_link_map(cs, hs, ds, SB6_DS_SHADER);
+   }
+
+
+   if (gs) {
+      uint32_t vertices_out, invocations, output, vec4_size;
+      uint32_t prev_stage_output_size = ds ? ds->output_size : vs->output_size;
+
+      /* this detects the tu_clear_blit path, which doesn't set ->nir */
+      if (gs->shader->nir) {
+         if (hs) {
+            tu6_emit_link_map(cs, ds, gs, SB6_GS_SHADER);
+         } else {
+            tu6_emit_link_map(cs, vs, gs, SB6_GS_SHADER);
+         }
+         vertices_out = gs->shader->nir->info.gs.vertices_out - 1;
+         output = gl_primitive_to_tess(gs->shader->nir->info.gs.output_primitive);
+         invocations = gs->shader->nir->info.gs.invocations - 1;
+         /* Size of per-primitive alloction in ldlw memory in vec4s. */
+         vec4_size = gs->shader->nir->info.gs.vertices_in *
+                     DIV_ROUND_UP(prev_stage_output_size, 4);
+      } else {
+         vertices_out = 3;
+         output = TESS_CW_TRIS;
+         invocations = 0;
+         vec4_size = 0;
+      }
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_PRIMITIVE_CNTL_5, 1);
+      tu_cs_emit(cs,
+            A6XX_PC_PRIMITIVE_CNTL_5_GS_VERTICES_OUT(vertices_out) |
+            A6XX_PC_PRIMITIVE_CNTL_5_GS_OUTPUT(output) |
+            A6XX_PC_PRIMITIVE_CNTL_5_GS_INVOCATIONS(invocations));
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_PRIMITIVE_CNTL_3, 1);
+      tu_cs_emit(cs, 0);
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_VPC_UNKNOWN_9100, 1);
+      tu_cs_emit(cs, 0xff);
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_PRIMITIVE_CNTL_6, 1);
+      tu_cs_emit(cs, A6XX_PC_PRIMITIVE_CNTL_6_STRIDE_IN_VPC(vec4_size));
+
+      uint32_t prim_size = prev_stage_output_size;
+      if (prim_size > 64)
+         prim_size = 64;
+      else if (prim_size == 64)
+         prim_size = 63;
+      tu_cs_emit_pkt4(cs, REG_A6XX_SP_GS_PRIM_SIZE, 1);
+      tu_cs_emit(cs, prim_size);
+   }
 }
 
 static int
@@ -691,8 +1192,7 @@ tu6_vpc_varying_mode(const struct ir3_shader_variant *fs,
          *interp_mode |= INTERP_ONE << 6;
          shift += 2;
       }
-   } else if ((fs->inputs[index].interpolate == INTERP_MODE_FLAT) ||
-              fs->inputs[index].rasterflat) {
+   } else if (fs->inputs[index].flat) {
       for (int i = 0; i < 4; i++) {
          if (compmask & (1 << i)) {
             *interp_mode |= INTERP_FLAT << shift;
@@ -706,13 +1206,12 @@ tu6_vpc_varying_mode(const struct ir3_shader_variant *fs,
 
 static void
 tu6_emit_vpc_varying_modes(struct tu_cs *cs,
-                           const struct ir3_shader_variant *fs,
-                           bool binning_pass)
+                           const struct ir3_shader_variant *fs)
 {
    uint32_t interp_modes[8] = { 0 };
    uint32_t ps_repl_modes[8] = { 0 };
 
-   if (!binning_pass) {
+   if (fs) {
       for (int i = -1;
            (i = ir3_next_varying(fs, i)) < (int) fs->inputs_count;) {
 
@@ -745,14 +1244,14 @@ tu6_emit_vpc_varying_modes(struct tu_cs *cs,
    tu_cs_emit_array(cs, ps_repl_modes, 8);
 }
 
-static void
+void
 tu6_emit_fs_inputs(struct tu_cs *cs, const struct ir3_shader_variant *fs)
 {
    uint32_t face_regid, coord_regid, zwcoord_regid, samp_id_regid;
-   uint32_t ij_pix_regid, ij_samp_regid, ij_cent_regid, ij_size_regid;
+   uint32_t ij_regid[IJ_COUNT];
    uint32_t smask_in_regid;
 
-   bool sample_shading = fs->per_samp; /* TODO | key->sample_shading; */
+   bool sample_shading = fs->per_samp | fs->key.sample_shading;
    bool enable_varyings = fs->total_in > 0;
 
    samp_id_regid   = ir3_find_sysval_regid(fs, SYSTEM_VALUE_SAMPLE_ID);
@@ -760,15 +1259,19 @@ tu6_emit_fs_inputs(struct tu_cs *cs, const struct ir3_shader_variant *fs)
    face_regid      = ir3_find_sysval_regid(fs, SYSTEM_VALUE_FRONT_FACE);
    coord_regid     = ir3_find_sysval_regid(fs, SYSTEM_VALUE_FRAG_COORD);
    zwcoord_regid   = VALIDREG(coord_regid) ? coord_regid + 2 : regid(63, 0);
-   ij_pix_regid    = ir3_find_sysval_regid(fs, SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL);
-   ij_samp_regid   = ir3_find_sysval_regid(fs, SYSTEM_VALUE_BARYCENTRIC_PERSP_SAMPLE);
-   ij_cent_regid   = ir3_find_sysval_regid(fs, SYSTEM_VALUE_BARYCENTRIC_PERSP_CENTROID);
-   ij_size_regid   = ir3_find_sysval_regid(fs, SYSTEM_VALUE_BARYCENTRIC_PERSP_SIZE);
+   for (unsigned i = 0; i < ARRAY_SIZE(ij_regid); i++)
+      ij_regid[i] = ir3_find_sysval_regid(fs, SYSTEM_VALUE_BARYCENTRIC_PERSP_PIXEL + i);
+
+   if (VALIDREG(ij_regid[IJ_LINEAR_SAMPLE]))
+      tu_finishme("linear sample varying");
+
+   if (VALIDREG(ij_regid[IJ_LINEAR_CENTROID]))
+      tu_finishme("linear centroid varying");
 
    if (fs->num_sampler_prefetch > 0) {
-      assert(VALIDREG(ij_pix_regid));
+      assert(VALIDREG(ij_regid[IJ_PERSP_PIXEL]));
       /* also, it seems like ij_pix is *required* to be r0.x */
-      assert(ij_pix_regid == regid(0, 0));
+      assert(ij_regid[IJ_PERSP_PIXEL] == regid(0, 0));
    }
 
    tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_PREFETCH_CNTL, 1 + fs->num_sampler_prefetch);
@@ -786,76 +1289,100 @@ tu6_emit_fs_inputs(struct tu_cs *cs, const struct ir3_shader_variant *fs)
                      A6XX_SP_FS_PREFETCH_CMD_CMD(prefetch->cmd));
    }
 
+   if (fs->num_sampler_prefetch > 0) {
+      tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_BINDLESS_PREFETCH_CMD(0), fs->num_sampler_prefetch);
+      for (int i = 0; i < fs->num_sampler_prefetch; i++) {
+         const struct ir3_sampler_prefetch *prefetch = &fs->sampler_prefetch[i];
+         tu_cs_emit(cs,
+                    A6XX_SP_FS_BINDLESS_PREFETCH_CMD_SAMP_ID(prefetch->samp_bindless_id) |
+                    A6XX_SP_FS_BINDLESS_PREFETCH_CMD_TEX_ID(prefetch->tex_bindless_id));
+      }
+   }
+
    tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_CONTROL_1_REG, 5);
    tu_cs_emit(cs, 0x7);
    tu_cs_emit(cs, A6XX_HLSQ_CONTROL_2_REG_FACEREGID(face_regid) |
                   A6XX_HLSQ_CONTROL_2_REG_SAMPLEID(samp_id_regid) |
                   A6XX_HLSQ_CONTROL_2_REG_SAMPLEMASK(smask_in_regid) |
-                  A6XX_HLSQ_CONTROL_2_REG_SIZE(ij_size_regid));
-   tu_cs_emit(cs, A6XX_HLSQ_CONTROL_3_REG_BARY_IJ_PIXEL(ij_pix_regid) |
-                  A6XX_HLSQ_CONTROL_3_REG_BARY_IJ_CENTROID(ij_cent_regid) |
-                  0xfc00fc00);
+                  A6XX_HLSQ_CONTROL_2_REG_SIZE(ij_regid[IJ_PERSP_SIZE]));
+   tu_cs_emit(cs, A6XX_HLSQ_CONTROL_3_REG_IJ_PERSP_PIXEL(ij_regid[IJ_PERSP_PIXEL]) |
+                  A6XX_HLSQ_CONTROL_3_REG_IJ_LINEAR_PIXEL(ij_regid[IJ_LINEAR_PIXEL]) |
+                  A6XX_HLSQ_CONTROL_3_REG_IJ_PERSP_CENTROID(ij_regid[IJ_PERSP_CENTROID]) |
+                  A6XX_HLSQ_CONTROL_3_REG_IJ_LINEAR_CENTROID(ij_regid[IJ_LINEAR_CENTROID]));
    tu_cs_emit(cs, A6XX_HLSQ_CONTROL_4_REG_XYCOORDREGID(coord_regid) |
                   A6XX_HLSQ_CONTROL_4_REG_ZWCOORDREGID(zwcoord_regid) |
-                  A6XX_HLSQ_CONTROL_4_REG_BARY_IJ_PIXEL_PERSAMP(ij_samp_regid) |
-                  0x0000fc00);
+                  A6XX_HLSQ_CONTROL_4_REG_IJ_PERSP_SAMPLE(ij_regid[IJ_PERSP_SAMPLE]) |
+                  A6XX_HLSQ_CONTROL_4_REG_IJ_LINEAR_SAMPLE(ij_regid[IJ_LINEAR_SAMPLE]));
    tu_cs_emit(cs, 0xfc);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_UNKNOWN_B980, 1);
-   tu_cs_emit(cs, enable_varyings ? 3 : 1);
+   enum a6xx_threadsize thrsz = fs->info.double_threadsize ? THREAD128 : THREAD64;
+   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_FS_CNTL_0, 1);
+   tu_cs_emit(cs, A6XX_HLSQ_FS_CNTL_0_THREADSIZE(thrsz) |
+                  COND(enable_varyings, A6XX_HLSQ_FS_CNTL_0_VARYINGS));
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_UNKNOWN_A982, 1);
-   tu_cs_emit(cs, 0); /* XXX */
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_HLSQ_UPDATE_CNTL, 1);
-   tu_cs_emit(cs, 0xff); /* XXX */
+   bool need_size = fs->frag_face || fs->fragcoord_compmask != 0;
+   bool need_size_persamp = false;
+   if (VALIDREG(ij_regid[IJ_PERSP_SIZE])) {
+      if (sample_shading)
+         need_size_persamp = true;
+      else
+         need_size = true;
+   }
+   if (VALIDREG(ij_regid[IJ_LINEAR_PIXEL]))
+      need_size = true;
 
    tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_CNTL, 1);
    tu_cs_emit(cs,
-         CONDREG(ij_pix_regid, A6XX_GRAS_CNTL_VARYING) |
-         CONDREG(ij_cent_regid, A6XX_GRAS_CNTL_CENTROID) |
-         CONDREG(ij_samp_regid, A6XX_GRAS_CNTL_PERSAMP_VARYING) |
-         COND(VALIDREG(ij_size_regid) && !sample_shading, A6XX_GRAS_CNTL_SIZE) |
-         COND(VALIDREG(ij_size_regid) &&  sample_shading, A6XX_GRAS_CNTL_SIZE_PERSAMP) |
-         COND(fs->frag_coord,
-               A6XX_GRAS_CNTL_SIZE |
-               A6XX_GRAS_CNTL_XCOORD |
-               A6XX_GRAS_CNTL_YCOORD |
-               A6XX_GRAS_CNTL_ZCOORD |
-               A6XX_GRAS_CNTL_WCOORD) |
-         COND(fs->frag_face, A6XX_GRAS_CNTL_SIZE));
+         CONDREG(ij_regid[IJ_PERSP_PIXEL], A6XX_GRAS_CNTL_IJ_PERSP_PIXEL) |
+         CONDREG(ij_regid[IJ_PERSP_CENTROID], A6XX_GRAS_CNTL_IJ_PERSP_CENTROID) |
+         CONDREG(ij_regid[IJ_PERSP_SAMPLE], A6XX_GRAS_CNTL_IJ_PERSP_SAMPLE) |
+         COND(need_size, A6XX_GRAS_CNTL_SIZE) |
+         COND(need_size_persamp, A6XX_GRAS_CNTL_SIZE_PERSAMP) |
+         COND(fs->fragcoord_compmask != 0, A6XX_GRAS_CNTL_COORD_MASK(fs->fragcoord_compmask)));
 
    tu_cs_emit_pkt4(cs, REG_A6XX_RB_RENDER_CONTROL0, 2);
    tu_cs_emit(cs,
-         CONDREG(ij_pix_regid, A6XX_RB_RENDER_CONTROL0_VARYING) |
-         CONDREG(ij_cent_regid, A6XX_RB_RENDER_CONTROL0_CENTROID) |
-         CONDREG(ij_samp_regid, A6XX_RB_RENDER_CONTROL0_PERSAMP_VARYING) |
+         CONDREG(ij_regid[IJ_PERSP_PIXEL], A6XX_RB_RENDER_CONTROL0_IJ_PERSP_PIXEL) |
+         CONDREG(ij_regid[IJ_PERSP_CENTROID], A6XX_RB_RENDER_CONTROL0_IJ_PERSP_CENTROID) |
+         CONDREG(ij_regid[IJ_PERSP_SAMPLE], A6XX_RB_RENDER_CONTROL0_IJ_PERSP_SAMPLE) |
+         COND(need_size, A6XX_RB_RENDER_CONTROL0_SIZE) |
          COND(enable_varyings, A6XX_RB_RENDER_CONTROL0_UNK10) |
-         COND(VALIDREG(ij_size_regid) && !sample_shading, A6XX_RB_RENDER_CONTROL0_SIZE) |
-         COND(VALIDREG(ij_size_regid) &&  sample_shading, A6XX_RB_RENDER_CONTROL0_SIZE_PERSAMP) |
-         COND(fs->frag_coord,
-               A6XX_RB_RENDER_CONTROL0_SIZE |
-               A6XX_RB_RENDER_CONTROL0_XCOORD |
-               A6XX_RB_RENDER_CONTROL0_YCOORD |
-               A6XX_RB_RENDER_CONTROL0_ZCOORD |
-               A6XX_RB_RENDER_CONTROL0_WCOORD) |
-         COND(fs->frag_face, A6XX_RB_RENDER_CONTROL0_SIZE));
+         COND(need_size_persamp, A6XX_RB_RENDER_CONTROL0_SIZE_PERSAMP) |
+         COND(fs->fragcoord_compmask != 0,
+                           A6XX_RB_RENDER_CONTROL0_COORD_MASK(fs->fragcoord_compmask)));
    tu_cs_emit(cs,
+         /* these two bits (UNK4/UNK5) relate to fragcoord
+          * without them, fragcoord is the same for all samples
+          */
+         COND(sample_shading, A6XX_RB_RENDER_CONTROL1_UNK4) |
+         COND(sample_shading, A6XX_RB_RENDER_CONTROL1_UNK5) |
          CONDREG(smask_in_regid, A6XX_RB_RENDER_CONTROL1_SAMPLEMASK) |
          CONDREG(samp_id_regid, A6XX_RB_RENDER_CONTROL1_SAMPLEID) |
-         CONDREG(ij_size_regid, A6XX_RB_RENDER_CONTROL1_SIZE) |
+         CONDREG(ij_regid[IJ_PERSP_SIZE], A6XX_RB_RENDER_CONTROL1_SIZE) |
          COND(fs->frag_face, A6XX_RB_RENDER_CONTROL1_FACENESS));
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_RB_SAMPLE_CNTL, 1);
+   tu_cs_emit(cs, COND(sample_shading, A6XX_RB_SAMPLE_CNTL_PER_SAMP_MODE));
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_UNKNOWN_8101, 1);
+   tu_cs_emit(cs, COND(sample_shading, 0x6));  // XXX
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SAMPLE_CNTL, 1);
+   tu_cs_emit(cs, COND(sample_shading, A6XX_GRAS_SAMPLE_CNTL_PER_SAMP_MODE));
 }
 
 static void
 tu6_emit_fs_outputs(struct tu_cs *cs,
                     const struct ir3_shader_variant *fs,
-                    uint32_t mrt_count)
+                    uint32_t mrt_count, bool dual_src_blend,
+                    uint32_t render_components,
+                    bool no_earlyz)
 {
-   uint32_t smask_regid, posz_regid;
+   uint32_t smask_regid, posz_regid, stencilref_regid;
 
    posz_regid      = ir3_find_output_regid(fs, FRAG_RESULT_DEPTH);
    smask_regid     = ir3_find_output_regid(fs, FRAG_RESULT_SAMPLE_MASK);
+   stencilref_regid = ir3_find_output_regid(fs, FRAG_RESULT_STENCIL);
 
    uint32_t fragdata_regid[8];
    if (fs->color0_mrt) {
@@ -870,7 +1397,8 @@ tu6_emit_fs_outputs(struct tu_cs *cs,
    tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_OUTPUT_CNTL0, 2);
    tu_cs_emit(cs, A6XX_SP_FS_OUTPUT_CNTL0_DEPTH_REGID(posz_regid) |
                   A6XX_SP_FS_OUTPUT_CNTL0_SAMPMASK_REGID(smask_regid) |
-                  0xfc000000);
+                  A6XX_SP_FS_OUTPUT_CNTL0_STENCILREF_REGID(stencilref_regid) |
+                  COND(dual_src_blend, A6XX_SP_FS_OUTPUT_CNTL0_DUAL_COLOR_IN_ENABLE));
    tu_cs_emit(cs, A6XX_SP_FS_OUTPUT_CNTL1_MRT(mrt_count));
 
    tu_cs_emit_pkt4(cs, REG_A6XX_SP_FS_OUTPUT_REG(0), 8);
@@ -881,368 +1409,442 @@ tu6_emit_fs_outputs(struct tu_cs *cs,
                         (false ? A6XX_SP_FS_OUTPUT_REG_HALF_PRECISION : 0));
    }
 
+   tu_cs_emit_regs(cs,
+                   A6XX_SP_FS_RENDER_COMPONENTS(.dword = render_components));
+
    tu_cs_emit_pkt4(cs, REG_A6XX_RB_FS_OUTPUT_CNTL0, 2);
    tu_cs_emit(cs, COND(fs->writes_pos, A6XX_RB_FS_OUTPUT_CNTL0_FRAG_WRITES_Z) |
-                  COND(fs->writes_smask, A6XX_RB_FS_OUTPUT_CNTL0_FRAG_WRITES_SAMPMASK));
+                  COND(fs->writes_smask, A6XX_RB_FS_OUTPUT_CNTL0_FRAG_WRITES_SAMPMASK) |
+                  COND(fs->writes_stencilref, A6XX_RB_FS_OUTPUT_CNTL0_FRAG_WRITES_STENCILREF) |
+                  COND(dual_src_blend, A6XX_RB_FS_OUTPUT_CNTL0_DUAL_COLOR_IN_ENABLE));
    tu_cs_emit(cs, A6XX_RB_FS_OUTPUT_CNTL1_MRT(mrt_count));
 
-   uint32_t gras_su_depth_plane_cntl = 0;
-   uint32_t rb_depth_plane_cntl = 0;
-   if (fs->no_earlyz || fs->writes_pos) {
-      gras_su_depth_plane_cntl |= A6XX_GRAS_SU_DEPTH_PLANE_CNTL_FRAG_WRITES_Z;
-      rb_depth_plane_cntl |= A6XX_RB_DEPTH_PLANE_CNTL_FRAG_WRITES_Z;
+   tu_cs_emit_regs(cs,
+                   A6XX_RB_RENDER_COMPONENTS(.dword = render_components));
+
+   enum a6xx_ztest_mode zmode;
+
+   if ((fs->shader && !fs->shader->nir->info.fs.early_fragment_tests) &&
+       (fs->no_earlyz || fs->has_kill || fs->writes_pos || fs->writes_stencilref || no_earlyz || fs->writes_smask)) {
+      zmode = A6XX_LATE_Z;
+   } else {
+      zmode = A6XX_EARLY_Z;
    }
 
    tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SU_DEPTH_PLANE_CNTL, 1);
-   tu_cs_emit(cs, gras_su_depth_plane_cntl);
+   tu_cs_emit(cs, A6XX_GRAS_SU_DEPTH_PLANE_CNTL_Z_MODE(zmode));
 
    tu_cs_emit_pkt4(cs, REG_A6XX_RB_DEPTH_PLANE_CNTL, 1);
-   tu_cs_emit(cs, rb_depth_plane_cntl);
+   tu_cs_emit(cs, A6XX_RB_DEPTH_PLANE_CNTL_Z_MODE(zmode));
 }
 
 static void
-tu6_emit_shader_object(struct tu_cs *cs,
-                       gl_shader_stage stage,
-                       const struct ir3_shader_variant *variant,
-                       const struct tu_bo *binary_bo,
-                       uint32_t binary_offset)
+tu6_emit_geom_tess_consts(struct tu_cs *cs,
+                          const struct ir3_shader_variant *vs,
+                          const struct ir3_shader_variant *hs,
+                          const struct ir3_shader_variant *ds,
+                          const struct ir3_shader_variant *gs,
+                          uint32_t cps_per_patch)
 {
-   uint16_t reg;
-   uint8_t opcode;
-   enum a6xx_state_block sb;
-   switch (stage) {
-   case MESA_SHADER_VERTEX:
-      reg = REG_A6XX_SP_VS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_GEOM;
-      sb = SB6_VS_SHADER;
-      break;
-   case MESA_SHADER_TESS_CTRL:
-      reg = REG_A6XX_SP_HS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_GEOM;
-      sb = SB6_HS_SHADER;
-      break;
-   case MESA_SHADER_TESS_EVAL:
-      reg = REG_A6XX_SP_DS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_GEOM;
-      sb = SB6_DS_SHADER;
-      break;
-   case MESA_SHADER_GEOMETRY:
-      reg = REG_A6XX_SP_GS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_GEOM;
-      sb = SB6_GS_SHADER;
-      break;
-   case MESA_SHADER_FRAGMENT:
-      reg = REG_A6XX_SP_FS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_FRAG;
-      sb = SB6_FS_SHADER;
-      break;
-   case MESA_SHADER_COMPUTE:
-      reg = REG_A6XX_SP_CS_OBJ_START_LO;
-      opcode = CP_LOAD_STATE6_FRAG;
-      sb = SB6_CS_SHADER;
-      break;
-   default:
-      unreachable("invalid gl_shader_stage");
-      opcode = CP_LOAD_STATE6_GEOM;
-      sb = SB6_VS_SHADER;
-      break;
+   uint32_t num_vertices =
+         hs ? cps_per_patch : gs->shader->nir->info.gs.vertices_in;
+
+   uint32_t vs_params[4] = {
+      vs->output_size * num_vertices * 4,  /* vs primitive stride */
+      vs->output_size * 4,                 /* vs vertex stride */
+      0,
+      0,
+   };
+   uint32_t vs_base = ir3_const_state(vs)->offsets.primitive_param;
+   tu6_emit_const(cs, CP_LOAD_STATE6_GEOM, vs_base, SB6_VS_SHADER, 0,
+                  ARRAY_SIZE(vs_params), vs_params);
+
+   if (hs) {
+      assert(ds->type != MESA_SHADER_NONE);
+      uint32_t hs_params[4] = {
+         vs->output_size * num_vertices * 4,  /* hs primitive stride */
+         vs->output_size * 4,                 /* hs vertex stride */
+         hs->output_size,
+         cps_per_patch,
+      };
+
+      uint32_t hs_base = hs->const_state->offsets.primitive_param;
+      tu6_emit_const(cs, CP_LOAD_STATE6_GEOM, hs_base, SB6_HS_SHADER, 0,
+                     ARRAY_SIZE(hs_params), hs_params);
+      if (gs)
+         num_vertices = gs->shader->nir->info.gs.vertices_in;
+
+      uint32_t ds_params[4] = {
+         ds->output_size * num_vertices * 4,  /* ds primitive stride */
+         ds->output_size * 4,                 /* ds vertex stride */
+         hs->output_size,                     /* hs vertex stride (dwords) */
+         hs->shader->nir->info.tess.tcs_vertices_out
+      };
+
+      uint32_t ds_base = ds->const_state->offsets.primitive_param;
+      tu6_emit_const(cs, CP_LOAD_STATE6_GEOM, ds_base, SB6_DS_SHADER, 0,
+                     ARRAY_SIZE(ds_params), ds_params);
    }
 
-   if (!variant->instrlen) {
-      tu_cs_emit_pkt4(cs, reg, 2);
-      tu_cs_emit_qw(cs, 0);
-      return;
-   }
-
-   assert(variant->type == stage);
-
-   const uint64_t binary_iova = binary_bo->iova + binary_offset;
-   assert((binary_iova & 0x3) == 0);
-
-   tu_cs_emit_pkt4(cs, reg, 2);
-   tu_cs_emit_qw(cs, binary_iova);
-
-   /* always indirect */
-   const bool indirect = true;
-   if (indirect) {
-      tu_cs_emit_pkt7(cs, opcode, 3);
-      tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(0) |
-                        CP_LOAD_STATE6_0_STATE_TYPE(ST6_SHADER) |
-                        CP_LOAD_STATE6_0_STATE_SRC(SS6_INDIRECT) |
-                        CP_LOAD_STATE6_0_STATE_BLOCK(sb) |
-                        CP_LOAD_STATE6_0_NUM_UNIT(variant->instrlen));
-      tu_cs_emit_qw(cs, binary_iova);
-   } else {
-      const void *binary = binary_bo->map + binary_offset;
-
-      tu_cs_emit_pkt7(cs, opcode, 3 + variant->info.sizedwords);
-      tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(0) |
-                        CP_LOAD_STATE6_0_STATE_TYPE(ST6_SHADER) |
-                        CP_LOAD_STATE6_0_STATE_SRC(SS6_DIRECT) |
-                        CP_LOAD_STATE6_0_STATE_BLOCK(sb) |
-                        CP_LOAD_STATE6_0_NUM_UNIT(variant->instrlen));
-      tu_cs_emit_qw(cs, 0);
-      tu_cs_emit_array(cs, binary, variant->info.sizedwords);
-   }
-}
-
-static void
-tu6_emit_immediates(struct tu_cs *cs, const struct ir3_shader_variant *v,
-                    uint32_t opcode, enum a6xx_state_block block)
-{
-   /* dummy variant */
-   if (!v->shader)
-      return;
-
-   const struct ir3_const_state *const_state = &v->shader->const_state;
-   uint32_t base = const_state->offsets.immediate;
-   int size = const_state->immediates_count;
-
-   /* truncate size to avoid writing constants that shader
-    * does not use:
-    */
-   size = MIN2(size + base, v->constlen) - base;
-
-   if (size <= 0)
-      return;
-
-   tu_cs_emit_pkt7(cs, opcode, 3 + size * 4);
-   tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(base) |
-                  CP_LOAD_STATE6_0_STATE_TYPE(ST6_CONSTANTS) |
-                  CP_LOAD_STATE6_0_STATE_SRC(SS6_DIRECT) |
-                  CP_LOAD_STATE6_0_STATE_BLOCK(block) |
-                  CP_LOAD_STATE6_0_NUM_UNIT(size));
-   tu_cs_emit(cs, CP_LOAD_STATE6_1_EXT_SRC_ADDR(0));
-   tu_cs_emit(cs, CP_LOAD_STATE6_2_EXT_SRC_ADDR_HI(0));
-
-   for (unsigned i = 0; i < size; i++) {
-      tu_cs_emit(cs, const_state->immediates[i].val[0]);
-      tu_cs_emit(cs, const_state->immediates[i].val[1]);
-      tu_cs_emit(cs, const_state->immediates[i].val[2]);
-      tu_cs_emit(cs, const_state->immediates[i].val[3]);
+   if (gs) {
+      const struct ir3_shader_variant *prev = ds ? ds : vs;
+      uint32_t gs_params[4] = {
+         prev->output_size * num_vertices * 4,  /* gs primitive stride */
+         prev->output_size * 4,                 /* gs vertex stride */
+         0,
+         0,
+      };
+      uint32_t gs_base = gs->const_state->offsets.primitive_param;
+      tu6_emit_const(cs, CP_LOAD_STATE6_GEOM, gs_base, SB6_GS_SHADER, 0,
+                     ARRAY_SIZE(gs_params), gs_params);
    }
 }
 
 static void
 tu6_emit_program(struct tu_cs *cs,
-                 const struct tu_pipeline_builder *builder,
-                 const struct tu_bo *binary_bo,
+                 struct tu_pipeline_builder *builder,
                  bool binning_pass)
 {
-   static const struct ir3_shader_variant dummy_variant = {
-      .type = MESA_SHADER_NONE
-   };
-   assert(builder->shaders[MESA_SHADER_VERTEX]);
-   const struct ir3_shader_variant *vs =
-      &builder->shaders[MESA_SHADER_VERTEX]->variants[0];
-   const struct ir3_shader_variant *hs =
-      builder->shaders[MESA_SHADER_TESS_CTRL]
-         ? &builder->shaders[MESA_SHADER_TESS_CTRL]->variants[0]
-         : &dummy_variant;
-   const struct ir3_shader_variant *ds =
-      builder->shaders[MESA_SHADER_TESS_EVAL]
-         ? &builder->shaders[MESA_SHADER_TESS_EVAL]->variants[0]
-         : &dummy_variant;
-   const struct ir3_shader_variant *gs =
-      builder->shaders[MESA_SHADER_GEOMETRY]
-         ? &builder->shaders[MESA_SHADER_GEOMETRY]->variants[0]
-         : &dummy_variant;
-   const struct ir3_shader_variant *fs =
-      builder->shaders[MESA_SHADER_FRAGMENT]
-         ? &builder->shaders[MESA_SHADER_FRAGMENT]->variants[0]
-         : &dummy_variant;
+   const struct ir3_shader_variant *vs = builder->variants[MESA_SHADER_VERTEX];
+   const struct ir3_shader_variant *bs = builder->binning_variant;
+   const struct ir3_shader_variant *hs = builder->variants[MESA_SHADER_TESS_CTRL];
+   const struct ir3_shader_variant *ds = builder->variants[MESA_SHADER_TESS_EVAL];
+   const struct ir3_shader_variant *gs = builder->variants[MESA_SHADER_GEOMETRY];
+   const struct ir3_shader_variant *fs = builder->variants[MESA_SHADER_FRAGMENT];
+   gl_shader_stage stage = MESA_SHADER_VERTEX;
+   uint32_t cps_per_patch = builder->create_info->pTessellationState ?
+      builder->create_info->pTessellationState->patchControlPoints : 0;
+   bool multi_pos_output = builder->shaders[MESA_SHADER_VERTEX]->multi_pos_output;
 
-   if (binning_pass) {
-      vs = &builder->shaders[MESA_SHADER_VERTEX]->variants[1];
-      fs = &dummy_variant;
+   STATIC_ASSERT(MESA_SHADER_VERTEX == 0);
+
+   tu_cs_emit_regs(cs, A6XX_HLSQ_INVALIDATE_CMD(
+         .vs_state = true,
+         .hs_state = true,
+         .ds_state = true,
+         .gs_state = true,
+         .fs_state = true,
+         .gfx_ibo = true));
+
+  /* Don't use the binning pass variant when GS is present because we don't
+   * support compiling correct binning pass variants with GS.
+   */
+   if (binning_pass && !gs) {
+      vs = bs;
+      tu6_emit_xs_config(cs, stage, bs, &builder->pvtmem, builder->binning_vs_iova);
+      stage++;
    }
 
-   tu6_emit_vs_config(cs, builder->shaders[MESA_SHADER_VERTEX], vs);
-   tu6_emit_hs_config(cs, builder->shaders[MESA_SHADER_TESS_CTRL], hs);
-   tu6_emit_ds_config(cs, builder->shaders[MESA_SHADER_TESS_EVAL], ds);
-   tu6_emit_gs_config(cs, builder->shaders[MESA_SHADER_GEOMETRY], gs);
-   tu6_emit_fs_config(cs, builder->shaders[MESA_SHADER_FRAGMENT], fs);
+   for (; stage < ARRAY_SIZE(builder->shaders); stage++) {
+      const struct ir3_shader_variant *xs = builder->variants[stage];
 
-   tu6_emit_vs_system_values(cs, vs);
-   tu6_emit_vpc(cs, vs, fs, binning_pass);
-   tu6_emit_vpc_varying_modes(cs, fs, binning_pass);
-   tu6_emit_fs_inputs(cs, fs);
-   tu6_emit_fs_outputs(cs, fs, builder->color_attachment_count);
+      if (stage == MESA_SHADER_FRAGMENT && binning_pass)
+         fs = xs = NULL;
 
-   tu6_emit_shader_object(cs, MESA_SHADER_VERTEX, vs, binary_bo,
-      binning_pass ? builder->binning_vs_offset : builder->shader_offsets[MESA_SHADER_VERTEX]);
+      tu6_emit_xs_config(cs, stage, xs, &builder->pvtmem, builder->shader_iova[stage]);
+   }
 
-   tu6_emit_shader_object(cs, MESA_SHADER_FRAGMENT, fs, binary_bo,
-                          builder->shader_offsets[MESA_SHADER_FRAGMENT]);
+   uint32_t multiview_views = util_logbase2(builder->multiview_mask) + 1;
+   uint32_t multiview_cntl = builder->multiview_mask ?
+      A6XX_PC_MULTIVIEW_CNTL_ENABLE |
+      A6XX_PC_MULTIVIEW_CNTL_VIEWS(multiview_views) |
+      COND(!multi_pos_output, A6XX_PC_MULTIVIEW_CNTL_DISABLEMULTIPOS)
+      : 0;
 
-   tu6_emit_immediates(cs, vs, CP_LOAD_STATE6_GEOM, SB6_VS_SHADER);
-   if (!binning_pass)
-      tu6_emit_immediates(cs, fs, CP_LOAD_STATE6_FRAG, SB6_FS_SHADER);
+   /* Copy what the blob does here. This will emit an extra 0x3f
+    * CP_EVENT_WRITE when multiview is disabled. I'm not exactly sure what
+    * this is working around yet.
+    */
+   tu_cs_emit_pkt7(cs, CP_REG_WRITE, 3);
+   tu_cs_emit(cs, CP_REG_WRITE_0_TRACKER(UNK_EVENT_WRITE));
+   tu_cs_emit(cs, REG_A6XX_PC_MULTIVIEW_CNTL);
+   tu_cs_emit(cs, multiview_cntl);
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_VFD_MULTIVIEW_CNTL, 1);
+   tu_cs_emit(cs, multiview_cntl);
+
+   if (multiview_cntl &&
+       builder->device->physical_device->info.a6xx.supports_multiview_mask) {
+      tu_cs_emit_pkt4(cs, REG_A6XX_PC_MULTIVIEW_MASK, 1);
+      tu_cs_emit(cs, builder->multiview_mask);
+   }
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_SP_HS_WAVE_INPUT_SIZE, 1);
+   tu_cs_emit(cs, 0);
+
+   tu6_emit_vpc(cs, vs, hs, ds, gs, fs, cps_per_patch,
+                builder->device->physical_device->gpu_id == 650);
+   tu6_emit_vpc_varying_modes(cs, fs);
+
+   bool no_earlyz = builder->depth_attachment_format == VK_FORMAT_S8_UINT;
+   uint32_t mrt_count = builder->color_attachment_count;
+   uint32_t render_components = builder->render_components;
+
+   if (builder->alpha_to_coverage) {
+      /* alpha to coverage can behave like a discard */
+      no_earlyz = true;
+      /* alpha value comes from first mrt */
+      render_components |= 0xf;
+      if (!mrt_count) {
+         mrt_count = 1;
+         /* Disable memory write for dummy mrt because it doesn't get set otherwise */
+         tu_cs_emit_regs(cs, A6XX_RB_MRT_CONTROL(0, .component_enable = 0));
+      }
+   }
+
+   if (fs) {
+      tu6_emit_fs_inputs(cs, fs);
+      tu6_emit_fs_outputs(cs, fs, mrt_count,
+                          builder->use_dual_src_blend,
+                          render_components,
+                          no_earlyz);
+   } else {
+      /* TODO: check if these can be skipped if fs is disabled */
+      struct ir3_shader_variant dummy_variant = {};
+      tu6_emit_fs_inputs(cs, &dummy_variant);
+      tu6_emit_fs_outputs(cs, &dummy_variant, mrt_count,
+                          builder->use_dual_src_blend,
+                          render_components,
+                          no_earlyz);
+   }
+
+   if (gs || hs) {
+      tu6_emit_geom_tess_consts(cs, vs, hs, ds, gs, cps_per_patch);
+   }
 }
 
 static void
-tu6_emit_vertex_input(struct tu_cs *cs,
+tu6_emit_vertex_input(struct tu_pipeline *pipeline,
+                      struct tu_cs *cs,
                       const struct ir3_shader_variant *vs,
-                      const VkPipelineVertexInputStateCreateInfo *vi_info,
-                      uint8_t bindings[MAX_VERTEX_ATTRIBS],
-                      uint16_t strides[MAX_VERTEX_ATTRIBS],
-                      uint16_t offsets[MAX_VERTEX_ATTRIBS],
-                      uint32_t *count)
+                      const VkPipelineVertexInputStateCreateInfo *info)
 {
    uint32_t vfd_decode_idx = 0;
+   uint32_t binding_instanced = 0; /* bitmask of instanced bindings */
+   uint32_t step_rate[MAX_VBS];
 
-   for (uint32_t i = 0; i < vs->inputs_count; i++) {
-      if (vs->inputs[i].sysval || !vs->inputs[i].compmask)
+   for (uint32_t i = 0; i < info->vertexBindingDescriptionCount; i++) {
+      const VkVertexInputBindingDescription *binding =
+         &info->pVertexBindingDescriptions[i];
+
+      if (!(pipeline->dynamic_state_mask & BIT(TU_DYNAMIC_STATE_VB_STRIDE))) {
+         tu_cs_emit_regs(cs,
+                        A6XX_VFD_FETCH_STRIDE(binding->binding, binding->stride));
+      }
+
+      if (binding->inputRate == VK_VERTEX_INPUT_RATE_INSTANCE)
+         binding_instanced |= 1 << binding->binding;
+
+      step_rate[binding->binding] = 1;
+   }
+
+   const VkPipelineVertexInputDivisorStateCreateInfoEXT *div_state =
+      vk_find_struct_const(info->pNext, PIPELINE_VERTEX_INPUT_DIVISOR_STATE_CREATE_INFO_EXT);
+   if (div_state) {
+      for (uint32_t i = 0; i < div_state->vertexBindingDivisorCount; i++) {
+         const VkVertexInputBindingDivisorDescriptionEXT *desc =
+            &div_state->pVertexBindingDivisors[i];
+         step_rate[desc->binding] = desc->divisor;
+      }
+   }
+
+   /* TODO: emit all VFD_DECODE/VFD_DEST_CNTL in same (two) pkt4 */
+
+   for (uint32_t i = 0; i < info->vertexAttributeDescriptionCount; i++) {
+      const VkVertexInputAttributeDescription *attr =
+         &info->pVertexAttributeDescriptions[i];
+      uint32_t input_idx;
+
+      for (input_idx = 0; input_idx < vs->inputs_count; input_idx++) {
+         if ((vs->inputs[input_idx].slot - VERT_ATTRIB_GENERIC0) == attr->location)
+            break;
+      }
+
+      /* attribute not used, skip it */
+      if (input_idx == vs->inputs_count)
          continue;
 
-      const VkVertexInputAttributeDescription *vi_attr =
-         tu_find_vertex_input_attribute(vi_info, vs->inputs[i].slot);
-      const VkVertexInputBindingDescription *vi_binding =
-         tu_find_vertex_input_binding(vi_info, vi_attr);
-      assert(vi_attr && vi_binding);
+      const struct tu_native_format format = tu6_format_vtx(attr->format);
+      tu_cs_emit_regs(cs,
+                      A6XX_VFD_DECODE_INSTR(vfd_decode_idx,
+                        .idx = attr->binding,
+                        .offset = attr->offset,
+                        .instanced = binding_instanced & (1 << attr->binding),
+                        .format = format.fmt,
+                        .swap = format.swap,
+                        .unk30 = 1,
+                        ._float = !vk_format_is_int(attr->format)),
+                      A6XX_VFD_DECODE_STEP_RATE(vfd_decode_idx, step_rate[attr->binding]));
 
-      const struct tu_native_format *format =
-         tu6_get_native_format(vi_attr->format);
-      assert(format && format->vtx >= 0);
-
-      uint32_t vfd_decode = A6XX_VFD_DECODE_INSTR_IDX(vfd_decode_idx) |
-                            A6XX_VFD_DECODE_INSTR_FORMAT(format->vtx) |
-                            A6XX_VFD_DECODE_INSTR_SWAP(format->swap) |
-                            A6XX_VFD_DECODE_INSTR_UNK30;
-      if (vi_binding->inputRate == VK_VERTEX_INPUT_RATE_INSTANCE)
-         vfd_decode |= A6XX_VFD_DECODE_INSTR_INSTANCED;
-      if (!vk_format_is_int(vi_attr->format))
-         vfd_decode |= A6XX_VFD_DECODE_INSTR_FLOAT;
-
-      const uint32_t vfd_decode_step_rate = 1;
-
-      const uint32_t vfd_dest_cntl =
-         A6XX_VFD_DEST_CNTL_INSTR_WRITEMASK(vs->inputs[i].compmask) |
-         A6XX_VFD_DEST_CNTL_INSTR_REGID(vs->inputs[i].regid);
-
-      tu_cs_emit_pkt4(cs, REG_A6XX_VFD_DECODE(vfd_decode_idx), 2);
-      tu_cs_emit(cs, vfd_decode);
-      tu_cs_emit(cs, vfd_decode_step_rate);
-
-      tu_cs_emit_pkt4(cs, REG_A6XX_VFD_DEST_CNTL(vfd_decode_idx), 1);
-      tu_cs_emit(cs, vfd_dest_cntl);
-
-      bindings[vfd_decode_idx] = vi_binding->binding;
-      strides[vfd_decode_idx] = vi_binding->stride;
-      offsets[vfd_decode_idx] = vi_attr->offset;
+      tu_cs_emit_regs(cs,
+                      A6XX_VFD_DEST_CNTL_INSTR(vfd_decode_idx,
+                        .writemask = vs->inputs[input_idx].compmask,
+                        .regid = vs->inputs[input_idx].regid));
 
       vfd_decode_idx++;
-      assert(vfd_decode_idx <= MAX_VERTEX_ATTRIBS);
    }
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_VFD_CONTROL_0, 1);
-   tu_cs_emit(
-      cs, A6XX_VFD_CONTROL_0_VTXCNT(vfd_decode_idx) | (vfd_decode_idx << 8));
-
-   *count = vfd_decode_idx;
-}
-
-static uint32_t
-tu6_guardband_adj(uint32_t v)
-{
-   if (v > 256)
-      return (uint32_t)(511.0 - 65.0 * (log2(v) - 8.0));
-   else
-      return 511;
+   tu_cs_emit_regs(cs,
+                   A6XX_VFD_CONTROL_0(
+                     .fetch_cnt = vfd_decode_idx, /* decode_cnt for binning pass ? */
+                     .decode_cnt = vfd_decode_idx));
 }
 
 void
-tu6_emit_viewport(struct tu_cs *cs, const VkViewport *viewport)
+tu6_emit_viewport(struct tu_cs *cs, const VkViewport *viewports, uint32_t num_viewport)
 {
-   float offsets[3];
-   float scales[3];
-   scales[0] = viewport->width / 2.0f;
-   scales[1] = viewport->height / 2.0f;
-   scales[2] = viewport->maxDepth - viewport->minDepth;
-   offsets[0] = viewport->x + scales[0];
-   offsets[1] = viewport->y + scales[1];
-   offsets[2] = viewport->minDepth;
+   VkExtent2D guardband = {511, 511};
 
-   VkOffset2D min;
-   VkOffset2D max;
-   min.x = (int32_t) viewport->x;
-   max.x = (int32_t) ceilf(viewport->x + viewport->width);
-   if (viewport->height >= 0.0f) {
-      min.y = (int32_t) viewport->y;
-      max.y = (int32_t) ceilf(viewport->y + viewport->height);
-   } else {
-      min.y = (int32_t)(viewport->y + viewport->height);
-      max.y = (int32_t) ceilf(viewport->y);
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_CL_VPORT_XOFFSET(0), num_viewport * 6);
+   for (uint32_t i = 0; i < num_viewport; i++) {
+      const VkViewport *viewport = &viewports[i];
+      float offsets[3];
+      float scales[3];
+      scales[0] = viewport->width / 2.0f;
+      scales[1] = viewport->height / 2.0f;
+      scales[2] = viewport->maxDepth - viewport->minDepth;
+      offsets[0] = viewport->x + scales[0];
+      offsets[1] = viewport->y + scales[1];
+      offsets[2] = viewport->minDepth;
+      for (uint32_t j = 0; j < 3; j++) {
+         tu_cs_emit(cs, fui(offsets[j]));
+         tu_cs_emit(cs, fui(scales[j]));
+      }
+
+      guardband.width =
+         MIN2(guardband.width, fd_calc_guardband(offsets[0], scales[0], false));
+      guardband.height =
+         MIN2(guardband.height, fd_calc_guardband(offsets[1], scales[1], false));
    }
-   /* the spec allows viewport->height to be 0.0f */
-   if (min.y == max.y)
-      max.y++;
-   assert(min.x >= 0 && min.x < max.x);
-   assert(min.y >= 0 && min.y < max.y);
 
-   VkExtent2D guardband_adj;
-   guardband_adj.width = tu6_guardband_adj(max.x - min.x);
-   guardband_adj.height = tu6_guardband_adj(max.y - min.y);
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL(0), num_viewport * 2);
+   for (uint32_t i = 0; i < num_viewport; i++) {
+      const VkViewport *viewport = &viewports[i];
+      VkOffset2D min;
+      VkOffset2D max;
+      min.x = (int32_t) viewport->x;
+      max.x = (int32_t) ceilf(viewport->x + viewport->width);
+      if (viewport->height >= 0.0f) {
+         min.y = (int32_t) viewport->y;
+         max.y = (int32_t) ceilf(viewport->y + viewport->height);
+      } else {
+         min.y = (int32_t)(viewport->y + viewport->height);
+         max.y = (int32_t) ceilf(viewport->y);
+      }
+      /* the spec allows viewport->height to be 0.0f */
+      if (min.y == max.y)
+         max.y++;
+      /* allow viewport->width = 0.0f for un-initialized viewports: */
+      if (min.x == max.x)
+         max.x++;
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_CL_VPORT_XOFFSET_0, 6);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_XOFFSET_0(offsets[0]).value);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_XSCALE_0(scales[0]).value);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_YOFFSET_0(offsets[1]).value);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_YSCALE_0(scales[1]).value);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_ZOFFSET_0(offsets[2]).value);
-   tu_cs_emit(cs, A6XX_GRAS_CL_VPORT_ZSCALE_0(scales[2]).value);
+      min.x = MAX2(min.x, 0);
+      min.y = MAX2(min.y, 0);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0, 2);
-   tu_cs_emit(cs, A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_X(min.x) |
-                     A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_Y(min.y));
-   tu_cs_emit(cs, A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_X(max.x - 1) |
-                     A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_Y(max.y - 1));
+      assert(min.x < max.x);
+      assert(min.y < max.y);
+      tu_cs_emit(cs, A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_X(min.x) |
+                     A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_Y(min.y));
+      tu_cs_emit(cs, A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_X(max.x - 1) |
+                     A6XX_GRAS_SC_VIEWPORT_SCISSOR_TL_Y(max.y - 1));
+   }
 
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_CL_Z_CLAMP(0), num_viewport * 2);
+   for (uint32_t i = 0; i < num_viewport; i++) {
+      const VkViewport *viewport = &viewports[i];
+      tu_cs_emit(cs, fui(MIN2(viewport->minDepth, viewport->maxDepth)));
+      tu_cs_emit(cs, fui(MAX2(viewport->minDepth, viewport->maxDepth)));
+   }
    tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_CL_GUARDBAND_CLIP_ADJ, 1);
-   tu_cs_emit(cs,
-              A6XX_GRAS_CL_GUARDBAND_CLIP_ADJ_HORZ(guardband_adj.width) |
-                 A6XX_GRAS_CL_GUARDBAND_CLIP_ADJ_VERT(guardband_adj.height));
+   tu_cs_emit(cs, A6XX_GRAS_CL_GUARDBAND_CLIP_ADJ_HORZ(guardband.width) |
+                  A6XX_GRAS_CL_GUARDBAND_CLIP_ADJ_VERT(guardband.height));
+
+   /* TODO: what to do about this and multi viewport ? */
+   float z_clamp_min = num_viewport ? MIN2(viewports[0].minDepth, viewports[0].maxDepth) : 0;
+   float z_clamp_max = num_viewport ? MAX2(viewports[0].minDepth, viewports[0].maxDepth) : 0;
+
+   tu_cs_emit_regs(cs,
+                   A6XX_RB_Z_CLAMP_MIN(z_clamp_min),
+                   A6XX_RB_Z_CLAMP_MAX(z_clamp_max));
 }
 
 void
-tu6_emit_scissor(struct tu_cs *cs, const VkRect2D *scissor)
+tu6_emit_scissor(struct tu_cs *cs, const VkRect2D *scissors, uint32_t scissor_count)
 {
-   const VkOffset2D min = scissor->offset;
-   const VkOffset2D max = {
-      scissor->offset.x + scissor->extent.width,
-      scissor->offset.y + scissor->extent.height,
-   };
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SC_SCREEN_SCISSOR_TL(0), scissor_count * 2);
 
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SC_SCREEN_SCISSOR_TL_0, 2);
-   tu_cs_emit(cs, A6XX_GRAS_SC_SCREEN_SCISSOR_TL_0_X(min.x) |
-                     A6XX_GRAS_SC_SCREEN_SCISSOR_TL_0_Y(min.y));
-   tu_cs_emit(cs, A6XX_GRAS_SC_SCREEN_SCISSOR_TL_0_X(max.x - 1) |
-                     A6XX_GRAS_SC_SCREEN_SCISSOR_TL_0_Y(max.y - 1));
+   for (uint32_t i = 0; i < scissor_count; i++) {
+      const VkRect2D *scissor = &scissors[i];
+
+      uint32_t min_x = scissor->offset.x;
+      uint32_t min_y = scissor->offset.y;
+      uint32_t max_x = min_x + scissor->extent.width - 1;
+      uint32_t max_y = min_y + scissor->extent.height - 1;
+
+      if (!scissor->extent.width || !scissor->extent.height) {
+         min_x = min_y = 1;
+         max_x = max_y = 0;
+      } else {
+         /* avoid overflow */
+         uint32_t scissor_max = BITFIELD_MASK(15);
+         min_x = MIN2(scissor_max, min_x);
+         min_y = MIN2(scissor_max, min_y);
+         max_x = MIN2(scissor_max, max_x);
+         max_y = MIN2(scissor_max, max_y);
+      }
+
+      tu_cs_emit(cs, A6XX_GRAS_SC_SCREEN_SCISSOR_TL_X(min_x) |
+                     A6XX_GRAS_SC_SCREEN_SCISSOR_TL_Y(min_y));
+      tu_cs_emit(cs, A6XX_GRAS_SC_SCREEN_SCISSOR_BR_X(max_x) |
+                     A6XX_GRAS_SC_SCREEN_SCISSOR_BR_Y(max_y));
+   }
 }
 
-static void
-tu6_emit_gras_unknowns(struct tu_cs *cs)
+void
+tu6_emit_sample_locations(struct tu_cs *cs, const VkSampleLocationsInfoEXT *samp_loc)
 {
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_UNKNOWN_8000, 1);
-   tu_cs_emit(cs, 0x80);
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_UNKNOWN_8001, 1);
-   tu_cs_emit(cs, 0x0);
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_LAYER_CNTL, 1);
-   tu_cs_emit(cs, 0x0);
-}
+   if (!samp_loc) {
+      tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SAMPLE_CONFIG, 1);
+      tu_cs_emit(cs, 0);
 
-static void
-tu6_emit_point_size(struct tu_cs *cs)
-{
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SU_POINT_MINMAX, 2);
-   tu_cs_emit(cs, A6XX_GRAS_SU_POINT_MINMAX_MIN(1.0f / 16.0f) |
-                     A6XX_GRAS_SU_POINT_MINMAX_MAX(4092.0f));
-   tu_cs_emit(cs, A6XX_GRAS_SU_POINT_SIZE(1.0f).value);
+      tu_cs_emit_pkt4(cs, REG_A6XX_RB_SAMPLE_CONFIG, 1);
+      tu_cs_emit(cs, 0);
+
+      tu_cs_emit_pkt4(cs, REG_A6XX_SP_TP_SAMPLE_CONFIG, 1);
+      tu_cs_emit(cs, 0);
+      return;
+   }
+
+   assert(samp_loc->sampleLocationsPerPixel == samp_loc->sampleLocationsCount);
+   assert(samp_loc->sampleLocationGridSize.width == 1);
+   assert(samp_loc->sampleLocationGridSize.height == 1);
+
+   uint32_t sample_config =
+      A6XX_RB_SAMPLE_CONFIG_LOCATION_ENABLE;
+   uint32_t sample_locations = 0;
+   for (uint32_t i = 0; i < samp_loc->sampleLocationsCount; i++) {
+      sample_locations |=
+         (A6XX_RB_SAMPLE_LOCATION_0_SAMPLE_0_X(samp_loc->pSampleLocations[i].x) |
+          A6XX_RB_SAMPLE_LOCATION_0_SAMPLE_0_Y(samp_loc->pSampleLocations[i].y)) << i*8;
+   }
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SAMPLE_CONFIG, 2);
+   tu_cs_emit(cs, sample_config);
+   tu_cs_emit(cs, sample_locations);
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_RB_SAMPLE_CONFIG, 2);
+   tu_cs_emit(cs, sample_config);
+   tu_cs_emit(cs, sample_locations);
+
+   tu_cs_emit_pkt4(cs, REG_A6XX_SP_TP_SAMPLE_CONFIG, 2);
+   tu_cs_emit(cs, sample_config);
+   tu_cs_emit(cs, sample_locations);
 }
 
 static uint32_t
 tu6_gras_su_cntl(const VkPipelineRasterizationStateCreateInfo *rast_info,
-                 VkSampleCountFlagBits samples)
+                 VkSampleCountFlagBits samples,
+                 bool multiview)
 {
    uint32_t gras_su_cntl = 0;
 
@@ -1254,7 +1856,8 @@ tu6_gras_su_cntl(const VkPipelineRasterizationStateCreateInfo *rast_info,
    if (rast_info->frontFace == VK_FRONT_FACE_CLOCKWISE)
       gras_su_cntl |= A6XX_GRAS_SU_CNTL_FRONT_CW;
 
-   /* don't set A6XX_GRAS_SU_CNTL_LINEHALFWIDTH */
+   gras_su_cntl |=
+      A6XX_GRAS_SU_CNTL_LINEHALFWIDTH(rast_info->lineWidth / 2.0f);
 
    if (rast_info->depthBiasEnable)
       gras_su_cntl |= A6XX_GRAS_SU_CNTL_POLY_OFFSET;
@@ -1262,19 +1865,13 @@ tu6_gras_su_cntl(const VkPipelineRasterizationStateCreateInfo *rast_info,
    if (samples > VK_SAMPLE_COUNT_1_BIT)
       gras_su_cntl |= A6XX_GRAS_SU_CNTL_MSAA_ENABLE;
 
+   if (multiview) {
+      gras_su_cntl |=
+         A6XX_GRAS_SU_CNTL_UNK17 |
+         A6XX_GRAS_SU_CNTL_MULTIVIEW_ENABLE;
+   }
+
    return gras_su_cntl;
-}
-
-void
-tu6_emit_gras_su_cntl(struct tu_cs *cs,
-                      uint32_t gras_su_cntl,
-                      float line_width)
-{
-   assert((gras_su_cntl & A6XX_GRAS_SU_CNTL_LINEHALFWIDTH__MASK) == 0);
-   gras_su_cntl |= A6XX_GRAS_SU_CNTL_LINEHALFWIDTH(line_width / 2.0f);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_GRAS_SU_CNTL, 1);
-   tu_cs_emit(cs, gras_su_cntl);
 }
 
 void
@@ -1287,84 +1884,6 @@ tu6_emit_depth_bias(struct tu_cs *cs,
    tu_cs_emit(cs, A6XX_GRAS_SU_POLY_OFFSET_SCALE(slope_factor).value);
    tu_cs_emit(cs, A6XX_GRAS_SU_POLY_OFFSET_OFFSET(constant_factor).value);
    tu_cs_emit(cs, A6XX_GRAS_SU_POLY_OFFSET_OFFSET_CLAMP(clamp).value);
-}
-
-static void
-tu6_emit_alpha_control_disable(struct tu_cs *cs)
-{
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_ALPHA_CONTROL, 1);
-   tu_cs_emit(cs, 0);
-}
-
-static void
-tu6_emit_depth_control(struct tu_cs *cs,
-                       const VkPipelineDepthStencilStateCreateInfo *ds_info)
-{
-   assert(!ds_info->depthBoundsTestEnable);
-
-   uint32_t rb_depth_cntl = 0;
-   if (ds_info->depthTestEnable) {
-      rb_depth_cntl |=
-         A6XX_RB_DEPTH_CNTL_Z_ENABLE |
-         A6XX_RB_DEPTH_CNTL_ZFUNC(tu6_compare_func(ds_info->depthCompareOp)) |
-         A6XX_RB_DEPTH_CNTL_Z_TEST_ENABLE;
-
-      if (ds_info->depthWriteEnable)
-         rb_depth_cntl |= A6XX_RB_DEPTH_CNTL_Z_WRITE_ENABLE;
-   }
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_DEPTH_CNTL, 1);
-   tu_cs_emit(cs, rb_depth_cntl);
-}
-
-static void
-tu6_emit_stencil_control(struct tu_cs *cs,
-                         const VkPipelineDepthStencilStateCreateInfo *ds_info)
-{
-   uint32_t rb_stencil_control = 0;
-   if (ds_info->stencilTestEnable) {
-      const VkStencilOpState *front = &ds_info->front;
-      const VkStencilOpState *back = &ds_info->back;
-      rb_stencil_control |=
-         A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE |
-         A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE_BF |
-         A6XX_RB_STENCIL_CONTROL_STENCIL_READ |
-         A6XX_RB_STENCIL_CONTROL_FUNC(tu6_compare_func(front->compareOp)) |
-         A6XX_RB_STENCIL_CONTROL_FAIL(tu6_stencil_op(front->failOp)) |
-         A6XX_RB_STENCIL_CONTROL_ZPASS(tu6_stencil_op(front->passOp)) |
-         A6XX_RB_STENCIL_CONTROL_ZFAIL(tu6_stencil_op(front->depthFailOp)) |
-         A6XX_RB_STENCIL_CONTROL_FUNC_BF(tu6_compare_func(back->compareOp)) |
-         A6XX_RB_STENCIL_CONTROL_FAIL_BF(tu6_stencil_op(back->failOp)) |
-         A6XX_RB_STENCIL_CONTROL_ZPASS_BF(tu6_stencil_op(back->passOp)) |
-         A6XX_RB_STENCIL_CONTROL_ZFAIL_BF(tu6_stencil_op(back->depthFailOp));
-   }
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_STENCIL_CONTROL, 1);
-   tu_cs_emit(cs, rb_stencil_control);
-}
-
-void
-tu6_emit_stencil_compare_mask(struct tu_cs *cs, uint32_t front, uint32_t back)
-{
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_STENCILMASK, 1);
-   tu_cs_emit(
-      cs, A6XX_RB_STENCILMASK_MASK(front) | A6XX_RB_STENCILMASK_BFMASK(back));
-}
-
-void
-tu6_emit_stencil_write_mask(struct tu_cs *cs, uint32_t front, uint32_t back)
-{
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_STENCILWRMASK, 1);
-   tu_cs_emit(cs, A6XX_RB_STENCILWRMASK_WRMASK(front) |
-                     A6XX_RB_STENCILWRMASK_BFWRMASK(back));
-}
-
-void
-tu6_emit_stencil_reference(struct tu_cs *cs, uint32_t front, uint32_t back)
-{
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_STENCILREF, 1);
-   tu_cs_emit(cs,
-              A6XX_RB_STENCILREF_REF(front) | A6XX_RB_STENCILREF_BFREF(back));
 }
 
 static uint32_t
@@ -1395,17 +1914,10 @@ tu6_rb_mrt_blend_control(const VkPipelineColorBlendAttachmentState *att,
 static uint32_t
 tu6_rb_mrt_control(const VkPipelineColorBlendAttachmentState *att,
                    uint32_t rb_mrt_control_rop,
-                   bool is_int,
                    bool has_alpha)
 {
    uint32_t rb_mrt_control =
       A6XX_RB_MRT_CONTROL_COMPONENT_ENABLE(att->colorWriteMask);
-
-   /* ignore blending and logic op for integer attachments */
-   if (is_int) {
-      rb_mrt_control |= A6XX_RB_MRT_CONTROL_ROP_CODE(ROP_COPY);
-      return rb_mrt_control;
-   }
 
    rb_mrt_control |= rb_mrt_control_rop;
 
@@ -1444,11 +1956,10 @@ tu6_emit_rb_mrt_controls(struct tu_cs *cs,
       uint32_t rb_mrt_control = 0;
       uint32_t rb_mrt_blend_control = 0;
       if (format != VK_FORMAT_UNDEFINED) {
-         const bool is_int = vk_format_is_int(format);
          const bool has_alpha = vk_format_has_alpha(format);
 
          rb_mrt_control =
-            tu6_rb_mrt_control(att, rb_mrt_control_rop, is_int, has_alpha);
+            tu6_rb_mrt_control(att, rb_mrt_control_rop, has_alpha);
          rb_mrt_blend_control = tu6_rb_mrt_blend_control(att, has_alpha);
 
          if (att->blendEnable || rop_reads_dst)
@@ -1459,160 +1970,353 @@ tu6_emit_rb_mrt_controls(struct tu_cs *cs,
       tu_cs_emit(cs, rb_mrt_control);
       tu_cs_emit(cs, rb_mrt_blend_control);
    }
-
-   for (uint32_t i = blend_info->attachmentCount; i < MAX_RTS; i++) {
-      tu_cs_emit_pkt4(cs, REG_A6XX_RB_MRT_CONTROL(i), 2);
-      tu_cs_emit(cs, 0);
-      tu_cs_emit(cs, 0);
-   }
 }
 
 static void
 tu6_emit_blend_control(struct tu_cs *cs,
                        uint32_t blend_enable_mask,
+                       bool dual_src_blend,
                        const VkPipelineMultisampleStateCreateInfo *msaa_info)
 {
-   assert(!msaa_info->sampleShadingEnable);
-   assert(!msaa_info->alphaToOneEnable);
-
-   uint32_t sp_blend_cntl = A6XX_SP_BLEND_CNTL_UNK8;
-   if (blend_enable_mask)
-      sp_blend_cntl |= A6XX_SP_BLEND_CNTL_ENABLED;
-   if (msaa_info->alphaToCoverageEnable)
-      sp_blend_cntl |= A6XX_SP_BLEND_CNTL_ALPHA_TO_COVERAGE;
-
    const uint32_t sample_mask =
-      msaa_info->pSampleMask ? *msaa_info->pSampleMask
+      msaa_info->pSampleMask ? (*msaa_info->pSampleMask & 0xffff)
                              : ((1 << msaa_info->rasterizationSamples) - 1);
 
+   tu_cs_emit_regs(cs,
+                   A6XX_SP_BLEND_CNTL(.enabled = blend_enable_mask,
+                                      .dual_color_in_enable = dual_src_blend,
+                                      .alpha_to_coverage = msaa_info->alphaToCoverageEnable,
+                                      .unk8 = true));
+
    /* set A6XX_RB_BLEND_CNTL_INDEPENDENT_BLEND only when enabled? */
-   uint32_t rb_blend_cntl =
-      A6XX_RB_BLEND_CNTL_ENABLE_BLEND(blend_enable_mask) |
-      A6XX_RB_BLEND_CNTL_INDEPENDENT_BLEND |
-      A6XX_RB_BLEND_CNTL_SAMPLE_MASK(sample_mask);
-   if (msaa_info->alphaToCoverageEnable)
-      rb_blend_cntl |= A6XX_RB_BLEND_CNTL_ALPHA_TO_COVERAGE;
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_SP_BLEND_CNTL, 1);
-   tu_cs_emit(cs, sp_blend_cntl);
-
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_BLEND_CNTL, 1);
-   tu_cs_emit(cs, rb_blend_cntl);
+   tu_cs_emit_regs(cs,
+                   A6XX_RB_BLEND_CNTL(.enable_blend = blend_enable_mask,
+                                      .independent_blend = true,
+                                      .sample_mask = sample_mask,
+                                      .dual_color_in_enable = dual_src_blend,
+                                      .alpha_to_coverage = msaa_info->alphaToCoverageEnable,
+                                      .alpha_to_one = msaa_info->alphaToOneEnable));
 }
 
-void
-tu6_emit_blend_constants(struct tu_cs *cs, const float constants[4])
+static uint32_t
+calc_pvtmem_size(struct tu_device *dev, struct tu_pvtmem_config *config,
+                 uint32_t pvtmem_bytes)
 {
-   tu_cs_emit_pkt4(cs, REG_A6XX_RB_BLEND_RED_F32, 4);
-   tu_cs_emit_array(cs, (const uint32_t *) constants, 4);
-}
+   uint32_t per_fiber_size = ALIGN(pvtmem_bytes, 512);
+   uint32_t per_sp_size =
+      ALIGN(per_fiber_size * dev->physical_device->info.fibers_per_sp, 1 << 12);
 
-static VkResult
-tu_pipeline_create(struct tu_device *dev,
-                   const VkAllocationCallbacks *pAllocator,
-                   struct tu_pipeline **out_pipeline)
-{
-   struct tu_pipeline *pipeline =
-      vk_zalloc2(&dev->alloc, pAllocator, sizeof(*pipeline), 8,
-                 VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!pipeline)
-      return VK_ERROR_OUT_OF_HOST_MEMORY;
-
-   tu_cs_init(&pipeline->cs, TU_CS_MODE_SUB_STREAM, 2048);
-
-   /* reserve the space now such that tu_cs_begin_sub_stream never fails */
-   VkResult result = tu_cs_reserve_space(dev, &pipeline->cs, 2048);
-   if (result != VK_SUCCESS) {
-      vk_free2(&dev->alloc, pAllocator, pipeline);
-      return result;
+   if (config) {
+      config->per_fiber_size = per_fiber_size;
+      config->per_sp_size = per_sp_size;
    }
 
-   *out_pipeline = pipeline;
+   return dev->physical_device->info.num_sp_cores * per_sp_size;
+}
 
-   return VK_SUCCESS;
+static void
+tu_setup_pvtmem(struct tu_device *dev,
+                struct tu_pipeline *pipeline,
+                struct tu_pvtmem_config *config,
+                uint32_t pvtmem_bytes, bool per_wave)
+{
+   struct tu_cs_memory memory;
+
+   if (!pvtmem_bytes) {
+      memset(config, 0, sizeof(*config));
+      return;
+   }
+
+   uint32_t total_size = calc_pvtmem_size(dev, config, pvtmem_bytes);
+   config->per_wave = per_wave;
+
+   tu_cs_alloc(&pipeline->cs, total_size / 32, 8, &memory);
+   config->iova = memory.iova;
+}
+
+
+static VkResult
+tu_pipeline_allocate_cs(struct tu_device *dev,
+                        struct tu_pipeline *pipeline,
+                        struct tu_pipeline_builder *builder,
+                        struct ir3_shader_variant *compute)
+{
+   uint32_t size = 2048 + tu6_load_state_size(pipeline, compute);
+
+   /* graphics case: */
+   if (builder) {
+      uint32_t pvtmem_bytes = 0;
+      for (uint32_t i = 0; i < ARRAY_SIZE(builder->variants); i++) {
+         if (builder->variants[i]) {
+            size += builder->variants[i]->info.size / 4;
+            pvtmem_bytes = MAX2(pvtmem_bytes, builder->variants[i]->pvtmem_size);
+         }
+      }
+
+      size += builder->binning_variant->info.size / 4;
+      pvtmem_bytes = MAX2(pvtmem_bytes, builder->binning_variant->pvtmem_size);
+
+      size += calc_pvtmem_size(dev, NULL, pvtmem_bytes) / 4;
+   } else {
+      size += compute->info.size / 4;
+      size += calc_pvtmem_size(dev, NULL, compute->pvtmem_size) / 4;
+   }
+
+   tu_cs_init(&pipeline->cs, dev, TU_CS_MODE_SUB_STREAM, size);
+
+   /* Reserve the space now such that tu_cs_begin_sub_stream never fails. Note
+    * that LOAD_STATE can potentially take up a large amount of space so we
+    * calculate its size explicitly.
+   */
+   return tu_cs_reserve_space(&pipeline->cs, size);
+}
+
+static void
+tu_pipeline_shader_key_init(struct ir3_shader_key *key,
+                            const VkGraphicsPipelineCreateInfo *pipeline_info)
+{
+   for (uint32_t i = 0; i < pipeline_info->stageCount; i++) {
+      if (pipeline_info->pStages[i].stage == VK_SHADER_STAGE_GEOMETRY_BIT) {
+         key->has_gs = true;
+         break;
+      }
+   }
+
+   if (pipeline_info->pRasterizationState->rasterizerDiscardEnable)
+      return;
+
+   const VkPipelineMultisampleStateCreateInfo *msaa_info = pipeline_info->pMultisampleState;
+   const struct VkPipelineSampleLocationsStateCreateInfoEXT *sample_locations =
+      vk_find_struct_const(msaa_info->pNext, PIPELINE_SAMPLE_LOCATIONS_STATE_CREATE_INFO_EXT);
+   if (msaa_info->rasterizationSamples > 1 ||
+       /* also set msaa key when sample location is not the default
+        * since this affects varying interpolation */
+       (sample_locations && sample_locations->sampleLocationsEnable)) {
+      key->msaa = true;
+   }
+
+   /* note: not actually used by ir3, just checked in tu6_emit_fs_inputs */
+   if (msaa_info->sampleShadingEnable)
+      key->sample_shading = true;
+
+   /* We set this after we compile to NIR because we need the prim mode */
+   key->tessellation = IR3_TESS_NONE;
+}
+
+static uint32_t
+tu6_get_tessmode(struct tu_shader* shader)
+{
+   uint32_t primitive_mode = shader->ir3_shader->nir->info.tess.primitive_mode;
+   switch (primitive_mode) {
+   case GL_ISOLINES:
+      return IR3_TESS_ISOLINES;
+   case GL_TRIANGLES:
+      return IR3_TESS_TRIANGLES;
+   case GL_QUADS:
+      return IR3_TESS_QUADS;
+   case GL_NONE:
+      return IR3_TESS_NONE;
+   default:
+      unreachable("bad tessmode");
+   }
+}
+
+static uint64_t
+tu_upload_variant(struct tu_pipeline *pipeline,
+                  const struct ir3_shader_variant *variant)
+{
+   struct tu_cs_memory memory;
+
+   if (!variant)
+      return 0;
+
+   /* this expects to get enough alignment because shaders are allocated first
+    * and total size is always aligned correctly
+    * note: an assert in tu6_emit_xs_config validates the alignment
+    */
+   tu_cs_alloc(&pipeline->cs, variant->info.size / 4, 1, &memory);
+
+   memcpy(memory.map, variant->bin, variant->info.size);
+   return memory.iova;
+}
+
+static void
+tu_append_executable(struct tu_pipeline *pipeline, struct ir3_shader_variant *variant,
+                     char *nir_from_spirv)
+{
+   ralloc_steal(pipeline->executables_mem_ctx, variant->disasm_info.nir);
+   ralloc_steal(pipeline->executables_mem_ctx, variant->disasm_info.disasm);
+
+   struct tu_pipeline_executable exe = {
+      .stage = variant->shader->type,
+      .nir_from_spirv = nir_from_spirv,
+      .nir_final = variant->disasm_info.nir,
+      .disasm = variant->disasm_info.disasm,
+      .stats = variant->info,
+      .is_binning = variant->binning_pass,
+   };
+
+   util_dynarray_append(&pipeline->executables, struct tu_pipeline_executable, exe);
 }
 
 static VkResult
-tu_pipeline_builder_compile_shaders(struct tu_pipeline_builder *builder)
+tu_pipeline_builder_compile_shaders(struct tu_pipeline_builder *builder,
+                                    struct tu_pipeline *pipeline)
 {
+   const struct ir3_compiler *compiler = builder->device->compiler;
    const VkPipelineShaderStageCreateInfo *stage_infos[MESA_SHADER_STAGES] = {
       NULL
    };
    for (uint32_t i = 0; i < builder->create_info->stageCount; i++) {
       gl_shader_stage stage =
-         tu_shader_stage(builder->create_info->pStages[i].stage);
+         vk_to_mesa_shader_stage(builder->create_info->pStages[i].stage);
       stage_infos[stage] = &builder->create_info->pStages[i];
    }
 
-   struct tu_shader_compile_options options;
-   tu_shader_compile_options_init(&options, builder->create_info);
+   struct ir3_shader_key key = {};
+   tu_pipeline_shader_key_init(&key, builder->create_info);
 
-   /* compile shaders in reverse order */
-   struct tu_shader *next_stage_shader = NULL;
-   for (gl_shader_stage stage = MESA_SHADER_STAGES - 1;
-        stage > MESA_SHADER_NONE; stage--) {
+   nir_shader *nir[ARRAY_SIZE(builder->shaders)] = { NULL };
+
+   for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+        stage < ARRAY_SIZE(nir); stage++) {
       const VkPipelineShaderStageCreateInfo *stage_info = stage_infos[stage];
       if (!stage_info)
          continue;
 
+      nir[stage] = tu_spirv_to_nir(builder->device, stage_info, stage);
+      if (!nir[stage])
+         return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
+
+   if (!nir[MESA_SHADER_FRAGMENT]) {
+         const nir_shader_compiler_options *nir_options =
+            ir3_get_compiler_options(builder->device->compiler);
+         nir_builder fs_b = nir_builder_init_simple_shader(MESA_SHADER_FRAGMENT,
+                                                           nir_options,
+                                                           "noop_fs");
+         nir[MESA_SHADER_FRAGMENT] = fs_b.shader;
+   }
+
+   const bool executable_info = builder->create_info->flags &
+      VK_PIPELINE_CREATE_CAPTURE_INTERNAL_REPRESENTATIONS_BIT_KHR;
+
+   char *nir_initial_disasm[ARRAY_SIZE(builder->shaders)] = { NULL };
+
+   if (executable_info) {
+      for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+            stage < ARRAY_SIZE(nir); stage++) {
+         if (!nir[stage])
+            continue;
+
+         nir_initial_disasm[stage] =
+            nir_shader_as_str(nir[stage], pipeline->executables_mem_ctx);
+      }
+   }
+
+   /* TODO do intra-stage linking here */
+
+   uint32_t desc_sets = 0;
+   for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+        stage < ARRAY_SIZE(nir); stage++) {
+      if (!nir[stage])
+         continue;
+
       struct tu_shader *shader =
-         tu_shader_create(builder->device, stage, stage_info, builder->layout,
+         tu_shader_create(builder->device, nir[stage],
+                          builder->multiview_mask, builder->layout,
                           builder->alloc);
       if (!shader)
          return VK_ERROR_OUT_OF_HOST_MEMORY;
 
-      VkResult result =
-         tu_shader_compile(builder->device, shader, next_stage_shader,
-                           &options, builder->alloc);
-      if (result != VK_SUCCESS)
-         return result;
+      /* In SPIR-V generated from GLSL, the primitive mode is specified in the
+       * tessellation evaluation shader, but in SPIR-V generated from HLSL,
+       * the mode is specified in the tessellation control shader. */
+      if ((stage == MESA_SHADER_TESS_EVAL || stage == MESA_SHADER_TESS_CTRL) &&
+          key.tessellation == IR3_TESS_NONE) {
+         key.tessellation = tu6_get_tessmode(shader);
+      }
+
+      /* Keep track of the status of each shader's active descriptor sets,
+       * which is set in tu_lower_io. */
+      desc_sets |= shader->active_desc_sets;
 
       builder->shaders[stage] = shader;
-      builder->shader_offsets[stage] = builder->shader_total_size;
-      builder->shader_total_size +=
-         sizeof(uint32_t) * shader->variants[0].info.sizedwords;
+   }
+   pipeline->active_desc_sets = desc_sets;
 
-      next_stage_shader = shader;
+   struct tu_shader *last_shader = builder->shaders[MESA_SHADER_GEOMETRY];
+   if (!last_shader)
+      last_shader = builder->shaders[MESA_SHADER_TESS_EVAL];
+   if (!last_shader)
+      last_shader = builder->shaders[MESA_SHADER_VERTEX];
+
+   uint64_t outputs_written = last_shader->ir3_shader->nir->info.outputs_written;
+
+   key.layer_zero = !(outputs_written & VARYING_BIT_LAYER);
+   key.view_zero = !(outputs_written & VARYING_BIT_VIEWPORT);
+
+   pipeline->tess.patch_type = key.tessellation;
+
+   for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+        stage < ARRAY_SIZE(builder->shaders); stage++) {
+      if (!builder->shaders[stage])
+         continue;
+      
+      bool created;
+      builder->variants[stage] =
+         ir3_shader_get_variant(builder->shaders[stage]->ir3_shader,
+                                &key, false, executable_info, &created);
+      if (!builder->variants[stage])
+         return VK_ERROR_OUT_OF_HOST_MEMORY;
    }
 
-   if (builder->shaders[MESA_SHADER_VERTEX]->has_binning_pass) {
-      const struct tu_shader *vs = builder->shaders[MESA_SHADER_VERTEX];
-      builder->binning_vs_offset = builder->shader_total_size;
-      builder->shader_total_size +=
-         sizeof(uint32_t) * vs->variants[1].info.sizedwords;
-   }
+   uint32_t safe_constlens = ir3_trim_constlen(builder->variants, compiler);
 
-   return VK_SUCCESS;
-}
+   key.safe_constlen = true;
 
-static VkResult
-tu_pipeline_builder_upload_shaders(struct tu_pipeline_builder *builder,
-                                   struct tu_pipeline *pipeline)
-{
-   struct tu_bo *bo = &pipeline->program.binary_bo;
-
-   VkResult result =
-      tu_bo_init_new(builder->device, bo, builder->shader_total_size);
-   if (result != VK_SUCCESS)
-      return result;
-
-   result = tu_bo_map(builder->device, bo);
-   if (result != VK_SUCCESS)
-      return result;
-
-   for (uint32_t i = 0; i < MESA_SHADER_STAGES; i++) {
-      const struct tu_shader *shader = builder->shaders[i];
-      if (!shader)
+   for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+        stage < ARRAY_SIZE(builder->shaders); stage++) {
+      if (!builder->shaders[stage])
          continue;
 
-      memcpy(bo->map + builder->shader_offsets[i], shader->binary,
-             sizeof(uint32_t) * shader->variants[0].info.sizedwords);
+      if (safe_constlens & (1 << stage)) {
+         bool created;
+         builder->variants[stage] =
+            ir3_shader_get_variant(builder->shaders[stage]->ir3_shader,
+                                   &key, false, executable_info, &created);
+         if (!builder->variants[stage])
+            return VK_ERROR_OUT_OF_HOST_MEMORY;
+      }
    }
 
-   if (builder->shaders[MESA_SHADER_VERTEX]->has_binning_pass) {
-      const struct tu_shader *vs = builder->shaders[MESA_SHADER_VERTEX];
-      memcpy(bo->map + builder->binning_vs_offset, vs->binning_binary,
-             sizeof(uint32_t) * vs->variants[1].info.sizedwords);
+   const struct tu_shader *vs = builder->shaders[MESA_SHADER_VERTEX];
+   struct ir3_shader_variant *variant;
+
+   if (vs->ir3_shader->stream_output.num_outputs ||
+       !ir3_has_binning_vs(&key)) {
+      variant = builder->variants[MESA_SHADER_VERTEX];
+   } else {
+      bool created;
+      key.safe_constlen = !!(safe_constlens & (1 << MESA_SHADER_VERTEX));
+      variant = ir3_shader_get_variant(vs->ir3_shader, &key,
+                                       true, executable_info, &created);
+      if (!variant)
+         return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
+
+   builder->binning_variant = variant;
+
+   for (gl_shader_stage stage = MESA_SHADER_VERTEX;
+         stage < ARRAY_SIZE(nir); stage++) {
+      if (builder->variants[stage]) {
+         tu_append_executable(pipeline, builder->variants[stage],
+            nir_initial_disasm[stage]);
+      }
+   }
+
+   if (builder->binning_variant != builder->variants[MESA_SHADER_VERTEX]) {
+      tu_append_executable(pipeline, builder->binning_variant, NULL);
    }
 
    return VK_SUCCESS;
@@ -1628,9 +2332,76 @@ tu_pipeline_builder_parse_dynamic(struct tu_pipeline_builder *builder,
    if (!dynamic_info)
       return;
 
+   pipeline->gras_su_cntl_mask = ~0u;
+   pipeline->rb_depth_cntl_mask = ~0u;
+   pipeline->rb_stencil_cntl_mask = ~0u;
+
    for (uint32_t i = 0; i < dynamic_info->dynamicStateCount; i++) {
-      pipeline->dynamic_state.mask |=
-         tu_dynamic_state_bit(dynamic_info->pDynamicStates[i]);
+      VkDynamicState state = dynamic_info->pDynamicStates[i];
+      switch (state) {
+      case VK_DYNAMIC_STATE_VIEWPORT ... VK_DYNAMIC_STATE_STENCIL_REFERENCE:
+         if (state == VK_DYNAMIC_STATE_LINE_WIDTH)
+            pipeline->gras_su_cntl_mask &= ~A6XX_GRAS_SU_CNTL_LINEHALFWIDTH__MASK;
+         pipeline->dynamic_state_mask |= BIT(state);
+         break;
+      case VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT:
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_SAMPLE_LOCATIONS);
+         break;
+      case VK_DYNAMIC_STATE_CULL_MODE_EXT:
+         pipeline->gras_su_cntl_mask &=
+            ~(A6XX_GRAS_SU_CNTL_CULL_BACK | A6XX_GRAS_SU_CNTL_CULL_FRONT);
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_GRAS_SU_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_FRONT_FACE_EXT:
+         pipeline->gras_su_cntl_mask &= ~A6XX_GRAS_SU_CNTL_FRONT_CW;
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_GRAS_SU_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY_EXT:
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY);
+         break;
+      case VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT:
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_VB_STRIDE);
+         break;
+      case VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT_EXT:
+         pipeline->dynamic_state_mask |= BIT(VK_DYNAMIC_STATE_VIEWPORT);
+         break;
+      case VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT_EXT:
+         pipeline->dynamic_state_mask |= BIT(VK_DYNAMIC_STATE_SCISSOR);
+         break;
+      case VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE_EXT:
+         pipeline->rb_depth_cntl_mask &=
+            ~(A6XX_RB_DEPTH_CNTL_Z_ENABLE | A6XX_RB_DEPTH_CNTL_Z_TEST_ENABLE);
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_DEPTH_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE_EXT:
+         pipeline->rb_depth_cntl_mask &= ~A6XX_RB_DEPTH_CNTL_Z_WRITE_ENABLE;
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_DEPTH_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_DEPTH_COMPARE_OP_EXT:
+         pipeline->rb_depth_cntl_mask &= ~A6XX_RB_DEPTH_CNTL_ZFUNC__MASK;
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_DEPTH_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE_EXT:
+         pipeline->rb_depth_cntl_mask &=
+            ~(A6XX_RB_DEPTH_CNTL_Z_BOUNDS_ENABLE | A6XX_RB_DEPTH_CNTL_Z_TEST_ENABLE);
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_DEPTH_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE_EXT:
+         pipeline->rb_stencil_cntl_mask &= ~(A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE |
+                                             A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE_BF |
+                                             A6XX_RB_STENCIL_CONTROL_STENCIL_READ);
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_STENCIL_CNTL);
+         break;
+      case VK_DYNAMIC_STATE_STENCIL_OP_EXT:
+         pipeline->rb_stencil_cntl_mask &= A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE |
+                                           A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE_BF |
+                                           A6XX_RB_STENCIL_CONTROL_STENCIL_READ;
+         pipeline->dynamic_state_mask |= BIT(TU_DYNAMIC_STATE_RB_STENCIL_CNTL);
+         break;
+      default:
+         assert(!"unsupported dynamic state");
+         break;
+      }
    }
 }
 
@@ -1639,14 +2410,9 @@ tu_pipeline_set_linkage(struct tu_program_descriptor_linkage *link,
                         struct tu_shader *shader,
                         struct ir3_shader_variant *v)
 {
-   link->ubo_state = v->shader->ubo_state;
-   link->const_state = v->shader->const_state;
+   link->const_state = *ir3_const_state(v);
    link->constlen = v->constlen;
-   link->texture_map = shader->texture_map;
-   link->sampler_map = shader->sampler_map;
-   link->ubo_map = shader->ubo_map;
-   link->ssbo_map = shader->ssbo_map;
-   link->image_map = shader->image_map;
+   link->push_consts = shader->push_consts;
 }
 
 static void
@@ -1654,22 +2420,27 @@ tu_pipeline_builder_parse_shader_stages(struct tu_pipeline_builder *builder,
                                         struct tu_pipeline *pipeline)
 {
    struct tu_cs prog_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, 512, &prog_cs);
-   tu6_emit_program(&prog_cs, builder, &pipeline->program.binary_bo, false);
-   pipeline->program.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &prog_cs);
+   tu_cs_begin_sub_stream(&pipeline->cs, 512, &prog_cs);
+   tu6_emit_program(&prog_cs, builder, false);
+   pipeline->program.state = tu_cs_end_draw_state(&pipeline->cs, &prog_cs);
 
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, 512, &prog_cs);
-   tu6_emit_program(&prog_cs, builder, &pipeline->program.binary_bo, true);
-   pipeline->program.binning_state_ib =
-      tu_cs_end_sub_stream(&pipeline->cs, &prog_cs);
+   tu_cs_begin_sub_stream(&pipeline->cs, 512, &prog_cs);
+   tu6_emit_program(&prog_cs, builder, true);
+   pipeline->program.binning_state = tu_cs_end_draw_state(&pipeline->cs, &prog_cs);
 
-   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
+   VkShaderStageFlags stages = 0;
+   for (unsigned i = 0; i < builder->create_info->stageCount; i++) {
+      stages |= builder->create_info->pStages[i].stage;
+   }
+   pipeline->active_stages = stages;
+
+   for (unsigned i = 0; i < ARRAY_SIZE(builder->shaders); i++) {
       if (!builder->shaders[i])
          continue;
 
       tu_pipeline_set_linkage(&pipeline->program.link[i],
                               builder->shaders[i],
-                              &builder->shaders[i]->variants[0]);
+                              builder->variants[i]);
    }
 }
 
@@ -1679,25 +2450,23 @@ tu_pipeline_builder_parse_vertex_input(struct tu_pipeline_builder *builder,
 {
    const VkPipelineVertexInputStateCreateInfo *vi_info =
       builder->create_info->pVertexInputState;
-   const struct tu_shader *vs = builder->shaders[MESA_SHADER_VERTEX];
+   const struct ir3_shader_variant *vs = builder->variants[MESA_SHADER_VERTEX];
+   const struct ir3_shader_variant *bs = builder->binning_variant;
+
+   pipeline->num_vbs = vi_info->vertexBindingDescriptionCount;
 
    struct tu_cs vi_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs,
-                          MAX_VERTEX_ATTRIBS * 5 + 2, &vi_cs);
-   tu6_emit_vertex_input(&vi_cs, &vs->variants[0], vi_info,
-                         pipeline->vi.bindings, pipeline->vi.strides,
-                         pipeline->vi.offsets, &pipeline->vi.count);
-   pipeline->vi.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &vi_cs);
+   tu_cs_begin_sub_stream(&pipeline->cs,
+                          MAX_VERTEX_ATTRIBS * 7 + 2, &vi_cs);
+   tu6_emit_vertex_input(pipeline, &vi_cs, vs, vi_info);
+   pipeline->vi.state = tu_cs_end_draw_state(&pipeline->cs, &vi_cs);
 
-   if (vs->has_binning_pass) {
-      tu_cs_begin_sub_stream(builder->device, &pipeline->cs,
-                             MAX_VERTEX_ATTRIBS * 5 + 2, &vi_cs);
-      tu6_emit_vertex_input(
-         &vi_cs, &vs->variants[1], vi_info, pipeline->vi.binning_bindings,
-         pipeline->vi.binning_strides, pipeline->vi.binning_offsets,
-         &pipeline->vi.binning_count);
-      pipeline->vi.binning_state_ib =
-         tu_cs_end_sub_stream(&pipeline->cs, &vi_cs);
+   if (bs) {
+      tu_cs_begin_sub_stream(&pipeline->cs,
+                             MAX_VERTEX_ATTRIBS * 7 + 2, &vi_cs);
+      tu6_emit_vertex_input(pipeline, &vi_cs, bs, vi_info);
+      pipeline->vi.binning_state =
+         tu_cs_end_draw_state(&pipeline->cs, &vi_cs);
    }
 }
 
@@ -1710,6 +2479,46 @@ tu_pipeline_builder_parse_input_assembly(struct tu_pipeline_builder *builder,
 
    pipeline->ia.primtype = tu6_primtype(ia_info->topology);
    pipeline->ia.primitive_restart = ia_info->primitiveRestartEnable;
+}
+
+static bool
+tu_pipeline_static_state(struct tu_pipeline *pipeline, struct tu_cs *cs,
+                         uint32_t id, uint32_t size)
+{
+   assert(id < ARRAY_SIZE(pipeline->dynamic_state));
+
+   if (pipeline->dynamic_state_mask & BIT(id))
+      return false;
+
+   pipeline->dynamic_state[id] = tu_cs_draw_state(&pipeline->cs, cs, size);
+   return true;
+}
+
+static void
+tu_pipeline_builder_parse_tessellation(struct tu_pipeline_builder *builder,
+                                       struct tu_pipeline *pipeline)
+{
+   if (!(pipeline->active_stages & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) ||
+       !(pipeline->active_stages & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT))
+      return;
+
+   const VkPipelineTessellationStateCreateInfo *tess_info =
+      builder->create_info->pTessellationState;
+
+   assert(!(pipeline->dynamic_state_mask & BIT(TU_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY)));
+
+   assert(pipeline->ia.primtype == DI_PT_PATCHES0);
+   assert(tess_info->patchControlPoints <= 32);
+   pipeline->ia.primtype += tess_info->patchControlPoints;
+   const VkPipelineTessellationDomainOriginStateCreateInfo *domain_info =
+         vk_find_struct_const(tess_info->pNext, PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO);
+   pipeline->tess.upper_left_domain_origin = !domain_info ||
+         domain_info->domainOrigin == VK_TESSELLATION_DOMAIN_ORIGIN_UPPER_LEFT;
+   const struct ir3_shader_variant *hs = builder->variants[MESA_SHADER_TESS_CTRL];
+   const struct ir3_shader_variant *ds = builder->variants[MESA_SHADER_TESS_EVAL];
+   pipeline->tess.param_stride = hs->output_size * 4;
+   pipeline->tess.hs_bo_regid = hs->const_state->offsets.primitive_param + 1;
+   pipeline->tess.ds_bo_regid = ds->const_state->offsets.primitive_param + 1;
 }
 
 static void
@@ -1730,20 +2539,13 @@ tu_pipeline_builder_parse_viewport(struct tu_pipeline_builder *builder,
    const VkPipelineViewportStateCreateInfo *vp_info =
       builder->create_info->pViewportState;
 
-   struct tu_cs vp_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, 15, &vp_cs);
+   struct tu_cs cs;
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_VIEWPORT)) {
-      assert(vp_info->viewportCount == 1);
-      tu6_emit_viewport(&vp_cs, vp_info->pViewports);
-   }
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_VIEWPORT, 8 + 10 * vp_info->viewportCount))
+      tu6_emit_viewport(&cs, vp_info->pViewports, vp_info->viewportCount);
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_SCISSOR)) {
-      assert(vp_info->scissorCount == 1);
-      tu6_emit_scissor(&vp_cs, vp_info->pScissors);
-   }
-
-   pipeline->vp.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &vp_cs);
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_SCISSOR, 1 + 2 * vp_info->scissorCount))
+      tu6_emit_scissor(&cs, vp_info->pScissors, vp_info->scissorCount);
 }
 
 static void
@@ -1753,31 +2555,67 @@ tu_pipeline_builder_parse_rasterization(struct tu_pipeline_builder *builder,
    const VkPipelineRasterizationStateCreateInfo *rast_info =
       builder->create_info->pRasterizationState;
 
-   assert(!rast_info->depthClampEnable);
-   assert(rast_info->polygonMode == VK_POLYGON_MODE_FILL);
+   enum a6xx_polygon_mode mode = tu6_polygon_mode(rast_info->polygonMode);
 
-   struct tu_cs rast_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, 20, &rast_cs);
+   bool depth_clip_disable = rast_info->depthClampEnable;
+
+   const VkPipelineRasterizationDepthClipStateCreateInfoEXT *depth_clip_state =
+      vk_find_struct_const(rast_info, PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT);
+   if (depth_clip_state)
+      depth_clip_disable = !depth_clip_state->depthClipEnable;
+
+   struct tu_cs cs;
+   uint32_t cs_size = 13 + (builder->emit_msaa_state ? 11 : 0);
+   pipeline->rast_state = tu_cs_draw_state(&pipeline->cs, &cs, cs_size);
+
+   tu_cs_emit_regs(&cs,
+                   A6XX_GRAS_CL_CNTL(
+                     .znear_clip_disable = depth_clip_disable,
+                     .zfar_clip_disable = depth_clip_disable,
+                     /* TODO should this be depth_clip_disable instead? */
+                     .unk5 = rast_info->depthClampEnable,
+                     .zero_gb_scale_z = 1,
+                     .vp_clip_code_ignore = 1));
+
+   tu_cs_emit_regs(&cs,
+                   A6XX_VPC_POLYGON_MODE(mode));
+
+   tu_cs_emit_regs(&cs,
+                   A6XX_PC_POLYGON_MODE(mode));
 
    /* move to hw ctx init? */
-   tu6_emit_gras_unknowns(&rast_cs);
-   tu6_emit_point_size(&rast_cs);
+   tu_cs_emit_regs(&cs,
+                   A6XX_GRAS_SU_POINT_MINMAX(.min = 1.0f / 16.0f, .max = 4092.0f),
+                   A6XX_GRAS_SU_POINT_SIZE(1.0f));
 
-   const uint32_t gras_su_cntl =
-      tu6_gras_su_cntl(rast_info, builder->samples);
+   const VkPipelineRasterizationStateStreamCreateInfoEXT *stream_info =
+      vk_find_struct_const(rast_info->pNext,
+                           PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT);
+   unsigned stream = stream_info ? stream_info->rasterizationStream : 0;
+   tu_cs_emit_regs(&cs,
+                   A6XX_PC_RASTER_CNTL(.stream = stream,
+                                       .discard = rast_info->rasterizerDiscardEnable));
+   tu_cs_emit_regs(&cs,
+                   A6XX_VPC_UNKNOWN_9107(.raster_discard = rast_info->rasterizerDiscardEnable));
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_LINE_WIDTH))
-      tu6_emit_gras_su_cntl(&rast_cs, gras_su_cntl, rast_info->lineWidth);
+   /* If samples count couldn't be devised from the subpass, we should emit it here.
+    * It happens when subpass doesn't use any color/depth attachment.
+    */
+   if (builder->emit_msaa_state)
+      tu6_emit_msaa(&cs, builder->samples);
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_DEPTH_BIAS)) {
-      tu6_emit_depth_bias(&rast_cs, rast_info->depthBiasConstantFactor,
+   pipeline->gras_su_cntl =
+      tu6_gras_su_cntl(rast_info, builder->samples, builder->multiview_mask != 0);
+
+   if (tu_pipeline_static_state(pipeline, &cs, TU_DYNAMIC_STATE_GRAS_SU_CNTL, 2))
+      tu_cs_emit_regs(&cs, A6XX_GRAS_SU_CNTL(.dword = pipeline->gras_su_cntl));
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_DEPTH_BIAS, 4)) {
+      tu6_emit_depth_bias(&cs, rast_info->depthBiasConstantFactor,
                           rast_info->depthBiasClamp,
                           rast_info->depthBiasSlopeFactor);
    }
 
-   pipeline->rast.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &rast_cs);
-
-   pipeline->rast.gras_su_cntl = gras_su_cntl;
 }
 
 static void
@@ -1791,38 +2629,152 @@ tu_pipeline_builder_parse_depth_stencil(struct tu_pipeline_builder *builder,
     *    the pipeline has rasterization disabled or if the subpass of the
     *    render pass the pipeline is created against does not use a
     *    depth/stencil attachment.
-    *
-    * We disable both depth and stenil tests in those cases.
     */
-   static const VkPipelineDepthStencilStateCreateInfo dummy_ds_info;
    const VkPipelineDepthStencilStateCreateInfo *ds_info =
-      builder->use_depth_stencil_attachment
-         ? builder->create_info->pDepthStencilState
-         : &dummy_ds_info;
+      builder->create_info->pDepthStencilState;
+   const VkPipelineRasterizationStateCreateInfo *rast_info =
+      builder->create_info->pRasterizationState;
+   uint32_t rb_depth_cntl = 0, rb_stencil_cntl = 0;
+   struct tu_cs cs;
 
-   struct tu_cs ds_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, 12, &ds_cs);
+   if (builder->depth_attachment_format != VK_FORMAT_UNDEFINED &&
+       builder->depth_attachment_format != VK_FORMAT_S8_UINT) {
+      if (ds_info->depthTestEnable) {
+         rb_depth_cntl |=
+            A6XX_RB_DEPTH_CNTL_Z_ENABLE |
+            A6XX_RB_DEPTH_CNTL_ZFUNC(tu6_compare_func(ds_info->depthCompareOp)) |
+            A6XX_RB_DEPTH_CNTL_Z_TEST_ENABLE; /* TODO: don't set for ALWAYS/NEVER */
 
-   /* move to hw ctx init? */
-   tu6_emit_alpha_control_disable(&ds_cs);
+         if (rast_info->depthClampEnable)
+            rb_depth_cntl |= A6XX_RB_DEPTH_CNTL_Z_CLAMP_ENABLE;
 
-   tu6_emit_depth_control(&ds_cs, ds_info);
-   tu6_emit_stencil_control(&ds_cs, ds_info);
+         if (ds_info->depthWriteEnable)
+            rb_depth_cntl |= A6XX_RB_DEPTH_CNTL_Z_WRITE_ENABLE;
+      }
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_STENCIL_COMPARE_MASK)) {
-      tu6_emit_stencil_compare_mask(&ds_cs, ds_info->front.compareMask,
-                                    ds_info->back.compareMask);
+      if (ds_info->depthBoundsTestEnable)
+            rb_depth_cntl |= A6XX_RB_DEPTH_CNTL_Z_BOUNDS_ENABLE | A6XX_RB_DEPTH_CNTL_Z_TEST_ENABLE;
+   } else {
+      /* if RB_DEPTH_CNTL is set dynamically, we need to make sure it is set
+       * to 0 when this pipeline is used, as enabling depth test when there
+       * is no depth attachment is a problem (at least for the S8_UINT case)
+       */
+      if (pipeline->dynamic_state_mask & BIT(TU_DYNAMIC_STATE_RB_DEPTH_CNTL))
+         pipeline->rb_depth_cntl_disable = true;
    }
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_STENCIL_WRITE_MASK)) {
-      tu6_emit_stencil_write_mask(&ds_cs, ds_info->front.writeMask,
-                                  ds_info->back.writeMask);
-   }
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_STENCIL_REFERENCE)) {
-      tu6_emit_stencil_reference(&ds_cs, ds_info->front.reference,
-                                 ds_info->back.reference);
+
+   if (builder->depth_attachment_format != VK_FORMAT_UNDEFINED) {
+      const VkStencilOpState *front = &ds_info->front;
+      const VkStencilOpState *back = &ds_info->back;
+
+      rb_stencil_cntl |=
+         A6XX_RB_STENCIL_CONTROL_FUNC(tu6_compare_func(front->compareOp)) |
+         A6XX_RB_STENCIL_CONTROL_FAIL(tu6_stencil_op(front->failOp)) |
+         A6XX_RB_STENCIL_CONTROL_ZPASS(tu6_stencil_op(front->passOp)) |
+         A6XX_RB_STENCIL_CONTROL_ZFAIL(tu6_stencil_op(front->depthFailOp)) |
+         A6XX_RB_STENCIL_CONTROL_FUNC_BF(tu6_compare_func(back->compareOp)) |
+         A6XX_RB_STENCIL_CONTROL_FAIL_BF(tu6_stencil_op(back->failOp)) |
+         A6XX_RB_STENCIL_CONTROL_ZPASS_BF(tu6_stencil_op(back->passOp)) |
+         A6XX_RB_STENCIL_CONTROL_ZFAIL_BF(tu6_stencil_op(back->depthFailOp));
+
+      if (ds_info->stencilTestEnable) {
+         rb_stencil_cntl |=
+            A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE |
+            A6XX_RB_STENCIL_CONTROL_STENCIL_ENABLE_BF |
+            A6XX_RB_STENCIL_CONTROL_STENCIL_READ;
+      }
    }
 
-   pipeline->ds.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &ds_cs);
+   if (tu_pipeline_static_state(pipeline, &cs, TU_DYNAMIC_STATE_RB_DEPTH_CNTL, 2)) {
+      tu_cs_emit_pkt4(&cs, REG_A6XX_RB_DEPTH_CNTL, 1);
+      tu_cs_emit(&cs, rb_depth_cntl);
+   } else {
+      pipeline->rb_depth_cntl = rb_depth_cntl;
+   }
+
+   if (tu_pipeline_static_state(pipeline, &cs, TU_DYNAMIC_STATE_RB_STENCIL_CNTL, 2)) {
+      tu_cs_emit_pkt4(&cs, REG_A6XX_RB_STENCIL_CONTROL, 1);
+      tu_cs_emit(&cs, rb_stencil_cntl);
+   } else {
+      pipeline->rb_stencil_cntl = rb_stencil_cntl;
+   }
+
+   /* the remaining draw states arent used if there is no d/s, leave them empty */
+   if (builder->depth_attachment_format == VK_FORMAT_UNDEFINED)
+      return;
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_DEPTH_BOUNDS, 3)) {
+      tu_cs_emit_regs(&cs,
+                      A6XX_RB_Z_BOUNDS_MIN(ds_info->minDepthBounds),
+                      A6XX_RB_Z_BOUNDS_MAX(ds_info->maxDepthBounds));
+   }
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK, 2)) {
+      tu_cs_emit_regs(&cs, A6XX_RB_STENCILMASK(.mask = ds_info->front.compareMask & 0xff,
+                                               .bfmask = ds_info->back.compareMask & 0xff));
+   }
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_STENCIL_WRITE_MASK, 2)) {
+      tu_cs_emit_regs(&cs, A6XX_RB_STENCILWRMASK(.wrmask = ds_info->front.writeMask & 0xff,
+                                                 .bfwrmask = ds_info->back.writeMask & 0xff));
+   }
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_STENCIL_REFERENCE, 2)) {
+      tu_cs_emit_regs(&cs, A6XX_RB_STENCILREF(.ref = ds_info->front.reference & 0xff,
+                                              .bfref = ds_info->back.reference & 0xff));
+   }
+
+   if (ds_info->depthTestEnable) {
+      pipeline->lrz.write = ds_info->depthWriteEnable;
+      pipeline->lrz.invalidate = false;
+      pipeline->lrz.z_test_enable = true;
+
+      /* LRZ does not support some depth modes.
+       *
+       * The HW has a flag for GREATER and GREATER_OR_EQUAL modes which is used
+       * in freedreno, however there are some dEQP-VK tests that fail if we use here.
+       * Furthermore, blob disables LRZ on these comparison opcodes too.
+       *
+       * TODO: investigate if we can enable GREATER flag here.
+       */
+      switch(ds_info->depthCompareOp) {
+      case VK_COMPARE_OP_ALWAYS:
+      case VK_COMPARE_OP_NOT_EQUAL:
+      case VK_COMPARE_OP_GREATER:
+      case VK_COMPARE_OP_GREATER_OR_EQUAL:
+         pipeline->lrz.invalidate = true;
+         pipeline->lrz.write = false;
+         break;
+      case VK_COMPARE_OP_EQUAL:
+      case VK_COMPARE_OP_NEVER:
+         pipeline->lrz.enable = true;
+         pipeline->lrz.write = false;
+         break;
+      case VK_COMPARE_OP_LESS:
+      case VK_COMPARE_OP_LESS_OR_EQUAL:
+         pipeline->lrz.enable = true;
+         break;
+      default:
+         unreachable("bad VK_COMPARE_OP value");
+         break;
+      };
+   }
+
+   if (ds_info->stencilTestEnable) {
+      pipeline->lrz.write = false;
+      pipeline->lrz.invalidate = true;
+   }
+
+   if (builder->shaders[MESA_SHADER_FRAGMENT]) {
+      const struct ir3_shader_variant *fs = &builder->shaders[MESA_SHADER_FRAGMENT]->ir3_shader->variants[0];
+      if (fs->has_kill || fs->no_earlyz || fs->writes_pos) {
+         pipeline->lrz.write = false;
+      }
+      if (fs->no_earlyz || fs->writes_pos) {
+         pipeline->lrz.enable = false;
+         pipeline->lrz.z_test_enable = false;
+      }
+   }
 }
 
 static void
@@ -1855,21 +2807,54 @@ tu_pipeline_builder_parse_multisample_and_color_blend(
       builder->use_color_attachments ? builder->create_info->pColorBlendState
                                      : &dummy_blend_info;
 
-   struct tu_cs blend_cs;
-   tu_cs_begin_sub_stream(builder->device, &pipeline->cs, MAX_RTS * 3 + 9,
-                          &blend_cs);
+   struct tu_cs cs;
+   pipeline->blend_state =
+      tu_cs_draw_state(&pipeline->cs, &cs, blend_info->attachmentCount * 3 + 4);
 
    uint32_t blend_enable_mask;
-   tu6_emit_rb_mrt_controls(&blend_cs, blend_info,
+   tu6_emit_rb_mrt_controls(&cs, blend_info,
                             builder->color_attachment_formats,
                             &blend_enable_mask);
 
-   if (!(pipeline->dynamic_state.mask & TU_DYNAMIC_BLEND_CONSTANTS))
-      tu6_emit_blend_constants(&blend_cs, blend_info->blendConstants);
+   tu6_emit_blend_control(&cs, blend_enable_mask,
+                          builder->use_dual_src_blend, msaa_info);
 
-   tu6_emit_blend_control(&blend_cs, blend_enable_mask, msaa_info);
+   assert(cs.cur == cs.end); /* validate draw state size */
 
-   pipeline->blend.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &blend_cs);
+   if (blend_enable_mask) {
+      for (int i = 0; i < blend_info->attachmentCount; i++) {
+         VkPipelineColorBlendAttachmentState blendAttachment = blend_info->pAttachments[i];
+         /* Disable LRZ writes when blend is enabled, since the
+          * resulting pixel value from the blend-draw
+          * depends on an earlier draw, which LRZ in the draw pass
+          * could early-reject if the previous blend-enabled draw wrote LRZ.
+          *
+          * From the PoV of LRZ, having masked color channels is
+          * the same as having blend enabled, in that the draw will
+          * care about the fragments from an earlier draw.
+          */
+         if (blendAttachment.blendEnable || blendAttachment.colorWriteMask != 0xf) {
+            pipeline->lrz.blend_disable_write = true;
+         }
+      }
+   }
+
+   if (tu_pipeline_static_state(pipeline, &cs, VK_DYNAMIC_STATE_BLEND_CONSTANTS, 5)) {
+      tu_cs_emit_pkt4(&cs, REG_A6XX_RB_BLEND_RED_F32, 4);
+      tu_cs_emit_array(&cs, (const uint32_t *) blend_info->blendConstants, 4);
+   }
+
+   const struct VkPipelineSampleLocationsStateCreateInfoEXT *sample_locations =
+      vk_find_struct_const(msaa_info->pNext, PIPELINE_SAMPLE_LOCATIONS_STATE_CREATE_INFO_EXT);
+   const VkSampleLocationsInfoEXT *samp_loc = NULL;
+
+   if (sample_locations && sample_locations->sampleLocationsEnable)
+      samp_loc = &sample_locations->sampleLocationsInfo;
+
+    if (tu_pipeline_static_state(pipeline, &cs, TU_DYNAMIC_STATE_SAMPLE_LOCATIONS,
+                                 samp_loc ? 9 : 6)) {
+      tu6_emit_sample_locations(&cs, samp_loc);
+    }
 }
 
 static void
@@ -1877,41 +2862,79 @@ tu_pipeline_finish(struct tu_pipeline *pipeline,
                    struct tu_device *dev,
                    const VkAllocationCallbacks *alloc)
 {
-   tu_cs_finish(dev, &pipeline->cs);
+   tu_cs_finish(&pipeline->cs);
 
-   if (pipeline->program.binary_bo.gem_handle)
-      tu_bo_finish(dev, &pipeline->program.binary_bo);
+   ralloc_free(pipeline->executables_mem_ctx);
 }
 
 static VkResult
 tu_pipeline_builder_build(struct tu_pipeline_builder *builder,
                           struct tu_pipeline **pipeline)
 {
-   VkResult result = tu_pipeline_create(builder->device, builder->alloc,
-                                        pipeline);
-   if (result != VK_SUCCESS)
-      return result;
+   VkResult result;
+
+   *pipeline = vk_object_zalloc(&builder->device->vk, builder->alloc,
+                                sizeof(**pipeline), VK_OBJECT_TYPE_PIPELINE);
+   if (!*pipeline)
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   (*pipeline)->layout = builder->layout;
+   (*pipeline)->executables_mem_ctx = ralloc_context(NULL);
+   util_dynarray_init(&(*pipeline)->executables, (*pipeline)->executables_mem_ctx);
 
    /* compile and upload shaders */
-   result = tu_pipeline_builder_compile_shaders(builder);
-   if (result == VK_SUCCESS)
-      result = tu_pipeline_builder_upload_shaders(builder, *pipeline);
+   result = tu_pipeline_builder_compile_shaders(builder, *pipeline);
    if (result != VK_SUCCESS) {
-      tu_pipeline_finish(*pipeline, builder->device, builder->alloc);
-      vk_free2(&builder->device->alloc, builder->alloc, *pipeline);
-      *pipeline = VK_NULL_HANDLE;
-
+      vk_object_free(&builder->device->vk, builder->alloc, *pipeline);
       return result;
    }
+
+   result = tu_pipeline_allocate_cs(builder->device, *pipeline, builder, NULL);
+   if (result != VK_SUCCESS) {
+      vk_object_free(&builder->device->vk, builder->alloc, *pipeline);
+      return result;
+   }
+
+   for (uint32_t i = 0; i < ARRAY_SIZE(builder->variants); i++)
+      builder->shader_iova[i] = tu_upload_variant(*pipeline, builder->variants[i]);
+
+   builder->binning_vs_iova =
+      tu_upload_variant(*pipeline, builder->binning_variant);
+
+   /* Setup private memory. Note that because we're sharing the same private
+    * memory for all stages, all stages must use the same config, or else
+    * fibers from one stage might overwrite fibers in another.
+    */
+
+   uint32_t pvtmem_size = 0;
+   bool per_wave = true;
+   for (uint32_t i = 0; i < ARRAY_SIZE(builder->variants); i++) {
+      if (builder->variants[i]) {
+         pvtmem_size = MAX2(pvtmem_size, builder->variants[i]->pvtmem_size);
+         if (!builder->variants[i]->pvtmem_per_wave)
+            per_wave = false;
+      }
+   }
+
+   if (builder->binning_variant) {
+      pvtmem_size = MAX2(pvtmem_size, builder->binning_variant->pvtmem_size);
+      if (!builder->binning_variant->pvtmem_per_wave)
+         per_wave = false;
+   }
+
+   tu_setup_pvtmem(builder->device, *pipeline, &builder->pvtmem,
+                   pvtmem_size, per_wave);
 
    tu_pipeline_builder_parse_dynamic(builder, *pipeline);
    tu_pipeline_builder_parse_shader_stages(builder, *pipeline);
    tu_pipeline_builder_parse_vertex_input(builder, *pipeline);
    tu_pipeline_builder_parse_input_assembly(builder, *pipeline);
+   tu_pipeline_builder_parse_tessellation(builder, *pipeline);
    tu_pipeline_builder_parse_viewport(builder, *pipeline);
    tu_pipeline_builder_parse_rasterization(builder, *pipeline);
    tu_pipeline_builder_parse_depth_stencil(builder, *pipeline);
    tu_pipeline_builder_parse_multisample_and_color_blend(builder, *pipeline);
+   tu6_emit_load_state(*pipeline, false);
 
    /* we should have reserved enough space upfront such that the CS never
     * grows
@@ -1924,7 +2947,7 @@ tu_pipeline_builder_build(struct tu_pipeline_builder *builder,
 static void
 tu_pipeline_builder_finish(struct tu_pipeline_builder *builder)
 {
-   for (uint32_t i = 0; i < MESA_SHADER_STAGES; i++) {
+   for (uint32_t i = 0; i < ARRAY_SIZE(builder->shaders); i++) {
       if (!builder->shaders[i])
          continue;
       tu_shader_destroy(builder->device, builder->shaders[i], builder->alloc);
@@ -1949,21 +2972,28 @@ tu_pipeline_builder_init_graphics(
       .layout = layout,
    };
 
+   const struct tu_render_pass *pass =
+      tu_render_pass_from_handle(create_info->renderPass);
+   const struct tu_subpass *subpass =
+      &pass->subpasses[create_info->subpass];
+
+   builder->multiview_mask = subpass->multiview_mask;
+
    builder->rasterizer_discard =
       create_info->pRasterizationState->rasterizerDiscardEnable;
+
+   /* variableMultisampleRate support */
+   builder->emit_msaa_state = (subpass->samples == 0) && !builder->rasterizer_discard;
 
    if (builder->rasterizer_discard) {
       builder->samples = VK_SAMPLE_COUNT_1_BIT;
    } else {
       builder->samples = create_info->pMultisampleState->rasterizationSamples;
+      builder->alpha_to_coverage = create_info->pMultisampleState->alphaToCoverageEnable;
 
-      const struct tu_render_pass *pass =
-         tu_render_pass_from_handle(create_info->renderPass);
-      const struct tu_subpass *subpass =
-         &pass->subpasses[create_info->subpass];
-
-      builder->use_depth_stencil_attachment =
-         subpass->depth_stencil_attachment.attachment != VK_ATTACHMENT_UNUSED;
+      const uint32_t a = subpass->depth_stencil_attachment.attachment;
+      builder->depth_attachment_format = (a != VK_ATTACHMENT_UNUSED) ?
+         pass->attachments[a].format : VK_FORMAT_UNDEFINED;
 
       assert(subpass->color_count == 0 ||
              !create_info->pColorBlendState ||
@@ -1976,6 +3006,15 @@ tu_pipeline_builder_init_graphics(
 
          builder->color_attachment_formats[i] = pass->attachments[a].format;
          builder->use_color_attachments = true;
+         builder->render_components |= 0xf << (i * 4);
+      }
+
+      if (tu_blend_state_is_dual_src(create_info->pColorBlendState)) {
+         builder->color_attachment_count++;
+         builder->use_dual_src_blend = true;
+         /* dual source blending has an extra fs output in the 2nd slot */
+         if (subpass->color_attachments[0].attachment != VK_ATTACHMENT_UNUSED)
+            builder->render_components |= 0xf << 4;
       }
    }
 }
@@ -2028,46 +3067,6 @@ tu_CreateGraphicsPipelines(VkDevice device,
    return final_result;
 }
 
-static void
-tu6_emit_compute_program(struct tu_cs *cs,
-                         struct tu_shader *shader,
-                         const struct tu_bo *binary_bo)
-{
-   const struct ir3_shader_variant *v = &shader->variants[0];
-
-   tu6_emit_cs_config(cs, shader, v);
-
-   /* The compute program is the only one in the pipeline, so 0 offset. */
-   tu6_emit_shader_object(cs, MESA_SHADER_COMPUTE, v, binary_bo, 0);
-
-   tu6_emit_immediates(cs, v, CP_LOAD_STATE6_FRAG, SB6_CS_SHADER);
-}
-
-static VkResult
-tu_compute_upload_shader(VkDevice device,
-                         struct tu_pipeline *pipeline,
-                         struct tu_shader *shader)
-{
-   TU_FROM_HANDLE(tu_device, dev, device);
-   struct tu_bo *bo = &pipeline->program.binary_bo;
-   struct ir3_shader_variant *v = &shader->variants[0];
-
-   uint32_t shader_size = sizeof(uint32_t) * v->info.sizedwords;
-   VkResult result =
-      tu_bo_init_new(dev, bo, shader_size);
-   if (result != VK_SUCCESS)
-      return result;
-
-   result = tu_bo_map(dev, bo);
-   if (result != VK_SUCCESS)
-      return result;
-
-   memcpy(bo->map, shader->binary, shader_size);
-
-   return VK_SUCCESS;
-}
-
-
 static VkResult
 tu_compute_pipeline_create(VkDevice device,
                            VkPipelineCache _cache,
@@ -2084,52 +3083,78 @@ tu_compute_pipeline_create(VkDevice device,
 
    *pPipeline = VK_NULL_HANDLE;
 
-   result = tu_pipeline_create(dev, pAllocator, &pipeline);
-   if (result != VK_SUCCESS)
-      return result;
+   pipeline = vk_object_zalloc(&dev->vk, pAllocator, sizeof(*pipeline),
+                               VK_OBJECT_TYPE_PIPELINE);
+   if (!pipeline)
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    pipeline->layout = layout;
 
-   struct tu_shader_compile_options options;
-   tu_shader_compile_options_init(&options, NULL);
+   pipeline->executables_mem_ctx = ralloc_context(NULL);
+   util_dynarray_init(&pipeline->executables, pipeline->executables_mem_ctx);
+
+   struct ir3_shader_key key = {};
+
+   nir_shader *nir = tu_spirv_to_nir(dev, stage_info, MESA_SHADER_COMPUTE);
+
+   const bool executable_info = pCreateInfo->flags &
+      VK_PIPELINE_CREATE_CAPTURE_INTERNAL_REPRESENTATIONS_BIT_KHR;
+
+   char *nir_initial_disasm = executable_info ?
+      nir_shader_as_str(nir, pipeline->executables_mem_ctx) : NULL;
 
    struct tu_shader *shader =
-      tu_shader_create(dev, MESA_SHADER_COMPUTE, stage_info, layout, pAllocator);
+      tu_shader_create(dev, nir, 0, layout, pAllocator);
    if (!shader) {
       result = VK_ERROR_OUT_OF_HOST_MEMORY;
       goto fail;
    }
 
-   result = tu_shader_compile(dev, shader, NULL, &options, pAllocator);
-   if (result != VK_SUCCESS)
-      goto fail;
+   pipeline->active_desc_sets = shader->active_desc_sets;
 
-   struct ir3_shader_variant *v = &shader->variants[0];
+   bool created;
+   struct ir3_shader_variant *v =
+      ir3_shader_get_variant(shader->ir3_shader, &key, false, executable_info, &created);
+   if (!v) {
+      result = VK_ERROR_OUT_OF_HOST_MEMORY;
+      goto fail;
+   }
 
    tu_pipeline_set_linkage(&pipeline->program.link[MESA_SHADER_COMPUTE],
                            shader, v);
 
-   result = tu_compute_upload_shader(device, pipeline, shader);
+   result = tu_pipeline_allocate_cs(dev, pipeline, NULL, v);
    if (result != VK_SUCCESS)
       goto fail;
 
+   uint64_t shader_iova = tu_upload_variant(pipeline, v);
+
+   struct tu_pvtmem_config pvtmem;
+   tu_setup_pvtmem(dev, pipeline, &pvtmem, v->pvtmem_size, v->pvtmem_per_wave);
+
    for (int i = 0; i < 3; i++)
-      pipeline->compute.local_size[i] = v->shader->nir->info.cs.local_size[i];
+      pipeline->compute.local_size[i] = v->local_size[i];
 
    struct tu_cs prog_cs;
-   tu_cs_begin_sub_stream(dev, &pipeline->cs, 512, &prog_cs);
-   tu6_emit_compute_program(&prog_cs, shader, &pipeline->program.binary_bo);
-   pipeline->program.state_ib = tu_cs_end_sub_stream(&pipeline->cs, &prog_cs);
+   tu_cs_begin_sub_stream(&pipeline->cs, 512, &prog_cs);
+   tu6_emit_cs_config(&prog_cs, shader, v, &pvtmem, shader_iova);
+   pipeline->program.state = tu_cs_end_draw_state(&pipeline->cs, &prog_cs);
+
+   tu6_emit_load_state(pipeline, true);
+
+   tu_append_executable(pipeline, v, nir_initial_disasm);
+
+   tu_shader_destroy(dev, shader, pAllocator);
 
    *pPipeline = tu_pipeline_to_handle(pipeline);
+
    return VK_SUCCESS;
 
 fail:
    if (shader)
       tu_shader_destroy(dev, shader, pAllocator);
 
-   tu_pipeline_finish(pipeline, dev, pAllocator);
-   vk_free2(&dev->alloc, pAllocator, pipeline);
+   vk_object_free(&dev->vk, pAllocator, pipeline);
 
    return result;
 }
@@ -2167,5 +3192,236 @@ tu_DestroyPipeline(VkDevice _device,
       return;
 
    tu_pipeline_finish(pipeline, dev, pAllocator);
-   vk_free2(&dev->alloc, pAllocator, pipeline);
+   vk_object_free(&dev->vk, pAllocator, pipeline);
+}
+
+#define WRITE_STR(field, ...) ({                                \
+   memset(field, 0, sizeof(field));                             \
+   UNUSED int _i = snprintf(field, sizeof(field), __VA_ARGS__); \
+   assert(_i > 0 && _i < sizeof(field));                        \
+})
+
+static const struct tu_pipeline_executable *
+tu_pipeline_get_executable(struct tu_pipeline *pipeline, uint32_t index)
+{
+   assert(index < util_dynarray_num_elements(&pipeline->executables,
+                                             struct tu_pipeline_executable));
+   return util_dynarray_element(
+      &pipeline->executables, struct tu_pipeline_executable, index);
+}
+
+VkResult
+tu_GetPipelineExecutablePropertiesKHR(
+      VkDevice _device,
+      const VkPipelineInfoKHR* pPipelineInfo,
+      uint32_t* pExecutableCount,
+      VkPipelineExecutablePropertiesKHR* pProperties)
+{
+   TU_FROM_HANDLE(tu_device, dev, _device);
+   TU_FROM_HANDLE(tu_pipeline, pipeline, pPipelineInfo->pipeline);
+   VK_OUTARRAY_MAKE(out, pProperties, pExecutableCount);
+
+   util_dynarray_foreach (&pipeline->executables, struct tu_pipeline_executable, exe) {
+      vk_outarray_append(&out, props) {
+         gl_shader_stage stage = exe->stage;
+         props->stages = mesa_to_vk_shader_stage(stage);
+
+         if (!exe->is_binning)
+            WRITE_STR(props->name, "%s", _mesa_shader_stage_to_abbrev(stage));
+         else
+            WRITE_STR(props->name, "Binning VS");
+
+         WRITE_STR(props->description, "%s", _mesa_shader_stage_to_string(stage));
+
+         props->subgroupSize =
+            dev->compiler->threadsize_base * (exe->stats.double_threadsize ? 2 : 1);
+      }
+   }
+
+   return vk_outarray_status(&out);
+}
+
+VkResult
+tu_GetPipelineExecutableStatisticsKHR(
+      VkDevice _device,
+      const VkPipelineExecutableInfoKHR* pExecutableInfo,
+      uint32_t* pStatisticCount,
+      VkPipelineExecutableStatisticKHR* pStatistics)
+{
+   TU_FROM_HANDLE(tu_pipeline, pipeline, pExecutableInfo->pipeline);
+   VK_OUTARRAY_MAKE(out, pStatistics, pStatisticCount);
+
+   const struct tu_pipeline_executable *exe =
+      tu_pipeline_get_executable(pipeline, pExecutableInfo->executableIndex);
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Max Waves Per Core");
+      WRITE_STR(stat->description,
+                "Maximum number of simultaneous waves per core.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.max_waves;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Instruction Count");
+      WRITE_STR(stat->description,
+                "Total number of IR3 instructions in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.instrs_count;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "NOPs Count");
+      WRITE_STR(stat->description,
+                "Number of NOP instructions in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.nops_count;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "MOV Count");
+      WRITE_STR(stat->description,
+                "Number of MOV instructions in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.mov_count;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "COV Count");
+      WRITE_STR(stat->description,
+                "Number of COV instructions in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.cov_count;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Registers used");
+      WRITE_STR(stat->description,
+                "Number of registers used in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.max_reg + 1;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Half-registers used");
+      WRITE_STR(stat->description,
+                "Number of half-registers used in the final generated "
+                "shader executable.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.max_half_reg + 1;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Instructions with SS sync bit");
+      WRITE_STR(stat->description,
+                "SS bit is set for instructions which depend on a result "
+                "of \"long\" instructions to prevent RAW hazard.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.ss;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Instructions with SY sync bit");
+      WRITE_STR(stat->description,
+                "SY bit is set for instructions which depend on a result "
+                "of loads from global memory to prevent RAW hazard.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.sy;
+   }
+
+   vk_outarray_append(&out, stat) {
+      WRITE_STR(stat->name, "Estimated cycles stalled on SS");
+      WRITE_STR(stat->description,
+                "A better metric to estimate the impact of SS syncs.");
+      stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+      stat->value.u64 = exe->stats.sstall;
+   }
+
+   for (int i = 0; i < ARRAY_SIZE(exe->stats.instrs_per_cat); i++) {
+      vk_outarray_append(&out, stat) {
+         WRITE_STR(stat->name, "cat%d instructions", i);
+         WRITE_STR(stat->description,
+                  "Number of cat%d instructions.", i);
+         stat->format = VK_PIPELINE_EXECUTABLE_STATISTIC_FORMAT_UINT64_KHR;
+         stat->value.u64 = exe->stats.instrs_per_cat[i];
+      }
+   }
+
+   return vk_outarray_status(&out);
+}
+
+static bool
+write_ir_text(VkPipelineExecutableInternalRepresentationKHR* ir,
+              const char *data)
+{
+   ir->isText = VK_TRUE;
+
+   size_t data_len = strlen(data) + 1;
+
+   if (ir->pData == NULL) {
+      ir->dataSize = data_len;
+      return true;
+   }
+
+   strncpy(ir->pData, data, ir->dataSize);
+   if (ir->dataSize < data_len)
+      return false;
+
+   ir->dataSize = data_len;
+   return true;
+}
+
+VkResult
+tu_GetPipelineExecutableInternalRepresentationsKHR(
+    VkDevice _device,
+    const VkPipelineExecutableInfoKHR* pExecutableInfo,
+    uint32_t* pInternalRepresentationCount,
+    VkPipelineExecutableInternalRepresentationKHR* pInternalRepresentations)
+{
+   TU_FROM_HANDLE(tu_pipeline, pipeline, pExecutableInfo->pipeline);
+   VK_OUTARRAY_MAKE(out, pInternalRepresentations, pInternalRepresentationCount);
+   bool incomplete_text = false;
+
+   const struct tu_pipeline_executable *exe =
+      tu_pipeline_get_executable(pipeline, pExecutableInfo->executableIndex);
+
+   if (exe->nir_from_spirv) {
+      vk_outarray_append(&out, ir) {
+         WRITE_STR(ir->name, "NIR from SPIRV");
+         WRITE_STR(ir->description,
+                   "Initial NIR before any optimizations");
+
+         if (!write_ir_text(ir, exe->nir_from_spirv))
+            incomplete_text = true;
+      }
+   }
+
+   if (exe->nir_final) {
+      vk_outarray_append(&out, ir) {
+         WRITE_STR(ir->name, "Final NIR");
+         WRITE_STR(ir->description,
+                   "Final NIR before going into the back-end compiler");
+
+         if (!write_ir_text(ir, exe->nir_final))
+            incomplete_text = true;
+      }
+   }
+
+   if (exe->disasm) {
+      vk_outarray_append(&out, ir) {
+         WRITE_STR(ir->name, "IR3 Assembly");
+         WRITE_STR(ir->description,
+                   "Final IR3 assembly for the generated shader binary");
+
+         if (!write_ir_text(ir, exe->disasm))
+            incomplete_text = true;
+      }
+   }
+
+   return incomplete_text ? VK_INCOMPLETE : vk_outarray_status(&out);
 }

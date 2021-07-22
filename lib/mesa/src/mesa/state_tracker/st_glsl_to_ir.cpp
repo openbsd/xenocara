@@ -45,7 +45,7 @@ extern "C" {
 GLboolean
 st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
 {
-   struct pipe_screen *pscreen = ctx->st->pipe->screen;
+   struct pipe_screen *pscreen = st_context(ctx)->screen;
 
    enum pipe_shader_ir preferred_ir = (enum pipe_shader_ir)
       pscreen->get_shader_param(pscreen, PIPE_SHADER_VERTEX,
@@ -122,7 +122,7 @@ st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
          lower_offset_arrays(ir);
       do_mat_op_to_vec(ir);
 
-      if (stage == MESA_SHADER_FRAGMENT)
+      if (stage == MESA_SHADER_FRAGMENT && pscreen->get_param(pscreen, PIPE_CAP_FBFETCH))
          lower_blend_equation_advanced(
             shader, ctx->Extensions.KHR_blend_equation_advanced_coherent);
 
@@ -159,7 +159,6 @@ st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       do_vec_index_to_cond_assign(ir);
       lower_vector_insert(ir, true);
       lower_quadop_vector(ir, false);
-      lower_noise(ir);
       if (options->MaxIfDepth == 0) {
          lower_discard(ir);
       }

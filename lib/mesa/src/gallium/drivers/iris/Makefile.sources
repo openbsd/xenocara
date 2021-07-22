@@ -20,11 +20,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-GENERATED_SOURCES := \
-	iris_driinfo.h
-
 IRIS_C_SOURCES = \
-	$(GENERATED_SOURCES) \
 	driinfo_iris.h \
 	iris_batch.c \
 	iris_batch.h \
@@ -41,9 +37,13 @@ IRIS_C_SOURCES = \
 	iris_draw.c \
 	iris_fence.c \
 	iris_fence.h \
+	iris_fine_fence.c \
+	iris_fine_fence.h \
 	iris_formats.c \
 	iris_genx_macros.h \
 	iris_genx_protos.h \
+	iris_measure.c \
+	iris_measure.h \
 	iris_monitor.c \
 	iris_performance_query.c \
 	iris_perf.c \

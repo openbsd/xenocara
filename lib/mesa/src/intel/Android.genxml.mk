@@ -96,11 +96,6 @@ $(intermediates)/genxml/gen9_pack.h: PRIVATE_XML := $(LOCAL_PATH)/genxml/gen9.xm
 $(intermediates)/genxml/gen9_pack.h: $(LOCAL_PATH)/genxml/gen9.xml $(LOCAL_PATH)/genxml/gen_pack_header.py
 	$(call header-gen)
 
-$(intermediates)/genxml/gen10_pack.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(LOCAL_PATH)/genxml/gen_pack_header.py
-$(intermediates)/genxml/gen10_pack.h: PRIVATE_XML := $(LOCAL_PATH)/genxml/gen10.xml
-$(intermediates)/genxml/gen10_pack.h: $(LOCAL_PATH)/genxml/gen10.xml $(LOCAL_PATH)/genxml/gen_pack_header.py
-	$(call header-gen)
-
 $(intermediates)/genxml/gen11_pack.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(LOCAL_PATH)/genxml/gen_pack_header.py
 $(intermediates)/genxml/gen11_pack.h: PRIVATE_XML := $(LOCAL_PATH)/genxml/gen11.xml
 $(intermediates)/genxml/gen11_pack.h: $(LOCAL_PATH)/genxml/gen11.xml $(LOCAL_PATH)/genxml/gen_pack_header.py
@@ -109,6 +104,11 @@ $(intermediates)/genxml/gen11_pack.h: $(LOCAL_PATH)/genxml/gen11.xml $(LOCAL_PAT
 $(intermediates)/genxml/gen12_pack.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(LOCAL_PATH)/genxml/gen_pack_header.py
 $(intermediates)/genxml/gen12_pack.h: PRIVATE_XML := $(LOCAL_PATH)/genxml/gen12.xml
 $(intermediates)/genxml/gen12_pack.h: $(LOCAL_PATH)/genxml/gen12.xml $(LOCAL_PATH)/genxml/gen_pack_header.py
+	$(call header-gen)
+
+$(intermediates)/genxml/gen125_pack.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(LOCAL_PATH)/genxml/gen_pack_header.py
+$(intermediates)/genxml/gen125_pack.h: PRIVATE_XML := $(LOCAL_PATH)/genxml/gen125.xml
+$(intermediates)/genxml/gen125_pack.h: $(LOCAL_PATH)/genxml/gen125.xml $(LOCAL_PATH)/genxml/gen_pack_header.py
 	$(call header-gen)
 
 $(intermediates)/genxml/genX_xml.h: $(addprefix $(MESA_TOP)/src/intel/,$(GENXML_XML_FILES)) $(MESA_TOP)/src/intel/genxml/gen_zipped_file.py

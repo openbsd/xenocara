@@ -35,7 +35,7 @@
 
 #include <drm-uapi/i915_drm.h>
 
-#include "common/gen_gem.h"
+#include "common/intel_gem.h"
 
 #include "dev/gen_debug.h"
 #include "dev/gen_device_info.h"
@@ -47,17 +47,13 @@
 #include "perf/gen_perf_private.h"
 
 #include "util/bitscan.h"
+#include "util/macros.h"
 #include "util/mesa-sha1.h"
 #include "util/u_math.h"
 
 #define FILE_DEBUG_FLAG DEBUG_PERFMON
 
 #define OA_REPORT_INVALID_CTX_ID (0xffffffff)
-
-static inline uint64_t to_user_pointer(void *ptr)
-{
-   return (uintptr_t) ptr;
-}
 
 static bool
 is_dir_or_link(const struct dirent *entry, const char *parent_dir)
@@ -83,6 +79,9 @@ get_sysfs_dev_dir(struct gen_perf_config *perf, int fd)
    int len;
 
    perf->sysfs_dev_dir[0] = '\0';
+
+   if (INTEL_DEBUG & DEBUG_NO_OACONFIG)
+      return true;
 
    if (fstat(fd, &sb)) {
       DBG("Failed to stat DRM fd\n");
@@ -175,6 +174,7 @@ read_sysfs_drm_device_file_uint64(struct gen_perf_config *perf,
 
 static void
 register_oa_config(struct gen_perf_config *perf,
+                   const struct gen_device_info *devinfo,
                    const struct gen_perf_query_info *query,
                    uint64_t config_id)
 {
@@ -182,13 +182,16 @@ register_oa_config(struct gen_perf_config *perf,
       gen_perf_append_query_info(perf, 0);
 
    *registered_query = *query;
+   registered_query->oa_format = devinfo->ver >= 8 ?
+      I915_OA_FORMAT_A32u40_A4u32_B8_C8 : I915_OA_FORMAT_A45_B8_C8;
    registered_query->oa_metrics_set_id = config_id;
    DBG("metric set registered: id = %" PRIu64", guid = %s\n",
        registered_query->oa_metrics_set_id, query->guid);
 }
 
 static void
-enumerate_sysfs_metrics(struct gen_perf_config *perf)
+enumerate_sysfs_metrics(struct gen_perf_config *perf,
+                        const struct gen_device_info *devinfo)
 {
    DIR *metricsdir = NULL;
    struct dirent *metric_entry;
@@ -223,7 +226,8 @@ enumerate_sysfs_metrics(struct gen_perf_config *perf)
             continue;
          }
 
-         register_oa_config(perf, (const struct gen_perf_query_info *)entry->data, id);
+         register_oa_config(perf, devinfo,
+                            (const struct gen_perf_query_info *)entry->data, id);
       } else
          DBG("metric set not known by mesa (skipping)\n");
    }
@@ -231,12 +235,22 @@ enumerate_sysfs_metrics(struct gen_perf_config *perf)
    closedir(metricsdir);
 }
 
+static void
+add_all_metrics(struct gen_perf_config *perf,
+                const struct gen_device_info *devinfo)
+{
+   hash_table_foreach(perf->oa_metrics_table, entry) {
+      const struct gen_perf_query_info *query = entry->data;
+      register_oa_config(perf, devinfo, query, 0);
+   }
+}
+
 static bool
 kernel_has_dynamic_config_support(struct gen_perf_config *perf, int fd)
 {
    uint64_t invalid_config_id = UINT64_MAX;
 
-   return gen_ioctl(fd, DRM_IOCTL_I915_PERF_REMOVE_CONFIG,
+   return intel_ioctl(fd, DRM_IOCTL_I915_PERF_REMOVE_CONFIG,
                     &invalid_config_id) < 0 && errno == ENOENT;
 }
 
@@ -248,7 +262,7 @@ i915_query_items(struct gen_perf_config *perf, int fd,
       .num_items = n_items,
       .items_ptr = to_user_pointer(items),
    };
-   return gen_ioctl(fd, DRM_IOCTL_I915_QUERY, &q);
+   return intel_ioctl(fd, DRM_IOCTL_I915_QUERY, &q);
 }
 
 static bool
@@ -314,20 +328,21 @@ i915_add_config(struct gen_perf_config *perf, int fd,
    memcpy(i915_config.uuid, guid, sizeof(i915_config.uuid));
 
    i915_config.n_mux_regs = config->n_mux_regs;
-   i915_config.mux_regs_ptr = to_user_pointer(config->mux_regs);
+   i915_config.mux_regs_ptr = to_const_user_pointer(config->mux_regs);
 
    i915_config.n_boolean_regs = config->n_b_counter_regs;
-   i915_config.boolean_regs_ptr = to_user_pointer(config->b_counter_regs);
+   i915_config.boolean_regs_ptr = to_const_user_pointer(config->b_counter_regs);
 
    i915_config.n_flex_regs = config->n_flex_regs;
-   i915_config.flex_regs_ptr = to_user_pointer(config->flex_regs);
+   i915_config.flex_regs_ptr = to_const_user_pointer(config->flex_regs);
 
-   int ret = gen_ioctl(fd, DRM_IOCTL_I915_PERF_ADD_CONFIG, &i915_config);
+   int ret = intel_ioctl(fd, DRM_IOCTL_I915_PERF_ADD_CONFIG, &i915_config);
    return ret > 0 ? ret : 0;
 }
 
 static void
-init_oa_configs(struct gen_perf_config *perf, int fd)
+init_oa_configs(struct gen_perf_config *perf, int fd,
+                const struct gen_device_info *devinfo)
 {
    hash_table_foreach(perf->oa_metrics_table, entry) {
       const struct gen_perf_query_info *query = entry->data;
@@ -335,7 +350,7 @@ init_oa_configs(struct gen_perf_config *perf, int fd)
 
       if (gen_perf_load_metric_id(perf, query->guid, &config_id)) {
          DBG("metric set: %s (already loaded)\n", query->guid);
-         register_oa_config(perf, query, config_id);
+         register_oa_config(perf, devinfo, query, config_id);
          continue;
       }
 
@@ -346,7 +361,7 @@ init_oa_configs(struct gen_perf_config *perf, int fd)
          continue;
       }
 
-      register_oa_config(perf, query, ret);
+      register_oa_config(perf, devinfo, query, ret);
       DBG("metric set: %s (added)\n", query->guid);
    }
 }
@@ -360,16 +375,16 @@ compute_topology_builtins(struct gen_perf_config *perf,
 
    for (int i = 0; i < sizeof(devinfo->subslice_masks[i]); i++) {
       perf->sys_vars.n_eu_sub_slices +=
-         __builtin_popcount(devinfo->subslice_masks[i]);
+         util_bitcount(devinfo->subslice_masks[i]);
    }
 
    for (int i = 0; i < sizeof(devinfo->eu_masks); i++)
-      perf->sys_vars.n_eus += __builtin_popcount(devinfo->eu_masks[i]);
+      perf->sys_vars.n_eus += util_bitcount(devinfo->eu_masks[i]);
 
    perf->sys_vars.eu_threads_count = devinfo->num_thread_per_eu;
 
-   /* The subslice mask builtin contains bits for all slices. Prior to Gen11
-    * it had groups of 3bits for each slice, on Gen11 it's 8bits for each
+   /* The subslice mask builtin contains bits for all slices. Prior to Gfx11
+    * it had groups of 3bits for each slice, on Gfx11 it's 8bits for each
     * slice.
     *
     * Ideally equations would be updated to have a slice/subslice query
@@ -377,7 +392,7 @@ compute_topology_builtins(struct gen_perf_config *perf,
     */
    perf->sys_vars.subslice_mask = 0;
 
-   int bits_per_subslice = devinfo->gen == 11 ? 8 : 3;
+   int bits_per_subslice = devinfo->ver == 11 ? 8 : 3;
 
    for (int s = 0; s < util_last_bit(devinfo->slice_masks); s++) {
       for (int ss = 0; ss < (devinfo->subslice_slice_stride * 8); ss++) {
@@ -392,17 +407,23 @@ init_oa_sys_vars(struct gen_perf_config *perf, const struct gen_device_info *dev
 {
    uint64_t min_freq_mhz = 0, max_freq_mhz = 0;
 
-   if (!read_sysfs_drm_device_file_uint64(perf, "gt_min_freq_mhz", &min_freq_mhz))
-      return false;
+   if (!(INTEL_DEBUG & DEBUG_NO_OACONFIG)) {
+      if (!read_sysfs_drm_device_file_uint64(perf, "gt_min_freq_mhz", &min_freq_mhz))
+         return false;
 
-   if (!read_sysfs_drm_device_file_uint64(perf,  "gt_max_freq_mhz", &max_freq_mhz))
-      return false;
+      if (!read_sysfs_drm_device_file_uint64(perf,  "gt_max_freq_mhz", &max_freq_mhz))
+         return false;
+   } else {
+      min_freq_mhz = 300;
+      max_freq_mhz = 1000;
+   }
 
    memset(&perf->sys_vars, 0, sizeof(perf->sys_vars));
    perf->sys_vars.gt_min_freq = min_freq_mhz * 1000000;
    perf->sys_vars.gt_max_freq = max_freq_mhz * 1000000;
    perf->sys_vars.timestamp_frequency = devinfo->timestamp_frequency;
    perf->sys_vars.revision = devinfo->revision;
+   perf->sys_vars.query_mode = true;
    compute_topology_builtins(perf, devinfo);
 
    return true;
@@ -443,17 +464,41 @@ get_register_queries_function(const struct gen_device_info *devinfo)
       if (devinfo->gt == 3)
          return gen_oa_register_queries_cflgt3;
    }
-   if (devinfo->is_cannonlake)
-      return gen_oa_register_queries_cnl;
-   if (devinfo->gen == 11) {
+   if (devinfo->ver == 11) {
       if (devinfo->is_elkhartlake)
-         return gen_oa_register_queries_lkf;
+         return gen_oa_register_queries_ehl;
       return gen_oa_register_queries_icl;
    }
-   if (devinfo->gen == 12)
-      return gen_oa_register_queries_tgl;
+   if (devinfo->is_tigerlake) {
+      if (devinfo->gt == 1)
+         return gen_oa_register_queries_tglgt1;
+      if (devinfo->gt == 2)
+         return gen_oa_register_queries_tglgt2;
+   }
+   if (devinfo->is_rocketlake)
+      return gen_oa_register_queries_rkl;
+   if (devinfo->is_dg1)
+      return gen_oa_register_queries_dg1;
+   if (devinfo->is_alderlake)
+      return gen_oa_register_queries_adl;
 
    return NULL;
+}
+
+static int
+gen_perf_compare_counter_names(const void *v1, const void *v2)
+{
+   const struct gen_perf_query_counter *c1 = v1;
+   const struct gen_perf_query_counter *c2 = v2;
+
+   return strcmp(c1->name, c2->name);
+}
+
+static void
+sort_query(struct gen_perf_query_info *q)
+{
+   qsort(q->counters, q->n_counters, sizeof(q->counters[0]),
+         gen_perf_compare_counter_names);
 }
 
 static void
@@ -473,36 +518,36 @@ load_pipeline_statistic_metrics(struct gen_perf_config *perf_cfg,
    gen_perf_query_add_basic_stat_reg(query, VS_INVOCATION_COUNT,
                                      "N vertex shader invocations");
 
-   if (devinfo->gen == 6) {
-      gen_perf_query_add_stat_reg(query, GEN6_SO_PRIM_STORAGE_NEEDED, 1, 1,
+   if (devinfo->ver == 6) {
+      gen_perf_query_add_stat_reg(query, GFX6_SO_PRIM_STORAGE_NEEDED, 1, 1,
                                   "SO_PRIM_STORAGE_NEEDED",
                                   "N geometry shader stream-out primitives (total)");
-      gen_perf_query_add_stat_reg(query, GEN6_SO_NUM_PRIMS_WRITTEN, 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX6_SO_NUM_PRIMS_WRITTEN, 1, 1,
                                   "SO_NUM_PRIMS_WRITTEN",
                                   "N geometry shader stream-out primitives (written)");
    } else {
-      gen_perf_query_add_stat_reg(query, GEN7_SO_PRIM_STORAGE_NEEDED(0), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_PRIM_STORAGE_NEEDED(0), 1, 1,
                                   "SO_PRIM_STORAGE_NEEDED (Stream 0)",
                                   "N stream-out (stream 0) primitives (total)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_PRIM_STORAGE_NEEDED(1), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_PRIM_STORAGE_NEEDED(1), 1, 1,
                                   "SO_PRIM_STORAGE_NEEDED (Stream 1)",
                                   "N stream-out (stream 1) primitives (total)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_PRIM_STORAGE_NEEDED(2), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_PRIM_STORAGE_NEEDED(2), 1, 1,
                                   "SO_PRIM_STORAGE_NEEDED (Stream 2)",
                                   "N stream-out (stream 2) primitives (total)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_PRIM_STORAGE_NEEDED(3), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_PRIM_STORAGE_NEEDED(3), 1, 1,
                                   "SO_PRIM_STORAGE_NEEDED (Stream 3)",
                                   "N stream-out (stream 3) primitives (total)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_NUM_PRIMS_WRITTEN(0), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_NUM_PRIMS_WRITTEN(0), 1, 1,
                                   "SO_NUM_PRIMS_WRITTEN (Stream 0)",
                                   "N stream-out (stream 0) primitives (written)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_NUM_PRIMS_WRITTEN(1), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_NUM_PRIMS_WRITTEN(1), 1, 1,
                                   "SO_NUM_PRIMS_WRITTEN (Stream 1)",
                                   "N stream-out (stream 1) primitives (written)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_NUM_PRIMS_WRITTEN(2), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_NUM_PRIMS_WRITTEN(2), 1, 1,
                                   "SO_NUM_PRIMS_WRITTEN (Stream 2)",
                                   "N stream-out (stream 2) primitives (written)");
-      gen_perf_query_add_stat_reg(query, GEN7_SO_NUM_PRIMS_WRITTEN(3), 1, 1,
+      gen_perf_query_add_stat_reg(query, GFX7_SO_NUM_PRIMS_WRITTEN(3), 1, 1,
                                   "SO_NUM_PRIMS_WRITTEN (Stream 3)",
                                   "N stream-out (stream 3) primitives (written)");
    }
@@ -522,7 +567,7 @@ load_pipeline_statistic_metrics(struct gen_perf_config *perf_cfg,
    gen_perf_query_add_basic_stat_reg(query, CL_PRIMITIVES_COUNT,
                                      "N primitives leaving clipping");
 
-   if (devinfo->is_haswell || devinfo->gen == 8) {
+   if (devinfo->is_haswell || devinfo->ver == 8) {
       gen_perf_query_add_stat_reg(query, PS_INVOCATION_COUNT, 1, 4,
                                   "N fragment shader invocations",
                                   "N fragment shader invocations");
@@ -534,12 +579,14 @@ load_pipeline_statistic_metrics(struct gen_perf_config *perf_cfg,
    gen_perf_query_add_basic_stat_reg(query, PS_DEPTH_COUNT,
                                      "N z-pass fragments");
 
-   if (devinfo->gen >= 7) {
+   if (devinfo->ver >= 7) {
       gen_perf_query_add_basic_stat_reg(query, CS_INVOCATION_COUNT,
                                         "N compute shader invocations");
    }
 
    query->data_size = sizeof(uint64_t) * query->n_counters;
+
+   sort_query(query);
 }
 
 static int
@@ -551,7 +598,7 @@ i915_perf_version(int drm_fd)
       .value = &tmp,
    };
 
-   int ret = gen_ioctl(drm_fd, DRM_IOCTL_I915_GETPARAM, &gp);
+   int ret = intel_ioctl(drm_fd, DRM_IOCTL_I915_GETPARAM, &gp);
 
    /* Return 0 if this getparam is not supported, the first version supported
     * is 1.
@@ -559,9 +606,111 @@ i915_perf_version(int drm_fd)
    return ret < 0 ? 0 : tmp;
 }
 
+static void
+i915_get_sseu(int drm_fd, struct drm_i915_gem_context_param_sseu *sseu)
+{
+   struct drm_i915_gem_context_param arg = {
+      .param = I915_CONTEXT_PARAM_SSEU,
+      .size = sizeof(*sseu),
+      .value = to_user_pointer(sseu)
+   };
+
+   intel_ioctl(drm_fd, DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM, &arg);
+}
+
+static inline int
+compare_str_or_null(const char *s1, const char *s2)
+{
+   if (s1 == NULL && s2 == NULL)
+      return 0;
+   if (s1 == NULL)
+      return -1;
+   if (s2 == NULL)
+      return 1;
+
+   return strcmp(s1, s2);
+}
+
+static int
+compare_counter_categories_and_names(const void *_c1, const void *_c2)
+{
+   const struct gen_perf_query_counter_info *c1 = (const struct gen_perf_query_counter_info *)_c1;
+   const struct gen_perf_query_counter_info *c2 = (const struct gen_perf_query_counter_info *)_c2;
+
+   /* pipeline counters don't have an assigned category */
+   int r = compare_str_or_null(c1->counter->category, c2->counter->category);
+   if (r)
+      return r;
+
+   return strcmp(c1->counter->name, c2->counter->name);
+}
+
+static void
+build_unique_counter_list(struct gen_perf_config *perf)
+{
+   assert(perf->n_queries < 64);
+
+   size_t max_counters = 0;
+
+   for (int q = 0; q < perf->n_queries; q++)
+      max_counters += perf->queries[q].n_counters;
+
+   /*
+    * Allocate big enough array to hold maximum possible number of counters.
+    * We can't alloc it small and realloc when needed because the hash table
+    * below contains pointers to this array.
+    */
+   struct gen_perf_query_counter_info *counter_infos =
+         ralloc_array_size(perf, sizeof(counter_infos[0]), max_counters);
+
+   perf->n_counters = 0;
+
+   struct hash_table *counters_table =
+      _mesa_hash_table_create(perf,
+                              _mesa_hash_string,
+                              _mesa_key_string_equal);
+   struct hash_entry *entry;
+   for (int q = 0; q < perf->n_queries ; q++) {
+      struct gen_perf_query_info *query = &perf->queries[q];
+
+      for (int c = 0; c < query->n_counters; c++) {
+         struct gen_perf_query_counter *counter;
+         struct gen_perf_query_counter_info *counter_info;
+
+         counter = &query->counters[c];
+         entry = _mesa_hash_table_search(counters_table, counter->symbol_name);
+
+         if (entry) {
+            counter_info = entry->data;
+            counter_info->query_mask |= BITFIELD64_BIT(q);
+            continue;
+         }
+         assert(perf->n_counters < max_counters);
+
+         counter_info = &counter_infos[perf->n_counters++];
+         counter_info->counter = counter;
+         counter_info->query_mask = BITFIELD64_BIT(q);
+
+         counter_info->location.group_idx = q;
+         counter_info->location.counter_idx = c;
+
+         _mesa_hash_table_insert(counters_table, counter->symbol_name, counter_info);
+      }
+   }
+
+   _mesa_hash_table_destroy(counters_table, NULL);
+
+   /* Now we can realloc counter_infos array because hash table doesn't exist. */
+   perf->counter_infos = reralloc_array_size(perf, counter_infos,
+         sizeof(counter_infos[0]), perf->n_counters);
+
+   qsort(perf->counter_infos, perf->n_counters, sizeof(perf->counter_infos[0]),
+         compare_counter_categories_and_names);
+}
+
 static bool
-load_oa_metrics(struct gen_perf_config *perf, int fd,
-                         const struct gen_device_info *devinfo)
+oa_metrics_available(struct gen_perf_config *perf, int fd,
+      const struct gen_device_info *devinfo)
 {
    perf_register_oa_queries_t oa_register = get_register_queries_function(devinfo);
    bool i915_perf_oa_available = false;
@@ -570,12 +719,15 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
    perf->i915_query_supported = i915_query_perf_config_supported(perf, fd);
    perf->i915_perf_version = i915_perf_version(fd);
 
+   /* Record the default SSEU configuration. */
+   i915_get_sseu(fd, &perf->sseu);
+
    /* The existence of this sysctl parameter implies the kernel supports
     * the i915 perf interface.
     */
    if (stat("/proc/sys/dev/i915/perf_stream_paranoid", &sb) == 0) {
 
-      /* If _paranoid == 1 then on Gen8+ we won't be able to access OA
+      /* If _paranoid == 1 then on Gfx8+ we won't be able to access OA
        * metrics unless running as root.
        */
       if (devinfo->is_haswell)
@@ -588,13 +740,23 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
          if (paranoid == 0 || geteuid() == 0)
             i915_perf_oa_available = true;
       }
+
+      perf->platform_supported = oa_register != NULL;
    }
 
-   if (!i915_perf_oa_available ||
-       !oa_register ||
-       !get_sysfs_dev_dir(perf, fd) ||
-       !init_oa_sys_vars(perf, devinfo))
-      return false;
+   return i915_perf_oa_available &&
+          oa_register &&
+          get_sysfs_dev_dir(perf, fd) &&
+          init_oa_sys_vars(perf, devinfo);
+}
+
+static void
+load_oa_metrics(struct gen_perf_config *perf, int fd,
+                const struct gen_device_info *devinfo)
+{
+   int existing_queries = perf->n_queries;
+
+   perf_register_oa_queries_t oa_register = get_register_queries_function(devinfo);
 
    perf->oa_metrics_table =
       _mesa_hash_table_create(perf, _mesa_hash_string,
@@ -605,13 +767,31 @@ load_oa_metrics(struct gen_perf_config *perf, int fd,
     */
    oa_register(perf);
 
-   if (likely((INTEL_DEBUG & DEBUG_NO_OACONFIG) == 0) &&
-       kernel_has_dynamic_config_support(perf, fd))
-      init_oa_configs(perf, fd);
-   else
-      enumerate_sysfs_metrics(perf);
+   if (!(INTEL_DEBUG & DEBUG_NO_OACONFIG)) {
+      if (kernel_has_dynamic_config_support(perf, fd))
+         init_oa_configs(perf, fd, devinfo);
+      else
+         enumerate_sysfs_metrics(perf, devinfo);
+   } else {
+      add_all_metrics(perf, devinfo);
+   }
 
-   return true;
+   /* sort counters in each individual group created by this function by name */
+   for (int i = existing_queries; i < perf->n_queries; ++i)
+      sort_query(&perf->queries[i]);
+
+   /* Select a fallback OA metric. Look for the TestOa metric or use the last
+    * one if no present (on HSW).
+    */
+   for (int i = existing_queries; i < perf->n_queries; i++) {
+      if (perf->queries[i].symbol_name &&
+          strcmp(perf->queries[i].symbol_name, "TestOa") == 0) {
+         perf->fallback_raw_oa_metric = perf->queries[i].oa_metrics_set_id;
+         break;
+      }
+   }
+   if (perf->fallback_raw_oa_metric == 0 && perf->n_queries > 0)
+      perf->fallback_raw_oa_metric = perf->queries[perf->n_queries - 1].oa_metrics_set_id;
 }
 
 struct gen_perf_registers *
@@ -636,9 +816,9 @@ gen_perf_load_configuration(struct gen_perf_config *perf_cfg, int fd, const char
     * struct gen_perf_query_register_prog maps exactly to the tuple of
     * (register offset, register value) returned by the i915.
     */
-   i915_config.flex_regs_ptr = to_user_pointer(config->flex_regs);
-   i915_config.mux_regs_ptr = to_user_pointer(config->mux_regs);
-   i915_config.boolean_regs_ptr = to_user_pointer(config->b_counter_regs);
+   i915_config.flex_regs_ptr = to_const_user_pointer(config->flex_regs);
+   i915_config.mux_regs_ptr = to_const_user_pointer(config->mux_regs);
+   i915_config.boolean_regs_ptr = to_const_user_pointer(config->b_counter_regs);
    if (!i915_query_perf_config_data(perf_cfg, fd, guid, &i915_config)) {
       ralloc_free(config);
       return NULL;
@@ -695,6 +875,82 @@ gen_perf_store_configuration(struct gen_perf_config *perf_cfg, int fd,
    return i915_add_config(perf_cfg, fd, config, generated_guid);
 }
 
+static uint64_t
+get_passes_mask(struct gen_perf_config *perf,
+                const uint32_t *counter_indices,
+                uint32_t counter_indices_count)
+{
+   uint64_t queries_mask = 0;
+
+   assert(perf->n_queries < 64);
+
+   /* Compute the number of passes by going through all counters N times (with
+    * N the number of queries) to make sure we select the most constraining
+    * counters first and look at the more flexible ones (that could be
+    * obtained from multiple queries) later. That way we minimize the number
+    * of passes required.
+    */
+   for (uint32_t q = 0; q < perf->n_queries; q++) {
+      for (uint32_t i = 0; i < counter_indices_count; i++) {
+         assert(counter_indices[i] < perf->n_counters);
+
+         uint32_t idx = counter_indices[i];
+         if (util_bitcount64(perf->counter_infos[idx].query_mask) != (q + 1))
+            continue;
+
+         if (queries_mask & perf->counter_infos[idx].query_mask)
+            continue;
+
+         queries_mask |= BITFIELD64_BIT(ffsll(perf->counter_infos[idx].query_mask) - 1);
+      }
+   }
+
+   return queries_mask;
+}
+
+uint32_t
+gen_perf_get_n_passes(struct gen_perf_config *perf,
+                      const uint32_t *counter_indices,
+                      uint32_t counter_indices_count,
+                      struct gen_perf_query_info **pass_queries)
+{
+   uint64_t queries_mask = get_passes_mask(perf, counter_indices, counter_indices_count);
+
+   if (pass_queries) {
+      uint32_t pass = 0;
+      for (uint32_t q = 0; q < perf->n_queries; q++) {
+         if ((1ULL << q) & queries_mask)
+            pass_queries[pass++] = &perf->queries[q];
+      }
+   }
+
+   return util_bitcount64(queries_mask);
+}
+
+void
+gen_perf_get_counters_passes(struct gen_perf_config *perf,
+                             const uint32_t *counter_indices,
+                             uint32_t counter_indices_count,
+                             struct gen_perf_counter_pass *counter_pass)
+{
+   uint64_t queries_mask = get_passes_mask(perf, counter_indices, counter_indices_count);
+   ASSERTED uint32_t n_passes = util_bitcount64(queries_mask);
+
+   for (uint32_t i = 0; i < counter_indices_count; i++) {
+      assert(counter_indices[i] < perf->n_counters);
+
+      uint32_t idx = counter_indices[i];
+      counter_pass[i].counter = perf->counter_infos[idx].counter;
+
+      uint32_t query_idx = ffsll(perf->counter_infos[idx].query_mask & queries_mask) - 1;
+      counter_pass[i].query = &perf->queries[query_idx];
+
+      uint32_t clear_bits = 63 - query_idx;
+      counter_pass[i].pass = util_bitcount64((queries_mask << clear_bits) >> clear_bits) - 1;
+      assert(counter_pass[i].pass < n_passes);
+   }
+}
+
 /* Accumulate 32bits OA counters */
 static inline void
 accumulate_uint32(const uint32_t *report0,
@@ -728,7 +984,7 @@ accumulate_uint40(int a_index,
 }
 
 static void
-gen8_read_report_clock_ratios(const uint32_t *report,
+gfx8_read_report_clock_ratios(const uint32_t *report,
                               uint64_t *slice_freq_hz,
                               uint64_t *unslice_freq_hz)
 {
@@ -767,27 +1023,34 @@ gen_perf_query_result_read_frequencies(struct gen_perf_query_result *result,
     * OA_DEBUG_REGISTER is set to 1. This is how the kernel programs this
     * global register (see drivers/gpu/drm/i915/i915_perf.c)
     *
-    * Documentation says this should be available on Gen9+ but experimentation
-    * shows that Gen8 reports similar values, so we enable it there too.
+    * Documentation says this should be available on Gfx9+ but experimentation
+    * shows that Gfx8 reports similar values, so we enable it there too.
     */
-   if (devinfo->gen < 8)
+   if (devinfo->ver < 8)
       return;
 
-   gen8_read_report_clock_ratios(start,
+   gfx8_read_report_clock_ratios(start,
                                  &result->slice_frequency[0],
                                  &result->unslice_frequency[0]);
-   gen8_read_report_clock_ratios(end,
+   gfx8_read_report_clock_ratios(end,
                                  &result->slice_frequency[1],
                                  &result->unslice_frequency[1]);
+}
+
+static inline bool
+can_use_mi_rpc_bc_counters(const struct gen_device_info *devinfo)
+{
+   return devinfo->ver <= 11;
 }
 
 void
 gen_perf_query_result_accumulate(struct gen_perf_query_result *result,
                                  const struct gen_perf_query_info *query,
+                                 const struct gen_device_info *devinfo,
                                  const uint32_t *start,
                                  const uint32_t *end)
 {
-   int i, idx = 0;
+   int i;
 
    if (result->hw_id == OA_REPORT_INVALID_CTX_ID &&
        start[2] != OA_REPORT_INVALID_CTX_ID)
@@ -798,33 +1061,168 @@ gen_perf_query_result_accumulate(struct gen_perf_query_result *result,
 
    switch (query->oa_format) {
    case I915_OA_FORMAT_A32u40_A4u32_B8_C8:
-      accumulate_uint32(start + 1, end + 1, result->accumulator + idx++); /* timestamp */
-      accumulate_uint32(start + 3, end + 3, result->accumulator + idx++); /* clock */
+      accumulate_uint32(start + 1, end + 1,
+                        result->accumulator + query->gpu_time_offset); /* timestamp */
+      accumulate_uint32(start + 3, end + 3,
+                        result->accumulator + query->gpu_clock_offset); /* clock */
 
       /* 32x 40bit A counters... */
-      for (i = 0; i < 32; i++)
-         accumulate_uint40(i, start, end, result->accumulator + idx++);
+      for (i = 0; i < 32; i++) {
+         accumulate_uint40(i, start, end,
+                           result->accumulator + query->a_offset + i);
+      }
 
       /* 4x 32bit A counters... */
-      for (i = 0; i < 4; i++)
-         accumulate_uint32(start + 36 + i, end + 36 + i, result->accumulator + idx++);
+      for (i = 0; i < 4; i++) {
+         accumulate_uint32(start + 36 + i, end + 36 + i,
+                           result->accumulator + query->a_offset + 32 + i);
+      }
 
-      /* 8x 32bit B counters + 8x 32bit C counters... */
-      for (i = 0; i < 16; i++)
-         accumulate_uint32(start + 48 + i, end + 48 + i, result->accumulator + idx++);
+      if (can_use_mi_rpc_bc_counters(devinfo)) {
+         /* 8x 32bit B counters */
+         for (i = 0; i < 8; i++) {
+            accumulate_uint32(start + 48 + i, end + 48 + i,
+                              result->accumulator + query->b_offset + i);
+         }
+
+         /* 8x 32bit C counters... */
+         for (i = 0; i < 8; i++) {
+            accumulate_uint32(start + 56 + i, end + 56 + i,
+                              result->accumulator + query->c_offset + i);
+         }
+      }
       break;
 
    case I915_OA_FORMAT_A45_B8_C8:
       accumulate_uint32(start + 1, end + 1, result->accumulator); /* timestamp */
 
-      for (i = 0; i < 61; i++)
-         accumulate_uint32(start + 3 + i, end + 3 + i, result->accumulator + 1 + i);
+      for (i = 0; i < 61; i++) {
+         accumulate_uint32(start + 3 + i, end + 3 + i,
+                           result->accumulator + query->a_offset + i);
+      }
       break;
 
    default:
       unreachable("Can't accumulate OA counters in unknown format");
    }
 
+}
+
+#define GET_FIELD(word, field) (((word)  & field ## _MASK) >> field ## _SHIFT)
+
+void
+gen_perf_query_result_read_gt_frequency(struct gen_perf_query_result *result,
+                                        const struct gen_device_info *devinfo,
+                                        const uint32_t start,
+                                        const uint32_t end)
+{
+   switch (devinfo->ver) {
+   case 7:
+   case 8:
+      result->gt_frequency[0] = GET_FIELD(start, GFX7_RPSTAT1_CURR_GT_FREQ) * 50ULL;
+      result->gt_frequency[1] = GET_FIELD(end, GFX7_RPSTAT1_CURR_GT_FREQ) * 50ULL;
+      break;
+   case 9:
+   case 11:
+   case 12:
+      result->gt_frequency[0] = GET_FIELD(start, GFX9_RPSTAT0_CURR_GT_FREQ) * 50ULL / 3ULL;
+      result->gt_frequency[1] = GET_FIELD(end, GFX9_RPSTAT0_CURR_GT_FREQ) * 50ULL / 3ULL;
+      break;
+   default:
+      unreachable("unexpected gen");
+   }
+
+   /* Put the numbers into Hz. */
+   result->gt_frequency[0] *= 1000000ULL;
+   result->gt_frequency[1] *= 1000000ULL;
+}
+
+void
+gen_perf_query_result_read_perfcnts(struct gen_perf_query_result *result,
+                                    const struct gen_perf_query_info *query,
+                                    const uint64_t *start,
+                                    const uint64_t *end)
+{
+   for (uint32_t i = 0; i < 2; i++) {
+      uint64_t v0 = start[i] & PERF_CNT_VALUE_MASK;
+      uint64_t v1 = end[i] & PERF_CNT_VALUE_MASK;
+
+      result->accumulator[query->perfcnt_offset + i] = v0 > v1 ?
+         (PERF_CNT_VALUE_MASK + 1 + v1 - v0) :
+         (v1 - v0);
+   }
+}
+
+static uint32_t
+query_accumulator_offset(const struct gen_perf_query_info *query,
+                         enum gen_perf_query_field_type type,
+                         uint8_t index)
+{
+   switch (type) {
+   case GEN_PERF_QUERY_FIELD_TYPE_SRM_PERFCNT:
+      return query->perfcnt_offset + index;
+   case GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_B:
+      return query->b_offset + index;
+   case GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_C:
+      return query->c_offset + index;
+   default:
+      unreachable("Invalid register type");
+      return 0;
+   }
+}
+
+void
+gen_perf_query_result_accumulate_fields(struct gen_perf_query_result *result,
+                                        const struct gen_perf_query_info *query,
+                                        const struct gen_device_info *devinfo,
+                                        const void *start,
+                                        const void *end,
+                                        bool no_oa_accumulate)
+{
+   struct gen_perf_query_field_layout *layout = &query->perf->query_layout;
+
+   for (uint32_t r = 0; r < layout->n_fields; r++) {
+      struct gen_perf_query_field *field = &layout->fields[r];
+
+      if (field->type == GEN_PERF_QUERY_FIELD_TYPE_MI_RPC) {
+         gen_perf_query_result_read_frequencies(result, devinfo,
+                                                start + field->location,
+                                                end + field->location);
+         /* no_oa_accumulate=true is used when doing GL perf queries, we
+          * manually parse the OA reports from the OA buffer and substract
+          * unrelated deltas, so don't accumulate the begin/end reports here.
+          */
+         if (!no_oa_accumulate) {
+            gen_perf_query_result_accumulate(result, query, devinfo,
+                                             start + field->location,
+                                             end + field->location);
+         }
+      } else {
+         uint64_t v0, v1;
+
+         if (field->size == 4) {
+            v0 = *(const uint32_t *)(start + field->location);
+            v1 = *(const uint32_t *)(end + field->location);
+         } else {
+            assert(field->size == 8);
+            v0 = *(const uint64_t *)(start + field->location);
+            v1 = *(const uint64_t *)(end + field->location);
+         }
+
+         if (field->mask) {
+            v0 = field->mask & v0;
+            v1 = field->mask & v1;
+         }
+
+         /* RPSTAT is a bit of a special case because its begin/end values
+          * represent frequencies. We store it in a separate location.
+          */
+         if (field->type == GEN_PERF_QUERY_FIELD_TYPE_SRM_RPSTAT)
+            gen_perf_query_result_read_gt_frequency(result, devinfo, v0, v1);
+         else
+            result->accumulator[query_accumulator_offset(query, field->type, field->index)] = v1 - v0;
+      }
+   }
 }
 
 void
@@ -835,12 +1233,162 @@ gen_perf_query_result_clear(struct gen_perf_query_result *result)
 }
 
 void
+gen_perf_query_result_print_fields(const struct gen_perf_query_info *query,
+                                   const struct gen_device_info *devinfo,
+                                   const void *data)
+{
+   const struct gen_perf_query_field_layout *layout = &query->perf->query_layout;
+
+   for (uint32_t r = 0; r < layout->n_fields; r++) {
+      const struct gen_perf_query_field *field = &layout->fields[r];
+      const uint32_t *value32 = data + field->location;
+
+      switch (field->type) {
+      case GEN_PERF_QUERY_FIELD_TYPE_MI_RPC:
+         fprintf(stderr, "MI_RPC:\n");
+         fprintf(stderr, "  TS: 0x%08x\n", *(value32 + 1));
+         fprintf(stderr, "  CLK: 0x%08x\n", *(value32 + 3));
+         break;
+      case GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_B:
+         fprintf(stderr, "B%u: 0x%08x\n", field->index, *value32);
+         break;
+      case GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_C:
+         fprintf(stderr, "C%u: 0x%08x\n", field->index, *value32);
+         break;
+      default:
+         break;
+      }
+   }
+}
+
+static int
+gen_perf_compare_query_names(const void *v1, const void *v2)
+{
+   const struct gen_perf_query_info *q1 = v1;
+   const struct gen_perf_query_info *q2 = v2;
+
+   return strcmp(q1->name, q2->name);
+}
+
+static inline struct gen_perf_query_field *
+add_query_register(struct gen_perf_query_field_layout *layout,
+                   enum gen_perf_query_field_type type,
+                   uint16_t offset,
+                   uint16_t size,
+                   uint8_t index)
+{
+   /* Align MI_RPC to 64bytes (HW requirement) & 64bit registers to 8bytes
+    * (shows up nicely in the debugger).
+    */
+   if (type == GEN_PERF_QUERY_FIELD_TYPE_MI_RPC)
+      layout->size = align(layout->size, 64);
+   else if (size % 8 == 0)
+      layout->size = align(layout->size, 8);
+
+   layout->fields[layout->n_fields++] = (struct gen_perf_query_field) {
+      .mmio_offset = offset,
+      .location = layout->size,
+      .type = type,
+      .index = index,
+      .size = size,
+   };
+   layout->size += size;
+
+   return &layout->fields[layout->n_fields - 1];
+}
+
+static void
+gen_perf_init_query_fields(struct gen_perf_config *perf_cfg,
+                           const struct gen_device_info *devinfo)
+{
+   struct gen_perf_query_field_layout *layout = &perf_cfg->query_layout;
+
+   layout->n_fields = 0;
+
+   /* MI_RPC requires a 64byte alignment. */
+   layout->alignment = 64;
+
+   layout->fields = rzalloc_array(perf_cfg, struct gen_perf_query_field, 5 + 16);
+
+   add_query_register(layout, GEN_PERF_QUERY_FIELD_TYPE_MI_RPC,
+                      0, 256, 0);
+
+   if (devinfo->ver <= 11) {
+      struct gen_perf_query_field *field =
+         add_query_register(layout,
+                            GEN_PERF_QUERY_FIELD_TYPE_SRM_PERFCNT,
+                            PERF_CNT_1_DW0, 8, 0);
+      field->mask = PERF_CNT_VALUE_MASK;
+
+      field = add_query_register(layout,
+                                 GEN_PERF_QUERY_FIELD_TYPE_SRM_PERFCNT,
+                                 PERF_CNT_2_DW0, 8, 1);
+      field->mask = PERF_CNT_VALUE_MASK;
+   }
+
+   if (devinfo->ver == 8 && !devinfo->is_cherryview) {
+      add_query_register(layout,
+                         GEN_PERF_QUERY_FIELD_TYPE_SRM_RPSTAT,
+                         GFX7_RPSTAT1, 4, 0);
+   }
+
+   if (devinfo->ver >= 9) {
+      add_query_register(layout,
+                         GEN_PERF_QUERY_FIELD_TYPE_SRM_RPSTAT,
+                         GFX9_RPSTAT0, 4, 0);
+   }
+
+   if (!can_use_mi_rpc_bc_counters(devinfo)) {
+      if (devinfo->ver >= 8 && devinfo->ver <= 11) {
+         for (uint32_t i = 0; i < GFX8_N_OA_PERF_B32; i++) {
+            add_query_register(layout, GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_B,
+                               GFX8_OA_PERF_B32(i), 4, i);
+         }
+         for (uint32_t i = 0; i < GFX8_N_OA_PERF_C32; i++) {
+            add_query_register(layout, GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_C,
+                               GFX8_OA_PERF_C32(i), 4, i);
+         }
+      } else if (devinfo->ver == 12) {
+         for (uint32_t i = 0; i < GFX12_N_OAG_PERF_B32; i++) {
+            add_query_register(layout, GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_B,
+                               GFX12_OAG_PERF_B32(i), 4, i);
+         }
+         for (uint32_t i = 0; i < GFX12_N_OAG_PERF_C32; i++) {
+            add_query_register(layout, GEN_PERF_QUERY_FIELD_TYPE_SRM_OA_C,
+                               GFX12_OAG_PERF_C32(i), 4, i);
+         }
+      }
+   }
+
+   /* Align the whole package to 64bytes so that 2 snapshots can be put
+    * together without extract alignment for the user.
+    */
+   layout->size = align(layout->size, 64);
+}
+
+void
 gen_perf_init_metrics(struct gen_perf_config *perf_cfg,
                       const struct gen_device_info *devinfo,
-                      int drm_fd)
+                      int drm_fd,
+                      bool include_pipeline_statistics)
 {
-   load_pipeline_statistic_metrics(perf_cfg, devinfo);
-   gen_perf_register_mdapi_statistic_query(perf_cfg, devinfo);
-   if (load_oa_metrics(perf_cfg, drm_fd, devinfo))
+   gen_perf_init_query_fields(perf_cfg, devinfo);
+
+   if (include_pipeline_statistics) {
+      load_pipeline_statistic_metrics(perf_cfg, devinfo);
+      gen_perf_register_mdapi_statistic_query(perf_cfg, devinfo);
+   }
+
+   bool oa_metrics = oa_metrics_available(perf_cfg, drm_fd, devinfo);
+   if (oa_metrics)
+      load_oa_metrics(perf_cfg, drm_fd, devinfo);
+
+   /* sort query groups by name */
+   qsort(perf_cfg->queries, perf_cfg->n_queries,
+         sizeof(perf_cfg->queries[0]), gen_perf_compare_query_names);
+
+   build_unique_counter_list(perf_cfg);
+
+   if (oa_metrics)
       gen_perf_register_mdapi_oa_query(perf_cfg, devinfo);
 }

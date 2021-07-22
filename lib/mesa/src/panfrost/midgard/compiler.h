@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2019-2020 Collabora, Ltd.
  * Copyright (C) 2019 Alyssa Rosenzweig <alyssa@rosenzweig.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,7 +29,6 @@
 #include "helpers.h"
 #include "midgard_compile.h"
 #include "midgard_ops.h"
-#include "lcra.h"
 
 #include "util/hash_table.h"
 #include "util/u_dynarray.h"
@@ -38,6 +38,8 @@
 #include "main/mtypes.h"
 #include "compiler/nir_types.h"
 #include "compiler/nir/nir.h"
+#include "panfrost/util/pan_ir.h"
+#include "panfrost/util/lcra.h"
 
 /* Forward declare */
 struct midgard_block;
@@ -50,6 +52,7 @@ struct midgard_block;
 #define TARGET_BREAK 1
 #define TARGET_CONTINUE 2
 #define TARGET_DISCARD 3
+#define TARGET_TILEBUF_WAIT 4
 
 typedef struct midgard_branch {
         /* If conditional, the condition is specified in r31.w */
@@ -96,8 +99,37 @@ typedef struct midgard_instruction {
         /* vec16 swizzle, unpacked, per source */
         unsigned swizzle[MIR_SRC_COUNT][MIR_VEC_COMPONENTS];
 
-        /* Special fields for an ALU instruction */
-        midgard_reg_info registers;
+        /* Types! */
+        nir_alu_type src_types[MIR_SRC_COUNT];
+        nir_alu_type dest_type;
+
+        /* Packing ops have non-32-bit dest types even though they functionally
+         * work at the 32-bit level, use this as a signal to disable copyprop.
+         * We maybe need synthetic pack ops instead. */
+        bool is_pack;
+
+        /* Modifiers, depending on type */
+        union {
+                struct {
+                        bool src_abs[MIR_SRC_COUNT];
+                        bool src_neg[MIR_SRC_COUNT];
+                };
+
+                struct {
+                        bool src_shift[MIR_SRC_COUNT];
+                };
+        };
+
+        /* Out of the union for csel (could maybe be fixed..) */
+        bool src_invert[MIR_SRC_COUNT];
+
+        /* If the op supports it */
+        enum midgard_roundmode roundmode;
+
+        /* For textures: should helpers execute this instruction (instead of
+         * just helping with derivatives)? Should helpers terminate after? */
+        bool helper_terminate;
+        bool helper_execute;
 
         /* I.e. (1 << alu_bit) */
         int unit;
@@ -105,27 +137,17 @@ typedef struct midgard_instruction {
         bool has_constants;
         midgard_constants constants;
         uint16_t inline_constant;
-        bool has_blend_constant;
         bool has_inline_constant;
 
         bool compact_branch;
-        bool writeout;
+        uint8_t writeout;
         bool last_writeout;
-
-        /* Kind of a hack, but hint against aggressive DCE */
-        bool dont_eliminate;
 
         /* Masks in a saneish format. One bit per channel, not packed fancy.
          * Use this instead of the op specific ones, and switch over at emit
          * time */
 
         uint16_t mask;
-
-        /* For ALU ops only: set to true to invert (bitwise NOT) the
-         * destination of an integer-out op. Not implemented in hardware but
-         * allows more optimizations */
-
-        bool invert;
 
         /* Hint for the register allocator not to spill the destination written
          * from this instruction (because it is a spill/unspill node itself).
@@ -146,33 +168,29 @@ typedef struct midgard_instruction {
         unsigned nr_dependencies;
         BITSET_WORD *dependents;
 
-        /* For load/store ops.. force 64-bit destination */
-        bool load_64;
+        /* Use this in conjunction with `type` */
+        unsigned op;
+
+        /* This refers to midgard_outmod_float or midgard_outmod_int.
+         * In case of a ALU op, use midgard_is_integer_out_op() to know which
+         * one is used.
+         * If it's a texture op, it's always midgard_outmod_float. */
+        unsigned outmod;
 
         union {
                 midgard_load_store_word load_store;
-                midgard_vector_alu alu;
                 midgard_texture_word texture;
-                midgard_branch_extended branch_extended;
-                uint16_t br_compact;
 
-                /* General branch, rather than packed br_compact. Higher level
-                 * than the other components */
                 midgard_branch branch;
         };
+
+        unsigned bundle_id;
 } midgard_instruction;
 
 typedef struct midgard_block {
-        /* Link to next block. Must be first for mir_get_block */
-        struct list_head link;
+        pan_block base;
 
-        /* List of midgard_instructions emitted for the current block */
-        struct list_head instructions;
-
-        /* Index of the block in source order */
-        unsigned source_id;
-
-        bool is_scheduled;
+        bool scheduled;
 
         /* List of midgard_bundles emitted (after the scheduler has run) */
         struct util_dynarray bundles;
@@ -180,28 +198,11 @@ typedef struct midgard_block {
         /* Number of quadwords _actually_ emitted, as determined after scheduling */
         unsigned quadword_count;
 
-        /* Succeeding blocks. The compiler should not necessarily rely on
-         * source-order traversal */
-        struct midgard_block *successors[2];
-        unsigned nr_successors;
-
-        struct set *predecessors;
-
-        /* The successors pointer form a graph, and in the case of
-         * complex control flow, this graph has a cycles. To aid
-         * traversal during liveness analysis, we have a visited?
-         * boolean for passes to use as they see fit, provided they
-         * clean up later */
-        bool visited;
-
-        /* In liveness analysis, these are live masks (per-component) for
-         * indices for the block. Scalar compilers have the luxury of using
-         * simple bit fields, but for us, liveness is a vector idea. */
-        uint16_t *live_in;
-        uint16_t *live_out;
-
         /* Indicates this is a fixed-function fragment epilogue block */
         bool epilogue;
+
+        /* Are helper invocations required by this block? */
+        bool helpers_in;
 } midgard_block;
 
 typedef struct midgard_bundle {
@@ -218,25 +219,38 @@ typedef struct midgard_bundle {
         int control;
         bool has_embedded_constants;
         midgard_constants constants;
-        bool has_blend_constant;
         bool last_writeout;
 } midgard_bundle;
 
+enum midgard_rt_id {
+        MIDGARD_COLOR_RT0 = 0,
+        MIDGARD_COLOR_RT1,
+        MIDGARD_COLOR_RT2,
+        MIDGARD_COLOR_RT3,
+        MIDGARD_COLOR_RT4,
+        MIDGARD_COLOR_RT5,
+        MIDGARD_COLOR_RT6,
+        MIDGARD_COLOR_RT7,
+        MIDGARD_ZS_RT,
+        MIDGARD_NUM_RTS,
+};
+
+#define MIDGARD_MAX_SAMPLE_ITER 16
+
 typedef struct compiler_context {
+        const struct panfrost_compile_inputs *inputs;
         nir_shader *nir;
+        struct pan_shader_info *info;
         gl_shader_stage stage;
 
-        /* Is internally a blend shader? Depends on stage == FRAGMENT */
-        bool is_blend;
+        /* Number of samples for a keyed blend shader. Depends on is_blend */
+        unsigned blend_sample_iterations;
 
-        /* Render target number for a keyed blend shader. Depends on is_blend */
-        unsigned blend_rt;
+        /* Index to precolour to r0 for an input blend colour */
+        unsigned blend_input;
 
-        /* Tracking for blend constant patching */
-        int blend_constant_offset;
-
-        /* Number of bytes used for Thread Local Storage */
-        unsigned tls_size;
+        /* Index to precolour to r2 for a dual-source blend colour */
+        unsigned blend_src1;
 
         /* Count of spills and fills for shaderdb */
         unsigned spills;
@@ -271,34 +285,16 @@ typedef struct compiler_context {
         /* Constants which have been loaded, for later inlining */
         struct hash_table_u64 *ssa_constants;
 
-        /* Mapping of hashes computed from NIR indices to the sequential temp indices ultimately used in MIR */
-        struct hash_table_u64 *hash_to_temp;
         int temp_count;
         int max_hash;
 
-        /* Just the count of the max register used. Higher count => higher
-         * register pressure */
-        int work_registers;
-
-        /* Used for cont/last hinting. Increase when a tex op is added.
-         * Decrease when a tex op is removed. */
-        int texture_op_count;
-
-        /* The number of uniforms allowable for the fast path */
-        int uniform_cutoff;
+        /* Set of NIR indices that were already emitted as outmods */
+        BITSET_WORD *already_emitted;
 
         /* Count of instructions emitted from NIR overall, across all blocks */
         int instruction_count;
 
-        /* Alpha ref value passed in */
-        float alpha_ref;
-
         unsigned quadword_count;
-
-        /* The mapping of sysvals to uniforms, the count, and the off-by-one inverse */
-        unsigned sysvals[MAX_SYSVAL_COUNT];
-        unsigned sysval_count;
-        struct hash_table_u64 *sysval_to_id;
 
         /* Bitmask of valid metadata */
         unsigned metadata;
@@ -307,7 +303,9 @@ typedef struct compiler_context {
         uint32_t quirks;
 
         /* Writeout instructions for each render target */
-        midgard_instruction *writeout_branch[4];
+        midgard_instruction *writeout_branch[MIDGARD_NUM_RTS][MIDGARD_MAX_SAMPLE_ITER];
+
+        struct hash_table_u64 *sysval_to_id;
 } compiler_context;
 
 /* Per-block live_in/live_out */
@@ -329,7 +327,7 @@ static inline midgard_instruction *
 emit_mir_instruction(struct compiler_context *ctx, struct midgard_instruction ins)
 {
         midgard_instruction *u = mir_upload_ins(ctx, ins);
-        list_addtail(&u->link, &ctx->current_block->instructions);
+        list_addtail(&u->link, &ctx->current_block->base.instructions);
         return u;
 }
 
@@ -362,33 +360,27 @@ mir_next_op(struct midgard_instruction *ins)
 }
 
 #define mir_foreach_block(ctx, v) \
-        list_for_each_entry(struct midgard_block, v, &ctx->blocks, link)
+        list_for_each_entry(pan_block, v, &ctx->blocks, link)
 
 #define mir_foreach_block_from(ctx, from, v) \
-        list_for_each_entry_from(struct midgard_block, v, from, &ctx->blocks, link)
-
-#define mir_foreach_instr(ctx, v) \
-        list_for_each_entry(struct midgard_instruction, v, &ctx->current_block->instructions, link)
-
-#define mir_foreach_instr_safe(ctx, v) \
-        list_for_each_entry_safe(struct midgard_instruction, v, &ctx->current_block->instructions, link)
+        list_for_each_entry_from(pan_block, v, &from->base, &ctx->blocks, link)
 
 #define mir_foreach_instr_in_block(block, v) \
-        list_for_each_entry(struct midgard_instruction, v, &block->instructions, link)
+        list_for_each_entry(struct midgard_instruction, v, &block->base.instructions, link)
 #define mir_foreach_instr_in_block_rev(block, v) \
-        list_for_each_entry_rev(struct midgard_instruction, v, &block->instructions, link)
+        list_for_each_entry_rev(struct midgard_instruction, v, &block->base.instructions, link)
 
 #define mir_foreach_instr_in_block_safe(block, v) \
-        list_for_each_entry_safe(struct midgard_instruction, v, &block->instructions, link)
+        list_for_each_entry_safe(struct midgard_instruction, v, &block->base.instructions, link)
 
 #define mir_foreach_instr_in_block_safe_rev(block, v) \
-        list_for_each_entry_safe_rev(struct midgard_instruction, v, &block->instructions, link)
+        list_for_each_entry_safe_rev(struct midgard_instruction, v, &block->base.instructions, link)
 
 #define mir_foreach_instr_in_block_from(block, v, from) \
-        list_for_each_entry_from(struct midgard_instruction, v, from, &block->instructions, link)
+        list_for_each_entry_from(struct midgard_instruction, v, from, &block->base.instructions, link)
 
 #define mir_foreach_instr_in_block_from_rev(block, v, from) \
-        list_for_each_entry_from_rev(struct midgard_instruction, v, from, &block->instructions, link)
+        list_for_each_entry_from_rev(struct midgard_instruction, v, from, &block->base.instructions, link)
 
 #define mir_foreach_bundle_in_block(block, v) \
         util_dynarray_foreach(&block->bundles, midgard_bundle, v)
@@ -406,29 +398,21 @@ mir_next_op(struct midgard_instruction *ins)
 
 #define mir_foreach_instr_global(ctx, v) \
         mir_foreach_block(ctx, v_block) \
-                mir_foreach_instr_in_block(v_block, v)
+                mir_foreach_instr_in_block(((midgard_block *) v_block), v)
 
 #define mir_foreach_instr_global_safe(ctx, v) \
         mir_foreach_block(ctx, v_block) \
-                mir_foreach_instr_in_block_safe(v_block, v)
-
-#define mir_foreach_successor(blk, v) \
-        struct midgard_block *v; \
-        struct midgard_block **_v; \
-        for (_v = &blk->successors[0], \
-                v = *_v; \
-                v != NULL && _v < &blk->successors[2]; \
-                _v++, v = *_v) \
+                mir_foreach_instr_in_block_safe(((midgard_block *) v_block), v)
 
 /* Based on set_foreach, expanded with automatic type casts */
 
 #define mir_foreach_predecessor(blk, v) \
         struct set_entry *_entry_##v; \
         struct midgard_block *v; \
-        for (_entry_##v = _mesa_set_next_entry(blk->predecessors, NULL), \
+        for (_entry_##v = _mesa_set_next_entry(blk->base.predecessors, NULL), \
                 v = (struct midgard_block *) (_entry_##v ? _entry_##v->key : NULL);  \
                 _entry_##v != NULL; \
-                _entry_##v = _mesa_set_next_entry(blk->predecessors, _entry_##v), \
+                _entry_##v = _mesa_set_next_entry(blk->base.predecessors, _entry_##v), \
                 v = (struct midgard_block *) (_entry_##v ? _entry_##v->key : NULL))
 
 #define mir_foreach_src(ins, v) \
@@ -437,7 +421,7 @@ mir_next_op(struct midgard_instruction *ins)
 static inline midgard_instruction *
 mir_last_in_block(struct midgard_block *block)
 {
-        return list_last_entry(&block->instructions, struct midgard_instruction, link);
+        return list_last_entry(&block->base.instructions, struct midgard_instruction, link);
 }
 
 static inline midgard_block *
@@ -451,29 +435,11 @@ mir_get_block(compiler_context *ctx, int idx)
         return (struct midgard_block *) lst;
 }
 
-static inline midgard_block *
-mir_exit_block(struct compiler_context *ctx)
-{
-        midgard_block *last = list_last_entry(&ctx->blocks,
-                        struct midgard_block, link);
-
-        /* The last block must be empty logically but contains branch writeout
-         * for fragment shaders */
-
-        assert(last->nr_successors == 0);
-
-        return last;
-}
-
 static inline bool
 mir_is_alu_bundle(midgard_bundle *bundle)
 {
-        return midgard_word_types[bundle->tag] == midgard_word_type_alu;
+        return IS_ALU(bundle->tag);
 }
-
-/* Registers/SSA are distinguish in the backend by the bottom-most bit */
-
-#define IS_REG (1)
 
 static inline unsigned
 make_compiler_temp(compiler_context *ctx)
@@ -484,34 +450,34 @@ make_compiler_temp(compiler_context *ctx)
 static inline unsigned
 make_compiler_temp_reg(compiler_context *ctx)
 {
-        return ((ctx->func->impl->reg_alloc + ctx->temp_alloc++) << 1) | IS_REG;
+        return ((ctx->func->impl->reg_alloc + ctx->temp_alloc++) << 1) | PAN_IS_REG;
+}
+
+static inline unsigned
+nir_ssa_index(nir_ssa_def *ssa)
+{
+        return (ssa->index << 1) | 0;
 }
 
 static inline unsigned
 nir_src_index(compiler_context *ctx, nir_src *src)
 {
         if (src->is_ssa)
-                return (src->ssa->index << 1) | 0;
+                return nir_ssa_index(src->ssa);
         else {
                 assert(!src->reg.indirect);
-                return (src->reg.reg->index << 1) | IS_REG;
+                return (src->reg.reg->index << 1) | PAN_IS_REG;
         }
 }
 
 static inline unsigned
-nir_alu_src_index(compiler_context *ctx, nir_alu_src *src)
-{
-        return nir_src_index(ctx, &src->src);
-}
-
-static inline unsigned
-nir_dest_index(compiler_context *ctx, nir_dest *dst)
+nir_dest_index(nir_dest *dst)
 {
         if (dst->is_ssa)
                 return (dst->ssa.index << 1) | 0;
         else {
                 assert(!dst->reg.indirect);
-                return (dst->reg.reg->index << 1) | IS_REG;
+                return (dst->reg.reg->index << 1) | PAN_IS_REG;
         }
 }
 
@@ -526,20 +492,17 @@ void mir_rewrite_index_dst_single(midgard_instruction *ins, unsigned old, unsign
 void mir_rewrite_index_src_single(midgard_instruction *ins, unsigned old, unsigned new);
 void mir_rewrite_index_src_swizzle(compiler_context *ctx, unsigned old, unsigned new, unsigned *swizzle);
 bool mir_single_use(compiler_context *ctx, unsigned value);
-bool mir_special_index(compiler_context *ctx, unsigned idx);
 unsigned mir_use_count(compiler_context *ctx, unsigned value);
-bool mir_is_written_before(compiler_context *ctx, midgard_instruction *ins, unsigned node);
 uint16_t mir_bytemask_of_read_components(midgard_instruction *ins, unsigned node);
-midgard_reg_mode mir_typesize(midgard_instruction *ins);
-midgard_reg_mode mir_srcsize(midgard_instruction *ins, unsigned i);
-unsigned mir_bytes_for_mode(midgard_reg_mode mode);
-midgard_reg_mode mir_mode_for_destsize(unsigned size);
-uint16_t mir_from_bytemask(uint16_t bytemask, midgard_reg_mode mode);
-uint16_t mir_to_bytemask(midgard_reg_mode mode, unsigned mask);
+uint16_t mir_bytemask_of_read_components_index(midgard_instruction *ins, unsigned i);
+uint16_t mir_from_bytemask(uint16_t bytemask, unsigned bits);
 uint16_t mir_bytemask(midgard_instruction *ins);
-uint16_t mir_round_bytemask_up(uint16_t mask, midgard_reg_mode mode);
+uint16_t mir_round_bytemask_up(uint16_t mask, unsigned bits);
 void mir_set_bytemask(midgard_instruction *ins, uint16_t bytemask);
-unsigned mir_upper_override(midgard_instruction *ins);
+signed mir_upper_override(midgard_instruction *ins, unsigned inst_size);
+unsigned mir_components_for_type(nir_alu_type T);
+unsigned max_bitsize_for_alu(midgard_instruction *ins);
+midgard_reg_mode reg_mode_for_bitsize(unsigned bitsize);
 
 /* MIR printing */
 
@@ -547,14 +510,20 @@ void mir_print_instruction(midgard_instruction *ins);
 void mir_print_bundle(midgard_bundle *ctx);
 void mir_print_block(midgard_block *block);
 void mir_print_shader(compiler_context *ctx);
-bool mir_nontrivial_source2_mod(midgard_instruction *ins);
-bool mir_nontrivial_source2_mod_simple(midgard_instruction *ins);
+bool mir_nontrivial_mod(midgard_instruction *ins, unsigned i, bool check_swizzle);
 bool mir_nontrivial_outmod(midgard_instruction *ins);
 
 void mir_insert_instruction_before_scheduled(compiler_context *ctx, midgard_block *block, midgard_instruction *tag, midgard_instruction ins);
 void mir_insert_instruction_after_scheduled(compiler_context *ctx, midgard_block *block, midgard_instruction *tag, midgard_instruction ins);
 void mir_flip(midgard_instruction *ins);
 void mir_compute_temp_count(compiler_context *ctx);
+
+#define LDST_GLOBAL 0x3E
+#define LDST_SHARED 0x2E
+#define LDST_SCRATCH 0x2A
+
+void mir_set_offset(compiler_context *ctx, midgard_instruction *ins, nir_src *offset, unsigned seg);
+void mir_set_ubo_offset(midgard_instruction *ins, nir_src *src, unsigned bias);
 
 /* 'Intrinsic' move for aliasing */
 
@@ -565,14 +534,12 @@ v_mov(unsigned src, unsigned dest)
                 .type = TAG_ALU_4,
                 .mask = 0xF,
                 .src = { ~0, src, ~0, ~0 },
+                .src_types = { 0, nir_type_uint32 },
                 .swizzle = SWIZZLE_IDENTITY,
                 .dest = dest,
-                .alu = {
-                        .op = midgard_alu_op_imov,
-                        .reg_mode = midgard_reg_mode_32,
-                        .dest_override = midgard_dest_override_none,
-                        .outmod = midgard_outmod_int_wrap
-                },
+                .dest_type = nir_type_uint32,
+                .op = midgard_alu_op_imov,
+                .outmod = midgard_outmod_int_wrap
         };
 
         return ins;
@@ -601,12 +568,12 @@ v_load_store_scratch(
         midgard_instruction ins = {
                 .type = TAG_LOAD_STORE_4,
                 .mask = mask,
+                .dest_type = nir_type_uint32,
                 .dest = ~0,
                 .src = { ~0, ~0, ~0, ~0 },
                 .swizzle = SWIZZLE_IDENTITY_4,
+                .op = is_store ? midgard_op_st_u128 : midgard_op_ld_u128,
                 .load_store = {
-                        .op = is_store ? midgard_op_st_int4 : midgard_op_ld_int4,
-
                         /* For register spilling - to thread local storage */
                         .arg_1 = 0xEA,
                         .arg_2 = 0x1E,
@@ -620,6 +587,7 @@ v_load_store_scratch(
 
         if (is_store) {
                 ins.src[0] = srcdest;
+                ins.src_types[0] = nir_type_uint32;
 
                 /* Ensure we are tightly swizzled so liveness analysis is
                  * correct */
@@ -640,7 +608,7 @@ mir_has_arg(midgard_instruction *ins, unsigned arg)
         if (!ins)
                 return false;
 
-        for (unsigned i = 0; i < ARRAY_SIZE(ins->src); ++i) {
+        mir_foreach_src(ins, i) {
                 if (ins->src[i] == arg)
                         return true;
         }
@@ -664,9 +632,6 @@ void mir_create_pipeline_registers(compiler_context *ctx);
 void midgard_promote_uniforms(compiler_context *ctx);
 
 void
-emit_sysval_read(compiler_context *ctx, nir_instr *instr, signed dest_override, unsigned nr_components);
-
-void
 midgard_emit_derivatives(compiler_context *ctx, nir_alu_instr *instr);
 
 void
@@ -674,34 +639,30 @@ midgard_lower_derivatives(compiler_context *ctx, midgard_block *block);
 
 bool mir_op_computes_derivatives(gl_shader_stage stage, unsigned op);
 
+void mir_analyze_helper_terminate(compiler_context *ctx);
+void mir_analyze_helper_requirements(compiler_context *ctx);
+
 /* Final emission */
 
 void emit_binary_bundle(
         compiler_context *ctx,
+        midgard_block *block,
         midgard_bundle *bundle,
         struct util_dynarray *emission,
         int next_tag);
 
-bool
-nir_undef_to_zero(nir_shader *shader);
+bool nir_fuse_io_16(nir_shader *shader);
 
-void midgard_nir_lod_errata(nir_shader *shader);
+bool midgard_nir_lod_errata(nir_shader *shader);
+
+unsigned midgard_get_first_tag_from_block(compiler_context *ctx, unsigned block_idx);
 
 /* Optimizations */
 
 bool midgard_opt_copy_prop(compiler_context *ctx, midgard_block *block);
 bool midgard_opt_combine_projection(compiler_context *ctx, midgard_block *block);
 bool midgard_opt_varying_projection(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_dead_code_eliminate(compiler_context *ctx, midgard_block *block);
+bool midgard_opt_dead_code_eliminate(compiler_context *ctx);
 bool midgard_opt_dead_move_eliminate(compiler_context *ctx, midgard_block *block);
-
-void midgard_lower_invert(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_not_propagate(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_fuse_src_invert(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_fuse_dest_invert(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_csel_invert(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_promote_fmov(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_drop_cmp_invert(compiler_context *ctx, midgard_block *block);
-bool midgard_opt_invert_branch(compiler_context *ctx, midgard_block *block);
 
 #endif

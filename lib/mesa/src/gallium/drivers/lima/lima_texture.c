@@ -34,7 +34,7 @@
 #include "lima_screen.h"
 #include "lima_texture.h"
 #include "lima_resource.h"
-#include "lima_submit.h"
+#include "lima_job.h"
 #include "lima_util.h"
 #include "lima_format.h"
 
@@ -63,10 +63,14 @@ lima_texture_desc_set_va(lima_tex_desc *desc,
    desc->va[va_idx + 1] |= va >> (32 - va_bit_idx);
 }
 
+/*
+ * Note: this function is used by both draw and flush code path,
+ * make sure no lima_job_get() is called inside this.
+ */
 void
 lima_texture_desc_set_res(struct lima_context *ctx, lima_tex_desc *desc,
                           struct pipe_resource *prsc,
-                          unsigned first_level, unsigned last_level)
+                          unsigned first_level, unsigned last_level, unsigned first_layer)
 {
    unsigned width, height, layout, i;
    struct lima_resource *lima_res = lima_resource(prsc);
@@ -79,7 +83,7 @@ lima_texture_desc_set_res(struct lima_context *ctx, lima_tex_desc *desc,
    }
 
    desc->format = lima_format_get_texel(prsc->format);
-   desc->swap_r_b = lima_format_get_swap_rb(prsc->format);
+   desc->swap_r_b = lima_format_get_texel_swap_rb(prsc->format);
    desc->width  = width;
    desc->height = height;
    desc->unknown_3_1 = 1;
@@ -87,20 +91,15 @@ lima_texture_desc_set_res(struct lima_context *ctx, lima_tex_desc *desc,
    if (lima_res->tiled)
       layout = 3;
    else {
-      /* for padded linear texture */
-      if (lima_res->levels[first_level].width != width) {
-         desc->stride = lima_res->levels[first_level].stride;
-         desc->has_stride = 1;
-      }
+      desc->stride = lima_res->levels[first_level].stride;
+      desc->has_stride = 1;
       layout = 0;
    }
-
-   lima_submit_add_bo(ctx->pp_submit, lima_res->bo, LIMA_SUBMIT_BO_READ);
 
    uint32_t base_va = lima_res->bo->va;
 
    /* attach first level */
-   uint32_t first_va = base_va + lima_res->levels[first_level].offset;
+   uint32_t first_va = base_va + lima_res->levels[first_level].offset + first_layer * lima_res->levels[first_level].layer_stride;
    desc->va_s.va_0 = first_va >> 6;
    desc->va_s.layout = layout;
 
@@ -123,6 +122,7 @@ lima_update_tex_desc(struct lima_context *ctx, struct lima_sampler_state *sample
    lima_tex_desc *desc = pdesc;
    unsigned first_level;
    unsigned last_level;
+   unsigned first_layer;
    float max_lod;
 
    memset(desc, 0, desc_size);
@@ -144,6 +144,7 @@ lima_update_tex_desc(struct lima_context *ctx, struct lima_sampler_state *sample
 
    first_level = texture->base.u.tex.first_level;
    last_level = texture->base.u.tex.last_level;
+   first_layer = texture->base.u.tex.first_layer;
    if (last_level - first_level >= LIMA_MAX_MIP_LEVELS)
       last_level = first_level + LIMA_MAX_MIP_LEVELS - 1;
 
@@ -231,7 +232,7 @@ lima_update_tex_desc(struct lima_context *ctx, struct lima_sampler_state *sample
    desc->lod_bias += lod_bias_delta;
 
    lima_texture_desc_set_res(ctx, desc, texture->base.texture,
-                             first_level, last_level);
+                             first_level, last_level, first_layer);
 }
 
 static unsigned
@@ -255,12 +256,25 @@ lima_calc_tex_desc_size(struct lima_sampler_view *texture)
 void
 lima_update_textures(struct lima_context *ctx)
 {
+   struct lima_job *job = lima_job_get(ctx);
    struct lima_texture_stateobj *lima_tex = &ctx->tex_stateobj;
 
    assert (lima_tex->num_samplers <= 16);
 
    /* Nothing to do - we have no samplers or textures */
    if (!lima_tex->num_samplers || !lima_tex->num_textures)
+      return;
+
+   /* we always need to add texture bo to job */
+   for (int i = 0; i < lima_tex->num_samplers; i++) {
+      struct lima_sampler_view *texture = lima_sampler_view(lima_tex->textures[i]);
+      struct lima_resource *rsc = lima_resource(texture->base.texture);
+      lima_flush_previous_job_writing_resource(ctx, texture->base.texture);
+      lima_job_add_bo(job, LIMA_PIPE_PP, rsc->bo, LIMA_SUBMIT_BO_READ);
+   }
+
+   /* do not regenerate texture desc if no change */
+   if (!(ctx->dirty & LIMA_CONTEXT_DIRTY_TEXTURES))
       return;
 
    unsigned size = lima_tex_list_size;
@@ -278,18 +292,17 @@ lima_update_textures(struct lima_context *ctx)
       struct lima_sampler_view *texture = lima_sampler_view(lima_tex->textures[i]);
       unsigned desc_size = lima_calc_tex_desc_size(texture);
 
-      descs[i] = lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc,
-                                  LIMA_CTX_BUFF_SUBMIT_PP) + offset;
+      descs[i] = lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc) + offset;
       lima_update_tex_desc(ctx, sampler, texture, (void *)descs + offset, desc_size);
       offset += desc_size;
    }
 
    lima_dump_command_stream_print(
-      descs, size, false, "add textures_desc at va %x\n",
-      lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc, 0));
+      job->dump, descs, size, false, "add textures_desc at va %x\n",
+      lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc));
 
    lima_dump_texture_descriptor(
-      descs, size,
-      lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc, 0) + lima_tex_list_size,
+      job->dump, descs, size,
+      lima_ctx_buff_va(ctx, lima_ctx_buff_pp_tex_desc) + lima_tex_list_size,
       lima_tex_list_size);
 }

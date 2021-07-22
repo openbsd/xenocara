@@ -30,13 +30,14 @@
 #include "nouveau_util.h"
 #include "nv04_3d.xml.h"
 #include "nv04_driver.h"
+#include "util/u_memory.h"
 
 static GLboolean
 texunit_needs_combiners(struct gl_texture_unit *u,
                         struct gl_fixedfunc_texture_unit *f)
 {
 	struct gl_texture_object *t = u->_Current;
-	struct gl_texture_image *ti = t->Image[0][t->BaseLevel];
+	struct gl_texture_image *ti = t->Image[0][t->Attrib.BaseLevel];
 
 	return ti->TexFormat == MESA_FORMAT_A_UNORM8 ||
 		ti->TexFormat == MESA_FORMAT_L_UNORM8 ||
@@ -133,7 +134,7 @@ nv04_context_destroy(struct gl_context *ctx)
 	nouveau_object_del(&nctx->hw.surf3d);
 
 	nouveau_context_deinit(ctx);
-	free(ctx);
+	align_free(ctx);
 }
 
 static struct gl_context *
@@ -146,7 +147,7 @@ nv04_context_create(struct nouveau_screen *screen, gl_api api,
 	struct gl_context *ctx;
 	int ret;
 
-	nctx = CALLOC_STRUCT(nv04_context);
+	nctx = align_calloc(sizeof(struct nv04_context), 16);
 	if (!nctx)
 		return NULL;
 

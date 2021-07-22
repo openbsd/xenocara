@@ -33,7 +33,7 @@
 #include "util/u_pack_color.h"
 #include "util/u_surface.h"
 #include "util/os_time.h"
-#include "state_tracker/winsys_handle.h"
+#include "frontend/winsys_handle.h"
 #include <errno.h>
 #include <inttypes.h>
 
@@ -52,7 +52,7 @@ bool r600_prepare_for_dma_blit(struct r600_common_context *rctx,
 			       unsigned src_level,
 			       const struct pipe_box *src_box)
 {
-	if (!rctx->dma.cs)
+	if (!rctx->dma.cs.priv)
 		return false;
 
 	if (rdst->surface.bpe != rsrc->surface.bpe)
@@ -183,11 +183,11 @@ static unsigned r600_texture_get_offset(struct r600_common_screen *rscreen,
 	*layer_stride = (uint64_t)rtex->surface.u.legacy.level[level].slice_size_dw * 4;
 
 	if (!box)
-		return rtex->surface.u.legacy.level[level].offset;
+		return (uint64_t)rtex->surface.u.legacy.level[level].offset_256B * 256;
 
 	/* Each texture is an array of mipmap levels. Each level is
 	 * an array of slices. */
-	return rtex->surface.u.legacy.level[level].offset +
+	return (uint64_t)rtex->surface.u.legacy.level[level].offset_256B * 256 +
 		box->z * (uint64_t)rtex->surface.u.legacy.level[level].slice_size_dw * 4 +
 		(box->y / rtex->surface.blk_h *
 		 rtex->surface.u.legacy.level[level].nblk_x +
@@ -243,8 +243,6 @@ static int r600_init_surface(struct r600_common_screen *rscreen,
 		flags |= RADEON_SURF_SHAREABLE;
 	if (is_imported)
 		flags |= RADEON_SURF_IMPORTED | RADEON_SURF_SHAREABLE;
-	if (!(ptex->flags & R600_RESOURCE_FLAG_FORCE_TILING))
-		flags |= RADEON_SURF_OPTIMIZE_FOR_SPACE;
 
 	r = rscreen->ws->surface_init(rscreen->ws, ptex,
 				      flags, bpe, array_mode, surface);
@@ -264,7 +262,7 @@ static int r600_init_surface(struct r600_common_screen *rscreen,
 
 	if (offset) {
 		for (i = 0; i < ARRAY_SIZE(surface->u.legacy.level); ++i)
-			surface->u.legacy.level[i].offset += offset;
+			surface->u.legacy.level[i].offset_256B += offset / 256;
 	}
 
 	return 0;
@@ -457,7 +455,7 @@ static void r600_texture_get_info(struct pipe_screen* screen,
 		return;
 
 	if (resource->target != PIPE_BUFFER) {
-		offset = rtex->surface.u.legacy.level[0].offset;
+		offset = (uint64_t)rtex->surface.u.legacy.level[0].offset_256B * 256;
 		stride = rtex->surface.u.legacy.level[0].nblk_x *
 			 rtex->surface.bpe;
 	}
@@ -521,7 +519,7 @@ static bool r600_texture_get_handle(struct pipe_screen* screen,
 		if (!res->b.is_shared || update_metadata) {
 			r600_texture_init_metadata(rscreen, rtex, &metadata);
 
-			rscreen->ws->buffer_set_metadata(res->buf, &metadata);
+			rscreen->ws->buffer_set_metadata(rscreen->ws, res->buf, &metadata, NULL);
 		}
 
 		slice_size = (uint64_t)rtex->surface.u.legacy.level[0].slice_size_dw * 4;
@@ -655,7 +653,7 @@ void r600_texture_get_fmask_info(struct r600_common_screen *rscreen,
 	out->pitch_in_pixels = fmask.u.legacy.level[0].nblk_x;
 	out->bank_height = fmask.u.legacy.bankh;
 	out->tile_swizzle = fmask.tile_swizzle;
-	out->alignment = MAX2(256, fmask.surf_alignment);
+	out->alignment = MAX2(256, 1 << fmask.surf_alignment_log2);
 	out->size = fmask.surf_size;
 }
 
@@ -759,7 +757,7 @@ static void r600_texture_get_htile_size(struct r600_common_screen *rscreen,
 	unsigned slice_elements, slice_bytes, pipe_interleave_bytes, base_align;
 	unsigned num_pipes = rscreen->info.num_tile_pipes;
 
-	rtex->surface.htile_size = 0;
+	rtex->surface.meta_size = 0;
 
 	if (rscreen->chip_class <= EVERGREEN &&
 	    rscreen->info.drm_minor < 26)
@@ -806,8 +804,8 @@ static void r600_texture_get_htile_size(struct r600_common_screen *rscreen,
 	pipe_interleave_bytes = rscreen->info.pipe_interleave_bytes;
 	base_align = num_pipes * pipe_interleave_bytes;
 
-	rtex->surface.htile_alignment = base_align;
-	rtex->surface.htile_size =
+	rtex->surface.meta_alignment_log2 = util_logbase2(base_align);
+	rtex->surface.meta_size =
 		util_num_layers(&rtex->resource.b.b, 0) *
 		align(slice_bytes, base_align);
 }
@@ -817,11 +815,11 @@ static void r600_texture_allocate_htile(struct r600_common_screen *rscreen,
 {
 	r600_texture_get_htile_size(rscreen, rtex);
 
-	if (!rtex->surface.htile_size)
+	if (!rtex->surface.meta_size)
 		return;
 
-	rtex->htile_offset = align(rtex->size, rtex->surface.htile_alignment);
-	rtex->size = rtex->htile_offset + rtex->surface.htile_size;
+	rtex->htile_offset = align(rtex->size, 1 << rtex->surface.meta_alignment_log2);
+	rtex->size = rtex->htile_offset + rtex->surface.meta_size;
 }
 
 void r600_print_texture_info(struct r600_common_screen *rscreen,
@@ -832,7 +830,7 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 	/* Common parameters. */
 	u_log_printf(log, "  Info: npix_x=%u, npix_y=%u, npix_z=%u, blk_w=%u, "
 		"blk_h=%u, array_size=%u, last_level=%u, "
-		"bpe=%u, nsamples=%u, flags=0x%x, %s\n",
+		"bpe=%u, nsamples=%u, flags=0x%"PRIx64", %s\n",
 		rtex->resource.b.b.width0, rtex->resource.b.b.height0,
 		rtex->resource.b.b.depth0, rtex->surface.blk_w,
 		rtex->surface.blk_h,
@@ -842,7 +840,7 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 
 	u_log_printf(log, "  Layout: size=%"PRIu64", alignment=%u, bankw=%u, "
 		"bankh=%u, nbanks=%u, mtilea=%u, tilesplit=%u, pipeconfig=%u, scanout=%u\n",
-		rtex->surface.surf_size, rtex->surface.surf_alignment, rtex->surface.u.legacy.bankw,
+		rtex->surface.surf_size, 1 << rtex->surface.surf_alignment_log2, rtex->surface.u.legacy.bankw,
 		rtex->surface.u.legacy.bankh, rtex->surface.u.legacy.num_banks, rtex->surface.u.legacy.mtilea,
 		rtex->surface.u.legacy.tile_split, rtex->surface.u.legacy.pipe_config,
 		(rtex->surface.flags & RADEON_SURF_SCANOUT) != 0);
@@ -863,14 +861,14 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 	if (rtex->htile_offset)
 		u_log_printf(log, "  HTile: offset=%"PRIu64", size=%u "
 			"alignment=%u\n",
-			     rtex->htile_offset, rtex->surface.htile_size,
-			     rtex->surface.htile_alignment);
+			     rtex->htile_offset, rtex->surface.meta_size,
+			     1 << rtex->surface.meta_alignment_log2);
 
 	for (i = 0; i <= rtex->resource.b.b.last_level; i++)
 		u_log_printf(log, "  Level[%i]: offset=%"PRIu64", slice_size=%"PRIu64", "
 			"npix_x=%u, npix_y=%u, npix_z=%u, nblk_x=%u, nblk_y=%u, "
 			"mode=%u, tiling_index = %u\n",
-			i, rtex->surface.u.legacy.level[i].offset,
+			i, (uint64_t)rtex->surface.u.legacy.level[i].offset_256B * 256,
 			(uint64_t)rtex->surface.u.legacy.level[i].slice_size_dw * 4,
 			u_minify(rtex->resource.b.b.width0, i),
 			u_minify(rtex->resource.b.b.height0, i),
@@ -888,15 +886,15 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 				"slice_size=%"PRIu64", npix_x=%u, "
 				"npix_y=%u, npix_z=%u, nblk_x=%u, nblk_y=%u, "
 				"mode=%u, tiling_index = %u\n",
-				i, rtex->surface.u.legacy.stencil_level[i].offset,
-				(uint64_t)rtex->surface.u.legacy.stencil_level[i].slice_size_dw * 4,
+				i, (uint64_t)rtex->surface.u.legacy.zs.stencil_level[i].offset_256B * 256,
+				(uint64_t)rtex->surface.u.legacy.zs.stencil_level[i].slice_size_dw * 4,
 				u_minify(rtex->resource.b.b.width0, i),
 				u_minify(rtex->resource.b.b.height0, i),
 				u_minify(rtex->resource.b.b.depth0, i),
-				rtex->surface.u.legacy.stencil_level[i].nblk_x,
-				rtex->surface.u.legacy.stencil_level[i].nblk_y,
-				rtex->surface.u.legacy.stencil_level[i].mode,
-				rtex->surface.u.legacy.stencil_tiling_index[i]);
+				rtex->surface.u.legacy.zs.stencil_level[i].nblk_x,
+				rtex->surface.u.legacy.zs.stencil_level[i].nblk_y,
+				rtex->surface.u.legacy.zs.stencil_level[i].mode,
+				rtex->surface.u.legacy.zs.stencil_tiling_index[i]);
 		}
 	}
 }
@@ -918,7 +916,6 @@ r600_texture_create_object(struct pipe_screen *screen,
 
 	resource = &rtex->resource;
 	resource->b.b = *base;
-	resource->b.b.next = NULL;
 	resource->b.vtbl = &r600_texture_vtbl;
 	pipe_reference_init(&resource->b.b.reference, 1);
 	resource->b.b.screen = screen;
@@ -974,7 +971,7 @@ r600_texture_create_object(struct pipe_screen *screen,
 	/* Now create the backing buffer. */
 	if (!buf) {
 		r600_init_resource_fields(rscreen, resource, rtex->size,
-					  rtex->surface.surf_alignment);
+					  1 << rtex->surface.surf_alignment_log2);
 
 		if (!r600_alloc_resource(rscreen, resource)) {
 			FREE(rtex);
@@ -984,7 +981,7 @@ r600_texture_create_object(struct pipe_screen *screen,
 		resource->buf = buf;
 		resource->gpu_address = rscreen->ws->buffer_get_virtual_address(resource->buf);
 		resource->bo_size = buf->size;
-		resource->bo_alignment = buf->alignment;
+		resource->bo_alignment = 1 << buf->alignment_log2;
 		resource->domains = rscreen->ws->buffer_get_initial_domain(resource->buf);
 		if (resource->domains & RADEON_DOMAIN_VRAM)
 			resource->vram_usage = buf->size;
@@ -1003,7 +1000,7 @@ r600_texture_create_object(struct pipe_screen *screen,
 
 		r600_screen_clear_buffer(rscreen, &rtex->resource.b.b,
 					 rtex->htile_offset,
-					 rtex->surface.htile_size,
+					 rtex->surface.meta_size,
 					 clear_value);
 	}
 
@@ -1135,7 +1132,7 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 	if (!buf)
 		return NULL;
 
-	rscreen->ws->buffer_get_metadata(buf, &metadata);
+	rscreen->ws->buffer_get_metadata(rscreen->ws, buf, &metadata, NULL);
 	r600_surface_import_metadata(rscreen, &surface, &metadata,
 				     &array_mode, &is_scanout);
 
@@ -1262,7 +1259,7 @@ static bool r600_can_invalidate_texture(struct r600_common_screen *rscreen,
 	/* r600g doesn't react to dirty_tex_descriptor_counter */
 	return rscreen->chip_class >= GFX6 &&
 		!rtex->resource.b.is_shared &&
-		!(transfer_usage & PIPE_TRANSFER_READ) &&
+		!(transfer_usage & PIPE_MAP_READ) &&
 		rtex->resource.b.b.last_level == 0 &&
 		util_texrange_covers_whole_level(&rtex->resource.b.b, 0,
 						 box->x, box->y, box->z,
@@ -1339,14 +1336,14 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 		 */
 		if (!rtex->surface.is_linear)
 			use_staging_texture = true;
-		else if (usage & PIPE_TRANSFER_READ)
+		else if (usage & PIPE_MAP_READ)
 			use_staging_texture =
 				rtex->resource.domains & RADEON_DOMAIN_VRAM ||
 				rtex->resource.flags & RADEON_FLAG_GTT_WC;
 		/* Write & linear only: */
 		else if (r600_rings_is_buffer_referenced(rctx, rtex->resource.buf,
 							 RADEON_USAGE_READWRITE) ||
-			 !rctx->ws->buffer_wait(rtex->resource.buf, 0,
+			 !rctx->ws->buffer_wait(rctx->ws, rtex->resource.buf, 0,
 						RADEON_USAGE_READWRITE)) {
 			/* It's busy. */
 			if (r600_can_invalidate_texture(rctx->screen, rtex,
@@ -1389,7 +1386,7 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 				return NULL;
 			}
 
-			if (usage & PIPE_TRANSFER_READ) {
+			if (usage & PIPE_MAP_READ) {
 				struct pipe_resource *temp = ctx->screen->resource_create(ctx->screen, &resource);
 				if (!temp) {
 					R600_ERR("failed to create a temporary depth texture\n");
@@ -1435,7 +1432,7 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 
 		r600_init_temp_resource_from_box(&resource, texture, box, level,
 						 R600_RESOURCE_FLAG_TRANSFER);
-		resource.usage = (usage & PIPE_TRANSFER_READ) ?
+		resource.usage = (usage & PIPE_MAP_READ) ?
 			PIPE_USAGE_STAGING : PIPE_USAGE_STREAM;
 
 		/* Create the temporary texture. */
@@ -1452,10 +1449,10 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 					&trans->b.b.stride,
 					&trans->b.b.layer_stride);
 
-		if (usage & PIPE_TRANSFER_READ)
+		if (usage & PIPE_MAP_READ)
 			r600_copy_to_staging_texture(ctx, trans);
 		else
-			usage |= PIPE_TRANSFER_UNSYNCHRONIZED;
+			usage |= PIPE_MAP_UNSYNCHRONIZED;
 
 		buf = trans->staging;
 	} else {
@@ -1484,7 +1481,7 @@ static void r600_texture_transfer_unmap(struct pipe_context *ctx,
 	struct pipe_resource *texture = transfer->resource;
 	struct r600_texture *rtex = (struct r600_texture*)texture;
 
-	if ((transfer->usage & PIPE_TRANSFER_WRITE) && rtransfer->staging) {
+	if ((transfer->usage & PIPE_MAP_WRITE) && rtransfer->staging) {
 		if (rtex->is_depth && rtex->resource.b.b.nr_samples <= 1) {
 			ctx->resource_copy_region(ctx, texture, transfer->level,
 						  transfer->box.x, transfer->box.y, transfer->box.z,
@@ -1617,8 +1614,6 @@ static void r600_clear_texture(struct pipe_context *pipe,
 	struct r600_texture *rtex = (struct r600_texture*)tex;
 	struct pipe_surface tmpl = {{0}};
 	struct pipe_surface *sf;
-	const struct util_format_description *desc =
-		util_format_description(tex->format);
 
 	tmpl.format = tex->format;
 	tmpl.u.tex.first_layer = box->z;
@@ -1635,11 +1630,11 @@ static void r600_clear_texture(struct pipe_context *pipe,
 
 		/* Depth is always present. */
 		clear = PIPE_CLEAR_DEPTH;
-		desc->unpack_z_float(&depth, 0, data, 0, 1, 1);
+		util_format_unpack_z_float(tex->format, &depth, data, 1);
 
 		if (rtex->surface.has_stencil) {
 			clear |= PIPE_CLEAR_STENCIL;
-			desc->unpack_s_8uint(&stencil, 0, data, 0, 1, 1);
+			util_format_unpack_s_8uint(tex->format, &stencil, data, 1);
 		}
 
 		pipe->clear_depth_stencil(pipe, sf, clear, depth, stencil,
@@ -1648,13 +1643,7 @@ static void r600_clear_texture(struct pipe_context *pipe,
 	} else {
 		union pipe_color_union color;
 
-		/* pipe_color_union requires the full vec4 representation. */
-		if (util_format_is_pure_uint(tex->format))
-			desc->unpack_rgba_uint(color.ui, 0, data, 0, 1, 1);
-		else if (util_format_is_pure_sint(tex->format))
-			desc->unpack_rgba_sint(color.i, 0, data, 0, 1, 1);
-		else
-			desc->unpack_rgba_float(color.f, 0, data, 0, 1, 1);
+		util_format_unpack_rgba(tex->format, color.ui, data, 1);
 
 		if (screen->is_format_supported(screen, tex->format,
 						tex->target, 0, 0,
@@ -1751,12 +1740,8 @@ static void evergreen_set_clear_color(struct r600_texture *rtex,
 		       color->ui[0] == color->ui[2]);
 		uc.ui[0] = color->ui[0];
 		uc.ui[1] = color->ui[3];
-	} else if (util_format_is_pure_uint(surface_format)) {
-		util_format_write_4ui(surface_format, color->ui, 0, &uc, 0, 0, 0, 1, 1);
-	} else if (util_format_is_pure_sint(surface_format)) {
-		util_format_write_4i(surface_format, color->i, 0, &uc, 0, 0, 0, 1, 1);
 	} else {
-		util_pack_color(color->f, surface_format, &uc);
+		util_pack_color_union(surface_format, &uc, color);
 	}
 
 	memcpy(rtex->color_clear_value, &uc, 2 * sizeof(uint32_t));
@@ -1914,7 +1899,7 @@ r600_texture_from_memobj(struct pipe_screen *screen,
 	struct pb_buffer *buf = NULL;
 
 	if (memobj->b.dedicated) {
-		rscreen->ws->buffer_get_metadata(memobj->buf, &metadata);
+		rscreen->ws->buffer_get_metadata(rscreen->ws, memobj->buf, &metadata, NULL);
 		r600_surface_import_metadata(rscreen, &surface, &metadata,
 				     &array_mode, &is_scanout);
 	} else {

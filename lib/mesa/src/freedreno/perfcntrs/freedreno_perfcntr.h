@@ -27,6 +27,12 @@
 #ifndef FREEDRENO_PERFCNTR_H_
 #define FREEDRENO_PERFCNTR_H_
 
+#include "util/macros.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Mapping very closely to the AMD_performance_monitor extension, adreno has
  * groups of performance counters where each group has N counters, which can
@@ -121,5 +127,9 @@ const struct fd_perfcntr_group *fd_perfcntrs(unsigned gpu_id, unsigned *count);
 	.num_countables = ARRAY_SIZE(_countables),   \
 	.countables     = _countables,               \
 }
+
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif
 
 #endif /* FREEDRENO_PERFCNTR_H_ */

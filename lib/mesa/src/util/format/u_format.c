@@ -125,6 +125,18 @@ util_format_has_alpha(enum pipe_format format)
           desc->swizzle[3] != PIPE_SWIZZLE_1;
 }
 
+/** Test if format has alpha as 1 (like RGBX) */
+boolean
+util_format_has_alpha1(enum pipe_format format)
+{
+   const struct util_format_description *desc =
+      util_format_description(format);
+
+   return (desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB ||
+           desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB) &&
+           desc->nr_channels == 4 &&
+           desc->swizzle[3] == PIPE_SWIZZLE_1;
+}
 
 boolean
 util_format_is_luminance(enum pipe_format format)
@@ -220,6 +232,29 @@ util_format_is_unorm(enum pipe_format format)
    const struct util_format_description *desc = util_format_description(format);
 
    return desc->is_unorm;
+}
+
+/**
+ * Returns true if the format contains scaled integer format channels.
+ */
+boolean
+util_format_is_scaled(enum pipe_format format)
+{
+   const struct util_format_description *desc = util_format_description(format);
+   int i;
+
+   /* format none is described as scaled but not for this check */
+   if (format == PIPE_FORMAT_NONE)
+      return FALSE;
+
+   /* Find the first non-void channel. */
+   i = util_format_get_first_non_void_channel(format);
+   if (i == -1)
+      return FALSE;
+
+   return !desc->channel[i].pure_integer && !desc->channel[i].normalized &&
+      (desc->channel[i].type == UTIL_FORMAT_TYPE_SIGNED ||
+       desc->channel[i].type == UTIL_FORMAT_TYPE_UNSIGNED);
 }
 
 boolean
@@ -326,14 +361,15 @@ util_get_depth_format_mrd(const struct util_format_description *desc)
 
 
 void
-util_format_read_4f(enum pipe_format format,
-                    float *dst, unsigned dst_stride,
-                    const void *src, unsigned src_stride,
-                    unsigned x, unsigned y, unsigned w, unsigned h)
+util_format_read_4(enum pipe_format format,
+                   void *dst, unsigned dst_stride,
+                   const void *src, unsigned src_stride,
+                   unsigned x, unsigned y, unsigned w, unsigned h)
 {
    const struct util_format_description *format_desc;
+   const struct util_format_unpack_description *unpack =
+      util_format_unpack_description(format);
    const uint8_t *src_row;
-   float *dst_row;
 
    format_desc = util_format_description(format);
 
@@ -341,21 +377,21 @@ util_format_read_4f(enum pipe_format format,
    assert(y % format_desc->block.height == 0);
 
    src_row = (const uint8_t *)src + y*src_stride + x*(format_desc->block.bits/8);
-   dst_row = dst;
 
-   format_desc->unpack_rgba_float(dst_row, dst_stride, src_row, src_stride, w, h);
+   unpack->unpack_rgba(dst, dst_stride, src_row, src_stride, w, h);
 }
 
 
 void
-util_format_write_4f(enum pipe_format format,
-                     const float *src, unsigned src_stride,
+util_format_write_4(enum pipe_format format,
+                     const void *src, unsigned src_stride,
                      void *dst, unsigned dst_stride,
                      unsigned x, unsigned y, unsigned w, unsigned h)
 {
    const struct util_format_description *format_desc;
+   const struct util_format_pack_description *pack =
+      util_format_pack_description(format);
    uint8_t *dst_row;
-   const float *src_row;
 
    format_desc = util_format_description(format);
 
@@ -363,9 +399,13 @@ util_format_write_4f(enum pipe_format format,
    assert(y % format_desc->block.height == 0);
 
    dst_row = (uint8_t *)dst + y*dst_stride + x*(format_desc->block.bits/8);
-   src_row = src;
 
-   format_desc->pack_rgba_float(dst_row, dst_stride, src_row, src_stride, w, h);
+   if (util_format_is_pure_uint(format))
+      pack->pack_rgba_uint(dst_row, dst_stride, src, src_stride, w, h);
+   else if (util_format_is_pure_sint(format))
+      pack->pack_rgba_sint(dst_row, dst_stride, src, src_stride, w, h);
+   else
+      pack->pack_rgba_float(dst_row, dst_stride, src, src_stride, w, h);
 }
 
 
@@ -373,6 +413,8 @@ void
 util_format_read_4ub(enum pipe_format format, uint8_t *dst, unsigned dst_stride, const void *src, unsigned src_stride, unsigned x, unsigned y, unsigned w, unsigned h)
 {
    const struct util_format_description *format_desc;
+   const struct util_format_unpack_description *unpack =
+      util_format_unpack_description(format);
    const uint8_t *src_row;
    uint8_t *dst_row;
 
@@ -384,7 +426,7 @@ util_format_read_4ub(enum pipe_format format, uint8_t *dst, unsigned dst_stride,
    src_row = (const uint8_t *)src + y*src_stride + x*(format_desc->block.bits/8);
    dst_row = dst;
 
-   format_desc->unpack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, w, h);
+   unpack->unpack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, w, h);
 }
 
 
@@ -392,6 +434,8 @@ void
 util_format_write_4ub(enum pipe_format format, const uint8_t *src, unsigned src_stride, void *dst, unsigned dst_stride, unsigned x, unsigned y, unsigned w, unsigned h)
 {
    const struct util_format_description *format_desc;
+   const struct util_format_pack_description *pack =
+      util_format_pack_description(format);
    uint8_t *dst_row;
    const uint8_t *src_row;
 
@@ -403,91 +447,7 @@ util_format_write_4ub(enum pipe_format format, const uint8_t *src, unsigned src_
    dst_row = (uint8_t *)dst + y*dst_stride + x*(format_desc->block.bits/8);
    src_row = src;
 
-   format_desc->pack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, w, h);
-}
-
-void
-util_format_read_4ui(enum pipe_format format,
-                     unsigned *dst, unsigned dst_stride,
-                     const void *src, unsigned src_stride,
-                     unsigned x, unsigned y, unsigned w, unsigned h)
-{
-   const struct util_format_description *format_desc;
-   const uint8_t *src_row;
-   uint32_t *dst_row;
-
-   format_desc = util_format_description(format);
-
-   assert(x % format_desc->block.width == 0);
-   assert(y % format_desc->block.height == 0);
-
-   src_row = (const uint8_t *)src + y*src_stride + x*(format_desc->block.bits/8);
-   dst_row = dst;
-
-   format_desc->unpack_rgba_uint(dst_row, dst_stride, src_row, src_stride, w, h);
-}
-
-void
-util_format_write_4ui(enum pipe_format format,
-                      const unsigned int *src, unsigned src_stride,
-                      void *dst, unsigned dst_stride,
-                      unsigned x, unsigned y, unsigned w, unsigned h)
-{
-   const struct util_format_description *format_desc;
-   uint8_t *dst_row;
-   const uint32_t *src_row;
-
-   format_desc = util_format_description(format);
-
-   assert(x % format_desc->block.width == 0);
-   assert(y % format_desc->block.height == 0);
-
-   dst_row = (uint8_t *)dst + y*dst_stride + x*(format_desc->block.bits/8);
-   src_row = src;
-
-   format_desc->pack_rgba_uint(dst_row, dst_stride, src_row, src_stride, w, h);
-}
-
-void
-util_format_read_4i(enum pipe_format format,
-                    int *dst, unsigned dst_stride,
-                    const void *src, unsigned src_stride,
-                    unsigned x, unsigned y, unsigned w, unsigned h)
-{
-   const struct util_format_description *format_desc;
-   const uint8_t *src_row;
-   int32_t *dst_row;
-
-   format_desc = util_format_description(format);
-
-   assert(x % format_desc->block.width == 0);
-   assert(y % format_desc->block.height == 0);
-
-   src_row = (const uint8_t *)src + y*src_stride + x*(format_desc->block.bits/8);
-   dst_row = dst;
-
-   format_desc->unpack_rgba_sint(dst_row, dst_stride, src_row, src_stride, w, h);
-}
-
-void
-util_format_write_4i(enum pipe_format format,
-                      const int *src, unsigned src_stride,
-                      void *dst, unsigned dst_stride,
-                      unsigned x, unsigned y, unsigned w, unsigned h)
-{
-   const struct util_format_description *format_desc;
-   uint8_t *dst_row;
-   const int32_t *src_row;
-
-   format_desc = util_format_description(format);
-
-   assert(x % format_desc->block.width == 0);
-   assert(y % format_desc->block.height == 0);
-
-   dst_row = (uint8_t *)dst + y*dst_stride + x*(format_desc->block.bits/8);
-   src_row = src;
-
-   format_desc->pack_rgba_sint(dst_row, dst_stride, src_row, src_stride, w, h);
+   pack->pack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, w, h);
 }
 
 /**
@@ -651,6 +611,10 @@ util_format_translate(enum pipe_format dst_format,
 {
    const struct util_format_description *dst_format_desc;
    const struct util_format_description *src_format_desc;
+   const struct util_format_pack_description *pack =
+      util_format_pack_description(dst_format);
+   const struct util_format_unpack_description *unpack =
+      util_format_unpack_description(src_format);
    uint8_t *dst_row;
    const uint8_t *src_row;
    unsigned x_step, y_step;
@@ -705,25 +669,23 @@ util_format_translate(enum pipe_format dst_format,
       assert(x_step == 1);
       assert(y_step == 1);
 
-      if (src_format_desc->unpack_z_float &&
-          dst_format_desc->pack_z_float) {
+      if (unpack->unpack_z_float && pack->pack_z_float) {
          tmp_z = malloc(width * sizeof *tmp_z);
       }
 
-      if (src_format_desc->unpack_s_8uint &&
-          dst_format_desc->pack_s_8uint) {
+      if (unpack->unpack_s_8uint && pack->pack_s_8uint) {
          tmp_s = malloc(width * sizeof *tmp_s);
       }
 
       while (height--) {
          if (tmp_z) {
-            src_format_desc->unpack_z_float(tmp_z, 0, src_row, src_stride, width, 1);
-            dst_format_desc->pack_z_float(dst_row, dst_stride, tmp_z, 0, width, 1);
+            util_format_unpack_z_float(src_format, tmp_z, src_row, width);
+            util_format_pack_z_float(dst_format, dst_row, tmp_z, width);
          }
 
          if (tmp_s) {
-            src_format_desc->unpack_s_8uint(tmp_s, 0, src_row, src_stride, width, 1);
-            dst_format_desc->pack_s_8uint(dst_row, dst_stride, tmp_s, 0, width, 1);
+            util_format_unpack_s_8uint(src_format, tmp_s, src_row, width);
+            util_format_pack_s_8uint(dst_format, dst_row, tmp_s, width);
          }
 
          dst_row += dst_step;
@@ -742,8 +704,8 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       uint8_t *tmp_row;
 
-      if (!src_format_desc->unpack_rgba_8unorm ||
-          !dst_format_desc->pack_rgba_8unorm) {
+      if (!unpack->unpack_rgba_8unorm ||
+          !pack->pack_rgba_8unorm) {
          return FALSE;
       }
 
@@ -753,8 +715,8 @@ util_format_translate(enum pipe_format dst_format,
          return FALSE;
 
       while (height >= y_step) {
-         src_format_desc->unpack_rgba_8unorm(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
-         dst_format_desc->pack_rgba_8unorm(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
+         unpack->unpack_rgba_8unorm(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
+         pack->pack_rgba_8unorm(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
 
          dst_row += dst_step;
          src_row += src_step;
@@ -762,8 +724,8 @@ util_format_translate(enum pipe_format dst_format,
       }
 
       if (height) {
-         src_format_desc->unpack_rgba_8unorm(tmp_row, tmp_stride, src_row, src_stride, width, height);
-         dst_format_desc->pack_rgba_8unorm(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
+         unpack->unpack_rgba_8unorm(tmp_row, tmp_stride, src_row, src_stride, width, height);
+         pack->pack_rgba_8unorm(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
       }
 
       free(tmp_row);
@@ -773,8 +735,8 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       int *tmp_row;
 
-      if (!src_format_desc->unpack_rgba_sint ||
-          !dst_format_desc->pack_rgba_sint) {
+      if (util_format_is_pure_sint(src_format) !=
+          util_format_is_pure_sint(dst_format)) {
          return FALSE;
       }
 
@@ -784,8 +746,8 @@ util_format_translate(enum pipe_format dst_format,
          return FALSE;
 
       while (height >= y_step) {
-         src_format_desc->unpack_rgba_sint(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
-         dst_format_desc->pack_rgba_sint(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
+         pack->pack_rgba_sint(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
 
          dst_row += dst_step;
          src_row += src_step;
@@ -793,8 +755,8 @@ util_format_translate(enum pipe_format dst_format,
       }
 
       if (height) {
-         src_format_desc->unpack_rgba_sint(tmp_row, tmp_stride, src_row, src_stride, width, height);
-         dst_format_desc->pack_rgba_sint(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, height);
+         pack->pack_rgba_sint(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
       }
 
       free(tmp_row);
@@ -804,8 +766,8 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       unsigned int *tmp_row;
 
-      if (!src_format_desc->unpack_rgba_uint ||
-          !dst_format_desc->pack_rgba_uint) {
+      if (!unpack->unpack_rgba ||
+          !pack->pack_rgba_uint) {
          return FALSE;
       }
 
@@ -815,8 +777,8 @@ util_format_translate(enum pipe_format dst_format,
          return FALSE;
 
       while (height >= y_step) {
-         src_format_desc->unpack_rgba_uint(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
-         dst_format_desc->pack_rgba_uint(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
+         pack->pack_rgba_uint(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
 
          dst_row += dst_step;
          src_row += src_step;
@@ -824,8 +786,8 @@ util_format_translate(enum pipe_format dst_format,
       }
 
       if (height) {
-         src_format_desc->unpack_rgba_uint(tmp_row, tmp_stride, src_row, src_stride, width, height);
-         dst_format_desc->pack_rgba_uint(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, height);
+         pack->pack_rgba_uint(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
       }
 
       free(tmp_row);
@@ -834,8 +796,8 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       float *tmp_row;
 
-      if (!src_format_desc->unpack_rgba_float ||
-          !dst_format_desc->pack_rgba_float) {
+      if (!unpack->unpack_rgba ||
+          !pack->pack_rgba_float) {
          return FALSE;
       }
 
@@ -845,8 +807,8 @@ util_format_translate(enum pipe_format dst_format,
          return FALSE;
 
       while (height >= y_step) {
-         src_format_desc->unpack_rgba_float(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
-         dst_format_desc->pack_rgba_float(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
+         pack->pack_rgba_float(dst_row, dst_stride, tmp_row, tmp_stride, width, y_step);
 
          dst_row += dst_step;
          src_row += src_step;
@@ -854,8 +816,8 @@ util_format_translate(enum pipe_format dst_format,
       }
 
       if (height) {
-         src_format_desc->unpack_rgba_float(tmp_row, tmp_stride, src_row, src_stride, width, height);
-         dst_format_desc->pack_rgba_float(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
+         unpack->unpack_rgba(tmp_row, tmp_stride, src_row, src_stride, width, height);
+         pack->pack_rgba_float(dst_row, dst_stride, tmp_row, tmp_stride, width, height);
       }
 
       free(tmp_row);
@@ -1005,38 +967,131 @@ util_format_snorm8_to_sint8(enum pipe_format format)
 
    case PIPE_FORMAT_R8G8B8X8_SNORM:
       return PIPE_FORMAT_R8G8B8X8_SINT;
+   case PIPE_FORMAT_B8G8R8X8_SNORM:
+      return PIPE_FORMAT_B8G8R8X8_SINT;
+
    case PIPE_FORMAT_R8A8_SNORM:
       return PIPE_FORMAT_R8A8_SINT;
    case PIPE_FORMAT_G8R8_SNORM:
       return PIPE_FORMAT_G8R8_SINT;
+
+   case PIPE_FORMAT_A8R8G8B8_SNORM:
+      return PIPE_FORMAT_A8R8G8B8_SINT;
+   case PIPE_FORMAT_X8R8G8B8_SNORM:
+      return PIPE_FORMAT_X8R8G8B8_SINT;
+
    case PIPE_FORMAT_A8B8G8R8_SNORM:
       return PIPE_FORMAT_A8B8G8R8_SINT;
    case PIPE_FORMAT_X8B8G8R8_SNORM:
       return PIPE_FORMAT_X8B8G8R8_SINT;
+
+   case PIPE_FORMAT_R10G10B10A2_SNORM:
+      return PIPE_FORMAT_R10G10B10A2_SINT;
+   case PIPE_FORMAT_B10G10R10A2_SNORM:
+      return PIPE_FORMAT_B10G10R10A2_SINT;
 
    default:
       return format;
    }
 }
 
-bool
-util_format_planar_is_supported(struct pipe_screen *screen,
-                                enum pipe_format format,
-                                enum pipe_texture_target target,
-                                unsigned sample_count,
-                                unsigned storage_sample_count,
-                                unsigned bind)
+/**
+ * If the format is RGB, return BGR. If the format is BGR, return RGB.
+ * This may fail by returning PIPE_FORMAT_NONE.
+ */
+enum pipe_format
+util_format_rgb_to_bgr(enum pipe_format format)
 {
-   unsigned num_planes = util_format_get_num_planes(format);
-   assert(num_planes >= 2);
+#define REMAP_RGB_ONE(r, rs, g, gs, b, bs, type) \
+   case PIPE_FORMAT_##r##rs##g##gs##b##bs##_##type: \
+      return PIPE_FORMAT_##b##bs##g##gs##r##rs##_##type;
 
-   for (unsigned i = 0; i < num_planes; i++) {
-      if (!screen->is_format_supported(screen,
-                                       util_format_get_plane_format(format, i),
-                                       target, sample_count,
-                                       storage_sample_count, bind))
-         return false;
+#define REMAP_RGB(rs, gs, bs, type) \
+   REMAP_RGB_ONE(R, rs, G, gs, B, bs, type) \
+   REMAP_RGB_ONE(B, bs, G, gs, R, rs, type) \
+
+#define REMAP_RGBA_ONE(r, rs, g, gs, b, bs, a, as, type) \
+   case PIPE_FORMAT_##r##rs##g##gs##b##bs##a##as##_##type: \
+      return PIPE_FORMAT_##b##bs##g##gs##r##rs##a##as##_##type;
+
+#define REMAP_ARGB_ONE(a, as, r, rs, g, gs, b, bs, type) \
+   case PIPE_FORMAT_##a##as##r##rs##g##gs##b##bs##_##type: \
+      return PIPE_FORMAT_##a##as##b##bs##g##gs##r##rs##_##type;
+
+#define REMAP_RGB_AX(A, rs, gs, bs, as, type) \
+   REMAP_RGBA_ONE(R, rs, G, gs, B, bs, A, as, type) \
+   REMAP_RGBA_ONE(B, bs, G, gs, R, rs, A, as, type) \
+
+#define REMAP_AX_RGB(A, rs, gs, bs, as, type) \
+   REMAP_ARGB_ONE(A, as, R, rs, G, gs, B, bs, type) \
+   REMAP_ARGB_ONE(A, as, B, bs, G, gs, R, rs, type) \
+
+#define REMAP_RGBA(rs, gs, bs, as, type) REMAP_RGB_AX(A, rs, gs, bs, as, type)
+#define REMAP_RGBX(rs, gs, bs, as, type) REMAP_RGB_AX(X, rs, gs, bs, as, type)
+#define REMAP_ARGB(rs, gs, bs, as, type) REMAP_AX_RGB(A, rs, gs, bs, as, type)
+#define REMAP_XRGB(rs, gs, bs, as, type) REMAP_AX_RGB(X, rs, gs, bs, as, type)
+
+#define REMAP_RGBA_ALL(rs, gs, bs, as, type) \
+   REMAP_RGBA(rs, gs, bs, as, type) \
+   REMAP_RGBX(rs, gs, bs, as, type) \
+   REMAP_ARGB(rs, gs, bs, as, type) \
+   REMAP_XRGB(rs, gs, bs, as, type)
+
+   switch (format) {
+   REMAP_RGB(3, 3, 2, UNORM);
+   REMAP_RGB(3, 3, 2, UINT);
+   REMAP_RGB(5, 6, 5, SRGB);
+   REMAP_RGB(5, 6, 5, UNORM);
+   REMAP_RGB(5, 6, 5, UINT);
+   REMAP_RGB(8, 8, 8, SRGB);
+   REMAP_RGB(8, 8, 8, UNORM);
+   REMAP_RGB(8, 8, 8, SNORM);
+   REMAP_RGB(8, 8, 8, UINT);
+   REMAP_RGB(8, 8, 8, SINT);
+   REMAP_RGB(8, 8, 8, USCALED);
+   REMAP_RGB(8, 8, 8, SSCALED);
+
+   /* Complete format sets. */
+   REMAP_RGBA_ALL(5, 5, 5, 1, UNORM);
+   REMAP_RGBA_ALL(8, 8, 8, 8, SRGB);
+   REMAP_RGBA_ALL(8, 8, 8, 8, UNORM);
+   REMAP_RGBA_ALL(8, 8, 8, 8, SNORM);
+   REMAP_RGBA_ALL(8, 8, 8, 8, SINT);
+
+   /* Format sets missing XRGB/XBGR. */
+   REMAP_RGBA(4, 4, 4, 4, UNORM);
+   REMAP_RGBX(4, 4, 4, 4, UNORM);
+   REMAP_ARGB(4, 4, 4, 4, UNORM);
+
+   REMAP_RGBA(8, 8, 8, 8, UINT);
+   REMAP_RGBX(8, 8, 8, 8, UINT);
+   REMAP_ARGB(8, 8, 8, 8, UINT);
+
+   REMAP_RGBA(10, 10, 10, 2, UNORM);
+   REMAP_RGBX(10, 10, 10, 2, UNORM);
+   REMAP_ARGB(10, 10, 10, 2, UNORM);
+
+   /* Format sets missing a half of combinations. */
+   REMAP_RGBA(4, 4, 4, 4, UINT);
+   REMAP_ARGB(4, 4, 4, 4, UINT);
+
+   REMAP_RGBA(5, 5, 5, 1, UINT);
+   REMAP_ARGB(5, 5, 5, 1, UINT);
+
+   REMAP_RGBA(10, 10, 10, 2, SNORM);
+   REMAP_RGBX(10, 10, 10, 2, SNORM);
+
+   REMAP_RGBA(10, 10, 10, 2, UINT);
+   REMAP_ARGB(10, 10, 10, 2, UINT);
+
+   /* Format sets having only RGBA/BGRA. */
+   REMAP_RGBA(8, 8, 8, 8, USCALED);
+   REMAP_RGBA(8, 8, 8, 8, SSCALED);
+   REMAP_RGBA(10, 10, 10, 2, SINT);
+   REMAP_RGBA(10, 10, 10, 2, USCALED);
+   REMAP_RGBA(10, 10, 10, 2, SSCALED);
+
+   default:
+      return PIPE_FORMAT_NONE;
    }
-
-   return true;
 }

@@ -49,20 +49,16 @@ typedef struct {
 static nir_ssa_def *
 load_frag_coord(nir_builder *b)
 {
-   int max_driver_loc = -1;
-   nir_foreach_variable(var, &b->shader->inputs) {
+   nir_foreach_shader_in_variable(var, b->shader) {
       if (var->data.location == VARYING_SLOT_POS)
          return nir_load_var(b, var);
-      if (max_driver_loc < (int)var->data.driver_location)
-         max_driver_loc = var->data.driver_location;
    }
 
    nir_variable *pos = nir_variable_create(b->shader, nir_var_shader_in,
                                            glsl_vec4_type(), NULL);
    pos->data.location = VARYING_SLOT_POS;
    pos->data.interpolation = INTERP_MODE_NOPERSPECTIVE;
-   pos->data.driver_location = max_driver_loc + 1;
-   b->shader->num_inputs++;
+   pos->data.driver_location = b->shader->num_inputs++;
    return nir_load_var(b, pos);
 }
 
@@ -75,17 +71,16 @@ nir_lower_pstipple_block(nir_block *block,
 
    b->cursor = nir_before_block(block);
 
-   nir_ssa_def *div32 = nir_imm_vec2(b, 1.0/32.0, 1.0/32.0);
-
    nir_ssa_def *frag_coord = state->fs_pos_is_sysval ? nir_load_frag_coord(b) : load_frag_coord(b);
 
-   texcoord = nir_fmul(b, frag_coord, div32);
+   texcoord = nir_fmul(b, nir_channels(b, frag_coord, 0x3),
+                       nir_imm_vec2(b, 1.0/32.0, 1.0/32.0));
 
    nir_tex_instr *tex = nir_tex_instr_create(b->shader, 1);
    tex->op = nir_texop_tex;
    tex->sampler_dim = GLSL_SAMPLER_DIM_2D;
    tex->coord_components = 2;
-   tex->dest_type = nir_type_float;
+   tex->dest_type = nir_type_float32;
    tex->texture_index = state->stip_tex->data.binding;
    tex->sampler_index = state->stip_tex->data.binding;
    tex->src[0].src_type = nir_tex_src_coord;
@@ -95,9 +90,7 @@ nir_lower_pstipple_block(nir_block *block,
    nir_builder_instr_insert(b, &tex->instr);
 
    nir_ssa_def *condition = nir_f2b32(b, nir_channel(b, &tex->dest.ssa, 3));
-   nir_intrinsic_instr *discard = nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard_if);
-   discard->src[0] = nir_src_for_ssa(condition);
-   nir_builder_instr_insert(b, &discard->instr);
+   nir_discard_if(b, condition);
    b->shader->info.fs.uses_discard = true;
 }
 
@@ -127,7 +120,7 @@ nir_lower_pstipple_fs(struct nir_shader *shader,
       return;
 
    int binding = 0;
-   nir_foreach_variable(var, &shader->uniforms) {
+   nir_foreach_uniform_variable(var, shader) {
       if (glsl_type_is_sampler(var->type)) {
          if (var->data.binding >= binding)
             binding = var->data.binding + 1;
@@ -141,7 +134,7 @@ nir_lower_pstipple_fs(struct nir_shader *shader,
    tex_var->data.explicit_binding = true;
    tex_var->data.how_declared = nir_var_hidden;
 
-   shader->info.textures_used |= (1 << binding);
+   BITSET_SET(shader->info.textures_used, binding);
    state.stip_tex = tex_var;
 
    nir_foreach_function(function, shader) {
@@ -220,7 +213,7 @@ nir_lower_aaline_fs(struct nir_shader *shader, int *varying)
       return;
 
    int highest_location = -1, highest_drv_location = -1;
-   nir_foreach_variable(var, &shader->inputs) {
+   nir_foreach_shader_in_variable(var, shader) {
      if ((int)var->data.location > highest_location)
          highest_location = var->data.location;
      if ((int)var->data.driver_location > highest_drv_location)
@@ -305,9 +298,7 @@ nir_lower_aapoint_impl(nir_function_impl *impl,
    nir_ssa_def *chan_val_one = nir_channel(b, aainput, 3);
    nir_ssa_def *comp = nir_flt32(b, chan_val_one, dist);
 
-   nir_intrinsic_instr *discard = nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard_if);
-   discard->src[0] = nir_src_for_ssa(comp);
-   nir_builder_instr_insert(b, &discard->instr);
+   nir_discard_if(b, comp);
    b->shader->info.fs.uses_discard = true;
 
    /* compute coverage factor = (1-d)/(1-k) */
@@ -344,7 +335,7 @@ nir_lower_aapoint_fs(struct nir_shader *shader, int *varying)
       return;
 
    int highest_location = -1, highest_drv_location = -1;
-   nir_foreach_variable(var, &shader->inputs) {
+   nir_foreach_shader_in_variable(var, shader) {
      if ((int)var->data.location > highest_location)
          highest_location = var->data.location;
      if ((int)var->data.driver_location > highest_drv_location)

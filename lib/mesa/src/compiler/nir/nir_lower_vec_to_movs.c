@@ -26,6 +26,12 @@
  */
 
 #include "nir.h"
+#include "nir_builder.h"
+
+struct vec_to_movs_data {
+   nir_instr_writemask_filter_cb cb;
+   const void *data;
+};
 
 /*
  * Implements a simple pass that lowers vecN instructions to a series of
@@ -56,6 +62,10 @@ static unsigned
 insert_mov(nir_alu_instr *vec, unsigned start_idx, nir_shader *shader)
 {
    assert(start_idx < nir_op_infos[vec->op].num_inputs);
+
+   /* No sense generating a MOV from undef, we can just leave the dst channel undef. */
+   if (nir_src_is_undef(vec->src[start_idx].src))
+      return 1 << start_idx;
 
    nir_alu_instr *mov = nir_alu_instr_create(shader, nir_op_mov);
    nir_alu_src_copy(&mov->src[0], &vec->src[start_idx], mov);
@@ -106,9 +116,9 @@ insert_mov(nir_alu_instr *vec, unsigned start_idx, nir_shader *shader)
 static bool
 has_replicated_dest(nir_alu_instr *alu)
 {
-   return alu->op == nir_op_fdot_replicated2 ||
-          alu->op == nir_op_fdot_replicated3 ||
-          alu->op == nir_op_fdot_replicated4 ||
+   return alu->op == nir_op_fdot2_replicated ||
+          alu->op == nir_op_fdot3_replicated ||
+          alu->op == nir_op_fdot4_replicated ||
           alu->op == nir_op_fdph_replicated;
 }
 
@@ -118,8 +128,10 @@ has_replicated_dest(nir_alu_instr *alu)
  * can then call insert_mov as normal.
  */
 static unsigned
-try_coalesce(nir_alu_instr *vec, unsigned start_idx)
+try_coalesce(nir_alu_instr *vec, unsigned start_idx, void *_data)
 {
+   struct vec_to_movs_data *data = _data;
+
    assert(start_idx < nir_op_infos[vec->op].num_inputs);
 
    /* We will only even try if the source is SSA */
@@ -177,6 +189,7 @@ try_coalesce(nir_alu_instr *vec, unsigned start_idx)
       for (unsigned i = 0; i < 4; i++)
          swizzles[j][i] = src_alu->src[j].swizzle[i];
 
+   /* Generate the final write mask */
    unsigned write_mask = 0;
    for (unsigned i = start_idx; i < 4; i++) {
       if (!(vec->dest.write_mask & (1 << i)))
@@ -186,10 +199,21 @@ try_coalesce(nir_alu_instr *vec, unsigned start_idx)
           vec->src[i].src.ssa != &src_alu->dest.dest.ssa)
          continue;
 
-      /* At this point, the give vec source matchese up with the ALU
+      write_mask |= 1 << i;
+   }
+
+   /* If the instruction would be vectorized but the backend
+    * doesn't support vectorizing this op, abort. */
+   if (data->cb && !data->cb(&src_alu->instr, write_mask, data->data))
+      return 0;
+
+   for (unsigned i = start_idx; i < 4; i++) {
+      if (!(write_mask & (1 << i)))
+         continue;
+
+      /* At this point, the given vec source matches up with the ALU
        * instruction so we can re-swizzle that component to match.
        */
-      write_mask |= 1 << i;
       if (has_replicated_dest(src_alu)) {
          /* Since the destination is a single replicated value, we don't need
           * to do any reswizzling
@@ -210,105 +234,85 @@ try_coalesce(nir_alu_instr *vec, unsigned start_idx)
 }
 
 static bool
-lower_vec_to_movs_block(nir_block *block, nir_function_impl *impl)
+nir_lower_vec_to_movs_instr(nir_builder *b, nir_instr *instr, void *data)
 {
-   bool progress = false;
-   nir_shader *shader = impl->function->shader;
+   if (instr->type != nir_instr_type_alu)
+      return false;
 
-   nir_foreach_instr_safe(instr, block) {
-      if (instr->type != nir_instr_type_alu)
+   nir_alu_instr *vec = nir_instr_as_alu(instr);
+
+   switch (vec->op) {
+   case nir_op_vec2:
+   case nir_op_vec3:
+   case nir_op_vec4:
+      break;
+   default:
+      return false;
+   }
+
+   bool vec_had_ssa_dest = vec->dest.dest.is_ssa;
+   if (vec->dest.dest.is_ssa) {
+      /* Since we insert multiple MOVs, we have a register destination. */
+      nir_register *reg = nir_local_reg_create(b->impl);
+      reg->num_components = vec->dest.dest.ssa.num_components;
+      reg->bit_size = vec->dest.dest.ssa.bit_size;
+
+      nir_ssa_def_rewrite_uses_src(&vec->dest.dest.ssa, nir_src_for_reg(reg));
+
+      nir_instr_rewrite_dest(&vec->instr, &vec->dest.dest,
+                             nir_dest_for_reg(reg));
+   }
+
+   unsigned finished_write_mask = 0;
+
+   /* First, emit a MOV for all the src channels that are in the
+    * destination reg, in case other values we're populating in the dest
+    * might overwrite them.
+    */
+   for (unsigned i = 0; i < 4; i++) {
+      if (!(vec->dest.write_mask & (1 << i)))
          continue;
 
-      nir_alu_instr *vec = nir_instr_as_alu(instr);
-
-      switch (vec->op) {
-      case nir_op_vec2:
-      case nir_op_vec3:
-      case nir_op_vec4:
+      if (src_matches_dest_reg(&vec->dest.dest, &vec->src[i].src)) {
+         finished_write_mask |= insert_mov(vec, i, b->shader);
          break;
-      default:
-         continue; /* The loop */
       }
+   }
 
-      bool vec_had_ssa_dest = vec->dest.dest.is_ssa;
-      if (vec->dest.dest.is_ssa) {
-         /* Since we insert multiple MOVs, we have a register destination. */
-         nir_register *reg = nir_local_reg_create(impl);
-         reg->num_components = vec->dest.dest.ssa.num_components;
-         reg->bit_size = vec->dest.dest.ssa.bit_size;
+   /* Now, emit MOVs for all the other src channels. */
+   for (unsigned i = 0; i < 4; i++) {
+      if (!(vec->dest.write_mask & (1 << i)))
+         continue;
 
-         nir_ssa_def_rewrite_uses(&vec->dest.dest.ssa, nir_src_for_reg(reg));
-
-         nir_instr_rewrite_dest(&vec->instr, &vec->dest.dest,
-                                nir_dest_for_reg(reg));
-      }
-
-      unsigned finished_write_mask = 0;
-
-      /* First, emit a MOV for all the src channels that are in the
-       * destination reg, in case other values we're populating in the dest
-       * might overwrite them.
+      /* Coalescing moves the register writes from the vec up to the ALU
+       * instruction in the source.  We can only do this if the original
+       * vecN had an SSA destination.
        */
-      for (unsigned i = 0; i < 4; i++) {
-         if (!(vec->dest.write_mask & (1 << i)))
-            continue;
+      if (vec_had_ssa_dest && !(finished_write_mask & (1 << i)))
+         finished_write_mask |= try_coalesce(vec, i, data);
 
-         if (src_matches_dest_reg(&vec->dest.dest, &vec->src[i].src)) {
-            finished_write_mask |= insert_mov(vec, i, shader);
-            break;
-         }
-      }
-
-      /* Now, emit MOVs for all the other src channels. */
-      for (unsigned i = 0; i < 4; i++) {
-         if (!(vec->dest.write_mask & (1 << i)))
-            continue;
-
-         /* Coalescing moves the register writes from the vec up to the ALU
-          * instruction in the source.  We can only do this if the original
-          * vecN had an SSA destination.
-          */
-         if (vec_had_ssa_dest && !(finished_write_mask & (1 << i)))
-            finished_write_mask |= try_coalesce(vec, i);
-
-         if (!(finished_write_mask & (1 << i)))
-            finished_write_mask |= insert_mov(vec, i, shader);
-      }
-
-      nir_instr_remove(&vec->instr);
-      ralloc_free(vec);
-      progress = true;
+      if (!(finished_write_mask & (1 << i)))
+         finished_write_mask |= insert_mov(vec, i, b->shader);
    }
 
-   return progress;
-}
+   nir_instr_remove(&vec->instr);
+   ralloc_free(vec);
 
-static bool
-nir_lower_vec_to_movs_impl(nir_function_impl *impl)
-{
-   bool progress = false;
-
-   nir_foreach_block(block, impl) {
-      progress |= lower_vec_to_movs_block(block, impl);
-   }
-
-   if (progress) {
-      nir_metadata_preserve(impl, nir_metadata_block_index |
-                                  nir_metadata_dominance);
-   }
-
-   return progress;
+   return true;
 }
 
 bool
-nir_lower_vec_to_movs(nir_shader *shader)
+nir_lower_vec_to_movs(nir_shader *shader, nir_instr_writemask_filter_cb cb,
+                      const void *_data)
 {
-   bool progress = false;
+   struct vec_to_movs_data data = {
+      .cb = cb,
+      .data = _data,
+   };
 
-   nir_foreach_function(function, shader) {
-      if (function->impl)
-         progress = nir_lower_vec_to_movs_impl(function->impl) || progress;
-   }
-
-   return progress;
+   return nir_shader_instructions_pass(shader,
+                                       nir_lower_vec_to_movs_instr,
+                                       nir_metadata_block_index |
+                                       nir_metadata_dominance,
+                                       &data);
 }

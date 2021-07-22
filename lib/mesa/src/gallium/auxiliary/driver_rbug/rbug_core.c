@@ -44,11 +44,8 @@
 
 #include <errno.h>
 
-#define U642VOID(x) ((void *)(unsigned long)(x))
-#define VOID2U64(x) ((uint64_t)(unsigned long)(x))
-
-#define container_of(ptr, type, field) \
-   (type*)((char*)ptr - offsetof(type, field))
+#define U642VOID(x) ((void *)(uintptr_t)(x))
+#define VOID2U64(x) ((uint64_t)(uintptr_t)(x))
 
 struct rbug_rbug
 {
@@ -272,7 +269,7 @@ rbug_texture_read(struct rbug_rbug *tr_rbug, struct rbug_header *header, uint32_
    tex = tr_tex->resource;
    map = pipe_transfer_map(context, tex,
                            gptr->level, gptr->face + gptr->zslice,
-                           PIPE_TRANSFER_READ,
+                           PIPE_MAP_READ,
                            gptr->x, gptr->y, gptr->w, gptr->h, &t);
 
    rbug_send_texture_read_reply(tr_rbug->con, serial,
@@ -577,17 +574,19 @@ rbug_shader_info(struct rbug_rbug *tr_rbug, struct rbug_header *header, uint32_t
    /* just in case */
    assert(sizeof(struct tgsi_token) == 4);
 
-   original_len = tgsi_num_tokens(tr_shdr->tokens);
-   if (tr_shdr->replaced_tokens)
-      replaced_len = tgsi_num_tokens(tr_shdr->replaced_tokens);
-   else
-      replaced_len = 0;
+   if (tr_shdr->tokens) {
+           original_len = tgsi_num_tokens(tr_shdr->tokens);
+           if (tr_shdr->replaced_tokens)
+                   replaced_len = tgsi_num_tokens(tr_shdr->replaced_tokens);
+           else
+                   replaced_len = 0;
 
-   rbug_send_shader_info_reply(tr_rbug->con, serial,
-                               (uint32_t*)tr_shdr->tokens, original_len,
-                               (uint32_t*)tr_shdr->replaced_tokens, replaced_len,
-                               tr_shdr->disabled,
-                               NULL);
+           rbug_send_shader_info_reply(tr_rbug->con, serial,
+                                       (uint32_t*)tr_shdr->tokens, original_len,
+                                       (uint32_t*)tr_shdr->replaced_tokens, replaced_len,
+                                       tr_shdr->disabled,
+                                       NULL);
+   }
 
    mtx_unlock(&rb_context->list_mutex);
    mtx_unlock(&rb_screen->list_mutex);

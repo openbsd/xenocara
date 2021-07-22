@@ -161,6 +161,7 @@ static bool noop_resource_get_param(struct pipe_screen *pscreen,
                                     struct pipe_resource *resource,
                                     unsigned plane,
                                     unsigned layer,
+                                    unsigned level,
                                     enum pipe_resource_param param,
                                     unsigned handle_usage,
                                     uint64_t *value)
@@ -175,7 +176,7 @@ static bool noop_resource_get_param(struct pipe_screen *pscreen,
    if (!tex)
       return false;
 
-   result = screen->resource_get_param(screen, NULL, tex, 0, 0, param,
+   result = screen->resource_get_param(screen, NULL, tex, 0, 0, 0, param,
                                        handle_usage, value);
    pipe_resource_reference(&tex, NULL);
    return result;
@@ -253,7 +254,7 @@ static void noop_texture_subdata(struct pipe_context *pipe,
 /*
  * clear/copy
  */
-static void noop_clear(struct pipe_context *ctx, unsigned buffers,
+static void noop_clear(struct pipe_context *ctx, unsigned buffers, const struct pipe_scissor_state *scissor_state,
                        const union pipe_color_union *color, double depth, unsigned stencil)
 {
 }
@@ -343,6 +344,10 @@ static void noop_set_context_param(struct pipe_context *ctx,
 {
 }
 
+static void noop_set_frontend_noop(struct pipe_context *ctx, bool enable)
+{
+}
+
 static struct pipe_context *noop_create_context(struct pipe_screen *screen,
                                                 void *priv, unsigned flags)
 {
@@ -383,6 +388,7 @@ static struct pipe_context *noop_create_context(struct pipe_screen *screen,
    ctx->texture_subdata = noop_texture_subdata;
    ctx->invalidate_resource = noop_invalidate_resource;
    ctx->set_context_param = noop_set_context_param;
+   ctx->set_frontend_noop = noop_set_frontend_noop;
    noop_init_state_functions(ctx);
 
    return ctx;
@@ -393,6 +399,7 @@ static struct pipe_context *noop_create_context(struct pipe_screen *screen,
  * pipe_screen
  */
 static void noop_flush_frontbuffer(struct pipe_screen *_screen,
+                                   struct pipe_context *ctx,
                                    struct pipe_resource *resource,
                                    unsigned level, unsigned layer,
                                    void *context_private, struct pipe_box *box)

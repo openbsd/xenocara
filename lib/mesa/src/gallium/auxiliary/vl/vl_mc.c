@@ -563,6 +563,10 @@ vl_mc_init_buffer(struct vl_mc *renderer, struct vl_mc_buffer *buffer)
    buffer->viewport.translate[0] = 0;
    buffer->viewport.translate[1] = 0;
    buffer->viewport.translate[2] = 0;
+   buffer->viewport.swizzle_x = PIPE_VIEWPORT_SWIZZLE_POSITIVE_X;
+   buffer->viewport.swizzle_y = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Y;
+   buffer->viewport.swizzle_z = PIPE_VIEWPORT_SWIZZLE_POSITIVE_Z;
+   buffer->viewport.swizzle_w = PIPE_VIEWPORT_SWIZZLE_POSITIVE_W;
 
    buffer->fb_state.nr_cbufs = 1;
    buffer->fb_state.zsbuf = NULL;
@@ -618,7 +622,7 @@ vl_mc_render_ref(struct vl_mc *renderer, struct vl_mc_buffer *buffer, struct pip
    renderer->pipe->bind_fs_state(renderer->pipe, renderer->fs_ref);
 
    renderer->pipe->set_sampler_views(renderer->pipe, PIPE_SHADER_FRAGMENT,
-                                     0, 1, &ref);
+                                     0, 1, 0, &ref);
    renderer->pipe->bind_sampler_states(renderer->pipe, PIPE_SHADER_FRAGMENT,
                                        0, 1, &renderer->sampler_ref);
 

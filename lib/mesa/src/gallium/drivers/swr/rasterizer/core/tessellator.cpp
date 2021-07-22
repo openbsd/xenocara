@@ -18,7 +18,7 @@
 */
 
 #include "tessellator.hpp"
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_MSC_VER)
 #include <math.h> // ceil
 #else
 #include <cmath>
@@ -179,7 +179,9 @@ INT32 floatToIDotF( const float& input )
         if (iShift >= 0)
         {
 //            assert( iShift < 32 );
+#if defined(_MSC_VER)
 #pragma warning( suppress : 4293 )
+#endif
             _fxpMaxPosValueFloat -= INT32( 1 ) << iShift;
         }
 
@@ -199,7 +201,9 @@ INT32 floatToIDotF( const float& input )
         if (iShift >= 0)
         {
 //            assert( iShift < 32 );
+#if defined(_MSC_VER)
 #pragma warning( suppress : 4293 )
+#endif
             _fxpMaxPosValueFloat -= INT32( 1 ) << iShift;
         }
 
@@ -542,7 +546,7 @@ void CHWTessellator::QuadProcessTessFactors( float tessFactor_Ueq0, float tessFa
     }
 
     // Clamp edge TessFactors
-    float lowerBound, upperBound;
+    float lowerBound = 0.0, upperBound = 0.0;
     switch(m_originalPartitioning)
     {
         case D3D11_TESSELLATOR_PARTITIONING_INTEGER:
@@ -1060,7 +1064,7 @@ void CHWTessellator::TriProcessTessFactors( float tessFactor_Ueq0, float tessFac
     }
 
     // Clamp edge TessFactors
-    float lowerBound, upperBound;
+    float lowerBound = 0.0, upperBound = 0.0;
     switch(m_originalPartitioning)
     {
         case D3D11_TESSELLATOR_PARTITIONING_INTEGER:
@@ -1435,7 +1439,7 @@ void CHWTessellator::IsoLineProcessTessFactors( float TessFactor_V_LineDensity, 
     }
 
     // Clamp edge TessFactors
-    float lowerBound, upperBound;
+    float lowerBound = 0.0, upperBound = 0.0;
     switch(m_originalPartitioning)
     {
         case D3D11_TESSELLATOR_PARTITIONING_INTEGER:
@@ -2236,15 +2240,13 @@ void CHLSLTessellator::QuadHLSLProcessTessFactors( float tessFactor_Ueq0, float 
     // Process outside tessFactors
     float outsideTessFactor[QUAD_EDGES] = {tessFactor_Ueq0, tessFactor_Veq0, tessFactor_Ueq1, tessFactor_Veq1};
     int edge, axis;
-    TESSELLATOR_PARITY insideTessFactorParity[QUAD_AXES], outsideTessFactorParity[QUAD_EDGES];
+    TESSELLATOR_PARITY insideTessFactorParity[QUAD_AXES];
     if( Pow2Partitioning() || IntegerPartitioning() )
     {
         for( edge = 0; edge < QUAD_EDGES; edge++ )
         {
             RoundUpTessFactor(outsideTessFactor[edge]);
             ClampTessFactor(outsideTessFactor[edge]); // clamp unbounded user input based on tessellation mode
-            int edgeEven = isEven(outsideTessFactor[edge]);
-            outsideTessFactorParity[edge] = edgeEven ? TESSELLATOR_PARITY_EVEN : TESSELLATOR_PARITY_ODD;
         }
     }
     else
@@ -2253,7 +2255,6 @@ void CHLSLTessellator::QuadHLSLProcessTessFactors( float tessFactor_Ueq0, float 
         for( edge = 0; edge < QUAD_EDGES; edge++ )
         {
             ClampTessFactor(outsideTessFactor[edge]); // clamp unbounded user input based on tessellation mode
-            outsideTessFactorParity[edge] = m_originalParity;
         }
     }
 
@@ -2588,18 +2589,10 @@ void CHLSLTessellator::IsoLineHLSLProcessTessFactors( float TessFactor_V_LineDen
 
     m_LastUnRoundedComputedTessFactors[1] = TessFactor_U_LineDetail;    // Save off TessFactors so they can be returned to app
 
-    TESSELLATOR_PARITY parity;
     if(Pow2Partitioning()||IntegerPartitioning())
     {
         RoundUpTessFactor(TessFactor_U_LineDetail);
-        parity = isEven(TessFactor_U_LineDetail) ? TESSELLATOR_PARITY_EVEN : TESSELLATOR_PARITY_ODD;
     }
-    else
-    {
-        parity = m_originalParity;
-    }
-
-    FXP fxpTessFactor_U_LineDetail = floatToFixed(TessFactor_U_LineDetail);
 
     OverridePartitioning(D3D11_TESSELLATOR_PARTITIONING_INTEGER);
 

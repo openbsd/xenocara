@@ -21,10 +21,11 @@
 libaub = static_library(
   'aub',
   files('aub_read.c', 'aub_mem.c'),
-  include_directories : [inc_common, inc_intel],
+  include_directories : [inc_include, inc_src, inc_intel],
   dependencies : idep_mesautil,
   link_with : [libintel_common, libintel_dev],
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install : false
 )
 
@@ -32,9 +33,10 @@ aubinator = executable(
   'aubinator',
   files('aubinator.c'),
   dependencies : [idep_mesautil, dep_expat, dep_zlib, dep_dl, dep_thread, dep_m],
-  include_directories : [inc_common, inc_intel],
+  include_directories : [inc_include, inc_src, inc_intel],
   link_with : [libintel_common, libintel_compiler, libintel_dev, libaub],
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install : true
 )
 
@@ -42,9 +44,10 @@ aubinator_error_decode = executable(
   'aubinator_error_decode',
   files('aubinator_error_decode.c'),
   dependencies : [idep_mesautil, dep_zlib, dep_thread],
-  include_directories : [inc_common, inc_intel],
+  include_directories : [inc_include, inc_src, inc_intel],
   link_with : [libintel_common, libintel_compiler, libintel_dev],
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install : true
 )
 
@@ -52,9 +55,10 @@ i965_disasm = executable(
   'i965_disasm',
   files('i965_disasm.c'),
   dependencies : [idep_mesautil, dep_thread],
-  include_directories : [inc_common, inc_intel],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_intel],
   link_with : [libintel_common, libintel_compiler, libintel_dev],
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install : true
 )
 
@@ -62,9 +66,10 @@ error2aub = executable(
   'intel_error2aub',
   files('aub_write.h', 'aub_write.c', 'error2aub.c'),
   dependencies : [dep_zlib, dep_dl, dep_thread, dep_m],
-  include_directories : [inc_common, inc_intel, inc_include],
+  include_directories : [inc_include, inc_src, inc_intel],
   link_with : [libintel_dev],
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install : true
 )
 
@@ -72,6 +77,10 @@ sanitize_data = configuration_data()
 sanitize_data.set(
   'install_libexecdir',
   join_paths(get_option('prefix'), get_option('libexecdir'))
+)
+sanitize_data.set(
+  'install_libdir',
+  join_paths(get_option('prefix'), get_option('libdir'))
 )
 configure_file(
   input : 'intel_sanitize_gpu.in',
@@ -85,9 +94,10 @@ libintel_sanitize_gpu = shared_library(
   'intel_sanitize_gpu',
   files('intel_sanitize_gpu.c'),
   dependencies : [idep_mesautil, dep_dl, dep_thread],
-  include_directories : [inc_common, inc_intel, inc_include],
+  include_directories : [inc_include, inc_src, inc_intel],
   link_with : libintel_common,
-  c_args : [c_vis_args, no_override_init_args, c_sse2_args],
+  c_args : [no_override_init_args, c_sse2_args],
+  gnu_symbol_visibility : 'hidden',
   install_dir : get_option('libexecdir'),
   install : true
 )
@@ -103,16 +113,37 @@ configure_file(
 libintel_dump_gpu = shared_library(
   'intel_dump_gpu',
   files(
-    'gen_context.h', 'gen8_context.h', 'gen10_context.h', 'intel_aub.h',
+    'gen_context.h', 'gfx8_context.h', 'gfx10_context.h', 'intel_aub.h',
     'aub_write.h', 'aub_write.c', 'intel_dump_gpu.c',
   ),
-  dependencies : dep_dl,
-  include_directories : [inc_common, inc_intel, inc_include],
+  dependencies : [dep_dl, idep_mesautil],
+  include_directories : [inc_include, inc_src, inc_intel],
   link_with : libintel_dev,
-  c_args : [c_vis_args, no_override_init_args],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   install_dir : get_option('libexecdir'),
   install : true
 )
+
+if with_tools.contains('drm-shim')
+  configure_file(
+    input : 'intel_stub_gpu.in',
+    output : '@BASENAME@',
+    install_dir : get_option('bindir'),
+    configuration : sanitize_data,
+    install : true
+  )
+
+  libintel_stub_gpu = shared_library(
+    ['intel_noop_drm_shim'],
+    'intel_noop_drm_shim.c',
+    include_directories: [inc_include, inc_src, inc_intel],
+    link_with: libintel_dev,
+    dependencies: [dep_libdrm, dep_drm_shim, idep_mesautil, idep_libintel_common],
+    gnu_symbol_visibility : 'hidden',
+    install : true,
+  )
+endif
 
 if with_tools.contains('intel-ui')
   subdir('imgui')
@@ -121,56 +152,77 @@ if with_tools.contains('intel-ui')
     'aubinator_viewer',
     files('aubinator_viewer.cpp', 'aubinator_viewer_decoder.cpp'),
     dependencies : [idep_mesautil, dep_zlib, dep_dl, dep_thread, dep_m, libintel_imgui_gtk_dep],
-    include_directories : [inc_common, inc_intel],
+    include_directories : [inc_include, inc_src, inc_intel],
     link_with : [libintel_common, libintel_compiler, libintel_dev, libaub],
-    c_args : [c_vis_args, no_override_init_args],
+    c_args : [no_override_init_args],
+    gnu_symbol_visibility : 'hidden',
     cpp_args : ['-fpermissive', '-Wno-parentheses', '-Wno-class-memaccess'],
     install : true
   )
 endif
 
+bison_command = []
+if yacc_is_bison
+  bison_command = [
+    prog_bison, '@INPUT@', '--defines=@OUTPUT1@',
+    '--output=@OUTPUT0@'
+  ]
+else
+  bison_command = [
+    prog_bison, '-H', '@OUTPUT1@',
+    '-o', '@OUTPUT0@', '@INPUT@'
+  ]
+endif
+
 i965_gram_tab = custom_target(
-   'i965_gram.tab.[ch]',
-   input : 'i965_gram.y',
-   output : ['i965_gram.tab.c', 'i965_gram.tab.h'],
-   command : [
-      prog_bison, '@INPUT@', '--defines=@OUTPUT1@',
-      '--output=@OUTPUT0@'
-   ]
+  'i965_gram.tab.[ch]',
+  input : 'i965_gram.y',
+  output : ['i965_gram.tab.c', 'i965_gram.tab.h'],
+  command : bison_command
 )
 
 i965_lex_yy_c = custom_target(
-   'i965_lex.yy.c',
-   input : 'i965_lex.l',
-   output : 'i965_lex.yy.c',
-   command : [prog_flex, '-o', '@OUTPUT@', '@INPUT@']
+  'i965_lex.yy.c',
+  input : 'i965_lex.l',
+  output : 'i965_lex.yy.c',
+  command : [prog_flex, '-o', '@OUTPUT@', '@INPUT@']
 )
 
 i965_asm = executable(
-   'i965_asm',
-   ['i965_asm.c', i965_gram_tab[0], i965_gram_tab[1], i965_lex_yy_c],
-   dependencies : [idep_mesautil, dep_thread],
-   include_directories : [inc_common, inc_intel],
-   link_with : [libintel_common, libintel_compiler, libintel_dev],
-   c_args : [c_vis_args, no_override_init_args],
-   install : true
+  'i965_asm',
+  ['i965_asm.c', i965_gram_tab[0], i965_gram_tab[1], i965_lex_yy_c],
+  dependencies : [idep_mesautil, dep_thread],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_intel],
+  link_with : [libintel_common, libintel_compiler, libintel_dev],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
+  install : true
 )
 
 asm_testcases = [
-   ['brw', 'tests/gen4'],
-   ['g4x', 'tests/gen4.5'],
-   ['ilk', 'tests/gen5'],
-   ['snb', 'tests/gen6'],
-   ['ivb', 'tests/gen7'],
-   ['hsw', 'tests/gen7.5'],
-   ['bdw', 'tests/gen8'],
-   ['skl', 'tests/gen9'],
-   ['icl', 'tests/gen11'],
+  ['brw', 'gfx4'],
+  ['g4x', 'gfx4.5'],
+  ['ilk', 'gfx5'],
+  ['snb', 'gfx6'],
+  ['ivb', 'gfx7'],
+  ['hsw', 'gfx7.5'],
+  ['bdw', 'gfx8'],
+  ['skl', 'gfx9'],
+  ['icl', 'gfx11'],
 ]
 
-test_runner = find_program('tests/run-test.sh')
+test_runner = find_program('tests/run-test.py')
 foreach testcase : asm_testcases
-   test('i965_asm : ' + testcase[1], test_runner,
-        args : [i965_asm, testcase[1], testcase[0]],
-        env : ['srcdir=' + meson.current_source_dir()])
+  _gen_name = testcase[0]
+  _gen_num = testcase[1]
+  _gen_folder = join_paths(meson.current_source_dir(), 'tests', _gen_num)
+  test(
+    'i965_asm_' + _gen_num, test_runner,
+    args : [
+      '--i965_asm', i965_asm,
+      '--gen_name', _gen_name,
+      '--gen_folder', _gen_folder,
+    ],
+    suite : 'intel',
+  )
 endforeach

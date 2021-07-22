@@ -43,20 +43,26 @@
 #include "intel_aub.h"
 #include "aub_write.h"
 
+#include "dev/gen_debug.h"
 #include "dev/gen_device_info.h"
 #include "util/macros.h"
 
 static int close_init_helper(int fd);
 static int ioctl_init_helper(int fd, unsigned long request, ...);
+static int munmap_init_helper(void *addr, size_t length);
 
 static int (*libc_close)(int fd) = close_init_helper;
 static int (*libc_ioctl)(int fd, unsigned long request, ...) = ioctl_init_helper;
+static int (*libc_munmap)(void *addr, size_t length) = munmap_init_helper;
 
 static int drm_fd = -1;
 static char *output_filename = NULL;
 static FILE *output_file = NULL;
 static int verbose = 0;
-static bool device_override;
+static bool device_override = false;
+static bool capture_only = false;
+static int64_t frame_id = -1;
+static bool capture_finished = false;
 
 #define MAX_FD_COUNT 64
 #define MAX_BO_COUNT 64 * 1024
@@ -65,6 +71,14 @@ struct bo {
    uint32_t size;
    uint64_t offset;
    void *map;
+   /* Whether the buffer has been positionned in the GTT already. */
+   bool gtt_mapped : 1;
+   /* Tracks userspace mmapping of the buffer */
+   bool user_mapped : 1;
+   /* Using the i915-gem mmapping ioctl & execbuffer ioctl, track whether a
+    * buffer has been updated.
+    */
+   bool dirty : 1;
 };
 
 static struct bo *bos;
@@ -78,21 +92,7 @@ static struct bo *bos;
 #define IS_USERPTR(p) ((uintptr_t) (p) & USERPTR_FLAG)
 #define GET_PTR(p) ( (void *) ((uintptr_t) p & ~(uintptr_t) 1) )
 
-static void __attribute__ ((format(__printf__, 2, 3)))
-fail_if(int cond, const char *format, ...)
-{
-   va_list args;
-
-   if (!cond)
-      return;
-
-   va_start(args, format);
-   fprintf(stderr, "intel_dump_gpu: ");
-   vfprintf(stderr, format, args);
-   va_end(args);
-
-   raise(SIGTRAP);
-}
+#define fail_if(cond, ...) _fail_if(cond, "intel_dump_gpu", __VA_ARGS__)
 
 static struct bo *
 get_bo(unsigned fd, uint32_t handle)
@@ -113,8 +113,22 @@ align_u32(uint32_t v, uint32_t a)
 }
 
 static struct gen_device_info devinfo = {0};
-static uint32_t device = 0;
+static int device = 0;
 static struct aub_file aub_file;
+
+static void
+ensure_device_info(int fd)
+{
+   /* We can't do this at open time as we're not yet authenticated. */
+   if (device == 0) {
+      fail_if(!gen_get_device_info_from_fd(fd, &devinfo),
+              "failed to identify chipset.\n");
+      device = devinfo.chipset_id;
+   } else if (devinfo.ver == 0) {
+      fail_if(!gen_get_device_info_from_pci_id(device, &devinfo),
+              "failed to identify chipset.\n");
+   }
+}
 
 static void *
 relocate_bo(int fd, struct bo *bo, const struct drm_i915_gem_execbuffer2 *execbuffer2,
@@ -202,15 +216,10 @@ dump_execbuffer2(int fd, struct drm_i915_gem_execbuffer2 *execbuffer2)
    int batch_index;
    void *data;
 
-   /* We can't do this at open time as we're not yet authenticated. */
-   if (device == 0) {
-      fail_if(!gen_get_device_info_from_fd(fd, &devinfo),
-              "failed to identify chipset.\n");
-      device = devinfo.chipset_id;
-   } else if (devinfo.gen == 0) {
-      fail_if(!gen_get_device_info_from_pci_id(device, &devinfo),
-              "failed to identify chipset.\n");
-   }
+   ensure_device_info(fd);
+
+   if (capture_finished)
+      return;
 
    if (!aub_file.file) {
       aub_file_init(&aub_file, output_file,
@@ -220,16 +229,13 @@ dump_execbuffer2(int fd, struct drm_i915_gem_execbuffer2 *execbuffer2)
 
       if (verbose)
          printf("[running, output file %s, chipset id 0x%04x, gen %d]\n",
-                output_filename, device, devinfo.gen);
+                output_filename, device, devinfo.ver);
    }
 
    if (aub_use_execlists(&aub_file))
       offset = 0x1000;
    else
       offset = aub_gtt_size(&aub_file);
-
-   if (verbose)
-      printf("Dumping execbuffer2:\n");
 
    for (uint32_t i = 0; i < execbuffer2->buffer_count; i++) {
       obj = &exec_objects[i];
@@ -245,28 +251,74 @@ dump_execbuffer2(int fd, struct drm_i915_gem_execbuffer2 *execbuffer2)
       }
 
       if (obj->flags & EXEC_OBJECT_PINNED) {
+         if (bo->offset != obj->offset)
+            bo->gtt_mapped = false;
          bo->offset = obj->offset;
-         if (verbose)
-            printf("BO #%d (%dB) pinned @ 0x%" PRIx64 "\n",
-                   obj->handle, bo->size, bo->offset);
       } else {
          if (obj->alignment != 0)
             offset = align_u32(offset, obj->alignment);
          bo->offset = offset;
-         if (verbose)
-            printf("BO #%d (%dB) @ 0x%" PRIx64 "\n", obj->handle,
-                   bo->size, bo->offset);
          offset = align_u32(offset + bo->size + 4095, 4096);
       }
 
       if (bo->map == NULL && bo->size > 0)
          bo->map = gem_mmap(fd, obj->handle, 0, bo->size);
       fail_if(bo->map == MAP_FAILED, "bo mmap failed\n");
-
-      if (aub_use_execlists(&aub_file))
-         aub_map_ppgtt(&aub_file, bo->offset, bo->size);
    }
 
+   uint64_t current_frame_id = 0;
+   if (frame_id >= 0) {
+      for (uint32_t i = 0; i < execbuffer2->buffer_count; i++) {
+         obj = &exec_objects[i];
+         bo = get_bo(fd, obj->handle);
+
+         /* Check against frame_id requirements. */
+         if (memcmp(bo->map, intel_debug_identifier(),
+                    intel_debug_identifier_size()) == 0) {
+            const struct gen_debug_block_frame *frame_desc =
+               intel_debug_get_identifier_block(bo->map, bo->size,
+                                                GEN_DEBUG_BLOCK_TYPE_FRAME);
+
+            current_frame_id = frame_desc ? frame_desc->frame_id : 0;
+            break;
+         }
+      }
+   }
+
+   if (verbose)
+      printf("Dumping execbuffer2 (frame_id=%"PRIu64", buffers=%u):\n",
+             current_frame_id, execbuffer2->buffer_count);
+
+   /* Check whether we can stop right now. */
+   if (frame_id >= 0) {
+      if (current_frame_id < frame_id)
+         return;
+
+      if (current_frame_id > frame_id) {
+         aub_file_finish(&aub_file);
+         capture_finished = true;
+         return;
+      }
+   }
+
+
+   /* Map buffers into the PPGTT. */
+   for (uint32_t i = 0; i < execbuffer2->buffer_count; i++) {
+      obj = &exec_objects[i];
+      bo = get_bo(fd, obj->handle);
+
+      if (verbose) {
+         printf("BO #%d (%dB) @ 0x%" PRIx64 "\n",
+                obj->handle, bo->size, bo->offset);
+      }
+
+      if (aub_use_execlists(&aub_file) && !bo->gtt_mapped) {
+         aub_map_ppgtt(&aub_file, bo->offset, bo->size);
+         bo->gtt_mapped = true;
+      }
+   }
+
+   /* Write the buffer content into the Aub. */
    batch_index = (execbuffer2->flags & I915_EXEC_BATCH_FIRST) ? 0 :
       execbuffer2->buffer_count - 1;
    batch_bo = get_bo(fd, exec_objects[batch_index].handle);
@@ -279,12 +331,19 @@ dump_execbuffer2(int fd, struct drm_i915_gem_execbuffer2 *execbuffer2)
       else
          data = bo->map;
 
-      if (bo == batch_bo) {
-         aub_write_trace_block(&aub_file, AUB_TRACE_TYPE_BATCH,
-                               GET_PTR(data), bo->size, bo->offset);
-      } else {
-         aub_write_trace_block(&aub_file, AUB_TRACE_TYPE_NOTYPE,
-                               GET_PTR(data), bo->size, bo->offset);
+      bool write = !capture_only || (obj->flags & EXEC_OBJECT_CAPTURE);
+
+      if (write && bo->dirty) {
+         if (bo == batch_bo) {
+            aub_write_trace_block(&aub_file, AUB_TRACE_TYPE_BATCH,
+                                  GET_PTR(data), bo->size, bo->offset);
+         } else {
+            aub_write_trace_block(&aub_file, AUB_TRACE_TYPE_NOTYPE,
+                                  GET_PTR(data), bo->size, bo->offset);
+         }
+
+         if (!bo->user_mapped)
+            bo->dirty = false;
       }
 
       if (data != bo->map)
@@ -325,6 +384,8 @@ add_new_bo(unsigned fd, int handle, uint64_t size, void *map)
 
    bo->size = size;
    bo->map = map;
+   bo->user_mapped = false;
+   bo->gtt_mapped = false;
 }
 
 static void
@@ -334,25 +395,7 @@ remove_bo(int fd, int handle)
 
    if (bo->map && !IS_USERPTR(bo->map))
       munmap(bo->map, bo->size);
-   bo->size = 0;
-   bo->map = NULL;
-}
-
-static uint32_t
-dump_create_context(int fd, uint32_t *ctx_id)
-{
-   if (!aub_file.file) {
-      aub_file_init(&aub_file, output_file,
-                    verbose == 2 ? stdout : NULL,
-                    device, program_invocation_short_name);
-      aub_write_default_setup(&aub_file);
-
-      if (verbose)
-         printf("[running, output file %s, chipset id 0x%04x, gen %d]\n",
-                output_filename, device, devinfo.gen);
-   }
-
-   return aub_write_context_create(&aub_file, ctx_id);
+   memset(bo, 0, sizeof(*bo));
 }
 
 __attribute__ ((visibility ("default"))) int
@@ -364,8 +407,23 @@ close(int fd)
    return libc_close(fd);
 }
 
+static int
+get_pci_id(int fd, int *pci_id)
+{
+   struct drm_i915_getparam gparam;
+
+   if (device_override) {
+      *pci_id = device;
+      return 0;
+   }
+
+   gparam.param = I915_PARAM_CHIPSET_ID;
+   gparam.value = pci_id;
+   return libc_ioctl(fd, DRM_IOCTL_I915_GETPARAM, &gparam);
+}
+
 static void
-maybe_init(void)
+maybe_init(int fd)
 {
    static bool initialized = false;
    FILE *config;
@@ -376,7 +434,12 @@ maybe_init(void)
 
    initialized = true;
 
-   config = fopen(getenv("INTEL_DUMP_GPU_CONFIG"), "r");
+   const char *config_path = getenv("INTEL_DUMP_GPU_CONFIG");
+   fail_if(config_path == NULL, "INTEL_DUMP_GPU_CONFIG is not set\n");
+
+   config = fopen(config_path, "r");
+   fail_if(config == NULL, "failed to open file %s\n", config_path);
+
    while (fscanf(config, "%m[^=]=%m[^\n]\n", &key, &value) != EOF) {
       if (!strcmp(key, "verbose")) {
          if (!strcmp(value, "1")) {
@@ -385,15 +448,15 @@ maybe_init(void)
             verbose = 2;
          }
       } else if (!strcmp(key, "device")) {
-         fail_if(device != 0, "Device/Platform override specified multiple times.");
+         fail_if(device != 0, "Device/Platform override specified multiple times.\n");
          fail_if(sscanf(value, "%i", &device) != 1,
-                 "failed to parse device id '%s'",
+                 "failed to parse device id '%s'\n",
                  value);
          device_override = true;
       } else if (!strcmp(key, "platform")) {
-         fail_if(device != 0, "Device/Platform override specified multiple times.");
+         fail_if(device != 0, "Device/Platform override specified multiple times.\n");
          device = gen_device_name_to_pci_device_id(value);
-         fail_if(device == -1, "Unknown platform '%s'", value);
+         fail_if(device == -1, "Unknown platform '%s'\n", value);
          device_override = true;
       } else if (!strcmp(key, "file")) {
          output_filename = strdup(value);
@@ -401,6 +464,10 @@ maybe_init(void)
          fail_if(output_file == NULL,
                  "failed to open file '%s'\n",
                  output_filename);
+      } else if (!strcmp(key, "capture_only")) {
+         capture_only = atoi(value);
+      } else if (!strcmp(key, "frame")) {
+         frame_id = atol(value);
       } else {
          fprintf(stderr, "unknown option '%s'\n", key);
       }
@@ -412,6 +479,18 @@ maybe_init(void)
 
    bos = calloc(MAX_FD_COUNT * MAX_BO_COUNT, sizeof(bos[0]));
    fail_if(bos == NULL, "out of memory\n");
+
+   ASSERTED int ret = get_pci_id(fd, &device);
+   assert(ret == 0);
+
+   aub_file_init(&aub_file, output_file,
+                 verbose == 2 ? stdout : NULL,
+                 device, program_invocation_short_name);
+   aub_write_default_setup(&aub_file);
+
+   if (verbose)
+      printf("[running, output file %s, chipset id 0x%04x, gen %d]\n",
+             output_filename, device, devinfo.ver);
 }
 
 __attribute__ ((visibility ("default"))) int
@@ -435,27 +514,85 @@ ioctl(int fd, unsigned long request, ...)
    }
 
    if (fd == drm_fd) {
-      maybe_init();
+      maybe_init(fd);
 
       switch (request) {
+      case DRM_IOCTL_SYNCOBJ_WAIT:
+      case DRM_IOCTL_I915_GEM_WAIT: {
+         if (device_override)
+            return 0;
+         return libc_ioctl(fd, request, argp);
+      }
+
+      case DRM_IOCTL_I915_GET_RESET_STATS: {
+         if (device_override) {
+            struct drm_i915_reset_stats *stats = argp;
+
+            stats->reset_count = 0;
+            stats->batch_active = 0;
+            stats->batch_pending = 0;
+            return 0;
+         }
+         return libc_ioctl(fd, request, argp);
+      }
+
       case DRM_IOCTL_I915_GETPARAM: {
          struct drm_i915_getparam *getparam = argp;
 
-         if (device_override && getparam->param == I915_PARAM_CHIPSET_ID) {
-            *getparam->value = device;
-            return 0;
+         ensure_device_info(fd);
+
+         if (getparam->param == I915_PARAM_CHIPSET_ID)
+            return get_pci_id(fd, getparam->value);
+
+         if (device_override) {
+            switch (getparam->param) {
+            case I915_PARAM_CS_TIMESTAMP_FREQUENCY:
+               *getparam->value = devinfo.timestamp_frequency;
+               return 0;
+
+            case I915_PARAM_HAS_WAIT_TIMEOUT:
+            case I915_PARAM_HAS_EXECBUF2:
+            case I915_PARAM_MMAP_VERSION:
+            case I915_PARAM_HAS_EXEC_ASYNC:
+            case I915_PARAM_HAS_EXEC_FENCE:
+            case I915_PARAM_HAS_EXEC_FENCE_ARRAY:
+               *getparam->value = 1;
+               return 0;
+
+            case I915_PARAM_HAS_EXEC_SOFTPIN:
+               *getparam->value = devinfo.ver >= 8 && !devinfo.is_cherryview;
+               return 0;
+
+            default:
+               return -1;
+            }
          }
 
-         ret = libc_ioctl(fd, request, argp);
+         return libc_ioctl(fd, request, argp);
+      }
 
-         /* If the application looks up chipset_id
-          * (they typically do), we'll piggy-back on
-          * their ioctl and store the id for later
-          * use. */
-         if (ret == 0 && getparam->param == I915_PARAM_CHIPSET_ID)
-            device = *getparam->value;
+      case DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM: {
+         struct drm_i915_gem_context_param *getparam = argp;
 
-         return ret;
+         ensure_device_info(fd);
+
+         if (device_override) {
+            switch (getparam->param) {
+            case I915_CONTEXT_PARAM_GTT_SIZE:
+               if (devinfo.is_elkhartlake)
+                  getparam->value = 1ull << 36;
+               else if (devinfo.ver >= 8 && !devinfo.is_cherryview)
+                  getparam->value = 1ull << 48;
+               else
+                  getparam->value = 1ull << 31;
+               return 0;
+
+            default:
+               return -1;
+            }
+         }
+
+         return libc_ioctl(fd, request, argp);
       }
 
       case DRM_IOCTL_I915_GEM_EXECBUFFER: {
@@ -487,7 +624,7 @@ ioctl(int fd, unsigned long request, ...)
          }
 
          if (ret == 0)
-            create->ctx_id = dump_create_context(fd, ctx_id);
+            create->ctx_id = aub_write_context_create(&aub_file, ctx_id);
 
          return ret;
       }
@@ -502,7 +639,7 @@ ioctl(int fd, unsigned long request, ...)
          }
 
          if (ret == 0)
-            create->ctx_id = dump_create_context(fd, ctx_id);
+            create->ctx_id = aub_write_context_create(&aub_file, ctx_id);
 
          return ret;
       }
@@ -562,6 +699,28 @@ ioctl(int fd, unsigned long request, ...)
          return ret;
       }
 
+      case DRM_IOCTL_I915_GEM_MMAP: {
+         ret = libc_ioctl(fd, request, argp);
+         if (ret == 0) {
+            struct drm_i915_gem_mmap *mmap = argp;
+            struct bo *bo = get_bo(fd, mmap->handle);
+            bo->user_mapped = true;
+            bo->dirty = true;
+         }
+         return ret;
+      }
+
+      case DRM_IOCTL_I915_GEM_MMAP_OFFSET: {
+         ret = libc_ioctl(fd, request, argp);
+         if (ret == 0) {
+            struct drm_i915_gem_mmap_offset *mmap = argp;
+            struct bo *bo = get_bo(fd, mmap->handle);
+            bo->user_mapped = true;
+            bo->dirty = true;
+         }
+         return ret;
+      }
+
       default:
          return libc_ioctl(fd, request, argp);
       }
@@ -575,6 +734,7 @@ init(void)
 {
    libc_close = dlsym(RTLD_NEXT, "close");
    libc_ioctl = dlsym(RTLD_NEXT, "ioctl");
+   libc_munmap = dlsym(RTLD_NEXT, "munmap");
    fail_if(libc_close == NULL || libc_ioctl == NULL,
            "failed to get libc ioctl or close\n");
 }
@@ -600,12 +760,27 @@ ioctl_init_helper(int fd, unsigned long request, ...)
    return libc_ioctl(fd, request, argp);
 }
 
+static int
+munmap_init_helper(void *addr, size_t length)
+{
+   init();
+   for (uint32_t i = 0; i < MAX_FD_COUNT * MAX_BO_COUNT; i++) {
+      struct bo *bo = &bos[i];
+      if (bo->map == addr) {
+         bo->user_mapped = false;
+         break;
+      }
+   }
+   return libc_munmap(addr, length);
+}
+
 static void __attribute__ ((destructor))
 fini(void)
 {
-   if (devinfo.gen != 0) {
+   if (devinfo.ver != 0) {
       free(output_filename);
-      aub_file_finish(&aub_file);
+      if (!capture_finished)
+         aub_file_finish(&aub_file);
       free(bos);
    }
 }

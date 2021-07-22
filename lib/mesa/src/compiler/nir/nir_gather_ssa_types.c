@@ -72,8 +72,7 @@ static void
 copy_types(nir_src src, nir_dest *dest, BITSET_WORD *float_types,
            BITSET_WORD *int_types, bool *progress)
 {
-   bool src_is_sink = nir_src_is_const(src) ||
-                      src.ssa->parent_instr->type == nir_instr_type_ssa_undef;
+   bool src_is_sink = nir_src_is_const(src) || nir_src_is_undef(src);
    copy_type(src.ssa->index, dest->ssa.index, src_is_sink, float_types, progress);
    copy_type(src.ssa->index, dest->ssa.index, src_is_sink, int_types, progress);
 }
@@ -112,6 +111,9 @@ nir_gather_ssa_types(nir_function_impl *impl,
                case nir_op_vec2:
                case nir_op_vec3:
                case nir_op_vec4:
+               case nir_op_vec5:
+               case nir_op_vec8:
+               case nir_op_vec16:
                   for (unsigned i = 0; i < info->num_inputs; i++) {
                      copy_types(alu->src[i].src, &alu->dest.dest,
                                 float_types, int_types, &progress);
@@ -184,14 +186,14 @@ nir_gather_ssa_types(nir_function_impl *impl,
                case nir_intrinsic_load_uniform:
                   assert(intrin->dest.is_ssa);
                   set_type(intrin->dest.ssa.index,
-                           nir_intrinsic_type(intrin),
+                           nir_intrinsic_dest_type(intrin),
                            float_types, int_types, &progress);
                   break;
 
                case nir_intrinsic_store_output:
                   assert(intrin->src[0].is_ssa);
                   set_type(intrin->src[0].ssa->index,
-                           nir_intrinsic_type(intrin),
+                           nir_intrinsic_src_type(intrin),
                            float_types, int_types, &progress);
                   break;
 

@@ -70,7 +70,7 @@ llvmpipe_create_rasterizer_state(struct pipe_context *pipe,
    memcpy(&state->draw_state, rast, sizeof *rast);
    memcpy(&state->lp_state, rast, sizeof *rast);
 
-   /* We rely on draw module to do unfilled polyons, AA lines and
+   /* We rely on draw module to do unfilled polygons, AA lines and
     * points and stipple.
     * 
     * Over time, reduce this list of conditions, and expand the list
@@ -116,7 +116,8 @@ llvmpipe_bind_rasterizer_state(struct pipe_context *pipe, void *handle)
                                   state->lp_state.front_ccw,
                                   state->lp_state.scissor,
                                   state->lp_state.half_pixel_center,
-                                  state->lp_state.bottom_edge_rule);
+                                  state->lp_state.bottom_edge_rule,
+                                  state->lp_state.multisample);
       lp_setup_set_flatshade_first( llvmpipe->setup,
 				    state->lp_state.flatshade_first);
       lp_setup_set_line_state( llvmpipe->setup,

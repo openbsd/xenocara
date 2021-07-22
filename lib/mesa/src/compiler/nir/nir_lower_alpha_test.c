@@ -40,6 +40,7 @@ nir_lower_alpha_test(nir_shader *shader, enum compare_func func,
                      bool alpha_to_one,
                      const gl_state_index16 *alpha_ref_state_tokens)
 {
+   assert(alpha_ref_state_tokens);
    assert(shader->info.stage == MESA_SHADER_FRAGMENT);
 
    nir_foreach_function(function, shader) {
@@ -61,7 +62,7 @@ nir_lower_alpha_test(nir_shader *shader, enum compare_func func,
                   break;
                case nir_intrinsic_store_output:
                   /* already had i/o lowered.. lookup the matching output var: */
-                  nir_foreach_variable(var, &shader->outputs) {
+                  nir_foreach_shader_out_variable(var, shader) {
                      int drvloc = var->data.driver_location;
                      if (nir_intrinsic_base(intr) == drvloc) {
                         out = var;
@@ -94,30 +95,21 @@ nir_lower_alpha_test(nir_shader *shader, enum compare_func func,
                                       3);
                }
 
-               nir_ssa_def *alpha_ref;
-               if (alpha_ref_state_tokens) {
-                  nir_variable *var = nir_variable_create(shader,
-                                                          nir_var_uniform,
-                                                          glsl_float_type(),
-                                                          "gl_AlphaRefMESA");
-                  var->num_state_slots = 1;
-                  var->state_slots = ralloc_array(var, nir_state_slot, 1);
-                  memcpy(var->state_slots[0].tokens,
-                         alpha_ref_state_tokens,
-                         sizeof(var->state_slots[0].tokens));
-                  alpha_ref = nir_load_var(&b, var);
-               } else
-                  alpha_ref = nir_load_alpha_ref_float(&b);
+               nir_variable *var = nir_variable_create(shader,
+                                                       nir_var_uniform,
+                                                       glsl_float_type(),
+                                                       "gl_AlphaRefMESA");
+               var->num_state_slots = 1;
+               var->state_slots = ralloc_array(var, nir_state_slot, 1);
+               memcpy(var->state_slots[0].tokens,
+                      alpha_ref_state_tokens,
+                      sizeof(var->state_slots[0].tokens));
+               nir_ssa_def *alpha_ref = nir_load_var(&b, var);
 
                nir_ssa_def *condition =
                   nir_compare_func(&b, func, alpha, alpha_ref);
 
-               nir_intrinsic_instr *discard =
-                  nir_intrinsic_instr_create(b.shader,
-                                             nir_intrinsic_discard_if);
-               discard->num_components = 1;
-               discard->src[0] = nir_src_for_ssa(nir_inot(&b, condition));
-               nir_builder_instr_insert(&b, &discard->instr);
+               nir_discard_if(&b, nir_inot(&b, condition));
                shader->info.fs.uses_discard = true;
             }
          }

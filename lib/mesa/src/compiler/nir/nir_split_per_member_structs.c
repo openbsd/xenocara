@@ -66,7 +66,7 @@ split_variable(struct nir_variable *var, nir_shader *shader,
    assert(var->state_slots == NULL);
 
    /* Constant initializers are currently not handled */
-   assert(var->constant_initializer == NULL);
+   assert(var->constant_initializer == NULL && var->pointer_initializer == NULL);
 
    nir_variable **members =
       ralloc_array(dead_ctx, nir_variable *, var->num_members);
@@ -101,24 +101,6 @@ split_variable(struct nir_variable *var, nir_shader *shader,
    }
 
    _mesa_hash_table_insert(var_to_member_map, var, members);
-}
-
-static bool
-split_variables_in_list(struct exec_list *var_list, nir_shader *shader,
-                        struct hash_table *var_to_member_map, void *dead_ctx)
-{
-   bool progress = false;
-
-   nir_foreach_variable_safe(var, var_list) {
-      if (var->num_members == 0)
-         continue;
-
-      split_variable(var, shader, var_to_member_map, dead_ctx);
-      exec_node_remove(&var->node);
-      progress = true;
-   }
-
-   return progress;
 }
 
 static nir_deref_instr *
@@ -163,7 +145,7 @@ rewrite_deref_instr(nir_builder *b, nir_deref_instr *deref,
    nir_deref_instr *member_deref =
       build_member_deref(b, nir_deref_instr_parent(deref), member);
    nir_ssa_def_rewrite_uses(&deref->dest.ssa,
-                            nir_src_for_ssa(&member_deref->dest.ssa));
+                            &member_deref->dest.ssa);
 
    /* The referenced variable is no longer valid, clean up the deref */
    nir_deref_instr_remove_if_unused(deref);
@@ -177,12 +159,17 @@ nir_split_per_member_structs(nir_shader *shader)
    struct hash_table *var_to_member_map =
       _mesa_pointer_hash_table_create(dead_ctx);
 
-   progress |= split_variables_in_list(&shader->inputs, shader,
-                                       var_to_member_map, dead_ctx);
-   progress |= split_variables_in_list(&shader->outputs, shader,
-                                       var_to_member_map, dead_ctx);
-   progress |= split_variables_in_list(&shader->system_values, shader,
-                                       var_to_member_map, dead_ctx);
+   nir_foreach_variable_with_modes_safe(var, shader, nir_var_shader_in |
+                                                     nir_var_shader_out |
+                                                     nir_var_system_value) {
+      if (var->num_members == 0)
+         continue;
+
+      split_variable(var, shader, var_to_member_map, dead_ctx);
+      exec_node_remove(&var->node);
+      progress = true;
+   }
+
    if (!progress) {
       ralloc_free(dead_ctx);
       return false;
@@ -202,6 +189,10 @@ nir_split_per_member_structs(nir_shader *shader)
             }
          }
       }
+
+      nir_metadata_preserve(function->impl,
+                            nir_metadata_block_index |
+                            nir_metadata_dominance);
    }
 
    ralloc_free(dead_ctx);

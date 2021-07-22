@@ -23,15 +23,18 @@
  *
  */
 
+#include "util/format/u_format.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
 #include "util/u_helpers.h"
 #include "util/u_debug.h"
+#include "util/u_framebuffer.h"
 
 #include "pipe/p_state.h"
 
 #include "lima_screen.h"
 #include "lima_context.h"
+#include "lima_format.h"
 #include "lima_resource.h"
 
 static void
@@ -40,53 +43,15 @@ lima_set_framebuffer_state(struct pipe_context *pctx,
 {
    struct lima_context *ctx = lima_context(pctx);
 
-   /* submit need framebuffer info, flush before change it */
-   lima_flush(ctx);
+   /* make sure there are always single job in this context */
+   if (lima_debug & LIMA_DEBUG_SINGLE_JOB)
+      lima_flush(ctx);
 
    struct lima_context_framebuffer *fb = &ctx->framebuffer;
 
-   fb->base.samples = framebuffer->samples;
+   util_copy_framebuffer_state(&fb->base, framebuffer);
 
-   fb->base.nr_cbufs = framebuffer->nr_cbufs;
-   pipe_surface_reference(&fb->base.cbufs[0], framebuffer->cbufs[0]);
-   pipe_surface_reference(&fb->base.zsbuf, framebuffer->zsbuf);
-
-   /* need align here? */
-   fb->base.width = framebuffer->width;
-   fb->base.height = framebuffer->height;
-
-   int width = align(framebuffer->width, 16) >> 4;
-   int height = align(framebuffer->height, 16) >> 4;
-   if (fb->tiled_w != width || fb->tiled_h != height) {
-      struct lima_screen *screen = lima_screen(ctx->base.screen);
-
-      fb->tiled_w = width;
-      fb->tiled_h = height;
-
-      fb->shift_h = 0;
-      fb->shift_w = 0;
-
-      int limit = screen->plb_max_blk;
-      while ((width * height) > limit) {
-         if (width >= height) {
-            width = (width + 1) >> 1;
-            fb->shift_w++;
-         } else {
-            height = (height + 1) >> 1;
-            fb->shift_h++;
-         }
-      }
-
-      fb->block_w = width;
-      fb->block_h = height;
-
-      fb->shift_min = MIN3(fb->shift_w, fb->shift_h, 2);
-
-      debug_printf("fb dim change tiled=%d/%d block=%d/%d shift=%d/%d/%d\n",
-                   fb->tiled_w, fb->tiled_h, fb->block_w, fb->block_h,
-                   fb->shift_w, fb->shift_h, fb->shift_min);
-   }
-
+   ctx->job = NULL;
    ctx->dirty |= LIMA_CONTEXT_DIRTY_FRAMEBUFFER;
 }
 
@@ -221,13 +186,17 @@ lima_delete_vertex_elements_state(struct pipe_context *pctx, void *hwcso)
 static void
 lima_set_vertex_buffers(struct pipe_context *pctx,
                         unsigned start_slot, unsigned count,
+                        unsigned unbind_num_trailing_slots,
+                        bool take_ownership,
                         const struct pipe_vertex_buffer *vb)
 {
    struct lima_context *ctx = lima_context(pctx);
    struct lima_context_vertex_buffer *so = &ctx->vertex_buffers;
 
    util_set_vertex_buffers_mask(so->vb, &so->enabled_mask,
-                                vb, start_slot, count);
+                                vb, start_slot, count,
+                                unbind_num_trailing_slots,
+                                take_ownership);
    so->count = util_last_bit(so->enabled_mask);
 
    ctx->dirty |= LIMA_CONTEXT_DIRTY_VERTEX_BUFF;
@@ -283,17 +252,28 @@ lima_set_blend_color(struct pipe_context *pctx,
 
 static void
 lima_set_stencil_ref(struct pipe_context *pctx,
-                     const struct pipe_stencil_ref *stencil_ref)
+                     const struct pipe_stencil_ref stencil_ref)
 {
    struct lima_context *ctx = lima_context(pctx);
 
-   ctx->stencil_ref = *stencil_ref;
+   ctx->stencil_ref = stencil_ref;
    ctx->dirty |= LIMA_CONTEXT_DIRTY_STENCIL_REF;
+}
+
+static void
+lima_set_clip_state(struct pipe_context *pctx,
+                    const struct pipe_clip_state *clip)
+{
+   struct lima_context *ctx = lima_context(pctx);
+   ctx->clip = *clip;
+
+   ctx->dirty |= LIMA_CONTEXT_DIRTY_CLIP;
 }
 
 static void
 lima_set_constant_buffer(struct pipe_context *pctx,
                          enum pipe_shader_type shader, uint index,
+                         bool pass_reference,
                          const struct pipe_constant_buffer *cb)
 {
    struct lima_context *ctx = lima_context(pctx);
@@ -377,6 +357,11 @@ lima_create_sampler_view(struct pipe_context *pctx, struct pipe_resource *prsc,
    so->base.reference.count = 1;
    so->base.context = pctx;
 
+   uint8_t sampler_swizzle[4] = { cso->swizzle_r, cso->swizzle_g,
+                                  cso->swizzle_b, cso->swizzle_a };
+   const uint8_t *format_swizzle = lima_format_get_texel_swizzle(cso->format);
+   util_format_compose_swizzles(format_swizzle, sampler_swizzle, so->swizzle);
+
    return &so->base;
 }
 
@@ -395,6 +380,7 @@ static void
 lima_set_sampler_views(struct pipe_context *pctx,
                       enum pipe_shader_type shader,
                       unsigned start, unsigned nr,
+                       unsigned unbind_num_trailing_slots,
                       struct pipe_sampler_view **views)
 {
    struct lima_context *ctx = lima_context(pctx);
@@ -433,6 +419,7 @@ lima_state_init(struct lima_context *ctx)
    ctx->base.set_scissor_states = lima_set_scissor_states;
    ctx->base.set_blend_color = lima_set_blend_color;
    ctx->base.set_stencil_ref = lima_set_stencil_ref;
+   ctx->base.set_clip_state = lima_set_clip_state;
 
    ctx->base.set_vertex_buffers = lima_set_vertex_buffers;
    ctx->base.set_constant_buffer = lima_set_constant_buffer;
@@ -470,7 +457,7 @@ lima_state_fini(struct lima_context *ctx)
    struct lima_context_vertex_buffer *so = &ctx->vertex_buffers;
 
    util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, NULL,
-                                0, ARRAY_SIZE(so->vb));
+                                0, 0, ARRAY_SIZE(so->vb), false);
 
    pipe_surface_reference(&ctx->framebuffer.base.cbufs[0], NULL);
    pipe_surface_reference(&ctx->framebuffer.base.zsbuf, NULL);

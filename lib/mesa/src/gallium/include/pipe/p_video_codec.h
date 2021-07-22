@@ -104,7 +104,7 @@ struct pipe_video_codec
 
    /**
     * flush any outstanding command buffers to the hardware
-    * should be called before a video_buffer is acessed by the state tracker again
+    * should be called before a video_buffer is acessed by the gallium frontend again
     */
    void (*flush)(struct pipe_video_codec *codec);
 
@@ -122,7 +122,6 @@ struct pipe_video_buffer
    struct pipe_context *context;
 
    enum pipe_format buffer_format;
-   enum pipe_video_chroma_format chroma_format;
    unsigned width;
    unsigned height;
    bool interlaced;

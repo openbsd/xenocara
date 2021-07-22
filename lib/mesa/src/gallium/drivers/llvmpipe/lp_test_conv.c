@@ -175,7 +175,7 @@ test_one(unsigned verbose,
 
    /* Known failures
     * - fixed point 32 -> float 32
-    * - float 32 -> signed normalised integer 32
+    * - float 32 -> signed normalized integer 32
     */
    if ((src_type.floating && !dst_type.floating && dst_type.sign && dst_type.norm && src_type.width == dst_type.width) ||
        (!src_type.floating && dst_type.floating && src_type.fixed && src_type.width == dst_type.width)) {
@@ -184,7 +184,7 @@ test_one(unsigned verbose,
 
    /* Known failures
     * - fixed point 32 -> float 32
-    * - float 32 -> signed normalised integer 32
+    * - float 32 -> signed normalized integer 32
     */
    if ((src_type.floating && !dst_type.floating && dst_type.sign && dst_type.norm && src_type.width == dst_type.width) ||
        (!src_type.floating && dst_type.floating && src_type.fixed && src_type.width == dst_type.width)) {
@@ -221,7 +221,7 @@ test_one(unsigned verbose,
    }
 
    context = LLVMContextCreate();
-   gallivm = gallivm_create("test_module", context);
+   gallivm = gallivm_create("test_module", context, NULL);
 
    func = add_conv_test(gallivm, src_type, num_srcs, dst_type, num_dsts);
 

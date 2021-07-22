@@ -22,6 +22,7 @@ files_mesa_format = [
   'u_format.c',
   'u_format_bptc.c',
   'u_format_etc.c',
+  'u_format_fxt1.c',
   'u_format_latc.c',
   'u_format_other.c',
   'u_format_rgtc.c',
@@ -30,6 +31,15 @@ files_mesa_format = [
   'u_format_yuv.c',
   'u_format_zs.c',
 ]
+
+u_format_pack_h = custom_target(
+  'u_format_pack.h',
+  input : ['u_format_table.py', 'u_format.csv'],
+  output : 'u_format_pack.h',
+  command : [prog_python, '@INPUT@', '--header'],
+  depend_files : files('u_format_pack.py', 'u_format_parse.py'),
+  capture : true,
+)
 
 u_format_table_c = custom_target(
   'u_format_table.c',
@@ -42,9 +52,12 @@ u_format_table_c = custom_target(
 
 libmesa_format = static_library(
   'mesa_format',
-  [files_mesa_format, u_format_table_c],
-  include_directories : inc_common,
-  dependencies : dep_m,
-  c_args : [c_msvc_compat_args, c_vis_args],
+  [files_mesa_format, u_format_table_c, u_format_pack_h],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
+  # NOTE dep_valgrind used here instead of idep_mesautil due to chicken/egg
+  # dependencies between util and util/format
+  dependencies : [dep_m, dep_valgrind],
+  c_args : [c_msvc_compat_args],
+  gnu_symbol_visibility : 'hidden',
   build_by_default : false
 )

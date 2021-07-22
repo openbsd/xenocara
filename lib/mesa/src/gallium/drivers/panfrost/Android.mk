@@ -42,10 +42,10 @@ LOCAL_STATIC_LIBRARIES := \
 	libmesa_nir \
 	libmesa_winsys_panfrost \
 	libpanfrost_bifrost \
-	libpanfrost_decode \
-	libpanfrost_encoder \
+	libpanfrost_lib \
 	libpanfrost_midgard \
-	libpanfrost_shared
+	libpanfrost_shared \
+	libpanfrost_util \
 
 LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 

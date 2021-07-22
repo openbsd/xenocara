@@ -21,7 +21,8 @@
 libwsw = static_library(
   'wsw',
   files('wrapper_sw_winsys.c', 'wrapper_sw_winsys.h'),
-  c_args : c_vis_args,
+  gnu_symbol_visibility : 'hidden',
   include_directories : [inc_gallium, inc_include, inc_src, inc_gallium_aux],
+  dependencies : idep_mesautil,
   build_by_default : false,
 )

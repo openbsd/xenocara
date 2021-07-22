@@ -24,7 +24,7 @@ import os
 import sys
 import textwrap
 
-import xml.etree.cElementTree as et
+import xml.etree.ElementTree as et
 
 hashed_funcs = {}
 
@@ -94,7 +94,7 @@ def emit_fsub(tmp_id, args):
 
 def emit_read(tmp_id, args):
     type = args[1].lower()
-    c("uint64_t tmp{0} = accumulator[query->{1}_offset + {2}];".format(tmp_id, type, args[0]))
+    c("uint64_t tmp{0} = results->accumulator[query->{1}_offset + {2}];".format(tmp_id, type, args[0]))
     return tmp_id + 1
 
 def emit_uadd(tmp_id, args):
@@ -105,7 +105,11 @@ def emit_uadd(tmp_id, args):
 def emit_udiv(tmp_id, args):
     c("uint64_t tmp{0} = {1};".format(tmp_id, args[1]))
     c("uint64_t tmp{0} = {1};".format(tmp_id + 1, args[0]))
-    c("uint64_t tmp{0} = tmp{1} ? tmp{2} / tmp{1} : 0;".format(tmp_id + 2, tmp_id + 1, tmp_id))
+    if args[0].isdigit():
+        assert int(args[0]) > 0
+        c("uint64_t tmp{0} = tmp{2} / tmp{1};".format(tmp_id + 2, tmp_id + 1, tmp_id))
+    else:
+        c("uint64_t tmp{0} = tmp{1} ? tmp{2} / tmp{1} : 0;".format(tmp_id + 2, tmp_id + 1, tmp_id))
     return tmp_id + 3
 
 def emit_umul(tmp_id, args):
@@ -181,7 +185,7 @@ hw_vars["$EuSlicesTotalCount"] = "perf->sys_vars.n_eu_slices"
 hw_vars["$EuSubslicesTotalCount"] = "perf->sys_vars.n_eu_sub_slices"
 hw_vars["$EuThreadsCount"] = "perf->sys_vars.eu_threads_count"
 hw_vars["$SliceMask"] = "perf->sys_vars.slice_mask"
-# subslice_mask is interchangeable with subslice/dual-subslice since Gen12+
+# subslice_mask is interchangeable with subslice/dual-subslice since Gfx12+
 # only has dual subslices which can be assimilated with 16EUs subslices.
 hw_vars["$SubsliceMask"] = "perf->sys_vars.subslice_mask"
 hw_vars["$DualSubsliceMask"] = "perf->sys_vars.subslice_mask"
@@ -189,6 +193,7 @@ hw_vars["$GpuTimestampFrequency"] = "perf->sys_vars.timestamp_frequency"
 hw_vars["$GpuMinFrequency"] = "perf->sys_vars.gt_min_freq"
 hw_vars["$GpuMaxFrequency"] = "perf->sys_vars.gt_max_freq"
 hw_vars["$SkuRevisionId"] = "perf->sys_vars.revision"
+hw_vars["$QueryMode"] = "perf->sys_vars.query_mode"
 
 def output_rpn_equation_code(set, counter, equation):
     c("/* RPN equation: " + equation + " */")
@@ -210,7 +215,7 @@ def output_rpn_equation_code(set, counter, equation):
                         operand = hw_vars[operand]
                     elif operand in set.counter_vars:
                         reference = set.counter_vars[operand]
-                        operand = set.read_funcs[operand[1:]] + "(perf, query, accumulator)"
+                        operand = set.read_funcs[operand[1:]] + "(perf, query, results)"
                     else:
                         raise Exception("Failed to resolve variable " + operand + " in equation " + equation + " for " + set.name + " :: " + counter.get('name'));
                 args.append(operand)
@@ -230,7 +235,7 @@ def output_rpn_equation_code(set, counter, equation):
     if value in hw_vars:
         value = hw_vars[value]
     if value in set.counter_vars:
-        value = set.read_funcs[value[1:]] + "(perf, query, accumulator)"
+        value = set.read_funcs[value[1:]] + "(perf, query, results)"
 
     c("\nreturn " + value + ";")
 
@@ -284,7 +289,7 @@ def output_counter_read(gen, set, counter):
         c(counter.read_sym + "(UNUSED struct gen_perf_config *perf,\n")
         c_indent(len(counter.read_sym) + 1)
         c("const struct gen_perf_query_info *query,\n")
-        c("const uint64_t *accumulator)\n")
+        c("const struct gen_perf_query_result *results)\n")
         c_outdent(len(counter.read_sym) + 1)
 
         c("{")
@@ -353,6 +358,43 @@ def output_availability(set, availability, counter_name):
         c_outdent(4)
 
 
+def output_units(unit):
+    return unit.replace(' ', '_').upper()
+
+
+# should a unit be visible in description?
+units_map = {
+    "bytes" : True,
+    "cycles" : True,
+    "eu atomic requests to l3 cache lines" : False,
+    "eu bytes per l3 cache line" : False,
+    "eu requests to l3 cache lines" : False,
+    "eu sends to l3 cache lines" : False,
+    "events" : True,
+    "hz" : True,
+    "messages" : True,
+    "ns" : True,
+    "number" : False,
+    "percent" : True,
+    "pixels" : True,
+    "texels" : True,
+    "threads" : True,
+    "us" : True,
+    "utilization" : False,
+    }
+
+
+def desc_units(unit):
+    val = units_map.get(unit)
+    if val is None:
+        raise Exception("Unknown unit: " + unit)
+    if val == False:
+        return ""
+    if unit == 'hz':
+        unit = 'Hz'
+    return " Unit: " + unit + "."
+
+
 def output_counter_report(set, counter, current_offset):
     data_type = counter.get('data_type')
     data_type_uc = data_type.upper()
@@ -377,9 +419,12 @@ def output_counter_report(set, counter, current_offset):
     c("counter = &query->counters[query->n_counters++];\n")
     c("counter->oa_counter_read_" + data_type + " = " + set.read_funcs[counter.get('symbol_name')] + ";\n")
     c("counter->name = \"" + counter.get('name') + "\";\n")
-    c("counter->desc = \"" + counter.get('description') + "\";\n")
+    c("counter->desc = \"" + counter.get('description') + desc_units(counter.get('units')) + "\";\n")
+    c("counter->symbol_name = \"" + counter.get('symbol_name') + "\";\n")
+    c("counter->category = \"" + counter.get('mdapi_group') + "\";\n")
     c("counter->type = GEN_PERF_COUNTER_TYPE_" + semantic_type_uc + ";\n")
     c("counter->data_type = GEN_PERF_COUNTER_DATA_TYPE_" + data_type_uc + ";\n")
+    c("counter->units = GEN_PERF_COUNTER_UNITS_" + output_units(counter.get('units')) + ";\n")
     c("counter->raw_max = " + set.max_values[counter.get('symbol_name')] + ";\n")
 
     current_offset = pot_align(current_offset, sizeof(c_type))
@@ -413,6 +458,7 @@ def compute_register_lengths(set):
 
 def generate_register_configs(set):
     register_configs = set.findall('register_config')
+
     for register_config in register_configs:
         t = register_types[register_config.get('type')]
 
@@ -421,9 +467,15 @@ def generate_register_configs(set):
             output_availability(set, availability, register_config.get('type') + ' register config')
             c_indent(3)
 
-        for register in register_config.findall('register'):
-            c("query->config.%s[query->config.n_%s++] = (struct gen_perf_query_register_prog) { .reg = %s, .val = %s };" %
-              (t, t, register.get('address'), register.get('value')))
+        registers = register_config.findall('register')
+        c("static const struct gen_perf_query_register_prog %s[] = {" % t)
+        c_indent(3)
+        for register in registers:
+            c("{ .reg = %s, .val = %s }," % (register.get('address'), register.get('value')))
+        c_outdent(3)
+        c("};")
+        c("query->config.%s = %s;" % (t, t))
+        c("query->config.n_%s = ARRAY_SIZE(%s);" % (t, t))
 
         if availability:
             c_outdent(3)
@@ -626,6 +678,7 @@ def main():
         #include <drm-uapi/i915_drm.h>
 
         #include "util/hash_table.h"
+        #include "util/ralloc.h"
 
         """))
 
@@ -655,64 +708,50 @@ def main():
             counters = set.counters
 
             c("\n")
-            register_lengths = compute_register_lengths(set);
-            for reg_type, reg_length in register_lengths.items():
-                c("static struct gen_perf_query_register_prog {0}_{1}_{2}[{3}];".format(gen.chipset,
-                                                                                        set.underscore_name,
-                                                                                        reg_type, reg_length))
-
-            c("\nstatic struct gen_perf_query_counter {0}_{1}_query_counters[{2}];\n".format(gen.chipset, set.underscore_name, len(counters)))
-            c("static struct gen_perf_query_info " + gen.chipset + "_" + set.underscore_name + "_query = {\n")
-            c_indent(3)
-
-            c(".kind = GEN_PERF_QUERY_TYPE_OA,\n")
-            c(".name = \"" + set.name + "\",\n")
-            c(".guid = \"" + set.hw_config_guid + "\",\n")
-
-            c(".counters = {0}_{1}_query_counters,".format(gen.chipset, set.underscore_name))
-            c(".n_counters = 0,")
-            c(".oa_metrics_set_id = 0, /* determined at runtime, via sysfs */")
-
-            if gen.chipset == "hsw":
-                c(textwrap.dedent("""\
-                    .oa_format = I915_OA_FORMAT_A45_B8_C8,
-
-                    /* Accumulation buffer offsets... */
-                    .gpu_time_offset = 0,
-                    .a_offset = 1,
-                    .b_offset = 46,
-                    .c_offset = 54,
-                """))
-            else:
-                c(textwrap.dedent("""\
-                    .oa_format = I915_OA_FORMAT_A32u40_A4u32_B8_C8,
-
-                    /* Accumulation buffer offsets... */
-                    .gpu_time_offset = 0,
-                    .gpu_clock_offset = 1,
-                    .a_offset = 2,
-                    .b_offset = 38,
-                    .c_offset = 46,
-                """))
-
-            c(".config = {")
-            c_indent(3)
-            for reg_type, reg_length in register_lengths.items():
-                c(".{0} = {1}_{2}_{3},".format(reg_type, gen.chipset, set.underscore_name, reg_type))
-                c(".n_{0} = 0, /* Determined at runtime */".format(reg_type))
-            c_outdent(3)
-            c("},")
-
-            c_outdent(3)
-            c("};\n")
-
             c("\nstatic void\n")
             c("{0}_register_{1}_counter_query(struct gen_perf_config *perf)\n".format(gen.chipset, set.underscore_name))
             c("{\n")
             c_indent(3)
 
-            c("static struct gen_perf_query_info *query = &" + gen.chipset + "_" + set.underscore_name + "_query;\n")
-            c("struct gen_perf_query_counter *counter;\n")
+            c("struct gen_perf_query_info *query = rzalloc(perf, struct gen_perf_query_info);\n")
+            c("\n")
+            c("query->perf = perf;\n")
+            c("query->kind = GEN_PERF_QUERY_TYPE_OA;\n")
+            c("query->name = \"" + set.name + "\";\n")
+            c("query->symbol_name = \"" + set.symbol_name + "\";\n")
+            c("query->guid = \"" + set.hw_config_guid + "\";\n")
+
+            c("query->counters = rzalloc_array(query, struct gen_perf_query_counter, %u);" % len(counters))
+            c("query->n_counters = 0;")
+            c("query->oa_metrics_set_id = 0; /* determined at runtime, via sysfs */")
+
+            if gen.chipset == "hsw":
+                c(textwrap.dedent("""\
+                    query->oa_format = I915_OA_FORMAT_A45_B8_C8;
+                    /* Accumulation buffer offsets... */
+                    query->gpu_time_offset = 0;
+                    query->a_offset = query->gpu_time_offset + 1;
+                    query->b_offset = query->a_offset + 45;
+                    query->c_offset = query->b_offset + 8;
+                    query->perfcnt_offset = query->c_offset + 8;
+                    query->rpstat_offset = query->perfcnt_offset + 2;
+                """))
+            else:
+                c(textwrap.dedent("""\
+                    query->oa_format = I915_OA_FORMAT_A32u40_A4u32_B8_C8;
+                    /* Accumulation buffer offsets... */
+                    query->gpu_time_offset = 0;
+                    query->gpu_clock_offset = query->gpu_time_offset + 1;
+                    query->a_offset = query->gpu_clock_offset + 1;
+                    query->b_offset = query->a_offset + 36;
+                    query->c_offset = query->b_offset + 8;
+                    query->perfcnt_offset = query->c_offset + 8;
+                    query->rpstat_offset = query->perfcnt_offset + 2;
+                """))
+
+
+            c("\n")
+            c("struct gen_perf_query_counter *counter = query->counters;\n")
 
             c("\n")
             c("/* Note: we're assuming there can't be any variation in the definition ")

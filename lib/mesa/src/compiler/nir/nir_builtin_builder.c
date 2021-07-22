@@ -52,21 +52,6 @@ nir_cross4(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
 }
 
 nir_ssa_def*
-nir_length(nir_builder *b, nir_ssa_def *vec)
-{
-   nir_ssa_def *finf = nir_imm_floatN_t(b, INFINITY, vec->bit_size);
-
-   nir_ssa_def *abs = nir_fabs(b, vec);
-   if (vec->num_components == 1)
-      return abs;
-
-   nir_ssa_def *maxc = nir_fmax_abs_vec_comp(b, abs);
-   abs = nir_fdiv(b, abs, maxc);
-   nir_ssa_def *res = nir_fmul(b, nir_fsqrt(b, nir_fdot(b, abs, abs)), maxc);
-   return nir_bcsel(b, nir_feq(b, maxc, finf), maxc, res);
-}
-
-nir_ssa_def*
 nir_fast_length(nir_builder *b, nir_ssa_def *vec)
 {
    switch (vec->num_components) {
@@ -74,6 +59,8 @@ nir_fast_length(nir_builder *b, nir_ssa_def *vec)
    case 2: return nir_fsqrt(b, nir_fdot2(b, vec, vec));
    case 3: return nir_fsqrt(b, nir_fdot3(b, vec, vec));
    case 4: return nir_fsqrt(b, nir_fdot4(b, vec, vec));
+   case 8: return nir_fsqrt(b, nir_fdot8(b, vec, vec));
+   case 16: return nir_fsqrt(b, nir_fdot16(b, vec, vec));
    default:
       unreachable("Invalid number of components");
    }
@@ -89,15 +76,37 @@ nir_nextafter(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
    nir_ssa_def *conddir = nir_flt(b, x, y);
    nir_ssa_def *condzero = nir_feq(b, x, zero);
 
+   uint64_t sign_mask = 1ull << (x->bit_size - 1);
+   uint64_t min_abs = 1;
+
+   if (nir_is_denorm_flush_to_zero(b->shader->info.float_controls_execution_mode, x->bit_size)) {
+      switch (x->bit_size) {
+      case 16:
+         min_abs = 1 << 10;
+         break;
+      case 32:
+         min_abs = 1 << 23;
+         break;
+      case 64:
+         min_abs = 1ULL << 52;
+         break;
+      }
+
+      /* Flush denorm to zero to avoid returning a denorm when condeq is true. */
+      x = nir_fmul(b, x, nir_imm_floatN_t(b, 1.0, x->bit_size));
+   }
+
    /* beware of: +/-0.0 - 1 == NaN */
    nir_ssa_def *xn =
       nir_bcsel(b,
                 condzero,
-                nir_imm_intN_t(b, (1 << (x->bit_size - 1)) + 1, x->bit_size),
+                nir_imm_intN_t(b, sign_mask | min_abs, x->bit_size),
                 nir_isub(b, x, one));
 
    /* beware of -0.0 + 1 == -0x1p-149 */
-   nir_ssa_def *xp = nir_bcsel(b, condzero, one, nir_iadd(b, x, one));
+   nir_ssa_def *xp = nir_bcsel(b, condzero,
+                               nir_imm_intN_t(b, min_abs, x->bit_size),
+                               nir_iadd(b, x, one));
 
    /* nextafter can be implemented by just +/- 1 on the int value */
    nir_ssa_def *res =
@@ -126,23 +135,6 @@ nir_normalize(nir_builder *b, nir_ssa_def *vec)
    nir_ssa_def *res = nir_fmul(b, temp, nir_frsq(b, nir_fdot(b, temp, temp)));
 
    return nir_bcsel(b, nir_feq(b, maxc, f0), vec, res);
-}
-
-nir_ssa_def*
-nir_rotate(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
-{
-   nir_ssa_def *shift_mask = nir_imm_int(b, x->bit_size - 1);
-
-   if (y->bit_size != 32)
-      y = nir_u2u32(b, y);
-
-   nir_ssa_def *lshift = nir_iand(b, y, shift_mask);
-   nir_ssa_def *rshift = nir_isub(b, nir_imm_int(b, x->bit_size), lshift);
-
-   nir_ssa_def *hi = nir_ishl(b, x, lshift);
-   nir_ssa_def *lo = nir_ushr(b, x, rshift);
-
-   return nir_ior(b, hi, lo);
 }
 
 nir_ssa_def*
@@ -352,7 +344,7 @@ nir_get_texture_size(nir_builder *b, nir_tex_instr *tex)
    txs->is_new_style_shadow = tex->is_new_style_shadow;
    txs->texture_index = tex->texture_index;
    txs->sampler_index = tex->sampler_index;
-   txs->dest_type = nir_type_int;
+   txs->dest_type = nir_type_int32;
 
    unsigned idx = 0;
    for (unsigned i = 0; i < tex->num_srcs; i++) {
@@ -375,7 +367,7 @@ nir_get_texture_size(nir_builder *b, nir_tex_instr *tex)
                      nir_tex_instr_dest_size(txs), 32, NULL);
    nir_builder_instr_insert(b, &txs->instr);
 
-   return nir_i2f32(b, &txs->dest.ssa);
+   return &txs->dest.ssa;
 }
 
 nir_ssa_def *
@@ -406,7 +398,7 @@ nir_get_texture_lod(nir_builder *b, nir_tex_instr *tex)
    tql->is_new_style_shadow = tex->is_new_style_shadow;
    tql->texture_index = tex->texture_index;
    tql->sampler_index = tex->sampler_index;
-   tql->dest_type = nir_type_float;
+   tql->dest_type = nir_type_float32;
 
    unsigned idx = 0;
    for (unsigned i = 0; i < tex->num_srcs; i++) {

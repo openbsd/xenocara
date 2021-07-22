@@ -28,8 +28,10 @@
 
 #include "util/u_dynarray.h"
 #include "pipe/p_state.h"
-#include "pan_allocate.h"
+#include "pan_cs.h"
+#include "pan_pool.h"
 #include "pan_resource.h"
+#include "pan_scoreboard.h"
 
 /* panfrost_batch_fence is the out fence of a batch that users or other batches
  * might want to wait on. The batch fence lifetime is different from the batch
@@ -45,24 +47,7 @@ struct panfrost_batch_fence {
          * batch has been flushed or not.
          */
         struct panfrost_batch *batch;
-
-        /* Context this fence is attached to. We need both ctx and batch, as
-         * the batch will go away after it's been submitted, but the fence
-         * will stay a bit longer.
-         */
-        struct panfrost_context *ctx;
-
-        /* Sync object backing this fence. */
-        uint32_t syncobj;
-
-        /* Cached value of the signaled state to avoid calling WAIT_SYNCOBJs
-         * when we know the fence has already been signaled.
-         */
-        bool signaled;
 };
-
-#define PAN_REQ_MSAA            (1 << 0)
-#define PAN_REQ_DEPTH_WRITE     (1 << 1)
 
 /* A panfrost_batch corresponds to a bound FBO we're rendering to,
  * collecting over multiple draws. */
@@ -73,6 +58,12 @@ struct panfrost_batch {
 
         /* Buffers cleared (PIPE_CLEAR_* bitmask) */
         unsigned clear;
+
+        /* Buffers drawn */
+        unsigned draws;
+
+        /* Buffers read */
+        unsigned read;
 
         /* Packed clear values, indexed by both render target as well as word.
          * Essentially, a single pixel is packed, with some padding to bring it
@@ -86,9 +77,8 @@ struct panfrost_batch {
         /* Amount of thread local storage required per thread */
         unsigned stack_size;
 
-        /* Whether this job uses the corresponding requirement (PAN_REQ_*
-         * bitmask) */
-        unsigned requirements;
+        /* Amount of shared memory needed per workgroup (for compute) */
+        unsigned shared_size;
 
         /* The bounding box covered by this job, taking scissors into account.
          * Basically, the bounding box we have to run fragment shaders for */
@@ -96,69 +86,47 @@ struct panfrost_batch {
         unsigned minx, miny;
         unsigned maxx, maxy;
 
-        /* CPU pointers to the job descriptor headers. next_job is only
-         * set at submit time (since only then are all the dependencies
-         * known). The upshot is that this is append-only.
-         *
-         * These arrays contain the headers for the "primary batch", our jargon
-         * referring to the part of the panfrost_job that actually contains
-         * meaningful work. In an OpenGL ES setting, that means the
-         * WRITE_VALUE/VERTEX/TILER jobs. Excluded is specifically the FRAGMENT
-         * job, which is sent on as a secondary batch containing only a single
-         * hardware job. Since there's one and only one FRAGMENT job issued per
-         * panfrost_job, there is no need to do any scoreboarding / management;
-         * it's easy enough to open-code it and it's not like we can get any
-         * better anyway. */
-        struct util_dynarray headers;
-
-        /* (And the GPU versions; TODO maybe combine) */
-        struct util_dynarray gpu_headers;
-
-        /* The last job in the primary batch */
-        struct panfrost_transfer last_job;
-
-        /* The first/last tiler job */
-        struct panfrost_transfer first_tiler;
-        struct panfrost_transfer last_tiler;
-
-        /* The first vertex job used as the input to a tiler job */
-        struct panfrost_transfer first_vertex_for_tiler;
-
-        /* The first job. Notice we've created a linked list */
-        struct panfrost_transfer first_job;
-
-        /* The number of jobs in the primary batch, essentially */
-        unsigned job_index;
-
-        /* BOs referenced -- will be used for flushing logic */
+        /* BOs referenced not in the pool */
         struct hash_table *bos;
 
-        /* Current transient BO */
-	struct panfrost_bo *transient_bo;
+        /* Pool owned by this batch (released when the batch is released) used for temporary descriptors */
+        struct pan_pool pool;
 
-        /* Within the topmost transient BO, how much has been used? */
-        unsigned transient_offset;
+        /* Pool also owned by this batch that is not CPU mapped (created as
+         * INVISIBLE) used for private GPU-internal structures, particularly
+         * varyings */
+        struct pan_pool invisible_pool;
+
+        /* Job scoreboarding state */
+        struct pan_scoreboard scoreboard;
 
         /* Polygon list bound to the batch, or NULL if none bound yet */
         struct panfrost_bo *polygon_list;
 
-        /* Scratchpath BO bound to the batch, or NULL if none bound yet */
+        /* Scratchpad BO bound to the batch, or NULL if none bound yet */
         struct panfrost_bo *scratchpad;
 
-        /* Tiler heap BO bound to the batch, or NULL if none bound yet */
-        struct panfrost_bo *tiler_heap;
-
-        /* Dummy tiler BO bound to the batch, or NULL if none bound yet */
-        struct panfrost_bo *tiler_dummy;
+        /* Shared memory BO bound to the batch, or NULL if none bound yet */
+        struct panfrost_bo *shared_memory;
 
         /* Framebuffer descriptor. */
-        struct panfrost_transfer framebuffer;
+        struct panfrost_ptr framebuffer;
+
+        /* Thread local storage descriptor. */
+        struct panfrost_ptr tls;
+
+        /* Tiler context */
+        struct pan_tiler_context tiler_ctx;
 
         /* Output sync object. Only valid when submitted is true. */
         struct panfrost_batch_fence *out_sync;
 
         /* Batch dependencies */
         struct util_dynarray dependencies;
+
+        /* Indirect draw data */
+        struct panfrost_ptr indirect_draw_ctx;
+        unsigned indirect_draw_job_id;
 };
 
 /* Functions for managing the above */
@@ -182,14 +150,12 @@ void
 panfrost_batch_add_bo(struct panfrost_batch *batch, struct panfrost_bo *bo,
                       uint32_t flags);
 
-void panfrost_batch_add_fbo_bos(struct panfrost_batch *batch);
-
 struct panfrost_bo *
 panfrost_batch_create_bo(struct panfrost_batch *batch, size_t size,
                          uint32_t create_flags, uint32_t access_flags);
 
 void
-panfrost_flush_all_batches(struct panfrost_context *ctx, bool wait);
+panfrost_flush_all_batches(struct panfrost_context *ctx);
 
 bool
 panfrost_pending_batches_access_bo(struct panfrost_context *ctx,
@@ -197,22 +163,19 @@ panfrost_pending_batches_access_bo(struct panfrost_context *ctx,
 
 void
 panfrost_flush_batches_accessing_bo(struct panfrost_context *ctx,
-                                    struct panfrost_bo *bo, uint32_t flags);
+                                    struct panfrost_bo *bo, bool flush_readers);
 
 void
 panfrost_batch_set_requirements(struct panfrost_batch *batch);
 
-struct panfrost_bo *
-panfrost_batch_get_scratchpad(struct panfrost_batch *batch, unsigned shift, unsigned thread_tls_alloc, unsigned core_count);
-
-mali_ptr
-panfrost_batch_get_polygon_list(struct panfrost_batch *batch, unsigned size);
+void
+panfrost_batch_adjust_stack_size(struct panfrost_batch *batch);
 
 struct panfrost_bo *
-panfrost_batch_get_tiler_heap(struct panfrost_batch *batch);
+panfrost_batch_get_scratchpad(struct panfrost_batch *batch, unsigned size, unsigned thread_tls_alloc, unsigned core_count);
 
 struct panfrost_bo *
-panfrost_batch_get_tiler_dummy(struct panfrost_batch *batch);
+panfrost_batch_get_shared_memory(struct panfrost_batch *batch, unsigned size, unsigned workgroup_count);
 
 void
 panfrost_batch_clear(struct panfrost_batch *batch,
@@ -230,39 +193,13 @@ panfrost_batch_intersection_scissor(struct panfrost_batch *batch,
                                     unsigned minx, unsigned miny,
                                     unsigned maxx, unsigned maxy);
 
-/* Scoreboarding */
+mali_ptr
+panfrost_batch_get_bifrost_tiler(struct panfrost_batch *batch, unsigned vertex_count);
 
-void
-panfrost_scoreboard_queue_compute_job(
-        struct panfrost_batch *batch,
-        struct panfrost_transfer job);
+mali_ptr
+panfrost_batch_reserve_framebuffer(struct panfrost_batch *batch);
 
-void
-panfrost_scoreboard_queue_vertex_job(
-        struct panfrost_batch *batch,
-        struct panfrost_transfer vertex,
-        bool requires_tiling);
-
-void
-panfrost_scoreboard_queue_tiler_job(
-        struct panfrost_batch *batch,
-        struct panfrost_transfer tiler);
-
-void
-panfrost_scoreboard_queue_fused_job(
-        struct panfrost_batch *batch,
-        struct panfrost_transfer vertex,
-        struct panfrost_transfer tiler);
-void
-panfrost_scoreboard_queue_fused_job_prepend(
-        struct panfrost_batch *batch,
-        struct panfrost_transfer vertex,
-        struct panfrost_transfer tiler);
-
-void
-panfrost_scoreboard_link_batch(struct panfrost_batch *batch);
-
-bool
-panfrost_batch_is_scanout(struct panfrost_batch *batch);
+mali_ptr
+panfrost_batch_reserve_tls(struct panfrost_batch *batch, bool compute);
 
 #endif

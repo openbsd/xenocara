@@ -29,10 +29,11 @@
 #include "wsi_common.h"
 #include "drm-uapi/drm_fourcc.h"
 
-static PFN_vkVoidFunction
+static VKAPI_PTR PFN_vkVoidFunction
 tu_wsi_proc_addr(VkPhysicalDevice physicalDevice, const char *pName)
 {
-   return tu_lookup_entrypoint_unchecked(pName);
+   TU_FROM_HANDLE(tu_physical_device, pdevice, physicalDevice);
+   return vk_instance_get_proc_addr_unchecked(&pdevice->instance->vk, pName);
 }
 
 VkResult
@@ -43,8 +44,9 @@ tu_wsi_init(struct tu_physical_device *physical_device)
    result = wsi_device_init(&physical_device->wsi_device,
                             tu_physical_device_to_handle(physical_device),
                             tu_wsi_proc_addr,
-                            &physical_device->instance->alloc,
-                            physical_device->master_fd, NULL);
+                            &physical_device->instance->vk.alloc,
+                            physical_device->master_fd, NULL,
+                            false);
    if (result != VK_SUCCESS)
       return result;
 
@@ -57,7 +59,7 @@ void
 tu_wsi_finish(struct tu_physical_device *physical_device)
 {
    wsi_device_finish(&physical_device->wsi_device,
-                     &physical_device->instance->alloc);
+                     &physical_device->instance->vk.alloc);
 }
 
 void
@@ -68,7 +70,7 @@ tu_DestroySurfaceKHR(VkInstance _instance,
    TU_FROM_HANDLE(tu_instance, instance, _instance);
    ICD_FROM_HANDLE(VkIcdSurfaceBase, surface, _surface);
 
-   vk_free2(&instance->alloc, pAllocator, surface);
+   vk_free2(&instance->vk.alloc, pAllocator, surface);
 }
 
 VkResult
@@ -168,7 +170,7 @@ tu_CreateSwapchainKHR(VkDevice _device,
    if (pAllocator)
       alloc = pAllocator;
    else
-      alloc = &device->alloc;
+      alloc = &device->vk.alloc;
 
    return wsi_common_create_swapchain(&device->physical_device->wsi_device,
                                       tu_device_to_handle(device),
@@ -186,7 +188,7 @@ tu_DestroySwapchainKHR(VkDevice _device,
    if (pAllocator)
       alloc = pAllocator;
    else
-      alloc = &device->alloc;
+      alloc = &device->vk.alloc;
 
    wsi_common_destroy_swapchain(_device, swapchain, alloc);
 }
@@ -227,12 +229,16 @@ tu_AcquireNextImage2KHR(VkDevice _device,
                         uint32_t *pImageIndex)
 {
    TU_FROM_HANDLE(tu_device, device, _device);
+   TU_FROM_HANDLE(tu_syncobj, fence, pAcquireInfo->fence);
+   TU_FROM_HANDLE(tu_syncobj, semaphore, pAcquireInfo->semaphore);
+
    struct tu_physical_device *pdevice = device->physical_device;
 
    VkResult result = wsi_common_acquire_next_image2(
       &pdevice->wsi_device, _device, pAcquireInfo, pImageIndex);
 
-   /* TODO signal fence and semaphore */
+   /* signal fence/semaphore - image is available immediately */
+   tu_signal_fences(device, fence, semaphore);
 
    return result;
 }

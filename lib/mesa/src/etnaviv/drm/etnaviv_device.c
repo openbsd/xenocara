@@ -25,11 +25,10 @@
  */
 
 #include "util/hash_table.h"
+#include "util/os_file.h"
 
 #include "etnaviv_priv.h"
 #include "etnaviv_drmif.h"
-
-static pthread_mutex_t etna_drm_table_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct etna_device *etna_device_new(int fd)
 {
@@ -63,7 +62,7 @@ struct etna_device *etna_device_new(int fd)
  * which is close()d when the device is finalized. */
 struct etna_device *etna_device_new_dup(int fd)
 {
-	int dup_fd = dup(fd);
+	int dup_fd = os_dupfd_cloexec(fd);
 	struct etna_device *dev = etna_device_new(dup_fd);
 
 	if (dev)
@@ -99,6 +98,8 @@ static void etna_device_del_impl(struct etna_device *dev)
 
 void etna_device_del_locked(struct etna_device *dev)
 {
+	simple_mtx_assert_locked(&etna_drm_table_lock);
+
 	if (!p_atomic_dec_zero(&dev->refcnt))
 		return;
 
@@ -110,9 +111,9 @@ void etna_device_del(struct etna_device *dev)
 	if (!p_atomic_dec_zero(&dev->refcnt))
 		return;
 
-	pthread_mutex_lock(&etna_drm_table_lock);
+	simple_mtx_lock(&etna_drm_table_lock);
 	etna_device_del_impl(dev);
-	pthread_mutex_unlock(&etna_drm_table_lock);
+	simple_mtx_unlock(&etna_drm_table_lock);
 }
 
 int etna_device_fd(struct etna_device *dev)

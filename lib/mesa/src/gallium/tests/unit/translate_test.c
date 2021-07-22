@@ -27,7 +27,7 @@
 #include "translate/translate.h"
 #include "util/u_memory.h"
 #include "util/format/u_format.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 #include "util/u_cpu_detect.h"
 #include "rtasm/rtasm_cpu.h"
 
@@ -50,6 +50,7 @@ int main(int argc, char** argv)
 {
    struct translate *(*create_fn)(const struct translate_key *key) = 0;
 
+   extern struct util_cpu_caps_t util_cpu_caps;
    struct translate_key key;
    unsigned output_format;
    unsigned input_format;
@@ -87,7 +88,7 @@ int main(int argc, char** argv)
    }
    else if (!strcmp(argv[1], "sse"))
    {
-      if(!util_cpu_caps.has_sse || !rtasm_cpu_has_sse())
+      if(!util_get_cpu_caps()->has_sse || !rtasm_cpu_has_sse())
       {
          printf("Error: CPU doesn't support SSE (test with qemu)\n");
          return 2;
@@ -99,7 +100,7 @@ int main(int argc, char** argv)
    }
    else if (!strcmp(argv[1], "sse2"))
    {
-      if(!util_cpu_caps.has_sse2 || !rtasm_cpu_has_sse())
+      if(!util_get_cpu_caps()->has_sse2 || !rtasm_cpu_has_sse())
       {
          printf("Error: CPU doesn't support SSE2 (test with qemu)\n");
          return 2;
@@ -110,7 +111,7 @@ int main(int argc, char** argv)
    }
    else if (!strcmp(argv[1], "sse3"))
    {
-      if(!util_cpu_caps.has_sse3 || !rtasm_cpu_has_sse())
+      if(!util_get_cpu_caps()->has_sse3 || !rtasm_cpu_has_sse())
       {
          printf("Error: CPU doesn't support SSE3 (test with qemu)\n");
          return 2;
@@ -120,7 +121,7 @@ int main(int argc, char** argv)
    }
    else if (!strcmp(argv[1], "sse4.1"))
    {
-      if(!util_cpu_caps.has_sse4_1 || !rtasm_cpu_has_sse())
+      if(!util_get_cpu_caps()->has_sse4_1 || !rtasm_cpu_has_sse())
       {
          printf("Error: CPU doesn't support SSE4.1 (test with qemu)\n");
          return 2;
@@ -164,7 +165,7 @@ int main(int argc, char** argv)
       double_buffer[i] = rand_double();
 
    for (i = 0; i < buffer_size / sizeof(double); ++i)
-      half_buffer[i] = util_float_to_half((float) rand_double());
+      half_buffer[i] = _mesa_float_to_half((float) rand_double());
 
    for (i = 0; i < count; ++i)
       elts[i] = i;
@@ -172,12 +173,15 @@ int main(int argc, char** argv)
    for (output_format = 1; output_format < PIPE_FORMAT_COUNT; ++output_format)
    {
       const struct util_format_description* output_format_desc = util_format_description(output_format);
+      const struct util_format_pack_description* output_format_pack = util_format_pack_description(output_format);
+      util_format_fetch_rgba_func_ptr fetch_rgba =
+         util_format_fetch_rgba_func(output_format);
       unsigned output_format_size;
       unsigned output_normalized = 0;
 
       if (!output_format_desc
-            || !output_format_desc->fetch_rgba_float
-            || !output_format_desc->pack_rgba_float
+            || !fetch_rgba
+            || !output_format_pack->pack_rgba_float
             || output_format_desc->colorspace != UTIL_FORMAT_COLORSPACE_RGB
             || output_format_desc->layout != UTIL_FORMAT_LAYOUT_PLAIN
             || !translate_is_output_format_supported(output_format))
@@ -194,6 +198,9 @@ int main(int argc, char** argv)
       for (input_format = 1; input_format < PIPE_FORMAT_COUNT; ++input_format)
       {
          const struct util_format_description* input_format_desc = util_format_description(input_format);
+         const struct util_format_pack_description* input_format_pack = util_format_pack_description(input_format);
+         util_format_fetch_rgba_func_ptr fetch_rgba =
+            util_format_fetch_rgba_func(input_format);
          unsigned input_format_size;
          struct translate* translate[2];
          unsigned fail = 0;
@@ -202,8 +209,8 @@ int main(int argc, char** argv)
          boolean input_is_float = FALSE;
 
          if (!input_format_desc
-               || !input_format_desc->fetch_rgba_float
-               || !input_format_desc->pack_rgba_float
+               || !fetch_rgba
+               || !input_format_pack->pack_rgba_float
                || input_format_desc->colorspace != UTIL_FORMAT_COLORSPACE_RGB
                || input_format_desc->layout != UTIL_FORMAT_LAYOUT_PLAIN
                || !translate_is_output_format_supported(input_format))
@@ -273,8 +280,8 @@ int main(int argc, char** argv)
          {
             float a[4];
             float b[4];
-            input_format_desc->fetch_rgba_float(a, buffer[2] + i * input_format_size, 0, 0);
-            input_format_desc->fetch_rgba_float(b, buffer[4] + i * input_format_size, 0, 0);
+            fetch_rgba(a, buffer[2] + i * input_format_size, 0, 0);
+            fetch_rgba(b, buffer[4] + i * input_format_size, 0, 0);
 
             for (j = 0; j < count; ++j)
             {

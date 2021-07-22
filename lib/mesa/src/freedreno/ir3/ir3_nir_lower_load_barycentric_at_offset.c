@@ -33,7 +33,6 @@ static nir_ssa_def *
 load(nir_builder *b, unsigned ncomp, nir_intrinsic_op op)
 {
 	nir_intrinsic_instr *load_size = nir_intrinsic_instr_create(b->shader, op);
-	load_size->num_components = ncomp;
 	nir_ssa_dest_init(&load_size->instr, &load_size->dest, ncomp, 32, NULL);
 	nir_builder_instr_insert(b, &load_size->instr);
 
@@ -62,6 +61,9 @@ ir3_nir_lower_load_barycentric_at_offset_instr(nir_builder *b,
 
 	nir_ssa_def *foo = nir_fddx(b, sij);
 	nir_ssa_def *bar = nir_fddy(b, sij);
+
+	if (b->shader->info.stage == MESA_SHADER_FRAGMENT)
+		b->shader->info.fs.needs_quad_helper_invocations = true;
 
 	nir_ssa_def *x, *y, *z, *i, *j;
 

@@ -28,6 +28,7 @@
 #ifdef HAVE_LIBDRM
 #include <xf86drm.h>
 #endif
+#include "util/compiler.h"
 #include "util/macros.h"
 
 #include "eglcurrent.h"
@@ -108,9 +109,9 @@ static int
 _eglAddDRMDevice(drmDevicePtr device, _EGLDevice **out_dev)
 {
    _EGLDevice *dev;
-   const int wanted_nodes = 1 << DRM_NODE_RENDER | 1 << DRM_NODE_PRIMARY;
 
-   if ((device->available_nodes & wanted_nodes) != wanted_nodes)
+   if ((device->available_nodes & (1 << DRM_NODE_PRIMARY |
+                                   1 << DRM_NODE_RENDER)) == 0)
       return -1;
 
    dev = _eglGlobal.DeviceList;
@@ -224,7 +225,7 @@ _eglQueryDeviceAttribEXT(_EGLDevice *dev, EGLint attribute,
 {
    switch (attribute) {
    default:
-      _eglError(EGL_BAD_ATTRIBUTE, "eglQueryDeviceStringEXT");
+      _eglError(EGL_BAD_ATTRIBUTE, "eglQueryDeviceAttribEXT");
       return EGL_FALSE;
    }
 }
@@ -239,8 +240,8 @@ _eglQueryDeviceStringEXT(_EGLDevice *dev, EGLint name)
    case EGL_DRM_DEVICE_FILE_EXT:
       if (_eglDeviceSupports(dev, _EGL_DEVICE_DRM))
          return dev->device->nodes[DRM_NODE_PRIMARY];
-      /* fall through */
 #endif
+      FALLTHROUGH;
    default:
       _eglError(EGL_BAD_PARAMETER, "eglQueryDeviceStringEXT");
       return NULL;
@@ -273,6 +274,9 @@ _eglRefreshDeviceList(void)
 
    num_devs = drmGetDevices2(0, devices, ARRAY_SIZE(devices));
    for (int i = 0; i < num_devs; i++) {
+      if (!(devices[i]->available_nodes & (1 << DRM_NODE_RENDER)))
+         continue;
+
       ret = _eglAddDRMDevice(devices[i], NULL);
 
       /* Device is not added - error or already present */

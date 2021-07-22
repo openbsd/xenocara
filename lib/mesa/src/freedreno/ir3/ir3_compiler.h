@@ -27,15 +27,22 @@
 #ifndef IR3_COMPILER_H_
 #define IR3_COMPILER_H_
 
-#include "ir3_shader.h"
+#include "util/disk_cache.h"
+#include "util/log.h"
+
+#include "ir3.h"
 
 struct ir3_ra_reg_set;
+struct ir3_shader;
 
 struct ir3_compiler {
 	struct fd_device *dev;
 	uint32_t gpu_id;
 	struct ir3_ra_reg_set *set;
+	struct ir3_ra_reg_set *mergedregs_set;
 	uint32_t shader_count;
+
+	struct disk_cache *disk_cache;
 
 	/*
 	 * Configuration options for things that are handled differently on
@@ -67,9 +74,94 @@ struct ir3_compiler {
 	/* on a6xx, rewrite samgp to sequence of samgq0-3 in vertex shaders:
 	 */
 	bool samgq_workaround;
+
+	/* on a650, vertex shader <-> tess control io uses LDL/STL */
+	bool tess_use_shared;
+
+	/* The maximum number of constants, in vec4's, across the entire graphics
+	 * pipeline.
+	 */
+	uint16_t max_const_pipeline;
+
+	/* The maximum number of constants, in vec4's, for VS+HS+DS+GS. */
+	uint16_t max_const_geom;
+
+	/* The maximum number of constants, in vec4's, for FS. */
+	uint16_t max_const_frag;
+
+	/* A "safe" max constlen that can be applied to each shader in the
+	 * pipeline which we guarantee will never exceed any combined limits.
+	 */
+	uint16_t max_const_safe;
+
+	/* The maximum number of constants, in vec4's, for compute shaders. */
+	uint16_t max_const_compute;
+
+	/* Number of instructions that the shader's base address and length
+	 * (instrlen divides instruction count by this) must be aligned to.
+	 */
+	uint32_t instr_align;
+
+	/* on a3xx, the unit of indirect const load is higher than later gens (in
+	 * vec4 units):
+	 */
+	uint32_t const_upload_unit;
+
+	/* The base number of threads per wave. Some stages may be able to double
+	 * this.
+	 */
+	uint32_t threadsize_base;
+
+	/* On at least a6xx, waves are always launched in pairs. In calculations
+	 * about occupancy, we pretend that each wave pair is actually one wave,
+	 * which simplifies many of the calculations, but means we have to
+	 * multiply threadsize_base by this number.
+	 */
+	uint32_t wave_granularity;
+
+	/* The maximum number of simultaneous waves per core. */
+	uint32_t max_waves;
+
+	/* This is theoretical maximum number of vec4 registers that one wave of
+	 * the base threadsize could use. To get the actual size of the register
+	 * file in bytes one would need to compute:
+	 *
+	 * reg_size_vec4 * threadsize_base * wave_granularity * 16 (bytes per vec4)
+	 *
+	 * However this number is more often what we actually need. For example, a
+	 * max_reg more than half of this will result in a doubled threadsize
+	 * being impossible (because double-sized waves take up twice as many
+	 * registers). Also, the formula for the occupancy given a particular
+	 * register footprint is simpler.
+	 *
+	 * It is in vec4 units because the register file is allocated
+	 * with vec4 granularity, so it's in the same units as max_reg.
+	 */
+	uint32_t reg_size_vec4;
+
+	/* The size of local memory in bytes */
+	uint32_t local_mem_size;
+
+	/* The number of total branch stack entries, divided by wave_granularity. */
+	uint32_t branchstack_size;
+
+	/* Whether clip+cull distances are supported */
+	bool has_clip_cull;
+
+	/* Whether private memory is supported */
+	bool has_pvtmem;
 };
 
+void ir3_compiler_destroy(struct ir3_compiler *compiler);
 struct ir3_compiler * ir3_compiler_create(struct fd_device *dev, uint32_t gpu_id);
+
+void ir3_disk_cache_init(struct ir3_compiler *compiler);
+void ir3_disk_cache_init_shader_key(struct ir3_compiler *compiler,
+		struct ir3_shader *shader);
+bool ir3_disk_cache_retrieve(struct ir3_compiler *compiler,
+		struct ir3_shader_variant *v);
+void ir3_disk_cache_store(struct ir3_compiler *compiler,
+		struct ir3_shader_variant *v);
 
 int ir3_compile_shader_nir(struct ir3_compiler *compiler,
 		struct ir3_shader_variant *so);
@@ -82,20 +174,26 @@ unsigned ir3_pointer_size(struct ir3_compiler *compiler)
 }
 
 enum ir3_shader_debug {
-	IR3_DBG_SHADER_VS  = 0x001,
-	IR3_DBG_SHADER_TCS = 0x002,
-	IR3_DBG_SHADER_TES = 0x004,
-	IR3_DBG_SHADER_GS  = 0x008,
-	IR3_DBG_SHADER_FS  = 0x010,
-	IR3_DBG_SHADER_CS  = 0x020,
-	IR3_DBG_DISASM     = 0x040,
-	IR3_DBG_OPTMSGS    = 0x080,
-	IR3_DBG_FORCES2EN  = 0x100,
-	IR3_DBG_NOUBOOPT   = 0x200,
-	IR3_DBG_SCHEDMSGS  = 0x400,
+	IR3_DBG_SHADER_VS  = BITFIELD_BIT(0),
+	IR3_DBG_SHADER_TCS = BITFIELD_BIT(1),
+	IR3_DBG_SHADER_TES = BITFIELD_BIT(2),
+	IR3_DBG_SHADER_GS  = BITFIELD_BIT(3),
+	IR3_DBG_SHADER_FS  = BITFIELD_BIT(4),
+	IR3_DBG_SHADER_CS  = BITFIELD_BIT(5),
+	IR3_DBG_DISASM     = BITFIELD_BIT(6),
+	IR3_DBG_OPTMSGS    = BITFIELD_BIT(7),
+	IR3_DBG_FORCES2EN  = BITFIELD_BIT(8),
+	IR3_DBG_NOUBOOPT   = BITFIELD_BIT(9),
+	IR3_DBG_NOFP16     = BITFIELD_BIT(10),
+	IR3_DBG_NOCACHE    = BITFIELD_BIT(11),
+
+	/* DEBUG-only options: */
+	IR3_DBG_SCHEDMSGS  = BITFIELD_BIT(20),
+	IR3_DBG_RAMSGS     = BITFIELD_BIT(21),
 };
 
 extern enum ir3_shader_debug ir3_shader_debug;
+extern const char *ir3_shader_override_path;
 
 static inline bool
 shader_debug_enabled(gl_shader_stage type)

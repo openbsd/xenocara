@@ -193,9 +193,9 @@ rewrite_compare_instruction(nir_builder *bld, nir_alu_instr *orig_cmp,
    nir_builder_instr_insert(bld, &mov_cmp->instr);
 
    nir_ssa_def_rewrite_uses(&orig_cmp->dest.dest.ssa,
-                            nir_src_for_ssa(&mov_cmp->dest.dest.ssa));
+                            &mov_cmp->dest.dest.ssa);
    nir_ssa_def_rewrite_uses(&orig_add->dest.dest.ssa,
-                            nir_src_for_ssa(&mov_add->dest.dest.ssa));
+                            &mov_add->dest.dest.ssa);
 
    /* We know these have no more uses because we just rewrote them all, so we
     * can remove them.
@@ -237,7 +237,7 @@ comparison_pre_block(nir_block *block, struct block_queue *bq, nir_builder *bld)
       if (alu->dest.saturate)
          continue;
 
-      static const uint8_t swizzle[4] = { 0, 0, 0, 0 };
+      static const uint8_t swizzle[NIR_MAX_VEC_COMPONENTS] = {0};
 
       switch (alu->op) {
       case nir_op_fadd: {
@@ -319,7 +319,7 @@ comparison_pre_block(nir_block *block, struct block_queue *bq, nir_builder *bld)
 
       case nir_op_flt:
       case nir_op_fge:
-      case nir_op_fne:
+      case nir_op_fneu:
       case nir_op_feq:
          /* If the instruction is a comparison that is used by an if-statement
           * and neither operand is immediate value 0, add it to the set.
@@ -364,9 +364,12 @@ nir_opt_comparison_pre_impl(nir_function_impl *impl)
 
    block_queue_finish(&bq);
 
-   if (progress)
+   if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
+   }
 
    return progress;
 }

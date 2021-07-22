@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2013 Connor Abbott (connor@abbott.cx)
  * Copyright (c) 2018 Alyssa Rosenzweig (alyssa@rosenzweig.io)
+ * Copyright (C) 2019-2020 Collabora, Ltd.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,11 +30,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "panfrost-job.h"
 
 #define MIDGARD_DBG_MSGS		0x0001
 #define MIDGARD_DBG_SHADERS		0x0002
 #define MIDGARD_DBG_SHADERDB            0x0004
+#define MIDGARD_DBG_INORDER             0x0008
 
 extern int midgard_debug;
 
@@ -51,6 +52,25 @@ typedef enum {
         midgard_alu_vadd,
         midgard_alu_lut
 } midgard_alu;
+
+enum {
+        TAG_INVALID = 0x0,
+        TAG_BREAK = 0x1,
+        TAG_TEXTURE_4_VTX = 0x2,
+        TAG_TEXTURE_4 = 0x3,
+        TAG_TEXTURE_4_BARRIER = 0x4,
+        TAG_LOAD_STORE_4 = 0x5,
+        TAG_UNKNOWN_1 = 0x6,
+        TAG_UNKNOWN_2 = 0x7,
+        TAG_ALU_4 = 0x8,
+        TAG_ALU_8 = 0x9,
+        TAG_ALU_12 = 0xA,
+        TAG_ALU_16 = 0xB,
+        TAG_ALU_4_WRITEOUT = 0xC,
+        TAG_ALU_8_WRITEOUT = 0xD,
+        TAG_ALU_12_WRITEOUT = 0xE,
+        TAG_ALU_16_WRITEOUT = 0xF
+};
 
 /*
  * ALU words
@@ -108,7 +128,7 @@ typedef enum {
         midgard_alu_op_ixor       = 0x76,
         midgard_alu_op_inxor      = 0x77, /* ~(a & b) */
         midgard_alu_op_iclz       = 0x78, /* Number of zeroes on left */
-        midgard_alu_op_ibitcount8 = 0x7A, /* Counts bits in 8-bit increments */
+        midgard_alu_op_ipopcnt    = 0x7A, /* Population count */
         midgard_alu_op_imov       = 0x7B,
         midgard_alu_op_iabsdiff   = 0x7C,
         midgard_alu_op_uabsdiff   = 0x7D,
@@ -188,9 +208,9 @@ typedef enum {
 
 typedef enum {
         midgard_outmod_none = 0,
-        midgard_outmod_pos  = 1,
-        /* 0x2 unknown */
-        midgard_outmod_sat  = 3
+        midgard_outmod_pos  = 1, /* max(x, 0.0) */
+        midgard_outmod_sat_signed  = 2, /* clamp(x, -1.0, 1.0) */
+        midgard_outmod_sat  = 3 /* clamp(x, 0.0, 1.0) */
 } midgard_outmod_float;
 
 typedef enum {
@@ -256,8 +276,7 @@ midgard_vector_alu;
 typedef struct
 __attribute__((__packed__))
 {
-        bool abs           : 1;
-        bool negate        : 1;
+        unsigned mod       : 2;
         bool full          : 1; /* 0 = half, 1 = full */
         unsigned component : 3;
 }
@@ -397,6 +416,12 @@ typedef enum {
         /* Packs a colour from fp16 to a native format */
         midgard_op_pack_colour   = 0x09,
 
+        /* Likewise packs from fp32 */
+        midgard_op_pack_colour_32 = 0x0A,
+
+        /* Converts image/tex coordinates into mem address */
+        midgard_op_lea_tex = 0x0D,
+
         /* Unclear why this is on the L/S unit, but moves fp32 cube map
          * coordinates in r27 to its cube map texture coordinate destination
          * (e.g r29). */
@@ -436,15 +461,19 @@ typedef enum {
         midgard_op_atomic_xchg = 0x60,
         midgard_op_atomic_xchg64 = 0x61,
 
+        midgard_op_atomic_cmpxchg = 0x64,
+        midgard_op_atomic_cmpxchg64 = 0x65,
+
         /* Used for compute shader's __global arguments, __local variables (or
          * for register spilling) */
 
-        midgard_op_ld_char = 0x81,
-        midgard_op_ld_char2 = 0x84,
-        midgard_op_ld_short = 0x85,
-        midgard_op_ld_char4 = 0x88, /* short2, int, float */
-        midgard_op_ld_short4 = 0x8C, /* int2, float2, long */
-        midgard_op_ld_int4 = 0x90, /* float4, long2 */
+        midgard_op_ld_u8 = 0x80, /* zero extends */
+        midgard_op_ld_i8 = 0x81, /* sign extends */
+        midgard_op_ld_u16 = 0x84, /* zero extends */
+        midgard_op_ld_i16 = 0x85, /* sign extends */
+        midgard_op_ld_u32 = 0x88,
+        midgard_op_ld_u64 = 0x8C,
+        midgard_op_ld_u128 = 0x90,
 
         midgard_op_ld_attr_32 = 0x94,
         midgard_op_ld_attr_16 = 0x95,
@@ -455,8 +484,10 @@ typedef enum {
         midgard_op_ld_vary_32u = 0x9A,
         midgard_op_ld_vary_32i = 0x9B,
 
-        /* Old version of midgard_op_ld_color_buffer_u8_as_fp16, for T720 */
-        midgard_op_ld_color_buffer_u8_as_fp16_old = 0x9D,
+        /* Old version of midgard_op_ld_color_buffer_as_fp16, for T720 */
+        midgard_op_ld_color_buffer_as_fp32_old = 0x9C,
+        midgard_op_ld_color_buffer_as_fp16_old = 0x9D,
+        midgard_op_ld_color_buffer_32u_old = 0x9E,
 
         /* The distinction between these ops is the alignment requirement /
          * accompanying shift. Thus, the offset to ld_ubo_int4 is in 16-byte
@@ -466,21 +497,27 @@ typedef enum {
          * UBOs don't really exist. The ops are still listed to maintain
          * symmetry with generic I/O ops. */
 
-        midgard_op_ld_ubo_char   = 0xA0, /* theoretical */
-        midgard_op_ld_ubo_char2  = 0xA4, /* theoretical */
-        midgard_op_ld_ubo_char4  = 0xA8,
-        midgard_op_ld_ubo_short4 = 0xAC,
-        midgard_op_ld_ubo_int4   = 0xB0,
+        midgard_op_ld_ubo_u8   = 0xA0, /* theoretical */
+        midgard_op_ld_ubo_u16  = 0xA4, /* theoretical */
+        midgard_op_ld_ubo_u32  = 0xA8,
+        midgard_op_ld_ubo_u64  = 0xAC,
+        midgard_op_ld_ubo_u128 = 0xB0,
+
+        midgard_op_ld_image_32f = 0xB4,
+        midgard_op_ld_image_16f = 0xB5,
+        midgard_op_ld_image_32u = 0xB6,
+        midgard_op_ld_image_32i = 0xB7,
 
         /* New-style blending ops. Works on T760/T860 */
-        midgard_op_ld_color_buffer_u8_as_fp16 = 0xB9,
+        midgard_op_ld_color_buffer_as_fp32 = 0xB8,
+        midgard_op_ld_color_buffer_as_fp16 = 0xB9,
         midgard_op_ld_color_buffer_32u = 0xBA,
 
-        midgard_op_st_char = 0xC0,
-        midgard_op_st_char2 = 0xC4, /* short */
-        midgard_op_st_char4 = 0xC8, /* short2, int, float */
-        midgard_op_st_short4 = 0xCC, /* int2, float2, long */
-        midgard_op_st_int4 = 0xD0, /* float4, long2 */
+        midgard_op_st_u8 = 0xC0,
+        midgard_op_st_u16 = 0xC4,
+        midgard_op_st_u32 = 0xC8,
+        midgard_op_st_u64 = 0xCC,
+        midgard_op_st_u128 = 0xD0,
 
         midgard_op_st_vary_32 = 0xD4,
         midgard_op_st_vary_16 = 0xD5,
@@ -488,12 +525,14 @@ typedef enum {
         midgard_op_st_vary_32i = 0xD7,
 
         /* Value to st in r27, location r26.w as short2 */
-        midgard_op_st_image_f = 0xD8,
-        midgard_op_st_image_ui = 0xDA,
-        midgard_op_st_image_i = 0xDB,
+        midgard_op_st_image_32f = 0xD8,
+        midgard_op_st_image_16f = 0xD9,
+        midgard_op_st_image_32u = 0xDA,
+        midgard_op_st_image_32i = 0xDB,
 } midgard_load_store_op;
 
 typedef enum {
+        midgard_interp_sample = 0,
         midgard_interp_centroid = 1,
         midgard_interp_default = 2
 } midgard_interpolation;
@@ -607,23 +646,13 @@ midgard_tex_register_select;
 /* Texture pipeline results are in r28-r29 */
 #define REG_TEX_BASE 28
 
-/* Texture opcodes... maybe? */
-#define TEXTURE_OP_NORMAL 0x11          /* texture */
-#define TEXTURE_OP_LOD 0x12             /* textureLod */
-#define TEXTURE_OP_TEXEL_FETCH 0x14     /* texelFetch */
-
-/* Implements barrier() */
-#define TEXTURE_OP_BARRIER 0x0B
-
-/* Computes horizontal and vertical derivatives respectively. Use with a float
- * sampler and a "2D" texture.  Leave texture/sampler IDs as zero; they ought
- * to be ignored. Only works for fp32 on 64-bit at a time, so derivatives of a
- * vec4 require 2 texture ops.  For some reason, the blob computes both X and Y
- * derivatives at the same time and just throws out whichever is unused; it's
- * not known if this is a quirk of the hardware or just of the blob. */
-
-#define TEXTURE_OP_DFDX 0x0D
-#define TEXTURE_OP_DFDY 0x1D
+enum mali_texture_op {
+        TEXTURE_OP_NORMAL = 1,  /* texture */
+        TEXTURE_OP_LOD = 2,     /* textureLod */
+        TEXTURE_OP_TEXEL_FETCH = 4,
+        TEXTURE_OP_BARRIER = 11,
+        TEXTURE_OP_DERIVATIVE = 13
+};
 
 enum mali_sampler_type {
         MALI_SAMPLER_UNK        = 0x0,
@@ -632,15 +661,30 @@ enum mali_sampler_type {
         MALI_SAMPLER_SIGNED     = 0x3, /* isampler */
 };
 
+/* Texture modes */
+enum mali_texture_mode {
+        TEXTURE_NORMAL = 1,
+        TEXTURE_SHADOW = 5,
+        TEXTURE_GATHER_SHADOW = 6,
+        TEXTURE_GATHER_X = 8,
+        TEXTURE_GATHER_Y = 9,
+        TEXTURE_GATHER_Z = 10,
+        TEXTURE_GATHER_W = 11,
+};
+
+enum mali_derivative_mode {
+        TEXTURE_DFDX = 0,
+        TEXTURE_DFDY = 1,
+};
+
 typedef struct
 __attribute__((__packed__))
 {
         unsigned type      : 4;
         unsigned next_type : 4;
 
-        unsigned op  : 6;
-        unsigned shadow    : 1;
-        unsigned is_gather  : 1;
+        enum mali_texture_op op  : 4;
+        unsigned mode : 4;
 
         /* A little obscure, but last is set for the last texture operation in
          * a shader. cont appears to just be last's opposite (?). Yeah, I know,
@@ -650,7 +694,7 @@ __attribute__((__packed__))
         unsigned cont  : 1;
         unsigned last  : 1;
 
-        enum mali_texture_type format : 2;
+        unsigned format : 2;
 
         /* Are sampler_handle/texture_handler respectively set by registers? If
          * true, the lower 8-bits of the respective field is a register word.
@@ -687,19 +731,25 @@ __attribute__((__packed__))
 
         unsigned mask : 4;
 
-        /* Intriguingly, textures can take an outmod just like textures. Int
+        /* Intriguingly, textures can take an outmod just like alu ops. Int
          * outmods are not supported as far as I can tell, so this is only
          * meaningful for float samplers */
         midgard_outmod_float outmod  : 2;
 
         unsigned swizzle  : 8;
-        unsigned unknown4  : 8;
 
-        unsigned unknownA  : 4;
+         /* These indicate how many bundles after this texture op may be
+          * executed in parallel with this op. We may execute only ALU and
+         * ld/st in parallel (not other textures), and obviously there cannot
+         * be any dependency (the blob appears to forbid even accessing other
+         * channels of a given texture register). */
+
+        unsigned out_of_order   : 2;
+        unsigned unknown4  : 10;
 
         /* In immediate mode, each offset field is an immediate range [0, 7].
          *
-         * In register mode, offset_x becomes a register full / select / upper
+         * In register mode, offset_x becomes a register (full, select, upper)
          * triplet followed by a vec3 swizzle is splattered across
          * offset_y/offset_z in a genuinely bizarre way.
          *
@@ -765,8 +815,8 @@ __attribute__((__packed__))
         unsigned zero2 : 14;
 
         unsigned zero3 : 24;
-        unsigned unknown4 : 1;
-        unsigned zero4 : 7;
+        unsigned out_of_order : 4;
+        unsigned zero4 : 4;
 
         uint64_t zero5;
 } midgard_texture_barrier_word;
@@ -785,5 +835,12 @@ typedef union midgard_constants {
         int8_t i8[16];
 }
 midgard_constants;
+
+enum midgard_roundmode {
+        MIDGARD_RTE = 0x0, /* round to even */
+        MIDGARD_RTZ = 0x1, /* round to zero */
+        MIDGARD_RTN = 0x2, /* round to negative */
+        MIDGARD_RTP = 0x3, /* round to positive */
+};
 
 #endif

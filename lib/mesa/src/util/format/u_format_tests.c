@@ -240,6 +240,10 @@ util_format_test_cases[] =
    {PIPE_FORMAT_R8_SRGB, PACKED_1x8(0xff), PACKED_1x8(0xbc), UNPACKED_1x1(0.502886458033, 0.0, 0.0, 1.0)},
    {PIPE_FORMAT_R8_SRGB, PACKED_1x8(0xff), PACKED_1x8(0xff), UNPACKED_1x1(1.0, 0.0, 0.0, 1.0)},
 
+   {PIPE_FORMAT_R8G8_SRGB, PACKED_2x8(0xff, 0xff), PACKED_2x8(0x00, 0x00), UNPACKED_1x1(0.0, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R8G8_SRGB, PACKED_2x8(0xff, 0xff), PACKED_2x8(0xbc, 0xbc), UNPACKED_1x1(0.502886458033, 0.502886458033, 0.0, 1.0)},
+   {PIPE_FORMAT_R8G8_SRGB, PACKED_2x8(0xff, 0xff), PACKED_2x8(0xff, 0xff), UNPACKED_1x1(1.0, 1.0, 0.0, 1.0)},
+
    {PIPE_FORMAT_L8A8_SRGB, PACKED_1x16(0xffff), PACKED_1x16(0x0000), UNPACKED_1x1(0.0, 0.0, 0.0, 0.0)},
    {PIPE_FORMAT_L8A8_SRGB, PACKED_1x16(0xffff), PACKED_1x16(0x00bc), UNPACKED_1x1(0.502886458033, 0.502886458033, 0.502886458033, 0.0)},
    {PIPE_FORMAT_L8A8_SRGB, PACKED_1x16(0xffff), PACKED_1x16(0x00ff), UNPACKED_1x1(1.0, 1.0, 1.0, 0.0)},
@@ -914,8 +918,11 @@ util_format_test_cases[] =
    {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x03FF), UNPACKED_1x1( 6.09756E-5, 0.0, 0.0, 1.0)},
 #endif
 
+   /* This fails with _mesa_float_to_float16_rtz, but passes with _mesa_float_to_float16_rtne. */
+#if 0
    /* Minimum positive denormal */
    {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x0001), UNPACKED_1x1( 5.96046E-8, 0.0, 0.0, 1.0)},
+#endif
 
    /* Min representable value */
    {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xfbff), UNPACKED_1x1(   -65504.0, 0.0, 0.0, 1.0)},

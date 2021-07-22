@@ -37,7 +37,7 @@
 #include "main/errors.h"
 #include "main/glheader.h"
 #include "main/macros.h"
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 
 #include "math/m_xform.h"
@@ -263,7 +263,7 @@ static void texgen_reflection_map_nv( struct gl_context *ctx,
    out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
    out->count = VB->Count;
    out->size = MAX2(in->size, 3);
-   if (in->size == 4) 
+   if (in->size == 4)
       _mesa_copy_tab[0x8]( out, in );
 }
 
@@ -292,7 +292,7 @@ static void texgen_normal_map_nv( struct gl_context *ctx,
    out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
    out->count = count;
    out->size = MAX2(in->size, 3);
-   if (in->size == 4) 
+   if (in->size == 4)
       _mesa_copy_tab[0x8]( out, in );
 }
 
@@ -370,12 +370,12 @@ static void texgen( struct gl_context *ctx,
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( (GLfloat *)out->data,
 				       sizeof(out->data[0]), obj,
-				       texUnit->GenS.ObjectPlane );
+				       texUnit->ObjectPlane[GEN_S] );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( (GLfloat *)out->data,
 				       sizeof(out->data[0]), eye,
-				       texUnit->GenS.EyePlane );
+				       texUnit->EyePlane[GEN_S] );
 	 break;
       case GL_SPHERE_MAP:
          for (i = 0; i < count; i++)
@@ -403,12 +403,12 @@ static void texgen( struct gl_context *ctx,
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][1]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->GenT.ObjectPlane );
+				       texUnit->ObjectPlane[GEN_T] );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][1]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->GenT.EyePlane );
+				       texUnit->EyePlane[GEN_T] );
 	 break;
       case GL_SPHERE_MAP:
          for (i = 0; i < count; i++)
@@ -436,12 +436,12 @@ static void texgen( struct gl_context *ctx,
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][2]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->GenR.ObjectPlane );
+				       texUnit->ObjectPlane[GEN_R] );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][2]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->GenR.EyePlane );
+				       texUnit->EyePlane[GEN_R] );
 	 break;
       case GL_REFLECTION_MAP_NV:
 	 for (i=0;i<count;i++)
@@ -464,12 +464,12 @@ static void texgen( struct gl_context *ctx,
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][3]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->GenQ.ObjectPlane );
+				       texUnit->ObjectPlane[GEN_Q] );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][3]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->GenQ.EyePlane );
+				       texUnit->EyePlane[GEN_Q] );
 	 break;
       default:
 	 _mesa_problem(ctx, "Bad Q texgen");
@@ -487,7 +487,7 @@ static GLboolean run_texgen_stage( struct gl_context *ctx,
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current) 
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current)
       return GL_TRUE;
 
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
@@ -511,7 +511,7 @@ static void validate_texgen_stage( struct gl_context *ctx,
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current) 
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current)
       return;
 
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {

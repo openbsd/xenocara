@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 files_libradeonsi = files(
-  'cik_sdma.c',
   'driinfo_radeonsi.h',
   'gfx10_query.c',
   'gfx10_shader_ngg.c',
@@ -32,9 +31,9 @@ files_libradeonsi = files(
   'si_compute.h',
   'si_compute_blit.c',
   'si_cp_dma.c',
+  'si_cp_reg_shadowing.c',
   'si_debug.c',
   'si_descriptors.c',
-  'si_dma_cs.c',
   'si_fence.c',
   'si_get.c',
   'si_gfx_cs.c',
@@ -57,16 +56,18 @@ files_libradeonsi = files(
   'si_shader_llvm_tess.c',
   'si_shader_llvm_vs.c',
   'si_shader_nir.c',
+  'si_shaderlib_nir.c',
   'si_shaderlib_tgsi.c',
+  'si_sqtt.c',
   'si_state.c',
   'si_state.h',
   'si_state_binning.c',
-  'si_state_draw.c',
+  'si_state_draw.cpp',
   'si_state_msaa.c',
   'si_state_shaders.c',
   'si_state_streamout.c',
   'si_state_viewport.c',
-  'si_test_dma.c',
+  'si_test_blit.c',
   'si_test_dma_perf.c',
   'si_texture.c',
   'si_uvd.c',
@@ -74,11 +75,13 @@ files_libradeonsi = files(
   '../radeon/radeon_uvd.h',
   '../radeon/radeon_vcn_enc_1_2.c',
   '../radeon/radeon_vcn_enc_2_0.c',
+  '../radeon/radeon_vcn_enc_3_0.c',
   '../radeon/radeon_vcn_enc.c',
   '../radeon/radeon_vcn_enc.h',
   '../radeon/radeon_vcn_dec_jpeg.c',
   '../radeon/radeon_vcn_dec.c',
   '../radeon/radeon_vcn_dec.h',
+  '../radeon/radeon_vcn_av1_default.h',
   '../radeon/radeon_uvd_enc_1_1.c',
   '../radeon/radeon_uvd_enc.c',
   '../radeon/radeon_uvd_enc.h',
@@ -92,44 +95,20 @@ files_libradeonsi = files(
   '../radeon/radeon_winsys.h',
 )
 
-si_driinfo_h = custom_target(
-  'si_driinfo.h',
-  input : files(
-    '../../../util/merge_driinfo.py',
-    '../../auxiliary/pipe-loader/driinfo_gallium.h', 'driinfo_radeonsi.h'
-  ),
-  output : 'si_driinfo.h',
-  command : [prog_python, '@INPUT@'],
-  capture : true,
-)
-
-gfx10_format_table_h = custom_target(
-  'gfx10_format_table.h',
-  input : files(
-    'gfx10_format_table.py',
-    '../../../util/format/u_format.csv', '../../../amd/registers/gfx10-rsrc.json'
-  ),
-  output : 'gfx10_format_table.h',
-  command : [prog_python, '@INPUT@'],
-  capture : true,
-  depend_files : ['../../../amd/registers/regdb.py']
-)
-
 libradeonsi = static_library(
   'radeonsi',
-  [files_libradeonsi, si_driinfo_h, sid_tables_h, gfx10_format_table_h],
+  [files_libradeonsi, sid_tables_h],
   include_directories : [
     inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_amd_common, inc_amd_common_llvm,
     inc_gallium_drivers,
   ],
-  c_args : ['-Wstrict-overflow=0', c_vis_args],
-  cpp_args : [cpp_vis_args],
-  dependencies : [dep_llvm, dep_clock, dep_libdrm_radeon, idep_nir_headers, idep_amdgfxregs_h],
+  c_args : ['-Wstrict-overflow=0'],
+  gnu_symbol_visibility : 'hidden',
+  dependencies : [dep_llvm, dep_clock, dep_libdrm_radeon, idep_nir_headers, idep_amdgfxregs_h, idep_mesautil],
 )
 
 driver_radeonsi = declare_dependency(
   compile_args : '-DGALLIUM_RADEONSI',
-  sources : si_driinfo_h,
   link_with : [
     libradeonsi, libradeonwinsys, libamdgpuwinsys, libamd_common, libamd_common_llvm, libgalliumvl
   ],

@@ -31,6 +31,7 @@
 struct zink_blend_state;
 struct zink_depth_stencil_alpha_state;
 struct zink_gfx_program;
+struct zink_compute_program;
 struct zink_rasterizer_state;
 struct zink_render_pass;
 struct zink_screen;
@@ -40,17 +41,47 @@ struct zink_gfx_pipeline_state {
    struct zink_render_pass *render_pass;
 
    struct zink_vertex_elements_hw_state *element_state;
-   VkVertexInputBindingDescription bindings[PIPE_MAX_ATTRIBS]; // combination of element_state and stride
+   uint8_t divisors_present;
 
    uint32_t num_attachments;
    struct zink_blend_state *blend_state;
 
    struct zink_rasterizer_hw_state *rast_state;
 
-   struct zink_depth_stencil_alpha_state *depth_stencil_alpha_state;
+   struct zink_depth_stencil_alpha_hw_state *depth_stencil_alpha_state;
 
    VkSampleMask sample_mask;
    uint8_t rast_samples;
+   uint8_t vertices_per_patch;
+
+   unsigned num_viewports;
+
+   bool primitive_restart;
+
+   /* Pre-hashed value for table lookup, invalid when zero.
+    * Members after this point are not included in pipeline state hash key */
+   uint32_t hash;
+   bool dirty;
+
+   VkShaderModule modules[PIPE_SHADER_TYPES - 1];
+   uint32_t module_hash;
+
+   uint32_t combined_hash;
+   bool combined_dirty;
+
+   VkVertexInputBindingDivisorDescriptionEXT divisors[PIPE_MAX_ATTRIBS];
+   VkVertexInputBindingDescription bindings[PIPE_MAX_ATTRIBS]; // combination of element_state and stride
+   uint32_t vertex_buffers_enabled_mask;
+   bool have_EXT_extended_dynamic_state;
+};
+
+struct zink_compute_pipeline_state {
+   /* Pre-hashed value for table lookup, invalid when zero.
+    * Members after this point are not included in pipeline state hash key */
+   uint32_t hash;
+   bool dirty;
+   bool use_local_size;
+   uint32_t local_size[3];
 };
 
 VkPipeline
@@ -59,4 +90,6 @@ zink_create_gfx_pipeline(struct zink_screen *screen,
                          struct zink_gfx_pipeline_state *state,
                          VkPrimitiveTopology primitive_topology);
 
+VkPipeline
+zink_create_compute_pipeline(struct zink_screen *screen, struct zink_compute_program *comp, struct zink_compute_pipeline_state *state);
 #endif

@@ -68,8 +68,12 @@ libintel_compiler_files = files(
   'brw_fs_visitor.cpp',
   'brw_inst.h',
   'brw_interpolation_map.c',
+  'brw_ir.h',
   'brw_ir_allocator.h',
+  'brw_ir_analysis.h',
   'brw_ir_fs.h',
+  'brw_ir_performance.h',
+  'brw_ir_performance.cpp',
   'brw_ir_vec4.h',
   'brw_nir.h',
   'brw_nir.c',
@@ -80,8 +84,15 @@ libintel_compiler_files = files(
   'brw_nir_lower_cs_intrinsics.c',
   'brw_nir_lower_alpha_to_coverage.c',
   'brw_nir_lower_image_load_store.c',
+  'brw_nir_lower_intersection_shader.c',
   'brw_nir_lower_mem_access_bit_sizes.c',
+  'brw_nir_lower_rt_intrinsics.c',
+  'brw_nir_lower_scoped_barriers.c',
+  'brw_nir_lower_shader_calls.c',
   'brw_nir_opt_peephole_ffma.c',
+  'brw_nir_rt.h',
+  'brw_nir_rt.c',
+  'brw_nir_rt_builder.h',
   'brw_nir_tcs_workarounds.c',
   'brw_nir_clamp_image_1d_2d_array_sizes.c',
   'brw_packed_float.c',
@@ -89,6 +100,7 @@ libintel_compiler_files = files(
   'brw_reg.h',
   'brw_reg_type.c',
   'brw_reg_type.h',
+  'brw_rt.h',
   'brw_schedule_instructions.cpp',
   'brw_shader.cpp',
   'brw_shader.h',
@@ -118,8 +130,8 @@ libintel_compiler_files = files(
   'brw_vec4_vs.h',
   'brw_vue_map.c',
   'brw_wm_iz.cpp',
-  'gen6_gs_visitor.cpp',
-  'gen6_gs_visitor.h',
+  'gfx6_gs_visitor.cpp',
+  'gfx6_gs_visitor.h',
 )
 
 brw_nir_trig = custom_target(
@@ -137,10 +149,10 @@ brw_nir_trig = custom_target(
 libintel_compiler = static_library(
   'intel_compiler',
   [libintel_compiler_files, brw_nir_trig, ir_expression_operation_h],
-  include_directories : [inc_common, inc_intel],
-  c_args : [c_vis_args, no_override_init_args],
-  cpp_args : [cpp_vis_args],
-  dependencies : idep_nir_headers,
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_intel],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
+  dependencies : [idep_nir_headers, idep_mesautil],
   build_by_default : false,
 )
 
@@ -156,7 +168,7 @@ if with_tests
       executable(
         [t, ir_expression_operation_h],
         'test_@0@.cpp'.format(t),
-        include_directories : [inc_common, inc_intel],
+        include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_intel],
         link_with : [
           libintel_compiler, libintel_common, libintel_dev, libisl,
         ],

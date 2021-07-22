@@ -35,7 +35,7 @@
 #define COND(bool, val) ((bool) ? (val) : 0)
 
 #define DBG(fmt, ...) \
-		do { debug_printf("%s:%d: "fmt "\n", \
+		do { mesa_logd("%s:%d: "fmt, \
 				__FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 
 /**
@@ -77,13 +77,13 @@ struct ir3_context {
 	 * inputs.  So we do all the input tracking normally and fix
 	 * things up after compile_instructions()
 	 */
-	struct ir3_instruction *ij_pixel, *ij_sample, *ij_centroid, *ij_size;
+	struct ir3_instruction *ij[IJ_COUNT];
 
 	/* for fragment shaders, for gl_FrontFacing and gl_FragCoord: */
 	struct ir3_instruction *frag_face, *frag_coord;
 
 	/* For vertex shaders, keep track of the system values sources */
-	struct ir3_instruction *vertex_id, *basevertex, *instance_id, *base_instance;
+	struct ir3_instruction *vertex_id, *basevertex, *instance_id, *base_instance, *draw_id, *view_index;
 
 	/* For fragment shaders: */
 	struct ir3_instruction *samp_id, *samp_mask_in;
@@ -120,7 +120,14 @@ struct ir3_context {
 	 * src used for an array of vec1 cannot be also used for an
 	 * array of vec4.
 	 */
-	struct hash_table *addr_ht[4];
+	struct hash_table *addr0_ht[4];
+
+	/* The same for a1.x. We only support immediate values for a1.x, as this
+	 * is the only use so far.
+	 */
+	struct hash_table_u64 *addr1_ht;
+
+	struct hash_table *sel_cond_conversions;
 
 	/* last dst array, for indirect we need to insert a var-store.
 	 */
@@ -139,6 +146,8 @@ struct ir3_context {
 
 	unsigned max_texture_index;
 
+	unsigned prefetch_limit;
+
 	/* set if we encounter something we can't handle yet, so we
 	 * can bail cleanly and fallback to TGSI compiler f/e
 	 */
@@ -150,8 +159,12 @@ struct ir3_context_funcs {
 			struct ir3_instruction **dst);
 	void (*emit_intrinsic_store_ssbo)(struct ir3_context *ctx, nir_intrinsic_instr *intr);
 	struct ir3_instruction * (*emit_intrinsic_atomic_ssbo)(struct ir3_context *ctx, nir_intrinsic_instr *intr);
+	void (*emit_intrinsic_load_image)(struct ir3_context *ctx, nir_intrinsic_instr *intr,
+			struct ir3_instruction **dst);
 	void (*emit_intrinsic_store_image)(struct ir3_context *ctx, nir_intrinsic_instr *intr);
 	struct ir3_instruction * (*emit_intrinsic_atomic_image)(struct ir3_context *ctx, nir_intrinsic_instr *intr);
+	void (*emit_intrinsic_image_size)(struct ir3_context *ctx, nir_intrinsic_instr *intr,
+			struct ir3_instruction **dst);
 };
 
 extern const struct ir3_context_funcs ir3_a4xx_funcs;
@@ -169,6 +182,10 @@ struct ir3_instruction * ir3_create_collect(struct ir3_context *ctx,
 		struct ir3_instruction *const *arr, unsigned arrsz);
 void ir3_split_dest(struct ir3_block *block, struct ir3_instruction **dst,
 		struct ir3_instruction *src, unsigned base, unsigned n);
+void ir3_handle_bindless_cat6(struct ir3_instruction *instr, nir_src rsrc);
+void ir3_handle_nonuniform(struct ir3_instruction *instr, nir_intrinsic_instr *intrin);
+void emit_intrinsic_image_size_tex(struct ir3_context *ctx, nir_intrinsic_instr *intr,
+		struct ir3_instruction **dst);
 
 NORETURN void ir3_context_error(struct ir3_context *ctx, const char *format, ...);
 
@@ -176,16 +193,17 @@ NORETURN void ir3_context_error(struct ir3_context *ctx, const char *format, ...
 		if (!(cond)) ir3_context_error((ctx), "failed assert: "#cond"\n"); \
 	} while (0)
 
-struct ir3_instruction * ir3_get_addr(struct ir3_context *ctx,
+struct ir3_instruction * ir3_get_addr0(struct ir3_context *ctx,
 		struct ir3_instruction *src, int align);
+struct ir3_instruction * ir3_get_addr1(struct ir3_context *ctx,
+		unsigned const_val);
 struct ir3_instruction * ir3_get_predicate(struct ir3_context *ctx,
 		struct ir3_instruction *src);
 
 void ir3_declare_array(struct ir3_context *ctx, nir_register *reg);
 struct ir3_array * ir3_get_array(struct ir3_context *ctx, nir_register *reg);
 struct ir3_instruction *ir3_create_array_load(struct ir3_context *ctx,
-		struct ir3_array *arr, int n, struct ir3_instruction *address,
-		unsigned bitsize);
+		struct ir3_array *arr, int n, struct ir3_instruction *address);
 void ir3_create_array_store(struct ir3_context *ctx, struct ir3_array *arr, int n,
 		struct ir3_instruction *src, struct ir3_instruction *address);
 

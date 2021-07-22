@@ -117,7 +117,7 @@ v3d_invalidate_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
 }
 
 /**
- * Flushes the current job to get up-to-date primive counts written to the
+ * Flushes the current job to get up-to-date primitive counts written to the
  * primitive counts BO, then accumulates the transform feedback primitive count
  * in the context and the corresponding vertex counts in the bound stream
  * output targets.
@@ -149,6 +149,129 @@ v3d_update_primitive_counters(struct v3d_context *v3d)
         }
 }
 
+bool
+v3d_line_smoothing_enabled(struct v3d_context *v3d)
+{
+        if (!v3d->rasterizer->base.line_smooth)
+                return false;
+
+        /* According to the OpenGL docs, line smoothing shouldn’t be applied
+         * when multisampling
+         */
+        if (v3d->job->msaa || v3d->rasterizer->base.multisample)
+                return false;
+
+        if (v3d->framebuffer.nr_cbufs <= 0)
+                return false;
+
+        struct pipe_surface *cbuf = v3d->framebuffer.cbufs[0];
+        if (!cbuf)
+                return false;
+
+        /* Modifying the alpha for pure integer formats probably
+         * doesn’t make sense because we don’t know how the application
+         * uses the alpha value.
+         */
+        if (util_format_is_pure_integer(cbuf->format))
+                return false;
+
+        return true;
+}
+
+float
+v3d_get_real_line_width(struct v3d_context *v3d)
+{
+        float width = v3d->rasterizer->base.line_width;
+
+        if (v3d_line_smoothing_enabled(v3d)) {
+                /* If line smoothing is enabled then we want to add some extra
+                 * pixels to the width in order to have some semi-transparent
+                 * edges.
+                 */
+                width = floorf(M_SQRT2 * width) + 3;
+        }
+
+        return width;
+}
+
+void
+v3d_flag_dirty_sampler_state(struct v3d_context *v3d,
+                             enum pipe_shader_type shader)
+{
+        switch (shader) {
+        case PIPE_SHADER_VERTEX:
+                v3d->dirty |= VC5_DIRTY_VERTTEX;
+                break;
+        case PIPE_SHADER_GEOMETRY:
+                v3d->dirty |= VC5_DIRTY_GEOMTEX;
+                break;
+        case PIPE_SHADER_FRAGMENT:
+                v3d->dirty |= VC5_DIRTY_FRAGTEX;
+                break;
+        case PIPE_SHADER_COMPUTE:
+                v3d->dirty |= VC5_DIRTY_COMPTEX;
+                break;
+        default:
+                unreachable("Unsupported shader stage");
+        }
+}
+
+void
+v3d_create_texture_shader_state_bo(struct v3d_context *v3d,
+                                   struct v3d_sampler_view *so)
+{
+        if (v3d->screen->devinfo.ver >= 41)
+                v3d41_create_texture_shader_state_bo(v3d, so);
+        else
+                v3d33_create_texture_shader_state_bo(v3d, so);
+}
+
+void
+v3d_get_tile_buffer_size(bool is_msaa,
+                         uint32_t nr_cbufs,
+                         struct pipe_surface **cbufs,
+                         struct pipe_surface *bbuf,
+                         uint32_t *tile_width,
+                         uint32_t *tile_height,
+                         uint32_t *max_bpp)
+{
+        static const uint8_t tile_sizes[] = {
+                64, 64,
+                64, 32,
+                32, 32,
+                32, 16,
+                16, 16,
+        };
+        int tile_size_index = 0;
+        if (is_msaa)
+                tile_size_index += 2;
+
+        if (cbufs[3] || cbufs[2])
+                tile_size_index += 2;
+        else if (cbufs[1])
+                tile_size_index++;
+
+        *max_bpp = 0;
+        for (int i = 0; i < nr_cbufs; i++) {
+                if (cbufs[i]) {
+                        struct v3d_surface *surf = v3d_surface(cbufs[i]);
+                        *max_bpp = MAX2(*max_bpp, surf->internal_bpp);
+                }
+        }
+
+        if (bbuf) {
+                struct v3d_surface *bsurf = v3d_surface(bbuf);
+                assert(bbuf->texture->nr_samples <= 1 || is_msaa);
+                *max_bpp = MAX2(*max_bpp, bsurf->internal_bpp);
+        }
+
+        tile_size_index += *max_bpp;
+
+        assert(tile_size_index < ARRAY_SIZE(tile_sizes));
+        *tile_width = tile_sizes[tile_size_index * 2 + 0];
+        *tile_height = tile_sizes[tile_size_index * 2 + 1];
+}
+
 static void
 v3d_context_destroy(struct pipe_context *pctx)
 {
@@ -174,6 +297,13 @@ v3d_context_destroy(struct pipe_context *pctx)
 
         pipe_surface_reference(&v3d->framebuffer.cbufs[0], NULL);
         pipe_surface_reference(&v3d->framebuffer.zsbuf, NULL);
+
+        if (v3d->sand8_blit_vs)
+                pctx->delete_vs_state(pctx, v3d->sand8_blit_vs);
+        if (v3d->sand8_blit_fs_luma)
+                pctx->delete_fs_state(pctx, v3d->sand8_blit_fs_luma);
+        if (v3d->sand8_blit_fs_chroma)
+                pctx->delete_fs_state(pctx, v3d->sand8_blit_fs_chroma);
 
         v3d_program_fini(pctx);
 

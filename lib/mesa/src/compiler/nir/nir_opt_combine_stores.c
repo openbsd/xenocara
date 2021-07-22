@@ -174,7 +174,7 @@ static void
 combine_stores_with_deref(struct combine_stores_state *state,
                               nir_deref_instr *deref)
 {
-   if ((state->modes & deref->mode) == 0)
+   if (!nir_deref_mode_may_be(deref, state->modes))
       return;
 
    list_for_each_entry_safe(struct combined_store, combo, &state->pending, link) {
@@ -193,7 +193,7 @@ combine_stores_with_modes(struct combine_stores_state *state,
       return;
 
    list_for_each_entry_safe(struct combined_store, combo, &state->pending, link) {
-      if (combo->dst->mode & modes) {
+      if (nir_deref_mode_may_be(combo->dst, modes)) {
          combine_stores(state, combo);
          free_combined_store(state, combo);
       }
@@ -216,7 +216,7 @@ update_combined_store(struct combine_stores_state *state,
                       nir_intrinsic_instr *intrin)
 {
    nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
-   if ((dst->mode & state->modes) == 0)
+   if (!nir_deref_mode_may_be(dst, state->modes))
       return;
 
    unsigned vec_mask;
@@ -301,7 +301,19 @@ combine_stores_block(struct combine_stores_state *state, nir_block *block)
       nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
       switch (intrin->intrinsic) {
       case nir_intrinsic_store_deref:
-         update_combined_store(state, intrin);
+         if (nir_intrinsic_access(intrin) & ACCESS_VOLATILE) {
+            nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
+            /* When we see a volatile store, we go ahead and combine all
+             * previous non-volatile stores which touch that address and
+             * specifically don't add the volatile store to the list.  This
+             * way we guarantee that the volatile store isn't combined with
+             * anything and no non-volatile stores are combined across a
+             * volatile store.
+             */
+            combine_stores_with_deref(state, dst);
+         } else {
+            update_combined_store(state, intrin);
+         }
          break;
 
       case nir_intrinsic_control_barrier:
@@ -326,7 +338,7 @@ combine_stores_block(struct combine_stores_state *state, nir_block *block)
          combine_stores_with_modes(state, nir_var_shader_out);
          break;
 
-      case nir_intrinsic_scoped_memory_barrier:
+      case nir_intrinsic_scoped_barrier:
          if (nir_intrinsic_memory_semantics(intrin) & NIR_MEMORY_RELEASE) {
             combine_stores_with_modes(state,
                                       nir_intrinsic_memory_modes(intrin));
@@ -338,17 +350,55 @@ combine_stores_block(struct combine_stores_state *state, nir_block *block)
          combine_stores_with_modes(state, nir_var_shader_out);
          break;
 
+      case nir_intrinsic_report_ray_intersection:
+         combine_stores_with_modes(state, nir_var_mem_ssbo |
+                                          nir_var_mem_global |
+                                          nir_var_shader_call_data |
+                                          nir_var_ray_hit_attrib);
+         break;
+
+      case nir_intrinsic_ignore_ray_intersection:
+      case nir_intrinsic_terminate_ray:
+         combine_stores_with_modes(state, nir_var_mem_ssbo |
+                                          nir_var_mem_global |
+                                          nir_var_shader_call_data);
+         break;
+
       case nir_intrinsic_load_deref: {
          nir_deref_instr *src = nir_src_as_deref(intrin->src[0]);
          combine_stores_with_deref(state, src);
          break;
       }
 
-      case nir_intrinsic_copy_deref: {
+      case nir_intrinsic_load_deref_block_intel:
+      case nir_intrinsic_store_deref_block_intel: {
+         /* Combine all the stores that may alias with the whole variable (or
+          * cast).
+          */
+         nir_deref_instr *operand = nir_src_as_deref(intrin->src[0]);
+         while (nir_deref_instr_parent(operand))
+            operand = nir_deref_instr_parent(operand);
+         assert(operand->deref_type == nir_deref_type_var ||
+                operand->deref_type == nir_deref_type_cast);
+
+         combine_stores_with_deref(state, operand);
+         break;
+      }
+
+      case nir_intrinsic_copy_deref:
+      case nir_intrinsic_memcpy_deref: {
          nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
          nir_deref_instr *src = nir_src_as_deref(intrin->src[1]);
          combine_stores_with_deref(state, dst);
          combine_stores_with_deref(state, src);
+         break;
+      }
+
+      case nir_intrinsic_trace_ray:
+      case nir_intrinsic_execute_callable: {
+         nir_deref_instr *payload =
+            nir_src_as_deref(*nir_get_shader_call_payload_src(intrin));
+         combine_stores_with_deref(state, payload);
          break;
       }
 
@@ -388,6 +438,8 @@ combine_stores_impl(struct combine_stores_state *state, nir_function_impl *impl)
    if (state->progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
    }
 
    return state->progress;

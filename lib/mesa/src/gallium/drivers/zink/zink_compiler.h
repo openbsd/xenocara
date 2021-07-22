@@ -27,17 +27,34 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
 
+#include "compiler/nir/nir.h"
 #include "compiler/shader_info.h"
 
 #include <vulkan/vulkan.h>
+#include "zink_descriptors.h"
+
+#define ZINK_WORKGROUP_SIZE_X 1
+#define ZINK_WORKGROUP_SIZE_Y 2
+#define ZINK_WORKGROUP_SIZE_Z 3
 
 struct pipe_screen;
+struct zink_context;
 struct zink_screen;
+struct zink_shader_key;
+struct zink_gfx_program;
 
 struct nir_shader_compiler_options;
 struct nir_shader;
 
+struct set;
+
 struct tgsi_token;
+struct zink_so_info {
+   struct pipe_stream_output_info so_info;
+   unsigned so_info_slots[PIPE_MAX_SO_OUTPUTS];
+   bool have_xfb;
+};
+
 
 const void *
 zink_get_compiler_options(struct pipe_screen *screen,
@@ -48,22 +65,55 @@ struct nir_shader *
 zink_tgsi_to_nir(struct pipe_screen *screen, const struct tgsi_token *tokens);
 
 struct zink_shader {
-   VkShaderModule shader_module;
+   unsigned shader_id;
+   struct nir_shader *nir;
 
-   shader_info info;
+   struct zink_so_info streamout;
 
    struct {
       int index;
       int binding;
       VkDescriptorType type;
-   } bindings[PIPE_MAX_CONSTANT_BUFFERS + PIPE_MAX_SHADER_SAMPLER_VIEWS];
-   size_t num_bindings;
+      unsigned char size;
+   } bindings[ZINK_DESCRIPTOR_TYPES][32];
+   size_t num_bindings[ZINK_DESCRIPTOR_TYPES];
+   uint32_t ubos_used; // bitfield of which ubo indices are used
+   uint32_t ssbos_used; // bitfield of which ssbo indices are used
+   struct set *programs;
+
+   union {
+      struct zink_shader *generated; // a generated shader that this shader "owns"
+      bool is_generated; // if this is a driver-created shader (e.g., tcs)
+   };
 };
 
+void
+zink_screen_init_compiler(struct zink_screen *screen);
+
+VkShaderModule
+zink_shader_compile(struct zink_screen *screen, struct zink_shader *zs, struct zink_shader_key *key,
+                    unsigned char *shader_slot_map, unsigned char *shader_slots_reserved);
+
 struct zink_shader *
-zink_compile_nir(struct zink_screen *screen, struct nir_shader *nir);
+zink_shader_create(struct zink_screen *screen, struct nir_shader *nir,
+                 const struct pipe_stream_output_info *so_info);
 
 void
-zink_shader_free(struct zink_screen *screen, struct zink_shader *shader);
+zink_shader_finalize(struct pipe_screen *pscreen, void *nirptr, bool optimize);
 
+void
+zink_shader_free(struct zink_context *ctx, struct zink_shader *shader);
+
+struct zink_shader *
+zink_shader_tcs_create(struct zink_context *ctx, struct zink_shader *vs);
+
+static inline bool
+zink_shader_descriptor_is_buffer(struct zink_shader *zs, enum zink_descriptor_type type, unsigned i)
+{
+   return zs->bindings[type][i].type == VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER ||
+          zs->bindings[type][i].type == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+}
+
+uint32_t
+zink_binding(gl_shader_stage stage, VkDescriptorType type, int index);;
 #endif

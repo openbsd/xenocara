@@ -27,60 +27,6 @@
 #include "compiler/nir/nir_builder.h"
 #include "compiler/nir/nir_format_convert.h"
 
-/* The higher compiler layers use the GL enums for image formats even if
- * they come in from SPIR-V or Vulkan.  We need to turn them into an ISL
- * enum before we can use them.
- */
-static enum isl_format
-isl_format_for_gl_format(uint32_t gl_format)
-{
-   switch (gl_format) {
-   case GL_R8:             return ISL_FORMAT_R8_UNORM;
-   case GL_R8_SNORM:       return ISL_FORMAT_R8_SNORM;
-   case GL_R8UI:           return ISL_FORMAT_R8_UINT;
-   case GL_R8I:            return ISL_FORMAT_R8_SINT;
-   case GL_RG8:            return ISL_FORMAT_R8G8_UNORM;
-   case GL_RG8_SNORM:      return ISL_FORMAT_R8G8_SNORM;
-   case GL_RG8UI:          return ISL_FORMAT_R8G8_UINT;
-   case GL_RG8I:           return ISL_FORMAT_R8G8_SINT;
-   case GL_RGBA8:          return ISL_FORMAT_R8G8B8A8_UNORM;
-   case GL_RGBA8_SNORM:    return ISL_FORMAT_R8G8B8A8_SNORM;
-   case GL_RGBA8UI:        return ISL_FORMAT_R8G8B8A8_UINT;
-   case GL_RGBA8I:         return ISL_FORMAT_R8G8B8A8_SINT;
-   case GL_R11F_G11F_B10F: return ISL_FORMAT_R11G11B10_FLOAT;
-   case GL_RGB10_A2:       return ISL_FORMAT_R10G10B10A2_UNORM;
-   case GL_RGB10_A2UI:     return ISL_FORMAT_R10G10B10A2_UINT;
-   case GL_R16:            return ISL_FORMAT_R16_UNORM;
-   case GL_R16_SNORM:      return ISL_FORMAT_R16_SNORM;
-   case GL_R16F:           return ISL_FORMAT_R16_FLOAT;
-   case GL_R16UI:          return ISL_FORMAT_R16_UINT;
-   case GL_R16I:           return ISL_FORMAT_R16_SINT;
-   case GL_RG16:           return ISL_FORMAT_R16G16_UNORM;
-   case GL_RG16_SNORM:     return ISL_FORMAT_R16G16_SNORM;
-   case GL_RG16F:          return ISL_FORMAT_R16G16_FLOAT;
-   case GL_RG16UI:         return ISL_FORMAT_R16G16_UINT;
-   case GL_RG16I:          return ISL_FORMAT_R16G16_SINT;
-   case GL_RGBA16:         return ISL_FORMAT_R16G16B16A16_UNORM;
-   case GL_RGBA16_SNORM:   return ISL_FORMAT_R16G16B16A16_SNORM;
-   case GL_RGBA16F:        return ISL_FORMAT_R16G16B16A16_FLOAT;
-   case GL_RGBA16UI:       return ISL_FORMAT_R16G16B16A16_UINT;
-   case GL_RGBA16I:        return ISL_FORMAT_R16G16B16A16_SINT;
-   case GL_R32F:           return ISL_FORMAT_R32_FLOAT;
-   case GL_R32UI:          return ISL_FORMAT_R32_UINT;
-   case GL_R32I:           return ISL_FORMAT_R32_SINT;
-   case GL_RG32F:          return ISL_FORMAT_R32G32_FLOAT;
-   case GL_RG32UI:         return ISL_FORMAT_R32G32_UINT;
-   case GL_RG32I:          return ISL_FORMAT_R32G32_SINT;
-   case GL_RGBA32F:        return ISL_FORMAT_R32G32B32A32_FLOAT;
-   case GL_RGBA32UI:       return ISL_FORMAT_R32G32B32A32_UINT;
-   case GL_RGBA32I:        return ISL_FORMAT_R32G32B32A32_SINT;
-   case GL_NONE:           return ISL_FORMAT_UNSUPPORTED;
-   default:
-      assert(!"Invalid image format");
-      return ISL_FORMAT_UNSUPPORTED;
-   }
-}
-
 static nir_ssa_def *
 _load_image_param(nir_builder *b, nir_deref_instr *deref, unsigned offset)
 {
@@ -191,7 +137,7 @@ image_address(nir_builder *b, const struct gen_device_info *devinfo,
     * by passing in the miplevel as tile.z for 3-D textures and 0 in
     * tile.z for 2-D array textures.
     *
-    * See Volume 1 Part 1 of the Gen7 PRM, sections 6.18.4.7 "Surface
+    * See Volume 1 Part 1 of the Gfx7 PRM, sections 6.18.4.7 "Surface
     * Arrays" and 6.18.6 "3D Surfaces" for a more extensive discussion
     * of the hardware 3D texture and 2D array layouts.
     */
@@ -254,7 +200,7 @@ image_address(nir_builder *b, const struct gen_device_info *devinfo,
       /* Multiply by the Bpp value. */
       addr = nir_imul(b, idx, nir_channel(b, stride, 0));
 
-      if (devinfo->gen < 8 && !devinfo->is_baytrail) {
+      if (devinfo->ver < 8 && !devinfo->is_baytrail) {
          /* Take into account the two dynamically specified shifts.  Both are
           * used to implement swizzling of X-tiled surfaces.  For Y-tiled
           * surfaces only one bit needs to be XOR-ed with bit 6 of the memory
@@ -353,7 +299,7 @@ convert_color_for_load(nir_builder *b, const struct gen_device_info *devinfo,
        * their least significant bits.  However, the data in the high bits is
        * garbage so we have to discard it.
        */
-      if (devinfo->gen == 7 && !devinfo->is_haswell &&
+      if (devinfo->ver == 7 && !devinfo->is_haswell &&
           (lower_fmt == ISL_FORMAT_R16_UINT ||
            lower_fmt == ISL_FORMAT_R8_UINT))
          color = nir_format_mask_uvec(b, color, lower.bits);
@@ -422,7 +368,7 @@ lower_image_load_instr(nir_builder *b,
    nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
    nir_variable *var = nir_deref_instr_get_variable(deref);
    const enum isl_format image_fmt =
-      isl_format_for_gl_format(var->data.image.format);
+      isl_format_for_pipe_format(var->data.image.format);
 
    if (isl_has_matching_typed_storage_image_format(devinfo, image_fmt)) {
       const enum isl_format lower_fmt =
@@ -433,7 +379,7 @@ lower_image_load_instr(nir_builder *b,
        * conversion.
        */
       nir_ssa_def *placeholder = nir_ssa_undef(b, 4, 32);
-      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, nir_src_for_ssa(placeholder));
+      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, placeholder);
 
       intrin->num_components = isl_format_get_num_channels(lower_fmt);
       intrin->dest.ssa.num_components = intrin->num_components;
@@ -445,7 +391,7 @@ lower_image_load_instr(nir_builder *b,
                                                   image_fmt, lower_fmt,
                                                   dest_components);
 
-      nir_ssa_def_rewrite_uses(placeholder, nir_src_for_ssa(color));
+      nir_ssa_def_rewrite_uses(placeholder, color);
       nir_instr_remove(placeholder->parent_instr);
    } else {
       const struct isl_format_layout *image_fmtl =
@@ -462,9 +408,9 @@ lower_image_load_instr(nir_builder *b,
       nir_ssa_def *coord = intrin->src[1].ssa;
 
       nir_ssa_def *do_load = image_coord_is_in_bounds(b, deref, coord);
-      if (devinfo->gen == 7 && !devinfo->is_haswell) {
+      if (devinfo->ver == 7 && !devinfo->is_haswell) {
          /* Check whether the first stride component (i.e. the Bpp value)
-          * is greater than four, what on Gen7 indicates that a surface of
+          * is greater than four, what on Gfx7 indicates that a surface of
           * type RAW has been bound for untyped access.  Reading or writing
           * to a surface of type other than RAW using untyped surface
           * messages causes a hang on IVB and VLV.
@@ -477,15 +423,9 @@ lower_image_load_instr(nir_builder *b,
       nir_push_if(b, do_load);
 
       nir_ssa_def *addr = image_address(b, devinfo, deref, coord);
-      nir_intrinsic_instr *load =
-         nir_intrinsic_instr_create(b->shader,
-                                    nir_intrinsic_image_deref_load_raw_intel);
-      load->src[0] = nir_src_for_ssa(&deref->dest.ssa);
-      load->src[1] = nir_src_for_ssa(addr);
-      load->num_components = image_fmtl->bpb / 32;
-      nir_ssa_dest_init(&load->instr, &load->dest,
-                        load->num_components, 32, NULL);
-      nir_builder_instr_insert(b, &load->instr);
+      nir_ssa_def *load =
+         nir_image_deref_load_raw_intel(b, image_fmtl->bpb / 32, 32,
+                                        &deref->dest.ssa, addr);
 
       nir_push_else(b, NULL);
 
@@ -493,13 +433,13 @@ lower_image_load_instr(nir_builder *b,
 
       nir_pop_if(b, NULL);
 
-      nir_ssa_def *value = nir_if_phi(b, &load->dest.ssa, zero);
+      nir_ssa_def *value = nir_if_phi(b, load, zero);
 
       nir_ssa_def *color = convert_color_for_load(b, devinfo, value,
                                                   image_fmt, raw_fmt,
                                                   dest_components);
 
-      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, nir_src_for_ssa(color));
+      nir_ssa_def_rewrite_uses(&intrin->dest.ssa, color);
    }
 
    return true;
@@ -587,7 +527,7 @@ lower_image_store_instr(nir_builder *b,
       return false;
 
    const enum isl_format image_fmt =
-      isl_format_for_gl_format(var->data.image.format);
+      isl_format_for_pipe_format(var->data.image.format);
 
    if (isl_has_matching_typed_storage_image_format(devinfo, image_fmt)) {
       const enum isl_format lower_fmt =
@@ -616,9 +556,9 @@ lower_image_store_instr(nir_builder *b,
       nir_ssa_def *coord = intrin->src[1].ssa;
 
       nir_ssa_def *do_store = image_coord_is_in_bounds(b, deref, coord);
-      if (devinfo->gen == 7 && !devinfo->is_haswell) {
+      if (devinfo->ver == 7 && !devinfo->is_haswell) {
          /* Check whether the first stride component (i.e. the Bpp value)
-          * is greater than four, what on Gen7 indicates that a surface of
+          * is greater than four, what on Gfx7 indicates that a surface of
           * type RAW has been bound for untyped access.  Reading or writing
           * to a surface of type other than RAW using untyped surface
           * messages causes a hang on IVB and VLV.
@@ -655,7 +595,7 @@ lower_image_atomic_instr(nir_builder *b,
                          const struct gen_device_info *devinfo,
                          nir_intrinsic_instr *intrin)
 {
-   if (devinfo->is_haswell || devinfo->gen >= 8)
+   if (devinfo->is_haswell || devinfo->ver >= 8)
       return false;
 
    nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
@@ -664,7 +604,7 @@ lower_image_atomic_instr(nir_builder *b,
 
    /* Use an undef to hold the uses of the load conversion. */
    nir_ssa_def *placeholder = nir_ssa_undef(b, 4, 32);
-   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, nir_src_for_ssa(placeholder));
+   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, placeholder);
 
    /* Check the first component of the size field to find out if the
     * image is bound.  Necessary on IVB for typed atomics because
@@ -680,7 +620,7 @@ lower_image_atomic_instr(nir_builder *b,
    nir_pop_if(b, NULL);
 
    nir_ssa_def *result = nir_if_phi(b, &intrin->dest.ssa, zero);
-   nir_ssa_def_rewrite_uses(placeholder, nir_src_for_ssa(result));
+   nir_ssa_def_rewrite_uses(placeholder, result);
 
    return true;
 }
@@ -703,9 +643,11 @@ lower_image_size_instr(nir_builder *b,
     * so we fall back and let the back-end emit a TXS for this.
     */
    const enum isl_format image_fmt =
-      isl_format_for_gl_format(var->data.image.format);
+      isl_format_for_pipe_format(var->data.image.format);
    if (isl_has_matching_typed_storage_image_format(devinfo, image_fmt))
       return false;
+
+   assert(nir_src_as_uint(intrin->src[1]) == 0);
 
    b->cursor = nir_instr_remove(&intrin->instr);
 
@@ -727,14 +669,15 @@ lower_image_size_instr(nir_builder *b,
       comps[c] = nir_imm_int(b, 1);
 
    nir_ssa_def *vec = nir_vec(b, comps, intrin->dest.ssa.num_components);
-   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, nir_src_for_ssa(vec));
+   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, vec);
 
    return true;
 }
 
 bool
 brw_nir_lower_image_load_store(nir_shader *shader,
-                               const struct gen_device_info *devinfo)
+                               const struct gen_device_info *devinfo,
+                               bool *uses_atomic_load_store)
 {
    bool progress = false;
 
@@ -742,6 +685,7 @@ brw_nir_lower_image_load_store(nir_shader *shader,
       if (function->impl == NULL)
          continue;
 
+      bool impl_progress = false;
       nir_foreach_block_safe(block, function->impl) {
          nir_builder b;
          nir_builder_init(&b, function->impl);
@@ -754,12 +698,12 @@ brw_nir_lower_image_load_store(nir_shader *shader,
             switch (intrin->intrinsic) {
             case nir_intrinsic_image_deref_load:
                if (lower_image_load_instr(&b, devinfo, intrin))
-                  progress = true;
+                  impl_progress = true;
                break;
 
             case nir_intrinsic_image_deref_store:
                if (lower_image_store_instr(&b, devinfo, intrin))
-                  progress = true;
+                  impl_progress = true;
                break;
 
             case nir_intrinsic_image_deref_atomic_add:
@@ -772,13 +716,15 @@ brw_nir_lower_image_load_store(nir_shader *shader,
             case nir_intrinsic_image_deref_atomic_xor:
             case nir_intrinsic_image_deref_atomic_exchange:
             case nir_intrinsic_image_deref_atomic_comp_swap:
+               if (uses_atomic_load_store)
+                  *uses_atomic_load_store = true;
                if (lower_image_atomic_instr(&b, devinfo, intrin))
-                  progress = true;
+                  impl_progress = true;
                break;
 
             case nir_intrinsic_image_deref_size:
                if (lower_image_size_instr(&b, devinfo, intrin))
-                  progress = true;
+                  impl_progress = true;
                break;
 
             default:
@@ -788,8 +734,12 @@ brw_nir_lower_image_load_store(nir_shader *shader,
          }
       }
 
-      if (progress)
+      if (impl_progress) {
+         progress = true;
          nir_metadata_preserve(function->impl, nir_metadata_none);
+      } else {
+         nir_metadata_preserve(function->impl, nir_metadata_all);
+      }
    }
 
    return progress;

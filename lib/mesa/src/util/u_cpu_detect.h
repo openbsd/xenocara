@@ -37,20 +37,31 @@
 
 
 #include "pipe/p_config.h"
+#include "util/u_thread.h"
 
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+enum cpu_family {
+   CPU_UNKNOWN,
 
-struct util_cpu_caps {
+   CPU_AMD_ZEN1_ZEN2,
+   CPU_AMD_ZEN_HYGON,
+   CPU_AMD_ZEN3,
+   CPU_AMD_LAST,
+};
+
+typedef uint32_t util_affinity_mask[UTIL_MAX_CPUS / 32];
+
+struct util_cpu_caps_t {
    int nr_cpus;
+   enum cpu_family family;
 
    /* Feature flags */
    int x86_cpu_type;
    unsigned cacheline;
-   unsigned cores_per_L3;
 
    unsigned has_intel:1;
    unsigned has_tsc:1;
@@ -84,10 +95,29 @@ struct util_cpu_caps {
    unsigned has_avx512bw:1;
    unsigned has_avx512vl:1;
    unsigned has_avx512vbmi:1;
+
+   unsigned num_L3_caches;
+   unsigned num_cpu_mask_bits;
+
+   uint16_t cpu_to_L3[UTIL_MAX_CPUS];
+   /* Affinity masks for each L3 cache. */
+   util_affinity_mask *L3_affinity_mask;
 };
 
-extern struct util_cpu_caps
-util_cpu_caps;
+#define U_CPU_INVALID_L3 0xffff
+
+static inline const struct util_cpu_caps_t *
+util_get_cpu_caps(void)
+{
+	extern struct util_cpu_caps_t util_cpu_caps;
+
+	/* If you hit this assert, it means that something is using the
+	 * cpu-caps without having first called util_cpu_detect()
+	 */
+	assert(util_cpu_caps.nr_cpus >= 1);
+
+	return &util_cpu_caps;
+}
 
 void util_cpu_detect(void);
 

@@ -24,7 +24,7 @@
 
 #include "pipe/p_state.h"
 #include "pipe/p_defines.h"
-#include "state_tracker/drm_driver.h"
+#include "frontend/drm_driver.h"
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
 
@@ -38,18 +38,64 @@ nvc0_tex_choose_tile_dims(unsigned nx, unsigned ny, unsigned nz, bool is_3d)
 }
 
 static uint32_t
-nvc0_mt_choose_storage_type(struct nv50_miptree *mt, bool compressed)
-{
-   const unsigned ms = util_logbase2(mt->base.base.nr_samples);
+tu102_choose_tiled_storage_type(enum pipe_format format,
+                                unsigned ms,
+                                bool compressed)
 
+{
+   uint32_t kind;
+
+   switch (format) {
+   case PIPE_FORMAT_Z16_UNORM:
+      if (compressed)
+         kind = 0x0b; // NV_MMU_PTE_KIND_Z16_COMPRESSIBLE_DISABLE_PLC
+      else
+         kind = 0x01; // NV_MMU_PTE_KIND_Z16
+      break;
+   case PIPE_FORMAT_X8Z24_UNORM:
+   case PIPE_FORMAT_S8X24_UINT:
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
+      if (compressed)
+         kind = 0x0e; // NV_MMU_PTE_KIND_Z24S8_COMPRESSIBLE_DISABLE_PLC
+      else
+         kind = 0x05; // NV_MMU_PTE_KIND_Z24S8
+      break;
+   case PIPE_FORMAT_X24S8_UINT:
+   case PIPE_FORMAT_Z24X8_UNORM:
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
+      if (compressed)
+         kind = 0x0c; // NV_MMU_PTE_KIND_S8Z24_COMPRESSIBLE_DISABLE_PLC
+      else
+         kind = 0x03; // NV_MMU_PTE_KIND_S8Z24
+      break;
+   case PIPE_FORMAT_X32_S8X24_UINT:
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      if (compressed)
+         kind = 0x0d; // NV_MMU_PTE_KIND_ZF32_X24S8_COMPRESSIBLE_DISABLE_PLC
+      else
+         kind = 0x04; // NV_MMU_PTE_KIND_ZF32_X24S8
+      break;
+   case PIPE_FORMAT_Z32_FLOAT:
+   default:
+      kind = 0x06;
+      break;
+   }
+
+   return kind;
+}
+
+uint32_t
+nvc0_choose_tiled_storage_type(struct pipe_screen *pscreen,
+                               enum pipe_format format,
+                               unsigned ms,
+                               bool compressed)
+{
    uint32_t tile_flags;
 
-   if (unlikely(mt->base.base.bind & PIPE_BIND_CURSOR))
-      return 0;
-   if (unlikely(mt->base.base.flags & NOUVEAU_RESOURCE_FLAG_LINEAR))
-      return 0;
+   if (nouveau_screen(pscreen)->device->chipset >= 0x160)
+      return tu102_choose_tiled_storage_type(format, ms, compressed);
 
-   switch (mt->base.base.format) {
+   switch (format) {
    case PIPE_FORMAT_Z16_UNORM:
       if (compressed)
          tile_flags = 0x02 + ms;
@@ -86,7 +132,7 @@ nvc0_mt_choose_storage_type(struct nv50_miptree *mt, bool compressed)
          tile_flags = 0xc3;
       break;
    default:
-      switch (util_format_get_blocksizebits(mt->base.base.format)) {
+      switch (util_format_get_blocksizebits(format)) {
       case 128:
          if (compressed)
             tile_flags = 0xf4 + ms * 2;
@@ -134,6 +180,21 @@ nvc0_mt_choose_storage_type(struct nv50_miptree *mt, bool compressed)
    }
 
    return tile_flags;
+}
+
+static uint32_t
+nvc0_mt_choose_storage_type(struct pipe_screen *pscreen,
+                            const struct nv50_miptree *mt,
+                            bool compressed)
+{
+   const unsigned ms = util_logbase2(mt->base.base.nr_samples);
+
+   if (unlikely(mt->base.base.bind & PIPE_BIND_CURSOR))
+      return 0;
+   if (unlikely(mt->base.base.flags & NOUVEAU_RESOURCE_FLAG_LINEAR))
+      return 0;
+
+   return nvc0_choose_tiled_storage_type(pscreen, mt->base.base.format, ms, compressed);
 }
 
 static inline bool
@@ -188,7 +249,7 @@ nvc0_miptree_init_layout_video(struct nv50_miptree *mt)
 }
 
 static void
-nvc0_miptree_init_layout_tiled(struct nv50_miptree *mt)
+nvc0_miptree_init_layout_tiled(struct nv50_miptree *mt, uint64_t modifier)
 {
    struct pipe_resource *pt = &mt->base.base;
    unsigned w, h, d, l;
@@ -205,6 +266,9 @@ nvc0_miptree_init_layout_tiled(struct nv50_miptree *mt)
    d = mt->layout_3d ? pt->depth0 : 1;
 
    assert(!mt->ms_mode || !pt->last_level);
+   assert(modifier == DRM_FORMAT_MOD_INVALID ||
+          (!pt->last_level && !mt->layout_3d));
+   assert(modifier != DRM_FORMAT_MOD_LINEAR);
 
    for (l = 0; l <= pt->last_level; ++l) {
       struct nv50_miptree_level *lvl = &mt->level[l];
@@ -214,7 +278,16 @@ nvc0_miptree_init_layout_tiled(struct nv50_miptree *mt)
 
       lvl->offset = mt->total_size;
 
-      lvl->tile_mode = nvc0_tex_choose_tile_dims(nbx, nby, d, mt->layout_3d);
+      if (modifier != DRM_FORMAT_MOD_INVALID)
+         /* Extract the log2(block height) field from the modifier and pack it
+          * into tile_mode's y field. Other tile dimensions are always 1
+          * (represented using 0 here) for 2D surfaces, and non-2D surfaces are
+          * not supported by the current modifiers (asserted above). Note the
+          * modifier must be validated prior to calling this function.
+          */
+         lvl->tile_mode = ((uint32_t)modifier & 0xf) << 4;
+      else
+         lvl->tile_mode = nvc0_tex_choose_tile_dims(nbx, nby, d, mt->layout_3d);
 
       tsx = NVC0_TILE_SIZE_X(lvl->tile_mode); /* x is tile row pitch in bytes */
       tsy = NVC0_TILE_SIZE_Y(lvl->tile_mode);
@@ -236,57 +309,34 @@ nvc0_miptree_init_layout_tiled(struct nv50_miptree *mt)
    }
 }
 
-static uint64_t nvc0_miptree_get_modifier(struct nv50_miptree *mt)
+static uint64_t
+nvc0_miptree_get_modifier(struct pipe_screen *pscreen, struct nv50_miptree *mt)
 {
-   union nouveau_bo_config *config = &mt->base.bo->config;
-   uint64_t modifier;
+   const union nouveau_bo_config *config = &mt->base.bo->config;
+   const uint32_t uc_kind =
+      nvc0_choose_tiled_storage_type(pscreen,
+                                     mt->base.base.format,
+                                     mt->base.base.nr_samples,
+                                     false);
+   const uint32_t kind_gen = nvc0_get_kind_generation(pscreen);
 
    if (mt->layout_3d)
       return DRM_FORMAT_MOD_INVALID;
+   if (mt->base.base.nr_samples > 1)
+      return DRM_FORMAT_MOD_INVALID;
+   if (config->nvc0.memtype == 0x00)
+      return DRM_FORMAT_MOD_LINEAR;
+   if (NVC0_TILE_MODE_Y(config->nvc0.tile_mode) > 5)
+      return DRM_FORMAT_MOD_INVALID;
+   if (config->nvc0.memtype != uc_kind)
+      return DRM_FORMAT_MOD_INVALID;
 
-   switch (config->nvc0.memtype) {
-   case 0x00:
-      modifier = DRM_FORMAT_MOD_LINEAR;
-      break;
-
-   case 0xfe:
-      switch (NVC0_TILE_MODE_Y(config->nvc0.tile_mode)) {
-      case 0:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB;
-         break;
-
-      case 1:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB;
-         break;
-
-      case 2:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB;
-         break;
-
-      case 3:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB;
-         break;
-
-      case 4:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB;
-         break;
-
-      case 5:
-         modifier = DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB;
-         break;
-
-      default:
-         modifier = DRM_FORMAT_MOD_INVALID;
-         break;
-      }
-      break;
-
-   default:
-      modifier = DRM_FORMAT_MOD_INVALID;
-      break;
-   }
-
-   return modifier;
+   return DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(
+             0,
+             nouveau_screen(pscreen)->tegra_sector_layout ? 0 : 1,
+             kind_gen,
+             config->nvc0.memtype,
+             NVC0_TILE_MODE_Y(config->nvc0.tile_mode));
 }
 
 static bool
@@ -301,9 +351,87 @@ nvc0_miptree_get_handle(struct pipe_screen *pscreen,
    if (!ret)
       return ret;
 
-   whandle->modifier = nvc0_miptree_get_modifier(mt);
+   whandle->modifier = nvc0_miptree_get_modifier(pscreen, mt);
 
    return true;
+}
+
+static uint64_t
+nvc0_miptree_select_best_modifier(struct pipe_screen *pscreen,
+                                  const struct nv50_miptree *mt,
+                                  const uint64_t *modifiers,
+                                  unsigned int count)
+{
+   /*
+    * Supported block heights are 1,2,4,8,16,32, stored as log2() their
+    * value. Reserve one slot for each, as well as the linear modifier.
+    */
+   uint64_t prio_supported_mods[] = {
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_INVALID,
+      DRM_FORMAT_MOD_LINEAR,
+   };
+   const uint32_t uc_kind = nvc0_mt_choose_storage_type(pscreen, mt, false);
+   int top_mod_slot = ARRAY_SIZE(prio_supported_mods);
+   const uint32_t kind_gen = nvc0_get_kind_generation(pscreen);
+   unsigned int i;
+   int p;
+
+   if (uc_kind != 0u) {
+      const struct pipe_resource *pt = &mt->base.base;
+      const unsigned nbx = util_format_get_nblocksx(pt->format, pt->width0);
+      const unsigned nby = util_format_get_nblocksy(pt->format, pt->height0);
+      const uint32_t lbh_preferred =
+         NVC0_TILE_MODE_Y(nvc0_tex_choose_tile_dims(nbx, nby, 1u, false));
+      uint32_t lbh = lbh_preferred;
+      bool dec_lbh = true;
+      const uint8_t s = nouveau_screen(pscreen)->tegra_sector_layout ? 0 : 1;
+
+      for (i = 0; i < ARRAY_SIZE(prio_supported_mods) - 1; i++) {
+         assert(lbh <= 5u);
+         prio_supported_mods[i] =
+            DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(0, s, kind_gen, uc_kind, lbh);
+
+         /*
+          * The preferred block height is the largest block size that doesn't
+          * waste excessive space with unused padding bytes relative to the
+          * height of the image.  Construct the priority array such that
+          * the preferred block height is highest priority, followed by
+          * progressively smaller block sizes down to a block height of one,
+          * followed by progressively larger (more wasteful) block sizes up
+          * to 5.
+          */
+         if (lbh == 0u) {
+            lbh = lbh_preferred + 1u;
+            dec_lbh = false;
+         } else if (dec_lbh) {
+            lbh--;
+         } else {
+            lbh++;
+         }
+      }
+   }
+
+   assert(prio_supported_mods[ARRAY_SIZE(prio_supported_mods) - 1] ==
+          DRM_FORMAT_MOD_LINEAR);
+
+   for (i = 0u; i < count; i++) {
+      for (p = 0; p < ARRAY_SIZE(prio_supported_mods); p++) {
+         if (prio_supported_mods[p] == modifiers[i]) {
+            if (top_mod_slot > p) top_mod_slot = p;
+            break;
+         }
+      }
+   }
+
+   if (top_mod_slot >= ARRAY_SIZE(prio_supported_mods))
+       return DRM_FORMAT_MOD_INVALID;
+
+   return prio_supported_mods[top_mod_slot];
 }
 
 const struct u_resource_vtbl nvc0_miptree_vtbl =
@@ -328,6 +456,8 @@ nvc0_miptree_create(struct pipe_screen *pscreen,
    int ret;
    union nouveau_bo_config bo_config;
    uint32_t bo_flags;
+   unsigned pitch_align;
+   uint64_t modifier = DRM_FORMAT_MOD_INVALID;
 
    if (!mt)
       return NULL;
@@ -338,6 +468,9 @@ nvc0_miptree_create(struct pipe_screen *pscreen,
    pt->screen = pscreen;
 
    if (pt->usage == PIPE_USAGE_STAGING) {
+      /* PIPE_USAGE_STAGING, and usage in general, should not be specified when
+       * modifiers are used. */
+      assert(count == 0);
       switch (pt->target) {
       case PIPE_TEXTURE_2D:
       case PIPE_TEXTURE_RECT:
@@ -351,13 +484,27 @@ nvc0_miptree_create(struct pipe_screen *pscreen,
       }
    }
 
-   if (count == 1 && modifiers[0] == DRM_FORMAT_MOD_LINEAR)
-      pt->flags |= NOUVEAU_RESOURCE_FLAG_LINEAR;
-
    if (pt->bind & PIPE_BIND_LINEAR)
       pt->flags |= NOUVEAU_RESOURCE_FLAG_LINEAR;
 
-   bo_config.nvc0.memtype = nvc0_mt_choose_storage_type(mt, compressed);
+   if (count > 0) {
+      modifier = nvc0_miptree_select_best_modifier(pscreen, mt,
+                                                   modifiers, count);
+
+      if (modifier == DRM_FORMAT_MOD_INVALID) {
+         FREE(mt);
+         return NULL;
+      }
+
+      if (modifier == DRM_FORMAT_MOD_LINEAR) {
+         pt->flags |= NOUVEAU_RESOURCE_FLAG_LINEAR;
+         bo_config.nvc0.memtype = 0;
+      } else {
+         bo_config.nvc0.memtype = (modifier >> 12) & 0xff;
+      }
+   } else {
+      bo_config.nvc0.memtype = nvc0_mt_choose_storage_type(pscreen, mt, compressed);
+   }
 
    if (!nvc0_miptree_init_ms_mode(mt)) {
       FREE(mt);
@@ -365,14 +512,24 @@ nvc0_miptree_create(struct pipe_screen *pscreen,
    }
 
    if (unlikely(pt->flags & NVC0_RESOURCE_FLAG_VIDEO)) {
+      assert(modifier == DRM_FORMAT_MOD_INVALID);
       nvc0_miptree_init_layout_video(mt);
    } else
    if (likely(bo_config.nvc0.memtype)) {
-      nvc0_miptree_init_layout_tiled(mt);
-   } else
-   if (!nv50_miptree_init_layout_linear(mt, 128)) {
-      FREE(mt);
-      return NULL;
+      nvc0_miptree_init_layout_tiled(mt, modifier);
+   } else {
+      /* When modifiers are supplied, usage is zero. TODO: detect the
+       * modifiers+cursor case. */
+      if (pt->usage & PIPE_BIND_CURSOR)
+         pitch_align = 1;
+      else if ((pt->usage & PIPE_BIND_SCANOUT) || count > 0)
+         pitch_align = 256;
+      else
+         pitch_align = 128;
+      if (!nv50_miptree_init_layout_linear(mt, pitch_align)) {
+         FREE(mt);
+         return NULL;
+      }
    }
    bo_config.nvc0.tile_mode = mt->level[0].tile_mode;
 

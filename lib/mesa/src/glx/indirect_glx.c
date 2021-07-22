@@ -229,124 +229,25 @@ indirect_wait_x(struct glx_context *gc)
    SyncHandle();
 }
 
-static void
-indirect_use_x_font(struct glx_context *gc,
-		    Font font, int first, int count, int listBase)
-{
-   xGLXUseXFontReq *req;
-   Display *dpy = gc->currentDpy;
-
-   /* Flush any pending commands out */
-   __glXFlushRenderBuffer(gc, gc->pc);
-
-   /* Send the glXUseFont request */
-   LockDisplay(dpy);
-   GetReq(GLXUseXFont, req);
-   req->reqType = gc->majorOpcode;
-   req->glxCode = X_GLXUseXFont;
-   req->contextTag = gc->currentContextTag;
-   req->font = font;
-   req->first = first;
-   req->count = count;
-   req->listBase = listBase;
-   UnlockDisplay(dpy);
-   SyncHandle();
-}
-
-static void
-indirect_bind_tex_image(Display * dpy,
-			GLXDrawable drawable,
-			int buffer, const int *attrib_list)
-{
-   xGLXVendorPrivateReq *req;
-   struct glx_context *gc = __glXGetCurrentContext();
-   CARD32 *drawable_ptr;
-   INT32 *buffer_ptr;
-   CARD32 *num_attrib_ptr;
-   CARD32 *attrib_ptr;
-   CARD8 opcode;
-   unsigned int i;
-
-   i = 0;
-   if (attrib_list) {
-      while (attrib_list[i * 2] != None)
-         i++;
-   }
-
-   opcode = __glXSetupForCommand(dpy);
-   if (!opcode)
-      return;
-
-   LockDisplay(dpy);
-   GetReqExtra(GLXVendorPrivate, 12 + 8 * i, req);
-   req->reqType = opcode;
-   req->glxCode = X_GLXVendorPrivate;
-   req->vendorCode = X_GLXvop_BindTexImageEXT;
-   req->contextTag = gc->currentContextTag;
-
-   drawable_ptr = (CARD32 *) (req + 1);
-   buffer_ptr = (INT32 *) (drawable_ptr + 1);
-   num_attrib_ptr = (CARD32 *) (buffer_ptr + 1);
-   attrib_ptr = (CARD32 *) (num_attrib_ptr + 1);
-
-   *drawable_ptr = drawable;
-   *buffer_ptr = buffer;
-   *num_attrib_ptr = (CARD32) i;
-
-   i = 0;
-   if (attrib_list) {
-      while (attrib_list[i * 2] != None) {
-         *attrib_ptr++ = (CARD32) attrib_list[i * 2 + 0];
-         *attrib_ptr++ = (CARD32) attrib_list[i * 2 + 1];
-         i++;
-      }
-   }
-
-   UnlockDisplay(dpy);
-   SyncHandle();
-}
-
-static void
-indirect_release_tex_image(Display * dpy, GLXDrawable drawable, int buffer)
-{
-   xGLXVendorPrivateReq *req;
-   struct glx_context *gc = __glXGetCurrentContext();
-   CARD32 *drawable_ptr;
-   INT32 *buffer_ptr;
-   CARD8 opcode;
-
-   opcode = __glXSetupForCommand(dpy);
-   if (!opcode)
-      return;
-
-   LockDisplay(dpy);
-   GetReqExtra(GLXVendorPrivate, sizeof(CARD32) + sizeof(INT32), req);
-   req->reqType = opcode;
-   req->glxCode = X_GLXVendorPrivate;
-   req->vendorCode = X_GLXvop_ReleaseTexImageEXT;
-   req->contextTag = gc->currentContextTag;
-
-   drawable_ptr = (CARD32 *) (req + 1);
-   buffer_ptr = (INT32 *) (drawable_ptr + 1);
-
-   *drawable_ptr = drawable;
-   *buffer_ptr = buffer;
-
-   UnlockDisplay(dpy);
-   SyncHandle();
-}
-
 static const struct glx_context_vtable indirect_context_vtable = {
    .destroy             = indirect_destroy_context,
    .bind                = indirect_bind_context,
    .unbind              = indirect_unbind_context,
    .wait_gl             = indirect_wait_gl,
    .wait_x              = indirect_wait_x,
-   .use_x_font          = indirect_use_x_font,
-   .bind_tex_image      = indirect_bind_tex_image,
-   .release_tex_image   = indirect_release_tex_image,
-   .get_proc_address    = NULL,
 };
+
+_X_HIDDEN struct glx_context *
+indirect_create_context(struct glx_screen *psc,
+			struct glx_config *mode,
+			struct glx_context *shareList, int renderType)
+{
+   unsigned error = 0;
+   const uint32_t attribs[] = { GLX_RENDER_TYPE, renderType };
+
+   return indirect_create_context_attribs(psc, mode, shareList,
+                                          1, attribs, &error);
+}
 
 /**
  * \todo Eliminate \c __glXInitVertexArrayState.  Replace it with a new
@@ -358,17 +259,46 @@ static const struct glx_context_vtable indirect_context_vtable = {
  * parameters.  It is just the allocator for the \c glx_context.
  */
 _X_HIDDEN struct glx_context *
-indirect_create_context(struct glx_screen *psc,
-			struct glx_config *mode,
-			struct glx_context *shareList, int renderType)
+indirect_create_context_attribs(struct glx_screen *psc,
+				struct glx_config *mode,
+				struct glx_context *shareList,
+				unsigned num_attribs,
+				const uint32_t *attribs,
+				unsigned *error)
 {
    struct glx_context *gc;
    int bufSize;
    CARD8 opcode;
    __GLXattribute *state;
+   int i, renderType = GLX_RGBA_TYPE;
+   uint32_t mask = GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+   uint32_t major = 1;
+   uint32_t minor = 0;
 
    opcode = __glXSetupForCommand(psc->dpy);
    if (!opcode) {
+      return NULL;
+   }
+
+   for (i = 0; i < num_attribs; i++) {
+      uint32_t attr = attribs[i*2], val = attribs[i*2 + 1];
+
+      if (attr == GLX_RENDER_TYPE)
+         renderType = val;
+      if (attr == GLX_CONTEXT_PROFILE_MASK_ARB)
+         mask = val;
+      if (attr == GLX_CONTEXT_MAJOR_VERSION_ARB)
+         major = val;
+      if (attr == GLX_CONTEXT_MINOR_VERSION_ARB)
+         minor = val;
+   }
+
+   /* We have no indirect support for core or ES contexts, and our compat
+    * context support is limited to GL 1.4.
+    */
+   if (mask != GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB ||
+       major != 1 ||
+       minor > 4) {
       return NULL;
    }
 
@@ -433,48 +363,15 @@ indirect_create_context(struct glx_screen *psc,
 
    /*
     ** Constrain the maximum drawing command size allowed to be
-    ** transfered using the X_GLXRender protocol request.  First
-    ** constrain by a software limit, then constrain by the protocl
+    ** transferred using the X_GLXRender protocol request.  First
+    ** constrain by a software limit, then constrain by the protocol
     ** limit.
     */
-   if (bufSize > __GLX_RENDER_CMD_SIZE_LIMIT) {
-      bufSize = __GLX_RENDER_CMD_SIZE_LIMIT;
-   }
-   if (bufSize > __GLX_MAX_RENDER_CMD_SIZE) {
-      bufSize = __GLX_MAX_RENDER_CMD_SIZE;
-   }
-   gc->maxSmallRenderCommandSize = bufSize;
-   
+   gc->maxSmallRenderCommandSize = MIN3(bufSize, __GLX_RENDER_CMD_SIZE_LIMIT,
+                                        __GLX_MAX_RENDER_CMD_SIZE);
+
 
    return gc;
-}
-
-_X_HIDDEN struct glx_context *
-indirect_create_context_attribs(struct glx_screen *base,
-				struct glx_config *config_base,
-				struct glx_context *shareList,
-				unsigned num_attribs,
-				const uint32_t *attribs,
-				unsigned *error)
-{
-   int renderType = GLX_RGBA_TYPE;
-   unsigned i;
-
-   /* The error parameter is only used on the server so that correct GLX
-    * protocol errors can be generated.  On the client, it can be ignored.
-    */
-   (void) error;
-
-   /* All of the attribute validation for indirect contexts is handled on the
-    * server, so there's not much to do here. Still, we need to parse the
-    * attributes to correctly set renderType.
-    */
-   for (i = 0; i < num_attribs; i++) {
-      if (attribs[i * 2] == GLX_RENDER_TYPE)
-         renderType = attribs[i * 2 + 1];
-   }
-
-   return indirect_create_context(base, config_base, shareList, renderType);
 }
 
 static const struct glx_screen_vtable indirect_screen_vtable = {

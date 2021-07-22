@@ -39,7 +39,7 @@ class Field(object):
 		self.shr = shr
 		self.type = type
 
-		builtin_types = [ None, "boolean", "uint", "hex", "int", "fixed", "ufixed", "float", "address", "waddress" ]
+		builtin_types = [ None, "a3xx_regid", "boolean", "uint", "hex", "int", "fixed", "ufixed", "float", "address", "waddress" ]
 
 		if low < 0 or low > 31:
 			raise parser.error("low attribute out of range: %d" % low)
@@ -61,7 +61,7 @@ class Field(object):
 		elif self.type == "boolean":
 			type = "bool"
 			val = var_name
-		elif self.type == "uint" or self.type == "hex":
+		elif self.type == "uint" or self.type == "hex" or self.type == "a3xx_regid":
 			type = "uint32_t"
 			val = var_name
 		elif self.type == "int":
@@ -78,7 +78,7 @@ class Field(object):
 			val = "fui(%s)" % var_name
 		elif self.type == "float" and self.high - self.low == 15:
 			type = "float"
-			val = "util_float_to_half(%s)" % var_name
+			val = "_mesa_float_to_half(%s)" % var_name
 		elif self.type in [ "address", "waddress" ]:
 			type = "uint64_t"
 			val = var_name
@@ -93,7 +93,7 @@ class Field(object):
 
 def tab_to(name, value):
 	tab_count = (68 - (len(name) & ~7)) // 8
-	if tab_count == 0:
+	if tab_count <= 0:
 		tab_count = 1
 	print(name + ('\t' * tab_count) + value)
 
@@ -105,11 +105,11 @@ class Bitset(object):
 		self.name = name
 		self.inline = False
 		if template:
-			self.fields = template.fields
+			self.fields = template.fields[:]
 		else:
 			self.fields = []
 
-	def dump_pack_struct(self, prefix=None, array=None):
+	def dump_pack_struct(self, prefix=None, array=None, bit_size=32):
 		def field_name(prefix, name):
 			if f.name:
 				name = f.name.lower()
@@ -126,19 +126,26 @@ class Bitset(object):
 		if prefix == None:
 			prefix = self.name
 
+		value_name = "dword"
 		print("struct %s {" % prefix)
 		for f in self.fields:
 			if f.type in [ "address", "waddress" ]:
 				tab_to("    __bo_type", "bo;")
 				tab_to("    uint32_t", "bo_offset;")
+				if bit_size == 64:
+                                    value_name = "qword"
 				continue
 			name = field_name(prefix, f.name)
 
 			type, val = f.ctype("var")
 
 			tab_to("    %s" % type, "%s;" % name)
-		tab_to("    uint32_t", "unknown;")
-		tab_to("    uint32_t", "dword;")
+		if value_name == "qword":
+			tab_to("    uint64_t", "unknown;")
+			tab_to("    uint64_t", "qword;")
+		else:
+			tab_to("    uint32_t", "unknown;")
+			tab_to("    uint32_t", "dword;")
 		print("};\n")
 
 		address = None;
@@ -176,7 +183,7 @@ class Bitset(object):
 			else:
 				type, val = f.ctype("fields.%s" % field_name(prefix, f.name))
 				print("            (%-40s << %2d) |" % (val, f.low))
-		print("            fields.unknown | fields.dword,")
+		print("            fields.unknown | fields.%s," % (value_name,))
 
 		if address:
 			print("        .is_address = true,")
@@ -227,14 +234,17 @@ class Bitset(object):
 
 class Array(object):
 	def __init__(self, attrs, domain):
-		self.name = attrs["name"]
+		if "name" in attrs:
+			self.name = attrs["name"]
+		else:
+			self.name = ""
 		self.domain = domain
 		self.offset = int(attrs["offset"], 0)
 		self.stride = int(attrs["stride"], 0)
 		self.length = int(attrs["length"], 0)
 
 	def dump(self):
-		print("static inline uint32_t REG_%s_%s(uint32_t i0) { return 0x%08x + 0x%x*i0; }\n" % (self.domain, self.name, self.offset, self.stride))
+		print("#define REG_%s_%s(i0) (0x%08x + 0x%x*(i0))\n" % (self.domain, self.name, self.offset, self.stride))
 
 	def dump_pack_struct(self):
 		pass
@@ -266,7 +276,7 @@ class Reg(object):
 
 	def dump_pack_struct(self):
 		if self.bitset.inline:
-			self.bitset.dump_pack_struct(self.full_name, not self.array == None)
+			self.bitset.dump_pack_struct(self.full_name, not self.array == None, self.bit_size)
 
 
 def parse_variants(attrs):
@@ -341,14 +351,19 @@ class Parser(object):
 		self.stack.pop()
 		file.close()
 
-	def parse(self, filename):
-		self.path = os.path.dirname(filename)
+	def parse(self, rnn_path, filename):
+		self.path = rnn_path
 		self.stack = []
 		self.do_parse(filename)
 
 	def parse_reg(self, attrs, bit_size):
 		if "type" in attrs and attrs["type"] in self.bitsets:
-			self.current_bitset = self.bitsets[attrs["type"]]
+			bitset = self.bitsets[attrs["type"]]
+			if bitset.inline:
+				self.current_bitset = Bitset(attrs["name"], bitset)
+				self.current_bitset.inline = True
+			else:
+				self.current_bitset = bitset
 		else:
 			self.current_bitset = Bitset(attrs["name"], None)
 			self.current_bitset.inline = True
@@ -363,7 +378,7 @@ class Parser(object):
 
 	def start_element(self, name, attrs):
 		if name == "import":
-			filename = os.path.basename(attrs["file"])
+			filename = attrs["file"]
 			self.do_parse(os.path.join(self.path, filename))
 		elif name == "domain":
 			self.current_domain = attrs["name"]
@@ -439,8 +454,9 @@ class Parser(object):
 
 def main():
 	p = Parser()
-	xml_file = sys.argv[1]
-	if len(sys.argv) > 2 and sys.argv[2] == '--pack-structs':
+	rnn_path = sys.argv[1]
+	xml_file = sys.argv[2]
+	if len(sys.argv) > 3 and sys.argv[3] == '--pack-structs':
 		do_structs = True
 		guard = str.replace(os.path.basename(xml_file), '.', '_').upper() + '_STRUCTS'
 	else:
@@ -450,7 +466,7 @@ def main():
 	print("#ifndef %s\n#define %s\n" % (guard, guard))
 
 	try:
-		p.parse(xml_file)
+		p.parse(rnn_path, xml_file)
 	except Error as e:
 		print(e)
 		exit(1)

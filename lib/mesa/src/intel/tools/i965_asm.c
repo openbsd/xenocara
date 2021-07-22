@@ -38,6 +38,9 @@ static enum opt_output_type output_type = OPT_OUTPUT_BIN;
 char *input_filename = NULL;
 int errors;
 
+struct list_head instr_labels;
+struct list_head target_labels;
+
 static void
 print_help(const char *progname, FILE *file)
 {
@@ -54,6 +57,14 @@ print_help(const char *progname, FILE *file)
            "Example:\n"
            "    i965_asm -g kbl input.asm -t hex -o output\n",
            progname);
+}
+
+static uint32_t
+get_dword(const brw_inst *inst, int idx)
+{
+   uint32_t dword;
+   memcpy(&dword, (char *)inst + 4 * idx, sizeof(dword));
+   return dword;
 }
 
 static void
@@ -73,11 +84,11 @@ print_instruction(FILE *output, bool compact, const brw_inst *instruction)
       break;
    }
    case OPT_OUTPUT_C_LITERAL: {
-      fprintf(output, "\t0x%02x,", ((unsigned char *)instruction)[0]);
+      fprintf(output, "\t0x%08x,", get_dword(instruction, 0));
 
-      for (unsigned i = 1; i < byte_limit; i++) {
-         fprintf(output, " 0x%02x,", ((unsigned char *)instruction)[i]);
-      }
+      for (unsigned i = 1; i < byte_limit / 4; i++)
+         fprintf(output, " 0x%08x,", get_dword(instruction, i));
+
       break;
    }
    case OPT_OUTPUT_BIN:
@@ -106,9 +117,91 @@ i965_disasm_init(uint16_t pci_id)
       return NULL;
    }
 
-   brw_init_compaction_tables(devinfo);
-
    return devinfo;
+}
+
+static bool
+i965_postprocess_labels()
+{
+   if (p->devinfo->ver < 6) {
+      return true;
+   }
+
+   void *store = p->store;
+
+   struct target_label *tlabel;
+   struct instr_label *ilabel, *s;
+
+   const unsigned to_bytes_scale = brw_jump_scale(p->devinfo);
+
+   LIST_FOR_EACH_ENTRY(tlabel, &target_labels, link) {
+      LIST_FOR_EACH_ENTRY_SAFE(ilabel, s, &instr_labels, link) {
+         if (!strcmp(tlabel->name, ilabel->name)) {
+            brw_inst *inst = store + ilabel->offset;
+
+            int relative_offset = (tlabel->offset - ilabel->offset) / sizeof(brw_inst);
+            relative_offset *= to_bytes_scale;
+
+            unsigned opcode = brw_inst_opcode(p->devinfo, inst);
+
+            if (ilabel->type == INSTR_LABEL_JIP) {
+               switch (opcode) {
+               case BRW_OPCODE_IF:
+               case BRW_OPCODE_ELSE:
+               case BRW_OPCODE_ENDIF:
+               case BRW_OPCODE_WHILE:
+                  if (p->devinfo->ver >= 7) {
+                     brw_inst_set_jip(p->devinfo, inst, relative_offset);
+                  } else if (p->devinfo->ver == 6) {
+                     brw_inst_set_gfx6_jump_count(p->devinfo, inst, relative_offset);
+                  }
+                  break;
+               case BRW_OPCODE_BREAK:
+               case BRW_OPCODE_HALT:
+               case BRW_OPCODE_CONTINUE:
+                  brw_inst_set_jip(p->devinfo, inst, relative_offset);
+                  break;
+               default:
+                  fprintf(stderr, "Unknown opcode %d with JIP label\n", opcode);
+                  return false;
+               }
+            } else {
+               switch (opcode) {
+               case BRW_OPCODE_IF:
+               case BRW_OPCODE_ELSE:
+                  if (p->devinfo->ver > 7) {
+                     brw_inst_set_uip(p->devinfo, inst, relative_offset);
+                  } else if (p->devinfo->ver == 7) {
+                     brw_inst_set_uip(p->devinfo, inst, relative_offset);
+                  } else if (p->devinfo->ver == 6) {
+                     // Nothing
+                  }
+                  break;
+               case BRW_OPCODE_WHILE:
+               case BRW_OPCODE_ENDIF:
+                  fprintf(stderr, "WHILE/ENDIF cannot have UIP offset\n");
+                  return false;
+               case BRW_OPCODE_BREAK:
+               case BRW_OPCODE_CONTINUE:
+               case BRW_OPCODE_HALT:
+                  brw_inst_set_uip(p->devinfo, inst, relative_offset);
+                  break;
+               default:
+                  fprintf(stderr, "Unknown opcode %d with UIP label\n", opcode);
+                  return false;
+               }
+            }
+
+            list_del(&ilabel->link);
+         }
+      }
+   }
+
+   LIST_FOR_EACH_ENTRY(ilabel, &instr_labels, link) {
+      fprintf(stderr, "Unknown label '%s'\n", ilabel->name);
+   }
+
+   return list_is_empty(&instr_labels);
 }
 
 int main(int argc, char **argv)
@@ -124,6 +217,8 @@ int main(int argc, char **argv)
    struct disasm_info *disasm_info;
    struct gen_device_info *devinfo = NULL;
    int result = EXIT_FAILURE;
+   list_inithead(&instr_labels);
+   list_inithead(&target_labels);
 
    const struct option i965_asm_opts[] = {
       { "help",          no_argument,       (int *) &help,      true },
@@ -222,6 +317,9 @@ int main(int argc, char **argv)
    if (err || errors)
       goto end;
 
+   if (!i965_postprocess_labels())
+      goto end;
+
    store = p->store;
 
    disasm_info = disasm_initialize(p->devinfo, NULL);
@@ -231,7 +329,7 @@ int main(int argc, char **argv)
    }
 
    if (output_type == OPT_OUTPUT_C_LITERAL)
-      fprintf(output, "static const char gen_eu_bytes[] = {\n");
+      fprintf(output, "{\n");
 
    brw_validate_instructions(p->devinfo, p->store, 0,
                              p->next_insn_offset, disasm_info);

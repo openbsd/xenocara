@@ -51,7 +51,7 @@ point_size(struct gl_context *ctx, GLfloat size, bool no_error)
       return;
    }
 
-   FLUSH_VERTICES(ctx, _NEW_POINT);
+   FLUSH_VERTICES(ctx, _NEW_POINT, GL_POINT_BIT);
    ctx->Point.Size = size;
 
    if (ctx->Driver.PointSize)
@@ -117,9 +117,8 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
     * If point parameters aren't supported, then this function shouldn't even
     * exist.
     */
-   assert(!(ctx->Extensions.ARB_point_sprite
-            || ctx->Extensions.NV_point_sprite)
-          || ctx->Extensions.EXT_point_parameters);
+   assert(!ctx->Extensions.ARB_point_sprite ||
+          ctx->Extensions.EXT_point_parameters);
 
    if (!ctx->Extensions.EXT_point_parameters) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -131,7 +130,8 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
       case GL_DISTANCE_ATTENUATION_EXT:
          if (TEST_EQ_3V(ctx->Point.Params, params))
             return;
-         FLUSH_VERTICES(ctx, _NEW_POINT);
+         FLUSH_VERTICES(ctx, _NEW_POINT | _NEW_FF_VERT_PROGRAM |
+                        _NEW_TNL_SPACES, GL_POINT_BIT);
          COPY_3V(ctx->Point.Params, params);
          ctx->Point._Attenuated = (ctx->Point.Params[0] != 1.0F ||
                                    ctx->Point.Params[1] != 0.0F ||
@@ -145,7 +145,7 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
          }
          if (ctx->Point.MinSize == params[0])
             return;
-         FLUSH_VERTICES(ctx, _NEW_POINT);
+         FLUSH_VERTICES(ctx, _NEW_POINT, GL_POINT_BIT);
          ctx->Point.MinSize = params[0];
          break;
       case GL_POINT_SIZE_MAX_EXT:
@@ -156,7 +156,7 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
          }
          if (ctx->Point.MaxSize == params[0])
             return;
-         FLUSH_VERTICES(ctx, _NEW_POINT);
+         FLUSH_VERTICES(ctx, _NEW_POINT, GL_POINT_BIT);
          ctx->Point.MaxSize = params[0];
          break;
       case GL_POINT_FADE_THRESHOLD_SIZE_EXT:
@@ -167,31 +167,8 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
          }
          if (ctx->Point.Threshold == params[0])
             return;
-         FLUSH_VERTICES(ctx, _NEW_POINT);
+         FLUSH_VERTICES(ctx, _NEW_POINT, GL_POINT_BIT);
          ctx->Point.Threshold = params[0];
-         break;
-      case GL_POINT_SPRITE_R_MODE_NV:
-         /* This is one area where ARB_point_sprite and NV_point_sprite
-	  * differ.  In ARB_point_sprite the POINT_SPRITE_R_MODE is
-	  * always ZERO.  NV_point_sprite adds the S and R modes.
-	  */
-         if (_mesa_is_desktop_gl(ctx) && ctx->Extensions.NV_point_sprite) {
-            GLenum value = (GLenum) params[0];
-            if (value != GL_ZERO && value != GL_S && value != GL_R) {
-               _mesa_error(ctx, GL_INVALID_VALUE,
-                           "glPointParameterf[v]{EXT,ARB}(param)");
-               return;
-            }
-            if (ctx->Point.SpriteRMode == value)
-               return;
-            FLUSH_VERTICES(ctx, _NEW_POINT);
-            ctx->Point.SpriteRMode = value;
-         }
-         else {
-            _mesa_error(ctx, GL_INVALID_ENUM,
-                        "glPointParameterf[v]{EXT,ARB}(pname)");
-            return;
-         }
          break;
       case GL_POINT_SPRITE_COORD_ORIGIN:
 	 /* GL_POINT_SPRITE_COORD_ORIGIN was added to point sprites when the
@@ -207,7 +184,7 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
             }
             if (ctx->Point.SpriteOrigin == value)
                return;
-            FLUSH_VERTICES(ctx, _NEW_POINT);
+            FLUSH_VERTICES(ctx, _NEW_POINT, GL_POINT_BIT);
             ctx->Point.SpriteOrigin = value;
          }
          else {
@@ -263,7 +240,6 @@ _mesa_init_point(struct gl_context *ctx)
    ctx->Point.PointSprite = (ctx->API == API_OPENGL_CORE ||
                              ctx->API == API_OPENGLES2);
 
-   ctx->Point.SpriteRMode = GL_ZERO; /* GL_NV_point_sprite (only!) */
    ctx->Point.SpriteOrigin = GL_UPPER_LEFT; /* GL_ARB_point_sprite */
-   ctx->Point.CoordReplace = 0; /* GL_ARB/NV_point_sprite */
+   ctx->Point.CoordReplace = 0; /* GL_ARB_point_sprite */
 }

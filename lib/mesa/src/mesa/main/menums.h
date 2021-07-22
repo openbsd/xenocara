@@ -122,8 +122,6 @@ typedef enum
    BUFFER_DEPTH,
    BUFFER_STENCIL,
    BUFFER_ACCUM,
-   /* optional aux buffer */
-   BUFFER_AUX0,
    /* generic renderbuffers */
    BUFFER_COLOR0,
    BUFFER_COLOR1,
@@ -141,6 +139,7 @@ typedef enum
 {
    MAP_USER,
    MAP_INTERNAL,
+   MAP_GLTHREAD,
    MAP_COUNT
 } gl_map_buffer_index;
 

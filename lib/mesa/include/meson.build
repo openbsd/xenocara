@@ -18,9 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-inc_include = include_directories('.')
+inc_include = [include_directories('.')]
 inc_d3d9 = include_directories('D3D9')
 inc_haikugl = include_directories('HaikuGL')
+
+# Most things assume that Android headers are in the default include
+# path when compiling for Android so add the stub headers to
+# inc_include when using the stub.
+if with_android_stub
+  inc_include += [include_directories('android_stub')]
+endif
 
 if not with_glvnd
   if with_gles1 or with_gles2 or with_opengl or with_egl
@@ -89,7 +96,7 @@ if with_egl
   )
 endif
 
-if with_osmesa != 'none'
+if with_osmesa
   install_headers('GL/osmesa.h', subdir : 'GL')
 endif
 
@@ -134,8 +141,4 @@ if with_gallium_opencl and not with_opencl_icd
     'CL/opencl.h',
     subdir: 'CL'
   )
-endif
-
-if with_intel_vk
-  install_headers('vulkan/vulkan_intel.h', subdir : 'vulkan')
 endif

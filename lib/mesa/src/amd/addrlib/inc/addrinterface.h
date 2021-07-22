@@ -33,6 +33,7 @@
 #ifndef __ADDR_INTERFACE_H__
 #define __ADDR_INTERFACE_H__
 
+// Includes should be before extern "C"
 #include "addrtypes.h"
 
 #if defined(__cplusplus)
@@ -177,6 +178,7 @@ typedef struct _ADDR_EQUATION
                                                        ///< stacked vertically prior to swizzling
 } ADDR_EQUATION;
 
+
 /**
 ****************************************************************************************************
 * @brief Alloc system memory flags.
@@ -308,8 +310,9 @@ typedef union _ADDR_CREATE_FLAGS
         UINT_32 useHtileSliceAlign     : 1;    ///< Do htile single slice alignment
         UINT_32 allowLargeThickTile    : 1;    ///< Allow 64*thickness*bytesPerPixel > rowSize
         UINT_32 forceDccAndTcCompat    : 1;    ///< Force enable DCC and TC compatibility
-        UINT_32 nonPower2MemConfig     : 1;    ///< Physical video memory size is not power of 2
-        UINT_32 reserved               : 23;   ///< Reserved bits for future use
+        UINT_32 nonPower2MemConfig     : 1;    ///< Video memory bit width is not power of 2
+        UINT_32 enableAltTiling        : 1;    ///< Enable alt tile mode
+        UINT_32 reserved               : 22;   ///< Reserved bits for future use
     };
 
     UINT_32 value;
@@ -407,6 +410,8 @@ ADDR_E_RETURNCODE ADDR_API AddrCreate(
     const ADDR_CREATE_INPUT*    pAddrCreateIn,
     ADDR_CREATE_OUTPUT*         pAddrCreateOut);
 
+
+
 /**
 ****************************************************************************************************
 *   AddrDestroy
@@ -420,6 +425,8 @@ ADDR_E_RETURNCODE ADDR_API AddrCreate(
 */
 ADDR_E_RETURNCODE ADDR_API AddrDestroy(
     ADDR_HANDLE hLib);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                    Surface functions
@@ -652,6 +659,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeSurfaceInfo(
     const ADDR_COMPUTE_SURFACE_INFO_INPUT*  pIn,
     ADDR_COMPUTE_SURFACE_INFO_OUTPUT*       pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT
@@ -739,6 +748,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeSurfaceAddrFromCoord(
     ADDR_HANDLE                                     hLib,
     const ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT* pIn,
     ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT*      pOut);
+
+
 
 /**
 ****************************************************************************************************
@@ -921,6 +932,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeHtileInfo(
     const ADDR_COMPUTE_HTILE_INFO_INPUT*    pIn,
     ADDR_COMPUTE_HTILE_INFO_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_HTILE_ADDRFROMCOORD_INPUT
@@ -983,6 +996,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeHtileAddrFromCoord(
     const ADDR_COMPUTE_HTILE_ADDRFROMCOORD_INPUT*   pIn,
     ADDR_COMPUTE_HTILE_ADDRFROMCOORD_OUTPUT*        pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_HTILE_COORDFROMADDR_INPUT
@@ -1042,6 +1057,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeHtileCoordFromAddr(
     ADDR_HANDLE                                     hLib,
     const ADDR_COMPUTE_HTILE_COORDFROMADDR_INPUT*   pIn,
     ADDR_COMPUTE_HTILE_COORDFROMADDR_OUTPUT*        pOut);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     C-mask functions
@@ -1130,6 +1147,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeCmaskInfo(
     const ADDR_COMPUTE_CMASK_INFO_INPUT*    pIn,
     ADDR_COMPUTE_CMASK_INFO_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_CMASK_ADDRFROMCOORD_INPUT
@@ -1190,6 +1209,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeCmaskAddrFromCoord(
     const ADDR_COMPUTE_CMASK_ADDRFROMCOORD_INPUT*   pIn,
     ADDR_COMPUTE_CMASK_ADDRFROMCOORD_OUTPUT*        pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_CMASK_COORDFROMADDR_INPUT
@@ -1247,6 +1268,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeCmaskCoordFromAddr(
     ADDR_HANDLE                                     hLib,
     const ADDR_COMPUTE_CMASK_COORDFROMADDR_INPUT*   pIn,
     ADDR_COMPUTE_CMASK_COORDFROMADDR_OUTPUT*        pOut);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     F-mask functions
@@ -1328,6 +1351,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeFmaskInfo(
     const ADDR_COMPUTE_FMASK_INFO_INPUT*    pIn,
     ADDR_COMPUTE_FMASK_INFO_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_FMASK_ADDRFROMCOORD_INPUT
@@ -1404,6 +1429,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeFmaskAddrFromCoord(
     const ADDR_COMPUTE_FMASK_ADDRFROMCOORD_INPUT*   pIn,
     ADDR_COMPUTE_FMASK_ADDRFROMCOORD_OUTPUT*        pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_FMASK_COORDFROMADDR_INPUT
@@ -1476,6 +1503,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeFmaskCoordFromAddr(
     ADDR_HANDLE                                     hLib,
     const ADDR_COMPUTE_FMASK_COORDFROMADDR_INPUT*   pIn,
     ADDR_COMPUTE_FMASK_COORDFROMADDR_OUTPUT*        pOut);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                          Element/utility functions
@@ -1565,6 +1594,7 @@ ADDR_E_RETURNCODE ADDR_API AddrExtractBankPipeSwizzle(
     const ADDR_EXTRACT_BANKPIPE_SWIZZLE_INPUT*  pIn,
     ADDR_EXTRACT_BANKPIPE_SWIZZLE_OUTPUT*       pOut);
 
+
 /**
 ****************************************************************************************************
 *   ADDR_COMBINE_BANKPIPE_SWIZZLE_INPUT
@@ -1622,6 +1652,8 @@ ADDR_E_RETURNCODE ADDR_API AddrCombineBankPipeSwizzle(
     const ADDR_COMBINE_BANKPIPE_SWIZZLE_INPUT*  pIn,
     ADDR_COMBINE_BANKPIPE_SWIZZLE_OUTPUT*       pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_COMPUTE_SLICESWIZZLE_INPUT
@@ -1647,6 +1679,8 @@ typedef struct _ADDR_COMPUTE_SLICESWIZZLE_INPUT
     INT_32          macroModeIndex;     ///< Index in macro tile mode table if there is one (CI)
                                         ///< README: When tileIndex is not -1, this must be valid
 } ADDR_COMPUTE_SLICESWIZZLE_INPUT;
+
+
 
 /**
 ****************************************************************************************************
@@ -1677,6 +1711,7 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeSliceSwizzle(
     ADDR_HANDLE                             hLib,
     const ADDR_COMPUTE_SLICESWIZZLE_INPUT*  pIn,
     ADDR_COMPUTE_SLICESWIZZLE_OUTPUT*       pOut);
+
 
 /**
 ****************************************************************************************************
@@ -1768,6 +1803,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeBaseSwizzle(
     const ADDR_COMPUTE_BASE_SWIZZLE_INPUT*  pIn,
     ADDR_COMPUTE_BASE_SWIZZLE_OUTPUT*       pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ELEM_GETEXPORTNORM_INPUT
@@ -1807,6 +1844,8 @@ typedef struct _ELEM_GETEXPORTNORM_INPUT
 BOOL_32 ADDR_API ElemGetExportNorm(
     ADDR_HANDLE                     hLib,
     const ELEM_GETEXPORTNORM_INPUT* pIn);
+
+
 
 /**
 ****************************************************************************************************
@@ -1862,6 +1901,8 @@ ADDR_E_RETURNCODE ADDR_API ElemFlt32ToDepthPixel(
     ADDR_HANDLE                         hLib,
     const ELEM_FLT32TODEPTHPIXEL_INPUT* pIn,
     ELEM_FLT32TODEPTHPIXEL_OUTPUT*      pOut);
+
+
 
 /**
 ****************************************************************************************************
@@ -1989,6 +2030,8 @@ ADDR_E_RETURNCODE ADDR_API AddrConvertTileInfoToHW(
     const ADDR_CONVERT_TILEINFOTOHW_INPUT*  pIn,
     ADDR_CONVERT_TILEINFOTOHW_OUTPUT*       pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_CONVERT_TILEINDEX_INPUT
@@ -2113,6 +2156,8 @@ ADDR_E_RETURNCODE ADDR_API AddrConvertTileIndex1(
     const ADDR_CONVERT_TILEINDEX1_INPUT*    pIn,
     ADDR_CONVERT_TILEINDEX_OUTPUT*          pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_GET_TILEINDEX_INPUT
@@ -2158,6 +2203,8 @@ ADDR_E_RETURNCODE ADDR_API AddrGetTileIndex(
     const ADDR_GET_TILEINDEX_INPUT* pIn,
     ADDR_GET_TILEINDEX_OUTPUT*      pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_PRT_INFO_INPUT
@@ -2201,6 +2248,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputePrtInfo(
     ADDR_HANDLE                 hLib,
     const ADDR_PRT_INFO_INPUT*  pIn,
     ADDR_PRT_INFO_OUTPUT*       pOut);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     DCC key functions
@@ -2262,6 +2311,8 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeDccInfo(
     const ADDR_COMPUTE_DCCINFO_INPUT*       pIn,
     ADDR_COMPUTE_DCCINFO_OUTPUT*            pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR_GET_MAX_ALIGNMENTS_OUTPUT
@@ -2270,7 +2321,7 @@ ADDR_E_RETURNCODE ADDR_API AddrComputeDccInfo(
 *       Output structure of AddrGetMaxAlignments
 ****************************************************************************************************
 */
-typedef struct _ADDR_GET_MAX_ALIGNMENTS_OUTPUT
+typedef struct ADDR_GET_MAX_ALINGMENTS_OUTPUT
 {
     UINT_32 size;                   ///< Size of this structure in bytes
     UINT_32 baseAlign;              ///< Maximum base alignment in bytes
@@ -2324,6 +2375,7 @@ ADDR_E_RETURNCODE ADDR_API AddrGetMaxMetaAlignments(
 *     Addr2ComputeDccInfo()
 *
 **/
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                    Surface functions for Gfx9
@@ -2488,6 +2540,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeSurfaceInfo(
     const ADDR2_COMPUTE_SURFACE_INFO_INPUT*    pIn,
     ADDR2_COMPUTE_SURFACE_INFO_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR2_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT
@@ -2554,6 +2608,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeSurfaceAddrFromCoord(
     const ADDR2_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT*    pIn,
     ADDR2_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR2_COMPUTE_SURFACE_COORDFROMADDR_INPUT
@@ -2619,6 +2675,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeSurfaceCoordFromAddr(
     const ADDR2_COMPUTE_SURFACE_COORDFROMADDR_INPUT*    pIn,
     ADDR2_COMPUTE_SURFACE_COORDFROMADDR_OUTPUT*         pOut);
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                   HTile functions for Gfx9
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2667,6 +2725,7 @@ typedef struct _ADDR2_META_MIP_INFO
             UINT_32    depth;
         };
 
+        // GFX10
         struct
         {
             UINT_32    offset;      ///< Metadata offset within one slice,
@@ -2699,6 +2758,7 @@ typedef struct _ADDR2_COMPUTE_HTILE_INFO_INPUT
     UINT_32             firstMipIdInTail;   ///  Id of the first mip in tail,
                                             ///  if no mip is in tail, it should be set to
                                             ///  number of mip levels
+                                            ///  Only for GFX10
 } ADDR2_COMPUTE_HTILE_INFO_INPUT;
 
 /**
@@ -2725,6 +2785,10 @@ typedef struct _ADDR2_COMPUTE_HTILE_INFO_OUTPUT
     UINT_32    metaBlkNumPerSlice;  ///< Number of metablock within one slice
 
     ADDR2_META_MIP_INFO* pMipInfo;  ///< HTILE mip information
+
+    struct {
+      UINT_16* gfx10_bits; /* 72 2-byte elements */
+   } equation;
 } ADDR2_COMPUTE_HTILE_INFO_OUTPUT;
 
 /**
@@ -2739,6 +2803,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeHtileInfo(
     ADDR_HANDLE                              hLib,
     const ADDR2_COMPUTE_HTILE_INFO_INPUT*    pIn,
     ADDR2_COMPUTE_HTILE_INFO_OUTPUT*         pOut);
+
+
 
 /**
 ****************************************************************************************************
@@ -2796,6 +2862,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeHtileAddrFromCoord(
     ADDR_HANDLE                                       hLib,
     const ADDR2_COMPUTE_HTILE_ADDRFROMCOORD_INPUT*    pIn,
     ADDR2_COMPUTE_HTILE_ADDRFROMCOORD_OUTPUT*         pOut);
+
+
 
 /**
 ****************************************************************************************************
@@ -2855,6 +2923,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeHtileCoordFromAddr(
     const ADDR2_COMPUTE_HTILE_COORDFROMADDR_INPUT*    pIn,
     ADDR2_COMPUTE_HTILE_COORDFROMADDR_OUTPUT*         pOut);
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     C-mask functions for Gfx9
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2881,6 +2951,7 @@ typedef struct _ADDR2_COMPUTE_CMASKINFO_INPUT
     UINT_32             numMipLevels;       ///< Number of mip levels
     UINT_32             firstMipIdInTail;   ///< The id of first mip in tail, if no mip is in tail,
                                             ///  it should be number of mip levels
+                                            ///  Only for GFX10
 } ADDR2_COMPUTE_CMASK_INFO_INPUT;
 
 /**
@@ -2924,6 +2995,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeCmaskInfo(
     ADDR_HANDLE                              hLib,
     const ADDR2_COMPUTE_CMASK_INFO_INPUT*    pIn,
     ADDR2_COMPUTE_CMASK_INFO_OUTPUT*         pOut);
+
+
 
 /**
 ****************************************************************************************************
@@ -2986,6 +3059,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeCmaskAddrFromCoord(
     const ADDR2_COMPUTE_CMASK_ADDRFROMCOORD_INPUT*   pIn,
     ADDR2_COMPUTE_CMASK_ADDRFROMCOORD_OUTPUT*        pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR2_COMPUTE_CMASK_COORDFROMADDR_INPUT
@@ -3043,6 +3118,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeCmaskCoordFromAddr(
     ADDR_HANDLE                                       hLib,
     const ADDR2_COMPUTE_CMASK_COORDFROMADDR_INPUT*    pIn,
     ADDR2_COMPUTE_CMASK_COORDFROMADDR_OUTPUT*         pOut);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     F-mask functions for Gfx9
@@ -3126,6 +3203,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeFmaskInfo(
     const ADDR2_COMPUTE_FMASK_INFO_INPUT*    pIn,
     ADDR2_COMPUTE_FMASK_INFO_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR2_COMPUTE_FMASK_ADDRFROMCOORD_INPUT
@@ -3185,6 +3264,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeFmaskAddrFromCoord(
     const ADDR2_COMPUTE_FMASK_ADDRFROMCOORD_INPUT*    pIn,
     ADDR2_COMPUTE_FMASK_ADDRFROMCOORD_OUTPUT*         pOut);
 
+
+
 /**
 ****************************************************************************************************
 *   ADDR2_COMPUTE_FMASK_COORDFROMADDR_INPUT
@@ -3243,6 +3324,8 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeFmaskCoordFromAddr(
     const ADDR2_COMPUTE_FMASK_COORDFROMADDR_INPUT*    pIn,
     ADDR2_COMPUTE_FMASK_COORDFROMADDR_OUTPUT*         pOut);
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                     DCC key functions for Gfx9
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3273,6 +3356,7 @@ typedef struct _ADDR2_COMPUTE_DCCINFO_INPUT
                                             ///< useful in meta linear case
     UINT_32             firstMipIdInTail;   ///< The id of first mip in tail, if no mip is in tail,
                                             ///  it should be number of mip levels
+                                            ///  Only for GFX10
 } ADDR2_COMPUTE_DCCINFO_INPUT;
 
 /**
@@ -3301,7 +3385,7 @@ typedef struct _ADDR2_COMPUTE_DCCINFO_OUTPUT
     UINT_32    metaBlkWidth;       ///< DCC meta block width
     UINT_32    metaBlkHeight;      ///< DCC meta block height
     UINT_32    metaBlkDepth;       ///< DCC meta block depth
-
+    UINT_32    metaBlkSize;        ///< DCC meta block size in bytes
     UINT_32    metaBlkNumPerSlice; ///< Number of metablock within one slice
 
     union
@@ -3310,9 +3394,39 @@ typedef struct _ADDR2_COMPUTE_DCCINFO_OUTPUT
         UINT_32 dccRamSliceSize;        ///< DCC ram size per slice. For mipmap, it's
                                         ///  the slize size of a mip chain, the thickness of a
                                         ///  a slice is meta block depth
+                                        ///  Only for GFX10
     };
 
     ADDR2_META_MIP_INFO* pMipInfo;      ///< DCC mip information
+
+    /* The equation for doing DCC address computations in shaders. */
+    union {
+       /* This is chip-specific, and it varies with:
+        * - resource type
+        * - swizzle_mode
+        * - bpp
+        * - number of fragments
+        * - pipe_aligned
+        * - rb_aligned
+        */
+       struct {
+          UINT_8 num_bits;
+
+          struct {
+             struct {
+                UINT_8 dim; /* 0..4 as index, 5 means invalid */
+                UINT_8 ord; /* 0..31 */
+             } coord[8]; /* 0..num_coords */
+          } bit[32]; /* 0..num_bits */
+          UINT_8 numPipeBits;
+       } gfx9;
+
+       /* This is chip-specific, it requires 64KB_R_X, and it varies with:
+        * - bpp
+        * - pipe_aligned
+        */
+       UINT_16 *gfx10_bits; /* 68 2-byte elements */
+    } equation;
 } ADDR2_COMPUTE_DCCINFO_OUTPUT;
 
 /**
@@ -3328,6 +3442,7 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeDccInfo(
     ADDR_HANDLE                           hLib,
     const ADDR2_COMPUTE_DCCINFO_INPUT*    pIn,
     ADDR2_COMPUTE_DCCINFO_OUTPUT*         pOut);
+
 
 /**
 ****************************************************************************************************
@@ -3360,6 +3475,15 @@ typedef struct _ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT
     UINT_32             numFrags;            ///< Color surface fragment number
 
     UINT_32             pipeXor;             ///< pipe Xor setting
+    UINT_32             pitch;               ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::pitch
+    UINT_32             height;              ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::height
+    UINT_32             compressBlkWidth;    ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkWidth
+    UINT_32             compressBlkHeight;   ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkHeight
+    UINT_32             compressBlkDepth;    ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::compressBlkDepth
+    UINT_32             metaBlkWidth;        ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkWidth
+    UINT_32             metaBlkHeight;       ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkHeight
+    UINT_32             metaBlkDepth;        ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::metaBlkDepth
+    UINT_32             dccRamSliceSize;     ///< ADDR2_COMPUTE_DCC_INFO_OUTPUT::dccRamSliceSize
 } ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT;
 
 /**
@@ -3456,6 +3580,7 @@ typedef struct _ADDR2_COMPUTE_SLICE_PIPEBANKXOR_INPUT
     UINT_32             size;               ///< Size of this structure in bytes
     AddrSwizzleMode     swizzleMode;        ///< Surface swizzle mode
     AddrResourceType    resourceType;       ///< Surface resource type
+    UINT_32             bpe;                ///< bits per element (e.g. block size for BCn format)
     UINT_32             basePipeBankXor;    ///< Base pipe bank xor
     UINT_32             slice;              ///< Slice id
     UINT_32             numSamples;         ///< Number of samples
@@ -3537,6 +3662,62 @@ ADDR_E_RETURNCODE ADDR_API Addr2ComputeSubResourceOffsetForSwizzlePattern(
 
 /**
 ****************************************************************************************************
+*   ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT
+*
+*   @brief
+*       Input structure of Addr2ComputeNonBlockCompressedView
+****************************************************************************************************
+*/
+typedef struct _ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT
+{
+    UINT_32               size;              ///< Size of this structure in bytes
+    ADDR2_SURFACE_FLAGS   flags;             ///< Surface flags
+    AddrSwizzleMode       swizzleMode;       ///< Swizzle Mode for Gfx9
+    AddrResourceType      resourceType;      ///< Surface type
+    AddrFormat            format;            ///< Surface format
+    UINT_32               width;             ///< Width of mip0 in texels (not in compressed block)
+    UINT_32               height;            ///< Height of mip0 in texels (not in compressed block) 
+    UINT_32               numSlices;         ///< Number surface slice/depth of mip0
+    UINT_32               numMipLevels;      ///< Total mipmap levels.
+    UINT_32               pipeBankXor;       ///< Combined swizzle used to do bank/pipe rotation
+    UINT_32               slice;             ///< Index of slice to view
+    UINT_32               mipId;             ///< Id of mip to view
+} ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT;
+
+/**
+****************************************************************************************************
+*   ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT
+*
+*   @brief
+*       Output structure of Addr2ComputeNonBlockCompressedView
+****************************************************************************************************
+*/
+typedef struct _ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT
+{
+    UINT_32             size;               ///< Size of this structure in bytes
+    UINT_64             offset;             ///< Offset shifted from resource base for the view
+    UINT_32             pipeBankXor;        ///< Pipe bank xor for the view
+    UINT_32             unalignedWidth;     ///< Mip0 width (in element) for the view
+    UINT_32             unalignedHeight;    ///< Mip0 height (in element) for the view
+    UINT_32             numMipLevels;       ///< Total mipmap levels for the view
+    UINT_32             mipId;              ///< Mip ID for the view
+} ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT;
+
+/**
+****************************************************************************************************
+*   Addr2ComputeNonBlockCompressedView
+*
+*   @brief
+*       Compute non-block-compressed view for a given mipmap level/slice
+****************************************************************************************************
+*/
+ADDR_E_RETURNCODE ADDR_API Addr2ComputeNonBlockCompressedView(
+    ADDR_HANDLE                                       hLib,
+    const ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT* pIn,
+    ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT*      pOut);
+
+/**
+****************************************************************************************************
 *   ADDR2_BLOCK_SET
 *
 *   @brief
@@ -3553,8 +3734,9 @@ typedef union _ADDR2_BLOCK_SET
         UINT_32 macroThin64KB  : 1;   // Thin 64KB for 2D/3D resource
         UINT_32 macroThick64KB : 1;   // Thick 64KB for 3D resource
         UINT_32 var            : 1;   // VAR block
+        UINT_32                : 1;
         UINT_32 linear         : 1;   // Linear block
-        UINT_32 reserved       : 25;
+        UINT_32 reserved       : 24;
     };
 
     UINT_32 value;
@@ -3606,10 +3788,10 @@ typedef union _ADDR2_SWMODE_SET
         UINT_32 sw64KB_S    : 1;
         UINT_32 sw64KB_D    : 1;
         UINT_32 sw64KB_R    : 1;
-        UINT_32 swReserved0 : 1;
-        UINT_32 swReserved1 : 1;
-        UINT_32 swReserved2 : 1;
-        UINT_32 swReserved3 : 1;
+        UINT_32 swMiscDef12 : 1;
+        UINT_32 swMiscDef13 : 1;
+        UINT_32 swMiscDef14 : 1;
+        UINT_32 swMiscDef15 : 1;
         UINT_32 sw64KB_Z_T  : 1;
         UINT_32 sw64KB_S_T  : 1;
         UINT_32 sw64KB_D_T  : 1;
@@ -3622,11 +3804,19 @@ typedef union _ADDR2_SWMODE_SET
         UINT_32 sw64KB_S_X  : 1;
         UINT_32 sw64KB_D_X  : 1;
         UINT_32 sw64KB_R_X  : 1;
-        UINT_32 swVar_Z_X   : 1;
-        UINT_32 swReserved4 : 1;
-        UINT_32 swReserved5 : 1;
-        UINT_32 swVar_R_X   : 1;
+        UINT_32 swMiscDef28 : 1;
+        UINT_32 swMiscDef29 : 1;
+        UINT_32 swMiscDef30 : 1;
+        UINT_32 swMiscDef31 : 1;
     };
+
+    struct
+    {
+        UINT_32             : 28;
+        UINT_32 swVar_Z_X   : 1;
+        UINT_32             : 2;
+        UINT_32 swVar_R_X   : 1;
+    } gfx10;
 
     UINT_32 value;
 } ADDR2_SWMODE_SET;
@@ -3663,6 +3853,8 @@ typedef struct _ADDR2_GET_PREFERRED_SURF_SETTING_INPUT
     UINT_32               maxAlign;          ///< maximum base/size alignment requested by client
     UINT_32               minSizeAlign;      ///< memory allocated for surface in client driver will
                                              ///  be padded to multiple of this value (in bytes)
+    DOUBLE                memoryBudget;      ///< Memory consumption ratio based on minimum possible
+                                             ///  size.
 } ADDR2_GET_PREFERRED_SURF_SETTING_INPUT;
 
 /**
@@ -3705,14 +3897,14 @@ ADDR_E_RETURNCODE ADDR_API Addr2GetPreferredSurfaceSetting(
 *   Addr2IsValidDisplaySwizzleMode
 *
 *   @brief
-*       Return whether the swizzle mode is supported by DCE / DCN.
+*       Return whether the swizzle mode is supported by display engine
 ****************************************************************************************************
 */
 ADDR_E_RETURNCODE ADDR_API Addr2IsValidDisplaySwizzleMode(
     ADDR_HANDLE     hLib,
     AddrSwizzleMode swizzleMode,
     UINT_32         bpp,
-    bool            *result);
+    BOOL_32         *pResult);
 
 #if defined(__cplusplus)
 }

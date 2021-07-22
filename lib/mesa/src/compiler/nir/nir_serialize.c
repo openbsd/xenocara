@@ -206,12 +206,13 @@ union packed_var {
    struct {
       unsigned has_name:1;
       unsigned has_constant_initializer:1;
+      unsigned has_pointer_initializer:1;
       unsigned has_interface_type:1;
       unsigned num_state_slots:7;
       unsigned data_encoding:2;
       unsigned type_same_as_last:1;
       unsigned interface_type_same_as_last:1;
-      unsigned _pad:2;
+      unsigned _pad:1;
       unsigned num_members:16;
    } u;
 };
@@ -231,7 +232,6 @@ write_variable(write_ctx *ctx, const nir_variable *var)
    write_add_object(ctx, var);
 
    assert(var->num_state_slots < (1 << 7));
-   assert(var->num_members < (1 << 16));
 
    STATIC_ASSERT(sizeof(union packed_var) == 4);
    union packed_var flags;
@@ -239,6 +239,7 @@ write_variable(write_ctx *ctx, const nir_variable *var)
 
    flags.u.has_name = !ctx->strip && var->name;
    flags.u.has_constant_initializer = !!(var->constant_initializer);
+   flags.u.has_pointer_initializer = !!(var->pointer_initializer);
    flags.u.has_interface_type = !!(var->interface_type);
    flags.u.type_same_as_last = var->type == ctx->last_type;
    flags.u.interface_type_same_as_last =
@@ -252,6 +253,7 @@ write_variable(write_ctx *ctx, const nir_variable *var)
     * which is typically after shaders are linked.
     */
    if (ctx->strip &&
+       data.mode != nir_var_system_value &&
        data.mode != nir_var_shader_in &&
        data.mode != nir_var_shader_out)
       data.location = 0;
@@ -323,6 +325,8 @@ write_variable(write_ctx *ctx, const nir_variable *var)
    }
    if (var->constant_initializer)
       write_constant(ctx, var->constant_initializer);
+   if (var->pointer_initializer)
+      write_lookup_object(ctx, var->pointer_initializer);
    if (var->num_members > 0) {
       blob_write_bytes(ctx->blob, (uint8_t *) var->members,
                        var->num_members * sizeof(*var->members));
@@ -393,6 +397,12 @@ read_variable(read_ctx *ctx)
       var->constant_initializer = read_constant(ctx, var);
    else
       var->constant_initializer = NULL;
+
+   if (flags.u.has_pointer_initializer)
+      var->pointer_initializer = read_object(ctx);
+   else
+      var->pointer_initializer = NULL;
+
    var->num_members = flags.u.num_members;
    if (var->num_members > 0) {
       var->members = ralloc_array(var, struct nir_variable_data,
@@ -627,9 +637,9 @@ union packed_instr {
       unsigned instr_type:4;
       unsigned deref_type:3;
       unsigned cast_type_same_as_last:1;
-      unsigned mode:10; /* deref_var redefines this */
+      unsigned modes:14; /* deref_var redefines this */
       unsigned packed_src_ssa_16bit:1; /* deref_var redefines this */
-      unsigned _pad:5;  /* deref_var redefines this */
+      unsigned _pad:1;  /* deref_var redefines this */
       unsigned dest:8;
    } deref;
    struct {
@@ -663,8 +673,8 @@ union packed_instr {
       unsigned instr_type:4;
       unsigned num_srcs:4;
       unsigned op:4;
-      unsigned texture_array_size:12;
       unsigned dest:8;
+      unsigned _pad:12;
    } tex;
    struct {
       unsigned instr_type:4;
@@ -707,21 +717,24 @@ write_dest(write_ctx *ctx, const nir_dest *dst, union packed_instr header,
 
       if (ctx->last_instr_type == nir_instr_type_alu) {
          assert(ctx->last_alu_header_offset);
-         union packed_instr *last_header =
-            (union packed_instr *)(ctx->blob->data +
-                                   ctx->last_alu_header_offset);
+         union packed_instr last_header;
+         memcpy(&last_header, ctx->blob->data + ctx->last_alu_header_offset,
+                sizeof(last_header));
 
          /* Clear the field that counts ALUs with equal headers. */
          union packed_instr clean_header;
-         clean_header.u32 = last_header->u32;
+         clean_header.u32 = last_header.u32;
          clean_header.alu.num_followup_alu_sharing_header = 0;
 
          /* There can be at most 4 consecutive ALU instructions
           * sharing the same header.
           */
-         if (last_header->alu.num_followup_alu_sharing_header < 3 &&
+         if (last_header.alu.num_followup_alu_sharing_header < 3 &&
              header.u32 == clean_header.u32) {
-            last_header->alu.num_followup_alu_sharing_header++;
+            last_header.alu.num_followup_alu_sharing_header++;
+            memcpy(ctx->blob->data + ctx->last_alu_header_offset,
+                   &last_header, sizeof(last_header));
+
             equal_header = true;
          }
       }
@@ -971,7 +984,7 @@ static void
 write_deref(write_ctx *ctx, const nir_deref_instr *deref)
 {
    assert(deref->deref_type < 8);
-   assert(deref->mode < (1 << 10));
+   assert(deref->modes < (1 << 14));
 
    union packed_instr header;
    header.u32 = 0;
@@ -980,7 +993,7 @@ write_deref(write_ctx *ctx, const nir_deref_instr *deref)
    header.deref.deref_type = deref->deref_type;
 
    if (deref->deref_type == nir_deref_type_cast) {
-      header.deref.mode = deref->mode;
+      header.deref.modes = deref->modes;
       header.deref.cast_type_same_as_last = deref->type == ctx->last_type;
    }
 
@@ -1027,6 +1040,8 @@ write_deref(write_ctx *ctx, const nir_deref_instr *deref)
    case nir_deref_type_cast:
       write_src(ctx, &deref->parent);
       blob_write_uint32(ctx->blob, deref->cast.ptr_stride);
+      blob_write_uint32(ctx->blob, deref->cast.align_mul);
+      blob_write_uint32(ctx->blob, deref->cast.align_offset);
       if (!header.deref.cast_type_same_as_last) {
          encode_type_to_blob(ctx->blob, deref->type);
          ctx->last_type = deref->type;
@@ -1091,6 +1106,8 @@ read_deref(read_ctx *ctx, union packed_instr header)
    case nir_deref_type_cast:
       read_src(ctx, &deref->parent, &deref->instr);
       deref->cast.ptr_stride = blob_read_uint32(ctx->blob);
+      deref->cast.align_mul = blob_read_uint32(ctx->blob);
+      deref->cast.align_offset = blob_read_uint32(ctx->blob);
       if (header.deref.cast_type_same_as_last) {
          deref->type = ctx->last_type;
       } else {
@@ -1110,12 +1127,12 @@ read_deref(read_ctx *ctx, union packed_instr header)
    }
 
    if (deref_type == nir_deref_type_var) {
-      deref->mode = deref->var->data.mode;
+      deref->modes = deref->var->data.mode;
    } else if (deref->deref_type == nir_deref_type_cast) {
-      deref->mode = header.deref.mode;
+      deref->modes = header.deref.modes;
    } else {
       assert(deref->parent.is_ssa);
-      deref->mode = nir_instr_as_deref(deref->parent.ssa->parent_instr)->mode;
+      deref->modes = nir_instr_as_deref(deref->parent.ssa->parent_instr)->modes;
    }
 
    return deref;
@@ -1433,16 +1450,18 @@ read_ssa_undef(read_ctx *ctx, union packed_instr header)
 union packed_tex_data {
    uint32_t u32;
    struct {
-      enum glsl_sampler_dim sampler_dim:4;
-      nir_alu_type dest_type:8;
+      unsigned sampler_dim:4;
+      unsigned dest_type:8;
       unsigned coord_components:3;
       unsigned is_array:1;
       unsigned is_shadow:1;
       unsigned is_new_style_shadow:1;
+      unsigned is_sparse:1;
       unsigned component:2;
       unsigned texture_non_uniform:1;
       unsigned sampler_non_uniform:1;
-      unsigned unused:8; /* Mark unused for valgrind. */
+      unsigned array_is_lowered_cube:1;
+      unsigned unused:6; /* Mark unused for valgrind. */
    } u;
 };
 
@@ -1451,7 +1470,6 @@ write_tex(write_ctx *ctx, const nir_tex_instr *tex)
 {
    assert(tex->num_srcs < 16);
    assert(tex->op < 16);
-   assert(tex->texture_array_size < 1024);
 
    union packed_instr header;
    header.u32 = 0;
@@ -1459,7 +1477,6 @@ write_tex(write_ctx *ctx, const nir_tex_instr *tex)
    header.tex.instr_type = tex->instr.type;
    header.tex.num_srcs = tex->num_srcs;
    header.tex.op = tex->op;
-   header.tex.texture_array_size = tex->texture_array_size;
 
    write_dest(ctx, &tex->dest, header, tex->instr.type);
 
@@ -1476,9 +1493,11 @@ write_tex(write_ctx *ctx, const nir_tex_instr *tex)
       .u.is_array = tex->is_array,
       .u.is_shadow = tex->is_shadow,
       .u.is_new_style_shadow = tex->is_new_style_shadow,
+      .u.is_sparse = tex->is_sparse,
       .u.component = tex->component,
       .u.texture_non_uniform = tex->texture_non_uniform,
       .u.sampler_non_uniform = tex->sampler_non_uniform,
+      .u.array_is_lowered_cube = tex->array_is_lowered_cube,
    };
    blob_write_uint32(ctx->blob, packed.u32);
 
@@ -1499,7 +1518,6 @@ read_tex(read_ctx *ctx, union packed_instr header)
 
    tex->op = header.tex.op;
    tex->texture_index = blob_read_uint32(ctx->blob);
-   tex->texture_array_size = header.tex.texture_array_size;
    tex->sampler_index = blob_read_uint32(ctx->blob);
    if (tex->op == nir_texop_tg4)
       blob_copy_bytes(ctx->blob, tex->tg4_offsets, sizeof(tex->tg4_offsets));
@@ -1512,9 +1530,11 @@ read_tex(read_ctx *ctx, union packed_instr header)
    tex->is_array = packed.u.is_array;
    tex->is_shadow = packed.u.is_shadow;
    tex->is_new_style_shadow = packed.u.is_new_style_shadow;
+   tex->is_sparse = packed.u.is_sparse;
    tex->component = packed.u.component;
    tex->texture_non_uniform = packed.u.texture_non_uniform;
    tex->sampler_non_uniform = packed.u.sampler_non_uniform;
+   tex->array_is_lowered_cube = packed.u.array_is_lowered_cube;
 
    for (unsigned i = 0; i < tex->num_srcs; i++) {
       union packed_src src = read_src(ctx, &tex->src[i].src, &tex->instr);
@@ -1625,6 +1645,9 @@ read_fixup_phis(read_ctx *ctx)
 static void
 write_jump(write_ctx *ctx, const nir_jump_instr *jmp)
 {
+   /* These aren't handled because they require special block linking */
+   assert(jmp->type != nir_jump_goto && jmp->type != nir_jump_goto_if);
+
    assert(jmp->type < 4);
 
    union packed_instr header;
@@ -1639,6 +1662,10 @@ write_jump(write_ctx *ctx, const nir_jump_instr *jmp)
 static nir_jump_instr *
 read_jump(read_ctx *ctx, union packed_instr header)
 {
+   /* These aren't handled because they require special block linking */
+   assert(header.jump.type != nir_jump_goto &&
+          header.jump.type != nir_jump_goto_if);
+
    nir_jump_instr *jmp = nir_jump_instr_create(ctx->nir, header.jump.type);
    return jmp;
 }
@@ -1895,6 +1922,8 @@ read_cf_list(read_ctx *ctx, struct exec_list *cf_list)
 static void
 write_function_impl(write_ctx *ctx, const nir_function_impl *fi)
 {
+   blob_write_uint8(ctx->blob, fi->structured);
+
    write_var_list(ctx, &fi->locals);
    write_reg_list(ctx, &fi->registers);
    blob_write_uint32(ctx->blob, fi->reg_alloc);
@@ -1908,6 +1937,8 @@ read_function_impl(read_ctx *ctx, nir_function *fxn)
 {
    nir_function_impl *fi = nir_function_impl_create_bare(ctx->nir);
    fi->function = fxn;
+
+   fi->structured = blob_read_uint8(ctx->blob);
 
    read_var_list(ctx, &fi->locals);
    read_reg_list(ctx, &fi->registers);
@@ -2007,17 +2038,11 @@ nir_serialize(struct blob *blob, const nir_shader *nir, bool strip)
    info.name = info.label = NULL;
    blob_write_bytes(blob, (uint8_t *) &info, sizeof(info));
 
-   write_var_list(&ctx, &nir->uniforms);
-   write_var_list(&ctx, &nir->inputs);
-   write_var_list(&ctx, &nir->outputs);
-   write_var_list(&ctx, &nir->shared);
-   write_var_list(&ctx, &nir->globals);
-   write_var_list(&ctx, &nir->system_values);
+   write_var_list(&ctx, &nir->variables);
 
    blob_write_uint32(blob, nir->num_inputs);
    blob_write_uint32(blob, nir->num_uniforms);
    blob_write_uint32(blob, nir->num_outputs);
-   blob_write_uint32(blob, nir->num_shared);
    blob_write_uint32(blob, nir->scratch_size);
 
    blob_write_uint32(blob, exec_list_length(&nir->functions));
@@ -2065,17 +2090,11 @@ nir_deserialize(void *mem_ctx,
 
    ctx.nir->info = info;
 
-   read_var_list(&ctx, &ctx.nir->uniforms);
-   read_var_list(&ctx, &ctx.nir->inputs);
-   read_var_list(&ctx, &ctx.nir->outputs);
-   read_var_list(&ctx, &ctx.nir->shared);
-   read_var_list(&ctx, &ctx.nir->globals);
-   read_var_list(&ctx, &ctx.nir->system_values);
+   read_var_list(&ctx, &ctx.nir->variables);
 
    ctx.nir->num_inputs = blob_read_uint32(blob);
    ctx.nir->num_uniforms = blob_read_uint32(blob);
    ctx.nir->num_outputs = blob_read_uint32(blob);
-   ctx.nir->num_shared = blob_read_uint32(blob);
    ctx.nir->scratch_size = blob_read_uint32(blob);
 
    unsigned num_functions = blob_read_uint32(blob);

@@ -142,9 +142,11 @@ Lib* Lib::GetLib(
     return static_cast<Lib*>(hLib);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               Surface Methods
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 /**
 ************************************************************************************************************************
@@ -308,6 +310,9 @@ ADDR_E_RETURNCODE Lib::ComputeSurfaceInfo(
                 if (pOut->pStereoInfo != NULL)
                 {
                     ComputeQbStereoInfo(pOut);
+#if DEBUG
+                    ValidateStereoInfo(pIn, pOut);
+#endif
                 }
             }
         }
@@ -436,6 +441,7 @@ ADDR_E_RETURNCODE Lib::ComputeSurfaceCoordFromAddr(
 
     return returnCode;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               CMASK/HTILE
@@ -823,7 +829,12 @@ ADDR_E_RETURNCODE Lib::ComputeDccAddrFromCoord(
     }
     else
     {
-        returnCode = HwlComputeDccAddrFromCoord(pIn, pOut);
+        returnCode = HwlSupportComputeDccAddrFromCoord(pIn);
+
+        if (returnCode == ADDR_OK)
+        {
+            HwlComputeDccAddrFromCoord(pIn, pOut);
+        }
     }
 
     return returnCode;
@@ -889,6 +900,15 @@ ADDR_E_RETURNCODE Lib::ComputeSlicePipeBankXor(
     {
         returnCode = ADDR_NOTSUPPORTED;
     }
+    else if ((pIn->bpe != 0) &&
+             (pIn->bpe != 8) &&
+             (pIn->bpe != 16) &&
+             (pIn->bpe != 32) &&
+             (pIn->bpe != 64) &&
+             (pIn->bpe != 128))
+    {
+        returnCode = ADDR_INVALIDPARAMS;
+    }
     else
     {
         returnCode = HwlComputeSlicePipeBankXor(pIn, pOut);
@@ -923,6 +943,37 @@ ADDR_E_RETURNCODE Lib::ComputeSubResourceOffsetForSwizzlePattern(
     else
     {
         returnCode = HwlComputeSubResourceOffsetForSwizzlePattern(pIn, pOut);
+    }
+
+    return returnCode;
+}
+
+/**
+************************************************************************************************************************
+*   Lib::ComputeNonBlockCompressedView
+*
+*   @brief
+*       Interface function stub of Addr2ComputeNonBlockCompressedView.
+*
+*   @return
+*       ADDR_E_RETURNCODE
+************************************************************************************************************************
+*/
+ADDR_E_RETURNCODE Lib::ComputeNonBlockCompressedView(
+    const ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT* pIn,
+    ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT*      pOut)
+{
+    ADDR_E_RETURNCODE returnCode;
+
+    if ((GetFillSizeFieldsFlags() == TRUE) &&
+        ((pIn->size != sizeof(ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT)) ||
+         (pOut->size != sizeof(ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT))))
+    {
+        returnCode = ADDR_INVALIDPARAMS;
+    }
+    else
+    {
+        returnCode = HwlComputeNonBlockCompressedView(pIn, pOut);
     }
 
     return returnCode;
@@ -1540,11 +1591,11 @@ Dim3d Lib::GetMipTailDim(
     {
         ADDR_ASSERT(IsThin(resourceType, swizzleMode));
 
+#if DEBUG
         // GFX9/GFX10 use different dimension shrinking logic for mipmap tail: say for 128KB block + 2BPE, the maximum
         // dimension of mipmap tail level will be [256W * 128H] on GFX9 ASICs and [128W * 256H] on GFX10 ASICs. Since
         // GFX10 is newer HWL so we make its implementation into base class, in order to save future change on new HWLs.
         // And assert log2BlkSize will always be an even value on GFX9, so we never need the logic wrapped by DEBUG...
-#if DEBUG
         if ((log2BlkSize & 1) && (m_chipFamily == ADDR_CHIP_FAMILY_AI))
         {
             // Should never go here...
@@ -1959,7 +2010,7 @@ VOID Lib::FilterInvalidEqSwizzleMode(
         const UINT_32 rsrcTypeIdx         = static_cast<UINT_32>(resourceType) - 1;
         UINT_32       validSwModeSet      = allowedSwModeSetVal;
 
-        for (UINT_32 swModeIdx = 0; validSwModeSet != 0; swModeIdx++)
+        for (UINT_32 swModeIdx = 1; validSwModeSet != 0; swModeIdx++)
         {
             if (validSwModeSet & 1)
             {
@@ -1979,6 +2030,169 @@ VOID Lib::FilterInvalidEqSwizzleMode(
         }
     }
 }
+
+/**
+************************************************************************************************************************
+*   Lib::IsBlockTypeAvaiable
+*
+*   @brief
+*       Determine whether a block type is allowed in a given blockSet
+*
+*   @return
+*       N/A
+************************************************************************************************************************
+*/
+BOOL_32 Lib::IsBlockTypeAvaiable(
+    ADDR2_BLOCK_SET blockSet,
+    AddrBlockType   blockType)
+{
+    BOOL_32 avail;
+
+    if (blockType == AddrBlockLinear)
+    {
+        avail = blockSet.linear ? TRUE : FALSE;
+    }
+    else
+    {
+        avail = blockSet.value & (1 << (static_cast<UINT_32>(blockType) - 1)) ? TRUE : FALSE;
+    }
+
+    return avail;
+}
+
+/**
+************************************************************************************************************************
+*   Lib::BlockTypeWithinMemoryBudget
+*
+*   @brief
+*       Determine whether a new block type is acceptible based on memory waste ratio
+*
+*   @return
+*       N/A
+************************************************************************************************************************
+*/
+BOOL_32 Lib::BlockTypeWithinMemoryBudget(
+    UINT_64 minSize,
+    UINT_64 newBlockTypeSize,
+    UINT_32 ratioLow,
+    UINT_32 ratioHi,
+    DOUBLE  memoryBudget,
+    BOOL_32 newBlockTypeBigger)
+{
+    BOOL_32 accept = FALSE;
+
+    if (memoryBudget >= 1.0)
+    {
+        if (newBlockTypeBigger)
+        {
+            if ((static_cast<DOUBLE>(newBlockTypeSize) / minSize) <= memoryBudget)
+            {
+                accept = TRUE;
+            }
+        }
+        else
+        {
+            if ((static_cast<DOUBLE>(minSize) / newBlockTypeSize) > memoryBudget)
+            {
+                accept = TRUE;
+            }
+        }
+    }
+    else
+    {
+        if (newBlockTypeBigger)
+        {
+            if ((newBlockTypeSize * ratioHi) <= (minSize * ratioLow))
+            {
+                accept = TRUE;
+            }
+        }
+        else
+        {
+            if ((newBlockTypeSize * ratioLow) < (minSize * ratioHi))
+            {
+                accept = TRUE;
+            }
+        }
+    }
+
+    return accept;
+}
+
+#if DEBUG
+/**
+************************************************************************************************************************
+*   Lib::ValidateStereoInfo
+*
+*   @brief
+*       Validate stereo info by checking a few typical cases
+*
+*   @return
+*       N/A
+************************************************************************************************************************
+*/
+VOID Lib::ValidateStereoInfo(
+    const ADDR2_COMPUTE_SURFACE_INFO_INPUT*  pIn,   ///< [in] input structure
+    const ADDR2_COMPUTE_SURFACE_INFO_OUTPUT* pOut   ///< [in] output structure
+    ) const
+{
+    ADDR2_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT addrIn = {};
+    addrIn.size            = sizeof(addrIn);
+    addrIn.swizzleMode     = pIn->swizzleMode;
+    addrIn.flags           = pIn->flags;
+    addrIn.flags.qbStereo  = 0;
+    addrIn.resourceType    = pIn->resourceType;
+    addrIn.bpp             = pIn->bpp;
+    addrIn.unalignedWidth  = pIn->width;
+    addrIn.numSlices       = pIn->numSlices;
+    addrIn.numMipLevels    = pIn->numMipLevels;
+    addrIn.numSamples      = pIn->numSamples;
+    addrIn.numFrags        = pIn->numFrags;
+
+    // Call Addr2ComputePipeBankXor() and validate different pbXor value if necessary...
+    const UINT_32 pbXor = 0;
+
+    ADDR2_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT addrOut = {};
+    addrOut.size = sizeof(addrOut);
+
+    // Make the array to be {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096} for full test
+    const UINT_32 TestCoord[] = {0};
+
+    for (UINT_32 xIdx = 0; xIdx < sizeof(TestCoord) / sizeof(TestCoord[0]); xIdx++)
+    {
+        if (TestCoord[xIdx] < pIn->width)
+        {
+            addrIn.x = TestCoord[xIdx];
+
+            for (UINT_32 yIdx = 0; yIdx  < sizeof(TestCoord) / sizeof(TestCoord[0]); yIdx++)
+            {
+                if (TestCoord[yIdx] < pIn->height)
+                {
+                    addrIn.y               = TestCoord[yIdx] + pOut->pStereoInfo->eyeHeight;
+                    addrIn.pipeBankXor     = pbXor ^ pOut->pStereoInfo->rightSwizzle;
+                    addrIn.unalignedHeight = pIn->height + pOut->pStereoInfo->eyeHeight;
+
+                    ADDR_E_RETURNCODE ret = ComputeSurfaceAddrFromCoord(&addrIn, &addrOut);
+                    ADDR_ASSERT(ret == ADDR_OK);
+
+                    const UINT_64 rightEyeOffsetFromBase = addrOut.addr;
+
+                    addrIn.y               = TestCoord[yIdx];
+                    addrIn.pipeBankXor     = pbXor;
+                    addrIn.unalignedHeight = pIn->height;
+
+                    ret = ComputeSurfaceAddrFromCoord(&addrIn, &addrOut);
+                    ADDR_ASSERT(ret == ADDR_OK);
+
+                    const UINT_64 rightEyeOffsetRelative = addrOut.addr;
+
+                    ADDR_ASSERT(rightEyeOffsetFromBase == rightEyeOffsetRelative + pOut->pStereoInfo->rightOffset);
+                }
+            }
+        }
+    }
+}
+#endif
 
 } // V2
 } // Addr

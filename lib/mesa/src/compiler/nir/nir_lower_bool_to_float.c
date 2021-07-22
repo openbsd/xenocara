@@ -56,8 +56,11 @@ lower_alu_instr(nir_builder *b, nir_alu_instr *alu)
    case nir_op_vec2:
    case nir_op_vec3:
    case nir_op_vec4:
+   case nir_op_vec5:
    case nir_op_vec8:
    case nir_op_vec16:
+      if (alu->dest.dest.ssa.bit_size != 1)
+         return false;
       /* These we expect to have booleans but the opcode doesn't change */
       break;
 
@@ -68,11 +71,12 @@ lower_alu_instr(nir_builder *b, nir_alu_instr *alu)
       rep = nir_sne(b, nir_ssa_for_alu_src(b, alu, 0),
                        nir_imm_float(b, 0));
       break;
+   case nir_op_b2b1: alu->op = nir_op_mov; break;
 
    case nir_op_flt: alu->op = nir_op_slt; break;
    case nir_op_fge: alu->op = nir_op_sge; break;
    case nir_op_feq: alu->op = nir_op_seq; break;
-   case nir_op_fne: alu->op = nir_op_sne; break;
+   case nir_op_fneu: alu->op = nir_op_sne; break;
    case nir_op_ilt: alu->op = nir_op_slt; break;
    case nir_op_ige: alu->op = nir_op_sge; break;
    case nir_op_ieq: alu->op = nir_op_seq; break;
@@ -113,7 +117,7 @@ lower_alu_instr(nir_builder *b, nir_alu_instr *alu)
 
    if (rep) {
       /* We've emitted a replacement instruction */
-      nir_ssa_def_rewrite_uses(&alu->dest.dest.ssa, nir_src_for_ssa(rep));
+      nir_ssa_def_rewrite_uses(&alu->dest.dest.ssa, rep);
       nir_instr_remove(&alu->instr);
    } else {
       if (alu->dest.dest.ssa.bit_size == 1)
@@ -121,6 +125,18 @@ lower_alu_instr(nir_builder *b, nir_alu_instr *alu)
    }
 
    return true;
+}
+
+static bool
+lower_tex_instr(nir_tex_instr *tex)
+{
+   bool progress = false;
+   rewrite_1bit_ssa_def_to_32bit(&tex->dest.ssa, &progress);
+   if (tex->dest_type == nir_type_bool1) {
+      tex->dest_type = nir_type_bool32;
+      progress = true;
+   }
+   return progress;
 }
 
 static bool
@@ -153,9 +169,12 @@ nir_lower_bool_to_float_impl(nir_function_impl *impl)
          case nir_instr_type_intrinsic:
          case nir_instr_type_ssa_undef:
          case nir_instr_type_phi:
-         case nir_instr_type_tex:
             nir_foreach_ssa_def(instr, rewrite_1bit_ssa_def_to_32bit,
                                 &progress);
+            break;
+
+         case nir_instr_type_tex:
+            progress |= lower_tex_instr(nir_instr_as_tex(instr));
             break;
 
          default:

@@ -45,7 +45,7 @@ iris_perf_emit_mi_report_perf_count(void *c,
 {
    struct iris_context *ice = c;
    struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
-   ice->vtbl.emit_mi_report_perf_count(batch, bo, offset_in_bytes, report_id);
+   batch->screen->vtbl.emit_mi_report_perf_count(batch, bo, offset_in_bytes, report_id);
 }
 
 static void
@@ -63,10 +63,10 @@ iris_perf_store_register_mem(void *ctx, void *bo,
    struct iris_context *ice = ctx;
    struct iris_batch *batch = &ice->batches[IRIS_BATCH_RENDER];
    if (reg_size == 8) {
-      ice->vtbl.store_register_mem64(batch, reg, bo, offset, false);
+      batch->screen->vtbl.store_register_mem64(batch, reg, bo, offset, false);
    } else {
       assert(reg_size == 4);
-      ice->vtbl.store_register_mem32(batch, reg, bo, offset, false);
+      batch->screen->vtbl.store_register_mem32(batch, reg, bo, offset, false);
    }
 }
 

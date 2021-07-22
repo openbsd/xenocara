@@ -41,7 +41,7 @@
 /** Initialize the internal details */
 struct pp_program *
 pp_init_prog(struct pp_queue_t *ppq, struct pipe_context *pipe,
-             struct cso_context *cso)
+             struct cso_context *cso, struct st_context_iface *st)
 {
    struct pp_program *p;
 
@@ -56,6 +56,7 @@ pp_init_prog(struct pp_queue_t *ppq, struct pipe_context *pipe,
    p->screen = pipe->screen;
    p->pipe = pipe;
    p->cso = cso;
+   p->st = st;
 
    {
       static const float verts[4][2][4] = {
@@ -109,14 +110,15 @@ pp_init_prog(struct pp_queue_t *ppq, struct pipe_context *pipe,
       PIPE_TEX_FILTER_NEAREST;
    p->sampler_point.normalized_coords = 1;
 
-   p->velem[0].src_offset = 0;
-   p->velem[0].instance_divisor = 0;
-   p->velem[0].vertex_buffer_index = 0;
-   p->velem[0].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
-   p->velem[1].src_offset = 1 * 4 * sizeof(float);
-   p->velem[1].instance_divisor = 0;
-   p->velem[1].vertex_buffer_index = 0;
-   p->velem[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+   p->velem.count = 2;
+   p->velem.velems[0].src_offset = 0;
+   p->velem.velems[0].instance_divisor = 0;
+   p->velem.velems[0].vertex_buffer_index = 0;
+   p->velem.velems[0].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
+   p->velem.velems[1].src_offset = 1 * 4 * sizeof(float);
+   p->velem.velems[1].instance_divisor = 0;
+   p->velem.velems[1].vertex_buffer_index = 0;
+   p->velem.velems[1].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
 
    if (!p->screen->is_format_supported(p->screen,
                                        PIPE_FORMAT_R32G32B32A32_FLOAT,

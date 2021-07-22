@@ -205,7 +205,7 @@ brw_set_default_compression_control(struct brw_codegen *p,
       unreachable("not reached");
    }
 
-   if (p->devinfo->gen <= 6) {
+   if (p->devinfo->ver <= 6) {
       p->current->compressed =
          (compression_control == BRW_COMPRESSION_COMPRESSED);
    }
@@ -219,7 +219,7 @@ void
 brw_inst_set_compression(const struct gen_device_info *devinfo,
                          brw_inst *inst, bool on)
 {
-   if (devinfo->gen >= 6) {
+   if (devinfo->ver >= 6) {
       /* No-op, the EU will figure out for us whether the instruction needs to
        * be compressed.
        */
@@ -251,12 +251,12 @@ void
 brw_inst_set_group(const struct gen_device_info *devinfo,
                    brw_inst *inst, unsigned group)
 {
-   if (devinfo->gen >= 7) {
+   if (devinfo->ver >= 7) {
       assert(group % 4 == 0 && group < 32);
       brw_inst_set_qtr_control(devinfo, inst, group / 8);
       brw_inst_set_nib_control(devinfo, inst, (group / 4) % 2);
 
-   } else if (devinfo->gen == 6) {
+   } else if (devinfo->ver == 6) {
       assert(group % 8 == 0 && group < 32);
       brw_inst_set_qtr_control(devinfo, inst, group / 8);
 
@@ -363,6 +363,13 @@ const unsigned *brw_get_program( struct brw_codegen *p,
    return (const unsigned *)p->store;
 }
 
+const brw_shader_reloc *
+brw_get_shader_relocs(struct brw_codegen *p, unsigned *num_relocs)
+{
+   *num_relocs = p->num_relocs;
+   return p->relocs;
+}
+
 bool brw_try_override_assembly(struct brw_codegen *p, int start_offset,
                                const char *identifier)
 {
@@ -394,7 +401,7 @@ bool brw_try_override_assembly(struct brw_codegen *p, int start_offset,
    p->store = (brw_inst *)reralloc_size(p->mem_ctx, p->store, p->next_insn_offset);
    assert(p->store);
 
-   ssize_t ret = read(fd, p->store + start_offset, sb.st_size);
+   ssize_t ret = read(fd, (char *)p->store + start_offset, sb.st_size);
    close(fd);
    if (ret != sb.st_size) {
       return false;
@@ -409,15 +416,132 @@ bool brw_try_override_assembly(struct brw_codegen *p, int start_offset,
    return true;
 }
 
+const struct brw_label *
+brw_find_label(const struct brw_label *root, int offset)
+{
+   const struct brw_label *curr = root;
+
+   if (curr != NULL)
+   {
+      do {
+         if (curr->offset == offset)
+            return curr;
+
+         curr = curr->next;
+      } while (curr != NULL);
+   }
+
+   return curr;
+}
+
+void
+brw_create_label(struct brw_label **labels, int offset, void *mem_ctx)
+{
+   if (*labels != NULL) {
+      struct brw_label *curr = *labels;
+      struct brw_label *prev;
+
+      do {
+         prev = curr;
+
+         if (curr->offset == offset)
+            return;
+
+         curr = curr->next;
+      } while (curr != NULL);
+
+      curr = ralloc(mem_ctx, struct brw_label);
+      curr->offset = offset;
+      curr->number = prev->number + 1;
+      curr->next = NULL;
+      prev->next = curr;
+   } else {
+      struct brw_label *root = ralloc(mem_ctx, struct brw_label);
+      root->number = 0;
+      root->offset = offset;
+      root->next = NULL;
+      *labels = root;
+   }
+}
+
+const struct brw_label *
+brw_label_assembly(const struct gen_device_info *devinfo,
+                   const void *assembly, int start, int end, void *mem_ctx)
+{
+   struct brw_label *root_label = NULL;
+
+   int to_bytes_scale = sizeof(brw_inst) / brw_jump_scale(devinfo);
+
+   for (int offset = start; offset < end;) {
+      const brw_inst *inst = (const brw_inst *) ((const char *) assembly + offset);
+      brw_inst uncompacted;
+
+      bool is_compact = brw_inst_cmpt_control(devinfo, inst);
+
+      if (is_compact) {
+         brw_compact_inst *compacted = (brw_compact_inst *)inst;
+         brw_uncompact_instruction(devinfo, &uncompacted, compacted);
+         inst = &uncompacted;
+      }
+
+      if (brw_has_uip(devinfo, brw_inst_opcode(devinfo, inst))) {
+         /* Instructions that have UIP also have JIP. */
+         brw_create_label(&root_label,
+            offset + brw_inst_uip(devinfo, inst) * to_bytes_scale, mem_ctx);
+         brw_create_label(&root_label,
+            offset + brw_inst_jip(devinfo, inst) * to_bytes_scale, mem_ctx);
+      } else if (brw_has_jip(devinfo, brw_inst_opcode(devinfo, inst))) {
+         int jip;
+         if (devinfo->ver >= 7) {
+            jip = brw_inst_jip(devinfo, inst);
+         } else {
+            jip = brw_inst_gfx6_jump_count(devinfo, inst);
+         }
+
+         brw_create_label(&root_label, offset + jip * to_bytes_scale, mem_ctx);
+      }
+
+      if (is_compact) {
+         offset += sizeof(brw_compact_inst);
+      } else {
+         offset += sizeof(brw_inst);
+      }
+   }
+
+   return root_label;
+}
+
+void
+brw_disassemble_with_labels(const struct gen_device_info *devinfo,
+                            const void *assembly, int start, int end, FILE *out)
+{
+   void *mem_ctx = ralloc_context(NULL);
+   const struct brw_label *root_label =
+      brw_label_assembly(devinfo, assembly, start, end, mem_ctx);
+
+   brw_disassemble(devinfo, assembly, start, end, root_label, out);
+
+   ralloc_free(mem_ctx);
+}
+
 void
 brw_disassemble(const struct gen_device_info *devinfo,
-                const void *assembly, int start, int end, FILE *out)
+                const void *assembly, int start, int end,
+                const struct brw_label *root_label, FILE *out)
 {
    bool dump_hex = (INTEL_DEBUG & DEBUG_HEX) != 0;
 
    for (int offset = start; offset < end;) {
       const brw_inst *insn = (const brw_inst *)((char *)assembly + offset);
       brw_inst uncompacted;
+
+      if (root_label != NULL) {
+        const struct brw_label *label = brw_find_label(root_label, offset);
+        if (label != NULL) {
+           fprintf(out, "\nLABEL%d:\n", label->number);
+        }
+      }
+
       bool compacted = brw_inst_cmpt_control(devinfo, insn);
       if (0)
          fprintf(out, "0x%08x: ", offset);
@@ -442,7 +566,6 @@ brw_disassemble(const struct gen_device_info *devinfo,
 
          brw_uncompact_instruction(devinfo, &uncompacted, compacted);
          insn = &uncompacted;
-         offset += 8;
       } else {
          if (dump_hex) {
             unsigned char * insn_ptr = ((unsigned char *)&insn[0]);
@@ -454,118 +577,125 @@ brw_disassemble(const struct gen_device_info *devinfo,
                        insn_ptr[i + 3]);
             }
          }
-         offset += 16;
       }
 
-      brw_disassemble_inst(out, devinfo, insn, compacted);
+      brw_disassemble_inst(out, devinfo, insn, compacted, offset, root_label);
+
+      if (compacted) {
+         offset += sizeof(brw_compact_inst);
+      } else {
+         offset += sizeof(brw_inst);
+      }
    }
 }
 
 static const struct opcode_desc opcode_descs[] = {
    /* IR,                 HW,  name,      nsrc, ndst, gens */
-   { BRW_OPCODE_ILLEGAL,  0,   "illegal", 0,    0,    GEN_ALL },
-   { BRW_OPCODE_SYNC,     1,   "sync",    1,    0,    GEN_GE(GEN12) },
-   { BRW_OPCODE_MOV,      1,   "mov",     1,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_MOV,      97,  "mov",     1,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_SEL,      2,   "sel",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_SEL,      98,  "sel",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_MOVI,     3,   "movi",    2,    1,    GEN_GE(GEN45) & GEN_LT(GEN12) },
-   { BRW_OPCODE_MOVI,     99,  "movi",    2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_NOT,      4,   "not",     1,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_NOT,      100, "not",     1,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_AND,      5,   "and",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_AND,      101, "and",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_OR,       6,   "or",      2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_OR,       102, "or",      2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_XOR,      7,   "xor",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_XOR,      103, "xor",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_SHR,      8,   "shr",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_SHR,      104, "shr",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_SHL,      9,   "shl",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_SHL,      105, "shl",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_DIM,      10,  "dim",     1,    1,    GEN75 },
-   { BRW_OPCODE_SMOV,     10,  "smov",    0,    0,    GEN_GE(GEN8) & GEN_LT(GEN12) },
-   { BRW_OPCODE_SMOV,     106, "smov",    0,    0,    GEN_GE(GEN12) },
-   { BRW_OPCODE_ASR,      12,  "asr",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_ASR,      108, "asr",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_ROR,      14,  "ror",     2,    1,    GEN11 },
-   { BRW_OPCODE_ROR,      110, "ror",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_ROL,      15,  "rol",     2,    1,    GEN11 },
-   { BRW_OPCODE_ROL,      111, "rol",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_CMP,      16,  "cmp",     2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_CMP,      112, "cmp",     2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_CMPN,     17,  "cmpn",    2,    1,    GEN_LT(GEN12) },
-   { BRW_OPCODE_CMPN,     113, "cmpn",    2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_CSEL,     18,  "csel",    3,    1,    GEN_GE(GEN8) & GEN_LT(GEN12) },
-   { BRW_OPCODE_CSEL,     114, "csel",    3,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_F32TO16,  19,  "f32to16", 1,    1,    GEN7 | GEN75 },
-   { BRW_OPCODE_F16TO32,  20,  "f16to32", 1,    1,    GEN7 | GEN75 },
-   { BRW_OPCODE_BFREV,    23,  "bfrev",   1,    1,    GEN_GE(GEN7) & GEN_LT(GEN12) },
-   { BRW_OPCODE_BFREV,    119, "bfrev",   1,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_BFE,      24,  "bfe",     3,    1,    GEN_GE(GEN7) & GEN_LT(GEN12) },
-   { BRW_OPCODE_BFE,      120, "bfe",     3,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_BFI1,     25,  "bfi1",    2,    1,    GEN_GE(GEN7) & GEN_LT(GEN12) },
-   { BRW_OPCODE_BFI1,     121, "bfi1",    2,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_BFI2,     26,  "bfi2",    3,    1,    GEN_GE(GEN7) & GEN_LT(GEN12) },
-   { BRW_OPCODE_BFI2,     122, "bfi2",    3,    1,    GEN_GE(GEN12) },
-   { BRW_OPCODE_JMPI,     32,  "jmpi",    0,    0,    GEN_ALL },
-   { BRW_OPCODE_BRD,      33,  "brd",     0,    0,    GEN_GE(GEN7) },
-   { BRW_OPCODE_IF,       34,  "if",      0,    0,    GEN_ALL },
-   { BRW_OPCODE_IFF,      35,  "iff",     0,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_BRC,      35,  "brc",     0,    0,    GEN_GE(GEN7) },
-   { BRW_OPCODE_ELSE,     36,  "else",    0,    0,    GEN_ALL },
-   { BRW_OPCODE_ENDIF,    37,  "endif",   0,    0,    GEN_ALL },
-   { BRW_OPCODE_DO,       38,  "do",      0,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_CASE,     38,  "case",    0,    0,    GEN6 },
-   { BRW_OPCODE_WHILE,    39,  "while",   0,    0,    GEN_ALL },
-   { BRW_OPCODE_BREAK,    40,  "break",   0,    0,    GEN_ALL },
-   { BRW_OPCODE_CONTINUE, 41,  "cont",    0,    0,    GEN_ALL },
-   { BRW_OPCODE_HALT,     42,  "halt",    0,    0,    GEN_ALL },
-   { BRW_OPCODE_CALLA,    43,  "calla",   0,    0,    GEN_GE(GEN75) },
-   { BRW_OPCODE_MSAVE,    44,  "msave",   0,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_CALL,     44,  "call",    0,    0,    GEN_GE(GEN6) },
-   { BRW_OPCODE_MREST,    45,  "mrest",   0,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_RET,      45,  "ret",     0,    0,    GEN_GE(GEN6) },
-   { BRW_OPCODE_PUSH,     46,  "push",    0,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_FORK,     46,  "fork",    0,    0,    GEN6 },
-   { BRW_OPCODE_GOTO,     46,  "goto",    0,    0,    GEN_GE(GEN8) },
-   { BRW_OPCODE_POP,      47,  "pop",     2,    0,    GEN_LE(GEN5) },
-   { BRW_OPCODE_WAIT,     48,  "wait",    1,    0,    GEN_LT(GEN12) },
-   { BRW_OPCODE_SEND,     49,  "send",    1,    1,    GEN_ALL },
-   { BRW_OPCODE_SENDC,    50,  "sendc",   1,    1,    GEN_ALL },
-   { BRW_OPCODE_SENDS,    51,  "sends",   2,    1,    GEN_GE(GEN9) & GEN_LT(GEN12) },
-   { BRW_OPCODE_SENDSC,   52,  "sendsc",  2,    1,    GEN_GE(GEN9) & GEN_LT(GEN12) },
-   { BRW_OPCODE_MATH,     56,  "math",    2,    1,    GEN_GE(GEN6) },
-   { BRW_OPCODE_ADD,      64,  "add",     2,    1,    GEN_ALL },
-   { BRW_OPCODE_MUL,      65,  "mul",     2,    1,    GEN_ALL },
-   { BRW_OPCODE_AVG,      66,  "avg",     2,    1,    GEN_ALL },
-   { BRW_OPCODE_FRC,      67,  "frc",     1,    1,    GEN_ALL },
-   { BRW_OPCODE_RNDU,     68,  "rndu",    1,    1,    GEN_ALL },
-   { BRW_OPCODE_RNDD,     69,  "rndd",    1,    1,    GEN_ALL },
-   { BRW_OPCODE_RNDE,     70,  "rnde",    1,    1,    GEN_ALL },
-   { BRW_OPCODE_RNDZ,     71,  "rndz",    1,    1,    GEN_ALL },
-   { BRW_OPCODE_MAC,      72,  "mac",     2,    1,    GEN_ALL },
-   { BRW_OPCODE_MACH,     73,  "mach",    2,    1,    GEN_ALL },
-   { BRW_OPCODE_LZD,      74,  "lzd",     1,    1,    GEN_ALL },
-   { BRW_OPCODE_FBH,      75,  "fbh",     1,    1,    GEN_GE(GEN7) },
-   { BRW_OPCODE_FBL,      76,  "fbl",     1,    1,    GEN_GE(GEN7) },
-   { BRW_OPCODE_CBIT,     77,  "cbit",    1,    1,    GEN_GE(GEN7) },
-   { BRW_OPCODE_ADDC,     78,  "addc",    2,    1,    GEN_GE(GEN7) },
-   { BRW_OPCODE_SUBB,     79,  "subb",    2,    1,    GEN_GE(GEN7) },
-   { BRW_OPCODE_SAD2,     80,  "sad2",    2,    1,    GEN_ALL },
-   { BRW_OPCODE_SADA2,    81,  "sada2",   2,    1,    GEN_ALL },
-   { BRW_OPCODE_DP4,      84,  "dp4",     2,    1,    GEN_LT(GEN11) },
-   { BRW_OPCODE_DPH,      85,  "dph",     2,    1,    GEN_LT(GEN11) },
-   { BRW_OPCODE_DP3,      86,  "dp3",     2,    1,    GEN_LT(GEN11) },
-   { BRW_OPCODE_DP2,      87,  "dp2",     2,    1,    GEN_LT(GEN11) },
-   { BRW_OPCODE_LINE,     89,  "line",    2,    1,    GEN_LE(GEN10) },
-   { BRW_OPCODE_PLN,      90,  "pln",     2,    1,    GEN_GE(GEN45) & GEN_LE(GEN10) },
-   { BRW_OPCODE_MAD,      91,  "mad",     3,    1,    GEN_GE(GEN6) },
-   { BRW_OPCODE_LRP,      92,  "lrp",     3,    1,    GEN_GE(GEN6) & GEN_LE(GEN10) },
-   { BRW_OPCODE_MADM,     93,  "madm",    3,    1,    GEN_GE(GEN8) },
-   { BRW_OPCODE_NENOP,    125, "nenop",   0,    0,    GEN45 },
-   { BRW_OPCODE_NOP,      126, "nop",     0,    0,    GEN_LT(GEN12) },
-   { BRW_OPCODE_NOP,      96,  "nop",     0,    0,    GEN_GE(GEN12) }
+   { BRW_OPCODE_ILLEGAL,  0,   "illegal", 0,    0,    GFX_ALL },
+   { BRW_OPCODE_SYNC,     1,   "sync",    1,    0,    GFX_GE(GFX12) },
+   { BRW_OPCODE_MOV,      1,   "mov",     1,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_MOV,      97,  "mov",     1,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_SEL,      2,   "sel",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SEL,      98,  "sel",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_MOVI,     3,   "movi",    2,    1,    GFX_GE(GFX45) & GFX_LT(GFX12) },
+   { BRW_OPCODE_MOVI,     99,  "movi",    2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_NOT,      4,   "not",     1,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_NOT,      100, "not",     1,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_AND,      5,   "and",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_AND,      101, "and",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_OR,       6,   "or",      2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_OR,       102, "or",      2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_XOR,      7,   "xor",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_XOR,      103, "xor",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_SHR,      8,   "shr",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SHR,      104, "shr",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_SHL,      9,   "shl",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SHL,      105, "shl",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_DIM,      10,  "dim",     1,    1,    GFX75 },
+   { BRW_OPCODE_SMOV,     10,  "smov",    0,    0,    GFX_GE(GFX8) & GFX_LT(GFX12) },
+   { BRW_OPCODE_SMOV,     106, "smov",    0,    0,    GFX_GE(GFX12) },
+   { BRW_OPCODE_ASR,      12,  "asr",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_ASR,      108, "asr",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_ROR,      14,  "ror",     2,    1,    GFX11 },
+   { BRW_OPCODE_ROR,      110, "ror",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_ROL,      15,  "rol",     2,    1,    GFX11 },
+   { BRW_OPCODE_ROL,      111, "rol",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_CMP,      16,  "cmp",     2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_CMP,      112, "cmp",     2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_CMPN,     17,  "cmpn",    2,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_CMPN,     113, "cmpn",    2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_CSEL,     18,  "csel",    3,    1,    GFX_GE(GFX8) & GFX_LT(GFX12) },
+   { BRW_OPCODE_CSEL,     114, "csel",    3,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_F32TO16,  19,  "f32to16", 1,    1,    GFX7 | GFX75 },
+   { BRW_OPCODE_F16TO32,  20,  "f16to32", 1,    1,    GFX7 | GFX75 },
+   { BRW_OPCODE_BFREV,    23,  "bfrev",   1,    1,    GFX_GE(GFX7) & GFX_LT(GFX12) },
+   { BRW_OPCODE_BFREV,    119, "bfrev",   1,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_BFE,      24,  "bfe",     3,    1,    GFX_GE(GFX7) & GFX_LT(GFX12) },
+   { BRW_OPCODE_BFE,      120, "bfe",     3,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_BFI1,     25,  "bfi1",    2,    1,    GFX_GE(GFX7) & GFX_LT(GFX12) },
+   { BRW_OPCODE_BFI1,     121, "bfi1",    2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_BFI2,     26,  "bfi2",    3,    1,    GFX_GE(GFX7) & GFX_LT(GFX12) },
+   { BRW_OPCODE_BFI2,     122, "bfi2",    3,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_JMPI,     32,  "jmpi",    0,    0,    GFX_ALL },
+   { BRW_OPCODE_BRD,      33,  "brd",     0,    0,    GFX_GE(GFX7) },
+   { BRW_OPCODE_IF,       34,  "if",      0,    0,    GFX_ALL },
+   { BRW_OPCODE_IFF,      35,  "iff",     0,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_BRC,      35,  "brc",     0,    0,    GFX_GE(GFX7) },
+   { BRW_OPCODE_ELSE,     36,  "else",    0,    0,    GFX_ALL },
+   { BRW_OPCODE_ENDIF,    37,  "endif",   0,    0,    GFX_ALL },
+   { BRW_OPCODE_DO,       38,  "do",      0,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_CASE,     38,  "case",    0,    0,    GFX6 },
+   { BRW_OPCODE_WHILE,    39,  "while",   0,    0,    GFX_ALL },
+   { BRW_OPCODE_BREAK,    40,  "break",   0,    0,    GFX_ALL },
+   { BRW_OPCODE_CONTINUE, 41,  "cont",    0,    0,    GFX_ALL },
+   { BRW_OPCODE_HALT,     42,  "halt",    0,    0,    GFX_ALL },
+   { BRW_OPCODE_CALLA,    43,  "calla",   0,    0,    GFX_GE(GFX75) },
+   { BRW_OPCODE_MSAVE,    44,  "msave",   0,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_CALL,     44,  "call",    0,    0,    GFX_GE(GFX6) },
+   { BRW_OPCODE_MREST,    45,  "mrest",   0,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_RET,      45,  "ret",     0,    0,    GFX_GE(GFX6) },
+   { BRW_OPCODE_PUSH,     46,  "push",    0,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_FORK,     46,  "fork",    0,    0,    GFX6 },
+   { BRW_OPCODE_GOTO,     46,  "goto",    0,    0,    GFX_GE(GFX8) },
+   { BRW_OPCODE_POP,      47,  "pop",     2,    0,    GFX_LE(GFX5) },
+   { BRW_OPCODE_WAIT,     48,  "wait",    0,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SEND,     49,  "send",    1,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SENDC,    50,  "sendc",   1,    1,    GFX_LT(GFX12) },
+   { BRW_OPCODE_SEND,     49,  "send",    2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_SENDC,    50,  "sendc",   2,    1,    GFX_GE(GFX12) },
+   { BRW_OPCODE_SENDS,    51,  "sends",   2,    1,    GFX_GE(GFX9) & GFX_LT(GFX12) },
+   { BRW_OPCODE_SENDSC,   52,  "sendsc",  2,    1,    GFX_GE(GFX9) & GFX_LT(GFX12) },
+   { BRW_OPCODE_MATH,     56,  "math",    2,    1,    GFX_GE(GFX6) },
+   { BRW_OPCODE_ADD,      64,  "add",     2,    1,    GFX_ALL },
+   { BRW_OPCODE_MUL,      65,  "mul",     2,    1,    GFX_ALL },
+   { BRW_OPCODE_AVG,      66,  "avg",     2,    1,    GFX_ALL },
+   { BRW_OPCODE_FRC,      67,  "frc",     1,    1,    GFX_ALL },
+   { BRW_OPCODE_RNDU,     68,  "rndu",    1,    1,    GFX_ALL },
+   { BRW_OPCODE_RNDD,     69,  "rndd",    1,    1,    GFX_ALL },
+   { BRW_OPCODE_RNDE,     70,  "rnde",    1,    1,    GFX_ALL },
+   { BRW_OPCODE_RNDZ,     71,  "rndz",    1,    1,    GFX_ALL },
+   { BRW_OPCODE_MAC,      72,  "mac",     2,    1,    GFX_ALL },
+   { BRW_OPCODE_MACH,     73,  "mach",    2,    1,    GFX_ALL },
+   { BRW_OPCODE_LZD,      74,  "lzd",     1,    1,    GFX_ALL },
+   { BRW_OPCODE_FBH,      75,  "fbh",     1,    1,    GFX_GE(GFX7) },
+   { BRW_OPCODE_FBL,      76,  "fbl",     1,    1,    GFX_GE(GFX7) },
+   { BRW_OPCODE_CBIT,     77,  "cbit",    1,    1,    GFX_GE(GFX7) },
+   { BRW_OPCODE_ADDC,     78,  "addc",    2,    1,    GFX_GE(GFX7) },
+   { BRW_OPCODE_SUBB,     79,  "subb",    2,    1,    GFX_GE(GFX7) },
+   { BRW_OPCODE_SAD2,     80,  "sad2",    2,    1,    GFX_ALL },
+   { BRW_OPCODE_SADA2,    81,  "sada2",   2,    1,    GFX_ALL },
+   { BRW_OPCODE_DP4,      84,  "dp4",     2,    1,    GFX_LT(GFX11) },
+   { BRW_OPCODE_DPH,      85,  "dph",     2,    1,    GFX_LT(GFX11) },
+   { BRW_OPCODE_DP3,      86,  "dp3",     2,    1,    GFX_LT(GFX11) },
+   { BRW_OPCODE_DP2,      87,  "dp2",     2,    1,    GFX_LT(GFX11) },
+   { BRW_OPCODE_LINE,     89,  "line",    2,    1,    GFX_LE(GFX10) },
+   { BRW_OPCODE_PLN,      90,  "pln",     2,    1,    GFX_GE(GFX45) & GFX_LE(GFX10) },
+   { BRW_OPCODE_MAD,      91,  "mad",     3,    1,    GFX_GE(GFX6) },
+   { BRW_OPCODE_LRP,      92,  "lrp",     3,    1,    GFX_GE(GFX6) & GFX_LE(GFX10) },
+   { BRW_OPCODE_MADM,     93,  "madm",    3,    1,    GFX_GE(GFX8) },
+   { BRW_OPCODE_NENOP,    125, "nenop",   0,    0,    GFX45 },
+   { BRW_OPCODE_NOP,      126, "nop",     0,    0,    GFX_LT(GFX12) },
+   { BRW_OPCODE_NOP,      96,  "nop",     0,    0,    GFX_GE(GFX12) }
 };
 
 /**

@@ -28,7 +28,7 @@
  * \author Ian Romanick <ian.d.romanick@intel.com>
  */
 
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 #include "prog_parameter.h"
 #include "prog_parameter_layout.h"
@@ -82,7 +82,7 @@ copy_indirect_accessed_array(struct gl_program_parameter_list *src,
 	 j = dst->NumParameters;
       } else {
 	 for (j = 0; j < dst->NumParameters; j++) {
-	    if (memcmp(dst->Parameters[j].StateIndexes, curr->StateIndexes, 
+	    if (memcmp(dst->Parameters[j].StateIndexes, curr->StateIndexes,
 		       sizeof(curr->StateIndexes)) == 0) {
 	       return -1;
 	    }
@@ -95,12 +95,12 @@ copy_indirect_accessed_array(struct gl_program_parameter_list *src,
       memcpy(&dst->Parameters[j], curr,
 	     sizeof(dst->Parameters[j]));
 
-      dst->ParameterValueOffset[j] = dst->NumParameterValues;
+      dst->Parameters[j].ValueOffset = dst->NumParameterValues;
 
       gl_constant_value *pv_dst =
-         dst->ParameterValues + dst->ParameterValueOffset[j];
+         dst->ParameterValues + dst->Parameters[j].ValueOffset;
       gl_constant_value *pv_src =
-         src->ParameterValues + src->ParameterValueOffset[i];
+         src->ParameterValues + src->Parameters[i].ValueOffset;
 
       memcpy(pv_dst, pv_src, MIN2(src->Parameters[i].Size, 4) *
              sizeof(GLfloat));
@@ -119,8 +119,27 @@ copy_indirect_accessed_array(struct gl_program_parameter_list *src,
 }
 
 
+static int compare_state_var(const void *a1, const void *a2)
+{
+   const struct gl_program_parameter *p1 =
+      (const struct gl_program_parameter *)a1;
+   const struct gl_program_parameter *p2 =
+      (const struct gl_program_parameter *)a2;
+
+   for (unsigned i = 0; i < STATE_LENGTH; i++) {
+      if (p1->StateIndexes[i] != p2->StateIndexes[i])
+         return p1->StateIndexes[i] - p2->StateIndexes[i];
+   }
+   return 0;
+}
+
+
 /**
- * XXX description???
+ * Create the final program parameter list in this order:
+ * - constants and state variables with variable indexing are first
+ * - other constants are next
+ * - other state variables are last and sorted
+ *
  * \return GL_TRUE for success, GL_FALSE for failure
  */
 GLboolean
@@ -128,7 +147,6 @@ _mesa_layout_parameters(struct asm_parser_state *state)
 {
    struct gl_program_parameter_list *layout;
    struct asm_instruction *inst;
-   unsigned i;
 
    layout =
       _mesa_new_parameter_list_sized(state->prog->Parameters->NumParameters);
@@ -137,87 +155,138 @@ _mesa_layout_parameters(struct asm_parser_state *state)
     * original parameter list to the new parameter list.
     */
    for (inst = state->inst_head; inst != NULL; inst = inst->next) {
-      for (i = 0; i < 3; i++) {
-	 if (inst->SrcReg[i].Base.RelAddr) {
-	    /* Only attempt to add the to the new parameter list once.
-	     */
-	    if (!inst->SrcReg[i].Symbol->pass1_done) {
-	       const int new_begin =
-		  copy_indirect_accessed_array(state->prog->Parameters, layout,
-		      inst->SrcReg[i].Symbol->param_binding_begin,
-		      inst->SrcReg[i].Symbol->param_binding_length);
+      for (unsigned i = 0; i < 3; i++) {
+         if (inst->SrcReg[i].Base.RelAddr) {
+            /* Only attempt to add the to the new parameter list once.
+             */
+            if (!inst->SrcReg[i].Symbol->pass1_done) {
+               const int new_begin =
+                  copy_indirect_accessed_array(state->prog->Parameters, layout,
+                                               inst->SrcReg[i].Symbol->param_binding_begin,
+                                               inst->SrcReg[i].Symbol->param_binding_length);
 
-	       if (new_begin < 0) {
-		  _mesa_free_parameter_list(layout);
-		  return GL_FALSE;
-	       }
+               if (new_begin < 0) {
+                  _mesa_free_parameter_list(layout);
+                  return GL_FALSE;
+               }
 
-	       inst->SrcReg[i].Symbol->param_binding_begin = new_begin;
-	       inst->SrcReg[i].Symbol->pass1_done = 1;
-	    }
+               inst->SrcReg[i].Symbol->param_binding_begin = new_begin;
+               inst->SrcReg[i].Symbol->pass1_done = 1;
+            }
 
-	    /* Previously the Index was just the offset from the parameter
-	     * array.  Now that the base of the parameter array is known, the
-	     * index can be updated to its actual value.
-	     */
-	    inst->Base.SrcReg[i] = inst->SrcReg[i].Base;
-	    inst->Base.SrcReg[i].Index +=
-	       inst->SrcReg[i].Symbol->param_binding_begin;
-	 }
+            /* Previously the Index was just the offset from the parameter
+             * array.  Now that the base of the parameter array is known, the
+             * index can be updated to its actual value.
+             */
+            inst->Base.SrcReg[i] = inst->SrcReg[i].Base;
+            inst->Base.SrcReg[i].Index +=
+               inst->SrcReg[i].Symbol->param_binding_begin;
+         }
       }
    }
 
-   /* PASS 2:  Move any parameters that are not accessed indirectly from the
+   /* PASS 2: Move any constants that are not accessed indirectly from the
     * original parameter list to the new parameter list.
     */
    for (inst = state->inst_head; inst != NULL; inst = inst->next) {
-      for (i = 0; i < 3; i++) {
-	 const struct gl_program_parameter *p;
-	 const int idx = inst->SrcReg[i].Base.Index;
-	 unsigned swizzle = SWIZZLE_NOOP;
+      for (unsigned i = 0; i < 3; i++) {
+         const int idx = inst->SrcReg[i].Base.Index;
+         const struct gl_program_parameter *const p =
+            &state->prog->Parameters->Parameters[idx];
+         unsigned swizzle = SWIZZLE_NOOP;
 
-	 /* All relative addressed operands were processed on the first
-	  * pass.  Just skip them here.
-	  */
-	 if (inst->SrcReg[i].Base.RelAddr) {
-	    continue;
-	 }
+         if (inst->SrcReg[i].Base.RelAddr ||
+             inst->SrcReg[i].Base.File <= PROGRAM_OUTPUT ||
+             inst->SrcReg[i].Base.File >= PROGRAM_WRITE_ONLY ||
+             p->Type != PROGRAM_CONSTANT)
+            continue;
 
-	 if ((inst->SrcReg[i].Base.File <= PROGRAM_OUTPUT)
-	     || (inst->SrcReg[i].Base.File >= PROGRAM_WRITE_ONLY)) {
-	    continue;
-	 }
+         inst->Base.SrcReg[i] = inst->SrcReg[i].Base;
 
-	 inst->Base.SrcReg[i] = inst->SrcReg[i].Base;
-	 p = & state->prog->Parameters->Parameters[idx];
+         unsigned pvo = state->prog->Parameters->Parameters[idx].ValueOffset;
+         const gl_constant_value *const v =
+            state->prog->Parameters->ParameterValues + pvo;
 
-	 switch (p->Type) {
-	 case PROGRAM_CONSTANT: {
-            unsigned pvo = state->prog->Parameters->ParameterValueOffset[idx];
-            const gl_constant_value *const v =
-               state->prog->Parameters->ParameterValues + pvo;
+         inst->Base.SrcReg[i].Index =
+            _mesa_add_unnamed_constant(layout, v, p->Size, &swizzle);
 
-	    inst->Base.SrcReg[i].Index =
-	       _mesa_add_unnamed_constant(layout, v, p->Size, & swizzle);
+         inst->Base.SrcReg[i].Swizzle =
+            _mesa_combine_swizzles(swizzle, inst->Base.SrcReg[i].Swizzle);
 
-	    inst->Base.SrcReg[i].Swizzle = 
-	       _mesa_combine_swizzles(swizzle, inst->Base.SrcReg[i].Swizzle);
-	    break;
-	 }
-
-	 case PROGRAM_STATE_VAR:
-	    inst->Base.SrcReg[i].Index =
-	       _mesa_add_state_reference(layout, p->StateIndexes);
-	    break;
-
-	 default:
-	    break;
-	 }
-
-	 inst->SrcReg[i].Base.File = p->Type;
-	 inst->Base.SrcReg[i].File = p->Type;
+         inst->SrcReg[i].Base.File = p->Type;
+         inst->Base.SrcReg[i].File = p->Type;
       }
    }
+
+   /* PASS 3: Add sorted state variables.  NOTE: This pass does **not** modify
+    * the instruction with the updated index.  The sorting step might
+    * invalidate the index that was calculated by _mesa_add_state_reference.
+    * Instead, it relies on PASS 4 to do this.
+    */
+   unsigned first_state_var = layout->NumParameters;
+
+   for (inst = state->inst_head; inst != NULL; inst = inst->next) {
+      for (unsigned i = 0; i < 3; i++) {
+         const struct gl_program_parameter *p;
+         const int idx = inst->SrcReg[i].Base.Index;
+
+         p = &state->prog->Parameters->Parameters[idx];
+
+         if (inst->SrcReg[i].Base.RelAddr ||
+             inst->SrcReg[i].Base.File <= PROGRAM_OUTPUT ||
+             inst->SrcReg[i].Base.File >= PROGRAM_WRITE_ONLY ||
+             p->Type != PROGRAM_STATE_VAR)
+            continue;
+
+         _mesa_add_state_reference(layout, p->StateIndexes);
+      }
+   }
+
+   /* Sort if we have added at least 2 state vars. */
+   if (first_state_var + 2 <= layout->NumParameters) {
+      /* All state vars should be vec4s. */
+      for (unsigned i = first_state_var; i < layout->NumParameters; i++) {
+         assert(layout->Parameters[i].Size == 4);
+         assert(layout->Parameters[i].ValueOffset == i * 4);
+      }
+
+      qsort(layout->Parameters + first_state_var,
+            layout->NumParameters - first_state_var,
+            sizeof(layout->Parameters[0]), compare_state_var);
+
+      /* Fix offsets. */
+      for (unsigned i = first_state_var; i < layout->NumParameters; i++) {
+         layout->Parameters[i].ValueOffset = i * 4;
+      }
+   }
+
+   /* PASS 4: Fix up the index and file information for instructions whose
+    * parameters were added to the parameter list in PASS 3.
+    */
+   for (inst = state->inst_head; inst != NULL; inst = inst->next) {
+      for (unsigned i = 0; i < 3; i++) {
+         const int idx = inst->SrcReg[i].Base.Index;
+         const struct gl_program_parameter *const p =
+            &state->prog->Parameters->Parameters[idx];
+
+         if (inst->SrcReg[i].Base.RelAddr ||
+             inst->SrcReg[i].Base.File <= PROGRAM_OUTPUT ||
+             inst->SrcReg[i].Base.File >= PROGRAM_WRITE_ONLY ||
+             p->Type != PROGRAM_STATE_VAR)
+            continue;
+
+         inst->Base.SrcReg[i] = inst->SrcReg[i].Base;
+
+         inst->Base.SrcReg[i].Index =
+            _mesa_add_state_reference(layout, p->StateIndexes);
+
+         inst->SrcReg[i].Base.File = p->Type;
+         inst->Base.SrcReg[i].File = p->Type;
+      }
+   }
+
+   assert(layout->NumParameters <= state->prog->Parameters->NumParameters);
+   _mesa_recompute_parameter_bounds(layout);
 
    layout->StateFlags = state->prog->Parameters->StateFlags;
    _mesa_free_parameter_list(state->prog->Parameters);

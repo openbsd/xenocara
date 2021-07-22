@@ -1,5 +1,6 @@
 /*
  * © Copyright 2018 Alyssa Rosenzweig
+ * Copyright (C) 2019-2020 Collabora, Ltd.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,27 +28,44 @@
 #include <string.h>
 #include "pan_bo.h"
 #include "pan_context.h"
+#include "pan_shader.h"
 #include "pan_util.h"
+#include "panfrost-quirks.h"
 
 #include "compiler/nir/nir.h"
 #include "nir/tgsi_to_nir.h"
-#include "midgard/midgard_compile.h"
 #include "util/u_dynarray.h"
+#include "util/u_upload_mgr.h"
 
 #include "tgsi/tgsi_dump.h"
 
-void
-panfrost_shader_compile(
-                struct panfrost_context *ctx,
-                struct mali_shader_meta *meta,
-                enum pipe_shader_ir ir_type,
-                const void *ir,
-                gl_shader_stage stage,
-                struct panfrost_shader_state *state,
-                uint64_t *outputs_written)
+static void
+pan_upload_shader_descriptor(struct panfrost_context *ctx,
+                        struct panfrost_shader_state *state)
 {
-        struct panfrost_screen *screen = pan_screen(ctx->base.screen);
-        uint8_t *dst;
+        const struct panfrost_device *dev = pan_device(ctx->base.screen);
+        struct mali_state_packed *out;
+
+        u_upload_alloc(ctx->state_uploader, 0, MALI_RENDERER_STATE_LENGTH, MALI_RENDERER_STATE_LENGTH,
+                        &state->upload.offset, &state->upload.rsrc, (void **) &out);
+
+        pan_pack(out, RENDERER_STATE, cfg) {
+                pan_shader_prepare_rsd(dev, &state->info,
+                                       state->bo ? state->bo->ptr.gpu : 0,
+                                       &cfg);
+        }
+
+        u_upload_unmap(ctx->state_uploader);
+}
+
+void
+panfrost_shader_compile(struct panfrost_context *ctx,
+                        enum pipe_shader_ir ir_type,
+                        const void *ir,
+                        gl_shader_stage stage,
+                        struct panfrost_shader_state *state)
+{
+        struct panfrost_device *dev = pan_device(ctx->base.screen);
 
         nir_shader *s;
 
@@ -55,129 +73,38 @@ panfrost_shader_compile(
                 s = nir_shader_clone(NULL, ir);
         } else {
                 assert (ir_type == PIPE_SHADER_IR_TGSI);
-                s = tgsi_to_nir(ir, ctx->base.screen);
+                s = tgsi_to_nir(ir, ctx->base.screen, false);
         }
 
         s->info.stage = stage;
 
         /* Call out to Midgard compiler given the above NIR */
-
-        midgard_program program = {
-                .alpha_ref = state->alpha_state.ref_value
+        struct panfrost_compile_inputs inputs = {
+                .gpu_id = dev->gpu_id,
+                .shaderdb = !!(dev->debug & PAN_DBG_PRECOMPILE),
         };
 
-        midgard_compile_shader_nir(s, &program, false, 0, screen->gpu_id,
-                        pan_debug & PAN_DBG_PRECOMPILE);
+        memcpy(inputs.rt_formats, state->rt_formats, sizeof(inputs.rt_formats));
+
+        struct util_dynarray binary;
+
+        util_dynarray_init(&binary, NULL);
+        pan_shader_compile(dev, s, &inputs, &binary, &state->info);
 
         /* Prepare the compiled binary for upload */
-        int size = program.compiled.size;
-        dst = program.compiled.data;
-
-        /* Upload the shader. The lookahead tag is ORed on as a tagged pointer.
-         * I bet someone just thought that would be a cute pun. At least,
-         * that's how I'd do it. */
-
-        if (size) {
-                state->bo = panfrost_bo_create(screen, size, PAN_BO_EXECUTE);
-                memcpy(state->bo->cpu, dst, size);
-                meta->shader = state->bo->gpu | program.first_tag;
-        } else {
-                /* no shader */
-                meta->shader = 0x0;
+        if (binary.size) {
+                state->bo = panfrost_bo_create(dev, binary.size, PAN_BO_EXECUTE);
+                memcpy(state->bo->ptr.cpu, binary.data, binary.size);
         }
 
-        util_dynarray_fini(&program.compiled);
+        /* Midgard needs the first tag on the bottom nibble */
 
-        /* Sysvals are prepended */
-        program.uniform_count += program.sysval_count;
-        state->sysval_count = program.sysval_count;
-        memcpy(state->sysval, program.sysvals, sizeof(state->sysval[0]) * state->sysval_count);
+        if (stage != MESA_SHADER_FRAGMENT)
+                pan_upload_shader_descriptor(ctx, state);
 
-        meta->midgard1.uniform_count = MIN2(program.uniform_count, program.uniform_cutoff);
-        meta->midgard1.work_count = program.work_register_count;
+        util_dynarray_fini(&binary);
 
-        bool vertex_id = s->info.system_values_read & (1 << SYSTEM_VALUE_VERTEX_ID);
-        bool instance_id = s->info.system_values_read & (1 << SYSTEM_VALUE_INSTANCE_ID);
-
-        switch (stage) {
-        case MESA_SHADER_VERTEX:
-                meta->attribute_count = util_bitcount64(s->info.inputs_read);
-                meta->varying_count = util_bitcount64(s->info.outputs_written);
-
-                if (vertex_id)
-                        meta->attribute_count = MAX2(meta->attribute_count, PAN_VERTEX_ID + 1);
-
-                if (instance_id)
-                        meta->attribute_count = MAX2(meta->attribute_count, PAN_INSTANCE_ID + 1);
-
-                break;
-        case MESA_SHADER_FRAGMENT:
-                meta->attribute_count = 0;
-                meta->varying_count = util_bitcount64(s->info.inputs_read);
-                break;
-        case MESA_SHADER_COMPUTE:
-                /* TODO: images */
-                meta->attribute_count = 0;
-                meta->varying_count = 0;
-                break;
-        default:
-                unreachable("Unknown shader state");
-        }
-
-        state->can_discard = s->info.fs.uses_discard;
-        state->writes_point_size = program.writes_point_size;
-        state->reads_point_coord = false;
-        state->helper_invocations = s->info.fs.needs_helper_invocations;
-        state->stack_size = program.tls_size;
-
-        if (outputs_written)
-                *outputs_written = s->info.outputs_written;
-
-        /* Separate as primary uniform count is truncated */
-        state->uniform_count = program.uniform_count;
-
-        meta->midgard1.unknown2 = 8; /* XXX */
-
-        unsigned default_vec1_swizzle = panfrost_get_default_swizzle(1);
-        unsigned default_vec2_swizzle = panfrost_get_default_swizzle(2);
-        unsigned default_vec4_swizzle = panfrost_get_default_swizzle(4);
-
-        /* Iterate the varyings and emit the corresponding descriptor */
-        for (unsigned i = 0; i < meta->varying_count; ++i) {
-                unsigned location = program.varyings[i];
-
-                /* Default to a vec4 varying */
-                struct mali_attr_meta v = {
-                        .format = program.varying_type[i],
-                        .swizzle = default_vec4_swizzle,
-                        .unknown1 = 0x2,
-                };
-
-                /* Check for special cases, otherwise assume general varying */
-
-                if (location == VARYING_SLOT_POS) {
-                        if (stage == MESA_SHADER_FRAGMENT)
-                                state->reads_frag_coord = true;
-                        else
-                                v.format = MALI_VARYING_POS;
-                } else if (location == VARYING_SLOT_PSIZ) {
-                        v.format = MALI_R16F;
-                        v.swizzle = default_vec1_swizzle;
-
-                        state->writes_point_size = true;
-                } else if (location == VARYING_SLOT_PNTC) {
-                        v.format = MALI_RG16F;
-                        v.swizzle = default_vec2_swizzle;
-
-                        state->reads_point_coord = true;
-                } else if (location == VARYING_SLOT_FACE) {
-                        v.format = MALI_R32I;
-                        v.swizzle = default_vec1_swizzle;
-
-                        state->reads_face = true;
-                }
-
-                state->varyings[i] = v;
-                state->varyings_loc[i] = location;
-        }
+        /* In both clone and tgsi_to_nir paths, the shader is ralloc'd against
+         * a NULL context */
+        ralloc_free(s);
 }

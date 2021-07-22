@@ -24,7 +24,7 @@
 #include "anv_private.h"
 #include "test_common.h"
 
-int main(int argc, char **argv)
+int main(void)
 {
    struct anv_physical_device physical_device = {
       .use_softpin = true,
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
    pthread_mutex_init(&device.mutex, NULL);
    anv_bo_cache_init(&device.bo_cache);
-   anv_block_pool_init(&pool, &device, 4096, initial_size);
+   anv_block_pool_init(&pool, &device, "test", 4096, initial_size);
    ASSERT(pool.size == initial_size);
 
    uint32_t padding;

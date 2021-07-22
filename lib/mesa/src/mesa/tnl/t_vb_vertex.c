@@ -28,12 +28,12 @@
 
 #include "main/glheader.h"
 #include "main/macros.h"
-#include "main/imports.h"
 #include "main/mtypes.h"
 
 #include "math/m_xform.h"
 
 #include "util/bitscan.h"
+#include "util/u_memory.h"
 
 #include "t_context.h"
 #include "t_pipeline.h"
@@ -141,7 +141,7 @@ static GLboolean run_vertex_stage( struct gl_context *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
 
-   if (ctx->VertexProgram._Current) 
+   if (ctx->VertexProgram._Current)
       return GL_TRUE;
 
    tnl_clip_prepare(ctx);
@@ -158,6 +158,9 @@ static GLboolean run_vertex_stage( struct gl_context *ctx,
 				    VB->AttribPtr[_TNL_ATTRIB_POS]);
    }
 
+   /* make sure the inverse is up to date */
+   _math_matrix_analyse(&ctx->_ModelProjectMatrix);
+
    VB->ClipPtr = TransformRaw( &store->clip,
 			       &ctx->_ModelProjectMatrix,
 			       VB->AttribPtr[_TNL_ATTRIB_POS] );
@@ -165,14 +168,14 @@ static GLboolean run_vertex_stage( struct gl_context *ctx,
    /* Drivers expect this to be clean to element 4...
     */
    switch (VB->ClipPtr->size) {
-   case 1:			
+   case 1:
       /* impossible */
    case 2:
       _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 2 );
-      /* fall-through */
+      FALLTHROUGH;
    case 3:
       _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 3 );
-      /* fall-through */
+      FALLTHROUGH;
    case 4:
       break;
    }
@@ -247,7 +250,7 @@ static GLboolean init_vertex_stage( struct gl_context *ctx,
    _mesa_vector4f_alloc( &store->clip, 0, size, 32 );
    _mesa_vector4f_alloc( &store->proj, 0, size, 32 );
 
-   store->clipmask = _mesa_align_malloc(sizeof(GLubyte)*size, 32 );
+   store->clipmask = align_malloc(sizeof(GLubyte)*size, 32 );
 
    if (!store->clipmask ||
        !store->eye.data ||
@@ -266,7 +269,7 @@ static void dtr( struct tnl_pipeline_stage *stage )
       _mesa_vector4f_free( &store->eye );
       _mesa_vector4f_free( &store->clip );
       _mesa_vector4f_free( &store->proj );
-      _mesa_align_free( store->clipmask );
+      align_free( store->clipmask );
       free(store);
       stage->privatePtr = NULL;
       stage->run = init_vertex_stage;

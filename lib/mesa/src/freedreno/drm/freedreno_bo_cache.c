@@ -28,7 +28,7 @@
 #include "freedreno_priv.h"
 
 void bo_del(struct fd_bo *bo);
-extern pthread_mutex_t table_lock;
+extern simple_mtx_t table_lock;
 
 static void
 add_bucket(struct fd_bo_cache *cache, int size)
@@ -140,7 +140,7 @@ static struct fd_bo *find_in_bucket(struct fd_bo_bucket *bucket, uint32_t flags)
 	 * NOTE that intel takes ALLOC_FOR_RENDER bo's from the list tail
 	 * (MRU, since likely to be in GPU cache), rather than head (LRU)..
 	 */
-	pthread_mutex_lock(&table_lock);
+	simple_mtx_lock(&table_lock);
 	if (!list_is_empty(&bucket->list)) {
 		bo = LIST_ENTRY(struct fd_bo, bucket->list.next, list);
 		/* TODO check for compatible flags? */
@@ -150,7 +150,7 @@ static struct fd_bo *find_in_bucket(struct fd_bo_bucket *bucket, uint32_t flags)
 			bo = NULL;
 		}
 	}
-	pthread_mutex_unlock(&table_lock);
+	simple_mtx_unlock(&table_lock);
 
 	return bo;
 }
@@ -172,15 +172,15 @@ retry:
 		bo = find_in_bucket(bucket, flags);
 		if (bo) {
 			VG_BO_OBTAIN(bo);
-			if (bo->funcs->madvise(bo, TRUE) <= 0) {
+			if (bo->funcs->madvise(bo, true) <= 0) {
 				/* we've lost the backing pages, delete and try again: */
-				pthread_mutex_lock(&table_lock);
+				simple_mtx_lock(&table_lock);
 				bo_del(bo);
-				pthread_mutex_unlock(&table_lock);
+				simple_mtx_unlock(&table_lock);
 				goto retry;
 			}
 			p_atomic_set(&bo->refcnt, 1);
-			fd_device_ref(bo->dev);
+			bo->flags = FD_RELOC_FLAGS_INIT;
 			return bo;
 		}
 	}
@@ -197,7 +197,7 @@ fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo)
 	if (bucket) {
 		struct timespec time;
 
-		bo->funcs->madvise(bo, FALSE);
+		bo->funcs->madvise(bo, false);
 
 		clock_gettime(CLOCK_MONOTONIC, &time);
 
@@ -205,11 +205,6 @@ fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo)
 		VG_BO_RELEASE(bo);
 		list_addtail(&bo->list, &bucket->list);
 		fd_bo_cache_cleanup(cache, time.tv_sec);
-
-		/* bo's in the bucket cache don't have a ref and
-		 * don't hold a ref to the dev:
-		 */
-		fd_device_del_locked(bo->dev);
 
 		return 0;
 	}

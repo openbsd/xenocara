@@ -3,7 +3,7 @@
  */
 
 #include <stdio.h>
-#include "state_tracker/graw.h"
+#include "frontend/graw.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
@@ -28,12 +28,12 @@ static void draw( void )
 {
    union pipe_color_union clear_color = { {1, 0, 1, 1} };
 
-   ctx->clear(ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
+   ctx->clear(ctx, PIPE_CLEAR_COLOR, NULL, &clear_color, 0, 0);
    ctx->flush(ctx, NULL, 0);
 
    graw_save_surface_to_file(ctx, surf, NULL);
 
-   screen->flush_frontbuffer(screen, tex, 0, 0, window, NULL);
+   screen->flush_frontbuffer(screen, ctx, tex, 0, 0, window, NULL);
 }
 
 static void init( void )

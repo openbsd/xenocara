@@ -29,7 +29,6 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/macros.h"
-#include "main/imports.h"
 
 #include "m_matrix.h"
 #include "m_xform.h"
@@ -161,9 +160,9 @@ static void init_matrix( GLfloat *m )
    m[3] = 11.0; m[7] = 23.0; m[11] = 91.0; m[15] =  9.0;
 }
 
-ALIGN16(static GLfloat, s[TEST_COUNT][4]);
-ALIGN16(static GLfloat, d[TEST_COUNT][4]);
-ALIGN16(static GLfloat, r[TEST_COUNT][4]);
+ALIGN16 static GLfloat s[TEST_COUNT][4];
+ALIGN16 static GLfloat d[TEST_COUNT][4];
+ALIGN16 static GLfloat r[TEST_COUNT][4];
 
 static int test_transform_function( transform_func func, int psize,
 				    int mtype, unsigned long *cycles )
@@ -183,7 +182,7 @@ static int test_transform_function( transform_func func, int psize,
       return 0;
    }
 
-   mat->m = _mesa_align_malloc( 16 * sizeof(GLfloat), 16 );
+   mat->m = align_malloc( 16 * sizeof(GLfloat), 16 );
    mat->type = mtypes[mtype];
 
    m = mat->m;
@@ -273,7 +272,7 @@ static int test_transform_function( transform_func func, int psize,
       }
    }
 
-   _mesa_align_free( mat->m );
+   align_free( mat->m );
    return 1;
 }
 

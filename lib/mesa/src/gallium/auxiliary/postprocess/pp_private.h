@@ -30,6 +30,7 @@
 
 
 #include "postprocess.h"
+#include "cso_cache/cso_context.h"
 
 
 /**
@@ -40,6 +41,7 @@ struct pp_program
    struct pipe_screen *screen;
    struct pipe_context *pipe;
    struct cso_context *cso;
+   struct st_context_iface *st;
 
    struct pipe_blend_state blend;
    struct pipe_depth_stencil_alpha_state depthstencil;
@@ -48,7 +50,7 @@ struct pp_program
    struct pipe_sampler_state sampler_point;     /* point */
    struct pipe_viewport_state viewport;
    struct pipe_framebuffer_state framebuffer;
-   struct pipe_vertex_element velem[2];
+   struct cso_velems_state velem;
 
    union pipe_color_union clear_color;
 
@@ -93,7 +95,7 @@ void pp_free_fbos(struct pp_queue_t *);
 void pp_debug(const char *, ...);
 
 struct pp_program *pp_init_prog(struct pp_queue_t *, struct pipe_context *pipe,
-                                struct cso_context *);
+                                struct cso_context *, struct st_context_iface *st);
 
 void pp_blit(struct pipe_context *pipe,
              struct pipe_resource *src_tex,

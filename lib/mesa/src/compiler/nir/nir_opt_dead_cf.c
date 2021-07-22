@@ -106,7 +106,7 @@ opt_constant_if(nir_if *if_stmt, bool condition)
 
       assert(def);
       assert(phi->dest.is_ssa);
-      nir_ssa_def_rewrite_uses(&phi->dest.ssa, nir_src_for_ssa(def));
+      nir_ssa_def_rewrite_uses(&phi->dest.ssa, def);
       nir_instr_remove(instr);
    }
 
@@ -218,15 +218,17 @@ node_is_dead(nir_cf_node *node)
          if (instr->type == nir_instr_type_call)
             return false;
 
-         /* Return instructions can cause us to skip over other side-effecting
-          * instructions after the loop, so consider them to have side effects
-          * here.
+         /* Return and halt instructions can cause us to skip over other
+          * side-effecting instructions after the loop, so consider them to
+          * have side effects here.
           *
           * When the block is not inside a loop, break and continue might also
           * cause a skip.
           */
          if (instr->type == nir_instr_type_jump &&
-             (!inside_loop || nir_instr_as_jump(instr)->type == nir_jump_return))
+             (!inside_loop ||
+              nir_instr_as_jump(instr)->type == nir_jump_return ||
+              nir_instr_as_jump(instr)->type == nir_jump_halt))
             return false;
 
          if (instr->type == nir_instr_type_intrinsic) {
@@ -374,9 +376,7 @@ opt_dead_cf_impl(nir_function_impl *impl)
        */
       nir_repair_ssa_impl(impl);
    } else {
-#ifndef NDEBUG
-      impl->valid_metadata &= ~nir_metadata_not_properly_reset;
-#endif
+      nir_metadata_preserve(impl, nir_metadata_all);
    }
 
    return progress;

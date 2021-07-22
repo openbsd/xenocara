@@ -25,13 +25,14 @@
 
 #include "pipe/p_screen.h"
 #include "util/slab.h"
+#include "util/disk_cache.h"
 #include "virgl_winsys.h"
 
 enum virgl_debug_flags {
    VIRGL_DEBUG_VERBOSE              = 1 << 0,
    VIRGL_DEBUG_TGSI                 = 1 << 1,
-   VIRGL_DEBUG_EMULATE_BGRA         = 1 << 2,
-   VIRGL_DEBUG_BGRA_DEST_SWIZZLE    = 1 << 3,
+   VIRGL_DEBUG_NO_EMULATE_BGRA      = 1 << 2,
+   VIRGL_DEBUG_NO_BGRA_DEST_SWIZZLE = 1 << 3,
    VIRGL_DEBUG_SYNC                 = 1 << 4,
    VIRGL_DEBUG_XFER                 = 1 << 5,
 };
@@ -56,6 +57,8 @@ struct virgl_screen {
    bool tweak_gles_emulate_bgra;
    bool tweak_gles_apply_bgra_dest_swizzle;
    int32_t tweak_gles_tf3_value;
+
+   struct disk_cache *disk_cache;
 };
 
 

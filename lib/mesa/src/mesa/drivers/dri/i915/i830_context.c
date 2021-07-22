@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,13 +22,12 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "i830_context.h"
 #include "main/api_exec.h"
 #include "main/extensions.h"
-#include "main/imports.h"
 #include "main/version.h"
 #include "main/vtxfmt.h"
 #include "tnl/tnl.h"
@@ -37,6 +36,7 @@
 #include "tnl/t_pipeline.h"
 #include "intel_tris.h"
 #include "util/ralloc.h"
+#include "util/u_memory.h"
 
 /***************************************
  * Mesa's Driver Functions
@@ -62,7 +62,7 @@ i830CreateContext(int api,
                   void *sharedContextPrivate)
 {
    struct dd_function_table functions;
-   struct i830_context *i830 = rzalloc(NULL, struct i830_context);
+   struct i830_context *i830 = align_calloc(sizeof(struct i830_context), 16);
    struct intel_context *intel = &i830->intel;
    struct gl_context *ctx = &intel->ctx;
 
@@ -79,7 +79,7 @@ i830CreateContext(int api,
                          mesaVis, driContextPriv,
                          sharedContextPrivate, &functions,
                          error)) {
-      ralloc_free(i830);
+      align_free(i830);
       return false;
    }
 

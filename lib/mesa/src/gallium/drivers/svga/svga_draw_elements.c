@@ -61,6 +61,7 @@
 static enum pipe_error
 translate_indices(struct svga_hwtnl *hwtnl,
                   const struct pipe_draw_info *info,
+                  const struct pipe_draw_start_count *draw,
                   enum pipe_prim_type gen_prim,
                   unsigned orig_nr, unsigned gen_nr,
                   unsigned gen_size,
@@ -74,7 +75,7 @@ translate_indices(struct svga_hwtnl *hwtnl,
    struct pipe_transfer *src_transfer = NULL;
    struct pipe_transfer *dst_transfer = NULL;
    const unsigned size = gen_size * gen_nr;
-   const unsigned offset = info->start * info->index_size;
+   const unsigned offset = draw->start * info->index_size;
    const void *src_map = NULL;
    struct pipe_resource *dst = NULL;
    void *dst_map = NULL;
@@ -115,14 +116,14 @@ translate_indices(struct svga_hwtnl *hwtnl,
       if (!dst)
          goto fail;
 
-      dst_map = pipe_buffer_map(pipe, dst, PIPE_TRANSFER_WRITE, &dst_transfer);
+      dst_map = pipe_buffer_map(pipe, dst, PIPE_MAP_WRITE, &dst_transfer);
       if (!dst_map)
          goto fail;
 
       *out_offset = 0;
       src_map = pipe_buffer_map(pipe, info->index.resource,
-                                PIPE_TRANSFER_READ |
-                                PIPE_TRANSFER_UNSYNCHRONIZED,
+                                PIPE_MAP_READ |
+                                PIPE_MAP_UNSYNCHRONIZED,
                                 &src_transfer);
       if (!src_map)
          goto fail;
@@ -186,14 +187,15 @@ svga_hwtnl_simple_draw_range_elements(struct svga_hwtnl *hwtnl,
                                       enum pipe_prim_type prim, unsigned start,
                                       unsigned count,
                                       unsigned start_instance,
-                                      unsigned instance_count)
+                                      unsigned instance_count,
+                                      ubyte vertices_per_patch)
 {
    SVGA3dPrimitiveRange range;
    unsigned hw_prim;
    unsigned hw_count;
    unsigned index_offset = start * index_size;
 
-   hw_prim = svga_translate_prim(prim, count, &hw_count);
+   hw_prim = svga_translate_prim(prim, count, &hw_count, vertices_per_patch);
    if (hw_count == 0)
       return PIPE_OK; /* nothing to draw */
 
@@ -206,13 +208,15 @@ svga_hwtnl_simple_draw_range_elements(struct svga_hwtnl *hwtnl,
 
    return svga_hwtnl_prim(hwtnl, &range, count,
                           min_index, max_index, index_buffer,
-                          start_instance, instance_count);
+                          start_instance, instance_count,
+                          NULL, NULL);
 }
 
 
 enum pipe_error
 svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
                                const struct pipe_draw_info *info,
+                               const struct pipe_draw_start_count *draw,
                                unsigned count)
 {
    struct pipe_context *pipe = &hwtnl->svga->pipe;
@@ -234,20 +238,28 @@ svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
                                        &gen_size, &gen_nr, &gen_func);
    }
    else {
+      unsigned hw_pv;
+
+      /* There is no geometry ordering with PATCH, so no need to
+       * consider provoking vertex mode for the translation.
+       * So use the same api_pv as the hw_pv.
+       */
+      hw_pv = info->mode == PIPE_PRIM_PATCHES ? hwtnl->api_pv :
+                                                hwtnl->hw_pv;
       gen_type = u_index_translator(svga_hw_prims,
                                     info->mode,
                                     info->index_size,
                                     count,
                                     hwtnl->api_pv,
-                                    hwtnl->hw_pv,
+                                    hw_pv,
                                     PR_DISABLE,
                                     &gen_prim, &gen_size, &gen_nr, &gen_func);
    }
 
-   if (gen_type == U_TRANSLATE_MEMCPY) {
+   if ((gen_type == U_TRANSLATE_MEMCPY) && (info->index_size == gen_size)) {
       /* No need for translation, just pass through to hardware:
        */
-      unsigned start_offset = info->start * info->index_size;
+      unsigned start_offset = draw->start * info->index_size;
       struct pipe_resource *index_buffer = NULL;
       unsigned index_offset;
 
@@ -259,7 +271,7 @@ svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
          index_offset /= info->index_size;
       } else {
          pipe_resource_reference(&index_buffer, info->index.resource);
-         index_offset = info->start;
+         index_offset = draw->start;
       }
 
       assert(index_buffer != NULL);
@@ -267,11 +279,12 @@ svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
       ret = svga_hwtnl_simple_draw_range_elements(hwtnl, index_buffer,
                                                   info->index_size,
                                                   info->index_bias,
-                                                  info->min_index,
-                                                  info->max_index,
+                                                  info->index_bounds_valid ? info->min_index : 0,
+                                                  info->index_bounds_valid ? info->max_index : ~0,
                                                   gen_prim, index_offset, count,
                                                   info->start_instance,
-                                                  info->instance_count);
+                                                  info->instance_count,
+                                                  info->vertices_per_patch);
       pipe_resource_reference(&index_buffer, NULL);
    }
    else {
@@ -285,7 +298,7 @@ svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
        * GL though, as index buffers are typically used only once
        * there.
        */
-      ret = translate_indices(hwtnl, info, gen_prim,
+      ret = translate_indices(hwtnl, info, draw, gen_prim,
                               count, gen_nr, gen_size,
                               gen_func, &gen_buf, &gen_offset);
       if (ret == PIPE_OK) {
@@ -294,12 +307,13 @@ svga_hwtnl_draw_range_elements(struct svga_hwtnl *hwtnl,
                                                      gen_buf,
                                                      gen_size,
                                                      info->index_bias,
-                                                     info->min_index,
-                                                     info->max_index,
+                                                     info->index_bounds_valid ? info->min_index : 0,
+                                                     info->index_bounds_valid ? info->max_index : ~0,
                                                      gen_prim, gen_offset,
                                                      gen_nr,
                                                      info->start_instance,
-                                                     info->instance_count);
+                                                     info->instance_count,
+                                                     info->vertices_per_patch);
       }
 
       if (gen_buf) {

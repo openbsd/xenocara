@@ -71,20 +71,19 @@
  */
 
 #include <stdbool.h>
+#include <stdlib.h>
 
+#include "blob.h"
 #include "ralloc.h"
-#include "main/imports.h"
 #include "main/macros.h"
 #include "util/bitset.h"
+#include "util/u_dynarray.h"
+#include "u_math.h"
 #include "register_allocate.h"
-
-#define NO_REG ~0U
 
 struct ra_reg {
    BITSET_WORD *conflicts;
-   unsigned int *conflict_list;
-   unsigned int conflict_list_size;
-   unsigned int num_conflicts;
+   struct util_dynarray conflict_list;
 };
 
 struct ra_regs {
@@ -127,9 +126,8 @@ struct ra_node {
     * symmetric with the other node.
     */
    BITSET_WORD *adjacency;
-   unsigned int *adjacency_list;
-   unsigned int adjacency_list_size;
-   unsigned int adjacency_count;
+
+   struct util_dynarray adjacency_list;
    /** @} */
 
    unsigned int class;
@@ -171,8 +169,7 @@ struct ra_graph {
 
    unsigned int alloc; /**< count of nodes allocated. */
 
-   unsigned int (*select_reg_callback)(struct ra_graph *g, BITSET_WORD *regs,
-                                       void *data);
+   ra_select_reg_callback select_reg_callback;
    void *select_reg_callback_data;
 
    /* Temporary data for the algorithm to scratch around in */
@@ -227,16 +224,10 @@ ra_alloc_reg_set(void *mem_ctx, unsigned int count, bool need_conflict_lists)
                                               BITSET_WORDS(count));
       BITSET_SET(regs->regs[i].conflicts, i);
 
-      if (need_conflict_lists) {
-         regs->regs[i].conflict_list = ralloc_array(regs->regs,
-                                                    unsigned int, 4);
-         regs->regs[i].conflict_list_size = 4;
-         regs->regs[i].conflict_list[0] = i;
-      } else {
-         regs->regs[i].conflict_list = NULL;
-         regs->regs[i].conflict_list_size = 0;
-      }
-      regs->regs[i].num_conflicts = 1;
+      util_dynarray_init(&regs->regs[i].conflict_list,
+                         need_conflict_lists ? regs->regs : NULL);
+      if (need_conflict_lists)
+         util_dynarray_append(&regs->regs[i].conflict_list, unsigned int, i);
    }
 
    return regs;
@@ -263,13 +254,8 @@ ra_add_conflict_list(struct ra_regs *regs, unsigned int r1, unsigned int r2)
 {
    struct ra_reg *reg1 = &regs->regs[r1];
 
-   if (reg1->conflict_list) {
-      if (reg1->conflict_list_size == reg1->num_conflicts) {
-         reg1->conflict_list_size *= 2;
-         reg1->conflict_list = reralloc(regs->regs, reg1->conflict_list,
-                                        unsigned int, reg1->conflict_list_size);
-      }
-      reg1->conflict_list[reg1->num_conflicts++] = r2;
+   if (reg1->conflict_list.mem_ctx) {
+      util_dynarray_append(&reg1->conflict_list, unsigned int, r2);
    }
    BITSET_SET(reg1->conflicts, r2);
 }
@@ -295,12 +281,11 @@ void
 ra_add_transitive_reg_conflict(struct ra_regs *regs,
                                unsigned int base_reg, unsigned int reg)
 {
-   unsigned int i;
-
    ra_add_reg_conflict(regs, reg, base_reg);
 
-   for (i = 0; i < regs->regs[base_reg].num_conflicts; i++) {
-      ra_add_reg_conflict(regs, reg, regs->regs[base_reg].conflict_list[i]);
+   util_dynarray_foreach(&regs->regs[base_reg].conflict_list, unsigned int,
+                         r2p) {
+      ra_add_reg_conflict(regs, reg, *r2p);
    }
 }
 
@@ -315,17 +300,15 @@ void
 ra_add_transitive_reg_pair_conflict(struct ra_regs *regs,
                                     unsigned int base_reg, unsigned int reg0, unsigned int reg1)
 {
-   unsigned int i;
-
    ra_add_reg_conflict(regs, reg0, base_reg);
    ra_add_reg_conflict(regs, reg1, base_reg);
 
-   for (i = 0; i < regs->regs[base_reg].num_conflicts; i++) {
-      unsigned int conflict = regs->regs[base_reg].conflict_list[i];
+   util_dynarray_foreach(&regs->regs[base_reg].conflict_list, unsigned int, i) {
+      unsigned int conflict = *i;
       if (conflict != reg1)
-         ra_add_reg_conflict(regs, reg0, regs->regs[base_reg].conflict_list[i]);
+         ra_add_reg_conflict(regs, reg0, conflict);
       if (conflict != reg0)
-         ra_add_reg_conflict(regs, reg1, regs->regs[base_reg].conflict_list[i]);
+         ra_add_reg_conflict(regs, reg1, conflict);
    }
 }
 
@@ -373,6 +356,8 @@ ra_class_add_reg(struct ra_regs *regs, unsigned int c, unsigned int r)
 {
    struct ra_class *class = regs->classes[c];
 
+   assert(r < regs->count);
+
    BITSET_SET(class->regs, r);
    class->p++;
 }
@@ -416,15 +401,12 @@ ra_set_finalize(struct ra_regs *regs, unsigned int **q_values)
             unsigned int rc;
             int max_conflicts = 0;
 
-            for (rc = 0; rc < regs->count; rc++) {
+            BITSET_FOREACH_SET(rc, regs->classes[c]->regs, regs->count) {
                int conflicts = 0;
-               unsigned int i;
 
-               if (!reg_belongs_to_class(rc, regs->classes[c]))
-                  continue;
-
-               for (i = 0; i < regs->regs[rc].num_conflicts; i++) {
-                  unsigned int rb = regs->regs[rc].conflict_list[i];
+               util_dynarray_foreach(&regs->regs[rc].conflict_list,
+                                     unsigned int, rbp) {
+                  unsigned int rb = *rbp;
                   if (reg_belongs_to_class(rb, regs->classes[b]))
                      conflicts++;
                }
@@ -436,9 +418,70 @@ ra_set_finalize(struct ra_regs *regs, unsigned int **q_values)
    }
 
    for (b = 0; b < regs->count; b++) {
-      ralloc_free(regs->regs[b].conflict_list);
-      regs->regs[b].conflict_list = NULL;
+      util_dynarray_fini(&regs->regs[b].conflict_list);
    }
+}
+
+void
+ra_set_serialize(const struct ra_regs *regs, struct blob *blob)
+{
+   blob_write_uint32(blob, regs->count);
+   blob_write_uint32(blob, regs->class_count);
+
+   for (unsigned int r = 0; r < regs->count; r++) {
+      struct ra_reg *reg = &regs->regs[r];
+      blob_write_bytes(blob, reg->conflicts, BITSET_WORDS(regs->count) *
+                                             sizeof(BITSET_WORD));
+      assert(util_dynarray_num_elements(&reg->conflict_list, unsigned int) == 0);
+   }
+
+   for (unsigned int c = 0; c < regs->class_count; c++) {
+      struct ra_class *class = regs->classes[c];
+      blob_write_bytes(blob, class->regs, BITSET_WORDS(regs->count) *
+                                          sizeof(BITSET_WORD));
+      blob_write_uint32(blob, class->p);
+      blob_write_bytes(blob, class->q, regs->class_count * sizeof(*class->q));
+   }
+
+   blob_write_uint32(blob, regs->round_robin);
+}
+
+struct ra_regs *
+ra_set_deserialize(void *mem_ctx, struct blob_reader *blob)
+{
+   unsigned int reg_count = blob_read_uint32(blob);
+   unsigned int class_count = blob_read_uint32(blob);
+
+   struct ra_regs *regs = ra_alloc_reg_set(mem_ctx, reg_count, false);
+   assert(regs->count == reg_count);
+
+   for (unsigned int r = 0; r < reg_count; r++) {
+      struct ra_reg *reg = &regs->regs[r];
+      blob_copy_bytes(blob, reg->conflicts, BITSET_WORDS(reg_count) *
+                                            sizeof(BITSET_WORD));
+   }
+
+   assert(regs->classes == NULL);
+   regs->classes = ralloc_array(regs->regs, struct ra_class *, class_count);
+   regs->class_count = class_count;
+
+   for (unsigned int c = 0; c < class_count; c++) {
+      struct ra_class *class = rzalloc(regs, struct ra_class);
+      regs->classes[c] = class;
+
+      class->regs = ralloc_array(class, BITSET_WORD, BITSET_WORDS(reg_count));
+      blob_copy_bytes(blob, class->regs, BITSET_WORDS(reg_count) *
+                                         sizeof(BITSET_WORD));
+
+      class->p = blob_read_uint32(blob);
+
+      class->q = ralloc_array(regs->classes[c], unsigned int, class_count);
+      blob_copy_bytes(blob, class->q, class_count * sizeof(*class->q));
+   }
+
+   regs->round_robin = blob_read_uint32(blob);
+
+   return regs;
 }
 
 static void
@@ -452,16 +495,7 @@ ra_add_node_adjacency(struct ra_graph *g, unsigned int n1, unsigned int n2)
    int n2_class = g->nodes[n2].class;
    g->nodes[n1].q_total += g->regs->classes[n1_class]->q[n2_class];
 
-   if (g->nodes[n1].adjacency_count >=
-       g->nodes[n1].adjacency_list_size) {
-      g->nodes[n1].adjacency_list_size *= 2;
-      g->nodes[n1].adjacency_list = reralloc(g, g->nodes[n1].adjacency_list,
-                                             unsigned int,
-                                             g->nodes[n1].adjacency_list_size);
-   }
-
-   g->nodes[n1].adjacency_list[g->nodes[n1].adjacency_count] = n2;
-   g->nodes[n1].adjacency_count++;
+   util_dynarray_append(&g->nodes[n1].adjacency_list, unsigned int, n2);
 }
 
 static void
@@ -475,18 +509,8 @@ ra_node_remove_adjacency(struct ra_graph *g, unsigned int n1, unsigned int n2)
    int n2_class = g->nodes[n2].class;
    g->nodes[n1].q_total -= g->regs->classes[n1_class]->q[n2_class];
 
-   unsigned int i;
-   for (i = 0; i < g->nodes[n1].adjacency_count; i++) {
-      if (g->nodes[n1].adjacency_list[i] == n2) {
-         memmove(&g->nodes[n1].adjacency_list[i],
-                 &g->nodes[n1].adjacency_list[i + 1],
-                 (g->nodes[n1].adjacency_count - i - 1) *
-                 sizeof(g->nodes[n1].adjacency_list[0]));
-         break;
-      }
-   }
-   assert(i < g->nodes[n1].adjacency_count);
-   g->nodes[n1].adjacency_count--;
+   util_dynarray_delete_unordered(&g->nodes[n1].adjacency_list, unsigned int,
+                                  n2);
 }
 
 static void
@@ -499,7 +523,7 @@ ra_realloc_interference_graph(struct ra_graph *g, unsigned int alloc)
     * easier to memset the top of the growing bitsets.
     */
    assert(g->alloc % BITSET_WORDBITS == 0);
-   alloc = ALIGN(alloc, BITSET_WORDBITS);
+   alloc = align64(alloc, BITSET_WORDBITS);
 
    g->nodes = reralloc(g, g->nodes, struct ra_node, alloc);
 
@@ -516,10 +540,7 @@ ra_realloc_interference_graph(struct ra_graph *g, unsigned int alloc)
    for (unsigned i = g->alloc; i < alloc; i++) {
       memset(&g->nodes[i], 0, sizeof(g->nodes[i]));
       g->nodes[i].adjacency = rzalloc_array(g, BITSET_WORD, bitset_count);
-      g->nodes[i].adjacency_list_size = 4;
-      g->nodes[i].adjacency_list =
-         ralloc_array(g, unsigned int, g->nodes[i].adjacency_list_size);
-      g->nodes[i].adjacency_count = 0;
+      util_dynarray_init(&g->nodes[i].adjacency_list, g);
       g->nodes[i].q_total = 0;
 
       g->nodes[i].forced_reg = NO_REG;
@@ -565,9 +586,7 @@ ra_resize_interference_graph(struct ra_graph *g, unsigned int count)
 }
 
 void ra_set_select_reg_callback(struct ra_graph *g,
-                                unsigned int (*callback)(struct ra_graph *g,
-                                                         BITSET_WORD *regs,
-                                                         void *data),
+                                ra_select_reg_callback callback,
                                 void *data)
 {
    g->select_reg_callback = callback;
@@ -613,12 +632,13 @@ ra_add_node_interference(struct ra_graph *g,
 void
 ra_reset_node_interference(struct ra_graph *g, unsigned int n)
 {
-   for (unsigned int i = 0; i < g->nodes[n].adjacency_count; i++)
-      ra_node_remove_adjacency(g, g->nodes[n].adjacency_list[i], n);
+   util_dynarray_foreach(&g->nodes[n].adjacency_list, unsigned int, n2p) {
+      ra_node_remove_adjacency(g, *n2p, n);
+   }
 
    memset(g->nodes[n].adjacency, 0,
           BITSET_WORDS(g->count) * sizeof(BITSET_WORD));
-   g->nodes[n].adjacency_count = 0;
+   util_dynarray_clear(&g->nodes[n].adjacency_list);
 }
 
 static void
@@ -647,13 +667,12 @@ update_pq_info(struct ra_graph *g, unsigned int n)
 static void
 add_node_to_stack(struct ra_graph *g, unsigned int n)
 {
-   unsigned int i;
    int n_class = g->nodes[n].class;
 
    assert(!BITSET_TEST(g->tmp.in_stack, n));
 
-   for (i = 0; i < g->nodes[n].adjacency_count; i++) {
-      unsigned int n2 = g->nodes[n].adjacency_list[i];
+   util_dynarray_foreach(&g->nodes[n].adjacency_list, unsigned int, n2p) {
+      unsigned int n2 = *n2p;
       unsigned int n2_class = g->nodes[n2].class;
 
       if (!BITSET_TEST(g->tmp.in_stack, n2) &&
@@ -786,10 +805,8 @@ ra_simplify(struct ra_graph *g)
 static bool
 ra_any_neighbors_conflict(struct ra_graph *g, unsigned int n, unsigned int r)
 {
-   unsigned int i;
-
-   for (i = 0; i < g->nodes[n].adjacency_count; i++) {
-      unsigned int n2 = g->nodes[n].adjacency_list[i];
+   util_dynarray_foreach(&g->nodes[n].adjacency_list, unsigned int, n2p) {
+      unsigned int n2 = *n2p;
 
       if (!BITSET_TEST(g->tmp.in_stack, n2) &&
           BITSET_TEST(g->regs->regs[r].conflicts, g->nodes[n2].reg)) {
@@ -817,8 +834,8 @@ ra_compute_available_regs(struct ra_graph *g, unsigned int n, BITSET_WORD *regs)
    /* Remove any regs that conflict with nodes that we're adjacent to and have
     * already colored.
     */
-   for (int i = 0; i < g->nodes[n].adjacency_count; i++) {
-      unsigned int n2 = g->nodes[n].adjacency_list[i];
+   util_dynarray_foreach(&g->nodes[n].adjacency_list, unsigned int, n2p) {
+      unsigned int n2 = *n2p;
       unsigned int r = g->nodes[n2].reg;
 
       if (!BITSET_TEST(g->tmp.in_stack, n2)) {
@@ -868,7 +885,8 @@ ra_select(struct ra_graph *g)
             return false;
          }
 
-         r = g->select_reg_callback(g, select_regs, g->select_reg_callback_data);
+         r = g->select_reg_callback(n, select_regs, g->select_reg_callback_data);
+         assert(r < g->regs->count);
       } else {
          /* Find the lowest-numbered reg which is not used by a member
           * of the graph adjacent to us.
@@ -946,7 +964,6 @@ ra_set_node_reg(struct ra_graph *g, unsigned int n, unsigned int reg)
 static float
 ra_get_spill_benefit(struct ra_graph *g, unsigned int n)
 {
-   unsigned int j;
    float benefit = 0;
    int n_class = g->nodes[n].class;
 
@@ -955,8 +972,8 @@ ra_get_spill_benefit(struct ra_graph *g, unsigned int n)
     * "count number of edges" approach of traditional graph coloring,
     * but takes classes into account.
     */
-   for (j = 0; j < g->nodes[n].adjacency_count; j++) {
-      unsigned int n2 = g->nodes[n].adjacency_list[j];
+   util_dynarray_foreach(&g->nodes[n].adjacency_list, unsigned int, n2p) {
+      unsigned int n2 = *n2p;
       unsigned int n2_class = g->nodes[n2].class;
       benefit += ((float)g->regs->classes[n_class]->q[n2_class] /
                   g->regs->classes[n_class]->p);

@@ -99,7 +99,7 @@ nv50_mt_choose_storage_type(struct nv50_miptree *mt, bool compressed)
    default:
       /* Most color formats don't work with compression. */
       compressed = false;
-      /* fallthrough */
+      FALLTHROUGH;
    case PIPE_FORMAT_R8G8B8A8_UNORM:
    case PIPE_FORMAT_R8G8B8A8_SRGB:
    case PIPE_FORMAT_R8G8B8X8_UNORM:
@@ -342,6 +342,7 @@ nv50_miptree_create(struct pipe_screen *pscreen,
    int ret;
    union nouveau_bo_config bo_config;
    uint32_t bo_flags;
+   unsigned pitch_align;
 
    if (!mt)
       return NULL;
@@ -370,10 +371,17 @@ nv50_miptree_create(struct pipe_screen *pscreen,
    } else
    if (bo_config.nv50.memtype != 0) {
       nv50_miptree_init_layout_tiled(mt);
-   } else
-   if (!nv50_miptree_init_layout_linear(mt, 64)) {
-      FREE(mt);
-      return NULL;
+   } else {
+      if (pt->usage & PIPE_BIND_CURSOR)
+         pitch_align = 1;
+      else if (pt->usage & PIPE_BIND_SCANOUT)
+         pitch_align = 256;
+      else
+         pitch_align = 64;
+      if (!nv50_miptree_init_layout_linear(mt, pitch_align)) {
+         FREE(mt);
+         return NULL;
+      }
    }
    bo_config.nv50.tile_mode = mt->level[0].tile_mode;
 

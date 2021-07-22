@@ -26,6 +26,9 @@
 
 struct zink_batch;
 struct zink_context;
+struct zink_fence;
+struct zink_query;
+struct zink_screen;
 
 void
 zink_suspend_queries(struct zink_context *ctx, struct zink_batch *batch);
@@ -33,4 +36,15 @@ zink_suspend_queries(struct zink_context *ctx, struct zink_batch *batch);
 void
 zink_resume_queries(struct zink_context *ctx, struct zink_batch *batch);
 
+void
+zink_prune_query(struct zink_screen *screen, struct zink_query *query);
+
+void
+zink_query_update_gs_states(struct zink_context *ctx);
+
+void
+zink_start_conditional_render(struct zink_context *ctx);
+
+void
+zink_stop_conditional_render(struct zink_context *ctx);
 #endif

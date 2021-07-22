@@ -51,7 +51,7 @@ const char *compute_shader_video_buffer =
       "DCL SV[0], THREAD_ID\n"
       "DCL SV[1], BLOCK_ID\n"
 
-      "DCL CONST[0..5]\n"
+      "DCL CONST[0..6]\n"
       "DCL SVIEW[0..2], RECT, FLOAT\n"
       "DCL SAMP[0..2]\n"
 
@@ -59,7 +59,7 @@ const char *compute_shader_video_buffer =
       "DCL TEMP[0..7]\n"
 
       "IMM[0] UINT32 { 8, 8, 1, 0}\n"
-      "IMM[1] FLT32 { 1.0, 2.0, 0.0, 0.0}\n"
+      "IMM[1] FLT32 { 1.0, 0.0, 0.0, 0.0}\n"
 
       "UMAD TEMP[0].xy, SV[1].xyyy, IMM[0].xyyy, SV[0].xyyy\n"
 
@@ -74,7 +74,7 @@ const char *compute_shader_video_buffer =
          /* Translate */
          "UADD TEMP[2].xy, TEMP[0].xyyy, -CONST[5].xyxy\n"
          "U2F TEMP[2].xy, TEMP[2].xyyy\n"
-         "DIV TEMP[3].xy, TEMP[2].xyyy, IMM[1].yyyy\n"
+         "MUL TEMP[3].xy, TEMP[2].xyyy, CONST[6].xyyy\n"
 
          /* Scale */
          "DIV TEMP[2].xy, TEMP[2].xyyy, CONST[3].zwww\n"
@@ -597,7 +597,7 @@ cs_launch(struct vl_compositor *c,
    image.shader_access = image.access = PIPE_IMAGE_ACCESS_READ_WRITE;
    image.format = c->fb_state.cbufs[0]->texture->format;
 
-   ctx->set_shader_images(c->pipe, PIPE_SHADER_COMPUTE, 0, 1, &image);
+   ctx->set_shader_images(c->pipe, PIPE_SHADER_COMPUTE, 0, 1, 0, &image);
 
    /* Bind compute shader */
    ctx->bind_compute_state(ctx, cs);
@@ -646,14 +646,15 @@ calc_drawn_area(struct vl_compositor_state *s,
 
 static bool
 set_viewport(struct vl_compositor_state *s,
-             struct cs_viewport         *drawn)
+             struct cs_viewport         *drawn,
+             struct pipe_sampler_view **samplers)
 {
    struct pipe_transfer *buf_transfer;
 
    assert(s && drawn);
 
    void *ptr = pipe_buffer_map(s->pipe, s->shader_params,
-                               PIPE_TRANSFER_READ | PIPE_TRANSFER_WRITE,
+                               PIPE_MAP_READ | PIPE_MAP_WRITE,
                                &buf_transfer);
 
    if (!ptr)
@@ -674,7 +675,19 @@ set_viewport(struct vl_compositor_state *s,
 
    ptr_float = (float *)ptr_int;
    *ptr_float++ = drawn->sampler0_w;
-   *ptr_float = drawn->sampler0_h;
+   *ptr_float++ = drawn->sampler0_h;
+
+   /* compute_shader_video_buffer uses pixel coordinates based on the
+    * Y sampler dimensions. If U/V are using separate planes and are
+    * subsampled, we need to scale the coordinates */
+   if (samplers[1]) {
+      float h_ratio = samplers[1]->texture->width0 /
+                     (float) samplers[0]->texture->width0;
+      *ptr_float++ = h_ratio;
+      float v_ratio = samplers[1]->texture->height0 /
+                     (float) samplers[0]->texture->height0;
+      *ptr_float++ = v_ratio;
+   }
    pipe_buffer_unmap(s->pipe, buf_transfer);
 
    return true;
@@ -698,25 +711,30 @@ draw_layers(struct vl_compositor       *c,
 
          drawn.area = calc_drawn_area(s, layer);
          drawn.scale_x = layer->viewport.scale[0] /
-                  (float)layer->sampler_views[0]->texture->width0;
-         drawn.scale_y = drawn.scale_x;
+                  (float)layer->sampler_views[0]->texture->width0 * 
+                  (layer->src.br.x - layer->src.tl.x);
+         drawn.scale_y = layer->viewport.scale[1] /
+                  ((float)layer->sampler_views[0]->texture->height0 * 
+                   (s->interlaced ? 2.0 : 1.0) * 
+                   (layer->src.br.y - layer->src.tl.y));
+
          drawn.translate_x = (int)layer->viewport.translate[0];
          drawn.translate_y = (int)layer->viewport.translate[1];
          drawn.sampler0_w = (float)layer->sampler_views[0]->texture->width0;
          drawn.sampler0_h = (float)layer->sampler_views[0]->texture->height0;
-         set_viewport(s, &drawn);
+         set_viewport(s, &drawn, samplers);
 
          c->pipe->bind_sampler_states(c->pipe, PIPE_SHADER_COMPUTE, 0,
                         num_sampler_views, layer->samplers);
          c->pipe->set_sampler_views(c->pipe, PIPE_SHADER_COMPUTE, 0,
-                        num_sampler_views, samplers);
+                        num_sampler_views, 0, samplers);
 
          cs_launch(c, layer->cs, &(drawn.area));
 
          /* Unbind. */
-         c->pipe->set_shader_images(c->pipe, PIPE_SHADER_COMPUTE, 0, 1, NULL);
-         c->pipe->set_constant_buffer(c->pipe, PIPE_SHADER_COMPUTE, 0, NULL);
-         c->pipe->set_sampler_views(c->pipe, PIPE_SHADER_FRAGMENT, 0,
+         c->pipe->set_shader_images(c->pipe, PIPE_SHADER_COMPUTE, 0, 0, 1, NULL);
+         c->pipe->set_constant_buffer(c->pipe, PIPE_SHADER_COMPUTE, 0, false, NULL);
+         c->pipe->set_sampler_views(c->pipe, PIPE_SHADER_FRAGMENT, 0, 0,
                         num_sampler_views, NULL);
          c->pipe->bind_compute_state(c->pipe, NULL);
          c->pipe->bind_sampler_states(c->pipe, PIPE_SHADER_COMPUTE, 0,

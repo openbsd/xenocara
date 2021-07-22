@@ -22,21 +22,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <arpa/inet.h>
 #include <assert.h>
-#include <ctype.h>
 #include <err.h>
-#include <fcntl.h>
-#include <ftw.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 #include <time.h>
-#include <unistd.h>
 #include <curses.h>
 #include <libconfig.h>
 #include <inttypes.h>
@@ -45,6 +38,9 @@
 #include "drm/freedreno_drmif.h"
 #include "drm/freedreno_ringbuffer.h"
 
+#include "util/os_file.h"
+
+#include "freedreno_dt.h"
 #include "freedreno_perfcntr.h"
 
 #define MAX_CNTR_PER_GROUP 24
@@ -79,10 +75,6 @@ struct counter_group {
 };
 
 static struct {
-	char *dtnode;
-	int address_cells, size_cells;
-	uint64_t base;
-	uint32_t size;
 	void *io;
 	uint32_t chipid;
 	uint32_t min_freq;
@@ -105,37 +97,6 @@ static void restore_counter_groups(void);
  * helpers
  */
 
-#define CHUNKSIZE 32
-
-static void *
-readfile(const char *path, int *sz)
-{
-	char *buf = NULL;
-	int fd, ret, n = 0;
-
-	fd = open(path, O_RDONLY);
-	if (fd < 0)
-		return NULL;
-
-	while (1) {
-		buf = realloc(buf, n + CHUNKSIZE);
-		ret = read(fd, buf + n, CHUNKSIZE);
-		if (ret < 0) {
-			free(buf);
-			*sz = 0;
-			close(fd);
-			return NULL;
-		} else if (ret < CHUNKSIZE) {
-			n += ret;
-			*sz = n;
-			close(fd);
-			return buf;
-		} else {
-			n += CHUNKSIZE;
-		}
-	}
-}
-
 static uint32_t
 gettime_us(void)
 {
@@ -154,183 +115,12 @@ delta(uint32_t a, uint32_t b)
 		return b - a;
 }
 
-/*
- * TODO de-duplicate OUT_RING() and friends
- */
-
-#define CP_WAIT_FOR_IDLE 38
-#define CP_TYPE0_PKT 0x00000000
-#define CP_TYPE3_PKT 0xc0000000
-#define CP_TYPE4_PKT 0x40000000
-#define CP_TYPE7_PKT 0x70000000
-
-static inline void
-OUT_RING(struct fd_ringbuffer *ring, uint32_t data)
-{
-	*(ring->cur++) = data;
-}
-
-static inline void
-OUT_PKT0(struct fd_ringbuffer *ring, uint16_t regindx, uint16_t cnt)
-{
-	OUT_RING(ring, CP_TYPE0_PKT | ((cnt-1) << 16) | (regindx & 0x7FFF));
-}
-
-static inline void
-OUT_PKT3(struct fd_ringbuffer *ring, uint8_t opcode, uint16_t cnt)
-{
-	OUT_RING(ring, CP_TYPE3_PKT | ((cnt-1) << 16) | ((opcode & 0xFF) << 8));
-}
-
-
-/*
- * Starting with a5xx, pkt4/pkt7 are used instead of pkt0/pkt3
- */
-
-static inline unsigned
-_odd_parity_bit(unsigned val)
-{
-	/* See: http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-	 * note that we want odd parity so 0x6996 is inverted.
-	 */
-	val ^= val >> 16;
-	val ^= val >> 8;
-	val ^= val >> 4;
-	val &= 0xf;
-	return (~0x6996 >> val) & 1;
-}
-
-static inline void
-OUT_PKT4(struct fd_ringbuffer *ring, uint16_t regindx, uint16_t cnt)
-{
-	OUT_RING(ring, CP_TYPE4_PKT | cnt |
-			(_odd_parity_bit(cnt) << 7) |
-			((regindx & 0x3ffff) << 8) |
-			((_odd_parity_bit(regindx) << 27)));
-}
-
-static inline void
-OUT_PKT7(struct fd_ringbuffer *ring, uint8_t opcode, uint16_t cnt)
-{
-	OUT_RING(ring, CP_TYPE7_PKT | cnt |
-			(_odd_parity_bit(cnt) << 15) |
-			((opcode & 0x7f) << 16) |
-			((_odd_parity_bit(opcode) << 23)));
-}
-
-/*
- * code to find stuff in /proc/device-tree:
- *
- * NOTE: if we sampled the counters from the cmdstream, we could avoid needing
- * /dev/mem and /proc/device-tree crawling.  OTOH when the GPU is heavily loaded
- * we would be competing with whatever else is using the GPU.
- */
-
-static void *
-readdt(const char *node)
-{
-	char *path;
-	void *buf;
-	int sz;
-
-	asprintf(&path, "%s/%s", dev.dtnode, node);
-	buf = readfile(path, &sz);
-	free(path);
-
-	return buf;
-}
-
-static int
-find_freqs_fn(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
-{
-	const char *fname = fpath + ftwbuf->base;
-	int sz;
-
-	if (strcmp(fname, "qcom,gpu-freq") == 0) {
-		uint32_t *buf = readfile(fpath, &sz);
-		uint32_t freq = ntohl(buf[0]);
-		free(buf);
-		dev.max_freq = MAX2(dev.max_freq, freq);
-		dev.min_freq = MIN2(dev.min_freq, freq);
-	}
-
-	return 0;
-}
-
-static void
-find_freqs(void)
-{
-	char *path;
-	int ret;
-
-	dev.min_freq = ~0;
-	dev.max_freq = 0;
-
-	asprintf(&path, "%s/%s", dev.dtnode, "qcom,gpu-pwrlevels");
-
-	ret = nftw(path, find_freqs_fn, 64, 0);
-	if (ret < 0)
-		err(1, "could not find power levels");
-
-	free(path);
-}
-
-static int
-find_device_fn(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
-{
-	const char *fname = fpath + ftwbuf->base;
-	int sz;
-
-	if (strcmp(fname, "compatible") == 0) {
-		char *str = readfile(fpath, &sz);
-		if ((strcmp(str, "qcom,adreno-3xx") == 0) ||
-				(strcmp(str, "qcom,kgsl-3d0") == 0) ||
-				(strstr(str, "amd,imageon") == str) ||
-				(strstr(str, "qcom,adreno") == str)) {
-			int dlen = strlen(fpath) - strlen("/compatible");
-			dev.dtnode = malloc(dlen + 1);
-			memcpy(dev.dtnode, fpath, dlen);
-			printf("found dt node: %s\n", dev.dtnode);
-
-			char buf[dlen + sizeof("/../#address-cells") + 1];
-			int sz, *val;
-
-			sprintf(buf, "%s/../#address-cells", dev.dtnode);
-			val = readfile(buf, &sz);
-			dev.address_cells = ntohl(*val);
-			free(val);
-
-			sprintf(buf, "%s/../#size-cells", dev.dtnode);
-			val = readfile(buf, &sz);
-			dev.size_cells = ntohl(*val);
-			free(val);
-
-			printf("#address-cells=%d, #size-cells=%d\n",
-					dev.address_cells, dev.size_cells);
-		}
-		free(str);
-	}
-	if (dev.dtnode) {
-		/* we found it! */
-		return 1;
-	}
-	return 0;
-}
-
 static void
 find_device(void)
 {
 	int ret, fd;
-	uint32_t *buf, *b;
 
-	ret = nftw("/proc/device-tree/", find_device_fn, 64, 0);
-	if (ret < 0)
-		err(1, "could not find adreno gpu");
-
-	if (!dev.dtnode)
-		errx(1, "could not find qcom,adreno-3xx node");
-
-	fd = drmOpen("msm", NULL);
+	fd = drmOpenWithType("msm", NULL, DRM_NODE_RENDER);
 	if (fd < 0)
 		err(1, "could not open drm device");
 
@@ -352,37 +142,14 @@ find_device(void)
 		((chipid) >> 0) & 0xff
 	printf("device: a%"CHIP_FMT"\n", CHIP_ARGS(dev.chipid));
 
-	b = buf = readdt("reg");
-
-	if (dev.address_cells == 2) {
-		uint32_t u[2] = { ntohl(buf[0]), ntohl(buf[1]) };
-		dev.base = (((uint64_t)u[0]) << 32) | u[1];
-		buf += 2;
-	} else {
-		dev.base = ntohl(buf[0]);
-		buf += 1;
-	}
-
-	if (dev.size_cells == 2) {
-		uint32_t u[2] = { ntohl(buf[0]), ntohl(buf[1]) };
-		dev.size = (((uint64_t)u[0]) << 32) | u[1];
-		buf += 2;
-	} else {
-		dev.size = ntohl(buf[0]);
-		buf += 1;
-	}
-
-	free(b);
-
-	printf("i/o region at %08"PRIu64" (size: %x)\n", dev.base, dev.size);
-
 	/* try MAX_FREQ first as that will work regardless of old dt
 	 * dt bindings vs upstream bindings:
 	 */
 	ret = fd_pipe_get_param(dev.pipe, FD_MAX_FREQ, &val);
 	if (ret) {
 		printf("falling back to parsing DT bindings for freq\n");
-		find_freqs();
+		if (!fd_dt_find_freqs(&dev.min_freq, &dev.max_freq))
+			err(1, "could not find GPU freqs");
 	} else {
 		dev.min_freq = 0;
 		dev.max_freq = val;
@@ -390,13 +157,8 @@ find_device(void)
 
 	printf("min_freq=%u, max_freq=%u\n", dev.min_freq, dev.max_freq);
 
-	fd = open("/dev/mem", O_RDWR | O_SYNC);
-	if (fd < 0)
-		err(1, "could not open /dev/mem");
-
-	dev.io = mmap(0, dev.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, dev.base);
+	dev.io = fd_dt_find_io();
 	if (!dev.io) {
-		close(fd);
 		err(1, "could not map device");
 	}
 }
@@ -640,7 +402,7 @@ static void
 redraw_counter_value_raw(WINDOW *win, float val)
 {
 	char *str;
-	asprintf(&str, "%'.2f", val);
+	(void) asprintf(&str, "%'.2f", val);
 	waddstr(win, str);
 	whline(win, ' ', w - getcurx(win));
 	free(str);
@@ -770,7 +532,7 @@ counter_dialog(void)
 {
 	WINDOW *dialog;
 	struct counter_group *group;
-	int cnt, current = 0, scroll;
+	int cnt = 0, current = 0, scroll;
 
 	/* figure out dialog size: */
 	int dh = h/2;
@@ -1033,7 +795,7 @@ config_restore(void)
 	config_setting_t *root = config_root_setting(&cfg);
 
 	/* per device settings: */
-	asprintf(&str, "a%dxx", dev.chipid >> 24);
+	(void) asprintf(&str, "a%dxx", dev.chipid >> 24);
 	setting = config_setting_get_member(root, str);
 	if (!setting)
 		setting = config_setting_add(root, str, CONFIG_TYPE_GROUP);
@@ -1084,6 +846,8 @@ main(int argc, char **argv)
 	}
 
 	dev.groups = calloc(dev.ngroups, sizeof(struct counter_group));
+
+	setlocale(LC_NUMERIC, "en_US.UTF-8");
 
 	setup_counter_groups(groups);
 	restore_counter_groups();

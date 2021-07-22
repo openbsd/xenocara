@@ -23,7 +23,7 @@
  */
 
 #include "util/ralloc.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 #include "util/bitscan.h"
 
 #include "ppir.h"
@@ -130,7 +130,7 @@ static void ppir_codegen_encode_texld(ppir_node *node, void *code)
    f->lod_bias_en = ldtex->lod_bias_en;
    f->explicit_lod = ldtex->explicit_lod;
    if (ldtex->lod_bias_en)
-      ppir_target_get_src_reg_index(&ldtex->src[1]);
+      f->lod_bias = ppir_target_get_src_reg_index(&ldtex->src[1]);
 
    switch (ldtex->sampler_dim) {
    case GLSL_SAMPLER_DIM_2D:
@@ -201,7 +201,6 @@ static void ppir_codegen_encode_vec_mul(ppir_node *node, void *code)
       f->op = shift_to_op(alu->shift);
       break;
    case ppir_op_mov:
-   case ppir_op_store_color:
       f->op = ppir_codegen_vec4_mul_op_mov;
       break;
    case ppir_op_max:
@@ -277,9 +276,6 @@ static void ppir_codegen_encode_scl_mul(ppir_node *node, void *code)
    case ppir_op_mov:
       f->op = ppir_codegen_float_mul_op_mov;
       break;
-   case ppir_op_sel_cond:
-      f->op = ppir_codegen_float_mul_op_mov;
-      break;
    case ppir_op_max:
       f->op = ppir_codegen_float_mul_op_max;
       break;
@@ -344,7 +340,6 @@ static void ppir_codegen_encode_vec_add(ppir_node *node, void *code)
       f->op = ppir_codegen_vec4_acc_op_add;
       break;
    case ppir_op_mov:
-   case ppir_op_store_color:
       f->op = ppir_codegen_vec4_acc_op_mov;
       break;
    case ppir_op_sum3:
@@ -573,7 +568,7 @@ static void ppir_codegen_encode_store_temp(ppir_node *node, void *code)
 static void ppir_codegen_encode_const(ppir_const *constant, uint16_t *code)
 {
    for (int i = 0; i < constant->num; i++)
-      code[i] = util_float_to_half(constant->value[i].f);
+      code[i] = _mesa_float_to_half(constant->value[i].f);
 }
 
 static void ppir_codegen_encode_discard(ppir_node *node, void *code)
@@ -814,8 +809,11 @@ bool ppir_codegen_prog(ppir_compiler *comp)
       }
    }
 
+   if (comp->prog->shader)
+      ralloc_free(comp->prog->shader);
+
    comp->prog->shader = prog;
-   comp->prog->shader_size = size * sizeof(uint32_t);
+   comp->prog->state.shader_size = size * sizeof(uint32_t);
 
    if (lima_debug & LIMA_DEBUG_PP)
       ppir_codegen_print_prog(comp);

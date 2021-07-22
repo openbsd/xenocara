@@ -80,6 +80,25 @@
    ((x)[BITSET_BITWORD(b)] &= ~BITSET_RANGE(b, e)) : \
    (assert (!"BITSET_CLEAR_RANGE: bit range crosses word boundary"), 0))
 
+static inline unsigned
+__bitset_prefix_sum(const BITSET_WORD *x, unsigned b, unsigned n)
+{
+   unsigned prefix = 0;
+
+   for (unsigned i = 0; i < n; i++) {
+      if ((i + 1) * BITSET_WORDBITS <= b) {
+         prefix += util_bitcount(x[i]);
+      } else {
+         prefix += util_bitcount(x[i] & BITFIELD_MASK(b - i * BITSET_WORDBITS));
+         break;
+      }
+   }
+   return prefix;
+}
+
+#define BITSET_PREFIX_SUM(x, b) \
+   __bitset_prefix_sum(x, b, ARRAY_SIZE(x))
+
 /* Get first bit set in a bitset.
  */
 static inline int
@@ -95,7 +114,22 @@ __bitset_ffs(const BITSET_WORD *x, int n)
    return 0;
 }
 
+/* Get the last bit set in a bitset.
+ */
+static inline int
+__bitset_last_bit(const BITSET_WORD *x, int n)
+{
+   for (int i = n - 1; i >= 0; i--) {
+      if (x[i])
+         return util_last_bit(x[i]) + BITSET_WORDBITS * i;
+   }
+
+   return 0;
+}
+
 #define BITSET_FFS(x) __bitset_ffs(x, ARRAY_SIZE(x))
+#define BITSET_LAST_BIT(x) __bitset_last_bit(x, ARRAY_SIZE(x))
+#define BITSET_LAST_BIT_SIZED(x, size) __bitset_last_bit(x, size)
 
 static inline unsigned
 __bitset_next_set(unsigned i, BITSET_WORD *tmp,
@@ -137,9 +171,75 @@ __bitset_next_set(unsigned i, BITSET_WORD *tmp,
  * @param __size number of bits in the set to consider
  */
 #define BITSET_FOREACH_SET(__i, __set, __size) \
-   for (BITSET_WORD __tmp = *(__set), *__foo = &__tmp; __foo != NULL; __foo = NULL) \
+   for (BITSET_WORD __tmp = (__size) == 0 ? 0 : *(__set), *__foo = &__tmp; __foo != NULL; __foo = NULL) \
       for (__i = 0; \
            (__i = __bitset_next_set(__i, &__tmp, __set, __size)) < __size;)
+
+static inline void
+__bitset_next_range(unsigned *start, unsigned *end, const BITSET_WORD *set,
+                    unsigned size)
+{
+   /* To find the next start, start searching from end. In the first iteration
+    * it will be at 0, in every subsequent iteration it will be at the first
+    * 0-bit after the range.
+    */
+   unsigned word = BITSET_BITWORD(*end);
+   if (word >= BITSET_WORDS(size)) {
+      *start = *end = size;
+      return;
+   }
+   BITSET_WORD tmp = set[word] & ~(BITSET_BIT(*end) - 1);
+   while (!tmp) {
+      word++;
+      if (word >= BITSET_WORDS(size)) {
+         *start = *end = size;
+         return;
+      }
+      tmp = set[word];
+   }
+
+   *start = word * BITSET_WORDBITS + ffs(tmp) - 1;
+
+   /* Now do the opposite to find end. Here we can start at start + 1, because
+    * we know that the bit at start is 1 and we're searching for the first
+    * 0-bit.
+    */
+   word = BITSET_BITWORD(*start + 1);
+   if (word >= BITSET_WORDS(size)) {
+      *end = size;
+      return;
+   }
+   tmp = set[word] | (BITSET_BIT(*start + 1) - 1);
+   while (~tmp == 0) {
+      word++;
+      if (word >= BITSET_WORDS(size)) {
+         *end = size;
+         return;
+      }
+      tmp = set[word];
+   }
+
+   /* Cap "end" at "size" in case there are extra bits past "size" set in the
+    * word. This is only necessary for "end" because we terminate the loop if
+    * "start" goes past "size".
+    */
+   *end = MIN2(word * BITSET_WORDBITS + ffs(~tmp) - 1, size);
+}
+
+/**
+ * Iterates over each contiguous range of set bits in a set
+ *
+ * @param __start the first 1 bit of the current range
+ * @param __end   the bit after the last 1 bit of the current range
+ * @param __set   the bitset to iterate (will not be modified)
+ * @param __size  number of bits in the set to consider
+ */
+#define BITSET_FOREACH_RANGE(__start, __end, __set, __size) \
+   for (__start = 0, __end = 0, \
+        __bitset_next_range(&__start, &__end, __set, __size); \
+        __start < __size; \
+        __bitset_next_range(&__start, &__end, __set, __size))
+
 
 #ifdef __cplusplus
 

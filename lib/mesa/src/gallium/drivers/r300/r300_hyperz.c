@@ -42,7 +42,7 @@ static enum r300_hiz_func r300_get_hiz_func(struct r300_context *r300)
 {
     struct r300_dsa_state *dsa = r300->dsa_state.state;
 
-    switch (dsa->dsa.depth.func) {
+    switch (dsa->dsa.depth_func) {
     case PIPE_FUNC_NEVER:
     case PIPE_FUNC_EQUAL:
     case PIPE_FUNC_NOTEQUAL:
@@ -63,7 +63,7 @@ static enum r300_hiz_func r300_get_hiz_func(struct r300_context *r300)
 static unsigned r300_get_sc_hz_max(struct r300_context *r300)
 {
     struct r300_dsa_state *dsa = r300->dsa_state.state;
-    unsigned func = dsa->dsa.depth.func;
+    unsigned func = dsa->dsa.depth_func;
 
     return func >= PIPE_FUNC_GREATER ? R300_SC_HYPERZ_MAX : R300_SC_HYPERZ_MIN;
 }
@@ -71,7 +71,7 @@ static unsigned r300_get_sc_hz_max(struct r300_context *r300)
 static boolean r300_is_hiz_func_valid(struct r300_context *r300)
 {
     struct r300_dsa_state *dsa = r300->dsa_state.state;
-    unsigned func = dsa->dsa.depth.func;
+    unsigned func = dsa->dsa.depth_func;
 
     if (r300->hiz_func == HIZ_FUNC_NONE)
         return TRUE;
@@ -115,13 +115,13 @@ static boolean r300_hiz_allowed(struct r300_context *r300)
         r300_dsa_stencil_op_not_keep(&dsa->dsa.stencil[1]))
         return FALSE;
 
-    if (dsa->dsa.depth.enabled) {
+    if (dsa->dsa.depth_enabled) {
         /* if depth func is EQUAL pre-r500 */
-        if (dsa->dsa.depth.func == PIPE_FUNC_EQUAL && !r300screen->caps.is_r500)
+        if (dsa->dsa.depth_func == PIPE_FUNC_EQUAL && !r300screen->caps.is_r500)
             return FALSE;
 
         /* if depth func is NOTEQUAL */
-        if (dsa->dsa.depth.func == PIPE_FUNC_NOTEQUAL)
+        if (dsa->dsa.depth_func == PIPE_FUNC_NOTEQUAL)
             return FALSE;
     }
     return TRUE;
@@ -169,10 +169,10 @@ static void r300_update_hyperz(struct r300_context* r300)
     }
 
     /* Do not set anything if depth and stencil tests are off. */
-    if (!dsa->dsa.depth.enabled &&
+    if (!dsa->dsa.depth_enabled &&
         !dsa->dsa.stencil[0].enabled &&
         !dsa->dsa.stencil[1].enabled) {
-        assert(!dsa->dsa.depth.writemask);
+        assert(!dsa->dsa.depth_writemask);
         return;
     }
 
@@ -189,12 +189,12 @@ static void r300_update_hyperz(struct r300_context* r300)
         if (!r300_hiz_allowed(r300)) {
             /* If writemask is disabled, the HiZ memory will not be changed,
              * so we can keep its content for later. */
-            if (dsa->dsa.depth.writemask) {
+            if (dsa->dsa.depth_writemask) {
                 r300->hiz_in_use = FALSE;
             }
             return;
         }
-        DBG(r300, DBG_HYPERZ, "r300: Z-func: %i\n", dsa->dsa.depth.func);
+        DBG(r300, DBG_HYPERZ, "r300: Z-func: %i\n", dsa->dsa.depth_func);
 
         /* Set the HiZ function if needed. */
         if (r300->hiz_func == HIZ_FUNC_NONE) {
@@ -218,39 +218,13 @@ static void r300_update_hyperz(struct r300_context* r300)
 /* The ZTOP state                                                            */
 /*****************************************************************************/
 
-static boolean r300_dsa_writes_stencil(
-        struct pipe_stencil_state *s)
-{
-    return s->enabled && s->writemask &&
-           (s->fail_op  != PIPE_STENCIL_OP_KEEP ||
-            s->zfail_op != PIPE_STENCIL_OP_KEEP ||
-            s->zpass_op != PIPE_STENCIL_OP_KEEP);
-}
-
-static boolean r300_dsa_writes_depth_stencil(
-        struct pipe_depth_stencil_alpha_state *dsa)
-{
-    /* We are interested only in the cases when a depth or stencil value
-     * can be changed. */
-
-    if (dsa->depth.enabled && dsa->depth.writemask &&
-        dsa->depth.func != PIPE_FUNC_NEVER)
-        return TRUE;
-
-    if (r300_dsa_writes_stencil(&dsa->stencil[0]) ||
-        r300_dsa_writes_stencil(&dsa->stencil[1]))
-        return TRUE;
-
-    return FALSE;
-}
-
 static boolean r300_dsa_alpha_test_enabled(
         struct pipe_depth_stencil_alpha_state *dsa)
 {
     /* We are interested only in the cases when alpha testing can kill
      * a fragment. */
 
-    return dsa->alpha.enabled && dsa->alpha.func != PIPE_FUNC_ALWAYS;
+    return dsa->alpha_enabled && dsa->alpha_func != PIPE_FUNC_ALWAYS;
 }
 
 static void r300_update_ztop(struct r300_context* r300)
@@ -287,7 +261,7 @@ static void r300_update_ztop(struct r300_context* r300)
      */
 
     /* ZS writes */
-    if (r300_dsa_writes_depth_stencil(r300->dsa_state.state) &&
+    if (util_writes_depth_stencil(r300->dsa_state.state) &&
            (r300_dsa_alpha_test_enabled(r300->dsa_state.state) ||  /* (1) */
             r300_fs(r300)->shader->info.uses_kill)) {              /* (2) */
         ztop_state->z_buffer_top = R300_ZTOP_DISABLE;

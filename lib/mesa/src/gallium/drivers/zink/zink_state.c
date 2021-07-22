@@ -26,6 +26,8 @@
 #include "zink_context.h"
 #include "zink_screen.h"
 
+#include "compiler/shader_enums.h"
+#include "util/u_dual_blend.h"
 #include "util/u_memory.h"
 
 #include <math.h>
@@ -48,7 +50,6 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
    int num_bindings = 0;
    for (i = 0; i < num_elements; ++i) {
       const struct pipe_vertex_element *elem = elements + i;
-      assert(!elem->instance_divisor);
 
       int binding = elem->vertex_buffer_index;
       if (buffer_map[binding] < 0) {
@@ -59,10 +60,14 @@ zink_create_vertex_elements_state(struct pipe_context *pctx,
 
 
       ves->bindings[binding].binding = binding;
-      ves->bindings[binding].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+      ves->bindings[binding].inputRate = elem->instance_divisor ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+
+      assert(!elem->instance_divisor || zink_screen(pctx->screen)->info.have_EXT_vertex_attribute_divisor);
+      ves->divisor[binding] = elem->instance_divisor;
+      assert(elem->instance_divisor <= screen->info.vdiv_props.maxVertexAttribDivisor);
 
       ves->hw_state.attribs[i].binding = binding;
-      ves->hw_state.attribs[i].location = i; // TODO: unsure
+      ves->hw_state.attribs[i].location = i;
       ves->hw_state.attribs[i].format = zink_get_format(screen,
                                                         elem->src_format);
       assert(ves->hw_state.attribs[i].format != VK_FORMAT_UNDEFINED);
@@ -81,12 +86,19 @@ zink_bind_vertex_elements_state(struct pipe_context *pctx,
    struct zink_context *ctx = zink_context(pctx);
    struct zink_gfx_pipeline_state *state = &ctx->gfx_pipeline_state;
    ctx->element_state = cso;
+   state->dirty = true;
+   state->divisors_present = 0;
    if (cso) {
       state->element_state = &ctx->element_state->hw_state;
       struct zink_vertex_elements_state *ves = cso;
       for (int i = 0; i < state->element_state->num_bindings; ++i) {
          state->bindings[i].binding = ves->bindings[i].binding;
          state->bindings[i].inputRate = ves->bindings[i].inputRate;
+         if (ves->divisor[i]) {
+            state->divisors[state->divisors_present].divisor = ves->divisor[i];
+            state->divisors[state->divisors_present].binding = state->bindings[i].binding;
+            state->divisors_present++;
+         }
       }
    } else
      state->element_state = NULL;
@@ -96,6 +108,7 @@ static void
 zink_delete_vertex_elements_state(struct pipe_context *pctx,
                                   void *ves)
 {
+   FREE(ves);
 }
 
 static VkBlendFactor
@@ -190,6 +203,21 @@ logic_op(enum pipe_logicop func)
    unreachable("unexpected logicop function");
 }
 
+/* from iris */
+static enum pipe_blendfactor
+fix_blendfactor(enum pipe_blendfactor f, bool alpha_to_one)
+{
+   if (alpha_to_one) {
+      if (f == PIPE_BLENDFACTOR_SRC1_ALPHA)
+         return PIPE_BLENDFACTOR_ONE;
+
+      if (f == PIPE_BLENDFACTOR_INV_SRC1_ALPHA)
+         return PIPE_BLENDFACTOR_ZERO;
+   }
+
+   return f;
+}
+
 static void *
 zink_create_blend_state(struct pipe_context *pctx,
                         const struct pipe_blend_state *blend_state)
@@ -215,7 +243,7 @@ zink_create_blend_state(struct pipe_context *pctx,
 
    cso->need_blend_constants = false;
 
-   for (int i = 0; i < PIPE_MAX_COLOR_BUFS; ++i) {
+   for (int i = 0; i < blend_state->max_rt + 1; ++i) {
       const struct pipe_rt_blend_state *rt = blend_state->rt;
       if (blend_state->independent_blend_enable)
          rt = blend_state->rt + i;
@@ -224,11 +252,11 @@ zink_create_blend_state(struct pipe_context *pctx,
 
       if (rt->blend_enable) {
          att.blendEnable = VK_TRUE;
-         att.srcColorBlendFactor = blend_factor(rt->rgb_src_factor);
-         att.dstColorBlendFactor = blend_factor(rt->rgb_dst_factor);
+         att.srcColorBlendFactor = blend_factor(fix_blendfactor(rt->rgb_src_factor, cso->alpha_to_one));
+         att.dstColorBlendFactor = blend_factor(fix_blendfactor(rt->rgb_dst_factor, cso->alpha_to_one));
          att.colorBlendOp = blend_op(rt->rgb_func);
-         att.srcAlphaBlendFactor = blend_factor(rt->alpha_src_factor);
-         att.dstAlphaBlendFactor = blend_factor(rt->alpha_dst_factor);
+         att.srcAlphaBlendFactor = blend_factor(fix_blendfactor(rt->alpha_src_factor, cso->alpha_to_one));
+         att.dstAlphaBlendFactor = blend_factor(fix_blendfactor(rt->alpha_dst_factor, cso->alpha_to_one));
          att.alphaBlendOp = blend_op(rt->alpha_func);
 
          if (need_blend_constants(rt->rgb_src_factor) ||
@@ -249,6 +277,7 @@ zink_create_blend_state(struct pipe_context *pctx,
 
       cso->attachments[i] = att;
    }
+   cso->dual_src_blend = util_blend_state_is_dual(blend_state, 0);
 
    return cso;
 }
@@ -256,7 +285,12 @@ zink_create_blend_state(struct pipe_context *pctx,
 static void
 zink_bind_blend_state(struct pipe_context *pctx, void *cso)
 {
-   zink_context(pctx)->gfx_pipeline_state.blend_state = cso;
+   struct zink_gfx_pipeline_state* state = &zink_context(pctx)->gfx_pipeline_state;
+
+   if (state->blend_state != cso) {
+      state->blend_state = cso;
+      state->dirty = true;
+   }
 }
 
 static void
@@ -290,8 +324,8 @@ stencil_op(enum pipe_stencil_op op)
    case PIPE_STENCIL_OP_REPLACE: return VK_STENCIL_OP_REPLACE;
    case PIPE_STENCIL_OP_INCR: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
    case PIPE_STENCIL_OP_DECR: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-   case PIPE_STENCIL_OP_INCR_WRAP: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-   case PIPE_STENCIL_OP_DECR_WRAP: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+   case PIPE_STENCIL_OP_INCR_WRAP: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+   case PIPE_STENCIL_OP_DECR_WRAP: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
    case PIPE_STENCIL_OP_INVERT: return VK_STENCIL_OP_INVERT;
    }
    unreachable("unexpected op");
@@ -319,28 +353,30 @@ zink_create_depth_stencil_alpha_state(struct pipe_context *pctx,
    if (!cso)
       return NULL;
 
-   if (depth_stencil_alpha->depth.enabled) {
-      cso->depth_test = VK_TRUE;
-      cso->depth_compare_op = compare_op(depth_stencil_alpha->depth.func);
+   cso->base = *depth_stencil_alpha;
+
+   if (depth_stencil_alpha->depth_enabled) {
+      cso->hw_state.depth_test = VK_TRUE;
+      cso->hw_state.depth_compare_op = compare_op(depth_stencil_alpha->depth_func);
    }
 
-   if (depth_stencil_alpha->depth.bounds_test) {
-      cso->depth_bounds_test = VK_TRUE;
-      cso->min_depth_bounds = depth_stencil_alpha->depth.bounds_min;
-      cso->max_depth_bounds = depth_stencil_alpha->depth.bounds_max;
+   if (depth_stencil_alpha->depth_bounds_test) {
+      cso->hw_state.depth_bounds_test = VK_TRUE;
+      cso->hw_state.min_depth_bounds = depth_stencil_alpha->depth_bounds_min;
+      cso->hw_state.max_depth_bounds = depth_stencil_alpha->depth_bounds_max;
    }
 
    if (depth_stencil_alpha->stencil[0].enabled) {
-      cso->stencil_test = VK_TRUE;
-      cso->stencil_front = stencil_op_state(depth_stencil_alpha->stencil);
+      cso->hw_state.stencil_test = VK_TRUE;
+      cso->hw_state.stencil_front = stencil_op_state(depth_stencil_alpha->stencil);
    }
 
-   if (depth_stencil_alpha->stencil[0].enabled)
-      cso->stencil_back = stencil_op_state(depth_stencil_alpha->stencil + 1);
+   if (depth_stencil_alpha->stencil[1].enabled)
+      cso->hw_state.stencil_back = stencil_op_state(depth_stencil_alpha->stencil + 1);
    else
-      cso->stencil_back = cso->stencil_front;
+      cso->hw_state.stencil_back = cso->hw_state.stencil_front;
 
-   cso->depth_write = depth_stencil_alpha->depth.writemask;
+   cso->hw_state.depth_write = depth_stencil_alpha->depth_writemask;
 
    return cso;
 }
@@ -348,7 +384,17 @@ zink_create_depth_stencil_alpha_state(struct pipe_context *pctx,
 static void
 zink_bind_depth_stencil_alpha_state(struct pipe_context *pctx, void *cso)
 {
-   zink_context(pctx)->gfx_pipeline_state.depth_stencil_alpha_state = cso;
+   struct zink_context *ctx = zink_context(pctx);
+
+   ctx->dsa_state = cso;
+
+   if (cso) {
+      struct zink_gfx_pipeline_state *state = &ctx->gfx_pipeline_state;
+      if (state->depth_stencil_alpha_state != &ctx->dsa_state->hw_state) {
+         state->depth_stencil_alpha_state = &ctx->dsa_state->hw_state;
+         state->dirty = true;
+      }
+   }
 }
 
 static void
@@ -391,6 +437,7 @@ zink_create_rasterizer_state(struct pipe_context *pctx,
    assert(rs_state->depth_clip_far == rs_state->depth_clip_near);
    state->hw_state.depth_clamp = rs_state->depth_clip_near == 0;
    state->hw_state.rasterizer_discard = rs_state->rasterizer_discard;
+   state->hw_state.force_persample_interp = rs_state->force_persample_interp;
 
    assert(rs_state->fill_front <= PIPE_POLYGON_MODE_POINT);
    if (rs_state->fill_back != rs_state->fill_front)
@@ -410,8 +457,8 @@ zink_create_rasterizer_state(struct pipe_context *pctx,
    state->offset_scale = rs_state->offset_scale;
 
    state->line_width = line_width(rs_state->line_width,
-                                  screen->props.limits.lineWidthGranularity,
-                                  screen->props.limits.lineWidthRange);
+                                  screen->info.props.limits.lineWidthGranularity,
+                                  screen->info.props.limits.lineWidthRange);
 
    return state;
 }
@@ -420,11 +467,25 @@ static void
 zink_bind_rasterizer_state(struct pipe_context *pctx, void *cso)
 {
    struct zink_context *ctx = zink_context(pctx);
+   bool clip_halfz = ctx->rast_state ? ctx->rast_state->base.clip_halfz : false;
+   bool point_quad_rasterization = ctx->rast_state ? ctx->rast_state->base.point_quad_rasterization : false;
    ctx->rast_state = cso;
 
    if (ctx->rast_state) {
-      ctx->gfx_pipeline_state.rast_state = &ctx->rast_state->hw_state;
-      ctx->line_width = ctx->rast_state->line_width;
+      if (ctx->gfx_pipeline_state.rast_state != &ctx->rast_state->hw_state) {
+         ctx->gfx_pipeline_state.rast_state = &ctx->rast_state->hw_state;
+         ctx->gfx_pipeline_state.dirty = true;
+      }
+
+      if (clip_halfz != ctx->rast_state->base.clip_halfz)
+         ctx->last_vertex_stage_dirty = true;
+
+      if (ctx->line_width != ctx->rast_state->line_width) {
+         ctx->line_width = ctx->rast_state->line_width;
+         ctx->gfx_pipeline_state.dirty = true;
+      }
+      if (ctx->rast_state->base.point_quad_rasterization != point_quad_rasterization)
+         ctx->dirty_shader_stages |= BITFIELD_BIT(PIPE_SHADER_FRAGMENT);
    }
 }
 

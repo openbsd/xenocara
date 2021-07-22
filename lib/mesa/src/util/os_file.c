@@ -4,20 +4,25 @@
  */
 
 #include "os_file.h"
+#include "detect_os.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
-
-#if defined(WIN32)
+#if DETECT_OS_WINDOWS
 #include <io.h>
 #define open _open
 #define fdopen _fdopen
 #define O_CREAT _O_CREAT
 #define O_EXCL _O_EXCL
 #define O_WRONLY _O_WRONLY
+#else
+#include <unistd.h>
+#ifndef F_DUPFD_CLOEXEC
+#define F_DUPFD_CLOEXEC 1030
+#endif
 #endif
 
 
@@ -31,15 +36,55 @@ os_file_create_unique(const char *filename, int filemode)
 }
 
 
-#if defined(__linux__)
+#if DETECT_OS_WINDOWS
+int
+os_dupfd_cloexec(int fd)
+{
+   /*
+    * On Windows child processes don't inherit handles by default:
+    * https://devblogs.microsoft.com/oldnewthing/20111216-00/?p=8873
+    */
+   return dup(fd);
+}
+#else
+int
+os_dupfd_cloexec(int fd)
+{
+   int minfd = 3;
+   int newfd = fcntl(fd, F_DUPFD_CLOEXEC, minfd);
+
+   if (newfd >= 0)
+      return newfd;
+
+   if (errno != EINVAL)
+      return -1;
+
+   newfd = fcntl(fd, F_DUPFD, minfd);
+
+   if (newfd < 0)
+      return -1;
+
+   long flags = fcntl(newfd, F_GETFD);
+   if (flags == -1) {
+      close(newfd);
+      return -1;
+   }
+
+   if (fcntl(newfd, F_SETFD, flags | FD_CLOEXEC) == -1) {
+      close(newfd);
+      return -1;
+   }
+
+   return newfd;
+}
+#endif
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
-#include <unistd.h>
 
-/* copied from <linux/kcmp.h> */
-#define KCMP_FILE 0
+#if DETECT_OS_WINDOWS
+typedef ptrdiff_t ssize_t;
+#endif
 
 static ssize_t
 readN(int fd, char *buf, size_t len)
@@ -66,8 +111,13 @@ readN(int fd, char *buf, size_t len)
    return total ? (ssize_t)total : err;
 }
 
+#ifndef O_BINARY
+/* Unix makes no distinction between text and binary files. */
+#define O_BINARY 0
+#endif
+
 char *
-os_read_file(const char *filename)
+os_read_file(const char *filename, size_t *size)
 {
    /* Note that this also serves as a slight margin to avoid a 2x grow when
     * the file is just a few bytes larger when we read it than when we
@@ -76,7 +126,7 @@ os_read_file(const char *filename)
     */
    size_t len = 64;
 
-   int fd = open(filename, O_RDONLY);
+   int fd = open(filename, O_RDONLY | O_BINARY);
    if (fd == -1) {
       /* errno set by open() */
       return NULL;
@@ -130,8 +180,19 @@ os_read_file(const char *filename)
 
    buf[offset] = '\0';
 
+   if (size)
+      *size = offset;
+
    return buf;
 }
+
+#if DETECT_OS_LINUX
+
+#include <sys/syscall.h>
+#include <unistd.h>
+
+/* copied from <linux/kcmp.h> */
+#define KCMP_FILE 0
 
 int
 os_same_file_description(int fd1, int fd2)
@@ -146,15 +207,6 @@ os_same_file_description(int fd1, int fd2)
 }
 
 #else
-
-#include "u_debug.h"
-
-char *
-os_read_file(const char *filename)
-{
-   errno = -ENOSYS;
-   return NULL;
-}
 
 int
 os_same_file_description(int fd1, int fd2)

@@ -41,7 +41,7 @@ lower_load_uniform_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
 
       nir_intrinsic_set_base(chan_intr, nir_intrinsic_base(intr) * 4 + i);
       nir_intrinsic_set_range(chan_intr, nir_intrinsic_range(intr) * 4);
-      nir_intrinsic_set_type(chan_intr, nir_intrinsic_type(intr));
+      nir_intrinsic_set_dest_type(chan_intr, nir_intrinsic_dest_type(intr));
 
       chan_intr->src[0] =
          nir_src_for_ssa(nir_imul_imm(b, intr->src[0].ssa, 4));
@@ -52,8 +52,7 @@ lower_load_uniform_to_scalar(nir_builder *b, nir_intrinsic_instr *intr)
    }
 
    nir_ssa_def_rewrite_uses(&intr->dest.ssa,
-                            nir_src_for_ssa(nir_vec(b, loads,
-                                                    intr->num_components)));
+                            nir_vec(b, loads, intr->num_components));
    nir_instr_remove(&intr->instr);
 }
 

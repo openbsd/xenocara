@@ -234,12 +234,12 @@ namespace SwrJit
     /// @param pVecPassthru - SIMD wide vector of values to load when lane is inactive
     Value* Builder::GATHER_PTR(Value* pVecSrcPtr, Value* pVecMask, Value* pVecPassthru)
     {
-        return MASKED_GATHER(pVecSrcPtr, 4, pVecMask, pVecPassthru);
+        return MASKED_GATHER(pVecSrcPtr, AlignType(4), pVecMask, pVecPassthru);
     }
 
     void Builder::SCATTER_PTR(Value* pVecDstPtr, Value* pVecSrc, Value* pVecMask)
     {
-        MASKED_SCATTER(pVecSrc, pVecDstPtr, 4, pVecMask);
+        MASKED_SCATTER(pVecSrc, pVecDstPtr, AlignType(4), pVecMask);
     }
 
     void Builder::Gather4(const SWR_FORMAT format,
@@ -427,8 +427,8 @@ namespace SwrJit
                                       bool                   bPackedOutput)
     {
         // cast types
-        Type* vGatherTy = VectorType::get(IntegerType::getInt32Ty(JM()->mContext), mVWidth);
-        Type* v32x8Ty   = VectorType::get(mInt8Ty, mVWidth * 4); // vwidth is units of 32 bits
+        Type* vGatherTy = getVectorType(IntegerType::getInt32Ty(JM()->mContext), mVWidth);
+        Type* v32x8Ty   = getVectorType(mInt8Ty, mVWidth * 4); // vwidth is units of 32 bits
 
         // input could either be float or int vector; do shuffle work in int
         vGatherInput[0] = BITCAST(vGatherInput[0], mSimdInt32Ty);
@@ -436,7 +436,7 @@ namespace SwrJit
 
         if (bPackedOutput)
         {
-            Type* v128bitTy = VectorType::get(IntegerType::getIntNTy(JM()->mContext, 128),
+            Type* v128bitTy = getVectorType(IntegerType::getIntNTy(JM()->mContext, 128),
                                               mVWidth / 4); // vwidth is units of 32 bits
 
             // shuffle mask
@@ -532,12 +532,12 @@ namespace SwrJit
                                      bool                   bPackedOutput)
     {
         // cast types
-        Type* vGatherTy = VectorType::get(IntegerType::getInt32Ty(JM()->mContext), mVWidth);
-        Type* v32x8Ty   = VectorType::get(mInt8Ty, mVWidth * 4); // vwidth is units of 32 bits
+        Type* vGatherTy = getVectorType(IntegerType::getInt32Ty(JM()->mContext), mVWidth);
+        Type* v32x8Ty   = getVectorType(mInt8Ty, mVWidth * 4); // vwidth is units of 32 bits
 
         if (bPackedOutput)
         {
-            Type* v128Ty = VectorType::get(IntegerType::getIntNTy(JM()->mContext, 128),
+            Type* v128Ty = getVectorType(IntegerType::getIntNTy(JM()->mContext, 128),
                                            mVWidth / 4); // vwidth is units of 32 bits
                                                          // shuffle mask
             Value* vConstMask = C<char>({0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15,
@@ -632,6 +632,7 @@ namespace SwrJit
                     break;
                 }
 
+                assert(vConstMask && "Invalid info.numComps value");
                 vGatherOutput[swizzleIndex] =
                     BITCAST(PSHUFB(BITCAST(vGatherInput, v32x8Ty), vConstMask), vGatherTy);
                 // after pshufb for x channel
@@ -651,11 +652,11 @@ namespace SwrJit
         Value* pDst, Value* vSrc, Value* vOffsets, Value* vMask, MEM_CLIENT usage)
     {
         AssertMemoryUsageParams(pDst, usage);
-//        if (vSrc->getType() != mSimdFP32Ty)
-//        {
-//            vSrc = BITCAST(vSrc, mSimdFP32Ty);
-//        }                                               
+#if LLVM_VERSION_MAJOR >= 11
+        SWR_ASSERT(cast<VectorType>(vSrc->getType())->getElementType()->isFloatTy());
+#else
         SWR_ASSERT(vSrc->getType()->getVectorElementType()->isFloatTy());
+#endif
         VSCATTERPS(pDst, vMask, vOffsets, vSrc, C(1));
         return;
 

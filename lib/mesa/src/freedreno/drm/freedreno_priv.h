@@ -35,13 +35,14 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <pthread.h>
 #include <stdio.h>
 
 #include <xf86drm.h>
 
 #include "util/hash_table.h"
 #include "util/list.h"
+#include "util/log.h"
+#include "util/simple_mtx.h"
 #include "util/u_debug.h"
 #include "util/u_atomic.h"
 #include "util/u_math.h"
@@ -50,7 +51,7 @@
 #include "freedreno_drmif.h"
 #include "freedreno_ringbuffer.h"
 
-#define atomic_dec_and_test(x) (__sync_add_and_fetch (x, -1) == 0)
+extern simple_mtx_t table_lock;
 
 struct fd_device_funcs {
 	int (*bo_new_handle)(struct fd_device *dev, uint32_t size,
@@ -138,16 +139,6 @@ struct fd_submit {
 	const struct fd_submit_funcs *funcs;
 };
 
-struct fd_ringbuffer_funcs {
-	void (*grow)(struct fd_ringbuffer *ring, uint32_t size);
-	void (*emit_reloc)(struct fd_ringbuffer *ring,
-			const struct fd_reloc *reloc);
-	uint32_t (*emit_reloc_ring)(struct fd_ringbuffer *ring,
-			struct fd_ringbuffer *target, uint32_t cmd_idx);
-	uint32_t (*cmd_count)(struct fd_ringbuffer *ring);
-	void (*destroy)(struct fd_ringbuffer *ring);
-};
-
 struct fd_bo_funcs {
 	int (*offset)(struct fd_bo *bo, uint64_t *offset);
 	int (*cpu_prep)(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op);
@@ -164,6 +155,7 @@ struct fd_bo {
 	uint32_t handle;
 	uint32_t name;
 	int32_t refcnt;
+	uint32_t flags; /* flags like FD_RELOC_DUMP to use for relocs to this BO */
 	uint64_t iova;
 	void *map;
 	const struct fd_bo_funcs *funcs;
@@ -178,23 +170,24 @@ struct fd_bo {
 	time_t free_time;        /* time when added to bucket-list */
 };
 
-struct fd_bo *fd_bo_new_ring(struct fd_device *dev,
-		uint32_t size, uint32_t flags);
+struct fd_bo *fd_bo_new_ring(struct fd_device *dev, uint32_t size);
 
 #define enable_debug 0  /* TODO make dynamic */
 
+bool fd_dbg(void);
+
 #define INFO_MSG(fmt, ...) \
-		do { debug_printf("[I] "fmt " (%s:%d)\n", \
-				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
+		do { if (fd_dbg()) mesa_logi("%s:%d: "fmt, \
+				__FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 #define DEBUG_MSG(fmt, ...) \
-		do if (enable_debug) { debug_printf("[D] "fmt " (%s:%d)\n", \
-				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
+		do if (enable_debug) { mesa_logd("%s:%d: "fmt, \
+				__FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 #define WARN_MSG(fmt, ...) \
-		do { debug_printf("[W] "fmt " (%s:%d)\n", \
-				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
+		do { mesa_logw("%s:%d: "fmt, \
+				__FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 #define ERROR_MSG(fmt, ...) \
-		do { debug_printf("[E] " fmt " (%s:%d)\n", \
-				##__VA_ARGS__, __FUNCTION__, __LINE__); } while (0)
+		do { mesa_loge("%s:%d: " fmt, \
+				__FUNCTION__, __LINE__, ##__VA_ARGS__); } while (0)
 
 #define U642VOID(x) ((void *)(unsigned long)(x))
 #define VOID2U64(x) ((uint64_t)(unsigned long)(x))

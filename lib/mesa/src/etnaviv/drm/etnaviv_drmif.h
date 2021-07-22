@@ -58,6 +58,7 @@ enum etna_param_id {
 	ETNA_GPU_FEATURES_5                = 0x8,
 	ETNA_GPU_FEATURES_6                = 0x9,
 	ETNA_GPU_FEATURES_7                = 0xa,
+	ETNA_GPU_FEATURES_8                = 0xb,
 
 	ETNA_GPU_STREAM_COUNT              = 0x10,
 	ETNA_GPU_REGISTER_MAX              = 0x11,
@@ -109,7 +110,6 @@ int etna_gpu_get_param(struct etna_gpu *gpu, enum etna_param_id param,
 
 struct etna_pipe *etna_pipe_new(struct etna_gpu *gpu, enum etna_pipe_id id);
 void etna_pipe_del(struct etna_pipe *pipe);
-int etna_pipe_wait(struct etna_pipe *pipe, uint32_t timestamp, uint32_t ms);
 int etna_pipe_wait_ns(struct etna_pipe *pipe, uint32_t timestamp, uint64_t ns);
 
 

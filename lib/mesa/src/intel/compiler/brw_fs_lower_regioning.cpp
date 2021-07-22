@@ -140,7 +140,7 @@ namespace {
        * used to pack components Y and W of a vector at offset 16B of a SIMD
        * register. The problem doesn't occur if the stride of the source is 0.
        */
-      if (devinfo->gen == 8 &&
+      if (devinfo->ver == 8 &&
           inst->opcode == BRW_OPCODE_MAD &&
           inst->src[i].type == BRW_REGISTER_TYPE_HF &&
           reg_offset(inst->src[i]) % REG_SIZE > 0 &&
@@ -215,7 +215,7 @@ namespace {
           * integer at codegen time due to hardware limitations of 64-bit
           * types.
           */
-         return ((devinfo->gen == 7 && !devinfo->is_haswell) ||
+         return ((devinfo->ver == 7 && !devinfo->is_haswell) ||
                  devinfo->is_cherryview || gen_device_info_is_9lp(devinfo)) &&
                 type_sz(inst->src[0].type) > 4 &&
                 inst->dst.type != inst->src[0].type;
@@ -256,6 +256,12 @@ namespace brw {
    lower_src_modifiers(fs_visitor *v, bblock_t *block, fs_inst *inst, unsigned i)
    {
       assert(inst->components_read(i) == 1);
+      assert(v->devinfo->has_integer_dword_mul ||
+             inst->opcode != BRW_OPCODE_MUL ||
+             brw_reg_type_is_floating_point(get_exec_type(inst)) ||
+             MIN2(type_sz(inst->src[0].type), type_sz(inst->src[1].type)) >= 4 ||
+             type_sz(inst->src[i].type) == get_exec_type_size(inst));
+
       const fs_builder ibld(v, block, inst);
       const fs_reg tmp = ibld.vgrf(get_exec_type(inst));
 
@@ -454,7 +460,7 @@ fs_visitor::lower_regioning()
       progress |= lower_instruction(this, block, inst);
 
    if (progress)
-      invalidate_live_intervals();
+      invalidate_analysis(DEPENDENCY_INSTRUCTIONS | DEPENDENCY_VARIABLES);
 
    return progress;
 }

@@ -75,6 +75,7 @@ REAL_FUNCTION_POINTER(opendir);
 REAL_FUNCTION_POINTER(readdir);
 REAL_FUNCTION_POINTER(readdir64);
 REAL_FUNCTION_POINTER(readlink);
+REAL_FUNCTION_POINTER(realpath);
 REAL_FUNCTION_POINTER(__xstat);
 REAL_FUNCTION_POINTER(__xstat64);
 REAL_FUNCTION_POINTER(__fxstat);
@@ -84,6 +85,8 @@ REAL_FUNCTION_POINTER(__fxstat64);
 static char *render_node_path;
 /* renderD* */
 static char *render_node_dirent_name;
+/* /sys/dev/char/major:minor/device */
+static char *device_path;
 /* /sys/dev/char/major:minor/device/subsystem */
 static char *subsystem_path;
 int render_node_minor = -1;
@@ -94,20 +97,34 @@ struct file_override {
 };
 static struct file_override file_overrides[10];
 static int file_overrides_count;
+extern bool drm_shim_driver_prefers_first_render_node;
 
-/* Come up with a filename for a render node that doesn't actually exist on
- * the system.
+#define nfasprintf(...)                         \
+   {                                            \
+      UNUSED int __ret = asprintf(__VA_ARGS__); \
+      assert(__ret >= 0);                       \
+   }
+#define nfvasprintf(...)                         \
+   {                                             \
+      UNUSED int __ret = vasprintf(__VA_ARGS__); \
+      assert(__ret >= 0);                        \
+   }
+
+/* Pick the minor and filename for our shimmed render node.  This can be
+ * either a new one that didn't exist on the system, or if the driver wants,
+ * it can replace the first render node.
  */
 static void
 get_dri_render_node_minor(void)
 {
    for (int i = 0; i < 10; i++) {
-      int minor = 128 + i;
-      asprintf(&render_node_dirent_name, "renderD%d", minor);
-      asprintf(&render_node_path, "/dev/dri/%s",
-               render_node_dirent_name);
+      UNUSED int minor = 128 + i;
+      nfasprintf(&render_node_dirent_name, "renderD%d", minor);
+      nfasprintf(&render_node_path, "/dev/dri/%s",
+                 render_node_dirent_name);
       struct stat st;
-      if (stat(render_node_path, &st) == -1) {
+      if (drm_shim_driver_prefers_first_render_node ||
+          stat(render_node_path, &st) == -1) {
 
          render_node_minor = minor;
          return;
@@ -137,7 +154,7 @@ drm_shim_override_file(const char *contents, const char *path_format, ...)
    char *path;
    va_list ap;
    va_start(ap, path_format);
-   vasprintf(&path, path_format, ap);
+   nfvasprintf(&path, path_format, ap);
    va_end(ap);
 
    struct file_override *override = &file_overrides[file_overrides_count++];
@@ -187,6 +204,7 @@ init_shim(void)
    GET_FUNCTION_POINTER(readdir);
    GET_FUNCTION_POINTER(readdir64);
    GET_FUNCTION_POINTER(readlink);
+   GET_FUNCTION_POINTER(realpath);
    GET_FUNCTION_POINTER(__xstat);
    GET_FUNCTION_POINTER(__xstat64);
    GET_FUNCTION_POINTER(__fxstat);
@@ -199,9 +217,13 @@ init_shim(void)
               render_node_path);
    }
 
-   asprintf(&subsystem_path,
-            "/sys/dev/char/%d:%d/device/subsystem",
-            DRM_MAJOR, render_node_minor);
+   nfasprintf(&device_path,
+              "/sys/dev/char/%d:%d/device",
+              DRM_MAJOR, render_node_minor);
+
+   nfasprintf(&subsystem_path,
+              "/sys/dev/char/%d:%d/device/subsystem",
+              DRM_MAJOR, render_node_minor);
 
    drm_shim_device_init();
 
@@ -265,8 +287,9 @@ PUBLIC int __xstat(int ver, const char *path, struct stat *st)
     * there.
     */
    char *sys_dev_drm_dir;
-   asprintf(&sys_dev_drm_dir, "/sys/dev/char/%d:%d/device/drm",
-            DRM_MAJOR, render_node_minor);
+   nfasprintf(&sys_dev_drm_dir,
+              "/sys/dev/char/%d:%d/device/drm",
+              DRM_MAJOR, render_node_minor);
    if (strcmp(path, sys_dev_drm_dir) == 0) {
       free(sys_dev_drm_dir);
       return 0;
@@ -298,8 +321,9 @@ PUBLIC int __xstat64(int ver, const char *path, struct stat64 *st)
     * there.
     */
    char *sys_dev_drm_dir;
-   asprintf(&sys_dev_drm_dir, "/sys/dev/char/%d:%d/device/drm",
-            DRM_MAJOR, render_node_minor);
+   nfasprintf(&sys_dev_drm_dir,
+              "/sys/dev/char/%d:%d/device/drm",
+              DRM_MAJOR, render_node_minor);
    if (strcmp(path, sys_dev_drm_dir) == 0) {
       free(sys_dev_drm_dir);
       return 0;
@@ -452,10 +476,42 @@ readlink(const char *path, char *buf, size_t size)
 
    if (strcmp(path, subsystem_path) != 0)
       return real_readlink(path, buf, size);
-   strncpy(buf, "/platform", size);
-   buf[size - 1] = 0;
+
+   static const struct {
+      const char *name;
+      int bus_type;
+   } bus_types[] = {
+      { "/pci", DRM_BUS_PCI },
+      { "/usb", DRM_BUS_USB },
+      { "/platform", DRM_BUS_PLATFORM },
+      { "/spi", DRM_BUS_PLATFORM },
+      { "/host1x", DRM_BUS_HOST1X },
+   };
+
+   for (uint32_t i = 0; i < ARRAY_SIZE(bus_types); i++) {
+      if (bus_types[i].bus_type != shim_device.bus_type)
+         continue;
+
+      strncpy(buf, bus_types[i].name, size);
+      buf[size - 1] = 0;
+      break;
+   }
 
    return strlen(buf) + 1;
+}
+
+/* Handles libdrm's realpath to figure out what kind of device we have. */
+PUBLIC char *
+realpath(const char *path, char *resolved_path)
+{
+   init_shim();
+
+   if (strcmp(path, device_path) != 0)
+      return real_realpath(path, resolved_path);
+
+   strcpy(resolved_path, path);
+
+   return resolved_path;
 }
 
 /* Main entrypoint to DRM drivers: the ioctl syscall.  We send all ioctls on

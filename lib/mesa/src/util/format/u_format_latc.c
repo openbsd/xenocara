@@ -30,7 +30,7 @@
 #include "util/u_math.h"
 
 void
-util_format_latc1_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc1_unorm_fetch_rgba_8unorm(uint8_t *restrict dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
    /* Fix warnings here: */
    (void) util_format_unsigned_encode_rgtc_ubyte;
@@ -43,20 +43,20 @@ util_format_latc1_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsi
 }
 
 void
-util_format_latc1_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc1_unorm_unpack_rgba_8unorm(uint8_t *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc1_unorm_unpack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc1_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row,
+util_format_latc1_unorm_pack_rgba_8unorm(uint8_t *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row,
 					 unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc1_unorm_pack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc1_unorm_unpack_rgba_float(void *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y, i, j;
    int block_size = 8;
@@ -66,7 +66,7 @@ util_format_latc1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 4) {
          for(j = 0; j < 4; ++j) {
             for(i = 0; i < 4; ++i) {
-               float *dst = dst_row + (y + j)*dst_stride/sizeof(*dst_row) + (x + i)*4;
+               float *dst = (float *)((uint8_t *)dst_row + (y + j)*dst_stride + (x + i)*16);
                uint8_t tmp_r;
                util_format_unsigned_fetch_texel_rgtc(0, src, i, j, &tmp_r, 1);
                dst[0] =
@@ -82,14 +82,15 @@ util_format_latc1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
 }
 
 void
-util_format_latc1_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc1_unorm_pack_rgba_float(uint8_t *restrict dst_row, unsigned dst_stride, const float *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc1_unorm_pack_rgba_float(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc1_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc1_unorm_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
+   float *dst = in_dst;
    uint8_t tmp_r;
 
    util_format_unsigned_fetch_texel_rgtc(0, src, i, j, &tmp_r, 1);
@@ -100,36 +101,36 @@ util_format_latc1_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigne
 }
 
 void
-util_format_latc1_snorm_fetch_rgba_8unorm(UNUSED uint8_t *dst, UNUSED const uint8_t *src,
+util_format_latc1_snorm_fetch_rgba_8unorm(UNUSED uint8_t *restrict dst, UNUSED const uint8_t *restrict src,
                                           UNUSED unsigned i, UNUSED unsigned j)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc1_snorm_unpack_rgba_8unorm(UNUSED uint8_t *dst_row, UNUSED unsigned dst_stride,
-                                           UNUSED const uint8_t *src_row, UNUSED unsigned src_stride,
+util_format_latc1_snorm_unpack_rgba_8unorm(UNUSED uint8_t *restrict dst_row, UNUSED unsigned dst_stride,
+                                           UNUSED const uint8_t *restrict src_row, UNUSED unsigned src_stride,
                                            UNUSED unsigned width, UNUSED unsigned height)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc1_snorm_pack_rgba_8unorm(UNUSED uint8_t *dst_row, UNUSED unsigned dst_stride,
-                                         UNUSED const uint8_t *src_row, UNUSED unsigned src_stride,
+util_format_latc1_snorm_pack_rgba_8unorm(UNUSED uint8_t *restrict dst_row, UNUSED unsigned dst_stride,
+                                         UNUSED const uint8_t *restrict src_row, UNUSED unsigned src_stride,
                                          UNUSED unsigned width, UNUSED unsigned height)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc1_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc1_snorm_pack_rgba_float(uint8_t *restrict dst_row, unsigned dst_stride, const float *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc1_snorm_pack_rgba_float(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc1_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc1_snorm_unpack_rgba_float(void *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y, i, j;
    int block_size = 8;
@@ -139,7 +140,7 @@ util_format_latc1_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 4) {
          for(j = 0; j < 4; ++j) {
             for(i = 0; i < 4; ++i) {
-               float *dst = dst_row + (y + j)*dst_stride/sizeof(*dst_row) + (x + i)*4;
+               float *dst = (float *)((uint8_t *)dst_row + (y + j)*dst_stride + (x + i)*16);
                int8_t tmp_r;
                util_format_signed_fetch_texel_rgtc(0, src, i, j, &tmp_r, 1);
                dst[0] =
@@ -155,8 +156,9 @@ util_format_latc1_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
 }
 
 void
-util_format_latc1_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc1_snorm_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
+   float *dst = in_dst;
    int8_t tmp_r;
 
    util_format_signed_fetch_texel_rgtc(0, (int8_t *)src, i, j, &tmp_r, 1);
@@ -168,7 +170,7 @@ util_format_latc1_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigne
 
 
 void
-util_format_latc2_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc2_unorm_fetch_rgba_8unorm(uint8_t *restrict dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
    util_format_unsigned_fetch_texel_rgtc(0, src, i, j, dst, 2);
    dst[1] = dst[0];
@@ -177,25 +179,25 @@ util_format_latc2_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsi
 }
 
 void
-util_format_latc2_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_unorm_unpack_rgba_8unorm(uint8_t *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc2_unorm_unpack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_unorm_pack_rgba_8unorm(uint8_t *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rgtc2_unorm_pack_rgba_8unorm(dst_row, dst_stride, src_row, src_stride, width, height);
 }
 
 void
-util_format_latc2_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_unorm_pack_rgba_float(uint8_t *restrict dst_row, unsigned dst_stride, const float *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rxtc2_unorm_pack_rgba_float(dst_row, dst_stride, src_row, src_stride, width, height, 3);
 }
 
 void
-util_format_latc2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_unorm_unpack_rgba_float(void *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y, i, j;
    int block_size = 16;
@@ -205,7 +207,7 @@ util_format_latc2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 4) {
          for(j = 0; j < 4; ++j) {
             for(i = 0; i < 4; ++i) {
-               float *dst = dst_row + (y + j)*dst_stride/sizeof(*dst_row) + (x + i)*4;
+               float *dst = (float *)((uint8_t *)dst_row + (y + j)*dst_stride + (x + i)*16);
                uint8_t tmp_r, tmp_g;
                util_format_unsigned_fetch_texel_rgtc(0, src, i, j, &tmp_r, 2);
                util_format_unsigned_fetch_texel_rgtc(0, src + 8, i, j, &tmp_g, 2);
@@ -222,8 +224,9 @@ util_format_latc2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
 }
 
 void
-util_format_latc2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc2_unorm_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
+   float *dst = in_dst;
    uint8_t tmp_r, tmp_g;
 
    util_format_unsigned_fetch_texel_rgtc(0, src, i, j, &tmp_r, 2);
@@ -236,30 +239,30 @@ util_format_latc2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigne
 
 
 void
-util_format_latc2_snorm_fetch_rgba_8unorm(UNUSED uint8_t *dst, UNUSED const uint8_t *src,
+util_format_latc2_snorm_fetch_rgba_8unorm(UNUSED uint8_t *restrict dst, UNUSED const uint8_t *restrict src,
                                           UNUSED unsigned i, UNUSED unsigned j)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc2_snorm_unpack_rgba_8unorm(UNUSED uint8_t *dst_row, UNUSED unsigned dst_stride,
-                                           UNUSED const uint8_t *src_row, UNUSED unsigned src_stride,
+util_format_latc2_snorm_unpack_rgba_8unorm(UNUSED uint8_t *restrict dst_row, UNUSED unsigned dst_stride,
+                                           UNUSED const uint8_t *restrict src_row, UNUSED unsigned src_stride,
                                            UNUSED unsigned width, UNUSED unsigned height)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc2_snorm_pack_rgba_8unorm(UNUSED uint8_t *dst_row, UNUSED unsigned dst_stride,
-                                         UNUSED const uint8_t *src_row, UNUSED unsigned src_stride,
+util_format_latc2_snorm_pack_rgba_8unorm(UNUSED uint8_t *restrict dst_row, UNUSED unsigned dst_stride,
+                                         UNUSED const uint8_t *restrict src_row, UNUSED unsigned src_stride,
                                          UNUSED unsigned width, UNUSED unsigned height)
 {
    fprintf(stderr,"%s\n", __func__);
 }
 
 void
-util_format_latc2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_snorm_unpack_rgba_float(void *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    unsigned x, y, i, j;
    int block_size = 16;
@@ -269,7 +272,7 @@ util_format_latc2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 4) {
          for(j = 0; j < 4; ++j) {
             for(i = 0; i < 4; ++i) {
-               float *dst = dst_row + (y + j)*dst_stride/sizeof(*dst_row) + (x + i)*4;
+               float *dst = (float *)(uint8_t *)dst_row + (y + j)*dst_stride + (x + i)*16;
                int8_t tmp_r, tmp_g;
                util_format_signed_fetch_texel_rgtc(0, src, i, j, &tmp_r, 2);
                util_format_signed_fetch_texel_rgtc(0, src + 8, i, j, &tmp_g, 2);
@@ -286,14 +289,15 @@ util_format_latc2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
 }
 
 void
-util_format_latc2_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+util_format_latc2_snorm_pack_rgba_float(uint8_t *restrict dst_row, unsigned dst_stride, const float *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
 {
    util_format_rxtc2_snorm_pack_rgba_float(dst_row, dst_stride, src_row, src_stride, width, height, 3);
 }
 
 void
-util_format_latc2_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+util_format_latc2_snorm_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, unsigned i, unsigned j)
 {
+   float *dst = in_dst;
    int8_t tmp_r, tmp_g;
 
    util_format_signed_fetch_texel_rgtc(0, (int8_t *)src, i, j, &tmp_r, 2);

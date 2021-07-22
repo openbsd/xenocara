@@ -3,10 +3,11 @@
 #include <float.h>
 
 #include "util/u_math.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
+#include "util/u_cpu_detect.h"
 
-int
-main(int argc, char **argv)
+static void
+test(void)
 {
    unsigned i;
    unsigned roundtrip_fails = 0;
@@ -17,8 +18,8 @@ main(int argc, char **argv)
       union fi f;
       uint16_t rh;
 
-      f.f = util_half_to_float(h);
-      rh = util_float_to_half(f.f);
+      f.f = _mesa_half_to_float(h);
+      rh = _mesa_float_to_half(f.f);
 
       if (h != rh && !(util_is_half_nan(h) && util_is_half_nan(rh))) {
          printf("Roundtrip failed: %x -> %x = %f -> %x\n", h, f.ui, f.f, rh);
@@ -28,9 +29,22 @@ main(int argc, char **argv)
 
    if(roundtrip_fails) {
       printf("Failure! %u/65536 half floats failed a conversion to float and back.\n", roundtrip_fails);
-      return 1;
-   } else {
-      printf("Success!\n");
-      return 0;
+      exit(1);
    }
+}
+
+int
+main(int argc, char **argv)
+{
+   util_cpu_detect();
+   test();
+
+   /* Test non-f16c. */
+   if (util_get_cpu_caps()->has_f16c) {
+      ((struct util_cpu_caps_t *)util_get_cpu_caps())->has_f16c = false;
+      test();
+   }
+
+   printf("Success!\n");
+   return 0;
 }

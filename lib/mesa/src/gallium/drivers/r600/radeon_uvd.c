@@ -73,7 +73,7 @@ struct ruvd_decoder {
 
 	struct pipe_screen		*screen;
 	struct radeon_winsys*		ws;
-	struct radeon_cmdbuf*	cs;
+	struct radeon_cmdbuf	cs;
 
 	unsigned			cur_buffer;
 
@@ -102,14 +102,14 @@ struct ruvd_decoder {
 /* flush IB to the hardware */
 static int flush(struct ruvd_decoder *dec, unsigned flags)
 {
-	return dec->ws->cs_flush(dec->cs, flags, NULL);
+	return dec->ws->cs_flush(&dec->cs, flags, NULL);
 }
 
 /* add a new set register command to the IB */
 static void set_reg(struct ruvd_decoder *dec, unsigned reg, uint32_t val)
 {
-	radeon_emit(dec->cs, RUVD_PKT0(reg >> 2, 0));
-	radeon_emit(dec->cs, val);
+	radeon_emit(&dec->cs, RUVD_PKT0(reg >> 2, 0));
+	radeon_emit(&dec->cs, val);
 }
 
 /* send a command to the VCPU through the GPCOM registers */
@@ -119,7 +119,7 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 {
 	int reloc_idx;
 
-	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED,
+	reloc_idx = dec->ws->cs_add_buffer(&dec->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED,
 					   domain, 0);
 	if (!dec->use_legacy) {
 		uint64_t addr;
@@ -152,8 +152,8 @@ static void map_msg_fb_it_buf(struct ruvd_decoder *dec)
 	buf = &dec->msg_fb_it_buffers[dec->cur_buffer];
 
 	/* and map it for CPU access */
-	ptr = dec->ws->buffer_map(buf->res->buf, dec->cs,
-                                  PIPE_TRANSFER_WRITE | RADEON_TRANSFER_TEMPORARY);
+	ptr = dec->ws->buffer_map(dec->ws, buf->res->buf, &dec->cs,
+                                  PIPE_MAP_WRITE | RADEON_MAP_TEMPORARY);
 
 	/* calc buffer offsets */
 	dec->msg = (struct ruvd_msg *)ptr;
@@ -177,7 +177,8 @@ static void send_msg_buf(struct ruvd_decoder *dec)
 	buf = &dec->msg_fb_it_buffers[dec->cur_buffer];
 
 	/* unmap the buffer */
-	dec->ws->buffer_unmap(buf->res->buf);
+	dec->ws->buffer_unmap(dec->ws, buf->res->buf);
+	dec->bs_ptr = NULL;
 	dec->msg = NULL;
 	dec->fb = NULL;
 	dec->it = NULL;
@@ -225,55 +226,6 @@ static uint32_t profile2stream_type(struct ruvd_decoder *dec, unsigned family)
 	}
 }
 
-static unsigned calc_ctx_size_h265_main(struct ruvd_decoder *dec)
-{
-	unsigned width = align(dec->base.width, VL_MACROBLOCK_WIDTH);
-	unsigned height = align(dec->base.height, VL_MACROBLOCK_HEIGHT);
-
-	unsigned max_references = dec->base.max_references + 1;
-
-	if (dec->base.width * dec->base.height >= 4096*2000)
-		max_references = MAX2(max_references, 8);
-	else
-		max_references = MAX2(max_references, 17);
-
-	width = align (width, 16);
-	height = align (height, 16);
-	return ((width + 255) / 16) * ((height + 255) / 16) * 16 * max_references + 52 * 1024;
-}
-
-static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_h265_picture_desc *pic)
-{
-	unsigned log2_ctb_size, width_in_ctb, height_in_ctb, num_16x16_block_per_ctb;
-	unsigned context_buffer_size_per_ctb_row, cm_buffer_size, max_mb_address, db_left_tile_pxl_size;
-	unsigned db_left_tile_ctx_size = 4096 / 16 * (32 + 16 * 4);
-
-	unsigned width = align(dec->base.width, VL_MACROBLOCK_WIDTH);
-	unsigned height = align(dec->base.height, VL_MACROBLOCK_HEIGHT);
-	unsigned coeff_10bit = (pic->pps->sps->bit_depth_luma_minus8 || pic->pps->sps->bit_depth_chroma_minus8) ? 2 : 1;
-
-	unsigned max_references = dec->base.max_references + 1;
-
-	if (dec->base.width * dec->base.height >= 4096*2000)
-		max_references = MAX2(max_references, 8);
-	else
-		max_references = MAX2(max_references, 17);
-
-	log2_ctb_size = pic->pps->sps->log2_min_luma_coding_block_size_minus3 + 3 +
-		pic->pps->sps->log2_diff_max_min_luma_coding_block_size;
-
-	width_in_ctb = (width + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
-	height_in_ctb = (height + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
-
-	num_16x16_block_per_ctb = ((1 << log2_ctb_size) >> 4) * ((1 << log2_ctb_size) >> 4);
-	context_buffer_size_per_ctb_row = align(width_in_ctb * num_16x16_block_per_ctb * 16, 256);
-	max_mb_address = (unsigned) ceil(height * 8 / 2048.0);
-
-	cm_buffer_size = max_references * context_buffer_size_per_ctb_row * height_in_ctb;
-	db_left_tile_pxl_size = coeff_10bit * (max_mb_address * 2 * 2048 + 1024);
-
-	return cm_buffer_size + db_left_tile_ctx_size + db_left_tile_pxl_size;
-}
 
 static unsigned get_db_pitch_alignment(struct ruvd_decoder *dec)
 {
@@ -510,156 +462,6 @@ static struct ruvd_h264 get_h264_msg(struct ruvd_decoder *dec, struct pipe_h264_
 	memcpy(result.field_order_cnt_list, pic->field_order_cnt_list, 4*16*2);
 
 	result.decoded_pic_idx = pic->frame_num;
-
-	return result;
-}
-
-/* get h265 specific message bits */
-static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video_buffer *target,
-				     struct pipe_h265_picture_desc *pic)
-{
-	struct ruvd_h265 result;
-	unsigned i;
-
-	memset(&result, 0, sizeof(result));
-
-	result.sps_info_flags = 0;
-	result.sps_info_flags |= pic->pps->sps->scaling_list_enabled_flag << 0;
-	result.sps_info_flags |= pic->pps->sps->amp_enabled_flag << 1;
-	result.sps_info_flags |= pic->pps->sps->sample_adaptive_offset_enabled_flag << 2;
-	result.sps_info_flags |= pic->pps->sps->pcm_enabled_flag << 3;
-	result.sps_info_flags |= pic->pps->sps->pcm_loop_filter_disabled_flag << 4;
-	result.sps_info_flags |= pic->pps->sps->long_term_ref_pics_present_flag << 5;
-	result.sps_info_flags |= pic->pps->sps->sps_temporal_mvp_enabled_flag << 6;
-	result.sps_info_flags |= pic->pps->sps->strong_intra_smoothing_enabled_flag << 7;
-	result.sps_info_flags |= pic->pps->sps->separate_colour_plane_flag << 8;
-	if (pic->UseRefPicList == true)
-		result.sps_info_flags |= 1 << 10;
-
-	result.chroma_format = pic->pps->sps->chroma_format_idc;
-	result.bit_depth_luma_minus8 = pic->pps->sps->bit_depth_luma_minus8;
-	result.bit_depth_chroma_minus8 = pic->pps->sps->bit_depth_chroma_minus8;
-	result.log2_max_pic_order_cnt_lsb_minus4 = pic->pps->sps->log2_max_pic_order_cnt_lsb_minus4;
-	result.sps_max_dec_pic_buffering_minus1 = pic->pps->sps->sps_max_dec_pic_buffering_minus1;
-	result.log2_min_luma_coding_block_size_minus3 = pic->pps->sps->log2_min_luma_coding_block_size_minus3;
-	result.log2_diff_max_min_luma_coding_block_size = pic->pps->sps->log2_diff_max_min_luma_coding_block_size;
-	result.log2_min_transform_block_size_minus2 = pic->pps->sps->log2_min_transform_block_size_minus2;
-	result.log2_diff_max_min_transform_block_size = pic->pps->sps->log2_diff_max_min_transform_block_size;
-	result.max_transform_hierarchy_depth_inter = pic->pps->sps->max_transform_hierarchy_depth_inter;
-	result.max_transform_hierarchy_depth_intra = pic->pps->sps->max_transform_hierarchy_depth_intra;
-	result.pcm_sample_bit_depth_luma_minus1 = pic->pps->sps->pcm_sample_bit_depth_luma_minus1;
-	result.pcm_sample_bit_depth_chroma_minus1 = pic->pps->sps->pcm_sample_bit_depth_chroma_minus1;
-	result.log2_min_pcm_luma_coding_block_size_minus3 = pic->pps->sps->log2_min_pcm_luma_coding_block_size_minus3;
-	result.log2_diff_max_min_pcm_luma_coding_block_size = pic->pps->sps->log2_diff_max_min_pcm_luma_coding_block_size;
-	result.num_short_term_ref_pic_sets = pic->pps->sps->num_short_term_ref_pic_sets;
-
-	result.pps_info_flags = 0;
-	result.pps_info_flags |= pic->pps->dependent_slice_segments_enabled_flag << 0;
-	result.pps_info_flags |= pic->pps->output_flag_present_flag << 1;
-	result.pps_info_flags |= pic->pps->sign_data_hiding_enabled_flag << 2;
-	result.pps_info_flags |= pic->pps->cabac_init_present_flag << 3;
-	result.pps_info_flags |= pic->pps->constrained_intra_pred_flag << 4;
-	result.pps_info_flags |= pic->pps->transform_skip_enabled_flag << 5;
-	result.pps_info_flags |= pic->pps->cu_qp_delta_enabled_flag << 6;
-	result.pps_info_flags |= pic->pps->pps_slice_chroma_qp_offsets_present_flag << 7;
-	result.pps_info_flags |= pic->pps->weighted_pred_flag << 8;
-	result.pps_info_flags |= pic->pps->weighted_bipred_flag << 9;
-	result.pps_info_flags |= pic->pps->transquant_bypass_enabled_flag << 10;
-	result.pps_info_flags |= pic->pps->tiles_enabled_flag << 11;
-	result.pps_info_flags |= pic->pps->entropy_coding_sync_enabled_flag << 12;
-	result.pps_info_flags |= pic->pps->uniform_spacing_flag << 13;
-	result.pps_info_flags |= pic->pps->loop_filter_across_tiles_enabled_flag << 14;
-	result.pps_info_flags |= pic->pps->pps_loop_filter_across_slices_enabled_flag << 15;
-	result.pps_info_flags |= pic->pps->deblocking_filter_override_enabled_flag << 16;
-	result.pps_info_flags |= pic->pps->pps_deblocking_filter_disabled_flag << 17;
-	result.pps_info_flags |= pic->pps->lists_modification_present_flag << 18;
-	result.pps_info_flags |= pic->pps->slice_segment_header_extension_present_flag << 19;
-	//result.pps_info_flags |= pic->pps->deblocking_filter_control_present_flag; ???
-
-	result.num_extra_slice_header_bits = pic->pps->num_extra_slice_header_bits;
-	result.num_long_term_ref_pic_sps = pic->pps->sps->num_long_term_ref_pics_sps;
-	result.num_ref_idx_l0_default_active_minus1 = pic->pps->num_ref_idx_l0_default_active_minus1;
-	result.num_ref_idx_l1_default_active_minus1 = pic->pps->num_ref_idx_l1_default_active_minus1;
-	result.pps_cb_qp_offset = pic->pps->pps_cb_qp_offset;
-	result.pps_cr_qp_offset = pic->pps->pps_cr_qp_offset;
-	result.pps_beta_offset_div2 = pic->pps->pps_beta_offset_div2;
-	result.pps_tc_offset_div2 = pic->pps->pps_tc_offset_div2;
-	result.diff_cu_qp_delta_depth = pic->pps->diff_cu_qp_delta_depth;
-	result.num_tile_columns_minus1 = pic->pps->num_tile_columns_minus1;
-	result.num_tile_rows_minus1 = pic->pps->num_tile_rows_minus1;
-	result.log2_parallel_merge_level_minus2 = pic->pps->log2_parallel_merge_level_minus2;
-	result.init_qp_minus26 = pic->pps->init_qp_minus26;
-
-	for (i = 0; i < 19; ++i)
-		result.column_width_minus1[i] = pic->pps->column_width_minus1[i];
-
-	for (i = 0; i < 21; ++i)
-		result.row_height_minus1[i] = pic->pps->row_height_minus1[i];
-
-	result.num_delta_pocs_ref_rps_idx = pic->NumDeltaPocsOfRefRpsIdx;
-	result.curr_idx = pic->CurrPicOrderCntVal;
-	result.curr_poc = pic->CurrPicOrderCntVal;
-
-	vl_video_buffer_set_associated_data(target, &dec->base,
-					    (void *)(uintptr_t)pic->CurrPicOrderCntVal,
-					    &ruvd_destroy_associated_data);
-
-	for (i = 0; i < 16; ++i) {
-		struct pipe_video_buffer *ref = pic->ref[i];
-		uintptr_t ref_pic = 0;
-
-		result.poc_list[i] = pic->PicOrderCntVal[i];
-
-		if (ref)
-			ref_pic = (uintptr_t)vl_video_buffer_get_associated_data(ref, &dec->base);
-		else
-			ref_pic = 0x7F;
-		result.ref_pic_list[i] = ref_pic;
-	}
-
-	for (i = 0; i < 8; ++i) {
-		result.ref_pic_set_st_curr_before[i] = 0xFF;
-		result.ref_pic_set_st_curr_after[i] = 0xFF;
-		result.ref_pic_set_lt_curr[i] = 0xFF;
-	}
-
-	for (i = 0; i < pic->NumPocStCurrBefore; ++i)
-		result.ref_pic_set_st_curr_before[i] = pic->RefPicSetStCurrBefore[i];
-
-	for (i = 0; i < pic->NumPocStCurrAfter; ++i)
-		result.ref_pic_set_st_curr_after[i] = pic->RefPicSetStCurrAfter[i];
-
-	for (i = 0; i < pic->NumPocLtCurr; ++i)
-		result.ref_pic_set_lt_curr[i] = pic->RefPicSetLtCurr[i];
-
-	for (i = 0; i < 6; ++i)
-		result.ucScalingListDCCoefSizeID2[i] = pic->pps->sps->ScalingListDCCoeff16x16[i];
-
-	for (i = 0; i < 2; ++i)
-		result.ucScalingListDCCoefSizeID3[i] = pic->pps->sps->ScalingListDCCoeff32x32[i];
-
-	memcpy(dec->it, pic->pps->sps->ScalingList4x4, 6 * 16);
-	memcpy(dec->it + 96, pic->pps->sps->ScalingList8x8, 6 * 64);
-	memcpy(dec->it + 480, pic->pps->sps->ScalingList16x16, 6 * 64);
-	memcpy(dec->it + 864, pic->pps->sps->ScalingList32x32, 2 * 64);
-
-	for (i = 0 ; i < 2 ; i++) {
-		for (int j = 0 ; j < 15 ; j++)
-			result.direct_reflist[i][j] = pic->RefPicList[i][j];
-	}
-
-	/* TODO
-	result.highestTid;
-	result.isNonRef;
-
-	IDRPicFlag;
-	RAPPicFlag;
-	NumPocTotalCurr;
-	NumShortTermPictureSliceHeaderBits;
-	NumLongTermPictureSliceHeaderBits;
-
-	IsLongTerm[16];
-	*/
 
 	return result;
 }
@@ -1007,7 +809,7 @@ static void ruvd_destroy(struct pipe_video_codec *decoder)
 
 	flush(dec, 0);
 
-	dec->ws->cs_destroy(dec->cs);
+	dec->ws->cs_destroy(&dec->cs);
 
 	for (i = 0; i < NUM_BUFFERS; ++i) {
 		rvid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
@@ -1038,9 +840,9 @@ static void ruvd_begin_frame(struct pipe_video_codec *decoder,
 					    &ruvd_destroy_associated_data);
 
 	dec->bs_size = 0;
-	dec->bs_ptr = dec->ws->buffer_map(
+	dec->bs_ptr = dec->ws->buffer_map(dec->ws,
 		dec->bs_buffers[dec->cur_buffer].res->buf,
-		dec->cs, PIPE_TRANSFER_WRITE | RADEON_TRANSFER_TEMPORARY);
+		&dec->cs, PIPE_MAP_WRITE | RADEON_MAP_TEMPORARY);
 }
 
 /**
@@ -1086,15 +888,16 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 			new_size += 2; /* save for EOI */
 
 		if (new_size > buf->res->buf->size) {
-			dec->ws->buffer_unmap(buf->res->buf);
-			if (!rvid_resize_buffer(dec->screen, dec->cs, buf, new_size)) {
+			dec->ws->buffer_unmap(dec->ws, buf->res->buf);
+			dec->bs_ptr = NULL;
+			if (!rvid_resize_buffer(dec->screen, &dec->cs, buf, new_size)) {
 				RVID_ERR("Can't resize bitstream buffer!");
 				return;
 			}
 
-			dec->bs_ptr = dec->ws->buffer_map(buf->res->buf, dec->cs,
-							  PIPE_TRANSFER_WRITE |
-							  RADEON_TRANSFER_TEMPORARY);
+			dec->bs_ptr = dec->ws->buffer_map(dec->ws, buf->res->buf, &dec->cs,
+							  PIPE_MAP_WRITE |
+							  RADEON_MAP_TEMPORARY);
 			if (!dec->bs_ptr)
 				return;
 
@@ -1136,7 +939,8 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	bs_size = align(dec->bs_size, 128);
 	memset(dec->bs_ptr, 0, bs_size - dec->bs_size);
-	dec->ws->buffer_unmap(bs_buf->res->buf);
+	dec->ws->buffer_unmap(dec->ws, bs_buf->res->buf);
+	dec->bs_ptr = NULL;
 
 	map_msg_fb_it_buf(dec);
 	dec->msg->size = sizeof(*dec->msg);
@@ -1240,14 +1044,14 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	struct ruvd_decoder *dec;
 	int r, i;
 
-	ws->query_info(ws, &info);
+	ws->query_info(ws, &info, false, false);
 
 	switch(u_reduce_video_profile(templ->profile)) {
 	case PIPE_VIDEO_FORMAT_MPEG12:
 		if (templ->entrypoint > PIPE_VIDEO_ENTRYPOINT_BITSTREAM || info.family < CHIP_PALM)
 			return vl_create_mpeg12_decoder(context, templ);
 
-		/* fall through */
+		FALLTHROUGH;
 	case PIPE_VIDEO_FORMAT_MPEG4:
 		width = align(width, VL_MACROBLOCK_WIDTH);
 		height = align(height, VL_MACROBLOCK_HEIGHT);
@@ -1286,8 +1090,8 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	dec->stream_handle = rvid_alloc_stream_handle();
 	dec->screen = context->screen;
 	dec->ws = ws;
-	dec->cs = ws->cs_create(rctx->ctx, RING_UVD, NULL, NULL, false);
-	if (!dec->cs) {
+
+	if (!ws->cs_create(&dec->cs, rctx->ctx, RING_UVD, NULL, NULL, false)) {
 		RVID_ERR("Can't get command submission context.\n");
 		goto error;
 	}
@@ -1347,7 +1151,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	return &dec->base;
 
 error:
-	if (dec->cs) dec->ws->cs_destroy(dec->cs);
+	dec->ws->cs_destroy(&dec->cs);
 
 	for (i = 0; i < NUM_BUFFERS; ++i) {
 		rvid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
@@ -1366,7 +1170,7 @@ error:
 /* calculate top/bottom offset */
 static unsigned texture_offset(struct radeon_surf *surface, unsigned layer)
 {
-	return surface->u.legacy.level[0].offset +
+	return (uint64_t)surface->u.legacy.level[0].offset_256B * 256 +
 		layer * (uint64_t)surface->u.legacy.level[0].slice_size_dw * 4;
 }
 

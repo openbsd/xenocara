@@ -34,6 +34,7 @@
 #include "nv04_driver.h"
 #include "nv10_driver.h"
 #include "nv20_driver.h"
+#include "util/u_memory.h"
 
 static void
 nv20_clear(struct gl_context *ctx, GLbitfield buffers)
@@ -434,7 +435,7 @@ nv20_context_destroy(struct gl_context *ctx)
 	nouveau_object_del(&nctx->hw.eng3d);
 
 	nouveau_context_deinit(ctx);
-	free(ctx);
+	align_free(ctx);
 }
 
 static struct gl_context *
@@ -447,7 +448,7 @@ nv20_context_create(struct nouveau_screen *screen, gl_api api,
 	unsigned kelvin_class;
 	int ret;
 
-	nctx = CALLOC_STRUCT(nouveau_context);
+	nctx = align_calloc(sizeof(struct nouveau_context), 16);
 	if (!nctx)
 		return NULL;
 

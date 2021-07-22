@@ -24,11 +24,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "util/os_file.h"
+
 #include "iris_drm_public.h"
-#include "iris/iris_screen.h"
+extern struct pipe_screen *iris_screen_create(int fd, const struct pipe_screen_config *config);
 
 struct pipe_screen *
 iris_drm_screen_create(int fd, const struct pipe_screen_config *config)
 {
-   return iris_screen_create(fcntl(fd, F_DUPFD_CLOEXEC, 3), config);
+   int newfd = os_dupfd_cloexec(fd);
+   if (newfd < 0)
+      return NULL;
+   return iris_screen_create(newfd, config);
 }

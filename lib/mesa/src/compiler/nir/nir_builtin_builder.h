@@ -25,7 +25,7 @@
 #define NIR_BUILTIN_BUILDER_H
 
 #include "util/u_math.h"
-#include "nir/nir_builder.h"
+#include "nir_builder.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,11 +38,9 @@ extern "C" {
 
 nir_ssa_def* nir_cross3(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y);
 nir_ssa_def* nir_cross4(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y);
-nir_ssa_def* nir_length(nir_builder *b, nir_ssa_def *vec);
 nir_ssa_def* nir_fast_length(nir_builder *b, nir_ssa_def *vec);
 nir_ssa_def* nir_nextafter(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y);
 nir_ssa_def* nir_normalize(nir_builder *b, nir_ssa_def *vec);
-nir_ssa_def* nir_rotate(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y);
 nir_ssa_def* nir_smoothstep(nir_builder *b, nir_ssa_def *edge0,
                             nir_ssa_def *edge1, nir_ssa_def *x);
 nir_ssa_def* nir_upsample(nir_builder *b, nir_ssa_def *hi, nir_ssa_def *lo);
@@ -58,7 +56,7 @@ nir_get_texture_size(nir_builder *b, nir_tex_instr *tex);
 static inline nir_ssa_def *
 nir_nan_check2(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *res)
 {
-   return nir_bcsel(b, nir_fne(b, x, x), x, nir_bcsel(b, nir_fne(b, y, y), y, res));
+   return nir_bcsel(b, nir_fneu(b, x, x), x, nir_bcsel(b, nir_fneu(b, y, y), y, res));
 }
 
 static inline nir_ssa_def *
@@ -89,19 +87,15 @@ nir_uabs_diff(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
 }
 
 static inline nir_ssa_def *
-nir_umul24(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
+nir_fexp(nir_builder *b, nir_ssa_def *x)
 {
-   nir_ssa_def *mask = nir_imm_int(b, 0xffffff);
-   nir_ssa_def *x_24 = nir_iand(b, x, mask);
-   nir_ssa_def *y_24 = nir_iand(b, y, mask);
-   return nir_imul(b, x_24, y_24);
+   return nir_fexp2(b, nir_fmul_imm(b, x, M_LOG2E));
 }
 
 static inline nir_ssa_def *
-nir_umad24(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *z)
+nir_flog(nir_builder *b, nir_ssa_def *x)
 {
-   nir_ssa_def *temp = nir_umul24(b, x, y);
-   return nir_iadd(b, temp, z);
+   return nir_fmul_imm(b, nir_flog2(b, x), 1.0 / M_LOG2E);
 }
 
 static inline nir_ssa_def *
@@ -182,12 +176,6 @@ nir_fdim(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
 }
 
 static inline nir_ssa_def *
-nir_distance(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
-{
-   return nir_length(b, nir_fsub(b, x, y));
-}
-
-static inline nir_ssa_def *
 nir_fast_distance(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y)
 {
    return nir_fast_length(b, nir_fsub(b, x, y));
@@ -256,7 +244,13 @@ nir_select(nir_builder *b, nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *s)
       uint64_t mask = 1ull << (s->bit_size - 1);
       s = nir_iand(b, s, nir_imm_intN_t(b, mask, s->bit_size));
    }
-   return nir_bcsel(b, nir_ieq(b, s, nir_imm_intN_t(b, 0, s->bit_size)), x, y);
+   return nir_bcsel(b, nir_ieq_imm(b, s, 0), x, y);
+}
+
+static inline nir_ssa_def *
+nir_ftan(nir_builder *b, nir_ssa_def *x)
+{
+   return nir_fdiv(b, nir_fsin(b, x), nir_fcos(b, x));
 }
 
 static inline nir_ssa_def *
@@ -265,6 +259,16 @@ nir_clz_u(nir_builder *b, nir_ssa_def *a)
    nir_ssa_def *val;
    val = nir_isub(b, nir_imm_intN_t(b, a->bit_size - 1, 32), nir_ufind_msb(b, a));
    return nir_u2u(b, val, a->bit_size);
+}
+
+static inline nir_ssa_def *
+nir_ctz_u(nir_builder *b, nir_ssa_def *a)
+{
+   nir_ssa_def *cond = nir_ieq(b, a, nir_imm_intN_t(b, 0, a->bit_size));
+
+   return nir_bcsel(b, cond,
+                    nir_imm_intN_t(b, a->bit_size, a->bit_size),
+                    nir_u2u(b, nir_find_lsb(b, a), a->bit_size));
 }
 
 #ifdef __cplusplus

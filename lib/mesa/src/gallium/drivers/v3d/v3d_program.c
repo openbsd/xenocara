@@ -47,7 +47,7 @@ v3d_setup_shared_precompile_key(struct v3d_uncompiled_shader *uncompiled,
 static gl_varying_slot
 v3d_get_slot_for_driver_location(nir_shader *s, uint32_t driver_location)
 {
-        nir_foreach_variable(var, &s->outputs) {
+        nir_foreach_shader_out_variable(var, s) {
                 if (var->data.driver_location == driver_location) {
                         return var->data.location;
                 }
@@ -180,7 +180,7 @@ precompile_all_outputs(nir_shader *s,
                        struct v3d_varying_slot *outputs,
                        uint8_t *num_outputs)
 {
-        nir_foreach_variable(var, &s->outputs) {
+        nir_foreach_shader_out_variable(var, s) {
                 const int array_len = MAX2(glsl_get_length(var->type), 1);
                 for (int j = 0; j < array_len; j++) {
                         const int slot = var->data.location + j;
@@ -212,7 +212,7 @@ v3d_shader_precompile(struct v3d_context *v3d,
                         .base.shader_state = so,
                 };
 
-                nir_foreach_variable(var, &s->outputs) {
+                nir_foreach_shader_out_variable(var, s) {
                         if (var->data.location == FRAG_RESULT_COLOR) {
                                 key.cbufs |= 1 << 0;
                         } else if (var->data.location >= FRAG_RESULT_DATA0) {
@@ -303,17 +303,15 @@ v3d_uncompiled_shader_create(struct pipe_context *pctx,
                         tgsi_dump(ir, 0);
                         fprintf(stderr, "\n");
                 }
-                s = tgsi_to_nir(ir, pctx->screen);
+                s = tgsi_to_nir(ir, pctx->screen, false);
         }
 
-        nir_variable_mode lower_mode = nir_var_all & ~nir_var_uniform;
-        if (s->info.stage == MESA_SHADER_VERTEX ||
-            s->info.stage == MESA_SHADER_GEOMETRY) {
-                lower_mode &= ~(nir_var_shader_in | nir_var_shader_out);
+        if (s->info.stage != MESA_SHADER_VERTEX &&
+            s->info.stage != MESA_SHADER_GEOMETRY) {
+                NIR_PASS_V(s, nir_lower_io,
+                           nir_var_shader_in | nir_var_shader_out,
+                           type_size, (nir_lower_io_options)0);
         }
-        NIR_PASS_V(s, nir_lower_io, lower_mode,
-                   type_size,
-                   (nir_lower_io_options)0);
 
         NIR_PASS_V(s, nir_lower_regs_to_ssa);
         NIR_PASS_V(s, nir_normalize_cubemap_coords);
@@ -322,7 +320,7 @@ v3d_uncompiled_shader_create(struct pipe_context *pctx,
 
         v3d_optimize_nir(s);
 
-        NIR_PASS_V(s, nir_remove_dead_variables, nir_var_function_temp);
+        NIR_PASS_V(s, nir_remove_dead_variables, nir_var_function_temp, NULL);
 
         /* Garbage collect dead instructions */
         nir_sweep(s);
@@ -447,6 +445,9 @@ v3d_setup_shared_key(struct v3d_context *v3d, struct v3d_key *key,
 {
         const struct v3d_device_info *devinfo = &v3d->screen->devinfo;
 
+        key->num_tex_used = texstate->num_textures;
+        key->num_samplers_used = texstate->num_textures;
+        assert(key->num_tex_used == key->num_samplers_used);
         for (int i = 0; i < texstate->num_textures; i++) {
                 struct pipe_sampler_view *sampler = texstate->textures[i];
                 struct v3d_sampler_view *v3d_sampler = v3d_sampler_view(sampler);
@@ -456,7 +457,7 @@ v3d_setup_shared_key(struct v3d_context *v3d, struct v3d_key *key,
                 if (!sampler)
                         continue;
 
-                key->tex[i].return_size =
+                key->sampler[i].return_size =
                         v3d_get_tex_return_size(devinfo,
                                                 sampler->format,
                                                 sampler_state->compare_mode);
@@ -465,17 +466,17 @@ v3d_setup_shared_key(struct v3d_context *v3d, struct v3d_key *key,
                  * channels (meaning no recompiles for most statechanges),
                  * while for 32 we actually scale the returns with channels.
                  */
-                if (key->tex[i].return_size == 16) {
-                        key->tex[i].return_channels = 2;
+                if (key->sampler[i].return_size == 16) {
+                        key->sampler[i].return_channels = 2;
                 } else if (devinfo->ver > 40) {
-                        key->tex[i].return_channels = 4;
+                        key->sampler[i].return_channels = 4;
                 } else {
-                        key->tex[i].return_channels =
+                        key->sampler[i].return_channels =
                                 v3d_get_tex_return_channels(devinfo,
                                                             sampler->format);
                 }
 
-                if (key->tex[i].return_size == 32 && devinfo->ver < 40) {
+                if (key->sampler[i].return_size == 32 && devinfo->ver < 40) {
                         memcpy(key->tex[i].swizzle,
                                v3d_sampler->swizzle,
                                sizeof(v3d_sampler->swizzle));
@@ -488,15 +489,6 @@ v3d_setup_shared_key(struct v3d_context *v3d, struct v3d_key *key,
                         key->tex[i].swizzle[2] = PIPE_SWIZZLE_Z;
                         key->tex[i].swizzle[3] = PIPE_SWIZZLE_W;
                 }
-
-                if (sampler) {
-                        key->tex[i].clamp_s =
-                                sampler_state->wrap_s == PIPE_TEX_WRAP_CLAMP;
-                        key->tex[i].clamp_t =
-                                sampler_state->wrap_t == PIPE_TEX_WRAP_CLAMP;
-                        key->tex[i].clamp_r =
-                                sampler_state->wrap_r == PIPE_TEX_WRAP_CLAMP;
-                }
         }
 }
 
@@ -506,9 +498,15 @@ v3d_setup_shared_precompile_key(struct v3d_uncompiled_shader *uncompiled,
 {
         nir_shader *s = uncompiled->base.ir.nir;
 
+        /* Note that below we access they key's texture and sampler fields
+         * using the same index. On OpenGL they are the same (they are
+         * combined)
+         */
+        key->num_tex_used = s->info.num_textures;
+        key->num_samplers_used = s->info.num_textures;
         for (int i = 0; i < s->info.num_textures; i++) {
-                key->tex[i].return_size = 16;
-                key->tex[i].return_channels = 2;
+                key->sampler[i].return_size = 16;
+                key->sampler[i].return_channels = 2;
 
                 key->tex[i].swizzle[0] = PIPE_SWIZZLE_X;
                 key->tex[i].swizzle[1] = PIPE_SWIZZLE_Y;
@@ -543,7 +541,8 @@ v3d_update_compiled_fs(struct v3d_context *v3d, uint8_t prim_mode)
         key->is_points = (prim_mode == PIPE_PRIM_POINTS);
         key->is_lines = (prim_mode >= PIPE_PRIM_LINES &&
                          prim_mode <= PIPE_PRIM_LINE_STRIP);
-        key->clamp_color = v3d->rasterizer->base.clamp_fragment_color;
+        key->line_smoothing = (key->is_lines &&
+                               v3d_line_smoothing_enabled(v3d));
         if (v3d->blend->base.logicop_enable) {
                 key->logicop_func = v3d->blend->base.logicop_func;
         } else {
@@ -555,13 +554,6 @@ v3d_update_compiled_fs(struct v3d_context *v3d, uint8_t prim_mode)
                                         v3d->sample_mask != (1 << V3D_MAX_SAMPLES) - 1);
                 key->sample_alpha_to_coverage = v3d->blend->base.alpha_to_coverage;
                 key->sample_alpha_to_one = v3d->blend->base.alpha_to_one;
-        }
-
-        key->depth_enabled = (v3d->zsa->base.depth.enabled ||
-                              v3d->zsa->base.stencil[0].enabled);
-        if (v3d->zsa->base.alpha.enabled) {
-                key->alpha_test = true;
-                key->alpha_test_func = v3d->zsa->base.alpha.func;
         }
 
         key->swap_color_rb = v3d->swap_color_rb;
@@ -611,9 +603,6 @@ v3d_update_compiled_fs(struct v3d_context *v3d, uint8_t prim_mode)
                         (v3d->rasterizer->base.sprite_coord_mode ==
                          PIPE_SPRITE_COORD_UPPER_LEFT);
         }
-
-        key->light_twoside = v3d->rasterizer->base.light_twoside;
-        key->shade_model_flat = v3d->rasterizer->base.flatshade;
 
         struct v3d_compiled_shader *old_fs = v3d->prog.fs;
         v3d->prog.fs = v3d_get_compiled_shader(v3d, &key->base, sizeof(*key));
@@ -756,11 +745,32 @@ v3d_update_compiled_vs(struct v3d_context *v3d, uint8_t prim_mode)
                    sizeof(key->used_outputs));
         }
 
-        key->clamp_color = v3d->rasterizer->base.clamp_vertex_color;
-
         key->per_vertex_point_size =
                 (prim_mode == PIPE_PRIM_POINTS &&
                  v3d->rasterizer->base.point_size_per_vertex);
+
+        nir_shader *s = v3d->prog.bind_vs->base.ir.nir;
+        uint64_t inputs_read = s->info.inputs_read;
+        assert(util_bitcount(inputs_read) <= v3d->vtx->num_elements);
+
+        while (inputs_read) {
+                int location = u_bit_scan64(&inputs_read);
+                nir_variable *var =
+                        nir_find_variable_with_location(s, nir_var_shader_in, location);
+                assert (var != NULL);
+                int driver_location = var->data.driver_location;
+                switch (v3d->vtx->pipe[driver_location].src_format) {
+                case PIPE_FORMAT_B8G8R8A8_UNORM:
+                case PIPE_FORMAT_B10G10R10A2_UNORM:
+                case PIPE_FORMAT_B10G10R10A2_SNORM:
+                case PIPE_FORMAT_B10G10R10A2_USCALED:
+                case PIPE_FORMAT_B10G10R10A2_SSCALED:
+                        key->va_swap_rb_mask |= 1 << location;
+                        break;
+                default:
+                        break;
+                }
+        }
 
         struct v3d_compiled_shader *vs =
                 v3d_get_compiled_shader(v3d, &key->base, sizeof(*key));
@@ -792,6 +802,12 @@ v3d_update_compiled_vs(struct v3d_context *v3d, uint8_t prim_mode)
                                0, tail_bytes);
                 }
                 key->num_used_outputs = shader_state->num_tf_outputs;
+        } else {
+                key->num_used_outputs = v3d->prog.gs_bin->prog_data.gs->num_inputs;
+                STATIC_ASSERT(sizeof(key->used_outputs) ==
+                              sizeof(v3d->prog.gs_bin->prog_data.gs->input_slots));
+                memcpy(key->used_outputs, v3d->prog.gs_bin->prog_data.gs->input_slots,
+                       sizeof(key->used_outputs));
         }
 
         struct v3d_compiled_shader *cs =

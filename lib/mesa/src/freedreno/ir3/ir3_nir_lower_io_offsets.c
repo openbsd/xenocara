@@ -132,8 +132,6 @@ ir3_nir_try_propagate_bit_shift(nir_builder *b, nir_ssa_def *offset, int32_t shi
 	nir_ssa_def *shift_ssa;
 	nir_ssa_def *new_offset = NULL;
 
-	b->cursor = nir_after_instr(&alu->instr);
-
 	/* the first src could be something like ssa_18.x, but we only want
 	 * the single component.  Otherwise the ishl/ishr/ushr could turn
 	 * into a vec4 operation:
@@ -168,14 +166,22 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 					  unsigned ir3_ssbo_opcode, uint8_t offset_src_idx)
 {
 	unsigned num_srcs = nir_intrinsic_infos[intrinsic->intrinsic].num_srcs;
+	int shift = 2;
 
 	bool has_dest = nir_intrinsic_infos[intrinsic->intrinsic].has_dest;
 	nir_ssa_def *new_dest = NULL;
+
+	/* for 16-bit ssbo access, offset is in 16-bit words instead of dwords */
+	if ((has_dest && intrinsic->dest.ssa.bit_size == 16) ||
+		(!has_dest && intrinsic->src[0].ssa->bit_size == 16))
+		shift = 1;
 
 	/* Here we create a new intrinsic and copy over all contents from the old one. */
 
 	nir_intrinsic_instr *new_intrinsic;
 	nir_src *target_src;
+
+	b->cursor = nir_before_instr(&intrinsic->instr);
 
 	/* 'offset_src_idx' holds the index of the source that represent the offset. */
 	new_intrinsic =
@@ -192,7 +198,7 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 	 * Here we use the convention that shifting right is negative while shifting
 	 * left is positive. So 'x / 4' ~ 'x >> 2' or 'x << -2'.
 	 */
-	nir_ssa_def *new_offset = ir3_nir_try_propagate_bit_shift(b, offset, -2);
+	nir_ssa_def *new_offset = ir3_nir_try_propagate_bit_shift(b, offset, -shift);
 
 	/* The new source that will hold the dword-offset is always the last
 	 * one for every intrinsic.
@@ -211,12 +217,9 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 	for (unsigned i = 0; i < num_srcs; i++)
 		new_intrinsic->src[i] = nir_src_for_ssa(intrinsic->src[i].ssa);
 
-	for (unsigned i = 0; i < NIR_INTRINSIC_MAX_CONST_INDEX; i++)
-		new_intrinsic->const_index[i] = intrinsic->const_index[i];
+	nir_intrinsic_copy_const_indices(new_intrinsic, intrinsic);
 
 	new_intrinsic->num_components = intrinsic->num_components;
-
-	b->cursor = nir_before_instr(&intrinsic->instr);
 
 	/* If we managed to propagate the division by 4, just use the new offset
 	 * register and don't emit the SHR.
@@ -224,7 +227,7 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 	if (new_offset)
 		offset = new_offset;
 	else
-		offset = nir_ushr(b, offset, nir_imm_int(b, 2));
+		offset = nir_ushr(b, offset, nir_imm_int(b, shift));
 
 	/* Insert the new intrinsic right before the old one. */
 	nir_builder_instr_insert(b, &new_intrinsic->instr);
@@ -241,7 +244,7 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 		 * of the new intrinsic.
 		 */
 		nir_ssa_def_rewrite_uses(&intrinsic->dest.ssa,
-								 nir_src_for_ssa(new_dest));
+								 new_dest);
 	}
 
 	/* Finally remove the original intrinsic. */
@@ -251,11 +254,11 @@ lower_offset_for_ssbo(nir_intrinsic_instr *intrinsic, nir_builder *b,
 }
 
 static bool
-lower_io_offsets_block(nir_block *block, nir_builder *b, void *mem_ctx)
+lower_io_offsets_block(nir_block *block, nir_builder *b, void *mem_ctx, int gpu_id)
 {
 	bool progress = false;
 
-	nir_foreach_instr_safe(instr, block) {
+	nir_foreach_instr_safe (instr, block) {
 		if (instr->type != nir_instr_type_intrinsic)
 			continue;
 
@@ -276,15 +279,15 @@ lower_io_offsets_block(nir_block *block, nir_builder *b, void *mem_ctx)
 }
 
 static bool
-lower_io_offsets_func(nir_function_impl *impl)
+lower_io_offsets_func(nir_function_impl *impl, int gpu_id)
 {
 	void *mem_ctx = ralloc_parent(impl);
 	nir_builder b;
 	nir_builder_init(&b, impl);
 
 	bool progress = false;
-	nir_foreach_block_safe(block, impl) {
-		progress |= lower_io_offsets_block(block, &b, mem_ctx);
+	nir_foreach_block_safe (block, impl) {
+		progress |= lower_io_offsets_block(block, &b, mem_ctx, gpu_id);
 	}
 
 	if (progress) {
@@ -296,13 +299,13 @@ lower_io_offsets_func(nir_function_impl *impl)
 }
 
 bool
-ir3_nir_lower_io_offsets(nir_shader *shader)
+ir3_nir_lower_io_offsets(nir_shader *shader, int gpu_id)
 {
 	bool progress = false;
 
-	nir_foreach_function(function, shader) {
+	nir_foreach_function (function, shader) {
 		if (function->impl)
-			progress |= lower_io_offsets_func(function->impl);
+			progress |= lower_io_offsets_func(function->impl, gpu_id);
 	}
 
 	return progress;

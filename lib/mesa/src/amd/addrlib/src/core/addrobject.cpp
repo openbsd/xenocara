@@ -177,7 +177,8 @@ VOID Object::Free(
 */
 VOID* Object::operator new(
     size_t objSize,     ///< [in] Size to allocate
-    VOID*  pMem)        ///< [in] Pre-allocated pointer
+    VOID*  pMem        ///< [in] Pre-allocated pointer
+    ) noexcept
 {
     return pMem;
 }
@@ -230,6 +231,7 @@ VOID Object::DebugPrint(
         m_client.callbacks.debugPrint(&debugPrintInput);
 
         va_end(ap);
+        va_end(debugPrintInput.ap);
     }
 #endif
 }

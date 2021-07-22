@@ -175,12 +175,16 @@ softpipe_set_sampler_views(struct pipe_context *pipe,
                            enum pipe_shader_type shader,
                            unsigned start,
                            unsigned num,
+                           unsigned unbind_num_trailing_slots,
                            struct pipe_sampler_view **views);
 
 
 void
 softpipe_draw_vbo(struct pipe_context *pipe,
-                  const struct pipe_draw_info *info);
+                  const struct pipe_draw_info *info,
+                  const struct pipe_draw_indirect_info *indirect,
+                  const struct pipe_draw_start_count *draws,
+                  unsigned num_draws);
 
 void
 softpipe_map_texture_surfaces(struct softpipe_context *sp);

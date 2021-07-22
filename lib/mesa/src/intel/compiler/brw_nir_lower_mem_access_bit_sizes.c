@@ -53,6 +53,9 @@ dup_mem_intrinsic(nir_builder *b, nir_intrinsic_instr *intrin,
    }
 
    dup->num_components = num_components;
+   if (intrin->intrinsic == nir_intrinsic_load_scratch ||
+       intrin->intrinsic == nir_intrinsic_store_scratch)
+      assert(num_components == 1);
 
    for (unsigned i = 0; i < info->num_indices; i++)
       dup->const_index[i] = intrin->const_index[i];
@@ -81,18 +84,18 @@ lower_mem_load_bit_size(nir_builder *b, nir_intrinsic_instr *intrin,
       intrin->intrinsic == nir_intrinsic_load_scratch;
 
    assert(intrin->dest.is_ssa);
-   if (intrin->dest.ssa.bit_size == 32 &&
-       (!needs_scalar || intrin->num_components == 1))
-      return false;
-
    const unsigned bit_size = intrin->dest.ssa.bit_size;
    const unsigned num_components = intrin->dest.ssa.num_components;
    const unsigned bytes_read = num_components * (bit_size / 8);
    const unsigned align = nir_intrinsic_align(intrin);
 
+   if (bit_size == 32 && align >= 32 && intrin->num_components <= 4 &&
+       (!needs_scalar || intrin->num_components == 1))
+      return false;
+
    nir_ssa_def *result;
    nir_src *offset_src = nir_get_io_offset_src(intrin);
-   if (bit_size < 32 && nir_src_is_const(*offset_src)) {
+   if (bit_size < 32 && !needs_scalar && nir_src_is_const(*offset_src)) {
       /* The offset is constant so we can use a 32-bit load and just shift it
        * around as needed.
        */
@@ -109,8 +112,10 @@ lower_mem_load_bit_size(nir_builder *b, nir_intrinsic_instr *intrin,
       result = nir_extract_bits(b, &load, 1, load_offset * 8,
                                 num_components, bit_size);
    } else {
-      /* Otherwise, we have to break it into smaller loads */
-      nir_ssa_def *loads[8];
+      /* Otherwise, we have to break it into smaller loads.  We could end up
+       * with as many as 32 loads if we're loading a u64vec16 from scratch.
+       */
+      nir_ssa_def *loads[32];
       unsigned num_loads = 0;
       int load_offset = 0;
       while (load_offset < bytes_read) {
@@ -139,7 +144,7 @@ lower_mem_load_bit_size(nir_builder *b, nir_intrinsic_instr *intrin,
    }
 
    nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
-                            nir_src_for_ssa(result));
+                            result);
    nir_instr_remove(&intrin->instr);
 
    return true;
@@ -167,7 +172,7 @@ lower_mem_store_bit_size(nir_builder *b, nir_intrinsic_instr *intrin,
    assert(writemask < (1 << num_components));
 
    if ((value->bit_size <= 32 && num_components == 1) ||
-       (value->bit_size == 32 &&
+       (value->bit_size == 32 && num_components <= 4 && align >= 32 &&
         writemask == (1 << num_components) - 1 &&
         !needs_scalar))
       return false;
@@ -251,6 +256,7 @@ lower_mem_access_bit_sizes_impl(nir_function_impl *impl,
          nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
          switch (intrin->intrinsic) {
          case nir_intrinsic_load_global:
+         case nir_intrinsic_load_global_constant:
          case nir_intrinsic_load_ssbo:
          case nir_intrinsic_load_shared:
          case nir_intrinsic_load_scratch:
@@ -275,6 +281,8 @@ lower_mem_access_bit_sizes_impl(nir_function_impl *impl,
    if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
    }
 
    return progress;

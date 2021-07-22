@@ -269,6 +269,7 @@
     <value name="d16"      value="42" min_ver="41"/>
     <value name="d24s8"    value="43" min_ver="41"/>
     <value name="s8"       value="44" min_ver="41"/>
+    <value name="rgba5551" value="45" min_ver="41"/>
   </enum>
 
   <enum name="Z/S Output Image Format" prefix="V3D_OUTPUT_IMAGE_FORMAT_ZS" max_ver="33">
@@ -472,6 +473,7 @@
 
     <field name="R/B swap" size="1" start="20" type="bool"/>
     <field name="Channel Reverse" size="1" start="19" type="bool"/>
+    <field name="Force alpha 1" size="1" start="18" type="bool"/>
 
     <field name="Input Image Format" size="6" start="12" type="Output Image Format"/>
 
@@ -630,11 +632,11 @@
   </packet>
 
   <packet code="54" name="Set InstanceID" cl="B" min_ver="41">
-    <field name="Instance ID" size="32" start="32" type="uint"/>
+    <field name="Instance ID" size="32" start="0" type="uint"/>
   </packet>
 
   <packet code="55" name="Set PrimitiveID" cl="B" min_ver="41">
-    <field name="Primitive ID" size="32" start="32" type="uint"/>
+    <field name="Primitive ID" size="32" start="0" type="uint"/>
   </packet>
 
   <packet code="56" name="Prim List Format">
@@ -1051,9 +1053,9 @@
 
   <packet code="121" name="Tile Rendering Mode Cfg (Color)" cl="R" min_ver="41">
 
-    <field name="Pad" size="28" start="34" type="uint"/>
+    <field name="Pad" size="28" start="36" type="uint"/>
 
-    <field name="Render Target 3 Clamp" size="2" start="32" type="Render Target Clamp"/>
+    <field name="Render Target 3 Clamp" size="2" start="34" type="Render Target Clamp"/>
     <field name="Render Target 3 Internal Type" size="4" start="30" type="Internal Type"/>
     <field name="Render Target 3 Internal BPP" size="2" start="28" type="Internal BPP"/>
 
@@ -1531,7 +1533,7 @@
   </struct>
 
   <struct name="TMU Config Parameter 2" min_ver="41" max_ver="41">
-    <field name="Pad" size="24" start="8" type="uint"/>
+    <field name="Pad" size="8" start="24" type="uint"/>
     <field name="Op" size="4" start="20" type="TMU Op"/>
     <field name="Offset R" size="4" start="16" type="int"/>
     <field name="Offset T" size="4" start="12" type="int"/>
@@ -1545,8 +1547,8 @@
   </struct>
 
   <struct name="TMU Config Parameter 2" min_ver="42">
-    <field name="Pad" size="23" start="9" type="uint"/>
-    <field name="LOD Query" size="1" start="8" type="bool"/>
+    <field name="Pad" size="7" start="25" type="uint"/>
+    <field name="LOD Query" size="1" start="24" type="bool"/>
     <field name="Op" size="4" start="20" type="TMU Op"/>
     <field name="Offset R" size="4" start="16" type="int"/>
     <field name="Offset T" size="4" start="12" type="int"/>
@@ -1775,6 +1777,7 @@
     <value name="Texture Data Format RGBA32I" value="112"/>
     <value name="Texture Data Format RGBA32UI" value="113"/>
     <value name="Texture Data Format RGB10_A2UI" value="114"/>
+    <value name="Texture Data Format A1_RGB5" value="115"/>
 
   </enum>
 </vcxml>

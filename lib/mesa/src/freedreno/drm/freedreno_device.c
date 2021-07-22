@@ -28,10 +28,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "util/os_file.h"
+
 #include "freedreno_drmif.h"
 #include "freedreno_priv.h"
-
-static pthread_mutex_t table_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct fd_device * kgsl_device_new(int fd);
 struct fd_device * msm_device_new(int fd);
@@ -79,8 +79,8 @@ out:
 	dev->fd = fd;
 	dev->handle_table = _mesa_hash_table_create(NULL, _mesa_hash_u32, _mesa_key_u32_equal);
 	dev->name_table = _mesa_hash_table_create(NULL, _mesa_hash_u32, _mesa_key_u32_equal);
-	fd_bo_cache_init(&dev->bo_cache, FALSE);
-	fd_bo_cache_init(&dev->ring_cache, TRUE);
+	fd_bo_cache_init(&dev->bo_cache, false);
+	fd_bo_cache_init(&dev->ring_cache, true);
 
 	return dev;
 }
@@ -90,7 +90,7 @@ out:
  */
 struct fd_device * fd_device_new_dup(int fd)
 {
-	int dup_fd = dup(fd);
+	int dup_fd = os_dupfd_cloexec(fd);
 	struct fd_device *dev = fd_device_new(dup_fd);
 	if (dev)
 		dev->closefd = 1;
@@ -108,7 +108,11 @@ struct fd_device * fd_device_ref(struct fd_device *dev)
 static void fd_device_del_impl(struct fd_device *dev)
 {
 	int close_fd = dev->closefd ? dev->fd : -1;
+
+	simple_mtx_assert_locked(&table_lock);
+
 	fd_bo_cache_cleanup(&dev->bo_cache, 0);
+	fd_bo_cache_cleanup(&dev->ring_cache, 0);
 	_mesa_hash_table_destroy(dev->handle_table, NULL);
 	_mesa_hash_table_destroy(dev->name_table, NULL);
 	dev->funcs->destroy(dev);
@@ -118,18 +122,18 @@ static void fd_device_del_impl(struct fd_device *dev)
 
 void fd_device_del_locked(struct fd_device *dev)
 {
-	if (!atomic_dec_and_test(&dev->refcnt))
+	if (!p_atomic_dec_zero(&dev->refcnt))
 		return;
 	fd_device_del_impl(dev);
 }
 
 void fd_device_del(struct fd_device *dev)
 {
-	if (!atomic_dec_and_test(&dev->refcnt))
+	if (!p_atomic_dec_zero(&dev->refcnt))
 		return;
-	pthread_mutex_lock(&table_lock);
+	simple_mtx_lock(&table_lock);
 	fd_device_del_impl(dev);
-	pthread_mutex_unlock(&table_lock);
+	simple_mtx_unlock(&table_lock);
 }
 
 int fd_device_fd(struct fd_device *dev)
@@ -140,4 +144,22 @@ int fd_device_fd(struct fd_device *dev)
 enum fd_version fd_device_version(struct fd_device *dev)
 {
 	return dev->version;
+}
+
+bool fd_dbg(void)
+{
+	static int dbg;
+
+	if (!dbg)
+		dbg = getenv("LIBGL_DEBUG") ? 1 : -1;
+
+	return dbg == 1;
+}
+
+bool fd_has_syncobj(struct fd_device *dev)
+{
+	uint64_t value;
+	if (drmGetCap(dev->fd, DRM_CAP_SYNCOBJ, &value))
+		return false;
+	return value && dev->version >= FD_VERSION_FENCE_FD;
 }

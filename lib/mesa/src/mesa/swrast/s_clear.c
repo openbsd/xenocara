@@ -27,7 +27,7 @@
 #include "main/condrender.h"
 #include "main/format_pack.h"
 #include "main/macros.h"
-#include "main/imports.h"
+
 #include "main/mtypes.h"
 
 #include "s_context.h"
@@ -290,8 +290,7 @@ _swrast_Clear(struct gl_context *ctx, GLbitfield buffers)
 	 BUFFER_BIT_BACK_RIGHT |
 	 BUFFER_BIT_DEPTH |
 	 BUFFER_BIT_STENCIL |
-	 BUFFER_BIT_ACCUM |
-         BUFFER_BIT_AUX0;
+	 BUFFER_BIT_ACCUM;
       assert((buffers & (~legalBits)) == 0);
    }
 #endif

@@ -542,7 +542,22 @@ depth_test_quad(struct quad_stage *qs,
    unsigned zmask = 0;
    unsigned j;
 
-   switch (softpipe->depth_stencil->depth.func) {
+#define DEPTHTEST(l, op, r) do { \
+      if (data->format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT || \
+          data->format == PIPE_FORMAT_Z32_FLOAT) { \
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) { \
+            if (((float *)l)[j] op ((float *)r)[j]) \
+               zmask |= (1 << j); \
+         } \
+      } else { \
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) { \
+            if (l[j] op r[j]) \
+               zmask |= (1 << j); \
+         } \
+      } \
+   } while (0)
+
+   switch (softpipe->depth_stencil->depth_func) {
    case PIPE_FUNC_NEVER:
       /* zmask = 0 */
       break;
@@ -550,40 +565,22 @@ depth_test_quad(struct quad_stage *qs,
       /* Note this is pretty much a single sse or cell instruction.  
        * Like this:  quad->mask &= (quad->outputs.depth < zzzz);
        */
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] < data->bzzzz[j]) 
-	    zmask |= 1 << j;
-      }
+      DEPTHTEST(data->qzzzz,  <, data->bzzzz);
       break;
    case PIPE_FUNC_EQUAL:
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] == data->bzzzz[j]) 
-	    zmask |= 1 << j;
-      }
+      DEPTHTEST(data->qzzzz, ==, data->bzzzz);
       break;
    case PIPE_FUNC_LEQUAL:
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] <= data->bzzzz[j]) 
-	    zmask |= (1 << j);
-      }
+      DEPTHTEST(data->qzzzz, <=, data->bzzzz);
       break;
    case PIPE_FUNC_GREATER:
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] > data->bzzzz[j]) 
-	    zmask |= (1 << j);
-      }
+      DEPTHTEST(data->qzzzz,  >, data->bzzzz);
       break;
    case PIPE_FUNC_NOTEQUAL:
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] != data->bzzzz[j]) 
-	    zmask |= (1 << j);
-      }
+      DEPTHTEST(data->qzzzz, !=, data->bzzzz);
       break;
    case PIPE_FUNC_GEQUAL:
-      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
-	 if (data->qzzzz[j] >= data->bzzzz[j]) 
-	    zmask |= (1 << j);
-      }
+      DEPTHTEST(data->qzzzz, >=, data->bzzzz);
       break;
    case PIPE_FUNC_ALWAYS:
       zmask = MASK_ALL;
@@ -600,7 +597,7 @@ depth_test_quad(struct quad_stage *qs,
     * depth.writemask is FALSE, may still need to write out buffer
     * data due to stencil changes.
     */
-   if (softpipe->depth_stencil->depth.writemask) {
+   if (softpipe->depth_stencil->depth_writemask) {
       for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (quad->inout.mask & (1 << j)) {
             data->bzzzz[j] = data->qzzzz[j];
@@ -659,7 +656,7 @@ depth_stencil_test_quad(struct quad_stage *qs,
 
    if (quad->inout.mask) {
       /* now the pixels that passed the stencil test are depth tested */
-      if (softpipe->depth_stencil->depth.enabled) {
+      if (softpipe->depth_stencil->depth_enabled) {
          const unsigned origMask = quad->inout.mask;
 
          depth_test_quad(qs, data, quad);  /* quad->mask is updated */
@@ -689,7 +686,7 @@ depth_stencil_test_quad(struct quad_stage *qs,
                            struct quad_header *quads[],                 \
                            unsigned nr )                                \
    {                                                                    \
-      const float ref = qs->softpipe->depth_stencil->alpha.ref_value;   \
+      const float ref = qs->softpipe->depth_stencil->alpha_ref_value;   \
       const uint cbuf = 0; /* only output[0].alpha is tested */         \
       unsigned pass_nr = 0;                                             \
       unsigned i;                                                       \
@@ -728,7 +725,7 @@ alpha_test_quads(struct quad_stage *qs,
                  struct quad_header *quads[], 
                  unsigned nr)
 {
-   switch (qs->softpipe->depth_stencil->alpha.func) {
+   switch (qs->softpipe->depth_stencil->alpha_func) {
    case PIPE_FUNC_LESS:
       return alpha_test_quads_LESS( qs, quads, nr );
    case PIPE_FUNC_EQUAL:
@@ -747,6 +744,76 @@ alpha_test_quads(struct quad_stage *qs,
    default:
       return 0;
    }
+}
+
+
+/**
+ * EXT_depth_bounds_test has some careful language about precision:
+ *
+ *     At what precision is the depth bounds test carried out?
+ *
+ *       RESOLUTION:  For the purposes of the test, the bounds are converted
+ *       to fixed-point as though they were to be written to the depth buffer,
+ *       and the comparison uses those quantized bounds.
+ *
+ * We choose the obvious interpretation that Z32F needs no such conversion.
+ */
+static unsigned
+depth_bounds_test_quads(struct quad_stage *qs,
+                        struct quad_header *quads[],
+                        unsigned nr,
+                        struct depth_data *data)
+{
+   struct pipe_depth_stencil_alpha_state *dsa = qs->softpipe->depth_stencil;
+   unsigned i = 0, pass_nr = 0;
+   enum pipe_format format = util_format_get_depth_only(data->format);
+   double min = dsa->depth_bounds_min;
+   double max = dsa->depth_bounds_max;
+
+   for (i = 0; i < nr; i++) {
+      unsigned j = 0, passMask = 0;
+
+      get_depth_stencil_values(data, quads[i]);
+
+      if (format == PIPE_FORMAT_Z32_FLOAT) {
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+            double z = uif(data->bzzzz[j]);
+
+            if (z >= min && z <= max)
+               passMask |= (1 << j);
+         }
+      } else {
+         unsigned imin, imax;
+
+         if (format == PIPE_FORMAT_Z16_UNORM) {
+            imin = ((unsigned) (min * 65535.0)) & 0xffff;
+            imax = ((unsigned) (max * 65535.0)) & 0xffff;
+         } else if (format == PIPE_FORMAT_Z32_UNORM) {
+            imin = (unsigned) (min * 4294967295.0);
+            imax = (unsigned) (max * 4294967295.0);
+         } else if (format == PIPE_FORMAT_Z24X8_UNORM ||
+                    format == PIPE_FORMAT_X8Z24_UNORM) {
+            imin = ((unsigned) (min * 16777215.0)) & 0xffffff;
+            imax = ((unsigned) (max * 16777215.0)) & 0xffffff;
+         } else {
+            unreachable("Unknown depth buffer format");
+         }
+
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+            unsigned iz = data->bzzzz[j];
+
+            if (iz >= imin && iz <= imax)
+               passMask |= (1 << j);
+         }
+      }
+
+      quads[i]->inout.mask &= passMask;
+
+      if (quads[i]->inout.mask)
+         quads[pass_nr++] = quads[i];
+   }
+
+   return pass_nr;
 }
 
 
@@ -784,18 +851,15 @@ depth_test_quads_fallback(struct quad_stage *qs,
    const struct tgsi_shader_info *fsInfo = &qs->softpipe->fs_variant->info;
    boolean interp_depth = !fsInfo->writes_z || qs->softpipe->early_depth;
    boolean shader_stencil_ref = fsInfo->writes_stencil;
+   boolean have_zs = !!qs->softpipe->framebuffer.zsbuf;
    struct depth_data data;
    unsigned vp_idx = quads[0]->input.viewport_index;
 
    data.use_shader_stencil_refs = FALSE;
 
-   if (qs->softpipe->depth_stencil->alpha.enabled) {
-      nr = alpha_test_quads(qs, quads, nr);
-   }
-
-   if (qs->softpipe->framebuffer.zsbuf &&
-         (qs->softpipe->depth_stencil->depth.enabled ||
-          qs->softpipe->depth_stencil->stencil[0].enabled)) {
+   if (have_zs && (qs->softpipe->depth_stencil->depth_enabled ||
+                   qs->softpipe->depth_stencil->stencil[0].enabled ||
+                   qs->softpipe->depth_stencil->depth_bounds_test)) {
       float near_val, far_val;
 
       data.ps = qs->softpipe->framebuffer.zsbuf;
@@ -809,11 +873,33 @@ depth_test_quads_fallback(struct quad_stage *qs,
       far_val = near_val + (qs->softpipe->viewports[vp_idx].scale[2] * 2.0);
       data.minval = MIN2(near_val, far_val);
       data.maxval = MAX2(near_val, far_val);
+   }
 
+   /* EXT_depth_bounds_test says:
+    *
+    *     Where should the depth bounds test take place in the OpenGL fragment
+    *     processing pipeline?
+    *
+    *       RESOLUTION:  After scissor test, before alpha test. In practice,
+    *       this is a logical placement of the test.  An implementation is
+    *       free to perform the test in a manner that is consistent with the
+    *       specified ordering.
+    */
+
+   if (have_zs && qs->softpipe->depth_stencil->depth_bounds_test) {
+      nr = depth_bounds_test_quads(qs, quads, nr, &data);
+   }
+
+   if (qs->softpipe->depth_stencil->alpha_enabled) {
+      nr = alpha_test_quads(qs, quads, nr);
+   }
+
+   if (have_zs && (qs->softpipe->depth_stencil->depth_enabled ||
+                   qs->softpipe->depth_stencil->stencil[0].enabled)) {
       for (i = 0; i < nr; i++) {
          get_depth_stencil_values(&data, quads[i]);
 
-         if (qs->softpipe->depth_stencil->depth.enabled) {
+         if (qs->softpipe->depth_stencil->depth_enabled) {
             if (interp_depth)
                interpolate_quad_depth(quads[i]);
 
@@ -831,7 +917,7 @@ depth_test_quads_fallback(struct quad_stage *qs,
             if (!depth_test_quad(qs, &data, quads[i]))
                continue;
 
-            if (qs->softpipe->depth_stencil->depth.writemask)
+            if (qs->softpipe->depth_stencil->depth_writemask)
                write_depth_stencil_values(&data, quads[i]);
          }
 
@@ -904,19 +990,21 @@ choose_depth_test(struct quad_stage *qs,
 
    boolean interp_depth = !fsInfo->writes_z || qs->softpipe->early_depth;
 
-   boolean alpha = qs->softpipe->depth_stencil->alpha.enabled;
+   boolean alpha = qs->softpipe->depth_stencil->alpha_enabled;
 
-   boolean depth = qs->softpipe->depth_stencil->depth.enabled;
+   boolean depth = qs->softpipe->depth_stencil->depth_enabled;
 
-   unsigned depthfunc = qs->softpipe->depth_stencil->depth.func;
+   unsigned depthfunc = qs->softpipe->depth_stencil->depth_func;
 
    boolean stencil = qs->softpipe->depth_stencil->stencil[0].enabled;
 
-   boolean depthwrite = qs->softpipe->depth_stencil->depth.writemask;
+   boolean depthwrite = qs->softpipe->depth_stencil->depth_writemask;
 
    boolean occlusion = qs->softpipe->active_query_count;
 
    boolean clipped = !qs->softpipe->rasterizer->depth_clip_near;
+
+   boolean depth_bounds = qs->softpipe->depth_stencil->depth_bounds_test;
 
    if(!qs->softpipe->framebuffer.zsbuf)
       depth = depthwrite = stencil = FALSE;
@@ -929,7 +1017,8 @@ choose_depth_test(struct quad_stage *qs,
        !depth &&
        !occlusion &&
        !clipped &&
-       !stencil) {
+       !stencil &&
+       !depth_bounds) {
       qs->run = depth_noop;
    }
    else if (!alpha && 
@@ -938,7 +1027,8 @@ choose_depth_test(struct quad_stage *qs,
             depthwrite && 
             !occlusion &&
             !clipped &&
-            !stencil) 
+            !stencil &&
+            !depth_bounds)
    {
       if (qs->softpipe->framebuffer.zsbuf->format == PIPE_FORMAT_Z16_UNORM) {
          switch (depthfunc) {

@@ -35,7 +35,7 @@ libamd_common_llvm = static_library(
   'amd_common_llvm',
   [amd_common_llvm_files],
   include_directories : [
-    inc_common, inc_compiler, inc_mesa, inc_mapi, inc_amd, inc_amd_common
+    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_compiler, inc_amd, inc_amd_common
   ],
   link_with: [
     libamd_common
@@ -44,7 +44,6 @@ libamd_common_llvm = static_library(
     dep_llvm, dep_thread, dep_elf, dep_libdrm_amdgpu, dep_valgrind,
     idep_nir_headers, idep_amdgfxregs_h,
   ],
-  c_args : [c_vis_args],
-  cpp_args : [cpp_vis_args],
+  gnu_symbol_visibility : 'hidden',
 )
 

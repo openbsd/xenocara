@@ -58,6 +58,18 @@
 #include <xcb/xcb.h>
 #include <xcb/glx.h>
 
+#define __GLX_MIN_CONFIG_PROPS	18
+#define __GLX_EXT_CONFIG_PROPS	32
+
+/*
+** Since we send all non-core visual properties as token, value pairs,
+** we require 2 words across the wire. In order to maintain backwards
+** compatibility, we need to send the total number of words that the
+** VisualConfigs are sent back in so old libraries can simply "ignore"
+** the new properties.
+*/
+#define __GLX_TOTAL_CONFIG \
+   (__GLX_MIN_CONFIG_PROPS + 2 * __GLX_EXT_CONFIG_PROPS)
 
 #ifdef DEBUG
 void __glXDumpDrawBuffer(struct glx_context * ctx);
@@ -261,10 +273,6 @@ glx_display_free(struct glx_display *priv)
    priv->driswDisplay = NULL;
 
 #if defined (GLX_USE_DRM)
-   if (priv->driDisplay)
-      (*priv->driDisplay->destroyDisplay) (priv->driDisplay);
-   priv->driDisplay = NULL;
-
    if (priv->dri2Display)
       (*priv->dri2Display->destroyDisplay) (priv->dri2Display);
    priv->dri2Display = NULL;
@@ -623,10 +631,8 @@ createConfigsFromProperties(Display * dpy, int nvisuals, int nprops,
    if (nprops == 0)
       return NULL;
 
-   /* FIXME: Is the __GLX_MIN_CONFIG_PROPS test correct for FBconfigs? */
-
    /* Check number of properties */
-   if (nprops < __GLX_MIN_CONFIG_PROPS || nprops > __GLX_MAX_CONFIG_PROPS)
+   if (nprops < __GLX_MIN_CONFIG_PROPS)
       return NULL;
 
    /* Allocate memory for our config structure */
@@ -655,8 +661,6 @@ createConfigsFromProperties(Display * dpy, int nvisuals, int nprops,
        */
       m->drawableType = GLX_WINDOW_BIT | GLX_PIXMAP_BIT | GLX_PBUFFER_BIT;
 #endif
-      /* Older X servers don't send this so we default it here. */
-      m->sRGBCapable = GL_FALSE;
        __glXInitializeVisualConfigFromTags(m, nprops, props,
                                           tagged_only, GL_TRUE);
       m->screen = screen;
@@ -819,8 +823,6 @@ AllocAndFetchScreenConfigs(Display * dpy, struct glx_display * priv)
 #endif /* HAVE_DRI3 */
       if (psc == NULL && priv->dri2Display)
 	 psc = (*priv->dri2Display->createScreen) (i, priv);
-      if (psc == NULL && priv->driDisplay)
-	 psc = (*priv->driDisplay->createScreen) (i, priv);
 #endif /* GLX_USE_DRM */
 
 #ifdef GLX_USE_WINDOWSGL
@@ -926,8 +928,8 @@ __glXInitialize(Display * dpy)
       if (!env_var_as_boolean("LIBGL_DRI3_DISABLE", false))
          dpyPriv->dri3Display = dri3_create_display(dpy);
 #endif /* HAVE_DRI3 */
-      dpyPriv->dri2Display = dri2CreateDisplay(dpy);
-      dpyPriv->driDisplay = driCreateDisplay(dpy);
+      if (!env_var_as_boolean("LIBGL_DRI2_DISABLE", false))
+         dpyPriv->dri2Display = dri2CreateDisplay(dpy);
    }
 #endif /* GLX_USE_DRM */
    if (glx_direct)

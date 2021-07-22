@@ -28,17 +28,77 @@
 #include <stdint.h>
 #include <vulkan/vulkan.h>
 
+#include "compiler/nir/nir.h"
+#include "compiler/shader_enums.h"
+#include "pipe/p_state.h"
+
+#include "zink_compiler.h"
+
 struct spirv_shader {
    uint32_t *words;
    size_t num_words;
 };
 
 struct nir_shader;
+struct pipe_stream_output_info;
 
 struct spirv_shader *
-nir_to_spirv(struct nir_shader *s);
+nir_to_spirv(struct nir_shader *s, const struct zink_so_info *so_info);
 
 void
 spirv_shader_delete(struct spirv_shader *s);
+
+static inline bool
+type_is_counter(const struct glsl_type *type)
+{
+   return glsl_get_base_type(glsl_without_array(type)) == GLSL_TYPE_ATOMIC_UINT;
+}
+
+static inline VkDescriptorType
+zink_sampler_type(const struct glsl_type *type)
+{
+   assert(glsl_type_is_sampler(type));
+   switch (glsl_get_sampler_dim(type)) {
+   case GLSL_SAMPLER_DIM_1D:
+   case GLSL_SAMPLER_DIM_2D:
+   case GLSL_SAMPLER_DIM_3D:
+   case GLSL_SAMPLER_DIM_CUBE:
+   case GLSL_SAMPLER_DIM_RECT:
+   case GLSL_SAMPLER_DIM_MS:
+   case GLSL_SAMPLER_DIM_EXTERNAL:
+      return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   case GLSL_SAMPLER_DIM_BUF:
+      return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+   default:
+      unreachable("unimplemented");
+   }
+   return 0;
+}
+
+static inline VkDescriptorType
+zink_image_type(const struct glsl_type *type)
+{
+   assert(glsl_type_is_image(type));
+   switch (glsl_get_sampler_dim(type)) {
+   case GLSL_SAMPLER_DIM_1D:
+   case GLSL_SAMPLER_DIM_2D:
+   case GLSL_SAMPLER_DIM_3D:
+   case GLSL_SAMPLER_DIM_CUBE:
+   case GLSL_SAMPLER_DIM_RECT:
+   case GLSL_SAMPLER_DIM_MS:
+   case GLSL_SAMPLER_DIM_EXTERNAL:
+      return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+   case GLSL_SAMPLER_DIM_BUF:
+      return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+   default:
+      unreachable("unimplemented");
+   }
+   return 0;
+}
+
+struct nir_shader;
+
+bool
+zink_nir_lower_b2b(struct nir_shader *shader);
 
 #endif

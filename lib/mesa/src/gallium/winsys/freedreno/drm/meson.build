@@ -28,6 +28,9 @@ libfreedrenowinsys = static_library(
     inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_gallium_drivers,
     inc_freedreno,
   ],
-  c_args : [c_vis_args],
-  dependencies : [dep_libdrm],
+  gnu_symbol_visibility : 'hidden',
+  dependencies : [
+    dep_libdrm,
+    idep_mesautil,
+  ],
 )

@@ -120,7 +120,7 @@ lower_subgroup_op_to_scalar(nir_builder *b, nir_intrinsic_instr *intrin,
 
    nir_ssa_def *value = nir_ssa_for_src(b, intrin->src[0],
                                            intrin->num_components);
-   nir_ssa_def *reads[4];
+   nir_ssa_def *reads[NIR_MAX_VEC_COMPONENTS];
 
    for (unsigned i = 0; i < intrin->num_components; i++) {
       nir_intrinsic_instr *chan_intrin =
@@ -187,20 +187,13 @@ lower_vote_eq_to_ballot(nir_builder *b, nir_intrinsic_instr *intrin,
    /* We have to implicitly lower to scalar */
    nir_ssa_def *all_eq = NULL;
    for (unsigned i = 0; i < intrin->num_components; i++) {
-      nir_intrinsic_instr *rfi =
-         nir_intrinsic_instr_create(b->shader,
-                                    nir_intrinsic_read_first_invocation);
-      nir_ssa_dest_init(&rfi->instr, &rfi->dest,
-                        1, value->bit_size, NULL);
-      rfi->num_components = 1;
-      rfi->src[0] = nir_src_for_ssa(nir_channel(b, value, i));
-      nir_builder_instr_insert(b, &rfi->instr);
+      nir_ssa_def *rfi = nir_read_first_invocation(b, nir_channel(b, value, i));
 
       nir_ssa_def *is_eq;
       if (intrin->intrinsic == nir_intrinsic_vote_feq) {
-         is_eq = nir_feq(b, &rfi->dest.ssa, nir_channel(b, value, i));
+         is_eq = nir_feq(b, rfi, nir_channel(b, value, i));
       } else {
-         is_eq = nir_ieq(b, &rfi->dest.ssa, nir_channel(b, value, i));
+         is_eq = nir_ieq(b, rfi, nir_channel(b, value, i));
       }
 
       if (all_eq == NULL) {
@@ -210,35 +203,68 @@ lower_vote_eq_to_ballot(nir_builder *b, nir_intrinsic_instr *intrin,
       }
    }
 
-   nir_intrinsic_instr *ballot =
-      nir_intrinsic_instr_create(b->shader, nir_intrinsic_ballot);
-   nir_ssa_dest_init(&ballot->instr, &ballot->dest,
-                     1, options->ballot_bit_size, NULL);
-   ballot->num_components = 1;
-   ballot->src[0] = nir_src_for_ssa(nir_inot(b, all_eq));
-   nir_builder_instr_insert(b, &ballot->instr);
+   nir_ssa_def *ballot = nir_ballot(b, 1, options->ballot_bit_size, nir_inot(b, all_eq));
+   return nir_ieq(b, ballot, nir_imm_intN_t(b, 0, options->ballot_bit_size));
+}
 
-   return nir_ieq(b, &ballot->dest.ssa,
-                  nir_imm_intN_t(b, 0, options->ballot_bit_size));
+static nir_ssa_def *
+lower_shuffle_to_swizzle(nir_builder *b, nir_intrinsic_instr *intrin,
+                         const nir_lower_subgroups_options *options)
+{
+   unsigned mask = nir_src_as_uint(intrin->src[1]);
+
+   if (mask >= 32)
+      return NULL;
+
+   nir_intrinsic_instr *swizzle = nir_intrinsic_instr_create(
+      b->shader, nir_intrinsic_masked_swizzle_amd);
+   swizzle->num_components = intrin->num_components;
+   nir_src_copy(&swizzle->src[0], &intrin->src[0], swizzle);
+   nir_intrinsic_set_swizzle_mask(swizzle, (mask << 10) | 0x1f);
+   nir_ssa_dest_init(&swizzle->instr, &swizzle->dest,
+                     intrin->dest.ssa.num_components,
+                     intrin->dest.ssa.bit_size, NULL);
+
+   if (options->lower_to_scalar && swizzle->num_components > 1) {
+      return lower_subgroup_op_to_scalar(b, swizzle, options->lower_shuffle_to_32bit);
+   } else if (options->lower_shuffle_to_32bit && swizzle->src[0].ssa->bit_size == 64) {
+      return lower_subgroup_op_to_32bit(b, swizzle);
+   } else {
+      nir_builder_instr_insert(b, &swizzle->instr);
+      return &swizzle->dest.ssa;
+   }
 }
 
 static nir_ssa_def *
 lower_shuffle(nir_builder *b, nir_intrinsic_instr *intrin,
-              bool lower_to_scalar, bool lower_to_32bit)
+              const nir_lower_subgroups_options *options)
 {
+   if (intrin->intrinsic == nir_intrinsic_shuffle_xor &&
+       options->lower_shuffle_to_swizzle_amd &&
+       nir_src_is_const(intrin->src[1])) {
+      nir_ssa_def *result =
+         lower_shuffle_to_swizzle(b, intrin, options);
+      if (result)
+         return result;
+   }
+
    nir_ssa_def *index = nir_load_subgroup_invocation(b);
+   bool is_shuffle = false;
    switch (intrin->intrinsic) {
    case nir_intrinsic_shuffle_xor:
       assert(intrin->src[1].is_ssa);
       index = nir_ixor(b, index, intrin->src[1].ssa);
+      is_shuffle = true;
       break;
    case nir_intrinsic_shuffle_up:
       assert(intrin->src[1].is_ssa);
       index = nir_isub(b, index, intrin->src[1].ssa);
+      is_shuffle = true;
       break;
    case nir_intrinsic_shuffle_down:
       assert(intrin->src[1].is_ssa);
       index = nir_iadd(b, index, intrin->src[1].ssa);
+      is_shuffle = true;
       break;
    case nir_intrinsic_quad_broadcast:
       assert(intrin->src[1].is_ssa);
@@ -276,7 +302,8 @@ lower_shuffle(nir_builder *b, nir_intrinsic_instr *intrin,
                      intrin->dest.ssa.num_components,
                      intrin->dest.ssa.bit_size, NULL);
 
-   if (lower_to_scalar && shuffle->num_components > 1) {
+   bool lower_to_32bit = options->lower_shuffle_to_32bit && is_shuffle;
+   if (options->lower_to_scalar && shuffle->num_components > 1) {
       return lower_subgroup_op_to_scalar(b, shuffle, lower_to_32bit);
    } else if (lower_to_32bit && shuffle->src[0].ssa->bit_size == 64) {
       return lower_subgroup_op_to_32bit(b, shuffle);
@@ -306,7 +333,7 @@ lower_dynamic_quad_broadcast(nir_builder *b, nir_intrinsic_instr *intrin,
                              const nir_lower_subgroups_options *options)
 {
    if (!options->lower_quad_broadcast_dynamic_to_const)
-      return lower_shuffle(b, intrin, options->lower_to_scalar, false);
+      return lower_shuffle(b, intrin, options);
 
    nir_ssa_def *dst = NULL;
 
@@ -426,15 +453,9 @@ lower_subgroups_instr(nir_builder *b, nir_instr *instr, void *_options)
           intrin->dest.ssa.bit_size == options->ballot_bit_size)
          return NULL;
 
-      nir_intrinsic_instr *ballot =
-         nir_intrinsic_instr_create(b->shader, nir_intrinsic_ballot);
-      ballot->num_components = 1;
-      nir_ssa_dest_init(&ballot->instr, &ballot->dest,
-                        1, options->ballot_bit_size, NULL);
-      nir_src_copy(&ballot->src[0], &intrin->src[0], ballot);
-      nir_builder_instr_insert(b, &ballot->instr);
+      nir_ssa_def *ballot = nir_ballot(b, 1, options->ballot_bit_size, intrin->src[0].ssa);
 
-      return uint_to_ballot_type(b, &ballot->dest.ssa,
+      return uint_to_ballot_type(b, ballot,
                                  intrin->dest.ssa.num_components,
                                  intrin->dest.ssa.bit_size);
    }
@@ -508,13 +529,10 @@ lower_subgroups_instr(nir_builder *b, nir_instr *instr, void *_options)
    }
 
    case nir_intrinsic_elect: {
-      nir_intrinsic_instr *first =
-         nir_intrinsic_instr_create(b->shader,
-                                    nir_intrinsic_first_invocation);
-      nir_ssa_dest_init(&first->instr, &first->dest, 1, 32, NULL);
-      nir_builder_instr_insert(b, &first->instr);
+      if (!options->lower_elect)
+         return NULL;
 
-      return nir_ieq(b, nir_load_subgroup_invocation(b), &first->dest.ssa);
+      return nir_ieq(b, nir_load_subgroup_invocation(b), nir_first_invocation(b));
    }
 
    case nir_intrinsic_shuffle:
@@ -523,12 +541,11 @@ lower_subgroups_instr(nir_builder *b, nir_instr *instr, void *_options)
       else if (options->lower_shuffle_to_32bit && intrin->src[0].ssa->bit_size == 64)
          return lower_subgroup_op_to_32bit(b, intrin);
       break;
-
    case nir_intrinsic_shuffle_xor:
    case nir_intrinsic_shuffle_up:
    case nir_intrinsic_shuffle_down:
       if (options->lower_shuffle)
-         return lower_shuffle(b, intrin, options->lower_to_scalar, options->lower_shuffle_to_32bit);
+         return lower_shuffle(b, intrin, options);
       else if (options->lower_to_scalar && intrin->num_components > 1)
          return lower_subgroup_op_to_scalar(b, intrin, options->lower_shuffle_to_32bit);
       else if (options->lower_shuffle_to_32bit && intrin->src[0].ssa->bit_size == 64)

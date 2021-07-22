@@ -45,8 +45,8 @@ radeon_cs_memory_below_limit(struct r600_common_screen *screen,
 			     struct radeon_cmdbuf *cs,
 			     uint64_t vram, uint64_t gtt)
 {
-	vram += cs->used_vram;
-	gtt += cs->used_gart;
+	vram += (uint64_t)cs->used_vram_kb * 1024;
+	gtt += (uint64_t)cs->used_gart_kb * 1024;
 
 	/* Anything that goes above the VRAM size should go to GTT. */
 	if (vram > screen->info.vram_size)
@@ -74,7 +74,7 @@ static inline unsigned radeon_add_to_buffer_list(struct r600_common_context *rct
 {
 	assert(usage);
 	return rctx->ws->cs_add_buffer(
-		ring->cs, rbo->buf,
+		&ring->cs, rbo->buf,
 		(enum radeon_bo_usage)(usage | RADEON_USAGE_SYNCHRONIZED),
 		rbo->domains, priority) * 4;
 }
@@ -105,7 +105,7 @@ radeon_add_to_buffer_list_check_mem(struct r600_common_context *rctx,
 				    bool check_mem)
 {
 	if (check_mem &&
-	    !radeon_cs_memory_below_limit(rctx->screen, ring->cs,
+	    !radeon_cs_memory_below_limit(rctx->screen, &ring->cs,
 					  rctx->vram + rbo->vram_usage,
 					  rctx->gtt + rbo->gart_usage))
 		ring->flush(rctx, PIPE_FLUSH_ASYNC, NULL);
@@ -118,7 +118,7 @@ static inline void r600_emit_reloc(struct r600_common_context *rctx,
 				   enum radeon_bo_usage usage,
 				   enum radeon_bo_priority priority)
 {
-	struct radeon_cmdbuf *cs = ring->cs;
+	struct radeon_cmdbuf *cs = &ring->cs;
 	bool has_vm = ((struct r600_common_screen*)rctx->b.screen)->info.r600_has_virtual_memory;
 	unsigned reloc = radeon_add_to_buffer_list(rctx, ring, rbo, usage, priority);
 

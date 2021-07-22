@@ -45,7 +45,7 @@ sp_alloc_tile(struct softpipe_tile_cache *tc);
 /**
  * Return the position in the cache for the tile that contains win pos (x,y).
  * We currently use a direct mapped cache so this is like a hack key.
- * At some point we should investige something more sophisticated, like
+ * At some point we should investigate something more sophisticated, like
  * a LRU replacement policy.
  */
 #define CACHE_POS(x, y, l)                        \
@@ -202,8 +202,8 @@ sp_tile_cache_set_surface(struct softpipe_tile_cache *tc,
          for (i = 0; i < tc->num_maps; i++) {
             tc->transfer_map[i] = pipe_transfer_map(pipe, ps->texture,
                                                     ps->u.tex.level, ps->u.tex.first_layer + i,
-                                                    PIPE_TRANSFER_READ_WRITE |
-                                                    PIPE_TRANSFER_UNSYNCHRONIZED,
+                                                    PIPE_MAP_READ_WRITE |
+                                                    PIPE_MAP_UNSYNCHRONIZED,
                                                     0, 0, ps->width, ps->height,
                                                     &tc->transfer[i]);
          }
@@ -367,22 +367,10 @@ sp_tile_cache_flush_clear(struct softpipe_tile_cache *tc, int layer)
                                  tc->tile->data.any, 0/*STRIDE*/);
             }
             else {
-               if (util_format_is_pure_uint(tc->surface->format)) {
-                  pipe_put_tile_ui_format(pt, tc->transfer_map[layer],
-                                          x, y, TILE_SIZE, TILE_SIZE,
-                                          tc->surface->format,
-                                          (unsigned *) tc->tile->data.colorui128);
-               } else if (util_format_is_pure_sint(tc->surface->format)) {
-                  pipe_put_tile_i_format(pt, tc->transfer_map[layer],
-                                         x, y, TILE_SIZE, TILE_SIZE,
-                                         tc->surface->format,
-                                         (int *) tc->tile->data.colori128);
-               } else {
-                  pipe_put_tile_rgba_format(pt, tc->transfer_map[layer],
-                                            x, y, TILE_SIZE, TILE_SIZE,
-                                            tc->surface->format,
-                                            (float *) tc->tile->data.color);
-               }
+               pipe_put_tile_rgba(pt, tc->transfer_map[layer],
+                                  x, y, TILE_SIZE, TILE_SIZE,
+                                  tc->surface->format,
+                                  tc->tile->data.color);
             }
             numCleared++;
          }
@@ -408,28 +396,12 @@ sp_flush_tile(struct softpipe_tile_cache* tc, unsigned pos)
                            tc->entries[pos]->data.depth32, 0/*STRIDE*/);
       }
       else {
-         if (util_format_is_pure_uint(tc->surface->format)) {
-            pipe_put_tile_ui_format(tc->transfer[layer], tc->transfer_map[layer],
-                                    tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                    tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                    TILE_SIZE, TILE_SIZE,
-                                    tc->surface->format,
-                                    (unsigned *) tc->entries[pos]->data.colorui128);
-         } else if (util_format_is_pure_sint(tc->surface->format)) {
-            pipe_put_tile_i_format(tc->transfer[layer], tc->transfer_map[layer],
-                                   tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                   tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                   TILE_SIZE, TILE_SIZE,
-                                   tc->surface->format,
-                                   (int *) tc->entries[pos]->data.colori128);
-         } else {
-            pipe_put_tile_rgba_format(tc->transfer[layer], tc->transfer_map[layer],
-                                      tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                      tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                      TILE_SIZE, TILE_SIZE,
-                                      tc->surface->format,
-                                      (float *) tc->entries[pos]->data.color);
-         }
+         pipe_put_tile_rgba(tc->transfer[layer], tc->transfer_map[layer],
+                            tc->tile_addrs[pos].bits.x * TILE_SIZE,
+                            tc->tile_addrs[pos].bits.y * TILE_SIZE,
+                            TILE_SIZE, TILE_SIZE,
+                            tc->surface->format,
+                            tc->entries[pos]->data.color);
       }
       tc->tile_addrs[pos].bits.invalid = 1;  /* mark as empty */
    }
@@ -538,28 +510,12 @@ sp_find_cached_tile(struct softpipe_tile_cache *tc,
                               tile->data.depth32, 0/*STRIDE*/);
          }
          else {
-            if (util_format_is_pure_uint(tc->surface->format)) {
-               pipe_put_tile_ui_format(tc->transfer[layer], tc->transfer_map[layer],
-                                      tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                      tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                      TILE_SIZE, TILE_SIZE,
-                                      tc->surface->format,
-                                      (unsigned *) tile->data.colorui128);
-            } else if (util_format_is_pure_sint(tc->surface->format)) {
-               pipe_put_tile_i_format(tc->transfer[layer], tc->transfer_map[layer],
-                                      tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                      tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                      TILE_SIZE, TILE_SIZE,
-                                      tc->surface->format,
-                                      (int *) tile->data.colori128);
-            } else {
-               pipe_put_tile_rgba_format(tc->transfer[layer], tc->transfer_map[layer],
-                                         tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                         tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                         TILE_SIZE, TILE_SIZE,
-                                         tc->surface->format,
-                                         (float *) tile->data.color);
-            }
+            pipe_put_tile_rgba(tc->transfer[layer], tc->transfer_map[layer],
+                               tc->tile_addrs[pos].bits.x * TILE_SIZE,
+                               tc->tile_addrs[pos].bits.y * TILE_SIZE,
+                               TILE_SIZE, TILE_SIZE,
+                               tc->surface->format,
+                               tile->data.color);
          }
       }
 
@@ -589,28 +545,12 @@ sp_find_cached_tile(struct softpipe_tile_cache *tc,
                               tile->data.depth32, 0/*STRIDE*/);
          }
          else {
-            if (util_format_is_pure_uint(tc->surface->format)) {
-               pipe_get_tile_ui_format(tc->transfer[layer], tc->transfer_map[layer],
-                                         tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                         tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                         TILE_SIZE, TILE_SIZE,
-                                         tc->surface->format,
-                                         (unsigned *) tile->data.colorui128);
-            } else if (util_format_is_pure_sint(tc->surface->format)) {
-               pipe_get_tile_i_format(tc->transfer[layer], tc->transfer_map[layer],
-                                         tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                         tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                         TILE_SIZE, TILE_SIZE,
-                                         tc->surface->format,
-                                         (int *) tile->data.colori128);
-            } else {
-               pipe_get_tile_rgba_format(tc->transfer[layer], tc->transfer_map[layer],
-                                         tc->tile_addrs[pos].bits.x * TILE_SIZE,
-                                         tc->tile_addrs[pos].bits.y * TILE_SIZE,
-                                         TILE_SIZE, TILE_SIZE,
-                                         tc->surface->format,
-                                         (float *) tile->data.color);
-            }
+            pipe_get_tile_rgba(tc->transfer[layer], tc->transfer_map[layer],
+                               tc->tile_addrs[pos].bits.x * TILE_SIZE,
+                               tc->tile_addrs[pos].bits.y * TILE_SIZE,
+                               TILE_SIZE, TILE_SIZE,
+                               tc->surface->format,
+                               tile->data.color);
          }
       }
    }

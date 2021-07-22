@@ -44,7 +44,7 @@ nv84_copy_firmware(const char *path, void *dest, ssize_t len)
    close(fd);
 
    if (r != len) {
-      fprintf(stderr, "reading firwmare file %s failed: %m\n", path);
+      fprintf(stderr, "reading firmware file %s failed: %m\n", path);
       return 1;
    }
 
@@ -619,7 +619,7 @@ nv84_video_buffer_create(struct pipe_context *pipe,
       debug_printf("Require interlaced video buffers\n");
       return NULL;
    }
-   if (template->chroma_format != PIPE_VIDEO_CHROMA_FORMAT_420) {
+   if (pipe_format_to_chroma_format(template->buffer_format) != PIPE_VIDEO_CHROMA_FORMAT_420) {
       debug_printf("Must use 4:2:0 format\n");
       return NULL;
    }
@@ -638,7 +638,6 @@ nv84_video_buffer_create(struct pipe_context *pipe,
    buffer->base.buffer_format = template->buffer_format;
    buffer->base.context = pipe;
    buffer->base.destroy = nv84_video_buffer_destroy;
-   buffer->base.chroma_format = template->chroma_format;
    buffer->base.width = template->width;
    buffer->base.height = template->height;
    buffer->base.get_sampler_view_planes = nv84_video_buffer_sampler_view_planes;

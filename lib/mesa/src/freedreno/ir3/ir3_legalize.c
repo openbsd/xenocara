@@ -28,15 +28,21 @@
 #include "util/u_math.h"
 
 #include "ir3.h"
-#include "ir3_compiler.h"
+#include "ir3_shader.h"
 
 /*
  * Legalize:
  *
- * We currently require that scheduling ensures that we have enough nop's
- * in all the right places.  The legalize step mostly handles fixing up
- * instruction flags ((ss)/(sy)/(ei)), and collapses sequences of nop's
- * into fewer nop's w/ rpt flag.
+ * The legalize pass handles ensuring sufficient nop's and sync flags for
+ * correct execution.
+ *
+ * 1) Iteratively determine where sync ((sy)/(ss)) flags are needed,
+ *    based on state flowing out of predecessor blocks until there is
+ *    no further change.  In some cases this requires inserting nops.
+ * 2) Mark (ei) on last varying input, and (ul) on last use of a0.x
+ * 3) Final nop scheduling for instruction latency
+ * 4) Resolve jumps and schedule blocks, marking potential convergence
+ *    points with (jp)
  */
 
 struct ir3_legalize_ctx {
@@ -80,7 +86,6 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 	if (bd->valid)
 		return false;
 
-	struct ir3_instruction *last_input = NULL;
 	struct ir3_instruction *last_rel = NULL;
 	struct ir3_instruction *last_n = NULL;
 	struct list_head instr_list;
@@ -88,6 +93,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 	struct ir3_legalize_state *state = &bd->state;
 	bool last_input_needs_ss = false;
 	bool has_tex_prefetch = false;
+	bool mergedregs = ctx->so->mergedregs;
 
 	/* our input state is the OR of all predecessor blocks' state: */
 	set_foreach(block->predecessors, entry) {
@@ -106,6 +112,20 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				&state->needs_sy, &pstate->needs_sy);
 	}
 
+	unsigned input_count = 0;
+
+	foreach_instr (n, &block->instr_list) {
+		if (is_input(n)) {
+			input_count++;
+		}
+	}
+
+	unsigned inputs_remaining = input_count;
+
+	/* Inputs can only be in the first block */
+	assert(input_count == 0 ||
+		   block == list_first_entry(&block->shader->block_list, struct ir3_block, node));
+
 	/* remove all the instructions from the list, we'll be adding
 	 * them back in as we go
 	 */
@@ -113,7 +133,6 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 	list_inithead(&block->instr_list);
 
 	foreach_instr_safe (n, &instr_list) {
-		struct ir3_register *reg;
 		unsigned i;
 
 		n->flags &= ~(IR3_INSTR_SS | IR3_INSTR_SY);
@@ -133,15 +152,15 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		if (last_n && is_barrier(last_n)) {
 			n->flags |= IR3_INSTR_SS | IR3_INSTR_SY;
 			last_input_needs_ss = false;
-			regmask_init(&state->needs_ss_war);
-			regmask_init(&state->needs_ss);
-			regmask_init(&state->needs_sy);
+			regmask_init(&state->needs_ss_war, mergedregs);
+			regmask_init(&state->needs_ss, mergedregs);
+			regmask_init(&state->needs_sy, mergedregs);
 		}
 
-		if (last_n && (last_n->opc == OPC_IF)) {
+		if (last_n && (last_n->opc == OPC_PREDT)) {
 			n->flags |= IR3_INSTR_SS;
-			regmask_init(&state->needs_ss_war);
-			regmask_init(&state->needs_ss);
+			regmask_init(&state->needs_ss_war, mergedregs);
+			regmask_init(&state->needs_ss, mergedregs);
 		}
 
 		/* NOTE: consider dst register too.. it could happen that
@@ -151,7 +170,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		 * resulting in undefined results:
 		 */
 		for (i = 0; i < n->regs_count; i++) {
-			reg = n->regs[i];
+			struct ir3_register *reg = n->regs[i];
 
 			if (reg_gpr(reg)) {
 
@@ -162,13 +181,13 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				if (regmask_get(&state->needs_ss, reg)) {
 					n->flags |= IR3_INSTR_SS;
 					last_input_needs_ss = false;
-					regmask_init(&state->needs_ss_war);
-					regmask_init(&state->needs_ss);
+					regmask_init(&state->needs_ss_war, mergedregs);
+					regmask_init(&state->needs_ss, mergedregs);
 				}
 
 				if (regmask_get(&state->needs_sy, reg)) {
 					n->flags |= IR3_INSTR_SY;
-					regmask_init(&state->needs_sy);
+					regmask_init(&state->needs_sy, mergedregs);
 				}
 			}
 
@@ -181,12 +200,12 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		}
 
 		if (n->regs_count > 0) {
-			reg = n->regs[0];
+			struct ir3_register *reg = n->regs[0];
 			if (regmask_get(&state->needs_ss_war, reg)) {
 				n->flags |= IR3_INSTR_SS;
 				last_input_needs_ss = false;
-				regmask_init(&state->needs_ss_war);
-				regmask_init(&state->needs_ss);
+				regmask_init(&state->needs_ss_war, mergedregs);
+				regmask_init(&state->needs_ss, mergedregs);
 			}
 
 			if (last_rel && (reg->num == regid(REG_A0, 0))) {
@@ -211,29 +230,11 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		if (list_is_empty(&block->instr_list) && (opc_cat(n->opc) >= 5))
 			ir3_NOP(block);
 
-		if (is_nop(n) && !list_is_empty(&block->instr_list)) {
-			struct ir3_instruction *last = list_last_entry(&block->instr_list,
-					struct ir3_instruction, node);
-			if (is_nop(last) && (last->repeat < 5)) {
-				last->repeat++;
-				last->flags |= n->flags;
-				continue;
-			}
-
-			/* NOTE: I think the nopN encoding works for a5xx and
-			 * probably a4xx, but not a3xx.  So far only tested on
-			 * a6xx.
-			 */
-			if ((ctx->compiler->gpu_id >= 600) && !n->flags && (last->nop < 3) &&
-					((opc_cat(last->opc) == 2) || (opc_cat(last->opc) == 3))) {
-				last->nop++;
-				continue;
-			}
-		}
-
 		if (ctx->compiler->samgq_workaround &&
 			ctx->type == MESA_SHADER_VERTEX && n->opc == OPC_SAMGQ) {
 			struct ir3_instruction *samgp;
+
+			list_delinit(&n->node);
 
 			for (i = 0; i < 4; i++) {
 				samgp = ir3_instr_clone(n);
@@ -241,24 +242,16 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				if (i > 1)
 					samgp->flags |= IR3_INSTR_SY;
 			}
-			list_delinit(&n->node);
 		} else {
+			list_delinit(&n->node);
 			list_addtail(&n->node, &block->instr_list);
-		}
-
-		if (n->opc == OPC_DSXPP_1 || n->opc == OPC_DSYPP_1) {
-			struct ir3_instruction *op_p = ir3_instr_clone(n);
-			op_p->flags = IR3_INSTR_P;
-
-			ctx->so->need_fine_derivatives = true;
 		}
 
 		if (is_sfu(n))
 			regmask_set(&state->needs_ss, n->regs[0]);
 
-		if (is_tex(n) || (n->opc == OPC_META_TEX_PREFETCH)) {
+		if (is_tex_or_prefetch(n)) {
 			regmask_set(&state->needs_sy, n->regs[0]);
-			ctx->so->need_pixlod = true;
 			if (n->opc == OPC_META_TEX_PREFETCH)
 				has_tex_prefetch = true;
 		} else if (n->opc == OPC_RESINFO) {
@@ -293,51 +286,53 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		 * their src register(s):
 		 */
 		if (is_tex(n) || is_sfu(n) || is_mem(n)) {
-			foreach_src(reg, n) {
+			foreach_src (reg, n) {
 				if (reg_gpr(reg))
 					regmask_set(&state->needs_ss_war, reg);
 			}
 		}
 
 		if (is_input(n)) {
-			last_input = n;
 			last_input_needs_ss |= (n->opc == OPC_LDLV);
+
+			assert(inputs_remaining > 0);
+			inputs_remaining--;
+			if (inputs_remaining == 0) {
+				/* This is the last input. We add the (ei) flag to release
+				 * varying memory after this executes. If it's an ldlv,
+				 * however, we need to insert a dummy bary.f on which we can
+				 * set the (ei) flag. We may also need to insert an (ss) to
+				 * guarantee that all ldlv's have finished fetching their
+				 * results before releasing the varying memory.
+				 */
+				struct ir3_instruction *last_input = n;
+				if (n->opc == OPC_LDLV) {
+					struct ir3_instruction *baryf;
+
+					/* (ss)bary.f (ei)r63.x, 0, r0.x */
+					baryf = ir3_instr_create(block, OPC_BARY_F, 3);
+					ir3_reg_create(baryf, regid(63, 0), 0);
+					ir3_reg_create(baryf, 0, IR3_REG_IMMED)->iim_val = 0;
+					ir3_reg_create(baryf, regid(0, 0), 0);
+
+					last_input = baryf;
+				}
+
+				last_input->regs[0]->flags |= IR3_REG_EI;
+				if (last_input_needs_ss) {
+					last_input->flags |= IR3_INSTR_SS;
+					regmask_init(&state->needs_ss_war, mergedregs);
+					regmask_init(&state->needs_ss, mergedregs);
+				}
+			}
 		}
 
 		last_n = n;
 	}
 
-	if (last_input) {
-		assert(block == list_first_entry(&block->shader->block_list,
-				struct ir3_block, node));
-		/* special hack.. if using ldlv to bypass interpolation,
-		 * we need to insert a dummy bary.f on which we can set
-		 * the (ei) flag:
-		 */
-		if (is_mem(last_input) && (last_input->opc == OPC_LDLV)) {
-			struct ir3_instruction *baryf;
+	assert(inputs_remaining == 0);
 
-			/* (ss)bary.f (ei)r63.x, 0, r0.x */
-			baryf = ir3_instr_create(block, OPC_BARY_F);
-			ir3_reg_create(baryf, regid(63, 0), 0);
-			ir3_reg_create(baryf, 0, IR3_REG_IMMED)->iim_val = 0;
-			ir3_reg_create(baryf, regid(0, 0), 0);
-
-			/* insert the dummy bary.f after last_input: */
-			list_delinit(&baryf->node);
-			list_add(&baryf->node, &last_input->node);
-
-			last_input = baryf;
-
-			/* by definition, we need (ss) since we are inserting
-			 * the dummy bary.f immediately after the ldlv:
-			 */
-			last_input_needs_ss = true;
-		}
-		last_input->regs[0]->flags |= IR3_REG_EI;
-		if (last_input_needs_ss)
-			last_input->flags |= IR3_INSTR_SS;
-	} else if (has_tex_prefetch) {
+	if (has_tex_prefetch && input_count == 0) {
 		/* texture prefetch, but *no* inputs.. we need to insert a
 		 * dummy bary.f at the top of the shader to unblock varying
 		 * storage:
@@ -345,7 +340,7 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 		struct ir3_instruction *baryf;
 
 		/* (ss)bary.f (ei)r63.x, 0, r0.x */
-		baryf = ir3_instr_create(block, OPC_BARY_F);
+		baryf = ir3_instr_create(block, OPC_BARY_F, 3);
 		ir3_reg_create(baryf, regid(63, 0), 0)->flags |= IR3_REG_EI;
 		ir3_reg_create(baryf, 0, IR3_REG_IMMED)->iim_val = 0;
 		ir3_reg_create(baryf, regid(0, 0), 0);
@@ -369,6 +364,42 @@ legalize_block(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
 				break;
 			struct ir3_legalize_block_data *pbd = block->successors[i]->data;
 			pbd->valid = false;
+		}
+	}
+
+	return true;
+}
+
+/* Expands dsxpp and dsypp macros to:
+ *
+ * dsxpp.1 dst, src
+ * dsxpp.1.p dst, src
+ *
+ * We apply this after flags syncing, as we don't want to sync in between the
+ * two (which might happen if dst == src).  We do it before nop scheduling
+ * because that needs to count actual instructions.
+ */
+static bool
+apply_fine_deriv_macro(struct ir3_legalize_ctx *ctx, struct ir3_block *block)
+{
+	struct list_head instr_list;
+
+	/* remove all the instructions from the list, we'll be adding
+	 * them back in as we go
+	 */
+	list_replace(&block->instr_list, &instr_list);
+	list_inithead(&block->instr_list);
+
+	foreach_instr_safe (n, &instr_list) {
+		list_addtail(&n->node, &block->instr_list);
+
+		if (n->opc == OPC_DSXPP_MACRO || n->opc == OPC_DSYPP_MACRO) {
+			n->opc = (n->opc == OPC_DSXPP_MACRO) ? OPC_DSXPP_1 : OPC_DSYPP_1;
+
+			struct ir3_instruction *op_p = ir3_instr_clone(n);
+			op_p->flags = IR3_INSTR_P;
+
+			ctx->so->need_fine_derivatives = true;
 		}
 	}
 
@@ -503,7 +534,7 @@ resolve_jump(struct ir3_instruction *instr)
 	 * then we can just drop the jump.
 	 */
 	unsigned next_block;
-	if (instr->cat0.inv == true)
+	if (instr->cat0.inv1 == true)
 		next_block = 2;
 	else
 		next_block = 1;
@@ -573,10 +604,166 @@ mark_xvergence_points(struct ir3 *ir)
 	}
 }
 
-void
+/* Insert the branch/jump instructions for flow control between blocks.
+ * Initially this is done naively, without considering if the successor
+ * block immediately follows the current block (ie. so no jump required),
+ * but that is cleaned up in resolve_jumps().
+ *
+ * TODO what ensures that the last write to p0.x in a block is the
+ * branch condition?  Have we been getting lucky all this time?
+ */
+static void
+block_sched(struct ir3 *ir)
+{
+	foreach_block (block, &ir->block_list) {
+		if (block->successors[1]) {
+			/* if/else, conditional branches to "then" or "else": */
+			struct ir3_instruction *br;
+
+			debug_assert(block->condition);
+
+			/* create "else" branch first (since "then" block should
+			 * frequently/always end up being a fall-thru):
+			 */
+			br = ir3_B(block, block->condition, 0);
+			br->cat0.inv1 = true;
+			br->cat0.target = block->successors[1];
+
+			/* "then" branch: */
+			br = ir3_B(block, block->condition, 0);
+			br->cat0.target = block->successors[0];
+
+		} else if (block->successors[0]) {
+			/* otherwise unconditional jump to next block: */
+			struct ir3_instruction *jmp;
+
+			jmp = ir3_JUMP(block);
+			jmp->cat0.target = block->successors[0];
+		}
+	}
+}
+
+/* Here we workaround the fact that kill doesn't actually kill the thread as
+ * GL expects. The last instruction always needs to be an end instruction,
+ * which means that if we're stuck in a loop where kill is the only way out,
+ * then we may have to jump out to the end. kill may also have the d3d
+ * semantics of converting the thread to a helper thread, rather than setting
+ * the exec mask to 0, in which case the helper thread could get stuck in an
+ * infinite loop.
+ *
+ * We do this late, both to give the scheduler the opportunity to reschedule
+ * kill instructions earlier and to avoid having to create a separate basic
+ * block.
+ *
+ * TODO: Assuming that the wavefront doesn't stop as soon as all threads are
+ * killed, we might benefit by doing this more aggressively when the remaining
+ * part of the program after the kill is large, since that would let us
+ * skip over the instructions when there are no non-killed threads left.
+ */
+static void
+kill_sched(struct ir3 *ir, struct ir3_shader_variant *so)
+{
+	/* True if we know that this block will always eventually lead to the end
+	 * block:
+	 */
+	bool always_ends = true;
+	bool added = false;
+	struct ir3_block *last_block =
+		list_last_entry(&ir->block_list, struct ir3_block, node);
+
+	foreach_block_rev (block, &ir->block_list) {
+		for (unsigned i = 0; i < 2 && block->successors[i]; i++) {
+			if (block->successors[i]->start_ip <= block->end_ip)
+				always_ends = false;
+		}
+
+		if (always_ends)
+			continue;
+
+		foreach_instr_safe (instr, &block->instr_list) {
+			if (instr->opc != OPC_KILL)
+				continue;
+
+			struct ir3_instruction *br = ir3_instr_create(block, OPC_B, 2);
+			br->regs[1] = instr->regs[1];
+			br->cat0.target =
+				list_last_entry(&ir->block_list, struct ir3_block, node);
+
+			list_del(&br->node);
+			list_add(&br->node, &instr->node);
+
+			added = true;
+		}
+	}
+
+	if (added) {
+		/* I'm not entirely sure how the branchstack works, but we probably
+		 * need to add at least one entry for the divergence which is resolved
+		 * at the end:
+		 */
+		so->branchstack++;
+
+		/* We don't update predecessors/successors, so we have to do this
+		 * manually:
+		 */
+		mark_jp(last_block);
+	}
+}
+
+/* Insert nop's required to make this a legal/valid shader program: */
+static void
+nop_sched(struct ir3 *ir)
+{
+	foreach_block (block, &ir->block_list) {
+		struct ir3_instruction *last = NULL;
+		struct list_head instr_list;
+
+		/* remove all the instructions from the list, we'll be adding
+		 * them back in as we go
+		 */
+		list_replace(&block->instr_list, &instr_list);
+		list_inithead(&block->instr_list);
+
+		foreach_instr_safe (instr, &instr_list) {
+			unsigned delay = ir3_delay_calc(block, instr, false, true);
+
+			/* NOTE: I think the nopN encoding works for a5xx and
+			 * probably a4xx, but not a3xx.  So far only tested on
+			 * a6xx.
+			 */
+
+			if ((delay > 0) && (ir->compiler->gpu_id >= 600) && last &&
+					((opc_cat(last->opc) == 2) || (opc_cat(last->opc) == 3)) &&
+					(last->repeat == 0)) {
+				/* the previous cat2/cat3 instruction can encode at most 3 nop's: */
+				unsigned transfer = MIN2(delay, 3 - last->nop);
+				last->nop += transfer;
+				delay -= transfer;
+			}
+
+			if ((delay > 0) && last && (last->opc == OPC_NOP)) {
+				/* the previous nop can encode at most 5 repeats: */
+				unsigned transfer = MIN2(delay, 5 - last->repeat);
+				last->repeat += transfer;
+				delay -= transfer;
+			}
+
+			if (delay > 0) {
+				debug_assert(delay <= 6);
+				ir3_NOP(block)->repeat = delay - 1;
+			}
+
+			list_addtail(&instr->node, &block->instr_list);
+			last = instr;
+		}
+	}
+}
+
+bool
 ir3_legalize(struct ir3 *ir, struct ir3_shader_variant *so, int *max_bary)
 {
 	struct ir3_legalize_ctx *ctx = rzalloc(ir, struct ir3_legalize_ctx);
+	bool mergedregs = so->mergedregs;
 	bool progress;
 
 	ctx->so = so;
@@ -586,8 +773,17 @@ ir3_legalize(struct ir3 *ir, struct ir3_shader_variant *so, int *max_bary)
 
 	/* allocate per-block data: */
 	foreach_block (block, &ir->block_list) {
-		block->data = rzalloc(ctx, struct ir3_legalize_block_data);
+		struct ir3_legalize_block_data *bd =
+				rzalloc(ctx, struct ir3_legalize_block_data);
+
+		regmask_init(&bd->state.needs_ss_war, mergedregs);
+		regmask_init(&bd->state.needs_ss, mergedregs);
+		regmask_init(&bd->state.needs_sy, mergedregs);
+
+		block->data = bd;
 	}
+
+	ir3_remove_nops(ir);
 
 	/* process each block: */
 	do {
@@ -599,6 +795,16 @@ ir3_legalize(struct ir3 *ir, struct ir3_shader_variant *so, int *max_bary)
 
 	*max_bary = ctx->max_bary;
 
+	block_sched(ir);
+	if (so->type == MESA_SHADER_FRAGMENT)
+		kill_sched(ir, so);
+
+	foreach_block (block, &ir->block_list) {
+		progress |= apply_fine_deriv_macro(ctx, block);
+	}
+
+	nop_sched(ir);
+
 	do {
 		ir3_count_instructions(ir);
 	} while(resolve_jumps(ir));
@@ -606,4 +812,6 @@ ir3_legalize(struct ir3 *ir, struct ir3_shader_variant *so, int *max_bary)
 	mark_xvergence_points(ir);
 
 	ralloc_free(ctx);
+
+	return true;
 }

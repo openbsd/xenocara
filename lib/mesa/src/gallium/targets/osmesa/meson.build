@@ -41,8 +41,7 @@ endif
 libosmesa = shared_library(
   osmesa_lib_name,
   'target.c',
-  c_args : [c_vis_args],
-  cpp_args : cpp_vis_args,
+  gnu_symbol_visibility : 'hidden',
   link_args : [ld_args_gc_sections, osmesa_link_args],
   vs_module_defs : osmesa_def,
   include_directories : [
@@ -61,6 +60,7 @@ libosmesa = shared_library(
   name_prefix : host_machine.system() == 'windows' ? '' : 'lib',  # otherwise mingw will create libosmesa.dll
   soversion : host_machine.system() == 'windows' ? '' : '8',
   version : '8.0.0',
+  darwin_versions : '9.0.0',
   install : true,
 )
 
@@ -77,7 +77,7 @@ if with_tests
     executable(
       'osmesa-render',
       'test-render.cpp',
-      include_directories : inc_common,
+      include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux],
       link_with: libosmesa,
       dependencies : [idep_gtest],
     ),

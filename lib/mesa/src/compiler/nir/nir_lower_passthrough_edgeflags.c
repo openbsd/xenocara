@@ -35,12 +35,47 @@ lower_impl(nir_function_impl *impl)
    nir_builder_init(&b, impl);
    b.cursor = nir_before_cf_list(&impl->body);
 
+   /* The edge flag is the last input in st/mesa. */
+   assert(shader->num_inputs == util_bitcount64(shader->info.inputs_read));
+
+   /* Lowered IO only uses intrinsics. It doesn't use variables. */
+   if (shader->info.io_lowered) {
+      assert(shader->num_outputs ==
+             util_bitcount64(shader->info.outputs_written));
+
+      /* Load an edge flag. */
+      nir_io_semantics load_sem = {0};
+      load_sem.location = VERT_ATTRIB_EDGEFLAG;
+      load_sem.num_slots = 1;
+
+      nir_ssa_def *load =
+         nir_load_input(&b, 1, 32, nir_imm_int(&b, 0),
+                        .base = shader->num_inputs++,
+                        .component = 0,
+                        .dest_type = nir_type_float32,
+                        .io_semantics = load_sem);
+
+      /* Store an edge flag. */
+      nir_io_semantics semantics = {0};
+      semantics.location = VARYING_SLOT_EDGE;
+      semantics.num_slots = 1;
+
+      nir_store_output(&b, load, nir_imm_int(&b, 0),
+                       .base = shader->num_outputs++,
+                       .component = 0,
+                       .io_semantics = semantics,
+                       .src_type = nir_type_float32,
+                       .write_mask = 0x1);
+
+      nir_metadata_preserve(impl, nir_metadata_block_index |
+                                  nir_metadata_dominance);
+      return;
+   }
+
    in  = nir_variable_create(shader, nir_var_shader_in,
                              glsl_vec4_type(), "edgeflag_in");
    in->data.location = VERT_ATTRIB_EDGEFLAG;
 
-   /* The edge flag is the last input in st/mesa. */
-   assert(shader->num_inputs == util_bitcount64(shader->info.inputs_read));
    in->data.driver_location = shader->num_inputs++;
    shader->info.inputs_read |= BITFIELD64_BIT(VERT_ATTRIB_EDGEFLAG);
 

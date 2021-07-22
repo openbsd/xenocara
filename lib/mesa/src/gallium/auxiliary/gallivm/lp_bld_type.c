@@ -76,7 +76,7 @@ lp_build_vec_type(struct gallivm_state *gallivm,struct lp_type type)
  * type and check for identity.
  */
 boolean
-lp_check_elem_type(struct lp_type type, LLVMTypeRef elem_type) 
+lp_check_elem_type(struct lp_type type, LLVMTypeRef elem_type)
 {
    LLVMTypeKind elem_kind;
 
@@ -113,12 +113,12 @@ lp_check_elem_type(struct lp_type type, LLVMTypeRef elem_type)
          return FALSE;
    }
 
-   return TRUE; 
+   return TRUE;
 }
 
 
 boolean
-lp_check_vec_type(struct lp_type type, LLVMTypeRef vec_type) 
+lp_check_vec_type(struct lp_type type, LLVMTypeRef vec_type)
 {
    LLVMTypeRef elem_type;
 
@@ -142,7 +142,7 @@ lp_check_vec_type(struct lp_type type, LLVMTypeRef vec_type)
 
 
 boolean
-lp_check_value(struct lp_type type, LLVMValueRef val) 
+lp_check_value(struct lp_type type, LLVMValueRef val)
 {
    LLVMTypeRef vec_type;
 

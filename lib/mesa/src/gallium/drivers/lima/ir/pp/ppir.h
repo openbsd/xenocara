@@ -54,7 +54,6 @@ typedef enum {
    ppir_op_normalize3,
    ppir_op_normalize4,
 
-   ppir_op_sel_cond,
    ppir_op_select,
 
    ppir_op_sin,
@@ -108,7 +107,6 @@ typedef enum {
    ppir_op_load_temp,
 
    ppir_op_store_temp,
-   ppir_op_store_color,
 
    ppir_op_const,
 
@@ -154,6 +152,7 @@ typedef struct {
 
 typedef struct ppir_node {
    struct list_head list;
+   struct list_head sched_list;
    ppir_op op;
    ppir_node_type type;
    int index;
@@ -162,6 +161,8 @@ typedef struct ppir_node {
    struct ppir_instr *instr;
    int instr_pos;
    struct ppir_block *block;
+   bool is_end;
+   bool succ_different_block;
 
    /* for scheduler */
    struct list_head succ_list;
@@ -270,8 +271,7 @@ typedef struct {
 typedef struct {
    ppir_node node;
    ppir_dest dest;
-   ppir_src src[2]; /* src[0] temporarily stores src_coords,
-                       not to be used after lowering */
+   ppir_src src[2];
    int num_src;
    int sampler;
    int sampler_dim;
@@ -300,11 +300,6 @@ enum ppir_instr_slot {
    PPIR_INSTR_SLOT_ALU_END = PPIR_INSTR_SLOT_ALU_COMBINE,
 };
 
-struct ppir_liveness {
-   ppir_reg *reg;
-   unsigned mask : 4;
-};
-
 typedef struct ppir_instr {
    struct list_head list;
    int index;
@@ -326,10 +321,11 @@ typedef struct ppir_instr {
    int encode_size;
 
    /* for liveness analysis */
-   struct ppir_liveness *live_in;
-   struct ppir_liveness *live_out;
-   struct set *live_in_set;
-   struct set *live_out_set;
+   BITSET_WORD *live_set;
+   uint8_t *live_mask; /* mask for non-ssa registers */
+   /* live_internal is to mark registers only live within an
+    * instruction, without propagation */
+   BITSET_WORD *live_internal;
 } ppir_instr;
 
 typedef struct ppir_block {
@@ -345,12 +341,6 @@ typedef struct ppir_block {
    int sched_instr_index;
    int sched_instr_base;
    int index;
-
-   /* for liveness analysis */
-   struct ppir_liveness *live_in;
-   struct ppir_liveness *live_out;
-   struct set *live_in_set;
-   struct set *live_out_set;
 } ppir_block;
 
 typedef struct {
@@ -365,7 +355,7 @@ typedef struct {
 } ppir_branch_node;
 
 struct ra_regs;
-struct lima_fs_shader_state;
+struct lima_fs_compiled_shader;
 
 typedef struct ppir_compiler {
    struct list_head block_list;
@@ -374,13 +364,15 @@ typedef struct ppir_compiler {
    int cur_instr_index;
 
    struct list_head reg_list;
+   int reg_num;
 
    /* array for searching ssa/reg node */
    ppir_node **var_nodes;
    unsigned reg_base;
 
    struct ra_regs *ra;
-   struct lima_fs_shader_state *prog;
+   struct lima_fs_compiled_shader *prog;
+   bool uses_discard;
 
    /* for scheduler */
    int sched_instr_base;
@@ -407,12 +399,9 @@ void ppir_node_print_prog(ppir_compiler *comp);
 void ppir_node_replace_child(ppir_node *parent, ppir_node *old_child, ppir_node *new_child);
 void ppir_node_replace_all_succ(ppir_node *dst, ppir_node *src);
 void ppir_node_replace_pred(ppir_dep *dep, ppir_node *new_pred);
-void ppir_delete_if_orphan(ppir_block *block, ppir_node *node);
 ppir_dep *ppir_dep_for_pred(ppir_node *node, ppir_node *pred);
-ppir_node *ppir_node_clone(ppir_block *block, ppir_node *node);
 /* Assumes that node successors are in the same block */
 ppir_node *ppir_node_insert_mov(ppir_node *node);
-ppir_node *ppir_node_insert_mov_all_blocks(ppir_node *node);
 
 static inline bool ppir_node_is_root(ppir_node *node)
 {
@@ -426,7 +415,8 @@ static inline bool ppir_node_is_leaf(ppir_node *node)
 
 static inline bool ppir_node_has_single_succ(ppir_node *node)
 {
-   return list_is_singular(&node->succ_list);
+   return list_is_singular(&node->succ_list)
+      && !node->succ_different_block;
 }
 
 bool ppir_node_has_single_src_succ(ppir_node *node);
@@ -546,17 +536,6 @@ static inline ppir_reg *ppir_dest_get_reg(ppir_dest *dest)
    }
 }
 
-static inline ppir_src *ppir_node_get_src_for_pred(ppir_node *node, ppir_node *pred)
-{
-   for (int i = 0; i < ppir_node_get_src_num(node); i++) {
-      ppir_src *src = ppir_node_get_src(node, i);
-      if (src && src->node == pred)
-         return src;
-   }
-
-   return NULL;
-}
-
 static inline void ppir_node_target_assign(ppir_src *src, ppir_node *node)
 {
    ppir_dest *dest = ppir_node_get_dest(node);
@@ -638,7 +617,7 @@ static inline int ppir_src_get_mask(ppir_src *src)
    return mask;
 }
 
-static inline bool ppir_target_is_scaler(ppir_dest *dest)
+static inline bool ppir_target_is_scalar(ppir_dest *dest)
 {
    switch (dest->type) {
    case ppir_target_ssa:
@@ -662,6 +641,17 @@ static inline bool ppir_target_is_scaler(ppir_dest *dest)
    default:
       return false;
    }
+}
+
+static inline bool ppir_node_schedulable_slot(ppir_node *node,
+                                              enum ppir_instr_slot slot)
+{
+   int *slots = ppir_op_infos[node->op].slots;
+   for (int i = 0; slots[i] != PPIR_INSTR_SLOT_END; i++)
+      if (slots[i] == slot)
+         return true;
+
+   return false;
 }
 
 ppir_instr *ppir_instr_create(ppir_block *block);
@@ -696,5 +686,27 @@ bool ppir_schedule_prog(ppir_compiler *comp);
 bool ppir_regalloc_prog(ppir_compiler *comp);
 bool ppir_codegen_prog(ppir_compiler *comp);
 void ppir_liveness_analysis(ppir_compiler *comp);
+
+static inline unsigned int reg_mask_size(unsigned int num_reg)
+{
+   return (num_reg + 1) / 2;
+}
+
+static inline uint8_t get_reg_mask(uint8_t *set, unsigned index)
+{
+   unsigned int i = index / 2;
+   unsigned int shift = index % 2 ? 4 : 0;
+   uint8_t mask = 0x0f << shift;
+   return (set[i] & mask) >> shift;
+}
+
+static inline void set_reg_mask(uint8_t *set, unsigned int index, uint8_t bits)
+{
+   unsigned int i = index / 2;
+   unsigned int shift = index % 2 ? 4 : 0;
+   uint8_t mask = 0x0f << shift;
+   set[i] &= ~mask;
+   set[i] |= (bits << shift);
+}
 
 #endif

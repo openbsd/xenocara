@@ -22,33 +22,40 @@
 
 #include "tgsi/tgsi_from_mesa.h"
 #include "st_nir.h"
+#include "st_program.h"
 
 #include "compiler/nir/nir_builder.h"
+#include "compiler/glsl/gl_nir.h"
+#include "tgsi/tgsi_parse.h"
 
 struct pipe_shader_state *
 st_nir_finish_builtin_shader(struct st_context *st,
-                             nir_shader *nir,
-                             const char *name)
+                             nir_shader *nir)
 {
-   struct pipe_context *pipe = st->pipe;
-   struct pipe_screen *screen = pipe->screen;
+   struct pipe_screen *screen = st->screen;
+   gl_shader_stage stage = nir->info.stage;
 
-   nir->info.name = ralloc_strdup(nir, name);
    nir->info.separate_shader = true;
-   if (nir->info.stage == MESA_SHADER_FRAGMENT)
+   if (stage == MESA_SHADER_FRAGMENT)
       nir->info.fs.untyped_color_outputs = true;
 
    NIR_PASS_V(nir, nir_lower_global_vars_to_local);
    NIR_PASS_V(nir, nir_split_var_copies);
    NIR_PASS_V(nir, nir_lower_var_copies);
    NIR_PASS_V(nir, nir_lower_system_values);
+   NIR_PASS_V(nir, nir_lower_compute_system_values, NULL);
 
    if (nir->options->lower_to_scalar) {
       nir_variable_mode mask =
-         (nir->info.stage > MESA_SHADER_VERTEX ? nir_var_shader_in : 0) |
-         (nir->info.stage < MESA_SHADER_FRAGMENT ? nir_var_shader_out : 0);
+          (stage > MESA_SHADER_VERTEX ? nir_var_shader_in : 0) |
+          (stage < MESA_SHADER_FRAGMENT ? nir_var_shader_out : 0);
 
       NIR_PASS_V(nir, nir_lower_io_to_scalar_early, mask);
+   }
+
+   if (st->lower_rect_tex) {
+      const struct nir_lower_tex_options opts = { .lower_rect = true, };
+      NIR_PASS_V(nir, nir_lower_tex, &opts);
    }
 
    nir_shader_gather_info(nir, nir_shader_get_entrypoint(nir));
@@ -58,6 +65,8 @@ st_nir_finish_builtin_shader(struct st_context *st,
 
    st_nir_lower_samplers(screen, nir, NULL, NULL);
    st_nir_lower_uniforms(st, nir);
+   if (!screen->get_param(screen, PIPE_CAP_NIR_IMAGES_AS_DEREF))
+      NIR_PASS_V(nir, gl_nir_lower_images, false);
 
    if (screen->finalize_nir)
       screen->finalize_nir(screen, nir, true);
@@ -69,21 +78,7 @@ st_nir_finish_builtin_shader(struct st_context *st,
       .ir.nir = nir,
    };
 
-   switch (nir->info.stage) {
-   case MESA_SHADER_VERTEX:
-      return pipe->create_vs_state(pipe, &state);
-   case MESA_SHADER_TESS_CTRL:
-      return pipe->create_tcs_state(pipe, &state);
-   case MESA_SHADER_TESS_EVAL:
-      return pipe->create_tes_state(pipe, &state);
-   case MESA_SHADER_GEOMETRY:
-      return pipe->create_gs_state(pipe, &state);
-   case MESA_SHADER_FRAGMENT:
-      return pipe->create_fs_state(pipe, &state);
-   default:
-      unreachable("unsupported shader stage");
-      return NULL;
-   }
+   return st_create_nir_shader(st, &state);
 }
 
 /**
@@ -99,12 +94,12 @@ st_nir_make_passthrough_shader(struct st_context *st,
                                unsigned *interpolation_modes,
                                unsigned sysval_mask)
 {
-   struct nir_builder b;
    const struct glsl_type *vec4 = glsl_vec4_type();
    const nir_shader_compiler_options *options =
-      st->ctx->Const.ShaderCompilerOptions[stage].NirOptions;
+      st_get_nir_compiler_options(st, stage);
 
-   nir_builder_init_simple_shader(&b, NULL, stage, options);
+   nir_builder b = nir_builder_init_simple_shader(stage, options,
+                                                  "%s", shader_name);
 
    char var_name[15];
 
@@ -114,7 +109,6 @@ st_nir_make_passthrough_shader(struct st_context *st,
          snprintf(var_name, sizeof(var_name), "sys_%u", input_locations[i]);
          in = nir_variable_create(b.shader, nir_var_system_value,
                                   glsl_int_type(), var_name);
-         in->data.interpolation = INTERP_MODE_FLAT;
       } else {
          snprintf(var_name, sizeof(var_name), "in_%u", input_locations[i]);
          in = nir_variable_create(b.shader, nir_var_shader_in, vec4, var_name);
@@ -132,5 +126,5 @@ st_nir_make_passthrough_shader(struct st_context *st,
       nir_copy_var(&b, out, in);
    }
 
-   return st_nir_finish_builtin_shader(st, b.shader, shader_name);
+   return st_nir_finish_builtin_shader(st, b.shader);
 }

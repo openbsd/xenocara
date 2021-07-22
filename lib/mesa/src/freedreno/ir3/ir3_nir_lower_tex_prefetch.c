@@ -107,7 +107,47 @@ ir3_nir_coord_offset(nir_ssa_def *ssa)
 static bool
 has_src(nir_tex_instr *tex, nir_tex_src_type type)
 {
-	return nir_tex_instr_src_index(tex, type) > 0;
+	return nir_tex_instr_src_index(tex, type) >= 0;
+}
+
+static bool
+ok_bindless_src(nir_tex_instr *tex, nir_tex_src_type type)
+{
+	int idx = nir_tex_instr_src_index(tex, type);
+	assert(idx >= 0);
+	nir_intrinsic_instr *bindless = ir3_bindless_resource(tex->src[idx].src);
+
+	/* TODO from SP_FS_BINDLESS_PREFETCH[n] it looks like this limit should
+	 * be 1<<8 ?
+	 */
+	return nir_src_is_const(bindless->src[0]) &&
+			(nir_src_as_uint(bindless->src[0]) < (1 << 16));
+}
+
+/**
+ * Check that we will be able to encode the tex/samp parameters
+ * successfully.  These limits are based on the layout of
+ * SP_FS_PREFETCH[n] and SP_FS_BINDLESS_PREFETCH[n], so at some
+ * point (if those regs changes) they may become generation
+ * specific.
+ */
+static bool
+ok_tex_samp(nir_tex_instr *tex)
+{
+	if (has_src(tex, nir_tex_src_texture_handle)) {
+		/* bindless case: */
+
+		assert(has_src(tex, nir_tex_src_sampler_handle));
+
+		return ok_bindless_src(tex, nir_tex_src_texture_handle) &&
+				ok_bindless_src(tex, nir_tex_src_sampler_handle);
+	} else {
+		assert(!has_src(tex, nir_tex_src_texture_offset));
+		assert(!has_src(tex, nir_tex_src_sampler_offset));
+
+		return (tex->texture_index <= 0x1f) &&
+				(tex->sampler_index <= 0xf);
+	}
 }
 
 static bool
@@ -115,7 +155,7 @@ lower_tex_prefetch_block(nir_block *block)
 {
 	bool progress = false;
 
-	nir_foreach_instr_safe(instr, block) {
+	nir_foreach_instr_safe (instr, block) {
 		if (instr->type != nir_instr_type_tex)
 			continue;
 
@@ -137,6 +177,9 @@ lower_tex_prefetch_block(nir_block *block)
 
 		/* only prefetch for simple 2d tex fetch case */
 		if (tex->sampler_dim != GLSL_SAMPLER_DIM_2D || tex->is_array)
+			continue;
+
+		if (!ok_tex_samp(tex))
 			continue;
 
 		int idx = nir_tex_instr_src_index(tex, nir_tex_src_coord);
@@ -183,7 +226,7 @@ ir3_nir_lower_tex_prefetch(nir_shader *shader)
 
 	assert(shader->info.stage == MESA_SHADER_FRAGMENT);
 
-	nir_foreach_function(function, shader) {
+	nir_foreach_function (function, shader) {
 		/* Only texture sampling instructions inside the main function
 		 * are eligible for pre-dispatch.
 		 */

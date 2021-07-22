@@ -32,27 +32,15 @@ files_libvirgl = files(
   'virgl_tgsi.c',
 )
 
-virgl_driinfo_h = custom_target(
-  'virgl_driinfo.h',
-  input : files(
-    '../../../util/merge_driinfo.py',
-    '../../auxiliary/pipe-loader/driinfo_gallium.h', 'virgl_driinfo.h.in'
-  ),
-  output : 'virgl_driinfo.h',
-  command : [prog_python, '@INPUT@'],
-  capture : true,
-)
-
 libvirgl = static_library(
   'virgl',
-  [ files_libvirgl, virgl_driinfo_h ],
-  c_args : c_vis_args,
-  include_directories : inc_common,
-  dependencies : dep_libdrm
+  [ files_libvirgl ],
+  gnu_symbol_visibility : 'hidden',
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_virtio],
+  dependencies : [dep_libdrm, idep_mesautil, idep_xmlconfig],
 )
 
 driver_virgl = declare_dependency(
-  sources : virgl_driinfo_h,
   compile_args : '-DGALLIUM_VIRGL',
   link_with : [libvirgl, libvirgldrm, libvirglvtest],
 )

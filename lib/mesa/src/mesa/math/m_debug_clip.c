@@ -28,7 +28,7 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/macros.h"
-#include "main/imports.h"
+
 
 #include "m_matrix.h"
 #include "m_xform.h"
@@ -203,9 +203,9 @@ static clip_func ref_cliptest[5] = {
  * Cliptest tests
  */
 
-ALIGN16(static GLfloat, s[TEST_COUNT][4]);
-ALIGN16(static GLfloat, d[TEST_COUNT][4]);
-ALIGN16(static GLfloat, r[TEST_COUNT][4]);
+ALIGN16 static GLfloat s[TEST_COUNT][4];
+ALIGN16 static GLfloat d[TEST_COUNT][4];
+ALIGN16 static GLfloat r[TEST_COUNT][4];
 
 
 /**

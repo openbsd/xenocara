@@ -30,7 +30,6 @@
  */
 
 #include "main/glheader.h"
-#include "main/imports.h"
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/mipmap.h"
@@ -41,7 +40,7 @@
 #include "main/texobj.h"
 #include "drivers/common/meta.h"
 
-#include "util/xmlpool.h"		/* for symbolic values of enum-type options */
+#include "util/driconf.h"		/* for symbolic values of enum-type options */
 
 #include "radeon_common.h"
 
@@ -113,7 +112,7 @@ radeonAllocTextureImageBuffer(struct gl_context *ctx,
 		return GL_FALSE;
 
 	teximage_assign_miptree(rmesa, texobj, timage);
-				
+
 	return GL_TRUE;
 }
 
@@ -182,7 +181,7 @@ radeon_map_texture_image(struct gl_context *ctx,
 	} else if (likely(mt)) {
 		void *base;
 		radeon_mipmap_level *lvl = &image->mt->levels[texImage->Level];
-		       
+
 		radeon_bo_map(mt->bo, write);
 		base = mt->bo->ptr + lvl->faces[image->base.Base.Face].offset;
 
@@ -652,7 +651,7 @@ static radeon_mipmap_tree *radeon_miptree_create_for_teximage(radeonContextPtr r
 	height = texImage->Height;
 	depth = texImage->Depth;
 
-	if (texImage->Level > texObj->BaseLevel &&
+	if (texImage->Level > texObj->Attrib.BaseLevel &&
 	    (width == 1 ||
 	     (texObj->Target != GL_TEXTURE_1D && height == 1) ||
 	     (texObj->Target == GL_TEXTURE_3D && depth == 1))) {
@@ -664,10 +663,10 @@ static radeon_mipmap_tree *radeon_miptree_create_for_teximage(radeonContextPtr r
 		firstLevel = texImage->Level;
 		lastLevel = texImage->Level;
 	} else {
-		if (texImage->Level < texObj->BaseLevel)
+		if (texImage->Level < texObj->Attrib.BaseLevel)
 			firstLevel = 0;
 		else
-			firstLevel = texObj->BaseLevel;
+			firstLevel = texObj->Attrib.BaseLevel;
 
 		for (i = texImage->Level; i > firstLevel; i--) {
 			width <<= 1;
@@ -676,17 +675,17 @@ static radeon_mipmap_tree *radeon_miptree_create_for_teximage(radeonContextPtr r
 			if (depth != 1)
 				depth <<= 1;
 		}
-		if ((texObj->Sampler.MinFilter == GL_NEAREST ||
-		     texObj->Sampler.MinFilter == GL_LINEAR) &&
+		if ((texObj->Sampler.Attrib.MinFilter == GL_NEAREST ||
+		     texObj->Sampler.Attrib.MinFilter == GL_LINEAR) &&
 		    texImage->Level == firstLevel) {
 			lastLevel = firstLevel;
 		} else {
-			lastLevel = firstLevel + _mesa_logbase2(MAX2(MAX2(width, height), depth));
+			lastLevel = firstLevel + util_logbase2(MAX2(MAX2(width, height), depth));
 		}
 	}
 
 	return  radeon_miptree_create(rmesa, texObj->Target,
 				      texImage->TexFormat, firstLevel, lastLevel - firstLevel + 1,
-				      width, height, depth, 
+				      width, height, depth,
 				      t->tile_bits);
-}				     
+}

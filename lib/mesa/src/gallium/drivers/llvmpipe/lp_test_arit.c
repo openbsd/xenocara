@@ -293,6 +293,27 @@ const float fract_values[] = {
  * Unary test cases.
  */
 
+#ifdef _MSC_VER
+#define WRAP(func) \
+static float \
+wrap_ ## func ## (float x) \
+{ \
+   return func(x); \
+}
+WRAP(expf)
+WRAP(logf)
+WRAP(sinf)
+WRAP(cosf)
+WRAP(floorf)
+WRAP(ceilf)
+#define expf wrap_expf
+#define logf wrap_logf
+#define sinf wrap_sinf
+#define cosf wrap_cosf
+#define floorf wrap_floorf
+#define ceilf wrap_ceilf
+#endif
+
 static const struct unary_test_t
 unary_tests[] = {
    {"abs", &lp_build_abs, &fabsf, sgn_values, ARRAY_SIZE(sgn_values), 20.0 },
@@ -382,7 +403,7 @@ flush_denorm_to_zero(float val)
    fi_val.f = val;
 
 #if defined(PIPE_ARCH_SSE)
-   if (util_cpu_caps.has_sse) {
+   if (util_get_cpu_caps()->has_sse) {
       if ((fi_val.ui & 0x7f800000) == 0) {
          fi_val.ui &= 0xff800000;
       }
@@ -417,7 +438,7 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test, unsigned
    }
 
    context = LLVMContextCreate();
-   gallivm = gallivm_create("test_module", context);
+   gallivm = gallivm_create("test_module", context, NULL);
 
    test_func = build_unary_test_func(gallivm, test, length, test_name);
 
@@ -458,7 +479,7 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test, unsigned
             continue;
          }
 
-         if (!util_cpu_caps.has_neon &&
+         if (!util_get_cpu_caps()->has_neon &&
              test->ref == &nearbyintf && length == 2 &&
              ref != roundf(testval)) {
             /* FIXME: The generic (non SSE) path in lp_build_iround, which is
@@ -468,9 +489,11 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test, unsigned
          }
 
          if (test->ref == &expf && util_inf_sign(testval) == -1) {
-            /* XXX: 64bits MSVCRT's expf(-inf) returns -inf instead of 0 */
+            /* Some older 64-bit MSVCRT versions return -inf instead of 0
+	     * for expf(-inf). As detecting the VC runtime version is
+	     * non-trivial, just ignore the test result. */
 #if defined(_MSC_VER) && defined(_WIN64)
-            expected_pass = FALSE;
+            expected_pass = pass;
 #endif
          }
 

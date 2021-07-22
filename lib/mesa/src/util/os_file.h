@@ -25,11 +25,21 @@ FILE *
 os_file_create_unique(const char *filename, int filemode);
 
 /*
+ * Duplicate a file descriptor, making sure not to keep it open after an exec*()
+ */
+int
+os_dupfd_cloexec(int fd);
+
+/*
  * Read a file.
  * Returns a char* that the caller must free(), or NULL and sets errno.
+ * If size is not null and no error occurred it's set to the size of the
+ * file.
+ * Reads files as binary and includes a NUL terminator after the end of the
+ * returned buffer.
  */
 char *
-os_read_file(const char *filename);
+os_read_file(const char *filename, size_t *size);
 
 /*
  * Try to determine if two file descriptors reference the same file description

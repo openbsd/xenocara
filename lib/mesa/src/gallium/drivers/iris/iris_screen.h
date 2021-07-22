@@ -24,17 +24,26 @@
 #define IRIS_SCREEN_H
 
 #include "pipe/p_screen.h"
-#include "state_tracker/drm_driver.h"
+#include "frontend/drm_driver.h"
 #include "util/disk_cache.h"
 #include "util/slab.h"
 #include "util/u_screen.h"
 #include "intel/dev/gen_device_info.h"
 #include "intel/isl/isl.h"
 #include "iris_bufmgr.h"
+#include "iris_binder.h"
+#include "iris_measure.h"
+#include "iris_resource.h"
 
-struct iris_bo;
-struct iris_monitor_config;
-struct gen_l3_config;
+struct intel_l3_config;
+struct brw_vue_map;
+struct iris_vs_prog_key;
+struct iris_tcs_prog_key;
+struct iris_tes_prog_key;
+struct iris_gs_prog_key;
+struct iris_fs_prog_key;
+struct iris_cs_prog_key;
+enum iris_program_cache_id;
 
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x, v) *(volatile __typeof__(x) *)&(x) = (v)
@@ -42,6 +51,97 @@ struct gen_l3_config;
 #define IRIS_MAX_TEXTURE_SAMPLERS 32
 #define IRIS_MAX_SOL_BUFFERS 4
 #define IRIS_MAP_BUFFER_ALIGNMENT 64
+
+/**
+ * Virtual table for generation-specific (genxml) function calls.
+ */
+struct iris_vtable {
+   void (*destroy_state)(struct iris_context *ice);
+   void (*init_render_context)(struct iris_batch *batch);
+   void (*init_compute_context)(struct iris_batch *batch);
+   void (*upload_render_state)(struct iris_context *ice,
+                               struct iris_batch *batch,
+                               const struct pipe_draw_info *draw,
+                               const struct pipe_draw_indirect_info *indirect,
+                               const struct pipe_draw_start_count *sc);
+   void (*update_surface_base_address)(struct iris_batch *batch,
+                                       struct iris_binder *binder);
+   void (*upload_compute_state)(struct iris_context *ice,
+                                struct iris_batch *batch,
+                                const struct pipe_grid_info *grid);
+   void (*rebind_buffer)(struct iris_context *ice,
+                         struct iris_resource *res);
+   void (*load_register_reg32)(struct iris_batch *batch, uint32_t dst,
+                               uint32_t src);
+   void (*load_register_reg64)(struct iris_batch *batch, uint32_t dst,
+                               uint32_t src);
+   void (*load_register_imm32)(struct iris_batch *batch, uint32_t reg,
+                               uint32_t val);
+   void (*load_register_imm64)(struct iris_batch *batch, uint32_t reg,
+                               uint64_t val);
+   void (*load_register_mem32)(struct iris_batch *batch, uint32_t reg,
+                               struct iris_bo *bo, uint32_t offset);
+   void (*load_register_mem64)(struct iris_batch *batch, uint32_t reg,
+                               struct iris_bo *bo, uint32_t offset);
+   void (*store_register_mem32)(struct iris_batch *batch, uint32_t reg,
+                                struct iris_bo *bo, uint32_t offset,
+                                bool predicated);
+   void (*store_register_mem64)(struct iris_batch *batch, uint32_t reg,
+                                struct iris_bo *bo, uint32_t offset,
+                                bool predicated);
+   void (*store_data_imm32)(struct iris_batch *batch,
+                            struct iris_bo *bo, uint32_t offset,
+                            uint32_t value);
+   void (*store_data_imm64)(struct iris_batch *batch,
+                            struct iris_bo *bo, uint32_t offset,
+                            uint64_t value);
+   void (*copy_mem_mem)(struct iris_batch *batch,
+                        struct iris_bo *dst_bo, uint32_t dst_offset,
+                        struct iris_bo *src_bo, uint32_t src_offset,
+                        unsigned bytes);
+   void (*emit_raw_pipe_control)(struct iris_batch *batch,
+                                 const char *reason, uint32_t flags,
+                                 struct iris_bo *bo, uint32_t offset,
+                                 uint64_t imm);
+
+   void (*emit_mi_report_perf_count)(struct iris_batch *batch,
+                                     struct iris_bo *bo,
+                                     uint32_t offset_in_bytes,
+                                     uint32_t report_id);
+
+   unsigned (*derived_program_state_size)(enum iris_program_cache_id id);
+   void (*store_derived_program_state)(const struct gen_device_info *devinfo,
+                                       enum iris_program_cache_id cache_id,
+                                       struct iris_compiled_shader *shader);
+   uint32_t *(*create_so_decl_list)(const struct pipe_stream_output_info *sol,
+                                    const struct brw_vue_map *vue_map);
+   void (*populate_vs_key)(const struct iris_context *ice,
+                           const struct shader_info *info,
+                           gl_shader_stage last_stage,
+                           struct iris_vs_prog_key *key);
+   void (*populate_tcs_key)(const struct iris_context *ice,
+                            struct iris_tcs_prog_key *key);
+   void (*populate_tes_key)(const struct iris_context *ice,
+                            const struct shader_info *info,
+                            gl_shader_stage last_stage,
+                            struct iris_tes_prog_key *key);
+   void (*populate_gs_key)(const struct iris_context *ice,
+                           const struct shader_info *info,
+                           gl_shader_stage last_stage,
+                           struct iris_gs_prog_key *key);
+   void (*populate_fs_key)(const struct iris_context *ice,
+                           const struct shader_info *info,
+                           struct iris_fs_prog_key *key);
+   void (*populate_cs_key)(const struct iris_context *ice,
+                           struct iris_cs_prog_key *key);
+   void (*lost_genx_state)(struct iris_context *ice, struct iris_batch *batch);
+};
+
+struct iris_address {
+   struct iris_bo *bo;
+   uint64_t offset;
+   enum iris_domain access;
+};
 
 struct iris_screen {
    struct pipe_screen base;
@@ -65,6 +165,8 @@ struct iris_screen {
 
    bool no_hw;
 
+   struct iris_vtable vtbl;
+
    /** Global program_string_id counter (see get_program_string_id()) */
    unsigned program_id;
 
@@ -79,26 +181,46 @@ struct iris_screen {
       bool always_flush_cache;
    } driconf;
 
+   /** Does the kernel support various features (KERNEL_HAS_* bitfield)? */
+   unsigned kernel_features;
+#define KERNEL_HAS_WAIT_FOR_SUBMIT (1<<0)
+
    unsigned subslice_total;
 
    uint64_t aperture_bytes;
+
+   /**
+    * Last sequence number allocated by the cache tracking mechanism.
+    *
+    * These are used for synchronization and are expected to identify a single
+    * section of a batch, so they should be monotonically increasing and
+    * unique across a single pipe_screen.
+    */
+   uint64_t last_seqno;
 
    struct gen_device_info devinfo;
    struct isl_device isl_dev;
    struct iris_bufmgr *bufmgr;
    struct brw_compiler *compiler;
-   struct iris_monitor_config *monitor_cfg;
+   struct gen_perf_config *perf_cfg;
 
-   const struct gen_l3_config *l3_config_3d;
-   const struct gen_l3_config *l3_config_cs;
+   const struct intel_l3_config *l3_config_3d;
+   const struct intel_l3_config *l3_config_cs;
 
    /**
-    * A buffer containing nothing useful, for hardware workarounds that
-    * require scratch writes or reads from some unimportant memory.
+    * A buffer containing a marker + description of the driver. This buffer is
+    * added to all execbufs syscalls so that we can identify the driver that
+    * generated a hang by looking at the content of the buffer in the error
+    * state. It is also used for hardware workarounds that require scratch
+    * writes or reads from some unimportant memory. To avoid overriding the
+    * debug data, use the workaround_address field for workarounds.
     */
    struct iris_bo *workaround_bo;
+   struct iris_address workaround_address;
 
    struct disk_cache *disk_cache;
+
+   struct intel_measure_device measure;
 };
 
 struct pipe_screen *

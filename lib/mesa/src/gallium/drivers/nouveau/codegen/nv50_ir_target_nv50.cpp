@@ -66,7 +66,7 @@ TargetNV50::getBuiltinOffset(int builtin) const
    return 0;
 }
 
-struct opProperties
+struct nv50_opProperties
 {
    operation op;
    unsigned int mNeg    : 4;
@@ -79,7 +79,7 @@ struct opProperties
    unsigned int fImm    : 3;
 };
 
-static const struct opProperties _initProps[] =
+static const struct nv50_opProperties _initProps[] =
 {
    //           neg  abs  not  sat  c[]  s[], a[], imm
    { OP_ADD,    0x3, 0x0, 0x0, 0x8, 0x2, 0x1, 0x1, 0x2 },
@@ -172,7 +172,7 @@ void TargetNV50::initOpInfo()
       opInfo[noPredList[i]].predicate = 0;
 
    for (i = 0; i < ARRAY_SIZE(_initProps); ++i) {
-      const struct opProperties *prop = &_initProps[i];
+      const struct nv50_opProperties *prop = &_initProps[i];
 
       for (int s = 0; s < 3; ++s) {
          if (prop->mNeg & (1 << s))
@@ -251,9 +251,9 @@ TargetNV50::getSVAddress(DataFile shaderFile, const Symbol *sym) const
       return shaderFile == FILE_SHADER_INPUT ? 0x18 :
          sysvalLocation[sym->reg.data.sv.sv];
    case SV_NCTAID:
-      return 0x8 + 2 * sym->reg.data.sv.index;
+      return sym->reg.data.sv.index >= 2 ? 0x10 : 0x8 + 2 * sym->reg.data.sv.index;
    case SV_CTAID:
-      return 0xc + 2 * sym->reg.data.sv.index;
+      return sym->reg.data.sv.index >= 2 ? 0x12 : 0xc + 2 * sym->reg.data.sv.index;
    case SV_NTID:
       return 0x2 + 2 * sym->reg.data.sv.index;
    case SV_TID:
@@ -261,6 +261,8 @@ TargetNV50::getSVAddress(DataFile shaderFile, const Symbol *sym) const
       return 0;
    case SV_SAMPLE_POS:
       return 0; /* sample position is handled differently */
+   case SV_THREAD_KILL:
+      return 0;
    default:
       return sysvalLocation[sym->reg.data.sv.sv];
    }
@@ -355,8 +357,11 @@ TargetNV50::insnCanLoad(const Instruction *i, int s,
       ldSize = typeSizeof(ld->dType);
    }
 
-   if (sf == FILE_IMMEDIATE)
+   if (sf == FILE_IMMEDIATE) {
+      if (ldSize == 2 && (i->op == OP_AND || i->op == OP_OR || i->op == OP_XOR))
+         return false;
       return ldSize <= 4;
+   }
 
 
    // Check if memory access is encodable:
@@ -584,15 +589,16 @@ recordLocation(uint16_t *locs, uint8_t *masks,
 }
 
 void
-TargetNV50::parseDriverInfo(const struct nv50_ir_prog_info *info)
+TargetNV50::parseDriverInfo(const struct nv50_ir_prog_info *info,
+                            const struct nv50_ir_prog_info_out *info_out)
 {
    unsigned int i;
-   for (i = 0; i < info->numOutputs; ++i)
-      recordLocation(sysvalLocation, NULL, &info->out[i]);
-   for (i = 0; i < info->numInputs; ++i)
-      recordLocation(sysvalLocation, &wposMask, &info->in[i]);
-   for (i = 0; i < info->numSysVals; ++i)
-      recordLocation(sysvalLocation, NULL, &info->sv[i]);
+   for (i = 0; i < info_out->numOutputs; ++i)
+      recordLocation(sysvalLocation, NULL, &info_out->out[i]);
+   for (i = 0; i < info_out->numInputs; ++i)
+      recordLocation(sysvalLocation, &wposMask, &info_out->in[i]);
+   for (i = 0; i < info_out->numSysVals; ++i)
+      recordLocation(sysvalLocation, NULL, &info_out->sv[i]);
 
    if (sysvalLocation[SV_POSITION] >= 0x200) {
       // not assigned by driver, but we need it internally
@@ -600,7 +606,7 @@ TargetNV50::parseDriverInfo(const struct nv50_ir_prog_info *info)
       sysvalLocation[SV_POSITION] = 0;
    }
 
-   Target::parseDriverInfo(info);
+   Target::parseDriverInfo(info, info_out);
 }
 
 } // namespace nv50_ir

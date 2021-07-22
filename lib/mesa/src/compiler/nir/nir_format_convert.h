@@ -192,8 +192,8 @@ nir_format_bitcast_uvec_unmasked(nir_builder *b, nir_ssa_def *src,
       unsigned src_idx = 0;
       unsigned shift = 0;
       for (unsigned i = 0; i < dst_components; i++) {
-         dst_chan[i] = nir_iand(b, nir_ushr(b, nir_channel(b, src, src_idx),
-                                               nir_imm_int(b, shift)),
+         dst_chan[i] = nir_iand(b, nir_ushr_imm(b, nir_channel(b, src, src_idx),
+                                                shift),
                                    mask);
          shift += dst_bits;
          if (shift >= src_bits) {
@@ -214,8 +214,8 @@ _nir_format_norm_factor(nir_builder *b, const unsigned *bits,
    nir_const_value factor[NIR_MAX_VEC_COMPONENTS];
    memset(factor, 0, sizeof(factor));
    for (unsigned i = 0; i < num_components; i++) {
-      assert(bits[i] < 32);
-      factor[i].f32 = (1ul << (bits[i] - is_signed)) - 1;
+      assert(bits[i] <= 32);
+      factor[i].f32 = (1ull << (bits[i] - is_signed)) - 1;
    }
    return nir_build_imm(b, num_components, 32, factor);
 }
@@ -405,7 +405,7 @@ nir_format_pack_r9g9b9e5(nir_builder *b, nir_ssa_def *color)
     *              1 + RGB9E5_EXP_BIAS - 127;
     */
    nir_ssa_def *exp_shared =
-      nir_iadd(b, nir_umax(b, nir_ushr(b, maxu, nir_imm_int(b, 23)),
+      nir_iadd(b, nir_umax(b, nir_ushr_imm(b, maxu, 23),
                               nir_imm_int(b, -RGB9E5_EXP_BIAS - 1 + 127)),
                   nir_imm_int(b, 1 + RGB9E5_EXP_BIAS - 127));
 
@@ -432,8 +432,8 @@ nir_format_pack_r9g9b9e5(nir_builder *b, nir_ssa_def *color)
     * gm = (gm & 1) + (gm >> 1);
     * bm = (bm & 1) + (bm >> 1);
     */
-   mantissa = nir_iadd(b, nir_iand(b, mantissa, nir_imm_int(b, 1)),
-                          nir_ushr(b, mantissa, nir_imm_int(b, 1)));
+   mantissa = nir_iadd(b, nir_iand_imm(b, mantissa, 1),
+                          nir_ushr_imm(b, mantissa, 1));
 
    nir_ssa_def *packed = nir_channel(b, mantissa, 0);
    packed = nir_mask_shift_or(b, packed, nir_channel(b, mantissa, 1), ~0, 9);

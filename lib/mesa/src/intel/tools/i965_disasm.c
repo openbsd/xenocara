@@ -28,12 +28,20 @@
 
 #include "compiler/brw_eu.h"
 #include "dev/gen_device_info.h"
+#include "util/u_dynarray.h"
+
+enum opt_input_type {
+   OPT_INPUT_BINARY,
+   OPT_INPUT_C_LITERAL,
+};
+
+static enum opt_input_type input_type = OPT_INPUT_BINARY;
 
 /* Return size of file in bytes pointed by fp */
-static size_t
+static long
 i965_disasm_get_file_size(FILE *fp)
 {
-   size_t size;
+   long size;
 
    fseek(fp, 0L, SEEK_END);
    size = ftell(fp);
@@ -42,13 +50,54 @@ i965_disasm_get_file_size(FILE *fp)
    return size;
 }
 
+/* Read hex file which should be in following format:
+ * for example :
+ *    { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }
+ */
+static void *
+i965_disasm_read_c_literal_file(FILE *fp, size_t *end)
+{
+   struct util_dynarray assembly = {};
+   uint32_t temp[2];
+
+   if (fscanf(fp, " { ") == EOF) {
+      fprintf(stderr, "Couldn't find opening `{`\n");
+      return NULL;
+   }
+
+   if (fscanf(fp, "0x%x , 0x%x", &temp[0], &temp[1]) == 2) {
+      util_dynarray_append(&assembly, uint32_t, temp[0]);
+      util_dynarray_append(&assembly, uint32_t, temp[1]);
+   } else {
+      fprintf(stderr, "Couldn't read hex values\n");
+      return NULL;
+   }
+
+   while (fscanf(fp, " , 0x%x , 0x%x ", &temp[0], &temp[1]) == 2) {
+      util_dynarray_append(&assembly, uint32_t, temp[0]);
+      util_dynarray_append(&assembly, uint32_t, temp[1]);
+   }
+
+   if (fscanf(fp, "}") == EOF) {
+      fprintf(stderr, "Couldn't find closing `}`\n");
+      return NULL;
+   }
+
+   *end = assembly.size;
+   return assembly.data;
+}
+
 static void *
 i965_disasm_read_binary(FILE *fp, size_t *end)
 {
    size_t size;
    void *assembly;
 
-   *end = i965_disasm_get_file_size(fp);
+   long sz = i965_disasm_get_file_size(fp);
+   if (sz < 0)
+      return NULL;
+
+   *end = (size_t)sz;
    if (!*end)
       return NULL;
 
@@ -57,7 +106,6 @@ i965_disasm_read_binary(FILE *fp, size_t *end)
       return NULL;
 
    size = fread(assembly, *end, 1, fp);
-   fclose(fp);
    if (!size) {
       free(assembly);
       return NULL;
@@ -80,9 +128,6 @@ i965_disasm_init(uint16_t pci_id)
       exit(EXIT_FAILURE);
    }
 
-   /* initialize compaction table in order to handle compacted instructions */
-   brw_init_compaction_tables(devinfo);
-
    return devinfo;
 }
 
@@ -93,7 +138,9 @@ print_help(const char *progname, FILE *file)
            "Usage: %s [OPTION]...\n"
            "Disassemble i965 instructions from binary file.\n\n"
            "      --help             display this help and exit\n"
-           "      --binary-path=PATH read binary file from binary file PATH\n"
+           "      --input-path=PATH  read binary file from binary file PATH\n"
+           "      --type=INPUT_TYPE  INPUT_TYPE can be 'bin' (default if omitted),\n"
+           "                         'c_literal'.\n"
            "      --gen=platform     disassemble instructions for given \n"
            "                         platform (3 letter platform name)\n",
            progname);
@@ -103,61 +150,73 @@ int main(int argc, char *argv[])
 {
    FILE *fp = NULL;
    void *assembly = NULL;
-   char *binary_path = NULL;
+   char *file_path = NULL;
    size_t start = 0, end = 0;
    uint16_t pci_id = 0;
-   int c, i;
-   struct gen_device_info *devinfo;
+   int c;
+   struct gen_device_info *devinfo = NULL;
+   int result = EXIT_FAILURE;
 
    bool help = false;
    const struct option i965_disasm_opts[] = {
       { "help",          no_argument,       (int *) &help,      true },
-      { "binary-path",   required_argument, NULL,               'b' },
+      { "input-path",    required_argument, NULL,               'i' },
+      { "type",          required_argument, NULL,               't' },
       { "gen",           required_argument, NULL,               'g'},
       { NULL,            0,                 NULL,                0 }
    };
 
-   i = 0;
-   while ((c = getopt_long(argc, argv, "", i965_disasm_opts, &i)) != -1) {
+   while ((c = getopt_long(argc, argv, ":i:t:g:h", i965_disasm_opts, NULL)) != -1) {
       switch (c) {
       case 'g': {
          const int id = gen_device_name_to_pci_device_id(optarg);
          if (id < 0) {
             fprintf(stderr, "can't parse gen: '%s', expected 3 letter "
                             "platform name\n", optarg);
-            /* Clean up binary path if given pci id is wrong */
-            if (binary_path) {
-               free(binary_path);
-               fclose(fp);
-            }
-            exit(EXIT_FAILURE);
+            goto end;
          } else {
             pci_id = id;
          }
          break;
       }
-      case 'b':
-         binary_path = strdup(optarg);
-         fp = fopen(binary_path, "rb");
+      case 'i':
+         file_path = strdup(optarg);
+         fp = fopen(file_path, "r");
          if (!fp) {
-            fprintf(stderr, "Unable to read input binary file : %s\n",
-                    binary_path);
-            /* free binary_path if path is wrong */
-            free(binary_path);
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "Unable to read input file : %s\n",
+                    file_path);
+            goto end;
          }
          break;
+      case 't':
+         if (strcmp(optarg, "c_literal") == 0) {
+            input_type = OPT_INPUT_C_LITERAL;
+         } else if (strcmp(optarg, "bin") == 0) {
+            input_type = OPT_INPUT_BINARY;
+         } else {
+            fprintf(stderr, "invalid value for --type: %s\n", optarg);
+            goto end;
+         }
+         break;
+      case 'h':
+         help = true;
+         print_help(argv[0], stderr);
+         goto end;
+      case 0:
+         break;
+      case ':':
+         fprintf(stderr, "%s: option `-%c' requires an argument\n",
+                 argv[0], optopt);
+         goto end;
+      case '?':
       default:
-         /* Clean up binary path if given option is wrong */
-         if (binary_path) {
-            free(binary_path);
-            fclose(fp);
-         }
-         break;
+         fprintf(stderr, "%s: option `-%c' is invalid: ignored\n",
+                 argv[0], optopt);
+         goto end;
       }
    }
 
-   if (help || !binary_path || !pci_id) {
+   if (help || !file_path || !pci_id) {
       print_help(argv[0], stderr);
       exit(0);
    }
@@ -166,25 +225,35 @@ int main(int argc, char *argv[])
    if (!devinfo) {
       fprintf(stderr, "Unable to allocate memory for "
                       "gen_device_info struct instance.\n");
-      exit(EXIT_FAILURE);
+      goto end;
    }
 
-   assembly = i965_disasm_read_binary(fp, &end);
+   if (input_type == OPT_INPUT_BINARY)
+      assembly = i965_disasm_read_binary(fp, &end);
+   else if (input_type == OPT_INPUT_C_LITERAL)
+      assembly = i965_disasm_read_c_literal_file(fp, &end);
+
    if (!assembly) {
       if (end)
-        fprintf(stderr, "Unable to allocate buffer to read binary file\n");
+        fprintf(stderr, "Unable to allocate buffer to read input file\n");
       else
-        fprintf(stderr, "Input file is empty\n");
+        fprintf(stderr, "Failed to read input file\n");
 
-      exit(EXIT_FAILURE);
+      goto end;
    }
 
    /* Disassemble i965 instructions from buffer assembly */
-   brw_disassemble(devinfo, assembly, start, end, stdout);
+   brw_disassemble_with_labels(devinfo, assembly, start, end, stdout);
 
-   free(binary_path);
+   result = EXIT_SUCCESS;
+
+end:
+   if (fp)
+      fclose(fp);
+
+   free(file_path);
    free(assembly);
    free(devinfo);
 
-   return EXIT_SUCCESS;
+   exit(result);
 }

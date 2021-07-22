@@ -67,6 +67,7 @@ struct SwizzleModeFlags
 
     UINT_32 isT             : 1;    // T mode
 
+    // GFX10
     UINT_32 isRtOpt         : 1;    // mode opt for render target
 
     UINT_32 reserved        : 20;   // Reserved bits
@@ -88,15 +89,16 @@ struct Dim3d
 // Macro define resource block type
 enum AddrBlockType
 {
-    AddrBlockMicro     = 0, // Resource uses 256B block
-    AddrBlockThin4KB   = 1, // Resource uses thin 4KB block
-    AddrBlockThick4KB  = 2, // Resource uses thick 4KB block
-    AddrBlockThin64KB  = 3, // Resource uses thin 64KB block
-    AddrBlockThick64KB = 4, // Resource uses thick 64KB block
-    AddrBlockVar       = 5, // Resource uses var block, only valid for GFX9
-    AddrBlockLinear    = 6, // Resource uses linear swizzle mode
+    AddrBlockLinear    = 0, // Resource uses linear swizzle mode
+    AddrBlockMicro     = 1, // Resource uses 256B block
+    AddrBlockThin4KB   = 2, // Resource uses thin 4KB block
+    AddrBlockThick4KB  = 3, // Resource uses thick 4KB block
+    AddrBlockThin64KB  = 4, // Resource uses thin 64KB block
+    AddrBlockThick64KB = 5, // Resource uses thick 64KB block
+    AddrBlockThinVar   = 6, // Resource uses thin var block
+    AddrBlockThickVar  = 7, // Resource uses thick var block
+    AddrBlockMaxTiledType,
 
-    AddrBlockMaxTiledType = AddrBlockVar + 1,
 };
 
 enum AddrSwSet
@@ -116,6 +118,87 @@ const UINT_32 Size64K = 65536u;
 const UINT_32 Log2Size256 = 8u;
 const UINT_32 Log2Size4K  = 12u;
 const UINT_32 Log2Size64K = 16u;
+
+/**
+************************************************************************************************************************
+* @brief Bit setting for swizzle pattern
+************************************************************************************************************************
+*/
+union ADDR_BIT_SETTING
+{
+    struct
+    {
+        UINT_16 x;
+        UINT_16 y;
+        UINT_16 z;
+        UINT_16 s;
+    };
+    UINT_64 value;
+};
+
+/**
+************************************************************************************************************************
+* @brief Swizzle pattern information
+************************************************************************************************************************
+*/
+struct ADDR_SW_PATINFO
+{
+    UINT_8  maxItemCount;
+    UINT_8  nibble01Idx;
+    UINT_16 nibble2Idx;
+    UINT_16 nibble3Idx;
+    UINT_8  nibble4Idx;
+};
+
+/**
+************************************************************************************************************************
+*   InitBit
+*
+*   @brief
+*       Initialize bit setting value via a return value
+************************************************************************************************************************
+*/
+#define InitBit(c, index) (1ull << ((c << 4) + index))
+
+const UINT_64 X0  = InitBit(0,  0);
+const UINT_64 X1  = InitBit(0,  1);
+const UINT_64 X2  = InitBit(0,  2);
+const UINT_64 X3  = InitBit(0,  3);
+const UINT_64 X4  = InitBit(0,  4);
+const UINT_64 X5  = InitBit(0,  5);
+const UINT_64 X6  = InitBit(0,  6);
+const UINT_64 X7  = InitBit(0,  7);
+const UINT_64 X8  = InitBit(0,  8);
+const UINT_64 X9  = InitBit(0,  9);
+const UINT_64 X10 = InitBit(0, 10);
+const UINT_64 X11 = InitBit(0, 11);
+
+const UINT_64 Y0  = InitBit(1,  0);
+const UINT_64 Y1  = InitBit(1,  1);
+const UINT_64 Y2  = InitBit(1,  2);
+const UINT_64 Y3  = InitBit(1,  3);
+const UINT_64 Y4  = InitBit(1,  4);
+const UINT_64 Y5  = InitBit(1,  5);
+const UINT_64 Y6  = InitBit(1,  6);
+const UINT_64 Y7  = InitBit(1,  7);
+const UINT_64 Y8  = InitBit(1,  8);
+const UINT_64 Y9  = InitBit(1,  9);
+const UINT_64 Y10 = InitBit(1, 10);
+const UINT_64 Y11 = InitBit(1, 11);
+
+const UINT_64 Z0  = InitBit(2,  0);
+const UINT_64 Z1  = InitBit(2,  1);
+const UINT_64 Z2  = InitBit(2,  2);
+const UINT_64 Z3  = InitBit(2,  3);
+const UINT_64 Z4  = InitBit(2,  4);
+const UINT_64 Z5  = InitBit(2,  5);
+const UINT_64 Z6  = InitBit(2,  6);
+const UINT_64 Z7  = InitBit(2,  7);
+const UINT_64 Z8  = InitBit(2,  8);
+
+const UINT_64 S0  = InitBit(3,  0);
+const UINT_64 S1  = InitBit(3,  1);
+const UINT_64 S2  = InitBit(3,  2);
 
 /**
 ************************************************************************************************************************
@@ -207,6 +290,10 @@ public:
     ADDR_E_RETURNCODE ComputeSubResourceOffsetForSwizzlePattern(
         const ADDR2_COMPUTE_SUBRESOURCE_OFFSET_FORSWIZZLEPATTERN_INPUT* pIn,
         ADDR2_COMPUTE_SUBRESOURCE_OFFSET_FORSWIZZLEPATTERN_OUTPUT*      pOut);
+
+    ADDR_E_RETURNCODE ComputeNonBlockCompressedView(
+        const ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT* pIn,
+        ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT*      pOut);
 
     ADDR_E_RETURNCODE Addr2GetPreferredSurfaceSetting(
         const ADDR2_GET_PREFERRED_SURF_SETTING_INPUT* pIn,
@@ -457,12 +544,18 @@ protected:
         return ADDR_NOTSUPPORTED;
     }
 
-    virtual ADDR_E_RETURNCODE HwlComputeDccAddrFromCoord(
+    virtual ADDR_E_RETURNCODE HwlSupportComputeDccAddrFromCoord(
+        const ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT* pIn)
+    {
+        ADDR_NOT_IMPLEMENTED();
+        return ADDR_NOTSUPPORTED;
+    }
+
+    virtual VOID HwlComputeDccAddrFromCoord(
         const ADDR2_COMPUTE_DCC_ADDRFROMCOORD_INPUT* pIn,
         ADDR2_COMPUTE_DCC_ADDRFROMCOORD_OUTPUT*      pOut)
     {
         ADDR_NOT_IMPLEMENTED();
-        return ADDR_NOTSUPPORTED;
     }
 
     virtual ADDR_E_RETURNCODE HwlComputeCmaskAddrFromCoord(
@@ -553,6 +646,14 @@ protected:
     virtual ADDR_E_RETURNCODE HwlComputeSubResourceOffsetForSwizzlePattern(
         const ADDR2_COMPUTE_SUBRESOURCE_OFFSET_FORSWIZZLEPATTERN_INPUT* pIn,
         ADDR2_COMPUTE_SUBRESOURCE_OFFSET_FORSWIZZLEPATTERN_OUTPUT*      pOut) const
+    {
+        ADDR_NOT_IMPLEMENTED();
+        return ADDR_NOTSUPPORTED;
+    }
+
+    virtual ADDR_E_RETURNCODE HwlComputeNonBlockCompressedView(
+        const ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_INPUT* pIn,
+        ADDR2_COMPUTE_NONBLOCKCOMPRESSEDVIEW_OUTPUT*      pOut) const
     {
         ADDR_NOT_IMPLEMENTED();
         return ADDR_NOTSUPPORTED;
@@ -820,6 +921,22 @@ protected:
         ADDR2_SWMODE_SET& allowedSwModeSet,
         AddrResourceType  resourceType,
         UINT_32           elemLog2) const;
+
+    static BOOL_32 IsBlockTypeAvaiable(ADDR2_BLOCK_SET blockSet, AddrBlockType blockType);
+
+    static BOOL_32 BlockTypeWithinMemoryBudget(
+        UINT_64 minSize,
+        UINT_64 newBlockTypeSize,
+        UINT_32 ratioLow,
+        UINT_32 ratioHi,
+        DOUBLE  memoryBudget = 0.0f,
+        BOOL_32 newBlockTypeBigger = TRUE);
+
+#if DEBUG
+    VOID ValidateStereoInfo(
+        const ADDR2_COMPUTE_SURFACE_INFO_INPUT* pIn,
+        const ADDR2_COMPUTE_SURFACE_INFO_OUTPUT* pOut) const;
+#endif
 
     UINT_32 m_se;                       ///< Number of shader engine
     UINT_32 m_rbPerSe;                  ///< Number of render backend per shader engine

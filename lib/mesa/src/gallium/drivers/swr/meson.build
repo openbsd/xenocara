@@ -187,10 +187,14 @@ swr_incs = include_directories(
   'rasterizer/archrast', 'rasterizer',
 )
 
-swr_cpp_args = [cpp_vis_args]
+swr_cpp_args = []
 if cpp.has_argument('-fno-strict-aliasing')
   swr_cpp_args += '-fno-strict-aliasing'
 endif
+if cpp.has_argument('-Wno-aligned-new')
+  swr_cpp_args += '-Wno-aligned-new'
+endif
+
 
 swr_arch_libs = []
 swr_defines = []
@@ -228,12 +232,14 @@ if with_swr_arches.contains('skx')
         cpp_msvc_compat_args, swr_cpp_args, swr_skx_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX512',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
       version : '0.0.0',
       soversion : host_machine.system() == 'windows' ? '' : '0',
       install : true,
+      name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
     )
   else
     swr_arch_libs += static_library(
@@ -243,6 +249,7 @@ if with_swr_arches.contains('skx')
         cpp_msvc_compat_args, swr_cpp_args, swr_skx_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX512',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
@@ -267,12 +274,14 @@ if with_swr_arches.contains('knl')
         cpp_msvc_compat_args, swr_cpp_args, swr_knl_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX512', '-DSIMD_ARCH_KNIGHTS',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
       version : '0.0.0',
       soversion : host_machine.system() == 'windows' ? '' : '0',
       install : true,
+      name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
     )
   else
     swr_arch_libs += static_library(
@@ -282,6 +291,7 @@ if with_swr_arches.contains('knl')
         cpp_msvc_compat_args, swr_cpp_args, swr_knl_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX512', '-DSIMD_ARCH_KNIGHTS',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
@@ -311,12 +321,14 @@ if with_swr_arches.contains('avx2')
         cpp_msvc_compat_args, swr_cpp_args, swr_avx2_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX2',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
       version : '0.0.0',
       soversion : host_machine.system() == 'windows' ? '' : '0',
       install : true,
+      name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
     )
   else
     swr_arch_libs += static_library(
@@ -326,6 +338,7 @@ if with_swr_arches.contains('avx2')
         cpp_msvc_compat_args, swr_cpp_args, swr_avx2_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX2',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
@@ -343,12 +356,14 @@ if with_swr_arches.contains('avx')
         cpp_msvc_compat_args, swr_cpp_args, swr_avx_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
       version : '0.0.0',
       soversion : host_machine.system() == 'windows' ? '' : '0',
       install : true,
+      name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
     )
   else
     swr_arch_libs += static_library(
@@ -358,6 +373,7 @@ if with_swr_arches.contains('avx')
         cpp_msvc_compat_args, swr_cpp_args, swr_avx_args,
         '-DKNOB_ARCH=KNOB_ARCH_AVX',
       ],
+      gnu_symbol_visibility : 'hidden',
       link_args : [ld_args_gc_sections],
       include_directories : [swr_incs],
       dependencies : [dep_thread, dep_llvm],
@@ -376,11 +392,12 @@ libmesaswr = static_library(
   [files_swr_mesa, files_swr_common, gen_knobs_h, gen_knobs_cpp,
    gen_builder_hpp, gen_builder_meta_hpp, gen_builder_intrin_hpp],
   cpp_args : [
-    cpp_msvc_compat_args, cpp_vis_args, swr_cpp_args, swr_avx_args,
+    cpp_msvc_compat_args, swr_cpp_args, swr_avx_args,
     swr_defines,
   ],
-  include_directories : [inc_common, swr_incs],
-  dependencies : dep_llvm,
+  gnu_symbol_visibility : 'hidden',
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, swr_incs],
+  dependencies : [dep_llvm, idep_mesautil],
 )
 
 link_libs = [libmesaswr]

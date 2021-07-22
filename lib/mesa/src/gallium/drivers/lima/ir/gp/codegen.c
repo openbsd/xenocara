@@ -114,6 +114,7 @@ static void gpir_codegen_mul0_slot(gpir_codegen_instr *code, gpir_instr *instr)
 
    case gpir_op_neg:
       code->mul0_neg = true;
+      FALLTHROUGH;
    case gpir_op_mov:
       code->mul0_src0 = gpir_get_alu_input(node, alu->children[0]);
       code->mul0_src1 = gpir_codegen_src_ident;
@@ -173,6 +174,7 @@ static void gpir_codegen_mul1_slot(gpir_codegen_instr *code, gpir_instr *instr)
 
    case gpir_op_neg:
       code->mul1_neg = true;
+      FALLTHROUGH;
    case gpir_op_mov:
       code->mul1_src0 = gpir_get_alu_input(node, alu->children[0]);
       code->mul1_src1 = gpir_codegen_src_ident;
@@ -265,6 +267,7 @@ static void gpir_codegen_add0_slot(gpir_codegen_instr *code, gpir_instr *instr)
 
    case gpir_op_neg:
       code->acc0_src0_neg = true;
+      FALLTHROUGH;
    case gpir_op_mov:
       code->acc_op = gpir_codegen_acc_op_add;
       code->acc0_src0 = gpir_get_alu_input(node, alu->children[0]);
@@ -349,6 +352,7 @@ static void gpir_codegen_add1_slot(gpir_codegen_instr *code, gpir_instr *instr)
 
    case gpir_op_neg:
       code->acc1_src0_neg = true;
+      FALLTHROUGH;
    case gpir_op_mov:
       code->acc_op = gpir_codegen_acc_op_add;
       code->acc1_src0 = gpir_get_alu_input(node, alu->children[0]);
@@ -562,11 +566,9 @@ static void gpir_codegen(gpir_codegen_instr *code, gpir_instr *instr)
 static void gpir_codegen_print_prog(gpir_compiler *comp)
 {
    uint32_t *data = comp->prog->shader;
-   int size = comp->prog->shader_size;
-   int num_instr = size / sizeof(gpir_codegen_instr);
    int num_dword_per_instr = sizeof(gpir_codegen_instr) / sizeof(uint32_t);
 
-   for (int i = 0; i < num_instr; i++) {
+   for (int i = 0; i < comp->num_instr; i++) {
       printf("%03d: ", i);
       for (int j = 0; j < num_dword_per_instr; j++)
          printf("%08x ", data[i * num_dword_per_instr + j]);
@@ -582,11 +584,7 @@ bool gpir_codegen_prog(gpir_compiler *comp)
       num_instr += list_length(&block->instr_list);
    }
 
-   if (num_instr > 512) {
-      gpir_error("shader too big (%d), GP has a 512 instruction limit.\n",
-                 num_instr);
-      return false;
-   }
+   assert(num_instr <= 512);
 
    gpir_codegen_instr *code = rzalloc_array(comp->prog, gpir_codegen_instr, num_instr);
    if (!code)
@@ -602,12 +600,11 @@ bool gpir_codegen_prog(gpir_compiler *comp)
 
    for (int i = 0; i < num_instr; i++) {
       if (code[i].register0_attribute)
-         comp->prog->prefetch = i;
+         comp->prog->state.prefetch = i;
    }
 
    comp->prog->shader = code;
-   comp->prog->shader_size = num_instr * sizeof(gpir_codegen_instr);
-   comp->num_instr = num_instr;
+   comp->prog->state.shader_size = num_instr * sizeof(gpir_codegen_instr);
 
    if (lima_debug & LIMA_DEBUG_GP) {
       gpir_codegen_print_prog(comp);

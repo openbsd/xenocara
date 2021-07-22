@@ -22,7 +22,7 @@
  */
 
 #include "util/format/u_format.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 #include "v3d_context.h"
 #include "broadcom/common/v3d_macros.h"
 #include "broadcom/cle/v3dx_pack.h"
@@ -101,11 +101,11 @@ swizzled_border_color(const struct v3d_device_info *devinfo,
 
         switch (swiz) {
         case PIPE_SWIZZLE_0:
-                return util_float_to_half(0.0);
+                return _mesa_float_to_half(0.0);
         case PIPE_SWIZZLE_1:
-                return util_float_to_half(1.0);
+                return _mesa_float_to_half(1.0);
         default:
-                return util_float_to_half(sampler->border_color.f[swiz]);
+                return _mesa_float_to_half(sampler->border_color.f[swiz]);
         }
 }
 
@@ -514,19 +514,25 @@ v3dX(emit_state)(struct pipe_context *pctx)
                          */
                         config.early_z_updates_enable =
                                 (job->ez_state != VC5_EZ_DISABLED);
-                        if (v3d->zsa->base.depth.enabled) {
+                        if (v3d->zsa->base.depth_enabled) {
                                 config.z_updates_enable =
-                                        v3d->zsa->base.depth.writemask;
+                                        v3d->zsa->base.depth_writemask;
                                 config.early_z_enable =
                                         config.early_z_updates_enable;
                                 config.depth_test_function =
-                                        v3d->zsa->base.depth.func;
+                                        v3d->zsa->base.depth_func;
                         } else {
                                 config.depth_test_function = PIPE_FUNC_ALWAYS;
                         }
 
                         config.stencil_enable =
                                 v3d->zsa->base.stencil[0].enabled;
+
+                        /* Use nicer line caps when line smoothing is
+                         * enabled
+                         */
+                        config.line_rasterization =
+                                v3d_line_smoothing_enabled(v3d) ? 1 : 0;
                 }
 
         }
@@ -551,7 +557,7 @@ v3dX(emit_state)(struct pipe_context *pctx)
                 }
 
                 cl_emit(&job->bcl, LINE_WIDTH, line_width) {
-                        line_width.line_width = v3d->rasterizer->base.line_width;
+                        line_width.line_width = v3d_get_real_line_width(v3d);
                 }
         }
 
@@ -742,7 +748,7 @@ v3dX(emit_state)(struct pipe_context *pctx)
                 }
         }
 
-        /* Set up the trasnform feedback buffers. */
+        /* Set up the transform feedback buffers. */
         if (v3d->dirty & VC5_DIRTY_STREAMOUT) {
                 struct v3d_uncompiled_shader *tf_shader = get_tf_shader(v3d);
                 struct v3d_streamout_stateobj *so = &v3d->streamout;
@@ -799,7 +805,7 @@ v3dX(emit_state)(struct pipe_context *pctx)
         if (v3d->dirty & VC5_DIRTY_SAMPLE_STATE) {
                 cl_emit(&job->bcl, SAMPLE_STATE, state) {
                         /* Note: SampleCoverage was handled at the
-                         * state_tracker level by converting to sample_mask.
+                         * frontend level by converting to sample_mask.
                          */
                         state.coverage = 1.0;
                         state.mask = job->msaa ? v3d->sample_mask : 0xf;

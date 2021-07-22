@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <libsync.h>
 
+#include "util/os_file.h"
 #include <util/u_memory.h>
 #include <util/u_inlines.h>
 
@@ -33,7 +34,7 @@
 #include "lima_screen.h"
 #include "lima_context.h"
 #include "lima_fence.h"
-#include "lima_submit.h"
+#include "lima_job.h"
 
 struct pipe_fence_handle {
    struct pipe_reference reference;
@@ -46,7 +47,7 @@ lima_create_fence_fd(struct pipe_context *pctx,
                      int fd, enum pipe_fd_type type)
 {
    assert(type == PIPE_FD_TYPE_NATIVE_SYNC);
-   *fence = lima_fence_create(fcntl(fd, F_DUPFD_CLOEXEC, 3));
+   *fence = lima_fence_create(os_dupfd_cloexec(fd));
 }
 
 static void
@@ -55,7 +56,7 @@ lima_fence_server_sync(struct pipe_context *pctx,
 {
    struct lima_context *ctx = lima_context(pctx);
 
-   lima_submit_add_in_sync(ctx->gp_submit, fence->fd);
+   sync_accumulate("lima", &ctx->in_sync_fd, fence->fd);
 }
 
 void lima_fence_context_init(struct lima_context *ctx)
@@ -83,7 +84,7 @@ static int
 lima_fence_get_fd(struct pipe_screen *pscreen,
                   struct pipe_fence_handle *fence)
 {
-   return fcntl(fence->fd, F_DUPFD_CLOEXEC, 3);
+   return os_dupfd_cloexec(fence->fd);
 }
 
 static void

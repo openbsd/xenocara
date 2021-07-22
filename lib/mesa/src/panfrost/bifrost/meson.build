@@ -20,19 +20,116 @@
 # SOFTWARE.
 
 libpanfrost_bifrost_files = files(
+  'bi_layout.c',
+  'bi_liveness.c',
+  'bi_lower_swizzle.c',
+  'bi_print.c',
+  'bi_opt_copy_prop.c',
+  'bi_opt_dce.c',
+  'bi_opt_push_ubo.c',
+  'bi_pack.c',
+  'bi_ra.c',
+  'bi_schedule.c',
+  'bi_scoreboard.c',
+  'bi_test_pack.c',
+  'bir.c',
   'bifrost_compile.c',
-  'bifrost_opts.c',
-  'bifrost_sched.c',
-  'bifrost_print.c',
-  'disassemble.c',
+)
+
+bifrost_nir_algebraic_c = custom_target(
+  'bifrost_nir_algebraic.c',
+  input : 'bifrost_nir_algebraic.py',
+  output : 'bifrost_nir_algebraic.c',
+  command : [
+    prog_python, '@INPUT@',
+    '-p', join_paths(meson.source_root(), 'src/compiler/nir/'),
+  ],
+  capture : true,
+  depend_files : nir_algebraic_py,
+)
+
+bifrost_gen_disasm_c = custom_target(
+  'bifrost_gen_disasm.c',
+  input : ['gen_disasm.py', 'ISA.xml'],
+  output : 'bifrost_gen_disasm.c',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+bi_opcodes_c = custom_target(
+  'bi_opcodes.c',
+  input : ['bi_opcodes.c.py', 'ISA.xml'],
+  output : 'bi_opcodes.c',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+bi_printer_c = custom_target(
+  'bi_printer.c',
+  input : ['bi_printer.c.py', 'ISA.xml'],
+  output : 'bi_printer.c',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+bi_packer_c = custom_target(
+  'bi_packer.c',
+  input : ['bi_packer.c.py', 'ISA.xml'],
+  output : 'bi_packer.c',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+bi_opcodes_h = custom_target(
+  'bi_opcodes.h',
+  input : ['bi_opcodes.h.py', 'ISA.xml'],
+  output : 'bi_opcodes.h',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+idep_bi_opcodes_h = declare_dependency(
+  sources : [bi_opcodes_h],
+  include_directories : include_directories('.'),
+)
+
+bi_builder_h = custom_target(
+  'bi_builder.h',
+  input : ['bi_builder.h.py', 'ISA.xml'],
+  output : 'bi_builder.h',
+  command : [prog_python, '@INPUT@'],
+  capture : true,
+  depend_files : files('bifrost_isa.py'),
+)
+
+idep_bi_builder_h = declare_dependency(
+  sources : [bi_builder_h],
+  include_directories : include_directories('.'),
+)
+
+libpanfrost_bifrost_disasm = static_library(
+  'panfrost_bifrost_disasm',
+  ['disassemble.c', 'bi_print_common.c', bifrost_gen_disasm_c],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw],
+  dependencies: [idep_nir],
+  link_with: [libpanfrost_util],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
+  build_by_default : false,
 )
 
 libpanfrost_bifrost = static_library(
   'panfrost_bifrost',
-  [libpanfrost_bifrost_files],
-  include_directories : [inc_common, inc_include, inc_src],
-  dependencies: [idep_nir],
-  c_args : [c_vis_args, no_override_init_args],
-  cpp_args : [cpp_vis_args],
+  [libpanfrost_bifrost_files, bifrost_nir_algebraic_c, bi_opcodes_c, bi_printer_c, bi_packer_c],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_panfrost_hw],
+  dependencies: [idep_nir, idep_bi_opcodes_h, idep_bi_builder_h],
+  link_with: [libpanfrost_util, libpanfrost_bifrost_disasm],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   build_by_default : false,
 )

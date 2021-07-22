@@ -211,7 +211,7 @@ uint16_t _mesa_roundtozero_f16(int16_t s, int16_t e, int16_t m)
         if (e < 0) {
             m = _mesa_shift_right_jam32(m, -e);
             e = 0;
-        } else if ((e > 0x1d) || (0x8000 <= m)) {
+        } else if (e > 0x1d) {
             e = 0x1f;
             m = 0;
             return (s << 15) + (e << 10) + m - 1;
@@ -393,6 +393,7 @@ _mesa_shift_right_jam_m(uint8_t size_words, const uint32_t *a, uint32_t dist, ui
 
     word_jam = 0;
     word_dist = dist >> 5;
+    tmp = NULL;
     if (word_dist) {
         if (size_words < word_dist)
             word_dist = size_words;
@@ -428,10 +429,12 @@ _mesa_shift_right_jam_m(uint8_t size_words, const uint32_t *a, uint32_t dist, ui
         }
         tmp = m_out + index_multiword_hi(size_words, word_dist);
     }
-    do {
-        *tmp++ = 0;
-        --word_dist;
-    } while (word_dist);
+    if (tmp) {
+       do {
+           *tmp++ = 0;
+           --word_dist;
+       } while (word_dist);
+    }
     if (word_jam)
         m_out[index_word_lo(size_words)] |= 1;
 }
@@ -1435,7 +1438,7 @@ _mesa_double_to_f32(double val, bool rtz)
  * From f32_to_f16()
  */
 uint16_t
-_mesa_float_to_half_rtz(float val)
+_mesa_float_to_half_rtz_slow(float val)
 {
     const fi_type fi = {val};
     const uint32_t flt_m = fi.u & 0x7fffff;

@@ -44,6 +44,7 @@
 #define FAMILY_AI      0x8D
 #define FAMILY_RV      0x8E
 #define FAMILY_NV      0x8F
+#define FAMILY_VGH     0x90
 
 // AMDGPU_FAMILY_IS(familyId, familyName)
 #define FAMILY_IS(f, fn)     (f == FAMILY_##fn)
@@ -88,7 +89,8 @@
 #define AMDGPU_VEGA10_RANGE     0x01, 0x14
 #define AMDGPU_VEGA12_RANGE     0x14, 0x28
 #define AMDGPU_VEGA20_RANGE     0x28, 0x32
-#define AMDGPU_ARCTURUS_RANGE   0x32, 0xFF
+#define AMDGPU_ARCTURUS_RANGE   0x32, 0x3C
+#define AMDGPU_ALDEBARAN_RANGE  0x3C, 0xFF
 
 #define AMDGPU_RAVEN_RANGE      0x01, 0x81
 #define AMDGPU_RAVEN2_RANGE     0x81, 0x91
@@ -97,10 +99,16 @@
 #define AMDGPU_NAVI10_RANGE     0x01, 0x0A
 #define AMDGPU_NAVI12_RANGE     0x0A, 0x14
 #define AMDGPU_NAVI14_RANGE     0x14, 0x28
+#define AMDGPU_SIENNA_CICHLID_RANGE     0x28, 0x32
+#define AMDGPU_NAVY_FLOUNDER_RANGE      0x32, 0x3C
+#define AMDGPU_DIMGREY_CAVEFISH_RANGE   0x3C, 0x46
+
+#define AMDGPU_VANGOGH_RANGE    0x01, 0xFF
 
 #define AMDGPU_EXPAND_FIX(x) x
 #define AMDGPU_RANGE_HELPER(val, min, max) ((val >= min) && (val < max))
 #define AMDGPU_IN_RANGE(val, ...)   AMDGPU_EXPAND_FIX(AMDGPU_RANGE_HELPER(val, __VA_ARGS__))
+
 
 // ASICREV_IS(eRevisionId, revisionName)
 #define ASICREV_IS(r, rn)              AMDGPU_IN_RANGE(r, AMDGPU_##rn##_RANGE)
@@ -136,13 +144,19 @@
 #define ASICREV_IS_VEGA12_p(r)         ASICREV_IS(r, VEGA12)
 #define ASICREV_IS_VEGA20_P(r)         ASICREV_IS(r, VEGA20)
 #define ASICREV_IS_ARCTURUS(r)         ASICREV_IS(r, ARCTURUS)
+#define ASICREV_IS_ALDEBARAN(r)        ASICREV_IS(r, ALDEBARAN)
 
 #define ASICREV_IS_RAVEN(r)            ASICREV_IS(r, RAVEN)
 #define ASICREV_IS_RAVEN2(r)           ASICREV_IS(r, RAVEN2)
 #define ASICREV_IS_RENOIR(r)           ASICREV_IS(r, RENOIR)
 
 #define ASICREV_IS_NAVI10_P(r)         ASICREV_IS(r, NAVI10)
-#define ASICREV_IS_NAVI12(r)           ASICREV_IS(r, NAVI12)
-#define ASICREV_IS_NAVI14(r)           ASICREV_IS(r, NAVI14)
+#define ASICREV_IS_NAVI12_P(r)         ASICREV_IS(r, NAVI12)
+#define ASICREV_IS_NAVI14_M(r)         ASICREV_IS(r, NAVI14)
+#define ASICREV_IS_SIENNA_CICHLID(r)   ASICREV_IS(r, SIENNA_CICHLID)
+#define ASICREV_IS_NAVY_FLOUNDER(r)    ASICREV_IS(r, NAVY_FLOUNDER)
+#define ASICREV_IS_DIMGREY_CAVEFISH(r) ASICREV_IS(r, DIMGREY_CAVEFISH)
+
+#define ASICREV_IS_VANGOGH(r)          ASICREV_IS(r, VANGOGH)
 
 #endif // _AMDGPU_ASIC_ADDR_H

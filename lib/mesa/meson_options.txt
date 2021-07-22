@@ -23,23 +23,29 @@ option(
   type : 'array',
   value : ['auto'],
   choices : [
-    '', 'auto', 'x11', 'wayland', 'drm', 'surfaceless', 'haiku', 'android',
-    'windows',
+    'auto', 'x11', 'wayland', 'haiku', 'android', 'windows',
   ],
   description : 'window systems to support. If this is set to `auto`, all platforms applicable will be enabled.'
 )
 option(
+  'android-stub',
+  type : 'boolean',
+  value : false,
+  description : 'Build against android-stub',
+)
+
+option(
   'dri3',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'disabled', 'enabled'],
   description : 'enable support for dri3'
 )
 option(
   'dri-drivers',
   type : 'array',
   value : ['auto'],
-  choices : ['', 'auto', 'i915', 'i965', 'r100', 'r200', 'nouveau', 'swrast'],
+  choices : ['auto', 'i915', 'i965', 'r100', 'r200', 'nouveau'],
   description : 'List of dri drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
 )
 option(
@@ -59,9 +65,9 @@ option(
   type : 'array',
   value : ['auto'],
   choices : [
-    '', 'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
+    'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
     'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
-    'swr', 'panfrost', 'iris', 'lima', 'zink'
+    'swr', 'panfrost', 'iris', 'lima', 'zink', 'd3d12'
   ],
   description : 'List of gallium drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
 )
@@ -75,8 +81,8 @@ option(
   'gallium-vdpau',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
-  description : 'enable gallium vdpau state tracker.',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'enable gallium vdpau frontend.',
 )
 option(
   'vdpau-libs-path',
@@ -88,8 +94,8 @@ option(
   'gallium-xvmc',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
-  description : 'enable gallium xvmc state tracker.',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'enable gallium xvmc frontend.',
 )
 option(
   'xvmc-libs-path',
@@ -102,7 +108,7 @@ option(
   type : 'combo',
   value : 'auto',
   choices : ['auto', 'disabled', 'bellagio', 'tizonia'],
-  description : 'enable gallium omx state tracker.',
+  description : 'enable gallium omx frontend.',
 )
 option(
   'omx-libs-path',
@@ -114,8 +120,8 @@ option(
   'gallium-va',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
-  description : 'enable gallium va state tracker.',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'enable gallium va frontend.',
 )
 option(
   'va-libs-path',
@@ -127,27 +133,40 @@ option(
   'gallium-xa',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
-  description : 'enable gallium xa state tracker.',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'enable gallium xa frontend.',
 )
 option(
   'gallium-nine',
   type : 'boolean',
   value : false,
-  description : 'build gallium "nine" Direct3D 9.x state tracker.',
+  description : 'build gallium "nine" Direct3D 9.x frontend.',
 )
 option(
   'gallium-opencl',
   type : 'combo',
   choices : ['icd', 'standalone', 'disabled'],
   value : 'disabled',
-  description : 'build gallium "clover" OpenCL state tracker.',
+  description : 'build gallium "clover" OpenCL frontend.',
 )
 option(
   'opencl-spirv',
   type : 'boolean',
   value : false,
-  description : 'build gallium "clover" OpenCL state tracker with SPIR-V binary support.',
+  description : 'build gallium "clover" OpenCL frontend with SPIR-V binary support.',
+)
+option(
+  'opencl-native',
+  type : 'boolean',
+  value : true,
+  description : 'build gallium "clover" OpenCL frontend with native LLVM codegen support.',
+)
+option(
+  'static-libclc',
+  type : 'array',
+  value : [],
+  choices : ['spirv', 'spirv64', 'all'],
+  description : 'Link libclc SPIR-V statically.',
 )
 option(
   'd3d-drivers-path',
@@ -159,15 +178,38 @@ option(
   'vulkan-drivers',
   type : 'array',
   value : ['auto'],
-  choices : ['', 'auto', 'amd', 'freedreno', 'intel'],
+  choices : ['auto', 'amd', 'broadcom', 'freedreno', 'intel', 'swrast', 'virtio-experimental'],
   description : 'List of vulkan drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
+)
+option(
+  'freedreno-kgsl',
+  type : 'boolean',
+  value : false,
+  description : 'use kgsl backend for freedreno vulkan driver',
 )
 option(
   'shader-cache',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
-  description : 'Build with on-disk shader cache support'
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'Build with on-disk shader cache support.',
+)
+option(
+  'shader-cache-default',
+  type : 'boolean',
+  value : true,
+  description : 'If set to false, the feature is only activated when environment variable MESA_GLSL_CACHE_DISABLE is set to false',
+)
+option(
+  'shader-cache-max-size',
+  type : 'string',
+  value : '',
+  description : '''Default value for MESA_GLSL_CACHE_MAX_SIZE enviroment variable.
+   If set, determines the maximum size of the on-disk cache of compiled
+   GLSL programs, can be overriden by enviroment variable if needed. Should be set to a number optionally followed by
+   ``K``, ``M``, or ``G`` to specify a size in kilobytes, megabytes, or
+   gigabytes. By default, gigabytes will be assumed. And if unset, a
+   maximum size of 1GB will be used.'''
 )
 option(
   'vulkan-icd-dir',
@@ -176,30 +218,31 @@ option(
   description : 'Location relative to prefix to put vulkan icds on install. Default: $datadir/vulkan/icd.d'
 )
 option(
-  'vulkan-overlay-layer',
-  type : 'boolean',
-  value : false,
-  description : 'Whether to build the vulkan overlay layer'
+  'vulkan-layers',
+  type : 'array',
+  value : [],
+  choices : ['device-select', 'intel-nullhw', 'overlay'],
+  description : 'List of vulkan layers to build'
 )
 option(
   'shared-glapi',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Whether to build a shared or static glapi. Defaults to false on Windows, true elsewhere'
 )
 option(
   'gles1',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for OpenGL ES 1.x'
 )
 option(
   'gles2',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for OpenGL ES 2.x and 3.x'
 )
 option(
@@ -212,7 +255,7 @@ option(
   'gbm',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for gbm platform'
 )
 option(
@@ -226,7 +269,7 @@ option(
   'egl',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for EGL platform'
 )
 option(
@@ -234,6 +277,24 @@ option(
   type : 'boolean',
   value : false,
   description : 'Enable GLVND support.'
+)
+option(
+  'microsoft-clc',
+  type : 'feature',
+  value : 'auto',
+  description : 'Build support for the Microsoft CLC to DXIL compiler'
+)
+option(
+  'spirv-to-dxil',
+  type : 'boolean',
+  value : false,
+  description : 'Build support for the SPIR-V to DXIL library'
+)
+option(
+  'glvnd-vendor-name',
+  type : 'string',
+  value : 'mesa',
+  description : 'Vendor name string to use for glvnd libraries'
 )
 option(
    'glx-read-only-text',
@@ -245,41 +306,54 @@ option(
   'llvm',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build with LLVM support.'
 )
 option(
   'shared-llvm',
+  type : 'combo',
+  value : 'auto',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
+  description : 'Whether to link LLVM shared or statically.'
+)
+option(
+  'draw-use-llvm',
   type : 'boolean',
-  value : true,
-  description : 'Whether to link llvm shared or statically.'
+  value : 'true',
+  description : 'Whether to use LLVM for the Gallium draw module, if LLVM is included.'
 )
 option(
   'valgrind',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build with valgrind support'
 )
 option(
   'libunwind',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Use libunwind for stack-traces'
 )
 option(
   'lmsensors',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Enable HUD lmsensors support.'
 )
 option(
   'build-tests',
   type : 'boolean',
   value : false,
-  description : 'Build unit tests. Currently this will build *all* unit tests, which may build more than expected.'
+  description : 'Build unit tests. Currently this will build *all* unit tests except the ACO tests, which may build more than expected.'
+)
+option(
+  'build-aco-tests',
+  type : 'boolean',
+  value : false,
+  description : 'Build ACO tests. These require RADV and glslang but not an AMD GPU.'
 )
 option(
   'install-intel-gpu-tests',
@@ -295,9 +369,8 @@ option(
 )
 option(
   'osmesa',
-  type : 'combo',
-  value : 'none',
-  choices : ['none', 'classic', 'gallium'],
+  type : 'boolean',
+  value : false,
   description : 'Build OSmesa.'
 )
 option(
@@ -332,14 +405,14 @@ option(
   'power8',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Enable power8 optimizations.',
 )
 option(
   'xlib-lease',
   type : 'combo',
   value : 'auto',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Enable VK_EXT_acquire_xlib_display.'
 )
 option(
@@ -347,12 +420,6 @@ option(
   type : 'boolean',
   value : true,
   description : 'Enable direct rendering in GLX and EGL for DRI',
-)
-option(
-  'I-love-half-baked-turnips',
-  type : 'boolean',
-  value : false,
-  description : 'Allow work-in-progress freedreno vulkan driver to be enabled',
 )
 option(
   'prefer-iris',
@@ -382,7 +449,19 @@ option(
 option(
   'zstd',
   type : 'combo',
-  choices : ['auto', 'true', 'false'],
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   value : 'auto',
   description : 'Use ZSTD instead of ZLIB in some cases.'
+)
+option(
+   'zlib',
+   type : 'feature',
+   value : 'enabled',
+   description : 'Use ZLIB to build driver. Default: enabled'
+)
+option(
+  'sse2',
+  type : 'boolean',
+  value : true,
+  description : 'use msse2 flag for mingw x86. Default: true',
 )

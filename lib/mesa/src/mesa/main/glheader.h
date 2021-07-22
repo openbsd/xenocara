@@ -138,6 +138,10 @@ typedef int GLclampx;
 #define GL_SR8_EXT                                              0x8FBD
 #endif
 
+#ifndef GL_EXT_texture_sRGB_RG8
+#define GL_SRG8_EXT                                             0x8FBE
+#endif
+
 #ifndef GL_AMD_compressed_ATC_texture
 #define GL_ATC_RGB_AMD                                          0x8C92
 #define GL_ATC_RGBA_EXPLICIT_ALPHA_AMD                          0x8C93
@@ -155,6 +159,10 @@ typedef int GLclampx;
 
 #ifndef GL_EXT_multisampled_render_to_texture
 #define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_SAMPLES_EXT 0x8D6C
+#endif
+
+#ifndef GL_ANGLE_pack_reverse_row_order
+#define GL_PACK_REVERSE_ROW_ORDER_ANGLE 0x93A4
 #endif
 
 #ifdef __cplusplus

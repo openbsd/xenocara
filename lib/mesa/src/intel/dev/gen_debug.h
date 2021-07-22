@@ -28,6 +28,7 @@
 
 #include <stdint.h>
 #include "compiler/shader_enums.h"
+#include "util/macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +40,9 @@ extern "C" {
  * list of debugging flags, as well as some macros for handling them.
  */
 
-extern uint64_t INTEL_DEBUG;
+extern uint64_t intel_debug;
+
+#define INTEL_DEBUG __builtin_expect(intel_debug, 0)
 
 #define DEBUG_TEXTURE             (1ull <<  0)
 #define DEBUG_STATE               (1ull <<  1)
@@ -88,6 +91,8 @@ extern uint64_t INTEL_DEBUG;
 #define DEBUG_BT                  (1ull << 44)
 #define DEBUG_PIPE_CONTROL        (1ull << 45)
 #define DEBUG_NO_FAST_CLEAR       (1ull << 46)
+#define DEBUG_NO32                (1ull << 47)
+#define DEBUG_RT                  (1ull << 48)
 
 /* These flags are not compatible with the disk shader cache */
 #define DEBUG_DISK_CACHE_DISABLE_MASK DEBUG_SHADER_TIME
@@ -96,7 +101,7 @@ extern uint64_t INTEL_DEBUG;
 #define DEBUG_DISK_CACHE_MASK \
    (DEBUG_NO16 | DEBUG_NO_DUAL_OBJECT_GS | DEBUG_NO8 |  DEBUG_SPILL_FS | \
    DEBUG_SPILL_VEC4 | DEBUG_NO_COMPACTION | DEBUG_DO32 | DEBUG_SOFT64 | \
-   DEBUG_TCS_EIGHT_PATCH)
+   DEBUG_TCS_EIGHT_PATCH | DEBUG_NO32)
 
 #ifdef HAVE_ANDROID_PLATFORM
 #define LOG_TAG "INTEL-MESA"
@@ -114,13 +119,57 @@ extern uint64_t INTEL_DEBUG;
 #endif /* HAVE_ANDROID_PLATFORM */
 
 #define DBG(...) do {						\
-	if (unlikely(INTEL_DEBUG & FILE_DEBUG_FLAG))		\
+	if (INTEL_DEBUG & FILE_DEBUG_FLAG)		\
 		dbg_printf(__VA_ARGS__);			\
 } while(0)
 
 extern uint64_t intel_debug_flag_for_shader_stage(gl_shader_stage stage);
 
 extern void brw_process_intel_debug_variable(void);
+
+/* Below is a list of structure located in the identifier buffer. The driver
+ * can fill those in for debug purposes.
+ */
+
+enum gen_debug_block_type {
+   /* End of the debug blocks */
+   GEN_DEBUG_BLOCK_TYPE_END = 1,
+
+   /* Driver identifier (struct gen_debug_block_driver) */
+   GEN_DEBUG_BLOCK_TYPE_DRIVER,
+
+   /* Frame identifier (struct gen_debug_block_frame) */
+   GEN_DEBUG_BLOCK_TYPE_FRAME,
+
+   /* Internal, never to be written out */
+   GEN_DEBUG_BLOCK_TYPE_MAX,
+};
+
+struct gen_debug_block_base {
+   uint32_t type; /* enum gen_debug_block_type */
+   uint32_t length; /* inclusive of this structure size */
+};
+
+struct gen_debug_block_driver {
+   struct gen_debug_block_base base;
+   uint8_t description[];
+};
+
+struct gen_debug_block_frame {
+   struct gen_debug_block_base base;
+   uint64_t frame_id;
+};
+
+extern void *intel_debug_identifier(void);
+extern uint32_t intel_debug_identifier_size(void);
+
+extern uint32_t intel_debug_write_identifiers(void *output,
+                                              uint32_t output_size,
+                                              const char *driver_name);
+
+extern void *intel_debug_get_identifier_block(void *buffer,
+                                              uint32_t buffer_size,
+                                              enum gen_debug_block_type type);
 
 #ifdef __cplusplus
 }

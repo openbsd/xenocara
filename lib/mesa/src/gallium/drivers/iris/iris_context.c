@@ -24,6 +24,7 @@
 #include <time.h>
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
+#include "util/debug.h"
 #include "util/ralloc.h"
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
@@ -32,8 +33,8 @@
 #include "iris_context.h"
 #include "iris_resource.h"
 #include "iris_screen.h"
-#include "common/gen_defines.h"
-#include "common/gen_sample_positions.h"
+#include "common/intel_defines.h"
+#include "common/intel_sample_positions.h"
 
 /**
  * For debugging purposes, this returns a time in seconds.
@@ -73,33 +74,25 @@ iris_set_debug_callback(struct pipe_context *ctx,
 void
 iris_lost_context_state(struct iris_batch *batch)
 {
-   /* The batch module doesn't have an iris_context, because we want to
-    * avoid introducing lots of layering violations.  Unfortunately, here
-    * we do need to inform the context of batch catastrophe.  We know the
-    * batch is one of our context's, so hackily claw our way back.
-    */
-   struct iris_context *ice = NULL;
+   struct iris_context *ice = batch->ice;
 
    if (batch->name == IRIS_BATCH_RENDER) {
-      ice = container_of(batch, ice, batches[IRIS_BATCH_RENDER]);
-      assert(&ice->batches[IRIS_BATCH_RENDER] == batch);
-
-      ice->vtbl.init_render_context(batch);
+      batch->screen->vtbl.init_render_context(batch);
    } else if (batch->name == IRIS_BATCH_COMPUTE) {
-      ice = container_of(batch, ice, batches[IRIS_BATCH_COMPUTE]);
-      assert(&ice->batches[IRIS_BATCH_COMPUTE] == batch);
-
-      ice->vtbl.init_compute_context(batch);
+      batch->screen->vtbl.init_compute_context(batch);
    } else {
       unreachable("unhandled batch reset");
    }
 
    ice->state.dirty = ~0ull;
+   ice->state.stage_dirty = ~0ull;
    ice->state.current_hash_scale = 0;
+   memset(&ice->shaders.urb, 0, sizeof(ice->shaders.urb));
+   memset(ice->state.last_block, 0, sizeof(ice->state.last_block));
    memset(ice->state.last_grid, 0, sizeof(ice->state.last_grid));
    batch->last_surface_base_address = ~0ull;
    batch->last_aux_map_state = 0;
-   ice->vtbl.lost_genx_state(ice, batch);
+   batch->screen->vtbl.lost_genx_state(ice, batch);
 }
 
 static enum pipe_reset_status
@@ -171,17 +164,60 @@ iris_get_sample_position(struct pipe_context *ctx,
       } v;
    } u;
    switch (sample_count) {
-   case 1:  GEN_SAMPLE_POS_1X(u.v._);  break;
-   case 2:  GEN_SAMPLE_POS_2X(u.v._);  break;
-   case 4:  GEN_SAMPLE_POS_4X(u.v._);  break;
-   case 8:  GEN_SAMPLE_POS_8X(u.v._);  break;
-   case 16: GEN_SAMPLE_POS_16X(u.v._); break;
+   case 1:  INTEL_SAMPLE_POS_1X(u.v._);  break;
+   case 2:  INTEL_SAMPLE_POS_2X(u.v._);  break;
+   case 4:  INTEL_SAMPLE_POS_4X(u.v._);  break;
+   case 8:  INTEL_SAMPLE_POS_8X(u.v._);  break;
+   case 16: INTEL_SAMPLE_POS_16X(u.v._); break;
    default: unreachable("invalid sample count");
    }
 
    out_value[0] = u.a.x[sample_index];
    out_value[1] = u.a.y[sample_index];
 }
+
+static bool
+create_dirty_dmabuf_set(struct iris_context *ice)
+{
+   assert(ice->dirty_dmabufs == NULL);
+
+   ice->dirty_dmabufs = _mesa_pointer_set_create(ice);
+   return ice->dirty_dmabufs != NULL;
+}
+
+void
+iris_mark_dirty_dmabuf(struct iris_context *ice,
+                       struct pipe_resource *res)
+{
+   if (!_mesa_set_search(ice->dirty_dmabufs, res)) {
+      _mesa_set_add(ice->dirty_dmabufs, res);
+      pipe_reference(NULL, &res->reference);
+   }
+}
+
+static void
+clear_dirty_dmabuf_set(struct iris_context *ice)
+{
+   set_foreach(ice->dirty_dmabufs, entry) {
+      struct pipe_resource *res = (struct pipe_resource *)entry->key;
+      if (pipe_reference(&res->reference, NULL))
+         res->screen->resource_destroy(res->screen, res);
+   }
+
+   _mesa_set_clear(ice->dirty_dmabufs, NULL);
+}
+
+void
+iris_flush_dirty_dmabufs(struct iris_context *ice)
+{
+   set_foreach(ice->dirty_dmabufs, entry) {
+      struct pipe_resource *res = (struct pipe_resource *)entry->key;
+      ice->ctx.flush_resource(&ice->ctx, res);
+   }
+
+   clear_dirty_dmabuf_set(ice);
+}
+
 
 /**
  * Destroy a context, freeing any associated memory.
@@ -190,42 +226,49 @@ static void
 iris_destroy_context(struct pipe_context *ctx)
 {
    struct iris_context *ice = (struct iris_context *)ctx;
+   struct iris_screen *screen = (struct iris_screen *)ctx->screen;
 
    if (ctx->stream_uploader)
       u_upload_destroy(ctx->stream_uploader);
 
-   ice->vtbl.destroy_state(ice);
+   clear_dirty_dmabuf_set(ice);
+
+   screen->vtbl.destroy_state(ice);
    iris_destroy_program_cache(ice);
    iris_destroy_border_color_pool(ice);
+   if (screen->measure.config)
+      iris_destroy_ctx_measure(ice);
+
    u_upload_destroy(ice->state.surface_uploader);
    u_upload_destroy(ice->state.dynamic_uploader);
    u_upload_destroy(ice->query_buffer_uploader);
-
-   slab_destroy_child(&ice->transfer_pool);
 
    iris_batch_free(&ice->batches[IRIS_BATCH_RENDER]);
    iris_batch_free(&ice->batches[IRIS_BATCH_COMPUTE]);
    iris_destroy_binder(&ice->state.binder);
 
+   slab_destroy_child(&ice->transfer_pool);
+   slab_destroy_child(&ice->transfer_pool_unsync);
+
    ralloc_free(ice);
 }
 
 #define genX_call(devinfo, func, ...)             \
-   switch (devinfo->gen) {                        \
-   case 12:                                       \
-      gen12_##func(__VA_ARGS__);                  \
+   switch ((devinfo)->verx10) {                   \
+   case 125:                                      \
+      gfx125_##func(__VA_ARGS__);                 \
       break;                                      \
-   case 11:                                       \
-      gen11_##func(__VA_ARGS__);                  \
+   case 120:                                      \
+      gfx12_##func(__VA_ARGS__);                  \
       break;                                      \
-   case 10:                                       \
-      gen10_##func(__VA_ARGS__);                  \
+   case 110:                                      \
+      gfx11_##func(__VA_ARGS__);                  \
       break;                                      \
-   case 9:                                        \
-      gen9_##func(__VA_ARGS__);                   \
+   case 90:                                       \
+      gfx9_##func(__VA_ARGS__);                   \
       break;                                      \
-   case 8:                                        \
-      gen8_##func(__VA_ARGS__);                   \
+   case 80:                                       \
+      gfx8_##func(__VA_ARGS__);                   \
       break;                                      \
    default:                                       \
       unreachable("Unknown hardware generation"); \
@@ -258,6 +301,11 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
    }
    ctx->const_uploader = ctx->stream_uploader;
 
+   if (!create_dirty_dmabuf_set(ice)) {
+      ralloc_free(ice);
+      return NULL;
+   }
+
    ctx->destroy = iris_destroy_context;
    ctx->set_debug_callback = iris_set_debug_callback;
    ctx->set_device_reset_callback = iris_set_device_reset_callback;
@@ -277,6 +325,7 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
    iris_init_binder(ice);
 
    slab_create_child(&ice->transfer_pool, &screen->transfer_pool);
+   slab_create_child(&ice->transfer_pool_unsync, &screen->transfer_pool);
 
    ice->state.surface_uploader =
       u_upload_create(ctx, 16384, PIPE_BIND_CUSTOM, PIPE_USAGE_IMMUTABLE,
@@ -295,21 +344,29 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
 
    int priority = 0;
    if (flags & PIPE_CONTEXT_HIGH_PRIORITY)
-      priority = GEN_CONTEXT_HIGH_PRIORITY;
+      priority = INTEL_CONTEXT_HIGH_PRIORITY;
    if (flags & PIPE_CONTEXT_LOW_PRIORITY)
-      priority = GEN_CONTEXT_LOW_PRIORITY;
+      priority = INTEL_CONTEXT_LOW_PRIORITY;
 
-   if (unlikely(INTEL_DEBUG & DEBUG_BATCH))
+   if (INTEL_DEBUG & DEBUG_BATCH)
       ice->state.sizes = _mesa_hash_table_u64_create(ice);
 
    for (int i = 0; i < IRIS_BATCH_COUNT; i++) {
-      iris_init_batch(&ice->batches[i], screen, &ice->vtbl, &ice->dbg,
-                      &ice->reset, ice->state.sizes,
-                      ice->batches, (enum iris_batch_name) i, priority);
+      iris_init_batch(ice, (enum iris_batch_name) i, priority);
    }
 
-   ice->vtbl.init_render_context(&ice->batches[IRIS_BATCH_RENDER]);
-   ice->vtbl.init_compute_context(&ice->batches[IRIS_BATCH_COMPUTE]);
+   screen->vtbl.init_render_context(&ice->batches[IRIS_BATCH_RENDER]);
+   screen->vtbl.init_compute_context(&ice->batches[IRIS_BATCH_COMPUTE]);
 
-   return ctx;
+   if (!(flags & PIPE_CONTEXT_PREFER_THREADED))
+      return ctx;
+
+   /* Clover doesn't support u_threaded_context */
+   if (flags & PIPE_CONTEXT_COMPUTE_ONLY)
+      return ctx;
+
+   return threaded_context_create(ctx, &screen->transfer_pool,
+                                  iris_replace_buffer_storage,
+                                  NULL, /* TODO: asynchronous flushes? */
+                                  &ice->thrctx);
 }

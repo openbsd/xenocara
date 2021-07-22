@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
  /*
@@ -30,7 +30,7 @@
   *   Brian Paul
   */
 
-#include "main/imports.h"
+
 #include "main/image.h"
 #include "main/macros.h"
 
@@ -39,6 +39,7 @@
 #include "st_cb_bitmap.h"
 #include "st_cb_blit.h"
 #include "st_cb_fbo.h"
+#include "st_cb_texture.h"
 #include "st_manager.h"
 #include "st_scissor.h"
 #include "st_util.h"
@@ -169,7 +170,7 @@ st_BlitFramebuffer(struct gl_context *ctx,
       st_window_rectangles_to_blit(ctx, &blit);
 
    blit.filter = pFilter;
-   blit.render_condition_enable = TRUE;
+   blit.render_condition_enable = st->has_conditional_render;
    blit.alpha_blend = FALSE;
 
    if (mask & GL_COLOR_BUFFER_BIT) {
@@ -180,6 +181,12 @@ st_BlitFramebuffer(struct gl_context *ctx,
       blit.mask = PIPE_MASK_RGBA;
 
       if (srcAtt->Type == GL_TEXTURE) {
+         /* Make sure that the st_texture_object->pt is the current storage for
+          * our miplevel.  The finalize would happen at some point anyway, might
+          * as well be now.
+          */
+         st_finalize_texture(ctx, st->pipe, srcAtt->Texture, srcAtt->CubeMapFace);
+
          struct st_texture_object *srcObj = st_texture_object(srcAtt->Texture);
 
          if (!srcObj || !srcObj->pt) {
@@ -189,7 +196,7 @@ st_BlitFramebuffer(struct gl_context *ctx,
          blit.src.resource = srcObj->pt;
          blit.src.level = srcAtt->TextureLevel;
          blit.src.box.z = srcAtt->Zoffset + srcAtt->CubeMapFace;
-         blit.src.format = srcObj->pt->format;
+         blit.src.format = srcObj->surface_based ? srcObj->surface_format : srcObj->pt->format;
 
          if (!ctx->Color.sRGBEnabled)
             blit.src.format = util_format_linear(blit.src.format);
@@ -245,7 +252,7 @@ st_BlitFramebuffer(struct gl_context *ctx,
       /* get src/dst depth surfaces */
       struct st_renderbuffer *srcDepthRb =
          st_renderbuffer(readFB->Attachment[BUFFER_DEPTH].Renderbuffer);
-      struct st_renderbuffer *dstDepthRb = 
+      struct st_renderbuffer *dstDepthRb =
          st_renderbuffer(drawFB->Attachment[BUFFER_DEPTH].Renderbuffer);
       struct pipe_surface *dstDepthSurf =
          dstDepthRb ? dstDepthRb->surface : NULL;

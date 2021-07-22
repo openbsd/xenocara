@@ -35,15 +35,20 @@ files_etnaviv = files(
   'etnaviv_blt.h',
   'etnaviv_clear_blit.c',
   'etnaviv_clear_blit.h',
+  'etnaviv_compiler.c',
   'etnaviv_compiler.h',
   'etnaviv_compiler_nir.c',
-  'etnaviv_compiler_nir_emit.h',
+  'etnaviv_compiler_nir_emit.c',
+  'etnaviv_compiler_nir_liveness.c',
+  'etnaviv_compiler_nir_ra.c',
   'etnaviv_compiler_tgsi.c',
   'etnaviv_context.c',
   'etnaviv_context.h',
   'etnaviv_debug.h',
   'etnaviv_disasm.c',
   'etnaviv_disasm.h',
+  'etnaviv_disk_cache.c',
+  'etnaviv_disk_cache.h',
   'etnaviv_emit.c',
   'etnaviv_emit.h',
   'etnaviv_etc2.c',
@@ -53,14 +58,19 @@ files_etnaviv = files(
   'etnaviv_format.c',
   'etnaviv_format.h',
   'etnaviv_internal.h',
+  'etnaviv_nir_lower_ubo_to_uniform.c',
+  'etnaviv_nir.c',
+  'etnaviv_nir.h',
+  'etnaviv_perfmon.c',
+  'etnaviv_perfmon.h',
   'etnaviv_query.c',
   'etnaviv_query.h',
-  'etnaviv_query_hw.c',
-  'etnaviv_query_hw.h',
+  'etnaviv_query_acc_occlusion.c',
+  'etnaviv_query_acc_perfmon.c',
+  'etnaviv_query_acc.c',
+  'etnaviv_query_acc.h',
   'etnaviv_query_sw.c',
   'etnaviv_query_sw.h',
-  'etnaviv_query_pm.c',
-  'etnaviv_query_pm.h',
   'etnaviv_rasterizer.c',
   'etnaviv_rasterizer.h',
   'etnaviv_resource.c',
@@ -96,12 +106,12 @@ files_etnaviv = files(
 libetnaviv = static_library(
   'etnaviv',
   files_etnaviv,
-  c_args : [c_vis_args],
+  gnu_symbol_visibility : 'hidden',
   include_directories : [
     inc_include, inc_src, inc_gallium, inc_gallium_aux, inc_etnaviv,
   ],
   link_with: libetnaviv_drm,
-  dependencies : [dep_libdrm, idep_nir_headers],
+  dependencies : [dep_libdrm, idep_nir_headers, idep_mesautil],
 )
 
 etnaviv_compiler = executable(
@@ -121,3 +131,19 @@ driver_etnaviv = declare_dependency(
   link_with : [libetnaviv, libetnavivdrm],
   dependencies : idep_nir,
 )
+
+if with_tests
+  test(
+    'lower_ubo',
+    executable(
+      'nir_lower_ubo_test',
+      files('tests/lower_ubo_tests.cpp'),
+      cpp_args : [cpp_msvc_compat_args],
+      gnu_symbol_visibility : 'hidden',
+      include_directories : [inc_include, inc_src, inc_gallium],
+      link_with : [libetnaviv],
+      dependencies : [idep_gtest, idep_nir],
+    ),
+    suite : ['compiler', 'etnaviv'],
+  )
+endif

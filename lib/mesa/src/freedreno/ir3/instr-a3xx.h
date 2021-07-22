@@ -31,6 +31,22 @@
 #include <stdbool.h>
 #include <assert.h>
 
+void ir3_assert_handler(const char *expr, const char *file, int line,
+		const char *func) __attribute__((weak)) __attribute__ ((__noreturn__));
+
+/* A wrapper for assert() that allows overriding handling of a failed
+ * assert.  This is needed for tools like crashdec which can want to
+ * attempt to disassemble memory that might not actually be valid
+ * instructions.
+ */
+#define ir3_assert(expr) do { \
+		if (!(expr)) { \
+			if (ir3_assert_handler) { \
+				ir3_assert_handler(#expr, __FILE__, __LINE__, __func__); \
+			} \
+			assert(expr); \
+		} \
+	} while (0)
 /* size of largest OPC field of all the instruction categories: */
 #define NOPC_BITS 6
 
@@ -39,7 +55,7 @@
 typedef enum {
 	/* category 0: */
 	OPC_NOP             = _OPC(0, 0),
-	OPC_BR              = _OPC(0, 1),
+	OPC_B               = _OPC(0, 1),
 	OPC_JUMP            = _OPC(0, 2),
 	OPC_CALL            = _OPC(0, 3),
 	OPC_RET             = _OPC(0, 4),
@@ -51,12 +67,39 @@ typedef enum {
 	OPC_CHSH            = _OPC(0, 10),
 	OPC_FLOW_REV        = _OPC(0, 11),
 
-	OPC_IF              = _OPC(0, 13),
-	OPC_ELSE            = _OPC(0, 14),
-	OPC_ENDIF           = _OPC(0, 15),
+	OPC_BKT             = _OPC(0, 16),
+	OPC_STKS            = _OPC(0, 17),
+	OPC_STKR            = _OPC(0, 18),
+	OPC_XSET            = _OPC(0, 19),
+	OPC_XCLR            = _OPC(0, 20),
+	OPC_GETONE          = _OPC(0, 21),
+	OPC_DBG             = _OPC(0, 22),
+	OPC_SHPS            = _OPC(0, 23),   /* shader prologue start */
+	OPC_SHPE            = _OPC(0, 24),   /* shader prologue end */
+
+	OPC_PREDT           = _OPC(0, 29),   /* predicated true */
+	OPC_PREDF           = _OPC(0, 30),   /* predicated false */
+	OPC_PREDE           = _OPC(0, 31),   /* predicated end */
+
+	/* Logical opcodes for different branch instruction variations: */
+	OPC_BR              = _OPC(0, 40),
+	OPC_BRAO            = _OPC(0, 41),
+	OPC_BRAA            = _OPC(0, 42),
+	OPC_BRAC            = _OPC(0, 43),
+	OPC_BANY            = _OPC(0, 44),
+	OPC_BALL            = _OPC(0, 45),
+	OPC_BRAX            = _OPC(0, 46),
 
 	/* category 1: */
 	OPC_MOV             = _OPC(1, 0),
+	OPC_MOVMSK          = _OPC(1, 3),
+
+	/* Logical opcodes for different variants of mov: */
+	OPC_MOV_IMMED       = _OPC(1, 40),
+	OPC_MOV_CONST       = _OPC(1, 41),
+	OPC_MOV_GPR         = _OPC(1, 42),
+	OPC_MOV_RELGPR      = _OPC(1, 43),
+	OPC_MOV_RELCONST    = _OPC(1, 44),
 
 	/* category 2: */
 	OPC_ADD_F           = _OPC(2, 0),
@@ -175,6 +218,9 @@ typedef enum {
 	OPC_DSYPP_1         = _OPC(5, 25),
 	OPC_RGETPOS         = _OPC(5, 26),
 	OPC_RGETINFO        = _OPC(5, 27),
+	/* cat5 meta instructions, placed above the cat5 opc field's size */
+	OPC_DSXPP_MACRO     = _OPC(5, 32),
+	OPC_DSYPP_MACRO     = _OPC(5, 33),
 
 	/* category 6: */
 	OPC_LDG             = _OPC(6, 0),        /* load-global */
@@ -207,6 +253,31 @@ typedef enum {
 	OPC_STIB            = _OPC(6, 29),
 	OPC_LDC             = _OPC(6, 30),
 	OPC_LDLV            = _OPC(6, 31),
+	OPC_PIPR            = _OPC(6, 32), /* ??? */
+	OPC_PIPC            = _OPC(6, 33), /* ??? */
+	OPC_EMIT2           = _OPC(6, 34), /* ??? */
+	OPC_ENDLS           = _OPC(6, 35), /* ??? */
+	OPC_GETSPID         = _OPC(6, 36), /* SP ID */
+	OPC_GETWID          = _OPC(6, 37), /* wavefront ID */
+
+	/* Logical opcodes for things that differ in a6xx+ */
+	OPC_STC             = _OPC(6, 40),
+	OPC_RESINFO_B       = _OPC(6, 41),
+	OPC_LDIB_B          = _OPC(6, 42),
+	OPC_STIB_B          = _OPC(6, 43),
+
+	/* Logical opcodes for different atomic instruction variations: */
+	OPC_ATOMIC_B_ADD      = _OPC(6, 44),
+	OPC_ATOMIC_B_SUB      = _OPC(6, 45),
+	OPC_ATOMIC_B_XCHG     = _OPC(6, 46),
+	OPC_ATOMIC_B_INC      = _OPC(6, 47),
+	OPC_ATOMIC_B_DEC      = _OPC(6, 48),
+	OPC_ATOMIC_B_CMPXCHG  = _OPC(6, 49),
+	OPC_ATOMIC_B_MIN      = _OPC(6, 50),
+	OPC_ATOMIC_B_MAX      = _OPC(6, 51),
+	OPC_ATOMIC_B_AND      = _OPC(6, 52),
+	OPC_ATOMIC_B_OR       = _OPC(6, 53),
+	OPC_ATOMIC_B_XOR      = _OPC(6, 54),
 
 	/* category 7: */
 	OPC_BAR             = _OPC(7, 0),
@@ -236,6 +307,8 @@ typedef enum {
 #define opc_cat(opc) ((int)((opc) >> NOPC_BITS))
 #define opc_op(opc)  ((unsigned)((opc) & ((1 << NOPC_BITS) - 1)))
 
+const char *disasm_a3xx_instr_name(opc_t opc);
+
 typedef enum {
 	TYPE_F16 = 0,
 	TYPE_F32 = 1,
@@ -262,7 +335,7 @@ static inline uint32_t type_size(type_t type)
 	case TYPE_S8:
 		return 8;
 	default:
-		assert(0); /* invalid type */
+		ir3_assert(0); /* invalid type */
 		return 0;
 	}
 }
@@ -302,6 +375,21 @@ typedef union PACKED {
 	int32_t  idummy8   : 8;
 } reg_t;
 
+/* comp:
+ *   0 - x
+ *   1 - y
+ *   2 - z
+ *   3 - w
+ */
+static inline uint32_t regid(int num, int comp)
+{
+	return (num << 2) | (comp & 0x3);
+}
+
+#define INVALID_REG      regid(63, 0)
+#define VALIDREG(r)      ((r) != INVALID_REG)
+#define CONDREG(r, val)  COND(VALIDREG(r), (val))
+
 /* special registers: */
 #define REG_A0 61       /* address register */
 #define REG_P0 62       /* predicate register */
@@ -310,6 +398,16 @@ static inline int reg_special(reg_t reg)
 {
 	return (reg.num == REG_A0) || (reg.num == REG_P0);
 }
+
+typedef enum {
+	BRANCH_PLAIN = 0,   /* br */
+	BRANCH_OR    = 1,   /* brao */
+	BRANCH_AND   = 2,   /* braa */
+	BRANCH_CONST = 3,   /* brac */
+	BRANCH_ANY   = 4,   /* bany */
+	BRANCH_ALL   = 5,   /* ball */
+	BRANCH_X     = 6,   /* brax ??? */
+} brtype_t;
 
 typedef struct PACKED {
 	/* dword0: */
@@ -328,13 +426,18 @@ typedef struct PACKED {
 	};
 
 	/* dword1: */
-	uint32_t dummy2   : 8;
+	uint32_t idx      : 5;  /* brac.N index */
+	uint32_t brtype   : 3;  /* branch type, see brtype_t */
 	uint32_t repeat   : 3;
 	uint32_t dummy3   : 1;
 	uint32_t ss       : 1;
-	uint32_t dummy4   : 7;
-	uint32_t inv      : 1;
-	uint32_t comp     : 2;
+	uint32_t inv2     : 1;
+	uint32_t comp2    : 2;
+	uint32_t eq       : 1;
+	uint32_t opc_hi   : 1;  /* at least one bit */
+	uint32_t dummy4   : 2;
+	uint32_t inv1     : 1;
+	uint32_t comp1    : 2;  /* component for first src */
 	uint32_t opc      : 4;
 	uint32_t jmp_tgt  : 1;
 	uint32_t sync     : 1;
@@ -378,7 +481,7 @@ typedef struct PACKED {
 	uint32_t src_im     : 1;
 	uint32_t even       : 1;
 	uint32_t pos_inf    : 1;
-	uint32_t must_be_0  : 2;
+	uint32_t opc        : 2;
 	uint32_t jmp_tgt    : 1;
 	uint32_t sync       : 1;
 	uint32_t opc_cat    : 3;
@@ -404,7 +507,7 @@ typedef struct PACKED {
 		struct PACKED {
 			uint32_t src1         : 12;
 			uint32_t src1_c       : 1;   /* const */
-			uint32_t dummy        : 3;
+			int32_t dummy        : 3;
 		} c1;
 	};
 
@@ -567,6 +670,57 @@ typedef struct PACKED {
 	uint32_t opc_cat  : 3;
 } instr_cat4_t;
 
+/* With is_bindless_s2en = 1, this determines whether bindless is enabled and
+ * if so, how to get the (base, index) pair for both sampler and texture.
+ * There is a single base embedded in the instruction, which is always used
+ * for the texture.
+ */
+typedef enum {
+	/* Use traditional GL binding model, get texture and sampler index
+	 * from src3 which is not presumed to be uniform. This is
+	 * backwards-compatible with earlier generations, where this field was
+	 * always 0 and nonuniform-indexed sampling always worked.
+	 */
+	CAT5_NONUNIFORM = 0,
+
+	/* The sampler base comes from the low 3 bits of a1.x, and the sampler
+	 * and texture index come from src3 which is presumed to be uniform.
+	 */
+	CAT5_BINDLESS_A1_UNIFORM = 1,
+
+	/* The texture and sampler share the same base, and the sampler and
+	 * texture index come from src3 which is *not* presumed to be uniform.
+	 */
+	CAT5_BINDLESS_NONUNIFORM = 2,
+
+	/* The sampler base comes from the low 3 bits of a1.x, and the sampler
+	 * and texture index come from src3 which is *not* presumed to be
+	 * uniform.
+	 */
+	CAT5_BINDLESS_A1_NONUNIFORM = 3,
+
+	/* Use traditional GL binding model, get texture and sampler index
+	 * from src3 which is presumed to be uniform.
+	 */
+	CAT5_UNIFORM = 4,
+
+	/* The texture and sampler share the same base, and the sampler and
+	 * texture index come from src3 which is presumed to be uniform.
+	 */
+	CAT5_BINDLESS_UNIFORM = 5,
+
+	/* The texture and sampler share the same base, get sampler index from low
+	 * 4 bits of src3 and texture index from high 4 bits.
+	 */
+	CAT5_BINDLESS_IMM = 6,
+
+	/* The sampler base comes from the low 3 bits of a1.x, and the texture
+	 * index comes from the next 8 bits of a1.x. The sampler index is an
+	 * immediate in src3.
+	 */
+	CAT5_BINDLESS_A1_IMM = 7,
+} cat5_desc_mode_t;
+
 typedef struct PACKED {
 	/* dword0: */
 	union PACKED {
@@ -581,50 +735,52 @@ typedef struct PACKED {
 		} norm;
 		/* s2en case: */
 		struct PACKED {
-			uint32_t full     : 1;   /* not half */
-			uint32_t src1     : 8;
-			uint32_t src2     : 11;
-			uint32_t dummy1   : 1;
-			uint32_t src3     : 8;
-			uint32_t dummy2   : 3;
-		} s2en;
+			uint32_t full         : 1;   /* not half */
+			uint32_t src1         : 8;
+			uint32_t src2         : 8;
+			uint32_t dummy1       : 2;
+			uint32_t base_hi      : 2;
+			uint32_t src3         : 8;
+			uint32_t desc_mode    : 3;
+		} s2en_bindless;
 		/* same in either case: */
 		// XXX I think, confirm this
 		struct PACKED {
 			uint32_t full     : 1;   /* not half */
 			uint32_t src1     : 8;
-			uint32_t pad      : 23;
+			uint32_t src2     : 8;
+			uint32_t pad      : 15;
 		};
 	};
 
 	/* dword1: */
-	uint32_t dst      : 8;
-	uint32_t wrmask   : 4;   /* write-mask */
-	uint32_t type     : 3;
-	uint32_t dummy2   : 1;   /* seems to be ignored */
-	uint32_t is_3d    : 1;
+	uint32_t dst              : 8;
+	uint32_t wrmask           : 4;   /* write-mask */
+	uint32_t type             : 3;
+	uint32_t base_lo          : 1;   /* used with bindless */
+	uint32_t is_3d            : 1;
 
-	uint32_t is_a     : 1;
-	uint32_t is_s     : 1;
-	uint32_t is_s2en  : 1;
-	uint32_t is_o     : 1;
-	uint32_t is_p     : 1;
+	uint32_t is_a             : 1;
+	uint32_t is_s             : 1;
+	uint32_t is_s2en_bindless : 1;
+	uint32_t is_o             : 1;
+	uint32_t is_p             : 1;
 
-	uint32_t opc      : 5;
-	uint32_t jmp_tgt  : 1;
-	uint32_t sync     : 1;
-	uint32_t opc_cat  : 3;
+	uint32_t opc              : 5;
+	uint32_t jmp_tgt          : 1;
+	uint32_t sync             : 1;
+	uint32_t opc_cat          : 3;
 } instr_cat5_t;
 
-/* dword0 encoding for src_off: [src1 + off], src2: */
+/* dword0 encoding for src_off: [src1 + off], src3: */
 typedef struct PACKED {
 	/* dword0: */
 	uint32_t mustbe1  : 1;
-	int32_t  off      : 13;
+	int32_t  off      : 13;   /* src2 */
 	uint32_t src1     : 8;
 	uint32_t src1_im  : 1;
-	uint32_t src2_im  : 1;
-	uint32_t src2     : 8;
+	uint32_t src3_im  : 1;
+	uint32_t src3     : 8;
 
 	/* dword1: */
 	uint32_t dword1;
@@ -634,7 +790,8 @@ typedef struct PACKED {
 typedef struct PACKED {
 	/* dword0: */
 	uint32_t mustbe0  : 1;
-	uint32_t src1     : 13;
+	uint32_t src1     : 8;
+	uint32_t pad      : 5;
 	uint32_t ignore0  : 8;
 	uint32_t src1_im  : 1;
 	uint32_t src2_im  : 1;
@@ -647,15 +804,11 @@ typedef struct PACKED {
 /* dword1 encoding for dst_off: */
 typedef struct PACKED {
 	/* dword0: */
-	uint32_t dword0;
+	uint32_t dw0_pad1 : 9;
+	int32_t off_high : 5;
+	uint32_t dw0_pad2 : 18;
 
-	/* note: there is some weird stuff going on where sometimes
-	 * cat6->a.off is involved.. but that seems like a bug in
-	 * the blob, since it is used even if !cat6->src_off
-	 * It would make sense for there to be some more bits to
-	 * bring us to 11 bits worth of offset, but not sure..
-	 */
-	int32_t off       : 8;
+	uint32_t off      : 8;
 	uint32_t mustbe1  : 1;
 	uint32_t dst      : 8;
 	uint32_t pad1     : 15;
@@ -696,7 +849,7 @@ typedef struct PACKED {
 	uint32_t src_ssbo : 8;
 	uint32_t pad2     : 3;  // type
 	uint32_t g        : 1;
-	uint32_t pad3     : 1;
+	uint32_t src_ssbo_im : 1;
 	uint32_t pad4     : 10; // opc/jmp_tgt/sync/opc_cat
 } instr_cat6ldgb_t;
 
@@ -748,43 +901,74 @@ typedef union PACKED {
 	};
 } instr_cat6_t;
 
+/* Similar to cat5_desc_mode_t, describes how the descriptor is loaded.
+ */
+typedef enum {
+	/* Use old GL binding model with an immediate index. */
+	CAT6_IMM = 0,
+
+	CAT6_UNIFORM = 1,
+
+	CAT6_NONUNIFORM = 2,
+
+	/* Use the bindless model, with an immediate index.
+	 */
+	CAT6_BINDLESS_IMM = 4,
+
+	/* Use the bindless model, with a uniform register index.
+	 */
+	CAT6_BINDLESS_UNIFORM = 5,
+
+	/* Use the bindless model, with a register index that isn't guaranteed
+	 * to be uniform. This presumably checks if the indices are equal and
+	 * splits up the load/store, because it works the way you would
+	 * expect.
+	 */
+	CAT6_BINDLESS_NONUNIFORM = 6,
+} cat6_desc_mode_t;
+
 /**
  * For atomic ops (which return a value):
  *
- *    pad1=1, pad2=c, pad3=0, pad4=3
+ *    pad1=1, pad3=6, pad5=3
  *    src1    - vecN offset/coords
  *    src2.x  - is actually dest register
  *    src2.y  - is 'data' except for cmpxchg where src2.y is 'compare'
  *              and src2.z is 'data'
  *
  * For stib (which does not return a value):
- *    pad1=0, pad2=c, pad3=0, pad4=2
+ *    pad1=0, pad3=6, pad5=2
  *    src1    - vecN offset/coords
  *    src2    - value to store
  *
  * For ldib:
- *    pad1=1, pad2=c, pad3=0, pad4=2
+ *    pad1=1, pad3=6, pad5=2
  *    src1    - vecN offset/coords
  *
  * for ldc (load from UBO using descriptor):
- *    pad1=0, pad2=8, pad3=0, pad4=2
+ *    pad1=0, pad3=4, pad5=2
+ *
+ * pad2 and pad5 are only observed to be 0.
  */
 typedef struct PACKED {
 	/* dword0: */
-	uint32_t pad1     : 9;
+	uint32_t pad1     : 1;
+	uint32_t base     : 3;
+	uint32_t pad2     : 2;
+	uint32_t desc_mode : 3;
 	uint32_t d        : 2;
 	uint32_t typed    : 1;
 	uint32_t type_size : 2;
-	uint32_t opc      : 5;
-	uint32_t pad2     : 5;
+	uint32_t opc      : 6;
+	uint32_t pad3     : 4;
 	uint32_t src1     : 8;  /* coordinate/offset */
 
 	/* dword1: */
 	uint32_t src2     : 8;  /* or the dst for load instructions */
-	uint32_t pad3     : 1;  //mustbe0 ?? or zero means imm vs reg for ssbo??
+	uint32_t pad4     : 1;  //mustbe0 ??
 	uint32_t ssbo     : 8;  /* ssbo/image binding point */
 	uint32_t type     : 3;
-	uint32_t pad4     : 7;
+	uint32_t pad5     : 7;
 	uint32_t jmp_tgt  : 1;
 	uint32_t sync     : 1;
 	uint32_t opc_cat  : 3;
@@ -856,6 +1040,28 @@ static inline bool instr_sat(instr_t *instr)
 	}
 }
 
+static inline bool is_sat_compatible(opc_t opc)
+{
+	/* On a6xx saturation doesn't work on cat4 */
+	if (opc_cat(opc) != 2 && opc_cat(opc) != 3)
+		return false;
+
+	switch (opc) {
+	/* On a3xx and a6xx saturation doesn't work on bary.f */
+	case OPC_BARY_F:
+	/* On a6xx saturation doesn't work on sel.* */
+	case OPC_SEL_B16:
+	case OPC_SEL_B32:
+	case OPC_SEL_S16:
+	case OPC_SEL_S32:
+	case OPC_SEL_F16:
+	case OPC_SEL_F32:
+		return false;
+	default:
+		return true;
+	}
+}
+
 /* We can probably drop the gpu_id arg, but keeping it for now so we can
  * assert if we see something we think should be new encoding on an older
  * gpu.
@@ -864,14 +1070,16 @@ static inline bool is_cat6_legacy(instr_t *instr, unsigned gpu_id)
 {
 	instr_cat6_a6xx_t *cat6 = &instr->cat6_a6xx;
 
+	if (gpu_id < 600)
+		return true;
+
 	/* At least one of these two bits is pad in all the possible
 	 * "legacy" cat6 encodings, and a analysis of all the pre-a6xx
 	 * cmdstream traces I have indicates that the pad bit is zero
 	 * in all cases.  So we can use this to detect new encoding:
 	 */
-	if ((cat6->pad2 & 0x8) && (cat6->pad4 & 0x2)) {
-		assert(gpu_id >= 600);
-		assert(instr->cat6.opc == 0);
+	if ((cat6->pad3 & 0x4) && (cat6->pad5 & 0x2)) {
+		ir3_assert(instr->cat6.opc == 0);
 		return false;
 	}
 
@@ -881,8 +1089,8 @@ static inline bool is_cat6_legacy(instr_t *instr, unsigned gpu_id)
 static inline uint32_t instr_opc(instr_t *instr, unsigned gpu_id)
 {
 	switch (instr->opc_cat) {
-	case 0:  return instr->cat0.opc;
-	case 1:  return 0;
+	case 0:  return instr->cat0.opc | instr->cat0.opc_hi << 4;
+	case 1:  return instr->cat1.opc;
 	case 2:  return instr->cat2.opc;
 	case 3:  return instr->cat3.opc;
 	case 4:  return instr->cat4.opc;
@@ -968,6 +1176,41 @@ static inline bool is_isam(opc_t opc)
 	}
 }
 
-int disasm_a3xx(uint32_t *dwords, int sizedwords, int level, FILE *out, unsigned gpu_id);
+
+static inline bool is_cat2_float(opc_t opc)
+{
+	switch (opc) {
+	case OPC_ADD_F:
+	case OPC_MIN_F:
+	case OPC_MAX_F:
+	case OPC_MUL_F:
+	case OPC_SIGN_F:
+	case OPC_CMPS_F:
+	case OPC_ABSNEG_F:
+	case OPC_CMPV_F:
+	case OPC_FLOOR_F:
+	case OPC_CEIL_F:
+	case OPC_RNDNE_F:
+	case OPC_RNDAZ_F:
+	case OPC_TRUNC_F:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+static inline bool is_cat3_float(opc_t opc)
+{
+	switch (opc) {
+	case OPC_MAD_F16:
+	case OPC_MAD_F32:
+	case OPC_SEL_F16:
+	case OPC_SEL_F32:
+		return true;
+	default:
+		return false;
+	}
+}
 
 #endif /* INSTR_A3XX_H_ */

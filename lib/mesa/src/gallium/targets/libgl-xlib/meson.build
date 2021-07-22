@@ -41,17 +41,18 @@ libgl = shared_library(
   'GL',
   files('xlib.c'),
   include_directories : [
-    inc_common, inc_gallium_winsys, inc_gallium_drivers,
-    include_directories('../../state_trackers/glx/xlib'),
+    inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_gallium_winsys, inc_gallium_drivers,
+    include_directories('../../frontends/glx/xlib'),
   ],
-  c_args : [c_vis_args, gallium_xlib_c_args],
+  c_args : [gallium_xlib_c_args],
+  gnu_symbol_visibility : 'hidden',
   link_args : [ld_args_bsymbolic, ld_args_gc_sections, gallium_xlib_ld_args],
   link_depends : gallium_xlib_link_depends,
   link_with : [
     libxlib, libws_xlib, libglapi_static,
     libgallium, libmesa_gallium, gallium_xlib_link_with,
   ],
-  dependencies : [dep_thread, dep_clock, dep_unwind, driver_swrast, driver_swr],
+  dependencies : [dep_thread, dep_clock, dep_unwind, driver_swrast, driver_swr, driver_virgl],
   install : true,
   version : '1.5.0',
 )

@@ -28,7 +28,7 @@
 #include "util/u_inlines.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
-#include "util/u_half.h"
+#include "util/half_float.h"
 #include "util/u_helpers.h"
 #include "util/u_upload_mgr.h"
 
@@ -52,17 +52,17 @@ v3d_set_blend_color(struct pipe_context *pctx,
         v3d->blend_color.f = *blend_color;
         for (int i = 0; i < 4; i++) {
                 v3d->blend_color.hf[i] =
-                        util_float_to_half(blend_color->color[i]);
+                        _mesa_float_to_half(blend_color->color[i]);
         }
         v3d->dirty |= VC5_DIRTY_BLEND_COLOR;
 }
 
 static void
 v3d_set_stencil_ref(struct pipe_context *pctx,
-                    const struct pipe_stencil_ref *stencil_ref)
+                    const struct pipe_stencil_ref stencil_ref)
 {
         struct v3d_context *v3d = v3d_context(pctx);
-        v3d->stencil_ref = *stencil_ref;
+        v3d->stencil_ref = stencil_ref;
         v3d->dirty |= VC5_DIRTY_STENCIL_REF;
 }
 
@@ -175,8 +175,8 @@ v3d_create_depth_stencil_alpha_state(struct pipe_context *pctx,
 
         so->base = *cso;
 
-        if (cso->depth.enabled) {
-                switch (cso->depth.func) {
+        if (cso->depth_enabled) {
+                switch (cso->depth_func) {
                 case PIPE_FUNC_LESS:
                 case PIPE_FUNC_LEQUAL:
                         so->ez_state = VC5_EZ_LT_LE;
@@ -290,13 +290,17 @@ v3d_set_viewport_states(struct pipe_context *pctx,
 static void
 v3d_set_vertex_buffers(struct pipe_context *pctx,
                        unsigned start_slot, unsigned count,
+                       unsigned unbind_num_trailing_slots,
+                       bool take_ownership,
                        const struct pipe_vertex_buffer *vb)
 {
         struct v3d_context *v3d = v3d_context(pctx);
         struct v3d_vertexbuf_stateobj *so = &v3d->vertexbuf;
 
         util_set_vertex_buffers_mask(so->vb, &so->enabled_mask, vb,
-                                     start_slot, count);
+                                     start_slot, count,
+                                     unbind_num_trailing_slots,
+                                     take_ownership);
         so->count = util_last_bit(so->enabled_mask);
 
         v3d->dirty |= VC5_DIRTY_VTXBUF;
@@ -446,14 +450,15 @@ v3d_vertex_state_bind(struct pipe_context *pctx, void *hwcso)
 
 static void
 v3d_set_constant_buffer(struct pipe_context *pctx, uint shader, uint index,
+                        bool take_ownership,
                         const struct pipe_constant_buffer *cb)
 {
         struct v3d_context *v3d = v3d_context(pctx);
         struct v3d_constbuf_stateobj *so = &v3d->constbuf[shader];
 
-        util_copy_constant_buffer(&so->cb[index], cb);
+        util_copy_constant_buffer(&so->cb[index], cb, take_ownership);
 
-        /* Note that the state tracker can unbind constant buffers by
+        /* Note that the gallium frontend can unbind constant buffers by
          * passing NULL here.
          */
         if (unlikely(!cb)) {
@@ -504,7 +509,7 @@ v3d_set_framebuffer_state(struct pipe_context *pctx,
 }
 
 static enum V3DX(Wrap_Mode)
-translate_wrap(uint32_t pipe_wrap, bool using_nearest)
+translate_wrap(uint32_t pipe_wrap)
 {
         switch (pipe_wrap) {
         case PIPE_TEX_WRAP_REPEAT:
@@ -515,10 +520,6 @@ translate_wrap(uint32_t pipe_wrap, bool using_nearest)
                 return V3D_WRAP_MODE_MIRROR;
         case PIPE_TEX_WRAP_CLAMP_TO_BORDER:
                 return V3D_WRAP_MODE_BORDER;
-        case PIPE_TEX_WRAP_CLAMP:
-                return (using_nearest ?
-                        V3D_WRAP_MODE_CLAMP :
-                        V3D_WRAP_MODE_BORDER);
         default:
                 unreachable("Unknown wrap mode");
         }
@@ -528,15 +529,14 @@ translate_wrap(uint32_t pipe_wrap, bool using_nearest)
 static void
 v3d_upload_sampler_state_variant(void *map,
                                  const struct pipe_sampler_state *cso,
-                                 enum v3d_sampler_state_variant variant,
-                                 bool either_nearest)
+                                 enum v3d_sampler_state_variant variant)
 {
         v3dx_pack(map, SAMPLER_STATE, sampler) {
                 sampler.wrap_i_border = false;
 
-                sampler.wrap_s = translate_wrap(cso->wrap_s, either_nearest);
-                sampler.wrap_t = translate_wrap(cso->wrap_t, either_nearest);
-                sampler.wrap_r = translate_wrap(cso->wrap_r, either_nearest);
+                sampler.wrap_s = translate_wrap(cso->wrap_s);
+                sampler.wrap_t = translate_wrap(cso->wrap_t);
+                sampler.wrap_r = translate_wrap(cso->wrap_r);
 
                 sampler.fixed_bias = cso->lod_bias;
                 sampler.depth_compare_function = cso->compare_func;
@@ -691,13 +691,13 @@ v3d_upload_sampler_state_variant(void *map,
                                 sampler.border_color_word_3 = border.ui[3];
                         } else {
                                 sampler.border_color_word_0 =
-                                        util_float_to_half(border.f[0]);
+                                        _mesa_float_to_half(border.f[0]);
                                 sampler.border_color_word_1 =
-                                        util_float_to_half(border.f[1]);
+                                        _mesa_float_to_half(border.f[1]);
                                 sampler.border_color_word_2 =
-                                        util_float_to_half(border.f[2]);
+                                        _mesa_float_to_half(border.f[2]);
                                 sampler.border_color_word_3 =
-                                        util_float_to_half(border.f[3]);
+                                        _mesa_float_to_half(border.f[3]);
                         }
                 }
         }
@@ -716,16 +716,9 @@ v3d_create_sampler_state(struct pipe_context *pctx,
 
         memcpy(so, cso, sizeof(*cso));
 
-        bool either_nearest =
-                (cso->mag_img_filter == PIPE_TEX_MIPFILTER_NEAREST ||
-                 cso->min_img_filter == PIPE_TEX_MIPFILTER_NEAREST);
-
-        enum V3DX(Wrap_Mode) wrap_s = translate_wrap(cso->wrap_s,
-                                                     either_nearest);
-        enum V3DX(Wrap_Mode) wrap_t = translate_wrap(cso->wrap_t,
-                                                     either_nearest);
-        enum V3DX(Wrap_Mode) wrap_r = translate_wrap(cso->wrap_r,
-                                                     either_nearest);
+        enum V3DX(Wrap_Mode) wrap_s = translate_wrap(cso->wrap_s);
+        enum V3DX(Wrap_Mode) wrap_t = translate_wrap(cso->wrap_t);
+        enum V3DX(Wrap_Mode) wrap_r = translate_wrap(cso->wrap_r);
 
         bool uses_border_color = (wrap_s == V3D_WRAP_MODE_BORDER ||
                                   wrap_t == V3D_WRAP_MODE_BORDER ||
@@ -752,7 +745,7 @@ v3d_create_sampler_state(struct pipe_context *pctx,
                 so->sampler_state_offset[i] =
                         so->sampler_state_offset[0] + i * sampler_size;
                 v3d_upload_sampler_state_variant(map + i * sampler_size,
-                                                 cso, i, either_nearest);
+                                                 cso, i);
         }
 
 #else /* V3D_VERSION < 40 */
@@ -768,28 +761,6 @@ v3d_create_sampler_state(struct pipe_context *pctx,
         }
 #endif /* V3D_VERSION < 40 */
         return so;
-}
-
-static void
-v3d_flag_dirty_sampler_state(struct v3d_context *v3d,
-                             enum pipe_shader_type shader)
-{
-        switch (shader) {
-        case PIPE_SHADER_VERTEX:
-                v3d->dirty |= VC5_DIRTY_VERTTEX;
-                break;
-        case PIPE_SHADER_GEOMETRY:
-                v3d->dirty |= VC5_DIRTY_GEOMTEX;
-                break;
-        case PIPE_SHADER_FRAGMENT:
-                v3d->dirty |= VC5_DIRTY_FRAGTEX;
-                break;
-        case PIPE_SHADER_COMPUTE:
-                v3d->dirty |= VC5_DIRTY_COMPTEX;
-                break;
-        default:
-                unreachable("Unsupported shader stage");
-        }
 }
 
 static void
@@ -914,6 +885,93 @@ v3d_setup_texture_shader_state(struct V3DX(TEXTURE_SHADER_STATE) *tex,
                 tex->extended = true;
         }
 #endif /* V3D_VERSION >= 40 */
+}
+
+void
+v3dX(create_texture_shader_state_bo)(struct v3d_context *v3d,
+                                     struct v3d_sampler_view *so)
+{
+        struct pipe_resource *prsc = so->texture;
+        const struct pipe_sampler_view *cso = &so->base;
+        struct v3d_screen *screen = v3d->screen;
+
+        void *map;
+
+#if V3D_VERSION >= 40
+        v3d_bo_unreference(&so->bo);
+        so->bo = v3d_bo_alloc(v3d->screen,
+                              cl_packet_length(TEXTURE_SHADER_STATE), "sampler");
+        map = v3d_bo_map(so->bo);
+#else /* V3D_VERSION < 40 */
+        STATIC_ASSERT(sizeof(so->texture_shader_state) >=
+                      cl_packet_length(TEXTURE_SHADER_STATE));
+        map = &so->texture_shader_state;
+#endif
+
+        v3dx_pack(map, TEXTURE_SHADER_STATE, tex) {
+                v3d_setup_texture_shader_state(&tex, prsc,
+                                               cso->u.tex.first_level,
+                                               cso->u.tex.last_level,
+                                               cso->u.tex.first_layer,
+                                               cso->u.tex.last_layer);
+
+                tex.srgb = util_format_is_srgb(cso->format);
+
+#if V3D_VERSION >= 40
+                tex.swizzle_r = translate_swizzle(so->swizzle[0]);
+                tex.swizzle_g = translate_swizzle(so->swizzle[1]);
+                tex.swizzle_b = translate_swizzle(so->swizzle[2]);
+                tex.swizzle_a = translate_swizzle(so->swizzle[3]);
+#endif
+
+                if (prsc->nr_samples > 1 && V3D_VERSION < 40) {
+                        /* Using texture views to reinterpret formats on our
+                         * MSAA textures won't work, because we don't lay out
+                         * the bits in memory as it's expected -- for example,
+                         * RGBA8 and RGB10_A2 are compatible in the
+                         * ARB_texture_view spec, but in HW we lay them out as
+                         * 32bpp RGBA8 and 64bpp RGBA16F.  Just assert for now
+                         * to catch failures.
+                         *
+                         * We explicitly allow remapping S8Z24 to RGBA8888 for
+                         * v3d_blit.c's stencil blits.
+                         */
+                        assert((util_format_linear(cso->format) ==
+                                util_format_linear(prsc->format)) ||
+                               (prsc->format == PIPE_FORMAT_S8_UINT_Z24_UNORM &&
+                                cso->format == PIPE_FORMAT_R8G8B8A8_UNORM));
+                        uint32_t output_image_format =
+                                v3d_get_rt_format(&screen->devinfo, cso->format);
+                        uint32_t internal_type;
+                        uint32_t internal_bpp;
+                        v3d_get_internal_type_bpp_for_output_format(&screen->devinfo,
+                                                                    output_image_format,
+                                                                    &internal_type,
+                                                                    &internal_bpp);
+
+                        switch (internal_type) {
+                        case V3D_INTERNAL_TYPE_8:
+                                tex.texture_type = TEXTURE_DATA_FORMAT_RGBA8;
+                                break;
+                        case V3D_INTERNAL_TYPE_16F:
+                                tex.texture_type = TEXTURE_DATA_FORMAT_RGBA16F;
+                                break;
+                        default:
+                                unreachable("Bad MSAA texture type");
+                        }
+
+                        /* sRGB was stored in the tile buffer as linear and
+                         * would have been encoded to sRGB on resolved tile
+                         * buffer store.  Note that this means we would need
+                         * shader code if we wanted to read an MSAA sRGB
+                         * texture without sRGB decode.
+                         */
+                        tex.srgb = false;
+                } else {
+                        tex.texture_type = v3d_get_tex_format(&screen->devinfo,
+                                                              cso->format);
+                }
+        };
 }
 
 static struct pipe_sampler_view *
@@ -1067,81 +1125,7 @@ v3d_create_sampler_view(struct pipe_context *pctx, struct pipe_resource *prsc,
                 pipe_resource_reference(&so->texture, prsc);
         }
 
-        void *map;
-#if V3D_VERSION >= 40
-        so->bo = v3d_bo_alloc(v3d->screen,
-                              cl_packet_length(TEXTURE_SHADER_STATE), "sampler");
-        map = v3d_bo_map(so->bo);
-#else /* V3D_VERSION < 40 */
-        STATIC_ASSERT(sizeof(so->texture_shader_state) >=
-                      cl_packet_length(TEXTURE_SHADER_STATE));
-        map = &so->texture_shader_state;
-#endif
-
-        v3dx_pack(map, TEXTURE_SHADER_STATE, tex) {
-                v3d_setup_texture_shader_state(&tex, prsc,
-                                               cso->u.tex.first_level,
-                                               cso->u.tex.last_level,
-                                               cso->u.tex.first_layer,
-                                               cso->u.tex.last_layer);
-
-                tex.srgb = util_format_is_srgb(cso->format);
-
-#if V3D_VERSION >= 40
-                tex.swizzle_r = translate_swizzle(so->swizzle[0]);
-                tex.swizzle_g = translate_swizzle(so->swizzle[1]);
-                tex.swizzle_b = translate_swizzle(so->swizzle[2]);
-                tex.swizzle_a = translate_swizzle(so->swizzle[3]);
-#endif
-
-                if (prsc->nr_samples > 1 && V3D_VERSION < 40) {
-                        /* Using texture views to reinterpret formats on our
-                         * MSAA textures won't work, because we don't lay out
-                         * the bits in memory as it's expected -- for example,
-                         * RGBA8 and RGB10_A2 are compatible in the
-                         * ARB_texture_view spec, but in HW we lay them out as
-                         * 32bpp RGBA8 and 64bpp RGBA16F.  Just assert for now
-                         * to catch failures.
-                         *
-                         * We explicitly allow remapping S8Z24 to RGBA8888 for
-                         * v3d_blit.c's stencil blits.
-                         */
-                        assert((util_format_linear(cso->format) ==
-                                util_format_linear(prsc->format)) ||
-                               (prsc->format == PIPE_FORMAT_S8_UINT_Z24_UNORM &&
-                                cso->format == PIPE_FORMAT_R8G8B8A8_UNORM));
-                        uint32_t output_image_format =
-                                v3d_get_rt_format(&screen->devinfo, cso->format);
-                        uint32_t internal_type;
-                        uint32_t internal_bpp;
-                        v3d_get_internal_type_bpp_for_output_format(&screen->devinfo,
-                                                                    output_image_format,
-                                                                    &internal_type,
-                                                                    &internal_bpp);
-
-                        switch (internal_type) {
-                        case V3D_INTERNAL_TYPE_8:
-                                tex.texture_type = TEXTURE_DATA_FORMAT_RGBA8;
-                                break;
-                        case V3D_INTERNAL_TYPE_16F:
-                                tex.texture_type = TEXTURE_DATA_FORMAT_RGBA16F;
-                                break;
-                        default:
-                                unreachable("Bad MSAA texture type");
-                        }
-
-                        /* sRGB was stored in the tile buffer as linear and
-                         * would have been encoded to sRGB on resolved tile
-                         * buffer store.  Note that this means we would need
-                         * shader code if we wanted to read an MSAA sRGB
-                         * texture without sRGB decode.
-                         */
-                        tex.srgb = false;
-                } else {
-                        tex.texture_type = v3d_get_tex_format(&screen->devinfo,
-                                                              cso->format);
-                }
-        };
+        v3d_create_texture_shader_state_bo(v3d, so);
 
         return &so->base;
 }
@@ -1162,6 +1146,7 @@ static void
 v3d_set_sampler_views(struct pipe_context *pctx,
                       enum pipe_shader_type shader,
                       unsigned start, unsigned nr,
+                      unsigned unbind_num_trailing_slots,
                       struct pipe_sampler_view **views)
 {
         struct v3d_context *v3d = v3d_context(pctx);
@@ -1353,6 +1338,7 @@ static void
 v3d_set_shader_images(struct pipe_context *pctx,
                       enum pipe_shader_type shader,
                       unsigned start, unsigned count,
+                      unsigned unbind_num_trailing_slots,
                       const struct pipe_image_view *images)
 {
         struct v3d_context *v3d = v3d_context(pctx);
@@ -1398,6 +1384,11 @@ v3d_set_shader_images(struct pipe_context *pctx,
         }
 
         v3d->dirty |= VC5_DIRTY_SHADER_IMAGE;
+
+        if (unbind_num_trailing_slots) {
+                v3d_set_shader_images(pctx, shader, start + count,
+                                      unbind_num_trailing_slots, 0, NULL);
+        }
 }
 
 void

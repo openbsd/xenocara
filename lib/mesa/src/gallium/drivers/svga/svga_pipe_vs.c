@@ -116,7 +116,7 @@ svga_create_vs_state(struct pipe_context *pipe,
    tgsi_scan_shader(vs->base.tokens, &vs->base.info);
 
    {
-      /* Need to do construct a new template in case we substitued a
+      /* Need to do construct a new template in case we substituted a
        * debug shader.
        */
       struct pipe_shader_state tmp2 = *templ;
@@ -166,44 +166,44 @@ svga_delete_vs_state(struct pipe_context *pipe, void *shader)
 {
    struct svga_context *svga = svga_context(pipe);
    struct svga_vertex_shader *vs = (struct svga_vertex_shader *)shader;
+   struct svga_vertex_shader *next_vs;
    struct svga_shader_variant *variant, *tmp;
-   enum pipe_error ret;
 
    svga_hwtnl_flush_retry(svga);
 
    assert(vs->base.parent == NULL);
 
-   /* Check if there is a generated geometry shader to go with this
-    * vertex shader. If there is, then delete the geometry shader as well.
-    */
-   if (vs->gs != NULL) {
-      svga->pipe.delete_gs_state(&svga->pipe, vs->gs);
-   }
+   while (vs) {
+      next_vs = (struct svga_vertex_shader *)vs->base.next;
 
-   if (vs->base.stream_output != NULL)
-      svga_delete_stream_output(svga, vs->base.stream_output);
-
-   draw_delete_vertex_shader(svga->swtnl.draw, vs->draw_shader);
-
-   for (variant = vs->base.variants; variant; variant = tmp) {
-      tmp = variant->next;
-
-      /* Check if deleting currently bound shader */
-      if (variant == svga->state.hw_draw.vs) {
-         ret = svga_set_shader(svga, SVGA3D_SHADERTYPE_VS, NULL);
-         if (ret != PIPE_OK) {
-            svga_context_flush(svga, NULL);
-            ret = svga_set_shader(svga, SVGA3D_SHADERTYPE_VS, NULL);
-            assert(ret == PIPE_OK);
-         }
-         svga->state.hw_draw.vs = NULL;
+      /* Check if there is a generated geometry shader to go with this
+       * vertex shader. If there is, then delete the geometry shader as well.
+       */
+      if (vs->gs != NULL) {
+         svga->pipe.delete_gs_state(&svga->pipe, vs->gs);
       }
 
-      svga_destroy_shader_variant(svga, variant);
-   }
+      if (vs->base.stream_output != NULL)
+         svga_delete_stream_output(svga, vs->base.stream_output);
 
-   FREE((void *)vs->base.tokens);
-   FREE(vs);
+      draw_delete_vertex_shader(svga->swtnl.draw, vs->draw_shader);
+
+      for (variant = vs->base.variants; variant; variant = tmp) {
+         tmp = variant->next;
+
+         /* Check if deleting currently bound shader */
+         if (variant == svga->state.hw_draw.vs) {
+            SVGA_RETRY(svga, svga_set_shader(svga, SVGA3D_SHADERTYPE_VS, NULL));
+            svga->state.hw_draw.vs = NULL;
+         }
+
+         svga_destroy_shader_variant(svga, variant);
+      }
+
+      FREE((void *)vs->base.tokens);
+      FREE(vs);
+      vs = next_vs;
+   }
 }
 
 

@@ -45,6 +45,8 @@
 #include "util/u_transfer.h"
 #include "util/u_threaded_context.h"
 
+#include "compiler/nir/nir.h"
+
 struct u_log_context;
 #define ATI_VENDOR_ID 0x1002
 
@@ -289,7 +291,7 @@ struct r600_mmio_counter {
 };
 
 union r600_mmio_counters {
-	struct {
+	struct r600_mmio_counters_named {
 		/* For global GPU load including SDMA. */
 		struct r600_mmio_counter gpu;
 
@@ -320,7 +322,7 @@ union r600_mmio_counters {
 		struct r600_mmio_counter cp_dma;
 		struct r600_mmio_counter scratch_ram;
 	} named;
-	unsigned array[0];
+	unsigned array[sizeof(struct r600_mmio_counters_named) / sizeof(unsigned)];
 };
 
 struct r600_memory_object {
@@ -404,6 +406,8 @@ struct r600_common_screen {
 		 */
 		unsigned compute_to_L2;
 	} barrier_flags;
+
+        struct nir_shader_compiler_options nir_options;
 };
 
 /* This encapsulates a state or an operation which can emitted into the GPU
@@ -474,7 +478,7 @@ struct r600_viewports {
 };
 
 struct r600_ring {
-	struct radeon_cmdbuf		*cs;
+	struct radeon_cmdbuf		cs;
 	void (*flush)(void *ctx, unsigned flags,
 		      struct pipe_fence_handle **fence);
 };
@@ -508,7 +512,7 @@ struct r600_common_context {
 	unsigned			last_num_draw_calls;
 
 	struct threaded_context		*tc;
-	struct u_suballocator		*allocator_zeroed_memory;
+	struct u_suballocator		allocator_zeroed_memory;
 	struct slab_child_pool		pool_transfers;
 	struct slab_child_pool		pool_transfers_unsync; /* for threaded_context */
 

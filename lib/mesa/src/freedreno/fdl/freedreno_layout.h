@@ -75,12 +75,17 @@
  * texture.
  */
 
-#define FDL_MAX_MIP_LEVELS 14
+#define FDL_MAX_MIP_LEVELS 15
 
 struct fdl_slice {
 	uint32_t offset;         /* offset of first layer in slice */
-	uint32_t pitch;
 	uint32_t size0;          /* size of first layer in slice */
+};
+
+/* parameters for explicit (imported) layout */
+struct fdl_explicit_layout {
+	uint32_t offset;
+	uint32_t pitch;
 };
 
 /**
@@ -91,8 +96,13 @@ struct fdl_slice {
 struct fdl_layout {
 	struct fdl_slice slices[FDL_MAX_MIP_LEVELS];
 	struct fdl_slice ubwc_slices[FDL_MAX_MIP_LEVELS];
+	uint32_t pitch0;
+	uint32_t ubwc_width0;
 	uint32_t layer_size;
+	uint32_t ubwc_layer_size; /* in bytes */
+	bool ubwc : 1;
 	bool layer_first : 1;    /* see above description */
+	bool tile_all : 1;
 
 	/* Note that for tiled textures, beyond a certain mipmap level (ie.
 	 * when width is less than block size) things switch to linear.  In
@@ -107,12 +117,45 @@ struct fdl_layout {
 	 */
 	uint8_t cpp;
 
+	/**
+	 * Left shift necessary to multiply by cpp.  Invalid for NPOT cpp, please
+	 * use fdl_cpp_shift() to sanity check you aren't hitting that case.
+	 */
+	uint8_t cpp_shift;
+
 	uint32_t width0, height0, depth0;
+	uint32_t nr_samples;
+	enum pipe_format format;
 
 	uint32_t size; /* Size of the whole image, in bytes. */
-
-	uint32_t ubwc_size;
+	uint32_t base_align; /* Alignment of the base address, in bytes. */
+	uint8_t pitchalign; /* log2(pitchalign) */
 };
+
+static inline uint32_t
+fdl_cpp_shift(const struct fdl_layout *layout)
+{
+	assert(util_is_power_of_two_or_zero(layout->cpp));
+	return layout->cpp_shift;
+}
+
+static inline uint32_t
+fdl_pitch(const struct fdl_layout *layout, unsigned level)
+{
+	return align(u_minify(layout->pitch0, level), 1 << layout->pitchalign);
+}
+
+#define RGB_TILE_WIDTH_ALIGNMENT 64
+#define RGB_TILE_HEIGHT_ALIGNMENT 16
+#define UBWC_PLANE_SIZE_ALIGNMENT 4096
+
+static inline uint32_t
+fdl_ubwc_pitch(const struct fdl_layout *layout, unsigned level)
+{
+	if (!layout->ubwc)
+		return 0;
+	return align(u_minify(layout->ubwc_width0, level), RGB_TILE_WIDTH_ALIGNMENT);
+}
 
 static inline uint32_t
 fdl_layer_stride(const struct fdl_layout *layout, unsigned level)
@@ -121,6 +164,22 @@ fdl_layer_stride(const struct fdl_layout *layout, unsigned level)
 		return layout->layer_size;
 	else
 		return layout->slices[level].size0;
+}
+
+/* a2xx is special and needs PoT alignment for mipmaps: */
+static inline uint32_t
+fdl2_pitch(const struct fdl_layout *layout, unsigned level)
+{
+	uint32_t pitch = fdl_pitch(layout, level);
+	if (level)
+		pitch = util_next_power_of_two(pitch);
+	return pitch;
+}
+
+static inline uint32_t
+fdl2_pitch_pixels(const struct fdl_layout *layout, unsigned level)
+{
+	return fdl2_pitch(layout, level) >> fdl_cpp_shift(layout);
 }
 
 static inline uint32_t
@@ -133,22 +192,23 @@ fdl_surface_offset(const struct fdl_layout *layout, unsigned level, unsigned lay
 static inline uint32_t
 fdl_ubwc_offset(const struct fdl_layout *layout, unsigned level, unsigned layer)
 {
-	/* for now this doesn't do anything clever, but when UBWC is enabled
-	 * for multi layer/level images, it will.
-	 */
-	if (layout->ubwc_size) {
-		assert(level == 0);
-		assert(layer == 0);
-	}
-	return layout->ubwc_slices[0].offset;
+	const struct fdl_slice *slice = &layout->ubwc_slices[level];
+	return slice->offset + layer * layout->ubwc_layer_size;
 }
+
+/* Minimum layout width to enable UBWC. */
+#define FDL_MIN_UBWC_WIDTH 16
 
 static inline bool
 fdl_level_linear(const struct fdl_layout *layout, int level)
 {
+	if (layout->tile_all)
+		return false;
+
 	unsigned w = u_minify(layout->width0, level);
-	if (w < 16)
+	if (w < FDL_MIN_UBWC_WIDTH)
 		return true;
+
 	return false;
 }
 
@@ -164,17 +224,35 @@ fdl_tile_mode(const struct fdl_layout *layout, int level)
 static inline bool
 fdl_ubwc_enabled(const struct fdl_layout *layout, int level)
 {
-	return layout->ubwc_size && fdl_tile_mode(layout, level);
+	return layout->ubwc;
 }
 
 void
 fdl_layout_buffer(struct fdl_layout *layout, uint32_t size);
 
 void
+fdl5_layout(struct fdl_layout *layout,
+		enum pipe_format format, uint32_t nr_samples,
+		uint32_t width0, uint32_t height0, uint32_t depth0,
+		uint32_t mip_levels, uint32_t array_size, bool is_3d);
+
+bool
 fdl6_layout(struct fdl_layout *layout,
 		enum pipe_format format, uint32_t nr_samples,
 		uint32_t width0, uint32_t height0, uint32_t depth0,
-		uint32_t mip_levels, uint32_t array_size, bool is_3d, bool ubwc);
+		uint32_t mip_levels, uint32_t array_size, bool is_3d,
+		struct fdl_explicit_layout *plane_layout);
+
+static inline void
+fdl_set_pitchalign(struct fdl_layout *layout, unsigned pitchalign)
+{
+	uint32_t nblocksx = util_format_get_nblocksx(layout->format, layout->width0);
+	layout->pitchalign = pitchalign;
+	layout->pitch0 = align(nblocksx * layout->cpp, 1 << pitchalign);
+}
+
+void
+fdl_dump_layout(struct fdl_layout *layout);
 
 void
 fdl6_get_ubwc_blockwidth(struct fdl_layout *layout,

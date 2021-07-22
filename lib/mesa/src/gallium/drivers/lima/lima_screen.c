@@ -39,30 +39,30 @@
 #include "lima_bo.h"
 #include "lima_fence.h"
 #include "lima_format.h"
-#include "lima_util.h"
+#include "lima_disk_cache.h"
 #include "ir/lima_ir.h"
 
 #include "xf86drm.h"
 
 int lima_plb_max_blk = 0;
+int lima_plb_pp_stream_cache_size = 0;
 
 static void
 lima_screen_destroy(struct pipe_screen *pscreen)
 {
    struct lima_screen *screen = lima_screen(pscreen);
 
-   lima_dump_file_close();
-
    slab_destroy_parent(&screen->transfer_pool);
 
    if (screen->ro)
-      free(screen->ro);
+      screen->ro->destroy(screen->ro);
 
    if (screen->pp_buffer)
       lima_bo_unreference(screen->pp_buffer);
 
    lima_bo_cache_fini(screen);
    lima_bo_table_fini(screen);
+   disk_cache_destroy(screen->disk_cache);
    ralloc_free(screen);
 }
 
@@ -103,6 +103,7 @@ lima_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_UMA:
    case PIPE_CAP_NATIVE_FENCE_FD:
    case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
+   case PIPE_CAP_TEXTURE_SWIZZLE:
       return 1;
 
    /* Unimplemented, but for exporting OpenGL 2.0 */
@@ -120,6 +121,9 @@ lima_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL:
    case PIPE_CAP_TGSI_FS_POINT_IS_SYSVAL:
    case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
+      return 1;
+
+   case PIPE_CAP_TEXTURE_HALF_FLOAT_LINEAR:
       return 1;
 
    case PIPE_CAP_MAX_TEXTURE_2D_SIZE:
@@ -141,6 +145,7 @@ lima_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return 0;
 
    case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
+   case PIPE_CAP_SHAREABLE_SHADERS:
       return 0;
 
    case PIPE_CAP_ALPHA_TEST:
@@ -148,6 +153,9 @@ lima_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TWO_SIDED_COLOR:
    case PIPE_CAP_CLIP_PLANES:
       return 0;
+
+   case PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES:
+      return 1;
 
    default:
       return u_pipe_screen_get_param_defaults(pscreen, param);
@@ -193,8 +201,10 @@ get_vertex_shader_param(struct lima_screen *screen,
    case PIPE_SHADER_CAP_MAX_OUTPUTS:
       return LIMA_MAX_VARYING_NUM; /* varying */
 
+   /* Mali-400 GP provides space for 304 vec4 uniforms, globals and
+    * temporary variables. */
    case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
-      return 16 * 1024 * sizeof(float);
+      return 304 * 4 * sizeof(float);
 
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return 1;
@@ -230,12 +240,17 @@ get_fragment_shader_param(struct lima_screen *screen,
    case PIPE_SHADER_CAP_MAX_CONTROL_FLOW_DEPTH:
       return 1024;
 
+   /* The Mali-PP supports a uniform table up to size 32768 total.
+    * However, indirect access to an uniform only supports indices up
+    * to 8192 (a 2048 vec4 array). To prevent indices bigger than that,
+    * limit max const buffer size to 8192 for now. */
    case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
-      return 16 * 1024 * sizeof(float);
+      return 2048 * 4 * sizeof(float);
 
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return 1;
 
+   case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       return 16; /* need investigate */
 
@@ -305,13 +320,17 @@ lima_screen_is_format_supported(struct pipe_screen *pscreen,
    if (sample_count > 1 && sample_count != 4)
       return false;
 
-   if (usage & PIPE_BIND_RENDER_TARGET &&
-       !lima_format_pixel_supported(format))
-      return false;
+   if (usage & PIPE_BIND_RENDER_TARGET) {
+      if (!lima_format_pixel_supported(format))
+         return false;
+
+      /* multisample unsupported with half float target */
+      if (sample_count > 1 && util_format_is_float(format))
+         return false;
+   }
 
    if (usage & PIPE_BIND_DEPTH_STENCIL) {
       switch (format) {
-      case PIPE_FORMAT_Z16_UNORM:
       case PIPE_FORMAT_Z24_UNORM_S8_UINT:
       case PIPE_FORMAT_Z24X8_UNORM:
          break;
@@ -322,7 +341,66 @@ lima_screen_is_format_supported(struct pipe_screen *pscreen,
 
    if (usage & PIPE_BIND_VERTEX_BUFFER) {
       switch (format) {
+      case PIPE_FORMAT_R32_FLOAT:
+      case PIPE_FORMAT_R32G32_FLOAT:
       case PIPE_FORMAT_R32G32B32_FLOAT:
+      case PIPE_FORMAT_R32G32B32A32_FLOAT:
+      case PIPE_FORMAT_R32_FIXED:
+      case PIPE_FORMAT_R32G32_FIXED:
+      case PIPE_FORMAT_R32G32B32_FIXED:
+      case PIPE_FORMAT_R32G32B32A32_FIXED:
+      case PIPE_FORMAT_R16_FLOAT:
+      case PIPE_FORMAT_R16G16_FLOAT:
+      case PIPE_FORMAT_R16G16B16_FLOAT:
+      case PIPE_FORMAT_R16G16B16A16_FLOAT:
+      case PIPE_FORMAT_R32_UNORM:
+      case PIPE_FORMAT_R32G32_UNORM:
+      case PIPE_FORMAT_R32G32B32_UNORM:
+      case PIPE_FORMAT_R32G32B32A32_UNORM:
+      case PIPE_FORMAT_R32_SNORM:
+      case PIPE_FORMAT_R32G32_SNORM:
+      case PIPE_FORMAT_R32G32B32_SNORM:
+      case PIPE_FORMAT_R32G32B32A32_SNORM:
+      case PIPE_FORMAT_R32_USCALED:
+      case PIPE_FORMAT_R32G32_USCALED:
+      case PIPE_FORMAT_R32G32B32_USCALED:
+      case PIPE_FORMAT_R32G32B32A32_USCALED:
+      case PIPE_FORMAT_R32_SSCALED:
+      case PIPE_FORMAT_R32G32_SSCALED:
+      case PIPE_FORMAT_R32G32B32_SSCALED:
+      case PIPE_FORMAT_R32G32B32A32_SSCALED:
+      case PIPE_FORMAT_R16_UNORM:
+      case PIPE_FORMAT_R16G16_UNORM:
+      case PIPE_FORMAT_R16G16B16_UNORM:
+      case PIPE_FORMAT_R16G16B16A16_UNORM:
+      case PIPE_FORMAT_R16_SNORM:
+      case PIPE_FORMAT_R16G16_SNORM:
+      case PIPE_FORMAT_R16G16B16_SNORM:
+      case PIPE_FORMAT_R16G16B16A16_SNORM:
+      case PIPE_FORMAT_R16_USCALED:
+      case PIPE_FORMAT_R16G16_USCALED:
+      case PIPE_FORMAT_R16G16B16_USCALED:
+      case PIPE_FORMAT_R16G16B16A16_USCALED:
+      case PIPE_FORMAT_R16_SSCALED:
+      case PIPE_FORMAT_R16G16_SSCALED:
+      case PIPE_FORMAT_R16G16B16_SSCALED:
+      case PIPE_FORMAT_R16G16B16A16_SSCALED:
+      case PIPE_FORMAT_R8_UNORM:
+      case PIPE_FORMAT_R8G8_UNORM:
+      case PIPE_FORMAT_R8G8B8_UNORM:
+      case PIPE_FORMAT_R8G8B8A8_UNORM:
+      case PIPE_FORMAT_R8_SNORM:
+      case PIPE_FORMAT_R8G8_SNORM:
+      case PIPE_FORMAT_R8G8B8_SNORM:
+      case PIPE_FORMAT_R8G8B8A8_SNORM:
+      case PIPE_FORMAT_R8_USCALED:
+      case PIPE_FORMAT_R8G8_USCALED:
+      case PIPE_FORMAT_R8G8B8_USCALED:
+      case PIPE_FORMAT_R8G8B8A8_USCALED:
+      case PIPE_FORMAT_R8_SSCALED:
+      case PIPE_FORMAT_R8G8_SSCALED:
+      case PIPE_FORMAT_R8G8B8_SSCALED:
+      case PIPE_FORMAT_R8G8B8A8_SSCALED:
          break;
       default:
          return false;
@@ -428,6 +506,16 @@ lima_screen_query_info(struct lima_screen *screen)
    return true;
 }
 
+static const uint64_t lima_available_modifiers[] = {
+   DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED,
+   DRM_FORMAT_MOD_LINEAR,
+};
+
+static bool lima_is_modifier_external_only(enum pipe_format format)
+{
+   return util_format_is_yuv(format);
+}
+
 static void
 lima_screen_query_dmabuf_modifiers(struct pipe_screen *pscreen,
                                    enum pipe_format format, int max,
@@ -435,24 +523,40 @@ lima_screen_query_dmabuf_modifiers(struct pipe_screen *pscreen,
                                    unsigned int *external_only,
                                    int *count)
 {
-   uint64_t available_modifiers[] = {
-      DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED,
-      DRM_FORMAT_MOD_LINEAR,
-   };
+   int num_modifiers = ARRAY_SIZE(lima_available_modifiers);
 
    if (!modifiers) {
-      *count = ARRAY_SIZE(available_modifiers);
+      *count = num_modifiers;
       return;
    }
 
+   *count = MIN2(max, num_modifiers);
    for (int i = 0; i < *count; i++) {
-      modifiers[i] = available_modifiers[i];
+      modifiers[i] = lima_available_modifiers[i];
       if (external_only)
-         external_only = false;
+         external_only[i] = lima_is_modifier_external_only(format);
    }
 }
 
-static const struct debug_named_value debug_options[] = {
+static bool
+lima_screen_is_dmabuf_modifier_supported(struct pipe_screen *pscreen,
+                                         uint64_t modifier,
+                                         enum pipe_format format,
+                                         bool *external_only)
+{
+   for (int i = 0; i < ARRAY_SIZE(lima_available_modifiers); i++) {
+      if (lima_available_modifiers[i] == modifier) {
+         if (external_only)
+            *external_only = lima_is_modifier_external_only(format);
+
+         return true;
+      }
+   }
+
+   return false;
+}
+
+static const struct debug_named_value lima_debug_options[] = {
         { "gp",       LIMA_DEBUG_GP,
           "print GP shader compiler result of each stage" },
         { "pp",       LIMA_DEBUG_PP,
@@ -469,19 +573,22 @@ static const struct debug_named_value debug_options[] = {
           "don't use tiled buffers" },
         { "nogrowheap",   LIMA_DEBUG_NO_GROW_HEAP,
           "disable growable heap buffer" },
+        { "singlejob", LIMA_DEBUG_SINGLE_JOB,
+          "disable multi job optimization" },
+        { "precompile", LIMA_DEBUG_PRECOMPILE,
+          "Precompile shaders for shader-db" },
+        { "diskcache", LIMA_DEBUG_DISK_CACHE,
+          "print debug info for shader disk cache" },
         { NULL }
 };
 
-DEBUG_GET_ONCE_FLAGS_OPTION(lima_debug, "LIMA_DEBUG", debug_options, 0)
+DEBUG_GET_ONCE_FLAGS_OPTION(lima_debug, "LIMA_DEBUG", lima_debug_options, 0)
 uint32_t lima_debug;
 
 static void
 lima_screen_parse_env(void)
 {
    lima_debug = debug_get_option_lima_debug();
-
-   if (lima_debug & LIMA_DEBUG_DUMP)
-      lima_dump_file_open();
 
    lima_ctx_num_plb = debug_get_num_option("LIMA_CTX_NUM_PLB", LIMA_CTX_PLB_DEF_NUM);
    if (lima_ctx_num_plb > LIMA_CTX_PLB_MAX_NUM ||
@@ -505,11 +612,27 @@ lima_screen_parse_env(void)
               "reset to default 0\n", lima_ppir_force_spilling);
       lima_ppir_force_spilling = 0;
    }
+
+   lima_plb_pp_stream_cache_size = debug_get_num_option("LIMA_PLB_PP_STREAM_CACHE_SIZE", 0);
+   if (lima_plb_pp_stream_cache_size < 0) {
+      fprintf(stderr, "lima: LIMA_PLB_PP_STREAM_CACHE_SIZE %d less than 0, "
+              "reset to default 0\n", lima_plb_pp_stream_cache_size);
+      lima_plb_pp_stream_cache_size = 0;
+   }
+}
+
+static struct disk_cache *
+lima_get_disk_shader_cache (struct pipe_screen *pscreen)
+{
+   struct lima_screen *screen = lima_screen(pscreen);
+
+   return screen->disk_cache;
 }
 
 struct pipe_screen *
 lima_screen_create(int fd, struct renderonly *ro)
 {
+   uint64_t system_memory;
    struct lima_screen *screen;
 
    screen = rzalloc(NULL, struct lima_screen);
@@ -517,8 +640,18 @@ lima_screen_create(int fd, struct renderonly *ro)
       return NULL;
 
    screen->fd = fd;
+   screen->ro = ro;
 
    lima_screen_parse_env();
+
+   /* Limit PP PLB stream cache size to 0.1% of system memory */
+   if (!lima_plb_pp_stream_cache_size &&
+       os_get_total_physical_memory(&system_memory))
+      lima_plb_pp_stream_cache_size = system_memory >> 10;
+
+   /* Set lower limit on PP PLB cache size */
+   lima_plb_pp_stream_cache_size = MAX2(128 * 1024 * lima_ctx_num_plb,
+                                        lima_plb_pp_stream_cache_size);
 
    if (!lima_screen_query_info(screen))
       goto err_out0;
@@ -579,14 +712,6 @@ lima_screen_create(int fd, struct renderonly *ro)
    pp_frame_rsw[9] = screen->pp_buffer->va + pp_clear_program_offset;
    pp_frame_rsw[13] = 0x00000100;
 
-   if (ro) {
-      screen->ro = renderonly_dup(ro);
-      if (!screen->ro) {
-         fprintf(stderr, "Failed to dup renderonly object\n");
-         goto err_out3;
-      }
-   }
-
    screen->base.destroy = lima_screen_destroy;
    screen->base.get_name = lima_screen_get_name;
    screen->base.get_vendor = lima_screen_get_vendor;
@@ -598,9 +723,12 @@ lima_screen_create(int fd, struct renderonly *ro)
    screen->base.is_format_supported = lima_screen_is_format_supported;
    screen->base.get_compiler_options = lima_screen_get_compiler_options;
    screen->base.query_dmabuf_modifiers = lima_screen_query_dmabuf_modifiers;
+   screen->base.is_dmabuf_modifier_supported = lima_screen_is_dmabuf_modifier_supported;
+   screen->base.get_disk_shader_cache = lima_get_disk_shader_cache;
 
    lima_resource_screen_init(screen);
    lima_fence_screen_init(screen);
+   lima_disk_cache_init(screen);
 
    slab_create_parent(&screen->transfer_pool, sizeof(struct lima_transfer), 16);
 
@@ -608,8 +736,6 @@ lima_screen_create(int fd, struct renderonly *ro)
 
    return &screen->base;
 
-err_out3:
-   lima_bo_unreference(screen->pp_buffer);
 err_out2:
    lima_bo_table_fini(screen);
 err_out1:

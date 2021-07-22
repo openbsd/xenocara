@@ -38,6 +38,7 @@
 #include "program/prog_instruction.h"
 #include "compiler/glsl_types.h"
 #include "main/macros.h"
+#include "util/half_float.h"
 
 using namespace ir_builder;
 
@@ -109,6 +110,22 @@ compare_components(ir_constant *a, ir_constant *b)
         i < components;
         c0 += a_inc, c1 += b_inc, ++i) {
       switch (a->type->base_type) {
+      case GLSL_TYPE_UINT16:
+         if (a->value.u16[c0] < b->value.u16[c1])
+            foundless = true;
+         else if (a->value.u16[c0] > b->value.u16[c1])
+            foundgreater = true;
+         else
+            foundequal = true;
+         break;
+      case GLSL_TYPE_INT16:
+         if (a->value.i16[c0] < b->value.i16[c1])
+            foundless = true;
+         else if (a->value.i16[c0] > b->value.i16[c1])
+            foundgreater = true;
+         else
+            foundequal = true;
+         break;
       case GLSL_TYPE_UINT:
          if (a->value.u[c0] < b->value.u[c1])
             foundless = true;
@@ -125,6 +142,17 @@ compare_components(ir_constant *a, ir_constant *b)
          else
             foundequal = true;
          break;
+      case GLSL_TYPE_FLOAT16: {
+         float af = _mesa_half_to_float(a->value.f16[c0]);
+         float bf = _mesa_half_to_float(b->value.f16[c1]);
+         if (af < bf)
+            foundless = true;
+         else if (af > bf)
+            foundgreater = true;
+         else
+            foundequal = true;
+         break;
+      }
       case GLSL_TYPE_FLOAT:
          if (a->value.f[c0] < b->value.f[c1])
             foundless = true;
@@ -171,6 +199,16 @@ combine_constant(bool ismin, ir_constant *a, ir_constant *b)
    ir_constant *c = a->clone(mem_ctx, NULL);
    for (unsigned i = 0; i < c->type->components(); i++) {
       switch (c->type->base_type) {
+      case GLSL_TYPE_UINT16:
+         if ((ismin && b->value.u16[i] < c->value.u16[i]) ||
+             (!ismin && b->value.u16[i] > c->value.u16[i]))
+            c->value.u16[i] = b->value.u16[i];
+         break;
+      case GLSL_TYPE_INT16:
+         if ((ismin && b->value.i16[i] < c->value.i16[i]) ||
+             (!ismin && b->value.i16[i] > c->value.i16[i]))
+            c->value.i16[i] = b->value.i16[i];
+         break;
       case GLSL_TYPE_UINT:
          if ((ismin && b->value.u[i] < c->value.u[i]) ||
              (!ismin && b->value.u[i] > c->value.u[i]))
@@ -181,6 +219,13 @@ combine_constant(bool ismin, ir_constant *a, ir_constant *b)
              (!ismin && b->value.i[i] > c->value.i[i]))
             c->value.i[i] = b->value.i[i];
          break;
+      case GLSL_TYPE_FLOAT16: {
+         float bf = _mesa_half_to_float(b->value.f16[i]);
+         float cf = _mesa_half_to_float(c->value.f16[i]);
+         if ((ismin && bf < cf) || (!ismin && bf > cf))
+            c->value.f16[i] = b->value.f16[i];
+         break;
+      }
       case GLSL_TYPE_FLOAT:
          if ((ismin && b->value.f[i] < c->value.f[i]) ||
              (!ismin && b->value.f[i] > c->value.f[i]))

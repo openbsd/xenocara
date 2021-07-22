@@ -25,9 +25,10 @@ subdir('cle')
 v3d_versions = ['33', '41', '42']
 v3d_libs = []
 
-if with_gallium_v3d
+if with_gallium_v3d or with_broadcom_vk
   subdir('compiler')
   subdir('qpu')
+  subdir('simulator')
 endif
 
 if with_tools.contains('drm-shim')
@@ -42,8 +43,9 @@ foreach ver : v3d_versions
       files('clif/v3dx_dump.c'),
       v3d_xml_pack
     ],
-    include_directories : [inc_common, inc_broadcom, inc_src],
-    c_args : [c_vis_args, no_override_init_args, '-DV3D_VERSION=' + ver],
+    include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom],
+    c_args : [no_override_init_args, '-DV3D_VERSION=' + ver],
+    gnu_symbol_visibility : 'hidden',
     dependencies: [dep_valgrind, dep_thread],
   )
 endforeach
@@ -54,9 +56,14 @@ libbroadcom_v3d = static_library(
     files('common/v3d_debug.c', 'common/v3d_device_info.c', 'clif/clif_dump.c'),
     v3d_xml_pack,
   ],
-  include_directories : [inc_common, inc_broadcom, inc_src],
-  c_args : [c_vis_args, no_override_init_args],
+  include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom],
+  c_args : [no_override_init_args],
+  gnu_symbol_visibility : 'hidden',
   link_whole : v3d_libs + per_version_libs,
   build_by_default : false,
   dependencies: [dep_valgrind, dep_thread],
 )
+
+if with_broadcom_vk
+  subdir('vulkan')
+endif

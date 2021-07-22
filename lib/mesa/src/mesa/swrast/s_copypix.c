@@ -29,7 +29,7 @@
 #include "main/macros.h"
 #include "main/blit.h"
 #include "main/pixeltransfer.h"
-#include "main/imports.h"
+
 
 #include "s_context.h"
 #include "s_depth.h"
@@ -214,7 +214,7 @@ scale_and_bias_z(struct gl_context *ctx, GLuint width,
       const GLdouble depthMaxF = ctx->DrawBuffer->_DepthMaxF;
       for (i = 0; i < width; i++) {
          GLdouble d = depth[i] * ctx->Pixel.DepthScale + ctx->Pixel.DepthBias;
-         d = CLAMP(d, 0.0, 1.0) * depthMaxF;
+         d = SATURATE(d) * depthMaxF;
          if (d >= depthMaxF)
             z[i] = depthMax;
          else
@@ -618,7 +618,7 @@ _swrast_CopyPixels(struct gl_context *ctx,
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    struct gl_renderbuffer *rb;
-      
+
    if (!_mesa_check_conditional_render(ctx))
       return; /* don't copy */
 

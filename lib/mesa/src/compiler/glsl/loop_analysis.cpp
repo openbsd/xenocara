@@ -107,7 +107,7 @@ calculate_iterations(ir_rvalue *from, ir_rvalue *to, ir_rvalue *increment,
       return -1;
    }
 
-   if (!iter->type->is_integer_32()) {
+   if (!iter->type->is_integer()) {
       const ir_expression_operation op = iter->type->is_double()
          ? ir_unop_d2i : ir_unop_f2i;
       ir_rvalue *cast =
@@ -116,7 +116,7 @@ calculate_iterations(ir_rvalue *from, ir_rvalue *to, ir_rvalue *increment,
       iter = cast->constant_expression_value(mem_ctx);
    }
 
-   int iter_value = iter->get_int_component(0);
+   int64_t iter_value = iter->get_int64_component(0);
 
    /* Code after this block works under assumption that iterator will be
     * incremented or decremented until it hits the limit,
@@ -159,13 +159,28 @@ calculate_iterations(ir_rvalue *from, ir_rvalue *to, ir_rvalue *increment,
       /* Increment may be of type int, uint or float. */
       switch (increment->type->base_type) {
       case GLSL_TYPE_INT:
-         iter = new(mem_ctx) ir_constant(iter_value + bias[i]);
+         iter = new(mem_ctx) ir_constant(int32_t(iter_value + bias[i]));
+         break;
+      case GLSL_TYPE_INT16:
+         iter = new(mem_ctx) ir_constant(int16_t(iter_value + bias[i]));
+         break;
+      case GLSL_TYPE_INT64:
+         iter = new(mem_ctx) ir_constant(int64_t(iter_value + bias[i]));
          break;
       case GLSL_TYPE_UINT:
          iter = new(mem_ctx) ir_constant(unsigned(iter_value + bias[i]));
          break;
+      case GLSL_TYPE_UINT16:
+         iter = new(mem_ctx) ir_constant(uint16_t(iter_value + bias[i]));
+         break;
+      case GLSL_TYPE_UINT64:
+         iter = new(mem_ctx) ir_constant(uint64_t(iter_value + bias[i]));
+         break;
       case GLSL_TYPE_FLOAT:
          iter = new(mem_ctx) ir_constant(float(iter_value + bias[i]));
+         break;
+      case GLSL_TYPE_FLOAT16:
+         iter = new(mem_ctx) ir_constant(float16_t(float(iter_value + bias[i])));
          break;
       case GLSL_TYPE_DOUBLE:
          iter = new(mem_ctx) ir_constant(double(iter_value + bias[i]));
@@ -346,10 +361,8 @@ loop_terminator *
 loop_variable_state::insert(ir_if *if_stmt, bool continue_from_then)
 {
    void *mem_ctx = ralloc_parent(this);
-   loop_terminator *t = new(mem_ctx) loop_terminator();
-
-   t->ir = if_stmt;
-   t->continue_from_then = continue_from_then;
+   loop_terminator *t = new(mem_ctx) loop_terminator(if_stmt,
+                                                     continue_from_then);
 
    this->terminators.push_tail(t);
 

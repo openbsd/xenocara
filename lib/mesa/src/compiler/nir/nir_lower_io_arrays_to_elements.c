@@ -61,7 +61,7 @@ get_io_offset(nir_builder *b, nir_deref_instr *deref, nir_variable *var,
          unsigned size = glsl_count_attribute_slots((*p)->type, false);
          offset += size * index;
 
-         xfb_offset += index * glsl_get_component_slots((*p)->type) * 4;
+         *xfb_offset += index * glsl_get_component_slots((*p)->type) * 4;
 
          unsigned num_elements = glsl_type_is_array((*p)->type) ?
             glsl_get_aoa_size((*p)->type) : 1;
@@ -114,6 +114,18 @@ lower_array(nir_builder *b, nir_intrinsic_instr *intr, nir_variable *var,
             struct hash_table *varyings)
 {
    b->cursor = nir_before_instr(&intr->instr);
+
+   if (nir_deref_instr_is_known_out_of_bounds(nir_src_as_deref(intr->src[0]))) {
+      /* See Section 5.11 (Out-of-Bounds Accesses) of the GLSL 4.60 */
+      if (intr->intrinsic != nir_intrinsic_store_deref) {
+         nir_ssa_def *zero = nir_imm_zero(b, intr->dest.ssa.num_components,
+                                          intr->dest.ssa.bit_size);
+         nir_ssa_def_rewrite_uses(&intr->dest.ssa,
+                                  zero);
+      }
+      nir_instr_remove(&intr->instr);
+      return;
+   }
 
    nir_variable **elements =
       get_array_elements(varyings, var, b->shader->info.stage);
@@ -174,7 +186,7 @@ lower_array(nir_builder *b, nir_intrinsic_instr *intr, nir_variable *var,
       }
 
       nir_ssa_def_rewrite_uses(&intr->dest.ssa,
-                               nir_src_for_ssa(&element_intr->dest.ssa));
+                               &element_intr->dest.ssa);
    } else {
       nir_intrinsic_set_write_mask(element_intr,
                                    nir_intrinsic_write_mask(intr));
@@ -238,7 +250,7 @@ create_indirects_mask(nir_shader *shader,
                   continue;
 
                nir_deref_instr *deref = nir_src_as_deref(intr->src[0]);
-               if (deref->mode != mode)
+               if (!nir_deref_mode_is(deref, mode))
                   continue;
 
                nir_variable *var = nir_deref_instr_get_variable(deref);
@@ -284,13 +296,17 @@ lower_io_arrays_to_elements(nir_shader *shader, nir_variable_mode mask,
                   continue;
 
                nir_deref_instr *deref = nir_src_as_deref(intr->src[0]);
-               if (!(deref->mode & mask))
+               if (!nir_deref_mode_is_one_of(deref, mask))
                   continue;
 
                nir_variable *var = nir_deref_instr_get_variable(deref);
 
                /* Drivers assume compact arrays are, in fact, arrays. */
                if (var->data.compact)
+                  continue;
+
+               /* Per-view variables are expected to remain arrays. */
+               if (var->data.per_view)
                   continue;
 
                /* Skip indirects */
