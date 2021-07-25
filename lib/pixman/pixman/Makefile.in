@@ -454,6 +454,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -496,6 +497,7 @@ libpixman_sources = \
 	$(NULL)
 
 libpixman_headers = \
+	dither/blue-noise-64x64.h	\
 	pixman.h			\
 	pixman-accessor.h		\
 	pixman-combine32.h		\
@@ -521,6 +523,7 @@ noinst_LTLIBRARIES = $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_16) $(am__append_18) $(am__append_20)
 EXTRA_DIST = \
 	Makefile.win32			\
+	dither/make-blue-noise.c	\
 	pixman-region.c			\
 	solaris-hwcap.mapfile		\
 	meson.build			\

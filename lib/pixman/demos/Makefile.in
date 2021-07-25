@@ -70,7 +70,7 @@ CONFIG_CLEAN_VPATH_FILES =
 @HAVE_GTK_TRUE@	trap-test$(EXEEXT) tri-test$(EXEEXT) \
 @HAVE_GTK_TRUE@	quad2quad$(EXEEXT) checkerboard$(EXEEXT) \
 @HAVE_GTK_TRUE@	srgb-trap-test$(EXEEXT) srgb-test$(EXEEXT) \
-@HAVE_GTK_TRUE@	scale$(EXEEXT)
+@HAVE_GTK_TRUE@	scale$(EXEEXT) dither$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__alpha_test_SOURCES_DIST = alpha-test.c gtk-utils.c gtk-utils.h \
 	../test/utils.c ../test/utils.h ../test/utils-prng.c \
@@ -146,6 +146,15 @@ am__convolution_test_SOURCES_DIST = convolution-test.c gtk-utils.c \
 convolution_test_OBJECTS = $(am_convolution_test_OBJECTS)
 convolution_test_LDADD = $(LDADD)
 @HAVE_GTK_TRUE@convolution_test_DEPENDENCIES =  \
+@HAVE_GTK_TRUE@	$(top_builddir)/pixman/libpixman-1.la \
+@HAVE_GTK_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+am__dither_SOURCES_DIST = dither.c gtk-utils.c gtk-utils.h \
+	../test/utils.c ../test/utils.h ../test/utils-prng.c \
+	../test/utils-prng.h
+@HAVE_GTK_TRUE@am_dither_OBJECTS = dither.$(OBJEXT) $(am__objects_1)
+dither_OBJECTS = $(am_dither_OBJECTS)
+dither_LDADD = $(LDADD)
+@HAVE_GTK_TRUE@dither_DEPENDENCIES =  \
 @HAVE_GTK_TRUE@	$(top_builddir)/pixman/libpixman-1.la \
 @HAVE_GTK_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__gradient_test_SOURCES_DIST = gradient-test.c gtk-utils.c \
@@ -280,9 +289,10 @@ am__v_CCLD_1 =
 SOURCES = $(alpha_test_SOURCES) $(checkerboard_SOURCES) \
 	$(clip_in_SOURCES) $(clip_test_SOURCES) \
 	$(composite_test_SOURCES) $(conical_test_SOURCES) \
-	$(convolution_test_SOURCES) $(gradient_test_SOURCES) \
-	$(linear_gradient_SOURCES) quad2quad.c $(radial_test_SOURCES) \
-	$(scale_SOURCES) $(screen_test_SOURCES) $(srgb_test_SOURCES) \
+	$(convolution_test_SOURCES) $(dither_SOURCES) \
+	$(gradient_test_SOURCES) $(linear_gradient_SOURCES) \
+	quad2quad.c $(radial_test_SOURCES) $(scale_SOURCES) \
+	$(screen_test_SOURCES) $(srgb_test_SOURCES) \
 	$(srgb_trap_test_SOURCES) $(trap_test_SOURCES) \
 	$(tri_test_SOURCES)
 DIST_SOURCES = $(am__alpha_test_SOURCES_DIST) \
@@ -291,7 +301,7 @@ DIST_SOURCES = $(am__alpha_test_SOURCES_DIST) \
 	$(am__composite_test_SOURCES_DIST) \
 	$(am__conical_test_SOURCES_DIST) \
 	$(am__convolution_test_SOURCES_DIST) \
-	$(am__gradient_test_SOURCES_DIST) \
+	$(am__dither_SOURCES_DIST) $(am__gradient_test_SOURCES_DIST) \
 	$(am__linear_gradient_SOURCES_DIST) quad2quad.c \
 	$(am__radial_test_SOURCES_DIST) $(am__scale_SOURCES_DIST) \
 	$(am__screen_test_SOURCES_DIST) $(am__srgb_test_SOURCES_DIST) \
@@ -445,6 +455,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -457,6 +468,7 @@ EXTRA_DIST = \
      parrot.c		\
      parrot.jpg		\
      scale.ui		\
+     dither.ui		\
      meson.build	\
      $(NULL)
 
@@ -484,7 +496,8 @@ EXTRA_DIST = \
 @HAVE_GTK_TRUE@	checkerboard		\
 @HAVE_GTK_TRUE@	srgb-trap-test		\
 @HAVE_GTK_TRUE@	srgb-test		\
-@HAVE_GTK_TRUE@	scale
+@HAVE_GTK_TRUE@	scale			\
+@HAVE_GTK_TRUE@	dither
 
 @HAVE_GTK_TRUE@gradient_test_SOURCES = gradient-test.c $(GTK_UTILS)
 @HAVE_GTK_TRUE@alpha_test_SOURCES = alpha-test.c $(GTK_UTILS)
@@ -502,6 +515,7 @@ EXTRA_DIST = \
 @HAVE_GTK_TRUE@srgb_test_SOURCES = srgb-test.c $(GTK_UTILS)
 @HAVE_GTK_TRUE@srgb_trap_test_SOURCES = srgb-trap-test.c $(GTK_UTILS)
 @HAVE_GTK_TRUE@scale_SOURCES = scale.c $(GTK_UTILS)
+@HAVE_GTK_TRUE@dither_SOURCES = dither.c $(GTK_UTILS)
 all: all-am
 
 .SUFFIXES:
@@ -566,6 +580,9 @@ conical-test$(EXEEXT): $(conical_test_OBJECTS) $(conical_test_DEPENDENCIES) $(EX
 convolution-test$(EXEEXT): $(convolution_test_OBJECTS) $(convolution_test_DEPENDENCIES) $(EXTRA_convolution_test_DEPENDENCIES) 
 	@rm -f convolution-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(convolution_test_OBJECTS) $(convolution_test_LDADD) $(LIBS)
+dither$(EXEEXT): $(dither_OBJECTS) $(dither_DEPENDENCIES) $(EXTRA_dither_DEPENDENCIES) 
+	@rm -f dither$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(dither_OBJECTS) $(dither_LDADD) $(LIBS)
 gradient-test$(EXEEXT): $(gradient_test_OBJECTS) $(gradient_test_DEPENDENCIES) $(EXTRA_gradient_test_DEPENDENCIES) 
 	@rm -f gradient-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(gradient_test_OBJECTS) $(gradient_test_LDADD) $(LIBS)
@@ -610,6 +627,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/composite-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/conical-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolution-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dither.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gradient-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linear-gradient.Po@am__quote@
