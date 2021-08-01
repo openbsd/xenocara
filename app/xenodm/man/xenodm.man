@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: March 13 2021 $
+.Dd $Mdocdate: August 1 2021 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -102,20 +102,23 @@ own login window, can be affected by setting resources in the
 .Pa Xresources
 file.
 .Pp
-After resetting the X server,
+If
+.Ic autoLogin
+is not set (the default), after resetting the X server,
 .Nm
 runs the
 .Pa Xsetup
 script to assist in setting up the screen the user sees along with the
-xlogin widget.
-.Pp
-The xlogin widget, which
+xlogin widget, which
 .Nm
-presents, offers the familiar login and password prompts, unless
-.Ic autoLogin
-is set.
+presents.
+The xlogin widget offers the familiar login and password prompts.
 .Pp
-After the user logs in,
+If
+.Ic autoLogin
+is set the designated user is automatically logged in.
+.Pp
+After the user logged in,
 .Nm
 runs the
 .Pa Xstartup
@@ -710,8 +713,8 @@ This file may also contain resources for the setup program.
 .Sh SETUP PROGRAM
 The
 .Pa Xsetup
-file is run after the server is reset, but before the Login window is offered.
-The file is typically a shell script.
+shell script is run after the server is reset, but before the Login window
+is offered.
 It is run as root, so should be careful about security.
 This is the place to change the root background or bring up other
 windows that should appear on the screen along with the Login widget.
@@ -746,16 +749,6 @@ is set,
 will not be able to connect to the display at all.
 Resources for this program can be put into the file named by
 .Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resources .
-.Pp
-Here is a sample
-.Pa Xsetup
-script:
-.Bd -literal -offset Ds
-#!/bin/sh
-# Xsetup_0 - setup script for one workstation
-xcmsdb < XENODMDIR/monitors/alex.0
-xconsole -geometry 480x130-0-0 -notify -verbose -exitOnFail &
-.Ed
 .Sh AUTHENTICATION WIDGET
 The authentication widget prompts the user for the username, password, and/or
 other required authentication data from the keyboard.
@@ -1023,14 +1016,13 @@ It is typically a shell script.
 Since it is run as root,
 .Pa Xstartup
 should be very careful about security.
-This is the place to put commands which add entries to
-.Xr utmp 5
-or
+The default script updates 
 .Xr wtmp 5
-files (the
+files using the
 .Xr sessreg 1
-program may be useful here), mount users' home directories from file servers,
-or abort the session if logins are not allowed.
+program, or aborts the session if logins are not allowed when the 
+.Pa /etc/nologin
+file is present.
 .Pp
 In addition to any specified by
 .Ic DisplayManager.exportList ,
@@ -1063,33 +1055,6 @@ waits until this script exits before starting the user session.
 If the exit value of this script is non-zero,
 .Nm
 discontinues the session and starts another authentication cycle.
-.Pp
-The sample
-.Pa Xstartup
-file shown here prevents login while the file
-.Pa /etc/nologin
-exists.
-Thus this is not a complete example,
-but simply a demonstration of the available functionality.
-.Pp
-Here is a sample
-.Pa Xstartup
-script:
-.Bd -literal -offset Ds
-#!/bin/sh
-#
-# Xstartup
-#
-# This program is run as root after the user is verified
-#
-if [ -f /etc/nologin ]; then
-	xmessage -file /etc/nologin -timeout 30 -center
-	exit 1
-fi
-sessreg -a -l $DISPLAY -x XENODMDIR/Xservers $LOGNAME
-XENODMDIR/GiveConsole
-exit 0
-.Ed
 .Sh SESSION PROGRAM
 The
 .Pa Xsession
@@ -1121,15 +1086,15 @@ may be set to a non-standard authority file
 may be set to the window path leading to the X server
 .El
 .Pp
-At most installations,
+The default
 .Pa Xsession
-should look in
+program looks in
 .Pa $HOME
-for a file
+for a script named
 .Pa .xsession ,
-which contains commands that each user would like to use as a session.
+which contains commands that each user would like to use as a session. 
 .Pa Xsession
-should also implement a system default session
+also implements a system default session
 if no user-specified session exists.
 .Pp
 An argument may be passed to this program from the authentication widget
@@ -1137,51 +1102,18 @@ using the
 .Ic set-session-argument
 action.
 This can be used to select different styles of session.
-One good use of this feature is to allow
-the user to escape from the ordinary session when it fails.
-This allows users to repair their own
-.Pa .xsession
-if it fails, without requiring administrative intervention.
-The example following demonstrates this feature.
-.Pp
-This example recognizes the special failsafe mode,
+By default it recognizes the special failsafe mode,
 specified in the translations in the
 .Pa Xresources
 file, to provide an escape from the ordinary session.
 It also requires that the
 .Pa .xsession
 file be executable so we don't have to guess what shell it wants to use.
-.Bd -literal -offset Ds
-#!/bin/sh
-#
-# Xsession
-#
-# This is the program that is run as the client
-# for the display manager.
-
-case $# in
-1)
-	case $1 in
-	failsafe)
-		exec xterm -geometry 80x24-0-0
-		;;
-	esac
-esac
-
-startup=$HOME/.xsession
-resources=$HOME/.Xresources
-
-if [ -f "$startup" ]; then
-	exec "$startup"
-else
-	if [ -f "$resources" ]; then
-		xrdb -load "$resources"
-	fi
-	xclock -geometry 100x100-0+0 &
-	xterm -geometry 80x24+10+10 -ls &
-	exec twm
-fi
-.Ed
+.Pp
+Errors from the user's
+.Pa .xsession
+script are logged in
+.Pa ${HOME}/.xsession-errors .
 .Pp
 The user's
 .Pa .xsession
@@ -1193,7 +1125,7 @@ xrdb -merge "$HOME/.Xresources"
 emacs -geometry +0+50 &
 xbiff -geometry -430+5 &
 xterm -geometry -0+50 -ls &
-exec twm 
+exec fvwm 
 .Ed
 .Sh RESET PROGRAM
 Symmetrical with
@@ -1201,32 +1133,15 @@ Symmetrical with
 the
 .Pa Xreset
 script is run after the user session has terminated.
-Run as root, it should contain commands that undo the effects of commands in
+Run as root, it contains commands that undo the effects of commands in
 .Pa Xstartup ,
 updating entries in
-.Xr utmp 5
-or
 .Xr wtmp 5
-files, or unmounting directories from file servers.
+files.
 The environment variables that were passed to
 .Pa Xstartup
 are also passed to
 .Pa Xreset .
-.Pp
-A sample
-.Pa Xreset
-script:
-.Bd -literal -offset Ds
-#!/bin/sh
-#
-# Xreset
-#
-# This program is run as root after the session ends
-#
-sessreg -d -l $DISPLAY -x XENODMDIR/Xservers $LOGNAME
-XENODMDIR/TakeConsole
-exit 0
-.Ed
 .Sh CONTROLLING THE SERVER
 .Nm
 controls local servers using POSIX signals.
@@ -1309,19 +1224,25 @@ interested in
 .Sh FILES
 .Bl -tag -width Ds -compact
 .It Pa XENODMDIR/xenodm-config
-the default configuration file
+default configuration file
+.It Pa XENODMLOGDIR/xenodm.log
+system log file
 .It Pa $HOME/.Xauthority
 user authorization file where
 .Nm
 stores keys for clients to read
+.It Pa $HOME/.xsession
+user session script
+.It Pa $HOME/.xsession-errors
+log file for the user session
 .It Pa BINDIR/xrdb
-the default resource database loader
+default resource database loader
 .It Pa BINDIR/X
-the default server
+default X server
 .It Pa BINDIR/xterm
-the default session program and failsafe client
+default session program and failsafe client
 .It Pa XENODMXAUTHDIR/A Ns Ar display Ns - Ns Ar suffix
-the default place for authorization files
+default place for authorization files
 .El
 .Sh SEE ALSO
 .Xr sessreg 1 ,
