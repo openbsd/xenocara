@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $OpenBSD: gen_osmesa.sh,v 1.1 2020/08/26 06:02:41 jsg Exp $
+# $OpenBSD: gen_osmesa.sh,v 1.2 2021/08/01 02:34:50 jsg Exp $
 #
 # Copyright (c) 2010,2011 Jasper Lievisse Adriaanse <jasper@openbsd.org>
 #
@@ -59,10 +59,9 @@ libdir=\${prefix}/lib
 includedir=\${prefix}/include
 
 Name: osmesa
-Description: Mesa Off-screen Rendering library
+Description: Mesa Off-screen Rendering Library
 Version: ${lib_version}
-Requires:
 Libs: -L\${libdir} -lOSMesa
-Libs.private: -lm -lpthread -pthread
+Libs.private: -lpthread -pthread -lm
 Cflags: -I\${includedir}
 __EOF__

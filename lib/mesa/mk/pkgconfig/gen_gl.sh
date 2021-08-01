@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $OpenBSD: gen_gl.sh,v 1.1 2020/08/26 06:02:41 jsg Exp $
+# $OpenBSD: gen_gl.sh,v 1.2 2021/08/01 02:34:50 jsg Exp $
 #
 # Copyright (c) 2010,2011 Jasper Lievisse Adriaanse <jasper@openbsd.org>
 #
@@ -63,7 +63,7 @@ glx_tls=no
 Name: gl
 Description: Mesa OpenGL Library
 Version: ${lib_version}
-Requires.private: x11, xext, xdamage >= 1.1, xfixes, x11-xcb, xcb, xcb-glx >= 1.8.1, xcb-dri2 >= 1.8, xxf86vm, libdrm >= 2.4.75
+Requires.private: x11, xext, xfixes, x11-xcb, xcb, xcb-glx >= 1.8.1, xcb-dri2 >= 1.8, xxf86vm, libdrm >= 2.4.75
 Libs: -L\${libdir} -lGL
 Libs.private: -lpthread -pthread -lm
 Cflags: -I\${includedir}

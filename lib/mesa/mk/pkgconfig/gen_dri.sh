@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $OpenBSD: gen_dri.sh,v 1.1 2020/08/26 06:02:41 jsg Exp $
+# $OpenBSD: gen_dri.sh,v 1.2 2021/08/01 02:34:50 jsg Exp $
 #
 # Copyright (c) 2010,2011 Jasper Lievisse Adriaanse <jasper@openbsd.org>
 #
@@ -63,6 +63,6 @@ dridriverdir=/usr/X11R6/lib/modules/dri
 Name: dri
 Description: Direct Rendering Infrastructure
 Version: ${lib_version}
-Requires.private: libdrm >= 2.4.100
+Requires.private: libdrm >= 2.4.105
 Cflags: -I\${includedir}
 __EOF__
