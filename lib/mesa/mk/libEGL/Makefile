@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2021/08/01 01:52:49 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -38,7 +38,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/egl/main \
 		-I${MESA_SRC}/src/gbm/backends/dri \
 		-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11
 
-LDADD+= ${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
+LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
+	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
 	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
 	-lz -lm \
 	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb -lxcb-xfixes
@@ -55,7 +56,8 @@ LDADD+= ${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a 
 .endif
 
 LDADD+= -L${.CURDIR}/../libgbm/${__objdir} -lgbm \
-	-L${.CURDIR}/../libglapi/${__objdir} -lglapi
+	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
+	-Wl,--end-group
 
 obj: _xenocara_obj
 
