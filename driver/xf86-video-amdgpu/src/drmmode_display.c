@@ -40,14 +40,12 @@
 #include "mipointrst.h"
 #include "xf86cmap.h"
 #include "xf86Priv.h"
-#include "sarea.h"
+#include <xf86drm.h>
 
 #include "drmmode_display.h"
 #include "amdgpu_bo_helper.h"
 #include "amdgpu_glamor.h"
 #include "amdgpu_pixmap.h"
-
-#include <dri.h>
 
 /* DPMS */
 #ifdef HAVE_XEXTPROTO_71
@@ -96,42 +94,6 @@ AMDGPUZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name)
 	return FALSE;
 }
 
-
-static PixmapPtr drmmode_create_bo_pixmap(ScrnInfoPtr pScrn,
-					  int width, int height,
-					  int depth, int bpp,
-					  int pitch,
-					  struct amdgpu_buffer *bo)
-{
-	ScreenPtr pScreen = pScrn->pScreen;
-	PixmapPtr pixmap;
-
-	pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth,
-					  AMDGPU_CREATE_PIXMAP_SCANOUT);
-	if (!pixmap)
-		return NULL;
-
-	if (!(*pScreen->ModifyPixmapHeader) (pixmap, width, height,
-					     depth, bpp, pitch, NULL))
-		goto fail;
-
-	if (!amdgpu_glamor_create_textured_pixmap(pixmap, bo))
-		goto fail;
-
-	if (amdgpu_set_pixmap_bo(pixmap, bo))
-		return pixmap;
-
-fail:
-	pScreen->DestroyPixmap(pixmap);
-	return NULL;
-}
-
-static void drmmode_destroy_bo_pixmap(PixmapPtr pixmap)
-{
-	ScreenPtr pScreen = pixmap->drawable.pScreen;
-
-	(*pScreen->DestroyPixmap) (pixmap);
-}
 
 static void
 drmmode_ConvertFromKMode(ScrnInfoPtr scrn,
@@ -505,22 +467,6 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 }
 
 void
-drmmode_crtc_scanout_destroy(drmmode_ptr drmmode,
-			     struct drmmode_scanout *scanout)
-{
-
-	if (scanout->pixmap) {
-		drmmode_destroy_bo_pixmap(scanout->pixmap);
-		scanout->pixmap = NULL;
-	}
-
-	if (scanout->bo) {
-		amdgpu_bo_unref(&scanout->bo);
-		scanout->bo = NULL;
-	}
-}
-
-void
 drmmode_crtc_scanout_free(xf86CrtcPtr crtc)
 {
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
@@ -532,60 +478,43 @@ drmmode_crtc_scanout_free(xf86CrtcPtr crtc)
 		amdgpu_drm_queue_handle_deferred(crtc);
 	}
 
-	drmmode_crtc_scanout_destroy(drmmode_crtc->drmmode,
-				     &drmmode_crtc->scanout[0]);
-	drmmode_crtc_scanout_destroy(drmmode_crtc->drmmode,
-				     &drmmode_crtc->scanout[1]);
+	drmmode_crtc_scanout_destroy(&drmmode_crtc->scanout[0]);
+	drmmode_crtc_scanout_destroy(&drmmode_crtc->scanout[1]);
 
 	if (drmmode_crtc->scanout_damage)
 		DamageDestroy(drmmode_crtc->scanout_damage);
 }
 
-PixmapPtr
-drmmode_crtc_scanout_create(xf86CrtcPtr crtc, struct drmmode_scanout *scanout,
+static Bool
+drmmode_crtc_scanout_create(xf86CrtcPtr crtc, PixmapPtr *scanout,
 			    int width, int height)
 {
 	ScrnInfoPtr pScrn = crtc->scrn;
-	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
-	drmmode_ptr drmmode = drmmode_crtc->drmmode;
-	int pitch;
+	ScreenPtr screen = pScrn->pScreen;
 
-	if (scanout->pixmap) {
-		if (scanout->width == width && scanout->height == height)
-			return scanout->pixmap;
+	if (*scanout) {
+		if ((*scanout)->drawable.width == width &&
+		    (*scanout)->drawable.height == height)
+			return TRUE;
 
-		drmmode_crtc_scanout_destroy(drmmode, scanout);
+		drmmode_crtc_scanout_destroy(scanout);
 	}
 
-	scanout->bo = amdgpu_alloc_pixmap_bo(pScrn, width, height,
-					     pScrn->depth, 0,
-					     pScrn->bitsPerPixel, &pitch);
-	if (!scanout->bo) {
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "Failed to allocate scanout buffer memory\n");
-		return NULL;
-	}
-
-	scanout->pixmap = drmmode_create_bo_pixmap(pScrn,
-						 width, height,
-						 pScrn->depth,
-						 pScrn->bitsPerPixel,
-						 pitch, scanout->bo);
-	if (!scanout->pixmap) {
+	*scanout = screen->CreatePixmap(screen, width, height, pScrn->depth,
+					AMDGPU_CREATE_PIXMAP_SCANOUT);
+	if (!*scanout) {
 		ErrorF("failed to create CRTC scanout pixmap\n");
 		goto error;
 	}
 
-	if (amdgpu_pixmap_get_fb(scanout->pixmap)) {
-		scanout->width = width;
-		scanout->height = height;
-	} else {
+	if (!amdgpu_pixmap_get_fb(*scanout)) {
 		ErrorF("failed to create CRTC scanout FB\n");
 error:		
-		drmmode_crtc_scanout_destroy(drmmode, scanout);
+		drmmode_crtc_scanout_destroy(scanout);
+		return FALSE;
 	}
 
-	return scanout->pixmap;
+	return TRUE;
 }
 
 static void
@@ -705,8 +634,7 @@ drmmode_crtc_prime_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 	ScreenPtr screen = scrn->pScreen;
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
-	if (drmmode_crtc->tear_free &&
-	    !drmmode_crtc->scanout[1].pixmap) {
+	if (drmmode_crtc->tear_free && !drmmode_crtc->scanout[1]) {
 		RegionPtr region;
 		BoxPtr box;
 
@@ -729,8 +657,8 @@ drmmode_crtc_prime_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 		xorg_list_for_each_entry(dirty, &screen->pixmap_dirty_list,
 					 ent) {
 			if (amdgpu_dirty_src_equals(dirty, drmmode_crtc->prime_scanout_pixmap)) {
-				dirty->slave_dst =
-					drmmode_crtc->scanout[scanout_id].pixmap;
+				dirty->secondary_dst =
+					drmmode_crtc->scanout[scanout_id];
 				break;
 			}
 		}
@@ -738,9 +666,9 @@ drmmode_crtc_prime_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 		if (!drmmode_crtc->tear_free) {
 			GCPtr gc = GetScratchGC(scrn->depth, screen);
 
-			ValidateGC(&drmmode_crtc->scanout[0].pixmap->drawable, gc);
-			gc->ops->CopyArea(&drmmode_crtc->scanout[1].pixmap->drawable,
-					  &drmmode_crtc->scanout[0].pixmap->drawable,
+			ValidateGC(&drmmode_crtc->scanout[0]->drawable, gc);
+			gc->ops->CopyArea(&drmmode_crtc->scanout[1]->drawable,
+					  &drmmode_crtc->scanout[0]->drawable,
 					  gc, 0, 0, mode->HDisplay, mode->VDisplay,
 					  0, 0);
 			FreeScratchGC(gc);
@@ -748,7 +676,7 @@ drmmode_crtc_prime_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 		}
 	}
 
-	*fb = amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap);
+	*fb = amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id]);
 	*x = *y = 0;
 	drmmode_crtc->scanout_id = scanout_id;
 }
@@ -771,9 +699,9 @@ drmmode_crtc_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 					    mode->HDisplay, mode->VDisplay);
 	}
 
-	if (drmmode_crtc->scanout[scanout_id].pixmap &&
+	if (drmmode_crtc->scanout[scanout_id] &&
 	    (!drmmode_crtc->tear_free ||
-	     drmmode_crtc->scanout[scanout_id ^ 1].pixmap)) {
+	     drmmode_crtc->scanout[scanout_id ^ 1])) {
 		BoxRec extents = { .x1 = 0, .y1 = 0,
 				   .x2 = scrn->virtualX, .y2 = scrn->virtualY };
 
@@ -787,7 +715,7 @@ drmmode_crtc_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 				       drmmode_crtc->scanout_damage);
 		}
 
-		*fb = amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap);
+		*fb = amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id]);
 		*x = *y = 0;
 
 		if (amdgpu_scanout_do_update(crtc, scanout_id,
@@ -1370,7 +1298,6 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 	Bool handle_deferred = FALSE;
 	unsigned scanout_id = 0;
-	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 	int saved_x, saved_y;
 	Rotation saved_rotation;
 	DisplayModeRec saved_mode;
@@ -1407,8 +1334,8 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		if (drmmode_crtc->prime_scanout_pixmap) {
 			drmmode_crtc_prime_scanout_update(crtc, mode, scanout_id,
 							  &fb, &x, &y);
-		} else if (drmmode_crtc->rotate.pixmap) {
-			fb = amdgpu_pixmap_get_fb(drmmode_crtc->rotate.pixmap);
+		} else if (drmmode_crtc->rotate) {
+			fb = amdgpu_pixmap_get_fb(drmmode_crtc->rotate);
 			x = y = 0;
 
 		} else if (!pScreen->isGPU &&
@@ -1489,13 +1416,11 @@ done:
 	} else {
 		crtc->active = TRUE;
 
-		if (drmmode_crtc->scanout[scanout_id].pixmap &&
-		    fb != amdgpu_pixmap_get_fb(drmmode_crtc->
-					       scanout[scanout_id].pixmap)) {
+		if (drmmode_crtc->scanout[scanout_id] &&
+		    fb != amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id])) {
 			drmmode_crtc_scanout_free(crtc);
 		} else if (!drmmode_crtc->tear_free) {
-			drmmode_crtc_scanout_destroy(drmmode,
-						     &drmmode_crtc->scanout[1]);
+			drmmode_crtc_scanout_destroy(&drmmode_crtc->scanout[1]);
 		}
 	}
 
@@ -1784,7 +1709,7 @@ static void drmmode_show_cursor(xf86CrtcPtr crtc)
 		arg.hot_y = yhot;
 
 		ret = drmIoctl(pAMDGPUEnt->fd, DRM_IOCTL_MODE_CURSOR2, &arg);
-		if (ret == -EINVAL)
+		if (ret == -1 && errno == EINVAL)
 			use_set_cursor2 = FALSE;
 		else
 			return;
@@ -1819,7 +1744,7 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 					    height);
 	}
 
-	return drmmode_crtc->rotate.pixmap;
+	return drmmode_crtc->rotate;
 }
 
 static void
@@ -1827,9 +1752,8 @@ drmmode_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap,
 			    void *data)
 {
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
-	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 
-	drmmode_crtc_scanout_destroy(drmmode, &drmmode_crtc->rotate);
+	drmmode_crtc_scanout_destroy(&drmmode_crtc->rotate);
 }
 
 static void
@@ -1865,7 +1789,7 @@ static Bool drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
 
 	xorg_list_for_each_entry(dirty, &screen->pixmap_dirty_list, ent) {
 		if (amdgpu_dirty_src_equals(dirty, drmmode_crtc->prime_scanout_pixmap)) {
-			PixmapStopDirtyTracking(dirty->src, dirty->slave_dst);
+			PixmapStopDirtyTracking(dirty->src, dirty->secondary_dst);
 			break;
 		}
 	}
@@ -1893,16 +1817,16 @@ static Bool drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
 
 #ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
 	PixmapStartDirtyTracking(&ppix->drawable,
-				 drmmode_crtc->scanout[scanout_id].pixmap,
+				 drmmode_crtc->scanout[scanout_id],
 				 0, 0, 0, 0, RR_Rotate_0);
 #elif defined(HAS_DIRTYTRACKING_ROTATION)
-	PixmapStartDirtyTracking(ppix, drmmode_crtc->scanout[scanout_id].pixmap,
+	PixmapStartDirtyTracking(ppix, drmmode_crtc->scanout[scanout_id],
 				 0, 0, 0, 0, RR_Rotate_0);
 #elif defined(HAS_DIRTYTRACKING2)
-	PixmapStartDirtyTracking2(ppix, drmmode_crtc->scanout[scanout_id].pixmap,
+	PixmapStartDirtyTracking2(ppix, drmmode_crtc->scanout[scanout_id],
 				  0, 0, 0, 0);
 #else
-	PixmapStartDirtyTracking(ppix, drmmode_crtc->scanout[scanout_id].pixmap, 0, 0);
+	PixmapStartDirtyTracking(ppix, drmmode_crtc->scanout[scanout_id], 0, 0);
 #endif
 	return TRUE;
 }
@@ -2975,8 +2899,8 @@ static Bool drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
 	int i, pitch, old_width, old_height, old_pitch;
 	int cpp = info->pixel_bytes;
 	PixmapPtr ppix = screen->GetScreenPixmap(screen);
+	int hint = AMDGPU_CREATE_PIXMAP_SCANOUT;
 	void *fb_shadow;
-	int hint = 0;
 
 	if (scrn->virtualX == width && scrn->virtualY == height)
 		return TRUE;
@@ -2990,9 +2914,9 @@ static Bool drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
 	}
 
 	if (info->shadow_primary)
-		hint = AMDGPU_CREATE_PIXMAP_LINEAR | AMDGPU_CREATE_PIXMAP_GTT;
+		hint |= AMDGPU_CREATE_PIXMAP_LINEAR | AMDGPU_CREATE_PIXMAP_GTT;
 	else if (!info->use_glamor)
-		hint = AMDGPU_CREATE_PIXMAP_LINEAR;
+		hint |= AMDGPU_CREATE_PIXMAP_LINEAR;
 
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		   "Allocate new frame buffer %dx%d\n", width, height);
@@ -3432,7 +3356,7 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 	unsigned int crtcs_needed = 0;
 	unsigned int crtcs_got = 0;
 	drmModeResPtr mode_res;
-	char *bus_id_string, *provider_name;
+	char *provider_name;
 
 	xf86CrtcConfigInit(pScrn, &drmmode_xf86crtc_config_funcs);
 
@@ -3495,9 +3419,7 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 	/* workout clones */
 	drmmode_clones_init(pScrn, drmmode, mode_res);
 
-	bus_id_string = DRICreatePCIBusID(info->PciInfo);
-	XNFasprintf(&provider_name, "%s @ %s", pScrn->chipset, bus_id_string);
-	free(bus_id_string);
+	XNFasprintf(&provider_name, "%s @ %s", pScrn->chipset, pAMDGPUEnt->busid);
 	xf86ProviderSetup(pScrn, NULL, provider_name);
 	free(provider_name);
 
@@ -4127,7 +4049,7 @@ Bool amdgpu_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			}
 
 			drmmode_fb_reference(pAMDGPUEnt->fd, &flipdata->fb[crtc_id],
-					     amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap));
+					     amdgpu_pixmap_get_fb(drmmode_crtc->scanout[scanout_id]));
 			if (!flipdata->fb[crtc_id]) {
 				ErrorF("Failed to get FB for TearFree flip\n");
 				goto error;

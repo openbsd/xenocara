@@ -168,18 +168,18 @@ typedef enum {
 } AMDGPUOpts;
 
 static inline ScreenPtr
-amdgpu_master_screen(ScreenPtr screen)
+amdgpu_primary_screen(ScreenPtr screen)
 {
-	if (screen->current_master)
-		return screen->current_master;
+	if (screen->current_primary)
+		return screen->current_primary;
 
 	return screen;
 }
 
 static inline ScreenPtr
-amdgpu_dirty_master(PixmapDirtyUpdatePtr dirty)
+amdgpu_dirty_primary(PixmapDirtyUpdatePtr dirty)
 {
-	return amdgpu_master_screen(dirty->slave_dst->drawable.pScreen);
+	return amdgpu_primary_screen(dirty->secondary_dst->drawable.pScreen);
 }
 
 static inline DrawablePtr
@@ -248,8 +248,6 @@ extern DevScreenPrivateKeyRec amdgpu_device_private_key;
 
 typedef struct {
 	EntityInfoPtr pEnt;
-	struct pci_device *PciInfo;
-	int Chipset;
 	uint32_t family;
 	struct gbm_device *gbm;
 

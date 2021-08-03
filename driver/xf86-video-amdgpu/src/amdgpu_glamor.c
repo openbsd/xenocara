@@ -201,14 +201,16 @@ amdgpu_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 			    unsigned usage)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	PixmapFormatPtr format = xf86GetPixFormat(scrn, depth);
 	AMDGPUInfoPtr info = AMDGPUPTR(scrn);
 	struct amdgpu_pixmap *priv;
 	PixmapPtr pixmap, new_pixmap = NULL;
 
-	if (!xf86GetPixFormat(scrn, depth))
+	if (!format)
 		return NULL;
 
-	if (!AMDGPU_CREATE_PIXMAP_SHARED(usage)) {
+	if (!(usage & AMDGPU_CREATE_PIXMAP_SCANOUT) &&
+	    !AMDGPU_CREATE_PIXMAP_SHARED(usage)) {
 		if (info->shadow_primary) {
 			if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP)
 				return fbCreatePixmap(screen, w, h, depth, usage);
@@ -216,9 +218,15 @@ amdgpu_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 			usage |= AMDGPU_CREATE_PIXMAP_LINEAR |
 				 AMDGPU_CREATE_PIXMAP_GTT;
 		} else if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP) {
-			pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
-			if (pixmap)
-				return pixmap;
+			if (w < scrn->virtualX || w > scrn->displayWidth ||
+			    h != scrn->virtualY ||
+			    format->bitsPerPixel != scrn->bitsPerPixel) {
+				pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
+				if (pixmap)
+					return pixmap;
+			} else {
+				usage |= AMDGPU_CREATE_PIXMAP_SCANOUT;
+			}
 		}
 	}
 
@@ -342,7 +350,7 @@ amdgpu_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap)
 
 
 static Bool
-amdgpu_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr slave,
+amdgpu_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr secondary,
 				   void **handle_p)
 {
 	ScreenPtr screen = pixmap->drawable.pScreen;

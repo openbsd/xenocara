@@ -81,7 +81,7 @@ on. If this option is set, the default value of the property is 'on' or 'off'
 accordingly. If this option isn't set, the default value of the property is
 .B auto,
 which means that TearFree is on for rotated outputs, outputs with RandR
-transforms applied and for RandR 1.4 slave outputs, otherwise off.
+transforms applied and for RandR 1.4 secondary outputs, otherwise off.
 .TP
 .BI "Option \*qVariableRefresh\*q \*q" boolean \*q
 Enables support for enabling variable refresh on the Screen's CRTCs

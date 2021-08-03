@@ -96,12 +96,6 @@ enum drmmode_scanout_status {
 	DRMMODE_SCANOUT_VBLANK_FAILED = 1u << 1,
 };
 
-struct drmmode_scanout {
-	struct amdgpu_buffer *bo;
-	PixmapPtr pixmap;
-	int width, height;
-};
-
 typedef struct {
 	drmmode_ptr drmmode;
 	drmModeCrtcPtr mode_crtc;
@@ -115,8 +109,8 @@ typedef struct {
 	unsigned cursor_id;
 	struct amdgpu_buffer *cursor_buffer[2];
 
-	struct drmmode_scanout rotate;
-	struct drmmode_scanout scanout[2];
+	PixmapPtr rotate;
+	PixmapPtr scanout[2];
 	DamagePtr scanout_damage;
 	Bool ignore_damage;
 	RegionRec scanout_last_region;
@@ -202,9 +196,9 @@ drmmode_crtc_can_flip(xf86CrtcPtr crtc)
 
 	return crtc->enabled &&
 		drmmode_crtc->dpms_mode == DPMSModeOn &&
-		!drmmode_crtc->rotate.bo &&
+		!drmmode_crtc->rotate &&
 		(drmmode_crtc->tear_free ||
-		 !drmmode_crtc->scanout[drmmode_crtc->scanout_id].bo);
+		 !drmmode_crtc->scanout[drmmode_crtc->scanout_id]);
 }
 
 
@@ -240,6 +234,17 @@ drmmode_fb_reference_loc(int drm_fd, struct drmmode_fb **old, struct drmmode_fb 
 	drmmode_fb_reference_loc(fd, old, new, __func__, __LINE__)
 
 
+static inline void
+drmmode_crtc_scanout_destroy(PixmapPtr *scanout)
+{
+	if (!*scanout)
+		return;
+
+	(*scanout)->drawable.pScreen->DestroyPixmap(*scanout);
+	(*scanout) = NULL;
+}
+
+
 extern int drmmode_page_flip_target_absolute(AMDGPUEntPtr pAMDGPUEnt,
 					     drmmode_crtc_private_ptr drmmode_crtc,
 					     int fb_id, uint32_t flags,
@@ -259,12 +264,7 @@ extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode,
 extern void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
 
-extern void drmmode_crtc_scanout_destroy(drmmode_ptr drmmode,
-					 struct drmmode_scanout *scanout);
 void drmmode_crtc_scanout_free(xf86CrtcPtr crtc);
-PixmapPtr drmmode_crtc_scanout_create(xf86CrtcPtr crtc,
-				      struct drmmode_scanout *scanout,
-				      int width, int height);
 
 extern void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 extern void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode);

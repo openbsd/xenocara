@@ -9,7 +9,7 @@ Please
 to the Xorg bugzilla.
 
 The
-[master development code repository](https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu)
+[main development code repository](https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu)
 can be found at FreeDesktop Gitlab.
 
 Please use merge requests for patch submission.

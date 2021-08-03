@@ -69,6 +69,7 @@ typedef struct {
 	ScrnInfoPtr scrn[6];
 	struct xf86_platform_device *platform_dev;
 	char *render_node;
+	char *busid;
 } AMDGPUEntRec, *AMDGPUEntPtr;
 
 extern void amdgpu_kernel_close_fd(AMDGPUEntPtr pAMDGPUEnt);
