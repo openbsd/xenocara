@@ -74,7 +74,7 @@ typedef struct {
 
 #ifndef OLDXAW
     /* new resources */
-    String menu_name;			/* name of nested sub menu or NULL */
+    char * menu_name;			/* name of nested sub menu or NULL */
     XtPointer pad[4];	/* for future use and keep binary compatability */
 #endif
 } SmeBSBPart;

@@ -170,8 +170,8 @@ XawSmeClassPartInitialize(WidgetClass cclass)
  */
 /*ARGSUSED*/
 static void
-XawSmeInitialize(Widget request, Widget cnew,
-		 ArgList args, Cardinal *num_args)
+XawSmeInitialize(Widget request _X_UNUSED, Widget cnew,
+		 ArgList args _X_UNUSED, Cardinal *num_args _X_UNUSED)
 {
     SmeObject entry = (SmeObject)cnew;
 
@@ -190,7 +190,7 @@ XawSmeInitialize(Widget request, Widget cnew,
  */
 /*ARGSUSED*/
 static void
-Highlight(Widget w)
+Highlight(Widget w _X_UNUSED)
 {
 }
 
@@ -206,7 +206,7 @@ Highlight(Widget w)
  */
 /*ARGSUSED*/
 static void
-Unhighlight(Widget w)
+Unhighlight(Widget w _X_UNUSED)
 {
 }
 

@@ -53,7 +53,7 @@ host_triplet = @host@
 @BUILD_XAW6_TRUE@am__append_1 = xaw6.pc
 @BUILD_XAW7_TRUE@am__append_2 = xaw7.pc
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/xaw6.pc.in $(srcdir)/xaw7.pc.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
@@ -314,6 +314,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -331,6 +332,7 @@ pkgconfig_DATA = $(am__append_1) $(am__append_2)
 @BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@DEFAULT_LIB = libXaw.7.@LIBEXT@
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 EXTRA_DIST = \
+	README.md	   \
         autogen.sh	   \
 	old-doc/Changelog  \
 	old-doc/CHANGES

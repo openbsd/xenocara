@@ -1,8 +1,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXaw], [1.0.13],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXaw])
+AC_INIT([libXaw], [1.0.14],
+        [https://gitlab.freedesktop.org/xorg/lib/libXaw/issues], [libXaw])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -106,10 +106,19 @@ case $host_os in
 	;;
 esac
 
+AC_MSG_CHECKING(if C const-support is wanted)
+AC_ARG_ENABLE(const, AS_HELP_STRING([--disable-const], [Disable const-support]),
+	USE_CONST="$enableval", USE_CONST="yes")
+AC_MSG_RESULT($USE_CONST)
+if test "x$USE_CONST" = "xyes" ; then
+	AC_DEFINE(_CONST_X_STRING, 1, [Define to 1 to use standard C const feature.])
+fi
+
 AC_CONFIG_FILES([Makefile
 		include/Makefile
 		man/Makefile
 		specs/Makefile
+		specs/libXaw.ent
 		src/Makefile])
 
 if test "x$build_v6" = xyes; then

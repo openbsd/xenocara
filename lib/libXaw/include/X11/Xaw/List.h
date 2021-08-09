@@ -167,7 +167,7 @@ _XFUNCPROTOBEGIN
 void XawListChange
 (
  Widget			w,
- String			*list,
+ _Xconst char		**list,
  int			nitems,
  int			longest,
 #if NeedWidePrototypes

@@ -90,3 +90,6 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Define to 1 to use standard C const feature. */
+#undef _CONST_X_STRING

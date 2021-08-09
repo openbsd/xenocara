@@ -355,6 +355,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -419,18 +420,18 @@ COMMON_SOURCES = \
 	XawI18n.c \
 	XawI18n.h
 
-COMMON_CFLAGS = \
+AM_CFLAGS = \
 	$(CWARNFLAGS)
 
-COMMON_CPPFLAGS = \
+AM_CPPFLAGS = \
 	-I${top_srcdir}/include \
 	-DPROJECT_ROOT=\"$(prefix)\"
 
 @BUILD_XAW6_TRUE@libXaw6_la_CPPFLAGS = \
-@BUILD_XAW6_TRUE@	$(COMMON_CPPFLAGS)
+@BUILD_XAW6_TRUE@	$(AM_CPPFLAGS)
 
 @BUILD_XAW6_TRUE@libXaw6_la_CFLAGS = \
-@BUILD_XAW6_TRUE@	$(COMMON_CFLAGS)		\
+@BUILD_XAW6_TRUE@	$(AM_CFLAGS)			\
 @BUILD_XAW6_TRUE@	-DOLDXAW			\
 @BUILD_XAW6_TRUE@	$(XAW6_CFLAGS)
 
@@ -440,15 +441,15 @@ COMMON_CPPFLAGS = \
 @BUILD_XAW6_TRUE@libXaw6_la_LDFLAGS = -version-info 6:1:0 -no-undefined
 @BUILD_XAW6_TRUE@libXaw6_la_LIBADD = $(XAW6_LIBS)
 @BUILD_XAW7_TRUE@libXaw7_la_CPPFLAGS = \
-@BUILD_XAW7_TRUE@	$(COMMON_CPPFLAGS)
+@BUILD_XAW7_TRUE@	$(AM_CPPFLAGS)
 
 @BUILD_XAW7_TRUE@libXaw7_la_CFLAGS = \
-@BUILD_XAW7_TRUE@	$(COMMON_CFLAGS)		\
+@BUILD_XAW7_TRUE@	$(AM_CFLAGS)			\
 @BUILD_XAW7_TRUE@	-DXAW7				\
 @BUILD_XAW7_TRUE@	$(XAW7_CFLAGS)
 
 @BUILD_XAW7_TRUE@libXaw7_la_SOURCES = \
-@BUILD_XAW7_TRUE@	$(COMMON_SOURCES) \
+@BUILD_XAW7_TRUE@	$(COMMON_SOURCES)		\
 @BUILD_XAW7_TRUE@	Tip.c
 
 @BUILD_XAW7_TRUE@libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined

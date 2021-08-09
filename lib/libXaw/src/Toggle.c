@@ -90,7 +90,7 @@ static XtResource resources[] = {
     sizeof(Boolean),
     offset(command.set),
     XtRString,
-    "off"
+    (XtPointer)"off"
   },
   {
     XtNradioGroup,
@@ -225,7 +225,7 @@ XawToggleClassInitialize(void)
 /*ARGSUSED*/
 static void
 XawToggleInitialize(Widget request, Widget cnew,
-		    ArgList args, Cardinal *num_args)
+		    ArgList args _X_UNUSED, Cardinal *num_args _X_UNUSED)
 {
     ToggleWidget tw = (ToggleWidget)cnew;
     ToggleWidget tw_req = (ToggleWidget)request;
@@ -259,7 +259,7 @@ XawToggleInitialize(Widget request, Widget cnew,
 
 /*ARGSUSED*/
 static void
-ToggleSet(Widget w, XEvent *event, String *params, Cardinal *num_params)
+ToggleSet(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     ToggleWidgetClass cclass = (ToggleWidgetClass)w->core.widget_class;
 
@@ -281,7 +281,7 @@ Toggle(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /*ARGSUSED*/
 static void
-Notify(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Notify(Widget w, XEvent *event _X_UNUSED, String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     ToggleWidget tw = (ToggleWidget)w;
     long antilint = tw->command.set;
@@ -292,7 +292,7 @@ Notify(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /*ARGSUSED*/
 static Boolean
 XawToggleSetValues(Widget current, Widget request, Widget cnew,
-		   ArgList args, Cardinal *num_args)
+		   ArgList args _X_UNUSED, Cardinal *num_args _X_UNUSED)
 {
     ToggleWidget oldtw = (ToggleWidget)current;
     ToggleWidget tw = (ToggleWidget)cnew;
@@ -326,7 +326,7 @@ XawToggleSetValues(Widget current, Widget request, Widget cnew,
  */
 /*ARGSUSED*/
 static void
-XawToggleDestroy(Widget w, XtPointer temp1, XtPointer temp2)
+XawToggleDestroy(Widget w, XtPointer temp1 _X_UNUSED, XtPointer temp2 _X_UNUSED)
 {
     RemoveFromRadioGroup(w);
 }
