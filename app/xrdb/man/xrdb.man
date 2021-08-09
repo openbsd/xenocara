@@ -251,6 +251,10 @@ option.  The
 option can be used to merge the contents of properties back into the input
 resource file without damaging preprocessor commands.
 .TP 8
+.B \-get \fIname\fP
+This option indicates that the current content of the property matching
+\fIname\fP should be printed onto the standard output.
+.TP 8
 .B \-load
 This option indicates that the input should be loaded as the new value
 of the specified properties, replacing whatever was there (i.e.

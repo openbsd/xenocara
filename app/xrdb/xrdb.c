@@ -48,6 +48,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
 #include <X11/Xmu/SysUtil.h>
+#include <X11/Xresource.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
@@ -84,6 +85,7 @@
 #define OPLOAD 4
 #define OPMERGE 5
 #define OPOVERRIDE 6
+#define OPGET 7
 
 #define BACKUP_SUFFIX ".bak"    /* for editing */
 
@@ -126,6 +128,7 @@ static char *editFile = NULL;
 static const char *cpp_program = NULL;
 static const char * const cpp_locations[] = { CPP };
 static const char *backup_suffix = BACKUP_SUFFIX;
+static const char *resource_name = NULL;
 static Bool dont_execute = False;
 static Bool show_cpp = False;
 static String defines;
@@ -745,6 +748,8 @@ EditFile(Entries *new, FILE *in, FILE *out)
             buff[0] = '\0';
             if (!fgets(buff, BUFSIZ, in))
                 goto cleanup;
+            if (buff[0] == '\0')
+                continue;
             AppendToBuffer(&b, buff, strlen(buff));
             c = &b.buff[b.used - 1];
             if ((*(c--) == '\n') && (b.used == 1 || *c != '\\'))
@@ -784,6 +789,7 @@ Syntax(const char *errmsg)
             " -nocpp              do not use a preprocessor\n"
             " -E                  show preprocessor command & processed input file\n"
             " -query              query resources\n"
+            " -get name           get the content of a resource\n"
             " -load               load resources from file [default]\n"
             " -override           add in resources from file\n"
             " -merge              merge resources from file & sort\n"
@@ -982,6 +988,13 @@ main(int argc, char *argv[])
                 oper = OPQUERY;
                 continue;
             }
+            else if (isabbreviation("-get", arg, 2)) {
+                oper = OPGET;
+                if (++i >= argc)
+                    Syntax("-get requires an argument");
+                resource_name = argv[i];
+                continue;
+            }
             else if (isabbreviation("-load", arg, 2)) {
                 oper = OPLOAD;
                 continue;
@@ -1055,7 +1068,7 @@ main(int argc, char *argv[])
             }
             else if (!strcmp("-undef", arg)) {
                 if (num_cmd_defines < MAX_CMD_DEFINES) {
-                    cmd_defines[num_cmd_defines++] = "-undef";
+                    cmd_defines[num_cmd_defines++] = (char *) "-undef";
                 }
                 else {
                     fatal("%s: Too many cpp arguments\n", ProgramName);
@@ -1282,7 +1295,19 @@ Process(int scrno, Bool doScreen, Bool execute)
     }
     else if (oper == OPQUERY) {
         if (xdefs)
-            printf("%s", xdefs);        /* fputs broken in SunOS 4.0 */
+            fputs(xdefs, stdout);
+    }
+    else if (oper == OPGET) {
+        if (xdefs && resource_name != NULL) {
+            char *type = NULL;
+            XrmValue value;
+            XrmDatabase xrdb = XrmGetStringDatabase(xdefs);
+            Bool found = XrmGetResource(xrdb, resource_name,
+                                        resource_name, &type, &value);
+            if (found == True && value.addr != NULL)
+                printf("%s\n", value.addr);
+            XrmDestroyDatabase(xrdb);
+        }
     }
     else if (oper == OPREMOVE) {
         if (xdefs)
@@ -1454,7 +1479,7 @@ Process(int scrno, Bool doScreen, Bool execute)
     }
     if (execute)
         FreeEntries(&newDB);
-    if (doScreen && xdefs)
+    if (doScreen)
         XFree(xdefs);
 }
 

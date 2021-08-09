@@ -1,3 +1,65 @@
+commit 9c3a19e3f13252c6ac5b02ce703531b2bf9f7463
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Aug 9 19:31:28 2021 +0200
+
+    xrdb 1.2.1
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 4d3c11bee8c81abbc033a4731648a88db14508e1
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Jun 26 23:11:25 2021 +0200
+
+    fix assignment discards ‘const’ qualifier
+    
+    xrdb.c: In function ‘main’:
+    xrdb.c:1071:52: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+                         cmd_defines[num_cmd_defines++] = "-undef";
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 7d69c7f52b83a9b732325a16603b22e6c2f15d93
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Jun 26 23:06:23 2021 +0200
+
+    XFree() can handle NULL arg
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 2c57bc85c4cea7a159985a446e1f5f61a4c0f139
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Jun 26 22:55:46 2021 +0200
+
+    Add actual querying capabilities
+    
+    The world is littered with broken grep commands because `xrdb -query`
+    can only dump the database and doesn't implement this simple search
+    feature. This patch adds a new `-get` option to search and print the
+    content of a single property by name.
+    
+    Signed-off-by: Michele Guerini Rocco <rnhm...@inventati.org>
+    Reviewed-by:  Walter Harms <wharms@bfs.de>
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 9c51a2829f65ea03ef87376ca9561037d9262f6d
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Jun 7 19:56:43 2020 +0200
+
+    Fix out of boundary read.
+    
+    If a binary file which starts with 0x00 is edited, xrdb performs
+    an off-by-one read outside of its buffer.
+    
+    The fix is simple: Do not try to append an empty string to buffer,
+    which would be a no-op anyway.
+    
+    Proof of Concept (compile with -fsanitize=address):
+    
+    $ dd if=/dev/zero bs=1 count=1 of=poc.txt
+    $ xrdb -edit poc.txt
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
 commit c281cadb06657c2a15a52598be6cf9c30fad1b12
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 19 15:43:17 2019 -0800
