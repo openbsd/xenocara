@@ -22,17 +22,27 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT([font-misc-ethiopic], [1.0.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+AC_INIT([font-misc-ethiopic], [1.0.4],
+        [https://gitlab.freedesktop.org/xorg/font/misc-ethiopic/issues],
         [font-misc-ethiopic])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
 	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.3)
 XORG_DEFAULT_OPTIONS
+
+AC_ARG_ENABLE(truetype-install, 
+		AS_HELP_STRING([--disable-truetype-install],
+		[Disable install of truetype fonts (default: enabled)]),
+		[install_ttf=$enableval], [install_ttf=yes])
+AM_CONDITIONAL(INSTALL_TTF, [test "x$install_ttf" = xyes])
+AC_ARG_ENABLE(opentype-install, 
+		AS_HELP_STRING([--disable-opentype-install],
+		[Disable install of opentype fonts (default: enabled)]),
+		[install_otf=$enableval], [install_otf=yes])
+AM_CONDITIONAL(INSTALL_OTF, [test "x$install_otf" = xyes])
 
 AC_PROG_INSTALL
 
@@ -45,4 +55,5 @@ XORG_FONTSUBDIR([TTFFONTDIR], [ttf-fontdir], [TTF])
 XORG_FONTSUBDIR([OTFFONTDIR], [otf-fontdir], [OTF])
 XORG_FONT_SCALED_UTILS
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

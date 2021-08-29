@@ -1,5 +1,115 @@
+commit 3bc40d4997763e61253c52fcb1d9cd1093c9479f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 6 14:23:45 2020 -0700
+
+    font-misc-ethiopic 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a74da8becde2359a4350e057b5250d5e04f3e6e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:27:06 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d3d5b014994ad791330704ca469a4a25fba9d63
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 18:40:44 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8699d54a175d0e47fa4e0bbf42b4959c0ab1ebc9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 19af834a60e0b690e08b6f958ec376ee14ba89cc
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1a3ff71b48cca4aae165584c72fe65755655aebd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 30f5c5314e33f90fa0da2cfb97f7b86cdebdf6c6
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Sep 12 10:48:42 2016 +0200
+
+    Typo: font.dir -> fonts.dir
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 69005112f774b4aceddc0bbeb411319a249ac305
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0aa78788104883b08fedac4edf154041109bbb3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1811017d61a0400351c5bcdbd195d1031945f83
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 28 08:08:55 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bf0b2812b020cd338cba2e235132b97021a6f9e3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 17:50:35 2011 +0200
+
+    install: Make fonttypes to be installed configurable
+    
+    This package contains two font versions: TrueType and OpenType.
+    One may want to install only one of them and (re)generate font.scale
+    for this introduce two new config options:
+      --disable-opentype-install and --disable-truetype-install.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
 commit dc0fe3761a074b5884bec91edde1babdf45cc95b
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Mon Nov 15 23:42:52 2010 +0100
 
     font-misc-ethiopic 1.0.3

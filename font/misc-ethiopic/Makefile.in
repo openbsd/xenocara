@@ -72,9 +72,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure COPYING \
-	ChangeLog INSTALL config.guess config.sub install-sh missing
+	ChangeLog INSTALL compile config.guess config.sub install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -267,6 +268,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -640,14 +642,14 @@ uninstall-am: uninstall-otffontDATA uninstall-ttffontDATA
 
 
 install-data-hook:
-	@rm -f $(DESTDIR)$(ttffontdir)/fonts.scale
-	$(MKFONTSCALE) $(DESTDIR)$(ttffontdir)
-	@rm -f $(DESTDIR)$(ttffontdir)/fonts.dir
-	$(MKFONTDIR) $(DESTDIR)$(ttffontdir)
-	@rm -f $(DESTDIR)$(otffontdir)/fonts.scale
-	$(MKFONTSCALE) $(DESTDIR)$(otffontdir)
-	@rm -f $(DESTDIR)$(otffontdir)/fonts.dir
-	$(MKFONTDIR) $(DESTDIR)$(otffontdir)
+@INSTALL_TTF_TRUE@	@rm -f $(DESTDIR)$(ttffontdir)/fonts.scale
+@INSTALL_TTF_TRUE@	$(MKFONTSCALE) $(DESTDIR)$(ttffontdir)
+@INSTALL_TTF_TRUE@	@rm -f $(DESTDIR)$(ttffontdir)/fonts.dir
+@INSTALL_TTF_TRUE@	$(MKFONTDIR) $(DESTDIR)$(ttffontdir)
+@INSTALL_OTF_TRUE@	@rm -f $(DESTDIR)$(otffontdir)/fonts.scale
+@INSTALL_OTF_TRUE@	$(MKFONTSCALE) $(DESTDIR)$(otffontdir)
+@INSTALL_OTF_TRUE@	@rm -f $(DESTDIR)$(otffontdir)/fonts.dir
+@INSTALL_OTF_TRUE@	$(MKFONTDIR) $(DESTDIR)$(otffontdir)
 	@RUN_FCCACHE@
 
 distuninstallcheck:
