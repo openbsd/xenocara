@@ -22,11 +22,10 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT([font-alias], [1.0.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+AC_INIT([font-alias], [1.0.4],
+        [https://gitlab.freedesktop.org/xorg/font/alias/issues],
         [font-alias])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -36,6 +35,11 @@ XORG_DEFAULT_OPTIONS
 
 AC_PROG_INSTALL
 
+# Require X.Org's font util macros 1.2 or later
+m4_ifndef([XORG_FONT_MACROS_VERSION],
+	  [m4_fatal([must install X.Org font-util 1.2 or later before running autoconf/autogen])])
+XORG_FONT_MACROS_VERSION(1.2)
+
 XORG_FONTROOTDIR
 
 AC_ARG_WITH(top-fontdir, AC_HELP_STRING([--with-top-fontdir=<pathname>],
@@ -43,8 +47,9 @@ AC_ARG_WITH(top-fontdir, AC_HELP_STRING([--with-top-fontdir=<pathname>],
 	[AC_MSG_ERROR([--with-top-fontdir is obsolete, use --with-fontrootdir instead])])
 
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
            100dpi/Makefile
            75dpi/Makefile
            cyrillic/Makefile
            misc/Makefile])
+AC_OUTPUT
