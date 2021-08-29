@@ -238,66 +238,65 @@ fontMetrics(FontPtr font)
 
     if (count) font->metrics.awidth = sumAwidth / count;
 
-    font->metrics.height = TWO_SIXTEENTH;
+    font->metrics.size = TWO_SIXTEENTH;
 
     if(font->pxMetrics.size == UNDEF) {
 	font->pxMetrics.size = font->pxMetrics.height;
-	font->metrics.size = font->metrics.height;
     }
 
-    font->metrics.size = font->pxMetrics.size
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+    font->metrics.height = font->pxMetrics.height
+	* font->metrics.size / font->pxMetrics.size;
 
     if(font->pxMetrics.ascent == UNDEF) {
 	font->metrics.ascent = font->metrics.maxY;
 	font->pxMetrics.ascent =
 	    font->metrics.ascent
-	    * font->pxMetrics.height / TWO_SIXTEENTH;
+	    * font->pxMetrics.size / font->metrics.size;
     }
     else
 	font->metrics.ascent =
 	    font->pxMetrics.ascent
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
 
     if(font->pxMetrics.descent == UNDEF) {
 	font->metrics.descent = - font->metrics.minY;
 	font->pxMetrics.descent =
 	    font->metrics.descent
-	    * font->pxMetrics.height / TWO_SIXTEENTH;
+	    * font->pxMetrics.size / font->metrics.size;
     }
     else
 	font->metrics.descent =
 	    font->pxMetrics.descent
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
 
     if(font->pxMetrics.capHeight == UNDEF) {
 	if(glyphMetrics(font, 'X', NULL, NULL, NULL, NULL, &font->metrics.capHeight) != 1)
 	    font->metrics.capHeight = font->metrics.ascent;
 	font->pxMetrics.capHeight =
-	    font->metrics.capHeight * font->pxMetrics.height / TWO_SIXTEENTH;
+	    font->metrics.capHeight * font->pxMetrics.size / font->metrics.size;
     }
     else
 	font->metrics.capHeight =
 	    font->pxMetrics.capHeight
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
 
     if(font->pxMetrics.xHeight == UNDEF) {
 	if(glyphMetrics(font, 'x', NULL, NULL, NULL, NULL, &font->metrics.xHeight) != 1)
 	    font->metrics.xHeight = font->metrics.capHeight * 2 / 3;
 	font->pxMetrics.xHeight =
-	    font->metrics.xHeight * font->pxMetrics.height / TWO_SIXTEENTH;
+	    font->metrics.xHeight * font->pxMetrics.size / font->metrics.size;
     }
     else
 	font->metrics.xHeight =
 	    font->pxMetrics.xHeight
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
 
     if(font->pxMetrics.underlinePosition == UNDEF)
 	font->metrics.underlinePosition = - font->metrics.descent * 2;
     else {
 	font->metrics.underlinePosition =
 	    font->pxMetrics.underlinePosition
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
     }
 
     if(font->pxMetrics.underlineThickness == UNDEF)
@@ -306,12 +305,12 @@ fontMetrics(FontPtr font)
 	 * X Logical Font Description Conventions (xlfd.txt)
 	 * by also considering the font weight. */
 	font->metrics.underlineThickness =
-	    TWO_SIXTEENTH
-	    / (font->pxMetrics.height < 9 ? font->pxMetrics.height : 9);
+	    font->metrics.size
+	    / (font->pxMetrics.size < 9 ? font->pxMetrics.size : 9);
     else
 	font->metrics.underlineThickness =
 	    font->pxMetrics.underlineThickness
-	    * TWO_SIXTEENTH / font->pxMetrics.height;
+	    * font->metrics.size / font->pxMetrics.size;
 }
 
 int 
@@ -758,6 +757,10 @@ writeEBLC(FILE* out, FontPtr font)
             int offset;
 
             location = ftell(out);
+            if (location == -1) {
+                perror("Couldn't ftell");
+                return -1;
+            }
             rc = fseek(out, table->location + 4, SEEK_SET);
             if(rc != 0) {
                 perror("Couldn't seek");

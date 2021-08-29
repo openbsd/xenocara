@@ -1,6 +1,6 @@
 
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT(fonttosfnt,[1.2.1], [https://gitlab.freedesktop.org/xorg/app/fonttosfnt/issues],fonttosfnt)
+AC_INIT(fonttosfnt,[1.2.2], [https://gitlab.freedesktop.org/xorg/app/fonttosfnt/issues],fonttosfnt)
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

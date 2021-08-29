@@ -1,3 +1,25 @@
+commit 2726947ea34653a90f89163849887c11179b2d6d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 15 10:33:54 2021 +1000
+
+    Bump to 1.2.2
+
+commit 9ea3677ba344c7ebd47f8078d11f69d117b9541e
+Author: Christopher Zimmermann <madroach@gmerlin.de>
+Date:   Mon Oct 26 12:17:45 2020 +0100
+
+    1em is font size, not height
+
+commit 49524b5db4867b5e896ed299fd66b390e68f1ffc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 25 09:50:45 2021 +1000
+
+    Fail if ftell fails
+    
+    Fixes a coverity warning: ftell may return -1 on error which we then pass into
+    fseek later. We properly fail there anyway, so this change is unlikely to have
+    any real effect.
+
 commit 33f944705c6c42e1b52f6ec62131d31f737c638f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Dec 16 15:14:11 2020 +1000
