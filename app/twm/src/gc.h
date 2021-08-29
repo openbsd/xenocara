@@ -49,7 +49,6 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-
 /**********************************************************************
  *
  * GC related externs
@@ -61,6 +60,6 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _GC_
 #define _GC_
 
-extern void CreateGCs( void );
+extern void CreateGCs(void);
 
-#endif /* _GC_ */
+#endif                          /* _GC_ */

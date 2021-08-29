@@ -1,3 +1,307 @@
+commit c2859ef3eb3b9ab2747d74c7a5d0235f8622d23e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jun 14 16:54:53 2020 -0700
+
+    twm 1.0.11
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit f320e1bb447c01fc3e42ae3e350c69862b8795b8
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jun 14 16:54:42 2020 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit c5df45a0721c75788cbdfe89992fdc97f1d47c34
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 15:53:12 2019 -0500
+
+    an error in the action for warp-to-ring would produce two error messages
+    because the case lacked a break-statement
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 35f696e8c51b3fa6b8f6f2e8baa038ae8f77bc2d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 15:50:54 2019 -0500
+
+    strict gcc-warning fixes, no object-change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fc3c537836adbe209ab98e08b345874f522027cc
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 15:48:02 2019 -0500
+
+    whitespace-fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit eb98aefe4702310474ed11aefd3d50c4520ad0cd
+Merge: 077a496 f973b77
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 05:54:50 2019 -0500
+
+    Merge remote-tracking branch 'upstream/master'
+
+commit f973b774e8b1732afbe5a41543a2c7d556845c5d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 05:48:34 2019 -0500
+
+    Formatted most of the C files using "twm-indent", part of cindent at
+            https://invisible-island.net/cindent/
+    That is essentially a script which adds typedefs to the x-indent.sh script.
+    No object-code changed in this reformatting.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 077a496c38fc993d7691ce5aab1e9c2b4aee4b02
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 23 05:48:34 2019 -0500
+
+    Formatted most of the C files using "twm-indent", part of cindent at
+            https://invisible-island.net/cindent/
+    That is essentially a script which adds typedefs to the x-indent.sh script.
+    No object-code changed in this reformatting.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit e2a533d16e047af1c5db19aa9340414b33061d2d
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Fri Sep 13 13:01:00 2019 +0300
+
+    Correct system.twmrc location.
+
+commit 2e0923ba703d040160bac1deb05d5d6d4cbd62aa
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 20:43:14 2019 -0400
+
+    bump minor version for issue #2
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 98ff71aff13d9e35bb2436a15ea3fd38ea2fffa4
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 20:40:50 2019 -0400
+
+    issue 2: twm doesn't handle RandR screen size changes
+            patch submitted by Preston Crow
+            modified to check if xrandr development header/library is available
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9f3f818068ba54ab2b46142e73100ef10a0bda0b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 18:25:53 2019 -0400
+
+    bump minor version to reflect issues #4 and #7
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5e1798773d837eabaa70d0fff5762397f540ee00
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 17:06:02 2019 -0400
+
+    caddr_t used to be used in X code before XPointer was established; it's obsolete and less portable
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b09c794f975d4b11685ac31884b8a6fd73b1ff15
+Merge: 7545239 6b4b0fb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 16:59:53 2019 -0400
+
+    Merge branch 'master' into dickey
+
+commit 6b4b0fb50a75d9336a123899138cc479d6d9765d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 16:55:25 2019 -0400
+
+    issue 4: twm makes windows too wide
+            https://gitlab.freedesktop.org/xorg/app/twm/issues/4
+            patch submitted by Jes Bodi Klinke
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9cf220752302be2ac965cfefdd0a0c29b3db19e2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 05:04:37 2019 -0400
+
+    fix const-warnings by making a copy of the data
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a4659e5c49119bb3114ad18efffd945ec7bd5ba0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:40:55 2019 -0400
+
+    fix const-warnings in grammar using a non-const initializer
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 99bad1baa20fafb47aa07925b3960b003aa160df
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:34:18 2019 -0400
+
+    constify deftwmrc[], to fix gcc-stricter warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 43e36f1b95c40966c6e6e3ae4acd5c2974b1cc53
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:33:26 2019 -0400
+
+    gcc-stricter warnings, no object change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7545239de1666f9d1c2027ded3b3af053c1eb6f5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 05:04:37 2019 -0400
+
+    fix const-warnings by making a copy of the data
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 87281920e1d15d4dc5c50f79750ab9ff173c0e8d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:40:55 2019 -0400
+
+    fix const-warnings in grammar using a non-const initializer
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 58ec53e44bb2b00bc104324a0f32e19dcab2ad34
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:34:18 2019 -0400
+
+    constify deftwmrc[], to fix gcc-stricter warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 05814df9c0be77ff0168a22415e2282d093df5d5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 04:33:26 2019 -0400
+
+    gcc-stricter warnings, no object change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cb7840991612fbbe259bf07c53f34577c5b5c2b9
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 03:58:51 2019 -0400
+
+    ignore LOGS generated in test-builds
+
+commit 0c045ca14adb853932e39ae5c2d07f9008ab4ee8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 15 20:42:52 2019 -0400
+
+    cleanup manual page, using check-manpage (xterm)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c3ff775bfe4556ffbe920cbfbc860e471dfc7f07
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 15 19:58:35 2019 -0400
+
+    fix gcc-normal compiler warnings, no object change
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f7a9ead69089a862fbd9aab6995980d3ecd290bf
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 15 17:14:59 2019 -0400
+
+    issue 7: check if there are no fonts found for the fontset, and fallback to fixed in that case.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 55a26c49c8a976abb0ead8bd58da6260de61b739
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 31 12:43:04 2019 -0700
+
+    Make some char pointers const as necessary to clear some gcc warnings
+    
+    twm.c:544:20: warning: assignment discards ‘const’ qualifier from
+     pointer target type [-Wdiscarded-qualifiers]
+      Scr->iconmgr.name = "TWM";
+                        ^
+    twm.c:545:25: warning: assignment discards ‘const’ qualifier from
+     pointer target type [-Wdiscarded-qualifiers]
+      Scr->iconmgr.icon_name = "Icons";
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee3dcf350b5621d7965a8b8185a3dc534bcc46c7
+Author: Bryan Kadzban <github@kadzban.net>
+Date:   Sun Sep 11 15:20:13 2016 -0700
+
+    Read system.twmrc from where it got installed
+    
+    ${rcdir} is ${datadir}/X11/twm by default, but can be overridden when
+    running make.  If it is overridden, then the code should read from the
+    same place as where "make rcdir=FOO install" puts the file.
+    
+    (Obviously overriding rcdir= for "make install" requires overriding it
+    for "make" as well.  But at least this way it's possible to get it to
+    work.  :-) )
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3045f271739da5068b1744f0dc4848d8a5ef7d06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:58:08 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b78dccab895bb14f79b45d78ce70c4bcaf65738b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:52:05 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 777236e942ae85bcacfdc2e086944a42cfed5b45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 30 14:35:15 2018 -0700
+
+    If we can't find a colormap to replace, insert new one instead of leaking it
+    
+    Found by Oracle's Parfait 2.2 static analyzer:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer sc allocated with malloc(32)
+            at line 421 of src/util.c in function 'InsertRGBColormap'.
+              sc allocated at line 397 with malloc(32)
+              sc leaks when replace != 0 at line 405.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4512f268c689db62b46c88e813935c66eda14742
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 30 14:28:35 2018 -0700
+
+    When replacing a colormap, free old map, not new one
+    
+    Found by Oracle's Parfait 2.2 static analyzer:
+    
+    Error: Use after free
+       Use after free [use-after-free] (CWE 416):
+          Use after free of pointer Scr
+            at line 421 of src/util.c in function 'InsertRGBColormap'.
+            Invalid pointer accessible via global Scr at line 105 of src/twm.c
+              maps escapes to sc->maps at line 419 of src/util.c in function 'InsertRGBColormap'
+              maps freed with XFree at line 406
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ca032d147824861b2451c5b0ff715429f055cfe1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Mar 6 23:09:04 2018 -0800

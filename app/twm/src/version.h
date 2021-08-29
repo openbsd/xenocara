@@ -62,4 +62,4 @@ in this Software without prior written authorization from The Open Group.
 
 extern const char *Version;
 
-#endif /* _VERSION_ */
+#endif                          /* _VERSION_ */

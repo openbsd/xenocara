@@ -50,7 +50,11 @@ AC_PROG_LEX
 AC_CHECK_FUNCS([mkstemp])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(TWM, x11 xext xt xmu ice sm xproto >= 7.0.17)
+PKG_CHECK_MODULES([TWM], [x11 xext xt xmu ice sm xproto >= 7.0.17])
+PKG_CHECK_MODULES([XRANDR], [xrandr], [have_xrandr=yes], [have_xrandr=no])
+if test "$have_xrandr" = yes; then
+	AC_DEFINE([HAVE_XRANDR], [1], [Define to 1 if you have the xrandr headers/libraries])
+fi
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

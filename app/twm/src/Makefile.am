@@ -30,41 +30,41 @@ dist_rc_DATA = system.twmrc
 AM_CPPFLAGS =							\
 	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
 	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
-	-DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
+	-DSYSTEM_INIT_FILE=\"${rcdir}/system.twmrc\"
 
-AM_CFLAGS = $(TWM_CFLAGS)
-twm_LDADD = $(TWM_LIBS)
+AM_CFLAGS = $(TWM_CFLAGS) $(XRANDR_CFLAGS)
+twm_LDADD = $(TWM_LIBS)   $(XRANDR_LIBS)
 
 twm_SOURCES =		\
-        add_window.c	\
-        add_window.h	\
-        cursor.c	\
+	add_window.c	\
+	add_window.h	\
+	cursor.c	\
 	deftwmrc.c	\
-        events.c	\
-        events.h	\
-        gc.c		\
-        gc.h		\
-        iconmgr.c	\
-        iconmgr.h	\
-        icons.c		\
-        icons.h		\
-        list.c		\
-        list.h		\
-        menus.c		\
-        menus.h		\
-        parse.c		\
-        parse.h		\
-        resize.c	\
-        resize.h	\
-        screen.h	\
-        session.c	\
-        session.h	\
-        twm.c		\
-        twm.h		\
-        util.c		\
-        util.h		\
-        version.c	\
-        version.h	\
+	events.c	\
+	events.h	\
+	gc.c		\
+	gc.h		\
+	iconmgr.c	\
+	iconmgr.h	\
+	icons.c		\
+	icons.h		\
+	list.c		\
+	list.h		\
+	menus.c		\
+	menus.h		\
+	parse.c		\
+	parse.h		\
+	resize.c	\
+	resize.h	\
+	screen.h	\
+	session.c	\
+	session.h	\
+	twm.c		\
+	twm.h		\
+	util.c		\
+	util.h		\
+	version.c	\
+	version.h	\
 	gram.y		\
 	lex.l
 
@@ -77,8 +77,8 @@ deftwmrc.c:  system.twmrc
 	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ;	\
 	echo ' */' >>$@ ;							\
 	echo '' >>$@ ;								\
-	echo 'unsigned char *defTwmrc[] = {' >>$@ ;				\
+	echo 'const unsigned char *defTwmrc[] = {' >>$@ ;				\
 	$(SED) -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ;	\
-	echo '    (unsigned char *) 0 };' >>$@
+	echo '    (const unsigned char *) 0 };' >>$@
 
 EXTRA_DIST = deftwmrc.sed siconify.bm

@@ -78,8 +78,9 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xos.h>
 #include <X11/Xmu/CharSet.h>
 
-static char *Action = "";
-static char *Name = "";
+static char empty[1];
+static char *Action = empty;
+static char *Name = empty;
 static MenuRoot	*root, *pull = NULL;
 
 static MenuRoot *GetRoot ( const char *name, const char *fore, const char *back );
@@ -159,7 +160,7 @@ stmt		: error
 		| ZOOM number		{ if (Scr->FirstTime)
 					  {
 						Scr->DoZoom = TRUE;
-						Scr->ZoomCount = $2;
+						Scr->ZoomCount = (short)$2;
 					  }
 					}
 		| ZOOM			{ if (Scr->FirstTime)
@@ -193,7 +194,7 @@ stmt		: error
 						AddToMenu(root,"x",Action,
 							  NULL,$2,NULLSTR,NULLSTR);
 					  }
-					  Action = "";
+					  Action = empty;
 					  pull = NULL;
 					}
 		| string fullkey	{ GotKey($1, $2); }
@@ -259,7 +260,7 @@ stmt		: error
 						AddToMenu(root,"x",Action,
 							  NULL,$2, NULLSTR, NULLSTR);
 					  }
-					  Action = "";
+					  Action = empty;
 					  pull = NULL;
 					}
 		| WINDOW_FUNCTION action { Scr->WindowFunction.func = $2;
@@ -267,7 +268,7 @@ stmt		: error
 					   Scr->WindowFunction.item =
 						AddToMenu(root,"x",Action,
 							  NULL,$2, NULLSTR, NULLSTR);
-					   Action = "";
+					   Action = empty;
 					   pull = NULL;
 					}
 		| WARP_CURSOR		{ list = &Scr->WarpCursorL; }
@@ -567,9 +568,9 @@ function_entries: /* Empty */
 		| function_entries function_entry
 		;
 
-function_entry	: action		{ AddToMenu(root, "", Action, NULL, $1,
+function_entry	: action		{ AddToMenu(root, empty, Action, NULL, $1,
 						NULLSTR, NULLSTR);
-					  Action = "";
+					  Action = empty;
 					}
 		;
 
@@ -582,13 +583,13 @@ menu_entries	: /* Empty */
 
 menu_entry	: string action		{ AddToMenu(root, $1, Action, pull, $2,
 						NULLSTR, NULLSTR);
-					  Action = "";
+					  Action = empty;
 					  pull = NULL;
 					}
 		| string LP string COLON string RP action {
 					  AddToMenu(root, $1, Action, pull, $7,
 						$3, $5);
-					  Action = "";
+					  Action = empty;
 					  pull = NULL;
 					}
 		;
@@ -610,6 +611,7 @@ action		: FKEYWORD	{ $$ = $1; }
 						 Action);
 					$$ = F_NOP;
 				    }
+				    break;
 				  case F_WARPTOSCREEN:
 				    if (!CheckWarpScreenArg (Action)) {
 					twmrc_error_prefix();
@@ -707,6 +709,7 @@ RemoveDQuote(char *str)
 		    goto hex;
 		else
 		    --i;
+		/* FALLTHRU */
 	    case '1': case '2': case '3':
 	    case '4': case '5': case '6': case '7':
 		n = 0;
@@ -716,7 +719,7 @@ RemoveDQuote(char *str)
 		    n = (n<<3) + (*i++ - '0');
 		    count++;
 		}
-		*o = n;
+		*o = (char)n;
 		break;
 	    hex:
 	    case 'x':
@@ -733,7 +736,7 @@ RemoveDQuote(char *str)
 		    else
 			break;
 		}
-		*o = n;
+		*o = (char)n;
 		break;
 	    case '\n':
 		i++;	/* punt */
@@ -769,7 +772,7 @@ static MenuRoot *GetRoot(const char *name, const char* fore, const char *back)
 	Scr->FirstTime = TRUE;
 	GetColor(COLOR, &tmp->hi_fore, fore);
 	GetColor(COLOR, &tmp->hi_back, back);
-	Scr->FirstTime = save;
+	Scr->FirstTime = (short)save;
     }
 
     return tmp;
@@ -797,10 +800,10 @@ static void GotButton(int butt, int func)
 		    NULL, func, NULLSTR, NULLSTR);
 	}
     }
-    Action = "";
+    Action = empty;
     pull = NULL;
     cont = 0;
-    mods_used |= mods;
+    mods_used |= (unsigned)mods;
     mods = 0;
 }
 
@@ -816,10 +819,10 @@ static void GotKey(char *key, int func)
 	  break;
     }
 
-    Action = "";
+    Action = empty;
     pull = NULL;
     cont = 0;
-    mods_used |= mods;
+    mods_used |= (unsigned)mods;
     mods = 0;
 }
 
@@ -832,7 +835,7 @@ static void GotTitleButton (char *bitmapname, int func, Bool rightside)
 		 "unable to create %s titlebutton \"%s\"\n",
 		 rightside ? "right" : "left", bitmapname);
     }
-    Action = "";
+    Action = empty;
     pull = NULL;
 }
 

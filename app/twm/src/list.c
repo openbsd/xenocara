@@ -49,7 +49,6 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-
 /**********************************************************************
  *
  * TWM code to deal with the name lists for the NoTitle list and
@@ -65,8 +64,7 @@ in this Software without prior written authorization from The Open Group.
 #include "gram.h"
 #include "util.h"
 
-struct name_list_struct
-{
+struct name_list_struct {
     name_list *next;    /**< pointer to the next name */
     char *name;         /**< the name of the window */
     char *ptr;          /**< list dependent data */
@@ -75,34 +73,34 @@ struct name_list_struct
 /**
  * add a window name to the appropriate list.
  *
- *	If the list does not use the ptr value, a non-null value
- *	should be placed in it.  LookInList returns this ptr value
- *	and procedures calling LookInList will check for a non-null
- *	return value as an indication of success.
+ *      If the list does not use the ptr value, a non-null value
+ *      should be placed in it.  LookInList returns this ptr value
+ *      and procedures calling LookInList will check for a non-null
+ *      return value as an indication of success.
  *
  *  \param list  the address of the pointer to the head of a list
  *  \param name  a pointer to the name of the window
  *  \param ptr   pointer to list dependent data
  */
 void
-AddToList(name_list **list_head, char *name, char *ptr)
+AddToList(name_list ** list_head, char *name, char *ptr)
 {
     name_list *nptr;
 
-    if (!list_head) return;	/* ignore empty inserts */
+    if (!list_head)
+        return;                 /* ignore empty inserts */
 
     nptr = malloc(sizeof(name_list));
-    if (nptr == NULL)
-    {
-	twmrc_error_prefix();
-	fprintf (stderr, "unable to allocate %ld bytes for name_list\n",
-		 (unsigned long)sizeof(name_list));
-	Done(NULL, NULL);
+    if (nptr == NULL) {
+        twmrc_error_prefix();
+        fprintf(stderr, "unable to allocate %ld bytes for name_list\n",
+                (unsigned long) sizeof(name_list));
+        Done(NULL, NULL);
     }
 
     nptr->next = *list_head;
     nptr->name = name;
-    nptr->ptr = (ptr == NULL) ? (char *)TRUE : ptr;
+    nptr->ptr = (ptr == NULL) ? (char *) TRUE : ptr;
     *list_head = nptr;
 }
 
@@ -110,39 +108,38 @@ AddToList(name_list **list_head, char *name, char *ptr)
  * look through a list for a window name, or class
  *
  *  \return the ptr field of the list structure or NULL if the name
- *	or class was not found in the list
+ *      or class was not found in the list
  *
- *	\param list   a pointer to the head of a list
- *	\param name   a pointer to the name to look for
+ *      \param list   a pointer to the head of a list
+ *      \param name   a pointer to the name to look for
  *  \param class  a pointer to the class to look for
  */
 char *
-LookInList(name_list *list_head, char *name, XClassHint *class)
+LookInList(name_list * list_head, const char *name, XClassHint *class)
 {
     name_list *nptr;
 
     /* look for the name first */
     for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	if (strcmp(name, nptr->name) == 0)
-	    return (nptr->ptr);
+        if (strcmp(name, nptr->name) == 0)
+            return (nptr->ptr);
 
-    if (class)
-    {
-	/* look for the res_name next */
-	for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	    if (strcmp(class->res_name, nptr->name) == 0)
-		return (nptr->ptr);
+    if (class) {
+        /* look for the res_name next */
+        for (nptr = list_head; nptr != NULL; nptr = nptr->next)
+            if (strcmp(class->res_name, nptr->name) == 0)
+                return (nptr->ptr);
 
-	/* finally look for the res_class */
-	for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	    if (strcmp(class->res_class, nptr->name) == 0)
-		return (nptr->ptr);
+        /* finally look for the res_class */
+        for (nptr = list_head; nptr != NULL; nptr = nptr->next)
+            if (strcmp(class->res_class, nptr->name) == 0)
+                return (nptr->ptr);
     }
     return (NULL);
 }
 
 char *
-LookInNameList(name_list *list_head, char *name)
+LookInNameList(name_list * list_head, const char *name)
 {
     return (LookInList(list_head, name, NULL));
 }
@@ -156,45 +153,42 @@ LookInNameList(name_list *list_head, char *name)
  *  \param      list  a pointer to the head of a list
  *  \param      name  a pointer to the name to look for
  *  \param      class a pointer to the class to look for
- *	\param[out] ptr   fill in the list value if the name was found
+ *      \param[out] ptr   fill in the list value if the name was found
  */
-int GetColorFromList(name_list *list_head, char *name, XClassHint *class,
-                     Pixel *ptr)
+int
+GetColorFromList(name_list * list_head, const char *name, XClassHint *class,
+                 Pixel *ptr)
 {
     int save;
     name_list *nptr;
 
     for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	if (strcmp(name, nptr->name) == 0)
-	{
-	    save = Scr->FirstTime;
-	    Scr->FirstTime = TRUE;
-	    GetColor(Scr->Monochrome, ptr, nptr->ptr);
-	    Scr->FirstTime = save;
-	    return (TRUE);
-	}
+        if (strcmp(name, nptr->name) == 0) {
+            save = Scr->FirstTime;
+            Scr->FirstTime = TRUE;
+            GetColor(Scr->Monochrome, ptr, nptr->ptr);
+            Scr->FirstTime = (short) save;
+            return (TRUE);
+        }
 
-    if (class)
-    {
-	for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	    if (strcmp(class->res_name, nptr->name) == 0)
-	    {
-		save = Scr->FirstTime;
-		Scr->FirstTime = TRUE;
-		GetColor(Scr->Monochrome, ptr, nptr->ptr);
-		Scr->FirstTime = save;
-		return (TRUE);
-	    }
+    if (class) {
+        for (nptr = list_head; nptr != NULL; nptr = nptr->next)
+            if (strcmp(class->res_name, nptr->name) == 0) {
+                save = Scr->FirstTime;
+                Scr->FirstTime = TRUE;
+                GetColor(Scr->Monochrome, ptr, nptr->ptr);
+                Scr->FirstTime = (short) save;
+                return (TRUE);
+            }
 
-	for (nptr = list_head; nptr != NULL; nptr = nptr->next)
-	    if (strcmp(class->res_class, nptr->name) == 0)
-	    {
-		save = Scr->FirstTime;
-		Scr->FirstTime = TRUE;
-		GetColor(Scr->Monochrome, ptr, nptr->ptr);
-		Scr->FirstTime = save;
-		return (TRUE);
-	    }
+        for (nptr = list_head; nptr != NULL; nptr = nptr->next)
+            if (strcmp(class->res_class, nptr->name) == 0) {
+                save = Scr->FirstTime;
+                Scr->FirstTime = TRUE;
+                GetColor(Scr->Monochrome, ptr, nptr->ptr);
+                Scr->FirstTime = (short) save;
+                return (TRUE);
+            }
     }
     return (FALSE);
 }
@@ -202,16 +196,16 @@ int GetColorFromList(name_list *list_head, char *name, XClassHint *class,
 /**
  * free up a list
  */
-void FreeList(name_list **list)
+void
+FreeList(name_list ** list)
 {
     name_list *nptr;
     name_list *tmp;
 
-    for (nptr = *list; nptr != NULL; )
-    {
-	tmp = nptr->next;
-	free(nptr);
-	nptr = tmp;
+    for (nptr = *list; nptr != NULL;) {
+        tmp = nptr->next;
+        free(nptr);
+        nptr = tmp;
     }
     *list = NULL;
 }

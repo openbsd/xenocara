@@ -1,4 +1,5 @@
 twm - Tab Window Manager for the X Window System
+------------------------------------------------
 
 twm is a window manager for the X Window System.  It provides
 titlebars, shaped windows, several forms of icon management,
@@ -8,23 +9,15 @@ keyboard focus, and user-specified key and pointer button bindings.
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
-
-Please submit bug reports to the Xorg bugzilla:
-
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
 The master development code repository can be found at:
 
-        git://anongit.freedesktop.org/git/xorg/app/twm
+  https://gitlab.freedesktop.org/xorg/app/twm
 
-        http://cgit.freedesktop.org/xorg/app/twm
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

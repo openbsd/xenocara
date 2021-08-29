@@ -27,9 +27,14 @@
 #define _SESSION_H
 #include <X11/SM/SMlib.h>
 
-extern void ConnectToSessionManager ( char *previous_id );
-extern int GetWindowConfig ( TwmWindow *theWindow, short *x, short *y, unsigned short *width, unsigned short *height, Bool *iconified, Bool *icon_info_present, short *icon_x, short *icon_y, Bool *width_ever_changed_by_user, Bool *height_ever_changed_by_user );
-extern void ReadWinConfigFile ( char *filename );
+extern void ConnectToSessionManager(char *previous_id);
+extern int GetWindowConfig(TwmWindow *theWindow, short *x, short *y,
+                           unsigned short *width, unsigned short *height,
+                           Bool *iconified, Bool *icon_info_present,
+                           short *icon_x, short *icon_y,
+                           Bool *width_ever_changed_by_user,
+                           Bool *height_ever_changed_by_user);
+extern void ReadWinConfigFile(char *filename);
 
 extern SmcConn smcConn;
 

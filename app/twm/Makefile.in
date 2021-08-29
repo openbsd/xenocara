@@ -71,7 +71,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh missing ylwrap
@@ -236,6 +236,8 @@ TWM_CFLAGS = @TWM_CFLAGS@
 TWM_LIBS = @TWM_LIBS@
 VERSION = @VERSION@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XRANDR_CFLAGS = @XRANDR_CFLAGS@
+XRANDR_LIBS = @XRANDR_LIBS@
 YACC = @YACC@
 YACC_INST = @YACC_INST@
 YFLAGS = @YFLAGS@
@@ -281,6 +283,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -290,7 +293,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = src man
-EXTRA_DIST = sample-twmrc/jim.twmrc sample-twmrc/keith.twmrc sample-twmrc/lemke.twmrc
+EXTRA_DIST = sample-twmrc/jim.twmrc sample-twmrc/keith.twmrc sample-twmrc/lemke.twmrc README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

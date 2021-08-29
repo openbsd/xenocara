@@ -627,6 +627,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+XRANDR_LIBS
+XRANDR_CFLAGS
 TWM_LIBS
 TWM_CFLAGS
 LEXLIB
@@ -735,6 +737,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -778,7 +781,9 @@ PKG_CONFIG_LIBDIR
 YACC
 YFLAGS
 TWM_CFLAGS
-TWM_LIBS'
+TWM_LIBS
+XRANDR_CFLAGS
+XRANDR_LIBS'
 
 
 # Initialize some variables set by options.
@@ -817,6 +822,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1069,6 +1075,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1206,7 +1221,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1359,6 +1374,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1435,6 +1451,9 @@ Some influential environment variables:
               default value of `-d' given by some make applications.
   TWM_CFLAGS  C compiler flags for TWM, overriding pkg-config
   TWM_LIBS    linker flags for TWM, overriding pkg-config
+  XRANDR_CFLAGS
+              C compiler flags for XRANDR, overriding pkg-config
+  XRANDR_LIBS linker flags for XRANDR, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -10915,8 +10934,8 @@ done
 # Checks for pkg-config packages
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TWM" >&5
-$as_echo_n "checking for TWM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for x11 xext xt xmu ice sm xproto >= 7.0.17" >&5
+$as_echo_n "checking for x11 xext xt xmu ice sm xproto >= 7.0.17... " >&6; }
 
 if test -n "$TWM_CFLAGS"; then
     pkg_cv_TWM_CFLAGS="$TWM_CFLAGS"
@@ -10956,7 +10975,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -10983,7 +11002,7 @@ Alternatively, you may set the environment variables TWM_CFLAGS
 and TWM_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -11002,6 +11021,82 @@ else
 	TWM_LIBS=$pkg_cv_TWM_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
+
+fi
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xrandr" >&5
+$as_echo_n "checking for xrandr... " >&6; }
+
+if test -n "$XRANDR_CFLAGS"; then
+    pkg_cv_XRANDR_CFLAGS="$XRANDR_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xrandr\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xrandr") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XRANDR_CFLAGS=`$PKG_CONFIG --cflags "xrandr" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$XRANDR_LIBS"; then
+    pkg_cv_XRANDR_LIBS="$XRANDR_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xrandr\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xrandr") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XRANDR_LIBS=`$PKG_CONFIG --libs "xrandr" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        XRANDR_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "xrandr" 2>&1`
+        else
+	        XRANDR_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "xrandr" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$XRANDR_PKG_ERRORS" >&5
+
+	have_xrandr=no
+elif test $pkg_failed = untried; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	have_xrandr=no
+else
+	XRANDR_CFLAGS=$pkg_cv_XRANDR_CFLAGS
+	XRANDR_LIBS=$pkg_cv_XRANDR_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	have_xrandr=yes
+fi
+if test "$have_xrandr" = yes; then
+
+$as_echo "#define HAVE_XRANDR 1" >>confdefs.h
 
 fi
 

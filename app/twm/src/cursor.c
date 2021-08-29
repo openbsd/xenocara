@@ -37,6 +37,7 @@ in this Software without prior written authorization from The Open Group.
 #include "screen.h"
 #include "util.h"
 
+/* *INDENT-OFF* */
 static struct _CursorName {
     const char		*name;
     unsigned int	shape;
@@ -121,25 +122,26 @@ static struct _CursorName {
 {"watch",		XC_watch,		None},
 {"xterm",		XC_xterm,		None},
 };
+/* *INDENT-ON* */
 
 void
-NewFontCursor (Cursor *cp, const char *str)
+NewFontCursor(Cursor *cp, const char *str)
 {
     int i;
 
-    for (i = 0; i < sizeof(cursor_names)/sizeof(struct _CursorName); i++)
-    {
-	if (strcmp(str, cursor_names[i].name) == 0)
-	{
-	    if (cursor_names[i].cursor == None)
-		cursor_names[i].cursor = XCreateFontCursor(dpy,
-			cursor_names[i].shape);
-	    *cp = cursor_names[i].cursor;
-	    return;
-	}
+    for (i = 0; (size_t) i < sizeof(cursor_names) / sizeof(struct _CursorName);
+         i++) {
+        if (strcmp(str, cursor_names[i].name) == 0) {
+            if (cursor_names[i].cursor == None)
+                cursor_names[i].cursor = XCreateFontCursor(dpy,
+                                                           cursor_names[i].
+                                                           shape);
+            *cp = cursor_names[i].cursor;
+            return;
+        }
     }
-    fprintf (stderr, "%s:  unable to find font cursor \"%s\"\n",
-	     ProgramName, str);
+    fprintf(stderr, "%s:  unable to find font cursor \"%s\"\n",
+            ProgramName, str);
 }
 
 void
@@ -151,21 +153,23 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask)
     Pixmap spm, mpm;
 
     spm = GetBitmap(source);
-    if ((hotx = HotX) < 0) hotx = 0;
-    if ((hoty = HotY) < 0) hoty = 0;
+    if ((hotx = HotX) < 0)
+        hotx = 0;
+    if ((hoty = HotY) < 0)
+        hoty = 0;
     mpm = GetBitmap(mask);
 
     /* make sure they are the same size */
 
-    XGetGeometry(dpy, spm, &JunkRoot, &sx, &sy, &sw, &sh, &JunkBW,&JunkDepth);
-    XGetGeometry(dpy, mpm, &JunkRoot, &mx, &my, &mw, &mh, &JunkBW,&JunkDepth);
-    if (sw != mw || sh != mh)
-    {
-	fprintf (stderr,
-		 "%s:  cursor bitmaps \"%s\" and \"%s\" not the same size\n",
-		 ProgramName, source, mask);
-	return;
+    XGetGeometry(dpy, spm, &JunkRoot, &sx, &sy, &sw, &sh, &JunkBW, &JunkDepth);
+    XGetGeometry(dpy, mpm, &JunkRoot, &mx, &my, &mw, &mh, &JunkBW, &JunkDepth);
+    if (sw != mw || sh != mh) {
+        fprintf(stderr,
+                "%s:  cursor bitmaps \"%s\" and \"%s\" not the same size\n",
+                ProgramName, source, mask);
+        return;
     }
     *cp = XCreatePixmapCursor(dpy, spm, mpm, &Scr->PointerForeground,
-			      &Scr->PointerBackground, hotx,hoty);
+                              &Scr->PointerBackground,
+                              (unsigned) hotx, (unsigned) hoty);
 }

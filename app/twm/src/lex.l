@@ -82,7 +82,7 @@ static int doinput (char *buf, int size)
 	if ((c = (*twmInputFunc)()) <= 0)
 		return (0);
 
-	buf[0] = c;
+	buf[0] = (char)c;
 	return (1);
 }
 #define YY_NO_UNPUT

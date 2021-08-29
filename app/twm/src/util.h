@@ -49,64 +49,63 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-
 /***********************************************************************
  *
  * utility routines header file
  *
- * 28-Oct-87 Thomas E. LaStrange		File created
+ * 28-Oct-87 Thomas E. LaStrange                File created
  *
  ***********************************************************************/
 
 #ifndef _UTIL_
 #define _UTIL_
 
-extern void MoveOutline ( Window root, int x, int y, int width, int height,
-			  int bw, int th );
-extern void Zoom ( Window wf, Window wt );
-extern char * ExpandFilename ( const char *name );
-extern void GetUnknownIcon ( const char *name );
-extern Pixmap FindBitmap ( const char *name, unsigned int *widthp,
-			   unsigned int *heightp );
-extern Pixmap GetBitmap ( const char *name );
-extern void InsertRGBColormap ( Atom a, XStandardColormap *maps, int nmaps,
-			       Bool replace );
-extern void RemoveRGBColormap ( Atom a );
-extern void LocateStandardColormaps ( void );
-extern void GetColor ( int kind, Pixel *what, const char *name );
-extern void GetColorValue ( int kind, XColor *what, const char *name );
-extern void GetFont ( MyFont *font );
-extern int MyFont_TextWidth( MyFont *font, const char *string, int len);
-extern void MyFont_DrawImageString( Display *dpy, Drawable d, MyFont *font,
-				    GC gc, int x, int y, const char * string,
-				    int len);
-extern void MyFont_DrawString( Display *dpy, Drawable d, MyFont *font, GC gc,
-                               int x, int y, const char * string, int len);
-extern void MyFont_ChangeGC( unsigned long fix_fore, unsigned long fix_back,
-			     MyFont *fix_font);
-extern Status I18N_FetchName( Display *dpy, Window win, char **winname);
-extern Status I18N_GetIconName( Display *dpy, Window win, char **iconname);
-extern void SetFocus ( TwmWindow *tmp_win, Time time );
-extern void Bell ( int type, int percent, Window win );
+extern void MoveOutline(Window root, int x, int y, int width, int height,
+                        int bw, int th);
+extern void Zoom(Window wf, Window wt);
+extern char *ExpandFilename(const char *name);
+extern void GetUnknownIcon(const char *name);
+extern Pixmap FindBitmap(const char *name, unsigned int *widthp,
+                         unsigned int *heightp);
+extern Pixmap GetBitmap(const char *name);
+extern void InsertRGBColormap(Atom a, XStandardColormap *maps, int nmaps,
+                              Bool replace);
+extern void RemoveRGBColormap(Atom a);
+extern void LocateStandardColormaps(void);
+extern void GetColor(int kind, Pixel *what, const char *name);
+extern void GetColorValue(int kind, XColor *what, const char *name);
+extern void GetFont(MyFont *font);
+extern int MyFont_TextWidth(MyFont *font, const char *string, int len);
+extern void MyFont_DrawImageString(Display *dpy, Drawable d, MyFont *font,
+                                   GC gc, int x, int y, const char *string,
+                                   int len);
+extern void MyFont_DrawString(Display *dpy, Drawable d, MyFont *font, GC gc,
+                              int x, int y, const char *string, int len);
+extern void MyFont_ChangeGC(unsigned long fix_fore, unsigned long fix_back,
+                            MyFont *fix_font);
+extern Status I18N_FetchName(Display *dpy, Window win, char **winname);
+extern Status I18N_GetIconName(Display *dpy, Window win, char **iconname);
+extern void SetFocus(TwmWindow *tmp_win, Time time);
+extern void Bell(int type, int percent, Window win);
 
 extern int HotX, HotY;
 
-#define	WM_BELL			0
-#define	MINOR_ERROR_BELL	1
-#define	MAJOR_ERROR_BELL	2
-#define	INFO_BELL		3
-#define	NUM_BELLS		4
+#define WM_BELL                 0
+#define MINOR_ERROR_BELL        1
+#define MAJOR_ERROR_BELL        2
+#define INFO_BELL               3
+#define NUM_BELLS               4
 
-#define	QUIET_BELL		-100
-#define	MODERATE_BELL		0
-#define	LOUD_BELL		100
+#define QUIET_BELL              -100
+#define MODERATE_BELL           0
+#define LOUD_BELL               100
 
 #ifdef XKB
 #include <X11/extensions/XKBbells.h>
 #else
-#define	XkbBI_Info			0
-#define	XkbBI_MinorError		1
-#define	XkbBI_MajorError		2
+#define XkbBI_Info              0
+#define XkbBI_MinorError        1
+#define XkbBI_MajorError        2
 #endif
 
-#endif /* _UTIL_ */
+#endif                          /* _UTIL_ */

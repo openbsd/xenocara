@@ -1,4 +1,4 @@
 /^#/d
 s/"/\\"/g
-s/^/    (unsigned char *) "/
+s/^/    (const unsigned char *) "/
 s/$/",/

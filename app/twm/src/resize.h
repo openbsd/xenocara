@@ -49,7 +49,6 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-
 /**********************************************************************
  *
  * resize function externs
@@ -61,18 +60,19 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _RESIZE_
 #define _RESIZE_
 
-extern void AddEndResize ( TwmWindow *tmp_win );
-extern void AddStartResize ( TwmWindow *tmp_win, int x, int y, int w, int h );
-extern void ConstrainSize ( TwmWindow *tmp_win, int *widthp, int *heightp );
-extern void DoResize ( int x_root, int y_root, TwmWindow *tmp_win );
-extern void EndResize ( void );
-extern void fullzoom ( TwmWindow *tmp_win, int flag );
-extern void MenuDoResize ( int x_root, int y_root, TwmWindow *tmp_win );
-extern void MenuEndResize ( TwmWindow *tmp_win );
-extern void MenuStartResize ( TwmWindow *tmp_win, int x, int y, int w, int h );
-extern void SetFrameShape ( TwmWindow *tmp );
-extern void SetupFrame ( TwmWindow *tmp_win, int x, int y, int w, int h, int bw, Bool sendEvent );
-extern void SetupWindow ( TwmWindow *tmp_win, int x, int y, int w, int h, int bw );
-extern void StartResize ( XEvent *evp, TwmWindow *tmp_win, Bool fromtitlebar );
+extern void AddEndResize(TwmWindow *tmp_win);
+extern void AddStartResize(TwmWindow *tmp_win, int x, int y, int w, int h);
+extern void ConstrainSize(TwmWindow *tmp_win, int *widthp, int *heightp);
+extern void DoResize(int x_root, int y_root, TwmWindow *tmp_win);
+extern void EndResize(void);
+extern void fullzoom(TwmWindow *tmp_win, int flag);
+extern void MenuDoResize(int x_root, int y_root, TwmWindow *tmp_win);
+extern void MenuEndResize(TwmWindow *tmp_win);
+extern void MenuStartResize(TwmWindow *tmp_win, int x, int y, int w, int h);
+extern void SetFrameShape(TwmWindow *tmp);
+extern void SetupFrame(TwmWindow *tmp_win, int x, int y, int w, int h, int bw,
+                       Bool sendEvent);
+extern void SetupWindow(TwmWindow *tmp_win, int x, int y, int w, int h, int bw);
+extern void StartResize(XEvent *evp, TwmWindow *tmp_win, Bool fromtitlebar);
 
-#endif /* _RESIZE_ */
+#endif                          /* _RESIZE_ */
