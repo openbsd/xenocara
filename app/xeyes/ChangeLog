@@ -1,3 +1,92 @@
+commit adde23dc8724dc6f793b0c68143dc34818f7f6f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 16:41:00 2021 -0700
+
+    xeyes 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09e50de77da82430cbada93cf58544af2441fd83
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 16:38:48 2021 -0700
+
+    Remove redundant declaration of hypot() for SVR4 systems
+    
+    Fixes gcc warning:
+    Eyes.c:54:15: warning: redundant redeclaration of ‘hypot’ [-Wredundant-decls]
+     extern double hypot(double, double);
+                   ^~~~~
+    
+    since it's already declared in <math.h>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7517441ffa1aecb6f565217149762267d145e11e
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Mar 23 08:55:53 2020 -0700
+
+    Clean up compiler warnings
+    
+    Add (char *) casts to initializers in Xt structs.
+    Remove unused variables.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 420c2d8517246c9e422739cadb7acb29e35a3bed
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Aug 7 12:17:24 2013 +0200
+
+    Use XI2 raw events to notice when mouse moves [v2]
+    
+    v2:
+            We only need Xi version 2.0, not 2.2
+            Suggested-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 3f2af30bd94ea3012bc1d1bde82f7c9a1c4dea27
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jul 26 18:46:45 2013 -0700
+
+    Add support for the 'Present' extension. [v3]
+    
+    This makes updating the eyes nicely vblank synchronized.
+    
+    v2:
+            Ensure extensions exist before calling query_version
+    
+            These calls add calls to xcb_get_extension_data before calling
+            query_version calls, as those calls will mark the connection
+            with an error if made against an X server without the
+            extension present.
+    
+            Suggested-by: Uli Schlachter <psychon@znc.in>
+    
+    v3:
+            check the 'present' field in the return from
+            xcb_get_extension_data; the xcb_get_extension_data call will
+            always succeed (save for out of memory), the only way to tell
+            if the extension is supported in the target X server is to
+            test the 'present' field in the query extension reply value.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 46dac260d384e034aaabd576d9b818d39f4821c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:02:46 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7922b89288d463a29f742fbb48ab38b3ec485dff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:56:11 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit abb6802af0d82c196fd94b8dc94549ba64754cb5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:24:55 2018 -0800
@@ -508,7 +597,7 @@ Date:   Wed Jul 20 19:31:53 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit c903caebf875d510cbd1f720ccc02bd03250d7c6
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:07:18 2005 +0000
 
     Xeyes build system

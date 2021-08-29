@@ -73,7 +73,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xeyes$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh missing \
@@ -93,7 +93,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_xeyes_OBJECTS = Eyes.$(OBJEXT) transform.$(OBJEXT) xeyes.$(OBJEXT)
 xeyes_OBJECTS = $(am_xeyes_OBJECTS)
 am__DEPENDENCIES_1 =
-xeyes_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+xeyes_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -249,6 +250,8 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -302,6 +305,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -311,8 +315,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-AM_CFLAGS = $(XEYES_CFLAGS) $(XRENDER_CFLAGS) $(CWARNFLAGS)
-xeyes_LDADD = $(XEYES_LIBS) $(XRENDER_LIBS) -lm
+AM_CFLAGS = $(XEYES_CFLAGS) $(XRENDER_CFLAGS) $(PRESENT_CFLAGS)  $(CWARNFLAGS)
+xeyes_LDADD = $(XEYES_LIBS) $(XRENDER_LIBS) $(PRESENT_LIBS) -lm
 xeyes_SOURCES = \
         Eyes.c \
         Eyes.h \
@@ -321,7 +325,7 @@ xeyes_SOURCES = \
         transform.h \
         xeyes.c
 
-EXTRA_DIST = eyes.bit eyesmask.bit
+EXTRA_DIST = eyes.bit eyesmask.bit README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

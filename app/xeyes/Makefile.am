@@ -22,8 +22,8 @@
 SUBDIRS = man
 bin_PROGRAMS = xeyes
 
-AM_CFLAGS = $(XEYES_CFLAGS) $(XRENDER_CFLAGS) $(CWARNFLAGS)
-xeyes_LDADD = $(XEYES_LIBS) $(XRENDER_LIBS) -lm
+AM_CFLAGS = $(XEYES_CFLAGS) $(XRENDER_CFLAGS) $(PRESENT_CFLAGS)  $(CWARNFLAGS)
+xeyes_LDADD = $(XEYES_LIBS) $(XRENDER_LIBS) $(PRESENT_LIBS) -lm
 
 xeyes_SOURCES =	\
         Eyes.c \
@@ -33,7 +33,7 @@ xeyes_SOURCES =	\
         transform.h \
         xeyes.c
 
-EXTRA_DIST = eyes.bit eyesmask.bit
+EXTRA_DIST = eyes.bit eyesmask.bit README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

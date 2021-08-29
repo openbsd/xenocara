@@ -57,6 +57,10 @@ usage(void)
     fprintf(stderr,
 	    "       [-render | +render]\n");
 #endif
+#ifdef PRESENT
+    fprintf(stderr,
+	    "       [-present | +present]\n");
+#endif
     exit(1);
 }
 
@@ -64,16 +68,20 @@ usage(void)
    pass over the remaining options after XtParseCommand is let loose. */
 
 static XrmOptionDescRec options[] = {
-{"-outline",	"*eyes.outline",	XrmoptionSepArg,	NULL},
-{"-center",	"*eyes.center",		XrmoptionSepArg,	NULL},
-{"-backing",	"*eyes.backingStore",	XrmoptionSepArg,	NULL},
-{"-shape",	"*eyes.shapeWindow",	XrmoptionNoArg,		"TRUE"},
-{"+shape",	"*eyes.shapeWindow",	XrmoptionNoArg,		"FALSE"},
+{(char *)"-outline",	(char *)"*eyes.outline",	XrmoptionSepArg,	NULL},
+{(char *)"-center",	(char *)"*eyes.center",		XrmoptionSepArg,	NULL},
+{(char *)"-backing",	(char *)"*eyes.backingStore",	XrmoptionSepArg,	NULL},
+{(char *)"-shape",	(char *)"*eyes.shapeWindow",	XrmoptionNoArg,		(char *)"TRUE"},
+{(char *)"+shape",	(char *)"*eyes.shapeWindow",	XrmoptionNoArg,		(char *)"FALSE"},
 #ifdef XRENDER
-{"-render",	"*eyes.render",		XrmoptionNoArg,		"TRUE"},
-{"+render",	"*eyes.render",		XrmoptionNoArg,		"FALSE"},
+{(char *)"-render",	(char *)"*eyes.render",		XrmoptionNoArg,		(char *)"TRUE"},
+{(char *)"+render",	(char *)"*eyes.render",		XrmoptionNoArg,		(char *)"FALSE"},
 #endif
-{"-distance",	"*eyes.distance",	XrmoptionNoArg,		"TRUE"},
+#ifdef PRESENT
+{(char *)"-present",	(char *)"*eyes.present",	XrmoptionNoArg,		(char *)"TRUE"},
+{(char *)"+present",	(char *)"*eyes.present",	XrmoptionNoArg,		(char *)"FALSE"},
+#endif
+{(char *)"-distance",	(char *)"*eyes.distance",	XrmoptionNoArg,		(char *)"TRUE"},
 };
 
 static Atom wm_delete_window;
@@ -92,7 +100,7 @@ quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 static XtActionsRec actions[] = {
-    {"quit",	quit}
+    {(char *) "quit",	quit}
 };
 
 int
