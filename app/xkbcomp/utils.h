@@ -10,8 +10,8 @@
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
-   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE 
-   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED 
+   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE
+   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED
    * WARRANTY.
    *
    * IF THE SOFTWARE IS MODIFIED IN A MANNER CREATING DERIVATIVE COPYRIGHT
@@ -23,7 +23,7 @@
    * that the above copyright notice appear in all copies and that both that
    * copyright notice and this permission notice appear in supporting
    * documentation, and that the name of Digital Equipment Corporation not be
-   * used in advertising or publicity pertaining to distribution of the 
+   * used in advertising or publicity pertaining to distribution of the
    * software without specific, written prior permission.
    \*/
 
@@ -107,69 +107,33 @@ extern void uFree(Opaque        /* ptr */
 extern Boolean uSetErrorFile(char *     /* name */
     );
 
-#define INFO6 			uInformation
-#define INFO5 			uInformation
-#define INFO4 			uInformation
-#define INFO3 			uInformation
-#define INFO2 			uInformation
-#define INFO1 			uInformation
 #define INFO 			uInformation
 
 extern void
 uInformation(const char * /* s */ , ...
     ) _X_ATTRIBUTE_PRINTF(1, 2);
 
-#define ACTION6			uAction
-#define ACTION5			uAction
-#define ACTION4			uAction
-#define ACTION3			uAction
-#define ACTION2			uAction
-#define ACTION1			uAction
 #define ACTION			uAction
 
      extern void uAction(const char * /* s  */ , ...
     ) _X_ATTRIBUTE_PRINTF(1, 2);
 
-#define WARN6			uWarning
-#define WARN5			uWarning
-#define WARN4			uWarning
-#define WARN3			uWarning
-#define WARN2			uWarning
-#define WARN1			uWarning
 #define WARN			uWarning
 
      extern void uWarning(const char * /* s  */ , ...
     ) _X_ATTRIBUTE_PRINTF(1, 2);
 
-#define ERROR6			uError
-#define ERROR5			uError
-#define ERROR4			uError
-#define ERROR3			uError
-#define ERROR2			uError
-#define ERROR1			uError
 #define ERROR			uError
 
      extern void uError(const char * /* s  */ , ...
     ) _X_ATTRIBUTE_PRINTF(1, 2);
 
-#define FATAL6			uFatalError
-#define FATAL5			uFatalError
-#define FATAL4			uFatalError
-#define FATAL3			uFatalError
-#define FATAL2			uFatalError
-#define FATAL1			uFatalError
 #define FATAL			uFatalError
 
      extern void uFatalError(const char * /* s  */ , ...
     ) _X_ATTRIBUTE_PRINTF(1, 2) _X_NORETURN;
 
 /* WSGO stands for "Weird Stuff Going On" */
-#define WSGO6			uInternalError
-#define WSGO5			uInternalError
-#define WSGO4			uInternalError
-#define WSGO3			uInternalError
-#define WSGO2			uInternalError
-#define WSGO1			uInternalError
 #define WSGO			uInternalError
 
      extern void uInternalError(const char * /* s  */ , ...

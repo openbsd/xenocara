@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -107,21 +107,21 @@ HandleVModDef(VModDef * stmt, unsigned mergeMode, VModInfo * info)
                     if (!ExprResolveModMask(stmt->value, &mod, NULL, NULL))
                     {
                         str1 = XkbAtomText(NULL, stmt->name, XkbMessage);
-                        ACTION1("Declaration of %s ignored\n", str1);
+                        ACTION("Declaration of %s ignored\n", str1);
                         return False;
                     }
                     if (mod.uval == srv->vmods[i])
                         return True;
 
                     str1 = XkbAtomText(NULL, stmt->name, XkbMessage);
-                    WARN1("Virtual modifier %s multiply defined\n", str1);
+                    WARN("Virtual modifier %s multiply defined\n", str1);
                     str1 = XkbModMaskText(srv->vmods[i], XkbCFile);
                     if (mergeMode == MergeOverride)
                     {
                         str2 = str1;
                         str1 = XkbModMaskText(mod.uval, XkbCFile);
                     }
-                    ACTION2("Using %s, ignoring %s\n", str1, str2);
+                    ACTION("Using %s, ignoring %s\n", str1, str2);
                     if (mergeMode == MergeOverride)
                         srv->vmods[i] = mod.uval;
                     return True;
@@ -133,7 +133,7 @@ HandleVModDef(VModDef * stmt, unsigned mergeMode, VModInfo * info)
     }
     if (nextFree < 0)
     {
-        ERROR1("Too many virtual modifiers defined (maximum %d)\n",
+        ERROR("Too many virtual modifiers defined (maximum %d)\n",
                XkbNumVirtualMods);
         ACTION("Exiting\n");
         return False;
@@ -149,7 +149,7 @@ HandleVModDef(VModDef * stmt, unsigned mergeMode, VModInfo * info)
         srv->vmods[nextFree] = mod.uval;
         return True;
     }
-    ACTION1("Declaration of %s ignored\n",
+    ACTION("Declaration of %s ignored\n",
             XkbAtomText(NULL, stmt->name, XkbMessage));
     return False;
 }
@@ -264,7 +264,7 @@ ResolveVirtualModifier(ExprDef * def, ExprResult * val_rtrn, VModInfo * info)
     {
         if (val_rtrn->uval < XkbNumVirtualMods)
             return True;
-        ERROR2("Illegal virtual modifier %d (must be 0..%d inclusive)\n",
+        ERROR("Illegal virtual modifier %d (must be 0..%d inclusive)\n",
                val_rtrn->uval, XkbNumVirtualMods - 1);
     }
     return False;

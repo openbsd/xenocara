@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -52,13 +52,13 @@ Copyright 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -279,7 +279,7 @@ AddDirectory(char *head, char *ptrn, char *rest, char *map)
             tmp = strchr(tmp, ')');
             if ((tmp == NULL) || (tmp[1] != '\0'))
             {
-                ERROR1("File and map must have the format file(map)\n");
+                ERROR("File and map must have the format file(map)\n");
                 return 0;
             }
             *map = '\0';
@@ -388,7 +388,7 @@ AddMatchingFiles(char *head_in)
         || (head
             && ((strchr(head, '(') != NULL) || (strchr(head, ')') != NULL))))
     {
-        ERROR1("Files/maps to list must have the form file(map)\n");
+        ERROR("Files/maps to list must have the form file(map)\n");
         ACTION("Illegal specifier ignored\n");
         return 0;
     }
@@ -425,14 +425,14 @@ GenerateListing(char *out_name)
 
     if (nFilesListed < 1)
     {
-        ERROR1("Must specify at least one file or pattern to list\n");
+        ERROR("Must specify at least one file or pattern to list\n");
         return 0;
     }
     if ((!out_name) || ((out_name[0] == '-') && (out_name[1] == '\0')))
         outFile = stdout;
     else if ((outFile = fopen(out_name, "w")) == NULL)
     {
-        ERROR1("Cannot open \"%s\" to write keyboard description\n",
+        ERROR("Cannot open \"%s\" to write keyboard description\n",
                out_name);
         ACTION("Exiting\n");
         return 0;
@@ -460,7 +460,7 @@ GenerateListing(char *out_name)
             if (stat(list[i].file, &sbuf) < 0)
             {
                 if (oldWarningLevel > 5)
-                    WARN1("Couldn't open \"%s\"\n", list[i].file);
+                    WARN("Couldn't open \"%s\"\n", list[i].file);
                 continue;
             }
             if (S_ISDIR(sbuf.st_mode))
@@ -474,7 +474,7 @@ GenerateListing(char *out_name)
             if (!inputFile)
             {
                 if (oldWarningLevel > 5)
-                    WARN1("Couldn't open \"%s\"\n", list[i].file);
+                    WARN("Couldn't open \"%s\"\n", list[i].file);
                 continue;
             }
             setScanState(list[i].file, 1);

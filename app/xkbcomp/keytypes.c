@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -274,7 +274,7 @@ FindMatchingKeyType(KeyTypesInfo * info, KeyTypeInfo * new)
 static Bool
 ReportTypeBadWidth(const char *type, int has, int needs)
 {
-    ERROR3("Key type \"%s\" has %d levels, must have %d\n", type, has, needs);
+    ERROR("Key type \"%s\" has %d levels, must have %d\n", type, has, needs);
     ACTION("Illegal type definition ignored\n");
     return False;
 }
@@ -326,7 +326,7 @@ AddKeyType(XkbDescPtr xkb, KeyTypesInfo * info, KeyTypeInfo * new)
             if (((old->defs.fileID == new->defs.fileID)
                  && (warningLevel > 0)) || (warningLevel > 9))
             {
-                WARN1("Multiple definitions of the %s key type\n",
+                WARN("Multiple definitions of the %s key type\n",
                       XkbAtomGetString(NULL, new->name));
                 ACTION("Earlier definition ignored\n");
             }
@@ -342,7 +342,7 @@ AddKeyType(XkbDescPtr xkb, KeyTypesInfo * info, KeyTypeInfo * new)
         report = (old->defs.fileID == new->defs.fileID) && (warningLevel > 0);
         if (report)
         {
-            WARN1("Multiple definitions of the %s key type\n",
+            WARN("Multiple definitions of the %s key type\n",
                   XkbAtomGetString(NULL, new->name));
             ACTION("Later definition ignored\n");
         }
@@ -520,7 +520,7 @@ NextMapEntry(KeyTypeInfo * type)
         type->entries = uTypedCalloc(2, XkbKTMapEntryRec);
         if (type->entries == NULL)
         {
-            ERROR1("Couldn't allocate map entries for %s\n", TypeTxt(type));
+            ERROR("Couldn't allocate map entries for %s\n", TypeTxt(type));
             ACTION("Map entries lost\n");
             return NULL;
         }
@@ -535,7 +535,7 @@ NextMapEntry(KeyTypeInfo * type)
                                        XkbKTMapEntryRec);
         if (type->entries == NULL)
         {
-            ERROR1("Couldn't reallocate map entries for %s\n", TypeTxt(type));
+            ERROR("Couldn't reallocate map entries for %s\n", TypeTxt(type));
             ACTION("Map entries lost\n");
             return NULL;
         }
@@ -563,7 +563,7 @@ AddPreserve(XkbDescPtr xkb,
         {
             if (warningLevel > 9)
             {
-                WARN2("Identical definitions for preserve[%s] in %s\n",
+                WARN("Identical definitions for preserve[%s] in %s\n",
                       PreserveIndexTxt(type, xkb, old), TypeTxt(type));
                 ACTION("Ignored\n");
             }
@@ -572,19 +572,19 @@ AddPreserve(XkbDescPtr xkb,
         if (report && (warningLevel > 0))
         {
             char *str;
-            WARN2("Multiple definitions for preserve[%s] in %s\n",
+            WARN("Multiple definitions for preserve[%s] in %s\n",
                   PreserveIndexTxt(type, xkb, old), TypeTxt(type));
 
             if (clobber)
                 str = PreserveTxt(type, xkb, new);
             else
                 str = PreserveTxt(type, xkb, old);
-            ACTION1("Using %s, ", str);
+            ACTION("Using %s, ", str);
             if (clobber)
                 str = PreserveTxt(type, xkb, old);
             else
                 str = PreserveTxt(type, xkb, new);
-            INFO1("ignoring %s\n", str);
+            INFO("ignoring %s\n", str);
         }
         if (clobber)
         {
@@ -596,8 +596,8 @@ AddPreserve(XkbDescPtr xkb,
     old = uTypedAlloc(PreserveInfo);
     if (!old)
     {
-        WSGO1("Couldn't allocate preserve in %s\n", TypeTxt(type));
-        ACTION1("Preserve[%s] lost\n", PreserveIndexTxt(type, xkb, new));
+        WSGO("Couldn't allocate preserve in %s\n", TypeTxt(type));
+        ACTION("Preserve[%s] lost\n", PreserveIndexTxt(type, xkb, new));
         return False;
     }
     *old = *new;
@@ -638,13 +638,13 @@ AddMapEntry(XkbDescPtr xkb,
                 use = old->level + 1;
                 ignore = new->level + 1;
             }
-            WARN2("Multiple map entries for %s in %s\n",
+            WARN("Multiple map entries for %s in %s\n",
                   MapEntryTxt(type, xkb, new), TypeTxt(type));
-            ACTION2("Using %d, ignoring %d\n", use, ignore);
+            ACTION("Using %d, ignoring %d\n", use, ignore);
         }
         else if (warningLevel > 9)
         {
-            WARN3("Multiple occurrences of map[%s]= %d in %s\n",
+            WARN("Multiple occurrences of map[%s]= %d in %s\n",
                   MapEntryTxt(type, xkb, new), new->level + 1, TypeTxt(type));
             ACTION("Ignored\n");
             return True;
@@ -698,13 +698,13 @@ SetMapEntry(KeyTypeInfo * type,
     {
         if (warningLevel > 0)
         {
-            WARN1("Map entry for unused modifiers in %s\n", TypeTxt(type));
-            ACTION1("Using %s instead of ",
+            WARN("Map entry for unused modifiers in %s\n", TypeTxt(type));
+            ACTION("Using %s instead of ",
                     XkbVModMaskText(type->dpy, xkb,
                                     entry.mods.real_mods & type->mask,
                                     entry.mods.vmods & type->vmask,
                                     XkbMessage));
-            INFO1("%s\n", MapEntryTxt(type, xkb, &entry));
+            INFO("%s\n", MapEntryTxt(type, xkb, &entry));
         }
         entry.mods.real_mods &= type->mask;
         entry.mods.vmods &= type->vmask;
@@ -717,9 +717,9 @@ SetMapEntry(KeyTypeInfo * type,
     }
     if ((rtrn.ival < 1) || (rtrn.ival > XkbMaxShiftLevel + 1))
     {
-        ERROR3("Shift level %d out of range (1..%d) in key type %s\n",
+        ERROR("Shift level %d out of range (1..%d) in key type %s\n",
                XkbMaxShiftLevel + 1, rtrn.ival, TypeTxt(type));
-        ACTION1("Ignoring illegal definition of map[%s]\n",
+        ACTION("Ignoring illegal definition of map[%s]\n",
                 MapEntryTxt(type, xkb, &entry));
         return False;
     }
@@ -746,20 +746,20 @@ SetPreserve(KeyTypeInfo * type,
     {
         if (warningLevel > 0)
         {
-            WARN1("Preserve for modifiers not used by the %s type\n",
+            WARN("Preserve for modifiers not used by the %s type\n",
                   TypeTxt(type));
-            ACTION1("Index %s converted to ",
+            ACTION("Index %s converted to ",
                     PreserveIndexTxt(type, xkb, &new));
         }
         new.indexMods &= type->mask;
         new.indexVMods &= type->vmask;
         if (warningLevel > 0)
-            INFO1("%s\n", PreserveIndexTxt(type, xkb, &new));
+            INFO("%s\n", PreserveIndexTxt(type, xkb, &new));
     }
     if (!ExprResolveModMask(value, &rtrn, LookupVModMask, (XPointer) xkb))
     {
         ERROR("Preserve value in a key type is not a modifier mask\n");
-        ACTION2("Ignoring preserve[%s] in type %s\n",
+        ACTION("Ignoring preserve[%s] in type %s\n",
                 PreserveIndexTxt(type, xkb, &new), TypeTxt(type));
         return False;
     }
@@ -770,15 +770,15 @@ SetPreserve(KeyTypeInfo * type,
     {
         if (warningLevel > 0)
         {
-            WARN2("Illegal value for preserve[%s] in type %s\n",
+            WARN("Illegal value for preserve[%s] in type %s\n",
                   PreserveTxt(type, xkb, &new), TypeTxt(type));
-            ACTION1("Converted %s to ", PreserveIndexTxt(type, xkb, &new));
+            ACTION("Converted %s to ", PreserveIndexTxt(type, xkb, &new));
         }
         new.preMods &= new.indexMods;
         new.preVMods &= new.indexVMods;
         if (warningLevel > 0)
         {
-            INFO1("%s\n", PreserveIndexTxt(type, xkb, &new));
+            INFO("%s\n", PreserveIndexTxt(type, xkb, &new));
         }
     }
     return AddPreserve(xkb, type, &new, True, True);
@@ -796,7 +796,7 @@ AddLevelName(KeyTypeInfo * type,
             uTypedRecalloc(type->lvlNames, type->szNames, level + 1, Atom);
         if (type->lvlNames == NULL)
         {
-            ERROR1("Couldn't allocate level names for type %s\n",
+            ERROR("Couldn't allocate level names for type %s\n",
                    TypeTxt(type));
             ACTION("Level names lost\n");
             type->szNames = 0;
@@ -808,7 +808,7 @@ AddLevelName(KeyTypeInfo * type,
     {
         if (warningLevel > 9)
         {
-            WARN2("Duplicate names for level %d of key type %s\n",
+            WARN("Duplicate names for level %d of key type %s\n",
                   level + 1, TypeTxt(type));
             ACTION("Ignored\n");
         }
@@ -821,12 +821,12 @@ AddLevelName(KeyTypeInfo * type,
             char *old, *new;
             old = XkbAtomText(type->dpy, type->lvlNames[level], XkbMessage);
             new = XkbAtomText(type->dpy, name, XkbMessage);
-            WARN2("Multiple names for level %d of key type %s\n",
+            WARN("Multiple names for level %d of key type %s\n",
                   level + 1, TypeTxt(type));
             if (clobber)
-                ACTION2("Using %s, ignoring %s\n", new, old);
+                ACTION("Using %s, ignoring %s\n", new, old);
             else
-                ACTION2("Using %s, ignoring %s\n", old, new);
+                ACTION("Using %s, ignoring %s\n", old, new);
         }
         if (!clobber)
             return True;
@@ -849,7 +849,7 @@ SetLevelName(KeyTypeInfo * type, ExprDef * arrayNdx, ExprDef * value)
         return ReportTypeBadType(type, "level name", "integer");
     if ((rtrn.ival < 1) || (rtrn.ival > XkbMaxShiftLevel + 1))
     {
-        ERROR3("Level name %d out of range (1..%d) in key type %s\n",
+        ERROR("Level name %d out of range (1..%d) in key type %s\n",
                rtrn.ival,
                XkbMaxShiftLevel + 1,
                XkbAtomText(type->dpy, type->name, XkbMessage));
@@ -859,7 +859,7 @@ SetLevelName(KeyTypeInfo * type, ExprDef * arrayNdx, ExprDef * value)
     level = rtrn.ival - 1;
     if (!ExprResolveString(value, &rtrn, NULL, NULL))
     {
-        ERROR2("Non-string name for level %d in key type %s\n", level + 1,
+        ERROR("Non-string name for level %d in key type %s\n", level + 1,
                XkbAtomText(type->dpy, type->name, XkbMessage));
         ACTION("Ignoring illegal level name definition\n");
         return False;
@@ -903,10 +903,10 @@ SetKeyTypeField(KeyTypeInfo * type,
         vmods = (tmp.uval >> 8) & 0xffff; /* xkb virtual mods */
         if (type->defs.defined & _KT_Mask)
         {
-            WARN1("Multiple modifier mask definitions for key type %s\n",
+            WARN("Multiple modifier mask definitions for key type %s\n",
                   XkbAtomText(type->dpy, type->name, XkbMessage));
-            ACTION1("Using %s, ", TypeMaskTxt(type, xkb));
-            INFO1("ignoring %s\n", XkbVModMaskText(type->dpy, xkb, mods,
+            ACTION("Using %s, ", TypeMaskTxt(type, xkb));
+            INFO("ignoring %s\n", XkbVModMaskText(type->dpy, xkb, mods,
                                                    vmods, XkbMessage));
             return False;
         }
@@ -931,7 +931,7 @@ SetKeyTypeField(KeyTypeInfo * type,
         type->defs.defined |= _KT_LevelNames;
         return SetLevelName(type, arrayNdx, value);
     }
-    ERROR2("Unknown field %s in key type %s\n", field, TypeTxt(type));
+    ERROR("Unknown field %s in key type %s\n", field, TypeTxt(type));
     ACTION("Definition ignored\n");
     return False;
 }
@@ -949,12 +949,12 @@ HandleKeyTypeVar(VarDef * stmt, XkbDescPtr xkb, KeyTypesInfo * info)
                                stmt->value, info);
     if (elem.str != NULL)
     {
-        ERROR1("Default for unknown element %s\n", uStringText(elem.str));
-        ACTION1("Value for field %s ignored\n", uStringText(field.str));
+        ERROR("Default for unknown element %s\n", uStringText(elem.str));
+        ACTION("Value for field %s ignored\n", uStringText(field.str));
     }
     else if (field.str != NULL)
     {
-        ERROR1("Default defined for unknown field %s\n",
+        ERROR("Default defined for unknown field %s\n",
                uStringText(field.str));
         ACTION("Ignored\n");
     }
@@ -1114,7 +1114,7 @@ HandleKeyTypesFile(XkbFile * file,
             info->errorCount++;
             break;
         default:
-            WSGO1("Unexpected statement type %d in HandleKeyTypesFile\n",
+            WSGO("Unexpected statement type %d in HandleKeyTypesFile\n",
                   stmt->stmtType);
             break;
         }
@@ -1124,7 +1124,7 @@ HandleKeyTypesFile(XkbFile * file,
 #ifdef NOISY
             ERROR("Too many errors\n");
 #endif
-            ACTION1("Abandoning keytypes file \"%s\"\n", file->topName);
+            ACTION("Abandoning keytypes file \"%s\"\n", file->topName);
             break;
         }
     }
@@ -1166,7 +1166,7 @@ CopyDefToKeyType(XkbDescPtr xkb, XkbKeyTypePtr type, KeyTypeInfo * def)
         if (!type->preserve)
         {
             WARN("Couldn't allocate preserve array in CopyDefToKeyType\n");
-            ACTION1("Preserve setting for type %s lost\n",
+            ACTION("Preserve setting for type %s lost\n",
                     XkbAtomText(def->dpy, def->name, XkbMessage));
         }
         else
@@ -1228,7 +1228,7 @@ CompileKeyTypes(XkbFile * file, XkbFileInfo * result, unsigned merge)
             else
             {
                 WSGO("Couldn't allocate space for types name\n");
-                ACTION2("Name \"%s\" (from %s) NOT assigned\n",
+                ACTION("Name \"%s\" (from %s) NOT assigned\n",
                         scanFile, info.name);
             }
         }

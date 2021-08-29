@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -91,7 +91,7 @@ siText(SymInterpInfo * si, CompatInfo * info)
     }
     else
     {
-        snprintf(buf, sizeof(buf), "%s+%s(%s)", 
+        snprintf(buf, sizeof(buf), "%s+%s(%s)",
 		XkbKeysymText(si->interp.sym, XkbMessage),
                 XkbSIMatchText(si->interp.match, XkbMessage),
                 XkbModMaskText(si->interp.mods, XkbMessage));
@@ -211,7 +211,7 @@ AddInterp(CompatInfo * info, SymInterpInfo * new)
             if (((old->defs.fileID == new->defs.fileID)
                  && (warningLevel > 0)) || (warningLevel > 9))
             {
-                WARN1("Multiple definitions for \"%s\"\n", siText(new, info));
+                WARN("Multiple definitions for \"%s\"\n", siText(new, info));
                 ACTION("Earlier interpretation ignored\n");
             }
             *old = *new;
@@ -248,8 +248,8 @@ AddInterp(CompatInfo * info, SymInterpInfo * new)
         }
         if (collide)
         {
-            WARN1("Multiple interpretations of \"%s\"\n", siText(new, info));
-            ACTION1("Using %s definition for duplicate fields\n",
+            WARN("Multiple interpretations of \"%s\"\n", siText(new, info));
+            ACTION("Using %s definition for duplicate fields\n",
                     (new->defs.merge != MergeAugment ? "last" : "first"));
         }
         return True;
@@ -277,8 +277,8 @@ AddGroupCompat(CompatInfo * info, unsigned group, GroupCompatInfo * newGC)
     if (((gc->defined && gc->fileID == newGC->fileID) && (warningLevel > 0))
         || (warningLevel > 9))
     {
-        WARN1("Compat map for group %d redefined\n", group + 1);
-        ACTION1("Using %s definition\n",
+        WARN("Compat map for group %d redefined\n", group + 1);
+        ACTION("Using %s definition\n",
                 (merge == MergeAugment ? "old" : "new"));
     }
     if(newGC->defined && (merge != MergeAugment || !gc->defined))
@@ -319,7 +319,7 @@ ResolveStateAndPredicate(ExprDef * expr,
             *pred_rtrn = XkbSI_Exactly;
         else
         {
-            ERROR1("Illegal modifier predicate \"%s\"\n", pred_txt);
+            ERROR("Illegal modifier predicate \"%s\"\n", pred_txt);
             ACTION("Ignored\n");
             return False;
         }
@@ -699,9 +699,9 @@ HandleGroupCompatDef(GroupCompatDef * def,
         merge = def->merge;
     if (!XkbIsLegalGroup(def->group - 1))
     {
-        ERROR1("Keyboard group must be in the range 1..%d\n",
+        ERROR("Keyboard group must be in the range 1..%d\n",
                XkbNumKbdGroups + 1);
-        ACTION1("Compatibility map for illegal group %d ignored\n",
+        ACTION("Compatibility map for illegal group %d ignored\n",
                 def->group);
         return False;
     }
@@ -710,7 +710,7 @@ HandleGroupCompatDef(GroupCompatDef * def,
     if (!ExprResolveModMask(def->def, &val, LookupVModMask, (XPointer) xkb))
     {
         ERROR("Expected a modifier mask in group compatibility definition\n");
-        ACTION1("Ignoring illegal compatibility map for group %d\n",
+        ACTION("Ignoring illegal compatibility map for group %d\n",
                 def->group);
         return False;
     }
@@ -773,7 +773,7 @@ HandleCompatMapFile(XkbFile * file,
             info->errorCount++;
             break;
         default:
-            WSGO1("Unexpected statement type %d in HandleCompatMapFile\n",
+            WSGO("Unexpected statement type %d in HandleCompatMapFile\n",
                   stmt->stmtType);
             break;
         }
@@ -783,7 +783,7 @@ HandleCompatMapFile(XkbFile * file,
 #ifdef NOISY
             ERROR("Too many errors\n");
 #endif
-            ACTION1("Abandoning compatibility map \"%s\"\n", file->topName);
+            ACTION("Abandoning compatibility map \"%s\"\n", file->topName);
             break;
         }
     }
@@ -846,7 +846,7 @@ CompileCompatMap(XkbFile * file,
             else
             {
                 WSGO("Couldn't allocate space for compat name\n");
-                ACTION2("Name \"%s\" (from %s) NOT assigned\n",
+                ACTION("Name \"%s\" (from %s) NOT assigned\n",
                         scanFile, info.name);
             }
         }

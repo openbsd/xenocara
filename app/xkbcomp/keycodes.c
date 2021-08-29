@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -169,7 +169,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
         if (((old->defs.fileID == new->defs.fileID) && (warningLevel > 0))
             || (warningLevel > 9))
         {
-            WARN1("Multiple indicators named %s\n",
+            WARN("Multiple indicators named %s\n",
                   XkbAtomText(NULL, new->name, XkbMessage));
             if (old->ndx == new->ndx)
             {
@@ -177,7 +177,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
                 {
                     if (replace)
                         old->virtual = new->virtual;
-                    ACTION2("Using %s instead of %s\n",
+                    ACTION("Using %s instead of %s\n",
                             (old->virtual ? "virtual" : "real"),
                             (old->virtual ? "real" : "virtual"));
                 }
@@ -190,9 +190,9 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
             else
             {
                 if (replace)
-                    ACTION2("Ignoring %d, using %d\n", old->ndx, new->ndx);
+                    ACTION("Ignoring %d, using %d\n", old->ndx, new->ndx);
                 else
-                    ACTION2("Using %d, ignoring %d\n", old->ndx, new->ndx);
+                    ACTION("Using %d, ignoring %d\n", old->ndx, new->ndx);
             }
             if (replace)
             {
@@ -222,7 +222,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
         if (((old->defs.fileID == new->defs.fileID) && (warningLevel > 0))
             || (warningLevel > 9))
         {
-            WARN1("Multiple names for indicator %d\n", new->ndx);
+            WARN("Multiple names for indicator %d\n", new->ndx);
             if ((old->name == new->name) && (old->virtual == new->virtual))
                 ACTION("Identical definitions ignored\n");
             else
@@ -247,7 +247,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
                     using = old->name;
                     ignoring = new->name;
                 }
-                ACTION4("Using %s %s, ignoring %s %s\n",
+                ACTION("Using %s %s, ignoring %s %s\n",
                         oldType, XkbAtomText(NULL, using, XkbMessage),
                         newType, XkbAtomText(NULL, ignoring, XkbMessage));
             }
@@ -263,7 +263,7 @@ AddIndicatorName(KeyNamesInfo * info, IndicatorNameInfo * new)
     new = NextIndicatorName(info);
     if (!new)
     {
-        WSGO1("Couldn't allocate name for indicator %d\n", old->ndx);
+        WSGO("Couldn't allocate name for indicator %d\n", old->ndx);
         ACTION("Ignored\n");
         return False;
     }
@@ -334,10 +334,8 @@ AddKeyName(KeyNamesInfo * info,
     {
         if (!high_keycode_warned && warningLevel > 1)
         {
-            WARN2("Unsupported high keycode %d for name <%s> ignored\n",
+            INFO("Keycodes above %d (e.g. <%s>) are not supported by X and are ignored\n",
                   kc, name);
-            ACTION2("X11 cannot support keycodes above 255.\n");
-            ACTION2("This warning only shows for the first high keycode.\n");
             high_keycode_warned = True;
         }
         return True;
@@ -370,7 +368,7 @@ AddKeyName(KeyNamesInfo * info,
             else if (reportCollisions)
             {
                 WARN("Multiple identical key name definitions\n");
-                ACTION2("Later occurrences of \"<%s> = %d\" ignored\n",
+                ACTION("Later occurrences of \"<%s> = %d\" ignored\n",
                         buf, kc);
             }
             return True;
@@ -379,8 +377,8 @@ AddKeyName(KeyNamesInfo * info,
         {
             if (reportCollisions)
             {
-                WARN1("Multiple names for keycode %d\n", kc);
-                ACTION2("Using <%s>, ignoring <%s>\n", buf, name);
+                WARN("Multiple names for keycode %d\n", kc);
+                ACTION("Using <%s>, ignoring <%s>\n", buf, name);
             }
             return True;
         }
@@ -388,8 +386,8 @@ AddKeyName(KeyNamesInfo * info,
         {
             if (reportCollisions)
             {
-                WARN1("Multiple names for keycode %d\n", kc);
-                ACTION2("Using <%s>, ignoring <%s>\n", name, buf);
+                WARN("Multiple names for keycode %d\n", kc);
+                ACTION("Using <%s>, ignoring <%s>\n", name, buf);
             }
             info->names[kc] = 0;
             info->files[kc] = 0;
@@ -405,16 +403,16 @@ AddKeyName(KeyNamesInfo * info,
             info->has_alt_forms[old] = True;
             if (reportCollisions)
             {
-                WARN1("Key name <%s> assigned to multiple keys\n", name);
-                ACTION2("Using %d, ignoring %d\n", kc, old);
+                WARN("Key name <%s> assigned to multiple keys\n", name);
+                ACTION("Using %d, ignoring %d\n", kc, old);
             }
         }
         else if (merge != MergeAltForm)
         {
             if ((reportCollisions) && (warningLevel > 3))
             {
-                WARN1("Key name <%s> assigned to multiple keys\n", name);
-                ACTION2("Using %d, ignoring %d\n", old, kc);
+                WARN("Key name <%s> assigned to multiple keys\n", name);
+                ACTION("Using %d, ignoring %d\n", old, kc);
                 ACTION
                     ("Use 'alternate' keyword to assign the same name to multiple keys\n");
             }
@@ -590,7 +588,7 @@ HandleKeycodeDef(KeycodeDef * stmt, unsigned merge, KeyNamesInfo * info)
 
     if (!ExprResolveInteger(stmt->value, &result, NULL, NULL))
     {
-        ACTION1("No value keycode assigned to name <%s>\n", stmt->name);
+        ACTION("No value keycode assigned to name <%s>\n", stmt->name);
         return 0;
     }
     code = result.ival;
@@ -598,10 +596,8 @@ HandleKeycodeDef(KeycodeDef * stmt, unsigned merge, KeyNamesInfo * info)
     {
         if (!high_keycode_warned && warningLevel > 1)
         {
-            WARN2("Unsupported high keycode %d for name <%s> ignored\n",
+            INFO("Keycodes above %d (e.g. <%s>) are not supported by X and are ignored\n",
                   code, stmt->name);
-            ACTION2("X11 cannot support keycodes above 255.\n");
-            ACTION2("This warning only shows for the first high keycode.\n");
             high_keycode_warned = True;
         }
         return 1;
@@ -637,8 +633,8 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
 
     if (tmp.str != NULL)
     {
-        ERROR1("Unknown element %s encountered\n", tmp.str);
-        ACTION1("Default for field %s ignored\n", field.str);
+        ERROR("Unknown element %s encountered\n", tmp.str);
+        ACTION("Default for field %s ignored\n", field.str);
         return 0;
     }
     if (uStrCaseCmp(field.str, "minimum") == 0)
@@ -648,33 +644,33 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
     else
     {
         ERROR("Unknown field encountered\n");
-        ACTION1("Assignment to field %s ignored\n", field.str);
+        ACTION("Assignment to field %s ignored\n", field.str);
         return 0;
     }
     if (arrayNdx != NULL)
     {
-        ERROR1("The %s setting is not an array\n", field.str);
+        ERROR("The %s setting is not an array\n", field.str);
         ACTION("Illegal array reference ignored\n");
         return 0;
     }
 
     if (ExprResolveInteger(stmt->value, &tmp, NULL, NULL) == 0)
     {
-        ACTION1("Assignment to field %s ignored\n", field.str);
+        ACTION("Assignment to field %s ignored\n", field.str);
         return 0;
     }
     if ((tmp.ival < XkbMinLegalKeyCode))
     {
-        ERROR3
+        ERROR
             ("Illegal keycode %d (must be in the range %d-%d inclusive)\n",
              tmp.ival, XkbMinLegalKeyCode, XkbMaxLegalKeyCode);
-        ACTION1("Value of \"%s\" not changed\n", field.str);
+        ACTION("Value of \"%s\" not changed\n", field.str);
         return 0;
     }
     if ((tmp.ival > XkbMaxLegalKeyCode))
     {
-        WARN2("Unsupported maximum keycode %d, clipping.\n", tmp.ival);
-        ACTION2("X11 cannot support keycodes above 255.\n");
+        WARN("Unsupported maximum keycode %d, clipping.\n", tmp.ival);
+        ACTION("X11 cannot support keycodes above 255.\n");
         info->explicitMax = XkbMaxLegalKeyCode;
         info->effectiveMax = XkbMaxLegalKeyCode;
         return 1;
@@ -683,7 +679,7 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
     {
         if ((info->explicitMax > 0) && (info->explicitMax < tmp.ival))
         {
-            ERROR2
+            ERROR
                 ("Minimum key code (%d) must be <= maximum key code (%d)\n",
                  tmp.ival, info->explicitMax);
             ACTION("Minimum key code value not changed\n");
@@ -691,7 +687,7 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
         }
         if ((info->computedMax > 0) && (info->computedMin < tmp.ival))
         {
-            ERROR2
+            ERROR
                 ("Minimum key code (%d) must be <= lowest defined key (%d)\n",
                  tmp.ival, info->computedMin);
             ACTION("Minimum key code value not changed\n");
@@ -704,14 +700,14 @@ HandleKeyNameVar(VarDef * stmt, KeyNamesInfo * info)
     {
         if ((info->explicitMin > 0) && (info->explicitMin > tmp.ival))
         {
-            ERROR2("Maximum code (%d) must be >= minimum key code (%d)\n",
+            ERROR("Maximum code (%d) must be >= minimum key code (%d)\n",
                    tmp.ival, info->explicitMin);
             ACTION("Maximum code value not changed\n");
             return 0;
         }
         if ((info->computedMax > 0) && (info->computedMax > tmp.ival))
         {
-            ERROR2
+            ERROR
                 ("Maximum code (%d) must be >= highest defined key (%d)\n",
                  tmp.ival, info->computedMax);
             ACTION("Maximum code value not changed\n");
@@ -733,7 +729,7 @@ HandleIndicatorNameDef(IndicatorNameDef * def,
     if ((def->ndx < 1) || (def->ndx > XkbNumIndicators))
     {
         info->errorCount++;
-        ERROR1("Name specified for illegal indicator index %d\n", def->ndx);
+        ERROR("Name specified for illegal indicator index %d\n", def->ndx);
         ACTION("Ignored\n");
         return False;
     }
@@ -805,14 +801,14 @@ HandleKeycodesFile(XkbFile * file,
         case StmtInterpDef:
         case StmtVModDef:
             ERROR("Keycode files may define key and indicator names only\n");
-            ACTION1("Ignoring definition of %s\n",
+            ACTION("Ignoring definition of %s\n",
                     ((stmt->stmtType ==
                       StmtInterpDef) ? "a symbol interpretation" :
                      "virtual modifiers"));
             info->errorCount++;
             break;
         default:
-            WSGO1("Unexpected statement type %d in HandleKeycodesFile\n",
+            WSGO("Unexpected statement type %d in HandleKeycodesFile\n",
                   stmt->stmtType);
             break;
         }
@@ -822,7 +818,7 @@ HandleKeycodesFile(XkbFile * file,
 #ifdef NOISY
             ERROR("Too many errors\n");
 #endif
-            ACTION1("Abandoning keycodes file \"%s\"\n", file->topName);
+            ACTION("Abandoning keycodes file \"%s\"\n", file->topName);
             break;
         }
     }

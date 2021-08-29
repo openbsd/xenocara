@@ -1,3 +1,86 @@
+commit f8b240e897ed68b90c116ce4c2f8814e71e5aa97
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 17 15:39:53 2021 +1000
+
+    xkbcomp 1.4.5
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit da810f10d732a312ccee88652141c1d165efc114
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:24:00 2021 +1000
+
+    keycodes: compress the high keycode warning
+    
+    No point spending 3 lines on this, especially given that this warning is
+    always triggered.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 80398db098b2a2214c5bef28d09cefd58beac43d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:20:40 2021 +1000
+
+    keycodes: downgrade the >255 keycode warning to an info
+    
+    This warning will be triggered all the time now that xkeyboard-config has
+    started adding keycodes > 255. Downgrade to an info, there's nothing the user
+    can do about this warning anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1955a2645670eeea83d6d163653749249cd839f2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:16:53 2021 +1000
+
+    Downgrade the warning for missing symbols to info
+    
+    In the interest of maintainability, it's easier to include as many keycodes as
+    possible and then have the symbols mapping specific to the layout. This is
+    particularly true for evdev where the kernel takes care of device-specifics
+    and every keyboard has the same set of keycodes anyway.
+    
+    So let's downgrade this from a warning to a mere info, virtually every
+    keyboard right now triggers this warning for a number of keys.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9510dedad875099c32993246188050ea73ab1a9f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:08:25 2021 +1000
+
+    Replace WARN[1-9], ERROR[1-9], etc. with their unnumbered version
+    
+    Those macros date back to when varargs weren't a thing but they've
+    been #defined to the same value for 17 years now.
+    
+    Patch generated with:
+            for action in WARN INFO ERROR ACTION FATAL WSGO; do
+            sed -i "s/${action}[1-9]/${action}/g" `git ls-files`
+            done
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ff6a19ed8898ee8c79b2b2a2f87806353d89f5d4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:46:01 2021 +1000
+
+    gitlab CI: add basic build test
+    
+    Copied from xorgproto
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3b3d25dd32ba48fd6d15ca98baf7109af21e1d97
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 21 13:24:51 2021 +1000
+
+    Remove trailing whitespaces
+    
+    Let's clean this up so I don't have to fight vim and git in removing them.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 790b998647ec171133bf196a3d84c5153cd64840
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 5 14:24:24 2020 +1000

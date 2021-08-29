@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -202,7 +202,7 @@ setVerboseFlags(char *str)
         default:
             if (warningLevel > 4)
             {
-                WARN1("Unknown verbose option \"%c\"\n", (unsigned int) *str);
+                WARN("Unknown verbose option \"%c\"\n", (unsigned int) *str);
                 ACTION("Ignored\n");
             }
             break;
@@ -236,7 +236,7 @@ parseArgs(int argc, char *argv[])
                 else if (warningLevel > 0)
                 {
                     WARN("Too many file names on command line\n");
-                    ACTION3
+                    ACTION
                         ("Compiling %s, writing to %s, ignoring %s\n",
                          inputFile, outputFile, argv[i]);
                 }
@@ -266,7 +266,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple output file formats specified\n");
-                    ACTION1("\"%s\" flag ignored\n", argv[i]);
+                    ACTION("\"%s\" flag ignored\n", argv[i]);
                 }
             }
             else
@@ -284,7 +284,7 @@ parseArgs(int argc, char *argv[])
                 if (sscanf(argv[++i], "%i", &itmp) == 1)
                     debugFlags = itmp;
             }
-            INFO1("Setting debug flags to %d\n", debugFlags);
+            INFO("Setting debug flags to %d\n", debugFlags);
         }
 #endif
         else if ((strcmp(argv[i], "-dflts") == 0) && (!xkblist))
@@ -306,7 +306,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple pre-error messages specified\n");
-                    ACTION2("Compiling %s, ignoring %s\n",
+                    ACTION("Compiling %s, ignoring %s\n",
                             preErrorMsg, argv[i]);
                 }
             }
@@ -328,7 +328,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple error prefixes specified\n");
-                    ACTION2("Compiling %s, ignoring %s\n",
+                    ACTION("Compiling %s, ignoring %s\n",
                             errorPrefix, argv[i]);
                 }
             }
@@ -350,7 +350,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple post-error messages specified\n");
-                    ACTION2("Compiling %s, ignoring %s\n",
+                    ACTION("Compiling %s, ignoring %s\n",
                             postErrorMsg, argv[i]);
                 }
             }
@@ -381,7 +381,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple output file formats specified\n");
-                    ACTION1("\"%s\" flag ignored\n", argv[i]);
+                    ACTION("\"%s\" flag ignored\n", argv[i]);
                 }
             }
             else
@@ -407,7 +407,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("No map name specified\n");
-                    ACTION1("Trailing \"%s\" option ignored\n", argv[i - 1]);
+                    ACTION("Trailing \"%s\" option ignored\n", argv[i - 1]);
                 }
             }
             else if (xkblist)
@@ -420,7 +420,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple map names specified\n");
-                    ACTION2("Compiling %s, ignoring %s\n", inputMap, argv[i]);
+                    ACTION("Compiling %s, ignoring %s\n", inputMap, argv[i]);
                 }
             }
             else
@@ -445,7 +445,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple output files specified\n");
-                    ACTION2("Compiling %s, ignoring %s\n", outputFile,
+                    ACTION("Compiling %s, ignoring %s\n", outputFile,
                             argv[i]);
                 }
             }
@@ -460,7 +460,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("No optional components specified\n");
-                    ACTION1("Trailing \"%s\" option ignored\n", argv[i - 1]);
+                    ACTION("Trailing \"%s\" option ignored\n", argv[i - 1]);
                 }
             }
             else
@@ -493,10 +493,10 @@ parseArgs(int argc, char *argv[])
                     default:
                         if (warningLevel > 0)
                         {
-                            WARN1
+                            WARN
                                 ("Illegal component for %s option\n",
                                  argv[i - 1]);
-                            ACTION1
+                            ACTION
                                 ("Ignoring unknown specifier \"%c\"\n",
                                  (unsigned int) *tmp2);
                         }
@@ -522,7 +522,7 @@ parseArgs(int argc, char *argv[])
                 dirsToStrip = 0;
             }
             if (warningLevel > 5)
-                INFO1("Setting path count to %d\n", dirsToStrip);
+                INFO("Setting path count to %d\n", dirsToStrip);
         }
         else if (strncmp(argv[i], "-R", 2) == 0)
         {
@@ -539,7 +539,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple root directories specified\n");
-                    ACTION2("Using %s, ignoring %s\n", rootDir, argv[i]);
+                    ACTION("Using %s, ignoring %s\n", rootDir, argv[i]);
                 }
             }
             else
@@ -547,14 +547,14 @@ parseArgs(int argc, char *argv[])
                 rootDir = &argv[i][2];
                 if (warningLevel > 8)
                 {
-                    WARN1("Changing root directory to \"%s\"\n", rootDir);
+                    WARN("Changing root directory to \"%s\"\n", rootDir);
                 }
                 if (chdir(rootDir) == 0)
                 {
                     XkbAddDirectoryToPath(".");
                 } else if (warningLevel > 0)
                 {
-                       WARN1("Couldn't change directory to \"%s\"\n", rootDir);
+                       WARN("Couldn't change directory to \"%s\"\n", rootDir);
                        ACTION("Root directory (-R) option ignored\n");
                        rootDir = NULL;
                 }
@@ -606,7 +606,7 @@ parseArgs(int argc, char *argv[])
                     warningLevel = utmp > 10 ? 10 : utmp;
                 else
                 {
-                    ERROR1("Unknown flag \"%s\" on command line\n", argv[i]);
+                    ERROR("Unknown flag \"%s\" on command line\n", argv[i]);
                     Usage(argc, argv);
                     return False;
                 }
@@ -620,7 +620,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple output file formats specified\n");
-                    ACTION1("\"%s\" flag ignored\n", argv[i]);
+                    ACTION("\"%s\" flag ignored\n", argv[i]);
                 }
             }
             else
@@ -634,7 +634,7 @@ parseArgs(int argc, char *argv[])
                 if (warningLevel > 0)
                 {
                     WARN("Multiple output file formats specified\n");
-                    ACTION1("\"%s\" flag ignored\n", argv[i]);
+                    ACTION("\"%s\" flag ignored\n", argv[i]);
                 }
             }
             else
@@ -642,7 +642,7 @@ parseArgs(int argc, char *argv[])
         }
         else
         {
-            ERROR1("Unknown flag \"%s\" on command line\n", argv[i]);
+            ERROR("Unknown flag \"%s\" on command line\n", argv[i]);
             Usage(argc, argv);
             return False;
         }
@@ -691,12 +691,12 @@ parseArgs(int argc, char *argv[])
                 else
                 {
                     WARN("Map specified in filename and with -m flag\n");
-                    ACTION1("map from name (\"%s\") ignored\n", tmpstr);
+                    ACTION("map from name (\"%s\") ignored\n", tmpstr);
                 }
             }
             else
             {
-                ERROR1("Illegal name \"%s\" for input file\n", inputFile);
+                ERROR("Illegal name \"%s\" for input file\n", inputFile);
                 return False;
             }
         }
@@ -861,25 +861,25 @@ GetDisplay(char *program, char *dpyName)
         switch (error)
         {
         case XkbOD_BadLibraryVersion:
-            INFO3("%s was compiled with XKB version %d.%02d\n",
+            INFO("%s was compiled with XKB version %d.%02d\n",
                   program, XkbMajorVersion, XkbMinorVersion);
-            ERROR2("X library supports incompatible version %d.%02d\n",
+            ERROR("X library supports incompatible version %d.%02d\n",
                    mjr, mnr);
             break;
         case XkbOD_ConnectionRefused:
-            ERROR1("Cannot open display \"%s\"\n", dpyName);
+            ERROR("Cannot open display \"%s\"\n", dpyName);
             break;
         case XkbOD_NonXkbServer:
-            ERROR1("XKB extension not present on %s\n", dpyName);
+            ERROR("XKB extension not present on %s\n", dpyName);
             break;
         case XkbOD_BadServerVersion:
-            INFO3("%s was compiled with XKB version %d.%02d\n",
+            INFO("%s was compiled with XKB version %d.%02d\n",
                   program, XkbMajorVersion, XkbMinorVersion);
-            ERROR3("Server %s uses incompatible version %d.%02d\n",
+            ERROR("Server %s uses incompatible version %d.%02d\n",
                    dpyName, mjr, mnr);
             break;
         default:
-            WSGO1("Unknown error %d from XkbOpenDisplay\n", error);
+            WSGO("Unknown error %d from XkbOpenDisplay\n", error);
         }
     }
     else if (synch)
@@ -968,9 +968,9 @@ main(int argc, char *argv[])
         mnr = XkbMinorVersion;
         if (!XkbLibraryVersion(&mjr, &mnr))
         {
-            INFO3("%s was compiled with XKB version %d.%02d\n",
+            INFO("%s was compiled with XKB version %d.%02d\n",
                   argv[0], XkbMajorVersion, XkbMinorVersion);
-            ERROR2("X library supports incompatible version %d.%02d\n",
+            ERROR("X library supports incompatible version %d.%02d\n",
                    mjr, mnr);
             ACTION("Exiting\n");
             exit(1);
@@ -994,7 +994,7 @@ main(int argc, char *argv[])
                 }
                 if (!mapToUse)
                 {
-                    FATAL2("No map named \"%s\" in \"%s\"\n",
+                    FATAL("No map named \"%s\" in \"%s\"\n",
                            inputMap, inputFile);
                     /* NOTREACHED */
                 }
@@ -1013,10 +1013,10 @@ main(int argc, char *argv[])
                     mapToUse = rtrn;
                     if (warningLevel > 4)
                     {
-                        WARN1
+                        WARN
                             ("No map specified, but \"%s\" has several\n",
                              inputFile);
-                        ACTION1
+                        ACTION
                             ("Using the first defined map, \"%s\"\n",
                              mapToUse->name);
                     }
@@ -1057,7 +1057,7 @@ main(int argc, char *argv[])
                 ok = CompileGeometry(mapToUse, &result, MergeReplace);
                 break;
             default:
-                WSGO1("Unknown file type %d\n", mapToUse->type);
+                WSGO("Unknown file type %d\n", mapToUse->type);
                 ok = False;
                 break;
             }
@@ -1075,14 +1075,14 @@ main(int argc, char *argv[])
             tmp = XkmReadFile(file, 0, XkmKeymapLegal, &result);
             if (tmp == XkmKeymapLegal)
             {
-                ERROR1("Cannot read XKM file \"%s\"\n", inputFile);
+                ERROR("Cannot read XKM file \"%s\"\n", inputFile);
                 ok = False;
             }
             result.xkb->device_spec = device_id;
         }
         else
         {
-            INFO1("Errors encountered in %s; not compiled.\n", inputFile);
+            INFO("Errors encountered in %s; not compiled.\n", inputFile);
             ok = False;
         }
     }
@@ -1108,8 +1108,8 @@ main(int argc, char *argv[])
                 char buf[100];
                 buf[0] = '\0';
                 XGetErrorText(inDpy, status, buf, 100);
-                WARN1("Could not load keyboard geometry for %s\n", inDpyName);
-                ACTION1("%s\n", buf);
+                WARN("Could not load keyboard geometry for %s\n", inDpyName);
+                ACTION("%s\n", buf);
                 ACTION("Resulting keymap file will not describe geometry\n");
             }
         }
@@ -1129,7 +1129,7 @@ main(int argc, char *argv[])
         if ((inDpy != outDpy) &&
             (XkbChangeKbdDisplay(outDpy, &result) != Success))
         {
-            WSGO2("Error converting keyboard display from %s to %s\n",
+            WSGO("Error converting keyboard display from %s to %s\n",
                   inDpyName, outDpyName);
             exit(1);
         }
@@ -1169,7 +1169,7 @@ main(int argc, char *argv[])
                          | S_IWOTH | binMode);
                 if (outputFileFd < 0)
                 {
-                    ERROR1
+                    ERROR
                         ("Cannot open \"%s\" to write keyboard description\n",
                          outputFile);
                     ACTION("Exiting\n");
@@ -1184,7 +1184,7 @@ main(int argc, char *argv[])
                 /* end BR */
                 if (out == NULL)
                 {
-                    ERROR1
+                    ERROR
                         ("Cannot open \"%s\" to write keyboard description\n",
                          outputFile);
                     ACTION("Exiting\n");
@@ -1206,14 +1206,14 @@ main(int argc, char *argv[])
         case WANT_X_SERVER:
             if (!(ok = XkbWriteToServer(&result)))
             {
-                ERROR2("%s in %s\n", _XkbErrMessages[_XkbErrCode],
+                ERROR("%s in %s\n", _XkbErrMessages[_XkbErrCode],
                        _XkbErrLocation ? _XkbErrLocation : "unknown");
-                ACTION1("Couldn't write keyboard description to %s\n",
+                ACTION("Couldn't write keyboard description to %s\n",
                         outDpyName);
             }
             break;
         default:
-            WSGO1("Unknown output format %d\n", outputFormat);
+            WSGO("Unknown output format %d\n", outputFormat);
             ACTION("No output file created\n");
             ok = False;
             break;
@@ -1222,18 +1222,18 @@ main(int argc, char *argv[])
         {
             if (fclose(out))
             {
-                ERROR1("Cannot close \"%s\" properly (not enough space?)\n",
+                ERROR("Cannot close \"%s\" properly (not enough space?)\n",
                        outputFile);
                 ok= False;
             }
             else if (!ok)
             {
-                ERROR2("%s in %s\n", _XkbErrMessages[_XkbErrCode],
+                ERROR("%s in %s\n", _XkbErrMessages[_XkbErrCode],
                        _XkbErrLocation ? _XkbErrLocation : "unknown");
             }
             if (!ok)
             {
-                ACTION1("Output file \"%s\" removed\n", outputFile);
+                ACTION("Output file \"%s\" removed\n", outputFile);
                 unlink(outputFile);
             }
         }

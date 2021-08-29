@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -66,7 +66,7 @@ ProcessIncludeFile(IncludeStmt * stmt,
         file = XkbFindFileInPath(stmt->file, file_type, &stmt->path);
         if (file == NULL)
         {
-            ERROR2("Can't find file \"%s\" for %s include\n", stmt->file,
+            ERROR("Can't find file \"%s\" for %s include\n", stmt->file,
                    XkbDirectoryForInclude(file_type));
             ACTION("Exiting\n");
             return False;
@@ -75,12 +75,12 @@ ProcessIncludeFile(IncludeStmt * stmt,
         oldLine = lineNum;
         setScanState(stmt->file, 1);
         if (debugFlags & 2)
-            INFO1("About to parse include file %s\n", stmt->file);
+            INFO("About to parse include file %s\n", stmt->file);
         /* parse the file */
         if ((XKBParseFile(file, &rtrn) == 0) || (rtrn == NULL))
         {
             setScanState(oldFile, oldLine);
-            ERROR1("Error interpreting include file \"%s\"\n", stmt->file);
+            ERROR("Error interpreting include file \"%s\"\n", stmt->file);
             ACTION("Exiting\n");
             fclose(file);
             return False;
@@ -107,7 +107,7 @@ ProcessIncludeFile(IncludeStmt * stmt,
         }
         if (!mapToUse)
         {
-            ERROR3("No %s named \"%s\" in the include file \"%s\"\n",
+            ERROR("No %s named \"%s\" in the include file \"%s\"\n",
                    XkbConfigText(file_type, XkbMessage), stmt->map,
                    stmt->file);
             ACTION("Exiting\n");
@@ -124,9 +124,9 @@ ProcessIncludeFile(IncludeStmt * stmt,
         {
             if (warningLevel > 5)
             {
-                WARN1("No map in include statement, but \"%s\" contains several without a default map\n",
+                WARN("No map in include statement, but \"%s\" contains several without a default map\n",
                       stmt->file);
-                ACTION1("Using first defined map, \"%s\"\n", rtrn->name);
+                ACTION("Using first defined map, \"%s\"\n", rtrn->name);
             }
             mapToUse = rtrn;
         }
@@ -135,10 +135,10 @@ ProcessIncludeFile(IncludeStmt * stmt,
     setScanState(oldFile, oldLine);
     if (mapToUse->type != file_type)
     {
-        ERROR2("Include file wrong type (expected %s, got %s)\n",
+        ERROR("Include file wrong type (expected %s, got %s)\n",
                XkbConfigText(file_type, XkbMessage),
                XkbConfigText(mapToUse->type, XkbMessage));
-        ACTION1("Include file \"%s\" ignored\n", stmt->file);
+        ACTION("Include file \"%s\" ignored\n", stmt->file);
         return False;
     }
     /* FIXME: we have to check recursive includes here (or somewhere) */
@@ -154,16 +154,16 @@ ProcessIncludeFile(IncludeStmt * stmt,
 int
 ReportNotArray(const char *type, const char *field, const char *name)
 {
-    ERROR2("The %s %s field is not an array\n", type, field);
-    ACTION1("Ignoring illegal assignment in %s\n", name);
+    ERROR("The %s %s field is not an array\n", type, field);
+    ACTION("Ignoring illegal assignment in %s\n", name);
     return False;
 }
 
 int
 ReportShouldBeArray(const char *type, const char *field, char *name)
 {
-    ERROR2("Missing subscript for %s %s\n", type, field);
-    ACTION1("Ignoring illegal assignment in %s\n", name);
+    ERROR("Missing subscript for %s %s\n", type, field);
+    ACTION("Ignoring illegal assignment in %s\n", name);
     return False;
 }
 
@@ -171,31 +171,31 @@ int
 ReportBadType(const char *type, const char *field,
               const char *name, const char *wanted)
 {
-    ERROR3("The %s %s field must be a %s\n", type, field, wanted);
-    ACTION1("Ignoring illegal assignment in %s\n", name);
+    ERROR("The %s %s field must be a %s\n", type, field, wanted);
+    ACTION("Ignoring illegal assignment in %s\n", name);
     return False;
 }
 
 int
 ReportBadIndexType(char *type, char *field, char *name, char *wanted)
 {
-    ERROR3("Index for the %s %s field must be a %s\n", type, field, wanted);
-    ACTION1("Ignoring assignment to illegal field in %s\n", name);
+    ERROR("Index for the %s %s field must be a %s\n", type, field, wanted);
+    ACTION("Ignoring assignment to illegal field in %s\n", name);
     return False;
 }
 
 int
 ReportBadField(const char *type, const char *field, const char *name)
 {
-    ERROR3("Unknown %s field %s in %s\n", type, field, name);
-    ACTION1("Ignoring assignment to unknown field in %s\n", name);
+    ERROR("Unknown %s field %s in %s\n", type, field, name);
+    ACTION("Ignoring assignment to unknown field in %s\n", name);
     return False;
 }
 
 int
 ReportMultipleDefs(char *type, char *field, char *name)
 {
-    WARN3("Multiple definitions of %s in %s \"%s\"\n", field, type, name);
+    WARN("Multiple definitions of %s in %s \"%s\"\n", field, type, name);
     ACTION("Using last definition\n");
     return False;
 }
@@ -446,10 +446,10 @@ ComputeKbdDefaults(XkbDescPtr xkb)
                     {
                         if (warningLevel > 2)
                         {
-                            WARN1
+                            WARN
                                 ("Several keys match pattern for %s\n",
                                  XkbKeyNameText(name->name, XkbMessage));
-                            ACTION2("Using <U%03d> for key %d\n",
+                            ACTION("Using <U%03d> for key %d\n",
                                     nUnknown, i);
                         }
                         snprintf(tmpname, sizeof(tmpname), "U%03d",
@@ -464,8 +464,8 @@ ComputeKbdDefaults(XkbDescPtr xkb)
             {
                 if (warningLevel > 2)
                 {
-                    WARN1("Key %d does not match any defaults\n", i);
-                    ACTION1("Using name <U%03d>\n", nUnknown);
+                    WARN("Key %d does not match any defaults\n", i);
+                    ACTION("Using name <U%03d>\n", nUnknown);
                     snprintf(tmpname, sizeof(tmpname), "U%03d", nUnknown++);
                     memcpy(xkb->names->keys[i].name, tmpname,
                            XkbKeyNameLength);
@@ -539,7 +539,7 @@ FindNamedKey(XkbDescPtr xkb,
                 if (warningLevel > 0)
                 {
                     WARN("Couldn't allocate key names in FindNamedKey\n");
-                    ACTION1("Key \"%s\" not automatically created\n",
+                    ACTION("Key \"%s\" not automatically created\n",
                             longText(name, XkbMessage));
                 }
                 return False;
