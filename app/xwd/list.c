@@ -43,12 +43,12 @@ from The Open Group.
 /** ------------------------------------------------------------------------
 	Sets the pointers of the specified list to NULL.
     --------------------------------------------------------------------- **/
-void zero_list(list_ptr lp)
+void
+zero_list(list_ptr lp)
 {
     lp->next = NULL;
     lp->ptr.item = NULL;
 }
-
 
 /** ------------------------------------------------------------------------
 	Adds item to the list pointed to by lp.  Finds the end of the
@@ -57,14 +57,15 @@ void zero_list(list_ptr lp)
 	and the next pointer in the new node is set to NULL.
 	Returns 1 if successful, 0 if the malloc failed.
     -------------------------------------------------------------------- **/
-int add_to_list(list_ptr lp, void *item)
+int
+add_to_list(list_ptr lp, void *item)
 {
     while (lp->next) {
-	lp = lp->next;
+        lp = lp->next;
     }
-    if ((lp->next = (list_ptr) malloc( sizeof( list_item))) == NULL) {
+    if ((lp->next = (list_ptr) malloc(sizeof(list_item))) == NULL) {
 
-	return 0;
+        return 0;
     }
     lp->next->ptr.item = item;
     lp->next->next = NULL;
@@ -77,13 +78,14 @@ int add_to_list(list_ptr lp, void *item)
 	Creates a new list and sets its pointers to NULL.
 	Returns a pointer to the new list.
     -------------------------------------------------------------------- **/
-list_ptr new_list (void)
+list_ptr
+new_list(void)
 {
     list_ptr lp;
 
-    if ((lp = (list_ptr) malloc( sizeof( list_item)))) {
-	lp->next = NULL;
-	lp->ptr.item = NULL;
+    if ((lp = (list_ptr) malloc(sizeof(list_item)))) {
+        lp->next = NULL;
+        lp->ptr.item = NULL;
     }
 
     return lp;
@@ -99,13 +101,14 @@ list_ptr new_list (void)
 	curr pointer in the new list is the same as in the old list.
 	Returns a pointer to the new list head.
     -------------------------------------------------------------------- **/
-list_ptr dup_list_head(list_ptr lp, int start_at_curr)
+list_ptr
+dup_list_head(list_ptr lp, int start_at_curr)
 {
     list_ptr new_listp;
 
-    if ((new_listp = (list_ptr) malloc( sizeof( list_item))) == NULL) {
+    if ((new_listp = (list_ptr) malloc(sizeof(list_item))) == NULL) {
 
-        return (list_ptr)NULL;
+        return (list_ptr) NULL;
     }
     new_listp->next = start_at_curr ? lp->ptr.curr : lp->next;
     new_listp->ptr.curr = lp->ptr.curr;
@@ -117,13 +120,14 @@ list_ptr dup_list_head(list_ptr lp, int start_at_curr)
 /** ------------------------------------------------------------------------
 	Returns the number of items in the list.
     -------------------------------------------------------------------- **/
-unsigned int list_length(list_ptr lp)
+unsigned int
+list_length(list_ptr lp)
 {
     unsigned int count = 0;
 
     while (lp->next) {
-	count++;
-	lp = lp->next;
+        count++;
+        lp = lp->next;
     }
 
     return count;
@@ -139,19 +143,20 @@ unsigned int list_length(list_ptr lp)
 	Returns a pointer to the item, so the caller can free it if it
 	so desires.  If a match is not found, returns NULL.
     -------------------------------------------------------------------- **/
-void *delete_from_list(list_ptr lp, void *item)
+void *
+delete_from_list(list_ptr lp, void *item)
 {
     list_ptr new_next;
 
     while (lp->next) {
-	if (lp->next->ptr.item == item) {
-	    new_next = lp->next->next;
-	    free (lp->next);
-	    lp->next = new_next;
+        if (lp->next->ptr.item == item) {
+            new_next = lp->next->next;
+            free(lp->next);
+            lp->next = new_next;
 
-	    return item;
-	}
-	lp = lp->next;
+            return item;
+        }
+        lp = lp->next;
     }
 
     return NULL;
@@ -164,35 +169,38 @@ void *delete_from_list(list_ptr lp, void *item)
 	with new_list().  If free_items is true, each item pointed to
 	from the node is freed, in addition to the node itself.
     -------------------------------------------------------------------- **/
-void delete_list(list_ptr lp, int free_items)
+void
+delete_list(list_ptr lp, int free_items)
 {
     list_ptr del_node;
     void *item;
 
     while (lp->next) {
-	del_node = lp->next;
-	item = del_node->ptr.item;
-	lp->next = del_node->next;
-	free (del_node);
-	if (free_items) {
-	    free( item);
-	}
+        del_node = lp->next;
+        item = del_node->ptr.item;
+        lp->next = del_node->next;
+        free(del_node);
+        if (free_items) {
+            free(item);
+        }
     }
 }
 
-void delete_list_destroying(list_ptr lp, void destructor(void *item))
+void
+delete_list_destroying(list_ptr lp, void destructor(void *item))
 {
     list_ptr del_node;
+
     void *item;
 
     while (lp->next) {
-	del_node = lp->next;
-	item = del_node->ptr.item;
-	lp->next = del_node->next;
-	free( del_node);
-	if (destructor) {
-	    destructor( item);
-	}
+        del_node = lp->next;
+        item = del_node->ptr.item;
+        lp->next = del_node->next;
+        free(del_node);
+        if (destructor) {
+            destructor(item);
+        }
     }
 }
 
@@ -202,11 +210,12 @@ void delete_list_destroying(list_ptr lp, void destructor(void *item))
 	Sets the list head node's curr ptr to the first node in the list.
 	Returns NULL if the list is empty.
     -------------------------------------------------------------------- **/
-void * first_in_list(list_ptr lp)
+void *
+first_in_list(list_ptr lp)
 {
-    if (! lp) {
+    if (!lp) {
 
-	return NULL;
+        return NULL;
     }
     lp->ptr.curr = lp->next;
 
@@ -219,21 +228,22 @@ void * first_in_list(list_ptr lp)
 	first_in_list must have been called prior.
 	Returns NULL if no next item.
     -------------------------------------------------------------------- **/
-void * next_in_list(list_ptr lp)
+void *
+next_in_list(list_ptr lp)
 {
-    if (! lp) {
+    if (!lp) {
 
-	return NULL;
+        return NULL;
     }
     if (lp->ptr.curr) {
-	lp->ptr.curr = lp->ptr.curr->next;
+        lp->ptr.curr = lp->ptr.curr->next;
     }
 
     return lp->ptr.curr ? lp->ptr.curr->ptr.item : NULL;
 }
 
-int list_is_empty(list_ptr lp)
+int
+list_is_empty(list_ptr lp)
 {
     return (lp == NULL || lp->next == NULL);
 }
-

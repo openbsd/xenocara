@@ -47,47 +47,23 @@ from The Open Group.
 typedef struct _list_item {
     struct _list_item *next;
     union {
-	void *item;		 /* in normal list node, pts to data */
-	struct _list_item *curr; /* in list head, pts to curr for 1st, next */
+        void *item;              /* in normal list node, pts to data */
+        struct _list_item *curr; /* in list head, pts to curr for 1st, next */
     } ptr;
 } list, list_item, *list_ptr;
 
-typedef void (*DESTRUCT_FUNC_PTR)(
-void *
-);
+typedef void (*DESTRUCT_FUNC_PTR) (void *);
 
-void zero_list(
-          list_ptr
-    );
-int add_to_list (
-          list_ptr , void *
-    );
-list_ptr new_list (
-          void
-    );
-list_ptr dup_list_head (
-          list_ptr , int
-    );
-unsigned int list_length(
-          list_ptr
-    );
-void *delete_from_list (
-          list_ptr , void *
-    );
-void delete_list(
-          list_ptr , int
-    );
-void delete_list_destroying (
-          list_ptr , DESTRUCT_FUNC_PTR
-    );
-void *first_in_list (
-          list_ptr
-    );
-void *next_in_list (
-          list_ptr
-    );
-int list_is_empty (
-          list_ptr
-    );
+void zero_list(list_ptr);
+int add_to_list(list_ptr, void *);
+list_ptr new_list(void);
+list_ptr dup_list_head(list_ptr, int);
+unsigned int list_length(list_ptr);
+void *delete_from_list(list_ptr, void *);
+void delete_list(list_ptr, int);
+void delete_list_destroying(list_ptr, DESTRUCT_FUNC_PTR);
+void *first_in_list(list_ptr);
+void *next_in_list(list_ptr);
+int list_is_empty(list_ptr);
 
 #endif

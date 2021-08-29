@@ -1,3 +1,80 @@
+commit 57586247e0c6bce744c04f072185762e76879baf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 17:14:35 2021 -0700
+
+    xwd 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae07bdd696b8e6ba8af4dbeb96c96e378166eede
+Author: Jim Rees <rees@umich.edu>
+Date:   Mon Jun 22 19:19:30 2020 -0500
+
+    Zero out uninitialized memory so as not to write stack garbage to dump file
+    
+    Also check return from XFetchName()
+    
+    Signed-off-by: Jim Rees <rees@umich.edu>
+
+commit aeabe09fdf0750933fdbd970780bd50c8dfda5fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 23 10:35:10 2019 -0700
+
+    Elide empty else
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68dc9400f0047b10eebd77d60353fb96ccf4914d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 23 10:28:07 2019 -0700
+
+    Adopt standard X.Org coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8026ace54250eba699ad9979586e78d27a7745dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 23 08:25:19 2019 -0700
+
+    QueryColorMap() function in multiVis.c may retrieve incorrect colours (#3)
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xwd/issues/3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fe45abd6589dcc501e415926d8aaa3568fb1933
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 21:46:46 2019 -0800
+
+    Combine options info into a single string in usage()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bab5bb9bbcb7e7424ec3276f6d74ca1a7dfa863f
+Author: Stéphane Aulery  <lkppo@free.fr>
+Date:   Sun Jul 7 03:03:59 2013 +0200
+
+    Ensure consistency between the manpage and the output of the -help option
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fff6825528bc85d20337e4abe284c84d814c5bcd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:21:32 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5879dad42baf52ddb55dd0405cdb115e41cde0a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:31:44 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e325d626acca54aa2b845aa0c0fb328659bd1b80
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:37:36 2018 -0800
@@ -216,7 +293,7 @@ Date:   Tue Dec 13 15:53:02 2011 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 7d88d8ab44b17247753f7225a1d8133d55d8423e
-Author: Pär Lidberg <par.lidberg@elekta.com>
+Author: Pär Lidberg  <par.lidberg@elekta.com>
 Date:   Mon Oct 3 00:24:06 2011 -0700
 
     Fix LP64 bug
@@ -624,7 +701,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 504daf4567c93ac5ec425ab122cd88f29089ea7d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 20:59:16 2005 +0000
 
     Add build system for xwd

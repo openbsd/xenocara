@@ -51,10 +51,10 @@ extern const char *program_name;             /* Name of this program */
 extern Display *dpy;                         /* The current display */
 extern int screen;                           /* The current screen */
 
-#define INIT_NAME program_name=argv[0]        /* use this in main to setup
-                                                 program_name */
+#define INIT_NAME program_name=argv[0]       /* use this in main to setup
+                                                program_name */
 
-    /* Declaritions for functions in just_display.c */
+    /* Declarations for functions in just_display.c */
 
 char *Get_Display_Name(int *, char **);
 Display *Open_Display(const char *);
@@ -63,8 +63,8 @@ void Close_Display(void);
 Window Select_Window_Args(int *, char **);
 void usage(const char *errmsg) _X_NORETURN _X_COLD;
 
-#define X_USAGE "[host:display]"              /* X arguments handled by
-						 Get_Display_Name */
+#define X_USAGE "[host:display]"             /* X arguments handled by
+                                                Get_Display_Name */
 
 /*
  * Other_stuff.h: Definitions of routines in other_stuff.
@@ -76,5 +76,6 @@ void usage(const char *errmsg) _X_NORETURN _X_COLD;
 
 Window Select_Window(Display *, int);
 Window Window_With_Name(Display *, Window, const char *);
-void Fatal_Error(const char *, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1, 2) _X_COLD;
+void Fatal_Error(const char *, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1, 2)
+    _X_COLD;
 void outl(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);

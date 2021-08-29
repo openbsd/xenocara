@@ -28,8 +28,8 @@ xwd - dump an image of an X window
 .SH SYNOPSIS
 .B "xwd"
 [-debug] [-help] [-nobdrs] [-out \fIfile\fP] [-xy] [-frame] [-add \fIvalue\fP]
-[-root | -id \fIid\fP | -name \fIname\fP ] [-icmap] [-screen] [-silent]
-[-display \fIdisplay\fP] [-version]
+[-root | -id \fIwdid\fP | -name \fIwdname\fP ] [-icmap] [-screen] [-silent]
+[-display \fIhost:dpy\fP] [-version]
 .SH DESCRIPTION
 .PP
 .I Xwd
@@ -44,7 +44,11 @@ the dump is completed.
 .SH OPTIONS
 .PP
 .TP 8
-.B "-display \fIdisplay\fP"
+.B "-debug"
+Enable debug mode.
+.PP
+.TP 8
+.B "-d, -display \fIhost:dpy\fP"
 This argument allows you to specify the server to connect to; see \fIX(__miscmansuffix__)\fP.
 .PP
 .TP 8
@@ -83,13 +87,13 @@ This option indicates that the root window should be selected for the
 window dump, without requiring the user to select a window with the pointer.
 .PP
 .TP 8
-.B "-id \fIid\fP"
+.B "-id \fIwdid\fP"
 This option indicates that the window with the specified resource id
 should be selected for the window dump, without requiring the user to
 select a window with the pointer.
 .PP
 .TP 8
-.B "-name \fIname\fP"
+.B "-name \fIwdname\fP"
 This option indicates that the window with the specified WM_NAME property
 should be selected for the window dump, without requiring the user to
 select a window with the pointer.

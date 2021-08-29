@@ -107,7 +107,7 @@ Find_Client_In_Children(Display * dpy, Window win)
             break;
     }
 
-  done:
+ done:
     XFree(children);
 
     return win;

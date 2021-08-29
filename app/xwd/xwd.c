@@ -111,29 +111,29 @@ static long parse_long(char *);
 static int Get24bitDirectColors(XColor **);
 static int ReadColors(Visual *, Colormap, XColor **);
 
-
-static long parse_long (char *s)
+static long
+parse_long(char *s)
 {
     long retval = 0L;
     int thesign = 1;
 
     if (s && s[0]) {
-	switch(s[0]) {
-	    case '-':
-		(void) sscanf (s + 1, "%lu", &retval);
-        	thesign = -1;
-		break;
-	    case '0':
-		(void) sscanf (s + 1, "%lo", &retval);
-		break;
-	    case 'x':
-	    case 'X':
-		(void) sscanf (s + 1, "%lx", &retval);
-		break;
-	    default:
-		(void) sscanf (s, "%lu", &retval);
-		break;
-	}
+        switch (s[0]) {
+        case '-':
+            (void) sscanf(s + 1, "%lu", &retval);
+            thesign = -1;
+            break;
+        case '0':
+            (void) sscanf(s + 1, "%lo", &retval);
+            break;
+        case 'x':
+        case 'X':
+            (void) sscanf(s + 1, "%lx", &retval);
+            break;
+        default:
+            (void) sscanf(s, "%lu", &retval);
+            break;
+        }
     }
     return (thesign * retval);
 }
@@ -154,66 +154,68 @@ main(int argc, char **argv)
     target_win = Select_Window_Args(&argc, argv);
 
     for (i = 1; i < argc; i++) {
-	if (!strcmp(argv[i], "-nobdrs")) {
-	    nobdrs = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-debug")) {
-	    debug = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-help"))
-	  usage(NULL);
-	if (!strcmp(argv[i], "-out")) {
-	    if (++i >= argc) usage("-out requires an argument");
-	    if (!(out_file = fopen(argv[i], "wb")))
-	      Fatal_Error("Can't open output file as specified.");
-	    standard_out = False;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-xy")) {
-	    format = XYPixmap;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-screen")) {
-	    on_root = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-icmap")) {
-	    use_installed = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-add")) {
-	    if (++i >= argc) usage("-add requires an argument");
-	    add_pixel_value = parse_long (argv[i]);
-	    continue;
-	}
-	if (!strcmp(argv[i], "-frame")) {
-	    frame_only = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-silent")) {
-	    silent = True;
-	    continue;
-	}
-	if (!strcmp(argv[i], "-version")) {
-	    puts(PACKAGE_STRING);
-	    exit(0);
-	}
-	fprintf (stderr, "%s: unrecognized argument '%s'\n",
-		 program_name, argv[i]);
-	usage(NULL);
+        if (!strcmp(argv[i], "-nobdrs")) {
+            nobdrs = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-debug")) {
+            debug = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-help"))
+            usage(NULL);
+        if (!strcmp(argv[i], "-out")) {
+            if (++i >= argc)
+                usage("-out requires an argument");
+            if (!(out_file = fopen(argv[i], "wb")))
+                Fatal_Error("Can't open output file as specified.");
+            standard_out = False;
+            continue;
+        }
+        if (!strcmp(argv[i], "-xy")) {
+            format = XYPixmap;
+            continue;
+        }
+        if (!strcmp(argv[i], "-screen")) {
+            on_root = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-icmap")) {
+            use_installed = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-add")) {
+            if (++i >= argc)
+                usage("-add requires an argument");
+            add_pixel_value = parse_long(argv[i]);
+            continue;
+        }
+        if (!strcmp(argv[i], "-frame")) {
+            frame_only = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-silent")) {
+            silent = True;
+            continue;
+        }
+        if (!strcmp(argv[i], "-version")) {
+            puts(PACKAGE_STRING);
+            exit(0);
+        }
+        fprintf(stderr, "%s: unrecognized argument '%s'\n",
+                program_name, argv[i]);
+        usage(NULL);
     }
 #ifdef WIN32
     if (standard_out)
-	_setmode(fileno(out_file), _O_BINARY);
+        _setmode(fileno(out_file), _O_BINARY);
 #endif
 
     /*
      * Let the user select the target window.
      */
     if (target_win == None)
-	target_win = Select_Window(dpy, !frame_only);
+        target_win = Select_Window(dpy, !frame_only);
 
     /*
      * Dump it!
@@ -222,8 +224,8 @@ main(int argc, char **argv)
 
     XCloseDisplay(dpy);
     if (fclose(out_file)) {
-	perror("xwd");
-	exit(1);
+        perror("xwd");
+        exit(1);
     }
     exit(0);
 }
@@ -231,24 +233,23 @@ main(int argc, char **argv)
 static int
 Get24bitDirectColors(XColor **colors)
 {
-    int i , ncolors = 256 ;
-    XColor *tcol ;
+    int i, ncolors = 256;
+    XColor *tcol;
 
-    *colors = tcol = (XColor *)malloc(sizeof(XColor) * ncolors) ;
+    *colors = tcol = (XColor *) malloc(sizeof(XColor) * ncolors);
 
-    for(i=0 ; i < ncolors ; i++)
-    {
-	tcol[i].pixel = i << 16 | i << 8 | i ;
-	tcol[i].red = tcol[i].green = tcol[i].blue = i << 8   | i ;
+    for (i = 0; i < ncolors; i++) {
+        tcol[i].pixel = i << 16 | i << 8 | i;
+        tcol[i].red = tcol[i].green = tcol[i].blue = i << 8 | i;
+        tcol[i].flags = 0;
     }
 
-    return ncolors ;
+    return ncolors;
 }
-
 
 /*
  * Window_Dump: dump a window to a file which must already be open for
- *              writting.
+ *              writing.
  */
 
 void
@@ -272,44 +273,45 @@ Window_Dump(Window window, FILE *out)
     XWDFileHeader header;
     XWDColor xwdcolor;
 
-    int                 transparentOverlays , multiVis;
-    int                 numVisuals;
-    XVisualInfo         *pVisuals;
-    int                 numOverlayVisuals;
-    OverlayInfo         *pOverlayVisuals;
-    int                 numImageVisuals;
-    XVisualInfo         **pImageVisuals;
-    list_ptr            vis_regions;    /* list of regions to read from */
-    list_ptr            vis_image_regions ;
-    Visual		vis_h,*vis ;
-    int			allImage = 0 ;
+    int transparentOverlays, multiVis;
+    int numVisuals;
+    XVisualInfo *pVisuals;
+    int numOverlayVisuals;
+    OverlayInfo *pOverlayVisuals;
+    int numImageVisuals;
+    XVisualInfo **pImageVisuals;
+    list_ptr vis_regions;       /* list of regions to read from */
+    list_ptr vis_image_regions;
+    Visual vis_h, *vis;
+    int allImage = 0;
 
     /*
      * Inform the user not to alter the screen.
      */
     if (!silent) {
 #ifdef XKB
-	XkbStdBell(dpy,None,50,XkbBI_Wait);
+        XkbStdBell(dpy, None, 50, XkbBI_Wait);
 #else
-	XBell(dpy,FEEP_VOLUME);
+        XBell(dpy, FEEP_VOLUME);
 #endif
-	XFlush(dpy);
+        XFlush(dpy);
     }
 
     /*
      * Get the parameters of the window being dumped.
      */
-    if (debug) outl("xwd: Getting target window information.\n");
-    if(!XGetWindowAttributes(dpy, window, &win_info))
-      Fatal_Error("Can't get target window attributes.");
+    if (debug)
+        outl("xwd: Getting target window information.\n");
+    if (!XGetWindowAttributes(dpy, window, &win_info))
+        Fatal_Error("Can't get target window attributes.");
 
     /* handle any frame window */
-    if (!XTranslateCoordinates (dpy, window, RootWindow (dpy, screen), 0, 0,
-				&absx, &absy, &dummywin)) {
-	fprintf (stderr,
-		 "%s:  unable to translate window coordinates (%d,%d)\n",
-		 program_name, absx, absy);
-	exit (1);
+    if (!XTranslateCoordinates(dpy, window, RootWindow(dpy, screen), 0, 0,
+                               &absx, &absy, &dummywin)) {
+        fprintf(stderr,
+                "%s:  unable to translate window coordinates (%d,%d)\n",
+                program_name, absx, absy);
+        exit(1);
     }
     win_info.x = absx;
     win_info.y = absy;
@@ -317,27 +319,30 @@ Window_Dump(Window window, FILE *out)
     height = win_info.height;
 
     if (!nobdrs) {
-	absx -= win_info.border_width;
-	absy -= win_info.border_width;
-	width += (2 * win_info.border_width);
-	height += (2 * win_info.border_width);
+        absx -= win_info.border_width;
+        absy -= win_info.border_width;
+        width += (2 * win_info.border_width);
+        height += (2 * win_info.border_width);
     }
-    dwidth = DisplayWidth (dpy, screen);
-    dheight = DisplayHeight (dpy, screen);
-
+    dwidth = DisplayWidth(dpy, screen);
+    dheight = DisplayHeight(dpy, screen);
 
     /* clip to window */
-    if (absx < 0) width += absx, absx = 0;
-    if (absy < 0) height += absy, absy = 0;
-    if (absx + width > dwidth) width = dwidth - absx;
-    if (absy + height > dheight) height = dheight - absy;
+    if (absx < 0)
+        width += absx, absx = 0;
+    if (absy < 0)
+        height += absy, absy = 0;
+    if (absx + width > dwidth)
+        width = dwidth - absx;
+    if (absy + height > dheight)
+        height = dheight - absy;
 
-    XFetchName(dpy, window, &win_name);
-    if (!win_name || !win_name[0]) {
-	win_name = default_win_name;
-	got_win_name = False;
-    } else {
-	got_win_name = True;
+    if (!XFetchName(dpy, window, &win_name) || !win_name || !win_name[0]) {
+        win_name = default_win_name;
+        got_win_name = False;
+    }
+    else {
+        got_win_name = True;
     }
 
     /* sizeof(char) is included for the null string terminator. */
@@ -350,75 +355,82 @@ Window_Dump(Window window, FILE *out)
     x = absx - win_info.x;
     y = absy - win_info.y;
 
-    multiVis = GetMultiVisualRegions(dpy,RootWindow(dpy, screen),
-               absx, absy,
-	       width, height,&transparentOverlays,&numVisuals, &pVisuals,
-               &numOverlayVisuals,&pOverlayVisuals,&numImageVisuals,
-               &pImageVisuals,&vis_regions,&vis_image_regions,&allImage) ;
-    if (on_root || multiVis)
-    {
-	if(!multiVis)
-	    image = XGetImage (dpy, RootWindow(dpy, screen), absx, absy,
-                    width, height, AllPlanes, format);
-	else
-	    image = ReadAreaToImage(dpy, RootWindow(dpy, screen), absx, absy,
-                width, height,
-    		numVisuals,pVisuals,numOverlayVisuals,pOverlayVisuals,
-                numImageVisuals, pImageVisuals,vis_regions,
-                vis_image_regions,format,allImage);
+    multiVis = GetMultiVisualRegions(dpy, RootWindow(dpy, screen),
+                                     absx, absy,
+                                     width, height, &transparentOverlays,
+                                     &numVisuals, &pVisuals,
+                                     &numOverlayVisuals, &pOverlayVisuals,
+                                     &numImageVisuals, &pImageVisuals,
+                                     &vis_regions, &vis_image_regions,
+                                     &allImage);
+    if (on_root || multiVis) {
+        if (!multiVis)
+            image = XGetImage(dpy, RootWindow(dpy, screen), absx, absy,
+                              width, height, AllPlanes, format);
+        else
+            image = ReadAreaToImage(dpy, RootWindow(dpy, screen), absx, absy,
+                                    width, height,
+                                    numVisuals, pVisuals,
+                                    numOverlayVisuals, pOverlayVisuals,
+                                    numImageVisuals, pImageVisuals,
+                                    vis_regions, vis_image_regions,
+                                    format, allImage);
     }
     else
-	image = XGetImage (dpy, window, x, y, width, height, AllPlanes, format);
+        image = XGetImage(dpy, window, x, y, width, height, AllPlanes, format);
     if (!image) {
-	fprintf (stderr, "%s:  unable to get image at %dx%d+%d+%d\n",
-		 program_name, width, height, x, y);
-	exit (1);
+        fprintf(stderr, "%s:  unable to get image at %dx%d+%d+%d\n",
+                program_name, width, height, x, y);
+        exit(1);
     }
 
-    if (add_pixel_value != 0) XAddPixel (image, add_pixel_value);
+    if (add_pixel_value != 0)
+        XAddPixel(image, add_pixel_value);
 
     /*
      * Determine the pixmap size.
      */
     buffer_size = Image_Size(image);
 
-    if (debug) outl("xwd: Getting Colors.\n");
+    if (debug)
+        outl("xwd: Getting Colors.\n");
 
-    if( !multiVis)
-    {
-       ncolors = Get_XColors(&win_info, &colors);
-       vis = win_info.visual ;
+    if (!multiVis) {
+        ncolors = Get_XColors(&win_info, &colors);
+        vis = win_info.visual;
     }
-    else
-    {
-       ncolors = Get24bitDirectColors(&colors) ;
-       initFakeVisual(&vis_h) ;
-       vis = &vis_h ;
+    else {
+        ncolors = Get24bitDirectColors(&colors);
+        initFakeVisual(&vis_h);
+        vis = &vis_h;
     }
     /*
      * Inform the user that the image has been retrieved.
      */
     if (!silent) {
 #ifdef XKB
-	XkbStdBell(dpy,window,FEEP_VOLUME,XkbBI_Proceed);
-	XkbStdBell(dpy,window,FEEP_VOLUME,XkbBI_RepeatingLastBell);
+        XkbStdBell(dpy, window, FEEP_VOLUME, XkbBI_Proceed);
+        XkbStdBell(dpy, window, FEEP_VOLUME, XkbBI_RepeatingLastBell);
 #else
-	XBell(dpy, FEEP_VOLUME);
-	XBell(dpy, FEEP_VOLUME);
+        XBell(dpy, FEEP_VOLUME);
+        XBell(dpy, FEEP_VOLUME);
 #endif
-	XFlush(dpy);
+        XFlush(dpy);
     }
 
     /*
      * Calculate header size.
      */
-    if (debug) outl("xwd: Calculating header size.\n");
+    if (debug)
+        outl("xwd: Calculating header size.\n");
     header_size = SIZEOF(XWDheader) + (CARD32) win_name_size;
 
     /*
      * Write out header information.
      */
-    if (debug) outl("xwd: Constructing and dumping file header.\n");
+    if (debug)
+        outl("xwd: Constructing and dumping file header.\n");
+    memset(&header, 0, SIZEOF(XWDheader));
     header.header_size = (CARD32) header_size;
     header.file_version = (CARD32) XWD_FILE_VERSION;
     header.pixmap_format = (CARD32) format;
@@ -455,64 +467,70 @@ Window_Dump(Window window, FILE *out)
     header.window_bdrwidth = (CARD32) win_info.border_width;
 
     if (*(char *) &swaptest) {
-	_swaplong((char *) &header, sizeof(header));
-	for (i = 0; i < ncolors; i++) {
-	    _swaplong((char *) &colors[i].pixel, sizeof(CARD32));
-	    _swapshort((char *) &colors[i].red, 3 * sizeof(short));
-	}
+        _swaplong((char *) &header, sizeof(header));
+        for (i = 0; i < ncolors; i++) {
+            _swaplong((char *) &colors[i].pixel, sizeof(CARD32));
+            _swapshort((char *) &colors[i].red, 3 * sizeof(short));
+        }
     }
 
-    if (fwrite((char *)&header, SIZEOF(XWDheader), 1, out) != 1 ||
-	fwrite(win_name, win_name_size, 1, out) != 1) {
-	perror("xwd");
-	exit(1);
+    if (fwrite((char *) &header, SIZEOF(XWDheader), 1, out) != 1 ||
+        fwrite(win_name, win_name_size, 1, out) != 1) {
+        perror("xwd");
+        exit(1);
     }
 
     /*
      * Write out the color maps, if any
      */
 
-    if (debug) outl("xwd: Dumping %d colors.\n", ncolors);
+    if (debug)
+        outl("xwd: Dumping %d colors.\n", ncolors);
     for (i = 0; i < ncolors; i++) {
-	xwdcolor.pixel = colors[i].pixel;
-	xwdcolor.red = colors[i].red;
-	xwdcolor.green = colors[i].green;
-	xwdcolor.blue = colors[i].blue;
-	xwdcolor.flags = colors[i].flags;
-	if (fwrite((char *) &xwdcolor, SIZEOF(XWDColor), 1, out) != 1) {
-	    perror("xwd");
-	    exit(1);
-	}
+        xwdcolor.pixel = colors[i].pixel;
+        xwdcolor.red = colors[i].red;
+        xwdcolor.green = colors[i].green;
+        xwdcolor.blue = colors[i].blue;
+        xwdcolor.flags = colors[i].flags;
+        if (fwrite((char *) &xwdcolor, SIZEOF(XWDColor), 1, out) != 1) {
+            perror("xwd");
+            exit(1);
+        }
     }
 
     /*
      * Write out the buffer.
      */
-    if (debug) outl("xwd: Dumping pixmap.  bufsize=%d\n",buffer_size);
+    if (debug)
+        outl("xwd: Dumping pixmap.  bufsize=%d\n", buffer_size);
 
     /*
-     *    This copying of the bit stream (data) to a file is to be replaced
+     *  This copying of the bit stream (data) to a file is to be replaced
      *  by an Xlib call which hasn't been written yet.  It is not clear
      *  what other functions of xwd will be taken over by this (as yet)
      *  non-existant X function.
      */
     if (fwrite(image->data, (int) buffer_size, 1, out) != 1) {
-	perror("xwd");
-	exit(1);
+        perror("xwd");
+        exit(1);
     }
 
     /*
      * free the color buffer.
      */
 
-    if(debug && ncolors > 0) outl("xwd: Freeing colors.\n");
-    if(ncolors > 0) free(colors);
+    if (debug && ncolors > 0)
+        outl("xwd: Freeing colors.\n");
+    if (ncolors > 0)
+        free(colors);
 
     /*
      * Free window name string.
      */
-    if (debug) outl("xwd: Freeing window name string.\n");
-    if (got_win_name) XFree(win_name);
+    if (debug)
+        outl("xwd: Freeing window name string.\n");
+    if (got_win_name)
+        XFree(win_name);
 
     /*
      * Free image
@@ -527,26 +545,43 @@ void
 usage(const char *errmsg)
 {
     if (errmsg != NULL)
-        fprintf (stderr, "%s: %s\n", program_name, errmsg);
+        fprintf(stderr, "%s: %s\n", program_name, errmsg);
 
-    fprintf (stderr,
-"usage: %s [-display host:dpy] [-debug] [-help] %s [-nobdrs] [-out <file>]",
-	   program_name, "[{-root|-id <id>|-name <name>}]");
-    fprintf (stderr, " [-xy] [-add value] [-frame] [-version]\n");
+    fprintf(stderr,
+            "Usage: %s [options] [-root| -id <wdid>| -name <wdname>] > mywddump\n",
+            program_name);
+    fprintf(stderr,
+            "       %s [options] [-root| -id <wdid>| -name <wdname>] -out mywddump\n",
+            program_name);
+    fputs("Options:\n" "  -help                    Print this message\n"
+          "  -version                 Print the program version and exit\n"
+          "  -debug                   Enable debug mode\n"
+          "  -d, -display <host:dpy>  Specify server to connect\n"
+          "  -nobdrs                  Exclude window borders\n"
+          "  -out <file>              Specify an output file\n"
+          "  -xy                      Select XY dumping format for color displays\n"
+          "  -add <value>             Add a signed value to every pixel\n"
+          "  -frame                   Include window manager frame\n"
+          "  -root                    Select the root window\n"
+          "  -id <wdid>               Select a window by its resource id\n"
+          "  -name <wdname>           Select a window by its WM_NAME property\n"
+          "  -icmap                   Use the first colormap of the screen\n"
+          "  -screen                  Send the request against the root window\n"
+          "  -silent                  Don't ring any bells\n", stderr);
     exit(1);
 }
-
 
 /*
  * Determine the pixmap size.
  */
 
-int Image_Size(XImage *image)
+int
+Image_Size(XImage *image)
 {
     if (image->format != ZPixmap)
-      return(image->bytes_per_line * image->height * image->depth);
+        return (image->bytes_per_line * image->height * image->depth);
 
-    return(image->bytes_per_line * image->height);
+    return (image->bytes_per_line * image->height);
 }
 
 #define lowbit(x) ((x) & (~(x) + 1))
@@ -554,79 +589,80 @@ int Image_Size(XImage *image)
 static int
 ReadColors(Visual *vis, Colormap cmap, XColor **colors)
 {
-    int i,ncolors ;
+    int i, ncolors;
 
     ncolors = vis->map_entries;
 
-    if (!(*colors = (XColor *) malloc (sizeof(XColor) * ncolors)))
-      Fatal_Error("Out of memory!");
+    if (!(*colors = (XColor *) malloc(sizeof(XColor) * ncolors)))
+        Fatal_Error("Out of memory!");
 
-    if (vis->class == DirectColor ||
-	vis->class == TrueColor) {
-	Pixel red, green, blue, red1, green1, blue1;
+    if (vis->class == DirectColor || vis->class == TrueColor) {
+        Pixel red, green, blue, red1, green1, blue1;
 
-	red = green = blue = 0;
-	red1 = lowbit(vis->red_mask);
-	green1 = lowbit(vis->green_mask);
-	blue1 = lowbit(vis->blue_mask);
-	for (i=0; i<ncolors; i++) {
-	  (*colors)[i].pixel = red|green|blue;
-	  (*colors)[i].pad = 0;
-	  red += red1;
-	  if (red > vis->red_mask)
-	    red = 0;
-	  green += green1;
-	  if (green > vis->green_mask)
-	    green = 0;
-	  blue += blue1;
-	  if (blue > vis->blue_mask)
-	    blue = 0;
-	}
-    } else {
-	for (i=0; i<ncolors; i++) {
-	  (*colors)[i].pixel = i;
-	  (*colors)[i].pad = 0;
-	}
+        red = green = blue = 0;
+        red1 = lowbit(vis->red_mask);
+        green1 = lowbit(vis->green_mask);
+        blue1 = lowbit(vis->blue_mask);
+        for (i = 0; i < ncolors; i++) {
+            (*colors)[i].pixel = red | green | blue;
+            (*colors)[i].pad = 0;
+            red += red1;
+            if (red > vis->red_mask)
+                red = 0;
+            green += green1;
+            if (green > vis->green_mask)
+                green = 0;
+            blue += blue1;
+            if (blue > vis->blue_mask)
+                blue = 0;
+        }
+    }
+    else {
+        for (i = 0; i < ncolors; i++) {
+            (*colors)[i].pixel = i;
+            (*colors)[i].pad = 0;
+        }
     }
 
     XQueryColors(dpy, cmap, *colors, ncolors);
 
-    return(ncolors);
+    return (ncolors);
 }
 
 /*
  * Get the XColors of all pixels in image - returns # of colors
  */
-int Get_XColors(XWindowAttributes *win_info, XColor **colors)
+int
+Get_XColors(XWindowAttributes *win_info, XColor **colors)
 {
     int i, ncolors;
     Colormap cmap = win_info->colormap;
 
     if (use_installed)
-	/* assume the visual will be OK ... */
-	cmap = XListInstalledColormaps(dpy, win_info->root, &i)[0];
+        /* assume the visual will be OK ... */
+        cmap = XListInstalledColormaps(dpy, win_info->root, &i)[0];
     if (!cmap)
-	return(0);
-    ncolors = ReadColors(win_info->visual,cmap,colors) ;
-    return ncolors ;
+        return (0);
+    ncolors = ReadColors(win_info->visual, cmap, colors);
+    return ncolors;
 }
 
 void
-_swapshort (register char *bp, register unsigned n)
+_swapshort(register char *bp, register unsigned n)
 {
     register char c;
     register char *ep = bp + n;
 
     while (bp < ep) {
-	c = *bp;
-	*bp = *(bp + 1);
-	bp++;
-	*bp++ = c;
+        c = *bp;
+        *bp = *(bp + 1);
+        bp++;
+        *bp++ = c;
     }
 }
 
 void
-_swaplong (register char *bp, register unsigned n)
+_swaplong(register char *bp, register unsigned n)
 {
     register char c;
     register char *ep = bp + n;

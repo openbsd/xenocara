@@ -34,20 +34,15 @@ from The Open Group.
 
  ------------------------------------------------------------------------ **/
 
-extern int GetMultiVisualRegions(
-    Display *, Window, int, int, unsigned int,
-    unsigned int, int *, int *, XVisualInfo **, int *,
-    OverlayInfo  **, int *, XVisualInfo ***, list_ptr *,
-    list_ptr *, int *
-);
+extern int GetMultiVisualRegions(Display *, Window, int, int, unsigned int,
+                                 unsigned int, int *, int *, XVisualInfo **,
+                                 int *, OverlayInfo **, int *, XVisualInfo ***,
+                                 list_ptr *, list_ptr *, int *);
 
-extern XImage *ReadAreaToImage(
-    Display *, Window, int, int, unsigned int,
-    unsigned int, int, XVisualInfo *, int,
-    OverlayInfo	*, int, XVisualInfo **, list_ptr,
-    list_ptr, int, int
-);
+extern XImage *ReadAreaToImage(Display *, Window, int, int, unsigned int,
+                               unsigned int, int, XVisualInfo *, int,
+                               OverlayInfo *, int, XVisualInfo **, list_ptr,
+                               list_ptr, int, int
+    );
 
-extern void initFakeVisual(
-    Visual *
-);
+extern void initFakeVisual(Visual *);
