@@ -52,12 +52,12 @@ VGA_ARBITER = common_vgaarb_stub.c
 endif
 
 if GNU
-OS_SUPPORT = x86_pci.c
+OS_SUPPORT = hurd_pci.c x86_pci.c x86_pci.h
 VGA_ARBITER = common_vgaarb_stub.c
 endif
 
 if CYGWIN
-OS_SUPPORT = x86_pci.c
+OS_SUPPORT = x86_pci.c x86_pci.h
 VGA_ARBITER = common_vgaarb_stub.c
 endif
 

@@ -23,8 +23,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.14],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
+AC_INIT([libpciaccess],[0.16],
+        [https://gitlab.freedesktop.org/xorg/lib/libpciaccess/issues],[libpciaccess])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([.])
 
@@ -132,14 +132,6 @@ fi
 if test "x$have_mtrr_h" = xyes; then
     AC_DEFINE(HAVE_MTRR, 1, [Use MTRRs on mappings])
 fi
-
-# check for the pci_io.pi_sel.pc_domain
-AC_CHECK_MEMBER([struct pci_io.pi_sel.pc_domain],
-               [AC_DEFINE(HAVE_PCI_IO_PC_DOMAIN,1,[Have the pci_io.pi_sel.pc_domain member.])],
-               [],
-               [ #include <sys/types.h>
-                 #include <sys/pciio.h>
-               ])
 
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)

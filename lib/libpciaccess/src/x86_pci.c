@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2018 Damien Zammit
+ * Copyright (c) 2017 Joan Lledó
  * Copyright (c) 2009, 2012 Samuel Thibault
  * Heavily inspired from the freebsd, netbsd, and openbsd backends
  * (C) Copyright Eric Anholt 2006
@@ -22,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include "x86_pci.h"
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +42,7 @@
 
 #include <sys/io.h>
 
-static int
+int
 x86_enable_io(void)
 {
     if (!ioperm(0, 0xffff, 1))
@@ -46,7 +50,7 @@ x86_enable_io(void)
     return errno;
 }
 
-static int
+int
 x86_disable_io(void)
 {
     if (!ioperm(0, 0xffff, 0))
@@ -206,34 +210,6 @@ outl(uint32_t value, uint16_t port)
 #error How to enable IO ports on this system?
 
 #endif
-
-#define PCI_VENDOR(reg)		((reg) & 0xFFFF)
-#define PCI_VENDOR_INVALID	0xFFFF
-
-#define PCI_VENDOR_ID		0x00
-#define PCI_SUB_VENDOR_ID	0x2c
-#define PCI_VENDOR_ID_COMPAQ		0x0e11
-#define PCI_VENDOR_ID_INTEL		0x8086
-
-#define PCI_DEVICE(reg)		(((reg) >> 16) & 0xFFFF)
-#define PCI_DEVICE_INVALID	0xFFFF
-
-#define PCI_CLASS		0x08
-#define PCI_CLASS_DEVICE	0x0a
-#define PCI_CLASS_DISPLAY_VGA		0x0300
-#define PCI_CLASS_BRIDGE_HOST		0x0600
-
-#define	PCIC_DISPLAY	0x03
-#define	PCIS_DISPLAY_VGA	0x00
-
-#define PCI_HDRTYPE	0x0E
-#define PCI_IRQ		0x3C
-
-struct pci_system_x86 {
-    struct pci_system system;
-    int (*read)(unsigned bus, unsigned dev, unsigned func, pciaddr_t reg, void *data, unsigned size);
-    int (*write)(unsigned bus, unsigned dev, unsigned func, pciaddr_t reg, const void *data, unsigned size);
-};
 
 static int
 pci_system_x86_conf1_probe(void)
@@ -408,62 +384,68 @@ pci_system_x86_conf2_write(unsigned bus, unsigned dev, unsigned func, pciaddr_t 
 }
 
 /* Check that this really looks like a PCI configuration. */
-static int
-pci_system_x86_check(struct pci_system_x86 *pci_sys_x86)
+static error_t
+pci_system_x86_check (void)
 {
     int dev;
     uint16_t class, vendor;
+    struct pci_device tmpdev = { 0 };
 
     /* Look on bus 0 for a device that is a host bridge, a VGA card,
      * or an intel or compaq device.  */
+    tmpdev.bus = 0;
+    tmpdev.func = 0;
+    class = 0;
+    vendor = 0;
 
     for (dev = 0; dev < 32; dev++) {
-	if (pci_sys_x86->read(0, dev, 0, PCI_CLASS_DEVICE, &class, sizeof(class)))
-	    continue;
-	if (class == PCI_CLASS_BRIDGE_HOST || class == PCI_CLASS_DISPLAY_VGA)
-	    return 0;
-	if (pci_sys_x86->read(0, dev, 0, PCI_VENDOR_ID, &vendor, sizeof(vendor)))
-	    continue;
-	if (vendor == PCI_VENDOR_ID_INTEL || class == PCI_VENDOR_ID_COMPAQ)
-	    return 0;
+       tmpdev.dev = dev;
+       if (pci_device_cfg_read_u16 (&tmpdev, &class, PCI_CLASS_DEVICE))
+           continue;
+       if (class == PCI_CLASS_BRIDGE_HOST || class == PCI_CLASS_DISPLAY_VGA)
+           return 0;
+       if (pci_device_cfg_read_u16 (&tmpdev, &vendor, PCI_VENDOR_ID))
+           continue;
+       if (vendor == PCI_VENDOR_ID_INTEL || class == PCI_VENDOR_ID_COMPAQ)
+           return 0;
     }
 
     return ENODEV;
 }
 
 static int
-pci_nfuncs(struct pci_system_x86 *pci_sys_x86, int bus, int dev)
+pci_nfuncs(struct pci_device *dev, uint8_t *nfuncs)
 {
     uint8_t hdr;
     int err;
+    struct pci_device tmpdev = *dev;
 
-    err = pci_sys_x86->read(bus, dev, 0, PCI_HDRTYPE, &hdr, sizeof(hdr));
+    tmpdev.func = 0;
+
+    err = pci_device_cfg_read_u8 (&tmpdev, &hdr, PCI_HDRTYPE);
 
     if (err)
 	return err;
 
-    return hdr & 0x80 ? 8 : 1;
+    *nfuncs = hdr & 0x80 ? 8 : 1;
+    return err;
 }
 
 /**
- * Read a VGA rom using the 0xc0000 mapping.
+ * Read a PCI rom.
  */
-static int
+static error_t
 pci_device_x86_read_rom(struct pci_device *dev, void *buffer)
 {
     void *bios;
     int memfd;
-
-    if ((dev->device_class & 0x00ffff00) !=
-	 ((PCIC_DISPLAY << 16) | ( PCIS_DISPLAY_VGA << 8))) {
-	return ENOSYS;
-    }
+    struct pci_device_private *d = (struct pci_device_private *)dev;
 
     memfd = open("/dev/mem", O_RDONLY | O_CLOEXEC);
     if (memfd == -1)
 	return errno;
 
-    bios = mmap(NULL, dev->rom_size, PROT_READ, 0, memfd, 0xc0000);
+    bios = mmap(NULL, dev->rom_size, PROT_READ, MAP_SHARED, memfd, d->rom_base);
     if (bios == MAP_FAILED) {
 	close(memfd);
 	return errno;
@@ -526,75 +508,299 @@ get_test_val_size( uint32_t testval )
     return size;
 }
 
-static int
-pci_device_x86_probe(struct pci_device *dev)
+/* Read BAR `reg_num' in `dev' and map the data if any */
+static error_t
+pci_device_x86_region_probe (struct pci_device *dev, int reg_num)
 {
-    uint8_t irq, hdrtype;
-    int err, i, bar;
+    error_t err;
+    uint8_t offset;
+    uint32_t reg, addr, testval;
+    int memfd;
 
-    /* Many of the fields were filled in during initial device enumeration.
-     * At this point, we need to fill in regions, rom_size, and irq.
-     */
+    offset = PCI_BAR_ADDR_0 + 0x4 * reg_num;
 
-    err = pci_device_cfg_read_u8(dev, &irq, PCI_IRQ);
+    /* Get the base address */
+    err = pci_device_cfg_read_u32 (dev, &addr, offset);
     if (err)
-	return err;
-    dev->irq = irq;
+        return err;
 
-    err = pci_device_cfg_read_u8(dev, &hdrtype, PCI_HDRTYPE);
+    /* Test write all ones to the register, then restore it. */
+    reg = 0xffffffff;
+    err = pci_device_cfg_write_u32 (dev, reg, offset);
     if (err)
-	return err;
+        return err;
+    err = pci_device_cfg_read_u32 (dev, &testval, offset);
+    if (err)
+        return err;
+    err = pci_device_cfg_write_u32 (dev, addr, offset);
+    if (err)
+        return err;
 
-    bar = 0x10;
-    for (i = 0; i < pci_device_x86_get_num_regions(hdrtype); i++, bar += 4) {
-	uint32_t addr, testval;
+    if (addr & 0x01)
+        dev->regions[reg_num].is_IO = 1;
+    if (addr & 0x04)
+        dev->regions[reg_num].is_64 = 1;
+    if (addr & 0x08)
+        dev->regions[reg_num].is_prefetchable = 1;
 
-	/* Get the base address */
-	err = pci_device_cfg_read_u32(dev, &addr, bar);
-	if (err != 0)
-	    continue;
+    /* Set the size */
+    dev->regions[reg_num].size = get_test_val_size (testval);
 
-	/* Test write all ones to the register, then restore it. */
-	err = pci_device_cfg_write_u32(dev, 0xffffffff, bar);
-	if (err != 0)
-	    continue;
-	pci_device_cfg_read_u32(dev, &testval, bar);
-	err = pci_device_cfg_write_u32(dev, addr, bar);
+    /* Set the base address value */
+    dev->regions[reg_num].base_addr = get_map_base (addr);
 
-	if (addr & 0x01)
-	    dev->regions[i].is_IO = 1;
-	if (addr & 0x04)
-	    dev->regions[i].is_64 = 1;
-	if (addr & 0x08)
-	    dev->regions[i].is_prefetchable = 1;
+    if (dev->regions[reg_num].is_64)
+    {
+        err = pci_device_cfg_read_u32 (dev, &addr, offset + 4);
+        if (err)
+            return err;
 
-	/* Set the size */
-	dev->regions[i].size = get_test_val_size(testval);
-
-	/* Set the base address value */
-	if (dev->regions[i].is_64) {
-	    uint32_t top;
-
-	    err = pci_device_cfg_read_u32(dev, &top, bar + 4);
-	    if (err != 0)
-		continue;
-
-	    dev->regions[i].base_addr = ((uint64_t)top << 32) |
-					get_map_base(addr);
-	    bar += 4;
-	    i++;
-	} else {
-	    dev->regions[i].base_addr = get_map_base(addr);
-	}
+        dev->regions[reg_num].base_addr |= ((uint64_t) addr << 32);
     }
 
-    /* If it's a VGA device, set up the rom size for read_rom using the
-     * 0xc0000 mapping.
-     */
-    if ((dev->device_class & 0x00ffff00) ==
-	((PCIC_DISPLAY << 16) | (PCIS_DISPLAY_VGA << 8)))
+    if (dev->regions[reg_num].is_IO)
     {
-	dev->rom_size = 64 * 1024;
+        /* Enable the I/O Space bit */
+        err = pci_device_cfg_read_u32 (dev, &reg, PCI_COMMAND);
+        if (err)
+            return err;
+
+        if (!(reg & 0x1))
+        {
+            reg |= 0x1;
+
+            err = pci_device_cfg_write_u32 (dev, reg, PCI_COMMAND);
+            if (err)
+                return err;
+        }
+
+        /* Clear the map pointer */
+        dev->regions[reg_num].memory = 0;
+    }
+    else if (dev->regions[reg_num].size > 0)
+    {
+        /* Enable the Memory Space bit */
+        err = pci_device_cfg_read_u32 (dev, &reg, PCI_COMMAND);
+        if (err)
+            return err;
+
+        if (!(reg & 0x2))
+        {
+            reg |= 0x2;
+
+            err = pci_device_cfg_write_u32 (dev, reg, PCI_COMMAND);
+            if (err)
+                return err;
+        }
+
+        /* Map the region in our space */
+        memfd = open ("/dev/mem", O_RDWR | O_CLOEXEC);
+        if (memfd == -1)
+            return errno;
+
+        dev->regions[reg_num].memory =
+         mmap (NULL, dev->regions[reg_num].size, PROT_READ | PROT_WRITE, MAP_SHARED,
+               memfd, dev->regions[reg_num].base_addr);
+        if (dev->regions[reg_num].memory == MAP_FAILED)
+        {
+            dev->regions[reg_num].memory = 0;
+            close (memfd);
+            return errno;
+        }
+    }
+
+    return 0;
+}
+
+/* Read the XROMBAR in `dev' and save the rom size and rom base */
+static error_t
+pci_device_x86_probe_rom (struct pci_device *dev)
+{
+    error_t err;
+    uint8_t reg_8, xrombar_addr;
+    uint32_t reg, reg_back;
+    pciaddr_t rom_size;
+    pciaddr_t rom_base;
+    struct pci_device_private *d = (struct pci_device_private *)dev;
+
+    /* First we need to know which type of header is this */
+    err = pci_device_cfg_read_u8 (dev, &reg_8, PCI_HDRTYPE);
+    if (err)
+        return err;
+
+    /* Get the XROMBAR register address */
+    switch (reg_8 & 0x3)
+    {
+    case PCI_HDRTYPE_DEVICE:
+        xrombar_addr = PCI_XROMBAR_ADDR_00;
+        break;
+    case PCI_HDRTYPE_BRIDGE:
+        xrombar_addr = PCI_XROMBAR_ADDR_01;
+        break;
+    default:
+        return -1;
+    }
+
+    /* Get size and physical address */
+    err = pci_device_cfg_read_u32 (dev, &reg, xrombar_addr);
+    if (err)
+        return err;
+
+    reg_back = reg;
+    reg = 0xFFFFF800;            /* Base address: first 21 bytes */
+    err = pci_device_cfg_write_u32 (dev, reg, xrombar_addr);
+    if (err)
+        return err;
+    err = pci_device_cfg_read_u32 (dev, &reg, xrombar_addr);
+    if (err)
+        return err;
+
+    rom_size = (~reg + 1);
+    rom_base = reg_back & reg;
+
+    if (rom_size == 0)
+        return 0;
+
+    /* Enable the address decoder and write the physical address back */
+    reg_back |= 0x1;
+    err = pci_device_cfg_write_u32 (dev, reg_back, xrombar_addr);
+    if (err)
+        return err;
+
+    /* Enable the Memory Space bit */
+    err = pci_device_cfg_read_u32 (dev, &reg, PCI_COMMAND);
+    if (err)
+        return err;
+
+    if (!(reg & 0x2))
+    {
+        reg |= 0x2;
+
+        err = pci_device_cfg_write_u32 (dev, reg, PCI_COMMAND);
+        if (err)
+            return err;
+    }
+
+    dev->rom_size = rom_size;
+    d->rom_base = rom_base;
+
+    return 0;
+}
+
+/* Configure BARs and ROM */
+static error_t
+pci_device_x86_probe (struct pci_device *dev)
+{
+    error_t err;
+    uint8_t hdrtype;
+    int i;
+
+    /* Probe BARs */
+    err = pci_device_cfg_read_u8 (dev, &hdrtype, PCI_HDRTYPE);
+    if (err)
+        return err;
+
+    for (i = 0; i < pci_device_x86_get_num_regions (hdrtype); i++)
+    {
+        err = pci_device_x86_region_probe (dev, i);
+        if (err)
+            return err;
+
+        if (dev->regions[i].is_64)
+            /* Move the pointer one BAR ahead */
+            i++;
+    }
+
+    /* Probe ROM */
+    pci_device_x86_probe_rom(dev);
+
+    return 0;
+}
+
+/* Recursively scan bus number `bus' */
+static error_t
+pci_system_x86_scan_bus (uint8_t bus)
+{
+    error_t err;
+    uint8_t dev, func, nfuncs, hdrtype, secbus;
+    uint32_t reg;
+    struct pci_device_private *d, *devices;
+    struct pci_device scratchdev;
+
+    scratchdev.bus = bus;
+
+    for (dev = 0; dev < 32; dev++)
+    {
+        scratchdev.dev = dev;
+        scratchdev.func = 0;
+        err = pci_nfuncs (&scratchdev, &nfuncs);
+        if (err)
+           return err;
+
+        for (func = 0; func < nfuncs; func++)
+        {
+            scratchdev.func = func;
+            err = pci_device_cfg_read_u32 (&scratchdev, &reg, PCI_VENDOR_ID);
+            if (err)
+                return err;
+
+            if (PCI_VENDOR (reg) == PCI_VENDOR_INVALID || PCI_VENDOR (reg) == 0)
+                continue;
+
+            err = pci_device_cfg_read_u32 (&scratchdev, &reg, PCI_CLASS);
+            if (err)
+                return err;
+
+            err = pci_device_cfg_read_u8 (&scratchdev, &hdrtype, PCI_HDRTYPE);
+            if (err)
+                return err;
+
+            devices =
+              realloc (pci_sys->devices,
+                       (pci_sys->num_devices + 1) * sizeof (struct pci_device_private));
+            if (!devices)
+                return ENOMEM;
+
+            d = devices + pci_sys->num_devices;
+            memset (d, 0, sizeof (struct pci_device_private));
+
+            /* Fixed values as PCI express is still not supported */
+            d->base.domain = 0;
+            d->base.bus = bus;
+            d->base.dev = dev;
+            d->base.func = func;
+
+            d->base.device_class = reg >> 8;
+
+            err = pci_device_x86_probe (&d->base);
+            if (err)
+                return err;
+
+            pci_sys->devices = devices;
+            pci_sys->num_devices++;
+
+            switch (hdrtype & 0x3)
+            {
+            case PCI_HDRTYPE_DEVICE:
+                break;
+            case PCI_HDRTYPE_BRIDGE:
+            case PCI_HDRTYPE_CARDBUS:
+                {
+                    err = pci_device_cfg_read_u8 (&scratchdev, &secbus, PCI_SECONDARY_BUS);
+                    if (err)
+                        return err;
+
+                    err = pci_system_x86_scan_bus (secbus);
+                    if (err)
+                        return err;
+
+                    break;
+                }
+            default:
+                /* Unknown header, do nothing */
+                break;
+            }
+        }
     }
 
     return 0;
@@ -635,7 +841,7 @@ pci_device_x86_unmap_range(struct pci_device *dev,
 
 #else
 
-static int
+int
 pci_device_x86_map_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
@@ -649,14 +855,14 @@ pci_device_x86_map_range(struct pci_device *dev,
 	prot |= PROT_WRITE;
 
     map->memory = mmap(NULL, map->size, prot, MAP_SHARED, memfd, map->base);
-    close(memfd);
-    if (map->memory == MAP_FAILED)
+    if (map->memory == MAP_FAILED) {
+    	close(memfd);
 	return errno;
-
+    }
     return 0;
 }
 
-static int
+int
 pci_device_x86_unmap_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
@@ -666,10 +872,9 @@ pci_device_x86_unmap_range(struct pci_device *dev,
 #endif
 
 static int
-pci_device_x86_read(struct pci_device *dev, void *data,
+pci_device_x86_read_conf1(struct pci_device *dev, void *data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_read)
 {
-    struct pci_system_x86 *pci_sys_x86 = (struct pci_system_x86 *) pci_sys;
     int err;
 
     *bytes_read = 0;
@@ -678,7 +883,7 @@ pci_device_x86_read(struct pci_device *dev, void *data,
 	if (toread > size)
 	    toread = size;
 
-	err = pci_sys_x86->read(dev->bus, dev->dev, dev->func, offset, data, toread);
+	err = pci_system_x86_conf1_read(dev->bus, dev->dev, dev->func, offset, data, toread);
 	if (err)
 	    return err;
 
@@ -691,10 +896,33 @@ pci_device_x86_read(struct pci_device *dev, void *data,
 }
 
 static int
-pci_device_x86_write(struct pci_device *dev, const void *data,
+pci_device_x86_read_conf2(struct pci_device *dev, void *data,
+    pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_read)
+{
+    int err;
+
+    *bytes_read = 0;
+    while (size > 0) {
+	int toread = 1 << (ffs(0x4 + (offset & 0x03)) - 1);
+	if (toread > size)
+	    toread = size;
+
+	err = pci_system_x86_conf2_read(dev->bus, dev->dev, dev->func, offset, data, toread);
+	if (err)
+	    return err;
+
+	offset += toread;
+	data = (char*)data + toread;
+	size -= toread;
+	*bytes_read += toread;
+    }
+    return 0;
+}
+
+static int
+pci_device_x86_write_conf1(struct pci_device *dev, const void *data,
     pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_written)
 {
-    struct pci_system_x86 *pci_sys_x86 = (struct pci_system_x86 *) pci_sys;
     int err;
 
     *bytes_written = 0;
@@ -705,7 +933,7 @@ pci_device_x86_write(struct pci_device *dev, const void *data,
 	if (towrite > 4 - (offset & 0x3))
 	    towrite = 4 - (offset & 0x3);
 
-	err = pci_sys_x86->write(dev->bus, dev->dev, dev->func, offset, data, towrite);
+	err = pci_system_x86_conf1_write(dev->bus, dev->dev, dev->func, offset, data, towrite);
 	if (err)
 	    return err;
 
@@ -717,13 +945,39 @@ pci_device_x86_write(struct pci_device *dev, const void *data,
     return 0;
 }
 
-static void
+static int
+pci_device_x86_write_conf2(struct pci_device *dev, const void *data,
+    pciaddr_t offset, pciaddr_t size, pciaddr_t *bytes_written)
+{
+    int err;
+
+    *bytes_written = 0;
+    while (size > 0) {
+	int towrite = 4;
+	if (towrite > size)
+	    towrite = size;
+	if (towrite > 4 - (offset & 0x3))
+	    towrite = 4 - (offset & 0x3);
+
+	err = pci_system_x86_conf2_write(dev->bus, dev->dev, dev->func, offset, data, towrite);
+	if (err)
+	    return err;
+
+	offset += towrite;
+	data = (const char*)data + towrite;
+	size -= towrite;
+	*bytes_written += towrite;
+    }
+    return 0;
+}
+
+void
 pci_system_x86_destroy(void)
 {
     x86_disable_io();
 }
 
-static struct pci_io_handle *
+struct pci_io_handle *
 pci_device_x86_open_legacy_io(struct pci_io_handle *ret,
     struct pci_device *dev, pciaddr_t base, pciaddr_t size)
 {
@@ -736,7 +990,7 @@ pci_device_x86_open_legacy_io(struct pci_io_handle *ret,
     return ret;
 }
 
-static void
+void
 pci_device_x86_close_io(struct pci_device *dev, struct pci_io_handle *handle)
 {
     /* Like in the Linux case, do not disable I/O, as it may be opened several
@@ -744,46 +998,46 @@ pci_device_x86_close_io(struct pci_device *dev, struct pci_io_handle *handle)
     /* x86_disable_io(); */
 }
 
-static uint32_t
+uint32_t
 pci_device_x86_read32(struct pci_io_handle *handle, uint32_t reg)
 {
     return inl(reg + handle->base);
 }
 
-static uint16_t
+uint16_t
 pci_device_x86_read16(struct pci_io_handle *handle, uint32_t reg)
 {
     return inw(reg + handle->base);
 }
 
-static uint8_t
+uint8_t
 pci_device_x86_read8(struct pci_io_handle *handle, uint32_t reg)
 {
     return inb(reg + handle->base);
 }
 
-static void
+void
 pci_device_x86_write32(struct pci_io_handle *handle, uint32_t reg,
 		       uint32_t data)
 {
     outl(data, reg + handle->base);
 }
 
-static void
+void
 pci_device_x86_write16(struct pci_io_handle *handle, uint32_t reg,
 		       uint16_t data)
 {
     outw(data, reg + handle->base);
 }
 
-static void
+void
 pci_device_x86_write8(struct pci_io_handle *handle, uint32_t reg,
 		      uint8_t data)
 {
     outb(data, reg + handle->base);
 }
 
-static int
+int
 pci_device_x86_map_legacy(struct pci_device *dev, pciaddr_t base,
     pciaddr_t size, unsigned map_flags, void **addr)
 {
@@ -799,7 +1053,7 @@ pci_device_x86_map_legacy(struct pci_device *dev, pciaddr_t base,
     return err;
 }
 
-static int
+int
 pci_device_x86_unmap_legacy(struct pci_device *dev, void *addr,
     pciaddr_t size)
 {
@@ -812,14 +1066,14 @@ pci_device_x86_unmap_legacy(struct pci_device *dev, void *addr,
     return pci_device_x86_unmap_range(dev, &map);
 }
 
-static const struct pci_system_methods x86_pci_methods = {
+static const struct pci_system_methods x86_pci_method_conf1 = {
     .destroy = pci_system_x86_destroy,
     .read_rom = pci_device_x86_read_rom,
     .probe = pci_device_x86_probe,
     .map_range = pci_device_x86_map_range,
     .unmap_range = pci_device_x86_unmap_range,
-    .read = pci_device_x86_read,
-    .write = pci_device_x86_write,
+    .read = pci_device_x86_read_conf1,
+    .write = pci_device_x86_write_conf1,
     .fill_capabilities = pci_fill_capabilities_generic,
     .open_legacy_io = pci_device_x86_open_legacy_io,
     .close_io = pci_device_x86_close_io,
@@ -833,108 +1087,84 @@ static const struct pci_system_methods x86_pci_methods = {
     .unmap_legacy = pci_device_x86_unmap_legacy,
 };
 
-static int pci_probe(struct pci_system_x86 *pci_sys_x86)
+static const struct pci_system_methods x86_pci_method_conf2 = {
+    .destroy = pci_system_x86_destroy,
+    .read_rom = pci_device_x86_read_rom,
+    .probe = pci_device_x86_probe,
+    .map_range = pci_device_x86_map_range,
+    .unmap_range = pci_device_x86_unmap_range,
+    .read = pci_device_x86_read_conf2,
+    .write = pci_device_x86_write_conf2,
+    .fill_capabilities = pci_fill_capabilities_generic,
+    .open_legacy_io = pci_device_x86_open_legacy_io,
+    .close_io = pci_device_x86_close_io,
+    .read32 = pci_device_x86_read32,
+    .read16 = pci_device_x86_read16,
+    .read8 = pci_device_x86_read8,
+    .write32 = pci_device_x86_write32,
+    .write16 = pci_device_x86_write16,
+    .write8 = pci_device_x86_write8,
+    .map_legacy = pci_device_x86_map_legacy,
+    .unmap_legacy = pci_device_x86_unmap_legacy,
+};
+
+static int pci_probe(void)
 {
+    pci_sys->methods = &x86_pci_method_conf1;
     if (pci_system_x86_conf1_probe() == 0) {
-	pci_sys_x86->read = pci_system_x86_conf1_read;
-	pci_sys_x86->write = pci_system_x86_conf1_write;
-	if (pci_system_x86_check(pci_sys_x86) == 0)
-	    return 0;
+	if (pci_system_x86_check() == 0)
+	    return 1;
     }
 
+    pci_sys->methods = &x86_pci_method_conf2;
     if (pci_system_x86_conf2_probe() == 0) {
-	pci_sys_x86->read = pci_system_x86_conf2_read;
-	pci_sys_x86->write = pci_system_x86_conf2_write;
-	if (pci_system_x86_check(pci_sys_x86) == 0)
-	    return 0;
+	if (pci_system_x86_check() == 0)
+	    return 2;
     }
 
-    return ENODEV;
+    pci_sys->methods = NULL;
+    return 0;
 }
 
 _pci_hidden int
 pci_system_x86_create(void)
 {
-    struct pci_device_private *device;
-    int ret, bus, dev, ndevs, func, nfuncs;
-    struct pci_system_x86 *pci_sys_x86;
-    uint32_t reg;
+    error_t err;
+    int confx;
 
-    ret = x86_enable_io();
-    if (ret)
-	return ret;
+    err = x86_enable_io ();
+    if (err)
+        return err;
 
-    pci_sys_x86 = calloc(1, sizeof(struct pci_system_x86));
-    if (pci_sys_x86 == NULL) {
-	x86_disable_io();
-	return ENOMEM;
-    }
-    pci_sys = &pci_sys_x86->system;
-
-    ret = pci_probe(pci_sys_x86);
-    if (ret) {
-	x86_disable_io();
-	free(pci_sys_x86);
-	pci_sys = NULL;
-	return ret;
+    pci_sys = calloc (1, sizeof (struct pci_system));
+    if (pci_sys == NULL)
+    {
+        x86_disable_io ();
+        return ENOMEM;
     }
 
-    pci_sys->methods = &x86_pci_methods;
-
-    ndevs = 0;
-    for (bus = 0; bus < 256; bus++) {
-	for (dev = 0; dev < 32; dev++) {
-	    nfuncs = pci_nfuncs(pci_sys_x86, bus, dev);
-	    for (func = 0; func < nfuncs; func++) {
-		if (pci_sys_x86->read(bus, dev, func, PCI_VENDOR_ID, &reg, sizeof(reg)) != 0)
-		    continue;
-		if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
-		    PCI_VENDOR(reg) == 0)
-		    continue;
-		ndevs++;
-	    }
-	}
+    confx = pci_probe ();
+    if (!confx)
+    {
+        x86_disable_io ();
+        free (pci_sys);
+        pci_sys = NULL;
+        return ENODEV;
     }
+    else if (confx == 1)
+        pci_sys->methods = &x86_pci_method_conf1;
+    else
+        pci_sys->methods = &x86_pci_method_conf2;
 
-    pci_sys->num_devices = ndevs;
-    pci_sys->devices = calloc(ndevs, sizeof(struct pci_device_private));
-    if (pci_sys->devices == NULL) {
-	x86_disable_io();
-	free(pci_sys_x86);
-	pci_sys = NULL;
-	return ENOMEM;
-    }
-
-    device = pci_sys->devices;
-    for (bus = 0; bus < 256; bus++) {
-	for (dev = 0; dev < 32; dev++) {
-	    nfuncs = pci_nfuncs(pci_sys_x86, bus, dev);
-	    for (func = 0; func < nfuncs; func++) {
-		if (pci_sys_x86->read(bus, dev, func, PCI_VENDOR_ID, &reg, sizeof(reg)) != 0)
-		    continue;
-		if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
-		    PCI_VENDOR(reg) == 0)
-		    continue;
-		device->base.domain = device->base.domain_16 = 0;
-		device->base.bus = bus;
-		device->base.dev = dev;
-		device->base.func = func;
-		device->base.vendor_id = PCI_VENDOR(reg);
-		device->base.device_id = PCI_DEVICE(reg);
-
-		if (pci_sys_x86->read(bus, dev, func, PCI_CLASS, &reg, sizeof(reg)) != 0)
-		    continue;
-		device->base.device_class = reg >> 8;
-		device->base.revision = reg & 0xFF;
-
-		if (pci_sys_x86->read(bus, dev, func, PCI_SUB_VENDOR_ID, &reg, sizeof(reg)) != 0)
-		    continue;
-		device->base.subvendor_id = PCI_VENDOR(reg);
-		device->base.subdevice_id = PCI_DEVICE(reg);
-
-		device++;
-	    }
-	}
+    /* Recursive scan */
+    pci_sys->num_devices = 0;
+    err = pci_system_x86_scan_bus (0);
+    if (err)
+    {
+        x86_disable_io ();
+        free (pci_sys);
+        pci_sys = NULL;
+        return err;
     }
 
     return 0;

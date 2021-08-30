@@ -21,9 +21,6 @@
 /* Use MTRRs on mappings */
 #undef HAVE_MTRR
 
-/* Have the pci_io.pi_sel.pc_domain member. */
-#undef HAVE_PCI_IO_PC_DOMAIN
-
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

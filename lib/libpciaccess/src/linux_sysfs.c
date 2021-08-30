@@ -50,7 +50,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
+#if defined(__i386__) || defined(__x86_64__)
 #include <sys/io.h>
 #else
 #define inb(x) -1
@@ -264,6 +264,7 @@ populate_entries( struct pci_system * p )
     if (err) {
 	free(p->devices);
 	p->devices = NULL;
+	p->num_devices = 0;
     }
 
     return err;

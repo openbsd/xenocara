@@ -122,9 +122,9 @@ am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 	common_init.c common_interface.c common_io.c \
 	common_capability.c common_device_name.c common_map.c \
 	pciaccess_private.h common_vgaarb_stub.c common_vgaarb.c \
-	x86_pci.c freebsd_pci.c linux_sysfs.c linux_devmem.c \
-	linux_devmem.h netbsd_pci.c openbsd_pci.c solx_devfs.c \
-	pci_tools.h
+	x86_pci.c x86_pci.h freebsd_pci.c hurd_pci.c linux_sysfs.c \
+	linux_devmem.c linux_devmem.h netbsd_pci.c openbsd_pci.c \
+	solx_devfs.c pci_tools.h
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = common_vgaarb_stub.lo
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_1 = common_vgaarb.lo
@@ -137,7 +137,8 @@ am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_2 = netbsd_pci.lo
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_2 = linux_sysfs.lo \
 @CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	linux_devmem.lo
-@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = x86_pci.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = hurd_pci.lo \
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@	x86_pci.lo
 @CYGWIN_FALSE@@FREEBSD_TRUE@am__objects_2 = freebsd_pci.lo
 @CYGWIN_TRUE@am__objects_2 = x86_pci.lo
 am_libpciaccess_la_OBJECTS = common_bridge.lo common_iterator.lo \
@@ -340,9 +341,9 @@ top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(CWARNFLAGS) @PCIACCESS_CFLAGS@
 lib_LTLIBRARIES = libpciaccess.la
-@CYGWIN_TRUE@OS_SUPPORT = x86_pci.c
+@CYGWIN_TRUE@OS_SUPPORT = x86_pci.c x86_pci.h
 @FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
-@GNU_TRUE@OS_SUPPORT = x86_pci.c
+@GNU_TRUE@OS_SUPPORT = hurd_pci.c x86_pci.c x86_pci.h
 @LINUX_TRUE@OS_SUPPORT = linux_sysfs.c linux_devmem.c linux_devmem.h
 @NETBSD_TRUE@OS_SUPPORT = netbsd_pci.c
 @OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
@@ -456,6 +457,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb_stub.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freebsd_pci.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_devmem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_sysfs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netbsd_pci.Plo@am__quote@

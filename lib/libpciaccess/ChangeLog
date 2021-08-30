@@ -1,3 +1,236 @@
+commit fbd1f0fe79ba25b72635f8e36a6c33d7e0ca19f6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 17 12:24:48 2019 -0400
+
+    libpciaccess 0.16
+
+commit f834c15afb49aa340c44374c6e00ef303b076ace
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sun May 19 20:33:21 2019 +1000
+
+    x86: Use MAP_SHARED for memory/rom region mmap && fix mode
+
+commit 1d71669e577f5f2eb02542851696d3bcb722a80b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 11 12:56:40 2019 -0400
+
+    linux: Don't try to include <sys/io.h> on arm
+    
+    It no longer exists in newer glibc, and didn't work like you'd have
+    hoped on anything but strongarm anyway.
+
+commit 726e27bedf163597b5c948b66daeacf9b76f441a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 11 12:27:36 2019 -0400
+
+    libpciaccess 0.15
+
+commit 53e53b09eb80e4e2b3e1fad3f4886bf9290a61e0
+Author: Lichao Mu <mulichao@outlook.com>
+Date:   Thu Jul 11 12:19:34 2019 -0400
+
+    Fix pci_device_get_bridge_info() for multifunction bridges
+    
+    Fixes: xorg/lib/libpciaccess#9
+
+commit 640f114e3bf195f77a2151fc6cbdfed8ace8b6ae
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sat Nov 10 06:48:42 2018 -0500
+
+    Use recursive scan bus
+    
+    Switch over to the new recursive scan bus routine for x86
+    
+    Signed-off-by: Damien Zammit <damien@zamaudio.com>
+
+commit 95fbfeeacfd054de1037d6a10dee03b2b2cbc290
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sat Nov 10 06:23:40 2018 -0500
+
+    Add better probe cmds for non-VGA roms and regions on x86
+    
+    Also add a recursive scan-bus routine that uses the new probe cmds.
+    
+    Signed-off-by: Damien Zammit <damien@zamaudio.com>
+
+commit 048fe0613847e3a9b39bbc3ea3e6db0f54517191
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sat Nov 10 06:11:19 2018 -0500
+
+    New module for the Hurd
+    
+    This new module uses Hurd's RPCs for accessing the PCI configuration space.
+    Direct access as in {read_write}_{8,16,32} functions is done by the old x86
+    module.
+    
+    Some x86 function prototypes are now declared in a new header for the Hurd
+    module to use them, in order to duplicate as little code as possible.
+    
+    Author:  Joan Lledó <joanlluislledo@gmail.com>
+    Also-by: Damien Zammit <damien@zamaudio.com>
+    Signed-off-by: Damien Zammit <damien@zamaudio.com>
+
+commit 6e3837284372d70a9427918f622bf1dc7e2a3db6
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sat Jun 15 11:12:51 2019 +0200
+
+    freebsd_pci: remove old probe method
+    
+    Remove the old probe method.  The PCIOCGETBAR ioctl has been in FreeBSD
+    since 8.0 release, if not earlier.  Remove the old way of doing it.
+    This is done using unifdef -DPCIOCGETBAR and cleaning up whitespace.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit e8c7e461e43e96f7cf8b121d20d83dc6d8997f91
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sat Jun 15 11:02:07 2019 +0200
+
+    freebsd_pci: format freebsd_pci_methods
+    
+    Format freebsd_pci_methods a bit, adding some whitespace and assigning
+    NULL to methods not implemented.  This makes it easier to see the names
+    of various methods, as well as which methods are not implemented.
+    Idea from src/linux_sysfs.c
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit b40f387048a5c7b280d0c83d3af9d34ceca7f4f8
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sat Jun 15 10:59:00 2019 +0200
+
+    freebsd_pci: Add has_kernel_driver function
+    
+    Add a has_kernel_driver function to the FreeBSD libpciaccess functions.
+    This uses the PCIOCATTACHED ioctl to check if a driver is attached to a
+    specific PCI device.
+    Idea taken from the FreeBSD system utility pciconf.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit baa4084474665e34a8d6a9bba0e97d9aa5dcd88a
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sun Jun 16 10:42:08 2019 +0200
+
+    freebsd_pci: Remove unused variable
+    
+    Remove unused variable, it's written to, but never used.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit 976e661ee193941f9928353db365f14654a934db
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sun Jun 16 10:41:03 2019 +0200
+
+    freebsd_pci: Make this work on sparc64
+    
+    Make the FreeBSD libpciaccess routines work on FreeBSD.  The FreeBSD
+    sparc64 architecture needs special treatment, similar to the
+    PCI_MAGIC_IO_RANGE code.  However, PCI_MAGIC_IO_RANGE has been gone for
+    some time.  Give this a chance to work on sparc64 anyway.
+    
+    This code has been in the FreeBSD ports tree for some time.
+
+commit a1b528c4ae00972640d7a24f049c3fe9055ffe3b
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Fri Jun 14 23:40:33 2019 +0200
+
+    freebsd_pci: update legacy I/O for new architectures
+    
+    Update FreeBSD legacy I/O routines for new architectures.  When we're
+    not on amd64 or i386, and PCI_MAGIC_IO_RANGE is not defined, use IOCTLs
+    to handle reads and writes through /dev/io.
+    This is accomplished by opening /dev/io and using IOCTLs from
+    dev/io/iodev.h, an interface that exists on most FreeBSD architectures.
+    
+    This change has been in the FreeBSD ports tree for quite some time.
+
+commit b6de3c42cdc8fdb3acdd0b0a119e8848f1339950
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Sat Jun 15 00:06:54 2019 +0200
+
+    freebsd_pci: Fix types in write functions
+    
+    Fix the type used in write functions to match the size of the write.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit 735c8a5f6649d1b13fdc932f1b0b1e9e94512949
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Thu Jun 13 17:36:35 2019 +0200
+
+    Don't check for struct pci_io.pi_sel.pc_domain
+    
+    Autoconf has a check that pci_io.pi_sel.pc_domain exists.  This is only
+    used on FreeBSD.  pc_domain was added to pci_io.pi_sel on FreeBSD many
+    many releases ago, and exists on all current FreeBSD releases.
+    
+    Remove the check, and the corresponding HAVE_PCI_IO_PC_DOMAIN, and
+    update the code to take into account that #ifdef HAVE_PCI_IO_PC_DOMAIN
+    is now always true.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit 4fef4d2978619e9f198a17176afc88ba27ff6ab7
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Thu Jun 13 17:14:53 2019 +0200
+
+    freebsd_pci: Try to conform to uniform style
+    
+    Try to make freebsd_pci.c conform to a more uniform style.
+    This change is whitespace only, no functional change intended.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit 404f6aadaeeef03fedca52a822871675a652692f
+Author: Conrad Meyer <cem@FreeBSD.org>
+Date:   Sun Jun 16 02:30:41 2019 -0700
+
+    freebsd: Add !legacy open_device_io implementation
+    
+    Some drivers, such as QXL, rely on this method and do not check for errors
+    when it is unavailable.  FreeBSD's legacy method can enumerate any d/b/s/f
+    just fine, so it should be adequate for the !legacy API, as far as I can
+    tell.
+    
+    With this change, QXL doesn't crash on startup on FreeBSD.
+    
+    Signed-off-by: Conrad Meyer <cem@FreeBSD.org>
+
+commit fbed5d2b478cd33870c8eb6f0a12893193d7e32c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:31:52 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d30934ee6e0ee48cc10c141d5681be847e28e974
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 23:03:36 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 44f3dd08f99ba67e967980daaea2b800c68e2659
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Wed Oct 24 10:11:49 2018 +0200
+
+    linux: Set number of devices to 0 in case of error
+    
+    pci_sys is a global variable which is populated on init, and in case of
+    error reading sysfs on Linux, the devices are NULL, but the number of
+    devices is left unchanged.
+    
+    As a result, we may crash in `pci_device_next()` which relies on the
+    number of devices.
+    
+    To fix the issue, simply reset the number of devices to zero in case of
+    error so we don't try to access indices of a NULL array later on.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
 commit 13854f603f720c45caf51d785a874d3c7e8c5f58
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon Oct 23 11:44:32 2017 -0400

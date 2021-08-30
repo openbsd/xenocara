@@ -216,7 +216,7 @@ pci_device_get_bridge_info( struct pci_device * dev )
 	read_bridge_info(priv);
     }
 
-    return (priv->header_type == 1) ? priv->bridge.pci : NULL;
+    return ((priv->header_type & 0x7f) == 1) ? priv->bridge.pci : NULL;
 }
 
 
