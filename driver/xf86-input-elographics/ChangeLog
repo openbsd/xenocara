@@ -1,3 +1,58 @@
+commit 0f927a2167f0c18135322806ec52299b835d2b75
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jun 9 11:46:09 2019 -0700
+
+    elographics 1.4.2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a4dafa6b3b473acb1e8322392d0d74358651b71f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 13:58:27 2019 -0700
+
+    Add README.md to EXTRA_DIST
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb4f69a71d72e0baab73723b99e8b22d573f256e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 11:17:35 2019 -0700
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a01b79bd085c09db3c4a4bf7c32efc2f60678b70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 11:17:21 2019 -0700
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c666c78c764d0b97fa25bd9f0796a83b77761f7d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 30 11:47:03 2013 +1000
+
+    Handle DEVICE_ABORT on input ABI 19.1
+    
+    Don't do anything, but don't print a warning either.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0d3ec2e97c99431cdbaea8e958a75ff2e748da41
+Author: Jaska Kivela <jaska@kivela.net>
+Date:   Wed Jan 16 11:51:04 2013 +0200
+
+    Added axis inversion functionality.
+    
+    The module would previously log a message if min > max, but not do anything
+    about it. Keep the original min/max around, swap on-the-fly.
+    
+    Signed-off-by: Jaska Kivela <jaska@kivela.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 9fc73c9d037a751dc2b98d4b07d7580db31b8e3a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Aug 20 11:11:41 2012 +1000

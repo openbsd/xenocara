@@ -360,6 +360,22 @@ xf86EloReadInput(InputInfoPtr	pInfo)
           cur_y = WORD_ASSEMBLY(priv->packet_buf[5], priv->packet_buf[6]);
           state = priv->packet_buf[2] & 0x07;
 
+          DBG(5, ErrorF("ELO got: x(%d), y(%d), %s\n",
+                      cur_x, cur_y,
+                      (state == ELO_PRESS) ? "Press" :
+			((state == ELO_RELEASE) ? "Release" : "Stream")));
+
+          if (priv->min_y > priv->max_y) {
+            /* inverted y axis */
+            cur_y = priv->max_y - cur_y + priv->min_y;
+          }
+
+          if (priv->min_x > priv->max_x) {
+            /* inverted x axis */
+            cur_x = priv->max_x - cur_x + priv->min_x;
+          }
+
+
           /*
            * Send events.
            *
@@ -676,6 +692,7 @@ xf86EloControl(DeviceIntPtr	dev,
   unsigned char		reply[ELO_PACKET_SIZE];
   Atom btn_label;
   Atom axis_labels[2] = { 0, 0 };
+  int x0, x1, y0, y1;
 
   switch(mode) {
 
@@ -719,17 +736,27 @@ xf86EloControl(DeviceIntPtr	dev,
 	return !Success;
       }
       else {
+
+	/* Correct the coordinates for possibly inverted axis.
+	   Leave priv->variables untouched so we can check for
+	   inversion on incoming events.
+	 */
+	y0 = min(priv->min_y, priv->max_y);
+	y1 = max(priv->min_y, priv->max_y);
+	x0 = min(priv->min_x, priv->max_x);
+	x1 = max(priv->min_x, priv->max_x);
+
 	/* I will map coordinates myself */
 	InitValuatorAxisStruct(dev, 0,
 			       axis_labels[0],
-			       priv->min_x, priv->max_x,
+			       x0, x1,
 			       9500,
 			       0     /* min_res */,
 			       9500  /* max_res */,
 			       Absolute);
 	InitValuatorAxisStruct(dev, 1,
 			       axis_labels[1],
-			       priv->min_y, priv->max_y,
+			       y0, y1,
 			       10500,
 			       0     /* min_res */,
 			       10500 /* max_res */,
@@ -847,6 +874,11 @@ xf86EloControl(DeviceIntPtr	dev,
     pInfo->fd = -1;
     DBG(2, ErrorF("Done\n"));
     return Success;
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) * 100 + GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 1901
+  case DEVICE_ABORT:
+    return Success;
+#endif
 
   default:
       ErrorF("unsupported mode=%d\n", mode);
