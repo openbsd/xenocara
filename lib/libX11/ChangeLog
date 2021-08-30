@@ -1,3 +1,206 @@
+commit f906fe8e9769e4313294b68e61c402610ade69da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 5 09:12:13 2021 -0700
+
+    libX11 1.7.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 51b73ac0acda65005c8a9f17ca4ea7281b00ca84
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun May 23 15:05:17 2021 +0200
+
+    Protect against overly long strings
+    
+    Checking against upper limit of USHRT_MAX must happen before truncating
+    size_t to int. On 64 bit systems with strings larger than 2 GB this
+    could otherwise lead to negative ints or ints smaller than USHRT_MAX.
+    
+    In XParseColor this could lead to out of boundary access with strings
+    starting with a # (color sequence). A modulo 12 operation is performed
+    to validate the string length, but with an overflown length, the for
+    loop would eventually read behind terminating '\0' character.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
+commit ab2f59530b16bdfbf023b8e025c7c8aba3b6fd0c
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun May 30 16:33:48 2021 +0200
+
+    Check for NULL strings before getting their lengths
+    
+    Problem reported by Karsten Trulsen
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit a8216e8653a246db664e1443ecf707b27de65067
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sat May 22 17:35:47 2021 +0200
+
+    include <limits.h> always, not if HAVE_CONFIG_H is set.
+    
+    via Matthew Green from the NetBSD project
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 6953a586df4819143c4d55e011b3a5e5377981b8
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue May 18 15:27:58 2021 +0200
+
+    Version 1.7.1
+    
+    Release notes in README.md, version bump in configure.ac
+
+commit 8d2e02ae650f00c4a53deb625211a0527126c605
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Fri Feb 19 15:30:39 2021 +0100
+
+    Reject string longer than USHRT_MAX before sending them on the wire
+    
+    The X protocol uses CARD16 values to represent the length so
+    this would overflow.
+    
+    CVE-2021-31535
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 838ea5a5a0267c25b20c095c9a70684edeeefba4
+Author: Gaurav Ujjwal <gujjwal00@gmail.com>
+Date:   Sun May 9 05:04:36 2021 +0000
+
+    Fix out-of-bound access in KeySymToUcs4()
+    
+    Array `keysym_to_unicode_590_5fe` is only valid for range  [0x590, 0x5fe] but current lower-bound is checked against 0x589.
+    
+    So invalid values from 0x58a to 0x58f are being allowed by current check.
+    
+    If any of these invalid value is passed as `keysym`,    `keysym - 0x590` would underflow.
+    
+    Signed-off-by: Gaurav Ujjwal <gujjwal00@gmail.com>
+
+commit 32491b02c76ac22f99dc433a32466e22bdc181a7
+Author: Christopher Chavez <chrischavez@gmx.us>
+Date:   Mon May 3 15:46:44 2021 +0000
+
+    Xlib.h: spelling fix in comment
+
+commit 5faa8dc0b364f55f19034c370436074646d9ad54
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Tue Nov 24 18:54:24 2020 +0100
+
+    nls: adjust three comments about the APL compose sequences
+    
+    Commit 0bbc0d5e605e (from eight years ago) removed the lines that two
+    of these comments referred to.  Without those lines, the comments don't
+    make sense any more.  Reword and shorten them.
+    
+    Also reword a comment about two sequences that don't work.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit b126bfd7fe990b8c1df088f55c31d9b3fd440cde
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Tue Nov 24 12:23:32 2020 +0100
+
+    nls: allow composing all breved letters also with a lowercase "u"
+    
+    The letters ă and ŭ can already be composed with "u a" and "u u", but
+    ĕ, ğ, ĭ, and ŏ can be composed only with an uppercase U.  Emancipate
+    the latter four and understand also a lowercase "u" to mean 'breve'.
+    
+    (Yesterday I needed ğ and was annoyed that "u g" did not work.)
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 78027fdb7aa07621a3b7cdf37050bae39012f2fb
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Nov 28 21:05:33 2020 +0100
+
+    fix same roff code
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 4f15cfc64548098fef3ddd24f7359b76cf1bbda7
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Nov 28 20:56:35 2020 +0100
+
+    Fix some roff code add see also
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit daa106927f78e6c5c9c36558a4b951d7cb58a8d1
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sat Nov 28 17:49:25 2020 +0100
+
+    fix broken nroff coding for code comments
+    
+    the comments /* */ are code as /\(**  */ that does not work.
+    the coding in other X11 man pages is /\&* */ so we do the same here.
+
+commit 7bdeae239b17db002964ac73d06f43f216d1cf86
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Nov 27 22:43:21 2020 +0100
+
+    FIX: warning: macro `hN' not defined
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit b7ec67d3ea78ab68857328d8f72d923324e68cc2
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Nov 27 22:26:15 2020 +0100
+
+    FIX: warning: macro `IN' not defined
+    
+    just remove an other dead macro use.
+
+commit 7ca3ceb9175a829a40c347cb3b2e98341ec5a2df
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Nov 27 21:58:04 2020 +0100
+
+    fix warning: macro `s' not defined
+    
+    this is caused by bad nroff coding, fix some more issues on the fly
+
+commit 14fb4e535626ba934cad5bc4308f511524cd1103
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Nov 27 20:04:22 2020 +0100
+
+    FIX: warning: macro `hN' not defined
+    
+    this was found by checking man pages with
+     groff -t -mandoc -Z  -wmac -Tutf8 $FILE >/dev/null
+    
+    In most cases .hN could be replaced with .BR
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit cb03da4447aa53e8e5382f124917d89b50148036
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Nov 27 19:00:00 2020 +0100
+
+    FIX: warning: macro `Pn' not defined
+    
+    The missing macro is found via:
+    roff -t -mandoc -Z  -wmac -Tutf8 XAnyEvent.man >/dev/null
+    
+    To fix the problem the macro is replaced with .RB.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit cc9f8878f2cbe17c7b4035b4ff4352b52ece38e0
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Wed Nov 25 16:58:27 2020 +0100
+
+    nls: add 'C.utf8' as an alias for 'en_US.UTF-8'
+    
+    The normal form is 'C.UTF-8', but 'C.utf8' has been seen in the wild.
+    
+    Fixes #102.
+    
+    Reported-by: Tomas Korbar
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
 commit ca8115186f810eccb7d86b0979980eff3ba95f0b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Nov 19 11:30:41 2020 -0800

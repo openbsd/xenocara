@@ -2,7 +2,6 @@
 noinst_PROGRAMS=makekeys
 
 AM_CFLAGS = \
-	$(X11_CFLAGS) \
 	$(CWARNFLAGS)
 
 AM_CPPFLAGS = \

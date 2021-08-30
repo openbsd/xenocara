@@ -41,13 +41,15 @@ XLookupColor (
 	XColor *def,
 	XColor *scr)
 {
-	register int n;
+	register size_t n;
 	xLookupColorReply reply;
 	register xLookupColorReq *req;
 	XcmsCCC ccc;
 	XcmsColor cmsColor_exact;
 
-	n = (int) strlen (spec);
+	if (spec == NULL)
+		return 0;
+	n = strlen (spec);
 	if (n >= USHRT_MAX)
             return 0;
 #ifdef XCMS
