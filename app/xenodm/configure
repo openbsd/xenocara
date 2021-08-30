@@ -672,6 +672,7 @@ XENODM_CFLAGS
 SHELL_CMD
 WTMP_FILE
 UTMP_FILE
+DEF_SERVER
 DEFAULTVT
 XENODMLOGDIR
 XENODMSCRIPTDIR
@@ -844,6 +845,7 @@ with_xenodmconfigdir
 with_xenodmscriptdir
 with_logdir
 with_default_vt
+with_default_server
 with_utmp_file
 with_wtmp_file
 with_color_pixmap
@@ -1565,6 +1567,9 @@ Optional Packages:
                           (default=/var/log)
   --with-default-vt=<vtname>
                           specify default vt to start xenodm on (default=none)
+  --with-default-server=<server>
+                          specify default server to start xenodm with
+                          (default=${bindir}/X)
   --with-utmp-file=<pathname>
                           specify file to pass to sessreg -u for current
                           logins
@@ -18867,6 +18872,16 @@ fi
 
 
 
+
+# Check whether --with-default-server was given.
+if test "${with_default_server+set}" = set; then :
+  withval=$with_default_server; DEF_SERVER="$withval"
+else
+  DEF_SERVER="${bindir}/X"
+fi
+
+
+
 # Ideally we'd just pull out UTMP_FILE & WTMP_FILE from <utmp.h>
 # but that's not easy to do in autoconf
 
@@ -19762,10 +19777,6 @@ XENODM_LIBS="$XENODM_LIBS $DMCP_LIBS"
 # Defaults for X session - should probably be configure --with-* flags
 # Currently just trying to mirror what defaults were set in Imake
 
-# -DDEF_SERVER_LINE=":0 local $(DEF_SERVER) :0"
-if test -z "$DEF_SERVER" ; then
-	DEF_SERVER="${bindir}/X"
-fi
 if test -z "$DEF_SERVER_LINE" ; then
 	DEF_SERVER_LINE=":0 local ${DEF_SERVER} :0"
 fi

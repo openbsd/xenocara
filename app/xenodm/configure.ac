@@ -93,6 +93,12 @@ AC_ARG_WITH(default-vt,
 	[DEFAULTVT="$withval"], [[DEFAULTVT=""]])
 AC_SUBST(DEFAULTVT)
 
+AC_ARG_WITH(default-server,
+	AS_HELP_STRING([--with-default-server=<server>],
+	  [specify default server to start xenodm with (default=${bindir}/X)]),
+	[DEF_SERVER="$withval"], [[DEF_SERVER="${bindir}/X"]])
+AC_SUBST(DEF_SERVER)
+
 # Ideally we'd just pull out UTMP_FILE & WTMP_FILE from <utmp.h>
 # but that's not easy to do in autoconf
 AC_ARG_WITH(utmp_file,
@@ -205,10 +211,6 @@ AC_SUBST(XENODM_LIBS)
 # Defaults for X session - should probably be configure --with-* flags
 # Currently just trying to mirror what defaults were set in Imake
 
-# -DDEF_SERVER_LINE=":0 local $(DEF_SERVER) :0"
-if test -z "$DEF_SERVER" ; then
-	DEF_SERVER="${bindir}/X"
-fi
 if test -z "$DEF_SERVER_LINE" ; then
 	DEF_SERVER_LINE=":0 local ${DEF_SERVER} :0"
 fi

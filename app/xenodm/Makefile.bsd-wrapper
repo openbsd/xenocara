@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2021/06/26 07:58:37 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2021/08/30 17:01:56 matthieu Exp $
 .include <bsd.own.mk>
 
 XENODMCONFIGDIR=/etc/X11/xenodm
@@ -12,6 +12,7 @@ DEFAULT_VT= --with-default-vt=vt05
 
 CONFIGURE_ARGS= \
 	$(DEFAULT_VT) \
+	--with-default-server=${BINDIR}/X \
 	--with-authdir=$(XENODMCONFIGDIR) \
 	--with-xenodmlibdir=$(XENODMCONFIGDIR) \
 	--with-pixmapdir=$(PIXMAPDIR) \
