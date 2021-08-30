@@ -256,11 +256,12 @@ static Bool ReadClientValues(
         _XRead32 (dpy, &value, 4);
         client->length = value;
         client->value = malloc(client->length);
-        _XRead32 (dpy, client->value, client->length);
+        _XRead (dpy, client->value, client->length);
     }
     return True;
 }
 
+/* Returns an array of uint32_t values, not an array of long */
 Status XResQueryClientIds (
    Display            *dpy,
    long                num_specs,
@@ -292,7 +293,6 @@ Status XResQueryClientIds (
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse)) {
         goto error;
     }
-
     *client_ids = calloc(rep.numIds, sizeof(**client_ids));
     *num_ids = rep.numIds;
 

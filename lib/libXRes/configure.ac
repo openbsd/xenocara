@@ -29,8 +29,8 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so XRes version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXres], [1.2.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXres])
+AC_INIT([libXres], [1.2.1],
+        [https://gitlab.freedesktop.org/xorg/lib/libXRes/issues], [libXres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

@@ -1,3 +1,60 @@
+commit c05c6d918b0e2011d4bfa370c321482e34630b17
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 30 21:36:16 2021 -0700
+
+    libXres 1.2.1
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 53581bba3ee20671e6e5ab7c743bfbf6ffbe6974
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Mar 30 21:05:48 2021 -0700
+
+    Note ABI of XResQueryClientIds
+    
+    XResQueryClientIds is now documented to return an array of 32-bit
+    values, not an array of longs. The previous implementation allocated
+    space for 32-bit values but read longs into that, overflowing the
+    array. Applications using this were expecting 32-bit values.
+    
+    This "worked" on little endian 64-bit systems because only one value
+    was typically provided and the low 32-bits got stuck in the right
+    place, although the allocation was overrun at the end. That might
+    cause trouble if the allocator is checking carefully.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 3e6bdd90c604e061c71715865eb403ffdd0dd7f0
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Wed Oct 21 10:03:23 2020 -0400
+
+    XRes: Use _XRead instead of _XRead32 for reading pid
+    
+    _XRead32 requires the output variable to be a long, but
+    `ReadClientValues` feeds it client->value which is a
+    32-bit allocation.
+    
+    This commit changes the code to use _XRead instead, which
+    properly handles 32-bit output variables.
+    
+    https://gitlab.freedesktop.org/xorg/lib/libxres/-/issues/3
+
+commit 97d312e5fd9b4b97e3f50c899a40325768f246a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:49:47 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a90ff752cfe4020c323d927fe856e91c49abbc93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 21:27:37 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 84b9156c7833dfd91c65d33542420ff4fe226948
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Oct 11 11:11:01 2017 -0400

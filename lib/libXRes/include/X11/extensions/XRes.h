@@ -98,6 +98,7 @@ Status XResQueryClientPixmapBytes (
 
 /* v1.2 */
 
+/* Returns an array of uint32_t values, not an array of long */
 Status XResQueryClientIds (
    Display            *dpy,
    long                num_specs,
