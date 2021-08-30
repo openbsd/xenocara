@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.462 2021/08/09 17:52:14 matthieu Exp $
+# $OpenBSD: MODULES,v 1.463 2021/08/30 12:14:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -8,7 +8,7 @@ app/bdftopcf		1.1
 app/beforelight		1.0.5
 app/bitmap		1.0.9
 app/editres		1.0.7
-app/fonttosfnt		1.2.2		needs-update
+app/fonttosfnt		1.2.2
 app/iceauth		1.0.8
 app/ico			1.0.5		remove?
 app/listres		1.0.4
@@ -20,7 +20,7 @@ app/rgb			1.0.6		remove?
 app/sessreg		1.1.2
 app/setxkbmap		1.3.2
 app/smproxy		1.0.6
-app/twm			1.0.11		needs-update
+app/twm			1.0.11
 app/viewres		1.0.6
 app/x11perf		1.6.1
 app/xauth		1.1
@@ -37,7 +37,7 @@ app/xdpyinfo		1.3.2
 app/xdriinfo		1.0.6
 app/xedit		1.2.2
 app/xev			1.2.4
-app/xeyes		1.2.0		needs-update
+app/xeyes		1.2.0
 app/xf86dga		1.0.3
 app/xfd			1.1.3
 app/xfontsel		1.0.6
@@ -46,7 +46,7 @@ app/xgc			1.0.5		remove?
 app/xhost		1.0.8
 app/xinit		1.4.1
 app/xinput		1.6.3
-app/xkbcomp		1.4.5		needs-update
+app/xkbcomp		1.4.5
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5
 app/xkbutils		1.0.4
@@ -70,7 +70,7 @@ app/xsetroot		1.1.2
 app/xsm			1.0.4
 app/xvidtune		1.0.3
 app/xvinfo		1.1.3
-app/xwd			1.0.8		needs-update
+app/xwd			1.0.8
 app/xwininfo		1.1.5
 app/xwud		1.0.5
 
@@ -79,7 +79,7 @@ data/bitmaps		1.1.2
 doc/xorg-docs		1.7.1
 
 driver/xf86-input-acecad	1.5.0
-driver/xf86-input-elographics	1.4.2		needs-update
+driver/xf86-input-elographics	1.4.2
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.3
@@ -116,7 +116,7 @@ font/adobe-75dpi		1.0.3
 font/adobe-utopia-100dpi	1.0.4
 font/adobe-utopia-75dpi		1.0.4
 font/adobe-utopia-type1		1.0.4
-font/alias			1.0.4		needs-update
+font/alias			1.0.4
 font/arabic-misc		1.0.3
 font/bh-100dpi			1.0.3
 font/bh-75dpi			1.0.3
@@ -136,7 +136,7 @@ font/isas-misc			1.0.3
 font/jis-misc			1.0.3
 font/micro-misc			1.0.3
 font/misc-cyrillic		1.0.3
-font/misc-ethiopic		1.0.4		needs-update
+font/misc-ethiopic		1.0.4
 font/misc-meltho		1.0.3
 font/misc-misc			1.1.2
 font/mutt-misc			1.0.3
@@ -150,7 +150,7 @@ font/xfree86-type1		1.0.4
 
 lib/libICE			1.0.10
 lib/libSM			1.2.3
-lib/libX11			1.7.2		needs-update
+lib/libX11			1.7.2
 lib/libXScrnSaver		1.2.3
 lib/libXau			1.0.9
 lib/libXaw			1.0.14
@@ -160,7 +160,7 @@ lib/libXdamage			1.1.5
 lib/libXdmcp			1.1.3
 lib/libXext			1.3.4
 lib/libXfixes			6.0.0		needs-update
-lib/libXfont2			2.0.5		needs-update
+lib/libXfont2			2.0.5
 lib/libXft			2.3.3
 lib/libXi			1.7.10
 lib/libXinerama			1.1.4
@@ -169,7 +169,7 @@ lib/libXpm			3.5.13
 lib/libXpresent			1.0.0
 lib/libXrandr			1.5.2
 lib/libXrender			0.9.10
-lib/libXres			1.2.1		needs-update
+lib/libXres			1.2.1
 lib/libXt			1.2.1
 lib/libXtst			1.2.3
 lib/libXv			1.0.11
@@ -178,7 +178,7 @@ lib/libXxf86dga			1.1.5
 lib/libXxf86vm			1.1.4
 lib/libdmx			1.1.4
 lib/libfontenc			1.1.4
-lib/libpciaccess		0.16		needs-update
+lib/libpciaccess		0.16
 lib/libxcb			1.14
 lib/libxkbfile			1.1.0
 lib/libxshmfence		1.3
