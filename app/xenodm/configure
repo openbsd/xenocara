@@ -20120,7 +20120,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile config/Xreset config/Xresources config/Xservers config/Xsession config/Xstartup config/xenodm-config"
+ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile config/GiveConsole config/TakeConsole config/Xreset config/Xresources config/Xservers config/Xsession config/Xsetup_0 config/Xstartup config/xenodm-config"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -21145,10 +21145,13 @@ do
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "man/Makefile") CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
     "xenodm/Makefile") CONFIG_FILES="$CONFIG_FILES xenodm/Makefile" ;;
+    "config/GiveConsole") CONFIG_FILES="$CONFIG_FILES config/GiveConsole" ;;
+    "config/TakeConsole") CONFIG_FILES="$CONFIG_FILES config/TakeConsole" ;;
     "config/Xreset") CONFIG_FILES="$CONFIG_FILES config/Xreset" ;;
     "config/Xresources") CONFIG_FILES="$CONFIG_FILES config/Xresources" ;;
     "config/Xservers") CONFIG_FILES="$CONFIG_FILES config/Xservers" ;;
     "config/Xsession") CONFIG_FILES="$CONFIG_FILES config/Xsession" ;;
+    "config/Xsetup_0") CONFIG_FILES="$CONFIG_FILES config/Xsetup_0" ;;
     "config/Xstartup") CONFIG_FILES="$CONFIG_FILES config/Xstartup" ;;
     "config/xenodm-config") CONFIG_FILES="$CONFIG_FILES config/xenodm-config" ;;
 
