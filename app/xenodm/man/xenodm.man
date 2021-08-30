@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: August 1 2021 $
+.Dd $Mdocdate: August 30 2021 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -1016,11 +1016,11 @@ It is typically a shell script.
 Since it is run as root,
 .Pa Xstartup
 should be very careful about security.
-The default script updates 
+The default script updates
 .Xr wtmp 5
 files using the
 .Xr sessreg 1
-program, or aborts the session if logins are not allowed when the 
+program, or aborts the session if logins are not allowed when the
 .Pa /etc/nologin
 file is present.
 .Pp
@@ -1092,7 +1092,7 @@ program looks in
 .Pa $HOME
 for a script named
 .Pa .xsession ,
-which contains commands that each user would like to use as a session. 
+which contains commands that each user would like to use as a session.
 .Pa Xsession
 also implements a system default session
 if no user-specified session exists.
@@ -1125,7 +1125,7 @@ xrdb -merge "$HOME/.Xresources"
 emacs -geometry +0+50 &
 xbiff -geometry -430+5 &
 xterm -geometry -0+50 -ls &
-exec fvwm 
+exec fvwm
 .Ed
 .Sh RESET PROGRAM
 Symmetrical with
