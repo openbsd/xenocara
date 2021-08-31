@@ -963,7 +963,7 @@ extern void report_char_class(XtermWidget);
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
-#define CharWidth(n) (((n) < 256) ? (IsLatin1(n) ? 1 : 0) : my_wcwidth((wchar_t) (n)))
+#define CharWidth(n) (my_wcwidth((wchar_t) (n)))
 #else
 #define WideCells(n) 1
 #define CharWidth(n) (IsLatin1(n) ? 1 : 0)
