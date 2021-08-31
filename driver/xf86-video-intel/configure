@@ -850,6 +850,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1001,6 +1002,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1253,6 +1255,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1390,7 +1401,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1543,6 +1554,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -10689,10 +10701,11 @@ _ACEOF
 
 
 
-CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp && \
+CHANGELOG_CMD="((GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp) 2>/dev/null && \
 mv \$(top_srcdir)/.changelog.tmp \$(top_srcdir)/ChangeLog) \
-|| (rm -f \$(top_srcdir)/.changelog.tmp; touch \$(top_srcdir)/ChangeLog; \
-echo 'git directory not found: installing possibly empty changelog.' >&2)"
+|| (rm -f \$(top_srcdir)/.changelog.tmp; test -e \$(top_srcdir)/ChangeLog || ( \
+touch \$(top_srcdir)/ChangeLog; \
+echo 'git failed to create ChangeLog: installing empty ChangeLog.' >&2))"
 
 
 
@@ -10700,13 +10713,44 @@ echo 'git directory not found: installing possibly empty changelog.' >&2)"
 macros_datadir=`$PKG_CONFIG --print-errors --variable=pkgdatadir xorg-macros`
 INSTALL_CMD="(cp -f "$macros_datadir/INSTALL" \$(top_srcdir)/.INSTALL.tmp && \
 mv \$(top_srcdir)/.INSTALL.tmp \$(top_srcdir)/INSTALL) \
-|| (rm -f \$(top_srcdir)/.INSTALL.tmp; touch \$(top_srcdir)/INSTALL; \
-echo 'util-macros \"pkgdatadir\" from xorg-macros.pc not found: installing possibly empty INSTALL.' >&2)"
+|| (rm -f \$(top_srcdir)/.INSTALL.tmp; test -e \$(top_srcdir)/INSTALL || ( \
+touch \$(top_srcdir)/INSTALL; \
+echo 'failed to copy INSTALL from util-macros: installing empty INSTALL.' >&2))"
 
 
 
 
 
+
+case $host_os in
+    solaris*)
+        # Solaris 2.0 - 11.3 use SysV man page section numbers, so we
+        # check for a man page file found in later versions that use
+        # traditional section numbers instead
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for /usr/share/man/man7/attributes.7" >&5
+$as_echo_n "checking for /usr/share/man/man7/attributes.7... " >&6; }
+if ${ac_cv_file__usr_share_man_man7_attributes_7+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "/usr/share/man/man7/attributes.7"; then
+  ac_cv_file__usr_share_man_man7_attributes_7=yes
+else
+  ac_cv_file__usr_share_man_man7_attributes_7=no
+fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_file__usr_share_man_man7_attributes_7" >&5
+$as_echo "$ac_cv_file__usr_share_man_man7_attributes_7" >&6; }
+if test "x$ac_cv_file__usr_share_man_man7_attributes_7" = xyes; then :
+  SYSV_MAN_SECTIONS=false
+else
+  SYSV_MAN_SECTIONS=true
+fi
+
+        ;;
+    *) SYSV_MAN_SECTIONS=false ;;
+esac
 
 if test x$APP_MAN_SUFFIX = x    ; then
     APP_MAN_SUFFIX=1
@@ -10723,9 +10767,9 @@ if test x$LIB_MAN_DIR = x    ; then
 fi
 
 if test x$FILE_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	FILE_MAN_SUFFIX=4  ;;
-	*)		FILE_MAN_SUFFIX=5  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				FILE_MAN_SUFFIX=4  ;;
+	*)				FILE_MAN_SUFFIX=5  ;;
     esac
 fi
 if test x$FILE_MAN_DIR = x    ; then
@@ -10733,9 +10777,9 @@ if test x$FILE_MAN_DIR = x    ; then
 fi
 
 if test x$MISC_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	MISC_MAN_SUFFIX=5  ;;
-	*)		MISC_MAN_SUFFIX=7  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				MISC_MAN_SUFFIX=5  ;;
+	*)				MISC_MAN_SUFFIX=7  ;;
     esac
 fi
 if test x$MISC_MAN_DIR = x    ; then
@@ -10743,9 +10787,9 @@ if test x$MISC_MAN_DIR = x    ; then
 fi
 
 if test x$DRIVER_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
-	*)		DRIVER_MAN_SUFFIX=4  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				DRIVER_MAN_SUFFIX=7  ;;
+	*)				DRIVER_MAN_SUFFIX=4  ;;
     esac
 fi
 if test x$DRIVER_MAN_DIR = x    ; then
@@ -10753,9 +10797,9 @@ if test x$DRIVER_MAN_DIR = x    ; then
 fi
 
 if test x$ADMIN_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	ADMIN_MAN_SUFFIX=1m ;;
-	*)		ADMIN_MAN_SUFFIX=8  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				ADMIN_MAN_SUFFIX=1m ;;
+	*)				ADMIN_MAN_SUFFIX=8  ;;
     esac
 fi
 if test x$ADMIN_MAN_DIR = x    ; then
@@ -18690,8 +18734,8 @@ fi
 	else
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GEN4ASM" >&5
-$as_echo_n "checking for GEN4ASM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for intel-gen4asm >= 1.2" >&5
+$as_echo_n "checking for intel-gen4asm >= 1.2... " >&6; }
 
 if test -n "$GEN4ASM_CFLAGS"; then
     pkg_cv_GEN4ASM_CFLAGS="$GEN4ASM_CFLAGS"
@@ -18731,7 +18775,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -18749,7 +18793,7 @@ fi
 
 	gen4asm=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	gen4asm=no
 else
@@ -18865,8 +18909,8 @@ fi
 if test "x$UDEV" != "xno"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for UDEV" >&5
-$as_echo_n "checking for UDEV... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libudev" >&5
+$as_echo_n "checking for libudev... " >&6; }
 
 if test -n "$UDEV_CFLAGS"; then
     pkg_cv_UDEV_CFLAGS="$UDEV_CFLAGS"
@@ -18906,7 +18950,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -18924,7 +18968,7 @@ fi
 
 	udev="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	udev="no"
 else
@@ -18946,8 +18990,8 @@ fi
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for X11" >&5
-$as_echo_n "checking for X11... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for x11 xrender xrandr xext xfixes cairo cairo-xlib-xrender pixman-1 libpng" >&5
+$as_echo_n "checking for x11 xrender xrandr xext xfixes cairo cairo-xlib-xrender pixman-1 libpng... " >&6; }
 
 if test -n "$X11_CFLAGS"; then
     pkg_cv_X11_CFLAGS="$X11_CFLAGS"
@@ -18987,7 +19031,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19005,7 +19049,7 @@ fi
 
 	x11="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	x11="no"
 else
@@ -19164,8 +19208,8 @@ fi
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for X11_DRI3" >&5
-$as_echo_n "checking for X11_DRI3... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xcb-dri3 xcb-sync xcb-present x11-xcb xshmfence x11 xrender xext libdrm" >&5
+$as_echo_n "checking for xcb-dri3 xcb-sync xcb-present x11-xcb xshmfence x11 xrender xext libdrm... " >&6; }
 
 if test -n "$X11_DRI3_CFLAGS"; then
     pkg_cv_X11_DRI3_CFLAGS="$X11_DRI3_CFLAGS"
@@ -19205,7 +19249,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19223,7 +19267,7 @@ fi
 
 	x11_dri3="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	x11_dri3="no"
 else
@@ -19270,8 +19314,8 @@ if test "x$tools" != "xno"; then
 	ignore="xinerama"
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IVO_EXTRA" >&5
-$as_echo_n "checking for IVO_EXTRA... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ignore" >&5
+$as_echo_n "checking for $ignore... " >&6; }
 
 if test -n "$IVO_EXTRA_CFLAGS"; then
     pkg_cv_IVO_EXTRA_CFLAGS="$IVO_EXTRA_CFLAGS"
@@ -19311,7 +19355,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19329,7 +19373,7 @@ fi
 
 	ignore=""
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	ignore=""
 else
@@ -19357,8 +19401,8 @@ fi
 	ignore="xcb-dri3 xcb-sync x11-xcb xshmfence x11"
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IVO_EXTRA" >&5
-$as_echo_n "checking for IVO_EXTRA... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ignore" >&5
+$as_echo_n "checking for $ignore... " >&6; }
 
 if test -n "$IVO_EXTRA_CFLAGS"; then
     pkg_cv_IVO_EXTRA_CFLAGS="$IVO_EXTRA_CFLAGS"
@@ -19398,7 +19442,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19416,7 +19460,7 @@ fi
 
 	ignore=""
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	ignore=""
 else
@@ -19429,8 +19473,8 @@ fi
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IVO" >&5
-$as_echo_n "checking for IVO... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ivo_requires" >&5
+$as_echo_n "checking for $ivo_requires... " >&6; }
 
 if test -n "$IVO_CFLAGS"; then
     pkg_cv_IVO_CFLAGS="$IVO_CFLAGS"
@@ -19470,7 +19514,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19488,7 +19532,7 @@ fi
 
 	ivo="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	ivo="no"
 else
@@ -19734,8 +19778,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 # Obtain compiler/linker options for the driver dependencies
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DRM" >&5
-$as_echo_n "checking for DRM... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libdrm >= 2.4.20" >&5
+$as_echo_n "checking for libdrm >= 2.4.20... " >&6; }
 
 if test -n "$DRM_CFLAGS"; then
     pkg_cv_DRM_CFLAGS="$DRM_CFLAGS"
@@ -19775,7 +19819,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19802,7 +19846,7 @@ Alternatively, you may set the environment variables DRM_CFLAGS
 and DRM_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -19825,8 +19869,8 @@ $as_echo "yes" >&6; }
 fi # libdrm_intel is checked separately
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCIACCESS" >&5
-$as_echo_n "checking for PCIACCESS... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pciaccess >= 0.10" >&5
+$as_echo_n "checking for pciaccess >= 0.10... " >&6; }
 
 if test -n "$PCIACCESS_CFLAGS"; then
     pkg_cv_PCIACCESS_CFLAGS="$PCIACCESS_CFLAGS"
@@ -19866,7 +19910,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -19893,7 +19937,7 @@ Alternatively, you may set the environment variables PCIACCESS_CFLAGS
 and PCIACCESS_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -20030,8 +20074,8 @@ $as_echo "#define USE_UXA 1" >>confdefs.h
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DRMINTEL" >&5
-$as_echo_n "checking for DRMINTEL... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libdrm_intel >= $uxa_requires_libdrm" >&5
+$as_echo_n "checking for libdrm_intel >= $uxa_requires_libdrm... " >&6; }
 
 if test -n "$DRMINTEL_CFLAGS"; then
     pkg_cv_DRMINTEL_CFLAGS="$DRMINTEL_CFLAGS"
@@ -20071,7 +20115,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20098,7 +20142,7 @@ Alternatively, you may set the environment variables DRMINTEL_CFLAGS
 and DRMINTEL_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -20139,8 +20183,8 @@ if test "x$GLAMOR" != "xno"; then
 	else
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LIBGLAMOR" >&5
-$as_echo_n "checking for LIBGLAMOR... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for glamor >= 0.6.0" >&5
+$as_echo_n "checking for glamor >= 0.6.0... " >&6; }
 
 if test -n "$LIBGLAMOR_CFLAGS"; then
     pkg_cv_LIBGLAMOR_CFLAGS="$LIBGLAMOR_CFLAGS"
@@ -20180,7 +20224,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20207,7 +20251,7 @@ Alternatively, you may set the environment variables LIBGLAMOR_CFLAGS
 and LIBGLAMOR_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -20230,8 +20274,8 @@ $as_echo "yes" >&6; }
 fi
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LIBGLAMOR_EGL" >&5
-$as_echo_n "checking for LIBGLAMOR_EGL... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for glamor-egl" >&5
+$as_echo_n "checking for glamor-egl... " >&6; }
 
 if test -n "$LIBGLAMOR_EGL_CFLAGS"; then
     pkg_cv_LIBGLAMOR_EGL_CFLAGS="$LIBGLAMOR_EGL_CFLAGS"
@@ -20271,7 +20315,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20298,7 +20342,7 @@ Alternatively, you may set the environment variables LIBGLAMOR_EGL_CFLAGS
 and LIBGLAMOR_EGL_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -20328,8 +20372,8 @@ fi
 
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XORG" >&5
-$as_echo_n "checking for XORG... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xorg-server >= $required_xorg_server_version xproto fontsproto pixman-1 >= $required_pixman_version $REQUIRED_MODULES" >&5
+$as_echo_n "checking for xorg-server >= $required_xorg_server_version xproto fontsproto pixman-1 >= $required_pixman_version $REQUIRED_MODULES... " >&6; }
 
 if test -n "$XORG_CFLAGS"; then
     pkg_cv_XORG_CFLAGS="$XORG_CFLAGS"
@@ -20369,7 +20413,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20396,7 +20440,7 @@ Alternatively, you may set the environment variables XORG_CFLAGS
 and XORG_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -20600,8 +20644,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 if test "x$_EXT_CHECK" != "xno" -a "x$DRI" != "xno" -a "x$DRI1" != "xno" -a "x$UMS" = "xyes"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DRI1" >&5
-$as_echo_n "checking for DRI1... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xf86driproto" >&5
+$as_echo_n "checking for xf86driproto... " >&6; }
 
 if test -n "$DRI1_CFLAGS"; then
     pkg_cv_DRI1_CFLAGS="$DRI1_CFLAGS"
@@ -20641,7 +20685,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20659,7 +20703,7 @@ fi
 
 	have_dri1=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	have_dri1=no
 else
@@ -20736,8 +20780,8 @@ if test "x$DRI" != "xno"; then
 	if test "x$DRI2" != "xno"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DRI2" >&5
-$as_echo_n "checking for DRI2... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for dri2proto >= 2.6" >&5
+$as_echo_n "checking for dri2proto >= 2.6... " >&6; }
 
 if test -n "$DRI2_CFLAGS"; then
     pkg_cv_DRI2_CFLAGS="$DRI2_CFLAGS"
@@ -20777,7 +20821,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20795,7 +20839,7 @@ fi
 
 	have_dri2=no
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	have_dri2=no
 else
@@ -20892,8 +20936,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 		if test "x$_EXT_CHECK" != "xno"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DRI3" >&5
-$as_echo_n "checking for DRI3... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for dri3proto" >&5
+$as_echo_n "checking for dri3proto... " >&6; }
 
 if test -n "$DRI3_CFLAGS"; then
     pkg_cv_DRI3_CFLAGS="$DRI3_CFLAGS"
@@ -20933,7 +20977,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -20960,7 +21004,7 @@ Alternatively, you may set the environment variables DRI3_CFLAGS
 and DRI3_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -21119,8 +21163,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 if test "x$_EXT_CHECK" != "xno"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PRESENT" >&5
-$as_echo_n "checking for PRESENT... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for presentproto" >&5
+$as_echo_n "checking for presentproto... " >&6; }
 
 if test -n "$PRESENT_CFLAGS"; then
     pkg_cv_PRESENT_CFLAGS="$PRESENT_CFLAGS"
@@ -21160,7 +21204,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -21187,7 +21231,7 @@ Alternatively, you may set the environment variables PRESENT_CFLAGS
 and PRESENT_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -21293,8 +21337,8 @@ $as_echo "$SNA" >&6; }
 if test "$XVMC" = "yes"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XVMCLIB" >&5
-$as_echo_n "checking for XVMCLIB... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for xvmc dri2proto x11 x11-xcb xcb-dri2 xcb-aux libdrm_intel" >&5
+$as_echo_n "checking for xvmc dri2proto x11 x11-xcb xcb-dri2 xcb-aux libdrm_intel... " >&6; }
 
 if test -n "$XVMCLIB_CFLAGS"; then
     pkg_cv_XVMCLIB_CFLAGS="$XVMCLIB_CFLAGS"
@@ -21334,7 +21378,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -21352,7 +21396,7 @@ fi
 
 	XVMC="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	XVMC="no"
 else
@@ -21651,8 +21695,8 @@ have_valgrind="no"
 if test "x$VG" != "xno"; then
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for VALGRIND" >&5
-$as_echo_n "checking for VALGRIND... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for valgrind" >&5
+$as_echo_n "checking for valgrind... " >&6; }
 
 if test -n "$VALGRIND_CFLAGS"; then
     pkg_cv_VALGRIND_CFLAGS="$VALGRIND_CFLAGS"
@@ -21692,7 +21736,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -21710,7 +21754,7 @@ fi
 
 	have_valgrind="no"
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	have_valgrind="no"
 else
@@ -24323,7 +24367,7 @@ fi
 
 echo ""
 echo ""
-test -e `pwd $0`/README && cat `pwd $0`/README
+test -e `pwd`/README && cat `pwd`/README
 
 accel_msg=""
 if test "x$SNA" != "xno"; then
