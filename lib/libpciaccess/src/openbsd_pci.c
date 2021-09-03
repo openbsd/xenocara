@@ -17,8 +17,9 @@
 #include "config.h"
 #endif
 
-#include <sys/param.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #if defined(__i386__) || defined(__amd64__)
 #include <sys/memrange.h>
 #endif
@@ -32,6 +33,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +41,8 @@
 
 #include "pciaccess.h"
 #include "pciaccess_private.h"
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 /*
  * This should allow for 16 domains, which should cover everything
@@ -624,7 +628,7 @@ pci_system_openbsd_create(void)
 {
 	struct pci_device_private *device;
 	int domain, bus, dev, func, ndevs, nfuncs;
-	char path[MAXPATHLEN];
+	char path[PATH_MAX];
 	uint32_t reg;
 
 	if (ndomains > 0)
