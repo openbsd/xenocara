@@ -91,15 +91,18 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_dmxtodmx_OBJECTS = dmxtodmx.$(OBJEXT)
 dmxtodmx_OBJECTS = $(am_dmxtodmx_OBJECTS)
+dmxtodmx_DEPENDENCIES = libdmxconfig.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 am_vdltodmx_OBJECTS = vdltodmx.$(OBJEXT)
 vdltodmx_OBJECTS = $(am_vdltodmx_OBJECTS)
+vdltodmx_DEPENDENCIES = libdmxconfig.a
 am_xdmxconfig_OBJECTS = xdmxconfig-xdmxconfig.$(OBJEXT) \
 	xdmxconfig-dmxlog.$(OBJEXT) xdmxconfig-Canvas.$(OBJEXT)
 xdmxconfig_OBJECTS = $(am_xdmxconfig_OBJECTS)
+xdmxconfig_DEPENDENCIES = libdmxconfig.a
 xdmxconfig_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(xdmxconfig_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -591,7 +594,6 @@ AM_CFLAGS = \
 	$(GLX_DEFS) \
 	@DMXMODULES_CFLAGS@
 
-xdmxconfig_DEPENDENCIES = libdmxconfig.a
 xdmxconfig_SOURCES = \
 	xdmxconfig.c \
 	$(top_srcdir)/hw/dmx/dmxlog.c \
@@ -599,14 +601,12 @@ xdmxconfig_SOURCES = \
 	Canvas.h \
 	CanvasP.h
 
-xdmxconfig_LDADD = -L. -ldmxconfig @XDMXCONFIG_DEP_LIBS@
+xdmxconfig_LDADD = libdmxconfig.a @XDMXCONFIG_DEP_LIBS@
 xdmxconfig_CFLAGS = $(AM_CFLAGS) @XDMXCONFIG_DEP_CFLAGS@
-vdltodmx_DEPENDENCIES = libdmxconfig.a
 vdltodmx_SOURCES = vdltodmx.c
-vdltodmx_LDADD = -L. -ldmxconfig
-dmxtodmx_DEPENDENCIES = libdmxconfig.a
+vdltodmx_LDADD = libdmxconfig.a
 dmxtodmx_SOURCES = dmxtodmx.c
-dmxtodmx_LDADD = -L. -ldmxconfig
+dmxtodmx_LDADD = libdmxconfig.a
 EXTRA_DIST = \
 	test-a.in test-a.out \
 	test-b.in test-b.out \

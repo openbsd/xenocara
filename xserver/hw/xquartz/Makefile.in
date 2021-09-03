@@ -77,9 +77,8 @@ libXquartz_la_DEPENDENCIES =  \
 	$(top_builddir)/pseudoramiX/libPseudoramiX.la
 am_libXquartz_la_OBJECTS = miinitext.lo X11Application.lo \
 	X11Controller.lo applewm.lo darwin.lo darwinEvents.lo \
-	darwinXinput.lo keysym2ucs.lo quartz.lo quartzCocoa.lo \
-	quartzKeyboard.lo quartzStartup.lo quartzRandR.lo \
-	console_redirect.lo
+	darwinXinput.lo keysym2ucs.lo quartz.lo quartzKeyboard.lo \
+	quartzStartup.lo quartzRandR.lo
 libXquartz_la_OBJECTS = $(am_libXquartz_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -566,11 +565,9 @@ libXquartz_la_SOURCES = \
 	darwinXinput.c \
 	keysym2ucs.c \
 	quartz.c \
-	quartzCocoa.m \
 	quartzKeyboard.c \
 	quartzStartup.c \
-	quartzRandR.c \
-	console_redirect.c
+	quartzRandR.c
 
 libXquartz_la_LIBADD = $(top_builddir)/pseudoramiX/libPseudoramiX.la
 EXTRA_DIST = \
@@ -582,12 +579,10 @@ EXTRA_DIST = \
 	darwinEvents.h \
 	keysym2ucs.h \
 	quartz.h \
-	quartzCommon.h \
 	quartzKeyboard.h \
 	quartzRandR.h \
 	sanitizedCarbon.h \
-	sanitizedCocoa.h \
-	console_redirect.h
+	sanitizedCocoa.h
 
 all: all-recursive
 
@@ -646,14 +641,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/X11Application.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/X11Controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/applewm.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console_redirect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/darwin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/darwinEvents.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/darwinXinput.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keysym2ucs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quartz.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quartzCocoa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quartzKeyboard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quartzRandR.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quartzStartup.Plo@am__quote@

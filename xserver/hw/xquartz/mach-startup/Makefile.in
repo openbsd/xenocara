@@ -50,7 +50,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-x11app_PROGRAMS = X11.bin$(EXEEXT)
+x11app_PROGRAMS = X11.bin$(EXEEXT) X11$(EXEEXT)
 @GLX_TRUE@am__append_1 = \
 @GLX_TRUE@	$(top_builddir)/hw/xquartz/GL/libCGLCore.la \
 @GLX_TRUE@	$(top_builddir)/glx/libglxvnd.la \
@@ -90,7 +90,14 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(x11appdir)"
 PROGRAMS = $(bin_PROGRAMS) $(x11app_PROGRAMS)
-dist_X11_bin_OBJECTS = bundle-main.$(OBJEXT) strndup.$(OBJEXT)
+dist_X11_OBJECTS = bundle_trampoline.$(OBJEXT)
+X11_OBJECTS = $(dist_X11_OBJECTS)
+X11_LDADD = $(LDADD)
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+dist_X11_bin_OBJECTS = bundle-main.$(OBJEXT)
 nodist_X11_bin_OBJECTS = mach_startupServer.$(OBJEXT) \
 	mach_startupUser.$(OBJEXT)
 X11_bin_OBJECTS = $(dist_X11_bin_OBJECTS) $(nodist_X11_bin_OBJECTS)
@@ -102,10 +109,6 @@ am__DEPENDENCIES_2 = $(top_builddir)/hw/xquartz/libXquartz.la \
 	$(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1) \
 	$(am__append_4)
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
 X11_bin_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(X11_bin_LDFLAGS) $(LDFLAGS) -o $@
@@ -150,9 +153,11 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(dist_X11_bin_SOURCES) $(nodist_X11_bin_SOURCES) \
-	$(dist_Xquartz_SOURCES) $(nodist_Xquartz_SOURCES)
-DIST_SOURCES = $(dist_X11_bin_SOURCES) $(dist_Xquartz_SOURCES)
+SOURCES = $(dist_X11_SOURCES) $(dist_X11_bin_SOURCES) \
+	$(nodist_X11_bin_SOURCES) $(dist_Xquartz_SOURCES) \
+	$(nodist_Xquartz_SOURCES)
+DIST_SOURCES = $(dist_X11_SOURCES) $(dist_X11_bin_SOURCES) \
+	$(dist_Xquartz_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -528,13 +533,12 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = $(DIX_CFLAGS)
 x11appdir = $(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/MacOS
+dist_X11_bin_SOURCES = \
+	bundle-main.c
 
-# strndup(3) was added in Mac OS X 10.7, but we do this unconditionally to deal
-# with the case where we build on Lion but target Snow Leopard as the minimum
-# OS version.
-#if NEED_STRNDUP
-dist_X11_bin_SOURCES = bundle-main.c $(top_srcdir)/os/strndup.c
-#endif
+dist_X11_SOURCES = \
+	bundle_trampoline.c
+
 nodist_X11_bin_SOURCES = \
 	mach_startupServer.c \
 	mach_startupUser.c
@@ -705,6 +709,9 @@ clean-x11appPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+X11$(EXEEXT): $(X11_OBJECTS) $(X11_DEPENDENCIES) $(EXTRA_X11_DEPENDENCIES) 
+	@rm -f X11$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(X11_OBJECTS) $(X11_LDADD) $(LIBS)
 X11.bin$(EXEEXT): $(X11_bin_OBJECTS) $(X11_bin_DEPENDENCIES) $(EXTRA_X11_bin_DEPENDENCIES) 
 	@rm -f X11.bin$(EXEEXT)
 	$(AM_V_CCLD)$(X11_bin_LINK) $(X11_bin_OBJECTS) $(X11_bin_LDADD) $(LIBS)
@@ -719,10 +726,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bundle-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bundle_trampoline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/launchd_fd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mach_startupServer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mach_startupUser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strndup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub.Po@am__quote@
 
 .c.o:
@@ -745,20 +752,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-
-strndup.o: $(top_srcdir)/os/strndup.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strndup.o -MD -MP -MF $(DEPDIR)/strndup.Tpo -c -o strndup.o `test -f '$(top_srcdir)/os/strndup.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strndup.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/strndup.Tpo $(DEPDIR)/strndup.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/os/strndup.c' object='strndup.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strndup.o `test -f '$(top_srcdir)/os/strndup.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strndup.c
-
-strndup.obj: $(top_srcdir)/os/strndup.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strndup.obj -MD -MP -MF $(DEPDIR)/strndup.Tpo -c -o strndup.obj `if test -f '$(top_srcdir)/os/strndup.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strndup.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strndup.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/strndup.Tpo $(DEPDIR)/strndup.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/os/strndup.c' object='strndup.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strndup.obj `if test -f '$(top_srcdir)/os/strndup.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strndup.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strndup.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

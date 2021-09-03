@@ -673,13 +673,8 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
         return;
     }
 
-#ifdef __LP64__
     DebugF("pbtypes retainCount after containsObject: %lu\n",
            [pbtypes retainCount]);
-#else
-    DebugF("pbtypes retainCount after containsObject: %u\n",
-           [pbtypes retainCount]);
-#endif
 
     data = [pb stringForType:NSStringPboardType];
 
@@ -698,11 +693,7 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
 
         if (length < 50) {
             DebugF("UTF-8: %s\n", bytes);
-#ifdef __LP64__
             DebugF("UTF-8 length: %lu\n", length);
-#else
-            DebugF("UTF-8 length: %u\n", length);
-#endif
         }
     }
     else {
@@ -787,7 +778,7 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
     [self send_reply:&reply];
 }
 
-/* Return nil if an error occured. */
+/* Return nil if an error occurred. */
 /* DO NOT retain the encdata for longer than the length of an event response.
  * The autorelease pool will reuse/free it.
  */
@@ -818,8 +809,8 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
     return encdata;
 }
 
-/* Return YES when an error has occured when trying to send the PICT. */
-/* The caller should send a default reponse with a property of None when an error occurs. */
+/* Return YES when an error has occurred when trying to send the PICT. */
+/* The caller should send a default response with a property of None when an error occurs. */
 - (BOOL) send_image_pict_reply:(XSelectionRequestEvent *)e
                     pasteboard:(NSPasteboard *)pb
                           type:(NSBitmapImageFileType)imagetype
@@ -866,7 +857,7 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
     return NO; /*no error*/
 }
 
-/* Return YES if an error occured. */
+/* Return YES if an error occurred. */
 /* The caller should send a reply with a property of None when an error occurs. */
 - (BOOL) send_image_tiff_reply:(XSelectionRequestEvent *)e
                     pasteboard:(NSPasteboard *)pb
@@ -1049,7 +1040,7 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
         if (get_property(e->requestor, e->property, &pdata, /*Delete*/ True,
                          &type)) {
             /*
-             * An error occured, so we should invoke the copy_completed:, but
+             * An error occurred, so we should invoke the copy_completed:, but
              * not handle_selection:type:propdata:
              */
             [self copy_completed:e->selection];
@@ -1196,13 +1187,8 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
         return;
     }
 
-#ifdef __LP64__
     DebugF("data retainCount before NSBitmapImageRep initWithData: %lu\n",
            [data retainCount]);
-#else
-    DebugF("data retainCount before NSBitmapImageRep initWithData: %u\n",
-           [data retainCount]);
-#endif
 
     bmimage = [[NSBitmapImageRep alloc] initWithData:data];
 
@@ -1212,13 +1198,8 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
         return;
     }
 
-#ifdef __LP64__
     DebugF("data retainCount after NSBitmapImageRep initWithData: %lu\n",
            [data retainCount]);
-#else
-    DebugF("data retainCount after NSBitmapImageRep initWithData: %u\n",
-           [data retainCount]);
-#endif
 
     @try
     {
@@ -1233,13 +1214,8 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
         return;
     }
 
-#ifdef __LP64__
     DebugF("bmimage retainCount after TIFFRepresentation %lu\n",
            [bmimage retainCount]);
-#else
-    DebugF("bmimage retainCount after TIFFRepresentation %u\n",
-           [bmimage retainCount]);
-#endif
 
     pbtypes = [NSArray arrayWithObjects:NSTIFFPboardType, nil];
 
@@ -1256,11 +1232,7 @@ get_property(Window win, Atom property, struct propdata *pdata, Bool delete,
 
     [data autorelease];
 
-#ifdef __LP64__
     DebugF("bmimage retainCount before release %lu\n", [bmimage retainCount]);
-#else
-    DebugF("bmimage retainCount before release %u\n", [bmimage retainCount]);
-#endif
 
     [bmimage autorelease];
 }

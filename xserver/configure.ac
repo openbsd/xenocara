@@ -26,12 +26,12 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.20.10, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2020-12-01"
-RELEASE_NAME="Chicken Pot Pie"
+AC_INIT([xorg-server], 1.20.13, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2021-07-29"
+RELEASE_NAME="Lemon Pepper Chicken"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Require xorg-macros minimum of 1.14 for XORG_COMPILER_BRAND in XORG_DEFAULT_OPTIONS
@@ -736,10 +736,6 @@ case $host_os in
 				XQUARTZ=no
 			fi
 		fi
-
-		AC_CHECK_FUNC(dispatch_async,
-		              AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available]),
-		              [])
 
 		if test "x$XQUARTZ" = xyes ; then
 			XQUARTZ=yes
@@ -2315,7 +2311,7 @@ if test "x$DMX" = xyes; then
 	fi
 	DMX_INCLUDES="$XEXT_INC $RENDER_INC $RECORD_INC"
 	XDMX_CFLAGS="$DMXMODULES_CFLAGS"
-	XDMX_LIBS="$FB_LIB $MI_LIB $XEXT_LIB $RENDER_LIB $RECORD_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_SHADOW_LIB $MIEXT_DAMAGE_LIB $COMPOSITE_LIB $DAMAGE_LIB $MAIN_LIB $DIX_LIB $RANDR_LIB $CONFIG_LIB $OS_LIB $FIXES_LIB"
+	XDMX_LIBS="$FB_LIB $MI_LIB $XEXT_LIB $RENDER_LIB $RECORD_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_SHADOW_LIB $MIEXT_DAMAGE_LIB $COMPOSITE_LIB $DAMAGE_LIB $MAIN_LIB $DIX_LIB $RANDR_LIB $RENDER_LIB $CONFIG_LIB $OS_LIB $FIXES_LIB"
 	XDMX_SYS_LIBS="$DMXMODULES_LIBS"
 	AC_SUBST([XDMX_CFLAGS])
 	AC_SUBST([XDMX_LIBS])

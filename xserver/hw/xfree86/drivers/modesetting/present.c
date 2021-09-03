@@ -244,7 +244,7 @@ ms_present_check_unflip(RRCrtcPtr crtc,
         if (drmmode_crtc->rotate_bo.gbm)
             return FALSE;
 
-        if (ms_crtc_on(config->crtc[i]))
+        if (xf86_crtc_on(config->crtc[i]))
             num_crtcs_on++;
     }
 
@@ -255,6 +255,9 @@ ms_present_check_unflip(RRCrtcPtr crtc,
     /* Check stride, can't change that on flip */
     if (!ms->atomic_modeset &&
         pixmap->devKind != drmmode_bo_get_pitch(&ms->drmmode.front_bo))
+        return FALSE;
+
+    if (!ms->drmmode.glamor)
         return FALSE;
 
 #ifdef GBM_BO_WITH_MODIFIERS
