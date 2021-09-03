@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.7 2015/11/14 17:12:14 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.8 2021/09/03 07:09:08 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -36,7 +36,6 @@
 #endif
 
 #include <sys/ioctl.h>
-#include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
