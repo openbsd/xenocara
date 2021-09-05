@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.465 2021/09/03 13:38:31 matthieu Exp $
+# $OpenBSD: MODULES,v 1.466 2021/09/05 07:46:05 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -176,7 +176,6 @@ lib/libXv			1.0.11
 lib/libXvMC			1.0.12
 lib/libXxf86dga			1.1.5
 lib/libXxf86vm			1.1.4
-lib/libdmx			1.1.4		remove?
 lib/libfontenc			1.1.4
 lib/libpciaccess		0.16
 lib/libxcb			1.14
