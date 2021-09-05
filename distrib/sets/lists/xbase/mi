@@ -296,9 +296,6 @@
 ./usr/X11R6/lib/libXxf86vm.a
 ./usr/X11R6/lib/libXxf86vm.la
 ./usr/X11R6/lib/libXxf86vm.so.6.0
-./usr/X11R6/lib/libdmx.a
-./usr/X11R6/lib/libdmx.la
-./usr/X11R6/lib/libdmx.so.2.0
 ./usr/X11R6/lib/libfontconfig.a
 ./usr/X11R6/lib/libfontconfig.la
 ./usr/X11R6/lib/libfontconfig.so.13.0
