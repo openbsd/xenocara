@@ -3,15 +3,10 @@ libXfont - X font handling library for server & utilities
 
 libXfont provides the core of the legacy X11 font system, handling the index
 files (fonts.dir, fonts.alias, fonts.scale), the various font file formats,
-and rasterizing them.  It is used by the X servers, and will eventually be
-used by the X Font Server (xfs), but should not be used by normal X11 clients.
-X11 clients access fonts via either the new APIs in libXft, or the legacy
-APIs in libX11.
-
-This version of libXfont is not compatible with xfs, or with the legacy
-bdftopcf utility; these packages require libXfont 1.5, not libXfont 2.0
-or later. The two versions can be installed in parallel, and eventually
-the need for 1.5 will go away. We apologize for the inconvenience.
+and rasterizing them.  It is used by the X display servers (Xorg, Xvfb, etc.)
+and the X Font Server (xfs), but should not be used by normal X11 clients.  X11
+clients access fonts via either the new APIs in libXft, or the legacy APIs in
+libX11.
 
 libXfont supports a number of compression and font formats, and the
 configure script takes various options to enable or disable them:

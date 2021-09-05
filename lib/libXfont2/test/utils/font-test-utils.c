@@ -58,7 +58,10 @@ SOFTWARE.
 #include <stdlib.h>
 #include <limits.h>
 #include <assert.h>
+#ifdef HAVE_ERR_H
 #include <err.h>
+#endif
+#include "src/util/replace.h"
 #include <X11/X.h>
 
 static unsigned long server_generation;

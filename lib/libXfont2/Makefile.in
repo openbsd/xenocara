@@ -144,6 +144,7 @@ DIST_COMMON = $(am__configure_deps) $(libXfontinclude_HEADERS) \
 	$(noinst_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(srcdir)/xfont2.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/src/util/reallocarray.c \
+	$(top_srcdir)/src/util/realpath.c \
 	$(top_srcdir)/src/util/strlcat.c \
 	$(top_srcdir)/src/util/strlcpy.c AUTHORS COPYING ChangeLog \
 	INSTALL compile config.guess config.sub depcomp install-sh \
@@ -524,6 +525,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -906,6 +908,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/patcache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/private.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/reallocarray.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/realpath.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/strlcat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/strlcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/utilbitmap.Plo@am__quote@
