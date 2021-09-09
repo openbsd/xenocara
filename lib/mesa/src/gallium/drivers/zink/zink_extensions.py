@@ -25,8 +25,8 @@ from xml.etree import ElementTree
 from typing import List,Tuple
 
 class Version:
-    device_version : Tuple[int, int, int] = (1,0,0)
-    struct_version : Tuple[int, int] = (1,0)
+    device_version = (1,0,0)
+    struct_version = (1,0)
 
     def __init__(self, version, struct=()):
         self.device_version = version
@@ -59,16 +59,16 @@ class Version:
                 + '_' + struct)
 
 class Extension:
-    name           : str       = None
-    alias          : str       = None
-    is_required    : bool      = False
-    is_nonstandard : bool      = False
-    enable_conds   : List[str] = None
+    name           = None
+    alias          = None
+    is_required    = False
+    is_nonstandard = False
+    enable_conds   = None
 
     # these are specific to zink_device_info.py:
-    has_properties : bool      = False
-    has_features   : bool      = False
-    guard          : bool      = False
+    has_properties = False
+    has_features   = False
+    guard          = False
 
     # these are specific to zink_instance.py:
     core_since     : Version   = None
@@ -147,14 +147,14 @@ Layer = Extension
 
 class ExtensionRegistryEntry:
     # type of extension - right now it's either "instance" or "device"
-    ext_type          : str       = ""
+    ext_type          = ""
     # the version in which the extension is promoted to core VK
-    promoted_in       : Version   = None
+    promoted_in       = None
     # functions added by the extension are referred to as "commands" in the registry
-    commands          : List[str] = None
-    constants         : List[str] = None
-    features_struct   : str       = None
-    properties_struct : str       = None
+    commands          = None
+    constants         = None
+    features_struct   = None
+    properties_struct = None
 
 class ExtensionRegistry:
     # key = extension name, value = registry entry

@@ -121,6 +121,7 @@ test('ir3_disasm',
   executable(
     'ir3_disasm',
     'tests/disasm.c',
+    link_args : [ld_args_build_id],
     link_with: [libfreedreno_ir3, libir3decode],
     dependencies: [idep_mesautil, idep_nir],
     include_directories: [inc_freedreno, inc_include, inc_src, inc_gallium],

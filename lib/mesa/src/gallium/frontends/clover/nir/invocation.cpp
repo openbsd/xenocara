@@ -324,8 +324,8 @@ clover_lower_nir(nir_shader *nir, std::vector<module::argument> &args,
                                          "constant_buffer_addr");
       constant_var->data.location = args.size();
 
-      args.emplace_back(module::argument::global,
-                        pointer_bit_size / 8, pointer_bit_size / 8, pointer_bit_size / 8,
+      args.emplace_back(module::argument::global, sizeof(cl_mem),
+                        pointer_bit_size / 8, pointer_bit_size / 8,
                         module::argument::zero_ext,
                         module::argument::constant_buffer);
    }

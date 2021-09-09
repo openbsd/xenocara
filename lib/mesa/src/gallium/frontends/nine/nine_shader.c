@@ -1010,7 +1010,7 @@ tx_src_param(struct shader_translator *tx, const struct sm1_src_param *param)
     struct ureg_dst tmp;
 
     assert(!param->rel || (IS_VS && param->file == D3DSPR_CONST) ||
-        (D3DSPR_ADDR && tx->version.major == 3));
+        (param->file == D3DSPR_INPUT && tx->version.major == 3));
 
     switch (param->file)
     {

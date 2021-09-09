@@ -72,14 +72,14 @@ lima_clip_scissor_to_viewport(struct lima_context *ctx)
 
    viewport_left = MAX2(ctx->viewport.left, 0);
    cscissor->minx = MAX2(cscissor->minx, viewport_left);
-   viewport_right = MIN2(ctx->viewport.right, fb->base.width);
+   viewport_right = MIN2(MAX2(ctx->viewport.right, 0), fb->base.width);
    cscissor->maxx = MIN2(cscissor->maxx, viewport_right);
    if (cscissor->minx > cscissor->maxx)
       cscissor->minx = cscissor->maxx;
 
    viewport_bottom = MAX2(ctx->viewport.bottom, 0);
    cscissor->miny = MAX2(cscissor->miny, viewport_bottom);
-   viewport_top = MIN2(ctx->viewport.top, fb->base.height);
+   viewport_top = MIN2(MAX2(ctx->viewport.top, 0), fb->base.height);
    cscissor->maxy = MIN2(cscissor->maxy, viewport_top);
    if (cscissor->miny > cscissor->maxy)
       cscissor->miny = cscissor->maxy;
@@ -195,6 +195,7 @@ enum lima_attrib_type {
    LIMA_ATTRIB_FLOAT = 0x000,
    LIMA_ATTRIB_I32   = 0x001,
    LIMA_ATTRIB_U32   = 0x002,
+   LIMA_ATTRIB_FP16  = 0x003,
    LIMA_ATTRIB_I16   = 0x004,
    LIMA_ATTRIB_U16   = 0x005,
    LIMA_ATTRIB_I8    = 0x006,
@@ -217,7 +218,10 @@ lima_pipe_format_to_attrib_type(enum pipe_format format)
 
    switch (c->type) {
    case UTIL_FORMAT_TYPE_FLOAT:
-      return LIMA_ATTRIB_FLOAT;
+      if (c->size == 16)
+         return LIMA_ATTRIB_FP16;
+      else
+         return LIMA_ATTRIB_FLOAT;
    case UTIL_FORMAT_TYPE_FIXED:
       return LIMA_ATTRIB_FIXED;
    case UTIL_FORMAT_TYPE_SIGNED:
