@@ -808,15 +808,19 @@ fd_screen_bo_get_handle(struct pipe_screen *pscreen, struct fd_bo *bo,
                         struct renderonly_scanout *scanout, unsigned stride,
                         struct winsys_handle *whandle)
 {
+   struct fd_screen *screen = fd_screen(pscreen);
+
    whandle->stride = stride;
 
    if (whandle->type == WINSYS_HANDLE_TYPE_SHARED) {
       return fd_bo_get_name(bo, &whandle->handle) == 0;
    } else if (whandle->type == WINSYS_HANDLE_TYPE_KMS) {
-      if (renderonly_get_handle(scanout, whandle))
+      if (screen->ro) {
+         return renderonly_get_handle(scanout, whandle);
+      } else {
+         whandle->handle = fd_bo_handle(bo);
          return true;
-      whandle->handle = fd_bo_handle(bo);
-      return true;
+      }
    } else if (whandle->type == WINSYS_HANDLE_TYPE_FD) {
       whandle->handle = fd_bo_dmabuf(bo);
       return true;

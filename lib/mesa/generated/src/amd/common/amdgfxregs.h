@@ -262,9 +262,12 @@
 #define   S_00005C_EXP_CNT(x)                                         (((unsigned)(x) & 0x7) << 4)
 #define   G_00005C_EXP_CNT(x)                                         (((x) >> 4) & 0x7)
 #define   C_00005C_EXP_CNT                                            0xFFFFFF8F
-#define   S_00005C_LGKM_CNT(x)                                        (((unsigned)(x) & 0x1F) << 8)
-#define   G_00005C_LGKM_CNT(x)                                        (((x) >> 8) & 0x1F)
-#define   C_00005C_LGKM_CNT                                           0xFFFFE0FF
+#define   S_00005C_LGKM_CNT_GFX6(x)                                   (((unsigned)(x) & 0x1F) << 8) /* <= gfx6 */
+#define   G_00005C_LGKM_CNT_GFX6(x)                                   (((x) >> 8) & 0x1F)
+#define   C_00005C_LGKM_CNT_GFX6                                      0xFFFFE0FF
+#define   S_00005C_LGKM_CNT_GFX7(x)                                   (((unsigned)(x) & 0xF) << 8) /* gfx7, gfx8, gfx81, gfx9 */
+#define   G_00005C_LGKM_CNT_GFX7(x)                                   (((x) >> 8) & 0xF)
+#define   C_00005C_LGKM_CNT_GFX7                                      0xFFFFF0FF
 #define   S_00005C_VALU_CNT_GFX7(x)                                   (((unsigned)(x) & 0x7) << 12) /* gfx7, gfx8, gfx81, gfx9 */
 #define   G_00005C_VALU_CNT_GFX7(x)                                   (((x) >> 12) & 0x7)
 #define   C_00005C_VALU_CNT_GFX7                                      0xFFFF8FFF
@@ -12402,9 +12405,12 @@
 #define   S_028B50_ACCUM_QUAD(x)                                      (((unsigned)(x) & 0xFF) << 16)
 #define   G_028B50_ACCUM_QUAD(x)                                      (((x) >> 16) & 0xFF)
 #define   C_028B50_ACCUM_QUAD                                         0xFF00FFFF
-#define   S_028B50_DONUT_SPLIT(x)                                     (((unsigned)(x) & 0xFF) << 24) /* >= gfx81 */
-#define   G_028B50_DONUT_SPLIT(x)                                     (((x) >> 24) & 0xFF)
-#define   C_028B50_DONUT_SPLIT                                        0x00FFFFFF
+#define   S_028B50_DONUT_SPLIT_GFX81(x)                               (((unsigned)(x) & 0xFF) << 24) /* gfx81 */
+#define   G_028B50_DONUT_SPLIT_GFX81(x)                               (((x) >> 24) & 0xFF)
+#define   C_028B50_DONUT_SPLIT_GFX81                                  0x00FFFFFF
+#define   S_028B50_DONUT_SPLIT_GFX9(x)                                (((unsigned)(x) & 0x1F) << 24) /* >= gfx9 */
+#define   G_028B50_DONUT_SPLIT_GFX9(x)                                (((x) >> 24) & 0x1F)
+#define   C_028B50_DONUT_SPLIT_GFX9                                   0xE0FFFFFF
 #define   S_028B50_TRAP_SPLIT(x)                                      (((unsigned)(x) & 0x7) << 29) /* >= gfx9 */
 #define   G_028B50_TRAP_SPLIT(x)                                      (((x) >> 29) & 0x7)
 #define   C_028B50_TRAP_SPLIT                                         0x1FFFFFFF
@@ -15773,10 +15779,10 @@
 #define   S_03106C_RELEASE_ALL(x)                                     (((unsigned)(x) & 0x1) << 15)
 #define   G_03106C_RELEASE_ALL(x)                                     (((x) >> 15) & 0x1)
 #define   C_03106C_RELEASE_ALL                                        0xFFFF7FFF
-#define   S_03106C_HEAD_QUEUE_GFX7(x)                                 (((unsigned)(x) & 0x7FF) << 16) /* gfx7, gfx8 */
+#define   S_03106C_HEAD_QUEUE_GFX7(x)                                 (((unsigned)(x) & 0x7FF) << 16) /* gfx7, gfx8, >= gfx10 */
 #define   G_03106C_HEAD_QUEUE_GFX7(x)                                 (((x) >> 16) & 0x7FF)
 #define   C_03106C_HEAD_QUEUE_GFX7                                    0xF800FFFF
-#define   S_03106C_HEAD_QUEUE_GFX81(x)                                (((unsigned)(x) & 0xFFF) << 16) /* >= gfx81 */
+#define   S_03106C_HEAD_QUEUE_GFX81(x)                                (((unsigned)(x) & 0xFFF) << 16) /* gfx81, gfx9 */
 #define   G_03106C_HEAD_QUEUE_GFX81(x)                                (((x) >> 16) & 0xFFF)
 #define   C_03106C_HEAD_QUEUE_GFX81                                   0xF000FFFF
 #define   S_03106C_HEAD_VALID_GFX7(x)                                 (((unsigned)(x) & 0x1) << 27) /* gfx7, gfx8, >= gfx10 */

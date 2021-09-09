@@ -114,9 +114,9 @@ optimizations = [
    (('idiv', a, '#b(is_neg_power_of_two)'), ('ineg', ('imul', ('isign', a), ('ushr', ('iabs', a), ('find_lsb', ('iabs', b))))), '!options->lower_bitops'),
    (('umod', a, '#b(is_pos_power_of_two)'),    ('iand', a, ('isub', b, 1))),
    (('imod', a, '#b(is_pos_power_of_two)'),    ('iand', a, ('isub', b, 1))),
-   (('imod', a, '#b(is_neg_power_of_two)'),    ('ior', a, b)),
-   (('irem', a, '#b(is_pos_power_of_two)'),    ('bcsel', ('ige', a, 0), ('iand', a, ('isub', b, 1)), ('ior', a, ('ineg', b)))),
-   (('irem', a, '#b(is_neg_power_of_two)'),    ('bcsel', ('ige', a, 0), ('iand', a, ('inot', b)), ('ior', a, b))),
+   (('imod', a, '#b(is_neg_power_of_two)'),    ('bcsel', ('ieq', ('ior', a, b), b), 0, ('ior', a, b))),
+   (('irem', a, '#b(is_pos_power_of_two)'),    ('bcsel', ('ige', a, 0), ('iand', a, ('isub', b, 1)), ('imod', a, ('ineg', b)))),
+   (('irem', a, '#b(is_neg_power_of_two)'),    ('bcsel', ('ige', a, 0), ('iand', a, ('inot', b)), ('imod', a, b))),
 
    (('~fneg', ('fneg', a)), a),
    (('ineg', ('ineg', a)), a),

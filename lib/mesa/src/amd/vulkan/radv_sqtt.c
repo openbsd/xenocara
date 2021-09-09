@@ -625,8 +625,6 @@ radv_get_thread_trace(struct radv_queue *queue, struct ac_thread_trace *thread_t
                                         ? (first_active_cu / 2)
                                         : first_active_cu;
 
-      thread_trace_se.compute_unit = 0;
-
       thread_trace->traces[thread_trace->num_traces] = thread_trace_se;
       thread_trace->num_traces++;
    }

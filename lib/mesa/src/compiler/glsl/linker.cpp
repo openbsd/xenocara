@@ -321,6 +321,39 @@ public:
    }
 };
 
+class array_length_to_const_visitor : public ir_rvalue_visitor {
+public:
+   array_length_to_const_visitor()
+   {
+      this->progress = false;
+   }
+
+   virtual ~array_length_to_const_visitor()
+   {
+      /* empty */
+   }
+
+   bool progress;
+
+   virtual void handle_rvalue(ir_rvalue **rvalue)
+   {
+      if (*rvalue == NULL || (*rvalue)->ir_type != ir_type_expression)
+         return;
+
+      ir_expression *expr = (*rvalue)->as_expression();
+      if (expr) {
+         if (expr->operation == ir_unop_implicitly_sized_array_length) {
+            assert(!expr->operands[0]->type->is_unsized_array());
+            ir_constant *constant = new(expr)
+               ir_constant(expr->operands[0]->type->array_size());
+            if (constant) {
+               *rvalue = constant;
+            }
+         }
+      }
+   }
+};
+
 /**
  * Visitor that determines the highest stream id to which a (geometry) shader
  * emits vertices. It also checks whether End{Stream}Primitive is ever called.
@@ -1200,7 +1233,7 @@ static bool
 interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
                                          bool validate_ssbo)
 {
-   int *InterfaceBlockStageIndex[MESA_SHADER_STAGES];
+   int *ifc_blk_stage_idx[MESA_SHADER_STAGES];
    struct gl_uniform_block *blks = NULL;
    unsigned *num_blks = validate_ssbo ? &prog->data->NumShaderStorageBlocks :
       &prog->data->NumUniformBlocks;
@@ -1221,9 +1254,10 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
    for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
       struct gl_linked_shader *sh = prog->_LinkedShaders[i];
 
-      InterfaceBlockStageIndex[i] = new int[max_num_buffer_blocks];
+      ifc_blk_stage_idx[i] =
+         (int *) malloc(sizeof(int) * max_num_buffer_blocks);
       for (unsigned int j = 0; j < max_num_buffer_blocks; j++)
-         InterfaceBlockStageIndex[i][j] = -1;
+         ifc_blk_stage_idx[i][j] = -1;
 
       if (sh == NULL)
          continue;
@@ -1247,7 +1281,7 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
                          "definitions\n", sh_blks[j]->Name);
 
             for (unsigned k = 0; k <= i; k++) {
-               delete[] InterfaceBlockStageIndex[k];
+               free(ifc_blk_stage_idx[k]);
             }
 
             /* Reset the block count. This will help avoid various segfaults
@@ -1258,7 +1292,7 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
             return false;
          }
 
-         InterfaceBlockStageIndex[i][index] = j;
+         ifc_blk_stage_idx[i][index] = j;
       }
    }
 
@@ -1267,7 +1301,7 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
     */
    for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
       for (unsigned j = 0; j < *num_blks; j++) {
-         int stage_index = InterfaceBlockStageIndex[i][j];
+         int stage_index = ifc_blk_stage_idx[i][j];
 
          if (stage_index != -1) {
             struct gl_linked_shader *sh = prog->_LinkedShaders[i];
@@ -1283,7 +1317,7 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
    }
 
    for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
-      delete[] InterfaceBlockStageIndex[i];
+      free(ifc_blk_stage_idx[i]);
    }
 
    if (validate_ssbo)
@@ -2538,6 +2572,12 @@ link_intrastage_shaders(void *mem_ctx,
    array_sizing_visitor v;
    v.run(linked->ir);
    v.fixup_unnamed_interface_types();
+
+   /* Now that we know the sizes of all the arrays, we can replace .length()
+    * calls with a constant expression.
+    */
+   array_length_to_const_visitor len_v;
+   len_v.run(linked->ir);
 
    /* Link up uniform blocks defined within this stage. */
    link_uniform_blocks(mem_ctx, ctx, prog, linked, &ubo_blocks,

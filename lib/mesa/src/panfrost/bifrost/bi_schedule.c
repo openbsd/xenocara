@@ -467,6 +467,72 @@ bi_reads_temps(bi_instr *ins, unsigned src)
         }
 }
 
+static bool
+bi_impacted_t_modifiers(bi_instr *I, unsigned src)
+{
+        enum bi_swizzle swizzle = I->src[src].swizzle;
+
+        switch (I->op) {
+        case BI_OPCODE_F16_TO_F32:
+        case BI_OPCODE_F16_TO_S32:
+        case BI_OPCODE_F16_TO_U32:
+        case BI_OPCODE_MKVEC_V2I16:
+        case BI_OPCODE_S16_TO_F32:
+        case BI_OPCODE_S16_TO_S32:
+        case BI_OPCODE_U16_TO_F32:
+        case BI_OPCODE_U16_TO_U32:
+                return (swizzle != BI_SWIZZLE_H00);
+
+        case BI_OPCODE_BRANCH_F32:
+        case BI_OPCODE_LOGB_F32:
+        case BI_OPCODE_ILOGB_F32:
+        case BI_OPCODE_FADD_F32:
+        case BI_OPCODE_FCMP_F32:
+        case BI_OPCODE_FREXPE_F32:
+        case BI_OPCODE_FREXPM_F32:
+        case BI_OPCODE_FROUND_F32:
+                return (swizzle != BI_SWIZZLE_H01);
+
+        case BI_OPCODE_IADD_S32:
+        case BI_OPCODE_IADD_U32:
+        case BI_OPCODE_ISUB_S32:
+        case BI_OPCODE_ISUB_U32:
+        case BI_OPCODE_IADD_V4S8:
+        case BI_OPCODE_IADD_V4U8:
+        case BI_OPCODE_ISUB_V4S8:
+        case BI_OPCODE_ISUB_V4U8:
+                return (src == 1) && (swizzle != BI_SWIZZLE_H01);
+
+        case BI_OPCODE_S8_TO_F32:
+        case BI_OPCODE_S8_TO_S32:
+        case BI_OPCODE_U8_TO_F32:
+        case BI_OPCODE_U8_TO_U32:
+                return (swizzle != BI_SWIZZLE_B0000);
+
+        case BI_OPCODE_V2S8_TO_V2F16:
+        case BI_OPCODE_V2S8_TO_V2S16:
+        case BI_OPCODE_V2U8_TO_V2F16:
+        case BI_OPCODE_V2U8_TO_V2U16:
+                return (swizzle != BI_SWIZZLE_B0022);
+
+        case BI_OPCODE_IADD_V2S16:
+        case BI_OPCODE_IADD_V2U16:
+        case BI_OPCODE_ISUB_V2S16:
+        case BI_OPCODE_ISUB_V2U16:
+                return (src == 1) && (swizzle >= BI_SWIZZLE_H11);
+
+#if 0
+        /* Restriction on IADD in 64-bit clauses on G72 */
+        case BI_OPCODE_IADD_S64:
+        case BI_OPCODE_IADD_U64:
+                return (src == 1) && (swizzle != BI_SWIZZLE_D0);
+#endif
+
+        default:
+                return false;
+        }
+}
+
 ASSERTED static bool
 bi_reads_t(bi_instr *ins, unsigned src)
 {
@@ -481,6 +547,11 @@ bi_reads_t(bi_instr *ins, unsigned src)
         /* Staging register reads may happen before the succeeding register
          * block encodes a write, so effectively there is no passthrough */
         if (src == 0 && bi_opcode_props[ins->op].sr_read)
+                return false;
+
+        /* Bifrost cores newer than Mali G71 have restrictions on swizzles on
+         * same-cycle temporaries. Check the list for these hazards. */
+        if (bi_impacted_t_modifiers(ins, src))
                 return false;
 
         /* Descriptor must not come from a passthrough */

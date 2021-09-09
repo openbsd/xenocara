@@ -24491,6 +24491,7 @@ evaluate_cube_face_index(nir_const_value *_dst_val,
       struct float32_vec dst;
 
          
+dst.x = 0.0;
 float absX = fabsf(src0.x);
 float absY = fabsf(src0.y);
 float absZ = fabsf(src0.z);

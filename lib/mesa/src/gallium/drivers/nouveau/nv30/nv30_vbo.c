@@ -514,9 +514,9 @@ nv30_draw_elements(struct nv30_context *nv30, bool shorten,
       if (!info->has_user_indices)
          data = nouveau_resource_map_offset(&nv30->base,
                                             nv04_resource(info->index.resource),
-                                            start * index_size, NOUVEAU_BO_RD);
+                                            0, NOUVEAU_BO_RD);
       else
-         data = (char*)info->index.user + start * index_size;
+         data = info->index.user;
       if (!data)
          return;
 

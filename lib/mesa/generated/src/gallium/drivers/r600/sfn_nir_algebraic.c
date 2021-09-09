@@ -59,7 +59,7 @@ static const nir_search_expression replace0_0_0 = {
 
 static const nir_search_constant replace0_0_1 = {
    { nir_search_value_constant, 32 },
-   nir_type_float, { 0xbfe0000000000000L /* -0.5 */ },
+   nir_type_float, { 0xbfe0000000000000 /* -0.5 */ },
 };
 static const nir_search_expression replace0_0 = {
    { nir_search_value_expression, 32 },

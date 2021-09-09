@@ -130,6 +130,7 @@ enum ir_expression_operation {
    ir_unop_interpolate_at_centroid,
    ir_unop_get_buffer_size,
    ir_unop_ssbo_unsized_array_length,
+   ir_unop_implicitly_sized_array_length,
    ir_unop_pack_int_2x32,
    ir_unop_pack_uint_2x32,
    ir_unop_unpack_int_2x32,

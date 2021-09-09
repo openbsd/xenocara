@@ -353,6 +353,7 @@ fs_visitor::nir_emit_if(nir_if *if_stmt)
    if (cond != NULL && cond->op == nir_op_inot) {
       invert = true;
       cond_reg = get_nir_src(cond->src[0].src);
+      cond_reg = offset(cond_reg, bld, cond->src[0].swizzle[0]);
    } else {
       invert = false;
       cond_reg = get_nir_src(if_stmt->condition);

@@ -495,13 +495,13 @@ si_emit_graphics(struct radv_device *device, struct radeon_cmdbuf *cs)
    if (physical_device->rad_info.chip_class >= GFX9) {
       radeon_set_context_reg(cs, R_028B50_VGT_TESS_DISTRIBUTION,
                              S_028B50_ACCUM_ISOLINE(40) | S_028B50_ACCUM_TRI(30) |
-                                S_028B50_ACCUM_QUAD(24) | S_028B50_DONUT_SPLIT(24) |
+                                S_028B50_ACCUM_QUAD(24) | S_028B50_DONUT_SPLIT_GFX9(24) |
                                 S_028B50_TRAP_SPLIT(6));
    } else if (physical_device->rad_info.chip_class >= GFX8) {
       uint32_t vgt_tess_distribution;
 
       vgt_tess_distribution = S_028B50_ACCUM_ISOLINE(32) | S_028B50_ACCUM_TRI(11) |
-                              S_028B50_ACCUM_QUAD(11) | S_028B50_DONUT_SPLIT(16);
+                              S_028B50_ACCUM_QUAD(11) | S_028B50_DONUT_SPLIT_GFX81(16);
 
       if (physical_device->rad_info.family == CHIP_FIJI ||
           physical_device->rad_info.family >= CHIP_POLARIS10)

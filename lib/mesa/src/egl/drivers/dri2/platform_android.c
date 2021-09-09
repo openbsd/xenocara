@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <drm-uapi/drm_fourcc.h>
 
+#include "util/compiler.h"
 #include "util/os_file.h"
 
 #include "loader.h"

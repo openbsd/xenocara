@@ -940,6 +940,8 @@ radv_emit_inline_push_consts(struct radv_cmd_buffer *cmd_buffer, struct radv_pip
 
    assert(loc->num_sgprs == count);
 
+   radeon_check_space(cmd_buffer->device->ws, cmd_buffer->cs, 2 + count);
+
    radeon_set_sh_reg_seq(cmd_buffer->cs, base_reg + loc->sgpr_idx * 4, count);
    radeon_emit_array(cmd_buffer->cs, values, count);
 }
@@ -5956,7 +5958,7 @@ radv_initialize_htile(struct radv_cmd_buffer *cmd_buffer, struct radv_image *ima
 
    radv_set_ds_clear_metadata(cmd_buffer, image, range, value, aspects);
 
-   if (radv_image_is_tc_compat_htile(image)) {
+   if (radv_image_is_tc_compat_htile(image) && (range->aspectMask & VK_IMAGE_ASPECT_DEPTH_BIT)) {
       /* Initialize the TC-compat metada value to 0 because by
        * default DB_Z_INFO.RANGE_PRECISION is set to 1, and we only
        * need have to conditionally update its value when performing

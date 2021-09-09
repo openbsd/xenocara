@@ -847,6 +847,9 @@ vl_dri3_screen_create(Display *display, int screen)
    scrn->base.set_back_texture_from_output = vl_dri3_screen_set_back_texture_from_output;
 
    scrn->next_back = 1;
+
+   close(fd);
+   
    return &scrn->base;
 
 no_context:
