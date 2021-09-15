@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2018/10/20 19:09:19 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2021/09/15 05:46:34 matthieu Exp $
 
-CONFIGURE_ARGS = --without-xf86misc
+CONFIGURE_ARGS = --without-xf86misc --withouth-dmx
 
 .include <bsd.xorg.mk>
