@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.466 2021/09/05 07:46:05 matthieu Exp $
+# $OpenBSD: MODULES,v 1.467 2021/09/16 15:09:23 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -162,7 +162,7 @@ lib/libXext			1.3.4
 lib/libXfixes			6.0.0		needs-update
 lib/libXfont2			2.0.5
 lib/libXft			2.3.3
-lib/libXi			1.7.10
+lib/libXi			1.8		needs-update
 lib/libXinerama			1.1.4
 lib/libXmu			1.1.3
 lib/libXpm			3.5.13
@@ -191,7 +191,7 @@ lib/xcb-util-renderutil		0.3.9
 lib/xcb-util-wm			0.4.1
 
 proto/xcb-proto			1.14.1
-proto/xorgproto			2021.4		needs-update
+proto/xorgproto			2021.5		needs-update
 
 util/cf				1.0.4
 util/gccmakedep			1.0.3
