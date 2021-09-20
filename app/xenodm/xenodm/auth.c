@@ -793,7 +793,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	    Debug ("Lock is %d\n", lockStatus);
 	    if (lockStatus == LOCK_SUCCESS) {
                 if (openFiles (home_name, new_name, sizeof(new_name), &old, &new)
-		    && (old != NULL) && (new != NULL)) {
+		    && (new != NULL)) {
 		    name = home_name;
 		    setenv = 0;
 		} else {
