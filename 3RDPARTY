@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.390 2021/09/16 15:09:23 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.391 2021/10/17 09:28:56 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.10.4
@@ -8,14 +8,14 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
-Version:	367
-Current Vers:	368
+Version:	369
+Current Vers:	369
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		21.1.8
-Current Vers:	21.2.1
+Current Vers:	21.2.4
 Maintainer:	Brian Paul
 Archive Site:	https://www.mesa3d.org/
 
@@ -33,7 +33,7 @@ Archive Site:	https://mesa.freedesktop.org/archive/glu/
 
 Package:	libepoxy
 Version:	1.5.4
-Current Vers:	1.5.8
+Current Vers:	1.5.9
 Maintainer:	Emmanuele Bassi
 Archive Site:	https://github.com/anholt/libepoxy/releases
 
