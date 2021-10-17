@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.365 2020/10/12 19:21:53 tom Exp $ */
+/* $XTermId: input.c,v 1.368 2021/09/12 18:20:03 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -999,10 +999,14 @@ Input(XtermWidget xw,
 	}
     }
 #ifdef XK_ISO_Left_Tab
-    else if (IsTabKey(kd.keysym)
-	     && kd.nbytes <= 1
-	     && modify_parm == (MOD_NONE + MOD_SHIFT)) {
-	kd.keysym = XK_ISO_Left_Tab;
+    else if (IsTabKey(kd.keysym) && kd.nbytes <= 1) {
+	if (allowModifierParm(xw, &kd)) {
+	    if (modify_parm == (MOD_NONE + MOD_SHIFT)) {
+		kd.keysym = XK_ISO_Left_Tab;
+	    }
+	} else if (evt_state & ShiftMask) {
+	    kd.keysym = XK_ISO_Left_Tab;
+	}
     }
 #endif
 #endif /* OPT_MOD_FKEYS */
@@ -1458,9 +1462,6 @@ decfuncvalue(KEY_DATA * kd)
 	    MAP(XK_Select, 4);
 	    MAP(XK_Prior, 5);
 	    MAP(XK_Next, 6);
-#ifdef XK_ISO_Left_Tab
-	    MAP(XK_ISO_Left_Tab, 'Z');
-#endif
 	    MAP(XK_Help, 28);
 	    MAP(XK_Menu, 29);
 	default:

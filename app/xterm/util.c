@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.877 2021/03/21 21:27:08 tom Exp $ */
+/* $XTermId: util.c,v 1.887 2021/09/19 18:22:57 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -79,6 +79,13 @@
 #endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
 
 #include <graphics.h>
+
+#define IncrementSavedLines(amount) \
+	    if (screen->savedlines < screen->savelines) { \
+		if ((screen->savedlines += amount) > screen->savelines) \
+		    screen->savedlines = screen->savelines; \
+		ScrollBarDrawThumb(xw, 1); \
+	    }
 
 static int handle_translated_exposure(XtermWidget xw,
 				      int rect_x,
@@ -228,15 +235,7 @@ FlushScroll(XtermWidget xw)
 		    refreshheight = screen->scroll_amt;
 		}
 	    }
-	    i = screen->savedlines;
-	    if (i < screen->savelines) {
-		i += screen->scroll_amt;
-		if (i > screen->savelines) {
-		    i = screen->savelines;
-		}
-		screen->savedlines = i;
-		ScrollBarDrawThumb(xw, 1);
-	    }
+	    IncrementSavedLines(screen->scroll_amt);
 	} else {
 	    scrolltop = screen->top_marg + shift;
 	    i = bot - (screen->bot_marg - screen->refresh_amt + screen->scroll_amt);
@@ -611,7 +610,8 @@ xtermScroll(XtermWidget xw, int amount)
 					  && screen->top_marg == 0);
     Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
-    TRACE(("xtermScroll count=%d\n", amount));
+    TRACE(("xtermScroll count=%d (top %d, saved %d)\n", amount,
+	   screen->topline, screen->savelines));
 
     screen->cursor_busy += 1;
     screen->cursor_moved = True;
@@ -627,7 +627,8 @@ xtermScroll(XtermWidget xw, int amount)
 	refreshheight = 0;
     } else
 #if OPT_SCROLL_LOCK
-    if (screen->allowScrollLock && screen->scroll_lock) {
+	if ((screen->allowScrollLock && screen->scroll_lock)
+	    || (screen->autoScrollLock && screen->topline < 0)) {
 	refreshheight = 0;
 	screen->scroll_amt = 0;
 	screen->refresh_amt = 0;
@@ -686,12 +687,7 @@ xtermScroll(XtermWidget xw, int amount)
 		scrolltop = 0;
 		if ((scrollheight += shift) > i)
 		    scrollheight = i;
-		if ((i = screen->savedlines) < screen->savelines) {
-		    if ((i += amount) > screen->savelines)
-			i = screen->savelines;
-		    screen->savedlines = i;
-		    ScrollBarDrawThumb(xw, 1);
-		}
+		IncrementSavedLines(amount);
 	    } else {
 		scrolltop = screen->top_marg + shift;
 		if ((i = screen->bot_marg - bot) > 0) {
@@ -769,6 +765,8 @@ xtermScroll(XtermWidget xw, int amount)
   done:
     screen->do_wrap = save_wrap;
     screen->cursor_busy -= 1;
+    TRACE(("...xtermScroll count=%d (top %d, saved %d)\n", amount,
+	   screen->topline, screen->savelines));
     return;
 }
 
@@ -1304,7 +1302,7 @@ InsertLine(XtermWidget xw, int n)
  * at the cursor's position, lines added at bottom margin are blank.
  */
 void
-DeleteLine(XtermWidget xw, int n)
+DeleteLine(XtermWidget xw, int n, Bool canSave)
 {
     TScreen *screen = TScreenOf(xw);
     int i;
@@ -1340,8 +1338,10 @@ DeleteLine(XtermWidget xw, int n)
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
 		FlushScroll(xw);
-	    screen->scroll_amt += n;
-	    screen->refresh_amt += n;
+	    if (canSave) {
+		screen->scroll_amt += n;
+		screen->refresh_amt += n;
+	    }
 	} else {
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
@@ -1352,7 +1352,7 @@ DeleteLine(XtermWidget xw, int n)
     if (n > 0) {
 	if (left > 0 || right < screen->max_col) {
 	    scrollInMargins(xw, n, screen->cur_row);
-	} else if (scroll_all_lines) {
+	} else if (canSave && scroll_all_lines) {
 	    ScrnDeleteLine(xw,
 			   screen->saveBuf_index,
 			   screen->bot_marg + screen->savelines,
@@ -1386,16 +1386,11 @@ DeleteLine(XtermWidget xw, int n)
 	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
 	    (i = screen->max_row - refreshheight + 1))
 	    refreshtop = i;
-	if (scroll_all_lines) {
+	if (canSave && scroll_all_lines) {
 	    scrolltop = 0;
 	    if ((scrollheight += shift) > i)
 		scrollheight = i;
-	    if ((i = screen->savedlines) < screen->savelines) {
-		if ((i += n) > screen->savelines)
-		    i = screen->savelines;
-		screen->savedlines = i;
-		ScrollBarDrawThumb(xw, 1);
-	    }
+	    IncrementSavedLines(n);
 	} else {
 	    scrolltop = screen->cur_row + shift;
 	    if ((i = screen->bot_marg - bot) > 0) {
@@ -2013,6 +2008,25 @@ do_erase_display(XtermWidget xw, int param, int mode)
 }
 
 static Boolean
+row_has_data(TScreen *screen, int row)
+{
+    Boolean result = False;
+    CLineData *ld;
+
+    if ((ld = getLineData(screen, row)) != 0) {
+	int col;
+
+	for (col = 0; col < screen->max_col; ++col) {
+	    if (ld->attribs[col] & CHARDRAWN && ld->charData[col] != ' ') {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static Boolean
 screen_has_data(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2020,39 +2034,69 @@ screen_has_data(XtermWidget xw)
     int row;
 
     for (row = 0; row < screen->max_row; ++row) {
-	CLineData *ld;
-
-	if ((ld = getLineData(screen, row)) != 0) {
-	    int col;
-
-	    for (col = 0; col < screen->max_col; ++col) {
-		if (ld->attribs[col] & CHARDRAWN) {
-		    result = True;
-		    break;
-		}
-	    }
-	}
-	if (result)
+	if (row_has_data(screen, row)) {
+	    result = True;
 	    break;
+	}
     }
     return result;
 }
 
+static void
+do_extra_scroll(XtermWidget xw, Bool trimmed)
+{
+    TScreen *screen = TScreenOf(xw);
+    int row;
+
+    if (screen_has_data(xw)) {
+	TRACE(("do_extra_scroll buffer=%d, trimmed=%s\n", screen->whichBuf,
+	       BtoS(trimmed)));
+	if (trimmed) {
+	    Boolean hadData = ((screen->saved_fifo > 0)
+			       ? row_has_data(screen, -1)
+			       : False);
+
+	    for (row = 0; row < screen->max_row; ++row) {
+		Boolean hasData = row_has_data(screen, row);
+		if (hasData || hadData) {
+		    LineData *dst = addScrollback(screen);
+		    LineData *src = getLineData(screen, row);
+		    copyLineData(dst, src);
+		    IncrementSavedLines(1);
+		}
+		hadData = hasData;
+	    }
+	} else {
+	    xtermScroll(xw, screen->max_row);
+	    FlushScroll(xw);
+	}
+	xtermRepaint(xw);
+    }
+}
+
 /*
- * Like tiXtraScroll, perform a scroll up of the page contents.  In this case,
- * it happens for the special case when erasing the whole display starting from
- * the upper-left corner of the screen.
+ * Like tiXtraScroll, perform a scroll up of the page contents.
+ *
+ * In this case, it happens for the special case when erasing the whole
+ * display, e.g., an erase-below starting from the upper-left corner of the
+ * screen, or if the erasure applies to the whole screen.
  */
 void
-do_cd_xtra_scroll(XtermWidget xw)
+do_cd_xtra_scroll(XtermWidget xw, int param)
 {
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("do_cd_xtra_scroll param %d, @%d,%d vs %d,%d\n", param,
+	   screen->cur_row,
+	   screen->cur_col,
+	   ScrnTopMargin(xw),
+	   ScrnLeftMargin(xw)));
     if (xw->misc.cdXtraScroll
-	&& screen->cur_col == 0
-	&& screen->cur_row == 0
-	&& screen_has_data(xw)) {
-	xtermScroll(xw, screen->max_row);
+	&& (param == 2 ||
+	    (param == 0
+	     && screen->cur_col <= ScrnLeftMargin(xw)
+	     && screen->cur_row <= ScrnTopMargin(xw)))) {
+	do_extra_scroll(xw, (xw->misc.cdXtraScroll == edTrim));
     }
 }
 
@@ -2063,10 +2107,8 @@ do_cd_xtra_scroll(XtermWidget xw)
 void
 do_ti_xtra_scroll(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
-
     if (xw->misc.tiXtraScroll) {
-	xtermScroll(xw, screen->max_row);
+	do_extra_scroll(xw, False);
     }
 }
 
@@ -2708,13 +2750,8 @@ swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg hc_param)
     ColorRes tmp;
     Boolean found = False;
 
-#if OPT_COLOR_RES
     Pixel fg_color = fg->value;
     Pixel bg_color = bg->value;
-#else
-    Pixel fg_color = *fg;
-    Pixel bg_color = *bg;
-#endif
 
 #if OPT_HIGHLIGHT_COLOR
     if ((fg_color != bg_color) || !hilite_color)
@@ -2911,7 +2948,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
     if (!found) {
 	i = oldest;
 	color.pixel = pixel;
-	XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &color);
+	(void) QueryOneColor(xw, &color);
 	cache[i].color.color.red = color.red;
 	cache[i].color.color.green = color.green;
 	cache[i].color.color.blue = color.blue;
@@ -2937,14 +2974,14 @@ getXftColor(XtermWidget xw, Pixel pixel)
 	      ? (((ch) >= 128 && (ch) < 160) \
 		  ? (TScreenOf(xw)->c1_printable ? 1 : 0) \
 		  : 1) \
-	      : CharWidth(ch)))
+	      : CharWidth(TScreenOf(xw), ch)))
 #else
 #define XtermCellWidth(xw, ch) \
 	(((ch) == 0 || (ch) == 127) \
 	  ? 0 \
 	  : (((ch) < 256) \
 	      ? 1 \
-	      : CharWidth(ch)))
+	      : CharWidth(TScreenOf(xw), ch)))
 #endif
 
 #endif /* OPT_RENDERWIDE */
@@ -3247,7 +3284,7 @@ ucs_workaround(XTermDraw * params,
 	IChar eqv = (IChar) AsciiEquivs(ch);
 
 	if (eqv != (IChar) ch) {
-	    int width = CharWidth(ch);
+	    int width = CharWidth(screen, ch);
 
 	    do {
 		drawXtermText(params,
@@ -3939,7 +3976,7 @@ drawXtermText(XTermDraw * params,
 		unsigned ch = (unsigned) text[last];
 		int filler = 0;
 #if OPT_WIDE_CHARS
-		int needed = forceDbl ? 2 : CharWidth(ch);
+		int needed = forceDbl ? 2 : CharWidth(screen, ch);
 		XftFont *currFont = pickXftFont(needed, font, wfont);
 		XftFont *tempFont = 0;
 #define CURR_TEMP (tempFont ? tempFont : currFont)
@@ -4210,7 +4247,7 @@ drawXtermText(XTermDraw * params,
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = CharWidth(ch);
+	    ch_width = CharWidth(screen, ch);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4335,7 +4372,7 @@ drawXtermText(XTermDraw * params,
 
 	    if (!needWide
 		&& !IsIcon(screen)
-		&& ((recur.on_wide || CharWidth(ch) > 1)
+		&& ((recur.on_wide || CharWidth(screen, ch) > 1)
 		    && okFont(NormalWFont(screen)))) {
 		needWide = True;
 	    }
@@ -4996,9 +5033,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 	    && ((color >= 0)
 		|| (result != (Pixel) color))) {
 	    XColor work;
-	    work.pixel = result;
 	    last_in = result;
-	    if (XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &work)) {
+	    work.pixel = result;
+	    if (QueryOneColor(xw, &work)) {
 		DIM_IT(red);
 		DIM_IT(green);
 		DIM_IT(blue);
@@ -5059,7 +5096,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 	size_t off;
 
 	TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
-	       row, col, ch, CharWidth(ch)));
+	       row, col, ch, CharWidth(screen, ch)));
 
 	for_each_combData(off, ld) {
 	    if (!ld->combData[off][col]) {

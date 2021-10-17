@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.31 2021/03/01 22:00:49 tom Exp $
+-- $XTermId: THANKS,v 1.32 2021/09/12 23:14:32 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -72,6 +72,7 @@ David Wolfskill
 David Wood
 David Yeo
 Denis Zaitsev
+Dennis Filder
 Dennis Preiser
 Dennis Schneider
 Dimitrios Christidis
@@ -137,12 +138,14 @@ Lauri Tirkkonen
 Leandro Lupori
 Lee Olsen
 Loïc Minier
+Luis Javier Merino
 Marc Bevand
 Marc La France
 Marco Peereboom
 Marius Tolzmann
 Mark Waggoner
 Markus Kuhn
+Martijn van Duren
 Martin Hostettler
 Martin Pirker
 Martin Tournoij
@@ -213,6 +216,7 @@ Sergey Vlasov
 Slava Semushin
 Stefan Assmann
 Stefan Dirsch
+Stelios Bounanos
 Stephen P Wall
 Stuart Lissaman
 Sven Joachim

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.365 2021/03/21 20:03:03 tom Exp $ */
+/* $XTermId: menu.c,v 1.367 2021/06/03 21:23:40 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -695,6 +695,8 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 				 simpleMenuWidgetClass,
 				 toplevel,
 				 NULL, 0);
+    TRACE(("created popupShell(%s) widget %p, window %#lx\n",
+	   data->internal_name, list->w, XtWindow(list->w)));
 #endif
     if (list->w != 0) {
 	Boolean *unused = unusedEntries(xw, num);
@@ -718,6 +720,8 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 							   : smeLineObjectClass),
 							  list->w,
 							  &arg, (Cardinal) 1);
+		TRACE(("created menuEntry[%d] widget %p, window %#lx\n",
+		       n, (void *) entries[n].widget, XtWindow(entries[n].widget)));
 		list->entries++;
 	    }
 	}
@@ -3031,6 +3035,8 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 				      *menus,
 				      XtNgeometry, NULL,
 				      (XtPointer) 0);
+    TRACE(("created popupShel widget %p, window %#lx\n",
+	   (void *) shell[n].w, XtWindow(shell[n].w)));
 
     XtAddCallback(shell[n].w, XtNpopupCallback, InitPopup, menu_names[n].internal_name);
     XtVaGetValues(shell[n].w,
@@ -3052,6 +3058,8 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 					 XtNmenuName, menu_names[n].internal_name,
 					 XtNlabel, external_name,
 					 (XtPointer) 0);
+    TRACE(("created menuButton[%d] widget %p, window %#lx\n",
+	   n, (void *) shell[n].b, XtWindow(shell[n].b)));
     XtVaGetValues(shell[n].b,
 		  XtNheight, &button_height,
 		  XtNborderWidth, &button_border,
@@ -3085,6 +3093,8 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension *menu_high)
     *forms = XtVaCreateManagedWidget("form",
 				     formWidgetClass, shell,
 				     (XtPointer) 0);
+    TRACE(("created form widget %p, window %#lx\n",
+	   (void *) *forms, XtWindow(*forms)));
     xtermAddInput(*forms);
 
     /*
@@ -3105,6 +3115,8 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension *menu_high)
     } else {
 	*menus = XtCreateWidget("menubar", boxWidgetClass, *forms, args, 5);
     }
+    TRACE(("created menubar widget %p, window %#lx\n",
+	   (void *) *menus, XtWindow(*menus)));
 
     /*
      * The toolbar widget's height is not necessarily known yet.  If the

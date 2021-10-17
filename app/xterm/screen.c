@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.598 2021/03/01 08:54:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.602 2021/08/22 20:30:10 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -98,11 +98,7 @@
 		screen->save_ptr, \
 		(size_t) scrnHeadSize(screen, (unsigned) (len)))
 
-#if OPT_SAVE_LINES
 #define VisBuf(screen) screen->editBuf_index[screen->whichBuf]
-#else
-#define VisBuf(screen) scrnHeadAddr(screen, screen->saveBuf_index, (unsigned) savelines)
-#endif
 
 /*
  * ScrnPtr's can point to different types of data.
@@ -363,26 +359,20 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
     return (base);
 }
 
-#if OPT_SAVE_LINES
 /*
  * Copy line-data from the visible (edit) buffer to the save-lines buffer.
  */
 static void
-saveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
+saveEditBufLines(TScreen *screen, unsigned n)
 {
     unsigned j;
 
     TRACE(("...copying %d lines from editBuf to saveBuf\n", n));
-#if OPT_FIFO_LINES
-    (void) sb;
-#endif
+
     for (j = 0; j < n; ++j) {
-#if OPT_FIFO_LINES
+
 	LineData *dst = addScrollback(screen);
-#else
-	unsigned k = (screen->savelines + j - n);
-	LineData *dst = (LineData *) scrnHeadAddr(screen, sb, k);
-#endif
+
 	LineData *src = getLineData(screen, (int) j);
 	copyLineData(dst, src);
     }
@@ -400,7 +390,7 @@ unsaveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
     for (j = 0; j < n; ++j) {
 	int extra = (int) (n - j);
 	LineData *dst = (LineData *) scrnHeadAddr(screen, sb, j);
-#if OPT_FIFO_LINES
+
 	CLineData *src;
 
 	if (extra > screen->saved_fifo || extra > screen->savelines) {
@@ -408,15 +398,10 @@ unsaveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
 	    continue;
 	}
 	src = getScrollback(screen, -extra);
-#else
-	unsigned k = (screen->savelines - extra);
-	CLineData *src = CLineData *scrnHeadAddr(screen,
-						 screen->saveBuf_index, k);
-#endif
+
 	copyLineData(dst, src);
     }
 }
-#endif
 
 /*
  *  This is called when the screen is resized.
@@ -496,13 +481,7 @@ Reallocate(XtermWidget xw,
     }
 
     setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
-    extractScrnData(screen, newBufHead, oldBufHead, minrows,
-#if OPT_SAVE_LINES
-		    0
-#else
-		    (unsigned) move_down
-#endif
-	);
+    extractScrnData(screen, newBufHead, oldBufHead, minrows, 0);
 
     /* Now free the old data */
     free(oldBufData);
@@ -588,7 +567,6 @@ ReallocateBufOffsets(XtermWidget xw,
     TRACE(("ReallocateBufOffsets %dx%d ->%p\n", nrow, ncol, *sbufaddr));
 }
 
-#if OPT_FIFO_LINES
 /*
  * Allocate a new FIFO index.
  */
@@ -623,7 +601,6 @@ ReallocateFifoIndex(XtermWidget xw)
 	screen->saveBuf_index = newBufHead;
     }
 }
-#endif
 
 /*
  * This function dynamically adds support for wide-characters.
@@ -640,13 +617,6 @@ ChangeToWide(XtermWidget xw)
     if (xtermLoadWideFonts(xw, True)) {
 	int whichBuf = screen->whichBuf;
 
-#if !OPT_FIFO_LINES || !OPT_SAVE_LINES
-	int savelines = screen->scrollWidget ? screen->savelines : 0;
-
-	if (savelines < 0)
-	    savelines = 0;
-#endif
-
 	/*
 	 * If we're displaying the alternate screen, switch the pointers back
 	 * temporarily so ReallocateBufOffsets() will operate on the proper
@@ -655,16 +625,8 @@ ChangeToWide(XtermWidget xw)
 	if (screen->whichBuf)
 	    SwitchBufPtrs(screen, 0);
 
-#if OPT_SAVE_LINES
-#if OPT_FIFO_LINES
 	ReallocateFifoIndex(xw);
-#else
-	ReallocateBufOffsets(xw,
-			     &screen->saveBuf_index,
-			     &screen->saveBuf_data,
-			     (unsigned) savelines,
-			     (unsigned) MaxCols(screen));
-#endif
+
 	if (screen->editBuf_index[0]) {
 	    ReallocateBufOffsets(xw,
 				 &screen->editBuf_index[0],
@@ -672,13 +634,7 @@ ChangeToWide(XtermWidget xw)
 				 (unsigned) MaxRows(screen),
 				 (unsigned) MaxCols(screen));
 	}
-#else
-	ReallocateBufOffsets(xw,
-			     &screen->saveBuf_index,
-			     &screen->saveBuf_data,
-			     (unsigned) (MaxRows(screen) + savelines),
-			     (unsigned) MaxCols(screen));
-#endif
+
 	if (screen->editBuf_index[1]) {
 	    ReallocateBufOffsets(xw,
 				 &screen->editBuf_index[1],
@@ -1117,11 +1073,8 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
  * We're always ensured of having a visible buffer, but may not have saved
  * lines.  Check the pointer that's sure to work.
  */
-#if OPT_SAVE_LINES
+
 #define OkAllocBuf(screen) (screen->editBuf_index[0] != 0)
-#else
-#define OkAllocBuf(screen) (screen->saveBuf_index != 0)
-#endif
 
 void
 ScrnAllocBuf(XtermWidget xw)
@@ -1130,25 +1083,14 @@ ScrnAllocBuf(XtermWidget xw)
 
     if (!OkAllocBuf(screen)) {
 	int nrows = MaxRows(screen);
-#if !OPT_SAVE_LINES
-	int savelines = screen->scrollWidget ? screen->savelines : 0;
-#endif
 
 	TRACE(("ScrnAllocBuf %dx%d (%d)\n",
 	       nrows, MaxCols(screen), screen->savelines));
 
-#if OPT_SAVE_LINES
 	if (screen->savelines != 0) {
-#if OPT_FIFO_LINES
 	    /* for FIFO, we only need space for the index - addScrollback inits */
 	    screen->saveBuf_index = allocScrnHead(screen,
 						  (unsigned) (screen->savelines));
-#else
-	    screen->saveBuf_index = allocScrnBuf(xw,
-						 (unsigned) screen->savelines,
-						 (unsigned) MaxCols(screen),
-						 &screen->saveBuf_data);
-#endif
 	} else {
 	    screen->saveBuf_index = 0;
 	}
@@ -1156,12 +1098,6 @@ ScrnAllocBuf(XtermWidget xw)
 						(unsigned) nrows,
 						(unsigned) MaxCols(screen),
 						&screen->editBuf_data[0]);
-#else /* !OPT_SAVE_LINES */
-	screen->saveBuf_index = allocScrnBuf(xw,
-					     (unsigned) (nrows + screen->savelines),
-					     (unsigned) (MaxCols(screen)),
-					     &screen->saveBuf_data);
-#endif /* OPT_SAVE_LINES */
 	screen->visbuf = VisBuf(screen);
     }
     return;
@@ -1254,43 +1190,15 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 
     /* move up lines */
     last -= ((int) n - 1);
-#if OPT_SAVE_LINES
+
     if (inSaveBuf(screen, sb, where)) {
-#if !OPT_FIFO_LINES
-	int from = where + n;
-#endif
 
 	/* we shouldn't be editing the saveBuf, only scroll into it */
 	assert(last >= screen->savelines);
 
 	if (sb != 0) {
-#if OPT_FIFO_LINES
 	    /* copy lines from editBuf to saveBuf (allocating as we go...) */
-	    saveEditBufLines(screen, sb, n);
-#else
-	    ScrnClearLines(xw, sb, where, n, size);
-
-	    /* move the pointers within saveBuf */
-	    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
-		   ((screen->savelines > from)
-		    ? ""
-		    : "SKIP "),
-		   screen->savelines,
-		   from));
-	    if (screen->savelines > from) {
-		MoveLineData(sb,
-			     (unsigned) where,
-			     (unsigned) from,
-			     (unsigned) (screen->savelines - from));
-	    }
-
-	    /* reuse storage in saveBuf */
-	    TRACE(("...reuse %d lines storage in saveBuf\n", n));
-	    RestoreLineData(sb, (unsigned) screen->savelines - n, n);
-
-	    /* copy lines from editBuf to saveBuf (into the reused storage) */
-	    saveEditBufLines(screen, sb, n);
-#endif
+	    saveEditBufLines(screen, n);
 	}
 
 	/* adjust variables to fall-thru into changes only to editBuf */
@@ -1299,7 +1207,7 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 	where = 0;
 	sb = screen->visbuf;
     }
-#endif
+
     /*
      * Scroll the visible buffer (editBuf).
      */
@@ -2014,9 +1922,6 @@ ScreenResize(XtermWidget xw,
 
     /* update buffers if the screen has changed size */
     if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
-#if !OPT_SAVE_LINES
-	int whichBuf = 0;
-#endif
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -2026,14 +1931,9 @@ ScreenResize(XtermWidget xw,
 	       rows, cols, delta_rows, delta_cols));
 
 	if (screen->is_running) {
-#if !OPT_FIFO_LINES
-	    int savelines = (screen->scrollWidget
-			     ? screen->savelines
-			     : 0);
-#endif
 	    if (screen->cursor_state)
 		HideCursor(xw);
-#if OPT_SAVE_LINES
+
 	    /*
 	     * The non-visible buffer is simple, since we will not copy data
 	     * to/from the saved-lines.  Do that first.
@@ -2058,61 +1958,16 @@ ScreenResize(XtermWidget xw,
 
 		if (delta_rows < 0) {
 		    unsigned move_up = (unsigned) (-delta_rows);
-		    ScrnBuf dst = screen->saveBuf_index;
-
-#if OPT_FIFO_LINES
 		    int amount = ((MaxRows(screen) - (int) move_up - 1)
 				  - screen->cur_row);
 
 		    if (amount < 0) {
 			/* move line-data from visible-buffer to save-buffer */
-			saveEditBufLines(screen, dst, (unsigned) -amount);
+			saveEditBufLines(screen, (unsigned) -amount);
 			move_down_by = amount;
 		    } else {
 			move_down_by = 0;
 		    }
-#else /* !OPT_FIFO_LINES */
-		    int amount = screen->savelines - (int) move_up;
-
-		    TRACE_SCRNBUF("before save", screen, dst, screen->savelines);
-
-		    /* shift lines in save-buffer to make room */
-		    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
-			   (amount > 0
-			    ? ""
-			    : "SKIP "),
-			   screen->savelines,
-			   move_up));
-		    if (amount > 0) {
-			SaveLineData(dst, 0, move_up);
-
-			MoveLineData(dst,
-				     0,
-				     move_up,
-				     (unsigned) amount);
-
-			TRACE(("...reuse %d lines storage in saveBuf\n", move_up));
-			RestoreLineData(dst,
-					(unsigned) amount,
-					move_up);
-			TRACE_SCRNBUF("restoresave", screen, dst, screen->savelines);
-		    }
-
-		    /* copy line-data from visible-buffer to save-buffer */
-		    saveEditBufLines(screen, dst, move_up);
-
-		    /* after data is copied, reallocate saved-lines */
-		    (void) Reallocate(xw,
-				      &screen->saveBuf_index,
-				      &screen->saveBuf_data,
-				      (unsigned) savelines,
-				      (unsigned) cols,
-				      (unsigned) savelines);
-		    TRACE_SCRNBUF("reallocSAVE",
-				  screen,
-				  screen->saveBuf_index,
-				  savelines);
-#endif /* OPT_FIFO_LINES */
 
 		    /* decrease size of visible-buffer */
 		    (void) Reallocate(xw,
@@ -2127,11 +1982,7 @@ ScreenResize(XtermWidget xw,
 				  rows);
 		} else {
 		    unsigned move_down = (unsigned) delta_rows;
-#if OPT_FIFO_LINES
 		    long unsave_fifo;
-#else
-		    ScrnBuf src = screen->saveBuf_index;
-#endif
 		    ScrnBuf dst;
 		    int amount;
 
@@ -2179,7 +2030,6 @@ ScreenResize(XtermWidget xw,
 		    unsaveEditBufLines(screen, dst, move_down);
 		    TRACE_SCRNBUF("copied", screen, dst, rows);
 
-#if OPT_FIFO_LINES
 		    unsave_fifo = (long) move_down;
 		    if (screen->saved_fifo < (int) unsave_fifo)
 			unsave_fifo = screen->saved_fifo;
@@ -2188,42 +2038,10 @@ ScreenResize(XtermWidget xw,
 		    while (unsave_fifo-- > 0) {
 			deleteScrollback(screen);
 		    }
-#else
-		    amount = (screen->savelines - (int) move_down);
-		    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
-			   (amount > 0
-			    ? ""
-			    : "SKIP "),
-			   rows,
-			   move_down));
-		    if (amount > 0) {
-			/* shift lines in save-buffer to account for copy */
-			src = screen->saveBuf_index;
-			SaveLineData(src, amount, move_down);
-
-			MoveLineData(src,
-				     move_down,
-				     0,
-				     (unsigned) amount);
-
-			TRACE(("...reuse %d lines storage in saveBuf\n", move_down));
-			RestoreLineData(src,
-					0,
-					move_down);
-		    }
-#endif
 
 		    /* recover storage in save-buffer */
 		}
 	    } else {
-#if !OPT_FIFO_LINES
-		(void) Reallocate(xw,
-				  &screen->saveBuf_index,
-				  &screen->saveBuf_data,
-				  (unsigned) savelines,
-				  (unsigned) cols,
-				  (unsigned) savelines);
-#endif
 		(void) Reallocate(xw,
 				  &screen->editBuf_index[screen->whichBuf],
 				  &screen->editBuf_data[screen->whichBuf],
@@ -2231,29 +2049,7 @@ ScreenResize(XtermWidget xw,
 				  (unsigned) cols,
 				  (unsigned) MaxRows(screen));
 	    }
-#else /* !OPT_SAVE_LINES */
-	    if (screen->whichBuf
-		&& GravityIsSouthWest(xw)) {
-		/* swap buffer pointers back to make this work */
-		whichBuf = screen->whichBuf;
-		SwitchBufPtrs(screen, 0);
-	    } else {
-		whichBuf = 0;
-	    }
-	    if (screen->editBuf_index[1])
-		(void) Reallocate(xw,
-				  &screen->editBuf_index[1],
-				  &screen->editBuf_data[1],
-				  (unsigned) rows,
-				  (unsigned) cols,
-				  (unsigned) MaxRows(screen));
-	    move_down_by = Reallocate(xw,
-				      &screen->saveBuf_index,
-				      &screen->saveBuf_data,
-				      (unsigned) (rows + savelines),
-				      (unsigned) cols,
-				      (unsigned) (MaxRows(screen) + savelines));
-#endif /* OPT_SAVE_LINES */
+
 	    screen->visbuf = VisBuf(screen);
 	}
 
@@ -2273,11 +2069,6 @@ ScreenResize(XtermWidget xw,
 		set_cur_row(screen, screen->cur_row + move_down_by);
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
-
-#if !OPT_SAVE_LINES
-		if (whichBuf)
-		    SwitchBufPtrs(screen, whichBuf);	/* put the pointers back */
-#endif
 	    }
 	}
 
@@ -2791,7 +2582,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		    (exact
 		     ? ((target->right - target->left) + 1)
 		     : (getMaxCol(screen) - getMinCol(screen) + 1)),
-		    False);
+		    True);
     }
 }
 

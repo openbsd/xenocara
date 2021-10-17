@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2326 2021/03/26 23:02:54 tom Exp $
+  $XTermId: xterm.log.html,v 1.2358 2021/09/21 23:48:07 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -70,6 +70,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_369">Patch #369 - 2021/09/21</a></li>
+
+    <li><a href="#xterm_368">Patch #368 - 2021/06/07</a></li>
+
     <li><a href="#xterm_367">Patch #367 - 2021/03/26</a></li>
 
     <li><a href="#xterm_366">Patch #366 - 2021/02/10</a></li>
@@ -1010,6 +1014,103 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_369" id="xterm_369">Patch #369 -
+  2021/09/21</a></h1>
+
+  <ul>
+    <li>modify <code>run-tic.sh</code> to work around bug in
+    development version of ncurses which was packaged in FreeBSD
+    ports.</li>
+
+    <li>remove ifdef's for <code>OPT_COLOR_RES</code> and
+    <code>OPT_COLOR_RES2</code>.</li>
+
+    <li>improve performance over slow connections (report by Harald
+    Dunkel).</li>
+
+    <li>update cursor if restoring mode for DECTCEM.</li>
+
+    <li>modify <code>CharWidth</code> macro to ensure that the
+    shortcut for Latin-1 is only applied when UTF-8 is not enabled,
+    to fix a bug in handling soft-hyphen from <a href=
+    "#xterm_334">patch #334</a> changes (patch by Martijn van
+    Duren).</li>
+
+    <li>improve terminfo:
+      <ul>
+        <li>fill-in function-keys in terminfo which are not Sun/HP
+        keyboards using <code>xterm+nopcfkeys</code>
+        building-block.</li>
+
+        <li>add kbeg to xterm+keypad to accommodate termcap
+        applications</li>
+
+        <li>add smglp and smgrp to vt420+lrmm, to provide useful
+        data for the "tabs" <code><strong>+m</strong></code>
+        option</li>
+      </ul>
+    </li>
+
+    <li>support shift-tab in Sun, HP and SCO keyboards.</li>
+
+    <li>document some legacy features in <code>ctlseqs.ms</code>
+    (prompted by discussion with Jimmy Aguilar Mena "Ergus").</li>
+
+    <li>add &ldquo;trim&rdquo; option to <code>cdXtraScroll</code>
+    and <code>tiXtraScroll</code>.</li>
+
+    <li>remove support for non-fifo save-lines configuration.</li>
+
+    <li>extend <code>cdXtraScroll</code> to check if the cursor is
+    at the upper-left of the scrolling region when the erasure is
+    for the remainder of the screen versus the whole screen
+    (prompted by discussion with J&ouml;rg Breitbart).</li>
+
+    <li>add workaround for broken pcre2 package in Debian 10.</li>
+
+    <li>change screen-refresh call used for <code>DECCARA</code>
+    and <code>DECRARA</code> to ensure that trailing blanks which
+    are part of the rectangle are repainted (report/analysis by
+    Dennis Filder).</li>
+
+    <li>when resetting the terminal, ensure that the cursor shape
+    also is reset, e.g., if <code>DECSCUSR</code> has been used to
+    modify the cursor shape for an xterm which was started with the
+    underlined cursor option (report/analysis by Luis Javier
+    Merino).</li>
+
+    <li>prevent <code>DECSCUSR</code> from blinking the cursor if
+    the <code>cursorBlink</code> resource is &ldquo;never&rdquo;
+    (report by Vladimir D Seleznev).</li>
+
+    <li>invert the sense of <code>DECSDM</code>, to correspond with
+    VT382 manuals (lsix #41).</li>
+
+    <li>update tables in <code>wcwidth.c</code> based on Unicode
+    14.0.0</li>
+  </ul>
+
+  <h1><a name="xterm_368" id="xterm_368">Patch #368 -
+  2021/06/07</a></h1>
+
+  <ul>
+    <li>add <code>DefaultOff</code> option to
+    <code>RenderFont</code> resource, as part of the
+    session-management feature.</li>
+
+    <li>add auto-scroll-lock feature (patch by Stelios
+    Bounanos).</li>
+
+    <li>update the window-size information returned via
+    <code>TIOCGWINSZ</code> when rows/columns are unchanged but the
+    font-size changes (report by Nick Black).</li>
+
+    <li>improve session-management feature by saving/restoring the
+    font settings.</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_367" id="xterm_367">Patch #367 -
@@ -11331,9 +11432,10 @@ Klanderman).
     rather than individually ascent and descent, and allows the
     bold font to be one pixel smaller than the normal font
     (addresses a report by Alan Citterman &lt;alan@mticket.com&gt;,
-    who says that something in patches #146 to #148 made xterm more
-    likely to overstrike bold fonts, and indirectly Debian bug
-    report #76404, which reports the opposite).</li>
+    who says that something in patches <a href=
+    "#xterm_146">#146</a> to <a href="#xterm_148">#148</a> made
+    xterm more likely to overstrike bold fonts, and indirectly
+    Debian bug report #76404, which reports the opposite).</li>
 
     <li>make configure script use $CFLAGS and $CPPFLAGS
     consistently, including removing a chunk from configure.in
@@ -11962,9 +12064,9 @@ Klanderman).
 
     <li>modified <code>creat_as()</code> a little more, retaining
     the ability to append to a logfile If the user specifies the
-    name. Also, check if the opened file (which patch #130 ensures
-    is owned by the effective user) is not writable by other
-    users.</li>
+    name. Also, check if the opened file (which <a href=
+    "#xterm_130">patch #130</a> ensures is owned by the effective
+    user) is not writable by other users.</li>
 
     <li>use <code>creat_as()</code> logic to make tek4014
     screen-copy more secure (noted by Branden Robinson).</li>
@@ -12934,9 +13036,10 @@ Klanderman).
   <ul>
     <li>correct selection logic: I omitted an offset that accounts
     for the distance into the scrollback buffer when rewriting this
-    for patch #101. Also fixed a similar problem for selecting
-    double size characters from the scrollback buffer (first was
-    reported by D Roland Walker &lt;walker@pobox.com&gt;).</li>
+    for <a href="#xterm_101">patch #101</a>. Also fixed a similar
+    problem for selecting double size characters from the
+    scrollback buffer (first was reported by D Roland Walker
+    &lt;walker@pobox.com&gt;).</li>
 
     <li>improved support for Unix98 PTY's, using patch in Debian
     bug report #35650, by J.H.M. Dassen
@@ -12970,9 +13073,9 @@ Klanderman).
   XFree86 3.9Pm</a></h1>
 
   <ul>
-    <li>revert change to openpty call in patch #101; this causes
-    xterm to fail on DEC-Alpha OSF/1 4.0B (reported by H Merijn
-    Brand).</li>
+    <li>revert change to openpty call in <a href="#xterm_101">patch
+    #101</a>; this causes xterm to fail on DEC-Alpha OSF/1 4.0B
+    (reported by H Merijn Brand).</li>
 
     <li>modify print.c to move include of stdio.h after the
     autoconf'd xtermcfg.h since HP's ANSI C compiler otherwise sees
@@ -13591,13 +13694,14 @@ Klanderman).
   <h1><a name="xterm_88" id="xterm_88">Patch #88 - 1998/10/31 -
   XFree86 3.9Nk and 3.3.2h</a></h1>
 
-  <p>This refines my #85 patch by checking for a case where the
-  font server returns a bold font that does not quite correspond to
-  the normal font. When I asked for a bold version of the 6x12
-  font, the font server returned a near equivalent where the ascent
-  and descent values did not match, causing xterm to leave lines
-  across the display. This patch makes xterm reject that type of
-  mismatch, falling back to the old font behavior.</p>
+  <p>This refines my <a href="#xterm_85">patch #85</a> by checking
+  for a case where the font server returns a bold font that does
+  not quite correspond to the normal font. When I asked for a bold
+  version of the 6x12 font, the font server returned a near
+  equivalent where the ascent and descent values did not match,
+  causing xterm to leave lines across the display. This patch makes
+  xterm reject that type of mismatch, falling back to the old font
+  behavior.</p>
 
   <h1><a name="xterm_87" id="xterm_87">Patch #87 - 1998/10/21 -
   XFree86 3.9Nj and 3.3.2f</a></h1>
@@ -13700,7 +13804,8 @@ Klanderman).
   <h1><a name="sync_83" id="sync_83">Resync #83 - 1998/10/7 -
   XFree86 3.3.2e</a></h1>
 
-  <p>Merge changes through patch #83 with the 3.3.2e version.</p>
+  <p>Merge changes through <a href="#xterm_83">patch #83</a> with
+  the 3.3.2e version.</p>
 
   <p>This follows a change from XFree86 CVS which adds checks for
   non-null return from malloc (patch by Matthieu Herrb).</p>
@@ -13740,7 +13845,7 @@ Klanderman).
   <h1><a name="xterm_82" id="xterm_82">Patch #82 - 1998/7/15 -
   XFree86 3.9Aj</a></h1>
 
-  <p>Bug fix for patch #81:</p>
+  <p>Bug fix for <a href="#xterm_81">patch #81</a>:</p>
 
   <ul>
     <li>remove an #undef for NBBY, which caused compile problem on
@@ -14180,8 +14285,8 @@ Klanderman).
   Olivier Calle &lt;olivier@tc.fluke.com&gt; as well as some other
   people after the XFree86 3.3.2 release.</p>
 
-  <p>The error was introduced by my patch #53 in XFree86 3.9r
-  (October 1997).</p>
+  <p>The error was introduced by my <a href="#xterm_53">patch
+  #53</a> in XFree86 3.9r (October 1997).</p>
 
   <p>The correction removes the reset of setuid/setgid before the
   main event loop, and solves the problem which I had worked around
@@ -14646,7 +14751,8 @@ Klanderman).
     ANSI colors, where exposure events would occasionally pick up
     the former (e.g., colorBD) rather than ANSI colors. Testing the
     colorAttrMode made this apparent, though it has been in the
-    code since 3.2A (patch #35 in Jan 1997).</li>
+    code since 3.2A (<a href="#xterm_35">patch #35</a> in Jan
+    1997).</li>
 
     <li>correct two problems with the optional logging support. On
     Linux at least, the waitpid call in creat_as hangs when the
@@ -15011,8 +15117,8 @@ Klanderman).
     entries).</li>
 
     <li>some minor tidying up (e.g., signed/unsigned use bitcpy,
-    MODE_DECCKM, resetColor, resetCharsets). More is done in patch
-    #35.</li>
+    MODE_DECCKM, resetColor, resetCharsets). More is done in
+    <a href="#xterm_35">patch #35</a>.</li>
   </ul>
 
   <p>I got the description of DECSTR from a vt420 user's manual.

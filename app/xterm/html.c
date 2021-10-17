@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.21 2021/02/25 23:19:16 tom Exp $ */
+/* $XTermId: html.c,v 1.23 2021/09/19 18:30:48 tom Exp $ */
 
 /*
  * Copyright 2018-2020,2021	Thomas E. Dickey
@@ -175,8 +175,8 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	}
 #endif
 
-	XQueryColor(xw->screen.display, xw->core.colormap, &fgcolor);
-	XQueryColor(xw->screen.display, xw->core.colormap, &bgcolor);
+	(void) QueryOneColor(xw, &fgcolor);
+	(void) QueryOneColor(xw, &bgcolor);
 	xevents(xw);
 
 	if (ld->attribs[col] & BLINK) {
@@ -291,8 +291,9 @@ PixelToCSSColor(XtermWidget xw, Pixel p)
     static char rgb[sizeof "rgb(100.00%, 100.00%, 100.00%)"];
     XColor c;
 
+    (void) xw;
     c.pixel = p;
-    XQueryColor(xw->screen.display, xw->core.colormap, &c);
+    (void) QueryOneColor(xw, &c);
     sprintf(rgb, "rgb(%.2f%%, %.2f%%, %.2f%%)", RGBPCT(c));
     return rgb;
 }

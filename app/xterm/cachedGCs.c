@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.80 2021/02/02 00:20:11 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.81 2021/09/16 19:48:02 tom Exp $ */
 
 /*
  * Copyright 2007-2019,2021 by Thomas E. Dickey
@@ -217,20 +217,11 @@ tracePixel(XtermWidget xw, Pixel value)
 
     if (result == 0) {
 	for (n = 0; n < MAXCOLORS; ++n) {
-#if OPT_COLOR_RES
 	    if (screen->Acolors[n].mode > 0
 		&& value == screen->Acolors[n].value) {
 		result = screen->Acolors[n].resource;
 		break;
 	    }
-#else
-	    if (value == screen->Acolors[n]) {
-		char temp[80];
-		sprintf(temp, "Acolors[%d]", n);
-		result = x_strdup(temp);
-		break;
-	    }
-#endif
 	}
     }
 

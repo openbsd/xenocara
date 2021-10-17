@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.13 2021/01/27 01:04:54 tom Exp $
+# $XTermId: run-tic.sh,v 1.14 2021/09/21 08:03:03 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -84,6 +84,8 @@ case "x$VER" in
 	case "$VER" in
 	*\ [7-9].*|*\ 6.[1-9].20[12][0-9]*)
 		check=`echo "$VER" | sed -e 's/^.*\.//' -e 's/[^0-9].*$//'`
+		[ "$check" -ge "20210626" ] && \
+		[ "$check" -lt "20210828" ] && use_ncurses6
 		[ "$check" -lt "$USE_NCURSES" ] && use_ncurses6
 		;;
 	*)

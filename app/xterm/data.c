@@ -1,7 +1,7 @@
-/* $XTermId: data.c,v 1.98 2017/12/18 23:38:05 tom Exp $ */
+/* $XTermId: data.c,v 1.100 2021/05/27 22:29:26 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -68,6 +68,7 @@ jmp_buf Tekend;
 #endif
 
 char *ProgramName;
+char *ProgramPath;
 
 Arg ourTopLevelShellArgs[] =
 {
@@ -114,7 +115,10 @@ char *xterm_cursor_theme;
 
 #if OPT_SESSION_MGT
 int ice_fd = -1;
+char **restart_command;
 #endif
+
+int restart_params = 0;
 
 #ifdef USE_IGNORE_RC
 int ignore_unused;

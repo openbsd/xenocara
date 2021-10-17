@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.74 2020/12/19 00:19:51 tom Exp $ */
+/* $XTermId: main.h,v 1.77 2021/08/24 09:45:41 tom Exp $ */
 
 /*
- * Copyright 2000-2019,2020 by Thomas E. Dickey
+ * Copyright 2000-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -167,6 +167,10 @@
 #define DEF_BACKARO_BS		True
 #endif
 
+#ifndef DEF_CD_XTRA_SCROLL
+#define DEF_CD_XTRA_SCROLL	"False"
+#endif
+
 #ifndef DEF_ALT_SENDS_ESC
 #define DEF_ALT_SENDS_ESC	False
 #endif
@@ -225,6 +229,10 @@
 
 #ifndef DEF_TITLE_MODES
 #define DEF_TITLE_MODES		0
+#endif
+
+#ifndef DEF_TI_XTRA_SCROLL
+#define DEF_TI_XTRA_SCROLL	"False"
 #endif
 
 #ifndef DEF_XFT_CACHE

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.703 2021/03/02 00:25:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.706 2021/09/12 18:38:50 Martijn.van.Duren Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -2442,7 +2442,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 #endif
     for (c = first; c <= last; ++c) {
 	if (FcCharSetHasChar(xft->charset, c)) {
-	    int width = CharWidth(c);
+	    int width = CharWidth(screen, c);
 	    XGlyphInfo extents;
 	    Boolean big_x;
 	    Boolean big_y;
@@ -2610,7 +2610,7 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      * Ignore control characters - their extent information is misleading.
      */
     for (c = 32; c < 256; ++c) {
-	if (CharWidth(c) <= 0)
+	if (CharWidth(TScreenOf(xw), c) <= 0)
 	    continue;
 	if (FcCharSetHasChar(source->font->charset, c)) {
 	    (void) checkedXftWidth(XtDisplay(xw),
@@ -3626,8 +3626,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 #endif
 
     if (pc == 0 || CI_NONEXISTCHAR(pc)) {
-	TRACE2(("xtermMissingChar %#04x (!exists), %d cells\n",
-		ch, CharWidth(ch)));
+	TRACE2(("xtermMissingChar %#04x (!exists)\n", ch));
 	result = True;
     }
     if (ch < KNOWN_MISSING) {
@@ -4054,7 +4053,7 @@ foundXftGlyph(XtermWidget xw, XftFont *font, unsigned wc)
     if (font != 0 && XftGlyphExists(screen->display, font, wc)) {
 	int expect;
 
-	if ((expect = CharWidth(wc)) > 0) {
+	if ((expect = CharWidth(screen, wc)) > 0) {
 	    XGlyphInfo gi;
 	    int actual;
 

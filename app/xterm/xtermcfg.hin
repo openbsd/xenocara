@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.221 2021/03/21 19:51:33 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.223 2021/08/22 20:00:07 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -88,6 +88,7 @@
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PCRE2POSIX_H	/* CF_WITH_PCRE2 */
+#undef HAVE_PCRE2REGCOMP	/* CF_WITH_PCRE2 */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
 #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
 #undef HAVE_POSIX_SAVED_IDS	/* CF_POSIX_SAVED_IDS */
@@ -157,7 +158,6 @@
 #undef OPT_DIRECT_COLOR		/* CF_ARG_ENABLE(direct-color) */
 #undef OPT_DOUBLE_BUFFER	/* CF_ARG_ENABLE(double-buffer) */
 #undef OPT_EXEC_XTERM		/* CF_ARG_ENABLE(exec-xterm) */
-#undef OPT_FIFO_LINES		/* CF_ARG_ENABLE(fifo-lines) */
 #undef OPT_GRAPHICS		/* CF_ARG_ENABLE(graphics) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS		/* CF_ARG_ENABLE(hp-fkeys) */

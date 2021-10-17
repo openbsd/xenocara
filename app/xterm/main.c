@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.877 2021/03/21 22:09:06 tom Exp $ */
+/* $XTermId: main.c,v 1.882 2021/09/16 19:49:13 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -2221,7 +2221,10 @@ main(int argc, char *argv[]ENVP_ARG)
     Xaw3dXftData *xaw3dxft_data;
 #endif
 
-    ProgramName = argv[0];
+    ProgramName = x_strdup(x_basename(argv[0]));
+    ProgramPath = xtermFindShell(argv[0], True);
+    if (ProgramPath != NULL)
+	argv[0] = ProgramPath;
 
 #ifdef HAVE_POSIX_SAVED_IDS
     save_euid = geteuid();
@@ -2269,6 +2272,7 @@ main(int argc, char *argv[]ENVP_ARG)
     /* Do these first, since we may not be able to open the display */
     TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
     TRACE_ARGV("Before XtOpenApplication", argv);
+    restart_params = 0;
     if (argc > 1) {
 	XrmOptionDescRec *option_ptr;
 	char *option_value;
@@ -2289,10 +2293,12 @@ main(int argc, char *argv[]ENVP_ARG)
 		if (explicit_shname == 0)
 		    exit(0);
 		TRACE(("...explicit shell %s\n", explicit_shname));
+		restart_params = (argc - n);
 	    } else if (!strcmp(option_ptr->option, "-e")) {
 		command_to_exec = (argv + n + 1);
 		if (!command_to_exec[0])
 		    Syntax(argv[n]);
+		restart_params = (argc - n);
 		break;
 	    } else if (!strcmp(option_ptr->option, "-version")) {
 		Version();
@@ -2473,6 +2479,8 @@ main(int argc, char *argv[]ENVP_ARG)
 					fallback_resources,
 					sessionShellWidgetClass,
 					NULL, 0);
+	TRACE(("created toplevel widget %p, window %#lx\n",
+	       (void *) toplevel, XtWindow(toplevel)));
 
 	XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				  application_resources,
@@ -2652,6 +2660,8 @@ main(int argc, char *argv[]ENVP_ARG)
 						 XtNmenuHeight, menu_high,
 #endif
 						 (XtPointer) 0);
+    TRACE(("created vt100 widget %p, window %#lx\n",
+	   (void *) term, XtWindow(term)));
     decode_keyboard_type(term, &resource);
 
     screen = TScreenOf(term);
@@ -2866,7 +2876,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
     xtermEmbedWindow(winToEmbedInto);
-#if OPT_COLOR_RES
+
     TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
 	   term->misc.re_verse0 ? "reverse" : "normal",
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
@@ -2887,7 +2897,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
     }
-#endif /* OPT_COLOR_RES */
 
 #if OPT_MAXIMIZE
     if (resource.maximized)

@@ -1,23 +1,43 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #367 - 2021/03/26
+                            Patch #369 - 2021/09/21
 
-     * add  OSC 22 to allow programs to select different pointer cursor at
-       runtime.
-     * change  configuration for no-return functions to use _Noreturn when
-       it  is  available, because clang --analyze does not properly handle
-       the gcc noreturn attribute.
-     * add  cursorTheme resource to provide a way to enable or disable the
-       cursor theme feature.
-     * modified  CopyWait  event retries to use shorter sleeps, to improve
-       responsiveness (tmux #2556).
-     * improve quoting/escaping in demo-scripts per shellcheck.
-     * add  resizeByPixel  resource,  to  permit  disabling window manager
-       resizing-hints (patch by Tim Oehl).
-     * corrected  printOptsImmediate  handling of alternate-screen (report
-       by Abhijit Dasgupta).
-     * update sample terminfo to more closely match ncurses.
-     * add/improve limit-checks for Xlib calls (report by Roman Fiedler).
-     * fix a typo in the help-message (report by Tomas Korbar).
+     * modify  run-tic.sh  to  work  around  bug in development version of
+       ncurses which was packaged in FreeBSD ports.
+     * remove ifdef's for OPT_COLOR_RES and OPT_COLOR_RES2.
+     * improve   performance  over  slow  connections  (report  by  Harald
+       Dunkel).
+     * update cursor if restoring mode for DECTCEM.
+     * modify  CharWidth  macro to ensure that the shortcut for Latin-1 is
+       only  applied  when  UTF-8 is not enabled, to fix a bug in handling
+       soft-hyphen from patch #334 changes (patch by Martijn van Duren).
+     * improve terminfo:
+          + fill-in   function-keys  in  terminfo  which  are  not  Sun/HP
+            keyboards using xterm+nopcfkeys building-block.
+          + add kbeg to xterm+keypad to accommodate termcap applications
+          + add  smglp and smgrp to vt420+lrmm, to provide useful data for
+            the "tabs" +m option
+     * support shift-tab in Sun, HP and SCO keyboards.
+     * document some legacy features in ctlseqs.ms (prompted by discussion
+       with Jimmy Aguilar Mena "Ergus").
+     * add “trim” option to cdXtraScroll and tiXtraScroll.
+     * remove support for non-fifo save-lines configuration.
+     * extend  cdXtraScroll to check if the cursor is at the upper-left of
+       the  scrolling  region when the erasure is for the remainder of the
+       screen  versus  the whole screen (prompted by discussion with Jörg
+       Breitbart).
+     * add workaround for broken pcre2 package in Debian 10.
+     * change  screen-refresh  call used for DECCARA and DECRARA to ensure
+       that  trailing blanks which are part of the rectangle are repainted
+       (report/analysis by Dennis Filder).
+     * when  resetting  the terminal, ensure that the cursor shape also is
+       reset,  e.g.,  if DECSCUSR has been used to modify the cursor shape
+       for  an  xterm  which was started with the underlined cursor option
+       (report/analysis by Luis Javier Merino).
+     * prevent  DECSCUSR  from  blinking  the  cursor  if  the cursorBlink
+       resource is “never” (report by Vladimir D Seleznev).
+     * invert  the sense of DECSDM, to correspond with VT382 manuals (lsix
+       #41).
+     * update tables in wcwidth.c based on Unicode 14.0.0
 

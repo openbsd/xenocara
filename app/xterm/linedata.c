@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.99 2021/03/08 00:24:12 tom Exp $ */
+/* $XTermId: linedata.c,v 1.100 2021/08/22 20:02:23 tom Exp $ */
 
 /*
  * Copyright 2009-2019,2021 by Thomas E. Dickey
@@ -51,14 +51,8 @@ getLineData(TScreen *screen, int row)
     if (row >= 0) {
 	buffer = screen->visbuf;
     } else {
-#if OPT_FIFO_LINES
 	buffer = 0;
 	result = getScrollback(screen, row);
-#else
-	buffer = screen->saveBuf_index;
-	row += screen->savelines;
-	max_row += screen->savelines;
-#endif
     }
     if (row >= 0 && row <= max_row) {
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);

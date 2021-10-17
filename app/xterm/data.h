@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.139 2021/03/09 01:08:15 tom Exp $ */
+/* $XTermId: data.h,v 1.141 2021/05/27 22:29:12 tom Exp $ */
 
 /*
  * Copyright 2002-2019,2021 by Thomas E. Dickey
@@ -104,7 +104,12 @@ extern PtySelect Select_mask;
 extern PtySelect X_mask;
 extern PtySelect pty_mask;
 
+#if OPT_SESSION_MGT
 extern int ice_fd;
+extern char **restart_command;
+#endif
+
+extern int restart_params;
 
 extern XtermWidget term;
 
@@ -124,7 +129,8 @@ extern SIG_ATOMIC_T caught_intr;
 #define	XkbBI_MarginBell		10
 #endif
 
-extern char *ProgramName;
+extern char *ProgramName;	/* just the last part of name, maybe alias */
+extern char *ProgramPath;	/* full pathname which can be executed */
 extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
 extern Atom wm_delete_window;

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.979 2021/03/24 00:27:48 tom Exp $ */
+/* $XTermId: misc.c,v 1.1001 2021/09/19 19:49:40 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2593,7 +2593,7 @@ maskToWidth(unsigned long mask)
     return result;
 }
 
-int
+XVisualInfo *
 getVisualInfo(XtermWidget xw)
 {
 #define MYFMT "getVisualInfo \
@@ -2646,7 +2646,7 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 		   xw->rgb_shifts[2]));
 	}
     }
-    return (xw->visInfo != 0) && (xw->numVisuals > 0);
+    return (xw->visInfo != 0) && (xw->numVisuals > 0) ? xw->visInfo : NULL;
 #undef MYFMT
 #undef MYARG
 }
@@ -2659,12 +2659,11 @@ ReportAnsiColorRequest(XtermWidget xw, int opcode, int colornum, int final)
 
     if (AllowColorOps(xw, ecGetAnsiColor)) {
 	XColor color;
-	Colormap cmap = xw->core.colormap;
 	char buffer[80];
 
 	TRACE(("ReportAnsiColorRequest %d\n", colornum));
 	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
-	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	(void) QueryOneColor(xw, &color);
 	sprintf(buffer, "%d;%d;rgb:%04x/%04x/%04x",
 		opcode,
 		(opcode == 5) ? (colornum - NUM_ANSI_COLORS) : colornum,
@@ -2731,6 +2730,75 @@ loadColorTable(XtermWidget xw, unsigned length)
     return result;
 }
 
+/***====================================================================***/
+
+/*
+ * Call this function with def->{red,green,blue} initialized, to obtain a pixel
+ * value.
+ */
+Boolean
+AllocOneColor(XtermWidget xw, XColor *def)
+{
+    TScreen *screen = TScreenOf(xw);
+    XVisualInfo *visInfo;
+    Boolean result = True;
+
+#define MaskIt(name,nn) \
+	((unsigned long) ((def->name >> (16 - xw->rgb_widths[nn])) \
+	             << xw->rgb_shifts[nn]) \
+	 & xw->visInfo->name ##_mask)
+
+    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+	def->pixel = MaskIt(red, 0) | MaskIt(green, 1) | MaskIt(blue, 2);
+    } else {
+	Display *dpy = screen->display;
+	if (!XAllocColor(dpy, xw->core.colormap, def)) {
+	    /*
+	     * Decide between foreground and background by a grayscale
+	     * approximation.
+	     */
+	    int bright = def->red * 3 + def->green * 10 + def->blue;
+	    int levels = 14 * 0x8000;
+	    def->pixel = ((bright >= levels)
+			  ? xw->dft_background
+			  : xw->dft_foreground);
+	    result = False;
+	}
+    }
+    return result;
+}
+
+/***====================================================================***/
+
+/*
+ * Call this function with def->pixel set to the color that we want to convert
+ * to separate red/green/blue.
+ */
+Boolean
+QueryOneColor(XtermWidget xw, XColor *def)
+{
+    XVisualInfo *visInfo;
+    Boolean result = True;
+
+#define UnMaskIt(name,nn) \
+	((unsigned short)((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn]))
+#define UnMaskIt2(name,nn) \
+	((unsigned short)((UnMaskIt(name,nn) << 8) \
+			  |UnMaskIt(name,nn)))
+
+    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+	/* *INDENT-EQLS* */
+	def->red   = UnMaskIt2(red, 0);
+	def->green = UnMaskIt2(green, 1);
+	def->blue  = UnMaskIt2(blue, 2);
+    } else if (!XQueryColor(TScreenOf(xw)->display, xw->core.colormap, def)) {
+	result     = False;
+    }
+    return result;
+}
+
+/***====================================================================***/
+
 /*
  * Find closest color for "def" in "cmap".
  * Set "def" to the resulting color.
@@ -2742,7 +2810,7 @@ loadColorTable(XtermWidget xw, unsigned length)
  * Return False if not able to find or allocate a color.
  */
 static Boolean
-allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor *def)
+allocateClosestRGB(XtermWidget xw, XColor *def)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean result = False;
@@ -2796,8 +2864,7 @@ allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor *def)
 			    }
 			}
 		    }
-		    if (XAllocColor(screen->display, cmap,
-				    &screen->cmap_data[bestInx]) != 0) {
+		    if (AllocOneColor(xw, &screen->cmap_data[bestInx])) {
 			*def = screen->cmap_data[bestInx];
 			TRACE(("...closest %x/%x/%x\n", def->red,
 			       def->green, def->blue));
@@ -2822,193 +2889,6 @@ allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor *def)
 #define ULONG_MAX (unsigned long)(~(0L))
 #endif
 
-#define CheckColor(result, value) \
-	    result = 0; \
-	    if (value.red) \
-		result |= 1; \
-	    if (value.green) \
-		result |= 2; \
-	    if (value.blue) \
-		result |= 4
-
-#define SelectColor(state, value, result) \
-	switch (state) { \
-	default: \
-	case 1: \
-	    result = value.red; \
-	    break; \
-	case 2: \
-	    result = value.green; \
-	    break; \
-	case 4: \
-	    result = value.blue; \
-	    break; \
-	}
-
-/*
- * Check if the color map consists of values in exactly one of the red, green
- * or blue columns.  If it is not, we do not know how to use it for the exact
- * match.
- */
-static int
-simpleColors(XColor *colortable, unsigned length)
-{
-    unsigned n;
-    int state = 0;
-    int check;
-
-    for (n = 0; n < length; ++n) {
-	if (state > 0) {
-	    CheckColor(check, colortable[n]);
-	    if (check > 0 && check != state) {
-		state = 0;
-		break;
-	    }
-	} else {
-	    CheckColor(state, colortable[n]);
-	}
-    }
-    switch (state) {
-    case 1:
-    case 2:
-    case 4:
-	break;
-    default:
-	state = 0;
-	break;
-    }
-    return state;
-}
-
-/*
- * Shift the mask left or right to put its most significant bit at the 16-bit
- * mark.
- */
-static unsigned
-normalizeMask(unsigned mask)
-{
-    while (mask < 0x8000) {
-	mask <<= 1;
-    }
-    while (mask >= 0x10000) {
-	mask >>= 1;
-    }
-    return mask;
-}
-
-static unsigned
-searchColors(XColor *colortable, unsigned mask, unsigned length, unsigned
-	     color, int state)
-{
-    unsigned result = 0;
-    unsigned n;
-    unsigned long best = ULONG_MAX;
-    unsigned value;
-
-    mask = normalizeMask(mask);
-    for (n = 0; n < length; ++n) {
-	unsigned long diff;
-
-	SelectColor(state, colortable[n], value);
-	diff = ((color & mask) - (value & mask));
-	diff *= diff;
-	if (diff < best) {
-#if 0
-	    TRACE(("...%d:looking for %x, found %x/%x/%x (%lx)\n",
-		   n, color,
-		   colortable[n].red,
-		   colortable[n].green,
-		   colortable[n].blue,
-		   diff));
-#endif
-	    result = n;
-	    best = diff;
-	}
-    }
-    SelectColor(state, colortable[result], value);
-    return value;
-}
-
-/*
- * This is a workaround for a longstanding defect in the X libraries.
- *
- * According to
- * http://www.unix.com/man-page/all/3x/XAllocColoA/
- *
- *     XAllocColor() acts differently on static and dynamic visuals.  On Pseu-
- *     doColor, DirectColor, and GrayScale  visuals,  XAllocColor()  fails  if
- *     there  are  no  unallocated  colorcells and no allocated read-only cell
- *     exactly matches the requested RGB values.  On  StaticColor,  TrueColor,
- *     and  StaticGray  visuals,  XAllocColor() returns the closest RGB values
- *     available in the colormap.  The colorcell_in_out structure returns  the
- *     actual RGB values allocated.
- *
- * That is, XAllocColor() should suffice unless the color map is full.  In that
- * case, allocateClosestRGB() is useful for the dynamic display classes such as
- * PseudoColor.  It is not useful for TrueColor, since XQueryColors() does not
- * return regular RGB triples (unless a different scheme was used for
- * specifying the pixel values); only the blue value is filled in.  However, it
- * is filled in with the colors that the server supports.
- *
- * Also (the reason for this function), XAllocColor() does not really work as
- * described.  For some TrueColor configurations it merely returns a close
- * approximation, but not the closest.
- */
-static Boolean
-allocateExactRGB(XtermWidget xw, Colormap cmap, XColor *def)
-{
-    XColor save = *def;
-    TScreen *screen = TScreenOf(xw);
-    Boolean result = (Boolean) (XAllocColor(screen->display, cmap, def) != 0);
-
-    /*
-     * If this is a statically allocated display with too many items to store
-     * in our array, i.e., TrueColor, see if we can improve on the result by
-     * using the color values actually supported by the server.
-     */
-    if (result) {
-	unsigned cmap_type;
-	unsigned cmap_size;
-
-	getColormapInfo(xw, &cmap_type, &cmap_size);
-
-	if (cmap_type == TrueColor) {
-	    XColor temp = *def;
-	    int state;
-
-	    if (loadColorTable(xw, cmap_size)
-		&& (state = simpleColors(screen->cmap_data, cmap_size)) > 0) {
-#define SearchColors(which) \
-	temp.which = (unsigned short) searchColors(screen->cmap_data, \
-						   (unsigned) xw->visInfo->which##_mask,\
-						   cmap_size, \
-						   save.which, \
-						   state)
-		SearchColors(red);
-		SearchColors(green);
-		SearchColors(blue);
-		if (XAllocColor(screen->display, cmap, &temp) != 0) {
-#if OPT_TRACE
-		    if (temp.red != save.red
-			|| temp.green != save.green
-			|| temp.blue != save.blue) {
-			TRACE(("...improved %x/%x/%x ->%x/%x/%x\n",
-			       save.red, save.green, save.blue,
-			       temp.red, temp.green, temp.blue));
-		    } else {
-			TRACE(("...no improvement for %x/%x/%x\n",
-			       save.red, save.green, save.blue));
-		    }
-#endif
-		    *def = temp;
-		}
-	    }
-	}
-    }
-
-    return result;
-}
-
 /*
  * Allocate a color for the "ANSI" colors.  That actually includes colors up
  * to 256.
@@ -3027,11 +2907,8 @@ AllocateAnsiColor(XtermWidget xw,
     XColor def;
 
     if (xtermAllocColor(xw, &def, spec)) {
-	if (
-#if OPT_COLOR_RES
-	       res->mode == True &&
-#endif
-	       EQL_COLOR_RES(res, def.pixel)) {
+	if (res->mode == True &&
+	    EQL_COLOR_RES(res, def.pixel)) {
 	    result = 0;
 	} else {
 	    result = 1;
@@ -3045,11 +2922,9 @@ AllocateAnsiColor(XtermWidget xw,
 		   def.green,
 		   def.blue,
 		   def.pixel));
-#if OPT_COLOR_RES
 	    if (!res->mode)
 		result = 0;
 	    res->mode = True;
-#endif
 	}
     } else {
 	TRACE(("AllocateAnsiColor %s (failed)\n", spec));
@@ -3058,7 +2933,6 @@ AllocateAnsiColor(XtermWidget xw,
     return (result);
 }
 
-#if OPT_COLOR_RES
 Pixel
 xtermGetColorRes(XtermWidget xw, ColorRes * res)
 {
@@ -3086,7 +2960,6 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
     }
     return result;
 }
-#endif
 
 static int
 ChangeOneAnsiColor(XtermWidget xw, int color, const char *name)
@@ -3225,16 +3098,15 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
     return repaint;
 }
 #else
-#define allocateClosestRGB(xw, cmap, def) 0
-#define allocateExactRGB(xw, cmap, def) XAllocColor(TScreenOf(xw)->display, cmap, def)
+#define allocateClosestRGB(xw, def) 0
 #endif /* OPT_ISO_COLORS */
 
 Boolean
 allocateBestRGB(XtermWidget xw, XColor *def)
 {
-    Colormap cmap = xw->core.colormap;
-
-    return allocateExactRGB(xw, cmap, def) || allocateClosestRGB(xw, cmap, def);
+    (void) xw;
+    (void) def;
+    return AllocOneColor(xw, def) || allocateClosestRGB(xw, def);
 }
 
 static Boolean
@@ -3247,7 +3119,7 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 
     if (have == 0 || have > MAX_U_STRING) {
 	if (resource.reportColors) {
-	    printf("color  (ignored, length %lu)\n", have);
+	    printf("color  (ignored, length %lu)\n", (unsigned long) have);
 	}
     } else if (XParseColor(screen->display, cmap, spec, def)) {
 	XColor save_def = *def;
@@ -3284,7 +3156,7 @@ int
 xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 {
     int result = -1;
-#if OPT_COLOR_RES && OPT_ISO_COLORS
+#if OPT_ISO_COLORS
     int n;
     int best_index = -1;
     unsigned long best_value = 0;
@@ -3319,6 +3191,7 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
     }
     TRACE(("...best match at %d with diff %lx\n", best_index, best_value));
     result = best_index;
+
 #else
     (void) xw;
     (void) find_red;
@@ -3688,7 +3561,6 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 
     if (AllowColorOps(xw, ecGetColor)) {
 	XColor color;
-	Colormap cmap = xw->core.colormap;
 	char buffer[80];
 
 	/*
@@ -3700,7 +3572,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 
 	GetOldColors(xw);
 	color.pixel = xw->work.oldColors->colors[ndx];
-	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	(void) QueryOneColor(xw, &color);
 	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 		color.red,
 		color.green,
@@ -3841,8 +3713,6 @@ ResetColorsRequest(XtermWidget xw,
     (void) code;
 
     TRACE(("ResetColorsRequest code=%d\n", code));
-
-#if OPT_COLOR_RES
     if (GetOldColors(xw)) {
 	ScrnColors newColors;
 	const char *thisName;
@@ -3868,7 +3738,6 @@ ResetColorsRequest(XtermWidget xw,
 	}
 	result = True;
     }
-#endif
     return result;
 }
 
@@ -6989,11 +6858,75 @@ getXtermWidget(Widget w)
 }
 
 #if OPT_SESSION_MGT
+
+#if OPT_TRACE
+static void
+trace_1_SM(const char *tag, String name)
+{
+    Arg args[1];
+    char *buf = 0;
+
+    XtSetArg(args[0], name, &buf);
+    XtGetValues(toplevel, args, 1);
+
+    if (strstr(name, "Path") || strstr(name, "Directory")) {
+	TRACE(("%s %s: %s\n", tag, name, NonNull(buf)));
+    } else if (strstr(name, "Command")) {
+	if (buf != NULL) {
+	    char **vec = (char **) (void *) buf;
+	    int n;
+	    TRACE(("%s %s:\n", tag, name));
+	    for (n = 0; vec[n] != NULL; ++n) {
+		TRACE((" arg[%d] = %s\n", n, vec[n]));
+	    }
+	} else {
+	    TRACE(("%s %s: %p\n", tag, name, buf));
+	}
+    } else {
+	TRACE(("%s %s: %p\n", tag, name, buf));
+    }
+}
+
+static void
+trace_SM_props(void)
+{
+    /* *INDENT-OFF* */
+    static struct { String app, cls; } table[] = {
+	{ XtNcurrentDirectory,	XtCCurrentDirectory },
+	{ XtNdieCallback,	XtNdiscardCommand },
+	{ XtCDiscardCommand,	XtNenvironment },
+	{ XtCEnvironment,	XtNinteractCallback },
+	{ XtNjoinSession,	XtCJoinSession },
+	{ XtNprogramPath,	XtCProgramPath },
+	{ XtNresignCommand,	XtCResignCommand },
+	{ XtNrestartCommand,	XtCRestartCommand },
+	{ XtNrestartStyle,	XtCRestartStyle },
+	{ XtNsaveCallback,	XtNsaveCompleteCallback },
+	{ XtNsessionID,		XtCSessionID },
+	{ XtNshutdownCommand,	XtCShutdownCommand },
+    };
+    /* *INDENT-ON* */
+    Cardinal n;
+    TRACE(("Session properties:\n"));
+    for (n = 0; n < XtNumber(table); ++n) {
+	trace_1_SM("app", table[n].app);
+	trace_1_SM("cls", table[n].cls);
+    }
+}
+#define TRACE_SM_PROPS()	trace_SM_props()
+#else
+#define TRACE_SM_PROPS()	/* nothing */
+#endif
+
 static void
 die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
 	     XtPointer call_data GCC_UNUSED)
 {
+    TRACE(("die_callback client=%p, call=%p\n",
+	   (void *) client_data,
+	   (void *) call_data));
+    TRACE_SM_PROPS();
     NormalExit();
 }
 
@@ -7003,7 +6936,19 @@ save_callback(Widget w GCC_UNUSED,
 	      XtPointer call_data)
 {
     XtCheckpointToken token = (XtCheckpointToken) call_data;
-    /* we have nothing to save */
+    TRACE(("save_callback:\n"));
+    TRACE(("... save_type            <-%d\n", token->save_type));
+    TRACE(("... interact_style       <-%d\n", token->interact_style));
+    TRACE(("... shutdown             <-%s\n", BtoS(token->shutdown)));
+    TRACE(("... fast                 <-%s\n", BtoS(token->fast)));
+    TRACE(("... cancel_shutdown      <-%s\n", BtoS(token->cancel_shutdown)));
+    TRACE(("... phase                <-%d\n", token->phase));
+    TRACE(("... interact_dialog_type ->%d\n", token->interact_dialog_type));
+    TRACE(("... request_cancel       ->%s\n", BtoS(token->request_cancel)));
+    TRACE(("... request_next_phase   ->%s\n", BtoS(token->request_next_phase)));
+    TRACE(("... save_success         ->%s\n", BtoS(token->save_success)));
+    xtermUpdateRestartCommand(term);
+    /* we have nothing more to save */
     token->save_success = True;
 }
 
@@ -7029,6 +6974,8 @@ xtermOpenSession(void)
 	TRACE(("Enabling session-management callbacks\n"));
 	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+
+	TRACE_SM_PROPS();
     }
 }
 
@@ -7036,6 +6983,267 @@ void
 xtermCloseSession(void)
 {
     IceRemoveConnectionWatch(icewatch, NULL);
+}
+
+typedef enum {
+    B_ARG = 0,
+    I_ARG,
+    D_ARG,
+    S_ARG
+} ParamType;
+
+#define Barg(name, field) { name, B_ARG, XtOffsetOf(XtermWidgetRec, field) }
+#define Iarg(name, field) { name, I_ARG, XtOffsetOf(XtermWidgetRec, field) }
+#define Darg(name, field) { name, D_ARG, XtOffsetOf(XtermWidgetRec, field) }
+#define Sarg(name, field) { name, S_ARG, XtOffsetOf(XtermWidgetRec, field) }
+
+typedef struct {
+    const char name[30];
+    ParamType type;
+    Cardinal offset;
+} FontParams;
+
+/* *INDENT-OFF* */
+static const FontParams fontParams[] = {
+    Iarg(XtNinitialFont,     screen.menu_font_number),	/* "-fc" */
+    Barg(XtNallowBoldFonts,  screen.allowBoldFonts),	/* menu */
+#if OPT_BOX_CHARS
+    Barg(XtNforceBoxChars,   screen.force_box_chars),	/* "-fbx" */
+    Barg(XtNforcePackedFont, screen.force_packed),	/* menu */
+#endif
+#if OPT_DEC_CHRSET
+    Barg(XtNfontDoublesize,  screen.font_doublesize),	/* menu */
+#endif
+#if OPT_WIDE_CHARS
+    Barg(XtNutf8Fonts,       screen.utf8_fonts),	/* menu */
+#endif
+#if OPT_RENDERFONT
+    Darg(XtNfaceSize,        misc.face_size[0]),	/* "-fs" */
+    Sarg(XtNfaceName,        misc.default_xft.f_n),	/* "-fa" */
+    Sarg(XtNrenderFont,      misc.render_font_s),	/* (resource) */
+#endif
+};
+/* *INDENT-ON* */
+
+#define RESTART_PARAMS (int)(XtNumber(fontParams) * 2)
+#define TypedPtr(type) *(type *)(void *)((char *) xw + parameter->offset)
+
+/*
+ * If no widget is given, no value is used.
+ */
+static char *
+formatFontParam(char *result, XtermWidget xw, const FontParams * parameter)
+{
+    sprintf(result, "%s*%s:", ProgramName, parameter->name);
+    if (xw != None) {
+	char *next = result + strlen(result);
+	switch (parameter->type) {
+	case B_ARG:
+	    sprintf(next, "%s", *(Boolean *) ((char *) xw + parameter->offset)
+		    ? "true"
+		    : "false");
+	    break;
+	case I_ARG:
+	    sprintf(next, "%d", TypedPtr(int));
+	    break;
+	case D_ARG:
+	    sprintf(next, "%.1f", TypedPtr(float));
+	    break;
+	case S_ARG:
+	    strcpy(next, TypedPtr(char *));
+#if OPT_RENDERFONT
+	    if (!strcmp(parameter->name, XtNfaceName)) {
+		if (IsEmpty(next)
+		    && xw->work.render_font) {
+		    strcpy(next, DEFFACENAME_AUTO);
+		}
+	    } else if (!strcmp(parameter->name, XtNrenderFont)) {
+		if (xw->work.render_font == erDefault
+		    && IsEmpty(xw->misc.default_xft.f_n)) {
+		    strcpy(next, "DefaultOff");
+		}
+	    }
+#endif
+	    break;
+	}
+    }
+    return result;
+}
+
+#if OPT_TRACE
+static void
+dumpFontParams(XtermWidget xw)
+{
+    char buffer[1024];
+    Cardinal n;
+
+    TRACE(("FontParams:\n"));
+    for (n = 0; n < XtNumber(fontParams); ++n) {
+	TRACE(("%3d:%s\n", n, formatFontParam(buffer, xw, fontParams + n)));
+    }
+}
+#else
+#define dumpFontParams(xw)	/* nothing */
+#endif
+
+static Boolean
+findFontParams(int argc, char **argv)
+{
+    Boolean result = False;
+
+    if (argc > RESTART_PARAMS && (argc - restart_params) > RESTART_PARAMS) {
+	int n;
+
+	for (n = 0; n < RESTART_PARAMS; ++n) {
+	    int my_index = argc - restart_params - n - 1;
+	    int my_param = (RESTART_PARAMS - n - 1) / 2;
+	    char *actual = argv[my_index];
+	    char expect[1024];
+	    Boolean value = (Boolean) ((n % 2) == 0);
+
+	    result = False;
+	    TRACE(("...index: %d\n", my_index));
+	    TRACE(("...param: %d\n", my_param));
+	    TRACE(("...actual %s\n", actual));
+	    if (IsEmpty(actual))
+		break;
+
+	    if (value) {
+		formatFontParam(expect, None, fontParams + my_param);
+	    } else {
+		strcpy(expect, "-xrm");
+	    }
+
+	    TRACE(("...expect %s\n", expect));
+
+	    if (value) {
+		if (strlen(expect) >= strlen(actual))
+		    break;
+		if (strncmp(expect, actual, strlen(expect)))
+		    break;
+	    } else {
+		if (strcmp(actual, expect))
+		    break;
+	    }
+	    TRACE(("fixme/ok:%d\n", n));
+	    result = True;
+	}
+	TRACE(("findFontParams: %s (tested %d of %d parameters)\n",
+	       BtoS(result), n + 1, RESTART_PARAMS));
+    }
+    return result;
+}
+
+static int
+insertFontParams(XtermWidget xw, int *targetp, Bool first)
+{
+    int changed = 0;
+    int n;
+    int target = *targetp;
+    char buffer[1024];
+    const char *option = "-xrm";
+
+    for (n = 0; n < (int) XtNumber(fontParams); ++n) {
+	formatFontParam(buffer, xw, fontParams + n);
+	TRACE(("formatted %3d ->%3d:%s\n", n, target, buffer));
+	if (restart_command[target] == NULL)
+	    restart_command[target] = x_strdup(option);
+	++target;
+	if (first) {
+	    restart_command[target] = x_strdup(buffer);
+	    ++changed;
+	} else if (restart_command[target] == NULL
+		   || strcmp(restart_command[target], buffer)) {
+	    free(restart_command[target]);
+	    restart_command[target] = x_strdup(buffer);
+	    ++changed;
+	}
+	++target;
+    }
+    *targetp = target;
+    return changed;
+}
+
+void
+xtermUpdateRestartCommand(XtermWidget xw)
+{
+    if (resource.sessionMgt) {
+	Arg args[1];
+	char **argv = 0;
+
+	XtSetArg(args[0], XtNrestartCommand, &argv);
+	XtGetValues(toplevel, args, 1);
+	if (argv != NULL) {
+	    static int my_params = 0;
+
+	    int changes = 0;
+	    Boolean first = False;
+	    int argc;
+	    int want;
+	    int source, target;
+
+	    TRACE(("xtermUpdateRestartCommand\n"));
+	    dumpFontParams(xw);
+	    for (argc = 0; argv[argc] != NULL; ++argc) {
+		TRACE((" arg[%d] = %s\n", argc, argv[argc]));
+		;
+	    }
+	    want = argc - (restart_params + RESTART_PARAMS);
+
+	    TRACE((" argc:           %d\n", argc));
+	    TRACE((" restart_params: %d\n", restart_params));
+	    TRACE((" want to insert: %d\n", want));
+
+	    /*
+	     * If we already have the font-choice option, do not add it again.
+	     */
+	    if (findFontParams(argc, argv)) {
+		my_params = (want);
+	    } else {
+		first = True;
+		my_params = (argc - restart_params);
+	    }
+	    TRACE((" my_params:      %d\n", my_params));
+
+	    if (my_params > argc) {
+		TRACE((" re-allocate restartCommand\n"));
+		FreeAndNull(restart_command);
+	    }
+
+	    if (restart_command == NULL) {
+		int need = argc + RESTART_PARAMS + 1;
+
+		restart_command = TypeCallocN(char *, need);
+
+		TRACE(("..inserting font-parameters\n"));
+		for (source = target = 0; source < argc; ++source) {
+		    if (source == my_params) {
+			changes += insertFontParams(xw, &target, first);
+			if (!first) {
+			    source += (RESTART_PARAMS - 1);
+			    continue;
+			}
+		    }
+		    if (argv[source] == NULL)
+			break;
+		    restart_command[target++] = x_strdup(argv[source]);
+		}
+		restart_command[target] = NULL;
+	    } else {
+		TRACE(("..replacing font-parameters\n"));
+		target = my_params;
+		changes += insertFontParams(xw, &target, first);
+	    }
+	    if (changes) {
+		TRACE(("..%d parameters changed\n", changes));
+		XtSetArg(args[0], XtNrestartCommand, restart_command);
+		XtSetValues(toplevel, args, 1);
+	    } else {
+		TRACE(("..NO parameters changed\n"));
+	    }
+	}
+	TRACE_SM_PROPS();
+    }
 }
 #endif /* OPT_SESSION_MGT */
 
@@ -7205,12 +7413,23 @@ update_winsize(int fd, int rows, int cols, int height, int width)
 #ifdef TTYSIZE_STRUCT
     static int last_rows = -1;
     static int last_cols = -1;
+    static int last_high = -1;
+    static int last_wide = -1;
 
-    if (rows != last_rows || cols != last_cols) {
+    TRACE(("update_winsize %dx%d (%dx%d) -> %dx%d (%dx%d)\n",
+	   last_rows, last_cols, last_high, last_wide,
+	   rows, cols, height, width));
+
+    if (rows != last_rows
+	|| cols != last_cols
+	|| last_high != height
+	|| last_wide != width) {
 	TTYSIZE_STRUCT ts;
 
 	last_rows = rows;
 	last_cols = cols;
+	last_high = height;
+	last_wide = width;
 	setup_winsize(ts, rows, cols, height, width);
 	TRACE_RC(code, SET_TTYSIZE(fd, ts));
 	trace_winsize(ts, "from SET_TTYSIZE");

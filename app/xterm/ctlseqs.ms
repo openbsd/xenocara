@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.612 2021/03/24 00:41:44 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.633 2021/09/11 23:17:26 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #367
-.ds RF 2021/03/23
+.ds LF Patch #369
+.ds RF 2021/09/11
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -373,7 +373,7 @@ Individual values for the parameters are listed with \*(Ps .
 .IP \*(Pt
 A text parameter composed of printable characters.
 .
-.Sh "Control Bytes, Characters, and Sequences"
+.Ss "Control Bytes, Characters, and Sequences"
 .LP
 ECMA-48 (aka \*(``ISO 6429\*('') documents C1 (8-bit) and C0 (7-bit) codes.
 Those are respectively codes 128 to 159 and 0 to 31.
@@ -453,7 +453,7 @@ string mode if it decodes a common control character such as carriage return
 before the string terminator.
 .RE
 .
-.Sh "C1 (8-Bit) Control Characters"
+.Ss "C1 (8-Bit) Control Characters"
 .LP
 The \fI\*(xt\fP program recognizes both 8-bit and 7-bit control characters.
 It generates 7-bit controls (by default) or 8-bit if S8C1T is enabled.
@@ -514,7 +514,7 @@ Application Program Command (\*(AP is 0x9f).
 .LP
 These control characters are used in the vtXXX emulation.
 .
-.Sh "VT100 Mode"
+.Ss "VT100-related terminals"
 .LP
 In this document, \*(``VT100\*('' refers not only to VT100/VT102,
 but also to the succession of upward-compatible terminals produced
@@ -535,7 +535,7 @@ since the only way X provides for this will affect all windows.
 .LP
 There are additional control sequences to provide
 \fI\*(xt-\fPdependent functions, such as the scrollbar or window size.
-Where the function is specified by DEC or ECMA-48, the code assigned
+Where the function is specified by DEC or ECMA-48, the mnemonic assigned
 to it is given in parentheses.
 .LP
 The escape codes to designate and invoke
@@ -545,6 +545,7 @@ discussion of character sets).
 Many of the features are optional;
 \fI\*(xt\fP can be configured and built without support for them.
 .
+.Sh "VT100 Mode"
 .Ss Single-character functions
 .St
 .IP \\*(Be
@@ -1320,7 +1321,7 @@ This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
-  \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
 (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
@@ -1455,7 +1456,7 @@ This is normally disabled by a compile-time option.
 This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
-  \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Clear screen when DECCOLM is set/reset (DECNCSM),
 VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Don't send Mouse X & Y on button press and
@@ -1947,6 +1948,11 @@ Set Scrolling Region [top;bottom] (default = full size of window)
 Restore DEC Private Mode Values (XTRESTORE), \*(xt.
 The value of \*(Ps previously saved is restored.
 \*(Ps values are the same as for DECSET.
+.iP
+Like Restore Cursor (DECRC), this uses a one-level cache.
+Unlike Restore Cursor,
+specific settings can be saved and restored independently.
+Only those modes listed as parameters are restored.
 .
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Ps\\*s\\*$\\*r
@@ -1983,6 +1989,11 @@ which is \*0.
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
 Save DEC Private Mode Values (XTSAVE), \*(xt.
 \*(Ps values are the same as for DECSET.
+.iP
+Like Save Cursor (DECSC), this uses a one-level cache.
+Unlike Save Cursor,
+specific settings can be saved and restored independently.
+Only those modes listed as parameters are saved.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
@@ -2395,7 +2406,8 @@ Since XFree86-3.1.2Ee (August 1996), \*(xt has accepted \*(ST
 \*(``\fIprop\fP\*('' to delete the property.
   \*(Ps = \*4\*;\fIc\fP\*s\*;\fIspec\fP \(-> Change Color Number \fIc\fP to
 the color specified by \fIspec\fP.
-This can be a name or RGB specification as per \fIXParseColor\fP.
+.sP
+The \fIspec\fP can be a name or RGB specification as per \fIXParseColor\fP.
 Any number of \fIc\fP/\fIspec\fP pairs may be given.
 The color numbers correspond to the ANSI colors 0-7,
 their bright versions 8-15,
@@ -2409,9 +2421,12 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
 .sP
   \*(Ps = \*5\*;\fIc\fP\*s\*;\fIspec\fP \(-> Change Special Color Number \fIc\fP to
 the color specified by \fIspec\fP.
-This can be a name or RGB specification as per \fIXParseColor\fP.
+.sP
+The \fIspec\fP parameter can be a name or RGB specification
+as per \fIXParseColor\fP.
 Any number of \fIc\fP/\fIspec\fP pairs may be given.
 The special colors can also be set by adding the maximum number of colors
+(e.g., 88 or 256)
 to these codes in an \*(Os\*4 control:
 .sP
 .in +2n
@@ -2426,6 +2441,8 @@ to these codes in an \*(Os\*4 control:
 The second parameter tells \fI\*(xt\fP to enable the corresponding color
 mode if nonzero, disable it if zero.
 \*(Os\*6 is the same as \*(Os\*1\*0\*6.
+.sP
+If no parameters are given, this control has no effect.
 .sP
 The 10 colors (below) which may be set or queried
 using \*1\*0 through \*1\*9 are
@@ -2488,7 +2505,7 @@ These controls may be disabled using the \fBallowWindowOps\fP resource.
 The parameter \*(Pt is parsed as
 .br
 	\*(Pc\*s\*;\*(Pd
-.br
+.sP
 The first, \*(Pc, may contain zero or more characters from the
 set \*c, \*p, \*q, \*(cs, \*0, \*1, \*2, \*3, \*4, \*5, \*6, and \*7.
 It is used to construct a list of selection parameters for
@@ -2496,10 +2513,10 @@ clipboard,
 primary,
 secondary,
 select,
-or cut buffers 0 through 7 respectively,
+or cut-buffers 0 through 7 respectively,
 in the order given.
 If the parameter is empty, \fI\*(xt\fP uses \*(cs\*0,
-to specify the configurable primary/clipboard selection and cut buffer 0.
+to specify the configurable primary/clipboard selection and cut-buffer 0.
 .sP
 The second parameter, \*(Pd, gives the selection data.
 Normally this is a string encoded in base64 (RFC-4648).
@@ -2531,6 +2548,8 @@ These parameters correspond to the special colors which can be set
 using an \*(Os\*5 control (or by adding the maximum number of colors
 using an \*(Os\*4 control).
 .sP
+If no parameters are given, all special colors will be reset.
+.sP
   \*(Ps = \*1\*0\*6\*;\fIc\fP\*s\*;\fIf\fP \(-> Enable/disable Special Color Number \fIc\fP.
 The second parameter tells \fI\*(xt\fP to enable the corresponding color
 mode if nonzero, disable it if zero.
@@ -2543,6 +2562,8 @@ mode if nonzero, disable it if zero.
   \*(Pc = \*4 \(<- resource \fBcolorITMode\fP (ITALIC).
   \*(Pc = \*5 \(<- resource \fBcolorAttrMode\fP (Override ANSI).
 .in -2n
+.sP
+If no parameters are given, this control has no effect.
 .sP
 The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.
@@ -2576,7 +2597,32 @@ Sun shelltool, CDE dtterm.
 \*(Pt need not be printable characters.
 .Ed
 .
-.Sh "Alt and Meta Keys"
+.Sh "Special Keyboard Keys"
+.LP
+Terminal keyboards have two types of keys:
+.bP
+ordinary keys, which you would use as data,
+e.g., in a text file, and
+.bP
+special keys, which you would use to tell \fI\*(xt\fP to perform some action.
+.LP
+\fI\*(XT\fP detects all of these keys via X key-press and key-release events.
+It uses the \fBtranslations\fP resource to decide what to do with these events.
+.bP
+Ordinary keys are handled with the
+\fBinsert-seven-bit\fP or
+\fBinsert-eight-bit\fP action.
+.bP
+Special keys may be handled with other resources.
+However, \fI\*(xt\fP also has built-in logic to map commonly-used
+special keys into characters which your keypress sends to the application
+running in \fI\*(xt\fP.
+.LP
+Special keyboard keys send control characters or escape sequences.
+This is a convention,
+making it convenient for applications to detect these keys,
+rather than a standard.
+.Ss "Alt and Meta Keys"
 .LP
 Many keyboards have keys labeled \*(``Alt\*(''.
 Few have keys labeled \*(``Meta\*(''.
@@ -2654,7 +2700,6 @@ This assumes \fBaltIsNotMeta\fP is set:
 .TS H
 center;
 lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
-_
 .TH
 .T&
 l | l | l | l .
@@ -2678,7 +2723,7 @@ Alt-x	ON	ON	\*(Es x
 Alt+Meta-x	ON	ON	\*(Es x
 _
 .TE
-.Sh "PC-Style Function Keys"
+.Ss "PC-Style Function Keys"
 .LP
 If \fI\*(xt\fP does minimal translation of the function keys,
 it usually does this
@@ -2884,7 +2929,7 @@ is not readily apparent, and
 .bP
 the scheme is not extensible, i.e., it is an \fIad hoc\fP
 assignment limited to two modifiers (\fIshift\fP and \fIcontrol\fP).
-.Sh "VT220-Style Function Keys"
+.Ss "VT220-Style Function Keys"
 .LP
 However, \fI\*(xt\fP is most useful as a DEC VT102 or VT220 emulator.
 Set the \fBsunKeyboard\fP resource to true to force a Sun/PC keyboard
@@ -2985,7 +3030,7 @@ F19	\*(Cs\*3\*3\*~
 F20	\*(Cs\*3\*4\*~
 _
 .TE
-.Sh "VT52-Style Function Keys"
+.Ss "VT52-Style Function Keys"
 .LP
 A VT52 does not have function keys,
 but it does have a numeric keypad and cursor keys.
@@ -3040,7 +3085,7 @@ PF4	\*(Es\*S	\*(Es\*S	no
 = (equal)	\*=	\*(Es\*?\*(XX	no
 _
 .TE
-.Sh "Sun-Style Function Keys"
+.Ss "Sun-Style Function Keys"
 .LP
 The \fI\*(xt\fP program provides support for Sun keyboards more directly, by
 a menu toggle that causes it to send Sun-style function key codes
@@ -3052,10 +3097,50 @@ For example, their wrap-margin behavior differs.
 Only function keys are altered; keypad and cursor keys are the same.
 The emulation responds identically.
 See the xterm-sun terminfo entry for details.
-.Sh "HP-Style Function Keys"
+.Ss "HP-Style Function Keys"
 .LP
 Similarly, \fI\*(xt\fP can be compiled to support HP keyboards.
 See the xterm-hp terminfo entry for details.
+.Ss "Non-Function Keys"
+.LP
+On a DEC terminal keyboard, some of the keys which one would expect
+to see labeled as function keys had special names.
+The keys actually send character sequences as if they were the
+expected function keys, but the special names are used in documentation.
+Because other keyboards may use those names,
+\fI\*(xt\fP maps the X key symbols which have the corresponding names
+into the character sequences which the original DEC keyboard would send.
+.LP
+These mappings are used for the DEC (VT220) and other keyboards:
+.TS H
+center;
+lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Label	DEC	SUN	HP	SCO
+_
+.TH
+.T&
+l | l | l | l | l .
+Up	\*(S3\*A	\*(S3\*A	\*(Es\*A	\*(Cs\*A
+Down	\*(S3\*(cB	\*(S3\*(cB	\*(Es\*(cB	\*(Cs\*(cB
+Right	\*(S3\*C	\*(S3\*C	\*(Es\*C	\*(Cs\*C
+Left	\*(S3\*D	\*(S3\*D	\*(Es\*D	\*(Cs\*D
+Clear	-	-	\*(Es\*J	-
+Find	\*(Cs\*1\*~	\*(Cs\*1\*z	\*(Es\*h	-
+Insert	\*(Cs\*2\*~	\*(Cs\*2\*z	\*(Es\*Q	\*(Cs\*L
+Delete	\*(Cs\*3\*~	\*(Cs\*3\*z	\*(Es\*P	-
+Keypad Insert	\*(Cs\*2\*~	\*(Cs\*2\*z	\*(Es\*Q	\*(Cs\*L
+Keypad Delete	\*(Cs\*3\*~	\*(Cs\*3\*z	\*(Es\*P	-
+Remove	\*(Cs\*3\*~	\*(Cs\*3\*z	\*(Es\*P	-
+Select	\*(Cs\*4\*~	\*(Cs\*4\*z	\*(Es\*F	-
+Prior	\*(Cs\*5\*~	\*(Cs\*2\*1\*6\*z	\*(Es\*T	\*(Cs\*I
+Next	\*(Cs\*6\*~	\*(Cs\*2\*2\*2\*z	\*(Es\*S	\*(Cs\*G
+Help	\*(Cs\*2\*8\*~	\*(Cs\*1\*9\*6\*z	-	-
+Menu	\*(Cs\*2\*9\*~	\*(Cs\*1\*9\*7\*z	-	-
+Home	-	\*(Cs\*2\*1\*4\*z	\*(Es\*h	\*(Cs\*H
+End	-	\*(Cs\*2\*2\*0\*z	\*(Es\*F	\*(Cs\*F
+Begin	-	\*(Cs\*2\*1\*8\*z	-	\*(Cs\*E
+_
+.TE
 .Sh "The Alternate Screen Buffer"
 .LP
 \fI\*(XT\fP maintains two screen buffers.
@@ -3268,8 +3353,8 @@ Release events for the wheel buttons are not reported.
 .LP
 By default,
 the wheel mouse events (buttons 4 and 5)
-are translated to \fIscroll-back\fP
-and \fIscroll-forw\fP actions, respectively.
+are translated to \fBscroll-back\fP
+and \fBscroll-forw\fP actions, respectively.
 Those actions normally scroll the whole window,
 as if the scrollbar was used.
 .LP
@@ -3467,7 +3552,8 @@ it is not an improvement over 1006.
 Use the same mouse response format as the 1006 control,
 but report position in \fIpixels\fP rather than character \fIcells\fP.
 .
-.Sh "Sixel Graphics"
+.Sh "Graphics"
+.Ss "Sixel Graphics"
 .LP
 If \fI\*(xt\fP is configured as
 VT240,
@@ -3512,7 +3598,7 @@ following the \*q with sixel data.
   \*(Ps \(-> sixel data
 .Ed
 .
-.Sh "ReGIS Graphics"
+.Ss "ReGIS Graphics"
 .LP
 If \fI\*(xt\fP is configured as
 VT125,
@@ -3554,7 +3640,8 @@ with four possible values:
   \*(Pm = 3 \(-> start new command, use command display mode.
 .Ed
 .
-.Sh "Tektronix 4014 Mode"
+.Sh "Non-VT100 Modes"
+.Ss "Tektronix 4014 Mode"
 .LP
 Most of these sequences are standard Tektronix 4014 control sequences.
 Graph mode supports the 12-bit addressing of the Tektronix 4014.
@@ -3704,7 +3791,7 @@ Alpha Mode (Ctrl-_).
 .Ed
 .
 .
-.Sh "VT52 Mode"
+.Ss "VT52 Mode"
 .LP
 Parameters for cursor movement are at the end of the \*(Es\*Y escape sequence.
 Each ordinate is encoded in a single character as \fIvalue\fP+32.
@@ -3816,7 +3903,7 @@ EK-VT420-RM-002,
 EK-VT520-RM A01,
 EK-VT100-TM-003, and
 EK-VT102-UG-003.
-The remaining documents were found on the bitsavers site.
+In addition, several documents were found on the bitsavers site.
 .bP
 .\" http://www.bitsavers.org/pdf/dec/terminal/vt52/EK-VT5X-OP-001_DECscope_Users_Manual_Mar77.pdf
 \fIDECscope User's Manual\fP.
@@ -3868,13 +3955,37 @@ Digital Equipment Corporation
 Digital Equipment Corporation
 (EK-VT3XX-TP-001, March 1987).
 .bP
-.\" https://vt100.net/docs/vt3xx-gp/
+.\" http://www.bitsavers.org/pdf/dec/terminal/vt340/EK-VT3XX-GP-001_VT330_VT340_Graphics_Programming_Mar87.pdf
 \fIVT330/VT340 Programmer Reference Manual\fP
 .br
 \fIVolume 2: Graphics Programming\fP.
 .br
 Digital Equipment Corporation
 (EK-VT3XX-GP-001, March 1987).
+.bP
+.\" https://vt100.net/docs/vt3xx-gp/
+\fIVT330/VT340 Programmer Reference Manual\fP
+.br
+\fIVolume 2: Graphics Programming\fP.
+.br
+Digital Equipment Corporation
+(EK-VT3XX-GP-002, May 1988).
+.bP
+.\" https://vt100.net/dec/ek-vt382-rm-001.pdf
+\fIVT382 Kanji Display Terminal\fP
+.br
+\fIProgrammer Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT382-RM-001).
+.bP
+.\" https://vt100.net/dec/ek-vt38t-ug-001.pdf
+\fIVT382 Thai Display Terminal\fP
+.br
+\fIInstalling and Using Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT38T-UG-001, August 1989).
 .bP
 .\" http://www.bitsavers.org/pdf/dec/terminal/vt420/EK-VT420-UG-001_Installing_and_Using_The_VT420_Video_Terminal_Nov89.pdf
 \fIInstalling and Using\fP
@@ -3916,6 +4027,15 @@ Digital Equipment Corporation
 Digital Equipment Corporation
 (EK-PPLV2-PM B01, August 1994).
 .bP
+.\" http://www.bitsavers.org/pdf/ibm/pc/dos/6936752_DOS_2.00_Jan83.pdf
+\fIDisk Operating System\fP
+.br
+DOS 2.00
+.br
+Microsoft, Inc.
+.br
+First edition, January 1983.
+.bP
 .\" https://vt100.net/manx/details/5,5479
 \fI4014 and 4014-1 Computer Display Terminal\fP
 .br
@@ -3929,6 +4049,28 @@ The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus \fIextensions\fP, e.g., \*(``private modes\*(''.
 Not all commonly-used features are standard.
 For example, scrolling regions are not found in ECMA-48.
+On the other hand, ECMA-48 was not intended to all-encompassing.
+Quoting from the second edition:
+.in +4n
+.sp
+.ft C
+Full conformance to a standard means that all its requirements are met.
+For such conformance to be unique the standard must contain no options.
+This is typically the case for hardware standards, for instance Standard
+ECMA-10 for data interchange on punched tapes.
+.sp
+This Standard ECMA-48 is of a different nature and as a result,
+it is only practicable to envisage limited conformance to it,
+as defined hereunder.
+.sp
+This Standard addresses a whole class of devices which can vary greatly
+from each other depending on the application for which a device has
+been specifically designed. Obviously, a
+product which implements all facilities described in this standard \[en]   
+thus being in \*(``full conformance\*('' with it \[en] whilst theoretically
+possible, would be technically and economically unthinkable.
+.ft R
+.in -4n
 .LP
 Again, it is possible to find discrepancies in the standards:
 .bP
@@ -3943,13 +4085,103 @@ but the documentation and dates are lacking).
 ECMA created a new PDF in April 2003 which changed that detail to use \*T,
 and later in 2008 provided PDFs of the earlier editions which used \*T.
 .bP
+The first edition of ECMA-48 has not been available, to compare.
+As of September 2021,
+ECMA's website provides a copy of ECMA-\fB46\fP in its place.
+.IP
+Earlier versions of ISO 6429 have never been available.
+The first three editions of ISO 6429 were issued in 1983, 1988, and 1992.
+.bP
+\fIANSI X3.64-1979\fP
+does not list color as a feature of the SGR sequence (page 49).
+.IP
+In Appendix A, it mentions ECMA-48:
+.in +4n
+.ft C
+.sp
+(8) This document represents a coordinated effort to develop a single technical
+standard in the United States and Europe (see ECMA-48 standard entitled
+\fIAdditional Controls for Character Imaging Input/Output Devices\fP).
+.in -4n
+.IP
+.ft R
+Appendix H clarifies the relationship between these documents somewhat
+though it confuses the first two editions of ECMA-48.
+The typo for \*(``work\*('' versus \*(``owkr\*(''
+appears in the original document:
+.in +4n
+.hy 0
+.sp
+.ft C
+ANSI X3.64-1979, and ECMA-48,
+\fIAdditional Controls for Character-Imaging I/O Devices\fP,
+were developed in parallel, with close liaison.
+ISO DP 6429, Additional Control Functions for Character-Imaging
+Devices, was developed as a synthesis of X3.04 and ECMA-48.
+During this process,
+some control functions as well as additional selective parameters were added.
+Except for point 1 below, X3.64 is a subset of ISO 6429.
+Although the two standards use different language,
+the intent is that the subset is technically identical.
+X3.64 was balloted and forwarded prior to the final resolution of ISO 6429
+and does not incorporate the \fIowkr\fP of IS0/TC97/SC2 in completing ISO 6429.
+Revision of X3.64 will attempt to incorporate those elements
+and assumptions of X3.64.
+.in -4n
+.ft R
+.IP
+ANSI X3.64 goes on to say that the SGR codes 8, 30-47 are in ISO 6429.
+It includes 38 and 39, but omits 48 and 49.
+At the time, ISO 6429's first edition was still four years in the future.
+The writer probably was referring to the ongoing process of making
+ECMA-48 second edition into the ISO standard.
+.bP
 The VT320, VT420, VT520 manuals claim that DECSCL does a
 hard reset (RIS).
 .IP
 Both the VT220 manual and DEC STD 070 (which documents
 levels 1-4 in detail) state that it is a soft reset, e.g., DECSTR.
+.bP
+The VT330/VT340 reference manual for graphics programming
+documents sixel scrolling in some detail in chapter 14.
+The VT382 Kanji and Thai manuals provide less information,
+but differ in their comment about the private mode
+DECSDM (\*(Cs\*?\*8\*0\*h),
+which each manual agrees should \fIset\fP the Sixel Scrolling feature.
+However, the VT330/VT340 manual says
+.RS
+.IP
+When sixel display mode is set, the Sixel Scrolling feature is enabled. 
+.RE
+.IP
+while the VT382 Kanji manual (page 6-6) says
+.RS
+.IP
+Disable sixel scroll
+.RE
+.IP
+and the VT382 Thai manual (page C-30) says
+.RS
+.IP
+No Sixel scrolling
+.RE
+.IP
+The standard (DEC STD 070) in chapter 9 (August 3, 1990)
+states on page 17 that video devices will scroll
+when advancing the Sixel active position past the bottom margin,
+but on page 19, in the section on deviations,
+states that VT125 and VT240 did not scroll in this situation.
+The standard does not mention VT330/VT340 or VT382.
+Nor does it document DECSDM.
 .LP
 Here are the relevant standards:
+.bP
+.\" https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub86.pdf
+\fIAdditional Controls for Use with American National Standard Code for Information Interchange, ANSI X3.64-1979\fP
+.br
+FIPS Publication 86. July 18, 1979.
+.br
+American National Standards Institute, Inc.
 .bP
 .\" https://www.ecma-international.org/publications/standards/Ecma-035.htm
 \fIECMA-35: Character Code Structure and Extension Techniques\fP
@@ -4024,7 +4256,7 @@ and added a few new ones.
 .TS
 l l l l l
 _ _ _ _ _
-l c c c l.
+l | c | c | c | l.
 \fBCode\fR	\fBSun\fR	\fBCDE	\*(XT	Description\fP
 \*(Cs\*1\*t	yes	yes	yes	de-iconify
 \*(Cs\*2\*t	yes	yes	yes	iconify
@@ -4057,6 +4289,7 @@ l c c c l.
 \*(Os\*I\*(ST	yes	yes	yes	set icon to file
 \*(Os\*l\*(ST	yes	yes	yes	set window title
 \*(Os\*L\*(ST	yes	yes	yes	set icon label
+_
 .TE
 .br
 Besides the Sun-derived OSC controls for setting window title and icon label,
@@ -4066,18 +4299,20 @@ The \fICDE\fP source was unavailable for inspection until 2012,
 so that clarification of the details of the window operations
 relied upon \fIvttest\fP.
 .bP
-The control sequences for saving/restoring the cursor and
-for saving/restoring \*(``DEC Private Mode Values\*('' may appear to be
+The SCOSC/SCORC control sequences for saving/restoring the cursor and
+for saving/restoring \*(``DEC Private Mode Values\*(''
+(XTSAVE and XTRESTORE)
+may appear to be
 related (since the \*(``save\*('' controls both end with \*(cs),
 but that is coincidental.
-The latter was introduced in X10.4:
+The latter was introduced in X10.4 (December 1986):
 .iP
 .RS
 .ft C
 .na
-Most Dec Private mode settings can be saved away internally using \\E[?ns,
-where n is the same number to set or reset the Dec Private mode.  The
-mode can be restored using \\E[?nr.  This can be used in termcap for vi, for
+Most Dec Private mode settings can be saved away internally using \\E[?\fIn\fPs,
+where \fIn\fP is the same number to set or reset the Dec Private mode.  The
+mode can be restored using \\E[?\fIn\fPr.  This can be used in termcap for \fBvi\fP, for
 example, to turn off saving of lines, but restore whatever the original
 state was on exit.
 .ad
@@ -4086,6 +4321,47 @@ state was on exit.
 .IP
 while the SCOSC/SCORC pair was added in 1995 by XFree86
 (and documented long afterwards).
+.IP
+The SCO \fIANSI\fP console terminal descriptions did not use these controls
+(they used the VT100-compatible SC/RC pair).
+SCOSC/SCORC were an artifact of DOS 2.00 (January 1983),
+by Microsoft and later supported by SCO and other vendors.
+.IP
+The SCOSC/SCORC pair is considered a \fIprivate mode\fP because the final
+characters (\*(cs and \*u) fall in the range from \*(``\`\*('' to \*(``~\*(''
+(octal 0140 to octal 0176).
+Other \fIprivate\fP control sequences can be constructed by using
+octets 074 to 077 (characters
+\*(``<\*('',
+\*(``=\*('',
+\*(``>\*('', or
+\*(``?\*('') at the beginning of the parameter string.
+The XTSAVE and XTRESTORE controls use \*(``?\*('') in this manner.
+.IP
+Because the XTSAVE and XTRESTORE controls are private,
+other terminals may behave differently.
+For example, DEC (a contributor to the early \fI\*(xt\fP as well as
+a manufacturer of terminals) used an incompatible
+private control in one of its terminals more than five years later
+(for the VT420 PCTerm, announced in February 1992).
+.IP
+In that model of the VT420,
+\*(Cs\*?\*(Pm\*;\*(Pc\*s\*r
+selects the \fIPC TERM\fP emulation mode.
+When this mode is enabled, the keyboard sends \fIscan codes\fP
+rather than characters (analogous to X keyboard events).
+The first parameter of this private control
+enables or disables \fIPC TERM\fP mode,
+while the second selects a character set.
+An ambiguity arises if an application omits the second parameter.
+In that special case, it cannot be distinguished from XTRESTORE.
+DEC did not take this into account when designing the feature.
+.IP
+If there were potential users, \fI\*(xt\fP could accommodate this
+by a resource setting.
+In retrospect (thirty years later),
+there have been no uses of \fIPC TERM\fP,
+while the XTRESTORE feature is still in use.
 .bP
 The \fIaixterm\fP manual page gives the format of the control sequence
 for foreground and background colors 8-15,

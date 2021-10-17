@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.233 2021/03/09 01:14:50 tom Exp $ */
+/* $XTermId: trace.c,v 1.234 2021/09/14 20:09:56 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -913,6 +913,13 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       (void *) ev->xnoexpose.display,
 	       ev->xnoexpose.major_code,
 	       ev->xnoexpose.minor_code));
+	break;
+    case GraphicsExpose:
+	TRACE((" send_event:%d display %p major:%d minor:%d",
+	       ev->xgraphicsexpose.send_event,
+	       (void *) ev->xgraphicsexpose.display,
+	       ev->xgraphicsexpose.major_code,
+	       ev->xgraphicsexpose.minor_code));
 	break;
     case SelectionClear:
 	TRACE((" selection:%s",

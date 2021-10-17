@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.379 2021/03/21 16:48:26 tom Exp $
+dnl $XTermId: configure.in,v 1.380 2021/08/22 19:49:13 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -714,8 +714,8 @@ CF_ARG_DISABLE(fifo-lines,
 	[enable_fifo_lines=no],
 	[enable_fifo_lines=yes])
 AC_MSG_RESULT($enable_fifo_lines)
-if test "$enable_fifo_lines" = yes ; then
-	AC_DEFINE(OPT_FIFO_LINES,1,[Define to 1 to disable FIFO-storage for saved-lines])
+if test "$enable_fifo_lines" != yes ; then
+	AC_MSG_WARN(this option has been deprecated)
 fi
 
 AC_MSG_CHECKING(if you want support for internationalization)

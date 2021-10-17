@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.636 2021/02/10 01:14:51 tom Exp $ */
+/* $XTermId: button.c,v 1.637 2021/08/12 00:33:06 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -79,17 +79,45 @@ button.c	Handles button events in the terminal emulator.
 #include <xstrings.h>
 
 #if OPT_SELECT_REGEX
-#ifdef HAVE_PCRE2POSIX_H
+#if defined(HAVE_PCRE2POSIX_H)
 #include <pcre2posix.h>
-#else
-#ifdef HAVE_PCREPOSIX_H
+
+/* pcre2 used to provide its "POSIX" entrypoints using the same names as the
+ * standard ones in the C runtime, but that never worked because the linker
+ * would use the C runtime.  Debian patched the library to fix this symbol
+ * conflict, but overlooked the header file, and Debian's patch was made
+ * obsolete when pcre2 was changed early in 2019 to provide different names.
+ *
+ * Here is a workaround to make the older version of Debian's package work.
+ */
+#if !defined(PCRE2regcomp) && defined(HAVE_PCRE2REGCOMP)
+
+#undef regcomp
+#undef regexec
+#undef regfree
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    PCRE2POSIX_EXP_DECL int PCRE2regcomp(regex_t *, const char *, int);
+    PCRE2POSIX_EXP_DECL int PCRE2regexec(const regex_t *, const char *, size_t,
+					 regmatch_t *, int);
+    PCRE2POSIX_EXP_DECL void PCRE2regfree(regex_t *);
+#ifdef __cplusplus
+}				/* extern "C" */
+#endif
+#define regcomp(r,s,n)          PCRE2regcomp(r,s,n)
+#define regexec(r,s,n,m,x)      PCRE2regexec(r,s,n,m,x)
+#define regfree(r)              PCRE2regfree(r)
+#endif
+/* end workaround... */
+#elif defined(HAVE_PCREPOSIX_H)
 #include <pcreposix.h>
 #else /* POSIX regex.h */
 #include <sys/types.h>
 #include <regex.h>
 #endif
-#endif
-#endif
+#endif /* OPT_SELECT_REGEX */
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/ConvertI.h>

@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.19 2021/02/25 23:20:05 tom Exp $ */
+/* $XTermId: svg.c,v 1.21 2021/09/19 18:22:57 tom Exp $ */
 
 /*
  * Copyright 2017-2020,2021	Thomas E. Dickey
@@ -166,8 +166,8 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 	}
 #endif
 
-	XQueryColor(xw->screen.display, xw->core.colormap, &fgcolor);
-	XQueryColor(xw->screen.display, xw->core.colormap, &bgcolor);
+	(void) QueryOneColor(xw, &fgcolor);
+	(void) QueryOneColor(xw, &bgcolor);
 	xevents(xw);
 
 	if (ld->attribs[col] & BLINK) {

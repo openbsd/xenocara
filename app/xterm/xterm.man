@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.844 2021/03/26 23:11:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.851 2021/09/07 00:02:12 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1628,7 +1628,8 @@ The default is
 and is limited to the range 1 through 100.
 .TP 8
 .B "cursorTheme\fP (class\fB CursorTheme\fP)"
-The Xcursor(__miscmansuffix__) library provides a way to 
+The Xcursor(__miscmansuffix__) library
+provides a way to change the pointer shape and size.
 The X11 library uses this library to extend the font- and glyph-cursor
 calls used by applications such as \fI\*n\fP  to substitute external
 files for the built-in \*(``core\*('' cursors provided by X.
@@ -2286,6 +2287,8 @@ user surprise.
 This key is generally unused in keyboard configurations,
 and has not acquired a standard meaning even when it is used in that manner.
 Consequently, users have assigned it for ad hoc purposes.
+.IP
+See also the \fBautoScrollLock\fP resource.
 .TP 8
 .B "allowSendEvents\fP (class\fB AllowSendEvents\fP)"
 Specifies whether or not synthetic key and button events (generated using
@@ -2454,6 +2457,14 @@ The reason for this resource is to help with
 certain quasi-automatically generated fonts
 (such as the ISO-10646-1 encoding of Terminus)
 which have incorrect font-metrics.
+.TP 8
+.B "autoScrollLock\fP (class\fB AutoScrollLock\fP)"
+If \*(``true\*('', \fI\*n\fR will maintain its viewport of displayed lines
+whenever displaying scrollback, as if \fBallowScrollLock\fP were enabled
+and the Scroll Lock key had been pressed.
+The default is \*(``false\*(''.
+This feature is only useful if the \fBscrollTtyOutput\fP resource is set to
+\*(``false\*(''.
 .TP 8
 .B "autoWrap\fP (class\fB AutoWrap\fP)"
 Specifies whether or not auto-wraparound should be enabled.
@@ -2650,6 +2661,22 @@ the whole screen.
 Like \fBtiXtraScroll\fP,
 the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback before wiping out the text.
+.IP
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+nothing is added to the scrollback.
+.TP
+true (1)
+the current screen is added to the scrollback.
+.TP
+trim (2)
+the current screen is added to the scrollback,
+but repeated blank lines are trimmed (reduced to a single blank line).
+.RE
+.IP
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "charClass\fP (class\fB CharClass\fP)"
@@ -4811,6 +4838,12 @@ That is normally \*(``mono\*(''.
 If the \fBfaceName\fP resource is set,
 then start by using the TrueType font rather than the bitmap font.
 .RE
+.TP 5
+defaultOff
+.br
+Enable the \*(``TrueType Fonts\*(''
+menu entry to allow runtime switching to/from TrueType fonts,
+but allow it to be initially unselected if no \fBfaceName\fP resource was given.
 .RE
 .TP 8
 .B "resizeByPixel\fP (class\fB ResizeByPixel\fP)"
@@ -5095,11 +5128,28 @@ The default is \*(``false\*(''.
 .TP 8
 .B "tiXtraScroll\fP (class\fB TiXtraScroll\fP)"
 Specifies whether \fI\*n\fP should scroll to a new page when processing
-the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
+the \fIti\fP or \fIte\fP termcap strings,
+i.e., the private modes 47, 1047 or 1049.
 This is only in effect if \fBtiteInhibit\fP is \*(``true\*('',
 because the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback without wiping out the text that
 would be shown before the application was initialized.
+.IP
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+nothing is added to the scrollback.
+.TP
+true (1)
+the current screen is added to the scrollback.
+.TP
+trim (2)
+the current screen is added to the scrollback,
+but repeated blank lines are trimmed (reduced to a single blank line).
+.RE
+.IP
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "titeInhibit\fP (class\fB TiteInhibit\fP)"
@@ -8850,7 +8900,7 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 228 in September 2020.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 234 in August 2021.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,

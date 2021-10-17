@@ -1,8 +1,8 @@
-/* $XTermId: graphics_sixel.c,v 1.28 2020/08/06 20:32:33 Ben.Wong Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.29 2021/08/10 00:39:26 tom Exp $ */
 
 /*
- * Copyright 2014-2016,2020 by Ross Combs
- * Copyright 2014-2016,2020 by Thomas E. Dickey
+ * Copyright 2014-2020,2021 by Ross Combs
+ * Copyright 2014-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -229,7 +229,7 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
     if (screen->scroll_amt)
 	FlushScroll(xw);
 
-    if (xw->keyboard.flags & MODE_DECSDM) {
+    if (SixelScrolling(xw)) {
 	int new_row, new_col;
 
 	if (screen->sixel_scrolls_right) {
@@ -340,7 +340,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
     /* default isn't white on the VT240, but not sure what it is */
     context.current_register = 3;	/* FIXME: using green, but not sure what it should be */
 
-    if (xw->keyboard.flags & MODE_DECSDM) {
+    if (SixelScrolling(xw)) {
 	TRACE(("sixel scrolling enabled: inline positioning for graphic at %d,%d\n",
 	       screen->cur_row, screen->cur_col));
 	graphic = get_new_graphic(xw, screen->cur_row, screen->cur_col, 0U);
@@ -487,7 +487,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	     * the remainder of the graphic depending on this setting.
 	     */
 	    if (scroll_lines > 0) {
-		if (xw->keyboard.flags & MODE_DECSDM) {
+		if (SixelScrolling(xw)) {
 		    Display *display = screen->display;
 		    xtermScroll(xw, scroll_lines);
 		    XSync(display, False);

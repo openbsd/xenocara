@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2021)
-               updated for XTerm Patch #367 (2021/03/23)
+               updated for XTerm Patch #369 (2021/09/11)
 
 
 
@@ -178,7 +178,7 @@ ESC _
 These control characters are used in the vtXXX emulation.
 
 
-VT100 Mode
+VT100-related terminals
 
 In this document, "VT100" refers not only to VT100/VT102, but also to
 the succession of upward-compatible terminals produced by DEC (Digital
@@ -197,7 +197,7 @@ provides for this will affect all windows.
 
 There are additional control sequences to provide xterm-dependent
 functions, such as the scrollbar or window size.  Where the function is
-specified by DEC or ECMA-48, the code assigned to it is given in
+specified by DEC or ECMA-48, the mnemonic assigned to it is given in
 parentheses.
 
 The escape codes to designate and invoke character sets are specified by
@@ -205,6 +205,9 @@ ISO 2022 (see that document for a discussion of character sets).
 
 Many of the features are optional; xterm can be configured and built
 without support for them.
+
+
+VT100 Mode
 
 
 Single-character functions
@@ -777,7 +780,7 @@ CSI ? Pm h
           VT420.  This sets the backarrowKey resource to "true".
             Ps = 6 9  -> Enable left and right margin mode (DECLRMM),
           VT420 and up.
-            Ps = 8 0  -> Enable Sixel Scrolling (DECSDM).
+            Ps = 8 0  -> Disable Sixel Scrolling (DECSDM).
             Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
@@ -906,7 +909,7 @@ CSI ? Pm l
           VT420.  This sets the backarrowKey resource to "false".
             Ps = 6 9  -> Disable left and right margin mode (DECLRMM),
           VT420 and up.
-            Ps = 8 0  -> Disable Sixel Scrolling (DECSDM).
+            Ps = 8 0  -> Enable Sixel Scrolling (DECSDM).
             Ps = 9 5  -> Clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Don't send Mouse X & Y on button press and
@@ -1325,6 +1328,11 @@ CSI ? Pm r
           of Ps previously saved is restored.  Ps values are the same as
           for DECSET.
 
+          Like Restore Cursor (DECRC), this uses a one-level cache.
+          Unlike Restore Cursor, specific settings can be saved and
+          restored independently.  Only those modes listed as parameters
+          are restored.
+
 CSI Pt ; Pl ; Pb ; Pr ; Ps $ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
@@ -1357,6 +1365,11 @@ CSI > Ps s
 CSI ? Pm s
           Save DEC Private Mode Values (XTSAVE), xterm.  Ps values are
           the same as for DECSET.
+
+          Like Save Cursor (DECSC), this uses a one-level cache.  Unlike
+          Save Cursor, specific settings can be saved and restored
+          independently.  Only those modes listed as parameters are
+          saved.
 
 CSI Ps ; Ps ; Ps t
           Window manipulation (XTWINOPS), dtterm, extended by xterm.
@@ -1690,11 +1703,13 @@ OSC Ps ; Pt ST
           in the form "prop=value", or just "prop" to delete the
           property.
             Ps = 4 ; c ; spec -> Change Color Number c to the color
-          specified by spec.  This can be a name or RGB specification as
-          per XParseColor.  Any number of c/spec pairs may be given.
-          The color numbers correspond to the ANSI colors 0-7, their
-          bright versions 8-15, and if supported, the remainder of the
-          88-color or 256-color table.
+          specified by spec.
+
+          The spec can be a name or RGB specification as per
+          XParseColor.  Any number of c/spec pairs may be given.  The
+          color numbers correspond to the ANSI colors 0-7, their bright
+          versions 8-15, and if supported, the remainder of the 88-color
+          or 256-color table.
 
           If a "?" is given rather than a name or RGB specification,
           xterm replies with a control sequence of the same form which
@@ -1703,11 +1718,12 @@ OSC Ps ; Pt ST
           control sequence, xterm can make more than one reply.
 
             Ps = 5 ; c ; spec -> Change Special Color Number c to the
-          color specified by spec.  This can be a name or RGB
-          specification as per XParseColor.  Any number of c/spec pairs
-          may be given.  The special colors can also be set by adding
-          the maximum number of colors to these codes in an OSC 4
-          control:
+          color specified by spec.
+
+          The spec parameter can be a name or RGB specification as per
+          XParseColor.  Any number of c/spec pairs may be given.  The
+          special colors can also be set by adding the maximum number of
+          colors (e.g., 88 or 256) to these codes in an OSC 4  control:
 
               Pc = 0  <- resource colorBD (BOLD).
               Pc = 1  <- resource colorUL (UNDERLINE).
@@ -1719,6 +1735,8 @@ OSC Ps ; Pt ST
           The second parameter tells xterm to enable the corresponding
           color mode if nonzero, disable it if zero.  OSC 6  is the same
           as OSC 1 0 6 .
+
+          If no parameters are given, this control has no effect.
 
           The 10 colors (below) which may be set or queried using 1 0
           through 1 9  are denoted dynamic colors, since the
@@ -1780,13 +1798,14 @@ OSC Ps ; Pt ST
           be disabled using the allowWindowOps resource.  The parameter
           Pt is parsed as
                Pc ; Pd
+
           The first, Pc, may contain zero or more characters from the
           set c , p , q , s , 0 , 1 , 2 , 3 , 4 , 5 , 6 , and 7 .  It is
           used to construct a list of selection parameters for
-          clipboard, primary, secondary, select, or cut buffers 0
+          clipboard, primary, secondary, select, or cut-buffers 0
           through 7 respectively, in the order given.  If the parameter
           is empty, xterm uses s 0 , to specify the configurable
-          primary/clipboard selection and cut buffer 0.
+          primary/clipboard selection and cut-buffer 0.
 
           The second parameter, Pd, gives the selection data.  Normally
           this is a string encoded in base64 (RFC-4648).  The data
@@ -1815,6 +1834,8 @@ OSC Ps ; Pt ST
           5  control (or by adding the maximum number of colors using an
           OSC 4  control).
 
+          If no parameters are given, all special colors will be reset.
+
             Ps = 1 0 6 ; c ; f -> Enable/disable Special Color Number c.
           The second parameter tells xterm to enable the corresponding
           color mode if nonzero, disable it if zero.
@@ -1825,6 +1846,8 @@ OSC Ps ; Pt ST
               Pc = 3  <- resource colorRVMode (REVERSE).
               Pc = 4  <- resource colorITMode (ITALIC).
               Pc = 5  <- resource colorAttrMode (Override ANSI).
+
+          If no parameters are given, this control has no effect.
 
           The dynamic colors can also be reset to their default
           (resource) values:
@@ -1852,6 +1875,33 @@ Privacy Message
 
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not
           be printable characters.
+
+
+Special Keyboard Keys
+
+Terminal keyboards have two types of keys:
+
+o   ordinary keys, which you would use as data, e.g., in a text file,
+    and
+
+o   special keys, which you would use to tell xterm to perform some
+    action.
+
+XTerm detects all of these keys via X key-press and key-release events.
+It uses the translations resource to decide what to do with these
+events.
+
+o   Ordinary keys are handled with the insert-seven-bit or insert-eight-
+    bit action.
+
+o   Special keys may be handled with other resources.  However, xterm
+    also has built-in logic to map commonly-used special keys into
+    characters which your keypress sends to the application running in
+    xterm.
+
+Special keyboard keys send control characters or escape sequences.  This
+is a convention, making it convenient for applications to detect these
+keys, rather than a standard.
 
 
 Alt and Meta Keys
@@ -1909,7 +1959,6 @@ The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes altIsNotMeta is set:
 
-       -----------------------------------------------------------
        key          altSendsEscape   metaSendsEscape   result
        -----------+----------------+-----------------+------------
        x          | off            | off             | x
@@ -2240,6 +2289,43 @@ HP-Style Function Keys
 
 Similarly, xterm can be compiled to support HP keyboards.  See the
 xterm-hp terminfo entry for details.
+
+
+Non-Function Keys
+
+On a DEC terminal keyboard, some of the keys which one would expect to
+see labeled as function keys had special names.  The keys actually send
+character sequences as if they were the expected function keys, but the
+special names are used in documentation.  Because other keyboards may
+use those names, xterm maps the X key symbols which have the
+corresponding names into the character sequences which the original DEC
+keyboard would send.
+
+These mappings are used for the DEC (VT220) and other keyboards:
+
+     Label           DEC          SUN            HP         SCO
+     --------------+------------+--------------+----------+----------
+     Up            | SS3 A      | SS3 A        | ESC A    | CSI A
+     Down          | SS3 B      | SS3 B        | ESC B    | CSI B
+     Right         | SS3 C      | SS3 C        | ESC C    | CSI C
+     Left          | SS3 D      | SS3 D        | ESC D    | CSI D
+     Clear         | -          | -            | ESC J    | -
+     Find          | CSI 1 ~    | CSI 1 z      | ESC h    | -
+     Insert        | CSI 2 ~    | CSI 2 z      | ESC Q    | CSI L
+     Delete        | CSI 3 ~    | CSI 3 z      | ESC P    | -
+     Keypad Insert | CSI 2 ~    | CSI 2 z      | ESC Q    | CSI L
+     Keypad Delete | CSI 3 ~    | CSI 3 z      | ESC P    | -
+     Remove        | CSI 3 ~    | CSI 3 z      | ESC P    | -
+     Select        | CSI 4 ~    | CSI 4 z      | ESC F    | -
+     Prior         | CSI 5 ~    | CSI 2 1 6 z  | ESC T    | CSI I
+     Next          | CSI 6 ~    | CSI 2 2 2 z  | ESC S    | CSI G
+     Help          | CSI 2 8 ~  | CSI 1 9 6 z  | -        | -
+     Menu          | CSI 2 9 ~  | CSI 1 9 7 z  | -        | -
+     Home          | -          | CSI 2 1 4 z  | ESC h    | CSI H
+     End           | -          | CSI 2 2 0 z  | ESC F    | CSI F
+     Begin         | -          | CSI 2 1 8 z  | -        | CSI E
+     --------------+------------+--------------+----------+----------
+
 
 
 The Alternate Screen Buffer
@@ -2607,6 +2693,9 @@ SGR-Pixels (1016)
           report position in pixels rather than character cells.
 
 
+Graphics
+
+
 Sixel Graphics
 
 If xterm is configured as VT240, VT241, VT330, VT340 or VT382 using the
@@ -2673,6 +2762,9 @@ DCS Pm p Pr..Pr ST
             Pm = 1 -> start new command, use fullscreen mode.
             Pm = 2 -> resume command, use command display mode.
             Pm = 3 -> start new command, use command display mode.
+
+
+Non-VT100 Modes
 
 
 Tektronix 4014 Mode
@@ -2864,8 +2956,8 @@ the technical references were limited to EK-VT220-HR-002 and EK-
 VT420-UG.002.  Shortly after, Richard Shuford sent a copy of EK-VT3XX-
 TP-001.  Still later (beginning in 2003), Paul Williams' vt100.net site
 provided EK-VT102-UG-003, EK-VT220-RM-002, EK-VT420-RM-002, EK-VT520-RM
-A01, EK-VT100-TM-003, and EK-VT102-UG-003.  The remaining documents were
-found on the bitsavers site.
+A01, EK-VT100-TM-003, and EK-VT102-UG-003.  In addition, several
+documents were found on the bitsavers site.
 
 o   DECscope User's Manual.
     Digital Equipment Corporation (EK-VT5X-OP-001 1975).
@@ -2896,6 +2988,18 @@ o   VT330/VT340 Programmer Reference Manual
     Volume 2: Graphics Programming.
     Digital Equipment Corporation (EK-VT3XX-GP-001, March 1987).
 
+o   VT330/VT340 Programmer Reference Manual
+    Volume 2: Graphics Programming.
+    Digital Equipment Corporation (EK-VT3XX-GP-002, May 1988).
+
+o   VT382 Kanji Display Terminal
+    Programmer Reference Manual.
+    Digital Equipment Corporation (EK-VT382-RM-001).
+
+o   VT382 Thai Display Terminal
+    Installing and Using Manual.
+    Digital Equipment Corporation (EK-VT38T-UG-001, August 1989).
+
 o   Installing and Using
     The VT420 Video Terminal
     (North American Model).
@@ -2916,6 +3020,11 @@ o   Digital ANSI-Compliant Printing Protocol
     Level 2 Programming Reference Manual
     Digital Equipment Corporation (EK-PPLV2-PM B01, August 1994).
 
+o   Disk Operating System
+    DOS 2.00
+    Microsoft, Inc.
+    First edition, January 1983.
+
 o   4014 and 4014-1 Computer Display Terminal
     User's Manual.
     Tektronix, Inc.  (070-1647-00, November 1979).
@@ -2926,7 +3035,24 @@ Standards
 The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus extensions, e.g., "private modes".  Not all
 commonly-used features are standard.  For example, scrolling regions are
-not found in ECMA-48.
+not found in ECMA-48.  On the other hand, ECMA-48 was not intended to
+all-encompassing.  Quoting from the second edition:
+
+    Full conformance to a standard means that all its requirements are
+    met.  For such conformance to be unique the standard must contain no
+    options.  This is typically the case for hardware standards, for
+    instance Standard ECMA-10 for data interchange on punched tapes.
+
+    This Standard ECMA-48 is of a different nature and as a result, it
+    is only practicable to envisage limited conformance to it, as
+    defined hereunder.
+
+    This Standard addresses a whole class of devices which can vary
+    greatly from each other depending on the application for which a
+    device has been specifically designed. Obviously, a product which
+    implements all facilities described in this standard - thus being in
+    "full conformance" with it - whilst theoretically possible, would be
+    technically and economically unthinkable.
 
 Again, it is possible to find discrepancies in the standards:
 
@@ -2941,13 +3067,84 @@ o   The printed ECMA-48 5th edition (1991) and the first PDF produced
     use T , and later in 2008 provided PDFs of the earlier editions
     which used T .
 
+o   The first edition of ECMA-48 has not been available, to compare.  As
+    of September 2021, ECMA's website provides a copy of ECMA-46 in its
+    place.
+
+    Earlier versions of ISO 6429 have never been available.  The first
+    three editions of ISO 6429 were issued in 1983, 1988, and 1992.
+
+o   ANSI X3.64-1979 does not list color as a feature of the SGR sequence
+    (page 49).
+
+    In Appendix A, it mentions ECMA-48:
+
+        (8) This document represents a coordinated effort to develop a
+        single technical standard in the United States and Europe (see
+        ECMA-48 standard entitled Additional Controls for Character
+        Imaging Input/Output Devices).
+
+    Appendix H clarifies the relationship between these documents
+    somewhat though it confuses the first two editions of ECMA-48.  The
+    typo for "work" versus "owkr" appears in the original document:
+
+        ANSI X3.64-1979, and ECMA-48, Additional Controls for Character-
+        Imaging I/O Devices, were developed in parallel, with close
+        liaison.  ISO DP 6429, Additional Control Functions for
+        Character-Imaging Devices, was developed as a synthesis of X3.04
+        and ECMA-48.  During this process, some control functions as
+        well as additional selective parameters were added.  Except for
+        point 1 below, X3.64 is a subset of ISO 6429.  Although the two
+        standards use different language, the intent is that the subset
+        is technically identical.  X3.64 was balloted and forwarded
+        prior to the final resolution of ISO 6429 and does not
+        incorporate the owkr of IS0/TC97/SC2 in completing ISO 6429.
+        Revision of X3.64 will attempt to incorporate those elements and
+        assumptions of X3.64.
+
+    ANSI X3.64 goes on to say that the SGR codes 8, 30-47 are in ISO
+    6429.  It includes 38 and 39, but omits 48 and 49.  At the time, ISO
+    6429's first edition was still four years in the future.  The writer
+    probably was referring to the ongoing process of making ECMA-48
+    second edition into the ISO standard.
+
 o   The VT320, VT420, VT520 manuals claim that DECSCL does a hard reset
     (RIS).
 
     Both the VT220 manual and DEC STD 070 (which documents levels 1-4 in
     detail) state that it is a soft reset, e.g., DECSTR.
 
+o   The VT330/VT340 reference manual for graphics programming documents
+    sixel scrolling in some detail in chapter 14.  The VT382 Kanji and
+    Thai manuals provide less information, but differ in their comment
+    about the private mode DECSDM (CSI ? 8 0 h ), which each manual
+    agrees should set the Sixel Scrolling feature.  However, the
+    VT330/VT340 manual says
+
+              When sixel display mode is set, the Sixel Scrolling
+              feature is enabled.
+
+    while the VT382 Kanji manual (page 6-6) says
+
+              Disable sixel scroll
+
+    and the VT382 Thai manual (page C-30) says
+
+              No Sixel scrolling
+
+    The standard (DEC STD 070) in chapter 9 (August 3, 1990) states on
+    page 17 that video devices will scroll when advancing the Sixel
+    active position past the bottom margin, but on page 19, in the
+    section on deviations, states that VT125 and VT240 did not scroll in
+    this situation.  The standard does not mention VT330/VT340 or VT382.
+    Nor does it document DECSDM.
+
 Here are the relevant standards:
+
+o   Additional Controls for Use with American National Standard Code for
+    Information Interchange, ANSI X3.64-1979
+    FIPS Publication 86. July 18, 1979.
+    American National Standards Institute, Inc.
 
 o   ECMA-35: Character Code Structure and Extension Techniques
     (6th Edition, December 1994).
@@ -3005,38 +3202,39 @@ o   XTerm supports control sequences for manipulating its window which
     those, and added a few new ones.
 
     Code         Sun   CDE   XTerm   Description
-    -----------------------------------------------------------------
-    CSI 1 t      yes   yes    yes    de-iconify
-    CSI 2 t      yes   yes    yes    iconify
-    CSI 3 t      yes   yes    yes    move window to pixel-position
-    CSI 4 t      yes   yes    yes    resize window in pixels
-    CSI 5 t      yes   yes    yes    raise window to front of stack
-    CSI 6 t      yes   yes    yes    raise window to back of stack
-    CSI 7 t      yes   yes    yes    refresh window
-    CSI 8 t      yes   yes    yes    resize window in chars
-    CSI 9 t       -     -     yes    maximize/unmaximize window
-    CSI 1 0 t     -     -     yes    to/from full-screen
-    CSI 1 1 t    yes   yes    yes    report if window is iconified
-    CSI 1 2 t     -     -      -     -
-    CSI 1 3 t    yes   yes    yes    report window position
-    CSI 1 4 t    yes   yes    yes    report window size in pixels
-    CSI 1 5 t     -     -     yes    report screen size in pixels
-    CSI 1 6 t     -     -     yes    report character cell in pixels
-    CSI 1 7 t     -     -      -     -
-    CSI 1 8 t    yes   yes    yes    report window size in chars
-    CSI 1 9 t     -     -     yes    report screen size in chars
-    CSI 2 0 t     -    yes    yes    report icon label
-    CSI 2 1 t     -    yes    yes    report window title
-    CSI 2 2 t     -     -     yes    save window/icon title
-    CSI 2 3 t     -     -     yes    restore window/icon title
-    CSI 2 4 t     -     -     yes    resize window (DECSLPP)
-    OSC 0 ST      -    yes    yes    set window and icon title
-    OSC 1 ST      -    yes    yes    set icon label
-    OSC 2 ST      -    yes    yes    set window title
-    OSC 3 ST      -    n/a    yes    set X server property
-    OSC I ST     yes   yes    yes    set icon to file
-    OSC l ST     yes   yes    yes    set window title
-    OSC L ST     yes   yes    yes    set icon label
+    -----------+-----+-----+-------+---------------------------------
+    CSI 1 t    | yes | yes |  yes  | de-iconify
+    CSI 2 t    | yes | yes |  yes  | iconify
+    CSI 3 t    | yes | yes |  yes  | move window to pixel-position
+    CSI 4 t    | yes | yes |  yes  | resize window in pixels
+    CSI 5 t    | yes | yes |  yes  | raise window to front of stack
+    CSI 6 t    | yes | yes |  yes  | raise window to back of stack
+    CSI 7 t    | yes | yes |  yes  | refresh window
+    CSI 8 t    | yes | yes |  yes  | resize window in chars
+    CSI 9 t    |  -  |  -  |  yes  | maximize/unmaximize window
+    CSI 1 0 t  |  -  |  -  |  yes  | to/from full-screen
+    CSI 1 1 t  | yes | yes |  yes  | report if window is iconified
+    CSI 1 2 t  |  -  |  -  |   -   | -
+    CSI 1 3 t  | yes | yes |  yes  | report window position
+    CSI 1 4 t  | yes | yes |  yes  | report window size in pixels
+    CSI 1 5 t  |  -  |  -  |  yes  | report screen size in pixels
+    CSI 1 6 t  |  -  |  -  |  yes  | report character cell in pixels
+    CSI 1 7 t  |  -  |  -  |   -   | -
+    CSI 1 8 t  | yes | yes |  yes  | report window size in chars
+    CSI 1 9 t  |  -  |  -  |  yes  | report screen size in chars
+    CSI 2 0 t  |  -  | yes |  yes  | report icon label
+    CSI 2 1 t  |  -  | yes |  yes  | report window title
+    CSI 2 2 t  |  -  |  -  |  yes  | save window/icon title
+    CSI 2 3 t  |  -  |  -  |  yes  | restore window/icon title
+    CSI 2 4 t  |  -  |  -  |  yes  | resize window (DECSLPP)
+    OSC 0 ST   |  -  | yes |  yes  | set window and icon title
+    OSC 1 ST   |  -  | yes |  yes  | set icon label
+    OSC 2 ST   |  -  | yes |  yes  | set window title
+    OSC 3 ST   |  -  | n/a |  yes  | set X server property
+    OSC I ST   | yes | yes |  yes  | set icon to file
+    OSC l ST   | yes | yes |  yes  | set window title
+    OSC L ST   | yes | yes |  yes  | set icon label
+    -----------+-----+-----+-------+---------------------------------
 
     Besides the Sun-derived OSC controls for setting window title and
     icon label, dtterm also supported the xterm controls for the same
@@ -3046,10 +3244,11 @@ o   XTerm supports control sequences for manipulating its window which
     clarification of the details of the window operations relied upon
     vttest.
 
-o   The control sequences for saving/restoring the cursor and for
-    saving/restoring "DEC Private Mode Values" may appear to be related
-    (since the "save" controls both end with s ), but that is
-    coincidental.  The latter was introduced in X10.4:
+o   The SCOSC/SCORC control sequences for saving/restoring the cursor
+    and for saving/restoring "DEC Private Mode Values" (XTSAVE and
+    XTRESTORE) may appear to be related (since the "save" controls both
+    end with s ), but that is coincidental.  The latter was introduced
+    in X10.4 (December 1986):
 
         Most Dec Private mode settings can be saved away internally
         using \E[?ns, where n is the same number to set or reset the Dec
@@ -3059,6 +3258,38 @@ o   The control sequences for saving/restoring the cursor and for
 
     while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
+
+    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
+    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
+    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
+    supported by SCO and other vendors.
+
+    The SCOSC/SCORC pair is considered a private mode because the  final
+    characters (s  and u ) fall in the range from "`" to "~" (octal 0140
+    to octal 0176).  Other private control sequences can be  constructed
+    by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
+    beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
+    controls use "?") in this manner.
+
+    Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
+    terminals may behave differently.  For example, DEC  (a  contributor
+    to  the  early xterm as well as a manufacturer of terminals) used an
+    incompatible private control in one of its terminals more than  five
+    years later (for the VT420 PCTerm, announced in February 1992).
+
+    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
+    emulation mode.  When this mode is enabled, the keyboard sends  scan
+    codes  rather than characters (analogous to X keyboard events).  The
+    first parameter of this private control enables or disables PC  TERM
+    mode, while the second selects a character set.  An ambiguity arises
+    if an application omits the second parameter.  In that special case,
+    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
+    into account when designing the feature.
+
+    If there were potential users, xterm could  accommodate  this  by  a
+    resource  setting.   In  retrospect (thirty years later), there have
+    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
+    use.
 
 o   The aixterm manual page gives the format of the control sequence for
     foreground and background colors 8-15, but  does  not  specify  what

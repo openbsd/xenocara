@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1030 2021/03/21 22:11:10 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1040 2021/09/16 20:43:29 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -552,10 +552,6 @@ typedef enum {
 #define OPT_COLOR_CLASS 1 /* true if xterm uses separate color-resource classes */
 #endif
 
-#ifndef OPT_COLOR_RES
-#define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
-#endif
-
 #ifndef OPT_DABBREV
 #define OPT_DABBREV 0	/* dynamic abbreviations */
 #endif
@@ -614,10 +610,6 @@ typedef enum {
 
 #ifndef OPT_EXTRA_PASTE
 #define OPT_EXTRA_PASTE 1
-#endif
-
-#ifndef OPT_FIFO_LINES
-#define OPT_FIFO_LINES 1 /* optimize save-lines feature using FIFO */
 #endif
 
 #ifndef OPT_FOCUS_EVENT
@@ -752,10 +744,6 @@ typedef enum {
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
 
-#ifndef OPT_SAVE_LINES
-#define OPT_SAVE_LINES OPT_FIFO_LINES /* optimize save-lines feature */
-#endif
-
 #ifndef OPT_SCO_FUNC_KEYS
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
 #endif
@@ -858,21 +846,6 @@ typedef enum {
 /* You must have ANSI/ISO colors to support AIX colors */
 #undef  OPT_AIX_COLORS
 #define OPT_AIX_COLORS 0
-#endif
-
-#if OPT_COLOR_RES && !OPT_ISO_COLORS
-/* You must have ANSI/ISO colors to support ColorRes logic */
-#undef  OPT_COLOR_RES
-#define OPT_COLOR_RES 0
-#endif
-
-#if OPT_256_COLORS && (OPT_WIDE_CHARS || OPT_RENDERFONT || OPT_XMC_GLITCH)
-/* It's actually more complicated than that - but by trimming options you can
- * have 256 color resources though.
- */
-#define OPT_COLOR_RES2 1
-#else
-#define OPT_COLOR_RES2 0
 #endif
 
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
@@ -1532,13 +1505,8 @@ typedef enum {
 #define COLOR_RES_CLASS(root) XtCForeground
 #endif
 
-#if OPT_COLOR_RES
 #define COLOR_RES(root,offset,value) Sres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset.resource, value)
 #define COLOR_RES2(name,class,offset,value) Sres(name, class, offset.resource, value)
-#else
-#define COLOR_RES(root,offset,value) Cres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset, value)
-#define COLOR_RES2(name,class,offset,value) Cres(name, class, offset, value)
-#endif
 
 #define CLICK_RES_NAME(count)  "on" count "Clicks"
 #define CLICK_RES_CLASS(count) "On" count "Clicks"
@@ -1946,6 +1914,7 @@ typedef enum {
 	erFalse = 0
 	, erTrue
 	, erDefault
+	, erDefaultOff
 	, erLast
 } RenderFont;
 
@@ -2095,16 +2064,12 @@ typedef enum {
 
 #define NUM_POPUP_MENUS 4
 
-#if OPT_COLOR_RES
 typedef struct {
 	String		resource;
 	Pixel		value;
 	unsigned short red, green, blue;
 	int		mode;		/* -1=invalid, 0=unset, 1=set   */
 } ColorRes;
-#else
-#define ColorRes Pixel
-#endif
 
 /* these are set in getPrinterFlags */
 typedef struct {
@@ -2731,6 +2696,7 @@ typedef struct {
 #if OPT_SCROLL_LOCK
 	Boolean		allowScrollLock;/* ScrollLock mode		*/
 	Boolean		allowScrollLock0;/* initial ScrollLock mode	*/
+	Boolean		autoScrollLock; /* Auto ScrollLock mode		*/
 	Boolean		scroll_lock;	/* true to keep buffer in view	*/
 	Boolean		scroll_dirty;	/* scrolling makes screen dirty	*/
 #endif
@@ -3019,6 +2985,13 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
     , ebLast
 } ebMetaModeTypes;
 
+typedef enum {			/* legal values for misc.cdXtraScroll */
+    edFalse = 0
+    , edTrue = 1
+    , edTrim = 2
+    , edLast
+} edXtraScrollTypes;
+
 #define NAME_OLD_KT " legacy"
 
 #if OPT_HP_FUNC_KEYS
@@ -3137,10 +3110,12 @@ typedef struct _Misc {
     Boolean useRight;
 #endif
     Boolean titeInhibit;
-    Boolean tiXtraScroll;	/* scroll on ti/te */
-    Boolean cdXtraScroll;	/* scroll on cd (clear-display) */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
+    int cdXtraScroll;		/* scroll on cd (clear-display) */
+    char *cdXtraScroll_s;
+    int tiXtraScroll;		/* scroll on ti/te (init/end-cup) */
+    char *tiXtraScroll_s;
 #if OPT_INPUT_METHOD
     char* f_x;			/* font for XIM */
     char* input_method;
@@ -3407,7 +3382,6 @@ typedef struct _TekWidgetRec {
 /* The following attribute is used in the argument of xtermSpecialFont etc */
 #define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
 
-
 /*
  * Groups of attributes
  */
@@ -3432,6 +3406,11 @@ typedef struct _TekWidgetRec {
 #else
 #define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
+
+/*
+ * Sixel-scrolling is backwards, perhaps from an error in the hardware design.
+ */
+#define SixelScrolling(xw) (!((xw)->keyboard.flags & MODE_DECSDM))
 
 /*
  * Per-line flags

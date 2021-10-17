@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.94 2021/02/25 23:42:01 tom Exp $ */
+/* $XTermId: graphics.c,v 1.95 2021/09/19 18:57:09 tom Exp $ */
 
 /*
  * Copyright 2013-2020,2021 by Ross Combs
@@ -852,7 +852,7 @@ get_new_or_matching_graphic(XtermWidget xw,
     return graphic;
 }
 
-#define ScaleForXColor(s) (unsigned short) ((long)(s) * MAX_U_COLOR / CHANNEL_MAX)
+#define ScaleForXColor(s) (unsigned short) ((unsigned long)(s) * MAX_U_COLOR / CHANNEL_MAX)
 
 static int
 save_allocated_color(const ColorRegister *reg, XtermWidget xw, Pixel *pix)
