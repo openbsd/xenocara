@@ -700,7 +700,7 @@ void parse_args(
     }
 
     if (infilename) {
-	f = open(infilename, O_RDONLY|O_BINARY, 0);
+	f = open(infilename, O_RDONLY|O_BINARY);
 	if (f < 0) {
 	    fprintf(stderr, "xpr: error opening \"%s\" for input\n",
 		    infilename);
@@ -716,7 +716,7 @@ void parse_args(
 	if (!(*flags & F_APPEND)) {
 	    f = open(output_filename, O_CREAT|O_WRONLY|O_TRUNC, 0664);
 	} else {
-	    f = open(output_filename, O_WRONLY, 0);
+	    f = open(output_filename, O_WRONLY);
 	}
 	if (f < 0) {
 	    fprintf(stderr, "xpr: error opening \"%s\" for output\n",

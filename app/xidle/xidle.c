@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.9 2019/04/02 14:16:37 kn Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.10 2021/10/25 09:30:33 matthieu Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -345,7 +345,7 @@ main(int argc, char **argv)
 	signal(SIGTERM, handler);
 	signal(SIGUSR1, handler);
 
-	fd = open(_PATH_DEVNULL, O_RDWR, 0);
+	fd = open(_PATH_DEVNULL, O_RDWR);
 	if (fd < 0)
 		err(1, _PATH_DEVNULL);
 	dup2(fd, STDIN_FILENO);

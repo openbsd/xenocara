@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.40 2021/02/16 13:57:41 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.41 2021/10/25 09:30:33 matthieu Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -784,7 +784,7 @@ dev_check_caps(struct video *vid)
 	struct dev *d = &vid->dev;
 	struct v4l2_capability cap;
 
-	if ((d->fd = open(d->path, O_RDWR, 0)) < 0) {
+	if ((d->fd = open(d->path, O_RDWR)) < 0) {
 		warn("%s", d->path);
 		return 0;
 	}
@@ -1624,7 +1624,7 @@ setup(struct video *vid)
 		if (!strcmp(vid->iofile, "-"))
 			vid->iofile_fd = STDIN_FILENO;
 		else
-			vid->iofile_fd = open(vid->iofile, O_RDONLY, 0);
+			vid->iofile_fd = open(vid->iofile, O_RDONLY);
 	} else if (vid->mode & M_OUT_FILE) {
 		if (!strcmp(vid->iofile, "-"))
 			vid->iofile_fd = STDOUT_FILENO;
