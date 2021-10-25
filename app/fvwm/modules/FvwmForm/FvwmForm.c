@@ -1512,7 +1512,7 @@ int main (int argc, char **argv)
   fd_err = open(".FvwmFormErrors", O_WRONLY | O_CREAT, 0777);
   fp_err = fdopen(fd_err, "w");
 #else
-  fd_err = open("/dev/null", O_WRONLY, 0);
+  fd_err = open("/dev/null", O_WRONLY);
   fp_err = fdopen(fd_err, "w");
 #endif
 
