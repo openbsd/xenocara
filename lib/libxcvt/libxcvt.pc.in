@@ -1,0 +1,9 @@
+prefix=@PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libxcvt
+Description: A Library to generate VESA CVT standard timing modelines.
+Version: @VERSION@
+Libs: -L${libdir} -lxcvt
+Cflags: -I${includedir}
