@@ -32,9 +32,17 @@ typedef uint16_t khronos_uint16_t;
 typedef uint32_t khronos_uint32_t;
 typedef uint64_t khronos_uint64_t;
 typedef float khronos_float_t;
-typedef long khronos_intptr_t;
-typedef long khronos_ssize_t;
-typedef unsigned long khronos_usize_t;
+#ifdef _WIN64
+typedef signed   long long int khronos_intptr_t;
+typedef unsigned long long int khronos_uintptr_t;
+typedef signed   long long int khronos_ssize_t;
+typedef unsigned long long int khronos_usize_t;
+#else
+typedef signed   long int      khronos_intptr_t;
+typedef unsigned long int      khronos_uintptr_t;
+typedef signed   long int      khronos_ssize_t;
+typedef unsigned long int      khronos_usize_t;
+#endif
 typedef uint64_t khronos_utime_nanoseconds_t;
 typedef int64_t khronos_stime_nanoseconds_t;
 #define KHRONOS_MAX_ENUM 0x7FFFFFFF
@@ -43,7 +51,6 @@ typedef enum {
     KHRONOS_TRUE  = 1,
     KHRONOS_BOOLEAN_ENUM_FORCE_SIZE = KHRONOS_MAX_ENUM
 } khronos_boolean_enum_t;
-typedef uintptr_t khronos_uintptr_t;
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
 typedef unsigned int GLbitfield;

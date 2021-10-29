@@ -1,11 +1,11 @@
-project('libepoxy', 'c', version: '1.5.4',
+project('libepoxy', 'c', version: '1.5.9',
         default_options: [
           'buildtype=debugoptimized',
           'c_std=gnu99',
           'warning_level=1',
         ],
         license: 'MIT',
-        meson_version: '>= 0.47.0')
+        meson_version: '>= 0.54.0')
 
 epoxy_version = meson.project_version().split('.')
 epoxy_major_version = epoxy_version[0].to_int()
@@ -196,14 +196,8 @@ if host_system == 'windows'
   gdi32_dep = cc.find_library('gdi32', required: true)
 endif
 
-# Python
-python = import('python3').find_python()
-if not python.found()
-  python = find_program('python', required: true)
-endif
-
 # Generates the dispatch tables
-gen_dispatch_py = files('src/gen_dispatch.py')
+gen_dispatch_py = find_program('src/gen_dispatch.py')
 
 gl_registry = files('registry/gl.xml')
 egl_registry = files('registry/egl.xml')

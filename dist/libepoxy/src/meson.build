@@ -33,7 +33,6 @@ foreach g: generated_sources
                             input: registry,
                             output: [ gen_source ],
                             command: [
-                              python,
                               gen_dispatch_py,
                               '--source',
                               '--no-header',
@@ -54,9 +53,7 @@ if host_system == 'linux' and cc.get_id() == 'gcc'
 endif
 
 # Maintain compatibility with autotools; see: https://github.com/anholt/libepoxy/issues/108
-if host_system == 'darwin'
-  common_ldflags += [ '-compatibility_version 1', '-current_version 1.0', ]
-endif
+darwin_versions = [1, '1.0']
 
 epoxy_deps = [ dl_dep, ]
 if host_system == 'windows'
@@ -67,6 +64,7 @@ libepoxy = library(
   'epoxy',
   sources: epoxy_sources + epoxy_headers,
   version: '0.0.0',
+  darwin_versions: darwin_versions,
   install: true,
   dependencies: epoxy_deps,
   include_directories: libepoxy_inc,
@@ -74,16 +72,21 @@ libepoxy = library(
   link_args: common_ldflags,
 )
 
+epoxy_has_glx = build_glx ? '1' : '0'
+epoxy_has_egl = build_egl ? '1' : '0'
+epoxy_has_wgl = build_wgl ? '1' : '0'
+
 libepoxy_dep = declare_dependency(
   link_with: libepoxy,
   include_directories: libepoxy_inc,
   dependencies: epoxy_deps,
   sources: epoxy_headers,
+  variables: {
+    'epoxy_has_glx': epoxy_has_glx,
+    'epoxy_has_egl': epoxy_has_egl,
+    'epoxy_has_wgl': epoxy_has_wgl,
+  },
 )
-
-epoxy_has_glx = build_glx ? '1' : '0'
-epoxy_has_egl = build_egl ? '1' : '0'
-epoxy_has_wgl = build_wgl ? '1' : '0'
 
 # We don't want to add these dependencies to the library, as they are
 # not needed when building Epoxy; we do want to add them to the generated

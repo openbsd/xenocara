@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2020/01/26 13:45:49 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2021/10/29 15:57:09 matthieu Exp $
 .include <bsd.xconf.mk>
 
 EPOXY=	${.CURDIR}/../../dist/libepoxy
@@ -7,7 +7,7 @@ LIB=	epoxy
 
 EPOXY_MAJOR=	1
 EPOXY_MINOR=	5
-EPOXY_TINY=	4
+EPOXY_TINY=	9
 
 INCSDIR=	${X11BASE}/include/epoxy
 
