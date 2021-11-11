@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.55 2020/11/11 09:27:24 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.56 2021/11/11 08:22:03 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 23.4.17
+FT_VERSION_INFO= 24.0.18
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -23,7 +23,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftpatent.c ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c \
 	ftsynth.c ftsystem.c fttype1.c ftwinfnt.c autofit.c bdf.c \
 	cff.c ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
-	raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c \
+	raster.c sdf.c sfnt.c smooth.c truetype.c type1.c type1cid.c \
 	type42.c winfnt.c
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY -DFT_CONFIG_CONFIG_H='<ftconfig.h>'
@@ -99,6 +99,7 @@ NOPROFILE=
 .PATH:  ${FREETYPESRC}/pshinter
 .PATH:  ${FREETYPESRC}/psnames
 .PATH:  ${FREETYPESRC}/raster
+.PATH:  ${FREETYPESRC}/sdf
 .PATH:  ${FREETYPESRC}/sfnt
 .PATH:  ${FREETYPESRC}/smooth
 .PATH:  ${FREETYPESRC}/truetype
