@@ -93,8 +93,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libXfixesincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libXfixes_la_DEPENDENCIES =
-am_libXfixes_la_OBJECTS = Cursor.lo Region.lo SaveSet.lo Selection.lo \
-	Xfixes.lo
+am_libXfixes_la_OBJECTS = Cursor.lo Disconnect.lo Region.lo SaveSet.lo \
+	Selection.lo Xfixes.lo
 libXfixes_la_OBJECTS = $(am_libXfixes_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -280,6 +280,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -291,6 +292,7 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libXfixes.la
 libXfixes_la_SOURCES = \
 	Cursor.c	\
+	Disconnect.c	\
 	Region.c	\
 	SaveSet.c	\
 	Selection.c	\
@@ -381,6 +383,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Disconnect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Region.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SaveSet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Selection.Plo@am__quote@

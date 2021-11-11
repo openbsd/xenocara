@@ -32,8 +32,8 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xfixes.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXfixes, [5.0.3],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXfixes])
+AC_INIT(libXfixes, [6.0.0],
+	[https://gitlab.freedesktop.org/xorg/lib/libXfixes/issues], [libXfixes])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

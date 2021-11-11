@@ -1,3 +1,83 @@
+commit 6fe3bd64dd82f704ed91478acb4c99ab5c00be16
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed May 12 09:34:39 2021 +1000
+
+    libXfixes 6.0.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 883f89dd39dcdae9a38e46f74a43b316180c8a19
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Mar 11 09:27:06 2021 +0100
+
+    xfixes: Add ClientDisconnectMode
+    
+    The Xserver itself is capable of terminating itself once all X11 clients
+    are gone, yet in a typical full session, there are a number of X11
+    clients running continuously (e.g. the Xsettings daemon, IBus, etc.).
+    
+    Those always-running clients will prevent the Xserver from terminating,
+    because the actual number of X11 clients will never drop to 0.
+    
+    To solve this issue directly at the Xserver level, this add new entries
+    to the XFixes extension to let the X11 clients themselves specify the
+    disconnect mode they expect.
+    
+    Typically, those X11 daemon clients would specify the disconnect mode
+    XFixesClientDisconnectFlagTerminate to let the Xserver know that they
+    should not be accounted for when checking the remaining clients prior
+    to terminate.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
+commit 174a94975af710247719310cfc53bd13e1f3b44d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 12:39:31 2019 -0700
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e238b40bbef0664d281432c19634df39a19b1ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 21:58:32 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9b75d74c3e78c5df70c512786d1ee6db45975aa
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6f950642597f2f1f509c339861d9f40baf28c39b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 65845c5fc7098f9232cd356248aebc7db9a38095
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 84df9cb81cc31bbed27ba241a23ae04f61da57db
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Oct 4 21:11:55 2016 +0200
