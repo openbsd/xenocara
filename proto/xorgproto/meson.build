@@ -18,77 +18,90 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-project('xorgproto', 'c', license : 'MIT', version : '2019.2')
-pkg = import('pkgconfig')
+# keep version in sync with configure.ac
+project('xorgproto', 'c', license : 'MIT', version : '2021.5')
 cc = meson.get_compiler('c')
-sed = find_program('sed')
 
 pcs = [
-        ['applewmproto',        '1.4.2'],
-        ['bigreqsproto',        '1.1.2'],
-        ['compositeproto',      '0.4.2'],
-        ['damageproto',         '1.2.1'],
-        ['dmxproto',            '2.3.1'],
-        ['dri2proto',           '2.8'],
-        ['dri3proto',           '1.2'],
-        ['fixesproto',          '5.0'],
-        ['fontsproto',          '2.1.3'],
-        ['glproto',             '1.4.17'],
-        ['inputproto',          '2.3.2'],
-        ['kbproto',             '1.0.7'],
-        ['presentproto',        '1.2'],
-        ['randrproto',          '1.6.0'],
-        ['recordproto',         '1.14.2'],
-        ['renderproto',         '0.11.1'],
-        ['resourceproto',       '1.2.0'],
-        ['scrnsaverproto',      '1.2.2'],
-        ['trapproto',           '3.4.3'],
-        ['videoproto',          '2.3.3'],
-        ['xcmiscproto',         '1.2.2'],
-        ['xextproto',           '7.3.0'],
-        ['xf86bigfontproto',    '1.2.0'],
-        ['xf86dgaproto',        '2.1'],
-        ['xf86driproto',        '2.1.1'],
-        ['xf86miscproto',       '0.9.3'],
-        ['xf86vidmodeproto',    '2.3.1'],
-        ['xineramaproto',       '1.2.1'],
-        ['xproto',              '7.0.32'],
-        ['xproxymngproto',      '1.0.3'],
+        'applewmproto',
+        'bigreqsproto',
+        'compositeproto',
+        'damageproto',
+        'dmxproto',
+        'dpmsproto',
+        'dri2proto',
+        'dri3proto',
+        'fixesproto',
+        'fontsproto',
+        'glproto',
+        'inputproto',
+        'kbproto',
+        'presentproto',
+        'randrproto',
+        'recordproto',
+        'renderproto',
+        'resourceproto',
+        'scrnsaverproto',
+        'videoproto',
+        'xcmiscproto',
+        'xextproto',
+        'xf86bigfontproto',
+        'xf86dgaproto',
+        'xf86driproto',
+        'xf86vidmodeproto',
+        'xineramaproto',
+        'xproto',
 ]
 
+pc_data = configuration_data()
+pc_data.set('prefix', get_option('prefix'))
+# meson does not allow installing the includedir outside of the prefix
+pc_data.set('includedir', '${prefix}/' + get_option('includedir'))
+
 foreach pc : pcs
-    if pc[0] == 'xf86driproto'
-        subdir = 'X11/dri'
-    else
-        subdir = ''
-    endif
-    pkg.generate(
-        name : pc[0],
-        filebase : pc[0],
-        description : pc[0] + ' headers',
-        version : pc[1],
+    configure_file(
+        input : pc + '.pc.in',
+        output : pc + '.pc',
         install_dir : get_option('datadir') + '/pkgconfig',
-        subdirs : subdir,
+        configuration : pc_data,
     )
 endforeach
 
+
+docs = files('compositeproto.txt',
+             'damageproto.txt',
+             'dri2proto.txt',
+             'dri3proto.txt',
+             'fixesproto.txt',
+             'PM_spec',
+             'presentproto.txt',
+             'randrproto.txt',
+             'renderproto.txt',
+             'resproto.txt',
+             'xv-protocol-v2.txt')
+install_data(docs,
+             install_dir: get_option('datadir') / 'doc' / 'xorgproto')
+
+
 if get_option('legacy') == true
     legacy_pcs = [
-        ['evieproto', '1.1.1'],
-        ['fontcacheproto', '0.1.3'],
-        ['lg3dproto', '5.0'],
-        ['printproto', '1.0.5'],
-        ['windowswmproto', '1.0.4'],
-        ['xcalibrateproto', '0.1.0'],
-        ['xf86rushproto', '1.2.2'],
+        'evieproto',
+        'fontcacheproto',
+        'lg3dproto',
+        'printproto',
+        'trapproto',
+        'windowswmproto',
+        'xcalibrateproto',
+        'xf86miscproto',
+        'xf86rushproto',
+        'xproxymngproto',
     ]
     foreach pc : legacy_pcs
-        pkg.generate(
-            name : pc[0],
-            filebase : pc[0],
-            description : pc[0] + ' headers',
-            version : pc[1],
-            install_dir : get_option('datadir') + '/pkgconfig'
+        configure_file(
+            input : pc + '.pc.in',
+            output : pc + '.pc',
+            install_dir : get_option('datadir') + '/pkgconfig',
+            configuration : pc_data,
         )
     endforeach
 endif
@@ -98,3 +111,8 @@ ext_xorgproto = declare_dependency(
 )
 
 subdir('include')
+
+keysymfile = join_paths(meson.source_root(), 'include', 'X11', 'XF86keysym.h')
+test('evdev-keysym-check',
+     find_program('scripts/keysym-generator.py'),
+     args: ['-v', '--header', keysymfile, 'verify'])

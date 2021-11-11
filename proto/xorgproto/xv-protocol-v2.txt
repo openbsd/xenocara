@@ -551,7 +551,7 @@
     motion video.  If motion is False, the requested size is intended
     for use with stills only.
 
-    The retuned size is also chosen to maintain the requested aspect ratio
+    The returned size is also chosen to maintain the requested aspect ratio
     if possible.
 
     Errors: {Port}

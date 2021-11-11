@@ -23,7 +23,7 @@ HTML generation can be done like this:
     <refpurpose>The "X print service" - a portable, network-transparent printing system based on the X11 protocol</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
-    <para>Xprint is a very flexible, extensible, scaleable, client/server
+    <para>Xprint is a very flexible, extensible, scalable, client/server
      print system based on ISO 10175 (and some other specs) and the X11
      rendering protocol.
      Using Xprint an application can search, query and use devices like
@@ -316,7 +316,7 @@ HTML generation can be done like this:
       <itemizedlist>
         <listitem>
           <para>
-            how many printers will be accessable through the printer
+            how many printers will be accessible through the printer
             subsystem on any given machine.  A system administrator may
             choose to cluster printers on a few given machines, or
             scatter them across an organization and possibly make
@@ -380,7 +380,7 @@ HTML generation can be done like this:
           <para>
             Startup would likely be done at session login or by
             launching actions or processes manually once the user
-            logs in.  Note: Deamons like "dtpdmd" must be started after Xprt.
+            logs in.  Note: Daemons like "dtpdmd" must be started after Xprt.
           </para>
         </listitem>
       </itemizedlist>

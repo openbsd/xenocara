@@ -190,7 +190,7 @@ SelectCursorInput
 	Servers supporting the X Input Extension Version 2.0 or higher only
 	notify the clients of cursor change events for the ClientPointer, not
 	of any other master pointer (see Section 4.4. in the XI2 protocol
-	specificiation).
+	specification).
 
 GetCursorImage
 
@@ -639,6 +639,63 @@ DestroyPointerBarrier
 	Destroys the named barrier.
 
 	Errors: Barrier 
+
+************* XFIXES VERSION 6 OR BETTER ***********
+
+13. Disconnect mode
+
+The X11 server is capable of terminating itself once all X11 clients are
+gone.
+
+Yet, in a typical user session, there are a number of X11 clients running
+continuously (e.g. Xsettings daemon, IBus, etc.). Those always-running
+clients will prevent the X11 server from terminating, because the actual
+number of X11 clients will never drop to 0.
+
+Disconnect mode allows the X11 clients themselves to specify that they
+should not be accounted for when checking the remaining clients prior
+to terminate the X11 server.
+
+This can be particularly useful for Wayland compositors which are able to
+start Xwayland on demand, as this allows Xwayland to terminate automatically
+when the relevant X11 clients have quit.
+
+13.1 Types
+
+	XFixesClientDisconnectFlags
+
+		XFixesClientDisconnectFlagDefault:	    0
+		XFixesClientDisconnectFlagTerminate:	    1 << 0
+
+	XFixesClientDisconnectFlagDefault is the default behavior for
+	regular clients, i.e. the X11 server won't terminate as long as such
+	clients are still connected.
+
+	XFixesClientDisconnectFlagTerminate indicates to the X11 server that
+	it can ignore the client and terminate itself even though the client
+	is still connected to the X11 server.
+
+13.2 Requests
+
+SetClientDisconnectMode
+
+		disconnect-mode:	    CARD32
+
+	Sets the disconnect mode for the client.
+
+	The disconnect-mode is a bit mask of XFixesClientDisconnectFlags.
+
+
+GetClientDisconnectMode
+
+	Gets the disconnect mode for the client.
+
+		->
+
+		disconnect-mode:	    CARD32
+
+	The disconnect-mode is a bit mask of XFixesClientDisconnectFlags.
+
 
 99. Future compatibility
 

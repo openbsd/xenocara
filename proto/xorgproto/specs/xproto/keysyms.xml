@@ -1181,7 +1181,7 @@ terminals.
 
 <para>
 The KEYSYM number range #x10000000 to #x1FFFFFFF is available for
-vendor-specific extentions. Among these, the range #x11000000 to
+vendor-specific extensions. Among these, the range #x11000000 to
 #x1100FFFF is designated for keypad KEYSYMs.
 </para>
 </sect1>

@@ -1,8 +1,7 @@
 prefix=@prefix@
-exec_prefix=@exec_prefix@
 includedir=@includedir@
  
 Name: InputProto
 Description: Input extension headers
-Version: 2.3.2
+Version: 2.3.99.2
 Cflags: -I${includedir}

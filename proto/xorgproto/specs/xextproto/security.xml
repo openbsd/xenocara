@@ -530,7 +530,7 @@ a root window destination.)
          </para>
          <orderedlist>
            <listitem>
-             <para>The propogate field of SendEvent is False.</para>
+             <para>The propagate field of SendEvent is False.</para>
            </listitem>
            <listitem>
              <para>
@@ -838,7 +838,7 @@ forward client connections to servers that do not meet the criteria.
 To use this authorization method, the client (or proxy) sends
 "XC-QUERY-SECURITY-1" as the authorization-protocol-name in the initial
 connection setup message. The authorization-protocol-data may be empty or
-may contain additional security criteria desribed below. If the success
+may contain additional security criteria described below. If the success
 field of the server's reply is Authenticate, the server supports the
 security extension, and the server meets all specified additional security
 criteria. In this case, the client should resend the initial connection
@@ -1289,7 +1289,7 @@ name and name_length fields of auth_in should be initialized to the
 authorization protocol name and its length in characters respectively.
 If there is authorization data, the data and data_length fields of
 auth_in should be initialized to the data and its length in characters
-respectivley. The library does not assume that name and data are
+respectively. The library does not assume that name and data are
 null-terminated strings. The auth_in argument must be freed with
 <xref linkend='XSecurityFreeXauth' xrefstyle='select: title'/>.
 </para>
@@ -1380,7 +1380,7 @@ name that was passed in, and the data and data_length fields will be set to
 the authorization data returned by the server. The caller should not assume
 that name and data are null-terminated strings. If no authorization data was
 returned by the server, the data and data_length fields will be set to NULL
-and zero repectively. The returned Xauth structure must be freed with
+and zero respectively. The returned Xauth structure must be freed with
 <xref linkend='XSecurityFreeXauth' xrefstyle='select: title'/>; the caller should not use any other
 means free the structure or any of its components. The auth_id_return
 argument will be filled in with the non-zero authorization id of the created

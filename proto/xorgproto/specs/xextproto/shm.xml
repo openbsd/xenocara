@@ -81,7 +81,7 @@ be able to use this extension, your system must provide the SYSV shared
 memory primitives.  There is not an mmap-based version of this extension.
 To use shared memory on Sun systems, you must have built your kernel with
 SYSV shared memory enabled -- which is not the default configuration.
-Additionally, the shared memeory maximum size will need to be increased on
+Additionally, the shared memory maximum size will need to be increased on
 both Sun and Digital systems; the defaults are far too small for any useful
 work.
 </para>

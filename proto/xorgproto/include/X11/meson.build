@@ -18,15 +18,13 @@ elif cc.has_member('fd_set', '__fds_bits', prefix: fd_set_headers)
 else
     error('Your fd_set is too weird.')
 endif
-custom_target('Xpoll.h',
-              capture : true,
-              install : true,
-              install_dir : get_option('includedir') + '/X11',
-              input : 'Xpoll.h.in',
-              output : 'Xpoll.h',
-              command : [ sed,
-                          's/@USE_FDS_BITS@/' + fds_bits + '/g',
-                          '@INPUT@'])
+xpoll_config = configuration_data()
+xpoll_config.set('USE_FDS_BITS', fds_bits)
+configure_file(input : 'Xpoll.h.in',
+               output : 'Xpoll.h',
+               install : true,
+               install_dir : get_option('includedir') + '/X11',
+               configuration: xpoll_config)
 
 install_headers(
     'ap_keysym.h',
@@ -59,4 +57,6 @@ install_headers(
 subdir('dri')
 subdir('extensions')
 subdir('fonts')
-subdir('PM')
+if get_option('legacy') == true
+    subdir('PM')
+endif

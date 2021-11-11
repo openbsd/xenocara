@@ -1,4 +1,25 @@
 if APPLEWM
+SED = sed
+
+XORGRELSTRING = @PACKAGE_STRING@
+  XORGMANNAME = X Version 11
+
+MAN_SUBSTS = \
+        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+        -e 's|__datadir__|$(datadir)|g' \
+        -e 's|__libdir__|$(libdir)|g' \
+        -e 's|__sysconfdir__|$(sysconfdir)|g' \
+        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
+        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
+        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
+
+SUFFIXES = .$(MISC_MAN_SUFFIX) .man
+
+.man.$(MISC_MAN_SUFFIX): man
+	$(MKDIR_P) man
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
 applewmdir = $(includedir)/X11/extensions
 applewm_HEADERS = \
         include/X11/extensions/applewmconst.h \
@@ -15,16 +36,6 @@ bigreqs_HEADERS = \
 
 bigreqsprotopkgconfigdir = $(datadir)/pkgconfig
 bigreqsprotopkgconfig_DATA = bigreqsproto.pc
-
-if LEGACY
-XCalibrateincludedir = $(includedir)/X11/extensions
-XCalibrateinclude_HEADERS = \
-	include/X11/extensions/xcalibrateproto.h \
-	include/X11/extensions/xcalibratewire.h
-
-calibrateprotopkgconfigdir = $(datadir)/pkgconfig
-calibrateprotopkgconfig_DATA = xcalibrateproto.pc
-endif
 
 compositedir = $(includedir)/X11/extensions
 composite_HEADERS = \
@@ -50,6 +61,9 @@ dmx_HEADERS = \
 dmxprotopkgconfigdir = $(datadir)/pkgconfig
 dmxprotopkgconfig_DATA = dmxproto.pc
 
+dpmsprotopkgconfigdir = $(datadir)/pkgconfig
+dpmsprotopkgconfig_DATA = dpmsproto.pc
+
 dri2dir = $(includedir)/X11/extensions
 dri2_HEADERS = \
 	include/X11/extensions/dri2proto.h \
@@ -65,16 +79,6 @@ dri3_HEADERS = \
 dri3protopkgconfigdir = $(datadir)/pkgconfig
 dri3protopkgconfig_DATA = dri3proto.pc
 
-if LEGACY
-eviedir = $(includedir)/X11/extensions
-evie_HEADERS = \
-	include/X11/extensions/evieproto.h \
-	include/X11/extensions/Xeviestr.h
-
-evieprotopkgconfigdir = $(datadir)/pkgconfig
-evieprotopkgconfig_DATA = evieproto.pc
-endif
-
 fixesdir = $(includedir)/X11/extensions
 fixes_HEADERS = \
 	include/X11/extensions/xfixesproto.h \
@@ -82,17 +86,6 @@ fixes_HEADERS = \
 
 fixesprotopkgconfigdir = $(datadir)/pkgconfig
 fixesprotopkgconfig_DATA = fixesproto.pc
-
-if LEGACY
-fontcachedir = $(includedir)/X11/extensions
-fontcache_HEADERS = \
-	include/X11/extensions/fontcache.h \
-	include/X11/extensions/fontcacheP.h \
-	include/X11/extensions/fontcachstr.h
-
-fontcacheprotopkgconfigdir = $(datadir)/pkgconfig
-fontcacheprotopkgconfig_DATA = fontcacheproto.pc
-endif
 
 fontsdir = $(includedir)/X11/fonts
 fonts_HEADERS = \
@@ -143,23 +136,6 @@ endif
 kbprotopkgconfigdir = $(datadir)/pkgconfig
 kbprotopkgconfig_DATA = kbproto.pc
 
-if LEGACY
-lg3ddir = $(includedir)/X11/extensions
-lg3d_HEADERS = \
-	include/X11/extensions/lgewire.h
-
-lg3dprotopkgconfigdir = $(datadir)/pkgconfig
-lg3dprotopkgconfig_DATA = lg3dproto.pc
-
-xproxymngdir = $(includedir)/X11/PM
-xproxymng_HEADERS = \
-	include/X11/PM/PM.h \
-	include/X11/PM/PMproto.h
-
-pmprotopkgconfigdir = $(datadir)/pkgconfig
-pmprotopkgconfig_DATA = xproxymngproto.pc
-endif
-
 presentdir = $(includedir)/X11/extensions
 present_HEADERS = \
 	include/X11/extensions/presentproto.h \
@@ -167,41 +143,6 @@ present_HEADERS = \
 
 presentprotopkgconfigdir = $(datadir)/pkgconfig
 presentprotopkgconfig_DATA = presentproto.pc
-
-if LEGACY
-printdir = $(includedir)/X11/extensions
-print_HEADERS = \
-	include/X11/extensions/Print.h \
-	include/X11/extensions/Printstr.h
-
-printprotopkgconfigdir = $(datadir)/pkgconfig
-printprotopkgconfig_DATA = printproto.pc
-
-miscmandir = $(MISC_MAN_DIR)
-miscman_DATA =	man/Xprint.$(MISC_MAN_SUFFIX)
-CLEANFILES = $(miscman_DATA)
-endif
-
-SED = sed
-
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-        -e 's|__datadir__|$(datadir)|g' \
-        -e 's|__libdir__|$(libdir)|g' \
-        -e 's|__sysconfdir__|$(sysconfdir)|g' \
-        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
-
-SUFFIXES = .$(MISC_MAN_SUFFIX) .man
-
-.man.$(MISC_MAN_SUFFIX): man
-	$(MKDIR_P) man
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 randrdir = $(includedir)/X11/extensions
 randr_HEADERS = \
@@ -243,21 +184,6 @@ scrnsaver_HEADERS = \
 scrnsaverprotopkgconfigdir = $(datadir)/pkgconfig
 scrnsaverprotopkgconfig_DATA = scrnsaverproto.pc
 
-if LEGACY
-trapdir = $(includedir)/X11/extensions
-trap_HEADERS = \
-	include/X11/extensions/xtrapbits.h \
-	include/X11/extensions/xtrapddmi.h \
-	include/X11/extensions/xtrapdi.h \
-	include/X11/extensions/xtrapemacros.h \
-	include/X11/extensions/xtraplib.h \
-	include/X11/extensions/xtraplibp.h \
-	include/X11/extensions/xtrapproto.h
-
-trapprotopkgconfigdir = $(datadir)/pkgconfig
-trapprotopkgconfig_DATA = trapproto.pc
-endif
-
 videodir = $(includedir)/X11/extensions
 video_HEADERS = \
 	include/X11/extensions/Xv.h \
@@ -270,16 +196,6 @@ endif
 
 videoprotopkgconfigdir = $(datadir)/pkgconfig
 videoprotopkgconfig_DATA = videoproto.pc
-
-if LEGACY
-windowswmdir = $(includedir)/X11/extensions
-windowswm_HEADERS = \
-        include/X11/extensions/windowswm.h \
-	include/X11/extensions/windowswmstr.h
-
-windowswmprotopkgconfigdir = $(datadir)/pkgconfig
-windowswmprotopkgconfig_DATA = windowswmproto.pc
-endif
 
 xprotodir = $(includedir)/X11
 xproto_HEADERS = \
@@ -398,7 +314,96 @@ xf86dri_HEADERS = \
 xf86driprotopkgconfigdir = $(datadir)/pkgconfig
 xf86driprotopkgconfig_DATA = xf86driproto.pc
 
+xf86vidmodedir = $(includedir)/X11/extensions
+xf86vidmode_HEADERS = \
+	include/X11/extensions/xf86vm.h \
+	include/X11/extensions/xf86vmproto.h \
+	include/X11/extensions/xf86vmstr.h
+
+xf86vidmodeprotopkgconfigdir = $(datadir)/pkgconfig
+xf86vidmodeprotopkgconfig_DATA = xf86vidmodeproto.pc
+
+xineramadir = $(includedir)/X11/extensions
+xinerama_HEADERS = \
+	include/X11/extensions/panoramiXproto.h
+
+xineramaprotopkgconfigdir = $(datadir)/pkgconfig
+xineramaprotopkgconfig_DATA = xineramaproto.pc
+
 if LEGACY
+XCalibrateincludedir = $(includedir)/X11/extensions
+XCalibrateinclude_HEADERS = \
+	include/X11/extensions/xcalibrateproto.h \
+	include/X11/extensions/xcalibratewire.h
+
+calibrateprotopkgconfigdir = $(datadir)/pkgconfig
+calibrateprotopkgconfig_DATA = xcalibrateproto.pc
+
+eviedir = $(includedir)/X11/extensions
+evie_HEADERS = \
+	include/X11/extensions/evieproto.h \
+	include/X11/extensions/Xeviestr.h
+
+evieprotopkgconfigdir = $(datadir)/pkgconfig
+evieprotopkgconfig_DATA = evieproto.pc
+
+fontcachedir = $(includedir)/X11/extensions
+fontcache_HEADERS = \
+	include/X11/extensions/fontcache.h \
+	include/X11/extensions/fontcacheP.h \
+	include/X11/extensions/fontcachstr.h
+
+fontcacheprotopkgconfigdir = $(datadir)/pkgconfig
+fontcacheprotopkgconfig_DATA = fontcacheproto.pc
+
+lg3ddir = $(includedir)/X11/extensions
+lg3d_HEADERS = \
+	include/X11/extensions/lgewire.h
+
+lg3dprotopkgconfigdir = $(datadir)/pkgconfig
+lg3dprotopkgconfig_DATA = lg3dproto.pc
+
+xproxymngdir = $(includedir)/X11/PM
+xproxymng_HEADERS = \
+	include/X11/PM/PM.h \
+	include/X11/PM/PMproto.h
+
+pmprotopkgconfigdir = $(datadir)/pkgconfig
+pmprotopkgconfig_DATA = xproxymngproto.pc
+
+printdir = $(includedir)/X11/extensions
+print_HEADERS = \
+	include/X11/extensions/Print.h \
+	include/X11/extensions/Printstr.h
+
+printprotopkgconfigdir = $(datadir)/pkgconfig
+printprotopkgconfig_DATA = printproto.pc
+
+miscmandir = $(MISC_MAN_DIR)
+miscman_DATA =	man/Xprint.$(MISC_MAN_SUFFIX)
+CLEANFILES = $(miscman_DATA)
+
+trapdir = $(includedir)/X11/extensions
+trap_HEADERS = \
+	include/X11/extensions/xtrapbits.h \
+	include/X11/extensions/xtrapddmi.h \
+	include/X11/extensions/xtrapdi.h \
+	include/X11/extensions/xtrapemacros.h \
+	include/X11/extensions/xtraplib.h \
+	include/X11/extensions/xtraplibp.h \
+	include/X11/extensions/xtrapproto.h
+
+trapprotopkgconfigdir = $(datadir)/pkgconfig
+trapprotopkgconfig_DATA = trapproto.pc
+
+windowswmdir = $(includedir)/X11/extensions
+windowswm_HEADERS = \
+        include/X11/extensions/windowswm.h \
+	include/X11/extensions/windowswmstr.h
+
+windowswmprotopkgconfigdir = $(datadir)/pkgconfig
+windowswmprotopkgconfig_DATA = windowswmproto.pc
+
 xf86miscdir = $(includedir)/X11/extensions
 xf86misc_HEADERS = \
 	include/X11/extensions/xf86misc.h \
@@ -415,22 +420,6 @@ xf86rush_HEADERS = \
 xf86rushprotopkgconfigdir = $(datadir)/pkgconfig
 xf86rushprotopkgconfig_DATA = xf86rushproto.pc
 endif
-
-xf86vidmodedir = $(includedir)/X11/extensions
-xf86vidmode_HEADERS = \
-	include/X11/extensions/xf86vm.h \
-	include/X11/extensions/xf86vmproto.h \
-	include/X11/extensions/xf86vmstr.h
-
-xf86vidmodeprotopkgconfigdir = $(datadir)/pkgconfig
-xf86vidmodeprotopkgconfig_DATA = xf86vidmodeproto.pc
-
-xineramadir = $(includedir)/X11/extensions
-xinerama_HEADERS = \
-	include/X11/extensions/panoramiXproto.h
-
-xineramaprotopkgconfigdir = $(datadir)/pkgconfig
-xineramaprotopkgconfig_DATA = xineramaproto.pc
 
 # SUBDIRS=specs
 
@@ -497,6 +486,16 @@ EXTRA_DIST = \
     meson.build \
     meson_options.txt \
     man/Xprint.man \
-    man/Xprint.sgml
+    man/Xprint.sgml \
+    scripts/keysym-generator.py
+
 
 AM_DISTCHECK_CONFIGURE_FLAGS = --enable-legacy
+
+if HAVE_PYTHON
+AM_TESTS_ENVIRONMENT = \
+       INCLUDESDIR=$(top_srcdir)/include
+TESTS = scripts/keysym-generator.py
+TEST_EXTENSIONS = .py
+PY_LOG_COMPILER = $(PYTHON)
+endif

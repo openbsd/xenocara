@@ -1973,7 +1973,7 @@ factors, such as re-cabling a monitor, etc.
 
 	This event is generated whenever a lease has been created or
 	destroyed and is sent to requesting clients. 'timestamp'
-	indicates when the change happend.  'window' is the window
+	indicates when the change happened.  'window' is the window
 	selecting for this event.
 
 			      ❧❧❧❧❧❧❧❧❧❧❧

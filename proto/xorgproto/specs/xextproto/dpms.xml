@@ -108,7 +108,7 @@ to enforce this rule.
 </para>
 
 <para>
-Note however that a concious decision is made to decouple the timeouts
+Note however that a conscious decision is made to decouple the timeouts
 associated with screen saver from the DPMS timeouts.  While it might be
 considered logical to require that the first non-zero DPMS timeout be
 greater than or equal to the screen saver timeout, this is intentionally
@@ -175,7 +175,7 @@ increment for small, upward-compatible changes.  Servers that support the
 protocol defined in this document will return a
 <emphasis remap='I'>server_major_version</emphasis>
 of one (1), and a <emphasis remap='I'>server_minor_version</emphasis>
-of one (1).
+of two (2).
 </para>
 
 <para>
@@ -273,7 +273,7 @@ final level of power savings is invoked. Off mode's physical and electrical
 characteristics are implementation defined, but in DPMS compliant hardware,
 is implemented by shutting off both horizontal and vertical sync signals,
 resulting in the power-down of the monitor.  Recovery time is implementation
-dependant, but frequently is similar to the power-up time of the monitor. A
+dependent, but frequently is similar to the power-up time of the monitor. A
 value of zero indicates that this mode is disabled.
 </para>
 
@@ -435,13 +435,81 @@ of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend or DPMSModeOff, otherwise
 it is undefined.
 </para>
 
+<para>
+<olink targetdoc='dpmslib' targetptr='DPMSSelectInput'><function>DPMSSelectInput</function></olink>
+</para>
+
+<informaltable frame="none">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <tbody>
+    <row>
+      <entry>
+<emphasis remap='I'>event_mask</emphasis>: CARD32
+      </entry>
+    </row>
+    <row>
+      <entry>=&gt;</entry>
+    </row>
+  </tbody>
+  </tgroup>
+</informaltable>
+
+<para>
+This request specifies whether DPMS extension events should be generated for this client.
+If DPMSInfoNotifyMask is set in <emphasis remap='I'>event-mask</emphasis>, then DPMSInfoNotifyEvent
+events will be generated whenever the current DPMS on/off state or power level changes.
+If no bits are set, then no events will be generated.
+</para>
+
 </chapter>
 
-<chapter id="Events_and_Errors">
-<title>Events and Errors</title>
+<chapter id="Events">
+
+<title>Events</title>
 <para>
-No new events or errors are defined by this extension.
+The DPMS extension adds one event:
 </para>
+<para>
+<function>DPMSInfoNotifyEvent</function>
+</para>
+
+<informaltable frame="none">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <tbody>
+    <row>
+      <entry>
+<emphasis remap='I'>timestamp</emphasis>: TIMESTAMP
+      </entry>
+    </row>
+    <row>
+      <entry>
+<emphasis remap='I'>power_level</emphasis>: CARD16
+      </entry>
+    </row>
+    <row>
+      <entry>
+<emphasis remap='I'>state</emphasis>: BOOL
+      </entry>
+    </row>
+  </tbody>
+  </tgroup>
+</informaltable>
+
+<para>
+This event is delivered to clients that have requested
+DPMSInfoNotifyMask events using the <function>DPMSSelectInput</function> request
+whenever the current DPMS on/off state or power level changes.
+<emphasis remap='I'>state</emphasis> is one of DPMSEnabled or DPMSDisabled.
+If <emphasis remap='I'>state</emphasis> is DPMSEnabled,
+<emphasis remap='I'>power_level</emphasis> is one
+of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend or DPMSModeOff, otherwise
+it is undefined.
+</para>
+
 </chapter>
 
 <chapter id="Encoding">
@@ -562,6 +630,34 @@ The name of this extension is "DPMS".
      1     BOOL          state
      21                  unused
 
+</literallayout>
+
+<literallayout class="monospaced">
+<olink targetdoc='dpmslib' targetptr='DPMSSelectInput'><function>DPMSSelectInput</function></olink>
+     1     CARD8         opcode
+     1     8             DPMS opcode
+     2     2             request length
+     4                   event mask
+           0     no events
+           1     DPMSInfoNotifyMask
+</literallayout>
+
+<literallayout class="monospaced">
+<olink targetdoc='dpmslib' targetptr='DPMSInfoNotifyEvent'><function>DPMSInfoNotifyEvent</function></olink>
+     1     GenericEvent    type
+     1     CARD8           DPMS extension offset
+     2     CARD16          sequence number
+     4     0               length
+     2     DPMSInfoNotify  evtype
+     2                     unused
+     4     TIMESTAMP       timestamp
+     2                     power_level
+           0     DPMSModeOn
+           1     DPMSModeStandby
+           2     DPMSModeSuspend
+           3     DPMSModeOff
+     1     BOOL            state
+     13                    unused
 </literallayout>
 </chapter>
 </book>

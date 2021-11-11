@@ -236,7 +236,7 @@ is cleared.
 </itemizedlist>
 <para>
 The effect of passing a window to a request that accepts a DRAWABLE is
-unchanged by this extension. The window and front buffer are synonomous with
+unchanged by this extension. The window and front buffer are synonymous with
 each other. This includes obeying the <function>GetImage</function> semantics
 and the subwindow-mode semantics if a core graphics context is involved.
 Regardless of whether the window was explicitly passed in a

@@ -1,6 +1,6 @@
-dnl 
+dnl
 dnl  Copyright © 2017 Keith Packard
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Keith Packard makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -22,7 +22,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xorgproto], [2019.2],
+# keep version in sync with meson.build
+AC_INIT([xorgproto], [2021.5],
         [https://gitlab.freedesktop.org/xorg/proto/xorgproto/issues])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
@@ -36,6 +37,9 @@ XORG_WITH_XMLTO(0.0.22)
 XORG_WITH_FOP
 XORG_WITH_XSLTPROC
 XORG_CHECK_SGML_DOCTOOLS(1.8)
+
+AM_PATH_PYTHON([3.6], , [:])
+AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 
 AC_CANONICAL_HOST
 
@@ -61,7 +65,7 @@ case $host_os in
 esac
 
 if test "x$fds_bits_found" = xfalse ; then
-   AC_CHECK_MEMBER(fd_set.fds_bits, 
+   AC_CHECK_MEMBER(fd_set.fds_bits,
 			   [
 			       fds_bits_found=plain
 			       USE_FDS_BITS="fds_bits"
@@ -116,6 +120,7 @@ AC_CONFIG_FILES([applewmproto.pc
 		 compositeproto.pc
 		 damageproto.pc
 		 dmxproto.pc
+		 dpmsproto.pc
 		 dri2proto.pc
 		 dri3proto.pc
 		 evieproto.pc
@@ -159,6 +164,5 @@ AC_CONFIG_FILES([applewmproto.pc
 		 xineramaproto.pc
 		 xproto.pc
 		 xproxymngproto.pc])
-		 
+
 AC_OUTPUT
-		 

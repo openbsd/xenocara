@@ -103,7 +103,7 @@ deactivates.  At this time, the window is unmapped and is not accessible to any
 client requests.
 </para>
 <para>
-The server's default mechanism is refered to as the <emphasis remap='I'>internal</emphasis> screen
+The server's default mechanism is referred to as the <emphasis remap='I'>internal</emphasis> screen
 saver.  An <emphasis remap='I'>external</emphasis>
 screen saver client requires a means of determining the window
 id for the screen saver window and setting the attributes (e.g. size,
@@ -126,7 +126,7 @@ Second, a screen saver program must control the actual RGB values sent to the
 display tube to ensure that the values change periodically to avoid phosphor
 burn in.  Thus, the client must have a known colormap installed whenever the
 screen saver window is displayed.  To prevent screen flashing, the visual type
-of the screen saver window should also be controlable.
+of the screen saver window should also be controllable.
 </para>
 <para>
 Third, some implementations may wish to destroy the screen saver window when
@@ -145,7 +145,7 @@ The Screen Saver extension is as follows:
 <sect1 id="Types">
 <title>Types</title>
 <para>
-In adition to the comon types described in the core protocol, the following
+In addition to the common types described in the core protocol, the following
 type is used in the request and event definitions in subsequent sections.
 </para>
 
@@ -233,7 +233,7 @@ any of its siblings in the stacking order.  XXX - TranslateCoords?
 </para>
 <para>
 The <emphasis remap='I'>state</emphasis> field specifies whether or not the screen saver is currently
-active and how the <emphasis remap='I'>til-or-since</emphasis> value should be interpretted:
+active and how the <emphasis remap='I'>til-or-since</emphasis> value should be interpreted:
 </para>
 
 <informaltable frame="none">
@@ -826,7 +826,7 @@ The format of the events generated is:
 typedef struct {
     int type;               /* of event */
     unsigned long serial;   /* # of last request processed by server */
-    Bool send_event;        /* true if this came frome a SendEvent request */
+    Bool send_event;        /* true if this came from a SendEvent request */
     Display *display;       /* Display the event was read from */
     Window window;          /* screen saver window */
     Window root;            /* root window of event screen */

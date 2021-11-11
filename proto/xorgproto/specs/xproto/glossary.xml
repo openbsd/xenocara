@@ -350,7 +350,7 @@ These events can be generated either asynchronously from devices
 or as side effects of client requests.
 Events are grouped into types.
 The server never sends events to a client unless the
-client has specificially asked to be informed of that type of event.
+client has specifically asked to be informed of that type of event.
 However, other clients can force events to be sent to other clients.
 Events are typically reported relative to a window.
 <!-- .KE -->

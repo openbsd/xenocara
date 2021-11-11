@@ -233,7 +233,7 @@ If single_screen is set to True default_root specifies which screen will be retu
 
 
 <para>
-If single_screen is set to True the  root_visual and default_colormap attributes may be used to over-ride the default values that are returned in the connection setup information returned to new programs in the Application Group. If None is specified for root_visual or default_colormap then the normal default values for the screen (possibly spedified by default_root) are used, otherwise the specified values are used. If root_visual and/or default_colormap are specified they must be valid, i.e. root_visual must be a visual type available on the screen, and the colormap, if specified, must be a valid colormap for the visual that is used.
+If single_screen is set to True the  root_visual and default_colormap attributes may be used to over-ride the default values that are returned in the connection setup information returned to new programs in the Application Group. If None is specified for root_visual or default_colormap then the normal default values for the screen (possibly specified by default_root) are used, otherwise the specified values are used. If root_visual and/or default_colormap are specified they must be valid, i.e. root_visual must be a visual type available on the screen, and the colormap, if specified, must be a valid colormap for the visual that is used.
 </para>
 
 <para>
@@ -409,7 +409,7 @@ The Application Group Leader must not select SubstructuRedirect events on a root
 <title>MapRequest</title>
 
 <para>
-When a MapWindow request is received for a window whose override-redirect attribut is set to False and whose parent is the root window and the window belongs to an application that is in an application group and there is an application group leader for the group, then this event is delivered to the Application Group Leader with the parent field in the event set to the AppGroup ID. Otherwise the core protocol semantics apply.
+When a MapWindow request is received for a window whose override-redirect attribute is set to False and whose parent is the root window and the window belongs to an application that is in an application group and there is an application group leader for the group, then this event is delivered to the Application Group Leader with the parent field in the event set to the AppGroup ID. Otherwise the core protocol semantics apply.
 </para>
 
 </sect2>
@@ -417,7 +417,7 @@ When a MapWindow request is received for a window whose override-redirect attrib
 <title>ConfigureRequest</title>
 
 <para>
-When a ConfigureWindow request is received for a window whose override-redirect attribut is set to False and whose parent is the root window and the window belongs to an application that is in an application group and there is an application group leader for the group, then this event is delivered to the Application Group Leader with the parent field in the event set to the AppGroup ID. Otherwise the core protocol semantics apply.
+When a ConfigureWindow request is received for a window whose override-redirect attribute is set to False and whose parent is the root window and the window belongs to an application that is in an application group and there is an application group leader for the group, then this event is delivered to the Application Group Leader with the parent field in the event set to the AppGroup ID. Otherwise the core protocol semantics apply.
 </para>
 
 </sect2>

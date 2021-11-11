@@ -1,4 +1,4 @@
-Server-interpreted Authentication Types "localuser" and "localgroup":
+## Server-interpreted Authentication Types "localuser" and "localgroup"
 
 On systems which can determine in a secure fashion the credentials of a client
 process, the "localuser" and "localgroup" authentication methods provide access
@@ -13,8 +13,20 @@ will only support this for clients running on the same host using a local IPC
 transport.
 
 Examples:
-        xhost +SI:localuser:alanc
-        xhost +SI:localuser:#1234
-        xhost +SI:localgroup:wheel
-        xhost +SI:localgroup:#0
+
+```
+xhost +SI:localuser:alanc
+```
+
+```
+xhost +SI:localuser:#1234
+```
+
+```
+xhost +SI:localgroup:wheel
+```
+
+```
+xhost +SI:localgroup:#0
+```
 

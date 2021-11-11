@@ -190,7 +190,7 @@ DRI2BUFFER { attachment: CARD32
     	     cpp: CARD32
 	     flags: CARD32 }
 
-	The DRI2BUFFER describes an auxillary rendering buffer
+	The DRI2BUFFER describes an auxiliary rendering buffer
 	associated with an X drawable.  'attachment' describes the
 	attachment point for the buffer, 'name' is the name of the
 	underlying kernel buffer,
@@ -561,7 +561,7 @@ naturally some interactions with other extensions.
 
 11.1 GLX
 
-The GL auxilary buffers map directly to the DRI2 buffers... eh
+The GL auxiliary buffers map directly to the DRI2 buffers... eh
 
 
 11.2 DBE

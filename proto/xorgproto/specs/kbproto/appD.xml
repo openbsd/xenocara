@@ -26,7 +26,7 @@ v     LISTofITEMs           NAME
 <para>
 The MASK-EXPRESSION is an expression using C-style boolean operators and fields
 of the request which specifies the bitmask used to determine whether or not a
-mem ber of the LISTofITEMs is present. If present, TYPE specifies the
+member of the LISTofITEMs is present. If present, TYPE specifies the
 interpretation of the resulting bitmask and the values are listed using the
 symbolic names of the members of the set. If TYPE is blank, the values are
 numeric constants.
@@ -692,10 +692,10 @@ class, or feedback
 1     KEYCODE          new key
 1     SETofKEYMASK          mask
 1     SETofKEYMASK          real modifiers
-1     SETofKB_VMODSHIGH          virtual modfiiers mask high
+1     SETofKB_VMODSHIGH          virtual modifiers mask high
 1     SETofKB_VMODSLOW          virtual modifiers mask low
 1     SETofKB_VMODSHIGH          virtual modifiers high
-1     SETofKB_VMODSLOW          virtual modfiers low
+1     SETofKB_VMODSLOW          virtual modifiers low
 </literallayout>
 
 <literallayout class='monospaced'>1     18          type

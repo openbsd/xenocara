@@ -201,7 +201,7 @@ The name of this extension is "Present"
 	the client as soon as the PresentIdleNotify event has been
 	received. Note that if PresentCapabilityFence is set for the
 	associated CRTC, then clients should use fences to improve
-	overall systme performance. If PresentCapabilityFence is not
+	overall system performance. If PresentCapabilityFence is not
 	set, then using fences offers no benefit, but also no cost.
 
 	If 'target-msc' is greater than the current msc for 'window',

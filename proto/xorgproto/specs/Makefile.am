@@ -15,7 +15,7 @@ EXTRA_DIST = \
     printproto/xp_protoIX.doc \
     printproto/xp_protoTOC.doc \
     printproto/xp_proto_cov.mif \
-    SIAddresses/hostname.txt \
-    SIAddresses/IPv6.txt \
-    SIAddresses/localuser.txt \
+    SIAddresses/hostname.md \
+    SIAddresses/IPv6.md \
+    SIAddresses/localuser.md \
     SIAddresses/README
