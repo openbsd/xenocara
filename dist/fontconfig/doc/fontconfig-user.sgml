@@ -140,6 +140,8 @@ convenience for the applications' rendering mechanism.
                           familylang, stylelang, and fullnamelang
   prgname         String  String  Name of the running program
   postscriptname  String  Font family name in PostScript
+  fonthashint     Bool    Whether the font has hinting
+  order           Int     Order number of the font
     </programlisting>
   </refsect2>
   <refsect2>
@@ -300,7 +302,7 @@ directory (&confdir;).  Each configuration file should contain the
 following structure:
     <programlisting>
 	&lt;?xml version="1.0"?&gt;
-	&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
+	&lt;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&gt;
 	&lt;fontconfig&gt;
 	...
 	&lt;/fontconfig&gt;
@@ -310,9 +312,13 @@ following structure:
 This is the top level element for a font configuration and can contain
 <literal>&lt;dir&gt;</literal>, <literal>&lt;cachedir&gt;</literal>, <literal>&lt;include&gt;</literal>, <literal>&lt;match&gt;</literal> and <literal>&lt;alias&gt;</literal> elements in any order.
   </para></refsect2>
-  <refsect2><title><literal>&lt;dir prefix="default"&gt;</literal></title><para>
+  <refsect2><title><literal>&lt;dir prefix="default" salt=""&gt;</literal></title><para>
 This element contains a directory name which will be scanned for font files
-to include in the set of available fonts. If 'prefix' is set to "xdg", the value in the XDG_DATA_HOME environment variable will be added as the path prefix. please see XDG Base Directory Specification for more details.
+to include in the set of available fonts.
+  </para><para>
+If 'prefix' is set to "default" or "cwd", the current working directory will be added as the path prefix prior to the value. If 'prefix' is set to "xdg", the value in the XDG_DATA_HOME environment variable will be added as the path prefix. please see XDG Base Directory Specification for more details. If 'prefix' is set to "relative", the path of current file will be added prior to the value.
+  </para><para>
+'salt' property affects to determine cache filename. this is useful for example when having different fonts sets on same path at container and share fonts from host on different font path.
   </para></refsect2>
   <refsect2><title><literal>&lt;cachedir prefix="default"&gt;</literal></title><para>
 This element contains a directory name that is supposed to be stored or read
@@ -340,12 +346,30 @@ This element provides a place to consolidate additional configuration
 information.  <literal>&lt;config&gt;</literal> can contain <literal>&lt;blank&gt;</literal> and <literal>&lt;rescan&gt;</literal> elements in any
 order.
   </para></refsect2>
+  <refsect2><title><literal>&lt;description domain="fontconfig-conf"&gt;</literal></title><para>
+This element is supposed to hold strings which describe what a config is used for.
+This string can be translated through gettext. 'domain' needs to be set the proper name to apply then.
+fontconfig will tries to retrieve translations with 'domain' from gettext.
+  </para></refsect2>
   <refsect2><title><literal>&lt;blank&gt;</literal></title><para>
 Fonts often include "broken" glyphs which appear in the encoding but are
 drawn as blanks on the screen.  Within the <literal>&lt;blank&gt;</literal> element, place each
 Unicode characters which is supposed to be blank in an <literal>&lt;int&gt;</literal> element.
 Characters outside of this set which are drawn as blank will be elided from
 the set of characters supported by the font.
+  </para></refsect2>
+  <refsect2><title><literal>&lt;remap-dir prefix="default" as-path="" salt=""&gt;</literal></title><para>
+This element contains a directory name where will be mapped
+as the path 'as-path' in cached information.
+This is useful if the directory name is an alias
+(via a bind mount or symlink) to another directory in the system for
+which cached font information is likely to exist.
+  </para><para>
+'salt' property affects to determine cache filename as same as <literal>&lt;dir&gt;</literal> element.
+  </para></refsect2>
+  <refsect2><title><literal>&lt;reset-dirs /&gt;</literal></title><para>
+This element removes all of fonts directories where added by <literal>&lt;dir&gt;</literal> elements.
+This is useful to override fonts directories from system to own fonts directories only.
   </para></refsect2>
   <refsect2><title><literal>&lt;rescan&gt;</literal></title><para>
 The <literal>&lt;rescan&gt;</literal> element holds an <literal>&lt;int&gt;</literal> element which indicates the default
@@ -568,7 +592,7 @@ This is an example of a system-wide configuration file
     </para>
     <programlisting>
 &lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
+&lt;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&gt;
 &lt;!-- &confdir;/fonts.conf file to configure system font access --&gt;
 &lt;fontconfig&gt;
 &lt;!-- 
@@ -589,9 +613,9 @@ This is an example of a system-wide configuration file
 	Names not including any well known alias are given 'sans-serif'
 --&gt;
 &lt;match target="pattern"&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;&lt;string&gt;sans-serif&lt;/string&gt;&lt;/test&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;&lt;string&gt;serif&lt;/string&gt;&lt;/test&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;&lt;string&gt;monospace&lt;/string&gt;&lt;/test&gt;
+	&lt;test qual="all" name="family" compare="not_eq"&gt;&lt;string&gt;sans-serif&lt;/string&gt;&lt;/test&gt;
+	&lt;test qual="all" name="family" compare="not_eq"&gt;&lt;string&gt;serif&lt;/string&gt;&lt;/test&gt;
+	&lt;test qual="all" name="family" compare="not_eq"&gt;&lt;string&gt;monospace&lt;/string&gt;&lt;/test&gt;
 	&lt;edit name="family" mode="append_last"&gt;&lt;string&gt;sans-serif&lt;/string&gt;&lt;/edit&gt;
 &lt;/match&gt;
 
@@ -653,7 +677,7 @@ This is an example of a system-wide configuration file
 	add 'monospace' as the alternative
 --&gt;
 &lt;match target="pattern"&gt;
-	&lt;test name="family" mode="eq"&gt;
+	&lt;test name="family" compare="eq"&gt;
 		&lt;string&gt;Courier New&lt;/string&gt;
 	&lt;/test&gt;
 	&lt;edit name="family" mode="prepend"&gt;
@@ -661,7 +685,7 @@ This is an example of a system-wide configuration file
 	&lt;/edit&gt;
 &lt;/match&gt;
 &lt;match target="pattern"&gt;
-	&lt;test name="family" mode="eq"&gt;
+	&lt;test name="family" compare="eq"&gt;
 		&lt;string&gt;Courier&lt;/string&gt;
 	&lt;/test&gt;
 	&lt;edit name="family" mode="prepend"&gt;
@@ -679,7 +703,7 @@ $XDG_CONFIG_HOME/fontconfig/fonts.conf
     </para>
     <programlisting>
 &lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
+&lt;!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"&gt;
 &lt;!-- $XDG_CONFIG_HOME/fontconfig/fonts.conf for per-user font configuration --&gt;
 &lt;fontconfig&gt;
 
@@ -783,6 +807,10 @@ is used to override the default configuration file.
 is used to override the default configuration directory.
   </para>
   <para>
+<emphasis>FONTCONFIG_SYSROOT</emphasis>
+is used to set a default sysroot directory.
+  </para>
+  <para>
 <emphasis>FC_DEBUG</emphasis>
 is used to output the detailed debugging messages. see <link linkend="debug">Debugging Applications</link> section for more details.
   </para>
@@ -798,10 +826,14 @@ is used to specify the default language as the weak binding in the query. if thi
 <emphasis>FONTCONFIG_USE_MMAP</emphasis>
 is used to control the use of mmap(2) for the cache files if available. this take a boolean value. fontconfig will checks if the cache files are stored on the filesystem that is safe to use mmap(2). explicitly setting this environment variable will causes skipping this check and enforce to use or not use mmap(2) anyway.
   </para>
+  <para>
+<emphasis>SOURCE_DATE_EPOCH</emphasis>
+is used to ensure <literal>fc-cache(1)</literal> generates files in a deterministic manner in order to support reproducible builds. When set to a numeric representation of UNIX timestamp, fontconfig will prefer this value over using the modification timestamps of the input files in order to identify which cache files require regeneration. If <literal>SOURCE_DATE_EPOCH</literal> is not set (or is newer than the mtime of the directory), the existing behaviour is unchanged.
+  </para>
 </refsect1>
 <refsect1><title>See Also</title>
   <para>
-fc-cat(1), fc-cache(1), fc-list(1), fc-match(1), fc-query(1)
+fc-cat(1), fc-cache(1), fc-list(1), fc-match(1), fc-query(1), <ulink url="https://reproducible-builds.org/specs/source-date-epoch/">SOURCE_DATE_EPOCH</ulink>.
   </para>
 </refsect1>
 <refsect1><title>Version</title>

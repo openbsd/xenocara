@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2016/08/09 18:57:45 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2021/11/11 08:46:46 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -53,6 +53,7 @@ MAN = FcAtomicCreate.3 \
 	FcConfigGetConfigDirs.3 \
 	FcConfigGetConfigFiles.3 \
 	FcConfigGetCurrent.3 \
+	FcConfigGetFilename.3 \
 	FcConfigGetFontDirs.3 \
 	FcConfigGetFonts.3 \
 	FcConfigGetRescanInterval.3 \
@@ -166,6 +167,7 @@ MAN = FcAtomicCreate.3 \
 	FcRangeDestroy.3 \
 	FcRangeGetDouble.3 \
 	FcStrBasename.3 \
+	FcStrBuildFilename.3 \
 	FcStrCmp.3 \
 	FcStrCmpIgnoreCase.3 \
 	FcStrCopy.3 \
@@ -255,6 +257,7 @@ HTML_DEVEL_FILES = \
 	fcconfiggetconfigdirs.html \
 	fcconfiggetconfigfiles.html \
 	fcconfiggetcurrent.html \
+	fcconfiggetfilename.html \
 	fcconfiggetfontdirs.html \
 	fcconfiggetfonts.html \
 	fcconfiggetrescaninterval.html \
@@ -363,6 +366,7 @@ HTML_DEVEL_FILES = \
 	fcpatternreference.html \
 	fcpatternremove.html \
 	fcstrbasename.html \
+	fcstrbuildfilename.html \
 	fcstrcmp.html \
 	fcstrcmpignorecase.html \
 	fcstrcopy.html \
@@ -394,7 +398,6 @@ HTML_DEVEL_FILES = \
 	fcvalueequal.html \
 	fcvalueprint.html \
 	fcvaluesave.html \
-	x102.html \
 	x19.html \
 	x31.html
 

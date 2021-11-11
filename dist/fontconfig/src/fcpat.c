@@ -338,7 +338,7 @@ FcValueHash (const FcValue *v)
     case FcTypeLangSet:
 	return FcLangSetHash (FcValueLangSet(v));
     case FcTypeRange:
-	return FcRangeHash (v->u.r);
+	return FcRangeHash (FcValueRange (v));
     }
     return 0;
 }
@@ -373,6 +373,71 @@ FcValueListHash (FcValueListPtr l)
     return hash;
 }
 
+static void *
+FcPatternGetCacheObject (FcPattern *p)
+{
+  /* We use a value to find the cache, instead of the FcPattern object
+   * because the pattern itself may be a cache allocation if we rewrote the path,
+   * so the p may not be in the cached region. */
+  return FcPatternEltValues(&FcPatternElts (p)[0]);
+}
+
+FcPattern *
+FcPatternCacheRewriteFile (const FcPattern *p,
+                           FcCache *cache,
+                           const FcChar8 *relocated_font_file)
+{
+    FcPatternElt *elts = FcPatternElts (p);
+    size_t i,j;
+    FcChar8 *data;
+    FcPattern *new_p;
+    FcPatternElt *new_elts;
+    FcValueList *new_value_list;
+    size_t new_path_len = strlen ((char *)relocated_font_file);
+    FcChar8 *new_path;
+
+    /* Allocate space for the patter, the PatternElt headers and
+     * the FC_FILE FcValueList and path that will be freed with the
+     * cache */
+    data = FcCacheAllocate (cache,
+			    sizeof (FcPattern) +
+			    p->num * sizeof (FcPatternElt) +
+			    sizeof (FcValueList) +
+			    new_path_len + 1);
+
+    new_p = (FcPattern *)data;
+    data += sizeof (FcPattern);
+    new_elts = (FcPatternElt *)(data);
+    data += p->num * sizeof (FcPatternElt);
+    new_value_list = (FcValueList *)data;
+    data += sizeof (FcValueList);
+    new_path = data;
+
+    *new_p = *p;
+    new_p->elts_offset = FcPtrToOffset (new_p, new_elts);
+
+    /* Copy all but the FILE values from the cache */
+    for (i = 0, j = 0; i < p->num; i++)
+    {
+	FcPatternElt *elt = &elts[i];
+	new_elts[j].object = elt->object;
+	if (elt->object != FC_FILE_OBJECT)
+	    new_elts[j++].values = FcPatternEltValues(elt);
+	else
+	    new_elts[j++].values = new_value_list;
+    }
+
+    new_value_list->next = NULL;
+    new_value_list->value.type = FcTypeString;
+    new_value_list->value.u.s = new_path;
+    new_value_list->binding = FcValueBindingWeak;
+
+    /* Add rewritten path at the end */
+    strcpy ((char *)new_path, (char *)relocated_font_file);
+
+    return new_p;
+}
+
 void
 FcPatternDestroy (FcPattern *p)
 {
@@ -384,20 +449,30 @@ FcPatternDestroy (FcPattern *p)
 
     if (FcRefIsConst (&p->ref))
     {
-	FcCacheObjectDereference (p);
+	FcCacheObjectDereference (FcPatternGetCacheObject(p));
 	return;
     }
-	
+
     if (FcRefDec (&p->ref) != 1)
 	return;
 
     elts = FcPatternElts (p);
-    for (i = 0; i < p->num; i++)
+    for (i = 0; i < FcPatternObjectCount (p); i++)
 	FcValueListDestroy (FcPatternEltValues(&elts[i]));
 
     free (elts);
     free (p);
 }
+
+int
+FcPatternObjectCount (const FcPattern *pat)
+{
+    if (pat)
+	return pat->num;
+
+    return 0;
+}
+
 
 static int
 FcPatternObjectPosition (const FcPattern *p, FcObject object)
@@ -406,7 +481,7 @@ FcPatternObjectPosition (const FcPattern *p, FcObject object)
     FcPatternElt    *elts = FcPatternElts(p);
 
     low = 0;
-    high = p->num - 1;
+    high = FcPatternObjectCount (p) - 1;
     c = 1;
     mid = 0;
     while (low <= high)
@@ -452,7 +527,7 @@ FcPatternObjectInsertElt (FcPattern *p, FcObject object)
 	i = -i - 1;
 
 	/* reallocate array */
-	if (p->num + 1 >= p->size)
+	if (FcPatternObjectCount (p) + 1 >= p->size)
 	{
 	    int s = p->size + 16;
 	    if (p->size)
@@ -463,7 +538,7 @@ FcPatternObjectInsertElt (FcPattern *p, FcObject object)
 		{
 		    e = malloc(s * sizeof (FcPatternElt));
 		    if (e)
-			memcpy(e, e0, p->num * sizeof (FcPatternElt));
+			memcpy(e, e0, FcPatternObjectCount (p) * sizeof (FcPatternElt));
 		}
 	    }
 	    else
@@ -484,7 +559,7 @@ FcPatternObjectInsertElt (FcPattern *p, FcObject object)
 	memmove (e + i + 1,
 		 e + i,
 		 sizeof (FcPatternElt) *
-		 (p->num - i));
+		 (FcPatternObjectCount (p) - i));
 		
 	/* bump count */
 	p->num++;
@@ -499,24 +574,26 @@ FcPatternObjectInsertElt (FcPattern *p, FcObject object)
 FcBool
 FcPatternEqual (const FcPattern *pa, const FcPattern *pb)
 {
-    int	i;
-    FcPatternElt   *pae, *pbe;
+    FcPatternIter ia, ib;
 
     if (pa == pb)
 	return FcTrue;
 
-    if (pa->num != pb->num)
+    if (FcPatternObjectCount (pa) != FcPatternObjectCount (pb))
 	return FcFalse;
-    pae = FcPatternElts(pa);
-    pbe = FcPatternElts(pb);
-    for (i = 0; i < pa->num; i++)
-    {
-	if (pae[i].object != pbe[i].object)
+    FcPatternIterStart (pa, &ia);
+    FcPatternIterStart (pb, &ib);
+    do {
+	FcBool ra, rb;
+
+	if (!FcPatternIterEqual (pa, &ia, pb, &ib))
 	    return FcFalse;
-	if (!FcValueListEqual (FcPatternEltValues(&pae[i]),
-			       FcPatternEltValues(&pbe[i])))
-	    return FcFalse;
-    }
+	ra = FcPatternIterNext (pa, &ia);
+	rb = FcPatternIterNext (pb, &ib);
+	if (!ra && !rb)
+	    break;
+    } while (1);
+
     return FcTrue;
 }
 
@@ -527,7 +604,7 @@ FcPatternHash (const FcPattern *p)
     FcChar32	h = 0;
     FcPatternElt    *pe = FcPatternElts(p);
 
-    for (i = 0; i < p->num; i++)
+    for (i = 0; i < FcPatternObjectCount (p); i++)
     {
 	h = (((h << 1) | (h >> 31)) ^
 	     pe[i].object ^
@@ -713,10 +790,10 @@ FcPatternObjectDel (FcPattern *p, FcObject object)
 
     /* shuffle existing ones down */
     memmove (e, e+1,
-	     (FcPatternElts(p) + p->num - (e + 1)) *
+	     (FcPatternElts(p) + FcPatternObjectCount (p) - (e + 1)) *
 	     sizeof (FcPatternElt));
     p->num--;
-    e = FcPatternElts(p) + p->num;
+    e = FcPatternElts(p) + FcPatternObjectCount (p);
     e->object = 0;
     e->values = NULL;
     return FcTrue;
@@ -837,13 +914,19 @@ FcPatternAddBool (FcPattern *p, const char *object, FcBool b)
 }
 
 FcBool
-FcPatternAddCharSet (FcPattern *p, const char *object, const FcCharSet *c)
+FcPatternObjectAddCharSet (FcPattern *p, FcObject object, const FcCharSet *c)
 {
     FcValue	v;
 
     v.type = FcTypeCharSet;
     v.u.c = (FcCharSet *)c;
-    return FcPatternAdd (p, object, v, FcTrue);
+    return FcPatternObjectAdd (p, object, v, FcTrue);
+}
+
+FcBool
+FcPatternAddCharSet (FcPattern *p, const char *object, const FcCharSet *c)
+{
+    return FcPatternObjectAddCharSet (p, FcObjectFromName (object), c);
 }
 
 FcBool
@@ -857,13 +940,19 @@ FcPatternAddFTFace (FcPattern *p, const char *object, const FT_Face f)
 }
 
 FcBool
-FcPatternAddLangSet (FcPattern *p, const char *object, const FcLangSet *ls)
+FcPatternObjectAddLangSet (FcPattern *p, FcObject object, const FcLangSet *ls)
 {
     FcValue	v;
 
     v.type = FcTypeLangSet;
     v.u.l = (FcLangSet *)ls;
-    return FcPatternAdd (p, object, v, FcTrue);
+    return FcPatternObjectAdd (p, object, v, FcTrue);
+}
+
+FcBool
+FcPatternAddLangSet (FcPattern *p, const char *object, const FcLangSet *ls)
+{
+    return FcPatternObjectAddLangSet (p, FcObjectFromName (object), ls);
 }
 
 FcBool
@@ -883,7 +972,7 @@ FcPatternAddRange (FcPattern *p, const char *object, const FcRange *r)
 }
 
 FcResult
-FcPatternObjectGet (const FcPattern *p, FcObject object, int id, FcValue *v)
+FcPatternObjectGetWithBinding (const FcPattern *p, FcObject object, int id, FcValue *v, FcValueBinding *b)
 {
     FcPatternElt   *e;
     FcValueListPtr l;
@@ -898,6 +987,8 @@ FcPatternObjectGet (const FcPattern *p, FcObject object, int id, FcValue *v)
 	if (!id)
 	{
 	    *v = FcValueCanonicalize(&l->value);
+	    if (b)
+		*b = l->binding;
 	    return FcResultMatch;
 	}
 	id--;
@@ -906,9 +997,21 @@ FcPatternObjectGet (const FcPattern *p, FcObject object, int id, FcValue *v)
 }
 
 FcResult
+FcPatternObjectGet (const FcPattern *p, FcObject object, int id, FcValue *v)
+{
+    return FcPatternObjectGetWithBinding (p, object, id, v, NULL);
+}
+
+FcResult
+FcPatternGetWithBinding (const FcPattern *p, const char *object, int id, FcValue *v, FcValueBinding *b)
+{
+    return FcPatternObjectGetWithBinding (p, FcObjectFromName (object), id, v, b);
+}
+
+FcResult
 FcPatternGet (const FcPattern *p, const char *object, int id, FcValue *v)
 {
-    return FcPatternObjectGet (p, FcObjectFromName (object), id, v);
+    return FcPatternObjectGetWithBinding (p, FcObjectFromName (object), id, v, NULL);
 }
 
 FcResult
@@ -1007,18 +1110,24 @@ FcPatternGetMatrix(const FcPattern *p, const char *object, int id, FcMatrix **m)
 
 
 FcResult
-FcPatternGetBool(const FcPattern *p, const char *object, int id, FcBool *b)
+FcPatternObjectGetBool (const FcPattern *p, FcObject object, int id, FcBool *b)
 {
     FcValue	v;
     FcResult	r;
 
-    r = FcPatternGet (p, object, id, &v);
+    r = FcPatternObjectGet (p, object, id, &v);
     if (r != FcResultMatch)
 	return r;
     if (v.type != FcTypeBool)
         return FcResultTypeMismatch;
     *b = v.u.b;
     return FcResultMatch;
+}
+
+FcResult
+FcPatternGetBool(const FcPattern *p, const char *object, int id, FcBool *b)
+{
+    return FcPatternObjectGetBool (p, FcObjectFromName (object), id, b);
 }
 
 FcResult
@@ -1095,28 +1204,28 @@ FcPattern *
 FcPatternDuplicate (const FcPattern *orig)
 {
     FcPattern	    *new;
-    FcPatternElt    *e;
-    int		    i;
+    FcPatternIter   iter;
     FcValueListPtr  l;
+
+    if (!orig)
+	return NULL;
 
     new = FcPatternCreate ();
     if (!new)
 	goto bail0;
 
-    e = FcPatternElts(orig);
-
-    for (i = 0; i < orig->num; i++)
+    FcPatternIterStart (orig, &iter);
+    do
     {
-	for (l = FcPatternEltValues(e + i); l; l = FcValueListNext(l))
+	for (l = FcPatternIterGetValues (orig, &iter); l; l = FcValueListNext (l))
 	{
-	    if (!FcPatternObjectAddWithBinding (new, e[i].object,
+	    if (!FcPatternObjectAddWithBinding (new, FcPatternIterGetObjectId (orig, &iter),
 						FcValueCanonicalize(&l->value),
 						l->binding,
 						FcTrue))
 		goto bail1;
-	
 	}
-    }
+    } while (FcPatternIterNext (orig, &iter));
 
     return new;
 
@@ -1132,7 +1241,7 @@ FcPatternReference (FcPattern *p)
     if (!FcRefIsConst (&p->ref))
 	FcRefInc (&p->ref);
     else
-	FcCacheObjectReference (p);
+	FcCacheObjectReference (FcPatternGetCacheObject(p));
 }
 
 FcPattern *
@@ -1161,21 +1270,21 @@ FcPatternBuild (FcPattern *p, ...)
 FcBool
 FcPatternAppend (FcPattern *p, FcPattern *s)
 {
-    int		    i;
-    FcPatternElt    *e;
-    FcValueListPtr  v;
+    FcPatternIter  iter;
+    FcValueListPtr v;
 
-    for (i = 0; i < s->num; i++)
+    FcPatternIterStart (s, &iter);
+    do
     {
-	e = FcPatternElts(s)+i;
-	for (v = FcPatternEltValues(e); v; v = FcValueListNext(v))
+	for (v = FcPatternIterGetValues (s, &iter); v; v = FcValueListNext (v))
 	{
-	    if (!FcPatternObjectAddWithBinding (p, e->object,
+	    if (!FcPatternObjectAddWithBinding (p, FcPatternIterGetObjectId (s, &iter),
 						FcValueCanonicalize(&v->value),
 						v->binding, FcTrue))
 		return FcFalse;
 	}
-    }
+    } while (FcPatternIterNext (s, &iter));
+
     return FcTrue;
 }
 
@@ -1216,6 +1325,148 @@ bail0:
     return NULL;
 }
 
+typedef struct _FcPatternPrivateIter {
+    FcPatternElt *elt;
+    int           pos;
+} FcPatternPrivateIter;
+
+static void
+FcPatternIterSet (const FcPattern *pat, FcPatternPrivateIter *iter)
+{
+    iter->elt = FcPatternObjectCount (pat) > 0 && iter->pos < FcPatternObjectCount (pat) ? &FcPatternElts (pat)[iter->pos] : NULL;
+}
+
+void
+FcPatternIterStart (const FcPattern *pat, FcPatternIter *iter)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *) iter;
+
+    priv->pos = 0;
+    FcPatternIterSet (pat, priv);
+}
+
+FcBool
+FcPatternIterNext (const FcPattern *pat, FcPatternIter *iter)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *) iter;
+
+    priv->pos++;
+    if (priv->pos >= FcPatternObjectCount (pat))
+	return FcFalse;
+    FcPatternIterSet (pat, priv);
+
+    return FcTrue;
+}
+
+FcBool
+FcPatternIterEqual (const FcPattern *p1, FcPatternIter *i1,
+		    const FcPattern *p2, FcPatternIter *i2)
+{
+    FcBool b1 = FcPatternIterIsValid (p1, i1);
+    FcBool b2 = FcPatternIterIsValid (p2, i2);
+
+    if (!i1 && !i2)
+	return FcTrue;
+    if (!b1 || !b2)
+	return FcFalse;
+    if (FcPatternIterGetObjectId (p1, i1) != FcPatternIterGetObjectId (p2, i2))
+	return FcFalse;
+
+    return FcValueListEqual (FcPatternIterGetValues (p1, i1),
+			     FcPatternIterGetValues (p2, i2));
+}
+
+FcBool
+FcPatternFindObjectIter (const FcPattern *pat, FcPatternIter *iter, FcObject object)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *) iter;
+    int i = FcPatternObjectPosition (pat, object);
+
+    priv->elt = NULL;
+    if (i < 0)
+	return FcFalse;
+
+    priv->pos = i;
+    FcPatternIterSet (pat, priv);
+
+    return FcTrue;
+}
+
+FcBool
+FcPatternFindIter (const FcPattern *pat, FcPatternIter *iter, const char *object)
+{
+    return FcPatternFindObjectIter (pat, iter, FcObjectFromName (object));
+}
+
+FcBool
+FcPatternIterIsValid (const FcPattern *pat, FcPatternIter *iter)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *)iter;
+
+    if (priv && priv->elt)
+	return FcTrue;
+
+    return FcFalse;
+}
+
+FcObject
+FcPatternIterGetObjectId (const FcPattern *pat, FcPatternIter *iter)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *) iter;
+
+    if (priv && priv->elt)
+	return priv->elt->object;
+
+    return 0;
+}
+
+const char *
+FcPatternIterGetObject (const FcPattern *pat, FcPatternIter *iter)
+{
+    return FcObjectName (FcPatternIterGetObjectId (pat, iter));
+}
+
+FcValueListPtr
+FcPatternIterGetValues (const FcPattern *pat, FcPatternIter *iter)
+{
+    FcPatternPrivateIter *priv = (FcPatternPrivateIter *) iter;
+
+    if (priv && priv->elt)
+	return FcPatternEltValues (priv->elt);
+
+    return NULL;
+}
+
+int
+FcPatternIterValueCount (const FcPattern *pat, FcPatternIter *iter)
+{
+    int count = 0;
+    FcValueListPtr l;
+
+    for (l = FcPatternIterGetValues (pat, iter); l; l = FcValueListNext (l))
+	count++;
+
+    return count;
+}
+
+FcResult
+FcPatternIterGetValue (const FcPattern *pat, FcPatternIter *iter, int id, FcValue *v, FcValueBinding *b)
+{
+    FcValueListPtr l;
+
+    for (l = FcPatternIterGetValues (pat, iter); l; l = FcValueListNext (l))
+    {
+	if (id == 0)
+	{
+	    *v = FcValueCanonicalize (&l->value);
+	    if (b)
+		*b = l->binding;
+	    return FcResultMatch;
+	}
+	id--;
+    }
+    return FcResultNoId;
+}
 
 FcBool
 FcPatternSerializeAlloc (FcSerialize *serialize, const FcPattern *pat)
@@ -1225,9 +1476,9 @@ FcPatternSerializeAlloc (FcSerialize *serialize, const FcPattern *pat)
 
     if (!FcSerializeAlloc (serialize, pat, sizeof (FcPattern)))
 	return FcFalse;
-    if (!FcSerializeAlloc (serialize, elts, pat->num * sizeof (FcPatternElt)))
+    if (!FcSerializeAlloc (serialize, elts, FcPatternObjectCount (pat) * sizeof (FcPatternElt)))
 	return FcFalse;
-    for (i = 0; i < pat->num; i++)
+    for (i = 0; i < FcPatternObjectCount (pat); i++)
 	if (!FcValueListSerializeAlloc (serialize, FcPatternEltValues(elts+i)))
 	    return FcFalse;
     return FcTrue;
@@ -1246,7 +1497,7 @@ FcPatternSerialize (FcSerialize *serialize, const FcPattern *pat)
     if (!pat_serialized)
 	return NULL;
     *pat_serialized = *pat;
-    pat_serialized->size = pat->num;
+    pat_serialized->size = FcPatternObjectCount (pat);
     FcRefSetConst (&pat_serialized->ref);
 
     elts_serialized = FcSerializePtr (serialize, elts);
@@ -1256,7 +1507,7 @@ FcPatternSerialize (FcSerialize *serialize, const FcPattern *pat)
     pat_serialized->elts_offset = FcPtrToOffset (pat_serialized,
 						 elts_serialized);
 
-    for (i = 0; i < pat->num; i++)
+    for (i = 0; i < FcPatternObjectCount (pat); i++)
     {
 	values_serialized = FcValueListSerialize (serialize, FcPatternEltValues (elts+i));
 	if (!values_serialized)

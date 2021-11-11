@@ -1,11 +1,664 @@
                               Fontconfig
              Font configuration and customization library
-                            Version 2.12.4
-                              2017-07-05
+                      Version 2.13.94 (2.14 RC4)
+                              2021-06-28
 
 
 Check INSTALL for compilation and installation instructions.
-Report bugs to https://bugs.freedesktop.org in the fontconfig module.
+Report bugs to https://gitlab.freedesktop.org/fontconfig/fontconfig/issues/new.
+
+2.13.94 (2.14 RC4)
+
+Akira TAGOH (10):
+      Add back fullname property at scan matching phase
+      Overwrite symlinks for config files
+      Fix missing <dir> element for WINDOWSFONTDIR in meson
+      Refactoring configure.ac to add <dir> element around font paths
+      Fix build fail when missing docbook and/or disabling doc-build
+      ci: Update CA cert related thing for Python on Windows
+      Add support for XDG_DATA_DIRS
+      Better wording for comments in config
+      Revert constructing fullname property from family and style properties
+      Fix score evaluation for multiple values in properties
+
+Albert Astals Cid (1):
+      Fix potential memory leak in _get_real_paths_from_prefix
+
+Ben Wagner (11):
+      Skip leading whitespace in style name.
+      Remove abort from FcCompareSize.
+      Add line between licenses in COPYING.
+      Portable trap conditions in run-test.sh.
+      Fix leaks in fcxml.c, fc-match.c, and tests.
+      Fix wild frees and leak of fs in test-conf.
+      Always run-test-conf, but skip if not built.
+      Fix test-conf string to integer conversion.
+      Test all not_eq for family names.
+      Clean up test-family-matching test.
+      Fix stack use after scope in FcConfigCompareValue
+
+Carmina16 (1):
+      ie.orth: Corrected; mistaken source replaced
+
+Heiko Becker (1):
+      Handle absolute sysconfdir when installing symlinks
+
+Jacko Dirks (1):
+      fccfg.c: lock_config: Fix potential memory leak
+
+Szunti (3):
+      Fix locale dependent behaviour in run-test.sh
+      Check qual and compare for family tests
+      Fix stripping whitespace from end of family in FcPatternAddFullname
+
+Tim-Philipp Müller (6):
+      meson: remove unused stdin_wrapper.py script
+      fcformat: fix compiler warnings with clang on Android
+      ci: add meson android aarch64 build
+      meson: error out in script if gperf preprocessing failed
+      meson: fix cross-compilation issues with gperf header file preprocessing
+      meson: fix subproject build regression
+
+Xavier Claessens (3):
+      Meson: Fallback to gperf subproject on all platforms
+      Meson: Do not wrap fccache insallation script
+      Windows: Fix symlink privilege error detection
+
+ratijas (1):
+      Fix closing tag bracket typo in doc/fontconfig-user.sgml
+
+2.13.93 (2.14 RC3)
+
+Akira TAGOH (48):
+      Affect FC_FONT_HAS_HINT property to score on matcher
+      Do not return FcFalse from FcConfigParseAndLoad*() if complain is set to false
+      Warn as well if no directory name for cachedir provided
+      Take effect sysroot functionality to the default config file
+      Read latest cache in paths
+      Fix a memory leak caused by the previous commit
+      Use FcConfigReference/Destroy appropriately instead of FcConfigGetCurrent
+      Fix potential race condition in FcConfigSetCurrent and FcConfigReference
+      Fix gcc warnings with -Wpointer-sign
+      Don't add a value for FC_FULLNAME in meta face
+      Fix a test fail when no bwrap was available
+      Add proper fullname for named-instances
+      Fix the process substitution doesn't work with FONTCONFIG_FILE
+      Fix memory leaks
+      Fix assertion in FcFini()
+      Set exact boolean value to color property
+      Fix assertion in FcCacheFini() again
+      Fix errors on shellcheck
+      Fix cache conflicts on OSTree based system
+      Drop unmaintained files
+      Drop elements with its namespace from conf
+      Add FC_ORDER property into cache
+      Drop Bitstream Vera fonts from 60-latin.conf
+      Fix a typo in doc/confdir.sgml.in
+      Fix empty XDG_CACHE_HOME Behavior
+      Fix build issues regarding formatter for Win32
+      Add some tweaks into runtest.sh to see progress
+      Integrate python scripts to autotools build
+      Make sure a minimum version of python
+      Make more clearer the license terms
+      Add CONFIGDIR to the fallback config where can be specified by --with-configdir
+      fc-scan: add --sysroot option
+      Construct fullname from family and style
+      Add fullname later once FcConfigSubstitute() is done
+      Update meson.build
+      Add Regular style when no meta data available to guess a style
+      Make sure a combination of family and familylang is available
+      Split up a code again coming from different copyright notice
+      Update COPYING
+      Use memcpy instead of strcpy
+      Evaluate mingw64_env to setup properly on CI
+      Add examples section in fc-match(1)
+      Drop duplicated BUILT_SOURCES in doc/Makefile.am
+      Initialize shell variables to be sure
+      Update README that missed changes mistakenly
+      new-version.sh: update version in meson.build
+      Update version in meson.build to sync up with configure.ac
+      new-version.sh: commit meson.build when bumpping
+
+Alan Coopersmith (1):
+      Fix some typos/spelling errors
+
+Ben Wagner (2):
+      Replace FT_UNUSED with FC_UNUSED.
+      Fix fc_atomic_ptr_get and use.
+
+Chun-wei Fan (2):
+      meson: Look for FreeType using CMake too
+      meson: Don't use .def files for Visual Studio builds
+
+James Lee (1):
+      Fix 'meson install' when cross compiling
+
+Jan Tojnar (4):
+      conf: Add JoyPixels emoji font
+      Correct reset-dirs in DTD
+      Drop elements with its namespace from fonts.conf.in
+      Turn unknown attributes into warning
+
+Jonathan Kew (1):
+      Set name_mapping to NULL after freeing
+
+Mathieu Duponchelle (1):
+      Some build fixes to support compilation with MSVC on Windows
+
+Matthias Clasen (17):
+      Avoid a crash in FcPatternHash with ranges
+      Special-case some of the string walking code
+      Add a hash function for families
+      Use a hash table for family matching
+      Add a shortcut for FcQualAny matching
+      Speed up fonthashint matching
+      Speed up FcConfigCompareValue
+      Speed up FcConfigCompareValue
+      Speed up FcCompareLang and FcCompareBool
+      Use a hash table for families in FcConfigSubstitute
+      Use __builtin_expect in a few places
+      Fixup: Promote ints to ranges when appropriate
+      Add FC_LIKELY and FC_UNLIKELY macros
+      Use FC_UNLIKELY
+      Fixup: Handle patterns without family
+      Fix up FC_LIKELY macros
+      Fix a problem in FcConfigSubstitute
+
+Nicolas Mailhot (1):
+      Use an URN for DTD ID
+
+Niklas Guertler (3):
+      Allow multiple default system font directories in the fallback config, and set them to the default dirs on Darwin.
+      Add <dir> XML tags to default values for FC_DEFAULT_FONTS on non-Darwin systems
+      Increased timeout for meson tests to 600sec to make tests work on Darwin
+
+Nirbheek Chauhan (2):
+      fcatomic: Fix EXC_BAD_ACCESS on iOS ARM64
+      meson: Fix build failure with gcc10 on mingw
+
+Szunti (1):
+      Add missing return type for FcFontSet* functions
+
+Tim-Philipp Müller (8):
+      doc: fix FcPatternFilter documentation
+      Use FC_PATH_MAX to fix build on Windows
+      Fix build on Windows some more
+      fccompat: fix build on Windows without unistd.h
+      Guard dirent.h includes
+      Add Meson build system
+      meson: print configuration summary()
+      ci: allow meson mingw build to fail
+
+Xavier Claessens (3):
+      meson: Fix build when 'tools' option is disabled
+      meson: Use version comparison function
+      meson: Fix build failure when compiler is not in PATH
+
+xiota (1):
+      Add Courier Std aliases.  Fixes #262.
+
+2.13.92 (2.14 RC2)
+
+Akira TAGOH (18):
+      Fix a typo on masking face id
+      Don't clean up pre-built docs if no docbook installed.
+      Fix obtaining real path from pre-defined names for Win32
+      Fix a crash when running with FC_DEBUG=256
+      Improve the performance a bit
+      Fix a typo
+      Add English name first into a cache
+      FcConfigParseAndLoad*() should returns false on config errors
+      Clean up temporary directory for tests
+      Add docs for missing properties
+      Fix the fail on fc-cache
+      Fix memory leaks
+      Fix a memory leak in FcFreeTypeQuery*()
+      Add 35-lang-normalize.conf
+      Add FC_FONT_HAS_HINT property to see if font has hinting or not.
+      Fix failing the check of prep table in some fonts
+      Fix the fails of make check when SOURCE_DATE_EPOCH is set
+      Improve the performance a bit
+
+Egmont Koblinger (1):
+      Fix the linear interpolation during weight mapping
+
+2.13.91 (2.14 RC1)
+
+Akira TAGOH (74):
+      Fix the build issue with --enable-static
+      Fix the issue that '~' wasn't extracted to the proper homedir
+      Add a test case for d1f48f11
+      Fix CI
+      Add more prefix support in <dir> element
+      Update fonts.dtd for last commit
+      Update docs for 1aa8b700
+      add missing the case of prefix="default" as documented
+      Fix test case
+      CI: Add more logs
+      Do not update mtime when removing .uuid file
+      Do not try updating mtime when unlink was failed
+      Do not run a test case for .uuid deletion
+      Drop Mitra Mono from 65-nonlatin.conf
+      Enable bubblewrap test case
+      Use FC_PATH_MAX instead of PATH_MAX
+      Use Rachana instead of Meera for Malayalam
+      Add doc for description element and update fonts.dtd
+      Fix FcFontList doesn't return a font with FC_COLOR=true
+      Add a test case for FcFontList
+      Warn when constant name is used for unexpected object
+      covscan fix: get rid of unnecessary condition check
+      Don't call unlink_dirs if basedir is null
+      covscan: fix compiler warnings
+      Fix a dereference of a null pointer
+      Fix a crash with invalid matrix element
+      Add system-ui generic family
+      Fix misleading summary in docs for FcStrStrIgnoreCase
+      Fix build issue on Win32.
+      autogen.sh: Make AUTORECONF_FLAGS overwritable
+      Ifdef'ed unnecessary code for Win32
+      Fix make check on cross-compiled env
+      Add build test for MinGW
+      Fix make distcheck error
+      Update requirement for gettext
+      Correct configure option to cross-compile
+      Install wine for CI on MinGW
+      Don't test bind-mount thing for MinGW
+      Reset errno to do error handling properly
+      Add FcDirCacheCreateUUID doc back to pass make check
+      Drop a line to include uuid.h
+      Fix make check fail on run-test-conf.sh
+      Add new element remap-dir instead of extending dir element
+      Trim the last slash
+      Update testcase
+      Update deps to run CI
+      Drop unnecessary line to include uuid.h
+      Fix a typo
+      Add reset-dirs element
+      Add salt attribute to dir and remap-dir elements
+      Update doc for salt
+      trivial testcase update
+      Add back if !OS_WIN32 line
+      Fix build issues on MinGW
+      Use alternative function for realpath on Win32
+      Fix make check fail on MinGW again
+      Add more data to artifacts for debugging purpose
+      Don't share fonts and cache dir for testing
+      Don't warn if path can't be converted with prefix
+      Add some debugging output
+      Oops, Terminate string
+      fc-cache: Show font directories to generate cache with -v
+      Allow overriding salt with new one coming later
+      Don't show salt in debugging message if salt is null
+      Fix unexpected cache name by double-slash in path
+      Fallback uuid-based name to read a cache if no MD5-based cache available
+      No need to remap for uuid based
+      Update the test case that is looking for uuid based on host
+      Distribute archive in xz instead of bz2
+      Update CaseFolding.txt to Unicode 12.1
+      fc-validate: returns an error code when missing some glyphs
+      Correct the comment for FC_LANG in fontconfig.h
+      Fix a typo in the description of FcWeightFromOpenTypeDouble
+      Fix endianness on generating MD5 cache name
+
+Behdad Esfahbod (1):
+      Fix name-table language code mapping for Mongolian
+
+Ben Wagner (1):
+      Better document sysroot.
+
+Chris McDonald (2):
+      Respect sysroot option for file path passed to stat
+      Lowered temporary rooted_dir variable inside loop
+
+Jon Turney (1):
+      Only use test wrapper-script if host is MinGW
+
+Keith Packard (6):
+      Do not remove UUID file when a scanned directory is empty
+      Fetch FONTCONFIG_SYSROOT in FcConfigCreate
+      Remove '-u' option from run-test-conf.sh
+      Add delays to test-bz106632, check UptoDate separately
+      Remove UUID-related tests
+      Replace UUID file mechanism with per-directory 'map' attribute [v2]
+
+Robert Yang (1):
+      src/fccache.c: Fix define for HAVE_POSIX_FADVISE
+
+2.13.1
+
+Akira TAGOH (48):
+      Use the builtin uuid for OSX
+      Fix the build issue again on MinGW with enabling nls
+      Add uuid to Requires.private in .pc only when pkgconfig macro found it
+      Allow the constant names in the range
+      Do not override locale if already set by app
+      Add the value of the constant name to the implicit object in the pattern
+      Add a testcase for FcNameParse
+      Leave the locale setting to applications
+      call setlocale
+      Fix make check fail when srcdir != builddir.
+      Do not ship fcobjshash.h
+      Fix typo in doc
+      Change the emboldening logic again
+      Bug 43367 - RFE: iterator to peek objects in FcPattern
+      Add a testrunner for conf
+      Add a test case for 90-synthetic.conf
+      Bug 106497 - better error description when problem reading font configuration
+      Bug 106459 - fc-cache doesn't use -y option for .uuid files
+      Fix leaks
+      Fix -Wstringop-truncation warning
+      Fix double-free
+      Add a test case for bz#106618
+      Update CaseFolding.txt to Unicode 11
+      Remove .uuid when no font files exists on a directory
+      Fix the leak of file handle
+      Fix memory leak
+      Fix memory leaks
+      Fix memory leak
+      Fix memory leak
+      Fix memory leak
+      Fix unterminated string issue
+      Fix array access in a null pointer dereference
+      Fix access in a null pointer dereference
+      do not pass null pointer to memcpy
+      Fix dereferencing null pointer
+      Fix a typo
+      Fix possibly dereferencing a null pointer
+      Fix allocating insufficient memory for terminating null of the string
+      Make a call fail on ENOMEM
+      Allocate sufficient memory to terminate with null
+      Drop the redundant code
+      Fix memory leak
+      Fix the build issue with gperf
+      Fix missing closing bracket in FcStrIsAbsoluteFilename()
+      Update the issue tracker URL
+      Fix distcheck fail
+      Add .gitlab-ci.yml
+      Bump the libtool revision
+
+Alexander Larsson (3):
+      Add FcCacheAllocate() helper
+      Cache: Rewrite relocated paths in earlier
+      Cache: Remove alias_table
+
+Behdad Esfahbod (4):
+      Minor: fix warnings
+      Fix name scanning
+      Share name-mapping across instances
+      Use FT_HAS_COLOR
+
+Chris Lamb (1):
+      Ensure cache checksums are deterministic
+
+Matthieu Herrb (1):
+      FcCacheFindByStat(): fix checking of nanoseconds field.
+
+Tom Anderson (7):
+      Fix undefined-shift UBSAN errors
+      Use realfilename for FcOpen in _FcConfigParse
+      Add FONTCONFIG_SYSROOT environment variable
+      Fix CFI builds
+      Fix heap use-after-free
+      Return canonicalized paths from FcConfigRealFilename
+      Fix build with CFLAGS="-std=c11 -D_GNU_SOURCE"
+
+2.13
+
+Akira TAGOH (4):
+      Add Simplified Chinese translations
+      Fix a build issue on MinGW with enabling nls
+      Initialize an array explicitly
+      Bump the libtool revision
+
+2.12.93 (2.13 RC3)
+
+Akira TAGOH (12):
+      trivial fix
+      Add files to enable ITS support in gettext
+      Use the native ITS support in gettext
+      Remove POTFILES.in until new release of gettext is coming...
+      export GETTEXTDATADIR to refer the local .its/.loc file instead of using --its option
+      clean up
+      Do not add cflags and libs coming from pkg-config file.
+      Revert some removal from 7ac6af6
+      Take effects on dir, cachedir, acceptfont, and rejectfont only when loading
+      Do not mix up font dirs into the list of config dirs
+      Ensure the user config dir is available in the list of config dirs on the fallback config
+      Add missing files to ship
+
+Alexander Larsson (1):
+      FcHashTableAddInternal: Compare against the right key
+
+Behdad Esfahbod (5):
+      Remove hack for OS/2 weights 1..9
+      Support FC_WIDTH as double as well
+      Fix leak
+      Use FT_Done_MM_Var if available
+      Fix undefined-behavior signed shifts
+
+Olivier Crête (1):
+      Fix cross-compilation by passing CPPFLAGS to CPP
+
+Tom Anderson (1):
+      Allow overriding symbol visibility.
+
+2.12.92 (2.13 RC2)
+
+Akira TAGOH (13):
+      cleanup files
+      Update .uuid only when -r is given but not -f.
+      Returns false if key is already available in the table
+      Add missing doc of FcDirCacheCreateUUID
+      Replace uuid in the table properly when -r
+      Add a test case for uuid creation
+      Do not update mtime with creating .uuid
+      Disable uuid related code on Win32
+      Try to get current instance of FcConfig as far as possible
+      do not check the existence of itstool on win32
+      Fix the mis-ordering of ruleset evaluation in a file with include element
+      Fix compiler warnings
+      Add FcReadLink to wrap up readlink impl.
+
+Alexander Larsson (1):
+      fchash: Fix replace
+
+Behdad Esfahbod (7):
+      Don't crash
+      Remove a debug abort()
+      Minor
+      Set font-variations settings for standard axes in variable fonts
+      Let pattern FC_FONT_VARIATIONS override standard axis variations
+      Put back accidentally removed code
+      Add FcWeightTo/FromOpenTypeDouble()
+
+2.12.91 (2.13 RC1)
+
+Akira TAGOH (37):
+      und_zsye.orth: polish to get for NotoEmoji-Regular.ttf
+      Revert "Keep the same behavior to the return value of FcConfigParseAndLoad"
+      Fix again to keep the same behavior to the return value of FcConfigParseAndLoad
+      cleanup
+      Fix a compiler warning
+      Update libtool revision
+      Bump version to 2.12.6
+      doc: trivial update
+      Add the ruleset description support
+      workaround to avoid modifying by gettextize
+      missing an open parenthesis
+      another workaround to avoid modifying by gettextize...
+      Validate cache more carefully
+      Allow autoreconf through autopoint for gettext things
+      Correct debugging messages to load/scan config
+      Add the check of PCF_CONFIG_OPTION_LONG_FAMILY_NAMES back
+      Use uuid-based cache filename if uuid is assigned to dirs
+      Add new API to find out a font from current search path
+      Replace the font path in FcPattern to what it is actually located.
+      Replace the original path to the new one
+      Replace the path of subdirs in caches as well
+      Don't call FcStat when the alias has already been added
+      Destroy the alias and UUID tables when all of caches is unloaded
+      cleanup
+      abstract hash table functions
+      update
+      Fix memory leak
+      Fix a typo
+      Don't call FcStat when the alias has already been added
+      Add a testcase for bind-mounted cachedir
+      cleanup
+      Use smaller prime for hash size
+      Fix the testcase for env not enabled PCF_CONFIG_OPTION_LONG_FAMILY_NAMES in freetype
+      thread-safe functions in fchash.c
+      Fix distcheck error
+      Fix "make check" fail again
+      Bump the libtool revision
+
+Alban Browaeys (1):
+      Fixes cleanup
+
+Alexander Kanavin (1):
+      src/fcxml.c: avoid double free() of filename
+
+Bastien Nocera (1):
+      conf: Prefer system emoji fonts to third-party ones
+
+Behdad Esfahbod (76):
+      Minor
+      Remove stray printf()
+      [fc-query] Fix linking order
+      Instead of loading glyphs (with FreeType), just check loca table
+      Don't even check loca for glyph outline detection
+      Check for non-empty outline for U+0000..U+001F
+      Add back code for choosing strike, and cleanup
+      Minor: adjust debug output
+      Remove unnecessary check
+      Remove a few unused blanks parameters
+      Remove check that cannot fail
+      Remove use of psnames for charset construction
+      Remove unused variable
+      Remove fc-glyphname
+      Remove blanks facility from the library
+      Remove blanks support from fc-scan
+      Mark more parameters FC_UNUSED
+      Move variables to narrower scope and indent
+      Remove unneeded check
+      Use multiplication instead of division
+      Use inline functions instead of macros for a couple of things
+      Simplify advance-width calculations
+      Inline FcFreeTypeCheckGlyph()
+      Call FT_Get_Advance() only as long as we need to determine font width type
+      Minor
+      Update documentation for removal of blanks
+      Merge branch 'faster'
+      Add FcFreeTypeQueryAll()
+      Document FcFreeTypeQueryAll()
+      Accept NULL in for spacing in FcFreeTypeCharSetAndSpacing()
+      Remove FcCompareSize()
+      Rename FcCompareSizeRange() to FcCompareRange()
+      Rewrite FcCompareRange()
+      In FcSubstituteDefault(), handle size range
+      Check instance-index before accessing array
+      Indent
+      [varfonts] Add FC_FONT_VARIATIONS
+      [varfonts] Add FC_VARIABLE
+      [varfonts] Change id argument in FcFreeTypeQuery* to unsigned int
+      Print ranges as closed as opposed to half-open
+      [varfonts] Change FC_WEIGHT and FC_WIDTH into ranges
+      [varfonts] Query varfonts if id >> 16 == 0x8000
+      Fix instance-num handling in collections
+      [varfonts] Query variable font in FcFreeTypeQueryAll()
+      [varfonts] Fetch optical-size for named instances
+      In RenderPrepare(), handle ranges smartly
+      [fc-query] Remove --ignore-blanks / -b
+      [fc-match/fc-list/fc-query/fc-scan] Add --brief that is like --verbose without charset
+      Add separate match compare function for size
+      Fix range comparision operators implementation
+      Adjust emboldening logic
+      [varfonts] Map from OpenType to Fontconfig weight values
+      Add FcDontCare value to FcBool
+      Implement more config bool operations for boolean types
+      Fix possible div-by-zero
+      [varfonts] Use fvar data even if there's no variation in it
+      Minor
+      Revert "[varfonts] Use fvar data even if there's no variation in it"
+      [varfonts] Minor
+      [varfonts] Comment
+      [varfonts] Don't set style for variable-font pattern
+      [varfonts] Skip named-instance that is equivalent to base font
+      [varfonts] Do not set postscriptname for varfont pattern
+      [varfonts] Don't reopen face for each named instance
+      Separate charset and spacing code
+      [varfonts] Reuse charset for named instances
+      Move whitespace-trimming code to apply to all name-table strings
+      Fix whitespace-trimming loop and empty strings...
+      Whitespace
+      Don't convert nameds to UTF-8 unless we are going to use them
+      Simplify name-table platform mathcing logic
+      Use binary-search for finding name table entries
+      [varfonts] Share lang across named-instances
+      Merge branch 'varfonts2'
+      Require freetype >= 2.8.1
+      Remove assert
+
+David Kaspar [Dee'Kej] (1):
+      conf.d: Drop aliases for (URW)++ fonts
+
+Florian Müllner (1):
+      build: Remove references to deleted file
+
+2.12.6
+
+Akira TAGOH (4):
+      und_zsye.orth: polish to get for NotoEmoji-Regular.ttf
+      Revert "Keep the same behavior to the return value of FcConfigParseAndLoad"
+      Fix again to keep the same behavior to the return value of FcConfigParseAndLoad
+      Update libtool revision
+
+Behdad Esfahbod (2):
+      Minor
+      [fc-query] Fix linking order
+
+David Kaspar [Dee'Kej] (1):
+      conf.d: Drop aliases for (URW)++ fonts
+
+Florian Müllner (1):
+      build: Remove references to deleted file
+
+2.12.5
+
+Akira TAGOH (17):
+      Add FcPatternGetWithBinding() to obtain the binding type of the value in FcPattern.
+      Add FcConfigParseAndLoadFromMemory() to load a configuration from memory.
+      Bug 101726 - Sans config pulls in Microsoft Serifed font
+      Fix gcc warnings with enabling libxml2
+      Add und-zsye.orth to support emoji in lang
+      Add more code points to und-zsye.orth
+      Keep the same behavior to the return value of FcConfigParseAndLoad
+      Do not ship fcobjshash.gperf in archive
+      Accept 4 digit script tag in FcLangNormalize().
+      Fix to work the debugging option on fc-validate
+      Add und_zmth.orth to support Math in lang
+      Polish und_zmth.orth for Libertinus Math
+      Polish und_zmth.orth more for Cambria Math and Minion Math
+      Update similar to emoji's
+      fc-blanks: fall back to the static data available in repo if downloaded data is corrupted
+      Update docs
+      Update libtool versioning
+
+Behdad Esfahbod (14):
+      Pass --pic to gperf
+      Add generic family matching for "emoji" and "math"
+      [fc-query] Support listing named instances
+      Add Twitter Color Emoji
+      Add EmojiOne Mozilla font
+      [fc-lang] Allow using ".." instead of "-" in ranges
+      Minor
+      Remove unneeded codepoints
+      Adjust color emoji config some more
+      Ignore 'und-' prefix for in FcLangCompare
+      Minor
+      Fix sign-difference compare warning
+      Fix warning
+      Fix weight mapping
 
 2.12.4
 
@@ -933,7 +1586,7 @@ Behdad Esfahbod (119):
       [doc] Add const decorator for FcPatternDuplicate()
       Add FcPatternFilter() (#13016)
       [doc] Document that a zero rescanInterval disables automatic checks (#17103)
-      Get rid of $Id: README,v 1.4 2017/08/19 10:11:04 matthieu Exp $ tags
+      Get rid of $Id: README,v 1.5 2021/11/11 08:46:42 matthieu Exp $ tags
       [doc] Fix signature of FcConfigHome()
       Fix docs re 'orig' argument of FcPatternBuild and family
       Update sr.orth to actul subset of Cyrillic used by Serbian (#17208)

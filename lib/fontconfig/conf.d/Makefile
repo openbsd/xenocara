@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2017/01/16 22:43:49 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.12 2021/11/11 08:46:46 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -9,21 +9,25 @@ DOC_FILES= \
 	README
 
 CONF_LINKS = \
+	10-hinting-slight.conf \
 	10-scale-bitmap-fonts.conf \
+	11-lcd-filter-default.conf \
 	20-unhint-small-vera.conf \
 	30-lucida-aliases.conf \
-	30-urw-aliases.conf \
 	30-metric-aliases.conf \
 	31-nonmst.conf \
 	40-nonlatin.conf \
+	45-generic.conf \
 	45-latin.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
+	60-generic.conf \
 	60-latin.conf \
 	65-fonts-persian.conf \
 	65-nonlatin.conf \
 	69-unifont.conf \
+	70-no-bitmaps.conf \
 	80-delicious.conf \
 	90-synthetic.conf
 
@@ -46,14 +50,15 @@ AVAIL_FILES =				\
 	20-unhint-small-vera.conf	\
 	25-unhint-nonlatin.conf		\
 	30-lucida-aliases.conf		\
-	30-urw-aliases.conf		\
 	30-metric-aliases.conf		\
 	31-nonmst.conf			\
 	40-nonlatin.conf		\
+	45-generic.conf			\
 	45-latin.conf			\
 	49-sansserif.conf		\
 	50-user.conf			\
 	51-local.conf			\
+	60-generic.conf			\
 	60-latin.conf			\
 	65-fonts-persian.conf		\
 	65-khmer.conf			\

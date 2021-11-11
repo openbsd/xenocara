@@ -1,21 +1,22 @@
-#	$OpenBSD: Makefile,v 1.2 2017/06/18 21:09:07 espie Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/11/11 08:46:46 matthieu Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
 
-PROG=	fc-case
 
-afterdepend: fccase.h
-all: fccase.h
+all:
 
-fccase.h: ${PROG}
-	./${PROG} ${FONTCONFIG}/fc-case/CaseFolding.txt \
-	< ${FONTCONFIG}/fc-case/fccase.tmpl.h > fccase.h
+regen: fccase.h
 
-obj:	_xenocara_obj
+fccase.h: CaseFolding.txt fccase.tmpl.h fc-case.py
+	python${PYTHON_VERSION} ${FONTCONFIG}/fc-case/fc-case.py \
+	${FONTCONFIG}/fc-case/CaseFolding.txt \
+	--template ${FONTCONFIG}/fc-case/fccase.tmpl.h \
+		--output $@
+
+obj:
 
 .PATH: ${FONTCONFIG}/fc-case
 
-CLEANFILES = fccase.h
 
 NOMAN=
 

@@ -10,10 +10,10 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FcWeight"
-HREF="x102.html#AEN3573"><LINK
+HREF="x103.html#AEN4036"><LINK
 REL="PREVIOUS"
-TITLE="FUNCTIONS"
-HREF="x102.html"><LINK
+TITLE="FcWeightToOpenTypeDouble"
+HREF="fcweighttoopentypedouble.html"><LINK
 REL="NEXT"
 TITLE="FcWeightToOpenType"
 HREF="fcweighttoopentype.html"></HEAD
@@ -44,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="x102.html"
+HREF="fcweighttoopentypedouble.html"
 ACCESSKEY="P"
 >&#60;&#60;&#60; Previous</A
 ></TD
@@ -75,7 +75,7 @@ NAME="FCWEIGHTFROMOPENTYPE"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN3581"
+NAME="AEN4091"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN3581"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN3584"
+NAME="AEN4094"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN3585"
+NAME="AEN4095"
 ></A
 ><TABLE
 BORDER="0"
@@ -129,7 +129,7 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3592"
+NAME="AEN4102"
 ></A
 ><H2
 >Description</H2
@@ -137,19 +137,18 @@ NAME="AEN3592"
 ><TT
 CLASS="FUNCTION"
 >FcWeightFromOpenType</TT
-> returns an integer value
-to use with FC_WEIGHT, from an integer in the 1..1000 range, resembling
-the numbers from OpenType specification's OS/2 usWeight numbers, which
-are also similar to CSS font-weight numbers.  If input is negative,
-zero, or greater than 1000, returns -1.  This function linearly interpolates
-between various FC_WEIGHT_* constants.  As such, the returned value does not
-necessarily match any of the predefined constants.
+> is like
+<TT
+CLASS="FUNCTION"
+>FcWeightFromOpenTypeDouble</TT
+> but with integer arguments.
+Use the other function instead.
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3596"
+NAME="AEN4107"
 ></A
 ><H2
 >Since</H2
@@ -172,7 +171,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="x102.html"
+HREF="fcweighttoopentypedouble.html"
 ACCESSKEY="P"
 >&#60;&#60;&#60; Previous</A
 ></TD
@@ -200,13 +199,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->FUNCTIONS</TD
+>FcWeightToOpenTypeDouble</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN3573"
+HREF="x103.html#AEN4036"
 ACCESSKEY="U"
 >Up</A
 ></TD

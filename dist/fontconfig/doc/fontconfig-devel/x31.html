@@ -13,7 +13,7 @@ TITLE="FUNCTIONAL OVERVIEW"
 HREF="x19.html"><LINK
 REL="NEXT"
 TITLE="FUNCTIONS"
-HREF="x102.html"></HEAD
+HREF="x103.html"></HEAD
 ><BODY
 CLASS="SECT1"
 BGCOLOR="#FFFFFF"
@@ -55,7 +55,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="x102.html"
+HREF="x103.html"
 ACCESSKEY="N"
 >Next &#62;&#62;&#62;</A
 ></TD
@@ -208,6 +208,7 @@ CLASS="PROGRAMLISTING"
                         const FcCharSet *c;
 			void *f;
 			const FcLangSet *l;
+			const FcRange   *r;
                 } u;
         } FcValue;
     </PRE
@@ -236,6 +237,7 @@ CLASS="PROGRAMLISTING"
         FcTypeCharSet   c               FcCharSet *
 	FcTypeFTFace	f		void * (FT_Face)
 	FcTypeLangSet	l		FcLangSet *
+	FcTypeRange	r		FcRange *
     </PRE
 ></TD
 ></TR
@@ -249,14 +251,15 @@ CLASS="SECT2"
 CLASS="SECT2"
 ><A
 NAME="AEN58"
->FcPattern</A
+>FcPattern, FcPatternIter</A
 ></H2
 ><P
->holds a set of names with associated value lists; each name refers to a
+>An FcPattern holds a set of names with associated value lists; each name refers to a
 property of a font.  FcPatterns are used as inputs to the matching code as
 well as holding information about specific fonts.  Each property can hold
 one or more values; conventionally all of the same type, although the
-interface doesn't demand that.
+interface doesn't demand that.  An FcPatternIter is used during iteration to
+access properties in FcPattern.
     </P
 ></DIV
 ><DIV
@@ -415,13 +418,18 @@ NAME="AEN80"
 blank chars are assumed to be invalid and are elided from the charset
 associated with the font.
     </P
+><P
+>        FcBlanks is deprecated and should not be used in newly written code.
+        It is still accepted by some functions for compatibility with
+        older code but will be removed in the future.
+    </P
 ></DIV
 ><DIV
 CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN83"
+NAME="AEN84"
 >FcFileCache</A
 ></H2
 ><P
@@ -435,7 +443,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN86"
+NAME="AEN87"
 >FcConfig</A
 ></H2
 ><P
@@ -454,7 +462,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN89"
+NAME="AEN90"
 >FcSetName</A
 ></H2
 ><P
@@ -468,7 +476,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN92"
+NAME="AEN93"
 >FcResult</A
 ></H2
 ><P
@@ -502,7 +510,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN96"
+NAME="AEN97"
 >FcAtomic</A
 ></H2
 ><P
@@ -515,7 +523,7 @@ CLASS="SECT2"
 ><H2
 CLASS="SECT2"
 ><A
-NAME="AEN99"
+NAME="AEN100"
 >FcCache</A
 ></H2
 ><P
@@ -561,7 +569,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="x102.html"
+HREF="x103.html"
 ACCESSKEY="N"
 >Next &#62;&#62;&#62;</A
 ></TD

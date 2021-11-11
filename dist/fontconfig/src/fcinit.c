@@ -39,15 +39,24 @@ static FcConfig *
 FcInitFallbackConfig (const FcChar8 *sysroot)
 {
     FcConfig	*config;
+    const FcChar8 *fallback = (const FcChar8 *) ""	\
+	"<fontconfig>" \
+	FC_DEFAULT_FONTS \
+	"  <dir prefix=\"xdg\">fonts</dir>" \
+	"  <cachedir>" FC_CACHEDIR "</cachedir>" \
+	"  <cachedir prefix=\"xdg\">fontconfig</cachedir>" \
+	"  <include ignore_missing=\"yes\">" CONFIGDIR "</include>" \
+	"  <include ignore_missing=\"yes\" prefix=\"xdg\">fontconfig/conf.d</include>" \
+	"  <include ignore_missing=\"yes\" prefix=\"xdg\">fontconfig/fonts.conf</include>" \
+	"</fontconfig>";
 
     config = FcConfigCreate ();
     if (!config)
 	goto bail0;
     FcConfigSetSysRoot (config, sysroot);
-    if (!FcConfigAddDir (config, (FcChar8 *) FC_DEFAULT_FONTS))
+    if (!FcConfigParseAndLoadFromMemory (config, fallback, FcFalse))
 	goto bail1;
-    if (!FcConfigAddCacheDir (config, (FcChar8 *) FC_CACHEDIR))
-	goto bail1;
+
     return config;
 
 bail1:
@@ -86,6 +95,7 @@ FcInitLoadOwnConfig (FcConfig *config)
 
 	return fallback;
     }
+    (void) FcConfigParseOnly (config, (const FcChar8 *)FC_TEMPLATEDIR, FcFalse);
 
     if (config->cacheDirs && config->cacheDirs->num == 0)
     {
@@ -190,10 +200,10 @@ void
 FcFini (void)
 {
     FcConfigFini ();
-    FcCacheFini ();
+    FcConfigPathFini ();
     FcDefaultFini ();
     FcObjectFini ();
-    FcConfigPathFini ();
+    FcCacheFini ();
 }
 
 /*
@@ -220,7 +230,8 @@ FcInitReinitialize (void)
 FcBool
 FcInitBringUptoDate (void)
 {
-    FcConfig	*config = FcConfigGetCurrent ();
+    FcConfig	*config = FcConfigReference (NULL);
+    FcBool	ret = FcTrue;
     time_t	now;
 
     if (!config)
@@ -229,19 +240,23 @@ FcInitBringUptoDate (void)
      * rescanInterval == 0 disables automatic up to date
      */
     if (config->rescanInterval == 0)
-	return FcTrue;
+	goto bail;
     /*
      * Check no more often than rescanInterval seconds
      */
     now = time (0);
     if (config->rescanTime + config->rescanInterval - now > 0)
-	return FcTrue;
+	goto bail;
     /*
      * If up to date, don't reload configuration
      */
     if (FcConfigUptoDate (0))
-	return FcTrue;
-    return FcInitReinitialize ();
+	goto bail;
+    ret = FcInitReinitialize ();
+bail:
+    FcConfigDestroy (config);
+
+    return ret;
 }
 
 #define __fcinit__

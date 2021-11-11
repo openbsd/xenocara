@@ -1,19 +1,19 @@
-#	$OpenBSD: Makefile,v 1.2 2017/06/18 21:09:07 espie Exp $
+#	$OpenBSD: Makefile,v 1.3 2021/11/11 08:46:46 matthieu Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
+PYTHON=		python${PYTHON_VERSION}
 
-PROG=	fc-lang
+all:
 
-CFLAGS+=	-I../fc-case
+regen: fclang.h
 
-afterdepend: fclang.h
-all: fclang.h
+fclang.h: ${ORTH} fc-lang.py fclang.tmpl.h
+	${PYTHON} ${FONTCONFIG}/fc-lang/fc-lang.py \
+	--directory ${FONTCONFIG}/fc-lang ${ORTH} \
+	--template ${FONTCONFIG}/fc-lang/fclang.tmpl.h  \
+	--output ${.CURDIR}/$@
 
-fclang.h: ${PROG}
-	./${PROG} -d ${FONTCONFIG}/fc-lang ${ORTH} \
-	< ${FONTCONFIG}/fc-lang/fclang.tmpl.h > fclang.h
-
-obj:	_xenocara_obj
+obj:
 
 # NOTE:
 #
@@ -264,12 +264,12 @@ ORTH = \
 	brx.orth \
 	sat.orth \
 	doi.orth \
-	mni.orth
+	mni.orth \
+	und_zsye.orth \
+	und_zmth.orth
 #	^-------------- Add new orth files here
 
 .PATH: ${FONTCONFIG}/fc-lang
-
-CLEANFILES = fclang.h
 
 NOMAN=
 

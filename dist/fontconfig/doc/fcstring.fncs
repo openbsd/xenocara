@@ -195,7 +195,7 @@ with UTF8 encoded strings.
 @FUNC@		FcStrStrIgnoreCase
 @TYPE1@		const FcChar8 *			@ARG1@		s1
 @TYPE2@		const FcChar8 *			@ARG2@		s2
-@PURPOSE@	locate UTF-8 substring ignoring ASCII case
+@PURPOSE@	locate UTF-8 substring ignoring case
 @DESC@
 Returns the location of <parameter>s2</parameter> in 
 <parameter>s1</parameter>, ignoring case.  Returns NULL if
@@ -221,6 +221,18 @@ new string.
 @DESC@
 This is just a wrapper around free(3) which helps track memory usage of
 strings within the fontconfig library.
+@@
+
+@RET@		FcChar8 *
+@FUNC@		FcStrBuildFilename
+@TYPE1@		const FcChar8 *			@ARG1@		path
+@TYPE2@		...
+@PURPOSE@	Concatenate strings as a file path
+@DESC@
+Creates a filename from the given elements of strings as file paths
+and concatenate them with the appropriate file separator.
+Arguments must be null-terminated.
+This returns a newly-allocated memory which should be freed when no longer needed.
 @@
 
 @RET@		FcChar8 *

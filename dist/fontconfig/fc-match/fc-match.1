@@ -55,6 +55,18 @@ Displays fonts matching
 \fB\fIelement\fB\fR
 If set, the \fIelement\fR property
 is displayed for matching fonts.
+.SH "EXAMPLES"
+.TP
+\fBfc-match sans\fR
+Display the best matching font categorized into sans-serif generic family, filtered by current locale
+.PP
+.TP
+\fBfc-match sans:lang=en\fR
+Display the best matching font categorized into sans-serif generic family, filtered by English language
+.PP
+.TP
+\fBfc-match sans:lang=en:weight=bold\fR
+Display the best matching font categorized into sans-serif generic family, filtered by English language and weight is bold.
 .SH "SEE ALSO"
 .PP
 \fBfc-list\fR(1)

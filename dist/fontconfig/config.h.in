@@ -12,6 +12,10 @@
 /* Use libxml2 instead of Expat */
 #undef ENABLE_LIBXML2
 
+/* Define to 1 if translation of program messages to the user's native
+   language is requested. */
+#undef ENABLE_NLS
+
 /* Additional font directories */
 #undef FC_ADD_FONTS
 
@@ -21,6 +25,9 @@
 /* System font directory */
 #undef FC_DEFAULT_FONTS
 
+/* The type of len parameter of the gperf hash/lookup function */
+#undef FC_GPERF_SIZE_T
+
 /* Define to nothing if C supports flexible array members, and to 1 if it does
    not. That way, with a declaration like `struct s { int n; double
    d[FLEXIBLE_ARRAY_MEMBER]; };', the struct hack can be used with pre-C99
@@ -29,6 +36,21 @@
    instead. Don't use 'offsetof (struct s, d[0])', as this doesn't work with
    MSVC and with C++ compilers. */
 #undef FLEXIBLE_ARRAY_MEMBER
+
+/* Gettext package */
+#undef GETTEXT_PACKAGE
+
+/* Define to 1 if you have the Mac OS X function CFLocaleCopyCurrent in the
+   CoreFoundation framework. */
+#undef HAVE_CFLOCALECOPYCURRENT
+
+/* Define to 1 if you have the Mac OS X function CFPreferencesCopyAppValue in
+   the CoreFoundation framework. */
+#undef HAVE_CFPREFERENCESCOPYAPPVALUE
+
+/* Define if the GNU dcgettext() function is already present or preinstalled.
+   */
+#undef HAVE_DCGETTEXT
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -49,14 +71,11 @@
 /* Define to 1 if you have the `fstatvfs' function. */
 #undef HAVE_FSTATVFS
 
-/* FT_Bitmap_Size structure includes y_ppem field */
-#undef HAVE_FT_BITMAP_SIZE_Y_PPEM
+/* Define to 1 if you have the `FT_Done_MM_Var' function. */
+#undef HAVE_FT_DONE_MM_VAR
 
 /* Define to 1 if you have the `FT_Get_BDF_Property' function. */
 #undef HAVE_FT_GET_BDF_PROPERTY
-
-/* Define to 1 if you have the `FT_Get_Next_Char' function. */
-#undef HAVE_FT_GET_NEXT_CHAR
 
 /* Define to 1 if you have the `FT_Get_PS_Font_Info' function. */
 #undef HAVE_FT_GET_PS_FONT_INFO
@@ -66,9 +85,6 @@
 
 /* Define to 1 if you have the `FT_Has_PS_Glyph_Names' function. */
 #undef HAVE_FT_HAS_PS_GLYPH_NAMES
-
-/* Define to 1 if you have the `FT_Select_Size' function. */
-#undef HAVE_FT_SELECT_SIZE
 
 /* Define to 1 if you have the `getexecname' function. */
 #undef HAVE_GETEXECNAME
@@ -84,6 +100,12 @@
 
 /* Define to 1 if you have the `getprogname' function. */
 #undef HAVE_GETPROGNAME
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#undef HAVE_GETTEXT
+
+/* Define if you have the iconv() function and it works. */
+#undef HAVE_ICONV
 
 /* Have Intel __sync_* atomic primitives */
 #undef HAVE_INTEL_ATOMIC_PRIMITIVES
@@ -157,6 +179,12 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
+/* Define to 1 if you have the `strerror' function. */
+#undef HAVE_STRERROR
+
+/* Define to 1 if you have the `strerror_r' function. */
+#undef HAVE_STRERROR_R
+
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
@@ -209,12 +237,6 @@
 
 /* Define to 1 if you have the <sys/vfs.h> header file. */
 #undef HAVE_SYS_VFS_H
-
-/* Define to 1 if `usLowerOpticalPointSize' is a member of `TT_OS2'. */
-#undef HAVE_TT_OS2_USLOWEROPTICALPOINTSIZE
-
-/* Define to 1 if `usUpperOpticalPointSize' is a member of `TT_OS2'. */
-#undef HAVE_TT_OS2_USUPPEROPTICALPOINTSIZE
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H

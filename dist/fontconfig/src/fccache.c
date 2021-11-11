@@ -22,14 +22,24 @@
  */
 #include "fcint.h"
 #include "fcarch.h"
+#include "fcmd5.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
 #include <string.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifndef _WIN32
+  #include <sys/time.h>
+#else
+  #include <winsock2.h> /* for struct timeval */
+#endif
+
 #include <assert.h>
 #if defined(HAVE_MMAP) || defined(__CYGWIN__)
 #  include <unistd.h>
@@ -43,19 +53,66 @@
 #define O_BINARY 0
 #endif
 
+FcBool
+FcDirCacheCreateUUID (FcChar8  *dir,
+		      FcBool    force,
+		      FcConfig *config)
+{
+    return FcTrue;
+}
 
-struct MD5Context {
-        FcChar32 buf[4];
-        FcChar32 bits[2];
-        unsigned char in[64];
-};
+FcBool
+FcDirCacheDeleteUUID (const FcChar8  *dir,
+		      FcConfig       *config)
+{
+    FcBool ret = FcTrue;
+#ifndef _WIN32
+    const FcChar8 *sysroot;
+    FcChar8 *target, *d;
+    struct stat statb;
+    struct timeval times[2];
 
-static void MD5Init(struct MD5Context *ctx);
-static void MD5Update(struct MD5Context *ctx, const unsigned char *buf, unsigned len);
-static void MD5Final(unsigned char digest[16], struct MD5Context *ctx);
-static void MD5Transform(FcChar32 buf[4], FcChar32 in[16]);
+    config = FcConfigReference (config);
+    if (!config)
+	return FcFalse;
+    sysroot = FcConfigGetSysRoot (config);
+    if (sysroot)
+	d = FcStrBuildFilename (sysroot, dir, NULL);
+    else
+	d = FcStrBuildFilename (dir, NULL);
+    if (FcStat (d, &statb) != 0)
+    {
+	ret = FcFalse;
+	goto bail;
+    }
+    target = FcStrBuildFilename (d, ".uuid", NULL);
+    ret = unlink ((char *) target) == 0;
+    if (ret)
+    {
+	times[0].tv_sec = statb.st_atime;
+	times[1].tv_sec = statb.st_mtime;
+#ifdef HAVE_STRUCT_STAT_ST_MTIM
+	times[0].tv_usec = statb.st_atim.tv_nsec / 1000;
+	times[1].tv_usec = statb.st_mtim.tv_nsec / 1000;
+#else
+	times[0].tv_usec = 0;
+	times[1].tv_usec = 0;
+#endif
+	if (utimes ((const char *) d, times) != 0)
+	{
+	    fprintf (stderr, "Unable to revert mtime: %s\n", d);
+	}
+    }
+    FcStrFree (target);
+bail:
+    FcStrFree (d);
+#endif
+    FcConfigDestroy (config);
 
-#define CACHEBASE_LEN (1 + 32 + 1 + sizeof (FC_ARCHITECTURE) + sizeof (FC_CACHE_SUFFIX))
+    return ret;
+}
+
+#define CACHEBASE_LEN (1 + 36 + 1 + sizeof (FC_ARCHITECTURE) + sizeof (FC_CACHE_SUFFIX))
 
 static FcBool
 FcCacheIsMmapSafe (int fd)
@@ -94,17 +151,48 @@ static const char bin2hex[] = { '0', '1', '2', '3',
 				'c', 'd', 'e', 'f' };
 
 static FcChar8 *
-FcDirCacheBasename (const FcChar8 * dir, FcChar8 cache_base[CACHEBASE_LEN])
+FcDirCacheBasenameMD5 (FcConfig *config, const FcChar8 *dir, FcChar8 cache_base[CACHEBASE_LEN])
 {
+    FcChar8		*mapped_dir = NULL;
     unsigned char 	hash[16];
-    FcChar8		*hex_hash;
+    FcChar8		*hex_hash, *key = NULL;
     int			cnt;
     struct MD5Context 	ctx;
+    const FcChar8	*salt, *orig_dir = NULL;
 
+    salt = FcConfigMapSalt (config, dir);
+    /* Obtain a path where "dir" is mapped to.
+     * In case:
+     * <remap-dir as-path="/usr/share/fonts">/run/host/fonts</remap-dir>
+     *
+     * FcConfigMapFontPath (config, "/run/host/fonts") will returns "/usr/share/fonts".
+     */
+    mapped_dir = FcConfigMapFontPath(config, dir);
+    if (mapped_dir)
+    {
+	orig_dir = dir;
+	dir = mapped_dir;
+    }
+    if (salt)
+    {
+	size_t dl = strlen ((const char *) dir);
+	size_t sl = strlen ((const char *) salt);
+
+	key = (FcChar8 *) malloc (dl + sl + 1);
+	memcpy (key, dir, dl);
+	memcpy (key + dl, salt, sl + 1);
+	key[dl + sl] = 0;
+	if (!orig_dir)
+		orig_dir = dir;
+	dir = key;
+    }
     MD5Init (&ctx);
     MD5Update (&ctx, (const unsigned char *)dir, strlen ((const char *) dir));
 
     MD5Final (hash, &ctx);
+
+    if (key)
+	FcStrFree (key);
 
     cache_base[0] = '/';
     hex_hash = cache_base + 1;
@@ -115,24 +203,90 @@ FcDirCacheBasename (const FcChar8 * dir, FcChar8 cache_base[CACHEBASE_LEN])
     }
     hex_hash[2*cnt] = 0;
     strcat ((char *) cache_base, "-" FC_ARCHITECTURE FC_CACHE_SUFFIX);
+    if (FcDebug() & FC_DBG_CACHE)
+    {
+	printf ("cache: %s (dir: %s%s%s%s%s%s)\n", cache_base, orig_dir ? orig_dir : dir, mapped_dir ? " (mapped to " : "", mapped_dir ? (char *)mapped_dir : "", mapped_dir ? ")" : "", salt ? ", salt: " : "", salt ? (char *)salt : "");
+    }
+
+    if (mapped_dir)
+	FcStrFree(mapped_dir);
 
     return cache_base;
 }
+
+#ifndef _WIN32
+static FcChar8 *
+FcDirCacheBasenameUUID (FcConfig *config, const FcChar8 *dir, FcChar8 cache_base[CACHEBASE_LEN])
+{
+    FcChar8 *target, *fuuid;
+    const FcChar8 *sysroot = FcConfigGetSysRoot (config);
+    int fd;
+
+    /* We don't need to apply remapping here. because .uuid was created at that very directory
+     * to determine the cache name no matter where it was mapped to.
+     */
+    cache_base[0] = 0;
+    if (sysroot)
+	target = FcStrBuildFilename (sysroot, dir, NULL);
+    else
+	target = FcStrdup (dir);
+    fuuid = FcStrBuildFilename (target, ".uuid", NULL);
+    if ((fd = FcOpen ((char *) fuuid, O_RDONLY)) != -1)
+    {
+	char suuid[37];
+	ssize_t len;
+
+	memset (suuid, 0, sizeof (suuid));
+	len = read (fd, suuid, 36);
+	suuid[36] = 0;
+	close (fd);
+	if (len < 0)
+	    goto bail;
+	cache_base[0] = '/';
+	strcpy ((char *)&cache_base[1], suuid);
+	strcat ((char *) cache_base, "-" FC_ARCHITECTURE FC_CACHE_SUFFIX);
+	if (FcDebug () & FC_DBG_CACHE)
+	{
+	    printf ("cache fallbacks to: %s (dir: %s)\n", cache_base, dir);
+	}
+    }
+bail:
+    FcStrFree (fuuid);
+    FcStrFree (target);
+
+    return cache_base;
+}
+#endif
 
 FcBool
 FcDirCacheUnlink (const FcChar8 *dir, FcConfig *config)
 {
     FcChar8	*cache_hashed = NULL;
     FcChar8	cache_base[CACHEBASE_LEN];
+#ifndef _WIN32
+    FcChar8     uuid_cache_base[CACHEBASE_LEN];
+#endif
     FcStrList	*list;
     FcChar8	*cache_dir;
-    const FcChar8 *sysroot = FcConfigGetSysRoot (config);
+    const FcChar8 *sysroot;
+    FcBool	ret = FcTrue;
 
-    FcDirCacheBasename (dir, cache_base);
+    config = FcConfigReference (config);
+    if (!config)
+	return FcFalse;
+    sysroot = FcConfigGetSysRoot (config);
+
+    FcDirCacheBasenameMD5 (config, dir, cache_base);
+#ifndef _WIN32
+    FcDirCacheBasenameUUID (config, dir, uuid_cache_base);
+#endif
 
     list = FcStrListCreate (config->cacheDirs);
     if (!list)
-        return FcFalse;
+    {
+	ret = FcFalse;
+	goto bail;
+    }
 	
     while ((cache_dir = FcStrListNext (list)))
     {
@@ -144,12 +298,29 @@ FcDirCacheUnlink (const FcChar8 *dir, FcConfig *config)
 	    break;
 	(void) unlink ((char *) cache_hashed);
 	FcStrFree (cache_hashed);
+#ifndef _WIN32
+	if (uuid_cache_base[0] != 0)
+	{
+	    if (sysroot)
+		cache_hashed = FcStrBuildFilename (sysroot, cache_dir, uuid_cache_base, NULL);
+	    else
+		cache_hashed = FcStrBuildFilename (cache_dir, uuid_cache_base, NULL);
+	    if (!cache_hashed)
+		break;
+	    (void) unlink ((char *) cache_hashed);
+	    FcStrFree (cache_hashed);
+	}
+#endif
     }
     FcStrListDone (list);
+    FcDirCacheDeleteUUID (dir, config);
     /* return FcFalse if something went wrong */
     if (cache_dir)
-	return FcFalse;
-    return FcTrue;
+	ret = FcFalse;
+bail:
+    FcConfigDestroy (config);
+
+    return ret;
 }
 
 static int
@@ -182,7 +353,7 @@ FcDirCacheOpenFile (const FcChar8 *cache_file, struct stat *file_stat)
 static FcBool
 FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
 		   FcBool (*callback) (FcConfig *config, int fd, struct stat *fd_stat,
-				       struct stat *dir_stat, void *closure),
+				       struct stat *dir_stat, struct timeval *cache_mtime, void *closure),
 		   void *closure, FcChar8 **cache_file_ret)
 {
     int		fd = -1;
@@ -192,6 +363,7 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
     struct stat file_stat, dir_stat;
     FcBool	ret = FcFalse;
     const FcChar8 *sysroot = FcConfigGetSysRoot (config);
+    struct timeval latest_mtime = (struct timeval){ 0 };
 
     if (sysroot)
 	d = FcStrBuildFilename (sysroot, dir, NULL);
@@ -204,7 +376,7 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
     }
     FcStrFree (d);
 
-    FcDirCacheBasename (dir, cache_base);
+    FcDirCacheBasenameMD5 (config, dir, cache_base);
 
     list = FcStrListCreate (config->cacheDirs);
     if (!list)
@@ -213,6 +385,9 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
     while ((cache_dir = FcStrListNext (list)))
     {
         FcChar8	*cache_hashed;
+#ifndef _WIN32
+	FcBool retried = FcFalse;
+#endif
 
 	if (sysroot)
 	    cache_hashed = FcStrBuildFilename (sysroot, cache_dir, cache_base, NULL);
@@ -220,23 +395,56 @@ FcDirCacheProcess (FcConfig *config, const FcChar8 *dir,
 	    cache_hashed = FcStrBuildFilename (cache_dir, cache_base, NULL);
         if (!cache_hashed)
 	    break;
+#ifndef _WIN32
+      retry:
+#endif
         fd = FcDirCacheOpenFile (cache_hashed, &file_stat);
         if (fd >= 0) {
-	    ret = (*callback) (config, fd, &file_stat, &dir_stat, closure);
+	    ret = (*callback) (config, fd, &file_stat, &dir_stat, &latest_mtime, closure);
 	    close (fd);
 	    if (ret)
 	    {
 		if (cache_file_ret)
+		{
+		    if (*cache_file_ret)
+			FcStrFree (*cache_file_ret);
 		    *cache_file_ret = cache_hashed;
+		}
 		else
 		    FcStrFree (cache_hashed);
-		break;
 	    }
+	    else
+		FcStrFree (cache_hashed);
 	}
-    	FcStrFree (cache_hashed);
+#ifndef _WIN32
+	else if (!retried)
+	{
+	    FcChar8	uuid_cache_base[CACHEBASE_LEN];
+
+	    retried = FcTrue;
+	    FcDirCacheBasenameUUID (config, dir, uuid_cache_base);
+	    if (uuid_cache_base[0] != 0)
+	    {
+		FcStrFree (cache_hashed);
+		if (sysroot)
+		    cache_hashed = FcStrBuildFilename (sysroot, cache_dir, uuid_cache_base, NULL);
+		else
+		    cache_hashed = FcStrBuildFilename (cache_dir, uuid_cache_base, NULL);
+		if (!cache_hashed)
+		    break;
+		goto retry;
+	    }
+	    else
+		FcStrFree (cache_hashed);
+	}
+#endif
+	else
+	    FcStrFree (cache_hashed);
     }
     FcStrListDone (list);
 
+    if (closure)
+	return !!(*((FcCache **)closure) != NULL);
     return ret;
 }
 
@@ -254,6 +462,7 @@ struct _FcCacheSkip {
     FcCache	    *cache;
     FcRef	    ref;
     intptr_t	    size;
+    void	   *allocated;
     dev_t	    cache_dev;
     ino_t	    cache_ino;
     time_t	    cache_mtime;
@@ -300,7 +509,9 @@ retry:
 static void
 unlock_cache (void)
 {
-  FcMutexUnlock (cache_lock);
+  FcMutex *lock;
+  lock = fc_atomic_ptr_get (&cache_lock);
+  FcMutexUnlock (lock);
 }
 
 static void
@@ -379,6 +590,7 @@ FcCacheInsert (FcCache *cache, struct stat *cache_stat)
 
     s->cache = cache;
     s->size = cache->size;
+    s->allocated = NULL;
     FcRefInit (&s->ref, 1);
     if (cache_stat)
     {
@@ -453,6 +665,7 @@ FcCacheRemoveUnlocked (FcCache *cache)
     FcCacheSkip	    **update[FC_CACHE_MAX_LEVEL];
     FcCacheSkip	    *s, **next;
     int		    i;
+    void            *allocated;
 
     /*
      * Find links along each chain
@@ -470,7 +683,19 @@ FcCacheRemoveUnlocked (FcCache *cache)
 	*update[i] = s->next[i];
     while (fcCacheMaxLevel > 0 && fcCacheChains[fcCacheMaxLevel - 1] == NULL)
 	fcCacheMaxLevel--;
-    free (s);
+
+    if (s)
+    {
+	allocated = s->allocated;
+	while (allocated)
+	{
+	    /* First element in allocated chunk is the free list */
+	    next = *(void **)allocated;
+	    free (allocated);
+	    allocated = next;
+	}
+	free (s);
+    }
 }
 
 static FcCache *
@@ -539,13 +764,48 @@ FcCacheObjectDereference (void *object)
     unlock_cache ();
 }
 
+void *
+FcCacheAllocate (FcCache *cache, size_t len)
+{
+    FcCacheSkip	*skip;
+    void *allocated = NULL;
+
+    lock_cache ();
+    skip = FcCacheFindByAddrUnlocked (cache);
+    if (skip)
+    {
+      void *chunk = malloc (sizeof (void *) + len);
+      if (chunk)
+      {
+	  /* First element in allocated chunk is the free list */
+	  *(void **)chunk = skip->allocated;
+	  skip->allocated = chunk;
+	  /* Return the rest */
+	  allocated = ((FcChar8 *)chunk) + sizeof (void *);
+      }
+    }
+    unlock_cache ();
+    return allocated;
+}
+
 void
 FcCacheFini (void)
 {
     int		    i;
 
     for (i = 0; i < FC_CACHE_MAX_LEVEL; i++)
-	assert (fcCacheChains[i] == NULL);
+    {
+	if (FcDebug() & FC_DBG_CACHE)
+	{
+	    if (fcCacheChains[i] != NULL)
+	    {
+		FcCacheSkip *s = fcCacheChains[i];
+		printf("Fontconfig error: not freed %p (dir: %s, refcount %" FC_ATOMIC_INT_FORMAT ")\n", s->cache, FcCacheDir(s->cache), s->ref.count);
+	    }
+	}
+	else
+	    assert (fcCacheChains[i] == NULL);
+    }
     assert (fcCacheMaxLevel == 0);
 
     free_lock ();
@@ -585,7 +845,7 @@ FcCacheTimeValid (FcConfig *config, FcCache *cache, struct stat *dir_stat)
 		FcCacheDir (cache), cache->checksum, (int) dir_stat->st_mtime);
 #endif
 
-    return cache->checksum == (int) dir_stat->st_mtime && fnano;
+    return dir_stat->st_mtime == 0 || (cache->checksum == (int) dir_stat->st_mtime && fnano);
 }
 
 static FcBool
@@ -632,7 +892,7 @@ FcCacheOffsetsValid (FcCache *cache)
         if (fs->nfont > (end - (char *) fs) / sizeof (FcPattern))
             return FcFalse;
 
-        if (fs->fonts != 0 && !FcIsEncodedOffset(fs->fonts))
+        if (!FcIsEncodedOffset(fs->fonts))
             return FcFalse;
 
         for (i = 0; i < fs->nfont; i++)
@@ -646,7 +906,8 @@ FcCacheOffsetsValid (FcCache *cache)
                 (char *) font > end - sizeof (FcFontSet) ||
                 font->elts_offset < 0 ||
                 font->elts_offset > end - (char *) font ||
-                font->num > (end - (char *) font - font->elts_offset) / sizeof (FcPatternElt))
+                font->num > (end - (char *) font - font->elts_offset) / sizeof (FcPatternElt) ||
+		!FcRefIsConst (&font->ref))
                 return FcFalse;
 
 
@@ -700,7 +961,7 @@ FcDirCacheMapFd (FcConfig *config, int fd, struct stat *fd_stat, struct stat *di
     {
 #if defined(HAVE_MMAP) || defined(__CYGWIN__)
 	cache = mmap (0, fd_stat->st_size, PROT_READ, MAP_SHARED, fd, 0);
-#if (HAVE_POSIX_FADVISE) && defined(POSIX_FADV_WILLNEED)
+#if defined(HAVE_POSIX_FADVISE) && defined(POSIX_FADV_WILLNEED)
 	posix_fadvise (fd, 0, fd_stat->st_size, POSIX_FADV_WILLNEED);
 #endif
 	if (cache == MAP_FAILED)
@@ -777,12 +1038,53 @@ FcDirCacheUnload (FcCache *cache)
 }
 
 static FcBool
-FcDirCacheMapHelper (FcConfig *config, int fd, struct stat *fd_stat, struct stat *dir_stat, void *closure)
+FcDirCacheMapHelper (FcConfig *config, int fd, struct stat *fd_stat, struct stat *dir_stat, struct timeval *latest_cache_mtime, void *closure)
 {
     FcCache *cache = FcDirCacheMapFd (config, fd, fd_stat, dir_stat);
+    struct timeval cache_mtime, zero_mtime = { 0, 0}, dir_mtime;
 
     if (!cache)
 	return FcFalse;
+    cache_mtime.tv_sec = fd_stat->st_mtime;
+    dir_mtime.tv_sec = dir_stat->st_mtime;
+#ifdef HAVE_STRUCT_STAT_ST_MTIM
+    cache_mtime.tv_usec = fd_stat->st_mtim.tv_nsec / 1000;
+    dir_mtime.tv_usec = dir_stat->st_mtim.tv_nsec / 1000;
+#else
+    cache_mtime.tv_usec = 0;
+    dir_mtime.tv_usec = 0;
+#endif
+    /* special take care of OSTree */
+    if (!timercmp (&zero_mtime, &dir_mtime, !=))
+    {
+	if (!timercmp (&zero_mtime, &cache_mtime, !=))
+	{
+	    if (*((FcCache **) closure))
+		FcDirCacheUnload (*((FcCache **) closure));
+	}
+	else if (*((FcCache **) closure) && !timercmp (&zero_mtime, latest_cache_mtime, !=))
+	{
+	    FcDirCacheUnload (cache);
+	    return FcFalse;
+	}
+	else if (timercmp (latest_cache_mtime, &cache_mtime, <))
+	{
+	    if (*((FcCache **) closure))
+		FcDirCacheUnload (*((FcCache **) closure));
+	}
+    }
+    else if (timercmp (latest_cache_mtime, &cache_mtime, <))
+    {
+	if (*((FcCache **) closure))
+	    FcDirCacheUnload (*((FcCache **) closure));
+    }
+    else
+    {
+	FcDirCacheUnload (cache);
+	return FcFalse;
+    }
+    latest_cache_mtime->tv_sec = cache_mtime.tv_sec;
+    latest_cache_mtime->tv_usec = cache_mtime.tv_usec;
     *((FcCache **) closure) = cache;
     return FcTrue;
 }
@@ -792,10 +1094,15 @@ FcDirCacheLoad (const FcChar8 *dir, FcConfig *config, FcChar8 **cache_file)
 {
     FcCache *cache = NULL;
 
+    config = FcConfigReference (config);
+    if (!config)
+	return NULL;
     if (!FcDirCacheProcess (config, dir,
 			    FcDirCacheMapHelper,
 			    &cache, cache_file))
-	return NULL;
+	cache = NULL;
+
+    FcConfigDestroy (config);
 
     return cache;
 }
@@ -806,15 +1113,70 @@ FcDirCacheLoadFile (const FcChar8 *cache_file, struct stat *file_stat)
     int	fd;
     FcCache *cache;
     struct stat	my_file_stat;
+    FcConfig *config;
 
     if (!file_stat)
 	file_stat = &my_file_stat;
+    config = FcConfigReference (NULL);
+    if (!config)
+	return NULL;
     fd = FcDirCacheOpenFile (cache_file, file_stat);
     if (fd < 0)
 	return NULL;
-    cache = FcDirCacheMapFd (FcConfigGetCurrent (), fd, file_stat, NULL);
+    cache = FcDirCacheMapFd (config, fd, file_stat, NULL);
+    FcConfigDestroy (config);
     close (fd);
     return cache;
+}
+
+static int
+FcDirChecksum (struct stat *statb)
+{
+    int			ret = (int) statb->st_mtime;
+    char		*endptr;
+    char		*source_date_epoch;
+    unsigned long long	epoch;
+
+    source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+    if (source_date_epoch)
+    {
+	errno = 0;
+	epoch = strtoull(source_date_epoch, &endptr, 10);
+
+	if (endptr == source_date_epoch)
+	    fprintf (stderr,
+		     "Fontconfig: SOURCE_DATE_EPOCH invalid\n");
+	else if ((errno == ERANGE && (epoch == ULLONG_MAX || epoch == 0))
+		|| (errno != 0 && epoch == 0))
+	    fprintf (stderr,
+		     "Fontconfig: SOURCE_DATE_EPOCH: strtoull: %s: %" FC_UINT64_FORMAT "\n",
+		     strerror(errno), epoch);
+	else if (*endptr != '\0')
+	    fprintf (stderr,
+		     "Fontconfig: SOURCE_DATE_EPOCH has trailing garbage\n");
+	else if (epoch > ULONG_MAX)
+	    fprintf (stderr,
+		     "Fontconfig: SOURCE_DATE_EPOCH must be <= %lu but saw: %" FC_UINT64_FORMAT "\n",
+		     ULONG_MAX, epoch);
+	else if (epoch < ret)
+	    /* Only override if directory is newer */
+	    ret = (int) epoch;
+    }
+
+    return ret;
+}
+
+static int64_t
+FcDirChecksumNano (struct stat *statb)
+{
+#ifdef HAVE_STRUCT_STAT_ST_MTIM
+    /* No nanosecond component to parse */
+    if (getenv("SOURCE_DATE_EPOCH"))
+	return 0;
+    return statb->st_mtim.tv_nsec;
+#else
+    return 0;
+#endif
 }
 
 /*
@@ -822,7 +1184,7 @@ FcDirCacheLoadFile (const FcChar8 *cache_file, struct stat *file_stat)
  * the magic number and the size field
  */
 static FcBool
-FcDirCacheValidateHelper (FcConfig *config, int fd, struct stat *fd_stat, struct stat *dir_stat, void *closure FC_UNUSED)
+FcDirCacheValidateHelper (FcConfig *config, int fd, struct stat *fd_stat, struct stat *dir_stat, struct timeval *latest_cache_mtime, void *closure FC_UNUSED)
 {
     FcBool  ret = FcTrue;
     FcCache	c;
@@ -835,10 +1197,10 @@ FcDirCacheValidateHelper (FcConfig *config, int fd, struct stat *fd_stat, struct
 	ret = FcFalse;
     else if (fd_stat->st_size != c.size)
 	ret = FcFalse;
-    else if (c.checksum != (int) dir_stat->st_mtime)
+    else if (c.checksum != FcDirChecksum (dir_stat))
 	ret = FcFalse;
 #ifdef HAVE_STRUCT_STAT_ST_MTIM
-    else if (c.checksum_nano != dir_stat->st_mtim.tv_nsec)
+    else if (c.checksum_nano != FcDirChecksumNano (dir_stat))
 	ret = FcFalse;
 #endif
     return ret;
@@ -856,12 +1218,16 @@ FcBool
 FcDirCacheValid (const FcChar8 *dir)
 {
     FcConfig	*config;
+    FcBool	ret;
 
-    config = FcConfigGetCurrent ();
+    config = FcConfigReference (NULL);
     if (!config)
         return FcFalse;
 
-    return FcDirCacheValidConfig (dir, config);
+    ret = FcDirCacheValidConfig (dir, config);
+    FcConfigDestroy (config);
+
+    return ret;
 }
 
 /*
@@ -914,10 +1280,8 @@ FcDirCacheBuild (FcFontSet *set, const FcChar8 *dir, struct stat *dir_stat, FcSt
     cache->magic = FC_CACHE_MAGIC_ALLOC;
     cache->version = FC_CACHE_VERSION_NUMBER;
     cache->size = serialize->size;
-    cache->checksum = (int) dir_stat->st_mtime;
-#ifdef HAVE_STRUCT_STAT_ST_MTIM
-    cache->checksum_nano = dir_stat->st_mtim.tv_nsec;
-#endif
+    cache->checksum = FcDirChecksum (dir_stat);
+    cache->checksum_nano = FcDirChecksumNano (dir_stat);
 
     /*
      * Serialize directory name
@@ -1032,17 +1396,19 @@ FcDirCacheWrite (FcCache *cache, FcConfig *config)
 	    }
 	}
     }
+    if (!test_dir)
+	fprintf (stderr, "Fontconfig error: No writable cache directories\n");
     if (d)
 	FcStrFree (d);
     FcStrListDone (list);
     if (!cache_dir)
 	return FcFalse;
 
-    FcDirCacheBasename (dir, cache_base);
+    FcDirCacheBasenameMD5 (config, dir, cache_base);
     cache_hashed = FcStrBuildFilename (cache_dir, cache_base, NULL);
+    FcStrFree (cache_dir);
     if (!cache_hashed)
         return FcFalse;
-    FcStrFree (cache_dir);
 
     if (FcDebug () & FC_DBG_CACHE)
         printf ("FcDirCacheWriteDir dir \"%s\" file \"%s\"\n",
@@ -1131,9 +1497,13 @@ FcDirCacheClean (const FcChar8 *cache_dir, FcBool verbose)
     FcCache	*cache;
     struct stat	target_stat;
     const FcChar8 *sysroot;
+    FcConfig	*config;
 
+    config = FcConfigReference (NULL);
+    if (!config)
+	return FcFalse;
     /* FIXME: this API needs to support non-current FcConfig */
-    sysroot = FcConfigGetSysRoot (NULL);
+    sysroot = FcConfigGetSysRoot (config);
     if (sysroot)
 	dir = FcStrBuildFilename (sysroot, cache_dir, NULL);
     else
@@ -1141,7 +1511,8 @@ FcDirCacheClean (const FcChar8 *cache_dir, FcBool verbose)
     if (!dir)
     {
 	fprintf (stderr, "Fontconfig error: %s: out of memory\n", cache_dir);
-	return FcFalse;
+	ret = FcFalse;
+	goto bail;
     }
     if (access ((char *) dir, W_OK) != 0)
     {
@@ -1218,8 +1589,10 @@ FcDirCacheClean (const FcChar8 *cache_dir, FcBool verbose)
     }
 
     closedir (d);
-  bail0:
+bail0:
     FcStrFree (dir);
+bail:
+    FcConfigDestroy (config);
 
     return ret;
 }
@@ -1235,7 +1608,7 @@ FcDirCacheLock (const FcChar8 *dir,
     const FcChar8 *sysroot = FcConfigGetSysRoot (config);
     int fd = -1;
 
-    FcDirCacheBasename (dir, cache_base);
+    FcDirCacheBasenameMD5 (config, dir, cache_base);
     list = FcStrListCreate (config->cacheDirs);
     if (!list)
 	return -1;
@@ -1354,250 +1727,6 @@ FcCacheNumFont args1(const FcCache *c)
     return FcCacheSet(c)->nfont;
 }
 
-/*
- * This code implements the MD5 message-digest algorithm.
- * The algorithm is due to Ron Rivest.	This code was
- * written by Colin Plumb in 1993, no copyright is claimed.
- * This code is in the public domain; do with it what you wish.
- *
- * Equivalent code is available from RSA Data Security, Inc.
- * This code has been tested against that, and is equivalent,
- * except that you don't need to include two pages of legalese
- * with every copy.
- *
- * To compute the message digest of a chunk of bytes, declare an
- * MD5Context structure, pass it to MD5Init, call MD5Update as
- * needed on buffers full of bytes, and then call MD5Final, which
- * will fill a supplied 16-byte array with the digest.
- */
-
-#ifndef HIGHFIRST
-#define byteReverse(buf, len)	/* Nothing */
-#else
-/*
- * Note: this code is harmless on little-endian machines.
- */
-void byteReverse(unsigned char *buf, unsigned longs)
-{
-    FcChar32 t;
-    do {
-	t = (FcChar32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
-	    ((unsigned) buf[1] << 8 | buf[0]);
-	*(FcChar32 *) buf = t;
-	buf += 4;
-    } while (--longs);
-}
-#endif
-
-/*
- * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
- * initialization constants.
- */
-static void MD5Init(struct MD5Context *ctx)
-{
-    ctx->buf[0] = 0x67452301;
-    ctx->buf[1] = 0xefcdab89;
-    ctx->buf[2] = 0x98badcfe;
-    ctx->buf[3] = 0x10325476;
-
-    ctx->bits[0] = 0;
-    ctx->bits[1] = 0;
-}
-
-/*
- * Update context to reflect the concatenation of another buffer full
- * of bytes.
- */
-static void MD5Update(struct MD5Context *ctx, const unsigned char *buf, unsigned len)
-{
-    FcChar32 t;
-
-    /* Update bitcount */
-
-    t = ctx->bits[0];
-    if ((ctx->bits[0] = t + ((FcChar32) len << 3)) < t)
-	ctx->bits[1]++; 	/* Carry from low to high */
-    ctx->bits[1] += len >> 29;
-
-    t = (t >> 3) & 0x3f;	/* Bytes already in shsInfo->data */
-
-    /* Handle any leading odd-sized chunks */
-
-    if (t) {
-	unsigned char *p = (unsigned char *) ctx->in + t;
-
-	t = 64 - t;
-	if (len < t) {
-	    memcpy(p, buf, len);
-	    return;
-	}
-	memcpy(p, buf, t);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (FcChar32 *) ctx->in);
-	buf += t;
-	len -= t;
-    }
-    /* Process data in 64-byte chunks */
-
-    while (len >= 64) {
-	memcpy(ctx->in, buf, 64);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (FcChar32 *) ctx->in);
-	buf += 64;
-	len -= 64;
-    }
-
-    /* Handle any remaining bytes of data. */
-
-    memcpy(ctx->in, buf, len);
-}
-
-/*
- * Final wrapup - pad to 64-byte boundary with the bit pattern
- * 1 0* (64-bit count of bits processed, MSB-first)
- */
-static void MD5Final(unsigned char digest[16], struct MD5Context *ctx)
-{
-    unsigned count;
-    unsigned char *p;
-
-    /* Compute number of bytes mod 64 */
-    count = (ctx->bits[0] >> 3) & 0x3F;
-
-    /* Set the first char of padding to 0x80.  This is safe since there is
-       always at least one byte free */
-    p = ctx->in + count;
-    *p++ = 0x80;
-
-    /* Bytes of padding needed to make 64 bytes */
-    count = 64 - 1 - count;
-
-    /* Pad out to 56 mod 64 */
-    if (count < 8) {
-	/* Two lots of padding:  Pad the first block to 64 bytes */
-	memset(p, 0, count);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (FcChar32 *) ctx->in);
-
-	/* Now fill the next block with 56 bytes */
-	memset(ctx->in, 0, 56);
-    } else {
-	/* Pad block to 56 bytes */
-	memset(p, 0, count - 8);
-    }
-    byteReverse(ctx->in, 14);
-
-    /* Append length in bits and transform */
-    ((FcChar32 *) ctx->in)[14] = ctx->bits[0];
-    ((FcChar32 *) ctx->in)[15] = ctx->bits[1];
-
-    MD5Transform(ctx->buf, (FcChar32 *) ctx->in);
-    byteReverse((unsigned char *) ctx->buf, 4);
-    memcpy(digest, ctx->buf, 16);
-    memset(ctx, 0, sizeof(*ctx));        /* In case it's sensitive */
-}
-
-
-/* The four core functions - F1 is optimized somewhat */
-
-/* #define F1(x, y, z) (x & y | ~x & z) */
-#define F1(x, y, z) (z ^ (x & (y ^ z)))
-#define F2(x, y, z) F1(z, x, y)
-#define F3(x, y, z) (x ^ y ^ z)
-#define F4(x, y, z) (y ^ (x | ~z))
-
-/* This is the central step in the MD5 algorithm. */
-#define MD5STEP(f, w, x, y, z, data, s) \
-	( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
-
-/*
- * The core of the MD5 algorithm, this alters an existing MD5 hash to
- * reflect the addition of 16 longwords of new data.  MD5Update blocks
- * the data and converts bytes into longwords for this routine.
- */
-static void MD5Transform(FcChar32 buf[4], FcChar32 in[16])
-{
-    register FcChar32 a, b, c, d;
-
-    a = buf[0];
-    b = buf[1];
-    c = buf[2];
-    d = buf[3];
-
-    MD5STEP(F1, a, b, c, d, in[0] + 0xd76aa478, 7);
-    MD5STEP(F1, d, a, b, c, in[1] + 0xe8c7b756, 12);
-    MD5STEP(F1, c, d, a, b, in[2] + 0x242070db, 17);
-    MD5STEP(F1, b, c, d, a, in[3] + 0xc1bdceee, 22);
-    MD5STEP(F1, a, b, c, d, in[4] + 0xf57c0faf, 7);
-    MD5STEP(F1, d, a, b, c, in[5] + 0x4787c62a, 12);
-    MD5STEP(F1, c, d, a, b, in[6] + 0xa8304613, 17);
-    MD5STEP(F1, b, c, d, a, in[7] + 0xfd469501, 22);
-    MD5STEP(F1, a, b, c, d, in[8] + 0x698098d8, 7);
-    MD5STEP(F1, d, a, b, c, in[9] + 0x8b44f7af, 12);
-    MD5STEP(F1, c, d, a, b, in[10] + 0xffff5bb1, 17);
-    MD5STEP(F1, b, c, d, a, in[11] + 0x895cd7be, 22);
-    MD5STEP(F1, a, b, c, d, in[12] + 0x6b901122, 7);
-    MD5STEP(F1, d, a, b, c, in[13] + 0xfd987193, 12);
-    MD5STEP(F1, c, d, a, b, in[14] + 0xa679438e, 17);
-    MD5STEP(F1, b, c, d, a, in[15] + 0x49b40821, 22);
-
-    MD5STEP(F2, a, b, c, d, in[1] + 0xf61e2562, 5);
-    MD5STEP(F2, d, a, b, c, in[6] + 0xc040b340, 9);
-    MD5STEP(F2, c, d, a, b, in[11] + 0x265e5a51, 14);
-    MD5STEP(F2, b, c, d, a, in[0] + 0xe9b6c7aa, 20);
-    MD5STEP(F2, a, b, c, d, in[5] + 0xd62f105d, 5);
-    MD5STEP(F2, d, a, b, c, in[10] + 0x02441453, 9);
-    MD5STEP(F2, c, d, a, b, in[15] + 0xd8a1e681, 14);
-    MD5STEP(F2, b, c, d, a, in[4] + 0xe7d3fbc8, 20);
-    MD5STEP(F2, a, b, c, d, in[9] + 0x21e1cde6, 5);
-    MD5STEP(F2, d, a, b, c, in[14] + 0xc33707d6, 9);
-    MD5STEP(F2, c, d, a, b, in[3] + 0xf4d50d87, 14);
-    MD5STEP(F2, b, c, d, a, in[8] + 0x455a14ed, 20);
-    MD5STEP(F2, a, b, c, d, in[13] + 0xa9e3e905, 5);
-    MD5STEP(F2, d, a, b, c, in[2] + 0xfcefa3f8, 9);
-    MD5STEP(F2, c, d, a, b, in[7] + 0x676f02d9, 14);
-    MD5STEP(F2, b, c, d, a, in[12] + 0x8d2a4c8a, 20);
-
-    MD5STEP(F3, a, b, c, d, in[5] + 0xfffa3942, 4);
-    MD5STEP(F3, d, a, b, c, in[8] + 0x8771f681, 11);
-    MD5STEP(F3, c, d, a, b, in[11] + 0x6d9d6122, 16);
-    MD5STEP(F3, b, c, d, a, in[14] + 0xfde5380c, 23);
-    MD5STEP(F3, a, b, c, d, in[1] + 0xa4beea44, 4);
-    MD5STEP(F3, d, a, b, c, in[4] + 0x4bdecfa9, 11);
-    MD5STEP(F3, c, d, a, b, in[7] + 0xf6bb4b60, 16);
-    MD5STEP(F3, b, c, d, a, in[10] + 0xbebfbc70, 23);
-    MD5STEP(F3, a, b, c, d, in[13] + 0x289b7ec6, 4);
-    MD5STEP(F3, d, a, b, c, in[0] + 0xeaa127fa, 11);
-    MD5STEP(F3, c, d, a, b, in[3] + 0xd4ef3085, 16);
-    MD5STEP(F3, b, c, d, a, in[6] + 0x04881d05, 23);
-    MD5STEP(F3, a, b, c, d, in[9] + 0xd9d4d039, 4);
-    MD5STEP(F3, d, a, b, c, in[12] + 0xe6db99e5, 11);
-    MD5STEP(F3, c, d, a, b, in[15] + 0x1fa27cf8, 16);
-    MD5STEP(F3, b, c, d, a, in[2] + 0xc4ac5665, 23);
-
-    MD5STEP(F4, a, b, c, d, in[0] + 0xf4292244, 6);
-    MD5STEP(F4, d, a, b, c, in[7] + 0x432aff97, 10);
-    MD5STEP(F4, c, d, a, b, in[14] + 0xab9423a7, 15);
-    MD5STEP(F4, b, c, d, a, in[5] + 0xfc93a039, 21);
-    MD5STEP(F4, a, b, c, d, in[12] + 0x655b59c3, 6);
-    MD5STEP(F4, d, a, b, c, in[3] + 0x8f0ccc92, 10);
-    MD5STEP(F4, c, d, a, b, in[10] + 0xffeff47d, 15);
-    MD5STEP(F4, b, c, d, a, in[1] + 0x85845dd1, 21);
-    MD5STEP(F4, a, b, c, d, in[8] + 0x6fa87e4f, 6);
-    MD5STEP(F4, d, a, b, c, in[15] + 0xfe2ce6e0, 10);
-    MD5STEP(F4, c, d, a, b, in[6] + 0xa3014314, 15);
-    MD5STEP(F4, b, c, d, a, in[13] + 0x4e0811a1, 21);
-    MD5STEP(F4, a, b, c, d, in[4] + 0xf7537e82, 6);
-    MD5STEP(F4, d, a, b, c, in[11] + 0xbd3af235, 10);
-    MD5STEP(F4, c, d, a, b, in[2] + 0x2ad7d2bb, 15);
-    MD5STEP(F4, b, c, d, a, in[9] + 0xeb86d391, 21);
-
-    buf[0] += a;
-    buf[1] += b;
-    buf[2] += c;
-    buf[3] += d;
-}
-
 FcBool
 FcDirCacheCreateTagFile (const FcChar8 *cache_dir)
 {
@@ -1661,15 +1790,20 @@ FcDirCacheCreateTagFile (const FcChar8 *cache_dir)
 }
 
 void
-FcCacheCreateTagFile (const FcConfig *config)
+FcCacheCreateTagFile (FcConfig *config)
 {
     FcChar8   *cache_dir = NULL, *d = NULL;
     FcStrList *list;
-    const FcChar8 *sysroot = FcConfigGetSysRoot (config);
+    const FcChar8 *sysroot;
+
+    config = FcConfigReference (config);
+    if (!config)
+	return;
+    sysroot = FcConfigGetSysRoot (config);
 
     list = FcConfigGetCacheDirs (config);
     if (!list)
-	return;
+	goto bail;
 
     while ((cache_dir = FcStrListNext (list)))
     {
@@ -1685,6 +1819,8 @@ FcCacheCreateTagFile (const FcConfig *config)
     if (d)
 	FcStrFree (d);
     FcStrListDone (list);
+bail:
+    FcConfigDestroy (config);
 }
 
 #define __fccache__

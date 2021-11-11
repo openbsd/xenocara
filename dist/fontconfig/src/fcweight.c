@@ -29,8 +29,8 @@ static const struct {
     {   0, FC_WEIGHT_THIN },
     { 100, FC_WEIGHT_THIN },
     { 200, FC_WEIGHT_EXTRALIGHT },
-    { 350, FC_WEIGHT_DEMILIGHT },
     { 300, FC_WEIGHT_LIGHT },
+    { 350, FC_WEIGHT_DEMILIGHT },
     { 380, FC_WEIGHT_BOOK },
     { 400, FC_WEIGHT_REGULAR },
     { 500, FC_WEIGHT_MEDIUM },
@@ -41,40 +41,22 @@ static const struct {
     {1000, FC_WEIGHT_EXTRABLACK },
 };
 
-static int lerp(int x, int x1, int x2, int y1, int y2)
+static double lerp(double x, int x1, int x2, int y1, int y2)
 {
   int dx = x2 - x1;
   int dy = y2 - y1;
   assert (dx > 0 && dy >= 0 && x1 <= x && x <= x2);
-  return y1 + (dy*(x-x1) + dx/2) / dx;
+  return y1 + (x-x1) * dy / dx;
 }
 
-int
-FcWeightFromOpenType (int ot_weight)
+double
+FcWeightFromOpenTypeDouble (double ot_weight)
 {
 	int i;
 
-	/* Loosely based on WPF Font Selection Model's advice. */
-
 	if (ot_weight < 0)
 	    return -1;
-	else if (1 <= ot_weight && ot_weight <= 9)
-	{
-	    /* WPF Font Selection Model says do "ot_weight *= 100",
-	     * but Greg Hitchcock revealed that GDI had a mapping
-	     * reflected below: */
-	    switch (ot_weight) {
-		case 1: ot_weight =  80; break;
-		case 2: ot_weight = 160; break;
-		case 3: ot_weight = 240; break;
-		case 4: ot_weight = 320; break;
-		case 5: ot_weight = 400; break;
-		case 6: ot_weight = 550; break;
-		case 7: ot_weight = 700; break;
-		case 8: ot_weight = 800; break;
-		case 9: ot_weight = 900; break;
-	    }
-	}
+
 	ot_weight = FC_MIN (ot_weight, map[(sizeof (map) / sizeof (map[0])) - 1].ot);
 
 	for (i = 1; ot_weight > map[i].ot; i++)
@@ -87,8 +69,8 @@ FcWeightFromOpenType (int ot_weight)
 	return lerp (ot_weight, map[i-1].ot, map[i].ot, map[i-1].fc, map[i].fc);
 }
 
-int
-FcWeightToOpenType (int fc_weight)
+double
+FcWeightToOpenTypeDouble (double fc_weight)
 {
 	int i;
 	if (fc_weight < 0 || fc_weight > FC_WEIGHT_EXTRABLACK)
@@ -102,6 +84,18 @@ FcWeightToOpenType (int fc_weight)
 
 	/* Interpolate between two items. */
 	return lerp (fc_weight, map[i-1].fc, map[i].fc, map[i-1].ot, map[i].ot);
+}
+
+int
+FcWeightFromOpenType (int ot_weight)
+{
+	return FcWeightFromOpenTypeDouble (ot_weight) + .5;
+}
+
+int
+FcWeightToOpenType (int fc_weight)
+{
+	return FcWeightToOpenTypeDouble (fc_weight) + .5;
 }
 
 #define __fcweight__

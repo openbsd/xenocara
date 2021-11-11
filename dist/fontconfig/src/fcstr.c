@@ -36,6 +36,32 @@ FcStrCopy (const FcChar8 *s)
     return FcStrdup (s);
 }
 
+static FcChar8 *
+FcStrMakeTriple (const FcChar8 *s1, const FcChar8 *s2, const FcChar8 *s3)
+{
+    int	    s1l = s1 ? strlen ((char *) s1) : 0;
+    int	    s2l = s2 ? strlen ((char *) s2) : 0;
+    int     s3l = s3 ? strlen ((char *) s3) : 0;
+    int	    l = s1l + 1 + s2l + 1 + s3l + 1;
+    FcChar8 *s = malloc (l);
+
+    if (!s)
+	return 0;
+    if (s1)
+	memcpy (s, s1, s1l + 1);
+    else
+	s[0] = '\0';
+    if (s2)
+	memcpy (s + s1l + 1, s2, s2l + 1);
+    else
+	s[s1l + 1] = '\0';
+    if (s3)
+	memcpy (s + s1l + 1 + s2l + 1, s3, s3l + 1);
+    else
+	s[s1l + 1 + s2l + 1] = '\0';
+    return s;
+}
+
 FcChar8 *
 FcStrPlus (const FcChar8 *s1, const FcChar8 *s2)
 {
@@ -134,11 +160,11 @@ FcStrCaseWalkerLong (FcCaseWalker *w, FcChar8 r)
 }
 
 static FcChar8
-FcStrCaseWalkerNext (FcCaseWalker *w, const char *delims)
+FcStrCaseWalkerNextNonDelim (FcCaseWalker *w, const char *delims)
 {
     FcChar8	r;
 
-    if (w->read)
+    if (FC_UNLIKELY (w->read != NULL))
     {
 	if ((r = *w->read++))
 	    return r;
@@ -149,7 +175,51 @@ FcStrCaseWalkerNext (FcCaseWalker *w, const char *delims)
 	r = *w->src++;
     } while (r != 0 && delims && strchr (delims, r));
 
-    if ((r & 0xc0) == 0xc0)
+    if (FC_UNLIKELY ((r & 0xc0) == 0xc0))
+	return FcStrCaseWalkerLong (w, r);
+    if ('A' <= r && r <= 'Z')
+        r = r - 'A' + 'a';
+    return r;
+}
+
+static FcChar8
+FcStrCaseWalkerNextNonBlank (FcCaseWalker *w)
+{
+    FcChar8	r;
+
+    if (FC_UNLIKELY (w->read != NULL))
+    {
+	if ((r = *w->read++))
+	    return r;
+	w->read = 0;
+    }
+    do
+    {
+	r = *w->src++;
+    } while (r == ' ');
+
+    if (FC_UNLIKELY ((r & 0xc0) == 0xc0))
+	return FcStrCaseWalkerLong (w, r);
+    if ('A' <= r && r <= 'Z')
+        r = r - 'A' + 'a';
+    return r;
+}
+
+static FcChar8
+FcStrCaseWalkerNext (FcCaseWalker *w)
+{
+    FcChar8	r;
+
+    if (FC_UNLIKELY (w->read != NULL))
+    {
+	if ((r = *w->read++))
+	    return r;
+	w->read = 0;
+    }
+
+    r = *w->src++;
+
+    if (FC_UNLIKELY ((r & 0xc0) == 0xc0))
 	return FcStrCaseWalkerLong (w, r);
     if ('A' <= r && r <= 'Z')
         r = r - 'A' + 'a';
@@ -164,13 +234,13 @@ FcStrDowncase (const FcChar8 *s)
     FcChar8	    *dst, *d;
 
     FcStrCaseWalkerInit (s, &w);
-    while (FcStrCaseWalkerNext (&w, NULL))
+    while (FcStrCaseWalkerNext (&w))
 	len++;
     d = dst = malloc (len + 1);
     if (!d)
 	return 0;
     FcStrCaseWalkerInit (s, &w);
-    while ((*d++ = FcStrCaseWalkerNext (&w, NULL)));
+    while ((*d++ = FcStrCaseWalkerNext (&w)));
     return dst;
 }
 
@@ -187,8 +257,8 @@ FcStrCmpIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1, NULL);
-	c2 = FcStrCaseWalkerNext (&w2, NULL);
+	c1 = FcStrCaseWalkerNext (&w1);
+	c2 = FcStrCaseWalkerNext (&w2);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -197,12 +267,6 @@ FcStrCmpIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
 int
 FcStrCmpIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2)
-{
-    return FcStrCmpIgnoreCaseAndDelims (s1, s2, (const FcChar8 *)" ");
-}
-
-int
-FcStrCmpIgnoreCaseAndDelims (const FcChar8 *s1, const FcChar8 *s2, const FcChar8 *delims)
 {
     FcCaseWalker    w1, w2;
     FcChar8	    c1, c2;
@@ -214,8 +278,8 @@ FcStrCmpIgnoreCaseAndDelims (const FcChar8 *s1, const FcChar8 *s2, const FcChar8
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1, (const char *)delims);
-	c2 = FcStrCaseWalkerNext (&w2, (const char *)delims);
+	c1 = FcStrCaseWalkerNextNonBlank (&w1);
+	c2 = FcStrCaseWalkerNextNonBlank (&w2);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -251,7 +315,20 @@ FcStrHashIgnoreCase (const FcChar8 *s)
     FcChar8	    c;
 
     FcStrCaseWalkerInit (s, &w);
-    while ((c = FcStrCaseWalkerNext (&w, NULL)))
+    while ((c = FcStrCaseWalkerNext (&w)))
+	h = ((h << 3) ^ (h >> 3)) ^ c;
+    return h;
+}
+
+FcChar32
+FcStrHashIgnoreBlanksAndCase (const FcChar8 *s)
+{
+    FcChar32	    h = 0;
+    FcCaseWalker    w;
+    FcChar8	    c;
+
+    FcStrCaseWalkerInit (s, &w);
+    while ((c = FcStrCaseWalkerNextNonBlank (&w)))
 	h = ((h << 3) ^ (h >> 3)) ^ c;
     return h;
 }
@@ -271,8 +348,8 @@ FcStrIsAtIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1, " ");
-	c2 = FcStrCaseWalkerNext (&w2, " ");
+	c1 = FcStrCaseWalkerNextNonBlank (&w1);
+	c2 = FcStrCaseWalkerNextNonBlank (&w2);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -330,8 +407,8 @@ FcStrIsAtIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1, NULL);
-	c2 = FcStrCaseWalkerNext (&w2, NULL);
+	c1 = FcStrCaseWalkerNext (&w1);
+	c2 = FcStrCaseWalkerNext (&w2);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -383,7 +460,7 @@ FcStrContainsWord (const FcChar8 *s1, const FcChar8 *s2)
 }
 
 /*
- * returns the number of strings (ignoring delimitors and case) being matched
+ * returns the number of strings (ignoring delimiters and case) being matched
  */
 
 int
@@ -399,8 +476,8 @@ FcStrMatchIgnoreCaseAndDelims (const FcChar8 *s1, const FcChar8 *s2, const FcCha
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1, (const char *)delims);
-	c2 = FcStrCaseWalkerNext (&w2, (const char *)delims);
+	c1 = FcStrCaseWalkerNextNonDelim (&w1, (const char *)delims);
+	c2 = FcStrCaseWalkerNextNonDelim (&w2, (const char *)delims);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -467,12 +544,12 @@ FcStrStrIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
     FcStrCaseWalkerInit (s1, &w1);
     FcStrCaseWalkerInit (s2, &w2);
 
-    c2 = FcStrCaseWalkerNext (&w2, NULL);
+    c2 = FcStrCaseWalkerNext (&w2);
 
     for (;;)
     {
 	cur = w1.src;
-	c1 = FcStrCaseWalkerNext (&w1, NULL);
+	c1 = FcStrCaseWalkerNext (&w1);
 	if (!c1)
 	    break;
 	if (c1 == c2)
@@ -483,8 +560,8 @@ FcStrStrIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
 	    for (;;)
 	    {
-		c1t = FcStrCaseWalkerNext (&w1t, NULL);
-		c2t = FcStrCaseWalkerNext (&w2t, NULL);
+		c1t = FcStrCaseWalkerNext (&w1t);
+		c2t = FcStrCaseWalkerNext (&w2t);
 
 		if (!c2t)
 		    return cur;
@@ -867,6 +944,17 @@ FcStrUsesHome (const FcChar8 *s)
     return *s == '~';
 }
 
+FcBool
+FcStrIsAbsoluteFilename (const FcChar8 *s)
+{
+#ifdef _WIN32
+    if (*s == '\\' ||
+	(isalpha (*s) && s[1] == ':' && (s[2] == '/' || s[2] == '\\')))
+	return FcTrue;
+#endif
+    return *s == '/';
+}
+
 FcChar8 *
 FcStrBuildFilename (const FcChar8 *path,
 		    ...)
@@ -942,7 +1030,7 @@ FcStrCopyFilename (const FcChar8 *s)
 	if (!home)
 	    return NULL;
 	size = strlen ((char *) home) + strlen ((char *) s);
-	full = (FcChar8 *) malloc (size);
+	full = (FcChar8 *) malloc (size + 1);
 	if (!full)
 	    return NULL;
 	strcpy ((char *) full, (char *) home);
@@ -1164,7 +1252,7 @@ _FcStrSetGrow (FcStrSet *set, int growElements)
 }
 
 static FcBool
-_FcStrSetAppend (FcStrSet *set, FcChar8 *s)
+_FcStrSetInsert (FcStrSet *set, FcChar8 *s, int pos)
 {
     if (!FcStrSetHasControlBit (set, FCSS_ALLOW_DUPLICATES))
     {
@@ -1180,8 +1268,21 @@ _FcStrSetAppend (FcStrSet *set, FcChar8 *s)
         if (!_FcStrSetGrow(set, growElements))
             return FcFalse;
     }
-    set->strs[set->num++] = s;
-    set->strs[set->num] = 0;
+    if (pos >= set->num)
+    {
+	set->strs[set->num++] = s;
+	set->strs[set->num] = 0;
+    }
+    else
+    {
+	int i;
+
+	set->num++;
+	set->strs[set->num] = 0;
+	for (i = set->num - 1; i > pos; i--)
+	    set->strs[i] = set->strs[i - 1];
+	set->strs[pos] = s;
+    }
     return FcTrue;
 }
 
@@ -1193,6 +1294,58 @@ FcStrSetMember (FcStrSet *set, const FcChar8 *s)
     for (i = 0; i < set->num; i++)
 	if (!FcStrCmp (set->strs[i], s))
 	    return FcTrue;
+    return FcFalse;
+}
+
+static int
+fc_strcmp_r (const FcChar8 *s1, const FcChar8 *s2, const FcChar8 **ret)
+{
+    FcChar8 c1, c2;
+
+    if (s1 == s2)
+    {
+	if (ret)
+	    *ret = NULL;
+	return 0;
+    }
+    for (;;)
+    {
+	if (s1)
+	    c1 = *s1++;
+	else
+	    c1 = 0;
+	if (s2)
+	    c2 = *s2++;
+	else
+	    c2 = 0;
+	if (!c1 || c1 != c2)
+	    break;
+    }
+    if (ret)
+	*ret = s1;
+    return (int) c1  - (int) c2;
+}
+
+FcBool
+FcStrSetMemberAB (FcStrSet *set, const FcChar8 *a, FcChar8 *b, FcChar8 **ret)
+{
+    int i;
+    const FcChar8 *s = NULL;
+
+    for (i = 0; i < set->num; i++)
+    {
+	if (!fc_strcmp_r (set->strs[i], a, &s) && s)
+	{
+	    if (!fc_strcmp_r (s, b, NULL))
+	    {
+		if (ret)
+		    *ret = set->strs[i];
+		return FcTrue;
+	    }
+	}
+    }
+    if (ret)
+	*ret = NULL;
     return FcFalse;
 }
 
@@ -1214,7 +1367,7 @@ FcStrSetAdd (FcStrSet *set, const FcChar8 *s)
     FcChar8 *new = FcStrCopy (s);
     if (!new)
 	return FcFalse;
-    if (!_FcStrSetAppend (set, new))
+    if (!_FcStrSetInsert (set, new, set->num))
     {
 	FcStrFree (new);
 	return FcFalse;
@@ -1223,17 +1376,103 @@ FcStrSetAdd (FcStrSet *set, const FcChar8 *s)
 }
 
 FcBool
-FcStrSetAddFilename (FcStrSet *set, const FcChar8 *s)
+FcStrSetInsert (FcStrSet *set, const FcChar8 *s, int pos)
 {
-    FcChar8 *new = FcStrCopyFilename (s);
+    FcChar8 *new = FcStrCopy (s);
     if (!new)
 	return FcFalse;
-    if (!_FcStrSetAppend (set, new))
+    if (!_FcStrSetInsert (set, new, pos))
     {
 	FcStrFree (new);
 	return FcFalse;
     }
     return FcTrue;
+}
+
+FcBool
+FcStrSetAddTriple (FcStrSet *set, const FcChar8 *a, const FcChar8 *b, const FcChar8 *c)
+{
+    FcChar8 *new = FcStrMakeTriple (a, b, c);
+    if (!new)
+	return FcFalse;
+    if (!_FcStrSetInsert (set, new, set->num))
+    {
+	FcStrFree (new);
+	return FcFalse;
+    }
+    return FcTrue;
+}
+
+const FcChar8 *
+FcStrTripleSecond (FcChar8 *str)
+{
+    FcChar8 *second = str + strlen((char *) str) + 1;
+
+    if (*second == '\0')
+	return 0;
+    return second;
+}
+
+const FcChar8 *
+FcStrTripleThird (FcChar8 *str)
+{
+    FcChar8 *second = str + strlen ((char *) str) + 1;
+    FcChar8 *third = second + strlen ((char *) second) + 1;
+
+    if (*third == '\0')
+	return 0;
+    return third;
+}
+
+FcBool
+FcStrSetAddFilename (FcStrSet *set, const FcChar8 *s)
+{
+    FcChar8 *new = FcStrCopyFilename (s);
+    if (!new)
+	return FcFalse;
+    if (!_FcStrSetInsert (set, new, set->num))
+    {
+	FcStrFree (new);
+	return FcFalse;
+    }
+    return FcTrue;
+}
+
+FcBool
+FcStrSetAddFilenamePairWithSalt (FcStrSet *set, const FcChar8 *a, const FcChar8 *b, const FcChar8 *salt)
+{
+    FcChar8 *new_a = NULL;
+    FcChar8 *new_b = NULL;
+    FcChar8 *rs = NULL;
+    FcBool  ret;
+
+    if (a)
+    {
+	new_a = FcStrCopyFilename (a);
+	if (!new_a)
+	    return FcFalse;
+    }
+    if (b)
+    {
+	new_b = FcStrCopyFilename(b);
+	if (!new_b)
+	{
+	    if (new_a)
+		FcStrFree(new_a);
+	    return FcFalse;
+	}
+    }
+    /* Override maps with new one if exists */
+    if (FcStrSetMemberAB (set, new_a, new_b, &rs))
+    {
+	FcStrSetDel (set, rs);
+    }
+    ret = FcStrSetAddTriple (set, new_a, new_b, salt);
+    if (new_a)
+	FcStrFree (new_a);
+    if (new_b)
+	FcStrFree (new_b);
+    return ret;
 }
 
 FcBool
@@ -1299,6 +1538,22 @@ FcStrSetDel (FcStrSet *set, const FcChar8 *s)
 	    return FcTrue;
 	}
     return FcFalse;
+}
+
+FcBool
+FcStrSetDeleteAll (FcStrSet *set)
+{
+    int i;
+
+    if (FcRefIsConst (&set->ref))
+	return FcFalse;
+
+    for (i = set->num; i > 0; i--)
+    {
+	FcStrFree (set->strs[i - 1]);
+	set->num--;
+    }
+    return FcTrue;
 }
 
 /* TODO Make public */

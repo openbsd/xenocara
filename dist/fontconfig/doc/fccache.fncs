@@ -71,7 +71,8 @@ FcCacheCopySet.
 @FUNC@		FcDirCacheClean
 @TYPE1@		const FcChar8 *			@ARG1@		cache_dir
 @TYPE2@		FcBool				@ARG2@		verbose
-@PURPOSE@
+@PURPOSE@	Clean up a cache directory
+@DESC@
 This tries to clean up the cache directory of <parameter>cache_dir</parameter>.
 This returns FcTrue if the operation is successfully complete. otherwise FcFalse.
 @SINCE@		2.9.91
@@ -85,4 +86,26 @@ This returns FcTrue if the operation is successfully complete. otherwise FcFalse
 This tries to create CACHEDIR.TAG file at the cache directory registered
 to <parameter>config</parameter>.
 @SINCE@		2.9.91
+@@
+
+@RET@		FcBool
+@FUNC@		FcDirCacheCreateUUID
+@TYPE1@		FcChar8 *			@ARG1@		dir
+@TYPE2@		FcBool				@ARG2@		force
+@TYPE3@		FcConfig *			@ARG3@		config
+@PURPOSE@	Create .uuid file at a directory
+@DESC@
+This function is deprecated. it doesn't take any effects.
+@SINCE@		2.12.92
+@@
+
+@RET@		FcBool
+@FUNC@		FcDirCacheDeleteUUID
+@TYPE1@		const FcChar8 *			@ARG1@		dir
+@TYPE2@		FcConfig *			@ARG2@		config
+@PURPOSE@	Delete .uuid file
+@DESC@
+This is to delete .uuid file containing an UUID at a font directory of
+<parameter>dir</parameter>.
+@SINCE@		2.13.1
 @@

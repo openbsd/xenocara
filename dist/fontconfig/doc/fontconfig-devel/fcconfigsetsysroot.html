@@ -10,10 +10,13 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FcConfig"
-HREF="x102.html#AEN2718"><LINK
+HREF="x103.html#AEN3038"><LINK
 REL="PREVIOUS"
 TITLE="FcConfigGetSysRoot"
-HREF="fcconfiggetsysroot.html"></HEAD
+HREF="fcconfiggetsysroot.html"><LINK
+REL="NEXT"
+TITLE="FcConfigFileInfoIterInit"
+HREF="fcconfigfileinfoiterinit.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -54,7 +57,11 @@ VALIGN="bottom"
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
->&nbsp;</TD
+><A
+HREF="fcconfigfileinfoiterinit.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
 ></TR
 ></TABLE
 ><HR
@@ -68,7 +75,7 @@ NAME="FCCONFIGSETSYSROOT"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN3401"
+NAME="AEN3775"
 ></A
 ><H2
 >Name</H2
@@ -76,7 +83,7 @@ NAME="AEN3401"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN3404"
+NAME="AEN3778"
 ></A
 ><H2
 >Synopsis</H2
@@ -85,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN3405"
+NAME="AEN3779"
 ></A
 ><TABLE
 BORDER="0"
@@ -127,21 +134,24 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3414"
+NAME="AEN3788"
 ></A
 ><H2
 >Description</H2
 ><P
->Set 'sysroot' as the system root directory. fontconfig prepend 'sysroot'
-to the cache directories in order to allow people to generate caches at
-the build time. Note that this causes changing current config. i.e.
-this function calls FcConfigSetCurrent() internally.
+>Set 'sysroot' as the system root directory. All file paths used or created with
+this 'config' (including file properties in patterns) will be considered or
+made relative to this 'sysroot'. This allows a host to generate caches for
+targets at build time. This also allows a cache to be re-targeted to a
+different base directory if 'FcConfigGetSysRoot' is used to resolve file paths.
+When setting this on the current config this causes changing current config
+(calls FcConfigSetCurrent()).
 	    </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3417"
+NAME="AEN3791"
 ></A
 ><H2
 >Since</H2
@@ -181,7 +191,11 @@ ACCESSKEY="H"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+><A
+HREF="fcconfigfileinfoiterinit.html"
+ACCESSKEY="N"
+>Next &#62;&#62;&#62;</A
+></TD
 ></TR
 ><TR
 ><TD
@@ -194,7 +208,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN2718"
+HREF="x103.html#AEN3038"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -202,7 +216,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->&nbsp;</TD
+>FcConfigFileInfoIterInit</TD
 ></TR
 ></TABLE
 ></DIV

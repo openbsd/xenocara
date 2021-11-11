@@ -33,9 +33,21 @@
 
 #include <fontconfig/fontconfig.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#define _(x)		(dgettext(GETTEXT_PACKAGE, x))
+#else
+#define dgettext(d, s)	(s)
+#define _(x)		(x)
+#endif
 
 #ifndef HAVE_GETOPT
 #define HAVE_GETOPT 0
@@ -52,6 +64,7 @@ static const struct option longopts[] = {
     {"sort", 0, 0, 's'},
     {"all", 0, 0, 'a'},
     {"verbose", 0, 0, 'v'},
+    {"brief", 0, 0, 'b'},
     {"format", 1, 0, 'f'},
     {"version", 0, 0, 'V'},
     {"help", 0, 0, 'h'},
@@ -69,28 +82,30 @@ usage (char *program, int error)
 {
     FILE *file = error ? stderr : stdout;
 #if HAVE_GETOPT_LONG
-    fprintf (file, "usage: %s [-savVh] [-f FORMAT] [--sort] [--all] [--verbose] [--format=FORMAT] [--version] [--help] [pattern] {element...}\n",
+    fprintf (file, _("usage: %s [-savbVh] [-f FORMAT] [--sort] [--all] [--verbose] [--brief] [--format=FORMAT] [--version] [--help] [pattern] {element...}\n"),
 	     program);
 #else
-    fprintf (file, "usage: %s [-savVh] [-f FORMAT] [pattern] {element...}\n",
+    fprintf (file, _("usage: %s [-savVh] [-f FORMAT] [pattern] {element...}\n"),
 	     program);
 #endif
-    fprintf (file, "List best font matching [pattern]\n");
+    fprintf (file, _("List best font matching [pattern]\n"));
     fprintf (file, "\n");
 #if HAVE_GETOPT_LONG
-    fprintf (file, "  -s, --sort           display sorted list of matches\n");
-    fprintf (file, "  -a, --all            display unpruned sorted list of matches\n");
-    fprintf (file, "  -v, --verbose        display entire font pattern verbosely\n");
-    fprintf (file, "  -f, --format=FORMAT  use the given output format\n");
-    fprintf (file, "  -V, --version        display font config version and exit\n");
-    fprintf (file, "  -h, --help           display this help and exit\n");
+    fprintf (file, _("  -s, --sort           display sorted list of matches\n"));
+    fprintf (file, _("  -a, --all            display unpruned sorted list of matches\n"));
+    fprintf (file, _("  -v, --verbose        display entire font pattern verbosely\n"));
+    fprintf (file, _("  -b, --brief          display entire font pattern briefly\n"));
+    fprintf (file, _("  -f, --format=FORMAT  use the given output format\n"));
+    fprintf (file, _("  -V, --version        display font config version and exit\n"));
+    fprintf (file, _("  -h, --help           display this help and exit\n"));
 #else
-    fprintf (file, "  -s,        (sort)    display sorted list of matches\n");
-    fprintf (file, "  -a         (all)     display unpruned sorted list of matches\n");
-    fprintf (file, "  -v         (verbose) display entire font pattern verbosely\n");
-    fprintf (file, "  -f FORMAT  (format)  use the given output format\n");
-    fprintf (file, "  -V         (version) display font config version and exit\n");
-    fprintf (file, "  -h         (help)    display this help and exit\n");
+    fprintf (file, _("  -s,        (sort)    display sorted list of matches\n"));
+    fprintf (file, _("  -a         (all)     display unpruned sorted list of matches\n"));
+    fprintf (file, _("  -v         (verbose) display entire font pattern verbosely\n"));
+    fprintf (file, _("  -b         (brief)   display entire font pattern briefly\n"));
+    fprintf (file, _("  -f FORMAT  (format)  use the given output format\n"));
+    fprintf (file, _("  -V         (version) display font config version and exit\n"));
+    fprintf (file, _("  -h         (help)    display this help and exit\n"));
 #endif
     exit (error);
 }
@@ -99,8 +114,10 @@ int
 main (int argc, char **argv)
 {
     int			verbose = 0;
+    int			brief = 0;
     int			sort = 0, all = 0;
     const FcChar8	*format = NULL;
+    const FcChar8	*format_optarg = NULL;
     int			i;
     FcObjectSet		*os = 0;
     FcFontSet		*fs;
@@ -109,10 +126,11 @@ main (int argc, char **argv)
 #if HAVE_GETOPT_LONG || HAVE_GETOPT
     int			c;
 
+    setlocale (LC_ALL, "");
 #if HAVE_GETOPT_LONG
-    while ((c = getopt_long (argc, argv, "asvf:Vh", longopts, NULL)) != -1)
+    while ((c = getopt_long (argc, argv, "asvbf:Vh", longopts, NULL)) != -1)
 #else
-    while ((c = getopt (argc, argv, "asvf:Vh")) != -1)
+    while ((c = getopt (argc, argv, "asvbf:Vh")) != -1)
 #endif
     {
 	switch (c) {
@@ -125,8 +143,11 @@ main (int argc, char **argv)
 	case 'v':
 	    verbose = 1;
 	    break;
+	case 'b':
+	    brief = 1;
+	    break;
 	case 'f':
-	    format = (FcChar8 *) strdup (optarg);
+	    format = format_optarg = (FcChar8 *) strdup (optarg);
 	    break;
 	case 'V':
 	    fprintf (stderr, "fontconfig version %d.%d.%d\n", 
@@ -148,7 +169,7 @@ main (int argc, char **argv)
 	pat = FcNameParse ((FcChar8 *) argv[i]);
 	if (!pat)
 	{
-	    fputs ("Unable to parse the pattern\n", stderr);
+	    fprintf (stderr, _("Unable to parse the pattern\n"));
 	    return 1;
 	}
 	while (argv[++i])
@@ -177,7 +198,7 @@ main (int argc, char **argv)
 
 	if (!font_patterns || font_patterns->nfont == 0)
 	{
-	    fputs("No fonts installed on the system\n", stderr);
+	    fprintf (stderr, _("No fonts installed on the system\n"));
 	    return 1;
 	}
 	for (j = 0; j < font_patterns->nfont; j++)
@@ -218,8 +239,13 @@ main (int argc, char **argv)
 
 	    font = FcPatternFilter (fs->fonts[j], os);
 
-	    if (verbose)
+	    if (verbose || brief)
 	    {
+		if (brief)
+		{
+		    FcPatternDel (font, FC_CHARSET);
+		    FcPatternDel (font, FC_LANG);
+		}
 		FcPatternPrint (font);
 	    }
 	    else
@@ -243,6 +269,11 @@ main (int argc, char **argv)
 	FcObjectSetDestroy (os);
 
     FcFini ();
+
+    if (format_optarg) {
+	free ((void*)format_optarg);
+	format_optarg = NULL;
+    }
 
     return 0;
 }

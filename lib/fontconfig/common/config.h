@@ -23,7 +23,7 @@
 /* #undef FC_ARCHITECTURE */
 
 /* System font directory */
-#define FC_DEFAULT_FONTS "/usr/X11R6/lib/X11/fonts"
+#define FC_DEFAULT_FONTS "\t<dir>/usr/X11R6/lib/X11/fonts</dir>\n"
 
 /* The type of len parameter of the gperf hash/lookup function */
 #define FC_GPERF_SIZE_T unsigned int

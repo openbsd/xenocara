@@ -25,7 +25,7 @@
 
 TAG = lang
 DEPS = $(ORTH)
-ARGS = -d $(srcdir) $(ORTH)
+ARGS = --directory $(srcdir) $(ORTH)
 DIST = $(ORTH)
 
 include $(top_srcdir)/Tools.mk
@@ -280,7 +280,26 @@ ORTH = \
 	brx.orth \
 	sat.orth \
 	doi.orth \
-	mni.orth
+	mni.orth \
+	und_zsye.orth \
+	und_zmth.orth
 #	^-------------- Add new orth files here
+
+BUILT_SOURCES += $(top_builddir)/conf.d/35-lang-normalize.conf
+
+DISTCLEANFILES = $(BUILT_SOURCES)
+
+$(top_builddir)/conf.d/35-lang-normalize.conf: $(ORTH) Makefile
+	$(AM_V_GEN) echo "<?xml version=\"1.0\"?>" > $@ && \
+		echo "<!DOCTYPE fontconfig SYSTEM \"urn:fontconfig:fonts.dtd\">" >> $@ && \
+		echo "<fontconfig>" >> $@ && \
+	for i in `echo $(ORTH) | sed -e 's/ /\n/g' | grep -v _ | sed -e 's/\.orth$$//g' | sort`; do \
+		echo "  <!-- $$i* -> $$i -->" >> $@; \
+		echo "  <match>" >> $@; \
+		echo "    <test name=\"lang\" compare=\"contains\"><string>$$i</string></test>" >> $@; \
+		echo "    <edit name=\"lang\" mode=\"assign\" binding=\"same\"><string>$$i</string></edit>" >> $@; \
+		echo "  </match>" >> $@; \
+	done && \
+	echo "</fontconfig>" >> $@
 
 -include $(top_srcdir)/git.mk

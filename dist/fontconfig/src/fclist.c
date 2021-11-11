@@ -222,7 +222,7 @@ FcListPatternMatchAny (const FcPattern *p,
 	if (pe->object == FC_NAMELANG_OBJECT)
 	{
 	    /* "namelang" object is the alias object to change "familylang",
-	     * "stylelang" and "fullnamelang" object alltogether. it won't be
+	     * "stylelang" and "fullnamelang" object all together. it won't be
 	     * available on the font pattern. so checking its availability
 	     * causes no results. we should ignore it here.
 	     */
@@ -491,11 +491,10 @@ FcFontSetList (FcConfig	    *config,
     {
 	if (!FcInitBringUptoDate ())
 	    goto bail0;
-
-	config = FcConfigGetCurrent ();
-	if (!config)
-	    goto bail0;
     }
+    config = FcConfigReference (config);
+    if (!config)
+	goto bail0;
     FcListHashTableInit (&table);
 
     if (!os)
@@ -558,7 +557,7 @@ FcFontSetList (FcConfig	    *config,
      */
     ret = FcFontSetCreate ();
     if (!ret)
-	goto bail0;
+	goto bail1;
     for (i = 0; i < FC_LIST_HASH_SIZE; i++)
 	while ((bucket = table.buckets[i]))
 	{
@@ -568,12 +567,17 @@ FcFontSetList (FcConfig	    *config,
 	    free (bucket);
 	}
 
+    if (destroy_os)
+        FcObjectSetDestroy (os);
+    FcConfigDestroy (config);
+
     return ret;
 
 bail2:
     FcFontSetDestroy (ret);
 bail1:
     FcListHashTableCleanup (&table);
+    FcConfigDestroy (config);
 bail0:
     if (destroy_os)
 	FcObjectSetDestroy (os);
@@ -585,24 +589,26 @@ FcFontList (FcConfig	*config,
 	    FcPattern	*p,
 	    FcObjectSet *os)
 {
-    FcFontSet	*sets[2];
+    FcFontSet	*sets[2], *ret;
     int		nsets;
 
     if (!config)
     {
 	if (!FcInitBringUptoDate ())
 	    return 0;
-
-	config = FcConfigGetCurrent ();
-	if (!config)
-	    return 0;
     }
+    config = FcConfigReference (config);
+    if (!config)
+	return NULL;
     nsets = 0;
     if (config->fonts[FcSetSystem])
 	sets[nsets++] = config->fonts[FcSetSystem];
     if (config->fonts[FcSetApplication])
 	sets[nsets++] = config->fonts[FcSetApplication];
-    return FcFontSetList (config, sets, nsets, p, os);
+    ret = FcFontSetList (config, sets, nsets, p, os);
+    FcConfigDestroy (config);
+
+    return ret;
 }
 #define __fclist__
 #include "fcaliastail.h"

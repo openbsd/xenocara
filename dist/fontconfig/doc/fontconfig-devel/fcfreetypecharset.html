@@ -10,7 +10,7 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FreeType specific functions"
-HREF="x102.html#AEN1344"><LINK
+HREF="x103.html#AEN1629"><LINK
 REL="PREVIOUS"
 TITLE="FcFreeTypeCharIndex"
 HREF="fcfreetypecharindex.html"><LINK
@@ -75,7 +75,7 @@ NAME="FCFREETYPECHARSET"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN1373"
+NAME="AEN1658"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN1373"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN1376"
+NAME="AEN1661"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN1377"
+NAME="AEN1662"
 ></A
 ><TABLE
 BORDER="0"
@@ -135,15 +135,19 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN1386"
+NAME="AEN1671"
 ></A
 ><H2
 >Description</H2
 ><P
->Scans a FreeType face and returns the set of encoded Unicode chars.  This scans
-several encoding tables to build as complete a list as possible.  
-If 'blanks' is not 0, the glyphs in the font are examined and any blank glyphs
-not in 'blanks' are not placed in the returned FcCharSet.
+>Scans a FreeType face and returns the set of encoded Unicode chars.
+FcBlanks is deprecated, <TT
+CLASS="PARAMETER"
+><I
+>blanks</I
+></TT
+> is ignored and
+accepted only for compatibility with older code.
 	    </P
 ></DIV
 ><DIV
@@ -196,7 +200,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN1344"
+HREF="x103.html#AEN1629"
 ACCESSKEY="U"
 >Up</A
 ></TD

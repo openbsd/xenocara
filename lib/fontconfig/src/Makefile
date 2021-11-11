@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2017/10/23 16:50:28 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.11 2021/11/11 08:46:46 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -8,7 +8,6 @@ LIB=	fontconfig
 
 SRCS = \
 	fcatomic.c \
-	fcblanks.c \
 	fccache.c \
 	fccfg.c \
 	fccharset.c \
@@ -19,6 +18,8 @@ SRCS = \
 	fcformat.c \
 	fcfreetype.c \
 	fcfs.c \
+	fcptrlist.c \
+	fchash.c \
 	fcinit.c \
 	fclang.c \
 	fclist.c \
@@ -37,6 +38,8 @@ SRCS = \
 
 CFLAGS +=	-DFC_CACHEDIR='"$(FC_CACHEDIR)"' \
 		-DFONTCONFIG_PATH='"$(BASECONFIGDIR)"' \
+		-DFC_TEMPLATEDIR='"$(BASECONFIGDIR)/conf.avail"' \
+		-DCONFIGDIR='"$(BASECONFIGDIR)/conf.d"' \
 		-I.
 
 LDADD =	-L${X11BASE}/lib -lfreetype -lexpat -lz

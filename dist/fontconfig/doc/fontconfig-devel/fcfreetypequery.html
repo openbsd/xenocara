@@ -10,13 +10,13 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FreeType specific functions"
-HREF="x102.html#AEN1344"><LINK
+HREF="x103.html#AEN1629"><LINK
 REL="PREVIOUS"
 TITLE="FcFreeTypeCharSetAndSpacing"
 HREF="fcfreetypecharsetandspacing.html"><LINK
 REL="NEXT"
-TITLE="FcFreeTypeQueryFace"
-HREF="fcfreetypequeryface.html"></HEAD
+TITLE="FcFreeTypeQueryAll"
+HREF="fcfreetypequeryall.html"></HEAD
 ><BODY
 CLASS="REFENTRY"
 BGCOLOR="#FFFFFF"
@@ -58,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="fcfreetypequeryface.html"
+HREF="fcfreetypequeryall.html"
 ACCESSKEY="N"
 >Next &#62;&#62;&#62;</A
 ></TD
@@ -75,7 +75,7 @@ NAME="FCFREETYPEQUERY"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN1418"
+NAME="AEN1705"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN1418"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN1421"
+NAME="AEN1708"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN1422"
+NAME="AEN1709"
 ></A
 ><TABLE
 BORDER="0"
@@ -145,13 +145,20 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN1435"
+NAME="AEN1722"
 ></A
 ><H2
 >Description</H2
 ><P
->Constructs a pattern representing the 'id'th font in 'file'.  The number
-of fonts in 'file' is returned in 'count'.
+>Constructs a pattern representing the 'id'th face in 'file'.  The number
+of faces in 'file' is returned in 'count'.
+FcBlanks is deprecated, <TT
+CLASS="PARAMETER"
+><I
+>blanks</I
+></TT
+> is ignored and
+accepted only for compatibility with older code.
 	    </P
 ></DIV
 ><DIV
@@ -188,7 +195,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="fcfreetypequeryface.html"
+HREF="fcfreetypequeryall.html"
 ACCESSKEY="N"
 >Next &#62;&#62;&#62;</A
 ></TD
@@ -204,7 +211,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN1344"
+HREF="x103.html#AEN1629"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -212,7 +219,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->FcFreeTypeQueryFace</TD
+>FcFreeTypeQueryAll</TD
 ></TR
 ></TABLE
 ></DIV

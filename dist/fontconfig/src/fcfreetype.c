@@ -22,28 +22,6 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/*
-  Copyright © 2002-2003 by Juliusz Chroboczek
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/
-
 #include "fcint.h"
 #include "fcftint.h"
 #include <stdlib.h>
@@ -51,6 +29,7 @@
 #include <string.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_ADVANCES_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_SFNT_NAMES_H
 #include FT_TRUETYPE_IDS_H
@@ -64,17 +43,8 @@
 #endif
 #include FT_MULTIPLE_MASTERS_H
 
+#include "fcfoundry.h"
 #include "ftglue.h"
-
-#if HAVE_WARNING_CPP_DIRECTIVE
-#if !HAVE_FT_GET_BDF_PROPERTY
-#warning "No FT_Get_BDF_Property: Please install freetype 2.1.4 or later"
-#endif
-
-#if !HAVE_FT_GET_PS_FONT_INFO
-#warning "No FT_Get_PS_Font_Info: Please install freetype 2.1.1 or later"
-#endif
-#endif
 
 /*
  * Keep Han languages separated by eliminating languages
@@ -202,9 +172,9 @@ static const FcFtLanguage   fcFtLanguage[] = {
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_KIRGHIZ,		    "ky" },
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_TAJIKI,		    "tg" },
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_TURKMEN,		    "tk" },
- {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN,	    "mo" },
- {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN_MONGOLIAN_SCRIPT,"mo" },
- {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN_CYRILLIC_SCRIPT, "mo" },
+ {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN,	    "mn" },
+ {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN_MONGOLIAN_SCRIPT,"mn" },
+ {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_MONGOLIAN_CYRILLIC_SCRIPT, "mn" },
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_PASHTO,		    "ps" },
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_KURDISH,		    "ku" },
  {  TT_PLATFORM_MACINTOSH,	TT_MAC_LANGID_KASHMIRI,		    "ks" },
@@ -385,12 +355,7 @@ static const FcFtLanguage   fcFtLanguage[] = {
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_LATVIAN_LATVIA,		"lv" },
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_LITHUANIAN_LITHUANIA,	"lt" },
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_CLASSIC_LITHUANIAN_LITHUANIA,"lt" },
-
-#ifdef TT_MS_LANGID_MAORI_NEW_ZELAND
-    /* this seems to be an error that have been dropped */
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_MAORI_NEW_ZEALAND,		"mi" },
-#endif
-
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_FARSI_IRAN,		"fa" },
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_VIETNAMESE_VIET_NAM,	"vi" },
  {  TT_PLATFORM_MICROSOFT,	TT_MS_LANGID_ARMENIAN_ARMENIA,		"hy" },
@@ -556,6 +521,12 @@ static const FcMacRomanFake fcMacRomanFake[] = {
 
 static FcChar8 *
 FcFontCapabilities(FT_Face face);
+
+static FcBool
+FcFontHasHint (FT_Face face);
+
+static int
+FcFreeTypeSpacing (FT_Face face);
 
 #define NUM_FC_MAC_ROMAN_FAKE	(int) (sizeof (fcMacRomanFake) / sizeof (fcMacRomanFake[0]))
 
@@ -935,33 +906,6 @@ FcSfntNameLanguage (FT_SfntName *sname)
     return 0;
 }
 
-/* Order is significant.  For example, some B&H fonts are hinted by
-   URW++, and both strings appear in the notice. */
-
-static const char *FcNoticeFoundries[][2] =
-    {
-     {"Adobe", "adobe"},
-     {"Bigelow", "b&h"},
-     {"Bitstream", "bitstream"},
-     {"Gnat", "culmus"},
-     {"Iorsh", "culmus"},
-     {"HanYang System", "hanyang"},
-     {"Font21", "hwan"},
-     {"IBM", "ibm"},
-     {"International Typeface Corporation", "itc"},
-     {"Linotype", "linotype"},
-     {"LINOTYPE-HELL", "linotype"},
-     {"Microsoft", "microsoft"},
-     {"Monotype", "monotype"},
-     {"Omega", "omega"},
-     {"Tiro Typeworks", "tiro"},
-     {"URW", "urw"},
-     {"XFree86", "xfree86"},
-     {"Xorg", "xorg"},
-};
-
-#define NUM_NOTICE_FOUNDRIES	(int) (sizeof (FcNoticeFoundries) / sizeof (FcNoticeFoundries[0]))
-
 static const FcChar8 *
 FcNoticeFoundry(const FT_String *notice)
 {
@@ -1108,23 +1052,26 @@ FcGetPixelSize (FT_Face face, int i)
 	    return (double) prop.u.integer;
     }
 #endif
-#if HAVE_FT_BITMAP_SIZE_Y_PPEM
     return (double) face->available_sizes[i].y_ppem / 64.0;
-#else
-    return (double) face->available_sizes[i].height;
-#endif
 }
 
 static FcBool
-FcStringInPatternElement (FcPattern *pat, const char *elt, FcChar8 *string)
+FcStringInPatternElement (FcPattern *pat, FcObject obj, const FcChar8 *string)
 {
-    int	    e;
-    FcChar8 *old;
-    for (e = 0; FcPatternGetString (pat, elt, e, &old) == FcResultMatch; e++)
-	if (!FcStrCmpIgnoreBlanksAndCase (old, string))
-	{
+    FcPatternIter iter;
+    FcValueListPtr l;
+
+    FcPatternIterStart (pat, &iter);
+    if (!FcPatternFindObjectIter (pat, &iter, obj))
+	return FcFalse;
+    for (l = FcPatternIterGetValues (pat, &iter); l; l = FcValueListNext (l))
+    {
+	FcValue v = FcValueCanonicalize (&l->value);
+	if (v.type != FcTypeString)
+	    break;
+	if (!FcStrCmpIgnoreBlanksAndCase (v.u.s, string))
 	    return FcTrue;
-	}
+    }
     return FcFalse;
 }
 
@@ -1132,41 +1079,123 @@ static const FT_UShort platform_order[] = {
     TT_PLATFORM_MICROSOFT,
     TT_PLATFORM_APPLE_UNICODE,
     TT_PLATFORM_MACINTOSH,
+    TT_PLATFORM_ISO,
 };
 #define NUM_PLATFORM_ORDER (sizeof (platform_order) / sizeof (platform_order[0]))
 
 static const FT_UShort nameid_order[] = {
-#ifdef TT_NAME_ID_WWS_FAMILY
     TT_NAME_ID_WWS_FAMILY,
-#endif
-    TT_NAME_ID_PREFERRED_FAMILY,
+    TT_NAME_ID_TYPOGRAPHIC_FAMILY,
     TT_NAME_ID_FONT_FAMILY,
     TT_NAME_ID_MAC_FULL_NAME,
     TT_NAME_ID_FULL_NAME,
-#ifdef TT_NAME_ID_WWS_SUBFAMILY
     TT_NAME_ID_WWS_SUBFAMILY,
-#endif
-    TT_NAME_ID_PREFERRED_SUBFAMILY,
+    TT_NAME_ID_TYPOGRAPHIC_SUBFAMILY,
     TT_NAME_ID_FONT_SUBFAMILY,
     TT_NAME_ID_TRADEMARK,
     TT_NAME_ID_MANUFACTURER,
 };
 
 #define NUM_NAMEID_ORDER  (sizeof (nameid_order) / sizeof (nameid_order[0]))
-FcPattern *
-FcFreeTypeQueryFace (const FT_Face  face,
-		     const FcChar8  *file,
-		     int	    id,
-		     FcBlanks	    *blanks)
+
+typedef struct
+{
+  unsigned int platform_id;
+  unsigned int name_id;
+  unsigned int encoding_id;
+  unsigned int language_id;
+  unsigned int idx;
+} FcNameMapping;
+
+static FcBool
+_is_english(int platform, int language)
+{
+    FcBool ret = FcFalse;
+
+    switch (platform)
+    {
+    case TT_PLATFORM_MACINTOSH:
+	ret = language == TT_MAC_LANGID_ENGLISH;
+	break;
+    case TT_PLATFORM_MICROSOFT:
+	ret = language == TT_MS_LANGID_ENGLISH_UNITED_STATES;
+	break;
+    }
+    return ret;
+}
+
+static int
+name_mapping_cmp (const void *pa, const void *pb)
+{
+  const FcNameMapping *a = (const FcNameMapping *) pa;
+  const FcNameMapping *b = (const FcNameMapping *) pb;
+
+  if (a->platform_id != b->platform_id) return (int) a->platform_id - (int) b->platform_id;
+  if (a->name_id != b->name_id) return (int) a->name_id - (int) b->name_id;
+  if (a->encoding_id != b->encoding_id) return (int) a->encoding_id - (int) b->encoding_id;
+  if (a->language_id != b->language_id) return _is_english(a->platform_id, a->language_id) ? -1 : _is_english(b->platform_id, b->language_id) ? 1 : (int) a->language_id - (int) b->language_id;
+  if (a->idx != b->idx) return (int) a->idx - (int) b->idx;
+
+  return 0;
+}
+
+static int
+FcFreeTypeGetFirstName (const FT_Face face,
+			unsigned int  platform,
+			unsigned int  nameid,
+			FcNameMapping *mapping,
+			unsigned int   count,
+			FT_SfntName   *sname)
+{
+    int min = 0, max = (int) count - 1;
+
+    while (min <= max)
+    {
+	int mid = (min + max) / 2;
+
+	if (FT_Get_Sfnt_Name (face, mapping[mid].idx, sname) != 0)
+	    return FcFalse;
+
+	if (platform < sname->platform_id ||
+	    (platform == sname->platform_id &&
+	     (nameid < sname->name_id ||
+	      (nameid == sname->name_id &&
+	       (mid &&
+		platform == mapping[mid - 1].platform_id &&
+		nameid == mapping[mid - 1].name_id
+	       )))))
+	    max = mid - 1;
+	else if (platform > sname->platform_id ||
+		 (platform == sname->platform_id &&
+		  nameid > sname->name_id))
+	    min = mid + 1;
+	else
+	    return mid;
+    }
+
+    return -1;
+}
+
+static FcPattern *
+FcFreeTypeQueryFaceInternal (const FT_Face  face,
+			     const FcChar8  *file,
+			     unsigned int   id,
+			     FcCharSet      **cs_share,
+			     FcLangSet      **ls_share,
+			     FcNameMapping  **nm_share)
 {
     FcPattern	    *pat;
     int		    slant = -1;
-    int		    weight = -1;
-    int		    width = -1;
+    double	    weight = -1;
+    double	    width = -1;
     FcBool	    decorative = FcFalse;
-    int		    i;
-    FcCharSet	    *cs;
-    FcLangSet	    *ls;
+    FcBool	    variable = FcFalse;
+    FcBool	    variable_weight = FcFalse;
+    FcBool	    variable_width = FcFalse;
+    FcBool	    variable_size = FcFalse;
+    FcCharSet       *cs;
+    FcLangSet       *ls;
+    FcNameMapping   *name_mapping = NULL;
 #if 0
     FcChar8	    *family = 0;
 #endif
@@ -1189,9 +1218,8 @@ FcFreeTypeQueryFace (const FT_Face  face,
 #endif
     TT_Header	    *head;
     const FcChar8   *exclusiveLang = 0;
-    FT_SfntName	    sname;
-    FT_UInt    	    snamei, snamec;
 
+    int		    name_count = 0;
     int		    nfamily = 0;
     int		    nfamily_lang = 0;
     int		    nstyle = 0;
@@ -1199,14 +1227,9 @@ FcFreeTypeQueryFace (const FT_Face  face,
     int		    nfullname = 0;
     int		    nfullname_lang = 0;
     unsigned int    p, n;
-    int		    platform, nameid;
 
     FcChar8	    *style = 0;
     int		    st;
-    char	    psname[256];
-    const char	    *tmp;
-
-    FcRange	    *r = NULL;
 
     FcBool	    symbol = FcFalse;
 
@@ -1220,61 +1243,122 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	int has_outline = !!(face->face_flags & FT_FACE_FLAG_SCALABLE);
 	int has_color = 0;
 
-#ifdef FT_FACE_FLAG_COLOR
-	has_color = !!(face->face_flags & FT_FACE_FLAG_COLOR);
-#endif
-
-	if (!FcPatternAddBool (pat, FC_OUTLINE, has_outline))
+	if (!FcPatternObjectAddBool (pat, FC_OUTLINE_OBJECT, has_outline))
 	    goto bail1;
 
-#ifdef FT_FACE_FLAG_COLOR
-	if (!FcPatternAddBool (pat, FC_COLOR, has_color))
+	has_color = !!FT_HAS_COLOR (face);
+	if (!FcPatternObjectAddBool (pat, FC_COLOR_OBJECT, has_color))
 	    goto bail1;
-#endif
 
 	/* All color fonts are designed to be scaled, even if they only have
 	 * bitmap strikes.  Client is responsible to scale the bitmaps.  This
-	 * is in constrast to non-color strikes... */
-	if (!FcPatternAddBool (pat, FC_SCALABLE, has_outline || has_color))
+	 * is in contrast to non-color strikes... */
+	if (!FcPatternObjectAddBool (pat, FC_SCALABLE_OBJECT, has_outline || has_color))
 	    goto bail1;
     }
 
     if (id >> 16)
     {
-      if (!FT_Get_MM_Var (face, &master))
-	instance = &master->namedstyle[(id >> 16) - 1];
+      if (FT_Get_MM_Var (face, &master))
+	  goto bail1;
 
-      if (instance)
+      if (id >> 16 == 0x8000)
       {
-	  /* Pull out weight and width from named-instance. */
+	  /* Query variable font itself. */
 	  unsigned int i;
 
 	  for (i = 0; i < master->num_axis; i++)
 	  {
-	    double value = instance->coords[i] / (double) (1 << 16);
-	    double default_value = master->axis[i].def / (double) (1 << 16);
-	    double mult = value / default_value;
-	    //printf ("named-instance, axis %d tag %lx value %g\n", i, master->axis[i].tag, value);
-	    switch (master->axis[i].tag)
-	    {
-	      case FT_MAKE_TAG ('w','g','h','t'):
-	        weight_mult = mult;
-		break;
+	      double min_value = master->axis[i].minimum / (double) (1U << 16);
+	      double def_value = master->axis[i].def / (double) (1U << 16);
+	      double max_value = master->axis[i].maximum / (double) (1U << 16);
+	      FcObject obj = FC_INVALID_OBJECT;
 
-	      case FT_MAKE_TAG ('w','d','t','h'):
-		width_mult = mult;
-		break;
+	      if (min_value > def_value || def_value > max_value || min_value == max_value)
+		  continue;
 
-	      /* TODO optical size! */
+	      switch (master->axis[i].tag)
+	      {
+		case FT_MAKE_TAG ('w','g','h','t'):
+		  obj = FC_WEIGHT_OBJECT;
+		  min_value = FcWeightFromOpenTypeDouble (min_value);
+		  max_value = FcWeightFromOpenTypeDouble (max_value);
+		  variable_weight = FcTrue;
+		  weight = 0; /* To stop looking for weight. */
+		  break;
+
+		case FT_MAKE_TAG ('w','d','t','h'):
+		  obj = FC_WIDTH_OBJECT;
+		  /* Values in 'wdth' match Fontconfig FC_WIDTH_* scheme directly. */
+		  variable_width = FcTrue;
+		  width = 0; /* To stop looking for width. */
+		  break;
+
+		case FT_MAKE_TAG ('o','p','s','z'):
+		  obj = FC_SIZE_OBJECT;
+		  /* Values in 'opsz' match Fontconfig FC_SIZE, both are in points. */
+		  variable_size = FcTrue;
+		  break;
+	      }
+
+	      if (obj != FC_INVALID_OBJECT)
+	      {
+		  FcRange *r = FcRangeCreateDouble (min_value, max_value);
+		  if (!FcPatternObjectAddRange (pat, obj, r))
+		  {
+		      FcRangeDestroy (r);
+		      goto bail1;
+		  }
+		  FcRangeDestroy (r);
+		  variable = FcTrue;
+	      }
+	  }
+
+	  if (!variable)
+	      goto bail1;
+
+	  id &= 0xFFFF;
+      }
+      else if ((id >> 16) - 1 < master->num_namedstyles)
+      {
+	  /* Pull out weight and width from named-instance. */
+	  unsigned int i;
+
+	  instance = &master->namedstyle[(id >> 16) - 1];
+
+	  for (i = 0; i < master->num_axis; i++)
+	  {
+	      double value = instance->coords[i] / (double) (1U << 16);
+	      double default_value = master->axis[i].def / (double) (1U << 16);
+	      double mult = default_value ? value / default_value : 1;
+	      //printf ("named-instance, axis %d tag %lx value %g\n", i, master->axis[i].tag, value);
+	      switch (master->axis[i].tag)
+	      {
+		case FT_MAKE_TAG ('w','g','h','t'):
+		  weight_mult = mult;
+		  break;
+
+		case FT_MAKE_TAG ('w','d','t','h'):
+		  width_mult = mult;
+		  break;
+
+		case FT_MAKE_TAG ('o','p','s','z'):
+		  if (!FcPatternObjectAddDouble (pat, FC_SIZE_OBJECT, value))
+		      goto bail1;
+		  break;
 	    }
 	  }
 	}
+        else
+	    goto bail1;
     }
+    if (!FcPatternObjectAddBool (pat, FC_VARIABLE_OBJECT, variable))
+	goto bail1;
 
     /*
      * Get the OS/2 table
      */
-    os2 = (TT_OS2 *) FT_Get_Sfnt_Table (face, ft_sfnt_os2);
+    os2 = (TT_OS2 *) FT_Get_Sfnt_Table (face, FT_SFNT_OS2);
 
     /*
      * Look first in the OS/2 table for the foundry, if
@@ -1302,13 +1386,44 @@ FcFreeTypeQueryFace (const FT_Face  face,
      * and style names.  FreeType makes quite a hash
      * of them
      */
-    snamec = FT_Get_Sfnt_Name_Count (face);
-    for (p = 0; p <= NUM_PLATFORM_ORDER; p++)
+    name_count = FT_Get_Sfnt_Name_Count (face);
+    if (nm_share)
+	name_mapping = *nm_share;
+    if (!name_mapping)
     {
-	if (p < NUM_PLATFORM_ORDER)
-	    platform = platform_order[p];
-	else
-	    platform = 0xffff;
+	int i = 0;
+	name_mapping = malloc (name_count * sizeof (FcNameMapping));
+	if (!name_mapping)
+	    name_count = 0;
+	for (i = 0; i < name_count; i++)
+	{
+	    FcNameMapping *p = &name_mapping[i];
+	    FT_SfntName sname;
+	    if (FT_Get_Sfnt_Name (face, i, &sname) == 0)
+	    {
+		p->platform_id = sname.platform_id;
+		p->name_id  = sname.name_id;
+		p->encoding_id = sname.encoding_id;
+		p->language_id = sname.language_id;
+		p->idx = i;
+	    }
+	    else
+	    {
+		p->platform_id =
+		p->name_id  =
+		p->encoding_id =
+		p->language_id =
+		p->idx = (unsigned int) -1;
+	    }
+	}
+	qsort (name_mapping, name_count, sizeof(FcNameMapping), name_mapping_cmp);
+
+	if (nm_share)
+	    *nm_share = name_mapping;
+    }
+    for (p = 0; p < NUM_PLATFORM_ORDER; p++)
+    {
+	int platform = platform_order[p];
 
 	/*
 	 * Order nameids so preferred names appear first
@@ -1316,117 +1431,80 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	 */
 	for (n = 0; n < NUM_NAMEID_ORDER; n++)
 	{
-	    nameid = nameid_order[n];
+	    FT_SfntName sname;
+	    int nameidx;
+	    const FcChar8	*lang;
+	    int		*np = 0, *nlangp = 0;
+	    size_t		len;
+	    int nameid, lookupid;
+	    FcObject obj = FC_INVALID_OBJECT, objlang = FC_INVALID_OBJECT;
 
-	    for (snamei = 0; snamei < snamec; snamei++)
+	    nameid = lookupid = nameid_order[n];
+
+	    if (instance)
 	    {
-		FcChar8		*utf8, *pp;
-		const FcChar8	*lang;
-		const char	*elt = 0, *eltlang = 0;
-		int		*np = 0, *nlangp = 0;
-		size_t		len;
-
-		if (FT_Get_Sfnt_Name (face, snamei, &sname) != 0)
+		/* For named-instances, we skip regular style nameIDs,
+		 * and treat the instance's nameid as FONT_SUBFAMILY.
+		 * Postscript name is automatically handled by FreeType. */
+		if (nameid == TT_NAME_ID_WWS_SUBFAMILY ||
+		    nameid == TT_NAME_ID_TYPOGRAPHIC_SUBFAMILY ||
+		    nameid == TT_NAME_ID_FULL_NAME)
 		    continue;
 
-		if (instance)
-		{
-		    /* For named-instances, we regular style nameIDs,
-		     * and map the instance's strid to FONT_SUBFAMILY. */
-		    if (sname.name_id == TT_NAME_ID_WWS_SUBFAMILY ||
-			sname.name_id == TT_NAME_ID_PREFERRED_SUBFAMILY ||
-			sname.name_id == TT_NAME_ID_FONT_SUBFAMILY)
-			continue;
-		    if (sname.name_id == instance->strid)
-			sname.name_id = TT_NAME_ID_FONT_SUBFAMILY;
-		}
+		if (nameid == TT_NAME_ID_FONT_SUBFAMILY)
+		    lookupid = instance->strid;
+	    }
 
-		if (sname.name_id != nameid)
-		    continue;
-
-		/*
-		 * Sort platforms in preference order, accepting
-		 * all other platforms last
-		 */
-		if (p < NUM_PLATFORM_ORDER)
-		{
-		    if (sname.platform_id != platform)
-			continue;
-		}
-		else
-		{
-		    unsigned int	sp;
-
-		    for (sp = 0; sp < NUM_PLATFORM_ORDER; sp++)
-			if (sname.platform_id == platform_order[sp])
-			    break;
-		    if (sp != NUM_PLATFORM_ORDER)
-			continue;
-		}
-		utf8 = FcSfntNameTranscode (&sname);
-		lang = FcSfntNameLanguage (&sname);
-
-		if (!utf8)
-		    continue;
-
-		switch (sname.name_id) {
-#ifdef TT_NAME_ID_WWS_FAMILY
+	    nameidx = FcFreeTypeGetFirstName (face, platform, lookupid,
+					      name_mapping, name_count,
+					      &sname);
+	    if (nameidx == -1)
+		continue;
+	    do
+	    {
+		switch (nameid) {
 		case TT_NAME_ID_WWS_FAMILY:
-#endif
-		case TT_NAME_ID_PREFERRED_FAMILY:
+		case TT_NAME_ID_TYPOGRAPHIC_FAMILY:
 		case TT_NAME_ID_FONT_FAMILY:
 #if 0	
 		case TT_NAME_ID_UNIQUE_ID:
 #endif
 		    if (FcDebug () & FC_DBG_SCANV)
-			printf ("found family (n %2d p %d e %d l 0x%04x) %s\n",
+			printf ("found family (n %2d p %d e %d l 0x%04x)",
 				sname.name_id, sname.platform_id,
-				sname.encoding_id, sname.language_id,
-				utf8);
+				sname.encoding_id, sname.language_id);
 
-		    elt = FC_FAMILY;
-		    eltlang = FC_FAMILYLANG;
+		    obj = FC_FAMILY_OBJECT;
+		    objlang = FC_FAMILYLANG_OBJECT;
 		    np = &nfamily;
 		    nlangp = &nfamily_lang;
 		    break;
 		case TT_NAME_ID_MAC_FULL_NAME:
 		case TT_NAME_ID_FULL_NAME:
+		    if (variable)
+			break;
 		    if (FcDebug () & FC_DBG_SCANV)
-			printf ("found full   (n %2d p %d e %d l 0x%04x) %s\n",
+			printf ("found full   (n %2d p %d e %d l 0x%04x)",
 				sname.name_id, sname.platform_id,
-				sname.encoding_id, sname.language_id,
-				utf8);
+				sname.encoding_id, sname.language_id);
 
-		    elt = FC_FULLNAME;
-		    eltlang = FC_FULLNAMELANG;
+		    obj = FC_FULLNAME_OBJECT;
+		    objlang = FC_FULLNAMELANG_OBJECT;
 		    np = &nfullname;
 		    nlangp = &nfullname_lang;
 		    break;
-#ifdef TT_NAME_ID_WWS_SUBFAMILY
 		case TT_NAME_ID_WWS_SUBFAMILY:
-#endif
-		case TT_NAME_ID_PREFERRED_SUBFAMILY:
+		case TT_NAME_ID_TYPOGRAPHIC_SUBFAMILY:
 		case TT_NAME_ID_FONT_SUBFAMILY:
-		    if (utf8)
-		    {
-			pp = utf8;
-			while (*pp == ' ')
-			    pp++;
-			len = strlen ((const char *) pp);
-			memmove (utf8, pp, len + 1);
-			pp = utf8 + len - 1;
-			while (*pp == ' ')
-			    pp--;
-			*(pp + 1) = 0;
-		    }
+		    if (variable)
+			break;
 		    if (FcDebug () & FC_DBG_SCANV)
-			printf ("found style  (n %2d p %d e %d l 0x%04x) %s\n",
+			printf ("found style  (n %2d p %d e %d l 0x%04x) ",
 				sname.name_id, sname.platform_id,
-				sname.encoding_id, sname.language_id,
-				utf8);
+				sname.encoding_id, sname.language_id);
 
-		    elt = FC_STYLE;
-		    eltlang = FC_STYLELANG;
+		    obj = FC_STYLE_OBJECT;
+		    objlang = FC_STYLELANG_OBJECT;
 		    np = &nstyle;
 		    nlangp = &nstyle_lang;
 		    break;
@@ -1434,19 +1512,46 @@ FcFreeTypeQueryFace (const FT_Face  face,
 		case TT_NAME_ID_MANUFACTURER:
 		    /* If the foundry wasn't found in the OS/2 table, look here */
 		    if(!foundry)
+		    {
+			FcChar8 *utf8;
+			utf8 = FcSfntNameTranscode (&sname);
 			foundry = FcNoticeFoundry((FT_String *) utf8);
+			free (utf8);
+		    }
 		    break;
 		}
-		if (elt)
+		if (obj != FC_INVALID_OBJECT)
 		{
-		    if (FcStringInPatternElement (pat, elt, utf8))
+		    FcChar8		*utf8, *pp;
+
+		    utf8 = FcSfntNameTranscode (&sname);
+		    lang = FcSfntNameLanguage (&sname);
+
+		    if (FcDebug () & FC_DBG_SCANV)
+			printf ("%s\n", utf8 ? (char *)utf8 : "(null)");
+
+		    if (!utf8)
+			continue;
+
+		    /* Trim surrounding whitespace. */
+		    pp = utf8;
+		    while (*pp == ' ')
+			pp++;
+		    len = strlen ((const char *) pp);
+		    memmove (utf8, pp, len + 1);
+		    pp = utf8 + len;
+		    while (pp > utf8 && *(pp - 1) == ' ')
+			pp--;
+		    *pp = 0;
+
+		    if (FcStringInPatternElement (pat, obj, utf8))
 		    {
 			free (utf8);
 			continue;
 		    }
 
 		    /* add new element */
-		    if (!FcPatternAddString (pat, elt, utf8))
+		    if (!FcPatternObjectAddString (pat, obj, utf8))
 		    {
 			free (utf8);
 			goto bail1;
@@ -1457,20 +1562,26 @@ FcFreeTypeQueryFace (const FT_Face  face,
 			/* pad lang list with 'und' to line up with elt */
 			while (*nlangp < *np)
 			{
-			    if (!FcPatternAddString (pat, eltlang, (FcChar8 *) "und"))
+			    if (!FcPatternObjectAddString (pat, objlang, (FcChar8 *) "und"))
 				goto bail1;
 			    ++*nlangp;
 			}
-			if (!FcPatternAddString (pat, eltlang, lang))
+			if (!FcPatternObjectAddString (pat, objlang, lang))
 			    goto bail1;
 			++*nlangp;
 		    }
 		    ++*np;
 		}
-		else
-		    free (utf8);
 	    }
+	    while (++nameidx < name_count &&
+		   FT_Get_Sfnt_Name (face, name_mapping[nameidx].idx, &sname) == 0 &&
+		   platform == sname.platform_id && lookupid == sname.name_id);
 	}
+    }
+    if (!nm_share)
+    {
+	free (name_mapping);
+	name_mapping = NULL;
     }
 
     if (!nfamily && face->family_name &&
@@ -1478,21 +1589,35 @@ FcFreeTypeQueryFace (const FT_Face  face,
     {
 	if (FcDebug () & FC_DBG_SCANV)
 	    printf ("using FreeType family \"%s\"\n", face->family_name);
-	if (!FcPatternAddString (pat, FC_FAMILY, (FcChar8 *) face->family_name))
+	if (!FcPatternObjectAddString (pat, FC_FAMILY_OBJECT, (FcChar8 *) face->family_name))
 	    goto bail1;
-	if (!FcPatternAddString (pat, FC_STYLELANG, (FcChar8 *) "en"))
+	if (!FcPatternObjectAddString (pat, FC_FAMILYLANG_OBJECT, (FcChar8 *) "en"))
 	    goto bail1;
 	++nfamily;
     }
 
-    if (!nstyle && face->style_name &&
-	FcStrCmpIgnoreBlanksAndCase ((FcChar8 *) face->style_name, (FcChar8 *) "") != 0)
+    if (!variable && !nstyle)
     {
-	if (FcDebug () & FC_DBG_SCANV)
-	    printf ("using FreeType style \"%s\"\n", face->style_name);
-	if (!FcPatternAddString (pat, FC_STYLE, (FcChar8 *) face->style_name))
+	const FcChar8 *style_regular = (const FcChar8 *) "Regular";
+	const FcChar8 *ss;
+
+	if (face->style_name &&
+	    FcStrCmpIgnoreBlanksAndCase ((FcChar8 *) face->style_name, (FcChar8 *) "") != 0)
+	{
+	    if (FcDebug () & FC_DBG_SCANV)
+		printf ("using FreeType style \"%s\"\n", face->style_name);
+
+	    ss = (const FcChar8 *) face->style_name;
+	}
+	else
+	{
+	    if (FcDebug () & FC_DBG_SCANV)
+		printf ("applying default style Regular\n");
+	    ss = style_regular;
+	}
+	if (!FcPatternObjectAddString (pat, FC_STYLE_OBJECT, ss))
 	    goto bail1;
-	if (!FcPatternAddString (pat, FC_STYLELANG, (FcChar8 *) "en"))
+	if (!FcPatternObjectAddString (pat, FC_STYLELANG_OBJECT, (FcChar8 *) "en"))
 	    goto bail1;
 	++nstyle;
     }
@@ -1516,7 +1641,12 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	family[end - start] = '\0';
 	if (FcDebug () & FC_DBG_SCANV)
 	    printf ("using filename for family %s\n", family);
-	if (!FcPatternAddString (pat, FC_FAMILY, family))
+	if (!FcPatternObjectAddString (pat, FC_FAMILY_OBJECT, family))
+	{
+	    free (family);
+	    goto bail1;
+	}
+	if (!FcPatternObjectAddString (pat, FC_FAMILYLANG_OBJECT, (FcChar8 *) "en"))
 	{
 	    free (family);
 	    goto bail1;
@@ -1525,57 +1655,118 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	++nfamily;
     }
 
-    /* Add the PostScript name into the cache */
-    tmp = FT_Get_Postscript_Name (face);
-    if (!tmp)
+    /* Add the fullname into the cache */
+    if (!variable && !nfullname)
     {
-	FcChar8 *family, *familylang = NULL;
-	size_t len;
+	FcChar8 *family, *style, *lang;
 	int n = 0;
+	size_t len, i;
+	FcStrBuf sbuf;
 
-	/* Workaround when FT_Get_Postscript_Name didn't give any name.
-	 * try to find out the English family name and convert.
-	 */
-	while (FcPatternObjectGetString (pat, FC_FAMILYLANG_OBJECT, n, &familylang) == FcResultMatch)
+	while (FcPatternObjectGetString (pat, FC_FAMILYLANG_OBJECT, n, &lang) == FcResultMatch)
 	{
-	    if (FcStrCmp (familylang, (const FcChar8 *)"en") == 0)
+	    if (FcStrCmp (lang, (const FcChar8 *) "en") == 0)
 		break;
 	    n++;
-	    familylang = NULL;
+	    lang = NULL;
 	}
-	if (!familylang)
+	if (!lang)
 	    n = 0;
-
 	if (FcPatternObjectGetString (pat, FC_FAMILY_OBJECT, n, &family) != FcResultMatch)
 	    goto bail1;
-	len = strlen ((const char *)family);
-	/* the literal name in PostScript Language is limited to 127 characters though,
-	 * It is the architectural limit. so assuming 255 characters may works enough.
-	 */
-	for (i = 0; i < len && i < 255; i++)
+	len = strlen ((const char *) family);
+	for (i = len; i > 0; i--)
 	{
-	    /* those characters are not allowed to be the literal name in PostScript */
-	    static const char exclusive_chars[] = "\x04()/<>[]{}\t\f\r\n ";
-
-	    if (strchr(exclusive_chars, family[i]) != NULL)
-		psname[i] = '-';
-	    else
-		psname[i] = family[i];
+	    if (!isspace (family[i]))
+		break;
 	}
-	psname[i] = 0;
+	family[i] = 0;
+	while (FcPatternObjectGetString (pat, FC_STYLELANG_OBJECT, n, &lang) == FcResultMatch)
+	{
+	    if (FcStrCmp (lang, (const FcChar8 *) "en") == 0)
+		break;
+	    n++;
+	    lang = NULL;
+	}
+	if (!lang)
+	    n = 0;
+	if (FcPatternObjectGetString (pat, FC_STYLE_OBJECT, n, &style) != FcResultMatch)
+	    goto bail1;
+	len = strlen ((const char *) style);
+	for (i = 0; style[i] != 0 && isspace (style[i]); i++)
+	    break;
+	memcpy (style, &style[i], len - i);
+	FcStrBufInit (&sbuf, NULL, 0);
+	FcStrBufString (&sbuf, family);
+	FcStrBufChar (&sbuf, ' ');
+	FcStrBufString (&sbuf, style);
+	if (!FcPatternObjectAddString (pat, FC_FULLNAME_OBJECT, FcStrBufDoneStatic (&sbuf)))
+	{
+	    FcStrBufDestroy (&sbuf);
+	    goto bail1;
+	}
+	FcStrBufDestroy (&sbuf);
+	if (!FcPatternObjectAddString (pat, FC_FULLNAMELANG_OBJECT, (const FcChar8 *) "en"))
+	    goto bail1;
+	++nfullname;
     }
-    else
+    /* Add the PostScript name into the cache */
+    if (!variable)
     {
-	strncpy (psname, tmp, 255);
-	psname[255] = 0;
+	char	    psname[256];
+	const char	    *tmp;
+	tmp = FT_Get_Postscript_Name (face);
+	if (!tmp)
+	{
+	    unsigned int i;
+	    FcChar8 *family, *familylang = NULL;
+	    size_t len;
+	    int n = 0;
+
+	    /* Workaround when FT_Get_Postscript_Name didn't give any name.
+	     * try to find out the English family name and convert.
+	     */
+	    while (FcPatternObjectGetString (pat, FC_FAMILYLANG_OBJECT, n, &familylang) == FcResultMatch)
+	    {
+		if (FcStrCmp (familylang, (const FcChar8 *)"en") == 0)
+		    break;
+		n++;
+		familylang = NULL;
+	    }
+	    if (!familylang)
+		n = 0;
+
+	    if (FcPatternObjectGetString (pat, FC_FAMILY_OBJECT, n, &family) != FcResultMatch)
+		goto bail1;
+	    len = strlen ((const char *)family);
+	    /* the literal name in PostScript Language is limited to 127 characters though,
+	     * It is the architectural limit. so assuming 255 characters may works enough.
+	     */
+	    for (i = 0; i < len && i < 255; i++)
+	    {
+		/* those characters are not allowed to be the literal name in PostScript */
+		static const char exclusive_chars[] = "\x04()/<>[]{}\t\f\r\n ";
+
+		if (strchr(exclusive_chars, family[i]) != NULL)
+		    psname[i] = '-';
+		else
+		    psname[i] = family[i];
+	    }
+	    psname[i] = 0;
+	}
+	else
+	{
+	    strncpy (psname, tmp, 255);
+	    psname[255] = 0;
+	}
+	if (!FcPatternObjectAddString (pat, FC_POSTSCRIPT_NAME_OBJECT, (const FcChar8 *)psname))
+	    goto bail1;
     }
-    if (!FcPatternAddString (pat, FC_POSTSCRIPT_NAME, (const FcChar8 *)psname))
+
+    if (file && *file && !FcPatternObjectAddString (pat, FC_FILE_OBJECT, file))
 	goto bail1;
 
-    if (file && *file && !FcPatternAddString (pat, FC_FILE, file))
-	goto bail1;
-
-    if (!FcPatternAddInteger (pat, FC_INDEX, id))
+    if (!FcPatternObjectAddInteger (pat, FC_INDEX_OBJECT, id))
 	goto bail1;
 
 #if 0
@@ -1585,7 +1776,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
      * the attribute.  Sigh.
      */
     if ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) != 0)
-	if (!FcPatternAddInteger (pat, FC_SPACING, FC_MONO))
+	if (!FcPatternObjectAddInteger (pat, FC_SPACING_OBJECT, FC_MONO))
 	    goto bail1;
 #endif
 
@@ -1595,17 +1786,20 @@ FcFreeTypeQueryFace (const FT_Face  face,
     head = (TT_Header *) FT_Get_Sfnt_Table (face, ft_sfnt_head);
     if (head)
     {
-	if (!FcPatternAddInteger (pat, FC_FONTVERSION, head->Font_Revision))
+	if (!FcPatternObjectAddInteger (pat, FC_FONTVERSION_OBJECT, head->Font_Revision))
 	    goto bail1;
     }
     else
     {
-	if (!FcPatternAddInteger (pat, FC_FONTVERSION, 0))
+	if (!FcPatternObjectAddInteger (pat, FC_FONTVERSION_OBJECT, 0))
 	    goto bail1;
     }
+    if (!FcPatternObjectAddInteger (pat, FC_ORDER_OBJECT, 0))
+	goto bail1;
 
     if (os2 && os2->version >= 0x0001 && os2->version != 0xffff)
     {
+	unsigned int i;
 	for (i = 0; i < NUM_CODE_PAGE_RANGE; i++)
 	{
 	    FT_ULong	bits;
@@ -1620,7 +1814,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
 		bits = os2->ulCodePageRange2;
 		bit = FcCodePageRange[i].bit - 32;
 	    }
-	    if (bits & (1 << bit))
+	    if (bits & (1U << bit))
 	    {
 		/*
 		 * If the font advertises support for multiple
@@ -1640,21 +1834,12 @@ FcFreeTypeQueryFace (const FT_Face  face,
     if (os2 && os2->version != 0xffff)
     {
 	weight = os2->usWeightClass;
-	if (weight < 10 && weight_mult != 1.0)
-	{
-		/* Work around bad values by cleaning them up before
-		 * multiplying by weight_mult. */
-		weight = FcWeightToOpenType (FcWeightFromOpenType (weight));
-	}
-	weight = FcWeightFromOpenType ((int) (weight * weight_mult + .5));
+	weight = FcWeightFromOpenTypeDouble (weight * weight_mult);
 	if ((FcDebug() & FC_DBG_SCANV) && weight != -1)
-	    printf ("\tos2 weight class %d multiplier %g maps to weight %d\n",
+	    printf ("\tos2 weight class %d multiplier %g maps to weight %g\n",
 		    os2->usWeightClass, weight_mult, weight);
 
-	/* TODO:
-	 * Add FcWidthFromOpenType and FcWidthToOpenType,
-	 * and apply width_mult post-conversion? */
-	switch ((int) (os2->usWidthClass * width_mult + .5)) {
+	switch (os2->usWidthClass) {
 	case 1:	width = FC_WIDTH_ULTRACONDENSED; break;
 	case 2:	width = FC_WIDTH_EXTRACONDENSED; break;
 	case 3:	width = FC_WIDTH_CONDENSED; break;
@@ -1665,13 +1850,14 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	case 8:	width = FC_WIDTH_EXTRAEXPANDED; break;
 	case 9:	width = FC_WIDTH_ULTRAEXPANDED; break;
 	}
+	width *= width_mult;
 	if ((FcDebug() & FC_DBG_SCANV) && width != -1)
-	    printf ("\tos2 width class %d multiplier %g maps to width %d\n",
+	    printf ("\tos2 width class %d multiplier %g maps to width %g\n",
 		    os2->usWidthClass, width_mult, width);
     }
     if (os2 && (complex_ = FcFontCapabilities(face)))
     {
-	if (!FcPatternAddString (pat, FC_CAPABILITY, complex_))
+	if (!FcPatternObjectAddString (pat, FC_CAPABILITY_OBJECT, complex_))
 	{
 	    free (complex_);
 	    goto bail1;
@@ -1679,24 +1865,34 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	free (complex_);
     }
 
-#if defined (HAVE_TT_OS2_USUPPEROPTICALPOINTSIZE) && defined (HAVE_TT_OS2_USLOWEROPTICALPOINTSIZE)
-    if (os2 && os2->version >= 0x0005 && os2->version != 0xffff)
+    if (!FcPatternObjectAddBool (pat, FC_FONT_HAS_HINT_OBJECT, FcFontHasHint (face)))
+	goto bail1;
+
+    if (!variable_size && os2 && os2->version >= 0x0005 && os2->version != 0xffff)
     {
 	double lower_size, upper_size;
+	FcRange *r;
 
 	/* usLowerPointSize and usUpperPointSize is actually twips */
 	lower_size = os2->usLowerOpticalPointSize / 20.0L;
 	upper_size = os2->usUpperOpticalPointSize / 20.0L;
 
-	r = FcRangeCreateDouble (lower_size, upper_size);
-	if (!FcPatternAddRange (pat, FC_SIZE, r))
+	if (lower_size == upper_size)
 	{
-	    FcRangeDestroy (r);
-	    goto bail1;
+	    if (!FcPatternObjectAddDouble (pat, FC_SIZE_OBJECT, lower_size))
+		goto bail1;
 	}
-	FcRangeDestroy (r);
+	else
+	{
+	    r = FcRangeCreateDouble (lower_size, upper_size);
+	    if (!FcPatternObjectAddRange (pat, FC_SIZE_OBJECT, r))
+	    {
+		FcRangeDestroy (r);
+		goto bail1;
+	    }
+	    FcRangeDestroy (r);
+	}
     }
-#endif
 
     /*
      * Type 1: Check for FontInfo dictionary information
@@ -1710,7 +1906,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	{
 	    weight = FcIsWeight ((FcChar8 *) psfontinfo.weight);
     	    if (FcDebug() & FC_DBG_SCANV)
-    		printf ("\tType1 weight %s maps to %d\n",
+		printf ("\tType1 weight %s maps to %g\n",
 			psfontinfo.weight, weight);
 	}
 
@@ -1774,7 +1970,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	{
 	    width = FcIsWidth ((FcChar8 *) prop.u.atom);
 	    if (FcDebug () & FC_DBG_SCANV)
-		printf ("\tsetwidth %s maps to %d\n", prop.u.atom, width);
+		printf ("\tsetwidth %s maps to %g\n", prop.u.atom, width);
 	}
     }
 #endif
@@ -1788,13 +1984,13 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	{
 	    weight = FcContainsWeight (style);
 	    if (FcDebug() & FC_DBG_SCANV)
-		printf ("\tStyle %s maps to weight %d\n", style, weight);
+		printf ("\tStyle %s maps to weight %g\n", style, weight);
 	}
 	if (width == -1)
 	{
 	    width = FcContainsWidth (style);
 	    if (FcDebug() & FC_DBG_SCANV)
-		printf ("\tStyle %s maps to width %d\n", style, width);
+		printf ("\tStyle %s maps to width %g\n", style, width);
 	}
 	if (slant == -1)
 	{
@@ -1833,34 +2029,42 @@ FcFreeTypeQueryFace (const FT_Face  face,
     if (foundry == 0)
 	foundry = (FcChar8 *) "unknown";
 
-    if (!FcPatternAddInteger (pat, FC_SLANT, slant))
+    if (!FcPatternObjectAddInteger (pat, FC_SLANT_OBJECT, slant))
 	goto bail1;
 
-    if (!FcPatternAddInteger (pat, FC_WEIGHT, weight))
+    if (!variable_weight && !FcPatternObjectAddDouble (pat, FC_WEIGHT_OBJECT, weight))
 	goto bail1;
 
-    if (!FcPatternAddInteger (pat, FC_WIDTH, width))
+    if (!variable_width && !FcPatternObjectAddDouble (pat, FC_WIDTH_OBJECT, width))
 	goto bail1;
 
-    if (!FcPatternAddString (pat, FC_FOUNDRY, foundry))
+    if (!FcPatternObjectAddString (pat, FC_FOUNDRY_OBJECT, foundry))
 	goto bail1;
 
-    if (!FcPatternAddBool (pat, FC_DECORATIVE, decorative))
+    if (!FcPatternObjectAddBool (pat, FC_DECORATIVE_OBJECT, decorative))
 	goto bail1;
 
 
     /*
      * Compute the unicode coverage for the font
      */
-    cs = FcFreeTypeCharSetAndSpacing (face, blanks, &spacing);
+    if (cs_share && *cs_share)
+	cs = FcCharSetCopy (*cs_share);
+    else
+    {
+	cs = FcFreeTypeCharSet (face, NULL);
+	if (cs_share)
+	    *cs_share = FcCharSetCopy (cs);
+    }
     if (!cs)
 	goto bail1;
 
-    /* The FcFreeTypeCharSetAndSpacing() chose the encoding; test it for symbol. */
+    /* The FcFreeTypeCharSet() chose the encoding; test it for symbol. */
     symbol = face->charmap && face->charmap->encoding == FT_ENCODING_MS_SYMBOL;
-    if (!FcPatternAddBool (pat, FC_SYMBOL, symbol))
+    if (!FcPatternObjectAddBool (pat, FC_SYMBOL_OBJECT, symbol))
 	goto bail1;
 
+    spacing = FcFreeTypeSpacing (face);
 #if HAVE_FT_GET_BDF_PROPERTY
     /* For PCF fonts, override the computed spacing with the one from
        the property */
@@ -1890,12 +2094,19 @@ FcFreeTypeQueryFace (const FT_Face  face,
 #endif
     }
 
-    if (!FcPatternAddCharSet (pat, FC_CHARSET, cs))
+    if (!FcPatternObjectAddCharSet (pat, FC_CHARSET_OBJECT, cs))
 	goto bail2;
 
     if (!symbol)
     {
-	ls = FcFreeTypeLangSet (cs, exclusiveLang);
+	if (ls_share && *ls_share)
+	    ls = FcLangSetCopy (*ls_share);
+	else
+	{
+	    ls = FcFreeTypeLangSet (cs, exclusiveLang);
+	    if (ls_share)
+		*ls_share = FcLangSetCopy (ls);
+	}
 	if (!ls)
 	    goto bail2;
     }
@@ -1906,7 +2117,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	ls = FcLangSetCreate ();
     }
 
-    if (!FcPatternAddLangSet (pat, FC_LANG, ls))
+    if (!FcPatternObjectAddLangSet (pat, FC_LANG_OBJECT, ls))
     {
 	FcLangSetDestroy (ls);
 	goto bail2;
@@ -1915,16 +2126,17 @@ FcFreeTypeQueryFace (const FT_Face  face,
     FcLangSetDestroy (ls);
 
     if (spacing != FC_PROPORTIONAL)
-	if (!FcPatternAddInteger (pat, FC_SPACING, spacing))
+	if (!FcPatternObjectAddInteger (pat, FC_SPACING_OBJECT, spacing))
 	    goto bail2;
 
     if (!(face->face_flags & FT_FACE_FLAG_SCALABLE))
     {
+	int i;
 	for (i = 0; i < face->num_fixed_sizes; i++)
-	    if (!FcPatternAddDouble (pat, FC_PIXEL_SIZE,
-				     FcGetPixelSize (face, i)))
+	    if (!FcPatternObjectAddDouble (pat, FC_PIXEL_SIZE_OBJECT,
+					   FcGetPixelSize (face, i)))
 		goto bail2;
-	if (!FcPatternAddBool (pat, FC_ANTIALIAS, FcFalse))
+	if (!FcPatternObjectAddBool (pat, FC_ANTIALIAS_OBJECT, FcFalse))
 	    goto bail2;
     }
 #if HAVE_FT_GET_X11_FONT_FORMAT
@@ -1935,7 +2147,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
     {
 	const char *font_format = FT_Get_X11_Font_Format (face);
 	if (font_format)
-	    if (!FcPatternAddString (pat, FC_FONTFORMAT, (FcChar8 *) font_format))
+	    if (!FcPatternObjectAddString (pat, FC_FONTFORMAT_OBJECT, (FcChar8 *) font_format))
 		goto bail2;
     }
 #endif
@@ -1948,9 +2160,14 @@ FcFreeTypeQueryFace (const FT_Face  face,
 	free (foundry_);
 
     if (master)
-      {
-	/* TODO: How to free master?! */
-      }
+    {
+#ifdef HAVE_FT_DONE_MM_VAR
+	if (face->glyph)
+	    FT_Done_MM_Var (face->glyph->library, master);
+#else
+	free (master);
+#endif
+    }
 
     return pat;
 
@@ -1958,6 +2175,17 @@ bail2:
     FcCharSetDestroy (cs);
 bail1:
     FcPatternDestroy (pat);
+    if (master)
+    {
+#ifdef HAVE_FT_DONE_MM_VAR
+	if (face->glyph)
+	    FT_Done_MM_Var (face->glyph->library, master);
+#else
+	free (master);
+#endif
+    }
+    if (!nm_share && name_mapping)
+	free (name_mapping);
     if (foundry_)
 	free (foundry_);
 bail0:
@@ -1965,9 +2193,18 @@ bail0:
 }
 
 FcPattern *
+FcFreeTypeQueryFace (const FT_Face  face,
+		     const FcChar8  *file,
+		     unsigned int   id,
+		     FcBlanks	    *blanks FC_UNUSED)
+{
+    return FcFreeTypeQueryFaceInternal (face, file, id, NULL, NULL, NULL);
+}
+
+FcPattern *
 FcFreeTypeQuery(const FcChar8	*file,
-		int		id,
-		FcBlanks	*blanks,
+		unsigned int	id,
+		FcBlanks	*blanks FC_UNUSED,
 		int		*count)
 {
     FT_Face	    face;
@@ -1977,12 +2214,13 @@ FcFreeTypeQuery(const FcChar8	*file,
     if (FT_Init_FreeType (&ftLibrary))
 	return NULL;
 
-    if (FT_New_Face (ftLibrary, (char *) file, id, &face))
+    if (FT_New_Face (ftLibrary, (char *) file, id & 0x7FFFFFFF, &face))
 	goto bail;
 
-    *count = face->num_faces;
+    if (count)
+      *count = face->num_faces;
 
-    pat = FcFreeTypeQueryFace (face, file, id, blanks);
+    pat = FcFreeTypeQueryFaceInternal (face, file, id, NULL, NULL, NULL);
 
     FT_Done_Face (face);
 bail:
@@ -1990,15 +2228,130 @@ bail:
     return pat;
 }
 
-/*
- * For our purposes, this approximation is sufficient
- */
-#if !HAVE_FT_GET_NEXT_CHAR
-#define FT_Get_Next_Char(face, ucs4, gi) ((ucs4) >= 0xffffff ? \
-					  (*(gi) = 0), 0 : \
-					  (*(gi) = 1), (ucs4) + 1)
-#warning "No FT_Get_Next_Char: Please install freetype version 2.1.0 or newer"
+unsigned int
+FcFreeTypeQueryAll(const FcChar8	*file,
+		   unsigned int		id,
+		   FcBlanks		*blanks,
+		   int			*count,
+		   FcFontSet            *set)
+{
+    FT_Face face = NULL;
+    FT_Library ftLibrary = NULL;
+    FcCharSet *cs = NULL;
+    FcLangSet *ls = NULL;
+    FcNameMapping  *nm = NULL;
+    FT_MM_Var *mm_var = NULL;
+    FcBool index_set = id != (unsigned int) -1;
+    unsigned int set_face_num = index_set ? id & 0xFFFF : 0;
+    unsigned int set_instance_num = index_set ? id >> 16 : 0;
+    unsigned int face_num = set_face_num;
+    unsigned int instance_num = set_instance_num;
+    unsigned int num_faces = 0;
+    unsigned int num_instances = 0;
+    unsigned int ret = 0;
+    int err = 0;
+
+    if (count)
+	*count = 0;
+
+    if (FT_Init_FreeType (&ftLibrary))
+	return 0;
+
+    if (FT_New_Face (ftLibrary, (const char *) file, face_num, &face))
+	goto bail;
+
+    num_faces = face->num_faces;
+    num_instances = face->style_flags >> 16;
+    if (num_instances && (!index_set || instance_num))
+    {
+	FT_Get_MM_Var (face, &mm_var);
+	if (!mm_var)
+	  num_instances = 0;
+    }
+
+    if (count)
+      *count = num_faces;
+
+    do {
+	FcPattern *pat = NULL;
+
+	if (instance_num == 0x8000 || instance_num > num_instances)
+	    FT_Set_Var_Design_Coordinates (face, 0, NULL); /* Reset variations. */
+	else if (instance_num)
+	{
+	    FT_Var_Named_Style *instance = &mm_var->namedstyle[instance_num - 1];
+	    FT_Fixed *coords = instance->coords;
+	    FcBool nonzero;
+	    unsigned int i;
+
+	    /* Skip named-instance that coincides with base instance. */
+	    nonzero = FcFalse;
+	    for (i = 0; i < mm_var->num_axis; i++)
+		if (coords[i] != mm_var->axis[i].def)
+		{
+		    nonzero = FcTrue;
+		    break;
+		}
+	    if (!nonzero)
+		goto skip;
+
+	    FT_Set_Var_Design_Coordinates (face, mm_var->num_axis, coords);
+	}
+
+	id = ((instance_num << 16) + face_num);
+	pat = FcFreeTypeQueryFaceInternal (face, (const FcChar8 *) file, id, &cs, &ls, &nm);
+
+	if (pat)
+	{
+
+	    ret++;
+	    if (!set || ! FcFontSetAdd (set, pat))
+		FcPatternDestroy (pat);
+	}
+	else if (instance_num != 0x8000)
+	    err = 1;
+
+skip:
+	if (!index_set && instance_num < num_instances)
+	    instance_num++;
+	else if (!index_set && instance_num == num_instances)
+	    instance_num = 0x8000; /* variable font */
+	else
+	{
+	    free (nm);
+	    nm = NULL;
+	    FcLangSetDestroy (ls);
+	    ls = NULL;
+	    FcCharSetDestroy (cs);
+	    cs = NULL;
+	    FT_Done_Face (face);
+	    face = NULL;
+
+	    face_num++;
+	    instance_num = set_instance_num;
+
+	    if (FT_New_Face (ftLibrary, (const char *) file, face_num, &face))
+	      break;
+	}
+    } while (!err && (!index_set || face_num == set_face_num) && face_num < num_faces);
+
+bail:
+#ifdef HAVE_FT_DONE_MM_VAR
+    FT_Done_MM_Var (ftLibrary, mm_var);
+#else
+    free (mm_var);
 #endif
+    FcLangSetDestroy (ls);
+    FcCharSetDestroy (cs);
+    if (face)
+	FT_Done_Face (face);
+    FT_Done_FreeType (ftLibrary);
+    if (nm)
+	free (nm);
+
+    return ret;
+}
+
 
 static const FT_Encoding fcFontEncodings[] = {
     FT_ENCODING_UNICODE,
@@ -2006,122 +2359,6 @@ static const FT_Encoding fcFontEncodings[] = {
 };
 
 #define NUM_DECODE  (int) (sizeof (fcFontEncodings) / sizeof (fcFontEncodings[0]))
-
-#include "../fc-glyphname/fcglyphname.h"
-
-static FcChar32
-FcHashGlyphName (const FcChar8 *name)
-{
-    FcChar32	h = 0;
-    FcChar8	c;
-
-    while ((c = *name++))
-    {
-	h = ((h << 1) | (h >> 31)) ^ c;
-    }
-    return h;
-}
-
-#if HAVE_FT_HAS_PS_GLYPH_NAMES
-/*
- * Use Type1 glyph names for fonts which have reliable names
- * and which export an Adobe Custom mapping
- */
-static FcBool
-FcFreeTypeUseNames (FT_Face face)
-{
-    FT_Int  map;
-
-    if (!FT_Has_PS_Glyph_Names (face))
-	return FcFalse;
-    for (map = 0; map < face->num_charmaps; map++)
-	if (face->charmaps[map]->encoding == ft_encoding_adobe_custom)
-	    return FcTrue;
-    return FcFalse;
-}
-
-static const FcChar8 *
-FcUcs4ToGlyphName (FcChar32 ucs4)
-{
-    int		i = (int) (ucs4 % FC_GLYPHNAME_HASH);
-    int		r = 0;
-    FcGlyphId	gn;
-
-    while ((gn = _fc_ucs_to_name[i]) != -1)
-    {
-	if (_fc_glyph_names[gn].ucs == ucs4)
-	    return _fc_glyph_names[gn].name;
-	if (!r)
-	{
-	    r = (int) (ucs4 % FC_GLYPHNAME_REHASH);
-	    if (!r)
-		r = 1;
-	}
-	i += r;
-	if (i >= FC_GLYPHNAME_HASH)
-	    i -= FC_GLYPHNAME_HASH;
-    }
-    return 0;
-}
-
-static FcChar32
-FcGlyphNameToUcs4 (FcChar8 *name)
-{
-    FcChar32	h = FcHashGlyphName (name);
-    int		i = (int) (h % FC_GLYPHNAME_HASH);
-    int		r = 0;
-    FcGlyphId	gn;
-
-    while ((gn = _fc_name_to_ucs[i]) != -1)
-    {
-	if (!strcmp ((char *) name, (char *) _fc_glyph_names[gn].name))
-	    return _fc_glyph_names[gn].ucs;
-	if (!r)
-	{
-	    r = (int) (h % FC_GLYPHNAME_REHASH);
-	    if (!r)
-		r = 1;
-	}
-	i += r;
-	if (i >= FC_GLYPHNAME_HASH)
-	    i -= FC_GLYPHNAME_HASH;
-    }
-    return 0xffff;
-}
-
-/*
- * Work around a bug in some FreeType versions which fail
- * to correctly bounds check glyph name buffers and overwrite
- * the stack. As Postscript names have a limit of 127 characters,
- * this should be sufficient.
- */
-
-#if FC_GLYPHNAME_MAXLEN < 127
-# define FC_GLYPHNAME_BUFLEN 127
-#else
-# define FC_GLYPHNAME_BUFLEN FC_GLYPHNAME_MAXLEN
-#endif
-
-/*
- * Search through a font for a glyph by name.  This is
- * currently a linear search as there doesn't appear to be
- * any defined order within the font
- */
-static FT_UInt
-FcFreeTypeGlyphNameIndex (FT_Face face, const FcChar8 *name)
-{
-    FT_UInt gindex;
-    FcChar8 name_buf[FC_GLYPHNAME_BUFLEN + 2];
-
-    for (gindex = 0; gindex < (FT_UInt) face->num_glyphs; gindex++)
-    {
-	if (FT_Get_Glyph_Name (face, gindex, name_buf, FC_GLYPHNAME_BUFLEN+1) == 0)
-	    if (!strcmp ((char *) name, (char *) name_buf))
-		return gindex;
-    }
-    return 0;
-}
-#endif
 
 /*
  * Map a UCS4 glyph to a glyph index.  Use all available encoding
@@ -2180,38 +2417,23 @@ FcFreeTypeCharIndex (FT_Face face, FcChar32 ucs4)
 		return glyphindex;
 	}
     }
-#if HAVE_FT_HAS_PS_GLYPH_NAMES
-    /*
-     * Check postscript name table if present
-     */
-    if (FcFreeTypeUseNames (face))
-    {
-	const FcChar8	*name = FcUcs4ToGlyphName (ucs4);
-	if (name)
-	{
-	    glyphindex = FcFreeTypeGlyphNameIndex (face, name);
-	    if (glyphindex)
-		return glyphindex;
-	}
-    }
-#endif
     return 0;
 }
 
-static FcBool
-FcFreeTypeCheckGlyph (FT_Face face, FcChar32 ucs4,
-		      FT_UInt glyph, FcBlanks *blanks,
-		      FT_Pos *advance,
-		      FcBool using_strike)
+static inline int fc_min (int a, int b) { return a <= b ? a : b; }
+static inline int fc_max (int a, int b) { return a >= b ? a : b; }
+static inline FcBool fc_approximately_equal (int x, int y)
+{ return abs (x - y) * 33 <= fc_max (abs (x), abs (y)); }
+
+static int
+FcFreeTypeSpacing (FT_Face face)
 {
     FT_Int	    load_flags = FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH | FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
-    FT_GlyphSlot    slot;
+    FT_Pos	    advances[3] = {0};
+    unsigned int    num_advances = 0;
+    int		    o;
 
-    if (using_strike)
-	load_flags &= ~FT_LOAD_NO_SCALE;
-
-    /*
-     * When using scalable fonts, only report those glyphs
+    /* When using scalable fonts, only report those glyphs
      * which can be scaled; otherwise those fonts will
      * only be available at some sizes, and never when
      * transformed.  Avoid this by simply reporting bitmap-only
@@ -2220,279 +2442,169 @@ FcFreeTypeCheckGlyph (FT_Face face, FcChar32 ucs4,
     if (face->face_flags & FT_FACE_FLAG_SCALABLE)
 	load_flags |= FT_LOAD_NO_BITMAP;
 
-    if (FT_Load_Glyph (face, glyph, load_flags))
-	return FcFalse;
+    if (!(face->face_flags & FT_FACE_FLAG_SCALABLE) &&
+	face->num_fixed_sizes > 0 &&
+	FT_Get_Sfnt_Table (face, ft_sfnt_head))
+    {
+	FT_Int strike_index = 0, i;
+	/* Select the face closest to 16 pixels tall */
+	for (i = 1; i < face->num_fixed_sizes; i++)
+	{
+	    if (abs (face->available_sizes[i].height - 16) <
+		abs (face->available_sizes[strike_index].height - 16))
+		strike_index = i;
+	}
 
-    slot = face->glyph;
-    if (!glyph)
-	return FcFalse;
+	FT_Select_Size (face, strike_index);
+    }
 
-    *advance = slot->metrics.horiAdvance;
+    for (o = 0; o < NUM_DECODE; o++)
+    {
+	FcChar32        ucs4;
+	FT_UInt	 	glyph;
 
-    switch ((int) slot->format) {
-    case ft_glyph_format_bitmap:
-	/*
-	 * Bitmaps are assumed to be reasonable; if
-	 * this proves to be a rash assumption, this
-	 * code can be easily modified
-	 */
-	return FcTrue;
-    case ft_glyph_format_outline:
-	/*
-	 * Glyphs with contours are always OK
-	 */
-	if (slot->outline.n_contours != 0)
-	    return FcTrue;
-	/*
-	 * Glyphs with no contours are only OK if
-	 * they're members of the Blanks set specified
-	 * in the configuration.  If blanks isn't set,
-	 * then allow any glyph to be blank
-	 */
-	if (!blanks || FcBlanksIsMember (blanks, ucs4))
-	    return FcTrue;
-	/* fall through ... */
-    default:
+	if (FT_Select_Charmap (face, fcFontEncodings[o]) != 0)
+	    continue;
+
+	ucs4 = FT_Get_First_Char (face, &glyph);
+	while (glyph != 0 && num_advances < 3)
+	{
+	    FT_Pos advance = 0;
+	    if (!FT_Get_Advance (face, glyph, load_flags, &advance) && advance)
+	    {
+		unsigned int j;
+		for (j = 0; j < num_advances; j++)
+		  if (fc_approximately_equal (advance, advances[j]))
+		    break;
+		if (j == num_advances)
+		  advances[num_advances++] = advance;
+	    }
+
+	    ucs4 = FT_Get_Next_Char (face, ucs4, &glyph);
+	}
 	break;
     }
-    return FcFalse;
+
+    if (num_advances <= 1)
+	return FC_MONO;
+    else if (num_advances == 2 &&
+	     fc_approximately_equal (fc_min (advances[0], advances[1]) * 2,
+				     fc_max (advances[0], advances[1])))
+	return FC_DUAL;
+    else
+	return FC_PROPORTIONAL;
 }
 
-#define APPROXIMATELY_EQUAL(x,y) (FC_ABS ((x) - (y)) <= FC_MAX (FC_ABS (x), FC_ABS (y)) / 33)
-
-static FcCharSet *
-FcFreeTypeCharSetAndSpacingForSize (FT_Face face, FcBlanks *blanks, int *spacing, FT_Int strike_index)
+FcCharSet *
+FcFreeTypeCharSet (FT_Face face, FcBlanks *blanks FC_UNUSED)
 {
-    FcChar32	    page, off, ucs4;
-#ifdef CHECK
-    FcChar32	    font_max = 0;
-#endif
+    const FT_Int    load_flags = FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH | FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
     FcCharSet	    *fcs;
-    FcCharLeaf	    *leaf;
     int		    o;
-    FT_UInt	    glyph;
-    FT_Pos	    advance, advance_one = 0, advance_two = 0;
-    FcBool	    has_advance = FcFalse, fixed_advance = FcTrue, dual_advance = FcFalse;
-    FcBool	    using_strike = FcFalse;
 
     fcs = FcCharSetCreate ();
     if (!fcs)
-	goto bail0;
-
-#if HAVE_FT_SELECT_SIZE
-    if (strike_index >= 0) {
-	if (FT_Select_Size (face, strike_index) != FT_Err_Ok)
-	    goto bail1;
-	using_strike = FcTrue;
-    }
-#endif
+	goto bail;
 
 #ifdef CHECK
     printf ("Family %s style %s\n", face->family_name, face->style_name);
 #endif
     for (o = 0; o < NUM_DECODE; o++)
     {
+	FcChar32        page, off, ucs4;
+	FcCharLeaf      *leaf;
+	FT_UInt	 	glyph;
+
 	if (FT_Select_Charmap (face, fcFontEncodings[o]) != 0)
 	    continue;
 
+	page = ~0;
+	leaf = NULL;
+	ucs4 = FT_Get_First_Char (face, &glyph);
+	while (glyph != 0)
 	{
-            page = ~0;
-            leaf = NULL;
-            ucs4 = FT_Get_First_Char (face, &glyph);
-            while (glyph != 0)
-	    {
-		if (FcFreeTypeCheckGlyph (face, ucs4, glyph, blanks, &advance, using_strike))
-		{
-		    if (advance)
-		    {
-			if (!has_advance)
-			{
-			    has_advance = FcTrue;
-			    advance_one = advance;
-			}
-			else if (!APPROXIMATELY_EQUAL (advance, advance_one))
-			{
-			    if (fixed_advance)
-			    {
-				dual_advance = FcTrue;
-				fixed_advance = FcFalse;
-				advance_two = advance;
-			    }
-			    else if (!APPROXIMATELY_EQUAL (advance, advance_two))
-				dual_advance = FcFalse;
-			}
-		    }
+	    FcBool good = FcTrue;
 
-		    if ((ucs4 >> 8) != page)
-		    {
-			page = (ucs4 >> 8);
-			leaf = FcCharSetFindLeafCreate (fcs, ucs4);
-			if (!leaf)
-			    goto bail1;
-		    }
-		    off = ucs4 & 0xff;
-		    leaf->map[off >> 5] |= (1 << (off & 0x1f));
-#ifdef CHECK
-		    if (ucs4 > font_max)
-			font_max = ucs4;
-#endif
-		}
-		ucs4 = FT_Get_Next_Char (face, ucs4, &glyph);
+	    /* CID fonts built by Adobe used to make ASCII control chars to cid1
+	     * (space glyph). As such, always check contour for those characters. */
+	    if (ucs4 <= 0x001F)
+	    {
+		if (FT_Load_Glyph (face, glyph, load_flags) ||
+		    (face->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
+		     face->glyph->outline.n_contours == 0))
+		    good = FcFalse;
 	    }
-	    if (fcFontEncodings[o] == FT_ENCODING_MS_SYMBOL)
-	    {
-		/* For symbol-encoded OpenType fonts, we duplicate the
-		 * U+F000..F0FF range at U+0000..U+00FF.  That's what
-		 * Windows seems to do, and that's hinted about at:
-		 * http://www.microsoft.com/typography/otspec/recom.htm
-		 * under "Non-Standard (Symbol) Fonts".
-		 *
-		 * See thread with subject "Webdings and other MS symbol
-		 * fonts don't display" on mailing list from May 2015.
-		 */
-		for (ucs4 = 0xF000; ucs4 < 0xF100; ucs4++)
-		{
-		    if (FcCharSetHasChar (fcs, ucs4))
-			FcCharSetAddChar (fcs, ucs4 - 0xF000);
-		}
-	    }
-#ifdef CHECK
-	    for (ucs4 = 0; ucs4 < 0x10000; ucs4++)
-	    {
-		FcBool	    FT_Has, FC_Has;
 
-		FT_Has = FT_Get_Char_Index (face, ucs4) != 0;
-		FC_Has = FcCharSetHasChar (fcs, ucs4);
-		if (FT_Has != FC_Has)
-		{
-		    printf ("0x%08x FT says %d FC says %d\n", ucs4, FT_Has, FC_Has);
-		}
-	    }
-#endif
-	}
-
-       break;
-    }
-#if HAVE_FT_HAS_PS_GLYPH_NAMES
-    /*
-     * Add mapping from PS glyph names if available
-     */
-    if (FcFreeTypeUseNames (face))
-    {
-	FcChar8 name_buf[FC_GLYPHNAME_BUFLEN + 2];
-
-	for (glyph = 0; glyph < (FT_UInt) face->num_glyphs; glyph++)
-	{
-	    if (FT_Get_Glyph_Name (face, glyph, name_buf, FC_GLYPHNAME_BUFLEN+1) == 0)
+	    if (good)
 	    {
-		ucs4 = FcGlyphNameToUcs4 (name_buf);
-		if (ucs4 != 0xffff &&
-		    FcFreeTypeCheckGlyph (face, ucs4, glyph, blanks, &advance, using_strike))
+		FcCharSetAddChar (fcs, ucs4);
+		if ((ucs4 >> 8) != page)
 		{
-		    if (advance)
-		    {
-			if (!has_advance)
-			{
-			    has_advance = FcTrue;
-			    advance_one = advance;
-			}
-			else if (!APPROXIMATELY_EQUAL (advance, advance_one))
-			{
-			    if (fixed_advance)
-			    {
-				dual_advance = FcTrue;
-				fixed_advance = FcFalse;
-				advance_two = advance;
-			    }
-			    else if (!APPROXIMATELY_EQUAL (advance, advance_two))
-				dual_advance = FcFalse;
-			}
-		    }
+		    page = (ucs4 >> 8);
 		    leaf = FcCharSetFindLeafCreate (fcs, ucs4);
 		    if (!leaf)
-			goto bail1;
-		    leaf->map[(ucs4 & 0xff) >> 5] |= (1 << (ucs4 & 0x1f));
-#ifdef CHECK
-		    if (ucs4 > font_max)
-			font_max = ucs4;
-#endif
+			goto bail;
 		}
+		off = ucs4 & 0xff;
+		leaf->map[off >> 5] |= (1U << (off & 0x1f));
+	    }
+
+	    ucs4 = FT_Get_Next_Char (face, ucs4, &glyph);
+	}
+	if (fcFontEncodings[o] == FT_ENCODING_MS_SYMBOL)
+	{
+	    /* For symbol-encoded OpenType fonts, we duplicate the
+	     * U+F000..F0FF range at U+0000..U+00FF.  That's what
+	     * Windows seems to do, and that's hinted about at:
+	     * http://www.microsoft.com/typography/otspec/recom.htm
+	     * under "Non-Standard (Symbol) Fonts".
+	     *
+	     * See thread with subject "Webdings and other MS symbol
+	     * fonts don't display" on mailing list from May 2015.
+	     */
+	    for (ucs4 = 0xF000; ucs4 < 0xF100; ucs4++)
+	    {
+		if (FcCharSetHasChar (fcs, ucs4))
+		    FcCharSetAddChar (fcs, ucs4 - 0xF000);
 	    }
 	}
-    }
-#endif
 #ifdef CHECK
-    printf ("%d glyphs %d encoded\n", (int) face->num_glyphs, FcCharSetCount (fcs));
-    for (ucs4 = 0; ucs4 <= font_max; ucs4++)
-    {
-	FcBool	has_char = (glyph = FcFreeTypeCharIndex (face, ucs4)) != 0;
-	FcBool	has_bit = FcCharSetHasChar (fcs, ucs4);
-
-	if (has_char && !has_bit)
+	for (ucs4 = 0x0020; ucs4 < 0x10000; ucs4++)
 	{
-	    if (!FcFreeTypeCheckGlyph (face, ucs4, glyph, blanks, &advance, using_strike))
-		printf ("Bitmap missing broken char 0x%x\n", ucs4);
-	    else
-		printf ("Bitmap missing char 0x%x\n", ucs4);
+	    FcBool	    FT_Has, FC_Has;
+
+	    FT_Has = FT_Get_Char_Index (face, ucs4) != 0;
+	    FC_Has = FcCharSetHasChar (fcs, ucs4);
+	    if (FT_Has != FC_Has)
+	    {
+		printf ("0x%08x FT says %d FC says %d\n", ucs4, FT_Has, FC_Has);
+	    }
 	}
-	else if (!has_char && has_bit)
-	    printf ("Bitmap extra char 0x%x\n", ucs4);
-    }
 #endif
-    if (fixed_advance)
-	*spacing = FC_MONO;
-    else if (dual_advance && APPROXIMATELY_EQUAL (2 * FC_MIN (advance_one, advance_two), FC_MAX (advance_one, advance_two)))
-        *spacing = FC_DUAL;
-    else
-	*spacing = FC_PROPORTIONAL;
+	break;
+    }
+
     return fcs;
-bail1:
+bail:
     FcCharSetDestroy (fcs);
-bail0:
     return 0;
 }
 
 FcCharSet *
-FcFreeTypeCharSetAndSpacing (FT_Face face, FcBlanks *blanks, int *spacing)
+FcFreeTypeCharSetAndSpacing (FT_Face face, FcBlanks *blanks FC_UNUSED, int *spacing)
 {
-    FcCharSet	*cs;
 
-    /*
-     * Check for bitmap-only ttf fonts that are missing the glyf table.
-     * In that case, pick a size and look for glyphs in that size instead
-     */
-    if (!(face->face_flags & FT_FACE_FLAG_SCALABLE) &&
-	face->num_fixed_sizes > 0 &&
-	FT_Get_Sfnt_Table (face, ft_sfnt_head))
-    {
-	FT_Int  strike_index = 0;
-	int	    i;
+    if (spacing)
+	*spacing = FcFreeTypeSpacing (face);
 
-	/* Select the face closest to 16 pixels tall */
-	for (i = 1; i < face->num_fixed_sizes; i++) {
-	    if (abs (face->available_sizes[i].height - 16) <
-		abs (face->available_sizes[strike_index].height - 16))
-		strike_index = i;
-	}
-	cs = FcFreeTypeCharSetAndSpacingForSize (face, blanks, spacing, strike_index);
-    }
-    else
-	cs = FcFreeTypeCharSetAndSpacingForSize (face, blanks, spacing, -1);
-    return cs;
-}
-
-FcCharSet *
-FcFreeTypeCharSet (FT_Face face, FcBlanks *blanks)
-{
-    int spacing;
-
-    return FcFreeTypeCharSetAndSpacing (face, blanks, &spacing);
+    return FcFreeTypeCharSet (face, blanks);
 }
 
 
 #define TTAG_GPOS  FT_MAKE_TAG( 'G', 'P', 'O', 'S' )
 #define TTAG_GSUB  FT_MAKE_TAG( 'G', 'S', 'U', 'B' )
 #define TTAG_SILF  FT_MAKE_TAG( 'S', 'i', 'l', 'f')
+#define TTAG_prep  FT_MAKE_TAG( 'p', 'r', 'e', 'p' )
 
 #define OTLAYOUT_HEAD	    "otlayout:"
 #define OTLAYOUT_HEAD_LEN   9
@@ -2542,6 +2654,20 @@ compareulong (const void *a, const void *b)
     return *ua - *ub;
 }
 
+static FcBool
+FindTable (FT_Face face, FT_ULong tabletag)
+{
+    FT_Stream  stream = face->stream;
+    FT_Error   error;
+
+    if (!stream)
+        return FcFalse;
+
+    if (( error = ftglue_face_goto_table( face, tabletag, stream ) ))
+	return FcFalse;
+
+    return FcTrue;
+}
 
 static int
 GetScriptTags(FT_Face face, FT_ULong tabletag, FT_ULong **stags)
@@ -2584,7 +2710,7 @@ GetScriptTags(FT_Face face, FT_ULong tabletag, FT_ULong **stags)
     ftglue_stream_frame_exit( stream );
 
     *stags = malloc(script_count * sizeof (FT_ULong));
-    if (!stags)
+    if (!*stags)
 	return 0;
 
     p = 0;
@@ -2651,7 +2777,7 @@ FcFontCapabilities(FT_Face face)
 
     complex_[0] = '\0';
     if (issilgraphitefont)
-	strcpy((char *) complex_, "ttable:Silf ");
+        strcpy((char *) complex_, "ttable:Silf ");
 
     while ((indx1 < gsub_count) || (indx2 < gpos_count)) {
 	if (indx1 == gsub_count) {
@@ -2676,6 +2802,13 @@ bail:
     free(gpostags);
     return complex_;
 }
+
+static FcBool
+FcFontHasHint (FT_Face face)
+{
+    return FindTable (face, TTAG_prep);
+}
+
 
 #define __fcfreetype__
 #include "fcaliastail.h"
