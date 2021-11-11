@@ -1,7 +1,6 @@
 ./usr/X11R6/bin/X
 ./usr/X11R6/bin/Xephyr
 ./usr/X11R6/bin/Xorg
-./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
 ./usr/X11R6/include/libsync.h
 ./usr/X11R6/lib/libvulkan_radeon.so
@@ -18,6 +17,8 @@
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions/libglx.la
 ./usr/X11R6/lib/modules/extensions/libglx.so
+./usr/X11R6/lib/modules/input/inputtest_drv.la
+./usr/X11R6/lib/modules/input/inputtest_drv.so
 ./usr/X11R6/lib/modules/input/kbd_drv.la
 ./usr/X11R6/lib/modules/input/kbd_drv.so
 ./usr/X11R6/lib/modules/input/mouse_drv.la
@@ -30,8 +31,6 @@
 ./usr/X11R6/lib/modules/input/ws_drv.so
 ./usr/X11R6/lib/modules/libexa.la
 ./usr/X11R6/lib/modules/libexa.so
-./usr/X11R6/lib/modules/libfb.la
-./usr/X11R6/lib/modules/libfb.so
 ./usr/X11R6/lib/modules/libfbdevhw.la
 ./usr/X11R6/lib/modules/libfbdevhw.so
 ./usr/X11R6/lib/modules/libglamoregl.la
@@ -42,8 +41,6 @@
 ./usr/X11R6/lib/modules/libshadow.so
 ./usr/X11R6/lib/modules/libshadowfb.la
 ./usr/X11R6/lib/modules/libshadowfb.so
-./usr/X11R6/lib/modules/libvbe.la
-./usr/X11R6/lib/modules/libvbe.so
 ./usr/X11R6/lib/modules/libvgahw.la
 ./usr/X11R6/lib/modules/libvgahw.so
 ./usr/X11R6/lib/modules/libwfb.la
@@ -52,11 +49,11 @@
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man1/Xorg.1
-./usr/X11R6/man/man1/cvt.1
 ./usr/X11R6/man/man1/gtf.1
 ./usr/X11R6/man/man4/ati.4
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
+./usr/X11R6/man/man4/inputtestdrv.4
 ./usr/X11R6/man/man4/kbd.4
 ./usr/X11R6/man/man4/modesetting.4
 ./usr/X11R6/man/man4/mouse.4

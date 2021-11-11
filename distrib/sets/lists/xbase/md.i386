@@ -84,9 +84,6 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
-./usr/X11R6/include/xorg/BT.h
-./usr/X11R6/include/xorg/IBM.h
-./usr/X11R6/include/xorg/TI.h
 ./usr/X11R6/include/xorg/XIstubs.h
 ./usr/X11R6/include/xorg/Xprintf.h
 ./usr/X11R6/include/xorg/callback.h
@@ -191,7 +188,6 @@
 ./usr/X11R6/include/xorg/shadow.h
 ./usr/X11R6/include/xorg/shadowfb.h
 ./usr/X11R6/include/xorg/shmint.h
-./usr/X11R6/include/xorg/site.h
 ./usr/X11R6/include/xorg/synaptics-properties.h
 ./usr/X11R6/include/xorg/syncsdk.h
 ./usr/X11R6/include/xorg/validate.h
@@ -206,6 +202,7 @@
 ./usr/X11R6/include/xorg/xaarop.h
 ./usr/X11R6/include/xorg/xace.h
 ./usr/X11R6/include/xorg/xacestr.h
+./usr/X11R6/include/xorg/xf86-input-inputtest-protocol.h
 ./usr/X11R6/include/xorg/xf86-mouse-properties.h
 ./usr/X11R6/include/xorg/xf86.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
@@ -222,7 +219,6 @@
 ./usr/X11R6/include/xorg/xf86PciInfo.h
 ./usr/X11R6/include/xorg/xf86Priv.h
 ./usr/X11R6/include/xorg/xf86Privstr.h
-./usr/X11R6/include/xorg/xf86RamDac.h
 ./usr/X11R6/include/xorg/xf86RandR12.h
 ./usr/X11R6/include/xorg/xf86VGAarbiter.h
 ./usr/X11R6/include/xorg/xf86Xinput.h
