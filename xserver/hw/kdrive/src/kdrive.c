@@ -164,15 +164,9 @@ KdEnableScreen(ScreenPtr pScreen)
 }
 
 void
-AbortDDX(enum ExitCode error)
-{
-    KdDisableScreens();
-}
-
-void
 ddxGiveUp(enum ExitCode error)
 {
-    AbortDDX(error);
+    KdDisableScreens();
 }
 
 static Bool kdDumbDriver;
@@ -361,11 +355,11 @@ KdUseMsg(void)
         ("-mouse driver [,n,,options]    Specify the pointer driver and its options (n is the number of buttons)\n");
     ErrorF
         ("-keybd driver [,,options]      Specify the keyboard driver and its options\n");
-    ErrorF("-xkb-rules       Set default XkbRules value (can be overriden by -keybd options)\n");
-    ErrorF("-xkb-model       Set default XkbModel value (can be overriden by -keybd options)\n");
-    ErrorF("-xkb-layout      Set default XkbLayout value (can be overriden by -keybd options)\n");
-    ErrorF("-xkb-variant     Set default XkbVariant value (can be overriden by -keybd options)\n");
-    ErrorF("-xkb-options     Set default XkbOptions value (can be overriden by -keybd options)\n");
+    ErrorF("-xkb-rules       Set default XkbRules value (can be overridden by -keybd options)\n");
+    ErrorF("-xkb-model       Set default XkbModel value (can be overridden by -keybd options)\n");
+    ErrorF("-xkb-layout      Set default XkbLayout value (can be overridden by -keybd options)\n");
+    ErrorF("-xkb-variant     Set default XkbVariant value (can be overridden by -keybd options)\n");
+    ErrorF("-xkb-options     Set default XkbOptions value (can be overridden by -keybd options)\n");
     ErrorF("-zaphod          Disable cursor screen switching\n");
     ErrorF("-2button         Emulate 3 button mouse\n");
     ErrorF("-3button         Disable 3 button mouse emulation\n");
@@ -1001,11 +995,13 @@ DeleteGPUDeviceRequest(struct OdevAttributes *attribs)
 }
 #endif
 
+#if defined(CONFIG_UDEV) || defined(CONFIG_HAL)
 struct xf86_platform_device *
 xf86_find_platform_device_by_devnum(int major, int minor)
 {
     return NULL;
 }
+#endif
 
 #ifdef SYSTEMD_LOGIND
 void

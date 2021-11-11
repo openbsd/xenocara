@@ -4,8 +4,7 @@ if GLX
 GLXMODS = libglx.la
 endif
 
-module_LTLIBRARIES = libfb.la \
-                     libwfb.la \
+module_LTLIBRARIES = libwfb.la \
                      libshadow.la
 
 extsmoduledir = $(moduledir)/extensions
@@ -16,11 +15,6 @@ AM_CPPFLAGS = @XORG_INCS@ \
            -I$(top_srcdir)/hw/xfree86/loader \
            -I$(top_srcdir)/miext/shadow \
            -I$(top_srcdir)/glx
-
-libfb_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-libfb_la_LIBADD = $(top_builddir)/fb/libfb.la
-libfb_la_SOURCES = fbmodule.c
-libfb_la_CFLAGS = $(AM_CFLAGS)
 
 libwfb_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
 libwfb_la_LIBADD = $(top_builddir)/fb/libwfb.la
@@ -39,10 +33,9 @@ libglx_la_SOURCES = glxmodule.c
 
 libshadow_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
 libshadow_la_LIBADD = $(top_builddir)/miext/shadow/libshadow.la
-if NO_UNDEFINED
-libshadow_la_LIBADD += libfb.la
-endif
 libshadow_la_SOURCES = shmodule.c
 
-libdixmods_la_SOURCES = $(top_srcdir)/mi/miinitext.c
+libdixmods_la_SOURCES = \
+	$(top_srcdir)/mi/miinitext.c \
+	$(top_srcdir)/mi/miinitext.h
 libdixmods_la_CFLAGS = $(AM_CFLAGS)

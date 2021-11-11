@@ -188,10 +188,6 @@ PictureCreateDefaultFormats(ScreenPtr pScreen, int *nformatp)
                                            PICT_TYPE_A, 8, 0, 0, 0);
     formats[nformats].depth = 8;
     nformats++;
-    formats[nformats].format = PICT_FORMAT(BitsPerPixel(4),
-                                           PICT_TYPE_A, 4, 0, 0, 0);
-    formats[nformats].depth = 4;
-    nformats++;
     formats[nformats].format = PICT_a8r8g8b8;
     formats[nformats].depth = 32;
     nformats++;
@@ -527,12 +523,12 @@ PictureMatchVisual(ScreenPtr pScreen, int depth, VisualPtr pVisual)
                     return format;
             }
             else {
-                if (format->direct.redMask << format->direct.red ==
-                    pVisual->redMask &&
-                    format->direct.greenMask << format->direct.green ==
-                    pVisual->greenMask &&
-                    format->direct.blueMask << format->direct.blue ==
-                    pVisual->blueMask) {
+                if ((unsigned long)format->direct.redMask <<
+                        format->direct.red == pVisual->redMask &&
+                    (unsigned long)format->direct.greenMask <<
+                        format->direct.green == pVisual->greenMask &&
+                    (unsigned long)format->direct.blueMask <<
+                        format->direct.blue == pVisual->blueMask) {
                     return format;
                 }
             }
@@ -797,8 +793,10 @@ static CARD32
 xRenderColorToCard32(xRenderColor c)
 {
     return
-        (c.alpha >> 8 << 24) |
-        (c.red >> 8 << 16) | (c.green & 0xff00) | (c.blue >> 8);
+        ((unsigned)c.alpha >> 8 << 24) |
+        ((unsigned)c.red >> 8 << 16) |
+        ((unsigned)c.green & 0xff00) |
+        ((unsigned)c.blue >> 8);
 }
 
 static void

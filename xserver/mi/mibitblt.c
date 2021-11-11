@@ -62,6 +62,10 @@ SOFTWARE.
 #include <X11/Xmd.h>
 #include "servermd.h"
 
+#ifdef __MINGW32__
+#define ffs __builtin_ffs
+#endif
+
 /* MICOPYAREA -- public entry for the CopyArea request
  * For each rectangle in the source region
  *     get the pixels with GetSpans
@@ -447,7 +451,7 @@ miOpqStipDrawable(DrawablePtr pDraw, GCPtr pGC, RegionPtr prgnSrc,
     ValidateGC(pDraw, pGC);
 
     /* Fill the drawable with the stipple.  This will draw the
-     * foreground color whereever 1 bits are set, leaving everything
+     * foreground color wherever 1 bits are set, leaving everything
      * with 0 bits untouched.  Note that the part outside the clip
      * region is all 0s.  */
     rect.x = dstx;

@@ -509,15 +509,6 @@ section to use in the absence of the
 .B \-layout
 command line option.
 .TP 7
-.BI "Option \*qNoTrapSignals\*q  \*q" boolean \*q
-This prevents the Xorg server from trapping a range of unexpected fatal
-signals and exiting cleanly.
-Instead, the Xorg server will die and drop core where the fault occurred.
-The default behaviour is for the Xorg server to exit cleanly, but still drop a
-core file.
-In general you never want to use this option unless you are debugging an Xorg
-server problem and know how to deal with the consequences.
-.TP 7
 .BI "Option \*qDontVTSwitch\*q  \*q" boolean \*q
 This disallows the use of the
 .BI Ctrl+Alt+F n
@@ -671,6 +662,12 @@ Enabled by default.
 .BI "Option \*qAutoAddGPU\*q \*q" boolean \*q
 If this option is disabled, then no GPU devices will be added from the udev
 backend. Enabled by default. (May need to be disabled to setup Xinerama).
+.TP 7
+.BI "Option \*qAutoBindGPU\*q  \*q" boolean \*q
+If enabled then secondary GPUs will be automatically set up as output-sinks and
+offload-sources. Making e.g. laptop outputs connected only to the secondary
+GPU directly available for use without needing to run
+"xrandr --setprovideroutputsource". Enabled by default.
 .TP 7
 .BI "Option \*qLog\*q \*q" string \*q
 This option controls whether the log is flushed and/or synced to disk after
@@ -1502,6 +1499,17 @@ option.
 .BI "Option \*qModeDebug\*q \*q" boolean \*q
 Enable printing of additional debugging information about modesetting to
 the server log.
+.TP 7
+.BI "Option \*qNoOutputInitialSize\*q \*q" width " " height \*q
+Normally, the X server infers the initial screen size based on any
+connected outputs.
+However, if no outputs are connected, the X server picks a default screen size
+of 1024 x 768.
+This option overrides the default screen size to use when no outputs are
+connected.
+In contrast to the \*qVirtual\*q Display SubSection entry, which applies
+unconditionally, \*qNoOutputInitialSize\*q is only used if no outputs are
+detected when the X server starts.
 .TP 7
 .BI "Option \*qPreferCloneMode\*q \*q" boolean \*q
 If enabled, bring up monitors of a screen in clone mode instead of horizontal

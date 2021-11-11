@@ -233,7 +233,7 @@ glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap,
     glamor_make_current(glamor_priv);
 
     image = eglCreateImageKHR(glamor_egl->display,
-                              glamor_egl->context,
+                              EGL_NO_CONTEXT,
                               EGL_NATIVE_PIXMAP_KHR, bo, NULL);
     if (image == EGL_NO_IMAGE_KHR) {
         glamor_set_pixmap_type(pixmap, GLAMOR_DRM_ONLY);
@@ -280,17 +280,29 @@ glamor_make_pixmap_exportable(PixmapPtr pixmap, Bool modifiers_ok)
         (modifiers_ok || !pixmap_priv->used_modifiers))
         return TRUE;
 
-    if (pixmap->drawable.bitsPerPixel != 32) {
+    switch (pixmap->drawable.depth) {
+    case 30:
+        format = GBM_FORMAT_ARGB2101010;
+        break;
+    case 32:
+    case 24:
+        format = GBM_FORMAT_ARGB8888;
+        break;
+    case 16:
+        format = GBM_FORMAT_RGB565;
+        break;
+    case 15:
+        format = GBM_FORMAT_ARGB1555;
+        break;
+    case 8:
+        format = GBM_FORMAT_R8;
+        break;
+    default:
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to make %dbpp pixmap exportable\n",
-                   pixmap->drawable.bitsPerPixel);
+                   "Failed to make %d depth, %dbpp pixmap exportable\n",
+                   pixmap->drawable.depth, pixmap->drawable.bitsPerPixel);
         return FALSE;
     }
-
-    if (pixmap->drawable.depth == 30)
-	format = GBM_FORMAT_ARGB2101010;
-    else
-        format = GBM_FORMAT_ARGB8888;
 
 #ifdef GBM_BO_WITH_MODIFIERS
     if (modifiers_ok && glamor_egl->dmabuf_capable) {
@@ -925,6 +937,8 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
 {
     struct glamor_egl_screen_private *glamor_egl;
     const GLubyte *renderer;
+    EGLConfig egl_config;
+    int n;
 
     glamor_egl = calloc(sizeof(*glamor_egl), 1);
     if (glamor_egl == NULL)
@@ -992,6 +1006,22 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
                                                    config_attribs);
     }
 
+    if (glamor_egl->context != EGL_NO_CONTEXT) {
+        if (!eglMakeCurrent(glamor_egl->display,
+                            EGL_NO_SURFACE, EGL_NO_SURFACE, glamor_egl->context)) {
+            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+                       "Failed to make GL context current\n");
+            goto error;
+        }
+
+        if (epoxy_gl_version() < 21) {
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "glamor: Ignoring GL < 2.1, falling back to GLES.\n");
+            eglDestroyContext(glamor_egl->display, glamor_egl->context);
+            glamor_egl->context = EGL_NO_CONTEXT;
+        }
+    }
+
     if (glamor_egl->context == EGL_NO_CONTEXT) {
         static const EGLint config_attribs[] = {
             EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -1003,21 +1033,28 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
             goto error;
         }
 
-        glamor_egl->context = eglCreateContext(glamor_egl->display,
-                                               NULL, EGL_NO_CONTEXT,
-                                               config_attribs);
-    }
-    if (glamor_egl->context == EGL_NO_CONTEXT) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "glamor: Failed to create GL or GLES2 contexts\n");
-        goto error;
-    }
+        if (!eglChooseConfig(glamor_egl->display, NULL, &egl_config, 1, &n)) {
+            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+                       "glamor: No acceptable EGL configs found\n");
+            goto error;
+        }
 
-    if (!eglMakeCurrent(glamor_egl->display,
-                        EGL_NO_SURFACE, EGL_NO_SURFACE, glamor_egl->context)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to make EGL context current\n");
-        goto error;
+        glamor_egl->context = eglCreateContext(glamor_egl->display,
+                                               egl_config, EGL_NO_CONTEXT,
+                                               config_attribs);
+
+        if (glamor_egl->context == EGL_NO_CONTEXT) {
+            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+                       "glamor: Failed to create GL or GLES2 contexts\n");
+            goto error;
+        }
+
+        if (!eglMakeCurrent(glamor_egl->display,
+                            EGL_NO_SURFACE, EGL_NO_SURFACE, glamor_egl->context)) {
+            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+                       "Failed to make GLES2 context current\n");
+            goto error;
+        }
     }
 
     renderer = glGetString(GL_RENDERER);
@@ -1027,9 +1064,14 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
         goto error;
     }
     if (strstr((const char *)renderer, "llvmpipe")) {
-        xf86DrvMsg(scrn->scrnIndex, X_INFO,
-                   "Refusing to try glamor on llvmpipe\n");
-        goto error;
+        if (scrn->confScreen->num_gpu_devices)
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "Allowing glamor on llvmpipe for PRIME\n");
+        else {
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "Refusing to try glamor on llvmpipe\n");
+            goto error;
+        }
     }
 
     /*
@@ -1052,9 +1094,9 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
                                 "EGL_EXT_image_dma_buf_import") &&
         epoxy_has_egl_extension(glamor_egl->display,
                                 "EGL_EXT_image_dma_buf_import_modifiers")) {
-       if (xf86Info.debug != NULL)
-           glamor_egl->dmabuf_capable = !!strstr(xf86Info.debug,
-                                                "dmabuf_capable");
+        if (xf86Info.debug != NULL)
+            glamor_egl->dmabuf_capable = !!strstr(xf86Info.debug,
+                                                  "dmabuf_capable");
         else
             glamor_egl->dmabuf_capable = FALSE;
     }

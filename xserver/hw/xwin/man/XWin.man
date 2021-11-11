@@ -51,11 +51,6 @@ Also start the integrated \fIWindows\fP-based window manager.
 Run the server in rootless mode.
 The X server works on a window covering the whole screen but the root window
 is hidden from view.
-.TP 8
-.B \-mwextwm
-Experimental.
-The mode combines \fB\-rootless\fP mode drawing with native \fIWindows\fP
-window frames managed by the experimental external window manager \fIxwinwm\fP.
 .PP
 \fBNOTE:\fP \fI-multiwindow\fP mode uses its own internal window manager.
 All other modes require an external window manager in order to move, resize, and perform other
@@ -71,7 +66,7 @@ Screen specific parameters can be applied as a
 default to all screens by placing those screen specific parameters
 before any \fB\-screen\fP parameter.  Screen specific parameters placed after
 the first \fB\-screen\fP parameter will apply only to the immediately
-preceeding \fB\-screen\fP parameter.
+preceding \fB\-screen\fP parameter.
 .TP 8
 .B \-[no]multimonitors or \-[no]multiplemonitors
 Create a screen 0 that covers all monitors [the primary monitor] on a system with
@@ -84,7 +79,7 @@ This option is currently enabled by default in \fB\-multiwindow\fP mode.
 .B "\-screen \fIscreen_number\fP [\fIW\fP \fIH\fP [\fIX\fP \fIY\fP] | [[\fIW\fPx\fIH\fP[+\fIX\fP+\fIY\fP]][@\fIM\fP]] ] "
 Create screen number
 .I screen_number
-and optionally specify it's
+and optionally specify its
 .I height,
 .I width
 and
@@ -112,6 +107,10 @@ in \fB-multiwindow\fP or \fB-rootless\fP mode.
 The X server window takes the full screen, covering completely the
 \fIWindows\fP desktop.
 Currently \fB\-fullscreen\fP may only be applied to one X screen.
+.TP 8
+.B "\-icon" \fIicon-specifier\fP
+Override the window icon for the screen window from the default.
+The \fIicon-specifier\fP is as defined in \fIXWinrc(@filemansuffix@)\fP.
 .TP 8
 .B \-nodecoration
 Do not give the Cygwin/X window a \fIWindows\fP window border, title bar,
@@ -175,6 +174,21 @@ on its own is equivalent to \fB\-resize=randr\fP
 Add the host name to the window title for X applications which are running
 on remote hosts, when that information is available and it's useful to do so.
 The default is enabled.
+.TP 8
+.B \-[no]compositewm
+Use Composite extension redirection to maintain a bitmap image of each top-level
+X window, so window contents which are occluded show correctly in task bar and
+task switcher previews.
+The default is enabled.
+.TP 8
+.B \-[no]compositealpha
+X windows with per-pixel alpha are composited into the \fIWindows\fP desktop
+(i.e. a \fIWindows\fP window can be seen through any transparency in an X window
+placed over it).
+
+This option has no effect on Windows 8 and 8.1.
+This option has no effect if \fB-compositewm\fP is disabled.
+The default is disabled.
 
 .SH OPTIONS CONTROLLING WINDOWS INTEGRATION
 .TP 8
@@ -211,15 +225,13 @@ The default is enabled.
 .TP 8
 .B \-swcursor
 Disable the usage of the \fIWindows\fP cursor and use the X11 software cursor instead.
+This option is ignored if \fB-compositewm\fP is also enabled.
 .TP 8
 .B \-[no]trayicon
 Do not create a tray icon.  Default is to create one
 icon per screen.  You can globally disable tray icons with
 \fB\-notrayicon\fP, then enable it for specific screens with
 \fB\-trayicon\fP for those screens.
-.TP 8
-.B \-nounicodeclipboard
-Do not use Unicode clipboard even if on a NT-based platform.
 .TP 8
 .B \-[no]unixkill
 Enable or disable the \fICtrl-Alt-Backspace\fP key combination as a

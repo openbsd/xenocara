@@ -86,9 +86,7 @@
 #include "xf86platformBus.h"
 #include "systemd-logind.h"
 
-#ifdef XF86PM
 extern void (*xf86OSPMClose) (void);
-#endif
 
 static void xf86VTSwitch(void);
 
@@ -106,12 +104,6 @@ typedef struct x_IHRec {
 } IHRec, *IHPtr;
 
 static IHPtr InputHandlers = NULL;
-
-Bool
-LegalModifier(unsigned int key, DeviceIntPtr pDev)
-{
-    return TRUE;
-}
 
 /*
  * TimeSinceLastInputEvent --
@@ -168,9 +160,6 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
     case ACTION_TERMINATE:
         if (!xf86Info.dontZap) {
             xf86Msg(X_INFO, "Server zapped. Shutting down.\n");
-#ifdef XFreeXDGA
-            DGAShutdown();
-#endif
             GiveUp(0);
         }
         break;
@@ -291,12 +280,12 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
     /*
      * Hmm... here is the biggest hack of every time !
      * It may be possible that a switch-vt procedure has finished BEFORE
-     * you released all keys neccessary to do this. That peculiar behavior
+     * you released all keys necessary to do this. That peculiar behavior
      * can fool the X-server pretty much, cause it assumes that some keys
-     * were not released. TWM may stuck alsmost completly....
+     * were not released. TWM may stuck almost completely....
      * OK, what we are doing here is after returning from the vt-switch
-     * exeplicitely unrelease all keyboard keys before the input-devices
-     * are reenabled.
+     * explicitly unrelease all keyboard keys before the input-devices
+     * are re-enabled.
      */
 
     for (i = keyc->xkbInfo->desc->min_key_code;
@@ -396,11 +385,9 @@ xf86VTLeave(void)
     if (!xf86VTSwitchAway())
         goto switch_failed;
 
-#ifdef XF86PM
     if (xf86OSPMClose)
         xf86OSPMClose();
     xf86OSPMClose = NULL;
-#endif
 
     for (i = 0; i < xf86NumScreens; i++) {
         /*
@@ -456,9 +443,7 @@ xf86VTEnter(void)
     if (!xf86VTSwitchTo())
         return;
 
-#ifdef XF86PM
     xf86OSPMClose = xf86OSPMOpen();
-#endif
 
     if (xorgHWAccess)
         xf86EnableIO();

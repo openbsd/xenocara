@@ -78,10 +78,9 @@ static Bool xf86RandR12CreateScreenResources12(ScreenPtr pScreen);
 static int xf86RandR12Generation;
 
 static DevPrivateKeyRec xf86RandR12KeyRec;
-static DevPrivateKey xf86RandR12Key;
 
 #define XF86RANDRINFO(p) ((XF86RandRInfoPtr) \
-    dixLookupPrivate(&(p)->devPrivates, xf86RandR12Key))
+    dixLookupPrivate(&(p)->devPrivates, &xf86RandR12KeyRec))
 
 static int
 xf86RandR12ModeRefresh(DisplayModePtr mode)
@@ -551,7 +550,7 @@ xf86RandR12SetMode(ScreenPtr pScreen,
     }
     /*
      * We know that if the driver failed to SwitchMode to the rotated
-     * version, then it should revert back to it's prior mode.
+     * version, then it should revert back to its prior mode.
      */
     if (!xf86SwitchMode(pScreen, mode)) {
         ret = FALSE;
@@ -807,6 +806,12 @@ xf86RandR12CreateScreenResources(ScreenPtr pScreen)
                 mmWidth = output->conf_monitor->mon_width;
                 mmHeight = output->conf_monitor->mon_height;
             }
+            else if (output &&
+                (output->mm_width > 0 &&
+                 output->mm_height > 0)) {
+                mmWidth = output->mm_width;
+                mmHeight = output->mm_height;
+            }
             else {
                 /*
                  * Otherwise, just set the screen to DEFAULT_DPI
@@ -860,7 +865,6 @@ xf86RandR12Init(ScreenPtr pScreen)
     if (xf86RandR12Generation != serverGeneration)
         xf86RandR12Generation = serverGeneration;
 
-    xf86RandR12Key = &xf86RandR12KeyRec;
     if (!dixRegisterPrivateKey(&xf86RandR12KeyRec, PRIVATE_SCREEN, 0))
         return FALSE;
 
@@ -890,7 +894,7 @@ xf86RandR12Init(ScreenPtr pScreen)
     randrp->palette_size = 0;
     randrp->palette = NULL;
 
-    dixSetPrivate(&pScreen->devPrivates, xf86RandR12Key, randrp);
+    dixSetPrivate(&pScreen->devPrivates, &xf86RandR12KeyRec, randrp);
 
 #if RANDR_12_INTERFACE
     if (!xf86RandR12Init12(pScreen))
@@ -904,7 +908,7 @@ xf86RandR12CloseScreen(ScreenPtr pScreen)
 {
     XF86RandRInfoPtr randrp;
 
-    if (xf86RandR12Key == NULL)
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
         return;
 
     randrp = XF86RANDRINFO(pScreen);
@@ -928,7 +932,7 @@ xf86RandR12SetRotations(ScreenPtr pScreen, Rotation rotations)
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
 #endif
 
-    if (xf86RandR12Key == NULL)
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
         return;
 
     randrp = XF86RANDRINFO(pScreen);
@@ -949,12 +953,10 @@ xf86RandR12SetTransformSupport(ScreenPtr pScreen, Bool transforms)
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     int c;
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
-#endif
 
-    if (xf86RandR12Key == NULL)
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
         return;
 
-#if RANDR_13_INTERFACE
     for (c = 0; c < config->num_crtc; c++) {
         xf86CrtcPtr crtc = config->crtc[c];
 
@@ -1254,8 +1256,8 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
 {
     int gamma_slots;
     unsigned shift;
-    CARD32 value;
     int i, j;
+    CARD32 value = 0;
 
     for (shift = 0; (gamma_size << shift) < (1 << 16); shift++);
 
@@ -1272,6 +1274,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_red[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+                crtc->gamma_red[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {
@@ -1298,6 +1304,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_green[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+            crtc->gamma_green[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {
@@ -1324,6 +1334,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_blue[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+            crtc->gamma_blue[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {
@@ -1357,6 +1371,7 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
 {
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     xf86CrtcPtr crtc = randr_crtc->devPrivate;
+    int max_size = crtc->gamma_size;
 
     if (crtc->funcs->gamma_set == NULL)
         return FALSE;
@@ -1371,12 +1386,15 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
                                     randr_crtc->gammaBlue,
                                     randr_crtc->gammaSize);
     } else {
+        if (max_size > randr_crtc->gammaSize)
+            max_size = randr_crtc->gammaSize;
+
         memcpy(crtc->gamma_red, randr_crtc->gammaRed,
-               crtc->gamma_size * sizeof(crtc->gamma_red[0]));
+               max_size * sizeof(crtc->gamma_red[0]));
         memcpy(crtc->gamma_green, randr_crtc->gammaGreen,
-               crtc->gamma_size * sizeof(crtc->gamma_green[0]));
+               max_size * sizeof(crtc->gamma_green[0]));
         memcpy(crtc->gamma_blue, randr_crtc->gammaBlue,
-               crtc->gamma_size * sizeof(crtc->gamma_blue[0]));
+               max_size * sizeof(crtc->gamma_blue[0]));
     }
 
     xf86RandR12CrtcReloadGamma(crtc);
@@ -1661,7 +1679,10 @@ xf86RandR12SetInfo12(ScreenPtr pScreen)
             RROutputSetConnection(output->randr_output, RR_Connected);
             break;
         case XF86OutputStatusDisconnected:
-            RROutputSetConnection(output->randr_output, RR_Disconnected);
+	    if (xf86OutputForceEnabled(output))
+                RROutputSetConnection(output->randr_output, RR_Connected);
+	    else
+                RROutputSetConnection(output->randr_output, RR_Disconnected);
             break;
         case XF86OutputStatusUnknown:
             RROutputSetConnection(output->randr_output, RR_UnknownConnection);
@@ -1822,9 +1843,6 @@ xf86RandR12CreateScreenResources12(ScreenPtr pScreen)
     rrScrPrivPtr rp = rrGetScrPriv(pScreen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
 
-    if (xf86RandR12Key == NULL)
-        return TRUE;
-
     for (c = 0; c < config->num_crtc; c++)
         xf86RandR12CrtcNotify(config->crtc[c]->randr_crtc);
 
@@ -1853,9 +1871,6 @@ xf86RandR12TellChanged(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
     int c;
-
-    if (xf86RandR12Key == NULL)
-        return;
 
     xf86RandR12SetInfo12(pScreen);
     for (c = 0; c < config->num_crtc; c++)
@@ -2200,7 +2215,7 @@ xf86RandR14ProviderDestroy(ScreenPtr screen, RRProviderPtr provider)
             config->randr_provider->output_source = NULL;
             RRSetChanged(screen);
         }
-        if (screen->current_master)
+        if (screen->current_primary)
             DetachUnboundGPU(screen);
     }
     config->randr_provider = NULL;

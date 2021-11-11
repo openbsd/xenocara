@@ -72,10 +72,17 @@ compCheckWindow(WindowPtr pWin, void *data)
     else {
         assert(pWinPixmap == pParentPixmap);
     }
-    assert(0 < pWinPixmap->refcnt && pWinPixmap->refcnt < 3);
-    assert(0 < pScreenPixmap->refcnt && pScreenPixmap->refcnt < 3);
-    if (pParentPixmap)
-        assert(0 <= pParentPixmap->refcnt && pParentPixmap->refcnt < 3);
+
+    assert(0 < pWinPixmap->refcnt)
+    assert(pWinPixmap->refcnt < 3);
+
+    assert(0 < pScreenPixmap->refcnt);
+    assert(pScreenPixmap->refcnt < 3);
+
+    if (pParentPixmap) {
+        assert(0 <= pParentPixmap->refcnt);
+        assert(pParentPixmap->refcnt < 3);
+    }
     return WT_WALKCHILDREN;
 }
 
@@ -446,7 +453,7 @@ compReparentWindow(WindowPtr pWin, WindowPtr pPriorParent)
     compUnredirectOneSubwindow(pPriorParent, pWin);
     compRedirectOneSubwindow(pWin->parent, pWin);
     /*
-     * Add any implict redirect due to synthesized visual
+     * Add any implicit redirect due to synthesized visual
      */
     if (compImplicitRedirect(pWin, pWin->parent))
         compRedirectWindow(serverClient, pWin, CompositeRedirectAutomatic);

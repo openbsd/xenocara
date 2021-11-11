@@ -55,8 +55,7 @@ DIST_COMMON = $(am__sdk_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/dix-config.h.in \
 	$(srcdir)/do-not-use-config.h.in $(srcdir)/version-config.h.in \
 	$(srcdir)/xkb-config.h.in $(srcdir)/xorg-config.h.in \
-	$(srcdir)/xorg-server.h.in $(srcdir)/xwayland-config.h.in \
-	$(srcdir)/xwin-config.h.in
+	$(srcdir)/xorg-server.h.in $(srcdir)/xwin-config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -67,8 +66,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = do-not-use-config.h xorg-server.h dix-config.h \
-	xorg-config.h xkb-config.h xwin-config.h xwayland-config.h \
-	version-config.h
+	xorg-config.h xkb-config.h xwin-config.h version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -122,15 +120,14 @@ am__sdk_HEADERS_DIST = XIstubs.h Xprintf.h callback.h client.h \
 	closestr.h closure.h colormap.h colormapst.h hotplug.h \
 	cursor.h cursorstr.h dix.h dixaccess.h dixevents.h dixfont.h \
 	dixfontstr.h dixgrabs.h dixstruct.h events.h exevents.h \
-	extension.h extinit.h extnsionst.h gc.h gcstruct.h globals.h \
-	glx_extinit.h glxvndabi.h input.h inputstr.h list.h misc.h \
-	miscstruct.h opaque.h nonsdk_extinit.h optionstr.h os.h \
+	extension.h extinit.h extnsionst.h fourcc.h gc.h gcstruct.h \
+	globals.h glx_extinit.h glxvndabi.h input.h inputstr.h list.h \
+	misc.h miscstruct.h opaque.h nonsdk_extinit.h optionstr.h os.h \
 	pixmap.h pixmapstr.h privates.h property.h propertyst.h \
 	ptrveloc.h region.h regionstr.h registry.h resource.h rgb.h \
-	screenint.h scrnintstr.h selection.h servermd.h site.h \
-	validate.h displaymode.h window.h windowstr.h xkbfile.h \
-	xkbsrv.h xkbstr.h xkbrules.h xserver_poll.h \
-	xserver-properties.h
+	screenint.h scrnintstr.h selection.h servermd.h validate.h \
+	displaymode.h window.h windowstr.h xkbfile.h xkbsrv.h xkbstr.h \
+	xkbrules.h xserver_poll.h xserver-properties.h
 HEADERS = $(nodist_sdk_HEADERS) $(sdk_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -152,8 +149,6 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
-BUILD_DATE = @BUILD_DATE@
-BUILD_TIME = @BUILD_TIME@
 BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 BUNDLE_VERSION = @BUNDLE_VERSION@
 BUNDLE_VERSION_STRING = @BUNDLE_VERSION_STRING@
@@ -185,14 +180,6 @@ DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
-DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
-DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
-DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
-DMXMODULES_LIBS = @DMXMODULES_LIBS@
-DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
-DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
-DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
-DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
 DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -266,6 +253,8 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
 LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
+LIBXCVT_CFLAGS = @LIBXCVT_CFLAGS@
+LIBXCVT_LIBS = @LIBXCVT_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -318,7 +307,6 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
-SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -342,29 +330,13 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
-WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
-WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
-WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
-WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
-WAYLAND_SCANNER = @WAYLAND_SCANNER@
-WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
-WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
-WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
-WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
-X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
-X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
 XCONFIGDIR = @XCONFIGDIR@
 XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
-XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
-XDMXCONFIG_DEP_LIBS = @XDMXCONFIG_DEP_LIBS@
-XDMX_CFLAGS = @XDMX_CFLAGS@
-XDMX_LIBS = @XDMX_LIBS@
-XDMX_SYS_LIBS = @XDMX_SYS_LIBS@
 XEPHYR_CFLAGS = @XEPHYR_CFLAGS@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
@@ -402,8 +374,6 @@ XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FEED_URL = @XQUARTZ_SPARKLE_FEED_URL@
-XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
-XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
@@ -414,14 +384,8 @@ XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
 XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
-XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
-XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
-XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
-XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
-XWAYLAND_LIBS = @XWAYLAND_LIBS@
-XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -518,6 +482,7 @@ top_srcdir = @top_srcdir@
 @XORG_TRUE@	extension.h	\
 @XORG_TRUE@	extinit.h	\
 @XORG_TRUE@	extnsionst.h	\
+@XORG_TRUE@	fourcc.h	\
 @XORG_TRUE@	gc.h		\
 @XORG_TRUE@	gcstruct.h	\
 @XORG_TRUE@	globals.h	\
@@ -547,7 +512,6 @@ top_srcdir = @top_srcdir@
 @XORG_TRUE@	scrnintstr.h	\
 @XORG_TRUE@	selection.h	\
 @XORG_TRUE@	servermd.h	\
-@XORG_TRUE@	site.h		\
 @XORG_TRUE@	validate.h	\
 @XORG_TRUE@	displaymode.h    \
 @XORG_TRUE@	window.h	\
@@ -573,11 +537,14 @@ EXTRA_DIST = \
         vidmodestr.h \
 	xorg-config.h.meson.in \
 	xorg-server.h.meson.in \
-	xwayland-config.h.meson.in \
 	xwin-config.h.meson.in \
 	xsha1.h
 
-all: do-not-use-config.h xorg-server.h dix-config.h xorg-config.h xkb-config.h xwin-config.h xwayland-config.h version-config.h
+
+# Generate dtrace header file for C sources to include
+@XSERVER_DTRACE_TRUE@BUILT_SOURCES = Xserver-dtrace.h
+CLEANFILES = Xserver-dtrace.h
+all: $(BUILT_SOURCES) do-not-use-config.h xorg-server.h dix-config.h xorg-config.h xkb-config.h xwin-config.h version-config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
@@ -664,24 +631,16 @@ stamp-h6: $(srcdir)/xwin-config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h6
 	cd $(top_builddir) && $(SHELL) ./config.status include/xwin-config.h
 
-xwayland-config.h: stamp-h7
+version-config.h: stamp-h7
 	@if test ! -f $@; then rm -f stamp-h7; else :; fi
 	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) stamp-h7; else :; fi
 
-stamp-h7: $(srcdir)/xwayland-config.h.in $(top_builddir)/config.status
+stamp-h7: $(srcdir)/version-config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h7
-	cd $(top_builddir) && $(SHELL) ./config.status include/xwayland-config.h
-
-version-config.h: stamp-h8
-	@if test ! -f $@; then rm -f stamp-h8; else :; fi
-	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) stamp-h8; else :; fi
-
-stamp-h8: $(srcdir)/version-config.h.in $(top_builddir)/config.status
-	@rm -f stamp-h8
 	cd $(top_builddir) && $(SHELL) ./config.status include/version-config.h
 
 distclean-hdr:
-	-rm -f do-not-use-config.h stamp-h1 xorg-server.h stamp-h2 dix-config.h stamp-h3 xorg-config.h stamp-h4 xkb-config.h stamp-h5 xwin-config.h stamp-h6 xwayland-config.h stamp-h7 version-config.h stamp-h8
+	-rm -f do-not-use-config.h stamp-h1 xorg-server.h stamp-h2 dix-config.h stamp-h3 xorg-config.h stamp-h4 xkb-config.h stamp-h5 xwin-config.h stamp-h6 version-config.h stamp-h7
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -741,11 +700,11 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	mkid -fID $$unique
 tags: TAGS
 
-TAGS:  $(HEADERS) $(SOURCES) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in xwayland-config.h.in version-config.h.in $(TAGS_DEPENDENCIES) \
+TAGS:  $(HEADERS) $(SOURCES) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in version-config.h.in $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	set x; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in xwayland-config.h.in version-config.h.in $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in version-config.h.in $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
@@ -763,9 +722,9 @@ TAGS:  $(HEADERS) $(SOURCES) do-not-use-config.h.in xorg-server.h.in dix-config.
 	  fi; \
 	fi
 ctags: CTAGS
-CTAGS:  $(HEADERS) $(SOURCES) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in xwayland-config.h.in version-config.h.in $(TAGS_DEPENDENCIES) \
+CTAGS:  $(HEADERS) $(SOURCES) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in version-config.h.in $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
-	list='$(SOURCES) $(HEADERS) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in xwayland-config.h.in version-config.h.in $(LISP) $(TAGS_FILES)'; \
+	list='$(SOURCES) $(HEADERS) do-not-use-config.h.in xorg-server.h.in dix-config.h.in xorg-config.h.in xkb-config.h.in xwin-config.h.in version-config.h.in $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
 	  done | \
@@ -828,15 +787,17 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(HEADERS) do-not-use-config.h xorg-server.h \
 		dix-config.h xorg-config.h xkb-config.h xwin-config.h \
-		xwayland-config.h version-config.h
+		version-config.h
 installdirs:
 	for dir in "$(DESTDIR)$(sdkdir)" "$(DESTDIR)$(sdkdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -858,6 +819,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -866,6 +828,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -932,7 +895,7 @@ ps-am:
 
 uninstall-am: uninstall-nodist_sdkHEADERS uninstall-sdkHEADERS
 
-.MAKE: all install-am install-strip
+.MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool cscopelist ctags distclean distclean-generic \
@@ -948,6 +911,9 @@ uninstall-am: uninstall-nodist_sdkHEADERS uninstall-sdkHEADERS
 	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-nodist_sdkHEADERS uninstall-sdkHEADERS
 
+
+@XSERVER_DTRACE_TRUE@Xserver-dtrace.h: $(srcdir)/Xserver.d
+@XSERVER_DTRACE_TRUE@	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

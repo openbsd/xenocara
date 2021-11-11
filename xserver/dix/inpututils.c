@@ -124,10 +124,10 @@ ApplyPointerMapping(DeviceIntPtr dev, CARD8 *map, int len, ClientPtr client)
     return Success;
 }
 
-/* Check if a modifier map change is okay with the device.
- * Returns -1 for BadValue, as it collides with MappingBusy; this particular
- * caveat can be removed with LegalModifier, as we have no other reason to
- * set MappingFailed.  Sigh. */
+/* Check if a modifier map change is okay with the device. Negative return
+ * values mean BadValue, positive values mean Mapping{Busy,Failed}, 0 is
+ * Success / MappingSuccess.
+ */
 static int
 check_modmap_change(ClientPtr client, DeviceIntPtr dev, KeyCode *modmap)
 {
@@ -151,12 +151,6 @@ check_modmap_change(ClientPtr client, DeviceIntPtr dev, KeyCode *modmap)
         if (i < xkb->min_key_code || i > xkb->max_key_code) {
             client->errorValue = i;
             return -1;
-        }
-
-        /* Make sure the mapping is okay with the DDX. */
-        if (!LegalModifier(i, dev)) {
-            client->errorValue = i;
-            return MappingFailed;
         }
 
         /* None of the new modifiers may be down while we change the
@@ -752,6 +746,21 @@ init_device_event(DeviceEvent *event, DeviceIntPtr dev, Time ms,
     event->source_type = source_type;
 }
 
+/**
+ * Initializes the given gesture event to zero (or default values),
+ * for the given device.
+ */
+void
+init_gesture_event(GestureEvent *event, DeviceIntPtr dev, Time ms)
+{
+    memset(event, 0, sizeof(GestureEvent));
+    event->header = ET_Internal;
+    event->length = sizeof(GestureEvent);
+    event->time = ms;
+    event->deviceid = dev->id;
+    event->sourceid = dev->id;
+}
+
 int
 event_get_corestate(DeviceIntPtr mouse, DeviceIntPtr kbd)
 {
@@ -787,6 +796,24 @@ event_set_state(DeviceIntPtr mouse, DeviceIntPtr kbd, DeviceEvent *event)
             state = &kbd->key->xkbInfo->prev_state;
         else
             state = &kbd->key->xkbInfo->state;
+
+        event->mods.base = state->base_mods;
+        event->mods.latched = state->latched_mods;
+        event->mods.locked = state->locked_mods;
+        event->mods.effective = state->mods;
+
+        event->group.base = state->base_group;
+        event->group.latched = state->latched_group;
+        event->group.locked = state->locked_group;
+        event->group.effective = state->group;
+    }
+}
+
+void
+event_set_state_gesture(DeviceIntPtr kbd, GestureEvent *event)
+{
+    if (kbd && kbd->key) {
+        XkbStatePtr state= &kbd->key->xkbInfo->state;
 
         event->mods.base = state->base_mods;
         event->mods.latched = state->latched_mods;
@@ -1225,4 +1252,29 @@ xi2mask_get_one_mask(const XI2Mask *mask, int deviceid)
     BUG_WARN(deviceid >= mask->nmasks);
 
     return mask->masks[deviceid];
+}
+
+/**
+ * Copies a sprite data from src to dst sprites.
+ *
+ * Returns FALSE on error.
+ */
+Bool
+CopySprite(SpritePtr src, SpritePtr dst)
+{
+    WindowPtr *trace;
+    if (src->spriteTraceGood > dst->spriteTraceSize) {
+        trace = reallocarray(dst->spriteTrace,
+                             src->spriteTraceSize, sizeof(*trace));
+        if (!trace) {
+            dst->spriteTraceGood = 0;
+            return FALSE;
+        }
+        dst->spriteTrace = trace;
+        dst->spriteTraceSize = src->spriteTraceGood;
+    }
+    memcpy(dst->spriteTrace, src->spriteTrace,
+           src->spriteTraceGood * sizeof(*trace));
+    dst->spriteTraceGood = src->spriteTraceGood;
+    return TRUE;
 }

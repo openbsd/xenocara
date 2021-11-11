@@ -1,4 +1,4 @@
-/* all driver need this */
+/* all drivers need this */
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
@@ -118,7 +118,7 @@ fbdevHWGetFD(ScrnInfoPtr pScrn)
 }
 
 /* -------------------------------------------------------------------- */
-/* some helpers for printing debug informations                         */
+/* some helpers for printing debug information                          */
 
 #ifdef DEBUG
 static void
@@ -331,12 +331,12 @@ fbdev_open(int scrnIndex, const char *dev, char **namep)
 
     /* only touch non-PCI devices on this path */
     {
-        char buf[PATH_MAX];
+        char buf[PATH_MAX] = {0};
         char *sysfs_path = NULL;
         char *node = strrchr(dev, '/') + 1;
 
         if (asprintf(&sysfs_path, "/sys/class/graphics/%s", node) < 0 ||
-            readlink(sysfs_path, buf, sizeof(buf)) < 0 ||
+            readlink(sysfs_path, buf, sizeof(buf) - 1) < 0 ||
             strstr(buf, "devices/pci")) {
             free(sysfs_path);
             close(fd);

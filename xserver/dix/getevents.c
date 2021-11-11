@@ -1071,7 +1071,7 @@ GetKeyboardEvents(InternalEvent *events, DeviceIntPtr pDev, int type,
     RawDeviceEvent *raw;
     enum DeviceEventSource source_type = EVENT_SOURCE_NORMAL;
 
-#if XSERVER_DTRACE
+#ifdef XSERVER_DTRACE
     if (XSERVER_INPUT_EVENT_ENABLED()) {
         XSERVER_INPUT_EVENT(pDev->id, type, key_code, 0, 0,
                             NULL, NULL);
@@ -1328,7 +1328,7 @@ QueuePointerEvents(DeviceIntPtr device, int type,
  * rescaled to match Sx/Sy for [n..m]. In the simplest example, x of (m/2-1)
  * is the last coordinate on the first screen and must be rescaled for the
  * event to be m. XI2 clients that do their own coordinate mapping would
- * otherwise interpret the position of the device elsewere to the cursor.
+ * otherwise interpret the position of the device elsewhere to the cursor.
  * However, this scaling leads to losses:
  * if we have two ScreenRecs we scale from e.g. [0..44704]  (Wacom I4) to
  * [0..2048[. that gives us 2047.954 as desktop coord, or the per-screen
@@ -1343,7 +1343,7 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
                     int buttons, CARD32 ms, int flags,
                     const ValuatorMask *mask_in)
 {
-    int num_events = 1;
+    int num_events = 0;
     DeviceEvent *event;
     RawDeviceEvent *raw = NULL;
     double screenx = 0.0, screeny = 0.0;        /* desktop coordinate system */
@@ -1386,6 +1386,10 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
         num_events++;
 
         init_raw(pDev, raw, ms, type, buttons);
+
+        if (flags & POINTER_EMULATED)
+            raw->flags = XIPointerEmulated;
+
         set_raw_valuators(raw, &mask, TRUE, raw->valuators.data_raw);
     }
 
@@ -1446,7 +1450,7 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
 
     storeLastValuators(pDev, &mask, 0, 1, devx, devy);
 
-    /* Update the MD's co-ordinates, which are always in desktop space. */
+    /* Update the MD's coordinates, which are always in desktop space. */
     if (!IsMaster(pDev) && !IsFloating(pDev)) {
         DeviceIntPtr master = GetMaster(pDev, MASTER_POINTER);
 
@@ -1454,35 +1458,36 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
         master->last.valuators[1] = screeny;
     }
 
-    event = &events->device_event;
-    init_device_event(event, pDev, ms, EVENT_SOURCE_NORMAL);
+    if ((flags & POINTER_RAWONLY) == 0) {
+        num_events++;
 
-    if (type == MotionNotify) {
-        event->type = ET_Motion;
-        event->detail.button = 0;
-    }
-    else {
-        if (type == ButtonPress) {
-            event->type = ET_ButtonPress;
-            set_button_down(pDev, buttons, BUTTON_POSTED);
+        event = &events->device_event;
+        init_device_event(event, pDev, ms, EVENT_SOURCE_NORMAL);
+
+        if (type == MotionNotify) {
+            event->type = ET_Motion;
+            event->detail.button = 0;
         }
-        else if (type == ButtonRelease) {
-            event->type = ET_ButtonRelease;
-            set_button_up(pDev, buttons, BUTTON_POSTED);
+        else {
+            if (type == ButtonPress) {
+                event->type = ET_ButtonPress;
+                set_button_down(pDev, buttons, BUTTON_POSTED);
+            }
+            else if (type == ButtonRelease) {
+                event->type = ET_ButtonRelease;
+                set_button_up(pDev, buttons, BUTTON_POSTED);
+            }
+            event->detail.button = buttons;
         }
-        event->detail.button = buttons;
+
+        /* root_x and root_y must be in per-screen coordinates */
+        event_set_root_coordinates(event, screenx - scr->x, screeny - scr->y);
+
+        if (flags & POINTER_EMULATED)
+            event->flags = XIPointerEmulated;
+
+        set_valuators(pDev, event, &mask);
     }
-
-    /* root_x and root_y must be in per-screen co-ordinates */
-    event_set_root_coordinates(event, screenx - scr->x, screeny - scr->y);
-
-    if (flags & POINTER_EMULATED) {
-        if (raw)
-            raw->flags = XIPointerEmulated;
-        event->flags = XIPointerEmulated;
-    }
-
-    set_valuators(pDev, event, &mask);
 
     return num_events;
 }
@@ -1615,7 +1620,7 @@ GetPointerEvents(InternalEvent *events, DeviceIntPtr pDev, int type,
     int i;
     int realtype = type;
 
-#if XSERVER_DTRACE
+#ifdef XSERVER_DTRACE
     if (XSERVER_INPUT_EVENT_ENABLED()) {
         XSERVER_INPUT_EVENT(pDev->id, type, buttons, flags,
                             mask_in ? mask_in->last_bit + 1 : 0,
@@ -1755,7 +1760,7 @@ GetProximityEvents(InternalEvent *events, DeviceIntPtr pDev, int type,
     DeviceEvent *event;
     ValuatorMask mask;
 
-#if XSERVER_DTRACE
+#ifdef XSERVER_DTRACE
     if (XSERVER_INPUT_EVENT_ENABLED()) {
         XSERVER_INPUT_EVENT(pDev->id, type, 0, 0,
                             mask_in ? mask_in->last_bit + 1 : 0,
@@ -1869,7 +1874,7 @@ int
 GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
                uint16_t type, uint32_t flags, const ValuatorMask *mask_in)
 {
-    ScreenPtr scr = dev->spriteInfo->sprite->hotPhys.pScreen;
+    ScreenPtr scr;
     TouchClassPtr t = dev->touch;
     ValuatorClassPtr v = dev->valuator;
     DeviceEvent *event;
@@ -1885,7 +1890,7 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
     Bool emulate_pointer = FALSE;
     int client_id = 0;
 
-#if XSERVER_DTRACE
+#ifdef XSERVER_DTRACE
     if (XSERVER_INPUT_EVENT_ENABLED()) {
         XSERVER_INPUT_EVENT(dev->id, type, ddx_touchid, flags,
                             mask_in ? mask_in->last_bit + 1 : 0,
@@ -1931,7 +1936,7 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
     switch (type) {
     case XI_TouchBegin:
         event->type = ET_TouchBegin;
-        /* If we're starting a touch, we must have x & y co-ordinates. */
+        /* If we're starting a touch, we must have x & y coordinates. */
         if (!mask_in ||
             !valuator_mask_isset(mask_in, 0) ||
             !valuator_mask_isset(mask_in, 1)) {
@@ -1957,7 +1962,7 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
         return 0;
     }
 
-    /* Get our screen event co-ordinates (root_x/root_y/event_x/event_y):
+    /* Get our screen event coordinates (root_x/root_y/event_x/event_y):
      * these come from the touchpoint in Absolute mode, or the sprite in
      * Relative. */
     if (t->mode == XIDirectTouch) {
@@ -1984,6 +1989,8 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
     if (need_rawevent)
         set_raw_valuators(raw, &mask, FALSE, raw->valuators.data);
 
+    scr = dev->spriteInfo->sprite->hotPhys.pScreen;
+
     /* Indirect device touch coordinates are not used for cursor positioning.
      * They are merely informational, and are provided in device coordinates.
      * The device sprite is used for positioning instead, and it is already
@@ -2003,7 +2010,7 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
     if (emulate_pointer)
         storeLastValuators(dev, &mask, 0, 1, devx, devy);
 
-    /* Update the MD's co-ordinates, which are always in desktop space. */
+    /* Update the MD's coordinates, which are always in desktop space. */
     if (emulate_pointer && !IsMaster(dev) && !IsFloating(dev)) {
 	    DeviceIntPtr master = GetMaster(dev, MASTER_POINTER);
 
@@ -2093,4 +2100,140 @@ PostSyntheticMotion(DeviceIntPtr pDev,
 
     /* FIXME: MD/SD considerations? */
     (*pDev->public.processInputProc) ((InternalEvent *) &ev, pDev);
+}
+
+void
+InitGestureEvent(InternalEvent *ievent, DeviceIntPtr dev, CARD32 ms,
+                 int type, uint16_t num_touches, uint32_t flags,
+                 double delta_x, double delta_y,
+                 double delta_unaccel_x, double delta_unaccel_y,
+                 double scale, double delta_angle)
+{
+    ScreenPtr scr = dev->spriteInfo->sprite->hotPhys.pScreen;
+    GestureEvent *event = &ievent->gesture_event;
+    double screenx = 0.0, screeny = 0.0;        /* desktop coordinate system */
+
+    init_gesture_event(event, dev, ms);
+
+    screenx = dev->spriteInfo->sprite->hotPhys.x;
+    screeny = dev->spriteInfo->sprite->hotPhys.y;
+
+    event->type = type;
+    event->root = scr->root->drawable.id;
+    event->root_x = screenx - scr->x;
+    event->root_y = screeny - scr->y;
+    event->num_touches = num_touches;
+    event->flags = flags;
+
+    event->delta_x = delta_x;
+    event->delta_y = delta_y;
+    event->delta_unaccel_x = delta_unaccel_x;
+    event->delta_unaccel_y = delta_unaccel_y;
+    event->scale = scale;
+    event->delta_angle = delta_angle;
+}
+
+/**
+ * Get events for a pinch or swipe gesture.
+ *
+ * events is not NULL-terminated; the return value is the number of events.
+ * The DDX is responsible for allocating the event structure in the first
+ * place via GetMaximumEventsNum(), and for freeing it.
+ *
+ * @param[out] events The list of events generated
+ * @param dev The device to generate the events for
+ * @param type XI_Gesture{Pinch,Swipe}{Begin,Update,End}
+ * @prama num_touches The number of touches in the gesture
+ * @param flags Event flags
+ * @param delta_x,delta_y accelerated relative motion delta
+ * @param delta_unaccel_x,delta_unaccel_y unaccelerated relative motion delta
+ * @param scale (valid only to pinch events) absolute scale of a pinch gesture
+ * @param delta_angle (valid only to pinch events) the ange delta in degrees between the last and
+ *        the current pinch event.
+ */
+int
+GetGestureEvents(InternalEvent *events, DeviceIntPtr dev,
+                 uint16_t type, uint16_t num_touches, uint32_t flags,
+                 double delta_x, double delta_y,
+                 double delta_unaccel_x, double delta_unaccel_y,
+                 double scale, double delta_angle)
+
+{
+    GestureClassPtr g = dev->gesture;
+    CARD32 ms = GetTimeInMillis();
+    enum EventType evtype;
+    int num_events = 0;
+    uint32_t evflags = 0;
+
+    if (!dev->enabled || !g)
+        return 0;
+
+    if (!IsMaster(dev))
+        events = UpdateFromMaster(events, dev, DEVCHANGE_POINTER_EVENT,
+                                  &num_events);
+
+    switch (type) {
+    case XI_GesturePinchBegin:
+        evtype = ET_GesturePinchBegin;
+        break;
+    case XI_GesturePinchUpdate:
+        evtype = ET_GesturePinchUpdate;
+        break;
+    case XI_GesturePinchEnd:
+        evtype = ET_GesturePinchEnd;
+        if (flags & XIGesturePinchEventCancelled)
+            evflags |= GESTURE_CANCELLED;
+        break;
+    case XI_GestureSwipeBegin:
+        evtype = ET_GestureSwipeBegin;
+        break;
+    case XI_GestureSwipeUpdate:
+        evtype = ET_GestureSwipeUpdate;
+        break;
+    case XI_GestureSwipeEnd:
+        evtype = ET_GestureSwipeEnd;
+        if (flags & XIGestureSwipeEventCancelled)
+            evflags |= GESTURE_CANCELLED;
+        break;
+    default:
+        return 0;
+    }
+
+    InitGestureEvent(events, dev, ms, evtype, num_touches, evflags,
+                     delta_x, delta_y, delta_unaccel_x, delta_unaccel_y,
+                     scale, delta_angle);
+    num_events++;
+
+    return num_events;
+}
+
+void
+QueueGesturePinchEvents(DeviceIntPtr dev, uint16_t type,
+                        uint16_t num_touches, uint32_t flags,
+                        double delta_x, double delta_y,
+                        double delta_unaccel_x,
+                        double delta_unaccel_y,
+                        double scale, double delta_angle)
+{
+    int nevents;
+    nevents = GetGestureEvents(InputEventList, dev, type, num_touches, flags,
+                               delta_x, delta_y,
+                               delta_unaccel_x, delta_unaccel_y,
+                               scale, delta_angle);
+    queueEventList(dev, InputEventList, nevents);
+}
+
+void
+QueueGestureSwipeEvents(DeviceIntPtr dev, uint16_t type,
+                        uint16_t num_touches, uint32_t flags,
+                        double delta_x, double delta_y,
+                        double delta_unaccel_x,
+                        double delta_unaccel_y)
+{
+    int nevents;
+    nevents = GetGestureEvents(InputEventList, dev, type, num_touches, flags,
+                               delta_x, delta_y,
+                               delta_unaccel_x, delta_unaccel_y,
+                               0.0, 0.0);
+    queueEventList(dev, InputEventList, nevents);
 }

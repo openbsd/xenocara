@@ -62,22 +62,27 @@ LoadXKM(unsigned want, unsigned need, const char *keymap, XkbDescPtr *xkbRtrn);
 static void
 OutputDirectory(char *outdir, size_t size)
 {
+    const char *directory = NULL;
+    const char *pathsep = "";
+    int r = -1;
+
 #ifndef WIN32
     /* Can we write an xkm and then open it too? */
-    if (access(XKM_OUTPUT_DIR, W_OK | X_OK) == 0 &&
-        (strlen(XKM_OUTPUT_DIR) < size)) {
-        (void) strcpy(outdir, XKM_OUTPUT_DIR);
+    if (access(XKM_OUTPUT_DIR, W_OK | X_OK) == 0) {
+        directory = XKM_OUTPUT_DIR;
+        if (XKM_OUTPUT_DIR[strlen(XKM_OUTPUT_DIR) - 1] != '/')
+            pathsep = "/";
     }
-    else
 #else
-    if (strlen(Win32TempDir()) + 1 < size) {
-        (void) strcpy(outdir, Win32TempDir());
-        (void) strcat(outdir, "\\");
-    }
-    else
+    directory = Win32TempDir();
+    pathsep = "\\";
 #endif
-    if (strlen("/tmp/") < size) {
-        (void) strcpy(outdir, "/tmp/");
+
+    if (directory)
+        r = snprintf(outdir, size, "%s%s", directory, pathsep);
+    if (r < 0 || r >= size) {
+        assert(strlen("/tmp/") < size);
+        strcpy(outdir, "/tmp/");
     }
 }
 
@@ -451,7 +456,7 @@ XkbRMLVOtoKcCGST(DeviceIntPtr dev, XkbRMLVOSet * rmlvo,
 /**
  * Compile the given RMLVO keymap and return it. Returns the XkbDescPtr on
  * success or NULL on failure. If the components compiled are not a superset
- * or equal to need, the compiliation is treated as failure.
+ * or equal to need, the compilation is treated as failure.
  */
 static XkbDescPtr
 XkbCompileKeymapForDevice(DeviceIntPtr dev, XkbRMLVOSet * rmlvo, int need)

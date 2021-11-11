@@ -88,9 +88,7 @@ __glXDisp_CreateContextAttribsARB(__GLXclientState * cl, GLbyte * pc)
     int minor_version = 0;
     uint32_t flags = 0;
     uint32_t render_type = GLX_RGBA_TYPE;
-#ifdef GLX_CONTEXT_RELEASE_BEHAVIOR_ARB
     uint32_t flush = GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB;
-#endif
     __GLXcontext *ctx = NULL;
     __GLXcontext *shareCtx = NULL;
     __GLXscreen *glxScreen;
@@ -132,12 +130,16 @@ __glXDisp_CreateContextAttribsARB(__GLXclientState * cl, GLbyte * pc)
      * On the client, the screen comes from the FBConfig, so GLXBadFBConfig
      * should be issued if the screen is nonsense.
      */
-    if (!validGlxScreen(client, req->screen, &glxScreen, &err))
+    if (!validGlxScreen(client, req->screen, &glxScreen, &err)) {
+        client->errorValue = req->fbconfig;
         return __glXError(GLXBadFBConfig);
+    }
 
     if (req->fbconfig) {
-        if (!validGlxFBConfig(client, glxScreen, req->fbconfig, &config, &err))
+        if (!validGlxFBConfig(client, glxScreen, req->fbconfig, &config, &err)) {
+            client->errorValue = req->fbconfig;
             return __glXError(GLXBadFBConfig);
+        }
     }
 
     /* Validate the context with which the new context should share resources.
@@ -201,14 +203,12 @@ __glXDisp_CreateContextAttribsARB(__GLXclientState * cl, GLbyte * pc)
 
             break;
 
-#ifdef GLX_CONTEXT_RELEASE_BEHAVIOR_ARB
         case GLX_CONTEXT_RELEASE_BEHAVIOR_ARB:
             flush = attribs[2 * i + 1];
             if (flush != GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB
                 && flush != GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB)
                 return BadValue;
             break;
-#endif
 
         case GLX_SCREEN:
             /* Only valid for GLX_EXT_no_config_context */
@@ -311,6 +311,7 @@ __glXDisp_CreateContextAttribsARB(__GLXclientState * cl, GLbyte * pc)
      */
     if (!req->isDirect && (major_version > 1 || minor_version > 4
                            || profile == GLX_CONTEXT_ES2_PROFILE_BIT_EXT)) {
+        client->errorValue = req->fbconfig;
         return __glXError(GLXBadFBConfig);
     }
 
@@ -348,9 +349,8 @@ __glXDisp_CreateContextAttribsARB(__GLXclientState * cl, GLbyte * pc)
     ctx->isDirect = req->isDirect;
     ctx->renderMode = GL_RENDER;
     ctx->resetNotificationStrategy = reset;
-#ifdef GLX_CONTEXT_RELEASE_BEHAVIOR_ARB
     ctx->releaseBehavior = flush;
-#endif
+    ctx->renderType = render_type;
 
     /* Add the new context to the various global tables of GLX contexts.
      */

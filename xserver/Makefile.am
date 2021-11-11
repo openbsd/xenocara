@@ -142,7 +142,6 @@ EXTRA_DIST += \
 	include/xorg-config.h.meson.in \
 	include/xwin-config.h.meson.in \
 	hw/xfree86/loader/symbol-test.c \
-	hw/xfree86/common/xf86Build.sh \
 	composite/meson.build \
 	config/meson.build \
 	damageext/meson.build \
@@ -153,11 +152,6 @@ EXTRA_DIST += \
 	fb/meson.build \
 	glamor/meson.build \
 	glx/meson.build \
-	hw/dmx/config/meson.build \
-	hw/dmx/examples/meson.build \
-	hw/dmx/glxProxy/meson.build \
-	hw/dmx/input/meson.build \
-	hw/dmx/meson.build \
 	hw/kdrive/ephyr/meson.build \
 	hw/kdrive/meson.build \
 	hw/kdrive/src/meson.build \
@@ -181,13 +175,11 @@ EXTRA_DIST += \
 	hw/xfree86/parser/meson.build \
 	hw/xfree86/ramdac/meson.build \
 	hw/xfree86/shadowfb/meson.build \
-	hw/xfree86/vbe/meson.build \
 	hw/xfree86/vgahw/meson.build \
 	hw/xfree86/x86emu/meson.build \
 	hw/xfree86/xkb/meson.build \
 	hw/xnest/meson.build \
 	hw/xquartz/meson.build \
-	hw/xwayland/meson.build \
 	hw/xwin/dri/meson.build \
 	hw/xwin/glx/meson.build \
 	hw/xwin/meson.build \
@@ -213,3 +205,5 @@ EXTRA_DIST += \
 	xfixes/meson.build \
 	Xi/meson.build \
 	xkb/meson.build
+
+DISTCLEANFILES = buildDateTime.h

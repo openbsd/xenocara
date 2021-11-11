@@ -94,7 +94,6 @@ SOFTWARE.
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include "misc.h"
-#include "site.h"
 #include <errno.h>
 #include <sys/types.h>
 #ifndef WIN32
@@ -228,7 +227,7 @@ typedef struct _host {
 #define FreeHost(h)	free(h)
 static HOST *selfhosts = NULL;
 static HOST *validhosts = NULL;
-static int AccessEnabled = DEFAULT_ACCESS_CONTROL;
+static int AccessEnabled = TRUE;
 static int LocalHostEnabled = FALSE;
 static int LocalHostRequested = FALSE;
 static int UsingXdmcp = FALSE;
@@ -921,7 +920,7 @@ AddLocalHosts(void)
         /* Fix for XFree86 bug #156: pass addingLocal = TRUE to
          * NewHost to tell that we are adding the default local
          * host entries and not to flag the entries as being
-         * explicitely requested */
+         * explicitly requested */
         (void) NewHost(self->family, self->addr, self->len, TRUE);
 }
 
@@ -951,7 +950,7 @@ ResetHosts(const char *display)
     int len;
 
     siTypesInitialize();
-    AccessEnabled = defeatAccessControl ? FALSE : DEFAULT_ACCESS_CONTROL;
+    AccessEnabled = !defeatAccessControl;
     LocalHostEnabled = FALSE;
     while ((host = validhosts) != 0) {
         validhosts = host->next;

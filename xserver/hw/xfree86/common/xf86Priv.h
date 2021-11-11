@@ -46,6 +46,7 @@
 extern _X_EXPORT const char *xf86ConfigFile;
 extern _X_EXPORT const char *xf86ConfigDir;
 extern _X_EXPORT Bool xf86AllowMouseOpenFail;
+extern _X_EXPORT Bool xf86AutoBindGPUDisabled;
 
 #ifdef XF86VIDMODE
 extern _X_EXPORT Bool xf86VidModeDisabled;
@@ -68,9 +69,7 @@ extern _X_EXPORT char *xf86KeyboardName;
 extern _X_EXPORT int xf86FbBpp;
 extern _X_EXPORT int xf86Depth;
 extern _X_EXPORT rgb xf86Weight;
-extern _X_EXPORT Bool xf86FlipPixels;
 extern _X_EXPORT Gamma xf86Gamma;
-extern _X_EXPORT const char *xf86ServerName;
 
 /* Other parameters */
 
@@ -91,8 +90,8 @@ extern _X_EXPORT const char *xf86VisualNames[];
 extern _X_EXPORT int xf86Verbose;       /* verbosity level */
 extern _X_EXPORT int xf86LogVerbose;    /* log file verbosity level */
 
-extern ScrnInfoPtr *xf86GPUScreens;      /* List of pointers to ScrnInfoRecs */
-extern int xf86NumGPUScreens;
+extern _X_EXPORT ScrnInfoPtr *xf86GPUScreens;      /* List of pointers to ScrnInfoRecs */
+extern _X_EXPORT int xf86NumGPUScreens;
 extern _X_EXPORT int xf86DRMMasterFd;              /* Command line argument for DRM master file descriptor */
 #ifndef DEFAULT_VERBOSE
 #define DEFAULT_VERBOSE		0

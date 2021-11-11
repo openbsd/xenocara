@@ -59,7 +59,6 @@ SOFTWARE.
 #include "cursorstr.h"
 #include "dixstruct.h"
 #include "ptrveloc.h"
-#include "site.h"
 #include "xkbsrv.h"
 #include "privates.h"
 #include "xace.h"
@@ -268,9 +267,6 @@ AddInputDevice(ClientPtr client, DeviceProc deviceProc, Bool autoStart)
         return NULL;
     }
 
-    if (!dev)
-        return (DeviceIntPtr) NULL;
-
     dev->last.scroll = NULL;
     dev->last.touches = NULL;
     dev->id = devid;
@@ -285,7 +281,7 @@ AddInputDevice(ClientPtr client, DeviceProc deviceProc, Bool autoStart)
     dev->deviceGrab.grabTime = currentTime;
     dev->deviceGrab.ActivateGrab = ActivateKeyboardGrab;
     dev->deviceGrab.DeactivateGrab = DeactivateKeyboardGrab;
-    dev->deviceGrab.sync.event = calloc(1, sizeof(DeviceEvent));
+    dev->deviceGrab.sync.event = calloc(1, sizeof(InternalEvent));
 
     XkbSetExtension(dev, ProcessKeyboardEvent);
 
@@ -462,6 +458,7 @@ DisableDevice(DeviceIntPtr dev, BOOL sendevent)
         return FALSE;
 
     TouchEndPhysicallyActiveTouches(dev);
+    GestureEndActiveGestures(dev);
     ReleaseButtonsAndKeys(dev);
     SyncRemoveDeviceIdleTime(dev->idle_counter);
     dev->idle_counter = NULL;
@@ -1674,6 +1671,32 @@ InitTouchClassDeviceStruct(DeviceIntPtr device, unsigned int max_touches,
     return FALSE;
 }
 
+/**
+ * Sets up gesture capabilities on @device.
+ *
+ * @max_touches The maximum number of simultaneous touches, or 0 for unlimited.
+ */
+Bool
+InitGestureClassDeviceStruct(DeviceIntPtr device, unsigned int max_touches)
+{
+    GestureClassPtr g;
+
+    BUG_RETURN_VAL(device == NULL, FALSE);
+    BUG_RETURN_VAL(device->gesture != NULL, FALSE);
+
+    g = calloc(1, sizeof(*g));
+    if (!g)
+        return FALSE;
+
+    g->sourceid = device->id;
+    g->max_touches = max_touches;
+    GestureInitGestureInfo(&g->gesture);
+
+    device->gesture = g;
+
+    return TRUE;
+}
+
 /*
  * Check if the given buffer contains elements between low (inclusive) and
  * high (inclusive) only.
@@ -2816,5 +2839,28 @@ valuator_set_mode(DeviceIntPtr dev, int axis, int mode)
 
         for (i = 0; i < dev->valuator->numAxes; i++)
             dev->valuator->axes[i].mode = mode;
+    }
+}
+
+void
+DeliverDeviceClassesChangedEvent(int sourceid, Time time)
+{
+    DeviceIntPtr dev;
+    int num_events = 0;
+    InternalEvent dcce;
+
+    dixLookupDevice(&dev, sourceid, serverClient, DixWriteAccess);
+
+    if (!dev)
+        return;
+
+    /* UpdateFromMaster generates at most one event */
+    UpdateFromMaster(&dcce, dev, DEVCHANGE_POINTER_EVENT, &num_events);
+    BUG_WARN(num_events > 1);
+
+    if (num_events) {
+        dcce.any.time = time;
+        /* FIXME: This doesn't do anything */
+        dev->public.processInputProc(&dcce, dev);
     }
 }

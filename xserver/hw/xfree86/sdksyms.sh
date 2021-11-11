@@ -21,13 +21,13 @@ cat > sdksyms.c << EOF
 #include "picturestr.h"
 
 
-/* fb/Makefile.am -- module */
-/*
+/* fb/Makefile.am */
 #include "fb.h"
 #include "fbrop.h"
 #include "fboverlay.h"
-#include "wfbrename.h"
 #include "fbpict.h"
+/* wfb is still a module
+#include "wfbrename.h"
  */
 
 
@@ -71,6 +71,8 @@ cat > sdksyms.c << EOF
 /* hw/xfree86/int10/Makefile.am -- module */
 /*
 #include "xf86int10.h"
+#include "vbe.h"
+#include "vbeModes.h"
  */
 
 
@@ -121,7 +123,6 @@ cat > sdksyms.c << EOF
 
 /* hw/xfree86/common/Makefile.am */
 #include "compiler.h"
-#include "fourcc.h"
 #include "xf86.h"
 #include "xf86Module.h"
 #include "xf86Opt.h"
@@ -147,11 +148,7 @@ cat > sdksyms.c << EOF
 
 
 /* hw/xfree86/ramdac/Makefile.am */
-#include "BT.h"
-#include "IBM.h"
-#include "TI.h"
 #include "xf86Cursor.h"
-#include "xf86RamDac.h"
 
 
 /* hw/xfree86/shadowfb/Makefile.am -- module */
@@ -183,13 +180,6 @@ cat > sdksyms.c << EOF
 /* hw/xfree86/parser/Makefile.am */
 #include "xf86Parser.h"
 #include "xf86Optrec.h"
-
-
-/* hw/xfree86/vbe/Makefile.am -- module */
-/*
-#include "vbe.h"
-#include "vbeModes.h"
- */
 
 
 /* hw/xfree86/dri/Makefile.am -- module */
@@ -260,6 +250,7 @@ cat > sdksyms.c << EOF
 #include "exevents.h"
 #include "extension.h"
 #include "extnsionst.h"
+#include "fourcc.h"
 #include "gc.h"
 #include "gcstruct.h"
 #include "globals.h"
@@ -287,7 +278,6 @@ cat > sdksyms.c << EOF
 #include "scrnintstr.h"
 #include "selection.h"
 #include "servermd.h"
-#include "site.h"
 #include "validate.h"
 #include "window.h"
 #include "windowstr.h"
@@ -306,13 +296,16 @@ LC_ALL=C
 export LC_ALL
 ${CPP:-cpp} "$@" sdksyms.c > /dev/null || exit $?
 ${CPP:-cpp} "$@" sdksyms.c | ${AWK:-awk} -v topdir=$topdir '
+function basename(file) {
+    sub(".*/", "", file)
+    return file
+}
 BEGIN {
     sdk = 0;
     print("/*");
     print(" * These symbols are referenced to ensure they");
     print(" * will be available in the X Server binary.");
     print(" */");
-    printf("/* topdir=%s */\n", topdir);
     print("_X_HIDDEN void *xorg_symbols[] = {");
 
     printf("sdksyms.c:") > "sdksyms.dep";
@@ -341,7 +334,7 @@ BEGIN {
 	# remove quotes
 	gsub(/"/, "", $3);
 	line = $2;
-	header = $3;
+	header = basename($3);
 	if (! headers[$3]) {
 	    printf(" \\\n  %s", $3) >> "sdksyms.dep";
 	    headers[$3] = 1;

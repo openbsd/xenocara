@@ -621,6 +621,7 @@ DuplicateModule(ModuleDescPtr mod, ModuleDescPtr parent)
 
 static const char *compiled_in_modules[] = {
     "ddc",
+    "fb",
     "i2c",
     "ramdac",
     "dbe",
@@ -695,6 +696,10 @@ LoadModule(const char *module, void *options, const XF86ModReqInfo *modreq,
         LogWrite(3, "\n");
         m = (char *) module;
     }
+
+    /* Backward compatibility, vbe and int10 are merged into int10 now */
+    if (!strcmp(m, "vbe"))
+        m = name = strdup("int10");
 
     for (cim = compiled_in_modules; *cim; cim++)
         if (!strcmp(m, *cim)) {
@@ -771,7 +776,7 @@ LoadModule(const char *module, void *options, const XF86ModReqInfo *modreq,
             *errmaj = LDR_NOMEM;
         goto LoadModule_fail;
     }
-    initdata = LoaderSymbolFromModule(ret->handle, p);
+    initdata = LoaderSymbolFromModule(ret, p);
     if (initdata) {
         ModuleSetupProc setup;
         ModuleTearDownProc teardown;

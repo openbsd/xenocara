@@ -239,9 +239,6 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
-/* Define to 1 if libudev is available. */
-#undef HAVE_LIBUDEV
-
 /* Have libunwind support */
 #undef HAVE_LIBUNWIND
 
@@ -325,6 +322,9 @@
 
 /* Have sigaction function */
 #undef HAVE_SIGACTION
+
+/* Define to 1 if you have the `sigprocmask' function. */
+#undef HAVE_SIGPROCMASK
 
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
@@ -473,12 +473,6 @@
 
 /* Define to 1 if no local socket credentials interface exists */
 #undef NO_LOCAL_CLIENT_CRED
-
-/* Operating System Name */
-#undef OSNAME
-
-/* Operating System Vendor */
-#undef OSVENDOR
 
 /* Name of package */
 #undef PACKAGE
@@ -686,9 +680,6 @@
 /* Build DRI extension */
 #undef XF86DRI
 
-/* Support APM/ACPI power management in the server */
-#undef XF86PM
-
 /* Support XFree86 Video Mode extension */
 #undef XF86VIDMODE
 
@@ -781,12 +772,6 @@
 
 /* Short vendor name */
 #undef XVENDORNAMESHORT
-
-/* Build xwayland with eglstream support */
-#undef XWL_HAS_EGLSTREAM
-
-/* Build xwayland with glamor support */
-#undef XWL_HAS_GLAMOR
 
 /* byte order */
 #undef X_BYTE_ORDER

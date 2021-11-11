@@ -49,6 +49,7 @@
 #include "Pci.h"
 #include "xf86platformBus.h"
 #include "xf86Config.h"
+#include "xf86Crtc.h"
 
 #include "randrstr.h"
 int platformSlotClaimed;
@@ -289,7 +290,7 @@ xf86platformProbe(void)
     for (i = 0; i < xf86_num_platform_devices; i++) {
         char *busid = xf86_platform_odev_attributes(i)->busid;
 
-        if (pci && (strncmp(busid, "pci:", 4) == 0)) {
+        if (pci && busid && (strncmp(busid, "pci:", 4) == 0)) {
             platform_find_pci_info(&xf86_platform_devices[i], busid);
         }
 
@@ -364,10 +365,12 @@ xf86MergeOutputClassOptions(int entityIndex, void **options)
         break;
     case BUS_PCI:
         for (i = 0; i < xf86_num_platform_devices; i++) {
-            if (MATCH_PCI_DEVICES(xf86_platform_devices[i].pdev,
-                                  entity->bus.id.pci)) {
-                dev = &xf86_platform_devices[i];
-                break;
+            if (xf86_platform_devices[i].pdev) {
+                if (MATCH_PCI_DEVICES(xf86_platform_devices[i].pdev,
+                                      entity->bus.id.pci)) {
+                    dev = &xf86_platform_devices[i];
+                    break;
+                }
             }
         }
         break;
@@ -533,21 +536,34 @@ xf86platformProbeDev(DriverPtr drvp)
     const unsigned numDevs = xf86MatchDevice(drvp->driverName, &devList);
     int i, j;
 
-    /* find the main device or any device specificed in xorg.conf */
+    /* find the main device or any device specified in xorg.conf */
     for (i = 0; i < numDevs; i++) {
+        const char *devpath;
+
         /* skip inactive devices */
         if (!devList[i]->active)
             continue;
 
+        /* This is specific to modesetting. */
+        devpath = xf86FindOptionValue(devList[i]->options, "kmsdev");
+
         for (j = 0; j < xf86_num_platform_devices; j++) {
-            if (devList[i]->busID && *devList[i]->busID) {
+            if (devpath && *devpath) {
+                if (strcmp(xf86_platform_devices[j].attribs->path, devpath) == 0)
+                    break;
+            } else if (devList[i]->busID && *devList[i]->busID) {
                 if (xf86PlatformDeviceCheckBusID(&xf86_platform_devices[j], devList[i]->busID))
                     break;
             }
             else {
                 /* for non-seat0 servers assume first device is the master */
-                if (ServerIsNotSeat0())
+                if (ServerIsNotSeat0()) {
                     break;
+                } else {
+                    /* Accept the device if the driver is simpledrm */
+                    if (strcmp(xf86_platform_devices[j].attribs->driver, "simpledrm") == 0)
+                        break;
+                }
 
                 if (xf86IsPrimaryPlatform(&xf86_platform_devices[j]))
                     break;
@@ -597,7 +613,7 @@ xf86platformAddGPUDevices(DriverPtr drvp)
 int
 xf86platformAddDevice(int index)
 {
-    int i, old_screens, scr_index;
+    int i, old_screens, scr_index, scrnum;
     DriverPtr drvp = NULL;
     screenLayoutPtr layout;
     static const char *hotplug_driver_name = "modesetting";
@@ -663,11 +679,15 @@ xf86platformAddDevice(int index)
        xf86NumGPUScreens = old_screens;
        return -1;
    }
-   /* attach unbound to 0 protocol screen */
-   AttachUnboundGPU(xf86Screens[0]->pScreen, xf86GPUScreens[i]->pScreen);
+   /* attach unbound to the configured protocol screen (or 0) */
+   scrnum = xf86GPUScreens[i]->confScreen->screennum;
+   AttachUnboundGPU(xf86Screens[scrnum]->pScreen, xf86GPUScreens[i]->pScreen);
+   if (xf86Info.autoBindGPU)
+       RRProviderAutoConfigGpuScreen(xf86ScrnToScreen(xf86GPUScreens[i]),
+                                     xf86ScrnToScreen(xf86Screens[scrnum]));
 
-   RRResourcesChanged(xf86Screens[0]->pScreen);
-   RRTellChanged(xf86Screens[0]->pScreen);
+   RRResourcesChanged(xf86Screens[scrnum]->pScreen);
+   RRTellChanged(xf86Screens[scrnum]->pScreen);
 
    return 0;
 }
@@ -676,7 +696,7 @@ void
 xf86platformRemoveDevice(int index)
 {
     EntityPtr entity;
-    int ent_num, i, j;
+    int ent_num, i, j, scrnum;
     Bool found;
 
     for (ent_num = 0; ent_num < xf86NumEntities; ent_num++) {
@@ -703,6 +723,8 @@ xf86platformRemoveDevice(int index)
         goto out;
     }
 
+    scrnum = xf86GPUScreens[i]->confScreen->screennum;
+
     xf86GPUScreens[i]->pScreen->CloseScreen(xf86GPUScreens[i]->pScreen);
 
     RemoveGPUScreen(xf86GPUScreens[i]->pScreen);
@@ -712,8 +734,8 @@ xf86platformRemoveDevice(int index)
 
     xf86_remove_platform_device(index);
 
-    RRResourcesChanged(xf86Screens[0]->pScreen);
-    RRTellChanged(xf86Screens[0]->pScreen);
+    RRResourcesChanged(xf86Screens[scrnum]->pScreen);
+    RRTellChanged(xf86Screens[scrnum]->pScreen);
  out:
     return;
 }

@@ -54,7 +54,8 @@ The X server may also be started directly by the user, though this
 method is usually reserved for testing and is not recommended for
 normal operation.  On some platforms, the user must have special
 permission to start the X server, often because access to certain
-devices (e.g. \fI/dev/mouse\fP) is restricted.
+devices (e.g. \fI/dev/mouse\fP) is restricted.  Where applicable, the
+X server notifies systemd when it is ready to process requests.
 .PP
 When the X server starts up, it typically takes over the display.  If
 you are running on a workstation whose console is the display, you may
@@ -163,11 +164,8 @@ a list of accepted extension names is printed.
 .B \-f \fIvolume\fP
 sets beep (bell) volume (allowable range: 0-100).
 .TP 8
-.B \-fc \fIcursorFont\fP
-sets default cursor font.
-.TP 8
-.B \-fn \fIfont\fP
-sets the default font.
+.B \-fakescreenfps \fFps\fP
+sets fake presenter screen default fps (allowable range: 1-600).
 .TP 8
 .B \-fp \fIfontPath\fP
 sets the search path for fonts.  This path is a comma separated list
@@ -268,14 +266,14 @@ connected to the system.
 sets pointer acceleration threshold in pixels (i.e. after how many pixels
 pointer acceleration should take effect).
 .TP 8
-.B \-terminate
+.B \-terminate \fI[delay]\fP
 causes the server to terminate at server reset, instead of continuing to run.
 This overrides a previous
 .B \-noreset
 command line option.
-.TP 8
-.B \-to \fIseconds\fP
-sets default connection timeout in seconds.
+If a delay in seconds is specified, the server waits for at least
+the delay. At the end of this grace period if no client is
+connected, the server terminates immediately.
 .TP 8
 .B \-tst
 disables all testing extensions (e.g., XTEST, XTrap, XTestExtension1, RECORD).
@@ -288,17 +286,6 @@ sets video-off screen-saver preference.
 .TP 8
 .B \-v
 sets video-on screen-saver preference.
-.TP 8
-.B \-wm
-forces the default backing-store of all windows to be WhenMapped.  This
-is a backdoor way of getting backing-store to apply to all windows.
-Although all mapped windows will have backing store, the backing store
-attribute value reported by the server for a window will be the last
-value established by a client.  If it has never been set by a client,
-the server will report the default value, NotUseful.  This behavior is
-required by the X protocol, which allows the server to exceed the
-client's backing store expectations but does not provide a way to tell
-the client that it is doing so.
 .TP 8
 .B \-wr
 sets the default root window to solid white instead of the standard root weave
@@ -621,7 +608,7 @@ Controlling the server once started: \fIxset\fP(1), \fIxsetroot\fP(1),
 \fIxhost\fP(1), \fIxinput\fP(1), \fIxrandr\fP(1)
 .PP
 Server-specific man pages:
-\fIXorg\fP(1), \fIXdmx\fP(1), \fIXephyr\fP(1), \fIXnest\fP(1),
+\fIXorg\fP(1), \fIXephyr\fP(1), \fIXnest\fP(1),
 \fIXvfb\fP(1), \fIXquartz\fP(1), \fIXWin\fP(1).
 .PP
 Server internal documentation:

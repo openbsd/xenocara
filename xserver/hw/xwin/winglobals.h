@@ -50,6 +50,7 @@ extern Bool g_fLogInited;
 
 extern Bool g_fAuthEnabled;
 extern Bool g_fXdmcpEnabled;
+extern Bool g_fCompositeAlpha;
 
 extern Bool g_fNoHelpMessageBox;
 extern Bool g_fNativeGl;
@@ -69,7 +70,6 @@ typedef int (*winDispatchProcPtr) (ClientPtr);
  * Wrapped DIX functions
  */
 extern winDispatchProcPtr winProcEstablishConnectionOrig;
-extern Bool g_fUnicodeClipboard;
 extern Bool g_fClipboard;
 extern Bool g_fClipboardStarted;
 
@@ -81,10 +81,6 @@ extern DWORD g_dwCurrentThreadID;
 
 extern Bool g_fKeyboardHookLL;
 extern Bool g_fButton[3];
-
-#ifdef XWIN_MULTIWINDOWEXTWM
-extern Bool g_fNoConfigureWindow;
-#endif
 
 extern pthread_mutex_t g_pmTerminating;
 

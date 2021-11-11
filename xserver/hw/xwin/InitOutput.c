@@ -35,7 +35,6 @@ from The Open Group.
 #include "winmsg.h"
 #include "winconfig.h"
 #include "winprefs.h"
-#include "X11/Xlocale.h"
 #ifdef DPMSExtension
 #include "dpmsproc.h"
 #endif
@@ -66,6 +65,7 @@ typedef WINAPI HRESULT(*SHGETFOLDERPATHPROC) (HWND hwndOwner,
 #include "glx/glwindows.h"
 #include "dri/windowsdri.h"
 #endif
+#include "winauth.h"
 
 /*
  * References to external symbols
@@ -111,6 +111,8 @@ static PixmapFormatRec g_PixmapFormats[] = {
     {32, 32, BITMAP_SCANLINE_PAD}
 };
 
+static Bool noDriExtension;
+
 static const ExtensionModule xwinExtensions[] = {
 #ifdef GLXEXT
 #ifdef XWIN_WINDOWS_DRI
@@ -139,7 +141,7 @@ void XwinExtensionInit(void)
 #if defined(DDXBEFORERESET)
 /*
  * Called right before KillAllClients when the server is going to reset,
- * allows us to shutdown our seperate threads cleanly.
+ * allows us to shutdown our separate threads cleanly.
  */
 
 void
@@ -247,16 +249,6 @@ ddxGiveUp(enum ExitCode error)
     }
 
     winDebug("ddxGiveUp - End\n");
-}
-
-/* See Porting Layer Definition - p. 57 */
-void
-AbortDDX(enum ExitCode error)
-{
-#if CYGDEBUG
-    winDebug("AbortDDX\n");
-#endif
-    ddxGiveUp(error);
 }
 
 #ifdef __CYGWIN__
@@ -726,6 +718,13 @@ winUseMsg(void)
            "\tthe updated region when num_boxes, or more, are in the\n"
            "\tupdated region.\n");
 
+    ErrorF("-[no]compositealpha\n"
+           "\tX windows with per-pixel alpha are composited into the Windows desktop.\n");
+    ErrorF("-[no]compositewm\n"
+           "\tUse the Composite extension to keep a bitmap image of each top-level\n"
+           "\tX window, so window contents which are occluded show correctly in\n"
+           "\ttask bar and task switcher previews.\n");
+
 #ifdef XWIN_XF86CONFIG
     ErrorF("-config\n" "\tSpecify a configuration file.\n");
 
@@ -760,6 +759,8 @@ winUseMsg(void)
     ErrorF("-[no]hostintitle\n"
            "\tIn multiwindow mode, add remote host names to window titles.\n");
 
+    ErrorF("-icon icon_specifier\n" "\tSet screen window icon in windowed mode.\n");
+
     ErrorF("-ignoreinput\n" "\tIgnore keyboard and mouse input.\n");
 
 #ifdef XWIN_XF86CONFIG
@@ -793,17 +794,9 @@ winUseMsg(void)
 
     ErrorF("-multiwindow\n" "\tRun the server in multi-window mode.\n");
 
-#ifdef XWIN_MULTIWINDOWEXTWM
-    ErrorF("-mwextwm\n"
-           "\tRun the server in multi-window external window manager mode.\n");
-#endif
-
     ErrorF("-nodecoration\n"
            "\tDo not draw a window border, title bar, etc.  Windowed\n"
            "\tmode only.\n");
-
-    ErrorF("-nounicodeclipboard\n"
-           "\tDo not use Unicode clipboard even if on a NT-based platform.\n");
 
     ErrorF("-[no]primary\n"
            "\tWhen clipboard integration is enabled, map the X11 PRIMARY selection\n"
@@ -813,7 +806,7 @@ winUseMsg(void)
            "\tSpecify an optional refresh rate to use in fullscreen mode\n"
            "\twith a DirectDraw engine.\n");
 
-    ErrorF("-resize=none|scrollbars|randr"
+    ErrorF("-resize=none|scrollbars|randr\n"
            "\tIn windowed mode, [don't] allow resizing of the window. 'scrollbars'\n"
            "\tmode gives the window scrollbars as needed, 'randr' mode uses the RANR\n"
            "\textension to resize the X screen.  'randr' is the default.\n");
@@ -989,8 +982,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
           for (iMonitor = 1; ; iMonitor++)
             {
               struct GetMonitorInfoData data;
-              QueryMonitor(iMonitor, &data);
-              if (data.bMonitorSpecifiedExists)
+              if (QueryMonitor(iMonitor, &data))
                 {
                   MONITORINFO mi;
                   mi.cbSize = sizeof(MONITORINFO);
@@ -1027,14 +1019,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     if (g_fXdmcpEnabled || g_fAuthEnabled)
         winGenerateAuthorization();
 
-    /* Perform some one time initialization */
-    if (1 == serverGeneration) {
-        /*
-         * setlocale applies to all threads in the current process.
-         * Apply locale specified in LANG environment variable.
-         */
-        setlocale(LC_ALL, "");
-    }
 
 #if CYGDEBUG || YES
     winDebug("InitOutput - Returning.\n");

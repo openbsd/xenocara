@@ -74,43 +74,18 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xwinconfigdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
-	winauth.c winblock.c wincmap.c winconfig.c wincreatewnd.c \
-	wincursor.c windialogs.c winengine.c winerror.c winglobals.c \
-	winkeybd.c winkeyhook.c winmisc.c winmonitors.c winmouse.c \
-	winmsg.c winmsgwindow.c winmultiwindowclass.c \
-	winmultiwindowicons.c winos.c winprefs.c winprefsyacc.y \
-	winprefslex.l winprocarg.c winscrinit.c winshadddnl.c \
-	winshadgdi.c wintaskbar.c wintrayicon.c winvalargs.c \
-	winwakeup.c winwindow.c winwndproc.c ddraw.h winconfig.h win.h \
-	winglobals.h winkeybd.h winkeynames.h winlayouts.h \
-	winmessages.h winmonitors.h winmsg.h winms.h \
-	winmultiwindowclass.h winmultiwindowicons.h winprefs.h \
-	winresource.h winwindow.h windisplay.c windisplay.h XWin.rc \
-	$(top_srcdir)/mi/miinitext.c winclipboardinit.c \
-	winclipboardwrappers.c winmultiwindowshape.c \
-	winmultiwindowwindow.c winmultiwindowwm.c \
-	winmultiwindowwndproc.c propertystore.h winSetAppUserModelID.c \
-	winwin32rootless.c winwin32rootlesswindow.c \
-	winwin32rootlesswndproc.c winwindowswm.c winrandr.c
 am__objects_1 = winclipboardinit.$(OBJEXT) \
 	winclipboardwrappers.$(OBJEXT)
 am__objects_2 = winmultiwindowshape.$(OBJEXT) \
 	winmultiwindowwindow.$(OBJEXT) winmultiwindowwm.$(OBJEXT) \
 	winmultiwindowwndproc.$(OBJEXT) winSetAppUserModelID.$(OBJEXT)
-@XWIN_MULTIWINDOWEXTWM_TRUE@am__objects_3 =  \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootless.$(OBJEXT) \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswindow.$(OBJEXT) \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswndproc.$(OBJEXT) \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwindowswm.$(OBJEXT)
-am__objects_4 = winrandr.$(OBJEXT)
-am__objects_5 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
+am__objects_3 = winrandr.$(OBJEXT)
+am__objects_4 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winallpriv.$(OBJEXT) winauth.$(OBJEXT) winblock.$(OBJEXT) \
 	wincmap.$(OBJEXT) winconfig.$(OBJEXT) wincreatewnd.$(OBJEXT) \
 	wincursor.$(OBJEXT) windialogs.$(OBJEXT) winengine.$(OBJEXT) \
@@ -125,8 +100,8 @@ am__objects_5 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	wintrayicon.$(OBJEXT) winvalargs.$(OBJEXT) winwakeup.$(OBJEXT) \
 	winwindow.$(OBJEXT) winwndproc.$(OBJEXT) windisplay.$(OBJEXT) \
 	XWin.$(OBJEXT) miinitext.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4)
-am_XWin_OBJECTS = $(am__objects_5)
+	$(am__objects_2) $(am__objects_3)
+am_XWin_OBJECTS = $(am__objects_4)
 XWin_OBJECTS = $(am_XWin_OBJECTS)
 am__DEPENDENCIES_1 = $(top_builddir)/pseudoramiX/libPseudoramiX.la \
 	$(top_builddir)/Xi/libXistubs.la
@@ -192,7 +167,7 @@ am__v_YACC_ = $(am__v_YACC_@AM_DEFAULT_V@)
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
 SOURCES = $(XWin_SOURCES)
-DIST_SOURCES = $(am__XWin_SOURCES_DIST)
+DIST_SOURCES = $(XWin_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -283,8 +258,6 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
-BUILD_DATE = @BUILD_DATE@
-BUILD_TIME = @BUILD_TIME@
 BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 BUNDLE_VERSION = @BUNDLE_VERSION@
 BUNDLE_VERSION_STRING = @BUNDLE_VERSION_STRING@
@@ -319,14 +292,6 @@ DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
-DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
-DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
-DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
-DMXMODULES_LIBS = @DMXMODULES_LIBS@
-DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
-DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
-DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
-DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
 DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -400,6 +365,8 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
 LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
+LIBXCVT_CFLAGS = @LIBXCVT_CFLAGS@
+LIBXCVT_LIBS = @LIBXCVT_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -452,7 +419,6 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
-SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -476,29 +442,13 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
-WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
-WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
-WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
-WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
-WAYLAND_SCANNER = @WAYLAND_SCANNER@
-WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
-WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
-WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
-WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
-X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
-X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
 XCONFIGDIR = @XCONFIGDIR@
 XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
-XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
-XDMXCONFIG_DEP_LIBS = @XDMXCONFIG_DEP_LIBS@
-XDMX_CFLAGS = @XDMX_CFLAGS@
-XDMX_LIBS = @XDMX_LIBS@
-XDMX_SYS_LIBS = @XDMX_SYS_LIBS@
 XEPHYR_CFLAGS = @XEPHYR_CFLAGS@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
@@ -536,8 +486,6 @@ XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FEED_URL = @XQUARTZ_SPARKLE_FEED_URL@
-XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
-XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
@@ -548,14 +496,8 @@ XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
 XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
-XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
-XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
-XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
-XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
-XWAYLAND_LIBS = @XWAYLAND_LIBS@
-XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@ $(top_builddir)/pseudoramiX/libPseudoramiX.la \
@@ -648,16 +590,7 @@ SRCS_MULTIWINDOW = \
 	propertystore.h \
 	winSetAppUserModelID.c
 
-MULTIWINDOW_SYS_LIBS = -lshlwapi -lole32
-@XWIN_MULTIWINDOWEXTWM_TRUE@SRCS_MULTIWINDOWEXTWM = \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootless.c \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswindow.c \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswndproc.c \
-@XWIN_MULTIWINDOWEXTWM_TRUE@	winwindowswm.c
-
-@XWIN_MULTIWINDOWEXTWM_TRUE@DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
-@XWIN_MULTIWINDOWEXTWM_TRUE@MULTIWINDOWEXTWM_LIBS = $(top_builddir)/miext/rootless/librootless.la
-@XWIN_MULTIWINDOWEXTWM_TRUE@MULTIWINDOWEXTWM_CFLAGS = -I$(top_srcdir)/miext/rootless
+MULTIWINDOW_SYS_LIBS = -lshlwapi -lole32 -ldwmapi
 SRCS_RANDR = \
 	winrandr.c
 
@@ -717,21 +650,19 @@ SRCS = InitInput.c \
 	windisplay.h \
 	XWin.rc \
 	$(top_srcdir)/mi/miinitext.c \
+	$(top_srcdir)/mi/miinitext.h \
 	$(SRCS_CLIPBOARD) \
 	$(SRCS_MULTIWINDOW) \
-	$(SRCS_MULTIWINDOWEXTWM) \
 	$(SRCS_RANDR)
 
 XWin_SOURCES = $(SRCS)
 XWin_DEPENDENCIES = \
-	$(MULTIWINDOWEXTWM_LIBS) \
 	$(XWIN_GLX_LIBS) \
 	$(XWIN_LIBS) \
 	$(CLIPBOARD_LIBS) \
 	$(XSERVER_LIBS)
 
 XWin_LDADD = \
-	$(MULTIWINDOWEXTWM_LIBS) \
 	$(XWIN_GLX_LIBS) \
 	$(XWIN_LIBS) \
 	$(CLIPBOARD_LIBS) \
@@ -749,7 +680,6 @@ AM_LFLAGS = -i
 AM_CFLAGS = -DHAVE_XWIN_CONFIG_H $(DIX_CFLAGS) \
             $(XWINMODULES_CFLAGS) \
             -I$(top_srcdir) \
-            $(MULTIWINDOWEXTWM_CFLAGS) \
             -Wno-bad-function-cast
 
 xwinconfigdir = $(sysconfdir)/X11
@@ -897,11 +827,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wintrayicon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winvalargs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwakeup.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwin32rootless.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwin32rootlesswindow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwin32rootlesswndproc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwindow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwindowswm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winwndproc.Po@am__quote@
 
 .c.o:

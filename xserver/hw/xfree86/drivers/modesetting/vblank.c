@@ -120,7 +120,8 @@ static RRCrtcPtr
 rr_crtc_covering_box(ScreenPtr pScreen, BoxPtr box, Bool screen_is_xf86_hint)
 {
     rrScrPrivPtr pScrPriv;
-    RRCrtcPtr crtc, best_crtc;
+    RROutputPtr primary_output;
+    RRCrtcPtr crtc, best_crtc, primary_crtc;
     int coverage, best_coverage;
     int c;
     BoxRec crtc_box, cover_box;
@@ -136,6 +137,11 @@ rr_crtc_covering_box(ScreenPtr pScreen, BoxPtr box, Bool screen_is_xf86_hint)
     if (!pScrPriv)
         return NULL;
 
+    primary_crtc = NULL;
+    primary_output = RRFirstOutput(pScreen);
+    if (primary_output)
+        primary_crtc = primary_output->crtc;
+
     for (c = 0; c < pScrPriv->numCrtcs; c++) {
         crtc = pScrPriv->crtcs[c];
 
@@ -146,7 +152,8 @@ rr_crtc_covering_box(ScreenPtr pScreen, BoxPtr box, Bool screen_is_xf86_hint)
         rr_crtc_box(crtc, &crtc_box);
         box_intersect(&cover_box, &crtc_box, box);
         coverage = box_area(&cover_box);
-        if (coverage > best_coverage) {
+        if ((coverage > best_coverage) ||
+            (coverage == best_coverage && crtc == primary_crtc)) {
             best_crtc = crtc;
             best_coverage = coverage;
         }
@@ -156,17 +163,17 @@ rr_crtc_covering_box(ScreenPtr pScreen, BoxPtr box, Bool screen_is_xf86_hint)
 }
 
 static RRCrtcPtr
-rr_crtc_covering_box_on_slave(ScreenPtr pScreen, BoxPtr box)
+rr_crtc_covering_box_on_secondary(ScreenPtr pScreen, BoxPtr box)
 {
     if (!pScreen->isGPU) {
-        ScreenPtr slave;
+        ScreenPtr secondary;
         RRCrtcPtr crtc = NULL;
 
-        xorg_list_for_each_entry(slave, &pScreen->slave_list, slave_head) {
-            if (!slave->is_output_slave)
+        xorg_list_for_each_entry(secondary, &pScreen->secondary_list, secondary_head) {
+            if (!secondary->is_output_secondary)
                 continue;
 
-            crtc = rr_crtc_covering_box(slave, box, FALSE);
+            crtc = rr_crtc_covering_box(secondary, box, FALSE);
             if (crtc)
                 return crtc;
         }
@@ -208,7 +215,7 @@ ms_randr_crtc_covering_drawable(DrawablePtr pDraw)
 
     crtc = rr_crtc_covering_box(pScreen, &box, TRUE);
     if (!crtc) {
-        crtc = rr_crtc_covering_box_on_slave(pScreen, &box);
+        crtc = rr_crtc_covering_box_on_secondary(pScreen, &box);
     }
     return crtc;
 }
@@ -349,7 +356,7 @@ ms_kernel_msc_to_crtc_msc(xf86CrtcPtr crtc, uint64_t sequence, Bool is64bit)
      * but update the 32-bit tracking variables with reliable ground truth.
      *
      * With 64-Bit api in use, the only !is64bit input is from pageflip events,
-     * and any pageflip event is usually preceeded by some is64bit input from
+     * and any pageflip event is usually preceded by some is64bit input from
      * swap scheduling, so this should provide reliable mapping for pageflip
      * events based on true 64-bit input as baseline as well.
      */

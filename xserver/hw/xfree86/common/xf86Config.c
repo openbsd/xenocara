@@ -619,7 +619,6 @@ configFiles(XF86ConfFilesPtr fileconf)
 }
 
 typedef enum {
-    FLAG_NOTRAPSIGNALS,
     FLAG_DONTVTSWITCH,
     FLAG_DONTZAP,
     FLAG_DONTZOOM,
@@ -643,6 +642,7 @@ typedef enum {
     FLAG_DRI2,
     FLAG_USE_SIGIO,
     FLAG_AUTO_ADD_GPU,
+    FLAG_AUTO_BIND_GPU,
     FLAG_MAX_CLIENTS,
     FLAG_IGLX,
     FLAG_DEBUG,
@@ -653,8 +653,6 @@ typedef enum {
  * if the parser found the option in the config file.
  */
 static OptionInfoRec FlagOptions[] = {
-    {FLAG_NOTRAPSIGNALS, "NoTrapSignals", OPTV_BOOLEAN,
-     {0}, FALSE},
     {FLAG_DONTVTSWITCH, "DontVTSwitch", OPTV_BOOLEAN,
      {0}, FALSE},
     {FLAG_DONTZAP, "DontZap", OPTV_BOOLEAN,
@@ -699,6 +697,8 @@ static OptionInfoRec FlagOptions[] = {
      {0}, FALSE},
     {FLAG_AUTO_ADD_GPU, "AutoAddGPU", OPTV_BOOLEAN,
      {0}, FALSE},
+    {FLAG_AUTO_BIND_GPU, "AutoBindGPU", OPTV_BOOLEAN,
+     {0}, FALSE},
     {FLAG_MAX_CLIENTS, "MaxClients", OPTV_INTEGER,
      {0}, FALSE },
     {FLAG_IGLX, "IndirectGLX", OPTV_BOOLEAN,
@@ -737,7 +737,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 
     xf86ProcessOptions(-1, optp, FlagOptions);
 
-    xf86GetOptValBool(FlagOptions, FLAG_NOTRAPSIGNALS, &xf86Info.notrapSignals);
     xf86GetOptValBool(FlagOptions, FLAG_DONTVTSWITCH, &xf86Info.dontVTSwitch);
     xf86GetOptValBool(FlagOptions, FLAG_DONTZAP, &xf86Info.dontZap);
     xf86GetOptValBool(FlagOptions, FLAG_DONTZOOM, &xf86Info.dontZoom);
@@ -779,6 +778,22 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     }
     xf86Msg(from, "%sutomatically adding GPU devices\n",
             xf86Info.autoAddGPU ? "A" : "Not a");
+
+    if (xf86AutoBindGPUDisabled) {
+        xf86Info.autoBindGPU = FALSE;
+        from = X_CMDLINE;
+    }
+    else if (xf86IsOptionSet(FlagOptions, FLAG_AUTO_BIND_GPU)) {
+        xf86GetOptValBool(FlagOptions, FLAG_AUTO_BIND_GPU,
+                          &xf86Info.autoBindGPU);
+        from = X_CONFIG;
+    }
+    else {
+        from = X_DEFAULT;
+    }
+    xf86Msg(from, "%sutomatically binding GPU devices\n",
+            xf86Info.autoBindGPU ? "A" : "Not a");
+
     /*
      * Set things up based on the config file information.  Some of these
      * settings may be overridden later when the command line options are
@@ -1723,15 +1738,34 @@ configScreen(confScreenPtr screenp, XF86ConfScreenPtr conf_screen, int scrnum,
 
     if (auto_gpu_device && conf_screen->num_gpu_devices == 0 &&
         xf86configptr->conf_device_lst) {
-        XF86ConfDevicePtr sdevice = xf86configptr->conf_device_lst->list.next;
+        /* Loop through the entire device list and skip the primary device
+         * assigned to the screen. This is important because there are two
+         * cases where the assigned primary device is not the first device in
+         * the device list. Firstly, if the first device in the list is assigned
+         * to a different seat than this X server, it will not have been picked
+         * by the previous FIND_SUITABLE. Secondly, if the device was explicitly
+         * assigned in the config but there is still only one screen, this code
+         * path is executed but the explicitly assigned device may not be the
+         * first device in the list. */
+        XF86ConfDevicePtr ptmp, sdevice = xf86configptr->conf_device_lst;
 
         for (i = 0; i < MAX_GPUDEVICES; i++) {
             if (!sdevice)
                 break;
 
-            FIND_SUITABLE (XF86ConfDevicePtr, sdevice, conf_screen->scrn_gpu_devices[i]);
-            if (!conf_screen->scrn_gpu_devices[i])
+            FIND_SUITABLE (XF86ConfDevicePtr, sdevice, ptmp);
+            if (!ptmp)
                 break;
+
+            /* skip the primary device on the screen */
+            if (ptmp != conf_screen->scrn_device) {
+                conf_screen->scrn_gpu_devices[i] = ptmp;
+            } else {
+                sdevice = ptmp->list.next;
+                i--; /* run the next iteration with the same index */
+                continue;
+            }
+
             screenp->gpu_devices[i] = xnfcalloc(1, sizeof(GDevRec));
             if (configDevice(screenp->gpu_devices[i], conf_screen->scrn_gpu_devices[i], TRUE, TRUE)) {
                 screenp->gpu_devices[i]->myScreenSection = screenp;

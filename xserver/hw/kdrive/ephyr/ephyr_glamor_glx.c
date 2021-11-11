@@ -42,7 +42,7 @@
 #include <X11/Xproto.h>
 
 /* until we need geometry shaders GL3.1 should suffice. */
-/* Xephyr has it's own copy of this for build reasons */
+/* Xephyr has its own copy of this for build reasons */
 #define GLAMOR_GL_CORE_VER_MAJOR 3
 #define GLAMOR_GL_CORE_VER_MINOR 1
 /** @{
@@ -321,7 +321,7 @@ ephyr_glamor_glx_screen_init(xcb_window_t win)
             ctx = glXCreateContextAttribsARB(dpy, fb_config, NULL, True,
                                              context_attribs);
         } else {
-            FatalError("Xephyr -glamor_gles2 rquires "
+            FatalError("Xephyr -glamor_gles2 requires "
                        "GLX_EXT_create_context_es2_profile\n");
         }
     } else {

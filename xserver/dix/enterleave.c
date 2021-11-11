@@ -56,7 +56,7 @@
  *
  * For a full description of the focus in/out model from a window's
  * perspective, see
- * http://lists.freedesktop.org/archives/xorg/2008-December/041740.html
+ * https://lists.freedesktop.org/archives/xorg/2008-December/041684.html
  *
  * Additional notes:
  * - The core protocol spec says that "In a LeaveNotify event, if a child of the
@@ -130,7 +130,7 @@ PointerWin(DeviceIntPtr dev)
 
 /**
  * Search for the first window below 'win' that has a pointer directly within
- * it's boundaries (excluding boundaries of its own descendants).
+ * its boundaries (excluding boundaries of its own descendants).
  *
  * @return The child window that has the pointer within its boundaries or
  *         NULL.
@@ -150,7 +150,7 @@ FirstPointerChild(WindowPtr win)
 
 /**
  * Search for the first window below 'win' that has a focus directly within
- * it's boundaries (excluding boundaries of its own descendants).
+ * its boundaries (excluding boundaries of its own descendants).
  *
  * @return The child window that has the pointer within its boundaries or
  *         NULL.

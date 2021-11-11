@@ -303,8 +303,8 @@ ProcShmQueryVersion(ClientPtr client)
 }
 
 /*
- * Simulate the access() system call for a shared memory segement,
- * using the credentials from the client if available
+ * Simulate the access() system call for a shared memory segment,
+ * using the credentials from the client if available.
  */
 static int
 shm_access(ClientPtr client, SHMPERM_TYPE * perm, int readonly)
@@ -1248,7 +1248,7 @@ shm_tmpfile(void)
         int flags = fcntl(fd, F_GETFD);
         if (flags != -1) {
             flags |= FD_CLOEXEC;
-            (void) fcntl(fd, F_SETFD, &flags);
+            (void) fcntl(fd, F_SETFD, flags);
         }
 #endif
         return fd;

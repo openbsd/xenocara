@@ -43,7 +43,7 @@ from The Open Group.
 #include "shmint.h"
 #endif
 
-/* We use this structure to propogate some information from miScreenInit to
+/* We use this structure to propagate some information from miScreenInit to
  * miCreateScreenResources.  miScreenInit allocates the structure, fills it
  * in, and puts it into pScreen->devPrivate.  miCreateScreenResources
  * extracts the info and frees the structure.  We could've accomplished the
@@ -124,11 +124,18 @@ miCloseScreen(ScreenPtr pScreen)
     return ((*pScreen->DestroyPixmap) ((PixmapPtr) pScreen->devPrivate));
 }
 
+static Bool
+miSaveScreen(ScreenPtr pScreen, int on)
+{
+    return TRUE;
+}
+
 void
 miSourceValidate(DrawablePtr pDrawable, int x, int y, int w, int h,
                  unsigned int subWindowMode)
 {
 }
+
 
 /* With the introduction of pixmap privates, the "screen pixmap" can no
  * longer be created in miScreenInit, since all the modules that could
@@ -248,7 +255,9 @@ miScreenInit(ScreenPtr pScreen, void *pbits,  /* pointer to screen bits */
         pScreen->CloseScreen = miCloseScreen;
     }
     /* else CloseScreen */
-    /* QueryBestSize, SaveScreen, GetImage, GetSpans */
+    /* QueryBestSize */
+    pScreen->SaveScreen = miSaveScreen;
+    /* GetImage, GetSpans */
     pScreen->SourceValidate = miSourceValidate;
     /* CreateWindow, DestroyWindow, PositionWindow, ChangeWindowAttributes */
     /* RealizeWindow, UnrealizeWindow */

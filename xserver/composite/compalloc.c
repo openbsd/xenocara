@@ -97,6 +97,8 @@ compDestroyDamage(DamagePtr pDamage, void *closure)
     CompWindowPtr cw = GetCompWindow(pWin);
 
     cw->damage = 0;
+    cw->damaged = 0;
+    cw->damageRegistered = 0;
 }
 
 static Bool
@@ -669,7 +671,8 @@ compReallocPixmap(WindowPtr pWin, int draw_x, int draw_y,
     int pix_x, pix_y;
     int pix_w, pix_h;
 
-    assert(cw && pWin->redirectDraw != RedirectDrawNone);
+    assert(cw);
+    assert(pWin->redirectDraw != RedirectDrawNone);
     cw->oldx = pOld->screen_x;
     cw->oldy = pOld->screen_y;
     pix_x = draw_x - bw;

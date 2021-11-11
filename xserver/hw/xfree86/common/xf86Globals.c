@@ -108,7 +108,6 @@ xf86InfoRec xf86Info = {
     .ShareVTs = FALSE,
     .dontZap = FALSE,
     .dontZoom = FALSE,
-    .notrapSignals = FALSE,
     .currentScreen = NULL,
 #ifdef CSRG_BASED
     .consType = -1,
@@ -133,6 +132,7 @@ xf86InfoRec xf86Info = {
 #else
     .autoAddGPU = FALSE,
 #endif
+    .autoBindGPU = TRUE,
 };
 
 const char *xf86ConfigFile = NULL;
@@ -168,7 +168,6 @@ const char *xf86VisualNames[] = {
 };
 
 /* Parameters set only from the command line */
-const char *xf86ServerName = "no-name";
 Bool xf86fpFlag = FALSE;
 Bool xf86sFlag = FALSE;
 Bool xf86bsEnableFlag = FALSE;
@@ -189,10 +188,10 @@ int xf86FbBpp = -1;
 int xf86Depth = -1;
 rgb xf86Weight = { 0, 0, 0 };
 
-Bool xf86FlipPixels = FALSE;
 Gamma xf86Gamma = { 0.0, 0.0, 0.0 };
 
 Bool xf86AllowMouseOpenFail = FALSE;
+Bool xf86AutoBindGPUDisabled = FALSE;
 
 #ifdef XF86VIDMODE
 Bool xf86VidModeDisabled = FALSE;

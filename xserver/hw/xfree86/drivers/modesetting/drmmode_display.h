@@ -1,5 +1,6 @@
 /*
  * Copyright © 2007 Red Hat, Inc.
+ * Copyright © 2019 NVIDIA CORPORATION
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,6 +23,7 @@
  *
  * Authors:
  *     Dave Airlie <airlied@redhat.com>
+ *     Aaron Plattner <aplattner@nvidia.com>
  *
  */
 #ifndef DRMMODE_DISPLAY_H
@@ -67,6 +69,9 @@ enum drmmode_connector_property {
 enum drmmode_crtc_property {
     DRMMODE_CRTC_ACTIVE,
     DRMMODE_CRTC_MODE_ID,
+    DRMMODE_CRTC_GAMMA_LUT,
+    DRMMODE_CRTC_GAMMA_LUT_SIZE,
+    DRMMODE_CRTC_CTM,
     DRMMODE_CRTC__COUNT
 };
 
@@ -115,6 +120,7 @@ typedef struct {
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
     DevScreenPrivateKeyRec spritePrivateKeyRec;
+    DevPrivateKeyRec vrrPrivateKeyRec;
     /* Number of SW cursors currently visible on this screen */
     int sprites_visible;
 
@@ -126,9 +132,15 @@ typedef struct {
 
     Bool dri2_flipping;
     Bool present_flipping;
+    Bool flip_bo_import_failed;
 
+    Bool can_async_flip;
+    Bool async_flip_secondaries;
     Bool dri2_enable;
     Bool present_enable;
+
+    uint32_t vrr_prop_id;
+    Bool use_ctm;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -140,6 +152,7 @@ typedef struct {
 typedef struct {
     const char *name;
     uint32_t prop_id;
+    uint64_t value;
     unsigned int num_enum_values;
     drmmode_prop_enum_info_rec *enum_values;
 } drmmode_prop_info_rec, *drmmode_prop_info_ptr;
@@ -195,6 +208,9 @@ typedef struct {
 
     Bool enable_flipping;
     Bool flipping_active;
+
+    Bool vrr_enabled;
+    Bool use_gamma_lut;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -219,6 +235,8 @@ typedef struct {
     int enc_mask;
     int enc_clone_mask;
     xf86CrtcPtr current_crtc;
+    Atom ctm_atom;
+    struct drm_color_ctm ctm;
 } drmmode_output_private_rec, *drmmode_output_private_ptr;
 
 typedef struct {
@@ -229,7 +247,7 @@ typedef struct _msPixmapPriv {
     uint32_t fb_id;
     struct dumb_bo *backing_bo; /* if this pixmap is backed by a dumb bo */
 
-    DamagePtr slave_damage;
+    DamagePtr secondary_damage;
 
     /** Sink fields for flipping shared pixmaps */
     int flip_seq; /* seq of current page flip event handler */
@@ -238,13 +256,9 @@ typedef struct _msPixmapPriv {
     /** Source fields for flipping shared pixmaps */
     Bool defer_dirty_update; /* if we want to manually update */
     PixmapDirtyUpdatePtr dirty; /* cached dirty ent to avoid searching list */
-    DrawablePtr slave_src; /* if we exported shared pixmap, dirty tracking src */
+    DrawablePtr secondary_src; /* if we exported shared pixmap, dirty tracking src */
     Bool notify_on_damage; /* if sink has requested damage notification */
 } msPixmapPrivRec, *msPixmapPrivPtr;
-
-extern DevPrivateKeyRec msPixmapPrivateKeyRec;
-
-#define msPixmapPrivateKey (&msPixmapPrivateKeyRec)
 
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
 
@@ -265,7 +279,7 @@ int drmmode_bo_destroy(drmmode_ptr drmmode, drmmode_bo *bo);
 uint32_t drmmode_bo_get_pitch(drmmode_bo *bo);
 uint32_t drmmode_bo_get_handle(drmmode_bo *bo);
 Bool drmmode_glamor_handle_new_screen_pixmap(drmmode_ptr drmmode);
-void *drmmode_map_slave_bo(drmmode_ptr drmmode, msPixmapPrivPtr ppriv);
+void *drmmode_map_secondary_bo(drmmode_ptr drmmode, msPixmapPrivPtr ppriv);
 Bool drmmode_SetSlaveBO(PixmapPtr ppix,
                         drmmode_ptr drmmode,
                         int fd_handle, int pitch, int size);
@@ -301,5 +315,6 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 int drmmode_crtc_flip(xf86CrtcPtr crtc, uint32_t fb_id, uint32_t flags, void *data);
 
 void drmmode_set_dpms(ScrnInfoPtr scrn, int PowerManagementMode, int flags);
+void drmmode_crtc_set_vrr(xf86CrtcPtr crtc, Bool enabled);
 
 #endif

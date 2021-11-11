@@ -106,6 +106,37 @@ xf86CallDriverProbe(DriverPtr drv, Bool detect_only)
     return foundScreen;
 }
 
+static screenLayoutPtr
+xf86BusConfigMatch(ScrnInfoPtr scrnInfo, Bool is_gpu) {
+    screenLayoutPtr layout;
+    int i, j;
+
+    for (layout = xf86ConfigLayout.screens; layout->screen != NULL;
+         layout++) {
+        for (i = 0; i < scrnInfo->numEntities; i++) {
+            GDevPtr dev =
+                xf86GetDevFromEntity(scrnInfo->entityList[i],
+                                     scrnInfo->entityInstanceList[i]);
+
+            if (is_gpu) {
+                for (j = 0; j < layout->screen->num_gpu_devices; j++) {
+                    if (dev == layout->screen->gpu_devices[j]) {
+                        /* A match has been found */
+                        return layout;
+                    }
+                }
+            } else {
+                if (dev == layout->screen->device) {
+                    /* A match has been found */
+                    return layout;
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
 /**
  * @return TRUE if all buses are configured and set up correctly and FALSE
  * otherwise.
@@ -114,7 +145,7 @@ Bool
 xf86BusConfig(void)
 {
     screenLayoutPtr layout;
-    int i, j;
+    int i;
 
     /*
      * 3 step probe to (hopefully) ensure that we always find at least 1
@@ -131,7 +162,7 @@ xf86BusConfig(void)
     /*
      * 2. If no Screens were found, call each drivers probe function with
      *    ignorePrimary = TRUE, to ensure that we do actually get a
-     *    Screen if there is atleast one supported video card.
+     *    Screen if there is at least one supported video card.
      */
     if (xf86NumScreens == 0) {
         xf86ProbeIgnorePrimary = TRUE;
@@ -170,27 +201,10 @@ xf86BusConfig(void)
      *
      */
     for (i = 0; i < xf86NumScreens; i++) {
-        for (layout = xf86ConfigLayout.screens; layout->screen != NULL;
-             layout++) {
-            Bool found = FALSE;
-
-            for (j = 0; j < xf86Screens[i]->numEntities; j++) {
-
-                GDevPtr dev =
-                    xf86GetDevFromEntity(xf86Screens[i]->entityList[j],
-                                         xf86Screens[i]->entityInstanceList[j]);
-
-                if (dev == layout->screen->device) {
-                    /* A match has been found */
-                    xf86Screens[i]->confScreen = layout->screen;
-                    found = TRUE;
-                    break;
-                }
-            }
-            if (found)
-                break;
-        }
-        if (layout->screen == NULL) {
+        layout = xf86BusConfigMatch(xf86Screens[i], FALSE);
+        if (layout && layout->screen)
+            xf86Screens[i]->confScreen = layout->screen;
+        else {
             /* No match found */
             xf86Msg(X_ERROR,
                     "Screen %d deleted because of no matching config section.\n",
@@ -199,9 +213,12 @@ xf86BusConfig(void)
         }
     }
 
-    /* bind GPU conf screen to protocol screen 0 */
-    for (i = 0; i < xf86NumGPUScreens; i++)
-        xf86GPUScreens[i]->confScreen = xf86Screens[0]->confScreen;
+    /* bind GPU conf screen to the configured protocol screen, or 0 if not configured */
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        layout = xf86BusConfigMatch(xf86GPUScreens[i], TRUE);
+        int scrnum = (layout && layout->screen) ? layout->screen->screennum : 0;
+        xf86GPUScreens[i]->confScreen = xf86Screens[scrnum]->confScreen;
+    }
 
     /* If no screens left, return now.  */
     if (xf86NumScreens == 0) {
@@ -268,6 +285,8 @@ StringToBusType(const char *busID, const char **retID)
         ret = BUS_SBUS;
     if (!xf86NameCmp(p, "platform"))
         ret = BUS_PLATFORM;
+    if (!xf86NameCmp(p, "usb"))
+        ret = BUS_USB;
     if (ret != BUS_NONE)
         if (retID)
             *retID = busID + strlen(p) + 1;
@@ -294,7 +313,8 @@ xf86IsEntityPrimary(int entityIndex)
 
 #ifdef XSERVER_LIBPCIACCESS
     if (primaryBus.type == BUS_PLATFORM && pEnt->bus.type == BUS_PCI)
-	return MATCH_PCI_DEVICES(pEnt->bus.id.pci, primaryBus.id.plat->pdev);
+        if (primaryBus.id.plat->pdev)
+            return MATCH_PCI_DEVICES(pEnt->bus.id.pci, primaryBus.id.plat->pdev);
 #endif
 
     if (primaryBus.type != pEnt->bus.type)
@@ -403,7 +423,7 @@ xf86RemoveEntityFromScreen(ScrnInfoPtr pScrn, int entityIndex)
 
 /*
  * xf86ClearEntityListForScreen() - called when a screen is deleted
- * to mark it's entities unused. Called by xf86DeleteScreen().
+ * to mark its entities unused. Called by xf86DeleteScreen().
  */
 void
 xf86ClearEntityListForScreen(ScrnInfoPtr pScrn)
@@ -551,25 +571,6 @@ xf86PostProbe(void)
         ))
         FatalError("Cannot run in framebuffer mode. Please specify busIDs "
                    "       for all framebuffer devices\n");
-}
-
-int
-xf86GetLastScrnFlag(int entityIndex)
-{
-    if (entityIndex < xf86NumEntities) {
-        return xf86Entities[entityIndex]->lastScrnFlag;
-    }
-    else {
-        return -1;
-    }
-}
-
-void
-xf86SetLastScrnFlag(int entityIndex, int scrnIndex)
-{
-    if (entityIndex < xf86NumEntities) {
-        xf86Entities[entityIndex]->lastScrnFlag = scrnIndex;
-    }
 }
 
 Bool

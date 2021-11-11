@@ -85,7 +85,7 @@ struct ms_flipdata {
 };
 
 /*
- * Per crtc pageflipping infomation,
+ * Per crtc pageflipping information,
  * These are submitted to the queuing code
  * one of them per crtc per flip.
  */
@@ -167,7 +167,14 @@ do_queue_flip_on_crtc(modesettingPtr ms, xf86CrtcPtr crtc,
                              (void *) (uintptr_t) seq);
 }
 
-static Bool
+enum queue_flip_status {
+    QUEUE_FLIP_SUCCESS,
+    QUEUE_FLIP_ALLOC_FAILED,
+    QUEUE_FLIP_QUEUE_ALLOC_FAILED,
+    QUEUE_FLIP_DRM_FLUSH_FAILED,
+};
+
+static int
 queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
                    struct ms_flipdata *flipdata,
                    int ref_crtc_vblank_pipe, uint32_t flags)
@@ -177,13 +184,10 @@ queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     struct ms_crtc_pageflip *flip;
     uint32_t seq;
-    int err;
 
     flip = calloc(1, sizeof(struct ms_crtc_pageflip));
     if (flip == NULL) {
-        xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-                   "flip queue: carrier alloc failed.\n");
-        return FALSE;
+        return QUEUE_FLIP_ALLOC_FAILED;
     }
 
     /* Only the reference crtc will finally deliver its page flip
@@ -195,32 +199,99 @@ queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
     seq = ms_drm_queue_alloc(crtc, flip, ms_pageflip_handler, ms_pageflip_abort);
     if (!seq) {
         free(flip);
-        return FALSE;
+        return QUEUE_FLIP_QUEUE_ALLOC_FAILED;
     }
 
     /* take a reference on flipdata for use in flip */
     flipdata->flip_count++;
 
     while (do_queue_flip_on_crtc(ms, crtc, flags, seq)) {
-        err = errno;
         /* We may have failed because the event queue was full.  Flush it
          * and retry.  If there was nothing to flush, then we failed for
          * some other reason and should just return an error.
          */
         if (ms_flush_drm_events(screen) <= 0) {
-            xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-                       "flip queue failed: %s\n", strerror(err));
             /* Aborting will also decrement flip_count and free(flip). */
             ms_drm_abort_seq(scrn, seq);
-            return FALSE;
+            return QUEUE_FLIP_DRM_FLUSH_FAILED;
         }
 
         /* We flushed some events, so try again. */
         xf86DrvMsg(scrn->scrnIndex, X_WARNING, "flip queue retry\n");
     }
 
-    /* The page flip succeded. */
-    return TRUE;
+    /* The page flip succeeded. */
+    return QUEUE_FLIP_SUCCESS;
+}
+
+
+#define MS_ASYNC_FLIP_LOG_ENABLE_LOGS_INTERVAL_MS 10000
+#define MS_ASYNC_FLIP_LOG_FREQUENT_LOGS_INTERVAL_MS 1000
+#define MS_ASYNC_FLIP_FREQUENT_LOG_COUNT 10
+
+static void
+ms_print_pageflip_error(int screen_index, const char *log_prefix,
+                        int crtc_index, int flags, int err)
+{
+    /* In certain circumstances we will have a lot of flip errors without a
+     * reasonable way to prevent them. In such case we reduce the number of
+     * logged messages to at least not fill the error logs.
+     *
+     * The details are as follows:
+     *
+     * At least on i915 hardware support for async page flip support depends
+     * on the used modifiers which themselves can change dynamically for a
+     * screen. This results in the following problems:
+     *
+     *  - We can't know about whether a particular CRTC will be able to do an
+     *    async flip without hardcoding the same logic as the kernel as there's
+     *    no interface to query this information.
+     *
+     *  - There is no way to give this information to an application, because
+     *    the protocol of the present extension does not specify anything about
+     *    changing of the capabilities on runtime or the need to re-query them.
+     *
+     * Even if the above was solved, the only benefit would be avoiding a
+     * roundtrip to the kernel and reduced amount of error logs. The former
+     * does not seem to be a good enough benefit compared to the amount of work
+     * that would need to be done. The latter is solved below. */
+
+    static CARD32 error_last_time_ms;
+    static int frequent_logs;
+    static Bool logs_disabled;
+
+    if (flags & DRM_MODE_PAGE_FLIP_ASYNC) {
+        CARD32 curr_time_ms = GetTimeInMillis();
+        int clocks_since_last_log = curr_time_ms - error_last_time_ms;
+
+        if (clocks_since_last_log >
+                MS_ASYNC_FLIP_LOG_ENABLE_LOGS_INTERVAL_MS) {
+            frequent_logs = 0;
+            logs_disabled = FALSE;
+        }
+        if (!logs_disabled) {
+            if (clocks_since_last_log <
+                    MS_ASYNC_FLIP_LOG_FREQUENT_LOGS_INTERVAL_MS) {
+                frequent_logs++;
+            }
+
+            if (frequent_logs > MS_ASYNC_FLIP_FREQUENT_LOG_COUNT) {
+                xf86DrvMsg(screen_index, X_WARNING,
+                           "%s: detected too frequent flip errors, disabling "
+                           "logs until frequency is reduced\n", log_prefix);
+                logs_disabled = TRUE;
+            } else {
+                xf86DrvMsg(screen_index, X_WARNING,
+                           "%s: queue async flip during flip on CRTC %d failed: %s\n",
+                           log_prefix, crtc_index, strerror(err));
+            }
+        }
+        error_last_time_ms = curr_time_ms;
+    } else {
+        xf86DrvMsg(screen_index, X_WARNING,
+                   "%s: queue flip during flip on CRTC %d failed: %s\n",
+                   log_prefix, crtc_index, strerror(err));
+    }
 }
 
 
@@ -231,7 +302,8 @@ ms_do_pageflip(ScreenPtr screen,
                int ref_crtc_vblank_pipe,
                Bool async,
                ms_pageflip_handler_proc pageflip_handler,
-               ms_pageflip_abort_proc pageflip_abort)
+               ms_pageflip_abort_proc pageflip_abort,
+               const char *log_prefix)
 {
 #ifndef GLAMOR_HAS_GBM
     return FALSE;
@@ -243,14 +315,15 @@ ms_do_pageflip(ScreenPtr screen,
     uint32_t flags;
     int i;
     struct ms_flipdata *flipdata;
-    glamor_block_handler(screen);
+    ms->glamor.block_handler(screen);
 
-    new_front_bo.gbm = glamor_gbm_bo_from_pixmap(screen, new_front);
+    new_front_bo.gbm = ms->glamor.gbm_bo_from_pixmap(screen, new_front);
     new_front_bo.dumb = NULL;
 
     if (!new_front_bo.gbm) {
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to get GBM bo for flip to new front.\n");
+                   "%s: Failed to get GBM BO for flip to new front.\n",
+                   log_prefix);
         return FALSE;
     }
 
@@ -258,7 +331,7 @@ ms_do_pageflip(ScreenPtr screen,
     if (!flipdata) {
         drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to allocate flipdata.\n");
+                   "%s: Failed to allocate flipdata.\n", log_prefix);
         return FALSE;
     }
 
@@ -271,7 +344,7 @@ ms_do_pageflip(ScreenPtr screen,
      * Take a local reference on flipdata.
      * if the first flip fails, the sequence abort
      * code will free the crtc flip data, and drop
-     * it's reference which would cause this to be
+     * its reference which would cause this to be
      * freed when we still required it.
      */
     flipdata->flip_count++;
@@ -282,12 +355,18 @@ ms_do_pageflip(ScreenPtr screen,
     new_front_bo.width = new_front->drawable.width;
     new_front_bo.height = new_front->drawable.height;
     if (drmmode_bo_import(&ms->drmmode, &new_front_bo,
-                          &ms->drmmode.fb_id))
+                          &ms->drmmode.fb_id)) {
+        if (!ms->drmmode.flip_bo_import_failed) {
+            xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Import BO failed: %s\n",
+                       log_prefix, strerror(errno));
+            ms->drmmode.flip_bo_import_failed = TRUE;
+        }
         goto error_out;
-
-    flags = DRM_MODE_PAGE_FLIP_EVENT;
-    if (async)
-        flags |= DRM_MODE_PAGE_FLIP_ASYNC;
+    } else {
+        if (ms->drmmode.flip_bo_import_failed &&
+            new_front != screen->GetScreenPixmap(screen))
+            ms->drmmode.flip_bo_import_failed = FALSE;
+    }
 
     /* Queue flips on all enabled CRTCs.
      *
@@ -299,15 +378,53 @@ ms_do_pageflip(ScreenPtr screen,
      * may never complete; this is a configuration error.
      */
     for (i = 0; i < config->num_crtc; i++) {
+        enum queue_flip_status flip_status;
         xf86CrtcPtr crtc = config->crtc[i];
+        drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
         if (!xf86_crtc_on(crtc))
             continue;
 
-        if (!queue_flip_on_crtc(screen, crtc, flipdata,
-                                ref_crtc_vblank_pipe,
-                                flags)) {
-            goto error_undo;
+        flags = DRM_MODE_PAGE_FLIP_EVENT;
+        if (ms->drmmode.can_async_flip && async)
+            flags |= DRM_MODE_PAGE_FLIP_ASYNC;
+
+        /*
+         * If this is not the reference crtc used for flip timing and flip event
+         * delivery and timestamping, ie. not the one whose presentation timing
+         * we do really care about, and async flips are possible, and requested
+         * by an xorg.conf option, then we flip this "secondary" crtc without
+         * sync to vblank. This may cause tearing on such "secondary" outputs,
+         * but it will prevent throttling of multi-display flips to the refresh
+         * cycle of any of the secondary crtcs, avoiding periodic slowdowns and
+         * judder caused by unsynchronized outputs. This is especially useful for
+         * outputs in a "clone-mode" or "mirror-mode" configuration.
+         */
+        if (ms->drmmode.can_async_flip && ms->drmmode.async_flip_secondaries &&
+            (drmmode_crtc->vblank_pipe != ref_crtc_vblank_pipe) &&
+            (ref_crtc_vblank_pipe >= 0))
+            flags |= DRM_MODE_PAGE_FLIP_ASYNC;
+
+        flip_status = queue_flip_on_crtc(screen, crtc, flipdata,
+                                         ref_crtc_vblank_pipe,
+                                         flags);
+
+        switch (flip_status) {
+            case QUEUE_FLIP_ALLOC_FAILED:
+                xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+                           "%s: carrier alloc for queue flip on CRTC %d failed.\n",
+                           log_prefix, i);
+                goto error_undo;
+            case QUEUE_FLIP_QUEUE_ALLOC_FAILED:
+                xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+                           "%s: entry alloc for queue flip on CRTC %d failed.\n",
+                           log_prefix, i);
+                goto error_undo;
+            case QUEUE_FLIP_DRM_FLUSH_FAILED:
+                ms_print_pageflip_error(scrn->scrnIndex, log_prefix, i, flags, errno);
+                goto error_undo;
+            case QUEUE_FLIP_SUCCESS:
+                break;
         }
     }
 
@@ -336,8 +453,6 @@ error_undo:
     }
 
 error_out:
-    xf86DrvMsg(scrn->scrnIndex, X_WARNING, "Page flip failed: %s\n",
-               strerror(errno));
     drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
     /* if only the local reference - free the structure,
      * else drop the local reference and return */

@@ -59,6 +59,7 @@ HWND g_hDlgAbout = NULL;
 const char *g_pszQueryHost = NULL;
 Bool g_fXdmcpEnabled = FALSE;
 Bool g_fAuthEnabled = FALSE;
+Bool g_fCompositeAlpha = FALSE;
 HICON g_hIconX = NULL;
 HICON g_hSmallIconX = NULL;
 
@@ -89,7 +90,6 @@ winDispatchProcPtr winProcEstablishConnectionOrig = NULL;
  * Clipboard variables
  */
 
-Bool g_fUnicodeClipboard = TRUE;
 Bool g_fClipboard = TRUE;
 Bool g_fClipboardStarted = FALSE;
 

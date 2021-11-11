@@ -41,7 +41,6 @@
 #include "mipointer.h"          // mi software cursor
 #include "micmap.h"             // mi colormap code
 #include "fb.h"                 // fb framebuffer code
-#include "site.h"
 #include "globals.h"
 #include "dix.h"
 #include "xkbsrv.h"
@@ -168,21 +167,6 @@ DarwinPrintBanner(void)
 {
     ErrorF("Xquartz starting:\n");
     ErrorF("X.Org X Server %s\n", XSERVER_VERSION);
-    ErrorF("Build Date: %s\n", BUILD_DATE);
-}
-
-/*
- * DarwinSaveScreen
- *  X screensaver support. Not implemented.
- */
-static Bool
-DarwinSaveScreen(ScreenPtr pScreen, int on)
-{
-    // FIXME
-    if (on == SCREEN_SAVER_FORCER) {}
-    else if (on == SCREEN_SAVER_ON) {}
-    else {}
-    return TRUE;
 }
 
 /*
@@ -270,9 +254,6 @@ DarwinScreenInit(ScreenPtr pScreen, int argc, char **argv)
 #ifdef MITSHM
     ShmRegisterFbFuncs(pScreen);
 #endif
-
-    // this must be initialized (why doesn't X have a default?)
-    pScreen->SaveScreen = DarwinSaveScreen;
 
     // finish mode dependent screen setup including cursor support
     if (!QuartzSetupScreen(pScreen->myNum, pScreen)) {
@@ -842,20 +823,6 @@ void
 ddxGiveUp(enum ExitCode error)
 {
     LogClose(error);
-}
-
-/*
- * AbortDDX --
- *      DDX - specific abort routine.  Called by AbortServer(). The attempt is
- *      made to restore all original setting of the displays. Also all devices
- *      are closed.
- */
-_X_NORETURN
-void
-AbortDDX(enum ExitCode error)
-{
-    ErrorF("   AbortDDX\n");
-    OsAbort();
 }
 
 #if INPUTTHREAD

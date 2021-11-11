@@ -591,12 +591,12 @@ vgaHWProtect(ScrnInfoPtr pScrn, Bool on)
         }
         else {
             /*
-             * Reenable sequencer, then turn on screen.
+             * Re-enable sequencer, then turn on screen.
              */
 
             tmp = hwp->readSeq(hwp, 0x01);
 
-            hwp->writeSeq(hwp, 0x01, tmp & ~0x20);      /* reenable display */
+            hwp->writeSeq(hwp, 0x01, tmp & ~0x20);      /* re-enable display */
             vgaHWSeqReset(hwp, FALSE);  /* clear synchronousreset */
 
             hwp->disablePalette(hwp);
@@ -1314,10 +1314,8 @@ vgaHWInit(ScrnInfoPtr scrninfp, DisplayModePtr mode)
     if (depth == 1) {
         /* Initialise the Mono map according to which bit-plane gets used */
 
-        Bool flipPixels = xf86GetFlipPixels();
-
         for (i = 0; i < 16; i++)
-            if (((i & (1 << BIT_PLANE)) != 0) != flipPixels)
+            if ((i & (1 << BIT_PLANE)) != 0)
                 regp->Attribute[i] = WHITE_VALUE;
             else
                 regp->Attribute[i] = BLACK_VALUE;
@@ -1948,7 +1946,7 @@ vgaHWddc1SetSpeed(ScrnInfoPtr pScrn, xf86ddcSpeed speed)
         hwp->writeCrtc(hwp, 0x09, (save->cr09 & 0xDF));
         save->cr07 = hwp->readCrtc(hwp, 0x07);
         hwp->writeCrtc(hwp, 0x07, (save->cr07 & 0x10));
-        /* vsync polarity negativ & ensure a 25MHz clock */
+        /* vsync polarity negative & ensure a 25MHz clock */
         save->msr = hwp->readMiscOut(hwp);
         hwp->writeMiscOut(hwp, ((save->msr & 0xF3) | 0x80));
         break;

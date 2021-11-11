@@ -44,7 +44,9 @@
  * - If A has XIAllMasterDevices, B may select on XIAllDevices
  * - if A has device X, B may select on XIAllDevices/XIAllMasterDevices
  */
-static int check_for_touch_selection_conflicts(ClientPtr B, WindowPtr win, int deviceid)
+static int
+check_for_touch_selection_conflicts(ClientPtr B, WindowPtr win, int deviceid,
+                                    int evtype)
 {
     OtherInputMasks *inputMasks = wOtherInputMasks(win);
     InputClients *A = NULL;
@@ -67,19 +69,19 @@ static int check_for_touch_selection_conflicts(ClientPtr B, WindowPtr win, int d
             return BadImplementation;       /* this shouldn't happen */
 
         /* A has XIAllDevices */
-        if (xi2mask_isset_for_device(A->xi2mask, inputInfo.all_devices, XI_TouchBegin)) {
+        if (xi2mask_isset_for_device(A->xi2mask, inputInfo.all_devices, evtype)) {
             if (deviceid == XIAllDevices)
                 return BadAccess;
         }
 
         /* A has XIAllMasterDevices */
-        if (xi2mask_isset_for_device(A->xi2mask, inputInfo.all_master_devices, XI_TouchBegin)) {
+        if (xi2mask_isset_for_device(A->xi2mask, inputInfo.all_master_devices, evtype)) {
             if (deviceid == XIAllMasterDevices)
                 return BadAccess;
         }
 
         /* A has this device */
-        if (xi2mask_isset_for_device(A->xi2mask, tmp, XI_TouchBegin))
+        if (xi2mask_isset_for_device(A->xi2mask, tmp, evtype))
             return BadAccess;
     }
 
@@ -224,13 +226,63 @@ ProcXISelectEvents(ClientPtr client)
                 return BadValue;
             }
 
-            /* Only one client per window may select for touch events on the
-             * same devices, including master devices.
+            /* All three pinch gesture events must be selected at once */
+            if ((BitIsOn(bits, XI_GesturePinchBegin) ||
+                 BitIsOn(bits, XI_GesturePinchUpdate) ||
+                 BitIsOn(bits, XI_GesturePinchEnd)) &&
+                (!BitIsOn(bits, XI_GesturePinchBegin) ||
+                 !BitIsOn(bits, XI_GesturePinchUpdate) ||
+                 !BitIsOn(bits, XI_GesturePinchEnd))) {
+                client->errorValue = XI_GesturePinchBegin;
+                return BadValue;
+            }
+
+            /* All three swipe gesture events must be selected at once. Note
+               that the XI_GestureSwipeEnd is at index 32 which is on the next
+               4-byte mask element */
+            if (evmask->mask_len == 1 &&
+                (BitIsOn(bits, XI_GestureSwipeBegin) ||
+                 BitIsOn(bits, XI_GestureSwipeUpdate)))
+            {
+                client->errorValue = XI_GestureSwipeBegin;
+                return BadValue;
+            }
+
+            if (evmask->mask_len >= 2 &&
+                (BitIsOn(bits, XI_GestureSwipeBegin) ||
+                 BitIsOn(bits, XI_GestureSwipeUpdate) ||
+                 BitIsOn(bits, XI_GestureSwipeEnd)) &&
+                (!BitIsOn(bits, XI_GestureSwipeBegin) ||
+                 !BitIsOn(bits, XI_GestureSwipeUpdate) ||
+                 !BitIsOn(bits, XI_GestureSwipeEnd))) {
+                client->errorValue = XI_GestureSwipeBegin;
+                return BadValue;
+            }
+
+            /* Only one client per window may select for touch or gesture events
+             * on the same devices, including master devices.
              * XXX: This breaks if a device goes from floating to attached. */
             if (BitIsOn(bits, XI_TouchBegin)) {
                 rc = check_for_touch_selection_conflicts(client,
                                                          win,
-                                                         evmask->deviceid);
+                                                         evmask->deviceid,
+                                                         XI_TouchBegin);
+                if (rc != Success)
+                    return rc;
+            }
+            if (BitIsOn(bits, XI_GesturePinchBegin)) {
+                rc = check_for_touch_selection_conflicts(client,
+                                                         win,
+                                                         evmask->deviceid,
+                                                         XI_GesturePinchBegin);
+                if (rc != Success)
+                    return rc;
+            }
+            if (BitIsOn(bits, XI_GestureSwipeBegin)) {
+                rc = check_for_touch_selection_conflicts(client,
+                                                         win,
+                                                         evmask->deviceid,
+                                                         XI_GestureSwipeBegin);
                 if (rc != Success)
                     return rc;
             }

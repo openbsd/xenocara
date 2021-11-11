@@ -116,11 +116,14 @@ SOFTWARE.
 #define zoneid_t int
 #endif
 
+#ifdef HAVE_SYSTEMD_DAEMON
+#include <systemd/sd-daemon.h>
+#endif
+
 #include "probes.h"
 
 struct ospoll   *server_poll;
 
-int MaxClients = 0;
 Bool NewOutputPending;          /* not yet attempted to write some new output */
 Bool NoListenAll;               /* Don't establish any listening sockets */
 
@@ -134,7 +137,7 @@ static Pid_t ParentProcess;
 int GrabInProgress = 0;
 
 static void
-QueueNewConnections(int curconn, int ready, void *data);
+EstablishNewConnections(int curconn, int ready, void *data);
 
 static void
 set_poll_client(ClientPtr client);
@@ -163,18 +166,6 @@ lookup_trans_conn(int fd)
     }
 
     return NULL;
-}
-
-/* Set MaxClients */
-
-void
-InitConnectionLimits(void)
-{
-    MaxClients = MAXCLIENTS;
-
-#ifdef DEBUG
-    ErrorF("InitConnectionLimits: MaxClients = %d\n", MaxClients);
-#endif
 }
 
 /*
@@ -230,6 +221,11 @@ NotifyParentProcess(void)
     }
     if (RunFromSigStopParent)
         raise(SIGSTOP);
+#ifdef HAVE_SYSTEMD_DAEMON
+    /* If we have been started as a systemd service, tell systemd that
+       we are ready. Otherwise sd_notify() won't do anything. */
+    sd_notify(0, "READY=1");
+#endif
 #endif
 }
 
@@ -293,7 +289,7 @@ CreateWellKnownSockets(void)
         int fd = _XSERVTransGetConnectionNumber(ListenTransConns[i]);
 
         ListenTransFds[i] = fd;
-        SetNotifyFd(fd, QueueNewConnections, X_NOTIFY_READ, NULL);
+        SetNotifyFd(fd, EstablishNewConnections, X_NOTIFY_READ, NULL);
 
         if (!_XSERVTransIsLocal(ListenTransConns[i]))
             DefineSelf (fd);
@@ -353,7 +349,8 @@ ResetWellKnownSockets(void)
         }
     }
     for (i = 0; i < ListenTransCount; i++)
-        SetNotifyFd(ListenTransFds[i], QueueNewConnections, X_NOTIFY_READ, NULL);
+        SetNotifyFd(ListenTransFds[i], EstablishNewConnections, X_NOTIFY_READ,
+                    NULL);
 
     ResetAuthorization();
     ResetHosts(display);
@@ -660,15 +657,13 @@ AllocNewConnection(XtransConnInfo trans_conn, int fd, CARD32 conn_time)
 
 /*****************
  * EstablishNewConnections
- *    If anyone is waiting on listened sockets, accept them.
- *    Returns a mask with indices of new clients.  Updates AllClients
- *    and AllSockets.
+ *    If anyone is waiting on listened sockets, accept them. Drop pending
+ *    connections if they've stuck around for more than one minute.
  *****************/
-
-static Bool
-EstablishNewConnections(ClientPtr clientUnused, void *closure)
+#define TimeOutValue 60 * MILLI_PER_SECOND
+static void
+EstablishNewConnections(int curconn, int ready, void *data)
 {
-    int curconn = (int) (intptr_t) closure;
     int newconn;       /* fd of new client */
     CARD32 connect_time;
     int i;
@@ -690,7 +685,7 @@ EstablishNewConnections(ClientPtr clientUnused, void *closure)
     }
 
     if ((trans_conn = lookup_trans_conn(curconn)) == NULL)
-        return TRUE;
+        return;
 
     if ((getdtablecount() + FdReserve) >= getdtablesize())
         Backoff = TRUE;
@@ -698,7 +693,7 @@ EstablishNewConnections(ClientPtr clientUnused, void *closure)
         Backoff = FALSE;
 
     if ((new_trans_conn = _XSERVTransAccept(trans_conn, &status)) == NULL)
-        return TRUE;
+        return;
 
     newconn = _XSERVTransGetConnectionNumber(new_trans_conn);
 
@@ -710,13 +705,7 @@ EstablishNewConnections(ClientPtr clientUnused, void *closure)
     if (Backoff || !AllocNewConnection(new_trans_conn, newconn, connect_time)) {
         ErrorConnMax(new_trans_conn);
     }
-    return TRUE;
-}
-
-static void
-QueueNewConnections(int fd, int ready, void *data)
-{
-    QueueWorkProc(EstablishNewConnections, NULL, (void *) (intptr_t) fd);
+    return;
 }
 
 #define NOROOM "Maximum number of clients reached"
@@ -923,7 +912,7 @@ ListenToAllClients(void)
 /****************
  * IgnoreClient
  *    Removes one client from input masks.
- *    Must have cooresponding call to AttendClient.
+ *    Must have corresponding call to AttendClient.
  ****************/
 
 void
@@ -1053,7 +1042,7 @@ ListenOnOpenFD(int fd, int noxauth)
     ListenTransConns[ListenTransCount] = ciptr;
     ListenTransFds[ListenTransCount] = fd;
 
-    SetNotifyFd(fd, QueueNewConnections, X_NOTIFY_READ, NULL);
+    SetNotifyFd(fd, EstablishNewConnections, X_NOTIFY_READ, NULL);
 
     /* Increment the count */
     ListenTransCount++;

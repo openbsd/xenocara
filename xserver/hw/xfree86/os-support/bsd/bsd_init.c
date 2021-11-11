@@ -109,9 +109,9 @@ static const char *supported_drivers[] = {
 };
 
 /*
- * Functions to probe for the existance of a supported console driver.
+ * Functions to probe for the existence of a supported console driver.
  * Any function returns either a valid file descriptor (driver probed
- * succesfully), -1 (driver not found), or uses FatalError() if the
+ * successfully), -1 (driver not found), or uses FatalError() if the
  * driver was found but proved to not support the required mode to run
  * an X server.
  */
@@ -138,7 +138,7 @@ static int xf86OpenWScons(void);
  * The sequence of the driver probes is important; start with the
  * driver that is best distinguishable, and end with the most generic
  * driver.  (Otherwise, pcvt would also probe as syscons, and either
- * pcvt or syscons might succesfully probe as pccons.)
+ * pcvt or syscons might successfully probe as pccons.)
  */
 static xf86ConsOpen_t xf86ConsTab[] = {
 #ifdef WSCONS_SUPPORT

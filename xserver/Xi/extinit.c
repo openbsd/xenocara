@@ -129,13 +129,8 @@ SOFTWARE.
  * breaks down. The device needs the dev->button->motionMask. If DBMM is
  * the same as BMM, we can ensure that both core and device events can be
  * delivered, without the need for extra structures in the DeviceIntRec. */
-const Mask DeviceKeyPressMask = KeyPressMask;
-const Mask DeviceKeyReleaseMask = KeyReleaseMask;
-const Mask DeviceButtonPressMask = ButtonPressMask;
-const Mask DeviceButtonReleaseMask = ButtonReleaseMask;
 const Mask DeviceProximityMask = (1L << 4);
 const Mask DeviceStateNotifyMask = (1L << 5);
-const Mask DevicePointerMotionMask = PointerMotionMask;
 const Mask DevicePointerMotionHintMask = PointerMotionHintMask;
 const Mask DeviceButton1MotionMask = Button1MotionMask;
 const Mask DeviceButton2MotionMask = Button2MotionMask;
@@ -153,7 +148,6 @@ const Mask DevicePropertyNotifyMask = (1L << 19);
 const Mask XIAllMasks = (1L << 20) - 1;
 
 int ExtEventIndex;
-Mask ExtExclusiveMasks[EMASKSIZE];
 
 static struct dev_type {
     Atom type;
@@ -364,8 +358,6 @@ RESTYPE RT_INPUTCLIENT;
 
 extern XExtensionVersion XIVersion;
 
-Mask PropagateMask[EMASKSIZE];
-
 /*****************************************************************
  *
  * Versioning support
@@ -520,7 +512,7 @@ static void
 SEventDeviceValuator(deviceValuator * from, deviceValuator * to)
 {
     int i;
-    INT32 *ip B32;
+    INT32 *ip;
 
     *to = *from;
     swaps(&to->sequenceNumber);
@@ -544,7 +536,7 @@ static void
 SDeviceStateNotifyEvent(deviceStateNotify * from, deviceStateNotify * to)
 {
     int i;
-    INT32 *ip B32;
+    INT32 *ip;
 
     *to = *from;
     swaps(&to->sequenceNumber);
@@ -858,6 +850,74 @@ SBarrierEvent(xXIBarrierEvent * from,
     swapl(&to->eventid);
 }
 
+static void
+SGesturePinchEvent(xXIGesturePinchEvent* from,
+                   xXIGesturePinchEvent* to)
+{
+    *to = *from;
+
+    swaps(&to->sequenceNumber);
+    swapl(&to->length);
+    swaps(&to->evtype);
+    swaps(&to->deviceid);
+    swapl(&to->time);
+    swapl(&to->detail);
+    swapl(&to->root);
+    swapl(&to->event);
+    swapl(&to->child);
+    swapl(&to->root_x);
+    swapl(&to->root_y);
+    swapl(&to->event_x);
+    swapl(&to->event_y);
+
+    swapl(&to->delta_x);
+    swapl(&to->delta_y);
+    swapl(&to->delta_unaccel_x);
+    swapl(&to->delta_unaccel_y);
+    swapl(&to->scale);
+    swapl(&to->delta_angle);
+    swaps(&to->sourceid);
+
+    swapl(&to->mods.base_mods);
+    swapl(&to->mods.latched_mods);
+    swapl(&to->mods.locked_mods);
+    swapl(&to->mods.effective_mods);
+    swapl(&to->flags);
+}
+
+static void
+SGestureSwipeEvent(xXIGestureSwipeEvent* from,
+                   xXIGestureSwipeEvent* to)
+{
+    *to = *from;
+
+    swaps(&to->sequenceNumber);
+    swapl(&to->length);
+    swaps(&to->evtype);
+    swaps(&to->deviceid);
+    swapl(&to->time);
+    swapl(&to->detail);
+    swapl(&to->root);
+    swapl(&to->event);
+    swapl(&to->child);
+    swapl(&to->root_x);
+    swapl(&to->root_y);
+    swapl(&to->event_x);
+    swapl(&to->event_y);
+
+    swapl(&to->delta_x);
+    swapl(&to->delta_y);
+    swapl(&to->delta_unaccel_x);
+    swapl(&to->delta_unaccel_y);
+    swaps(&to->sourceid);
+
+    swapl(&to->mods.base_mods);
+    swapl(&to->mods.latched_mods);
+    swapl(&to->mods.locked_mods);
+    swapl(&to->mods.effective_mods);
+    swapl(&to->flags);
+}
+
 /** Event swapping function for XI2 events. */
 void _X_COLD
 XI2EventSwap(xGenericEvent *from, xGenericEvent *to)
@@ -909,26 +969,22 @@ XI2EventSwap(xGenericEvent *from, xGenericEvent *to)
         SBarrierEvent((xXIBarrierEvent *) from,
                       (xXIBarrierEvent *) to);
         break;
+    case XI_GesturePinchBegin:
+    case XI_GesturePinchUpdate:
+    case XI_GesturePinchEnd:
+        SGesturePinchEvent((xXIGesturePinchEvent*) from,
+                           (xXIGesturePinchEvent*) to);
+        break;
+    case XI_GestureSwipeBegin:
+    case XI_GestureSwipeUpdate:
+    case XI_GestureSwipeEnd:
+        SGestureSwipeEvent((xXIGestureSwipeEvent*) from,
+                           (xXIGestureSwipeEvent*) to);
+        break;
     default:
         ErrorF("[Xi] Unknown event type to swap. This is a bug.\n");
         break;
     }
-}
-
-/**************************************************************************
- *
- * Allow the specified event to have its propagation suppressed.
- * The default is to not allow suppression of propagation.
- *
- */
-
-static void
-AllowPropagateSuppress(Mask mask)
-{
-    int i;
-
-    for (i = 0; i < MAXDEVICES; i++)
-        PropagateMask[i] |= mask;
 }
 
 /**************************************************************************
@@ -949,23 +1005,6 @@ SetEventInfo(Mask mask, int constant)
 {
     EventInfo[ExtEventIndex].mask = mask;
     EventInfo[ExtEventIndex++].type = constant;
-}
-
-/**************************************************************************
- *
- * Allow the specified event to be restricted to being selected by one
- * client at a time.
- * The default is to allow more than one client to select the event.
- *
- */
-
-static void
-SetExclusiveAccess(Mask mask)
-{
-    int i;
-
-    for (i = 0; i < MAXDEVICES; i++)
-        ExtExclusiveMasks[i] |= mask;
 }
 
 /**************************************************************************
@@ -1029,20 +1068,16 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     DeviceBusy += extEntry->errorBase;
     BadClass += extEntry->errorBase;
 
-    SetMaskForExtEvent(DeviceKeyPressMask, DeviceKeyPress);
-    AllowPropagateSuppress(DeviceKeyPressMask);
+    SetMaskForExtEvent(KeyPressMask, DeviceKeyPress);
     SetCriticalEvent(DeviceKeyPress);
 
-    SetMaskForExtEvent(DeviceKeyReleaseMask, DeviceKeyRelease);
-    AllowPropagateSuppress(DeviceKeyReleaseMask);
+    SetMaskForExtEvent(KeyReleaseMask, DeviceKeyRelease);
     SetCriticalEvent(DeviceKeyRelease);
 
-    SetMaskForExtEvent(DeviceButtonPressMask, DeviceButtonPress);
-    AllowPropagateSuppress(DeviceButtonPressMask);
+    SetMaskForExtEvent(ButtonPressMask, DeviceButtonPress);
     SetCriticalEvent(DeviceButtonPress);
 
-    SetMaskForExtEvent(DeviceButtonReleaseMask, DeviceButtonRelease);
-    AllowPropagateSuppress(DeviceButtonReleaseMask);
+    SetMaskForExtEvent(ButtonReleaseMask, DeviceButtonRelease);
     SetCriticalEvent(DeviceButtonRelease);
 
     SetMaskForExtEvent(DeviceProximityMask, ProximityIn);
@@ -1050,8 +1085,7 @@ FixExtensionEvents(ExtensionEntry * extEntry)
 
     SetMaskForExtEvent(DeviceStateNotifyMask, DeviceStateNotify);
 
-    SetMaskForExtEvent(DevicePointerMotionMask, DeviceMotionNotify);
-    AllowPropagateSuppress(DevicePointerMotionMask);
+    SetMaskForExtEvent(PointerMotionMask, DeviceMotionNotify);
     SetCriticalEvent(DeviceMotionNotify);
 
     SetEventInfo(DevicePointerMotionHintMask, _devicePointerMotionHint);
@@ -1069,8 +1103,6 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     SetMaskForExtEvent(ChangeDeviceNotifyMask, ChangeDeviceNotify);
 
     SetEventInfo(DeviceButtonGrabMask, _deviceButtonGrab);
-    SetExclusiveAccess(DeviceButtonGrabMask);
-
     SetEventInfo(DeviceOwnerGrabButtonMask, _deviceOwnerGrabButton);
     SetEventInfo(DevicePresenceNotifyMask, _devicePresence);
     SetMaskForExtEvent(DevicePropertyNotifyMask, DevicePropertyNotify);

@@ -63,7 +63,6 @@ typedef struct {
     Bool ShareVTs;
     Bool dontZap;
     Bool dontZoom;
-    Bool notrapSignals;         /* don't exit cleanly - die at fault */
 
     /* graphics part */
     ScreenPtr currentScreen;
@@ -79,7 +78,6 @@ typedef struct {
     Bool miscModInDevEnabled;   /* Allow input devices to be
                                  * changed */
     Bool miscModInDevAllowNonLocal;
-    Bool useSIGIO;              /* Use SIGIO for handling DRI1 swaps */
     Bool pmFlag;
     MessageType iglxFrom;
     XF86_GlxVisuals glxVisuals;
@@ -98,6 +96,7 @@ typedef struct {
 
     Bool autoAddGPU;
     const char *debug;
+    Bool autoBindGPU;
 } xf86InfoRec, *xf86InfoPtr;
 
 /* ISC's cc can't handle ~ of UL constants, so explicitly type cast them. */

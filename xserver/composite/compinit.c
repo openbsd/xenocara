@@ -76,9 +76,6 @@ compCloseScreen(ScreenPtr pScreen)
     pScreen->CreateWindow = cs->CreateWindow;
     pScreen->CopyWindow = cs->CopyWindow;
     pScreen->PositionWindow = cs->PositionWindow;
-
-    pScreen->GetImage = cs->GetImage;
-    pScreen->GetSpans = cs->GetSpans;
     pScreen->SourceValidate = cs->SourceValidate;
 
     free(cs);
@@ -108,14 +105,12 @@ compInstallColormap(ColormapPtr pColormap)
 static void
 compCheckBackingStore(WindowPtr pWin)
 {
-    if (pWin->backingStore != NotUseful && !pWin->backStorage) {
+    if (pWin->backingStore != NotUseful) {
         compRedirectWindow(serverClient, pWin, CompositeRedirectAutomatic);
-        pWin->backStorage = TRUE;
     }
-    else if (pWin->backingStore == NotUseful && pWin->backStorage) {
+    else {
         compUnredirectWindow(serverClient, pWin,
                              CompositeRedirectAutomatic);
-        pWin->backStorage = FALSE;
     }
 }
 
@@ -140,38 +135,6 @@ compChangeWindowAttributes(WindowPtr pWin, unsigned long mask)
 }
 
 static void
-compGetImage(DrawablePtr pDrawable,
-             int sx, int sy,
-             int w, int h,
-             unsigned int format, unsigned long planemask, char *pdstLine)
-{
-    ScreenPtr pScreen = pDrawable->pScreen;
-    CompScreenPtr cs = GetCompScreen(pScreen);
-
-    pScreen->GetImage = cs->GetImage;
-    if (pDrawable->type == DRAWABLE_WINDOW)
-        compPaintChildrenToWindow((WindowPtr) pDrawable);
-    (*pScreen->GetImage) (pDrawable, sx, sy, w, h, format, planemask, pdstLine);
-    cs->GetImage = pScreen->GetImage;
-    pScreen->GetImage = compGetImage;
-}
-
-static void
-compGetSpans(DrawablePtr pDrawable, int wMax, DDXPointPtr ppt, int *pwidth,
-             int nspans, char *pdstStart)
-{
-    ScreenPtr pScreen = pDrawable->pScreen;
-    CompScreenPtr cs = GetCompScreen(pScreen);
-
-    pScreen->GetSpans = cs->GetSpans;
-    if (pDrawable->type == DRAWABLE_WINDOW)
-        compPaintChildrenToWindow((WindowPtr) pDrawable);
-    (*pScreen->GetSpans) (pDrawable, wMax, ppt, pwidth, nspans, pdstStart);
-    cs->GetSpans = pScreen->GetSpans;
-    pScreen->GetSpans = compGetSpans;
-}
-
-static void
 compSourceValidate(DrawablePtr pDrawable,
                    int x, int y,
                    int width, int height, unsigned int subWindowMode)
@@ -182,9 +145,8 @@ compSourceValidate(DrawablePtr pDrawable,
     pScreen->SourceValidate = cs->SourceValidate;
     if (pDrawable->type == DRAWABLE_WINDOW && subWindowMode == IncludeInferiors)
         compPaintChildrenToWindow((WindowPtr) pDrawable);
-    if (pScreen->SourceValidate)
-        (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
-                                    subWindowMode);
+    (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
+                                subWindowMode);
     cs->SourceValidate = pScreen->SourceValidate;
     pScreen->SourceValidate = compSourceValidate;
 }
@@ -446,12 +408,6 @@ compScreenInit(ScreenPtr pScreen)
 
     cs->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = compCloseScreen;
-
-    cs->GetImage = pScreen->GetImage;
-    pScreen->GetImage = compGetImage;
-
-    cs->GetSpans = pScreen->GetSpans;
-    pScreen->GetSpans = compGetSpans;
 
     cs->SourceValidate = pScreen->SourceValidate;
     pScreen->SourceValidate = compSourceValidate;

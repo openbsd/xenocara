@@ -127,8 +127,8 @@ int ProcInitialConnection();
 #include "xace.h"
 #include "inputstr.h"
 #include "xkbsrv.h"
-#include "site.h"
 #include "client.h"
+#include "xfixesint.h"
 
 #ifdef XSERVER_DTRACE
 #include "registry.h"
@@ -148,6 +148,7 @@ xConnSetupPrefix connSetupPrefix;
 PaddingInfo PixmapWidthPaddingInfo[33];
 
 static ClientPtr grabClient;
+static ClientPtr currentClient; /* Client for the request currently being dispatched */
 
 #define GrabNone 0
 #define GrabActive 1
@@ -164,6 +165,7 @@ static int nextFreeClientID;    /* always MIN free client ID */
 static int nClients;            /* number of authorized clients */
 
 CallbackListPtr ClientStateCallback;
+OsTimerPtr dispatchExceptionTimer;
 
 /* dispatchException & isItTimeToYield must be declared volatile since they
  * are modified by signal handlers - otherwise optimizer may assume it doesn't
@@ -175,6 +177,23 @@ volatile char isItTimeToYield;
 
 #define SAME_SCREENS(a, b) (\
     (a.pScreen == b.pScreen))
+
+ClientPtr
+GetCurrentClient(void)
+{
+    if (in_input_thread()) {
+        static Bool warned;
+
+        if (!warned) {
+            ErrorF("[dix] Error GetCurrentClient called from input-thread\n");
+            warned = TRUE;
+        }
+
+        return NULL;
+    }
+
+    return currentClient;
+}
 
 void
 SetInputCheck(HWEventQueuePtr c0, HWEventQueuePtr c1)
@@ -382,6 +401,58 @@ SmartScheduleClient(void)
     return best;
 }
 
+static CARD32
+DispatchExceptionCallback(OsTimerPtr timer, CARD32 time, void *arg)
+{
+    dispatchException |= dispatchExceptionAtReset;
+
+    /* Don't re-arm the timer */
+    return 0;
+}
+
+static void
+CancelDispatchExceptionTimer(void)
+{
+    TimerFree(dispatchExceptionTimer);
+    dispatchExceptionTimer = NULL;
+}
+
+static void
+SetDispatchExceptionTimer(void)
+{
+    /* The timer delay is only for terminate, not reset */
+    if (!(dispatchExceptionAtReset & DE_TERMINATE)) {
+        dispatchException |= dispatchExceptionAtReset;
+        return;
+    }
+
+    CancelDispatchExceptionTimer();
+
+    if (terminateDelay == 0)
+        dispatchException |= dispatchExceptionAtReset;
+    else
+        dispatchExceptionTimer = TimerSet(dispatchExceptionTimer,
+                                          0, terminateDelay * 1000 /* msec */,
+                                          &DispatchExceptionCallback,
+                                          NULL);
+}
+
+static Bool
+ShouldDisconnectRemainingClients(void)
+{
+    int i;
+
+    for (i = 1; i < currentMaxClients; i++) {
+        if (clients[i]) {
+            if (!XFixesShouldDisconnectClient(clients[i]))
+                return FALSE;
+        }
+    }
+
+    /* All remaining clients can be safely ignored */
+    return TRUE;
+}
+
 void
 EnableLimitedSchedulingLatency(void)
 {
@@ -474,9 +545,12 @@ Dispatch(void)
                     result = BadLength;
                 else {
                     result = XaceHookDispatch(client, client->majorOp);
-                    if (result == Success)
+                    if (result == Success) {
+                        currentClient = client;
                         result =
                             (*client->requestVector[client->majorOp]) (client);
+                        currentClient = NULL;
+                    }
                 }
                 if (!SmartScheduleSignalEnable)
                     SmartScheduleTime = GetTimeInMillis();
@@ -515,18 +589,11 @@ Dispatch(void)
 }
 
 static int VendorRelease = VENDOR_RELEASE;
-static const char *VendorString = VENDOR_NAME;
 
 void
 SetVendorRelease(int release)
 {
     VendorRelease = release;
-}
-
-void
-SetVendorString(const char *vendor)
-{
-    VendorString = vendor;
 }
 
 Bool
@@ -540,6 +607,7 @@ CreateConnectionBlock(void)
     unsigned long vid;
     int i, j, k, lenofblock, sizesofar = 0;
     char *pBuf;
+    const char VendorString[] = VENDOR_NAME;
 
     memset(&setup, 0, sizeof(xConnSetup));
     /* Leave off the ridBase and ridMask, these must be sent with
@@ -3405,6 +3473,7 @@ ProcNoOperation(ClientPtr client)
  *********************/
 
 char dispatchExceptionAtReset = DE_RESET;
+int terminateDelay = 0;
 
 void
 CloseDownClient(ClientPtr client)
@@ -3461,7 +3530,7 @@ CloseDownClient(ClientPtr client)
 
     if (really_close_down) {
         if (client->clientState == ClientStateRunning && nClients == 0)
-            dispatchException |= dispatchExceptionAtReset;
+            SetDispatchExceptionTimer();
 
         client->clientState = ClientStateGone;
         if (ClientStateCallback) {
@@ -3473,6 +3542,7 @@ CloseDownClient(ClientPtr client)
             CallCallbacks((&ClientStateCallback), (void *) &clientinfo);
         }
         TouchListenerGone(client->clientAsMask);
+        GestureListenerGone(client->clientAsMask);
         FreeClientResources(client);
         /* Disable client ID tracking. This must be done after
          * ClientStateCallback. */
@@ -3489,6 +3559,9 @@ CloseDownClient(ClientPtr client)
         while (!clients[currentMaxClients - 1])
             currentMaxClients--;
     }
+
+    if (ShouldDisconnectRemainingClients())
+        SetDispatchExceptionTimer();
 }
 
 static void
@@ -3690,6 +3763,7 @@ SendConnSetup(ClientPtr client, const char *reason)
         clientinfo.setup = (xConnSetup *) lConnectionInfo;
         CallCallbacks((&ClientStateCallback), (void *) &clientinfo);
     }
+    CancelDispatchExceptionTimer();
     return Success;
 }
 
@@ -3846,11 +3920,11 @@ static int init_screen(ScreenPtr pScreen, int i, Bool gpu)
     pScreen->CreateScreenResources = 0;
 
     xorg_list_init(&pScreen->pixmap_dirty_list);
-    xorg_list_init(&pScreen->slave_list);
+    xorg_list_init(&pScreen->secondary_list);
 
     /*
      * This loop gets run once for every Screen that gets added,
-     * but thats ok.  If the ddx layer initializes the formats
+     * but that's ok.  If the ddx layer initializes the formats
      * one at a time calling AddScreen() after each, then each
      * iteration will make it a little more accurate.  Worst case
      * we do this loop N * numPixmapFormats where N is # of screens.
@@ -4014,54 +4088,54 @@ void
 AttachUnboundGPU(ScreenPtr pScreen, ScreenPtr new)
 {
     assert(new->isGPU);
-    assert(!new->current_master);
-    xorg_list_add(&new->slave_head, &pScreen->slave_list);
-    new->current_master = pScreen;
+    assert(!new->current_primary);
+    xorg_list_add(&new->secondary_head, &pScreen->secondary_list);
+    new->current_primary = pScreen;
 }
 
 void
-DetachUnboundGPU(ScreenPtr slave)
+DetachUnboundGPU(ScreenPtr secondary)
 {
-    assert(slave->isGPU);
-    assert(!slave->is_output_slave);
-    assert(!slave->is_offload_slave);
-    xorg_list_del(&slave->slave_head);
-    slave->current_master = NULL;
+    assert(secondary->isGPU);
+    assert(!secondary->is_output_secondary);
+    assert(!secondary->is_offload_secondary);
+    xorg_list_del(&secondary->secondary_head);
+    secondary->current_primary = NULL;
 }
 
 void
 AttachOutputGPU(ScreenPtr pScreen, ScreenPtr new)
 {
     assert(new->isGPU);
-    assert(!new->is_output_slave);
-    assert(new->current_master == pScreen);
-    new->is_output_slave = TRUE;
-    new->current_master->output_slaves++;
+    assert(!new->is_output_secondary);
+    assert(new->current_primary == pScreen);
+    new->is_output_secondary = TRUE;
+    new->current_primary->output_secondarys++;
 }
 
 void
-DetachOutputGPU(ScreenPtr slave)
+DetachOutputGPU(ScreenPtr secondary)
 {
-    assert(slave->isGPU);
-    assert(slave->is_output_slave);
-    slave->current_master->output_slaves--;
-    slave->is_output_slave = FALSE;
+    assert(secondary->isGPU);
+    assert(secondary->is_output_secondary);
+    secondary->current_primary->output_secondarys--;
+    secondary->is_output_secondary = FALSE;
 }
 
 void
 AttachOffloadGPU(ScreenPtr pScreen, ScreenPtr new)
 {
     assert(new->isGPU);
-    assert(!new->is_offload_slave);
-    assert(new->current_master == pScreen);
-    new->is_offload_slave = TRUE;
+    assert(!new->is_offload_secondary);
+    assert(new->current_primary == pScreen);
+    new->is_offload_secondary = TRUE;
 }
 
 void
-DetachOffloadGPU(ScreenPtr slave)
+DetachOffloadGPU(ScreenPtr secondary)
 {
-    assert(slave->isGPU);
-    assert(slave->is_offload_slave);
-    slave->is_offload_slave = FALSE;
+    assert(secondary->isGPU);
+    assert(secondary->is_offload_secondary);
+    secondary->is_offload_secondary = FALSE;
 }
 

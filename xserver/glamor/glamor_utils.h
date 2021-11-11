@@ -570,66 +570,7 @@
                                                     && (_w_) <= _glamor_->max_fbo_size  \
                                                     && (_h_) <= _glamor_->max_fbo_size)
 
-/* For 1bpp pixmap, we don't store it as texture. */
-#define glamor_check_pixmap_fbo_depth(_depth_) (			\
-						_depth_ == 8		\
-						|| _depth_ == 15	\
-						|| _depth_ == 16	\
-						|| _depth_ == 24	\
-						|| _depth_ == 30	\
-						|| _depth_ == 32)
-
 #define GLAMOR_PIXMAP_PRIV_HAS_FBO(pixmap_priv)    (pixmap_priv->gl_fbo == GLAMOR_FBO_NORMAL)
-
-/**
- * Borrow from uxa.
- */
-static inline CARD32
-format_for_depth(int depth)
-{
-    switch (depth) {
-    case 1:
-        return PICT_a1;
-    case 4:
-        return PICT_a4;
-    case 8:
-        return PICT_a8;
-    case 15:
-        return PICT_x1r5g5b5;
-    case 16:
-        return PICT_r5g6b5;
-    default:
-    case 24:
-        return PICT_x8r8g8b8;
-    case 30:
-        return PICT_x2r10g10b10;
-    case 32:
-        return PICT_a8r8g8b8;
-    }
-}
-
-static inline GLenum
-gl_iformat_for_pixmap(PixmapPtr pixmap)
-{
-    glamor_screen_private *glamor_priv =
-        glamor_get_screen_private((pixmap)->drawable.pScreen);
-
-    if (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP &&
-        ((pixmap)->drawable.depth == 1 || (pixmap)->drawable.depth == 8)) {
-        return glamor_priv->one_channel_format;
-    } else if (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP &&
-               (pixmap)->drawable.depth == 30) {
-        return GL_RGB10_A2;
-    } else {
-        return GL_RGBA;
-    }
-}
-
-static inline CARD32
-format_for_pixmap(PixmapPtr pixmap)
-{
-    return format_for_depth((pixmap)->drawable.depth);
-}
 
 #define REVERT_NONE       		0
 #define REVERT_NORMAL     		1
@@ -791,5 +732,9 @@ glamor_glDrawArrays_GL_QUADS(glamor_screen_private *glamor_priv, unsigned count)
     }
 }
 
+static inline Bool
+glamor_glsl_has_ints(glamor_screen_private *glamor_priv) {
+    return glamor_priv->glsl_version >= 130 || glamor_priv->use_gpu_shader4;
+}
 
 #endif

@@ -71,6 +71,22 @@ ms_present_get_ust_msc(RRCrtcPtr crtc, CARD64 *ust, CARD64 *msc)
 }
 
 /*
+ * Changes the variable refresh state for every CRTC on the screen.
+ */
+void
+ms_present_set_screen_vrr(ScrnInfoPtr scrn, Bool vrr_enabled)
+{
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
+    xf86CrtcPtr crtc;
+    int i;
+
+    for (i = 0; i < config->num_crtc; i++) {
+        crtc = config->crtc[i];
+        drmmode_crtc_set_vrr(crtc, vrr_enabled);
+    }
+}
+
+/*
  * Called when the queued vblank event has occurred
  */
 static void
@@ -126,9 +142,8 @@ ms_present_queue_vblank(RRCrtcPtr crtc,
     if (!ms_queue_vblank(xf86_crtc, MS_QUEUE_ABSOLUTE, msc, NULL, seq))
         return BadAlloc;
 
-    DebugPresent(("\t\tmq %lld seq %u msc %llu (hw msc %u)\n",
-                 (long long) event_id, seq, (long long) msc,
-                 vbl.request.sequence));
+    DebugPresent(("\t\tmq %lld seq %u msc %llu\n",
+                 (long long) event_id, seq, (long long) msc));
     return Success;
 }
 
@@ -166,7 +181,7 @@ ms_present_flush(WindowPtr window)
     modesettingPtr ms = modesettingPTR(scrn);
 
     if (ms->drmmode.glamor)
-        glamor_block_handler(screen);
+        ms->glamor.block_handler(screen);
 #endif
 }
 
@@ -252,8 +267,11 @@ ms_present_check_unflip(RRCrtcPtr crtc,
     if (num_crtcs_on == 0)
         return FALSE;
 
-    /* Check stride, can't change that on flip */
-    if (!ms->atomic_modeset &&
+    /*
+     * Check stride, can't change that reliably on flip on some drivers, unless
+     * the kms driver is atomic_modeset_capable.
+     */
+    if (!ms->atomic_modeset_capable &&
         pixmap->devKind != drmmode_bo_get_pitch(&ms->drmmode.front_bo))
         return FALSE;
 
@@ -262,7 +280,7 @@ ms_present_check_unflip(RRCrtcPtr crtc,
 
 #ifdef GBM_BO_WITH_MODIFIERS
     /* Check if buffer format/modifier is supported by all active CRTCs */
-    gbm = glamor_gbm_bo_from_pixmap(screen, pixmap);
+    gbm = ms->glamor.gbm_bo_from_pixmap(screen, pixmap);
     if (gbm) {
         uint32_t format;
         uint64_t modifier;
@@ -302,7 +320,12 @@ ms_present_check_flip(RRCrtcPtr crtc,
     if (ms->drmmode.sprites_visible > 0)
         return FALSE;
 
-    return ms_present_check_unflip(crtc, window, pixmap, sync_flip, reason);
+    if(!ms_present_check_unflip(crtc, window, pixmap, sync_flip, reason))
+        return FALSE;
+
+    ms->flip_window = window;
+
+    return TRUE;
 }
 
 /*
@@ -324,7 +347,7 @@ ms_present_flip(RRCrtcPtr crtc,
     Bool ret;
     struct ms_present_vblank_event *event;
 
-    if (!ms_present_check_flip(crtc, screen->root, pixmap, sync_flip, NULL))
+    if (!ms_present_check_flip(crtc, ms->flip_window, pixmap, sync_flip, NULL))
         return FALSE;
 
     event = calloc(1, sizeof(struct ms_present_vblank_event));
@@ -337,11 +360,21 @@ ms_present_flip(RRCrtcPtr crtc,
     event->event_id = event_id;
     event->unflip = FALSE;
 
+    /* A window can only flip if it covers the entire X screen.
+     * Only one window can flip at a time.
+     *
+     * If the window also has the variable refresh property then
+     * variable refresh supported can be enabled on every CRTC.
+     */
+    if (ms->vrr_support && ms->is_connector_vrr_capable &&
+          ms_window_has_variable_refresh(ms, ms->flip_window)) {
+        ms_present_set_screen_vrr(scrn, TRUE);
+    }
+
     ret = ms_do_pageflip(screen, pixmap, event, drmmode_crtc->vblank_pipe, !sync_flip,
-                         ms_present_flip_handler, ms_present_flip_abort);
-    if (!ret)
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR, "present flip failed\n");
-    else
+                         ms_present_flip_handler, ms_present_flip_abort,
+                         "Present-flip");
+    if (ret)
         ms->drmmode.present_flipping = TRUE;
 
     return ret;
@@ -360,6 +393,8 @@ ms_present_unflip(ScreenPtr screen, uint64_t event_id)
     int i;
     struct ms_present_vblank_event *event;
 
+    ms_present_set_screen_vrr(scrn, FALSE);
+
     event = calloc(1, sizeof(struct ms_present_vblank_event));
     if (!event)
         return;
@@ -369,7 +404,8 @@ ms_present_unflip(ScreenPtr screen, uint64_t event_id)
 
     if (ms_present_check_unflip(NULL, screen->root, pixmap, TRUE, NULL) &&
         ms_do_pageflip(screen, pixmap, event, -1, FALSE,
-                       ms_present_flip_handler, ms_present_flip_abort)) {
+                       ms_present_flip_handler, ms_present_flip_abort,
+                       "Present-unflip")) {
         return;
     }
 
@@ -428,8 +464,10 @@ ms_present_screen_init(ScreenPtr screen)
     int ret;
 
     ret = drmGetCap(ms->fd, DRM_CAP_ASYNC_PAGE_FLIP, &value);
-    if (ret == 0 && value == 1)
+    if (ret == 0 && value == 1) {
         ms_present_screen_info.capabilities |= PresentCapabilityAsync;
+        ms->drmmode.can_async_flip = TRUE;
+    }
 
     return present_screen_init(screen, &ms_present_screen_info);
 }

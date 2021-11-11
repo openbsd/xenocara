@@ -110,7 +110,7 @@ extern _X_EXPORT Bool glamor_close_screen(ScreenPtr screen);
 
 extern _X_EXPORT uint32_t glamor_get_pixmap_texture(PixmapPtr pixmap);
 
-extern _X_EXPORT void glamor_set_pixmap_texture(PixmapPtr pixmap,
+extern _X_EXPORT Bool glamor_set_pixmap_texture(PixmapPtr pixmap,
                                                 unsigned int tex);
 
 extern _X_EXPORT void glamor_set_pixmap_type(PixmapPtr pixmap,
@@ -129,6 +129,7 @@ extern _X_EXPORT Bool glamor_destroy_pixmap(PixmapPtr pixmap);
 #define GLAMOR_CREATE_FBO_NO_FBO        0x103
 #define GLAMOR_CREATE_NO_LARGE          0x105
 #define GLAMOR_CREATE_PIXMAP_NO_TEXTURE 0x106
+#define GLAMOR_CREATE_FORMAT_CBCR       0x107
 
 /* @glamor_egl_exchange_buffers: Exchange the underlying buffers(KHR image,fbo).
  *
@@ -343,7 +344,7 @@ extern _X_EXPORT void glamor_set_drawable_modifiers_func(ScreenPtr screen,
  * @scrn: Current screen info pointer.
  * @fd:   Current drm fd.
  *
- * This function creates and intialize EGL contexts.
+ * This function creates and initializes EGL contexts.
  * Should be called from DDX's preInit function.
  * Return TRUE if success, otherwise return FALSE.
  * */

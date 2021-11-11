@@ -9,12 +9,6 @@
 /* Builder address */
 #undef BUILDERADDR
 
-/* Operating System Name */
-#undef OSNAME
-
-/* Operating System Vendor */
-#undef OSVENDOR
-
 /* Builder string */
 #undef BUILDERSTRING
 
@@ -523,6 +517,12 @@
 
 /* Have epoll_create1() */
 #undef HAVE_EPOLL_CREATE1
+
+/* Have <sys/sysmacros.h> header */
+#undef HAVE_SYS_SYSMACROS_H
+
+/* Have sigprocmask */
+#undef HAVE_SIGPROCMASK
 
 /* Have isastream */
 #undef HAVE_ISASTREAM

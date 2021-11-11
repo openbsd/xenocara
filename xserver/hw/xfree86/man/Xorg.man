@@ -161,9 +161,6 @@ bpp framebuffer rather than the (possibly default) 32 bpp framebuffer
 (or vice versa).  Legal values are 1, 8, 16, 24, 32.  Not all drivers
 support all values.
 .TP 8
-.B \-flipPixels
-Swap the default values for the black and white pixels.
-.TP 8
 .BI \-gamma " value"
 Set the gamma correction.
 .I value
@@ -280,6 +277,13 @@ is a comma separated list of directories to search for
 .B Xorg
 server modules.  This option is only available when the server is run
 as root (i.e, with real-uid 0).
+.TP 8
+.B \-noautoBindGPU
+Disable automatically setting secondary GPUs up as output sinks and offload
+sources. This is equivalent to setting the
+.B AutoBindGPU
+xorg.conf(__filemansuffix__) file option. To
+.B false.
 .TP 8
 .B \-nosilk
 Disable Silken Mouse support.

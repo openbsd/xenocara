@@ -23,6 +23,7 @@ sdk_HEADERS =		\
 	extension.h	\
 	extinit.h	\
 	extnsionst.h	\
+	fourcc.h	\
 	gc.h		\
 	gcstruct.h	\
 	globals.h	\
@@ -52,7 +53,6 @@ sdk_HEADERS =		\
 	scrnintstr.h	\
 	selection.h	\
 	servermd.h	\
-	site.h		\
 	validate.h	\
 	displaymode.h    \
 	window.h	\
@@ -81,6 +81,15 @@ EXTRA_DIST = 	\
         vidmodestr.h \
 	xorg-config.h.meson.in \
 	xorg-server.h.meson.in \
-	xwayland-config.h.meson.in \
 	xwin-config.h.meson.in \
 	xsha1.h
+
+if XSERVER_DTRACE
+# Generate dtrace header file for C sources to include
+BUILT_SOURCES = Xserver-dtrace.h
+
+Xserver-dtrace.h: $(srcdir)/Xserver.d
+	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d
+endif
+
+CLEANFILES = Xserver-dtrace.h

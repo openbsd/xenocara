@@ -100,12 +100,11 @@ SOFTWARE.
 #include "misc.h"
 #include "extension.h"
 #include "extinit.h"
-#ifdef INXQUARTZ
-#include "nonsdk_extinit.h"
-#endif
 #include "micmap.h"
 #include "os.h"
 #include "globals.h"
+
+#include "miinitext.h"
 
 /* List of built-in (statically linked) extensions */
 static const ExtensionModule staticExtensions[] = {
@@ -127,12 +126,6 @@ static const ExtensionModule staticExtensions[] = {
 #endif
 #ifdef PANORAMIX
     {PanoramiXExtensionInit, "XINERAMA", &noPanoramiXExtension},
-#endif
-#ifdef INXQUARTZ
-    /* PseudoramiXExtensionInit must be done before RRExtensionInit, or
-     * XQuartz will render windows offscreen.
-     */
-    {PseudoramiXExtensionInit, "PseudoramiX", &noPseudoramiXExtension},
 #endif
     /* must be before Render to layer DisplayCursor correctly */
     {XFixesExtensionInit, "XFIXES", &noXFixesExtension},
@@ -182,6 +175,21 @@ static const ExtensionModule staticExtensions[] = {
 #endif
 };
 
+void
+ListStaticExtensions(void)
+{
+    const ExtensionModule *ext;
+    int i;
+
+    ErrorF(" Only the following extensions can be run-time enabled/disabled:\n");
+    for (i = 0; i < ARRAY_SIZE(staticExtensions); i++) {
+        ext = &staticExtensions[i];
+        if (ext->disablePtr != NULL) {
+            ErrorF("\t%s\n", ext->name);
+        }
+    }
+}
+
 Bool
 EnableDisableExtension(const char *name, Bool enable)
 {
@@ -221,16 +229,13 @@ EnableDisableExtensionError(const char *name, Bool enable)
             break;
         }
     }
-    if (found == FALSE)
+    if (found == FALSE) {
         ErrorF("[mi] Extension \"%s\" is not recognized\n", name);
-    ErrorF("[mi] Only the following extensions can be run-time %s:\n",
-           enable ? "enabled" : "disabled");
-    for (i = 0; i < ARRAY_SIZE(staticExtensions); i++) {
-        ext = &staticExtensions[i];
-        if (ext->disablePtr != NULL) {
-            ErrorF("[mi]    %s\n", ext->name);
-        }
+        /* Disabling a non-existing extension is a no-op anyway */
+        if (enable == FALSE)
+            return;
     }
+    ListStaticExtensions();
 }
 
 static ExtensionModule *ExtensionModuleList = NULL;

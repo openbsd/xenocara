@@ -110,6 +110,10 @@ __stdcall unsigned long GetTickCount(void);
 
 #include "picture.h"
 
+#include "miinitext.h"
+
+#include "present.h"
+
 Bool noTestExtensions;
 
 #ifdef COMPOSITE
@@ -331,7 +335,7 @@ LockServer(void)
              */
             break;
         }
-        else {
+        else if (errno == EEXIST) {
             /*
              * Read the pid from the existing file
              */
@@ -375,6 +379,12 @@ LockServer(void)
                      port, "\tIf this server is no longer running, remove",
                      LockFile, "\tand start again.");
             }
+        }
+        else {
+            unlink(tmp);
+            FatalError
+                ("Linking lock file (%s) in place failed: %s\n",
+                 LockFile, strerror(errno));
         }
     }
     unlink(tmp);
@@ -538,8 +548,7 @@ UseMsg(void)
     ErrorF
         ("-deferglyphs [none|all|16] defer loading of [no|all|16-bit] glyphs\n");
     ErrorF("-f #                   bell base (0-100)\n");
-    ErrorF("-fc string             cursor font\n");
-    ErrorF("-fn string             default font name\n");
+    ErrorF("-fakescreenfps #       fake screen default fps (1-600)\n");
     ErrorF("-fp string             default font path\n");
     ErrorF("-help                  prints message with these options\n");
     ErrorF("+iglx                  Allow creating indirect GLX contexts\n");
@@ -573,13 +582,11 @@ UseMsg(void)
     ErrorF("-s #                   screen-saver timeout (minutes)\n");
     ErrorF("-seat string           seat to run on\n");
     ErrorF("-t #                   default pointer threshold (pixels/t)\n");
-    ErrorF("-terminate             terminate at server reset\n");
-    ErrorF("-to #                  connection time out\n");
+    ErrorF("-terminate [delay]     terminate at server reset (optional delay in sec)\n");
     ErrorF("-tst                   disable testing extensions\n");
     ErrorF("ttyxx                  server started from init on /dev/ttyxx\n");
     ErrorF("v                      video blanking for screen-saver\n");
     ErrorF("-v                     screen-saver without video blanking\n");
-    ErrorF("-wm                    WhenMapped default backing-store\n");
     ErrorF("-wr                    create root window with white background\n");
     ErrorF("-maxbigreqsize         set maximal bigrequest size \n");
 #ifdef PANORAMIX
@@ -592,6 +599,7 @@ UseMsg(void)
     ErrorF("-sigstop               Enable SIGSTOP based startup\n");
     ErrorF("+extension name        Enable extension\n");
     ErrorF("-extension name        Disable extension\n");
+    ListStaticExtensions();
 #ifdef XDMCP
     XdmcpUseMsg();
 #endif
@@ -789,15 +797,12 @@ ProcessCommandLine(int argc, char *argv[])
             else
                 UseMsg();
         }
-        else if (strcmp(argv[i], "-fc") == 0) {
-            if (++i < argc)
-                defaultCursorFont = argv[i];
-            else
-                UseMsg();
-        }
-        else if (strcmp(argv[i], "-fn") == 0) {
-            if (++i < argc)
-                defaultTextFont = argv[i];
+        else if (strcmp(argv[i], "-fakescreenfps") == 0) {
+            if (++i < argc) {
+                FakeScreenFps = (uint32_t) atoi(argv[i]);
+                if (FakeScreenFps < 1 || FakeScreenFps > 600)
+                    FatalError("fakescreenfps must be an integer in [1;600] range\n");
+            }
             else
                 UseMsg();
         }
@@ -943,12 +948,10 @@ ProcessCommandLine(int argc, char *argv[])
         }
         else if (strcmp(argv[i], "-terminate") == 0) {
             dispatchExceptionAtReset = DE_TERMINATE;
-        }
-        else if (strcmp(argv[i], "-to") == 0) {
-            if (++i < argc)
-                TimeOutValue = ((CARD32) atoi(argv[i])) * MILLI_PER_SECOND;
-            else
-                UseMsg();
+            terminateDelay = -1;
+            if ((i + 1 < argc) && (isdigit(*argv[i + 1])))
+               terminateDelay = atoi(argv[++i]);
+            terminateDelay = max(0, terminateDelay);
         }
         else if (strcmp(argv[i], "-tst") == 0) {
             noTestExtensions = TRUE;
@@ -957,8 +960,6 @@ ProcessCommandLine(int argc, char *argv[])
             defaultScreenSaverBlanking = PreferBlanking;
         else if (strcmp(argv[i], "-v") == 0)
             defaultScreenSaverBlanking = DontPreferBlanking;
-        else if (strcmp(argv[i], "-wm") == 0)
-            defaultBackingStore = WhenMapped;
         else if (strcmp(argv[i], "-wr") == 0)
             whiteRoot = TRUE;
         else if (strcmp(argv[i], "-background") == 0) {
@@ -1297,7 +1298,7 @@ SmartScheduleInit(void)
 #endif
 }
 
-#ifdef SIG_BLOCK
+#ifdef HAVE_SIGPROCMASK
 static sigset_t PreviousSignalMask;
 static int BlockedSignalCount;
 #endif
@@ -1305,7 +1306,7 @@ static int BlockedSignalCount;
 void
 OsBlockSignals(void)
 {
-#ifdef SIG_BLOCK
+#ifdef HAVE_SIGPROCMASK
     if (BlockedSignalCount++ == 0) {
         sigset_t set;
 
@@ -1327,7 +1328,7 @@ OsBlockSignals(void)
 void
 OsReleaseSignals(void)
 {
-#ifdef SIG_BLOCK
+#ifdef HAVE_SIGPROCMASK
     if (--BlockedSignalCount == 0) {
         xthread_sigmask(SIG_SETMASK, &PreviousSignalMask, 0);
     }
@@ -1337,7 +1338,7 @@ OsReleaseSignals(void)
 void
 OsResetSignals(void)
 {
-#ifdef SIG_BLOCK
+#ifdef HAVE_SIGPROCMASK
     while (BlockedSignalCount > 0)
         OsReleaseSignals();
     input_force_unlock();

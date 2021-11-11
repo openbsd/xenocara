@@ -68,9 +68,9 @@
 #define _XF86_OSPROC_H
 
 /*
- * The actual prototypes have been pulled into this seperate file so
+ * The actual prototypes have been pulled into this separate file so
  * that they can can be used without pulling in all of the OS specific
- * stuff like sys/stat.h, etc. This casues problem for loadable modules.
+ * stuff like sys/stat.h, etc. that causes problems for loadable modules.
  */
 
 /*
@@ -90,7 +90,7 @@
 #ifndef NO_OSLIB_PROTOTYPES
 /*
  * This is to prevent re-entrancy to FatalError() when aborting.
- * Anything that can be called as a result of AbortDDX() should use this
+ * Anything that can be called as a result of ddxGiveUp() should use this
  * instead of FatalError().
  */
 

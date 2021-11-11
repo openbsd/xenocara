@@ -241,7 +241,8 @@ __glXdirectContextCreate(__GLXscreen * screen,
 static int
 DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
                 GLXContextID shareList, __GLXconfig * config,
-                __GLXscreen * pGlxScreen, GLboolean isDirect)
+                __GLXscreen * pGlxScreen, GLboolean isDirect,
+                int renderType)
 {
     ClientPtr client = cl->client;
     __GLXcontext *glxc, *shareglxc;
@@ -251,7 +252,7 @@ DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
      ** Find the display list space that we want to share.
      **
      ** NOTE: In a multithreaded X server, we would need to keep a reference
-     ** count for each display list so that if one client detroyed a list that
+     ** count for each display list so that if one client destroyed a list that
      ** another client was using, the list would not really be freed until it
      ** was no longer in use.  Since this sample implementation has no support
      ** for multithreaded servers, we don't do this.
@@ -283,6 +284,15 @@ DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
              ** for; this way we can share display list space with shareList.
              */
             isDirect = GL_FALSE;
+        }
+
+        /* Core GLX doesn't explicitly require this, but GLX_ARB_create_context
+         * does (see glx/createcontext.c), and it's assumed by our
+         * implementation anyway, so let's be consistent about it.
+         */
+        if (shareglxc->pGlxScreen != pGlxScreen) {
+            client->errorValue = shareglxc->pGlxScreen->pScreen->myNum;
+            return BadMatch;
         }
     }
 
@@ -323,6 +333,7 @@ DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
     glxc->idExists = GL_TRUE;
     glxc->isDirect = isDirect;
     glxc->renderMode = GL_RENDER;
+    glxc->renderType = renderType;
 
     /* The GLX_ARB_create_context_robustness spec says:
      *
@@ -372,7 +383,8 @@ __glXDisp_CreateContext(__GLXclientState * cl, GLbyte * pc)
         return err;
 
     return DoCreateContext(cl, req->context, req->shareList,
-                           config, pGlxScreen, req->isDirect);
+                           config, pGlxScreen, req->isDirect,
+                           GLX_RGBA_TYPE);
 }
 
 int
@@ -389,7 +401,8 @@ __glXDisp_CreateNewContext(__GLXclientState * cl, GLbyte * pc)
         return err;
 
     return DoCreateContext(cl, req->context, req->shareList,
-                           config, pGlxScreen, req->isDirect);
+                           config, pGlxScreen, req->isDirect,
+                           req->renderType);
 }
 
 int
@@ -410,7 +423,8 @@ __glXDisp_CreateContextWithConfigSGIX(__GLXclientState * cl, GLbyte * pc)
         return err;
 
     return DoCreateContext(cl, req->context, req->shareList,
-                           config, pGlxScreen, req->isDirect);
+                           config, pGlxScreen, req->isDirect,
+                           req->renderType);
 }
 
 int
@@ -771,7 +785,7 @@ __glXDisp_WaitGL(__GLXclientState * cl, GLbyte * pc)
         glFinish();
     }
 
-    if (glxc && glxc->drawPriv->waitGL)
+    if (glxc && glxc->drawPriv && glxc->drawPriv->waitGL)
         (*glxc->drawPriv->waitGL) (glxc->drawPriv);
 
     return Success;
@@ -795,7 +809,7 @@ __glXDisp_WaitX(__GLXclientState * cl, GLbyte * pc)
             return error;
     }
 
-    if (glxc && glxc->drawPriv->waitX)
+    if (glxc && glxc->drawPriv && glxc->drawPriv->waitX)
         (*glxc->drawPriv->waitX) (glxc->drawPriv);
 
     return Success;
@@ -978,7 +992,6 @@ __glXDisp_GetVisualConfigs(__GLXclientState * cl, GLbyte * pc)
         }
         /* Pad with zeroes, so that attributes count is constant. */
         while (p < GLX_VIS_CONFIG_TOTAL) {
-            buf[p++] = 0;
             buf[p++] = 0;
         }
 
@@ -1667,7 +1680,7 @@ DoQueryContext(__GLXclientState * cl, GLXContextID gcId)
     sendBuf[6] = GLX_FBCONFIG_ID;
     sendBuf[7] = (int) (ctx->config ? ctx->config->fbconfigID : 0);
     sendBuf[8] = GLX_RENDER_TYPE;
-    sendBuf[9] = (int) (ctx->config ? ctx->config->renderType : GLX_DONT_CARE);
+    sendBuf[9] = (int) (ctx->renderType);
 
     if (client->swapped) {
         int length = reply.length;
@@ -1859,7 +1872,7 @@ DoGetDrawableAttributes(__GLXclientState * cl, XID drawId)
     xGLXGetDrawableAttributesReply reply;
     __GLXdrawable *pGlxDraw = NULL;
     DrawablePtr pDraw;
-    CARD32 attributes[18];
+    CARD32 attributes[20];
     int num = 0, error;
 
     if (!validGlxDrawable(client, drawId, GLX_DRAWABLE_ANY,
@@ -1868,7 +1881,7 @@ DoGetDrawableAttributes(__GLXclientState * cl, XID drawId)
         int err = dixLookupWindow((WindowPtr *)&pDraw, drawId, client,
                                   DixGetAttrAccess);
         if (err != Success)
-            return error;
+            return __glXError(GLXBadDrawable);
     }
     if (pGlxDraw)
         pDraw = pGlxDraw->pDraw;
@@ -1896,6 +1909,14 @@ DoGetDrawableAttributes(__GLXclientState * cl, XID drawId)
             ATTRIB(GLX_STEREO_TREE_EXT, 0);
         }
     }
+
+    /* GLX_EXT_get_drawable_type */
+    if (!pGlxDraw || pGlxDraw->type == GLX_DRAWABLE_WINDOW)
+        ATTRIB(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
+    else if (pGlxDraw->type == GLX_DRAWABLE_PIXMAP)
+        ATTRIB(GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT);
+    else if (pGlxDraw->type == GLX_DRAWABLE_PBUFFER)
+        ATTRIB(GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT);
 #undef ATTRIB
 
     reply = (xGLXGetDrawableAttributesReply) {

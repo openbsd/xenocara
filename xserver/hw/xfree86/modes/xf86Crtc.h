@@ -964,6 +964,10 @@ extern _X_EXPORT void
 
 extern _X_EXPORT ScreenInitRetType xf86CrtcScreenInit(ScreenPtr pScreen);
 
+extern _X_EXPORT void
+xf86AssignNoOutputInitialSize(ScrnInfoPtr scrn, const OptionInfoRec *options,
+                              int *no_output_width, int *no_output_height);
+
 extern _X_EXPORT Bool
  xf86InitialConfiguration(ScrnInfoPtr pScrn, Bool canGrow);
 
@@ -1062,7 +1066,7 @@ extern _X_EXPORT Bool
  xf86_cursors_init(ScreenPtr screen, int max_width, int max_height, int flags);
 
 /**
- * Superseeded by xf86CursorResetCursor, which is getting called
+ * Superseded by xf86CursorResetCursor, which is getting called
  * automatically when necessary.
  */
 static _X_INLINE _X_DEPRECATED void xf86_reload_cursors(ScreenPtr screen) {}
@@ -1140,4 +1144,5 @@ xf86ProviderSetup(ScrnInfoPtr scrn,
 extern _X_EXPORT void
 xf86DetachAllCrtc(ScrnInfoPtr scrn);
 
+Bool xf86OutputForceEnabled(xf86OutputPtr output);
 #endif                          /* _XF86CRTC_H_ */

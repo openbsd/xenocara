@@ -71,7 +71,6 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -80,10 +79,10 @@ libdix_la_LIBADD =
 am_libdix_la_OBJECTS = atom.lo colormap.lo cursor.lo devices.lo \
 	dispatch.lo dixfonts.lo main.lo dixutils.lo enterleave.lo \
 	events.lo eventconvert.lo extension.lo gc.lo getevents.lo \
-	globals.lo glyphcurs.lo grabs.lo initatoms.lo inpututils.lo \
-	pixmap.lo privates.lo property.lo ptrveloc.lo region.lo \
-	registry.lo resource.lo selection.lo swaprep.lo swapreq.lo \
-	tables.lo touch.lo window.lo
+	gestures.lo globals.lo glyphcurs.lo grabs.lo initatoms.lo \
+	inpututils.lo pixmap.lo privates.lo property.lo ptrveloc.lo \
+	region.lo registry.lo resource.lo selection.lo swaprep.lo \
+	swapreq.lo tables.lo touch.lo window.lo
 libdix_la_OBJECTS = $(am_libdix_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -187,8 +186,6 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
-BUILD_DATE = @BUILD_DATE@
-BUILD_TIME = @BUILD_TIME@
 BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 BUNDLE_VERSION = @BUNDLE_VERSION@
 BUNDLE_VERSION_STRING = @BUNDLE_VERSION_STRING@
@@ -220,14 +217,6 @@ DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
-DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
-DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
-DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
-DMXMODULES_LIBS = @DMXMODULES_LIBS@
-DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
-DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
-DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
-DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
 DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -301,6 +290,8 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
 LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
+LIBXCVT_CFLAGS = @LIBXCVT_CFLAGS@
+LIBXCVT_LIBS = @LIBXCVT_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -353,7 +344,6 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
-SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -377,29 +367,13 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
-WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
-WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
-WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
-WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
-WAYLAND_SCANNER = @WAYLAND_SCANNER@
-WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
-WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
-WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
-WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
-X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
-X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
 XCONFIGDIR = @XCONFIGDIR@
 XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
-XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
-XDMXCONFIG_DEP_LIBS = @XDMXCONFIG_DEP_LIBS@
-XDMX_CFLAGS = @XDMX_CFLAGS@
-XDMX_LIBS = @XDMX_LIBS@
-XDMX_SYS_LIBS = @XDMX_SYS_LIBS@
 XEPHYR_CFLAGS = @XEPHYR_CFLAGS@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
@@ -437,8 +411,6 @@ XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FEED_URL = @XQUARTZ_SPARKLE_FEED_URL@
-XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
-XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
@@ -449,14 +421,8 @@ XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
 XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
-XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
-XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
-XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
-XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
-XWAYLAND_LIBS = @XWAYLAND_LIBS@
-XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -552,6 +518,7 @@ libdix_la_SOURCES = \
 	extension.c	\
 	gc.c		\
 	getevents.c	\
+	gestures.c	\
 	globals.c	\
 	glyphcurs.c	\
 	grabs.c		\
@@ -571,18 +538,13 @@ libdix_la_SOURCES = \
 	touch.c		\
 	window.c
 
-EXTRA_DIST = buildatoms BuiltInAtoms Xserver.d Xserver-dtrace.h.in
+EXTRA_DIST = buildatoms BuiltInAtoms
 
 # Install list of protocol names
 miscconfigdir = $(SERVER_MISC_CONFIG_PATH)
 dist_miscconfig_DATA = protocol.txt
-
-# Generate dtrace header file for C sources to include
-@XSERVER_DTRACE_TRUE@BUILT_SOURCES = Xserver-dtrace.h
 @SPECIAL_DTRACE_OBJECTS_TRUE@dix_O_SOURCES = 
-CLEANFILES = Xserver-dtrace.h
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -662,6 +624,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/events.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extension.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gestures.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getevents.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glyphcurs.Plo@am__quote@
@@ -829,15 +792,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(DATA)
 installdirs:
 	for dir in "$(DESTDIR)$(miscconfigdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -859,7 +820,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -868,7 +828,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
@@ -940,7 +899,7 @@ ps-am:
 
 uninstall-am: uninstall-dist_miscconfigDATA
 
-.MAKE: all check install install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-noinstLTLIBRARIES clean-noinstPROGRAMS \
@@ -958,13 +917,9 @@ uninstall-am: uninstall-dist_miscconfigDATA
 	uninstall-dist_miscconfigDATA
 
 
-@XSERVER_DTRACE_TRUE@Xserver-dtrace.h: $(srcdir)/Xserver.d
-@XSERVER_DTRACE_TRUE@	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d \
-@XSERVER_DTRACE_TRUE@		|| cp Xserver-dtrace.h.in $@
-
 # Generate dtrace object code for probes in libdix
-@SPECIAL_DTRACE_OBJECTS_TRUE@dtrace-dix.o: $(top_srcdir)/dix/Xserver.d libdix.la
-@SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
+@SPECIAL_DTRACE_OBJECTS_TRUE@dtrace-dix.o: $(top_srcdir)/include/Xserver.d libdix.la
+@SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)$(DTRACE) -G -C -o $@ -s $(top_srcdir)/include/Xserver.d $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 @SPECIAL_DTRACE_OBJECTS_TRUE@dix.O: dtrace-dix.o libdix.la
 @SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)ld -r -o $@ $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 

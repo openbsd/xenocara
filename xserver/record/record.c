@@ -1386,7 +1386,7 @@ RecordSanityCheckRegisterClients(RecordContextPtr pContext, ClientPtr client,
 typedef struct {
     int nintervals;             /* number of intervals in following array */
     RecordSetInterval *intervals;       /* array of intervals for this set */
-    int size;                   /* size of intevals array; >= nintervals */
+    int size;                   /* size of intervals array; >= nintervals */
     int align;                  /* alignment restriction for set */
     int offset;                 /* where to store set pointer rel. to start of RCAP */
     short first, last;          /* if for extension, major opcode interval */
@@ -1579,7 +1579,7 @@ RecordRegisterClients(RecordContextPtr pContext, ClientPtr client,
         return BadAlloc;
 
     /* We may have to create as many as one set for each "predefined"
-     * protocol types, plus one per range for extension reuests, plus one per
+     * protocol types, plus one per range for extension requests, plus one per
      * range for extension replies.
      */
     maxSets = PREDEFSETS + 2 * stuff->nRanges;
@@ -2376,7 +2376,8 @@ RecordDisableContext(RecordContextPtr pContext)
      * where all the disabled contexts are
      */
     i = RecordFindContextOnAllContexts(pContext);
-    assert((i != -1) && (i < numEnabledContexts));
+    assert(i != -1);
+    assert(i < numEnabledContexts);
     if (i != (numEnabledContexts - 1)) {
         ppAllContexts[i] = ppAllContexts[numEnabledContexts - 1];
         ppAllContexts[numEnabledContexts - 1] = pContext;

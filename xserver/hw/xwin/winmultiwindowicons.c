@@ -40,7 +40,6 @@
 #include <stdbool.h>
 
 #include <X11/Xwindows.h>
-#include <X11/Xlib.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_image.h>
@@ -347,7 +346,7 @@ NetWMToWinIcon(int bpp, uint32_t * icon)
         osvi.dwMajorVersion = 5;
         osvi.dwMinorVersion = 1;
 
-        /* Windows versions later than XP have icon alpha channel suport, 2000 does not */
+        /* Windows versions later than XP have icon alpha channel support, 2000 does not */
         VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION,
                           VER_GREATER_EQUAL);
         VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION,
@@ -582,7 +581,7 @@ winXIconToHICON(xcb_connection_t *conn, xcb_window_t id, int iconSize)
  */
 
 void
-winUpdateIcon(HWND hWnd, xcb_connection_t *conn, Window id, HICON hIconNew)
+winUpdateIcon(HWND hWnd, xcb_connection_t *conn, xcb_window_t id, HICON hIconNew)
 {
     HICON hIcon, hIconSmall = NULL, hIconOld;
 

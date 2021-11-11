@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.15 2018/01/20 12:25:26 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.16 2021/11/11 09:03:08 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -68,6 +68,7 @@
 
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
+#include "compiler.h"
 
 /***************************************************************************/
 /* Video Memory Mapping section                                            */

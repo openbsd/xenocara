@@ -55,8 +55,7 @@ host_triplet = @host@
 @NEED_DBUS_TRUE@am__append_2 = $(DBUS_CFLAGS)
 subdir = hw/xfree86/common
 DIST_COMMON = $(am__sdk_HEADERS_DIST) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/xf86Build.h.in \
-	$(top_srcdir)/depcomp
+	$(srcdir)/Makefile.in $(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -72,9 +71,8 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
-CONFIG_CLEAN_FILES = xf86Build.h
+CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libcommon_la_DEPENDENCIES = $(top_builddir)/config/libconfig.la
@@ -150,12 +148,11 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__sdk_HEADERS_DIST = compiler.h fourcc.h xf86.h xf86Module.h \
-	xf86Opt.h xf86PciInfo.h xf86Priv.h xf86Privstr.h xf86cmap.h \
-	xf86fbman.h xf86str.h xf86Xinput.h xisb.h xf86xv.h xf86xvmc.h \
-	xf86xvpriv.h dgaproc.h xorgVersion.h xf86sbusBus.h \
-	xf86VGAarbiter.h xf86Optionstr.h xf86platformBus.h \
-	xf86MatchDrivers.h xaarop.h
+am__sdk_HEADERS_DIST = compiler.h xf86.h xf86Module.h xf86Opt.h \
+	xf86PciInfo.h xf86Priv.h xf86Privstr.h xf86cmap.h xf86fbman.h \
+	xf86str.h xf86Xinput.h xisb.h xf86xv.h xf86xvmc.h xf86xvpriv.h \
+	dgaproc.h xorgVersion.h xf86sbusBus.h xf86VGAarbiter.h \
+	xf86Optionstr.h xf86platformBus.h xf86MatchDrivers.h xaarop.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -205,8 +202,6 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
-BUILD_DATE = @BUILD_DATE@
-BUILD_TIME = @BUILD_TIME@
 BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 BUNDLE_VERSION = @BUNDLE_VERSION@
 BUNDLE_VERSION_STRING = @BUNDLE_VERSION_STRING@
@@ -238,14 +233,6 @@ DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
-DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
-DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
-DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
-DMXMODULES_LIBS = @DMXMODULES_LIBS@
-DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
-DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
-DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
-DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
 DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -319,6 +306,8 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
 LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
+LIBXCVT_CFLAGS = @LIBXCVT_CFLAGS@
+LIBXCVT_LIBS = @LIBXCVT_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -371,7 +360,6 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
-SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -395,29 +383,13 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
-WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
-WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
-WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
-WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
-WAYLAND_SCANNER = @WAYLAND_SCANNER@
-WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
-WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
-WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
-WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
-X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
-X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
 XCONFIGDIR = @XCONFIGDIR@
 XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
-XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
-XDMXCONFIG_DEP_LIBS = @XDMXCONFIG_DEP_LIBS@
-XDMX_CFLAGS = @XDMX_CFLAGS@
-XDMX_LIBS = @XDMX_LIBS@
-XDMX_SYS_LIBS = @XDMX_SYS_LIBS@
 XEPHYR_CFLAGS = @XEPHYR_CFLAGS@
 XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
@@ -455,8 +427,6 @@ XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FEED_URL = @XQUARTZ_SPARKLE_FEED_URL@
-XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
-XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
 XSERVERCFLAGS_LIBS = @XSERVERCFLAGS_LIBS@
 XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
@@ -467,14 +437,8 @@ XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
 XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
-XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
-XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
-XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
-XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
-XWAYLAND_LIBS = @XWAYLAND_LIBS@
-XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -572,15 +536,16 @@ libcommon_la_SOURCES = xf86Configure.c xf86Bus.c xf86Config.c \
 		      xf86Extensions.c $(XF86VMODESOURCES) \
                       $(XVSOURCES) $(BUSSOURCES) $(RANDRSOURCES)
 
-nodist_libcommon_la_SOURCES = xf86DefModeSet.c xf86Build.h
+nodist_libcommon_la_SOURCES = xf86DefModeSet.c
 libcommon_la_LIBADD = $(top_builddir)/config/libconfig.la
 AM_CPPFLAGS = $(XORG_INCS) -I$(srcdir)/../ddc -I$(srcdir)/../i2c \
 	   -I$(srcdir)/../loader -I$(srcdir)/../parser \
            -I$(srcdir)/../vbe -I$(srcdir)/../int10 \
 	   -I$(srcdir)/../vgahw -I$(srcdir)/../dixmods/extmod \
-	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac -I$(srcdir)/../dri2
+	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac -I$(srcdir)/../dri2 \
+	   -I$(top_builddir)
 
-sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
+sdk_HEADERS = compiler.h xf86.h xf86Module.h xf86Opt.h \
               xf86PciInfo.h xf86Priv.h xf86Privstr.h \
               xf86cmap.h xf86fbman.h xf86str.h xf86Xinput.h xisb.h \
               $(XVSDKINCS) $(XF86VMODE_SDK) $(DGA_SDK) xorgVersion.h \
@@ -588,11 +553,9 @@ sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
 	      xf86platformBus.h xf86MatchDrivers.h \
 	      xaarop.h
 
-DISTCLEANFILES = xf86Build.h
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
 	compiler.h \
-	fourcc.h \
 	xf86.h \
 	xf86Bus.h \
 	xf86Config.h \
@@ -655,8 +618,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-xf86Build.h: $(top_builddir)/config.status $(srcdir)/xf86Build.h.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 clean-noinstLTLIBRARIES:
 	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
@@ -889,7 +850,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"

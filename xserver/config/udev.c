@@ -39,6 +39,10 @@
 #include "globals.h"
 #include "systemd-logind.h"
 
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
+
 #define UDEV_XKB_PROP_KEY "xkb"
 
 #define LOG_PROPERTY(path, prop, val)                                   \
@@ -56,7 +60,7 @@ static struct udev_monitor *udev_monitor;
 
 #ifdef CONFIG_UDEV_KMS
 static void
-config_udev_odev_setup_attribs(const char *path, const char *syspath,
+config_udev_odev_setup_attribs(struct udev_device *udev_device, const char *path, const char *syspath,
                                int major, int minor,
                                config_odev_probe_proc_ptr probe_callback);
 #endif
@@ -95,6 +99,9 @@ device_added(struct udev_device *udev_device)
     const char *syspath;
     const char *tags_prop;
     const char *key, *value, *tmp;
+#ifdef CONFIG_UDEV_KMS
+    const char *subsys = NULL;
+#endif
     InputOption *input_options;
     InputAttributes attrs = { };
     DeviceIntPtr dev = NULL;
@@ -116,7 +123,9 @@ device_added(struct udev_device *udev_device)
     devnum = udev_device_get_devnum(udev_device);
 
 #ifdef CONFIG_UDEV_KMS
-    if (!strcmp(udev_device_get_subsystem(udev_device), "drm")) {
+    subsys = udev_device_get_subsystem(udev_device);
+
+    if (subsys && !strcmp(subsys, "drm")) {
         const char *sysname = udev_device_get_sysname(udev_device);
 
         if (strncmp(sysname, "card", 4) != 0)
@@ -128,7 +137,7 @@ device_added(struct udev_device *udev_device)
 
         LogMessage(X_INFO, "config/udev: Adding drm device (%s)\n", path);
 
-        config_udev_odev_setup_attribs(path, syspath, major(devnum),
+        config_udev_odev_setup_attribs(udev_device, path, syspath, major(devnum),
                                        minor(devnum), NewGPUDeviceRequest);
         return;
     }
@@ -312,7 +321,9 @@ device_removed(struct udev_device *device)
     const char *syspath = udev_device_get_syspath(device);
 
 #ifdef CONFIG_UDEV_KMS
-    if (!strcmp(udev_device_get_subsystem(device), "drm")) {
+    const char *subsys = udev_device_get_subsystem(device);
+
+    if (subsys && !strcmp(subsys, "drm")) {
         const char *sysname = udev_device_get_sysname(device);
         const char *path = udev_device_get_devnode(device);
         dev_t devnum = udev_device_get_devnum(device);
@@ -322,7 +333,7 @@ device_removed(struct udev_device *device)
 
         LogMessage(X_INFO, "config/udev: removing GPU device %s %s\n",
                    syspath, path);
-        config_udev_odev_setup_attribs(path, syspath, major(devnum),
+        config_udev_odev_setup_attribs(device, path, syspath, major(devnum),
                                        minor(devnum), DeleteGPUDeviceRequest);
         /* Retry vtenter after a drm node removal */
         systemd_logind_vtenter();
@@ -357,7 +368,9 @@ socket_handler(int fd, int ready, void *data)
             device_added(udev_device);
         } else if (!strcmp(action, "change")) {
             /* ignore change for the drm devices */
-            if (strcmp(udev_device_get_subsystem(udev_device), "drm")) {
+            const char *subsys = udev_device_get_subsystem(udev_device);
+
+            if (subsys && strcmp(subsys, "drm")) {
                 device_removed(udev_device);
                 device_added(udev_device);
             }
@@ -464,17 +477,85 @@ config_udev_fini(void)
 
 #ifdef CONFIG_UDEV_KMS
 
+/* Find the last occurrence of the needle in haystack */
+static char *strrstr(const char *haystack, const char *needle)
+{
+    char *prev, *last, *tmp;
+
+    prev = strstr(haystack, needle);
+    if (!prev)
+        return NULL;
+
+    last = prev;
+    tmp = prev + 1;
+
+    while (tmp) {
+        last = strstr(tmp, needle);
+        if (!last)
+            return prev;
+        else {
+            prev = last;
+            tmp = prev + 1;
+        }
+    }
+
+    return last;
+}
+
+/* For certain devices udev does not create ID_PATH entry (which is presumably a bug
+ * in udev). We work around that by implementing a minimal ID_PATH calculator
+ * ourselves along the same logic that udev uses. This works only for the case of
+ * a PCI device being directly connected to a PCI bus, but it will cover most end
+ * users with e.g. a new laptop which only has beta hardware driver support.
+ * See https://gitlab.freedesktop.org/xorg/xserver/-/issues/993 */
+static char*
+config_udev_get_fallback_bus_id(struct udev_device *udev_device)
+{
+    const char *sysname;
+    char *busid;
+
+    udev_device = udev_device_get_parent(udev_device);
+    if (udev_device == NULL)
+        return NULL;
+
+    if (strcmp(udev_device_get_subsystem(udev_device), "pci") != 0)
+        return NULL;
+
+    sysname = udev_device_get_sysname(udev_device);
+    busid = XNFalloc(strlen(sysname) + 5);
+    busid[0] = '\0';
+    strcat(busid, "pci:");
+    strcat(busid, sysname);
+
+    return busid;
+}
+
 static void
-config_udev_odev_setup_attribs(const char *path, const char *syspath,
+config_udev_odev_setup_attribs(struct udev_device *udev_device, const char *path, const char *syspath,
                                int major, int minor,
                                config_odev_probe_proc_ptr probe_callback)
 {
     struct OdevAttributes *attribs = config_odev_allocate_attributes();
+    const char *value, *str;
 
     attribs->path = XNFstrdup(path);
     attribs->syspath = XNFstrdup(syspath);
     attribs->major = major;
     attribs->minor = minor;
+
+    value = udev_device_get_property_value(udev_device, "ID_PATH");
+    if (value && (str = strrstr(value, "pci-"))) {
+        value = str;
+
+        if ((str = strstr(value, "usb-")))
+            value = str;
+
+        attribs->busid = XNFstrdup(value);
+        attribs->busid[3] = ':';
+    }
+
+    if (!value)
+        attribs->busid = config_udev_get_fallback_bus_id(udev_device);
 
     /* ownership of attribs is passed to probe layer */
     probe_callback(attribs);
@@ -506,17 +587,18 @@ config_udev_odev_probe(config_odev_probe_proc_ptr probe_callback)
         const char *path = udev_device_get_devnode(udev_device);
         const char *sysname = udev_device_get_sysname(udev_device);
         dev_t devnum = udev_device_get_devnum(udev_device);
+        const char *subsys = udev_device_get_subsystem(udev_device);
 
-        if (!path || !syspath)
+        if (!path || !syspath || !subsys)
             goto no_probe;
-        else if (strcmp(udev_device_get_subsystem(udev_device), "drm") != 0)
+        else if (strcmp(subsys, "drm") != 0)
             goto no_probe;
         else if (strncmp(sysname, "card", 4) != 0)
             goto no_probe;
         else if (!check_seat(udev_device))
             goto no_probe;
 
-        config_udev_odev_setup_attribs(path, syspath, major(devnum),
+        config_udev_odev_setup_attribs(udev_device, path, syspath, major(devnum),
                                        minor(devnum), probe_callback);
     no_probe:
         udev_device_unref(udev_device);

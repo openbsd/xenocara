@@ -511,7 +511,7 @@ mechanism for this.
 
 	<para>
     If a device is capable of disabling this decoding the resource is
-    called sharable.  For PCI devices a generic method is provided to
+    called shareable.  For PCI devices a generic method is provided to
     control resource decoding.  Other devices will have to provide a
     device specific function to control decoding.
 	</para>
@@ -1065,7 +1065,7 @@ Here is what <function>InitOutput()</function> does:
       against the expected number (most drivers expect only one).  The
       entity information for each of them should be retrieved (with
       <function>xf86GetEntityInfo()</function>) and checked for the correct
-      bus type and that none of the sharable resources registered during
+      bus type and that none of the shareable resources registered during
       the Probe phase was rejected.
 	    </para>
 
@@ -1373,7 +1373,7 @@ Here is what <function>InitOutput()</function> does:
 
 	<orderedlist>
 	  <listitem><para>
-	The sharable resources registered by each entity are compared.
+	The shareable resources registered by each entity are compared.
 	If a resource is registered by more than one entity the entity
 	will be marked to indicate that it needs to share this resources
 	type (IO or MEM).
@@ -1833,7 +1833,6 @@ Some of them are:
     xf86Depth                 -depth from the command line
     xf86Weight                -weight from the command line
     xf86Gamma                 -{r,g,b,}gamma from the command line
-    xf86FlipPixels            -flippixels from the command line
     xf86ProbeOnly             -probeonly from the command line
     defaultColorVisualClass   -cc from the command line
 	</literallayout>
@@ -1894,26 +1893,6 @@ functions:
 
 	</para></blockquote>
 
-      <blockquote><para>
-	  <programlisting>
-    Bool xf86GetFlipPixels();
-	  </programlisting>
-	  <blockquote><para>
-      Returns <constant>TRUE</constant> if <option>-flippixels</option> is
-      present on the command line, and <constant>FALSE</constant> otherwise.
-	    </para></blockquote>
-
-	</para></blockquote>
-
-      <blockquote><para>
-	  <programlisting>
-    const char *xf86GetServerName();
-	  </programlisting>
-	  <blockquote><para>
-      Returns the name of the X server from the command line.
-	    </para></blockquote>
-
-	</para></blockquote>
     </sect2>
 
     <sect2>
@@ -2214,7 +2193,7 @@ giving up the VT.
 
       <para>
 In <function>PreInit()</function> phase each driver should check if any
-sharable resources it has registered during <function>Probe()</function> has
+shareable resources it has registered during <function>Probe()</function> has
 been denied and take appropriate action which could simply be to fail.
 If it needs to access resources it has disabled during
 <function>EntitySetup()</function> it can do so provided it has registered
@@ -2247,7 +2226,7 @@ rules:
 
 	<orderedlist>
 	  <listitem><para>
-   The sharable resources registered by each entity are compared.  If
+   The shareable resources registered by each entity are compared.  If
    a resource is registered by more than one entity the entity will be
    marked to need to share this resources type (<constant>IO</constant> or
    <constant>MEM</constant>).
@@ -4725,7 +4704,7 @@ typedef struct {
 		  <varlistentry>
 		    <term><structfield>depth</structfield></term>
 		    <listitem><para>
-	The significant bits per pixel in RGB formats (analgous to the
+	The significant bits per pixel in RGB formats (analogous to the
 	depth of a pixmap format).
 		      </para></listitem></varlistentry>
 
@@ -6019,19 +5998,6 @@ strongly encouraged to improve the consistency of driver behaviour.
       config file section, it is used together with the virtual size to
       calculate the dpi values.  This function should be called after
       all the mode resolution has been done.
-	    </para>
-
-	  </blockquote></para></blockquote>
-
-      <blockquote><para>
-	  <programlisting>
-    void xf86SetBlackWhitePixels(ScrnInfoPtr pScrn);
-	  </programlisting>
-	  <blockquote><para>
-      This functions sets the <structfield>blackPixel</structfield> and
-      <structfield>whitePixel</structfield> fields of the <structname>ScrnInfoRec</structname>
-      according to whether or not the <option>-flipPixels</option> command
-      line options is present.
 	    </para>
 
 	  </blockquote></para></blockquote>

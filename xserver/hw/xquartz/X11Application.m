@@ -1392,7 +1392,16 @@ wait_for_mieq_init(void);
         goto handle_mouse;
 
     case NSOtherMouseDown:
-        ev_button = 2;
+        // Get the AppKit button number, and convert it from 0-based to 1-based
+        ev_button = [e buttonNumber] + 1;
+
+        /* Translate middle mouse button (3 in AppKit) to button 2 in X11,
+         * and translate additional mouse buttons (4 and higher in AppKit)
+         * to buttons 8 and higher in X11, to match default behavior of X11
+         * on other platforms
+         */
+        ev_button = (ev_button == 3) ? 2 : (ev_button + 4);
+
         ev_type = ButtonPress;
         goto handle_mouse;
 
@@ -1407,7 +1416,9 @@ wait_for_mieq_init(void);
         goto handle_mouse;
 
     case NSOtherMouseUp:
-        ev_button = 2;
+        // See above comments for NSOtherMouseDown
+        ev_button = [e buttonNumber] + 1;
+        ev_button = (ev_button == 3) ? 2 : (ev_button + 4);
         ev_type = ButtonRelease;
         goto handle_mouse;
 
@@ -1422,7 +1433,9 @@ wait_for_mieq_init(void);
         goto handle_mouse;
 
     case NSOtherMouseDragged:
-        ev_button = 2;
+        // See above comments for NSOtherMouseDown
+        ev_button = [e buttonNumber] + 1;
+        ev_button = (ev_button == 3) ? 2 : (ev_button + 4);
         ev_type = MotionNotify;
         goto handle_mouse;
 

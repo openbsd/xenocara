@@ -732,17 +732,6 @@ DarwinModifierStringToNXMask(const char *str, int separatelr)
     return 0;
 }
 
-/*
- * LegalModifier
- *      This allows the ddx layer to prevent some keys from being remapped
- *      as modifier keys.
- */
-Bool
-LegalModifier(unsigned int key, DeviceIntPtr pDev)
-{
-    return 1;
-}
-
 static KeySym
 make_dead_key(KeySym in)
 {
