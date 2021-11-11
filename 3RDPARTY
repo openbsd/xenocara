@@ -1,8 +1,8 @@
 
-# $OpenBSD: 3RDPARTY,v 1.392 2021/10/29 16:36:06 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.393 2021/11/11 10:38:30 matthieu Exp $
 #
 Package: 	Freetype
-Version:	2.10.4
+Version:	2.11.0
 Current Vers:	2.11.0
 Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
@@ -38,8 +38,8 @@ Maintainer:	Emmanuele Bassi
 Archive Site:	https://github.com/anholt/libepoxy/releases
 
 Package:	fontconfig
-Version:	2.12.4
-Current Vers:	2.13.1
+Version:	2.12.94
+Current Vers:	2.13.94
 Maintainer:	Akira TAGOH
 Archive Site:	https://www.fontconfig.org/
 
