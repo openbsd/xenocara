@@ -19,7 +19,7 @@ SYNOPSIS
 
    name
           Specifies the extension to be queried. The input
-          extension name is definedin the header file XI.h.
+          extension name is defined in the header file XI.h.
 
 DESCRIPTION
 -----------

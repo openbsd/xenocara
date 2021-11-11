@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXi], [1.7.10],
+AC_INIT([libXi], [1.8],
 	[https://gitlab.freedesktop.org/xorg/lib/libXi/issues], [libXi])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h])
@@ -27,7 +27,7 @@ XORG_WITH_ASCIIDOC(8.4.5)
 XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for dependencies
-PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.6] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.2.99.1])
+PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.6] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.3.99.1])
 # CFLAGS only for PointerBarrier typedef
 PKG_CHECK_MODULES(XFIXES, [xfixes >= 5])
 

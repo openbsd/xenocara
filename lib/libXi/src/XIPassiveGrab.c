@@ -177,6 +177,37 @@ XIGrabTouchBegin(Display *dpy, int deviceid, Window grab_window,
                                 num_modifiers, modifiers_inout, CurrentTime);
 }
 
+int XIGrabPinchGestureBegin(Display* dpy, int deviceid, Window grab_window, int grab_mode,
+                            int paired_device_mode, int owner_events,
+                            XIEventMask *mask, int num_modifiers, XIGrabModifiers *modifiers_inout)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(dpy);
+
+    LockDisplay(dpy);
+    if (_XiCheckExtInit(dpy, XInput_2_4, extinfo) == -1)
+        return -1;
+    UnlockDisplay(dpy);
+
+    return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeGesturePinchBegin, 0,
+                                grab_window, None, grab_mode, paired_device_mode,
+                                owner_events, mask, num_modifiers, modifiers_inout, CurrentTime);
+}
+
+int XIGrabSwipeGestureBegin(Display* dpy, int deviceid, Window grab_window, int grab_mode,
+                            int paired_device_mode, int owner_events,
+                            XIEventMask *mask, int num_modifiers, XIGrabModifiers *modifiers_inout)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(dpy);
+
+    LockDisplay(dpy);
+    if (_XiCheckExtInit(dpy, XInput_2_4, extinfo) == -1)
+        return -1;
+    UnlockDisplay(dpy);
+
+    return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeGestureSwipeBegin, 0,
+                                grab_window, None, grab_mode, paired_device_mode,
+                                owner_events, mask, num_modifiers, modifiers_inout, CurrentTime);
+}
 
 static int
 _XIPassiveUngrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
@@ -254,5 +285,33 @@ XIUngrabTouchBegin(Display* display, int deviceid, Window grab_window,
     UnlockDisplay(display);
 
     return _XIPassiveUngrabDevice(display, deviceid, XIGrabtypeTouchBegin, 0,
+                                  grab_window, num_modifiers, modifiers);
+}
+
+int XIUngrabPinchGestureBegin(Display* display, int deviceid, Window grab_window,
+                              int num_modifiers, XIGrabModifiers *modifiers)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(display);
+
+    LockDisplay(display);
+    if (_XiCheckExtInit(display, XInput_2_4, extinfo) == -1)
+        return -1;
+    UnlockDisplay(display);
+
+    return _XIPassiveUngrabDevice(display, deviceid, XIGrabtypeGesturePinchBegin, 0,
+                                  grab_window, num_modifiers, modifiers);
+}
+
+int XIUngrabSwipeGestureBegin(Display* display, int deviceid, Window grab_window,
+                              int num_modifiers, XIGrabModifiers *modifiers)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(display);
+
+    LockDisplay(display);
+    if (_XiCheckExtInit(display, XInput_2_4, extinfo) == -1)
+        return -1;
+    UnlockDisplay(display);
+
+    return _XIPassiveUngrabDevice(display, deviceid, XIGrabtypeGestureSwipeBegin, 0,
                                   grab_window, num_modifiers, modifiers);
 }

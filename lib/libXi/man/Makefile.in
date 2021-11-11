@@ -288,6 +288,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -300,6 +301,7 @@ libmandir = $(LIB_MAN_DIR)
 
 # Source files for X Input v2 man pages
 XI2_txt = \
+	XIAllowEvents.txt 			\
 	XIBarrierReleasePointer.txt 		\
 	XIChangeHierarchy.txt			\
 	XIDefineCursor.txt			\

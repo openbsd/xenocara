@@ -42,10 +42,10 @@ SYNOPSIS
           or AnyKey.
 
    modifiers
-          Specifies the set of keymasks or AnyModifier.The mask is
-          the bitwise inclusive OR of the valid keymask bits.Valid
+          Specifies the set of keymasks or AnyModifier. The mask is
+          the bitwise inclusive OR of the valid keymask bits. Valid
           bits are: ShiftMask, LockMask, ControlMask, Mod1Mask,
-          Mod2Mask,Mod3Mask, Mod4Mask, Mod5Mask.
+          Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask.
 
    modifier_device
           Specifies the device whose modifiers are to be used. If
@@ -74,7 +74,7 @@ SYNOPSIS
 
    other_devices_mode
           Specifies further processing of events from other
-          devices. You can pass GrabModeSyncor GrabModeAsync.
+          devices. You can pass GrabModeSync or GrabModeAsync.
 
 DESCRIPTION
 -----------
@@ -126,7 +126,7 @@ DESCRIPTION
    BadAccess error results. When using AnyModifier or AnyKey, the
    request fails completely, and a BadAccess error results (no
    grabs are established) if there is a conflicting grab for any
-   combination.XGrabDeviceKey has no effect on an active grab.
+   combination. XGrabDeviceKey has no effect on an active grab.
 
    XGrabDeviceKey can generate BadAccess, BadClass, BadDevice,
    BadMatch, BadValue, and BadWindow errors. It returns Success on
@@ -138,7 +138,7 @@ DESCRIPTION
    to issuing the ungrab request for all possible modifier
    combinations, including the combination of no modifiers. A Key
    of AnyKey is equivalent to issuing the request for all possible
-   Keys.XUngrabDeviceKey has no effect on an active grab.
+   Keys. XUngrabDeviceKey has no effect on an active grab.
 
    If a modifier_device of NULL is specified, the X keyboard will
    be used as the modifier_device.

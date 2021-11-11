@@ -1,3 +1,100 @@
+commit f24d7f43ab4d97203e60677a3d42e11dbc80c8b4
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Wed Sep 15 19:28:03 2021 +0300
+
+    libXi 1.8
+    
+    Signed-off-by: Povilas Kanapickas <povilas@radix.lt>
+
+commit dd9a260b29c50be90e92048b0e067456ff18675e
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Wed Sep 15 19:27:50 2021 +0300
+
+    Bump the requirement of inputproto to 2.3.99.1
+
+commit a761ae5119b1460068d6f62219c4e2705ef20814
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sat Sep 4 00:03:50 2021 +0300
+
+    man: Document XIAllowEvents
+
+commit 42ee1f0b0660c5d6aaefbb55ef76ea97ad57d4f6
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Tue Jun 1 14:43:39 2021 +0300
+
+    libXi 1.7.99.2
+
+commit a7343d53509e66d92e91238e9f4ecc2bf154e045
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sun May 30 20:47:38 2021 +0300
+
+    gitlab-ci: Setup gitlab build
+
+commit dd3df0b61499fa231a5a82e14d17bf37ce917d1d
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sun May 30 19:56:18 2021 +0300
+
+    Fix compile error that slipped through
+    
+    Lesson for the future: make sure the private environment (e.g
+    convenience scripts) don't add changes where they are not expected. In
+    my case I'm building and installing Debian packages straigth away. And
+    one of the extra commits for Debian support had a change that had to go
+    to the libXi repository.
+    
+    The development snapshot 1.7.99.1 has thus not been released (only a
+    commit with the version bump was pushed).
+    
+    Signed-off-by: Povilas Kanapickas <povilas@radix.lt>
+
+commit f036a6399a0bb1808dc82f7a91a1ae5a7e57691e
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sun May 30 19:38:07 2021 +0300
+
+    libXi 1.7.99.1
+
+commit 4b2f0f0c0674915645881d9b73e9b8d4cf1a315f
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sat Oct 10 02:53:42 2020 +0300
+
+    Update the list of supported XI versions
+
+commit ed1788b8c3a78f6dc523487e46e202a5f667407c
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Sat Oct 10 02:53:41 2020 +0300
+
+    Add support for XI 2.4 gesture events
+
+commit 8b4ea802fa3ba769dc8335f0e72c6f0cb7c9c35e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 4 13:48:06 2020 -0700
+
+    man pages: fix more typos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6affddac55f03bff63b1e37e475d8e0d0bb84e85
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 4 13:21:24 2020 -0700
+
+    man pages: Add more missing spaces.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cff134328cb31df5e366729aca6c4131a1e3304f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 4 13:15:13 2020 -0700
+
+    man/XGrabDeviceButton.txt: Fix bad .P -> paragraph break conversion
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0944a10d6e22b02f229b4bbaab60aac170ef1bba
+Author: Samanta Navarro <ferivoz@riseup.net>
+Date:   Sun Oct 4 18:55:06 2020 +0000
+
+    Fix typos in manual pages
+
 commit e05da79a98775edb91ffe3de3b413f156bc4d6e7
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Wed Jun 19 12:42:33 2019 -0400

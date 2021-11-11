@@ -2,12 +2,12 @@
 .\"     Title: xichangehierarchy
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XICHANGEHIERARCHY" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XICHANGEHIERARCHY" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -175,7 +175,7 @@ typedef struct {
 .\}
 .nf
 XIAddMasterInfo creates a new master pointer and a new
-master keyboard labelled "name pointer" and "name keyboard"
+master keyboard labeled "name pointer" and "name keyboard"
 respectively\&. If sendCore is True, the devices will send core
 events\&. If enable is True, the device is enabled immediately\&.
 .fi
@@ -245,7 +245,7 @@ XIAttachSlaveInfo can generate a BadDevice error\&.
 .RS 4
 .\}
 .nf
-XIDettachSlaveInfo deattaches device from the current master
+XIDetachSlaveInfo detaches device from the current master
 device and sets it floating\&. If the device is already floating,
 no changes are made\&.
 .fi

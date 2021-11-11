@@ -36,7 +36,7 @@ SYNOPSIS
 
    keysyms_per_keycode_return
           Specifies the address of a variable into which the
-          number of KeySyms per KeyCodewill be returned.
+          number of KeySyms per KeyCode will be returned.
 
    keysyms
           Specifies the address of an array of KeySyms.
@@ -101,7 +101,7 @@ DESCRIPTION
    special KeySym value of NoSymbol should be used to fill in
    unused elements for individual KeyCodes. It is legal for
    NoSymbol to appear in nontrailing positions of the effective
-   list for a KeyCode.XChangeDeviceKeyMapping generates a
+   list for a KeyCode. XChangeDeviceKeyMapping generates a
    DeviceMappingNotify event that is sent to all clients that have
    selected that type of event.
 

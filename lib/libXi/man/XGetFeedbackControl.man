@@ -2,12 +2,12 @@
 .\"     Title: xgetfeedbackcontrol
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XGETFEEDBACKCONTROL" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XGETFEEDBACKCONTROL" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -62,19 +62,19 @@ device
 .nf
 num_feedbacks
        Specifies an address into which the number of feedbacks
-       supported by thedevice is to be returned\&.
+       supported by the device is to be returned\&.
 .fi
 .sp
 .nf
 mask
        Specifies a mask specific to each type of feedback that
-       describes howthe feedback is to be modified\&.
+       describes how the feedback is to be modified\&.
 .fi
 .sp
 .nf
 control
        Specifies the address of an XFeedbackControl structure
-       that containsthe new values for the feedback\&.
+       that contains the new values for the feedback\&.
 .fi
 .SH "DESCRIPTION"
 .sp

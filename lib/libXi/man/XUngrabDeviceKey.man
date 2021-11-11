@@ -1,1 +1,1 @@
-.so XGrabDeviceKey.libmansuffix
+.so manlibmansuffix/XGrabDeviceKey.libmansuffix

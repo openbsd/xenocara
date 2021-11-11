@@ -60,7 +60,7 @@ DESCRIPTION
 
    The XGetDeviceButtonMapping request returns the current mapping
    of the specified device. Buttons are numbered starting from
-   one.XGetDeviceButtonMapping returns the number of physical
+   one. XGetDeviceButtonMapping returns the number of physical
    buttons actually on the device. The nominal mapping for a
    device is map[i]=i+1. The nmap argument specifies the length of
    the array where the device mapping is returned, and only the

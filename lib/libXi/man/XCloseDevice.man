@@ -1,1 +1,1 @@
-.so XOpenDevice.libmansuffix
+.so manlibmansuffix/XOpenDevice.libmansuffix

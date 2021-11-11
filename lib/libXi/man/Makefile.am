@@ -25,6 +25,7 @@ libmandir = $(LIB_MAN_DIR)
 
 # Source files for X Input v2 man pages
 XI2_txt = 					\
+	XIAllowEvents.txt 			\
 	XIBarrierReleasePointer.txt 		\
 	XIChangeHierarchy.txt			\
 	XIDefineCursor.txt			\

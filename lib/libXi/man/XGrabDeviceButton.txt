@@ -42,10 +42,10 @@ SYNOPSIS
           released or AnyButton.
 
    modifiers
-          Specifies the set of keymasks or AnyModifier.The mask is
+          Specifies the set of keymasks or AnyModifier. The mask is
           the bitwise inclusive OR of the valid keymask bits.
-          Valid bits are: Shiftmask, LockMask, ControlMask,
-          Mod1Mask, Mod2Mask,Mod3Mask, Mod4Mask, Mod5Mask.
+          Valid bits are: ShiftMask, LockMask, ControlMask,
+          Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask.
 
    modifier_device
           specifies the device whose modifiers are to be used. If
@@ -124,14 +124,15 @@ DESCRIPTION
    combination. XGrabDeviceButton has no effect on an active grab.
 
    XGrabDeviceButton can generate BadClass, BadDevice, BadMatch,
-   BadValue, and BadWindow errors..P The XUngrabDeviceButton
-   request releases the passive grab for a button/modifier
-   combination on the specified window if it was grabbed by this
-   client. A modifier of AnyModifier is equivalent to issuing the
-   ungrab request for all possible modifier combinations,
-   including the combination of no modifiers. A button of
-   AnyButton is equivalent to issuing the request for all possible
-   buttons. XUngrabDeviceButton has no effect on an active grab.
+   BadValue, and BadWindow errors.
+
+   The XUngrabDeviceButton request releases the passive grab for a
+   button/modifier combination on the specified window if it was
+   grabbed by this client. A modifier of AnyModifier is equivalent to
+   issuing the ungrab request for all possible modifier combinations,
+   including the combination of no modifiers. A button of AnyButton is
+   equivalent to issuing the request for all possible buttons.
+   XUngrabDeviceButton has no effect on an active grab.
 
    A modifier_device of NULL indicates that the X keyboard should
    be used as the modifier_device.

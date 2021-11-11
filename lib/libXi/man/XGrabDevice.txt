@@ -58,7 +58,7 @@ SYNOPSIS
 
    other_devices_mode
           Specifies further processing of events from other
-          devices.You can pass GrabModeSync or GrabModeAsync.
+          devices. You can pass GrabModeSync or GrabModeAsync.
 
    time
           Specifies the time. You can pass either a timestamp or
@@ -70,7 +70,7 @@ DESCRIPTION
    The XGrabDevice request actively grabs control of the device
    and generates DeviceFocusIn and DeviceFocusOut events. Further
    device events are reported only to the grabbing
-   client.XGrabDevice overrides any active device grab by this
+   client. XGrabDevice overrides any active device grab by this
    client. event_list is a pointer to a list of event classes.
    This list indicates which events the client wishes to receive
    while the grab is active. If owner_events is False, all
@@ -123,7 +123,7 @@ DESCRIPTION
    The XUngrabDevice request releases the device and any queued
    events if this client has it actively grabbed from either
    XGrabDevice or XGrabDeviceKey. If other devices are frozen by
-   the grab, XUngrabDevice thaws them.XUngrabDevice does not
+   the grab, XUngrabDevice thaws them. XUngrabDevice does not
    release the device and any queued events if the specified time
    is earlier than the last-device-grab time or is later than the
    current X server time. It also generates DeviceFocusIn and

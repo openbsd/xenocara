@@ -2,12 +2,12 @@
 .\"     Title: xallowdeviceevents
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XALLOWDEVICEEVENTS" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XALLOWDEVICEEVENTS" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,7 +52,7 @@ device
 .sp
 .nf
 event_mode
-       Specifies the event mode\&.You can pass AsyncThisDevice,
+       Specifies the event mode\&. You can pass AsyncThisDevice,
        SyncThisDevice, ReplayThisDevice, AsyncOtherDevices,
        SyncAll, or AsyncAll\&.
 .fi

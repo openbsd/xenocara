@@ -2,12 +2,12 @@
 .\"     Title: xisetfocus
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XISETFOCUS" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XISETFOCUS" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -78,7 +78,7 @@ time
 .RS 4
 .\}
 .nf
-XISetFocus changes the focus of the specified device ans its
+XISetFocus changes the focus of the specified device and its
 last\-focus\-change time\&. It has no effect if the specified time
 is earlier than the current last\-focus\-change time or is later
 than the current X server time\&. Otherwise, the

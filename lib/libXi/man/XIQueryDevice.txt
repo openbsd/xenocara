@@ -77,7 +77,7 @@ DESCRIPTION
      and the attachment field specifies the paired master pointer.
    - If use is XISlavePointer, the device is a slave device and
      currently attached to the master pointer specified in
-     attachement.
+     attachment.
    - If use is XISlaveKeyboard, the device is a slave device an
      currently attached to the master keyboard specified in
      attachment.
@@ -101,7 +101,7 @@ DESCRIPTION
    The type field specifies the type of the input class.
    Currently, the following types are defined:
        XIKeyClass, XIButtonClass, XIValuatorClass, XIScrollClass,
-       XITouchClass
+       XITouchClass, XIGestureClass.
 
    In the future, additional types may be added. Clients are
    required to ignore unknown input classes.
@@ -185,7 +185,7 @@ DESCRIPTION
    describing the axis.
 
    min and max are the minimum and maximum values allowed on this
-   axis. If both are zero, no minumum or maximum values are set on
+   axis. If both are zero, no minimum or maximum values are set on
    this device. value is the current value of this axis.
 
    The resolution field specifies the resolution of the device in
@@ -247,7 +247,7 @@ DESCRIPTION
    The mode field is either XIDirectTouch for direct-input touch devices
    such as touchscreens or XIDependentTouch for indirect input devices such
    as touchpads. For XIDirectTouch devices, touch events are sent to window
-   at the position the touch occured. For XIDependentTouch devices, touch
+   at the position the touch occurred. For XIDependentTouch devices, touch
    events are sent to the window at the position of the device's sprite.
 
    The num_touches field defines the maximum number of simultaneous touches
@@ -258,6 +258,23 @@ DESCRIPTION
    A device with an XITouchClassInfo may still send pointer events. The
    valuators must be defined with the respective XIValuatorClass
    classes. A valuator may send both pointer and touch-events.
+
+                typedef struct
+                {
+                    int         type;
+                    int         sourceid;
+                    int         num_touches;
+                } XIGestureClassInfo;
+
+   A device may have zero or one XIGestureClassInfo, denoting
+   touchpad gesture capability on the device. A device with a XIGestureClassInfo
+   may send GestureSwipeBegin, GestureSwipeUpdate, GestureSwipeEnd,
+   GesturePinchBegin, GesturePinchUpdate, GesturePinchEnd.
+
+   The num_touches field defines the maximum number of simultaneous touches
+   the device supports. A num_touches of 0 means the maximum number of
+   simultaneous touches is undefined or unspecified. This field should be
+   used as a guide only, devices will lie about their capabilities.
 
    XIQueryDevice can generate a BadDevice error.
 

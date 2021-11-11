@@ -2,12 +2,12 @@
 .\"     Title: xigrabbutton
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XIGRABBUTTON" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XIGRABBUTTON" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-XIGrabButton, XIUngrabButton, XIGrabKeycode, XIUngrabKeycode, XIGrabTouchBegin, XIUngrabTouchBegin \- grab/ungrab buttons or keys
+XIGrabButton, XIUngrabButton, XIGrabKeycode, XIUngrabKeycode, XIGrabTouchBegin, XIUngrabTouchBegin, XIGrabPinchGestureBegin, XIUngrabPinchGestureBegin, XIGrabSwipeGestureBegin \- grab/ungrab buttons or keys
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -96,6 +96,46 @@ int XIUngrabTouchBegin( Display *display,
                         Window grab_window,
                         int num_modifiers,
                         XIGrabModifiers *modifiers);
+.fi
+.sp
+.nf
+int XIGrabPinchGestureBegin( Display* display,
+                             int deviceid,
+                             Window grab_window,
+                             int grab_mode,
+                             int paired_device_mode,
+                             int owner_events,
+                             XIEventMask *mask,
+                             int num_modifiers,
+                             XIGrabModifiers *modifiers_inout);
+.fi
+.sp
+.nf
+int XIUngrabPinchGestureBegin( Display* display,
+                               int deviceid,
+                               Window grab_window,
+                               int num_modifiers,
+                               XIGrabModifiers *modifiers);
+.fi
+.sp
+.nf
+int XIGrabSwipeGestureBegin( Display* display,
+                             int deviceid,
+                             Window grab_window,
+                             int grab_mode,
+                             int paired_device_mode,
+                             int owner_events,
+                             XIEventMask *mask,
+                             int num_modifiers,
+                             XIGrabModifiers *modifiers_inout);
+.fi
+.sp
+.nf
+int XIUngrabSwipeGestureBegin( Display* display,
+                               int deviceid,
+                               Window grab_window,
+                               int num_modifiers,
+                               XIGrabModifiers *modifiers);
 .fi
 .sp
 .nf
@@ -176,8 +216,9 @@ paired_device_mode
 .RS 4
 .\}
 .nf
-XIGrabButton, XIGrabKeycode and XIGrabTouchBegin establish a passive
-grab\&. The modifier device for a button grab is the paired master device
+XIGrabButton, XIGrabKeycode, XIGrabTouchBegin, XIGrabPinchGestureBegin,
+XIGrabSwipeTouchBegin establish a passive grab\&.
+The modifier device for a button grab is the paired master device
 if deviceid specifies a master pointer\&. Otherwise, the modifier
 device is the device specified with deviceid\&. In the future,
 the device is actively grabbed (as for XIGrabDevice, the
@@ -185,7 +226,7 @@ last\-grab time is set to the time at which the button or keycode
 was pressed and the XI_ButtonPress or XI_KeyPress event is
 reported if all of the following conditions are true:
   * The device is not grabbed, and the specified button or
-    keycode is logically pressed or a touch event occurs when the
+    keycode is logically pressed, a touch or a gesture event occurs when the
     specified modifier keys are logically down on the modifier device
     and no other buttons or modifier keys are logically down\&.
   * Either the grab window is an ancestor of (or is) the focus
@@ -279,9 +320,11 @@ active grab\&.
 .RS 4
 .\}
 .nf
-On success, XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return 0;
+On success, XIGrabButton, XIGrabKeycode, XIGrabTouchBegin,
+XIGrabPinchGestureBegin and XIGrabSwipeGestureBegin return 0;
 If one or more modifier combinations could not be grabbed,
-XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return the number of
+XIGrabButton, XIGrabKeycode, XIGrabTouchBegin, XIGrabPinchGestureBegin
+and XIGrabSwipeGestureBegin return the number of
 failed combinations and modifiers_inout contains the failed combinations
 and their respective error codes\&.
 .fi
@@ -293,7 +336,8 @@ and their respective error codes\&.
 .RS 4
 .\}
 .nf
-XIGrabButton, XIGrabKeycode and XIGrabTouchBegin can generate BadClass,
+XIGrabButton, XIGrabKeycode, XIGrabTouchBegin, XIGrabPinchGestureBegin
+and XIGrabSwipeGestureBegin can generate BadClass,
 BadDevice, BadMatch, BadValue, and BadWindow errors\&.
 .fi
 .if n \{\
@@ -304,7 +348,8 @@ BadDevice, BadMatch, BadValue, and BadWindow errors\&.
 .RS 4
 .\}
 .nf
-XIUngrabButton, XIUngrabKeycode and XIUngrabTouchBegin release the
+XIUngrabButton, XIUngrabKeycode, XIUngrabTouchBegin, XIUngrabPinchGestureBegin
+and XIUngrabSwipeGestureBegin release the
 passive grab for a button/modifier, keycode/modifier or touch/modifier
 combination on the specified window if it was grabbed by this client\&. A
 modifier of XIAnyModifier is equivalent to issuing the ungrab request
@@ -322,7 +367,8 @@ grab\&.
 .RS 4
 .\}
 .nf
-XIUngrabButton, XIUngrabKeycode and XIUngrabTouchBegin can generate
+XIUngrabButton, XIUngrabKeycode, XIUngrabTouchBegin,
+XIUngrabPinchGestureBegin and XIUngrabSwipeGestureBegin can generate
 BadDevice, BadMatch, BadValue and BadWindow errors\&.
 .fi
 .if n \{\
@@ -334,7 +380,8 @@ BadDevice, BadMatch, BadValue and BadWindow errors\&.
 .RS 4
 .\}
 .nf
-XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return the number of
+XIGrabButton, XIGrabKeycode, XIGrabTouchBegin and
+XIGrabPinchGestureBegin and XIGrabSwipeGestureBegin return the number of
 modifier combination that could not establish a passive grab\&. The
 modifiers are returned in modifiers_inout, along with the respective
 error for this modifier combination\&. If XIGrabButton, XIGrabKeycode
@@ -364,8 +411,10 @@ BadDevice
 BadMatch
        This error may occur if XIGrabButton specified a device
        that has no buttons, or XIGrabKeycode specified a device
-       that has no keys, or XIGrabTouchBegin specified a device
-       that is not touch\-capable\&.
+       that has no keys,
+       or XIGrabTouchBegin specified a device that is not touch\-capable,
+       or XIGrabPinchGestureBegin specified a device that is not gesture\-capable,
+       or XIGrabSwipeGestureBegin specified a device that is not gesture\-capable\&.
 .fi
 .if n \{\
 .RE

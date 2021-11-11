@@ -2,12 +2,12 @@
 .\"     Title: xgrabdevicekey
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XGRABDEVICEKEY" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XGRABDEVICEKEY" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -76,10 +76,10 @@ Key
 .sp
 .nf
 modifiers
-       Specifies the set of keymasks or AnyModifier\&.The mask is
-       the bitwise inclusive OR of the valid keymask bits\&.Valid
+       Specifies the set of keymasks or AnyModifier\&. The mask is
+       the bitwise inclusive OR of the valid keymask bits\&. Valid
        bits are: ShiftMask, LockMask, ControlMask, Mod1Mask,
-       Mod2Mask,Mod3Mask, Mod4Mask, Mod5Mask\&.
+       Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask\&.
 .fi
 .sp
 .nf
@@ -122,7 +122,7 @@ this_device_mode
 .nf
 other_devices_mode
        Specifies further processing of events from other
-       devices\&. You can pass GrabModeSyncor GrabModeAsync\&.
+       devices\&. You can pass GrabModeSync or GrabModeAsync\&.
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -225,7 +225,7 @@ the same Key/modifier combination on the same window, a
 BadAccess error results\&. When using AnyModifier or AnyKey, the
 request fails completely, and a BadAccess error results (no
 grabs are established) if there is a conflicting grab for any
-combination\&.XGrabDeviceKey has no effect on an active grab\&.
+combination\&. XGrabDeviceKey has no effect on an active grab\&.
 .fi
 .if n \{\
 .RE
@@ -253,7 +253,7 @@ grabbed by this client\&. A modifier of AnyModifier is equivalent
 to issuing the ungrab request for all possible modifier
 combinations, including the combination of no modifiers\&. A Key
 of AnyKey is equivalent to issuing the request for all possible
-Keys\&.XUngrabDeviceKey has no effect on an active grab\&.
+Keys\&. XUngrabDeviceKey has no effect on an active grab\&.
 .fi
 .if n \{\
 .RE

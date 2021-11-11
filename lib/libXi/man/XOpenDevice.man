@@ -2,12 +2,12 @@
 .\"     Title: xopendevice
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XOPENDEVICE" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XOPENDEVICE" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -187,7 +187,7 @@ The information contained in the XInputClassInfo structure is
 used by macros to obtain the event classes that clients use in
 making XSelectExtensionEvent requests\&. Currently defined macros
 include DeviceKeyPress, DeviceKeyRelease, DeviceButtonPress,
-DeviceButtonRelese, DeviceMotionNotify, DeviceFocusIn,
+DeviceButtonRelease, DeviceMotionNotify, DeviceFocusIn,
 DeviceFocusOut, ProximityIn, ProximityOut, DeviceStateNotify,
 DeviceMappingNotify, ChangeDeviceNotify,
 DevicePointerMotionHint, DeviceButton1Motion,

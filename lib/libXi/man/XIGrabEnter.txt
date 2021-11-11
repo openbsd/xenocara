@@ -131,7 +131,7 @@ DESCRIPTION
    When using XIAnyModifier, the request fails completely, and a
    XIBadAccess error results (no grabs are established) if there
    is a conflicting grab for any combination. XIGrabEnter and
-   XIGrabFocusin have no effect on an active grab.
+   XIGrabFocusIn have no effect on an active grab.
 
    On success, XIGrabEnter and XIGrabFocusIn return 0;
    If one or more modifier combinations could not be grabbed,

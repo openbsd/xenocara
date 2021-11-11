@@ -2,12 +2,12 @@
 .\"     Title: xsetdevicebuttonmapping
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XSETDEVICEBUTTONMAPP" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XSETDEVICEBUTTONMAPP" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -115,7 +115,7 @@ BadValue errors\&.
 .nf
 The XGetDeviceButtonMapping request returns the current mapping
 of the specified device\&. Buttons are numbered starting from
-one\&.XGetDeviceButtonMapping returns the number of physical
+one\&. XGetDeviceButtonMapping returns the number of physical
 buttons actually on the device\&. The nominal mapping for a
 device is map[i]=i+1\&. The nmap argument specifies the length of
 the array where the device mapping is returned, and only the

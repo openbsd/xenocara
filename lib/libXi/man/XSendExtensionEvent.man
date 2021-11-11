@@ -2,12 +2,12 @@
 .\"     Title: xsendextensionevent
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XSENDEXTENSIONEVENT" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XSENDEXTENSIONEVENT" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -59,7 +59,7 @@ device
 .nf
 destination
        Specifies the window the event is to be sent to\&. You can
-       pass window id, PointerWindow,or InputFocus\&.
+       pass window id, PointerWindow, or InputFocus\&.
 .fi
 .sp
 .nf
@@ -94,10 +94,10 @@ to pass an event class list\&. For a discussion of the valid
 event class names, see XOpenDevice(libmansuffix) This
 request uses the w argument to identify the destination window
 as follows:
-  * If w is PointerWindow,the destination window is the window
+  * If w is PointerWindow, the destination window is the window
     that contains the pointer\&.
-  * If w is InputFocusand if the focus window contains the
-    pointer,the destination window is the window that contains
+  * If w is InputFocus and if the focus window contains the
+    pointer, the destination window is the window that contains
     the pointer; otherwise, the destination window is the focus
     window\&.
 .fi
@@ -110,24 +110,24 @@ as follows:
 .\}
 .nf
 To determine which clients should receive the specified events,
-XSendExtensionEventuses the propagate argument as follows:
-  * If event_list is the empty set,the event is sent to the
+XSendExtensionEvent uses the propagate argument as follows:
+  * If event_list is the empty set, the event is sent to the
     client that created the destination window\&. If that client
-    no longer exists,no event is sent\&.
-  * If propagate is False,the event is sent to every client
-    selecting on destination any of the eventtypes specified by
+    no longer exists, no event is sent\&.
+  * If propagate is False, the event is sent to every client
+    selecting on destination any of the event types specified by
     the event_list array\&.
-  * If propagate is Trueand no clients have selected on
-    destination any ofthe events specified by the event_list
-    array,the destination is replaced with theclosest ancestor
-    of destination for which some client has selected atype
+  * If propagate is True and no clients have selected on
+    destination any of the events specified by the event_list
+    array, the destination is replaced with the closest ancestor
+    of destination for which some client has selected a type
     specified by the event\-list array and for which no
-    interveningwindow has that type in
-    itsdo\-not\-propagate\-mask\&. If no such window exists or if
-    the window isan ancestor of the focus window and
-    InputFocuswas originally specifiedas the destination, the
+    intervening window has that type in
+    its do\-not\-propagate\-mask\&. If no such window exists or if
+    the window is an ancestor of the focus window and
+    InputFocus was originally specified as the destination, the
     event is not sent to any clients\&. Otherwise, the event is
-    reported to every client selecting on the finaldestination
+    reported to every client selecting on the final destination
     any of the events specified in the event_list array\&.
 .fi
 .if n \{\
@@ -138,11 +138,11 @@ XSendExtensionEventuses the propagate argument as follows:
 .RS 4
 .\}
 .nf
-The event in the XEventstructure must be one of the events
-defined by the input extension (or a BadValueerror results) so
-that the X server can correctly byte\-swapthe contents as
-necessary\&. The contents of the event areotherwise unaltered and
-unchecked by the X server except to force send_event to Truein
+The event in the XEvent structure must be one of the events
+defined by the input extension (or a BadValue error results) so
+that the X server can correctly byte\-swap the contents as
+necessary\&. The contents of the event are otherwise unaltered and
+unchecked by the X server except to force send_event to True in
 the forwarded event and to set the serial number in the event
 correctly\&.
 .fi
@@ -154,9 +154,9 @@ correctly\&.
 .RS 4
 .\}
 .nf
-XSendExtensionEventreturns zero if the conversion to wire
-protocol format failedand returns nonzero
-otherwise\&.XSendExtensionEventcan generate BadClass, BadDevice,
+XSendExtensionEvent returns zero if the conversion to wire
+protocol format failed and returns nonzero
+otherwise\&. XSendExtensionEvent can generate BadClass, BadDevice,
 BadValue, and BadWindow errors\&.
 .fi
 .if n \{\

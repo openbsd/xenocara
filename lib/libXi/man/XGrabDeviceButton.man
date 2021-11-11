@@ -2,12 +2,12 @@
 .\"     Title: xgrabdevicebutton
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XGRABDEVICEBUTTON" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XGRABDEVICEBUTTON" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -76,10 +76,10 @@ button
 .sp
 .nf
 modifiers
-       Specifies the set of keymasks or AnyModifier\&.The mask is
+       Specifies the set of keymasks or AnyModifier\&. The mask is
        the bitwise inclusive OR of the valid keymask bits\&.
-       Valid bits are: Shiftmask, LockMask, ControlMask,
-       Mod1Mask, Mod2Mask,Mod3Mask, Mod4Mask, Mod5Mask\&.
+       Valid bits are: ShiftMask, LockMask, ControlMask,
+       Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask\&.
 .fi
 .sp
 .nf
@@ -223,14 +223,23 @@ combination\&. XGrabDeviceButton has no effect on an active grab\&.
 .\}
 .nf
 XGrabDeviceButton can generate BadClass, BadDevice, BadMatch,
-BadValue, and BadWindow errors\&.\&.P The XUngrabDeviceButton
-request releases the passive grab for a button/modifier
-combination on the specified window if it was grabbed by this
-client\&. A modifier of AnyModifier is equivalent to issuing the
-ungrab request for all possible modifier combinations,
-including the combination of no modifiers\&. A button of
-AnyButton is equivalent to issuing the request for all possible
-buttons\&. XUngrabDeviceButton has no effect on an active grab\&.
+BadValue, and BadWindow errors\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The XUngrabDeviceButton request releases the passive grab for a
+button/modifier combination on the specified window if it was
+grabbed by this client\&. A modifier of AnyModifier is equivalent to
+issuing the ungrab request for all possible modifier combinations,
+including the combination of no modifiers\&. A button of AnyButton is
+equivalent to issuing the request for all possible buttons\&.
+XUngrabDeviceButton has no effect on an active grab\&.
 .fi
 .if n \{\
 .RE

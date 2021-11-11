@@ -1,1 +1,1 @@
-.so XIBarrierReleasePointer.libmansuffix
+.so manlibmansuffix/XIBarrierReleasePointer.libmansuffix

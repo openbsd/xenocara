@@ -127,6 +127,12 @@ wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
 static int
 wireToBarrierEvent(xXIBarrierEvent *in,
                    XGenericEventCookie *cookie);
+static int
+wireToPinchEvent(xXIGesturePinchEvent *in,
+                 XGenericEventCookie *cookie);
+static int
+wireToSwipeEvent(xXIGestureSwipeEvent *in,
+                 XGenericEventCookie *cookie);
 
 static /* const */ XEvent emptyevent;
 
@@ -253,7 +259,9 @@ static XExtensionVersion versions[] = { {XI_Absent, 0, 0},
  XI_Add_DeviceProperties_Minor},
 {XI_Present, 2, 0},
 {XI_Present, 2, 1},
-{XI_Present, 2, 2}
+{XI_Present, 2, 2},
+{XI_Present, 2, 3},
+{XI_Present, 2, 4},
 };
 
 /***********************************************************************
@@ -1035,6 +1043,28 @@ XInputWireToCookie(
                 break;
             }
             return ENQUEUE_EVENT;
+        case XI_GesturePinchBegin:
+        case XI_GesturePinchUpdate:
+        case XI_GesturePinchEnd:
+            *cookie = *(XGenericEventCookie*)save;
+            if (!wireToPinchEvent((xXIGesturePinchEvent*)event, cookie))
+            {
+                printf("XInputWireToCookie: CONVERSION FAILURE!  evtype=%d\n",
+                        ge->evtype);
+                break;
+            }
+            return ENQUEUE_EVENT;
+        case XI_GestureSwipeBegin:
+        case XI_GestureSwipeUpdate:
+        case XI_GestureSwipeEnd:
+            *cookie = *(XGenericEventCookie*)save;
+            if (!wireToSwipeEvent((xXIGestureSwipeEvent*)event, cookie))
+            {
+                printf("XInputWireToCookie: CONVERSION FAILURE!  evtype=%d\n",
+                        ge->evtype);
+                break;
+            }
+            return ENQUEUE_EVENT;
         default:
             printf("XInputWireToCookie: Unknown generic event. type %d\n", ge->evtype);
 
@@ -1065,7 +1095,7 @@ sizeDeviceEvent(int buttons_len, int valuators_len,
 /* Return the size with added padding so next element would be
    double-aligned unless the architecture is known to allow unaligned
    data accesses.  Not doing this can cause a bus error on
-   MIPS N32. */
+   MIPS N32. */
 static int
 pad_to_double(int size)
 {
@@ -1142,6 +1172,9 @@ sizeDeviceClassType(int type, int num_elements)
             break;
         case XITouchClass:
             l = pad_to_double(sizeof(XITouchClassInfo));
+            break;
+        case XIGestureClass:
+            l = pad_to_double(sizeof(XIGestureClassInfo));
             break;
         default:
             printf("sizeDeviceClassType: unknown type %d\n", type);
@@ -1432,6 +1465,41 @@ copyBarrierEvent(XGenericEventCookie *in_cookie,
     return True;
 }
 
+
+static Bool
+copyGesturePinchEvent(XGenericEventCookie *cookie_in,
+                      XGenericEventCookie *cookie_out)
+{
+    XIGesturePinchEvent *in, *out;
+
+    in = cookie_in->data;
+
+    out = cookie_out->data = malloc(sizeof(XIGesturePinchEvent));
+    if (!out)
+        return False;
+
+    *out = *in;
+
+    return True;
+}
+
+static Bool
+copyGestureSwipeEvent(XGenericEventCookie *cookie_in,
+                      XGenericEventCookie *cookie_out)
+{
+    XIGestureSwipeEvent *in, *out;
+
+    in = cookie_in->data;
+
+    out = cookie_out->data = malloc(sizeof(XIGestureSwipeEvent));
+    if (!out)
+        return False;
+
+    *out = *in;
+
+    return True;
+}
+
 static Bool
 XInputCopyCookie(Display *dpy, XGenericEventCookie *in, XGenericEventCookie *out)
 {
@@ -1492,6 +1560,16 @@ XInputCopyCookie(Display *dpy, XGenericEventCookie *in, XGenericEventCookie *out
         case XI_BarrierHit:
         case XI_BarrierLeave:
             ret = copyBarrierEvent(in, out);
+            break;
+        case XI_GesturePinchBegin:
+        case XI_GesturePinchUpdate:
+        case XI_GesturePinchEnd:
+            ret = copyGesturePinchEvent(in, out);
+            break;
+        case XI_GestureSwipeBegin:
+        case XI_GestureSwipeUpdate:
+        case XI_GestureSwipeEnd:
+            ret = copyGestureSwipeEvent(in, out);
             break;
         default:
             printf("XInputCopyCookie: unknown evtype %d\n", in->evtype);
@@ -1606,6 +1684,9 @@ size_classes(xXIAnyInfo* from, int nclasses)
                 break;
             case XITouchClass:
                 l = sizeDeviceClassType(XITouchClass, 0);
+                break;
+            case XIGestureClass:
+                l = sizeDeviceClassType(XIGestureClass, 0);
                 break;
         }
 
@@ -1765,6 +1846,21 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses)
                     cls_lib->type = cls_wire->type;
                     cls_lib->sourceid = cls_wire->sourceid;
                     cls_lib->mode = cls_wire->mode;
+                    cls_lib->num_touches = cls_wire->num_touches;
+
+                    to->classes[cls_idx++] = any_lib;
+                }
+                break;
+            case XIGestureClass:
+                {
+                    XIGestureClassInfo *cls_lib;
+                    xXIGestureInfo *cls_wire;
+
+                    cls_wire = (xXIGestureInfo*)any_wire;
+                    cls_lib = next_block(&ptr_lib, sizeof(XIGestureClassInfo));
+
+                    cls_lib->type = cls_wire->type;
+                    cls_lib->sourceid = cls_wire->sourceid;
                     cls_lib->num_touches = cls_wire->num_touches;
 
                     to->classes[cls_idx++] = any_lib;
@@ -2026,6 +2122,94 @@ wireToBarrierEvent(xXIBarrierEvent *in, XGenericEventCookie *cookie)
     out->flags      = in->flags;
     out->barrier    = in->barrier;
     out->eventid    = in->eventid;
+
+    return 1;
+}
+
+static int
+wireToPinchEvent(xXIGesturePinchEvent *in,
+                 XGenericEventCookie *cookie)
+{
+    XIGesturePinchEvent *out;
+
+    cookie->data = out = malloc(sizeof(XIGesturePinchEvent));
+
+    out->display    = cookie->display;
+    out->type       = in->type;
+    out->serial     = cookie->serial;
+    out->extension  = in->extension;
+    out->evtype     = in->evtype;
+    out->send_event = ((in->type & 0x80) != 0);
+    out->time       = in->time;
+    out->deviceid   = in->deviceid;
+    out->sourceid   = in->sourceid;
+    out->detail     = in->detail;
+    out->root       = in->root;
+    out->event      = in->event;
+    out->child      = in->child;
+    out->root_x     = FP1616toDBL(in->root_x);
+    out->root_y     = FP1616toDBL(in->root_y);
+    out->event_x    = FP1616toDBL(in->event_x);
+    out->event_y    = FP1616toDBL(in->event_y);
+    out->delta_x    = FP1616toDBL(in->delta_x);
+    out->delta_y    = FP1616toDBL(in->delta_y);
+    out->delta_unaccel_x = FP1616toDBL(in->delta_unaccel_x);
+    out->delta_unaccel_y = FP1616toDBL(in->delta_unaccel_y);
+    out->scale      = FP1616toDBL(in->scale);
+    out->delta_angle = FP1616toDBL(in->delta_angle);
+    out->flags      = in->flags;
+
+    out->mods.base = in->mods.base_mods;
+    out->mods.locked = in->mods.locked_mods;
+    out->mods.latched = in->mods.latched_mods;
+    out->mods.effective = in->mods.effective_mods;
+    out->group.base = in->group.base_group;
+    out->group.locked = in->group.locked_group;
+    out->group.latched = in->group.latched_group;
+    out->group.effective = in->group.effective_group;
+
+    return 1;
+}
+
+static int
+wireToSwipeEvent(xXIGestureSwipeEvent *in,
+                 XGenericEventCookie *cookie)
+{
+    XIGestureSwipeEvent *out;
+
+    cookie->data = out = malloc(sizeof(XIGestureSwipeEvent));
+
+    out->display    = cookie->display;
+    out->type       = in->type;
+    out->serial     = cookie->serial;
+    out->extension  = in->extension;
+    out->evtype     = in->evtype;
+    out->send_event = ((in->type & 0x80) != 0);
+    out->time       = in->time;
+    out->deviceid   = in->deviceid;
+    out->sourceid   = in->sourceid;
+    out->detail     = in->detail;
+    out->root       = in->root;
+    out->event      = in->event;
+    out->child      = in->child;
+    out->root_x     = FP1616toDBL(in->root_x);
+    out->root_y     = FP1616toDBL(in->root_y);
+    out->event_x    = FP1616toDBL(in->event_x);
+    out->event_y    = FP1616toDBL(in->event_y);
+    out->delta_x    = FP1616toDBL(in->delta_x);
+    out->delta_y    = FP1616toDBL(in->delta_y);
+    out->delta_unaccel_x = FP1616toDBL(in->delta_unaccel_x);
+    out->delta_unaccel_y = FP1616toDBL(in->delta_unaccel_y);
+    out->flags      = in->flags;
+
+    out->mods.base = in->mods.base_mods;
+    out->mods.locked = in->mods.locked_mods;
+    out->mods.latched = in->mods.latched_mods;
+    out->mods.effective = in->mods.effective_mods;
+    out->group.base = in->group.base_group;
+    out->group.locked = in->group.locked_group;
+    out->group.latched = in->group.latched_group;
+    out->group.effective = in->group.effective_group;
 
     return 1;
 }

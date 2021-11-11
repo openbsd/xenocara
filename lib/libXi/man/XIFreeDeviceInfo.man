@@ -1,1 +1,1 @@
-.so XIQueryDevice.libmansuffix
+.so manlibmansuffix/XIQueryDevice.libmansuffix

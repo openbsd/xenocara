@@ -80,7 +80,7 @@ Structures
    used by macros to obtain the event classes that clients use in
    making XSelectExtensionEvent requests. Currently defined macros
    include DeviceKeyPress, DeviceKeyRelease, DeviceButtonPress,
-   DeviceButtonRelese, DeviceMotionNotify, DeviceFocusIn,
+   DeviceButtonRelease, DeviceMotionNotify, DeviceFocusIn,
    DeviceFocusOut, ProximityIn, ProximityOut, DeviceStateNotify,
    DeviceMappingNotify, ChangeDeviceNotify,
    DevicePointerMotionHint, DeviceButton1Motion,

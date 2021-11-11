@@ -42,7 +42,7 @@ DESCRIPTION
    represent a physical device. It is visually represented through
    a cursor. A master keyboard is a virtual keyboard device that
    does not represent a physical device. It is virtually
-   representd through a keyboard focus. A master pointer and a
+   represented through a keyboard focus. A master pointer and a
    master keyboard are always paired (i.e. if shift is pressed on
    the master keyboard, a pointer click would be a shift-click).
    Multiple master pointer/keyboard pairs can exist.

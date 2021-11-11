@@ -2,12 +2,12 @@
 .\"     Title: xlistdeviceproperties
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XLISTDEVICEPROPERTIE" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XLISTDEVICEPROPERTIE" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------

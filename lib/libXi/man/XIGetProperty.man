@@ -1,1 +1,1 @@
-.so XIChangeProperty.libmansuffix
+.so manlibmansuffix/XIChangeProperty.libmansuffix

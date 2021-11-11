@@ -39,8 +39,8 @@ SYNOPSIS
                          unsigned char **data)
 
    bytes_after_return
-          Returns the number of bytes remaining to be read in the prop-
-          erty if a partial read was performed.
+          Returns the number of bytes remaining to be read in the property
+          if a partial read was performed.
 
    data
           Specifies the property data.
@@ -142,8 +142,8 @@ unread bytes in the stored property.
 
 If the returned format is 8, the returned data is represented as a char
 array.  If the returned format is 16, the returned data is represented
-as a uint16_t array and should be cast to that type to obtain the ele-
-ments.  If the returned format is 32, the returned data is represented
+as a uint16_t array and should be cast to that type to obtain the elements.
+If the returned format is 32, the returned data is represented
 as a uint32_t array and should be cast to that type to obtain the elements.
 
 XIGetProperty always allocates one extra byte in prop_return (even

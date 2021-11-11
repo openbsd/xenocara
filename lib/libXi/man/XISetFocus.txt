@@ -38,7 +38,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-   XISetFocus changes the focus of the specified device ans its
+   XISetFocus changes the focus of the specified device and its
    last-focus-change time. It has no effect if the specified time
    is earlier than the current last-focus-change time or is later
    than the current X server time. Otherwise, the

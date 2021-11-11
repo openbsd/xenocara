@@ -1,1 +1,1 @@
-.so XISelectEvents.libmansuffix
+.so manlibmansuffix/XISelectEvents.libmansuffix

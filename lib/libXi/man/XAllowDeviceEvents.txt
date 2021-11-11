@@ -23,7 +23,7 @@ SYNOPSIS
           allowed.
 
    event_mode
-          Specifies the event mode.You can pass AsyncThisDevice,
+          Specifies the event mode. You can pass AsyncThisDevice,
           SyncThisDevice, ReplayThisDevice, AsyncOtherDevices,
           SyncAll, or AsyncAll.
 

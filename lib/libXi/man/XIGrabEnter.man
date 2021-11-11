@@ -2,12 +2,12 @@
 .\"     Title: xigrabenter
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XIGRABENTER" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XIGRABENTER" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -230,7 +230,7 @@ XIGrabFocusIn  on the same window, a BadAccess error results\&.
 When using XIAnyModifier, the request fails completely, and a
 XIBadAccess error results (no grabs are established) if there
 is a conflicting grab for any combination\&. XIGrabEnter and
-XIGrabFocusin have no effect on an active grab\&.
+XIGrabFocusIn have no effect on an active grab\&.
 .fi
 .if n \{\
 .RE

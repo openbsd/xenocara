@@ -2,12 +2,12 @@
 .\"     Title: xichangeproperty
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XICHANGEPROPERTY" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XICHANGEPROPERTY" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -69,8 +69,8 @@ Status XIGetProperty( Display *dpy,
 .sp
 .nf
 bytes_after_return
-       Returns the number of bytes remaining to be read in the prop\-
-       erty if a partial read was performed\&.
+       Returns the number of bytes remaining to be read in the property
+       if a partial read was performed\&.
 .fi
 .sp
 .nf
@@ -208,7 +208,7 @@ A = N \- (I + L)
 .sp
 The returned value starts at byte index I in the property (indexing from zero), and its length in bytes is L\&. If the value for long_offset causes L to be negative, a BadValue error results\&. The value of bytes_after_return is A, giving the number of trailing unread bytes in the stored property\&.
 .sp
-If the returned format is 8, the returned data is represented as a char array\&. If the returned format is 16, the returned data is represented as a uint16_t array and should be cast to that type to obtain the ele\- ments\&. If the returned format is 32, the returned data is represented as a uint32_t array and should be cast to that type to obtain the elements\&.
+If the returned format is 8, the returned data is represented as a char array\&. If the returned format is 16, the returned data is represented as a uint16_t array and should be cast to that type to obtain the elements\&. If the returned format is 32, the returned data is represented as a uint32_t array and should be cast to that type to obtain the elements\&.
 .sp
 XIGetProperty always allocates one extra byte in prop_return (even if the property is zero length) and sets it to zero so that simple properties consisting of characters do not have to be copied into yet another string before use\&.
 .sp

@@ -32,7 +32,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-   The ClientPointer is the device that is percieved to be the
+   The ClientPointer is the device that is perceived to be the
    core pointer for non-XI protocol requests and replies. Each
    time a protocol message needs device-dependent data and the
    device is not explicitly given, the ClientPointer device is

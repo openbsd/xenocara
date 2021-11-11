@@ -2,12 +2,12 @@
 .\"     Title: xisetclientpointer
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XISETCLIENTPOINTER" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XISETCLIENTPOINTER" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -67,7 +67,7 @@ deviceid
 .RS 4
 .\}
 .nf
-The ClientPointer is the device that is percieved to be the
+The ClientPointer is the device that is perceived to be the
 core pointer for non\-XI protocol requests and replies\&. Each
 time a protocol message needs device\-dependent data and the
 device is not explicitly given, the ClientPointer device is

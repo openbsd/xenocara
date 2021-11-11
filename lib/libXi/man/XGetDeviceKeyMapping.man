@@ -2,12 +2,12 @@
 .\"     Title: xgetdevicekeymapping
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XGETDEVICEKEYMAPPING" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XGETDEVICEKEYMAPPING" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -70,7 +70,7 @@ keysyms_per_keycode
 .nf
 keysyms_per_keycode_return
        Specifies the address of a variable into which the
-       number of KeySyms per KeyCodewill be returned\&.
+       number of KeySyms per KeyCode will be returned\&.
 .fi
 .sp
 .nf
@@ -252,7 +252,7 @@ the client to be large enough to hold all desired symbols\&. A
 special KeySym value of NoSymbol should be used to fill in
 unused elements for individual KeyCodes\&. It is legal for
 NoSymbol to appear in nontrailing positions of the effective
-list for a KeyCode\&.XChangeDeviceKeyMapping generates a
+list for a KeyCode\&. XChangeDeviceKeyMapping generates a
 DeviceMappingNotify event that is sent to all clients that have
 selected that type of event\&.
 .fi

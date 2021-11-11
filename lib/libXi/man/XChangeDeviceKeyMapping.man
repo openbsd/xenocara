@@ -1,1 +1,1 @@
-.so XGetDeviceKeyMapping.libmansuffix
+.so manlibmansuffix/XGetDeviceKeyMapping.libmansuffix

@@ -2,12 +2,12 @@
 .\"     Title: xselectextensionevent
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XSELECTEXTENSIONEVEN" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XSELECTEXTENSIONEVEN" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -152,7 +152,7 @@ Information contained in the XDevice structure returned by
 XOpenDevice is used by macros to obtain the event classes that
 clients use in making XSelectExtensionEvent requests\&. Currently
 defined macros include DeviceKeyPress, DeviceKeyRelease,
-DeviceButtonPress, DeviceButtonRelese, DeviceMotionNotify,
+DeviceButtonPress, DeviceButtonRelease, DeviceMotionNotify,
 DeviceFocusIn, DeviceFocusOut, ProximityIn, ProximityOut,
 DeviceStateNotify, DeviceMappingNotify, ChangeDeviceNotify,
 DevicePointerMotionHint, DeviceButton1Motion,

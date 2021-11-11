@@ -77,7 +77,7 @@ DESCRIPTION
                 } XIDetachSlaveInfo;
 
    XIAddMasterInfo creates a new master pointer and a new
-   master keyboard labelled "name pointer" and "name keyboard"
+   master keyboard labeled "name pointer" and "name keyboard"
    respectively. If sendCore is True, the devices will send core
    events. If enable is True, the device is enabled immediately.
 
@@ -99,7 +99,7 @@ DESCRIPTION
 
    XIAttachSlaveInfo can generate a BadDevice error.
 
-   XIDettachSlaveInfo deattaches device from the current master
+   XIDetachSlaveInfo detaches device from the current master
    device and sets it floating. If the device is already floating,
    no changes are made.
 

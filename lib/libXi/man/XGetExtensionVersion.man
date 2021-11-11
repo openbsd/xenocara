@@ -2,12 +2,12 @@
 .\"     Title: xgetextensionversion
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2019
+.\"      Date: 09/15/2021
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XGETEXTENSIONVERSION" "libmansuffix" "06/19/2019" "\ \&" "\ \&"
+.TH "XGETEXTENSIONVERSION" "libmansuffix" "09/15/2021" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,7 +48,7 @@ display
 .nf
 name
        Specifies the extension to be queried\&. The input
-       extension name is definedin the header file XI\&.h\&.
+       extension name is defined in the header file XI\&.h\&.
 .fi
 .SH "DESCRIPTION"
 .sp
