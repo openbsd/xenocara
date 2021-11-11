@@ -644,30 +644,30 @@ redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty)
 	RegionRec pixregion;
 	int was_blocked;
 
-	PixmapRegionInit(&pixregion, dirty->slave_dst->master_pixmap);
+	PixmapRegionInit(&pixregion, dirty->secondary_dst->primary_pixmap);
 	RegionTranslate(&pixregion, dirty->x, dirty->y);
 	RegionIntersect(&pixregion, &pixregion, DamageRegion(dirty->damage));
 	RegionTranslate(&pixregion, -dirty->x, -dirty->y);
 	was_blocked = RegionNil(&pixregion);
-	DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
+	DamageRegionAppend(&dirty->secondary_dst->drawable, &pixregion);
 	RegionUninit(&pixregion);
 	if (was_blocked)
 		return;
 
-	PixmapRegionInit(&pixregion, dirty->slave_dst->master_pixmap);
+	PixmapRegionInit(&pixregion, dirty->secondary_dst->primary_pixmap);
 	PixmapSyncDirtyHelper(dirty, &pixregion);
 	RegionUninit(&pixregion);
 
 	intel_batch_submit(scrn);
 	if (!intel->has_prime_vmap_flush) {
-		drm_intel_bo *bo = intel_get_pixmap_bo(dirty->slave_dst->master_pixmap);
+		drm_intel_bo *bo = intel_get_pixmap_bo(dirty->secondary_dst->primary_pixmap);
 		was_blocked = xf86BlockSIGIO();
 		drm_intel_bo_map(bo, FALSE);
 		drm_intel_bo_unmap(bo);
 		xf86UnblockSIGIO(was_blocked);
 	}
 
-	DamageRegionProcessPending(&dirty->slave_dst->drawable);
+	DamageRegionProcessPending(&dirty->secondary_dst->drawable);
 	return;
 }
 
