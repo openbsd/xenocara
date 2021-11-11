@@ -350,7 +350,7 @@ extern void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 				    int *new_pitch);
 extern void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv);
 extern Bool RADEONEXAPixmapIsOffscreen(PixmapPtr pPix);
-extern Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **handle_p);
+extern Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr secondary, void **handle_p);
 extern Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *handle);
 
 #endif

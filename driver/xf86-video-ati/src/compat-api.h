@@ -34,4 +34,10 @@
 #define BLOCKHANDLER_ARGS pScreen, pTimeout, pReadmask
 #endif
 
+#if ABI_VIDEODRV_VERSION < SET_ABI_VERSION(25, 2)
+#define current_primary current_master
+#define primary_pixmap master_pixmap
+#define secondary_dst slave_dst
+#endif
+
 #endif

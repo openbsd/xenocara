@@ -182,18 +182,18 @@ typedef enum {
 
 
 static inline ScreenPtr
-radeon_master_screen(ScreenPtr screen)
+radeon_primary_screen(ScreenPtr screen)
 {
-    if (screen->current_master)
-	return screen->current_master;
+    if (screen->current_primary)
+	return screen->current_primary;
 
     return screen;
 }
 
 static inline ScreenPtr
-radeon_dirty_master(PixmapDirtyUpdatePtr dirty)
+radeon_dirty_primary(PixmapDirtyUpdatePtr dirty)
 {
-    return radeon_master_screen(dirty->slave_dst->drawable.pScreen);
+    return radeon_primary_screen(dirty->secondary_dst->drawable.pScreen);
 }
 
 static inline DrawablePtr

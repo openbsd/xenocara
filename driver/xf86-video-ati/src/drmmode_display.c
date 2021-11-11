@@ -720,7 +720,7 @@ drmmode_crtc_prime_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 		xorg_list_for_each_entry(dirty, &screen->pixmap_dirty_list,
 					 ent) {
 			if (radeon_dirty_src_equals(dirty, drmmode_crtc->prime_scanout_pixmap)) {
-				dirty->slave_dst =
+				dirty->secondary_dst =
 					drmmode_crtc->scanout[scanout_id].pixmap;
 				break;
 			}
@@ -1356,7 +1356,7 @@ drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
 
 	xorg_list_for_each_entry(dirty, &screen->pixmap_dirty_list, ent) {
 		if (radeon_dirty_src_equals(dirty, drmmode_crtc->prime_scanout_pixmap)) {
-			PixmapStopDirtyTracking(dirty->src, dirty->slave_dst);
+			PixmapStopDirtyTracking(dirty->src, dirty->secondary_dst);
 			break;
 		}
 	}

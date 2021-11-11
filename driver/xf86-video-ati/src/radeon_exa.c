@@ -282,7 +282,7 @@ void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv)
     free(driverPriv);
 }
 
-Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **fd_handle)
+Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr seconndary, void **fd_handle)
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(ppix);
 

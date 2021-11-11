@@ -559,8 +559,8 @@ dirty_region(PixmapDirtyUpdatePtr dirty)
 	if (dirty->rotation != RR_Rotate_0) {
 		dstregion = transform_region(damageregion,
 					     &dirty->f_inverse,
-					     dirty->slave_dst->drawable.width,
-					     dirty->slave_dst->drawable.height);
+					     dirty->secondary_dst->drawable.width,
+					     dirty->secondary_dst->drawable.height);
 	} else
 #endif
 	{
@@ -568,7 +568,7 @@ dirty_region(PixmapDirtyUpdatePtr dirty)
 
 	    dstregion = RegionDuplicate(damageregion);
 	    RegionTranslate(dstregion, -dirty->x, -dirty->y);
-	    PixmapRegionInit(&pixregion, dirty->slave_dst);
+	    PixmapRegionInit(&pixregion, dirty->secondary_dst);
 	    RegionIntersect(dstregion, dstregion, &pixregion);
 	    RegionUninit(&pixregion);
 	}
@@ -585,8 +585,8 @@ redisplay_dirty(PixmapDirtyUpdatePtr dirty, RegionPtr region)
 	if (RegionNil(region))
 		goto out;
 
-	if (dirty->slave_dst->master_pixmap)
-	    DamageRegionAppend(&dirty->slave_dst->drawable, region);
+	if (dirty->secondary_dst->primary_pixmap)
+	    DamageRegionAppend(&dirty->secondary_dst->drawable, region);
 
 #ifdef HAS_DIRTYTRACKING_ROTATION
 	PixmapSyncDirtyHelper(dirty);
@@ -595,8 +595,8 @@ redisplay_dirty(PixmapDirtyUpdatePtr dirty, RegionPtr region)
 #endif
 
 	radeon_cs_flush_indirect(src_scrn);
-	if (dirty->slave_dst->master_pixmap)
-	    DamageRegionProcessPending(&dirty->slave_dst->drawable);
+	if (dirty->secondary_dst->primary_pixmap)
+	    DamageRegionProcessPending(&dirty->secondary_dst->drawable);
 
 out:
 	DamageEmpty(dirty->damage);
@@ -613,12 +613,12 @@ radeon_prime_scanout_update_abort(xf86CrtcPtr crtc, void *event_data)
 void
 radeon_sync_shared_pixmap(PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr master_screen = radeon_dirty_master(dirty);
+    ScreenPtr primary_screen = radeon_dirty_primary(dirty);
     PixmapDirtyUpdatePtr ent;
     RegionPtr region;
 
-    xorg_list_for_each_entry(ent, &master_screen->pixmap_dirty_list, ent) {
-	if (!radeon_dirty_src_equals(dirty, ent->slave_dst))
+    xorg_list_for_each_entry(ent, &primary_screen->pixmap_dirty_list, ent) {
+	if (!radeon_dirty_src_equals(dirty, ent->secondary_dst))
 	    continue;
 
 	region = dirty_region(ent);
@@ -631,45 +631,45 @@ radeon_sync_shared_pixmap(PixmapDirtyUpdatePtr dirty)
 #if HAS_SYNC_SHARED_PIXMAP
 
 static Bool
-master_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
+primary_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr master_screen = radeon_dirty_master(dirty);
+    ScreenPtr primary_screen = radeon_dirty_primary(dirty);
 
-    return !!master_screen->SyncSharedPixmap;
+    return !!primary_screen->SyncSharedPixmap;
 }
 
 static Bool
-slave_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
+secondary_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr slave_screen = dirty->slave_dst->drawable.pScreen;
+    ScreenPtr secondary_screen = dirty->secondary_dst->drawable.pScreen;
 
-    return !!slave_screen->SyncSharedPixmap;
+    return !!secondary_screen->SyncSharedPixmap;
 }
 
 static void
 call_sync_shared_pixmap(PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr master_screen = radeon_dirty_master(dirty);
+    ScreenPtr primary_screen = radeon_dirty_primary(dirty);
 
-    master_screen->SyncSharedPixmap(dirty);
+    primary_screen->SyncSharedPixmap(dirty);
 }
 
 #else /* !HAS_SYNC_SHARED_PIXMAP */
 
 static Bool
-master_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
+primary_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
 {
-    ScrnInfoPtr master_scrn = xf86ScreenToScrn(radeon_dirty_master(dirty));
+    ScrnInfoPtr primary_scrn = xf86ScreenToScrn(radeon_dirty_primary(dirty));
 
-    return master_scrn->driverName == scrn->driverName;
+    return primary_scrn->driverName == scrn->driverName;
 }
 
 static Bool
-slave_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
+secondary_has_sync_shared_pixmap(ScrnInfoPtr scrn, PixmapDirtyUpdatePtr dirty)
 {
-    ScrnInfoPtr slave_scrn = xf86ScreenToScrn(dirty->slave_dst->drawable.pScreen);
+    ScrnInfoPtr secondary_scrn = xf86ScreenToScrn(dirty->secondary_dst->drawable.pScreen);
 
-    return slave_scrn->driverName == scrn->driverName;
+    return secondary_scrn->driverName == scrn->driverName;
 }
 
 static void
@@ -684,12 +684,12 @@ call_sync_shared_pixmap(PixmapDirtyUpdatePtr dirty)
 static xf86CrtcPtr
 radeon_prime_dirty_to_crtc(PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr screen = dirty->slave_dst->drawable.pScreen;
+    ScreenPtr screen = dirty->secondary_dst->drawable.pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int c;
 
-    /* Find the CRTC which is scanning out from this slave pixmap */
+    /* Find the CRTC which is scanning out from this secondary pixmap */
     for (c = 0; c < xf86_config->num_crtc; c++) {
 	xf86CrtcPtr xf86_crtc = xf86_config->crtc[c];
 	drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
@@ -714,7 +714,7 @@ radeon_prime_scanout_do_update(xf86CrtcPtr crtc, unsigned scanout_id)
 	if (radeon_dirty_src_equals(dirty, drmmode_crtc->prime_scanout_pixmap)) {
 	    RegionPtr region;
 
-	    if (master_has_sync_shared_pixmap(scrn, dirty))
+	    if (primary_has_sync_shared_pixmap(scrn, dirty))
 		call_sync_shared_pixmap(dirty);
 
 	    region = dirty_region(dirty);
@@ -727,7 +727,7 @@ radeon_prime_scanout_do_update(xf86CrtcPtr crtc, unsigned scanout_id)
 		radeon_cs_flush_indirect(scrn);
 		RegionCopy(&drmmode_crtc->scanout_last_region, region);
 		RegionTranslate(region, -crtc->x, -crtc->y);
-		dirty->slave_dst = drmmode_crtc->scanout[scanout_id].pixmap;
+		dirty->secondary_dst = drmmode_crtc->scanout[scanout_id].pixmap;
 	    }
 
 	    redisplay_dirty(dirty, region);
@@ -754,7 +754,7 @@ radeon_prime_scanout_update_handler(xf86CrtcPtr crtc, uint32_t frame, uint64_t u
 static void
 radeon_prime_scanout_update(PixmapDirtyUpdatePtr dirty)
 {
-    ScreenPtr screen = dirty->slave_dst->drawable.pScreen;
+    ScreenPtr screen = dirty->secondary_dst->drawable.pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
     xf86CrtcPtr xf86_crtc = radeon_prime_dirty_to_crtc(dirty);
@@ -818,7 +818,7 @@ radeon_prime_scanout_update(PixmapDirtyUpdatePtr dirty)
 static void
 radeon_prime_scanout_flip(PixmapDirtyUpdatePtr ent)
 {
-    ScreenPtr screen = ent->slave_dst->drawable.pScreen;
+    ScreenPtr screen = ent->secondary_dst->drawable.pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
     xf86CrtcPtr crtc = radeon_prime_dirty_to_crtc(ent);
@@ -893,11 +893,11 @@ radeon_dirty_update(ScrnInfoPtr scrn)
 		if (screen->isGPU) {
 			PixmapDirtyUpdatePtr region_ent = ent;
 
-			if (master_has_sync_shared_pixmap(scrn, ent)) {
-				ScreenPtr master_screen = radeon_dirty_master(ent);
+			if (primary_has_sync_shared_pixmap(scrn, ent)) {
+				ScreenPtr primary_screen = radeon_dirty_primary(ent);
 
-				xorg_list_for_each_entry(region_ent, &master_screen->pixmap_dirty_list, ent) {
-					if (radeon_dirty_src_equals(ent, region_ent->slave_dst))
+				xorg_list_for_each_entry(region_ent, &primary_screen->pixmap_dirty_list, ent) {
+					if (radeon_dirty_src_equals(ent, region_ent->secondary_dst))
 						break;
 				}
 			}
@@ -921,7 +921,7 @@ radeon_dirty_update(ScrnInfoPtr scrn)
 
 			RegionDestroy(region);
 		} else {
-			if (slave_has_sync_shared_pixmap(scrn, ent))
+			if (secondary_has_sync_shared_pixmap(scrn, ent))
 				continue;
 
 			region = dirty_region(ent);
@@ -1216,7 +1216,7 @@ static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
     (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = RADEONBlockHandler_KMS;
 
-    if (!xf86ScreenToScrn(radeon_master_screen(pScreen))->vtSema)
+    if (!xf86ScreenToScrn(radeon_primary_screen(pScreen))->vtSema)
 	return;
 
     if (!pScreen->isGPU)
@@ -2584,7 +2584,7 @@ CARD32 cleanup_black_fb(OsTimerPtr timer, CARD32 now, pointer data)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int c;
 
-    if (xf86ScreenToScrn(radeon_master_screen(screen))->vtSema)
+    if (xf86ScreenToScrn(radeon_primary_screen(screen))->vtSema)
 	return 0;
 
     /* Unreference the all-black FB created by RADEONLeaveVT_KMS. After
