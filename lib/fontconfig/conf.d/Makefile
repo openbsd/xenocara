@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2021/11/11 08:46:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.13 2021/11/14 21:46:38 robert Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -27,7 +27,6 @@ CONF_LINKS = \
 	65-fonts-persian.conf \
 	65-nonlatin.conf \
 	69-unifont.conf \
-	70-no-bitmaps.conf \
 	80-delicious.conf \
 	90-synthetic.conf
 
