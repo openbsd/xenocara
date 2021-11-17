@@ -931,6 +931,13 @@ radeon_dirty_update(ScrnInfoPtr scrn)
 	}
 }
 
+static void
+radeonSourceValidate(DrawablePtr draw, int x, int y, int w, int h,
+		     unsigned int subWindowMode)
+{
+}
+
+
 
 Bool
 radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
@@ -993,7 +1000,7 @@ radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
 	    SetPicturePictFilter(src, xf86_crtc->filter, xf86_crtc->params,
 				 xf86_crtc->nparams);
 
-	pScreen->SourceValidate = NULL;
+	pScreen->SourceValidate = radeonSourceValidate;
 	CompositePicture(PictOpSrc,
 			 src, NULL, dst,
 			 extents.x1, extents.y1, 0, 0, extents.x1,
