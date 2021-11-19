@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.252 2020/04/16 13:32:35 okan Exp $
+ * $OpenBSD: conf.c,v 1.253 2021/11/19 19:13:14 okan Exp $
  */
 
 #include <sys/types.h>
@@ -669,6 +669,8 @@ conf_grab_kbd(Window win)
 
 	TAILQ_FOREACH(kb, &Conf.keybindq, entry) {
 		kc = XKeysymToKeycode(X_Dpy, kb->press.keysym);
+		if (kc == 0)
+			continue;
 		if ((XkbKeycodeToKeysym(X_Dpy, kc, 0, 0) != kb->press.keysym) &&
 		    (XkbKeycodeToKeysym(X_Dpy, kc, 0, 1) == kb->press.keysym))
 			kb->modmask |= ShiftMask;
