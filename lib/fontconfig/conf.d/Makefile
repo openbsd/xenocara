@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.13 2021/11/14 21:46:38 robert Exp $
+#	$OpenBSD: Makefile,v 1.14 2021/11/20 10:55:13 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -11,7 +11,7 @@ DOC_FILES= \
 CONF_LINKS = \
 	10-hinting-slight.conf \
 	10-scale-bitmap-fonts.conf \
-	11-lcd-filter-default.conf \
+	11-lcdfilter-default.conf \
 	20-unhint-small-vera.conf \
 	30-lucida-aliases.conf \
 	30-metric-aliases.conf \
