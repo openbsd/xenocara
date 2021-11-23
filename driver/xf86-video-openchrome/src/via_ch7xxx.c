@@ -430,7 +430,6 @@ CH7xxxModeCrtc(xf86CrtcPtr crtc, DisplayModePtr mode)
             case 16:
                 CRTC = Table.CRTC2_16BPP;
                 break;
-            case 24:
             case 32:
                 CRTC = Table.CRTC2_32BPP;
                 break;

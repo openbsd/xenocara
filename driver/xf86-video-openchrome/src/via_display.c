@@ -29,6 +29,8 @@
 #include "config.h"
 #endif
 
+#include "via_eng_regs.h"
+
 #include "via_driver.h"
 
 static ViaExpireNumberTable CLE266AExpireNumber[] = {
@@ -113,7 +115,6 @@ viaIGA1SetColorDepth(ScrnInfoPtr pScrn, CARD8 bitsPerPixel)
     case 16:
         ViaSeqMask(hwp, 0x15, 0x14, 0x1C);
         break;
-    case 24:
     case 32:
         ViaSeqMask(hwp, 0x15, 0x1C, 0x1C);
         break;
@@ -123,7 +124,6 @@ viaIGA1SetColorDepth(ScrnInfoPtr pScrn, CARD8 bitsPerPixel)
 
     if ((bitsPerPixel == 8)
         || (bitsPerPixel == 16)
-        || (bitsPerPixel == 24)
         || (bitsPerPixel == 32)) {
 
         xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -181,7 +181,6 @@ viaIGA1InitHI(ScrnInfoPtr pScrn)
     VIAPtr pVia = VIAPTR(pScrn);
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -216,7 +215,6 @@ viaIGA1SetHIStartingAddress(xf86CrtcPtr crtc)
     VIAPtr pVia = VIAPTR(pScrn);
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -242,7 +240,6 @@ viaIGA1DisplayHI(ScrnInfoPtr pScrn, Bool HI_Status)
     CARD32 temp;
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -275,7 +272,6 @@ viaIGA1SetHIDisplayLocation(ScrnInfoPtr pScrn,
     VIAPtr pVia = VIAPTR(pScrn);
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -290,51 +286,6 @@ viaIGA1SetHIDisplayLocation(ScrnInfoPtr pScrn,
         VIASETREG(HI_CENTEROFFSET, ((xoff << 16) | (yoff & 0x07ff)));
         break;
     }
-}
-
-/*
- * Resets IGA2 hardware.
- */
-static void
-viaIGA2HWReset(ScrnInfoPtr pScrn, CARD8 resetState)
-{
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered viaIGA2HWReset.\n"));
-
-    /* 3X5.6A[6] - Second Display Channel Reset
-     *             0: Reset
-     *             1: Normal Operation */
-    ViaCrtcMask(hwp, 0x6A, resetState << 6, 0x40);
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                "IGA2 HW Reset: %s\n",
-                (resetState & 0x01) ? "Off" : "On");
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaIGA2HWReset.\n"));
-}
-
-/*
- * Controls IGA2 display channel state.
- */
-void
-viaIGA2DisplayChannel(ScrnInfoPtr pScrn, Bool channelState)
-{
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered viaIGA2DisplayChannel.\n"));
-
-    /* 3X5.6A[7] - Second Display Channel Enable */
-    ViaCrtcMask(hwp, 0x6A, channelState << 7, 0x80);
-
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                "IGA2 Display Channel: %s\n",
-                channelState ? "On" : "Off");
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaIGA2DisplayChannel.\n"));
 }
 
 /*
@@ -361,7 +312,6 @@ viaIGA2SetColorDepth(ScrnInfoPtr pScrn, CARD8 bitsPerPixel)
         case 16:
             ViaCrtcMask(hwp, 0x67, 0x40, 0xC0);
             break;
-        case 24:
         case 32:
             ViaCrtcMask(hwp, 0x67, 0xC0, 0xC0);
             break;
@@ -371,7 +321,6 @@ viaIGA2SetColorDepth(ScrnInfoPtr pScrn, CARD8 bitsPerPixel)
 
     if ((bitsPerPixel == 8)
         || (bitsPerPixel == 16)
-        || (bitsPerPixel == 24)
         || (bitsPerPixel == 32)) {
 
         xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -416,7 +365,6 @@ viaIGA2InitHI(ScrnInfoPtr pScrn)
     VIAPtr pVia = VIAPTR(pScrn);
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -459,7 +407,6 @@ viaIGA2DisplayHI(ScrnInfoPtr pScrn, Bool HI_Status)
     CARD32 temp;
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -492,7 +439,6 @@ viaIGA2SetHIDisplayLocation(ScrnInfoPtr pScrn,
     VIAPtr pVia = VIAPTR(pScrn);
 
     switch(pVia->Chipset) {
-    case VIA_PM800:
     case VIA_CX700:
     case VIA_P4M890:
     case VIA_P4M900:
@@ -509,7 +455,7 @@ viaIGA2SetHIDisplayLocation(ScrnInfoPtr pScrn,
     }
 }
 
-void
+static void
 VIALoadRgbLut(ScrnInfoPtr pScrn, int start, int numColors, LOCO *colors)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
@@ -537,7 +483,6 @@ VIALoadRgbLut(ScrnInfoPtr pScrn, int start, int numColors, LOCO *colors)
             break;
         case 8:
         case 16:
-        case 24:
         case 32:
             for (i = start; i < numColors; i++) {
                 hwp->writeDacWriteAddr(hwp, i);
@@ -596,10 +541,7 @@ viaIGAInitCommon(ScrnInfoPtr pScrn)
     VIAPtr pVia = VIAPTR(pScrn);
     VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
     VIARegPtr Regs = &pVIADisplay->SavedReg;
-    CARD8 i;
-#ifdef HAVE_DEBUG
-    CARD8 temp;
-#endif
+    CARD8 i, temp;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaIGAInitCommon.\n"));
@@ -755,6 +697,13 @@ viaIGAInitCommon(ScrnInfoPtr pScrn)
     temp = hwp->readCrtc(hwp, 0x47);
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "CR47: 0x%02X\n", temp));
+
+    if (pVia->Chipset == VIA_CLE266) {
+        temp = hwp->readCrtc(hwp, 0x55);
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                            "CR55: 0x%02X\n", temp));
+    }
+
     temp = hwp->readCrtc(hwp, 0x6B);
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "CR6B: 0x%02X\n", temp));
@@ -973,6 +922,15 @@ viaIGAInitCommon(ScrnInfoPtr pScrn)
      * 3X5.47[0] - LCD Simultaneous Mode Backdoor Register for
      *             Clock Select and CRTC Register Protect */
     ViaCrtcMask(hwp, 0x47, 0x00, 0x23);
+
+    /*
+     * It was observed on NeoWare CA10 thin client with DVI that not
+     * resetting CR55[7] to 0 causes the screen driven by IGA2 to get
+     * distorted.
+     */
+    if (pVia->Chipset == VIA_CLE266) {
+        ViaCrtcMask(hwp, 0x55, 0x00, BIT(7));
+    }
 
     /* 3X5.6B[3] - Simultaneous Display Enable
      *             0: Disable
@@ -1199,8 +1157,10 @@ viaIGA1SetFBStartingAddress(xf86CrtcPtr crtc, int x, int y)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
-    CARD32 Base;
+    unsigned long Base;
+#ifdef HAVE_DEBUG
     CARD8 cr0c, cr0d, cr34, cr48;
+#endif
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaIGA1SetFBStartingAddress.\n"));
@@ -1226,23 +1186,19 @@ viaIGA1SetFBStartingAddress(xf86CrtcPtr crtc, int x, int y)
 
 #ifdef HAVE_DEBUG
     cr0d = hwp->readCrtc(hwp, 0x0D);
-    cr0c = hwp->readCrtc(hwp, 0x0C);
-    cr34 = hwp->readCrtc(hwp, 0x34);
-    if (!(pVia->Chipset == VIA_CLE266 && CLE266_REV_IS_AX(pVia->ChipRev))) {
-        cr48 = hwp->readCrtc(hwp, 0x48);
-    }
-
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "CR0D: 0x%02X\n", cr0d));
+    cr0c = hwp->readCrtc(hwp, 0x0C);
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "CR0C: 0x%02X\n", cr0c));
+    cr34 = hwp->readCrtc(hwp, 0x34);
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "CR34: 0x%02X\n", cr34));
     if (!(pVia->Chipset == VIA_CLE266 && CLE266_REV_IS_AX(pVia->ChipRev))) {
+        cr48 = hwp->readCrtc(hwp, 0x48);
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                             "CR48: 0x%02X\n", cr48));
     }
-
 #endif
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1262,11 +1218,11 @@ viaIGA1SetDisplayRegister(ScrnInfoPtr pScrn, DisplayModePtr mode)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                 "IGA1 Requested Screen Mode: %s\n", mode->name);
 
-    if (mode->Flags & V_CLKDIV2) {
-        ViaSeqMask(hwp, 0x01, 0x08, 0x08);
-    } else {
-        ViaSeqMask(hwp, 0x01, 0x00, 0x08);
-    }
+    /* Interlace mode selection for IGA1. */
+    /* 3C5.01[3] - First Display Interlace Mode
+     *             0: Off
+     *             1: On */
+    ViaSeqMask(hwp, 0x01, (mode->Flags & V_CLKDIV2) ? BIT(3) : 0x00, BIT(3));
 
     ViaCrtcMask(hwp, 0x03, 0x80, 0x80); /* enable vertical retrace access */
 
@@ -1946,7 +1902,6 @@ viaIGA1Restore(ScrnInfoPtr pScrn)
     case VIA_P4M890:
         hwp->writeSeq(hwp, 0x23, Regs->SR[0x23]);
         hwp->writeSeq(hwp, 0x24, Regs->SR[0x24]);
-        hwp->writeSeq(hwp, 0x25, Regs->SR[0x25]);
 
         hwp->writeSeq(hwp, 0x27, Regs->SR[0x27]);
         hwp->writeSeq(hwp, 0x28, Regs->SR[0x28]);
@@ -1956,10 +1911,12 @@ viaIGA1Restore(ScrnInfoPtr pScrn)
         break;
     }
 
-    hwp->writeSeq(hwp, 0x26, Regs->SR[0x26]);
-
     hwp->writeSeq(hwp, 0x2A, Regs->SR[0x2A]);
     hwp->writeSeq(hwp, 0x2B, Regs->SR[0x2B]);
+
+    hwp->writeSeq(hwp, 0x2C,
+                    (hwp->readSeq(hwp, 0x2C) & (~0x01)) |
+                    (Regs->SR[0x2C] & 0x01));
 
     hwp->writeSeq(hwp, 0x2D, Regs->SR[0x2D]);
     hwp->writeSeq(hwp, 0x2E, Regs->SR[0x2E]);
@@ -1981,6 +1938,10 @@ viaIGA1Restore(ScrnInfoPtr pScrn)
     default:
         break;
     }
+
+    hwp->writeSeq(hwp, 0x3D,
+                    (hwp->readSeq(hwp, 0x3D) & (~0x01)) |
+                    (Regs->SR[0x3D] & 0x01));
 
     /* Restore PLL settings and several miscellaneous registers.
      * For UniChrome, register 3C5.44 through 3C5.4B are restored.
@@ -2348,8 +2309,11 @@ viaIGA2SetFBStartingAddress(xf86CrtcPtr crtc, int x, int y)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
-    CARD32 Base, tmp;
+    unsigned long Base;
+    unsigned long tmp;
+#ifdef HAVE_DEBUG
     CARD8 cr62, cr63, cr64, cra3;
+#endif
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaIGA2SetFBStartingAddress.\n"));
@@ -2413,11 +2377,11 @@ viaIGA2SetDisplayRegister(ScrnInfoPtr pScrn, DisplayModePtr mode)
         ViaCrtcMask(hwp, 0x62, 0x00, 0x01);
     }
 
-    /* Keep interlace mode off. */
+    /* Interlace mode selection for IGA2. */
     /* 3X5.67[5] - Second Display Interlace Mode
      *             0: Off
      *             1: On */
-    ViaCrtcMask(hwp, 0x67, 0x00, 0x20);
+    ViaCrtcMask(hwp, 0x67, (mode->Flags & V_CLKDIV2) ? BIT(5) : 0x00, BIT(5));
 
 
     /* Set IGA2 horizontal total pixels.*/
@@ -2711,7 +2675,7 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
                     hwp->writeCrtc(hwp, 0x68, 0x67);/* depth 6, threshold 7 */
                 }
             } else {
-                if ((pScrn->bitsPerPixel >= 24)
+                if ((pScrn->bitsPerPixel == 32)
                     && (((mode->VDisplay > 768)
                          && (pVia->MemClk <= VIA_MEM_DDR200)) ||
                         ((mode->HDisplay > 1280)
@@ -3091,10 +3055,10 @@ viaIGA2Restore(ScrnInfoPtr pScrn)
 void
 ViaShadowCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 {
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaShadowCRTCSetMode\n"));
-
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     CARD16 temp;
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaShadowCRTCSetMode\n"));
 
     temp = (mode->CrtcHTotal >> 3) - 5;
     hwp->writeCrtc(hwp, 0x6D, temp & 0xFF);
@@ -3127,62 +3091,116 @@ ViaShadowCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 }
 
 static void
-iga1_crtc_dpms(xf86CrtcPtr crtc, int mode)
+via_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga1_crtc_dpms.\n"));
+                        "Entered %s.\n", __func__));
 
-    switch (mode) {
-    case DPMSModeOn:
-    case DPMSModeStandby:
-    case DPMSModeSuspend:
-        viaIGA1SetDisplayOutput(pScrn, TRUE);
-        break;
-    case DPMSModeOff:
-        viaIGA1SetDisplayOutput(pScrn, FALSE);
-        break;
-    default:
-        break;
+    if (!iga->index) {
+        switch (mode) {
+        case DPMSModeOn:
+        case DPMSModeStandby:
+        case DPMSModeSuspend:
+            viaIGA1SetDisplayOutput(pScrn, TRUE);
+            break;
+        case DPMSModeOff:
+            viaIGA1SetDisplayOutput(pScrn, FALSE);
+            break;
+        default:
+            break;
+        }
+    } else {
+        switch (mode) {
+        case DPMSModeOn:
+            viaIGA2SetDisplayOutput(pScrn, TRUE);
+            break;
+        case DPMSModeStandby:
+        case DPMSModeSuspend:
+        case DPMSModeOff:
+            viaIGA2SetDisplayOutput(pScrn, FALSE);
+            break;
+        default:
+            break;
+        }
     }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_dpms.\n"));
+                        "Exiting %s.\n", __func__));
 }
 
 static void
-iga1_crtc_save(xf86CrtcPtr crtc)
+via_crtc_save(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
-    viaIGA1Save(pScrn);
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Entered %s.\n", __func__));
+
+    if (!iga->index) {
+        viaIGA1Save(pScrn);
+    } else {
+        viaIGA2Save(pScrn);
+    }
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Exiting %s.\n", __func__));
 }
 
 static void
-iga1_crtc_restore(xf86CrtcPtr crtc)
+via_crtc_restore(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
-    viaIGA1Restore(pScrn);
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Entered %s.\n", __func__));
+
+    if (!iga->index) {
+        viaIGA1Restore(pScrn);
+    } else {
+        viaIGA2Restore(pScrn);
+    }
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Exiting %s.\n", __func__));
 }
 
 static Bool
-iga1_crtc_lock(xf86CrtcPtr crtc)
+via_crtc_lock(xf86CrtcPtr crtc)
 {
+    ScrnInfoPtr pScrn = crtc->scrn;
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Entered %s.\n", __func__));
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Exiting %s.\n", __func__));
+
     return FALSE;
 }
 
 static void
-iga1_crtc_unlock(xf86CrtcPtr crtc)
+via_crtc_unlock(xf86CrtcPtr crtc)
 {
+    ScrnInfoPtr pScrn = crtc->scrn;
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Entered %s.\n", __func__));
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Exiting %s.\n", __func__));
 }
 
 static Bool
-iga1_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
+via_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
                         DisplayModePtr adjusted_mode)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     VIAPtr pVia = VIAPTR(pScrn);
     CARD32 temp;
     ModeStatus modestatus;
@@ -3196,7 +3214,12 @@ iga1_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
         return FALSE;
     }
 
-    modestatus = viaIGA1ModeValid(pScrn, mode);
+    if (!iga->index) {
+        modestatus = viaIGA1ModeValid(pScrn, mode);
+    } else {
+        modestatus = viaIGA2ModeValid(pScrn, mode);
+    }
+
     if (modestatus != MODE_OK) {
         xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Not using mode \"%s\" : %s.\n",
                    mode->name, xf86ModeStatusToString(modestatus));
@@ -3230,112 +3253,136 @@ iga1_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
 }
 
 static void
-iga1_crtc_prepare(xf86CrtcPtr crtc)
+via_crtc_prepare(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga1_crtc_prepare.\n"));
+                        "Entered %s.\n", __func__));
 
-    /* Turn off IGA1. */
-    viaIGA1SetDisplayOutput(pScrn, FALSE);
+    if (!iga->index) {
+        /* Turn off IGA1. */
+        viaIGA1SetDisplayOutput(pScrn, FALSE);
+    } else {
+        /* Turn off IGA2. */
+        viaIGA2SetDisplayOutput(pScrn, FALSE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_prepare.\n"));
+                        "Exiting %s.\n", __func__));
 }
 
 static void
-iga1_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga1_crtc_set_origin.\n"));
-
-    viaIGA1SetFBStartingAddress(crtc, x, y);
-    VIAVidAdjustFrame(pScrn, x, y);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_set_origin.\n"));
-}
-
-static void
-iga1_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
-                    DisplayModePtr adjusted_mode,
+via_crtc_mode_set(xf86CrtcPtr crtc,
+                    DisplayModePtr mode, DisplayModePtr adjusted_mode,
                     int x, int y)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     VIAPtr pVia = VIAPTR(pScrn);
     VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga1_crtc_mode_set.\n"));
+                        "Entered %s.\n", __func__));
 
-    /* Put IGA1 into a reset state. */
-    viaIGA1HWReset(pScrn, TRUE);
+    if (!iga->index) {
+        /* Put IGA1 into a reset state. */
+        viaIGA1HWReset(pScrn, TRUE);
 
-    if (!vgaHWInit(pScrn, adjusted_mode)) {
-        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                            "vgaHWInit failed.\n"));
-        goto exit;
+        viaIGAInitCommon(pScrn);
+        viaIGA1Init(pScrn);
+
+        ViaPrintMode(pScrn, adjusted_mode);
+
+        /* Set color depth. */
+        viaIGA1SetColorDepth(pScrn, pScrn->bitsPerPixel);
+
+        /* Set display controller screen parameters. */
+        viaIGA1SetDisplayRegister(pScrn, adjusted_mode);
+
+        ViaSetPrimaryFIFO(pScrn, adjusted_mode);
+
+        pVIADisplay->Clock = ViaModeDotClockTranslate(pScrn, adjusted_mode);
+        pVIADisplay->ClockExternal = FALSE;
+        ViaSetPrimaryDotclock(pScrn, pVIADisplay->Clock);
+        viaSetUseExternalClock(pScrn);
+
+        viaIGA1SetFBStartingAddress(crtc, x, y);
+        VIAVidAdjustFrame(pScrn, x, y);
+
+        /* Put IGA1 back into a normal operating state. */
+        viaIGA1HWReset(pScrn, FALSE);
+    } else {
+        /* Put IGA2 into a reset state. */
+        viaIGA2HWReset(pScrn, TRUE);
+
+        /* Disable IGA2 display channel. */
+        viaIGA2DisplayChannel(pScrn, FALSE);
+
+        viaIGAInitCommon(pScrn);
+        viaIGA2Init(pScrn);
+
+        ViaPrintMode(pScrn, adjusted_mode);
+
+        /* Set color depth. */
+        viaIGA2SetColorDepth(pScrn, pScrn->bitsPerPixel);
+
+        /* Set display controller screen parameters. */
+        viaIGA2SetDisplayRegister(pScrn, adjusted_mode);
+
+        ViaSetSecondaryFIFO(pScrn, adjusted_mode);
+        pVIADisplay->Clock = ViaModeDotClockTranslate(pScrn, adjusted_mode);
+        pVIADisplay->ClockExternal = FALSE;
+        ViaSetSecondaryDotclock(pScrn, pVIADisplay->Clock);
+        viaSetUseExternalClock(pScrn);
+
+        viaIGA2SetFBStartingAddress(crtc, x, y);
+        VIAVidAdjustFrame(pScrn, x, y);
+
+        /* Enable IGA2 display channel. */
+        viaIGA2DisplayChannel(pScrn, TRUE);
+
+        /* Put IGA2 back into a normal operating state. */
+        viaIGA2HWReset(pScrn, FALSE);
     }
 
-    viaIGAInitCommon(pScrn);
-    viaIGA1Init(pScrn);
-
-    ViaPrintMode(pScrn, adjusted_mode);
-
-    /* Set color depth. */
-    viaIGA1SetColorDepth(pScrn, pScrn->bitsPerPixel);
-
-    /* Set display controller screen parameters. */
-    viaIGA1SetDisplayRegister(pScrn, adjusted_mode);
-
-    ViaSetPrimaryFIFO(pScrn, adjusted_mode);
-
-    pVIADisplay->Clock = ViaModeDotClockTranslate(pScrn, adjusted_mode);
-    pVIADisplay->ClockExternal = FALSE;
-    ViaSetPrimaryDotclock(pScrn, pVIADisplay->Clock);
-    ViaSetUseExternalClock(hwp);
-    ViaCrtcMask(hwp, 0x6B, 0x00, 0x01);
-
-    viaIGA1SetFBStartingAddress(crtc, x, y);
-    VIAVidAdjustFrame(pScrn, x, y);
-
-exit:
-    /* Put IGA1 back into a normal operating state. */
-    viaIGA1HWReset(pScrn, FALSE);
-
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_mode_set.\n"));
+                        "Exiting %s.\n", __func__));
 }
 
 static void
-iga1_crtc_commit(xf86CrtcPtr crtc)
+via_crtc_commit(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entering iga1_crtc_commit.\n"));
+                        "Entered %s.\n", __func__));
 
-    /* Turn on IGA1. */
-    viaIGA1SetDisplayOutput(pScrn, TRUE);
+    if (!iga->index) {
+        /* Turn on IGA1. */
+        viaIGA1SetDisplayOutput(pScrn, TRUE);
+    } else {
+        /* Turn on IGA2. */
+        viaIGA2SetDisplayOutput(pScrn, TRUE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_commit.\n"));
+                        "Exiting %s.\n", __func__));
 }
 
 static void
-iga1_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
+via_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
                     int size)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     LOCO colors[size];
     int i;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entering iga1_crtc_gamma_set.\n"));
+                        "Entered %s.\n", __func__));
 
     for (i = 0; i < size; i++) {
         colors[i].red = red[i] >> 8;
@@ -3343,64 +3390,30 @@ iga1_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
         colors[i].blue = blue[i] >> 8;
     }
 
-    /* Set palette LUT to 8-bit mode. */
-    viaIGA1SetPaletteLUTResolution(pScrn, TRUE);
+    if (!iga->index) {
+        /* Set palette LUT to 8-bit mode. */
+        viaIGA1SetPaletteLUTResolution(pScrn, TRUE);
 
-    switch (pScrn->bitsPerPixel) {
-    case 8:
         /* IGA1 will access the palette LUT. */
         viaSetPaletteLUTAccess(pScrn, 0x00);
 
-        VIALoadRgbLut(pScrn, 0, size, colors);
-
         /* Turn gamma correction off. */
         viaIGA1SetGamma(pScrn, FALSE);
-        break;
-    case 16:
-        /* IGA1 will access the palette LUT. */
-        viaSetPaletteLUTAccess(pScrn, 0x00);
+    } else {
+        /* Set palette LUT to 8-bit mode. */
+        viaIGA2SetPaletteLUTResolution(pScrn, TRUE);
 
-        VIALoadRgbLut(pScrn, 0, size, colors);
-
-        /* Turn gamma correction off. */
-        viaIGA1SetGamma(pScrn, FALSE);
-        break;
-    case 24:
-    case 32:
-        /* IGA1 will access the palette LUT. */
-        viaSetPaletteLUTAccess(pScrn, 0x00);
-
-        VIALoadRgbLut(pScrn, 0, size, colors);
+        /* IGA2 will access the palette LUT. */
+        viaSetPaletteLUTAccess(pScrn, 0x01);
 
         /* Turn gamma correction off. */
-        viaIGA1SetGamma(pScrn, FALSE);
-        break;
-    default:
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                    "Unsupported color depth: %d\n",
-                    pScrn->bitsPerPixel);
-        break;
+        viaIGA2SetGamma(pScrn, FALSE);
     }
 
+    VIALoadRgbLut(pScrn, 0, size, colors);
+
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga1_crtc_gamma_set.\n"));
-}
-
-static void *
-iga1_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
-{
-    return NULL;
-}
-
-static PixmapPtr
-iga1_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
-{
-    return NULL;
-}
-
-static void
-iga1_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *data)
-{
+                        "Exiting %s.\n", __func__));
 }
 
 /*
@@ -3410,28 +3423,38 @@ iga1_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *data)
     and in all other bpps the fg and bg are in 8-8-8 RGB format.
 */
 static void
-iga1_crtc_set_cursor_colors(xf86CrtcPtr crtc, int bg, int fg)
+via_crtc_set_cursor_colors(xf86CrtcPtr crtc, int bg, int fg)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
 
     if (xf86_config->cursor_fg)
         return;
 
-    /* Don't recolour the image if we don't have to. */
-    if (fg == xf86_config->cursor_fg && bg == xf86_config->cursor_bg)
+    /*
+     * Don't recolour the image if we don't have to.
+     */
+    if ((fg == xf86_config->cursor_fg) &&
+        (bg == xf86_config->cursor_bg)) {
         return;
+    }
 
-    viaIGA1DisplayHI(pScrn, FALSE);
+    if (!iga->index) {
+        viaIGA1DisplayHI(pScrn, FALSE);
+    } else {
+        viaIGA2DisplayHI(pScrn, FALSE);
+    }
 
     xf86_config->cursor_fg = fg;
     xf86_config->cursor_bg = bg;
 }
 
 static void
-iga1_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
+via_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     unsigned xoff, yoff;
 
     if (x < 0) {
@@ -3448,474 +3471,115 @@ iga1_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
         yoff = 0;
     }
 
-    viaIGA1SetHIDisplayLocation(pScrn, x, xoff, y, yoff);
+    if (!iga->index) {
+        viaIGA1SetHIDisplayLocation(pScrn, x, xoff, y, yoff);
+    } else {
+        viaIGA2SetHIDisplayLocation(pScrn, x, xoff, y, yoff);
+    }
 }
 
 static void
-iga1_crtc_show_cursor(xf86CrtcPtr crtc)
+via_crtc_show_cursor(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-
-    viaIGA1DisplayHI(pScrn, TRUE);
-}
-
-static void
-iga1_crtc_hide_cursor(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    viaIGA1DisplayHI(pScrn, FALSE);
-}
-
-static void
-iga1_crtc_load_cursor_argb(xf86CrtcPtr crtc, CARD32 *image)
-{
     drmmode_crtc_private_ptr iga = crtc->driver_private;
+
+    if (!iga->index) {
+        viaIGA1DisplayHI(pScrn, TRUE);
+    } else {
+        viaIGA2DisplayHI(pScrn, TRUE);
+    }
+}
+
+static void
+via_crtc_hide_cursor(xf86CrtcPtr crtc)
+{
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
+
+    if (!iga->index) {
+        viaIGA1DisplayHI(pScrn, FALSE);
+    } else {
+        viaIGA2DisplayHI(pScrn, FALSE);
+    }
+}
+
+static void
+via_crtc_load_cursor_argb(xf86CrtcPtr crtc, CARD32 *image)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
     void *dst;
 
     dst = drm_bo_map(pScrn, iga->cursor_bo);
-    memset(dst, 0x00, iga->cursor_bo->size);
     memcpy(dst, image, iga->cursor_bo->size);
     drm_bo_unmap(pScrn, iga->cursor_bo);
 
-    viaIGA1InitHI(pScrn);
-    viaIGA1SetHIStartingAddress(crtc);
+    if (!iga->index) {
+        viaIGA1InitHI(pScrn);
+        viaIGA1SetHIStartingAddress(crtc);
+    } else {
+        viaIGA2InitHI(pScrn);
+        viaIGA2SetHIStartingAddress(crtc);
+    }
 }
 
 static void
-iga_crtc_destroy(xf86CrtcPtr crtc)
+via_crtc_destroy(xf86CrtcPtr crtc)
 {
+    ScrnInfoPtr pScrn = crtc->scrn;
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Entered %s.\n", __func__));
+
     if (crtc->driver_private)
         free(crtc->driver_private);
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "Exiting %s.\n", __func__));
 }
 
-const xf86CrtcFuncsRec iga1_crtc_funcs = {
-    .dpms                   = iga1_crtc_dpms,
-    .save                   = iga1_crtc_save,
-    .restore                = iga1_crtc_restore,
-    .lock                   = iga1_crtc_lock,
-    .unlock                 = iga1_crtc_unlock,
-    .mode_fixup             = iga1_crtc_mode_fixup,
-    .prepare                = iga1_crtc_prepare,
-    .mode_set               = iga1_crtc_mode_set,
-    .commit                 = iga1_crtc_commit,
-    .gamma_set              = iga1_crtc_gamma_set,
-    .shadow_create          = iga1_crtc_shadow_create,
-    .shadow_allocate        = iga1_crtc_shadow_allocate,
-    .shadow_destroy         = iga1_crtc_shadow_destroy,
-    .set_cursor_colors      = iga1_crtc_set_cursor_colors,
-    .set_cursor_position    = iga1_crtc_set_cursor_position,
-    .show_cursor            = iga1_crtc_show_cursor,
-    .hide_cursor            = iga1_crtc_hide_cursor,
-    .load_cursor_argb       = iga1_crtc_load_cursor_argb,
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) > 2
-    .set_origin             = iga1_crtc_set_origin,
-#endif
-    .destroy                = iga_crtc_destroy,
-};
-
 static void
-iga2_crtc_dpms(xf86CrtcPtr crtc, int mode)
+via_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
+    drmmode_crtc_private_ptr iga = crtc->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_dpms.\n"));
+                        "Entered %s.\n", __func__));
 
-    switch (mode) {
-    case DPMSModeOn:
-        viaIGA2SetDisplayOutput(pScrn, TRUE);
-        break;
-    case DPMSModeStandby:
-    case DPMSModeSuspend:
-    case DPMSModeOff:
-        viaIGA2SetDisplayOutput(pScrn, FALSE);
-        break;
-    default:
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid DPMS mode: %d\n",
-                    mode);
-        break;
-    }
-    //vgaHWSaveScreen(pScrn->pScreen, mode);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_dpms.\n"));
-}
-
-static void
-iga2_crtc_save(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_save.\n"));
-
-    viaIGA2Save(pScrn);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_save.\n"));
-}
-
-static void
-iga2_crtc_restore(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_restore.\n"));
-
-    viaIGA2Restore(pScrn);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_restore.\n"));
-}
-
-static Bool
-iga2_crtc_lock(xf86CrtcPtr crtc)
-{
-    return FALSE;
-}
-
-static void
-iga2_crtc_unlock(xf86CrtcPtr crtc)
-{
-}
-
-static Bool
-iga2_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
-                        DisplayModePtr adjusted_mode)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-    VIAPtr pVia = VIAPTR(pScrn);
-    CARD32 temp;
-    ModeStatus modestatus;
-
-    if ((mode->Clock < pScrn->clockRanges->minClock) ||
-        (mode->Clock > pScrn->clockRanges->maxClock)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                   "Clock for mode \"%s\" outside of allowed range (%u (%u - %u))\n",
-                   mode->name, mode->Clock, pScrn->clockRanges->minClock,
-                   pScrn->clockRanges->maxClock);
-        return FALSE;
+    if (!iga->index) {
+        viaIGA1SetFBStartingAddress(crtc, x, y);
+    } else {
+        viaIGA2SetFBStartingAddress(crtc, x, y);
     }
 
-    modestatus = viaIGA2ModeValid(pScrn, mode);
-    if (modestatus != MODE_OK) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Not using mode \"%s\" : %s.\n",
-                   mode->name, xf86ModeStatusToString(modestatus));
-        return FALSE;
-    }
-
-    temp = mode->CrtcHDisplay * mode->CrtcVDisplay * mode->VRefresh *
-            (pScrn->bitsPerPixel >> 3);
-    if (pVia->pVIADisplay->Bandwidth < temp) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                    "Required bandwidth is not available. (%u > %u)\n",
-                    (unsigned)temp, (unsigned)pVia->pVIADisplay->Bandwidth);
-        return FALSE;
-    }
-
-    if (!pScrn->bitsPerPixel) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                    "Invalid bpp information.\n");
-        return FALSE;
-    }
-
-    /* 16 is the Chrome IGP display controller memory alignment. */
-    if (crtc->x % (16 / ((pScrn->bitsPerPixel + 7) >> 3))) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                    "The X location specified is not properly aligned "
-                    "to Chrome IGP's memory alignment.\n");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static void
-iga2_crtc_prepare(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_prepare.\n"));
-
-    /* Turn off IGA2. */
-    viaIGA2SetDisplayOutput(pScrn, FALSE);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_prepare.\n"));
-}
-
-static void
-iga2_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_set_origin.\n"));
-
-    viaIGA2SetFBStartingAddress(crtc, x, y);
     VIAVidAdjustFrame(pScrn, x, y);
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_set_origin.\n"));
+                        "Exiting %s.\n", __func__));
 }
+#endif /* GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) > 2 */
 
-static void
-iga2_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
-                    DisplayModePtr adjusted_mode, int x, int y)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-    VIAPtr pVia = VIAPTR(pScrn);
-    VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered iga2_crtc_mode_set.\n"));
-
-    /* Put IGA2 into a reset state. */
-    viaIGA2HWReset(pScrn, 0x00);
-
-    /* Disable IGA2 display channel. */
-    viaIGA2DisplayChannel(pScrn, FALSE);
-
-    viaIGAInitCommon(pScrn);
-    viaIGA2Init(pScrn);
-
-    ViaPrintMode(pScrn, adjusted_mode);
-
-    /* Set color depth. */
-    viaIGA2SetColorDepth(pScrn, pScrn->bitsPerPixel);
-
-    /* Set display controller screen parameters. */
-    viaIGA2SetDisplayRegister(pScrn, adjusted_mode);
-
-    ViaSetSecondaryFIFO(pScrn, adjusted_mode);
-    pVIADisplay->Clock = ViaModeDotClockTranslate(pScrn, adjusted_mode);
-    pVIADisplay->ClockExternal = FALSE;
-    ViaSetSecondaryDotclock(pScrn, pVIADisplay->Clock);
-    ViaSetUseExternalClock(hwp);
-
-    viaIGA2SetFBStartingAddress(crtc, x, y);
-    VIAVidAdjustFrame(pScrn, x, y);
-
-    /* Enable IGA2 display channel. */
-    viaIGA2DisplayChannel(pScrn, TRUE);
-
-    /* Put IGA2 back into a normal operating state. */
-    viaIGA2HWReset(pScrn, 0x01);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_mode_set.\n"));
-}
-
-static void
-iga2_crtc_commit(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entering iga2_crtc_commit.\n"));
-
-    /* Turn on IGA2. */
-    viaIGA2SetDisplayOutput(pScrn, TRUE);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_commit.\n"));
-}
-
-static void
-iga2_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
-                    int size)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-    LOCO colors[size];
-    int i;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entering iga2_crtc_gamma_set.\n"));
-
-    for (i = 0; i < size; i++) {
-        colors[i].red = red[i] >> 8;
-        colors[i].green = green[i] >> 8;
-        colors[i].blue = blue[i] >> 8;
-    }
-
-    /* Set palette LUT to 8-bit mode. */
-    viaIGA2SetPaletteLUTResolution(pScrn, 0x01);
-
-    switch (pScrn->bitsPerPixel) {
-    case 8:
-        /* IGA2 will access the palette LUT. */
-        viaSetPaletteLUTAccess(pScrn, 0x01);
-
-        VIALoadRgbLut(pScrn, 0, size, colors);
-
-        /* Turn gamma correction off. */
-        viaIGA2SetGamma(pScrn, FALSE);
-        break;
-    case 16:
-        /* IGA2 will access the palette LUT. */
-        viaSetPaletteLUTAccess(pScrn, 0x01);
-
-        VIALoadRgbLut(pScrn, 0, size, colors);
-
-        /* Turn gamma correction off. */
-        viaIGA2SetGamma(pScrn, FALSE);
-        break;
-    case 24:
-    case 32:
-        /* IGA2 will access the palette LUT. */
-        viaSetPaletteLUTAccess(pScrn, 0x01);
-
-        VIALoadRgbLut(pScrn, 0, size, colors);
-
-        /* Turn gamma correction off. */
-        viaIGA2SetGamma(pScrn, FALSE);
-        break;
-    default:
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                    "Unsupported color depth: %d\n",
-                    pScrn->bitsPerPixel);
-        break;
-    }
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting iga2_crtc_gamma_set.\n"));
-}
-
-static void *
-iga2_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
-{
-    return NULL;
-}
-
-static PixmapPtr
-iga2_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
-{
-    return NULL;
-}
-
-static void
-iga2_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *data)
-{
-}
-
-/*
-    Set the cursor foreground and background colors.  In 8bpp, fg and
-    bg are indices into the current colormap unless the
-    HARDWARE_CURSOR_TRUECOLOR_AT_8BPP flag is set.  In that case
-    and in all other bpps the fg and bg are in 8-8-8 RGB format.
-*/
-static void
-iga2_crtc_set_cursor_colors(xf86CrtcPtr crtc, int bg, int fg)
-{
-    drmmode_crtc_private_ptr iga = crtc->driver_private;
-    ScrnInfoPtr pScrn = crtc->scrn;
-    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int height = 64, width = 64, i;
-    CARD32 pixel, *dst;
-
-    if (xf86_config->cursor_fg)
-        return;
-
-    fg |= 0xff000000;
-    bg |= 0xff000000;
-
-    /* Don't recolour the image if we don't have to. */
-    if (fg == xf86_config->cursor_fg && bg == xf86_config->cursor_bg)
-        return;
-
-    viaIGA2DisplayHI(pScrn, FALSE);
-
-    dst = drm_bo_map(pScrn, iga->cursor_bo);
-    for (i = 0; i < width * height; i++, dst++)
-        if ((pixel = *dst))
-            *dst = (pixel == xf86_config->cursor_fg) ? fg : bg;
-    drm_bo_unmap(pScrn, iga->cursor_bo);
-
-    xf86_config->cursor_fg = fg;
-    xf86_config->cursor_bg = bg;
-}
-
-static void
-iga2_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-    unsigned xoff, yoff;
-
-    if (x < 0) {
-        xoff = ((-x) & 0xFE);
-        x = 0;
-    } else {
-        xoff = 0;
-    }
-
-    if (y < 0) {
-        yoff = ((-y) & 0xFE);
-        y = 0;
-    } else {
-        yoff = 0;
-    }
-
-    viaIGA2SetHIDisplayLocation(pScrn, x, xoff, y, yoff);
-}
-
-static void
-iga2_crtc_show_cursor(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    viaIGA2DisplayHI(pScrn, TRUE);
-}
-
-static void
-iga2_crtc_hide_cursor(xf86CrtcPtr crtc)
-{
-    ScrnInfoPtr pScrn = crtc->scrn;
-
-    viaIGA2DisplayHI(pScrn, FALSE);
-}
-
-static void
-iga2_crtc_load_cursor_argb(xf86CrtcPtr crtc, CARD32 *image)
-{
-    drmmode_crtc_private_ptr iga = crtc->driver_private;
-    ScrnInfoPtr pScrn = crtc->scrn;
-    void *dst;
-
-    dst = drm_bo_map(pScrn, iga->cursor_bo);
-    memset(dst, 0x00, iga->cursor_bo->size);
-    memcpy(dst, image, iga->cursor_bo->size);
-    drm_bo_unmap(pScrn, iga->cursor_bo);
-
-    viaIGA2InitHI(pScrn);
-    viaIGA2SetHIStartingAddress(crtc);
-}
-
-const xf86CrtcFuncsRec iga2_crtc_funcs = {
-    .dpms                   = iga2_crtc_dpms,
-    .save                   = iga2_crtc_save,
-    .restore                = iga2_crtc_restore,
-    .lock                   = iga2_crtc_lock,
-    .unlock                 = iga2_crtc_unlock,
-    .mode_fixup             = iga2_crtc_mode_fixup,
-    .prepare                = iga2_crtc_prepare,
-    .mode_set               = iga2_crtc_mode_set,
-    .commit                 = iga2_crtc_commit,
-    .gamma_set              = iga2_crtc_gamma_set,
-    .shadow_create          = iga2_crtc_shadow_create,
-    .shadow_allocate        = iga2_crtc_shadow_allocate,
-    .shadow_destroy         = iga2_crtc_shadow_destroy,
-    .set_cursor_colors      = iga2_crtc_set_cursor_colors,
-    .set_cursor_position    = iga2_crtc_set_cursor_position,
-    .show_cursor            = iga2_crtc_show_cursor,
-    .hide_cursor            = iga2_crtc_hide_cursor,
-    .load_cursor_argb       = iga2_crtc_load_cursor_argb,
+const xf86CrtcFuncsRec via_crtc_funcs = {
+    .dpms                   = via_crtc_dpms,
+    .save                   = via_crtc_save,
+    .restore                = via_crtc_restore,
+    .lock                   = via_crtc_lock,
+    .unlock                 = via_crtc_unlock,
+    .mode_fixup             = via_crtc_mode_fixup,
+    .prepare                = via_crtc_prepare,
+    .mode_set               = via_crtc_mode_set,
+    .commit                 = via_crtc_commit,
+    .gamma_set              = via_crtc_gamma_set,
+    .set_cursor_colors      = via_crtc_set_cursor_colors,
+    .set_cursor_position    = via_crtc_set_cursor_position,
+    .show_cursor            = via_crtc_show_cursor,
+    .hide_cursor            = via_crtc_hide_cursor,
+    .load_cursor_argb       = via_crtc_load_cursor_argb,
+    .destroy                = via_crtc_destroy,
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) > 2
-    .set_origin             = iga2_crtc_set_origin,
-#endif
-    .destroy                = iga_crtc_destroy,
+    .set_origin             = via_crtc_set_origin,
+#endif /* GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) > 2 */
 };

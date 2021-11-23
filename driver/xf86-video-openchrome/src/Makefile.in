@@ -76,38 +76,16 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@DRI_TRUE@am__append_1 = \
-@DRI_TRUE@         via_dri.c \
-@DRI_TRUE@         via_dri.h \
-@DRI_TRUE@         via_drm.h \
-@DRI_TRUE@         via_drmclient.h \
-@DRI_TRUE@         via_kms.h \
-@DRI_TRUE@         via_kms.c \
-@DRI_TRUE@         via_xvmc.c \
-@DRI_TRUE@         via_xvmc.h \
-@DRI_TRUE@         drm_fourcc.h
-
-@DRI_FALSE@am__append_2 = \
-@DRI_FALSE@         via_dri.c \
-@DRI_FALSE@         via_dri.h \
-@DRI_FALSE@         via_drm.h \
-@DRI_FALSE@         via_drmclient.h \
-@DRI_FALSE@         via_kms.h \
-@DRI_FALSE@         via_kms.c \
-@DRI_FALSE@         via_xvmc.c \
-@DRI_FALSE@         via_xvmc.h \
-@DRI_FALSE@         drm_fourcc.h
-
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
+CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -139,41 +117,63 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(openchrome_drv_ladir)"
 LTLIBRARIES = $(openchrome_drv_la_LTLIBRARIES)
 openchrome_drv_la_LIBADD =
-am__openchrome_drv_la_SOURCES_DIST = compat-api.h via_eng_regs.h \
-	via_3d.c via_3d.h via_3d_reg.h via_analog.c via_rop.h \
-	via_exa.c via_exa_h2.c via_exa_h6.c via_ums.h via_ch7xxx.c \
-	via_ch7xxx.h via_display.c via_dmabuffer.h via_driver.c \
-	via_driver.h via_i2c.c via_fp.c via_fp.h via_memcpy.c \
-	via_memmgr.h via_memmgr.c via_outputs.c via_priv.h via_regs.h \
-	via_sii164.c via_sii164.h via_tmds.c via_tv.c via_xv_overlay.c \
-	via_xv_overlay.h via_ums.c via_vgahw.c via_vgahw.h via_xv.c \
-	via_xv.h via_vt162x.c via_vt162x.h via_vt1632.c via_vt1632.h \
-	via_xvpriv.h via_dri.c via_dri.h via_drm.h via_drmclient.h \
-	via_kms.h via_kms.c via_xvmc.c via_xvmc.h drm_fourcc.h
-@DRI_TRUE@am__objects_1 = via_dri.lo via_kms.lo via_xvmc.lo
-am_openchrome_drv_la_OBJECTS = via_3d.lo via_analog.lo via_exa.lo \
-	via_exa_h2.lo via_exa_h6.lo via_ch7xxx.lo via_display.lo \
-	via_driver.lo via_i2c.lo via_fp.lo via_memcpy.lo via_memmgr.lo \
-	via_outputs.lo via_sii164.lo via_tmds.lo via_tv.lo \
-	via_xv_overlay.lo via_ums.lo via_vgahw.lo via_xv.lo \
-	via_vt162x.lo via_vt1632.lo $(am__objects_1)
+am__openchrome_drv_la_SOURCES_DIST = via_3d.c via_analog.c \
+	via_ch7xxx.c via_display.c via_driver.c via_exa.c via_exa_h2.c \
+	via_exa_h6.c via_fp.c via_i2c.c via_memcpy.c via_memmgr.c \
+	via_options.c via_output.c via_sii164.c via_tmds.c via_tv.c \
+	via_ums.c via_vgahw.c via_vt162x.c via_vt1632.c via_xv.c \
+	via_xv_overlay.c via_dri.c via_xvmc.c drmmode_display.c
+@DRI_TRUE@am__objects_1 = via_dri.lo via_xvmc.lo
+@XF86DRM_MODE_TRUE@am__objects_2 = drmmode_display.lo
+am_openchrome_drv_la_OBJECTS = via_3d.lo via_analog.lo via_ch7xxx.lo \
+	via_display.lo via_driver.lo via_exa.lo via_exa_h2.lo \
+	via_exa_h6.lo via_fp.lo via_i2c.lo via_memcpy.lo via_memmgr.lo \
+	via_options.lo via_output.lo via_sii164.lo via_tmds.lo \
+	via_tv.lo via_ums.lo via_vgahw.lo via_vt162x.lo via_vt1632.lo \
+	via_xv.lo via_xv_overlay.lo $(am__objects_1) $(am__objects_2)
 openchrome_drv_la_OBJECTS = $(am_openchrome_drv_la_OBJECTS)
-openchrome_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(openchrome_drv_la_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+openchrome_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(openchrome_drv_la_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_P = $(am__v_P_@AM_V@)
+am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
+am__v_P_0 = false
+am__v_P_1 = :
+AM_V_GEN = $(am__v_GEN_@AM_V@)
+am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
+am__v_GEN_0 = @echo "  GEN     " $@;
+am__v_GEN_1 = 
+AM_V_at = $(am__v_at_@AM_V@)
+am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+am__v_at_0 = @
+am__v_at_1 = 
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
 SOURCES = $(openchrome_drv_la_SOURCES)
 DIST_SOURCES = $(am__openchrome_drv_la_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -226,6 +226,7 @@ ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -233,11 +234,14 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -246,6 +250,7 @@ DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
 DRI_CFLAGS = @DRI_CFLAGS@
+DRI_LIBS = @DRI_LIBS@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
@@ -258,6 +263,7 @@ FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
 INSTALL = @INSTALL@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -304,6 +310,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XEXT_CFLAGS = @XEXT_CFLAGS@
@@ -358,6 +365,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -367,25 +375,70 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = xvmc
-BUILT_SOURCES = version.h
-EXTRA_DIST = version.h $(am__append_2)
-CONFIG_CLEAN_FILES = version.h
-AM_CFLAGS = @XORG_CFLAGS@ @LIBUDEV_CFLAGS@ @DRI_CFLAGS@
+@DRI_TRUE@OPENCHROME_DRI_SRCS = \
+@DRI_TRUE@    via_dri.c \
+@DRI_TRUE@    via_xvmc.c
+
+@XF86DRM_MODE_TRUE@OPENCHROME_KMS_SRCS = \
+@XF86DRM_MODE_TRUE@    drmmode_display.c
+
+AM_CFLAGS = @XORG_CFLAGS@ $(CWARNFLAGS) @DRI_CFLAGS@ @LIBUDEV_CFLAGS@
 openchrome_drv_la_LTLIBRARIES = openchrome_drv.la
-openchrome_drv_la_LDFLAGS = -module -avoid-version @LIBUDEV_LIBS@
+openchrome_drv_la_LDFLAGS = -module -avoid-version
 openchrome_drv_ladir = @moduledir@/drivers
-openchrome_drv_la_SOURCES = compat-api.h via_eng_regs.h via_3d.c \
-	via_3d.h via_3d_reg.h via_analog.c via_rop.h via_exa.c \
-	via_exa_h2.c via_exa_h6.c via_ums.h via_ch7xxx.c via_ch7xxx.h \
-	via_display.c via_dmabuffer.h via_driver.c via_driver.h \
-	via_i2c.c via_fp.c via_fp.h via_memcpy.c via_memmgr.h \
-	via_memmgr.c via_outputs.c via_priv.h via_regs.h via_sii164.c \
-	via_sii164.h via_tmds.c via_tv.c via_xv_overlay.c \
-	via_xv_overlay.h via_ums.c via_vgahw.c via_vgahw.h via_xv.c \
-	via_xv.h via_vt162x.c via_vt162x.h via_vt1632.c via_vt1632.h \
-	via_xvpriv.h $(am__append_1)
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+openchrome_drv_la_SOURCES = \
+    via_3d.c \
+    via_analog.c \
+    via_ch7xxx.c \
+    via_display.c \
+    via_driver.c \
+    via_exa.c \
+    via_exa_h2.c \
+    via_exa_h6.c \
+    via_fp.c \
+    via_i2c.c \
+    via_memcpy.c \
+    via_memmgr.c \
+    via_options.c \
+    via_output.c \
+    via_sii164.c \
+    via_tmds.c \
+    via_tv.c \
+    via_ums.c \
+    via_vgahw.c \
+    via_vt162x.c \
+    via_vt1632.c \
+    via_xv.c \
+    via_xv_overlay.c \
+    $(OPENCHROME_DRI_SRCS) \
+    $(OPENCHROME_KMS_SRCS)
+
+EXTRA_DIST = \
+    compat-api.h \
+    drmmode_display.h \
+    via_3d.h \
+    via_3d_reg.h \
+    via_ch7xxx.h \
+    via_dmabuffer.h \
+    via_dri.h \
+    via_driver.h \
+    via_drmclient.h \
+    via_eng_regs.h \
+    via_fp.h \
+    via_memmgr.h \
+    via_regs.h \
+    via_rop.h \
+    via_sii164.h \
+    via_ums.h \
+    via_vgahw.h \
+    via_vt162x.h \
+    via_vt1632.h \
+    via_xv.h \
+    via_xvpriv.h \
+    via_xvmc.h \
+    via_xv_overlay.h
+
+all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -454,7 +507,7 @@ clean-openchrome_drv_laLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 openchrome_drv.la: $(openchrome_drv_la_OBJECTS) $(openchrome_drv_la_DEPENDENCIES) $(EXTRA_openchrome_drv_la_DEPENDENCIES) 
-	$(openchrome_drv_la_LINK) -rpath $(openchrome_drv_ladir) $(openchrome_drv_la_OBJECTS) $(openchrome_drv_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(openchrome_drv_la_LINK) -rpath $(openchrome_drv_ladir) $(openchrome_drv_la_OBJECTS) $(openchrome_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -462,6 +515,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmmode_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_3d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_analog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_ch7xxx.Plo@am__quote@
@@ -473,10 +527,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_exa_h6.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_fp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_i2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_kms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_memcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_memmgr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_outputs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_options.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_sii164.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_tmds.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_tv.Plo@am__quote@
@@ -489,25 +543,25 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/via_xvmc.Plo@am__quote@
 
 .c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c $<
 
 .c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c `$(CYGPATH_W) '$<'`
 
 .c.lo:
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -696,20 +750,15 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-recursive
+check: check-recursive
 all-am: Makefile $(LTLIBRARIES)
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(openchrome_drv_ladir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-recursive
+install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -739,7 +788,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool \
@@ -811,14 +859,14 @@ ps-am:
 
 uninstall-am: uninstall-openchrome_drv_laLTLIBRARIES
 
-.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
-	cscopelist-recursive ctags-recursive install install-am \
-	install-strip tags-recursive
+.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) \
+	cscopelist-recursive ctags-recursive install-am install-strip \
+	tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-generic clean-libtool \
 	clean-openchrome_drv_laLTLIBRARIES cscopelist \
-	cscopelist-recursive ctags ctags-recursive dist-hook distclean \
+	cscopelist-recursive ctags ctags-recursive distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
@@ -832,37 +880,6 @@ uninstall-am: uninstall-openchrome_drv_laLTLIBRARIES
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-openchrome_drv_laLTLIBRARIES
 
-
-via_driver.lo: version.h
-version.h: $(openchrome_drv_la_SOURCES)
-	@if [ -d ../.git ]; then \
-        echo '#define BUILDCOMMENT "(development build, branch' \
-                     "`git branch -v | sed 's/no branch/no_branch/' | \
-                      awk '/^\*/ { print $$2 }'`" \
-                     'at revision' \
-                     "`git log -1 --pretty=format:%h | head -1`"')"' \
-                    > $@.tmp; \
-    else \
-        if [ -d .svn ]; then \
-	        echo '#define BUILDCOMMENT "(development build, at revision '\
-	                "`svnversion -nc .. | sed -e s/^[^:]*://`"')"' > $@.tmp; \
-        elif [ "$$SOURCE_DATE_EPOCH" ]; then \
-	        printf '#define BUILDCOMMENT "(compiled with SOURCE_DATE_EPOCH: %s)"' $$SOURCE_DATE_EPOCH \
-        	> $@.tmp; \
-        else \
-	        date +'#define BUILDCOMMENT "(development build, compiled on %c)"' \
-        	> $@.tmp; \
-	    fi; \
-    fi
-
-	@chmod 666 $@.tmp
-	@mv $@.tmp $@
-	@echo "created $@"
-
-dist-hook:
-	@[ -e version.h ] && rm version.h; \
-	echo '#define BUILDCOMMENT "(openchrome '$(VERSION)' release)"' \
-	> version.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

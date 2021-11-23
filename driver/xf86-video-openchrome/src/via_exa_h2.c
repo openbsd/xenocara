@@ -237,6 +237,8 @@ viaExaCopy_H2(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY,
     VIAPtr pVia = VIAPTR(pScrn);
     ViaTwodContext *tdc = &pVia->td;
 
+    RING_VARS;
+
     if (!width || !height)
         return;
 
@@ -250,8 +252,6 @@ viaExaCopy_H2(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY,
         dstX += width - 1;
     }
     val = VIA_PITCH_ENABLE | (dstPitch >> 3) << 16 | (tdc->srcPitch >> 3);
-
-    RING_VARS;
 
     BEGIN_RING(16);
     OUT_RING_H1(VIA_REG_GEMODE, tdc->mode);
@@ -335,35 +335,6 @@ viaExaCheckComposite_H2(int op, PicturePtr pSrcPicture,
     viaExaPrintCompositeInfo("Src format not supported", op, pSrcPicture, pMaskPicture, pDstPicture);
 #endif
     return FALSE;
-}
-
-static Bool
-viaIsAGP(VIAPtr pVia, PixmapPtr pPix, unsigned long *offset)
-{
-#ifdef HAVE_DRI
-    unsigned long offs;
-
-    if (pVia->directRenderingType && !pVia->IsPCI) {
-        offs = ((unsigned long)pPix->devPrivate.ptr
-                - (unsigned long)pVia->agpMappedAddr);
-
-        if ((offs - pVia->scratchOffset) < pVia->agpSize) {
-            *offset = offs + pVia->agpAddr;
-            return TRUE;
-        }
-    }
-#endif
-    return FALSE;
-}
-
-static Bool
-viaExaIsOffscreen(PixmapPtr pPix)
-{
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPix->drawable.pScreen);
-    VIAPtr pVia = VIAPTR(pScrn);
-
-    return ((unsigned long)pPix->devPrivate.ptr -
-            (unsigned long) drm_bo_map(pScrn, pVia->drmmode.front_bo)) < pVia->drmmode.front_bo->size;
 }
 
 Bool

@@ -212,7 +212,7 @@ viaAnalogDetectConnector(ScrnInfoPtr pScrn)
     VT3324, VT3353: SR40[7]=1 --> SR40[7] = 0 --> check 3C2[4]
     other: SR40[7]=1 --> check 3C2[4] --> SR40[7]=0
     */
-    if (ViaVgahwIn(hwp, 0x3C2) & BIT(4)) {
+    if (hwp->readST00(hwp) & BIT(4)) {
         connectorDetected = TRUE;
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                             "VGA connector detected.\n"));

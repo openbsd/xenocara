@@ -42,27 +42,8 @@
 #include "via_driver.h"
 #include "via_regs.h"
 #include "via_dmabuffer.h"
-#include "via_rop.h"
 
-/*
- * Use PCI MMIO to flush the command buffer when AGP DMA is not available.
- */
 static void
-viaDumpDMA(ViaCommandBuffer *cb)
-{
-    register CARD32 *bp = cb->buf;
-    CARD32 *endp = bp + cb->pos;
-
-    while (bp != endp) {
-        if (((bp - cb->buf) & 3) == 0) {
-            ErrorF("\n %04lx: ", (unsigned long)(bp - cb->buf));
-        }
-        ErrorF("0x%08x ", (unsigned)*bp++);
-    }
-    ErrorF("\n");
-}
-
-void
 viaFlushPCI(ViaCommandBuffer *cb)
 {
     register CARD32 *bp = cb->buf;
@@ -134,7 +115,25 @@ viaFlushPCI(ViaCommandBuffer *cb)
     cb->has3dState = FALSE;
 }
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
+/*
+ * Use PCI MMIO to flush the command buffer when AGP DMA is not available.
+ */
+static void
+viaDumpDMA(ViaCommandBuffer *cb)
+{
+    register CARD32 *bp = cb->buf;
+    CARD32 *endp = bp + cb->pos;
+
+    while (bp != endp) {
+        if (((bp - cb->buf) & 3) == 0) {
+            ErrorF("\n %04lx: ", (unsigned long)(bp - cb->buf));
+        }
+        ErrorF("0x%08x ", (unsigned)*bp++);
+    }
+    ErrorF("\n");
+}
+
 /*
  * Flush the command buffer using DRM. If in PCI mode, we can bypass DRM,
  * but not for command buffers that contain 3D engine state, since then
@@ -187,7 +186,7 @@ viaFlushDRIEnabled(ViaCommandBuffer *cb)
 static int
 viaSetupCBuffer(ScrnInfoPtr pScrn, ViaCommandBuffer *cb, unsigned size)
 {
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     VIAPtr pVia = VIAPTR(pScrn);
 #endif
 
@@ -203,7 +202,7 @@ viaSetupCBuffer(ScrnInfoPtr pScrn, ViaCommandBuffer *cb, unsigned size)
     cb->rindex = 0;
     cb->has3dState = FALSE;
     cb->flushFunc = viaFlushPCI;
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     if (pVia->directRenderingType == DRI_1) {
         cb->flushFunc = viaFlushDRIEnabled;
     }
@@ -278,7 +277,7 @@ viaCheckUpload(ScrnInfoPtr pScrn, Via3DState * v3d)
     forceUpload = (pVia->lastToUpload != v3d);
     pVia->lastToUpload = v3d;
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     if (pVia->directRenderingType == DRI_1) {
         volatile drm_via_sarea_t *saPriv = (drm_via_sarea_t *)
                 DRIGetSAREAPrivate(pScrn->pScreen);
@@ -526,7 +525,7 @@ viaAccelWaitMarker(ScreenPtr pScreen, int marker)
     }
 }
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 static int
 viaAccelDMADownload(ScrnInfoPtr pScrn, unsigned long fbOffset,
                     unsigned srcPitch, unsigned char *dst,
@@ -787,15 +786,75 @@ viaExaTexUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src,
     return TRUE;
 }
 
-#endif /* HAVE_DRI */
+#endif /* OPENCHROMEDRI */
 
-#define EXAOPT_MIGRATION_HEURISTIC  0
+int
+viaEXAOffscreenAlloc(ScrnInfoPtr pScrn, struct buffer_object *obj,
+                        unsigned long size, unsigned long alignment)
+{
+    ExaOffscreenArea *pArea;
+    int newSize = size;
+    int newAlignment;
+    int ret = 0;
+
+    newAlignment = alignment;
+    pArea = exaOffscreenAlloc(pScrn->pScreen, newSize,
+                                newAlignment, TRUE, NULL, NULL);
+    if (!pArea) {
+        ret = -ENOMEM;
+        goto exit;
+    }
+
+    obj->offset = pArea->offset;
+    obj->handle = (unsigned long) pArea;
+    obj->domain = TTM_PL_VRAM;
+    obj->size = newSize;
+
+exit:
+    return ret;
+}
+
+Bool
+viaIsAGP(VIAPtr pVia, PixmapPtr pPix, unsigned long *offset)
+{
+#ifdef OPENCHROMEDRI
+    unsigned long offs;
+
+    if (pVia->directRenderingType && !pVia->IsPCI) {
+        offs = ((unsigned long)pPix->devPrivate.ptr
+                - (unsigned long)pVia->agpMappedAddr);
+
+        if ((offs - pVia->scratchOffset) < pVia->agpSize) {
+            *offset = offs + pVia->agpAddr;
+            return TRUE;
+        }
+    }
+#endif
+    return FALSE;
+}
+
+Bool
+viaExaIsOffscreen(PixmapPtr pPix)
+{
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPix->drawable.pScreen);
+    VIAPtr pVia = VIAPTR(pScrn);
+    uint8_t* addr_size;
+    uint8_t* front_bo;
+    Bool ret;
+
+    front_bo = drm_bo_map(pScrn, pVia->drmmode.front_bo);
+    addr_size = (uint8_t*)pPix->devPrivate.ptr -
+                                            (unsigned long)front_bo;
+    ret = (addr_size < (uint8_t*)pVia->drmmode.front_bo->size) ?
+                                                        TRUE : FALSE;
+    return ret;
+}
 
 Bool
 viaInitExa(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-    ExaDriverPtr pExa = exaDriverAlloc();
+    ExaDriverPtr pExa;
     Bool nPOTSupported = TRUE;
     VIAPtr pVia = VIAPTR(pScrn);
 
@@ -804,7 +863,7 @@ viaInitExa(ScreenPtr pScreen)
      * Also some CLE266 hardware may not allow nPOT textures for
      * texture engine 1. We need to figure that out.
      */
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     nPOTSupported = ((!pVia->directRenderingType) ||
                      (pVia->drmVerMajor > 2) ||
                      ((pVia->drmVerMajor == 2) && (pVia->drmVerMinor >= 11)));
@@ -817,10 +876,10 @@ viaInitExa(ScreenPtr pScreen)
         return FALSE;
     }
 
-    if (!pExa)
+    pExa = exaDriverAlloc();
+    if (!pExa) {
         return FALSE;
-
-    memset(pExa, 0, sizeof(*pExa));
+    }
 
     pExa->exa_major = EXA_VERSION_MAJOR;
     pExa->exa_minor = EXA_VERSION_MINOR;
@@ -876,7 +935,7 @@ viaInitExa(ScreenPtr pScreen)
         break;
     }
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     if (pVia->directRenderingType == DRI_1) {
 #ifdef linux
         pExa->DownloadFromScreen = viaExaDownloadFromScreen;
@@ -891,7 +950,7 @@ viaInitExa(ScreenPtr pScreen)
             break;
         }
     }
-#endif /* HAVE_DRI */
+#endif /* OPENCHROMEDRI */
 
     if (!pVia->noComposite) {
         switch (pVia->Chipset) {
@@ -939,7 +998,7 @@ viaFinishInitAccel(ScreenPtr pScreen)
     VIAPtr pVia = VIAPTR(pScrn);
     int size;
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     if (pVia->directRenderingType && pVia->useEXA) {
 
         pVia->dBounce = calloc(VIA_DMA_DL_SIZE * 2, 1);
@@ -950,7 +1009,7 @@ viaFinishInitAccel(ScreenPtr pScreen)
             if (pVia->exaDriverPtr->UploadToScreen == viaExaTexUploadToScreen) {
                 size = VIA_AGP_UPL_SIZE * 2;
 
-                pVia->texAGPBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_FLAG_TT);
+                pVia->texAGPBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_TT);
                 if (pVia->texAGPBuffer) {
                     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                                "Allocated %u kiB of AGP memory for "
@@ -961,7 +1020,7 @@ viaFinishInitAccel(ScreenPtr pScreen)
             }
 
             size = pVia->exaScratchSize * 1024;
-            pVia->scratchBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_FLAG_TT);
+            pVia->scratchBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_TT);
             if (pVia->scratchBuffer) {
                 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                            "Allocated %u kiB of AGP memory for "
@@ -972,10 +1031,10 @@ viaFinishInitAccel(ScreenPtr pScreen)
             }
         }
     }
-#endif /* HAVE_DRI */
+#endif /* OPENCHROMEDRI */
     if (!pVia->scratchAddr && pVia->useEXA) {
         size = pVia->exaScratchSize * 1024 + 32;
-        pVia->scratchBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_FLAG_SYSTEM);
+        pVia->scratchBuffer = drm_bo_alloc(pScrn, size, 32, TTM_PL_SYSTEM);
 
         if (pVia->scratchBuffer) {
             xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1001,7 +1060,7 @@ viaExitAccel(ScreenPtr pScreen)
     viaTearDownCBuffer(&pVia->cb);
 
     if (pVia->useEXA) {
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
         if (pVia->directRenderingType == DRI_1) {
             if (pVia->texAGPBuffer) {
                 drm_bo_free(pScrn, pVia->texAGPBuffer);
@@ -1015,7 +1074,7 @@ viaExitAccel(ScreenPtr pScreen)
         }
         if (pVia->dBounce)
             free(pVia->dBounce);
-#endif /* HAVE_DRI */
+#endif /* OPENCHROMEDRI */
         if (pVia->scratchBuffer) {
             drm_bo_free(pScrn, pVia->scratchBuffer);
             pVia->scratchBuffer = NULL;

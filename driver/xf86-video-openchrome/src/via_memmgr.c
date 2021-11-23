@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2007 Red Hat, Inc.
  * Copyright 2003 Red Hat, Inc. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,187 +31,224 @@
 #include "xf86_OSproc.h"
 #include "xf86fbman.h"
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 #include "xf86drm.h"
 #endif
 
 #include "drm_fourcc.h"
 #include "via_driver.h"
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 #include "via_drm.h"
+#include "openchrome_drm.h"
+
 #else
 #include "drm_fourcc.h"
 #endif
 
-/*
- *	Isolate the wonders of X memory allocation and DRI memory allocation
- *	and 4.3 or 4.4 differences in one abstraction.
- *
- *	The pool code indicates who provided the memory:
- *	0  -  nobody
- *	1  -  xf86 linear
- *	2  -  DRM
- */
-int
-viaOffScreenLinear(struct buffer_object *obj, ScrnInfoPtr pScrn,
-                   unsigned long size)
+static int
+viaOffScreenLinear(ScrnInfoPtr pScrn, struct buffer_object *obj,
+                    unsigned long size, unsigned long alignment)
 {
-    int depth = pScrn->bitsPerPixel >> 3;
     FBLinearPtr linear;
+    int depth = pScrn->bitsPerPixel / 8;
+    int newAlignment;
+    int ret = 0;
 
+    newAlignment = alignment;
     linear = xf86AllocateOffscreenLinear(pScrn->pScreen,
-                                        (size + depth - 1) / depth,
-                                        32, NULL, NULL, NULL);
-    if (!linear)
-        return BadAlloc;
-    obj->offset = linear->offset * depth;
-    obj->handle = (unsigned long) linear;
-    obj->domain = TTM_PL_FLAG_VRAM;
-    obj->size = size;
-    return Success;
-}
-
-struct buffer_object *
-drm_bo_alloc_surface(ScrnInfoPtr pScrn, unsigned int width, unsigned int height,
-                    int format, unsigned int alignment, int domain)
-{
-    struct buffer_object *obj = NULL;
-    int pitch;
-
-    switch (format) {
-    case DRM_FORMAT_C8:
-        pitch = width;
-        break;
-
-    case DRM_FORMAT_XRGB1555:
-    case DRM_FORMAT_RGB565:
-        pitch = width * 2;
-        break;
-
-    case DRM_FORMAT_RGB888:
-        pitch = width * 3;
-        break;
-
-    case DRM_FORMAT_XRGB2101010:
-    case DRM_FORMAT_XRGB8888:
-        pitch = width * 4;
-        break;
+                                            (size + depth - 1) / depth,
+                                            newAlignment,
+                                            NULL, NULL, NULL);
+    if (!linear) {
+        ret = -ENOMEM;
+        goto exit;
     }
 
-    pitch = ALIGN_TO(pitch, alignment);
-    obj = drm_bo_alloc(pScrn, pitch * height, alignment, domain);
-    if (!obj->pitch)
-        obj->pitch = pitch;
-    return obj;
+    obj->offset = linear->offset * depth;
+    obj->handle = (unsigned long) linear;
+    obj->domain = TTM_PL_VRAM;
+    obj->size = size;
+
+exit:
+    return ret;
 }
 
 struct buffer_object *
-drm_bo_alloc(ScrnInfoPtr pScrn, unsigned int size, unsigned int alignment, int domain)
+drm_bo_alloc(ScrnInfoPtr pScrn, unsigned long size,
+                unsigned long alignment, int domain)
 {
     struct buffer_object *obj = NULL;
     VIAPtr pVia = VIAPTR(pScrn);
     int ret = 0;
 
     obj = xnfcalloc(1, sizeof(*obj));
-    if (obj) {
-        switch (domain) {
-        case TTM_PL_FLAG_TT:
-        case TTM_PL_FLAG_VRAM:
-            if (pVia->directRenderingType == DRI_NONE) {
-                if (Success != viaOffScreenLinear(obj, pScrn, size)) {
-                    ErrorF("Linear memory allocation failed\n");
-                    ret = -ENOMEM;
-                } else
-                    DEBUG(ErrorF("%lu bytes of Linear memory allocated at %lx, handle %lu\n", obj->size, obj->offset, obj->handle));
-#ifdef HAVE_DRI
-            } else if (pVia->directRenderingType == DRI_1) {
-                drm_via_mem_t drm;
-
-                size = ALIGN_TO(size, alignment);
-                drm.context = DRIGetContext(pScrn->pScreen);
-                drm.size = size;
-                drm.type = (domain == TTM_PL_FLAG_TT ? VIA_MEM_AGP : VIA_MEM_VIDEO);
-                ret = drmCommandWriteRead(pVia->drmmode.fd, DRM_VIA_ALLOCMEM,
-                                            &drm, sizeof(drm_via_mem_t));
-                if (!ret && (size == drm.size)) {
-                    if (domain == TTM_PL_FLAG_VRAM)
-                        drm.offset -= pVia->FBFreeStart;
-                    obj->offset = ALIGN_TO(drm.offset, alignment);
-                    obj->handle = drm.index;
-                    obj->domain = domain;
-                    obj->size = drm.size;
-                    DEBUG(ErrorF("%lu bytes of DRI memory allocated at %lx, handle %lu\n",
-                                obj->size, obj->offset, obj->handle));
-                }
-            } else if (pVia->directRenderingType == DRI_2) {
-                struct drm_via_gem_object args;
-
-                /* Some day this will be moved to libdrm. */
-                args.domains = domain;
-                args.alignment = alignment;
-                args.pitch = 0;
-                args.size = size;
-                ret = drmCommandWriteRead(pVia->drmmode.fd, DRM_VIA_GEM_CREATE,
-                                        &args, sizeof(struct drm_via_gem_object));
-                if (!ret) {
-                    /* Okay the X server expects to know the offset because
-                     * of non-KMS. Once we have KMS working the offset
-                     * will not be valid. */
-                    obj->map_offset = args.map_handle;
-                    obj->offset = args.offset;
-                    obj->handle = args.handle;
-                    obj->pitch = args.pitch;
-                    obj->size = args.size;
-                    obj->domain = domain;
-                    DEBUG(ErrorF("%lu bytes of DRI2 memory allocated at %lx, handle %lu\n",
-                                obj->size, obj->offset, obj->handle));
-                }
-#endif
-            }
-            break;
-
-        case TTM_PL_FLAG_SYSTEM:
-        default:
-            ret = -ENXIO;
-            break;
-        }
-
-        if (ret) {
-            DEBUG(ErrorF("DRM memory allocation failed %d\n", ret));
-            free(obj);
-            obj = NULL;
-        };
+    if (!obj) {
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                            "Allocation of a buffer object used for "
+                            "memory allocation failed.\n"));
+        goto exit;
     }
-    return obj;
+
+    switch (domain) {
+    case TTM_PL_TT:
+    case TTM_PL_VRAM:
+        if (pVia->directRenderingType == DRI_NONE) {
+            if (!pVia->useEXA) {
+                ret = viaOffScreenLinear(pScrn, obj,
+                                            size, alignment);
+                if (ret) {
+                    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                                        "Linear memory allocation "
+                                        "failed.\n"));
+                } else {
+                    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                                        "%lu bytes of linear memory "
+                                        "allocated at 0x%lx, handle "
+                                        "0x%lx.\n",
+                                        obj->size, obj->offset,
+                                        obj->handle));
+                }
+            } else {
+                ret = viaEXAOffscreenAlloc(pScrn, obj,
+                                            size, alignment);
+                if (ret) {
+                    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                                        "EXA offscreen memory "
+                                        "allocation failed.\n"));
+                } else {
+                    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                                        "%lu bytes of EXA offscreen "
+                                        "memory allocated at 0x%lx, "
+                                        "handle 0x%lx.\n",
+                                        obj->size, obj->offset,
+                                        obj->handle));
+                }
+            }
+#ifdef OPENCHROMEDRI
+        } else if (pVia->directRenderingType == DRI_1) {
+            drm_via_mem_t drm;
+
+            size = ALIGN_TO(size, alignment);
+            drm.context = DRIGetContext(pScrn->pScreen);
+            drm.size = size;
+            drm.type = (domain == TTM_PL_TT ? VIA_MEM_AGP : VIA_MEM_VIDEO);
+            ret = drmCommandWriteRead(pVia->drmmode.fd, DRM_VIA_ALLOCMEM,
+                                        &drm, sizeof(drm_via_mem_t));
+            if (!ret && (size == drm.size)) {
+                if (domain == TTM_PL_VRAM)
+                    drm.offset -= pVia->FBFreeStart;
+                obj->offset = ALIGN_TO(drm.offset, alignment);
+                obj->handle = drm.index;
+                obj->domain = domain;
+                obj->size = drm.size;
+                DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                                    "%lu bytes of DRI memory "
+                                    "allocated at 0x%lx, "
+                                    "handle 0x%lx.\n",
+                                    obj->size, obj->offset,
+                                    obj->handle));
+            }
+        } else if (pVia->directRenderingType == DRI_2) {
+            struct drm_openchrome_gem_create args;
+
+            memset(&args, 0, sizeof(args));
+            args.size = size;
+            args.alignment = alignment;
+            args.domain = domain;
+            ret = drmCommandWriteRead(pVia->drmmode.fd,
+                            DRM_OPENCHROME_GEM_CREATE,
+                            &args,
+                            sizeof(struct drm_openchrome_gem_create));
+            if (!ret) {
+                /* Okay the X server expects to know the offset because
+                 * of non-KMS. Once we have KMS working the offset
+                 * will not be valid. */
+                obj->size = args.size;
+                obj->domain = args.domain;
+                obj->handle = args.handle;
+                obj->offset = args.offset;
+                DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                                    "%lu bytes of DRI2 memory "
+                                    "allocated at 0x%lx, "
+                                    "handle 0x%lx.\n",
+                                    obj->size, obj->offset,
+                                    obj->handle));
+            }
+#endif
+        }
+        break;
+
+    case TTM_PL_SYSTEM:
+    default:
+        ret = -ENXIO;
+        break;
+    }
+
+    if (ret) {
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                            "DRM memory allocation failed.\n"
+                            "Error Code: %d\n", ret));
+        free(obj);
+        obj = NULL;
+        goto exit;
+    }
+
+exit:
+     return obj;
 }
 
 void*
 drm_bo_map(ScrnInfoPtr pScrn, struct buffer_object *obj)
 {
     VIAPtr pVia = VIAPTR(pScrn);
+#ifdef OPENCHROMEDRI
+    struct drm_openchrome_gem_map args;
+    int ret;
+#endif /* OPENCHROMEDRI */
 
-    if (pVia->directRenderingType == DRI_2) {
-        obj->ptr = mmap(0, obj->size, PROT_READ | PROT_WRITE,
-                        MAP_SHARED, pVia->drmmode.fd, obj->map_offset);
-        if (obj->ptr == MAP_FAILED) {
-            DEBUG(ErrorF("mmap failed with error %d\n", -errno));
-            obj->ptr = NULL;
-        }
-    } else {
+    if ((pVia->directRenderingType == DRI_NONE)
+#ifdef OPENCHROMEDRI
+        || (pVia->directRenderingType == DRI_1)
+#endif /* OPENCHROMEDRI */
+    ) {
         switch (obj->domain) {
-#ifdef HAVE_DRI
-        case TTM_PL_FLAG_TT:
-            obj->ptr = (pVia->agpMappedAddr + obj->offset);
+#ifdef OPENCHROMEDRI
+        case TTM_PL_TT:
+            obj->ptr = (uint8_t*)pVia->agpMappedAddr + obj->offset;
             break;
-#endif
-        case TTM_PL_FLAG_VRAM:
-            obj->ptr = (pVia->FBBase + obj->offset);
+#endif /* OPENCHROMEDRI */
+        case TTM_PL_VRAM:
+            obj->ptr = pVia->FBBase + obj->offset;
             break;
         default:
             obj->ptr = NULL;
             break;
         }
+#ifdef OPENCHROMEDRI
+    } else if (pVia->directRenderingType == DRI_2) {
+        memset(&args, 0, sizeof(args));
+        args.handle = obj->handle;
+        ret = drmCommandWriteRead(pVia->drmmode.fd,
+                        DRM_OPENCHROME_GEM_MAP,
+                        &args,
+                        sizeof(struct drm_openchrome_gem_map));
+        if (ret) {
+            obj->ptr = NULL;
+            goto exit;
+        }
+
+        obj->ptr = mmap(0, obj->size, PROT_READ | PROT_WRITE,
+                        MAP_SHARED, pVia->drmmode.fd, args.map_offset);
+        if (obj->ptr == MAP_FAILED) {
+            DEBUG(ErrorF("mmap failed with error %d\n", -errno));
+            obj->ptr = NULL;
+        }
+#endif /* OPENCHROMEDRI */
     }
+
+#ifdef OPENCHROMEDRI
+exit:
+#endif /* OPENCHROMEDRI */
     return obj->ptr;
 }
 
@@ -218,11 +256,35 @@ void
 drm_bo_unmap(ScrnInfoPtr pScrn, struct buffer_object *obj)
 {
     VIAPtr pVia = VIAPTR(pScrn);
+#ifdef OPENCHROMEDRI
+    struct drm_openchrome_gem_unmap args;
+    int ret;
+#endif /* OPENCHROMEDRI */
 
-    if (pVia->directRenderingType == DRI_2) {
+    if ((pVia->directRenderingType == DRI_NONE)
+#ifdef OPENCHROMEDRI
+        || (pVia->directRenderingType == DRI_1)
+#endif /* OPENCHROMEDRI */
+    ) {
+#ifdef OPENCHROMEDRI
+    } else if (pVia->directRenderingType == DRI_2) {
         munmap(obj->ptr, obj->size);
+
+        memset(&args, 0, sizeof(struct drm_openchrome_gem_unmap));
+        args.handle = obj->handle;
+        ret = drmCommandRead(pVia->drmmode.fd,
+                        DRM_OPENCHROME_GEM_UNMAP,
+                        &args,
+                        sizeof(struct drm_openchrome_gem_unmap));
+        if (ret) {
+            goto exit;
+        }
+#endif /* OPENCHROMEDRI */
     }
 
+#ifdef OPENCHROMEDRI
+exit:
+#endif /* OPENCHROMEDRI */
     obj->ptr = NULL;
 }
 
@@ -234,13 +296,20 @@ drm_bo_free(ScrnInfoPtr pScrn, struct buffer_object *obj)
     if (obj) {
         DEBUG(ErrorF("Freed %lu (pool %d)\n", obj->offset, obj->domain));
         switch (obj->domain) {
-        case TTM_PL_FLAG_VRAM:
-        case TTM_PL_FLAG_TT:
+        case TTM_PL_VRAM:
+        case TTM_PL_TT:
             if (pVia->directRenderingType == DRI_NONE) {
-                FBLinearPtr linear = (FBLinearPtr) obj->handle;
+                if (!pVia->useEXA) {
+                    FBLinearPtr linear = (FBLinearPtr) obj->handle;
 
-                xf86FreeOffscreenLinear(linear);
-#ifdef HAVE_DRI
+                    xf86FreeOffscreenLinear(linear);
+                } else {
+                    ExaOffscreenArea *pArea =
+                                    (ExaOffscreenArea *)obj->handle;
+
+                    exaOffscreenFree(pScrn->pScreen, pArea);
+                }
+#ifdef OPENCHROMEDRI
             } else if (pVia->directRenderingType == DRI_1) {
                 drm_via_mem_t drm;
 
@@ -263,20 +332,4 @@ drm_bo_free(ScrnInfoPtr pScrn, struct buffer_object *obj)
         }
         free(obj);
     }
-}
-
-Bool
-drm_bo_manager_init(ScrnInfoPtr pScrn)
-{
-    VIAPtr pVia = VIAPTR(pScrn);
-    Bool ret = TRUE;
-
-    if (pVia->directRenderingType == DRI_2)
-        return ret;
-    ret = umsCreate(pScrn);
-#ifdef HAVE_DRI
-    if (pVia->directRenderingType == DRI_1)
-        ret = VIADRIKernelInit(pScrn);
-#endif
-    return ret;
 }

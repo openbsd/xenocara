@@ -47,24 +47,16 @@ static ViaPanelModeRec ViaPanelNativeModes[] = {
     {1280,  768, FALSE,  TRUE},
     {1280, 1024,  TRUE,  TRUE},
     {1400, 1050,  TRUE,  TRUE},
-    {1600, 1200,  TRUE,  TRUE},
+    {1440,  900,  TRUE,  TRUE},
     {1280,  800, FALSE,  TRUE},
     { 800,  480, FALSE,  TRUE},
-    {1024,  768,  TRUE,  TRUE},
+    {1024,  600,  TRUE,  TRUE},
     {1366,  768, FALSE, FALSE},
-    {1024,  768,  TRUE, FALSE},
-    {1280,  768, FALSE, FALSE},
-    {1280, 1024,  TRUE, FALSE},
-    {1400, 1050,  TRUE, FALSE},
-    {1600, 1200,  TRUE, FALSE},
-    {1366,  768, FALSE, FALSE},
-    {1024,  600, FALSE,  TRUE},
-    {1280,  768,  TRUE,  TRUE},
-    {1280,  800, FALSE,  TRUE},
-    {1360,  768, FALSE, FALSE},
-    {1280,  768,  TRUE, FALSE},
-    { 480,  640, FALSE,  TRUE},
-    {1200,  900, FALSE, FALSE}};
+    {1680, 1050,  TRUE, FALSE},
+    {1920, 1200, FALSE, FALSE},
+    { 640,  240,  TRUE, FALSE},
+    { 480,  640,  TRUE, FALSE}
+};
 
 #define MODEPREFIX(name) NULL, NULL, name, 0, M_T_DRIVER | M_T_DEFAULT
 #define MODESUFFIX 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE,0,NULL,0,0.0,0.0
@@ -410,53 +402,6 @@ viaFPPower(ScrnInfoPtr pScrn, int Chipset, uint32_t diPort,
 }
 
 static void
-viaFPIOPadState(ScrnInfoPtr pScrn, uint32_t diPort, Bool ioPadOn)
-{
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered viaFPIOPadState.\n"));
-
-    switch(diPort) {
-    case VIA_DI_PORT_DVP0:
-        viaDVP0SetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case VIA_DI_PORT_DVP1:
-        viaDVP1SetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case VIA_DI_PORT_FPDPLOW:
-        viaFPDPLowSetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case VIA_DI_PORT_FPDPHIGH:
-        viaFPDPHighSetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case (VIA_DI_PORT_FPDPLOW |
-          VIA_DI_PORT_FPDPHIGH):
-        viaFPDPLowSetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        viaFPDPHighSetIOPadState(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case VIA_DI_PORT_LVDS1:
-        viaLVDS1SetIOPadSetting(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case VIA_DI_PORT_LVDS2:
-        viaLVDS2SetIOPadSetting(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    case (VIA_DI_PORT_LVDS1 |
-          VIA_DI_PORT_LVDS2):
-        viaLVDS1SetIOPadSetting(pScrn, ioPadOn ? 0x03 : 0x00);
-        viaLVDS2SetIOPadSetting(pScrn, ioPadOn ? 0x03 : 0x00);
-        break;
-    default:
-        break;
-    }
-
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                "FP I/O Pad: %s\n",
-                ioPadOn ? "On": "Off");
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaFPIOPadState.\n"));
-}
-
-static void
 viaFPFormat(ScrnInfoPtr pScrn, uint32_t diPort, CARD8 format)
 {
     CARD8 temp = format & 0x01;
@@ -597,56 +542,6 @@ viaFPSyncPolarity(ScrnInfoPtr pScrn, uint32_t diPort, unsigned int flags)
                         "Exiting viaFPSyncPolarity.\n"));
 }
 
-static void
-viaFPDisplaySource(ScrnInfoPtr pScrn, uint32_t diPort, int index)
-{
-    CARD8 displaySource = index & 0x01;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Entered viaFPDisplaySource.\n"));
-
-    switch(diPort) {
-    case VIA_DI_PORT_DVP0:
-        viaDVP0SetDisplaySource(pScrn, displaySource);
-        break;
-    case VIA_DI_PORT_DVP1:
-        viaDVP1SetDisplaySource(pScrn, displaySource);
-        break;
-    case VIA_DI_PORT_FPDPLOW:
-        viaFPDPLowSetDisplaySource(pScrn, displaySource);
-        viaDVP1SetDisplaySource(pScrn, displaySource);
-        break;
-    case VIA_DI_PORT_FPDPHIGH:
-        viaFPDPHighSetDisplaySource(pScrn, displaySource);
-        viaDVP0SetDisplaySource(pScrn, displaySource);
-        break;
-    case (VIA_DI_PORT_FPDPLOW |
-          VIA_DI_PORT_FPDPHIGH):
-        viaFPDPLowSetDisplaySource(pScrn, displaySource);
-        viaFPDPHighSetDisplaySource(pScrn, displaySource);
-        break;
-    case VIA_DI_PORT_LVDS1:
-        viaLVDS1SetDisplaySource(pScrn, displaySource);
-        break;
-    case VIA_DI_PORT_LVDS2:
-        viaLVDS2SetDisplaySource(pScrn, displaySource);
-        break;
-    case (VIA_DI_PORT_LVDS1 |
-          VIA_DI_PORT_LVDS2):
-        viaLVDS1SetDisplaySource(pScrn, displaySource);
-        viaLVDS2SetDisplaySource(pScrn, displaySource);
-        break;
-    default:
-        break;
-    }
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                "FP Display Source: IGA%d\n",
-                displaySource + 1);
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaFPDisplaySource.\n"));
-}
-
 /*
  * Try to interpret EDID ourselves.
  */
@@ -705,7 +600,6 @@ static void
 viaFPGetFPInfoScratchPad(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
     VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
     VIAFPPtr pVIAFP = (VIAFPPtr) output->driver_private;
@@ -982,13 +876,13 @@ via_fp_dpms(xf86OutputPtr output, int mode)
     switch (mode) {
     case DPMSModeOn:
         viaFPPower(pScrn, pVia->Chipset, pVIAFP->diPort, TRUE);
-        viaFPIOPadState(pScrn, pVIAFP->diPort, TRUE);
+        viaIOPadState(pScrn, pVIAFP->diPort, 0x03);
         break;
     case DPMSModeStandby:
     case DPMSModeSuspend:
     case DPMSModeOff:
         viaFPPower(pScrn, pVia->Chipset, pVIAFP->diPort, FALSE);
-        viaFPIOPadState(pScrn, pVIAFP->diPort, FALSE);
+        viaIOPadState(pScrn, pVIAFP->diPort, 0x00);
         break;
     default:
         break;
@@ -1056,7 +950,11 @@ via_fp_prepare(xf86OutputPtr output)
                         "Entered via_fp_prepare.\n"));
 
     viaFPPower(pScrn, pVia->Chipset, pVIAFP->diPort, FALSE);
-    viaFPIOPadState(pScrn, pVIAFP->diPort, FALSE);
+    viaIOPadState(pScrn, pVIAFP->diPort, 0x00);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pVIAFP->diPort, FALSE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting via_fp_prepare.\n"));
@@ -1073,7 +971,11 @@ via_fp_commit(xf86OutputPtr output)
                         "Entered via_fp_commit.\n"));
 
     viaFPPower(pScrn, pVia->Chipset, pVIAFP->diPort, TRUE);
-    viaFPIOPadState(pScrn, pVIAFP->diPort, TRUE);
+    viaIOPadState(pScrn, pVIAFP->diPort, 0x03);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pVIAFP->diPort, TRUE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting via_fp_commit.\n"));
@@ -1119,7 +1021,7 @@ via_fp_mode_set(xf86OutputPtr output, DisplayModePtr mode,
         }
 
         viaFPSyncPolarity(pScrn, pVIAFP->diPort, adjusted_mode->Flags);
-        viaFPDisplaySource(pScrn, pVIAFP->diPort, iga->index);
+        viaDisplaySource(pScrn, pVIAFP->diPort, iga->index);
     }
 }
 
@@ -1325,9 +1227,14 @@ viaFPProbe(ScrnInfoPtr pScrn)
     /* Detect the presence of FPs. */
     switch (pVia->Chipset) {
     case VIA_CLE266:
-        if ((sr12 & BIT(4)) || (cr3b & BIT(3))) {
+        /*
+         * 3C5.12[4] - FPD17 pin strapping (DIP1)
+         *             0: DVI / Capture
+         *             1: Panel
+         */
+        if ((!(sr12 & BIT(4))) && (cr3b & BIT(3))) {
             pVIADisplay->intFP1Presence = TRUE;
-            pVIADisplay->intFP1DIPort = VIA_DI_PORT_DIP0;
+            pVIADisplay->intFP1DIPort = VIA_DI_PORT_DIP1;
         } else {
             pVIADisplay->intFP1Presence = FALSE;
             pVIADisplay->intFP1DIPort = VIA_DI_PORT_NONE;

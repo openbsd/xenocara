@@ -27,7 +27,6 @@
 #define _VIA_DRIVER_H_ 1
 
 //#define VIA_DEBUG_COMPOSITE 1
-#define HAVE_DEBUG 1
 
 #ifdef HAVE_DEBUG
 #define DEBUG(x) x
@@ -35,60 +34,70 @@
 #define DEBUG(x)
 #endif
 
-#include "vgaHW.h"
-#include "xf86.h"
 
+#include "compiler.h"
+
+#include <errno.h>
+
+#include "vgaHW.h"
+
+#include "xf86.h"
+#include "xf86_OSproc.h"
+#include "xf86cmap.h"
+#include "xf86Crtc.h"
+#include "xf86Cursor.h"
+#include "xf86fbman.h"
+#include "xf86Pci.h"
+#include "xf86RandR12.h"
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #endif
 
-#include "xf86Pci.h"
-#include "xf86_OSproc.h"
-#include "compiler.h"
-#include "xf86Cursor.h"
-#include "mipointer.h"
-#include "micmap.h"
-#include "fourcc.h"
+#include "exa.h"
 #include "fb.h"
+#include "fourcc.h"
+#include "micmap.h"
+#include "mipointer.h"
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
 
-#include "xf86Crtc.h"
-#include "xf86fbman.h"
-#include "xf86RandR12.h"
-#include "xf86cmap.h"
+#include "compat-api.h"
 
-#ifdef HAVE_DRI
+#include "drmmode_display.h"
+
+#include "via_3d.h"
+#include "via_dmabuffer.h"
+#include "via_memmgr.h"
+#include "via_regs.h"
+#include "via_ums.h"
+#include "via_xv.h"
+#include "via_xv_overlay.h"
+
+#ifdef OPENCHROMEDRI
 #define _XF86DRI_SERVER_
 #include "xf86dri.h"
+
 #include "sarea.h"
 #include "dri.h"
 #include "drm_fourcc.h"
 #include "GL/glxint.h"
+
 #include "via_dri.h"
 #include "via_drmclient.h"
 #include "via_drm.h"
 #endif
-#include "exa.h"
-#include "via_memmgr.h"
 
-#include "via_regs.h"
-#include "via_kms.h"
-#include "via_ums.h"
-#include "via_dmabuffer.h"
-#include "via_3d.h"
-#include "via_xv.h"
-#include "via_xv_overlay.h"
-#include "via_eng_regs.h"
 
-#ifdef HAVE_PCIACCESS
-#include <pciaccess.h>
-#else
-#include "xf86PciInfo.h"
-#endif
-#include <errno.h>
+#define VIA_NAME            "OpenChrome"
+#define VIA_DRIVER_NAME     "openchrome"
+#define VIA_DRIVER_VERSION  (PACKAGE_VERSION_MAJOR << 24) | \
+                            (PACKAGE_VERSION_MINOR << 16) | \
+                            PACKAGE_VERSION_PATCHLEVEL
 
-#include "via_vt1632.h"
+#define OPENCHROME_DRM_DRIVER_NAME  "openchrome"
+#define VIA_DRM_DRIVER_NAME         "via"
 
-#include "compat-api.h"
 #define VIA_AGP_UPL_SIZE    (1024*128)
 #define VIA_DMA_DL_SIZE     (1024*128)
 #define VIA_SCRATCH_SIZE    (4*1024*1024)
@@ -106,9 +115,6 @@
 #define AGP_PAGES 8192
 #define AGP_SIZE (AGP_PAGE_SIZE * AGP_PAGES)
 
-#define DRIVER_NAME     "openchrome"
-#define VIA_VERSION     ((VIA_MAJOR_VERSION << 24) | (VIA_MINOR_VERSION << 16) | VIA_PATCHLEVEL)
-
 #define VIA_VQ_SIZE     (256 * 1024)
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
@@ -123,6 +129,22 @@
 #define VIDEO_ENGINE_UNK    0   /* Unknown video engine */
 #define VIDEO_ENGINE_CLE    1   /* CLE First generation video engine */
 #define VIDEO_ENGINE_CME    2   /* CME Second generation video engine */
+
+#ifdef XSERVER_LIBPCIACCESS
+#define VIA_MEMBASE(p,n)  (p)->regions[(n)].base_addr
+#define VENDOR_ID(p)      (p)->vendor_id
+#define DEVICE_ID(p)      (p)->device_id
+#define SUBVENDOR_ID(p)   (p)->subvendor_id
+#define SUBSYS_ID(p)      (p)->subdevice_id
+#define CHIP_REVISION(p)  (p)->revision
+#else
+#define VIA_MEMBASE(p,n)  (p)->memBase[n]
+#define VENDOR_ID(p)      (p)->vendor
+#define DEVICE_ID(p)      (p)->chipType
+#define SUBVENDOR_ID(p)   (p)->subsysVendor
+#define SUBSYS_ID(p)      (p)->subsysCard
+#define CHIP_REVISION(p)  (p)->chipRev
+#endif
 
 extern int gVIAEntityIndex;
 
@@ -139,7 +161,16 @@ enum dri_type {
 	DRI_2
 };
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
+typedef struct
+{
+    int major;
+    int minor;
+    int patchlevel;
+} ViaDRMVersion;
+#endif /* OPENCHROMEDRI */
+
+#ifdef OPENCHROMEDRI
 
 #define VIA_XVMC_MAX_BUFFERS 2
 #define VIA_XVMC_MAX_CONTEXTS 4
@@ -190,7 +221,7 @@ typedef struct _twodContext {
 } ViaTwodContext;
 
 typedef struct _VIA {
-    int                 Bpp, Bpl;
+    int                 Bpl;
 
     Bool                KMS;
     Bool                FirstInit;
@@ -212,7 +243,7 @@ typedef struct _VIA {
     unsigned char*      MpegMapBase;
     unsigned char*      BltBase;
     unsigned char*      MapBaseDense;
-    unsigned char*      FBBase;
+    uint8_t*            FBBase;
     CARD8               MemClk;
 
     /* Here are all the Options */
@@ -224,10 +255,8 @@ typedef struct _VIA {
 
 	CreateScreenResourcesProcPtr CreateScreenResources;
     CloseScreenProcPtr  CloseScreen;
-#ifdef HAVE_PCIACCESS
     struct pci_device  *PciInfo;
-#else
-    pciVideoPtr         PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG PciTag;
 #endif
     int                 Chipset;
@@ -267,7 +296,7 @@ typedef struct _VIA {
     char *              scratchAddr;
     Bool                noComposite;
     struct buffer_object *scratchBuffer;
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     struct buffer_object *texAGPBuffer;
     char *              dBounce;
 #endif
@@ -285,7 +314,7 @@ typedef struct _VIA {
 
     drmmode_rec         drmmode;
     enum dri_type       directRenderingType;
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
     Bool                XvMCEnabled;
     DRIInfoPtr          pDRIInfo;
     int                 numVisualConfigs;
@@ -332,8 +361,6 @@ typedef struct _VIA {
 #ifdef HAVE_DEBUG
     Bool                disableXvBWCheck;
     Bool                DumpVGAROM;
-    Bool                PrintVGARegs;
-    Bool                PrintTVRegs;
 #endif /* HAVE_DEBUG */
 
     video_via_regs*     VideoRegs;
@@ -357,13 +384,22 @@ typedef struct
 } VIAEntRec, *VIAEntPtr;
 
 
-/* In via_display.c. */
-extern const xf86CrtcFuncsRec iga1_crtc_funcs;
-extern const xf86CrtcFuncsRec iga2_crtc_funcs;
+const OptionInfoRec *VIAAvailableOptions(int chipid, int busid);
+void viaSetupDefaultOptions(ScrnInfoPtr pScrn);
+void viaProcessOptions(ScrnInfoPtr pScrn);
+Bool via_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height);
 
 /* In via_exa.c. */
+int viaEXAOffscreenAlloc(ScrnInfoPtr pScrn,
+                            struct buffer_object *obj,
+                            unsigned long size,
+                            unsigned long alignment);
+Bool viaIsAGP(VIAPtr pVia, PixmapPtr pPix, unsigned long *offset);
+Bool viaExaIsOffscreen(PixmapPtr pPix);
 Bool viaInitExa(ScreenPtr pScreen);
 Bool viaAccelSetMode(int bpp, ViaTwodContext * tdc);
+void viaSetClippingRectangle(ScrnInfoPtr pScrn,
+                                int x1, int y1, int x2, int y2);
 void viaAccelSync(ScrnInfoPtr);
 void viaExitAccel(ScreenPtr);
 void viaFinishInitAccel(ScreenPtr);
@@ -427,27 +463,21 @@ void viaInitVideo(ScreenPtr pScreen);
 void viaExitVideo(ScrnInfoPtr pScrn);
 void viaSaveVideo(ScrnInfoPtr pScrn);
 void viaRestoreVideo(ScrnInfoPtr pScrn);
-void viaSetColorSpace(VIAPtr pVia, int hue, int saturation, int brightness, int contrast,
-		      Bool reset);
-
-
-/* In via_xv.c */
-void viaInitVideo(ScreenPtr pScreen);
-void viaExitVideo(ScrnInfoPtr pScrn);
-void viaSaveVideo(ScrnInfoPtr pScrn);
-void viaRestoreVideo(ScrnInfoPtr pScrn);
-void viaSetColorSpace(VIAPtr pVia, int hue, int saturation, int brightness, int contrast,
-		      Bool reset);
 void VIAVidAdjustFrame(ScrnInfoPtr pScrn, int x, int y);
+
+
+/* In via_xv_overlay.c */
+void viaSetColorSpace(VIAPtr pVia, int hue, int saturation,
+                        int brightness, int contrast, Bool reset);
 
 /* In via_memcpy.c */
 typedef void (*vidCopyFunc)(unsigned char *, const unsigned char *,
                             int, int, int, int);
-extern vidCopyFunc viaVidCopyInit( char *copyType, ScreenPtr pScreen );
+extern vidCopyFunc viaVidCopyInit(const char *copyType, ScreenPtr pScreen );
 
 /* In via_xwmc.c */
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 /* Basic init and exit functions */
 void ViaInitXVMC(ScreenPtr pScreen);
 void ViaCleanupXVMC(ScrnInfoPtr pScrn, XF86VideoAdaptorPtr *XvAdaptors, int XvAdaptorCount);
@@ -457,7 +487,7 @@ int viaXvMCInitXv(ScrnInfoPtr pScrn, XF86VideoAdaptorPtr XvAdapt);
 unsigned long viaXvMCPutImageSize(ScrnInfoPtr pScrn);
 #endif
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 Bool VIADRI1ScreenInit(ScreenPtr pScreen);
 void VIADRICloseScreen(ScreenPtr pScreen);
 Bool VIADRIFinishScreenInit(ScreenPtr pScreen);
@@ -467,11 +497,6 @@ void viaDRIOffscreenRestore(ScrnInfoPtr pScrn);
 void viaDRIOffscreenSave(ScrnInfoPtr pScrn);
 Bool VIADRIBufferInit(ScrnInfoPtr pScrn);
 
-#endif /* HAVE_DRI */
-
-int viaOffScreenLinear(struct buffer_object *obj, ScrnInfoPtr pScrn, unsigned long size);
-void viaShowCursor(ScrnInfoPtr pScrn);
-void viaHideCursor(ScrnInfoPtr pScrn);
-Bool viaHWCursorInit(ScreenPtr pScreen);
+#endif /* OPENCHROMEDRI */
 
 #endif /* _VIA_DRIVER_H_ */

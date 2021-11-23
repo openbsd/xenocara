@@ -25,13 +25,6 @@
 
 #include "vgaHW.h"
 
-CARD8 ViaVgahwIn(vgaHWPtr hwp, int address);
-void ViaVgahwWrite(vgaHWPtr hwp, int indexaddress, CARD8 index,
-		  int valueaddress, CARD8 value);
-
-void ViaVgahwMask(vgaHWPtr hwp, int indexaddress, CARD8 index,
-			int valueaddress, CARD8 value, CARD8 mask);
-
 void ViaCrtcMask(vgaHWPtr hwp, CARD8 index, CARD8 value, CARD8 mask);
 void ViaSeqMask(vgaHWPtr hwp, CARD8 index, CARD8 value, CARD8 mask);
 void ViaGrMask(vgaHWPtr hwp, CARD8 index, CARD8 value, CARD8 mask);

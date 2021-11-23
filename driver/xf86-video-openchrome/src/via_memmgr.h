@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 James Simmons, All Rights Reserved.
+ * Copyright © 2007 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,32 +24,26 @@
 #ifndef _VIA_MEMMGR_H_
 #define _VIA_MEMMGR_H_
 
-#include <sys/mman.h>
 #include "xf86.h"
 
-#define TTM_PL_FLAG_SYSTEM	1
-#define TTM_PL_FLAG_TT		2
-#define TTM_PL_FLAG_VRAM	4
+
+#define TTM_PL_SYSTEM           0
+#define TTM_PL_TT               1
+#define TTM_PL_VRAM             2
+#define TTM_PL_PRIV             3
 
 struct buffer_object {
-    off_t           map_offset;
+    void            *ptr;
+    unsigned long   size;
+    int             domain;
     unsigned long   handle;
     unsigned long   offset;             /* Offset into fb */
-    unsigned long   pitch;
-    unsigned long   size;
-    void            *ptr;
-    int             domain;
 };
 
-/* In via_memory.c */
-Bool drm_bo_manager_init(ScrnInfoPtr pScrn);
 
 struct buffer_object *
-drm_bo_alloc_surface(ScrnInfoPtr pScrn, unsigned int width, unsigned int height,
-                    int format, unsigned int alignment, int domain);
-struct buffer_object *
-drm_bo_alloc(ScrnInfoPtr pScrn, unsigned int size, unsigned int alignment,
-                int domain);
+drm_bo_alloc(ScrnInfoPtr pScrn, unsigned long size,
+                unsigned long alignment, int domain);
 void *drm_bo_map(ScrnInfoPtr pScrn, struct buffer_object *obj);
 void drm_bo_unmap(ScrnInfoPtr pScrn, struct buffer_object *obj);
 void drm_bo_free(ScrnInfoPtr pScrn, struct buffer_object *);

@@ -39,6 +39,12 @@
 #define SDA_WRITE 0x10
 #define SCL_WRITE 0x20
 
+
+static char strI2CBus1[] = "I2C Bus 1";
+static char strI2CBus2[] = "I2C Bus 2";
+static char strI2CBus3[] = "I2C Bus 3";
+
+
 /*
  * First I2C Bus: Typically used for detecting a VGA monitor.
  */
@@ -73,12 +79,13 @@ ViaI2C1GetBits(I2CBusPtr Bus, int *clock, int *data)
 static I2CBusPtr
 ViaI2CBus1Init(ScrnInfoPtr pScrn)
 {
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+    I2CBusPtr pI2CBus;
+
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered ViaI2CBus1Init.\n"));
 
-    I2CBusPtr pI2CBus = xf86CreateI2CBusRec();
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-
+    pI2CBus = xf86CreateI2CBusRec();
     if (!pI2CBus) {
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                             "xf86CreateI2CBusRec failed.\n"));
@@ -89,7 +96,7 @@ ViaI2CBus1Init(ScrnInfoPtr pScrn)
         return NULL;
     }
 
-    pI2CBus->BusName = "I2C Bus 1";
+    pI2CBus->BusName = strI2CBus1;
     pI2CBus->scrnIndex = pScrn->scrnIndex;
 
     pI2CBus->I2CPutBits = ViaI2C1PutBits;
@@ -156,12 +163,13 @@ ViaI2C2GetBits(I2CBusPtr Bus, int *clock, int *data)
 static I2CBusPtr
 ViaI2CBus2Init(ScrnInfoPtr pScrn)
 {
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+    I2CBusPtr pI2CBus;
+
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered ViaI2CBus2Init.\n"));
 
-    I2CBusPtr pI2CBus = xf86CreateI2CBusRec();
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
-
+    pI2CBus = xf86CreateI2CBusRec();
     if (!pI2CBus) {
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                             "xf86CreateI2CBusRec failed.\n"));
@@ -172,7 +180,7 @@ ViaI2CBus2Init(ScrnInfoPtr pScrn)
         return NULL;
     }
 
-    pI2CBus->BusName = "I2C Bus 2";
+    pI2CBus->BusName = strI2CBus2;
     pI2CBus->scrnIndex = pScrn->scrnIndex;
 
     pI2CBus->I2CPutBits = ViaI2C2PutBits;
@@ -408,7 +416,7 @@ ViaI2CBus3Init(ScrnInfoPtr pScrn)
         return NULL;
     }
 
-    pI2CBus->BusName = "I2C Bus 3";
+    pI2CBus->BusName = strI2CBus3;
     pI2CBus->scrnIndex = pScrn->scrnIndex;
 
     pI2CBus->I2CPutBits = ViaI2C3SimplePutBits;

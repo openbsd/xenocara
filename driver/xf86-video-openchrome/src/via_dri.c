@@ -67,17 +67,10 @@ extern void GlxSetVisualConfigs(int nconfigs,
                                 __GLXvisualConfig * configs,
                                 void **configprivs);
 
-typedef struct
-{
-    int major;
-    int minor;
-    int patchlevel;
-} ViaDRMVersion;
-
 static char VIAKernelDriverName[] = "via";
 static char VIAClientDriverName[] = "unichrome";
-static const ViaDRMVersion drmExpected = { 1, 3, 0 };
-static const ViaDRMVersion drmCompat = { 2, 0, 0 };
+
+static char SWRastClientDriverName[] = "swrast";
 
 static Bool VIAInitVisualConfigs(ScreenPtr pScreen);
 static Bool VIADRIMapInit(ScreenPtr pScreen, VIAPtr pVia);
@@ -120,7 +113,7 @@ VIADRIIrqInit(ScrnInfoPtr pScrn, VIADRIPtr pVIADRI)
 
     pVIADRI->irqEnabled = drmGetInterruptFromBusID
             (pVia->drmmode.fd,
-#ifdef HAVE_PCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
              ((pVia->PciInfo->domain << 8) | pVia->PciInfo->bus),
              pVia->PciInfo->dev, pVia->PciInfo->func
 #else
@@ -548,7 +541,7 @@ VIADRI1ScreenInit(ScreenPtr pScreen)
         case VIA_VX800:
         case VIA_VX855:
         case VIA_VX900:
-            pDRIInfo->clientDriverName = "swrast";
+            pDRIInfo->clientDriverName = SWRastClientDriverName;
             break;
         default:
             pDRIInfo->clientDriverName = VIAClientDriverName;
@@ -616,6 +609,13 @@ VIADRI1ScreenInit(ScreenPtr pScreen)
         pVia->pDRIInfo = NULL;
         pVia->drmmode.fd = -1;
         return FALSE;
+    }
+
+    if ((pVia->driSize > (pVia->maxDriSize * 1024)) &&
+        (pVia->maxDriSize > 0)) {
+        pVia->driSize = pVia->maxDriSize * 1024;
+    } else {
+        pVia->driSize = (pVia->FBFreeEnd - pVia->FBFreeStart) >> 2;
     }
 
     if (!(VIAInitVisualConfigs(pScreen))) {
@@ -724,7 +724,7 @@ VIADRIFinishScreenInit(ScreenPtr pScreen)
                    "[drm] the frame buffer memory area in the BIOS.\n");
     }
 
-    pVia->driOffScreenMem = drm_bo_alloc(pScrn, pVia->driSize, 16, TTM_PL_FLAG_VRAM);
+    pVia->driOffScreenMem = drm_bo_alloc(pScrn, pVia->driSize, 16, TTM_PL_VRAM);
 
     DRIFinishScreenInit(pScreen);
 

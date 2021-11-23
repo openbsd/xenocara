@@ -168,12 +168,8 @@ viaVT1632RestoreRegisters(ScrnInfoPtr pScrn, I2CDevPtr pDev,
 static int
 viaVT1632CheckModeValidity(xf86OutputPtr output, DisplayModePtr pMode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
     viaVT1632RecPtr pVIAVT1632 = output->driver_private;
     int status = MODE_OK;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
-                        "Entered viaVT1632CheckModeValidity.\n"));
 
     if (pMode->Clock < pVIAVT1632->DotclockMin) {
         status = MODE_CLOCK_LOW;
@@ -185,8 +181,6 @@ viaVT1632CheckModeValidity(xf86OutputPtr output, DisplayModePtr pMode)
     }
 
 exit:
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaVT1632CheckModeValidity.\n"));
     return status;
 }
 
@@ -207,13 +201,13 @@ via_vt1632_dpms(xf86OutputPtr output, int mode)
     switch (mode) {
     case DPMSModeOn:
         viaVT1632Power(pScrn, pVIAVT1632->VT1632I2CDev, TRUE);
-        viaExtTMDSIOPadState(pScrn, pVIAVT1632->diPort, TRUE);
+        viaIOPadState(pScrn, pVIAVT1632->diPort, 0x03);
         break;
     case DPMSModeStandby:
     case DPMSModeSuspend:
     case DPMSModeOff:
         viaVT1632Power(pScrn, pVIAVT1632->VT1632I2CDev, FALSE);
-        viaExtTMDSIOPadState(pScrn, pVIAVT1632->diPort, FALSE);
+        viaIOPadState(pScrn, pVIAVT1632->diPort, 0x00);
         break;
     default:
         break;
@@ -271,13 +265,18 @@ static void
 via_vt1632_prepare(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaVT1632RecPtr pVIAVT1632 = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered %s.\n", __func__));
 
     viaVT1632Power(pScrn, pVIAVT1632->VT1632I2CDev, FALSE);
-    viaExtTMDSIOPadState(pScrn, pVIAVT1632->diPort, FALSE);
+    viaIOPadState(pScrn, pVIAVT1632->diPort, 0x00);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pVIAVT1632->diPort, FALSE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting %s.\n", __func__));
@@ -287,13 +286,18 @@ static void
 via_vt1632_commit(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaVT1632RecPtr pVIAVT1632 = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered %s.\n", __func__));
 
     viaVT1632Power(pScrn, pVIAVT1632->VT1632I2CDev, TRUE);
-    viaExtTMDSIOPadState(pScrn, pVIAVT1632->diPort, TRUE);
+    viaIOPadState(pScrn, pVIAVT1632->diPort, 0x03);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pVIAVT1632->diPort, TRUE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting %s.\n", __func__));
@@ -305,6 +309,7 @@ via_vt1632_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 {
     ScrnInfoPtr pScrn = output->scrn;
     drmmode_crtc_private_ptr iga = output->crtc->driver_private;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaVT1632RecPtr pVIAVT1632 = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -313,13 +318,17 @@ via_vt1632_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     if (output->crtc) {
         viaExtTMDSSetClockDriveStrength(pScrn, 0x03);
         viaExtTMDSSetDataDriveStrength(pScrn, 0x03);
-        viaExtTMDSEnableIOPads(pScrn, 0x03);
+        viaIOPadState(pScrn, pVIAVT1632->diPort, 0x03);
+
+        if (pVia->Chipset == VIA_CLE266) {
+            viaClockSource(pScrn, pVIAVT1632->diPort, TRUE);
+        }
 
         viaVT1632DumpRegisters(pScrn, pVIAVT1632->VT1632I2CDev);
         viaVT1632InitRegisters(pScrn, pVIAVT1632->VT1632I2CDev);
         viaVT1632DumpRegisters(pScrn, pVIAVT1632->VT1632I2CDev);
 
-        viaExtTMDSSetDisplaySource(pScrn, iga->index ? 0x01 : 0x00);
+        viaDisplaySource(pScrn, pVIAVT1632->diPort, iga->index);
     }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -443,7 +452,7 @@ Bool
 viaVT1632Probe(ScrnInfoPtr pScrn, I2CBusPtr pI2CBus)
 {
     I2CDevPtr pI2CDevice = NULL;
-    I2CSlaveAddr i2cAddr = 0x10;
+    I2CSlaveAddr i2cAddr = VIA_VT1632_I2C_ADDR;
     CARD8 i2cData;
     CARD16 vendorID, deviceID;
     Bool status = FALSE;
@@ -475,11 +484,10 @@ viaVT1632Probe(ScrnInfoPtr pScrn, I2CBusPtr pI2CBus)
     pI2CDevice->SlaveAddr = i2cAddr;
     pI2CDevice->pI2CBus = pI2CBus;
     if (!xf86I2CDevInit(pI2CDevice)) {
-        xf86DestroyI2CDevRec(pI2CDevice, TRUE);
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                             "Failed to initialize a device on "
                             "I2C bus.\n"));
-        goto exit;
+        goto free_dev_rec;
     }
 
     xf86I2CReadByte(pI2CDevice, 0, &i2cData);
@@ -497,16 +505,16 @@ viaVT1632Probe(ScrnInfoPtr pScrn, I2CBusPtr pI2CBus)
                         "Device ID: 0x%04x\n", deviceID));
 
     if ((vendorID != 0x1106) || (deviceID != 0x3192)) {
-        xf86DestroyI2CDevRec(pI2CDevice, TRUE);
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
                             "VT1632 external TMDS transmitter not "
                             "detected.\n"));
-        goto exit;
+        goto free_dev_rec;
     }
 
     status = TRUE;
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
                 "VT1632 external TMDS transmitter detected.\n");
+free_dev_rec:
     xf86DestroyI2CDevRec(pI2CDevice, TRUE);
 exit:
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -523,7 +531,7 @@ viaVT1632Init(ScrnInfoPtr pScrn)
     viaVT1632RecPtr pVIAVT1632;
     I2CBusPtr pI2CBus;
     I2CDevPtr pI2CDevice;
-    I2CSlaveAddr i2cAddr = 0x10;
+    I2CSlaveAddr i2cAddr = VIA_VT1632_I2C_ADDR;
     CARD8 i2cData;
     char outputNameBuffer[32];
 
@@ -539,12 +547,6 @@ viaVT1632Init(ScrnInfoPtr pScrn)
     } else if (pVIADisplay->extTMDSI2CBus & VIA_I2C_BUS3) {
         pI2CBus = pVIADisplay->pI2CBus3;
     } else {
-        goto exit;
-    }
-
-    if (!xf86I2CProbeAddress(pI2CBus, i2cAddr)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-                    "I2C device not found.\n");
         goto exit;
     }
 

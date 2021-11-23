@@ -382,6 +382,21 @@ viaIGA1HWReset(ScrnInfoPtr pScrn, Bool resetState)
 }
 
 /*
+ * Resets IGA2 hardware.
+ */
+static inline void
+viaIGA2HWReset(ScrnInfoPtr pScrn, Bool resetState)
+{
+    /* 3X5.6A[6] - Second Display Channel Reset
+     *             0: Reset
+     *             1: Normal Operation */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x6A, resetState ? 0x00 : BIT(6), BIT(6));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "IGA2 HW Reset: %s\n",
+                        resetState ? "On" : "Off"));
+}
+
+/*
  * Sets IGA1 palette LUT resolution. (6-bit or 8-bit)
  */
 static inline void
@@ -446,6 +461,21 @@ viaIGA2SetDisplayOutput(ScrnInfoPtr pScrn, Bool outputState)
 }
 
 /*
+ * Controls IGA2 display channel state.
+ */
+static inline void
+viaIGA2DisplayChannel(ScrnInfoPtr pScrn, Bool channelState)
+{
+    /* 3X5.6A[7] - Second Display Channel Enable */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x6A,
+                channelState ? BIT(7) : 0x00, BIT(7));
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "IGA2 Display Channel: %s\n",
+                        channelState ? "On" : "Off"));
+}
+
+/*
  * Sets DIP0 (Digital Interface Port 0) I/O pad state.
  * CLE266 chipset only.
  */
@@ -471,6 +501,44 @@ viaDIP0SetIOPadState(ScrnInfoPtr pScrn, CARD8 ioPadState)
 }
 
 /*
+ * Output enable of DIP0 (Digital Interface Port 0) interface.
+ * CLE266 chipset only.
+ */
+static inline void
+viaDIP0SetOutputEnable(ScrnInfoPtr pScrn, Bool outputEnable)
+{
+    /*
+     * 3X5.6C[0] - DIP0 Output Enable
+     *             0: Output Disable
+     *             1: Output Enable
+     */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x6C,
+                outputEnable ? 0x01 : 0x00, BIT(0));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP0 Output: %s\n",
+                        outputEnable ? "Enable" : "Disable"));
+}
+
+/*
+ * Sets the clock source of DIP0 (Digital Interface Port 0)
+ * interface. CLE266 chipset only.
+ */
+static inline void
+viaDIP0SetClockSource(ScrnInfoPtr pScrn, Bool clockSource)
+{
+    /*
+     * 3X5.6C[5] - DIP0 Clock Source
+     *             0: External
+     *             1: Internal
+     */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x6C,
+                clockSource ? BIT(5) : 0x00, BIT(5));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP0 Clock Source: %s\n",
+                        clockSource ? "Internal" : "External"));
+}
+
+/*
  * Sets the display source of DIP0 (Digital Interface Port 0)
  * interface. CLE266 chipset only.
  */
@@ -484,6 +552,88 @@ viaDIP0SetDisplaySource(ScrnInfoPtr pScrn, CARD8 displaySource)
                 displaySource << 7, BIT(7));
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "DIP0 Display Source: IGA%d\n",
+                        (displaySource & 0x01) + 1));
+}
+
+/*
+ * Sets DIP1 (Digital Interface Port 1) I/O pad state.
+ * CLE266 chipset only.
+ */
+static inline void
+viaDIP1SetIOPadState(ScrnInfoPtr pScrn, CARD8 ioPadState)
+{
+    /*
+     * 3C5.1E[5:4] - DIP1 I/O Pad Control
+     *               00: I/O pad off
+     *               11: I/O pad on
+     */
+    ViaSeqMask(VGAHWPTR(pScrn), 0x1E,
+                ioPadState << 4, BIT(5) | BIT(4));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP1 I/O Pad State: %s\n",
+                        ((ioPadState & (BIT(1) | BIT(0))) == 0x03) ?
+                            "On" :
+                        ((ioPadState & (BIT(1) | BIT(0))) == 0x02) ?
+                            "Unknown" :
+                        ((ioPadState & (BIT(1) | BIT(0))) == 0x01) ?
+                            "Unknown" :
+                            "Off"));
+}
+
+/*
+ * Output enable of DIP1 (Digital Interface Port 1) interface.
+ * CLE266 chipset only.
+ */
+static inline void
+viaDIP1SetOutputEnable(ScrnInfoPtr pScrn, Bool outputEnable)
+{
+    /*
+     * 3X5.93[0] - DIP1 Output Enable
+     *             0: Output Disable
+     *             1: Output Enable
+     */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x93,
+                outputEnable ? 0x01 : 0x00, BIT(0));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP1 Output: %s\n",
+                        outputEnable ? "Enable" : "Disable"));
+}
+
+/*
+ * Sets the clock source of DIP1 (Digital Interface Port 1)
+ * interface. CLE266 chipset only.
+ */
+static inline void
+viaDIP1SetClockSource(ScrnInfoPtr pScrn, Bool clockSource)
+{
+    /*
+     * 3X5.93[5] - DIP1 Clock Source
+     *             0: External
+     *             1: Internal
+     */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x93,
+                clockSource ? BIT(5) : 0x00, BIT(5));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP1 Clock Source: %s\n",
+                        clockSource ? "Internal" : "External"));
+}
+
+/*
+ * Sets the display source of DIP1 (Digital Interface Port 1)
+ * interface. CLE266 chipset only.
+ */
+static inline void
+viaDIP1SetDisplaySource(ScrnInfoPtr pScrn, uint8_t displaySource)
+{
+    /*
+     * 3X5.93[7] - DIP1 Data Source Selection
+     *             0: IGA1
+     *             1: IGA2
+     */
+    ViaCrtcMask(VGAHWPTR(pScrn), 0x93,
+                displaySource << 7, BIT(7));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                        "DIP1 Display Source: IGA%d\n",
                         (displaySource & 0x01) + 1));
 }
 
@@ -1556,12 +1706,13 @@ viaSetDisplayScaling(ScrnInfoPtr pScrn, Bool scalingState)
 
 
 /* via_ums.c */
-void viaUnmapMMIO(ScrnInfoPtr pScrn);
 void viaDisableVQ(ScrnInfoPtr pScrn);
-Bool umsAccelInit(ScreenPtr pScreen);
-Bool umsCreate(ScrnInfoPtr pScrn);
-Bool umsPreInit(ScrnInfoPtr pScrn);
-Bool umsCrtcInit(ScrnInfoPtr pScrn);
+Bool viaUMSAccelInit(ScrnInfoPtr pScrn);
+Bool viaUMSMapIOResources(ScrnInfoPtr pScrn);
+void viaUMSDestroy(ScrnInfoPtr pScrn);
+Bool viaUMSScreenInit(ScrnInfoPtr pScrn);
+Bool viaUMSPreInit(ScrnInfoPtr pScrn);
+void viaUMSPreInitExit(ScrnInfoPtr pScrn);
 
 /* via_i2c.c */
 void ViaI2CInit(ScrnInfoPtr pScrn);
@@ -1569,15 +1720,18 @@ Bool xf86I2CMaskByte(I2CDevPtr d, I2CByte subaddr,
                         I2CByte value, I2CByte mask);
 
 /* via_output.c */
+void viaDisplaySource(ScrnInfoPtr pScrn, uint32_t diPort, int index);
+void viaIOPadState(ScrnInfoPtr pScrn, uint32_t diPort, uint8_t ioPadState);
+void viaOutputEnable(ScrnInfoPtr pScrn, uint32_t diPort, Bool outputEnable);
+void viaClockSource(ScrnInfoPtr pScrn, uint32_t diPort, Bool clockSource);
 void viaInitDisplay(ScrnInfoPtr pScrn);
 CARD32 ViaGetMemoryBandwidth(ScrnInfoPtr pScrn);
+void viaSetUseExternalClock(ScrnInfoPtr pScrn);
 CARD32 ViaModeDotClockTranslate(ScrnInfoPtr pScrn, DisplayModePtr mode);
 void ViaSetPrimaryDotclock(ScrnInfoPtr pScrn, CARD32 clock);
 void ViaSetSecondaryDotclock(ScrnInfoPtr pScrn, CARD32 clock);
-void ViaSetUseExternalClock(vgaHWPtr hwp);
 
 /* via_display.c */
-void viaIGA2DisplayChannel(ScrnInfoPtr pScrn, Bool channelState);
 void ViaGammaDisable(ScrnInfoPtr pScrn);
 void viaIGAInitCommon(ScrnInfoPtr pScrn);
 void viaIGA1Init(ScrnInfoPtr pScrn);
@@ -1591,6 +1745,7 @@ void viaIGA2SetDisplayRegister(ScrnInfoPtr pScrn, DisplayModePtr mode);
 void viaIGA2Save(ScrnInfoPtr pScrn);
 void viaIGA2Restore(ScrnInfoPtr pScrn);
 void ViaShadowCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+extern const xf86CrtcFuncsRec via_crtc_funcs;
 
 /* via_analog.c */
 void viaAnalogProbe(ScrnInfoPtr pScrn);
@@ -1601,10 +1756,6 @@ void viaFPProbe(ScrnInfoPtr pScrn);
 void viaFPInit(ScrnInfoPtr pScrn);
 
 /* via_tmds.c */
-void viaExtTMDSIOPadState(ScrnInfoPtr pScrn, uint32_t diPort,
-                            Bool ioPadOn);
-void viaExtTMDSSetDisplaySource(ScrnInfoPtr pScrn, CARD8 displaySource);
-void viaExtTMDSEnableIOPads(ScrnInfoPtr pScrn, CARD8 ioPadState);
 void viaExtTMDSSetClockDriveStrength(ScrnInfoPtr pScrn,
                                         CARD8 clockDriveStrength);
 void viaExtTMDSSetDataDriveStrength(ScrnInfoPtr pScrn,

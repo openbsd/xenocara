@@ -34,65 +34,6 @@
 #include "xf86.h"
 #include "via_driver.h" /* for HAVE_DEBUG */
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-#define PIOOFFSET hwp->PIOOffset
-#else
-#define PIOOFFSET 0
-#endif
-
-CARD8
-ViaVgahwIn(vgaHWPtr hwp, int address)
-{
-    if (hwp->MMIOBase)
-        return MMIO_IN8(hwp->MMIOBase, hwp->MMIOOffset + address);
-    else
-        return inb(PIOOFFSET + address);
-}
-
-static void
-ViaVgahwOut(vgaHWPtr hwp, int address, CARD8 value)
-{
-    if (hwp->MMIOBase)
-        MMIO_OUT8(hwp->MMIOBase, hwp->MMIOOffset + address, value);
-    else
-        outb(PIOOFFSET + address, value);
-}
-
-/*
- * An indexed read.
- */
-static CARD8
-ViaVgahwRead(vgaHWPtr hwp, int indexaddress, CARD8 index, int valueaddress)
-{
-    ViaVgahwOut(hwp, indexaddress, index);
-    return ViaVgahwIn(hwp, valueaddress);
-}
-
-/*
- * An indexed write.
- */
-void
-ViaVgahwWrite(vgaHWPtr hwp, int indexaddress, CARD8 index,
-              int valueaddress, CARD8 value)
-{
-    ViaVgahwOut(hwp, indexaddress, index);
-    ViaVgahwOut(hwp, valueaddress, value);
-}
-
-
-void
-ViaVgahwMask(vgaHWPtr hwp, int indexaddress, CARD8 index,
-             int valueaddress, CARD8 value, CARD8 mask)
-{
-    CARD8 tmp;
-
-    tmp = ViaVgahwRead(hwp, indexaddress, index, valueaddress);
-    tmp &= ~mask;
-    tmp |= (value & mask);
-
-    ViaVgahwWrite(hwp, indexaddress, index, valueaddress, tmp);
-}
-
 void
 ViaCrtcMask(vgaHWPtr hwp, CARD8 index, CARD8 value, CARD8 mask)
 {

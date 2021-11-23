@@ -459,15 +459,15 @@ enum
 typedef struct
 {
     vidCopyFunc mFunc;
-    char *mName, **cpuFlag;
+    const char *mName, **cpuFlag;
 } McFuncData;
 
-static char *libc_cpuflags[] = { " ", 0 };
-static char *kernel_cpuflags[] = { " ", 0 };
-static char *sse_cpuflags[] = { " sse ", 0 };
-static char *mmx_cpuflags[] = { " mmx ", 0 };
-static char *now_cpuflags[] = { " 3dnow ", 0 };
-static char *mmx2_cpuflags[] = { " mmxext ", " sse ", 0 };
+static const char *libc_cpuflags[] = { " ", 0 };
+static const char *kernel_cpuflags[] = { " ", 0 };
+static const char *sse_cpuflags[] = { " sse ", 0 };
+static const char *mmx_cpuflags[] = { " mmx ", 0 };
+static const char *now_cpuflags[] = { " 3dnow ", 0 };
+static const char *mmx2_cpuflags[] = { " mmxext ", " sse ", 0 };
 
 static McFuncData mcFunctions[totNum] = {
 {libc_YUV42X, "libc", libc_cpuflags},
@@ -480,7 +480,7 @@ static McFuncData mcFunctions[totNum] = {
 
 
 static int
-flagValid(const char *cpuinfo, char *flag)
+flagValid(const char *cpuinfo, const char *flag)
 {
     const char *flagLoc, *nextProc;
     int located = 0;
@@ -502,7 +502,7 @@ flagValid(const char *cpuinfo, char *flag)
 
 
 static int
-cpuValid(const char *cpuinfo, char **flags)
+cpuValid(const char *cpuinfo, const char **flags)
 {
     for (; *flags != 0; flags++) {
         if (flagValid(cpuinfo, *flags))
@@ -515,7 +515,7 @@ cpuValid(const char *cpuinfo, char **flags)
  * Benchmark the video copy routines and choose the fastest.
  */
 vidCopyFunc
-viaVidCopyInit(char *copyType, ScreenPtr pScreen)
+viaVidCopyInit(const char *copyType, ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
@@ -566,7 +566,7 @@ viaVidCopyInit(char *copyType, ScreenPtr pScreen)
      * Allocate an area of offscreen FB memory, (buf1), a simulated video
      * player buffer (buf2) and a pool of uninitialized "video" data (buf3).
      */
-    tmpFbBuffer = drm_bo_alloc(pScrn, alignSize, 32, TTM_PL_FLAG_VRAM);
+    tmpFbBuffer = drm_bo_alloc(pScrn, alignSize, 32, TTM_PL_VRAM);
     if (!tmpFbBuffer)
         return libc_YUV42X;
     if (NULL == (buf2 = (unsigned char *)malloc(testSize))) {
@@ -638,7 +638,7 @@ viaVidCopyInit(char *copyType, ScreenPtr pScreen)
 #else
 
 vidCopyFunc
-viaVidCopyInit(char *copyType, ScreenPtr pScreen)
+viaVidCopyInit(const char *copyType, ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 

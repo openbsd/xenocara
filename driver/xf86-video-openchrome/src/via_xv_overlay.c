@@ -30,7 +30,7 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#ifdef HAVE_DRI
+#ifdef OPENCHROMEDRI
 #include "xf86drm.h"
 #include "via_drmclient.h"
 #include "via_drm.h"
@@ -39,6 +39,8 @@
 
 #include <math.h>
 #include <unistd.h>
+
+#include "via_eng_regs.h"
 
 /*
  * Warning: this file contains revision checks which are CLE266-specific.
@@ -123,10 +125,10 @@ viaWaitHQVFlip(VIAPtr pVia)
 static void
 viaWaitHQVFlipClear(VIAPtr pVia, unsigned long dwData)
 {
+    unsigned count = 50000;
     CARD32 volatile *pdwState =
             (CARD32 volatile *)(pVia->MapBase + HQV_CONTROL);
     *pdwState = dwData;
-    unsigned count = 50000;
 
     while (--count && (*pdwState & HQV_FLIP_STATUS)) {
         VIASETREG(HQV_CONTROL, *pdwState | HQV_FLIP_STATUS);
@@ -1146,7 +1148,7 @@ AddHQVSurface(ScrnInfoPtr pScrn, unsigned int numbuf, CARD32 fourcc)
     pitch = pVia->swov.SWDevice.dwPitch;
     fbsize = pitch * height * (isplanar ? 2 : 1);
 
-    pVia->swov.HQVMem = drm_bo_alloc(pScrn, fbsize * numbuf, 1, TTM_PL_FLAG_VRAM);
+    pVia->swov.HQVMem = drm_bo_alloc(pScrn, fbsize * numbuf, 1, TTM_PL_VRAM);
     if (!pVia->swov.HQVMem)
         return BadAlloc;
     addr = pVia->swov.HQVMem->offset;
@@ -1199,7 +1201,7 @@ CreateSurface(ScrnInfoPtr pScrn, CARD32 FourCC, CARD16 Width,
     }
 
     if (doalloc) {
-        pVia->swov.SWfbMem = drm_bo_alloc(pScrn, fbsize * 2, 1, TTM_PL_FLAG_VRAM);
+        pVia->swov.SWfbMem = drm_bo_alloc(pScrn, fbsize * 2, 1, TTM_PL_VRAM);
         if (!pVia->swov.SWfbMem)
             return BadAlloc;
         addr = pVia->swov.SWfbMem->offset;
@@ -1210,7 +1212,8 @@ CreateSurface(ScrnInfoPtr pScrn, CARD32 FourCC, CARD16 Width,
         pVia->swov.SWDevice.dwSWPhysicalAddr[0] = addr;
         pVia->swov.SWDevice.dwSWPhysicalAddr[1] = addr + fbsize;
         pVia->swov.SWDevice.lpSWOverlaySurface[0] = buf;
-        pVia->swov.SWDevice.lpSWOverlaySurface[1] = buf + fbsize;
+        pVia->swov.SWDevice.lpSWOverlaySurface[1] =
+                                        (unsigned char*)buf + fbsize;
 
         if (isplanar) {
             pVia->swov.SWDevice.dwSWCrPhysicalAddr[0] =

@@ -68,7 +68,7 @@ static DisplayModeRec VT1621Modes[] = {
 };
 
 struct VT1621TableRec {
-    char *  name;
+    const char* name;
     CARD16  Width;
     CARD16  Height;
     int     Standard;
@@ -187,7 +187,7 @@ static DisplayModeRec VT1622Modes[] = {
 };
 
 struct VT162XTableRec {
-    char *  name;
+    const char* name;
     CARD16  Width;
     CARD16  Height;
     int     Standard;

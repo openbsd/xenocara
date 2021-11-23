@@ -25,6 +25,8 @@
 #ifndef _VIA_VT1632_H_
 #define _VIA_VT1632_H_ 1
 
+#define VIA_VT1632_I2C_ADDR 0x10
+
 #define VIA_VT1632_VEN  0x20
 #define VIA_VT1632_HEN  0x10
 #define VIA_VT1632_DSEL 0x08

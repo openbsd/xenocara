@@ -46,7 +46,8 @@ viaTVSetDisplaySource(ScrnInfoPtr pScrn, CARD8 displaySource)
 
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
-    CARD8 sr12, sr13, sr5a;
+    CARD8 sr12, sr13;
+    CARD8 sr5a = 0x00;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaTVSetDisplaySource.\n"));
@@ -180,7 +181,8 @@ viaTVEnableIOPads(ScrnInfoPtr pScrn, CARD8 ioPadState)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
-    CARD8 sr12, sr13, sr5a;
+    CARD8 sr12, sr13;
+    CARD8 sr5a = 0x00;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaTVEnableIOPads.\n"));
@@ -314,7 +316,8 @@ viaTVSetClockDriveStrength(ScrnInfoPtr pScrn, CARD8 clockDriveStrength)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
-    CARD8 sr12, sr13, sr5a;
+    CARD8 sr12, sr13;
+    CARD8 sr5a = 0x00;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaTVSetClockDriveStrength.\n"));
@@ -418,7 +421,8 @@ viaTVSetDataDriveStrength(ScrnInfoPtr pScrn, CARD8 dataDriveStrength)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
-    CARD8 sr12, sr13, sr5a;
+    CARD8 sr12, sr13;
+    CARD8 sr5a = 0x00;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered viaTVSetDataDriveStrength.\n"));
@@ -868,11 +872,6 @@ via_tv_init(ScrnInfoPtr pScrn)
     pVIADisplay->tv = output;
     /* Save now */
     pVIADisplay->TVSave(pScrn);
-
-#ifdef HAVE_DEBUG
-    if (VIAPTR(pScrn)->PrintTVRegs)
-        pVIADisplay->TVPrintRegs(pScrn);
-#endif
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting via_tv_init.\n"));

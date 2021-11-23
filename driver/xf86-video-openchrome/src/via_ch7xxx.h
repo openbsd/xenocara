@@ -116,7 +116,7 @@ typedef struct _VIATVMASKTABLE {
 } VIABIOSTVMASKTableRec, *VIABIOSTVMASKTablePtr;
 
 struct CH7xxxTableRec {
-    char*   name;
+    const char* name;
     CARD16  Width;
     CARD16  Height;
     int     Standard;

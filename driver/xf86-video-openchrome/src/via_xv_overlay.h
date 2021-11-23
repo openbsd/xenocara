@@ -34,7 +34,6 @@
 # define DBG_DD(x)
 #endif
 
-#include "via_priv.h"
 #include "via_xvpriv.h"
 
 /* Definition for VideoStatus */

@@ -2,9 +2,6 @@
 
 #include "xorg-server.h"
 
-/* Use Damage extension */
-#undef DAMAGE
-
 /* Enable debug support */
 #undef HAVE_DEBUG
 
@@ -19,9 +16,6 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* libpciacces available */
-#undef HAVE_PCIACCESS
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
@@ -63,6 +57,12 @@
    */
 #undef LT_OBJDIR
 
+/* Enable DRI driver support */
+#undef OPENCHROMEDRI
+
+/* Enable developmental DRI driver support */
+#undef OPENCHROMEDRI_DEVEL
+
 /* Name of package */
 #undef PACKAGE
 
@@ -84,6 +84,15 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Major version of this package */
+#undef PACKAGE_VERSION_MAJOR
+
+/* Minor version of this package */
+#undef PACKAGE_VERSION_MINOR
+
+/* Patch version of this package */
+#undef PACKAGE_VERSION_PATCHLEVEL
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -93,29 +102,14 @@
 /* Version number of package */
 #undef VERSION
 
-/* Major version */
-#undef VIA_MAJOR_VERSION
-
-/* Minor version */
-#undef VIA_MINOR_VERSION
-
-/* Patch version */
-#undef VIA_PATCHLEVEL
-
-/* Enable DRI driver support */
-#undef XF86DRI
+/* Enable libpciaccess */
+#undef XSERVER_LIBPCIACCESS
 
 /* Enable XVideo debug support */
 #undef XV_DEBUG
 
 /* Compatibility define for older Xen */
-#undef X_HAVE_XAAGETROP
-
-/* Compatibility define for older Xen */
 #undef X_NEED_I2CSTART
-
-/* Compatibility define for older Xen */
-#undef X_USE_LINEARFB
 
 /* Compatibility define for older Xen */
 #undef X_USE_REGION_NULL

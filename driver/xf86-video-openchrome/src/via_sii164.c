@@ -154,12 +154,8 @@ viaSiI164RestoreRegisters(ScrnInfoPtr pScrn, I2CDevPtr pDev,
 static int
 viaSiI164CheckModeValidity(xf86OutputPtr output, DisplayModePtr pMode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
     viaSiI164RecPtr pSiI164Rec = output->driver_private;
     int status = MODE_OK;
-
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
-                        "Entered viaSiI164CheckModeValidity.\n"));
 
     if (pMode->Clock < pSiI164Rec->DotclockMin) {
         status = MODE_CLOCK_LOW;
@@ -171,8 +167,6 @@ viaSiI164CheckModeValidity(xf86OutputPtr output, DisplayModePtr pMode)
     }
 
 exit:
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                        "Exiting viaSiI164CheckModeValidity.\n"));
     return status;
 }
 
@@ -193,13 +187,13 @@ via_sii164_dpms(xf86OutputPtr output, int mode)
     switch (mode) {
     case DPMSModeOn:
         viaSiI164Power(pScrn, pSiI164Rec->pSiI164I2CDev, TRUE);
-        viaExtTMDSIOPadState(pScrn, pSiI164Rec->diPort, TRUE);
+        viaIOPadState(pScrn, pSiI164Rec->diPort, 0x03);
         break;
     case DPMSModeStandby:
     case DPMSModeSuspend:
     case DPMSModeOff:
         viaSiI164Power(pScrn, pSiI164Rec->pSiI164I2CDev, FALSE);
-        viaExtTMDSIOPadState(pScrn, pSiI164Rec->diPort, FALSE);
+        viaIOPadState(pScrn, pSiI164Rec->diPort, 0x00);
         break;
     default:
         break;
@@ -257,13 +251,18 @@ static void
 via_sii164_prepare(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaSiI164RecPtr pSiI164Rec = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered %s.\n", __func__));
 
     viaSiI164Power(pScrn, pSiI164Rec->pSiI164I2CDev, FALSE);
-    viaExtTMDSIOPadState(pScrn, pSiI164Rec->diPort, FALSE);
+    viaIOPadState(pScrn, pSiI164Rec->diPort, 0x00);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pSiI164Rec->diPort, FALSE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting %s.\n", __func__));
@@ -273,13 +272,18 @@ static void
 via_sii164_commit(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaSiI164RecPtr pSiI164Rec = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered %s.\n", __func__));
 
     viaSiI164Power(pScrn, pSiI164Rec->pSiI164I2CDev, TRUE);
-    viaExtTMDSIOPadState(pScrn, pSiI164Rec->diPort, TRUE);
+    viaIOPadState(pScrn, pSiI164Rec->diPort, 0x03);
+
+    if (pVia->Chipset == VIA_CLE266) {
+        viaOutputEnable(pScrn, pSiI164Rec->diPort, TRUE);
+    }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Exiting %s.\n", __func__));
@@ -291,6 +295,7 @@ via_sii164_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 {
     ScrnInfoPtr pScrn = output->scrn;
     drmmode_crtc_private_ptr iga = output->crtc->driver_private;
+    VIAPtr pVia = VIAPTR(pScrn);
     viaSiI164RecPtr pSiI164Rec = output->driver_private;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -299,13 +304,17 @@ via_sii164_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     if (output->crtc) {
         viaExtTMDSSetClockDriveStrength(pScrn, 0x03);
         viaExtTMDSSetDataDriveStrength(pScrn, 0x03);
-        viaExtTMDSEnableIOPads(pScrn, 0x03);
+        viaIOPadState(pScrn, pSiI164Rec->diPort, 0x03);
+
+        if (pVia->Chipset == VIA_CLE266) {
+            viaClockSource(pScrn, pSiI164Rec->diPort, TRUE);
+        }
 
         viaSiI164DumpRegisters(pScrn, pSiI164Rec->pSiI164I2CDev);
         viaSiI164InitRegisters(pScrn, pSiI164Rec->pSiI164I2CDev);
         viaSiI164DumpRegisters(pScrn, pSiI164Rec->pSiI164I2CDev);
 
-        viaExtTMDSSetDisplaySource(pScrn, iga->index ? 0x01 : 0x00);
+        viaDisplaySource(pScrn, pSiI164Rec->diPort, iga->index);
     }
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
