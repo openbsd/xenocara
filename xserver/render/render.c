@@ -2309,6 +2309,8 @@ SProcRenderCompositeGlyphs(ClientPtr client)
 
         i = elt->len;
         if (i == 0xff) {
+            if (buffer + 4 >= end)
+                return BadLength;
             swapl((int *) buffer);
             buffer += 4;
         }
@@ -2320,12 +2322,16 @@ SProcRenderCompositeGlyphs(ClientPtr client)
                 break;
             case 2:
                 while (i--) {
+                    if (buffer + 2 >= end)
+                        return BadLength;
                     swaps((short *) buffer);
                     buffer += 2;
                 }
                 break;
             case 4:
                 while (i--) {
+                    if (buffer + 4 >= end)
+                        return BadLength;
                     swapl((int *) buffer);
                     buffer += 4;
                 }
