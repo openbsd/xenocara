@@ -1350,9 +1350,9 @@ SProcScreenSaverSuspend(ClientPtr client)
 {
     REQUEST(xScreenSaverSuspendReq);
 
+    REQUEST_SIZE_MATCH(xScreenSaverSuspendReq);
     swaps(&stuff->length);
     swapl(&stuff->suspend);
-    REQUEST_SIZE_MATCH(xScreenSaverSuspendReq);
     return ProcScreenSaverSuspend(client);
 }
 
