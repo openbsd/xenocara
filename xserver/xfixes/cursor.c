@@ -1027,7 +1027,7 @@ SProcXFixesCreatePointerBarrier(ClientPtr client)
 
     swaps(&stuff->length);
     swaps(&stuff->num_devices);
-    REQUEST_FIXED_SIZE(xXFixesCreatePointerBarrierReq, pad_to_int32(stuff->num_devices));
+    REQUEST_FIXED_SIZE(xXFixesCreatePointerBarrierReq, pad_to_int32(stuff->num_devices * 2));
 
     swapl(&stuff->barrier);
     swapl(&stuff->window);
