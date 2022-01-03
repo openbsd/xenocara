@@ -79,9 +79,6 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
-./usr/X11R6/include/xorg/BT.h
-./usr/X11R6/include/xorg/IBM.h
-./usr/X11R6/include/xorg/TI.h
 ./usr/X11R6/include/xorg/XIstubs.h
 ./usr/X11R6/include/xorg/Xprintf.h
 ./usr/X11R6/include/xorg/callback.h
@@ -185,7 +182,6 @@
 ./usr/X11R6/include/xorg/shadow.h
 ./usr/X11R6/include/xorg/shadowfb.h
 ./usr/X11R6/include/xorg/shmint.h
-./usr/X11R6/include/xorg/site.h
 ./usr/X11R6/include/xorg/syncsdk.h
 ./usr/X11R6/include/xorg/validate.h
 ./usr/X11R6/include/xorg/vbe.h
@@ -199,6 +195,7 @@
 ./usr/X11R6/include/xorg/xaarop.h
 ./usr/X11R6/include/xorg/xace.h
 ./usr/X11R6/include/xorg/xacestr.h
+./usr/X11R6/include/xorg/xf86-input-inputtest-protocol.h
 ./usr/X11R6/include/xorg/xf86-mouse-properties.h
 ./usr/X11R6/include/xorg/xf86.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
@@ -215,7 +212,6 @@
 ./usr/X11R6/include/xorg/xf86PciInfo.h
 ./usr/X11R6/include/xorg/xf86Priv.h
 ./usr/X11R6/include/xorg/xf86Privstr.h
-./usr/X11R6/include/xorg/xf86RamDac.h
 ./usr/X11R6/include/xorg/xf86RandR12.h
 ./usr/X11R6/include/xorg/xf86VGAarbiter.h
 ./usr/X11R6/include/xorg/xf86Xinput.h
@@ -272,7 +268,7 @@
 ./usr/X11R6/lib/libdrm_radeon.so.4.0
 ./usr/X11R6/lib/libdrm_radeon_p.a
 ./usr/X11R6/lib/libepoxy.a
-./usr/X11R6/lib/libepoxy.so.4.0
+./usr/X11R6/lib/libepoxy.so.4.1
 ./usr/X11R6/lib/libgbm.a
 ./usr/X11R6/lib/libgbm.so.0.5
 ./usr/X11R6/lib/libgbm_p.a
