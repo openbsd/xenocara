@@ -1,9 +1,9 @@
-# $OpenBSD: config.site,v 1.8 2017/07/25 19:59:14 robert Exp $
+# $OpenBSD: config.site,v 1.9 2022/01/24 17:56:33 robert Exp $
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu=yes}
 ac_cv_c_const=${ac_cv_c_const=yes}
 ac_cv_cxx_compiler_gnu=${ac_cv_cxx_compiler_gnu=yes}
 ac_cv_f77_compiler_gnu=${ac_cv_f77_compiler_gnu=yes}
-ac_cv_path_CPP_PATH=${ac_cv_path_CPP_PATH=/usr/libexec/tradcpp}
+ac_cv_path_CPP_PATH=${ac_cv_path_CPP_PATH="/usr/libexec/cpp -traditional"}
 ac_cv_path_GZIP=${ac_cv_path_GZIP=/usr/bin/gzip}
 ac_cv_path_MKTEMP_COMMAND=${ac_cv_path_MKTEMP_COMMAND=/usr/bin/mktemp}
 ac_cv_path_PERL=${ac_cv_path_PERL=/usr/bin/perl}
