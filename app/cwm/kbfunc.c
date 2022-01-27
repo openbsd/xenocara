@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.170 2020/03/20 18:50:08 tim Exp $
+ * $OpenBSD: kbfunc.c,v 1.171 2022/01/27 18:45:10 op Exp $
  */
 
 #include <sys/types.h>
@@ -476,6 +476,14 @@ void
 kbfunc_group_only(void *ctx, struct cargs *cargs)
 {
 	group_only(ctx, cargs->flag);
+}
+
+void
+kbfunc_group_last(void *ctx, struct cargs *cargs)
+{
+	struct screen_ctx	*sc = ctx;
+
+	group_only(ctx, sc->group_last->num);
 }
 
 void

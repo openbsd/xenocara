@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.97 2020/03/24 14:47:29 okan Exp $
+ * $OpenBSD: screen.c,v 1.98 2022/01/27 18:45:10 op Exp $
  */
 
 #include <sys/types.h>
@@ -60,6 +60,7 @@ screen_init(int which)
 	xu_ewmh_net_supported_wm_check(sc);
 
 	conf_group(sc);
+	sc->group_last = sc->group_active;
 	screen_update_geometry(sc);
 
 	xu_ewmh_net_desktop_names(sc);

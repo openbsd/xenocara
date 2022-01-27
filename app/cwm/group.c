@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.137 2020/02/27 14:56:39 okan Exp $
+ * $OpenBSD: group.c,v 1.138 2022/01/27 18:45:10 op Exp $
  */
 
 #include <sys/types.h>
@@ -214,6 +214,9 @@ void
 group_only(struct screen_ctx *sc, int idx)
 {
 	struct group_ctx	*gc;
+
+	if (sc->group_last != sc->group_active)
+		sc->group_last = sc->group_active;
 
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
 		if (gc->num == idx)
