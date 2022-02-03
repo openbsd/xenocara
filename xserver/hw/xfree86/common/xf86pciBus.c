@@ -1185,7 +1185,6 @@ xf86VideoPtrToDriverList(struct pci_device *dev, XF86MatchedDrivers *md)
 		case 0x2772:
 		case 0x27a2:
 		case 0x27ae:
-		case 0x2972:
 		case 0x29b2:
 		case 0x29c2:
 		case 0x29d2:
