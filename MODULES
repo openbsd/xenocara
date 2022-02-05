@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.469 2021/11/11 10:38:30 matthieu Exp $
+# $OpenBSD: MODULES,v 1.470 2022/02/05 17:50:28 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -23,7 +23,7 @@ app/smproxy		1.0.6
 app/twm			1.0.11
 app/viewres		1.0.6
 app/x11perf		1.6.1
-app/xauth		1.1
+app/xauth		1.1.1		needs-update
 app/xbacklight		1.2.3
 app/xbiff		1.0.4
 app/xcalc		1.1.0
@@ -150,7 +150,7 @@ font/xfree86-type1		1.0.4
 
 lib/libICE			1.0.10
 lib/libSM			1.2.3
-lib/libX11			1.7.2
+lib/libX11			1.7.3.1		needs-update
 lib/libXScrnSaver		1.2.3
 lib/libXau			1.0.9
 lib/libXaw			1.0.14
@@ -199,4 +199,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.3
 util/makedepend			1.0.6
 
-xserver				21.1.1
+xserver				21.1.3		needs-update
