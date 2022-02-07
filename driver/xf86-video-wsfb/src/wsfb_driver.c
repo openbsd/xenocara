@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.39 2021/03/13 14:00:04 kettenis Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.40 2022/02/07 18:38:44 kettenis Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -1034,7 +1034,8 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 	/* On StaticGray visuals, fake a 256 entries colormap. */
 	if (ncolors == 0)
 		ncolors = 256;
-	if(!xf86HandleColormaps(pScreen, ncolors, 8, WsfbLoadPalette,
+	if (pScrn->depth != 30 &&
+	   !xf86HandleColormaps(pScreen, ncolors, 8, WsfbLoadPalette,
 				NULL, flags))
 		return FALSE;
 
