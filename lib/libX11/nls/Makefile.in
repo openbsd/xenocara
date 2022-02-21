@@ -221,7 +221,7 @@ PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
-SED = LC_CTYPE=C sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
@@ -315,6 +315,7 @@ SUFFIXES = .pre
 EXTRA_DIST = locale.alias.pre compose.dir.pre locale.dir.pre \
 	compose-check.pl $(nobase_x11locale_DATA:%=%.pre)
 x11locale_DATA = locale.alias locale.dir compose.dir
+C_SED = LC_CTYPE=C $(SED)
 WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
 CPP_FILES_FLAGS = $(WCHAR32_FLAGS)
 
@@ -324,14 +325,14 @@ CPP_FILES_FLAGS = $(WCHAR32_FLAGS)
 # Allow XCOMM to be preceded by whitespace and provide a means of generating
 # output lines with trailing backslashes.
 # Allow XHASH to always be substituted, even in cases where XCOMM isn't.
-CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^[	 ]*XCOMM$$/s/XCOMM/\#/' \
-                       -e '/^[	 ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
-                       -e '/^[	 ]*XHASH/s/XHASH/\#/' \
-                       -e 's,X11_LOCALEDATADIR,$(X11_LOCALEDATADIR),g' \
-                       -e '/\@\@$$/s/\@\@$$/\\/' \
-                       -e '/^$$/d'
+CPP_SED_MAGIC = $(C_SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
+                         -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
+                         -e '/^[	 ]*XCOMM$$/s/XCOMM/\#/' \
+                         -e '/^[	 ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
+                         -e '/^[	 ]*XHASH/s/XHASH/\#/' \
+                         -e 's,X11_LOCALEDATADIR,$(X11_LOCALEDATADIR),g' \
+                         -e '/\@\@$$/s/\@\@$$/\\/' \
+                         -e '/^$$/d'
 
 @HAVE_PERL_TRUE@LOG_COMPILER = $(PERL)
 @HAVE_PERL_TRUE@TESTS = compose-check.pl
@@ -714,19 +715,19 @@ uninstall-am: uninstall-nobase_dist_x11localeDATA \
 
 locale.alias: locale.alias.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.alias.pre | $(CPP_SED_MAGIC) > locale.alias.l1
-	$(SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
+	$(C_SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
         < locale.alias.l1 > locale.alias.l2
 	cat locale.alias.l2 locale.alias.l1 > locale.alias
 
 compose.dir: compose.dir.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/compose.dir.pre | $(CPP_SED_MAGIC) > compose.dir.l1
-	$(SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
+	$(C_SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
         < compose.dir.l1 > compose.dir.l2
 	cat compose.dir.l2 compose.dir.l1 > compose.dir
 
 locale.dir: locale.dir.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.dir.pre | $(CPP_SED_MAGIC) > locale.dir.l1
-	$(SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
+	$(C_SED) -e '/^[^#][^	 ]*:/s/://' -e '/^[^#].*[	 ].*:/d' \
         < locale.dir.l1 > locale.dir.l2
 	cat locale.dir.l2 locale.dir.l1 > locale.dir
 
