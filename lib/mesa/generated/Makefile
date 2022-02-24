@@ -13,9 +13,7 @@ all:
 	mkdir -p src/compiler/nir
 	mkdir -p src/compiler/spirv
 	mkdir -p src/gallium/auxiliary
-	mkdir -p src/gallium/drivers/iris
 	mkdir -p src/gallium/drivers/r600
-	mkdir -p src/gallium/drivers/radeonsi
 	mkdir -p src/intel/compiler
 	mkdir -p src/intel/genxml
 	mkdir -p src/intel/isl
