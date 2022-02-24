@@ -641,6 +641,7 @@ static void r600_set_sampler_views(struct pipe_context *pipe,
 				   enum pipe_shader_type shader,
 				   unsigned start, unsigned count,
 				   unsigned unbind_num_trailing_slots,
+				   bool take_ownership,
 				   struct pipe_sampler_view **views)
 {
 	struct r600_context *rctx = (struct r600_context *) pipe;
@@ -674,6 +675,10 @@ static void r600_set_sampler_views(struct pipe_context *pipe,
 
 	for (i = 0; i < count; i++) {
 		if (rviews[i] == dst->views.views[i]) {
+			if (take_ownership) {
+				struct pipe_sampler_view *view = views[i];
+				pipe_sampler_view_reference(&view, NULL);
+			}
 			continue;
 		}
 
@@ -704,7 +709,12 @@ static void r600_set_sampler_views(struct pipe_context *pipe,
 				dirty_sampler_states_mask |= 1 << i;
 			}
 
-			pipe_sampler_view_reference((struct pipe_sampler_view **)&dst->views.views[i], views[i]);
+			if (take_ownership) {
+				pipe_sampler_view_reference((struct pipe_sampler_view **)&dst->views.views[i], NULL);
+				dst->views.views[i] = (struct r600_pipe_sampler_view*)views[i];
+			} else {
+				pipe_sampler_view_reference((struct pipe_sampler_view **)&dst->views.views[i], views[i]);
+			}
 			new_mask |= 1 << i;
 			r600_context_add_resource_size(pipe, views[i]->texture);
 		} else {
@@ -2074,12 +2084,13 @@ static inline void r600_emit_rasterizer_prim_state(struct r600_context *rctx)
 }
 
 static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info *info,
+                          unsigned drawid_offset,
                           const struct pipe_draw_indirect_info *indirect,
-                          const struct pipe_draw_start_count *draws,
+                          const struct pipe_draw_start_count_bias *draws,
                           unsigned num_draws)
 {
 	if (num_draws > 1) {
-		util_draw_multi(ctx, info, indirect, draws, num_draws);
+		util_draw_multi(ctx, info, drawid_offset, indirect, draws, num_draws);
 		return;
 	}
 
@@ -2223,14 +2234,17 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 			index_offset -= start_offset;
 			has_user_indices = false;
 		}
-		index_bias = info->index_bias;
+		index_bias = draws->index_bias;
 	} else {
 		index_bias = indirect ? 0 : draws[0].start;
 	}
 
 	/* Set the index offset and primitive restart. */
-	if (rctx->vgt_state.vgt_multi_prim_ib_reset_en != info->primitive_restart ||
-	    rctx->vgt_state.vgt_multi_prim_ib_reset_indx != info->restart_index ||
+        bool restart_index_changed = info->primitive_restart &&
+            rctx->vgt_state.vgt_multi_prim_ib_reset_indx != info->restart_index;
+
+	if (rctx->vgt_state.vgt_multi_prim_ib_reset_en != info->primitive_restart  ||
+            restart_index_changed ||
 	    rctx->vgt_state.vgt_indx_offset != index_bias ||
 	    (rctx->vgt_state.last_draw_was_indirect && !indirect)) {
 		rctx->vgt_state.vgt_multi_prim_ib_reset_en = info->primitive_restart;

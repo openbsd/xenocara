@@ -773,6 +773,65 @@ GFX125_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->BlendConstantColorAlpha);
 }
 
+#define GFX125_CPS_STATE_length                8
+struct GFX125_CPS_STATE {
+   float                                MinCPSizeX;
+   bool                                 StatisticsEnable;
+   uint32_t                             CoarsePixelShadingMode;
+#define CPS_MODE_NONE                            0
+#define CPS_MODE_CONSTANT                        1
+#define CPS_MODE_RADIAL                          2
+   uint32_t                             ScaleAxis;
+#define SCALE_AXIS_XAxis                         0
+#define SCALE_AXIS_YAxis                         1
+   float                                MinCPSizeY;
+   float                                MaxCPSizeX;
+   float                                MaxCPSizeY;
+   float                                YFocal;
+   float                                XFocal;
+   float                                My;
+   float                                Mx;
+   float                                Rmin;
+   float                                Aspect;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_CPS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_CPS_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_sfixed(values->MinCPSizeX, 0, 10, 7) |
+      __gen_uint(values->StatisticsEnable, 11, 11) |
+      __gen_uint(values->CoarsePixelShadingMode, 12, 13) |
+      __gen_uint(values->ScaleAxis, 14, 14) |
+      __gen_sfixed(values->MinCPSizeY, 16, 26, 7);
+
+   dw[1] =
+      __gen_sfixed(values->MaxCPSizeX, 0, 10, 7) |
+      __gen_sfixed(values->MaxCPSizeY, 16, 26, 7);
+
+   dw[2] =
+      __gen_sfixed(values->YFocal, 0, 15, 0);
+
+   dw[3] =
+      __gen_sfixed(values->XFocal, 0, 15, 0);
+
+   dw[4] =
+      __gen_float(values->My);
+
+   dw[5] =
+      __gen_float(values->Mx);
+
+   dw[6] =
+      __gen_float(values->Rmin);
+
+   dw[7] =
+      __gen_float(values->Aspect);
+}
+
 #define GFX125_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR_length      1
 struct GFX125_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR {
    uint32_t                             TargetFunctionID;
@@ -1314,6 +1373,15 @@ struct GFX125_INTERFACE_DESCRIPTOR_DATA {
    uint32_t                             Threadgroupdispatchsize;
 #define TGsize8                                  0
 #define TGsize16                                 1
+   uint32_t                             NumberOfBarriers;
+#define BARRIER_SIZE_NONE                        0
+#define BARRIER_SIZE_B1                          1
+#define BARRIER_SIZE_B2                          2
+#define BARRIER_SIZE_B4                          3
+#define BARRIER_SIZE_B8                          4
+#define BARRIER_SIZE_B16                         5
+#define BARRIER_SIZE_B24                         6
+#define BARRIER_SIZE_B32                         7
    uint32_t                             BTDMode;
 };
 
@@ -1352,6 +1420,7 @@ GFX125_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->BarrierEnable, 21, 21) |
       __gen_uint(values->RoundingMode, 22, 23) |
       __gen_uint(values->Threadgroupdispatchsize, 27, 27) |
+      __gen_uint(values->NumberOfBarriers, 28, 30) |
       __gen_uint(values->BTDMode, 31, 31);
 
    dw[6] = 0;
@@ -1610,16 +1679,18 @@ struct GFX125_RENDER_SURFACE_STATE {
    uint32_t                             VerticalLineStride;
    uint32_t                             TileMode;
 #define LINEAR                                   0
+#define TILE64                                   1
 #define XMAJOR                                   2
-#define YMAJOR                                   3
+#define TILE4                                    3
    uint32_t                             SurfaceHorizontalAlignment;
-#define HALIGN4                                  1
-#define HALIGN8                                  2
-#define HALIGN16                                 3
+#define HALIGN_16                                0
+#define HALIGN_32                                1
+#define HALIGN_64                                2
+#define HALIGN_128                               3
    uint32_t                             SurfaceVerticalAlignment;
-#define VALIGN4                                  1
-#define VALIGN8                                  2
-#define VALIGN16                                 3
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
    uint32_t                             SurfaceFormat;
    bool                                 SurfaceArray;
    uint32_t                             SurfaceType;
@@ -1629,6 +1700,7 @@ struct GFX125_RENDER_SURFACE_STATE {
 #define SURFTYPE_CUBE                            3
 #define SURFTYPE_BUFFER                          4
 #define SURFTYPE_STRBUF                          5
+#define SURFTYPE_SCRATCH                         6
 #define SURFTYPE_NULL                            7
    uint32_t                             SurfaceQPitch;
    bool                                 SampleTapDiscardDisable;
@@ -1706,6 +1778,7 @@ struct GFX125_RENDER_SURFACE_STATE {
    bool                                 ClearValueAddressEnable;
    uint32_t                             CachingExpandedFormats;
    __gen_address_type                   AuxiliarySurfaceBaseAddress;
+   uint32_t                             RenderCompressionFormat;
    __gen_address_type                   ClearValueAddress;
 };
 
@@ -1731,7 +1804,7 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TileMode, 12, 13) |
       __gen_uint(values->SurfaceHorizontalAlignment, 14, 15) |
       __gen_uint(values->SurfaceVerticalAlignment, 16, 17) |
-      __gen_uint(values->SurfaceFormat, 18, 27) |
+      __gen_uint(values->SurfaceFormat, 18, 26) |
       __gen_uint(values->SurfaceArray, 28, 28) |
       __gen_uint(values->SurfaceType, 29, 31);
 
@@ -1808,10 +1881,12 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[10] = v10_address;
    dw[11] = (v10_address >> 32) | (v10 >> 32);
 
+   const uint64_t v12 =
+      __gen_uint(values->RenderCompressionFormat, 0, 4);
    const uint64_t v12_address =
-      __gen_address(data, &dw[12], values->ClearValueAddress, 0, 6, 47);
+      __gen_address(data, &dw[12], values->ClearValueAddress, v12, 6, 47);
    dw[12] = v12_address;
-   dw[13] = v12_address >> 32;
+   dw[13] = (v12_address >> 32) | (v12 >> 32);
 
    dw[14] = 0;
 
@@ -1957,19 +2032,20 @@ struct GFX125_SAMPLER_STATE {
    uint32_t                             TextureBorderColorMode;
 #define DX10OGL                                  0
 #define DX9                                      1
+   bool                                 CPSLODCompensationEnable;
    bool                                 SamplerDisable;
    uint32_t                             CubeSurfaceControlMode;
 #define PROGRAMMED                               0
 #define OVERRIDE                                 1
    uint32_t                             ShadowFunction;
-#define PREFILTEROPALWAYS                        0
-#define PREFILTEROPNEVER                         1
-#define PREFILTEROPLESS                          2
-#define PREFILTEROPEQUAL                         3
-#define PREFILTEROPLEQUAL                        4
-#define PREFILTEROPGREATER                       5
-#define PREFILTEROPNOTEQUAL                      6
-#define PREFILTEROPGEQUAL                        7
+#define PREFILTEROP_ALWAYS                       0
+#define PREFILTEROP_NEVER                        1
+#define PREFILTEROP_LESS                         2
+#define PREFILTEROP_EQUAL                        3
+#define PREFILTEROP_LEQUAL                       4
+#define PREFILTEROP_GREATER                      5
+#define PREFILTEROP_NOTEQUAL                     6
+#define PREFILTEROP_GEQUAL                       7
    uint32_t                             ChromaKeyMode;
 #define KEYFILTER_KILL_ON_ANY_MATCH              0
 #define KEYFILTER_REPLACE_BLACK                  1
@@ -2035,6 +2111,7 @@ GFX125_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CoarseLODQualityMode, 22, 26) |
       __gen_uint(values->LODPreClampMode, 27, 28) |
       __gen_uint(values->TextureBorderColorMode, 29, 29) |
+      __gen_uint(values->CPSLODCompensationEnable, 30, 30) |
       __gen_uint(values->SamplerDisable, 31, 31);
 
    dw[1] =
@@ -3234,6 +3311,7 @@ struct GFX125_VERTEX_BUFFER_STATE {
    bool                                 NullVertexBuffer;
    bool                                 AddressModifyEnable;
    uint32_t                             MOCS;
+   bool                                 L3BypassDisable;
    uint32_t                             VertexBufferIndex;
    __gen_address_type                   BufferStartingAddress;
    uint32_t                             BufferSize;
@@ -3251,6 +3329,7 @@ GFX125_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->NullVertexBuffer, 13, 13) |
       __gen_uint(values->AddressModifyEnable, 14, 14) |
       __gen_uint(values->MOCS, 16, 22) |
+      __gen_uint(values->L3BypassDisable, 25, 25) |
       __gen_uint(values->VertexBufferIndex, 26, 31);
 
    const uint64_t v1_address =
@@ -4396,6 +4475,42 @@ GFX125_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
    GFX125_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
+#define GFX125_3DSTATE_CPS_POINTERS_length      2
+#define GFX125_3DSTATE_CPS_POINTERS_length_bias      2
+#define GFX125_3DSTATE_CPS_POINTERS_header      \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =     34,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_CPS_POINTERS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             CoarsePixelShadingStateArrayPointer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_CPS_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_CPS_POINTERS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 15) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_offset(values->CoarsePixelShadingStateArrayPointer, 5, 31);
+}
+
 #define GFX125_3DSTATE_DEPTH_BOUNDS_length      4
 #define GFX125_3DSTATE_DEPTH_BOUNDS_length_bias      2
 #define GFX125_3DSTATE_DEPTH_BOUNDS_header      \
@@ -4480,11 +4595,12 @@ struct GFX125_3DSTATE_DEPTH_BUFFER {
    uint32_t                             MOCS;
    uint32_t                             MinimumArrayElement;
    uint32_t                             Depth;
+   uint32_t                             RenderCompressionFormat;
+   bool                                 CompressionMode;
    uint32_t                             MipTailStartLOD;
-   uint32_t                             TiledResourceMode;
-#define NONE                                     0
-#define TILEYF                                   1
-#define TILEYS                                   2
+   uint32_t                             TiledMode;
+#define TILE64                                   1
+#define TILE4                                    3
    uint32_t                             SurfaceQPitch;
    uint32_t                             LOD;
    uint32_t                             RenderTargetViewExtent;
@@ -4530,8 +4646,10 @@ GFX125_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Depth, 20, 30);
 
    dw[6] =
+      __gen_uint(values->RenderCompressionFormat, 0, 4) |
+      __gen_uint(values->CompressionMode, 5, 5) |
       __gen_uint(values->MipTailStartLOD, 26, 29) |
-      __gen_uint(values->TiledResourceMode, 30, 31);
+      __gen_uint(values->TiledMode, 30, 31);
 
    dw[7] =
       __gen_uint(values->SurfaceQPitch, 0, 14) |
@@ -4626,8 +4744,7 @@ struct GFX125_3DSTATE_DS {
 #define _912Samplers                             3
 #define _1316Samplers                            4
    bool                                 VectorMaskEnable;
-   uint32_t                             PerThreadScratchSpace;
-   __gen_address_type                   ScratchSpaceBasePointer;
+   uint32_t                             ScratchSpaceBuffer;
    uint32_t                             PatchURBEntryReadOffset;
    uint32_t                             PatchURBEntryReadLength;
    uint32_t                             DispatchGRFStartRegisterForURBData;
@@ -4675,12 +4792,10 @@ GFX125_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SamplerCount, 27, 29) |
       __gen_uint(values->VectorMaskEnable, 30, 30);
 
-   const uint64_t v4 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   const uint64_t v4_address =
-      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
-   dw[4] = v4_address;
-   dw[5] = (v4_address >> 32) | (v4 >> 32);
+   dw[4] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+
+   dw[5] = 0;
 
    dw[6] =
       __gen_uint(values->PatchURBEntryReadOffset, 4, 9) |
@@ -5057,8 +5172,7 @@ struct GFX125_3DSTATE_GS {
 #define _1316Samplers                            4
    bool                                 VectorMaskEnable;
    bool                                 SingleProgramFlow;
-   uint32_t                             PerThreadScratchSpace;
-   __gen_address_type                   ScratchSpaceBasePointer;
+   uint32_t                             ScratchSpaceBuffer;
    uint32_t                             DispatchGRFStartRegisterForURBData;
    uint32_t                             VertexURBEntryReadOffset;
    bool                                 IncludeVertexHandles;
@@ -5124,12 +5238,10 @@ GFX125_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VectorMaskEnable, 30, 30) |
       __gen_uint(values->SingleProgramFlow, 31, 31);
 
-   const uint64_t v4 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   const uint64_t v4_address =
-      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
-   dw[4] = v4_address;
-   dw[5] = (v4_address >> 32) | (v4 >> 32);
+   dw[4] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+
+   dw[5] = 0;
 
    dw[6] =
       __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
@@ -5183,10 +5295,9 @@ struct GFX125_3DSTATE_HIER_DEPTH_BUFFER {
    uint32_t                             CommandType;
    uint32_t                             SurfacePitch;
    bool                                 HierarchicalDepthBufferWriteThruEnable;
-   uint32_t                             TiledResourceMode;
-#define NONE                                     0
-#define TILEYF                                   1
-#define TILEYS                                   2
+   uint32_t                             TiledMode;
+#define TILE64                                   1
+#define TILE4                                    3
    uint32_t                             MOCS;
    uint32_t                             HierarchicalDepthBufferMOCS;
    __gen_address_type                   SurfaceBaseAddress;
@@ -5210,7 +5321,7 @@ GFX125_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *d
    dw[1] =
       __gen_uint(values->SurfacePitch, 0, 16) |
       __gen_uint(values->HierarchicalDepthBufferWriteThruEnable, 20, 20) |
-      __gen_uint(values->TiledResourceMode, 22, 23) |
+      __gen_uint(values->TiledMode, 22, 23) |
       __gen_uint(values->MOCS, 25, 31) |
       __gen_uint(values->HierarchicalDepthBufferMOCS, 25, 31);
 
@@ -5257,8 +5368,7 @@ struct GFX125_3DSTATE_HS {
    bool                                 StatisticsEnable;
    bool                                 Enable;
    uint64_t                             KernelStartPointer;
-   uint32_t                             PerThreadScratchSpace;
-   __gen_address_type                   ScratchSpaceBasePointer;
+   uint32_t                             ScratchSpaceBuffer;
    bool                                 IncludePrimitiveID;
    uint32_t                             PatchCountThreshold;
    uint32_t                             VertexURBEntryReadOffset;
@@ -5307,12 +5417,10 @@ GFX125_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[3] = v3;
    dw[4] = v3 >> 32;
 
-   const uint64_t v5 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   const uint64_t v5_address =
-      __gen_address(data, &dw[5], values->ScratchSpaceBasePointer, v5, 10, 63);
-   dw[5] = v5_address;
-   dw[6] = (v5_address >> 32) | (v5 >> 32);
+   dw[5] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+
+   dw[6] = 0;
 
    dw[7] =
       __gen_uint(values->IncludePrimitiveID, 0, 0) |
@@ -5350,6 +5458,7 @@ struct GFX125_3DSTATE_INDEX_BUFFER {
 #define INDEX_BYTE                               0
 #define INDEX_WORD                               1
 #define INDEX_DWORD                              2
+   bool                                 L3BypassDisable;
    __gen_address_type                   BufferStartingAddress;
    uint32_t                             BufferSize;
 };
@@ -5370,7 +5479,8 @@ GFX125_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[1] =
       __gen_uint(values->MOCS, 0, 6) |
-      __gen_uint(values->IndexFormat, 8, 9);
+      __gen_uint(values->IndexFormat, 8, 9) |
+      __gen_uint(values->L3BypassDisable, 11, 11);
 
    const uint64_t v2_address =
       __gen_address(data, &dw[2], values->BufferStartingAddress, 0, 0, 63);
@@ -5797,8 +5907,7 @@ struct GFX125_3DSTATE_PS {
 #define _1316Samplers                            4
    bool                                 VectorMaskEnable;
    bool                                 SingleProgramFlow;
-   uint32_t                             PerThreadScratchSpace;
-   __gen_address_type                   ScratchSpaceBasePointer;
+   uint32_t                             ScratchSpaceBuffer;
    bool                                 _8PixelDispatchEnable;
    bool                                 _16PixelDispatchEnable;
    bool                                 _32PixelDispatchEnable;
@@ -5853,12 +5962,10 @@ GFX125_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VectorMaskEnable, 30, 30) |
       __gen_uint(values->SingleProgramFlow, 31, 31);
 
-   const uint64_t v4 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   const uint64_t v4_address =
-      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
-   dw[4] = v4_address;
-   dw[5] = (v4_address >> 32) | (v4 >> 32);
+   dw[4] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+
+   dw[5] = 0;
 
    dw[6] =
       __gen_uint(values->_8PixelDispatchEnable, 0, 0) |
@@ -5960,6 +6067,7 @@ struct GFX125_3DSTATE_PS_EXTRA {
 #define ICMS_DEPTH_COVERAGE                      3
    bool                                 PixelShaderHasUAV;
    bool                                 PixelShaderPullsBary;
+   bool                                 PixelShaderIsPerCoarsePixel;
    bool                                 PixelShaderComputesStencil;
    bool                                 PixelShaderIsPerSample;
    bool                                 PixelShaderDisablesAlphaToCoverage;
@@ -5969,6 +6077,7 @@ struct GFX125_3DSTATE_PS_EXTRA {
    bool                                 PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresSourceDepthandorWPlaneCoefficients;
+   bool                                 PixelShaderRequiresRequestedCoarsePixelShadingSize;
    bool                                 PixelShaderUsesSourceW;
    bool                                 PixelShaderUsesSourceDepth;
    bool                                 ForceComputedDepth;
@@ -6001,6 +6110,7 @@ GFX125_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InputCoverageMaskState, 0, 1) |
       __gen_uint(values->PixelShaderHasUAV, 2, 2) |
       __gen_uint(values->PixelShaderPullsBary, 3, 3) |
+      __gen_uint(values->PixelShaderIsPerCoarsePixel, 4, 4) |
       __gen_uint(values->PixelShaderComputesStencil, 5, 5) |
       __gen_uint(values->PixelShaderIsPerSample, 6, 6) |
       __gen_uint(values->PixelShaderDisablesAlphaToCoverage, 7, 7) |
@@ -6010,6 +6120,7 @@ GFX125_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients, 19, 19) |
       __gen_uint(values->PixelShaderRequiresPerspectiveBaryPlaneCoefficients, 20, 20) |
       __gen_uint(values->PixelShaderRequiresSourceDepthandorWPlaneCoefficients, 21, 21) |
+      __gen_uint(values->PixelShaderRequiresRequestedCoarsePixelShadingSize, 22, 22) |
       __gen_uint(values->PixelShaderUsesSourceW, 23, 23) |
       __gen_uint(values->PixelShaderUsesSourceDepth, 24, 24) |
       __gen_uint(values->ForceComputedDepth, 25, 25) |
@@ -7832,11 +7943,12 @@ struct GFX125_3DSTATE_STENCIL_BUFFER {
    uint32_t                             MOCS;
    uint32_t                             MinimumArrayElement;
    uint32_t                             Depth;
+   uint32_t                             RenderCompressionFormat;
+   bool                                 CompressionMode;
    uint32_t                             MipTailStartLOD;
    uint32_t                             TiledMode;
-#define NONE                                     0
-#define TILEYF                                   1
-#define TILEYS                                   2
+#define TILE64                                   1
+#define TILE4                                    3
    uint32_t                             SurfaceQPitch;
    uint32_t                             SurfLOD;
    uint32_t                             RenderTargetViewExtent;
@@ -7880,6 +7992,8 @@ GFX125_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data
       __gen_uint(values->Depth, 20, 30);
 
    dw[6] =
+      __gen_uint(values->RenderCompressionFormat, 0, 4) |
+      __gen_uint(values->CompressionMode, 5, 5) |
       __gen_uint(values->MipTailStartLOD, 26, 29) |
       __gen_uint(values->TiledMode, 30, 31);
 
@@ -8784,8 +8898,7 @@ struct GFX125_3DSTATE_VS {
 #define _912Samplers                             3
 #define _1316Samplers                            4
    bool                                 VectorMaskEnable;
-   uint32_t                             PerThreadScratchSpace;
-   __gen_address_type                   ScratchSpaceBasePointer;
+   uint32_t                             ScratchSpaceBuffer;
    uint32_t                             VertexURBEntryReadOffset;
    uint32_t                             VertexURBEntryReadLength;
    uint32_t                             DispatchGRFStartRegisterForURBData;
@@ -8830,12 +8943,10 @@ GFX125_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SamplerCount, 27, 29) |
       __gen_uint(values->VectorMaskEnable, 30, 30);
 
-   const uint64_t v4 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
-   const uint64_t v4_address =
-      __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 63);
-   dw[4] = v4_address;
-   dw[5] = (v4_address >> 32) | (v4 >> 32);
+   dw[4] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+
+   dw[5] = 0;
 
    dw[6] =
       __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
@@ -9383,103 +9494,6 @@ GFX125_COMPUTE_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[38] =
       __gen_uint(values->InlineData[7], 0, 31);
-}
-
-#define GFX125_GPGPU_WALKER_length            15
-#define GFX125_GPGPU_WALKER_length_bias        2
-#define GFX125_GPGPU_WALKER_header              \
-   .DWordLength                         =     13,  \
-   .SubOpcode                           =      5,  \
-   .MediaCommandOpcode                  =      1,  \
-   .Pipeline                            =      2,  \
-   .CommandType                         =      3
-
-struct GFX125_GPGPU_WALKER {
-   uint32_t                             DWordLength;
-   bool                                 PredicateEnable;
-   bool                                 IndirectParameterEnable;
-   uint32_t                             SubOpcode;
-   uint32_t                             MediaCommandOpcode;
-   uint32_t                             Pipeline;
-   uint32_t                             CommandType;
-   uint32_t                             InterfaceDescriptorOffset;
-   uint32_t                             IndirectDataLength;
-   uint64_t                             IndirectDataStartAddress;
-   uint32_t                             ThreadWidthCounterMaximum;
-   uint32_t                             ThreadHeightCounterMaximum;
-   uint32_t                             ThreadDepthCounterMaximum;
-   uint32_t                             SIMDSize;
-#define SIMD8                                    0
-#define SIMD16                                   1
-#define SIMD32                                   2
-   uint32_t                             ThreadGroupIDStartingX;
-   uint32_t                             ThreadGroupIDXDimension;
-   uint32_t                             ThreadGroupIDStartingY;
-   uint32_t                             ThreadGroupIDYDimension;
-   uint32_t                             ThreadGroupIDStartingResumeZ;
-   uint32_t                             ThreadGroupIDZDimension;
-   uint32_t                             RightExecutionMask;
-   uint32_t                             BottomExecutionMask;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
-                         __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GFX125_GPGPU_WALKER * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->PredicateEnable, 8, 8) |
-      __gen_uint(values->IndirectParameterEnable, 10, 10) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
-
-   dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 5);
-
-   dw[2] =
-      __gen_uint(values->IndirectDataLength, 0, 16);
-
-   dw[3] =
-      __gen_offset(values->IndirectDataStartAddress, 6, 31);
-
-   dw[4] =
-      __gen_uint(values->ThreadWidthCounterMaximum, 0, 5) |
-      __gen_uint(values->ThreadHeightCounterMaximum, 8, 13) |
-      __gen_uint(values->ThreadDepthCounterMaximum, 16, 21) |
-      __gen_uint(values->SIMDSize, 30, 31);
-
-   dw[5] =
-      __gen_uint(values->ThreadGroupIDStartingX, 0, 31);
-
-   dw[6] = 0;
-
-   dw[7] =
-      __gen_uint(values->ThreadGroupIDXDimension, 0, 31);
-
-   dw[8] =
-      __gen_uint(values->ThreadGroupIDStartingY, 0, 31);
-
-   dw[9] = 0;
-
-   dw[10] =
-      __gen_uint(values->ThreadGroupIDYDimension, 0, 31);
-
-   dw[11] =
-      __gen_uint(values->ThreadGroupIDStartingResumeZ, 0, 31);
-
-   dw[12] =
-      __gen_uint(values->ThreadGroupIDZDimension, 0, 31);
-
-   dw[13] =
-      __gen_uint(values->RightExecutionMask, 0, 31);
-
-   dw[14] =
-      __gen_uint(values->BottomExecutionMask, 0, 31);
 }
 
 #define GFX125_MI_ARB_CHECK_length             1
@@ -10900,6 +10914,7 @@ GFX125_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
 struct GFX125_PIPE_CONTROL {
    uint32_t                             DWordLength;
    bool                                 HDCPipelineFlushEnable;
+   bool                                 L3ReadOnlyCacheInvalidationEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -10953,6 +10968,7 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
       __gen_uint(values->HDCPipelineFlushEnable, 9, 9) |
+      __gen_uint(values->L3ReadOnlyCacheInvalidationEnable, 10, 10) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -11335,6 +11351,25 @@ GFX125_CACHE_MODE_SS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InstructionLevel1CacheandInFlightQueueDisableMask, 17, 17) |
       __gen_uint(values->FloatBlendOptimizationEnableMask, 20, 20) |
       __gen_uint(values->PerSampleBlendOptDisableMask, 27, 27);
+}
+
+#define GFX125_CHICKEN_RASTER_1_num       0x6204
+#define GFX125_CHICKEN_RASTER_1_length         1
+struct GFX125_CHICKEN_RASTER_1 {
+   bool                                 AALineQualityFix;
+   bool                                 AALineQualityFixMask;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_CHICKEN_RASTER_1_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX125_CHICKEN_RASTER_1 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->AALineQualityFix, 5, 5) |
+      __gen_uint(values->AALineQualityFixMask, 21, 21);
 }
 
 #define GFX125_CL_INVOCATION_COUNT_num    0x2338
@@ -11801,19 +11836,34 @@ GFX125_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
 struct GFX125_ROW_INSTDONE {
    bool                                 BCDone;
    bool                                 PSDDone;
+   bool                                 TDPDone;
    bool                                 DAPRDone;
+   bool                                 CPSSDone;
+   bool                                 RTDONERENDER;
    bool                                 TDLDone;
+   bool                                 EU00doneSS1;
+   bool                                 EU01doneSS1;
+   bool                                 EU02doneSS1;
+   bool                                 EU03doneSS1;
+   bool                                 MA0doneSS1;
    bool                                 ICDone;
-   bool                                 MA0Done;
+   bool                                 BTDDONERENDER;
+   bool                                 RTDONECOMPUTE;
+   bool                                 MA0DoneSS0;
    bool                                 EU00DoneSS0;
    bool                                 EU01DoneSS0;
    bool                                 EU02DoneSS0;
    bool                                 EU03DoneSS0;
+   bool                                 BTDDONECOMPUTE;
    bool                                 EU10DoneSS0;
    bool                                 EU11DoneSS0;
    bool                                 EU12DoneSS0;
    bool                                 EU13DoneSS0;
-   bool                                 MA1DoneSS0;
+   bool                                 TSLDone;
+   bool                                 EU10DoneSS1;
+   bool                                 EU11DoneSS1;
+   bool                                 EU12DoneSS1;
+   bool                                 EU13DoneSS1;
 };
 
 static inline __attribute__((always_inline)) void
@@ -11826,19 +11876,34 @@ GFX125_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[0] =
       __gen_uint(values->BCDone, 0, 0) |
       __gen_uint(values->PSDDone, 1, 1) |
+      __gen_uint(values->TDPDone, 2, 2) |
       __gen_uint(values->DAPRDone, 3, 3) |
+      __gen_uint(values->CPSSDone, 4, 4) |
+      __gen_uint(values->RTDONERENDER, 5, 5) |
       __gen_uint(values->TDLDone, 6, 6) |
+      __gen_uint(values->EU00doneSS1, 7, 7) |
+      __gen_uint(values->EU01doneSS1, 8, 8) |
+      __gen_uint(values->EU02doneSS1, 9, 9) |
+      __gen_uint(values->EU03doneSS1, 10, 10) |
+      __gen_uint(values->MA0doneSS1, 11, 11) |
       __gen_uint(values->ICDone, 12, 12) |
-      __gen_uint(values->MA0Done, 15, 15) |
+      __gen_uint(values->BTDDONERENDER, 13, 13) |
+      __gen_uint(values->RTDONECOMPUTE, 14, 14) |
+      __gen_uint(values->MA0DoneSS0, 15, 15) |
       __gen_uint(values->EU00DoneSS0, 16, 16) |
       __gen_uint(values->EU01DoneSS0, 17, 17) |
       __gen_uint(values->EU02DoneSS0, 18, 18) |
       __gen_uint(values->EU03DoneSS0, 19, 19) |
+      __gen_uint(values->BTDDONECOMPUTE, 20, 20) |
       __gen_uint(values->EU10DoneSS0, 21, 21) |
       __gen_uint(values->EU11DoneSS0, 22, 22) |
       __gen_uint(values->EU12DoneSS0, 23, 23) |
       __gen_uint(values->EU13DoneSS0, 24, 24) |
-      __gen_uint(values->MA1DoneSS0, 26, 26);
+      __gen_uint(values->TSLDone, 26, 26) |
+      __gen_uint(values->EU10DoneSS1, 27, 27) |
+      __gen_uint(values->EU11DoneSS1, 28, 28) |
+      __gen_uint(values->EU12DoneSS1, 29, 29) |
+      __gen_uint(values->EU13DoneSS1, 30, 30);
 }
 
 #define GFX125_RPSTAT0_num                0xa01c
@@ -11863,26 +11928,36 @@ GFX125_RPSTAT0_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX125_SAMPLER_INSTDONE_num       0xe160
 #define GFX125_SAMPLER_INSTDONE_length         1
 struct GFX125_SAMPLER_INSTDONE {
-   bool                                 IMEDone;
-   bool                                 PL0Done;
-   bool                                 SO0Done;
-   bool                                 DG0Done;
-   bool                                 FT0Done;
-   bool                                 DM0Done;
-   bool                                 SCDone;
-   bool                                 FL0Done;
-   bool                                 QCDone;
+   bool                                 SIDone;
+   bool                                 SVSMADAPTERDone;
+   bool                                 SVSMARBDone;
    bool                                 SVSMDone;
-   bool                                 SI0Done;
-   bool                                 MT0Done;
-   bool                                 AVSDone;
-   bool                                 IEFDone;
-   bool                                 CREDone;
-   bool                                 SVSM_ARB_SIFM;
-   bool                                 SVSMARB2;
-   bool                                 SVSMARB1;
-   bool                                 SVSMAdapter;
+   bool                                 PLDone;
+   bool                                 DGDone;
+   bool                                 SSLADone;
+   bool                                 STARBDone;
+   bool                                 STDone;
+   bool                                 FTDone;
+   bool                                 MTDone;
+   bool                                 DMDone;
    bool                                 BDMDone;
+   bool                                 SCDone;
+   bool                                 FLDone;
+   bool                                 SODone;
+   bool                                 LSCL1BANK0Idle;
+   bool                                 LSCL1BANK1Idle;
+   bool                                 LSCL1BANK2Idle;
+   bool                                 LSCL1BANK3Idle;
+   bool                                 LSCSEQ0Idle;
+   bool                                 LSCSEQ1Idle;
+   bool                                 LSCSEQ2Idle;
+   bool                                 LSCSEQ3Idle;
+   bool                                 LSCSEQINTFIdle;
+   bool                                 LSCL3INTFIdle;
+   bool                                 VMEMSOARB0Done;
+   bool                                 VMEMSOARB1Done;
+   bool                                 VMEML3REQARB0Done;
+   bool                                 VMEML3REQARB1Done;
 };
 
 static inline __attribute__((always_inline)) void
@@ -11893,26 +11968,36 @@ GFX125_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->IMEDone, 0, 0) |
-      __gen_uint(values->PL0Done, 1, 1) |
-      __gen_uint(values->SO0Done, 2, 2) |
-      __gen_uint(values->DG0Done, 3, 3) |
-      __gen_uint(values->FT0Done, 4, 4) |
-      __gen_uint(values->DM0Done, 5, 5) |
-      __gen_uint(values->SCDone, 6, 6) |
-      __gen_uint(values->FL0Done, 7, 7) |
-      __gen_uint(values->QCDone, 8, 8) |
-      __gen_uint(values->SVSMDone, 9, 9) |
-      __gen_uint(values->SI0Done, 10, 10) |
-      __gen_uint(values->MT0Done, 11, 11) |
-      __gen_uint(values->AVSDone, 12, 12) |
-      __gen_uint(values->IEFDone, 13, 13) |
-      __gen_uint(values->CREDone, 14, 14) |
-      __gen_uint(values->SVSM_ARB_SIFM, 15, 15) |
-      __gen_uint(values->SVSMARB2, 16, 16) |
-      __gen_uint(values->SVSMARB1, 17, 17) |
-      __gen_uint(values->SVSMAdapter, 18, 18) |
-      __gen_uint(values->BDMDone, 19, 19);
+      __gen_uint(values->SIDone, 0, 0) |
+      __gen_uint(values->SVSMADAPTERDone, 1, 1) |
+      __gen_uint(values->SVSMARBDone, 2, 2) |
+      __gen_uint(values->SVSMDone, 3, 3) |
+      __gen_uint(values->PLDone, 4, 4) |
+      __gen_uint(values->DGDone, 5, 5) |
+      __gen_uint(values->SSLADone, 6, 6) |
+      __gen_uint(values->STARBDone, 7, 7) |
+      __gen_uint(values->STDone, 8, 8) |
+      __gen_uint(values->FTDone, 9, 9) |
+      __gen_uint(values->MTDone, 11, 11) |
+      __gen_uint(values->DMDone, 12, 12) |
+      __gen_uint(values->BDMDone, 13, 13) |
+      __gen_uint(values->SCDone, 14, 14) |
+      __gen_uint(values->FLDone, 15, 15) |
+      __gen_uint(values->SODone, 16, 16) |
+      __gen_uint(values->LSCL1BANK0Idle, 18, 18) |
+      __gen_uint(values->LSCL1BANK1Idle, 19, 19) |
+      __gen_uint(values->LSCL1BANK2Idle, 20, 20) |
+      __gen_uint(values->LSCL1BANK3Idle, 21, 21) |
+      __gen_uint(values->LSCSEQ0Idle, 22, 22) |
+      __gen_uint(values->LSCSEQ1Idle, 23, 23) |
+      __gen_uint(values->LSCSEQ2Idle, 24, 24) |
+      __gen_uint(values->LSCSEQ3Idle, 25, 25) |
+      __gen_uint(values->LSCSEQINTFIdle, 26, 26) |
+      __gen_uint(values->LSCL3INTFIdle, 27, 27) |
+      __gen_uint(values->VMEMSOARB0Done, 28, 28) |
+      __gen_uint(values->VMEMSOARB1Done, 29, 29) |
+      __gen_uint(values->VMEML3REQARB0Done, 30, 30) |
+      __gen_uint(values->VMEML3REQARB1Done, 31, 31);
 }
 
 #define GFX125_SAMPLER_MODE_num           0xe18c
@@ -11941,10 +12026,8 @@ struct GFX125_SC_INSTDONE {
    bool                                 WMFEDone;
    bool                                 WMBEDone;
    bool                                 HIZDone;
-   bool                                 STCDone;
-   bool                                 IZDone;
+   bool                                 IZFEDone;
    bool                                 SBEDone;
-   bool                                 RCZDone;
    bool                                 RCCDone;
    bool                                 RCPBEDone;
    bool                                 RCPFEDone;
@@ -11961,6 +12044,7 @@ struct GFX125_SC_INSTDONE {
    bool                                 GW3Done;
    bool                                 TDCDone;
    bool                                 SFBEDone;
+   bool                                 AMFSDone;
 };
 
 static inline __attribute__((always_inline)) void
@@ -11975,10 +12059,8 @@ GFX125_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->WMFEDone, 1, 1) |
       __gen_uint(values->WMBEDone, 2, 2) |
       __gen_uint(values->HIZDone, 3, 3) |
-      __gen_uint(values->STCDone, 4, 4) |
-      __gen_uint(values->IZDone, 5, 5) |
+      __gen_uint(values->IZFEDone, 5, 5) |
       __gen_uint(values->SBEDone, 6, 6) |
-      __gen_uint(values->RCZDone, 8, 8) |
       __gen_uint(values->RCCDone, 9, 9) |
       __gen_uint(values->RCPBEDone, 10, 10) |
       __gen_uint(values->RCPFEDone, 11, 11) |
@@ -11994,7 +12076,119 @@ GFX125_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->GW2Done, 22, 22) |
       __gen_uint(values->GW3Done, 23, 23) |
       __gen_uint(values->TDCDone, 24, 24) |
-      __gen_uint(values->SFBEDone, 25, 25);
+      __gen_uint(values->SFBEDone, 25, 25) |
+      __gen_uint(values->AMFSDone, 27, 27);
+}
+
+#define GFX125_SC_INSTDONE_EXTRA_num      0x7104
+#define GFX125_SC_INSTDONE_EXTRA_length        1
+struct GFX125_SC_INSTDONE_EXTRA {
+   bool                                 RCC1Done;
+   bool                                 RCPBE1Done;
+   bool                                 RCPFE1Done;
+   bool                                 DAPB1Done;
+   bool                                 DAPRBE1Done;
+   bool                                 DC4Done;
+   bool                                 DC5Done;
+   bool                                 DC6Done;
+   bool                                 DC7Done;
+   bool                                 GW4Done;
+   bool                                 GW5Done;
+   bool                                 GW6Done;
+   bool                                 GW7Done;
+   bool                                 TDC1Done;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SC_INSTDONE_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_SC_INSTDONE_EXTRA * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RCC1Done, 9, 9) |
+      __gen_uint(values->RCPBE1Done, 10, 10) |
+      __gen_uint(values->RCPFE1Done, 11, 11) |
+      __gen_uint(values->DAPB1Done, 12, 12) |
+      __gen_uint(values->DAPRBE1Done, 13, 13) |
+      __gen_uint(values->DC4Done, 16, 16) |
+      __gen_uint(values->DC5Done, 17, 17) |
+      __gen_uint(values->DC6Done, 18, 18) |
+      __gen_uint(values->DC7Done, 19, 19) |
+      __gen_uint(values->GW4Done, 20, 20) |
+      __gen_uint(values->GW5Done, 21, 21) |
+      __gen_uint(values->GW6Done, 22, 22) |
+      __gen_uint(values->GW7Done, 23, 23) |
+      __gen_uint(values->TDC1Done, 24, 24);
+}
+
+#define GFX125_SC_INSTDONE_EXTRA2_num     0x7108
+#define GFX125_SC_INSTDONE_EXTRA2_length       1
+struct GFX125_SC_INSTDONE_EXTRA2 {
+   bool                                 RCC2Done;
+   bool                                 RCPBE2Done;
+   bool                                 RCPFE2Done;
+   bool                                 DAPB2Done;
+   bool                                 DAPRBE2Done;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SC_INSTDONE_EXTRA2_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_SC_INSTDONE_EXTRA2 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RCC2Done, 9, 9) |
+      __gen_uint(values->RCPBE2Done, 10, 10) |
+      __gen_uint(values->RCPFE2Done, 11, 11) |
+      __gen_uint(values->DAPB2Done, 12, 12) |
+      __gen_uint(values->DAPRBE2Done, 13, 13);
+}
+
+#define GFX125_INSTDONE_GEOM_num          0x666c
+#define GFX125_INSTDONE_GEOM_length            1
+struct GFX125_INSTDONE_GEOM {
+   bool                                 VFLDone;
+   bool                                 VSDone;
+   bool                                 HSDone;
+   bool                                 TEDone;
+   bool                                 DSDone;
+   bool                                 GSDone;
+   bool                                 SOLDone;
+   bool                                 CLDone;
+   bool                                 SFDone;
+   bool                                 TDG1Done;
+   bool                                 URBMDone;
+   bool                                 SVGDone;
+   bool                                 TSG0Done;
+   bool                                 SDEDone;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_INSTDONE_GEOM_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_INSTDONE_GEOM * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->VFLDone, 1, 1) |
+      __gen_uint(values->VSDone, 2, 2) |
+      __gen_uint(values->HSDone, 3, 3) |
+      __gen_uint(values->TEDone, 4, 4) |
+      __gen_uint(values->DSDone, 5, 5) |
+      __gen_uint(values->GSDone, 6, 6) |
+      __gen_uint(values->SOLDone, 7, 7) |
+      __gen_uint(values->CLDone, 8, 8) |
+      __gen_uint(values->SFDone, 9, 9) |
+      __gen_uint(values->TDG1Done, 11, 11) |
+      __gen_uint(values->URBMDone, 13, 13) |
+      __gen_uint(values->SVGDone, 14, 14) |
+      __gen_uint(values->TSG0Done, 17, 17) |
+      __gen_uint(values->SDEDone, 22, 22);
 }
 
 #define GFX125_SLICE_COMMON_ECO_CHICKEN1_num 0x731c

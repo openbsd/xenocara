@@ -628,7 +628,7 @@ vl_mpeg12_begin_frame(struct pipe_video_codec *decoder,
    rect.height = tex->height0;
 
    buf->texels =
-      dec->context->transfer_map(dec->context, tex, 0,
+      dec->context->texture_map(dec->context, tex, 0,
                                  PIPE_MAP_WRITE |
                                  PIPE_MAP_DISCARD_RANGE,
                                  &rect, &buf->tex_transfer);
@@ -770,7 +770,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
    vl_vb_unmap(&buf->vertex_stream, dec->context);
 
    if (buf->tex_transfer)
-      dec->context->transfer_unmap(dec->context, buf->tex_transfer);
+      dec->context->texture_unmap(dec->context, buf->tex_transfer);
 
    vb[0] = dec->quads;
    vb[1] = dec->pos;
@@ -830,7 +830,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
             vl_idct_prepare_stage2(i ? &dec->idct_c : &dec->idct_y, &buf->idct[plane]);
          else {
             dec->context->set_sampler_views(dec->context,
-                                            PIPE_SHADER_FRAGMENT, 0, 1, 0,
+                                            PIPE_SHADER_FRAGMENT, 0, 1, 0, false,
                                             &mc_source_sv[plane]);
             dec->context->bind_sampler_states(dec->context,
                                               PIPE_SHADER_FRAGMENT,

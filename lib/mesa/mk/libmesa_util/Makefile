@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	mesa_util
 
@@ -24,8 +24,10 @@ SRCS=	anon_file.c \
 	memstream.c \
 	mesa-sha1.c \
 	os_file.c \
+	os_memory_fd.c \
 	os_misc.c \
 	os_socket.c \
+	u_trace.c \
 	os_time.c \
 	ralloc.c \
 	rand_xor.c \
@@ -40,6 +42,8 @@ SRCS=	anon_file.c \
 	string_buffer.c \
 	strtod.c \
 	u_atomic.c \
+	u_debug_describe.c \
+	u_debug_refcnt.c \
 	u_cpu_detect.c \
 	u_printf.cpp \
 	u_debug.c \
@@ -47,6 +51,8 @@ SRCS=	anon_file.c \
 	u_math.c \
 	u_mm.c \
 	u_process.c \
+	u_qsort.cpp \
+	u_hash_table.c \
 	u_queue.c \
 	u_vector.c \
 	vma.c
@@ -59,6 +65,7 @@ SRCS+=	format_srgb.c
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
+CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
@@ -72,5 +79,6 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/util
+.PATH: ${MESA_SRC}/src/util/perf
 .PATH: ${MESA_SRC}/src/util/sha1
 .PATH: ${MESA_SRC}/generated/src/util

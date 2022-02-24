@@ -301,6 +301,7 @@ swr_set_sampler_views(struct pipe_context *pipe,
                       unsigned start,
                       unsigned num,
                       unsigned unbind_num_trailing_slots,
+                      bool take_ownership,
                       struct pipe_sampler_view **views)
 {
    struct swr_context *ctx = swr_context(pipe);
@@ -314,8 +315,14 @@ swr_set_sampler_views(struct pipe_context *pipe,
    /* set the new sampler views */
    ctx->num_sampler_views[shader] = num;
    for (i = 0; i < num; i++) {
-      pipe_sampler_view_reference(&ctx->sampler_views[shader][start + i],
-                                  views[i]);
+      if (take_ownership) {
+         pipe_sampler_view_reference(&ctx->sampler_views[shader][start + i],
+                                     NULL);
+         ctx->sampler_views[shader][start + i] = views[i];
+      } else {
+         pipe_sampler_view_reference(&ctx->sampler_views[shader][start + i],
+                                     views[i]);
+      }
    }
    for (; i < num + unbind_num_trailing_slots; i++) {
       pipe_sampler_view_reference(&ctx->sampler_views[shader][start + i],
@@ -596,11 +603,11 @@ swr_create_vertex_elements_state(struct pipe_context *pipe,
          // XXX: we should do this keyed on the VS usage info
 
          const struct util_format_description *desc =
-            util_format_description(attribs[i].src_format);
+            util_format_description((enum pipe_format)attribs[i].src_format);
 
          velems->fsState.layout[i].AlignedByteOffset = attribs[i].src_offset;
          velems->fsState.layout[i].Format =
-            mesa_to_swr_format(attribs[i].src_format);
+            mesa_to_swr_format((enum pipe_format)attribs[i].src_format);
          velems->fsState.layout[i].StreamIndex =
             attribs[i].vertex_buffer_index;
          velems->fsState.layout[i].InstanceEnable =
@@ -627,7 +634,7 @@ swr_create_vertex_elements_state(struct pipe_context *pipe,
 
          /* Calculate the pitch of each stream */
          const SWR_FORMAT_INFO &swr_desc = GetFormatInfo(
-            mesa_to_swr_format(attribs[i].src_format));
+            mesa_to_swr_format((enum pipe_format)attribs[i].src_format));
          velems->stream_pitch[attribs[i].vertex_buffer_index] += swr_desc.Bpp;
 
          if (attribs[i].instance_divisor != 0) {
@@ -1113,7 +1120,8 @@ swr_user_vbuf_range(const struct pipe_draw_info *info,
                     uint32_t i,
                     uint32_t *totelems,
                     uint32_t *base,
-                    uint32_t *size)
+                    uint32_t *size,
+                    int index_bias)
 {
    /* FIXME: The size is too large - we don't access the full extra stride. */
    unsigned elems;
@@ -1125,8 +1133,8 @@ swr_user_vbuf_range(const struct pipe_draw_info *info,
       *size = elems * elem_pitch;
    } else if (vb->stride) {
       elems = info->max_index - info->min_index + 1;
-      *totelems = (info->max_index + (info->index_size ? info->index_bias : 0)) + 1;
-      *base = (info->min_index + (info->index_size ? info->index_bias : 0)) * vb->stride;
+      *totelems = (info->max_index + (info->index_size ? index_bias : 0)) + 1;
+      *base = (info->min_index + (info->index_size ? index_bias : 0)) * vb->stride;
       *size = elems * elem_pitch;
    } else {
       *totelems = 1;
@@ -1168,7 +1176,7 @@ swr_get_last_fe(const struct swr_context *ctx)
 void
 swr_update_derived(struct pipe_context *pipe,
                    const struct pipe_draw_info *p_draw_info,
-                   const struct pipe_draw_start_count *draw)
+                   const struct pipe_draw_start_count_bias *draw)
 {
    struct swr_context *ctx = swr_context(pipe);
    struct swr_screen *screen = swr_screen(pipe->screen);
@@ -1430,9 +1438,9 @@ swr_update_derived(struct pipe_context *pipe,
             post_update_dirty_flags |= SWR_NEW_VERTEX;
 
             uint32_t base;
-            swr_user_vbuf_range(&info, ctx->velems, vb, i, &elems, &base, &size);
+            swr_user_vbuf_range(&info, ctx->velems, vb, i, &elems, &base, &size, draw->index_bias);
             partial_inbounds = 0;
-            min_vertex_index = info.min_index + (info.index_size ? info.index_bias : 0);
+            min_vertex_index = info.min_index + (info.index_size ? draw->index_bias : 0);
 
             size = AlignUp(size, 4);
             /* If size of client memory copy is too large, don't copy. The
@@ -1650,7 +1658,7 @@ swr_update_derived(struct pipe_context *pipe,
                      SWR_NEW_SAMPLER |
                      SWR_NEW_SAMPLER_VIEW)) {
       if (ctx->tcs) {
-         ctx->tcs->vertices_per_patch = p_draw_info->vertices_per_patch;
+         ctx->tcs->vertices_per_patch = ctx->patch_vertices;
 
          swr_jit_tcs_key key;
          swr_generate_tcs_key(key, ctx, ctx->tcs);
@@ -1723,7 +1731,7 @@ swr_update_derived(struct pipe_context *pipe,
    /* Has to be before fragment shader, since it sets SWR_NEW_FS */
    if (p_draw_info) {
       bool new_prim_is_poly =
-         (u_reduced_prim(p_draw_info->mode) == PIPE_PRIM_TRIANGLES) &&
+         (u_reduced_prim((enum pipe_prim_type)p_draw_info->mode) == PIPE_PRIM_TRIANGLES) &&
          (ctx->derived.rastState.fillMode == SWR_FILLMODE_SOLID);
       if (new_prim_is_poly != ctx->poly_stipple.prim_is_poly) {
          ctx->dirty |= SWR_NEW_FS;
@@ -2154,6 +2162,14 @@ swr_set_so_targets(struct pipe_context *pipe,
    swr->dirty |= SWR_NEW_SO;
 }
 
+static void
+swr_set_patch_vertices(struct pipe_context *pipe, uint8_t patch_vertices)
+{
+   struct swr_context *swr = swr_context(pipe);
+
+   swr->patch_vertices = patch_vertices;
+}
+
 
 void
 swr_state_init(struct pipe_context *pipe)
@@ -2222,4 +2238,6 @@ swr_state_init(struct pipe_context *pipe)
    pipe->create_stream_output_target = swr_create_so_target;
    pipe->stream_output_target_destroy = swr_destroy_so_target;
    pipe->set_stream_output_targets = swr_set_so_targets;
+
+   pipe->set_patch_vertices = swr_set_patch_vertices;
 }

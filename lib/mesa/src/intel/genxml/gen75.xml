@@ -577,15 +577,15 @@
       <value name="PROGRAMMED" value="0"/>
       <value name="OVERRIDE" value="1"/>
     </field>
-    <field name="Shadow Function" start="33" end="35" type="uint">
-      <value name="PREFILTEROP ALWAYS" value="0"/>
-      <value name="PREFILTEROP NEVER" value="1"/>
-      <value name="PREFILTEROP LESS" value="2"/>
-      <value name="PREFILTEROP EQUAL" value="3"/>
-      <value name="PREFILTEROP LEQUAL" value="4"/>
-      <value name="PREFILTEROP GREATER" value="5"/>
-      <value name="PREFILTEROP NOTEQUAL" value="6"/>
-      <value name="PREFILTEROP GEQUAL" value="7"/>
+    <field name="Shadow Function" start="33" end="35" type="uint" prefix="PREFILTEROP">
+      <value name="ALWAYS" value="0"/>
+      <value name="NEVER" value="1"/>
+      <value name="LESS" value="2"/>
+      <value name="EQUAL" value="3"/>
+      <value name="LEQUAL" value="4"/>
+      <value name="GREATER" value="5"/>
+      <value name="NOTEQUAL" value="6"/>
+      <value name="GEQUAL" value="7"/>
     </field>
     <field name="Max LOD" start="40" end="51" type="u4.8"/>
     <field name="Min LOD" start="52" end="63" type="u4.8"/>
@@ -2305,7 +2305,7 @@
     <field name="Per Thread Scratch Space" start="32" end="35" type="uint"/>
     <field name="Stack Size" start="36" end="39" type="uint"/>
     <field name="Scratch Space Base Pointer" start="42" end="63" type="address"/>
-    <field name="GPGPU Mode" start="66" end="66" type="uint"/>
+    <field name="GPGPU Mode" start="66" end="66" type="bool"/>
     <field name="Bypass Gateway Control" start="70" end="70" type="uint">
       <value name="Maintaining OpenGateway/ForwardMsg/CloseGateway protocol (legacy mode)" value="0"/>
       <value name="Bypassing OpenGateway/CloseGateway protocol" value="1"/>
@@ -3638,7 +3638,7 @@
   </instruction>
 
   <instruction name="MI_FLUSH_DW" bias="2" length="4" engine="video">
-    <field name="DWord Length" start="0" end="5" type="uint"/>
+    <field name="DWord Length" start="0" end="5" type="uint" default="2"/>
     <field name="Video Pipeline Cache Invalidate" start="7" end="7" type="bool"/>
     <field name="Notify Enable" start="8" end="8" type="bool"/>
     <field name="Post-Sync Operation" start="14" end="15" type="uint"/>

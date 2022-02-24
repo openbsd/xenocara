@@ -3,7 +3,7 @@
 #include "gfx10_format_table.h"
 #include "amdgfxregs.h"
 
-#define FMT(_img_format, ...)    { .img_format = V_008F0C_IMG_FORMAT_##_img_format,      ##__VA_ARGS__ }
+#define FMT(_img_format, ...)    { .img_format = V_008F0C_GFX10_FORMAT_##_img_format,      ##__VA_ARGS__ }
 
 const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
   [PIPE_FORMAT_NONE] = FMT(8_USCALED),
@@ -276,6 +276,7 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_NV12 is not supported */
 /* PIPE_FORMAT_NV21 is not supported */
 /* PIPE_FORMAT_R8_G8B8_420_UNORM is not supported */
+/* PIPE_FORMAT_R8_G8_B8_420_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8_V8_422_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8V8_422_UNORM is not supported */
 /* PIPE_FORMAT_Y8_U8_V8_444_UNORM is not supported */
@@ -286,6 +287,12 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_P010 is not supported */
 /* PIPE_FORMAT_P012 is not supported */
 /* PIPE_FORMAT_P016 is not supported */
+/* PIPE_FORMAT_Y210 is not supported */
+/* PIPE_FORMAT_Y212 is not supported */
+/* PIPE_FORMAT_Y216 is not supported */
+/* PIPE_FORMAT_Y410 is not supported */
+/* PIPE_FORMAT_Y412 is not supported */
+/* PIPE_FORMAT_Y416 is not supported */
 /* PIPE_FORMAT_A4R4_UNORM is not supported */
 /* PIPE_FORMAT_R4A4_UNORM is not supported */
   [PIPE_FORMAT_R8A8_UNORM] = FMT(8_8_UNORM),
@@ -321,6 +328,9 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
   [PIPE_FORMAT_R32G32B32_SINT] = FMT(32_32_32_SINT, .buffers_only = 1),
   [PIPE_FORMAT_R32G32B32A32_SINT] = FMT(32_32_32_32_SINT),
   [PIPE_FORMAT_R64_UINT] = FMT(32_32_UINT),
+/* PIPE_FORMAT_R64G64_UINT is not supported */
+/* PIPE_FORMAT_R64G64B64_UINT is not supported */
+/* PIPE_FORMAT_R64G64B64A64_UINT is not supported */
   [PIPE_FORMAT_R64_SINT] = FMT(32_32_SINT),
   [PIPE_FORMAT_A8_UINT] = FMT(8_UINT),
   [PIPE_FORMAT_I8_UINT] = FMT(8_UINT),

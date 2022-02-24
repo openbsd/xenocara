@@ -152,14 +152,14 @@ svga_texture_copy_handle_resource(struct svga_context *svga,
       for (j = 0; j < numLayers; j++) {
          if (svga_is_texture_level_defined(src_tex, j+layeroffset, miplevel)) {
             unsigned depth = (zslice_pick < 0 ?
-                              u_minify(src_tex->b.b.depth0, miplevel) : 1);
+                              u_minify(src_tex->b.depth0, miplevel) : 1);
 
-            if (src_tex->b.b.nr_samples > 1) {
+            if (src_tex->b.nr_samples > 1) {
                unsigned subResource = j * numMipLevels + i;
                svga_texture_copy_region(svga, src_tex->handle,
                                         subResource, 0, 0, zoffset,
                                         dst, subResource, 0, 0, 0,
-                                        src_tex->b.b.width0, src_tex->b.b.height0, depth);
+                                        src_tex->b.width0, src_tex->b.height0, depth);
             }
             else {
                svga_texture_copy_handle(svga,
@@ -168,8 +168,8 @@ svga_texture_copy_handle_resource(struct svga_context *svga,
                                         miplevel,
                                         j + layeroffset,
                                         dst, 0, 0, 0, i, j,
-                                        u_minify(src_tex->b.b.width0, miplevel),
-                                        u_minify(src_tex->b.b.height0, miplevel),
+                                        u_minify(src_tex->b.width0, miplevel),
+                                        u_minify(src_tex->b.height0, miplevel),
                                         depth);
             }
          }
@@ -206,26 +206,26 @@ svga_texture_view_surface(struct svga_context *svga,
    key->flags = flags;
    key->format = format;
    key->numMipLevels = num_mip;
-   key->size.width = u_minify(tex->b.b.width0, start_mip);
-   key->size.height = u_minify(tex->b.b.height0, start_mip);
-   key->size.depth = zslice_pick < 0 ? u_minify(tex->b.b.depth0, start_mip) : 1;
+   key->size.width = u_minify(tex->b.width0, start_mip);
+   key->size.height = u_minify(tex->b.height0, start_mip);
+   key->size.depth = zslice_pick < 0 ? u_minify(tex->b.depth0, start_mip) : 1;
    key->cachable = 1;
    key->arraySize = 1;
    key->numFaces = 1;
 
    /* single sample surface can be treated as non-multisamples surface */
-   key->sampleCount = tex->b.b.nr_samples > 1 ? tex->b.b.nr_samples : 0;
+   key->sampleCount = tex->b.nr_samples > 1 ? tex->b.nr_samples : 0;
 
    if (key->sampleCount > 1) {
       assert(ss->sws->have_sm4_1);
       key->flags |= SVGA3D_SURFACE_MULTISAMPLE;
    }
 
-   if (tex->b.b.target == PIPE_TEXTURE_CUBE && layer_pick < 0) {
+   if (tex->b.target == PIPE_TEXTURE_CUBE && layer_pick < 0) {
       key->flags |= SVGA3D_SURFACE_CUBEMAP;
       key->numFaces = 6;
-   } else if (tex->b.b.target == PIPE_TEXTURE_1D_ARRAY ||
-              tex->b.b.target == PIPE_TEXTURE_2D_ARRAY) {
+   } else if (tex->b.target == PIPE_TEXTURE_1D_ARRAY ||
+              tex->b.target == PIPE_TEXTURE_2D_ARRAY) {
       key->arraySize = num_layers;
    }
 
@@ -277,14 +277,14 @@ done:
 
 /**
  * A helper function to create a surface view.
- * The view boolean flag specifies whether svga_texture_view_surface()
- * will be called to create a cloned surface and resource for the view.
+ * The clone_resource boolean flag specifies whether to clone the resource
+ * for the surface view.
  */
 static struct pipe_surface *
 svga_create_surface_view(struct pipe_context *pipe,
                          struct pipe_resource *pt,
                          const struct pipe_surface *surf_tmpl,
-                         boolean view)
+                         boolean clone_resource)
 {
    struct svga_context *svga = svga_context(pipe);
    struct svga_texture *tex = svga_texture(pt);
@@ -357,7 +357,7 @@ svga_create_surface_view(struct pipe_context *pipe,
 
    assert(format != SVGA3D_FORMAT_INVALID);
 
-   if (view) {
+   if (clone_resource) {
       SVGA_DBG(DEBUG_VIEWS,
                "New backed surface view: resource %p, level %u layer %u z %u, %p\n",
                pt, surf_tmpl->u.tex.level, layer, zslice, s);
@@ -462,10 +462,11 @@ svga_create_surface(struct pipe_context *pipe,
 
 
 /**
- * Clone the surface view and its associated resource.
+ * Create an alternate surface view and clone the resource if specified
  */
 static struct svga_surface *
-create_backed_surface_view(struct svga_context *svga, struct svga_surface *s)
+create_backed_surface_view(struct svga_context *svga, struct svga_surface *s,
+                           boolean clone_resource)
 {
    struct svga_texture *tex = svga_texture(s->base.texture);
 
@@ -476,9 +477,9 @@ create_backed_surface_view(struct svga_context *svga, struct svga_surface *s)
                            SVGA_STATS_TIME_CREATEBACKEDSURFACEVIEW);
 
       backed_view = svga_create_surface_view(&svga->pipe,
-                                             &tex->b.b,
+                                             &tex->b,
                                              &s->base,
-                                             TRUE);
+                                             clone_resource);
       if (!backed_view)
          goto done;
 
@@ -486,7 +487,8 @@ create_backed_surface_view(struct svga_context *svga, struct svga_surface *s)
 
       SVGA_STATS_TIME_POP(svga_sws(svga));
    }
-   else if (s->backed->age < tex->age) {
+   else if (s->backed->handle != tex->handle &&
+            s->backed->age < tex->age) {
       /*
        * There is already an existing backing surface, but we still need to
        * sync the backing resource if the original resource has been modified
@@ -497,7 +499,7 @@ create_backed_surface_view(struct svga_context *svga, struct svga_surface *s)
 
       assert(bs->handle);
 
-      switch (tex->b.b.target) {
+      switch (tex->b.target) {
       case PIPE_TEXTURE_CUBE:
       case PIPE_TEXTURE_CUBE_ARRAY:
       case PIPE_TEXTURE_1D_ARRAY:
@@ -518,6 +520,8 @@ create_backed_surface_view(struct svga_context *svga, struct svga_surface *s)
 
    svga_mark_surface_dirty(&s->backed->base);
    s->backed->age = tex->age;
+
+   assert(s->backed->base.context == &svga->pipe);
 
 done:
    return s->backed;
@@ -552,7 +556,7 @@ svga_validate_surface_view(struct svga_context *svga, struct svga_surface *s)
          SVGA_DBG(DEBUG_VIEWS,
                   "same resource used in shaderResource and renderTarget 0x%x\n",
                   s->handle);
-         s = create_backed_surface_view(svga, s);
+         s = create_backed_surface_view(svga, s, TRUE);
 
          if (s)
             svga->state.hw_draw.has_backed_views = TRUE;
@@ -567,9 +571,10 @@ svga_validate_surface_view(struct svga_context *svga, struct svga_surface *s)
     * view was created for another context.
     */
    if (s && s->base.context != &svga->pipe) {
-      struct pipe_surface *surf;
-      surf = svga_create_surface_view(&svga->pipe, s->base.texture, &s->base, FALSE);
-      s = svga_surface(surf);
+      s = create_backed_surface_view(svga, s, FALSE);
+
+      if (s)
+         svga->state.hw_draw.has_backed_views = TRUE;
    }
 
    if (s && s->view_id == SVGA3D_INVALID_ID) {
@@ -788,11 +793,11 @@ svga_propagate_surface(struct svga_context *svga, struct pipe_surface *surf,
       unsigned zslice, layer;
       unsigned nlayers = 1;
       unsigned i;
-      unsigned numMipLevels = tex->b.b.last_level + 1;
+      unsigned numMipLevels = tex->b.last_level + 1;
       unsigned srcLevel = s->real_level;
       unsigned dstLevel = surf->u.tex.level;
-      unsigned width = u_minify(tex->b.b.width0, dstLevel);
-      unsigned height = u_minify(tex->b.b.height0, dstLevel);
+      unsigned width = u_minify(tex->b.width0, dstLevel);
+      unsigned height = u_minify(tex->b.height0, dstLevel);
 
       if (surf->texture->target == PIPE_TEXTURE_CUBE) {
          zslice = 0;

@@ -285,7 +285,7 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
 
    if (newMode == GL_RENDER) {
       /* restore normal VBO draw function */
-      st_init_draw_functions(&ctx->Driver);
+      st_init_draw_functions(st->screen, &ctx->Driver);
    }
    else if (newMode == GL_SELECT) {
       if (!st->selection_stage)
@@ -294,7 +294,7 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
       /* Plug in new vbo draw function */
       ctx->Driver.Draw = st_feedback_draw_vbo;
       ctx->Driver.DrawGallium = _mesa_draw_gallium_fallback;
-      ctx->Driver.DrawGalliumComplex = _mesa_draw_gallium_complex_fallback;
+      ctx->Driver.DrawGalliumMultiMode = _mesa_draw_gallium_multimode_fallback;
    }
    else {
       struct gl_program *vp = st->ctx->VertexProgram._Current;
@@ -305,7 +305,7 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
       /* Plug in new vbo draw function */
       ctx->Driver.Draw = st_feedback_draw_vbo;
       ctx->Driver.DrawGallium = _mesa_draw_gallium_fallback;
-      ctx->Driver.DrawGalliumComplex = _mesa_draw_gallium_complex_fallback;
+      ctx->Driver.DrawGalliumMultiMode = _mesa_draw_gallium_multimode_fallback;
       /* need to generate/use a vertex program that emits pos/color/tex */
       if (vp)
          st->dirty |= ST_NEW_VERTEX_PROGRAM(st, st_program(vp));

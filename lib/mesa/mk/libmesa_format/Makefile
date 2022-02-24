@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	mesa_format
 
@@ -13,6 +13,7 @@ SRCS=	u_format.c \
 	u_format_rgtc.c \
 	u_format_s3tc.c \
 	u_format_tests.c \
+	u_format_unpack_neon.c \
 	u_format_yuv.c \
 	u_format_zs.c
 

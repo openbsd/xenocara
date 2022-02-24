@@ -27,8 +27,6 @@
 #define _ACO_BUILDER_
 
 #include "aco_ir.h"
-#include "util/u_math.h"
-#include "util/bitscan.h"
 
 namespace aco {
 enum dpp_ctrl {
@@ -435,19 +433,19 @@ public:
       bool has_lshl_add = program->chip_class >= GFX9;
       /* v_mul_lo_u32 has 1.6x the latency of most VALU on GFX10 (8 vs 5 cycles),
        * compared to 4x the latency on <GFX10. */
-      unsigned mul_cost = program->chip_class >= GFX10 ? 1 : (4 + Operand(imm).isLiteral());
+      unsigned mul_cost = program->chip_class >= GFX10 ? 1 : (4 + Operand::c32(imm).isLiteral());
       if (imm == 0) {
-         return copy(dst, Operand(0u));
+         return copy(dst, Operand::zero());
       } else if (imm == 1) {
          return copy(dst, Operand(tmp));
       } else if (util_is_power_of_two_or_zero(imm)) {
-         return vop2(aco_opcode::v_lshlrev_b32, dst, Operand((uint32_t)ffs(imm) - 1u), tmp);
+         return vop2(aco_opcode::v_lshlrev_b32, dst, Operand::c32(ffs(imm) - 1u), tmp);
       } else if (bits24) {
-        return vop2(aco_opcode::v_mul_u32_u24, dst, Operand(imm), tmp);
+        return vop2(aco_opcode::v_mul_u32_u24, dst, Operand::c32(imm), tmp);
       } else if (util_is_power_of_two_nonzero(imm - 1u)) {
-         return vadd32(dst, vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand((uint32_t)ffs(imm - 1u) - 1u), tmp), tmp);
+         return vadd32(dst, vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand::c32(ffs(imm - 1u) - 1u), tmp), tmp);
       } else if (mul_cost > 2 && util_is_power_of_two_nonzero(imm + 1u)) {
-         return vsub32(dst, vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand((uint32_t)ffs(imm + 1u) - 1u), tmp), tmp);
+         return vsub32(dst, vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand::c32(ffs(imm + 1u) - 1u), tmp), tmp);
       }
 
       unsigned instrs_required = util_bitcount(imm);
@@ -463,9 +461,9 @@ public:
             Definition tmp_dst = imm ? def(v1) : dst;
 
             if (shift && cur.id())
-               res = vadd32(Definition(tmp_dst), vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand(shift), tmp), cur);
+               res = vadd32(Definition(tmp_dst), vop2(aco_opcode::v_lshlrev_b32, def(v1), Operand::c32(shift), tmp), cur);
             else if (shift)
-               res = vop2(aco_opcode::v_lshlrev_b32, Definition(tmp_dst), Operand(shift), tmp);
+               res = vop2(aco_opcode::v_lshlrev_b32, Definition(tmp_dst), Operand::c32(shift), tmp);
             else if (cur.id())
                res = vadd32(Definition(tmp_dst), tmp, cur);
             else
@@ -476,7 +474,7 @@ public:
          return res;
       }
 
-      Temp imm_tmp = copy(def(s1), Operand(imm));
+      Temp imm_tmp = copy(def(s1), Operand::c32(imm));
       return vop3(aco_opcode::v_mul_lo_u32, dst, imm_tmp, tmp);
    }
 
@@ -490,7 +488,7 @@ public:
    }
 
    Result vadd32(Definition dst, Op a, Op b, bool carry_out=false, Op carry_in=Op(Operand(s2)), bool post_ra=false) {
-      if (!b.op.isTemp() || b.op.regClass().type() != RegType::vgpr)
+      if (b.op.isConstant() || b.op.regClass().type() != RegType::vgpr)
          std::swap(a, b);
       if (!post_ra && (!b.op.hasRegClass() || b.op.regClass().type() == RegType::sgpr))
          b = copy(def(v1), b);
@@ -2143,9 +2141,8 @@ public:
             instr->definitions[0].setNUW(is_nuw);
             instr->operands[0] = op0.op;
             
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2224,10 +2221,8 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2243,10 +2238,8 @@ instr->dst_preserve = true;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2264,10 +2257,8 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2286,10 +2277,8 @@ instr->dst_preserve = true;
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             
-            instr->sel[0] = op0.op.bytes() == 2 ? sdwa_uword : (op0.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->sel[1] = op1.op.bytes() == 2 ? sdwa_uword : (op1.op.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_sel = def0.bytes() == 2 ? sdwa_uword : (def0.bytes() == 1 ? sdwa_ubyte : sdwa_udword);
-instr->dst_preserve = true;
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2321,6 +2310,41 @@ instr->dst_preserve = true;
             instr->operands[0] = op0.op;
             instr->operands[1] = op1.op;
             
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_sdwa(aco_opcode opcode, Definition def0, Op op0, Op op1)
+   {
+      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::SDWA), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_sdwa(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
+   {
+      SDWA_instruction *instr = create_instruction<SDWA_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::SDWA), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            instr->sel[0] = SubdwordSel(op0.op.bytes(), 0, false);instr->sel[1] = SubdwordSel(op1.op.bytes(), 0, false);instr->dst_sel = SubdwordSel(def0.bytes(), 0, false);
+
        
       return insert(instr);
    }
@@ -2786,5 +2810,6 @@ instr->dst_preserve = true;
 
 };
 
-}
+} // namespace aco
+
 #endif /* _ACO_BUILDER_ */

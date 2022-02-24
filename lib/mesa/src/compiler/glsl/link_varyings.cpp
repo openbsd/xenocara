@@ -319,13 +319,13 @@ cross_validate_types_and_qualifiers(struct gl_context *ctx,
       return;
    }
 
-   /* The GLSL 4.30 and GLSL ES 3.00 specifications say:
+   /* The GLSL 4.20 and GLSL ES 3.00 specifications say:
     *
     *    "As only outputs need be declared with invariant, an output from
     *     one shader stage will still match an input of a subsequent stage
     *     without the input being declared as invariant."
     *
-    * while GLSL 4.20 says:
+    * while GLSL 4.10 says:
     *
     *    "For variables leaving one shader and coming into another shader,
     *     the invariant keyword has to be used in both shaders, or a link
@@ -337,7 +337,7 @@ cross_validate_types_and_qualifiers(struct gl_context *ctx,
     *     and fragment shaders must match."
     */
    if (input->data.explicit_invariant != output->data.explicit_invariant &&
-       prog->data->Version < (prog->IsES ? 300 : 430)) {
+       prog->data->Version < (prog->IsES ? 300 : 420)) {
       linker_error(prog,
                    "%s shader output `%s' %s invariant qualifier, "
                    "but %s shader input %s invariant qualifier\n",
@@ -660,9 +660,11 @@ validate_explicit_variable_location(struct gl_context *ctx,
          glsl_struct_field *field = &type_without_array->fields.structure[i];
          unsigned field_location = field->location -
             (field->patch ? VARYING_SLOT_PATCH0 : VARYING_SLOT_VAR0);
+         unsigned field_slots = field->type->count_attribute_slots(false);
          if (!check_location_aliasing(explicit_locations, var,
                                       field_location,
-                                      0, field_location + 1,
+                                      0,
+                                      field_location + field_slots,
                                       field->type,
                                       field->interpolation,
                                       field->centroid,
@@ -2106,7 +2108,8 @@ varying_matches::assign_locations(struct gl_shader_program *prog,
       } else {
          if ((this->disable_varying_packing &&
               !is_varying_packing_safe(type, var)) ||
-              (this->disable_xfb_packing && var->data.is_xfb) ||
+              (this->disable_xfb_packing && var->data.is_xfb &&
+               !(type->is_array() || type->is_struct() || type->is_matrix())) ||
              var->data.must_be_shader_input) {
             num_components = type->count_attribute_slots(false) * 4;
          } else {
@@ -2170,7 +2173,7 @@ varying_matches::store_locations() const
    /* Check is location needs to be packed with lower_packed_varyings() or if
     * we can just use ARB_enhanced_layouts packing.
     */
-   bool pack_loc[MAX_VARYINGS_INCL_PATCH] = { 0 };
+   bool pack_loc[MAX_VARYINGS_INCL_PATCH] = {};
    const glsl_type *loc_type[MAX_VARYINGS_INCL_PATCH][4] = { {NULL, NULL} };
 
    for (unsigned i = 0; i < this->num_matches; i++) {
@@ -2934,17 +2937,15 @@ assign_varying_locations(struct gl_context *ctx,
       /* There are two situations where a new output varying is needed:
        *
        *  - If varying packing is disabled for xfb and the current declaration
-       *    is not aligned within the top level varying (e.g. vec3_arr[1]).
+       *    is subscripting an array, whether the subscript is aligned or not.
+       *    to preserve the rest of the array for the consumer.
        *
        *  - If a builtin variable needs to be copied to a new variable
        *    before its content is modified by another lowering pass (e.g.
        *    \c gl_Position is transformed by \c nir_lower_viewport_transform).
        */
-      const unsigned dmul =
-         matched_candidate->type->without_array()->is_64bit() ? 2 : 1;
       const bool lowered =
-         (disable_xfb_packing &&
-          !tfeedback_decls[i].is_aligned(dmul, matched_candidate->struct_offset_floats)) ||
+         (disable_xfb_packing && tfeedback_decls[i].subscripted()) ||
          (matched_candidate->toplevel_var->data.explicit_location &&
           matched_candidate->toplevel_var->data.location < VARYING_SLOT_VAR0 &&
           (!consumer || consumer->Stage == MESA_SHADER_FRAGMENT) &&

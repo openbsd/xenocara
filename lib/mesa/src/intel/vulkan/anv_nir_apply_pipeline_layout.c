@@ -143,6 +143,7 @@ get_used_bindings(UNUSED nir_builder *_b, nir_instr *instr, void *_state)
       case nir_intrinsic_image_deref_atomic_xor:
       case nir_intrinsic_image_deref_atomic_exchange:
       case nir_intrinsic_image_deref_atomic_comp_swap:
+      case nir_intrinsic_image_deref_atomic_fadd:
       case nir_intrinsic_image_deref_size:
       case nir_intrinsic_image_deref_samples:
       case nir_intrinsic_image_deref_load_param_intel:
@@ -722,7 +723,8 @@ try_lower_direct_buffer_intrinsic(nir_builder *b,
       /* 64-bit atomics only support A64 messages so we can't lower them to
        * the index+offset model.
        */
-      if (is_atomic && nir_dest_bit_size(intrin->dest) == 64)
+      if (is_atomic && nir_dest_bit_size(intrin->dest) == 64 &&
+          !state->pdevice->info.has_lsc)
          return false;
 
       /* Normal binding table-based messages can't handle non-uniform access
@@ -754,6 +756,48 @@ try_lower_direct_buffer_intrinsic(nir_builder *b,
 }
 
 static bool
+lower_load_accel_struct_desc(nir_builder *b,
+                             nir_intrinsic_instr *load_desc,
+                             struct apply_pipeline_layout_state *state)
+{
+   assert(load_desc->intrinsic == nir_intrinsic_load_vulkan_descriptor);
+
+   nir_intrinsic_instr *idx_intrin = nir_src_as_intrinsic(load_desc->src[0]);
+
+   /* It doesn't really matter what address format we choose as
+    * everything will constant-fold nicely.  Choose one that uses the
+    * actual descriptor buffer.
+    */
+   const nir_address_format addr_format =
+      nir_address_format_64bit_bounded_global;
+
+   uint32_t set = UINT32_MAX, binding = UINT32_MAX;
+   nir_ssa_def *res_index =
+      build_res_index_for_chain(b, idx_intrin, addr_format,
+                                &set, &binding, state);
+
+   const struct anv_descriptor_set_binding_layout *bind_layout =
+      &state->layout->set[set].layout->binding[binding];
+
+   b->cursor = nir_before_instr(&load_desc->instr);
+
+   nir_ssa_def *desc_addr =
+      build_desc_addr(b, bind_layout, bind_layout->type,
+                      res_index, addr_format, state);
+
+   /* Acceleration structure descriptors are always uint64_t */
+   nir_ssa_def *desc = build_load_descriptor_mem(b, desc_addr, 0, 1, 64, state);
+
+   assert(load_desc->dest.is_ssa);
+   assert(load_desc->dest.ssa.bit_size == 64);
+   assert(load_desc->dest.ssa.num_components == 1);
+   nir_ssa_def_rewrite_uses(&load_desc->dest.ssa, desc);
+   nir_instr_remove(&load_desc->instr);
+
+   return true;
+}
+
+static bool
 lower_direct_buffer_instr(nir_builder *b, nir_instr *instr, void *_state)
 {
    struct apply_pipeline_layout_state *state = _state;
@@ -777,6 +821,7 @@ lower_direct_buffer_instr(nir_builder *b, nir_instr *instr, void *_state)
    case nir_intrinsic_deref_atomic_xor:
    case nir_intrinsic_deref_atomic_exchange:
    case nir_intrinsic_deref_atomic_comp_swap:
+   case nir_intrinsic_deref_atomic_fadd:
    case nir_intrinsic_deref_atomic_fmin:
    case nir_intrinsic_deref_atomic_fmax:
    case nir_intrinsic_deref_atomic_fcomp_swap:
@@ -808,6 +853,12 @@ lower_direct_buffer_instr(nir_builder *b, nir_instr *instr, void *_state)
       _mesa_set_add(state->lowered_instrs, intrin);
       return true;
    }
+
+   case nir_intrinsic_load_vulkan_descriptor:
+      if (nir_intrinsic_desc_type(intrin) ==
+          VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR)
+         return lower_load_accel_struct_desc(b, intrin, state);
+      return false;
 
    default:
       return false;
@@ -953,6 +1004,13 @@ lower_get_ssbo_size(nir_builder *b, nir_intrinsic_instr *intrin,
 }
 
 static bool
+image_binding_needs_lowered_surface(nir_variable *var)
+{
+   return !(var->data.access & ACCESS_NON_READABLE) &&
+          var->data.image.format != PIPE_FORMAT_NONE;
+}
+
+static bool
 lower_image_intrinsic(nir_builder *b, nir_intrinsic_instr *intrin,
                       struct apply_pipeline_layout_state *state)
 {
@@ -980,11 +1038,11 @@ lower_image_intrinsic(nir_builder *b, nir_intrinsic_instr *intrin,
 
       nir_ssa_def_rewrite_uses(&intrin->dest.ssa, desc);
    } else if (binding_offset > MAX_BINDING_TABLE_SIZE) {
-      const bool write_only =
-         (var->data.access & ACCESS_NON_READABLE) != 0;
+      const unsigned desc_comp =
+         image_binding_needs_lowered_surface(var) ? 1 : 0;
       nir_ssa_def *desc =
          build_load_var_deref_descriptor_mem(b, deref, 0, 2, 32, state);
-      nir_ssa_def *handle = nir_channel(b, desc, write_only ? 1 : 0);
+      nir_ssa_def *handle = nir_channel(b, desc, desc_comp);
       nir_rewrite_image_intrinsic(intrin, handle, true);
    } else {
       unsigned array_size =
@@ -1031,8 +1089,8 @@ lower_load_constant(nir_builder *b, nir_intrinsic_instr *intrin,
       offset = nir_umin(b, offset, nir_imm_int(b, max_offset));
 
       nir_ssa_def *const_data_base_addr = nir_pack_64_2x32_split(b,
-         nir_load_reloc_const_intel(b, ANV_SHADER_RELOC_CONST_DATA_ADDR_LOW),
-         nir_load_reloc_const_intel(b, ANV_SHADER_RELOC_CONST_DATA_ADDR_HIGH));
+         nir_load_reloc_const_intel(b, BRW_SHADER_RELOC_CONST_DATA_ADDR_LOW),
+         nir_load_reloc_const_intel(b, BRW_SHADER_RELOC_CONST_DATA_ADDR_HIGH));
 
       data = nir_load_global_constant(b, nir_iadd(b, const_data_base_addr,
                                                      nir_u2u64(b, offset)),
@@ -1187,7 +1245,7 @@ static void
 lower_gfx7_tex_swizzle(nir_builder *b, nir_tex_instr *tex, unsigned plane,
                        struct apply_pipeline_layout_state *state)
 {
-   assert(state->pdevice->info.ver == 7 && !state->pdevice->info.is_haswell);
+   assert(state->pdevice->info.verx10 == 70);
    if (tex->sampler_dim == GLSL_SAMPLER_DIM_BUF ||
        nir_tex_instr_is_query(tex) ||
        tex->op == nir_texop_tg4 || /* We can't swizzle TG4 */
@@ -1259,7 +1317,7 @@ lower_tex(nir_builder *b, nir_tex_instr *tex,
    /* On Ivy Bridge and Bay Trail, we have to swizzle in the shader.  Do this
     * before we lower the derefs away so we can still find the descriptor.
     */
-   if (state->pdevice->info.ver == 7 && !state->pdevice->info.is_haswell)
+   if (state->pdevice->info.verx10 == 70)
       lower_gfx7_tex_swizzle(b, tex, plane, state);
 
    b->cursor = nir_before_instr(&tex->instr);
@@ -1302,6 +1360,7 @@ apply_pipeline_layout(nir_builder *b, nir_instr *instr, void *_state)
       case nir_intrinsic_image_deref_atomic_xor:
       case nir_intrinsic_image_deref_atomic_exchange:
       case nir_intrinsic_image_deref_atomic_comp_swap:
+      case nir_intrinsic_image_deref_atomic_fadd:
       case nir_intrinsic_image_deref_size:
       case nir_intrinsic_image_deref_samples:
       case nir_intrinsic_image_deref_load_param_intel:
@@ -1354,7 +1413,9 @@ anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
       .pdevice = pdevice,
       .layout = layout,
       .add_bounds_checks = robust_buffer_access,
-      .desc_addr_format = nir_address_format_32bit_index_offset,
+      .desc_addr_format = brw_shader_stage_is_bindless(shader->info.stage) ?
+                          nir_address_format_64bit_global_32bit_offset :
+                          nir_address_format_32bit_index_offset,
       .ssbo_addr_format = anv_nir_ssbo_addr_format(pdevice, robust_buffer_access),
       .ubo_addr_format = anv_nir_ubo_addr_format(pdevice, robust_buffer_access),
       .lowered_instrs = _mesa_pointer_set_create(mem_ctx),
@@ -1456,7 +1517,8 @@ anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
 
       if (binding->data & ANV_DESCRIPTOR_SURFACE_STATE) {
          if (map->surface_count + array_size > MAX_BINDING_TABLE_SIZE ||
-             anv_descriptor_requires_bindless(pdevice, binding, false)) {
+             anv_descriptor_requires_bindless(pdevice, binding, false) ||
+             brw_shader_stage_is_bindless(shader->info.stage)) {
             /* If this descriptor doesn't fit in the binding table or if it
              * requires bindless for some reason, flag it as bindless.
              */
@@ -1495,7 +1557,8 @@ anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
 
       if (binding->data & ANV_DESCRIPTOR_SAMPLER_STATE) {
          if (map->sampler_count + array_size > MAX_SAMPLER_TABLE_SIZE ||
-             anv_descriptor_requires_bindless(pdevice, binding, true)) {
+             anv_descriptor_requires_bindless(pdevice, binding, true) ||
+             brw_shader_stage_is_bindless(shader->info.stage)) {
             /* If this descriptor doesn't fit in the binding table or if it
              * requires bindless for some reason, flag it as bindless.
              *
@@ -1553,9 +1616,8 @@ anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
              dim == GLSL_SAMPLER_DIM_SUBPASS_MS)
             pipe_binding[i].input_attachment_index = var->data.index + i;
 
-         /* NOTE: This is a uint8_t so we really do need to != 0 here */
-         pipe_binding[i].write_only =
-            (var->data.access & ACCESS_NON_READABLE) != 0;
+         pipe_binding[i].lowered_storage_surface =
+            image_binding_needs_lowered_surface(var);
       }
    }
 
@@ -1605,6 +1667,11 @@ anv_nir_apply_pipeline_layout(const struct anv_physical_device *pdevice,
                                 &state);
 
    ralloc_free(mem_ctx);
+
+   if (brw_shader_stage_is_bindless(shader->info.stage)) {
+      assert(map->surface_count == 0);
+      assert(map->sampler_count == 0);
+   }
 
    /* Now that we're done computing the surface and sampler portions of the
     * bind map, hash them.  This lets us quickly determine if the actual

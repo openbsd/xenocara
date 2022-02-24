@@ -26,7 +26,7 @@
 #include "brw_fs.h"
 #include "brw_nir.h"
 #include "brw_vec4_tes.h"
-#include "dev/gen_debug.h"
+#include "dev/intel_debug.h"
 #include "main/uniforms.h"
 #include "util/macros.h"
 
@@ -161,7 +161,7 @@ brw_texture_offset(const nir_tex_instr *tex, unsigned src,
 }
 
 const char *
-brw_instruction_name(const struct gen_device_info *devinfo, enum opcode op)
+brw_instruction_name(const struct intel_device_info *devinfo, enum opcode op)
 {
    switch (op) {
    case 0 ... NUM_BRW_OPCODES - 1:
@@ -331,6 +331,8 @@ brw_instruction_name(const struct gen_device_info *devinfo, enum opcode op)
       return "a64_untyped_atomic_float16_logical";
    case SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT32_LOGICAL:
       return "a64_untyped_atomic_float32_logical";
+   case SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT64_LOGICAL:
+      return "a64_untyped_atomic_float64_logical";
    case SHADER_OPCODE_TYPED_ATOMIC_LOGICAL:
       return "typed_atomic_logical";
    case SHADER_OPCODE_TYPED_SURFACE_READ_LOGICAL:
@@ -423,6 +425,8 @@ brw_instruction_name(const struct gen_device_info *devinfo, enum opcode op)
       return "set_high_32bit";
    case VEC4_OPCODE_MOV_FOR_SCRATCH:
       return "mov_for_scratch";
+   case VEC4_OPCODE_ZERO_OOB_PUSH_REGS:
+      return "zero_oob_push_regs";
 
    case FS_OPCODE_DDX_COARSE:
       return "ddx_coarse";
@@ -864,6 +868,7 @@ backend_instruction::is_commutative() const
    case BRW_OPCODE_OR:
    case BRW_OPCODE_XOR:
    case BRW_OPCODE_ADD:
+   case BRW_OPCODE_ADD3:
    case BRW_OPCODE_MUL:
    case SHADER_OPCODE_MULH:
       return true;
@@ -880,7 +885,7 @@ backend_instruction::is_commutative() const
 }
 
 bool
-backend_instruction::is_3src(const struct gen_device_info *devinfo) const
+backend_instruction::is_3src(const struct intel_device_info *devinfo) const
 {
    return ::is_3src(devinfo, opcode);
 }
@@ -966,10 +971,13 @@ backend_instruction::can_do_source_mods() const
    case BRW_OPCODE_ROL:
    case BRW_OPCODE_ROR:
    case BRW_OPCODE_SUBB:
+   case BRW_OPCODE_DP4A:
    case SHADER_OPCODE_BROADCAST:
    case SHADER_OPCODE_CLUSTER_BROADCAST:
    case SHADER_OPCODE_MOV_INDIRECT:
    case SHADER_OPCODE_SHUFFLE:
+   case SHADER_OPCODE_INT_QUOTIENT:
+   case SHADER_OPCODE_INT_REMAINDER:
       return false;
    default:
       return true;
@@ -981,6 +989,7 @@ backend_instruction::can_do_saturate() const
 {
    switch (opcode) {
    case BRW_OPCODE_ADD:
+   case BRW_OPCODE_ADD3:
    case BRW_OPCODE_ASR:
    case BRW_OPCODE_AVG:
    case BRW_OPCODE_CSEL:
@@ -988,6 +997,7 @@ backend_instruction::can_do_saturate() const
    case BRW_OPCODE_DP3:
    case BRW_OPCODE_DP4:
    case BRW_OPCODE_DPH:
+   case BRW_OPCODE_DP4A:
    case BRW_OPCODE_F16TO32:
    case BRW_OPCODE_F32TO16:
    case BRW_OPCODE_LINE:
@@ -1026,6 +1036,7 @@ backend_instruction::can_do_cmod() const
 {
    switch (opcode) {
    case BRW_OPCODE_ADD:
+   case BRW_OPCODE_ADD3:
    case BRW_OPCODE_ADDC:
    case BRW_OPCODE_AND:
    case BRW_OPCODE_ASR:
@@ -1081,7 +1092,7 @@ backend_instruction::reads_accumulator_implicitly() const
 }
 
 bool
-backend_instruction::writes_accumulator_implicitly(const struct gen_device_info *devinfo) const
+backend_instruction::writes_accumulator_implicitly(const struct intel_device_info *devinfo) const
 {
    return writes_accumulator ||
           (devinfo->ver < 6 &&
@@ -1113,6 +1124,7 @@ backend_instruction::has_side_effects() const
    case SHADER_OPCODE_A64_UNTYPED_ATOMIC_INT64_LOGICAL:
    case SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT16_LOGICAL:
    case SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT32_LOGICAL:
+   case SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT64_LOGICAL:
    case SHADER_OPCODE_BYTE_SCATTERED_WRITE_LOGICAL:
    case SHADER_OPCODE_DWORD_SCATTERED_WRITE_LOGICAL:
    case SHADER_OPCODE_TYPED_ATOMIC_LOGICAL:
@@ -1137,6 +1149,7 @@ backend_instruction::has_side_effects() const
    case SHADER_OPCODE_BTD_SPAWN_LOGICAL:
    case SHADER_OPCODE_BTD_RETIRE_LOGICAL:
    case RT_OPCODE_TRACE_RAY_LOGICAL:
+   case VEC4_OPCODE_ZERO_OOB_PUSH_REGS:
       return true;
    default:
       return eot;
@@ -1170,13 +1183,11 @@ backend_instruction::is_volatile() const
 static bool
 inst_is_in_block(const bblock_t *block, const backend_instruction *inst)
 {
-   bool found = false;
    foreach_inst_in_block (backend_instruction, i, block) {
-      if (inst == i) {
-         found = true;
-      }
+      if (inst == i)
+         return true;
    }
-   return found;
+   return false;
 }
 #endif
 
@@ -1195,6 +1206,7 @@ void
 backend_instruction::insert_after(bblock_t *block, backend_instruction *inst)
 {
    assert(this != inst);
+   assert(block->end_ip_delta == 0);
 
    if (!this->is_head_sentinel())
       assert(inst_is_in_block(block, this) || !"Instruction not in block");
@@ -1210,6 +1222,7 @@ void
 backend_instruction::insert_before(bblock_t *block, backend_instruction *inst)
 {
    assert(this != inst);
+   assert(block->end_ip_delta == 0);
 
    if (!this->is_tail_sentinel())
       assert(inst_is_in_block(block, this) || !"Instruction not in block");
@@ -1225,6 +1238,7 @@ void
 backend_instruction::insert_before(bblock_t *block, exec_list *list)
 {
    assert(inst_is_in_block(block, this) || !"Instruction not in block");
+   assert(block->end_ip_delta == 0);
 
    unsigned num_inst = list->length();
 
@@ -1236,13 +1250,23 @@ backend_instruction::insert_before(bblock_t *block, exec_list *list)
 }
 
 void
-backend_instruction::remove(bblock_t *block)
+backend_instruction::remove(bblock_t *block, bool defer_later_block_ip_updates)
 {
    assert(inst_is_in_block(block, this) || !"Instruction not in block");
 
-   adjust_later_block_ips(block, -1);
+   if (defer_later_block_ip_updates) {
+      block->end_ip_delta--;
+   } else {
+      assert(block->end_ip_delta == 0);
+      adjust_later_block_ips(block, -1);
+   }
 
    if (block->start_ip == block->end_ip) {
+      if (block->end_ip_delta != 0) {
+         adjust_later_block_ips(block, block->end_ip_delta);
+         block->end_ip_delta = 0;
+      }
+
       block->cfg->remove_block(block);
    } else {
       block->end_ip--;
@@ -1270,14 +1294,14 @@ backend_shader::dump_instructions(const char *name) const
    if (cfg) {
       int ip = 0;
       foreach_block_and_inst(block, backend_instruction, inst, cfg) {
-         if (!(INTEL_DEBUG & DEBUG_OPTIMIZER))
+         if (!INTEL_DEBUG(DEBUG_OPTIMIZER))
             fprintf(file, "%4d: ", ip++);
          dump_instruction(inst, file);
       }
    } else {
       int ip = 0;
       foreach_in_list(backend_instruction, inst, &instructions) {
-         if (!(INTEL_DEBUG & DEBUG_OPTIMIZER))
+         if (!INTEL_DEBUG(DEBUG_OPTIMIZER))
             fprintf(file, "%4d: ", ip++);
          dump_instruction(inst, file);
       }
@@ -1314,9 +1338,9 @@ brw_compile_tes(const struct brw_compiler *compiler,
                 struct brw_compile_stats *stats,
                 char **error_str)
 {
-   const struct gen_device_info *devinfo = compiler->devinfo;
+   const struct intel_device_info *devinfo = compiler->devinfo;
    const bool is_scalar = compiler->scalar_stage[MESA_SHADER_TESS_EVAL];
-   const bool debug_enabled = INTEL_DEBUG & DEBUG_TES;
+   const bool debug_enabled = INTEL_DEBUG(DEBUG_TES);
    const unsigned *assembly;
 
    prog_data->base.base.stage = MESA_SHADER_TESS_EVAL;

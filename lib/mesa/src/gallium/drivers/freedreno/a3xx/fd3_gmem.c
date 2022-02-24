@@ -524,7 +524,7 @@ emit_mem2gmem_surf(struct fd_batch *batch, const uint32_t bases[],
       OUT_PKT0(ring, REG_A3XX_RB_DEPTH_CONTROL, 1);
       OUT_RING(ring, (A3XX_RB_DEPTH_CONTROL_FRAG_WRITES_Z |
                       A3XX_RB_DEPTH_CONTROL_Z_WRITE_ENABLE |
-                      A3XX_RB_DEPTH_CONTROL_Z_ENABLE |
+                      A3XX_RB_DEPTH_CONTROL_Z_TEST_ENABLE |
                       A3XX_RB_DEPTH_CONTROL_EARLY_Z_DISABLE |
                       A3XX_RB_DEPTH_CONTROL_ZFUNC(FUNC_ALWAYS)));
 
@@ -806,7 +806,7 @@ update_vsc_pipe(struct fd_batch *batch) assert_dt
 
       if (!ctx->vsc_pipe_bo[i]) {
          ctx->vsc_pipe_bo[i] = fd_bo_new(
-            ctx->dev, 0x40000, DRM_FREEDRENO_GEM_TYPE_KMEM, "vsc_pipe[%u]", i);
+            ctx->dev, 0x40000, 0, "vsc_pipe[%u]", i);
       }
 
       OUT_PKT0(ring, REG_A3XX_VSC_PIPE(i), 3);

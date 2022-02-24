@@ -8490,10 +8490,26 @@ KEYWORD1 void KEYWORD2 NAME(ClearTexImage)(GLuint texture, GLint level, GLenum f
    DISPATCH(ClearTexImage, (texture, level, format, type, data), (F, "glClearTexImage(%d, %d, 0x%x, 0x%x, %p);\n", texture, level, format, type, (const void *) data));
 }
 
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_904)(GLuint texture, GLint level, GLenum format, GLenum type, const GLvoid * data);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_904)(GLuint texture, GLint level, GLenum format, GLenum type, const GLvoid * data)
+{
+    (void) texture; (void) level; (void) format; (void) type; (void) data;
+   DISPATCH(ClearTexImage, (texture, level, format, type, data), (F, "glClearTexImageEXT(%d, %d, 0x%x, 0x%x, %p);\n", texture, level, format, type, (const void *) data));
+}
+
 KEYWORD1 void KEYWORD2 NAME(ClearTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * data)
 {
     (void) texture; (void) level; (void) xoffset; (void) yoffset; (void) zoffset; (void) width; (void) height; (void) depth; (void) format; (void) type; (void) data;
    DISPATCH(ClearTexSubImage, (texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data), (F, "glClearTexSubImage(%d, %d, %d, %d, %d, %d, %d, %d, 0x%x, 0x%x, %p);\n", texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, (const void *) data));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_905)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * data);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_905)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * data)
+{
+    (void) texture; (void) level; (void) xoffset; (void) yoffset; (void) zoffset; (void) width; (void) height; (void) depth; (void) format; (void) type; (void) data;
+   DISPATCH(ClearTexSubImage, (texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data), (F, "glClearTexSubImageEXT(%d, %d, %d, %d, %d, %d, %d, %d, 0x%x, 0x%x, %p);\n", texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, (const void *) data));
 }
 
 KEYWORD1 void KEYWORD2 NAME(BindBuffersBase)(GLenum target, GLuint first, GLsizei count, const GLuint * buffers)
@@ -17478,6 +17494,8 @@ _glapi_proc UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_900),
    TABLE_ENTRY(_dispatch_stub_902),
    TABLE_ENTRY(_dispatch_stub_903),
+   TABLE_ENTRY(_dispatch_stub_904),
+   TABLE_ENTRY(_dispatch_stub_905),
    TABLE_ENTRY(_dispatch_stub_1020),
    TABLE_ENTRY(_dispatch_stub_1098),
    TABLE_ENTRY(_dispatch_stub_1099),

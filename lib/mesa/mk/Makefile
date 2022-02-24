@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
 
 .include "config.mk"
 
@@ -96,6 +96,9 @@ SUBDIR+=	libr600
 .endif
 
 .if ${WITH_GALLIUM_RADEONSI} == "yes" || make(obj)
+.for GEN in 6 7 8 9 10 103
+SUBDIR+=	libradeonsi_gfx${GEN}
+.endfor
 SUBDIR+=	libradeonsi
 .endif
 

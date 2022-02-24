@@ -193,7 +193,6 @@ struct draw_context
       boolean rebind_parameters;
 
       struct {
-         struct draw_pt_middle_end *fetch_emit;
          struct draw_pt_middle_end *fetch_shade_emit;
          struct draw_pt_middle_end *general;
          struct draw_pt_middle_end *llvm;
@@ -284,8 +283,6 @@ struct draw_context
    boolean guard_band_xy;
    boolean guard_band_points_xy;
 
-   boolean force_passthrough; /**< never clip or shade */
-
    boolean dump_vs;
 
    /** Depth format and bias related settings. */
@@ -333,6 +330,7 @@ struct draw_context
       struct draw_geometry_shader *geometry_shader;
       uint num_gs_outputs;  /**< convenience, from geometry_shader */
       uint position_output;
+      uint clipvertex_output;
 
       /** Fields for TGSI interpreter / execution */
       struct {
@@ -362,6 +360,7 @@ struct draw_context
    struct {
       struct draw_tess_eval_shader *tess_eval_shader;
       uint position_output;
+      uint clipvertex_output;
 
       /** Fields for TGSI interpreter / execution */
       struct {

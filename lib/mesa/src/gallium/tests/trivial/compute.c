@@ -204,7 +204,7 @@ static void init_tex(struct context *ctx, int slot,
         *tex = ctx->screen->resource_create(ctx->screen, &ttex);
         assert(*tex);
 
-        map = pipe->transfer_map(pipe, *tex, 0, PIPE_MAP_WRITE,
+        map = pipe->texture_map(pipe, *tex, 0, PIPE_MAP_WRITE,
                                   &(struct pipe_box) { .width = w,
                                                   .height = h,
                                                   .depth = 1 }, &xfer);
@@ -217,7 +217,7 @@ static void init_tex(struct context *ctx, int slot,
                 }
         }
 
-        pipe->transfer_unmap(pipe, xfer);
+        pipe->texture_unmap(pipe, xfer);
 
         ctx->tex_rw[slot] = rw;
 }
@@ -246,7 +246,7 @@ static void check_tex(struct context *ctx, int slot,
         if (!check)
                 check = default_check;
 
-        map = pipe->transfer_map(pipe, tex, 0, PIPE_MAP_READ,
+        map = pipe->texture_map(pipe, tex, 0, PIPE_MAP_READ,
                                   &(struct pipe_box) { .width = tex->width0,
                                         .height = tex->height0,
                                         .depth = 1 }, &xfer);
@@ -282,7 +282,7 @@ static void check_tex(struct context *ctx, int slot,
                 }
         }
 
-        pipe->transfer_unmap(pipe, xfer);
+        pipe->texture_unmap(pipe, xfer);
 
         if (err)
                 printf("(%d, %d): \x1b[31mFAIL\x1b[0m (%d)\n", x, y, err);
@@ -315,7 +315,7 @@ static void init_sampler_views(struct context *ctx, const int *slots)
                 assert(ctx->view[i]);
         }
 
-        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, i, 0, ctx->view);
+        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, i, 0, false, ctx->view);
 }
 
 static void destroy_sampler_views(struct context *ctx)
@@ -323,7 +323,7 @@ static void destroy_sampler_views(struct context *ctx)
         struct pipe_context *pipe = ctx->pipe;
         int i;
 
-        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, 0, MAX_RESOURCES, NULL);
+        pipe->set_sampler_views(pipe, PIPE_SHADER_COMPUTE, 0, 0, MAX_RESOURCES, false, NULL);
 
         for (i = 0; i < MAX_RESOURCES; ++i) {
                 if (ctx->view[i]) {
@@ -1203,6 +1203,11 @@ static void test_surface_st_expectu(void *p, int s, int x, int y)
         util_format_pack_rgba(surface_fmts[i], p, v, 1);
 }
 
+static unsigned absdiff(uint32_t a, uint32_t b)
+{
+        return (a > b) ? (a - b) : (b - a);
+}
+
 static bool test_surface_st_check(void *x, void *y, int sz)
 {
         int i = 0, j;
@@ -1212,8 +1217,8 @@ static bool test_surface_st_check(void *x, void *y, int sz)
 
         } else if ((sz % 4) == 0) {
                 for (j = 0; j < sz / 4; j++)
-                        if (abs(((uint32_t *)x)[j] -
-                                ((uint32_t *)y)[j]) > 1)
+                        if (absdiff(((uint32_t *)x)[j],
+                                    ((uint32_t *)y)[j]) > 1)
                                 return false;
                 return true;
         } else {

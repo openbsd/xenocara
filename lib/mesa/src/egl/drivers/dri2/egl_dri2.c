@@ -62,26 +62,13 @@
 #include "egl_dri2.h"
 #include "GL/mesa_glinterop.h"
 #include "loader/loader.h"
+#include "util/libsync.h"
 #include "util/os_file.h"
 #include "util/u_atomic.h"
 #include "util/u_vector.h"
 #include "mapi/glapi/glapi.h"
 #include "util/bitscan.h"
 #include "util/u_math.h"
-
-/* Additional definitions not yet in the drm_fourcc.h.
- */
-#ifndef DRM_FORMAT_P010
-#define DRM_FORMAT_P010 	 fourcc_code('P', '0', '1', '0') /* 2x2 subsampled Cb:Cr plane 10 bits per channel */
-#endif
-
-#ifndef DRM_FORMAT_P012
-#define DRM_FORMAT_P012 	 fourcc_code('P', '0', '1', '2') /* 2x2 subsampled Cb:Cr plane 12 bits per channel */
-#endif
-
-#ifndef DRM_FORMAT_P016
-#define DRM_FORMAT_P016 	 fourcc_code('P', '0', '1', '6') /* 2x2 subsampled Cb:Cr plane 16 bits per channel */
-#endif
 
 #define NUM_ATTRIBS 12
 
@@ -577,15 +564,6 @@ dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
       surface_type &= ~EGL_PIXMAP_BIT;
    }
 
-   /* No support for pbuffer + MSAA for now.
-    *
-    * XXX TODO: pbuffer + MSAA does not work and causes crashes.
-    * See QT bugreport: https://bugreports.qt.io/browse/QTBUG-47509
-    */
-   if (base.Samples) {
-      surface_type &= ~EGL_PBUFFER_BIT;
-   }
-
    if (!surface_type)
       return NULL;
 
@@ -671,33 +649,53 @@ dri2_add_pbuffer_configs_for_visuals(_EGLDisplay *disp)
    return (config_count != 0);
 }
 
-__DRIimage *
-dri2_lookup_egl_image(__DRIscreen *screen, void *image, void *data)
+GLboolean
+dri2_validate_egl_image(void *image, void *data)
 {
    _EGLDisplay *disp = data;
-   struct dri2_egl_image *dri2_img;
    _EGLImage *img;
-
-   (void) screen;
 
    mtx_lock(&disp->Mutex);
    img = _eglLookupImage(image, disp);
    mtx_unlock(&disp->Mutex);
 
    if (img == NULL) {
-      _eglError(EGL_BAD_PARAMETER, "dri2_lookup_egl_image");
-      return NULL;
+      _eglError(EGL_BAD_PARAMETER, "dri2_validate_egl_image");
+      return false;
    }
+
+   return true;
+}
+
+__DRIimage *
+dri2_lookup_egl_image_validated(void *image, void *data)
+{
+   struct dri2_egl_image *dri2_img;
+
+   (void)data;
 
    dri2_img = dri2_egl_image(image);
 
    return dri2_img->dri_image;
 }
 
-const __DRIimageLookupExtension image_lookup_extension = {
-   .base = { __DRI_IMAGE_LOOKUP, 1 },
+__DRIimage *
+dri2_lookup_egl_image(__DRIscreen *screen, void *image, void *data)
+{
+   (void) screen;
 
-   .lookupEGLImage       = dri2_lookup_egl_image
+   if (!dri2_validate_egl_image(image, data))
+      return NULL;
+
+   return dri2_lookup_egl_image_validated(image, data);
+}
+
+const __DRIimageLookupExtension image_lookup_extension = {
+   .base = { __DRI_IMAGE_LOOKUP, 2 },
+
+   .lookupEGLImage       = dri2_lookup_egl_image,
+   .validateEGLImage     = dri2_validate_egl_image,
+   .lookupEGLImageValidated = dri2_lookup_egl_image_validated,
 };
 
 struct dri2_extension_match {
@@ -2659,6 +2657,12 @@ dri2_num_fourcc_format_planes(EGLint format)
    case DRM_FORMAT_VYUY:
    case DRM_FORMAT_AYUV:
    case DRM_FORMAT_XYUV8888:
+   case DRM_FORMAT_Y210:
+   case DRM_FORMAT_Y212:
+   case DRM_FORMAT_Y216:
+   case DRM_FORMAT_Y410:
+   case DRM_FORMAT_Y412:
+   case DRM_FORMAT_Y416:
       return 1;
 
    case DRM_FORMAT_NV12:
@@ -3502,6 +3506,8 @@ dri2_dup_native_fence_fd(_EGLDisplay *disp, _EGLSync *sync)
       _eglError(EGL_BAD_PARAMETER, "eglDupNativeFenceFDANDROID");
       return EGL_NO_NATIVE_FENCE_FD_ANDROID;
    }
+
+   assert(sync_valid_fd(sync->SyncFd));
 
    return os_dupfd_cloexec(sync->SyncFd);
 }

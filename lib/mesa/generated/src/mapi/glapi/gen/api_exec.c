@@ -390,7 +390,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
    if ((ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
       SET_DepthRangeArrayfvOES(exec, _mesa_DepthRangeArrayfvOES);
       SET_DepthRangeIndexedfOES(exec, _mesa_DepthRangeIndexedfOES);
-      SET_PrimitiveBoundingBox(exec, _mesa_PrimitiveBoundingBox);
    }
    if (_mesa_is_desktop_gl(ctx)) {
       SET_AlphaToCoverageDitherControlNV(exec, _mesa_AlphaToCoverageDitherControlNV);
@@ -409,8 +408,6 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_ClearDepth(exec, _mesa_ClearDepth);
       SET_ClearNamedBufferDataEXT(exec, _mesa_ClearNamedBufferDataEXT);
       SET_ClearNamedBufferSubDataEXT(exec, _mesa_ClearNamedBufferSubDataEXT);
-      SET_ClearTexImage(exec, _mesa_ClearTexImage);
-      SET_ClearTexSubImage(exec, _mesa_ClearTexSubImage);
       SET_ClientAttribDefaultEXT(exec, _mesa_ClientAttribDefaultEXT);
       SET_CompileShaderIncludeARB(exec, _mesa_CompileShaderIncludeARB);
       SET_CompressedMultiTexImage1DEXT(exec, _mesa_CompressedMultiTexImage1DEXT);
@@ -755,6 +752,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_WindowRectanglesEXT(exec, _mesa_WindowRectanglesEXT);
    }
    if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
+      SET_ClearTexImage(exec, _mesa_ClearTexImage);
+      SET_ClearTexSubImage(exec, _mesa_ClearTexSubImage);
       SET_DrawArraysIndirect(exec, _mesa_DrawArraysIndirect);
       SET_DrawElementsIndirect(exec, _mesa_DrawElementsIndirect);
       SET_EvaluateDepthValuesARB(exec, _mesa_EvaluateDepthValuesARB);
@@ -770,6 +769,7 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_GetTexLevelParameterfv(exec, _mesa_GetTexLevelParameterfv);
       SET_GetTexLevelParameteriv(exec, _mesa_GetTexLevelParameteriv);
       SET_MemoryBarrier(exec, _mesa_MemoryBarrier);
+      SET_PrimitiveBoundingBox(exec, _mesa_PrimitiveBoundingBox);
       SET_TexStorage2DMultisample(exec, _mesa_TexStorage2DMultisample);
       SET_TexStorage3DMultisample(exec, _mesa_TexStorage3DMultisample);
       SET_VertexAttribFormat(exec, _mesa_VertexAttribFormat);

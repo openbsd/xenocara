@@ -29,6 +29,7 @@ all:
 	mkdir -p src/mesa/program
 	mkdir -p src/util/format
 	mkdir -p src/vulkan/util
+	mkdir -p src/vulkan/wsi
 	${PYTHON} ${MESA_SRC}/src/mapi/new/gen_gldispatch_mapi.py \
 	    glesv1 ${MESA_SRC}/src/mapi/glapi/registry/gl.xml \
 	    > src/mapi/es1api/glapi_mapi_tmp.h
@@ -94,9 +95,6 @@ all:
 	${PYTHON} ${MESA_SRC}/src/gallium/drivers/r600/egd_tables.py \
 	    ${MESA_SRC}/src/gallium/drivers/r600/evergreend.h \
 	    > src/gallium/drivers/r600/egd_tables.h
-	${PYTHON} ${MESA_SRC}/src/gallium/drivers/r600/sfn/sfn_nir_algebraic.py \
-	    -p ${MESA_SRC}/src/compiler/nir/ \
-	    > src/gallium/drivers/r600/sfn_nir_algebraic.c
 	${PYTHON} ${MESA_SRC}/src/amd/registers/makeregheader.py \
 	    ${MESA_SRC}/src/amd/registers/gfx6.json \
 	    ${MESA_SRC}/src/amd/registers/gfx7.json \
@@ -164,10 +162,10 @@ all:
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_indices_gen.py \
 	    > src/gallium/auxiliary/u_indices_gen.c
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/util/u_tracepoints.py \
-	    -p ${MESA_SRC}/src/gallium/auxiliary/util/ \
+	    -p ${MESA_SRC}/src/util/perf/ \
 	    -C src/gallium/auxiliary/u_tracepoints.c
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/util/u_tracepoints.py \
-	    -p ${MESA_SRC}/src/gallium/auxiliary/util/ \
+	    -p ${MESA_SRC}/src/util/perf/ \
 	    -H src/gallium/auxiliary/u_tracepoints.h
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_unfilled_gen.py \
 	    > src/gallium/auxiliary/u_unfilled_gen.c
@@ -192,8 +190,8 @@ all:
 	    --csv ${MESA_SRC}/src/intel/isl/isl_format_layout.csv \
 	    --out src/intel/isl/isl_format_layout.c
 	${PYTHON} ${MESA_SRC}/src/intel/perf/gen_perf.py \
-	    --code src/intel/perf/gen_perf_metrics.c \
-	    --header src/intel/perf/gen_perf_metrics.h \
+	    --code src/intel/perf/intel_perf_metrics.c \
+	    --header src/intel/perf/intel_perf_metrics.h \
 	    ${MESA_SRC}/src/intel/perf/oa-hsw.xml \
 	    ${MESA_SRC}/src/intel/perf/oa-bdw.xml \
 	    ${MESA_SRC}/src/intel/perf/oa-chv.xml \
@@ -244,9 +242,6 @@ all:
 	${PYTHON} ${MESA_SRC}/src/mesa/main/format_info.py \
 	    ${MESA_SRC}/src/mesa/main/formats.csv \
 	    > src/mesa/format_info.h
-	${PYTHON} ${MESA_SRC}/src/mesa/main/format_pack.py \
-	    ${MESA_SRC}/src/mesa/main/formats.csv \
-	    > src/mesa/format_pack.c
 	${PYTHON} ${MESA_SRC}/src/mesa/main/get_hash_generator.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mesa/get_hash.h
@@ -291,7 +286,8 @@ all:
 	    --out-h src/amd/vulkan/radv_entrypoints.h \
 	    --out-c src/amd/vulkan/radv_entrypoints.c \
 	    --prefix radv \
-	    --device-prefix sqtt
+	    --device-prefix sqtt \
+	    --device-prefix metro_exodus
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
 	    --api-version 1.2 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
@@ -305,9 +301,22 @@ all:
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
+	    --out-h src/vulkan/wsi/wsi_common_entrypoints.h \
+	    --out-c src/vulkan/wsi/wsi_common_entrypoints.c \
+	    --prefix wsi
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --proto --weak \
 	    --out-h src/vulkan/util/vk_common_entrypoints.h \
 	    --out-c src/vulkan/util/vk_common_entrypoints.c \
 	    --prefix vk_common
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_physical_device_features.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --out-c src/vulkan/util/vk_physical_device_features.c
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_cmd_queue_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --out-c src/vulkan/util/vk_cmd_queue.c \
+	    --out-h src/vulkan/util/vk_cmd_queue.h
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_dispatch_table_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --out-c src/vulkan/util/vk_dispatch_table.c \
@@ -356,7 +365,6 @@ clean:
 	rm -f src/gallium/auxiliary/u_tracepoints.h
 	rm -f src/gallium/auxiliary/u_unfilled_gen.c
 	rm -f src/gallium/drivers/r600/egd_tables.h
-	rm -f src/gallium/drivers/r600/sfn_nir_algebraic.c
 	rm -f src/git_sha1.h
 	rm -f src/intel/compiler/brw_nir_trig_workarounds.c
 .for GEN in 4 45 5 6 7 75 8 9 11 12 125
@@ -366,8 +374,8 @@ clean:
 	rm -f src/intel/genxml/genX_xml.h
 	rm -f src/intel/genxml/gen_rt_pack.h
 	rm -f src/intel/isl/isl_format_layout.c
-	rm -f src/intel/perf/gen_perf_metrics.c
-	rm -f src/intel/perf/gen_perf_metrics.h
+	rm -f src/intel/perf/intel_perf_metrics.c
+	rm -f src/intel/perf/intel_perf_metrics.h
 	rm -f src/intel/vulkan/anv_entrypoints.c
 	rm -f src/intel/vulkan/anv_entrypoints.h
 	rm -f src/intel/vulkan/intel_icd.json
@@ -389,7 +397,6 @@ clean:
 	rm -f src/mapi/shared-glapi/glapi_mapi_tmp.h
 	rm -f src/mesa/format_fallback.c
 	rm -f src/mesa/format_info.h
-	rm -f src/mesa/format_pack.c
 	rm -f src/mesa/get_hash.h
 	rm -f src/mesa/main/dispatch.h
 	rm -f src/mesa/main/marshal_generated.h
@@ -401,11 +408,17 @@ clean:
 	rm -f src/util/format/u_format_pack.h
 	rm -f src/util/format/u_format_table.c
 	rm -f src/util/format_srgb.c
+	rm -f src/vulkan/util/vk_cmd_queue.c
+	rm -f src/vulkan/util/vk_cmd_queue.h
 	rm -f src/vulkan/util/vk_common_entrypoints.c
 	rm -f src/vulkan/util/vk_common_entrypoints.h
 	rm -f src/vulkan/util/vk_dispatch_table.c
 	rm -f src/vulkan/util/vk_dispatch_table.h
+	rm -f src/vulkan/util/vk_enum_defines.h
 	rm -f src/vulkan/util/vk_enum_to_str.c
 	rm -f src/vulkan/util/vk_enum_to_str.h
 	rm -f src/vulkan/util/vk_extensions.c
 	rm -f src/vulkan/util/vk_extensions.h
+	rm -f src/vulkan/util/vk_physical_device_features.c
+	rm -f src/vulkan/wsi/wsi_common_entrypoints.c
+	rm -f src/vulkan/wsi/wsi_common_entrypoints.h

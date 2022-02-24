@@ -310,10 +310,11 @@ util_queue_thread_func(void *input)
       mtx_unlock(&queue->lock);
 
       if (job.job) {
-         job.execute(job.job, thread_index);
-         util_queue_fence_signal(job.fence);
+         job.execute(job.job, job.global_data, thread_index);
+         if (job.fence)
+            util_queue_fence_signal(job.fence);
          if (job.cleanup)
-            job.cleanup(job.job, thread_index);
+            job.cleanup(job.job, job.global_data, thread_index);
       }
    }
 
@@ -323,7 +324,8 @@ util_queue_thread_func(void *input)
       for (unsigned i = queue->read_idx; i != queue->write_idx;
            i = (i + 1) % queue->max_jobs) {
          if (queue->jobs[i].job) {
-            util_queue_fence_signal(queue->jobs[i].fence);
+            if (queue->jobs[i].fence)
+               util_queue_fence_signal(queue->jobs[i].fence);
             queue->jobs[i].job = NULL;
          }
       }
@@ -372,17 +374,17 @@ util_queue_adjust_num_threads(struct util_queue *queue, unsigned num_threads)
    num_threads = MIN2(num_threads, queue->max_threads);
    num_threads = MAX2(num_threads, 1);
 
-   mtx_lock(&queue->finish_lock);
+   simple_mtx_lock(&queue->finish_lock);
    unsigned old_num_threads = queue->num_threads;
 
    if (num_threads == old_num_threads) {
-      mtx_unlock(&queue->finish_lock);
+      simple_mtx_unlock(&queue->finish_lock);
       return;
    }
 
    if (num_threads < old_num_threads) {
       util_queue_kill_threads(queue, num_threads, true);
-      mtx_unlock(&queue->finish_lock);
+      simple_mtx_unlock(&queue->finish_lock);
       return;
    }
 
@@ -396,7 +398,7 @@ util_queue_adjust_num_threads(struct util_queue *queue, unsigned num_threads)
       if (!util_queue_create_thread(queue, i))
          break;
    }
-   mtx_unlock(&queue->finish_lock);
+   simple_mtx_unlock(&queue->finish_lock);
 }
 
 bool
@@ -404,7 +406,8 @@ util_queue_init(struct util_queue *queue,
                 const char *name,
                 unsigned max_jobs,
                 unsigned num_threads,
-                unsigned flags)
+                unsigned flags,
+                void *global_data)
 {
    unsigned i;
 
@@ -438,27 +441,28 @@ util_queue_init(struct util_queue *queue,
 
    queue->flags = flags;
    queue->max_threads = num_threads;
-   queue->num_threads = num_threads;
+   queue->num_threads = (flags & UTIL_QUEUE_INIT_SCALE_THREADS) ? 1 : num_threads;
    queue->max_jobs = max_jobs;
+   queue->global_data = global_data;
+
+   (void) mtx_init(&queue->lock, mtx_plain);
+   (void) simple_mtx_init(&queue->finish_lock, mtx_plain);
+
+   queue->num_queued = 0;
+   cnd_init(&queue->has_queued_cond);
+   cnd_init(&queue->has_space_cond);
 
    queue->jobs = (struct util_queue_job*)
                  calloc(max_jobs, sizeof(struct util_queue_job));
    if (!queue->jobs)
       goto fail;
 
-   (void) mtx_init(&queue->lock, mtx_plain);
-   (void) mtx_init(&queue->finish_lock, mtx_plain);
-
-   queue->num_queued = 0;
-   cnd_init(&queue->has_queued_cond);
-   cnd_init(&queue->has_space_cond);
-
-   queue->threads = (thrd_t*) calloc(num_threads, sizeof(thrd_t));
+   queue->threads = (thrd_t*) calloc(queue->max_threads, sizeof(thrd_t));
    if (!queue->threads)
       goto fail;
 
    /* start threads */
-   for (i = 0; i < num_threads; i++) {
+   for (i = 0; i < queue->num_threads; i++) {
       if (!util_queue_create_thread(queue, i)) {
          if (i == 0) {
             /* no threads created, fail */
@@ -496,10 +500,10 @@ util_queue_kill_threads(struct util_queue *queue, unsigned keep_num_threads,
 
    /* Signal all threads to terminate. */
    if (!finish_locked)
-      mtx_lock(&queue->finish_lock);
+      simple_mtx_lock(&queue->finish_lock);
 
    if (keep_num_threads >= queue->num_threads) {
-      mtx_unlock(&queue->finish_lock);
+      simple_mtx_unlock(&queue->finish_lock);
       return;
    }
 
@@ -516,18 +520,28 @@ util_queue_kill_threads(struct util_queue *queue, unsigned keep_num_threads,
       thrd_join(queue->threads[i], NULL);
 
    if (!finish_locked)
-      mtx_unlock(&queue->finish_lock);
+      simple_mtx_unlock(&queue->finish_lock);
+}
+
+static void
+util_queue_finish_execute(void *data, void *gdata, int num_thread)
+{
+   util_barrier *barrier = data;
+   util_barrier_wait(barrier);
 }
 
 void
 util_queue_destroy(struct util_queue *queue)
 {
    util_queue_kill_threads(queue, 0, false);
-   remove_from_atexit_list(queue);
+
+   /* This makes it safe to call on a queue that failedutil_queue_init. */
+   if (queue->head.next != NULL)
+      remove_from_atexit_list(queue);
 
    cnd_destroy(&queue->has_space_cond);
    cnd_destroy(&queue->has_queued_cond);
-   mtx_destroy(&queue->finish_lock);
+   simple_mtx_destroy(&queue->finish_lock);
    mtx_destroy(&queue->lock);
    free(queue->jobs);
    free(queue->threads);
@@ -552,11 +566,19 @@ util_queue_add_job(struct util_queue *queue,
       return;
    }
 
-   util_queue_fence_reset(fence);
+   if (fence)
+      util_queue_fence_reset(fence);
 
    assert(queue->num_queued >= 0 && queue->num_queued <= queue->max_jobs);
 
+
    if (queue->num_queued == queue->max_jobs) {
+      if ((queue->flags & UTIL_QUEUE_INIT_SCALE_THREADS) &&
+          execute != util_queue_finish_execute &&
+          queue->num_threads < queue->max_threads) {
+         util_queue_adjust_num_threads(queue, queue->num_threads + 1);
+      }
+
       if (queue->flags & UTIL_QUEUE_INIT_RESIZE_IF_FULL &&
           queue->total_jobs_size + job_size < S_256MB) {
          /* If the queue is full, make it larger to avoid waiting for a free
@@ -594,6 +616,7 @@ util_queue_add_job(struct util_queue *queue,
    ptr = &queue->jobs[queue->write_idx];
    assert(ptr->job == NULL);
    ptr->job = job;
+   ptr->global_data = queue->global_data;
    ptr->fence = fence;
    ptr->execute = execute;
    ptr->cleanup = cleanup;
@@ -630,7 +653,7 @@ util_queue_drop_job(struct util_queue *queue, struct util_queue_fence *fence)
         i = (i + 1) % queue->max_jobs) {
       if (queue->jobs[i].fence == fence) {
          if (queue->jobs[i].cleanup)
-            queue->jobs[i].cleanup(queue->jobs[i].job, -1);
+            queue->jobs[i].cleanup(queue->jobs[i].job, queue->global_data, -1);
 
          /* Just clear it. The threads will treat as a no-op job. */
          memset(&queue->jobs[i], 0, sizeof(queue->jobs[i]));
@@ -646,13 +669,6 @@ util_queue_drop_job(struct util_queue *queue, struct util_queue_fence *fence)
       util_queue_fence_wait(fence);
 }
 
-static void
-util_queue_finish_execute(void *data, int num_thread)
-{
-   util_barrier *barrier = data;
-   util_barrier_wait(barrier);
-}
-
 /**
  * Wait until all previously added jobs have completed.
  */
@@ -666,11 +682,11 @@ util_queue_finish(struct util_queue *queue)
     * a deadlock would happen, because 1 barrier requires that all threads
     * wait for it exclusively.
     */
-   mtx_lock(&queue->finish_lock);
+   simple_mtx_lock(&queue->finish_lock);
 
    /* The number of threads can be changed to 0, e.g. by the atexit handler. */
    if (!queue->num_threads) {
-      mtx_unlock(&queue->finish_lock);
+      simple_mtx_unlock(&queue->finish_lock);
       return;
    }
 
@@ -687,7 +703,7 @@ util_queue_finish(struct util_queue *queue)
       util_queue_fence_wait(&fences[i]);
       util_queue_fence_destroy(&fences[i]);
    }
-   mtx_unlock(&queue->finish_lock);
+   simple_mtx_unlock(&queue->finish_lock);
 
    util_barrier_destroy(&barrier);
 

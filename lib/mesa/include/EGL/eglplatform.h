@@ -25,7 +25,7 @@
 */
 
 /* Platform-specific types and definitions for egl.h
- * $Revision: 1.22 $ on $Date: 2021/09/09 09:59:14 $
+ * $Revision: 1.23 $ on $Date: 2022/02/24 02:29:48 $
  *
  * Adopters may modify khrplatform.h and this file to suit their platform.
  * You are encouraged to submit all modifications to the Khronos group so that

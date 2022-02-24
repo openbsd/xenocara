@@ -21,9 +21,9 @@
 //
 // Extract from Serge's printf clover code by airlied.
 
-#include "u_printf.h"
 #include <assert.h>
 #include <stdarg.h>
+#include "u_printf.h"
 #include "util/macros.h"
 
 /* Some versions of MinGW are missing _vscprintf's declaration, although they

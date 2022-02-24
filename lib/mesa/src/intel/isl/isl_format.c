@@ -25,7 +25,7 @@
 
 #include "isl.h"
 #include "isl_priv.h"
-#include "dev/gen_device_info.h"
+#include "dev/intel_device_info.h"
 
 #include "main/macros.h" /* Needed for MAX3 and MAX2 for format_rgb9e5 */
 #include "util/format_srgb.h"
@@ -83,6 +83,8 @@ struct surface_format_info {
  * VB    - Input Vertex Buffer
  * SO    - Steamed Output Vertex Buffers (transform feedback)
  * color - Color Processing
+ * TW    - Typed Write
+ * TR    - Typed Read
  * ccs_e - Lossless Compression Support (gfx9+ only)
  * sf    - Surface Format
  *
@@ -597,6 +599,10 @@ isl_format_for_pipe_format(enum pipe_format pf)
 
       [PIPE_FORMAT_ETC1_RGB8]               = ISL_FORMAT_ETC1_RGB8,
 
+      /* The formats say YCrCb, but there's no colorspace conversion. */
+      [PIPE_FORMAT_R8G8_R8B8_UNORM]         = ISL_FORMAT_YCRCB_NORMAL,
+      [PIPE_FORMAT_G8R8_B8R8_UNORM]         = ISL_FORMAT_YCRCB_SWAPY,
+
       [PIPE_FORMAT_R8G8B8X8_SRGB]           = ISL_FORMAT_R8G8B8X8_UNORM_SRGB,
       [PIPE_FORMAT_B10G10R10X2_UNORM]       = ISL_FORMAT_B10G10R10X2_UNORM,
       [PIPE_FORMAT_R16G16B16X16_UNORM]      = ISL_FORMAT_R16G16B16X16_UNORM,
@@ -672,12 +678,6 @@ isl_format_for_pipe_format(enum pipe_format pf)
    return table[pf];
 }
 
-static unsigned
-format_gen(const struct gen_device_info *devinfo)
-{
-   return devinfo->ver * 10 + (devinfo->is_g4x || devinfo->is_haswell) * 5;
-}
-
 static bool
 format_info_exists(enum isl_format format)
 {
@@ -687,27 +687,27 @@ format_info_exists(enum isl_format format)
 }
 
 bool
-isl_format_supports_rendering(const struct gen_device_info *devinfo,
+isl_format_supports_rendering(const struct intel_device_info *devinfo,
                               enum isl_format format)
 {
    if (!format_info_exists(format))
       return false;
 
-   return format_gen(devinfo) >= format_info[format].render_target;
+   return devinfo->verx10 >= format_info[format].render_target;
 }
 
 bool
-isl_format_supports_alpha_blending(const struct gen_device_info *devinfo,
+isl_format_supports_alpha_blending(const struct intel_device_info *devinfo,
                                    enum isl_format format)
 {
    if (!format_info_exists(format))
       return false;
 
-   return format_gen(devinfo) >= format_info[format].alpha_blend;
+   return devinfo->verx10 >= format_info[format].alpha_blend;
 }
 
 bool
-isl_format_supports_sampling(const struct gen_device_info *devinfo,
+isl_format_supports_sampling(const struct intel_device_info *devinfo,
                              enum isl_format format)
 {
    if (!format_info_exists(format))
@@ -721,59 +721,51 @@ isl_format_supports_sampling(const struct gen_device_info *devinfo,
       if (fmtl->txc == ISL_TXC_ETC1 || fmtl->txc == ISL_TXC_ETC2)
          return true;
    } else if (devinfo->is_cherryview) {
-      const struct isl_format_layout *fmtl = isl_format_get_layout(format);
-      /* Support for ASTC LDR exists on Cherry View even though big-core
-       * GPUs didn't get it until Skylake.
+      /* Support for ASTC LDR theoretically exists on Cherry View even though
+       * big-core GPUs didn't get it until Skylake.  However, it's fairly
+       * badly broken and requires some nasty workarounds which no Mesa driver
+       * has ever implemented.
        */
-      if (fmtl->txc == ISL_TXC_ASTC)
-         return format < ISL_FORMAT_ASTC_HDR_2D_4X4_FLT16;
-   } else if (gen_device_info_is_9lp(devinfo)) {
+   } else if (intel_device_info_is_9lp(devinfo)) {
       const struct isl_format_layout *fmtl = isl_format_get_layout(format);
       /* Support for ASTC HDR exists on Broxton even though big-core
        * GPUs didn't get it until Cannonlake.
        */
       if (fmtl->txc == ISL_TXC_ASTC)
          return true;
+   } else if (devinfo->verx10 >= 125) {
+      const struct isl_format_layout *fmtl = isl_format_get_layout(format);
+      /* ASTC & FXT1 support was removed from the hardware on Gfx12.5.
+       * Annoyingly, our format_info table doesn't have a concept of things
+       * being removed so we handle it as yet another special case.
+       *
+       * See HSD 1408144932 (ASTC), 1407633611 (FXT1)
+       *
+       */
+      if (fmtl->txc == ISL_TXC_ASTC || fmtl->txc == ISL_TXC_FXT1)
+         return false;
    }
 
-   return format_gen(devinfo) >= format_info[format].sampling;
+   return devinfo->verx10 >= format_info[format].sampling;
 }
 
 bool
-isl_format_supports_filtering(const struct gen_device_info *devinfo,
+isl_format_supports_filtering(const struct intel_device_info *devinfo,
                               enum isl_format format)
 {
    if (!format_info_exists(format))
       return false;
 
-   if (devinfo->is_baytrail) {
-      const struct isl_format_layout *fmtl = isl_format_get_layout(format);
-      /* Support for ETC1 and ETC2 exists on Bay Trail even though big-core
-       * GPUs didn't get it until Broadwell.
-       */
-      if (fmtl->txc == ISL_TXC_ETC1 || fmtl->txc == ISL_TXC_ETC2)
-         return true;
-   } else if (devinfo->is_cherryview) {
-      const struct isl_format_layout *fmtl = isl_format_get_layout(format);
-      /* Support for ASTC LDR exists on Cherry View even though big-core
-       * GPUs didn't get it until Skylake.
-       */
-      if (fmtl->txc == ISL_TXC_ASTC)
-         return format < ISL_FORMAT_ASTC_HDR_2D_4X4_FLT16;
-   } else if (gen_device_info_is_9lp(devinfo)) {
-      const struct isl_format_layout *fmtl = isl_format_get_layout(format);
-      /* Support for ASTC HDR exists on Broxton even though big-core
-       * GPUs didn't get it until Cannonlake.
-       */
-      if (fmtl->txc == ISL_TXC_ASTC)
-         return true;
+   if (isl_format_is_compressed(format)) {
+      assert(format_info[format].filtering == format_info[format].sampling);
+      return isl_format_supports_sampling(devinfo, format);
    }
 
-   return format_gen(devinfo) >= format_info[format].filtering;
+   return devinfo->verx10 >= format_info[format].filtering;
 }
 
 bool
-isl_format_supports_vertex_fetch(const struct gen_device_info *devinfo,
+isl_format_supports_vertex_fetch(const struct intel_device_info *devinfo,
                                  enum isl_format format)
 {
    if (!format_info_exists(format))
@@ -785,20 +777,20 @@ isl_format_supports_vertex_fetch(const struct gen_device_info *devinfo,
    if (devinfo->is_baytrail)
       return 75 >= format_info[format].input_vb;
 
-   return format_gen(devinfo) >= format_info[format].input_vb;
+   return devinfo->verx10 >= format_info[format].input_vb;
 }
 
 /**
  * Returns true if the given format can support typed writes.
  */
 bool
-isl_format_supports_typed_writes(const struct gen_device_info *devinfo,
+isl_format_supports_typed_writes(const struct intel_device_info *devinfo,
                                  enum isl_format format)
 {
    if (!format_info_exists(format))
       return false;
 
-   return format_gen(devinfo) >= format_info[format].typed_write;
+   return devinfo->verx10 >= format_info[format].typed_write;
 }
 
 
@@ -813,13 +805,13 @@ isl_format_supports_typed_writes(const struct gen_device_info *devinfo,
  * occurrences.
  */
 bool
-isl_format_supports_typed_reads(const struct gen_device_info *devinfo,
+isl_format_supports_typed_reads(const struct intel_device_info *devinfo,
                                 enum isl_format format)
 {
    if (!format_info_exists(format))
       return false;
 
-   return format_gen(devinfo) >= format_info[format].typed_read;
+   return devinfo->verx10 >= format_info[format].typed_read;
 }
 
 /**
@@ -829,7 +821,7 @@ isl_format_supports_typed_reads(const struct gen_device_info *devinfo,
  * and sample count.  See isl_surf_get_ccs_surf for details.
  */
 bool
-isl_format_supports_ccs_d(const struct gen_device_info *devinfo,
+isl_format_supports_ccs_d(const struct intel_device_info *devinfo,
                           enum isl_format format)
 {
    /* Clear-only compression was first added on Ivy Bridge and was last
@@ -853,7 +845,7 @@ isl_format_supports_ccs_d(const struct gen_device_info *devinfo,
  * such as tiling and sample count.  See isl_surf_get_ccs_surf for details.
  */
 bool
-isl_format_supports_ccs_e(const struct gen_device_info *devinfo,
+isl_format_supports_ccs_e(const struct intel_device_info *devinfo,
                           enum isl_format format)
 {
    /* Wa_22011186057: Disable compression on ADL-P A0 */
@@ -872,11 +864,11 @@ isl_format_supports_ccs_e(const struct gen_device_info *devinfo,
    if (format == ISL_FORMAT_R11G11B10_FLOAT)
       return false;
 
-   return format_gen(devinfo) >= format_info[format].ccs_e;
+   return devinfo->verx10 >= format_info[format].ccs_e;
 }
 
 bool
-isl_format_supports_multisampling(const struct gen_device_info *devinfo,
+isl_format_supports_multisampling(const struct intel_device_info *devinfo,
                                   enum isl_format format)
 {
    /* From the Sandybridge PRM, Volume 4 Part 1 p72, SURFACE_STATE, Surface
@@ -923,7 +915,7 @@ isl_format_supports_multisampling(const struct gen_device_info *devinfo,
  * format-dependent.
  */
 bool
-isl_formats_are_ccs_e_compatible(const struct gen_device_info *devinfo,
+isl_formats_are_ccs_e_compatible(const struct intel_device_info *devinfo,
                                  enum isl_format format1,
                                  enum isl_format format2)
 {
@@ -1188,11 +1180,11 @@ pack_channel(const union isl_color_value *value, unsigned i,
       }
       break;
    case ISL_UINT:
-      packed = MIN(value->u32[i], MAX_UINT(layout->bits));
+      packed = MIN(value->u32[i], u_uintN_max(layout->bits));
       break;
    case ISL_SINT:
-      packed = MIN(MAX(value->u32[i], MIN_INT(layout->bits)),
-                   MAX_INT(layout->bits));
+      packed = CLAMP(value->u32[i], u_intN_min(layout->bits),
+                     u_intN_max(layout->bits));
       break;
 
    default:
@@ -1202,7 +1194,7 @@ pack_channel(const union isl_color_value *value, unsigned i,
    unsigned dword = layout->start_bit / 32;
    unsigned bit = layout->start_bit % 32;
    assert(bit + layout->bits <= 32);
-   data_out[dword] |= (packed & MAX_UINT(layout->bits)) << bit;
+   data_out[dword] |= (packed & u_uintN_max(layout->bits)) << bit;
 }
 
 /**
@@ -1264,7 +1256,7 @@ unpack_channel(union isl_color_value *value,
    unsigned dword = layout->start_bit / 32;
    unsigned bit = layout->start_bit % 32;
    assert(bit + layout->bits <= 32);
-   uint32_t packed = (data_in[dword] >> bit) & MAX_UINT(layout->bits);
+   uint32_t packed = (data_in[dword] >> bit) & u_uintN_max(layout->bits);
 
    union {
       uint32_t u32;

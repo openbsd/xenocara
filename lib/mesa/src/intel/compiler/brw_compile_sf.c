@@ -24,7 +24,7 @@
 #include "brw_compiler.h"
 #include "brw_eu.h"
 
-#include "dev/gen_debug.h"
+#include "dev/intel_debug.h"
 
 struct brw_sf_compile {
    struct brw_codegen func;
@@ -868,7 +868,7 @@ brw_compile_sf(const struct brw_compiler *compiler,
 
    const unsigned *program = brw_get_program(&c.func, final_assembly_size);
 
-   if (INTEL_DEBUG & DEBUG_SF) {
+   if (INTEL_DEBUG(DEBUG_SF)) {
       fprintf(stderr, "sf:\n");
       brw_disassemble_with_labels(compiler->devinfo,
                                   program, 0, *final_assembly_size, stderr);

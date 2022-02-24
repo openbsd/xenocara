@@ -28,8 +28,8 @@
 #include "drm-uapi/i915_drm.h"
 
 #include "isl.h"
-#include "dev/gen_device_info.h"
-#include "dev/gen_debug.h"
+#include "dev/intel_device_info.h"
+#include "dev/intel_debug.h"
 
 uint32_t
 isl_tiling_to_i915_tiling(enum isl_tiling tiling)
@@ -49,6 +49,8 @@ isl_tiling_to_i915_tiling(enum isl_tiling tiling)
    case ISL_TILING_W:
    case ISL_TILING_Yf:
    case ISL_TILING_Ys:
+   case ISL_TILING_4:
+   case ISL_TILING_64:
    case ISL_TILING_GFX12_CCS:
       return I915_TILING_NONE;
    }
@@ -136,7 +138,7 @@ isl_drm_modifier_get_info(uint64_t modifier)
 }
 
 uint32_t
-isl_drm_modifier_get_score(const struct gen_device_info *devinfo,
+isl_drm_modifier_get_score(const struct intel_device_info *devinfo,
                            uint64_t modifier)
 {
    /* FINISHME: Add gfx12 modifiers */
@@ -148,13 +150,17 @@ isl_drm_modifier_get_score(const struct gen_device_info *devinfo,
    case I915_FORMAT_MOD_X_TILED:
       return 2;
    case I915_FORMAT_MOD_Y_TILED:
+      /* Gfx12.5 doesn't have Y-tiling. */
+      if (devinfo->verx10 >= 125)
+         return 0;
+
       return 3;
    case I915_FORMAT_MOD_Y_TILED_CCS:
       /* Gfx12's CCS layout differs from Gfx9-11. */
       if (devinfo->ver >= 12)
          return 0;
 
-      if (INTEL_DEBUG & DEBUG_NO_RBC)
+      if (INTEL_DEBUG(DEBUG_NO_RBC))
          return 0;
 
       return 4;

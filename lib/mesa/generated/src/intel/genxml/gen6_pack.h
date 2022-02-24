@@ -1934,10 +1934,10 @@ GFX6_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ReorderMode, 30, 30);
 }
 
-#define GFX6_3DSTATE_GS_SVB_INDEX_length       7
+#define GFX6_3DSTATE_GS_SVB_INDEX_length       4
 #define GFX6_3DSTATE_GS_SVB_INDEX_length_bias      2
 #define GFX6_3DSTATE_GS_SVB_INDEX_header        \
-   .DWordLength                         =      5,  \
+   .DWordLength                         =      2,  \
    ._3DCommandSubOpcode                 =     11,  \
    ._3DCommandOpcode                    =      1,  \
    .CommandSubType                      =      3,  \
@@ -1978,12 +1978,6 @@ GFX6_3DSTATE_GS_SVB_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[3] =
       __gen_uint(values->MaximumIndex, 0, 31);
-
-   dw[4] = 0;
-
-   dw[5] = 0;
-
-   dw[6] = 0;
 }
 
 #define GFX6_3DSTATE_HIER_DEPTH_BUFFER_length      3

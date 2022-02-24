@@ -116,6 +116,7 @@ static int parse_w(const char *str)
 "@in"                             return TOKEN(T_A_IN);
 "@out"                            return TOKEN(T_A_OUT);
 "@tex"                            return TOKEN(T_A_TEX);
+"@pvtmem"                         return TOKEN(T_A_PVTMEM);
 "(sy)"                            return TOKEN(T_SY);
 "(ss)"                            return TOKEN(T_SS);
 "(absneg)"                        return TOKEN(T_ABSNEG);
@@ -125,6 +126,7 @@ static int parse_w(const char *str)
 "(ul)"                            return TOKEN(T_UL);
 "(even)"                          return TOKEN(T_EVEN);
 "(pos_infinity)"                  return TOKEN(T_POS_INFINITY);
+"(neg_infinity)"                  return TOKEN(T_NEG_INFINITY);
 "(ei)"                            return TOKEN(T_EI);
 "(jp)"                            return TOKEN(T_JP);
 "(sat)"                           return TOKEN(T_SAT);
@@ -179,6 +181,9 @@ static int parse_w(const char *str)
 "mova"                            return TOKEN(T_OP_MOVA);
 "mov"                             return TOKEN(T_OP_MOV);
 "cov"                             return TOKEN(T_OP_COV);
+"swz"                             return TOKEN(T_OP_SWZ);
+"gat"                             return TOKEN(T_OP_GAT);
+"sct"                             return TOKEN(T_OP_SCT);
 
 ("f16"|"f32"|"u16"|"u32"|"s16"|"s32"|"u8"|"s8"){2} ir3_yylval.str = yytext; return T_CAT1_TYPE_TYPE;
 
@@ -247,6 +252,7 @@ static int parse_w(const char *str)
 "sel.f32"                         return TOKEN(T_OP_SEL_F32);
 "sad.s16"                         return TOKEN(T_OP_SAD_S16);
 "sad.s32"                         return TOKEN(T_OP_SAD_S32);
+"shlg.b16"                        return TOKEN(T_OP_SHLG_B16);
 
                                   /* category 4: */
 "rcp"                             return TOKEN(T_OP_RCP);
@@ -292,9 +298,11 @@ static int parse_w(const char *str)
 
                                   /* category 6: */
 "ldg"                             return TOKEN(T_OP_LDG);
+"ldg.a"                           return TOKEN(T_OP_LDG_A);
 "ldl"                             return TOKEN(T_OP_LDL);
 "ldp"                             return TOKEN(T_OP_LDP);
 "stg"                             return TOKEN(T_OP_STG);
+"stg.a"                           return TOKEN(T_OP_STG_A);
 "stl"                             return TOKEN(T_OP_STL);
 "stp"                             return TOKEN(T_OP_STP);
 "ldib"                            return TOKEN(T_OP_LDIB);

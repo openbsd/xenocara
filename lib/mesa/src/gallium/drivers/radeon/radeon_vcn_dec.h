@@ -224,6 +224,7 @@
 #define TYPE7 7
 
 /* VP9 Frame header flags */
+#define RDECODE_FRAME_HDR_INFO_VP9_USE_UNCOMPRESSED_HEADER_SHIFT      (14)
 #define RDECODE_FRAME_HDR_INFO_VP9_USE_PREV_IN_FIND_MV_REFS_SHIFT     (13)
 #define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_UPDATE_SHIFT        (12)
 #define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_ENABLED_SHIFT       (11)
@@ -239,6 +240,8 @@
 #define RDECODE_FRAME_HDR_INFO_VP9_FRAME_TYPE_SHIFT                   (1)
 #define RDECODE_FRAME_HDR_INFO_VP9_SHOW_EXISTING_FRAME_SHIFT          (0)
 
+
+#define RDECODE_FRAME_HDR_INFO_VP9_USE_UNCOMPRESSED_HEADER_MASK      (0x00004000)
 #define RDECODE_FRAME_HDR_INFO_VP9_USE_PREV_IN_FIND_MV_REFS_MASK     (0x00002000)
 #define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_UPDATE_MASK        (0x00001000)
 #define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_ENABLED_MASK       (0x00000800)
@@ -745,6 +748,7 @@ typedef struct rvcn_dec_message_hevc_s {
    unsigned char hevc_reserved[2];
 
    unsigned char direct_reflist[2][15];
+   unsigned int st_rps_bits;
 } rvcn_dec_message_hevc_t;
 
 typedef struct rvcn_dec_message_vp9_s {
@@ -1079,6 +1083,10 @@ struct radeon_decoder {
    unsigned stream_handle;
    unsigned stream_type;
    unsigned frame_number;
+   unsigned db_alignment;
+   unsigned dpb_size;
+   unsigned last_width;
+   unsigned last_height;
 
    struct pipe_screen *screen;
    struct radeon_winsys *ws;
@@ -1101,6 +1109,7 @@ struct radeon_decoder {
    void *render_pic_list[32];
    bool show_frame;
    unsigned ref_idx;
+   bool tmz_ctx;
    struct {
       unsigned data0;
       unsigned data1;

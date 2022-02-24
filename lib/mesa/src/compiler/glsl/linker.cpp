@@ -2126,7 +2126,7 @@ link_fs_inout_layout_qualifiers(struct gl_shader_program *prog,
          shader->SampleInterlockOrdered;
       linked_shader->Program->info.fs.sample_interlock_unordered |=
          shader->SampleInterlockUnordered;
-      linked_shader->Program->sh.fs.BlendSupport |= shader->BlendSupport;
+      linked_shader->Program->info.fs.advanced_blend_modes |= shader->BlendSupport;
    }
 
    linked_shader->Program->info.fs.pixel_center_integer = pixel_center_integer;
@@ -2264,9 +2264,9 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
       return;
 
    for (int i = 0; i < 3; i++)
-      gl_prog->info.cs.local_size[i] = 0;
+      gl_prog->info.workgroup_size[i] = 0;
 
-   gl_prog->info.cs.local_size_variable = false;
+   gl_prog->info.workgroup_size_variable = false;
 
    gl_prog->info.cs.derivative_group = DERIVATIVE_GROUP_NONE;
 
@@ -2284,9 +2284,9 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
       struct gl_shader *shader = shader_list[sh];
 
       if (shader->info.Comp.LocalSize[0] != 0) {
-         if (gl_prog->info.cs.local_size[0] != 0) {
+         if (gl_prog->info.workgroup_size[0] != 0) {
             for (int i = 0; i < 3; i++) {
-               if (gl_prog->info.cs.local_size[i] !=
+               if (gl_prog->info.workgroup_size[i] !=
                    shader->info.Comp.LocalSize[i]) {
                   linker_error(prog, "compute shader defined with conflicting "
                                "local sizes\n");
@@ -2295,11 +2295,11 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
             }
          }
          for (int i = 0; i < 3; i++) {
-            gl_prog->info.cs.local_size[i] =
+            gl_prog->info.workgroup_size[i] =
                shader->info.Comp.LocalSize[i];
          }
       } else if (shader->info.Comp.LocalSizeVariable) {
-         if (gl_prog->info.cs.local_size[0] != 0) {
+         if (gl_prog->info.workgroup_size[0] != 0) {
             /* The ARB_compute_variable_group_size spec says:
              *
              *     If one compute shader attached to a program declares a
@@ -2311,7 +2311,7 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
                          "variable local group size\n");
             return;
          }
-         gl_prog->info.cs.local_size_variable = true;
+         gl_prog->info.workgroup_size_variable = true;
       }
 
       enum gl_derivative_group group = shader->info.Comp.DerivativeGroup;
@@ -2330,30 +2330,30 @@ link_cs_input_layout_qualifiers(struct gl_shader_program *prog,
     * since we already know we're in the right type of shader program
     * for doing it.
     */
-   if (gl_prog->info.cs.local_size[0] == 0 &&
-       !gl_prog->info.cs.local_size_variable) {
+   if (gl_prog->info.workgroup_size[0] == 0 &&
+       !gl_prog->info.workgroup_size_variable) {
       linker_error(prog, "compute shader must contain a fixed or a variable "
                          "local group size\n");
       return;
    }
 
    if (gl_prog->info.cs.derivative_group == DERIVATIVE_GROUP_QUADS) {
-      if (gl_prog->info.cs.local_size[0] % 2 != 0) {
+      if (gl_prog->info.workgroup_size[0] % 2 != 0) {
          linker_error(prog, "derivative_group_quadsNV must be used with a "
                       "local group size whose first dimension "
                       "is a multiple of 2\n");
          return;
       }
-      if (gl_prog->info.cs.local_size[1] % 2 != 0) {
+      if (gl_prog->info.workgroup_size[1] % 2 != 0) {
          linker_error(prog, "derivative_group_quadsNV must be used with a local"
                       "group size whose second dimension "
                       "is a multiple of 2\n");
          return;
       }
    } else if (gl_prog->info.cs.derivative_group == DERIVATIVE_GROUP_LINEAR) {
-      if ((gl_prog->info.cs.local_size[0] *
-           gl_prog->info.cs.local_size[1] *
-           gl_prog->info.cs.local_size[2]) % 4 != 0) {
+      if ((gl_prog->info.workgroup_size[0] *
+           gl_prog->info.workgroup_size[1] *
+           gl_prog->info.workgroup_size[2]) % 4 != 0) {
          linker_error(prog, "derivative_group_linearNV must be used with a "
                       "local group size whose total number of invocations "
                       "is a multiple of 4\n");

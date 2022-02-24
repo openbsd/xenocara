@@ -773,6 +773,65 @@ GFX12_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->BlendConstantColorAlpha);
 }
 
+#define GFX12_CPS_STATE_length                 8
+struct GFX12_CPS_STATE {
+   float                                MinCPSizeX;
+   bool                                 StatisticsEnable;
+   uint32_t                             CoarsePixelShadingMode;
+#define CPS_MODE_NONE                            0
+#define CPS_MODE_CONSTANT                        1
+#define CPS_MODE_RADIAL                          2
+   uint32_t                             ScaleAxis;
+#define SCALE_AXIS_XAxis                         0
+#define SCALE_AXIS_YAxis                         1
+   float                                MinCPSizeY;
+   float                                MaxCPSizeX;
+   float                                MaxCPSizeY;
+   float                                YFocal;
+   float                                XFocal;
+   float                                My;
+   float                                Mx;
+   float                                Rmin;
+   float                                Aspect;
+};
+
+static inline __attribute__((always_inline)) void
+GFX12_CPS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                     __attribute__((unused)) void * restrict dst,
+                     __attribute__((unused)) const struct GFX12_CPS_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_sfixed(values->MinCPSizeX, 0, 10, 7) |
+      __gen_uint(values->StatisticsEnable, 11, 11) |
+      __gen_uint(values->CoarsePixelShadingMode, 12, 13) |
+      __gen_uint(values->ScaleAxis, 14, 14) |
+      __gen_sfixed(values->MinCPSizeY, 16, 26, 7);
+
+   dw[1] =
+      __gen_sfixed(values->MaxCPSizeX, 0, 10, 7) |
+      __gen_sfixed(values->MaxCPSizeY, 16, 26, 7);
+
+   dw[2] =
+      __gen_sfixed(values->YFocal, 0, 15, 0);
+
+   dw[3] =
+      __gen_sfixed(values->XFocal, 0, 15, 0);
+
+   dw[4] =
+      __gen_float(values->My);
+
+   dw[5] =
+      __gen_float(values->Mx);
+
+   dw[6] =
+      __gen_float(values->Rmin);
+
+   dw[7] =
+      __gen_float(values->Aspect);
+}
+
 #define GFX12_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR_length      1
 struct GFX12_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR {
    uint32_t                             TargetFunctionID;
@@ -1574,13 +1633,13 @@ struct GFX12_RENDER_SURFACE_STATE {
 #define XMAJOR                                   2
 #define YMAJOR                                   3
    uint32_t                             SurfaceHorizontalAlignment;
-#define HALIGN4                                  1
-#define HALIGN8                                  2
-#define HALIGN16                                 3
+#define HALIGN_4                                 1
+#define HALIGN_8                                 2
+#define HALIGN_16                                3
    uint32_t                             SurfaceVerticalAlignment;
-#define VALIGN4                                  1
-#define VALIGN8                                  2
-#define VALIGN16                                 3
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
    uint32_t                             SurfaceFormat;
    bool                                 SurfaceArray;
    uint32_t                             SurfaceType;
@@ -1918,19 +1977,20 @@ struct GFX12_SAMPLER_STATE {
    uint32_t                             TextureBorderColorMode;
 #define DX10OGL                                  0
 #define DX9                                      1
+   bool                                 CPSLODCompensationEnable;
    bool                                 SamplerDisable;
    uint32_t                             CubeSurfaceControlMode;
 #define PROGRAMMED                               0
 #define OVERRIDE                                 1
    uint32_t                             ShadowFunction;
-#define PREFILTEROPALWAYS                        0
-#define PREFILTEROPNEVER                         1
-#define PREFILTEROPLESS                          2
-#define PREFILTEROPEQUAL                         3
-#define PREFILTEROPLEQUAL                        4
-#define PREFILTEROPGREATER                       5
-#define PREFILTEROPNOTEQUAL                      6
-#define PREFILTEROPGEQUAL                        7
+#define PREFILTEROP_ALWAYS                       0
+#define PREFILTEROP_NEVER                        1
+#define PREFILTEROP_LESS                         2
+#define PREFILTEROP_EQUAL                        3
+#define PREFILTEROP_LEQUAL                       4
+#define PREFILTEROP_GREATER                      5
+#define PREFILTEROP_NOTEQUAL                     6
+#define PREFILTEROP_GEQUAL                       7
    uint32_t                             ChromaKeyMode;
 #define KEYFILTER_KILL_ON_ANY_MATCH              0
 #define KEYFILTER_REPLACE_BLACK                  1
@@ -1996,6 +2056,7 @@ GFX12_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CoarseLODQualityMode, 22, 26) |
       __gen_uint(values->LODPreClampMode, 27, 28) |
       __gen_uint(values->TextureBorderColorMode, 29, 29) |
+      __gen_uint(values->CPSLODCompensationEnable, 30, 30) |
       __gen_uint(values->SamplerDisable, 31, 31);
 
    dw[1] =
@@ -3195,6 +3256,7 @@ struct GFX12_VERTEX_BUFFER_STATE {
    bool                                 NullVertexBuffer;
    bool                                 AddressModifyEnable;
    uint32_t                             MOCS;
+   bool                                 L3BypassDisable;
    uint32_t                             VertexBufferIndex;
    __gen_address_type                   BufferStartingAddress;
    uint32_t                             BufferSize;
@@ -3212,6 +3274,7 @@ GFX12_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->NullVertexBuffer, 13, 13) |
       __gen_uint(values->AddressModifyEnable, 14, 14) |
       __gen_uint(values->MOCS, 16, 22) |
+      __gen_uint(values->L3BypassDisable, 25, 25) |
       __gen_uint(values->VertexBufferIndex, 26, 31);
 
    const uint64_t v1_address =
@@ -4357,6 +4420,42 @@ GFX12_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
    GFX12_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
+#define GFX12_3DSTATE_CPS_POINTERS_length      2
+#define GFX12_3DSTATE_CPS_POINTERS_length_bias      2
+#define GFX12_3DSTATE_CPS_POINTERS_header       \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =     34,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX12_3DSTATE_CPS_POINTERS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             CoarsePixelShadingStateArrayPointer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX12_3DSTATE_CPS_POINTERS_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX12_3DSTATE_CPS_POINTERS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 15) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_offset(values->CoarsePixelShadingStateArrayPointer, 5, 31);
+}
+
 #define GFX12_3DSTATE_DEPTH_BOUNDS_length      4
 #define GFX12_3DSTATE_DEPTH_BOUNDS_length_bias      2
 #define GFX12_3DSTATE_DEPTH_BOUNDS_header       \
@@ -5311,6 +5410,7 @@ struct GFX12_3DSTATE_INDEX_BUFFER {
 #define INDEX_BYTE                               0
 #define INDEX_WORD                               1
 #define INDEX_DWORD                              2
+   bool                                 L3BypassDisable;
    __gen_address_type                   BufferStartingAddress;
    uint32_t                             BufferSize;
 };
@@ -5331,7 +5431,8 @@ GFX12_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[1] =
       __gen_uint(values->MOCS, 0, 6) |
-      __gen_uint(values->IndexFormat, 8, 9);
+      __gen_uint(values->IndexFormat, 8, 9) |
+      __gen_uint(values->L3BypassDisable, 11, 11);
 
    const uint64_t v2_address =
       __gen_address(data, &dw[2], values->BufferStartingAddress, 0, 0, 63);
@@ -5921,6 +6022,7 @@ struct GFX12_3DSTATE_PS_EXTRA {
 #define ICMS_DEPTH_COVERAGE                      3
    bool                                 PixelShaderHasUAV;
    bool                                 PixelShaderPullsBary;
+   bool                                 PixelShaderIsPerCoarsePixel;
    bool                                 PixelShaderComputesStencil;
    bool                                 PixelShaderIsPerSample;
    bool                                 PixelShaderDisablesAlphaToCoverage;
@@ -5930,6 +6032,7 @@ struct GFX12_3DSTATE_PS_EXTRA {
    bool                                 PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresSourceDepthandorWPlaneCoefficients;
+   bool                                 PixelShaderRequiresRequestedCoarsePixelShadingSize;
    bool                                 PixelShaderUsesSourceW;
    bool                                 PixelShaderUsesSourceDepth;
    bool                                 ForceComputedDepth;
@@ -5962,6 +6065,7 @@ GFX12_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InputCoverageMaskState, 0, 1) |
       __gen_uint(values->PixelShaderHasUAV, 2, 2) |
       __gen_uint(values->PixelShaderPullsBary, 3, 3) |
+      __gen_uint(values->PixelShaderIsPerCoarsePixel, 4, 4) |
       __gen_uint(values->PixelShaderComputesStencil, 5, 5) |
       __gen_uint(values->PixelShaderIsPerSample, 6, 6) |
       __gen_uint(values->PixelShaderDisablesAlphaToCoverage, 7, 7) |
@@ -5971,6 +6075,7 @@ GFX12_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients, 19, 19) |
       __gen_uint(values->PixelShaderRequiresPerspectiveBaryPlaneCoefficients, 20, 20) |
       __gen_uint(values->PixelShaderRequiresSourceDepthandorWPlaneCoefficients, 21, 21) |
+      __gen_uint(values->PixelShaderRequiresRequestedCoarsePixelShadingSize, 22, 22) |
       __gen_uint(values->PixelShaderUsesSourceW, 23, 23) |
       __gen_uint(values->PixelShaderUsesSourceDepth, 24, 24) |
       __gen_uint(values->ForceComputedDepth, 25, 25) |
@@ -11154,6 +11259,7 @@ GFX12_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
 struct GFX12_PIPE_CONTROL {
    uint32_t                             DWordLength;
    bool                                 HDCPipelineFlushEnable;
+   bool                                 L3ReadOnlyCacheInvalidationEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -11207,6 +11313,7 @@ GFX12_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
       __gen_uint(values->HDCPipelineFlushEnable, 9, 9) |
+      __gen_uint(values->L3ReadOnlyCacheInvalidationEnable, 10, 10) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -11433,6 +11540,25 @@ GFX12_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SystemInstructionPointer, 4, 63);
    dw[1] = v1;
    dw[2] = v1 >> 32;
+}
+
+#define GFX12_3D_CHICKEN3_num             0x2090
+#define GFX12_3D_CHICKEN3_length               1
+struct GFX12_3D_CHICKEN3 {
+   bool                                 AALineQualityFix;
+   bool                                 AALineQualityFixMask;
+};
+
+static inline __attribute__((always_inline)) void
+GFX12_3D_CHICKEN3_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX12_3D_CHICKEN3 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->AALineQualityFix, 5, 5) |
+      __gen_uint(values->AALineQualityFixMask, 21, 21);
 }
 
 #define GFX12_BCS_INSTDONE_num            0x2206c
@@ -12076,10 +12202,17 @@ GFX12_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
 struct GFX12_ROW_INSTDONE {
    bool                                 BCDone;
    bool                                 PSDDone;
+   bool                                 TDPDone;
    bool                                 DAPRDone;
+   bool                                 CPSSDone;
    bool                                 TDLDone;
+   bool                                 EU00doneSS1;
+   bool                                 EU01doneSS1;
+   bool                                 EU02doneSS1;
+   bool                                 EU03doneSS1;
+   bool                                 MA0doneSS1;
    bool                                 ICDone;
-   bool                                 MA0Done;
+   bool                                 MA0DoneSS0;
    bool                                 EU00DoneSS0;
    bool                                 EU01DoneSS0;
    bool                                 EU02DoneSS0;
@@ -12088,7 +12221,10 @@ struct GFX12_ROW_INSTDONE {
    bool                                 EU11DoneSS0;
    bool                                 EU12DoneSS0;
    bool                                 EU13DoneSS0;
-   bool                                 MA1DoneSS0;
+   bool                                 EU10DoneSS1;
+   bool                                 EU11DoneSS1;
+   bool                                 EU12DoneSS1;
+   bool                                 EU13DoneSS1;
 };
 
 static inline __attribute__((always_inline)) void
@@ -12101,10 +12237,17 @@ GFX12_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[0] =
       __gen_uint(values->BCDone, 0, 0) |
       __gen_uint(values->PSDDone, 1, 1) |
+      __gen_uint(values->TDPDone, 2, 2) |
       __gen_uint(values->DAPRDone, 3, 3) |
+      __gen_uint(values->CPSSDone, 4, 4) |
       __gen_uint(values->TDLDone, 6, 6) |
+      __gen_uint(values->EU00doneSS1, 7, 7) |
+      __gen_uint(values->EU01doneSS1, 8, 8) |
+      __gen_uint(values->EU02doneSS1, 9, 9) |
+      __gen_uint(values->EU03doneSS1, 10, 10) |
+      __gen_uint(values->MA0doneSS1, 11, 11) |
       __gen_uint(values->ICDone, 12, 12) |
-      __gen_uint(values->MA0Done, 15, 15) |
+      __gen_uint(values->MA0DoneSS0, 15, 15) |
       __gen_uint(values->EU00DoneSS0, 16, 16) |
       __gen_uint(values->EU01DoneSS0, 17, 17) |
       __gen_uint(values->EU02DoneSS0, 18, 18) |
@@ -12113,7 +12256,10 @@ GFX12_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->EU11DoneSS0, 22, 22) |
       __gen_uint(values->EU12DoneSS0, 23, 23) |
       __gen_uint(values->EU13DoneSS0, 24, 24) |
-      __gen_uint(values->MA1DoneSS0, 26, 26);
+      __gen_uint(values->EU10DoneSS1, 27, 27) |
+      __gen_uint(values->EU11DoneSS1, 28, 28) |
+      __gen_uint(values->EU12DoneSS1, 29, 29) |
+      __gen_uint(values->EU13DoneSS1, 30, 30);
 }
 
 #define GFX12_RPSTAT0_num                 0xa01c
@@ -12146,18 +12292,28 @@ struct GFX12_SAMPLER_INSTDONE {
    bool                                 DM0Done;
    bool                                 SCDone;
    bool                                 FL0Done;
-   bool                                 QCDone;
+   bool                                 STDone;
    bool                                 SVSMDone;
    bool                                 SI0Done;
    bool                                 MT0Done;
    bool                                 AVSDone;
-   bool                                 IEFDone;
+   bool                                 VAFEDone;
    bool                                 CREDone;
-   bool                                 SVSM_ARB_SIFM;
+   bool                                 MediaSamplerArbDone;
    bool                                 SVSMARB2;
    bool                                 SVSMARB1;
    bool                                 SVSMAdapter;
    bool                                 BDMDone;
+   bool                                 SO1Done;
+   bool                                 FL1Done;
+   bool                                 DG1Done;
+   bool                                 PL1Done;
+   bool                                 SI1Done;
+   bool                                 MEDIASAMPLERARB2;
+   bool                                 MEDIASAMPLERARB1;
+   bool                                 MSSUBSLICEDFORK;
+   bool                                 VMESCDone;
+   bool                                 RDEDone;
 };
 
 static inline __attribute__((always_inline)) void
@@ -12176,18 +12332,28 @@ GFX12_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DM0Done, 5, 5) |
       __gen_uint(values->SCDone, 6, 6) |
       __gen_uint(values->FL0Done, 7, 7) |
-      __gen_uint(values->QCDone, 8, 8) |
+      __gen_uint(values->STDone, 8, 8) |
       __gen_uint(values->SVSMDone, 9, 9) |
       __gen_uint(values->SI0Done, 10, 10) |
       __gen_uint(values->MT0Done, 11, 11) |
       __gen_uint(values->AVSDone, 12, 12) |
-      __gen_uint(values->IEFDone, 13, 13) |
+      __gen_uint(values->VAFEDone, 13, 13) |
       __gen_uint(values->CREDone, 14, 14) |
-      __gen_uint(values->SVSM_ARB_SIFM, 15, 15) |
+      __gen_uint(values->MediaSamplerArbDone, 15, 15) |
       __gen_uint(values->SVSMARB2, 16, 16) |
       __gen_uint(values->SVSMARB1, 17, 17) |
       __gen_uint(values->SVSMAdapter, 18, 18) |
-      __gen_uint(values->BDMDone, 19, 19);
+      __gen_uint(values->BDMDone, 19, 19) |
+      __gen_uint(values->SO1Done, 22, 22) |
+      __gen_uint(values->FL1Done, 23, 23) |
+      __gen_uint(values->DG1Done, 24, 24) |
+      __gen_uint(values->PL1Done, 25, 25) |
+      __gen_uint(values->SI1Done, 26, 26) |
+      __gen_uint(values->MEDIASAMPLERARB2, 27, 27) |
+      __gen_uint(values->MEDIASAMPLERARB1, 28, 28) |
+      __gen_uint(values->MSSUBSLICEDFORK, 29, 29) |
+      __gen_uint(values->VMESCDone, 30, 30) |
+      __gen_uint(values->RDEDone, 31, 31);
 }
 
 #define GFX12_SAMPLER_MODE_num            0xe18c
@@ -12216,10 +12382,9 @@ struct GFX12_SC_INSTDONE {
    bool                                 WMFEDone;
    bool                                 WMBEDone;
    bool                                 HIZDone;
-   bool                                 STCDone;
-   bool                                 IZDone;
+   bool                                 IZBEDone0;
+   bool                                 IZFEDone;
    bool                                 SBEDone;
-   bool                                 RCZDone;
    bool                                 RCCDone;
    bool                                 RCPBEDone;
    bool                                 RCPFEDone;
@@ -12229,13 +12394,13 @@ struct GFX12_SC_INSTDONE {
    bool                                 DC0Done;
    bool                                 DC1Done;
    bool                                 DC2Done;
-   bool                                 DC3Done;
    bool                                 GW0Done;
    bool                                 GW1Done;
    bool                                 GW2Done;
-   bool                                 GW3Done;
    bool                                 TDCDone;
    bool                                 SFBEDone;
+   bool                                 PSSDone;
+   bool                                 AMFSDone;
 };
 
 static inline __attribute__((always_inline)) void
@@ -12250,10 +12415,9 @@ GFX12_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->WMFEDone, 1, 1) |
       __gen_uint(values->WMBEDone, 2, 2) |
       __gen_uint(values->HIZDone, 3, 3) |
-      __gen_uint(values->STCDone, 4, 4) |
-      __gen_uint(values->IZDone, 5, 5) |
+      __gen_uint(values->IZBEDone0, 4, 4) |
+      __gen_uint(values->IZFEDone, 5, 5) |
       __gen_uint(values->SBEDone, 6, 6) |
-      __gen_uint(values->RCZDone, 8, 8) |
       __gen_uint(values->RCCDone, 9, 9) |
       __gen_uint(values->RCPBEDone, 10, 10) |
       __gen_uint(values->RCPFEDone, 11, 11) |
@@ -12263,13 +12427,13 @@ GFX12_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DC0Done, 16, 16) |
       __gen_uint(values->DC1Done, 17, 17) |
       __gen_uint(values->DC2Done, 18, 18) |
-      __gen_uint(values->DC3Done, 19, 19) |
       __gen_uint(values->GW0Done, 20, 20) |
       __gen_uint(values->GW1Done, 21, 21) |
       __gen_uint(values->GW2Done, 22, 22) |
-      __gen_uint(values->GW3Done, 23, 23) |
       __gen_uint(values->TDCDone, 24, 24) |
-      __gen_uint(values->SFBEDone, 25, 25);
+      __gen_uint(values->SFBEDone, 25, 25) |
+      __gen_uint(values->PSSDone, 26, 26) |
+      __gen_uint(values->AMFSDone, 27, 27);
 }
 
 #define GFX12_SLICE_COMMON_ECO_CHICKEN1_num 0x731c

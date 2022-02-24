@@ -27,43 +27,83 @@
 #include "pipe/p_state.h"
 #include "util/format/u_format.h"
 
-#include "util/u_trace.h"
+#include "util/perf/u_trace.h"
 
-void __trace_surface(struct u_trace *ut
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/*
+ * surface
+ */
+struct trace_surface {
+         uint16_t width;
+         uint16_t height;
+         uint8_t nr_samples;
+         const char * format;
+};
+void __trace_surface(struct u_trace *ut, void *cs
      , const struct pipe_surface * psurf
 );
-static inline void trace_surface(struct u_trace *ut
+static inline void trace_surface(struct u_trace *ut, void *cs
      , const struct pipe_surface * psurf
 ) {
-   if (likely(!ut->enabled))
+   if (!unlikely(ut->enabled))
       return;
-   __trace_surface(ut
+   __trace_surface(ut, cs
         , psurf
    );
 }
-void __trace_framebuffer(struct u_trace *ut
+/*
+ * framebuffer
+ */
+struct trace_framebuffer {
+         uint16_t width;
+         uint16_t height;
+         uint8_t layers;
+         uint8_t samples;
+         uint8_t nr_cbufs;
+};
+void __trace_framebuffer(struct u_trace *ut, void *cs
      , const struct pipe_framebuffer_state * pfb
 );
-static inline void trace_framebuffer(struct u_trace *ut
+static inline void trace_framebuffer(struct u_trace *ut, void *cs
      , const struct pipe_framebuffer_state * pfb
 ) {
-   if (likely(!ut->enabled))
+   if (!unlikely(ut->enabled))
       return;
-   __trace_framebuffer(ut
+   __trace_framebuffer(ut, cs
         , pfb
    );
 }
-void __trace_grid_info(struct u_trace *ut
+/*
+ * grid_info
+ */
+struct trace_grid_info {
+         uint8_t work_dim;
+         uint16_t block_x;
+         uint16_t block_y;
+         uint16_t block_z;
+         uint16_t grid_x;
+         uint16_t grid_y;
+         uint16_t grid_z;
+};
+void __trace_grid_info(struct u_trace *ut, void *cs
      , const struct pipe_grid_info * pgrid
 );
-static inline void trace_grid_info(struct u_trace *ut
+static inline void trace_grid_info(struct u_trace *ut, void *cs
      , const struct pipe_grid_info * pgrid
 ) {
-   if (likely(!ut->enabled))
+   if (!unlikely(ut->enabled))
       return;
-   __trace_grid_info(ut
+   __trace_grid_info(ut, cs
         , pgrid
    );
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _U_TRACEPOINTS_H */

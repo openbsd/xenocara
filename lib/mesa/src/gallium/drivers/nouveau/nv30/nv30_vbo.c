@@ -546,12 +546,13 @@ nv30_draw_elements(struct nv30_context *nv30, bool shorten,
 
 static void
 nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+              unsigned drawid_offset,
               const struct pipe_draw_indirect_info *indirect,
-              const struct pipe_draw_start_count *draws,
+              const struct pipe_draw_start_count_bias *draws,
               unsigned num_draws)
 {
    if (num_draws > 1) {
-      util_draw_multi(pipe, info, indirect, draws, num_draws);
+      util_draw_multi(pipe, info, drawid_offset, indirect, draws, num_draws);
       return;
    }
 
@@ -591,7 +592,7 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
 
    nv30_state_validate(nv30, ~0, true);
    if (nv30->draw_flags) {
-      nv30_render_vbo(pipe, info, &draws[0]);
+      nv30_render_vbo(pipe, info, drawid_offset, &draws[0]);
       return;
    } else
    if (nv30->vbo_fifo) {
@@ -647,7 +648,7 @@ nv30_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
 
       nv30_draw_elements(nv30, shorten, info,
                          info->mode, draws[0].start, draws[0].count,
-                         info->instance_count, info->index_bias, info->index_size);
+                         info->instance_count, draws[0].index_bias, info->index_size);
    }
 
    nv30_state_release(nv30);

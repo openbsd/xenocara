@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	mesa_common
 
@@ -76,6 +76,7 @@ SRCS=	arbprogparse.c \
 	glthread_bufferobj.c \
 	glthread_draw.c \
 	glthread_get.c \
+	glthread_list.c \
 	glthread_shaderobj.c \
 	glthread_varray.c \
 	hash.c \
@@ -195,8 +196,6 @@ SRCS+=		sparc_clip.S \
 CPPFLAGS+=	-I${MESA_SRC}/src/mesa/sparc
 .endif
 
-SRCS+=	format_pack.c
-
 SRCS+=	lex.yy.c \
 	program_parse.tab.c \
 	api_exec.c \
@@ -219,6 +218,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/x86 \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/mesa \
 		-I${MESA_SRC}/generated/src/mesa/main \

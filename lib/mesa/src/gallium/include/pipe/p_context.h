@@ -50,7 +50,8 @@ struct pipe_depth_stencil_alpha_state;
 struct pipe_device_reset_callback;
 struct pipe_draw_info;
 struct pipe_draw_indirect_info;
-struct pipe_draw_start_count;
+struct pipe_draw_start_count_bias;
+struct pipe_draw_vertex_state_info;
 struct pipe_grid_info;
 struct pipe_fence_handle;
 struct pipe_framebuffer_state;
@@ -71,6 +72,7 @@ struct pipe_surface;
 struct pipe_transfer;
 struct pipe_vertex_buffer;
 struct pipe_vertex_element;
+struct pipe_vertex_state;
 struct pipe_video_buffer;
 struct pipe_video_codec;
 struct pipe_viewport_state;
@@ -120,7 +122,7 @@ struct pipe_context {
     * - PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS: Indirect draw count
     *
     * Differences against glMultiDraw and glMultiMode:
-    * - "info->mode" and "info->index_bias" are always constant due to the lack
+    * - "info->mode" and "draws->index_bias" are always constant due to the lack
     *   of hardware support and CPU performance concerns. Only start and count
     *   vary.
     * - if "info->increment_draw_id" is false, draw_id doesn't change between
@@ -131,15 +133,57 @@ struct pipe_context {
     *
     * \param pipe          context
     * \param info          draw info
+    * \param drawid_offset offset to add for drawid param of each draw
     * \param indirect      indirect multi draws
     * \param draws         array of (start, count) pairs for direct draws
     * \param num_draws     number of direct draws; 1 for indirect multi draws
     */
    void (*draw_vbo)(struct pipe_context *pipe,
                     const struct pipe_draw_info *info,
+                    unsigned drawid_offset,
                     const struct pipe_draw_indirect_info *indirect,
-                    const struct pipe_draw_start_count *draws,
+                    const struct pipe_draw_start_count_bias *draws,
                     unsigned num_draws);
+
+   /**
+    * Multi draw for display lists.
+    *
+    * For more information, see pipe_vertex_state and
+    * pipe_draw_vertex_state_info.
+    *
+    * Explanation of partial_vertex_mask:
+    *
+    * 1. pipe_vertex_state::input::elements have a monotonic logical index
+    *    determined by pipe_vertex_state::input::full_velem_mask, specifically,
+    *    the position of the i-th bit set is the logical index of the i-th
+    *    vertex element, up to 31.
+    *
+    * 2. pipe_vertex_state::input::partial_velem_mask is a subset of
+    *    full_velem_mask where the bits set determine which vertex elements
+    *    should be bound contiguously. The vertex elements corresponding to
+    *    the bits not set in partial_velem_mask should be ignored.
+    *
+    * Those two allow creating pipe_vertex_state that has more vertex
+    * attributes than the vertex shader has inputs. The idea is that
+    * pipe_vertex_state can be used with any vertex shader that has the same
+    * number of inputs and same logical indices or less. This may sound like
+    * an overly complicated way to bind a subset of vertex elements, but it
+    * actually simplifies everything else:
+    *
+    * - In st/mesa, full_velem_mask is exactly the mask of enabled vertex
+    *   attributes (VERT_ATTRIB_x) in the display list VAO, while
+    *   partial_velem_mask is exactly the inputs_read mask of the vertex
+    *   shader (also VERT_ATTRIB_x).
+    *
+    * - In the driver, some bit ops and popcnt is needed to assemble vertex
+    *   elements very quickly.
+    */
+   void (*draw_vertex_state)(struct pipe_context *ctx,
+                             struct pipe_vertex_state *state,
+                             uint32_t partial_velem_mask,
+                             struct pipe_draw_vertex_state_info info,
+                             const struct pipe_draw_start_count_bias *draws,
+                             unsigned num_draws);
    /*@}*/
 
    /**
@@ -444,11 +488,17 @@ struct pipe_context {
                              enum pipe_shader_type shader,
                              unsigned start_slot, unsigned num_views,
                              unsigned unbind_num_trailing_slots,
+                             bool take_ownership,
                              struct pipe_sampler_view **views);
 
    void (*set_tess_state)(struct pipe_context *,
                           const float default_outer_level[4],
                           const float default_inner_level[2]);
+
+   /**
+    * Set the number of vertices per input patch for tessellation.
+    */
+   void (*set_patch_vertices)(struct pipe_context *ctx, uint8_t patch_vertices);
 
    /**
     * Sets the debug callback. If the pointer is null, then no callback is
@@ -760,14 +810,14 @@ struct pipe_context {
     *
     * out_transfer will contain the transfer object that must be passed
     * to all the other transfer functions. It also contains useful
-    * information (like texture strides).
+    * information (like texture strides for texture_map).
     */
-   void *(*transfer_map)(struct pipe_context *,
-                         struct pipe_resource *resource,
-                         unsigned level,
-                         unsigned usage,  /* a combination of PIPE_MAP_x */
-                         const struct pipe_box *,
-                         struct pipe_transfer **out_transfer);
+   void *(*buffer_map)(struct pipe_context *,
+		       struct pipe_resource *resource,
+		       unsigned level,
+		       unsigned usage,  /* a combination of PIPE_MAP_x */
+		       const struct pipe_box *,
+		       struct pipe_transfer **out_transfer);
 
    /* If transfer was created with WRITE|FLUSH_EXPLICIT, only the
     * regions specified with this call are guaranteed to be written to
@@ -777,8 +827,18 @@ struct pipe_context {
 				  struct pipe_transfer *transfer,
 				  const struct pipe_box *);
 
-   void (*transfer_unmap)(struct pipe_context *,
-                          struct pipe_transfer *transfer);
+   void (*buffer_unmap)(struct pipe_context *,
+			struct pipe_transfer *transfer);
+
+   void *(*texture_map)(struct pipe_context *,
+			struct pipe_resource *resource,
+			unsigned level,
+			unsigned usage,  /* a combination of PIPE_MAP_x */
+			const struct pipe_box *,
+			struct pipe_transfer **out_transfer);
+
+   void (*texture_unmap)(struct pipe_context *,
+			 struct pipe_transfer *transfer);
 
    /* One-shot transfer operation with data supplied in a user
     * pointer.
@@ -1101,6 +1161,14 @@ struct pipe_context {
    void (*set_context_param)(struct pipe_context *ctx,
                              enum pipe_context_param param,
                              unsigned value);
+
+   /**
+    * Creates a video buffer as decoding target, with modifiers.
+    */
+   struct pipe_video_buffer *(*create_video_buffer_with_modifiers)(struct pipe_context *context,
+                                                                   const struct pipe_video_buffer *templat,
+                                                                   const uint64_t *modifiers,
+                                                                   unsigned int modifiers_count);
 };
 
 

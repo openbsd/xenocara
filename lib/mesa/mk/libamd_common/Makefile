@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
 
 LIB=	amd_common
 
@@ -16,9 +16,13 @@ SRCS=	ac_binary.c \
 	ac_rgp.c \
 	ac_msgpack.c \
 	ac_rgp_elf_object_pack.c \
+	ac_nir.c \
+	ac_nir_cull.c \
 	ac_nir_lower_esgs_io_to_mem.c \
 	ac_nir_lower_tess_io_to_mem.c \
-	amd_family.c
+	ac_nir_lower_ngg.c \
+	amd_family.c \
+	ac_perfcounter.c
 
 SRCS+=	gfx10_format_table.c
 
@@ -33,6 +37,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/compiler/nir
 

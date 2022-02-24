@@ -1452,11 +1452,11 @@ builtin_variable_generator::generate_cs_special_vars()
 {
    add_system_value(SYSTEM_VALUE_LOCAL_INVOCATION_ID, uvec3_t,
                     "gl_LocalInvocationID");
-   add_system_value(SYSTEM_VALUE_WORK_GROUP_ID, uvec3_t, "gl_WorkGroupID");
-   add_system_value(SYSTEM_VALUE_NUM_WORK_GROUPS, uvec3_t, "gl_NumWorkGroups");
+   add_system_value(SYSTEM_VALUE_WORKGROUP_ID, uvec3_t, "gl_WorkGroupID");
+   add_system_value(SYSTEM_VALUE_NUM_WORKGROUPS, uvec3_t, "gl_NumWorkGroups");
 
    if (state->ARB_compute_variable_group_size_enable) {
-      add_system_value(SYSTEM_VALUE_LOCAL_GROUP_SIZE,
+      add_system_value(SYSTEM_VALUE_WORKGROUP_SIZE,
                        uvec3_t, "gl_LocalGroupSizeARB");
    }
 
@@ -1630,6 +1630,9 @@ builtin_variable_generator::generate_varyings()
 
          var->data.invariant = fields[i].location == VARYING_SLOT_POS &&
                                options->PositionAlwaysInvariant;
+
+         var->data.precise = fields[i].location == VARYING_SLOT_POS &&
+                               options->PositionAlwaysPrecise;
       }
    }
 }

@@ -116,7 +116,7 @@ void
 brw_calculate_urb_fence(struct brw_context *brw, unsigned csize,
                         unsigned vsize, unsigned sfsize)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    if (csize < limits[CS].min_entry_size)
       csize = limits[CS].min_entry_size;
@@ -189,12 +189,12 @@ brw_calculate_urb_fence(struct brw_context *brw, unsigned csize,
             exit(1);
          }
 
-         if (INTEL_DEBUG & (DEBUG_URB|DEBUG_PERF))
+         if (INTEL_DEBUG(DEBUG_URB|DEBUG_PERF))
             fprintf(stderr, "URB CONSTRAINED\n");
       }
 
 done:
-      if (INTEL_DEBUG & DEBUG_URB)
+      if (INTEL_DEBUG(DEBUG_URB))
          fprintf(stderr,
                  "URB fence: %d ..VS.. %d ..GS.. %d ..CLP.. %d ..SF.. %d ..CS.. %d\n",
                  brw->urb.vs_start,

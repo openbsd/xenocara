@@ -78,12 +78,11 @@
 #include "lp_bld_format.h"
 
 
-/* the lp_test_format test fails on mingw/i686 at -O2
- * it is ok with gcc 9.3, but not for 10.2, assume broken for gcc>=10
+/* the lp_test_format test fails on mingw/i686 at -O2 with gcc 10.x
  * ref https://gitlab.freedesktop.org/mesa/mesa/-/issues/3906
  */
 
-#if defined(__MINGW32__) && !defined(__MINGW64__) && ((__GNUC__ * 100) + __GNUC_MINOR >= 1000)
+#if defined(__MINGW32__) && !defined(__MINGW64__) && (__GNUC__ == 10)
 #warning "disabling caller-saves optimization for this file to work around compiler bug"
 #pragma GCC optimize("-fno-caller-saves")
 #endif
@@ -121,6 +120,8 @@ lp_build_half_to_float(struct gallivm_state *gallivm,
          else {
             intrinsic = "llvm.x86.vcvtph2ps.256";
          }
+         src = LLVMBuildBitCast(builder, src,
+                                LLVMVectorType(LLVMInt16TypeInContext(gallivm->context), 8), "");
          return lp_build_intrinsic_unary(builder, intrinsic,
                                          lp_build_vec_type(gallivm, f32_type), src);
       } else {
@@ -194,6 +195,7 @@ lp_build_float_to_half(struct gallivm_state *gallivm,
       if (length == 4) {
          result = lp_build_extract_range(gallivm, result, 0, 4);
       }
+      result = LLVMBuildBitCast(builder, result, lp_build_vec_type(gallivm, lp_type_float_vec(16, 16 * length)), "");
    }
 
    else {

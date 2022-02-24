@@ -43,6 +43,7 @@ struct nir_spirv_specialization {
 };
 
 enum nir_spirv_debug_level {
+   NIR_SPIRV_DEBUG_LEVEL_INVALID = -1,
    NIR_SPIRV_DEBUG_LEVEL_INFO,
    NIR_SPIRV_DEBUG_LEVEL_WARNING,
    NIR_SPIRV_DEBUG_LEVEL_ERROR,
@@ -56,11 +57,6 @@ enum nir_spirv_execution_environment {
 
 struct spirv_to_nir_options {
    enum nir_spirv_execution_environment environment;
-
-   /* Whether to make FragCoord to a system value, the same as
-    * GLSLFragCoordIsSysVal in GLSL.
-    */
-   bool frag_coord_is_sysval;
 
    /* Whether to keep ViewIndex as an input instead of rewriting to a sysval.
     */

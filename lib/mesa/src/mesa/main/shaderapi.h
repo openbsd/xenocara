@@ -335,6 +335,11 @@ _mesa_get_program_resourceiv(struct gl_shader_program *shProg,
                              GLint *params);
 
 extern void
+_mesa_get_program_interfaceiv(struct gl_shader_program *shProg,
+                              GLenum programInterface, GLenum pname,
+                              GLint *params);
+
+extern void
 _mesa_create_program_resource_hash(struct gl_shader_program *shProg);
 
 /* GL_ARB_tessellation_shader */

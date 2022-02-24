@@ -29,6 +29,35 @@
 #include "util/u_dynarray.h"
 #include "util/hash_table.h"
 
+/* Indices for named (non-XFB) varyings that are present. These are packed
+ * tightly so they correspond to a bitfield present (P) indexed by (1 <<
+ * PAN_VARY_*). This has the nice property that you can lookup the buffer index
+ * of a given special field given a shift S by:
+ *
+ *      idx = popcount(P & ((1 << S) - 1))
+ *
+ * That is... look at all of the varyings that come earlier and count them, the
+ * count is the new index since plus one. Likewise, the total number of special
+ * buffers required is simply popcount(P)
+ */
+
+enum pan_special_varying {
+        PAN_VARY_GENERAL = 0,
+        PAN_VARY_POSITION = 1,
+        PAN_VARY_PSIZ = 2,
+        PAN_VARY_PNTCOORD = 3,
+        PAN_VARY_FACE = 4,
+        PAN_VARY_FRAGCOORD = 5,
+
+        /* Keep last */
+        PAN_VARY_MAX,
+};
+
+/* Maximum number of attribute descriptors required for varyings. These include
+ * up to MAX_VARYING source level varyings plus a descriptor each non-GENERAL
+ * special varying */
+#define PAN_MAX_VARYINGS (MAX_VARYING + PAN_VARY_MAX - 1)
+
 /* Define the general compiler entry point */
 
 #define MAX_SYSVAL_COUNT 32
@@ -56,6 +85,9 @@ enum {
         PAN_SYSVAL_SAMPLE_POSITIONS = 11,
         PAN_SYSVAL_MULTISAMPLED = 12,
         PAN_SYSVAL_RT_CONVERSION = 13,
+        PAN_SYSVAL_VERTEX_INSTANCE_OFFSETS = 14,
+        PAN_SYSVAL_DRAWID = 15,
+        PAN_SYSVAL_BLEND_CONSTANTS = 16,
 };
 
 #define PAN_TXS_SYSVAL_ID(texidx, dim, is_array)          \
@@ -122,7 +154,6 @@ struct panfrost_compile_inputs {
         struct {
                 unsigned rt;
                 unsigned nr_samples;
-                float constants[4];
                 uint64_t bifrost_blend_desc;
         } blend;
         unsigned sysval_ubo;
@@ -130,6 +161,15 @@ struct panfrost_compile_inputs {
         bool no_ubo_to_push;
 
         enum pipe_format rt_formats[8];
+        uint8_t raw_fmt_mask;
+        unsigned nr_cbufs;
+
+        union {
+                struct {
+                        bool static_rt_conv;
+                        uint32_t rt_conv[8];
+                } bifrost;
+        };
 };
 
 struct pan_shader_varying {
@@ -140,11 +180,18 @@ struct pan_shader_varying {
 struct bifrost_shader_blend_info {
         nir_alu_type type;
         uint32_t return_offset;
+
+        /* mali_bifrost_register_file_format corresponding to nir_alu_type */
+        unsigned format;
 };
 
 struct bifrost_shader_info {
         struct bifrost_shader_blend_info blend[8];
+        nir_alu_type blend_src1_type;
         bool wait_6, wait_7;
+
+        /* Packed, preloaded message descriptors */
+        uint16_t messages[2];
 };
 
 struct midgard_shader_info {
@@ -174,7 +221,9 @@ struct pan_shader_info {
                         bool reads_helper_invocation;
                         bool sample_shading;
                         bool early_fragment_tests;
+                        bool can_early_z, can_fpk;
                         BITSET_WORD outputs_read;
+                        BITSET_WORD outputs_written;
                 } fs;
 
                 struct {
@@ -182,6 +231,7 @@ struct pan_shader_info {
                 } vs;
         };
 
+        bool separable;
         bool contains_barrier;
         bool writes_global;
         uint64_t outputs_written;
@@ -193,9 +243,9 @@ struct pan_shader_info {
 
         struct {
                 unsigned input_count;
-                struct pan_shader_varying input[MAX_VARYING];
+                struct pan_shader_varying input[PAN_MAX_VARYINGS];
                 unsigned output_count;
-                struct pan_shader_varying output[MAX_VARYING];
+                struct pan_shader_varying output[PAN_MAX_VARYINGS];
         } varyings;
 
         struct panfrost_sysvals sysvals;
@@ -203,6 +253,8 @@ struct pan_shader_info {
         /* UBOs to push to Register Mapped Uniforms (Midgard) or Fast Access
          * Uniforms (Bifrost) */
         struct panfrost_ubo_push push;
+
+        uint32_t ubo_mask;
 
         union {
                 struct bifrost_shader_info bifrost;

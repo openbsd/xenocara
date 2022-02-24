@@ -19,10 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
-
 import argparse
 import os
 import xml.parsers.expat
@@ -67,7 +63,7 @@ from operator import itemgetter
 
 #include <stdint.h>
 
-#include "dev/gen_device_info.h"
+#include "dev/intel_device_info.h"
 #include "util/macros.h"
 
 <%def name="emit_per_gen_prop_func(item, prop)">
@@ -77,7 +73,7 @@ from operator import itemgetter
 % endfor
 
 static inline uint32_t ATTRIBUTE_PURE
-${item.token_name}_${prop}(const struct gen_device_info *devinfo)
+${item.token_name}_${prop}(const struct intel_device_info *devinfo)
 {
    switch (devinfo->verx10) {
    case 125: return ${item.get_prop(prop, 12.5)};
@@ -122,7 +118,7 @@ ${emit_per_gen_prop_func(field, 'start')}
 }
 #endif
 
-#endif /* ${guard} */""", output_encoding='utf-8')
+#endif /* ${guard} */""")
 
 class Gen(object):
 
@@ -328,7 +324,7 @@ def main():
         p.engines = set(engines)
         p.parse(source)
 
-    with open(pargs.output, 'wb') as f:
+    with open(pargs.output, 'w') as f:
         f.write(TEMPLATE.render(containers=containers, guard=pargs.cpp_guard))
 
 if __name__ == '__main__':

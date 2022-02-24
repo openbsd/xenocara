@@ -470,6 +470,7 @@ const _mesa_unmarshal_func _mesa_unmarshal_dispatch[NUM_DISPATCH_CMD] = {
    [DISPATCH_CMD_DisableVertexAttribArray] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableVertexAttribArray,
    [DISPATCH_CMD_EnableVertexAttribArray] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableVertexAttribArray,
    [DISPATCH_CMD_GetActiveUniform] = (_mesa_unmarshal_func)_mesa_unmarshal_GetActiveUniform,
+   [DISPATCH_CMD_GetUniformLocation] = (_mesa_unmarshal_func)_mesa_unmarshal_GetUniformLocation,
    [DISPATCH_CMD_LinkProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_LinkProgram,
    [DISPATCH_CMD_ShaderSource] = (_mesa_unmarshal_func)_mesa_unmarshal_ShaderSource,
    [DISPATCH_CMD_UseProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_UseProgram,

@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	loader
 
 NOPROFILE=
 
-SRCS=	loader.c \
+SRCS=	loader_dri_helper.c \
+	loader.c \
 	pci_id_driver_map.c
 
 .include "../Makefile.inc"

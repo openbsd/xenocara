@@ -29,7 +29,6 @@
 #include "util/u_pack_color.h"
 #include "util/u_split_draw.h"
 #include "util/u_upload_mgr.h"
-#include "indices/u_primconvert.h"
 
 #include "vc4_context.h"
 #include "vc4_resource.h"
@@ -133,6 +132,7 @@ vc4_predraw_check_textures(struct pipe_context *pctx,
 static void
 vc4_emit_gl_shader_state(struct vc4_context *vc4,
                          const struct pipe_draw_info *info,
+                         const struct pipe_draw_start_count_bias *draws,
                          uint32_t extra_index_bias)
 {
         struct vc4_job *job = vc4->job;
@@ -183,7 +183,7 @@ vc4_emit_gl_shader_state(struct vc4_context *vc4,
         };
 
         uint32_t max_index = 0xffff;
-        unsigned index_bias = info->index_size ? info->index_bias : 0;
+        unsigned index_bias = info->index_size ? draws->index_bias : 0;
         for (int i = 0; i < vtx->num_elements; i++) {
                 struct pipe_vertex_element *elem = &vtx->pipe[i];
                 struct pipe_vertex_buffer *vb =
@@ -289,12 +289,13 @@ vc4_hw_2116_workaround(struct pipe_context *pctx, int vert_count)
 
 static void
 vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
+             unsigned drawid_offset,
              const struct pipe_draw_indirect_info *indirect,
-             const struct pipe_draw_start_count *draws,
+             const struct pipe_draw_start_count_bias *draws,
              unsigned num_draws)
 {
         if (num_draws > 1) {
-                util_draw_multi(pctx, info, indirect, draws, num_draws);
+                util_draw_multi(pctx, info, drawid_offset, indirect, draws, num_draws);
                 return;
         }
 
@@ -302,28 +303,11 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
            return;
 
         struct vc4_context *vc4 = vc4_context(pctx);
-        struct pipe_draw_info local_info;
 
 	if (!indirect &&
 	    !info->primitive_restart &&
 	    !u_trim_pipe_prim(info->mode, (unsigned*)&draws[0].count))
 		return;
-
-        if (info->mode >= PIPE_PRIM_QUADS) {
-                if (info->mode == PIPE_PRIM_QUADS &&
-                    draws[0].count == 4 &&
-                    !vc4->rasterizer->base.flatshade) {
-                        local_info = *info;
-                        local_info.mode = PIPE_PRIM_TRIANGLE_FAN;
-                        info = &local_info;
-                } else {
-                        util_primconvert_save_rasterizer_state(vc4->primconvert, &vc4->rasterizer->base);
-                        util_primconvert_draw_vbo(vc4->primconvert, info, indirect, draws, num_draws);
-                        perf_debug("Fallback conversion for %d %s vertices\n",
-                                   draws[0].count, u_prim_name(info->mode));
-                        return;
-                }
-        }
 
         /* Before setting up the draw, do any fixup blits necessary. */
         vc4_predraw_check_textures(pctx, &vc4->verttex);
@@ -358,7 +342,7 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
 
         bool needs_drawarrays_shader_state = false;
 
-        unsigned index_bias = info->index_size ? info->index_bias : 0;
+        unsigned index_bias = info->index_size ? draws->index_bias : 0;
         if ((vc4->dirty & (VC4_DIRTY_VTXBUF |
                            VC4_DIRTY_VTXSTATE |
                            VC4_DIRTY_PRIM_MODE |
@@ -371,7 +355,7 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                            vc4->prog.fs->uniform_dirty_bits)) ||
             vc4->last_index_bias != index_bias) {
                 if (info->index_size)
-                        vc4_emit_gl_shader_state(vc4, info, 0);
+                        vc4_emit_gl_shader_state(vc4, info, draws, 0);
                 else
                         needs_drawarrays_shader_state = true;
         }
@@ -467,7 +451,7 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
                         uint32_t step;
 
                         if (needs_drawarrays_shader_state) {
-                                vc4_emit_gl_shader_state(vc4, info,
+                                vc4_emit_gl_shader_state(vc4, info, draws,
                                                          extra_index_bias);
                         }
 

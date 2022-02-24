@@ -1007,13 +1007,13 @@ struct GFX8_RENDER_SURFACE_STATE {
 #define XMAJOR                                   2
 #define YMAJOR                                   3
    uint32_t                             SurfaceHorizontalAlignment;
-#define HALIGN4                                  1
-#define HALIGN8                                  2
-#define HALIGN16                                 3
+#define HALIGN_4                                 1
+#define HALIGN_8                                 2
+#define HALIGN_16                                3
    uint32_t                             SurfaceVerticalAlignment;
-#define VALIGN4                                  1
-#define VALIGN8                                  2
-#define VALIGN16                                 3
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
    uint32_t                             SurfaceFormat;
    bool                                 SurfaceArray;
    uint32_t                             SurfaceType;
@@ -1245,14 +1245,14 @@ struct GFX8_SAMPLER_STATE {
 #define PROGRAMMED                               0
 #define OVERRIDE                                 1
    uint32_t                             ShadowFunction;
-#define PREFILTEROPALWAYS                        0
-#define PREFILTEROPNEVER                         1
-#define PREFILTEROPLESS                          2
-#define PREFILTEROPEQUAL                         3
-#define PREFILTEROPLEQUAL                        4
-#define PREFILTEROPGREATER                       5
-#define PREFILTEROPNOTEQUAL                      6
-#define PREFILTEROPGEQUAL                        7
+#define PREFILTEROP_ALWAYS                       0
+#define PREFILTEROP_NEVER                        1
+#define PREFILTEROP_LESS                         2
+#define PREFILTEROP_EQUAL                        3
+#define PREFILTEROP_LEQUAL                       4
+#define PREFILTEROP_GREATER                      5
+#define PREFILTEROP_NOTEQUAL                     6
+#define PREFILTEROP_GEQUAL                       7
    uint32_t                             ChromaKeyMode;
 #define KEYFILTER_KILL_ON_ANY_MATCH              0
 #define KEYFILTER_REPLACE_BLACK                  1

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -133,6 +133,10 @@ install: _SUBDIRUSE
 .else
 	ln -f ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so \
 	    ${DESTDIR}${X11BASE}/lib/modules/dri/${driver}_dri.so
+.endif
+.if "${driver}" == "i915"
+	ln -f ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so \
+	    ${DESTDIR}${X11BASE}/lib/modules/dri/i830_dri.so
 .endif
 .endfor
 	rm ${DESTDIR}${X11BASE}/lib/modules/dri/lib${LIB}.so

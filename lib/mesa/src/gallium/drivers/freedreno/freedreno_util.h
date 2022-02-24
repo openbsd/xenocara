@@ -44,6 +44,10 @@
 #include "adreno_pm4.xml.h"
 #include "disasm.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum adreno_rb_depth_format fd_pipe2depth(enum pipe_format format);
 enum pc_di_index_size fd_pipe2index(enum pipe_format format);
 enum pipe_format fd_gmem_restore_format(enum pipe_format format);
@@ -100,19 +104,31 @@ extern bool fd_binning_enabled;
 
 #define FD_DBG(category) unlikely(fd_mesa_debug &FD_DBG_##category)
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+
 #define DBG(fmt, ...)                                                          \
    do {                                                                        \
       if (FD_DBG(MSGS))                                                        \
-         mesa_logd("%s:%d: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__);      \
+         mesa_logi("%5d: %s:%d: " fmt, ((pid_t)syscall(SYS_gettid)),           \
+                                        __FUNCTION__, __LINE__,                \
+                                        ##__VA_ARGS__);                        \
+   } while (0)
+
+#define perf_debug_message(debug, type, ...)                                   \
+   do {                                                                        \
+      if (FD_DBG(PERF))                                                        \
+         mesa_logw(__VA_ARGS__);                                               \
+      struct pipe_debug_callback *__d = (debug);                               \
+      if (__d)                                                                 \
+         pipe_debug_message(__d, type, __VA_ARGS__);                           \
    } while (0)
 
 #define perf_debug_ctx(ctx, ...)                                               \
    do {                                                                        \
-      if (FD_DBG(PERF))                                                        \
-         mesa_logw(__VA_ARGS__);                                               \
       struct fd_context *__c = (ctx);                                          \
-      if (__c)                                                                 \
-         pipe_debug_message(&__c->debug, PERF_INFO, __VA_ARGS__);              \
+      perf_debug_message(__c ? &__c->debug : NULL, PERF_INFO, __VA_ARGS__);    \
    } while (0)
 
 #define perf_debug(...) perf_debug_ctx(NULL, __VA_ARGS__)
@@ -390,7 +406,7 @@ emit_marker(struct fd_ringbuffer *ring, int scratch_idx)
    if (reg == HW_QUERY_BASE_REG)
       return;
    if (__EMIT_MARKER) {
-      OUT_WFI5(ring);
+      OUT_WFI(ring);
       OUT_PKT0(ring, reg, 1);
       OUT_RING(ring, p_atomic_inc_return(&marker_cnt));
    }
@@ -426,7 +442,9 @@ fd_msaa_samples(unsigned samples)
    switch (samples) {
    default:
       debug_assert(0);
+#if defined(NDEBUG) || defined(DEBUG)
       FALLTHROUGH;
+#endif
    case 0:
    case 1:
       return MSAA_ONE;
@@ -456,7 +474,7 @@ fd4_stage2shadersb(gl_shader_stage type)
       return SB4_CS_SHADER;
    default:
       unreachable("bad shader type");
-      return ~0;
+      return (enum a4xx_state_block) ~0;
    }
 }
 
@@ -475,5 +493,9 @@ fd4_size2indextype(unsigned index_size)
    assert(0);
    return INDEX4_SIZE_32_BIT;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FREEDRENO_UTIL_H_ */

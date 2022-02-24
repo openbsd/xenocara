@@ -459,6 +459,54 @@ nir_intrinsic_has_access(const nir_intrinsic_instr *instr)
 
 
 static inline unsigned
+nir_intrinsic_call_idx(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_CALL_IDX] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_CALL_IDX] - 1];
+}
+
+static inline void
+nir_intrinsic_set_call_idx(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_CALL_IDX] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_CALL_IDX] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_call_idx(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_CALL_IDX] > 0;
+}
+
+
+static inline unsigned
+nir_intrinsic_stack_size(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_STACK_SIZE] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_STACK_SIZE] - 1];
+}
+
+static inline void
+nir_intrinsic_set_stack_size(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_STACK_SIZE] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_STACK_SIZE] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_stack_size(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_STACK_SIZE] > 0;
+}
+
+
+static inline unsigned
 nir_intrinsic_align_mul(const nir_intrinsic_instr *instr)
 {
    const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];

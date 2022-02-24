@@ -38,17 +38,19 @@
  */
 static void
 swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+             unsigned drawid_offset,
              const struct pipe_draw_indirect_info *indirect,
-             const struct pipe_draw_start_count *draws,
+             const struct pipe_draw_start_count_bias *draws,
              unsigned num_draws)
 {
    if (num_draws > 1) {
       struct pipe_draw_info tmp_info = *info;
+      unsigned drawid = drawid_offset;
 
       for (unsigned i = 0; i < num_draws; i++) {
-         swr_draw_vbo(pipe, &tmp_info, indirect, &draws[i], 1);
+         swr_draw_vbo(pipe, &tmp_info, drawid, indirect, &draws[i], 1);
          if (tmp_info.increment_draw_id)
-            tmp_info.drawid++;
+            drawid++;
       }
       return;
    }
@@ -60,7 +62,7 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
 
    if (!indirect &&
        !info->primitive_restart &&
-       !u_trim_pipe_prim(info->mode, (unsigned*)&draws[0].count))
+       !u_trim_pipe_prim((enum pipe_prim_type)info->mode, (unsigned*)&draws[0].count))
       return;
 
    if (!swr_check_render_cond(pipe))
@@ -82,13 +84,13 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
    swr_update_draw_context(ctx);
 
    struct pipe_draw_info resolved_info;
-   struct pipe_draw_start_count resolved_draw;
+   struct pipe_draw_start_count_bias resolved_draw;
    /* DrawTransformFeedback */
    if (indirect && indirect->count_from_stream_output) {
       // trick copied from softpipe to modify const struct *info
       memcpy(&resolved_info, (void*)info, sizeof(struct pipe_draw_info));
       resolved_draw.start = draws[0].start;
-      resolved_draw.count = ctx->so_primCounter * resolved_info.vertices_per_patch;
+      resolved_draw.count = ctx->so_primCounter * ctx->patch_vertices;
       resolved_info.max_index = resolved_draw.count - 1;
       info = &resolved_info;
       indirect = NULL;
@@ -100,7 +102,7 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
          STREAMOUT_COMPILE_STATE state = {0};
          struct pipe_stream_output_info *so = &ctx->vs->pipe.stream_output;
 
-         state.numVertsPerPrim = u_vertices_per_prim(info->mode);
+         state.numVertsPerPrim = u_vertices_per_prim((enum pipe_prim_type)info->mode);
 
          uint32_t offsets[MAX_SO_STREAMS] = {0};
          uint32_t num = 0;
@@ -219,7 +221,7 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
    if (ctx->gs)
       topology = (pipe_prim_type)ctx->gs->info.base.properties[TGSI_PROPERTY_GS_OUTPUT_PRIM];
    else
-      topology = info->mode;
+      topology = (enum pipe_prim_type)info->mode;
 
    switch (topology) {
    case PIPE_PRIM_TRIANGLE_FAN:
@@ -250,15 +252,15 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
 
    if (info->index_size)
       ctx->api.pfnSwrDrawIndexedInstanced(ctx->swrContext,
-                                          swr_convert_prim_topology(info->mode, info->vertices_per_patch),
+                                          swr_convert_prim_topology(info->mode, ctx->patch_vertices),
                                           draws[0].count,
                                           info->instance_count,
                                           draws[0].start,
-                                          info->index_bias,
+                                          draws->index_bias,
                                           info->start_instance);
    else
       ctx->api.pfnSwrDrawInstanced(ctx->swrContext,
-                                   swr_convert_prim_topology(info->mode, info->vertices_per_patch),
+                                   swr_convert_prim_topology(info->mode, ctx->patch_vertices),
                                    draws[0].count,
                                    info->instance_count,
                                    draws[0].start,

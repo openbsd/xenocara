@@ -48,12 +48,15 @@ struct marshal_cmd_VertexAttrib1sNV
    GLshort x;
    GLuint index;
 };
-void
-_mesa_unmarshal_VertexAttrib1sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1sNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1sNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLshort x = cmd->x;
    CALL_VertexAttrib1sNV(ctx->CurrentServerDispatch, (index, x));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1sNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1sNV(GLuint index, GLshort x)
@@ -74,12 +77,15 @@ struct marshal_cmd_VertexAttrib1svNV
    GLuint index;
    GLshort v[1];
 };
-void
-_mesa_unmarshal_VertexAttrib1svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLshort * v = cmd->v;
    CALL_VertexAttrib1svNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1svNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1svNV(GLuint index, const GLshort * v)
@@ -101,13 +107,16 @@ struct marshal_cmd_VertexAttrib2sNV
    GLshort y;
    GLuint index;
 };
-void
-_mesa_unmarshal_VertexAttrib2sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2sNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2sNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLshort x = cmd->x;
    GLshort y = cmd->y;
    CALL_VertexAttrib2sNV(ctx->CurrentServerDispatch, (index, x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2sNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2sNV(GLuint index, GLshort x, GLshort y)
@@ -129,12 +138,15 @@ struct marshal_cmd_VertexAttrib2svNV
    GLuint index;
    GLshort v[2];
 };
-void
-_mesa_unmarshal_VertexAttrib2svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLshort * v = cmd->v;
    CALL_VertexAttrib2svNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2svNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2svNV(GLuint index, const GLshort * v)
@@ -157,14 +169,17 @@ struct marshal_cmd_VertexAttrib3sNV
    GLshort z;
    GLuint index;
 };
-void
-_mesa_unmarshal_VertexAttrib3sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3sNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3sNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLshort x = cmd->x;
    GLshort y = cmd->y;
    GLshort z = cmd->z;
    CALL_VertexAttrib3sNV(ctx->CurrentServerDispatch, (index, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3sNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3sNV(GLuint index, GLshort x, GLshort y, GLshort z)
@@ -187,12 +202,15 @@ struct marshal_cmd_VertexAttrib3svNV
    GLuint index;
    GLshort v[3];
 };
-void
-_mesa_unmarshal_VertexAttrib3svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLshort * v = cmd->v;
    CALL_VertexAttrib3svNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3svNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3svNV(GLuint index, const GLshort * v)
@@ -216,8 +234,8 @@ struct marshal_cmd_VertexAttrib4sNV
    GLshort w;
    GLuint index;
 };
-void
-_mesa_unmarshal_VertexAttrib4sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4sNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4sNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4sNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLshort x = cmd->x;
@@ -225,6 +243,9 @@ _mesa_unmarshal_VertexAttrib4sNV(struct gl_context *ctx, const struct marshal_cm
    GLshort z = cmd->z;
    GLshort w = cmd->w;
    CALL_VertexAttrib4sNV(ctx->CurrentServerDispatch, (index, x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4sNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4sNV(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
@@ -248,12 +269,15 @@ struct marshal_cmd_VertexAttrib4svNV
    GLuint index;
    GLshort v[4];
 };
-void
-_mesa_unmarshal_VertexAttrib4svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLshort * v = cmd->v;
    CALL_VertexAttrib4svNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4svNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4svNV(GLuint index, const GLshort * v)
@@ -274,12 +298,15 @@ struct marshal_cmd_VertexAttrib1fNV
    GLuint index;
    GLfloat x;
 };
-void
-_mesa_unmarshal_VertexAttrib1fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1fNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1fNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLfloat x = cmd->x;
    CALL_VertexAttrib1fNV(ctx->CurrentServerDispatch, (index, x));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1fNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1fNV(GLuint index, GLfloat x)
@@ -300,12 +327,15 @@ struct marshal_cmd_VertexAttrib1fvNV
    GLuint index;
    GLfloat v[1];
 };
-void
-_mesa_unmarshal_VertexAttrib1fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLfloat * v = cmd->v;
    CALL_VertexAttrib1fvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1fvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1fvNV(GLuint index, const GLfloat * v)
@@ -327,13 +357,16 @@ struct marshal_cmd_VertexAttrib2fNV
    GLfloat x;
    GLfloat y;
 };
-void
-_mesa_unmarshal_VertexAttrib2fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2fNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2fNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLfloat x = cmd->x;
    GLfloat y = cmd->y;
    CALL_VertexAttrib2fNV(ctx->CurrentServerDispatch, (index, x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2fNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2fNV(GLuint index, GLfloat x, GLfloat y)
@@ -355,12 +388,15 @@ struct marshal_cmd_VertexAttrib2fvNV
    GLuint index;
    GLfloat v[2];
 };
-void
-_mesa_unmarshal_VertexAttrib2fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLfloat * v = cmd->v;
    CALL_VertexAttrib2fvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2fvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2fvNV(GLuint index, const GLfloat * v)
@@ -383,14 +419,17 @@ struct marshal_cmd_VertexAttrib3fNV
    GLfloat y;
    GLfloat z;
 };
-void
-_mesa_unmarshal_VertexAttrib3fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3fNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3fNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLfloat x = cmd->x;
    GLfloat y = cmd->y;
    GLfloat z = cmd->z;
    CALL_VertexAttrib3fNV(ctx->CurrentServerDispatch, (index, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3fNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3fNV(GLuint index, GLfloat x, GLfloat y, GLfloat z)
@@ -413,12 +452,15 @@ struct marshal_cmd_VertexAttrib3fvNV
    GLuint index;
    GLfloat v[3];
 };
-void
-_mesa_unmarshal_VertexAttrib3fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLfloat * v = cmd->v;
    CALL_VertexAttrib3fvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3fvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3fvNV(GLuint index, const GLfloat * v)
@@ -442,8 +484,8 @@ struct marshal_cmd_VertexAttrib4fNV
    GLfloat z;
    GLfloat w;
 };
-void
-_mesa_unmarshal_VertexAttrib4fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4fNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4fNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4fNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLfloat x = cmd->x;
@@ -451,6 +493,9 @@ _mesa_unmarshal_VertexAttrib4fNV(struct gl_context *ctx, const struct marshal_cm
    GLfloat z = cmd->z;
    GLfloat w = cmd->w;
    CALL_VertexAttrib4fNV(ctx->CurrentServerDispatch, (index, x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4fNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4fNV(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -474,12 +519,15 @@ struct marshal_cmd_VertexAttrib4fvNV
    GLuint index;
    GLfloat v[4];
 };
-void
-_mesa_unmarshal_VertexAttrib4fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLfloat * v = cmd->v;
    CALL_VertexAttrib4fvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4fvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4fvNV(GLuint index, const GLfloat * v)
@@ -500,12 +548,15 @@ struct marshal_cmd_VertexAttrib1dNV
    GLuint index;
    GLdouble x;
 };
-void
-_mesa_unmarshal_VertexAttrib1dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1dNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1dNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLdouble x = cmd->x;
    CALL_VertexAttrib1dNV(ctx->CurrentServerDispatch, (index, x));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1dNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1dNV(GLuint index, GLdouble x)
@@ -526,12 +577,15 @@ struct marshal_cmd_VertexAttrib1dvNV
    GLuint index;
    GLdouble v[1];
 };
-void
-_mesa_unmarshal_VertexAttrib1dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib1dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib1dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLdouble * v = cmd->v;
    CALL_VertexAttrib1dvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib1dvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib1dvNV(GLuint index, const GLdouble * v)
@@ -553,13 +607,16 @@ struct marshal_cmd_VertexAttrib2dNV
    GLdouble x;
    GLdouble y;
 };
-void
-_mesa_unmarshal_VertexAttrib2dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2dNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2dNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLdouble x = cmd->x;
    GLdouble y = cmd->y;
    CALL_VertexAttrib2dNV(ctx->CurrentServerDispatch, (index, x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2dNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2dNV(GLuint index, GLdouble x, GLdouble y)
@@ -581,12 +638,15 @@ struct marshal_cmd_VertexAttrib2dvNV
    GLuint index;
    GLdouble v[2];
 };
-void
-_mesa_unmarshal_VertexAttrib2dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib2dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib2dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLdouble * v = cmd->v;
    CALL_VertexAttrib2dvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib2dvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib2dvNV(GLuint index, const GLdouble * v)
@@ -609,14 +669,17 @@ struct marshal_cmd_VertexAttrib3dNV
    GLdouble y;
    GLdouble z;
 };
-void
-_mesa_unmarshal_VertexAttrib3dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3dNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3dNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLdouble x = cmd->x;
    GLdouble y = cmd->y;
    GLdouble z = cmd->z;
    CALL_VertexAttrib3dNV(ctx->CurrentServerDispatch, (index, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3dNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3dNV(GLuint index, GLdouble x, GLdouble y, GLdouble z)
@@ -639,12 +702,15 @@ struct marshal_cmd_VertexAttrib3dvNV
    GLuint index;
    GLdouble v[3];
 };
-void
-_mesa_unmarshal_VertexAttrib3dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib3dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib3dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLdouble * v = cmd->v;
    CALL_VertexAttrib3dvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib3dvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib3dvNV(GLuint index, const GLdouble * v)
@@ -668,8 +734,8 @@ struct marshal_cmd_VertexAttrib4dNV
    GLdouble z;
    GLdouble w;
 };
-void
-_mesa_unmarshal_VertexAttrib4dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4dNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4dNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4dNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLdouble x = cmd->x;
@@ -677,6 +743,9 @@ _mesa_unmarshal_VertexAttrib4dNV(struct gl_context *ctx, const struct marshal_cm
    GLdouble z = cmd->z;
    GLdouble w = cmd->w;
    CALL_VertexAttrib4dNV(ctx->CurrentServerDispatch, (index, x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4dNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4dNV(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
@@ -700,12 +769,15 @@ struct marshal_cmd_VertexAttrib4dvNV
    GLuint index;
    GLdouble v[4];
 };
-void
-_mesa_unmarshal_VertexAttrib4dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLdouble * v = cmd->v;
    CALL_VertexAttrib4dvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4dvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4dvNV(GLuint index, const GLdouble * v)
@@ -729,8 +801,8 @@ struct marshal_cmd_VertexAttrib4ubNV
    GLubyte w;
    GLuint index;
 };
-void
-_mesa_unmarshal_VertexAttrib4ubNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4ubNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4ubNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4ubNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLubyte x = cmd->x;
@@ -738,6 +810,9 @@ _mesa_unmarshal_VertexAttrib4ubNV(struct gl_context *ctx, const struct marshal_c
    GLubyte z = cmd->z;
    GLubyte w = cmd->w;
    CALL_VertexAttrib4ubNV(ctx->CurrentServerDispatch, (index, x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4ubNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4ubNV(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
@@ -761,12 +836,15 @@ struct marshal_cmd_VertexAttrib4ubvNV
    GLuint index;
    GLubyte v[4];
 };
-void
-_mesa_unmarshal_VertexAttrib4ubvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4ubvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttrib4ubvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttrib4ubvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    const GLubyte * v = cmd->v;
    CALL_VertexAttrib4ubvNV(ctx->CurrentServerDispatch, (index, v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexAttrib4ubvNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttrib4ubvNV(GLuint index, const GLubyte * v)
@@ -788,8 +866,8 @@ struct marshal_cmd_VertexAttribs1svNV
    GLsizei n;
    /* Next safe_mul(n, 1 * sizeof(GLshort)) bytes are GLshort v[n] */
 };
-void
-_mesa_unmarshal_VertexAttribs1svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs1svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -797,6 +875,7 @@ _mesa_unmarshal_VertexAttribs1svNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLshort *) variable_data;
    CALL_VertexAttribs1svNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs1svNV(GLuint index, GLsizei n, const GLshort * v)
@@ -826,8 +905,8 @@ struct marshal_cmd_VertexAttribs2svNV
    GLsizei n;
    /* Next safe_mul(n, 2 * sizeof(GLshort)) bytes are GLshort v[n][2] */
 };
-void
-_mesa_unmarshal_VertexAttribs2svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs2svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -835,6 +914,7 @@ _mesa_unmarshal_VertexAttribs2svNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLshort *) variable_data;
    CALL_VertexAttribs2svNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs2svNV(GLuint index, GLsizei n, const GLshort * v)
@@ -864,8 +944,8 @@ struct marshal_cmd_VertexAttribs3svNV
    GLsizei n;
    /* Next safe_mul(n, 3 * sizeof(GLshort)) bytes are GLshort v[n][3] */
 };
-void
-_mesa_unmarshal_VertexAttribs3svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs3svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -873,6 +953,7 @@ _mesa_unmarshal_VertexAttribs3svNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLshort *) variable_data;
    CALL_VertexAttribs3svNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs3svNV(GLuint index, GLsizei n, const GLshort * v)
@@ -902,8 +983,8 @@ struct marshal_cmd_VertexAttribs4svNV
    GLsizei n;
    /* Next safe_mul(n, 4 * sizeof(GLshort)) bytes are GLshort v[n][4] */
 };
-void
-_mesa_unmarshal_VertexAttribs4svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4svNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs4svNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4svNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -911,6 +992,7 @@ _mesa_unmarshal_VertexAttribs4svNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLshort *) variable_data;
    CALL_VertexAttribs4svNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs4svNV(GLuint index, GLsizei n, const GLshort * v)
@@ -940,8 +1022,8 @@ struct marshal_cmd_VertexAttribs1fvNV
    GLsizei n;
    /* Next safe_mul(n, 1 * sizeof(GLfloat)) bytes are GLfloat v[n] */
 };
-void
-_mesa_unmarshal_VertexAttribs1fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs1fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -949,6 +1031,7 @@ _mesa_unmarshal_VertexAttribs1fvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLfloat *) variable_data;
    CALL_VertexAttribs1fvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat * v)
@@ -978,8 +1061,8 @@ struct marshal_cmd_VertexAttribs2fvNV
    GLsizei n;
    /* Next safe_mul(n, 2 * sizeof(GLfloat)) bytes are GLfloat v[n][2] */
 };
-void
-_mesa_unmarshal_VertexAttribs2fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs2fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -987,6 +1070,7 @@ _mesa_unmarshal_VertexAttribs2fvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLfloat *) variable_data;
    CALL_VertexAttribs2fvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat * v)
@@ -1016,8 +1100,8 @@ struct marshal_cmd_VertexAttribs3fvNV
    GLsizei n;
    /* Next safe_mul(n, 3 * sizeof(GLfloat)) bytes are GLfloat v[n][3] */
 };
-void
-_mesa_unmarshal_VertexAttribs3fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs3fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1025,6 +1109,7 @@ _mesa_unmarshal_VertexAttribs3fvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLfloat *) variable_data;
    CALL_VertexAttribs3fvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat * v)
@@ -1054,8 +1139,8 @@ struct marshal_cmd_VertexAttribs4fvNV
    GLsizei n;
    /* Next safe_mul(n, 4 * sizeof(GLfloat)) bytes are GLfloat v[n][4] */
 };
-void
-_mesa_unmarshal_VertexAttribs4fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4fvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs4fvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4fvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1063,6 +1148,7 @@ _mesa_unmarshal_VertexAttribs4fvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLfloat *) variable_data;
    CALL_VertexAttribs4fvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat * v)
@@ -1092,8 +1178,8 @@ struct marshal_cmd_VertexAttribs1dvNV
    GLsizei n;
    /* Next safe_mul(n, 1 * sizeof(GLdouble)) bytes are GLdouble v[n] */
 };
-void
-_mesa_unmarshal_VertexAttribs1dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs1dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs1dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1101,6 +1187,7 @@ _mesa_unmarshal_VertexAttribs1dvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLdouble *) variable_data;
    CALL_VertexAttribs1dvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs1dvNV(GLuint index, GLsizei n, const GLdouble * v)
@@ -1130,8 +1217,8 @@ struct marshal_cmd_VertexAttribs2dvNV
    GLsizei n;
    /* Next safe_mul(n, 2 * sizeof(GLdouble)) bytes are GLdouble v[n][2] */
 };
-void
-_mesa_unmarshal_VertexAttribs2dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs2dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs2dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1139,6 +1226,7 @@ _mesa_unmarshal_VertexAttribs2dvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLdouble *) variable_data;
    CALL_VertexAttribs2dvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs2dvNV(GLuint index, GLsizei n, const GLdouble * v)
@@ -1168,8 +1256,8 @@ struct marshal_cmd_VertexAttribs3dvNV
    GLsizei n;
    /* Next safe_mul(n, 3 * sizeof(GLdouble)) bytes are GLdouble v[n][3] */
 };
-void
-_mesa_unmarshal_VertexAttribs3dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs3dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs3dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1177,6 +1265,7 @@ _mesa_unmarshal_VertexAttribs3dvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLdouble *) variable_data;
    CALL_VertexAttribs3dvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs3dvNV(GLuint index, GLsizei n, const GLdouble * v)
@@ -1206,8 +1295,8 @@ struct marshal_cmd_VertexAttribs4dvNV
    GLsizei n;
    /* Next safe_mul(n, 4 * sizeof(GLdouble)) bytes are GLdouble v[n][4] */
 };
-void
-_mesa_unmarshal_VertexAttribs4dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4dvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs4dvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4dvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1215,6 +1304,7 @@ _mesa_unmarshal_VertexAttribs4dvNV(struct gl_context *ctx, const struct marshal_
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLdouble *) variable_data;
    CALL_VertexAttribs4dvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs4dvNV(GLuint index, GLsizei n, const GLdouble * v)
@@ -1244,8 +1334,8 @@ struct marshal_cmd_VertexAttribs4ubvNV
    GLsizei n;
    /* Next safe_mul(n, 4 * sizeof(GLubyte)) bytes are GLubyte v[n][4] */
 };
-void
-_mesa_unmarshal_VertexAttribs4ubvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4ubvNV *cmd)
+uint32_t
+_mesa_unmarshal_VertexAttribs4ubvNV(struct gl_context *ctx, const struct marshal_cmd_VertexAttribs4ubvNV *cmd, const uint64_t *last)
 {
    GLuint index = cmd->index;
    GLsizei n = cmd->n;
@@ -1253,6 +1343,7 @@ _mesa_unmarshal_VertexAttribs4ubvNV(struct gl_context *ctx, const struct marshal
    const char *variable_data = (const char *) (cmd + 1);
    v = (GLubyte *) variable_data;
    CALL_VertexAttribs4ubvNV(ctx->CurrentServerDispatch, (index, n, v));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte * v)
@@ -1290,11 +1381,14 @@ struct marshal_cmd_BindFragmentShaderATI
    struct marshal_cmd_base cmd_base;
    GLuint id;
 };
-void
-_mesa_unmarshal_BindFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_BindFragmentShaderATI *cmd)
+uint32_t
+_mesa_unmarshal_BindFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_BindFragmentShaderATI *cmd, const uint64_t *last)
 {
    GLuint id = cmd->id;
    CALL_BindFragmentShaderATI(ctx->CurrentServerDispatch, (id));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BindFragmentShaderATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BindFragmentShaderATI(GLuint id)
@@ -1313,11 +1407,14 @@ struct marshal_cmd_DeleteFragmentShaderATI
    struct marshal_cmd_base cmd_base;
    GLuint id;
 };
-void
-_mesa_unmarshal_DeleteFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_DeleteFragmentShaderATI *cmd)
+uint32_t
+_mesa_unmarshal_DeleteFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_DeleteFragmentShaderATI *cmd, const uint64_t *last)
 {
    GLuint id = cmd->id;
    CALL_DeleteFragmentShaderATI(ctx->CurrentServerDispatch, (id));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DeleteFragmentShaderATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DeleteFragmentShaderATI(GLuint id)
@@ -1335,10 +1432,13 @@ struct marshal_cmd_BeginFragmentShaderATI
 {
    struct marshal_cmd_base cmd_base;
 };
-void
-_mesa_unmarshal_BeginFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_BeginFragmentShaderATI *cmd)
+uint32_t
+_mesa_unmarshal_BeginFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_BeginFragmentShaderATI *cmd, const uint64_t *last)
 {
    CALL_BeginFragmentShaderATI(ctx->CurrentServerDispatch, ());
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BeginFragmentShaderATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BeginFragmentShaderATI(void)
@@ -1356,10 +1456,13 @@ struct marshal_cmd_EndFragmentShaderATI
 {
    struct marshal_cmd_base cmd_base;
 };
-void
-_mesa_unmarshal_EndFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_EndFragmentShaderATI *cmd)
+uint32_t
+_mesa_unmarshal_EndFragmentShaderATI(struct gl_context *ctx, const struct marshal_cmd_EndFragmentShaderATI *cmd, const uint64_t *last)
 {
    CALL_EndFragmentShaderATI(ctx->CurrentServerDispatch, ());
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EndFragmentShaderATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_EndFragmentShaderATI(void)
@@ -1380,13 +1483,16 @@ struct marshal_cmd_PassTexCoordATI
    GLuint coord;
    GLenum swizzle;
 };
-void
-_mesa_unmarshal_PassTexCoordATI(struct gl_context *ctx, const struct marshal_cmd_PassTexCoordATI *cmd)
+uint32_t
+_mesa_unmarshal_PassTexCoordATI(struct gl_context *ctx, const struct marshal_cmd_PassTexCoordATI *cmd, const uint64_t *last)
 {
    GLuint dst = cmd->dst;
    GLuint coord = cmd->coord;
    GLenum swizzle = cmd->swizzle;
    CALL_PassTexCoordATI(ctx->CurrentServerDispatch, (dst, coord, swizzle));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_PassTexCoordATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_PassTexCoordATI(GLuint dst, GLuint coord, GLenum swizzle)
@@ -1409,13 +1515,16 @@ struct marshal_cmd_SampleMapATI
    GLuint interp;
    GLenum swizzle;
 };
-void
-_mesa_unmarshal_SampleMapATI(struct gl_context *ctx, const struct marshal_cmd_SampleMapATI *cmd)
+uint32_t
+_mesa_unmarshal_SampleMapATI(struct gl_context *ctx, const struct marshal_cmd_SampleMapATI *cmd, const uint64_t *last)
 {
    GLuint dst = cmd->dst;
    GLuint interp = cmd->interp;
    GLenum swizzle = cmd->swizzle;
    CALL_SampleMapATI(ctx->CurrentServerDispatch, (dst, interp, swizzle));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_SampleMapATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_SampleMapATI(GLuint dst, GLuint interp, GLenum swizzle)
@@ -1442,8 +1551,8 @@ struct marshal_cmd_ColorFragmentOp1ATI
    GLuint arg1Rep;
    GLuint arg1Mod;
 };
-void
-_mesa_unmarshal_ColorFragmentOp1ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp1ATI *cmd)
+uint32_t
+_mesa_unmarshal_ColorFragmentOp1ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp1ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1453,6 +1562,9 @@ _mesa_unmarshal_ColorFragmentOp1ATI(struct gl_context *ctx, const struct marshal
    GLuint arg1Rep = cmd->arg1Rep;
    GLuint arg1Mod = cmd->arg1Mod;
    CALL_ColorFragmentOp1ATI(ctx->CurrentServerDispatch, (op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ColorFragmentOp1ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ColorFragmentOp1ATI(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
@@ -1486,8 +1598,8 @@ struct marshal_cmd_ColorFragmentOp2ATI
    GLuint arg2Rep;
    GLuint arg2Mod;
 };
-void
-_mesa_unmarshal_ColorFragmentOp2ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp2ATI *cmd)
+uint32_t
+_mesa_unmarshal_ColorFragmentOp2ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp2ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1500,6 +1612,9 @@ _mesa_unmarshal_ColorFragmentOp2ATI(struct gl_context *ctx, const struct marshal
    GLuint arg2Rep = cmd->arg2Rep;
    GLuint arg2Mod = cmd->arg2Mod;
    CALL_ColorFragmentOp2ATI(ctx->CurrentServerDispatch, (op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ColorFragmentOp2ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ColorFragmentOp2ATI(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
@@ -1539,8 +1654,8 @@ struct marshal_cmd_ColorFragmentOp3ATI
    GLuint arg3Rep;
    GLuint arg3Mod;
 };
-void
-_mesa_unmarshal_ColorFragmentOp3ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp3ATI *cmd)
+uint32_t
+_mesa_unmarshal_ColorFragmentOp3ATI(struct gl_context *ctx, const struct marshal_cmd_ColorFragmentOp3ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1556,6 +1671,9 @@ _mesa_unmarshal_ColorFragmentOp3ATI(struct gl_context *ctx, const struct marshal
    GLuint arg3Rep = cmd->arg3Rep;
    GLuint arg3Mod = cmd->arg3Mod;
    CALL_ColorFragmentOp3ATI(ctx->CurrentServerDispatch, (op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ColorFragmentOp3ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ColorFragmentOp3ATI(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
@@ -1591,8 +1709,8 @@ struct marshal_cmd_AlphaFragmentOp1ATI
    GLuint arg1Rep;
    GLuint arg1Mod;
 };
-void
-_mesa_unmarshal_AlphaFragmentOp1ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp1ATI *cmd)
+uint32_t
+_mesa_unmarshal_AlphaFragmentOp1ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp1ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1601,6 +1719,9 @@ _mesa_unmarshal_AlphaFragmentOp1ATI(struct gl_context *ctx, const struct marshal
    GLuint arg1Rep = cmd->arg1Rep;
    GLuint arg1Mod = cmd->arg1Mod;
    CALL_AlphaFragmentOp1ATI(ctx->CurrentServerDispatch, (op, dst, dstMod, arg1, arg1Rep, arg1Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_AlphaFragmentOp1ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_AlphaFragmentOp1ATI(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
@@ -1632,8 +1753,8 @@ struct marshal_cmd_AlphaFragmentOp2ATI
    GLuint arg2Rep;
    GLuint arg2Mod;
 };
-void
-_mesa_unmarshal_AlphaFragmentOp2ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp2ATI *cmd)
+uint32_t
+_mesa_unmarshal_AlphaFragmentOp2ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp2ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1645,6 +1766,9 @@ _mesa_unmarshal_AlphaFragmentOp2ATI(struct gl_context *ctx, const struct marshal
    GLuint arg2Rep = cmd->arg2Rep;
    GLuint arg2Mod = cmd->arg2Mod;
    CALL_AlphaFragmentOp2ATI(ctx->CurrentServerDispatch, (op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_AlphaFragmentOp2ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_AlphaFragmentOp2ATI(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
@@ -1682,8 +1806,8 @@ struct marshal_cmd_AlphaFragmentOp3ATI
    GLuint arg3Rep;
    GLuint arg3Mod;
 };
-void
-_mesa_unmarshal_AlphaFragmentOp3ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp3ATI *cmd)
+uint32_t
+_mesa_unmarshal_AlphaFragmentOp3ATI(struct gl_context *ctx, const struct marshal_cmd_AlphaFragmentOp3ATI *cmd, const uint64_t *last)
 {
    GLenum op = cmd->op;
    GLuint dst = cmd->dst;
@@ -1698,6 +1822,9 @@ _mesa_unmarshal_AlphaFragmentOp3ATI(struct gl_context *ctx, const struct marshal
    GLuint arg3Rep = cmd->arg3Rep;
    GLuint arg3Mod = cmd->arg3Mod;
    CALL_AlphaFragmentOp3ATI(ctx->CurrentServerDispatch, (op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_AlphaFragmentOp3ATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_AlphaFragmentOp3ATI(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
@@ -1728,12 +1855,15 @@ struct marshal_cmd_SetFragmentShaderConstantATI
    GLuint dst;
    GLfloat value[4];
 };
-void
-_mesa_unmarshal_SetFragmentShaderConstantATI(struct gl_context *ctx, const struct marshal_cmd_SetFragmentShaderConstantATI *cmd)
+uint32_t
+_mesa_unmarshal_SetFragmentShaderConstantATI(struct gl_context *ctx, const struct marshal_cmd_SetFragmentShaderConstantATI *cmd, const uint64_t *last)
 {
    GLuint dst = cmd->dst;
    const GLfloat * value = cmd->value;
    CALL_SetFragmentShaderConstantATI(ctx->CurrentServerDispatch, (dst, value));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_SetFragmentShaderConstantATI), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_SetFragmentShaderConstantATI(GLuint dst, const GLfloat * value)
@@ -1753,11 +1883,14 @@ struct marshal_cmd_ActiveStencilFaceEXT
    struct marshal_cmd_base cmd_base;
    GLenum face;
 };
-void
-_mesa_unmarshal_ActiveStencilFaceEXT(struct gl_context *ctx, const struct marshal_cmd_ActiveStencilFaceEXT *cmd)
+uint32_t
+_mesa_unmarshal_ActiveStencilFaceEXT(struct gl_context *ctx, const struct marshal_cmd_ActiveStencilFaceEXT *cmd, const uint64_t *last)
 {
    GLenum face = cmd->face;
    CALL_ActiveStencilFaceEXT(ctx->CurrentServerDispatch, (face));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ActiveStencilFaceEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ActiveStencilFaceEXT(GLenum face)
@@ -1807,12 +1940,15 @@ struct marshal_cmd_DepthBoundsEXT
    GLclampd zmin;
    GLclampd zmax;
 };
-void
-_mesa_unmarshal_DepthBoundsEXT(struct gl_context *ctx, const struct marshal_cmd_DepthBoundsEXT *cmd)
+uint32_t
+_mesa_unmarshal_DepthBoundsEXT(struct gl_context *ctx, const struct marshal_cmd_DepthBoundsEXT *cmd, const uint64_t *last)
 {
    GLclampd zmin = cmd->zmin;
    GLclampd zmax = cmd->zmax;
    CALL_DepthBoundsEXT(ctx->CurrentServerDispatch, (zmin, zmax));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DepthBoundsEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DepthBoundsEXT(GLclampd zmin, GLclampd zmax)
@@ -1833,12 +1969,15 @@ struct marshal_cmd_BindRenderbufferEXT
    GLenum target;
    GLuint renderbuffer;
 };
-void
-_mesa_unmarshal_BindRenderbufferEXT(struct gl_context *ctx, const struct marshal_cmd_BindRenderbufferEXT *cmd)
+uint32_t
+_mesa_unmarshal_BindRenderbufferEXT(struct gl_context *ctx, const struct marshal_cmd_BindRenderbufferEXT *cmd, const uint64_t *last)
 {
    GLenum target = cmd->target;
    GLuint renderbuffer = cmd->renderbuffer;
    CALL_BindRenderbufferEXT(ctx->CurrentServerDispatch, (target, renderbuffer));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BindRenderbufferEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BindRenderbufferEXT(GLenum target, GLuint renderbuffer)
@@ -1859,12 +1998,15 @@ struct marshal_cmd_BindFramebufferEXT
    GLenum target;
    GLuint framebuffer;
 };
-void
-_mesa_unmarshal_BindFramebufferEXT(struct gl_context *ctx, const struct marshal_cmd_BindFramebufferEXT *cmd)
+uint32_t
+_mesa_unmarshal_BindFramebufferEXT(struct gl_context *ctx, const struct marshal_cmd_BindFramebufferEXT *cmd, const uint64_t *last)
 {
    GLenum target = cmd->target;
    GLuint framebuffer = cmd->framebuffer;
    CALL_BindFramebufferEXT(ctx->CurrentServerDispatch, (target, framebuffer));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BindFramebufferEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BindFramebufferEXT(GLenum target, GLuint framebuffer)
@@ -1894,11 +2036,14 @@ struct marshal_cmd_ProvokingVertex
    struct marshal_cmd_base cmd_base;
    GLenum mode;
 };
-void
-_mesa_unmarshal_ProvokingVertex(struct gl_context *ctx, const struct marshal_cmd_ProvokingVertex *cmd)
+uint32_t
+_mesa_unmarshal_ProvokingVertex(struct gl_context *ctx, const struct marshal_cmd_ProvokingVertex *cmd, const uint64_t *last)
 {
    GLenum mode = cmd->mode;
    CALL_ProvokingVertex(ctx->CurrentServerDispatch, (mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ProvokingVertex), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ProvokingVertex(GLenum mode)
@@ -1921,8 +2066,8 @@ struct marshal_cmd_ColorMaski
    GLboolean a;
    GLuint buf;
 };
-void
-_mesa_unmarshal_ColorMaski(struct gl_context *ctx, const struct marshal_cmd_ColorMaski *cmd)
+uint32_t
+_mesa_unmarshal_ColorMaski(struct gl_context *ctx, const struct marshal_cmd_ColorMaski *cmd, const uint64_t *last)
 {
    GLuint buf = cmd->buf;
    GLboolean r = cmd->r;
@@ -1930,6 +2075,9 @@ _mesa_unmarshal_ColorMaski(struct gl_context *ctx, const struct marshal_cmd_Colo
    GLboolean b = cmd->b;
    GLboolean a = cmd->a;
    CALL_ColorMaski(ctx->CurrentServerDispatch, (buf, r, g, b, a));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ColorMaski), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ColorMaski(GLuint buf, GLboolean r, GLboolean g, GLboolean b, GLboolean a)
@@ -1973,12 +2121,15 @@ struct marshal_cmd_Enablei
    GLenum target;
    GLuint index;
 };
-void
-_mesa_unmarshal_Enablei(struct gl_context *ctx, const struct marshal_cmd_Enablei *cmd)
+uint32_t
+_mesa_unmarshal_Enablei(struct gl_context *ctx, const struct marshal_cmd_Enablei *cmd, const uint64_t *last)
 {
    GLenum target = cmd->target;
    GLuint index = cmd->index;
    CALL_Enablei(ctx->CurrentServerDispatch, (target, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Enablei), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_Enablei(GLenum target, GLuint index)
@@ -1999,12 +2150,15 @@ struct marshal_cmd_Disablei
    GLenum target;
    GLuint index;
 };
-void
-_mesa_unmarshal_Disablei(struct gl_context *ctx, const struct marshal_cmd_Disablei *cmd)
+uint32_t
+_mesa_unmarshal_Disablei(struct gl_context *ctx, const struct marshal_cmd_Disablei *cmd, const uint64_t *last)
 {
    GLenum target = cmd->target;
    GLuint index = cmd->index;
    CALL_Disablei(ctx->CurrentServerDispatch, (target, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Disablei), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_Disablei(GLenum target, GLuint index)
@@ -2095,14 +2249,15 @@ struct marshal_cmd_DeletePerfMonitorsAMD
    GLsizei n;
    /* Next safe_mul(n, 1 * sizeof(GLuint)) bytes are GLuint monitors[n] */
 };
-void
-_mesa_unmarshal_DeletePerfMonitorsAMD(struct gl_context *ctx, const struct marshal_cmd_DeletePerfMonitorsAMD *cmd)
+uint32_t
+_mesa_unmarshal_DeletePerfMonitorsAMD(struct gl_context *ctx, const struct marshal_cmd_DeletePerfMonitorsAMD *cmd, const uint64_t *last)
 {
    GLsizei n = cmd->n;
    GLuint * monitors;
    const char *variable_data = (const char *) (cmd + 1);
    monitors = (GLuint *) variable_data;
    CALL_DeletePerfMonitorsAMD(ctx->CurrentServerDispatch, (n, monitors));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DeletePerfMonitorsAMD(GLsizei n, GLuint * monitors)
@@ -2133,8 +2288,8 @@ struct marshal_cmd_SelectPerfMonitorCountersAMD
    GLint numCounters;
    /* Next safe_mul(numCounters, 1 * sizeof(GLuint)) bytes are GLuint counterList[numCounters] */
 };
-void
-_mesa_unmarshal_SelectPerfMonitorCountersAMD(struct gl_context *ctx, const struct marshal_cmd_SelectPerfMonitorCountersAMD *cmd)
+uint32_t
+_mesa_unmarshal_SelectPerfMonitorCountersAMD(struct gl_context *ctx, const struct marshal_cmd_SelectPerfMonitorCountersAMD *cmd, const uint64_t *last)
 {
    GLuint monitor = cmd->monitor;
    GLboolean enable = cmd->enable;
@@ -2144,6 +2299,7 @@ _mesa_unmarshal_SelectPerfMonitorCountersAMD(struct gl_context *ctx, const struc
    const char *variable_data = (const char *) (cmd + 1);
    counterList = (GLuint *) variable_data;
    CALL_SelectPerfMonitorCountersAMD(ctx->CurrentServerDispatch, (monitor, enable, group, numCounters, counterList));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_SelectPerfMonitorCountersAMD(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint * counterList)
@@ -2173,11 +2329,14 @@ struct marshal_cmd_BeginPerfMonitorAMD
    struct marshal_cmd_base cmd_base;
    GLuint monitor;
 };
-void
-_mesa_unmarshal_BeginPerfMonitorAMD(struct gl_context *ctx, const struct marshal_cmd_BeginPerfMonitorAMD *cmd)
+uint32_t
+_mesa_unmarshal_BeginPerfMonitorAMD(struct gl_context *ctx, const struct marshal_cmd_BeginPerfMonitorAMD *cmd, const uint64_t *last)
 {
    GLuint monitor = cmd->monitor;
    CALL_BeginPerfMonitorAMD(ctx->CurrentServerDispatch, (monitor));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BeginPerfMonitorAMD), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BeginPerfMonitorAMD(GLuint monitor)
@@ -2196,11 +2355,14 @@ struct marshal_cmd_EndPerfMonitorAMD
    struct marshal_cmd_base cmd_base;
    GLuint monitor;
 };
-void
-_mesa_unmarshal_EndPerfMonitorAMD(struct gl_context *ctx, const struct marshal_cmd_EndPerfMonitorAMD *cmd)
+uint32_t
+_mesa_unmarshal_EndPerfMonitorAMD(struct gl_context *ctx, const struct marshal_cmd_EndPerfMonitorAMD *cmd, const uint64_t *last)
 {
    GLuint monitor = cmd->monitor;
    CALL_EndPerfMonitorAMD(ctx->CurrentServerDispatch, (monitor));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EndPerfMonitorAMD), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_EndPerfMonitorAMD(GLuint monitor)
@@ -2243,8 +2405,8 @@ struct marshal_cmd_CopyImageSubDataNV
    GLsizei height;
    GLsizei depth;
 };
-void
-_mesa_unmarshal_CopyImageSubDataNV(struct gl_context *ctx, const struct marshal_cmd_CopyImageSubDataNV *cmd)
+uint32_t
+_mesa_unmarshal_CopyImageSubDataNV(struct gl_context *ctx, const struct marshal_cmd_CopyImageSubDataNV *cmd, const uint64_t *last)
 {
    GLuint srcName = cmd->srcName;
    GLenum srcTarget = cmd->srcTarget;
@@ -2262,6 +2424,9 @@ _mesa_unmarshal_CopyImageSubDataNV(struct gl_context *ctx, const struct marshal_
    GLsizei height = cmd->height;
    GLsizei depth = cmd->depth;
    CALL_CopyImageSubDataNV(ctx->CurrentServerDispatch, (srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyImageSubDataNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyImageSubDataNV(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth)
@@ -2295,12 +2460,15 @@ struct marshal_cmd_MatrixLoadfEXT
    GLenum matrixMode;
    GLfloat m[16];
 };
-void
-_mesa_unmarshal_MatrixLoadfEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadfEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixLoadfEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadfEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLfloat * m = cmd->m;
    CALL_MatrixLoadfEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixLoadfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixLoadfEXT(GLenum matrixMode, const GLfloat * m)
@@ -2321,12 +2489,15 @@ struct marshal_cmd_MatrixLoaddEXT
    GLenum matrixMode;
    GLdouble m[16];
 };
-void
-_mesa_unmarshal_MatrixLoaddEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoaddEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixLoaddEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoaddEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLdouble * m = cmd->m;
    CALL_MatrixLoaddEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixLoaddEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixLoaddEXT(GLenum matrixMode, const GLdouble * m)
@@ -2347,12 +2518,15 @@ struct marshal_cmd_MatrixMultfEXT
    GLenum matrixMode;
    GLfloat m[16];
 };
-void
-_mesa_unmarshal_MatrixMultfEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultfEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixMultfEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultfEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLfloat * m = cmd->m;
    CALL_MatrixMultfEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixMultfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixMultfEXT(GLenum matrixMode, const GLfloat * m)
@@ -2373,12 +2547,15 @@ struct marshal_cmd_MatrixMultdEXT
    GLenum matrixMode;
    GLdouble m[16];
 };
-void
-_mesa_unmarshal_MatrixMultdEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultdEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixMultdEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultdEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLdouble * m = cmd->m;
    CALL_MatrixMultdEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixMultdEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixMultdEXT(GLenum matrixMode, const GLdouble * m)
@@ -2398,11 +2575,14 @@ struct marshal_cmd_MatrixLoadIdentityEXT
    struct marshal_cmd_base cmd_base;
    GLenum matrixMode;
 };
-void
-_mesa_unmarshal_MatrixLoadIdentityEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadIdentityEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixLoadIdentityEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadIdentityEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    CALL_MatrixLoadIdentityEXT(ctx->CurrentServerDispatch, (matrixMode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixLoadIdentityEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixLoadIdentityEXT(GLenum matrixMode)
@@ -2425,8 +2605,8 @@ struct marshal_cmd_MatrixRotatefEXT
    GLfloat y;
    GLfloat z;
 };
-void
-_mesa_unmarshal_MatrixRotatefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixRotatefEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixRotatefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixRotatefEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLfloat angle = cmd->angle;
@@ -2434,6 +2614,9 @@ _mesa_unmarshal_MatrixRotatefEXT(struct gl_context *ctx, const struct marshal_cm
    GLfloat y = cmd->y;
    GLfloat z = cmd->z;
    CALL_MatrixRotatefEXT(ctx->CurrentServerDispatch, (matrixMode, angle, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixRotatefEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixRotatefEXT(GLenum matrixMode, GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
@@ -2460,8 +2643,8 @@ struct marshal_cmd_MatrixRotatedEXT
    GLdouble y;
    GLdouble z;
 };
-void
-_mesa_unmarshal_MatrixRotatedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixRotatedEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixRotatedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixRotatedEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLdouble angle = cmd->angle;
@@ -2469,6 +2652,9 @@ _mesa_unmarshal_MatrixRotatedEXT(struct gl_context *ctx, const struct marshal_cm
    GLdouble y = cmd->y;
    GLdouble z = cmd->z;
    CALL_MatrixRotatedEXT(ctx->CurrentServerDispatch, (matrixMode, angle, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixRotatedEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixRotatedEXT(GLenum matrixMode, GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
@@ -2494,14 +2680,17 @@ struct marshal_cmd_MatrixScalefEXT
    GLfloat y;
    GLfloat z;
 };
-void
-_mesa_unmarshal_MatrixScalefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixScalefEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixScalefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixScalefEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLfloat x = cmd->x;
    GLfloat y = cmd->y;
    GLfloat z = cmd->z;
    CALL_MatrixScalefEXT(ctx->CurrentServerDispatch, (matrixMode, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixScalefEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixScalefEXT(GLenum matrixMode, GLfloat x, GLfloat y, GLfloat z)
@@ -2526,14 +2715,17 @@ struct marshal_cmd_MatrixScaledEXT
    GLdouble y;
    GLdouble z;
 };
-void
-_mesa_unmarshal_MatrixScaledEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixScaledEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixScaledEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixScaledEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLdouble x = cmd->x;
    GLdouble y = cmd->y;
    GLdouble z = cmd->z;
    CALL_MatrixScaledEXT(ctx->CurrentServerDispatch, (matrixMode, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixScaledEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixScaledEXT(GLenum matrixMode, GLdouble x, GLdouble y, GLdouble z)
@@ -2558,14 +2750,17 @@ struct marshal_cmd_MatrixTranslatefEXT
    GLfloat y;
    GLfloat z;
 };
-void
-_mesa_unmarshal_MatrixTranslatefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixTranslatefEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixTranslatefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixTranslatefEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLfloat x = cmd->x;
    GLfloat y = cmd->y;
    GLfloat z = cmd->z;
    CALL_MatrixTranslatefEXT(ctx->CurrentServerDispatch, (matrixMode, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixTranslatefEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixTranslatefEXT(GLenum matrixMode, GLfloat x, GLfloat y, GLfloat z)
@@ -2590,14 +2785,17 @@ struct marshal_cmd_MatrixTranslatedEXT
    GLdouble y;
    GLdouble z;
 };
-void
-_mesa_unmarshal_MatrixTranslatedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixTranslatedEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixTranslatedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixTranslatedEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLdouble x = cmd->x;
    GLdouble y = cmd->y;
    GLdouble z = cmd->z;
    CALL_MatrixTranslatedEXT(ctx->CurrentServerDispatch, (matrixMode, x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixTranslatedEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixTranslatedEXT(GLenum matrixMode, GLdouble x, GLdouble y, GLdouble z)
@@ -2625,8 +2823,8 @@ struct marshal_cmd_MatrixOrthoEXT
    GLdouble n;
    GLdouble f;
 };
-void
-_mesa_unmarshal_MatrixOrthoEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixOrthoEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixOrthoEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixOrthoEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLdouble l = cmd->l;
@@ -2636,6 +2834,9 @@ _mesa_unmarshal_MatrixOrthoEXT(struct gl_context *ctx, const struct marshal_cmd_
    GLdouble n = cmd->n;
    GLdouble f = cmd->f;
    CALL_MatrixOrthoEXT(ctx->CurrentServerDispatch, (matrixMode, l, r, b, t, n, f));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixOrthoEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixOrthoEXT(GLenum matrixMode, GLdouble l, GLdouble r, GLdouble b, GLdouble t, GLdouble n, GLdouble f)
@@ -2666,8 +2867,8 @@ struct marshal_cmd_MatrixFrustumEXT
    GLdouble n;
    GLdouble f;
 };
-void
-_mesa_unmarshal_MatrixFrustumEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixFrustumEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixFrustumEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixFrustumEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    GLdouble l = cmd->l;
@@ -2677,6 +2878,9 @@ _mesa_unmarshal_MatrixFrustumEXT(struct gl_context *ctx, const struct marshal_cm
    GLdouble n = cmd->n;
    GLdouble f = cmd->f;
    CALL_MatrixFrustumEXT(ctx->CurrentServerDispatch, (matrixMode, l, r, b, t, n, f));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixFrustumEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixFrustumEXT(GLenum matrixMode, GLdouble l, GLdouble r, GLdouble b, GLdouble t, GLdouble n, GLdouble f)
@@ -2701,11 +2905,14 @@ struct marshal_cmd_MatrixPushEXT
    struct marshal_cmd_base cmd_base;
    GLenum matrixMode;
 };
-void
-_mesa_unmarshal_MatrixPushEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixPushEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixPushEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixPushEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    CALL_MatrixPushEXT(ctx->CurrentServerDispatch, (matrixMode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixPushEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixPushEXT(GLenum matrixMode)
@@ -2725,11 +2932,14 @@ struct marshal_cmd_MatrixPopEXT
    struct marshal_cmd_base cmd_base;
    GLenum matrixMode;
 };
-void
-_mesa_unmarshal_MatrixPopEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixPopEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixPopEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixPopEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    CALL_MatrixPopEXT(ctx->CurrentServerDispatch, (matrixMode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixPopEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixPopEXT(GLenum matrixMode)
@@ -2749,11 +2959,14 @@ struct marshal_cmd_ClientAttribDefaultEXT
    struct marshal_cmd_base cmd_base;
    GLbitfield mask;
 };
-void
-_mesa_unmarshal_ClientAttribDefaultEXT(struct gl_context *ctx, const struct marshal_cmd_ClientAttribDefaultEXT *cmd)
+uint32_t
+_mesa_unmarshal_ClientAttribDefaultEXT(struct gl_context *ctx, const struct marshal_cmd_ClientAttribDefaultEXT *cmd, const uint64_t *last)
 {
    GLbitfield mask = cmd->mask;
    CALL_ClientAttribDefaultEXT(ctx->CurrentServerDispatch, (mask));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ClientAttribDefaultEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_ClientAttribDefaultEXT(GLbitfield mask)
@@ -2773,11 +2986,14 @@ struct marshal_cmd_PushClientAttribDefaultEXT
    struct marshal_cmd_base cmd_base;
    GLbitfield mask;
 };
-void
-_mesa_unmarshal_PushClientAttribDefaultEXT(struct gl_context *ctx, const struct marshal_cmd_PushClientAttribDefaultEXT *cmd)
+uint32_t
+_mesa_unmarshal_PushClientAttribDefaultEXT(struct gl_context *ctx, const struct marshal_cmd_PushClientAttribDefaultEXT *cmd, const uint64_t *last)
 {
    GLbitfield mask = cmd->mask;
    CALL_PushClientAttribDefaultEXT(ctx->CurrentServerDispatch, (mask));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_PushClientAttribDefaultEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_PushClientAttribDefaultEXT(GLbitfield mask)
@@ -2840,14 +3056,17 @@ struct marshal_cmd_TextureParameteriEXT
    GLenum pname;
    int param;
 };
-void
-_mesa_unmarshal_TextureParameteriEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameteriEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureParameteriEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameteriEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    int param = cmd->param;
    CALL_TextureParameteriEXT(ctx->CurrentServerDispatch, (texture, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureParameteriEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureParameteriEXT(GLuint texture, GLenum target, GLenum pname, int param)
@@ -2872,8 +3091,8 @@ struct marshal_cmd_TextureParameterivEXT
    GLenum pname;
    /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[_mesa_tex_param_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_TextureParameterivEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterivEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureParameterivEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterivEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -2882,6 +3101,7 @@ _mesa_unmarshal_TextureParameterivEXT(struct gl_context *ctx, const struct marsh
    const char *variable_data = (const char *) (cmd + 1);
    params = (GLint *) variable_data;
    CALL_TextureParameterivEXT(ctx->CurrentServerDispatch, (texture, target, pname, params));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureParameterivEXT(GLuint texture, GLenum target, GLenum pname, const GLint * params)
@@ -2913,14 +3133,17 @@ struct marshal_cmd_TextureParameterfEXT
    GLenum pname;
    float param;
 };
-void
-_mesa_unmarshal_TextureParameterfEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterfEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureParameterfEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterfEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    float param = cmd->param;
    CALL_TextureParameterfEXT(ctx->CurrentServerDispatch, (texture, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureParameterfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureParameterfEXT(GLuint texture, GLenum target, GLenum pname, float param)
@@ -2945,8 +3168,8 @@ struct marshal_cmd_TextureParameterfvEXT
    GLenum pname;
    /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(float)) bytes are float params[_mesa_tex_param_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_TextureParameterfvEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterfvEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureParameterfvEXT(struct gl_context *ctx, const struct marshal_cmd_TextureParameterfvEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -2955,6 +3178,7 @@ _mesa_unmarshal_TextureParameterfvEXT(struct gl_context *ctx, const struct marsh
    const char *variable_data = (const char *) (cmd + 1);
    params = (float *) variable_data;
    CALL_TextureParameterfvEXT(ctx->CurrentServerDispatch, (texture, target, pname, params));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureParameterfvEXT(GLuint texture, GLenum target, GLenum pname, const float * params)
@@ -2991,8 +3215,8 @@ struct marshal_cmd_TextureImage1DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3004,6 +3228,9 @@ _mesa_unmarshal_TextureImage1DEXT(struct gl_context *ctx, const struct marshal_c
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureImage1DEXT(GLuint texture, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3044,8 +3271,8 @@ struct marshal_cmd_TextureImage2DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3058,6 +3285,9 @@ _mesa_unmarshal_TextureImage2DEXT(struct gl_context *ctx, const struct marshal_c
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, height, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureImage2DEXT(GLuint texture, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3100,8 +3330,8 @@ struct marshal_cmd_TextureImage3DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureImage3DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3115,6 +3345,9 @@ _mesa_unmarshal_TextureImage3DEXT(struct gl_context *ctx, const struct marshal_c
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureImage3DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, height, depth, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureImage3DEXT(GLuint texture, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3155,8 +3388,8 @@ struct marshal_cmd_TextureSubImage1DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3167,6 +3400,9 @@ _mesa_unmarshal_TextureSubImage1DEXT(struct gl_context *ctx, const struct marsha
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureSubImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, width, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureSubImage1DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3206,8 +3442,8 @@ struct marshal_cmd_TextureSubImage2DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3220,6 +3456,9 @@ _mesa_unmarshal_TextureSubImage2DEXT(struct gl_context *ctx, const struct marsha
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureSubImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, width, height, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureSubImage2DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3263,8 +3502,8 @@ struct marshal_cmd_TextureSubImage3DEXT
    GLenum type;
    const GLvoid * pixels;
 };
-void
-_mesa_unmarshal_TextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_TextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_TextureSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3279,6 +3518,9 @@ _mesa_unmarshal_TextureSubImage3DEXT(struct gl_context *ctx, const struct marsha
    GLenum type = cmd->type;
    const GLvoid * pixels = cmd->pixels;
    CALL_TextureSubImage3DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_TextureSubImage3DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * pixels)
@@ -3320,8 +3562,8 @@ struct marshal_cmd_CopyTextureImage1DEXT
    GLsizei width;
    int border;
 };
-void
-_mesa_unmarshal_CopyTextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyTextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3332,6 +3574,9 @@ _mesa_unmarshal_CopyTextureImage1DEXT(struct gl_context *ctx, const struct marsh
    GLsizei width = cmd->width;
    int border = cmd->border;
    CALL_CopyTextureImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, x, y, width, border));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyTextureImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyTextureImage1DEXT(GLuint texture, GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, int border)
@@ -3365,8 +3610,8 @@ struct marshal_cmd_CopyTextureImage2DEXT
    GLsizei height;
    int border;
 };
-void
-_mesa_unmarshal_CopyTextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyTextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3378,6 +3623,9 @@ _mesa_unmarshal_CopyTextureImage2DEXT(struct gl_context *ctx, const struct marsh
    GLsizei height = cmd->height;
    int border = cmd->border;
    CALL_CopyTextureImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, x, y, width, height, border));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyTextureImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyTextureImage2DEXT(GLuint texture, GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, int border)
@@ -3410,8 +3658,8 @@ struct marshal_cmd_CopyTextureSubImage1DEXT
    GLint y;
    GLsizei width;
 };
-void
-_mesa_unmarshal_CopyTextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyTextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3421,6 +3669,9 @@ _mesa_unmarshal_CopyTextureSubImage1DEXT(struct gl_context *ctx, const struct ma
    GLint y = cmd->y;
    GLsizei width = cmd->width;
    CALL_CopyTextureSubImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, x, y, width));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyTextureSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyTextureSubImage1DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
@@ -3453,8 +3704,8 @@ struct marshal_cmd_CopyTextureSubImage2DEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_CopyTextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyTextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3466,6 +3717,9 @@ _mesa_unmarshal_CopyTextureSubImage2DEXT(struct gl_context *ctx, const struct ma
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_CopyTextureSubImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, x, y, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyTextureSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyTextureSubImage2DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -3501,8 +3755,8 @@ struct marshal_cmd_CopyTextureSubImage3DEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_CopyTextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyTextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyTextureSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3515,6 +3769,9 @@ _mesa_unmarshal_CopyTextureSubImage3DEXT(struct gl_context *ctx, const struct ma
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_CopyTextureSubImage3DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, zoffset, x, y, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyTextureSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyTextureSubImage3DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -3547,8 +3804,8 @@ struct marshal_cmd_GetTextureImageEXT
    GLenum type;
    GLvoid * pixels;
 };
-void
-_mesa_unmarshal_GetTextureImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetTextureImageEXT *cmd)
+uint32_t
+_mesa_unmarshal_GetTextureImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetTextureImageEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -3557,6 +3814,9 @@ _mesa_unmarshal_GetTextureImageEXT(struct gl_context *ctx, const struct marshal_
    GLenum type = cmd->type;
    GLvoid * pixels = cmd->pixels;
    CALL_GetTextureImageEXT(ctx->CurrentServerDispatch, (texture, target, level, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GetTextureImageEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GetTextureImageEXT(GLuint texture, GLenum target, GLint level, GLenum format, GLenum type, GLvoid * pixels)
@@ -3587,13 +3847,16 @@ struct marshal_cmd_BindMultiTextureEXT
    GLenum target;
    GLuint texture;
 };
-void
-_mesa_unmarshal_BindMultiTextureEXT(struct gl_context *ctx, const struct marshal_cmd_BindMultiTextureEXT *cmd)
+uint32_t
+_mesa_unmarshal_BindMultiTextureEXT(struct gl_context *ctx, const struct marshal_cmd_BindMultiTextureEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLuint texture = cmd->texture;
    CALL_BindMultiTextureEXT(ctx->CurrentServerDispatch, (texunit, target, texture));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_BindMultiTextureEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_BindMultiTextureEXT(GLenum texunit, GLenum target, GLuint texture)
@@ -3615,12 +3878,15 @@ struct marshal_cmd_EnableClientStateiEXT
    GLenum array;
    GLuint index;
 };
-void
-_mesa_unmarshal_EnableClientStateiEXT(struct gl_context *ctx, const struct marshal_cmd_EnableClientStateiEXT *cmd)
+uint32_t
+_mesa_unmarshal_EnableClientStateiEXT(struct gl_context *ctx, const struct marshal_cmd_EnableClientStateiEXT *cmd, const uint64_t *last)
 {
    GLenum array = cmd->array;
    GLuint index = cmd->index;
    CALL_EnableClientStateiEXT(ctx->CurrentServerDispatch, (array, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EnableClientStateiEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_EnableClientStateiEXT(GLenum array, GLuint index)
@@ -3642,12 +3908,15 @@ struct marshal_cmd_DisableClientStateiEXT
    GLenum array;
    GLuint index;
 };
-void
-_mesa_unmarshal_DisableClientStateiEXT(struct gl_context *ctx, const struct marshal_cmd_DisableClientStateiEXT *cmd)
+uint32_t
+_mesa_unmarshal_DisableClientStateiEXT(struct gl_context *ctx, const struct marshal_cmd_DisableClientStateiEXT *cmd, const uint64_t *last)
 {
    GLenum array = cmd->array;
    GLuint index = cmd->index;
    CALL_DisableClientStateiEXT(ctx->CurrentServerDispatch, (array, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DisableClientStateiEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DisableClientStateiEXT(GLenum array, GLuint index)
@@ -3681,14 +3950,17 @@ struct marshal_cmd_MultiTexEnviEXT
    GLenum pname;
    GLint param;
 };
-void
-_mesa_unmarshal_MultiTexEnviEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnviEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexEnviEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnviEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    GLint param = cmd->param;
    CALL_MultiTexEnviEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexEnviEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexEnviEXT(GLenum texunit, GLenum target, GLenum pname, GLint param)
@@ -3713,8 +3985,8 @@ struct marshal_cmd_MultiTexEnvivEXT
    GLenum pname;
    /* Next safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint param[_mesa_texenv_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexEnvivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvivEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexEnvivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvivEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -3723,6 +3995,7 @@ _mesa_unmarshal_MultiTexEnvivEXT(struct gl_context *ctx, const struct marshal_cm
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLint *) variable_data;
    CALL_MultiTexEnvivEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexEnvivEXT(GLenum texunit, GLenum target, GLenum pname, const GLint * param)
@@ -3754,14 +4027,17 @@ struct marshal_cmd_MultiTexEnvfEXT
    GLenum pname;
    GLfloat param;
 };
-void
-_mesa_unmarshal_MultiTexEnvfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvfEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexEnvfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvfEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    GLfloat param = cmd->param;
    CALL_MultiTexEnvfEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexEnvfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexEnvfEXT(GLenum texunit, GLenum target, GLenum pname, GLfloat param)
@@ -3786,8 +4062,8 @@ struct marshal_cmd_MultiTexEnvfvEXT
    GLenum pname;
    /* Next safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat param[_mesa_texenv_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexEnvfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvfvEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexEnvfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexEnvfvEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -3796,6 +4072,7 @@ _mesa_unmarshal_MultiTexEnvfvEXT(struct gl_context *ctx, const struct marshal_cm
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLfloat *) variable_data;
    CALL_MultiTexEnvfvEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexEnvfvEXT(GLenum texunit, GLenum target, GLenum pname, const GLfloat * param)
@@ -3847,14 +4124,17 @@ struct marshal_cmd_MultiTexParameteriEXT
    GLenum pname;
    GLint param;
 };
-void
-_mesa_unmarshal_MultiTexParameteriEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameteriEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexParameteriEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameteriEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    GLint param = cmd->param;
    CALL_MultiTexParameteriEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexParameteriEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexParameteriEXT(GLenum texunit, GLenum target, GLenum pname, GLint param)
@@ -3879,8 +4159,8 @@ struct marshal_cmd_MultiTexParameterivEXT
    GLenum pname;
    /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint param[_mesa_tex_param_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexParameterivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterivEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexParameterivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterivEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -3889,6 +4169,7 @@ _mesa_unmarshal_MultiTexParameterivEXT(struct gl_context *ctx, const struct mars
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLint *) variable_data;
    CALL_MultiTexParameterivEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexParameterivEXT(GLenum texunit, GLenum target, GLenum pname, const GLint* param)
@@ -3920,14 +4201,17 @@ struct marshal_cmd_MultiTexParameterfEXT
    GLenum pname;
    GLfloat param;
 };
-void
-_mesa_unmarshal_MultiTexParameterfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterfEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexParameterfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterfEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLenum pname = cmd->pname;
    GLfloat param = cmd->param;
    CALL_MultiTexParameterfEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexParameterfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexParameterfEXT(GLenum texunit, GLenum target, GLenum pname, GLfloat param)
@@ -3952,8 +4236,8 @@ struct marshal_cmd_MultiTexParameterfvEXT
    GLenum pname;
    /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat param[_mesa_tex_param_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexParameterfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterfvEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexParameterfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexParameterfvEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -3962,6 +4246,7 @@ _mesa_unmarshal_MultiTexParameterfvEXT(struct gl_context *ctx, const struct mars
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLfloat *) variable_data;
    CALL_MultiTexParameterfvEXT(ctx->CurrentServerDispatch, (texunit, target, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexParameterfvEXT(GLenum texunit, GLenum target, GLenum pname, const GLfloat* param)
@@ -4015,8 +4300,8 @@ struct marshal_cmd_GetMultiTexImageEXT
    GLenum type;
    GLvoid* pixels;
 };
-void
-_mesa_unmarshal_GetMultiTexImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetMultiTexImageEXT *cmd)
+uint32_t
+_mesa_unmarshal_GetMultiTexImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetMultiTexImageEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4025,6 +4310,9 @@ _mesa_unmarshal_GetMultiTexImageEXT(struct gl_context *ctx, const struct marshal
    GLenum type = cmd->type;
    GLvoid* pixels = cmd->pixels;
    CALL_GetMultiTexImageEXT(ctx->CurrentServerDispatch, (texunit, target, level, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GetMultiTexImageEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GetMultiTexImageEXT(GLenum texunit, GLenum target, GLint level, GLenum format, GLenum type, GLvoid* pixels)
@@ -4081,8 +4369,8 @@ struct marshal_cmd_MultiTexImage1DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4094,6 +4382,9 @@ _mesa_unmarshal_MultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalformat, width, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexImage1DEXT(GLenum texunit, GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4134,8 +4425,8 @@ struct marshal_cmd_MultiTexImage2DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4148,6 +4439,9 @@ _mesa_unmarshal_MultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalformat, width, height, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexImage2DEXT(GLenum texunit, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4190,8 +4484,8 @@ struct marshal_cmd_MultiTexImage3DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexImage3DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4205,6 +4499,9 @@ _mesa_unmarshal_MultiTexImage3DEXT(struct gl_context *ctx, const struct marshal_
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexImage3DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalformat, width, height, depth, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexImage3DEXT(GLenum texunit, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4245,8 +4542,8 @@ struct marshal_cmd_MultiTexSubImage1DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4257,6 +4554,9 @@ _mesa_unmarshal_MultiTexSubImage1DEXT(struct gl_context *ctx, const struct marsh
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexSubImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, width, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexSubImage1DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4296,8 +4596,8 @@ struct marshal_cmd_MultiTexSubImage2DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4310,6 +4610,9 @@ _mesa_unmarshal_MultiTexSubImage2DEXT(struct gl_context *ctx, const struct marsh
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexSubImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, width, height, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexSubImage2DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4353,8 +4656,8 @@ struct marshal_cmd_MultiTexSubImage3DEXT
    GLenum type;
    const GLvoid* pixels;
 };
-void
-_mesa_unmarshal_MultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4369,6 +4672,9 @@ _mesa_unmarshal_MultiTexSubImage3DEXT(struct gl_context *ctx, const struct marsh
    GLenum type = cmd->type;
    const GLvoid* pixels = cmd->pixels;
    CALL_MultiTexSubImage3DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexSubImage3DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid* pixels)
@@ -4410,8 +4716,8 @@ struct marshal_cmd_CopyMultiTexImage1DEXT
    GLsizei width;
    GLint border;
 };
-void
-_mesa_unmarshal_CopyMultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyMultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4422,6 +4728,9 @@ _mesa_unmarshal_CopyMultiTexImage1DEXT(struct gl_context *ctx, const struct mars
    GLsizei width = cmd->width;
    GLint border = cmd->border;
    CALL_CopyMultiTexImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalformat, x, y, width, border));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyMultiTexImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyMultiTexImage1DEXT(GLenum texunit, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border)
@@ -4455,8 +4764,8 @@ struct marshal_cmd_CopyMultiTexImage2DEXT
    GLsizei height;
    GLint border;
 };
-void
-_mesa_unmarshal_CopyMultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyMultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4468,6 +4777,9 @@ _mesa_unmarshal_CopyMultiTexImage2DEXT(struct gl_context *ctx, const struct mars
    GLsizei height = cmd->height;
    GLint border = cmd->border;
    CALL_CopyMultiTexImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalformat, x, y, width, height, border));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyMultiTexImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyMultiTexImage2DEXT(GLenum texunit, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
@@ -4500,8 +4812,8 @@ struct marshal_cmd_CopyMultiTexSubImage1DEXT
    GLint y;
    GLsizei width;
 };
-void
-_mesa_unmarshal_CopyMultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyMultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4511,6 +4823,9 @@ _mesa_unmarshal_CopyMultiTexSubImage1DEXT(struct gl_context *ctx, const struct m
    GLint y = cmd->y;
    GLsizei width = cmd->width;
    CALL_CopyMultiTexSubImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, x, y, width));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyMultiTexSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyMultiTexSubImage1DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
@@ -4543,8 +4858,8 @@ struct marshal_cmd_CopyMultiTexSubImage2DEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_CopyMultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyMultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4556,6 +4871,9 @@ _mesa_unmarshal_CopyMultiTexSubImage2DEXT(struct gl_context *ctx, const struct m
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_CopyMultiTexSubImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, x, y, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyMultiTexSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyMultiTexSubImage2DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -4591,8 +4909,8 @@ struct marshal_cmd_CopyMultiTexSubImage3DEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_CopyMultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CopyMultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CopyMultiTexSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -4605,6 +4923,9 @@ _mesa_unmarshal_CopyMultiTexSubImage3DEXT(struct gl_context *ctx, const struct m
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_CopyMultiTexSubImage3DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, zoffset, x, y, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CopyMultiTexSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CopyMultiTexSubImage3DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -4635,14 +4956,17 @@ struct marshal_cmd_MultiTexGendEXT
    GLenum pname;
    GLdouble param;
 };
-void
-_mesa_unmarshal_MultiTexGendEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGendEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGendEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGendEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
    GLenum pname = cmd->pname;
    GLdouble param = cmd->param;
    CALL_MultiTexGendEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexGendEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGendEXT(GLenum texunit, GLenum coord, GLenum pname, GLdouble param)
@@ -4667,8 +4991,8 @@ struct marshal_cmd_MultiTexGendvEXT
    GLenum pname;
    /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLdouble)) bytes are GLdouble param[_mesa_texgen_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexGendvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGendvEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGendvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGendvEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
@@ -4677,6 +5001,7 @@ _mesa_unmarshal_MultiTexGendvEXT(struct gl_context *ctx, const struct marshal_cm
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLdouble *) variable_data;
    CALL_MultiTexGendvEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGendvEXT(GLenum texunit, GLenum coord, GLenum pname, const GLdouble* param)
@@ -4708,14 +5033,17 @@ struct marshal_cmd_MultiTexGenfEXT
    GLenum pname;
    GLfloat param;
 };
-void
-_mesa_unmarshal_MultiTexGenfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenfEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGenfEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenfEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
    GLenum pname = cmd->pname;
    GLfloat param = cmd->param;
    CALL_MultiTexGenfEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexGenfEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGenfEXT(GLenum texunit, GLenum coord, GLenum pname, GLfloat param)
@@ -4740,8 +5068,8 @@ struct marshal_cmd_MultiTexGenfvEXT
    GLenum pname;
    /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat param[_mesa_texgen_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexGenfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenfvEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGenfvEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenfvEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
@@ -4750,6 +5078,7 @@ _mesa_unmarshal_MultiTexGenfvEXT(struct gl_context *ctx, const struct marshal_cm
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLfloat *) variable_data;
    CALL_MultiTexGenfvEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGenfvEXT(GLenum texunit, GLenum coord, GLenum pname, const GLfloat * param)
@@ -4781,14 +5110,17 @@ struct marshal_cmd_MultiTexGeniEXT
    GLenum pname;
    GLint param;
 };
-void
-_mesa_unmarshal_MultiTexGeniEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGeniEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGeniEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGeniEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
    GLenum pname = cmd->pname;
    GLint param = cmd->param;
    CALL_MultiTexGeniEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexGeniEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGeniEXT(GLenum texunit, GLenum coord, GLenum pname, GLint param)
@@ -4813,8 +5145,8 @@ struct marshal_cmd_MultiTexGenivEXT
    GLenum pname;
    /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint param[_mesa_texgen_enum_to_count(pname)] */
 };
-void
-_mesa_unmarshal_MultiTexGenivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenivEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexGenivEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexGenivEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum coord = cmd->coord;
@@ -4823,6 +5155,7 @@ _mesa_unmarshal_MultiTexGenivEXT(struct gl_context *ctx, const struct marshal_cm
    const char *variable_data = (const char *) (cmd + 1);
    param = (GLint *) variable_data;
    CALL_MultiTexGenivEXT(ctx->CurrentServerDispatch, (texunit, coord, pname, param));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexGenivEXT(GLenum texunit, GLenum coord, GLenum pname, const GLint * param)
@@ -4885,8 +5218,8 @@ struct marshal_cmd_MultiTexCoordPointerEXT
    GLsizei stride;
    const GLvoid * pointer;
 };
-void
-_mesa_unmarshal_MultiTexCoordPointerEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexCoordPointerEXT *cmd)
+uint32_t
+_mesa_unmarshal_MultiTexCoordPointerEXT(struct gl_context *ctx, const struct marshal_cmd_MultiTexCoordPointerEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLint size = cmd->size;
@@ -4894,6 +5227,9 @@ _mesa_unmarshal_MultiTexCoordPointerEXT(struct gl_context *ctx, const struct mar
    GLsizei stride = cmd->stride;
    const GLvoid * pointer = cmd->pointer;
    CALL_MultiTexCoordPointerEXT(ctx->CurrentServerDispatch, (texunit, size, type, stride, pointer));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MultiTexCoordPointerEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MultiTexCoordPointerEXT(GLenum texunit, GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
@@ -4918,12 +5254,15 @@ struct marshal_cmd_MatrixLoadTransposefEXT
    GLenum matrixMode;
    GLfloat m[16];
 };
-void
-_mesa_unmarshal_MatrixLoadTransposefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadTransposefEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixLoadTransposefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadTransposefEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLfloat * m = cmd->m;
    CALL_MatrixLoadTransposefEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixLoadTransposefEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixLoadTransposefEXT(GLenum matrixMode, const GLfloat * m)
@@ -4944,12 +5283,15 @@ struct marshal_cmd_MatrixLoadTransposedEXT
    GLenum matrixMode;
    GLdouble m[16];
 };
-void
-_mesa_unmarshal_MatrixLoadTransposedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadTransposedEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixLoadTransposedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixLoadTransposedEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLdouble * m = cmd->m;
    CALL_MatrixLoadTransposedEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixLoadTransposedEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixLoadTransposedEXT(GLenum matrixMode, const GLdouble * m)
@@ -4970,12 +5312,15 @@ struct marshal_cmd_MatrixMultTransposefEXT
    GLenum matrixMode;
    GLfloat m[16];
 };
-void
-_mesa_unmarshal_MatrixMultTransposefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultTransposefEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixMultTransposefEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultTransposefEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLfloat * m = cmd->m;
    CALL_MatrixMultTransposefEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixMultTransposefEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixMultTransposefEXT(GLenum matrixMode, const GLfloat * m)
@@ -4996,12 +5341,15 @@ struct marshal_cmd_MatrixMultTransposedEXT
    GLenum matrixMode;
    GLdouble m[16];
 };
-void
-_mesa_unmarshal_MatrixMultTransposedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultTransposedEXT *cmd)
+uint32_t
+_mesa_unmarshal_MatrixMultTransposedEXT(struct gl_context *ctx, const struct marshal_cmd_MatrixMultTransposedEXT *cmd, const uint64_t *last)
 {
    GLenum matrixMode = cmd->matrixMode;
    const GLdouble * m = cmd->m;
    CALL_MatrixMultTransposedEXT(ctx->CurrentServerDispatch, (matrixMode, m));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_MatrixMultTransposedEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_MatrixMultTransposedEXT(GLenum matrixMode, const GLdouble * m)
@@ -5028,8 +5376,8 @@ struct marshal_cmd_CompressedTextureImage1DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5040,6 +5388,9 @@ _mesa_unmarshal_CompressedTextureImage1DEXT(struct gl_context *ctx, const struct
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureImage1DEXT(GLuint texture, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5078,8 +5429,8 @@ struct marshal_cmd_CompressedTextureImage2DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5091,6 +5442,9 @@ _mesa_unmarshal_CompressedTextureImage2DEXT(struct gl_context *ctx, const struct
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, height, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureImage2DEXT(GLuint texture, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5131,8 +5485,8 @@ struct marshal_cmd_CompressedTextureImage3DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureImage3DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5145,6 +5499,9 @@ _mesa_unmarshal_CompressedTextureImage3DEXT(struct gl_context *ctx, const struct
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureImage3DEXT(ctx->CurrentServerDispatch, (texture, target, level, internalFormat, width, height, depth, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureImage3DEXT(GLuint texture, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5184,8 +5541,8 @@ struct marshal_cmd_CompressedTextureSubImage1DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5196,6 +5553,9 @@ _mesa_unmarshal_CompressedTextureSubImage1DEXT(struct gl_context *ctx, const str
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureSubImage1DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, width, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureSubImage1DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5235,8 +5595,8 @@ struct marshal_cmd_CompressedTextureSubImage2DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5249,6 +5609,9 @@ _mesa_unmarshal_CompressedTextureSubImage2DEXT(struct gl_context *ctx, const str
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureSubImage2DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, width, height, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureSubImage2DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5292,8 +5655,8 @@ struct marshal_cmd_CompressedTextureSubImage3DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedTextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedTextureSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedTextureSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
@@ -5308,6 +5671,9 @@ _mesa_unmarshal_CompressedTextureSubImage3DEXT(struct gl_context *ctx, const str
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedTextureSubImage3DEXT(ctx->CurrentServerDispatch, (texture, target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedTextureSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedTextureSubImage3DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5345,14 +5711,17 @@ struct marshal_cmd_GetCompressedTextureImageEXT
    GLint level;
    GLvoid * img;
 };
-void
-_mesa_unmarshal_GetCompressedTextureImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetCompressedTextureImageEXT *cmd)
+uint32_t
+_mesa_unmarshal_GetCompressedTextureImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetCompressedTextureImageEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
    GLint level = cmd->level;
    GLvoid * img = cmd->img;
    CALL_GetCompressedTextureImageEXT(ctx->CurrentServerDispatch, (texture, target, level, img));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GetCompressedTextureImageEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GetCompressedTextureImageEXT(GLuint texture, GLenum target, GLint level, GLvoid * img)
@@ -5386,8 +5755,8 @@ struct marshal_cmd_CompressedMultiTexImage1DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5398,6 +5767,9 @@ _mesa_unmarshal_CompressedMultiTexImage1DEXT(struct gl_context *ctx, const struc
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalFormat, width, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexImage1DEXT(GLenum texunit, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5436,8 +5808,8 @@ struct marshal_cmd_CompressedMultiTexImage2DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5449,6 +5821,9 @@ _mesa_unmarshal_CompressedMultiTexImage2DEXT(struct gl_context *ctx, const struc
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalFormat, width, height, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexImage2DEXT(GLenum texunit, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5489,8 +5864,8 @@ struct marshal_cmd_CompressedMultiTexImage3DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexImage3DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5503,6 +5878,9 @@ _mesa_unmarshal_CompressedMultiTexImage3DEXT(struct gl_context *ctx, const struc
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexImage3DEXT(ctx->CurrentServerDispatch, (texunit, target, level, internalFormat, width, height, depth, border, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexImage3DEXT(GLenum texunit, GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLsizei border, GLsizei imageSize, const GLvoid * data)
@@ -5542,8 +5920,8 @@ struct marshal_cmd_CompressedMultiTexSubImage1DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexSubImage1DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage1DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5554,6 +5932,9 @@ _mesa_unmarshal_CompressedMultiTexSubImage1DEXT(struct gl_context *ctx, const st
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexSubImage1DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, width, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexSubImage1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexSubImage1DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5593,8 +5974,8 @@ struct marshal_cmd_CompressedMultiTexSubImage2DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexSubImage2DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage2DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5607,6 +5988,9 @@ _mesa_unmarshal_CompressedMultiTexSubImage2DEXT(struct gl_context *ctx, const st
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexSubImage2DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, width, height, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexSubImage2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexSubImage2DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5650,8 +6034,8 @@ struct marshal_cmd_CompressedMultiTexSubImage3DEXT
    GLsizei imageSize;
    const GLvoid * data;
 };
-void
-_mesa_unmarshal_CompressedMultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_CompressedMultiTexSubImage3DEXT(struct gl_context *ctx, const struct marshal_cmd_CompressedMultiTexSubImage3DEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
@@ -5666,6 +6050,9 @@ _mesa_unmarshal_CompressedMultiTexSubImage3DEXT(struct gl_context *ctx, const st
    GLsizei imageSize = cmd->imageSize;
    const GLvoid * data = cmd->data;
    CALL_CompressedMultiTexSubImage3DEXT(ctx->CurrentServerDispatch, (texunit, target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, data));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CompressedMultiTexSubImage3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_CompressedMultiTexSubImage3DEXT(GLenum texunit, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const GLvoid * data)
@@ -5703,14 +6090,17 @@ struct marshal_cmd_GetCompressedMultiTexImageEXT
    GLint level;
    GLvoid * img;
 };
-void
-_mesa_unmarshal_GetCompressedMultiTexImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetCompressedMultiTexImageEXT *cmd)
+uint32_t
+_mesa_unmarshal_GetCompressedMultiTexImageEXT(struct gl_context *ctx, const struct marshal_cmd_GetCompressedMultiTexImageEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    GLint level = cmd->level;
    GLvoid * img = cmd->img;
    CALL_GetCompressedMultiTexImageEXT(ctx->CurrentServerDispatch, (texunit, target, level, img));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GetCompressedMultiTexImageEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GetCompressedMultiTexImageEXT(GLenum texunit, GLenum target, GLint level, GLvoid * img)
@@ -5779,13 +6169,16 @@ struct marshal_cmd_FlushMappedNamedBufferRangeEXT
    GLintptr offset;
    GLsizeiptr length;
 };
-void
-_mesa_unmarshal_FlushMappedNamedBufferRangeEXT(struct gl_context *ctx, const struct marshal_cmd_FlushMappedNamedBufferRangeEXT *cmd)
+uint32_t
+_mesa_unmarshal_FlushMappedNamedBufferRangeEXT(struct gl_context *ctx, const struct marshal_cmd_FlushMappedNamedBufferRangeEXT *cmd, const uint64_t *last)
 {
    GLuint buffer = cmd->buffer;
    GLintptr offset = cmd->offset;
    GLsizeiptr length = cmd->length;
    CALL_FlushMappedNamedBufferRangeEXT(ctx->CurrentServerDispatch, (buffer, offset, length));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_FlushMappedNamedBufferRangeEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_FlushMappedNamedBufferRangeEXT(GLuint buffer, GLintptr offset, GLsizeiptr length)
@@ -5817,12 +6210,15 @@ struct marshal_cmd_FramebufferDrawBufferEXT
    GLuint framebuffer;
    GLenum mode;
 };
-void
-_mesa_unmarshal_FramebufferDrawBufferEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferDrawBufferEXT *cmd)
+uint32_t
+_mesa_unmarshal_FramebufferDrawBufferEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferDrawBufferEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum mode = cmd->mode;
    CALL_FramebufferDrawBufferEXT(ctx->CurrentServerDispatch, (framebuffer, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_FramebufferDrawBufferEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_FramebufferDrawBufferEXT(GLuint framebuffer, GLenum mode)
@@ -5844,8 +6240,8 @@ struct marshal_cmd_FramebufferDrawBuffersEXT
    GLsizei n;
    /* Next safe_mul(n, 1 * sizeof(GLenum)) bytes are GLenum bufs[n] */
 };
-void
-_mesa_unmarshal_FramebufferDrawBuffersEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferDrawBuffersEXT *cmd)
+uint32_t
+_mesa_unmarshal_FramebufferDrawBuffersEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferDrawBuffersEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLsizei n = cmd->n;
@@ -5853,6 +6249,7 @@ _mesa_unmarshal_FramebufferDrawBuffersEXT(struct gl_context *ctx, const struct m
    const char *variable_data = (const char *) (cmd + 1);
    bufs = (GLenum *) variable_data;
    CALL_FramebufferDrawBuffersEXT(ctx->CurrentServerDispatch, (framebuffer, n, bufs));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_FramebufferDrawBuffersEXT(GLuint framebuffer, GLsizei n, const GLenum * bufs)
@@ -5881,12 +6278,15 @@ struct marshal_cmd_FramebufferReadBufferEXT
    GLuint framebuffer;
    GLenum mode;
 };
-void
-_mesa_unmarshal_FramebufferReadBufferEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferReadBufferEXT *cmd)
+uint32_t
+_mesa_unmarshal_FramebufferReadBufferEXT(struct gl_context *ctx, const struct marshal_cmd_FramebufferReadBufferEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum mode = cmd->mode;
    CALL_FramebufferReadBufferEXT(ctx->CurrentServerDispatch, (framebuffer, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_FramebufferReadBufferEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_FramebufferReadBufferEXT(GLuint framebuffer, GLenum mode)
@@ -5930,8 +6330,8 @@ struct marshal_cmd_NamedFramebufferTexture1DEXT
    GLuint texture;
    GLint level;
 };
-void
-_mesa_unmarshal_NamedFramebufferTexture1DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture1DEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedFramebufferTexture1DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture1DEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum attachment = cmd->attachment;
@@ -5939,6 +6339,9 @@ _mesa_unmarshal_NamedFramebufferTexture1DEXT(struct gl_context *ctx, const struc
    GLuint texture = cmd->texture;
    GLint level = cmd->level;
    CALL_NamedFramebufferTexture1DEXT(ctx->CurrentServerDispatch, (framebuffer, attachment, textarget, texture, level));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedFramebufferTexture1DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedFramebufferTexture1DEXT(GLuint framebuffer, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
@@ -5965,8 +6368,8 @@ struct marshal_cmd_NamedFramebufferTexture2DEXT
    GLuint texture;
    GLint level;
 };
-void
-_mesa_unmarshal_NamedFramebufferTexture2DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture2DEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedFramebufferTexture2DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture2DEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum attachment = cmd->attachment;
@@ -5974,6 +6377,9 @@ _mesa_unmarshal_NamedFramebufferTexture2DEXT(struct gl_context *ctx, const struc
    GLuint texture = cmd->texture;
    GLint level = cmd->level;
    CALL_NamedFramebufferTexture2DEXT(ctx->CurrentServerDispatch, (framebuffer, attachment, textarget, texture, level));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedFramebufferTexture2DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedFramebufferTexture2DEXT(GLuint framebuffer, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
@@ -6001,8 +6407,8 @@ struct marshal_cmd_NamedFramebufferTexture3DEXT
    GLint level;
    GLint zoffset;
 };
-void
-_mesa_unmarshal_NamedFramebufferTexture3DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture3DEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedFramebufferTexture3DEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferTexture3DEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum attachment = cmd->attachment;
@@ -6011,6 +6417,9 @@ _mesa_unmarshal_NamedFramebufferTexture3DEXT(struct gl_context *ctx, const struc
    GLint level = cmd->level;
    GLint zoffset = cmd->zoffset;
    CALL_NamedFramebufferTexture3DEXT(ctx->CurrentServerDispatch, (framebuffer, attachment, textarget, texture, level, zoffset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedFramebufferTexture3DEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedFramebufferTexture3DEXT(GLuint framebuffer, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
@@ -6037,14 +6446,17 @@ struct marshal_cmd_NamedFramebufferRenderbufferEXT
    GLenum renderbuffertarget;
    GLuint renderbuffer;
 };
-void
-_mesa_unmarshal_NamedFramebufferRenderbufferEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferRenderbufferEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedFramebufferRenderbufferEXT(struct gl_context *ctx, const struct marshal_cmd_NamedFramebufferRenderbufferEXT *cmd, const uint64_t *last)
 {
    GLuint framebuffer = cmd->framebuffer;
    GLenum attachment = cmd->attachment;
    GLenum renderbuffertarget = cmd->renderbuffertarget;
    GLuint renderbuffer = cmd->renderbuffer;
    CALL_NamedFramebufferRenderbufferEXT(ctx->CurrentServerDispatch, (framebuffer, attachment, renderbuffertarget, renderbuffer));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedFramebufferRenderbufferEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedFramebufferRenderbufferEXT(GLuint framebuffer, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
@@ -6079,14 +6491,17 @@ struct marshal_cmd_NamedRenderbufferStorageEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_NamedRenderbufferStorageEXT(struct gl_context *ctx, const struct marshal_cmd_NamedRenderbufferStorageEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedRenderbufferStorageEXT(struct gl_context *ctx, const struct marshal_cmd_NamedRenderbufferStorageEXT *cmd, const uint64_t *last)
 {
    GLuint renderbuffer = cmd->renderbuffer;
    GLenum internalformat = cmd->internalformat;
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_NamedRenderbufferStorageEXT(ctx->CurrentServerDispatch, (renderbuffer, internalformat, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedRenderbufferStorageEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedRenderbufferStorageEXT(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height)
@@ -6119,12 +6534,15 @@ struct marshal_cmd_GenerateTextureMipmapEXT
    GLuint texture;
    GLenum target;
 };
-void
-_mesa_unmarshal_GenerateTextureMipmapEXT(struct gl_context *ctx, const struct marshal_cmd_GenerateTextureMipmapEXT *cmd)
+uint32_t
+_mesa_unmarshal_GenerateTextureMipmapEXT(struct gl_context *ctx, const struct marshal_cmd_GenerateTextureMipmapEXT *cmd, const uint64_t *last)
 {
    GLuint texture = cmd->texture;
    GLenum target = cmd->target;
    CALL_GenerateTextureMipmapEXT(ctx->CurrentServerDispatch, (texture, target));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GenerateTextureMipmapEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GenerateTextureMipmapEXT(GLuint texture, GLenum target)
@@ -6145,12 +6563,15 @@ struct marshal_cmd_GenerateMultiTexMipmapEXT
    GLenum texunit;
    GLenum target;
 };
-void
-_mesa_unmarshal_GenerateMultiTexMipmapEXT(struct gl_context *ctx, const struct marshal_cmd_GenerateMultiTexMipmapEXT *cmd)
+uint32_t
+_mesa_unmarshal_GenerateMultiTexMipmapEXT(struct gl_context *ctx, const struct marshal_cmd_GenerateMultiTexMipmapEXT *cmd, const uint64_t *last)
 {
    GLenum texunit = cmd->texunit;
    GLenum target = cmd->target;
    CALL_GenerateMultiTexMipmapEXT(ctx->CurrentServerDispatch, (texunit, target));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GenerateMultiTexMipmapEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_GenerateMultiTexMipmapEXT(GLenum texunit, GLenum target)
@@ -6174,8 +6595,8 @@ struct marshal_cmd_NamedRenderbufferStorageMultisampleEXT
    GLsizei width;
    GLsizei height;
 };
-void
-_mesa_unmarshal_NamedRenderbufferStorageMultisampleEXT(struct gl_context *ctx, const struct marshal_cmd_NamedRenderbufferStorageMultisampleEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedRenderbufferStorageMultisampleEXT(struct gl_context *ctx, const struct marshal_cmd_NamedRenderbufferStorageMultisampleEXT *cmd, const uint64_t *last)
 {
    GLuint renderbuffer = cmd->renderbuffer;
    GLsizei samples = cmd->samples;
@@ -6183,6 +6604,9 @@ _mesa_unmarshal_NamedRenderbufferStorageMultisampleEXT(struct gl_context *ctx, c
    GLsizei width = cmd->width;
    GLsizei height = cmd->height;
    CALL_NamedRenderbufferStorageMultisampleEXT(ctx->CurrentServerDispatch, (renderbuffer, samples, internalformat, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedRenderbufferStorageMultisampleEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedRenderbufferStorageMultisampleEXT(GLuint renderbuffer, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
@@ -6209,8 +6633,8 @@ struct marshal_cmd_NamedCopyBufferSubDataEXT
    GLintptr writeOffset;
    GLsizeiptr size;
 };
-void
-_mesa_unmarshal_NamedCopyBufferSubDataEXT(struct gl_context *ctx, const struct marshal_cmd_NamedCopyBufferSubDataEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedCopyBufferSubDataEXT(struct gl_context *ctx, const struct marshal_cmd_NamedCopyBufferSubDataEXT *cmd, const uint64_t *last)
 {
    GLuint readBuffer = cmd->readBuffer;
    GLuint writeBuffer = cmd->writeBuffer;
@@ -6218,6 +6642,9 @@ _mesa_unmarshal_NamedCopyBufferSubDataEXT(struct gl_context *ctx, const struct m
    GLintptr writeOffset = cmd->writeOffset;
    GLsizeiptr size = cmd->size;
    CALL_NamedCopyBufferSubDataEXT(ctx->CurrentServerDispatch, (readBuffer, writeBuffer, readOffset, writeOffset, size));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NamedCopyBufferSubDataEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedCopyBufferSubDataEXT(GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
@@ -6245,8 +6672,8 @@ struct marshal_cmd_VertexArrayVertexOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayVertexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayVertexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6255,6 +6682,9 @@ _mesa_unmarshal_VertexArrayVertexOffsetEXT(struct gl_context *ctx, const struct 
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayVertexOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayVertexOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayVertexOffsetEXT(GLuint vaobj, GLuint buffer, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6284,8 +6714,8 @@ struct marshal_cmd_VertexArrayColorOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayColorOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayColorOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6294,6 +6724,9 @@ _mesa_unmarshal_VertexArrayColorOffsetEXT(struct gl_context *ctx, const struct m
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayColorOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayColorOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayColorOffsetEXT(GLuint vaobj, GLuint buffer, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6321,14 +6754,17 @@ struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayEdgeFlagOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayEdgeFlagOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayEdgeFlagOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayEdgeFlagOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayEdgeFlagOffsetEXT(GLuint vaobj, GLuint buffer, GLsizei stride, GLintptr offset)
@@ -6355,8 +6791,8 @@ struct marshal_cmd_VertexArrayIndexOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayIndexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayIndexOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayIndexOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayIndexOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6364,6 +6800,9 @@ _mesa_unmarshal_VertexArrayIndexOffsetEXT(struct gl_context *ctx, const struct m
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayIndexOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayIndexOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayIndexOffsetEXT(GLuint vaobj, GLuint buffer, GLenum type, GLsizei stride, GLintptr offset)
@@ -6391,8 +6830,8 @@ struct marshal_cmd_VertexArrayNormalOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayNormalOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayNormalOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayNormalOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayNormalOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6400,6 +6839,9 @@ _mesa_unmarshal_VertexArrayNormalOffsetEXT(struct gl_context *ctx, const struct 
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayNormalOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayNormalOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayNormalOffsetEXT(GLuint vaobj, GLuint buffer, GLenum type, GLsizei stride, GLintptr offset)
@@ -6428,8 +6870,8 @@ struct marshal_cmd_VertexArrayTexCoordOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayTexCoordOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayTexCoordOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6438,6 +6880,9 @@ _mesa_unmarshal_VertexArrayTexCoordOffsetEXT(struct gl_context *ctx, const struc
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayTexCoordOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayTexCoordOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayTexCoordOffsetEXT(GLuint vaobj, GLuint buffer, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6468,8 +6913,8 @@ struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6479,6 +6924,9 @@ _mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT(struct gl_context *ctx, const 
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayMultiTexCoordOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, texunit, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayMultiTexCoordOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayMultiTexCoordOffsetEXT(GLuint vaobj, GLuint buffer, GLenum texunit, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6508,8 +6956,8 @@ struct marshal_cmd_VertexArrayFogCoordOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayFogCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayFogCoordOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayFogCoordOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayFogCoordOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6517,6 +6965,9 @@ _mesa_unmarshal_VertexArrayFogCoordOffsetEXT(struct gl_context *ctx, const struc
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayFogCoordOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayFogCoordOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayFogCoordOffsetEXT(GLuint vaobj, GLuint buffer, GLenum type, GLsizei stride, GLintptr offset)
@@ -6545,8 +6996,8 @@ struct marshal_cmd_VertexArraySecondaryColorOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArraySecondaryColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArraySecondaryColorOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArraySecondaryColorOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArraySecondaryColorOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6555,6 +7006,9 @@ _mesa_unmarshal_VertexArraySecondaryColorOffsetEXT(struct gl_context *ctx, const
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArraySecondaryColorOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArraySecondaryColorOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArraySecondaryColorOffsetEXT(GLuint vaobj, GLuint buffer, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6586,8 +7040,8 @@ struct marshal_cmd_VertexArrayVertexAttribOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayVertexAttribOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayVertexAttribOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6598,6 +7052,9 @@ _mesa_unmarshal_VertexArrayVertexAttribOffsetEXT(struct gl_context *ctx, const s
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayVertexAttribOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, index, size, type, normalized, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayVertexAttribOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayVertexAttribOffsetEXT(GLuint vaobj, GLuint buffer, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset)
@@ -6630,8 +7087,8 @@ struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT
    GLsizei stride;
    GLintptr offset;
 };
-void
-_mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT *cmd)
+uint32_t
+_mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT(struct gl_context *ctx, const struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint buffer = cmd->buffer;
@@ -6641,6 +7098,9 @@ _mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT(struct gl_context *ctx, const 
    GLsizei stride = cmd->stride;
    GLintptr offset = cmd->offset;
    CALL_VertexArrayVertexAttribIOffsetEXT(ctx->CurrentServerDispatch, (vaobj, buffer, index, size, type, stride, offset));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_VertexArrayVertexAttribIOffsetEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_VertexArrayVertexAttribIOffsetEXT(GLuint vaobj, GLuint buffer, GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset)
@@ -6667,12 +7127,15 @@ struct marshal_cmd_EnableVertexArrayEXT
    GLuint vaobj;
    GLenum array;
 };
-void
-_mesa_unmarshal_EnableVertexArrayEXT(struct gl_context *ctx, const struct marshal_cmd_EnableVertexArrayEXT *cmd)
+uint32_t
+_mesa_unmarshal_EnableVertexArrayEXT(struct gl_context *ctx, const struct marshal_cmd_EnableVertexArrayEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLenum array = cmd->array;
    CALL_EnableVertexArrayEXT(ctx->CurrentServerDispatch, (vaobj, array));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EnableVertexArrayEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_EnableVertexArrayEXT(GLuint vaobj, GLenum array)
@@ -6694,12 +7157,15 @@ struct marshal_cmd_DisableVertexArrayEXT
    GLuint vaobj;
    GLenum array;
 };
-void
-_mesa_unmarshal_DisableVertexArrayEXT(struct gl_context *ctx, const struct marshal_cmd_DisableVertexArrayEXT *cmd)
+uint32_t
+_mesa_unmarshal_DisableVertexArrayEXT(struct gl_context *ctx, const struct marshal_cmd_DisableVertexArrayEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLenum array = cmd->array;
    CALL_DisableVertexArrayEXT(ctx->CurrentServerDispatch, (vaobj, array));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DisableVertexArrayEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DisableVertexArrayEXT(GLuint vaobj, GLenum array)
@@ -6721,12 +7187,15 @@ struct marshal_cmd_EnableVertexArrayAttribEXT
    GLuint vaobj;
    GLuint index;
 };
-void
-_mesa_unmarshal_EnableVertexArrayAttribEXT(struct gl_context *ctx, const struct marshal_cmd_EnableVertexArrayAttribEXT *cmd)
+uint32_t
+_mesa_unmarshal_EnableVertexArrayAttribEXT(struct gl_context *ctx, const struct marshal_cmd_EnableVertexArrayAttribEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint index = cmd->index;
    CALL_EnableVertexArrayAttribEXT(ctx->CurrentServerDispatch, (vaobj, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EnableVertexArrayAttribEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_EnableVertexArrayAttribEXT(GLuint vaobj, GLuint index)
@@ -6748,12 +7217,15 @@ struct marshal_cmd_DisableVertexArrayAttribEXT
    GLuint vaobj;
    GLuint index;
 };
-void
-_mesa_unmarshal_DisableVertexArrayAttribEXT(struct gl_context *ctx, const struct marshal_cmd_DisableVertexArrayAttribEXT *cmd)
+uint32_t
+_mesa_unmarshal_DisableVertexArrayAttribEXT(struct gl_context *ctx, const struct marshal_cmd_DisableVertexArrayAttribEXT *cmd, const uint64_t *last)
 {
    GLuint vaobj = cmd->vaobj;
    GLuint index = cmd->index;
    CALL_DisableVertexArrayAttribEXT(ctx->CurrentServerDispatch, (vaobj, index));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DisableVertexArrayAttribEXT), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_DisableVertexArrayAttribEXT(GLuint vaobj, GLuint index)
@@ -6818,8 +7290,8 @@ struct marshal_cmd_NamedProgramStringEXT
    GLsizei len;
    /* Next len bytes are GLvoid string[len] */
 };
-void
-_mesa_unmarshal_NamedProgramStringEXT(struct gl_context *ctx, const struct marshal_cmd_NamedProgramStringEXT *cmd)
+uint32_t
+_mesa_unmarshal_NamedProgramStringEXT(struct gl_context *ctx, const struct marshal_cmd_NamedProgramStringEXT *cmd, const uint64_t *last)
 {
    GLuint program = cmd->program;
    GLenum target = cmd->target;
@@ -6829,6 +7301,7 @@ _mesa_unmarshal_NamedProgramStringEXT(struct gl_context *ctx, const struct marsh
    const char *variable_data = (const char *) (cmd + 1);
    string = (GLvoid *) variable_data;
    CALL_NamedProgramStringEXT(ctx->CurrentServerDispatch, (program, target, format, len, string));
+   return cmd->cmd_base.cmd_size;
 }
 void GLAPIENTRY
 _mesa_marshal_NamedProgramStringEXT(GLuint program, GLenum target, GLenum format, GLsizei len, const GLvoid* string)

@@ -265,6 +265,7 @@ etna_resource_alloc(struct pipe_screen *pscreen, unsigned layout,
    rsc->base.nr_samples = nr_samples;
    rsc->layout = layout;
    rsc->halign = halign;
+   rsc->explicit_flush = true;
 
    pipe_reference_init(&rsc->base.reference, 1);
    util_range_init(&rsc->valid_buffer_range);
@@ -519,6 +520,9 @@ etna_resource_from_handle(struct pipe_screen *pscreen,
    rsc->layout = modifier_to_layout(handle->modifier);
    rsc->halign = TEXTURE_HALIGN_FOUR;
 
+   if (usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH)
+      rsc->explicit_flush = true;
+
    level->width = tmpl->width0;
    level->height = tmpl->height0;
    level->depth = tmpl->depth0;
@@ -607,6 +611,9 @@ etna_resource_get_handle(struct pipe_screen *pscreen,
    handle->stride = rsc->levels[0].stride;
    handle->offset = rsc->levels[0].offset;
    handle->modifier = layout_to_modifier(rsc->layout);
+
+   if (!(usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH))
+      rsc->explicit_flush = false;
 
    if (handle->type == WINSYS_HANDLE_TYPE_SHARED) {
       return etna_bo_get_name(rsc->bo, &handle->handle) == 0;

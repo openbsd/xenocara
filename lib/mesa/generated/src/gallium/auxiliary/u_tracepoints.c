@@ -26,20 +26,14 @@
 #include "u_tracepoints.h"
 
 #define __NEEDS_TRACE_PRIV
-#include "util/u_trace_priv.h"
+#include "util/perf/u_trace_priv.h"
 
 /*
  * surface
  */
-struct __payload_surface {
-         uint16_t width;
-         uint16_t height;
-         uint8_t nr_samples;
-         const char * format;
-};
 static void __print_surface(FILE *out, const void *arg) {
-   const struct __payload_surface *__entry =
-      (const struct __payload_surface *)arg;
+   const struct trace_surface *__entry =
+      (const struct trace_surface *)arg;
    fprintf(out, "%ux%u@%u, fmt=%s\n"
            , __entry->width
            , __entry->height
@@ -48,15 +42,15 @@ static void __print_surface(FILE *out, const void *arg) {
    );
 }
 static const struct u_tracepoint __tp_surface = {
-    ALIGN_POT(sizeof(struct __payload_surface), 8),   /* keep size 64b aligned */
+    ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
     "surface",
     __print_surface,
 };
-void __trace_surface(struct u_trace *ut
+void __trace_surface(struct u_trace *ut, void *cs
      , const struct pipe_surface * psurf
 ) {
-   struct __payload_surface *__entry =
-      (struct __payload_surface *)u_trace_append(ut, &__tp_surface);
+   struct trace_surface *__entry =
+      (struct trace_surface *)u_trace_append(ut, cs, &__tp_surface);
    (void)__entry;
         __entry->width = psurf->width;
         __entry->height = psurf->height;
@@ -67,16 +61,9 @@ void __trace_surface(struct u_trace *ut
 /*
  * framebuffer
  */
-struct __payload_framebuffer {
-         uint16_t width;
-         uint16_t height;
-         uint8_t layers;
-         uint8_t samples;
-         uint8_t nr_cbufs;
-};
 static void __print_framebuffer(FILE *out, const void *arg) {
-   const struct __payload_framebuffer *__entry =
-      (const struct __payload_framebuffer *)arg;
+   const struct trace_framebuffer *__entry =
+      (const struct trace_framebuffer *)arg;
    fprintf(out, "%ux%ux%u@%u, nr_cbufs: %u\n"
            , __entry->width
            , __entry->height
@@ -86,15 +73,15 @@ static void __print_framebuffer(FILE *out, const void *arg) {
    );
 }
 static const struct u_tracepoint __tp_framebuffer = {
-    ALIGN_POT(sizeof(struct __payload_framebuffer), 8),   /* keep size 64b aligned */
+    ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
     "framebuffer",
     __print_framebuffer,
 };
-void __trace_framebuffer(struct u_trace *ut
+void __trace_framebuffer(struct u_trace *ut, void *cs
      , const struct pipe_framebuffer_state * pfb
 ) {
-   struct __payload_framebuffer *__entry =
-      (struct __payload_framebuffer *)u_trace_append(ut, &__tp_framebuffer);
+   struct trace_framebuffer *__entry =
+      (struct trace_framebuffer *)u_trace_append(ut, cs, &__tp_framebuffer);
    (void)__entry;
         __entry->width = pfb->width;
         __entry->height = pfb->height;
@@ -106,18 +93,9 @@ void __trace_framebuffer(struct u_trace *ut
 /*
  * grid_info
  */
-struct __payload_grid_info {
-         uint8_t work_dim;
-         uint16_t block_x;
-         uint16_t block_y;
-         uint16_t block_z;
-         uint16_t grid_x;
-         uint16_t grid_y;
-         uint16_t grid_z;
-};
 static void __print_grid_info(FILE *out, const void *arg) {
-   const struct __payload_grid_info *__entry =
-      (const struct __payload_grid_info *)arg;
+   const struct trace_grid_info *__entry =
+      (const struct trace_grid_info *)arg;
    fprintf(out, "work_dim=%u, block=%ux%ux%u, grid=%ux%ux%u\n"
            , __entry->work_dim
            , __entry->block_x
@@ -129,15 +107,15 @@ static void __print_grid_info(FILE *out, const void *arg) {
    );
 }
 static const struct u_tracepoint __tp_grid_info = {
-    ALIGN_POT(sizeof(struct __payload_grid_info), 8),   /* keep size 64b aligned */
+    ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
     "grid_info",
     __print_grid_info,
 };
-void __trace_grid_info(struct u_trace *ut
+void __trace_grid_info(struct u_trace *ut, void *cs
      , const struct pipe_grid_info * pgrid
 ) {
-   struct __payload_grid_info *__entry =
-      (struct __payload_grid_info *)u_trace_append(ut, &__tp_grid_info);
+   struct trace_grid_info *__entry =
+      (struct trace_grid_info *)u_trace_append(ut, cs, &__tp_grid_info);
    (void)__entry;
         __entry->work_dim = pgrid->work_dim;
         __entry->block_x = pgrid->block[0];

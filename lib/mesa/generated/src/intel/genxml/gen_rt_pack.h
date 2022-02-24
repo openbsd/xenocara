@@ -186,8 +186,8 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
 struct GFX_BINDLESS_SHADER_RECORD {
    uint32_t                             OffsetToLocalArguments;
    uint32_t                             BindlessShaderDispatchMode;
-#define SIMD8                                    0
-#define SIMD16                                   1
+#define RT_SIMD16                                0
+#define RT_SIMD8                                 1
    uint64_t                             KernelStartPointer;
 };
 

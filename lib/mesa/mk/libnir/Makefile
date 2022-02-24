@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	nir
 
@@ -30,10 +30,10 @@ SRCS=	nir.c \
 	nir_lower_array_deref_of_vec.c \
 	nir_lower_atomics_to_ssbo.c \
 	nir_lower_bitmap.c \
+	nir_lower_blend.c \
 	nir_lower_bool_to_bitsize.c \
 	nir_lower_bool_to_float.c \
 	nir_lower_bool_to_int32.c \
-	nir_lower_cl_images_to_tex.c \
 	nir_lower_clamp_color_outputs.c \
 	nir_lower_clip.c \
 	nir_lower_clip_cull_distance_arrays.c \
@@ -57,6 +57,7 @@ SRCS=	nir.c \
 	nir_lower_load_const_to_scalar.c \
 	nir_lower_locals_to_regs.c \
 	nir_lower_idiv.c \
+	nir_lower_image.c \
 	nir_lower_indirect_derefs.c \
 	nir_lower_input_attachments.c \
 	nir_lower_int64.c \
@@ -67,6 +68,7 @@ SRCS=	nir.c \
 	nir_lower_io_to_temporaries.c \
 	nir_lower_io_to_scalar.c \
 	nir_lower_io_to_vector.c \
+	nir_lower_is_helper_invocation.c \
 	nir_lower_multiview.c \
 	nir_lower_mediump.c \
 	nir_lower_memcpy.c \
@@ -81,9 +83,11 @@ SRCS=	nir.c \
 	nir_lower_point_size_mov.c \
 	nir_lower_printf.c \
 	nir_lower_regs_to_ssa.c \
+	nir_lower_readonly_images_to_tex.c \
 	nir_lower_returns.c \
 	nir_lower_samplers.c \
 	nir_lower_scratch.c \
+	nir_lower_shader_calls.c \
 	nir_lower_ssbo.c \
 	nir_lower_subgroups.c \
 	nir_lower_system_values.c \
@@ -103,6 +107,7 @@ SRCS=	nir.c \
 	nir_lower_bit_size.c \
 	nir_lower_ubo_vec4.c \
 	nir_lower_uniforms_to_ubo.c \
+	nir_lower_sysvals_to_varyings.c \
 	nir_metadata.c \
 	nir_move_vec_src_uses_to_dest.c \
 	nir_normalize_cubemap_coords.c \
@@ -119,6 +124,7 @@ SRCS=	nir.c \
 	nir_opt_dead_cf.c \
 	nir_opt_dead_write_vars.c \
 	nir_opt_find_array_copies.c \
+	nir_opt_fragdepth.c \
 	nir_opt_gcm.c \
 	nir_opt_idiv_const.c \
 	nir_opt_if.c \
@@ -128,8 +134,10 @@ SRCS=	nir.c \
 	nir_opt_loop_unroll.c \
 	nir_opt_memcpy.c \
 	nir_opt_move.c \
+	nir_opt_move_discards_to_top.c \
 	nir_opt_offsets.c \
 	nir_opt_peephole_select.c \
+	nir_opt_phi_precision.c \
 	nir_opt_rematerialize_compares.c \
 	nir_opt_remove_phis.c \
 	nir_opt_shrink_vectors.c \

@@ -1011,14 +1011,14 @@ struct GFX7_SAMPLER_STATE {
 #define PROGRAMMED                               0
 #define OVERRIDE                                 1
    uint32_t                             ShadowFunction;
-#define PREFILTEROPALWAYS                        0
-#define PREFILTEROPNEVER                         1
-#define PREFILTEROPLESS                          2
-#define PREFILTEROPEQUAL                         3
-#define PREFILTEROPLEQUAL                        4
-#define PREFILTEROPGREATER                       5
-#define PREFILTEROPNOTEQUAL                      6
-#define PREFILTEROPGEQUAL                        7
+#define PREFILTEROP_ALWAYS                       0
+#define PREFILTEROP_NEVER                        1
+#define PREFILTEROP_LESS                         2
+#define PREFILTEROP_EQUAL                        3
+#define PREFILTEROP_LEQUAL                       4
+#define PREFILTEROP_GREATER                      5
+#define PREFILTEROP_NOTEQUAL                     6
+#define PREFILTEROP_GEQUAL                       7
    float                                MaxLOD;
    float                                MinLOD;
    uint64_t                             BorderColorPointer;
@@ -5279,7 +5279,7 @@ struct GFX7_MEDIA_VFE_STATE {
    uint32_t                             CommandType;
    uint32_t                             PerThreadScratchSpace;
    __gen_address_type                   ScratchSpaceBasePointer;
-   uint32_t                             GPGPUMode;
+   bool                                 GPGPUMode;
    uint32_t                             GatewayMMIOAccessControl;
 #define NoMMIOreadwriteallowed                   0
 #define MMIOreadwritetoanyaddress                2

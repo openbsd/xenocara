@@ -78,7 +78,7 @@ static void
 brw_lower_packing_builtins(struct brw_context *brw,
                            exec_list *ir)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    /* Gens < 7 don't have instructions to convert to or from half-precision,
     * and Gens < 6 don't expose that functionality.
@@ -94,7 +94,7 @@ process_glsl_ir(struct brw_context *brw,
                 struct gl_shader_program *shader_prog,
                 struct gl_linked_shader *shader)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
 
    /* Temporary memory context for any new IR. */
@@ -102,8 +102,10 @@ process_glsl_ir(struct brw_context *brw,
 
    ralloc_adopt(mem_ctx, shader->ir);
 
-   lower_blend_equation_advanced(
-      shader, ctx->Extensions.KHR_blend_equation_advanced_coherent);
+   if (shader->Stage == MESA_SHADER_FRAGMENT) {
+      lower_blend_equation_advanced(
+         shader, ctx->Extensions.KHR_blend_equation_advanced_coherent);
+   }
 
    /* lower_packing_builtins() inserts arithmetic instructions, so it
     * must precede lower_instructions().
@@ -131,7 +133,6 @@ process_glsl_ir(struct brw_context *brw,
    if (devinfo->ver < 6)
       lower_if_to_cond_assign(shader->Stage, shader->ir, 16);
 
-   do_lower_texture_projection(shader->ir);
    do_vec_index_to_cond_assign(shader->ir);
    lower_vector_insert(shader->ir, true);
    lower_offset_arrays(shader->ir);
@@ -247,7 +248,7 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
       prog->ShadowSamplers = shader->shadow_samplers;
 
       bool debug_enabled =
-         (INTEL_DEBUG & intel_debug_flag_for_shader_stage(shader->Stage));
+         INTEL_DEBUG(intel_debug_flag_for_shader_stage(shader->Stage));
 
       if (debug_enabled && shader->ir) {
          fprintf(stderr, "GLSL IR for native %s shader %d:\n",

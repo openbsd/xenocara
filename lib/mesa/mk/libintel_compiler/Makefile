@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:10 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:49 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -11,6 +11,7 @@ SRCS=	brw_cfg.cpp \
 	brw_clip_unfilled.c \
 	brw_clip_util.c \
 	brw_compile_clip.c \
+	brw_compile_ff_gs.c \
 	brw_compile_sf.c \
 	brw_compiler.c \
 	brw_dead_control_flow.cpp \
@@ -50,12 +51,12 @@ SRCS=	brw_cfg.cpp \
 	brw_nir_lower_conversions.c \
 	brw_nir_lower_cs_intrinsics.c \
 	brw_nir_lower_alpha_to_coverage.c \
-	brw_nir_lower_image_load_store.c \
 	brw_nir_lower_intersection_shader.c \
 	brw_nir_lower_mem_access_bit_sizes.c \
 	brw_nir_lower_rt_intrinsics.c \
 	brw_nir_lower_scoped_barriers.c \
 	brw_nir_lower_shader_calls.c \
+	brw_nir_lower_storage_image.c \
 	brw_nir_opt_peephole_ffma.c \
 	brw_nir_rt.c \
 	brw_nir_tcs_workarounds.c \

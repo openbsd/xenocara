@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
 
 LIB=	anv_common
 
@@ -27,8 +27,7 @@ SRCS=	anv_allocator.c \
 	anv_util.c \
 	anv_wsi.c
 
-SRCS+=	anv_wsi_x11.c \
-	anv_wsi_display.c \
+SRCS+=	anv_wsi_display.c \
 	anv_android_stubs.c
 
 SRCS+=	anv_entrypoints.c

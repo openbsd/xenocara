@@ -46,6 +46,7 @@
 #include "main/stencil.h"
 #include "main/state.h"
 #include "main/spirv_extensions.h"
+#include "main/externalobjects.h"
 
 #include "vbo/vbo.h"
 
@@ -79,6 +80,7 @@
 #include "isl/isl.h"
 
 #include "common/intel_defines.h"
+#include "common/intel_uuid.h"
 
 #include "compiler/spirv/nir_spirv.h"
 /***************************************
@@ -87,36 +89,16 @@
 
 const char *const brw_vendor_string = "Intel Open Source Technology Center";
 
-static const char *
-get_bsw_model(const struct brw_screen *screen)
-{
-   switch (screen->eu_total) {
-   case 16:
-      return "405";
-   case 12:
-      return "400";
-   default:
-      return "   ";
-   }
-}
-
 const char *
 brw_get_renderer_string(const struct brw_screen *screen)
 {
    static char buf[128];
-   const char *name = gen_get_device_name(screen->deviceID);
+   const char *name = screen->devinfo.name;
 
    if (!name)
       name = "Intel Unknown";
 
    snprintf(buf, sizeof(buf), "Mesa DRI %s", name);
-
-   /* Braswell branding is funny, so we have to fix it up here */
-   if (screen->deviceID == 0x22B1) {
-      char *needle = strstr(buf, "XXX");
-      if (needle)
-         memcpy(needle, get_bsw_model(screen), 3);
-   }
 
    return buf;
 }
@@ -155,6 +137,40 @@ brw_set_background_context(struct gl_context *ctx,
     * backgroundCallable is not NULL.
     */
    backgroundCallable->setBackgroundContext(driContext->loaderPrivate);
+}
+
+static struct gl_memory_object *
+brw_new_memoryobj(struct gl_context *ctx, GLuint name)
+{
+   struct brw_memory_object *memory_object = CALLOC_STRUCT(brw_memory_object);
+   if (!memory_object)
+      return NULL;
+
+   _mesa_initialize_memory_object(ctx, &memory_object->Base, name);
+   return &memory_object->Base;
+}
+
+static void
+brw_delete_memoryobj(struct gl_context *ctx, struct gl_memory_object *memObj)
+{
+   struct brw_memory_object *memory_object = brw_memory_object(memObj);
+   brw_bo_unreference(memory_object->bo);
+   _mesa_delete_memory_object(ctx, memObj);
+}
+
+static void
+brw_import_memoryobj_fd(struct gl_context *ctx,
+                       struct gl_memory_object *obj,
+                       GLuint64 size,
+                       int fd)
+{
+   struct brw_context *brw = brw_context(ctx);
+   struct brw_memory_object *memory_object = brw_memory_object(obj);
+
+   memory_object->bo = brw_bo_gem_create_from_prime(brw->bufmgr, fd);
+   brw_bo_reference(memory_object->bo);
+   assert(memory_object->bo->size >= size);
+   close(fd);
 }
 
 static void
@@ -223,7 +239,8 @@ brw_flush_front(struct gl_context *ctx)
    __DRIdrawable *driDrawable = driContext->driDrawablePriv;
    __DRIscreen *const dri_screen = brw->screen->driScrnPriv;
 
-   if (brw->front_buffer_dirty && _mesa_is_winsys_fbo(ctx->DrawBuffer)) {
+   if (brw->front_buffer_dirty && ctx->DrawBuffer &&
+       _mesa_is_winsys_fbo(ctx->DrawBuffer)) {
       if (flushFront(dri_screen) && driDrawable &&
           driDrawable->loaderPrivate) {
 
@@ -277,7 +294,7 @@ brw_display_shared_buffer(struct brw_context *brw)
 }
 
 static void
-brw_glFlush(struct gl_context *ctx)
+brw_glFlush(struct gl_context *ctx, unsigned gallium_flush_flags)
 {
    struct brw_context *brw = brw_context(ctx);
 
@@ -317,17 +334,40 @@ brw_finish(struct gl_context * ctx)
 {
    struct brw_context *brw = brw_context(ctx);
 
-   brw_glFlush(ctx);
+   brw_glFlush(ctx, 0);
 
    if (brw->batch.last_bo)
       brw_bo_wait_rendering(brw->batch.last_bo);
 }
 
 static void
+brw_get_device_uuid(struct gl_context *ctx, char *uuid)
+{
+   struct brw_context *brw = brw_context(ctx);
+   struct brw_screen *screen = brw->screen;
+
+   assert(GL_UUID_SIZE_EXT >= PIPE_UUID_SIZE);
+   memset(uuid, 0, GL_UUID_SIZE_EXT);
+   intel_uuid_compute_device_id((uint8_t *)uuid, &screen->isl_dev, PIPE_UUID_SIZE);
+}
+
+
+static void
+brw_get_driver_uuid(struct gl_context *ctx, char *uuid)
+{
+   struct brw_context *brw = brw_context(ctx);
+   struct brw_screen *screen = brw->screen;
+
+   assert(GL_UUID_SIZE_EXT >= PIPE_UUID_SIZE);
+   memset(uuid, 0, GL_UUID_SIZE_EXT);
+   intel_uuid_compute_driver_id((uint8_t *)uuid, &screen->devinfo, PIPE_UUID_SIZE);
+}
+
+static void
 brw_init_driver_functions(struct brw_context *brw,
                           struct dd_function_table *functions)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    _mesa_init_driver_functions(functions);
 
@@ -361,7 +401,7 @@ brw_init_driver_functions(struct brw_context *brw,
 
    brw_init_frag_prog_functions(functions);
    brw_init_common_queryobj_functions(functions);
-   if (devinfo->ver >= 8 || devinfo->is_haswell)
+   if (devinfo->verx10 >= 75)
       hsw_init_queryobj_functions(functions);
    else if (devinfo->ver >= 6)
       gfx6_init_queryobj_functions(functions);
@@ -412,12 +452,18 @@ brw_init_driver_functions(struct brw_context *brw,
    }
 
    functions->SetBackgroundContext = brw_set_background_context;
+
+   functions->NewMemoryObject = brw_new_memoryobj;
+   functions->DeleteMemoryObject = brw_delete_memoryobj;
+   functions->ImportMemoryObjectFd = brw_import_memoryobj_fd;
+   functions->GetDeviceUuid = brw_get_device_uuid;
+   functions->GetDriverUuid = brw_get_driver_uuid;
 }
 
 static void
 brw_initialize_spirv_supported_capabilities(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
 
    /* The following SPIR-V capabilities are only supported on gfx7+. In theory
@@ -441,7 +487,7 @@ brw_initialize_spirv_supported_capabilities(struct brw_context *brw)
 static void
 brw_initialize_context_constants(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    const struct brw_compiler *compiler = brw->screen->compiler;
 
@@ -465,7 +511,7 @@ brw_initialize_context_constants(struct brw_context *brw)
    }
 
    unsigned max_samplers =
-      devinfo->ver >= 8 || devinfo->is_haswell ? BRW_MAX_TEX_UNIT : 16;
+      devinfo->verx10 >= 75 ? BRW_MAX_TEX_UNIT : 16;
 
    ctx->Const.MaxDualSourceDrawBuffers = 1;
    ctx->Const.MaxDrawBuffers = BRW_MAX_DRAW_BUFFERS;
@@ -803,30 +849,12 @@ static void
 brw_initialize_cs_context_constants(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
-   const struct brw_screen *screen = brw->screen;
-   struct gen_device_info *devinfo = &brw->screen->devinfo;
-
-   /* FINISHME: Do this for all platforms that the kernel supports */
-   if (devinfo->is_cherryview &&
-       screen->subslice_total > 0 && screen->eu_total > 0) {
-      /* Logical CS threads = EUs per subslice * 7 threads per EU */
-      uint32_t max_cs_threads = screen->eu_total / screen->subslice_total * 7;
-
-      /* Fuse configurations may give more threads than expected, never less. */
-      if (max_cs_threads > devinfo->max_cs_threads)
-         devinfo->max_cs_threads = max_cs_threads;
-   }
+   struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    /* Maximum number of scalar compute shader invocations that can be run in
     * parallel in the same subslice assuming SIMD32 dispatch.
-    *
-    * We don't advertise more than 64 threads, because we are limited to 64 by
-    * our usage of thread_width_max in the gpgpu walker command. This only
-    * currently impacts Haswell, which otherwise might be able to advertise 70
-    * threads. With SIMD32 and 64 threads, Haswell still provides twice the
-    * required the number of invocation needed for ARB_compute_shader.
     */
-   const unsigned max_threads = MIN2(64, devinfo->max_cs_threads);
+   const unsigned max_threads = devinfo->max_cs_workgroup_threads;
    const uint32_t max_invocations = 32 * max_threads;
    ctx->Const.MaxComputeWorkGroupSize[0] = max_invocations;
    ctx->Const.MaxComputeWorkGroupSize[1] = max_invocations;
@@ -854,11 +882,11 @@ brw_initialize_cs_context_constants(struct brw_context *brw)
 static void
 brw_process_driconf_options(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    const driOptionCache *const options = &brw->screen->optionCache;
 
-   if (INTEL_DEBUG & DEBUG_NO_HIZ) {
+   if (INTEL_DEBUG(DEBUG_NO_HIZ)) {
        brw->has_hiz = false;
        /* On gfx6, you can only do separate stencil with HIZ. */
        if (devinfo->ver == 6)
@@ -938,7 +966,7 @@ brw_create_context(gl_api api,
 {
    struct gl_context *shareCtx = (struct gl_context *) sharedContextPrivate;
    struct brw_screen *screen = driContextPriv->driScreenPriv->driverPrivate;
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
    struct dd_function_table functions;
 
    /* Only allow the __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS flag if the kernel
@@ -974,7 +1002,7 @@ brw_create_context(gl_api api,
       return false;
    }
    brw->mem_ctx = ralloc_context(NULL);
-   brw->perf_ctx = gen_perf_new_context(brw->mem_ctx);
+   brw->perf_ctx = intel_perf_new_context(brw->mem_ctx);
 
    driContextPriv->driverPrivate = brw;
    brw->driContext = driContextPriv;
@@ -985,6 +1013,12 @@ brw_create_context(gl_api api,
    brw->has_separate_stencil = devinfo->has_hiz_and_separate_stencil;
 
    brw->has_swizzling = screen->hw_has_swizzling;
+
+   /* We don't push UBOs on IVB and earlier because the restrictions on
+    * 3DSTATE_CONSTANT_* make it really annoying to use push constants
+    * without dynamic state base address.
+    */
+   brw->can_push_ubos = devinfo->verx10 >= 75;
 
    brw->isl_dev = screen->isl_dev;
 
@@ -1041,7 +1075,7 @@ brw_create_context(gl_api api,
 
    _mesa_meta_init(ctx);
 
-   if (INTEL_DEBUG & DEBUG_PERF)
+   if (INTEL_DEBUG(DEBUG_PERF))
       brw->perf_debug = true;
 
    brw_initialize_cs_context_constants(brw);
@@ -1139,7 +1173,7 @@ brw_create_context(gl_api api,
       ctx->Const.RobustAccess = GL_TRUE;
    }
 
-   if (INTEL_DEBUG & DEBUG_SHADER_TIME)
+   if (INTEL_DEBUG(DEBUG_SHADER_TIME))
       brw_init_shader_time(brw);
 
    _mesa_override_extensions(ctx);
@@ -1218,7 +1252,7 @@ brw_destroy_context(__DRIcontext *driContextPriv)
 
    _mesa_meta_free(&brw->ctx);
 
-   if (INTEL_DEBUG & DEBUG_SHADER_TIME) {
+   if (INTEL_DEBUG(DEBUG_SHADER_TIME)) {
       /* Force a report. */
       brw->shader_time.report_time = 0;
 
@@ -1392,7 +1426,7 @@ void
 brw_resolve_for_dri2_flush(struct brw_context *brw,
                            __DRIdrawable *drawable)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    if (devinfo->ver < 6) {
       /* MSAA and fast color clear are not supported, so don't waste time
@@ -1477,7 +1511,7 @@ brw_update_dri2_buffers(struct brw_context *brw, __DRIdrawable *drawable)
     * thus ignore the invalidate. */
    drawable->lastStamp = drawable->dri2.stamp;
 
-   if (INTEL_DEBUG & DEBUG_DRI)
+   if (INTEL_DEBUG(DEBUG_DRI))
       fprintf(stderr, "enter %s, drawable %p\n", __func__, drawable);
 
    brw_query_dri2_buffers(brw, drawable, &buffers, &count);
@@ -1530,7 +1564,7 @@ brw_update_renderbuffers(__DRIcontext *context, __DRIdrawable *drawable)
     * thus ignore the invalidate. */
    drawable->lastStamp = drawable->dri2.stamp;
 
-   if (INTEL_DEBUG & DEBUG_DRI)
+   if (INTEL_DEBUG(DEBUG_DRI))
       fprintf(stderr, "enter %s, drawable %p\n", __func__, drawable);
 
    if (dri_screen->image.loader)
@@ -1709,7 +1743,7 @@ brw_process_dri2_buffer(struct brw_context *brw,
    if (old_name == buffer->name)
       return;
 
-   if (INTEL_DEBUG & DEBUG_DRI) {
+   if (INTEL_DEBUG(DEBUG_DRI)) {
       fprintf(stderr,
               "attaching buffer %d, at %d, cpp %d, pitch %d\n",
               buffer->name, buffer->attachment,

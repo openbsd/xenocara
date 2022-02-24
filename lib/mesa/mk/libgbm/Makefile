@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2020/09/03 11:29:42 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:48 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -16,7 +16,8 @@ SRCS+=	gbm_dri.c
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gbm/main \
 		-I${MESA_SRC}/src/gbm/backends/dri \
-		-I${MESA_SRC}/src/loader
+		-I${MESA_SRC}/src/loader \
+		-DDEFAULT_BACKENDS_PATH=\"${X11BASE}/lib/gbm\"
 
 LDADD+=	-Wl,--as-needed -Wl,--start-group \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \

@@ -104,7 +104,13 @@
  * We use it to indicate the free list is empty. */
 #define EMPTY UINT32_MAX
 
+/* On FreeBSD PAGE_SIZE is already defined in
+ * /usr/include/machine/param.h that is indirectly
+ * included here.
+ */
+#ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
+#endif
 
 struct anv_mmap_cleanup {
    void *map;
@@ -149,15 +155,12 @@ anv_state_table_init(struct anv_state_table *table,
     * userptr and send a chunk of it off to the GPU.
     */
    table->fd = os_create_anonymous_file(BLOCK_POOL_MEMFD_SIZE, "state table");
-   if (table->fd == -1) {
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-      goto fail_fd;
-   }
+   if (table->fd == -1)
+      return vk_error(device, VK_ERROR_INITIALIZATION_FAILED);
 
-   if (!u_vector_init(&table->cleanups,
-                      round_to_power_of_two(sizeof(struct anv_state_table_cleanup)),
-                      128)) {
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
+   if (!u_vector_init(&table->cleanups, 8,
+                      sizeof(struct anv_state_table_cleanup))) {
+      result = vk_error(device, VK_ERROR_INITIALIZATION_FAILED);
       goto fail_fd;
    }
 
@@ -191,11 +194,11 @@ anv_state_table_expand_range(struct anv_state_table *table, uint32_t size)
 
    /* Make sure that we don't go outside the bounds of the memfd */
    if (size > BLOCK_POOL_MEMFD_SIZE)
-      return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
+      return vk_error(table->device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
    cleanup = u_vector_add(&table->cleanups);
    if (!cleanup)
-      return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
+      return vk_error(table->device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
    *cleanup = ANV_STATE_TABLE_CLEANUP_INIT;
 
@@ -208,8 +211,8 @@ anv_state_table_expand_range(struct anv_state_table *table, uint32_t size)
    map = mmap(NULL, size, PROT_READ | PROT_WRITE,
               MAP_SHARED | MAP_POPULATE, table->fd, 0);
    if (map == MAP_FAILED) {
-      return vk_errorf(table->device, &table->device->vk.base,
-                       VK_ERROR_OUT_OF_HOST_MEMORY, "mmap failed: %m");
+      return vk_errorf(table->device, VK_ERROR_OUT_OF_HOST_MEMORY,
+                       "mmap failed: %m");
    }
 
    cleanup->map = map;
@@ -325,7 +328,7 @@ anv_free_list_push(union anv_free_list *list,
    for (uint32_t i = 1; i < count; i++, last++)
       table->map[last].next = last + 1;
 
-   old = *list;
+   old.u64 = list->u64;
    do {
       current = old;
       table->map[last].next = current.offset;
@@ -389,7 +392,7 @@ anv_block_pool_init(struct anv_block_pool *pool,
        */
       pool->fd = os_create_anonymous_file(BLOCK_POOL_MEMFD_SIZE, "block pool");
       if (pool->fd == -1)
-         return vk_error(VK_ERROR_INITIALIZATION_FAILED);
+         return vk_error(device, VK_ERROR_INITIALIZATION_FAILED);
 
       pool->wrapper_bo = (struct anv_bo) {
          .refcount = 1,
@@ -399,10 +402,9 @@ anv_block_pool_init(struct anv_block_pool *pool,
       pool->bo = &pool->wrapper_bo;
    }
 
-   if (!u_vector_init(&pool->mmap_cleanups,
-                      round_to_power_of_two(sizeof(struct anv_mmap_cleanup)),
-                      128)) {
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
+   if (!u_vector_init(&pool->mmap_cleanups, 8,
+                      sizeof(struct anv_mmap_cleanup))) {
+      result = vk_error(device, VK_ERROR_INITIALIZATION_FAILED);
       goto fail_fd;
    }
 
@@ -501,6 +503,7 @@ anv_block_pool_expand_range(struct anv_block_pool *pool,
                                             pool->name,
                                             new_bo_size,
                                             bo_alloc_flags |
+                                            ANV_BO_ALLOC_LOCAL_MEM |
                                             ANV_BO_ALLOC_FIXED_ADDRESS |
                                             ANV_BO_ALLOC_MAPPED |
                                             ANV_BO_ALLOC_SNOOPED,
@@ -524,8 +527,8 @@ anv_block_pool_expand_range(struct anv_block_pool *pool,
                        MAP_SHARED | MAP_POPULATE, pool->fd,
                        BLOCK_POOL_MEMFD_CENTER - center_bo_offset);
       if (map == MAP_FAILED)
-         return vk_errorf(pool->device, &pool->device->vk.base,
-                          VK_ERROR_MEMORY_MAP_FAILED, "mmap failed: %m");
+         return vk_errorf(pool->device, VK_ERROR_MEMORY_MAP_FAILED,
+                          "mmap failed: %m");
 
       struct anv_bo *new_bo;
       VkResult result = anv_device_import_bo_from_host_ptr(pool->device,
@@ -542,7 +545,7 @@ anv_block_pool_expand_range(struct anv_block_pool *pool,
       if (!cleanup) {
          munmap(map, size);
          anv_device_release_bo(pool->device, new_bo);
-         return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
+         return vk_error(pool->device, VK_ERROR_OUT_OF_HOST_MEMORY);
       }
       cleanup->map = map;
       cleanup->size = size;
@@ -1370,6 +1373,7 @@ anv_bo_pool_alloc(struct anv_bo_pool *pool, uint32_t size,
    VkResult result = anv_device_alloc_bo(pool->device,
                                          pool->name,
                                          pow2_size,
+                                         ANV_BO_ALLOC_LOCAL_MEM |
                                          ANV_BO_ALLOC_MAPPED |
                                          ANV_BO_ALLOC_SNOOPED |
                                          ANV_BO_ALLOC_CAPTURE,
@@ -1414,10 +1418,17 @@ anv_scratch_pool_init(struct anv_device *device, struct anv_scratch_pool *pool)
 void
 anv_scratch_pool_finish(struct anv_device *device, struct anv_scratch_pool *pool)
 {
-   for (unsigned s = 0; s < MESA_SHADER_STAGES; s++) {
+   for (unsigned s = 0; s < ARRAY_SIZE(pool->bos[0]); s++) {
       for (unsigned i = 0; i < 16; i++) {
          if (pool->bos[i][s] != NULL)
             anv_device_release_bo(device, pool->bos[i][s]);
+      }
+   }
+
+   for (unsigned i = 0; i < 16; i++) {
+      if (pool->surf_states[i].map != NULL) {
+         anv_state_pool_free(&device->surface_state_pool,
+                             pool->surf_states[i]);
       }
    }
 }
@@ -1432,89 +1443,25 @@ anv_scratch_pool_alloc(struct anv_device *device, struct anv_scratch_pool *pool,
    unsigned scratch_size_log2 = ffs(per_thread_scratch / 2048);
    assert(scratch_size_log2 < 16);
 
+   assert(stage < ARRAY_SIZE(pool->bos));
+
+   const struct intel_device_info *devinfo = &device->info;
+
+   /* On GFX version 12.5, scratch access changed to a surface-based model.
+    * Instead of each shader type having its own layout based on IDs passed
+    * from the relevant fixed-function unit, all scratch access is based on
+    * thread IDs like it always has been for compute.
+    */
+   if (devinfo->verx10 >= 125)
+      stage = MESA_SHADER_COMPUTE;
+
    struct anv_bo *bo = p_atomic_read(&pool->bos[scratch_size_log2][stage]);
 
    if (bo != NULL)
       return bo;
 
-   const struct gen_device_info *devinfo = &device->info;
-
-   unsigned subslices = MAX2(device->physical->subslice_total, 1);
-
-   /* The documentation for 3DSTATE_PS "Scratch Space Base Pointer" says:
-    *
-    *    "Scratch Space per slice is computed based on 4 sub-slices.  SW
-    *     must allocate scratch space enough so that each slice has 4
-    *     slices allowed."
-    *
-    * According to the other driver team, this applies to compute shaders
-    * as well.  This is not currently documented at all.
-    *
-    * This hack is no longer necessary on Gfx11+.
-    *
-    * For, Gfx11+, scratch space allocation is based on the number of threads
-    * in the base configuration.
-    */
-   if (devinfo->ver == 12)
-      subslices = (devinfo->is_dg1 || devinfo->gt == 2 ? 6 : 2);
-   else if (devinfo->ver == 11)
-      subslices = 8;
-   else if (devinfo->ver >= 9)
-      subslices = 4 * devinfo->num_slices;
-
-   unsigned scratch_ids_per_subslice;
-   if (devinfo->ver >= 12) {
-      /* Same as ICL below, but with 16 EUs. */
-      scratch_ids_per_subslice = 16 * 8;
-   } else if (devinfo->ver == 11) {
-      /* The MEDIA_VFE_STATE docs say:
-       *
-       *    "Starting with this configuration, the Maximum Number of
-       *     Threads must be set to (#EU * 8) for GPGPU dispatches.
-       *
-       *     Although there are only 7 threads per EU in the configuration,
-       *     the FFTID is calculated as if there are 8 threads per EU,
-       *     which in turn requires a larger amount of Scratch Space to be
-       *     allocated by the driver."
-       */
-      scratch_ids_per_subslice = 8 * 8;
-   } else if (devinfo->is_haswell) {
-      /* WaCSScratchSize:hsw
-       *
-       * Haswell's scratch space address calculation appears to be sparse
-       * rather than tightly packed. The Thread ID has bits indicating
-       * which subslice, EU within a subslice, and thread within an EU it
-       * is. There's a maximum of two slices and two subslices, so these
-       * can be stored with a single bit. Even though there are only 10 EUs
-       * per subslice, this is stored in 4 bits, so there's an effective
-       * maximum value of 16 EUs. Similarly, although there are only 7
-       * threads per EU, this is stored in a 3 bit number, giving an
-       * effective maximum value of 8 threads per EU.
-       *
-       * This means that we need to use 16 * 8 instead of 10 * 7 for the
-       * number of threads per subslice.
-       */
-      scratch_ids_per_subslice = 16 * 8;
-   } else if (devinfo->is_cherryview) {
-      /* Cherryview devices have either 6 or 8 EUs per subslice, and each EU
-       * has 7 threads. The 6 EU devices appear to calculate thread IDs as if
-       * it had 8 EUs.
-       */
-      scratch_ids_per_subslice = 8 * 7;
-   } else {
-      scratch_ids_per_subslice = devinfo->max_cs_threads;
-   }
-
-   uint32_t max_threads[] = {
-      [MESA_SHADER_VERTEX]           = devinfo->max_vs_threads,
-      [MESA_SHADER_TESS_CTRL]        = devinfo->max_tcs_threads,
-      [MESA_SHADER_TESS_EVAL]        = devinfo->max_tes_threads,
-      [MESA_SHADER_GEOMETRY]         = devinfo->max_gs_threads,
-      [MESA_SHADER_FRAGMENT]         = devinfo->max_wm_threads,
-      [MESA_SHADER_COMPUTE]          = scratch_ids_per_subslice * subslices,
-   };
-
-   uint32_t size = per_thread_scratch * max_threads[stage];
+   assert(stage < ARRAY_SIZE(devinfo->max_scratch_ids));
+   uint32_t size = per_thread_scratch * devinfo->max_scratch_ids[stage];
 
    /* Even though the Scratch base pointers in 3DSTATE_*S are 64 bits, they
     * are still relative to the general state base address.  When we emit
@@ -1534,7 +1481,8 @@ anv_scratch_pool_alloc(struct anv_device *device, struct anv_scratch_pool *pool,
     * so nothing will ever touch the top page.
     */
    VkResult result = anv_device_alloc_bo(device, "scratch", size,
-                                         ANV_BO_ALLOC_32BIT_ADDRESS,
+                                         ANV_BO_ALLOC_32BIT_ADDRESS |
+                                         ANV_BO_ALLOC_LOCAL_MEM,
                                          0 /* explicit_address */,
                                          &bo);
    if (result != VK_SUCCESS)
@@ -1550,14 +1498,58 @@ anv_scratch_pool_alloc(struct anv_device *device, struct anv_scratch_pool *pool,
    }
 }
 
+uint32_t
+anv_scratch_pool_get_surf(struct anv_device *device,
+                          struct anv_scratch_pool *pool,
+                          unsigned per_thread_scratch)
+{
+   if (per_thread_scratch == 0)
+      return 0;
+
+   unsigned scratch_size_log2 = ffs(per_thread_scratch / 2048);
+   assert(scratch_size_log2 < 16);
+
+   uint32_t surf = p_atomic_read(&pool->surfs[scratch_size_log2]);
+   if (surf > 0)
+      return surf;
+
+   struct anv_bo *bo =
+      anv_scratch_pool_alloc(device, pool, MESA_SHADER_COMPUTE,
+                             per_thread_scratch);
+   struct anv_address addr = { .bo = bo };
+
+   struct anv_state state =
+      anv_state_pool_alloc(&device->surface_state_pool,
+                           device->isl_dev.ss.size, 64);
+
+   isl_buffer_fill_state(&device->isl_dev, state.map,
+                         .address = anv_address_physical(addr),
+                         .size_B = bo->size,
+                         .mocs = anv_mocs(device, bo, 0),
+                         .format = ISL_FORMAT_RAW,
+                         .swizzle = ISL_SWIZZLE_IDENTITY,
+                         .stride_B = per_thread_scratch,
+                         .is_scratch = true);
+
+   uint32_t current = p_atomic_cmpxchg(&pool->surfs[scratch_size_log2],
+                                       0, state.offset);
+   if (current) {
+      anv_state_pool_free(&device->surface_state_pool, state);
+      return current;
+   } else {
+      pool->surf_states[scratch_size_log2] = state;
+      return state.offset;
+   }
+}
+
 VkResult
-anv_bo_cache_init(struct anv_bo_cache *cache)
+anv_bo_cache_init(struct anv_bo_cache *cache, struct anv_device *device)
 {
    util_sparse_array_init(&cache->bo_map, sizeof(struct anv_bo), 1024);
 
    if (pthread_mutex_init(&cache->mutex, NULL)) {
       util_sparse_array_finish(&cache->bo_map);
-      return vk_errorf(NULL, NULL, VK_ERROR_OUT_OF_HOST_MEMORY,
+      return vk_errorf(device, VK_ERROR_OUT_OF_HOST_MEMORY,
                        "pthread_mutex_init failed: %m");
    }
 
@@ -1625,6 +1617,10 @@ anv_device_alloc_bo(struct anv_device *device,
                     uint64_t explicit_address,
                     struct anv_bo **bo_out)
 {
+   if (!(alloc_flags & ANV_BO_ALLOC_LOCAL_MEM))
+      anv_perf_warn(VK_LOG_NO_OBJS(&device->physical->instance->vk.base),
+                                   "system memory used");
+
    if (!device->physical->has_implicit_ccs)
       assert(!(alloc_flags & ANV_BO_ALLOC_IMPLICIT_CCS));
 
@@ -1648,9 +1644,31 @@ anv_device_alloc_bo(struct anv_device *device,
       ccs_size = align_u64(DIV_ROUND_UP(size, INTEL_AUX_MAP_GFX12_CCS_SCALE), 4096);
    }
 
-   uint32_t gem_handle = anv_gem_create(device, size + ccs_size);
+   uint32_t gem_handle;
+
+   /* If we have vram size, we have multiple memory regions and should choose
+    * one of them.
+    */
+   if (device->physical->vram.size > 0) {
+      struct drm_i915_gem_memory_class_instance regions[2];
+      uint32_t nregions = 0;
+
+      if (alloc_flags & ANV_BO_ALLOC_LOCAL_MEM) {
+         /* For vram allocation, still use system memory as a fallback. */
+         regions[nregions++] = device->physical->vram.region;
+         regions[nregions++] = device->physical->sys.region;
+      } else {
+         regions[nregions++] = device->physical->sys.region;
+      }
+
+      gem_handle = anv_gem_create_regions(device, size + ccs_size,
+                                          nregions, regions);
+   } else {
+      gem_handle = anv_gem_create(device, size + ccs_size);
+   }
+
    if (gem_handle == 0)
-      return vk_error(VK_ERROR_OUT_OF_DEVICE_MEMORY);
+      return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
 
    struct anv_bo new_bo = {
       .name = name,
@@ -1670,8 +1688,7 @@ anv_device_alloc_bo(struct anv_device *device,
       new_bo.map = anv_gem_mmap(device, new_bo.gem_handle, 0, size, 0);
       if (new_bo.map == MAP_FAILED) {
          anv_gem_close(device, new_bo.gem_handle);
-         return vk_errorf(device, &device->vk.base,
-                          VK_ERROR_OUT_OF_HOST_MEMORY,
+         return vk_errorf(device, VK_ERROR_OUT_OF_HOST_MEMORY,
                           "mmap failed: %m");
       }
    }
@@ -1706,7 +1723,7 @@ anv_device_alloc_bo(struct anv_device *device,
          if (new_bo.map)
             anv_gem_munmap(device, new_bo.map, size);
          anv_gem_close(device, new_bo.gem_handle);
-         return vk_errorf(device, NULL, VK_ERROR_OUT_OF_DEVICE_MEMORY,
+         return vk_errorf(device, VK_ERROR_OUT_OF_DEVICE_MEMORY,
                           "failed to allocate virtual address for BO");
       }
    } else {
@@ -1756,7 +1773,7 @@ anv_device_import_bo_from_host_ptr(struct anv_device *device,
 
    uint32_t gem_handle = anv_gem_userptr(device, host_ptr, size);
    if (!gem_handle)
-      return vk_error(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+      return vk_error(device, VK_ERROR_INVALID_EXTERNAL_HANDLE);
 
    pthread_mutex_lock(&cache->mutex);
 
@@ -1769,21 +1786,21 @@ anv_device_import_bo_from_host_ptr(struct anv_device *device,
       assert(bo->gem_handle == gem_handle);
       if (bo_flags != bo->flags) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "same host pointer imported two different ways");
       }
 
       if (bo->has_client_visible_address !=
           ((alloc_flags & ANV_BO_ALLOC_CLIENT_VISIBLE_ADDRESS) != 0)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported with and without buffer "
                           "device address");
       }
 
       if (client_address && client_address != intel_48b_address(bo->offset)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported at two different "
                           "addresses");
       }
@@ -1814,7 +1831,7 @@ anv_device_import_bo_from_host_ptr(struct anv_device *device,
          if (new_bo.offset == 0) {
             anv_gem_close(device, new_bo.gem_handle);
             pthread_mutex_unlock(&cache->mutex);
-            return vk_errorf(device, NULL, VK_ERROR_OUT_OF_DEVICE_MEMORY,
+            return vk_errorf(device, VK_ERROR_OUT_OF_DEVICE_MEMORY,
                              "failed to allocate virtual address for BO");
          }
       } else {
@@ -1855,7 +1872,7 @@ anv_device_import_bo(struct anv_device *device,
    uint32_t gem_handle = anv_gem_fd_to_handle(device, fd);
    if (!gem_handle) {
       pthread_mutex_unlock(&cache->mutex);
-      return vk_error(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+      return vk_error(device, VK_ERROR_INVALID_EXTERNAL_HANDLE);
    }
 
    struct anv_bo *bo = anv_device_lookup_bo(device, gem_handle);
@@ -1880,7 +1897,7 @@ anv_device_import_bo(struct anv_device *device,
       if ((bo->flags & EXEC_OBJECT_PINNED) !=
           (bo_flags & EXEC_OBJECT_PINNED)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported two different ways");
       }
 
@@ -1895,21 +1912,21 @@ anv_device_import_bo(struct anv_device *device,
           (bo->flags & EXEC_OBJECT_SUPPORTS_48B_ADDRESS) !=
           (bo_flags & EXEC_OBJECT_SUPPORTS_48B_ADDRESS)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported on two different heaps");
       }
 
       if (bo->has_client_visible_address !=
           ((alloc_flags & ANV_BO_ALLOC_CLIENT_VISIBLE_ADDRESS) != 0)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported with and without buffer "
                           "device address");
       }
 
       if (client_address && client_address != intel_48b_address(bo->offset)) {
          pthread_mutex_unlock(&cache->mutex);
-         return vk_errorf(device, NULL, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+         return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
                           "The same BO was imported at two different "
                           "addresses");
       }
@@ -1922,7 +1939,7 @@ anv_device_import_bo(struct anv_device *device,
       if (size == (off_t)-1) {
          anv_gem_close(device, gem_handle);
          pthread_mutex_unlock(&cache->mutex);
-         return vk_error(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+         return vk_error(device, VK_ERROR_INVALID_EXTERNAL_HANDLE);
       }
 
       struct anv_bo new_bo = {
@@ -1947,7 +1964,7 @@ anv_device_import_bo(struct anv_device *device,
          if (new_bo.offset == 0) {
             anv_gem_close(device, new_bo.gem_handle);
             pthread_mutex_unlock(&cache->mutex);
-            return vk_errorf(device, NULL, VK_ERROR_OUT_OF_DEVICE_MEMORY,
+            return vk_errorf(device, VK_ERROR_OUT_OF_DEVICE_MEMORY,
                              "failed to allocate virtual address for BO");
          }
       } else {
@@ -1977,7 +1994,7 @@ anv_device_export_bo(struct anv_device *device,
 
    int fd = anv_gem_handle_to_fd(device, bo->gem_handle);
    if (fd < 0)
-      return vk_error(VK_ERROR_TOO_MANY_OBJECTS);
+      return vk_error(device, VK_ERROR_TOO_MANY_OBJECTS);
 
    *fd_out = fd;
 

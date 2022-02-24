@@ -73,12 +73,8 @@ static GLbitfield64
 brw_vs_outputs_written(struct brw_context *brw, struct brw_vs_prog_key *key,
                        GLbitfield64 user_varyings)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    GLbitfield64 outputs_written = user_varyings;
-
-   if (key->copy_edgeflag) {
-      outputs_written |= BITFIELD64_BIT(VARYING_SLOT_EDGE);
-   }
 
    if (devinfo->ver < 6) {
       /* Put dummy slots into the VUE for the SF to put the replaced
@@ -117,7 +113,7 @@ brw_codegen_vs_prog(struct brw_context *brw,
                     struct brw_vs_prog_key *key)
 {
    const struct brw_compiler *compiler = brw->screen->compiler;
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    const GLuint *program;
    struct brw_vs_prog_data prog_data;
    struct brw_stage_prog_data *stage_prog_data = &prog_data.base.base;
@@ -128,7 +124,7 @@ brw_codegen_vs_prog(struct brw_context *brw,
    memset(&prog_data, 0, sizeof(prog_data));
 
    /* Use ALT floating point mode for ARB programs so that 0^0 == 1. */
-   if (vp->program.is_arb_asm)
+   if (vp->program.info.is_arb_asm)
       stage_prog_data->use_alt_mode = true;
 
    mem_ctx = ralloc_context(NULL);
@@ -138,12 +134,14 @@ brw_codegen_vs_prog(struct brw_context *brw,
    brw_assign_common_binding_table_offsets(devinfo, &vp->program,
                                            &prog_data.base.base, 0);
 
-   if (!vp->program.is_arb_asm) {
+   if (!vp->program.info.is_arb_asm) {
       brw_nir_setup_glsl_uniforms(mem_ctx, nir, &vp->program,
                                   &prog_data.base.base,
                                   compiler->scalar_stage[MESA_SHADER_VERTEX]);
-      brw_nir_analyze_ubo_ranges(compiler, nir, key,
-                                 prog_data.base.base.ubo_ranges);
+      if (brw->can_push_ubos) {
+         brw_nir_analyze_ubo_ranges(compiler, nir, key,
+                                    prog_data.base.base.ubo_ranges);
+      }
    } else {
       brw_nir_setup_arb_uniforms(mem_ctx, nir, &vp->program,
                                  &prog_data.base.base);
@@ -153,6 +151,9 @@ brw_codegen_vs_prog(struct brw_context *brw,
       brw_nir_lower_legacy_clipping(nir, key->nr_userclip_plane_consts,
                                     &prog_data.base.base);
    }
+
+   if (key->copy_edgeflag)
+      nir_lower_passthrough_edgeflags(nir);
 
    uint64_t outputs_written =
       brw_vs_outputs_written(brw, key, nir->info.outputs_written);
@@ -171,8 +172,8 @@ brw_codegen_vs_prog(struct brw_context *brw,
       start_time = get_time();
    }
 
-   if (INTEL_DEBUG & DEBUG_VS) {
-      if (vp->program.is_arb_asm)
+   if (INTEL_DEBUG(DEBUG_VS)) {
+      if (vp->program.info.is_arb_asm)
          brw_dump_arb_asm("vertex", &vp->program);
    }
 
@@ -186,16 +187,16 @@ brw_codegen_vs_prog(struct brw_context *brw,
       .log_data = brw,
    };
 
-   if (INTEL_DEBUG & DEBUG_SHADER_TIME) {
+   if (INTEL_DEBUG(DEBUG_SHADER_TIME)) {
       params.shader_time = true;
       params.shader_time_index =
          brw_get_shader_time_index(brw, &vp->program, ST_VS,
-                                   !vp->program.is_arb_asm);
+                                   !vp->program.info.is_arb_asm);
    }
 
    program = brw_compile_vs(compiler, mem_ctx, &params);
    if (program == NULL) {
-      if (!vp->program.is_arb_asm) {
+      if (!vp->program.info.is_arb_asm) {
          vp->program.sh.data->LinkStatus = LINKING_FAILURE;
          ralloc_strcat(&vp->program.sh.data->InfoLog, params.error_str);
       }
@@ -257,7 +258,7 @@ brw_vs_populate_key(struct brw_context *brw,
    /* BRW_NEW_VERTEX_PROGRAM */
    struct gl_program *prog = brw->programs[MESA_SHADER_VERTEX];
    struct brw_program *vp = (struct brw_program *) prog;
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    memset(key, 0, sizeof(*key));
 
@@ -294,7 +295,7 @@ brw_vs_populate_key(struct brw_context *brw,
    }
 
    /* BRW_NEW_VS_ATTRIB_WORKAROUNDS */
-   if (devinfo->ver < 8 && !devinfo->is_haswell) {
+   if (devinfo->verx10 <= 70) {
       memcpy(key->gl_attrib_wa_flags, brw->vb.attrib_wa_flags,
              sizeof(brw->vb.attrib_wa_flags));
    }
@@ -333,7 +334,7 @@ brw_vs_populate_default_key(const struct brw_compiler *compiler,
                             struct brw_vs_prog_key *key,
                             struct gl_program *prog)
 {
-   const struct gen_device_info *devinfo = compiler->devinfo;
+   const struct intel_device_info *devinfo = compiler->devinfo;
    struct brw_program *bvp = brw_program(prog);
 
    memset(key, 0, sizeof(*key));

@@ -49,7 +49,7 @@
 void
 brw_enable_obj_preemption(struct brw_context *brw, bool enable)
 {
-   ASSERTED const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   ASSERTED const struct intel_device_info *devinfo = &brw->screen->devinfo;
    assert(devinfo->ver >= 9);
 
    if (enable == brw->object_preemption)
@@ -71,7 +71,7 @@ brw_enable_obj_preemption(struct brw_context *brw, bool enable)
 static void
 brw_upload_gfx11_slice_hashing_state(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    int subslices_delta =
       devinfo->ppipe_subslices[0] - devinfo->ppipe_subslices[1];
    if (subslices_delta == 0)
@@ -151,7 +151,7 @@ brw_upload_gfx11_slice_hashing_state(struct brw_context *brw)
 static void
 brw_upload_initial_gpu_state(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    const struct brw_compiler *compiler = brw->screen->compiler;
 
    /* On platforms with hardware contexts, we can set our initial GPU state
@@ -302,7 +302,7 @@ brw_copy_pipeline_atoms(struct brw_context *brw,
 void brw_init_state( struct brw_context *brw )
 {
    struct gl_context *ctx = &brw->ctx;
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    /* Force the first brw_select_pipeline to emit pipeline select */
    brw->last_pipeline = BRW_NUM_PIPELINES;
@@ -353,7 +353,7 @@ void brw_init_state( struct brw_context *brw )
    ctx->DriverFlags.NewTextureBuffer = BRW_NEW_TEXTURE_BUFFER;
    ctx->DriverFlags.NewAtomicBuffer = BRW_NEW_UNIFORM_BUFFER;
    ctx->DriverFlags.NewImageUnits = BRW_NEW_IMAGE_UNITS;
-   ctx->DriverFlags.NewDefaultTessLevels = BRW_NEW_DEFAULT_TESS_LEVELS;
+   ctx->DriverFlags.NewTessState = BRW_NEW_DEFAULT_TESS_LEVELS;
    ctx->DriverFlags.NewIntelConservativeRasterization = BRW_NEW_CONSERVATIVE_RASTERIZATION;
 }
 
@@ -527,7 +527,7 @@ brw_upload_programs(struct brw_context *brw,
                     enum brw_pipeline pipeline)
 {
    struct gl_context *ctx = &brw->ctx;
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    if (pipeline == BRW_RENDER_PIPELINE) {
       brw_upload_vs_prog(brw);
@@ -606,7 +606,7 @@ static inline void
 brw_upload_pipeline_state(struct brw_context *brw,
                           enum brw_pipeline pipeline)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    int i;
    static int dirty_count = 0;
@@ -619,7 +619,7 @@ brw_upload_pipeline_state(struct brw_context *brw,
    if (pipeline == BRW_RENDER_PIPELINE && brw->current_hash_scale != 1)
       brw_emit_hashing_mode(brw, UINT_MAX, UINT_MAX, 1);
 
-   if (INTEL_DEBUG & DEBUG_REEMIT) {
+   if (INTEL_DEBUG(DEBUG_REEMIT)) {
       /* Always re-emit all state. */
       brw->NewGLState = ~0;
       ctx->NewDriverState = ~0ull;
@@ -689,7 +689,7 @@ brw_upload_pipeline_state(struct brw_context *brw,
       brw_get_pipeline_atoms(brw, pipeline);
    const int num_atoms = brw->num_atoms[pipeline];
 
-   if (INTEL_DEBUG) {
+   if (INTEL_DEBUG(DEBUG_ANY)) {
       /* Debug version which enforces various sanity checks on the
        * state flags which are generated and checked to help ensure
        * state atoms are ordered correctly in the list.
@@ -723,7 +723,7 @@ brw_upload_pipeline_state(struct brw_context *brw,
       }
    }
 
-   if (INTEL_DEBUG & DEBUG_STATE) {
+   if (INTEL_DEBUG(DEBUG_STATE)) {
       STATIC_ASSERT(ARRAY_SIZE(brw_bits) == BRW_NUM_STATE_BITS + 1);
 
       brw_update_dirty_count(mesa_bits, state.mesa);

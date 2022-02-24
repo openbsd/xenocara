@@ -1125,7 +1125,7 @@ vc4_get_shadow_index_buffer(struct pipe_context *pctx,
         }
 
         if (src_transfer)
-                pctx->transfer_unmap(pctx, src_transfer);
+                pctx->buffer_unmap(pctx, src_transfer);
 
         return shadow_rsc;
 }
@@ -1147,7 +1147,6 @@ vc4_resource_screen_init(struct pipe_screen *pscreen)
         pscreen->resource_create_with_modifiers =
                 vc4_resource_create_with_modifiers;
         pscreen->resource_from_handle = vc4_resource_from_handle;
-        pscreen->resource_destroy = u_resource_destroy_vtbl;
         pscreen->resource_get_handle = vc4_resource_get_handle;
         pscreen->resource_get_param = vc4_resource_get_param;
         pscreen->resource_destroy = vc4_resource_destroy;
@@ -1170,9 +1169,11 @@ vc4_resource_screen_init(struct pipe_screen *pscreen)
 void
 vc4_resource_context_init(struct pipe_context *pctx)
 {
-        pctx->transfer_map = u_transfer_helper_transfer_map;
+        pctx->buffer_map = u_transfer_helper_transfer_map;
+        pctx->texture_map = u_transfer_helper_transfer_map;
         pctx->transfer_flush_region = u_transfer_helper_transfer_flush_region;
-        pctx->transfer_unmap = u_transfer_helper_transfer_unmap;
+        pctx->buffer_unmap = u_transfer_helper_transfer_unmap;
+        pctx->texture_unmap = u_transfer_helper_transfer_unmap;
         pctx->buffer_subdata = u_default_buffer_subdata;
         pctx->texture_subdata = vc4_texture_subdata;
         pctx->create_surface = vc4_create_surface;

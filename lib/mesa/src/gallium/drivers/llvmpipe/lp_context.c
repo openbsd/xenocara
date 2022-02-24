@@ -179,11 +179,12 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
 {
    struct llvmpipe_context *llvmpipe;
 
+   if (!llvmpipe_screen_late_init(llvmpipe_screen(screen)))
+      return NULL;
+
    llvmpipe = align_malloc(sizeof(struct llvmpipe_context), 16);
    if (!llvmpipe)
       return NULL;
-
-   util_init_math();
 
    memset(llvmpipe, 0, sizeof *llvmpipe);
 
@@ -282,6 +283,9 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
    draw_enable_point_sprites(llvmpipe->draw, FALSE);
    draw_wide_point_threshold(llvmpipe->draw, 10000.0);
    draw_wide_line_threshold(llvmpipe->draw, 10000.0);
+
+   /* initial state for clipping - enabled, with no guardband */
+   draw_set_driver_clipping(llvmpipe->draw, FALSE, FALSE, FALSE, TRUE);
 
    lp_reset_counters();
 

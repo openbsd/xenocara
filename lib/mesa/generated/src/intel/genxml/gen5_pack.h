@@ -2544,8 +2544,7 @@ struct GFX5_MI_STORE_DATA_IMM {
    uint32_t                             CommandType;
    __gen_address_type                   PhysicalStartAddressExtension;
    __gen_address_type                   Address;
-   uint32_t                             DataDWord0;
-   uint32_t                             DataDWord1;
+   uint64_t                             ImmediateData;
 };
 
 static inline __attribute__((always_inline)) void
@@ -2565,11 +2564,10 @@ GFX5_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[2] = __gen_address(data, &dw[2], values->Address, 0, 2, 31);
 
-   dw[3] =
-      __gen_uint(values->DataDWord0, 0, 31);
-
-   dw[4] =
-      __gen_uint(values->DataDWord1, 0, 31);
+   const uint64_t v3 =
+      __gen_uint(values->ImmediateData, 0, 63);
+   dw[3] = v3;
+   dw[4] = v3 >> 32;
 }
 
 #define GFX5_MI_STORE_REGISTER_MEM_length      3
@@ -2879,6 +2877,191 @@ GFX5_URB_FENCE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SFFence, 0, 9) |
       __gen_uint(values->VFEFence, 10, 19) |
       __gen_uint(values->CSFence, 20, 30);
+}
+
+#define GFX5_XY_COLOR_BLT_length               6
+#define GFX5_XY_COLOR_BLT_length_bias          2
+#define GFX5_XY_COLOR_BLT_header                \
+   .DWordLength                         =      4,  \
+   ._2DCommandOpcode                    =     80,  \
+   .CommandType                         =      2
+
+struct GFX5_XY_COLOR_BLT {
+   uint32_t                             DWordLength;
+   bool                                 TilingEnable;
+   uint32_t                             _32bppByteMask;
+   uint32_t                             _2DCommandOpcode;
+   uint32_t                             CommandType;
+   int32_t                              DestinationPitch;
+   uint32_t                             RasterOperation;
+   uint32_t                             ColorDepth;
+#define COLOR_DEPTH__8bit                        0
+#define COLOR_DEPTH__565                         1
+#define COLOR_DEPTH__1555                        2
+#define COLOR_DEPTH__32bit                       3
+   bool                                 ClippingEnabled;
+   int32_t                              DestinationX1Coordinate;
+   int32_t                              DestinationY1Coordinate;
+   int32_t                              DestinationX2Coordinate;
+   int32_t                              DestinationY2Coordinate;
+   __gen_address_type                   DestinationBaseAddress;
+   int32_t                              SolidPatternColor;
+};
+
+static inline __attribute__((always_inline)) void
+GFX5_XY_COLOR_BLT_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX5_XY_COLOR_BLT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->TilingEnable, 11, 11) |
+      __gen_uint(values->_32bppByteMask, 20, 21) |
+      __gen_uint(values->_2DCommandOpcode, 22, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sint(values->DestinationPitch, 0, 15) |
+      __gen_uint(values->RasterOperation, 16, 23) |
+      __gen_uint(values->ColorDepth, 24, 26) |
+      __gen_uint(values->ClippingEnabled, 30, 30);
+
+   dw[2] =
+      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+
+   dw[3] =
+      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY2Coordinate, 16, 31);
+
+   dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
+
+   dw[5] =
+      __gen_sint(values->SolidPatternColor, 0, 31);
+}
+
+#define GFX5_XY_SRC_COPY_BLT_length            8
+#define GFX5_XY_SRC_COPY_BLT_length_bias       2
+#define GFX5_XY_SRC_COPY_BLT_header             \
+   .DWordLength                         =      6,  \
+   ._2DCommandOpcode                    =     83,  \
+   .CommandType                         =      2
+
+struct GFX5_XY_SRC_COPY_BLT {
+   uint32_t                             DWordLength;
+   bool                                 DestinationTilingEnable;
+   bool                                 SourceTilingEnable;
+   uint32_t                             _32bppByteMask;
+   uint32_t                             _2DCommandOpcode;
+   uint32_t                             CommandType;
+   int32_t                              DestinationPitch;
+   uint32_t                             RasterOperation;
+   uint32_t                             ColorDepth;
+#define COLOR_DEPTH__8bit                        0
+#define COLOR_DEPTH__565                         1
+#define COLOR_DEPTH__1555                        2
+#define COLOR_DEPTH__32bit                       3
+   bool                                 ClippingEnabled;
+   int32_t                              DestinationX1Coordinate;
+   int32_t                              DestinationY1Coordinate;
+   int32_t                              DestinationX2Coordinate;
+   int32_t                              DestinationY2Coordinate;
+   __gen_address_type                   DestinationBaseAddress;
+   int32_t                              SourceX1Coordinate;
+   int32_t                              SourceY1Coordinate;
+   int32_t                              SourcePitch;
+   __gen_address_type                   SourceBaseAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX5_XY_SRC_COPY_BLT_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX5_XY_SRC_COPY_BLT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->DestinationTilingEnable, 11, 11) |
+      __gen_uint(values->SourceTilingEnable, 15, 15) |
+      __gen_uint(values->_32bppByteMask, 20, 21) |
+      __gen_uint(values->_2DCommandOpcode, 22, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sint(values->DestinationPitch, 0, 15) |
+      __gen_uint(values->RasterOperation, 16, 23) |
+      __gen_uint(values->ColorDepth, 24, 26) |
+      __gen_uint(values->ClippingEnabled, 30, 30);
+
+   dw[2] =
+      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+
+   dw[3] =
+      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY2Coordinate, 16, 31);
+
+   dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
+
+   dw[5] =
+      __gen_sint(values->SourceX1Coordinate, 0, 15) |
+      __gen_sint(values->SourceY1Coordinate, 16, 31);
+
+   dw[6] =
+      __gen_sint(values->SourcePitch, 0, 15);
+
+   dw[7] = __gen_address(data, &dw[7], values->SourceBaseAddress, 0, 0, 31);
+}
+
+#define GFX5_XY_TEXT_IMMEDIATE_BLT_length      3
+#define GFX5_XY_TEXT_IMMEDIATE_BLT_length_bias      2
+#define GFX5_XY_TEXT_IMMEDIATE_BLT_header       \
+   .DWordLength                         =      1,  \
+   ._2DCommandOpcode                    =     49,  \
+   .CommandType                         =      2
+
+struct GFX5_XY_TEXT_IMMEDIATE_BLT {
+   uint32_t                             DWordLength;
+   bool                                 TilingEnable;
+   uint32_t                             Packing;
+#define BitPacked                                0
+#define BytePacked                               1
+   uint32_t                             _32bppByteMask;
+   uint32_t                             _2DCommandOpcode;
+   uint32_t                             CommandType;
+   int32_t                              DestinationPitch;
+   int32_t                              DestinationX1Coordinate;
+   int32_t                              DestinationY1Coordinate;
+   int32_t                              DestinationX2Coordinate;
+   int32_t                              DestinationY2Coordinate;
+};
+
+static inline __attribute__((always_inline)) void
+GFX5_XY_TEXT_IMMEDIATE_BLT_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX5_XY_TEXT_IMMEDIATE_BLT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->TilingEnable, 11, 11) |
+      __gen_uint(values->Packing, 16, 16) |
+      __gen_uint(values->_32bppByteMask, 20, 21) |
+      __gen_uint(values->_2DCommandOpcode, 22, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sint(values->DestinationPitch, 0, 15) |
+      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+
+   dw[2] =
+      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
+      __gen_sint(values->DestinationY2Coordinate, 16, 31);
 }
 
 #endif /* GFX5_PACK_H */

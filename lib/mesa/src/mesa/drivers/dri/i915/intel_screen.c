@@ -40,6 +40,7 @@
 #include "swrast/s_renderbuffer.h"
 
 #include "utils.h"
+#include "util/debug.h"
 #include "util/driconf.h"
 #include "util/u_memory.h"
 
@@ -153,16 +154,21 @@ static const __DRItexBufferExtension intelTexBufferExtension = {
 };
 
 static void
-intelDRI2Flush(__DRIdrawable *drawable)
+intelDRI2FlushWithFlags(__DRIcontext *context,
+                        __DRIdrawable *drawable,
+                        unsigned flags,
+                        enum __DRI2throttleReason reason)
 {
-   GET_CURRENT_CONTEXT(ctx);
-   struct intel_context *intel = intel_context(ctx);
+   struct intel_context *intel = context->driverPrivate;
    if (intel == NULL)
       return;
+   struct gl_context *ctx = &intel->ctx;
 
    INTEL_FIREVERTICES(intel);
 
-   intel->need_throttle = true;
+   if (reason == __DRI2_THROTTLE_SWAPBUFFER ||
+       reason == __DRI2_THROTTLE_FLUSHFRONT)
+      intel->need_throttle = true;
 
    if (intel->batch.used)
       intel_batchbuffer_flush(intel);
@@ -172,11 +178,20 @@ intelDRI2Flush(__DRIdrawable *drawable)
    }
 }
 
+static void
+intelDRI2Flush(__DRIdrawable *drawable)
+{
+   intelDRI2FlushWithFlags(drawable->driContextPriv, drawable,
+                           __DRI2_FLUSH_DRAWABLE,
+                           __DRI2_THROTTLE_SWAPBUFFER);
+}
+
 static const struct __DRI2flushExtensionRec intelFlushExtension = {
-    .base = { __DRI2_FLUSH, 3 },
+    .base = { __DRI2_FLUSH, 4 },
 
     .flush              = intelDRI2Flush,
     .invalidate         = dri2InvalidateDrawable,
+    .flush_with_flags   = intelDRI2FlushWithFlags,
 };
 
 static struct intel_image_format intel_image_formats[] = {
@@ -495,7 +510,10 @@ intel_query_image(__DRIimage *image, int attrib, int *value)
       return true;
    case __DRI_IMAGE_ATTRIB_FD:
       return !drm_intel_bo_gem_export_to_prime(image->region->bo, value);
-  default:
+   case __DRI_IMAGE_ATTRIB_OFFSET:
+      *value = image->offset;
+      return true;
+   default:
       return false;
    }
 }
@@ -1002,7 +1020,7 @@ intel_init_bufmgr(struct intel_screen *intelScreen)
 {
    __DRIscreen *spriv = intelScreen->driScrnPriv;
 
-   intelScreen->no_hw = getenv("INTEL_NO_HW") != NULL;
+   intelScreen->no_hw = env_var_as_boolean("INTEL_NO_HW", false);
 
    intelScreen->bufmgr = intel_bufmgr_gem_init(spriv->fd, BATCH_SZ);
    if (intelScreen->bufmgr == NULL) {
@@ -1266,6 +1284,13 @@ static const __DRIextension *i915_driver_extensions[] = {
 };
 
 PUBLIC const __DRIextension **__driDriverGetExtensions_i915(void)
+{
+   globalDriverAPI = &i915_driver_api;
+
+   return i915_driver_extensions;
+}
+
+PUBLIC const __DRIextension **__driDriverGetExtensions_i830(void)
 {
    globalDriverAPI = &i915_driver_api;
 

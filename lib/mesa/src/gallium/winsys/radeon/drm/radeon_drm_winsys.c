@@ -314,13 +314,14 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
    }
 
    /* Check for UVD and VCE */
-   ws->info.has_hw_decode = false;
+   ws->info.has_video_hw.uvd_decode = false;
+   ws->info.has_video_hw.vce_encode = false;
    ws->info.vce_fw_version = 0x00000000;
    if (ws->info.drm_minor >= 32) {
       uint32_t value = RADEON_CS_RING_UVD;
       if (radeon_get_drm_value(ws->fd, RADEON_INFO_RING_WORKING,
                                "UVD Ring working", &value)) {
-         ws->info.has_hw_decode = value;
+         ws->info.has_video_hw.uvd_decode = value;
          ws->info.num_rings[RING_UVD] = 1;
       }
 
@@ -332,6 +333,7 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
                                   "VCE FW version", &value)) {
             ws->info.vce_fw_version = value;
             ws->info.num_rings[RING_VCE] = 1;
+            ws->info.has_video_hw.vce_encode = true;
          }
       }
    }
@@ -605,8 +607,6 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
    ws->info.max_wave64_per_simd = 10;
    ws->info.num_physical_sgprs_per_simd = 512;
    ws->info.num_physical_wave64_vgprs_per_simd = 256;
-   /* Potential hang on Kabini: */
-   ws->info.use_late_alloc = ws->info.family != CHIP_KABINI;
    ws->info.has_3d_cube_border_color_mipmap = true;
 
    ws->check_vm = strstr(debug_get_option("R600_DEBUG", ""), "check_vm") != NULL ||
@@ -938,7 +938,7 @@ radeon_drm_winsys_create(int fd, const struct pipe_screen_config *config,
    ws->info.pte_fragment_size = 64 * 1024; /* GPUVM page size */
 
    if (ws->num_cpus > 1 && debug_get_option_thread())
-      util_queue_init(&ws->cs_queue, "rcs", 8, 1, 0);
+      util_queue_init(&ws->cs_queue, "rcs", 8, 1, 0, NULL);
 
    /* Create the screen at the end. The winsys must be initialized
     * completely.

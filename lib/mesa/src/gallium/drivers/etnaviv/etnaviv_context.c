@@ -129,6 +129,9 @@ etna_context_destroy(struct pipe_context *pctx)
       _mesa_set_destroy(ctx->used_resources_write, NULL);
 
    }
+   if (ctx->flush_resources)
+      _mesa_set_destroy(ctx->flush_resources, NULL);
+
    mtx_unlock(&ctx->lock);
 
    if (ctx->dummy_desc_bo)
@@ -138,9 +141,6 @@ etna_context_destroy(struct pipe_context *pctx)
       etna_bo_del(ctx->dummy_rt);
 
    util_copy_framebuffer_state(&ctx->framebuffer_s, NULL);
-
-   if (ctx->primconvert)
-      util_primconvert_destroy(ctx->primconvert);
 
    if (ctx->blitter)
       util_blitter_destroy(ctx->blitter);
@@ -225,12 +225,13 @@ etna_get_fs(struct etna_context *ctx, struct etna_shader_key key)
 
 static void
 etna_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
+              unsigned drawid_offset,
               const struct pipe_draw_indirect_info *indirect,
-              const struct pipe_draw_start_count *draws,
+              const struct pipe_draw_start_count_bias *draws,
               unsigned num_draws)
 {
    if (num_draws > 1) {
-      util_draw_multi(pctx, info, indirect, draws, num_draws);
+      util_draw_multi(pctx, info, drawid_offset, indirect, draws, num_draws);
       return;
    }
 
@@ -250,13 +251,6 @@ etna_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
 
    if (ctx->vertex_elements == NULL || ctx->vertex_elements->num_elements == 0)
       return; /* Nothing to do */
-
-   if (!(ctx->prim_hwsupport & (1 << info->mode))) {
-      struct primconvert_context *primconvert = ctx->primconvert;
-      util_primconvert_save_rasterizer_state(primconvert, ctx->rasterizer);
-      util_primconvert_draw_vbo(primconvert, info, indirect, draws, num_draws);
-      return;
-   }
 
    int prims = u_decomposed_prims_for_vertices(info->mode, draws[0].count);
    if (unlikely(prims <= 0)) {
@@ -381,10 +375,10 @@ etna_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
    if (screen->specs.halti >= 2) {
       /* On HALTI2+ (GC3000 and higher) only use instanced drawing commands, as the blob does */
       etna_draw_instanced(ctx->stream, info->index_size, draw_mode, info->instance_count,
-         draws[0].count, info->index_size ? info->index_bias : draws[0].start);
+         draws[0].count, info->index_size ? draws->index_bias : draws[0].start);
    } else {
       if (info->index_size)
-         etna_draw_indexed_primitives(ctx->stream, draw_mode, 0, prims, info->index_bias);
+         etna_draw_indexed_primitives(ctx->stream, draw_mode, 0, prims, draws->index_bias);
       else
          etna_draw_primitives(ctx->stream, draw_mode, draws[0].start, prims);
    }
@@ -413,6 +407,7 @@ etna_reset_gpu_state(struct etna_context *ctx)
 {
    struct etna_cmd_stream *stream = ctx->stream;
    struct etna_screen *screen = ctx->screen;
+   uint32_t dummy_attribs[VIVS_NFE_GENERIC_ATTRIB__LEN] = { 0 };
 
    etna_set_state(stream, VIVS_GL_API_MODE, VIVS_GL_API_MODE_OPENGL);
    etna_set_state(stream, VIVS_GL_VERTEX_ELEMENT_CONFIG, 0x00000001);
@@ -473,6 +468,20 @@ etna_reset_gpu_state(struct etna_context *ctx)
             VIVS_VS_ICACHE_INVALIDATE_UNK4);
    }
 
+   /* It seems that some GPUs (at least some GC400 have shown this behavior)
+    * come out of reset with random vertex attributes enabled and also don't
+    * disable them on the write to the first config register as normal. Enabling
+    * all attributes seems to provide the GPU with the required edge to actually
+    * disable the unused attributes on the next draw.
+    */
+   if (screen->specs.halti >= 5) {
+      etna_set_state_multi(stream, VIVS_NFE_GENERIC_ATTRIB_CONFIG0(0),
+                           VIVS_NFE_GENERIC_ATTRIB__LEN, dummy_attribs);
+   } else {
+      etna_set_state_multi(stream, VIVS_FE_VERTEX_ELEMENT_CONFIG(0),
+                           screen->specs.halti >= 0 ? 16 : 12, dummy_attribs);
+   }
+
    ctx->dirty = ~0L;
    ctx->dirty_sampler_views = ~0L;
 }
@@ -488,6 +497,14 @@ etna_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
 
    list_for_each_entry(struct etna_acc_query, aq, &ctx->active_acc_queries, node)
       etna_acc_query_suspend(aq, ctx);
+
+   /* flush all resources that need an implicit flush */
+   set_foreach(ctx->flush_resources, entry) {
+      struct pipe_resource *prsc = (struct pipe_resource *)entry->key;
+
+      pctx->flush_resource(pctx, prsc);
+   }
+   _mesa_set_clear(ctx->flush_resources, NULL);
 
    etna_cmd_stream_flush(ctx->stream, ctx->in_fence_fd,
                           (flags & PIPE_FLUSH_FENCE_FD) ? &out_fence_fd : NULL);
@@ -595,6 +612,11 @@ etna_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
    if (!ctx->used_resources_write)
       goto fail;
 
+   ctx->flush_resources = _mesa_set_create(NULL, _mesa_hash_pointer,
+                                           _mesa_key_pointer_equal);
+   if (!ctx->flush_resources)
+      goto fail;
+
    mtx_init(&ctx->lock, mtx_recursive);
 
    /* context ctxate setup */
@@ -630,27 +652,6 @@ etna_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
 
    ctx->blitter = util_blitter_create(pctx);
    if (!ctx->blitter)
-      goto fail;
-
-   /* Generate the bitmask of supported draw primitives. */
-   ctx->prim_hwsupport = 1 << PIPE_PRIM_POINTS |
-                         1 << PIPE_PRIM_LINES |
-                         1 << PIPE_PRIM_LINE_STRIP |
-                         1 << PIPE_PRIM_TRIANGLES |
-                         1 << PIPE_PRIM_TRIANGLE_FAN;
-
-   /* TODO: The bug relates only to indexed draws, but here we signal
-    * that there is no support for triangle strips at all. This should
-    * be refined.
-    */
-   if (VIV_FEATURE(ctx->screen, chipMinorFeatures2, BUG_FIXES8))
-      ctx->prim_hwsupport |= 1 << PIPE_PRIM_TRIANGLE_STRIP;
-
-   if (VIV_FEATURE(ctx->screen, chipMinorFeatures2, LINE_LOOP))
-      ctx->prim_hwsupport |= 1 << PIPE_PRIM_LINE_LOOP;
-
-   ctx->primconvert = util_primconvert_create(pctx, ctx->prim_hwsupport);
-   if (!ctx->primconvert)
       goto fail;
 
    slab_create_child(&ctx->transfer_pool, &screen->transfer_pool);

@@ -32,6 +32,8 @@
 #include <stdarg.h>
 #include "c99_compat.h"
 #include "c11/threads.h"
+#include "util/u_thread.h"
+#include "util/u_string.h"
 
 #include "egllog.h"
 #include "eglcurrent.h"
@@ -45,8 +47,7 @@ static tss_t _egl_TSD;
 static void _eglDestroyThreadInfo(_EGLThreadInfo *t);
 
 #ifdef USE_ELF_TLS
-static __thread const _EGLThreadInfo *_egl_TLS
-   __attribute__ ((tls_model("initial-exec")));
+static __THREAD_INITIAL_EXEC const _EGLThreadInfo *_egl_TLS;
 #endif
 
 static inline void _eglSetTSD(const _EGLThreadInfo *t)
@@ -130,8 +131,14 @@ _eglCreateThreadInfo(void)
 static void
 _eglDestroyThreadInfo(_EGLThreadInfo *t)
 {
-   if (t != &dummy_thread)
+   if (t != &dummy_thread) {
       free(t);
+#ifdef USE_ELF_TLS
+      /* Reset the TLS also here, otherwise
+       * it will be having a dangling pointer */
+      _egl_TLS = NULL;
+#endif
+   }
 }
 
 

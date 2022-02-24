@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -106,6 +106,12 @@ SLIBS+= libamdgpuwinsys \
 	libaddrlib \
 	libamd_common \
 	libamd_common_llvm \
+	libradeonsi_gfx6 \
+	libradeonsi_gfx7 \
+	libradeonsi_gfx8 \
+	libradeonsi_gfx9 \
+	libradeonsi_gfx10 \
+	libradeonsi_gfx103 \
 	libradeonsi
 .endif
 

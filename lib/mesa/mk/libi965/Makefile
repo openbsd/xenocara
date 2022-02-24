@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
 
 LIB=	i965
 
@@ -25,7 +25,6 @@ SRCS=	brw_batch.c \
 	brw_extensions.c \
 	brw_fbo.c \
 	brw_ff_gs.c \
-	brw_ff_gs_emit.c \
 	brw_formatquery.c \
 	brw_generate_mipmap.c \
 	brw_gs.c \

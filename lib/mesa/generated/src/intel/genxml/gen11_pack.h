@@ -1510,13 +1510,13 @@ struct GFX11_RENDER_SURFACE_STATE {
 #define XMAJOR                                   2
 #define YMAJOR                                   3
    uint32_t                             SurfaceHorizontalAlignment;
-#define HALIGN4                                  1
-#define HALIGN8                                  2
-#define HALIGN16                                 3
+#define HALIGN_4                                 1
+#define HALIGN_8                                 2
+#define HALIGN_16                                3
    uint32_t                             SurfaceVerticalAlignment;
-#define VALIGN4                                  1
-#define VALIGN8                                  2
-#define VALIGN16                                 3
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
    uint32_t                             SurfaceFormat;
    bool                                 SurfaceArray;
    uint32_t                             SurfaceType;
@@ -1854,19 +1854,20 @@ struct GFX11_SAMPLER_STATE {
    uint32_t                             TextureBorderColorMode;
 #define DX10OGL                                  0
 #define DX9                                      1
+   bool                                 CPSLODCompensationEnable;
    bool                                 SamplerDisable;
    uint32_t                             CubeSurfaceControlMode;
 #define PROGRAMMED                               0
 #define OVERRIDE                                 1
    uint32_t                             ShadowFunction;
-#define PREFILTEROPALWAYS                        0
-#define PREFILTEROPNEVER                         1
-#define PREFILTEROPLESS                          2
-#define PREFILTEROPEQUAL                         3
-#define PREFILTEROPLEQUAL                        4
-#define PREFILTEROPGREATER                       5
-#define PREFILTEROPNOTEQUAL                      6
-#define PREFILTEROPGEQUAL                        7
+#define PREFILTEROP_ALWAYS                       0
+#define PREFILTEROP_NEVER                        1
+#define PREFILTEROP_LESS                         2
+#define PREFILTEROP_EQUAL                        3
+#define PREFILTEROP_LEQUAL                       4
+#define PREFILTEROP_GREATER                      5
+#define PREFILTEROP_NOTEQUAL                     6
+#define PREFILTEROP_GEQUAL                       7
    uint32_t                             ChromaKeyMode;
 #define KEYFILTER_KILL_ON_ANY_MATCH              0
 #define KEYFILTER_REPLACE_BLACK                  1
@@ -1932,6 +1933,7 @@ GFX11_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CoarseLODQualityMode, 22, 26) |
       __gen_uint(values->LODPreClampMode, 27, 28) |
       __gen_uint(values->TextureBorderColorMode, 29, 29) |
+      __gen_uint(values->CPSLODCompensationEnable, 30, 30) |
       __gen_uint(values->SamplerDisable, 31, 31);
 
    dw[1] =
@@ -4235,6 +4237,85 @@ GFX11_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
    GFX11_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
 
+#define GFX11_3DSTATE_CPS_length               9
+#define GFX11_3DSTATE_CPS_length_bias          2
+#define GFX11_3DSTATE_CPS_header                \
+   .DWordLength                         =      7,  \
+   ._3DCommandSubOpcode                 =     34,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX11_3DSTATE_CPS {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   float                                MinCPSizeX;
+   bool                                 StatisticsEnable;
+   uint32_t                             CoarsePixelShadingMode;
+#define CPS_MODE_NONE                            0
+#define CPS_MODE_CONSTANT                        1
+#define CPS_MODE_RADIAL                          2
+   uint32_t                             ScaleAxis;
+#define Xaxis                                    0
+#define Yaxis                                    1
+   float                                MinCPSizeY;
+   float                                MaxCPSizeX;
+   float                                MaxCPSizeY;
+   int32_t                              YFocal;
+   int32_t                              XFocal;
+   float                                My;
+   float                                Mx;
+   float                                Rmin;
+   float                                Aspect;
+};
+
+static inline __attribute__((always_inline)) void
+GFX11_3DSTATE_CPS_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX11_3DSTATE_CPS * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sfixed(values->MinCPSizeX, 0, 10, 7) |
+      __gen_uint(values->StatisticsEnable, 11, 11) |
+      __gen_uint(values->CoarsePixelShadingMode, 12, 13) |
+      __gen_uint(values->ScaleAxis, 14, 14) |
+      __gen_sfixed(values->MinCPSizeY, 16, 26, 7);
+
+   dw[2] =
+      __gen_sfixed(values->MaxCPSizeX, 0, 10, 7) |
+      __gen_sfixed(values->MaxCPSizeY, 16, 26, 7);
+
+   dw[3] =
+      __gen_sint(values->YFocal, 0, 15);
+
+   dw[4] =
+      __gen_sint(values->XFocal, 0, 15);
+
+   dw[5] =
+      __gen_float(values->My);
+
+   dw[6] =
+      __gen_float(values->Mx);
+
+   dw[7] =
+      __gen_float(values->Rmin);
+
+   dw[8] =
+      __gen_float(values->Aspect);
+}
+
 #define GFX11_3DSTATE_DEPTH_BUFFER_length      8
 #define GFX11_3DSTATE_DEPTH_BUFFER_length_bias      2
 #define GFX11_3DSTATE_DEPTH_BUFFER_header       \
@@ -5659,6 +5740,7 @@ struct GFX11_3DSTATE_PS_EXTRA {
 #define ICMS_DEPTH_COVERAGE                      3
    bool                                 PixelShaderHasUAV;
    bool                                 PixelShaderPullsBary;
+   bool                                 PixelShaderIsPerCoarsePixel;
    bool                                 PixelShaderComputesStencil;
    bool                                 PixelShaderIsPerSample;
    bool                                 PixelShaderDisablesAlphaToCoverage;
@@ -5668,6 +5750,7 @@ struct GFX11_3DSTATE_PS_EXTRA {
    bool                                 PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresSourceDepthandorWPlaneCoefficients;
+   bool                                 PixelShaderRequiresRequestedCoarsePixelShadingSize;
    bool                                 PixelShaderUsesSourceW;
    bool                                 PixelShaderUsesSourceDepth;
    bool                                 ForceComputedDepth;
@@ -5700,6 +5783,7 @@ GFX11_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->InputCoverageMaskState, 0, 1) |
       __gen_uint(values->PixelShaderHasUAV, 2, 2) |
       __gen_uint(values->PixelShaderPullsBary, 3, 3) |
+      __gen_uint(values->PixelShaderIsPerCoarsePixel, 4, 4) |
       __gen_uint(values->PixelShaderComputesStencil, 5, 5) |
       __gen_uint(values->PixelShaderIsPerSample, 6, 6) |
       __gen_uint(values->PixelShaderDisablesAlphaToCoverage, 7, 7) |
@@ -5709,6 +5793,7 @@ GFX11_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients, 19, 19) |
       __gen_uint(values->PixelShaderRequiresPerspectiveBaryPlaneCoefficients, 20, 20) |
       __gen_uint(values->PixelShaderRequiresSourceDepthandorWPlaneCoefficients, 21, 21) |
+      __gen_uint(values->PixelShaderRequiresRequestedCoarsePixelShadingSize, 22, 22) |
       __gen_uint(values->PixelShaderUsesSourceW, 23, 23) |
       __gen_uint(values->PixelShaderUsesSourceDepth, 24, 24) |
       __gen_uint(values->ForceComputedDepth, 25, 25) |
@@ -10606,6 +10691,25 @@ GFX11_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SystemInstructionPointer, 4, 63);
    dw[1] = v1;
    dw[2] = v1 >> 32;
+}
+
+#define GFX11_3D_CHICKEN3_num             0x2090
+#define GFX11_3D_CHICKEN3_length               1
+struct GFX11_3D_CHICKEN3 {
+   bool                                 AALineQualityFix;
+   bool                                 AALineQualityFixMask;
+};
+
+static inline __attribute__((always_inline)) void
+GFX11_3D_CHICKEN3_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX11_3D_CHICKEN3 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->AALineQualityFix, 5, 5) |
+      __gen_uint(values->AALineQualityFixMask, 21, 21);
 }
 
 #define GFX11_BCS_INSTDONE_num            0x2206c

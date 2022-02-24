@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:48 jsg Exp $
 
 LIB=	aco
 
@@ -22,6 +22,7 @@ SRCS=	aco_dead_code_analysis.cpp \
 	aco_lower_to_cssa.cpp \
 	aco_lower_to_hw_instr.cpp \
 	aco_optimizer.cpp \
+	aco_optimizer_postRA.cpp \
 	aco_opt_value_numbering.cpp \
 	aco_print_asm.cpp \
 	aco_print_ir.cpp \
@@ -51,6 +52,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/generated/src/amd \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/amd/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir

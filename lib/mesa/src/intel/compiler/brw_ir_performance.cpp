@@ -120,7 +120,7 @@ namespace {
     * instructions.
     */
    struct instruction_info {
-      instruction_info(const gen_device_info *devinfo, const fs_inst *inst) :
+      instruction_info(const intel_device_info *devinfo, const fs_inst *inst) :
          devinfo(devinfo), op(inst->opcode),
          td(inst->dst.type), sd(DIV_ROUND_UP(inst->size_written, REG_SIZE)),
          tx(get_exec_type(inst)), sx(0), ss(0),
@@ -150,7 +150,7 @@ namespace {
             tx = brw_int_type(8, tx == BRW_REGISTER_TYPE_D);
       }
 
-      instruction_info(const gen_device_info *devinfo,
+      instruction_info(const intel_device_info *devinfo,
                        const vec4_instruction *inst) :
          devinfo(devinfo), op(inst->opcode),
          td(inst->dst.type), sd(DIV_ROUND_UP(inst->size_written, REG_SIZE)),
@@ -174,7 +174,7 @@ namespace {
       }
 
       /** Device information. */
-      const struct gen_device_info *devinfo;
+      const struct intel_device_info *devinfo;
       /** Instruction opcode. */
       opcode op;
       /** Destination type. */
@@ -289,7 +289,7 @@ namespace {
    const perf_desc
    instruction_desc(const instruction_info &info)
    {
-      const struct gen_device_info *devinfo = info.devinfo;
+      const struct intel_device_info *devinfo = info.devinfo;
 
       switch (info.op) {
       case BRW_OPCODE_SYNC:
@@ -344,6 +344,7 @@ namespace {
       case VEC4_OPCODE_PICK_HIGH_32BIT:
       case VEC4_OPCODE_SET_LOW_32BIT:
       case VEC4_OPCODE_SET_HIGH_32BIT:
+      case VEC4_OPCODE_ZERO_OOB_PUSH_REGS:
       case GS_OPCODE_SET_DWORD_2:
       case GS_OPCODE_SET_WRITE_OFFSET:
       case GS_OPCODE_SET_VERTEX_COUNT:
@@ -377,6 +378,7 @@ namespace {
       case BRW_OPCODE_MOV:
       case BRW_OPCODE_CMP:
       case BRW_OPCODE_ADD:
+      case BRW_OPCODE_ADD3:
       case BRW_OPCODE_MUL:
       case SHADER_OPCODE_MOV_RELOC_IMM:
       case VEC4_OPCODE_MOV_FOR_SCRATCH:
@@ -492,6 +494,13 @@ namespace {
          else
             return calculate_desc(info, unit_fpu, 0, 2, 0, 0, 2,
                                   0, 12, 8 /* XXX */, 18 /* XXX */, 0, 0);
+
+      case BRW_OPCODE_DP4A:
+         if (devinfo->ver >= 12)
+            return calculate_desc(info, unit_fpu, 0, 2, 1, 0, 2,
+                                  0, 10, 6 /* XXX */, 14 /* XXX */, 0, 0);
+         else
+            abort();
 
       case SHADER_OPCODE_RCP:
       case SHADER_OPCODE_RSQ:
@@ -937,7 +946,11 @@ namespace {
             else
                abort();
 
+         case BRW_SFID_URB:
          case GFX7_SFID_DATAPORT_DATA_CACHE:
+         case GFX12_SFID_SLM:
+         case GFX12_SFID_TGM:
+         case GFX12_SFID_UGM:
          case HSW_SFID_DATAPORT_DATA_CACHE_1:
             if (devinfo->ver >= 7)
                return calculate_desc(info, unit_dp_dc, 2, 0, 0, 30 /* XXX */, 0,
@@ -1055,7 +1068,7 @@ namespace {
          }
          case GFX7_SFID_DATAPORT_DATA_CACHE:
          case HSW_SFID_DATAPORT_DATA_CACHE_1:
-            if (devinfo->ver >= 8 || devinfo->is_haswell) {
+            if (devinfo->verx10 >= 75) {
                switch (brw_dp_desc_msg_type(devinfo, info.desc)) {
                case HSW_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_OP:
                case HSW_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_OP_SIMD4X2:
@@ -1086,6 +1099,47 @@ namespace {
                                         0, 0);
                }
             } else {
+               abort();
+            }
+
+         case GFX12_SFID_UGM:
+         case GFX12_SFID_TGM:
+         case GFX12_SFID_SLM:
+            switch (lsc_msg_desc_opcode(devinfo, info.desc)) {
+            case LSC_OP_LOAD:
+            case LSC_OP_STORE:
+            case LSC_OP_LOAD_CMASK:
+            case LSC_OP_STORE_CMASK:
+               return calculate_desc(info, unit_dp_dc, 2, 0, 0,
+                                     0, 20 /* XXX */,
+                                     10 /* XXX */, 100 /* XXX */, 0, 0,
+                                     0, 0);
+
+            case LSC_OP_FENCE:
+            case LSC_OP_ATOMIC_INC:
+            case LSC_OP_ATOMIC_DEC:
+            case LSC_OP_ATOMIC_LOAD:
+            case LSC_OP_ATOMIC_STORE:
+            case LSC_OP_ATOMIC_ADD:
+            case LSC_OP_ATOMIC_SUB:
+            case LSC_OP_ATOMIC_MIN:
+            case LSC_OP_ATOMIC_MAX:
+            case LSC_OP_ATOMIC_UMIN:
+            case LSC_OP_ATOMIC_UMAX:
+            case LSC_OP_ATOMIC_CMPXCHG:
+            case LSC_OP_ATOMIC_FADD:
+            case LSC_OP_ATOMIC_FSUB:
+            case LSC_OP_ATOMIC_FMIN:
+            case LSC_OP_ATOMIC_FMAX:
+            case LSC_OP_ATOMIC_FCMPXCHG:
+            case LSC_OP_ATOMIC_AND:
+            case LSC_OP_ATOMIC_OR:
+            case LSC_OP_ATOMIC_XOR:
+               return calculate_desc(info, unit_dp_dc, 2, 0, 0,
+                                     30 /* XXX */, 400 /* XXX */,
+                                     10 /* XXX */, 100 /* XXX */, 0, 0,
+                                     0, 400 /* XXX */);
+            default:
                abort();
             }
 
@@ -1177,7 +1231,7 @@ namespace {
     * Return the dependency ID of a backend_reg, offset by \p delta GRFs.
     */
    dependency_id
-   reg_dependency_id(const gen_device_info *devinfo, const backend_reg &r,
+   reg_dependency_id(const intel_device_info *devinfo, const backend_reg &r,
                      const int delta)
    {
       if (r.file == VGRF) {
@@ -1263,7 +1317,7 @@ namespace {
     * instruction.
     */
    unsigned
-   accum_reg_of_channel(const gen_device_info *devinfo,
+   accum_reg_of_channel(const intel_device_info *devinfo,
                         const backend_instruction *inst,
                         brw_reg_type tx, unsigned i)
    {
@@ -1278,7 +1332,7 @@ namespace {
     * Model the performance behavior of an FS back-end instruction.
     */
    void
-   issue_fs_inst(state &st, const gen_device_info *devinfo,
+   issue_fs_inst(state &st, const intel_device_info *devinfo,
                  const backend_instruction *be_inst)
    {
       const fs_inst *inst = static_cast<const fs_inst *>(be_inst);
@@ -1330,7 +1384,7 @@ namespace {
                   st, reg_dependency_id(devinfo, brw_acc_reg(8), j));
          }
 
-         if (const unsigned mask = inst->flags_written()) {
+         if (const unsigned mask = inst->flags_written(devinfo)) {
             for (unsigned i = 0; i < sizeof(mask) * CHAR_BIT; i++) {
                if (mask & (1 << i))
                   stall_on_dependency(st, flag_dependency_id(i));
@@ -1380,7 +1434,7 @@ namespace {
                                   reg_dependency_id(devinfo, brw_acc_reg(8), j));
       }
 
-      if (const unsigned mask = inst->flags_written()) {
+      if (const unsigned mask = inst->flags_written(devinfo)) {
          for (unsigned i = 0; i < sizeof(mask) * CHAR_BIT; i++) {
             if (mask & (1 << i))
                mark_write_dependency(st, perf, flag_dependency_id(i));
@@ -1398,7 +1452,7 @@ namespace {
     * Model the performance behavior of a VEC4 back-end instruction.
     */
    void
-   issue_vec4_instruction(state &st, const gen_device_info *devinfo,
+   issue_vec4_instruction(state &st, const intel_device_info *devinfo,
                           const backend_instruction *be_inst)
    {
       const vec4_instruction *inst =
@@ -1447,7 +1501,7 @@ namespace {
                   st, reg_dependency_id(devinfo, brw_acc_reg(8), j));
          }
 
-         if (inst->writes_flag())
+         if (inst->writes_flag(devinfo))
             stall_on_dependency(st, dependency_id_flag0);
       }
 
@@ -1485,7 +1539,7 @@ namespace {
                                   reg_dependency_id(devinfo, brw_acc_reg(8), j));
       }
 
-      if (inst->writes_flag())
+      if (inst->writes_flag(devinfo))
          mark_write_dependency(st, perf, dependency_id_flag0);
    }
 
@@ -1509,7 +1563,7 @@ namespace {
    void
    calculate_performance(performance &p, const backend_shader *s,
                          void (*issue_instruction)(
-                            state &, const gen_device_info *,
+                            state &, const intel_device_info *,
                             const backend_instruction *),
                          unsigned dispatch_width)
    {

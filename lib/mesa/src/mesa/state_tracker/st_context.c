@@ -454,8 +454,6 @@ st_context_free_zombie_objects(struct st_context *st)
 static void
 st_destroy_context_priv(struct st_context *st, bool destroy_pipe)
 {
-   uint i;
-
    st_destroy_atoms(st);
    st_destroy_draw(st);
    st_destroy_clear(st);
@@ -466,11 +464,6 @@ st_destroy_context_priv(struct st_context *st, bool destroy_pipe)
    st_destroy_pbo_helpers(st);
    st_destroy_bound_texture_handles(st);
    st_destroy_bound_image_handles(st);
-
-   for (i = 0; i < ARRAY_SIZE(st->state.frag_sampler_views); i++) {
-      pipe_sampler_view_reference(&st->state.vert_sampler_views[i], NULL);
-      pipe_sampler_view_reference(&st->state.frag_sampler_views[i], NULL);
-   }
 
    /* free glReadPixels cache data */
    st_invalidate_readpix_cache(st);
@@ -494,7 +487,7 @@ st_init_driver_flags(struct st_context *st)
    f->NewRasterizerDiscard = ST_NEW_RASTERIZER;
    f->NewTileRasterOrder = ST_NEW_RASTERIZER;
    f->NewUniformBuffer = ST_NEW_UNIFORM_BUFFER;
-   f->NewDefaultTessLevels = ST_NEW_TESS_STATE;
+   f->NewTessState = ST_NEW_TESS_STATE;
 
    /* Shader resources */
    f->NewTextureBuffer = ST_NEW_SAMPLER_VIEWS;
@@ -562,10 +555,9 @@ st_init_driver_flags(struct st_context *st)
       f->NewDepthClamp = ST_NEW_RASTERIZER;
    }
 
+   f->NewClipPlaneEnable = ST_NEW_RASTERIZER;
    if (st->lower_ucp)
-      f->NewClipPlaneEnable = ST_NEW_VS_STATE | ST_NEW_GS_STATE;
-   else
-      f->NewClipPlaneEnable = ST_NEW_RASTERIZER;
+      f->NewClipPlaneEnable |= ST_NEW_VS_STATE | ST_NEW_GS_STATE;
 
    f->NewLineState = ST_NEW_RASTERIZER;
    f->NewPolygonState = ST_NEW_RASTERIZER;
@@ -681,6 +673,10 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
                        screen->is_format_supported(screen, PIPE_FORMAT_DXT1_SRGBA,
                                                    PIPE_TEXTURE_2D, 0, 0,
                                                    PIPE_BIND_SAMPLER_VIEW);
+   st->transcode_astc = options->transcode_astc &&
+                        screen->is_format_supported(screen, PIPE_FORMAT_DXT5_SRGBA,
+                                                    PIPE_TEXTURE_2D, 0, 0,
+                                                    PIPE_BIND_SAMPLER_VIEW);
    st->has_astc_2d_ldr =
       screen->is_format_supported(screen, PIPE_FORMAT_ASTC_4x4_SRGB,
                                   PIPE_TEXTURE_2D, 0, 0, PIPE_BIND_SAMPLER_VIEW);
@@ -798,6 +794,8 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
       !screen->get_param(screen, PIPE_CAP_VERTEX_SHADER_SATURATE);
 
    ctx->Const.ShaderCompilerOptions[MESA_SHADER_VERTEX].PositionAlwaysInvariant = options->vs_position_always_invariant;
+
+   ctx->Const.ShaderCompilerOptions[MESA_SHADER_TESS_EVAL].PositionAlwaysPrecise = options->vs_position_always_precise;
 
    enum pipe_shader_ir preferred_ir = (enum pipe_shader_ir)
       screen->get_shader_param(screen, PIPE_SHADER_VERTEX,
@@ -956,11 +954,12 @@ st_pin_driver_to_l3_cache(struct gl_context *ctx, unsigned L3_cache)
 
 static void
 st_init_driver_functions(struct pipe_screen *screen,
-                         struct dd_function_table *functions)
+                         struct dd_function_table *functions,
+                         bool has_egl_image_validate)
 {
    _mesa_init_sampler_object_functions(functions);
 
-   st_init_draw_functions(functions);
+   st_init_draw_functions(screen, functions);
    st_init_blit_functions(functions);
    st_init_bufferobject_functions(screen, functions);
    st_init_clear_functions(functions);
@@ -971,7 +970,7 @@ st_init_driver_functions(struct pipe_screen *screen,
 
    st_init_drawtex_functions(functions);
 
-   st_init_eglimage_functions(functions);
+   st_init_eglimage_functions(functions, has_egl_image_validate);
 
    st_init_fbo_functions(functions);
    st_init_feedback_functions(functions);
@@ -1033,7 +1032,7 @@ st_create_context(gl_api api, struct pipe_context *pipe,
                   const struct gl_config *visual,
                   struct st_context *share,
                   const struct st_config_options *options,
-                  bool no_error)
+                  bool no_error, bool has_egl_image_validate)
 {
    struct gl_context *ctx;
    struct gl_context *shareCtx = share ? share->ctx : NULL;
@@ -1043,7 +1042,7 @@ st_create_context(gl_api api, struct pipe_context *pipe,
    util_cpu_detect();
 
    memset(&funcs, 0, sizeof(funcs));
-   st_init_driver_functions(pipe->screen, &funcs);
+   st_init_driver_functions(pipe->screen, &funcs, has_egl_image_validate);
 
    if (pipe->set_context_param)
       funcs.PinDriverToL3Cache = st_pin_driver_to_l3_cache;

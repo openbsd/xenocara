@@ -98,11 +98,13 @@ void si_blitter_end(struct si_context *sctx)
    /* Restore shader pointers because the VS blit shader changed all
     * non-global VS user SGPRs. */
    sctx->shader_pointers_dirty |= SI_DESCS_SHADER_MASK(VERTEX);
+
+   unsigned num_vbos_in_user_sgprs = si_num_vbos_in_user_sgprs(sctx->screen);
    sctx->vertex_buffer_pointer_dirty = sctx->vb_descriptors_buffer != NULL &&
                                        sctx->num_vertex_elements >
-                                       sctx->screen->num_vbos_in_user_sgprs;
+                                       num_vbos_in_user_sgprs;
    sctx->vertex_buffer_user_sgprs_dirty = sctx->num_vertex_elements > 0 &&
-                                          sctx->screen->num_vbos_in_user_sgprs;
+                                          num_vbos_in_user_sgprs;
    si_mark_atom_dirty(sctx, &sctx->atoms.s.shader_pointers);
 }
 
@@ -393,11 +395,12 @@ static void si_decompress_depth(struct si_context *sctx, struct si_texture *tex,
       si_make_CB_shader_coherent(sctx, tex->buffer.b.b.nr_samples, false, true /* no DCC */);
 }
 
-static void si_decompress_sampler_depth_textures(struct si_context *sctx,
+static bool si_decompress_sampler_depth_textures(struct si_context *sctx,
                                                  struct si_samplers *textures)
 {
    unsigned i;
    unsigned mask = textures->needs_depth_decompress_mask;
+   bool need_flush = false;
 
    while (mask) {
       struct pipe_sampler_view *view;
@@ -416,7 +419,14 @@ static void si_decompress_sampler_depth_textures(struct si_context *sctx,
       si_decompress_depth(sctx, tex, sview->is_stencil_sampler ? PIPE_MASK_S : PIPE_MASK_Z,
                           view->u.tex.first_level, view->u.tex.last_level, 0,
                           util_max_layer(&tex->buffer.b.b, view->u.tex.first_level));
+
+      if (tex->need_flush_after_depth_decompression) {
+         need_flush = true;
+         tex->need_flush_after_depth_decompression = false;
+      }
    }
+
+   return need_flush;
 }
 
 static void si_blit_decompress_color(struct si_context *sctx, struct si_texture *tex,
@@ -755,6 +765,7 @@ static void si_decompress_resident_images(struct si_context *sctx)
 void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
 {
    unsigned compressed_colortex_counter, mask;
+   bool need_flush = false;
 
    if (sctx->blitter_running)
       return;
@@ -772,7 +783,7 @@ void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
       unsigned i = u_bit_scan(&mask);
 
       if (sctx->samplers[i].needs_depth_decompress_mask) {
-         si_decompress_sampler_depth_textures(sctx, &sctx->samplers[i]);
+         need_flush |= si_decompress_sampler_depth_textures(sctx, &sctx->samplers[i]);
       }
       if (sctx->samplers[i].needs_color_decompress_mask) {
          si_decompress_sampler_color_textures(sctx, &sctx->samplers[i]);
@@ -780,6 +791,16 @@ void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
       if (sctx->images[i].needs_color_decompress_mask) {
          si_decompress_image_color_textures(sctx, &sctx->images[i]);
       }
+   }
+
+   if (sctx->chip_class == GFX10_3 && need_flush) {
+      /* This fixes a corruption with the following sequence:
+       *   - fast clear depth
+       *   - decompress depth
+       *   - draw
+       * (see https://gitlab.freedesktop.org/drm/amd/-/issues/1810#note_1170171)
+       */
+      sctx->b.flush(&sctx->b, NULL, RADEON_FLUSH_ASYNC_START_NEXT_GFX_IB_NOW);
    }
 
    if (shader_mask & u_bit_consecutive(0, SI_NUM_GRAPHICS_SHADERS)) {
@@ -1027,7 +1048,7 @@ void si_resource_copy_region(struct pipe_context *ctx, struct pipe_resource *dst
    /* Copy. */
    si_blitter_begin(sctx, SI_COPY);
    util_blitter_blit_generic(sctx->blitter, dst_view, &dstbox, src_view, src_box, src_width0,
-                             src_height0, PIPE_MASK_RGBAZS, PIPE_TEX_FILTER_NEAREST, NULL, false);
+                             src_height0, PIPE_MASK_RGBAZS, PIPE_TEX_FILTER_NEAREST, NULL, false, false);
    si_blitter_end(sctx);
 
    pipe_surface_reference(&dst_view, NULL);
@@ -1203,9 +1224,46 @@ resolve_to_temp:
 static void si_blit(struct pipe_context *ctx, const struct pipe_blit_info *info)
 {
    struct si_context *sctx = (struct si_context *)ctx;
+   struct si_texture *sdst = (struct si_texture *)info->dst.resource;
 
    if (do_hardware_msaa_resolve(ctx, info)) {
       return;
+   }
+
+   if (info->is_dri_blit_image && sdst->surface.is_linear &&
+       sctx->chip_class >= GFX7 && sdst->surface.flags & RADEON_SURF_IMPORTED) {
+      struct si_texture *ssrc = (struct si_texture *)info->src.resource;
+      /* Use SDMA or async compute when copying to a DRI_PRIME imported linear surface. */
+      bool async_copy = info->dst.box.x == 0 && info->dst.box.y == 0 && info->dst.box.z == 0 &&
+                        info->src.box.x == 0 && info->src.box.y == 0 && info->src.box.z == 0 &&
+                        info->dst.level == 0 && info->src.level == 0 &&
+                        info->src.box.width == info->dst.resource->width0 &&
+                        info->src.box.height == info->dst.resource->height0 &&
+                        info->src.box.depth == 1 && util_can_blit_via_copy_region(info, true);
+      /* Try SDMA first... */
+      /* TODO: figure out why SDMA copies are slow on GFX10_3 */
+      if (async_copy && sctx->chip_class < GFX10_3 && si_sdma_copy_image(sctx, sdst, ssrc))
+         return;
+
+      /* ... and use async compute as the fallback. */
+      if (async_copy) {
+         struct si_screen *sscreen = sctx->screen;
+
+         simple_mtx_lock(&sscreen->async_compute_context_lock);
+         if (!sscreen->async_compute_context)
+            si_init_aux_async_compute_ctx(sscreen);
+
+         if (sscreen->async_compute_context) {
+            si_compute_copy_image((struct si_context*)sctx->screen->async_compute_context,
+                                  info->dst.resource, 0, info->src.resource, 0, 0, 0, 0,
+                                  &info->src.box, false, 0);
+            si_flush_gfx_cs((struct si_context*)sctx->screen->async_compute_context, 0, NULL);
+            simple_mtx_unlock(&sscreen->async_compute_context_lock);
+            return;
+         }
+
+         simple_mtx_unlock(&sscreen->async_compute_context_lock);
+      }
    }
 
    if (unlikely(sctx->thread_trace_enabled))
@@ -1276,50 +1334,14 @@ static void si_flush_resource(struct pipe_context *ctx, struct pipe_resource *re
    struct si_texture *tex = (struct si_texture *)res;
 
    assert(res->target != PIPE_BUFFER);
-   assert(!tex->dcc_separate_buffer || tex->dcc_gather_statistics);
-
-   /* st/dri calls flush twice per frame (not a bug), this prevents double
-    * decompression. */
-   if (tex->dcc_separate_buffer && !tex->separate_dcc_dirty)
-      return;
 
    if (!tex->is_depth && (tex->cmask_buffer || vi_dcc_enabled(tex, 0))) {
       si_blit_decompress_color(sctx, tex, 0, res->last_level, 0, util_max_layer(res, 0),
-                               tex->dcc_separate_buffer != NULL, false);
+                               false, false);
 
       if (tex->surface.display_dcc_offset && tex->displayable_dcc_dirty) {
          si_retile_dcc(sctx, tex);
          tex->displayable_dcc_dirty = false;
-      }
-   }
-
-   /* Always do the analysis even if DCC is disabled at the moment. */
-   if (tex->dcc_gather_statistics) {
-      bool separate_dcc_dirty = tex->separate_dcc_dirty;
-
-      /* If the color buffer hasn't been unbound and fast clear hasn't
-       * been used, separate_dcc_dirty is false, but there may have been
-       * new rendering. Check if the color buffer is bound and assume
-       * it's dirty.
-       *
-       * Note that DRI2 never unbinds window colorbuffers, which means
-       * the DCC pipeline statistics query would never be re-set and would
-       * keep adding new results until all free memory is exhausted if we
-       * didn't do this.
-       */
-      if (!separate_dcc_dirty) {
-         for (unsigned i = 0; i < sctx->framebuffer.state.nr_cbufs; i++) {
-            if (sctx->framebuffer.state.cbufs[i] &&
-                sctx->framebuffer.state.cbufs[i]->texture == res) {
-               separate_dcc_dirty = true;
-               break;
-            }
-         }
-      }
-
-      if (separate_dcc_dirty) {
-         tex->separate_dcc_dirty = false;
-         vi_separate_dcc_process_and_reset_stats(ctx, tex);
       }
    }
 }

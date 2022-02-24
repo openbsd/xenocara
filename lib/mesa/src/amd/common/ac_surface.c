@@ -28,6 +28,7 @@
 #define AC_SURFACE_INCLUDE_NIR
 #include "ac_surface.h"
 
+#include "ac_drm_fourcc.h"
 #include "ac_gpu_info.h"
 #include "addrlib/inc/addrinterface.h"
 #include "addrlib/src/amdgpu_asic_addr.h"
@@ -46,52 +47,6 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
-typedef uint64_t __u64;
-#define DRM_FORMAT_MOD_VENDOR_NONE    0
-#define DRM_FORMAT_MOD_VENDOR_AMD     0x02
-#define DRM_FORMAT_RESERVED	      ((1ULL << 56) - 1)
-#define fourcc_mod_code(vendor, val) \
-	((((__u64)DRM_FORMAT_MOD_VENDOR_## vendor) << 56) | ((val) & 0x00ffffffffffffffULL))
-#define DRM_FORMAT_MOD_INVALID	fourcc_mod_code(NONE, DRM_FORMAT_RESERVED)
-#define DRM_FORMAT_MOD_LINEAR	fourcc_mod_code(NONE, 0)
-#define AMD_FMT_MOD fourcc_mod_code(AMD, 0)
-#define IS_AMD_FMT_MOD(val) (((val) >> 56) == DRM_FORMAT_MOD_VENDOR_AMD)
-#define AMD_FMT_MOD_TILE_VER_GFX9 1
-#define AMD_FMT_MOD_TILE_VER_GFX10 2
-#define AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS 3
-#define AMD_FMT_MOD_TILE_GFX9_64K_S 9
-#define AMD_FMT_MOD_TILE_GFX9_64K_D 10
-#define AMD_FMT_MOD_TILE_GFX9_64K_S_X 25
-#define AMD_FMT_MOD_TILE_GFX9_64K_D_X 26
-#define AMD_FMT_MOD_TILE_GFX9_64K_R_X 27
-#define AMD_FMT_MOD_DCC_BLOCK_64B 0
-#define AMD_FMT_MOD_DCC_BLOCK_128B 1
-#define AMD_FMT_MOD_TILE_VERSION_SHIFT 0
-#define AMD_FMT_MOD_TILE_SHIFT 8
-#define AMD_FMT_MOD_TILE_MASK 0x1F
-#define AMD_FMT_MOD_DCC_SHIFT 13
-#define AMD_FMT_MOD_DCC_MASK 0x1
-#define AMD_FMT_MOD_DCC_RETILE_SHIFT 14
-#define AMD_FMT_MOD_DCC_RETILE_MASK 0x1
-#define AMD_FMT_MOD_DCC_PIPE_ALIGN_SHIFT 15
-#define AMD_FMT_MOD_DCC_PIPE_ALIGN_MASK 0x1
-#define AMD_FMT_MOD_DCC_INDEPENDENT_64B_SHIFT 16
-#define AMD_FMT_MOD_DCC_INDEPENDENT_64B_MASK 0x1
-#define AMD_FMT_MOD_DCC_INDEPENDENT_128B_SHIFT 17
-#define AMD_FMT_MOD_DCC_INDEPENDENT_128B_MASK 0x1
-#define AMD_FMT_MOD_DCC_MAX_COMPRESSED_BLOCK_SHIFT 18
-#define AMD_FMT_MOD_DCC_MAX_COMPRESSED_BLOCK_MASK 0x3
-#define AMD_FMT_MOD_DCC_CONSTANT_ENCODE_SHIFT 20
-#define AMD_FMT_MOD_PIPE_XOR_BITS_SHIFT 21
-#define AMD_FMT_MOD_BANK_XOR_BITS_SHIFT 24
-#define AMD_FMT_MOD_PACKERS_SHIFT 27 /* aliases with BANK_XOR_BITS */
-#define AMD_FMT_MOD_RB_SHIFT 30
-#define AMD_FMT_MOD_PIPE_SHIFT 33
-#define AMD_FMT_MOD_SET(field, value) \
-	((uint64_t)(value) << AMD_FMT_MOD_##field##_SHIFT)
-#define AMD_FMT_MOD_GET(field, value) \
-	(((value) >> AMD_FMT_MOD_##field##_SHIFT) & AMD_FMT_MOD_##field##_MASK)
-
 #define AMDGPU_TILING_ARRAY_MODE_SHIFT			0
 #define AMDGPU_TILING_ARRAY_MODE_MASK			0xf
 #define AMDGPU_TILING_PIPE_CONFIG_SHIFT			4
@@ -125,7 +80,6 @@ typedef uint64_t __u64;
 #define AMDGPU_TILING_GET(value, field) \
 	(((__u64)(value) >> AMDGPU_TILING_##field##_SHIFT) & AMDGPU_TILING_##field##_MASK)
 #else
-#include "drm-uapi/drm_fourcc.h"
 #include "drm-uapi/amdgpu_drm.h"
 #endif
 
@@ -149,6 +103,57 @@ bool ac_modifier_has_dcc(uint64_t modifier)
 bool ac_modifier_has_dcc_retile(uint64_t modifier)
 {
    return IS_AMD_FMT_MOD(modifier) && AMD_FMT_MOD_GET(DCC_RETILE, modifier);
+}
+
+bool ac_modifier_supports_dcc_image_stores(uint64_t modifier)
+{
+   if (!ac_modifier_has_dcc(modifier))
+      return false;
+
+   return (!AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier) &&
+            AMD_FMT_MOD_GET(DCC_INDEPENDENT_128B, modifier) &&
+            AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier) == AMD_FMT_MOD_DCC_BLOCK_128B) ||
+           (AMD_FMT_MOD_GET(TILE_VERSION, modifier) >= AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS && /* gfx10.3 */
+            AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier) &&
+            AMD_FMT_MOD_GET(DCC_INDEPENDENT_128B, modifier) &&
+            AMD_FMT_MOD_GET(DCC_MAX_COMPRESSED_BLOCK, modifier) == AMD_FMT_MOD_DCC_BLOCK_64B);
+
+}
+
+
+bool ac_surface_supports_dcc_image_stores(enum chip_class chip_class,
+                                          const struct radeon_surf *surf)
+{
+   /* DCC image stores is only available for GFX10+. */
+   if (chip_class < GFX10)
+      return false;
+
+   /* DCC image stores support the following settings:
+    * - INDEPENDENT_64B_BLOCKS = 0
+    * - INDEPENDENT_128B_BLOCKS = 1
+    * - MAX_COMPRESSED_BLOCK_SIZE = 128B
+    * - MAX_UNCOMPRESSED_BLOCK_SIZE = 256B (always used)
+    *
+    * gfx10.3 also supports the following setting:
+    * - INDEPENDENT_64B_BLOCKS = 1
+    * - INDEPENDENT_128B_BLOCKS = 1
+    * - MAX_COMPRESSED_BLOCK_SIZE = 64B
+    * - MAX_UNCOMPRESSED_BLOCK_SIZE = 256B (always used)
+    *
+    * The compressor only looks at MAX_COMPRESSED_BLOCK_SIZE to determine
+    * the INDEPENDENT_xx_BLOCKS settings. 128B implies INDEP_128B, while 64B
+    * implies INDEP_64B && INDEP_128B.
+    *
+    * The same limitations apply to SDMA compressed stores because
+    * SDMA uses the same DCC codec.
+    */
+   return (!surf->u.gfx9.color.dcc.independent_64B_blocks &&
+            surf->u.gfx9.color.dcc.independent_128B_blocks &&
+            surf->u.gfx9.color.dcc.max_compressed_block_size == V_028C78_MAX_BLOCK_SIZE_128B) ||
+           (chip_class >= GFX10_3 && /* gfx10.3 */
+            surf->u.gfx9.color.dcc.independent_64B_blocks &&
+            surf->u.gfx9.color.dcc.independent_128B_blocks &&
+            surf->u.gfx9.color.dcc.max_compressed_block_size == V_028C78_MAX_BLOCK_SIZE_64B);
 }
 
 static
@@ -190,7 +195,7 @@ bool ac_is_modifier_supported(const struct radeon_info *info,
 
    if (util_format_is_compressed(format) ||
        util_format_is_depth_or_stencil(format) ||
-       util_format_get_blocksize(format) > 8)
+       util_format_get_blocksizebits(format) > 64)
       return false;
 
    if (info->chip_class < GFX9)
@@ -199,7 +204,8 @@ bool ac_is_modifier_supported(const struct radeon_info *info,
    if(modifier == DRM_FORMAT_MOD_LINEAR)
       return true;
 
-   if (util_format_get_num_planes(format) > 1)
+   /* GFX8 may need a different modifier for each plane */
+   if (info->chip_class < GFX9 && util_format_get_num_planes(format) > 1)
       return false;
 
    uint32_t allowed_swizzles = 0xFFFFFFFF;
@@ -219,6 +225,10 @@ bool ac_is_modifier_supported(const struct radeon_info *info,
       return false;
 
    if (ac_modifier_has_dcc(modifier)) {
+      /* TODO: support multi-planar formats with DCC */
+      if (util_format_get_num_planes(format) > 1)
+         return false;
+
       if (!info->has_graphics)
          return false;
 
@@ -282,7 +292,7 @@ bool ac_get_supported_modifiers(const struct radeon_info *info,
               AMD_FMT_MOD_SET(PIPE, pipes) |
               AMD_FMT_MOD_SET(RB, rb))
 
-      if (util_format_get_blocksize(format) == 4) {
+      if (util_format_get_blocksizebits(format) == 32) {
          if (info->max_render_backends == 1) {
             ADD_MOD(AMD_FMT_MOD |
                     AMD_FMT_MOD_SET(TILE, AMD_FMT_MOD_TILE_GFX9_64K_S_X) |
@@ -343,12 +353,24 @@ bool ac_get_supported_modifiers(const struct radeon_info *info,
               AMD_FMT_MOD_SET(DCC_INDEPENDENT_128B, 1) |
               AMD_FMT_MOD_SET(DCC_MAX_COMPRESSED_BLOCK, AMD_FMT_MOD_DCC_BLOCK_128B))
 
+      if (info->chip_class >= GFX10_3) {
+         if (info->max_render_backends == 1) {
+            ADD_MOD(AMD_FMT_MOD | common_dcc |
+                    AMD_FMT_MOD_SET(DCC_INDEPENDENT_128B, 1) |
+                    AMD_FMT_MOD_SET(DCC_MAX_COMPRESSED_BLOCK, AMD_FMT_MOD_DCC_BLOCK_128B))
+         }
+
+         ADD_MOD(AMD_FMT_MOD | common_dcc |
+                 AMD_FMT_MOD_SET(DCC_RETILE, 1) |
+                 AMD_FMT_MOD_SET(DCC_INDEPENDENT_128B, 1) |
+                 AMD_FMT_MOD_SET(DCC_MAX_COMPRESSED_BLOCK, AMD_FMT_MOD_DCC_BLOCK_128B))
+      }
+
       if (info->family == CHIP_NAVI12 || info->family == CHIP_NAVI14 || info->chip_class >= GFX10_3) {
          bool independent_128b = info->chip_class >= GFX10_3;
 
          if (info->max_render_backends == 1) {
             ADD_MOD(AMD_FMT_MOD | common_dcc |
-                    AMD_FMT_MOD_SET(DCC_PIPE_ALIGN, 1) |
                     AMD_FMT_MOD_SET(DCC_INDEPENDENT_64B, 1) |
                     AMD_FMT_MOD_SET(DCC_INDEPENDENT_128B, independent_128b) |
                     AMD_FMT_MOD_SET(DCC_MAX_COMPRESSED_BLOCK, AMD_FMT_MOD_DCC_BLOCK_64B))
@@ -372,7 +394,7 @@ bool ac_get_supported_modifiers(const struct radeon_info *info,
               AMD_FMT_MOD_SET(TILE, AMD_FMT_MOD_TILE_GFX9_64K_S_X) |
               AMD_FMT_MOD_SET(PIPE_XOR_BITS, pipe_xor_bits))
 
-      if (util_format_get_blocksize(format) != 4) {
+      if (util_format_get_blocksizebits(format) != 32) {
          ADD_MOD(AMD_FMT_MOD |
                  AMD_FMT_MOD_SET(TILE, AMD_FMT_MOD_TILE_GFX9_64K_D) |
                  AMD_FMT_MOD_SET(TILE_VERSION, AMD_FMT_MOD_TILE_VER_GFX9));
@@ -1444,10 +1466,45 @@ ASSERTED static bool is_dcc_supported_by_L2(const struct radeon_info *info,
 
    /* 128B is recommended, but 64B can be set too if needed for 4K by DCN.
     * Since there is no reason to ever disable 128B, require it.
-    * DCC image stores are always supported.
+    * If 64B is used, DCC image stores are unsupported.
     */
    return surf->u.gfx9.color.dcc.independent_128B_blocks &&
           surf->u.gfx9.color.dcc.max_compressed_block_size <= V_028C78_MAX_BLOCK_SIZE_128B;
+}
+
+static bool gfx10_DCN_requires_independent_64B_blocks(const struct radeon_info *info,
+                                                      const struct ac_surf_config *config)
+{
+   assert(info->chip_class >= GFX10);
+
+   /* Older kernels have buggy DAL. */
+   if (info->drm_minor <= 43)
+      return true;
+
+   /* For 4K, DCN requires INDEPENDENT_64B_BLOCKS = 1 and MAX_COMPRESSED_BLOCK_SIZE = 64B. */
+   return config->info.width > 2560 || config->info.height > 2560;
+}
+
+void ac_modifier_max_extent(const struct radeon_info *info,
+                            uint64_t modifier, uint32_t *width, uint32_t *height)
+{
+   if (ac_modifier_has_dcc(modifier)) {
+      bool independent_64B_blocks = AMD_FMT_MOD_GET(DCC_INDEPENDENT_64B, modifier);
+
+      if (info->chip_class >= GFX10 && !independent_64B_blocks) {
+         /* For 4K, DCN requires INDEPENDENT_64B_BLOCKS = 1 and MAX_COMPRESSED_BLOCK_SIZE = 64B. */
+         *width = 2560;
+         *height = 2560;
+      } else {
+         /* DCC is not supported on surfaces above resolutions af 5760. */
+         *width = 5760;
+         *height = 5760;
+      }
+   } else {
+      /* Non-dcc modifiers */
+      *width = 16384;
+      *height = 16384;
+   }
 }
 
 static bool is_dcc_supported_by_DCN(const struct radeon_info *info,
@@ -1466,13 +1523,12 @@ static bool is_dcc_supported_by_DCN(const struct radeon_info *info,
    if (info->use_display_dcc_unaligned && (rb_aligned || pipe_aligned))
       return false;
 
+   /* Big resolutions don't support DCC. */
+   if (config->info.width > 5760 || config->info.height > 5760)
+      return false;
+
    switch (info->chip_class) {
    case GFX9:
-      /* Only support 64KB_S_X, so that we have only 1 variant of the retile shader. */
-      if (info->use_display_dcc_with_retile_blit &&
-          surf->u.gfx9.swizzle_mode != ADDR_SW_64KB_S_X)
-         return false;
-
       /* There are more constraints, but we always set
        * INDEPENDENT_64B_BLOCKS = 1 and MAX_COMPRESSED_BLOCK_SIZE = 64B,
        * which always works.
@@ -1482,17 +1538,11 @@ static bool is_dcc_supported_by_DCN(const struct radeon_info *info,
       return true;
    case GFX10:
    case GFX10_3:
-      /* Only support 64KB_R_X, so that we have only 1 variant of the retile shader. */
-      if (info->use_display_dcc_with_retile_blit &&
-          surf->u.gfx9.swizzle_mode != ADDR_SW_64KB_R_X)
-         return false;
-
       /* DCN requires INDEPENDENT_128B_BLOCKS = 0 only on Navi1x. */
       if (info->chip_class == GFX10 && surf->u.gfx9.color.dcc.independent_128B_blocks)
          return false;
 
-      /* For 4K, DCN requires INDEPENDENT_64B_BLOCKS = 1. */
-      return ((config->info.width <= 2560 && config->info.height <= 2560) ||
+      return (!gfx10_DCN_requires_independent_64B_blocks(info, config) ||
               (surf->u.gfx9.color.dcc.independent_64B_blocks &&
                surf->u.gfx9.color.dcc.max_compressed_block_size == V_028C78_MAX_BLOCK_SIZE_64B));
    default:
@@ -1528,6 +1578,28 @@ static void ac_copy_dcc_equation(const struct radeon_info *info,
          for (unsigned c = 0; c < ARRAY_SIZE(equation->u.gfx9.bit[b].coord); c++) {
             equation->u.gfx9.bit[b].coord[c].dim = dcc->equation.gfx9.bit[b].coord[c].dim;
             equation->u.gfx9.bit[b].coord[c].ord = dcc->equation.gfx9.bit[b].coord[c].ord;
+         }
+      }
+   }
+}
+
+static void ac_copy_cmask_equation(const struct radeon_info *info,
+                                   ADDR2_COMPUTE_CMASK_INFO_OUTPUT *cmask,
+                                   struct gfx9_meta_equation *equation)
+{
+   equation->meta_block_width = cmask->metaBlkWidth;
+   equation->meta_block_height = cmask->metaBlkHeight;
+   equation->meta_block_depth = 1;
+
+   if (info->chip_class == GFX9) {
+      assert(cmask->equation.gfx9.num_bits <= ARRAY_SIZE(equation->u.gfx9.bit));
+
+      equation->u.gfx9.num_bits = cmask->equation.gfx9.num_bits;
+      equation->u.gfx9.num_pipe_bits = cmask->equation.gfx9.numPipeBits;
+      for (unsigned b = 0; b < ARRAY_SIZE(equation->u.gfx9.bit); b++) {
+         for (unsigned c = 0; c < ARRAY_SIZE(equation->u.gfx9.bit[b].coord); c++) {
+            equation->u.gfx9.bit[b].coord[c].dim = cmask->equation.gfx9.bit[b].coord[c].dim;
+            equation->u.gfx9.bit[b].coord[c].ord = cmask->equation.gfx9.bit[b].coord[c].ord;
          }
       }
    }
@@ -1945,8 +2017,12 @@ static int gfx9_compute_miptree(struct ac_addrlib *addrlib, const struct radeon_
          surf->cmask_size = cout.cmaskBytes;
          surf->cmask_alignment_log2 = util_logbase2(cout.baseAlign);
          surf->cmask_slice_size = cout.sliceSize;
+         surf->cmask_pitch = cout.pitch;
+         surf->cmask_height = cout.height;
          surf->u.gfx9.color.cmask_level0.offset = meta_mip_info[0].offset;
          surf->u.gfx9.color.cmask_level0.size = meta_mip_info[0].sliceSize;
+
+         ac_copy_cmask_equation(info, &cout, &surf->u.gfx9.color.cmask_equation);
       }
    }
 
@@ -2054,14 +2130,17 @@ static int gfx9_compute_surface(struct ac_addrlib *addrlib, const struct radeon_
       ac_modifier_fill_dcc_params(surf->modifier, surf, &AddrSurfInfoIn);
    } else if (!AddrSurfInfoIn.flags.depth && !AddrSurfInfoIn.flags.stencil) {
       /* Optimal values for the L2 cache. */
-      if (info->chip_class == GFX9) {
-         surf->u.gfx9.color.dcc.independent_64B_blocks = 1;
-         surf->u.gfx9.color.dcc.independent_128B_blocks = 0;
-         surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_64B;
-      } else if (info->chip_class >= GFX10) {
-         surf->u.gfx9.color.dcc.independent_64B_blocks = 0;
-         surf->u.gfx9.color.dcc.independent_128B_blocks = 1;
-         surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_128B;
+      /* Don't change the DCC settings for imported buffers - they might differ. */
+      if (!(surf->flags & RADEON_SURF_IMPORTED)) {
+         if (info->chip_class == GFX9) {
+            surf->u.gfx9.color.dcc.independent_64B_blocks = 1;
+            surf->u.gfx9.color.dcc.independent_128B_blocks = 0;
+            surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_64B;
+         } else if (info->chip_class >= GFX10) {
+            surf->u.gfx9.color.dcc.independent_64B_blocks = 0;
+            surf->u.gfx9.color.dcc.independent_128B_blocks = 1;
+            surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_128B;
+         }
       }
 
       if (AddrSurfInfoIn.flags.display) {
@@ -2078,7 +2157,9 @@ static int gfx9_compute_surface(struct ac_addrlib *addrlib, const struct radeon_
          }
 
          /* Adjust DCC settings to meet DCN requirements. */
-         if (info->use_display_dcc_unaligned || info->use_display_dcc_with_retile_blit) {
+         /* Don't change the DCC settings for imported buffers - they might differ. */
+         if (!(surf->flags & RADEON_SURF_IMPORTED) &&
+             (info->use_display_dcc_unaligned || info->use_display_dcc_with_retile_blit)) {
             /* Only Navi12/14 support independent 64B blocks in L2,
              * but without DCC image stores.
              */
@@ -2088,7 +2169,13 @@ static int gfx9_compute_surface(struct ac_addrlib *addrlib, const struct radeon_
                surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_64B;
             }
 
-            if (info->chip_class >= GFX10_3) {
+            if ((info->chip_class >= GFX10_3 && info->family <= CHIP_YELLOW_CARP) ||
+                /* Newer chips will skip this when possible to get better performance.
+                 * This is also possible for other gfx10.3 chips, but is disabled for
+                 * interoperability between different Mesa versions.
+                 */
+                (info->family > CHIP_YELLOW_CARP &&
+                 gfx10_DCN_requires_independent_64B_blocks(info, config))) {
                surf->u.gfx9.color.dcc.independent_64B_blocks = 1;
                surf->u.gfx9.color.dcc.independent_128B_blocks = 1;
                surf->u.gfx9.color.dcc.max_compressed_block_size = V_028C78_MAX_BLOCK_SIZE_64B;
@@ -2216,7 +2303,9 @@ static int gfx9_compute_surface(struct ac_addrlib *addrlib, const struct radeon_
        !(surf->flags & (RADEON_SURF_DISABLE_DCC | RADEON_SURF_FORCE_SWIZZLE_MODE |
                         RADEON_SURF_FORCE_MICRO_TILE_MODE)) &&
        (surf->modifier == DRM_FORMAT_MOD_INVALID ||
-        ac_modifier_has_dcc(surf->modifier))) {
+        ac_modifier_has_dcc(surf->modifier)) &&
+       is_dcc_supported_by_DCN(info, config, surf, surf->u.gfx9.color.dcc.rb_aligned,
+                               surf->u.gfx9.color.dcc.pipe_aligned)) {
       /* Validate that DCC is enabled if DCN can do it. */
       if ((info->use_display_dcc_unaligned || info->use_display_dcc_with_retile_blit) &&
           AddrSurfInfoIn.flags.display && surf->bpe == 4) {
@@ -2926,7 +3015,8 @@ static nir_ssa_def *gfx10_nir_meta_addr_from_coord(nir_builder *b, const struct 
                                                    int blkSizeBias, unsigned blkStart,
                                                    nir_ssa_def *meta_pitch, nir_ssa_def *meta_slice_size,
                                                    nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *z,
-                                                   nir_ssa_def *pipe_xor)
+                                                   nir_ssa_def *pipe_xor,
+                                                   nir_ssa_def **bit_position)
 {
    nir_ssa_def *zero = nir_imm_int(b, 0);
    nir_ssa_def *one = nir_imm_int(b, 1);
@@ -2967,9 +3057,81 @@ static nir_ssa_def *gfx10_nir_meta_addr_from_coord(nir_builder *b, const struct 
    nir_ssa_def *pipeXor = nir_iand_imm(b, nir_ishl(b, nir_iand_imm(b, pipe_xor, pipeMask),
                                                    nir_imm_int(b, m_pipeInterleaveLog2)), blkMask);
 
+   if (bit_position)
+      *bit_position = nir_ishl(b, nir_iand(b, address, nir_imm_int(b, 1)),
+                                  nir_imm_int(b, 2));
+
    return nir_iadd(b, nir_iadd(b, nir_imul(b, meta_slice_size, z),
                                nir_imul(b, blkIndex, nir_ishl(b, one, nir_imm_int(b, blkSizeLog2)))),
                    nir_ixor(b, nir_ushr(b, address, one), pipeXor));
+}
+
+static nir_ssa_def *gfx9_nir_meta_addr_from_coord(nir_builder *b, const struct radeon_info *info,
+                                                  struct gfx9_meta_equation *equation,
+                                                  nir_ssa_def *meta_pitch, nir_ssa_def *meta_height,
+                                                  nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *z,
+                                                  nir_ssa_def *sample, nir_ssa_def *pipe_xor,
+                                                  nir_ssa_def **bit_position)
+{
+   nir_ssa_def *zero = nir_imm_int(b, 0);
+   nir_ssa_def *one = nir_imm_int(b, 1);
+
+   assert(info->chip_class >= GFX9);
+
+   unsigned meta_block_width_log2 = util_logbase2(equation->meta_block_width);
+   unsigned meta_block_height_log2 = util_logbase2(equation->meta_block_height);
+   unsigned meta_block_depth_log2 = util_logbase2(equation->meta_block_depth);
+
+   unsigned m_pipeInterleaveLog2 = 8 + G_0098F8_PIPE_INTERLEAVE_SIZE_GFX9(info->gb_addr_config);
+   unsigned numPipeBits = equation->u.gfx9.num_pipe_bits;
+   nir_ssa_def *pitchInBlock = nir_ushr_imm(b, meta_pitch, meta_block_width_log2);
+   nir_ssa_def *sliceSizeInBlock = nir_imul(b, nir_ushr_imm(b, meta_height, meta_block_height_log2),
+                                            pitchInBlock);
+
+   nir_ssa_def *xb = nir_ushr_imm(b, x, meta_block_width_log2);
+   nir_ssa_def *yb = nir_ushr_imm(b, y, meta_block_height_log2);
+   nir_ssa_def *zb = nir_ushr_imm(b, z, meta_block_depth_log2);
+
+   nir_ssa_def *blockIndex = nir_iadd(b, nir_iadd(b, nir_imul(b, zb, sliceSizeInBlock),
+                                                  nir_imul(b, yb, pitchInBlock)), xb);
+   nir_ssa_def *coords[] = {x, y, z, sample, blockIndex};
+
+   nir_ssa_def *address = zero;
+   unsigned num_bits = equation->u.gfx9.num_bits;
+   assert(num_bits <= 32);
+
+   /* Compute the address up until the last bit that doesn't use the block index. */
+   for (unsigned i = 0; i < num_bits - 1; i++) {
+      nir_ssa_def *xor = zero;
+
+      for (unsigned c = 0; c < 5; c++) {
+         if (equation->u.gfx9.bit[i].coord[c].dim >= 5)
+            continue;
+
+         assert(equation->u.gfx9.bit[i].coord[c].ord < 32);
+         nir_ssa_def *ison =
+            nir_iand(b, nir_ushr_imm(b, coords[equation->u.gfx9.bit[i].coord[c].dim],
+                                     equation->u.gfx9.bit[i].coord[c].ord), one);
+
+         xor = nir_ixor(b, xor, ison);
+      }
+      address = nir_ior(b, address, nir_ishl(b, xor, nir_imm_int(b, i)));
+   }
+
+   /* Fill the remaining bits with the block index. */
+   unsigned last = num_bits - 1;
+   address = nir_ior(b, address,
+                     nir_ishl(b, nir_ushr_imm(b, blockIndex,
+                                              equation->u.gfx9.bit[last].coord[0].ord),
+                     nir_imm_int(b, last)));
+
+   if (bit_position)
+      *bit_position = nir_ishl(b, nir_iand(b, address, nir_imm_int(b, 1)),
+                                  nir_imm_int(b, 2));
+
+   nir_ssa_def *pipeXor = nir_iand_imm(b, pipe_xor, (1 << numPipeBits) - 1);
+   return nir_ixor(b, nir_ushr(b, address, one),
+                   nir_ishl(b, pipeXor, nir_imm_int(b, m_pipeInterleaveLog2)));
 }
 
 nir_ssa_def *ac_nir_dcc_addr_from_coord(nir_builder *b, const struct radeon_info *info,
@@ -2979,68 +3141,37 @@ nir_ssa_def *ac_nir_dcc_addr_from_coord(nir_builder *b, const struct radeon_info
                                         nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *z,
                                         nir_ssa_def *sample, nir_ssa_def *pipe_xor)
 {
-   nir_ssa_def *zero = nir_imm_int(b, 0);
-   nir_ssa_def *one = nir_imm_int(b, 1);
-
    if (info->chip_class >= GFX10) {
       unsigned bpp_log2 = util_logbase2(bpe);
 
       return gfx10_nir_meta_addr_from_coord(b, info, equation, bpp_log2 - 8, 1,
                                             dcc_pitch, dcc_slice_size,
-                                            x, y, z, pipe_xor);
+                                            x, y, z, pipe_xor, NULL);
    } else {
-      assert(info->chip_class == GFX9);
+      return gfx9_nir_meta_addr_from_coord(b, info, equation, dcc_pitch,
+                                           dcc_height, x, y, z,
+                                           sample, pipe_xor, NULL);
+   }
+}
 
-      unsigned meta_block_width_log2 = util_logbase2(equation->meta_block_width);
-      unsigned meta_block_height_log2 = util_logbase2(equation->meta_block_height);
-      unsigned meta_block_depth_log2 = util_logbase2(equation->meta_block_depth);
+nir_ssa_def *ac_nir_cmask_addr_from_coord(nir_builder *b, const struct radeon_info *info,
+                                        struct gfx9_meta_equation *equation,
+                                        nir_ssa_def *cmask_pitch, nir_ssa_def *cmask_height,
+                                        nir_ssa_def *cmask_slice_size,
+                                        nir_ssa_def *x, nir_ssa_def *y, nir_ssa_def *z,
+                                        nir_ssa_def *pipe_xor,
+                                        nir_ssa_def **bit_position)
+{
+   nir_ssa_def *zero = nir_imm_int(b, 0);
 
-      unsigned m_pipeInterleaveLog2 = 8 + G_0098F8_PIPE_INTERLEAVE_SIZE_GFX9(info->gb_addr_config);
-      unsigned numPipeBits = equation->u.gfx9.num_pipe_bits;
-      nir_ssa_def *pitchInBlock = nir_ushr_imm(b, dcc_pitch, meta_block_width_log2);
-      nir_ssa_def *sliceSizeInBlock = nir_imul(b, nir_ushr_imm(b, dcc_height, meta_block_height_log2),
-                                               pitchInBlock);
-
-      nir_ssa_def *xb = nir_ushr_imm(b, x, meta_block_width_log2);
-      nir_ssa_def *yb = nir_ushr_imm(b, y, meta_block_height_log2);
-      nir_ssa_def *zb = nir_ushr_imm(b, z, meta_block_depth_log2);
-
-      nir_ssa_def *blockIndex = nir_iadd(b, nir_iadd(b, nir_imul(b, zb, sliceSizeInBlock),
-                                                     nir_imul(b, yb, pitchInBlock)), xb);
-      nir_ssa_def *coords[] = {x, y, z, sample, blockIndex};
-
-      nir_ssa_def *address = zero;
-      unsigned num_bits = equation->u.gfx9.num_bits;
-      assert(num_bits <= 32);
-
-      /* Compute the address up until the last bit that doesn't use the block index. */
-      for (unsigned i = 0; i < num_bits - 1; i++) {
-         nir_ssa_def *xor = zero;
-
-         for (unsigned c = 0; c < 5; c++) {
-            if (equation->u.gfx9.bit[i].coord[c].dim >= 5)
-               continue;
-
-            assert(equation->u.gfx9.bit[i].coord[c].ord < 32);
-            nir_ssa_def *ison =
-               nir_iand(b, nir_ushr_imm(b, coords[equation->u.gfx9.bit[i].coord[c].dim],
-                                        equation->u.gfx9.bit[i].coord[c].ord), one);
-
-            xor = nir_ixor(b, xor, ison);
-         }
-         address = nir_ior(b, address, nir_ishl(b, xor, nir_imm_int(b, i)));
-      }
-
-      /* Fill the remaining bits with the block index. */
-      unsigned last = num_bits - 1;
-      address = nir_ior(b, address,
-                        nir_ishl(b, nir_ushr_imm(b, blockIndex,
-                                                 equation->u.gfx9.bit[last].coord[0].ord),
-                        nir_imm_int(b, last)));
-
-      nir_ssa_def *pipeXor = nir_iand_imm(b, pipe_xor, (1 << numPipeBits) - 1);
-      return nir_ixor(b, nir_ushr(b, address, one),
-                      nir_ishl(b, pipeXor, nir_imm_int(b, m_pipeInterleaveLog2)));
+   if (info->chip_class >= GFX10) {
+      return gfx10_nir_meta_addr_from_coord(b, info, equation, -7, 1,
+                                            cmask_pitch, cmask_slice_size,
+                                            x, y, z, pipe_xor, bit_position);
+   } else {
+      return gfx9_nir_meta_addr_from_coord(b, info, equation, cmask_pitch,
+                                           cmask_height, x, y, z, zero,
+                                           pipe_xor, bit_position);
    }
 }
 
@@ -3053,5 +3184,5 @@ nir_ssa_def *ac_nir_htile_addr_from_coord(nir_builder *b, const struct radeon_in
 {
    return gfx10_nir_meta_addr_from_coord(b, info, equation, -4, 2,
                                             htile_pitch, htile_slice_size,
-                                            x, y, z, pipe_xor);
+                                            x, y, z, pipe_xor, NULL);
 }
