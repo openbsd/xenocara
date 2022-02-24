@@ -3,6 +3,7 @@
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/gtf
 ./usr/X11R6/include/libsync.h
+./usr/X11R6/lib/modules/dri/i830_dri.so
 ./usr/X11R6/lib/modules/dri/i915_dri.so
 ./usr/X11R6/lib/modules/dri/i965_dri.so
 ./usr/X11R6/lib/modules/dri/iris_dri.so
