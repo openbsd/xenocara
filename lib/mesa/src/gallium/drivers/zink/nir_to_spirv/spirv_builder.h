@@ -90,6 +90,9 @@ spirv_builder_emit_decoration(struct spirv_builder *b, SpvId target,
                               SpvDecoration decoration);
 
 void
+spirv_builder_emit_input_attachment_index(struct spirv_builder *b, SpvId target, uint32_t id);
+
+void
 spirv_builder_emit_specid(struct spirv_builder *b, SpvId target, uint32_t id);
 
 void
@@ -189,6 +192,9 @@ spirv_builder_emit_access_chain(struct spirv_builder *b, SpvId result_type,
 
 void
 spirv_builder_emit_interlock(struct spirv_builder *b, bool end);
+
+SpvId
+spirv_builder_emit_unop_const(struct spirv_builder *b, SpvOp op, SpvId result_type, uint64_t operand);
 
 SpvId
 spirv_builder_emit_unop(struct spirv_builder *b, SpvOp op, SpvId result_type,
@@ -445,7 +451,7 @@ spirv_builder_get_num_words(struct spirv_builder *b);
 
 size_t
 spirv_builder_get_words(struct spirv_builder *b, uint32_t *words,
-                        size_t num_words);
+                        size_t num_words, uint32_t spirv_version);
 
 void
 spirv_builder_emit_vertex(struct spirv_builder *b, uint32_t stream);

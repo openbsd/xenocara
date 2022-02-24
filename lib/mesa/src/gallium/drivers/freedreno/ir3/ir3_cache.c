@@ -140,9 +140,13 @@ ir3_cache_lookup(struct ir3_cache *cache, const struct ir3_cache_key *key,
    struct ir3_shader_variant *bs;
 
    if (ir3_has_binning_vs(&key->key)) {
-      shader_key.safe_constlen = !!(safe_constlens & (1 << MESA_SHADER_VERTEX));
+      /* starting with a6xx, the same const state is used for binning and draw
+       * passes, so the binning pass VS variant needs to match the main VS
+       */
+      shader_key.safe_constlen = (compiler->gen >= 6) &&
+            !!(safe_constlens & (1 << MESA_SHADER_VERTEX));
       bs =
-         ir3_shader_variant(shaders[MESA_SHADER_VERTEX], key->key, true, debug);
+         ir3_shader_variant(shaders[MESA_SHADER_VERTEX], shader_key, true, debug);
       if (!bs)
          return NULL;
    } else {
@@ -153,7 +157,7 @@ ir3_cache_lookup(struct ir3_cache *cache, const struct ir3_cache_key *key,
       cache->data, bs, variants[MESA_SHADER_VERTEX],
       variants[MESA_SHADER_TESS_CTRL], variants[MESA_SHADER_TESS_EVAL],
       variants[MESA_SHADER_GEOMETRY], variants[MESA_SHADER_FRAGMENT],
-      &key->key);
+      key);
    state->key = *key;
 
    /* NOTE: uses copy of key in state obj, because pointer passed by caller

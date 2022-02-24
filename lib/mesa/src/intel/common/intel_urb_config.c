@@ -60,7 +60,7 @@
  * \param[out] constrained - true if we wanted more space than we had
  */
 void
-intel_get_urb_config(const struct gen_device_info *devinfo,
+intel_get_urb_config(const struct intel_device_info *devinfo,
                      const struct intel_l3_config *l3_cfg,
                      bool tess_present, bool gs_present,
                      const unsigned entry_size[4],
@@ -87,8 +87,7 @@ intel_get_urb_config(const struct gen_device_info *devinfo,
    if (devinfo->ver >= 12)
       urb_size_kB -= 4 * devinfo->l3_banks;
 
-   const unsigned push_constant_kB =
-      (devinfo->ver >= 8 || (devinfo->is_haswell && devinfo->gt == 3)) ? 32 : 16;
+   const unsigned push_constant_kB = devinfo->max_constant_urb_size_kb;
 
    const bool active[4] = { true, tess_present, tess_present, gs_present };
 

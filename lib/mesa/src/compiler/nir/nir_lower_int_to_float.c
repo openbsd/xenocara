@@ -49,6 +49,8 @@ lower_alu_instr(nir_builder *b, nir_alu_instr *alu)
       return false;
    }
 
+   b->cursor = nir_before_instr(&alu->instr);
+
    /* Replacement SSA value */
    nir_ssa_def *rep = NULL;
    switch (alu->op) {
@@ -163,6 +165,8 @@ nir_lower_int_to_float_impl(nir_function_impl *impl)
    if (progress) {
       nir_metadata_preserve(impl, nir_metadata_block_index |
                                   nir_metadata_dominance);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
    }
 
    free(float_types);

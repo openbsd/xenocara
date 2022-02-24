@@ -22,6 +22,7 @@
 
 #include "radeon_compiler.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "r300_reg.h"
@@ -369,7 +370,7 @@ static void translate_vertex_program(struct radeon_compiler *c, void *user)
 	struct r300_vertex_program_compiler *compiler = (struct r300_vertex_program_compiler*)c;
 	struct rc_instruction *rci;
 
-	unsigned loops[R500_PVS_MAX_LOOP_DEPTH];
+	unsigned loops[R500_PVS_MAX_LOOP_DEPTH] = {};
 	unsigned loop_depth = 0;
 
 	compiler->code->pos_end = 0;	/* Not supported yet */
@@ -559,15 +560,33 @@ struct temporary_allocation {
 	struct rc_instruction * LastRead;
 };
 
+static int get_reg(struct radeon_compiler *c, struct temporary_allocation *ta, bool *hwtemps,
+                   unsigned int orig)
+{
+    if (!ta[orig].Allocated) {
+        int j;
+        for (j = 0; j < c->max_temp_regs; ++j)
+        {
+            if (!hwtemps[j])
+                break;
+        }
+        ta[orig].Allocated = 1;
+        ta[orig].HwTemp = j;
+        hwtemps[ta[orig].HwTemp] = true;
+    }
+
+    return ta[orig].HwTemp;
+}
+
 static void allocate_temporary_registers(struct radeon_compiler *c, void *user)
 {
 	struct r300_vertex_program_compiler *compiler = (struct r300_vertex_program_compiler*)c;
 	struct rc_instruction *inst;
 	struct rc_instruction *end_loop = NULL;
 	unsigned int num_orig_temps = 0;
-	char hwtemps[RC_REGISTER_MAX_INDEX];
+	bool hwtemps[RC_REGISTER_MAX_INDEX];
 	struct temporary_allocation * ta;
-	unsigned int i, j;
+	unsigned int i;
 
 	memset(hwtemps, 0, sizeof(hwtemps));
 
@@ -638,28 +657,17 @@ static void allocate_temporary_registers(struct radeon_compiler *c, void *user)
 		for (i = 0; i < opcode->NumSrcRegs; ++i) {
 			if (inst->U.I.SrcReg[i].File == RC_FILE_TEMPORARY) {
 				unsigned int orig = inst->U.I.SrcReg[i].Index;
-				inst->U.I.SrcReg[i].Index = ta[orig].HwTemp;
+				inst->U.I.SrcReg[i].Index = get_reg(c, ta, hwtemps, orig);
 
 				if (ta[orig].Allocated && inst == ta[orig].LastRead)
-					hwtemps[ta[orig].HwTemp] = 0;
+					hwtemps[ta[orig].HwTemp] = false;
 			}
 		}
 
 		if (opcode->HasDstReg) {
 			if (inst->U.I.DstReg.File == RC_FILE_TEMPORARY) {
 				unsigned int orig = inst->U.I.DstReg.Index;
-
-				if (!ta[orig].Allocated) {
-					for(j = 0; j < c->max_temp_regs; ++j) {
-						if (!hwtemps[j])
-							break;
-					}
-					ta[orig].Allocated = 1;
-					ta[orig].HwTemp = j;
-					hwtemps[ta[orig].HwTemp] = 1;
-				}
-
-				inst->U.I.DstReg.Index = ta[orig].HwTemp;
+				inst->U.I.DstReg.Index = get_reg(c, ta, hwtemps, orig);
 			}
 		}
 	}
@@ -695,10 +703,10 @@ static int transform_nonnative_modifiers(
 			new_inst->U.I.SrcReg[1] = inst->U.I.SrcReg[i];
 			new_inst->U.I.SrcReg[1].Negate ^= RC_MASK_XYZW;
 
-			memset(&inst->U.I.SrcReg[i], 0, sizeof(inst->U.I.SrcReg[i]));
 			inst->U.I.SrcReg[i].File = RC_FILE_TEMPORARY;
 			inst->U.I.SrcReg[i].Index = temp;
 			inst->U.I.SrcReg[i].Swizzle = RC_SWIZZLE_XYZW;
+			inst->U.I.SrcReg[i].RelAddr = 0;
 		}
 	}
 	return 1;
@@ -724,10 +732,13 @@ static int transform_source_conflicts(
 			inst_mov->U.I.DstReg.File = RC_FILE_TEMPORARY;
 			inst_mov->U.I.DstReg.Index = tmpreg;
 			inst_mov->U.I.SrcReg[0] = inst->U.I.SrcReg[2];
+			inst_mov->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
+			inst_mov->U.I.SrcReg[0].Negate = 0;
+			inst_mov->U.I.SrcReg[0].Abs = 0;
 
-			reset_srcreg(&inst->U.I.SrcReg[2]);
 			inst->U.I.SrcReg[2].File = RC_FILE_TEMPORARY;
 			inst->U.I.SrcReg[2].Index = tmpreg;
+			inst->U.I.SrcReg[2].RelAddr = false;
 		}
 	}
 
@@ -739,10 +750,13 @@ static int transform_source_conflicts(
 			inst_mov->U.I.DstReg.File = RC_FILE_TEMPORARY;
 			inst_mov->U.I.DstReg.Index = tmpreg;
 			inst_mov->U.I.SrcReg[0] = inst->U.I.SrcReg[1];
+			inst_mov->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
+			inst_mov->U.I.SrcReg[0].Negate = 0;
+			inst_mov->U.I.SrcReg[0].Abs = 0;
 
-			reset_srcreg(&inst->U.I.SrcReg[1]);
 			inst->U.I.SrcReg[1].File = RC_FILE_TEMPORARY;
 			inst->U.I.SrcReg[1].Index = tmpreg;
+			inst->U.I.SrcReg[1].RelAddr = false;
 		}
 	}
 
@@ -755,8 +769,8 @@ static void rc_vs_add_artificial_outputs(struct radeon_compiler *c, void *user)
 	int i;
 
 	for(i = 0; i < 32; ++i) {
-		if ((compiler->RequiredOutputs & (1 << i)) &&
-		    !(compiler->Base.Program.OutputsWritten & (1 << i))) {
+		if ((compiler->RequiredOutputs & (1U << i)) &&
+		    !(compiler->Base.Program.OutputsWritten & (1U << i))) {
 			struct rc_instruction * inst = rc_insert_new_instruction(&compiler->Base, compiler->Base.Program.Instructions.Prev);
 			inst->U.I.Opcode = RC_OPCODE_MOV;
 
@@ -768,7 +782,7 @@ static void rc_vs_add_artificial_outputs(struct radeon_compiler *c, void *user)
 			inst->U.I.SrcReg[0].Index = 0;
 			inst->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
 
-			compiler->Base.Program.OutputsWritten |= 1 << i;
+			compiler->Base.Program.OutputsWritten |= 1U << i;
 		}
 	}
 }
@@ -780,7 +794,7 @@ static void dataflow_outputs_mark_used(void * userdata, void * data,
 	int i;
 
 	for(i = 0; i < 32; ++i) {
-		if (c->RequiredOutputs & (1 << i))
+		if (c->RequiredOutputs & (1U << i))
 			callback(data, i, RC_MASK_XYZW);
 	}
 }
@@ -864,7 +878,7 @@ static void rc_emulate_negative_addressing(struct radeon_compiler *compiler, voi
 		transform_negative_addressing(c, lastARL, inst, min_offset);
 }
 
-struct rc_swizzle_caps r300_vertprog_swizzle_caps = {
+const struct rc_swizzle_caps r300_vertprog_swizzle_caps = {
 	.IsNative = &swizzle_is_native,
 	.Split = 0 /* should never be called */
 };

@@ -55,16 +55,7 @@ bool
 d3d12_lower_load_first_vertex(nir_shader *nir);
 
 void
-d3d12_create_bare_samplers(nir_shader *s);
-
-bool
-d3d12_lower_bool_input(struct nir_shader *s);
-
-void
 d3d12_lower_uint_cast(nir_shader *nir, bool is_signed);
-
-bool
-d3d12_lower_frag_result(struct nir_shader *s, unsigned nr_cbufs);
 
 void
 d3d12_add_missing_dual_src_target(struct nir_shader *s,

@@ -58,6 +58,14 @@ brw_batch_reset(struct brw_context *brw);
 static void
 brw_new_batch(struct brw_context *brw);
 
+static unsigned
+num_fences(struct brw_batch *batch)
+{
+   return util_dynarray_num_elements(&batch->exec_fences,
+                                     struct drm_i915_gem_exec_fence);
+}
+
+
 static void
 dump_validation_list(struct brw_batch *batch)
 {
@@ -128,9 +136,9 @@ brw_batch_init(struct brw_context *brw)
 {
    struct brw_screen *screen = brw->screen;
    struct brw_batch *batch = &brw->batch;
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
 
-   if (INTEL_DEBUG & DEBUG_BATCH) {
+   if (INTEL_DEBUG(DEBUG_BATCH)) {
       /* The shadow doesn't get relocs written so state decode fails. */
       batch->use_shadow_copy = false;
    } else
@@ -147,14 +155,15 @@ brw_batch_init(struct brw_context *brw)
       malloc(batch->exec_array_size * sizeof(batch->exec_bos[0]));
    batch->validation_list =
       malloc(batch->exec_array_size * sizeof(batch->validation_list[0]));
+   batch->contains_fence_signal = false;
 
-   if (INTEL_DEBUG & DEBUG_BATCH) {
+   if (INTEL_DEBUG(DEBUG_BATCH)) {
       batch->state_batch_sizes =
          _mesa_hash_table_u64_create(NULL);
 
       const unsigned decode_flags =
          INTEL_BATCH_DECODE_FULL |
-         ((INTEL_DEBUG & DEBUG_COLOR) ? INTEL_BATCH_DECODE_IN_COLOR : 0) |
+         (INTEL_DEBUG(DEBUG_COLOR) ? INTEL_BATCH_DECODE_IN_COLOR : 0) |
          INTEL_BATCH_DECODE_OFFSETS |
          INTEL_BATCH_DECODE_FLOATS;
 
@@ -284,6 +293,9 @@ brw_batch_reset(struct brw_context *brw)
    struct brw_bo *identifier_bo = brw->workaround_bo;
    if (identifier_bo)
       add_exec_bo(batch, identifier_bo);
+
+   if (batch->contains_fence_signal)
+      batch->contains_fence_signal = false;
 }
 
 static void
@@ -588,7 +600,7 @@ brw_new_batch(struct brw_context *brw)
     * while, because many programs won't cleanly destroy our context, so the
     * end-of-run printout may not happen.
     */
-   if (INTEL_DEBUG & DEBUG_SHADER_TIME)
+   if (INTEL_DEBUG(DEBUG_SHADER_TIME))
       brw_collect_and_report_shader_time(brw);
 
    brw_batch_maybe_noop(brw);
@@ -604,7 +616,7 @@ brw_new_batch(struct brw_context *brw)
 static void
 brw_finish_batch(struct brw_context *brw)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    brw->batch.no_wrap = true;
 
@@ -728,6 +740,14 @@ execbuffer(int fd,
       execbuf.flags |= I915_EXEC_FENCE_OUT;
    }
 
+   if (num_fences(batch)) {
+      execbuf.flags |= I915_EXEC_FENCE_ARRAY;
+      execbuf.num_cliprects = num_fences(batch);
+      execbuf.cliprects_ptr =
+         (uintptr_t)util_dynarray_begin(&batch->exec_fences);
+   }
+
+
    int ret = drmIoctl(fd, cmd, &execbuf);
    if (ret != 0)
       ret = -errno;
@@ -771,7 +791,7 @@ submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
    brw_bo_unmap(batch->batch.bo);
    brw_bo_unmap(batch->state.bo);
 
-   if (!brw->screen->no_hw) {
+   if (!brw->screen->devinfo.no_hw) {
       /* The requirement for using I915_EXEC_NO_RELOC are:
        *
        *   The addresses written in the objects must match the corresponding
@@ -830,7 +850,7 @@ submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
       throttle(brw);
    }
 
-   if (INTEL_DEBUG & DEBUG_BATCH) {
+   if (INTEL_DEBUG(DEBUG_BATCH)) {
       intel_print_batch(&batch->decoder, batch->batch.map,
                         4 * USED_BATCH(*batch),
                         batch->batch.bo->gtt_offset, false);
@@ -842,7 +862,7 @@ submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
    if (ret != 0) {
       fprintf(stderr, "i965: Failed to submit batchbuffer: %s\n",
               strerror(-ret));
-      exit(1);
+      abort();
    }
 
    return ret;
@@ -862,7 +882,7 @@ _brw_batch_flush_fence(struct brw_context *brw,
 {
    int ret;
 
-   if (USED_BATCH(brw->batch) == 0)
+   if (USED_BATCH(brw->batch) == 0 && !brw->batch.contains_fence_signal)
       return 0;
 
    /* Check that we didn't just wrap our batchbuffer at a bad time. */
@@ -879,7 +899,7 @@ _brw_batch_flush_fence(struct brw_context *brw,
       brw_bo_reference(brw->throttle_batch[0]);
    }
 
-   if (INTEL_DEBUG & (DEBUG_BATCH | DEBUG_SUBMIT)) {
+   if (INTEL_DEBUG(DEBUG_BATCH | DEBUG_SUBMIT)) {
       int bytes_for_commands = 4 * USED_BATCH(brw->batch);
       int bytes_for_state = brw->batch.state_used;
       fprintf(stderr, "%19s:%-3d: Batchbuffer flush with %5db (%0.1f%%) (pkt),"
@@ -897,7 +917,7 @@ _brw_batch_flush_fence(struct brw_context *brw,
 
    ret = submit_batch(brw, in_fence_fd, out_fence_fd);
 
-   if (INTEL_DEBUG & DEBUG_SYNC) {
+   if (INTEL_DEBUG(DEBUG_SYNC)) {
       fprintf(stderr, "waiting for idle\n");
       brw_bo_wait_rendering(brw->batch.batch.bo);
    }
@@ -1067,7 +1087,7 @@ brw_state_batch(struct brw_context *brw,
       assert(offset + size < batch->state.bo->size);
    }
 
-   if (INTEL_DEBUG & DEBUG_BATCH) {
+   if (INTEL_DEBUG(DEBUG_BATCH)) {
       _mesa_hash_table_u64_insert(batch->state_batch_sizes,
                                   offset, (void *) (uintptr_t) size);
    }
@@ -1095,7 +1115,7 @@ load_sized_register_mem(struct brw_context *brw,
                         uint32_t offset,
                         int size)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
    int i;
 
    /* MI_LOAD_REGISTER_MEM only exists on Gfx7+. */
@@ -1145,7 +1165,7 @@ void
 brw_store_register_mem32(struct brw_context *brw,
                          struct brw_bo *bo, uint32_t reg, uint32_t offset)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    assert(devinfo->ver >= 6);
 
@@ -1171,7 +1191,7 @@ void
 brw_store_register_mem64(struct brw_context *brw,
                          struct brw_bo *bo, uint32_t reg, uint32_t offset)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    assert(devinfo->ver >= 6);
 
@@ -1237,7 +1257,7 @@ brw_load_register_imm64(struct brw_context *brw, uint32_t reg, uint64_t imm)
 void
 brw_load_register_reg(struct brw_context *brw, uint32_t dest, uint32_t src)
 {
-   assert(brw->screen->devinfo.ver >= 8 || brw->screen->devinfo.is_haswell);
+   assert(brw->screen->devinfo.verx10 >= 75);
 
    BEGIN_BATCH(3);
    OUT_BATCH(MI_LOAD_REGISTER_REG | (3 - 2));
@@ -1252,7 +1272,7 @@ brw_load_register_reg(struct brw_context *brw, uint32_t dest, uint32_t src)
 void
 brw_load_register_reg64(struct brw_context *brw, uint32_t dest, uint32_t src)
 {
-   assert(brw->screen->devinfo.ver >= 8 || brw->screen->devinfo.is_haswell);
+   assert(brw->screen->devinfo.verx10 >= 75);
 
    BEGIN_BATCH(6);
    OUT_BATCH(MI_LOAD_REGISTER_REG | (3 - 2));
@@ -1271,7 +1291,7 @@ void
 brw_store_data_imm32(struct brw_context *brw, struct brw_bo *bo,
                      uint32_t offset, uint32_t imm)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    assert(devinfo->ver >= 6);
 
@@ -1294,7 +1314,7 @@ void
 brw_store_data_imm64(struct brw_context *brw, struct brw_bo *bo,
                      uint32_t offset, uint64_t imm)
 {
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    assert(devinfo->ver >= 6);
 

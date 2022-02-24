@@ -26,6 +26,8 @@
  *
  */
 
+#include "util/u_math.h"
+
 #include "radeon_dataflow.h"
 
 #include "radeon_compiler.h"
@@ -653,11 +655,12 @@ static int peephole_add_presub_inv(
 	/* XXX It would be nice to use is_src_uniform_constant here, but that
 	 * function only works if the register's file is RC_FILE_NONE */
 	for(i = 0; i < 4; i++ ) {
+		if (!(inst_add->U.I.DstReg.WriteMask & (1 << i)))
+			continue;
+
 		swz = GET_SWZ(inst_add->U.I.SrcReg[0].Swizzle, i);
-		if(((1 << i) & inst_add->U.I.DstReg.WriteMask)
-						&& swz != RC_SWIZZLE_ONE) {
+		if (swz != RC_SWIZZLE_ONE || inst_add->U.I.SrcReg[0].Negate & (1 << i))
 			return 0;
-		}
 	}
 
 	/* Check src1. */
@@ -832,8 +835,15 @@ static int peephole_mul_omod(
 		return 0;
 	}
 
-	/* Rewrite the instructions */
 	writemask_sum = rc_variable_writemask_sum(writer_list->Item);
+
+	/* rc_normal_rewrite_writemask can't expand a previous writemask to store
+	 * more channels replicated.
+	 */
+	if (util_bitcount(writemask_sum) < util_bitcount(inst_mul->U.I.DstReg.WriteMask))
+		return 0;
+
+	/* Rewrite the instructions */
 	for (var = writer_list->Item; var; var = var->Friend) {
 		struct rc_variable * writer = var;
 		unsigned conversion_swizzle = rc_make_conversion_swizzle(

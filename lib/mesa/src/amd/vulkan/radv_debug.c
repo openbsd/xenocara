@@ -67,11 +67,11 @@ radv_init_trace(struct radv_device *device)
    struct radeon_winsys *ws = device->ws;
    VkResult result;
 
-   device->trace_bo = ws->buffer_create(
+   result = ws->buffer_create(
       ws, TRACE_BO_SIZE, 8, RADEON_DOMAIN_VRAM,
       RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING | RADEON_FLAG_ZERO_VRAM,
-      RADV_BO_PRIORITY_UPLOAD_BUFFER);
-   if (!device->trace_bo)
+      RADV_BO_PRIORITY_UPLOAD_BUFFER, 0, &device->trace_bo);
+   if (result != VK_SUCCESS)
       return false;
 
    result = ws->buffer_make_resident(ws, device->trace_bo, true);
@@ -224,6 +224,8 @@ radv_dump_descriptor_set(struct radv_device *device, struct radv_descriptor_set 
          break;
       case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
       case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+      case VK_DESCRIPTOR_TYPE_MUTABLE_VALVE:
+      case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
          /* todo */
          break;
       default:
@@ -304,7 +306,7 @@ radv_dump_annotated_shader(struct radv_shader_variant *shader, gl_shader_stage s
    if (!shader)
       return;
 
-   start_addr = radv_buffer_get_va(shader->bo) + shader->bo_offset;
+   start_addr = radv_shader_variant_get_va(shader);
    end_addr = start_addr + shader->code_size;
 
    /* See if any wave executes the shader. */
@@ -401,8 +403,23 @@ radv_dump_annotated_shaders(struct radv_pipeline *pipeline, VkShaderStageFlagBit
 }
 
 static void
+radv_dump_spirv(struct radv_shader_variant *shader, const char *sha1, const char *dump_dir)
+{
+   char dump_path[512];
+   FILE *f;
+
+   snprintf(dump_path, sizeof(dump_path), "%s/%s.spv", dump_dir, sha1);
+
+   f = fopen(dump_path, "w+");
+   if (f) {
+      fwrite(shader->spirv, shader->spirv_size, 1, f);
+      fclose(f);
+   }
+}
+
+static void
 radv_dump_shader(struct radv_pipeline *pipeline, struct radv_shader_variant *shader,
-                 gl_shader_stage stage, FILE *f)
+                 gl_shader_stage stage, const char *dump_dir, FILE *f)
 {
    if (!shader)
       return;
@@ -416,8 +433,8 @@ radv_dump_shader(struct radv_pipeline *pipeline, struct radv_shader_variant *sha
       _mesa_sha1_compute(shader->spirv, shader->spirv_size, sha1);
       _mesa_sha1_format(sha1buf, sha1);
 
-      fprintf(f, "SPIRV (sha1: %s):\n", sha1buf);
-      radv_print_spirv(shader->spirv, shader->spirv_size, f);
+      fprintf(f, "SPIRV (see %s.spv)\n\n", sha1buf);
+      radv_dump_spirv(shader, sha1buf, dump_dir);
    }
 
    if (shader->nir_string) {
@@ -432,14 +449,15 @@ radv_dump_shader(struct radv_pipeline *pipeline, struct radv_shader_variant *sha
 }
 
 static void
-radv_dump_shaders(struct radv_pipeline *pipeline, VkShaderStageFlagBits active_stages, FILE *f)
+radv_dump_shaders(struct radv_pipeline *pipeline, VkShaderStageFlagBits active_stages,
+                  const char *dump_dir, FILE *f)
 {
    /* Dump active graphics shaders. */
    unsigned stages = active_stages;
    while (stages) {
       int stage = u_bit_scan(&stages);
 
-      radv_dump_shader(pipeline, pipeline->shaders[stage], stage, f);
+      radv_dump_shader(pipeline, pipeline->shaders[stage], stage, dump_dir, f);
    }
 }
 
@@ -447,13 +465,14 @@ static void
 radv_dump_vertex_descriptors(struct radv_pipeline *pipeline, FILE *f)
 {
    void *ptr = (uint64_t *)pipeline->device->trace_id_ptr;
-   uint32_t count = pipeline->num_vertex_bindings;
+   uint32_t count = util_bitcount(pipeline->vb_desc_usage_mask);
    uint32_t *vb_ptr = &((uint32_t *)ptr)[3];
 
    if (!count)
       return;
 
-   fprintf(f, "Num vertex bindings: %d\n", count);
+   fprintf(f, "Num vertex %s: %d\n",
+           pipeline->use_per_attribute_vb_descs ? "attributes" : "bindings", count);
    for (uint32_t i = 0; i < count; i++) {
       uint32_t *desc = &((uint32_t *)vb_ptr)[i * 4];
       uint64_t va = 0;
@@ -478,16 +497,16 @@ radv_get_saved_pipeline(struct radv_device *device, enum ring_type ring)
 }
 
 static void
-radv_dump_queue_state(struct radv_queue *queue, FILE *f)
+radv_dump_queue_state(struct radv_queue *queue, const char *dump_dir, FILE *f)
 {
-   enum ring_type ring = radv_queue_family_to_ring(queue->queue_family_index);
+   enum ring_type ring = radv_queue_family_to_ring(queue->vk.queue_family_index);
    struct radv_pipeline *pipeline;
 
    fprintf(f, "RING_%s:\n", ring == RING_GFX ? "GFX" : "COMPUTE");
 
    pipeline = radv_get_saved_pipeline(queue->device, ring);
    if (pipeline) {
-      radv_dump_shaders(pipeline, pipeline->active_stages, f);
+      radv_dump_shaders(pipeline, pipeline->active_stages, dump_dir, f);
       if (!(queue->device->instance->debug_flags & RADV_DEBUG_NO_UMR))
          radv_dump_annotated_shaders(pipeline, pipeline->active_stages, f);
       radv_dump_vertex_descriptors(pipeline, f);
@@ -590,7 +609,7 @@ radv_dump_device_name(struct radv_device *device, FILE *f)
 static void
 radv_dump_umr_ring(struct radv_queue *queue, FILE *f)
 {
-   enum ring_type ring = radv_queue_family_to_ring(queue->queue_family_index);
+   enum ring_type ring = radv_queue_family_to_ring(queue->vk.queue_family_index);
    struct radv_device *device = queue->device;
    char cmd[128];
 
@@ -608,7 +627,7 @@ radv_dump_umr_ring(struct radv_queue *queue, FILE *f)
 static void
 radv_dump_umr_waves(struct radv_queue *queue, FILE *f)
 {
-   enum ring_type ring = radv_queue_family_to_ring(queue->queue_family_index);
+   enum ring_type ring = radv_queue_family_to_ring(queue->vk.queue_family_index);
    struct radv_device *device = queue->device;
    char cmd[128];
 
@@ -628,7 +647,7 @@ radv_gpu_hang_occured(struct radv_queue *queue, enum ring_type ring)
 {
    struct radeon_winsys *ws = queue->device->ws;
 
-   if (!ws->ctx_wait_idle(queue->hw_ctx, ring, queue->queue_idx))
+   if (!ws->ctx_wait_idle(queue->hw_ctx, ring, queue->vk.index_in_family))
       return true;
 
    return false;
@@ -638,12 +657,10 @@ void
 radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_cmdbuf *cs)
 {
    struct radv_device *device = queue->device;
-   char dump_dir[256], dump_path[512];
    enum ring_type ring;
    uint64_t addr;
-   FILE *f;
 
-   ring = radv_queue_family_to_ring(queue->queue_family_index);
+   ring = radv_queue_family_to_ring(queue->vk.queue_family_index);
 
    bool hang_occurred = radv_gpu_hang_occured(queue, ring);
    bool vm_fault_occurred = false;
@@ -655,12 +672,14 @@ radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_cmdbuf *cs)
 
    fprintf(stderr, "radv: GPU hang detected...\n");
 
+#ifndef _WIN32
    /* Create a directory into $HOME/radv_dumps_<pid>_<time> to save
     * various debugging info about that GPU hang.
     */
    struct tm *timep, result;
    time_t raw_time;
-   char buf_time[128];
+   FILE *f;
+   char dump_dir[256], dump_path[512], buf_time[128];
 
    time(&raw_time);
    timep = os_localtime(&raw_time, &result);
@@ -687,7 +706,7 @@ radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_cmdbuf *cs)
    snprintf(dump_path, sizeof(dump_path), "%s/%s", dump_dir, "pipeline.log");
    f = fopen(dump_path, "w+");
    if (f) {
-      radv_dump_queue_state(queue, f);
+      radv_dump_queue_state(queue, dump_dir, f);
       fclose(f);
    }
 
@@ -768,6 +787,7 @@ radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_cmdbuf *cs)
       radv_dump_dmesg(f);
       fclose(f);
    }
+#endif
 
    fprintf(stderr, "radv: GPU hang report saved successfully!\n");
    abort();
@@ -816,11 +836,11 @@ radv_trap_handler_init(struct radv_device *device)
    if (result != VK_SUCCESS)
       return false;
 
-   device->tma_bo = ws->buffer_create(ws, TMA_BO_SIZE, 256, RADEON_DOMAIN_VRAM,
-                                      RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING |
-                                         RADEON_FLAG_ZERO_VRAM | RADEON_FLAG_32BIT,
-                                      RADV_BO_PRIORITY_SCRATCH);
-   if (!device->tma_bo)
+   result = ws->buffer_create(ws, TMA_BO_SIZE, 256, RADEON_DOMAIN_VRAM,
+                              RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING |
+                                 RADEON_FLAG_ZERO_VRAM | RADEON_FLAG_32BIT,
+                              RADV_BO_PRIORITY_SCRATCH, 0, &device->tma_bo);
+   if (result != VK_SUCCESS)
       return false;
 
    result = ws->buffer_make_resident(ws, device->tma_bo, true);
@@ -863,38 +883,6 @@ radv_trap_handler_finish(struct radv_device *device)
    }
 }
 
-static struct radv_shader_variant *
-radv_get_faulty_shader(struct radv_device *device, uint64_t faulty_pc)
-{
-   struct radv_shader_variant *shader = NULL;
-
-   mtx_lock(&device->shader_slab_mutex);
-
-   list_for_each_entry(struct radv_shader_slab, slab, &device->shader_slabs, slabs)
-   {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-      list_for_each_entry(struct radv_shader_variant, s, &slab->shaders, slab_list)
-      {
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-         uint64_t offset = align_u64(s->bo_offset + s->code_size, 256);
-         uint64_t va = radv_buffer_get_va(s->bo);
-
-         if (faulty_pc >= va + s->bo_offset && faulty_pc < va + offset) {
-            mtx_unlock(&device->shader_slab_mutex);
-            return s;
-         }
-      }
-   }
-   mtx_unlock(&device->shader_slab_mutex);
-
-   return shader;
-}
-
 static void
 radv_dump_faulty_shader(struct radv_device *device, uint64_t faulty_pc)
 {
@@ -902,11 +890,11 @@ radv_dump_faulty_shader(struct radv_device *device, uint64_t faulty_pc)
    uint64_t start_addr, end_addr;
    uint32_t instr_offset;
 
-   shader = radv_get_faulty_shader(device, faulty_pc);
+   shader = radv_find_shader_variant(device, faulty_pc);
    if (!shader)
       return;
 
-   start_addr = radv_buffer_get_va(shader->bo) + shader->bo_offset;
+   start_addr = radv_shader_variant_get_va(shader);
    end_addr = start_addr + shader->code_size;
    instr_offset = faulty_pc - start_addr;
 
@@ -979,12 +967,12 @@ radv_dump_sq_hw_regs(struct radv_device *device)
 void
 radv_check_trap_handler(struct radv_queue *queue)
 {
-   enum ring_type ring = radv_queue_family_to_ring(queue->queue_family_index);
+   enum ring_type ring = radv_queue_family_to_ring(queue->vk.queue_family_index);
    struct radv_device *device = queue->device;
    struct radeon_winsys *ws = device->ws;
 
    /* Wait for the context to be idle in a finite time. */
-   ws->ctx_wait_idle(queue->hw_ctx, ring, queue->queue_idx);
+   ws->ctx_wait_idle(queue->hw_ctx, ring, queue->vk.index_in_family);
 
    /* Try to detect if the trap handler has been reached by the hw by
     * looking at ttmp0 which should be non-zero if a shader exception

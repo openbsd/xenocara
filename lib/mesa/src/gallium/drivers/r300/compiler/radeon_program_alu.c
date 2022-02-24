@@ -858,7 +858,7 @@ static void transform_r300_vertex_SSG(struct radeon_compiler* c,
 	 *   SLT tmp1, x, 0;
 	 *   ADD result, tmp0, -tmp1;
 	 */
-	struct rc_dst_register dst0 = try_to_reuse_dst(c, inst);
+	struct rc_dst_register dst0;
 	unsigned tmp1;
 
 	/* 0 < x */
@@ -1215,12 +1215,6 @@ int radeonTransformDeriv(struct radeon_compiler* c,
  *
  * === OR ===
  *
- * IF Temp[0].x -\
- * KILL         - > KIL -abs(Temp[0].x)
- * ENDIF        -/
- *
- * === OR ===
- *
  * IF Temp[0].x -> IF Temp[0].x
  * ...          -> ...
  * ELSE         -> ELSE
@@ -1265,21 +1259,6 @@ void rc_transform_KILL(struct radeon_compiler * c, void *user)
 			 * block, because -0.0 is considered negative. */
 			inst->U.I.SrcReg[0] =
 				negate(absolute(if_inst->U.I.SrcReg[0]));
-
-			if (inst->Prev->U.I.Opcode != RC_OPCODE_IF
-				&& inst->Next->U.I.Opcode != RC_OPCODE_ENDIF) {
-
-				/* Optimize the special case:
-				 * IF Temp[0].x
-				 * KILP
-				 * ENDIF
-				 */
-
-				/* Remove IF */
-				rc_remove_instruction(inst->Prev);
-				/* Remove ENDIF */
-				rc_remove_instruction(inst->Next);
-			}
 		}
 	}
 }

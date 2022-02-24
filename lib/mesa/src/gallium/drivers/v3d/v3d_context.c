@@ -32,7 +32,6 @@
 #include "util/u_blitter.h"
 #include "util/u_upload_mgr.h"
 #include "util/u_prim.h"
-#include "indices/u_primconvert.h"
 #include "pipe/p_screen.h"
 
 #include "v3d_screen.h"
@@ -195,21 +194,35 @@ v3d_get_real_line_width(struct v3d_context *v3d)
 }
 
 void
+v3d_ensure_prim_counts_allocated(struct v3d_context *ctx)
+{
+        if (ctx->prim_counts)
+                return;
+
+        /* Init all 7 counters and 1 padding to 0 */
+        uint32_t zeroes[8] = { 0 };
+        u_upload_data(ctx->uploader,
+                      0, sizeof(zeroes), 32, zeroes,
+                      &ctx->prim_counts_offset,
+                      &ctx->prim_counts);
+}
+
+void
 v3d_flag_dirty_sampler_state(struct v3d_context *v3d,
                              enum pipe_shader_type shader)
 {
         switch (shader) {
         case PIPE_SHADER_VERTEX:
-                v3d->dirty |= VC5_DIRTY_VERTTEX;
+                v3d->dirty |= V3D_DIRTY_VERTTEX;
                 break;
         case PIPE_SHADER_GEOMETRY:
-                v3d->dirty |= VC5_DIRTY_GEOMTEX;
+                v3d->dirty |= V3D_DIRTY_GEOMTEX;
                 break;
         case PIPE_SHADER_FRAGMENT:
-                v3d->dirty |= VC5_DIRTY_FRAGTEX;
+                v3d->dirty |= V3D_DIRTY_FRAGTEX;
                 break;
         case PIPE_SHADER_COMPUTE:
-                v3d->dirty |= VC5_DIRTY_COMPTEX;
+                v3d->dirty |= V3D_DIRTY_COMPTEX;
                 break;
         default:
                 unreachable("Unsupported shader stage");
@@ -281,9 +294,6 @@ v3d_context_destroy(struct pipe_context *pctx)
 
         if (v3d->blitter)
                 util_blitter_destroy(v3d->blitter);
-
-        if (v3d->primconvert)
-                util_primconvert_destroy(v3d->primconvert);
 
         if (v3d->uploader)
                 u_upload_destroy(v3d->uploader);
@@ -393,11 +403,6 @@ v3d_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
         if (!v3d->blitter)
                 goto fail;
         v3d->blitter->use_index_buffer = true;
-
-        v3d->primconvert = util_primconvert_create(pctx,
-                                                   (1 << PIPE_PRIM_QUADS) - 1);
-        if (!v3d->primconvert)
-                goto fail;
 
         V3D_DEBUG |= saved_shaderdb_flag;
 

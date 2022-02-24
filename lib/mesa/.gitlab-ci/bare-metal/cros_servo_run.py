@@ -126,6 +126,12 @@ class CrosServoRun:
                 self.print_error("Detected cheza power management bus error, restarting run...")
                 return 2
 
+            # If the network device dies, it's probably not graphics's fault, just try again.
+            if re.search("NETDEV WATCHDOG", line):
+                self.print_error(
+                    "Detected network device failure, restarting run...")
+                return 2
+
             # These HFI response errors started appearing with the introduction
             # of piglit runs.  CosmicPenguin says:
             #
@@ -139,7 +145,12 @@ class CrosServoRun:
                 self.print_error("Detected cheza power management bus error, restarting run...")
                 return 2
 
-            result = re.search("bare-metal result: (\S*)", line)
+            if re.search("coreboot.*bootblock starting", line):
+                self.print_error(
+                    "Detected spontaneous reboot, restarting run...")
+                return 2
+
+            result = re.search("hwci: mesa: (\S*)", line)
             if result:
                 if result.group(1) == "pass":
                     return 0

@@ -26,6 +26,7 @@
  */
 
 #include "tu_private.h"
+#include "fdl/fd6_format_table.h"
 
 #include "util/debug.h"
 #include "util/u_atomic.h"
@@ -136,15 +137,22 @@ tu6_texswiz(const VkComponentMapping *comps,
    case VK_FORMAT_D24_UNORM_S8_UINT:
       if (aspect_mask == VK_IMAGE_ASPECT_STENCIL_BIT) {
          if (!has_z24uint_s8uint) {
-            /* using FMT6_8_8_8_8_UINT */
+            /* using FMT6_8_8_8_8_UINT, so need to pick out the W channel and
+             * swizzle (0,0,1) in the rest (see "Conversion to RGBA").
+             */
             swiz[0] = A6XX_TEX_W;
             swiz[1] = A6XX_TEX_ZERO;
+            swiz[2] = A6XX_TEX_ZERO;
+            swiz[3] = A6XX_TEX_ONE;
          } else {
-            /* using FMT6_Z24_UINT_S8_UINT */
+            /* using FMT6_Z24_UINT_S8_UINT, which is (d, s, 0, 1), so need to
+             * swizzle away the d.
+             */
             swiz[0] = A6XX_TEX_Y;
             swiz[1] = A6XX_TEX_ZERO;
          }
       }
+      break;
    default:
       break;
    }
@@ -372,7 +380,7 @@ tu_image_view_init(struct tu_image_view *iview,
    /* Don't set fields that are only used for attachments/blit dest if COLOR
     * is unsupported.
     */
-   if (!(fmt.supported & FMT_COLOR))
+   if (!tu6_format_color_supported(format))
       return;
 
    struct tu_native_format cfmt = tu6_format_color(format, layout->tile_mode);
@@ -447,7 +455,8 @@ tu_image_view_init(struct tu_image_view *iview,
 }
 
 bool
-ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage, bool has_z24uint_s8uint,
+ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
+              VkImageUsageFlags stencil_usage, const struct fd_dev_info *info,
               VkSampleCountFlagBits samples)
 {
    /* no UBWC with compressed formats, E5B9G9R9, S8_UINT
@@ -456,6 +465,14 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage, bool h
    if (vk_format_is_compressed(format) ||
        format == VK_FORMAT_E5B9G9R9_UFLOAT_PACK32 ||
        format == VK_FORMAT_S8_UINT)
+      return false;
+
+   if (!info->a6xx.has_8bpp_ubwc &&
+       (format == VK_FORMAT_R8_UNORM ||
+        format == VK_FORMAT_R8_SNORM ||
+        format == VK_FORMAT_R8_UINT ||
+        format == VK_FORMAT_R8_SINT ||
+        format == VK_FORMAT_R8_SRGB))
       return false;
 
    if (type == VK_IMAGE_TYPE_3D) {
@@ -472,7 +489,7 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage, bool h
     * UBWC-enabled mipmaps in freedreno currently.  Just match the closed GL
     * behavior of no UBWC.
    */
-   if (usage & VK_IMAGE_USAGE_STORAGE_BIT)
+   if ((usage | stencil_usage) & VK_IMAGE_USAGE_STORAGE_BIT)
       return false;
 
    /* Disable UBWC for D24S8 on A630 in some cases
@@ -486,18 +503,18 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage, bool h
     * Additionally, the special AS_R8G8B8A8 format is broken without UBWC,
     * so we have to fallback to 8_8_8_8_UNORM when UBWC is disabled
     */
-   if (!has_z24uint_s8uint &&
+   if (!info->a6xx.has_z24uint_s8uint &&
        format == VK_FORMAT_D24_UNORM_S8_UINT &&
-       (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)))
+       (stencil_usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)))
       return false;
 
-   if (!has_z24uint_s8uint && samples > VK_SAMPLE_COUNT_1_BIT)
+   if (!info->a6xx.has_z24uint_s8uint && samples > VK_SAMPLE_COUNT_1_BIT)
       return false;
 
    return true;
 }
 
-VkResult
+VKAPI_ATTR VkResult VKAPI_CALL
 tu_CreateImage(VkDevice _device,
                const VkImageCreateInfo *pCreateInfo,
                const VkAllocationCallbacks *alloc,
@@ -551,7 +568,7 @@ tu_CreateImage(VkDevice _device,
    image = vk_object_zalloc(&device->vk, alloc, sizeof(*image),
                             VK_OBJECT_TYPE_IMAGE);
    if (!image)
-      return vk_error(device->instance, VK_ERROR_OUT_OF_HOST_MEMORY);
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
    const VkExternalMemoryImageCreateInfo *external_info =
       vk_find_struct_const(pCreateInfo->pNext, EXTERNAL_MEMORY_IMAGE_CREATE_INFO);
@@ -602,8 +619,12 @@ tu_CreateImage(VkDevice _device,
       ubwc_enabled = false;
    }
 
+   const VkImageStencilUsageCreateInfo *stencil_usage_info =
+      vk_find_struct_const(pCreateInfo->pNext, IMAGE_STENCIL_USAGE_CREATE_INFO);
+
    if (!ubwc_possible(image->vk_format, pCreateInfo->imageType, pCreateInfo->usage,
-                      device->physical_device->info.a6xx.has_z24uint_s8uint, pCreateInfo->samples))
+                      stencil_usage_info ? stencil_usage_info->stencilUsage : pCreateInfo->usage,
+                      device->physical_device->info, pCreateInfo->samples))
       ubwc_enabled = false;
 
    /* expect UBWC enabled if we asked for it */
@@ -716,10 +737,10 @@ tu_CreateImage(VkDevice _device,
 
 invalid_layout:
    vk_object_free(&device->vk, alloc, image);
-   return vk_error(device->instance, VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
+   return vk_error(device, VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
 }
 
-void
+VKAPI_ATTR void VKAPI_CALL
 tu_DestroyImage(VkDevice _device,
                 VkImage _image,
                 const VkAllocationCallbacks *pAllocator)
@@ -738,7 +759,7 @@ tu_DestroyImage(VkDevice _device,
    vk_object_free(&device->vk, pAllocator, image);
 }
 
-void
+VKAPI_ATTR void VKAPI_CALL
 tu_GetImageSubresourceLayout(VkDevice _device,
                              VkImage _image,
                              const VkImageSubresource *pSubresource,
@@ -765,7 +786,8 @@ tu_GetImageSubresourceLayout(VkDevice _device,
    }
 }
 
-VkResult tu_GetImageDrmFormatModifierPropertiesEXT(
+VKAPI_ATTR VkResult VKAPI_CALL
+tu_GetImageDrmFormatModifierPropertiesEXT(
     VkDevice                                    device,
     VkImage                                     _image,
     VkImageDrmFormatModifierPropertiesEXT*      pProperties)
@@ -785,7 +807,7 @@ VkResult tu_GetImageDrmFormatModifierPropertiesEXT(
 }
 
 
-VkResult
+VKAPI_ATTR VkResult VKAPI_CALL
 tu_CreateImageView(VkDevice _device,
                    const VkImageViewCreateInfo *pCreateInfo,
                    const VkAllocationCallbacks *pAllocator,
@@ -797,16 +819,16 @@ tu_CreateImageView(VkDevice _device,
    view = vk_object_alloc(&device->vk, pAllocator, sizeof(*view),
                           VK_OBJECT_TYPE_IMAGE_VIEW);
    if (view == NULL)
-      return vk_error(device->instance, VK_ERROR_OUT_OF_HOST_MEMORY);
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   tu_image_view_init(view, pCreateInfo, device->physical_device->info.a6xx.has_z24uint_s8uint);
+   tu_image_view_init(view, pCreateInfo, device->physical_device->info->a6xx.has_z24uint_s8uint);
 
    *pView = tu_image_view_to_handle(view);
 
    return VK_SUCCESS;
 }
 
-void
+VKAPI_ATTR void VKAPI_CALL
 tu_DestroyImageView(VkDevice _device,
                     VkImageView _iview,
                     const VkAllocationCallbacks *pAllocator)
@@ -868,7 +890,7 @@ tu_buffer_view_init(struct tu_buffer_view *view,
    view->descriptor[5] = iova >> 32;
 }
 
-VkResult
+VKAPI_ATTR VkResult VKAPI_CALL
 tu_CreateBufferView(VkDevice _device,
                     const VkBufferViewCreateInfo *pCreateInfo,
                     const VkAllocationCallbacks *pAllocator,
@@ -880,7 +902,7 @@ tu_CreateBufferView(VkDevice _device,
    view = vk_object_alloc(&device->vk, pAllocator, sizeof(*view),
                           VK_OBJECT_TYPE_BUFFER_VIEW);
    if (!view)
-      return vk_error(device->instance, VK_ERROR_OUT_OF_HOST_MEMORY);
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
    tu_buffer_view_init(view, device, pCreateInfo);
 
@@ -889,7 +911,7 @@ tu_CreateBufferView(VkDevice _device,
    return VK_SUCCESS;
 }
 
-void
+VKAPI_ATTR void VKAPI_CALL
 tu_DestroyBufferView(VkDevice _device,
                      VkBufferView bufferView,
                      const VkAllocationCallbacks *pAllocator)

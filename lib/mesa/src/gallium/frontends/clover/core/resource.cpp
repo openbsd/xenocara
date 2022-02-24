@@ -89,8 +89,8 @@ resource::add_map(command_queue &q, cl_map_flags flags, bool blocking,
 
 void
 resource::del_map(void *p) {
-   erase_if([&](const mapping &m) {
-         return static_cast<void *>(m) == p;
+   erase_if([&](const mapping &b) {
+         return static_cast<void *>(b) == p;
       }, maps);
 }
 
@@ -233,7 +233,7 @@ mapping::mapping(command_queue &q, resource &r,
                       PIPE_MAP_DISCARD_RANGE : 0) |
                      (!blocking ? PIPE_MAP_UNSYNCHRONIZED : 0));
 
-   p = pctx->transfer_map(pctx, r.pipe, 0, usage,
+   p = pctx->buffer_map(pctx, r.pipe, 0, usage,
                           box(origin + r.offset, region), &pxfer);
    if (!p) {
       pxfer = NULL;
@@ -252,7 +252,7 @@ mapping::mapping(mapping &&m) :
 
 mapping::~mapping() {
    if (pxfer) {
-      pctx->transfer_unmap(pctx, pxfer);
+      pctx->buffer_unmap(pctx, pxfer);
    }
    pipe_resource_reference(&pres, NULL);
 }

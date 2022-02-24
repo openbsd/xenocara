@@ -95,9 +95,9 @@ static const driOptionDescription brw_driconf[] = {
    DRI_CONF_SECTION_MISCELLANEOUS
       DRI_CONF_GLSL_ZERO_INIT(false)
       DRI_CONF_VS_POSITION_ALWAYS_INVARIANT(false)
+      DRI_CONF_VS_POSITION_ALWAYS_PRECISE(false)
       DRI_CONF_ALLOW_RGB10_CONFIGS(false)
       DRI_CONF_ALLOW_RGB565_CONFIGS(true)
-      DRI_CONF_ALLOW_FP16_CONFIGS(false)
    DRI_CONF_SECTION_END
 };
 
@@ -346,16 +346,16 @@ static const struct brw_image_format brw_image_formats[] = {
 
 static const struct {
    uint64_t modifier;
-   unsigned since_gen;
+   unsigned since_ver;
 } supported_modifiers[] = {
-   { .modifier = DRM_FORMAT_MOD_LINEAR       , .since_gen = 1 },
-   { .modifier = I915_FORMAT_MOD_X_TILED     , .since_gen = 1 },
-   { .modifier = I915_FORMAT_MOD_Y_TILED     , .since_gen = 6 },
-   { .modifier = I915_FORMAT_MOD_Y_TILED_CCS , .since_gen = 9 },
+   { .modifier = DRM_FORMAT_MOD_LINEAR       , .since_ver = 1 },
+   { .modifier = I915_FORMAT_MOD_X_TILED     , .since_ver = 1 },
+   { .modifier = I915_FORMAT_MOD_Y_TILED     , .since_ver = 6 },
+   { .modifier = I915_FORMAT_MOD_Y_TILED_CCS , .since_ver = 9 },
 };
 
 static bool
-modifier_is_supported(const struct gen_device_info *devinfo,
+modifier_is_supported(const struct intel_device_info *devinfo,
                       const struct brw_image_format *fmt, int dri_format,
                       unsigned use, uint64_t modifier)
 {
@@ -374,7 +374,7 @@ modifier_is_supported(const struct gen_device_info *devinfo,
 
    if (modinfo->aux_usage == ISL_AUX_USAGE_CCS_E) {
       /* If INTEL_DEBUG=norbc is set, don't support any CCS_E modifiers */
-      if (INTEL_DEBUG & DEBUG_NO_RBC)
+      if (INTEL_DEBUG(DEBUG_NO_RBC))
          return false;
 
       /* CCS_E is not supported for planar images */
@@ -401,7 +401,7 @@ modifier_is_supported(const struct gen_device_info *devinfo,
       if (supported_modifiers[i].modifier != modifier)
          continue;
 
-      return supported_modifiers[i].since_gen <= devinfo->ver;
+      return supported_modifiers[i].since_ver <= devinfo->ver;
    }
 
    return false;
@@ -690,7 +690,7 @@ const uint64_t priority_to_modifier[] = {
 };
 
 static uint64_t
-select_best_modifier(struct gen_device_info *devinfo,
+select_best_modifier(struct intel_device_info *devinfo,
                      int dri_format,
                      unsigned use,
                      const uint64_t *modifiers,
@@ -736,11 +736,6 @@ brw_create_image_common(__DRIscreen *dri_screen,
    struct brw_screen *screen = dri_screen->driverPrivate;
    uint64_t modifier = DRM_FORMAT_MOD_INVALID;
    bool ok;
-
-   /* Callers of this may specify a modifier, or a dri usage, but not both. The
-    * newer modifier interface deprecates the older usage flags.
-    */
-   assert(!(use && count));
 
    if (use & __DRI_IMAGE_USE_CURSOR) {
       if (width != 64 || height != 64)
@@ -797,7 +792,7 @@ brw_create_image_common(__DRIscreen *dri_screen,
 
    struct isl_surf aux_surf = {0,};
    if (mod_info->aux_usage == ISL_AUX_USAGE_CCS_E) {
-      ok = isl_surf_get_ccs_surf(&screen->isl_dev, &surf, &aux_surf, NULL, 0);
+      ok = isl_surf_get_ccs_surf(&screen->isl_dev, &surf, NULL, &aux_surf, 0);
       if (!ok) {
          free(image);
          return NULL;
@@ -919,6 +914,17 @@ brw_create_image_with_modifiers(__DRIscreen *dri_screen,
                                   void *loaderPrivate)
 {
    return brw_create_image_common(dri_screen, width, height, format, 0,
+                                  modifiers, count, loaderPrivate);
+}
+
+static __DRIimage *
+brw_create_image_with_modifiers2(__DRIscreen *dri_screen,
+                                 int width, int height, int format,
+                                 const uint64_t *modifiers,
+                                 const unsigned count, unsigned int use,
+                                 void *loaderPrivate)
+{
+   return brw_create_image_common(dri_screen, width, height, format, use,
                                   modifiers, count, loaderPrivate);
 }
 
@@ -1227,7 +1233,7 @@ brw_create_image_from_fds_common(__DRIscreen *dri_screen,
       }
 
       struct isl_surf aux_surf = {0,};
-      ok = isl_surf_get_ccs_surf(&screen->isl_dev, &surf, &aux_surf, NULL,
+      ok = isl_surf_get_ccs_surf(&screen->isl_dev, &surf, NULL, &aux_surf,
                                  image->aux_pitch);
       if (!ok) {
          brw_bo_unreference(image->bo);
@@ -1344,7 +1350,7 @@ brw_create_image_from_dma_bufs(__DRIscreen *dri_screen,
 }
 
 static bool
-brw_image_format_is_supported(const struct gen_device_info *devinfo,
+brw_image_format_is_supported(const struct intel_device_info *devinfo,
                                 const struct brw_image_format *fmt)
 {
    /* Currently, all formats with an brw_image_format are available on all
@@ -1517,7 +1523,7 @@ brw_from_planar(__DRIimage *parent, int plane, void *loaderPrivate)
 }
 
 static const __DRIimageExtension brwImageExtension = {
-    .base = { __DRI_IMAGE, 16 },
+    .base = { __DRI_IMAGE, 19 },
 
     .createImageFromName                = brw_create_image_from_name,
     .createImageFromRenderbuffer        = brw_create_image_from_renderbuffer,
@@ -1540,6 +1546,7 @@ static const __DRIimageExtension brwImageExtension = {
     .queryDmaBufFormats                 = brw_query_dma_buf_formats,
     .queryDmaBufModifiers               = brw_query_dma_buf_modifiers,
     .queryDmaBufFormatModifierAttribs   = brw_query_format_modifier_attribs,
+    .createImageWithModifiers2          = brw_create_image_with_modifiers2,
 };
 
 static int
@@ -1882,9 +1889,6 @@ brw_init_bufmgr(struct brw_screen *screen)
 {
    __DRIscreen *dri_screen = screen->driScrnPriv;
 
-   if (getenv("INTEL_NO_HW") != NULL)
-      screen->no_hw = true;
-
    bool bo_reuse = false;
    int bo_reuse_mode = driQueryOptioni(&screen->optionCache, "bo_reuse");
    switch (bo_reuse_mode) {
@@ -1997,7 +2001,7 @@ static bool
 brw_detect_pipelined_register(struct brw_screen *screen,
                                 int reg, uint32_t expected_value, bool reset)
 {
-   if (screen->no_hw)
+   if (screen->devinfo.no_hw)
       return false;
 
    struct brw_bo *results, *bo;
@@ -2088,7 +2092,7 @@ err:
 static bool
 brw_detect_pipelined_so(struct brw_screen *screen)
 {
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
 
    /* Supposedly, Broadwell just works. */
    if (devinfo->ver >= 8)
@@ -2160,7 +2164,8 @@ brw_allowed_format(__DRIscreen *dri_screen, mesa_format format)
    if (!allow_rgba_ordering &&
        (format == MESA_FORMAT_R8G8B8A8_UNORM ||
         format == MESA_FORMAT_R8G8B8X8_UNORM ||
-        format == MESA_FORMAT_R8G8B8A8_SRGB))
+        format == MESA_FORMAT_R8G8B8A8_SRGB ||
+        format == MESA_FORMAT_R8G8B8X8_SRGB))
       return false;
 
     /* Shall we expose 10 bpc formats? */
@@ -2178,9 +2183,7 @@ brw_allowed_format(__DRIscreen *dri_screen, mesa_format format)
       return false;
 
    /* Shall we expose fp16 formats? */
-   bool allow_fp16_configs = driQueryOptionb(&screen->optionCache,
-                                             "allow_fp16_configs");
-   allow_fp16_configs &= brw_loader_get_cap(dri_screen, DRI_LOADER_CAP_FP16);
+   bool allow_fp16_configs = brw_loader_get_cap(dri_screen, DRI_LOADER_CAP_FP16);
    if (!allow_fp16_configs &&
        (format == MESA_FORMAT_RGBA_FLOAT16 ||
         format == MESA_FORMAT_RGBX_FLOAT16))
@@ -2224,11 +2227,11 @@ brw_screen_make_configs(__DRIscreen *dri_screen)
 
       /* Required by Android, for HAL_PIXEL_FORMAT_RGBA_8888. */
       MESA_FORMAT_R8G8B8A8_UNORM,
+      MESA_FORMAT_R8G8B8A8_SRGB,
 
       /* Required by Android, for HAL_PIXEL_FORMAT_RGBX_8888. */
       MESA_FORMAT_R8G8B8X8_UNORM,
-
-      MESA_FORMAT_R8G8B8A8_SRGB,
+      MESA_FORMAT_R8G8B8X8_SRGB,
    };
 
    /* __DRI_ATTRIB_SWAP_COPY is not supported due to page flipping. */
@@ -2239,7 +2242,7 @@ brw_screen_make_configs(__DRIscreen *dri_screen)
    static const uint8_t singlesample_samples[1] = {0};
 
    struct brw_screen *screen = dri_screen->driverPrivate;
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
    uint8_t depth_bits[4], stencil_bits[4];
    __DRIconfig **configs = NULL;
 
@@ -2465,14 +2468,13 @@ set_max_gl_versions(struct brw_screen *screen)
 }
 
 static void
-shader_debug_log_mesa(void *data, const char *fmt, ...)
+shader_debug_log_mesa(void *data, unsigned *msg_id, const char *fmt, ...)
 {
    struct brw_context *brw = (struct brw_context *)data;
    va_list args;
 
    va_start(args, fmt);
-   GLuint msg_id = 0;
-   _mesa_gl_vdebugf(&brw->ctx, &msg_id,
+   _mesa_gl_vdebugf(&brw->ctx, msg_id,
                     MESA_DEBUG_SOURCE_SHADER_COMPILER,
                     MESA_DEBUG_TYPE_OTHER,
                     MESA_DEBUG_SEVERITY_NOTIFICATION, fmt, args);
@@ -2480,14 +2482,14 @@ shader_debug_log_mesa(void *data, const char *fmt, ...)
 }
 
 static void
-shader_perf_log_mesa(void *data, const char *fmt, ...)
+shader_perf_log_mesa(void *data, unsigned *msg_id, const char *fmt, ...)
 {
    struct brw_context *brw = (struct brw_context *)data;
 
    va_list args;
    va_start(args, fmt);
 
-   if (INTEL_DEBUG & DEBUG_PERF) {
+   if (INTEL_DEBUG(DEBUG_PERF)) {
       va_list args_copy;
       va_copy(args_copy, args);
       vfprintf(stderr, fmt, args_copy);
@@ -2495,8 +2497,7 @@ shader_perf_log_mesa(void *data, const char *fmt, ...)
    }
 
    if (brw->perf_debug) {
-      GLuint msg_id = 0;
-      _mesa_gl_vdebugf(&brw->ctx, &msg_id,
+      _mesa_gl_vdebugf(&brw->ctx, msg_id,
                        MESA_DEBUG_SOURCE_SHADER_COMPILER,
                        MESA_DEBUG_TYPE_PERFORMANCE,
                        MESA_DEBUG_SEVERITY_MEDIUM, fmt, args);
@@ -2538,18 +2539,17 @@ __DRIconfig **brw_init_screen(__DRIscreen *dri_screen)
 
    driParseOptionInfo(&options, brw_driconf, ARRAY_SIZE(brw_driconf));
    driParseConfigFiles(&screen->optionCache, &options, dri_screen->myNum,
-                       "i965", NULL, NULL, 0, NULL, 0);
+                       "i965", NULL, NULL, NULL, 0, NULL, 0);
    driDestroyOptionCache(&options);
 
    screen->driScrnPriv = dri_screen;
    dri_screen->driverPrivate = (void *) screen;
 
-   if (!gen_get_device_info_from_fd(dri_screen->fd, &screen->devinfo))
+   if (!intel_get_device_info_from_fd(dri_screen->fd, &screen->devinfo))
       return NULL;
 
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
    screen->deviceID = devinfo->chipset_id;
-   screen->no_hw = devinfo->no_hw;
 
    if (devinfo->ver >= 12) {
       fprintf(stderr, "gfx12 and newer are not supported on i965\n");
@@ -2561,7 +2561,7 @@ __DRIconfig **brw_init_screen(__DRIscreen *dri_screen)
 
    brw_process_intel_debug_variable();
 
-   if ((INTEL_DEBUG & DEBUG_SHADER_TIME) && devinfo->ver < 7) {
+   if (INTEL_DEBUG(DEBUG_SHADER_TIME) && devinfo->ver < 7) {
       fprintf(stderr,
               "shader_time debugging requires gfx7 (Ivybridge) or better.\n");
       intel_debug &= ~DEBUG_SHADER_TIME;
@@ -2608,10 +2608,6 @@ __DRIconfig **brw_init_screen(__DRIscreen *dri_screen)
 
    isl_device_init(&screen->isl_dev, &screen->devinfo,
                    screen->hw_has_swizzling);
-
-   /* GENs prior to 8 do not support EU/Subslice info */
-   screen->subslice_total = gen_device_info_subslice_total(devinfo);
-   screen->eu_total = gen_device_info_eu_total(devinfo);
 
    /* Gfx7-7.5 kernel requirements / command parser saga:
     *
@@ -2805,6 +2801,7 @@ __DRIconfig **brw_init_screen(__DRIscreen *dri_screen)
       !(screen->kernel_features & KERNEL_ALLOWS_CONTEXT_ISOLATION);
 
    screen->compiler->glsl_compiler_options[MESA_SHADER_VERTEX].PositionAlwaysInvariant = driQueryOptionb(&screen->optionCache, "vs_position_always_invariant");
+   screen->compiler->glsl_compiler_options[MESA_SHADER_TESS_EVAL].PositionAlwaysPrecise = driQueryOptionb(&screen->optionCache, "vs_position_always_precise");
 
    screen->compiler->supports_pull_constants = true;
    screen->compiler->compact_params = true;
@@ -2815,7 +2812,7 @@ __DRIconfig **brw_init_screen(__DRIscreen *dri_screen)
 
    brw_screen_init_surface_formats(screen);
 
-   if (INTEL_DEBUG & (DEBUG_BATCH | DEBUG_SUBMIT)) {
+   if (INTEL_DEBUG(DEBUG_BATCH | DEBUG_SUBMIT)) {
       unsigned int caps = brw_get_integer(screen, I915_PARAM_HAS_SCHEDULER);
       if (caps) {
          fprintf(stderr, "Kernel scheduler detected: %08x\n", caps);

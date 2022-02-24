@@ -62,10 +62,10 @@ void si_execute_clears(struct si_context *sctx, struct si_clear_info *info,
 
    /* Flush caches and wait for idle. */
    if (types & (SI_CLEAR_TYPE_CMASK | SI_CLEAR_TYPE_DCC))
-      sctx->flags |= si_get_flush_flags(sctx, SI_COHERENCY_CB_META, L2_STREAM);
+      sctx->flags |= si_get_flush_flags(sctx, SI_COHERENCY_CB_META, L2_LRU);
 
    if (types & SI_CLEAR_TYPE_HTILE)
-      sctx->flags |= si_get_flush_flags(sctx, SI_COHERENCY_DB_META, L2_STREAM);
+      sctx->flags |= si_get_flush_flags(sctx, SI_COHERENCY_DB_META, L2_LRU);
 
    /* Flush caches in case we use compute. */
    sctx->flags |= SI_CONTEXT_INV_VCACHE;
@@ -293,18 +293,11 @@ static bool vi_get_fast_clear_parameters(struct si_screen *sscreen, enum pipe_fo
 bool vi_dcc_get_clear_info(struct si_context *sctx, struct si_texture *tex, unsigned level,
                            unsigned clear_value, struct si_clear_info *out)
 {
-   struct pipe_resource *dcc_buffer;
-   uint64_t dcc_offset, clear_size;
+   struct pipe_resource *dcc_buffer = &tex->buffer.b.b;
+   uint64_t dcc_offset = tex->surface.meta_offset;
+   uint32_t clear_size;
 
    assert(vi_dcc_enabled(tex, level));
-
-   if (tex->dcc_separate_buffer) {
-      dcc_buffer = &tex->dcc_separate_buffer->b.b;
-      dcc_offset = 0;
-   } else {
-      dcc_buffer = &tex->buffer.b.b;
-      dcc_offset = tex->surface.meta_offset;
-   }
 
    if (sctx->chip_class >= GFX10) {
       /* 4x and 8x MSAA needs a sophisticated compute shader for
@@ -359,7 +352,7 @@ bool vi_dcc_get_clear_info(struct si_context *sctx, struct si_texture *tex, unsi
          return false;
 
       dcc_offset += tex->surface.u.legacy.color.dcc_level[level].dcc_offset;
-      clear_size = tex->surface.u.legacy.color.dcc_level[level].dcc_fast_clear_size * num_layers;
+      clear_size = tex->surface.u.legacy.color.dcc_level[level].dcc_fast_clear_size;
    }
 
    si_init_buffer_clear(out, dcc_buffer, dcc_offset, clear_size, clear_value);
@@ -483,7 +476,7 @@ static uint32_t si_get_htile_clear_value(struct si_texture *tex, float depth)
    const uint32_t smem  = 0;
 
    /* Convert depthValue to 14-bit zmin/zmax uint values. */
-   const uint32_t zmin = (depth * max_z_value) + 0.5f;
+   const uint32_t zmin = lroundf(depth * max_z_value);
    const uint32_t zmax = zmin;
 
    if (tex->htile_stencil_disabled) {
@@ -607,21 +600,6 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
       bool eliminate_needed = false;
       bool fmask_decompress_needed = false;
 
-      /* Fast clear is the most appropriate place to enable DCC for
-       * displayable surfaces.
-       */
-      if (sctx->family == CHIP_STONEY && !too_small) {
-         vi_separate_dcc_try_enable(sctx, tex);
-
-         /* RB+ isn't supported with a CMASK clear only on Stoney,
-          * so all clears are considered to be hypothetically slow
-          * clears, which is weighed when determining whether to
-          * enable separate DCC.
-          */
-         if (tex->dcc_gather_statistics) /* only for Stoney */
-            tex->num_slow_clears++;
-      }
-
       /* Try to clear DCC first, otherwise try CMASK. */
       if (vi_dcc_enabled(tex, level)) {
          uint32_t reset_value;
@@ -667,7 +645,6 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
          num_clears++;
          clear_types |= SI_CLEAR_TYPE_DCC;
 
-         tex->separate_dcc_dirty = true;
          si_mark_display_dcc_dirty(sctx, tex);
 
          /* DCC fast clear with MSAA should clear CMASK to 0xC. */
@@ -824,15 +801,17 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                   /* Z-only clear. */
                   clear_value = si_get_htile_clear_value(zstex, depth);
                   *buffers &= ~PIPE_CLEAR_DEPTH;
+                  zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(level);
                   zstex->depth_cleared_level_mask |= BITFIELD_BIT(level);
                   update_db_depth_clear = true;
                }
-            } else if ((*buffers & PIPE_BIND_DEPTH_STENCIL) == PIPE_BIND_DEPTH_STENCIL) {
+            } else if ((*buffers & PIPE_CLEAR_DEPTHSTENCIL) == PIPE_CLEAR_DEPTHSTENCIL) {
                if (si_can_fast_clear_depth(zstex, level, depth, *buffers) &&
                    si_can_fast_clear_stencil(zstex, level, stencil, *buffers)) {
                   /* Combined Z+S clear. */
                   clear_value = si_get_htile_clear_value(zstex, depth);
                   *buffers &= ~PIPE_CLEAR_DEPTHSTENCIL;
+                  zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(level);
                   zstex->depth_cleared_level_mask |= BITFIELD_BIT(level);
                   zstex->stencil_cleared_level_mask |= BITFIELD_BIT(level);
                   update_db_depth_clear = true;
@@ -849,6 +828,8 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                 */
                clear_value = !zstex->htile_stencil_disabled ? 0xfffff30f : 0xfffc000f;
             }
+
+            zstex->need_flush_after_depth_decompression = sctx->chip_class == GFX10_3;
 
             assert(num_clears < ARRAY_SIZE(info));
             si_init_buffer_clear(&info[num_clears++], &zstex->buffer.b.b,
@@ -897,10 +878,11 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                                     htile_size, si_get_htile_clear_value(zstex, depth));
                clear_types |= SI_CLEAR_TYPE_HTILE;
                *buffers &= ~PIPE_CLEAR_DEPTH;
+               zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(level);
                zstex->depth_cleared_level_mask |= BITFIELD_BIT(level);
                update_db_depth_clear = true;
             }
-         } else if ((*buffers & PIPE_BIND_DEPTH_STENCIL) == PIPE_BIND_DEPTH_STENCIL) {
+         } else if ((*buffers & PIPE_CLEAR_DEPTHSTENCIL) == PIPE_CLEAR_DEPTHSTENCIL) {
             if (htile_size &&
                 si_can_fast_clear_depth(zstex, level, depth, *buffers) &&
                 si_can_fast_clear_stencil(zstex, level, stencil, *buffers)) {
@@ -910,6 +892,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                                     htile_size, si_get_htile_clear_value(zstex, depth));
                clear_types |= SI_CLEAR_TYPE_HTILE;
                *buffers &= ~PIPE_CLEAR_DEPTHSTENCIL;
+               zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(level);
                zstex->depth_cleared_level_mask |= BITFIELD_BIT(level);
                zstex->stencil_cleared_level_mask |= BITFIELD_BIT(level);
                update_db_depth_clear = true;
@@ -935,6 +918,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                                         htile_depth_writemask);
                clear_types |= SI_CLEAR_TYPE_HTILE;
                *buffers &= ~PIPE_CLEAR_DEPTH;
+               zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(level);
                zstex->depth_cleared_level_mask |= BITFIELD_BIT(level);
                update_db_depth_clear = true;
             } else if (htile_size &&
@@ -951,6 +935,8 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                update_db_stencil_clear = true;
             }
          }
+
+         zstex->need_flush_after_depth_decompression = update_db_depth_clear && sctx->chip_class == GFX10_3;
 
          /* Update DB_DEPTH_CLEAR. */
          if (update_db_depth_clear &&
@@ -1015,7 +1001,7 @@ static void si_clear(struct pipe_context *ctx, unsigned buffers,
       if (si_can_fast_clear_depth(zstex, level, depth, buffers)) {
          /* Need to disable EXPCLEAR temporarily if clearing
           * to a new value. */
-         if (!(zstex->depth_cleared_level_mask & BITFIELD_BIT(level)) ||
+         if (!(zstex->depth_cleared_level_mask_once & BITFIELD_BIT(level)) ||
              zstex->depth_clear_value[level] != depth) {
             sctx->db_depth_disable_expclear = true;
          }
@@ -1074,6 +1060,7 @@ static void si_clear(struct pipe_context *ctx, unsigned buffers,
    if (sctx->db_depth_clear) {
       sctx->db_depth_clear = false;
       sctx->db_depth_disable_expclear = false;
+      zstex->depth_cleared_level_mask_once |= BITFIELD_BIT(zsbuf->u.tex.level);
       zstex->depth_cleared_level_mask |= BITFIELD_BIT(zsbuf->u.tex.level);
       si_mark_atom_dirty(sctx, &sctx->atoms.s.db_render_state);
    }
@@ -1094,7 +1081,8 @@ static void si_clear_render_target(struct pipe_context *ctx, struct pipe_surface
    struct si_context *sctx = (struct si_context *)ctx;
    struct si_texture *sdst = (struct si_texture *)dst->texture;
 
-   if (dst->texture->nr_samples <= 1 && !vi_dcc_enabled(sdst, dst->u.tex.level)) {
+   if (dst->texture->nr_samples <= 1 &&
+       (sctx->chip_class >= GFX10 || !vi_dcc_enabled(sdst, dst->u.tex.level))) {
       si_compute_clear_render_target(ctx, dst, color, dstx, dsty, width, height,
                                      render_condition_enabled);
       return;

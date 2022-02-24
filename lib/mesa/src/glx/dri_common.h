@@ -63,20 +63,22 @@ driFetchDrawable(struct glx_context *gc, GLXDrawable glxDrawable);
 extern void
 driReleaseDrawables(struct glx_context *gc);
 
-extern void dri_message(int level, const char *f, ...) PRINTFLIKE(2, 3);
-
-#define InfoMessageF(...) dri_message(_LOADER_INFO, __VA_ARGS__)
-#define ErrorMessageF(...) dri_message(_LOADER_WARNING, __VA_ARGS__)
-#define CriticalErrorMessageF(...) dri_message(_LOADER_FATAL, __VA_ARGS__)
-
 extern const __DRIextension **driOpenDriver(const char *driverName,
                                             void **out_driver_handle);
 
-extern bool
-dri2_convert_glx_attribs(unsigned num_attribs, const uint32_t *attribs,
-                         unsigned *major_ver, unsigned *minor_ver,
-                         uint32_t *render_type, uint32_t *flags, unsigned *api,
-                         int *reset, int *release, unsigned *error);
+struct dri_ctx_attribs {
+   unsigned major_ver;
+   unsigned minor_ver;
+   uint32_t render_type;
+   uint32_t flags;
+   unsigned api;
+   int reset;
+   int release;
+};
+
+extern int
+dri_convert_glx_attribs(unsigned num_attribs, const uint32_t *attribs,
+                        struct dri_ctx_attribs *dca);
 
 extern bool
 dri2_check_no_error(uint32_t flags, struct glx_context *share_context,

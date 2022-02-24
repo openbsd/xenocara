@@ -27,6 +27,8 @@
 
 #include "adreno_pm4.xml.h"
 
+#include "freedreno_pm4.h"
+
 void
 tu_cs_init(struct tu_cs *cs,
            struct tu_device *device,
@@ -34,7 +36,8 @@ tu_cs_init(struct tu_cs *cs,
            uint32_t initial_size);
 
 void
-tu_cs_init_external(struct tu_cs *cs, uint32_t *start, uint32_t *end);
+tu_cs_init_external(struct tu_cs *cs, struct tu_device *device,
+                    uint32_t *start, uint32_t *end);
 
 void
 tu_cs_finish(struct tu_cs *cs);
@@ -77,7 +80,7 @@ tu_cs_draw_state(struct tu_cs *sub_cs, struct tu_cs *cs, uint32_t size)
 
    /* TODO: clean this up */
    tu_cs_alloc(sub_cs, size, 1, &memory);
-   tu_cs_init_external(cs, memory.map, memory.map + size);
+   tu_cs_init_external(cs, sub_cs->device, memory.map, memory.map + size);
    tu_cs_begin(cs);
    tu_cs_reserve_space(cs, size);
 
@@ -168,19 +171,6 @@ tu_cs_emit_array(struct tu_cs *cs, const uint32_t *values, uint32_t length)
    cs->cur += length;
 }
 
-static inline unsigned
-tu_odd_parity_bit(unsigned val)
-{
-   /* See: http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-    * note that we want odd parity so 0x6996 is inverted.
-    */
-   val ^= val >> 16;
-   val ^= val >> 8;
-   val ^= val >> 4;
-   val &= 0xf;
-   return (~0x6996 >> val) & 1;
-}
-
 /**
  * Get the size of the remaining space in the current BO.
  */
@@ -205,7 +195,7 @@ tu_cs_reserve(struct tu_cs *cs, uint32_t reserved_size)
       return;
    }
 
-   VkResult result = tu_cs_reserve_space(cs, reserved_size);
+   ASSERTED VkResult result = tu_cs_reserve_space(cs, reserved_size);
    /* TODO: set this error in tu_cs and use it */
    assert(result == VK_SUCCESS);
 }
@@ -217,9 +207,7 @@ static inline void
 tu_cs_emit_pkt4(struct tu_cs *cs, uint16_t regindx, uint16_t cnt)
 {
    tu_cs_reserve(cs, cnt + 1);
-   tu_cs_emit(cs, CP_TYPE4_PKT | cnt | (tu_odd_parity_bit(cnt) << 7) |
-                     ((regindx & 0x3ffff) << 8) |
-                     ((tu_odd_parity_bit(regindx) << 27)));
+   tu_cs_emit(cs, pm4_pkt4_hdr(regindx, cnt));
 }
 
 /**
@@ -229,9 +217,7 @@ static inline void
 tu_cs_emit_pkt7(struct tu_cs *cs, uint8_t opcode, uint16_t cnt)
 {
    tu_cs_reserve(cs, cnt + 1);
-   tu_cs_emit(cs, CP_TYPE7_PKT | cnt | (tu_odd_parity_bit(cnt) << 15) |
-                     ((opcode & 0x7f) << 16) |
-                     ((tu_odd_parity_bit(opcode) << 23)));
+   tu_cs_emit(cs, pm4_pkt7_hdr(opcode, cnt));
 }
 
 static inline void

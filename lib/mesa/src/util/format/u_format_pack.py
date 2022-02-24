@@ -35,19 +35,10 @@
  */
 '''
 
-
-from __future__ import division, print_function
-
 import sys
 
 from u_format_parse import *
 
-
-if sys.version_info < (3, 0):
-    integer_types = (int, long)
-
-else:
-    integer_types = (int, )
 
 def inv_swizzles(swizzles):
     '''Return an array[4] of inverse swizzle terms'''
@@ -220,7 +211,7 @@ def truncate_mantissa(x, bits):
     '''Truncate an integer so it can be represented exactly with a floating
     point mantissa'''
 
-    assert isinstance(x, integer_types)
+    assert isinstance(x, int)
 
     s = 1
     if x < 0:
@@ -244,7 +235,7 @@ def value_to_native(type, value):
     '''Get the value of unity for this type.'''
     if type.type == FLOAT:
         if type.size <= 32 \
-            and isinstance(value, integer_types):
+            and isinstance(value, int):
             return truncate_mantissa(value, 23)
         return value
     if type.type == FIXED:
@@ -617,7 +608,7 @@ def generate_format_unpack(format, dst_channel, dst_native_type, dst_suffix):
     else:
         dst_proto_type = 'void'
 
-    proto = 'util_format_%s_unpack_%s(%s *restrict dst_row, unsigned dst_stride, const uint8_t *restrict src_row, unsigned src_stride, unsigned width, unsigned height)' % (
+    proto = 'util_format_%s_unpack_%s(%s *restrict dst_row, const uint8_t *restrict src, unsigned width)' % (
         name, dst_suffix, dst_proto_type)
     print('void %s;' % proto, file=sys.stdout2)
 
@@ -626,19 +617,14 @@ def generate_format_unpack(format, dst_channel, dst_native_type, dst_suffix):
     print('{')
 
     if is_format_supported(format):
-        print('   unsigned x, y;')
-        print('   for(y = 0; y < height; y += %u) {' % (format.block_height,))
-        print('      %s *dst = dst_row;' % (dst_native_type))
-        print('      const uint8_t *src = src_row;')
-        print('      for(x = 0; x < width; x += %u) {' % (format.block_width,))
+        print('   %s *dst = dst_row;' % (dst_native_type))
+        print(
+            '   for (unsigned x = 0; x < width; x += %u) {' % (format.block_width,))
         
         generate_unpack_kernel(format, dst_channel, dst_native_type)
     
-        print('         src += %u;' % (format.block_size() / 8,))
-        print('         dst += 4;')
-        print('      }')
-        print('      src_row += src_stride;')
-        print('      dst_row = (uint8_t *)dst_row + dst_stride;')
+        print('      src += %u;' % (format.block_size() / 8,))
+        print('      dst += 4;')
         print('   }')
 
     print('}')

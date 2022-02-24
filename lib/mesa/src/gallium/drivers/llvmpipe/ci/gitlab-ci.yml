@@ -4,6 +4,7 @@
   variables:
     LIBGL_ALWAYS_SOFTWARE: "true"
     GALLIUM_DRIVER: "llvmpipe"
+    FLAKES_CHANNEL: "#mesa-swrast-ci"
 
 llvmpipe-piglit-cl:
   extends:
@@ -27,7 +28,7 @@ llvmpipe-piglit-quick_gl:
     - .piglit-test
     - .llvmpipe-test
   variables:
-    GALLIVM_PERF: "no_filter_hacks"
+    GALLIVM_PERF: "no_quad_lod"
     LP_NUM_THREADS: 0
     PIGLIT_OPTIONS: >
       --process-isolation false
@@ -61,7 +62,6 @@ llvmpipe-piglit-quick_shader:
     - .piglit-test
     - .llvmpipe-test
   variables:
-    GALLIVM_PERF: "no_filter_hacks"
     LP_NUM_THREADS: 1
     PIGLIT_PROFILES: quick_shader
     PIGLIT_RESULTS: "llvmpipe-quick_shader"
@@ -77,16 +77,38 @@ llvmpipe-traces:
     PIGLIT_REPLAY_DEVICE_NAME: "gl-vmware-llvmpipe"
     PIGLIT_RESULTS: "llvmpipe-replay"
 
-llvmpipe-gles2:
+.llvmpipe-deqp-test:
   variables:
-    DEQP_VER: gles2
-    GALLIVM_PERF: "nopt,no_filter_hacks"
+    GALLIVM_PERF: "nopt"
     # Don't use threads inside llvmpipe, we've already got all cores
     # busy at the deqp-runner level.
     LP_NUM_THREADS: 0
     GPU_VERSION: llvmpipe
-    DEQP_EXPECTED_RENDERER: llvmpipe
   extends:
     - .test-gl
     - .deqp-test
     - .llvmpipe-test
+
+llvmpipe-deqp:
+  variables:
+    DEQP_SUITE: llvmpipe
+  parallel: 2
+  extends: .llvmpipe-deqp-test
+
+llvmpipe-deqp-asan:
+  variables:
+    DEQP_SUITE: llvmpipe-asan
+    GPU_VERSION: llvmpipe-asan
+    DEQP_FRACTION: 10
+  extends: .llvmpipe-deqp-test
+  needs:
+    - debian/x86_test-gl
+    - debian-testing-asan
+
+llvmpipe-egl:
+  variables:
+    DEQP_VER: egl
+  extends:
+    - .llvmpipe-deqp-test
+  script:
+    - xvfb-run --server-args='-noreset' ./install/deqp-runner.sh

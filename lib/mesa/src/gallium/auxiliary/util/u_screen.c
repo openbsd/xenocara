@@ -77,6 +77,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
    case PIPE_CAP_DEPTH_CLIP_DISABLE_SEPARATE:
+   case PIPE_CAP_DEPTH_CLAMP_ENABLE:
    case PIPE_CAP_SHADER_STENCIL_EXPORT:
    case PIPE_CAP_TGSI_INSTANCEID:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
@@ -86,6 +87,10 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
    case PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND:
       return 0;
+
+   case PIPE_CAP_SUPPORTED_PRIM_MODES_WITH_RESTART:
+   case PIPE_CAP_SUPPORTED_PRIM_MODES:
+      return BITFIELD_MASK(PIPE_PRIM_MAX);
 
    case PIPE_CAP_MIN_TEXEL_OFFSET:
       /* GL 3.x minimum value. */
@@ -269,7 +274,6 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
    case PIPE_CAP_FRAMEBUFFER_NO_ATTACHMENT:
    case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
    case PIPE_CAP_CULL_DISTANCE:
-   case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
    case PIPE_CAP_TGSI_VOTE:
    case PIPE_CAP_MAX_WINDOW_RECTANGLES: /* Enables EXT_window_rectangles */
    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
@@ -287,6 +291,7 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
       return 4; /* GLES 2.0 minimum value */
 
    case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
+   case PIPE_CAP_PREFER_BACK_BUFFER_REUSE:
       return 1;
 
    case PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS:
@@ -460,10 +465,15 @@ u_pipe_screen_get_param_defaults(struct pipe_screen *pscreen,
       return 0;
 
    case PIPE_CAP_SAMPLER_REDUCTION_MINMAX:
+   case PIPE_CAP_SAMPLER_REDUCTION_MINMAX_ARB:
       return 0;
 
    case PIPE_CAP_ALLOW_DYNAMIC_VAO_FASTPATH:
       return 1;
+
+   case PIPE_CAP_EMULATE_NONFIXED_PRIMITIVE_RESTART:
+   case PIPE_CAP_DRAW_VERTEX_STATE:
+      return 0;
 
    default:
       unreachable("bad PIPE_CAP_*");

@@ -45,6 +45,7 @@ enum lp_texture_usage
 struct pipe_context;
 struct pipe_screen;
 struct llvmpipe_context;
+struct llvmpipe_screen;
 
 struct sw_displaytarget;
 
@@ -60,14 +61,17 @@ struct llvmpipe_resource
 {
    struct pipe_resource base;
 
+   /** an extra screen pointer to avoid crashing in driver trace */
+   struct llvmpipe_screen *screen;
+
    /** Row stride in bytes */
    unsigned row_stride[LP_MAX_TEXTURE_LEVELS];
    /** Image stride (for cube maps, array or 3D textures) in bytes */
-   unsigned img_stride[LP_MAX_TEXTURE_LEVELS];
+   uint64_t img_stride[LP_MAX_TEXTURE_LEVELS];
    /** Offset to start of mipmap level, in bytes */
-   unsigned mip_offsets[LP_MAX_TEXTURE_LEVELS];
+   uint64_t mip_offsets[LP_MAX_TEXTURE_LEVELS];
    /** allocated total size (for non-display target texture resources only) */
-   unsigned total_alloc_size;
+   uint64_t total_alloc_size;
 
    /**
     * Display target, for textures with the PIPE_BIND_DISPLAY_TARGET
@@ -85,7 +89,7 @@ struct llvmpipe_resource
     */
    void *data;
 
-   boolean userBuffer;  /** Is this a user-space buffer? */
+   bool user_ptr;  /** Is this a user-space buffer? */
    unsigned timestamp;
 
    unsigned id;  /**< temporary, for debugging */
@@ -95,6 +99,7 @@ struct llvmpipe_resource
    uint64_t size_required;
    uint64_t backing_offset;
    bool backable;
+   bool imported_memory;
 #ifdef DEBUG
    /** for linked list */
    struct llvmpipe_resource *prev, *next;
@@ -105,8 +110,13 @@ struct llvmpipe_resource
 struct llvmpipe_transfer
 {
    struct pipe_transfer base;
+};
 
-   unsigned long offset;
+struct llvmpipe_memory_object
+{
+   struct pipe_memory_object b;
+   struct pipe_memory_allocation *data;
+   uint64_t size;
 };
 
 
@@ -129,6 +139,12 @@ static inline struct llvmpipe_transfer *
 llvmpipe_transfer(struct pipe_transfer *pt)
 {
    return (struct llvmpipe_transfer *) pt;
+}
+
+static inline struct llvmpipe_memory_object *
+llvmpipe_memory_object(struct pipe_memory_object *pt)
+{
+   return (struct llvmpipe_memory_object *) pt;
 }
 
 

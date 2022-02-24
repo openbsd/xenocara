@@ -85,6 +85,11 @@ void create_program(enum chip_class chip_class, Stage stage, unsigned wave_size,
    program->debug.func = nullptr;
    program->debug.private_data = nullptr;
 
+   program->debug.output = output;
+   program->debug.shorten_messages = true;
+   program->debug.func = nullptr;
+   program->debug.private_data = nullptr;
+
    Block *block = program->create_and_insert_block();
    block->kind = block_kind_top_level;
 
@@ -164,7 +169,7 @@ void finish_opt_test()
    aco_print_program(program.get(), output);
 }
 
-void finish_ra_test(ra_test_policy policy)
+void finish_ra_test(ra_test_policy policy, bool lower)
 {
    finish_program(program.get());
    if (!aco::validate_ir(program.get())) {
@@ -180,6 +185,19 @@ void finish_ra_test(ra_test_policy policy)
       fail_test("Validation after register allocation failed");
       return;
    }
+
+   if (lower) {
+      aco::ssa_elimination(program.get());
+      aco::lower_to_hw_instr(program.get());
+   }
+
+   aco_print_program(program.get(), output);
+}
+
+void finish_optimizer_postRA_test()
+{
+   finish_program(program.get());
+   aco::optimize_postRA(program.get());
    aco_print_program(program.get(), output);
 }
 
@@ -197,6 +215,13 @@ void finish_insert_nops_test()
    aco_print_program(program.get(), output);
 }
 
+void finish_form_hard_clause_test()
+{
+   finish_program(program.get());
+   aco::form_hard_clauses(program.get());
+   aco_print_program(program.get(), output);
+}
+
 void finish_assembler_test()
 {
    finish_program(program.get());
@@ -205,11 +230,7 @@ void finish_assembler_test()
 
    /* we could use CLRX for disassembly but that would require it to be
     * installed */
-   if (program->chip_class == GFX10_3 && LLVM_VERSION_MAJOR < 9) {
-      skip_test("LLVM 11 needed for GFX10_3 disassembly");
-   } else if (program->chip_class == GFX10 && LLVM_VERSION_MAJOR < 9) {
-      skip_test("LLVM 9 needed for GFX10 disassembly");
-   } else if (program->chip_class >= GFX8) {
+   if (program->chip_class >= GFX8) {
       print_asm(program.get(), binary, exec_size / 4u, output);
    } else {
       //TODO: maybe we should use CLRX and skip this test if it's not available?
@@ -221,9 +242,37 @@ void finish_assembler_test()
 void writeout(unsigned i, Temp tmp)
 {
    if (tmp.id())
-      bld.pseudo(aco_opcode::p_unit_test, Operand(i), tmp);
+      bld.pseudo(aco_opcode::p_unit_test, Operand::c32(i), tmp);
    else
-      bld.pseudo(aco_opcode::p_unit_test, Operand(i));
+      bld.pseudo(aco_opcode::p_unit_test, Operand::c32(i));
+}
+
+void writeout(unsigned i, aco::Builder::Result res)
+{
+   bld.pseudo(aco_opcode::p_unit_test, Operand::c32(i), res);
+}
+
+void writeout(unsigned i, Operand op)
+{
+   bld.pseudo(aco_opcode::p_unit_test, Operand::c32(i), op);
+}
+
+void writeout(unsigned i, Operand op0, Operand op1)
+{
+   bld.pseudo(aco_opcode::p_unit_test, Operand::c32(i), op0, op1);
+}
+
+Temp fneg(Temp src)
+{
+   return bld.vop2(aco_opcode::v_mul_f32, bld.def(v1), Operand::c32(0xbf800000u), src);
+}
+
+Temp fabs(Temp src)
+{
+   Builder::Result res =
+      bld.vop2_e64(aco_opcode::v_mul_f32, bld.def(v1), Operand::c32(0x3f800000u), src);
+   res.instr->vop3().abs[1] = true;
+   return res;
 }
 
 VkDevice get_vk_device(enum chip_class chip_class)
@@ -337,28 +386,31 @@ void print_pipeline_ir(VkDevice device, VkPipeline pipeline, VkShaderStageFlagBi
    result = GetPipelineExecutableInternalRepresentationsKHR(device, &exec_info, &ir_count, ir);
    assert(result == VK_SUCCESS);
 
-   for (unsigned i = 0; i < ir_count; i++) {
-      if (strcmp(ir[i].name, name))
-         continue;
+   VkPipelineExecutableInternalRepresentationKHR* requested_ir = nullptr;
+   for (unsigned i = 0; i < ir_count; ++i) {
+      if (strcmp(ir[i].name, name) == 0) {
+         requested_ir = &ir[i];
+         break;
+      }
+   }
+   assert(requested_ir && "Could not find requested IR");
 
-      char *data = (char*)malloc(ir[i].dataSize);
-      ir[i].pData = data;
-      result = GetPipelineExecutableInternalRepresentationsKHR(device, &exec_info, &ir_count, ir);
-      assert(result == VK_SUCCESS);
+   char *data = (char*)malloc(requested_ir->dataSize);
+   requested_ir->pData = data;
+   result = GetPipelineExecutableInternalRepresentationsKHR(device, &exec_info, &ir_count, ir);
+   assert(result == VK_SUCCESS);
 
-      if (remove_encoding) {
-         for (char *c = data; *c; c++) {
-            if (*c == ';') {
-               for (; *c && *c != '\n'; c++)
-                  *c = ' ';
-            }
+   if (remove_encoding) {
+      for (char *c = data; *c; c++) {
+         if (*c == ';') {
+            for (; *c && *c != '\n'; c++)
+               *c = ' ';
          }
       }
-
-      fprintf(output, "%s", data);
-      free(data);
-      return;
    }
+
+   fprintf(output, "%s", data);
+   free(data);
 }
 
 VkShaderModule __qoCreateShaderModule(VkDevice dev, const QoShaderModuleCreateInfo *module_info)

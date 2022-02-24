@@ -107,6 +107,9 @@ def pack_modifier(mod, width, default, opts, body, pack_exprs):
         # Construct a list
         lists = [pick_from_bucket(opts, bucket) for bucket in SWIZZLE_BUCKETS]
         ir_value = "src[{}].swizzle".format(arg)
+    elif raw == "lane_dest":
+        lists = [pick_from_bucket(opts, bucket) for bucket in SWIZZLE_BUCKETS]
+        ir_value = "dest->swizzle"
     elif raw in ["abs", "sign"]:
         ir_value = "src[{}].abs".format(arg)
     elif raw in ["neg", "not"]:
@@ -307,7 +310,7 @@ bi_pack_${'fma' if unit == '*' else 'add'}(bi_instr *I,
     enum bifrost_packed_src src3)
 {
     if (!I)
-        return bi_pack_${opname_to_c(unit + 'NOP.i32')}(I, src0, src1, src2, src3);
+        return bi_pack_${opname_to_c(unit + 'NOP')}(I, src0, src1, src2, src3);
 
 % if unit == '*':
     assert((1 << src0) & 0xfb);

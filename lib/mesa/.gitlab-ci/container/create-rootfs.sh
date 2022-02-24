@@ -8,6 +8,8 @@ elif [ $DEBIAN_ARCH = amd64 ]; then
     ARCH_PACKAGES="firmware-amd-graphics
                    libelf1
                    libllvm11
+                   libva2
+                   libva-drm2
                   "
 fi
 
@@ -21,9 +23,7 @@ INSTALL_CI_FAIRY_PACKAGES="git
 apt-get -y install --no-install-recommends \
     $ARCH_PACKAGES \
     $INSTALL_CI_FAIRY_PACKAGES \
-    apitrace \
     ca-certificates \
-    curl \
     firmware-realtek \
     initramfs-tools \
     libasan6 \

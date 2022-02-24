@@ -48,12 +48,13 @@ tegra_destroy(struct pipe_context *pcontext)
 static void
 tegra_draw_vbo(struct pipe_context *pcontext,
                const struct pipe_draw_info *pinfo,
+               unsigned drawid_offset,
                const struct pipe_draw_indirect_info *pindirect,
-               const struct pipe_draw_start_count *draws,
+               const struct pipe_draw_start_count_bias *draws,
                unsigned num_draws)
 {
    if (num_draws > 1) {
-      util_draw_multi(pcontext, pinfo, pindirect, draws, num_draws);
+      util_draw_multi(pcontext, pinfo, drawid_offset, pindirect, draws, num_draws);
       return;
    }
 
@@ -80,7 +81,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
       pinfo = &info;
    }
 
-   context->gpu->draw_vbo(context->gpu, pinfo, pindirect, draws, num_draws);
+   context->gpu->draw_vbo(context->gpu, pinfo, drawid_offset, pindirect, draws, num_draws);
 }
 
 static void
@@ -561,18 +562,31 @@ static void
 tegra_set_sampler_views(struct pipe_context *pcontext, unsigned shader,
                         unsigned start_slot, unsigned num_views,
                         unsigned unbind_num_trailing_slots,
+                        bool take_ownership,
                         struct pipe_sampler_view **pviews)
 {
    struct pipe_sampler_view *views[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    struct tegra_context *context = to_tegra_context(pcontext);
+   struct tegra_sampler_view *view;
    unsigned i;
 
-   for (i = 0; i < num_views; i++)
+   for (i = 0; i < num_views; i++) {
+      /* adjust private reference count */
+      view = to_tegra_sampler_view(pviews[i]);
+      if (view) {
+         view->refcount--;
+         if (!view->refcount) {
+            view->refcount = 100000000;
+            p_atomic_add(&view->gpu->reference.count, view->refcount);
+         }
+      }
+
       views[i] = tegra_sampler_view_unwrap(pviews[i]);
+   }
 
    context->gpu->set_sampler_views(context->gpu, shader, start_slot,
                                    num_views, unbind_num_trailing_slots,
-                                   views);
+                                   take_ownership, views);
 }
 
 static void
@@ -834,15 +848,19 @@ tegra_create_sampler_view(struct pipe_context *pcontext,
    if (!view)
       return NULL;
 
-   view->gpu = context->gpu->create_sampler_view(context->gpu, resource->gpu,
-                                                 template);
-   memcpy(&view->base, view->gpu, sizeof(*view->gpu));
+   view->base = *template;
+   view->base.context = pcontext;
    /* overwrite to prevent reference from being released */
    view->base.texture = NULL;
-
    pipe_reference_init(&view->base.reference, 1);
    pipe_resource_reference(&view->base.texture, presource);
-   view->base.context = pcontext;
+
+   view->gpu = context->gpu->create_sampler_view(context->gpu, resource->gpu,
+                                                 template);
+
+   /* use private reference count */
+   view->gpu->reference.count += 100000000;
+   view->refcount = 100000000;
 
    return &view->base;
 }
@@ -854,6 +872,8 @@ tegra_sampler_view_destroy(struct pipe_context *pcontext,
    struct tegra_sampler_view *view = to_tegra_sampler_view(pview);
 
    pipe_resource_reference(&view->base.texture, NULL);
+   /* adjust private reference count */
+   p_atomic_add(&view->gpu->reference.count, -view->refcount);
    pipe_sampler_view_reference(&view->gpu, NULL);
    free(view);
 }
@@ -915,9 +935,15 @@ tegra_transfer_map(struct pipe_context *pcontext,
    if (!transfer)
       return NULL;
 
-   transfer->map = context->gpu->transfer_map(context->gpu, resource->gpu,
-                                              level, usage, box,
-                                              &transfer->gpu);
+   if (presource->target == PIPE_BUFFER) {
+      transfer->map = context->gpu->buffer_map(context->gpu, resource->gpu,
+                                                 level, usage, box,
+                                                 &transfer->gpu);
+   } else {
+      transfer->map = context->gpu->texture_map(context->gpu, resource->gpu,
+                                                 level, usage, box,
+                                                 &transfer->gpu);
+   }
    memcpy(&transfer->base, transfer->gpu, sizeof(*transfer->gpu));
    transfer->base.resource = NULL;
    pipe_resource_reference(&transfer->base.resource, presource);
@@ -945,7 +971,10 @@ tegra_transfer_unmap(struct pipe_context *pcontext,
    struct tegra_transfer *transfer = to_tegra_transfer(ptransfer);
    struct tegra_context *context = to_tegra_context(pcontext);
 
-   context->gpu->transfer_unmap(context->gpu, transfer->gpu);
+   if (ptransfer->resource->target == PIPE_BUFFER)
+      context->gpu->buffer_unmap(context->gpu, transfer->gpu);
+   else
+      context->gpu->texture_unmap(context->gpu, transfer->gpu);
    pipe_resource_reference(&transfer->base.resource, NULL);
    free(transfer);
 }
@@ -1358,9 +1387,11 @@ tegra_screen_context_create(struct pipe_screen *pscreen, void *priv,
    context->base.create_surface = tegra_create_surface;
    context->base.surface_destroy = tegra_surface_destroy;
 
-   context->base.transfer_map = tegra_transfer_map;
+   context->base.buffer_map = tegra_transfer_map;
+   context->base.texture_map = tegra_transfer_map;
    context->base.transfer_flush_region = tegra_transfer_flush_region;
-   context->base.transfer_unmap = tegra_transfer_unmap;
+   context->base.buffer_unmap = tegra_transfer_unmap;
+   context->base.texture_unmap = tegra_transfer_unmap;
    context->base.buffer_subdata = tegra_buffer_subdata;
    context->base.texture_subdata = tegra_texture_subdata;
 

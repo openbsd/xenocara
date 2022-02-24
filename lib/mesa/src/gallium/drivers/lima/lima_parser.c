@@ -32,6 +32,9 @@
 #include "lima_parser.h"
 #include "lima_texture.h"
 
+#include "lima/ir/gp/codegen.h"
+#include "lima/ir/pp/codegen.h"
+
 typedef struct {
    char *info;
 } render_state_info;
@@ -433,6 +436,35 @@ lima_parse_plbu(FILE *fp, uint32_t *data, int size, uint32_t start)
    fprintf(fp, "\n");
 }
 
+void
+lima_parse_shader(FILE *fp, uint32_t *data, int size, bool is_frag)
+{
+   uint32_t *value = &data[0];
+
+   if (is_frag) {
+      uint32_t *bin = value;
+      uint32_t offt = 0;
+      uint32_t next_instr_length = 0;
+
+      fprintf(fp, "/* ============ FS DISASSEMBLY BEGIN ============== */\n");
+
+      do {
+         ppir_codegen_ctrl *ctrl = (ppir_codegen_ctrl *)bin;
+         fprintf(fp, "@%6d: ", offt);
+         ppir_disassemble_instr(bin, offt, fp);
+         bin += ctrl->count;
+         offt += ctrl->count;
+         next_instr_length = ctrl->next_count;
+      } while (next_instr_length);
+
+      fprintf(fp, "/* ============ FS DISASSEMBLY END ================= */\n");
+   } else {
+      fprintf(fp, "/* ============ VS DISASSEMBLY BEGIN ============== */\n");
+      gpir_disassemble_program((gpir_codegen_instr *)value, size / sizeof(gpir_codegen_instr), fp);
+      fprintf(fp, "/* ============ VS DISASSEMBLY END ================= */\n");
+   }
+}
+
 static void
 parse_rsw(FILE *fp, uint32_t *value, int i, uint32_t *helper)
 {
@@ -489,7 +521,11 @@ parse_rsw(FILE *fp, uint32_t *value, int i, uint32_t *helper)
       if (*value & 0x1000)
          fprintf(fp, ", shader writes stencil");
       fprintf(fp, " */\n\t\t\t\t\t\t/* %s(3)", render_state_infos[i].info);
-      fprintf(fp, ": unknown bits 4-9: 0x%08x", *value & 0x000003f0);
+      if ((*value & 0x00000010) == 0x00000010)
+         fprintf(fp, ": ignore depth clip near");
+      if ((*value & 0x00000020) == 0x00000020)
+         fprintf(fp, ", ignore depth clip far");
+      fprintf(fp, ", unknown bits 6-9: 0x%08x", *value & 0x000003c0);
       fprintf(fp, ", unknown bits 13-15: 0x%08x */\n", *value & 0x00000e000);
       break;
    case 4: /* DEPTH RANGE */
@@ -537,8 +573,10 @@ parse_rsw(FILE *fp, uint32_t *value, int i, uint32_t *helper)
               (*value & 0x0000ff00) >> 8); /* back writemask */
       /* add a few tabs for alignment */
       fprintf(fp, "\t\t\t\t\t\t/* %s(2)", render_state_infos[i].info);
-      fprintf(fp, ": unknown (bits 16-31) 0x%04x */\n",
-              (*value & 0xffff0000) >> 16); /* unknown, alpha ref_value? */
+      fprintf(fp, ": alpha_ref_value: 0x%02x */\n", (*value & 0x00ff0000) >> 16);
+      fprintf(fp, "\t\t\t\t\t\t/* %s(3)", render_state_infos[i].info);
+      fprintf(fp, ": unknown (bits 24-31) 0x%02x */\n",
+              (*value & 0xff000000) >> 24); /* unknown */
       break;
    case 8: /* MULTI SAMPLE */
       if ((*value & 0x00000f00) == 0x00000000)
@@ -556,6 +594,10 @@ parse_rsw(FILE *fp, uint32_t *value, int i, uint32_t *helper)
          fprintf(fp, " */\n");
       else
          fprintf(fp, ", UNKNOWN\n");
+      fprintf(fp, "\t\t\t\t\t\t/* %s(2)", render_state_infos[i].info);
+      fprintf(fp, ": alpha_test_func: %d (%s) */\n",
+              (*value & 0x00000007),
+              lima_get_compare_func_string((*value & 0x00000007))); /* alpha_test_func */
       break;
    case 9: /* SHADER ADDRESS */
       fprintf(fp, ": fs shader @ 0x%08x, first instr length %d */\n",
@@ -631,6 +673,12 @@ parse_rsw(FILE *fp, uint32_t *value, int i, uint32_t *helper)
       fprintf(fp, ": ");
       if ((*value & 0x00002000) == 0x00002000)
          fprintf(fp, "blend->base.dither true, ");
+
+      if ((*value & 0x00001000) == 0x00001000)
+         fprintf(fp, "glFrontFace(GL_CCW), ");
+      else
+         fprintf(fp, "glFrontFace(GL_CW), ");
+
       if ((*value & 0x00010000) == 0x00010000)
          fprintf(fp, "ctx->const_buffer[PIPE_SHADER_FRAGMENT].buffer true ");
       fprintf(fp, "*/\n");

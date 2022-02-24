@@ -96,7 +96,7 @@ draw_emit_indirect(struct fd_ringbuffer *ring,
 static void
 draw_emit(struct fd_ringbuffer *ring, struct CP_DRAW_INDX_OFFSET_0 *draw0,
           const struct pipe_draw_info *info,
-          const struct pipe_draw_start_count *draw, unsigned index_offset)
+          const struct pipe_draw_start_count_bias *draw, unsigned index_offset)
 {
    if (info->index_size) {
       assert(!info->has_user_indices);
@@ -132,8 +132,9 @@ fixup_draw_state(struct fd_context *ctx, struct fd6_emit *emit) assert_dt
 
 static bool
 fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
+             unsigned drawid_offset,
              const struct pipe_draw_indirect_info *indirect,
-             const struct pipe_draw_start_count *draw,
+             const struct pipe_draw_start_count_bias *draw,
              unsigned index_offset) assert_dt
 {
    struct fd6_context *fd6_ctx = fd6_context(ctx);
@@ -142,6 +143,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
       .ctx = ctx,
       .vtx = &ctx->vtx,
       .info = info,
+      .drawid_offset = drawid_offset,
       .indirect = indirect,
       .draw = draw,
       .key = {
@@ -154,11 +156,13 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
             .sample_shading = (ctx->min_samples > 1),
             .msaa = (ctx->framebuffer.samples > 1),
          },
+         .clip_plane_enable = ctx->rasterizer->clip_plane_enable,
       },
       .rasterflat = ctx->rasterizer->flatshade,
       .sprite_coord_enable = ctx->rasterizer->sprite_coord_enable,
       .sprite_coord_mode = ctx->rasterizer->sprite_coord_mode,
       .primitive_restart = info->primitive_restart && info->index_size,
+      .patch_vertices = ctx->patch_vertices,
    };
 
    if (!(ctx->prog.vs && ctx->prog.fs))
@@ -174,6 +178,12 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
       struct shader_info *ds_info = ir3_get_shader_info(emit.key.ds);
       emit.key.key.tessellation = ir3_tess_mode(ds_info->tess.primitive_mode);
       ctx->gen_dirty |= BIT(FD6_GROUP_PRIMITIVE_PARAMS);
+
+      struct shader_info *fs_info = ir3_get_shader_info(emit.key.fs);
+      emit.key.key.tcs_store_primid =
+         BITSET_TEST(ds_info->system_values_read, SYSTEM_VALUE_PRIMITIVE_ID) ||
+         (gs_info && BITSET_TEST(gs_info->system_values_read, SYSTEM_VALUE_PRIMITIVE_ID)) ||
+         (fs_info && (fs_info->inputs_read & (1ull << VARYING_SLOT_PRIMITIVE_ID)));
    }
 
    if (emit.key.gs) {
@@ -186,7 +196,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 
    ir3_fixup_shader_state(&ctx->base, &emit.key.key);
 
-   if (!(ctx->dirty & FD_DIRTY_PROG)) {
+   if (!(ctx->gen_dirty & BIT(FD6_GROUP_PROG))) {
       emit.prog = fd6_ctx->prog;
    } else {
       fd6_ctx->prog = fd6_emit_get_prog(&emit);
@@ -227,7 +237,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
    struct fd_ringbuffer *ring = ctx->batch->draw;
 
    struct CP_DRAW_INDX_OFFSET_0 draw0 = {
-      .prim_type = ctx->primtypes[info->mode],
+      .prim_type = ctx->screen->primtypes[info->mode],
       .vis_cull = USE_VISIBILITY,
       .gs_enable = !!emit.key.gs,
    };
@@ -262,7 +272,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
          unreachable("bad tessmode");
       }
 
-      draw0.prim_type = DI_PT_PATCHES0 + info->vertices_per_patch;
+      draw0.prim_type = DI_PT_PATCHES0 + ctx->patch_vertices;
       draw0.tess_enable = true;
 
       const unsigned max_count = 2048;
@@ -273,10 +283,10 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
        * limit.  But in the indirect-draw case we must assume the worst.
        */
       if (indirect && indirect->buffer) {
-         count = ALIGN_NPOT(max_count, info->vertices_per_patch);
+         count = ALIGN_NPOT(max_count, ctx->patch_vertices);
       } else {
          count = MIN2(max_count, draw->count);
-         count = ALIGN_NPOT(count, info->vertices_per_patch);
+         count = ALIGN_NPOT(count, ctx->patch_vertices);
       }
 
       OUT_PKT7(ring, CP_SET_SUBDRAW_SIZE, 1);
@@ -302,7 +312,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
       }
    }
 
-   uint32_t index_start = info->index_size ? info->index_bias : draw->start;
+	uint32_t index_start = info->index_size ? draw->index_bias : draw->start;
    if (ctx->last.dirty || (ctx->last.index_start != index_start)) {
       OUT_PKT4(ring, REG_A6XX_VFD_INDEX_OFFSET, 1);
       OUT_RING(ring, index_start); /* VFD_INDEX_OFFSET */
@@ -364,7 +374,7 @@ fd6_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 }
 
 static void
-fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
+fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth) assert_dt
 {
    struct fd_ringbuffer *ring;
    struct fd_screen *screen = batch->ctx->screen;
@@ -378,8 +388,7 @@ fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
 
    OUT_WFI5(ring);
 
-   OUT_REG(ring,
-           A6XX_RB_CCU_CNTL(.offset = screen->info.a6xx.ccu_offset_bypass));
+   OUT_REG(ring, A6XX_RB_CCU_CNTL(.color_offset = screen->ccu_offset_bypass));
 
    OUT_REG(ring,
            A6XX_HLSQ_INVALIDATE_CMD(.vs_state = true, .hs_state = true,
@@ -424,6 +433,7 @@ fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
 
    fd6_event_write(batch, ring, PC_CCU_FLUSH_COLOR_TS, true);
    fd6_event_write(batch, ring, PC_CCU_INVALIDATE_COLOR, false);
+   fd_wfi(batch, ring);
 
    OUT_PKT4(ring, REG_A6XX_RB_2D_SRC_SOLID_C0, 4);
    OUT_RING(ring, fui(depth));
@@ -456,7 +466,7 @@ fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
    OUT_WFI5(ring);
 
    OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-   OUT_RING(ring, screen->info.a6xx.magic.RB_UNKNOWN_8E04_blit);
+   OUT_RING(ring, screen->info->a6xx.magic.RB_UNKNOWN_8E04_blit);
 
    OUT_PKT7(ring, CP_BLIT, 1);
    OUT_RING(ring, CP_BLIT_0_OP(BLIT_OP_SCALE));
@@ -469,6 +479,7 @@ fd6_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
    fd6_event_write(batch, ring, PC_CCU_FLUSH_COLOR_TS, true);
    fd6_event_write(batch, ring, PC_CCU_FLUSH_DEPTH_TS, true);
    fd6_event_write(batch, ring, CACHE_FLUSH_TS, true);
+   fd_wfi(batch, ring);
 
    fd6_cache_inv(batch, ring);
 }

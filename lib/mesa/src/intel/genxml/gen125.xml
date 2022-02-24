@@ -346,6 +346,29 @@
     <field name="Blend Constant Color Alpha" start="160" end="191" type="float"/>
   </struct>
 
+  <struct name="CPS_STATE" length="8">
+    <field name="Min CP Size X" start="0" end="10" type="s3.7"/>
+    <field name="Statistics Enable" start="11" end="11" type="bool"/>
+    <field name="Coarse Pixel Shading Mode" start="12" end="13" type="uint">
+      <value name="CPS_MODE_NONE" value="0"/>
+      <value name="CPS_MODE_CONSTANT" value="1"/>
+      <value name="CPS_MODE_RADIAL" value="2"/>
+    </field>
+    <field name="Scale Axis" start="14" end="14" type="uint" prefix="SCALE_AXIS">
+      <value name="X Axis" value="0"/>
+      <value name="Y Axis" value="1"/>
+    </field>
+    <field name="Min CP Size Y" start="16" end="26" type="s3.7"/>
+    <field name="Max CP Size X" start="32" end="42" type="s3.7"/>
+    <field name="Max CP Size Y" start="48" end="58" type="s3.7"/>
+    <field name="Y Focal" start="64" end="79" type="s15.0"/>
+    <field name="X Focal" start="96" end="111" type="s15.0"/>
+    <field name="M y" start="128" end="159" type="float"/>
+    <field name="M x" start="160" end="191" type="float"/>
+    <field name="R min" start="192" end="223" type="float"/>
+    <field name="Aspect" start="224" end="255" type="float"/>
+  </struct>
+
   <struct name="EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR" length="1">
     <field name="Target Function ID" start="0" end="3" type="uint"/>
     <field name="End Of Thread" start="5" end="5" type="uint">
@@ -565,6 +588,16 @@
       <value name="TG size 8" value="0"/>
       <value name="TG size 16" value="1"/>
     </field>
+    <field name="Number Of Barriers" start="188" end="190" type="uint" prefix="BARRIER_SIZE">
+      <value name="NONE" value="0"/>
+      <value name="B1" value="1"/>
+      <value name="B2" value="2"/>
+      <value name="B4" value="3"/>
+      <value name="B8" value="4"/>
+      <value name="B16" value="5"/>
+      <value name="B24" value="6"/>
+      <value name="B32" value="7"/>
+    </field>
     <field name="BTD Mode" start="191" end="191" type="uint"/>
   </struct>
 
@@ -710,20 +743,22 @@
     <field name="Vertical Line Stride" start="11" end="11" type="uint"/>
     <field name="Tile Mode" start="12" end="13" type="uint">
       <value name="LINEAR" value="0"/>
+      <value name="TILE64" value="1"/>
       <value name="XMAJOR" value="2"/>
-      <value name="YMAJOR" value="3"/>
+      <value name="TILE4"  value="3"/>
     </field>
     <field name="Surface Horizontal Alignment" start="14" end="15" type="uint">
-      <value name="HALIGN 4" value="1"/>
-      <value name="HALIGN 8" value="2"/>
-      <value name="HALIGN 16" value="3"/>
+      <value name="HALIGN_16" value="0"/>
+      <value name="HALIGN_32" value="1"/>
+      <value name="HALIGN_64" value="2"/>
+      <value name="HALIGN_128" value="3"/>
     </field>
     <field name="Surface Vertical Alignment" start="16" end="17" type="uint">
-      <value name="VALIGN 4" value="1"/>
-      <value name="VALIGN 8" value="2"/>
-      <value name="VALIGN 16" value="3"/>
+      <value name="VALIGN_4" value="1"/>
+      <value name="VALIGN_8" value="2"/>
+      <value name="VALIGN_16" value="3"/>
     </field>
-    <field name="Surface Format" start="18" end="27" type="uint"/>
+    <field name="Surface Format" start="18" end="26" type="uint"/>
     <field name="Surface Array" start="28" end="28" type="bool"/>
     <field name="Surface Type" start="29" end="31" type="uint">
       <value name="SURFTYPE_1D" value="0"/>
@@ -732,6 +767,7 @@
       <value name="SURFTYPE_CUBE" value="3"/>
       <value name="SURFTYPE_BUFFER" value="4"/>
       <value name="SURFTYPE_STRBUF" value="5"/>
+      <value name="SURFTYPE_SCRATCH" value="6"/>
       <value name="SURFTYPE_NULL" value="7"/>
     </field>
     <field name="Surface QPitch" start="32" end="46" type="uint"/>
@@ -818,6 +854,7 @@
     <field name="Clear Value Address Enable" start="330" end="330" type="bool"/>
     <field name="Caching Expanded Formats" start="331" end="331" type="uint"/>
     <field name="Auxiliary Surface Base Address" start="332" end="383" type="address"/>
+    <field name="Render Compression Format" start="384" end="388" type="uint"/>
     <field name="Clear Value Address" start="390" end="431" type="address"/>
   </struct>
 
@@ -896,20 +933,21 @@
       <value name="DX10/OGL" value="0"/>
       <value name="DX9" value="1"/>
     </field>
+    <field name="CPS LOD Compensation Enable" start="30" end="30" type="bool"/>
     <field name="Sampler Disable" start="31" end="31" type="bool"/>
     <field name="Cube Surface Control Mode" start="32" end="32" type="uint">
       <value name="PROGRAMMED" value="0"/>
       <value name="OVERRIDE" value="1"/>
     </field>
-    <field name="Shadow Function" start="33" end="35" type="uint">
-      <value name="PREFILTEROP ALWAYS" value="0"/>
-      <value name="PREFILTEROP NEVER" value="1"/>
-      <value name="PREFILTEROP LESS" value="2"/>
-      <value name="PREFILTEROP EQUAL" value="3"/>
-      <value name="PREFILTEROP LEQUAL" value="4"/>
-      <value name="PREFILTEROP GREATER" value="5"/>
-      <value name="PREFILTEROP NOTEQUAL" value="6"/>
-      <value name="PREFILTEROP GEQUAL" value="7"/>
+    <field name="Shadow Function" start="33" end="35" type="uint" prefix="PREFILTEROP">
+      <value name="ALWAYS" value="0"/>
+      <value name="NEVER" value="1"/>
+      <value name="LESS" value="2"/>
+      <value name="EQUAL" value="3"/>
+      <value name="LEQUAL" value="4"/>
+      <value name="GREATER" value="5"/>
+      <value name="NOTEQUAL" value="6"/>
+      <value name="GEQUAL" value="7"/>
     </field>
     <field name="ChromaKey Mode" start="36" end="36" type="uint">
       <value name="KEYFILTER_KILL_ON_ANY_MATCH" value="0"/>
@@ -1239,6 +1277,7 @@
     <field name="Null Vertex Buffer" start="13" end="13" type="bool"/>
     <field name="Address Modify Enable" start="14" end="14" type="bool"/>
     <field name="MOCS" start="16" end="22" type="uint"/>
+    <field name="L3 Bypass Disable" start="25" end="25" type="bool"/>
     <field name="Vertex Buffer Index" start="26" end="31" type="uint"/>
     <field name="Buffer Starting Address" start="32" end="95" type="address"/>
     <field name="Buffer Size" start="96" end="127" type="uint"/>
@@ -1614,6 +1653,15 @@
     <field name="Constant Body" start="32" end="351" type="3DSTATE_CONSTANT_BODY"/>
   </instruction>
 
+  <instruction name="3DSTATE_CPS_POINTERS" bias="2" length="2" engine="render">
+    <field name="DWord Length" start="0" end="15" type="uint" default="0"/>
+    <field name="3D Command Sub Opcode" start="16" end="23" type="uint" default="34"/>
+    <field name="3D Command Opcode" start="24" end="26" type="uint" default="0"/>
+    <field name="Command SubType" start="27" end="28" type="uint" default="3"/>
+    <field name="Command Type" start="29" end="31" type="uint" default="3"/>
+    <field name="Coarse Pixel Shading State Array Pointer" start="37" end="63" type="offset"/>
+  </instruction>
+
   <instruction name="3DSTATE_DEPTH_BOUNDS" bias="2" length="4">
     <field name="Length" start="0" end="7" type="uint" default="2"/>
     <field name="Depth Bounds Test Value Modify Disable" start="14" end="14" type="bool"/>
@@ -1656,11 +1704,12 @@
     <field name="MOCS" start="160" end="166" type="uint"/>
     <field name="Minimum Array Element" start="168" end="178" type="uint"/>
     <field name="Depth" start="180" end="190" type="uint"/>
+    <field name="Render Compression Format" start="192" end="196" type="uint"/>
+    <field name="Compression Mode" start="197" end="197" type="bool"/>
     <field name="Mip Tail Start LOD" start="218" end="221" type="uint"/>
-    <field name="Tiled Resource Mode" start="222" end="223" type="uint">
-      <value name="NONE" value="0"/>
-      <value name="TILEYF" value="1"/>
-      <value name="TILEYS" value="2"/>
+    <field name="Tiled Mode" start="222" end="223" type="uint">
+      <value name="TILE64" value="1"/>
+      <value name="TILE4" value="3"/>
     </field>
     <field name="Surface QPitch" start="224" end="238" type="uint"/>
     <field name="LOD" start="240" end="243" type="uint"/>
@@ -1712,8 +1761,7 @@
       <value name="13-16 Samplers" value="4"/>
     </field>
     <field name="Vector Mask Enable" start="126" end="126" type="bool"/>
-    <field name="Per-Thread Scratch Space" start="128" end="131" type="uint"/>
-    <field name="Scratch Space Base Pointer" start="138" end="191" type="address"/>
+    <field name="Scratch Space Buffer" start="138" end="159" type="uint"/>
     <field name="Patch URB Entry Read Offset" start="196" end="201" type="uint"/>
     <field name="Patch URB Entry Read Length" start="203" end="209" type="uint"/>
     <field name="Dispatch GRF Start Register For URB Data" start="212" end="216" type="uint"/>
@@ -1898,8 +1946,7 @@
     </field>
     <field name="Vector Mask Enable" start="126" end="126" type="bool"/>
     <field name="Single Program Flow" start="127" end="127" type="bool"/>
-    <field name="Per-Thread Scratch Space" start="128" end="131" type="uint"/>
-    <field name="Scratch Space Base Pointer" start="138" end="191" type="address"/>
+    <field name="Scratch Space Buffer" start="138" end="159" type="uint"/>
     <field name="Dispatch GRF Start Register For URB Data" start="192" end="195" type="uint"/>
     <field name="Vertex URB Entry Read Offset" start="196" end="201" type="uint"/>
     <field name="Include Vertex Handles" start="202" end="202" type="bool"/>
@@ -1944,10 +1991,9 @@
     <field name="Command Type" start="29" end="31" type="uint" default="3"/>
     <field name="Surface Pitch" start="32" end="48" type="uint"/>
     <field name="Hierarchical Depth Buffer Write Thru Enable" start="52" end="52" type="bool"/>
-    <field name="Tiled Resource Mode" start="54" end="55" type="uint">
-      <value name="NONE" value="0"/>
-      <value name="TILEYF" value="1"/>
-      <value name="TILEYS" value="2"/>
+    <field name="Tiled Mode" start="54" end="55" type="uint">
+      <value name="TILE64" value="1"/>
+      <value name="TILE4" value="3"/>
     </field>
     <field name="MOCS" start="57" end="63" type="uint"/>
     <field name="Hierarchical Depth Buffer MOCS" start="57" end="63" type="uint"/>
@@ -1983,8 +2029,7 @@
     <field name="Statistics Enable" start="93" end="93" type="bool"/>
     <field name="Enable" start="95" end="95" type="bool"/>
     <field name="Kernel Start Pointer" start="102" end="159" type="offset"/>
-    <field name="Per-Thread Scratch Space" start="160" end="163" type="uint"/>
-    <field name="Scratch Space Base Pointer" start="170" end="223" type="address"/>
+    <field name="Scratch Space Buffer" start="170" end="191" type="uint"/>
     <field name="Include Primitive ID" start="224" end="224" type="bool"/>
     <field name="Patch Count Threshold" start="225" end="227" type="uint"/>
     <field name="Vertex URB Entry Read Offset" start="228" end="233" type="uint"/>
@@ -2013,6 +2058,7 @@
       <value name="WORD" value="1"/>
       <value name="DWORD" value="2"/>
     </field>
+    <field name="L3 Bypass Disable" start="43" end="43" type="bool"/>
     <field name="Buffer Starting Address" start="64" end="127" type="address"/>
     <field name="Buffer Size" start="128" end="159" type="uint"/>
   </instruction>
@@ -2129,8 +2175,7 @@
     </field>
     <field name="Vector Mask Enable" start="126" end="126" type="bool"/>
     <field name="Single Program Flow" start="127" end="127" type="bool"/>
-    <field name="Per Thread Scratch Space" start="128" end="131" type="uint"/>
-    <field name="Scratch Space Base Pointer" start="138" end="191" type="address"/>
+    <field name="Scratch Space Buffer" start="138" end="159" type="uint"/>
     <field name="8 Pixel Dispatch Enable" start="192" end="192" type="bool"/>
     <field name="16 Pixel Dispatch Enable" start="193" end="193" type="bool"/>
     <field name="32 Pixel Dispatch Enable" start="194" end="194" type="bool"/>
@@ -2186,6 +2231,7 @@
     </field>
     <field name="Pixel Shader Has UAV" start="34" end="34" type="bool"/>
     <field name="Pixel Shader Pulls Bary" start="35" end="35" type="bool"/>
+    <field name="Pixel Shader Is Per Coarse Pixel" start="36" end="36" type="bool"/>
     <field name="Pixel Shader Computes Stencil" start="37" end="37" type="bool"/>
     <field name="Pixel Shader Is Per Sample" start="38" end="38" type="bool"/>
     <field name="Pixel Shader Disables Alpha To Coverage" start="39" end="39" type="bool"/>
@@ -2195,6 +2241,7 @@
     <field name="Pixel Shader Requires Non-Perspective Bary Plane Coefficients" start="51" end="51" type="bool"/>
     <field name="Pixel Shader Requires Perspective Bary Plane Coefficients" start="52" end="52" type="bool"/>
     <field name="Pixel Shader Requires Source Depth and/or W Plane Coefficients" start="53" end="53" type="bool"/>
+    <field name="Pixel Shader Requires Requested Coarse Pixel Shading Size" start="54" end="54" type="bool"/>
     <field name="Pixel Shader Uses Source W" start="55" end="55" type="bool"/>
     <field name="Pixel Shader Uses Source Depth" start="56" end="56" type="bool"/>
     <field name="Force Computed Depth" start="57" end="57" type="bool"/>
@@ -2719,11 +2766,12 @@
     <field name="MOCS" start="160" end="166" type="uint"/>
     <field name="Minimum Array Element" start="168" end="178" type="uint"/>
     <field name="Depth" start="180" end="190" type="uint"/>
+    <field name="Render Compression Format" start="192" end="196" type="uint"/>
+    <field name="Compression Mode" start="197" end="197" type="bool"/>
     <field name="Mip Tail Start LOD" start="218" end="221" type="uint"/>
     <field name="Tiled Mode" start="222" end="223" type="uint">
-      <value name="NONE" value="0"/>
-      <value name="TILEYF" value="1"/>
-      <value name="TILEYS" value="2"/>
+      <value name="TILE64" value="1"/>
+      <value name="TILE4" value="3"/>
     </field>
     <field name="Surface QPitch" start="224" end="238" type="uint"/>
     <field name="Surf LOD" start="240" end="243" type="uint"/>
@@ -3058,8 +3106,7 @@
       <value name="13-16 Samplers" value="4"/>
     </field>
     <field name="Vector Mask Enable" start="126" end="126" type="bool"/>
-    <field name="Per-Thread Scratch Space" start="128" end="131" type="uint"/>
-    <field name="Scratch Space Base Pointer" start="138" end="191" type="address"/>
+    <field name="Scratch Space Buffer" start="138" end="159" type="uint"/>
     <field name="Vertex URB Entry Read Offset" start="196" end="201" type="uint"/>
     <field name="Vertex URB Entry Read Length" start="203" end="208" type="uint"/>
     <field name="Dispatch GRF Start Register For URB Data" start="212" end="216" type="uint"/>
@@ -3288,35 +3335,6 @@
     <group count="8" start="992" size="32">
       <field name="Inline Data" start="0" end="31" type="uint"/>
     </group>
-  </instruction>
-
-  <instruction name="GPGPU_WALKER" bias="2" length="15" engine="render">
-    <field name="DWord Length" start="0" end="7" type="uint" default="13"/>
-    <field name="Predicate Enable" start="8" end="8" type="bool"/>
-    <field name="Indirect Parameter Enable" start="10" end="10" type="bool"/>
-    <field name="SubOpcode" start="16" end="23" type="uint" default="5"/>
-    <field name="Media Command Opcode" start="24" end="26" type="uint" default="1"/>
-    <field name="Pipeline" start="27" end="28" type="uint" default="2"/>
-    <field name="Command Type" start="29" end="31" type="uint" default="3"/>
-    <field name="Interface Descriptor Offset" start="32" end="37" type="uint"/>
-    <field name="Indirect Data Length" start="64" end="80" type="uint"/>
-    <field name="Indirect Data Start Address" start="102" end="127" type="offset"/>
-    <field name="Thread Width Counter Maximum" start="128" end="133" type="uint"/>
-    <field name="Thread Height Counter Maximum" start="136" end="141" type="uint"/>
-    <field name="Thread Depth Counter Maximum" start="144" end="149" type="uint"/>
-    <field name="SIMD Size" start="158" end="159" type="uint">
-      <value name="SIMD8" value="0"/>
-      <value name="SIMD16" value="1"/>
-      <value name="SIMD32" value="2"/>
-    </field>
-    <field name="Thread Group ID Starting X" start="160" end="191" type="uint"/>
-    <field name="Thread Group ID X Dimension" start="224" end="255" type="uint"/>
-    <field name="Thread Group ID Starting Y" start="256" end="287" type="uint"/>
-    <field name="Thread Group ID Y Dimension" start="320" end="351" type="uint"/>
-    <field name="Thread Group ID Starting/Resume Z" start="352" end="383" type="uint"/>
-    <field name="Thread Group ID Z Dimension" start="384" end="415" type="uint"/>
-    <field name="Right Execution Mask" start="416" end="447" type="uint"/>
-    <field name="Bottom Execution Mask" start="448" end="479" type="uint"/>
   </instruction>
 
   <instruction name="HCP_BSD_OBJECT" bias="2" length="3" engine="video">
@@ -5992,7 +6010,7 @@
   </instruction>
 
   <instruction name="MI_FLUSH_DW" bias="2" length="5" engine="video">
-    <field name="DWord Length" start="0" end="5" type="uint"/>
+    <field name="DWord Length" start="0" end="5" type="uint" default="3"/>
     <field name="Video Pipeline Cache Invalidate" start="7" end="7" type="bool"/>
     <field name="Notify Enable" start="8" end="8" type="bool"/>
     <field name="Flush LLC" start="9" end="9" type="bool"/>
@@ -6350,6 +6368,7 @@
   <instruction name="PIPE_CONTROL" bias="2" length="6" engine="render">
     <field name="DWord Length" start="0" end="7" type="uint" default="4"/>
     <field name="HDC Pipeline Flush Enable" start="9" end="9" type="bool"/>
+    <field name="L3 Read Only Cache Invalidation Enable" start="10" end="10" type="bool"/>
     <field name="3D Command Sub Opcode" start="16" end="23" type="uint" default="0"/>
     <field name="3D Command Opcode" start="24" end="26" type="uint" default="2"/>
     <field name="Command SubType" start="27" end="28" type="uint" default="3"/>
@@ -7021,6 +7040,11 @@
     <field name="Per Sample Blend Opt Disable Mask" start="27" end="27" type="bool"/>
   </register>
 
+  <register name="CHICKEN_RASTER_1" length="1" num="0x6204">
+     <field name="AA Line Quality Fix" start="5" end="5" type="bool"/>
+     <field name="AA Line Quality Fix Mask" start="21" end="21" type="bool"/>
+  </register>
+
   <register name="CL_INVOCATION_COUNT" length="2" num="0x2338">
     <field name="CL Invocation Count Report" start="0" end="63" type="uint"/>
   </register>
@@ -7150,19 +7174,34 @@
   <register name="ROW_INSTDONE" length="1" num="0xe164">
     <field name="BC Done" start="0" end="0" type="bool"/>
     <field name="PSD Done" start="1" end="1" type="bool"/>
+    <field name="TDP Done" start="2" end="2" type="bool"/>
     <field name="DAPR Done" start="3" end="3" type="bool"/>
+    <field name="CPSS Done" start="4" end="4" type="bool"/>
+    <field name="RT DONE RENDER" start="5" end="5" type="bool"/>
     <field name="TDL Done" start="6" end="6" type="bool"/>
+    <field name="EU00 done SS1" start="7" end="7" type="bool"/>
+    <field name="EU01 done SS1" start="8" end="8" type="bool"/>
+    <field name="EU02 done SS1" start="9" end="9" type="bool"/>
+    <field name="EU03 done SS1" start="10" end="10" type="bool"/>
+    <field name="MA0 done SS1" start="11" end="11" type="bool"/>
     <field name="IC Done" start="12" end="12" type="bool"/>
-    <field name="MA0 Done" start="15" end="15" type="bool"/>
+    <field name="BTD DONE RENDER" start="13" end="13" type="bool"/>
+    <field name="RT DONE COMPUTE" start="14" end="14" type="bool"/>
+    <field name="MA0 Done SS0" start="15" end="15" type="bool"/>
     <field name="EU00 Done SS0" start="16" end="16" type="bool"/>
     <field name="EU01 Done SS0" start="17" end="17" type="bool"/>
     <field name="EU02 Done SS0" start="18" end="18" type="bool"/>
     <field name="EU03 Done SS0" start="19" end="19" type="bool"/>
+    <field name="BTD DONE COMPUTE" start="20" end="20" type="bool"/>
     <field name="EU10 Done SS0" start="21" end="21" type="bool"/>
     <field name="EU11 Done SS0" start="22" end="22" type="bool"/>
     <field name="EU12 Done SS0" start="23" end="23" type="bool"/>
     <field name="EU13 Done SS0" start="24" end="24" type="bool"/>
-    <field name="MA1 Done SS0" start="26" end="26" type="bool"/>
+    <field name="TSL Done" start="26" end="26" type="bool"/>
+    <field name="EU10 Done SS1" start="27" end="27" type="bool"/>
+    <field name="EU11 Done SS1" start="28" end="28" type="bool"/>
+    <field name="EU12 Done SS1" start="29" end="29" type="bool"/>
+    <field name="EU13 Done SS1" start="30" end="30" type="bool"/>
   </register>
 
   <register name="RPSTAT0" length="1" num="0xa01c">
@@ -7171,26 +7210,36 @@
   </register>
 
   <register name="SAMPLER_INSTDONE" length="1" num="0xe160">
-    <field name="IME Done" start="0" end="0" type="bool"/>
-    <field name="PL0 Done" start="1" end="1" type="bool"/>
-    <field name="SO0 Done" start="2" end="2" type="bool"/>
-    <field name="DG0 Done" start="3" end="3" type="bool"/>
-    <field name="FT0 Done" start="4" end="4" type="bool"/>
-    <field name="DM0 Done" start="5" end="5" type="bool"/>
-    <field name="SC Done" start="6" end="6" type="bool"/>
-    <field name="FL0 Done" start="7" end="7" type="bool"/>
-    <field name="QC Done" start="8" end="8" type="bool"/>
-    <field name="SVSM Done" start="9" end="9" type="bool"/>
-    <field name="SI0 Done" start="10" end="10" type="bool"/>
-    <field name="MT0 Done" start="11" end="11" type="bool"/>
-    <field name="AVS Done" start="12" end="12" type="bool"/>
-    <field name="IEF Done" start="13" end="13" type="bool"/>
-    <field name="CRE Done" start="14" end="14" type="bool"/>
-    <field name="SVSM_ARB_SIFM" start="15" end="15" type="bool"/>
-    <field name="SVSM ARB2" start="16" end="16" type="bool"/>
-    <field name="SVSM ARB1" start="17" end="17" type="bool"/>
-    <field name="SVSM Adapter" start="18" end="18" type="bool"/>
-    <field name="BDM Done" start="19" end="19" type="bool"/>
+    <field name="SI Done" start="0" end="0" type="bool"/>
+    <field name="SVSM ADAPTER Done" start="1" end="1" type="bool"/>
+    <field name="SVSM ARB Done" start="2" end="2" type="bool"/>
+    <field name="SVSM Done" start="3" end="3" type="bool"/>
+    <field name="PL Done" start="4" end="4" type="bool"/>
+    <field name="DG Done" start="5" end="5" type="bool"/>
+    <field name="SSLA Done" start="6" end="6" type="bool"/>
+    <field name="ST ARB Done" start="7" end="7" type="bool"/>
+    <field name="ST Done" start="8" end="8" type="bool"/>
+    <field name="FT Done" start="9" end="9" type="bool"/>
+    <field name="MT Done" start="11" end="11" type="bool"/>
+    <field name="DM Done" start="12" end="12" type="bool"/>
+    <field name="BDM Done" start="13" end="13" type="bool"/>
+    <field name="SC Done" start="14" end="14" type="bool"/>
+    <field name="FL Done" start="15" end="15" type="bool"/>
+    <field name="SO Done" start="16" end="16" type="bool"/>
+    <field name="LSC L1BANK0 Idle" start="18" end="18" type="bool"/>
+    <field name="LSC L1BANK1 Idle" start="19" end="19" type="bool"/>
+    <field name="LSC L1BANK2 Idle" start="20" end="20" type="bool"/>
+    <field name="LSC L1BANK3 Idle" start="21" end="21" type="bool"/>
+    <field name="LSC SEQ0 Idle" start="22" end="22" type="bool"/>
+    <field name="LSC SEQ1 Idle" start="23" end="23" type="bool"/>
+    <field name="LSC SEQ2 Idle" start="24" end="24" type="bool"/>
+    <field name="LSC SEQ3 Idle" start="25" end="25" type="bool"/>
+    <field name="LSC SEQ INTF Idle" start="26" end="26" type="bool"/>
+    <field name="LSC L3 INTF Idle" start="27" end="27" type="bool"/>
+    <field name="VMEM SOARB0 Done" start="28" end="28" type="bool"/>
+    <field name="VMEM SOARB1 Done" start="29" end="29" type="bool"/>
+    <field name="VMEM L3REQARB0 Done" start="30" end="30" type="bool"/>
+    <field name="VMEM L3REQARB1 Done" start="31" end="31" type="bool"/>
   </register>
 
   <register name="SAMPLER_MODE" length="1" num="0x0e18c">
@@ -7203,10 +7252,8 @@
     <field name="WMFE Done" start="1" end="1" type="bool"/>
     <field name="WMBE Done" start="2" end="2" type="bool"/>
     <field name="HIZ Done" start="3" end="3" type="bool"/>
-    <field name="STC Done" start="4" end="4" type="bool"/>
-    <field name="IZ Done" start="5" end="5" type="bool"/>
+    <field name="IZFE Done" start="5" end="5" type="bool"/>
     <field name="SBE Done" start="6" end="6" type="bool"/>
-    <field name="RCZ Done" start="8" end="8" type="bool"/>
     <field name="RCC Done" start="9" end="9" type="bool"/>
     <field name="RCPBE Done" start="10" end="10" type="bool"/>
     <field name="RCPFE Done" start="11" end="11" type="bool"/>
@@ -7223,6 +7270,49 @@
     <field name="GW3 Done" start="23" end="23" type="bool"/>
     <field name="TDC Done" start="24" end="24" type="bool"/>
     <field name="SFBE Done" start="25" end="25" type="bool"/>
+    <field name="AMFS Done" start="27" end="27" type="bool"/>
+  </register>
+
+  <register name="SC_INSTDONE_EXTRA" length="1" num="0x7104">
+    <field name="RCC1 Done" start="9" end="9" type="bool"/>
+    <field name="RCPBE1 Done" start="10" end="10" type="bool"/>
+    <field name="RCPFE1 Done" start="11" end="11" type="bool"/>
+    <field name="DAPB1 Done" start="12" end="12" type="bool"/>
+    <field name="DAPRBE1 Done" start="13" end="13" type="bool"/>
+    <field name="DC4 Done" start="16" end="16" type="bool"/>
+    <field name="DC5 Done" start="17" end="17" type="bool"/>
+    <field name="DC6 Done" start="18" end="18" type="bool"/>
+    <field name="DC7 Done" start="19" end="19" type="bool"/>
+    <field name="GW4 Done" start="20" end="20" type="bool"/>
+    <field name="GW5 Done" start="21" end="21" type="bool"/>
+    <field name="GW6 Done" start="22" end="22" type="bool"/>
+    <field name="GW7 Done" start="23" end="23" type="bool"/>
+    <field name="TDC1 Done" start="24" end="24" type="bool"/>
+  </register>
+
+  <register name="SC_INSTDONE_EXTRA2" length="1" num="0x7108">
+    <field name="RCC2 Done" start="9" end="9" type="bool"/>
+    <field name="RCPBE2 Done" start="10" end="10" type="bool"/>
+    <field name="RCPFE2 Done" start="11" end="11" type="bool"/>
+    <field name="DAPB2 Done" start="12" end="12" type="bool"/>
+    <field name="DAPRBE2 Done" start="13" end="13" type="bool"/>
+  </register>
+
+  <register name="INSTDONE_GEOM" length="1" num="0x666c">
+    <field name="VFL Done" start="1" end="1" type="bool"/>
+    <field name="VS Done" start="2" end="2" type="bool"/>
+    <field name="HS Done" start="3" end="3" type="bool"/>
+    <field name="TE Done" start="4" end="4" type="bool"/>
+    <field name="DS Done" start="5" end="5" type="bool"/>
+    <field name="GS Done" start="6" end="6" type="bool"/>
+    <field name="SOL Done" start="7" end="7" type="bool"/>
+    <field name="CL Done" start="8" end="8" type="bool"/>
+    <field name="SF Done" start="9" end="9" type="bool"/>
+    <field name="TDG1 Done" start="11" end="11" type="bool"/>
+    <field name="URBM Done" start="13" end="13" type="bool"/>
+    <field name="SVG Done" start="14" end="14" type="bool"/>
+    <field name="TSG0 Done" start="17" end="17" type="bool"/>
+    <field name="SDE Done" start="22" end="22" type="bool"/>
   </register>
 
   <register name="SLICE_COMMON_ECO_CHICKEN1" length="1" num="0x731c">

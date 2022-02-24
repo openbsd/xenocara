@@ -41,11 +41,12 @@ struct iris_context;
 /* The kernel assumes batchbuffers are smaller than 256kB. */
 #define MAX_BATCH_SIZE (256 * 1024)
 
-/* Terminating the batch takes either 4 bytes for MI_BATCH_BUFFER_END
- * or 12 bytes for MI_BATCH_BUFFER_START (when chaining).  Plus another
- * 24 bytes for the seqno write (using PIPE_CONTROL).
+/* Terminating the batch takes either 4 bytes for MI_BATCH_BUFFER_END or 12
+ * bytes for MI_BATCH_BUFFER_START (when chaining).  Plus another 24 bytes for
+ * the seqno write (using PIPE_CONTROL), and another 24 bytes for the ISP
+ * invalidation pipe control.
  */
-#define BATCH_RESERVED 36
+#define BATCH_RESERVED 60
 
 /* Our target batch size - flush approximately at this point. */
 #define BATCH_SZ (64 * 1024 - BATCH_RESERVED)
@@ -54,8 +55,6 @@ enum iris_batch_name {
    IRIS_BATCH_RENDER,
    IRIS_BATCH_COMPUTE,
 };
-
-#define IRIS_BATCH_COUNT 2
 
 struct iris_batch {
    struct iris_context *ice;
@@ -82,11 +81,13 @@ struct iris_batch {
 
    uint32_t hw_ctx_id;
 
-   /** The validation list */
-   struct drm_i915_gem_exec_object2 *validation_list;
+   /** A list of all BOs referenced by this batch */
    struct iris_bo **exec_bos;
    int exec_count;
    int exec_array_size;
+   /** Bitset of whether this batch writes to BO `i'. */
+   BITSET_WORD *bos_written;
+   uint32_t max_gem_handle;
 
    /** Whether INTEL_BLACKHOLE_RENDER is enabled in the batch (aka first
     * instruction is a MI_BATCH_BUFFER_END).
@@ -268,7 +269,7 @@ iris_batch_reference_signal_syncobj(struct iris_batch *batch,
                                    struct iris_syncobj **out_syncobj)
 {
    struct iris_syncobj *syncobj = iris_batch_get_signal_syncobj(batch);
-   iris_syncobj_reference(batch->screen, out_syncobj, syncobj);
+   iris_syncobj_reference(batch->screen->bufmgr, out_syncobj, syncobj);
 }
 
 /**

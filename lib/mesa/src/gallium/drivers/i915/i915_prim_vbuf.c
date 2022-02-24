@@ -1,5 +1,5 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 /**
@@ -31,28 +31,24 @@
  * lists by hooking into the end of the primitive pipeline and
  * manipulating the vertex_id field in the vertex headers.
  *
- * XXX: work in progress 
- * 
+ * XXX: work in progress
+ *
  * \author José Fonseca <jfonseca@vmware.com>
  * \author Keith Whitwell <keithw@vmware.com>
  */
 
-
 #include "draw/draw_context.h"
 #include "draw/draw_vbuf.h"
 #include "util/u_debug.h"
+#include "util/u_fifo.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
-#include "util/u_fifo.h"
 
+#include "i915_batch.h"
 #include "i915_context.h"
 #include "i915_reg.h"
-#include "i915_batch.h"
 #include "i915_state.h"
-
-
-#define VBUF_MAP_BUFFER
 
 /**
  * Primitive renderer for i915.
@@ -76,22 +72,15 @@ struct i915_vbuf_render {
 
    /* Stuff for the vbo */
    struct i915_winsys_buffer *vbo;
-   size_t vbo_size; /**< current size of allocated buffer */
+   size_t vbo_size;       /**< current size of allocated buffer */
    size_t vbo_alloc_size; /**< minimum buffer size to allocate */
-   size_t vbo_hw_offset; /**< offset that we program the hardware with */
-   size_t vbo_sw_offset; /**< offset that we work with */
-   size_t vbo_index; /**< index offset to be added to all indices */
+   size_t vbo_hw_offset;  /**< offset that we program the hardware with */
+   size_t vbo_sw_offset;  /**< offset that we work with */
+   size_t vbo_index;      /**< index offset to be added to all indices */
    void *vbo_ptr;
    size_t vbo_max_used;
    size_t vbo_max_index; /**< index offset to be added to all indices */
-
-#ifndef VBUF_MAP_BUFFER
-   size_t map_used_start;
-   size_t map_used_end;
-   size_t map_size;
-#endif
 };
-
 
 /**
  * Basically a cast wrapper.
@@ -152,18 +141,18 @@ i915_vbuf_render_get_vertex_info(struct vbuf_render *render)
  * Side effects:
  *    None.
  */
-static boolean
+static bool
 i915_vbuf_render_reserve(struct i915_vbuf_render *i915_render, size_t size)
 {
    struct i915_context *i915 = i915_render->i915;
 
    if (i915_render->vbo_size < size + i915_render->vbo_sw_offset)
-      return FALSE;
+      return false;
 
    if (i915->vbo_flushed)
-      return FALSE;
+      return false;
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -199,17 +188,9 @@ i915_vbuf_render_new_buf(struct i915_vbuf_render *i915_render, size_t size)
    i915_render->vbo_sw_offset = 0;
    i915_render->vbo_index = 0;
 
-#ifndef VBUF_MAP_BUFFER
-   if (i915_render->vbo_size > i915_render->map_size) {
-      i915_render->map_size = i915_render->vbo_size;
-      FREE(i915_render->vbo_ptr);
-      i915_render->vbo_ptr = MALLOC(i915_render->map_size);
-   }
-#endif
-
-   i915_render->vbo = iws->buffer_create(iws, i915_render->vbo_size,
-                                         I915_NEW_VERTEX);
-   i915_render->vbo_ptr = iws->buffer_map(iws, i915_render->vbo, TRUE);
+   i915_render->vbo =
+      iws->buffer_create(iws, i915_render->vbo_size, I915_NEW_VERTEX);
+   i915_render->vbo_ptr = iws->buffer_map(iws, i915_render->vbo, true);
 }
 
 /**
@@ -222,8 +203,7 @@ i915_vbuf_render_new_buf(struct i915_vbuf_render *i915_render, size_t size)
  */
 static boolean
 i915_vbuf_render_allocate_vertices(struct vbuf_render *render,
-                                   ushort vertex_size,
-                                   ushort nr_vertices)
+                                   ushort vertex_size, ushort nr_vertices)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    size_t size = (size_t)vertex_size * (size_t)nr_vertices;
@@ -268,35 +248,18 @@ i915_vbuf_render_map_vertices(struct vbuf_render *render)
    if (i915->vbo_flushed)
       debug_printf("%s bad vbo flush occurred stalling on hw\n", __FUNCTION__);
 
-#ifdef VBUF_MAP_BUFFER
    return (unsigned char *)i915_render->vbo_ptr + i915_render->vbo_sw_offset;
-#else
-   return (unsigned char *)i915_render->vbo_ptr;
-#endif
 }
 
 static void
-i915_vbuf_render_unmap_vertices(struct vbuf_render *render,
-                                ushort min_index,
+i915_vbuf_render_unmap_vertices(struct vbuf_render *render, ushort min_index,
                                 ushort max_index)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
-   struct i915_context *i915 = i915_render->i915;
-   struct i915_winsys *iws = i915->iws;
 
    i915_render->vbo_max_index = max_index;
-   i915_render->vbo_max_used = MAX2(i915_render->vbo_max_used, i915_render->vertex_size * (max_index + 1));
-#ifdef VBUF_MAP_BUFFER
-   (void)iws;
-#else
-   i915_render->map_used_start = i915_render->vertex_size * min_index;
-   i915_render->map_used_end = i915_render->vertex_size * (max_index + 1);
-   iws->buffer_write(iws, i915_render->vbo,
-                     i915_render->map_used_start + i915_render->vbo_sw_offset,
-                     i915_render->map_used_end - i915_render->map_used_start,
-                     (unsigned char *)i915_render->vbo_ptr + i915_render->map_used_start);
-
-#endif
+   i915_render->vbo_max_used = MAX2(i915_render->vbo_max_used,
+                                    i915_render->vertex_size * (max_index + 1));
 }
 
 /**
@@ -308,8 +271,7 @@ i915_vbuf_render_unmap_vertices(struct vbuf_render *render,
  *    On failure update hw_offset and index.
  */
 static void
-i915_vbuf_ensure_index_bounds(struct vbuf_render *render,
-                              unsigned max_index)
+i915_vbuf_ensure_index_bounds(struct vbuf_render *render, unsigned max_index)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
 
@@ -323,13 +285,13 @@ i915_vbuf_ensure_index_bounds(struct vbuf_render *render,
 }
 
 static void
-i915_vbuf_render_set_primitive(struct vbuf_render *render, 
+i915_vbuf_render_set_primitive(struct vbuf_render *render,
                                enum pipe_prim_type prim)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    i915_render->prim = prim;
 
-   switch(prim) {
+   switch (prim) {
    case PIPE_PRIM_POINTS:
       i915_render->hwprim = PRIM3D_POINTLIST;
       i915_render->fallback = 0;
@@ -380,9 +342,8 @@ i915_vbuf_render_set_primitive(struct vbuf_render *render,
  * Used for fallbacks in draw_arrays
  */
 static void
-draw_arrays_generate_indices(struct vbuf_render *render,
-                             unsigned start, uint nr,
-                             unsigned type)
+draw_arrays_generate_indices(struct vbuf_render *render, unsigned start,
+                             uint32_t nr, unsigned type)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
@@ -390,32 +351,32 @@ draw_arrays_generate_indices(struct vbuf_render *render,
    unsigned end = start + nr + i915_render->vbo_index;
    start += i915_render->vbo_index;
 
-   switch(type) {
+   switch (type) {
    case 0:
-      for (i = start; i+1 < end; i += 2)
-         OUT_BATCH((i+0) | (i+1) << 16);
+      for (i = start; i + 1 < end; i += 2)
+         OUT_BATCH((i + 0) | (i + 1) << 16);
       if (i < end)
          OUT_BATCH(i);
       break;
    case PIPE_PRIM_LINE_LOOP:
       if (nr >= 2) {
          for (i = start + 1; i < end; i++)
-            OUT_BATCH((i-1) | (i+0) << 16);
-         OUT_BATCH((i-1) | ( start) << 16);
+            OUT_BATCH((i - 1) | (i + 0) << 16);
+         OUT_BATCH((i - 1) | (start) << 16);
       }
       break;
    case PIPE_PRIM_QUADS:
       for (i = start; i + 3 < end; i += 4) {
-         OUT_BATCH((i+0) | (i+1) << 16);
-         OUT_BATCH((i+3) | (i+1) << 16);
-         OUT_BATCH((i+2) | (i+3) << 16);
+         OUT_BATCH((i + 0) | (i + 1) << 16);
+         OUT_BATCH((i + 3) | (i + 1) << 16);
+         OUT_BATCH((i + 2) | (i + 3) << 16);
       }
       break;
    case PIPE_PRIM_QUAD_STRIP:
       for (i = start; i + 3 < end; i += 2) {
-         OUT_BATCH((i+0) | (i+1) << 16);
-         OUT_BATCH((i+3) | (i+2) << 16);
-         OUT_BATCH((i+0) | (i+3) << 16);
+         OUT_BATCH((i + 0) | (i + 1) << 16);
+         OUT_BATCH((i + 3) | (i + 2) << 16);
+         OUT_BATCH((i + 0) | (i + 3) << 16);
       }
       break;
    default:
@@ -424,7 +385,7 @@ draw_arrays_generate_indices(struct vbuf_render *render,
 }
 
 static unsigned
-draw_arrays_calc_nr_indices(uint nr, unsigned type)
+draw_arrays_calc_nr_indices(uint32_t nr, unsigned type)
 {
    switch (type) {
    case 0:
@@ -445,9 +406,7 @@ draw_arrays_calc_nr_indices(uint nr, unsigned type)
 }
 
 static void
-draw_arrays_fallback(struct vbuf_render *render,
-                     unsigned start,
-                     uint nr)
+draw_arrays_fallback(struct vbuf_render *render, unsigned start, uint32_t nr)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
@@ -465,7 +424,7 @@ draw_arrays_fallback(struct vbuf_render *render,
    if (i915->hardware_dirty)
       i915_emit_hardware_state(i915);
 
-   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
+   if (!BEGIN_BATCH(1 + (nr_indices + 1) / 2)) {
       FLUSH_BATCH(NULL, I915_FLUSH_ASYNC);
 
       /* Make sure state is re-emitted after a flush:
@@ -473,17 +432,17 @@ draw_arrays_fallback(struct vbuf_render *render,
       i915_emit_hardware_state(i915);
       i915->vbo_flushed = 1;
 
-      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
+      if (!BEGIN_BATCH(1 + (nr_indices + 1) / 2)) {
+         mesa_loge("i915: Failed to allocate space for %d indices in fresh "
+                   "batch with %d bytes left\n",
+                   nr_indices, (int)i915_winsys_batchbuffer_space(i915->batch));
          assert(0);
          goto out;
       }
    }
 
-   OUT_BATCH(_3DPRIMITIVE |
-             PRIM_INDIRECT |
-             i915_render->hwprim |
-             PRIM_INDIRECT_ELTS |
-             nr_indices);
+   OUT_BATCH(_3DPRIMITIVE | PRIM_INDIRECT | i915_render->hwprim |
+             PRIM_INDIRECT_ELTS | nr_indices);
 
    draw_arrays_generate_indices(render, start, nr, i915_render->fallback);
 
@@ -492,9 +451,8 @@ out:
 }
 
 static void
-i915_vbuf_render_draw_arrays(struct vbuf_render *render,
-                             unsigned start,
-                             uint nr)
+i915_vbuf_render_draw_arrays(struct vbuf_render *render, unsigned start,
+                             uint32_t nr)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
@@ -527,11 +485,8 @@ i915_vbuf_render_draw_arrays(struct vbuf_render *render,
       }
    }
 
-   OUT_BATCH(_3DPRIMITIVE |
-             PRIM_INDIRECT |
-             PRIM_INDIRECT_SEQUENTIAL |
-             i915_render->hwprim |
-             nr);
+   OUT_BATCH(_3DPRIMITIVE | PRIM_INDIRECT | PRIM_INDIRECT_SEQUENTIAL |
+             i915_render->hwprim | nr);
    OUT_BATCH(start); /* Beginning vertex index */
 
 out:
@@ -543,44 +498,42 @@ out:
  * If type is zero normal operation assumed.
  */
 static void
-draw_generate_indices(struct vbuf_render *render,
-                      const ushort *indices,
-                      uint nr_indices,
-                      unsigned type)
+draw_generate_indices(struct vbuf_render *render, const ushort *indices,
+                      uint32_t nr_indices, unsigned type)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
    unsigned i;
    unsigned o = i915_render->vbo_index;
 
-   switch(type) {
+   switch (type) {
    case 0:
       for (i = 0; i + 1 < nr_indices; i += 2) {
-         OUT_BATCH((o+indices[i]) | (o+indices[i+1]) << 16);
+         OUT_BATCH((o + indices[i]) | (o + indices[i + 1]) << 16);
       }
       if (i < nr_indices) {
-         OUT_BATCH((o+indices[i]));
+         OUT_BATCH((o + indices[i]));
       }
       break;
    case PIPE_PRIM_LINE_LOOP:
       if (nr_indices >= 2) {
          for (i = 1; i < nr_indices; i++)
-            OUT_BATCH((o+indices[i-1]) | (o+indices[i]) << 16);
-         OUT_BATCH((o+indices[i-1]) | (o+indices[0]) << 16);
+            OUT_BATCH((o + indices[i - 1]) | (o + indices[i]) << 16);
+         OUT_BATCH((o + indices[i - 1]) | (o + indices[0]) << 16);
       }
       break;
    case PIPE_PRIM_QUADS:
       for (i = 0; i + 3 < nr_indices; i += 4) {
-         OUT_BATCH((o+indices[i+0]) | (o+indices[i+1]) << 16);
-         OUT_BATCH((o+indices[i+3]) | (o+indices[i+1]) << 16);
-         OUT_BATCH((o+indices[i+2]) | (o+indices[i+3]) << 16);
+         OUT_BATCH((o + indices[i + 0]) | (o + indices[i + 1]) << 16);
+         OUT_BATCH((o + indices[i + 3]) | (o + indices[i + 1]) << 16);
+         OUT_BATCH((o + indices[i + 2]) | (o + indices[i + 3]) << 16);
       }
       break;
    case PIPE_PRIM_QUAD_STRIP:
       for (i = 0; i + 3 < nr_indices; i += 2) {
-         OUT_BATCH((o+indices[i+0]) | (o+indices[i+1]) << 16);
-         OUT_BATCH((o+indices[i+3]) | (o+indices[i+2]) << 16);
-         OUT_BATCH((o+indices[i+0]) | (o+indices[i+3]) << 16);
+         OUT_BATCH((o + indices[i + 0]) | (o + indices[i + 1]) << 16);
+         OUT_BATCH((o + indices[i + 3]) | (o + indices[i + 2]) << 16);
+         OUT_BATCH((o + indices[i + 0]) | (o + indices[i + 3]) << 16);
       }
       break;
    default:
@@ -590,7 +543,7 @@ draw_generate_indices(struct vbuf_render *render,
 }
 
 static unsigned
-draw_calc_nr_indices(uint nr_indices, unsigned type)
+draw_calc_nr_indices(uint32_t nr_indices, unsigned type)
 {
    switch (type) {
    case 0:
@@ -610,10 +563,9 @@ draw_calc_nr_indices(uint nr_indices, unsigned type)
    }
 }
 
-static void 
+static void
 i915_vbuf_render_draw_elements(struct vbuf_render *render,
-                               const ushort *indices,
-                               uint nr_indices)
+                               const ushort *indices, uint32_t nr_indices)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
@@ -633,28 +585,26 @@ i915_vbuf_render_draw_elements(struct vbuf_render *render,
    if (i915->hardware_dirty)
       i915_emit_hardware_state(i915);
 
-   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
+   if (!BEGIN_BATCH(1 + (nr_indices + 1) / 2)) {
       FLUSH_BATCH(NULL, I915_FLUSH_ASYNC);
 
-      /* Make sure state is re-emitted after a flush: 
+      /* Make sure state is re-emitted after a flush:
        */
       i915_emit_hardware_state(i915);
       i915->vbo_flushed = 1;
 
-      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
+      if (!BEGIN_BATCH(1 + (nr_indices + 1) / 2)) {
+         mesa_loge("i915: Failed to allocate space for %d indices in fresh "
+                   "batch with %d bytes left\n",
+                   nr_indices, (int)i915_winsys_batchbuffer_space(i915->batch));
          assert(0);
          goto out;
       }
    }
 
-   OUT_BATCH(_3DPRIMITIVE |
-             PRIM_INDIRECT |
-             i915_render->hwprim |
-             PRIM_INDIRECT_ELTS |
-             nr_indices);
-   draw_generate_indices(render,
-                         indices,
-                         save_nr_indices,
+   OUT_BATCH(_3DPRIMITIVE | PRIM_INDIRECT | i915_render->hwprim |
+             PRIM_INDIRECT_ELTS | nr_indices);
+   draw_generate_indices(render, indices, save_nr_indices,
                          i915_render->fallback);
 
 out:
@@ -699,15 +649,13 @@ static struct vbuf_render *
 i915_vbuf_render_create(struct i915_context *i915)
 {
    struct i915_vbuf_render *i915_render = CALLOC_STRUCT(i915_vbuf_render);
-   struct i915_winsys *iws = i915->iws;
-   int i;
 
    i915_render->i915 = i915;
 
-   i915_render->base.max_vertex_buffer_bytes = 4*4096;
+   i915_render->base.max_vertex_buffer_bytes = 4 * 4096;
 
-   /* NOTE: it must be such that state and vertices indices fit in a single 
-    * batch buffer. 4096 is one batch buffer and 430 is the max amount of 
+   /* NOTE: it must be such that state and vertices indices fit in a single
+    * batch buffer. 4096 is one batch buffer and 430 is the max amount of
     * state in dwords. The result is the number of 16-bit indices which can
     * fit in a single batch buffer.
     */
@@ -723,12 +671,6 @@ i915_vbuf_render_create(struct i915_context *i915)
    i915_render->base.release_vertices = i915_vbuf_render_release_vertices;
    i915_render->base.destroy = i915_vbuf_render_destroy;
 
-#ifndef VBUF_MAP_BUFFER
-   i915_render->map_size = 0;
-   i915_render->map_used_start = 0;
-   i915_render->map_used_end = 0;
-#endif
-
    i915_render->vbo = NULL;
    i915_render->vbo_ptr = NULL;
    i915_render->vbo_size = 0;
@@ -736,34 +678,22 @@ i915_vbuf_render_create(struct i915_context *i915)
    i915_render->vbo_sw_offset = 0;
    i915_render->vbo_alloc_size = i915_render->base.max_vertex_buffer_bytes * 4;
 
-#ifdef VBUF_USE_POOL
-   i915_render->pool_used = FALSE;
-   i915_render->pool_buffer_size = i915_render->vbo_alloc_size;
-   i915_render->pool_fifo = u_fifo_create(6);
-   for (i = 0; i < 6; i++)
-      u_fifo_add(i915_render->pool_fifo,
-                 iws->buffer_create(iws, i915_render->pool_buffer_size,
-                                    I915_NEW_VERTEX));
-#else
-   (void)i;
-   (void)iws;
-#endif
-
    return &i915_render->base;
 }
 
 /**
  * Create a new primitive vbuf/render stage.
  */
-struct draw_stage *i915_draw_vbuf_stage(struct i915_context *i915)
+struct draw_stage *
+i915_draw_vbuf_stage(struct i915_context *i915)
 {
    struct vbuf_render *render;
    struct draw_stage *stage;
-   
+
    render = i915_vbuf_render_create(i915);
    if (!render)
       return NULL;
-   
+
    stage = draw_vbuf_stage(i915->draw, render);
    if (!stage) {
       render->destroy(render);

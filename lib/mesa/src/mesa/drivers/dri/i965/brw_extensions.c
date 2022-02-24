@@ -37,7 +37,7 @@ void
 brw_init_extensions(struct gl_context *ctx)
 {
    struct brw_context *brw = brw_context(ctx);
-   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct intel_device_info *devinfo = &brw->screen->devinfo;
 
    assert(devinfo->ver >= 4);
 
@@ -87,7 +87,6 @@ brw_init_extensions(struct gl_context *ctx)
    ctx->Extensions.ARB_texture_mirror_clamp_to_edge = true;
    ctx->Extensions.ARB_texture_non_power_of_two = true;
    ctx->Extensions.ARB_texture_rg = true;
-   ctx->Extensions.ARB_texture_rgb10_a2ui = true;
    ctx->Extensions.ARB_vertex_program = true;
    ctx->Extensions.ARB_vertex_shader = true;
    ctx->Extensions.ARB_vertex_type_2_10_10_10_rev = true;
@@ -112,7 +111,6 @@ brw_init_extensions(struct gl_context *ctx)
    ctx->Extensions.EXT_texture_array = true;
    ctx->Extensions.EXT_texture_env_dot3 = true;
    ctx->Extensions.EXT_texture_filter_anisotropic = true;
-   ctx->Extensions.EXT_texture_integer = true;
    ctx->Extensions.EXT_texture_norm16 = true;
    ctx->Extensions.EXT_texture_shared_exponent = true;
    ctx->Extensions.EXT_texture_snorm = true;
@@ -202,8 +200,10 @@ brw_init_extensions(struct gl_context *ctx)
       ctx->Extensions.ARB_texture_cube_map_array = true;
       ctx->Extensions.ARB_texture_gather = true;
       ctx->Extensions.ARB_texture_multisample = true;
+      ctx->Extensions.ARB_texture_rgb10_a2ui = true;
       ctx->Extensions.ARB_uniform_buffer_object = true;
       ctx->Extensions.EXT_gpu_shader4 = true;
+      ctx->Extensions.EXT_texture_integer = true;
       ctx->Extensions.EXT_texture_shadow_lod = true;
 
       if (ctx->API != API_OPENGL_COMPAT ||
@@ -271,7 +271,7 @@ brw_init_extensions(struct gl_context *ctx)
              ctx->Const.MaxComputeWorkGroupSize[0] >= 1024) {
             ctx->Extensions.ARB_compute_shader = true;
             ctx->Extensions.ARB_ES3_1_compatibility =
-               devinfo->ver >= 8 || devinfo->is_haswell;
+               devinfo->verx10 >= 75;
             ctx->Extensions.NV_compute_shader_derivatives = true;
             ctx->Extensions.ARB_compute_variable_group_size = true;
          }
@@ -286,7 +286,7 @@ brw_init_extensions(struct gl_context *ctx)
       ctx->Extensions.ARB_spirv_extensions = true;
    }
 
-   if (devinfo->ver >= 8 || devinfo->is_haswell) {
+   if (devinfo->verx10 >= 75) {
       ctx->Extensions.ARB_stencil_texturing = true;
       ctx->Extensions.ARB_texture_stencil8 = true;
       ctx->Extensions.OES_geometry_shader = true;
@@ -294,7 +294,7 @@ brw_init_extensions(struct gl_context *ctx)
       ctx->Extensions.OES_viewport_array = true;
    }
 
-   if (devinfo->ver >= 8 || devinfo->is_haswell || devinfo->is_baytrail) {
+   if (devinfo->verx10 >= 75 || devinfo->is_baytrail) {
       ctx->Extensions.ARB_robust_buffer_access_behavior = true;
    }
 
@@ -374,7 +374,7 @@ brw_init_extensions(struct gl_context *ctx)
       ctx->Extensions.ARB_fragment_shader_interlock = true;
    }
 
-   if (gen_device_info_is_9lp(devinfo))
+   if (intel_device_info_is_9lp(devinfo))
       ctx->Extensions.KHR_texture_compression_astc_hdr = true;
 
    if (devinfo->ver >= 6)
@@ -393,4 +393,11 @@ brw_init_extensions(struct gl_context *ctx)
    ctx->Extensions.EXT_demote_to_helper_invocation = true;
 
    ctx->Const.PrimitiveRestartFixedIndex = true;
+
+   if (devinfo->ver >= 7) {
+      ctx->Extensions.EXT_memory_object_fd = true;
+      ctx->Extensions.EXT_memory_object = true;
+      ctx->Extensions.EXT_semaphore = true;
+      ctx->Extensions.EXT_semaphore_fd = true;
+   }
 }

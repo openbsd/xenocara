@@ -145,7 +145,7 @@ static VAStatus vlVaPostProcBlit(vlVaDriver *drv, vlVaContext *context,
       surf->templat.interlaced = false;
       dst->destroy(dst);
 
-      if (vlVaHandleSurfaceAllocate(drv, surf, &surf->templat) != VA_STATUS_SUCCESS)
+      if (vlVaHandleSurfaceAllocate(drv, surf, &surf->templat, NULL, 0) != VA_STATUS_SUCCESS)
          return VA_STATUS_ERROR_ALLOCATION_FAILED;
 
       dst = context->target = surf->buffer;
@@ -222,7 +222,7 @@ static VAStatus vlVaPostProcBlit(vlVaDriver *drv, vlVaContext *context,
 
       if (drv->pipe->screen->get_param(drv->pipe->screen,
                                        PIPE_CAP_PREFER_COMPUTE_FOR_MULTIMEDIA))
-         util_compute_blit(drv->pipe, &blit, &context->blit_cs);
+         util_compute_blit(drv->pipe, &blit, &context->blit_cs, !drv->compositor.deinterlace);
       else
          drv->pipe->blit(drv->pipe, &blit);
    }
@@ -281,7 +281,7 @@ vlVaApplyDeint(vlVaDriver *drv, vlVaContext *context,
 VAStatus
 vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf)
 {
-   enum vl_compositor_deinterlace deinterlace = VL_COMPOSITOR_WEAVE;
+   enum vl_compositor_deinterlace deinterlace = VL_COMPOSITOR_NONE;
    VARectangle def_src_region, def_dst_region;
    const VARectangle *src_region, *dst_region;
    VAProcPipelineParameterBuffer *param;
@@ -317,7 +317,7 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
       surf->templat.interlaced = false;
       dst->destroy(dst);
 
-      if (vlVaHandleSurfaceAllocate(drv, surf, &surf->templat) != VA_STATUS_SUCCESS)
+      if (vlVaHandleSurfaceAllocate(drv, surf, &surf->templat, NULL, 0) != VA_STATUS_SUCCESS)
          return VA_STATUS_ERROR_ALLOCATION_FAILED;
 
       dst = context->target = surf->buffer;
@@ -349,12 +349,13 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
          case VAProcDeinterlacingMotionAdaptive:
             src = vlVaApplyDeint(drv, context, param, src,
 				 !!(deint->flags & VA_DEINTERLACING_BOTTOM_FIELD));
+             deinterlace = VL_COMPOSITOR_MOTION_ADAPTIVE;
             break;
 
          default:
             return VA_STATUS_ERROR_UNIMPLEMENTED;
          }
-
+         drv->compositor.deinterlace = deinterlace;
          break;
       }
 

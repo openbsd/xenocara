@@ -147,10 +147,9 @@ resolve_image_views(struct iris_context *ice,
                                       aux_usage, false);
       }
 
-      iris_emit_buffer_barrier_for(batch, res->bo, IRIS_DOMAIN_OTHER_READ);
+      iris_emit_buffer_barrier_for(batch, res->bo, IRIS_DOMAIN_DATA_WRITE);
    }
 }
-
 
 /**
  * \brief Resolve buffers before drawing.
@@ -186,7 +185,7 @@ iris_predraw_resolve_framebuffer(struct iris_context *ice,
 {
    struct pipe_framebuffer_state *cso_fb = &ice->state.framebuffer;
    struct iris_screen *screen = (void *) ice->ctx.screen;
-   struct gen_device_info *devinfo = &screen->devinfo;
+   struct intel_device_info *devinfo = &screen->devinfo;
    struct iris_uncompiled_shader *ish =
       ice->shaders.uncompiled[MESA_SHADER_FRAGMENT];
    const nir_shader *nir = ish->nir;
@@ -254,8 +253,7 @@ iris_predraw_resolve_framebuffer(struct iris_context *ice,
                                       surf->view.array_len,
                                       aux_usage);
 
-         iris_cache_flush_for_render(batch, res->bo, surf->view.format,
-                                     aux_usage);
+         iris_cache_flush_for_render(batch, res->bo, aux_usage);
       }
    }
 }
@@ -330,24 +328,16 @@ iris_postdraw_update_resolve_tracking(struct iris_context *ice,
    }
 }
 
-static void *
-format_aux_tuple(enum isl_format format, enum isl_aux_usage aux_usage)
-{
-   return (void *)(uintptr_t)((uint32_t)format << 8 | aux_usage);
-}
-
 void
 iris_cache_flush_for_render(struct iris_batch *batch,
                             struct iris_bo *bo,
-                            enum isl_format format,
                             enum isl_aux_usage aux_usage)
 {
    iris_emit_buffer_barrier_for(batch, bo, IRIS_DOMAIN_RENDER_WRITE);
 
    /* Check to see if this bo has been used by a previous rendering operation
-    * but with a different format or aux usage.  If it has, flush the render
-    * cache so we ensure that it's only in there with one format or aux usage
-    * at a time.
+    * but with a different aux usage.  If it has, flush the render cache so we
+    * ensure that it's only in there with one aux usage at a time.
     *
     * Even though it's not obvious, this can easily happen in practice.
     * Suppose a client is blending on a surface with sRGB encode enabled on
@@ -360,25 +350,69 @@ iris_cache_flush_for_render(struct iris_batch *batch,
     * same time and the pixel scoreboard and color blender are trying to sort
     * it all out.  This ends badly (i.e. GPU hangs).
     *
-    * To date, we have never observed GPU hangs or even corruption to be
-    * associated with switching the format, only the aux usage.  However,
-    * there are comments in various docs which indicate that the render cache
-    * isn't 100% resilient to format changes.  We may as well be conservative
-    * and flush on format changes too.  We can always relax this later if we
-    * find it to be a performance problem.
+    * There are comments in various docs which indicate that the render cache
+    * isn't 100% resilient to format changes.  However, to date, we have never
+    * observed GPU hangs or even corruption to be associated with switching the
+    * format, only the aux usage.  So we let that slide for now.
     */
+   void *v_aux_usage = (void *) (uintptr_t) aux_usage;
    struct hash_entry *entry =
       _mesa_hash_table_search_pre_hashed(batch->cache.render, bo->hash, bo);
    if (!entry) {
       _mesa_hash_table_insert_pre_hashed(batch->cache.render, bo->hash, bo,
-                                         format_aux_tuple(format, aux_usage));
-   } else if (entry->data != format_aux_tuple(format, aux_usage)) {
+                                         v_aux_usage);
+   } else if (entry->data != v_aux_usage) {
       iris_emit_pipe_control_flush(batch,
-                                   "cache tracker: render format mismatch",
+                                   "cache tracker: aux usage mismatch",
                                    PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                   PIPE_CONTROL_TILE_CACHE_FLUSH |
                                    PIPE_CONTROL_CS_STALL);
-      entry->data = format_aux_tuple(format, aux_usage);
+      entry->data = v_aux_usage;
    }
+}
+
+static void
+flush_ubos(struct iris_batch *batch,
+            struct iris_shader_state *shs)
+{
+   uint32_t cbufs = shs->dirty_cbufs & shs->bound_cbufs;
+
+   while (cbufs) {
+      const int i = u_bit_scan(&cbufs);
+      struct pipe_shader_buffer *cbuf = &shs->constbuf[i];
+      struct iris_resource *res = (void *)cbuf->buffer;
+      iris_emit_buffer_barrier_for(batch, res->bo, IRIS_DOMAIN_OTHER_READ);
+   }
+
+   shs->dirty_cbufs = 0;
+}
+
+static void
+flush_ssbos(struct iris_batch *batch,
+            struct iris_shader_state *shs)
+{
+   uint32_t ssbos = shs->bound_ssbos;
+
+   while (ssbos) {
+      const int i = u_bit_scan(&ssbos);
+      struct pipe_shader_buffer *ssbo = &shs->ssbo[i];
+      struct iris_resource *res = (void *)ssbo->buffer;
+      iris_emit_buffer_barrier_for(batch, res->bo, IRIS_DOMAIN_DATA_WRITE);
+   }
+}
+
+void
+iris_predraw_flush_buffers(struct iris_context *ice,
+                           struct iris_batch *batch,
+                           gl_shader_stage stage)
+{
+   struct iris_shader_state *shs = &ice->state.shaders[stage];
+
+   if (ice->state.stage_dirty & (IRIS_STAGE_DIRTY_CONSTANTS_VS << stage))
+      flush_ubos(batch, shs);
+
+   if (ice->state.stage_dirty & (IRIS_STAGE_DIRTY_BINDINGS_VS << stage))
+      flush_ssbos(batch, shs);
 }
 
 static void
@@ -453,7 +487,7 @@ iris_mcs_partial_resolve(struct iris_context *ice,
 }
 
 bool
-iris_sample_with_depth_aux(const struct gen_device_info *devinfo,
+iris_sample_with_depth_aux(const struct intel_device_info *devinfo,
                            const struct iris_resource *res)
 {
    switch (res->aux.usage) {
@@ -655,7 +689,7 @@ iris_has_invalid_primary(const struct iris_resource *res,
                          unsigned start_level, unsigned num_levels,
                          unsigned start_layer, unsigned num_layers)
 {
-   if (!res->aux.bo)
+   if (res->aux.usage == ISL_AUX_USAGE_NONE)
       return false;
 
    /* Clamp the level range to fit the resource */
@@ -684,7 +718,7 @@ iris_resource_prepare_access(struct iris_context *ice,
                              enum isl_aux_usage aux_usage,
                              bool fast_clear_supported)
 {
-   if (!res->aux.bo)
+   if (res->aux.usage == ISL_AUX_USAGE_NONE)
       return;
 
    /* We can't do resolves on the compute engine, so awkwardly, we have to
@@ -738,7 +772,7 @@ iris_resource_finish_write(struct iris_context *ice,
                            uint32_t start_layer, uint32_t num_layers,
                            enum isl_aux_usage aux_usage)
 {
-   if (!res->aux.bo)
+   if (res->aux.usage == ISL_AUX_USAGE_NONE)
       return;
 
    const uint32_t level_layers =
@@ -823,7 +857,7 @@ iris_resource_texture_aux_usage(struct iris_context *ice,
                                 enum isl_format view_format)
 {
    struct iris_screen *screen = (void *) ice->ctx.screen;
-   struct gen_device_info *devinfo = &screen->devinfo;
+   struct intel_device_info *devinfo = &screen->devinfo;
 
    switch (res->aux.usage) {
    case ISL_AUX_USAGE_HIZ:
@@ -879,6 +913,8 @@ iris_image_view_aux_usage(struct iris_context *ice,
    if (!info)
       return ISL_AUX_USAGE_NONE;
 
+   const struct iris_screen *screen = (void *) ice->ctx.screen;
+   const struct intel_device_info *devinfo = &screen->devinfo;
    struct iris_resource *res = (void *) pview->resource;
 
    enum isl_format view_format = iris_image_view_get_format(ice, pview);
@@ -888,14 +924,18 @@ iris_image_view_aux_usage(struct iris_context *ice,
    bool uses_atomic_load_store =
       ice->shaders.uncompiled[info->stage]->uses_atomic_load_store;
 
-   if (aux_usage == ISL_AUX_USAGE_GFX12_CCS_E && !uses_atomic_load_store)
+   /* On GFX12, compressed surfaces supports non-atomic operations. GFX12HP and
+    * further, add support for all the operations.
+    */
+   if (aux_usage == ISL_AUX_USAGE_GFX12_CCS_E &&
+       (devinfo->verx10 >= 125 || !uses_atomic_load_store))
       return ISL_AUX_USAGE_GFX12_CCS_E;
 
    return ISL_AUX_USAGE_NONE;
 }
 
 bool
-iris_can_sample_mcs_with_clear(const struct gen_device_info *devinfo,
+iris_can_sample_mcs_with_clear(const struct intel_device_info *devinfo,
                                const struct iris_resource *res)
 {
    assert(isl_aux_usage_has_mcs(res->aux.usage));
@@ -937,7 +977,7 @@ iris_resource_prepare_texture(struct iris_context *ice,
                               uint32_t start_layer, uint32_t num_layers)
 {
    const struct iris_screen *screen = (void *) ice->ctx.screen;
-   const struct gen_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = &screen->devinfo;
 
    enum isl_aux_usage aux_usage =
       iris_resource_texture_aux_usage(ice, res, view_format);
@@ -966,13 +1006,15 @@ iris_resource_prepare_texture(struct iris_context *ice,
  */
 bool
 iris_render_formats_color_compatible(enum isl_format a, enum isl_format b,
-                                     union isl_color_value color)
+                                     union isl_color_value color,
+                                     bool clear_color_unknown)
 {
    if (a == b)
       return true;
 
    /* A difference in color space doesn't matter for 0/1 values. */
-   if (isl_format_srgb_to_linear(a) == isl_format_srgb_to_linear(b) &&
+   if (!clear_color_unknown &&
+       isl_format_srgb_to_linear(a) == isl_format_srgb_to_linear(b) &&
        isl_color_value_is_zero_one(color, a)) {
       return true;
    }
@@ -987,7 +1029,7 @@ iris_resource_render_aux_usage(struct iris_context *ice,
                                bool draw_aux_disabled)
 {
    struct iris_screen *screen = (void *) ice->ctx.screen;
-   struct gen_device_info *devinfo = &screen->devinfo;
+   struct intel_device_info *devinfo = &screen->devinfo;
 
    if (draw_aux_disabled)
       return ISL_AUX_USAGE_NONE;
@@ -1023,7 +1065,8 @@ iris_resource_render_aux_usage(struct iris_context *ice,
        */
       if (!iris_render_formats_color_compatible(render_format,
                                                 res->surf.format,
-                                                res->aux.clear_color)) {
+                                                res->aux.clear_color,
+                                                res->aux.clear_color_unknown)) {
          return ISL_AUX_USAGE_NONE;
       }
 

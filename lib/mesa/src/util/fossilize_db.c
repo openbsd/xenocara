@@ -156,17 +156,17 @@ update_foz_index(struct foz_db *foz_db, FILE *db_idx, unsigned file_idx)
       offset += header->payload_size;
       parsed_offset = offset;
 
-      /* Truncate the entry's hash string to a 64bit hash for use with a
-       * 64bit hash table for looking up file offsets.
-       */
-      hash_str[16] = '\0';
-      uint64_t key = strtoull(hash_str, NULL, 16);
-
       struct foz_db_entry *entry = ralloc(foz_db->mem_ctx,
                                           struct foz_db_entry);
       entry->header = *header;
       entry->file_idx = file_idx;
       _mesa_sha1_hex_to_sha1(entry->key, hash_str);
+
+      /* Truncate the entry's hash string to a 64bit hash for use with a
+       * 64bit hash table for looking up file offsets.
+       */
+      hash_str[16] = '\0';
+      uint64_t key = strtoull(hash_str, NULL, 16);
 
       entry->offset = cache_offset;
 
@@ -212,10 +212,6 @@ load_foz_dbs(struct foz_db *foz_db, FILE *db_idx, uint8_t file_idx,
       if (err == -1)
          goto fail;
 
-      err = lock_file_with_timeout(db_idx, 100000000);
-      if (err == -1)
-         goto fail;
-
       /* Compute length again so we know nobody else did it in the meantime */
       fseek(db_idx, 0, SEEK_END);
       len = ftell(db_idx);
@@ -252,7 +248,6 @@ load_foz_dbs(struct foz_db *foz_db, FILE *db_idx, uint8_t file_idx,
       fflush(db_idx);
    }
 
-   flock(fileno(db_idx), LOCK_UN);
    flock(fileno(foz_db->file[file_idx]), LOCK_UN);
 
    update_foz_index(foz_db, db_idx, file_idx);
@@ -261,7 +256,6 @@ load_foz_dbs(struct foz_db *foz_db, FILE *db_idx, uint8_t file_idx,
    return true;
 
 fail:
-   flock(fileno(db_idx), LOCK_UN);
    flock(fileno(foz_db->file[file_idx]), LOCK_UN);
    foz_destroy(foz_db);
    return false;
@@ -324,8 +318,12 @@ foz_prepare(struct foz_db *foz_db, char *cache_path)
       free(filename);
       free(idx_filename);
 
-      if (!check_files_opened_successfully(foz_db->file[file_idx], db_idx))
+      if (!check_files_opened_successfully(foz_db->file[file_idx], db_idx)) {
+         /* Prevent foz_destroy from destroying it a second time. */
+         foz_db->file[file_idx] = NULL;
+
          continue; /* Ignore invalid user provided filename and continue */
+      }
 
       if (!load_foz_dbs(foz_db, db_idx, file_idx, true)) {
          fclose(db_idx);
@@ -453,10 +451,6 @@ foz_write_entry(struct foz_db *foz_db, const uint8_t *cache_key_160bit,
    if (err == -1)
       goto fail_file;
 
-   err = lock_file_with_timeout(foz_db->db_idx, 1000000000);
-   if (err == -1)
-      goto fail_file;
-
    simple_mtx_lock(&foz_db->mtx);
 
    update_foz_index(foz_db, foz_db->db_idx, 0);
@@ -528,7 +522,6 @@ foz_write_entry(struct foz_db *foz_db, const uint8_t *cache_key_160bit,
    _mesa_hash_table_u64_insert(foz_db->index_db, hash, entry);
 
    simple_mtx_unlock(&foz_db->mtx);
-   flock(fileno(foz_db->db_idx), LOCK_UN);
    flock(fileno(foz_db->file[0]), LOCK_UN);
    simple_mtx_unlock(&foz_db->flock_mtx);
 
@@ -537,7 +530,6 @@ foz_write_entry(struct foz_db *foz_db, const uint8_t *cache_key_160bit,
 fail:
    simple_mtx_unlock(&foz_db->mtx);
 fail_file:
-   flock(fileno(foz_db->db_idx), LOCK_UN);
    flock(fileno(foz_db->file[0]), LOCK_UN);
    simple_mtx_unlock(&foz_db->flock_mtx);
    return false;
