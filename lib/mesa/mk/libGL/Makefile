@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/25 06:23:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2022/02/25 22:12:32 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -60,15 +60,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/glx \
 		-I${MESA_SRC}/src/mapi/glapi \
 		-I${MESA_SRC}/generated/src/mapi/glapi/gen
 
-LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXfixes -lX11-xcb -lxcb-glx \
-	-lxcb-dri2 -lxcb-shm -lXxf86vm -lXext -lX11 -lxcb \
-	-ldrm -lm -lpthread -lXau -lXdmcp
-
-.if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+=	-lxcb-dri3 -lxcb-xfixes -lxcb-present -lxcb-sync -lxshmfence
-.endif
-
 LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
+	-Wl,--start-group \
 	${.CURDIR}/../libglapi_static/${__objdir}/libglapi_static.a \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \
 	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
@@ -77,6 +70,16 @@ LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
 LDADD+=	${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a
+.endif
+
+LDADD+=	-Wl,--end-group
+
+LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXfixes -lX11-xcb -lxcb-glx \
+	-lxcb-dri2 -lxcb-shm -lXxf86vm -lXext -lX11 -lxcb \
+	-ldrm -lm -lpthread -lXau -lXdmcp
+
+.if ${XENOCARA_BUILD_DRI3:L} == "yes"
+LDADD+=	-lxcb-dri3 -lxcb-xfixes -lxcb-present -lxcb-sync -lxshmfence
 .endif
 
 obj: _xenocara_obj
