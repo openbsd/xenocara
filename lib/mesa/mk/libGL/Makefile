@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/25 06:23:08 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -72,7 +72,8 @@ LDADD+=	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libglapi_static/${__objdir}/libglapi_static.a \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \
 	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
-	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a
+	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
+	-Wl,--gc-sections
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
 LDADD+=	${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a

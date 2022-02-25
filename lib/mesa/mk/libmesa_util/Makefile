@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/02/25 06:23:08 jsg Exp $
 
 LIB=	mesa_util
 
@@ -65,7 +65,7 @@ SRCS+=	format_srgb.c
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
-CXXFLAGS+=	${CXX_VIS_ARGS}
+CXXFLAGS+=	${CXX_VIS_ARGS} -ffunction-sections -fdata-sections
 CPPFLAGS+=	-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
