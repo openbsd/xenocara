@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/25 06:23:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2022/02/25 23:36:14 jsg Exp $
 
 LIB=	mesa_util
 
@@ -46,6 +46,7 @@ SRCS=	anon_file.c \
 	u_debug_refcnt.c \
 	u_cpu_detect.c \
 	u_printf.cpp \
+	u_printf_length.c \
 	u_debug.c \
 	u_debug_memory.c \
 	u_math.c \

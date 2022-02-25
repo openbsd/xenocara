@@ -21,34 +21,48 @@
 //
 // Extract from Serge's printf clover code by airlied.
 
+#include <assert.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include "u_printf.h"
+#include "util/macros.h"
 
-size_t util_printf_next_spec_pos(const std::string &s, size_t pos)
+/* Some versions of MinGW are missing _vscprintf's declaration, although they
+ * still provide the symbol in the import library. */
+#ifdef __MINGW32__
+_CRTIMP int _vscprintf(const char *format, va_list argptr);
+#endif
+
+#ifndef va_copy
+#ifdef __va_copy
+#define va_copy(dest, src) __va_copy((dest), (src))
+#else
+#define va_copy(dest, src) (dest) = (src)
+#endif
+#endif
+
+size_t
+u_printf_length(const char *fmt, va_list untouched_args)
 {
-   size_t next_tok, spec_pos;
-   do {
-      pos = s.find_first_of('%', pos);
+   int size;
+   char junk;
 
-      if (pos == std::string::npos)
-         return -1;
+   /* Make a copy of the va_list so the original caller can still use it */
+   va_list args;
+   va_copy(args, untouched_args);
 
-      if (s[pos + 1] == '%') {
-         pos += 2;
-         continue;
-      }
+#ifdef _WIN32
+   /* We need to use _vcsprintf to calculate the size as vsnprintf returns -1
+    * if the number of characters to write is greater than count.
+    */
+   size = _vscprintf(fmt, args);
+   (void)junk;
+#else
+   size = vsnprintf(&junk, 1, fmt, args);
+#endif
+   assert(size >= 0);
 
-      next_tok = s.find_first_of('%', pos + 1);
-      spec_pos = s.find_first_of("cdieEfFgGaAosuxXp", pos + 1);
-      if (spec_pos != std::string::npos)
-         if (spec_pos < next_tok)
-            return spec_pos;
+   va_end(args);
 
-      pos++;
-   } while (1);
-}
-
-size_t util_printf_next_spec_pos(const char *str, size_t pos)
-{
-   return util_printf_next_spec_pos(std::string(str), pos);
+   return size;
 }
