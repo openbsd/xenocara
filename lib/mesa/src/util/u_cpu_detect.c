@@ -441,6 +441,7 @@ check_os_arm_support(void)
 static void
 check_os_mips64_support(void)
 {
+#if defined(PIPE_OS_LINUX)
     Elf64_auxv_t aux;
     int fd;
 
@@ -456,6 +457,7 @@ check_os_mips64_support(void)
        }
        close (fd);
     }
+#endif /* PIPE_OS_LINUX */
 }
 #endif /* PIPE_ARCH_MIPS64 */
 
