@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.254 2022/01/27 18:45:10 op Exp $
+ * $OpenBSD: conf.c,v 1.255 2022/02/26 15:19:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -648,7 +648,7 @@ conf_unbind_mouse(struct conf *c, struct bind_ctx *unbind)
 	struct bind_ctx		*mb = NULL, *mbnxt;
 
 	TAILQ_FOREACH_SAFE(mb, &c->mousebindq, entry, mbnxt) {
-		if ((unbind == NULL) || 
+		if ((unbind == NULL) ||
 		    ((mb->modmask == unbind->modmask) &&
 		     (mb->press.button == unbind->press.button))) {
 			TAILQ_REMOVE(&c->mousebindq, mb, entry);

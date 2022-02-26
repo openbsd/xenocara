@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.171 2022/01/27 18:45:10 op Exp $
+ * $OpenBSD: kbfunc.c,v 1.172 2022/02/26 15:19:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -668,7 +668,7 @@ kbfunc_menu_exec(void *ctx, struct cargs *cargs)
 				/* lstat(2) in case d_type isn't supported. */
 				if (lstat(tpath, &sb) == -1)
 					continue;
-				if (!S_ISREG(sb.st_mode) && 
+				if (!S_ISREG(sb.st_mode) &&
 				    !S_ISLNK(sb.st_mode))
 					continue;
 			}

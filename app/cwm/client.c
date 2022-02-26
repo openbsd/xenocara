@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.265 2022/02/26 15:03:42 okan Exp $
+ * $OpenBSD: client.c,v 1.266 2022/02/26 15:19:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -637,7 +637,7 @@ void
 client_wm_hints(struct client_ctx *cc)
 {
 	XWMHints	*wmh;
- 
+
 	if ((wmh = XGetWMHints(X_Dpy, cc->win)) != NULL) {
 		if ((wmh->flags & InputHint) && (wmh->input))
 			cc->flags |= CLIENT_INPUT;

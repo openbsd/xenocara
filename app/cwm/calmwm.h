@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.377 2022/02/26 15:03:42 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.378 2022/02/26 15:19:18 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -335,7 +335,7 @@ struct mwm_hints {
 	unsigned long	decorations;
 
 #define MWM_INPUT_MODELESS			0
-#define MWM_INPUT_PRIMARY_APPLICATION_MODAL	1   
+#define MWM_INPUT_PRIMARY_APPLICATION_MODAL	1
 #define MWM_INPUT_SYSTEM_MODAL			2
 #define MWM_INPUT_FULL_APPLICATION_MODAL	3
 	long		inputMode;
@@ -585,7 +585,7 @@ int			 xu_ewmh_get_net_wm_desktop(struct client_ctx *, long *);
 void			 xu_ewmh_set_net_wm_desktop(struct client_ctx *);
 Atom 			*xu_ewmh_get_net_wm_state(struct client_ctx *, int *);
 void 			 xu_ewmh_handle_net_wm_state_msg(struct client_ctx *,
-			     int, Atom , Atom);
+			     int, Atom, Atom);
 void 			 xu_ewmh_set_net_wm_state(struct client_ctx *);
 void 			 xu_ewmh_restore_net_wm_state(struct client_ctx *);
 

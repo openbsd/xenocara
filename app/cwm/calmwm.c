@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.114 2020/03/24 14:48:29 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.115 2022/02/26 15:19:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -94,7 +94,7 @@ main(int argc, char **argv)
 	    signal(SIGINT, sighdlr) == SIG_ERR ||
 	    signal(SIGTERM, sighdlr) == SIG_ERR)
 		err(1, "signal");
- 
+
 	if (parse_config(Conf.conf_file, &Conf) == -1) {
 		warnx("error parsing config file");
 		if (nflag)
