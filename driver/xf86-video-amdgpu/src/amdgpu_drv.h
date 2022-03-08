@@ -165,6 +165,7 @@ typedef enum {
 	OPTION_TEAR_FREE,
 	OPTION_DELETE_DP12,
 	OPTION_VARIABLE_REFRESH,
+	OPTION_ASYNC_FLIP_SECONDARIES,
 } AMDGPUOpts;
 
 static inline ScreenPtr
@@ -306,6 +307,8 @@ typedef struct {
 	/* kms pageflipping */
 	WindowPtr flip_window;
 	Bool allowPageFlip;
+	Bool can_async_flip;
+	Bool async_flip_secondaries;
 
 	/* cursor size */
 	int cursor_w;

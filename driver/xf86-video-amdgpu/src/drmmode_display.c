@@ -3970,16 +3970,26 @@ Bool amdgpu_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			uint32_t target_msc)
 {
 	AMDGPUEntPtr pAMDGPUEnt = AMDGPUEntPriv(scrn);
+	AMDGPUInfoPtr info = AMDGPUPTR(scrn);
 	xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
 	xf86CrtcPtr crtc = NULL;
 	drmmode_crtc_private_ptr drmmode_crtc = config->crtc[0]->driver_private;
 	int crtc_id;
 	uint32_t flip_flags = flip_sync == FLIP_ASYNC ? DRM_MODE_PAGE_FLIP_ASYNC : 0;
+	uint32_t sec_flip_flags = flip_flags;
 	drmmode_flipdata_ptr flipdata;
 	Bool handle_deferred = FALSE;
 	uintptr_t drm_queue_seq = 0;
 	struct drmmode_fb *fb;
 	int i = 0;
+
+	/*
+	 * Flip secondary non-ref_crtc crtc's async if possible and requested
+	 * by xorg.conf option "AsyncFlipSecondaries". Otherwise follow the lead
+	 * of flip_sync.
+	 */
+	if (info->can_async_flip && info->async_flip_secondaries)
+		sec_flip_flags |= DRM_MODE_PAGE_FLIP_ASYNC;
 
 	flipdata = calloc(1, sizeof(*flipdata) + drmmode_crtc->drmmode->count_crtcs *
 			  sizeof(flipdata->fb[0]));
@@ -4081,7 +4091,7 @@ Bool amdgpu_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			if (drmmode_page_flip_target_relative(pAMDGPUEnt,
 							      drmmode_crtc,
 							      flipdata->fb[crtc_id]->handle,
-							      flip_flags,
+							      sec_flip_flags,
 							      drm_queue_seq, 0) != 0)
 				goto flip_error;
 		}

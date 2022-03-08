@@ -1,3 +1,530 @@
+commit 533bd30ceaa373788b3d0bfd4d486f0f1c624d0c
+Author: Shashank Sharma <shashank.sharma@amd.com>
+Date:   Tue Feb 22 16:25:01 2022 +0100
+
+    Bump version for the 22.0.0 release
+    
+    This release includes some bug fixes and one minor feature.
+    
+    Signed-off-by: Shashank Sharma <shashank.sharma@amd.com>
+
+commit 402bfdead7d512726c01359c03fcd37b4efdc975
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 14:20:53 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c21bcdd1cbdc340a80d1ebfbf02376e2dad9c67c
+Author: Jesse Zhang <jesse.zhang@amd.com>
+Date:   Wed Feb 16 16:11:44 2022 +0100
+
+    glamor: unset AMDGPU_CREATE_PIXMAP_SCANOUT on shared pixmap
+    
+    While running multi-display test(for both APUs and DGPUs), if
+    the screen setting mode is changed from "single mode" to "share mode",
+    the screen shows tiled distortion, due to wrongly created pixmap.
+    This is a regression.
+    
+    Fixes: 0732f81a2c67 ("glamor: Make pixmap scanout compatible if its dimensions are")
+    Closes: https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/48
+    
+    Acked-by: Shashank Sharma <shashank.sharma@amd.com>
+    Signed-off-by: Jesse Zhang <jesse.zhang@amd.com>
+    Signed-off-by: Shashank Sharma <shashank.sharma@amd.com>
+
+commit 8bc148f0c14f6a6df1c3643a774e00a00c7942c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 14:25:12 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 65c127366a22c03d2ffcdcdf91eec28cac733e83
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Tue Jan 25 03:44:47 2022 +0100
+
+    Add option for non-vsynced flips for "secondary" outputs.
+    
+    This is a straightforward port of a patch with the same name
+    "modesetting: Add option for non-vsynced flips for "secondary"
+    outputs." from X-Server master / X-Server 21.1. See server MR 742.
+    The description below is therefore identical to that X-Server commit:
+    
+    Whenever an unredirected fullscreen window uses pageflipping for a
+    DRI3/Present PresentPixmap() operation and the X-Screen has more than
+    one active output, multiple crtc's need to execute pageflips. Only
+    after the last flip has completed can the PresentPixmap operation
+    as a whole complete.
+    
+    If a sync_flip is requested for the present, then the current
+    implementation will synchronize each pageflip to the vblank of
+    its associated crtc. This provides tear-free image presentation
+    across all outputs, but introduces a different artifact, if not
+    all outputs run at the same refresh rate with perfect synchrony:
+    The slowest output throttles the presentation rate, and present
+    completion is delayed to flip completion of the "latest" output
+    to complete. This means degraded performance, e.g., a dual-display
+    setup with a 144 Hz monitor and a 60 Hz monitor will always be
+    throttled to at most 60 fps. It also means non-constant present
+    rate if refresh cycles drift against each other, creating complex
+    "beat patterns", tremors, stutters and periodic slowdowns - quite
+    irritating!
+    
+    Such a scenario will be especially annoying if one uses multiple
+    outputs in "mirror mode" aka "clone mode". One output will usually
+    be the "production output" with the highest quality and fastest
+    display attached, whereas a secondary mirror output just has a
+    cheaper display for monitoring attached. Users care about perfect
+    and perfectly timed tear-free presentation on the "production output",
+    but cares less about quality on the secondary "mirror output". They
+    are willing to trade quality on secondary outputs away in exchange
+    for better presentation timing on the "production output".
+    
+    One example use case for such production + monitoring displays are
+    neuroscience / medical science applications where one high quality
+    display device is used to present visual animations to test subjects
+    or patients in a fMRI scanner room (production display), whereas
+    an operator monitors the same visual animations from a control room
+    on a lower quality display. Presentation timing needs to be perfect,
+    and animations high-speed and tear-free for the production display,
+    whereas quality and timing don't matter for the monitoring display.
+    
+    This commit gives users the option to choose such a trade-off as
+    opt-in:
+    
+    It adds a new boolean option "AsyncFlipSecondaries" to the device section
+    of xorg.conf. If this option is specified as true, then DRI3 pageflip
+    behaviour changes as follows:
+    
+    1. The "reference crtc" for a windows PresentPixmap operation does a
+       vblank synced flip, or a DRM_MODE_PAGE_FLIP_ASYNC non-synchronized
+       flip, as requested by the caller, just as in the past. Typically
+       flips will be requested to be vblank synchronized for tear-free
+       presentation. The "reference crtc" is the one chosen by the caller
+       to drive presentation timing (as specified by PresentPixmap()'s
+       "target_msc", "divisor", "remainder" parameters and implemented by
+       vblank events) and to deliver Present completion timestamps (msc
+       and ust) extracted from its pageflip completion event.
+    
+    2. All other crtc's, which also page-flip in a multi-display configuration,
+       will try to flip with DRM_MODE_PAGE_FLIP_ASYNC, ie. immediately and
+       not synchronized to vblank. This allows the PresentPixmap operation
+       to complete with little delay compared to a single-display present,
+       especially if the different crtc's run at different video refresh
+       rates or their refresh cycles are not perfectly synchronized, but
+       drift against each other. The downside is potential tearing artifacts
+       on all outputs apart from the one of the "reference crtc".
+    
+    Successfully tested on a AMD gpu with single-display and dual-display
+    setups, and with single-X-Screen as well as dual-X-Screen "ZaphodHeads"
+    configurations.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit 69365526d0a477e0d7842571a72266631c77742d
+Author: Dor Askayo <dor.askayo@gmail.com>
+Date:   Sat Aug 21 19:11:05 2021 +0300
+
+    glamor: Set AMDGPU_CREATE_PIXMAP_SCANOUT on DRI2 and shared pixmaps
+    
+    The scanout usage flag wasn't applied for DRI2 and shared pixmaps
+    in 0732f81a2c67, resulting in GPU artifacts in some scenarios.
+    
+    Fixes: 0732f81a2c67 ("glamor: Make pixmap scanout compatible if its
+                          dimensions are")
+    Closes: https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/41
+    Signed-off-by: Dor Askayo <dor.askayo@gmail.com>
+    Signed-off-by: Michel Dänzer <mdaenzer@redhat.com>
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
+commit 0d68a91dce88eeacd15bf1159ddc6200a01b1f2e
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Jul 29 13:20:16 2021 -0400
+
+    Bump version for the 21.0.0 release
+    
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit aedbf47ffc9459c3654b66d8abf6d4f8515c4815
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Mon Apr 26 15:00:54 2021 +0200
+
+    Include xf86drm.h instead of sarea.h
+    
+    Fixes build against current xorg-x11-server-devel from Fedora
+    34/35/rawhide.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 6ed48634443e15a45f48e3a4ddf91e46041ad38f
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Feb 2 12:45:54 2021 +0100
+
+    Drop dri.h includes
+    
+    Not needed anymore.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 6234a1b2652f469071c0c9b0d8b0f4a8079efe74
+Author: Likun Gao <Likun.Gao@amd.com>
+Date:   Fri Oct 30 12:23:20 2020 +0800
+
+    Fix drmmode_crtc_scanout_create logic
+    
+    If crtc scanout create successfully, the function of
+    drmmode_crtc_scanout_create should return TURE.
+    This will fix the regression caused by commit: "Make
+    drmmode_crtc_scanout_create/destroy static" (442efe73), as it will
+    result to some function (such as drmmode_set_scanout_pixmap) go to wrong
+    code path and result to NULL pointer.
+    Fixes: 442efe73 ("Make drmmode_crtc_scanout_create/destroy static")
+    
+    Signed-off-by: Likun Gao <Likun.Gao@amd.com>
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
+commit 6bd3dc6bd8af238868154f24a37ff13cc9aa2705
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Aug 28 10:50:50 2020 +0200
+
+    Check for AMDGPU_CREATE_PIXMAP_SCANOUT in amdgpu_glamor_create_pixmap
+    
+    We must not call glamor_create_pixmap or fbCreatePixmap when it's set.
+    
+    Closes: https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/21
+
+commit 2202cdfb0ac79591b6d3a51634e3b9f507970d55
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Jul 10 11:24:02 2020 +0200
+
+    Replace a few more instances of "master"
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 0d1d479ecca424120ae1b0f16f9009aec64e5164
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Jul 10 11:13:21 2020 +0200
+
+    Fix build against ABI_VIDEODRV_VERSION 25.2
+    
+    Use primary/secondary instead of master/slave where applicable.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 442efe73dd579dc36445a3b232937abbed9d2fbb
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Wed Apr 22 16:47:33 2020 +0200
+
+    Make drmmode_crtc_scanout_create/destroy static
+    
+    And the latter inline.
+
+commit 99f3c82e940e35642757ccd6dc5267004e1122f6
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Apr 21 19:02:41 2020 +0200
+
+    Drop struct drmmode_scanout altogether in favour of PixmapPtrs
+
+commit cfce4b3e6b05b1be14b7ce716dbfb9a15e7e21f4
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Apr 21 18:48:06 2020 +0200
+
+    Drop bo/width/height members from struct drmmode_scanout
+    
+    The pixmap is all we really need.
+
+commit 680b9a2976f9eb8010c8160c425c2194fb5429d1
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Wed Apr 15 10:34:32 2020 +0200
+
+    Fix return value check of drmIoctl()
+    
+    When the drmModeSetCursor2() call was replaced with bare drmIoctl() call in
+    b344e155, a bug was introduced.  With the use of drmModeSetCursor2(),
+    the return value from drmIoctl() (which calls ioctl()) were mangled, if
+    they were negative, they were replaced by -errno by a wrapper function
+    in xf86drMode.c in libdrm.  After replacing drmModeSetCursor2() with the
+    call to drmIoctl(), this mangling no longer happens, and we need to
+    explicitly check if the call to drmIoctl() fails, which is indicated by
+    returning -1, and then why it failed, by checking errno.
+    If the error indicated by errno is EINVAL, then we can't use the
+    DRM_IOCTL_MODE_CURSOR2 ioctl(), and need to fall back to the
+    DRM_IOCTL_MODE_CURSOR ioctl().
+    
+    This bug can manifest itself by an invisible hw cursor on systems where the
+    DRM_IOCTL_MODE_CURSOR2 is not implemented by the graphics driver.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+
+commit e923642bae6077f71a8f251fe885342757737224
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 8 11:14:32 2020 +1000
+
+    gitlab CI: update to use the latest CI templates
+    
+    Repository was moved there from wayland/ci-templates, and let's update to the
+    most recent version..
+    
+    No real functional changes, we're just making use of the various CI template
+    bits and bobs now, specifically the FDO_* variables and the
+    .fdo.container-build and .fdo.distribution-image templates.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0732f81a2c67354ddfa7a495bee6b0997c6ef244
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Apr 21 10:54:47 2020 +0200
+
+    glamor: Make pixmap scanout compatible if its dimensions are
+    
+    Namely, if its dimensions match those of the screen pixmap (enough that
+    it could stand in for it). When that's the case, the pixmap may end up
+    being scanned out directly due to page flipping via the Present
+    extension, e.g. with xfwm4 --vblank=xpresent .
+    
+    v2:
+    * Use AMDGPU_CREATE_PIXMAP_SCANOUT instead of second-guessing in
+      amdgpu_alloc_pixmap_bo, fixes corruption when resizing from smaller
+      to larger virtual size via RandR.
+    
+    Closes: https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues/10
+
+commit cb27a5b1120266e4baaa3eb784ff041977ded43f
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Nov 29 16:37:32 2019 +0100
+
+    Handle NULL fb_ptr in pixmap_get_fb
+    
+    This can happen when HW acceleration is disabled.
+    
+    Fixes https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati/issues/188
+    (ported from radeon commit 4d84cf438e7f1bebf0053035ef0292e9fed257d1)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e2cd67abb4aa8b5c942b46dd66dac091b9fad7ad
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Mon Mar 16 17:43:54 2020 +0100
+
+    Bail from amdgpu_pixmap_get_handle with ShadowFB
+    
+    There's no pixmap private in that case. The callers handle this
+    gracefully.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 42a3148ae14c6fd0d2e2e9013971188ca721d8f8
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Sat Dec 10 18:53:37 2016 +0000
+
+    Factor out common code to amdgpu_probe()
+    
+    Keep the distinct pci/platform screen management in the separate probe
+    entry point and fold the rest into a single function.
+    
+    v2: Rebase
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit eeaaf370854b63966f0b5adbd00d2e6809b773c1
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Sat Mar 31 15:00:16 2018 +0100
+
+    Introduce amdgpu_device_setup helper
+    
+    It folds the device specifics (open fd, device init) into a single
+    place.
+    
+    v2:
+     - Rebase
+     - Pass pAMDGPUEnt to amdgpu_device_setup (Michel)
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 1c9742e304f4d198628cdc9487049cde472c7285
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Sat Mar 31 14:27:52 2018 +0100
+
+    Kill off drmOpen/Close/drmSetInterfaceVersion in favour of drmDevices
+    
+    The former has very subtle semantics (see the implementation in libdrm
+    for details) which were required in the UMS days.
+    
+    With drmDevices around, we have enough information to build our
+    heuristics and avoid drmOpen all together.
+    
+    In the odd case drmGetDevices2() can take a few extra cycles, so use a
+    reasonably sized local array.
+    
+    v2:
+     - Rebase
+     - Rework now that amdgpu_kernel_mode_enabled() is staying
+     - Keep amdgpu_bus_id()
+     - Use local drmDevice array.
+    
+    v3:
+     - Correct error handling (Michel)
+     - Preserve the "am I master" check (Michel)
+     - Always initialise the fd variable
+    
+    v4:
+     - Don't print "-1" on drmGetDevices2 failure (Michel)
+     - Use uppercase DRM (Michel)
+    
+    v5:
+     - Rebase on top of amdgpu_bus_id() rework
+     - Pass both pci and platform dev to amdgpu_kernel_open_fd() (Michel)
+     - Indent local_drmIsMaster() with tabs (Michel)
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2dd730784e632056c75a0fd62b33206b5fc01602
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Jul 16 22:04:57 2019 +0100
+
+    Use the device_id straight from gpu_info
+    
+    This way we can remove the PciInfo and Chipset from the AMDGPUInfoRec.
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 655b3c55b9a6233091d4dc5d2e80a0373aa3e2d6
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Wed Jul 17 00:04:39 2019 +0100
+
+    Reuse the existing busid string
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit b357a8474074d911d1c03572d4d9db3ee420633a
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Wed Jul 17 00:01:51 2019 +0100
+
+    Store the busid string in AMDGPUEnt
+    
+    This way we can reuse it, instead of redoing it later on.
+    
+    v2: Pass the AMDGPUEnt as argument.
+    v3: free() the string at AMDGPUFreeRec (Michel)
+    v4: Inline amdgpu_bus_id, move at top of mdgpu_kernel_open_fd (Michel)
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com> (v3)
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2c0c154a838060eb683599faf9cbfa3e66dd42c8
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Jul 16 23:39:30 2019 +0100
+
+    Remove NULL check after a "cannot fail" function
+    
+    XNFasprintf cannot fail - aka busid cannot be NULL.
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 16ae0d06c6711a36c814618e06bf2be53079af81
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Jul 16 23:37:05 2019 +0100
+
+    Fixup the amdgpu_bus_id() string format
+    
+    The func is a u, instead of a signed int.
+    
+    v2: Drop the precision - s/1u/u/ (Michel)
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit abbe23fae70b7f3bc7033d7603d331570677d431
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Sat Dec 10 14:30:16 2016 +0000
+
+    Remove drmCheckModesettingSupported and kernel module loading, on Linux
+    
+    The former of these is a UMS artefact which gives incorrect and
+    misleading promise whether KMS is supported. Not to mention that
+    AMDGPU is a only KMS driver.
+    
+    In a similar fashion xf86LoadKernelModule() is a relic of the times,
+    where platforms had no scheme of detecting and loading the appropriate
+    kernel module.
+    
+    Notes:
+     - Since there is no reply from Robert the code is still around, behind
+    a FreeBSD guard.
+     - If FreeBSD still needs this they should look and fix it ASAP, as:
+       - wayland itself or compositors do _not_ load kernel modules
+       - the kernel module should be loaded early to control the clocks/fan,
+    hence temperature of the card
+    
+    v2: Keep the code as FreeBSD only, add 'Notes' in the commit message.
+    
+    Cc: Robert Millan <rmh@freebsd.org>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 0b3bc7addf9b5989bfad7c2c31979a15f5ba701d
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Sat Dec 10 14:28:19 2016 +0000
+
+    Use ODEV_ATTRIB_PATH where possible for the device node.
+    
+    Use the device node path, if the server knows it.
+    
+    Note:
+    ODEV_ATTRIB_PATH was introduced with xserver 1.13 - the minimum version
+    required to build amdgpu. Yet it's defined in xf86platformBus.h. With
+    the header included only when XSERVER_PLATFORM_BUS is set.
+    
+    Keep things obvious and use a ODEV_ATTRIB_PATH guard.
+    
+    v2: Rebase, add commit message
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit edcbe5f52ddfceee3d66d69bbcebbceac06b6d0d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 4 16:38:06 2020 -0500
+
+    Fix link failure with gcc 10
+    
+    Without the 'extern' this looks like a definition not just a
+    declaration, in every file that includes the header. gcc 10 is stricter
+    about this kind of multiple definition.
+
+commit fd66f5c0bea2b7c22a47bfd5eb1f22d32d166d9c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 30 12:33:09 2019 -0400
+
+    kms: Handle changes to SourceValidate call chain in xserver 19
+    
+    xserver 19 expects the SourceValidate hook to always be filled in with
+    something valid. For earlier servers it's harmless to simply fill this
+    in with a do-nothing function instead of NULL.
+    
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
 commit b467d2569a003da05ad222b0dc095bee5eec450a
 Author: Michel Dänzer <mdaenzer@redhat.com>
 Date:   Fri Oct 11 17:10:10 2019 +0200

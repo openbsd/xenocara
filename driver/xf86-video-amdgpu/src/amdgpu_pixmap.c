@@ -38,7 +38,7 @@ amdgpu_pixmap_create(ScreenPtr screen, int w, int h, int depth,	unsigned usage)
 	PixmapPtr pixmap;
 	AMDGPUInfoPtr info;
 
-	/* only DRI2 pixmap is suppported */
+	/* only DRI2 pixmap is supported */
 	if (!(usage & AMDGPU_CREATE_PIXMAP_DRI2))
 		return fbCreatePixmap(screen, w, h, depth, usage);
 

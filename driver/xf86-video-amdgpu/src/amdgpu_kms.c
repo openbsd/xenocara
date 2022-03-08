@@ -87,6 +87,7 @@ const OptionInfoRec AMDGPUOptions_KMS[] = {
 	{OPTION_TEAR_FREE, "TearFree", OPTV_BOOLEAN, {0}, FALSE},
 	{OPTION_DELETE_DP12, "DeleteUnusedDP12Displays", OPTV_BOOLEAN, {0}, FALSE},
 	{OPTION_VARIABLE_REFRESH, "VariableRefresh", OPTV_BOOLEAN, {0}, FALSE },
+	{OPTION_ASYNC_FLIP_SECONDARIES, "AsyncFlipSecondaries", OPTV_BOOLEAN, {0}, FALSE},
 	{-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -1637,6 +1638,13 @@ Bool AMDGPUPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
 			xf86DrvMsg(pScrn->scrnIndex, from, "VariableRefresh: %sabled\n",
 				   info->vrr_support ? "en" : "dis");
+
+			info->async_flip_secondaries = FALSE;
+			from = xf86GetOptValBool(info->Options, OPTION_ASYNC_FLIP_SECONDARIES,
+						 &info->async_flip_secondaries) ? X_CONFIG : X_DEFAULT;
+
+			xf86DrvMsg(pScrn->scrnIndex, from, "AsyncFlipSecondaries: %sabled\n",
+				   info->async_flip_secondaries ? "en" : "dis");
 		}
 	}
 

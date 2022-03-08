@@ -209,6 +209,15 @@ amdgpu_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 	if (!format)
 		return NULL;
 
+	if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP &&
+	    usage != CREATE_PIXMAP_USAGE_SHARED &&
+	    !info->shadow_primary &&
+	    w >= scrn->virtualX &&
+	    w <= scrn->displayWidth &&
+	    h == scrn->virtualY &&
+	    format->bitsPerPixel == scrn->bitsPerPixel)
+		usage |= AMDGPU_CREATE_PIXMAP_SCANOUT;
+
 	if (!(usage & AMDGPU_CREATE_PIXMAP_SCANOUT) &&
 	    !AMDGPU_CREATE_PIXMAP_SHARED(usage)) {
 		if (info->shadow_primary) {
@@ -218,15 +227,9 @@ amdgpu_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 			usage |= AMDGPU_CREATE_PIXMAP_LINEAR |
 				 AMDGPU_CREATE_PIXMAP_GTT;
 		} else if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP) {
-			if (w < scrn->virtualX || w > scrn->displayWidth ||
-			    h != scrn->virtualY ||
-			    format->bitsPerPixel != scrn->bitsPerPixel) {
-				pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
-				if (pixmap)
-					return pixmap;
-			} else {
-				usage |= AMDGPU_CREATE_PIXMAP_SCANOUT;
-			}
+			pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
+			if (pixmap)
+				return pixmap;
 		}
 	}
 
