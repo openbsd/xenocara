@@ -54,54 +54,58 @@ XCalc*ti.button40.displayList:		foreground rgb:a/9/8;segments 8,-4,-9,-4,-4,-9,-
 XCalc*ti.button40.borderColor:		rgb:9/8/7
 
 
-
-XCalc*ti.button22.background:		gray95
-XCalc*ti.button22.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button22.borderColor:		gray65
-
-XCalc*ti.button23.background:		gray95
-XCalc*ti.button23.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button23.borderColor:		gray65
-
-XCalc*ti.button24.background:		gray95
-XCalc*ti.button24.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button24.borderColor:		gray65
-
-XCalc*ti.button27.background:		gray95
-XCalc*ti.button27.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button27.borderColor:		gray65
-
-XCalc*ti.button28.background:		gray95
-XCalc*ti.button28.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button28.borderColor:		gray65
-
-XCalc*ti.button29.background:		gray95
-XCalc*ti.button29.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button29.borderColor:		gray65
-
-XCalc*ti.button32.background:		gray95
-XCalc*ti.button32.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button32.borderColor:		gray65
-
-XCalc*ti.button33.background:		gray95
-XCalc*ti.button33.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button33.borderColor:		gray65
-
-XCalc*ti.button34.background:		gray95
-XCalc*ti.button34.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
-XCalc*ti.button34.borderColor:		gray65
-
+! "Number" keys.
+! "7"
 XCalc*ti.button37.background:		gray95
 XCalc*ti.button37.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
 XCalc*ti.button37.borderColor:		gray65
-
+! "8"
 XCalc*ti.button38.background:		gray95
 XCalc*ti.button38.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
 XCalc*ti.button38.borderColor:		gray65
-
+! "9"
 XCalc*ti.button39.background:		gray95
 XCalc*ti.button39.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
 XCalc*ti.button39.borderColor:		gray65
+
+! "4"
+XCalc*ti.button42.background:		gray95
+XCalc*ti.button42.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button42.borderColor:		gray65
+! "5"
+XCalc*ti.button43.background:		gray95
+XCalc*ti.button43.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button43.borderColor:		gray65
+! "6"
+XCalc*ti.button44.background:		gray95
+XCalc*ti.button44.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button44.borderColor:		gray65
+
+! "1"
+XCalc*ti.button47.background:		gray95
+XCalc*ti.button47.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button47.borderColor:		gray65
+! "2"
+XCalc*ti.button48.background:		gray95
+XCalc*ti.button48.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button48.borderColor:		gray65
+! "3"
+XCalc*ti.button49.background:		gray95
+XCalc*ti.button49.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button49.borderColor:		gray65
+
+! "0"
+XCalc*ti.button52.background:		gray95
+XCalc*ti.button52.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button52.borderColor:		gray65
+! "."
+XCalc*ti.button53.background:		gray95
+XCalc*ti.button53.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button53.borderColor:		gray65
+! "+/-"
+XCalc*ti.button54.background:		gray95
+XCalc*ti.button54.displayList:		foreground gray75;segments 8,-4,-9,-4,-4,-9,-4,8;draw-arc -14,-14,-4,-4,270,90
+XCalc*ti.button54.borderColor:		gray65
 
 !	H e w l e t t - P a c k a r d   1 0 C
 
