@@ -608,6 +608,7 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
    ws->info.num_physical_sgprs_per_simd = 512;
    ws->info.num_physical_wave64_vgprs_per_simd = 256;
    ws->info.has_3d_cube_border_color_mipmap = true;
+   ws->info.never_stop_sq_perf_counters = false;
 
    ws->check_vm = strstr(debug_get_option("R600_DEBUG", ""), "check_vm") != NULL ||
                                                                             strstr(debug_get_option("AMD_DEBUG", ""), "check_vm") != NULL;

@@ -1762,7 +1762,7 @@ shader_variant_compile(struct radv_device *device, struct vk_shader_module *modu
    options->has_ls_vgpr_init_bug = device->physical_device->rad_info.has_ls_vgpr_init_bug;
    options->enable_mrt_output_nan_fixup =
       module && !module->nir && options->key.ps.enable_mrt_output_nan_fixup;
-   options->adjust_frag_coord_z = device->adjust_frag_coord_z;
+   options->adjust_frag_coord_z = options->key.adjust_frag_coord_z;
    options->has_image_load_dcc_bug = device->physical_device->rad_info.has_image_load_dcc_bug;
    options->debug.func = radv_compiler_debug;
    options->debug.private_data = &debug_data;

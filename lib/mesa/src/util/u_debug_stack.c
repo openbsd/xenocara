@@ -199,7 +199,6 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
                         unsigned start_frame,
                         unsigned nr_frames)
 {
-   const void **frame_pointer = NULL;
    unsigned i = 0;
 
    if (!nr_frames) {
@@ -254,15 +253,15 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
 #if defined(PIPE_CC_GCC) && (PIPE_CC_GCC_VERSION > 404) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wframe-address"
-   frame_pointer = ((const void **)__builtin_frame_address(1));
+   const void **frame_pointer = ((const void **)__builtin_frame_address(1));
 #pragma GCC diagnostic pop
-#elif defined(PIPE_CC_MSVC) && defined(PIPE_ARCH_X86)
+#elif defined(PIPE_CC_MSVC)
    __asm {
       mov frame_pointer, ebp
    }
-   frame_pointer = (const void **)frame_pointer[0];
+   const void **frame_pointer = (const void **)frame_pointer[0];
 #else
-   frame_pointer = NULL;
+   const void **frame_pointer = NULL;
 #endif
 
    while (nr_frames) {
@@ -287,8 +286,6 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
 
       frame_pointer = next_frame_pointer;
    }
-#else
-   (void) frame_pointer;
 #endif
 
    while (nr_frames) {

@@ -999,16 +999,21 @@ bi_instr_schedulable(bi_instr *instr,
          * same clause (most likely they will not), so if a later instruction
          * in the clause accesses the destination, the message-passing
          * instruction can't be scheduled */
-        if (bi_opcode_props[instr->op].sr_write && !bi_is_null(instr->dest[0])) {
-                unsigned nr = bi_count_write_registers(instr, 0);
-                assert(instr->dest[0].type == BI_INDEX_REGISTER);
-                unsigned reg = instr->dest[0].value;
+        if (bi_opcode_props[instr->op].sr_write) {
+                bi_foreach_dest(instr, d) {
+                        if (bi_is_null(instr->dest[d]))
+                                continue;
 
-                for (unsigned i = 0; i < clause->access_count; ++i) {
-                        bi_index idx = clause->accesses[i];
-                        for (unsigned d = 0; d < nr; ++d) {
-                                if (bi_is_equiv(bi_register(reg + d), idx))
-                                        return false;
+                        unsigned nr = bi_count_write_registers(instr, d);
+                        assert(instr->dest[d].type == BI_INDEX_REGISTER);
+                        unsigned reg = instr->dest[d].value;
+
+                        for (unsigned i = 0; i < clause->access_count; ++i) {
+                                bi_index idx = clause->accesses[i];
+                                for (unsigned d = 0; d < nr; ++d) {
+                                        if (bi_is_equiv(bi_register(reg + d), idx))
+                                                return false;
+                                }
                         }
                 }
         }

@@ -39,6 +39,13 @@ if get_option('layout') != 'mirror'
   error('`mirror` is the only build directory layout supported')
 endif
 
+amber = get_option('amber')
+if amber
+  package_version_suffix=' Amber'
+else
+  package_version_suffix=''
+endif
+
 # Arguments for the preprocessor, put these in a separate array from the C and
 # C++ (cpp in meson terminology) arguments since they need to be added to the
 # default arguments for both C and C++.
@@ -46,13 +53,18 @@ pre_args = [
   '-D__STDC_CONSTANT_MACROS',
   '-D__STDC_FORMAT_MACROS',
   '-D__STDC_LIMIT_MACROS',
-  '-DPACKAGE_VERSION="@0@"'.format(meson.project_version()),
+  '-DPACKAGE_VERSION="@0@@1@"'.format(meson.project_version(), package_version_suffix),
   '-DPACKAGE_BUGREPORT="https://gitlab.freedesktop.org/mesa/mesa/-/issues"',
 ]
 c_args = []
 cpp_args = []
 
 with_moltenvk_dir = get_option('moltenvk-dir')
+
+if amber
+  pre_args += '-DAMBER'
+endif
+
 with_vulkan_icd_dir = get_option('vulkan-icd-dir')
 with_tests = get_option('build-tests')
 with_aco_tests = get_option('build-aco-tests')
@@ -199,7 +211,9 @@ with_dri = dri_drivers.length() != 0
 
 gallium_drivers = get_option('gallium-drivers')
 if gallium_drivers.contains('auto')
-  if system_has_kms_drm
+  if amber
+    gallium_drivers = []
+  elif system_has_kms_drm
     # TODO: PPC, Sparc
     if ['x86', 'x86_64'].contains(host_machine.cpu_family())
       gallium_drivers = [
@@ -262,7 +276,9 @@ endif
 _vulkan_drivers = get_option('vulkan-drivers')
 if _vulkan_drivers.contains('auto')
   if system_has_kms_drm
-    if host_machine.cpu_family().startswith('x86')
+    if amber
+      _vulkan_drivers = []
+    elif host_machine.cpu_family().startswith('x86')
       _vulkan_drivers = ['amd', 'intel', 'swrast']
     elif ['arm', 'aarch64'].contains(host_machine.cpu_family())
       _vulkan_drivers = ['swrast']
@@ -531,8 +547,22 @@ if with_glx != 'disabled'
   endif
 endif
 
-with_glvnd = get_option('glvnd')
+_glvnd = get_option('glvnd')
+if _glvnd == 'true' or _glvnd == 'enabled' or (amber and _glvnd == 'auto')
+  with_glvnd = true
+else
+  with_glvnd = false
+endif
+
 glvnd_vendor_name = get_option('glvnd-vendor-name')
+if glvnd_vendor_name == 'auto'
+  if amber
+    glvnd_vendor_name = 'amber'
+  else
+    glvnd_vendor_name = 'mesa'
+  endif
+endif
+
 if with_glvnd
   if with_platform_windows
     error('glvnd cannot be used on Windows')

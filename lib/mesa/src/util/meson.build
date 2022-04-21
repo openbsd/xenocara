@@ -145,6 +145,7 @@ files_mesa_util = files(
   'u_cpu_detect.h',
   'u_printf.cpp',
   'u_printf.h',
+  'u_printf_length.c',
   'vma.c',
   'vma.h',
   'xxhash.h',

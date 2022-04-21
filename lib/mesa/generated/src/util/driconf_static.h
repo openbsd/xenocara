@@ -1958,285 +1958,62 @@ static const struct driconf_device device_399 = {
     .num_applications = 1,
     .applications = device_399_applications,
 };
-    
-static const struct driconf_option engine_447_options[] = {
-    { .name = "radv_zero_vram", .value = "true" },
-};
 
-    
-static const struct driconf_option engine_449_options[] = {
-    { .name = "radv_zero_vram", .value = "true" },
-    { .name = "radv_lower_discard_to_demote", .value = "true" },
-    { .name = "radv_disable_tc_compat_htile_general", .value = "true" },
-};
-
-
-static const struct driconf_engine device_402_engines[] = {
-    { .engine_name_match = "vkd3d",
-      .num_options = 1,
-      .options = engine_447_options,
-    },
-    { .engine_name_match = "Quantic Dream Engine",
-      .num_options = 3,
-      .options = engine_449_options,
-    },
-};
 
     
 static const struct driconf_option application_403_options[] = {
-    { .name = "radv_report_llvm9_version_string", .value = "true" },
-    { .name = "radv_invariant_geom", .value = "true" },
+    { .name = "force_gl_renderer", .value = "Adreno (TM) 618" },
+    { .name = "force_gl_vendor", .value = "Qualcomm" },
 };
 
     
 static const struct driconf_option application_406_options[] = {
-    { .name = "radv_invariant_geom", .value = "true" },
+    { .name = "force_gl_renderer", .value = "Adreno (TM) 630" },
+    { .name = "force_gl_vendor", .value = "Qualcomm" },
 };
 
     
-static const struct driconf_option application_408_options[] = {
-    { .name = "radv_enable_mrt_output_nan_fixup", .value = "true" },
+static const struct driconf_option application_409_options[] = {
+    { .name = "force_gl_renderer", .value = "Adreno (TM) 618" },
+    { .name = "force_gl_vendor", .value = "Qualcomm" },
 };
 
     
-static const struct driconf_option application_410_options[] = {
-    { .name = "radv_no_dynamic_bounds", .value = "true" },
-    { .name = "radv_absolute_depth_bias", .value = "true" },
-};
-
-    
-static const struct driconf_option application_413_options[] = {
-    { .name = "radv_no_dynamic_bounds", .value = "true" },
-    { .name = "radv_absolute_depth_bias", .value = "true" },
-};
-
-    
-static const struct driconf_option application_416_options[] = {
-    { .name = "radv_no_dynamic_bounds", .value = "true" },
-    { .name = "radv_absolute_depth_bias", .value = "true" },
-};
-
-    
-static const struct driconf_option application_419_options[] = {
-    { .name = "radv_no_dynamic_bounds", .value = "true" },
-    { .name = "radv_absolute_depth_bias", .value = "true" },
-};
-
-    
-static const struct driconf_option application_422_options[] = {
-    { .name = "radv_disable_shrink_image_store", .value = "true" },
-    { .name = "radv_zero_vram", .value = "true" },
-};
-
-    
-static const struct driconf_option application_425_options[] = {
-    { .name = "radv_override_uniform_offset_alignment", .value = "16" },
-    { .name = "radv_disable_shrink_image_store", .value = "true" },
-    { .name = "radv_invariant_geom", .value = "true" },
-};
-
-    
-static const struct driconf_option application_429_options[] = {
-    { .name = "radv_no_dynamic_bounds", .value = "true" },
-};
-
-    
-static const struct driconf_option application_431_options[] = {
-    { .name = "radv_zero_vram", .value = "true" },
-};
-
-    
-static const struct driconf_option application_433_options[] = {
-    { .name = "radv_lower_discard_to_demote", .value = "true" },
-};
-
-    
-static const struct driconf_option application_435_options[] = {
-    { .name = "radv_invariant_geom", .value = "true" },
-};
-
-    
-static const struct driconf_option application_437_options[] = {
-    { .name = "radv_disable_dcc", .value = "true" },
-};
-
-    
-static const struct driconf_option application_439_options[] = {
-    { .name = "radv_disable_dcc", .value = "true" },
-};
-
-    
-static const struct driconf_option application_441_options[] = {
-    { .name = "radv_report_apu_as_dgpu", .value = "true" },
-};
-
-    
-static const struct driconf_option application_443_options[] = {
-    { .name = "radv_invariant_geom", .value = "true" },
-};
-
-    
-static const struct driconf_option application_445_options[] = {
-    { .name = "radv_disable_htile_layers", .value = "true" },
+static const struct driconf_option application_412_options[] = {
+    { .name = "force_gl_renderer", .value = "Adreno (TM) 630" },
+    { .name = "force_gl_vendor", .value = "Qualcomm" },
 };
 
 
 static const struct driconf_application device_402_applications[] = {
-    { .name = "Shadow Of The Tomb Raider (Native)",
-      .application_name_match = "ShadowOfTheTomb",
-      .num_options = 2,
-      .options = application_403_options,
-    },
-    { .name = "Shadow Of The Tomb Raider (DX11/DX12)",
-      .application_name_match = "SOTTR.exe",
-      .num_options = 1,
-      .options = application_406_options,
-    },
-    { .name = "RAGE 2",
-      .executable = "RAGE2.exe",
-      .num_options = 1,
-      .options = application_408_options,
-    },
-    { .name = "Path of Exile (64-bit, Steam)",
-      .executable = "PathOfExile_x64Steam.exe",
-      .num_options = 2,
-      .options = application_410_options,
-    },
-    { .name = "Path of Exile (32-bit, Steam)",
-      .executable = "PathOfExileSteam.exe",
-      .num_options = 2,
-      .options = application_413_options,
-    },
-    { .name = "Path of Exile (64-bit)",
-      .executable = "PathOfExile_x64.exe",
-      .num_options = 2,
-      .options = application_416_options,
-    },
-    { .name = "Path of Exile (32-bit)",
-      .executable = "PathOfExile.exe",
-      .num_options = 2,
-      .options = application_419_options,
-    },
-    { .name = "The Surge 2",
-      .application_name_match = "Fledge",
-      .num_options = 2,
-      .options = application_422_options,
-    },
-    { .name = "World War Z (and World War Z: Aftermath)",
-      .application_name_match = "WWZ|wwz",
-      .num_options = 3,
-      .options = application_425_options,
-    },
-    { .name = "DOOM VFR",
-      .application_name_match = "DOOM_VFR",
-      .num_options = 1,
-      .options = application_429_options,
-    },
-    { .name = "DOOM Eternal",
-      .application_name_match = "DOOMEternal",
-      .num_options = 1,
-      .options = application_431_options,
-    },
-    { .name = "No Man's Sky",
-      .application_name_match = "No Man's Sky",
-      .num_options = 1,
-      .options = application_433_options,
-    },
-    { .name = "Monster Hunter World",
-      .application_name_match = "MonsterHunterWorld.exe",
-      .num_options = 1,
-      .options = application_435_options,
-    },
-    { .name = "DOOM (2016)",
-      .application_name_match = "DOOM$",
-      .num_options = 1,
-      .options = application_437_options,
-    },
-    { .name = "Wolfenstein II",
-      .application_name_match = "Wolfenstein II The New Colossus",
-      .num_options = 1,
-      .options = application_439_options,
-    },
-    { .name = "RDR2",
-      .application_name_match = "Red Dead Redemption 2",
-      .num_options = 1,
-      .options = application_441_options,
-    },
-    { .name = "Resident Evil Village",
-      .application_name_match = "re8.exe",
-      .num_options = 1,
-      .options = application_443_options,
-    },
-    { .name = "F1 2021",
-      .application_name_match = "F1_2021_dx12.exe",
-      .num_options = 1,
-      .options = application_445_options,
-    },
-};
-
-static const struct driconf_device device_402 = {
-    .driver = "radv",
-    .num_engines = 2,
-    .engines = device_402_engines,
-    .num_applications = 18,
-    .applications = device_402_applications,
-};
-
-
-    
-static const struct driconf_option application_454_options[] = {
-    { .name = "force_gl_renderer", .value = "Adreno (TM) 618" },
-    { .name = "force_gl_vendor", .value = "Qualcomm" },
-};
-
-    
-static const struct driconf_option application_457_options[] = {
-    { .name = "force_gl_renderer", .value = "Adreno (TM) 630" },
-    { .name = "force_gl_vendor", .value = "Qualcomm" },
-};
-
-    
-static const struct driconf_option application_460_options[] = {
-    { .name = "force_gl_renderer", .value = "Adreno (TM) 618" },
-    { .name = "force_gl_vendor", .value = "Qualcomm" },
-};
-
-    
-static const struct driconf_option application_463_options[] = {
-    { .name = "force_gl_renderer", .value = "Adreno (TM) 630" },
-    { .name = "force_gl_vendor", .value = "Qualcomm" },
-};
-
-
-static const struct driconf_application device_453_applications[] = {
     { .name = "Call of Duty Mobile",
       .executable = "com.activision.callofduty.shooter",
       .num_options = 2,
-      .options = application_454_options,
+      .options = application_403_options,
     },
     { .name = "Asphalt 8",
       .executable = "com.gameloft.android.ANMP.GloftA8HM",
       .num_options = 2,
-      .options = application_457_options,
+      .options = application_406_options,
     },
     { .name = "Asphalt 9",
       .executable = "com.gameloft.android.ANMP.GloftA9HM",
       .num_options = 2,
-      .options = application_460_options,
+      .options = application_409_options,
     },
     { .name = "PUBG Mobile",
       .executable = "com.tencent.ig",
       .num_options = 2,
-      .options = application_463_options,
+      .options = application_412_options,
     },
 };
 
-static const struct driconf_device device_453 = {
+static const struct driconf_device device_402 = {
     .driver = "msm",
     .device = "FD618",
     .num_engines = 0,
     .num_applications = 4,
-    .applications = device_453_applications,
+    .applications = device_402_applications,
 };
 
 static const struct driconf_device *driconf[] = {
@@ -2246,5 +2023,4 @@ static const struct driconf_device *driconf[] = {
     &device_396,
     &device_399,
     &device_402,
-    &device_453,
 };

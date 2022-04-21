@@ -2148,10 +2148,8 @@ tc_buffer_map(struct pipe_context *_pipe,
     * only get resource_copy_region.
     */
    if (usage & PIPE_MAP_DISCARD_RANGE) {
-      struct threaded_transfer *ttrans = slab_alloc(&tc->pool_transfers);
+      struct threaded_transfer *ttrans = slab_zalloc(&tc->pool_transfers);
       uint8_t *map;
-
-      ttrans->staging = NULL;
 
       u_upload_alloc(tc->base.stream_uploader, 0,
                      box->width + (box->x % tc->map_buffer_alignment),

@@ -8936,7 +8936,12 @@ fs_visitor::allocate_registers(bool allow_spilling)
    if (last_scratch > 0) {
       ASSERTED unsigned max_scratch_size = 2 * 1024 * 1024;
 
-      prog_data->total_scratch = brw_get_scratch_size(last_scratch);
+      /* Take the max of any previously compiled variant of the shader. In the
+       * case of bindless shaders with return parts, this will also take the
+       * max of all parts.
+       */
+      prog_data->total_scratch = MAX2(brw_get_scratch_size(last_scratch),
+                                      prog_data->total_scratch);
 
       if (stage == MESA_SHADER_COMPUTE || stage == MESA_SHADER_KERNEL) {
          if (devinfo->is_haswell) {
@@ -9721,6 +9726,7 @@ brw_compile_fs(const struct brw_compiler *compiler,
       INTEL_DEBUG(params->debug_flag ? params->debug_flag : DEBUG_WM);
 
    prog_data->base.stage = MESA_SHADER_FRAGMENT;
+   prog_data->base.total_scratch = 0;
 
    const struct intel_device_info *devinfo = compiler->devinfo;
    const unsigned max_subgroup_size = compiler->devinfo->ver >= 6 ? 32 : 16;
@@ -10110,6 +10116,7 @@ brw_compile_cs(const struct brw_compiler *compiler,
 
    prog_data->base.stage = MESA_SHADER_COMPUTE;
    prog_data->base.total_shared = nir->info.shared_size;
+   prog_data->base.total_scratch = 0;
 
    /* Generate code for all the possible SIMD variants. */
    bool generate_all;
@@ -10523,6 +10530,7 @@ brw_compile_bs(const struct brw_compiler *compiler, void *log_data,
    const bool debug_enabled = INTEL_DEBUG(DEBUG_RT);
 
    prog_data->base.stage = shader->info.stage;
+   prog_data->base.total_scratch = 0;
    prog_data->max_stack_size = 0;
 
    fs_generator g(compiler, log_data, mem_ctx, &prog_data->base,
