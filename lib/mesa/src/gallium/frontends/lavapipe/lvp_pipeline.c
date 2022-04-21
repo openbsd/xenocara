@@ -602,6 +602,8 @@ lvp_shader_compile_to_ir(struct lvp_pipeline *pipeline,
       NIR_PASS(progress, nir, nir_opt_deref);
       NIR_PASS(progress, nir, nir_lower_vars_to_ssa);
 
+      NIR_PASS(progress, nir, nir_opt_copy_prop_vars);
+
       NIR_PASS(progress, nir, nir_copy_prop);
       NIR_PASS(progress, nir, nir_opt_dce);
       NIR_PASS(progress, nir, nir_opt_peephole_select, 8, true, true);

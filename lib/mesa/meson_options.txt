@@ -302,8 +302,9 @@ option(
 )
 option(
   'glvnd',
-  type : 'boolean',
-  value : false,
+  type : 'combo',
+  value : 'auto',
+  choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Enable GLVND support.'
 )
 option(
@@ -321,7 +322,7 @@ option(
 option(
   'glvnd-vendor-name',
   type : 'string',
-  value : 'mesa',
+  value : 'auto',
   description : 'Vendor name string to use for glvnd libraries'
 )
 option(
@@ -457,14 +458,16 @@ option(
 )
 option(
   'prefer-iris',
-  type : 'boolean',
-  value : true,
+  type : 'combo',
+  value : 'auto',
+  choices : ['auto', 'true', 'false'],
   description : 'Prefer new Intel iris driver over older i965 driver'
 )
 option(
   'prefer-crocus',
-  type : 'boolean',
-  value : false,
+  type : 'combo',
+  value : 'auto',
+  choices : ['auto', 'true', 'false'],
   description : 'Prefer new crocus driver over older i965 driver for gen4-7'
 )
 option('egl-lib-suffix',
@@ -529,4 +532,10 @@ option(
   type : 'boolean',
   value : false,
   description : 'Build gallium VMware/svga driver with mksGuestStats instrumentation.'
+)
+option(
+  'amber',
+  type : 'boolean',
+  value : false,
+  description : 'Configure LTS build to coexist with Mesa >= 22.0'
 )

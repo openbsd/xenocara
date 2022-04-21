@@ -6922,10 +6922,9 @@ iris_upload_compute_walker(struct iris_context *ice,
       iris_emit_cmd(batch, GENX(CFE_STATE), cfe) {
          cfe.MaximumNumberofThreads =
             devinfo->max_cs_threads * devinfo->subslice_total - 1;
-         if (prog_data->total_scratch > 0) {
-            cfe.ScratchSpaceBuffer =
-               iris_get_scratch_surf(ice, prog_data->total_scratch)->offset >> 4;
-         }
+         uint32_t scratch_addr = pin_scratch_space(ice, batch, prog_data,
+                                                   MESA_SHADER_COMPUTE);
+         cfe.ScratchSpaceBuffer = scratch_addr >> 4;
       }
    }
 

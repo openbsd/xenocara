@@ -262,8 +262,6 @@ spec@arb_texture_rg@texwrap formats-int bordercolor-swizzled@GL_RG32UI- swizzled
 spec@arb_texture_rg@texwrap formats-int bordercolor-swizzled@GL_RG8I- swizzled- border color only,Fail
 spec@arb_texture_rg@texwrap formats-int bordercolor-swizzled@GL_RG8UI- swizzled- border color only,Fail
 
-spec@arb_texture_view@rendering-layers-image,Fail
-spec@arb_texture_view@rendering-layers-image@layers rendering of image1DArray,Fail
 spec@arb_timer_query@timestamp-get,Fail
 spec@arb_transform_feedback3@arb_transform_feedback3-ext_interleaved_two_bufs_vs,Fail
 spec@arb_transform_feedback3@gl_skipcomponents1-1,Fail

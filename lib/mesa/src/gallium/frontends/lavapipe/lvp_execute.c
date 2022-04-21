@@ -573,40 +573,6 @@ static void handle_graphics_pipeline(struct vk_cmd_queue_entry *cmd,
       state->rs_dirty = true;
    }
 
-   state->disable_multisample = pipeline->disable_multisample;
-   if (pipeline->graphics_create_info.pMultisampleState) {
-      const VkPipelineMultisampleStateCreateInfo *ms = pipeline->graphics_create_info.pMultisampleState;
-      state->rs_state.multisample = ms->rasterizationSamples > 1;
-      state->sample_mask = ms->pSampleMask ? ms->pSampleMask[0] : 0xffffffff;
-      state->blend_state.alpha_to_coverage = ms->alphaToCoverageEnable;
-      state->blend_state.alpha_to_one = ms->alphaToOneEnable;
-      state->blend_dirty = true;
-      state->rs_dirty = true;
-      state->min_samples = 1;
-      state->sample_mask_dirty = true;
-      fb_samples = ms->rasterizationSamples;
-      if (ms->sampleShadingEnable) {
-         state->min_samples = ceil(ms->rasterizationSamples * ms->minSampleShading);
-         if (state->min_samples > 1)
-            state->min_samples = ms->rasterizationSamples;
-         if (state->min_samples < 1)
-            state->min_samples = 1;
-      }
-      if (pipeline->force_min_sample)
-         state->min_samples = ms->rasterizationSamples;
-      state->min_samples_dirty = true;
-   } else {
-      state->rs_state.multisample = false;
-      state->sample_mask_dirty = state->sample_mask != 0xffffffff;
-      state->sample_mask = 0xffffffff;
-      state->min_samples_dirty = state->min_samples;
-      state->min_samples = 0;
-      state->blend_dirty |= state->blend_state.alpha_to_coverage || state->blend_state.alpha_to_one;
-      state->blend_state.alpha_to_coverage = false;
-      state->blend_state.alpha_to_one = false;
-      state->rs_dirty = true;
-   }
-
    if (pipeline->graphics_create_info.pDepthStencilState) {
       const VkPipelineDepthStencilStateCreateInfo *dsa = pipeline->graphics_create_info.pDepthStencilState;
 
@@ -708,6 +674,40 @@ static void handle_graphics_pipeline(struct vk_cmd_queue_entry *cmd,
    } else {
       memset(&state->blend_state, 0, sizeof(state->blend_state));
       state->blend_dirty = true;
+   }
+
+   state->disable_multisample = pipeline->disable_multisample;
+   if (pipeline->graphics_create_info.pMultisampleState) {
+      const VkPipelineMultisampleStateCreateInfo *ms = pipeline->graphics_create_info.pMultisampleState;
+      state->rs_state.multisample = ms->rasterizationSamples > 1;
+      state->sample_mask = ms->pSampleMask ? ms->pSampleMask[0] : 0xffffffff;
+      state->blend_state.alpha_to_coverage = ms->alphaToCoverageEnable;
+      state->blend_state.alpha_to_one = ms->alphaToOneEnable;
+      state->blend_dirty = true;
+      state->rs_dirty = true;
+      state->min_samples = 1;
+      state->sample_mask_dirty = true;
+      fb_samples = ms->rasterizationSamples;
+      if (ms->sampleShadingEnable) {
+         state->min_samples = ceil(ms->rasterizationSamples * ms->minSampleShading);
+         if (state->min_samples > 1)
+            state->min_samples = ms->rasterizationSamples;
+         if (state->min_samples < 1)
+            state->min_samples = 1;
+      }
+      if (pipeline->force_min_sample)
+         state->min_samples = ms->rasterizationSamples;
+      state->min_samples_dirty = true;
+   } else {
+      state->rs_state.multisample = false;
+      state->sample_mask_dirty = state->sample_mask != 0xffffffff;
+      state->sample_mask = 0xffffffff;
+      state->min_samples_dirty = state->min_samples;
+      state->min_samples = 0;
+      state->blend_dirty |= state->blend_state.alpha_to_coverage || state->blend_state.alpha_to_one;
+      state->blend_state.alpha_to_coverage = false;
+      state->blend_state.alpha_to_one = false;
+      state->rs_dirty = true;
    }
 
    if (!dynamic_states[conv_dynamic_state_idx(VK_DYNAMIC_STATE_VERTEX_INPUT_EXT)]) {
@@ -1011,8 +1011,6 @@ static void fill_sampler_view_stage(struct rendering_state *state,
    */
    if (iv->subresourceRange.aspectMask == VK_IMAGE_ASPECT_DEPTH_BIT ||
        iv->subresourceRange.aspectMask == VK_IMAGE_ASPECT_STENCIL_BIT) {
-      if (templ.swizzle_a == PIPE_SWIZZLE_X)
-         templ.swizzle_r = PIPE_SWIZZLE_X;
       fix_depth_swizzle(templ.swizzle_r);
       fix_depth_swizzle(templ.swizzle_g);
       fix_depth_swizzle(templ.swizzle_b);

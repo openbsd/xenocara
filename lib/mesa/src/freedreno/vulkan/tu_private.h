@@ -1262,6 +1262,8 @@ struct tu_pipeline
 
    struct tu_lrz_pipeline lrz;
 
+   bool subpass_feedback_loop_ds;
+
    void *executables_mem_ctx;
    /* tu_pipeline_executable */
    struct util_dynarray executables;
@@ -1610,8 +1612,8 @@ struct tu_subpass
    uint32_t resolve_count;
    bool resolve_depth_stencil;
 
-   /* True if there is any feedback loop at all. */
-   bool feedback;
+   bool feedback_loop_color;
+   bool feedback_loop_ds;
 
    /* True if we must invalidate UCHE thanks to a feedback loop. */
    bool feedback_invalidate;

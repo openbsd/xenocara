@@ -696,13 +696,13 @@ allocate_desc_set(struct zink_context *ctx, struct zink_program *pg, enum zink_d
 #endif
       switch (type) {
       case ZINK_DESCRIPTOR_TYPE_SAMPLER_VIEW:
-         zds->sampler_states = (struct zink_sampler_state**)&samplers[i * pool->key.layout->num_descriptors];
+         zds->sampler_states = (struct zink_sampler_state**)&samplers[i * num_resources];
          FALLTHROUGH;
       case ZINK_DESCRIPTOR_TYPE_IMAGE:
-         zds->surfaces = &surfaces[i * pool->key.layout->num_descriptors];
+         zds->surfaces = &surfaces[i * num_resources];
          break;
       default:
-         zds->res_objs = (struct zink_resource_object**)&res_objs[i * pool->key.layout->num_descriptors];
+         zds->res_objs = (struct zink_resource_object**)&res_objs[i * num_resources];
          break;
       }
       zds->desc_set = desc_set[i];
@@ -790,20 +790,28 @@ zink_descriptor_set_get(struct zink_context *ctx,
 
    simple_mtx_lock(&pool->mtx);
    if (last_set && last_set->hash == hash && desc_state_equal(&last_set->key, &key)) {
+      bool was_recycled = false;
       zds = last_set;
       *cache_hit = !zds->invalid;
       if (zds->recycled) {
          struct hash_entry *he = _mesa_hash_table_search_pre_hashed(pool->free_desc_sets, hash, &key);
-         if (he)
+         if (he) {
+            was_recycled = true;
             _mesa_hash_table_remove(pool->free_desc_sets, he);
+         }
          zds->recycled = false;
       }
       if (zds->invalid) {
           if (zink_batch_usage_exists(zds->batch_uses))
              punt_invalid_set(zds, NULL);
-          else
+          else {
+             if (was_recycled) {
+                descriptor_set_invalidate(zds);
+                goto out;
+             }
              /* this set is guaranteed to be in pool->alloc_desc_sets */
              goto skip_hash_tables;
+          }
           zds = NULL;
       }
       if (zds)
@@ -828,6 +836,8 @@ zink_descriptor_set_get(struct zink_context *ctx,
       zds = (void*)he->data;
       *cache_hit = !zds->invalid;
       if (recycled) {
+         if (zds->invalid)
+            descriptor_set_invalidate(zds);
          /* need to migrate this entry back to the in-use hash */
          _mesa_hash_table_remove(pool->free_desc_sets, he);
          goto out;
@@ -1419,6 +1429,7 @@ zink_descriptors_update(struct zink_context *ctx, bool is_compute)
       if (pg->dd->push_usage) {
          if (pg->dd->fbfetch) {
             /* fbfetch is not cacheable: grab a lazy set because it's faster */
+            cache_hit = false;
             desc_set = zink_descriptors_alloc_lazy_push(ctx);
          } else {
             zds = zink_descriptor_set_get(ctx, ZINK_DESCRIPTOR_TYPES, is_compute, &cache_hit);

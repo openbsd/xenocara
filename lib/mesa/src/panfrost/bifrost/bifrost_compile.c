@@ -3834,7 +3834,7 @@ bifrost_compile_shader_nir(nir_shader *nir,
                 /* TODO: pack flat */
         }
 
-        info->ubo_mask = ctx->ubo_mask & BITSET_MASK(ctx->nir->info.num_ubos);
+        info->ubo_mask = ctx->ubo_mask & ((1 << ctx->nir->info.num_ubos) - 1);
 
         if (bifrost_debug & BIFROST_DBG_SHADERS && !skip_internal) {
                 disassemble_bifrost(stdout, binary->data, binary->size,

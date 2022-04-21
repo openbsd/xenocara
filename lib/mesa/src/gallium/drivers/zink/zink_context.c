@@ -745,10 +745,24 @@ zink_create_sampler_view(struct pipe_context *pctx, struct pipe_resource *pres,
       ivci.subresourceRange.aspectMask = sampler_aspect_from_format(state->format);
       /* samplers for stencil aspects of packed formats need to always use stencil swizzle */
       if (ivci.subresourceRange.aspectMask & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)) {
-         ivci.components.r = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_r));
-         ivci.components.g = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_g));
-         ivci.components.b = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_b));
-         ivci.components.a = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_a));
+         if (sampler_view->base.swizzle_r == PIPE_SWIZZLE_0 &&
+             sampler_view->base.swizzle_g == PIPE_SWIZZLE_0 &&
+             sampler_view->base.swizzle_b == PIPE_SWIZZLE_0 &&
+             sampler_view->base.swizzle_a == PIPE_SWIZZLE_X) {
+            /*
+             * When the state tracker asks for 000x swizzles, this is depth mode GL_ALPHA,
+             * however with the single dref fetch this will fail, so just spam all the channels.
+             */
+            ivci.components.r = VK_COMPONENT_SWIZZLE_R;
+            ivci.components.g = VK_COMPONENT_SWIZZLE_R;
+            ivci.components.b = VK_COMPONENT_SWIZZLE_R;
+            ivci.components.a = VK_COMPONENT_SWIZZLE_R;
+         } else {
+            ivci.components.r = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_r));
+            ivci.components.g = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_g));
+            ivci.components.b = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_b));
+            ivci.components.a = zink_component_mapping(clamp_zs_swizzle(sampler_view->base.swizzle_a));
+         }
       } else {
          /* if we have e.g., R8G8B8X8, then we have to ignore alpha since we're just emulating
           * these formats

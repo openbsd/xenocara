@@ -557,6 +557,7 @@ void
 zink_destroy_gfx_program(struct zink_screen *screen,
                          struct zink_gfx_program *prog)
 {
+   util_queue_fence_wait(&prog->base.cache_fence);
    if (prog->base.layout)
       VKSCR(DestroyPipelineLayout)(screen->dev, prog->base.layout, NULL);
 
@@ -601,6 +602,7 @@ void
 zink_destroy_compute_program(struct zink_screen *screen,
                          struct zink_compute_program *comp)
 {
+   util_queue_fence_wait(&comp->base.cache_fence);
    if (comp->base.layout)
       VKSCR(DestroyPipelineLayout)(screen->dev, comp->base.layout, NULL);
 

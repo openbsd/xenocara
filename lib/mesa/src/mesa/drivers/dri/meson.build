@@ -51,7 +51,7 @@ endif
 
 if _dri_drivers != []
   libmesa_dri_drivers = shared_library(
-    'mesa_dri_drivers',
+    '@0@_dri_drivers'.format(glvnd_vendor_name),
     [],
     link_whole : _dri_drivers,
     link_with : [

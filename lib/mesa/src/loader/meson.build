@@ -41,11 +41,19 @@ loader_c_args = [
   '-DDEFAULT_DRIVER_DIR="@0@"'.format(dri_search_path),
 ]
 
-if get_option('prefer-iris')
+_prefer_iris = get_option('prefer-iris')
+if _prefer_iris == 'auto'
+  _prefer_iris = amber ? 'false' : 'true'
+endif
+if _prefer_iris == 'true'
   loader_c_args += ['-DPREFER_IRIS']
 endif
 
-if get_option('prefer-crocus')
+_prefer_crocus = get_option('prefer-crocus')
+if _prefer_crocus == 'auto'
+  _prefer_crocus = 'false'
+endif
+if _prefer_crocus == 'true'
   loader_c_args += ['-DPREFER_CROCUS']
 endif
 
