@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.882 2021/09/16 19:49:13 tom Exp $ */
+/* $XTermId: main.c,v 1.886 2022/02/22 23:35:41 tom Exp $ */
 
 /*
- * Copyright 2002-2020,2021 by Thomas E. Dickey
+ * Copyright 2002-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2897,7 +2897,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
     }
-
 #if OPT_MAXIMIZE
     if (resource.maximized)
 	RequestMaximize(term, True);
@@ -3705,6 +3704,72 @@ resetShell(char *oldPath)
     if (!IsEmpty(envPath))
 	xtermSetenv("SHELL", newPath);
     return newPath;
+}
+
+/*
+ * Trim unwanted environment variables:
+ *
+ * DESKTOP_STARTUP_ID
+ *	standards.freedesktop.org/startup-notification-spec/
+ * notes that this variable is used when a "reliable" mechanism is
+ * not available; in practice it must be unset to avoid confusing
+ * GTK applications.
+ *
+ * XCURSOR_PATH
+ * We set this temporarily to work around poor design of Xcursor.  Unset it
+ * here to avoid confusion.
+ *
+ * Other...
+ * These are set by other terminal emulators or non-standard libraries, and are
+ * a nuisance if one starts xterm from a shell inside one of those.
+ */
+static void
+xtermTrimEnv(void)
+{
+#define DATA(wild,name) { wild, #name }
+    static struct {
+	int wild;
+	const char *name;
+    } table[] = {
+	DATA(0, DEFAULT_COLORS),
+	    DATA(0, DESKTOP_STARTUP_ID),
+	    DATA(0, WCWIDTH_CJK_LEGACY),
+	    DATA(0, XCURSOR_PATH),
+	    DATA(1, COLORFGBG),
+	    DATA(1, COLORTERM),
+	    DATA(1, ITERM2_),
+	    DATA(1, MC_),
+	    DATA(1, PUTTY),
+	    DATA(1, RXVT_),
+	    DATA(1, URXVT_),
+	    DATA(1, VTE_),
+    };
+#undef DATA
+    Cardinal n;
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	int s;
+	if (table[n].wild) {
+	    size_t srclen = strlen(table[n].name);
+	    for (s = 0; environ[s] != NULL; ++s) {
+		size_t dstlen = strlen(environ[s]);
+		if (dstlen > srclen) {
+		    char *dstend = strchr(environ[s], '=');
+		    char *my_var;
+		    if (dstend != NULL &&
+			(dstlen = (size_t) (dstend - environ[s])) >= srclen &&
+			!strncmp(table[n].name, environ[s], dstlen) &&
+			(my_var = x_strdup(environ[s])) != NULL) {
+			my_var[dstlen] = '\0';
+			xtermUnsetenv(my_var);
+			free(my_var);
+		    }
+		}
+	    }
+	} else if (getenv(table[n].name) != NULL) {
+	    xtermUnsetenv(table[n].name);
+	}
+    }
 }
 
 /*
@@ -4623,19 +4688,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif
 
 	    xtermCopyEnv(environ);
-
-	    /*
-	     * standards.freedesktop.org/startup-notification-spec/
-	     * notes that this variable is used when a "reliable" mechanism is
-	     * not available; in practice it must be unset to avoid confusing
-	     * GTK applications.
-	     */
-	    xtermUnsetenv("DESKTOP_STARTUP_ID");
-	    /*
-	     * We set this temporarily to work around poor design of Xcursor.
-	     * Unset it here to avoid confusion.
-	     */
-	    xtermUnsetenv("XCURSOR_PATH");
+	    xtermTrimEnv();
 
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)
@@ -5503,7 +5556,7 @@ Exit(int n)
 	noleaks_charproc();
 	noleaks_ptydata();
 #if OPT_GRAPHICS
-	noleaks_graphics();
+	noleaks_graphics(dpy);
 #endif
 #if OPT_WIDE_CHARS
 	noleaks_CharacterClass();

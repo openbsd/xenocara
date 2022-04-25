@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: title.sh,v 1.22 2021/03/03 01:16:53 tom Exp $
+# $XTermId: title.sh,v 1.23 2022/02/13 14:36:47 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2021,2021 by Thomas E. Dickey
+# Copyright 1999-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -71,12 +71,8 @@ stty $old
 original=`echo "$original" |sed -e 's/^...//' -e 's/.$//'`
 original=${ESC}]2\;"${original}"${SUF}
 
-if ( trap "echo exit" EXIT 2>/dev/null ) >/dev/null
-then
-    trap '$CMD $OPT "$original" >/dev/tty; exit' EXIT HUP INT QUIT TERM
-else
-    trap '$CMD $OPT "$original" >/dev/tty; exit' 0    1   2   3    15
-fi
+trap '$CMD $OPT "$original" >/dev/tty; exit 1' 1 2 3 15
+trap '$CMD $OPT "$original" >/dev/tty' 0
 
 while true
 do

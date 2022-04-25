@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.12 2021/01/27 00:18:09 tom Exp $
+# $XTermId: plink.sh,v 1.16 2022/02/13 14:30:17 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2013,2021 by Thomas E. Dickey
+# Copyright 2001-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -35,15 +35,28 @@
 # Reduce the number of dynamic libraries used to link an executable.
 LINKIT=
 ASNEED=no
-while test $# != 0
+NO_LTO=
+
+# gcc's link-time optimization is very slow - reduce usage of that.
+case "$*" in
+*-flto=*|-flto\ )
+	NO_LTO=-fno-lto
+	;;
+esac
+
+while [ $# != 0 ]
 do
-	if test $ASNEED = no && test -n "$LINKIT"
+	if [ $ASNEED = no ] && [ -n "$LINKIT" ]
 	then
 		ASNEED=yes
 		OPT=-Wl,-as-needed
-		if ( eval $LINKIT $OPT "$@" >/dev/null 2>/dev/null )
+		warned=`mktemp`
+		trap "rm -f $warned; exit 1" 1 2 3 15
+		trap "rm -f $warned" 0
+		if ( eval $LINKIT $OPT $NO_LTO "$@" >"$warned" 2>&1 )
 		then
-			WARNED=`eval $LINKIT $OPT "$@" 2>&1`
+			WARNED=`cat "$warned"`
+			rm -f "$warned"
 			case ".$WARNED" in
 			*Warning*|*nsupported*|*nrecognized*|*nknown*)
 				;;
@@ -52,6 +65,8 @@ do
 				break
 				;;
 			esac
+		else
+			rm -f "$warned"
 		fi
 	fi
 
@@ -65,7 +80,7 @@ do
 		;;
 	-l*)
 		echo "testing if $OPT is needed"
-		if ( eval $LINKIT "$@" >/dev/null 2>/dev/null )
+		if ( eval $LINKIT $NO_LTO "$@" >/dev/null 2>&1 )
 		then
 			: echo ...no
 		else

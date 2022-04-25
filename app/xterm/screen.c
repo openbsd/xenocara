@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.602 2021/08/22 20:30:10 tom Exp $ */
+/* $XTermId: screen.c,v 1.623 2022/03/09 01:20:09 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -176,7 +176,12 @@ scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
  * Given a block of data, build index to it in the 'base' parameter.
  */
 void
-setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned ncol)
+setupLineData(TScreen *screen,
+	      ScrnBuf base,
+	      Char *data,
+	      unsigned nrow,
+	      unsigned ncol,
+	      Bool bottom)
 {
     unsigned i;
     unsigned offset = 0;
@@ -194,6 +199,13 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
 
     (void) screen;
     AlignValue(ncol);
+
+    (void) bottom;
+#if OPT_STATUS_LINE
+    if (bottom) {
+	AddStatusLineRows(nrow);
+    }
+#endif
 
     skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
     skipNcolCharData = (ncol * SizeofScrnPtr(charData));
@@ -230,8 +242,7 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
 #define ExtractScrnData(name) \
 		memcpy(dstPtrs->name, \
 		       ((LineData *) srcPtrs)->name,\
-		       dstCols * sizeof(dstPtrs->name[0])); \
-		nextPtr += (srcCols * sizeof(dstPtrs->name[0]))
+		       dstCols * sizeof(dstPtrs->name[0]))
 
 /*
  * As part of reallocating the screen buffer when resizing, extract from
@@ -266,6 +277,7 @@ allocScrnHead(TScreen *screen, unsigned nrow)
     unsigned size = scrnHeadSize(screen, 1);
 
     (void) screen;
+    AddStatusLineRows(nrow);
     result = (ScrnPtr *) calloc((size_t) nrow, (size_t) size);
     if (result == 0)
 	SysError(ERROR_SCALLOC);
@@ -313,13 +325,16 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 }
 
 Char *
-allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol)
+allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol, Bool bottom)
 {
     Char *result = 0;
     size_t length;
 
     AlignValue(ncol);
-    length = ((nrow + 1) * sizeofScrnRow(screen, ncol));
+    if (bottom) {
+	AddStatusLineRows(nrow);
+    }
+    length = (nrow * sizeofScrnRow(screen, ncol));
     if (length == 0
 	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
 	  SysError(ERROR_SCALLOC2);
@@ -350,9 +365,9 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
 
     if (nrow != 0) {
 	base = allocScrnHead(screen, nrow);
-	*addr = allocScrnData(screen, nrow, ncol);
+	*addr = allocScrnData(screen, nrow, ncol, True);
 
-	setupLineData(screen, base, *addr, nrow, ncol);
+	setupLineData(screen, base, *addr, nrow, ncol, True);
     }
 
     TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, (void *) base));
@@ -469,7 +484,7 @@ Reallocate(XtermWidget xw,
      * Create the new buffer space and copy old buffer contents there, line by
      * line.
      */
-    newBufData = allocScrnData(screen, nrow, ncol);
+    newBufData = allocScrnData(screen, nrow, ncol, True);
     *sbufaddr = newBufData;
 
     minrows = (oldrow < nrow) ? oldrow : nrow;
@@ -480,7 +495,7 @@ Reallocate(XtermWidget xw,
 	}
     }
 
-    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol, True);
     extractScrnData(screen, newBufHead, oldBufHead, minrows, 0);
 
     /* Now free the old data */
@@ -511,12 +526,9 @@ ReallocateBufOffsets(XtermWidget xw,
 
     unsigned old_jump = scrnHeadSize(screen, 1);
     unsigned new_jump;
-    unsigned new_ptrs = 1 + (unsigned) (screen->max_combining);
     unsigned dstCols = ncol;
-    unsigned srcCols = ncol;
     LineData *dstPtrs;
     LineData *srcPtrs;
-    Char *nextPtr;
 
     assert(nrow != 0);
     assert(ncol != 0);
@@ -536,12 +548,10 @@ ReallocateBufOffsets(XtermWidget xw,
 
     new_jump = scrnHeadSize(screen, 1);
     newBufHead = allocScrnHead(screen, nrow);
-    *sbufaddr = allocScrnData(screen, nrow, ncol);
-    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+    *sbufaddr = allocScrnData(screen, nrow, ncol, True);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol, True);
 
     screen->wide_chars = False;
-
-    nextPtr = *sbufaddr;
 
     srcPtrs = (LineData *) oldBufHead;
     dstPtrs = (LineData *) newBufHead;
@@ -553,7 +563,6 @@ ReallocateBufOffsets(XtermWidget xw,
 #endif
 	ExtractScrnData(charData);
 
-	nextPtr += ncol * new_ptrs;
 	srcPtrs = LineDataAddr(srcPtrs, old_jump);
 	dstPtrs = LineDataAddr(dstPtrs, new_jump);
     }
@@ -976,10 +985,6 @@ ScrnWriteText(XtermWidget xw,
     screen->last_written_row = screen->cur_row;
 #endif
 
-    TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n",
-	   screen->cur_col,
-	   screen->cur_row,
-	   real_width));
     chararea_clear_displayed_graphics(screen,
 				      screen->cur_col,
 				      screen->cur_row,
@@ -1056,11 +1061,6 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	base = ScrnBufAddr(base, jump);
     }
 
-    TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n",
-	   where,
-	   screen->savelines,
-	   n,
-	   screen->max_col));
     /* FIXME: this looks wrong -- rcombs */
     chararea_clear_displayed_graphics(screen,
 				      where + screen->savelines,
@@ -1292,7 +1292,7 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j <= last - (int) n; ++j) \
+    	for (j = col; j < last - (int) n; ++j) \
 	    data[j] = data[j + (int) n]
 
     TScreen *screen = TScreenOf(xw);
@@ -1395,7 +1395,7 @@ void
 ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
-    if (screen->show_wrap_marks) {
+    if (screen->show_wrap_marks && row >= 0 && row <= screen->max_row) {
 	Bool set = (Bool) LineTstWrapped(ld);
 	int y = row * FontHeight(screen) + screen->border;
 	int x = LineCursorX(screen, ld, screen->max_col + 1);
@@ -1447,6 +1447,14 @@ ScrnRefresh(XtermWidget xw,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
+#if OPT_STATUS_LINE
+    if (!recurse && (maxrow == screen->max_row) && IsStatusShown(screen)) {
+	TRACE(("...allow a row for status-line\n"));
+	nrows += StatusLineRows;
+	maxrow += StatusLineRows;
+    }
+#endif
+
     ++recurse;
 
     if (screen->cursorp.col >= leftcol
@@ -1489,7 +1497,7 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
-	if (lastind < 0 || lastind > screen->max_row)
+	if (lastind < 0 || lastind > LastRowNumber(screen))
 	    continue;
 
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
@@ -1797,11 +1805,12 @@ ScrnRefresh(XtermWidget xw,
 	if (gc_changes & BG_COLOR)
 	    SGR_Background(xw, xw->cur_background);
     });
+    (void) gc_changes;
 
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
 	first_time = 0;
-	update_winsize(screen->respond, nrows, ncols, xw->core.height, xw->core.width);
+	update_winsize(screen, nrows, ncols, xw->core.height, xw->core.width);
     }
 #endif
     recurse--;
@@ -1860,6 +1869,72 @@ ClearBufRows(XtermWidget xw,
     }
 }
 
+#if OPT_STATUS_LINE
+static LineData *
+freeLineData(TScreen *screen, LineData *source)
+{
+    (void) screen;
+    if (source != NULL) {
+	free(source->attribs);
+	free(source->charData);
+#if OPT_ISO_COLORS
+	free(source->color);
+#endif
+#if OPT_WIDE_CHARS
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for_each_combData(off, source) {
+		free(source->combData[off]);
+	    }
+	});
+#endif
+	free(source);
+	source = NULL;
+    }
+    return source;
+}
+
+#define ALLOC_IT(field) \
+    if (result != NULL) { \
+	if ((result->field = calloc(ncol, sizeof(*result->field))) == NULL) { \
+	    result = freeLineData(screen, result); \
+	} \
+    }
+
+/*
+ * Allocate a temporary LineData structure, which is not part of the index.
+ */
+static LineData *
+allocLineData(TScreen *screen, LineData *source)
+{
+    LineData *result = NULL;
+    Dimension ncol = (Dimension) (source->lineSize + 1);
+    size_t size = sizeof(*result);
+#if OPT_WIDE_CHARS
+    size += source->combSize * sizeof(result->combData[0]);
+#endif
+    if ((result = calloc(1, size)) != NULL) {
+	result->lineSize = ncol;
+	ALLOC_IT(attribs);
+#if OPT_ISO_COLORS
+	ALLOC_IT(color);
+#endif
+	ALLOC_IT(charData);
+#if OPT_WIDE_CHARS
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for_each_combData(off, source) {
+		ALLOC_IT(combData[off]);
+	    }
+	});
+#endif
+    }
+    return result;
+}
+
+#undef ALLOC_IT
+#endif /* OPT_STATUS_LINE */
+
 /*
   Resizes screen:
   1. If new window would have fractional characters, sets window size so as to
@@ -1874,9 +1949,8 @@ ClearBufRows(XtermWidget xw,
   5. Sets screen->max_row and screen->max_col to reflect new size
   6. Maintains the inner border (and clears the border on the screen).
   7. Clears origin mode and sets scrolling region to be entire screen.
-  8. Returns 0
   */
-int
+void
 ScreenResize(XtermWidget xw,
 	     int width,
 	     int height,
@@ -1886,6 +1960,11 @@ ScreenResize(XtermWidget xw,
     int rows, cols;
     const int border = 2 * screen->border;
     int move_down_by = 0;
+    Boolean forced = False;
+
+#if OPT_STATUS_LINE
+    LineData *savedStatus = NULL;
+#endif
 
     TRACE(("ScreenResize %dx%d border 2*%d font %dx%d\n",
 	   height, width, screen->border,
@@ -1893,6 +1972,43 @@ ScreenResize(XtermWidget xw,
 
     assert(width > 0);
     assert(height > 0);
+
+    TRACE(("...computing rows/cols: %.2f %.2f\n",
+	   (double) (height - border) / FontHeight(screen),
+	   (double) (width - border - ScrollbarWidth(screen)) / FontWidth(screen)));
+
+    rows = (height - border) / FontHeight(screen);
+    cols = (width - border - ScrollbarWidth(screen)) / FontWidth(screen);
+    if (rows < 1)
+	rows = 1;
+    if (cols < 1)
+	cols = 1;
+
+#if OPT_STATUS_LINE
+    TRACE(("...StatusShown %d/%d\n", IsStatusShown(screen), screen->status_shown));
+    if (IsStatusShown(screen)) {
+	int oldRow = MaxRows(screen);
+	TRACE(("...status line is currently on row %d(%d-%d) vs %d\n",
+	       oldRow,
+	       MaxRows(screen),
+	       (screen->status_shown ? 0 : StatusLineRows),
+	       rows));
+	if (1 || rows != oldRow) {
+	    LineData *oldLD = getLineData(screen, oldRow);
+	    TRACE(("...will move status-line from row %d to %d\n",
+		   oldRow,
+		   rows));
+	    savedStatus = allocLineData(screen, oldLD);
+	    copyLineData(savedStatus, oldLD);
+	    TRACE(("...copied::%s\n",
+		   visibleIChars(savedStatus->charData,
+				 savedStatus->lineSize)));
+	}
+	TRACE(("...discount a row for status-line\n"));
+	rows -= StatusLineRows;
+	height -= FontHeight(screen) * StatusLineRows;
+    }
+#endif
 
     if (screen->is_running) {
 	/* clear the right and bottom internal border because of NorthWest
@@ -1909,19 +2025,10 @@ ScreenResize(XtermWidget xw,
 	}
     }
 
-    TRACE(("...computing rows/cols: %.2f %.2f\n",
-	   (double) (height - border) / FontHeight(screen),
-	   (double) (width - border - ScrollbarWidth(screen)) / FontWidth(screen)));
-
-    rows = (height - border) / FontHeight(screen);
-    cols = (width - border - ScrollbarWidth(screen)) / FontWidth(screen);
-    if (rows < 1)
-	rows = 1;
-    if (cols < 1)
-	cols = 1;
-
     /* update buffers if the screen has changed size */
-    if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+    if (forced) {
+	;
+    } else if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -2085,8 +2192,15 @@ ScreenResize(XtermWidget xw,
 	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
 
 	scroll_displayed_graphics(xw, -move_down_by);
-    } else if (FullHeight(screen) == height && FullWidth(screen) == width)
-	return (0);		/* nothing has changed at all */
+    } else if (FullHeight(screen) == height && FullWidth(screen) == width) {
+#if OPT_STATUS_LINE
+	if (savedStatus != NULL) {
+	    TRACE(("...status line is currently saved!\n"));
+	    freeLineData(screen, savedStatus);
+	}
+#endif
+	return;			/* nothing has changed at all */
+    }
 
     screen->fullVwin.fullheight = (Dimension) height;
     screen->fullVwin.fullwidth = (Dimension) width;
@@ -2119,8 +2233,19 @@ ScreenResize(XtermWidget xw,
     }
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_STATUS_LINE
+    if (savedStatus != NULL) {
+	int newRow = LastRowNumber(screen);
+	LineData *newLD = getLineData(screen, newRow);
+	TRACE(("...status line is currently on row %d\n",
+	       LastRowNumber(screen)));
+	copyLineData(newLD, savedStatus);
+	freeLineData(screen, savedStatus);
+    }
+#endif
+
 #ifdef TTYSIZE_STRUCT
-    if (update_winsize(screen->respond, rows, cols, height, width) == 0) {
+    if (update_winsize(screen, rows, cols, height, width) == 0) {
 #if defined(SIGWINCH) && defined(TIOCGPGRP)
 	if (screen->pid > 1) {
 	    int pgrp;
@@ -2136,7 +2261,7 @@ ScreenResize(XtermWidget xw,
 #else
     TRACE(("ScreenResize cannot do anything to pty\n"));
 #endif /* TTYSIZE_STRUCT */
-    return (0);
+    return;
 }
 
 /*
@@ -2341,6 +2466,10 @@ ScrnFillRectangle(XtermWidget xw,
 		}
 	    })
 	}
+	chararea_clear_displayed_graphics(screen,
+					  left,
+					  top,
+					  numcols, numrows);
 	ScrnUpdate(xw,
 		   top,
 		   left - b_left,
@@ -2643,6 +2772,10 @@ ScrnWipeRectangle(XtermWidget xw,
 		}
 	    }
 	}
+	chararea_clear_displayed_graphics(screen,
+					  left,
+					  top,
+					  numcols, numrows);
 	ScrnUpdate(xw,
 		   top,
 		   left - b_left,

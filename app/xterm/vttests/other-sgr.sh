@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: other-sgr.sh,v 1.6 2021/03/03 01:16:53 tom Exp $
+# $XTermId: other-sgr.sh,v 1.7 2022/02/13 14:36:10 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018,2021 by Thomas E. Dickey
+# Copyright 2018-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -55,12 +55,8 @@ for verb in "printf" "print" ; do
 done
 rm -f $TMP
 
-if ( trap "echo exit" EXIT 2>/dev/null ) >/dev/null
-then
-    trap '$CMD $OPT "${CSI}0m"; exit' EXIT HUP INT QUIT TERM
-else
-    trap '$CMD $OPT "${CSI}0m"; exit' 0    1   2   3    15
-fi
+trap '$CMD $OPT "${CSI}0m"; exit 1' 1 2 3 15
+trap '$CMD $OPT "${CSI}0m"' 0
 
 echo "${CSI}0m"
 while true

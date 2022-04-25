@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2021)
-               updated for XTerm Patch #369 (2021/09/11)
+               updated for XTerm Patch #371 (2021/12/26)
 
 
 
@@ -424,6 +424,8 @@ DCS $ q Pt ST
             s       -> DECSLRM
             t       -> DECSLPP
             $ |     -> DECSCPP
+            $ }     -> DECSASD
+            $ ~     -> DECSSDT
             * |     -> DECSNLS
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
@@ -601,12 +603,23 @@ CSI ? Pi ; Pa ; Pv S
               done once, using resource-values.
           o   Graphics geometry is not necessarily the same as "window
               size" (see the dtterm window manipulation extensions).
-              For example, xterm limits the maximum graphics geometry at
-              compile time (1000x1000 as of version 328) although the
-              window size can be larger.
+              XTerm limits the maximum graphics geometry according to
+              the maxGraphicSize resource.
+              The maxGraphicSize resource can be either an explicit
+              heightxwidth (default: 1000x1000 as of version 328) or the
+              word "auto" (telling XTerm to use limits the decGraphicsID
+              or decTerminalID resource to determine the limits).
+          o   XTerm uses the minimum of the window size and the graphic
+              size to obtain the maximum geometry.
           o   While resizing a window will always change the current
               graphics geometry, the reverse is not true.  Setting
               graphics geometry does not affect the window size.
+          o   If xterm is able to support graphics (compile-time), but
+              is not configured (runtime) for graphics, these responses
+              will indicate a failure.  Other implementations which do
+              not use the maximum graphics dimensions but are configured
+              for graphics should report zeroes for the maximum geometry
+              rather than a failure.
 
 CSI Ps T  Scroll down Ps lines (default = 1) (SD), VT420.
 
@@ -1333,10 +1346,10 @@ CSI ? Pm r
           restored independently.  Only those modes listed as parameters
           are restored.
 
-CSI Pt ; Pl ; Pb ; Pr ; Ps $ r
+CSI Pt ; Pl ; Pb ; Pr ; Pm $ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
-            Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
+            Pm denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 
 CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
           also ANSI.SYS).
@@ -1463,11 +1476,11 @@ CSI Ps SP t
             Ps = 2 , 3  or 4  -> low.
             Ps = 5 , 6 , 7 , or 8  -> high.
 
-CSI Pt ; Pl ; Pb ; Pr ; Ps $ t
+CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
           Reverse Attributes in Rectangular Area (DECRARA), VT400 and
           up.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
-            Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
+            Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
 
@@ -1668,8 +1681,19 @@ CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
 CSI Ps ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
 
+CSI Ps $ }
+          Select active status display (DECSASD), VT320 and up.
+            Ps = 0  -> main (default)
+            Ps = 1  -> status line
+
 CSI Ps ' ~
           Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
+
+CSI Ps $ ~
+          Select status line type (DECSSDT), VT320 and up.
+            Ps = 0  -> none
+            Ps = 1  -> indicator (default)
+            Ps = 2  -> host-writable.
 
 
 Operating System Commands

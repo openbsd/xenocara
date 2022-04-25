@@ -1,4 +1,4 @@
-MANIFEST for xterm-369, version xterm-369
+MANIFEST for xterm, version xterm-372
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -203,16 +203,34 @@ vttests/88colors.pl             sample script showing 88-colors
 vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
+vttests/acs.pl                  simple test for mapping alternate-character-set
+vttests/altchars.sh             simple test for alternate-character-set
+vttests/blink.pl                test scrollback of blinking text
+vttests/bold-italics.pl         Test bold-italics for single- and double-width characters.
+vttests/bounce.sh               iconify/deiconify, recording the window properties
 vttests/closest-rgb.pl          demo of color-distances
+vttests/ctlpix.sh               display control/picture codes
+vttests/cursor.pl               exercise cursor-movement, to check color-contrasts
+vttests/decsed.pl               exercise DECSED with/without DECSCA
+vttests/dl.sh                   simple test for delete-line with margins
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.pl              demo for dynamic colors
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/dynamic2.sh             complete example of dynamic colors
+vttests/erase.pl                Generate a test-pattern, erasing parts of the text on each line.
 vttests/fonts.sh                script to demonstrate font-switching sequences
+vttests/halves.pl               test partial-update of double-cell characters
+vttests/il.sh                   simple test for insert-line with margins
+vttests/insdelln.pl             Tests insert/delete-line feature in xterm.
+vttests/iso2022.pl              show ISO-2022 characters, by default GL and GR, optionally G1/G2/G3
+vttests/lrmm-scroll.pl          Tests scroll left/right feature in xterm, optionally using margins.
 vttests/modify-keys.pl          illustrate modifyOtherKeys with a table
 vttests/mouse-codes             demo script for mouse-codes
+vttests/nrcs.pl                 a more direct way of exercising character sets than vttest.
 vttests/other-sgr.sh            demonstrate non-VTxx SGRs
+vttests/palettes.pl             Demonstrate how to set palette colors using xterm's control sequences.
 vttests/paste64.pl              script to test base64-selection option
+vttests/pointer-shapes.sh       exercise xterm's pointer-shape control
 vttests/print-vt-chars.pl       demo-script
 vttests/query-color.pl          demonstrate OSC 4
 vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
@@ -222,7 +240,19 @@ vttests/query-xres.pl           test/demo for DCS+Q
 vttests/report-sgr.pl           demonstrate report-sgr
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
+vttests/scroll.pl               Tests insert/delete-line feature in xterm.
+vttests/setpos.pl               Exercise CSI 3/13 t which set/get the window position.
 vttests/sgrPushPop.pl           demonstrate xterm SGR push/pop
 vttests/sgrPushPop2.pl          demonstrate xterm SGR push/pop for colors
+vttests/tab0.sh                 Demonstrate hard-tabs.
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action
+vttests/titlestack.pl           Test the title-stack and title-mode options of xterm.
+vttests/unascii.sh              display the characters recognized by xterm in AsciiEquivs
+vttests/under-latin.pl          Print a text-test pattern using Latin-1 characters.
+vttests/utf8.pl                 display the given Unicode characters, given their hex or decimal values.
+vttests/version.sh              Demonstrate version-string from xterm #354
+vttests/vt52chars.pl            show the vt52 graphic characters, annotatated in a table.
+vttests/wrap.pl                 Generates a series of wrapping lines, according to the terminal width.
+vttests/xorblink.pl             walk through the different states of cursor-blinking, with annotation
+vttests/xtra-scroll.pl          Interactively test screen-updates, e.g., cdXtraScroll and and tiXtraScroll

@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2020,2021 by Thomas E. Dickey                              *
+ * Copyright 1997-2021,2022 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2358 2021/09/21 23:48:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.2406 2022/03/10 01:00:00 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2020,2021 by <a href=
+  <p>Copyright &copy; 1997-2021,2022 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,12 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_372">Patch #372 - 2022/03/09</a></li>
+
+    <li><a href="#xterm_371">Patch #371 - 2022/02/24</a></li>
+
+    <li><a href="#xterm_370">Patch #370 - 2021/11/13</a></li>
+
     <li><a href="#xterm_369">Patch #369 - 2021/09/21</a></li>
 
     <li><a href="#xterm_368">Patch #368 - 2021/06/07</a></li>
@@ -1016,6 +1022,171 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_372" id="xterm_372">Patch #372 -
+  2022/03/09</a></h1>
+
+  <ul>
+    <li>amend allocation/freeing of scrollback lines, eliminating
+    an adjustment for status-line added in <a href=
+    "#xterm_371">patch #371</a> (report/testcase by Rajeev V.
+    Pillai).</li>
+  </ul>
+
+  <h1><a name="xterm_371" id="xterm_371">Patch #371 -
+  2022/02/24</a></h1>
+
+  <ul>
+    <li>drop double-buffer default from test-packages, since that
+    interferes with status-line.</li>
+
+    <li>add <code>faceSize7</code> to table in
+    <code>charproc.c</code>, overlooked in <a href=
+    "#xterm_360">patch #360</a> (patch by Vladimir A. Pavlov).</li>
+
+    <li>use <code>XDrawString</code> rather than
+    <code>XDrawString16</code> for text when the latter is not
+    needed.</li>
+
+    <li>improve performance for initializing/reusing graphic
+    objects in the SIXEL feature.</li>
+
+    <li>improve error-checking for <code>resize</code>.</li>
+
+    <li>fix errata in manual page (Debian #988221).</li>
+
+    <li>extended list of environment variables to purge on startup,
+    i.e., in case a user starts xterm from another terminal
+    emulator.</li>
+
+    <li>add comment in <code>cursor.c</code> to explain why
+    autowrap (<code>DECAWM</code>) does not apply to data
+    saved/restored with save/restore cursor-operations (report by
+    Thomas Wolff).</li>
+
+    <li>add special case in generating the combining-character
+    table in <code>wcwidth.c</code>, for Hangul Jamo Extended-B
+    (report by Luis Javier Merino).</li>
+
+    <li>simplify/improve portability of <code>trap</code> commands
+    in shell-scripts.</li>
+
+    <li>update configure options<br>
+    <code>--disable-rectangles</code>,<br>
+    <code>--disable-tcap-fkeys</code> and<br>
+    <code>--disable-tcap-query</code><br>
+    to account for changed default settings.</li>
+
+    <li>rather than ignore empty parameter for setting title, use
+    that to reset it to &ldquo;xterm&rdquo; for scripting.</li>
+
+    <li>check for out-of-bounds condition while drawing sixels, and
+    quit that operation (report by Nick Black).</li>
+
+    <li>add fallback definition for <code>PROJECTROOT</code> so
+    that a suitable default location for <code>luit</code> will be
+    compiled-in on build-servers.</li>
+
+    <li>implement DEC status-line controls DECSASD/DECSSDT:
+      <ul>
+        <li>decode controls, set state</li>
+
+        <li>implement DECRQSS responses</li>
+
+        <li>implement indicator-style status-line</li>
+
+        <li>add configure option
+        <code>--enable-status-line</code></li>
+
+        <li>add resource <code>indicatorFormat</code></li>
+
+        <li>implement host-writable status-line, able to handle
+        video-attributes and simple left/right cursor movement.
+        This disallows all of the DEC/xterm private modes such as
+        switching to/from the alternate screen.</li>
+
+        <li>move the status-line if the window is resized.</li>
+
+        <li><em>Note:</em> the associated screen-resizing does not
+        work for the special case of TrueType fonts with
+        double-buffering (see note in <a href=
+        "#xterm_349_xft_bug">patch #349</a>).</li>
+      </ul>
+    </li>
+
+    <li>modify configure-script fixup for <code>-Werror</code>
+    options to exclude fixup for <code>-Werror=format</code>, e.g.,
+    <code>-Werror=format-security</code>.</li>
+
+    <li>amend change from <a href="#xterm_370">patch #370</a>; DEC
+    070's pseudo-code for DECCOLM incorrectly suggests that it
+    enables DECLRMM as a side-effect.</li>
+
+    <li>fix some memory leaks seen using esctest and asan2 (patch
+    by Luis Javier Merino).</li>
+  </ul>
+
+  <h1><a name="xterm_370" id="xterm_370">Patch #370 -
+  2021/11/13</a></h1>
+
+  <ul>
+    <li>add <code>-a</code>, <code>-c</code> and <code>-d</code>
+    options to <code>query-status.pl</code> to improve test for
+    <code>DECRQSS</code>.</li>
+
+    <li>expanded discussion of maximum graphics geometry in
+    <code>ctlseqs.ms</code> (suggested by Bon Wong).</li>
+
+    <li>corrected parameter symbol for <code>DECCARA</code> and
+    <code>DECRARA</code> in <code>ctlseqs.ms</code> to indicate
+    that multiple parameters may be used (report by Thomas
+    Wolff).</li>
+
+    <li>add several test/demo scripts.</li>
+
+    <li>improve <code>DECCOLM</code>, <code>DECLRMM</code> and
+    <code>DECALN</code> referring to pseudo-code in DEC 070.</li>
+
+    <li>amend a change in patch #348 which caused left/right margin
+    mode to be reset when resizing the terminal window (report by
+    Valentine Barshak).</li>
+
+    <li>fix a misnamed macro-parameter (patch by Rajeev V.
+    Pillai).</li>
+
+    <li>fix spacing of <code>wideFont</code> when its width is not
+    exactly twice as wide as the normal font (report by Rajeev V.
+    Pillai).</li>
+
+    <li>suppress loading of italic font in a few places when
+    <code>colorITmode</code> is enabled (report/analysis by Rajeev
+    V. Pillai).</li>
+
+    <li>modify <code>XTSMGRAPHICS</code> to return failure status
+    if the terminal is not configured to support the corresponding
+    ReGIS or SIXEL feature (report by Nick Black, notcurses #2252,
+    notcurses #2257).</li>
+
+    <li>modify <code>DECERA</code> and <code>DECFRA</code> to erase
+    corresponding area in SIXEL graphics (patch by Nick Black,
+    notcurses #1740, vt340test #16). Also modify
+    <code>DECSERA</code>.</li>
+
+    <li>equate visuals for TrueColor and DirectColor (patch by
+    Denis Kaganovich).</li>
+
+    <li>correct computation for pixel value of rgb when using depth
+    16 (report by Denis Kaganovich).</li>
+
+    <li>correct wrapping of VT100-style double-sized characters
+    when configured for Unicode wide-characters (report by Luis
+    Javier Merino).</li>
+
+    <li>updated default value for <code>sixelScrolling</code>
+    resource to match expected behavior versus <code>DECSDM</code>
+    change in <a href="#xterm_369">patch #369</a> (report by Grant
+    Taylor).</li>
+  </ul>
+
   <h1><a name="xterm_369" id="xterm_369">Patch #369 -
   2021/09/21</a></h1>
 
@@ -1944,11 +2115,11 @@
       </ul>
     </li>
 
-    <li>reorganize text-drawing to make it possible to investigate
-    using Xft to implement VT100-style double-sized characters.
-    While doing this, made a workaround for apparent Xft bug which
-    loses its drawable state when switching from 132 to 80
-    columns.</li>
+    <li id="xterm_349_xft_bug">reorganize text-drawing to make it
+    possible to investigate using Xft to implement VT100-style
+    double-sized characters. While doing this, made a workaround
+    for apparent Xft bug which loses its drawable state when
+    switching from 132 to 80 columns.</li>
 
     <li>improve font-warning messages by showing which are
     <em>derived</em> rather than directly from resource settings

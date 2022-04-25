@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.145 2021/03/21 20:03:17 tom Exp $ */
+/* $XTermId: resize.c,v 1.148 2022/02/18 20:32:48 tom Exp $ */
 
 /*
- * Copyright 2003-2020,2021 by Thomas E. Dickey
+ * Copyright 2003-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -265,6 +265,13 @@ checkdigits(char *str)
 }
 
 static void
+unexpected_char(int c)
+{
+    fprintf(stderr, "%s: unknown character %#x, exiting.\r\n", myname, c);
+    onintr(0);
+}
+
+static void
 readstring(FILE *fp, char *buf, const char *str)
 {
     int last, c;
@@ -272,6 +279,7 @@ readstring(FILE *fp, char *buf, const char *str)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
 #endif
+    int limit = (BUFSIZ - 3);
 
     signal(SIGALRM, resize_timeout);
 #if defined(USG) || defined(__minix)
@@ -289,12 +297,20 @@ readstring(FILE *fp, char *buf, const char *str)
 	*buf++ = (char) c;
     }
     if (c != *str) {
-	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
-	onintr(0);
+	unexpected_char(c);
     }
     last = str[strlen(str) - 1];
-    while ((*buf++ = (char) getc(fp)) != last) {
-	;
+    while ((c = getc(fp)) != EOF) {
+	if (--limit <= 0) {
+	    fprintf(stderr, "%s: unexpected response\n", myname);
+	    onintr(0);
+	}
+	if (c < 32 || c > 126) {
+	    unexpected_char(c);
+	}
+	*buf++ = (char) c;
+	if (c == last)
+	    break;
     }
 #if defined(USG) || defined(__minix)
     alarm(0);

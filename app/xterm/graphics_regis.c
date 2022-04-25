@@ -1,8 +1,8 @@
-/* $XTermId: graphics_regis.c,v 1.128 2021/02/25 23:17:48 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.129 2022/02/21 13:33:08 tom Exp $ */
 
 /*
- * Copyright 2014-2020,2021 by Ross Combs
- * Copyright 2014-2020,2021 by Thomas E. Dickey
+ * Copyright 2014-2021,2022 by Ross Combs
+ * Copyright 2014-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -223,7 +223,7 @@ typedef struct RegisGraphicsContext {
     unsigned fill_point_count;
     unsigned destination_page;
     unsigned display_page;
-    int force_refresh;
+    Boolean force_refresh;
 } RegisGraphicsContext;
 
 static RegisGraphicsContext persistent_context;
@@ -623,7 +623,7 @@ draw_shaded_polygon(RegisGraphicsContext *context)
 	old_y = new_y;
     }
 
-    context->destination_graphic->dirty = 1;
+    context->destination_graphic->dirty = True;
 }
 
 static void
@@ -683,7 +683,7 @@ draw_filled_polygon(RegisGraphicsContext *context)
 	old_y = new_y;
     }
 
-    context->destination_graphic->dirty = 1;
+    context->destination_graphic->dirty = True;
 }
 
 static void
@@ -745,7 +745,7 @@ draw_patterned_line(RegisGraphicsContext *context, int x1, int y1,
 	}
     }
 
-    context->destination_graphic->dirty = 1;
+    context->destination_graphic->dirty = True;
 }
 
 typedef struct {
@@ -904,7 +904,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	while (rx <= 0);
     }
 
-    context->destination_graphic->dirty = 1;
+    context->destination_graphic->dirty = True;
 }
 
 /*
@@ -2750,7 +2750,7 @@ draw_text(RegisGraphicsContext *context, char const *str)
     }
 #endif
 
-    context->destination_graphic->dirty = 1;
+    context->destination_graphic->dirty = True;
     return;
 }
 
@@ -4599,9 +4599,9 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
     unsigned old_display_id = ~0U;
 
     if (context->destination_graphic)
-	context->destination_graphic->hidden = 1;
+	context->destination_graphic->hidden = True;
     if (context->display_graphic) {
-	context->display_graphic->hidden = 1;
+	context->display_graphic->hidden = True;
 	old_display_id = context->display_graphic->id;
     }
 
@@ -4612,8 +4612,8 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
 				    context->height,
 				    context->destination_page);
     if (context->destination_graphic) {
-	context->destination_graphic->hidden = 1;
-	context->destination_graphic->valid = 1;
+	context->destination_graphic->hidden = True;
+	context->destination_graphic->valid = True;
     }
 
     context->display_graphic =
@@ -4623,22 +4623,22 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
 				    context->height,
 				    context->display_page);
     if (context->display_graphic) {
-	context->display_graphic->hidden = 0;
+	context->display_graphic->hidden = False;
 	if (old_display_id != context->display_graphic->id) {
 	    if (!context->display_graphic->valid) {
 		draw_solid_rectangle(context->display_graphic, 0, 0,
 				     context->width, context->height,
 				     context->background);
 	    }
-	    context->display_graphic->dirty = 1;
-	    context->force_refresh = 1;
+	    context->display_graphic->dirty = True;
+	    context->force_refresh = True;
 	    /* FIXME: This isn't really enough.  If there are holes in the new
 	     * graphic they should be cleared and set to the text from the same
 	     * page.  But we don't have pages for text in xterm (the alt buffer
 	     * is similar though).
 	     */
 	}
-	context->display_graphic->valid = 1;
+	context->display_graphic->valid = True;
     }
 
     TRACE(("using graphics destination=[%d -> %u] display=[%d -> %u]\n",
@@ -4773,7 +4773,7 @@ init_regis_graphics_context(int graphics_termid, int width, int height,
     context->graphics_output_cursor_y = 0;
     /* FIXME: output cursor style */
 
-    context->force_refresh = 0;
+    context->force_refresh = False;
 }
 
 static int
@@ -5966,7 +5966,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    context->height = height;
 		    context->destination_graphic->actual_width = width;
 		    context->destination_graphic->actual_height = height;
-		    context->destination_graphic->dirty = 1;
+		    context->destination_graphic->dirty = True;
 
 		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
 			   context->x_off, context->y_off,
@@ -6005,8 +6005,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    context->fill_mode = 0;
 	    state->num_points = 0U;
 	    state->stack_next = 0U;
-	    context->destination_graphic->dirty = 1;
-	    context->force_refresh = 1;
+	    context->destination_graphic->dirty = True;
+	    context->force_refresh = True;
 	    break;
 	case 'F':
 	case 'f':
@@ -6019,8 +6019,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    /* We aren't going to print anything so no need to deduplicate. */
 	    DRAW_ALL(context, context->background);
-	    context->destination_graphic->dirty = 1;
-	    context->force_refresh = 1;
+	    context->destination_graphic->dirty = True;
+	    context->force_refresh = True;
 	    break;
 	case 'H':
 	case 'h':
@@ -7044,8 +7044,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 				      0, 0,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
-		context->destination_graphic->dirty = 1;
-		context->force_refresh = 1;
+		context->destination_graphic->dirty = True;
+		context->force_refresh = True;
 	    }
 	    break;
 	case 't':
@@ -7160,8 +7160,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 				      0, 0,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
-		context->destination_graphic->dirty = 1;
-		context->force_refresh = 1;
+		context->destination_graphic->dirty = True;
+		context->force_refresh = True;
 	    }
 	    break;
 	case 't':

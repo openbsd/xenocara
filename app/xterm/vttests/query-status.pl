@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-status.pl,v 1.7 2019/05/19 08:57:41 tom Exp $
+# $XTermId: query-status.pl,v 1.10 2021/11/11 21:31:48 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2017-2018,2019 by Thomas E. Dickey
+# Copyright 2017-2019,2021 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -41,19 +41,23 @@ use warnings;
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_8);
+our ( $opt_a, $opt_c, $opt_d, $opt_8 );
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('8') || die(
-    "Usage: $0 [options]\n
+&getopts('acd8') || die(
+    "Usage: $0 [options] [suffixes]\n
 Options:\n
+  -a      test ANSI colors with SGR controls
+  -c      test cursor appearance with DECSCUSR controls
+  -d      test direct colors with SGR controls
   -8      use 8-bit controls
 
 Options which use C1 controls may not work with UTF-8.
 "
 );
 
-our $ST = $opt_8 ? "\x9c" : "\x1b\\";
+our $ST  = $opt_8 ? "\x9c" : "\x1b\\";
+our $CSI = $opt_8 ? "\x9a" : "\x1b[";
 
 our %suffixes;
 $suffixes{DECSCA}   = '"q';
@@ -116,16 +120,16 @@ sub visible($) {
 }
 
 sub query_one($) {
-    my $name   = shift;
+    my $name = shift;
+
+    return unless $suffixes{$name};
+
     my $suffix = $suffixes{$name};
     my $prefix = $opt_8 ? "\x90" : "\x1bP";
-    my $reply;
-    my $n;
-    my $st    = $opt_8 ? "\x9c" : qr/\x1b\\/;
-    my $DCS   = qr/${prefix}/;
-    my $match = qr/${DCS}.*${st}/;
-
-    $reply = get_reply( $prefix . '$q' . $suffix . $ST );
+    my $st     = $opt_8 ? "\x9c" : qr/\x1b\\/;
+    my $DCS    = qr/${prefix}/;
+    my $match  = qr/${DCS}.*${st}/;
+    my $reply  = get_reply( $prefix . '$q' . $suffix . $ST );
 
     printf "%-10s query{%s}%*s", $name,    #
       &visible($suffix),                   #
@@ -148,12 +152,57 @@ sub query_one($) {
     printf "\n";
 }
 
+sub ansi_color($) {
+    my $color = shift;
+    return $color;
+}
+
+sub direct_color($) {
+    my $color  = shift;
+    my $result = "8:2:";
+    $result .= ( $color & 4 ) ? ":255" : ":0";
+    $result .= ( $color & 2 ) ? ":255" : ":0";
+    $result .= ( $color & 1 ) ? ":255" : ":0";
+    return $result;
+}
+
+sub default_colors() {
+    return "39;49";
+}
+
 printf "\x1b G" if ($opt_8);
 
 if ( $#ARGV >= 0 ) {
     while ( $#ARGV >= 0 ) {
         &query_one( shift @ARGV );
     }
+}
+elsif ($opt_a) {
+    for my $fg ( 0 .. 7 ) {
+        printf "%s3%sm", $CSI, &ansi_color($fg);
+        for my $bg ( 0 .. 7 ) {
+            printf "%s4%sm", $CSI, &ansi_color($bg);
+            &query_one("SGR");
+        }
+    }
+    printf "%s%sm", $CSI, &default_colors;
+}
+elsif ($opt_c) {
+    for my $c ( 0 .. 6 ) {
+        printf "%s%d q", $CSI, $c;
+        &query_one("DECSCUSR");
+    }
+    printf "%s q", $CSI;
+}
+elsif ($opt_d) {
+    for my $fg ( 0 .. 7 ) {
+        printf "%s3%sm", $CSI, &direct_color($fg);
+        for my $bg ( 0 .. 7 ) {
+            printf "%s4%sm", $CSI, &direct_color($bg);
+            &query_one("SGR");
+        }
+    }
+    printf "%s39;49m", $CSI;
 }
 else {
     for my $key ( sort keys %suffixes ) {

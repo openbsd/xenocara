@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.31 2022/01/31 08:53:42 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.36 2022/02/21 23:13:48 tom Exp $ */
 
 /*
  * Copyright 2014-2021,2022 by Ross Combs
@@ -149,40 +149,42 @@ init_sixel_background(Graphic *graphic, SixelContext const *context)
     graphic->color_registers_used[context->background] = 1;
 }
 
+#define ValidColumn(graphic, context) \
+	((context)->col >= 0 && \
+	 (context)->col < (graphic)->max_width)
+
 static Boolean
 set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 {
     const int mh = graphic->max_height;
     const int mw = graphic->max_width;
-    RegisterNum color;
+    const RegisterNum color = context->current_register;
     int pix;
+    int pix_row = context->row;
+    int pix_col = context->col + (pix_row * mw);
 
-    color = context->current_register;
-    TRACE(("drawing sixel at pos=%d,%d color=%hu (hole=%d, [%d,%d,%d])\n",
-	   context->col,
-	   context->row,
-	   color,
-	   color == COLOR_HOLE,
-	   ((color != COLOR_HOLE)
-	    ? (unsigned) graphic->color_registers[color].r : 0U),
-	   ((color != COLOR_HOLE)
-	    ? (unsigned) graphic->color_registers[color].g : 0U),
-	   ((color != COLOR_HOLE)
-	    ? (unsigned) graphic->color_registers[color].b : 0U)));
-    for (pix = 0; pix < 6; pix++) {
-	if (context->col >= 0 &&
-	    context->col < mw &&
-	    context->row + pix >= 0 &&
-	    context->row + pix < mh) {
+    TRACE2(("drawing sixel at pos=%d,%d color=%hu (hole=%d, [%d,%d,%d])\n",
+	    context->col,
+	    context->row,
+	    color,
+	    color == COLOR_HOLE,
+	    ((color != COLOR_HOLE)
+	     ? (unsigned) graphic->color_registers[color].r : 0U),
+	    ((color != COLOR_HOLE)
+	     ? (unsigned) graphic->color_registers[color].g : 0U),
+	    ((color != COLOR_HOLE)
+	     ? (unsigned) graphic->color_registers[color].b : 0U)));
+    for (pix = 0; pix < 6; pix++, pix_row++, pix_col += mw) {
+	if (pix_row >= 0 &&
+	    pix_row < mh) {
 	    if (sixel & (1 << pix)) {
-		if (context->col + 1 > graphic->actual_width) {
+		if (context->col >= graphic->actual_width) {
 		    graphic->actual_width = context->col + 1;
 		}
-		if (context->row + pix + 1 > graphic->actual_height) {
-		    graphic->actual_height = context->row + pix + 1;
+		if (pix_row >= graphic->actual_height) {
+		    graphic->actual_height = pix_row + 1;
 		}
-		graphic->pixels[((context->row + pix) * mw) + context->col] =
-		    color;
+		SetSpixel(graphic, pix_col, color);
 	    }
 	} else {
 	    TRACE(("sixel pixel %d out of bounds\n", pix));
@@ -295,7 +297,7 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
 	}
     }
 
-    graphic->dirty = 1;
+    graphic->dirty = True;
     refresh_modified_displayed_graphics(xw);
 
     TRACE(("DONE parsed sixel data\n"));
@@ -465,10 +467,11 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    TRACE(("sixel=%x (%c)\n", sixel, (char) ch));
 	    if (!graphic->valid) {
 		init_sixel_background(graphic, &context);
-		graphic->valid = 1;
+		graphic->valid = True;
 	    }
 	    if (sixel) {
-		if (!set_sixel(graphic, &context, sixel)) {
+		if (!ValidColumn(graphic, &context) ||
+		    !set_sixel(graphic, &context, sixel)) {
 		    context.col = 0;
 		    break;
 		}
@@ -535,12 +538,13 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		   sixel, (char) ch, Pcount));
 	    if (!graphic->valid) {
 		init_sixel_background(graphic, &context);
-		graphic->valid = 1;
+		graphic->valid = True;
 	    }
 	    if (sixel) {
 		int i;
 		for (i = 0; i < Pcount; i++) {
-		    if (set_sixel(graphic, &context, sixel)) {
+		    if (ValidColumn(graphic, &context) &&
+			set_sixel(graphic, &context, sixel)) {
 			context.col++;
 		    } else {
 			context.col = 0;

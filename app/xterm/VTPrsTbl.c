@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.103 2020/12/22 20:29:32 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.104 2021/12/26 17:50:25 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2849,8 +2849,8 @@ CASE_DECERA,
 CASE_DECSERA,
 /*	|		}		~		DEL	*/
 CASE_DECSCPP,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECSASD,
+CASE_DECSSDT,
 CASE_IGNORE,
 /*      0x80            0x81            0x82            0x83    */
 CASE_GROUND_STATE,
@@ -3009,8 +3009,8 @@ CASE_DECERA,
 CASE_DECSERA,
 /*	udiaeresis	yacute		thorn		ydiaeresis	*/
 CASE_DECSCPP,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECSASD,
+CASE_DECSSDT,
 CASE_GROUND_STATE,
 };
 

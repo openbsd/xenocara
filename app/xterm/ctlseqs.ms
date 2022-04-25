@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.633 2021/09/11 23:17:26 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.636 2021/12/26 21:57:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #369
-.ds RF 2021/09/11
+.ds LF Patch #371
+.ds RF 2021/12/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -877,6 +877,8 @@ The string following the \*(``q\*('' is one of the following:
   \*(cs		\(-> DECSLRM
   \*t		\(-> DECSLPP
   \*$\*|	\(-> DECSCPP
+  \*$\*}	\(-> DECSASD
+  \*$\*~	\(-> DECSSDT
   \**\*|	\(-> DECSNLS
 .br
 \fI\*(xt\fP responds with
@@ -1118,14 +1120,32 @@ but disallows modifying those sizes because that is done once,
 using resource-values.
 .bP
 Graphics geometry is not necessarily the same as \*(``window size\*(''
-(see the dtterm window manipulation extensions).
-For example, \fI\*(xt\fP limits the maximum graphics geometry at compile time
-(1000x1000 as of version 328)
-although the window size can be larger.
+(see the \fBdtterm\fP window manipulation extensions).
+\fI\*(XT\fP limits the maximum graphics geometry
+according to the \fBmaxGraphicSize\fP resource.
+.IP
+The \fBmaxGraphicSize\fP resource can be
+either an explicit \fIheight\fPx\fIwidth\fP
+(default: 1000x1000 as of version 328)
+or the word \*(``auto\*(''
+(telling \fI\*(XT\fP to use limits
+the \fBdecGraphicsID\fP
+or \fBdecTerminalID\fP resource to determine the limits).
+.bP
+\fI\*(XT\fP uses the minimum of the window size and the graphic size
+to obtain the maximum geometry.
 .bP
 While resizing a window will always change the current
 graphics geometry, the reverse is not true.
 Setting graphics geometry does not affect the window size.
+.bP
+If \fI\*(xt\fP is able to support graphics (compile-time),
+but is not configured (runtime) for graphics,
+these responses will indicate a failure.
+Other implementations which do not use the maximum graphics dimensions
+but are configured for graphics
+should report zeroes for the maximum geometry
+rather than a failure.
 .RE
 .
 .iP
@@ -1955,10 +1975,10 @@ specific settings can be saved and restored independently.
 Only those modes listed as parameters are restored.
 .
 .iP
-.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Ps\\*s\\*$\\*r
+.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*r
 Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
+  \*(Pm denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 .
 .iP
 .IP \\*(Cs\\*(cs
@@ -2115,10 +2135,10 @@ Set warning-bell volume (DECSWBV), VT520.
   \*(Ps = \*5, \*6, \*7, or \*8 \(-> high.
 .
 .iP
-.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Ps\\*s\\*$\\*t
+.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*t
 Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
+  \*(Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 .
 .iP
 .IP \\*(Cs\\*u
@@ -2359,8 +2379,21 @@ to their previous state.
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
 .
 .iP
+.IP \\*(Cs\\*(Ps\\*s\\*$\\*}
+Select active status display (DECSASD), VT320 and up.
+  \*(Ps = \*0 \(-> main (default)
+  \*(Ps = \*1 \(-> status line
+.
+.iP
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*~
 Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
+.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\*$\\*~
+Select status line type (DECSSDT), VT320 and up.
+  \*(Ps = \*0 \(-> none
+  \*(Ps = \*1 \(-> indicator (default)
+  \*(Ps = \*2 \(-> host-writable.
 .
 .Ed
 .

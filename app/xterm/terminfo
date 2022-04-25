@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.200 2021/09/21 20:22:27 tom Exp $
+# $XTermId: terminfo,v 1.203 2022/02/01 00:35:15 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2020,2021 by Thomas E. Dickey
+# Copyright 1996-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -135,6 +135,7 @@ xterm-new|modern xterm terminal emulator,
 	kcbt=\E[Z,
 	kent=\EOM,
 	nel=\EE,
+	use=dec+sl,
 	use=ecma+index,
 	use=xterm+keypad,
 	use=vt420+lrmm,
@@ -147,7 +148,8 @@ xterm-new|modern xterm terminal emulator,
 
 # Left/right margins are supported in xterm since patch #279 (2012/05/10)
 vt420+lrmm|VT420 left/right margins,
-	mgc=\E[?69l, smglp=\E[?69h\E[%i%p1%ds,
+	mgc=\E[?69l,
+	smglp=\E[?69h\E[%i%p1%ds,
 	smglr=\E[?69h\E[%i%p1%d;%p2%ds,
 	smgrp=\E[?69h\E[%i;%p1%ds,
 
@@ -932,7 +934,9 @@ xterm+sm+1006|xterm SGR-mouse,
 			l
 		%;,
 	xm=\E[<%i
-		%p3%d;%p1%d;%p2%d;
+		%p3%d;
+		%p1%d;
+		%p2%d;
 		%?
 			%p4
 			%tM
@@ -954,11 +958,13 @@ xterm+x11mouse|X11 xterm mouse protocol,
 	xm=\E[M
 		%?
 			%p4
-			%t%p3
+			%t
+			%p3
 		%e%{3}
 		%;
 		%'\s'%+%c
-		%p2%'!'%+%c%p1%'!'%+%c,
+		%p2%'!'%+%c
+		%p1%'!'%+%c,
 
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,
@@ -1095,7 +1101,8 @@ xterm-basic|modern xterm terminal emulator - common,
 			%t;4
 		%;
 		%?
-			%p1%p3%|
+			%p1
+			%p3%|
 			%t;7
 		%;
 		%?
@@ -1488,7 +1495,8 @@ xterm-bold|xterm with bold instead of underline (X Window System),
 			%t;1
 		%;
 		%?
-			%p1%p3%|
+			%p1
+			%p3%|
 			%t;7
 		%;
 		m,
@@ -1691,7 +1699,7 @@ xterm+nopcfkeys|fragment without PC-style fkeys,
 # equivalent) is provided.
 
 xterm+keypad|xterm emulating VT100/VT220 numeric keypad,
-	kbeg=\EOE, 
+	kbeg=\EOE,
 	kp5=\EOE,
 	kpADD=\EOk,
 	kpCMA=\EOl,
@@ -1903,7 +1911,8 @@ xterm-16color|xterm with 16 colors,
 	setab=\E[
 		%?
 			%p1%{8}%<
-			%t%p1%{40}%+
+			%t
+			%p1%{40}%+
 		%e
 			%p1%{92}%+
 		%;
@@ -1911,13 +1920,15 @@ xterm-16color|xterm with 16 colors,
 	setaf=\E[
 		%?
 			%p1%{8}%<
-			%t%p1%{30}%+
+			%t
+			%p1%{30}%+
 		%e
 			%p1%{82}%+
 		%;
 		%dm,
 	setb=
-		%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa
+		%p1%{8}%/%{6}%*%{4}%+\E[%d
+		%p1%{8}%m%Pa
 		%?%ga%{1}%=
 			%t4
 		%e%ga%{3}%=
@@ -1930,7 +1941,8 @@ xterm-16color|xterm with 16 colors,
 		%;
 		m,
 	setf=
-		%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa
+		%p1%{8}%/%{6}%*%{3}%+\E[%d
+		%p1%{8}%m%Pa
 		%?%ga%{1}%=
 			%t4
 		%e%ga%{3}%=
@@ -1970,15 +1982,20 @@ xterm+256color|original xterm 256-color feature,
 	colors#0x100,
 	pairs#0x10000,
 	initc=\E]4;
-		%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
+		%p1%d;rgb:
+		%p2%{255}%*%{1000}%/%2.2X/
+		%p3%{255}%*%{1000}%/%2.2X/
+		%p4%{255}%*%{1000}%/%2.2X\E\\,
 	oc=\E]104\007,
 	setab=\E[
 		%?
 			%p1%{8}%<
-			%t4%p1%d
+			%t4
+			%p1%d
 		%e
 			%p1%{16}%<
-			%t10%p1%{8}%-%d
+			%t10
+			%p1%{8}%-%d
 		%e48;5;
 			%p1%d
 		%;
@@ -1986,10 +2003,12 @@ xterm+256color|original xterm 256-color feature,
 	setaf=\E[
 		%?
 			%p1%{8}%<
-			%t3%p1%d
+			%t3
+			%p1%d
 		%e
 			%p1%{16}%<
-			%t9%p1%{8}%-%d
+			%t9
+			%p1%{8}%-%d
 		%e38;5;
 			%p1%d
 		%;
@@ -2000,22 +2019,26 @@ xterm+256color2|xterm 256-color feature,
 	setab=\E[
 		%?
 			%p1%{8}%<
-			%t4%p1%d
+			%t4
+			%p1%d
 		%e
 			%p1%{16}%<
-			%t10%p1%{8}%-%d
-		%e48\:5\:
+			%t10
+			%p1%{8}%-%d
+		%e48:5:
 			%p1%d
 		%;
 		m,
 	setaf=\E[
 		%?
 			%p1%{8}%<
-			%t3%p1%d
+			%t3
+			%p1%d
 		%e
 			%p1%{16}%<
-			%t9%p1%{8}%-%d
-		%e38\:5\:
+			%t9
+			%p1%{8}%-%d
+		%e38:5:
 			%p1%d
 		%;
 		m,
@@ -2053,17 +2076,23 @@ xterm+direct|xterm with direct-color indexing,
 	setab=\E[
 		%?
 			%p1%{8}%<
-			%t4%p1%d
-		%e48\:2\:\:
-			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+			%t4
+			%p1%d
+		%e48:2::
+			%p1%{65536}%/%d:
+			%p1%{256}%/%{255}%&%d:
+			%p1%{255}%&%d
 		%;
 		m,
 	setaf=\E[
 		%?
 			%p1%{8}%<
-			%t3%p1%d
-		%e38\:2\:\:
-			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+			%t3
+			%p1%d
+		%e38:2::
+			%p1%{65536}%/%d:
+			%p1%{256}%/%{255}%&%d:
+			%p1%{255}%&%d
 		%;
 		m,
 	setb@,
@@ -2245,7 +2274,8 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 			%t;4
 		%;
 		%?
-			%p1%p3%|
+			%p1
+			%p3%|
 			%t;7
 		%;
 		%?
@@ -2473,7 +2503,8 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 			%t;4
 		%;
 		%?
-			%p1%p3%|
+			%p1
+			%p3%|
 			%t;7
 		%;
 		%?
@@ -2736,6 +2767,14 @@ xterm-r5|xterm R5 version,
 	u8=\E[?1;2c,
 	u9=\E[c,
 	use=xterm+kbs,
+
+# DEC status-line is an extension for VT220, and standard with VT320 and up.
+dec+sl|DEC VTxx status line,
+	eslok,
+	hs,
+	dsl=\E[1$~,
+	fsl=\E[0$},
+	tsl=\E[2$~\E[1$}\E[%i%p1%d`,
 #
 #
 # Customization begins here.

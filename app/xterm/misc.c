@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1001 2021/09/19 19:49:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.1015 2022/02/18 09:08:10 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1844,18 +1844,20 @@ xtermIsIconified(XtermWidget xw)
 			    &actual_format_return,
 			    &nitems_return,
 			    &bytes_after_return,
-			    &prop_return)
-	    && prop_return != 0
-	    && actual_return_type == requested_type
-	    && actual_format_return == 32) {
-	    unsigned long n;
-	    for (n = 0; n < nitems_return; ++n) {
-		unsigned long check = (((unsigned long *)
-					(void *) prop_return)[n]);
-		if (check == is_hidden) {
-		    result = True;
-		    break;
+			    &prop_return)) {
+	    if (prop_return != 0
+		&& actual_return_type == requested_type
+		&& actual_format_return == 32) {
+		unsigned long n;
+		for (n = 0; n < nitems_return; ++n) {
+		    unsigned long check = (((unsigned long *)
+					    (void *) prop_return)[n]);
+		    if (check == is_hidden) {
+			result = True;
+			break;
+		    }
 		}
+		XFree(prop_return);
 	    }
 	}
     }
@@ -2634,7 +2636,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   (vi->blue_mask != 0) &&
 			   ((vi->red_mask & vi->green_mask) == 0) &&
 			   ((vi->green_mask & vi->blue_mask) == 0) &&
-			   ((vi->blue_mask & vi->red_mask) == 0));
+			   ((vi->blue_mask & vi->red_mask) == 0) &&
+			   (vi->class == TrueColor
+			    || vi->class == DirectColor));
 
 	    if (resource.reportColors) {
 		printf(MYFMT, MYARG);
@@ -2644,6 +2648,10 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 		   xw->rgb_shifts[0],
 		   xw->rgb_shifts[1],
 		   xw->rgb_shifts[2]));
+	    TRACE(("...widths %u/%u/%u\n",
+		   xw->rgb_widths[0],
+		   xw->rgb_widths[1],
+		   xw->rgb_widths[2]));
 	}
     }
     return (xw->visInfo != 0) && (xw->numVisuals > 0) ? xw->visInfo : NULL;
@@ -2740,7 +2748,6 @@ Boolean
 AllocOneColor(XtermWidget xw, XColor *def)
 {
     TScreen *screen = TScreenOf(xw);
-    XVisualInfo *visInfo;
     Boolean result = True;
 
 #define MaskIt(name,nn) \
@@ -2748,7 +2755,7 @@ AllocOneColor(XtermWidget xw, XColor *def)
 	             << xw->rgb_shifts[nn]) \
 	 & xw->visInfo->name ##_mask)
 
-    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+    if (getVisualInfo(xw) != NULL && xw->has_rgb) {
 	def->pixel = MaskIt(red, 0) | MaskIt(green, 1) | MaskIt(blue, 2);
     } else {
 	Display *dpy = screen->display;
@@ -2777,16 +2784,15 @@ AllocOneColor(XtermWidget xw, XColor *def)
 Boolean
 QueryOneColor(XtermWidget xw, XColor *def)
 {
-    XVisualInfo *visInfo;
     Boolean result = True;
 
 #define UnMaskIt(name,nn) \
 	((unsigned short)((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn]))
 #define UnMaskIt2(name,nn) \
-	((unsigned short)((UnMaskIt(name,nn) << 8) \
-			  |UnMaskIt(name,nn)))
+	(unsigned short)((((UnMaskIt(name,nn) << 8) \
+			   |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
 
-    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+    if (getVisualInfo(xw) != NULL && xw->has_rgb) {
 	/* *INDENT-EQLS* */
 	def->red   = UnMaskIt2(red, 0);
 	def->green = UnMaskIt2(green, 1);
@@ -3205,19 +3211,48 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 int
 getDirectColor(XtermWidget xw, int red, int green, int blue)
 {
-#define nRGB(name,shift) \
-	((unsigned long)(name << xw->rgb_shifts[shift]) \
-		         & xw->visInfo->name ##_mask)
-    MyPixel result = (MyPixel) (nRGB(red, 0) | nRGB(green, 1) | nRGB(blue, 2));
+    Pixel result = 0;
+
+#define getRGB(name,shift) \
+    do { \
+	Pixel value = (Pixel) name & 0xff; \
+	if (xw->rgb_widths[shift] < 8) { \
+	    value >>= (int) (8 - xw->rgb_widths[shift]); \
+	} \
+	value <<= xw->rgb_shifts[shift]; \
+	value &= xw->visInfo->name ##_mask; \
+	result |= value; \
+    } while (0)
+
+    getRGB(red, 0);
+    getRGB(green, 1);
+    getRGB(blue, 2);
+
+#undef getRGB
+
     return (int) result;
 }
 
 static void
 formatDirectColor(char *target, XtermWidget xw, unsigned value)
 {
-#define fRGB(name, shift) \
-	(value & xw->visInfo->name ## _mask) >> xw->rgb_shifts[shift]
-    sprintf(target, "%lu:%lu:%lu", fRGB(red, 0), fRGB(green, 1), fRGB(blue, 2));
+    Pixel result[3];
+
+#define getRGB(name, shift) \
+    do { \
+	result[shift] = value & xw->visInfo->name ## _mask; \
+	result[shift] >>= xw->rgb_shifts[shift]; \
+	if (xw->rgb_widths[shift] < 8) \
+	    result[shift] <<= (int) (8 - xw->rgb_widths[shift]); \
+    } while(0)
+
+    getRGB(red, 0);
+    getRGB(green, 1);
+    getRGB(blue, 2);
+
+#undef getRGB
+
+    sprintf(target, "%lu:%lu:%lu", result[0], result[1], result[2]);
 }
 #endif /* OPT_DIRECT_COLOR */
 
@@ -3931,7 +3966,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     Char *cp;
     int state = 0;
     char *buf = 0;
-    char temp[2];
+    char temp[20];
 #if OPT_ISO_COLORS
     int ansi_colors = 0;
 #endif
@@ -4066,11 +4101,20 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (IsEmpty(buf)) {
 	if (need_data) {
-	    TRACE(("do_osc found no data\n"));
-	    return;
+	    switch (mode) {
+	    case 0:
+	    case 1:
+	    case 2:
+		buf = strcpy(temp, "xterm");
+		break;
+	    default:
+		TRACE(("do_osc found no data\n"));
+		return;
+	    }
+	} else {
+	    temp[0] = '\0';
+	    buf = temp;
 	}
-	temp[0] = '\0';
-	buf = temp;
     } else if (!need_data && !optional_data) {
 	TRACE(("do_osc found unwanted data\n"));
 	return;
@@ -4729,7 +4773,21 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s",
 			((xw->flags & IN132COLUMNS) ? 132 : 80),
 			cp);
-	    } else if (!strcmp(cp, "*|")) {	/* DECSNLS */
+	    } else
+#if OPT_STATUS_LINE
+	    if (!strcmp(cp, "$}")) {	/* DECSASD */
+		TRACE(("reply DECSASD\n"));
+		sprintf(reply, "%d%s",
+			screen->status_active,
+			cp);
+	    } else if (!strcmp(cp, "$~")) {	/* DECSSDT */
+		TRACE(("reply DECSASD\n"));
+		sprintf(reply, "%d%s",
+			screen->status_type,
+			cp);
+	    } else
+#endif
+	    if (!strcmp(cp, "*|")) {	/* DECSNLS */
 		TRACE(("reply DECSNLS\n"));
 		sprintf(reply, "%d%s",
 			screen->max_row + 1,
@@ -5819,13 +5877,15 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 					&actual_format,
 					&nitems,
 					&bytes_after,
-					&prop)
-			&& actual_type == requested_type
-			&& actual_format == 8
-			&& prop != 0
-			&& nitems == strlen(value)
-			&& memcmp(value, prop, nitems) == 0) {
-			changed = False;
+					&prop)) {
+			if (actual_type == requested_type
+			    && actual_format == 8
+			    && prop != 0
+			    && nitems == strlen(value)
+			    && memcmp(value, prop, nitems) == 0) {
+			    changed = False;
+			}
+			XFree(prop);
 		    }
 		}
 #endif /* OPT_SAME_NAME */
@@ -6730,19 +6790,6 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			} else {
 			    mesg = "turn off/on";
 			}
-			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
-			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = malloc(strlen(mesg)
-						 + strlen(opt_array[j].desc)
-						 + 2);
-				if (s != 0) {
-				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
-				    opt_array[j].desc = s;
-				}
-			    } else {
-				TRACE(("OOPS "));
-			    }
-			}
 			TRACE(("%s: %s %s: %s (%s)\n",
 			       mesg,
 			       res_array[k].option,
@@ -7407,7 +7454,7 @@ free_string(String value)
 
 /* Set tty's idea of window size, using the given file descriptor 'fd'. */
 int
-update_winsize(int fd, int rows, int cols, int height, int width)
+update_winsize(TScreen *screen, int rows, int cols, int height, int width)
 {
     int code = -1;
 #ifdef TTYSIZE_STRUCT
@@ -7430,8 +7477,16 @@ update_winsize(int fd, int rows, int cols, int height, int width)
 	last_cols = cols;
 	last_high = height;
 	last_wide = width;
+#if OPT_STATUS_LINE
+	if (IsStatusShown(screen)) {
+	    ++rows;
+	    height += FontHeight(screen);
+	    TRACE(("... account for status-line -> %dx%d (%dx%d)\n",
+		   rows, cols, height, width));
+	}
+#endif
 	setup_winsize(ts, rows, cols, height, width);
-	TRACE_RC(code, SET_TTYSIZE(fd, ts));
+	TRACE_RC(code, SET_TTYSIZE(screen->respond, ts));
 	trace_winsize(ts, "from SET_TTYSIZE");
     }
 #endif
@@ -7458,7 +7513,7 @@ xtermSetWinSize(XtermWidget xw)
 	    TScreen *screen = TScreenOf(xw);
 
 	    TRACE(("xtermSetWinSize\n"));
-	    update_winsize(screen->respond,
+	    update_winsize(screen,
 			   MaxRows(screen),
 			   MaxCols(screen),
 			   Height(screen),

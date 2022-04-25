@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.14 2021/09/21 08:03:03 tom Exp $
+# $XTermId: run-tic.sh,v 1.15 2022/02/13 14:30:33 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2020,2021 by Thomas E. Dickey
+# Copyright 2006-2021,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -61,7 +61,8 @@ then
 	MYTEMP=${TMPDIR:-/tmp}/run-tic$$
 fi
 mkdir -p "$MYTEMP" || failed "cannot mkdir $MYTEMP"
-trap "rm -rf $MYTEMP" EXIT INT QUIT HUP TERM
+trap "rm -rf $MYTEMP; exit 1" 1 2 3 15
+trap "rm -rf $MYTEMP" 0
 
 STDERR=$MYTEMP/run-tic$$.log
 VER=`tic -V 2>/dev/null`

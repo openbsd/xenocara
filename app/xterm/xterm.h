@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.902 2021/09/19 18:27:35 tom Exp $ */
+/* $XTermId: xterm.h,v 1.910 2022/03/09 00:39:01 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -540,6 +540,7 @@ extern char **environ;
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
 #define XtNi18nSelections	"i18nSelections"
 #define XtNiconHint		"iconHint"
+#define XtNindicatorFormat	"indicatorFormat"
 #define XtNinitialFont		"initialFont"
 #define XtNinternalBorder	"internalBorder"
 #define XtNitalicULMode		"italicULMode"
@@ -747,6 +748,7 @@ extern char **environ;
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCI18nSelections	"I18nSelections"
 #define XtCIconHint		"IconHint"
+#define XtCIndicatorFormat	"IndicatorFormat"
 #define XtCInitialFont		"InitialFont"
 #define XtCJumpScroll		"JumpScroll"
 #define XtCKeepClipboard	"KeepClipboard"
@@ -966,11 +968,11 @@ extern void report_char_class(XtermWidget);
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
 #define CharWidth(screen, n) ((!((screen)->utf8_mode) && ((n) < 256)) \
-			     ? (IsLatin1(n) ? 1 : 0) \
-			     : my_wcwidth((wchar_t) (n)))
+			      ? (IsLatin1(n) ? 1 : 0) \
+			      : my_wcwidth((wchar_t) (n)))
 #else
 #define WideCells(n) 1
-#define CharWidth(n) (IsLatin1(n) ? 1 : 0)
+#define CharWidth(screen, n) (IsLatin1(n) ? 1 : 0)
 #endif
 
 /* cachedCgs.c */
@@ -1066,7 +1068,9 @@ extern void CursorDown (TScreen * /* screen */, int /* n */);
 extern void CursorForward (XtermWidget /* xw */, int /* n */);
 extern void CursorNextLine (XtermWidget /* xw */, int /* count */);
 extern void CursorPrevLine (XtermWidget /* xw */, int /* count */);
+extern void CursorRestore2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorRestore (XtermWidget  /* xw */);
+extern void CursorSave2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorSave (XtermWidget  /* xw */);
 extern void CursorSet (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* flags */);
 extern void CursorUp (TScreen * /* screen */, int   /* n */);
@@ -1078,7 +1082,14 @@ extern int set_cur_col(TScreen * /* screen */, int  /* value */);
 extern int set_cur_row(TScreen * /* screen */, int  /* value */);
 #else
 #define set_cur_col(screen, value) screen->cur_col = value
-#define set_cur_row(screen, value) screen->cur_row = value
+#define set_cur_row(screen, value) \
+	do { \
+	    int row_value = value; \
+	    if_STATUS_LINE(screen, { \
+		row_value = LastRowNumber(screen); \
+	    }); \
+	    screen->cur_row = row_value; \
+	} while (0)
 #endif
 
 /* cursorfont.c */
@@ -1182,7 +1193,7 @@ extern int creat_as (uid_t /* uid */, gid_t /* gid */, Bool /* append */, char *
 extern int getVisualDepth (XtermWidget /* xw */);
 extern int ignore_x11_error(Display * /* dpy */, XErrorEvent * /* event */);
 extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
-extern int update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
+extern int update_winsize (TScreen * /* screen */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermClosestColor (XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
@@ -1422,16 +1433,16 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 #define _NET_WM_STATE_TOGGLE	2	/* toggle property */
 
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
+extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
 extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
-extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
 extern void CopyCells (TScreen * /* screen */, LineData * /* src */, LineData * /* dst */, int /* col */, int /* len */, Bool /* down */);
 extern void FullScreen (XtermWidget /* xw */, int /* mode */);
 extern void FreeMarkGCs (XtermWidget /* xw */);
+extern void ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
@@ -1446,7 +1457,7 @@ extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftco
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
-extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
+extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #if OPT_TRACE && OPT_TRACE_FLAGS
@@ -1571,6 +1582,7 @@ extern int dimRound (double /* value */);
 extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
+extern void ClearLine (XtermWidget /* xw */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
 extern void DeleteChar (XtermWidget /* xw */, unsigned /* n */);

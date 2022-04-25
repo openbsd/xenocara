@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.92 2021/02/01 23:58:05 tom Exp $ */
+/* $XTermId: trace.h,v 1.93 2022/02/21 22:54:05 tom Exp $ */
 
 /*
- * Copyright 1997-2020,2021 by Thomas E. Dickey
+ * Copyright 1997-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -46,6 +46,9 @@
 extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
 extern	void	TraceVA ( const char *fmt, va_list ap );
 extern	void	TraceXError (Display *d, XErrorEvent *ev);
+
+#undef  if_TRACE
+#define if_TRACE(stmt)		stmt
 
 #undef  TRACE
 #define TRACE(p) Trace p
@@ -165,6 +168,7 @@ extern const char * ModifierName(unsigned /* modifier */);
 			    (Dimension) (reqwide), (Dimension) (reqhigh), \
 			    (gotwide), (gothigh))
 
+#define if_TRACE(stmt)		/*nothing*/
 #define TRACE(p)		/*nothing*/
 #define TRACE_CLOSE()		/*nothing*/
 #define TRACE_ARGV(tag,argv)	/*nothing*/

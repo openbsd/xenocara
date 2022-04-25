@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: acolors.sh,v 1.12 2021/03/03 01:16:53 tom Exp $
+# $XTermId: acolors.sh,v 1.13 2022/02/13 14:34:17 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2002-2011,2021 by Thomas E. Dickey
+# Copyright 2002-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -66,12 +66,8 @@ read original
 stty $old
 original=${original}${SUF}
 
-if ( trap "echo exit" EXIT 2>/dev/null ) >/dev/null
-then
-    trap '$CMD $OPT "$original" >/dev/tty; exit' EXIT HUP INT QUIT TERM
-else
-    trap '$CMD $OPT "$original" >/dev/tty; exit' 0    1   2   3    15
-fi
+trap '$CMD $OPT "$original" >/dev/tty; exit 1' 1 2 3 15
+trap '$CMD $OPT "$original" >/dev/tty' 0
 
 echo "${CSI}0;1;34mThis message is BLUE"
 echo "${CSI}0;1;31mThis message is RED ${CSI}0;31m(sometimes)"

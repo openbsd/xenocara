@@ -1,3 +1,21 @@
+xterm-dev (372) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 04 Mar 2022 16:37:03 -0500
+
+xterm-dev (371) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 25 Nov 2021 17:42:23 -0500
+
+xterm-dev (370) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 22 Sep 2021 18:23:43 -0400
+
 xterm-dev (369) unstable; urgency=low
 
   * maintenance updates
@@ -225,12 +243,6 @@ xterm-dev (332) unstable; urgency=low
   * maintenance updates
 
  -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 01 Jan 2018 11:13:30 -0500
-
-xterm-dev (331) unstable; urgency=low
-
-  * maintenance updates
-
- -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 08 Aug 2017 19:08:43 -0400
 
 xterm-dev (331) unstable; urgency=low
 

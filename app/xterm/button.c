@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.637 2021/08/12 00:33:06 tom Exp $ */
+/* $XTermId: button.c,v 1.638 2021/11/26 01:27:25 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -325,7 +325,6 @@ visibleScan(int mode)
 static char *
 scanTrans(char *source, int *this_is, int *next_is, unsigned *first, unsigned *last)
 {
-    char ch;
     char *target = source;
 
     *first = *last = 0;
@@ -333,6 +332,7 @@ scanTrans(char *source, int *this_is, int *next_is, unsigned *first, unsigned *l
 	target = 0;
     } else {
 	do {
+	    char ch;
 	    while (IsSpace(*target))
 		target++;
 	    *first = (unsigned) (target - source);

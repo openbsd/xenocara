@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.234 2015/02/12 09:31:30 tom Exp $
+## $XTermId: Makefile.in,v 1.260 2022/02/21 18:30:44 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2014,2015 by Thomas E. Dickey
+# Copyright 1997-2020,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -52,6 +52,7 @@ ETAGS		= @ETAGS@
 LN_S		= @LN_S@
 RM              = rm -f
 LINT		= @LINT@
+LINT_OPTS	= @LINT_OPTS@
 
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
@@ -63,7 +64,8 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(EXTRA_CPPFLAGS)
+PIXMAPDIR_DEF	= @no_pixmapdir@-DPIXMAP_ROOTDIR=\"@PIXMAPDIR@/\"
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(PIXMAPDIR_DEF) $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@ @EXTRA_LDFLAGS@
 LIBS		= @LIBS@
@@ -102,6 +104,13 @@ EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
+AUTO_SOURCE	= \
+		builtin_icons.h \
+		VTparse.cin \
+		Tekparse.cin \
+		VTparse.hin \
+		Tekparse.hin
+
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
 		  linedata.c main.c menu.c misc.c \
@@ -118,13 +127,14 @@ EXTRAOBJ	= @EXTRAOBJS@
           OBJS2 = resize$o version$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-           HDRS = VTparse.h data.h error.h main.h menu.h \
+           HDRS = VTparse.h data.h error.h fontutils.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
+  TEST_PROGRAMS = test_charclass$x test_ptydata$x test_wcwidth$x
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @MAN2HTML_NOTE@ .html @GROFF_NOTE@ .ps .pdf
+.SUFFIXES : .i .def .cin .hin .$(manext) .ms .man .txt @MAN2HTML_NOTE@ .html @GROFF_NOTE@ .ps .pdf
 
 .c$o :
 	@RULE_CC@
@@ -134,8 +144,13 @@ all :	$(PROGRAMS)
 	@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
+.def.cin :
+	@echo "making $@ from $<"
+	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' < $< >$@
+
 .def.hin :
-	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
+	@echo "making $@ from $<"
+	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 .man.$(manext) :
 	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
@@ -154,7 +169,7 @@ all :	$(PROGRAMS)
 @GROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.$(manext).txt :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Tascii -man | col -bx" >$@
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -rHY=0 -Tascii -man | col -bx" >$@
 @GROFF_NOTE@
 @MAN2HTML_NOTE@.ms.html :
 @MAN2HTML_NOTE@	./@MAN2HTML_TEMP@ $* ms ms >$@
@@ -163,15 +178,19 @@ all :	$(PROGRAMS)
 @GROFF_NOTE@	$(SHELL) -c "tbl $< | groff -ms" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.ms.txt :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Tascii -ms | col -bx" >$@
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -rHY=0 -Tascii -ms | col -bx" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.ps.pdf :
 @GROFF_NOTE@	ps2pdf $*.ps
 ################################################################################
+
+VTPARSE_H = VTparse.h VTparse.hin
+TEKPARSE_H = Tekparse.h Tekparse.hin
+
 main$o : main.h
 misc$o : version.h
 
-$(OBJS1) : xterm.h ptyx.h xtermcfg.h
+$(OBJS1) : xterm.h ptyx.h fontutils.h menu.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
@@ -188,11 +207,29 @@ resize$x : $(OBJS2)
 	-$(RM) $@
 	perl $(srcdir)/88colres.pl > $@
 
-charproc$o : main.h @CHARPROC_DEPS@
+charproc$o : $(VTPARSE_H) main.h @CHARPROC_DEPS@
+graphics_regis$o : $(VTPARSE_H)
+graphics_sixel$o : $(VTPARSE_H)
+misc$o : $(VTPARSE_H)
+VTPrsTbl$o : $(VTPARSE_H)
+
+charproc$o \
+graphics$o \
+graphics_regis$o \
+graphics_sixel$o \
+main$o \
+misc$o \
+screen$o \
+util$o : graphics.h
+
+TekPrsTbl$o : $(TEKPARSE_H)
+Tekproc$o : $(TEKPARSE_H)
 
 misc$o : builtin_icons.h
 
-# do this to quiet gcc -Wcast-qual warnings 
+trace$o : VTparse.cin Tekparse.cin
+
+# do this to quiet gcc -Wcast-qual warnings
 builtin_icons.h :
 	@echo "#if OPT_BUILTIN_XPMS" >$@
 	@echo "#include <icons/mini.xterm.xpms>" >>$@
@@ -203,6 +240,18 @@ builtin_icons.h :
 	@sed -e 's/static char \* /static const char * /' $(srcdir)/icons/mini.xterm_48x48.xpm >>$@
 	@echo "#endif" >>$@
 	@echo "made $@"
+
+################################################################################
+test_charclass$x : $(srcdir)/charclass.c
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/charclass.c $(LDFLAGS) $(LIBS)
+
+################################################################################
+test_ptydata$x : $(srcdir)/ptydata.c
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/ptydata.c $(LDFLAGS) $(LIBS)
+
+################################################################################
+test_wcwidth$x : $(srcdir)/wcwidth.c
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/wcwidth.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
@@ -314,14 +363,13 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_icondir@	$(SHELL) -c '\
+@no_icondir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
 @no_icondir@		for n in $(ICON_LIST); \
 @no_icondir@		do \
 @no_icondir@			x=$$ACTUAL_XTERM; \
 @no_icondir@			l=`echo "$$n" | cut -f1 -d:`; \
-@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e s,$(ICON_NAME),$$x-color,`; \
+@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
 @no_icondir@			test -z "$$r" && continue; \
 @no_icondir@			d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
 @no_icondir@			test -d "$$d" || mkdir -p "$$d"; \
@@ -344,8 +392,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install \
 @no_pixmapdir@install-icon \
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
-@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_pixmapdir@	$(SHELL) -c '\
+@no_pixmapdir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_pixmapdir@		h=$(PIXMAPDIR); \
 @no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
@@ -381,7 +428,7 @@ SET_TERMINFO = @SET_TERMINFO@
 
 install-full \
 install-tc ::
-	@-$(SHELL) -c "test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'"
+	@-$(SHELL) -c "if test -f /etc/termcap ; then echo 'You must install the termcap entry manually by editing /etc/termcap'; fi"
 
 installdirs : $(INSTALL_DIRS)
 ################################################################################
@@ -448,7 +495,7 @@ uninstall-full ::
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
 @no_appsdir@uninstall-full ::
-@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	-@ECHO_CC@$(SHELL) -c 'for s in $(APP_NAMES); \
 @no_appsdir@	do \
 @no_appsdir@		echo "** $$s"; \
 @no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
@@ -461,12 +508,13 @@ uninstall-full ::
 @no_icondir@uninstall \
 @no_icondir@uninstall-icon \
 @no_icondir@uninstall-full ::
-@no_icondir@	-@$(SHELL) -c 'for n in $(ICON_LIST); \
+@no_icondir@	-@ECHO_CC@$(SHELL) -c 'ACTUAL_XTERM=$(actual_xterm) ; \
+@no_icondir@		for n in $(ICON_LIST); \
 @no_icondir@		do \
-@no_icondir@		x=$(actual_xterm); \
-@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$x,`; \
+@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$ACTUAL_XTERM,`; \
 @no_icondir@		test -z "$$r" && continue; \
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		test -f $$h/$$r || continue; \
 @no_icondir@		echo removing $$h/$$r; \
 @no_icondir@		$(RM) $$h/$$r; \
 @no_icondir@		done'
@@ -475,8 +523,8 @@ uninstall-full ::
 @no_pixmapdir@uninstall \
 @no_pixmapdir@uninstall-icon \
 @no_pixmapdir@uninstall-full ::
-@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@	-@$(SHELL) -c 'ACTUAL_XTERM=$(actual_xterm) ; \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
 @no_pixmapdir@			l=`basename $$n`; \
 @no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
@@ -492,14 +540,29 @@ uninstall-full ::
 @desktop_utils@install-full ::
 @desktop_utils@	ACTUAL_XTERM=$(actual_xterm) \
 @desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
-@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(DESKTOP_FLAGS) $$n; \
+@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) DESTDIR="$(DESTDIR)" $(DESKTOP_FLAGS) $$n; \
 @desktop_utils@		done'
 ################################################################################
+check : $(TEST_PROGRAMS)
+	@ echo "See demos in vttests/* (use vttest for system-level testing)"
+	@ $(SHELL) -c 'echo "** executing test_charclass"; \
+		./test_charclass'
+	@ $(SHELL) -c 'echo "** executing test_wcwidth"; \
+		for range in 32-126 160-0xff00 0x10000-0x11000; \
+		do echo ".. range $$range"; \
+		./test_wcwidth -s $$range; \
+		./test_wcwidth -s $$range -w; \
+	done'
+	@ $(SHELL) -c 'echo "** executing test_ptydata"; \
+		./test_ptydata -a'
+################################################################################
 mostlyclean :
-	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
+	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS) builtin_icons.h 
+	-$(RM) $(PROGRAMS) $(TEST_PROGRAMS) $(AUTO_SOURCE)
+
+sources : $(AUTO_SOURCE)
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
@@ -523,8 +586,9 @@ realclean : distclean
 maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
 ################################################################################
-terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
-termcap.out : termcap		; tic -a -C -U termcap >$@
+TIC=tic
+terminfo.out : terminfo		; $(TIC) -a -I -1 terminfo >$@
+termcap.out : termcap		; $(TIC) -a -C -U termcap >$@
 ################################################################################
 docs-ctlseqs \
 docs :: $(srcdir)/ctlseqs.txt @MAN2HTML_NOTE@ ctlseqs.html @GROFF_NOTE@ ctlseqs.pdf ctlseqs.ps
@@ -563,8 +627,8 @@ koi8rxterm.ps : koi8rxterm.$(manext)
 koi8rxterm.txt : koi8rxterm.$(manext)
 ################################################################################
 lint :
-	$(LINT) $(CPPFLAGS) $(SRCS1)
-	$(LINT) $(CPPFLAGS) $(SRCS2)
+	$(LINT) $(LINT_OPTS) $(CPPFLAGS) $(SRCS1)
+	$(LINT) $(LINT_OPTS) $(CPPFLAGS) $(SRCS2)
 
 tags :
 	$(CTAGS) $(SRCS) $(HDRS)

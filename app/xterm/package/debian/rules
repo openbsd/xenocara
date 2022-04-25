@@ -66,7 +66,6 @@ configure-stamp:
 		--disable-imake \
 		--enable-dabbrev \
 		--enable-dec-locator \
-		--enable-double-buffer \
 		--enable-exec-xterm \
 		--enable-hp-fkeys \
 		--enable-load-vt-fonts \
@@ -75,6 +74,7 @@ configure-stamp:
 		--enable-mini-luit \
 		--enable-regis-graphics \
 		--enable-sco-fkeys \
+		--enable-status-line \
 		--enable-toolbar \
 		--enable-xmc-glitch \
 		--with-app-defaults=$(PKG_APPDEFAULTS) \

@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.223 2021/08/22 20:00:07 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.225 2022/02/13 13:50:45 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -153,7 +153,7 @@
 /* #undef OPT_DABBREV */		/* CF_ARG_ENABLE(dabbrev) */
 /* #undef OPT_DEC_CHRSET */		/* CF_ARG_DISABLE(doublechars) */
 /* #undef OPT_DEC_LOCATOR */		/* CF_ARG_ENABLE(dec-locator) */
-#define OPT_DEC_RECTOPS 1		/* CF_ARG_ENABLE(rectangles) */
+/* #define OPT_DEC_RECTOPS */		/* CF_ARG_DISABLE(rectangles) */
 #define OPT_DIRECT_COLOR 1		/* CF_ARG_ENABLE(direct-color) */
 /* #undef OPT_DOUBLE_BUFFER */		/* CF_ARG_ENABLE(double-buffer) */
 /* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
@@ -181,7 +181,8 @@
 /* #undef OPT_SELECTION_OPS */	/* CF_ARG_DISABLE(selection-ops) */
 #define OPT_SELECT_REGEX 1		/* CF_ARG_DISABLE(regex) */
 /* #undef OPT_SESSION_MGT */		/* CF_ARG_DISABLE(session-mgt) */
-/* #undef OPT_SIXEL_GRAPHICS */	/* CF_ARG_ENABLE(sixel-graphics) */
+/* #undef OPT_SIXEL_GRAPHICS */		/* CF_ARG_ENABLE(sixel-graphics) */
+/* #undef OPT_STATUS_LINE */		/* CF_ARG_ENABLE(status-line) */
 /* #undef OPT_SUN_FUNC_KEYS */	/* CF_ARG_ENABLE(sun-fkeys) */
 #define OPT_TCAP_FKEYS 0		/* CF_ARG_ENABLE(tcap-fkeys) */
 #define OPT_TCAP_QUERY 0		/* CF_ARG_ENABLE(tcap-query) */

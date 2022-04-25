@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.158 2015/08/10 23:38:32 tom Exp $
+-- $XTermId: INSTALL,v 1.189 2022/01/30 22:46:59 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2014,2015 by Thomas E. Dickey
+-- Copyright 1997-2021,2022 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -49,6 +49,16 @@ the sense of the default behavior.
 
 The options (in alphabetic order):
 
+  --disable-256-color     disable 256-color support
+
+  	Do not compile-in code that interprets SGR 38 and 48 for 256-colors.
+	If this feature is disabled, the 88-color feature will be used.
+
+  --disable-88-color      disable 88-color support
+
+	Do not compile-in code that interprets SGR 38 and 48 for 88-colors.
+	The 256-color option overrides this.
+
   --disable-16-color      disable 16-color support
 
 	Do not compile-in code to recognize aixterm-style control sequences
@@ -94,7 +104,7 @@ The options (in alphabetic order):
 	e.g., to make boxes.  When xterm loads a font, it checks if those
 	characters are present, and draws its own if they are missing.
 
-  --disable-broken-st     disallow broken string-terminators],
+  --disable-broken-st     disallow broken string-terminators,
 
 	Do not compile-in code that works around a bug in some ISDN routers
 	(and possibly other applications written by the same people):  they
@@ -107,7 +117,7 @@ The options (in alphabetic order):
 
 	See also --enable-broken-osc
 
-  --disable-c1-print      disallow -k8 option for printable 128-159],
+  --disable-c1-print      disallow -k8 option for printable 128-159,
 
 	Use this option to suppress support for nonstandard use of codes
 	128-159, which normally are considered control characters.  Some users
@@ -137,6 +147,11 @@ The options (in alphabetic order):
 
 	Note: If desktop-utils is not found they will not be installed anyway.
 
+  --disable-direct-color  disable direct color support
+
+  	Do not compile-in code that interprets SGR 38 and 48 for direct colors.
+	This feature extends the 256-color feature.
+
   --disable-doublechars   disable support for double-size chars
 
   	Do not compile-in code that supports font-manipulation needed to
@@ -150,13 +165,11 @@ The options (in alphabetic order):
 
   --disable-fifo-lines    enable FIFO-storage for saved-lines
 
-	With patch #244, xterm by default stores saved-lines in a FIFO
-	(circular buffer), which improves performance when the number of saved
-	lines is large.  Disable this option to revert to the pre-244 layout.
+	(this option is deprecrated)
 
   --disable-freetype      disable freetype library-support
 
- 	Do not use freetype libraries if they are found.  Normally they will
+	Do not use freetype libraries if they are found.  Normally they will
 	be used automatically.
 
   --disable-full-tgetent  disable check for termcap library
@@ -246,10 +259,14 @@ The options (in alphabetic order):
 
   --disable-paste64       disable support for bracketed paste mode
 
-	Do not compile-in code to support experimental bracketed paste mode,
-	i.e., provide functions for setting/getting the selection data.
+	Do not compile-in code to support bracketed paste mode, along with
+	functions for setting/getting the selection data, termed "paste64".
 
-	(see ctlseqs.ms description of OSC 52).
+	(see ctlseqs.ms description of OSC 52, and DECSET 2004).
+
+  --disable-print-graphics disable screen dump to sixel support
+
+	Do not compile-in code to support screen-dumps for ReGIS graphics.
 
   --disable-pty-handshake disable support for pty handshakes
 
@@ -285,6 +302,10 @@ The options (in alphabetic order):
 	Do not compile-in code that suppresses redundant updates to the
 	titlebar when the text has not changed.
 
+  --disable-screen-dumps  disable XHTML and SVG screen dumps
+
+	Do not compile-in code that provides XHTML and SVG screen dumps.
+
   --disable-selection-ops disable selection operations
 
 	Do not compile-in code to support the actions which allow users
@@ -305,6 +326,10 @@ The options (in alphabetic order):
 
 	Do not install xterm using setuid/setgid permissions.  Drop setuid
 	permissions on startup.
+
+  --disable-sixel-graphics disable support for sixel-graphics
+
+  	Do not compile-in code to support sixel-graphics
 
   --disable-sun-fkeys
 
@@ -345,13 +370,18 @@ The options (in alphabetic order):
 	ISO 6429 defines a few more which historically have found little use.
 	Some people find these amusing.
 
-	This is normally enabled.
+	This is normally enabled.  The direct-colors feature relies upon it.
 
   --disable-wide-chars    disable wide-character support
 
   	The wide-character code supports Unicode and UTF-8.
 
 	This is normally enabled.
+
+  --disable-xcursor       disable cursorTheme resource
+
+	Do not compile-in code that sets the XCURSOR_THEME environment variable
+	to enable/disable cursor themes.
 
   --disable-ziconbeep     disable -ziconbeep option
 
@@ -364,14 +394,6 @@ The options (in alphabetic order):
 	character.  Unicode values can be larger than 16-bits, up to 21-bits.
 	This uses less memory, but is less complete.  However, most languages
 	are covered by the 16-bit encoding.
-
-  --enable-256-color      enable 256-color support
-
-  	Compile-in code that interprets SGR 38 and 48 for 256-colors.
-
-  --enable-88-color       enable 88-color support
-
-	Compile-in code that interprets SGR 38 and 48 for 88-colors.
 
   --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
 
@@ -426,11 +448,15 @@ The options (in alphabetic order):
 
   --enable-double-buffer  enable double-buffering
 
-	Use experimental double-buffering for display to reduce flicker.
+	Set the initial value of the "buffered" resource, which tells
+	xterm to use double-buffering for display to reduce flicker.
 
-	This option was introduced in patch #282; at that point it needs
-	further work because colors used for clearing the screen do not
-	match the expected behavior (see vttest for instance).
+  --enable-env-terminfo   setenv $TERMINFO if --with-own-terminfo gives value
+
+	Use the custom terminfo directory specified in "--with-own-terminfo"
+	as the $TERMINFO variable for the shells spawned by xterm.  Setting
+	this variable makes most curses (and termcap) applications look in
+	that directory for terminal descriptions.
 
   --enable-exec-xterm     enable "spawn-new-terminal" action
 
@@ -458,7 +484,8 @@ The options (in alphabetic order):
   	Compile-in code that allows logging.
 
 	Logging was disabled in X11R5 xterm because of security problems.
-	They were addressed in X11R6, but the feature was not reinstated.
+	They were addressed in X11R6, but the feature was not reinstated
+	because of concerns (long past) about xterm running as root-setuid.
 
   --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
 
@@ -495,28 +522,30 @@ The options (in alphabetic order):
 
   --enable-readline-mouse enable support for mouse in readline applications
 
-	Compile-in code to support experimental bracketed paste mode, i.e.,
+	Compile-in code to support predecessor to bracketed paste mode, i.e.,
 	provide functions for setting/getting the selection data.  Essentially
 	this puts xterm into a mode that sends special function-key strings to
 	bracket the data.
 
-	(See --enable-paste64, which fits xterm's protocol better).
-
-  --enable-sco-fkeys      enable support for SCO-style function keys
-
-  	Compile-in code to support SCO-style function keys.
+	(The "paste64" feature, which fits xterm's protocol better, is
+	configured by default).
 
   --enable-regis-graphics enable support for ReGIS graphics
 
   	Compile-in code to support experimental ReGIS graphics
 
-  --enable-sixel-graphics enable support for sixel-graphics
+  --enable-sco-fkeys      enable support for SCO-style function keys
 
-  	Compile-in code to support experimental sixel-graphics
+  	Compile-in code to support SCO-style function keys.
 
-  --enable-sun-fkeys      enable support for Sun-style function keys
+  --enable-status-line    enable support for status-line
 
-  	Compile-in code to support Sun-style function keys.
+  	Compile-in code to enable VT220-VT525 support for status-line.
+
+  --enable-stdnoreturn    enable C11 _Noreturn feature for diagnostics
+
+	Use the C11 _Noreturn keyword if the compiler supports it, rather
+	than the gcc-specific __attribute__((noreturn)).
 
   --enable-toolbar        enable pulldown menus on toolbar
 
@@ -605,19 +634,20 @@ The options (in alphabetic order):
 
 	Check for and link with dbmalloc.
 
-  --with-desktop-category=XXX  one or more desktop catgories or auto
+  --with-desktop-category=XXX  one or more desktop categories or auto
 	This is a list of names.  The configure script maps blanks and commas
-	to semicolons (";") which are used by the desktop utils as a separator.
+	to semicolons (";") which are used by the desktop utilities as a
+	separator.
 
 	The default value "auto" tells the configure script to look
 	at existing ".desktop" files for xterm and common terminal
 	emulators, to use those.  If none are found, the script uses this
 	default:
-		System;TerminalEmulator;Utility;
+		System;TerminalEmulator;
 
   --with-freetype-config  configure script to use for FreeType
 
- 	Use a specific option value to tell the configure script to try
+	Use a specific option value to tell the configure script to try
 	just one of the variations:
 
 	"pkg*", e.g., pkg-config or pkgconfig uses whatever pkg-config
@@ -695,14 +725,18 @@ The options (in alphabetic order):
   --with-man2html[=XXX]   use XXX rather than groff
 
 	Specify an alternative program to use for converting manpages and
-	control sequences document to html.  If the option is given, its
-	default value is "man2html", otherwise it is "groff" with groff's
-	special options.  The "man2html" script reads formatted nroff output
-	from its standard input, and writes html to its standard output.  Other
-	input/output conventions are not currently supported.
+	control sequences document to html.  The default value for the option
+	is "man2html".  If the "man2html" script is not found, then "groff" is
+	used with groff's special options.
+
+	The "man2html" script reads formatted nroff output from its standard
+	input, and writes html to its standard output.  Other input/output
+	conventions are not currently supported.
 
 	See
 		http://invisible-island.net/scripts
+		http://invisible-island.net/scripts/man2html.html
+
 	for an up-to-date version of "man2html".
 
   --with-neXtaw           link with neXT Athena library
@@ -715,9 +749,9 @@ The options (in alphabetic order):
 	rule to point to the given directory.
 
 	If you have the $TERMINFO variable defined in your environment, the
-	configure script will use that value.  If no option and no variable
-	are are given, the configure script uses /usr/lib/terminfo, if it
-	exists.
+	configure script may use that value, if it matches an existing
+	directory.  If no option and no variable are are given, the configure
+	script uses /usr/lib/terminfo, if it exists.
 
 	You do not have to run "make install-ti", if there is already a
 	workable terminfo description.  Be advised, however, that the
@@ -725,9 +759,18 @@ The options (in alphabetic order):
 	directed to other variations (such as nxterm) which do not
 	support the background-color erase capability.
 
+  --with-pixmapdir=DIR    directory in which to install pixmaps (DATADIR/pixmaps)
+
+	Specify directory in which to install ".xpm" files.
+
   --with-pcre             use PCRE for regular-expressions
 
-	If regular expressions are not disable (--disable-regex), use PCRE
+	If regular expressions are not disabled (--disable-regex), use PCRE
+	rather than the POSIX regular expressions.
+
+  --with-pcre2            use PCRE2 for regular-expressions
+
+	If regular expressions are not disabled (--disable-regex), use PCRE2
 	rather than the POSIX regular expressions.
 
   --with-pkg-config{=path} enable/disable use of pkg-config
@@ -777,9 +820,16 @@ The options (in alphabetic order):
 	Activate the --disable-leaks option, and ensure that "-g" is added to
 	CFLAGS.
 
+  --without-xinerama      do not use Xinerama extension for multiple screens
+
+	Xinerama is an X server extension that allows multiple physical
+	screens to behave as a single screen.  If you do not need the feature
+	(or do not want the extra library dependency), use this option to
+	suppress it.
+
   --with-xpm=DIR          use Xpm library for colored icon, may specify path
 
- 	Use Xpm library to show colored icon in window decoration, e.g.,
+	Use Xpm library to show colored icon in window decoration, e.g.,
 	title area.
 
 	Use --without-xpm to suppress this feature.

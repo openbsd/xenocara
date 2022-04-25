@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.380 2021/08/22 19:49:13 tom Exp $
+dnl $XTermId: configure.in,v 1.383 2022/02/20 14:18:05 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2020,2021 by Thomas E. Dickey
+dnl Copyright 1997-2021,2022 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20210105)
+AC_PREREQ(2.52.20210509)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -891,13 +891,21 @@ CF_ARG_DISABLE(session-mgt,
 AC_MSG_RESULT($enable_session_mgt)
 test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0,[Define to 0 to disable support for session management])
 
+AC_MSG_CHECKING(if you want support for status-line)
+CF_ARG_ENABLE(status-line,
+	[  --enable-status-line    enable support for status-line],
+	[enable_status_line=yes],
+	[enable_status_line=no])
+AC_MSG_RESULT($enable_status_line)
+test "$enable_status_line" = yes && AC_DEFINE(OPT_STATUS_LINE,1,[Define to 1 to enable support for status-line])
+
 AC_MSG_CHECKING(if you want to use termcap function-keys)
 CF_ARG_DISABLE(tcap-fkeys,
 	[  --disable-tcap-fkeys    disable termcap function-keys support],
 	[enable_tcap_fkeys=no],
 	[enable_tcap_fkeys=yes])
 AC_MSG_RESULT($enable_tcap_fkeys)
-test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1,[Define to 1 to disable termcap function-keys support])
+test "$enable_tcap_fkeys" = no && AC_DEFINE(OPT_TCAP_FKEYS,0,[Define to 0 to disable termcap function-keys support])
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_DISABLE(tcap-query,
@@ -905,7 +913,7 @@ CF_ARG_DISABLE(tcap-query,
 	[enable_tcap_query=no],
 	[enable_tcap_query=yes])
 AC_MSG_RESULT($enable_tcap_query)
-test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1,[Define to 1 to disable compiled-in termcap-query support])
+test "$enable_tcap_query" = no && AC_DEFINE(OPT_TCAP_QUERY,0,[Define to 0 to disable compiled-in termcap-query support])
 
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,
@@ -1083,8 +1091,8 @@ CF_ARG_DISABLE(rectangles,
 	[enable_rectangles=no],
 	[enable_rectangles=yes])
 AC_MSG_RESULT($enable_rectangles)
-if test "$enable_rectangles" = yes ; then
-	AC_DEFINE(OPT_DEC_RECTOPS,1,[Define to 1 to disable VT420 rectangle support])
+if test "$enable_rectangles" = no ; then
+	AC_DEFINE(OPT_DEC_RECTOPS,0,[Define to 0 to disable VT420 rectangle support])
 fi
 
 AC_MSG_CHECKING(if you want -ziconbeep option)

@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1040 2021/09/16 20:43:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1060 2022/03/08 23:31:40 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -774,6 +774,10 @@ typedef enum {
 
 #ifndef OPT_SHIFT_FONTS
 #define OPT_SHIFT_FONTS 1 /* true if xterm interprets fontsize-shifting */
+#endif
+
+#ifndef OPT_STATUS_LINE
+#define OPT_STATUS_LINE	0 /* true if xterm supports status-line controls */
 #endif
 
 #ifndef OPT_SUNPC_KBD
@@ -2721,6 +2725,44 @@ typedef struct {
 	Boolean		graphics_rotated_print_mode;
 #endif
 
+#define StatusLineRows	1		/* number of rows in status-line */
+
+#if OPT_STATUS_LINE
+#define AddStatusLineRows(nrow)         nrow += StatusLineRows
+#define LastRowNumber(screen) \
+	( (screen)->max_row \
+	 + (IsStatusShown(screen) ? StatusLineRows : 0) )
+#define FirstRowNumber(screen) \
+	( (screen)->status_active \
+	   ? LastRowNumber(screen) \
+	   : 0 )
+#define IsStatusShown(screen) \
+	( ( (screen)->status_type == 2) || \
+	  ( (screen)->status_type == 1) )
+#define PlusStatusLine(screen,expr) \
+	( (screen)->status_shown \
+	  ? (expr) + StatusLineRows \
+	  : (expr) )
+#define if_STATUS_LINE(screen,stmt) \
+	if (IsStatusShown(screen) && (screen)->status_active) stmt
+
+	Boolean		status_timeout;	/* status timeout needs service	*/
+	Boolean		status_active;	/* DECSASD */
+	int		status_type;	/* DECSSDT */
+	int		status_shown;	/* last-displayed type */
+	SavedCursor	status_data[2];
+	char *		status_fmt;	/* format for indicator-status	*/
+
+#else /* !OPT_STATUS_LINE */
+
+#define AddStatusLineRows(nrow)         /* nothing */
+#define LastRowNumber(screen)           (screen)->max_row
+#define FirstRowNumber(screen)          0
+#define PlusStatusLine(screen,expr)     (expr)
+#define if_STATUS_LINE(screen,stmt)	/* nothing */
+
+#endif /* OPT_STATUS_LINE */
+
 #if OPT_VT52_MODE
 	IFlags		vt52_save_flags;
 	Char		vt52_save_curgl;
@@ -3189,6 +3231,7 @@ typedef struct _Work {
     unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
 #endif
     XtermFontNames fonts;
+    Boolean force_wideFont;	/* true to single-step wideFont	*/
 #if OPT_RENDERFONT
     Boolean render_font;
     unsigned max_fontsets;
@@ -3317,11 +3360,12 @@ typedef struct _TekWidgetRec {
 
 /*
  * terminal flags
- * There are actually two namespaces mixed together here.
- * One is the set of flags that can go in screen->visbuf attributes
- * and which must fit in a char (see OFF_ATTRS).
- * The other is the global setting stored in
- * term->flags and screen->save_modes.  This need only fit in an unsigned.
+ * There are actually two namespaces mixed together here:
+ * a) One is the set of flags that can go in screen->visbuf attributes and
+ *    which must fit in an IAttr (either a char or short, depending on whether
+ *    wide-attributes are used).
+ * b) The other is the global setting stored in term->flags and
+ *    screen->save_modes, which fits in an unsigned (IFlags).
  */
 
 #define AttrBIT(n)	xBIT(n)		/* text-attributes */

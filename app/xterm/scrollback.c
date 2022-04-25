@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.21 2020/10/12 19:22:13 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.23 2022/03/09 00:38:51 tom Exp $ */
 
 /*
- * Copyright 2009-2019,2020 by Thomas E. Dickey
+ * Copyright 2009-2020,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -95,10 +95,10 @@ addScrollback(TScreen *screen)
 	}
 
 	/* allocate the new data */
-	block = allocScrnData(screen, 1, ncols);
+	block = allocScrnData(screen, 1, ncols, False);
 
 	/* record the new data in the index */
-	setupLineData(screen, where, (Char *) block, 1, ncols);
+	setupLineData(screen, where, (Char *) block, 1, ncols, False);
 
 	TRACE(("...storing new FIFO data in slot %d: %p->%p\n",
 	       which, (void *) where, block));

@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.245 2021/06/03 21:23:18 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.246 2021/12/27 18:07:35 tom Exp $ */
 
 /*
  * Copyright 2001-2020,2021 by Thomas E. Dickey
@@ -924,7 +924,7 @@ TekSetWinSize(TekWidget tw)
 	int rows = THeight(tekscr) / (int) (ScaleOf(tw) * t->vsize);
 	int cols = TWidth(tekscr) / (int) (ScaleOf(tw) * t->hsize);
 
-	update_winsize(TScreenOf(tw->vt)->respond,
+	update_winsize(TScreenOf(tw->vt),
 		       rows, cols,
 		       TFullHeight(tekscr),
 		       TFullWidth(tekscr));
