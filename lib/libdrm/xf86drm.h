@@ -827,6 +827,8 @@ extern int drmGetNodeTypeFromFd(int fd);
 extern int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd);
 extern int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle);
 
+extern int drmCloseBufferHandle(int fd, uint32_t handle);
+
 extern char *drmGetPrimaryDeviceNameFromFd(int fd);
 extern char *drmGetRenderDeviceNameFromFd(int fd);
 
@@ -907,6 +909,8 @@ extern void drmFreeDevices(drmDevicePtr devices[], int count);
 #define DRM_DEVICE_GET_PCI_REVISION (1 << 0)
 extern int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device);
 extern int drmGetDevices2(uint32_t flags, drmDevicePtr devices[], int max_devices);
+
+extern int drmGetDeviceFromDevId(dev_t dev_id, uint32_t flags, drmDevicePtr *device);
 
 extern int drmDevicesEqual(drmDevicePtr a, drmDevicePtr b);
 

@@ -42,6 +42,7 @@ extern "C" {
 
 #include <drm.h>
 #include <drm_mode.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -142,18 +143,15 @@ typedef struct _drmModeProperty {
 	uint32_t *blob_ids; /* store the blob IDs */
 } drmModePropertyRes, *drmModePropertyPtr;
 
-static __inline int drm_property_type_is(drmModePropertyPtr property,
-		uint32_t type)
-{
-	/* instanceof for props.. handles extended type vs original types: */
-	if (property->flags & DRM_MODE_PROP_EXTENDED_TYPE)
-		return (property->flags & DRM_MODE_PROP_EXTENDED_TYPE) == type;
-	return property->flags & type;
-}
-
 static inline uint32_t drmModeGetPropertyType(const drmModePropertyRes *prop)
 {
 	return prop->flags & (DRM_MODE_PROP_LEGACY_TYPE | DRM_MODE_PROP_EXTENDED_TYPE);
+}
+
+static inline int drm_property_type_is(const drmModePropertyPtr property,
+		uint32_t type)
+{
+	return drmModeGetPropertyType(property) == type;
 }
 
 typedef struct _drmModeCrtc {
@@ -233,6 +231,12 @@ typedef struct _drmModeObjectProperties {
 	uint32_t *props;
 	uint64_t *prop_values;
 } drmModeObjectProperties, *drmModeObjectPropertiesPtr;
+
+typedef struct _drmModeFormatModifierIterator {
+	uint32_t fmt_idx, mod_idx;
+	uint32_t fmt;
+	uint64_t mod;
+} drmModeFormatModifierIterator;
 
 typedef struct _drmModePlane {
 	uint32_t count_formats;
@@ -391,6 +395,8 @@ extern drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId);
 extern void drmModeFreeProperty(drmModePropertyPtr ptr);
 
 extern drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id);
+extern bool drmModeFormatModifierBlobIterNext(const drmModePropertyBlobRes *blob,
+					      drmModeFormatModifierIterator *iter);
 extern void drmModeFreePropertyBlob(drmModePropertyBlobPtr ptr);
 extern int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property_id,
 				    uint64_t value);

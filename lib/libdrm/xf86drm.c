@@ -214,29 +214,15 @@ static bool is_x_t_amd_gfx9_tile(uint64_t tile)
     return false;
 }
 
-static char *
-drmGetFormatModifierNameFromArm(uint64_t modifier)
+static bool
+drmGetAfbcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
 {
-    uint64_t type = (modifier >> 52) & 0xf;
     uint64_t mode_value = modifier & AFBC_FORMAT_MOD_MODE_VALUE_MASK;
     uint64_t block_size = mode_value & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK;
-
-    FILE *fp;
-    char *modifier_name = NULL;
-    size_t size = 0;
-    unsigned int i;
 
     const char *block = NULL;
     const char *mode = NULL;
     bool did_print_mode = false;
-
-    /* misc type is already handled by the static table */
-    if (type != DRM_FORMAT_MOD_ARM_TYPE_AFBC)
-        return NULL;
-
-    fp = open_memstream(&modifier_name, &size);
-    if (!fp)
-        return NULL;
 
     /* add block, can only have a (single) block */
     switch (block_size) {
@@ -255,15 +241,13 @@ drmGetFormatModifierNameFromArm(uint64_t modifier)
     }
 
     if (!block) {
-        fclose(fp);
-        free(modifier_name);
-        return NULL;
+        return false;
     }
 
     fprintf(fp, "BLOCK_SIZE=%s,", block);
 
     /* add mode */
-    for (i = 0; i < ARRAY_SIZE(arm_mode_value_table); i++) {
+    for (unsigned int i = 0; i < ARRAY_SIZE(arm_mode_value_table); i++) {
         if (arm_mode_value_table[i].modifier & mode_value) {
             mode = arm_mode_value_table[i].modifier_name;
             if (!did_print_mode) {
@@ -275,7 +259,87 @@ drmGetFormatModifierNameFromArm(uint64_t modifier)
         }
     }
 
+    return true;
+}
+
+static bool
+drmGetAfrcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
+{
+    for (unsigned int i = 0; i < 2; ++i) {
+        uint64_t coding_unit_block =
+          (modifier >> (i * 4)) & AFRC_FORMAT_MOD_CU_SIZE_MASK;
+        const char *coding_unit_size = NULL;
+
+        switch (coding_unit_block) {
+        case AFRC_FORMAT_MOD_CU_SIZE_16:
+            coding_unit_size = "CU_16";
+            break;
+        case AFRC_FORMAT_MOD_CU_SIZE_24:
+            coding_unit_size = "CU_24";
+            break;
+        case AFRC_FORMAT_MOD_CU_SIZE_32:
+            coding_unit_size = "CU_32";
+            break;
+        }
+
+        if (!coding_unit_size) {
+            if (i == 0) {
+                return false;
+            }
+            break;
+        }
+
+        if (i == 0) {
+            fprintf(fp, "P0=%s,", coding_unit_size);
+        } else {
+            fprintf(fp, "P12=%s,", coding_unit_size);
+        }
+    }
+
+    bool scan_layout =
+        (modifier & AFRC_FORMAT_MOD_LAYOUT_SCAN) == AFRC_FORMAT_MOD_LAYOUT_SCAN;
+    if (scan_layout) {
+        fprintf(fp, "SCAN");
+    } else {
+        fprintf(fp, "ROT");
+    }
+    return true;
+}
+
+static char *
+drmGetFormatModifierNameFromArm(uint64_t modifier)
+{
+    uint64_t type = (modifier >> 52) & 0xf;
+
+    FILE *fp;
+    size_t size = 0;
+    char *modifier_name = NULL;
+    bool result = false;
+
+    fp = open_memstream(&modifier_name, &size);
+    if (!fp)
+        return NULL;
+
+    switch (type) {
+    case DRM_FORMAT_MOD_ARM_TYPE_AFBC:
+        result = drmGetAfbcFormatModifierNameFromArm(modifier, fp);
+        break;
+    case DRM_FORMAT_MOD_ARM_TYPE_AFRC:
+        result = drmGetAfrcFormatModifierNameFromArm(modifier, fp);
+        break;
+    /* misc type is already handled by the static table */
+    case DRM_FORMAT_MOD_ARM_TYPE_MISC:
+    default:
+        result = false;
+        break;
+    }
+
     fclose(fp);
+    if (!result) {
+        free(modifier_name);
+        return NULL;
+    }
+
     return modifier_name;
 }
 
@@ -1522,8 +1586,8 @@ drm_public int drmAddMap(int fd, drm_handle_t offset, drmSize size, drmMapType t
     memclear(map);
     map.offset  = offset;
     map.size    = size;
-    map.type    = type;
-    map.flags   = flags;
+    map.type    = (enum drm_map_type)type;
+    map.flags   = (enum drm_map_flags)flags;
     if (drmIoctl(fd, DRM_IOCTL_ADD_MAP, &map))
         return -errno;
     if (handle)
@@ -1567,7 +1631,7 @@ drm_public int drmAddBufs(int fd, int count, int size, drmBufDescFlags flags,
     memclear(request);
     request.count     = count;
     request.size      = size;
-    request.flags     = flags;
+    request.flags     = (int)flags;
     request.agp_start = agp_offset;
 
     if (drmIoctl(fd, DRM_IOCTL_ADD_BUFS, &request))
@@ -1851,7 +1915,7 @@ drm_public int drmDMA(int fd, drmDMAReqPtr request)
     dma.send_count      = request->send_count;
     dma.send_indices    = request->send_list;
     dma.send_sizes      = request->send_sizes;
-    dma.flags           = request->flags;
+    dma.flags           = (enum drm_dma_flags)request->flags;
     dma.request_count   = request->request_count;
     dma.request_size    = request->request_size;
     dma.request_indices = request->request_list;
@@ -2788,8 +2852,8 @@ drm_public int drmGetMap(int fd, int idx, drm_handle_t *offset, drmSize *size,
         return -errno;
     *offset = map.offset;
     *size   = map.size;
-    *type   = map.type;
-    *flags  = map.flags;
+    *type   = (drmMapType)map.type;
+    *flags  = (drmMapFlags)map.flags;
     *handle = (unsigned long)map.handle;
     *mtrr   = map.mtrr;
     return 0;
@@ -3298,6 +3362,15 @@ drm_public int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
     return 0;
 }
 
+drm_public int drmCloseBufferHandle(int fd, uint32_t handle)
+{
+    struct drm_gem_close args;
+
+    memclear(args);
+    args.handle = handle;
+    return drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &args);
+}
+
 static char *drmGetMinorNameForFD(int fd, int type)
 {
 #ifdef __linux__
@@ -3331,8 +3404,9 @@ static char *drmGetMinorNameForFD(int fd, int type)
 
     while ((ent = readdir(sysdir))) {
         if (strncmp(ent->d_name, name, len) == 0) {
-            snprintf(dev_name, sizeof(dev_name), DRM_DIR_NAME "/%s",
-                 ent->d_name);
+            if (snprintf(dev_name, sizeof(dev_name), DRM_DIR_NAME "/%s",
+                        ent->d_name) < 0)
+                return NULL;
 
             closedir(sysdir);
             return strdup(dev_name);
@@ -3743,7 +3817,9 @@ static int parse_separate_sysfs_files(int maj, int min,
     get_pci_path(maj, min, pci_path);
 
     for (unsigned i = ignore_revision ? 1 : 0; i < ARRAY_SIZE(attrs); i++) {
-        snprintf(path, PATH_MAX, "%s/%s", pci_path, attrs[i]);
+        if (snprintf(path, PATH_MAX, "%s/%s", pci_path, attrs[i]) < 0)
+            return -errno;
+
         fp = fopen(path, "r");
         if (!fp)
             return -errno;
@@ -3773,7 +3849,9 @@ static int parse_config_sysfs_file(int maj, int min,
 
     get_pci_path(maj, min, pci_path);
 
-    snprintf(path, PATH_MAX, "%s/config", pci_path);
+    if (snprintf(path, PATH_MAX, "%s/config", pci_path) < 0)
+        return -errno;
+
     fd = open(path, O_RDONLY);
     if (fd < 0)
         return -errno;
@@ -4025,6 +4103,7 @@ free_device:
 static int drm_usb_dev_path(int maj, int min, char *path, size_t len)
 {
     char *value, *tmp_path, *slash;
+    bool usb_device, usb_interface;
 
     snprintf(path, len, "/sys/dev/char/%d:%d/device", maj, min);
 
@@ -4032,9 +4111,13 @@ static int drm_usb_dev_path(int maj, int min, char *path, size_t len)
     if (!value)
         return -ENOENT;
 
-    if (strcmp(value, "usb_device") == 0)
+    usb_device = strcmp(value, "usb_device") == 0;
+    usb_interface = strcmp(value, "usb_interface") == 0;
+    free(value);
+
+    if (usb_device)
         return 0;
-    if (strcmp(value, "usb_interface") != 0)
+    if (!usb_interface)
         return -ENOTSUP;
 
     /* The parent of a usb_interface is a usb_device */
@@ -4446,95 +4529,35 @@ drm_device_has_rdev(drmDevicePtr device, dev_t find_rdev)
 #define MAX_DRM_NODES 256
 
 /**
- * Get information about the opened drm device
+ * Get information about a device from its dev_t identifier
  *
- * \param fd file descriptor of the drm device
+ * \param find_rdev dev_t identifier of the device
  * \param flags feature/behaviour bitmask
  * \param device the address of a drmDevicePtr where the information
  *               will be allocated in stored
  *
  * \return zero on success, negative error code otherwise.
- *
- * \note Unlike drmGetDevice it does not retrieve the pci device revision field
- * unless the DRM_DEVICE_GET_PCI_REVISION \p flag is set.
  */
-drm_public int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device)
+drm_public int drmGetDeviceFromDevId(dev_t find_rdev, uint32_t flags, drmDevicePtr *device)
 {
-#ifdef __OpenBSD__
-    /*
-     * DRI device nodes on OpenBSD are not in their own directory, they reside
-     * in /dev along with a large number of statically generated /dev nodes.
-     * Avoid stat'ing all of /dev needlessly by implementing this custom path.
-     */
-    drmDevicePtr     d;
-    struct stat      sbuf;
-    char             node[PATH_MAX + 1];
-    const char      *dev_name;
-    int              node_type, subsystem_type;
-    int              maj, min, n, ret;
-
-    if (fd == -1 || device == NULL)
-        return -EINVAL;
-
-    if (fstat(fd, &sbuf))
-        return -errno;
-
-    maj = major(sbuf.st_rdev);
-    min = minor(sbuf.st_rdev);
-
-    if (!drmNodeIsDRM(maj, min) || !S_ISCHR(sbuf.st_mode))
-        return -EINVAL;
-
-    node_type = drmGetMinorType(maj, min);
-    if (node_type == -1)
-        return -ENODEV;
-
-    dev_name = drmGetDeviceName(node_type);
-    if (!dev_name)
-        return -EINVAL;
-
-    n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min);
-    if (n == -1 || n >= PATH_MAX)
-      return -errno;
-    if (stat(node, &sbuf))
-        return -EINVAL;
-
-    subsystem_type = drmParseSubsystemType(maj, min);
-    if (subsystem_type != DRM_BUS_PCI)
-        return -ENODEV;
-
-    ret = drmProcessPciDevice(&d, node, node_type, maj, min, true, flags);
-    if (ret)
-        return ret;
-
-    *device = d;
-
-    return 0;
-#else
     drmDevicePtr local_devices[MAX_DRM_NODES];
     drmDevicePtr d;
     DIR *sysdir;
     struct dirent *dent;
-    struct stat sbuf;
     int subsystem_type;
     int maj, min;
     int ret, i, node_count;
-    dev_t find_rdev;
 
     if (drm_device_validate_flags(flags))
         return -EINVAL;
 
-    if (fd == -1 || device == NULL)
+    if (device == NULL)
         return -EINVAL;
 
-    if (fstat(fd, &sbuf))
-        return -errno;
+    maj = major(find_rdev);
+    min = minor(find_rdev);
 
-    find_rdev = sbuf.st_rdev;
-    maj = major(sbuf.st_rdev);
-    min = minor(sbuf.st_rdev);
-
-    if (!drmNodeIsDRM(maj, min) || !S_ISCHR(sbuf.st_mode))
+    if (!drmNodeIsDRM(maj, min))
         return -EINVAL;
 
     subsystem_type = drmParseSubsystemType(maj, min);
@@ -4580,7 +4603,35 @@ drm_public int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device)
     if (*device == NULL)
         return -ENODEV;
     return 0;
-#endif
+}
+
+/**
+ * Get information about the opened drm device
+ *
+ * \param fd file descriptor of the drm device
+ * \param flags feature/behaviour bitmask
+ * \param device the address of a drmDevicePtr where the information
+ *               will be allocated in stored
+ *
+ * \return zero on success, negative error code otherwise.
+ *
+ * \note Unlike drmGetDevice it does not retrieve the pci device revision field
+ * unless the DRM_DEVICE_GET_PCI_REVISION \p flag is set.
+ */
+drm_public int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device)
+{
+    struct stat sbuf;
+
+    if (fd == -1)
+        return -EINVAL;
+
+    if (fstat(fd, &sbuf))
+        return -errno;
+
+    if (!S_ISCHR(sbuf.st_mode))
+        return -EINVAL;
+
+    return drmGetDeviceFromDevId(sbuf.st_rdev, flags, device);
 }
 
 /**

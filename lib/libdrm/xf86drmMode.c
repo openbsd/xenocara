@@ -33,6 +33,7 @@
  *
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -50,6 +51,7 @@
 #include "xf86drmMode.h"
 #include "xf86drm.h"
 #include <drm.h>
+#include <drm_fourcc.h>
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -727,6 +729,112 @@ err_allocs:
 	return r;
 }
 
+static inline const uint32_t *
+get_formats_ptr(const struct drm_format_modifier_blob *blob)
+{
+	return (const uint32_t *)(((uint8_t *)blob) + blob->formats_offset);
+}
+
+static inline const struct drm_format_modifier *
+get_modifiers_ptr(const struct drm_format_modifier_blob *blob)
+{
+	return (const struct drm_format_modifier *)(((uint8_t *)blob) +
+						    blob->modifiers_offset);
+}
+
+static bool _drmModeFormatModifierGetNext(const drmModePropertyBlobRes *blob,
+					  drmModeFormatModifierIterator *iter)
+{
+	const struct drm_format_modifier *blob_modifiers, *mod;
+	const struct drm_format_modifier_blob *fmt_mod_blob;
+	const uint32_t *blob_formats;
+
+	assert(blob && iter);
+
+	fmt_mod_blob = blob->data;
+	blob_modifiers = get_modifiers_ptr(fmt_mod_blob);
+	blob_formats = get_formats_ptr(fmt_mod_blob);
+
+	/* fmt_idx and mod_idx designate the number of processed formats
+	 * and modifiers.
+	 */
+	if (iter->fmt_idx >= fmt_mod_blob->count_formats ||
+	    iter->mod_idx >= fmt_mod_blob->count_modifiers)
+		return false;
+
+	iter->fmt = blob_formats[iter->fmt_idx];
+	iter->mod = DRM_FORMAT_MOD_INVALID;
+
+	/* From the latest valid found, get the next valid modifier */
+	while (iter->mod_idx < fmt_mod_blob->count_modifiers) {
+		mod = &blob_modifiers[iter->mod_idx++];
+
+		/* Check if the format that fmt_idx designates, belongs to
+		 * this modifier 64-bit window selected via mod->offset.
+		 */
+		if (iter->fmt_idx < mod->offset ||
+		    iter->fmt_idx >= mod->offset + 64)
+			continue;
+		if (!(mod->formats & (1 << (iter->fmt_idx - mod->offset))))
+			continue;
+
+		iter->mod = mod->modifier;
+		break;
+	}
+
+	if (iter->mod_idx == fmt_mod_blob->count_modifiers) {
+		iter->mod_idx = 0;
+		iter->fmt_idx++;
+	}
+
+	/* Since mod_idx reset, in order for the caller to iterate over
+	 * the last modifier of the last format, always return true here
+	 * and early return from the next call.
+	 */
+	return true;
+}
+
+/**
+ * Iterate over formats first and then over modifiers. On each call, iter->fmt
+ * is retained until all associated modifiers are returned. Then, either update
+ * iter->fmt with the next format, or exit if there aren't any left.
+ *
+ * NOTE: clients should not make any assumption on mod_idx and fmt_idx values
+ *
+ * @blob: valid kernel blob holding formats and modifiers
+ * @iter: input and output iterator data. Iter data must be initialised to zero
+ * @return: false, on error or there aren't any further formats or modifiers left.
+ *          true, on success and there are more formats or modifiers.
+ */
+drm_public bool drmModeFormatModifierBlobIterNext(const drmModePropertyBlobRes *blob,
+						  drmModeFormatModifierIterator *iter)
+{
+	drmModeFormatModifierIterator tmp;
+	bool has_fmt;
+
+	if (!blob || !iter)
+		return false;
+
+	tmp.fmt_idx = iter->fmt_idx;
+	tmp.mod_idx = iter->mod_idx;
+
+	/* With the current state of things, DRM/KMS drivers are allowed to
+	 * construct blobs having formats and no modifiers. Userspace can't
+	 * legitimately abort in such cases.
+	 *
+	 * While waiting for the kernel to perhaps disallow formats with no
+	 * modifiers in IN_FORMATS blobs, skip the format altogether.
+	 */
+	do {
+		has_fmt = _drmModeFormatModifierGetNext(blob, &tmp);
+		if (has_fmt && tmp.mod != DRM_FORMAT_MOD_INVALID)
+			*iter = tmp;
+
+	} while (has_fmt && tmp.mod == DRM_FORMAT_MOD_INVALID);
+
+	return has_fmt;
+}
+
 drm_public void drmModeFreePropertyBlob(drmModePropertyBlobPtr ptr)
 {
 	if (!ptr)
@@ -1216,6 +1324,7 @@ struct _drmModeAtomicReqItem {
 	uint32_t object_id;
 	uint32_t property_id;
 	uint64_t value;
+	uint32_t cursor;
 };
 
 struct _drmModeAtomicReq {
@@ -1271,6 +1380,8 @@ drm_public drmModeAtomicReqPtr drmModeAtomicDuplicate(drmModeAtomicReqPtr old)
 drm_public int drmModeAtomicMerge(drmModeAtomicReqPtr base,
                                   drmModeAtomicReqPtr augment)
 {
+	uint32_t i;
+
 	if (!base)
 		return -EINVAL;
 
@@ -1293,6 +1404,8 @@ drm_public int drmModeAtomicMerge(drmModeAtomicReqPtr base,
 
 	memcpy(&base->items[base->cursor], augment->items,
 	       augment->cursor * sizeof(*augment->items));
+	for (i = base->cursor; i < base->cursor + augment->cursor; i++)
+		base->items[i].cursor = i;
 	base->cursor += augment->cursor;
 
 	return 0;
@@ -1338,6 +1451,7 @@ drm_public int drmModeAtomicAddProperty(drmModeAtomicReqPtr req,
 	req->items[req->cursor].object_id = object_id;
 	req->items[req->cursor].property_id = property_id;
 	req->items[req->cursor].value = value;
+	req->items[req->cursor].cursor = req->cursor;
 	req->cursor++;
 
 	return req->cursor;
@@ -1358,12 +1472,12 @@ static int sort_req_list(const void *misc, const void *other)
 	const drmModeAtomicReqItem *first = misc;
 	const drmModeAtomicReqItem *second = other;
 
-	if (first->object_id < second->object_id)
-		return -1;
-	else if (first->object_id > second->object_id)
-		return 1;
+	if (first->object_id != second->object_id)
+		return first->object_id - second->object_id;
+	else if (first->property_id != second->property_id)
+		return first->property_id - second->property_id;
 	else
-		return second->property_id - first->property_id;
+		return first->cursor - second->cursor;
 }
 
 drm_public int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
@@ -1414,6 +1528,9 @@ drm_public int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
 			(sorted->cursor - i - 1) * sizeof(*sorted->items));
 		sorted->cursor--;
 	}
+
+	for (i = 0; i < sorted->cursor; i++)
+		sorted->items[i].cursor = i;
 
 	objs_ptr = drmMalloc(atomic.count_objs * sizeof objs_ptr[0]);
 	if (!objs_ptr) {

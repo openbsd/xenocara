@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2021/07/05 11:10:00 jsg Exp $
+#	$OpenBSD: Makefile.inc,v 1.3 2022/04/29 10:16:21 jsg Exp $
 
 # bsd.lib.mk and bsd.xorg.mk both include Makefile.inc
 .if !defined(DRM_MK_INC)

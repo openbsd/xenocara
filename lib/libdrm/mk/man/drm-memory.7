@@ -1,8 +1,5 @@
 .\" Man page generated from reStructuredText.
 .
-.TH DRM-MEMORY 7 "September 2012" "" "Direct Rendering Manager"
-.SH NAME
-drm-memory \- DRM Memory Management
 .
 .nr rst2man-indent-level 0
 .
@@ -30,6 +27,9 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
+.TH "DRM-MEMORY" 7 "September 2012" "" "Direct Rendering Manager"
+.SH NAME
+drm-memory \- DRM Memory Management
 .SH SYNOPSIS
 .sp
 \fB#include <xf86drm.h>\fP
@@ -198,25 +198,10 @@ rendering, cursors and CPU\-access. See the libgbm library for more information
 or look at the driver\-dependent man\-pages (for example \fBdrm\-intel\fP(7) or
 \fBdrm\-radeon\fP(7)).
 .sp
-GEM\-buffers can be closed with the \fBDRM_IOCTL_GEM_CLOSE\fP ioctl. It takes as
-argument a structure of type \fBstruct drm_gem_close\fP:
-.INDENT 0.0
-.INDENT 3.5
-.sp
-.nf
-.ft C
-struct drm_gem_close {
-    __u32 handle;
-    __u32 pad;
-};
-.ft P
-.fi
-.UNINDENT
-.UNINDENT
-.sp
-The \fIhandle\fP field is the GEM\-handle to be closed. The \fIpad\fP field is unused
-padding. It must be zeroed. After this call the GEM handle cannot be used by
-this process anymore and may be reused for new GEM objects by the GEM API.
+GEM\-buffers can be closed with \fBdrmCloseBufferHandle\fP(3). It takes as
+argument the GEM\-handle to be closed. After this call the GEM handle cannot be
+used by this process anymore and may be reused for new GEM objects by the GEM
+API.
 .sp
 If you want to share GEM\-objects between different processes, you can create a
 name for them and pass this name to other processes which can then open this

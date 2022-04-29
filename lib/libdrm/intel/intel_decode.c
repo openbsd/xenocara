@@ -3815,32 +3815,35 @@ drm_public struct drm_intel_decode *
 drm_intel_decode_context_alloc(uint32_t devid)
 {
 	struct drm_intel_decode *ctx;
+	int gen = 0;
+
+	if (intel_get_genx(devid, &gen))
+		;
+	else if (IS_GEN8(devid))
+		gen = 8;
+	else if (IS_GEN7(devid))
+		gen = 7;
+	else if (IS_GEN6(devid))
+		gen = 6;
+	else if (IS_GEN5(devid))
+		gen = 5;
+	else if (IS_GEN4(devid))
+		gen = 4;
+	else if (IS_9XX(devid))
+		gen = 3;
+	else if (IS_GEN2(devid))
+		gen = 2;
+
+	if (!gen)
+		return NULL;
 
 	ctx = calloc(1, sizeof(struct drm_intel_decode));
 	if (!ctx)
 		return NULL;
 
 	ctx->devid = devid;
+	ctx->gen = gen;
 	ctx->out = stdout;
-
-	if (intel_get_genx(devid, &ctx->gen))
-		;
-	else if (IS_GEN8(devid))
-		ctx->gen = 8;
-	else if (IS_GEN7(devid))
-		ctx->gen = 7;
-	else if (IS_GEN6(devid))
-		ctx->gen = 6;
-	else if (IS_GEN5(devid))
-		ctx->gen = 5;
-	else if (IS_GEN4(devid))
-		ctx->gen = 4;
-	else if (IS_9XX(devid))
-		ctx->gen = 3;
-	else {
-		assert(IS_GEN2(devid));
-		ctx->gen = 2;
-	}
 
 	return ctx;
 }

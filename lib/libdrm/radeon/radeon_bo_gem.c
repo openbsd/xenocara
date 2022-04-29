@@ -125,7 +125,6 @@ static void bo_ref(struct radeon_bo_int *boi)
 static struct radeon_bo *bo_unref(struct radeon_bo_int *boi)
 {
     struct radeon_bo_gem *bo_gem = (struct radeon_bo_gem*)boi;
-    struct drm_gem_close args;
 
     if (boi->cref) {
         return (struct radeon_bo *)boi;
@@ -134,12 +133,8 @@ static struct radeon_bo *bo_unref(struct radeon_bo_int *boi)
         drm_munmap(bo_gem->priv_ptr, boi->size);
     }
 
-    /* Zero out args to make valgrind happy */
-    memset(&args, 0, sizeof(args));
-
     /* close object */
-    args.handle = boi->handle;
-    drmIoctl(boi->bom->fd, DRM_IOCTL_GEM_CLOSE, &args);
+    drmCloseBufferHandle(boi->bom->fd, boi->handle);
     memset(bo_gem, 0, sizeof(struct radeon_bo_gem));
     free(bo_gem);
     return NULL;
