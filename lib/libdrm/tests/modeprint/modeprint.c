@@ -113,7 +113,7 @@ static int printProperty(int fd, drmModeResPtr res, drmModePropertyPtr props, ui
 
 	} else {
 		for (j = 0; j < props->count_enums; j++) {
-			printf("\t\t%lld = %s\n", props->enums[j].value, props->enums[j].name);
+			printf("\t\t%" PRId64 " = %s\n", props->enums[j].value, props->enums[j].name);
 			if (props->enums[j].value == value)
 				name = props->enums[j].name;
 		}

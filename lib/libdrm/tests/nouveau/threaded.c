@@ -31,7 +31,7 @@
 #include "xf86drm.h"
 #include "nouveau.h"
 
-static typeof(ioctl) *old_ioctl;
+static __typeof__(ioctl) *old_ioctl;
 static int failed;
 
 static int import_fd;

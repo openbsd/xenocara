@@ -31,6 +31,7 @@ libdrm_intel = library(
   link_with : libdrm,
   dependencies : [dep_pciaccess, dep_pthread_stubs, dep_rt, dep_valgrind, dep_atomic_ops],
   c_args : libdrm_c_args,
+  gnu_symbol_visibility : 'hidden',
   version : '1.0.0',
   install : true,
 )
@@ -40,16 +41,19 @@ ext_libdrm_intel = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('libdrm_intel', ext_libdrm_intel)
+endif
+
 install_headers(
   'intel_bufmgr.h', 'intel_aub.h', 'intel_debug.h',
   subdir : 'libdrm',
 )
 
 pkg.generate(
+  libdrm_intel,
   name : 'libdrm_intel',
-  libraries : libdrm_intel,
   subdirs : ['.', 'libdrm'],
-  version : meson.project_version(),
   requires : 'libdrm',
   description : 'Userspace interface to intel kernel DRM services',
 )
@@ -60,6 +64,7 @@ test_decode = executable(
   include_directories : [inc_root, inc_drm],
   link_with : [libdrm, libdrm_intel],
   c_args : libdrm_c_args,
+  gnu_symbol_visibility : 'hidden',
 )
 
 test(

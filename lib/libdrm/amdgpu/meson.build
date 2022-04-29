@@ -44,11 +44,9 @@ libdrm_amdgpu = library(
 install_headers('amdgpu.h', subdir : 'libdrm')
 
 pkg.generate(
+  libdrm_amdgpu,
   name : 'libdrm_amdgpu',
-  libraries : libdrm_amdgpu,
   subdirs : ['.', 'libdrm'],
-  version : meson.project_version(),
-  requires_private : 'libdrm',
   description : 'Userspace interface to kernel DRM services for amdgpu',
 )
 
@@ -56,6 +54,10 @@ ext_libdrm_amdgpu = declare_dependency(
   link_with : [libdrm, libdrm_amdgpu],
   include_directories : [inc_drm, include_directories('.')],
 )
+
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('libdrm_amdgpu', ext_libdrm_amdgpu)
+endif
 
 test(
   'amdgpu-symbols-check',

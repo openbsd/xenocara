@@ -300,11 +300,9 @@ static const char *modifier_to_string(uint64_t modifier)
 
 static void dump_in_formats(struct device *dev, uint32_t blob_id)
 {
-	uint32_t i, j;
+	drmModeFormatModifierIterator iter = {0};
 	drmModePropertyBlobPtr blob;
-	struct drm_format_modifier_blob *header;
-	uint32_t *formats;
-	struct drm_format_modifier *modifiers;
+	uint32_t fmt = 0;
 
 	printf("\t\tin_formats blob decoded:\n");
 	blob = drmModeGetPropertyBlob(dev->fd, blob_id);
@@ -313,22 +311,18 @@ static void dump_in_formats(struct device *dev, uint32_t blob_id)
 		return;
 	}
 
-	header = blob->data;
-	formats = (uint32_t *) ((char *) header + header->formats_offset);
-	modifiers = (struct drm_format_modifier *)
-		((char *) header + header->modifiers_offset);
-
-	for (i = 0; i < header->count_formats; i++) {
-		printf("\t\t\t");
-		dump_fourcc(formats[i]);
-		printf(": ");
-		for (j = 0; j < header->count_modifiers; j++) {
-			uint64_t mask = 1ULL << i;
-			if (modifiers[j].formats & mask)
-				printf(" %s", modifier_to_string(modifiers[j].modifier));
+	while (drmModeFormatModifierBlobIterNext(blob, &iter)) {
+		if (!fmt || fmt != iter.fmt) {
+			printf("%s\t\t\t", !fmt ? "" : "\n");
+			fmt = iter.fmt;
+			dump_fourcc(fmt);
+			printf(": ");
 		}
-		printf("\n");
+
+		printf(" %s", modifier_to_string(iter.mod));
 	}
+
+	printf("\n");
 
 	drmModeFreePropertyBlob(blob);
 }
@@ -381,7 +375,7 @@ static void dump_prop(struct device *dev, drmModePropertyPtr prop,
 	if (drm_property_type_is(prop, DRM_MODE_PROP_ENUM)) {
 		printf("\t\tenums:");
 		for (i = 0; i < prop->count_enums; i++)
-			printf(" %s=%llu", prop->enums[i].name,
+			printf(" %s=%"PRIu64, prop->enums[i].name,
 			       prop->enums[i].value);
 		printf("\n");
 	} else if (drm_property_type_is(prop, DRM_MODE_PROP_BITMASK)) {
@@ -1710,13 +1704,21 @@ static void set_planes(struct device *dev, struct plane_arg *p, unsigned int cou
 static void set_cursors(struct device *dev, struct pipe_arg *pipes, unsigned int count)
 {
 	uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
+	uint32_t cw = 64;
+	uint32_t ch = 64;
 	struct bo *bo;
+	uint64_t value;
 	unsigned int i;
 	int ret;
 
-	/* maybe make cursor width/height configurable some day */
-	uint32_t cw = 64;
-	uint32_t ch = 64;
+	ret = drmGetCap(dev->fd, DRM_CAP_CURSOR_WIDTH, &value);
+	if (!ret)
+		cw = value;
+
+	ret = drmGetCap(dev->fd, DRM_CAP_CURSOR_HEIGHT, &value);
+	if (!ret)
+		ch = value;
+
 
 	/* create cursor bo.. just using PATTERN_PLAIN as it has
 	 * translucent alpha

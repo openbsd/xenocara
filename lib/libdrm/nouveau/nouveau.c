@@ -607,7 +607,6 @@ nouveau_bo_del(struct nouveau_bo *bo)
 	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_device_priv *nvdev = nouveau_device(bo->device);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
-	struct drm_gem_close req = { .handle = bo->handle };
 
 	if (nvbo->head.next) {
 		pthread_mutex_lock(&nvdev->lock);
@@ -621,11 +620,11 @@ nouveau_bo_del(struct nouveau_bo *bo)
 			 * might cause the bo to be closed accidentally while
 			 * re-importing.
 			 */
-			drmIoctl(drm->fd, DRM_IOCTL_GEM_CLOSE, &req);
+			drmCloseBufferHandle(drm->fd, bo->handle);
 		}
 		pthread_mutex_unlock(&nvdev->lock);
 	} else {
-		drmIoctl(drm->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmCloseBufferHandle(drm->fd, bo->handle);
 	}
 	if (bo->map)
 		drm_munmap(bo->map, bo->size);

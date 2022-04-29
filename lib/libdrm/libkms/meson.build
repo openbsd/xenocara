@@ -56,14 +56,17 @@ ext_libkms = declare_dependency(
   include_directories : [libkms_include],
 )
 
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('kms', ext_libkms)
+endif
+
 install_headers('libkms.h', subdir : 'libkms')
 
 pkg.generate(
+  libkms,
   name : 'libkms',
-  libraries : libkms,
   subdirs : ['libkms'],
   version : '1.0.0',
-  requires_private : 'libdrm',
   description : 'Library that abstracts away the different mm interfaces for kernel drivers',
 )
 

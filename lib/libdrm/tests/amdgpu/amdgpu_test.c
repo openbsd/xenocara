@@ -65,6 +65,7 @@
 #define CS_TESTS_STR "CS Tests"
 #define VCE_TESTS_STR "VCE Tests"
 #define VCN_TESTS_STR "VCN Tests"
+#define JPEG_TESTS_STR "JPEG Tests"
 #define UVD_ENC_TESTS_STR "UVD ENC Tests"
 #define DEADLOCK_TESTS_STR "Deadlock Tests"
 #define VM_TESTS_STR "VM Tests"
@@ -113,6 +114,12 @@ static CU_SuiteInfo suites[] = {
 		.pInitFunc = suite_vcn_tests_init,
 		.pCleanupFunc = suite_vcn_tests_clean,
 		.pTests = vcn_tests,
+	},
+	{
+		.pName = JPEG_TESTS_STR,
+		.pInitFunc = suite_jpeg_tests_init,
+		.pCleanupFunc = suite_jpeg_tests_clean,
+		.pTests = jpeg_tests,
 	},
 	{
 		.pName = UVD_ENC_TESTS_STR,
@@ -192,6 +199,10 @@ static Suites_Active_Status suites_active_stat[] = {
 		{
 			.pName = VCN_TESTS_STR,
 			.pActive = suite_vcn_tests_enable,
+		},
+		{
+			.pName = JPEG_TESTS_STR,
+			.pActive = suite_jpeg_tests_enable,
 		},
 		{
 			.pName = UVD_ENC_TESTS_STR,

@@ -305,7 +305,7 @@ static void amdgpu_secure_bounce(void)
 	/* Fill Alice with a pattern.
 	 */
 	for (pp = alice.bo->cpu_ptr;
-	     pp < (typeof(pp)) alice.bo->cpu_ptr + SECURE_BUFFER_SIZE;
+	     pp < (__typeof__(pp)) alice.bo->cpu_ptr + SECURE_BUFFER_SIZE;
 	     pp += sizeof(secure_pattern))
 		memcpy(pp, secure_pattern, sizeof(secure_pattern));
 
@@ -315,7 +315,7 @@ static void amdgpu_secure_bounce(void)
 				  SECURE_BUFFER_SIZE,
 				  page_size,
 				  AMDGPU_GEM_DOMAIN_VRAM,
-				  0 /* AMDGPU_GEM_CREATE_ENCRYPTED */,
+				  AMDGPU_GEM_CREATE_ENCRYPTED,
 				  &bob);
 	if (res) {
 		PRINT_ERROR(res);
@@ -323,9 +323,9 @@ static void amdgpu_secure_bounce(void)
 		goto Out_free_Alice;
 	}
 
-	/* sDMA clear copy from Alice to Bob.
+	/* sDMA TMZ copy from Alice to Bob.
 	 */
-	amdgpu_bo_lcopy(&sb_ctx, &bob, &alice, SECURE_BUFFER_SIZE, 0);
+	amdgpu_bo_lcopy(&sb_ctx, &bob, &alice, SECURE_BUFFER_SIZE, 1);
 
 	/* Move Bob to the GTT domain.
 	 */
@@ -336,14 +336,14 @@ static void amdgpu_secure_bounce(void)
 		goto Out_free_all;
 	}
 
-	/* sDMA clear copy from Bob to Alice.
+	/* sDMA TMZ copy from Bob to Alice.
 	 */
-	amdgpu_bo_lcopy(&sb_ctx, &alice, &bob, SECURE_BUFFER_SIZE, 0);
+	amdgpu_bo_lcopy(&sb_ctx, &alice, &bob, SECURE_BUFFER_SIZE, 1);
 
 	/* Verify the contents of Alice.
 	 */
 	for (pp = alice.bo->cpu_ptr;
-	     pp < (typeof(pp)) alice.bo->cpu_ptr + SECURE_BUFFER_SIZE;
+	     pp < (__typeof__(pp)) alice.bo->cpu_ptr + SECURE_BUFFER_SIZE;
 	     pp += sizeof(secure_pattern)) {
 		res = memcmp(pp, secure_pattern, sizeof(secure_pattern));
 		if (res) {

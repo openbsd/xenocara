@@ -21,10 +21,10 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.107',
+  version : '2.4.110',
   license : 'MIT',
-  meson_version : '>= 0.46',
-  default_options : ['buildtype=debugoptimized', 'c_std=gnu99'],
+  meson_version : '>= 0.53',
+  default_options : ['buildtype=debugoptimized', 'c_std=c99'],
 )
 
 pkg = import('pkgconfig')
@@ -44,6 +44,8 @@ dep_threads = dependency('threads')
 
 cc = meson.get_compiler('c')
 
+android = cc.compiles('''int func() { return __ANDROID__; }''')
+
 symbols_check = find_program('symbols-check.py')
 prog_nm = find_program('nm')
 
@@ -52,8 +54,10 @@ intel_atomics = false
 lib_atomics = false
 
 python3 = import('python').find_installation()
-format_mod_static_table = custom_target('format_mod_static_table',
-  output : 'generated_static_table_fourcc.h', input: 'include/drm/drm_fourcc.h',
+format_mod_static_table = custom_target(
+  'format_mod_static_table',
+  output : 'generated_static_table_fourcc.h',
+  input : 'include/drm/drm_fourcc.h',
   command : [python3, files('gen_table_fourcc.py'), '@INPUT@', '@OUTPUT@'])
 
 dep_atomic_ops = dependency('atomic_ops', required : false)
@@ -87,6 +91,7 @@ if _intel != 'false'
     with_intel = _intel == 'true' or host_machine.cpu_family().startswith('x86')
   endif
 endif
+summary('Intel', with_intel)
 
 with_radeon = false
 _radeon = get_option('radeon')
@@ -96,6 +101,7 @@ if _radeon != 'false'
   endif
   with_radeon = true
 endif
+summary('Radeon', with_radeon)
 
 with_amdgpu = false
 _amdgpu = get_option('amdgpu')
@@ -105,6 +111,7 @@ if _amdgpu != 'false'
   endif
   with_amdgpu = true
 endif
+summary('AMDGPU', with_amdgpu)
 
 with_nouveau = false
 _nouveau = get_option('nouveau')
@@ -114,12 +121,14 @@ if _nouveau != 'false'
   endif
   with_nouveau = true
 endif
+summary('Nouveau', with_nouveau)
 
 with_vmwgfx = false
 _vmwgfx = get_option('vmwgfx')
 if _vmwgfx != 'false'
   with_vmwgfx = true
 endif
+summary('vmwgfx', with_vmwgfx)
 
 with_omap = false
 _omap = get_option('omap')
@@ -129,6 +138,7 @@ if _omap == 'true'
   endif
   with_omap = true
 endif
+summary('OMAP', with_omap)
 
 with_freedreno = false
 _freedreno = get_option('freedreno')
@@ -139,6 +149,8 @@ if _freedreno != 'false'
     with_freedreno = _freedreno == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
   endif
 endif
+summary('Freedreno', with_freedreno)
+summary('Freedreon-kgsl', with_freedreno_kgsl)
 
 with_tegra = false
 _tegra = get_option('tegra')
@@ -148,6 +160,7 @@ if _tegra == 'true'
   endif
   with_tegra = true
 endif
+summary('Tegra', with_tegra)
 
 with_etnaviv = false
 _etnaviv = get_option('etnaviv')
@@ -157,22 +170,26 @@ if _etnaviv == 'true'
   endif
   with_etnaviv = true
 endif
+summary('Etnaviv', with_etnaviv)
 
 with_exynos = get_option('exynos') == 'true'
+summary('EXYNOS', with_exynos)
 
 with_vc4 = false
 _vc4 = get_option('vc4')
 if _vc4 != 'false'
   with_vc4 = _vc4 == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
 endif
+summary('VC4', with_vc4)
 
 # XXX: Apparently only freebsd and dragonfly bsd actually need this (and
 # gnu/kfreebsd), not openbsd and netbsd
 with_libkms = false
 _libkms = get_option('libkms')
 if _libkms != 'false'
-  with_libkms = _libkms == 'true' or ['linux', 'freebsd', 'dragonfly'].contains(host_machine.system())
+  with_libkms = _libkms == 'true' or (['linux', 'freebsd', 'dragonfly'].contains(host_machine.system()) and not android)
 endif
+summary('libkms', with_libkms)
 
 # Among others FreeBSD does not have a separate dl library.
 if not cc.has_function('dlsym')
@@ -201,8 +218,7 @@ else
 endif
 
 foreach header : ['sys/select.h', 'alloca.h']
-  config.set10('HAVE_' + header.underscorify().to_upper(),
-    cc.compiles('#include <@0@>'.format(header), name : '@0@ works'.format(header)))
+  config.set10('HAVE_' + header.underscorify().to_upper(), cc.check_header(header))
 endforeach
 
 if (cc.has_header_symbol('sys/sysmacros.h', 'major') and
@@ -217,30 +233,15 @@ if (cc.has_header_symbol('sys/mkdev.h', 'major') and
 endif
 config.set10('HAVE_OPEN_MEMSTREAM', cc.has_function('open_memstream'))
 
-warn_c_args = []
-foreach a : ['-Wall', '-Wextra', '-Wsign-compare', '-Werror=undef',
-             '-Werror=implicit-function-declaration', '-Wpointer-arith',
-             '-Wwrite-strings', '-Wstrict-prototypes', '-Wmissing-prototypes',
-             '-Wmissing-declarations', '-Wnested-externs', '-Wpacked',
-             '-Wswitch-enum', '-Wmissing-format-attribute',
-             '-Wstrict-aliasing=2', '-Winit-self', '-Winline', '-Wshadow',
-             '-Wdeclaration-after-statement', '-Wold-style-definition']
-  if cc.has_argument(a)
-    warn_c_args += a
-  endif
-endforeach
-# GCC will never error for -Wno-*, so check for -W* then add -Wno-* to the list
-# of options
-foreach a : ['unused-parameter', 'attributes', 'long-long',
-             'missing-field-initializers']
-  if cc.has_argument('-W@0@'.format(a))
-    warn_c_args += '-Wno-@0@'.format(a)
-  endif
-endforeach
-
-# all c args:
-libdrm_c_args = warn_c_args + ['-fvisibility=hidden']
-
+libdrm_c_args = cc.get_supported_arguments([
+  '-Wsign-compare', '-Werror=undef', '-Werror=implicit-function-declaration',
+  '-Wpointer-arith', '-Wwrite-strings', '-Wstrict-prototypes',
+  '-Wmissing-prototypes', '-Wmissing-declarations', '-Wnested-externs',
+  '-Wpacked', '-Wswitch-enum', '-Wmissing-format-attribute',
+  '-Wstrict-aliasing=2', '-Winit-self', '-Winline', '-Wshadow',
+  '-Wdeclaration-after-statement', '-Wold-style-definition',
+  '-Wno-unused-parameter', '-Wno-attributes', '-Wno-long-long',
+  '-Wno-missing-field-initializers'])
 
 dep_pciaccess = dependency('pciaccess', version : '>= 0.10', required : with_intel)
 dep_cunit = dependency('cunit', version : '>= 2.1', required : false)
@@ -269,9 +270,7 @@ with_man_pages = get_option('man-pages')
 prog_rst2man = find_program('rst2man', 'rst2man.py', required: with_man_pages == 'true')
 with_man_pages = with_man_pages != 'false' and prog_rst2man.found()
 
-config.set10('HAVE_VISIBILITY',
-  cc.compiles('''int foo_hidden(void) __attribute__((visibility(("hidden"))));''',
-              name : 'compiler supports __attribute__(("hidden"))'))
+config.set10('HAVE_VISIBILITY', cc.has_function_attribute('visibility:hidden'))
 
 foreach t : [
              [with_exynos, 'EXYNOS'],
@@ -299,19 +298,29 @@ add_project_arguments('-include', '@0@'.format(config_file), language : 'c')
 inc_root = include_directories('.')
 inc_drm = include_directories('include/drm')
 
+libdrm_files = [files(
+   'xf86drm.c', 'xf86drmHash.c', 'xf86drmRandom.c', 'xf86drmSL.c',
+   'xf86drmMode.c'
+  ),
+  config_file, format_mod_static_table
+]
+
+# Build an unversioned so on android
+if android
+  libdrm_kw = {}
+else
+  libdrm_kw = {'version' : '2.4.0'}
+endif
+
 libdrm = library(
   'drm',
-  [files(
-     'xf86drm.c', 'xf86drmHash.c', 'xf86drmRandom.c', 'xf86drmSL.c',
-     'xf86drmMode.c'
-   ),
-   config_file, format_mod_static_table
-  ],
+  libdrm_files,
   c_args : libdrm_c_args,
   dependencies : [dep_valgrind, dep_rt, dep_m],
   include_directories : inc_drm,
-  version : '2.4.0',
   install : true,
+  kwargs : libdrm_kw,
+  gnu_symbol_visibility : 'hidden',
 )
 
 test(
@@ -328,6 +337,10 @@ ext_libdrm = declare_dependency(
   link_with : libdrm,
   include_directories : [inc_root, inc_drm],
 )
+
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('libdrm', ext_libdrm)
+endif
 
 install_headers('libsync.h', 'xf86drm.h', 'xf86drmMode.h')
 install_headers(
@@ -347,10 +360,9 @@ if with_vmwgfx
 endif
 
 pkg.generate(
+  libdrm,
   name : 'libdrm',
-  libraries : libdrm,
   subdirs : ['.', 'libdrm'],
-  version : meson.project_version(),
   description : 'Userspace interface to kernel DRM services',
 )
 
@@ -392,20 +404,3 @@ if with_man_pages
 endif
 subdir('data')
 subdir('tests')
-
-message('')
-message('@0@ will be compiled with:'.format(meson.project_name()))
-message('')
-message('  libkms         @0@'.format(with_libkms))
-message('  Intel API      @0@'.format(with_intel))
-message('  vmwgfx API     @0@'.format(with_vmwgfx))
-message('  Radeon API     @0@'.format(with_radeon))
-message('  AMDGPU API     @0@'.format(with_amdgpu))
-message('  Nouveau API    @0@'.format(with_nouveau))
-message('  OMAP API       @0@'.format(with_omap))
-message('  EXYNOS API     @0@'.format(with_exynos))
-message('  Freedreno API  @0@ (kgsl: @1@)'.format(with_freedreno, with_freedreno_kgsl))
-message('  Tegra API      @0@'.format(with_tegra))
-message('  VC4 API        @0@'.format(with_vc4))
-message('  Etnaviv API    @0@'.format(with_etnaviv))
-message('')

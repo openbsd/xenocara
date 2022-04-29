@@ -48,7 +48,6 @@ struct radeon_bo {
     uint32_t                    size;
 };
 
-struct radeon_bo_manager;
 
 void radeon_bo_debug(struct radeon_bo *bo, const char *op);
 

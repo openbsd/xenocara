@@ -25,6 +25,7 @@ amdgpu_cs_ctx_create
 amdgpu_cs_ctx_create2
 amdgpu_cs_ctx_free
 amdgpu_cs_ctx_override_priority
+amdgpu_cs_ctx_stable_pstate
 amdgpu_cs_destroy_semaphore
 amdgpu_cs_destroy_syncobj
 amdgpu_cs_export_syncobj
@@ -53,6 +54,7 @@ amdgpu_cs_syncobj_wait
 amdgpu_cs_wait_fences
 amdgpu_cs_wait_semaphore
 amdgpu_device_deinitialize
+amdgpu_device_get_fd
 amdgpu_device_initialize
 amdgpu_find_bo_by_cpu_mapping
 amdgpu_get_marketing_name

@@ -169,19 +169,10 @@ rendering, cursors and CPU-access. See the libgbm library for more information
 or look at the driver-dependent man-pages (for example **drm-intel**\ (7) or
 **drm-radeon**\ (7)).
 
-GEM-buffers can be closed with the ``DRM_IOCTL_GEM_CLOSE`` ioctl. It takes as
-argument a structure of type ``struct drm_gem_close``:
-
-::
-
-   struct drm_gem_close {
-       __u32 handle;
-       __u32 pad;
-   };
-
-The *handle* field is the GEM-handle to be closed. The *pad* field is unused
-padding. It must be zeroed. After this call the GEM handle cannot be used by
-this process anymore and may be reused for new GEM objects by the GEM API.
+GEM-buffers can be closed with **drmCloseBufferHandle**\ (3). It takes as
+argument the GEM-handle to be closed. After this call the GEM handle cannot be
+used by this process anymore and may be reused for new GEM objects by the GEM
+API.
 
 If you want to share GEM-objects between different processes, you can create a
 name for them and pass this name to other processes which can then open this

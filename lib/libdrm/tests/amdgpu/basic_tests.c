@@ -62,6 +62,7 @@ static void amdgpu_compute_dispatch_test(void);
 static void amdgpu_gfx_dispatch_test(void);
 static void amdgpu_draw_test(void);
 static void amdgpu_gpu_reset_test(void);
+static void amdgpu_stable_pstate_test(void);
 
 static void amdgpu_command_submission_write_linear_helper(unsigned ip_type);
 static void amdgpu_command_submission_const_fill_helper(unsigned ip_type);
@@ -87,6 +88,7 @@ CU_TestInfo basic_tests[] = {
 	{ "Dispatch Test (GFX)",  amdgpu_gfx_dispatch_test },
 	{ "Draw Test",  amdgpu_draw_test },
 	{ "GPU reset Test", amdgpu_gpu_reset_test },
+	{ "Stable pstate Test", amdgpu_stable_pstate_test },
 	CU_TEST_INFO_NULL,
 };
 #define BUFFER_SIZE (MAX2(8 * 1024, getpagesize()))
@@ -3880,4 +3882,34 @@ static void amdgpu_gpu_reset_test(void)
 
 	amdgpu_compute_dispatch_test();
 	amdgpu_gfx_dispatch_test();
+}
+
+static void amdgpu_stable_pstate_test(void)
+{
+	int r;
+	amdgpu_context_handle context_handle;
+	uint32_t current_pstate = 0, new_pstate = 0;
+
+	r = amdgpu_cs_ctx_create(device_handle, &context_handle);
+	CU_ASSERT_EQUAL(r, 0);
+
+	r = amdgpu_cs_ctx_stable_pstate(context_handle,
+					AMDGPU_CTX_OP_GET_STABLE_PSTATE,
+					0, &current_pstate);
+	CU_ASSERT_EQUAL(r, 0);
+	CU_ASSERT_EQUAL(new_pstate, AMDGPU_CTX_STABLE_PSTATE_NONE);
+
+	r = amdgpu_cs_ctx_stable_pstate(context_handle,
+					AMDGPU_CTX_OP_SET_STABLE_PSTATE,
+					AMDGPU_CTX_STABLE_PSTATE_PEAK, NULL);
+	CU_ASSERT_EQUAL(r, 0);
+
+	r = amdgpu_cs_ctx_stable_pstate(context_handle,
+					AMDGPU_CTX_OP_GET_STABLE_PSTATE,
+					0, &new_pstate);
+	CU_ASSERT_EQUAL(r, 0);
+	CU_ASSERT_EQUAL(new_pstate, AMDGPU_CTX_STABLE_PSTATE_PEAK);
+
+	r = amdgpu_cs_ctx_free(context_handle);
+	CU_ASSERT_EQUAL(r, 0);
 }

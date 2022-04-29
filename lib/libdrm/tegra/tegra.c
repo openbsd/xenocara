@@ -38,15 +38,11 @@
 static void drm_tegra_bo_free(struct drm_tegra_bo *bo)
 {
 	struct drm_tegra *drm = bo->drm;
-	struct drm_gem_close args;
 
 	if (bo->map)
 		munmap(bo->map, bo->size);
 
-	memset(&args, 0, sizeof(args));
-	args.handle = bo->handle;
-
-	drmIoctl(drm->fd, DRM_IOCTL_GEM_CLOSE, &args);
+	drmCloseBufferHandle(drm->fd, bo->handle);
 
 	free(bo);
 }

@@ -546,6 +546,19 @@ int amdgpu_device_initialize(int fd,
 */
 int amdgpu_device_deinitialize(amdgpu_device_handle device_handle);
 
+/**
+ *
+ * /param device_handle - \c [in] Device handle.
+ *                           See #amdgpu_device_initialize()
+ *
+ * \return Returns the drm fd used for operations on this
+ *         device. This is still owned by the library and hence
+ *         should not be closed. Guaranteed to be valid until
+ *         #amdgpu_device_deinitialize gets called.
+ *
+*/
+int amdgpu_device_get_fd(amdgpu_device_handle device_handle);
+
 /*
  * Memory Management
  *
@@ -925,6 +938,21 @@ int amdgpu_cs_ctx_override_priority(amdgpu_device_handle dev,
                                     amdgpu_context_handle context,
                                     int master_fd,
                                     unsigned priority);
+
+/**
+ * Set or query the stable power state for GPU profiling.
+ *
+ * \param   dev        - \c [in] device handle
+ * \param   op         - \c [in] AMDGPU_CTX_OP_{GET,SET}_STABLE_PSTATE
+ * \param   flags      - \c [in] AMDGPU_CTX_STABLE_PSTATE_*
+ * \param   out_flags  - \c [out] output current stable pstate
+ *
+ * \return  0 on success otherwise POSIX Error code.
+ */
+int amdgpu_cs_ctx_stable_pstate(amdgpu_context_handle context,
+			        uint32_t op,
+			        uint32_t flags,
+			        uint32_t *out_flags);
 
 /**
  * Query reset state for the specific GPU Context

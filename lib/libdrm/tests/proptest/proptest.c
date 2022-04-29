@@ -126,7 +126,7 @@ dump_prop(uint32_t prop_id, uint64_t value)
 	if (drm_property_type_is(prop, DRM_MODE_PROP_ENUM)) {
 		printf("\t\tenums:");
 		for (i = 0; i < prop->count_enums; i++)
-			printf(" %s=%llu", prop->enums[i].name,
+			printf(" %s=%"PRIu64, prop->enums[i].name,
 			       prop->enums[i].value);
 		printf("\n");
 	} else if (drm_property_type_is(prop, DRM_MODE_PROP_BITMASK)) {

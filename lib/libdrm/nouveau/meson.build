@@ -23,6 +23,7 @@ libdrm_nouveau = library(
   'drm_nouveau',
   [files( 'nouveau.c', 'pushbuf.c', 'bufctx.c', 'abi16.c'), config_file],
   c_args : libdrm_c_args,
+  gnu_symbol_visibility : 'hidden',
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
   dependencies : [dep_threads, dep_atomic_ops],
@@ -35,6 +36,10 @@ ext_libdrm_nouveau = declare_dependency(
   include_directories : [inc_drm, include_directories('.')],
 )
 
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('libdrm_nouveau', ext_libdrm_nouveau)
+endif
+
 install_headers('nouveau.h', subdir : 'libdrm/nouveau')
 install_headers(
   'nvif/class.h', 'nvif/cl0080.h', 'nvif/cl9097.h', 'nvif/if0002.h',
@@ -43,11 +48,9 @@ install_headers(
 )
 
 pkg.generate(
+  libdrm_nouveau,
   name : 'libdrm_nouveau',
-  libraries : libdrm_nouveau,
   subdirs : ['.', 'libdrm', 'libdrm/nouveau'],
-  version : meson.project_version(),
-  requires_private : 'libdrm',
   description : 'Userspace interface to nouveau kernel DRM services',
 )
 

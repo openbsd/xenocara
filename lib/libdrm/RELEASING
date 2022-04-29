@@ -18,9 +18,9 @@ Follow these steps to release a new version of libdrm:
      builddir/meson-dist/ matches the number you bumped to. Move that
      tarball to the libdrm repo root for the release script to pick up.
 
-  3) Push the updated master branch with the bumped version number:
+  3) Push the updated main branch with the bumped version number:
 
-	git push origin master
+	git push origin main
 
      assuming the remote for the upstream libdrm repo is called origin.
 

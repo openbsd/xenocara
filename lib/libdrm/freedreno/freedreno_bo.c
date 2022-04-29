@@ -62,10 +62,7 @@ static struct fd_bo * bo_from_handle(struct fd_device *dev,
 
 	bo = dev->funcs->bo_from_handle(dev, size, handle);
 	if (!bo) {
-		struct drm_gem_close req = {
-				.handle = handle,
-		};
-		drmIoctl(dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmCloseBufferHandle(dev->fd, handle);
 		return NULL;
 	}
 	bo->dev = fd_device_ref(dev);
@@ -263,13 +260,10 @@ drm_private void bo_del(struct fd_bo *bo)
 	 */
 
 	if (bo->handle) {
-		struct drm_gem_close req = {
-				.handle = bo->handle,
-		};
 		drmHashDelete(bo->dev->handle_table, bo->handle);
 		if (bo->name)
 			drmHashDelete(bo->dev->name_table, bo->name);
-		drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmCloseBufferHandle(bo->dev->fd, bo->handle);
 	}
 
 	bo->funcs->destroy(bo);

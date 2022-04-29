@@ -29,6 +29,7 @@
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include <xf86drm.h>
 #include <xf86atomic.h>
@@ -274,9 +275,10 @@ pushbuf_dump(struct nouveau_pushbuf_krec *krec, int krec_id, int chid)
 
 	kref = krec->buffer;
 	for (i = 0; i < krec->nr_buffer; i++, kref++) {
-		err("ch%d: buf %08x %08x %08x %08x %08x\n", chid, i,
+		bo = (void *)(uintptr_t)kref->user_priv;
+		err("ch%d: buf %08x %08x %08x %08x %08x %p 0x%"PRIx64" 0x%"PRIx64"\n", chid, i,
 		    kref->handle, kref->valid_domains,
-		    kref->read_domains, kref->write_domains);
+		    kref->read_domains, kref->write_domains, bo->map, bo->offset, bo->size);
 	}
 
 	krel = krec->reloc;

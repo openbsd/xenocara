@@ -31,6 +31,7 @@ libdrm_etnaviv = library(
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
   c_args : libdrm_c_args,
+  gnu_symbol_visibility : 'hidden',
   dependencies : [dep_pthread_stubs, dep_rt, dep_atomic_ops],
   version : '1.0.0',
   install : true,
@@ -39,11 +40,9 @@ libdrm_etnaviv = library(
 install_headers('etnaviv_drmif.h', subdir : 'libdrm')
 
 pkg.generate(
+  libdrm_etnaviv,
   name : 'libdrm_etnaviv',
-  libraries : libdrm_etnaviv,
   subdirs : ['.', 'libdrm'],
-  version : meson.project_version(),
-  requires_private : 'libdrm',
   description : 'Userspace interface to Tegra kernel DRM services',
 )
 
@@ -51,6 +50,10 @@ ext_libdrm_etnaviv = declare_dependency(
   link_with : [libdrm, libdrm_etnaviv],
   include_directories : [inc_drm, include_directories('.')],
 )
+
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('libdrm_etnaviv', ext_libdrm_etnaviv)
+endif
 
 test(
   'etnaviv-symbols-check',

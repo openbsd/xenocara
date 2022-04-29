@@ -140,6 +140,26 @@ CU_BOOL suite_vcn_tests_enable(void);
 extern CU_TestInfo vcn_tests[];
 
 /**
++ * Initialize jpeg test suite
++ */
+int suite_jpeg_tests_init();
+
+/**
++ * Deinitialize jpeg test suite
++ */
+int suite_jpeg_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_jpeg_tests_enable(void);
+
+/**
++ * Tests in vcn test suite
++ */
+extern CU_TestInfo jpeg_tests[];
+
+/**
  * Initialize uvd enc test suite
  */
 int suite_uvd_enc_tests_init();

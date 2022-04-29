@@ -174,10 +174,7 @@ static struct omap_bo * bo_from_handle(struct omap_device *dev,
 {
 	struct omap_bo *bo = calloc(sizeof(*bo), 1);
 	if (!bo) {
-		struct drm_gem_close req = {
-				.handle = handle,
-		};
-		drmIoctl(dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmCloseBufferHandle(dev->fd, handle);
 		return NULL;
 	}
 	bo->dev = omap_device_ref(dev);
@@ -365,12 +362,9 @@ drm_public void omap_bo_del(struct omap_bo *bo)
 	}
 
 	if (bo->handle) {
-		struct drm_gem_close req = {
-				.handle = bo->handle,
-		};
 		pthread_mutex_lock(&table_lock);
 		drmHashDelete(bo->dev->handle_table, bo->handle);
-		drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmCloseBufferHandle(bo->dev->fd, bo->handle);
 		pthread_mutex_unlock(&table_lock);
 	}
 

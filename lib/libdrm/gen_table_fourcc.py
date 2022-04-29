@@ -64,7 +64,7 @@ static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
 
     for entry in fm_re['others']:
         (vendor, mod) = entry.split('_', 1)
-        if vendor == 'ARM' and (mod == 'TYPE_AFBC' or mod == 'TYPE_MISC'):
+        if vendor == 'ARM' and (mod == 'TYPE_AFBC' or mod == 'TYPE_MISC' or mod == 'TYPE_AFRC'):
             continue
         print_fm(f, vendor, mod, mod)
 

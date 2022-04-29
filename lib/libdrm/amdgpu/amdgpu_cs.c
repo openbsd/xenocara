@@ -167,6 +167,28 @@ drm_public int amdgpu_cs_ctx_override_priority(amdgpu_device_handle dev,
 	return 0;
 }
 
+drm_public int amdgpu_cs_ctx_stable_pstate(amdgpu_context_handle context,
+					   uint32_t op,
+					   uint32_t flags,
+					   uint32_t *out_flags)
+{
+	union drm_amdgpu_ctx args;
+	int r;
+
+	if (!context)
+		return -EINVAL;
+
+	memset(&args, 0, sizeof(args));
+	args.in.op = op;
+	args.in.ctx_id = context->id;
+	args.in.flags = flags;
+	r = drmCommandWriteRead(context->dev->fd, DRM_AMDGPU_CTX,
+				&args, sizeof(args));
+	if (!r && out_flags)
+		*out_flags = args.out.pstate.flags;
+	return r;
+}
+
 drm_public int amdgpu_cs_query_reset_state(amdgpu_context_handle context,
 					   uint32_t *state, uint32_t *hangs)
 {
