@@ -993,6 +993,12 @@ static const struct intel_device_info intel_device_info_adl_gt1 = {
    .is_alderlake = true,
 };
 
+static const struct intel_device_info intel_device_info_adl_n = {
+   GFX12_GT_FEATURES(1),
+   .is_alderlake = true,
+   .display_ver = 13,
+};
+
 static const struct intel_device_info intel_device_info_adl_gt2 = {
    GFX12_GT_FEATURES(2),
    .is_alderlake = true,
