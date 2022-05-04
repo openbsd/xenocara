@@ -1012,6 +1012,12 @@ static const struct intel_device_info intel_device_info_rpl = {
    .is_raptorlake = true,
 };
 
+static const struct intel_device_info intel_device_info_rpl_p = {
+   GFX12_GT_FEATURES(2),
+   .is_raptorlake = true,
+   .display_ver = 13,
+};
+
 #define GFX12_DG1_SG1_FEATURES                  \
    GFX12_GT_FEATURES(2),                        \
    .is_dg1 = true,                              \
