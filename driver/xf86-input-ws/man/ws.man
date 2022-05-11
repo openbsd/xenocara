@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.14 2016/09/03 14:01:16 guenther Exp $
+.\"	$OpenBSD: ws.man,v 1.15 2022/05/11 07:48:58 bentley Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -129,7 +129,7 @@ This option sets the verbosity level of the driver.
 It defaults to 0, which means no extra debug output.
 .TP 4
 .BI "Option \*qDevice\*q \*q" path \*q
-sets the path to the special file used by the device, ususally
+sets the path to the special file used by the device, usually
 .I /dev/wsmouse .
 This option is mandatory.
 .TP 4
