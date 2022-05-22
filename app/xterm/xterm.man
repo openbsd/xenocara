@@ -8977,3 +8977,7 @@ entry for xterm defines the
 capability as \fB^?\fP.
 .PP
 The u\*n and koi8r\*n shell scripts are not provided by OpenBSD.
+.PP
+The following functions are disabled on OpenBSD:
+\fBexec\-formatted()\fP, \fBexec\-selectable()\fP and
+\fBspawn\-new\-terminal()\fP.
