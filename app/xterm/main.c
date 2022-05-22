@@ -2903,6 +2903,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
     {
+#if OPT_EXEC_XTERM
         String data = NULL;
         getKeymapResources(SHELL_OF(term), "vt100", "VT100", XtRString, &data, sizeof(data));
         if (data &&
@@ -2912,7 +2913,9 @@ main(int argc, char *argv[]ENVP_ARG)
                 xtermWarning("pledge\n");
                 exit(1);
             }
-        } else {
+        } else
+#endif /* OPT_EXEC_XTERM */
+        {
             char *env;
 
             if ((env = getenv("HOME"))) {
