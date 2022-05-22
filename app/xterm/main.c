@@ -2914,45 +2914,54 @@ main(int argc, char *argv[]ENVP_ARG)
             }
         } else {
             char *env;
+
             if ((env = getenv("HOME"))) {
                 char homefile[PATH_MAX];
 		/* we ignore  unveil() errors - they are no relevant here */
-                snprintf(homefile, sizeof homefile, "%s/.fonts", env);
-                unveil(homefile, "r");
-                snprintf(homefile, sizeof homefile, "%s/.cache/fontconfig",
-                         env);
-                unveil(homefile, "r");
-                snprintf(homefile, sizeof homefile, "%s/.icons", env);
-                unveil(homefile, "r");
+                if (snprintf(homefile, sizeof homefile, "%s/.fonts",
+		    env) <= sizeof(homefile))
+	                unveil(homefile, "r");
+                if (snprintf(homefile, sizeof homefile, "%s/.cache/fontconfig",
+                    env) <= sizeof(homefile))
+	                unveil(homefile, "r");
+                if (snprintf(homefile, sizeof homefile, "%s/.icons",
+                    env) <= sizeof(homefile))
+                	unveil(homefile, "r");
             }
             if ((env = getenv("XDG_CONFIG_HOME"))) {
                 char xdgfile[PATH_MAX];
 
-                snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig", env);
-                unveil(xdgfile, "r");
-                snprintf(xdgfile, sizeof xdgfile, "%s/icons", env);
-                unveil(xdgfile, "r");
+                if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
+		    env) <= sizeof(xdgfile))
+                	unveil(xdgfile, "r");
+                if (snprintf(xdgfile, sizeof xdgfile, "%s/icons",
+		    env) <= sizeof(xdgfile))
+                	unveil(xdgfile, "r");
             }
             if ((env = getenv("XDG_DATA_HOME"))) {
                 char xdgfile[PATH_MAX];
 
-                snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig", env);
-                unveil(xdgfile, "r");
-                snprintf(xdgfile, sizeof xdgfile, "%s/icons", env);
-                unveil(xdgfile, "r");
+                if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
+		    env) <= sizeof(xdgfile))
+                	unveil(xdgfile, "r");
+                if (snprintf(xdgfile, sizeof xdgfile, "%s/icons",
+		    env) <= sizeof(xdgfile))
+                	unveil(xdgfile, "r");
             }
             if ((env = getenv("XDG_CACHE_HOME"))) {
                 char xdgfile[PATH_MAX];
 
-                snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig", env);
-                unveil(xdgfile, "r"); 
+                if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
+		    env) <= sizeof(xdgfile))
+                	unveil(xdgfile, "r"); 
 	    }
+
 	    unveil("/usr/X11R6", "r");
             unveil("/usr/local/share/fonts", "r");
 	    unveil("/var/cache/fontconfig", "r");
 	    unveil("/usr/local/share/icons", "r");
 	    unveil("/usr/local/lib/X11/icons", "r");
-            unveil(etc_utmp, "w");
+	    unveil(etc_utmp, "w");
 	    unveil(etc_wtmp, "w");
 
             if (pledge("stdio rpath wpath id proc tty", NULL) == -1) {
