@@ -5935,6 +5935,7 @@ expandFormat(XtermWidget xw,
     return result;
 }
 
+#if OPT_EXEC_XTERM
 /* execute the command after forking.  The main process frees its data */
 static void
 executeCommand(pid_t pid, char **argv)
@@ -6038,6 +6039,7 @@ HandleExecSelectable(Widget w,
 	}
     }
 }
+#endif /* OPT_EXEC_XTERM */
 
 static void
 reallyInsertFormatted(Widget w, char *format, char *data, CELL *start, CELL *finish)

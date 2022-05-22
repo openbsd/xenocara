@@ -384,8 +384,10 @@ static XtActionsRec actionsList[] = {
     { "scroll-lock",		HandleScrollLock },
 #endif
 #if OPT_SELECTION_OPS
+#if OPT_EXEC_XTERM
     { "exec-formatted",		HandleExecFormatted },
     { "exec-selectable",	HandleExecSelectable },
+#endif /* OPT_EXEC_XTERM */
     { "insert-formatted",	HandleInsertFormatted },
     { "insert-selectable",	HandleInsertSelectable },
 #endif

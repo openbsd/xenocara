@@ -2140,6 +2140,7 @@ timestamp_filename(char *dst, const char *src)
 	    tstruct->tm_sec);
 }
 
+#if OPT_SCREEN_DUMPS
 FILE *
 create_printfile(XtermWidget xw, const char *suffix)
 {
@@ -2171,7 +2172,9 @@ create_printfile(XtermWidget xw, const char *suffix)
     fp = (fd >= 0) ? fdopen(fd, "wb") : NULL;
     return fp;
 }
+#endif /* OPT_SCREEN_DUMPS */
 
+#if OPT_SCREEN_DUMPS || defined(ALLOWLOGGING)
 int
 open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
 {
@@ -2319,6 +2322,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
     }
 }
 #endif /* !VMS */
+#endif /* OPT_SCREEN_DUMPS || defined(ALLOWLOGGING) */
 
 int
 xtermResetIds(TScreen *screen)
