@@ -306,7 +306,7 @@ ttyslot(void)
 #include <sys/param.h>		/* for NOFILE */
 #endif
 
-#if defined(BSD) && (BSD >= 199103)
+#if defined(BSD) && (BSD >= 199103) && !defined(__OpenBSD__)
 #define WTMP
 #endif
 
@@ -2965,7 +2965,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	    unveil("/usr/local/share/icons", "r");
 	    unveil("/usr/local/lib/X11/icons", "r");
 	    unveil(etc_utmp, "w");
-	    unveil(etc_wtmp, "w");
 
             if (pledge("stdio rpath wpath id proc tty", NULL) == -1) {
                xtermWarning("pledge\n");
