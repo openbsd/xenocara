@@ -397,6 +397,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #define UTMP_FILENAME UTMP_FILE
 #elif defined(_PATH_UTMP)
 #define UTMP_FILENAME _PATH_UTMP
+int utmp_fd = -1;
 #else
 #define UTMP_FILENAME "/etc/utmp"
 #endif
@@ -2784,6 +2785,13 @@ main(int argc, char *argv[]ENVP_ARG)
 
     spawnXTerm(term, line_speed);
 
+    /* xterm (parent) grabs a fd for the utmp file now, while it
+     * has egid = "utmp".  Then discard the egid. */
+    setEffectiveGroup(save_egid);
+    utmp_fd = open(etc_utmp, O_WRONLY | O_CLOEXEC);
+    setresgid(save_rgid, save_rgid, save_rgid);
+    save_egid = -1;
+
 #ifndef VMS
     /* Child process is out there, let's catch its termination */
 
@@ -2964,9 +2972,8 @@ main(int argc, char *argv[]ENVP_ARG)
 	    unveil("/var/cache/fontconfig", "r");
 	    unveil("/usr/local/share/icons", "r");
 	    unveil("/usr/local/lib/X11/icons", "r");
-	    unveil(etc_utmp, "w");
 
-            if (pledge("stdio rpath wpath id proc tty", NULL) == -1) {
+            if (pledge("stdio rpath proc tty", NULL) == -1) {
                xtermWarning("pledge\n");
                exit(1);
             }
@@ -5494,10 +5501,12 @@ Exit(int n)
     if (!resource.utmpInhibit && added_utmp_entry &&
 	(am_slave < 0 && tslot > 0)) {
 #if defined(USE_UTMP_SETGID)
-	setEffectiveGroup(save_egid);
-	TRACE_IDS;
+	if (save_egid != -1) {
+		setEffectiveGroup(save_egid);
+		TRACE_IDS;
+	}
 #endif
-	if ((wfd = open(etc_utmp, O_WRONLY)) >= 0) {
+	if ((wfd = utmp_fd) != -1 || (wfd = open(etc_utmp, O_WRONLY)) >= 0) {
 	    memset(&utmp, 0, sizeof(utmp));
 	    lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
 	    IGNORE_RC(write(wfd, (char *) &utmp, sizeof(utmp)));
@@ -5515,8 +5524,10 @@ Exit(int n)
 	}
 #endif /* WTMP */
 #ifdef USE_UTMP_SETGID
-	disableSetGid();
-	TRACE_IDS;
+	if (save_egid != -1) {
+		disableSetGid();
+		TRACE_IDS;
+	}
 #endif
     }
 #endif /* USE_SYSV_UTMP */
