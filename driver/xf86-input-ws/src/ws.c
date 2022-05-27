@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.66 2021/03/28 15:57:45 jcs Exp $ */
+/* $OpenBSD: ws.c,v 1.67 2022/05/27 16:34:34 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -403,10 +403,8 @@ wsDeviceInit(DeviceIntPtr pWS)
 	xf86InitValuatorAxisStruct(pWS, VSCROLL_AXIS,
 	    axes_labels[VSCROLL_AXIS], 0, -1, 0, 0, 0, Relative);
 	priv->scroll_mask = valuator_mask_new(MAX_VALUATORS);
-	if (!priv->scroll_mask) {
-		free(axes_labels);
+	if (!priv->scroll_mask)
 		return !Success;
-	}
 
 	/*
 	 * The value of an HSCROLL or VSCROLL event is the fraction
