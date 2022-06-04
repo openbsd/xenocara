@@ -2256,7 +2256,7 @@ The default is \*(``true\*(''.
 .B "allowMouseOps\fP (class\fB AllowMouseOps\fP)"
 Specifies whether control sequences that enable \fI\*n\fP to send
 escape sequences to the host on mouse-clicks and movement.
-The default is \*(``true\*(''.
+The default is \*(``false\*(''.
 .TP 8
 .B "allowPasteControls\fP (class\fB AllowPasteControls\fP)"
 If true, allow control characters such as BEL and CAN to be pasted.
