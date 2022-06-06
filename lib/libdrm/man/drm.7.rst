@@ -73,7 +73,7 @@ driver dependent. However, two generic frameworks are available that are
 used by most DRM drivers. These are the *Translation Table Manager*
 (TTM) and the *Graphics Execution Manager* (GEM). They provide generic
 APIs to create, destroy and access buffers from user-space. However,
-there are still many differences between the drivers so driver-depedent
+there are still many differences between the drivers so driver-dependent
 code is still needed. Many helpers are provided in *libgbm* (Graphics
 Buffer Manager) from the *Mesa* project. For more information on DRM
 memory management, see **drm-memory**\ (7).

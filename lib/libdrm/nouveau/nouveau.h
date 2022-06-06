@@ -273,4 +273,8 @@ struct nv04_notify {
 	uint32_t offset;
 	uint32_t length;
 };
+
+bool
+nouveau_check_dead_channel(struct nouveau_drm *, struct nouveau_object *chan);
+
 #endif

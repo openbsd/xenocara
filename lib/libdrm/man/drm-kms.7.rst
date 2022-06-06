@@ -102,13 +102,13 @@ for the selected connector. See the *Examples* section below for more
 information.
 
 All valid modes for a connector can be retrieved with a call to
-drmModeGetConnector3 You need to select the mode you want to use and save it.
+**drmModeGetConnector**\ (3) You need to select the mode you want to use and save it.
 The first mode in the list is the default mode with the highest resolution
 possible and often a suitable choice.
 
 After you have a working connector+CRTC+mode combination, you need to create a
 framebuffer that is used for scanout. Memory buffer allocation is
-driver-depedent and described in **drm-memory**\ (7). You need to create a
+driver-dependent and described in **drm-memory**\ (7). You need to create a
 buffer big enough for your selected mode. Now you can create a framebuffer
 object that uses your memory-buffer as scanout buffer. You can do this with
 **drmModeAddFB**\ (3) and **drmModeAddFB2**\ (3).

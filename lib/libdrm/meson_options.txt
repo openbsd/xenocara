@@ -19,13 +19,6 @@
 # SOFTWARE.
 
 option(
-  'libkms',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
-  description : 'Build libkms mm abstraction library.',
-)
-option(
   'intel',
   type : 'combo',
   value : 'auto',

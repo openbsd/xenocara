@@ -21,7 +21,7 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.110',
+  version : '2.4.111',
   license : 'MIT',
   meson_version : '>= 0.53',
   default_options : ['buildtype=debugoptimized', 'c_std=c99'],
@@ -181,15 +181,6 @@ if _vc4 != 'false'
   with_vc4 = _vc4 == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
 endif
 summary('VC4', with_vc4)
-
-# XXX: Apparently only freebsd and dragonfly bsd actually need this (and
-# gnu/kfreebsd), not openbsd and netbsd
-with_libkms = false
-_libkms = get_option('libkms')
-if _libkms != 'false'
-  with_libkms = _libkms == 'true' or (['linux', 'freebsd', 'dragonfly'].contains(host_machine.system()) and not android)
-endif
-summary('libkms', with_libkms)
 
 # Among others FreeBSD does not have a separate dl library.
 if not cc.has_function('dlsym')
@@ -366,9 +357,6 @@ pkg.generate(
   description : 'Userspace interface to kernel DRM services',
 )
 
-if with_libkms
-  subdir('libkms')
-endif
 if with_intel
   subdir('intel')
 endif

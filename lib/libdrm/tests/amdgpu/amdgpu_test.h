@@ -261,11 +261,32 @@ CU_BOOL suite_syncobj_timeline_tests_enable(void);
  */
 extern CU_TestInfo syncobj_timeline_tests[];
 
+
+/**
+ * Initialize cp dma test suite
+ */
+int suite_cp_dma_tests_init();
+
+/**
+ * Deinitialize cp dma test suite
+ */
+int suite_cp_dma_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_cp_dma_tests_enable(void);
+
+/**
+ * Tests in cp dma test suite
+ */
+extern CU_TestInfo cp_dma_tests[];
+
 void amdgpu_dispatch_hang_helper(amdgpu_device_handle device_handle, uint32_t ip_type);
 void amdgpu_dispatch_hang_slow_helper(amdgpu_device_handle device_handle, uint32_t ip_type);
 void amdgpu_memcpy_draw_test(amdgpu_device_handle device_handle, uint32_t ring,
-			     int hang);
-void amdgpu_memcpy_draw_hang_slow_test(amdgpu_device_handle device_handle, uint32_t ring);
+			     int version, int hang);
+void amdgpu_memcpy_draw_hang_slow_test(amdgpu_device_handle device_handle, uint32_t ring, int version);
 
 /**
  * Initialize security test suite

@@ -35,7 +35,6 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include <libkms.h>
 #include <drm_fourcc.h>
 
 #include "exynos_drm.h"

@@ -782,3 +782,19 @@ nouveau_pushbuf_kick(struct nouveau_pushbuf *push, struct nouveau_object *chan)
 	pushbuf_flush(push);
 	return pushbuf_validate(push, false);
 }
+
+drm_public bool
+nouveau_check_dead_channel(struct nouveau_drm *drm, struct nouveau_object *chan)
+{
+	struct drm_nouveau_gem_pushbuf req = {};
+	struct nouveau_fifo *fifo = chan->data;
+	int ret;
+
+	req.channel = fifo->channel;
+	req.nr_push = 0;
+
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_GEM_PUSHBUF,
+				  &req, sizeof(req));
+	/* nouveau returns ENODEV once the channel was killed */
+	return ret == -ENODEV;
+}

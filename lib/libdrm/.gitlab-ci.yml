@@ -198,7 +198,6 @@ x86_64-freebsd-container_prep:
         -D freedreno=true
         -D freedreno-kgsl=true
         -D intel=true
-        -D libkms=true
         -D man-pages=true
         -D nouveau=true
         -D omap=true
@@ -228,7 +227,7 @@ x86_64-freebsd-container_prep:
     # the workspace to see details about the failed tests.
     - |
       set +e
-      /app/vmctl exec "pkg info; cd $CI_PROJECT_NAME ; meson build -D amdgpu=true -D cairo-tests=true -D intel=true -D libkms=true -D man-pages=true -D nouveau=false -D radeon=true -D valgrind=auto && ninja -C build"
+      /app/vmctl exec "pkg info; cd $CI_PROJECT_NAME ; meson build -D amdgpu=true -D cairo-tests=true -D intel=true -D man-pages=true -D nouveau=false -D radeon=true -D valgrind=auto && ninja -C build"
       set -ex
       scp -r vm:$CI_PROJECT_NAME/build/meson-logs .
       /app/vmctl exec "ninja -C $CI_PROJECT_NAME/build install"

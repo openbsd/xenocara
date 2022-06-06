@@ -179,12 +179,9 @@ CU_BOOL suite_jpeg_tests_enable(void)
 		return CU_FALSE;
 	}
 
-	if (family_id == AMDGPU_FAMILY_RV) {
-		if (chip_id >= (chip_rev + 0x91))
-			jpeg_direct_reg = true;
-		else
-			jpeg_direct_reg = false;
-	} else if (family_id == AMDGPU_FAMILY_NV)
+	if (info.hw_ip_version_major == 1)
+		jpeg_direct_reg = false;
+	else if (info.hw_ip_version_major > 1 && info.hw_ip_version_major <= 3)
 		jpeg_direct_reg = true;
 	else
 		return CU_FALSE;

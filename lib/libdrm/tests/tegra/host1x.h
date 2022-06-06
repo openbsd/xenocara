@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 NVIDIA Corporation
+ * Copyright © 2018 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,48 +20,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
+#ifndef HOST1X_H
+#define HOST1X_H
 
-#include "xf86drm.h"
-#include "tegra.h"
+#define HOST1X_OPCODE_SETCL(offset, classid, mask) \
+    ((0x0 << 28) | (((offset) & 0xfff) << 16) | (((classid) & 0x3ff) << 6) | ((mask) & 0x3f))
 
-static const char default_device[] = "/dev/dri/card0";
+#define HOST1X_OPCODE_INCR(offset, count) \
+    ((0x1 << 28) | (((offset) & 0xfff) << 16) | ((count) & 0xffff))
 
-int main(int argc, char *argv[])
-{
-    struct drm_tegra *tegra;
-    drmVersionPtr version;
-    const char *device;
-    int err, fd;
+#define HOST1X_CLASS_VIC 0x5d
 
-    if (argc < 2)
-        device = default_device;
-    else
-        device = argv[1];
-
-    fd = open(device, O_RDWR);
-    if (fd < 0)
-        return 1;
-
-    version = drmGetVersion(fd);
-    if (version) {
-        printf("Version: %d.%d.%d\n", version->version_major,
-               version->version_minor, version->version_patchlevel);
-        printf("  Name: %s\n", version->name);
-        printf("  Date: %s\n", version->date);
-        printf("  Description: %s\n", version->desc);
-
-        drmFreeVersion(version);
-    }
-
-    err = drm_tegra_new(fd, &tegra);
-    if (err < 0)
-        return 1;
-
-    drm_tegra_close(tegra);
-    close(fd);
-
-    return 0;
-}
+#endif
