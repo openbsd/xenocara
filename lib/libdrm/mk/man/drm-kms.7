@@ -119,13 +119,13 @@ for the selected connector. See the \fIExamples\fP section below for more
 information.
 .sp
 All valid modes for a connector can be retrieved with a call to
-drmModeGetConnector3 You need to select the mode you want to use and save it.
+\fBdrmModeGetConnector\fP(3) You need to select the mode you want to use and save it.
 The first mode in the list is the default mode with the highest resolution
 possible and often a suitable choice.
 .sp
 After you have a working connector+CRTC+mode combination, you need to create a
 framebuffer that is used for scanout. Memory buffer allocation is
-driver\-depedent and described in \fBdrm\-memory\fP(7). You need to create a
+driver\-dependent and described in \fBdrm\-memory\fP(7). You need to create a
 buffer big enough for your selected mode. Now you can create a framebuffer
 object that uses your memory\-buffer as scanout buffer. You can do this with
 \fBdrmModeAddFB\fP(3) and \fBdrmModeAddFB2\fP(3).
