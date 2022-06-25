@@ -1,3 +1,63 @@
+commit dfbeedae7eefa1605ed2f912beb0de31810ec63f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 10:33:30 2022 -0700
+
+    xcalc 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d484e053d54801f1afdcc67ef7651d048df97295
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 13:01:49 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7889111d9809af38a2cfb8c1ead1931c1f593be8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:42:03 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 242bcecfbb662a1c57f3d8d505492be2b6db89a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:42:00 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7886c8da2a3d8a92dea43828202d1762898041b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:42:06 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19eb8cefe1c3f7b5018e51d3dd5cc4bf691a553d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 17 17:02:35 2021 -0700
+
+    TI mode: correct key color highlighting
+    
+    Decimal number key mapping in XCalc-color was offset after adding
+    the bitwise ops & base conversion keys in commit c4f1bdb1
+    
+    Fixes: #2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit df1721c44e0b357f4d8ae80247861b4a6f7a7bbb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jun 9 13:44:24 2019 -0700
@@ -90,7 +150,7 @@ Date:   Sun Feb 17 13:50:58 2019 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 85c9feb6e10cea1ef017d702151b14717c40b9d5
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sun Jul 7 22:50:30 2013 +0200
 
     Reduce scope of i (cppcheck --verbose --enable=all)
@@ -100,7 +160,7 @@ Date:   Sun Jul 7 22:50:30 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit aa3d39389bfc752486a83933574d0365c74d4e29
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sun Jul 7 22:50:29 2013 +0200
 
     Reduce scope of cell (cppcheck --verbose --enable=all)
@@ -315,7 +375,7 @@ Date:   Sat Jul 6 20:45:40 2013 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 3e6d23bb9d57ae3d19e9eb47ced654669fca4d7c
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sun Jul 7 02:02:46 2013 +0200
 
     Use the new M_E symbol from math.h
@@ -328,7 +388,7 @@ Date:   Sun Jul 7 02:02:46 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit f3b065f03a7b68310b489d5d97b11985ef36e977
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sun Jul 7 02:02:38 2013 +0200
 
     Use the new M_PI symbol from math.h
@@ -341,7 +401,7 @@ Date:   Sun Jul 7 02:02:38 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit b9a89876666a42ad8692e8384a5a826456e6ae56
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sat Jul 6 15:39:07 2013 +0200
 
     Drop CRAY support
@@ -830,7 +890,7 @@ Date:   Sun Jul 17 20:11:02 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit 392f5dd1907a5110c89b308ef51122b39b23dde5
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 23:12:07 2005 +0000
 
     Build system for Xcalc

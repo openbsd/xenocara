@@ -470,10 +470,6 @@ X(__miscmansuffix__), xrdb(__appmansuffix__), the Athena Widget Set
 .PP
 HP mode is not completely debugged.  In particular, the stack is
 not handled properly after errors.
-.SH COPYRIGHT
-Copyright 1994 X Consortium
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHORS
 John Bradley, University of Pennsylvania
 .br
