@@ -51,5 +51,5 @@ typedef struct {
 } DialogButton;
 
 extern Dialog CreateDialog(Widget, String, unsigned long);
-extern unsigned long PopupDialog(Dialog, String, String, String *, XtGrabKind);
-extern void PopdownDialog(Dialog, String *);
+extern unsigned long PopupDialog(Dialog, String, String, _XtString *, XtGrabKind);
+extern void PopdownDialog(Dialog, _XtString *);

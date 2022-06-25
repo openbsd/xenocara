@@ -176,7 +176,7 @@ To edit a bitmap image simply click on one of the buttons with drawing
 commands (\fBPoint, Curve, Line, Rectangle,\fP etc.) and move the
 pointer into the bitmap grid window.  Press one of the buttons on your
 mouse and the appropriate action will take place.  You can either set,
-clear or invert the gird squares.  Setting a grid square corresponds
+clear or invert the grid squares.  Setting a grid square corresponds
 to setting a bit in the bitmap image to 1.  Clearing a grid square
 corresponds to setting a bit in the bitmap image to 0.  Inverting a
 grid square corresponds to changing a bit in the bitmap image from 0 to
@@ -323,7 +323,7 @@ is slow or\fI bitmap\fP receives very few mouse motion events, it might
 behave quite strangely.
 .TP 4
 .B Line
-This command will change the gird squares in a line between two squares.
+This command will change the grid squares in a line between two squares.
 Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the line from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
@@ -331,7 +331,7 @@ mouse button you will cause the change to take effect, and the highlighted
 line will disappear.
 .TP 4
 .B Rectangle
-This command will change the gird squares in a rectangle between two squares.
+This command will change the grid squares in a rectangle between two squares.
 Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the rectangle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
@@ -343,7 +343,7 @@ This command is identical to\fB Rectangle\fP, except at the end the
 rectangle will be filled rather than outlined.
 .TP 4
 .B Circle
-This command will change the gird squares in a circle between two squares.
+This command will change the grid squares in a circle between two squares.
 Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the circle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the

@@ -100,7 +100,7 @@ BWAddRequest(Widget w, BWRequest name, Boolean trap,
 
 /*
  * Engages the request designated by the current parameter.
- * Returnes TRUE if the request has an engage function and FALSE otherwise.
+ * Returns TRUE if the request has an engage function and FALSE otherwise.
  */
 static Boolean
 Engage(BitmapWidget BW, Cardinal current)
@@ -127,7 +127,7 @@ Engage(BitmapWidget BW, Cardinal current)
    Boolean BWRemoveRequest(); */
 
 /*
- * Scans down the request stack removing all requests untill it finds
+ * Scans down the request stack removing all requests until it finds
  * one to be trapped.
  */
 static void
@@ -152,7 +152,7 @@ TrappingLoop(BitmapWidget BW)
 }
 /*
  * Terimantes the current request and continues with next request if con = TRUE
- * Returnes TRUE if there is any number of requests left on the stack.
+ * Returns TRUE if there is any number of requests left on the stack.
  */
 Boolean
 BWTerminateRequest(Widget w, Boolean cont)

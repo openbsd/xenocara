@@ -648,7 +648,7 @@ BWPutImage(BitmapWidget w, Display *display, Drawable drawable, GC gc,
 }
 #endif
 
-static String
+static char *
 StripFilename(_Xconst _XtString filename)
 {
     const char *begin = strrchr(filename, '/');
@@ -688,7 +688,7 @@ XmuWriteBitmapDataToFile(_Xconst _XtString filename,
     	file = fopen(filename, "w+");
 
     if (file) {
-	String new_basename;
+	char *new_basename;
 
 	if (!basename || !strcmp(basename, "") || !strcmp(basename, "-"))
 	    basename = new_basename = StripFilename(filename);
@@ -963,12 +963,14 @@ BWParseSize(String size, Dimension *width, Dimension *height)
 
   status = XParseGeometry(size, &x, &y, &w, &h);
 
-  if (status & (WidthValue | HeightValue)) {
+  if (status & WidthValue) {
     *width = (Dimension) w;
-    *height = (Dimension) h;
-    return True;
+    if (status & HeightValue) {
+      *height = (Dimension) h;
+      return True;
+    }
   }
-  else return False;
+  return False;
 
 }
 
@@ -1227,8 +1229,8 @@ BWWriteFile(Widget w, _Xconst _XtString filename, _Xconst _XtString basename)
     return status;
 }
 
-String
-BWGetFilename(Widget w, String *str)
+_XtString
+BWGetFilename(Widget w, _XtString *str)
 {
     BitmapWidget BW = (BitmapWidget) w;
 
@@ -1237,11 +1239,11 @@ BWGetFilename(Widget w, String *str)
     return *str;
 }
 
-String
-BWGetFilepath(Widget w, String *str)
+_XtString
+BWGetFilepath(Widget w, _XtString *str)
 {
     BitmapWidget BW = (BitmapWidget) w;
-    String end;
+    _XtString end;
 
     *str = XtNewString(BW->bitmap.filename);
     assert(*str);
@@ -1257,8 +1259,8 @@ BWGetFilepath(Widget w, String *str)
 }
 
 
-String
-BWGetBasename(Widget w, String *str)
+_XtString
+BWGetBasename(Widget w, _XtString *str)
 {
     BitmapWidget BW = (BitmapWidget) w;
 
@@ -1389,7 +1391,7 @@ BWZoomIn(Widget w,
     BW->bitmap.mark.to_x = NotSet;
     BW->bitmap.mark.to_y = NotSet;
     BW->bitmap.zooming = True;
-    BW->bitmap.grid = True; /* potencially true, could use a resource here */
+    BW->bitmap.grid = True; /* potentially true, could use a resource here */
 
     FixHotSpot(BW);
 

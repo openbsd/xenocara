@@ -238,12 +238,12 @@ doit (FILE *fp,
 	    newline++;
 	}
 
-	if (newline == cp + 1) continue;
+	if (newline == cp) continue;
 
 	*newline = '\0';
 	len = strlen (cp);
 
-	if (width == 0) {
+	if (head == NULL) {
 	    width = len;
 	    padded = ((width & 7) != 0);
 	    bytes_per_scanline = (len + 7) / 8;
@@ -257,7 +257,7 @@ doit (FILE *fp,
 	    fprintf (stderr,
 		     "%s:  line %d is %d characters wide instead of %d\n",
 		     ProgramName, lineno, len, width);
-	    return;
+	    goto bail;
 	}
 
 	if (slist->used + 1 >= slist->allocated) {
@@ -266,8 +266,7 @@ doit (FILE *fp,
 
 	    if (!slist) {
 	        fprintf (stderr, "%s:  unable to allocate scan list\n", ProgramName);
-		free(old);
-	        return;
+		goto bail;
 	    }
 	}
 
@@ -308,5 +307,11 @@ doit (FILE *fp,
 	}
     }
     printf (" };\n");
+  bail:
+    for (slist = head; slist != NULL; slist = head) {
+        head = slist->next;
+        free(slist->scanlines);
+        free(slist);
+    }
     return;
 }

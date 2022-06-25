@@ -1,0 +1,27 @@
+#! /bin/sh
+
+prefix="@prefix@"
+builddir="@builddir@"
+BITMAP_SRC="${srcdir}/bitmaps"
+BITMAP_INC="@includedir@/X11/bitmaps"
+
+error_count=0
+for bm in ${BITMAP_SRC}/* ${BITMAP_INC}/* ; do
+    if [ -f ${bm} ] ; then
+        echo ${bm}
+        bmbase="$(basename ${bm})"
+        ${builddir}/bmtoa "${bm}" > bma.out
+        error_count=$(( error_count + $? ))
+        ${builddir}/atobm -name "${bmbase}" bma.out > abm.out
+        error_count=$(( error_count + $? ))
+        ${builddir}/bmtoa abm.out > bma.out.2
+        error_count=$(( error_count + $? ))
+        cmp bma.out bma.out.2
+        if [[ $? != 0 ]] ; then
+            exit 1
+        fi
+        rm abm.out bma.out bma.out.2
+    fi
+done
+
+exit $error_count

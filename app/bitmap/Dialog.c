@@ -127,7 +127,7 @@ CreateDialog(Widget top_widget, String name, unsigned long options)
 }
 
 void
-PopdownDialog(Dialog popup, String *answer)
+PopdownDialog(Dialog popup, _XtString *answer)
 {
     if (answer)
 	*answer = XawDialogGetValueString(popup->dialog_widget);
@@ -137,7 +137,7 @@ PopdownDialog(Dialog popup, String *answer)
 
 unsigned long
 PopupDialog(Dialog popup, String message, String suggestion,
-	    String *answer, XtGrabKind grab)
+	    _XtString *answer, XtGrabKind grab)
 {
   Position popup_x, popup_y, top_x, top_y;
   Dimension popup_width, popup_height, top_width, top_height, border_width;

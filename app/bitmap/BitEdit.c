@@ -226,7 +226,7 @@ static Boolean image_visible = False;
 static Pixmap check_mark;
 static Dialog input_dialog, error_dialog, qsave_dialog;
 static Time btime;
-static String filename = NULL, base_name = NULL, format;
+static char *filename = NULL, *base_name = NULL, *format;
 static char message[80];
 
 

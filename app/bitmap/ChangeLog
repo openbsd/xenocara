@@ -1,3 +1,130 @@
+commit b3e36bd9e5c72f4d8045b13ec066826545560361
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 13:22:09 2022 -0700
+
+    bitmap 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13ac2639c3c88bb6c7ecaae541941203e6344ad0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 9 16:26:14 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8090d0f5bee66ceb12cee2b63425efd74ad4610
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 9 16:11:45 2022 -0700
+
+    atobm: close memory leaks
+    
+    Fix leaks reported by Oracle Parfait (though they don't last long,
+    since the program exits immediately after leaking):
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with _new_scan_list(bytes_per_scanline)
+            at line 260 of atobm.c in function 'doit'.
+            calloc called at line 180 in function '_new_scan_list'
+            Allocated value returned to caller at line 193
+              pointer allocated at line 250 in function 'doit' with _new_scan_list(bytes_per_scanline)
+              pointer leaks when (i + 1) >= <unknown> at line 275
+                  and buf[0] != 0 at line 225.
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with _new_scan_list(bytes_per_scanline)
+            at line 316 of atobm.c in function 'doit'.
+            calloc called at line 180 in function '_new_scan_list'
+            Allocated value returned to caller at line 193
+              pointer allocated at line 250 in function 'doit' with _new_scan_list(bytes_per_scanline)
+              pointer leaks when slist != NULL at line 252
+                  and (i + 1) >= <unknown> at line 275
+                  and (i + 1) >= <unknown> at line 303.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6b48ffeb65182bf5989df299c6a7fcccb3cb09a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 9 15:56:57 2022 -0700
+
+    atobm: accept single character lines
+    
+    Fixes round-trip-test failure on hlines2
+    
+    The previous behavior has been present since the initial checkin of the
+    code to the X Consortium monolith, but no explanation was given for why
+    a single-character line should be skipped.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa7241ac10bf9b47c3d20d557fdca0aa0a468484
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 9 15:42:10 2022 -0700
+
+    test: add round-trip-test for atobm & bmtoa
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c4196d3218d1afa73c930577beeb579c1e87a38
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 9 12:44:34 2022 -0700
+
+    Move bitmaps into a new bitmaps directory
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7886e0b78ba317e02d8496fb83432ee9274f7887
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:35:15 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 14181d27e8ceb6c25051d63698fb34cf28911a5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:35:06 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0adae1b8e19f9bedc4cb1a3798736812cb490a6
+Author: Jeremy Mates <jeremy.mates@gmail.com>
+Date:   Fri May 14 11:34:42 2021 -0400
+
+    bitmap: Fix a crash with underspecified dimensions
+    
+    From the reporter on #xorg-devel:
+    
+    -!- thrig [thrig@unaffilaited/thrig] has joined #xorg-devel
+    <thrig> where does the code for bitmap live? there's a crash (or who
+            knows on some platforms) if you `bitmap -size 42`
+
+commit f0b589b685cc3d9f684d9423250f798a8f93142f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 23 10:20:54 2020 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+      codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a2473affe1e15d6e8d252db7ec5e22fd1683978
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 1 19:27:15 2019 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 169 out of 240 -Wdiscarded-qualifiers warnings from gcc 7.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6dcc9c8064baeb2f9d853309123cd9736809a4fd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 13:01:27 2019 -0800
@@ -944,7 +1071,7 @@ Date:   Tue Oct 4 23:15:11 2005 +0000
     Add bitmap.icon to EXTRA_DIST
 
 commit c3f282e1aa6176896089ea79be84b7250888a65c
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Sep 29 18:22:01 2005 +0000
 
     Add Bitmap-nocase app default file to APPDEFAULTFILES.
@@ -997,13 +1124,13 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit cc48a5df41c59071eab0f58818366e10cb1ff4ac
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 16:52:07 2005 +0000
 
     Add dependency on xbitmaps
 
 commit c6129c090ad25cd2f8b191f503ac6e8cd452a31d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 15:47:38 2005 +0000
 
     Build system for bitmap

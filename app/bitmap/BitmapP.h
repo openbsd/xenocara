@@ -119,7 +119,8 @@ typedef struct {
   Dimension        margin, squareW, squareH, width, height;
   XPoint           hot;
   int              button_function[5];
-  String           filename, basename;
+  _XtString        filename;
+  _XtString        basename;
   /* private state */
   String           size;
   Position         horizOffset, vertOffset;
