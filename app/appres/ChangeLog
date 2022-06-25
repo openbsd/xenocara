@@ -1,3 +1,67 @@
+commit 55db329c8363e6ca969c27652f0da714364065bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 11:54:44 2022 -0700
+
+    appres 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa7250cb209b31a4a8e78b53cd54b41f71a5c986
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:16:11 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78b86cfef4eb8a493e8238969bca9e1e9d111803
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:14:38 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73e835828184af9230db2176579a4ff74da7785b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 1 18:33:51 2019 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears gcc 7.3 warnings of:
+    
+    appres.c: In function ‘main’:
+    appres.c:36:16: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+     #define NONAME "-AppResTest-"
+                    ^
+    appres.c:126:20: note: in expansion of macro ‘NONAME’
+         String iname = NONAME, cname = NONAME;
+                        ^~~~~~
+    appres.c:36:16: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+     #define NONAME "-AppResTest-"
+                    ^
+    appres.c:126:36: note: in expansion of macro ‘NONAME’
+         String iname = NONAME, cname = NONAME;
+                                        ^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 60be69492ae346a89c5e510dfa6af8495c4fa078
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:38:21 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac89dfca6a91039261d68cdcc76fc4027f6e7458
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:16:28 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ce712a3ab96eb8127d9eda4600d99e6b83bd99db
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 19:28:31 2018 -0800
@@ -403,7 +467,7 @@ Date:   Fri Oct 14 00:25:40 2005 +0000
     Use sed to fill in variables in man page
 
 commit 61d84d9c527921b252706b251ce29caac4eb5ad4
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Fri Sep 23 20:34:52 2005 +0000
 
     Add some content to these.
@@ -449,7 +513,7 @@ Date:   Fri Jul 1 16:55:14 2005 +0000
     More freedestkop->freedesktop typo fixes
 
 commit e6418cf03e9a7f835a7ee7d958ea6a1d4318f7b5
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 23:52:44 2005 +0000
 
     - Add script that can generate the build system for applications

@@ -29,6 +29,8 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#define _CONST_X_STRING
+
 #include <X11/Intrinsic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -123,7 +125,7 @@ int
 main (int argc, char *argv[])
 {
     Widget toplevel;
-    char *iname = NONAME, *cname = NONAME;
+    String iname = NONAME, cname = NONAME;
     XtAppContext xtcontext;
     XrmName names[101];
     XrmClass classes[101];
