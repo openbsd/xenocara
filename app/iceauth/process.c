@@ -472,7 +472,7 @@ static Bool iceauth_existed = False;	/* if was present at initialize */
 static Bool iceauth_modified = False;	/* if added, removed, or merged */
 static Bool iceauth_allowed = True;	/* if allowed to write auth file */
 static char *iceauth_filename = NULL;
-static volatile Bool dieing = False;
+static volatile Bool dying = False;
 
 /* poor man's puts(), for under signal handlers */
 #define WRITES(fd, S) (void)write((fd), (S), strlen((S)))
@@ -480,7 +480,7 @@ static volatile Bool dieing = False;
 /* ARGSUSED */
 static void die (_X_UNUSED int sig)
 {
-    dieing = True;
+    dying = True;
     _exit (auth_finalize ());
     /* NOTREACHED */
 }
@@ -652,7 +652,7 @@ int auth_finalize (void)
     char temp_name[1024];			/* large filename size */
 
     if (iceauth_modified) {
-	if (dieing) {
+	if (dying) {
 	    if (verbose) {
 		/*
 		 * called from a signal handler -- printf is *not* reentrant; also
@@ -1286,7 +1286,8 @@ static int do_add (
     protodata_len = strlen (protodata_hex);
     if (protodata_len > 0)
     {
-	if (protodata_hex[0] == '"' && protodata_hex[protodata_len - 1] == '"')
+	if (protodata_len > 1 &&
+	    protodata_hex[0] == '"' && protodata_hex[protodata_len - 1] == '"')
 	{
 	    protodata = malloc (protodata_len - 1);
 	    if (protodata)
@@ -1311,7 +1312,8 @@ static int do_add (
     }
 
     authdata_len = strlen (authdata_hex);
-    if (authdata_hex[0] == '"' && authdata_hex[authdata_len - 1] == '"')
+    if (authdata_len > 1 &&
+	authdata_hex[0] == '"' && authdata_hex[authdata_len - 1] == '"')
     {
 	authdata = malloc (authdata_len - 1);
 	if (authdata)

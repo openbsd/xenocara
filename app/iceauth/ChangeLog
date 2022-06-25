@@ -1,3 +1,76 @@
+commit 82ef227485f6d102beae907212b4e903a05110e6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 11:41:21 2022 -0700
+
+    iceauth 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f51be4a9cc0ff7aabab64b1c91991f6d0d10e740
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 15:29:45 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca88df51cc13d89e5159bcf1629691735fb4bebc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 15:29:42 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e392ce8ef3bfd47ecd4b851e50736665b55140bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:43:31 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d08d1b100a171ea9faa1a6d3f5c618172152840
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:47:24 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 028b161bf2285dfb1c65af056d8d3414286ecc91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:00:32 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 509b0b9f6e3a40e23e0606eb9a976b28ddd9af6d
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Mon Nov 21 20:52:55 2016 +0100
+
+    Fix segmentation fault on invalid input.
+    
+    The 'add' command leads to a segmentation fault on invalid input.
+    
+    Two arguments to 'add' can be quoted, but the quotation check does not
+    properly parse a single double quote:
+    
+    $ echo 'add 0 " 0 0 0' | iceauth
+    Segmentation fault
+    $ _
+    
+    This happens because the code does not properly check if the argument
+    consists of just one quote. Technically, it is true that the first
+    and the last characters are double quotes. Therefore it also takes a
+    check to verify that the length of the string is at least 2.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e994aca370f6148f692a4ab9794daa8a522e37db
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 19:42:54 2018 -0800
@@ -755,7 +828,7 @@ Date:   Sat Jul 16 20:52:25 2005 +0000
         4496504)
 
 commit d0bc63cf13e98f686bd371a0ab609018e7fdf8c2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:04:15 2005 +0000
 
     Add build system for iceauth
