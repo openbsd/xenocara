@@ -10,7 +10,7 @@ testsrc="${srcdir:-.}"
 for script in `ls -1 ${testsrc}/*.script | sort` ; do
 	base=`basename $script .script`
 	echo "Testing $base"
-        $script > out.stdout 2> out.stderr
+        /bin/sh $script > out.stdout 2> out.stderr
 
 	# check stdout for correctness
 	if [ -f ${testsrc}/$base.stdout ]; then
