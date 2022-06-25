@@ -15,6 +15,9 @@
 /* Define to 1 if you have the <net/errno.h> header file. */
 #undef HAVE_NET_ERRNO_H
 
+/* Define to 1 if you have the `reallocarray' function. */
+#undef HAVE_REALLOCARRAY
+
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
 
