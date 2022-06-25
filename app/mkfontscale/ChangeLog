@@ -1,3 +1,56 @@
+commit b7e75ca2ccd8733496e0e891e84dc3856840813d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 12:20:15 2022 -0700
+
+    mkfontscale 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ee95eca936971e841a135ecc4f4a25875232fa2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:17:48 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f49cc4f618ce520fdb6c43d5434ff376d6324356
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:17:39 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b88c27bc45d0db78a6591bb92635915b3d5903b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 15:52:37 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9c76b4dee38619ccf4004f05f609a5e00806771
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Sun Oct 27 20:07:16 2019 +0200
+
+    Add "ExtraBold" as a valid T1 font weight.
+    
+    Used by freefonts.
+    
+    Signed-off-by: Maya Rashish <maya@NetBSD.org>
+
+commit 73a6d0e02eece1e51bfaed9638f1929404d2c66a
+Author: Maya Rashish <maya@NetBSD.org>
+Date:   Sun Oct 27 20:04:27 2019 +0200
+
+    Use case insensitive comparison for T1 font weight
+    
+    Signed-off-by: Maya Rashish <maya@NetBSD.org>
+
 commit 79f686765238ddd0e4753f9d4ee62b5a5296610e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 20 20:58:15 2019 -0700
