@@ -24,14 +24,14 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xclock],
-	[1.0.9],
+	[1.1.1],
 	[https://gitlab.freedesktop.org/xorg/app/xclock/issues],
 	[xclock])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -51,7 +51,11 @@ dnl Optional dependencies
 AC_ARG_WITH(xft, AS_HELP_STRING([--with-xft],[Use Xft2 and Xrender for rendering (Default is YES)]),use_xft="$withval",use_xft="try")
 if test x$use_xft != xno ; then
 	PKG_CHECK_MODULES(XFT, [xrender xft])
+	# Solaris 11 has sqrt in libc but needs libm for sincos
 	AC_SEARCH_LIBS(sqrt, [m])
+	AC_SEARCH_LIBS(sincos, [m],
+            AC_DEFINE([HAVE_SINCOS], [1],
+                      [Define to 1 if you have the `sincos' function.]))
 	XCLOCK_CFLAGS="$XCLOCK_CFLAGS $XFT_CFLAGS"
 	XCLOCK_LIBS="$XCLOCK_LIBS $XFT_LIBS"
 	AC_DEFINE([XRENDER],1,[Define to use X Render Extension])

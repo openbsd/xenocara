@@ -1,3 +1,115 @@
+commit a1202e71763cfc6aad4ade6e0dda4ac78b857e27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 7 13:36:13 2022 -0700
+
+    xclock 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f2acb1dbd75605d64f07740df2d83e73fe1b2ec3
+Author: Thomas Kuehne <thomas@kuehne.cn>
+Date:   Sat Dec 11 18:00:11 2021 +0100
+
+    fix -Wabsolute-value compiler warning
+    
+    fixes:
+    Clock.c:2011:14: warning: using integer absolute value function ‘abs’ when argument is of floating-point type ‘float’ [-Wabsolute-value]
+     2011 |             (abs(new->clock.update) <= SECOND_HAND_TIME);
+          |              ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e075308dccafb6f813ba0a8646b73860a7447a01
+Author: Thomas Kuehne <thomas@kuehne.cn>
+Date:   Sat Dec 11 17:56:39 2021 +0100
+
+    fix -Wmissing-field-initializers warning
+    
+    fixes:
+    Clock.c:269:6: warning: missing initializer for field ‘extension’ of ‘SimpleClassPart’ [-Wmissing-field-initializers]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96934f4472f10a1e5fcf53f6cbb9c88d743fa520
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 4 16:51:04 2022 -0700
+
+    Fall back to sin() and cos() calls on systems without sincos()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7126b722a055545d25291cd10076f4c3fe52f039
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 14:21:37 2022 -0700
+
+    xclock 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 65f9bee07f98d384068339bff025cf50d3cecead
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:50:42 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b719d3587d3f8547eff584d949385c3f1926ed0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:50:39 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8078de47f573fe60ee171647d23b9a097e818cc9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:28:07 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 866881cde2f973b50dc2a9279f2a85611ec23974
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 16:28:13 2021 -0700
+
+    Fix build on Solaris
+    
+    Solaris 11 has sqrt() in libc but needs to link with libm for sincos()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 30be448a408bf8543047008ef823321016b73132
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jul 15 23:24:30 2021 -0700
+
+    Update hands smoothly in Render mode
+    
+    Draw hour and minute hand every time the clock repaints, placing them
+    at the correct position for the current time.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit ff94d3f086479724261b764b11a0012f5e6cdc63
+Author: rees4905 <jim@rees.org>
+Date:   Fri Jun 12 22:27:10 2020 -0500
+
+    man: Indicate that -twelve & -twentyfour only affect brief display
+    
+    Signed-off-by: rees4905 <jim@rees.org>
+
+commit 03dba28ffd633839e57af748edae07a2c8b06398
+Author: rees4905 <jim@rees.org>
+Date:   Sun Jun 7 21:47:45 2020 -0500
+
+    re-indent Clock.c
+    
+    Signed-off-by: rees4905 <jim@rees.org>
+
 commit 755004c87b50e6334c07b0f4b9458a32b8c92566
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 11:34:07 2019 -0700
@@ -867,7 +979,7 @@ Date:   Sat Jul 16 17:16:05 2005 +0000
         Xft2/Render (enabled by default)
 
 commit 80d8b6affb2ee823cf18a368ab33535cb1cf1721
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 17:55:48 2005 +0000
 
     Build system for xclock
