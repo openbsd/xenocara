@@ -831,7 +831,9 @@ RenderTextBounds(ClockWidget w, char *str, int off, int len,
     else
 #endif
     {
- fallback:
+#if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
+    fallback:
+#endif
         XftTextExtents8(XtDisplay(w), w->clock.face, (FcChar8 *) str,
                         off, &head);
         XftTextExtents8(XtDisplay(w), w->clock.face, (FcChar8 *) str + off,

@@ -231,10 +231,9 @@ main(int argc, char *argv[])
     {
         /* force reading of XErrorDB into memory to avoid adding "rpath" to 
            pledge below */
-        int r;
         char buf[1];
         
-	r = XGetErrorDatabaseText(XtDisplay(toplevel), "XProtoError", "0", "",  buf, 1);
+	(void)XGetErrorDatabaseText(XtDisplay(toplevel), "XProtoError", "0", "",  buf, 1);
     }
     if (pledge("stdio", NULL) == -1)
 	    err(1, "pledge");
