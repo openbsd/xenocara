@@ -1,3 +1,72 @@
+commit ac1a150bb7c6af8377074e946f1ca6233a345ac9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 13:42:22 2022 -0700
+
+    setxkbmap 1.3.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a58fa93183d63a68ebcadbd666996b561e2e48b3
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Dec 31 16:02:54 2021 +0100
+
+    make functions static
+    
+    It is good practise to make functions static
+    to prevent export by accident
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit bebb48fde0e634c1e45e00714b27c84a8da8220a
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Dec 31 16:01:03 2021 +0100
+
+    fix exit status
+    
+    the status of exit() is actually status & 0377
+    change status value to return as intended
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 6ae13951f86f7117d354c1ac10bde54061c3b89d
+Author: Walter Harms <wharms@bfs.de>
+Date:   Fri Dec 31 15:47:18 2021 +0100
+
+    fix: warning: assignment discards ‘const’ qualifier from pointer target type
+    
+    fix: warning: assignment discards ‘const’ qualifier from pointer target type
+    make warning go away with casting
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 8872561b38049dbe34d4dd6903d16b0ef2c9e46d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 09:54:22 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fc079170f533b3b3a0002b61957b60641aa1b54a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 09:54:12 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13d1e26d696c5113a20dfc2f56c03ddb837a2eac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 12 09:46:25 2021 +1000
+
+    Check for Xwayland and print a warning
+    
+    Running setxkbmap isn't supported by Xwayland, so let's warn the user that
+    this won't work.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Olivier Fourdan <ofourdan@redhat.com>
+
 commit e03ecc3e00b411108449923cf006251b54f91c26
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 11:10:40 2019 -0700
@@ -135,7 +204,7 @@ Date:   Thu Aug 29 12:18:20 2013 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit f5ffd59830ff5f4a4f337d56e7e8b4a1930a46e8
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Tue Jul 2 00:06:55 2013 +0200
 
     Ensure consistency between the manpage and the output of the -h option
@@ -936,7 +1005,7 @@ Date:   Wed Jul 20 19:31:50 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit e04d3454c2e7b0390ccf61d9f6e0ca3d2a04dfb6
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:33:26 2005 +0000
 
     Build system for setxkbmap

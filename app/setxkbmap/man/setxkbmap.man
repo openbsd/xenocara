@@ -138,6 +138,18 @@ directly to the \fBxkbcomp\fP input.  For example, the command
 
 makes both steps run on the same (client) machine and loads a keyboard map into
 the server.
+
+.SH "XWAYLAND"
+Xwayland is an X server that uses a Wayland Compositor as backend.
+Xwayland acts as translation layer between the X protocol and the Wayland
+protocol but does not manage the keymaps - these are handled by the Wayland
+Compositor.
+.PP
+Changing the keymap with \fBsetxkbmap\fP is not supported by Xwayland.
+In most instances, using \fBsetxkbmap\fP on Xwayland is indicative of a
+bug in a shell script and \fBsetxkbmap\fP will print a warning. Use the Wayland
+Compositor's native XKB configuration methods instead.
+
 .SH SEE ALSO
 xkbcomp(__appmansuffix__), xkeyboard-config(__miscmansuffix__)
 .SH FILES
