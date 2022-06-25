@@ -1,3 +1,91 @@
+commit 0527098de837af8c4720170df94ba9748ba8009e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 12:06:29 2022 -0700
+
+    listres 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0678006b4a495d18930963e668b501a3850762cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:02:23 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3ece2edbec4df7d8ddd4778294574422fb284b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:06:46 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2255327723bd8e799546f09baf9e107ad1ecee5d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:06:42 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ea5ab9ed3f629eeaa9c1c69c81e0bc978deea5f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:40:42 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c29b2a9e452d660a334013eaa2a3497ffe3b37f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 18:33:38 2019 -0700
+
+    Fix -Wsign-compare warnings
+    
+    listres.c:174:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < node->nresources; i++, res++, wn++) {
+                       ^
+    listres.c:186:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < node->nconstraints; i++, res++, wn++) {
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af3e08de98ba89d090243ef217636678f7a42831
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 18:30:19 2019 -0700
+
+    Pass -D_CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears up 10 of the 20 gcc -Wdiscarded-qualifiers warnings in the listres build
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c8a9d18023e8e229953beba7618abc9d42a58fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:48:21 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc8e1247cac3885d62af4b910c9a90818ef0b400
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:12:52 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6c21e937384272a17f5afd29c4ac74e071816d6c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 19:35:36 2018 -0800
@@ -436,13 +524,13 @@ Date:   Wed Jul 20 19:31:49 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8b25b98b1cbe95610a862d75cdecd59cd40bca30
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 22:40:14 2005 +0000
 
     Add _BSD_SOURCE to lots of applications - patch from Stefan Dirsch
 
 commit 0b8defdf67bc0354d90c525bd4d81dff7f397925
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:09:55 2005 +0000
 
     Check in build system for listres

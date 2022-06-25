@@ -124,7 +124,7 @@ static void tree_known_widgets (void)
 
 
 /*
- * print_classname - print out the superclass-to-subclass hierchy of names
+ * print_classname - print out the superclass-to-subclass hierarchy of names
  * in the form super\sub\sub....
  */
 static int print_classname (XmuWidgetNode *node, XmuWidgetNode *topnode,
@@ -167,7 +167,7 @@ static void print_resources (XmuWidgetNode *node, const char *format,
 			     XmuWidgetNode *topnode, Bool showsuper,
 			     Bool showvar)
 {
-    int i;
+    Cardinal i;
     XtResourceList res = node->resources;
     XmuWidgetNode **wn = node->resourcewn;
 

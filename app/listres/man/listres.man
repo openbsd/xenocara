@@ -75,9 +75,5 @@ X(__miscmansuffix__), xrdb(__appmansuffix__), appropriate widget documents
 On operating systems that do not support dynamic linking of run-time routines,
 this program must have all of its known widgets compiled in.  The sources
 provide several tools for automating this process for various widget sets.
-.SH COPYRIGHT
-Copyright 1994 X Consortium
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 Jim Fulton, MIT X Consortium
