@@ -343,7 +343,7 @@ _TreeSelect(TreeInfo *tree_info, SelectTypes type)
 }
 
 /*	Function Name: _TreeSelectNode
- *	Description: Modifies the state of a node and all its decendants.
+ *	Description: Modifies the state of a node and all its descendants.
  *	Arguments: node - node to operate on.
  *                 type - type of selection to perform.
  *                 recurse - whether to continue on down the tree.
@@ -388,7 +388,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
 }
 
 /*	Function Name: _TreeRelabelNodes
- *	Description: Modifies the node and all its decendants label.
+ *	Description: Modifies the node and all its descendants label.
  *	Arguments: node - node to operate on.
  *                 type - type of selection to perform.
  *                 recurse - whether to continue on down the tree.
@@ -448,7 +448,7 @@ _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
 }
 
 /*	Function Name: _TreeActivateNode
- *	Description: Activates relatives of the node specfied, as specified
+ *	Description: Activates relatives of the node specified, as specified
  *                   by type.
  *	Arguments: node - node to opererate on.
  *                 type - type of activate to invode.

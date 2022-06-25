@@ -26,7 +26,7 @@ in this Software without prior written authorization from The Open Group.
  */
 
 #include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>	/* Get standard string definations. */
+#include <X11/StringDefs.h>	/* Get standard string definitions. */
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include <X11/Shell.h>

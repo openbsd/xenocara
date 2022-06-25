@@ -23,14 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([editres], [1.0.7],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [editres])
+AC_INIT([editres], [1.0.8],
+        [https://gitlab.freedesktop.org/xorg/app/editres/issues], [editres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -38,7 +37,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-# Obtain compiler/linker options from depedencies
+# Obtain compiler/linker options from dependencies
 PKG_CHECK_MODULES(EDITRES, [xaw7 x11 xt >= 1.0.99.1 xmu xproto >= 7.0.17])
 
 PKG_CHECK_MODULES(APPDEFS, xt)

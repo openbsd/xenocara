@@ -42,7 +42,7 @@ in this Software without prior written authorization from The Open Group.
 /*
  * Local function definitions.
  */
-static char * GetResourceName ( ResourceBoxInfo * res_box );
+static String GetResourceName ( ResourceBoxInfo * res_box );
 static void _AppendResourceString ( Widget w, XtPointer res_box_ptr,
 				    XtPointer filename_ptr );
 static void _SetResourcesFile ( Widget w, XtPointer junk,
@@ -216,7 +216,7 @@ PortholeCallback(Widget w, XtPointer panner_ptr, XtPointer report_ptr)
 }
 
 /*	Function Name: FlashActiveWidgets
- *	Description: called to flass all active widgets in the display.
+ *	Description: called to flash all active widgets in the display.
  *	Arguments: *** NOT USED ***
  *	Returns: none.
  */
@@ -265,7 +265,7 @@ GetResourceList(Widget w, XtPointer junk, XtPointer garbage)
     }
 
     /*
-     * No resoruces, fetch them from the client.
+     * No resources, fetch them from the client.
      */
 
     _XEditResResetStream(stream);
@@ -369,11 +369,11 @@ AnyChosen(Widget w, XtPointer any_info_ptr, XtPointer state_ptr)
  */
 
 
-static char *
+static String
 GetResourceName(ResourceBoxInfo *res_box)
 {
     XawListReturnStruct * list_info;
-    char * result;
+    String result;
 
     list_info = XawListShowCurrent(res_box->norm_list);
     if ((list_info->list_index == XAW_LIST_NONE) &&
@@ -414,7 +414,7 @@ ActivateWidgetsAndSetResourceString(Widget w,
  *	Description: Sets the resource label to correspond to the currently
  *                   chosen string.
  *	Arguments: w - The widget that invoked this callback, or NULL.
- *                 node_ptr - pointer to widget node contating this res box.
+ *                 node_ptr - pointer to widget node containing this res box.
  *                 call_data - The call data for the action that invoked
  *                             this callback.
  *	Returns: none.
@@ -489,17 +489,15 @@ SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
 
 /*	Function Name: ResourceListCallback
  *	Description: Callback functions for the resource lists.  This
- *                   routine is essentialy called by the list widgets
+ *                   routine is essentially called by the list widgets
  *                   Notify action.  If action EnableGetVal has been
  *                   invoked,  ResourceListCallback will perform a
  *                   GetValues protocol request.
  *	Arguments: list - the list widget that we are dealing with.
- *                 node_ptr - pointer to widget node contating this res box.
+ *                 node_ptr - pointer to widget node containing this res box.
  *                 junk - UNUSED.
  *	Returns: none
  */
-
-extern Boolean do_get_values;
 
 void
 ResourceListCallback(Widget list, XtPointer node_ptr, XtPointer junk)
@@ -657,7 +655,7 @@ SetFile(Widget w, XtPointer junk, XtPointer garbage)
  *	Description: Apply the current resource to the running application.
  *	Arguments: w - any widget in the application.
  *                 node_ptr - a pointer to the node containing
- *                            the current resouce box.
+ *                            the current resource box.
  *                 junk - UNUSED.
  *	Returns: none
  */
@@ -702,7 +700,7 @@ ApplyResource(Widget w, XtPointer node_ptr, XtPointer junk)
     len = stream->current - stream->top;
 
     /*
-     * Insert the widget count, overriden later.
+     * Insert the widget count, overridden later.
      */
 
     _XEditResPut16(stream, 0);
@@ -726,7 +724,7 @@ ApplyResource(Widget w, XtPointer node_ptr, XtPointer junk)
 /*	Function Name: ObtainResource
  *	Description: Obtain the current resource from the running application.
  *	Arguments: node_ptr - a pointer to the node containing
- *                            the current resouce box.
+ *                            the current resource box.
  *	Returns: none
  */
 
@@ -875,7 +873,7 @@ ActivateResourceWidgets(Widget w, XtPointer node_ptr, XtPointer junk)
 
 /*	Function Name: SetOnlyMatchingWidgets
  *	Description: Activates all widgets in the tree that match this
- *                   resource specifiction.
+ *                   resource specification.
  *	Arguments: node - the current node.
  *                 info_ptr - the pointer to the apply info.
  *	Returns: none

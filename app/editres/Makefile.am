@@ -23,6 +23,7 @@ SUBDIRS = man
 bin_PROGRAMS = editres
 
 AM_CFLAGS = $(CWARNFLAGS) $(EDITRES_CFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 editres_LDADD = $(EDITRES_LIBS)
 
 editres_SOURCES =	\
@@ -59,3 +60,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md

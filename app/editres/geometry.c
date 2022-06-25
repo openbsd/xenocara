@@ -204,7 +204,7 @@ AddToFlashList(TreeInfo *tree_info, GetGeomInfo *geom_info, char **errors)
 	return;
     }
 
-    if (!geom_info->visable) {
+    if (!geom_info->visible) {
 	snprintf(buf, sizeof(buf), "%s(0x%lx) - This widget is not mapped\n",
 		node->name, node->id);
 	AddString(errors, buf);

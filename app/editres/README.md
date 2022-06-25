@@ -8,7 +8,7 @@ string to the user's X Resources file.
 
 For more information on editres usage, see:
 
-	http://www.rahul.net/kenton/editres.html
+  http://www.rahul.net/kenton/editres.html
 
 Editres depends on the _EresInsert<something> and
 _EresRetrieve<something> routines that are are implemented and used by
@@ -18,28 +18,20 @@ module, but if you have not included that module into your library you
 will need to edit the makefile to make sure that editres links in this
 file.
 
-        ------------------------------------------------------------
+  ------------------------------------------------------------
 
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
-Please submit bug reports to the Xorg bugzilla:
+The primary development code repository can be found at:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://gitlab.freedesktop.org/xorg/app/editres
 
-The master development code repository can be found at:
-
-        git://anongit.freedesktop.org/git/xorg/app/editres
-
-        http://cgit.freedesktop.org/xorg/app/editres
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

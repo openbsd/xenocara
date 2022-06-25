@@ -29,7 +29,7 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdio.h>
 #include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>	/* Get standard string definations. */
+#include <X11/StringDefs.h>	/* Get standard string definitions. */
 
 #include <X11/Xaw/AsciiText.h>
 #include <X11/Xaw/Box.h>
@@ -73,7 +73,7 @@ static void FreeResBox ( Widget w, XtPointer ptr, XtPointer junk );
 
 
 /*      Function Name: RebuildMenusAndLabel
- *      Description: Determins if the user has selected an application
+ *      Description: Determines if the user has selected an application
  *                   which uses a different toolkit.  Xt is the default.
  *                   If this is so, destroys and recreates the menus and
  *                   information label at the top of the application.
@@ -310,7 +310,7 @@ CreateCommandMenu(Widget parent, String toolkit)
 
 
 /*	Function Name: CreateTreeCommandMenu
- *	Description: Creats the command menu.
+ *	Description: Creates the command menu.
  *	Arguments: parent - widget to put this menu into.
  *	Returns: none.
  */
@@ -323,7 +323,7 @@ CreateCommandMenu(Widget parent, String toolkit)
 #define FLASH 5
 
 struct tree_ops_menu {
-    char * name;
+    const char * name;
     int type;
     XtPointer data;
 };
@@ -407,7 +407,7 @@ CreateTreeCommandMenu(Widget parent, String toolkit)
 static Pixmap old_pixmap;
 
 /*	Function Name: PrepareToLayoutTree
- *	Description: prepares the Tree widget to be layed out.
+ *	Description: prepares the Tree widget to be laid out.
  *	Arguments: tree - the Tree widget.
  *	Returns: none
  */
@@ -814,7 +814,7 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
  *	Returns: none
  */
 
-static char* noneList[] = {"None"};
+static const char *noneList[] = {"None"};
 
 static void
 CreateLists(Widget parent, WNode *node, char **names, char **cons_names)

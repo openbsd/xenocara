@@ -1,3 +1,106 @@
+commit 2f248e96dcde3be96c21142c032f517aa5a06554
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 11:30:51 2022 -0700
+
+    editres 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c62da59948e45ea316d74b98d33eba2a5b6265aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:45:39 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f60785b6091b5828ae28eb5763a1b8e5023a025
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:45:34 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae0c5a4048bec6ebcc61a8cd4abbe79ac367c53e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:25:45 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 15be5d8d295f4d7c779845cd11e06c08cfacad85
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Fri Mar 27 09:56:26 2020 -0700
+
+    Add const to silence warning
+    
+    widgets.c:817:28: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a97f306fd57878158962eb873c23f03a5c6da9db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 2 11:38:57 2019 -0700
+
+    Clear -Wredundant-decls warnings from gcc 7.3
+    
+    comm.c:55:15: warning: redundant redeclaration of ‘CM_entries’ [-Wredundant-decls]
+     extern Widget CM_entries[NUM_CM_ENTRIES], TM_entries[NUM_TM_ENTRIES];
+                   ^~~~~~~~~~
+    In file included from comm.c:46:0:
+    editresP.h:339:15: note: previous declaration of ‘CM_entries’ was here
+     extern Widget CM_entries[NUM_CM_ENTRIES];
+                   ^~~~~~~~~~
+    comm.c:55:43: warning: redundant redeclaration of ‘TM_entries’ [-Wredundant-decls]
+     extern Widget CM_entries[NUM_CM_ENTRIES], TM_entries[NUM_TM_ENTRIES];
+                                               ^~~~~~~~~~
+    In file included from comm.c:46:0:
+    editresP.h:343:15: note: previous declaration of ‘TM_entries’ was here
+     extern Widget TM_entries[NUM_TM_ENTRIES];
+                   ^~~~~~~~~~
+    
+    handler.c:502:16: warning: redundant redeclaration of ‘do_get_values’ [-Wredundant-decls]
+     extern Boolean do_get_values;
+                    ^~~~~~~~~~~~~
+    In file included from handler.c:40:0:
+    editresP.h:334:16: note: previous declaration of ‘do_get_values’ was here
+     extern Boolean do_get_values;
+                    ^~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 43c19175385f98894c1633ed57ec6778e17a38a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 2 11:35:43 2019 -0700
+
+    Clear 208 out of 210 -Wdiscarded-qualifiers warnings from gcc 7.3
+    
+    Depends on building with a libXt version that defines String as a
+    const char * if _CONST_X_STRING is defined.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2b838dbd23f2ae2a3ff479003b13e03563624009
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:46:01 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 90a95d3f6a661b76b0768b454c00468eb65e47fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:45:13 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9644bfe7f56eb8c1cc795b724a6fc95ae4172d43
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 18:43:17 2018 -0800
@@ -655,13 +758,13 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit d15169a6a4c05a63b17ae630c9ade3b14a3d7181
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 22:30:58 2005 +0000
 
     Use $(foreach ) instead of listing the appdefaults files twice
 
 commit 349b2847900798cacdfe358eb8eb4773106657e8
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 21:35:04 2005 +0000
 
     - Fix string test in lib/Xaw/xaw.m4

@@ -45,7 +45,7 @@ String res_labels[NUM_RES_LABELS];
 int global_effective_protocol_version = CURRENT_PROTOCOL_VERSION;
 
 /* toolkit type of client whose "resources" we are currently editing */
-char *global_effective_toolkit = "xt";
+String global_effective_toolkit = "xt";
 
 int global_error_code;
 unsigned long global_serial_num;
@@ -132,7 +132,7 @@ main(int argc, char **argv)
  *	Description: Prints a the calling syntax for this function to stdout.
  *	Arguments: app_con - the application context.
  *                 call - the name of the application.
- *	Returns: none - exits tho.
+ *	Returns: none - exits though.
  */
 
 static void

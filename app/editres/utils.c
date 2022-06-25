@@ -56,7 +56,7 @@ static void FreeResources ( WidgetResources * resources );
  */
 
 void
-SetMessage(Widget w, char *str)
+SetMessage(Widget w, String str)
 {
     Arg args[1];
 
@@ -65,7 +65,7 @@ SetMessage(Widget w, char *str)
 }
 
 /*	Function Name: GetAllStrings
- *	Description: Returns a list of strings that have been borken up by
+ *	Description: Returns a list of strings that have been broken up by
  *                   the character specified.
  *	Arguments: in - the string to parse.
  *                 sep - the separator character.
@@ -132,7 +132,7 @@ GetAllStrings(char *in, char sep, char ***out, int *num)
  */
 
 void
-AddString(char ** str, char *add)
+AddString(char ** str, const char *add)
 {
     int len_str, len_add;
     char * ptr;
@@ -428,7 +428,7 @@ PopupCentered(XEvent *event, Widget w, XtGrabKind mode)
 /*	Function Name: _PopdownFileDialog
  *	Description: Destroys the file dialog, and calls the correct function.
  *	Arguments:  w - a child of the dialog widget.
- *                  client_data - TRUE if command was sucessful.
+ *                  client_data - TRUE if command was successful.
  *                  junk - ** UNUSED **.
  *	Returns: none.
  */
@@ -689,7 +689,7 @@ AddResource(ResourceInfo *res_info, WidgetResourceInfo *resource)
 
 
 /*	Function Name: FreeResources
- *	Description: frees the resource inforation.
+ *	Description: frees the resource information.
  *	Arguments: resources.
  *	Returns: none.
  */
@@ -724,7 +724,7 @@ FreeResources(WidgetResources *resources)
 /*	Function Name: CheckDatabase
  *	Description: Checks to see if the node is in the database.
  *	Arguments: db - the db to check
- *                 names, clases - names and clases, represented as quarks.
+ *                 names, classes - names and classes, represented as quarks.
  *	Returns: True if this entry is found.
  */
 
@@ -738,14 +738,14 @@ CheckDatabase(XrmDatabase db, XrmQuarkList names, XrmQuarkList classes)
 }
 
 /*	Function Name: Quarkify
- *	Description: Quarkifies the string list specifed.
+ *	Description: Quarkifies the string list specified.
  *	Arguments: list - list of strings to quarkify
  *                 ptr - an additional string to quarkify.
  *	Returns: none.
  */
 
 XrmQuarkList
-Quarkify(char **list, char *ptr)
+Quarkify(char **list, const char *ptr)
 {
     int i;
     char ** tlist;
@@ -853,7 +853,7 @@ ProtocolFailure(ProtocolStream *stream)
 {
     char buf[BUFSIZ];
     unsigned char version;
-    char* old_version_string;
+    const char* old_version_string;
 
     if (!_XEditResGet8(stream, &version))
 	return(XtNewString(res_labels[35]));

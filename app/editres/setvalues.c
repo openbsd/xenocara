@@ -96,7 +96,7 @@ GetResourceValueForSetValues(WNode *node, unsigned short *size)
 
     /*
      * This makes sure that exactly the same thing happens during a set
-     * values, that would happend of we were to insert this value into
+     * values, that would happen if we were to insert this value into
      * the resource database.
      */
 

@@ -95,13 +95,13 @@ typedef struct _NameInfo {
 
 typedef struct _ResourceBoxInfo {
     Widget value_wid;		/* The string containing the value. */
-    Widget res_label;		/* The label containing current resoruce. */
+    Widget res_label;		/* The label containing current resource. */
     Widget shell;		/* Shell widget containing resource box. */
     Widget norm_list;		/* The List widget for the normal list. */
     Widget cons_list;		/* The List widget for the
 				   Constriaint Resources */
     NameInfo * name_info;	/* The info about the widgets for each
-				   name and class in the instance heirarchy. */
+				   name and class in the instance hierarchy. */
 } ResourceBoxInfo;
 
 typedef struct _WidgetResourceInfo {
@@ -132,7 +132,7 @@ typedef struct _WNode {
  */
 
 typedef struct _AnyInfo {
-    WNode * node;		/* A Pointer off to the node corrsponding to
+    WNode * node;		/* A Pointer off to the node corresponding to
 				   this resource box. */
     Widget left_dot, left_star;	/* The dot and star widgets to our left. */
     Widget right_dot, right_star; /* The dot and star widgets to our right. */
@@ -192,7 +192,7 @@ typedef struct _AppResources {
  */
 
 typedef struct _ApplyResourcesInfo {
-    char * name, *class;	/* name and class  of this resource. */
+    const char * name, *class;	/* name and class  of this resource. */
     unsigned short count;
     ProtocolStream * stream;
     XrmDatabase database;
@@ -203,7 +203,7 @@ typedef struct _ApplyResourcesInfo {
  */
 
 typedef struct _ObtainResourcesInfo {
-    char * name, *class;	/* name and class  of this resource. */
+    const char * name, *class;	/* name and class  of this resource. */
     unsigned short count;
     ProtocolStream * stream;
     XrmDatabase database;
@@ -279,7 +279,7 @@ typedef struct _GetGeomInfo {
     WidgetInfo widgets;
     Boolean error;
     char * message;
-    Boolean visable;
+    Boolean visible;
     short x, y;
     unsigned short width, height, border_width;
 } GetGeomInfo;
@@ -315,7 +315,7 @@ typedef union _Event {
  * Global variables.
  */
 extern int global_effective_protocol_version;
-extern char* global_effective_toolkit;
+extern String global_effective_toolkit;
 extern int global_error_code;
 extern unsigned long global_serial_num;
 extern int (*global_old_error_handler)(Display *, XErrorEvent *);
@@ -360,7 +360,7 @@ extern Widget TM_entries[NUM_TM_ENTRIES];
  */
 extern void ActivateResourceWidgets ( Widget w, XtPointer node_ptr, XtPointer junk );
 extern void ActivateWidgetsAndSetResourceString ( Widget w, XtPointer node_ptr, XtPointer call_data );
-extern void AddString ( char ** str, char *add );
+extern void AddString ( char ** str, const char *add );
 extern void AddTreeNode ( Widget tree, WNode * top );
 extern void AnyChosen ( Widget w, XtPointer any_info_ptr, XtPointer state_ptr );
 extern void ApplyResource ( Widget w, XtPointer node_ptr, XtPointer junk );
@@ -403,7 +403,7 @@ extern void PrepareToLayoutTree ( Widget tree );
 extern void PrintNodes ( WNode * top );
 extern char * PrintSetValuesError ( Event * event );
 extern char * ProtocolFailure ( ProtocolStream * stream );
-extern XrmQuarkList Quarkify ( char ** list, char * ptr );
+extern XrmQuarkList Quarkify ( char ** list, const char * ptr );
 extern void Quit ( Widget w, XtPointer client_data, XtPointer call_data ) _X_NORETURN;
 extern void RebuildMenusAndLabel ( String toolkit );
 extern void ResourceListCallback ( Widget list, XtPointer node_ptr, XtPointer junk );
@@ -411,10 +411,10 @@ extern void SaveResource ( Widget w, XtPointer res_box_ptr, XtPointer junk );
 extern void SendTree ( Widget w, XtPointer value, XtPointer call_data );
 extern void SetAndCenterTreeNode ( WNode * node );
 extern void SetApplicationActions ( XtAppContext app_con );
-extern void SetCommand ( Widget w, ResCommand command, char * msg );
+extern void SetCommand ( Widget w, ResCommand command, String msg );
 extern void SetEntriesSensitive ( Widget *entries, int num, Boolean sensitive );
 extern void SetFile ( Widget w, XtPointer junk, XtPointer garbage );
-extern void SetMessage ( Widget w, char * str );
+extern void SetMessage ( Widget w, String str );
 extern void SetResourceString ( Widget w, XtPointer node_ptr, XtPointer junk );
 extern void TreeRelabel ( Widget w, XtPointer client_data, XtPointer call_data );
 extern void TreeSelect ( Widget w, XtPointer client_data, XtPointer call_data );

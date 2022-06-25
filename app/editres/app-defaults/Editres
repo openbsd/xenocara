@@ -96,7 +96,7 @@ Editres.Geometry:			500x568
 *xt*label7: Unable to own the Resource Selection
 *xt*label12: Widget Tree for client %s(%s).
 *xt*label14: Click on any widget in the client.\nEditres will select that widget in the tree display.
-*xt*label17: No widget Tree is avaliable.
+*xt*label17: No widget Tree is available.
 *xt*label19: This function requires exactly one (1) widget to be selected.
 *xt*label23: There are no currently active widgets.
 *xt*label27: There is no widget tree to display.
@@ -107,7 +107,7 @@ Editres.Geometry:			500x568
 *iv*label7: Unable to own the Attribute Selection
 *iv*label12: Style Tree for client %s(%s).
 *iv*label14: Click on any style in the client.\nEditres will select that style in the tree display.
-*iv*label17: No style Tree is avaliable.
+*iv*label17: No style Tree is available.
 *iv*label19: This function requires exactly one (1) style to be selected.
 *iv*label23: There are no currently active styles.
 *iv*label27: There is no style tree to display.
