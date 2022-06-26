@@ -22,6 +22,7 @@
 SUBDIRS = man
 bin_PROGRAMS = xload
 
+AM_CPPFLAGS = -D_CONST_X_STRING
 AM_CFLAGS = $(CWARNFLAGS) $(XLOAD_CFLAGS)
 xload_LDADD = $(XLOAD_LIBS)
 
@@ -41,7 +42,7 @@ appdefaultdir = @appdefaultdir@
 dist_appdefault_DATA = \
         app-defaults/XLoad
 
-EXTRA_DIST = xload.bit
+EXTRA_DIST = xload.bit README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL

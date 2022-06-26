@@ -142,9 +142,6 @@ void GetLoadPoint(
 #   include <sys/param.h>
 #  endif
 
-#  ifdef sgi
-#   define FSCALE	1024.0
-#  endif
 
 #  ifdef __osf__
 /*
@@ -212,7 +209,7 @@ void InitLoadPoint()				/* SYSV386 version */
 	xload_error("cannot read", VAR_NAME);
 
     if ((p=(struct proc *)malloc(v.v_proc*sizeof(*p))) == NULL)
-	xload_error("cannot allocat space for", PROC_NAME);
+	xload_error("cannot allocate space for", PROC_NAME);
 
     first_buf = (XtPointer) namelist[2].n_value;
     last_buf  = (char *)first_buf + v.v_buf * sizeof(struct buf);
@@ -521,11 +518,6 @@ void GetLoadPoint(
 #            define KERNEL_FILE "/hp-ux"
 #           endif /* hpux */
 
-#           ifdef sgi
-#            if (OSMAJORVERSION > 4)
-#             define KERNEL_FILE "/unix"
-#            endif
-#           endif
 
 /*
  * provide default for everyone else
@@ -569,9 +561,6 @@ void GetLoadPoint(
 #            endif /* hp9000s800 */
 #           endif /* hpux */
 
-#           ifdef sgi
-#	 define KERNEL_LOAD_VARIABLE "avenrun"
-#           endif /* sgi */
 
 #          endif /* KERNEL_LOAD_VARIABLE */
 
@@ -603,7 +592,7 @@ static long loadavg_seek;
 
 void InitLoadPoint()
 {
-#          if !defined(SVR4) && !defined(sgi) && !defined(AIXV5) && !(BSD >= 199103) && !defined(__APPLE__)
+#          if !defined(SVR4) && !defined(AIXV5) && !(BSD >= 199103) && !defined(__APPLE__)
     extern void nlist();
 #          endif
 
@@ -634,13 +623,13 @@ void GetLoadPoint( w, closure, call_data )
 
 	(void) lseek(kmem, loadavg_seek, 0);
 
-#          if defined(SVR4) || defined(sgi) || (BSD >= 199103)
+#          if defined(SVR4) || (BSD >= 199103)
 	{
 		long temp;
 		(void) read(kmem, (char *)&temp, sizeof(long));
 		*loadavg = (double)temp/FSCALE;
 	}
-#          else /* else not SVR4 or sgi or BSD */
+#          else /* else not SVR4 or BSD */
 	(void) read(kmem, (char *)loadavg, sizeof(double));
 #          endif /* SVR4 or ... else */
 	return;

@@ -1,3 +1,107 @@
+commit 8f9450b897b16bc9b9940b137dd805d443be050e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 16:27:26 2022 -0700
+
+    xload 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 74f67044d995d7f2c37943589724bfbd72aaa65f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 20 14:34:48 2022 -0700
+
+    unifdef -Usgi
+    
+    SGI's End of Support Life for Irix was December 2013
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4908fbfb34d0dfb9dc36308a271fe280593c36b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 13 11:00:18 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 4 out of 24 -Wdiscarded-qualifiers warnings from gcc 7.3
+    (The rest come from libX11's XrmOptionDescRec defined in Xresource.h.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d6a06b7204726af803e3d31e92fc193088c694c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 13 10:47:19 2022 -0700
+
+    xload.man: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa31b5a446c538b4d009442af7c0c203116b9c76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 13 10:46:16 2022 -0700
+
+    xload.man: adopt standard formatting for man page references
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xload/-/issues/2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33515f139ecb3a254b9aa1e4d237a595032d74a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:19:02 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 965c749c2f1d2eca73cf5970d7fb9f1811b9958e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:18:59 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 454466e4e863fa86a79a3fe6edff1d5552c2f45d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 4 17:57:27 2020 -0800
+
+    Fix formatting issues in xload man page
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xload/-/issues/1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f80d0c5023853de4038bcc8cffcffe6558262b72
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 23 10:15:41 2020 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+      codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 32c88fc4b23e75159c12aa33c277fe43e99b9f59
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:12:58 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2380579ba73fcb21f747a2e354251cb318f44816
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:31:55 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 57adc3d88856d96975479ba6a386ca1af1bc3cb8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:51:02 2018 -0800
@@ -920,7 +1024,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 62d4ea34f0fd64e258abb993004c8966eecc6cf7
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:36:58 2005 +0000
 
     Build system for xload
