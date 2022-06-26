@@ -293,7 +293,7 @@ main(int argc, char *argv[])
 
 
     /*
-     * Initalize all lists
+     * Initialize all lists
      */
 
     RunningList = ListInit();

@@ -150,7 +150,7 @@ DisplayProps(ClientRec *client)
 
     if (ListCount (client->props) > 0)
     {
-	char number[10];
+	char number[16];
 	char *ptr;
 
 	AppendStr (&buffer, "*** ID = ");
@@ -382,7 +382,7 @@ UpdateClientList(void)
 {
     ClientRec *client;
     char *progName, *hostname, *tmp1, *tmp2;
-    String clientInfo;
+    char *clientInfo;
     int maxlen1, maxlen2;
     char extraBuf1[80], extraBuf2[80];
     char *restart_service_prop;
@@ -398,7 +398,7 @@ UpdateClientList(void)
 	 */
 
 	for (i = 0; i < numClientListNames; i++)
-	    XtFree (clientListNames[i]);
+	    XtFree ((char *) clientListNames[i]);
 
 	XtFree ((char *) clientListNames);
 

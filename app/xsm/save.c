@@ -620,7 +620,7 @@ SaveCancelXtProc(Widget w, XtPointer client_data, XtPointer callData)
  */
 
 static Widget
-AddToggle(char *widgetName, Widget parent, int state, Widget radioGroup, 
+AddToggle(String widgetName, Widget parent, int state, Widget radioGroup, 
 	  XtPointer radioData,  Widget fromHoriz, Widget fromVert)
 {
     Widget toggle;
@@ -1195,7 +1195,7 @@ PopupBadSave(void)
 {
     ClientRec *client;
     char *progName, *hostname, *tmp1, *tmp2;
-    String clientInfo;
+    char *clientInfo;
     int maxlen1, maxlen2;
     char extraBuf1[80], extraBuf2[80];
     char *restart_service_prop;
@@ -1211,7 +1211,7 @@ PopupBadSave(void)
 	 */
 
 	for (i = 0; i < numFailedNames; i++)
-	    XtFree (failedNames[i]);
+	    XtFree ((char *) failedNames[i]);
 
 	XtFree ((char *) failedNames);
 

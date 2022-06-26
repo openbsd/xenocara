@@ -23,14 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xsm], [1.0.4],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xsm])
+AC_INIT([xsm], [1.0.5],
+	[https://gitlab.freedesktop.org/xorg/app/xsm/issues], [xsm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -48,7 +47,7 @@ AC_SUBST(RSH)
 AC_CHECK_FUNCS([mkstemp putenv])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSM, [x11 xt > 1.0.99 ice sm xaw7])
+PKG_CHECK_MODULES(XSM, [x11 xt > 1.0.99 ice sm xaw7 xproto >= 7.0.17])
 
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,

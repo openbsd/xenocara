@@ -1,3 +1,145 @@
+commit 6733ee9baffaef106792c0457c53b5c9452d0021
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 17:03:13 2022 -0700
+
+    xsm 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e552f2d4980d41d7a219dbe0c5dbaf33c4d752f3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 10:40:19 2022 -0800
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4d20042385ac95023ff5c03f2849655bdfb931b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 12:31:56 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 655c8ff920ac3fe8601e449b2ef8247063069bc8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:21:26 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 822be4f28bda6ba1267f4f11d378295e70f4aaba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:21:21 2021 -0800
+
+    gitlab CI: enable Static Application Security Testing (SAST)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 107fbd198f2d4cec9efb54e89a568a595ac2d1e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:02:18 2021 -0800
+
+    Add noreturn attributes suggested by gcc
+    
+    misc.c: In function ‘nomem’:
+    misc.c:106:1: warning: function might be candidate for
+     attribute ‘noreturn’ [-Wsuggest-attribute=noreturn]
+      106 | nomem(void)
+          | ^~~~~
+    xsm.c:657:1: warning: function might be candidate for
+     attribute ‘noreturn’ [-Wsuggest-attribute=noreturn]
+      657 | EndSession(int status)
+          | ^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 416a3fc806f47b158b489bb44f7709fc44fa4f3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 10:54:06 2021 -0800
+
+    WriteSave: allocate enough room for full session_save_file in error
+    
+    Clears warning from gcc 11.2:
+    
+    saveutil.c: In function ‘WriteSave’:
+    saveutil.c:315:75: warning: ‘%s’ directive output may be truncated
+     writing up to 1023 bytes into a region of size 221 [-Wformat-truncation=]
+      315 |         snprintf (msg, sizeof(msg), "%s: Error creating session save file %s",
+          |                                                                           ^~
+      316 |                   Argv[0], session_save_file);
+          |                            ~~~~~~~~~~~~~~~~~
+    saveutil.c:315:9: note: ‘snprintf’ output 36 or more bytes (assuming 1059)
+     into a destination of size 256
+      315 |         snprintf (msg, sizeof(msg), "%s: Error creating session save file %s",
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      316 |                   Argv[0], session_save_file);
+          |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6a902614350d46b759fc09a88daf9aff11f79ee8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 10:42:03 2021 -0800
+
+    Increase size of number buffer to fit all possible values
+    
+    Clears gcc warning of:
+    
+    info.c: In function ‘DisplayProps’:
+    info.c:214:44: warning: ‘snprintf’ output may be truncated before the
+     last format character [-Wformat-truncation=]
+           snprintf (number, sizeof(number), "%d", propnum);
+                                                ^
+    info.c:214:7: note: ‘snprintf’ output between 2 and 11 bytes into a
+     destination of size 10
+           snprintf (number, sizeof(number), "%d", propnum);
+           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4bf092e35a92b4fb613f4fee01d5ab26a612ddb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 10:38:43 2021 -0800
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 5 -Wincompatible-pointer-types warnings
+    and 18 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c7a7f81b18f8594aceaa9c32217753ef935dac2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:13:24 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Based on the config from libX11
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 788c1484c7357ba8a1c69167db2994bb9282d4a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:19:25 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 536adbdd5b5e44fcfbd5bce287080e678a48b678
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 30 17:20:13 2018 -0700
+
+    Remove ancient System() replacement for system(3c) on Solaris
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cae8e0a4db186da3556bdab944b61eb540e6685c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:24:29 2018 -0800
@@ -85,7 +227,7 @@ Date:   Tue Dec 17 11:08:50 2013 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 9f4bee64da58ed95923ceee4abfe56d5125974f6
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Thu Jul 4 00:53:43 2013 +0200
 
     Improve help messages & man page
@@ -95,7 +237,7 @@ Date:   Thu Jul 4 00:53:43 2013 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9a7429ed7734531ca313d8c1f724bcb07c33ff54
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sat Jul 6 15:40:56 2013 +0200
 
     Drop CRAY support
@@ -692,7 +834,7 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit 2f07c342e877fde5d3f64041ca6ff365a643ddc8
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:07 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove

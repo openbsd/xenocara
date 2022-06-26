@@ -33,6 +33,8 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#define _CONST_X_STRING
+
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
 
@@ -194,7 +196,7 @@ extern XtSignalId	sig_term_id, sig_usr1_id;
 
 extern void fprintfhex(FILE *fp, unsigned int len, char *cp);
 extern Status StartSession(char *name, Bool use_default);
-extern void EndSession(int status);
+extern void EndSession(int status) _X_NORETURN;
 extern void SetWM_DELETE_WINDOW(Widget widget, const _XtString delAction);
 extern void SetAllSensitive(Bool on);
 extern void FreeClient(ClientRec *client, Bool freeProps);
@@ -203,15 +205,10 @@ extern void CloseDownClient(ClientRec *client);
 
 /* misc.c */
 extern int strbw(const char *a, const char *b);
-extern void nomem(void);
+extern void nomem(void) _X_NORETURN;
 
 
 #define Strstr strstr
-
-#if defined(sun) && defined(SVR4)
-extern int System(char *s);
-#define system(s) System(s)
-#endif
 
 /* remote.c */
 extern void remote_start(const char *restart_protocol,

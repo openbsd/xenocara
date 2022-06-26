@@ -461,7 +461,7 @@ ChooseSessionDeleteXtProc(Widget w, XtPointer client_data, XtPointer callData)
 {
     XawListReturnStruct *current;
     int longest;
-    char *name;
+    String name;
 
     CheckBreakLockCancel ();
 
@@ -555,7 +555,7 @@ ChooseSessionBreakLockXtProc(Widget w, XtPointer client_data,
 			     XtPointer callData)
 {
     XawListReturnStruct *current;
-    char *name;
+    String name;
 
     CheckDeleteCancel ();
 

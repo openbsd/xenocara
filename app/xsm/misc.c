@@ -102,24 +102,6 @@ strbw(const char *a, const char *b)
 
 
 
-#if defined(sun) && defined(SVR4)
-#include <sys/wait.h>
-
-int 
-System(char *s)
-{
-    int pid, status;
-    if ((pid = fork ()) == 0) {
-	(void) setpgrp();
-	execl ("/bin/sh", "sh", "-c", s, NULL);
-    } else
-	waitpid (pid, &status, 0);
-    return status;
-}
-#endif
-
-
-
 void
 nomem(void)
 {

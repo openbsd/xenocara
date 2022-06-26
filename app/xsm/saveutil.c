@@ -204,7 +204,7 @@ ReadSave(const char *session_name, char **sm_id)
 
     if (state == 5)
     {
-	String strbuf;
+	char *strbuf;
 	int bufsize = 0;
 
 	getnextline(&buf, &buflen, f);
@@ -220,13 +220,12 @@ ReadSave(const char *session_name, char **sm_id)
 	    {
 		getnextline(&buf, &buflen, f);
 		if((p = strchr(buf, '\n'))) *p = '\0';
-		non_session_aware_clients[i] = (char *) malloc (
-		    strlen (buf) + 2);
+		non_session_aware_clients[i] = malloc (strlen (buf) + 2);
 		strcpy (non_session_aware_clients[i], buf);
 		bufsize += (strlen (buf) + 1);
 	    }
 
-	    strbuf = (String) malloc (bufsize + 1);
+	    strbuf = malloc (bufsize + 1);
 	    strbuf[0] = '\0';
 
 	    for (i = 0; i < non_session_aware_count; i++)
@@ -303,7 +302,7 @@ WriteSave(const char *sm_id)
     ClientRec *client;
     FILE *f;
     List *cl;
-    String commands;
+    char *commands;
     char *p, *c;
     int count;
 
@@ -311,7 +310,7 @@ WriteSave(const char *sm_id)
 
     if (!f)
     {
-	char msg[256];
+	char msg[36 + sizeof(session_save_file)];
 
 	snprintf (msg, sizeof(msg), "%s: Error creating session save file %s", 
 		  Argv[0], session_save_file);
