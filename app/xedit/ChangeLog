@@ -1,3 +1,110 @@
+commit 4a6d485fd3d35fe9d58927971bfe653a425becc1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 15:01:12 2022 -0700
+
+    xedit 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7641ca13c6d7195f057b08d091373f392785f0a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:53:17 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02055920e23db6a42710cac0de324137e5f333e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 12:05:41 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18d2efc2181fc05ec5ef37f4094b18f3e48b4dc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 12:05:38 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3ce9aa82e26700d3c7ebe772ba1449bea0fdc31
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Tue Jan 5 10:00:11 2021 -0800
+
+    Followup to previous commit to use isinfinite for darwin rather than arm64.
+    
+    It's deprecated on Intel as well as of macOS 10.9.  This also restores
+    behavior on other platforms that define __arm64__.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 97bb6ccc9ed75f38e339728642a9154004a93647
+Author: Gary Palter <palter@clozure.com>
+Date:   Sat Nov 28 23:01:17 2020 -0500
+
+    Minimal changes to build on Apple silicon (i.e., new Apple M1 Macs)
+
+commit 420fa2a8a4dd7294d0b23696103d7887ae570e43
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Wed Sep 11 22:30:16 2019 +0200
+
+    Fix segfault when tags file isn't found
+    
+    Fix a segfault when the tags file isn't found.  xedit tries to construct
+    a path to the tags file (by defailt ${HOME}/tags), using amongst other
+    things basename(3).  However, basename is called with an immutable
+    string which causes segfaults on FreeBSD, since basename(3) uses the
+    provided buffer to store it's result.
+    Change the code to duplicate the string with strdup() and call basename
+    on the duplicated string instead.
+
+commit abbacff9e01616f08c469637fa24132e151446f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:02:21 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d2b1ae91f7cfee5a96d49f1bb6c5e04cc04a618
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 3cf58b05696ac7d06e43640ac1b70fd6ab141cfa
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7a8d28bc4cfb00daa40ca38d4cdfefe750ac2a76
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 436a71e7390c51134f4fac629bf8d4a98b0592c5
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Feb 21 13:43:04 2015 -0800
@@ -94,7 +201,7 @@ Date:   Tue Dec 17 11:28:21 2013 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 505fc48999ca2c7040a47900697d95c6ab78d009
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sat Jul 6 15:40:00 2013 +0200
 
     Drop CRAY support
@@ -970,7 +1077,7 @@ Date:   Wed Sep 28 03:04:23 2005 +0000
     Don't override , automake predefines it.
 
 commit dad8235ff737556e2eaa645a5d7b48641eba270a
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Tue Sep 27 20:20:36 2005 +0000
 
     Only add -DINCLUDE_XPRINT_SUPPORT if the Xaw version supports it.
@@ -1016,7 +1123,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit c46761f286f8c9a41ee0e510211b5ed667a78479
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 18:45:46 2005 +0000
 
     - lib/lbxutil/lbxutil.pc.in: link to lbxutil, not Xfixes
@@ -1028,7 +1135,7 @@ Date:   Tue Jul 12 18:45:46 2005 +0000
     - add forgotten lbxproxytrans.c file
 
 commit fc1f512d7cd7876f79190511315fe219667b2e81
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 17:41:52 2005 +0000
 
     Build system for xprint
@@ -1161,7 +1268,7 @@ Date:   Thu Sep 2 08:40:32 2004 +0000
         Xprint support optional (Bug #1273, Roland Mainz).
 
 commit 6b12ddbb33c8722e50e7f69f456ba0ba72b76ddd
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Aug 16 16:36:16 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

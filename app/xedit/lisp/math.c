@@ -32,7 +32,7 @@
 #include "lisp/math.h"
 #include "lisp/private.h"
 
-#ifdef __UNIXOS2__
+#if defined(__UNIXOS2__) || defined(__APPLE__)
 # define finite(x) isfinite(x)
 #endif
 

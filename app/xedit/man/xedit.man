@@ -460,16 +460,6 @@ specifies required resources
 .I "Athena Widget Set"
 .SH RESTRICTIONS
 Xedit is not a replacement to Emacs.
-.SH COPYRIGHT
-Copyright 1988, Digital Equipment Corporation.
-.br
-Copyright 1989, X Consortium
-.br
-Copyright 1998, The XFree86 Project
-.br
-See
-.IR X (__miscmansuffix__)
-for a full statement of rights and permissions.
 .SH AUTHORS
 Chris D. Peterson, MIT X Consortium
 .br

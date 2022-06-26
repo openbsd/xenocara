@@ -62,7 +62,7 @@
 #define READ_ERROR_FIXNUM()	READ_ERROR0("number is not a fixnum")
 #define READ_ERROR_INVARG()	READ_ERROR0("invalid argument")
 
-#ifdef __UNIXOS2__
+#if defined(__UNIXOS2__) || defined(__APPLE__)
 # define finite(x) isfinite(x)
 #endif
 
