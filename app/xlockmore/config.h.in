@@ -210,6 +210,9 @@
 /* Define this one when using Esound */
 #undef DEFAULT_SOUND_DIR
 
+/* Define to enable privilege separation */
+#undef USE_PRIVSEP
+
 /* Allows xlock to run in root window (some window managers have problems) */
 #undef USE_VROOT
 

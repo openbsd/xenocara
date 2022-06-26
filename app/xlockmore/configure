@@ -793,6 +793,7 @@ enable_maptype
 enable_def_play
 enable_vroot
 enable_allow_root
+enable_privsep
 enable_vtlock
 enable_syslog
 enable_multiple_user
@@ -1492,6 +1493,7 @@ Optional Features:
                           (some window managers have problems)
   --disable-allow-root    allows users to turn off allowroot (default is to
                           always allow root to be able to unlock xlock)
+  --enable-privsep        enable privilege separation
   --enable-vtlock         allows to turn on VT switch lock (default is to be
                           able to switch to another VT)
   --enable-syslog         enable syslog logging
@@ -9455,7 +9457,7 @@ if test "${ac_cv_mesa_version_string+set}" = set; then
   $as_echo_n "(cached) " >&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9458 "configure"
+#line 9460 "configure"
 #include "confdefs.h"
 #include <GL/xmesa.h>
 configure: XMESA_MAJOR_VERSION XMESA_MINOR_VERSION
@@ -12734,6 +12736,23 @@ $as_echo "defining option ALWAYS_ALLOW_ROOT" >&6; }
 #define ALWAYS_ALLOW_ROOT 1
 _ACEOF
 
+fi
+
+# Check whether --enable-privsep was given.
+if test "${enable_privsep+set}" = set; then
+  enableval=$enable_privsep; use_privsep=$enableval
+else
+  use_privsep=no
+fi
+
+if test "$use_privsep" = yes; then
+  { $as_echo "$as_me:$LINENO: result: enabling privsep" >&5
+$as_echo "enabling privsep" >&6; }
+  cat >>confdefs.h <<\_ACEOF
+#define USE_PRIVSEP 1
+_ACEOF
+
+  XLOCKLIBS="${XLOCKLIBS} -lutil"
 fi
 
 case ${canonical} in

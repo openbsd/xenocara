@@ -72,8 +72,12 @@ extern char *cpasswd;
 #include <pwd.h>
 #endif
 
-#if defined( __bsdi__ ) && _BSDI_VERSION >= 199608 || defined(__OpenBSD__)
+#if defined( __bsdi__ ) && _BSDI_VERSION >= 199608
 #define       BSD_AUTH
+#endif
+
+#ifdef USE_PRIVSEP
+extern int priv_pw_check(char *, char *, char *);
 #endif
 
 #ifdef        BSD_AUTH
@@ -1272,7 +1276,20 @@ checkPasswd(char *buffer)
 
 #else /* !ultrix */
 
-#ifdef BSD_AUTH
+#ifdef USE_PRIVSEP
+	char	*pass;
+	char	*style;
+
+	/* buffer can be in the form style:pass */
+	if ((pass = strchr(buffer, ':')) != NULL) {
+	    *pass++ = '\0';
+	    style = buffer;
+	} else {
+	    pass = buffer;
+	    style = NULL;
+	}
+	return priv_pw_check(user, pass, style);
+#elif defined(BSD_AUTH)
 	char       *pass;
 	char       *style;
 	char       *name;

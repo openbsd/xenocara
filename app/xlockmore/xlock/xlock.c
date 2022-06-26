@@ -649,6 +649,11 @@ extern int  dpmsoff;
 
 #endif
 
+#ifdef USE_PRIVSEP
+extern int priv_init(gid_t);
+#endif
+	
+
 #ifdef HAVE_KRB5
 #include <krb5.h>
 #endif /* HAVE_KRB5 */
@@ -2628,6 +2633,7 @@ getPassword(void)
 			(void) printf("failed unlock attempt on user %s\n", user);
 			syslog(SYSLOG_NOTICE, "%s: failed unlock attempt on user %s\n",
 			       ProgramName, user);
+			explicit_bzero(buffer, strlen(buffer));
 #endif
 		}
 #endif
@@ -3206,6 +3212,10 @@ main(int argc, char **argv)
 
 	ruid = getuid();
 	rgid = getgid();
+#ifdef USE_PRIVSEP
+	if (priv_init(rgid) ==  -1)
+		exit(2);
+#else
 #ifdef HAVE_SETEUID
 	/* save effective uid and gid for later */
 	euid = geteuid();
@@ -3226,7 +3236,7 @@ main(int argc, char **argv)
 
 #endif
 #endif
-
+#endif
 	ProgramName = strrchr(argv[0], '/');
 	if (ProgramName)
 		ProgramName++;
@@ -3245,6 +3255,7 @@ main(int argc, char **argv)
 
 	getResources(&dsp, argc, argv);
 
+#ifndef USE_PRIVSEP
 #ifdef HAVE_SETEUID
 	/* become root to get the password */
 	(void) setegid(egid);
@@ -3257,7 +3268,7 @@ main(int argc, char **argv)
 
 #endif
 #endif
-
+#endif
 	initPasswd();
 
 /* revoke root privs, if there were any */

@@ -48,7 +48,7 @@ CXG = $(CX) $(DG)
 # S as the separator for object code
 
 # List of object files
-XLOCKUTILOBJS = $(DOU)xlock$(OU)passwd$(OU)resource$(OU)parsecmd$(O)$(S)\
+XLOCKUTILOBJS = $(DOU)xlock$(OU)passwd$(OU)privsep$(OU)resource$(OU)parsecmd$(O)$(S)\
 $(DOU)util$(OU)logout$(OU)mode$(OU)xlockimage$(OU)ras$(OU)xbm$(O)$(S)\
 $(DOU)vis$(OU)visgl$(OU)color$(OU)random$(OU)iostuff$(OU)automata$(O)$(S)\
 $(DOU)spline$(OU)sound$(OU)erase$(OU)magick$(O)$(S)\

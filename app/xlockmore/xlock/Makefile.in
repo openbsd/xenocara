@@ -38,7 +38,7 @@ CU = $(C) $(DU)
 @CHECK@XLOCKCHECKOBJS = $(DOU)memcheck$(O)
 
 # List of object files
-XLOCKUTILOBJS = $(DOU)xlock$(OU)passwd$(OU)resource$(OU)parsecmd$(O)$(S)\
+XLOCKUTILOBJS = $(DOU)xlock$(OU)passwd$(OU)privsep$(OU)resource$(OU)parsecmd$(O)$(S)\
 $(DOU)util$(OU)logout$(OU)mode$(OU)xlockimage$(OU)ras$(OU)xbm$(O)$(S)\
 $(DOU)vis$(OU)visgl$(OU)color$(OU)random$(OU)iostuff$(OU)automata$(O)$(S)\
 $(DOU)spline$(OU)sound$(OU)erase$(OU)magick$(O)$(S)\
@@ -48,7 +48,7 @@ XLOCKCHECKSRCS = $(DU)memcheck$(C)
 
 XLOCKUTILHDRS = xlock.h mode.h vroot.h xlockimage.h ras.h \
 version.h config.h
-XLOCKUTILSRCS = $(DU)xlock$(CU)passwd$(CU)resource$(CU)parsecmd$(C) \
+XLOCKUTILSRCS = $(DU)xlock$(CU)passwd$(CU)privsep$(CU)resource$(CU)parsecmd$(C) \
 $(DU)util$(CU)logout$(CU)mode$(CU)xlockimage$(CU)ras$(CU)xbm$(C) \
 $(DU)vis$(CU)visgl$(CU)color$(CU)random$(CU)iostuff$(CU)automata$(C) \
 $(DU)spline$(CU)sound$(CU)erase$(CU)magick$(C) \
