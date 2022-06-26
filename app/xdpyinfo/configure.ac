@@ -23,13 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xdpyinfo], [1.3.2],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xdpyinfo])
+AC_INIT([xdpyinfo], [1.3.3],
+	[https://gitlab.freedesktop.org/xorg/app/xdpyinfo/issues], [xdpyinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -120,8 +120,8 @@ else
 	echo "without xinerama"
 fi
 
-AC_ARG_WITH(dmx, AS_HELP_STRING([--without-dmx],[Disable dmx support.]),
-		[USE_DMX="$withval"], [USE_DMX="yes"])
+AC_ARG_WITH(dmx, AS_HELP_STRING([--with-dmx],[Enable dmx support.]),
+		[USE_DMX="$withval"], [USE_DMX="no"])
 if test "x$USE_DMX" != "xno" ; then
 	PKG_CHECK_MODULES(DPY_DMX, dmx,
 		[SAVE_CPPFLAGS="$CPPFLAGS"

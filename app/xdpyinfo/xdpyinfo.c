@@ -144,6 +144,7 @@ in this Software without prior written authorization from The Open Group.
 static char *ProgramName;
 static Bool queryExtensions = False;
 
+#if defined(XF86MISC) || defined(XFreeXDGA)
 static int
 silent_errors(_X_UNUSED Display *dpy, _X_UNUSED XErrorEvent *ev)
 {
@@ -151,6 +152,7 @@ silent_errors(_X_UNUSED Display *dpy, _X_UNUSED XErrorEvent *ev)
 }
 
 static int (*old_handler)(Display *, XErrorEvent *) = NULL;
+#endif
 
 static int print_event_mask(char *buf, int lastcol, int indent, long mask);
 
@@ -170,7 +172,7 @@ print_extension_info(Display *dpy)
     if (extlist) {
 	int i;
 
-	qsort(extlist, n, sizeof(char *), StrCmp);
+	qsort(extlist, (size_t)n, sizeof(char *), StrCmp);
 
 	if (!queryExtensions) {
 	    for (i = 0; i < n; i++) {
@@ -180,7 +182,7 @@ print_extension_info(Display *dpy)
 	    xcb_connection_t *xcb_conn = XGetXCBConnection (dpy);
 	    xcb_query_extension_cookie_t *qe_cookies;
 
-	    qe_cookies = calloc(n, sizeof(xcb_query_extension_cookie_t));
+	    qe_cookies = calloc((size_t)n, sizeof(xcb_query_extension_cookie_t));
 	    if (!qe_cookies) {
 		perror ("calloc failed to allocate memory for extensions");
 		return;
@@ -192,7 +194,7 @@ print_extension_info(Display *dpy)
 	     */
 	    for (i = 0; i < n; i++) {
 		qe_cookies[i] = xcb_query_extension (xcb_conn,
-						     strlen(extlist[i]),
+						     (uint16_t)strlen(extlist[i]),
 						     extlist[i]);
 	    }
 
@@ -239,7 +241,25 @@ print_display_info(Display *dpy)
     printf ("vendor string:    %s\n", ServerVendor (dpy));
     printf ("vendor release number:    %d\n", VendorRelease (dpy));
 
-    if (strstr(ServerVendor (dpy), "XFree86")) {
+    if (strstr(ServerVendor (dpy), "X.Org")) {
+	int vendrel = VendorRelease(dpy);
+
+	printf("X.Org version: ");
+        if (vendrel >= 12100000) {
+            vendrel -= 10000000; /* Y2.1K compliant */
+            printf("%d.%d",
+	       (vendrel /   100000) % 100,
+	       (vendrel /     1000) % 100);
+        } else {
+            printf("%d.%d.%d", vendrel / 10000000,
+                   (vendrel /   100000) % 100,
+                   (vendrel /     1000) % 100);
+        }
+        if (vendrel % 1000)
+            printf(".%d", vendrel % 1000);
+        printf("\n");
+    }
+    else if (strstr(ServerVendor (dpy), "XFree86")) {
 	int vendrel = VendorRelease(dpy);
 
 	printf("XFree86 version: ");
@@ -277,18 +297,6 @@ print_display_info(Display *dpy)
 		printf(".%d", vendrel % 1000);
 	    }
 	}
-	printf("\n");
-    }
-
-    if (strstr(ServerVendor (dpy), "X.Org")) {
-	int vendrel = VendorRelease(dpy);
-
-	printf("X.Org version: ");
-	printf("%d.%d.%d", vendrel / 10000000,
-	       (vendrel /   100000) % 100,
-	       (vendrel /     1000) % 100);
-	if (vendrel % 1000)
-	    printf(".%d", vendrel % 1000);
 	printf("\n");
     }
 
@@ -1067,7 +1075,7 @@ print_xrender_info(Display *dpy, const char *extname)
   int		    major, minor;
   int		    i, j;
   XVisualInfo	    viproto;		/* fill in for getting info */
-  XVisualInfo	    *vip;		/* retured info */
+  XVisualInfo	    *vip;		/* returned info */
   int		    nvi;		/* number of elements returned */
   int		    ndepths = 0, *depths = NULL;
 #if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
@@ -1380,7 +1388,7 @@ print_known_extensions(FILE *f)
     int i, col;
     for (i = 0, col = 6; i < num_known_extensions; i++)
     {
-	int extlen = strlen(known_extensions[i].extname) + 1;
+	int extlen = (int) strlen(known_extensions[i].extname) + 1;
 
 	if ((col + extlen) > 79)
 	{
