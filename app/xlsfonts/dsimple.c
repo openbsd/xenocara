@@ -42,7 +42,7 @@ from The Open Group.
 #include "dsimple.h"
 
 /*
- * Just_display: A group of routines designed to make the writting of simple
+ * Just_display: A group of routines designed to make the writing of simple
  *               X11 applications which open a display but do not open
  *               any windows much faster and easier.  Unless a routine says
  *               otherwise, it may be assumed to require program_name, dpy,
@@ -51,40 +51,40 @@ from The Open Group.
  * Written by Mark Lillibridge.   Last updated 7/1/87
  */
 
-
 /* This stuff is defined in the calling program by just_display.h */
-const char    *program_name = "unknown_program";
+const char *program_name = "unknown_program";
 Display *dpy = NULL;
-int      screen = 0;
+int screen = 0;
 
 /*
- * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
+ * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obsolete)
  * If found, remove it from command line.  Don't go past a lone -.
  */
 static char *
-Get_Display_Name(int *pargc/* MODIFIED */, char **argv/* MODIFIED */)
+Get_Display_Name(int *pargc /* MODIFIED */, char **argv /* MODIFIED */)
 {
     int argc = *pargc;
-    char **pargv = argv+1;
+    char **pargv = argv + 1;
     char *displayname = NULL;
     int i;
 
     for (i = 1; i < argc; i++) {
-	char *arg = argv[i];
+        char *arg = argv[i];
 
-	if (!strcmp (arg, "-display") || !strcmp (arg, "-d")) {
-	    if (++i >= argc) usage ("-display requires an argument");
+        if (!strcmp(arg, "-display") || !strcmp(arg, "-d")) {
+            if (++i >= argc)
+                usage("-display requires an argument");
 
-	    displayname = argv[i];
-	    *pargc -= 2;
-	    continue;
-	}
-	if (!strcmp(arg,"-")) {
-		while (i<argc)
-			*pargv++ = argv[i++];
-		break;
-	}
-	*pargv++ = arg;
+            displayname = argv[i];
+            *pargc -= 2;
+            continue;
+        }
+        if (!strcmp(arg, "-")) {
+            while (i < argc)
+                *pargv++ = argv[i++];
+            break;
+        }
+        *pargv++ = arg;
     }
 
     *pargv = NULL;
@@ -99,16 +99,16 @@ Get_Display_Name(int *pargc/* MODIFIED */, char **argv/* MODIFIED */)
 static Display *
 Open_Display(char *display_name)
 {
-	Display *d;
+    Display *d;
 
-	d = XOpenDisplay(display_name);
-	if (d == NULL) {
-	    fprintf (stderr, "%s:  unable to open display '%s'\n",
-		     program_name, XDisplayName (display_name));
-	    exit(1);
-	}
+    d = XOpenDisplay(display_name);
+    if (d == NULL) {
+        fprintf(stderr, "%s:  unable to open display '%s'\n",
+                program_name, XDisplayName(display_name));
+        exit(1);
+    }
 
-	return(d);
+    return (d);
 }
 
 
@@ -120,41 +120,43 @@ Open_Display(char *display_name)
  *                           Does not require dpy or screen defined.
  */
 void
-Setup_Display_And_Screen(int *argc/* MODIFIED */, char **argv/* MODIFIED */)
+Setup_Display_And_Screen(int *argc /* MODIFIED */, char **argv /* MODIFIED */)
 {
-	char *displayname = Get_Display_Name(argc, argv);
+    char *displayname = Get_Display_Name(argc, argv);
 
-	dpy = Open_Display (displayname);
-	screen = XDefaultScreen(dpy);
+    dpy = Open_Display(displayname);
+    screen = XDefaultScreen(dpy);
 }
 
 /*
  * Close_Display: Close display
  */
-void Close_Display(void)
+void
+Close_Display(void)
 {
     if (dpy == NULL)
-      return;
-      
+        return;
+
     XCloseDisplay(dpy);
     dpy = NULL;
 }
-
 
 /*
  * Standard fatal error routine - call like printf but maximum of 7 arguments.
  * Does not require dpy or screen defined.
  */
-void Fatal_Error(const char *msg, ...)
+void
+Fatal_Error(const char *msg, ...)
 {
-	va_list args;
-	fflush(stdout);
-	fflush(stderr);
-	fprintf(stderr, "%s: error: ", program_name);
-	va_start(args, msg);
-	vfprintf(stderr, msg, args);
-	va_end(args);
-	fprintf(stderr, "\n");
-        Close_Display();
-	exit(EXIT_FAILURE);
+    va_list args;
+
+    fflush(stdout);
+    fflush(stderr);
+    fprintf(stderr, "%s: error: ", program_name);
+    va_start(args, msg);
+    vfprintf(stderr, msg, args);
+    va_end(args);
+    fprintf(stderr, "\n");
+    Close_Display();
+    exit(EXIT_FAILURE);
 }

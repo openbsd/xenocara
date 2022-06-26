@@ -30,7 +30,7 @@ xlsfonts_SOURCES =	\
         dsimple.h	\
         xlsfonts.c
 
-EXTRA_DIST = xlsfonts.xml
+EXTRA_DIST = xlsfonts.xml README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL

@@ -36,10 +36,10 @@ in this Software without prior written authorization from The Open Group.
 #include <limits.h>
 #include "dsimple.h"
 
-#define N_START INT_MAX  /* Maximum # of fonts to start with (should
-                          * always be be > 10000 as modern OSes like 
-                          * Solaris 8 already have more than 9000 XLFD
-                          * fonts available) */
+#define N_START INT_MAX         /* Maximum # of fonts to start with (should
+                                 * always be be > 10000 as modern OSes like
+                                 * Solaris 8 already have more than 9000 XLFD
+                                 * fonts available) */
 
 #define L_SHORT    0
 #define L_MEDIUM   1
@@ -58,8 +58,8 @@ static int  font_cnt                  = 0;
 static int  min_max;
 
 typedef struct {
-  char           *name;
-  XFontStruct    *info;
+    char *name;
+    XFontStruct *info;
 } FontList;
 
 static FontList *font_list = NULL;
@@ -68,37 +68,39 @@ static FontList *font_list = NULL;
 static void get_list(const char *pattern);
 static int  compare(const void *arg1, const void *arg2);
 static void show_fonts(void);
-static void copy_number(char **pp1, char**pp2, int n1, int n2);
+static void copy_number(char **pp1, char **pp2, int n1, int n2);
 static int  IgnoreError(Display *disp, XErrorEvent *event);
 static void PrintProperty(XFontProp *prop);
 static void ComputeFontType(XFontStruct *fs);
 static void print_character_metrics(register XFontStruct *info);
-static void do_query_font (Display *dpy, char *name);
+static void do_query_font(Display *dpy, char *name);
 
-void usage(const char *errmsg)
+void
+usage(const char *errmsg)
 {
     if (errmsg != NULL)
-        fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
+        fprintf(stderr, "%s: %s\n\n", program_name, errmsg);
 
-    fprintf (stderr, "usage:  %s [-options] [-fn pattern]\n%s", program_name,
-    "where options include:\n"
-    "    -l[l[l]]                 give long info about each font\n"
-    "    -m                       give character min and max bounds\n"
-    "    -C                       force columns\n"
-    "    -1                       force single column\n"
-    "    -u                       keep output unsorted\n"
-    "    -o                       use OpenFont/QueryFont instead of ListFonts\n"
-    "    -w width                 maximum width for multiple columns\n"
-    "    -n columns               number of columns if multi column\n"
-    "    -display displayname     X server to contact\n"
-    "    -d displayname           (alias for -display displayname)\n"
-    "    -v                       print program version\n"
-    "\n");
+    fprintf(stderr, "usage:  %s [-options] [-fn pattern]\n%s", program_name,
+            "where options include:\n"
+            "    -l[l[l]]                 give long info about each font\n"
+            "    -m                       give character min and max bounds\n"
+            "    -C                       force columns\n"
+            "    -1                       force single column\n"
+            "    -u                       keep output unsorted\n"
+            "    -o                       use OpenFont/QueryFont instead of ListFonts\n"
+            "    -w width                 maximum width for multiple columns\n"
+            "    -n columns               number of columns if multi column\n"
+            "    -display displayname     X server to contact\n"
+            "    -d displayname           (alias for -display displayname)\n"
+            "    -v                       print program version\n"
+            "\n");
     Close_Display();
     exit(EXIT_FAILURE);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int argcnt = 0, i;
 
@@ -110,9 +112,9 @@ int main(int argc, char **argv)
     for (argv++, argc--; argc; argv++, argc--) {
         if (argv[0][0] == '-') {
             if (argcnt > 0)
-                usage ("options may not be specified after font names");
-            for (i=1; argv[0][i]; i++)
-                switch(argv[0][i]) {
+                usage("options may not be specified after font names");
+            for (i = 1; argv[0][i]; i++)
+                switch (argv[0][i]) {
                 case 'l':
                     long_list++;
                     break;
@@ -125,24 +127,27 @@ int main(int argc, char **argv)
                 case '1':
                     columns = 1;
                     break;
-                case 'f': /* "-fn" */
-                    if (argv[0][i+1] != 'n') {
-                        fprintf (stderr, "%s: unrecognized argument %s\n\n",
-                                 program_name, argv[0]);
+                case 'f':      /* "-fn" */
+                    if (argv[0][i + 1] != 'n') {
+                        fprintf(stderr, "%s: unrecognized argument %s\n\n",
+                                program_name, argv[0]);
                         usage(NULL);
                     }
-                    if (--argc <= 0) usage ("-fn requires an argument");
+                    if (--argc <= 0)
+                        usage("-fn requires an argument");
                     argcnt++;
                     argv++;
                     get_list(argv[0]);
                     goto next;
                 case 'w':
-                    if (--argc <= 0) usage ("-w requires an argument");
+                    if (--argc <= 0)
+                        usage("-w requires an argument");
                     argv++;
                     max_output_line_width = atoi(argv[0]);
                     goto next;
                 case 'n':
-                    if (--argc <= 0) usage ("-n requires an argument");
+                    if (--argc <= 0)
+                        usage("-n requires an argument");
                     argv++;
                     columns = atoi(argv[0]);
                     goto next;
@@ -156,56 +161,56 @@ int main(int argc, char **argv)
                     puts(PACKAGE_STRING);
                     exit(0);
                 default:
-                    fprintf (stderr, "%s: unrecognized argument -%c\n\n",
-                             program_name, argv[0][i]);
+                    fprintf(stderr, "%s: unrecognized argument -%c\n\n",
+                            program_name, argv[0][i]);
                     usage(NULL);
                     break;
                 }
             if (i == 1) {
-                fprintf (stderr, "%s: unrecognized argument %s\n\n",
-                         program_name, argv[0]);
+                fprintf(stderr, "%s: unrecognized argument %s\n\n",
+                        program_name, argv[0]);
                 usage(NULL);
             }
-        } else {
+        }
+        else {
             argcnt++;
             get_list(argv[0]);
         }
-      next: ;
+ next: ;
     }
 
     if (argcnt == 0)
         get_list("*");
 
     show_fonts();
-    
+
     Close_Display();
     return EXIT_SUCCESS;
 }
 
-
-static
-void get_list(const char *pattern)
+static void
+get_list(const char *pattern)
 {
-    int           available = nnames+1,
-                  i;
-    char        **fonts;
-    XFontStruct  *info;
+    int available = nnames + 1, i;
+    char **fonts;
+    XFontStruct *info;
 
     /* Get list of fonts matching pattern */
     for (;;) {
         if (open_instead_of_list) {
-            info = XLoadQueryFont (dpy, pattern);
+            info = XLoadQueryFont(dpy, pattern);
 
             if (info) {
                 fonts = &pattern;
                 available = 1;
-                XUnloadFont (dpy, info->fid);
-            } else {
+                XUnloadFont(dpy, info->fid);
+            }
+            else {
                 fonts = NULL;
             }
             break;
         }
-            
+
         if (long_list == L_MEDIUM)
             fonts = XListFontsWithInfo(dpy, pattern, nnames, &available, &info);
         else
@@ -228,19 +233,19 @@ void get_list(const char *pattern)
     font_list = realloc(font_list, (font_cnt + available) * sizeof(FontList));
     if (font_list == NULL)
         Fatal_Error("Out of memory!");
-    for (i=0; i<available; i++) {
+    for (i = 0; i < available; i++) {
         font_list[font_cnt].name = fonts[i];
         if (long_list == L_MEDIUM)
             font_list[font_cnt].info = info + i;
         else
             font_list[font_cnt].info = NULL;
-        
+
         font_cnt++;
     }
 }
 
-static
-int compare(const void *arg1, const void *arg2)
+static int
+compare(const void *arg1, const void *arg2)
 {
     const FontList *f1 = arg1;
     const FontList *f2 = arg2;
@@ -248,12 +253,12 @@ int compare(const void *arg1, const void *arg2)
     const char *p2 = f2->name;
 
     while (*p1 && *p2 && *p1 == *p2)
-            p1++, p2++;
-    return(*p1 - *p2);
+        p1++, p2++;
+    return (*p1 - *p2);
 }
 
-static
-void show_fonts(void)
+static void
+show_fonts(void)
 {
     int i;
 
@@ -261,18 +266,20 @@ void show_fonts(void)
         return;
 
     /* first sort the output */
-    if (sort_output) qsort(font_list, font_cnt, sizeof(FontList), compare);
+    if (sort_output)
+        qsort(font_list, font_cnt, sizeof(FontList), compare);
 
     if (long_list > L_MEDIUM) {
         for (i = 0; i < font_cnt; i++) {
-            do_query_font (dpy, font_list[i].name);
+            do_query_font(dpy, font_list[i].name);
         }
         return;
     }
 
     if (long_list == L_MEDIUM) {
         XFontStruct *pfi;
-        const char  *string;
+
+        const char *string;
 
         printf("DIR  ");
         printf("MIN  ");
@@ -284,26 +291,31 @@ void show_fonts(void)
         printf("DESC ");
         printf("NAME");
         printf("\n");
-        for (i=0; i<font_cnt; i++) {
+        for (i = 0; i < font_cnt; i++) {
             pfi = font_list[i].info;
             if (!pfi) {
                 fprintf(stderr, "%s:  no font information for font \"%s\".\n",
-                        program_name, 
-                        font_list[i].name ? 
-                        font_list[i].name : "");
+                        program_name,
+                        font_list[i].name ? font_list[i].name : "");
                 continue;
             }
-            switch(pfi->direction) {
-                case FontLeftToRight: string = "-->"; break;
-                case FontRightToLeft: string = "<--"; break;
-                default:              string = "???"; break;
+            switch (pfi->direction) {
+            case FontLeftToRight:
+                string = "-->";
+                break;
+            case FontRightToLeft:
+                string = "<--";
+                break;
+            default:
+                string = "???";
+                break;
             }
             printf("%-4s", string);
-            if (pfi->min_byte1 == 0 &&
-                pfi->max_byte1 == 0) {
+            if (pfi->min_byte1 == 0 && pfi->max_byte1 == 0) {
                 printf(" %3d ", pfi->min_char_or_byte2);
                 printf(" %3d ", pfi->max_char_or_byte2);
-            } else {
+            }
+            else {
                 printf("*%3d ", pfi->min_byte1);
                 printf("*%3d ", pfi->max_byte1);
             }
@@ -314,10 +326,9 @@ void show_fonts(void)
             printf("%4d ", pfi->descent);
             printf("%s\n", font_list[i].name);
             if (min_max) {
-                char  min[ BUFSIZ ],
-                      max[ BUFSIZ ];
-                char *pmax = max,
-                     *pmin = min;
+                char min[BUFSIZ], max[BUFSIZ];
+
+                char *pmax = max, *pmin = min;
 
                 strcpy(pmin, "     min(l,r,w,a,d) = (");
                 strcpy(pmax, "     max(l,r,w,a,d) = (");
@@ -353,13 +364,9 @@ void show_fonts(void)
     }
 
     if ((columns == 0 && isatty(1)) || columns > 1) {
-        int width,
-            max_width = 0,
-            lines_per_column,
-            j,
-            index;
+        int width, max_width = 0, lines_per_column, j, index;
 
-        for (i=0; i<font_cnt; i++) {
+        for (i = 0; i < font_cnt; i++) {
             width = strlen(font_list[i].name);
             if (width > max_width)
                 max_width = width;
@@ -371,48 +378,49 @@ void show_fonts(void)
             if ((max_width * 2) + output_line_padding >
                 max_output_line_width) {
                 columns = 1;
-            } else {
+            }
+            else {
                 max_width += output_line_padding;
                 columns = ((max_output_line_width +
                             output_line_padding) / max_width);
             }
-        } else {
+        }
+        else {
             max_width += output_line_padding;
         }
-        if (columns <= 1) goto single_column;
+        if (columns <= 1)
+            goto single_column;
 
         if (font_cnt < columns)
             columns = font_cnt;
         lines_per_column = (font_cnt + columns - 1) / columns;
 
-        for (i=0; i<lines_per_column; i++) {
-            for (j=0; j<columns; j++) {
+        for (i = 0; i < lines_per_column; i++) {
+            for (j = 0; j < columns; j++) {
                 index = j * lines_per_column + i;
                 if (index >= font_cnt)
                     break;
-                if (j+1 == columns)
-                    printf("%s", font_list[ index ].name);
+                if (j + 1 == columns)
+                    printf("%s", font_list[index].name);
                 else
-                    printf("%-*s",
-                           max_width, 
-                           font_list[ index ].name);
+                    printf("%-*s", max_width, font_list[index].name);
             }
             printf("\n");
         }
         return;
     }
 
-  single_column:
-    for (i=0; i<font_cnt; i++)
+ single_column:
+    for (i = 0; i < font_cnt; i++)
         printf("%s\n", font_list[i].name);
 }
 
-static
-void copy_number(char **pp1, char**pp2, int n1, int n2)
+static void
+copy_number(char **pp1, char **pp2, int n1, int n2)
 {
     char *p1 = *pp1;
     char *p2 = *pp2;
-    int   w;
+    int w;
 
     sprintf(p1, "%d", n1);
     sprintf(p2, "%d", n2);
@@ -425,17 +433,15 @@ void copy_number(char **pp1, char**pp2, int n1, int n2)
     *pp2 = p2;
 }
 
-
-
 /* ARGSUSED */
-static
-int IgnoreError(Display *disp, XErrorEvent *event)
+static int
+IgnoreError(Display * disp, XErrorEvent *event)
 {
     return 0;
 }
 
 static const char *bounds_metrics_title =
-                      "width left  right  asc  desc   attr   keysym\n";
+    "width left  right  asc  desc   attr   keysym\n";
 
 #define PrintBounds(_what,_ptr) \
 {   register XCharStruct *p = (_ptr); \
@@ -443,8 +449,7 @@ static const char *bounds_metrics_title =
           (_what), p->width, p->lbearing, \
           p->rbearing, p->ascent, p->descent, p->attributes); }
 
-
-static const char* stringValued [] = { /* values are atoms */
+static const char *stringValued[] = {   /* values are atoms */
     /* font name components (see section 3.2 of the XLFD) */
     "FOUNDRY",
     "FAMILY_NAME",
@@ -459,7 +464,7 @@ static const char* stringValued [] = { /* values are atoms */
     /* other standard X font properties (see section 3.2 of the XLFD) */
     "FONT",
     "FACE_NAME",
-    "FULL_NAME",              /* deprecated */
+    "FULL_NAME",                /* deprecated */
     "COPYRIGHT",
     "NOTICE",
     "FONT_TYPE",
@@ -469,7 +474,7 @@ static const char* stringValued [] = { /* values are atoms */
 
     /* other registered font properties (see the X.org Registry, sec. 15) */
     "_ADOBE_POSTSCRIPT_FONTNAME",
-    
+
     /* unregistered font properties */
     "CHARSET_COLLECTIONS",
     "CLASSIFICATION",
@@ -479,11 +484,11 @@ static const char* stringValued [] = { /* values are atoms */
     "QUALITY",
     "RELATIVE_SET",
     "STYLE",
-     NULL
-    };
+    NULL
+};
 
-static
-void PrintProperty(XFontProp *prop)
+static void
+PrintProperty(XFontProp * prop)
 {
     char *atom, *value;
     char nosuch[40];
@@ -492,55 +497,54 @@ void PrintProperty(XFontProp *prop)
 
     atom = XGetAtomName(dpy, prop->name);
     if (!atom) {
+        snprintf(nosuch, sizeof(nosuch), "No such atom = %ld", prop->name);
         atom = nosuch;
-        nosuch[0] = '\0';
-        (void)sprintf (atom, "No such atom = %ld", prop->name);
     }
-    printf ("      %s", atom);
+    printf("      %s", atom);
 
     /* Pad out to a column width of 22, but ensure there is always at
        least one space between property name & value. */
-    for (i = strlen(atom); i < 21; i++) putchar (' ');
+    for (i = strlen(atom); i < 21; i++)
+        putchar(' ');
     putchar(' ');
 
-    for (i = 0; ; i++) {
+    for (i = 0;; i++) {
         if (stringValued[i] == NULL) {
-            printf ("%ld\n", prop->card32);
+            printf("%ld\n", prop->card32);
             break;
         }
         if (strcmp(stringValued[i], atom) == 0) {
             value = XGetAtomName(dpy, prop->card32);
             if (value == NULL)
-                printf ("%ld (expected string value)\n", prop->card32);
+                printf("%ld (expected string value)\n", prop->card32);
             else {
-                printf ("%s\n", value);
-                XFree (value);
+                printf("%s\n", value);
+                XFree(value);
             }
             break;
         }
-    } 
-    if (atom != nosuch) XFree (atom);
-    XSetErrorHandler (oldhandler);
+    }
+    if (atom != nosuch)
+        XFree(atom);
+    XSetErrorHandler(oldhandler);
 }
-
 
 static void
 ComputeFontType(XFontStruct *fs)
 {
-    int i;
     Bool char_cell = True;
     const char *reason = NULL;
     XCharStruct *cs;
-    Atom awatom = XInternAtom (dpy, "AVERAGE_WIDTH", False);
+    Atom awatom = XInternAtom(dpy, "AVERAGE_WIDTH", False);
 
-    printf ("  font type:\t\t");
+    printf("  font type:\t\t");
     if (fs->min_bounds.width != fs->max_bounds.width) {
-        printf ("Proportional (min and max widths not equal)\n");
+        printf("Proportional (min and max widths not equal)\n");
         return;
     }
 
     if (awatom) {
-        for (i = 0; i < fs->n_properties; i++) {
+        for (int i = 0; i < fs->n_properties; i++) {
             if (fs->properties[i].name == awatom &&
                 (fs->max_bounds.width * 10) != fs->properties[i].card32) {
                 char_cell = False;
@@ -551,12 +555,14 @@ ComputeFontType(XFontStruct *fs)
     }
 
     if (fs->per_char) {
+        unsigned int i;
         for (i = fs->min_char_or_byte2, cs = fs->per_char;
              i <= fs->max_char_or_byte2; i++, cs++) {
-            if (cs->width == 0) continue;
+            if (cs->width == 0)
+                continue;
             if (cs->width != fs->max_bounds.width) {
                 /* this shouldn't happen since we checked above */
-                printf ("Proportional (characters not all the same width)\n");
+                printf("Proportional (characters not all the same width)\n");
                 return;
             }
             if (char_cell) {
@@ -567,7 +573,8 @@ ComputeFontType(XFontStruct *fs)
                         char_cell = False;
                         reason = "ink outside bounding box";
                     }
-                } else {
+                }
+                else {
                     if (!(0 <= cs->lbearing &&
                           cs->lbearing <= cs->rbearing &&
                           cs->rbearing <= cs->width)) {
@@ -577,38 +584,39 @@ ComputeFontType(XFontStruct *fs)
                 }
                 if (!(cs->ascent <= fs->ascent &&
                       cs->descent <= fs->descent)) {
-                    char_cell  = False;
+                    char_cell = False;
                     reason = "characters not all same ascent or descent";
                 }
             }
         }
     }
 
-    printf ("%s", char_cell ? "Character Cell" : "Monospaced");
-    if (reason) printf (" (%s)", reason);
-    printf ("\n");
-        
+    printf("%s", char_cell ? "Character Cell" : "Monospaced");
+    if (reason)
+        printf(" (%s)", reason);
+    printf("\n");
+
     return;
 }
-
 
 static void
 print_character_metrics(register XFontStruct *info)
 {
     register XCharStruct *pc = info->per_char;
-    register int i, j;
+    unsigned int i, j;
     unsigned n, saven;
 
-    printf ("  character metrics:\n");
+    printf("  character metrics:\n");
     saven = ((info->min_byte1 << 8) | info->min_char_or_byte2);
     for (j = info->min_byte1; j <= info->max_byte1; j++) {
         n = saven;
         for (i = info->min_char_or_byte2; i <= info->max_char_or_byte2; i++) {
-            char *s = XKeysymToString ((KeySym) n);
-            printf ("\t0x%02x%02x (%u)\t%4d  %4d  %4d  %4d  %4d  0x%04x  %s\n",
-                    j, i, n, pc->width, pc->lbearing,
-                    pc->rbearing, pc->ascent, pc->descent, pc->attributes,
-                    s ? s : ".");
+            char *s = XKeysymToString((KeySym) n);
+
+            printf("\t0x%02x%02x (%u)\t%4d  %4d  %4d  %4d  %4d  0x%04x  %s\n",
+                   j, i, n, pc->width, pc->lbearing,
+                   pc->rbearing, pc->ascent, pc->descent, pc->attributes,
+                   s ? s : ".");
             pc++;
             n++;
         }
@@ -616,47 +624,45 @@ print_character_metrics(register XFontStruct *info)
     }
 }
 
-static
-void do_query_font (Display *dpy, char *name)
+static void
+do_query_font(Display *display, char *name)
 {
     register int i;
-    register XFontStruct *info = XLoadQueryFont (dpy, name);
+    register XFontStruct *info = XLoadQueryFont(display, name);
 
     if (!info) {
-        fprintf (stderr, "%s:  unable to get info about font \"%s\"\n",
-                 program_name, name);
+        fprintf(stderr, "%s:  unable to get info about font \"%s\"\n",
+                program_name, name);
         return;
     }
-    printf ("name:  %s\n", name ? name : "(nil)");
-    printf ("  direction:\t\t%s\n", ((info->direction == FontLeftToRight)
-                                     ? "left to right" : "right to left"));
-    printf ("  indexing:\t\t%s\n", 
-            ((info->min_byte1 == 0 && info->max_byte1 == 0) ? "linear" :
-             "matrix"));
-    printf ("  rows:\t\t\t0x%02x thru 0x%02x (%d thru %d)\n",
-            info->min_byte1, info->max_byte1,
-            info->min_byte1, info->max_byte1);
-    printf ("  columns:\t\t0x%02x thru 0x%02x (%d thru %d)\n",
-            info->min_char_or_byte2, info->max_char_or_byte2,
-            info->min_char_or_byte2, info->max_char_or_byte2);
-    printf ("  all chars exist:\t%s\n",
-        (info->all_chars_exist) ? "yes" : "no");
-    printf ("  default char:\t\t0x%04x (%d)\n",
-            info->default_char, info->default_char);
-    printf ("  ascent:\t\t%d\n", info->ascent);
-    printf ("  descent:\t\t%d\n", info->descent);
-    ComputeFontType (info);
-    printf ("  bounds:\t\t%s", bounds_metrics_title);
-    PrintBounds ("min", &info->min_bounds);
-    PrintBounds ("max", &info->max_bounds);
-    if (info->per_char && long_list >= L_VERYLONG) 
-        print_character_metrics (info);
-    printf ("  properties:\t\t%d\n", info->n_properties);
+    printf("name:  %s\n", name ? name : "(nil)");
+    printf("  direction:\t\t%s\n", ((info->direction == FontLeftToRight)
+                                    ? "left to right" : "right to left"));
+    printf("  indexing:\t\t%s\n",
+           ((info->min_byte1 == 0 && info->max_byte1 == 0)
+            ? "linear" : "matrix"));
+    printf("  rows:\t\t\t0x%02x thru 0x%02x (%d thru %d)\n",
+           info->min_byte1, info->max_byte1,
+           info->min_byte1, info->max_byte1);
+    printf("  columns:\t\t0x%02x thru 0x%02x (%d thru %d)\n",
+           info->min_char_or_byte2, info->max_char_or_byte2,
+           info->min_char_or_byte2, info->max_char_or_byte2);
+    printf("  all chars exist:\t%s\n",
+           (info->all_chars_exist) ? "yes" : "no");
+    printf("  default char:\t\t0x%04x (%d)\n",
+           info->default_char, info->default_char);
+    printf("  ascent:\t\t%d\n", info->ascent);
+    printf("  descent:\t\t%d\n", info->descent);
+    ComputeFontType(info);
+    printf("  bounds:\t\t%s", bounds_metrics_title);
+    PrintBounds("min", &info->min_bounds);
+    PrintBounds("max", &info->max_bounds);
+    if (info->per_char && long_list >= L_VERYLONG)
+        print_character_metrics(info);
+    printf("  properties:\t\t%d\n", info->n_properties);
     for (i = 0; i < info->n_properties; i++)
-        PrintProperty (&info->properties[i]);
-    printf ("\n");
+        PrintProperty(&info->properties[i]);
+    printf("\n");
 
-    XFreeFontInfo (NULL, info, 1);
+    XFreeFontInfo(NULL, info, 1);
 }
-
-

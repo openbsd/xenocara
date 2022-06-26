@@ -49,12 +49,12 @@ from The Open Group.
 
     /* Global variables used by routines in just_display.c */
 
-extern const char *program_name;             /* Name of this program */
-extern Display *dpy;                         /* The current display */
-extern int screen;                           /* The current screen */
+extern const char *program_name;        /* Name of this program */
+extern Display *dpy;                    /* The current display */
+extern int screen;                      /* The current screen */
 
-#define INIT_NAME program_name=argv[0]        /* use this in main to setup
-                                                 program_name */
+#define INIT_NAME program_name=argv[0]  /* use this in main to setup
+                                           program_name */
 
 /* Declarations for functions in dsimple.c */
 
@@ -62,7 +62,7 @@ void Setup_Display_And_Screen(int *, char **);
 void Close_Display(void);
 void usage(const char *errmsg) _X_NORETURN;
 
-#define X_USAGE "[host:display]"              /* X arguments handled by
-						 Get_Display_Name */
+#define X_USAGE "[host:display]"        /* X arguments handled by
+                                           Get_Display_Name */
 
-void Fatal_Error(const char *, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1,2);
+void Fatal_Error(const char *, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1, 2);

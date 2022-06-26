@@ -1,3 +1,110 @@
+commit 8a29554a2edd31bf6f54babad0a13abb5618a155
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 16:39:17 2022 -0700
+
+    xlsfonts 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 287e5816a7326b6fe67c60f01f3f2e4cdca3e31d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 10:48:13 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a03ab7e51a9f2239c698749df401cedf8386e721
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 13:05:36 2021 -0800
+
+    Clear -Wshadow warning from gcc
+    
+    xlsfonts.c: In function ‘do_query_font’:
+    xlsfonts.c:628:24: warning: declaration of ‘dpy’ shadows a
+     global declaration [-Wshadow]
+     do_query_font(Display *dpy, char *name)
+                            ^~~
+    In file included from xlsfonts.c:37:0:
+    dsimple.h:53:17: note: shadowed declaration is here
+     extern Display *dpy;                    /* The current display */
+                     ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b84a6ffa8bae2dd9fe8cb1c8bc5b0b198584d8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 12:58:35 2021 -0800
+
+    Clear -Wsign-compare warnings from gcc
+    
+    xlsfonts.c:560:16: warning: comparison between signed and
+     unsigned integer expressions [-Wsign-compare]
+                  i <= fs->max_char_or_byte2; i++, cs++) {
+                    ^~
+    xlsfonts.c: In function ‘print_character_metrics’:
+    xlsfonts.c:611:33: warning: comparison between signed and
+     unsigned integer expressions [-Wsign-compare]
+         for (j = info->min_byte1; j <= info->max_byte1; j++) {
+                                     ^~
+    xlsfonts.c:613:45: warning: comparison between signed and
+     unsigned integer expressions [-Wsign-compare]
+             for (i = info->min_char_or_byte2; i <= info->max_char_or_byte2; i++) {
+                                                 ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ceafc3e134069ecd46df6482e8e7d4b5a7051c3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 12:49:54 2021 -0800
+
+    PrintProperty: replace sprintf with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba4fcf04c661dd59ddd4153d442da5fe56381ab2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 10:30:25 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d8f7cc9553701f5cc53c22ee2e48041ceb19e78c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 12:40:28 2021 -0800
+
+    Adapt to X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fc918002801de4bd7334867365836bd0ba94c654
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 12:12:08 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a1507b66e8e48af8a9612ff51b6d382ef0a4e0d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:14:04 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c2807f825b73e6b8310b8281245e8ac42d550250
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:35:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 637ba8863fa94210a7642e9460f314ec41867796
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:57:46 2018 -0800
@@ -590,7 +697,7 @@ Date:   Wed Jul 20 19:32:02 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8eab7c1c0df42316eca01fb7038efb2be1667b79
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:10 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
