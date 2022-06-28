@@ -26,7 +26,6 @@
 #if defined( TT_CONFIG_OPTION_EMBEDDED_BITMAPS ) && \
     defined( FT_CONFIG_OPTION_USE_PNG )
 
-#error bug
   /* We always include <setjmp.h>, so make libpng shut up! */
 #define PNG_SKIP_SETJMP_CHECK 1
 #include <png.h>
