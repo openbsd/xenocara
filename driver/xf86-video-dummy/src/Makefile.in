@@ -76,9 +76,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@DGA_TRUE@am__append_1 = \
-@DGA_TRUE@         dummy_dga.c
-
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -121,11 +118,7 @@ am__installdirs = "$(DESTDIR)$(dummy_drv_ladir)"
 LTLIBRARIES = $(dummy_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 dummy_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__dummy_drv_la_SOURCES_DIST = compat-api.h dummy_cursor.c \
-	dummy_driver.c dummy.h dummy_dga.c
-@DGA_TRUE@am__objects_1 = dummy_dga.lo
-am_dummy_drv_la_OBJECTS = dummy_cursor.lo dummy_driver.lo \
-	$(am__objects_1)
+am_dummy_drv_la_OBJECTS = dummy_cursor.lo dummy_driver.lo
 dummy_drv_la_OBJECTS = $(am_dummy_drv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -169,7 +162,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(dummy_drv_la_SOURCES)
-DIST_SOURCES = $(am__dummy_drv_la_SOURCES_DIST)
+DIST_SOURCES = $(dummy_drv_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -201,7 +194,6 @@ CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DGA = @DGA@
 DLLTOOL = @DLLTOOL@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
@@ -312,6 +304,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -325,8 +318,12 @@ dummy_drv_la_LTLIBRARIES = dummy_drv.la
 dummy_drv_la_LDFLAGS = -module -avoid-version
 dummy_drv_la_LIBADD = $(XORG_LIBS)
 dummy_drv_ladir = @moduledir@/drivers
-dummy_drv_la_SOURCES = compat-api.h dummy_cursor.c dummy_driver.c \
-	dummy.h $(am__append_1)
+dummy_drv_la_SOURCES = \
+         compat-api.h \
+         dummy_cursor.c \
+         dummy_driver.c \
+         dummy.h
+
 all: all-am
 
 .SUFFIXES:
@@ -405,7 +402,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy_driver.Plo@am__quote@
 
 .c.o:

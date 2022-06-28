@@ -1,3 +1,217 @@
+commit 68e02860d9ee6d65733457e689d180653fc9829f
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 5 10:16:22 2022 -0700
+
+    xf86-video-dummy 0.4.0
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit f8ec326276aeef2c54bfdfc5ff084ed57ecf9b04
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 10:19:23 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 499f52324f0ccea081f1c9cae92f66b84811a33c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 10:18:32 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2428bbfab7eb0532c3fe3109e4215a705c526949
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 10:17:54 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e8dce17c0c9aaa9ee193cc7280d7132163765ec
+Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Date:   Tue Sep 27 22:26:30 2016 +0200
+
+    Increase maximum number of video outputs to 16
+    
+    Apparently 4 is too low. The number is totally arbitrary.
+    
+    Signed-off-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+
+commit a87cfeca7dca26a840793024cc44f5aea5adc7bf
+Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Date:   Fri Jul 22 02:40:29 2016 +0200
+
+    xf86-video-dummy: changeable physical output size
+    
+    Add WIDTH_MM and HEIGHT_MM output properties to allow setting "physical"
+    size of the output. Normally this data is retrieved from EDID, but for
+    obvious reasons it can't be done in the VM.
+    This patch allows to set this properties from user space. This is later
+    reported as output size (the header line describing the output in
+    `xrandr` output).
+    
+    Signed-off-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+
+commit 327a25c4c3ab0b79a1103794449a1f7ccd6faff3
+Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Date:   Tue Oct 16 16:48:47 2018 +0200
+
+    RandR support in dummy video driver
+    
+    Properly initialize RandR extension, mostly with stubs. It creates four
+    virtual outputs (lets hope that nobody will need more at once...). By
+    default only the first one is in "connected" state, with preferred mode
+    from xorg.conf. Other outputs get "connected" at first mode set (and
+    left connected forever - you can always not use it).
+    So without any xrandr calls it should work as before.
+    
+    Signed-off-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+
+commit 850c05161d554bbf6360e69294dbec9bc15dd64a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:56:38 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ea2ad21c7a00a6a697f8561404b47cfb98137949
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 12:27:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bc8546e2bd5ed147ed5ef18ac086a1c50caff446
+Author: Antoine Martin <antoine@nagafix.co.uk>
+Date:   Mon Aug 14 12:10:32 2017 -0400
+
+    Support for 30 bit depth in dummy driver
+    
+    This patch makes it possible to start the server using the dummy driver
+    with a 30 bit depth.  The colormap size is changed from 256 to 1024 to
+    prevent crashes.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 5e90221dc68ae0893acd5c9b12d702269202558d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 5 17:12:41 2017 -0700
+
+    DUMMYGetRec: Fix misleading indentation
+    
+    GCC's -Wmisleading-indentation complains about this
+    
+      dummy_driver.c: In function ‘DUMMYGetRec’:
+      dummy_driver.c:181:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+           if (pScrn->driverPrivate == NULL)
+           ^~
+      dummy_driver.c:183:9: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+               return TRUE;
+               ^~~~~~
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 7957ad83b53b57f376164b10742d4e35223c9dcc
+Author: Xiaolei Yu <dreifachstein@gmail.com>
+Date:   Sat Aug 5 21:50:14 2017 +0700
+
+    fix a memory leak in probe
+    
+    Signed-off-by: Xiaolei Yu <dreifachstein@gmail.com>
+    Reviewed-by: Antoine Martin <antoine@nagafix.co.uk>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 33e68185665b2d065525ac03332f080026b18d8d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 5 21:34:31 2017 +0700
+
+    Get rid of dPtr->FBBase
+    
+    The pointer to the screen's pixels is stored in the screen pixmap's
+    devPrivate.ptr field.  Just use that instead of storing it
+    redundantly.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Bob Terek <xorg@esoterek.com>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 87249af5faf85c8d093e910c069faa4db0aee843
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 5 21:31:13 2017 +0700
+
+    Remove DGA support
+    
+    DGA was so 2004.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Bob Terek <xorg@esoterek.com>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 7c3b090e80a9b364434120262f9bef5686cd2e2e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 5 21:27:30 2017 +0700
+
+    Delete dPtr->screenSaver
+    
+    This is assigned, but never used.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Bob Terek <xorg@esoterek.com>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 12e3e2030171b7a5df074a56293eb16da40cd99b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sat Aug 5 21:25:03 2017 +0700
+
+    Delete XV stuff
+    
+    As far as I can tell, this was never implemented or used.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Bob Terek <xorg@esoterek.com>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit af0f808922f2de77f4514819c0dbe062060f1433
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 50ba5531dc7a5ac4197cba1235470ed6531f84f2
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 049573b57a33009c667533ad2b687b8fe8a72573
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 4a6df6b4eecae769771eba0136bf8271d01258fb
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Wed Dec 14 21:57:18 2016 +0100
