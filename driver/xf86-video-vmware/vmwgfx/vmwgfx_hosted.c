@@ -30,7 +30,6 @@
 #endif
 
 #include "vmwgfx_hosted.h"
-#include "vmwgfx_hosted_priv.h"
 
 /*
  * Hook up hosted environments here.
@@ -46,12 +45,7 @@
 const struct vmwgfx_hosted_driver *
 vmwgfx_hosted_detect(void)
 {
-    const struct vmwgfx_hosted_driver *tmp = vmwgfx_xmir_detect();
-
-    if (!tmp)
-	tmp = vmwgfx_xwl_detect();
-
-    return tmp;
+    return NULL;
 }
 
 /**
@@ -66,6 +60,4 @@ vmwgfx_hosted_detect(void)
 void
 vmwgfx_hosted_modify_flags(uint32_t *flags)
 {
-    vmwgfx_xmir_modify_flags(flags);
-    vmwgfx_xwl_modify_flags(flags);
 }

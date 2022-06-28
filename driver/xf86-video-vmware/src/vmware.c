@@ -36,6 +36,7 @@ char rcsId_vmware[] =
 #include "svga_modes.h"
 #include "vmware_bootstrap.h"
 #include "vmware_common.h"
+#include "common_compat.h"
 
 #ifndef HAVE_XORG_SERVER_1_5_0
 #include <xf86_ansic.h>
@@ -124,32 +125,50 @@ VMWAREFreeRec(ScrnInfoPtr pScrn)
 }
 
 CARD32
-vmwareReadReg(VMWAREPtr pVMWARE, int index)
+vmwareReadReg(VMWAREPtr pVMWARE, int rIndex)
 {
     /*
      * Block SIGIO for the duration, so we don't get interrupted after the
      * outl but before the inl by a mouse move (which write to our registers).
      */
-    int oldsigio, ret;
+    int ret;
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 22)
+    int oldsigio;
+    
     oldsigio = xf86BlockSIGIO();
-    outl(pVMWARE->indexReg, index);
+#else
+    input_lock();
+#endif
+    outl(pVMWARE->indexReg, rIndex);
     ret = inl(pVMWARE->valueReg);
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 22)
     xf86UnblockSIGIO(oldsigio);
+#else
+    input_unlock();
+#endif
     return ret;
 }
 
 void
-vmwareWriteReg(VMWAREPtr pVMWARE, int index, CARD32 value)
+vmwareWriteReg(VMWAREPtr pVMWARE, int wIndex, CARD32 value)
 {
     /*
      * Block SIGIO for the duration, so we don't get interrupted in between
      * the outls by a mouse move (which write to our registers).
      */
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 22)
     int oldsigio;
     oldsigio = xf86BlockSIGIO();
-    outl(pVMWARE->indexReg, index);
+#else
+    input_lock();
+#endif
+    outl(pVMWARE->indexReg, wIndex);
     outl(pVMWARE->valueReg, value);
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 22)
     xf86UnblockSIGIO(oldsigio);
+#else
+    input_unlock();
+#endif
 }
 
 void
@@ -1222,12 +1241,14 @@ VMWAREAddDisplayMode(ScrnInfoPtr pScrn,
                      int height)
 {
    DisplayModeRec *mode;
+   char * modeName;
 
    mode = malloc(sizeof(DisplayModeRec));
    memset(mode, 0, sizeof *mode);
 
-   mode->name = malloc(strlen(name) + 1);
-   strcpy(mode->name, name);
+   modeName = malloc(strlen(name) + 1);
+   strcpy(modeName, name);
+   mode->name = modeName;
    mode->status = MODE_OK;
    mode->type = M_T_DEFAULT;
    mode->HDisplay = width;
@@ -1324,7 +1345,7 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
 
 
     if (useXinerama && xf86IsOptionSet(options, OPTION_GUI_LAYOUT)) {
-       char *topology = xf86GetOptValString(options, OPTION_GUI_LAYOUT);
+       CONST_ABI_18_0 char *topology = xf86GetOptValString(options, OPTION_GUI_LAYOUT);
        if (topology) {
           pVMWARE->xineramaState =
              VMWAREParseTopologyString(pScrn, topology,
@@ -1332,11 +1353,11 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
 
          pVMWARE->xineramaStatic = pVMWARE->xineramaState != NULL;
 
-         free(topology);
+         free((void *)topology);
        }
     } else if (useXinerama &&
 	       xf86IsOptionSet(options, OPTION_STATIC_XINERAMA)) {
-       char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
+       CONST_ABI_18_0 char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
        if (topology) {
           pVMWARE->xineramaState =
              VMWAREParseTopologyString(pScrn, topology,
@@ -1345,7 +1366,7 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
 
          pVMWARE->xineramaStatic = pVMWARE->xineramaState != NULL;
 
-         free(topology);
+         free((void *)topology);
        }
     }
 

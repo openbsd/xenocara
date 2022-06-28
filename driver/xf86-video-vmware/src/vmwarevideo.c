@@ -44,6 +44,7 @@
 #include "fourcc.h"
 #include "svga_escape.h"
 #include "svga_overlay.h"
+#include "common_compat.h"
 
 #include <X11/extensions/Xv.h>
 
@@ -52,6 +53,8 @@
 #include <xf86_libc.h>
 #endif
 
+static CONST_ABI_16_0 char xv_adapt_name[] = "VMWare Overlay Video Engine";
+static CONST_ABI_16_0 char xv_image_name[] = "XV_IMAGE";
 
 #define HAVE_FILLKEYHELPERDRAWABLE \
     ((GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 2) ||  \
@@ -90,7 +93,7 @@ static XF86VideoEncodingRec vmwareVideoEncodings[] =
 {
     {
        0,
-       "XV_IMAGE",
+       xv_image_name,
        VMWARE_VID_MAX_WIDTH, VMWARE_VID_MAX_HEIGHT,
        {1, 1}
     }
@@ -111,6 +114,9 @@ static XF86ImageRec vmwareVideoImages[] =
     XVIMAGE_UYVY
 };
 
+static CONST_ABI_16_TO_19 char xv_colorkey_name[] = "XV_COLORKEY";
+static CONST_ABI_16_TO_19 char xv_autopaint_name[] = "XV_AUTOPAINT_COLORKEY";
+
 #define VMWARE_VID_NUM_ATTRIBUTES 2
 static XF86AttributeRec vmwareVideoAttributes[] =
 {
@@ -118,13 +124,13 @@ static XF86AttributeRec vmwareVideoAttributes[] =
         XvGettable | XvSettable,
         0x000000,
         0xffffff,
-        "XV_COLORKEY"
+        xv_colorkey_name,
     },
     {
         XvGettable | XvSettable,
         0,
         1,
-        "XV_AUTOPAINT_COLORKEY"
+        xv_autopaint_name,
     }
 };
 
@@ -575,7 +581,7 @@ vmwareVideoSetup(ScrnInfoPtr pScrn)
 
     adaptor->type = XvInputMask | XvImageMask | XvWindowMask;
     adaptor->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
-    adaptor->name = "VMware Video Engine";
+    adaptor->name = xv_adapt_name;
     adaptor->nEncodings = VMWARE_VID_NUM_ENCODINGS;
     adaptor->pEncodings = vmwareVideoEncodings;
     adaptor->nFormats = VMWARE_VID_NUM_FORMATS;

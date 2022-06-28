@@ -60,4 +60,5 @@ vmware_drv_la_SOURCES = \
 	vmware_bootstrap.h \
 	vmware_bootstrap.c \
 	vmware_common.c \
-	vmware_common.h
+	vmware_common.h \
+	common_compat.h

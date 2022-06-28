@@ -114,7 +114,7 @@ vmwgfx_xa_format(enum _PictFormatShort format)
 /*
  * Choose formats and flags for a dri2 surface.
  */
-static Bool
+Bool
 vmwgfx_hw_dri2_stage(PixmapPtr pixmap, unsigned int depth)
 {
     struct vmwgfx_saa_pixmap *vpix = vmwgfx_saa_pixmap(pixmap);
@@ -379,7 +379,7 @@ vmwgfx_hw_commit(PixmapPtr pixmap)
 					new_flags, 1) != XA_ERR_NONE)
 	    return FALSE;
 	vpix->xa_flags = new_flags;
-    } else if (!vmwgfx_create_hw(vsaa, pixmap))
+    } else if (!vmwgfx_create_hw(vsaa, pixmap, FALSE))
 	return FALSE;
 
     return TRUE;

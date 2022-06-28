@@ -40,6 +40,7 @@
 #endif
 #include "vm_basic_types.h"
 #include "vmware.h"
+#include "common_compat.h"
 
 #ifndef M_T_DRIVER
 # define M_T_DRIVER  0x40	/* Supplied by the driver (EDID, etc) */
@@ -83,7 +84,7 @@ vmwareAddDefaultMode(ScrnInfoPtr pScrn, uint32 dwidth, uint32 dheight)
 	DisplayModeRec dynamic =
 	    { MODEPREFIX, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, MODESUFFIX };
 	unsigned dispModeCount = 0;
-	char **dispModeList;
+	CONST_ABI_18_0 char **dispModeList;
 	char *dynModeName;
 	char name[80];
 	VMWAREPtr pVMWARE = VMWAREPTR(pScrn);

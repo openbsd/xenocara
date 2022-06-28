@@ -29,8 +29,12 @@
  * Author: Thomas Hellstrom <thellstrom@vmware.com>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <unistd.h>
+#include <fcntl.h>
 #include "xorg-server.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -65,6 +69,7 @@
 #include "../src/vmware_bootstrap.h"
 #include "../src/vmware_common.h"
 #include "vmwgfx_hosted.h"
+#include "common_compat.h"
 
 /*
  * We can't incude svga_types.h due to conflicting types for Bool.
@@ -175,7 +180,7 @@ drv_free_rec(ScrnInfoPtr pScrn)
 }
 
 static void
-drv_probe_ddc(ScrnInfoPtr pScrn, int index)
+drv_probe_ddc(ScrnInfoPtr pScrn, int _index)
 {
     ConfiguredMonitor = NULL;
 }
@@ -407,23 +412,23 @@ vmwgfx_pre_init_mode(ScrnInfoPtr pScrn, int flags)
     }
 
     if (xf86IsOptionSet(ms->Options, OPTION_GUI_LAYOUT)) {
-	char *topology =
+	CONST_ABI_18_0 char *topology =
 	    xf86GetOptValString(ms->Options, OPTION_GUI_LAYOUT);
 
 	ret = FALSE;
 	if (topology) {
 	    ret = vmwgfx_set_topology(pScrn, topology, "gui");
-	    free(topology);
+	    free((void *)topology);
 	}
 
     } else if (xf86IsOptionSet(ms->Options, OPTION_STATIC_XINERAMA)) {
-	char *topology =
+	CONST_ABI_18_0 char *topology =
 	    xf86GetOptValString(ms->Options, OPTION_STATIC_XINERAMA);
 
 	ret = FALSE;
 	if (topology) {
 	    ret = vmwgfx_set_topology(pScrn, topology, "static Xinerama");
-	    free(topology);
+	    free((void *)topology);
 	}
     }
 
@@ -541,19 +546,15 @@ drv_pre_init(ScrnInfoPtr pScrn, int flags)
 		   ms->drm_major, ms->drm_minor, ms->drm_patch);
     }
 
+    ms->has_screen_targets = ms->drm_major > 2 ||
+	(ms->drm_major == 2 && ms->drm_minor >= 7);
+    ms->has_screen_targets = (ms->has_screen_targets &&
+			      !vmwgfx_get_param(ms->fd,
+						DRM_VMW_PARAM_SCREEN_TARGET,
+						&cap) &&
+			      cap != 0);
+
     ms->check_fb_size = (vmwgfx_max_fb_size(ms->fd, &ms->max_fb_size) == 0);
-
-    if (vmwgfx_get_param(ms->fd, DRM_VMW_PARAM_HW_CAPS, &cap) != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to detect device "
-		   "screen object capability.\n");
-	goto out_depth;
-    }
-
-    if ((cap & SVGA_CAP_SCREEN_OBJECT_2) == 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Device is not screen object "
-		   "capable.\n");
-	goto out_depth;
-    }
 
     switch (pScrn->depth) {
     case 15:
@@ -622,6 +623,13 @@ drv_pre_init(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to load dri2 module.\n");
 	goto out_modes;
     }
+
+#ifdef DRI3
+    if (!xf86LoadSubModule(pScrn, "dri3")) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to load dri3 module.\n");
+	goto out_modes;
+    }
+#endif
 
     return TRUE;
 
@@ -744,7 +752,7 @@ void xorg_flush(ScreenPtr pScreen)
 
 	if (vpix->fb_id != -1) {
 	    if (vpix->pending_update) {
-		if (ms->only_hw_presents &&
+		if (vpix->scanout_hw &&
 		    REGION_NOTEMPTY(pscreen, vpix->pending_update)) {
 		    (void) vmwgfx_hw_accel_validate(pixmap, 0, XA_FLAG_SCANOUT,
 						    0, NULL);
@@ -756,7 +764,7 @@ void xorg_flush(ScreenPtr pScreen)
 		REGION_EMPTY(pScreen, vpix->pending_update);
 	    }
 	    if (vpix->pending_present) {
-		if (ms->only_hw_presents)
+		if (vpix->scanout_hw)
 		    (void) vmwgfx_scanout_update(ms->fd, vpix->fb_id,
 						 vpix->pending_present);
 		else
@@ -798,6 +806,7 @@ drv_create_screen_resources(ScreenPtr pScreen)
 	return ret;
 
     drv_adjust_frame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+    vmwgfx_uevent_init(pScrn, ms);
 
     return drv_enter_vt(VT_FUNC_ARGS);
 }
@@ -910,42 +919,42 @@ static void drv_load_palette(ScrnInfoPtr pScrn, int numColors,
 {
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     modesettingPtr ms = modesettingPTR(pScrn);
-    int index, j, i;
+    int _index, j, i;
     int c;
 
     switch(pScrn->depth) {
     case 15:
 	for (i = 0; i < numColors; i++) {
-	    index = indices[i];
+	    _index = indices[i];
 	    for (j = 0; j < 8; j++) {
-		ms->lut_r[index * 8 + j] = colors[index].red << 8;
-		ms->lut_g[index * 8 + j] = colors[index].green << 8;
-		ms->lut_b[index * 8 + j] = colors[index].blue << 8;
+		ms->lut_r[_index * 8 + j] = colors[_index].red << 8;
+		ms->lut_g[_index * 8 + j] = colors[_index].green << 8;
+		ms->lut_b[_index * 8 + j] = colors[_index].blue << 8;
 	    }
 	}
 	break;
     case 16:
 	for (i = 0; i < numColors; i++) {
-	    index = indices[i];
+	    _index = indices[i];
 
-	    if (index < 32) {
+	    if (_index < 32) {
 		for (j = 0; j < 8; j++) {
-		    ms->lut_r[index * 8 + j] = colors[index].red << 8;
-		    ms->lut_b[index * 8 + j] = colors[index].blue << 8;
+		    ms->lut_r[_index * 8 + j] = colors[_index].red << 8;
+		    ms->lut_b[_index * 8 + j] = colors[_index].blue << 8;
 		}
 	    }
 
 	    for (j = 0; j < 4; j++) {
-		ms->lut_g[index * 4 + j] = colors[index].green << 8;
+		ms->lut_g[_index * 4 + j] = colors[_index].green << 8;
 	    }
 	}
 	break;
     default:
 	for (i = 0; i < numColors; i++) {
-	    index = indices[i];
-	    ms->lut_r[index] = colors[index].red << 8;
-	    ms->lut_g[index] = colors[index].green << 8;
-	    ms->lut_b[index] = colors[index].blue << 8;
+	    _index = indices[i];
+	    ms->lut_r[_index] = colors[_index].red << 8;
+	    ms->lut_g[_index] = colors[_index].green << 8;
+	    ms->lut_b[_index] = colors[_index].blue << 8;
 	}
 	break;
     }
@@ -1021,10 +1030,33 @@ drv_screen_init(SCREEN_INIT_ARGS_DECL)
 
     xf86SetBlackWhitePixels(pScreen);
 
+    ms->autoLayout = TRUE;
     vmw_ctrl_ext_init(pScrn);
 
     if (ms->accelerate_render) {
+	/*
+	 * Some versions of the Gallium loader close our drm file
+	 * descriptor if xa_tracker_create() fails (typically 2D VMs.)
+	 * While this is mostly fixed everywhere we implement a
+	 * workaround to avoid tracking down the same bug again and again
+	 * on those setups where this is not fixed in mesa.
+	 */
+
+	int tmp_fd = dup(ms->fd);
+	long flags = fcntl(ms->fd, F_GETFD);
+
 	ms->xat = xa_tracker_create(ms->fd);
+	if (fcntl(ms->fd, F_GETFD) == -1) {
+	    if (tmp_fd == -1 || flags == -1 || fcntl(tmp_fd, F_SETFD, flags)) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "XA closed our DRM file descriptor. Giving up.\n");
+		return FALSE;
+	    }
+	    ms->fd = tmp_fd;
+	} else {
+	    close(tmp_fd);
+	}
+	    
 	if (!ms->xat) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "Failed to initialize Gallium3D Xa. "
@@ -1053,6 +1085,16 @@ drv_screen_init(SCREEN_INIT_ARGS_DECL)
 		ms->xat = NULL;
 		ms->from_render = X_PROBED;
 	    }
+#ifdef DRI3
+	    if (major == VMW_XA_VERSION_MAJOR_DRI3 &&
+		minor >= VMW_XA_VERSION_MINOR_DRI3) {
+		ms->xa_dri3 = TRUE;
+	    } else {
+		ms->xa_dri3 = FALSE;
+		LogMessage(X_WARNING,
+			   "Gallium3D XA version insufficient for dri3.\n");
+	    }
+#endif
 	}
 	if (ms->xat == NULL && ms->rendercheck) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
@@ -1071,17 +1113,29 @@ drv_screen_init(SCREEN_INIT_ARGS_DECL)
     if (!vmwgfx_saa_init(pScreen, ms->fd, ms->xat, &xorg_flush,
 			 ms->direct_presents,
 			 ms->only_hw_presents,
-			 ms->rendercheck)) {
+			 ms->rendercheck,
+			 ms->has_screen_targets)) {
 	FatalError("Failed to initialize SAA.\n");
     }
 
     ms->dri2_available = FALSE;
+#ifdef DRI3
+    ms->dri3_available = FALSE;
+#endif
     if (ms->enable_dri) {
 	if (ms->xat) {
 	    ms->dri2_available = xorg_dri2_init(pScreen);
 	    if (!ms->dri2_available)
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "Failed to initialize direct rendering.\n");
+			   "Failed to initialize direct rendering DRI2.\n");
+#ifdef DRI3
+	    if (ms->xa_dri3) {
+	        ms->dri3_available = vmwgfx_dri3_init(pScreen);
+		if (!ms->dri3_available)
+		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			       "Failed to initialize direct rendering DRI3.\n");
+	    }
+#endif /* DRI3 */
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "Skipped initialization of direct rendering due "
@@ -1097,14 +1151,25 @@ drv_screen_init(SCREEN_INIT_ARGS_DECL)
 	       "Rendercheck mode is %s.\n",
 	       (ms->rendercheck) ? "enabled" : "disabled");
 
-    xf86DrvMsg(pScrn->scrnIndex, ms->from_dri, "Direct rendering (3D) is %s.\n",
+    xf86DrvMsg(pScrn->scrnIndex, ms->from_dri,
+	       "Direct rendering (DRI2 3D) is %s.\n",
 	       (ms->dri2_available) ? "enabled" : "disabled");
+#ifdef DRI3
+    xf86DrvMsg(pScrn->scrnIndex, ms->from_dri,
+	       "Direct rendering (DRI3 3D) is %s.\n",
+	       (ms->dri3_available) ? "enabled" : "disabled");
+#endif
     if (ms->xat != NULL) {
 	xf86DrvMsg(pScrn->scrnIndex, ms->from_dp, "Direct presents are %s.\n",
 		   (ms->direct_presents) ? "enabled" : "disabled");
-	xf86DrvMsg(pScrn->scrnIndex, ms->from_hwp, "Hardware only presents "
-		   "are %s.\n",
-		   (ms->only_hw_presents) ? "enabled" : "disabled");
+	if (ms->only_hw_presents)
+	    xf86DrvMsg(pScrn->scrnIndex, ms->from_hwp, "Hardware only presents "
+		       "are enabled.\n");
+	else
+	    xf86DrvMsg(pScrn->scrnIndex, ms->from_hwp, "Hardware only presents "
+		       "are %s.\n",
+		       (ms->has_screen_targets) ? "automatic per scanout" :
+		       "disabled");
     }
 
     xf86SetBackingStore(pScreen);
@@ -1261,6 +1326,7 @@ drv_close_screen(CLOSE_SCREEN_ARGS_DECL)
     if (pScrn->vtSema)
         pScrn->LeaveVT(VT_FUNC_ARGS);
 
+    vmwgfx_uevent_fini(pScrn, ms);
     pScrn->vtSema = FALSE;
 
     vmwgfx_unwrap(ms, pScrn, EnterVT);

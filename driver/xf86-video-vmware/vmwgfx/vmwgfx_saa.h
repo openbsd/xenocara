@@ -56,6 +56,7 @@ struct vmwgfx_saa_pixmap {
     struct _WsbmListHead sync_x_head;
     struct _WsbmListHead scanout_list;
     struct _WsbmListHead pixmap_list;
+    Bool scanout_hw;
 
     uint32_t xa_flags;
     uint32_t staging_add_flags;
@@ -85,10 +86,12 @@ vmwgfx_saa_init(ScreenPtr pScreen, int drm_fd, struct xa_tracker *xat,
 		void (*present_flush)(ScreenPtr pScreen),
 		Bool direct_presents,
 		Bool only_hw_presents,
-		Bool rendercheck);
+		Bool rendercheck,
+		Bool has_screen_targets);
 
 extern uint32_t
-vmwgfx_scanout_ref(struct vmwgfx_screen_entry *box);
+vmwgfx_scanout_ref(struct vmwgfx_screen_entry *entry,
+		   Bool scanout_equals_pixmap);
 
 extern void
 vmwgfx_scanout_unref(struct vmwgfx_screen_entry *box);

@@ -33,6 +33,9 @@
  *      See http://www.xfree86.org/current/DESIGN16.html
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 
 #include "xorg-server.h"
@@ -58,6 +61,7 @@ typedef uint8_t uint8;
 #include "../src/svga_reg.h"
 #include "../src/svga_escape.h"
 #include "../src/svga_overlay.h"
+#include "../src/common_compat.h"
 
 #include <X11/extensions/Xv.h>
 
@@ -111,6 +115,9 @@ static XF86ImageRec vmwareVideoImages[] =
     XVIMAGE_UYVY
 };
 
+static CONST_ABI_16_TO_19 char xv_colorkey_name[] = "XV_COLORKEY";
+static CONST_ABI_16_TO_19 char xv_autopaint_name[] = "XV_AUTOPAINT_COLORKEY";
+
 #define VMWARE_VID_NUM_ATTRIBUTES 2
 static XF86AttributeRec vmwareVideoAttributes[] =
 {
@@ -118,13 +125,13 @@ static XF86AttributeRec vmwareVideoAttributes[] =
         XvGettable | XvSettable,
         0x000000,
         0xffffff,
-        "XV_COLORKEY"
+        xv_colorkey_name,
     },
     {
         XvGettable | XvSettable,
         0,
         1,
-        "XV_AUTOPAINT_COLORKEY"
+        xv_autopaint_name,
     }
 };
 

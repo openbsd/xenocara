@@ -14,6 +14,9 @@
 /* Has version 2.4.38 or greater of libdrm */
 #undef HAVE_LIBDRM_2_4_38
 
+/* Has libudev installed */
+#undef HAVE_LIBUDEV
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 

@@ -68,8 +68,7 @@ am__libvmwgfx_la_SOURCES_DIST = svga3d_reg.h vmwgfx_driver.c \
 	vmwgfx_saa_priv.h vmwgfx_drmi.c vmwgfx_drmi.h vmwgfx_overlay.c \
 	vmwgfx_ctrl.c vmwgfx_ctrl.h vmwgfx_xa_composite.c \
 	vmwgfx_xa_surface.c vmwgfx_hosted.c vmwgfx_hosted.h \
-	vmwgfx_hosted_priv.h vmwgfx_xmir.c vmwgfx_xwayland.c \
-	wsbm_util.h
+	vmwgfx_layout.c vmwgfx_rr_inlines.h vmwgfx_dri3.c wsbm_util.h
 @BUILD_VMWGFX_TRUE@am_libvmwgfx_la_OBJECTS =  \
 @BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_driver.lo \
 @BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_crtc.lo \
@@ -83,8 +82,8 @@ am__libvmwgfx_la_SOURCES_DIST = svga3d_reg.h vmwgfx_driver.c \
 @BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_xa_composite.lo \
 @BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_xa_surface.lo \
 @BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_hosted.lo \
-@BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_xmir.lo \
-@BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_xwayland.lo
+@BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_layout.lo \
+@BUILD_VMWGFX_TRUE@	libvmwgfx_la-vmwgfx_dri3.lo
 libvmwgfx_la_OBJECTS = $(am_libvmwgfx_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -189,6 +188,8 @@ LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
+LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -279,6 +280,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -288,9 +290,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @BUILD_VMWGFX_TRUE@noinst_LTLIBRARIES = libvmwgfx.la
-@BUILD_VMWGFX_TRUE@libvmwgfx_la_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS) @LIBDRM_CFLAGS@ @XATRACKER_CFLAGS@ -I$(top_srcdir)/src -I$(top_srcdir)/saa
+@BUILD_VMWGFX_TRUE@libvmwgfx_la_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS) @LIBDRM_CFLAGS@ @XATRACKER_CFLAGS@ @LIBUDEV_CFLAGS@ -I$(top_srcdir)/src -I$(top_srcdir)/saa
 @BUILD_VMWGFX_TRUE@libvmwgfx_la_LIBADD = @LIBDRM_LIBS@ $(top_builddir)/saa/libsaa.la\
-@BUILD_VMWGFX_TRUE@	@XATRACKER_LIBS@
+@BUILD_VMWGFX_TRUE@	@XATRACKER_LIBS@ @LIBUDEV_LIBS@
 
 @BUILD_VMWGFX_TRUE@libvmwgfx_la_DEPENDENCIES = $(top_builddir)/saa/libsaa.la
 @BUILD_VMWGFX_TRUE@libvmwgfx_la_SOURCES = \
@@ -314,9 +316,9 @@ top_srcdir = @top_srcdir@
 @BUILD_VMWGFX_TRUE@	vmwgfx_xa_surface.c \
 @BUILD_VMWGFX_TRUE@	vmwgfx_hosted.c \
 @BUILD_VMWGFX_TRUE@	vmwgfx_hosted.h \
-@BUILD_VMWGFX_TRUE@	vmwgfx_hosted_priv.h \
-@BUILD_VMWGFX_TRUE@	vmwgfx_xmir.c \
-@BUILD_VMWGFX_TRUE@	vmwgfx_xwayland.c \
+@BUILD_VMWGFX_TRUE@	vmwgfx_layout.c \
+@BUILD_VMWGFX_TRUE@	vmwgfx_rr_inlines.h \
+@BUILD_VMWGFX_TRUE@	vmwgfx_dri3.c \
 @BUILD_VMWGFX_TRUE@	wsbm_util.h
 
 all: all-am
@@ -376,17 +378,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_ctrl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_dri2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_dri3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_drmi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_hosted.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_layout.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_overlay.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_saa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_tex_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_xa_composite.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_xa_surface.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_xmir.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvmwgfx_la-vmwgfx_xwayland.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -493,19 +495,19 @@ libvmwgfx_la-vmwgfx_hosted.lo: vmwgfx_hosted.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -c -o libvmwgfx_la-vmwgfx_hosted.lo `test -f 'vmwgfx_hosted.c' || echo '$(srcdir)/'`vmwgfx_hosted.c
 
-libvmwgfx_la-vmwgfx_xmir.lo: vmwgfx_xmir.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -MT libvmwgfx_la-vmwgfx_xmir.lo -MD -MP -MF $(DEPDIR)/libvmwgfx_la-vmwgfx_xmir.Tpo -c -o libvmwgfx_la-vmwgfx_xmir.lo `test -f 'vmwgfx_xmir.c' || echo '$(srcdir)/'`vmwgfx_xmir.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libvmwgfx_la-vmwgfx_xmir.Tpo $(DEPDIR)/libvmwgfx_la-vmwgfx_xmir.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmwgfx_xmir.c' object='libvmwgfx_la-vmwgfx_xmir.lo' libtool=yes @AMDEPBACKSLASH@
+libvmwgfx_la-vmwgfx_layout.lo: vmwgfx_layout.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -MT libvmwgfx_la-vmwgfx_layout.lo -MD -MP -MF $(DEPDIR)/libvmwgfx_la-vmwgfx_layout.Tpo -c -o libvmwgfx_la-vmwgfx_layout.lo `test -f 'vmwgfx_layout.c' || echo '$(srcdir)/'`vmwgfx_layout.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libvmwgfx_la-vmwgfx_layout.Tpo $(DEPDIR)/libvmwgfx_la-vmwgfx_layout.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmwgfx_layout.c' object='libvmwgfx_la-vmwgfx_layout.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -c -o libvmwgfx_la-vmwgfx_xmir.lo `test -f 'vmwgfx_xmir.c' || echo '$(srcdir)/'`vmwgfx_xmir.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -c -o libvmwgfx_la-vmwgfx_layout.lo `test -f 'vmwgfx_layout.c' || echo '$(srcdir)/'`vmwgfx_layout.c
 
-libvmwgfx_la-vmwgfx_xwayland.lo: vmwgfx_xwayland.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -MT libvmwgfx_la-vmwgfx_xwayland.lo -MD -MP -MF $(DEPDIR)/libvmwgfx_la-vmwgfx_xwayland.Tpo -c -o libvmwgfx_la-vmwgfx_xwayland.lo `test -f 'vmwgfx_xwayland.c' || echo '$(srcdir)/'`vmwgfx_xwayland.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libvmwgfx_la-vmwgfx_xwayland.Tpo $(DEPDIR)/libvmwgfx_la-vmwgfx_xwayland.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmwgfx_xwayland.c' object='libvmwgfx_la-vmwgfx_xwayland.lo' libtool=yes @AMDEPBACKSLASH@
+libvmwgfx_la-vmwgfx_dri3.lo: vmwgfx_dri3.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -MT libvmwgfx_la-vmwgfx_dri3.lo -MD -MP -MF $(DEPDIR)/libvmwgfx_la-vmwgfx_dri3.Tpo -c -o libvmwgfx_la-vmwgfx_dri3.lo `test -f 'vmwgfx_dri3.c' || echo '$(srcdir)/'`vmwgfx_dri3.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libvmwgfx_la-vmwgfx_dri3.Tpo $(DEPDIR)/libvmwgfx_la-vmwgfx_dri3.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmwgfx_dri3.c' object='libvmwgfx_la-vmwgfx_dri3.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -c -o libvmwgfx_la-vmwgfx_xwayland.lo `test -f 'vmwgfx_xwayland.c' || echo '$(srcdir)/'`vmwgfx_xwayland.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libvmwgfx_la_CFLAGS) $(CFLAGS) -c -o libvmwgfx_la-vmwgfx_dri3.lo `test -f 'vmwgfx_dri3.c' || echo '$(srcdir)/'`vmwgfx_dri3.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

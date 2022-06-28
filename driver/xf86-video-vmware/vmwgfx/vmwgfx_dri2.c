@@ -29,6 +29,9 @@
  * Author: Thomas Hellstrom <thellstrom@vmware.com>
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "xorg-server.h"
 #include "xf86.h"

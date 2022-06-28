@@ -31,6 +31,9 @@
  *      The implementation of the VMWARE_CTRL protocol extension that
  *      allows X clients to communicate with the driver.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <xorg-server.h>
 #include "dixstruct.h"
@@ -118,6 +121,7 @@ VMwareCtrlDoSetRes(ScrnInfoPtr pScrn,
    rect.w = x;
    rect.h = y;
 
+   ms->autoLayout = FALSE;
    ret = vmwgfx_update_gui_layout(ms->fd, 1, &rect);
    return (ret == 0);
 }
@@ -223,6 +227,7 @@ VMwareCtrlDoSetTopology(ScrnInfoPtr pScrn,
       rects[i].h = extents[i].height;
    }
 
+   ms->autoLayout = FALSE;
    ret = vmwgfx_update_gui_layout(ms->fd, number, rects);
 
    free(rects);

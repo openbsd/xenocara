@@ -76,6 +76,7 @@
 #define DRM_VMW_PARAM_FIFO_CAPS        4
 #define DRM_VMW_PARAM_MAX_FB_SIZE      5
 #define DRM_VMW_PARAM_FIFO_HW_VERSION  6
+#define DRM_VMW_PARAM_SCREEN_TARGET    11
 
 /**
  * struct drm_vmw_getparam_arg
