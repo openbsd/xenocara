@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 # keep version in sync with configure.ac
-project('xorgproto', 'c', license : 'MIT', version : '2021.5')
+project('xorgproto', 'c', license : 'MIT', version : '2022.1')
 cc = meson.get_compiler('c')
 
 pcs = [

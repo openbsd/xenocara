@@ -71,28 +71,28 @@ DIST_COMMON = $(am__XCalibrateinclude_HEADERS_DIST) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/applewmproto.pc.in $(srcdir)/bigreqsproto.pc.in \
 	$(srcdir)/compositeproto.pc.in $(srcdir)/damageproto.pc.in \
-	$(srcdir)/dmxproto.pc.in $(srcdir)/dri2proto.pc.in \
-	$(srcdir)/dri3proto.pc.in $(srcdir)/evieproto.pc.in \
-	$(srcdir)/fixesproto.pc.in $(srcdir)/fontcacheproto.pc.in \
-	$(srcdir)/fontsproto.pc.in $(srcdir)/glproto.pc.in \
-	$(srcdir)/inputproto.pc.in $(srcdir)/kbproto.pc.in \
-	$(srcdir)/lg3dproto.pc.in $(srcdir)/presentproto.pc.in \
-	$(srcdir)/printproto.pc.in $(srcdir)/randrproto.pc.in \
-	$(srcdir)/recordproto.pc.in $(srcdir)/renderproto.pc.in \
-	$(srcdir)/resourceproto.pc.in $(srcdir)/scrnsaverproto.pc.in \
-	$(srcdir)/trapproto.pc.in $(srcdir)/videoproto.pc.in \
-	$(srcdir)/windowswmproto.pc.in $(srcdir)/xcalibrateproto.pc.in \
-	$(srcdir)/xcmiscproto.pc.in $(srcdir)/xextproto.pc.in \
-	$(srcdir)/xf86bigfontproto.pc.in $(srcdir)/xf86dgaproto.pc.in \
-	$(srcdir)/xf86driproto.pc.in $(srcdir)/xf86miscproto.pc.in \
-	$(srcdir)/xf86rushproto.pc.in $(srcdir)/xf86vidmodeproto.pc.in \
-	$(srcdir)/xineramaproto.pc.in $(srcdir)/xproto.pc.in \
-	$(srcdir)/xproxymngproto.pc.in $(top_srcdir)/configure \
-	$(top_srcdir)/include/X11/Xpoll.h.in $(xcmisc_HEADERS) \
-	$(xext_HEADERS) $(xf86bigfont_HEADERS) $(xf86dga_HEADERS) \
-	$(xf86dri_HEADERS) $(xf86vidmode_HEADERS) $(xinerama_HEADERS) \
-	$(xproto_HEADERS) AUTHORS INSTALL compile config.guess \
-	config.sub install-sh missing
+	$(srcdir)/dmxproto.pc.in $(srcdir)/dpmsproto.pc.in \
+	$(srcdir)/dri2proto.pc.in $(srcdir)/dri3proto.pc.in \
+	$(srcdir)/evieproto.pc.in $(srcdir)/fixesproto.pc.in \
+	$(srcdir)/fontcacheproto.pc.in $(srcdir)/fontsproto.pc.in \
+	$(srcdir)/glproto.pc.in $(srcdir)/inputproto.pc.in \
+	$(srcdir)/kbproto.pc.in $(srcdir)/lg3dproto.pc.in \
+	$(srcdir)/presentproto.pc.in $(srcdir)/printproto.pc.in \
+	$(srcdir)/randrproto.pc.in $(srcdir)/recordproto.pc.in \
+	$(srcdir)/renderproto.pc.in $(srcdir)/resourceproto.pc.in \
+	$(srcdir)/scrnsaverproto.pc.in $(srcdir)/trapproto.pc.in \
+	$(srcdir)/videoproto.pc.in $(srcdir)/windowswmproto.pc.in \
+	$(srcdir)/xcalibrateproto.pc.in $(srcdir)/xcmiscproto.pc.in \
+	$(srcdir)/xextproto.pc.in $(srcdir)/xf86bigfontproto.pc.in \
+	$(srcdir)/xf86dgaproto.pc.in $(srcdir)/xf86driproto.pc.in \
+	$(srcdir)/xf86miscproto.pc.in $(srcdir)/xf86rushproto.pc.in \
+	$(srcdir)/xf86vidmodeproto.pc.in $(srcdir)/xineramaproto.pc.in \
+	$(srcdir)/xproto.pc.in $(srcdir)/xproxymngproto.pc.in \
+	$(top_srcdir)/configure $(top_srcdir)/include/X11/Xpoll.h.in \
+	$(xcmisc_HEADERS) $(xext_HEADERS) $(xf86bigfont_HEADERS) \
+	$(xf86dga_HEADERS) $(xf86dri_HEADERS) $(xf86vidmode_HEADERS) \
+	$(xinerama_HEADERS) $(xproto_HEADERS) AUTHORS INSTALL compile \
+	config.guess config.sub install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -101,11 +101,11 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = applewmproto.pc bigreqsproto.pc compositeproto.pc \
-	damageproto.pc dmxproto.pc dri2proto.pc dri3proto.pc \
-	evieproto.pc fixesproto.pc fontcacheproto.pc fontsproto.pc \
-	glproto.pc include/X11/Xpoll.h inputproto.pc kbproto.pc \
-	lg3dproto.pc presentproto.pc printproto.pc randrproto.pc \
-	recordproto.pc renderproto.pc resourceproto.pc \
+	damageproto.pc dmxproto.pc dpmsproto.pc dri2proto.pc \
+	dri3proto.pc evieproto.pc fixesproto.pc fontcacheproto.pc \
+	fontsproto.pc glproto.pc include/X11/Xpoll.h inputproto.pc \
+	kbproto.pc lg3dproto.pc presentproto.pc printproto.pc \
+	randrproto.pc recordproto.pc renderproto.pc resourceproto.pc \
 	scrnsaverproto.pc trapproto.pc videoproto.pc windowswmproto.pc \
 	xcalibrateproto.pc xcmiscproto.pc xextproto.pc \
 	xf86bigfontproto.pc xf86dgaproto.pc xf86driproto.pc \
@@ -164,6 +164,7 @@ am__installdirs = "$(DESTDIR)$(applewmprotopkgconfigdir)" \
 	"$(DESTDIR)$(compositeprotopkgconfigdir)" \
 	"$(DESTDIR)$(damageprotopkgconfigdir)" "$(DESTDIR)$(docdir)" \
 	"$(DESTDIR)$(dmxprotopkgconfigdir)" \
+	"$(DESTDIR)$(dpmsprotopkgconfigdir)" \
 	"$(DESTDIR)$(dri2protopkgconfigdir)" \
 	"$(DESTDIR)$(dri3protopkgconfigdir)" \
 	"$(DESTDIR)$(evieprotopkgconfigdir)" \
@@ -219,19 +220,20 @@ DATA = $(applewmprotopkgconfig_DATA) $(bigreqsprotopkgconfig_DATA) \
 	$(calibrateprotopkgconfig_DATA) \
 	$(compositeprotopkgconfig_DATA) $(damageprotopkgconfig_DATA) \
 	$(dist_doc_DATA) $(dmxprotopkgconfig_DATA) \
-	$(dri2protopkgconfig_DATA) $(dri3protopkgconfig_DATA) \
-	$(evieprotopkgconfig_DATA) $(fixesprotopkgconfig_DATA) \
-	$(fontcacheprotopkgconfig_DATA) $(fontsprotopkgconfig_DATA) \
-	$(glprotopkgconfig_DATA) $(inputprotopkgconfig_DATA) \
-	$(kbprotopkgconfig_DATA) $(lg3dprotopkgconfig_DATA) \
-	$(miscman_DATA) $(pmprotopkgconfig_DATA) \
-	$(presentprotopkgconfig_DATA) $(printprotopkgconfig_DATA) \
-	$(randrprotopkgconfig_DATA) $(recordprotopkgconfig_DATA) \
-	$(renderprotopkgconfig_DATA) $(resourceprotopkgconfig_DATA) \
-	$(scrnsaverprotopkgconfig_DATA) $(trapprotopkgconfig_DATA) \
-	$(videoprotopkgconfig_DATA) $(windowswmprotopkgconfig_DATA) \
-	$(x11protopkgconfig_DATA) $(xcmiscprotopkgconfig_DATA) \
-	$(xextprotopkgconfig_DATA) $(xf86bigfontprotopkgconfig_DATA) \
+	$(dpmsprotopkgconfig_DATA) $(dri2protopkgconfig_DATA) \
+	$(dri3protopkgconfig_DATA) $(evieprotopkgconfig_DATA) \
+	$(fixesprotopkgconfig_DATA) $(fontcacheprotopkgconfig_DATA) \
+	$(fontsprotopkgconfig_DATA) $(glprotopkgconfig_DATA) \
+	$(inputprotopkgconfig_DATA) $(kbprotopkgconfig_DATA) \
+	$(lg3dprotopkgconfig_DATA) $(miscman_DATA) \
+	$(pmprotopkgconfig_DATA) $(presentprotopkgconfig_DATA) \
+	$(printprotopkgconfig_DATA) $(randrprotopkgconfig_DATA) \
+	$(recordprotopkgconfig_DATA) $(renderprotopkgconfig_DATA) \
+	$(resourceprotopkgconfig_DATA) $(scrnsaverprotopkgconfig_DATA) \
+	$(trapprotopkgconfig_DATA) $(videoprotopkgconfig_DATA) \
+	$(windowswmprotopkgconfig_DATA) $(x11protopkgconfig_DATA) \
+	$(xcmiscprotopkgconfig_DATA) $(xextprotopkgconfig_DATA) \
+	$(xf86bigfontprotopkgconfig_DATA) \
 	$(xf86dgaprotopkgconfig_DATA) $(xf86driprotopkgconfig_DATA) \
 	$(xf86miscprotopkgconfig_DATA) $(xf86rushprotopkgconfig_DATA) \
 	$(xf86vidmodeprotopkgconfig_DATA) \
@@ -295,6 +297,10 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
+am__tty_colors_dummy = \
+  mgn= red= grn= lgn= blu= brg= std=; \
+  am__color_tests=no
+am__tty_colors = $(am__tty_colors_dummy)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -359,16 +365,17 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
-MAN_SUBSTS = \
-        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-        -e 's|__datadir__|$(datadir)|g' \
-        -e 's|__libdir__|$(libdir)|g' \
-        -e 's|__sysconfdir__|$(sysconfdir)|g' \
-        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
+@APPLEWM_TRUE@MAN_SUBSTS = \
+@APPLEWM_TRUE@        -e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+@APPLEWM_TRUE@        -e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+@APPLEWM_TRUE@        -e 's|__datadir__|$(datadir)|g' \
+@APPLEWM_TRUE@        -e 's|__libdir__|$(libdir)|g' \
+@APPLEWM_TRUE@        -e 's|__sysconfdir__|$(sysconfdir)|g' \
+@APPLEWM_TRUE@        -e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
+@APPLEWM_TRUE@        -e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
+@APPLEWM_TRUE@        -e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
 
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
@@ -384,7 +391,13 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
-SED = sed
+PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
+@APPLEWM_TRUE@SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
@@ -436,9 +449,14 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
+pythondir = @pythondir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -447,6 +465,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+@APPLEWM_TRUE@XORGRELSTRING = @PACKAGE_STRING@
+@APPLEWM_TRUE@XORGMANNAME = X Version 11
+@APPLEWM_TRUE@SUFFIXES = .$(MISC_MAN_SUFFIX) .man
 @APPLEWM_TRUE@applewmdir = $(includedir)/X11/extensions
 @APPLEWM_TRUE@applewm_HEADERS = \
 @APPLEWM_TRUE@        include/X11/extensions/applewmconst.h \
@@ -461,13 +482,6 @@ bigreqs_HEADERS = \
 
 bigreqsprotopkgconfigdir = $(datadir)/pkgconfig
 bigreqsprotopkgconfig_DATA = bigreqsproto.pc
-@LEGACY_TRUE@XCalibrateincludedir = $(includedir)/X11/extensions
-@LEGACY_TRUE@XCalibrateinclude_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/xcalibrateproto.h \
-@LEGACY_TRUE@	include/X11/extensions/xcalibratewire.h
-
-@LEGACY_TRUE@calibrateprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@calibrateprotopkgconfig_DATA = xcalibrateproto.pc
 compositedir = $(includedir)/X11/extensions
 composite_HEADERS = \
 	include/X11/extensions/composite.h \
@@ -489,6 +503,8 @@ dmx_HEADERS = \
 
 dmxprotopkgconfigdir = $(datadir)/pkgconfig
 dmxprotopkgconfig_DATA = dmxproto.pc
+dpmsprotopkgconfigdir = $(datadir)/pkgconfig
+dpmsprotopkgconfig_DATA = dpmsproto.pc
 dri2dir = $(includedir)/X11/extensions
 dri2_HEADERS = \
 	include/X11/extensions/dri2proto.h \
@@ -502,13 +518,6 @@ dri3_HEADERS = \
 
 dri3protopkgconfigdir = $(datadir)/pkgconfig
 dri3protopkgconfig_DATA = dri3proto.pc
-@LEGACY_TRUE@eviedir = $(includedir)/X11/extensions
-@LEGACY_TRUE@evie_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/evieproto.h \
-@LEGACY_TRUE@	include/X11/extensions/Xeviestr.h
-
-@LEGACY_TRUE@evieprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@evieprotopkgconfig_DATA = evieproto.pc
 fixesdir = $(includedir)/X11/extensions
 fixes_HEADERS = \
 	include/X11/extensions/xfixesproto.h \
@@ -516,14 +525,6 @@ fixes_HEADERS = \
 
 fixesprotopkgconfigdir = $(datadir)/pkgconfig
 fixesprotopkgconfig_DATA = fixesproto.pc
-@LEGACY_TRUE@fontcachedir = $(includedir)/X11/extensions
-@LEGACY_TRUE@fontcache_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/fontcache.h \
-@LEGACY_TRUE@	include/X11/extensions/fontcacheP.h \
-@LEGACY_TRUE@	include/X11/extensions/fontcachstr.h
-
-@LEGACY_TRUE@fontcacheprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@fontcacheprotopkgconfig_DATA = fontcacheproto.pc
 fontsdir = $(includedir)/X11/fonts
 fonts_HEADERS = \
 	include/X11/fonts/font.h \
@@ -564,19 +565,6 @@ kb_HEADERS = include/X11/extensions/XKB.h \
 	include/X11/extensions/XKBstr.h $(am__append_1)
 kbprotopkgconfigdir = $(datadir)/pkgconfig
 kbprotopkgconfig_DATA = kbproto.pc
-@LEGACY_TRUE@lg3ddir = $(includedir)/X11/extensions
-@LEGACY_TRUE@lg3d_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/lgewire.h
-
-@LEGACY_TRUE@lg3dprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@lg3dprotopkgconfig_DATA = lg3dproto.pc
-@LEGACY_TRUE@xproxymngdir = $(includedir)/X11/PM
-@LEGACY_TRUE@xproxymng_HEADERS = \
-@LEGACY_TRUE@	include/X11/PM/PM.h \
-@LEGACY_TRUE@	include/X11/PM/PMproto.h
-
-@LEGACY_TRUE@pmprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@pmprotopkgconfig_DATA = xproxymngproto.pc
 presentdir = $(includedir)/X11/extensions
 present_HEADERS = \
 	include/X11/extensions/presentproto.h \
@@ -584,19 +572,6 @@ present_HEADERS = \
 
 presentprotopkgconfigdir = $(datadir)/pkgconfig
 presentprotopkgconfig_DATA = presentproto.pc
-@LEGACY_TRUE@printdir = $(includedir)/X11/extensions
-@LEGACY_TRUE@print_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/Print.h \
-@LEGACY_TRUE@	include/X11/extensions/Printstr.h
-
-@LEGACY_TRUE@printprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@printprotopkgconfig_DATA = printproto.pc
-@LEGACY_TRUE@miscmandir = $(MISC_MAN_DIR)
-@LEGACY_TRUE@miscman_DATA = man/Xprint.$(MISC_MAN_SUFFIX)
-@LEGACY_TRUE@CLEANFILES = $(miscman_DATA)
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-SUFFIXES = .$(MISC_MAN_SUFFIX) .man
 randrdir = $(includedir)/X11/extensions
 randr_HEADERS = \
 	include/X11/extensions/randr.h \
@@ -632,18 +607,6 @@ scrnsaver_HEADERS = \
 
 scrnsaverprotopkgconfigdir = $(datadir)/pkgconfig
 scrnsaverprotopkgconfig_DATA = scrnsaverproto.pc
-@LEGACY_TRUE@trapdir = $(includedir)/X11/extensions
-@LEGACY_TRUE@trap_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/xtrapbits.h \
-@LEGACY_TRUE@	include/X11/extensions/xtrapddmi.h \
-@LEGACY_TRUE@	include/X11/extensions/xtrapdi.h \
-@LEGACY_TRUE@	include/X11/extensions/xtrapemacros.h \
-@LEGACY_TRUE@	include/X11/extensions/xtraplib.h \
-@LEGACY_TRUE@	include/X11/extensions/xtraplibp.h \
-@LEGACY_TRUE@	include/X11/extensions/xtrapproto.h
-
-@LEGACY_TRUE@trapprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@trapprotopkgconfig_DATA = trapproto.pc
 videodir = $(includedir)/X11/extensions
 video_HEADERS = include/X11/extensions/Xv.h \
 	include/X11/extensions/XvMC.h \
@@ -651,13 +614,6 @@ video_HEADERS = include/X11/extensions/Xv.h \
 	include/X11/extensions/Xvproto.h $(am__append_2)
 videoprotopkgconfigdir = $(datadir)/pkgconfig
 videoprotopkgconfig_DATA = videoproto.pc
-@LEGACY_TRUE@windowswmdir = $(includedir)/X11/extensions
-@LEGACY_TRUE@windowswm_HEADERS = \
-@LEGACY_TRUE@        include/X11/extensions/windowswm.h \
-@LEGACY_TRUE@	include/X11/extensions/windowswmstr.h
-
-@LEGACY_TRUE@windowswmprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@windowswmprotopkgconfig_DATA = windowswmproto.pc
 xprotodir = $(includedir)/X11
 xproto_HEADERS = \
 	include/X11/ap_keysym.h \
@@ -767,20 +723,6 @@ xf86dri_HEADERS = \
 
 xf86driprotopkgconfigdir = $(datadir)/pkgconfig
 xf86driprotopkgconfig_DATA = xf86driproto.pc
-@LEGACY_TRUE@xf86miscdir = $(includedir)/X11/extensions
-@LEGACY_TRUE@xf86misc_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/xf86misc.h \
-@LEGACY_TRUE@	include/X11/extensions/xf86mscstr.h
-
-@LEGACY_TRUE@xf86miscprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@xf86miscprotopkgconfig_DATA = xf86miscproto.pc
-@LEGACY_TRUE@xf86rushdir = $(includedir)/X11/extensions
-@LEGACY_TRUE@xf86rush_HEADERS = \
-@LEGACY_TRUE@	include/X11/extensions/xf86rush.h \
-@LEGACY_TRUE@	include/X11/extensions/xf86rushstr.h
-
-@LEGACY_TRUE@xf86rushprotopkgconfigdir = $(datadir)/pkgconfig
-@LEGACY_TRUE@xf86rushprotopkgconfig_DATA = xf86rushproto.pc
 xf86vidmodedir = $(includedir)/X11/extensions
 xf86vidmode_HEADERS = \
 	include/X11/extensions/xf86vm.h \
@@ -795,6 +737,84 @@ xinerama_HEADERS = \
 
 xineramaprotopkgconfigdir = $(datadir)/pkgconfig
 xineramaprotopkgconfig_DATA = xineramaproto.pc
+@LEGACY_TRUE@XCalibrateincludedir = $(includedir)/X11/extensions
+@LEGACY_TRUE@XCalibrateinclude_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xcalibrateproto.h \
+@LEGACY_TRUE@	include/X11/extensions/xcalibratewire.h
+
+@LEGACY_TRUE@calibrateprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@calibrateprotopkgconfig_DATA = xcalibrateproto.pc
+@LEGACY_TRUE@eviedir = $(includedir)/X11/extensions
+@LEGACY_TRUE@evie_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/evieproto.h \
+@LEGACY_TRUE@	include/X11/extensions/Xeviestr.h
+
+@LEGACY_TRUE@evieprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@evieprotopkgconfig_DATA = evieproto.pc
+@LEGACY_TRUE@fontcachedir = $(includedir)/X11/extensions
+@LEGACY_TRUE@fontcache_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/fontcache.h \
+@LEGACY_TRUE@	include/X11/extensions/fontcacheP.h \
+@LEGACY_TRUE@	include/X11/extensions/fontcachstr.h
+
+@LEGACY_TRUE@fontcacheprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@fontcacheprotopkgconfig_DATA = fontcacheproto.pc
+@LEGACY_TRUE@lg3ddir = $(includedir)/X11/extensions
+@LEGACY_TRUE@lg3d_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/lgewire.h
+
+@LEGACY_TRUE@lg3dprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@lg3dprotopkgconfig_DATA = lg3dproto.pc
+@LEGACY_TRUE@xproxymngdir = $(includedir)/X11/PM
+@LEGACY_TRUE@xproxymng_HEADERS = \
+@LEGACY_TRUE@	include/X11/PM/PM.h \
+@LEGACY_TRUE@	include/X11/PM/PMproto.h
+
+@LEGACY_TRUE@pmprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@pmprotopkgconfig_DATA = xproxymngproto.pc
+@LEGACY_TRUE@printdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@print_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/Print.h \
+@LEGACY_TRUE@	include/X11/extensions/Printstr.h
+
+@LEGACY_TRUE@printprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@printprotopkgconfig_DATA = printproto.pc
+@LEGACY_TRUE@miscmandir = $(MISC_MAN_DIR)
+@LEGACY_TRUE@miscman_DATA = man/Xprint.$(MISC_MAN_SUFFIX)
+@LEGACY_TRUE@CLEANFILES = $(miscman_DATA)
+@LEGACY_TRUE@trapdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@trap_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xtrapbits.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapddmi.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapdi.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapemacros.h \
+@LEGACY_TRUE@	include/X11/extensions/xtraplib.h \
+@LEGACY_TRUE@	include/X11/extensions/xtraplibp.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapproto.h
+
+@LEGACY_TRUE@trapprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@trapprotopkgconfig_DATA = trapproto.pc
+@LEGACY_TRUE@windowswmdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@windowswm_HEADERS = \
+@LEGACY_TRUE@        include/X11/extensions/windowswm.h \
+@LEGACY_TRUE@	include/X11/extensions/windowswmstr.h
+
+@LEGACY_TRUE@windowswmprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@windowswmprotopkgconfig_DATA = windowswmproto.pc
+@LEGACY_TRUE@xf86miscdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@xf86misc_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xf86misc.h \
+@LEGACY_TRUE@	include/X11/extensions/xf86mscstr.h
+
+@LEGACY_TRUE@xf86miscprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@xf86miscprotopkgconfig_DATA = xf86miscproto.pc
+@LEGACY_TRUE@xf86rushdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@xf86rush_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xf86rush.h \
+@LEGACY_TRUE@	include/X11/extensions/xf86rushstr.h
+
+@LEGACY_TRUE@xf86rushprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@xf86rushprotopkgconfig_DATA = xf86rushproto.pc
 
 # SUBDIRS=specs
 dist_doc_DATA = \
@@ -860,9 +880,16 @@ EXTRA_DIST = \
     meson.build \
     meson_options.txt \
     man/Xprint.man \
-    man/Xprint.sgml
+    man/Xprint.sgml \
+    scripts/keysym-generator.py
 
 AM_DISTCHECK_CONFIGURE_FLAGS = --enable-legacy
+@HAVE_PYTHON_TRUE@AM_TESTS_ENVIRONMENT = \
+@HAVE_PYTHON_TRUE@       INCLUDESDIR=$(top_srcdir)/include
+
+@HAVE_PYTHON_TRUE@TESTS = scripts/keysym-generator.py
+@HAVE_PYTHON_TRUE@TEST_EXTENSIONS = .py
+@HAVE_PYTHON_TRUE@PY_LOG_COMPILER = $(PYTHON)
 all: all-am
 
 .SUFFIXES:
@@ -910,6 +937,8 @@ compositeproto.pc: $(top_builddir)/config.status $(srcdir)/compositeproto.pc.in
 damageproto.pc: $(top_builddir)/config.status $(srcdir)/damageproto.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 dmxproto.pc: $(top_builddir)/config.status $(srcdir)/dmxproto.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+dpmsproto.pc: $(top_builddir)/config.status $(srcdir)/dpmsproto.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 dri2proto.pc: $(top_builddir)/config.status $(srcdir)/dri2proto.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -1124,6 +1153,27 @@ uninstall-dmxprotopkgconfigDATA:
 	@list='$(dmxprotopkgconfig_DATA)'; test -n "$(dmxprotopkgconfigdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(dmxprotopkgconfigdir)'; $(am__uninstall_files_from_dir)
+install-dpmsprotopkgconfigDATA: $(dpmsprotopkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dpmsprotopkgconfig_DATA)'; test -n "$(dpmsprotopkgconfigdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(dpmsprotopkgconfigdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(dpmsprotopkgconfigdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dpmsprotopkgconfigdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dpmsprotopkgconfigdir)" || exit $$?; \
+	done
+
+uninstall-dpmsprotopkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dpmsprotopkgconfig_DATA)'; test -n "$(dpmsprotopkgconfigdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(dpmsprotopkgconfigdir)'; $(am__uninstall_files_from_dir)
 install-dri2protopkgconfigDATA: $(dri2protopkgconfig_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dri2protopkgconfig_DATA)'; test -n "$(dri2protopkgconfigdir)" || list=; \
@@ -2713,6 +2763,99 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 	-rm -f cscope.out cscope.in.out cscope.po.out cscope.files
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	$(am__tty_colors); \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst $(AM_TESTS_FD_REDIRECT); then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=XPASS; \
+	      ;; \
+	      *) \
+		col=$$grn; res=PASS; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xfail=`expr $$xfail + 1`; \
+		col=$$lgn; res=XFAIL; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=FAIL; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      col=$$blu; res=SKIP; \
+	    fi; \
+	    echo "$${col}$$res$${std}: $$tst"; \
+	  done; \
+	  if test "$$all" -eq 1; then \
+	    tests="test"; \
+	    All=""; \
+	  else \
+	    tests="tests"; \
+	    All="All "; \
+	  fi; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="$$All$$all $$tests passed"; \
+	    else \
+	      if test "$$xfail" -eq 1; then failures=failure; else failures=failures; fi; \
+	      banner="$$All$$all $$tests behaved as expected ($$xfail expected $$failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all $$tests failed"; \
+	    else \
+	      if test "$$xpass" -eq 1; then passes=pass; else passes=passes; fi; \
+	      banner="$$failed of $$all $$tests did not behave as expected ($$xpass unexpected $$passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    if test "$$skip" -eq 1; then \
+	      skipped="($$skip test was not run)"; \
+	    else \
+	      skipped="($$skip tests were not run)"; \
+	    fi; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  if test "$$failed" -eq 0; then \
+	    col="$$grn"; \
+	  else \
+	    col="$$red"; \
+	  fi; \
+	  echo "$${col}$$dashes$${std}"; \
+	  echo "$${col}$$banner$${std}"; \
+	  test -z "$$skipped" || echo "$${col}$$skipped$${std}"; \
+	  test -z "$$report" || echo "$${col}$$report$${std}"; \
+	  echo "$${col}$$dashes$${std}"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	test -d "$(distdir)" || mkdir "$(distdir)"
@@ -2869,10 +3012,11 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 all-am: Makefile $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(applewmprotopkgconfigdir)" "$(DESTDIR)$(bigreqsprotopkgconfigdir)" "$(DESTDIR)$(calibrateprotopkgconfigdir)" "$(DESTDIR)$(compositeprotopkgconfigdir)" "$(DESTDIR)$(damageprotopkgconfigdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(dmxprotopkgconfigdir)" "$(DESTDIR)$(dri2protopkgconfigdir)" "$(DESTDIR)$(dri3protopkgconfigdir)" "$(DESTDIR)$(evieprotopkgconfigdir)" "$(DESTDIR)$(fixesprotopkgconfigdir)" "$(DESTDIR)$(fontcacheprotopkgconfigdir)" "$(DESTDIR)$(fontsprotopkgconfigdir)" "$(DESTDIR)$(glprotopkgconfigdir)" "$(DESTDIR)$(inputprotopkgconfigdir)" "$(DESTDIR)$(kbprotopkgconfigdir)" "$(DESTDIR)$(lg3dprotopkgconfigdir)" "$(DESTDIR)$(miscmandir)" "$(DESTDIR)$(pmprotopkgconfigdir)" "$(DESTDIR)$(presentprotopkgconfigdir)" "$(DESTDIR)$(printprotopkgconfigdir)" "$(DESTDIR)$(randrprotopkgconfigdir)" "$(DESTDIR)$(recordprotopkgconfigdir)" "$(DESTDIR)$(renderprotopkgconfigdir)" "$(DESTDIR)$(resourceprotopkgconfigdir)" "$(DESTDIR)$(scrnsaverprotopkgconfigdir)" "$(DESTDIR)$(trapprotopkgconfigdir)" "$(DESTDIR)$(videoprotopkgconfigdir)" "$(DESTDIR)$(windowswmprotopkgconfigdir)" "$(DESTDIR)$(x11protopkgconfigdir)" "$(DESTDIR)$(xcmiscprotopkgconfigdir)" "$(DESTDIR)$(xextprotopkgconfigdir)" "$(DESTDIR)$(xf86bigfontprotopkgconfigdir)" "$(DESTDIR)$(xf86dgaprotopkgconfigdir)" "$(DESTDIR)$(xf86driprotopkgconfigdir)" "$(DESTDIR)$(xf86miscprotopkgconfigdir)" "$(DESTDIR)$(xf86rushprotopkgconfigdir)" "$(DESTDIR)$(xf86vidmodeprotopkgconfigdir)" "$(DESTDIR)$(xineramaprotopkgconfigdir)" "$(DESTDIR)$(XCalibrateincludedir)" "$(DESTDIR)$(applewmdir)" "$(DESTDIR)$(bigreqsdir)" "$(DESTDIR)$(compatdir)" "$(DESTDIR)$(compositedir)" "$(DESTDIR)$(damagedir)" "$(DESTDIR)$(dmxdir)" "$(DESTDIR)$(dri2dir)" "$(DESTDIR)$(dri3dir)" "$(DESTDIR)$(eviedir)" "$(DESTDIR)$(fixesdir)" "$(DESTDIR)$(fontcachedir)" "$(DESTDIR)$(fontsdir)" "$(DESTDIR)$(gldir)" "$(DESTDIR)$(glinternaldir)" "$(DESTDIR)$(inputdir)" "$(DESTDIR)$(kbdir)" "$(DESTDIR)$(lg3ddir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(presentdir)" "$(DESTDIR)$(printdir)" "$(DESTDIR)$(randrdir)" "$(DESTDIR)$(recorddir)" "$(DESTDIR)$(renderdir)" "$(DESTDIR)$(resourcedir)" "$(DESTDIR)$(scrnsaverdir)" "$(DESTDIR)$(trapdir)" "$(DESTDIR)$(videodir)" "$(DESTDIR)$(windowswmdir)" "$(DESTDIR)$(xcmiscdir)" "$(DESTDIR)$(xextdir)" "$(DESTDIR)$(xf86bigfontdir)" "$(DESTDIR)$(xf86dgadir)" "$(DESTDIR)$(xf86dridir)" "$(DESTDIR)$(xf86miscdir)" "$(DESTDIR)$(xf86rushdir)" "$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)"; do \
+	for dir in "$(DESTDIR)$(applewmprotopkgconfigdir)" "$(DESTDIR)$(bigreqsprotopkgconfigdir)" "$(DESTDIR)$(calibrateprotopkgconfigdir)" "$(DESTDIR)$(compositeprotopkgconfigdir)" "$(DESTDIR)$(damageprotopkgconfigdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(dmxprotopkgconfigdir)" "$(DESTDIR)$(dpmsprotopkgconfigdir)" "$(DESTDIR)$(dri2protopkgconfigdir)" "$(DESTDIR)$(dri3protopkgconfigdir)" "$(DESTDIR)$(evieprotopkgconfigdir)" "$(DESTDIR)$(fixesprotopkgconfigdir)" "$(DESTDIR)$(fontcacheprotopkgconfigdir)" "$(DESTDIR)$(fontsprotopkgconfigdir)" "$(DESTDIR)$(glprotopkgconfigdir)" "$(DESTDIR)$(inputprotopkgconfigdir)" "$(DESTDIR)$(kbprotopkgconfigdir)" "$(DESTDIR)$(lg3dprotopkgconfigdir)" "$(DESTDIR)$(miscmandir)" "$(DESTDIR)$(pmprotopkgconfigdir)" "$(DESTDIR)$(presentprotopkgconfigdir)" "$(DESTDIR)$(printprotopkgconfigdir)" "$(DESTDIR)$(randrprotopkgconfigdir)" "$(DESTDIR)$(recordprotopkgconfigdir)" "$(DESTDIR)$(renderprotopkgconfigdir)" "$(DESTDIR)$(resourceprotopkgconfigdir)" "$(DESTDIR)$(scrnsaverprotopkgconfigdir)" "$(DESTDIR)$(trapprotopkgconfigdir)" "$(DESTDIR)$(videoprotopkgconfigdir)" "$(DESTDIR)$(windowswmprotopkgconfigdir)" "$(DESTDIR)$(x11protopkgconfigdir)" "$(DESTDIR)$(xcmiscprotopkgconfigdir)" "$(DESTDIR)$(xextprotopkgconfigdir)" "$(DESTDIR)$(xf86bigfontprotopkgconfigdir)" "$(DESTDIR)$(xf86dgaprotopkgconfigdir)" "$(DESTDIR)$(xf86driprotopkgconfigdir)" "$(DESTDIR)$(xf86miscprotopkgconfigdir)" "$(DESTDIR)$(xf86rushprotopkgconfigdir)" "$(DESTDIR)$(xf86vidmodeprotopkgconfigdir)" "$(DESTDIR)$(xineramaprotopkgconfigdir)" "$(DESTDIR)$(XCalibrateincludedir)" "$(DESTDIR)$(applewmdir)" "$(DESTDIR)$(bigreqsdir)" "$(DESTDIR)$(compatdir)" "$(DESTDIR)$(compositedir)" "$(DESTDIR)$(damagedir)" "$(DESTDIR)$(dmxdir)" "$(DESTDIR)$(dri2dir)" "$(DESTDIR)$(dri3dir)" "$(DESTDIR)$(eviedir)" "$(DESTDIR)$(fixesdir)" "$(DESTDIR)$(fontcachedir)" "$(DESTDIR)$(fontsdir)" "$(DESTDIR)$(gldir)" "$(DESTDIR)$(glinternaldir)" "$(DESTDIR)$(inputdir)" "$(DESTDIR)$(kbdir)" "$(DESTDIR)$(lg3ddir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(presentdir)" "$(DESTDIR)$(printdir)" "$(DESTDIR)$(randrdir)" "$(DESTDIR)$(recorddir)" "$(DESTDIR)$(renderdir)" "$(DESTDIR)$(resourcedir)" "$(DESTDIR)$(scrnsaverdir)" "$(DESTDIR)$(trapdir)" "$(DESTDIR)$(videodir)" "$(DESTDIR)$(windowswmdir)" "$(DESTDIR)$(xcmiscdir)" "$(DESTDIR)$(xextdir)" "$(DESTDIR)$(xf86bigfontdir)" "$(DESTDIR)$(xf86dgadir)" "$(DESTDIR)$(xf86dridir)" "$(DESTDIR)$(xf86miscdir)" "$(DESTDIR)$(xf86rushdir)" "$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -2934,29 +3078,29 @@ install-data-am: install-XCalibrateincludeHEADERS \
 	install-compositeHEADERS install-compositeprotopkgconfigDATA \
 	install-damageHEADERS install-damageprotopkgconfigDATA \
 	install-dist_docDATA install-dmxHEADERS \
-	install-dmxprotopkgconfigDATA install-dri2HEADERS \
-	install-dri2protopkgconfigDATA install-dri3HEADERS \
-	install-dri3protopkgconfigDATA install-evieHEADERS \
-	install-evieprotopkgconfigDATA install-fixesHEADERS \
-	install-fixesprotopkgconfigDATA install-fontcacheHEADERS \
-	install-fontcacheprotopkgconfigDATA install-fontsHEADERS \
-	install-fontsprotopkgconfigDATA install-glHEADERS \
-	install-glinternalHEADERS install-glprotopkgconfigDATA \
-	install-inputHEADERS install-inputprotopkgconfigDATA \
-	install-kbHEADERS install-kbprotopkgconfigDATA \
-	install-lg3dHEADERS install-lg3dprotopkgconfigDATA \
-	install-miscmanDATA install-nodist_xprotoHEADERS \
-	install-pmprotopkgconfigDATA install-presentHEADERS \
-	install-presentprotopkgconfigDATA install-printHEADERS \
-	install-printprotopkgconfigDATA install-randrHEADERS \
-	install-randrprotopkgconfigDATA install-recordHEADERS \
-	install-recordprotopkgconfigDATA install-renderHEADERS \
-	install-renderprotopkgconfigDATA install-resourceHEADERS \
-	install-resourceprotopkgconfigDATA install-scrnsaverHEADERS \
-	install-scrnsaverprotopkgconfigDATA install-trapHEADERS \
-	install-trapprotopkgconfigDATA install-videoHEADERS \
-	install-videoprotopkgconfigDATA install-windowswmHEADERS \
-	install-windowswmprotopkgconfigDATA \
+	install-dmxprotopkgconfigDATA install-dpmsprotopkgconfigDATA \
+	install-dri2HEADERS install-dri2protopkgconfigDATA \
+	install-dri3HEADERS install-dri3protopkgconfigDATA \
+	install-evieHEADERS install-evieprotopkgconfigDATA \
+	install-fixesHEADERS install-fixesprotopkgconfigDATA \
+	install-fontcacheHEADERS install-fontcacheprotopkgconfigDATA \
+	install-fontsHEADERS install-fontsprotopkgconfigDATA \
+	install-glHEADERS install-glinternalHEADERS \
+	install-glprotopkgconfigDATA install-inputHEADERS \
+	install-inputprotopkgconfigDATA install-kbHEADERS \
+	install-kbprotopkgconfigDATA install-lg3dHEADERS \
+	install-lg3dprotopkgconfigDATA install-miscmanDATA \
+	install-nodist_xprotoHEADERS install-pmprotopkgconfigDATA \
+	install-presentHEADERS install-presentprotopkgconfigDATA \
+	install-printHEADERS install-printprotopkgconfigDATA \
+	install-randrHEADERS install-randrprotopkgconfigDATA \
+	install-recordHEADERS install-recordprotopkgconfigDATA \
+	install-renderHEADERS install-renderprotopkgconfigDATA \
+	install-resourceHEADERS install-resourceprotopkgconfigDATA \
+	install-scrnsaverHEADERS install-scrnsaverprotopkgconfigDATA \
+	install-trapHEADERS install-trapprotopkgconfigDATA \
+	install-videoHEADERS install-videoprotopkgconfigDATA \
+	install-windowswmHEADERS install-windowswmprotopkgconfigDATA \
 	install-x11protopkgconfigDATA install-xcmiscHEADERS \
 	install-xcmiscprotopkgconfigDATA install-xextHEADERS \
 	install-xextprotopkgconfigDATA install-xf86bigfontHEADERS \
@@ -3021,11 +3165,11 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-compositeprotopkgconfigDATA uninstall-damageHEADERS \
 	uninstall-damageprotopkgconfigDATA uninstall-dist_docDATA \
 	uninstall-dmxHEADERS uninstall-dmxprotopkgconfigDATA \
-	uninstall-dri2HEADERS uninstall-dri2protopkgconfigDATA \
-	uninstall-dri3HEADERS uninstall-dri3protopkgconfigDATA \
-	uninstall-evieHEADERS uninstall-evieprotopkgconfigDATA \
-	uninstall-fixesHEADERS uninstall-fixesprotopkgconfigDATA \
-	uninstall-fontcacheHEADERS \
+	uninstall-dpmsprotopkgconfigDATA uninstall-dri2HEADERS \
+	uninstall-dri2protopkgconfigDATA uninstall-dri3HEADERS \
+	uninstall-dri3protopkgconfigDATA uninstall-evieHEADERS \
+	uninstall-evieprotopkgconfigDATA uninstall-fixesHEADERS \
+	uninstall-fixesprotopkgconfigDATA uninstall-fontcacheHEADERS \
 	uninstall-fontcacheprotopkgconfigDATA uninstall-fontsHEADERS \
 	uninstall-fontsprotopkgconfigDATA uninstall-glHEADERS \
 	uninstall-glinternalHEADERS uninstall-glprotopkgconfigDATA \
@@ -3058,10 +3202,10 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-xineramaHEADERS uninstall-xineramaprotopkgconfigDATA \
 	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS
 
-.MAKE: install-am install-strip
+.MAKE: check-am install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
-	clean-cscope clean-generic cscope cscopelist ctags dist \
+.PHONY: CTAGS GTAGS all all-am am--refresh check check-TESTS check-am \
+	clean clean-cscope clean-generic cscope cscopelist ctags dist \
 	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
 	dist-xz dist-zip distcheck distclean distclean-generic \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
@@ -3074,32 +3218,32 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	install-damageHEADERS install-damageprotopkgconfigDATA \
 	install-data install-data-am install-dist_docDATA \
 	install-dmxHEADERS install-dmxprotopkgconfigDATA \
-	install-dri2HEADERS install-dri2protopkgconfigDATA \
-	install-dri3HEADERS install-dri3protopkgconfigDATA install-dvi \
-	install-dvi-am install-evieHEADERS \
-	install-evieprotopkgconfigDATA install-exec install-exec-am \
-	install-fixesHEADERS install-fixesprotopkgconfigDATA \
-	install-fontcacheHEADERS install-fontcacheprotopkgconfigDATA \
-	install-fontsHEADERS install-fontsprotopkgconfigDATA \
-	install-glHEADERS install-glinternalHEADERS \
-	install-glprotopkgconfigDATA install-html install-html-am \
-	install-info install-info-am install-inputHEADERS \
-	install-inputprotopkgconfigDATA install-kbHEADERS \
-	install-kbprotopkgconfigDATA install-lg3dHEADERS \
-	install-lg3dprotopkgconfigDATA install-man install-miscmanDATA \
-	install-nodist_xprotoHEADERS install-pdf install-pdf-am \
-	install-pmprotopkgconfigDATA install-presentHEADERS \
-	install-presentprotopkgconfigDATA install-printHEADERS \
-	install-printprotopkgconfigDATA install-ps install-ps-am \
-	install-randrHEADERS install-randrprotopkgconfigDATA \
-	install-recordHEADERS install-recordprotopkgconfigDATA \
-	install-renderHEADERS install-renderprotopkgconfigDATA \
-	install-resourceHEADERS install-resourceprotopkgconfigDATA \
-	install-scrnsaverHEADERS install-scrnsaverprotopkgconfigDATA \
-	install-strip install-trapHEADERS \
-	install-trapprotopkgconfigDATA install-videoHEADERS \
-	install-videoprotopkgconfigDATA install-windowswmHEADERS \
-	install-windowswmprotopkgconfigDATA \
+	install-dpmsprotopkgconfigDATA install-dri2HEADERS \
+	install-dri2protopkgconfigDATA install-dri3HEADERS \
+	install-dri3protopkgconfigDATA install-dvi install-dvi-am \
+	install-evieHEADERS install-evieprotopkgconfigDATA \
+	install-exec install-exec-am install-fixesHEADERS \
+	install-fixesprotopkgconfigDATA install-fontcacheHEADERS \
+	install-fontcacheprotopkgconfigDATA install-fontsHEADERS \
+	install-fontsprotopkgconfigDATA install-glHEADERS \
+	install-glinternalHEADERS install-glprotopkgconfigDATA \
+	install-html install-html-am install-info install-info-am \
+	install-inputHEADERS install-inputprotopkgconfigDATA \
+	install-kbHEADERS install-kbprotopkgconfigDATA \
+	install-lg3dHEADERS install-lg3dprotopkgconfigDATA install-man \
+	install-miscmanDATA install-nodist_xprotoHEADERS install-pdf \
+	install-pdf-am install-pmprotopkgconfigDATA \
+	install-presentHEADERS install-presentprotopkgconfigDATA \
+	install-printHEADERS install-printprotopkgconfigDATA \
+	install-ps install-ps-am install-randrHEADERS \
+	install-randrprotopkgconfigDATA install-recordHEADERS \
+	install-recordprotopkgconfigDATA install-renderHEADERS \
+	install-renderprotopkgconfigDATA install-resourceHEADERS \
+	install-resourceprotopkgconfigDATA install-scrnsaverHEADERS \
+	install-scrnsaverprotopkgconfigDATA install-strip \
+	install-trapHEADERS install-trapprotopkgconfigDATA \
+	install-videoHEADERS install-videoprotopkgconfigDATA \
+	install-windowswmHEADERS install-windowswmprotopkgconfigDATA \
 	install-x11protopkgconfigDATA install-xcmiscHEADERS \
 	install-xcmiscprotopkgconfigDATA install-xextHEADERS \
 	install-xextprotopkgconfigDATA install-xf86bigfontHEADERS \
@@ -3121,11 +3265,11 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-compositeprotopkgconfigDATA uninstall-damageHEADERS \
 	uninstall-damageprotopkgconfigDATA uninstall-dist_docDATA \
 	uninstall-dmxHEADERS uninstall-dmxprotopkgconfigDATA \
-	uninstall-dri2HEADERS uninstall-dri2protopkgconfigDATA \
-	uninstall-dri3HEADERS uninstall-dri3protopkgconfigDATA \
-	uninstall-evieHEADERS uninstall-evieprotopkgconfigDATA \
-	uninstall-fixesHEADERS uninstall-fixesprotopkgconfigDATA \
-	uninstall-fontcacheHEADERS \
+	uninstall-dpmsprotopkgconfigDATA uninstall-dri2HEADERS \
+	uninstall-dri2protopkgconfigDATA uninstall-dri3HEADERS \
+	uninstall-dri3protopkgconfigDATA uninstall-evieHEADERS \
+	uninstall-evieprotopkgconfigDATA uninstall-fixesHEADERS \
+	uninstall-fixesprotopkgconfigDATA uninstall-fontcacheHEADERS \
 	uninstall-fontcacheprotopkgconfigDATA uninstall-fontsHEADERS \
 	uninstall-fontsprotopkgconfigDATA uninstall-glHEADERS \
 	uninstall-glinternalHEADERS uninstall-glprotopkgconfigDATA \
@@ -3159,9 +3303,9 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS
 
 
-.man.$(MISC_MAN_SUFFIX): man
-	$(MKDIR_P) man
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+@APPLEWM_TRUE@.man.$(MISC_MAN_SUFFIX): man
+@APPLEWM_TRUE@	$(MKDIR_P) man
+@APPLEWM_TRUE@	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
